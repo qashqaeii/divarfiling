@@ -409,12 +409,16 @@
     /* ── Actions: call + message only ── */
     .crm-contacts-mobile .crm-contacts-table tbody tr.crm-row-selectable > td.crm-contacts-col-actions {
         order: 1;
+        display: block !important;
+        visibility: visible !important;
+        width: 100% !important;
         padding: 0 1rem 1rem !important;
         border-top: none !important;
         background: transparent !important;
     }
-    .crm-contacts-mob-actions {
+    .crm-contacts-mobile .crm-contacts-mob-actions {
         display: flex !important;
+        visibility: visible !important;
         gap: 0.5rem;
         width: 100%;
     }
@@ -456,9 +460,33 @@
         display: none;
     }
 
-    /* Hide legacy FAB */
-    .crm-contacts-fab {
-        display: none !important;
+    /* FAB — مخاطب جدید (پایین صفحه) */
+    .crm-contacts-mobile .crm-contacts-fab {
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+        position: fixed;
+        inset-inline-end: 1rem;
+        bottom: calc(var(--ws-mob-fab-offset, 4.25rem) + env(safe-area-inset-bottom, 0px));
+        z-index: 140;
+        width: 48px;
+        height: 48px;
+        min-height: 48px;
+        padding: 0;
+        border: none;
+        border-radius: 50%;
+        background: var(--ws-primary);
+        color: #fff;
+        font-size: 1rem;
+        cursor: pointer;
+        box-shadow: 0 6px 18px -4px color-mix(in srgb, var(--ws-primary) 55%, transparent);
+        transition: transform 0.12s, box-shadow 0.12s;
+    }
+    .crm-contacts-mobile .crm-contacts-fab span {
+        display: none;
+    }
+    .crm-contacts-mobile .crm-contacts-fab:active {
+        transform: scale(0.94);
     }
 
     /* Duplicate alert compact */

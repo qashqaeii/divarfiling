@@ -3738,6 +3738,49 @@ function initContactsMobileMenus() {
     });
 }
 
+function initContactDetailMobileMenus() {
+    const root = document.querySelector('.crm-contact-detail-pro');
+    if (!root) return;
+
+    const closeMenus = (except) => {
+        root.querySelectorAll('.crm-contact-mob-menu[open], .crm-contact-dock-more[open]').forEach(menu => {
+            if (menu !== except) menu.removeAttribute('open');
+        });
+    };
+
+    root.querySelectorAll('.crm-contact-mob-menu, .crm-contact-dock-more').forEach(menu => {
+        menu.addEventListener('toggle', () => {
+            if (menu.open) closeMenus(menu);
+        });
+    });
+
+    root.querySelectorAll('.crm-contact-mob-menu-item[data-drawer-open], .crm-contact-dock-more-item[data-drawer-open]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            btn.closest('details')?.removeAttribute('open');
+        });
+    });
+
+    root.querySelectorAll('.crm-contact-dock-more-item').forEach(link => {
+        link.addEventListener('click', () => {
+            if (link.getAttribute('href')) {
+                link.closest('.crm-contact-dock-more')?.removeAttribute('open');
+            }
+        });
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!root.contains(e.target)) return;
+        root.querySelectorAll('.crm-contact-mob-menu[open], .crm-contact-dock-more[open]').forEach(menu => {
+            if (!menu.contains(e.target)) menu.removeAttribute('open');
+        });
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key !== 'Escape') return;
+        closeMenus();
+    });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('[data-drawer-open]').forEach(btn => {
         btn.addEventListener('click', e => {
@@ -3783,6 +3826,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initCRMSavedFilters();
     initContactsMobileFilters();
     initContactsMobileMenus();
+    initContactDetailMobileMenus();
     initCRMPropertyAdvFilters();
     initCRMDealStagesEditor();
     initCRMDealChecklist();

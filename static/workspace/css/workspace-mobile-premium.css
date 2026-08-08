@@ -10,9 +10,17 @@
         /* Typography tokens */
         --mobile-title: 18px;
         --mobile-section: 15px;
-        --mobile-card: 14px;
+        --mobile-card: 16px;
         --mobile-body: 13px;
-        --mobile-meta: 11px;
+        --mobile-meta: 12px;
+        --mobile-secondary: 11px;
+
+        /* Card system v7 */
+        --ws-mob-thumb: 88px;
+        --ws-mob-thumb-sm: 72px;
+        --ws-mob-btn-h: 36px;
+        --ws-mob-btn-radius: 10px;
+        --ws-mob-card-pad-list: 12px;
 
         /* Layout tokens */
         --ws-mob-gutter: 16px;
@@ -29,10 +37,10 @@
         --ws-mob-nav-h: 4rem;
         --ws-mob-nav-gap: 8px;
         --ws-mob-nav-offset: calc(var(--ws-mob-nav-h) + var(--ws-mob-nav-gap) + env(safe-area-inset-bottom, 0px));
-        --ws-mob-dock-h: 2.75rem;
+        --ws-mob-dock-h: var(--ws-mob-btn-h);
         --ws-mob-dock-gap: 6px;
         --ws-mob-dock-offset: calc(var(--ws-mob-nav-offset) + var(--ws-mob-dock-gap));
-        --ws-mob-dock-clearance: calc(var(--ws-mob-dock-h) + 20px + env(safe-area-inset-bottom, 0px));
+        --ws-mob-dock-clearance: calc(var(--ws-mob-dock-h) + 12px + env(safe-area-inset-bottom, 0px));
         --ws-mob-fab-offset: var(--ws-mob-nav-offset);
         --ws-mob-topbar-h: 3rem;
     }
@@ -73,6 +81,12 @@
     .ws-content:has(.ws-ds-mobile),
     .ws-content:has(.ws-ld-mobile) {
         padding-bottom: 0 !important;
+    }
+
+    body.ws-body:has(.ws-ds-mobile) .ws-content,
+    body.ws-body:has(.mk-filing-mobile) .ws-content {
+        padding-inline: var(--ws-mob-gutter) !important;
+        padding-top: var(--ws-mob-gutter) !important;
     }
 
     .mk-page,
@@ -1030,9 +1044,9 @@
         flex-direction: row !important;
         justify-content: center !important;
         min-width: 0 !important;
-        min-height: 2.5rem !important;
-        padding: 0 6px !important;
-        border-radius: 10px !important;
+        min-height: var(--ws-mob-btn-h) !important;
+        padding: 0 8px !important;
+        border-radius: var(--ws-mob-btn-radius) !important;
         border: none !important;
         background: transparent !important;
         font-size: var(--mobile-meta) !important;
@@ -1083,39 +1097,43 @@
         padding-bottom: calc(var(--ws-mob-nav-offset) + var(--ws-mob-gutter)) !important;
     }
 
-    /* ─── PHASE 9 — Bottom navigation (64px, nav only) ─── */
+    /* ─── PHASE 9 — Bottom navigation (64px strict) ─── */
     .ws-bottom-nav {
         display: flex !important;
         inset-inline: 0 !important;
         bottom: 0 !important;
-        min-height: var(--ws-mob-nav-h) !important;
-        padding: 6px var(--ws-mob-gutter) calc(6px + env(safe-area-inset-bottom, 0px)) !important;
+        height: calc(var(--ws-mob-nav-h) + env(safe-area-inset-bottom, 0px)) !important;
+        min-height: calc(var(--ws-mob-nav-h) + env(safe-area-inset-bottom, 0px)) !important;
+        max-height: calc(var(--ws-mob-nav-h) + env(safe-area-inset-bottom, 0px)) !important;
+        padding: 0 var(--ws-mob-gutter) env(safe-area-inset-bottom, 0px) !important;
         border-radius: 0 !important;
         border: none !important;
-        border-top: 1px solid color-mix(in srgb, var(--ws-border) 65%, transparent) !important;
-        background: var(--ws-surface) !important;
-        box-shadow: 0 -4px 16px rgba(15, 23, 42, 0.06) !important;
+        border-top: 1px solid var(--ws-mob-card-border) !important;
+        background: var(--ws-mob-card-bg) !important;
+        box-shadow: 0 -2px 8px rgba(15, 23, 42, 0.04) !important;
         backdrop-filter: none !important;
         -webkit-backdrop-filter: none !important;
         z-index: 170 !important;
         gap: 0 !important;
+        align-items: stretch !important;
     }
 
     .ws-bottom-nav-item {
         flex: 1 1 0 !important;
-        min-height: auto !important;
-        border-radius: 10px !important;
-        font-size: var(--mobile-meta) !important;
+        min-height: var(--ws-mob-nav-h) !important;
+        max-height: var(--ws-mob-nav-h) !important;
+        border-radius: 8px !important;
+        font-size: var(--mobile-secondary) !important;
         font-weight: 600 !important;
-        gap: 2px !important;
+        gap: 1px !important;
         color: var(--ws-text-muted) !important;
         padding: 4px 2px !important;
     }
 
     .ws-bottom-nav-item i {
-        font-size: 1.125rem !important;
-        width: 1.75rem !important;
-        height: 1.75rem !important;
+        font-size: 1.0625rem !important;
+        width: 1.625rem !important;
+        height: 1.625rem !important;
         border-radius: 8px !important;
         background: transparent !important;
         box-shadow: none !important;
@@ -1205,149 +1223,480 @@
         display: none;
     }
 
-    /* ─── PHASE 7 — Dataset / filing card list ─── */
+    /* ─── PHASE 7 — Card system v7 (native mobile, not compressed desktop) ─── */
+
+    /* Shared card chrome */
+    :is(
+        .mk-filing-mobile .mk-ds-card-glass,
+        .ws-ds-mobile .mk-lcard,
+        .crm-files-mobile .crm-files-card,
+        .crm-deals-mobile .crm-deals-card
+    ) {
+        background: var(--ws-mob-card-bg) !important;
+        border: 1px solid var(--ws-mob-card-border) !important;
+        border-radius: var(--ws-mob-radius) !important;
+        box-shadow: var(--ws-mob-shadow) !important;
+        background-image: none !important;
+    }
+
+    /* ── Dataset cards (collection management — distinct from listings) ── */
     .mk-filing-mobile .mk-ds-grid {
         padding: 0 !important;
-        gap: var(--ws-mob-gap) !important;
+        gap: 8px !important;
+    }
+
+    .mk-filing-mobile .mk-ds-card {
+        position: relative;
     }
 
     .mk-filing-mobile .mk-ds-card-glass {
-        padding: var(--ws-mob-card-pad) !important;
+        display: grid !important;
+        grid-template-columns: var(--ws-mob-thumb-sm) minmax(0, 1fr) !important;
+        grid-template-rows: auto auto auto !important;
+        gap: 2px 12px !important;
+        padding: var(--ws-mob-card-pad-list) !important;
+        transform: none !important;
+    }
+
+    .mk-filing-mobile .mk-ds-card-glass::before {
+        display: none !important;
     }
 
     .mk-filing-mobile .mk-ds-card-main {
-        display: grid !important;
-        grid-template-columns: 4.5rem minmax(0, 1fr) !important;
-        gap: 10px !important;
-        align-items: start !important;
+        display: contents !important;
     }
 
     .mk-filing-mobile .mk-ds-card-cover {
-        width: 4.5rem !important;
-        height: 4.5rem !important;
-        min-height: 0 !important;
-        border-radius: 10px !important;
-        overflow: hidden;
+        grid-column: 1 !important;
+        grid-row: 1 / 4 !important;
+        width: var(--ws-mob-thumb-sm) !important;
+        height: var(--ws-mob-thumb-sm) !important;
+        min-height: var(--ws-mob-thumb-sm) !important;
+        max-height: var(--ws-mob-thumb-sm) !important;
+        aspect-ratio: 1 !important;
+        border-radius: 12px !important;
+        overflow: hidden !important;
+        position: relative !important;
+    }
+
+    .mk-filing-mobile .mk-ds-card-cover-img {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: cover !important;
+    }
+
+    .mk-filing-mobile .mk-ds-card-cover-empty {
+        min-height: var(--ws-mob-thumb-sm) !important;
+        background: color-mix(in srgb, var(--ws-surface-2) 45%, var(--ws-mob-card-bg)) !important;
+        border-radius: 12px !important;
     }
 
     .mk-filing-mobile .mk-ds-card-cover-orb,
-    .mk-filing-mobile .mk-ds-card-cover-top,
+    .mk-filing-mobile .mk-ds-card-cover-shade,
     .mk-filing-mobile .mk-ds-card-cover-fmt-pill {
         display: none !important;
     }
 
+    .mk-filing-mobile .mk-ds-card-cover-top {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 2px !important;
+        inset: 4px !important;
+        width: auto !important;
+        max-width: calc(100% - 8px) !important;
+        pointer-events: none !important;
+    }
+
+    .mk-filing-mobile .mk-ds-card-cover-top .mk-tx-badge {
+        font-size: var(--mobile-secondary) !important;
+        padding: 1px 6px !important;
+        border-radius: 6px !important;
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
+    }
+
     .mk-filing-mobile .mk-ds-card-count {
+        font-size: var(--mobile-secondary) !important;
+        padding: 1px 6px !important;
+        border-radius: 6px !important;
+        background: rgba(15, 23, 42, 0.55) !important;
+        color: #fff !important;
+        border: none !important;
+        box-shadow: none !important;
+        backdrop-filter: none !important;
+    }
+
+    .mk-filing-mobile .mk-ds-card-count strong {
         font-size: var(--mobile-meta) !important;
+        color: #fff !important;
+    }
+
+    .mk-filing-mobile .mk-ds-card-count em {
+        color: rgba(255, 255, 255, 0.85) !important;
     }
 
     .mk-filing-mobile .mk-ds-card-body {
+        display: contents !important;
+    }
+
+    .mk-filing-mobile .mk-ds-card-title {
+        grid-column: 2 !important;
+        grid-row: 1 !important;
+        margin: 0 !important;
         padding: 0 !important;
-        gap: 4px !important;
-        min-width: 0;
+        font-size: var(--mobile-card) !important;
+        font-weight: 700 !important;
+        line-height: 1.3 !important;
+        letter-spacing: -0.01em !important;
+        -webkit-line-clamp: 1 !important;
+        display: -webkit-box !important;
+        -webkit-box-orient: vertical !important;
+        overflow: hidden !important;
     }
 
     .mk-filing-mobile .mk-ds-card-sub {
-        font-size: var(--mobile-meta) !important;
-        display: -webkit-box;
-        -webkit-line-clamp: 1;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
+        display: none !important;
     }
 
     .mk-filing-mobile .mk-ds-card-chips {
+        grid-column: 2 !important;
+        grid-row: 2 !important;
+        margin: 0 !important;
         flex-wrap: nowrap !important;
         overflow: hidden !important;
         gap: 4px !important;
     }
 
     .mk-filing-mobile .mk-ds-card-chips > :nth-child(n + 3) {
-        display: none;
-    }
-
-    .mk-filing-mobile .mk-ds-card-chips span {
-        font-size: 0.625rem !important;
-        padding: 2px 6px !important;
-    }
-
-    .mk-filing-mobile .mk-ds-card-foot {
-        grid-column: 1 / -1;
-        display: flex !important;
-        align-items: center;
-        justify-content: space-between;
-        gap: 8px;
-        margin-top: 4px;
-        padding-top: 8px;
-        border-top: 1px solid color-mix(in srgb, var(--ws-border) 50%, transparent);
-    }
-
-    .mk-filing-mobile .mk-ds-card-date {
-        font-size: var(--mobile-meta) !important;
-    }
-
-    .mk-filing-mobile .mk-ds-card-acts {
-        gap: 4px !important;
-    }
-
-    .mk-filing-mobile .mk-ds-card-act:not(.mk-ds-card-act--open) {
         display: none !important;
     }
 
-    .mk-filing-mobile .mk-ds-card-act--open {
-        min-height: 2rem !important;
-        padding: 0 12px !important;
-        font-size: var(--mobile-meta) !important;
-        border-radius: 8px !important;
+    .mk-filing-mobile .mk-ds-chip {
+        font-size: var(--mobile-secondary) !important;
+        padding: 1px 6px !important;
+        min-height: 0 !important;
+        border-radius: 6px !important;
+        background: color-mix(in srgb, var(--ws-surface-2) 40%, var(--ws-mob-card-bg)) !important;
+        border: 1px solid var(--ws-mob-card-border) !important;
     }
 
-    /* Dataset detail listing cards — compact SaaS feed */
+    .mk-filing-mobile .mk-ds-card-foot {
+        grid-column: 1 / -1 !important;
+        grid-row: 4 !important;
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 8px !important;
+        margin: 6px 0 0 !important;
+        padding: 8px 0 0 !important;
+        border-top: 1px solid var(--ws-mob-card-border) !important;
+        background: transparent !important;
+    }
+
+    .mk-filing-mobile .mk-ds-card-date {
+        flex: 1 1 auto !important;
+        min-width: 0 !important;
+        font-size: var(--mobile-secondary) !important;
+        color: var(--ws-text-muted) !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+
+    .mk-filing-mobile .mk-ds-card-date i {
+        display: none !important;
+    }
+
+    .mk-filing-mobile .mk-ds-card-acts {
+        flex: 0 0 auto !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 4px !important;
+        width: auto !important;
+    }
+
+    .mk-filing-mobile .mk-ds-card-act--open {
+        flex: 0 0 auto !important;
+        width: auto !important;
+        min-width: 0 !important;
+        min-height: var(--ws-mob-btn-h) !important;
+        height: var(--ws-mob-btn-h) !important;
+        padding: 0 12px !important;
+        font-size: var(--mobile-meta) !important;
+        font-weight: 600 !important;
+        border-radius: var(--ws-mob-btn-radius) !important;
+        background: var(--ws-primary) !important;
+        background-image: none !important;
+        color: #fff !important;
+        border: none !important;
+        box-shadow: none !important;
+        gap: 4px !important;
+    }
+
+    .mk-filing-mobile .mk-ds-card-act--open span {
+        display: inline !important;
+    }
+
+    .mk-filing-mobile .mk-ds-card-act:not(.mk-ds-card-act--open):not(.mk-ds-card-act--danger) {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: var(--ws-mob-btn-h) !important;
+        height: var(--ws-mob-btn-h) !important;
+        min-width: var(--ws-mob-btn-h) !important;
+        min-height: var(--ws-mob-btn-h) !important;
+        padding: 0 !important;
+        border-radius: var(--ws-mob-btn-radius) !important;
+        background: transparent !important;
+        border: 1px solid var(--ws-mob-card-border) !important;
+        color: var(--ws-text-secondary) !important;
+        font-size: 0.8125rem !important;
+        box-shadow: none !important;
+    }
+
+    .mk-filing-mobile .mk-ds-card-act--danger {
+        display: none !important;
+    }
+
+    .mk-filing-mobile .mk-ds-card-acts .mk-ds-card-act:nth-child(4) {
+        display: none !important;
+    }
+
+    .mk-filing-mobile .mk-ds-card-check {
+        position: absolute !important;
+        top: 6px !important;
+        inset-inline-start: 6px !important;
+        inset-inline-end: auto !important;
+        z-index: 5 !important;
+        width: 1.5rem !important;
+        height: 1.5rem !important;
+        opacity: 0.85;
+    }
+
+    /* ── Listing cards (property feed — KPI-first horizontal layout) ── */
+    .ws-ds-mobile .mk-listing-cards-shell {
+        gap: 8px !important;
+        padding: 0 !important;
+    }
+
     .ws-ds-mobile .mk-lcard {
-        border-radius: var(--ws-mob-radius) !important;
-        box-shadow: var(--ws-mob-shadow) !important;
+        display: grid !important;
+        grid-template-columns: var(--ws-mob-thumb) minmax(0, 1fr) !important;
+        grid-template-rows: auto auto auto auto !important;
+        column-gap: 12px !important;
+        row-gap: 2px !important;
+        padding: var(--ws-mob-card-pad-list) !important;
+        align-items: start !important;
+        transform: none !important;
+    }
+
+    .ws-ds-mobile .mk-lcard:active {
+        transform: scale(0.99) !important;
     }
 
     .ws-ds-mobile .mk-lcard-cover {
-        aspect-ratio: 16 / 9 !important;
-        max-height: 140px;
+        grid-column: 1 !important;
+        grid-row: 1 / 5 !important;
+        width: var(--ws-mob-thumb) !important;
+        height: var(--ws-mob-thumb) !important;
+        min-height: var(--ws-mob-thumb) !important;
+        max-height: var(--ws-mob-thumb) !important;
+        aspect-ratio: 1 !important;
+        border-radius: 12px !important;
+        overflow: hidden !important;
+        position: relative !important;
+    }
+
+    .ws-ds-mobile .mk-lcard-cover-link,
+    .ws-ds-mobile .mk-lcard-cover-img,
+    .ws-ds-mobile .mk-lcard-cover-empty {
+        width: 100% !important;
+        height: 100% !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        aspect-ratio: auto !important;
+        border-radius: 12px !important;
+        object-fit: cover !important;
+    }
+
+    .ws-ds-mobile .mk-lcard-cover-shade,
+    .ws-ds-mobile .mk-lcard-nav,
+    .ws-ds-mobile .mk-lcard-cover-count {
+        display: none !important;
+    }
+
+    .ws-ds-mobile .mk-lcard-cover-top {
+        inset: 4px !important;
+        gap: 2px !important;
+    }
+
+    .ws-ds-mobile .mk-lcard-cover-value {
+        font-size: var(--mobile-secondary) !important;
+        padding: 1px 5px !important;
+        border-radius: 5px !important;
     }
 
     .ws-ds-mobile .mk-lcard-body {
-        padding: var(--ws-mob-card-pad) !important;
-        gap: 6px !important;
+        display: contents !important;
+    }
+
+    .ws-ds-mobile .mk-lcard-head {
+        grid-column: 2 !important;
+        grid-row: 1 !important;
+        min-width: 0 !important;
+        gap: 2px !important;
+    }
+
+    .ws-ds-mobile .mk-lcard-title {
+        margin: 0 !important;
     }
 
     .ws-ds-mobile .mk-lcard-title a {
         font-size: var(--mobile-card) !important;
-        -webkit-line-clamp: 1 !important;
+        font-weight: 700 !important;
+        line-height: 1.3 !important;
+        letter-spacing: -0.01em !important;
+        -webkit-line-clamp: 2 !important;
+        display: -webkit-box !important;
+        -webkit-box-orient: vertical !important;
+        overflow: hidden !important;
     }
 
-    .ws-ds-mobile .mk-lcard-price-row {
-        padding: 6px 8px !important;
-        gap: 6px !important;
-        border-radius: 10px !important;
-    }
-
-    .ws-ds-mobile .mk-lcard-price strong {
-        font-size: var(--mobile-body) !important;
-    }
-
-    .ws-ds-mobile .mk-lcard-chip:nth-child(n + 3),
-    .ws-ds-mobile .mk-lcard-specs > :nth-child(n + 3) {
-        display: none;
-    }
-
-    .ws-ds-mobile .mk-lcard-foot {
-        padding-top: 6px !important;
-        margin-top: 0 !important;
-    }
-
-    .ws-ds-mobile .mk-lcard-btn:not(.mk-lcard-btn--primary) {
+    .ws-ds-mobile .mk-lcard-tags {
         display: none !important;
     }
 
-    .ws-ds-mobile .mk-lcard-btn--primary {
-        min-height: 2rem !important;
+    .ws-ds-mobile .mk-lcard-price-row {
+        grid-column: 2 !important;
+        grid-row: 2 !important;
+        display: flex !important;
+        flex-wrap: wrap !important;
+        align-items: baseline !important;
+        gap: 6px 10px !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+    }
+
+    .ws-ds-mobile .mk-lcard-price-lbl {
+        display: none !important;
+    }
+
+    .ws-ds-mobile .mk-lcard-price strong,
+    .ws-ds-mobile .mk-lcard-price .mk-money {
+        font-size: var(--mobile-card) !important;
+        font-weight: 700 !important;
+        color: var(--ws-primary) !important;
+        line-height: 1.2 !important;
+    }
+
+    .ws-ds-mobile .mk-lcard-price--area strong {
         font-size: var(--mobile-meta) !important;
-        border-radius: 8px !important;
+        font-weight: 600 !important;
+        color: var(--ws-text-secondary) !important;
+    }
+
+    .ws-ds-mobile .mk-lcard-price--area strong small {
+        font-size: var(--mobile-secondary) !important;
+    }
+
+    .ws-ds-mobile .mk-lcard-meta-row {
+        grid-column: 2 !important;
+        grid-row: 3 !important;
+        display: flex !important;
+        flex-wrap: wrap !important;
+        align-items: center !important;
+        gap: 4px !important;
+        margin: 0 !important;
+    }
+
+    .ws-ds-mobile .mk-lcard-chip {
+        font-size: var(--mobile-secondary) !important;
+        padding: 0 !important;
+        background: transparent !important;
+        border: none !important;
+        color: var(--ws-text-muted) !important;
+        min-height: 0 !important;
+    }
+
+    .ws-ds-mobile .mk-lcard-chip--loc {
+        color: var(--ws-text-secondary) !important;
+        font-size: var(--mobile-meta) !important;
+    }
+
+    .ws-ds-mobile .mk-lcard-chip--loc i {
+        font-size: 0.625rem !important;
+        opacity: 0.7;
+    }
+
+    .ws-ds-mobile .mk-lcard-chip--tx {
+        font-size: var(--mobile-secondary) !important;
+        padding: 1px 6px !important;
+        border-radius: 6px !important;
+        background: color-mix(in srgb, var(--ws-surface-2) 45%, var(--ws-mob-card-bg)) !important;
+        border: 1px solid var(--ws-mob-card-border) !important;
+    }
+
+    .ws-ds-mobile .mk-lcard-specs {
+        display: none !important;
+    }
+
+    .ws-ds-mobile .mk-lcard-foot {
+        grid-column: 2 !important;
+        grid-row: 4 !important;
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        gap: 6px !important;
+        padding: 4px 0 0 !important;
+        margin: 0 !important;
+        border: none !important;
+    }
+
+    .ws-ds-mobile .mk-lcard-btn--primary {
+        flex: 0 1 auto !important;
+        width: auto !important;
+        min-width: 0 !important;
+        min-height: var(--ws-mob-btn-h) !important;
+        height: var(--ws-mob-btn-h) !important;
+        padding: 0 10px !important;
+        font-size: var(--mobile-meta) !important;
+        font-weight: 600 !important;
+        border-radius: var(--ws-mob-btn-radius) !important;
+        background: var(--ws-primary) !important;
+        background-image: none !important;
+        box-shadow: none !important;
+        gap: 4px !important;
+    }
+
+    .ws-ds-mobile .mk-lcard-btn--primary span::before {
+        content: none;
+    }
+
+    .ws-ds-mobile .mk-lcard-more {
+        display: block !important;
+        flex: 0 0 auto !important;
+    }
+
+    .ws-ds-mobile .mk-lcard-btn--icon {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: var(--ws-mob-btn-h) !important;
+        height: var(--ws-mob-btn-h) !important;
+        min-width: var(--ws-mob-btn-h) !important;
+        min-height: var(--ws-mob-btn-h) !important;
+        padding: 0 !important;
+        border-radius: var(--ws-mob-btn-radius) !important;
+        border: 1px solid var(--ws-mob-card-border) !important;
+        background: transparent !important;
+        color: var(--ws-text-secondary) !important;
+        box-shadow: none !important;
     }
 
     /* ─── CRM list cards — SaaS compact ─── */
@@ -2014,6 +2363,363 @@
         margin: var(--ws-mob-gap) 0 !important;
         border-radius: var(--ws-mob-radius) !important;
     }
+
+    /* ═══ CARD SYSTEM v7 — Search / filter + list density ═══ */
+
+    .mk-filing-mobile .mk-filing-mob-header {
+        border-radius: var(--ws-mob-radius) !important;
+        margin-bottom: 8px !important;
+        box-shadow: var(--ws-mob-shadow) !important;
+        border: 1px solid var(--ws-mob-card-border) !important;
+        background: var(--ws-mob-card-bg) !important;
+        background-image: none !important;
+    }
+
+    .mk-filing-mobile .mk-filing-mob-header-mesh,
+    .mk-filing-mobile .mk-filing-mob-header-accent {
+        display: none !important;
+    }
+
+    .mk-filing-mobile .mk-filing-mob-header-inner {
+        padding: 12px !important;
+    }
+
+    .mk-filing-mobile .mk-filing-mob-title {
+        font-size: var(--mobile-card) !important;
+        font-weight: 700 !important;
+    }
+
+    .mk-filing-mobile .mk-filing-mob-kicker {
+        font-size: var(--mobile-secondary) !important;
+    }
+
+    .mk-filing-mobile.mk-page {
+        background: var(--ws-mob-canvas) !important;
+        background-image: none !important;
+        gap: 8px !important;
+        padding-bottom: calc(var(--ws-mob-nav-offset) + var(--ws-mob-gutter)) !important;
+    }
+
+    .ws-ds-mobile.mk-page {
+        background: var(--ws-mob-canvas) !important;
+        background-image: none !important;
+        gap: 8px !important;
+    }
+
+    body.ws-body:has(.ws-ds-mobile) .ws-content {
+        padding-bottom: calc(var(--ws-mob-dock-clearance) + var(--ws-mob-gutter)) !important;
+    }
+
+    .mk-filing-mobile .mk-filing-toolbar {
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    .mk-filing-mobile .mk-filing-mob-filter-details {
+        border: none !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        overflow: visible !important;
+    }
+
+    .mk-filing-mobile .mk-filing-mob-filter-trigger {
+        display: none !important;
+    }
+
+    .mk-filing-mobile .mk-filing-mob-filter-details > .mk-filing-filters-sheet,
+    .mk-filing-mobile .mk-filing-mob-filter-details:not([open]) > .mk-filing-filters-sheet {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 8px !important;
+        padding: 0 !important;
+        visibility: visible !important;
+        height: auto !important;
+        overflow: visible !important;
+    }
+
+    .mk-filing-mobile .mk-filing-search {
+        width: 100% !important;
+        min-height: 40px !important;
+        height: 40px !important;
+        border-radius: 12px !important;
+        padding: 0 12px !important;
+        font-size: var(--mobile-meta) !important;
+        border: 1px solid var(--ws-mob-card-border) !important;
+        background: var(--ws-mob-card-bg) !important;
+        box-shadow: none !important;
+    }
+
+    .mk-filing-mobile .mk-filing-search input {
+        font-size: var(--mobile-meta) !important;
+    }
+
+    .mk-filing-mobile .mk-filing-search input::placeholder {
+        color: var(--ws-text-muted) !important;
+    }
+
+    .mk-filing-mobile .mk-filing-filters-sheet > .mk-filter-select {
+        flex: 1 1 calc(33.333% - 6px) !important;
+        min-width: 0 !important;
+        min-height: 34px !important;
+        height: 34px !important;
+        padding: 0 8px !important;
+        font-size: var(--mobile-secondary) !important;
+        border-radius: 10px !important;
+        border: 1px solid var(--ws-mob-card-border) !important;
+        background: var(--ws-mob-card-bg) !important;
+    }
+
+    .mk-filing-mobile .mk-filing-filters-sheet {
+        flex-wrap: wrap !important;
+        flex-direction: row !important;
+        align-items: center !important;
+    }
+
+    .mk-filing-mobile .mk-filing-search {
+        flex: 1 1 100% !important;
+    }
+
+    .mk-filing-mobile .mk-filing-filter-actions {
+        flex: 1 1 100% !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        margin: 0 !important;
+    }
+
+    .mk-filing-mobile .mk-filing-filter-btn {
+        flex: 0 0 auto !important;
+        min-height: var(--ws-mob-btn-h) !important;
+        height: var(--ws-mob-btn-h) !important;
+        padding: 0 14px !important;
+        font-size: var(--mobile-meta) !important;
+        font-weight: 600 !important;
+        border-radius: var(--ws-mob-btn-radius) !important;
+        background: var(--ws-primary) !important;
+        background-image: none !important;
+        box-shadow: none !important;
+    }
+
+    .mk-filing-mobile .mk-filing-view-toggle {
+        flex: 0 0 auto !important;
+        height: var(--ws-mob-btn-h) !important;
+        margin-inline-start: auto !important;
+        border-radius: var(--ws-mob-btn-radius) !important;
+        padding: 2px !important;
+        border: 1px solid var(--ws-mob-card-border) !important;
+        background: var(--ws-mob-card-bg) !important;
+    }
+
+    .mk-filing-mobile .mk-filing-view-btn {
+        width: 2rem !important;
+        height: calc(var(--ws-mob-btn-h) - 4px) !important;
+        border-radius: 8px !important;
+    }
+
+    .mk-filing-mobile .mk-filing-chips {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        overflow-x: auto !important;
+        gap: 6px !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .mk-filing-mobile .mk-filing-chips::-webkit-scrollbar {
+        display: none;
+    }
+
+    .mk-filing-mobile .mk-filing-chip {
+        flex: 0 0 auto;
+        min-height: 28px !important;
+        padding: 4px 10px !important;
+        font-size: var(--mobile-secondary) !important;
+        border-radius: 999px !important;
+    }
+
+    /* Reduce list page chrome for density */
+    .mk-filing-mobile .mk-filing-panel {
+        margin: 0 !important;
+        border: none !important;
+        box-shadow: none !important;
+        background: transparent !important;
+        border-radius: 0 !important;
+    }
+
+    .mk-filing-mobile .mk-filing-panel-head {
+        display: none !important;
+    }
+
+    .mk-filing-mobile .mk-filing-metrics {
+        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+        gap: 6px !important;
+        padding: 0 !important;
+    }
+
+    .mk-filing-mobile .mk-hub-metric {
+        padding: 8px !important;
+        gap: 4px !important;
+    }
+
+    .mk-filing-mobile .mk-hub-metric-val {
+        font-size: 0.9375rem !important;
+    }
+
+    .mk-filing-mobile .mk-hub-metric-lbl {
+        font-size: var(--mobile-secondary) !important;
+    }
+
+    /* Dataset detail — listing filter bar */
+    .ws-ds-mobile .mk-filter-shell {
+        margin: 0 !important;
+        padding: 0 !important;
+        border: none !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        border-radius: 0 !important;
+    }
+
+    .ws-ds-mobile .mk-filter-bar-listing {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 8px !important;
+        padding: 0 !important;
+    }
+
+    .ws-ds-mobile .mk-filter-primary {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 8px !important;
+    }
+
+    .ws-ds-mobile .mk-filter-search-grow {
+        width: 100% !important;
+        min-height: 40px !important;
+        height: 40px !important;
+        border-radius: 12px !important;
+        padding: 0 12px !important;
+        border: 1px solid var(--ws-mob-card-border) !important;
+        background: var(--ws-mob-card-bg) !important;
+        box-shadow: none !important;
+    }
+
+    .ws-ds-mobile .mk-filter-search-grow input {
+        font-size: var(--mobile-meta) !important;
+    }
+
+    .ws-ds-mobile .mk-filter-primary > .mk-filter-select {
+        flex: 1 1 calc(50% - 4px) !important;
+        min-width: 0 !important;
+        min-height: 34px !important;
+        height: 34px !important;
+        font-size: var(--mobile-secondary) !important;
+        border-radius: 10px !important;
+        border: 1px solid var(--ws-mob-card-border) !important;
+        background: var(--ws-mob-card-bg) !important;
+    }
+
+    .ws-ds-mobile .mk-filter-primary {
+        flex-direction: row !important;
+        flex-wrap: wrap !important;
+    }
+
+    .ws-ds-mobile .mk-filter-search-grow {
+        flex: 1 1 100% !important;
+    }
+
+    .ws-ds-mobile .mk-filter-actions {
+        flex: 1 1 100% !important;
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        overflow-x: auto !important;
+        gap: 6px !important;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .ws-ds-mobile .mk-filter-actions::-webkit-scrollbar {
+        display: none;
+    }
+
+    .ws-ds-mobile .mk-filter-toggle,
+    .ws-ds-mobile .mk-filter-apply,
+    .ws-ds-mobile .mk-filter-reset {
+        flex: 0 0 auto !important;
+        min-height: var(--ws-mob-btn-h) !important;
+        height: var(--ws-mob-btn-h) !important;
+        border-radius: var(--ws-mob-btn-radius) !important;
+        font-size: var(--mobile-meta) !important;
+        font-weight: 600 !important;
+        box-shadow: none !important;
+        background-image: none !important;
+    }
+
+    .ws-ds-mobile .mk-filter-toggle {
+        background: var(--ws-mob-card-bg) !important;
+        border: 1px solid var(--ws-mob-card-border) !important;
+        color: var(--ws-text-secondary) !important;
+        padding: 0 12px !important;
+    }
+
+    .ws-ds-mobile .mk-filter-apply {
+        background: var(--ws-primary) !important;
+        border: none !important;
+        color: #fff !important;
+        padding: 0 14px !important;
+    }
+
+    .ws-ds-mobile .mk-filter-reset {
+        width: var(--ws-mob-btn-h) !important;
+        min-width: var(--ws-mob-btn-h) !important;
+        padding: 0 !important;
+        border: 1px solid var(--ws-mob-card-border) !important;
+        background: var(--ws-mob-card-bg) !important;
+    }
+
+    .ws-ds-mobile .mk-listing-panel {
+        margin: 0 !important;
+        border: none !important;
+        box-shadow: none !important;
+        background: transparent !important;
+        border-radius: 0 !important;
+    }
+
+    .ws-ds-mobile .mk-listing-panel .mk-panel-head-table {
+        display: none !important;
+    }
+
+    .ws-ds-mobile .mk-ds-command {
+        border-radius: var(--ws-mob-radius) !important;
+        margin-bottom: 8px !important;
+        box-shadow: var(--ws-mob-shadow) !important;
+    }
+
+    .ws-ds-mobile .mk-ds-mobile-bar {
+        min-height: 48px !important;
+        padding: 8px 12px !important;
+    }
+
+    .ws-ds-mobile .mk-ds-mobile-primary {
+        min-height: var(--ws-mob-btn-h) !important;
+        height: var(--ws-mob-btn-h) !important;
+        padding: 0 10px !important;
+        font-size: var(--mobile-meta) !important;
+        border-radius: var(--ws-mob-btn-radius) !important;
+        background: var(--ws-primary) !important;
+        background-image: none !important;
+        box-shadow: none !important;
+    }
+
+    .ws-ds-mobile .ws-ds-mob-dock__btn {
+        min-height: var(--ws-mob-btn-h) !important;
+        height: var(--ws-mob-btn-h) !important;
+        font-size: var(--mobile-secondary) !important;
+        border-radius: var(--ws-mob-btn-radius) !important;
+    }
 }
 
 /* ─── 430px — mid mobile ─── */
@@ -2064,8 +2770,11 @@
 @media (max-width: 320px) {
     :root {
         --ws-mob-gutter: 10px;
+        --ws-mob-thumb: 76px;
+        --ws-mob-thumb-sm: 64px;
         --mobile-title: 16px;
         --mobile-section: 14px;
+        --mobile-card: 15px;
     }
 
     .mk-hub-metric,

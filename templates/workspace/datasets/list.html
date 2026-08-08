@@ -96,18 +96,24 @@
         <form method="get" class="mk-filter-form mk-filter-form--3 mk-filing-filter" id="dsFilterForm">
             {% if view_mode != 'auto' %}<input type="hidden" name="view" value="{{ view_mode }}">{% endif %}
             <div class="mk-filing-mob-filter-bar">
-                <details id="dsFilterDetails" class="mk-filing-mob-filter-details{% if has_filters %} is-active{% endif %}" open>
-                    <summary class="mk-filing-mob-filter-trigger">
+                <div class="ws-mob-search-bar ws-mob-search-bar--filing">
+                    <label class="mk-filter-search mk-filing-search ws-mob-search-bar__search">
+                        <i class="fas fa-search" aria-hidden="true"></i>
+                        <input type="search" name="q" value="{{ filters.q }}" placeholder="جستجو فایل…" autocomplete="off" aria-label="جستجو">
+                    </label>
+                    <button type="button" class="ws-mob-search-bar__btn ws-mob-search-bar__btn--filter" aria-controls="dsFilterDetails" aria-expanded="{% if has_filters %}true{% else %}false{% endif %}" data-ws-mob-filter-toggle>
                         <i class="fas fa-sliders" aria-hidden="true"></i>
-                        <span>فیلتر و جستجو</span>
-                        {% if has_filters %}<em class="mk-filing-mob-filter-badge">فعال</em>{% endif %}
-                        <i class="fas fa-chevron-down mk-filing-mob-filter-chevron" aria-hidden="true"></i>
-                    </summary>
-                    <div class="mk-filing-filters-sheet">
-                        <label class="mk-filter-search mk-filing-search">
-                            <i class="fas fa-search" aria-hidden="true"></i>
-                            <input type="search" name="q" value="{{ filters.q }}" placeholder="جستجو نام، شهر، نوع..." autocomplete="off" aria-label="جستجو">
-                        </label>
+                        <span>فیلتر</span>
+                        {% if has_filters %}<em class="ws-mob-search-bar__badge" aria-hidden="true"></em>{% endif %}
+                    </button>
+                    <button type="button" class="ws-mob-search-bar__btn ws-mob-search-bar__btn--sort" aria-controls="dsFilterDetails" data-ws-mob-sort-toggle title="مرتب‌سازی و نوع">
+                        <i class="fas fa-arrow-down-wide-short" aria-hidden="true"></i>
+                        <span>مرتب</span>
+                    </button>
+                </div>
+                <details id="dsFilterDetails" class="mk-filing-mob-filter-details mk-filing-mob-filter-details--drawer{% if has_filters %} is-active{% endif %}">
+                    <summary class="mk-filing-mob-filter-trigger" hidden>فیلتر</summary>
+                    <div class="mk-filing-filters-sheet mk-filing-filters-sheet--drawer">
                         <select name="tx" class="mk-filter-select" aria-label="نوع معامله">
                             <option value="">همه معاملات</option>
                             <option value="sale" {% if filters.tx == 'sale' %}selected{% endif %}>فروش</option>
@@ -126,16 +132,16 @@
                             <option value="csv" {% if filters.format == 'csv' %}selected{% endif %}>CSV</option>
                             <option value="json" {% if filters.format == 'json' %}selected{% endif %}>JSON</option>
                         </select>
-                        <div class="mk-filing-filter-actions">
+                        <div class="mk-filing-filter-actions mk-filing-filter-actions--drawer">
                             <button type="submit" class="mk-filing-filter-btn">
-                                <i class="fas fa-sliders" aria-hidden="true"></i> اعمال
+                                <i class="fas fa-check" aria-hidden="true"></i> اعمال
                             </button>
                             {% if has_filters %}
                             <a href="{% url 'workspace:dataset_list' %}{% if view_mode != 'auto' %}?view={{ view_mode }}{% endif %}" class="mk-filing-filter-clear" title="پاک کردن فیلترها">
                                 <i class="fas fa-times" aria-hidden="true"></i>
                             </a>
                             {% endif %}
-                            <div class="mk-filing-view-toggle" role="group" aria-label="نمایش">
+                            <div class="mk-filing-view-toggle mk-filing-view-toggle--drawer" role="group" aria-label="نمایش">
                                 <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}view=table" class="mk-filing-view-btn mk-filing-view-btn--table{% if view_mode == 'table' %} is-active{% endif %}" title="جدول"><i class="fas fa-table" aria-hidden="true"></i></a>
                                 <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}view=grid" class="mk-filing-view-btn mk-filing-view-btn--grid{% if view_mode == 'grid' %} is-active{% endif %}" title="کارت"><i class="fas fa-th-large" aria-hidden="true"></i></a>
                             </div>
@@ -355,6 +361,19 @@
     } else if (typeof desktop.addListener === 'function') {
         desktop.addListener(syncFilterDetails);
     }
+    document.querySelectorAll('[data-ws-mob-filter-toggle], [data-ws-mob-sort-toggle]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            if (desktop.matches) return;
+            var open = details.hasAttribute('open');
+            if (open) {
+                details.removeAttribute('open');
+                btn.setAttribute('aria-expanded', 'false');
+            } else {
+                details.setAttribute('open', '');
+                btn.setAttribute('aria-expanded', 'true');
+            }
+        });
+    });
 })();
 </script>
 {% if ai_enabled and has_bot_license %}

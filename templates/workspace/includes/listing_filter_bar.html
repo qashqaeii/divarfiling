@@ -6,11 +6,23 @@
     <input type="hidden" name="view" value="{{ listing_view_mode }}">
     {% endif %}
     <div class="mk-filter-primary">
-        <label class="mk-filter-search mk-filter-search-grow">
-            {% include 'includes/icon_slot.html' with decor='search' size='inline' only %}
-            <input type="search" name="q" value="{{ filters.q }}" placeholder="جستجو در عنوان…" autocomplete="off" aria-label="جستجو">
-        </label>
-        <select name="neighborhood" class="mk-filter-select" aria-label="محله">
+        <div class="ws-mob-search-bar ws-mob-search-bar--listing">
+            <label class="mk-filter-search mk-filter-search-grow ws-mob-search-bar__search">
+                {% include 'includes/icon_slot.html' with decor='search' size='inline' only %}
+                <input type="search" name="q" value="{{ filters.q }}" placeholder="جستجو فایل…" autocomplete="off" aria-label="جستجو">
+            </label>
+            <button type="button" class="ws-mob-search-bar__btn ws-mob-search-bar__btn--filter" id="wsAdvToggleMob" aria-expanded="{% if filters_open %}true{% else %}false{% endif %}" aria-controls="wsAdvPanel">
+                <i class="fas fa-sliders" aria-hidden="true"></i>
+                <span>فیلتر</span>
+                {% if advanced_filter_count %}<em class="ws-mob-search-bar__badge" aria-hidden="true"></em>{% endif %}
+            </button>
+            <button type="button" class="ws-mob-search-bar__btn ws-mob-search-bar__btn--sort" id="wsMobSortFocus" aria-label="مرتب‌سازی">
+                <i class="fas fa-arrow-down-wide-short" aria-hidden="true"></i>
+                <span>مرتب</span>
+            </button>
+        </div>
+        <div class="mk-filter-primary__fields">
+        <select name="neighborhood" class="mk-filter-select mk-filter-select--neighborhood" aria-label="محله">
             <option value="">همه محله‌ها</option>
             {% for nb in neighborhoods %}<option value="{{ nb }}" {% if filters.neighborhood == nb %}selected{% endif %}>{{ nb }}</option>{% endfor %}
         </select>
@@ -21,7 +33,8 @@
             <option value="disguised_consultant" {% if filters.consultant == 'disguised_consultant' %}selected{% endif %}>مشاور پنهان</option>
             <option value="0" {% if filters.consultant == '0' %}selected{% endif %}>شخصی</option>
         </select>
-        <div class="mk-filter-actions">
+        </div>
+        <div class="mk-filter-actions mk-filter-actions--desk">
             <button type="button" class="mk-filter-toggle" id="wsAdvToggle" aria-expanded="{% if filters_open %}true{% else %}false{% endif %}" aria-controls="wsAdvPanel">
                 {% include 'includes/icon_slot.html' with decor='filter' size='inline' only %}
                 <span>فیلتر پیشرفته</span>

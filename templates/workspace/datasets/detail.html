@@ -407,6 +407,17 @@
     advToggle?.addEventListener('click', function () {
         setFilterPanel(advPanel.hidden);
     });
+    document.getElementById('wsAdvToggleMob')?.addEventListener('click', function () {
+        setFilterPanel(advPanel.hidden);
+    });
+    document.getElementById('wsMobSortFocus')?.addEventListener('click', function () {
+        setFilterPanel(true);
+        const nb = document.querySelector('.mk-filter-select--neighborhood');
+        if (nb) {
+            nb.focus();
+            try { nb.showPicker(); } catch (e) { /* unsupported */ }
+        }
+    });
     if (advPanel && !advPanel.hidden) setFilterPanel(true);
 
     initListingEdit({

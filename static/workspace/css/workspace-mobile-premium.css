@@ -11,16 +11,19 @@
         --mobile-title: 18px;
         --mobile-section: 15px;
         --mobile-card: 16px;
+        --mobile-card-title: 15px;
+        --mobile-price: 16px;
         --mobile-body: 13px;
         --mobile-meta: 12px;
         --mobile-secondary: 11px;
 
-        /* Card system v7 */
-        --ws-mob-thumb: 88px;
-        --ws-mob-thumb-sm: 72px;
+        /* Card system v8 */
+        --ws-mob-thumb: 96px;
+        --ws-mob-thumb-sm: 56px;
         --ws-mob-btn-h: 36px;
         --ws-mob-btn-radius: 10px;
-        --ws-mob-card-pad-list: 12px;
+        --ws-mob-card-pad-list: 10px;
+        --ws-mob-card-max-h: 150px;
 
         /* Layout tokens */
         --ws-mob-gutter: 16px;
@@ -2720,6 +2723,383 @@
         font-size: var(--mobile-secondary) !important;
         border-radius: var(--ws-mob-btn-radius) !important;
     }
+
+    /* ═══ CARD SYSTEM v8 — Real Estate Native App ═══ */
+
+    /* ── Mobile search bar (search + filter + sort) ── */
+    .ws-mob-search-bar {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        width: 100%;
+    }
+
+    .ws-mob-search-bar__search {
+        flex: 1 1 auto;
+        min-width: 0;
+        display: flex !important;
+        align-items: center;
+        gap: 8px;
+        min-height: 40px !important;
+        height: 40px !important;
+        padding: 0 12px !important;
+        margin: 0 !important;
+        border-radius: 12px !important;
+        border: 1px solid var(--ws-mob-card-border) !important;
+        background: var(--ws-mob-card-bg) !important;
+        box-shadow: none !important;
+    }
+
+    .ws-mob-search-bar__search input {
+        flex: 1 1 auto;
+        min-width: 0;
+        border: none !important;
+        background: transparent !important;
+        font-size: var(--mobile-meta) !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+    }
+
+    .ws-mob-search-bar__btn {
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        min-width: var(--ws-mob-btn-h);
+        height: var(--ws-mob-btn-h);
+        padding: 0 10px;
+        border-radius: var(--ws-mob-btn-radius);
+        border: 1px solid var(--ws-mob-card-border);
+        background: var(--ws-mob-card-bg);
+        color: var(--ws-text-secondary);
+        font-family: inherit;
+        font-size: var(--mobile-secondary);
+        font-weight: 600;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        position: relative;
+    }
+
+    .ws-mob-search-bar__btn i {
+        font-size: 0.8125rem;
+    }
+
+    .ws-mob-search-bar__btn:active {
+        opacity: 0.88;
+        transform: scale(0.98);
+    }
+
+    .ws-mob-search-bar__badge {
+        position: absolute;
+        top: 6px;
+        inset-inline-end: 6px;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--ws-primary);
+    }
+
+    .mk-filing-mobile .mk-filing-mob-filter-details--drawer:not([open]) > .mk-filing-filters-sheet--drawer {
+        display: none !important;
+    }
+
+    .mk-filing-mobile .mk-filing-mob-filter-details--drawer[open] > .mk-filing-filters-sheet--drawer {
+        display: flex !important;
+        flex-direction: column;
+        gap: 8px;
+        margin-top: 8px;
+        padding: 10px 12px !important;
+        border-radius: var(--ws-mob-radius);
+        border: 1px solid var(--ws-mob-card-border);
+        background: var(--ws-mob-card-bg);
+        box-shadow: var(--ws-mob-shadow);
+    }
+
+    .mk-filing-mobile .mk-filing-mob-filter-details--drawer .mk-filter-select {
+        width: 100% !important;
+        min-height: 34px !important;
+        height: 34px !important;
+        font-size: var(--mobile-meta) !important;
+        border-radius: 10px !important;
+    }
+
+    .ws-ds-mobile .mk-filter-primary__fields {
+        display: none !important;
+    }
+
+    .ws-ds-mobile .mk-filter-actions--desk {
+        display: none !important;
+    }
+
+    .ws-ds-mobile .mk-filter-bar-listing {
+        padding: 0 !important;
+        gap: 0 !important;
+    }
+
+    /* ── Listing card native (property feed) ── */
+    .ws-ds-mobile .mk-lcard-native {
+        display: grid !important;
+        grid-template-columns: var(--ws-mob-thumb) minmax(0, 1fr) !important;
+        grid-template-rows: auto auto auto auto auto !important;
+        column-gap: 10px !important;
+        row-gap: 1px !important;
+        padding: var(--ws-mob-card-pad-list) 12px !important;
+        max-height: var(--ws-mob-card-max-h) !important;
+        overflow: hidden !important;
+        align-content: start !important;
+    }
+
+    .ws-ds-mobile .mk-lcard-native .mk-lcard-cover {
+        grid-column: 1 !important;
+        grid-row: 1 / 6 !important;
+        width: var(--ws-mob-thumb) !important;
+        height: var(--ws-mob-thumb) !important;
+        min-height: var(--ws-mob-thumb) !important;
+        max-height: var(--ws-mob-thumb) !important;
+        align-self: start !important;
+    }
+
+    .ws-ds-mobile .mk-lcard-native .mk-lcard-cover-top {
+        inset-inline: auto 4px !important;
+        inset-block: 4px auto !important;
+        align-items: flex-end !important;
+    }
+
+    .ws-ds-mobile .mk-lcard-native .mk-lcard-body,
+    .ws-ds-mobile .mk-lcard-native .mk-lcard-native__body {
+        display: contents !important;
+    }
+
+    .ws-ds-mobile .mk-lcard-native .mk-lcard-native__kpi {
+        grid-column: 2 !important;
+        grid-row: 1 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        gap: 0 !important;
+    }
+
+    .ws-ds-mobile .mk-lcard-native .mk-lcard-native__kpi .mk-lcard-price:first-child strong,
+    .ws-ds-mobile .mk-lcard-native .mk-lcard-native__kpi .mk-lcard-price:first-child .mk-money {
+        font-size: var(--mobile-price) !important;
+        font-weight: 800 !important;
+        color: var(--ws-primary) !important;
+        letter-spacing: -0.02em;
+    }
+
+    .ws-ds-mobile .mk-lcard-native .mk-lcard-native__kpi .mk-lcard-price:not(:first-child):not(.mk-lcard-price--area) {
+        display: none !important;
+    }
+
+    .ws-ds-mobile .mk-lcard-native .mk-lcard-native__kpi .mk-lcard-price--area {
+        display: none !important;
+    }
+
+    .ws-ds-mobile .mk-lcard-native .mk-lcard-native__head {
+        grid-column: 2 !important;
+        grid-row: 2 !important;
+        min-width: 0 !important;
+    }
+
+    .ws-ds-mobile .mk-lcard-native .mk-lcard-title a {
+        font-size: var(--mobile-card-title) !important;
+        font-weight: 700 !important;
+        line-height: 1.25 !important;
+        -webkit-line-clamp: 2 !important;
+    }
+
+    .ws-ds-mobile .mk-lcard-native .mk-lcard-native__tags {
+        display: none !important;
+    }
+
+    .ws-ds-mobile .mk-lcard-native .mk-lcard-native__loc {
+        grid-column: 2 !important;
+        grid-row: 3 !important;
+        margin: 0 !important;
+        gap: 6px !important;
+    }
+
+    .ws-ds-mobile .mk-lcard-native .mk-lcard-native__loc .mk-lcard-chip--loc {
+        font-size: var(--mobile-meta) !important;
+        color: var(--ws-text-secondary) !important;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .ws-ds-mobile .mk-lcard-native .mk-lcard-native__status {
+        flex-shrink: 0;
+        font-size: var(--mobile-secondary) !important;
+        padding: 1px 6px !important;
+        border-radius: 6px !important;
+        background: color-mix(in srgb, var(--ws-surface-2) 50%, var(--ws-mob-card-bg)) !important;
+        border: 1px solid var(--ws-mob-card-border) !important;
+    }
+
+    .ws-ds-mobile .mk-lcard-native .mk-lcard-native__facts {
+        grid-column: 2 !important;
+        grid-row: 4 !important;
+        display: flex !important;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+        margin: 0;
+        font-size: var(--mobile-meta) !important;
+        color: var(--ws-text-muted) !important;
+    }
+
+    .ws-ds-mobile .mk-lcard-native .mk-lcard-native__fact {
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        white-space: nowrap;
+    }
+
+    .ws-ds-mobile .mk-lcard-native .mk-lcard-native__fact i {
+        font-size: 0.625rem;
+        opacity: 0.65;
+    }
+
+    .ws-ds-mobile .mk-lcard-native .mk-lcard-native__specs-desk {
+        display: none !important;
+    }
+
+    .ws-ds-mobile .mk-lcard-native .mk-lcard-native__actions {
+        grid-column: 2 !important;
+        grid-row: 5 !important;
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        gap: 6px !important;
+        padding: 3px 0 0 !important;
+        margin: 0 !important;
+    }
+
+    .ws-ds-mobile .mk-lcard-native .mk-lcard-native__cta {
+        flex: 0 1 auto !important;
+        width: auto !important;
+        min-height: var(--ws-mob-btn-h) !important;
+        height: var(--ws-mob-btn-h) !important;
+        padding: 0 10px !important;
+        font-size: var(--mobile-meta) !important;
+        font-weight: 600 !important;
+        gap: 4px !important;
+        box-shadow: none !important;
+        background-image: none !important;
+    }
+
+    .ws-ds-mobile .mk-lcard-native .mk-lcard-native__cta i {
+        font-size: 0.6875rem;
+        opacity: 0.9;
+    }
+
+    .ws-ds-mobile .mk-listing-cards-shell {
+        gap: 6px !important;
+    }
+
+    /* ── Dataset card native (collection row — not property card) ── */
+    .mk-filing-mobile .mk-ds-card-native .mk-ds-card-glass {
+        display: grid !important;
+        grid-template-columns: var(--ws-mob-thumb-sm) minmax(0, 1fr) auto !important;
+        grid-template-rows: auto auto !important;
+        gap: 2px 10px !important;
+        padding: 10px 12px !important;
+        min-height: 72px !important;
+        max-height: none !important;
+        border-inline-start: 3px solid var(--ws-primary) !important;
+        border-radius: 12px !important;
+    }
+
+    .mk-filing-mobile .mk-ds-card-native .mk-ds-card-cover {
+        grid-column: 1 !important;
+        grid-row: 1 / 3 !important;
+        width: var(--ws-mob-thumb-sm) !important;
+        height: var(--ws-mob-thumb-sm) !important;
+        min-height: var(--ws-mob-thumb-sm) !important;
+        max-height: var(--ws-mob-thumb-sm) !important;
+        border-radius: 10px !important;
+        align-self: center !important;
+    }
+
+    .mk-filing-mobile .mk-ds-card-native .mk-ds-card-cover-top {
+        display: none !important;
+    }
+
+    .mk-filing-mobile .mk-ds-card-native .mk-ds-card-title {
+        grid-column: 2 !important;
+        grid-row: 1 !important;
+        font-size: 14px !important;
+        font-weight: 600 !important;
+        -webkit-line-clamp: 1 !important;
+    }
+
+    .mk-filing-mobile .mk-ds-card-native .mk-ds-card-chips {
+        grid-column: 2 !important;
+        grid-row: 2 !important;
+        gap: 6px !important;
+    }
+
+    .mk-filing-mobile .mk-ds-card-native .mk-ds-chip--dim {
+        display: none !important;
+    }
+
+    .mk-filing-mobile .mk-ds-card-native .mk-ds-card-foot {
+        grid-column: 3 !important;
+        grid-row: 1 / 3 !important;
+        flex-direction: column !important;
+        align-items: flex-end !important;
+        justify-content: center !important;
+        gap: 4px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: none !important;
+        align-self: center !important;
+    }
+
+    .mk-filing-mobile .mk-ds-card-native .mk-ds-card-date {
+        font-size: var(--mobile-secondary) !important;
+        text-align: end;
+        max-width: 4.5rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .mk-filing-mobile .mk-ds-card-native .mk-ds-card-act--open {
+        min-height: 32px !important;
+        height: 32px !important;
+        padding: 0 10px !important;
+        font-size: var(--mobile-secondary) !important;
+    }
+
+    .mk-filing-mobile .mk-ds-card-native .mk-ds-card-act:not(.mk-ds-card-act--open) {
+        width: 32px !important;
+        height: 32px !important;
+        min-width: 32px !important;
+        min-height: 32px !important;
+    }
+
+    .mk-filing-mobile .mk-ds-card-native .mk-ds-card-acts .mk-ds-card-act:nth-child(4) {
+        display: none !important;
+    }
+
+    /* Safe bottom clearance — content never under nav/dock */
+    body.ws-body:has(.mk-filing-mobile) .ws-content {
+        padding-bottom: calc(var(--ws-mob-nav-offset) + var(--ws-mob-gutter)) !important;
+    }
+
+    body.ws-body:has(.ws-ds-mobile) .ws-content {
+        padding-bottom: calc(var(--ws-mob-dock-clearance) + var(--ws-mob-gutter)) !important;
+    }
+
+    .mk-filing-mobile.mk-page {
+        padding-bottom: 0 !important;
+    }
+
+    .ws-ds-mobile.mk-page {
+        padding-bottom: 0 !important;
+    }
 }
 
 /* ─── 430px — mid mobile ─── */
@@ -2780,6 +3160,37 @@
     .mk-hub-metric,
     .crm-dash-kpi {
         min-width: 0 !important;
+    }
+}
+
+@media (min-width: 769px) {
+    .ws-mob-search-bar__btn {
+        display: none !important;
+    }
+
+    .ws-mob-search-bar {
+        display: flex !important;
+        width: 100%;
+    }
+
+    .mk-filing-mobile .mk-filing-mob-filter-details--drawer:not([open]) > .mk-filing-filters-sheet--drawer {
+        display: grid !important;
+    }
+
+    .mk-filter-primary__fields {
+        display: contents !important;
+    }
+
+    .mk-filter-actions--desk {
+        display: flex !important;
+    }
+
+    .mk-lcard-native__facts {
+        display: none !important;
+    }
+
+    .mk-lcard-native__specs-desk {
+        display: flex !important;
     }
 }
 

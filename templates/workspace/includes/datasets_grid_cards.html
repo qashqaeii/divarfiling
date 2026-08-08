@@ -2,7 +2,7 @@
 <div class="mk-ds-grid">
     {% for ds in datasets %}
     {% with tx=ds.transaction_type|ws_tx_profile %}
-    <article class="mk-ds-card mk-ds-card--{{ tx.mode|default:'other' }}{% if ds.cover_image %} mk-ds-card--has-cover{% endif %}" data-id="{{ ds.id }}">
+    <article class="mk-ds-card mk-ds-card-native mk-ds-card--{{ tx.mode|default:'other' }}{% if ds.cover_image %} mk-ds-card--has-cover{% endif %}" data-id="{{ ds.id }}">
         <label class="mk-ds-card-check" title="انتخاب">
             <input type="checkbox" class="mk-checkbox mk-ds-check" value="{{ ds.id }}" aria-label="انتخاب {{ ds.name }}">
         </label>

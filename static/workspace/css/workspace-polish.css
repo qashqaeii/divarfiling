@@ -777,7 +777,8 @@ body.ws-body {
         display: block !important;
     }
 
-    .mk-filing-pro.mk-filing-mobile .mk-filing-mob-filter-details {
+    .mk-filing-pro.mk-filing-mobile .mk-filing-mob-filter-details,
+    .mk-filing-pro.mk-filing-mobile .mk-filing-mob-filter-details:not([open]) {
         display: block !important;
         border: none;
         background: transparent;
@@ -789,13 +790,21 @@ body.ws-body {
         display: none !important;
     }
 
-    .mk-filing-pro.mk-filing-mobile .mk-filing-filters-sheet {
+    .mk-filing-pro.mk-filing-mobile .mk-filing-filters-sheet,
+    .mk-filing-pro.mk-filing-mobile .mk-filing-mob-filter-details:not([open]) > .mk-filing-filters-sheet {
         display: grid !important;
         grid-template-columns: minmax(0, 1.45fr) repeat(3, minmax(0, 0.9fr)) auto;
         gap: var(--ds-space-3);
         align-items: center;
         width: 100%;
         padding: 0;
+        visibility: visible !important;
+        min-height: 36px;
+    }
+
+    .mk-filing-pro.mk-filing-mobile #dsFilterForm {
+        display: block !important;
+        min-height: 36px;
     }
 }
 

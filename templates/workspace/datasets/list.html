@@ -5,7 +5,7 @@
 {% block mobile_bar_title %}فایلینگ دیوار{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-mobile.css' %}?v=4">
+<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-mobile.css' %}?v=5">
 {% include 'workspace/academy/includes/academy_assets_css.html' %}
 {% endblock %}
 
@@ -96,7 +96,7 @@
         <form method="get" class="mk-filter-form mk-filter-form--3 mk-filing-filter" id="dsFilterForm">
             {% if view_mode != 'auto' %}<input type="hidden" name="view" value="{{ view_mode }}">{% endif %}
             <div class="mk-filing-mob-filter-bar">
-                <details class="mk-filing-mob-filter-details{% if has_filters %} is-active{% endif %}"{% if has_filters %} open{% endif %}>
+                <details id="dsFilterDetails" class="mk-filing-mob-filter-details{% if has_filters %} is-active{% endif %}" open>
                     <summary class="mk-filing-mob-filter-trigger">
                         <i class="fas fa-sliders" aria-hidden="true"></i>
                         <span>فیلتر و جستجو</span>
@@ -337,6 +337,26 @@
 {% endblock %}
 
 {% block extra_js %}
+<script>
+(function () {
+    var details = document.getElementById('dsFilterDetails');
+    if (!details) return;
+    var desktop = window.matchMedia('(min-width: 769px)');
+    function syncFilterDetails() {
+        if (desktop.matches) {
+            details.setAttribute('open', '');
+        } else if (!details.classList.contains('is-active')) {
+            details.removeAttribute('open');
+        }
+    }
+    syncFilterDetails();
+    if (typeof desktop.addEventListener === 'function') {
+        desktop.addEventListener('change', syncFilterDetails);
+    } else if (typeof desktop.addListener === 'function') {
+        desktop.addListener(syncFilterDetails);
+    }
+})();
+</script>
 {% if ai_enabled and has_bot_license %}
 <script src="{% static 'workspace/js/ai.js' %}?v=6"></script>
 {% endif %}

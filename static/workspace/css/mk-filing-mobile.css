@@ -14,7 +14,9 @@
         display: block !important;
         width: 100%;
     }
-    .mk-filing-mobile .mk-filing-mob-filter-details {
+    /* details must be open on desktop — summary is hidden so closed = zero height */
+    .mk-filing-mobile .mk-filing-mob-filter-details,
+    .mk-filing-mobile .mk-filing-mob-filter-details[open] {
         display: block !important;
         border: none;
         background: transparent;
@@ -32,10 +34,15 @@
         align-items: center;
         width: 100%;
         padding: 0;
+        visibility: visible !important;
+        height: auto !important;
+        overflow: visible !important;
     }
-    .mk-filing-mobile .mk-filing-filter {
-        display: block;
+    .mk-filing-mobile .mk-filing-filter,
+    .mk-filing-mobile #dsFilterForm {
+        display: block !important;
         width: 100%;
+        min-height: 36px;
     }
 }
 

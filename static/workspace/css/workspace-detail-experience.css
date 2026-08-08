@@ -1,0 +1,808 @@
+/* ═══════════════════════════════════════════════════════════
+   Workspace Detail Experience — CRM detail pages polish
+   Scoped to Contact / Property / Deal detail roots only
+   Loads after workspace-experience.css — UI only, no layout shift
+   ═══════════════════════════════════════════════════════════ */
+
+:is(.crm-contact-detail-pro, .crm-prop-detail-v2, .crm-deal-detail-pro) {
+    --crm-xp-radius: var(--ds-radius-card, 16px);
+    --crm-xp-radius-sm: var(--ds-radius-sm, 8px);
+    --crm-xp-shadow: var(--ds-shadow-card, 0 1px 3px rgba(15, 23, 42, 0.06));
+    --crm-xp-shadow-hover: 0 2px 8px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+    --crm-xp-ease: cubic-bezier(0.4, 0, 0.2, 1);
+    --crm-xp-duration: 180ms;
+    gap: var(--ds-space-3, 12px);
+}
+
+[data-theme="dark"] :is(.crm-contact-detail-pro, .crm-prop-detail-v2, .crm-deal-detail-pro) {
+    --crm-xp-shadow-hover: 0 4px 14px rgba(0, 0, 0, 0.22);
+}
+
+/* ─── 1. Hero sections — SaaS profile feel ─── */
+
+/* Contact hero */
+.crm-contact-detail-pro .crm-contact-hero {
+    margin-bottom: 0;
+    border-radius: var(--crm-xp-radius);
+    border: 1px solid var(--ws-border);
+    box-shadow: var(--crm-xp-shadow);
+    transition:
+        box-shadow var(--crm-xp-duration) var(--crm-xp-ease),
+        border-color var(--crm-xp-duration) var(--crm-xp-ease);
+}
+
+.crm-contact-detail-pro .crm-contact-hero__mesh {
+    opacity: 0.55;
+}
+
+.crm-contact-detail-pro .crm-contact-hero__accent {
+    height: 2px;
+    background: linear-gradient(
+        90deg,
+        var(--ws-accent-ai, #7c3aed) 0%,
+        var(--ws-accent-info, #2563eb) 50%,
+        var(--ws-accent-growth, #16a34a) 100%
+    );
+}
+
+.crm-contact-detail-pro .crm-contact-hero__top {
+    padding: var(--ds-space-4, 16px) var(--ds-space-5, 24px);
+    gap: var(--ds-space-3, 12px);
+}
+
+.crm-contact-detail-pro .crm-contact-hero__title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: -0.035em;
+    line-height: 1.25;
+}
+
+.crm-contact-detail-pro .crm-contact-hero__crumb {
+    font-size: 0.6875rem;
+    font-weight: 500;
+    margin-bottom: var(--ds-space-2, 8px);
+}
+
+.crm-contact-detail-pro .crm-contact-hero__badges {
+    gap: var(--ds-space-2, 8px);
+}
+
+.crm-contact-detail-pro .crm-contact-hero__type {
+    background: var(--ws-surface-2);
+    color: var(--ws-text-secondary);
+    border-color: var(--ws-border);
+    font-size: 0.625rem;
+    font-weight: 600;
+}
+
+.crm-contact-detail-pro .crm-contact-hero__status,
+.crm-contact-detail-pro .crm-contact-hero__status-select {
+    background: var(--ws-accent-ai-soft, rgba(124, 58, 237, 0.1));
+    color: var(--ws-accent-ai, #7c3aed);
+    border-color: color-mix(in srgb, var(--ws-accent-ai) 16%, transparent);
+    font-size: 0.625rem;
+    font-weight: 600;
+}
+
+.crm-contact-detail-pro .crm-contact-hero__priority {
+    background: color-mix(in srgb, var(--ws-accent-warning, #d97706) 10%, transparent);
+    color: var(--ws-accent-warning, #d97706);
+    border-color: color-mix(in srgb, var(--ws-accent-warning) 18%, transparent);
+    font-size: 0.625rem;
+    font-weight: 600;
+}
+
+.crm-contact-detail-pro .crm-contact-hero__chip {
+    font-size: 0.6875rem;
+    font-weight: 500;
+    padding: 4px 10px;
+    border-radius: 999px;
+    border-color: var(--ws-border);
+    background: var(--ws-surface);
+    transition:
+        border-color var(--crm-xp-duration) var(--crm-xp-ease),
+        background var(--crm-xp-duration) var(--crm-xp-ease);
+}
+
+.crm-contact-detail-pro .crm-contact-hero__chip:hover {
+    border-color: color-mix(in srgb, var(--ws-accent-ai) 20%, var(--ws-border));
+    background: var(--ws-accent-ai-soft);
+    color: var(--ws-text);
+}
+
+.crm-contact-detail-pro .crm-contact-hero__actions-row {
+    padding: 3px;
+    border-radius: var(--crm-xp-radius-sm);
+    border-color: var(--ws-border);
+    background: var(--ws-surface-2);
+    box-shadow: none;
+    backdrop-filter: none;
+}
+
+.crm-contact-detail-pro .crm-contact-hero__edit-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: var(--crm-xp-radius-sm);
+    transition:
+        border-color var(--crm-xp-duration) var(--crm-xp-ease),
+        background var(--crm-xp-duration) var(--crm-xp-ease),
+        color var(--crm-xp-duration) var(--crm-xp-ease);
+}
+
+.crm-contact-detail-pro .crm-contact-hero__edit-btn:hover {
+    transform: none;
+}
+
+.crm-contact-detail-pro .crm-contact-hero__edit-btn--primary {
+    background: var(--ws-primary);
+    border-color: var(--ws-primary);
+    box-shadow: none;
+}
+
+.crm-contact-detail-pro .crm-contact-hero__edit-btn--primary:hover {
+    background: var(--ws-primary-hover);
+    filter: none;
+    box-shadow: var(--crm-xp-shadow-hover);
+}
+
+.crm-contact-detail-pro .crm-contact-hero__edit-btn--ai {
+    background: var(--ws-accent-ai-soft);
+    border-color: color-mix(in srgb, var(--ws-accent-ai) 18%, transparent);
+}
+
+.crm-contact-detail-pro .crm-contact-hero__edit-btn--ai:hover {
+    background: color-mix(in srgb, var(--ws-accent-ai) 14%, var(--ws-surface));
+}
+
+.crm-contact-detail-pro .crm-contact-hero__quick,
+.crm-contact-detail-pro .crm-contact-hero__quick-form button {
+    width: 32px;
+    height: 32px;
+    border-radius: var(--crm-xp-radius-sm);
+    background: transparent;
+    border-color: transparent;
+}
+
+.crm-contact-detail-pro .crm-contact-hero__quick:hover,
+.crm-contact-detail-pro .crm-contact-hero__quick-form button:hover {
+    transform: none;
+    background: var(--ws-surface);
+    border-color: var(--ws-border);
+}
+
+.crm-contact-detail-pro .crm-contact-hero__back {
+    border-radius: var(--crm-xp-radius-sm);
+    transition:
+        border-color var(--crm-xp-duration) var(--crm-xp-ease),
+        background var(--crm-xp-duration) var(--crm-xp-ease),
+        color var(--crm-xp-duration) var(--crm-xp-ease);
+}
+
+.crm-contact-detail-pro .crm-contact-hero__back:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+.crm-contact-detail-pro .crm-contact-hero__team {
+    padding: var(--ds-space-3, 12px) var(--ds-space-5, 24px);
+    background: var(--ws-surface-2);
+    border-top-color: var(--ws-border);
+}
+
+/* Property hero */
+.crm-prop-detail-v2 .crm-prop-hero {
+    border-radius: var(--crm-xp-radius);
+    border-color: var(--ws-border);
+    box-shadow: var(--crm-xp-shadow);
+}
+
+.crm-prop-detail-v2 .crm-prop-hero-orb {
+    opacity: 0.35;
+}
+
+.crm-prop-detail-v2 .crm-prop-hero-nav {
+    padding: var(--ds-space-3, 12px) var(--ds-space-4, 16px);
+    background: var(--ws-surface);
+    border-bottom-color: var(--ws-border);
+}
+
+.crm-prop-detail-v2 .crm-prop-hero-title,
+.crm-prop-detail-v2 .crm-prop-title {
+    font-size: 1.375rem;
+    font-weight: 700;
+    letter-spacing: -0.035em;
+    line-height: 1.3;
+}
+
+.crm-prop-detail-v2 .crm-prop-badge {
+    font-size: 0.625rem;
+    font-weight: 600;
+    padding: 3px 8px;
+}
+
+.crm-prop-detail-v2 .crm-prop-badge--status {
+    background: var(--ws-accent-growth-soft);
+    color: var(--ws-accent-growth);
+    border-color: color-mix(in srgb, var(--ws-accent-growth) 18%, transparent);
+}
+
+.crm-prop-detail-v2 .crm-prop-badge--deal {
+    background: var(--ws-accent-info-soft);
+    color: var(--ws-accent-info);
+    border-color: color-mix(in srgb, var(--ws-accent-info) 18%, transparent);
+}
+
+.crm-prop-detail-v2 .crm-prop-badge--pub {
+    background: var(--ws-accent-ai-soft);
+    color: var(--ws-accent-ai);
+    border-color: color-mix(in srgb, var(--ws-accent-ai) 15%, transparent);
+}
+
+.crm-prop-detail-v2 .crm-prop-badge--type {
+    background: var(--ws-surface-2);
+    color: var(--ws-text-secondary);
+    border-color: var(--ws-border);
+}
+
+.crm-prop-detail-v2 .crm-prop-hero-act {
+    height: 34px;
+    padding: 0 12px;
+    border-radius: var(--crm-xp-radius-sm);
+    font-size: 0.75rem;
+    font-weight: 500;
+    transition:
+        border-color var(--crm-xp-duration) var(--crm-xp-ease),
+        background var(--crm-xp-duration) var(--crm-xp-ease),
+        color var(--crm-xp-duration) var(--crm-xp-ease);
+}
+
+.crm-prop-detail-v2 .crm-prop-hero-act:hover {
+    transform: none;
+}
+
+.crm-prop-detail-v2 .crm-prop-hero-act--primary {
+    background: var(--ws-primary);
+    border-color: var(--ws-primary);
+    color: #fff;
+    box-shadow: none;
+}
+
+.crm-prop-detail-v2 .crm-prop-hero-act--primary:hover {
+    background: var(--ws-primary-hover);
+    color: #fff;
+}
+
+.crm-prop-detail-v2 .crm-prop-hero-act--accent {
+    background: var(--ws-accent-ai-soft);
+    border-color: color-mix(in srgb, var(--ws-accent-ai) 18%, transparent);
+    color: var(--ws-accent-ai);
+}
+
+.crm-prop-detail-v2 .crm-prop-hero-back {
+    border-radius: var(--crm-xp-radius-sm);
+}
+
+.crm-prop-detail-v2 .crm-prop-hero-back:hover {
+    transform: none;
+}
+
+.crm-prop-detail-v2 .crm-prop-hero--rent {
+    --crm-hero-accent: var(--ws-accent-growth, #16a34a);
+}
+
+.crm-prop-detail-v2 .crm-prop-hero--sale {
+    --crm-hero-accent: var(--ws-accent-info, #2563eb);
+}
+
+/* Deal hero / dossier */
+.crm-deal-detail-pro .crm-deal-dossier {
+    border-radius: var(--crm-xp-radius);
+    border-color: var(--ws-border);
+    box-shadow: var(--crm-xp-shadow);
+}
+
+.crm-deal-detail-pro .crm-deal-dossier::before {
+    height: 2px;
+    background: linear-gradient(
+        90deg,
+        var(--ws-accent-ai, #7c3aed),
+        var(--ws-accent-info, #2563eb)
+    );
+}
+
+.crm-deal-detail-pro .crm-deal-dossier-top {
+    padding: var(--ds-space-4, 16px) var(--ds-space-5, 24px);
+}
+
+.crm-deal-detail-pro .crm-deal-title {
+    font-size: 1.375rem;
+    font-weight: 700;
+    letter-spacing: -0.035em;
+    line-height: 1.3;
+}
+
+.crm-deal-detail-pro .crm-deal-stage-badge {
+    background: var(--ws-accent-ai-soft);
+    color: var(--ws-accent-ai);
+    font-size: 0.625rem;
+    font-weight: 600;
+}
+
+.crm-deal-detail-pro .crm-deal-prob-badge {
+    background: var(--ws-accent-info-soft);
+    color: var(--ws-accent-info);
+    font-size: 0.625rem;
+    font-weight: 600;
+}
+
+.crm-deal-detail-pro .crm-deal-link-chip {
+    font-size: 0.6875rem;
+    font-weight: 500;
+    padding: 4px 10px;
+    border-radius: 999px;
+}
+
+.crm-deal-detail-pro .crm-deal-link-chip i {
+    color: var(--ws-accent-ai);
+}
+
+.crm-deal-detail-pro .crm-deal-back {
+    border-radius: var(--crm-xp-radius-sm);
+}
+
+.crm-deal-detail-pro .crm-deal-back:hover {
+    border-color: color-mix(in srgb, var(--ws-accent-ai) 25%, var(--ws-border));
+    background: var(--ws-accent-ai-soft);
+    color: var(--ws-accent-ai);
+}
+
+/* ─── 2. Information cards — unified system ─── */
+:is(.crm-contact-detail-pro, .crm-prop-detail-v2, .crm-deal-detail-pro) :is(
+    .crm-contact-panel,
+    .crm-contact-side-card,
+    .crm-prop-panel,
+    .crm-prop-panel-pro,
+    .crm-deal-panel,
+    .crm-deal-block,
+    .crm-deal-side-card
+) {
+    border-radius: var(--crm-xp-radius);
+    border-color: var(--ws-border);
+    box-shadow: var(--crm-xp-shadow);
+    transition:
+        box-shadow var(--crm-xp-duration) var(--crm-xp-ease),
+        border-color var(--crm-xp-duration) var(--crm-xp-ease);
+}
+
+:is(.crm-contact-detail-pro, .crm-prop-detail-v2, .crm-deal-detail-pro) :is(
+    .crm-contact-panel-head,
+    .crm-prop-panel-pro .crm-prop-panel-head,
+    .crm-deal-panel-head
+) {
+    padding: var(--ds-space-3, 12px) var(--ds-space-4, 16px);
+    background: var(--ws-surface);
+    border-bottom-color: var(--ws-border);
+}
+
+:is(.crm-contact-detail-pro, .crm-prop-detail-v2, .crm-deal-detail-pro) :is(
+    .crm-contact-panel-head-text h2,
+    .crm-prop-panel-head h2,
+    .crm-deal-panel-head-text h2,
+    .crm-contact-side-head h3
+) {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+}
+
+:is(.crm-contact-detail-pro, .crm-prop-detail-v2, .crm-deal-detail-pro) :is(
+    .crm-contact-panel-head-text p,
+    .crm-prop-panel-head p,
+    .crm-deal-panel-head-text p,
+    .crm-contact-side-head p
+) {
+    font-size: 0.6875rem;
+    color: var(--ws-text-muted);
+}
+
+:is(.crm-contact-detail-pro, .crm-prop-detail-v2, .crm-deal-detail-pro) :is(
+    .crm-contact-panel-body,
+    .crm-prop-panel-pro .crm-prop-panel-body,
+    .crm-deal-panel-body
+) {
+    padding: var(--ds-space-4, 16px);
+}
+
+.crm-contact-detail-pro .crm-contact-side-card {
+    padding: var(--ds-space-3, 12px) var(--ds-space-4, 16px);
+    border-radius: var(--crm-xp-radius);
+}
+
+.crm-contact-detail-pro .crm-contact-side-card--followup {
+    border-color: color-mix(in srgb, var(--ws-accent-ai) 16%, var(--ws-border));
+    background: var(--ws-surface);
+}
+
+.crm-contact-detail-pro .crm-contact-side-card--warn {
+    border-color: color-mix(in srgb, var(--ws-accent-warning) 22%, var(--ws-border));
+    background: var(--ws-surface);
+}
+
+.crm-contact-detail-pro .crm-contact-side-card--accent {
+    border-color: color-mix(in srgb, var(--ws-accent-ai) 18%, var(--ws-border));
+    background: var(--ws-surface);
+}
+
+.crm-contact-detail-pro .crm-contact-side-card--prefs {
+    border-color: color-mix(in srgb, var(--ws-accent-growth) 16%, var(--ws-border));
+    background: var(--ws-surface);
+}
+
+/* ─── 3. Action area — primary / secondary hierarchy ─── */
+:is(.crm-contact-detail-pro, .crm-prop-detail-v2, .crm-deal-detail-pro) .crm-dash-act {
+    min-height: 34px;
+    padding: var(--ds-space-2, 8px) var(--ds-space-3, 12px);
+    border-radius: var(--crm-xp-radius-sm);
+    font-size: 0.75rem;
+    font-weight: 500;
+    border-color: var(--ws-border);
+    background: transparent;
+    color: var(--ws-text-secondary);
+    transition:
+        border-color var(--crm-xp-duration) var(--crm-xp-ease),
+        background var(--crm-xp-duration) var(--crm-xp-ease),
+        color var(--crm-xp-duration) var(--crm-xp-ease);
+}
+
+:is(.crm-contact-detail-pro, .crm-prop-detail-v2, .crm-deal-detail-pro) .crm-dash-act:hover {
+    border-color: var(--ws-border);
+    background: var(--ws-surface-2);
+    color: var(--ws-text);
+}
+
+:is(.crm-contact-detail-pro, .crm-prop-detail-v2, .crm-deal-detail-pro) .crm-dash-act--primary {
+    background: var(--ws-primary);
+    border-color: var(--ws-primary);
+    color: #fff;
+    box-shadow: none;
+}
+
+:is(.crm-contact-detail-pro, .crm-prop-detail-v2, .crm-deal-detail-pro) .crm-dash-act--primary:hover {
+    background: var(--ws-primary-hover);
+    color: #fff;
+    box-shadow: var(--crm-xp-shadow-hover);
+}
+
+:is(.crm-contact-detail-pro, .crm-prop-detail-v2, .crm-deal-detail-pro) .crm-dash-act--ghost {
+    border-color: transparent;
+    background: transparent;
+}
+
+:is(.crm-contact-detail-pro, .crm-prop-detail-v2, .crm-deal-detail-pro) .crm-dash-act--ghost:hover {
+    background: var(--ws-surface-2);
+    border-color: var(--ws-border);
+}
+
+:is(.crm-contact-detail-pro, .crm-prop-detail-v2, .crm-deal-detail-pro) .crm-btn--primary {
+    background: var(--ws-primary);
+    border-color: var(--ws-primary);
+}
+
+:is(.crm-contact-detail-pro, .crm-prop-detail-v2, .crm-deal-detail-pro) .crm-deal-cta-win {
+    background: var(--ws-accent-growth);
+    border-color: var(--ws-accent-growth);
+}
+
+/* Icon consistency in detail actions */
+:is(.crm-contact-detail-pro, .crm-prop-detail-v2, .crm-deal-detail-pro) .crm-dash-act .df-decor-icon,
+:is(.crm-contact-detail-pro, .crm-prop-detail-v2, .crm-deal-detail-pro) .crm-prop-hero-act .df-decor-icon {
+    --df-decor-size: 0.875rem;
+}
+
+/* ─── 4. Tabs — workspace-aligned ─── */
+:is(.crm-contact-detail-pro, .crm-prop-detail-v2) .crm-tab-pro {
+    border-radius: var(--crm-xp-radius-sm);
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--ws-text-secondary);
+    transition:
+        background var(--crm-xp-duration) var(--crm-xp-ease),
+        color var(--crm-xp-duration) var(--crm-xp-ease);
+}
+
+:is(.crm-contact-detail-pro, .crm-prop-detail-v2) .crm-tab-pro:hover {
+    background: var(--ws-surface-2);
+    color: var(--ws-text);
+}
+
+:is(.crm-contact-detail-pro, .crm-prop-detail-v2) .crm-tab-pro.active {
+    background: var(--ws-accent-ai-soft);
+    color: var(--ws-accent-ai);
+    font-weight: 600;
+}
+
+:is(.crm-contact-detail-pro, .crm-prop-detail-v2) .crm-tab-pro.active em {
+    background: color-mix(in srgb, var(--ws-accent-ai) 18%, transparent);
+    color: var(--ws-accent-ai);
+}
+
+/* ─── 5. Timeline / activity ─── */
+:is(.crm-contact-detail-pro, .crm-prop-detail-v2) .crm-timeline-pro::before {
+    opacity: 0.2;
+    background: var(--ws-border);
+}
+
+:is(.crm-contact-detail-pro, .crm-prop-detail-v2) .crm-timeline-pro .crm-timeline-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: var(--crm-xp-radius-sm);
+    background: var(--ws-surface-2);
+    color: var(--ws-text-secondary);
+    font-size: 0.6875rem;
+    box-shadow: 0 0 0 2px var(--ws-surface);
+}
+
+:is(.crm-contact-detail-pro, .crm-prop-detail-v2) .crm-timeline-pro .crm-timeline-item:hover .crm-timeline-icon {
+    background: var(--ws-accent-ai-soft);
+    color: var(--ws-accent-ai);
+}
+
+:is(.crm-contact-detail-pro, .crm-prop-detail-v2) .crm-timeline-pro .crm-timeline-body {
+    padding: var(--ds-space-3, 12px) var(--ds-space-4, 16px);
+    border-radius: var(--crm-xp-radius-sm);
+    border-color: var(--ws-border);
+    background: var(--ws-surface);
+}
+
+:is(.crm-contact-detail-pro, .crm-prop-detail-v2) .crm-timeline-pro .crm-timeline-item:hover .crm-timeline-body {
+    border-color: color-mix(in srgb, var(--ws-border) 70%, var(--ws-text-muted));
+    box-shadow: var(--crm-xp-shadow-hover);
+}
+
+:is(.crm-contact-detail-pro, .crm-prop-detail-v2) .crm-timeline-type {
+    font-size: 0.625rem;
+    font-weight: 600;
+    padding: 2px 7px;
+    background: var(--ws-accent-ai-soft);
+    color: var(--ws-accent-ai);
+}
+
+:is(.crm-contact-detail-pro, .crm-prop-detail-v2) .crm-timeline-title {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--ws-text);
+}
+
+:is(.crm-contact-detail-pro, .crm-prop-detail-v2) .crm-timeline-time {
+    font-size: 0.6875rem;
+    color: var(--ws-text-muted);
+}
+
+:is(.crm-contact-detail-pro, .crm-prop-detail-v2) .crm-timeline-text,
+:is(.crm-contact-detail-pro, .crm-prop-detail-v2) .crm-timeline-body p {
+    font-size: 0.8125rem;
+    color: var(--ws-text-secondary);
+    line-height: 1.5;
+}
+
+:is(.crm-contact-detail-pro, .crm-prop-detail-v2) .crm-timeline-pro .crm-timeline-item {
+    padding-bottom: var(--ds-space-3, 12px);
+}
+
+/* Followup badges */
+:is(.crm-contact-detail-pro, .crm-prop-detail-v2) .crm-followup-badge.overdue {
+    color: var(--ws-accent-warning);
+    background: var(--ws-accent-warning-soft);
+}
+
+:is(.crm-contact-detail-pro, .crm-prop-detail-v2) .crm-followup-badge.today {
+    color: var(--ws-accent-growth);
+    background: var(--ws-accent-growth-soft);
+}
+
+/* ─── 6. Deal stepper & checklist ─── */
+.crm-deal-detail-pro .crm-deal-stepper {
+    padding: var(--ds-space-4, 16px) var(--ds-space-5, 24px);
+    background: var(--ws-surface);
+}
+
+.crm-deal-detail-pro .crm-deal-stepper-track i {
+    background: linear-gradient(
+        90deg,
+        var(--ws-accent-ai, #7c3aed),
+        var(--ws-accent-info, #2563eb)
+    );
+}
+
+.crm-deal-detail-pro .crm-deal-step.is-active .crm-deal-step-dot {
+    border-color: var(--ws-accent-ai);
+    color: var(--ws-accent-ai);
+    box-shadow: 0 0 0 3px var(--ws-surface), 0 0 0 5px var(--ws-accent-ai-soft);
+}
+
+.crm-deal-detail-pro .crm-deal-step.is-done .crm-deal-step-dot {
+    background: var(--ws-accent-growth-soft);
+    border-color: var(--ws-accent-growth);
+    color: var(--ws-accent-growth);
+}
+
+.crm-deal-detail-pro .crm-deal-checklist {
+    border-radius: var(--crm-xp-radius);
+    border-color: var(--ws-border);
+    box-shadow: var(--crm-xp-shadow);
+}
+
+.crm-deal-detail-pro .crm-deal-checklist-head {
+    padding: var(--ds-space-3, 12px) var(--ds-space-4, 16px);
+}
+
+.crm-deal-detail-pro .crm-deal-checklist-title h2 {
+    font-size: 0.8125rem;
+    font-weight: 600;
+}
+
+.crm-deal-detail-pro .crm-deal-checklist-title p {
+    font-size: 0.6875rem;
+    color: var(--ws-text-muted);
+}
+
+.crm-deal-detail-pro .crm-deal-checklist-icon {
+    background: var(--ws-accent-growth-soft);
+    color: var(--ws-accent-growth);
+    border-radius: var(--crm-xp-radius-sm);
+}
+
+.crm-deal-detail-pro .crm-deal-checklist-track i {
+    background: var(--ws-accent-growth);
+}
+
+.crm-deal-detail-pro .crm-deal-checklist-item.is-done .crm-deal-checklist-box {
+    background: var(--ws-accent-growth-soft);
+    border-color: var(--ws-accent-growth);
+    color: var(--ws-accent-growth);
+}
+
+.crm-deal-detail-pro .crm-deal-side-head {
+    padding: var(--ds-space-3, 12px) var(--ds-space-4, 16px);
+    background: var(--ws-surface);
+    border-bottom-color: var(--ws-border);
+}
+
+.crm-deal-detail-pro .crm-deal-side-head h3 {
+    font-size: 0.8125rem;
+    font-weight: 600;
+}
+
+.crm-deal-detail-pro .crm-deal-side-icon--contact {
+    background: var(--ws-accent-info-soft);
+    color: var(--ws-accent-info);
+}
+
+.crm-deal-detail-pro .crm-deal-side-icon--property {
+    background: var(--ws-accent-growth-soft);
+    color: var(--ws-accent-growth);
+}
+
+.crm-deal-detail-pro .crm-deal-side-icon--action {
+    background: var(--ws-accent-ai-soft);
+    color: var(--ws-accent-ai);
+}
+
+.crm-deal-detail-pro .crm-deal-hero__icon-btn {
+    border-radius: var(--crm-xp-radius-sm);
+    transition:
+        border-color var(--crm-xp-duration) var(--crm-xp-ease),
+        background var(--crm-xp-duration) var(--crm-xp-ease),
+        color var(--crm-xp-duration) var(--crm-xp-ease);
+}
+
+.crm-deal-detail-pro .crm-deal-hero__icon-btn--primary {
+    background: var(--ws-primary);
+    border-color: var(--ws-primary);
+    color: #fff;
+}
+
+.crm-deal-detail-pro .crm-deal-hero__icon-btn:hover {
+    transform: none;
+}
+
+/* Property aside cards */
+.crm-prop-detail-v2 .crm-prop-side-card,
+.crm-prop-detail-v2 .crm-prop-side-card--pro {
+    border-radius: var(--crm-xp-radius);
+    border-color: var(--ws-border);
+    box-shadow: var(--crm-xp-shadow);
+}
+
+.crm-prop-detail-v2 .crm-prop-side-card--pro h3,
+.crm-prop-detail-v2 .crm-prop-side-card h3 {
+    font-size: 0.8125rem;
+    font-weight: 600;
+}
+
+.crm-prop-detail-v2 .crm-prop-side-card--share {
+    border-color: color-mix(in srgb, var(--ws-accent-ai) 16%, var(--ws-border));
+}
+
+/* ─── 9. Icon micro-interactions (detail scope) ─── */
+:is(.crm-contact-detail-pro, .crm-prop-detail-v2, .crm-deal-detail-pro) :is(
+    .crm-contact-hero__edit-btn,
+    .crm-contact-hero__quick,
+    .crm-prop-hero-act,
+    .crm-deal-hero__icon-btn,
+    .crm-deal-back,
+    .crm-contact-hero__back,
+    .crm-prop-hero-back
+):hover .df-decor-icon {
+    transform: scale(1.03) translateY(-0.5px);
+    color: var(--ws-accent-ai, #7c3aed);
+}
+
+:is(.crm-contact-detail-pro, .crm-prop-detail-v2, .crm-deal-detail-pro) .crm-dash-act--primary:hover .df-decor-icon {
+    color: #fff;
+    transform: scale(1.03) translateY(-0.5px);
+}
+
+/* ─── 7. Status pills & tags ─── */
+:is(.crm-contact-detail-pro, .crm-prop-detail-v2, .crm-deal-detail-pro) .crm-pill,
+:is(.crm-contact-detail-pro, .crm-prop-detail-v2, .crm-deal-detail-pro) .crm-status-badge {
+    font-size: 0.625rem;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 999px;
+}
+
+/* ─── 8. Mobile detail — preserve layout, apply tokens only ─── */
+@media (max-width: 768px) {
+    .crm-contact-detail-pro .crm-contact-hero__title {
+        font-size: 1.2rem;
+    }
+
+    .crm-prop-detail-v2 .crm-prop-hero-title,
+    .crm-prop-detail-v2 .crm-prop-title {
+        font-size: 1.125rem;
+    }
+
+    .crm-deal-detail-pro .crm-deal-title {
+        font-size: 1.125rem;
+    }
+
+    .crm-contact-detail-pro .crm-contact-hero__top,
+    .crm-deal-detail-pro .crm-deal-dossier-top {
+        padding: var(--ds-space-3, 12px) var(--ds-space-4, 16px);
+    }
+
+    /* Glance cards on contact mobile */
+    .crm-contact-detail-pro .crm-contact-glance-card {
+        border-radius: var(--crm-xp-radius-sm);
+        border-color: var(--ws-border);
+        box-shadow: var(--crm-xp-shadow);
+    }
+
+    .crm-contact-detail-pro .crm-contact-glance-badge.is-accent {
+        background: var(--ws-accent-ai-soft);
+        color: var(--ws-accent-ai);
+    }
+
+    .crm-contact-detail-pro .crm-contact-glance-badge.is-warn {
+        background: var(--ws-accent-warning-soft);
+        color: var(--ws-accent-warning);
+    }
+
+    /* Mobile docks — subtle polish only */
+    :is(.crm-contact-detail-pro, .crm-prop-detail-v2, .crm-deal-detail-pro) :is(
+        .crm-contact-mobile-dock,
+        .crm-prop-mobile-dock,
+        .crm-deal-mobile-dock
+    ) {
+        border-top-color: var(--ws-border);
+        background: color-mix(in srgb, var(--ws-surface) 92%, transparent);
+        backdrop-filter: blur(12px);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    :is(.crm-contact-detail-pro, .crm-prop-detail-v2, .crm-deal-detail-pro) * {
+        transition-duration: 0.01ms !important;
+    }
+}

@@ -1060,6 +1060,7 @@
                             <th>نوع</th>
                             <th>وضعیت</th>
                             <th>جغرافیا</th>
+                            <th>تاریخ</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -1072,11 +1073,19 @@
                                 <small class="adm-lac-kpi-sub">اطمینان {{ lead.classification_confidence|to_persian_digits }}</small>
                             </td>
                             <td><span class="adm-lac-status adm-lac-status--{{ lead.status }}">{{ lead.get_status_display }}</span></td>
-                            <td>{{ lead.city }}{% if lead.district %} / {{ lead.district }}{% endif %}</td>
+                            <td>{{ lead.city }}{% with d=lead|lead_district_fa %}{% if d %} / {{ d }}{% endif %}{% endwith %}</td>
+                            <td>
+                                <time>{{ lead.created_at|to_jalali_fa:"%Y/%m/%d %H:%M" }}</time>
+                                {% if lead.last_seen_at %}
+                                <p class="adm-lac-kpi-sub">آخرین مشاهده {{ lead.last_seen_at|to_jalali_fa:"%Y/%m/%d %H:%M" }}</p>
+                                {% elif lead.updated_at and lead.updated_at != lead.created_at %}
+                                <p class="adm-lac-kpi-sub">بروز {{ lead.updated_at|to_jalali_fa:"%Y/%m/%d %H:%M" }}</p>
+                                {% endif %}
+                            </td>
                         </tr>
                     {% empty %}
                         <tr>
-                            <td colspan="5">
+                            <td colspan="6">
                                 <div class="adm-lac-empty">
                                     <i class="fas fa-users"></i>
                                     بانکی خالی است — فایل را وارد کنید.

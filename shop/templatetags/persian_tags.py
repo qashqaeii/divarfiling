@@ -146,6 +146,16 @@ def transaction_status_tone(value):
 
 
 @register.filter
+def lead_district_fa(lead):
+    """نام فارسی منطقه سرنخ — slug انگلیسی (vanak) به فارسی (ونک) تبدیل می‌شود."""
+    if lead is None:
+        return ''
+    from accounts.services.lead_import import display_district_for_lead
+
+    return display_district_for_lead(lead)
+
+
+@register.filter
 def highlight_promo_codes(value):
     """برجسته‌کردن کدهای تخفیف لاتین داخل متن اطلاعیه."""
     if not value:

@@ -226,7 +226,7 @@ class AdminLeadAcquisitionView(StaffRequiredMixin, TemplateView):
                 _preview_item_from_session(i)
                 for i in (self.request.session.get(SESSION_BULK_PREVIEW_KEY) or [])
             ],
-            'leads_sample': MarketingLead.objects.order_by('-updated_at')[:25],
+            'leads_sample': MarketingLead.objects.select_related('first_batch').order_by('-updated_at')[:25],
             'default_variant_a': get_global_message_templates()['A'],
             'default_variant_b': get_global_message_templates()['B'],
             'default_step_2': get_global_message_templates()['step_2'],

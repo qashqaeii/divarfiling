@@ -144,6 +144,18 @@ class LeadImportTests(TestCase):
             'ونک',
         )
 
+    def test_lead_district_fa_template_filter(self):
+        from shop.templatetags.persian_tags import lead_district_fa
+
+        raw = json.dumps(SAMPLE_JSON).encode('utf-8')
+        preview = preview_phone_detector_json(raw, filename='t.json')
+        batch = create_preview_batch(preview)
+        commit_import_batch(batch.pk, preview_rows=preview.rows)
+        lead = MarketingLead.objects.get(phone_normalized='09121111111')
+        lead.district = 'vanak'
+        lead.save(update_fields=['district'])
+        self.assertEqual(lead_district_fa(lead), 'آجودانیه')
+
     def test_existing_user_not_suppressed(self):
         User.objects.create_user(username='eu1', password='x', phone='09123333333')
         payload = {

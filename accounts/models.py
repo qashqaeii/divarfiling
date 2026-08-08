@@ -598,6 +598,14 @@ class LeadImportBatch(models.Model):
         blank=True,
         related_name='lead_import_batches',
     )
+    acquisition_run = models.ForeignKey(
+        'AcquisitionRun',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='import_batches',
+        help_text='اجرای خودکار phone-detector که این بچ را تولید کرده',
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     committed_at = models.DateTimeField(null=True, blank=True)
 
@@ -1348,3 +1356,99 @@ class GrowthJourneyEvent(models.Model):
 
     def __str__(self):
         return f'{self.event_type}: {self.stage_from or "—"} → {self.stage_to}'
+
+
+# ─── Acquisition Automation (phone-detector → Lead Acquisition Center) ───
+
+
+class AcquisitionAutomationCampaign(models.Model):
+    """تنظیمات جمع‌آوری خودکار لید از دیوار via phone-detector."""
+
+    name = models.CharField(max_length=255)
+    city = models.CharField(max_length=100, default='تهران')
+    districts = models.JSONField(
+        default=list,
+        blank=True,
+        help_text='لیست نام مناطق فارسی، مثلاً ["ونک"]',
+    )
+    category = models.CharField(max_length=64, default='apartment-sell')
+    limit_per_run = models.PositiveIntegerField(default=30)
+    interval_hours = models.PositiveIntegerField(default=6)
+    is_active = models.BooleanField(default=True, db_index=True)
+    auto_create_campaign = models.BooleanField(
+        default=True,
+        help_text='پس از import، LeadCampaign پایلوت بساز',
+    )
+    auto_enroll_pilot = models.BooleanField(
+        default=True,
+        help_text='پس از ساخت کمپین، enroll_pilot اجرا شود',
+    )
+    landing_url = models.URLField(default='https://divarfiling.ir/', max_length=500)
+    next_run_at = models.DateTimeField(null=True, blank=True, db_index=True)
+    last_run_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'کمپین اتوماسیون جذب'
+        verbose_name_plural = 'کمپین‌های اتوماسیون جذب'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return self.name
+
+
+class AcquisitionRun(models.Model):
+    """یک اجرای collector — phone-detector → import."""
+
+    class Status(models.TextChoices):
+        QUEUED = 'queued', 'در صف'
+        RUNNING = 'running', 'در حال اجرا'
+        COMPLETED = 'completed', 'تکمیل'
+        RATE_LIMITED = 'rate_limited', 'محدودیت نرخ'
+        FAILED = 'failed', 'خطا'
+        INGESTED = 'ingested', 'وارد مرکز جذب'
+
+    campaign = models.ForeignKey(
+        AcquisitionAutomationCampaign,
+        on_delete=models.CASCADE,
+        related_name='runs',
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=Status.choices,
+        default=Status.QUEUED,
+        db_index=True,
+    )
+    district = models.CharField(max_length=100, blank=True)
+    started_at = models.DateTimeField(null=True, blank=True)
+    finished_at = models.DateTimeField(null=True, blank=True)
+    scanned_posts = models.PositiveIntegerField(default=0)
+    consultants_found = models.PositiveIntegerField(default=0)
+    phones_extracted = models.PositiveIntegerField(default=0)
+    output_json = models.JSONField(default=dict, blank=True)
+    output_path = models.CharField(max_length=500, blank=True)
+    import_batch = models.ForeignKey(
+        LeadImportBatch,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='acquisition_runs',
+    )
+    lead_campaign = models.ForeignKey(
+        LeadCampaign,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='acquisition_runs',
+    )
+    error_message = models.TextField(blank=True)
+    metrics = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        verbose_name = 'اجرای اتوماسیون جذب'
+        verbose_name_plural = 'اجراهای اتوماسیون جذب'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'Run #{self.pk} [{self.status}] {self.district or "—"}'

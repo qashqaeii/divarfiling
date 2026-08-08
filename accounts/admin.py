@@ -5,6 +5,8 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
 from .models import (
+    AcquisitionAutomationCampaign,
+    AcquisitionRun,
     CampaignEnrollment,
     CampaignMessage,
     CampaignStep,
@@ -268,3 +270,26 @@ admin.site.register(CampaignVariant)
 admin.site.register(CampaignStep)
 admin.site.register(CampaignEnrollment)
 admin.site.register(LeadTouchpoint)
+
+
+@admin.register(AcquisitionAutomationCampaign)
+class AcquisitionAutomationCampaignAdmin(admin.ModelAdmin):
+    list_display = [
+        'id', 'name', 'is_active', 'city', 'next_run_at', 'last_run_at', 'created_at',
+    ]
+    list_filter = ['is_active', 'city']
+    search_fields = ['name', 'city']
+    readonly_fields = ['last_run_at', 'created_at']
+
+
+@admin.register(AcquisitionRun)
+class AcquisitionRunAdmin(admin.ModelAdmin):
+    list_display = [
+        'id', 'campaign', 'status', 'district', 'phones_extracted', 'created_at', 'error_message',
+    ]
+    list_filter = ['status', 'campaign']
+    readonly_fields = [
+        'campaign', 'started_at', 'finished_at', 'scanned_posts', 'consultants_found',
+        'phones_extracted', 'output_path', 'import_batch', 'lead_campaign', 'metrics', 'created_at',
+    ]
+    search_fields = ['district', 'error_message']

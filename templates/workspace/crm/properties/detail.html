@@ -22,6 +22,10 @@
 {% endif %}
 {% endblock %}
 
+{% block ws_surface_css %}
+<link rel="stylesheet" href="{% static 'workspace/css/crm-prop-detail-mobile-premium.css' %}?v=1">
+{% endblock %}
+
 {% block crm_content %}
 {% if property_is_deleted %}
 <div class="crm-prop-detail-v2 crm-prop-detail-mobile crm-page-chrome">
@@ -886,7 +890,8 @@
                 <i class="fas fa-pen" aria-hidden="true"></i>
                 <span>ویرایش</span>
             </button>
-            {% elif is_property_owner and not property_is_deleted %}
+            {% endif %}
+            {% if is_property_owner and not property_is_deleted %}
             <button type="button" class="crm-prop-dock-btn crm-prop-dock-btn--share" data-modal-open="modal-property-share" title="اشتراک با مشتری">
                 <i class="fas fa-share-alt" aria-hidden="true"></i>
                 <span>اشتراک</span>

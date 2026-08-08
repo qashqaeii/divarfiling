@@ -867,79 +867,7 @@
     display: none !important;
 }
 
-@media (max-width: 768px) {
-    .crm-contact-detail-pro .crm-contact-action-bar.crm-contact-mobile-dock {
-        display: flex !important;
-        position: sticky;
-        inset-inline: 0;
-        bottom: 0;
-        z-index: 150;
-        margin-top: var(--crm-cx-gap);
-        padding: 8px 10px calc(8px + env(safe-area-inset-bottom, 0px));
-        border: 1px solid var(--ws-border);
-        border-radius: var(--crm-cx-radius) var(--crm-cx-radius) 0 0;
-        border-bottom: none;
-        background: color-mix(in srgb, var(--ws-surface) 94%, transparent);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        box-shadow: 0 -4px 16px rgba(15, 23, 42, 0.06);
-    }
-
-    .crm-contact-detail-pro .crm-contact-action-bar .crm-contact-mobile-dock__inner {
-        display: flex;
-        flex-direction: row;
-        align-items: stretch;
-        gap: 6px;
-        width: 100%;
-        padding: 0;
-        border: none;
-        border-radius: 0;
-        background: transparent;
-        box-shadow: none;
-        backdrop-filter: none;
-        -webkit-backdrop-filter: none;
-    }
-
-    .crm-contact-detail-pro .crm-contact-dock-btn {
-        flex: 1 1 auto;
-        flex-direction: row;
-        min-width: max-content;
-        min-height: 38px;
-        padding: 0 10px;
-        border-radius: 10px;
-        border: 1px solid var(--ws-border);
-        background: var(--ws-surface);
-        font-size: 0.6875rem;
-        font-weight: 500;
-        gap: 5px;
-        box-shadow: none;
-    }
-
-    .crm-contact-detail-pro .crm-contact-dock-btn i {
-        font-size: 0.8125rem;
-    }
-
-    .crm-contact-detail-pro .crm-contact-dock-btn--primary {
-        background: var(--ws-primary);
-        border-color: var(--ws-primary);
-        color: #fff;
-        flex: 1.15 1 auto;
-    }
-
-    .crm-contact-detail-pro .crm-contact-dock-btn--primary:active {
-        background: var(--ws-primary-hover);
-    }
-
-    .crm-contact-detail-pro .crm-contact-dock-btn:hover {
-        border-color: color-mix(in srgb, var(--ws-border) 70%, var(--ws-text-muted));
-        color: var(--ws-text);
-    }
-
-    .crm-contact-detail-pro .crm-contact-dock-btn--primary:hover {
-        background: var(--ws-primary-hover);
-        color: #fff;
-    }
-}
+/* Mobile dock layout → workspace-saas-polish.css (fixed above bottom nav) */
 
 /* ─── Desktop ─── */
 @media (min-width: 769px) {
@@ -1037,9 +965,7 @@
         top: 0;
     }
 
-    .crm-contact-detail-pro {
-        padding-bottom: calc(3.75rem + env(safe-area-inset-bottom, 0px)) !important;
-    }
+    /* Bottom clearance → workspace-saas-polish.css */
 
     .crm-contact-detail-pro.crm-contact-mobile .crm-contact-panel-head {
         background: var(--ws-surface) !important;

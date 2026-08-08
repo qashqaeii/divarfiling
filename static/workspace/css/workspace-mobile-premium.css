@@ -119,7 +119,8 @@
         .crm-files-mobile .crm-files-card,
         .crm-deals-mobile .crm-deals-card,
         .mk-filing-mobile .mk-ds-card-glass,
-        .ws-ds-mobile .mk-lcard
+        .ws-ds-mobile .mk-lcard-native,
+        .ws-ds-mobile .mk-lcard:not(.mk-lcard-native)
     ) {
         width: 100% !important;
         max-width: 100% !important;
@@ -239,7 +240,8 @@
         .crm-files-card-title,
         .crm-deals-card-title,
         .mk-ds-card-title,
-        .ws-ds-mobile .mk-lcard-title a,
+        .ws-ds-mobile .mk-lcard-native .mk-lcard-native__title a,
+        .ws-ds-mobile .mk-lcard:not(.mk-lcard-native) .mk-lcard-title a,
         .crm-timeline-title
     ) {
         font-size: var(--mobile-card) !important;
@@ -253,7 +255,8 @@
         .crm-timeline-text,
         .mk-hub-card-body,
         .crm-contacts-mob-meta,
-        .ws-ds-mobile .mk-lcard-body
+        .ws-ds-mobile .mk-lcard-native .mk-lcard-native__panel,
+        .ws-ds-mobile .mk-lcard:not(.mk-lcard-native) .mk-lcard-body
     ) {
         font-size: var(--mobile-body) !important;
         line-height: 1.45 !important;
@@ -1231,7 +1234,8 @@
     /* Shared card chrome */
     :is(
         .mk-filing-mobile .mk-ds-card-glass,
-        .ws-ds-mobile .mk-lcard,
+        .ws-ds-mobile .mk-lcard-native,
+        .ws-ds-mobile .mk-lcard:not(.mk-lcard-native),
         .crm-files-mobile .crm-files-card,
         .crm-deals-mobile .crm-deals-card
     ) {
@@ -1252,7 +1256,7 @@
         position: relative;
     }
 
-    .mk-filing-mobile .mk-ds-card-glass {
+    .mk-filing-mobile .mk-ds-card:not(.mk-ds-card-native) .mk-ds-card-glass {
         display: grid !important;
         grid-template-columns: var(--ws-mob-thumb-sm) minmax(0, 1fr) !important;
         grid-template-rows: auto auto auto !important;
@@ -1478,229 +1482,7 @@
         opacity: 0.85;
     }
 
-    /* ── Listing cards (property feed — KPI-first horizontal layout) ── */
-    .ws-ds-mobile .mk-listing-cards-shell {
-        gap: 8px !important;
-        padding: 0 !important;
-    }
-
-    .ws-ds-mobile .mk-lcard {
-        display: grid !important;
-        grid-template-columns: var(--ws-mob-thumb) minmax(0, 1fr) !important;
-        grid-template-rows: auto auto auto auto !important;
-        column-gap: 12px !important;
-        row-gap: 2px !important;
-        padding: var(--ws-mob-card-pad-list) !important;
-        align-items: start !important;
-        transform: none !important;
-    }
-
-    .ws-ds-mobile .mk-lcard:active {
-        transform: scale(0.99) !important;
-    }
-
-    .ws-ds-mobile .mk-lcard-cover {
-        grid-column: 1 !important;
-        grid-row: 1 / 5 !important;
-        width: var(--ws-mob-thumb) !important;
-        height: var(--ws-mob-thumb) !important;
-        min-height: var(--ws-mob-thumb) !important;
-        max-height: var(--ws-mob-thumb) !important;
-        aspect-ratio: 1 !important;
-        border-radius: 12px !important;
-        overflow: hidden !important;
-        position: relative !important;
-    }
-
-    .ws-ds-mobile .mk-lcard-cover-link,
-    .ws-ds-mobile .mk-lcard-cover-img,
-    .ws-ds-mobile .mk-lcard-cover-empty {
-        width: 100% !important;
-        height: 100% !important;
-        min-height: 0 !important;
-        max-height: none !important;
-        aspect-ratio: auto !important;
-        border-radius: 12px !important;
-        object-fit: cover !important;
-    }
-
-    .ws-ds-mobile .mk-lcard-cover-shade,
-    .ws-ds-mobile .mk-lcard-nav,
-    .ws-ds-mobile .mk-lcard-cover-count {
-        display: none !important;
-    }
-
-    .ws-ds-mobile .mk-lcard-cover-top {
-        inset: 4px !important;
-        gap: 2px !important;
-    }
-
-    .ws-ds-mobile .mk-lcard-cover-value {
-        font-size: var(--mobile-secondary) !important;
-        padding: 1px 5px !important;
-        border-radius: 5px !important;
-    }
-
-    .ws-ds-mobile .mk-lcard-body {
-        display: contents !important;
-    }
-
-    .ws-ds-mobile .mk-lcard-head {
-        grid-column: 2 !important;
-        grid-row: 1 !important;
-        min-width: 0 !important;
-        gap: 2px !important;
-    }
-
-    .ws-ds-mobile .mk-lcard-title {
-        margin: 0 !important;
-    }
-
-    .ws-ds-mobile .mk-lcard-title a {
-        font-size: var(--mobile-card) !important;
-        font-weight: 700 !important;
-        line-height: 1.3 !important;
-        letter-spacing: -0.01em !important;
-        -webkit-line-clamp: 2 !important;
-        display: -webkit-box !important;
-        -webkit-box-orient: vertical !important;
-        overflow: hidden !important;
-    }
-
-    .ws-ds-mobile .mk-lcard-tags {
-        display: none !important;
-    }
-
-    .ws-ds-mobile .mk-lcard-price-row {
-        grid-column: 2 !important;
-        grid-row: 2 !important;
-        display: flex !important;
-        flex-wrap: wrap !important;
-        align-items: baseline !important;
-        gap: 6px 10px !important;
-        padding: 0 !important;
-        margin: 0 !important;
-        background: transparent !important;
-        border: none !important;
-        box-shadow: none !important;
-        border-radius: 0 !important;
-    }
-
-    .ws-ds-mobile .mk-lcard-price-lbl {
-        display: none !important;
-    }
-
-    .ws-ds-mobile .mk-lcard-price strong,
-    .ws-ds-mobile .mk-lcard-price .mk-money {
-        font-size: var(--mobile-card) !important;
-        font-weight: 700 !important;
-        color: var(--ws-primary) !important;
-        line-height: 1.2 !important;
-    }
-
-    .ws-ds-mobile .mk-lcard-price--area strong {
-        font-size: var(--mobile-meta) !important;
-        font-weight: 600 !important;
-        color: var(--ws-text-secondary) !important;
-    }
-
-    .ws-ds-mobile .mk-lcard-price--area strong small {
-        font-size: var(--mobile-secondary) !important;
-    }
-
-    .ws-ds-mobile .mk-lcard-meta-row {
-        grid-column: 2 !important;
-        grid-row: 3 !important;
-        display: flex !important;
-        flex-wrap: wrap !important;
-        align-items: center !important;
-        gap: 4px !important;
-        margin: 0 !important;
-    }
-
-    .ws-ds-mobile .mk-lcard-chip {
-        font-size: var(--mobile-secondary) !important;
-        padding: 0 !important;
-        background: transparent !important;
-        border: none !important;
-        color: var(--ws-text-muted) !important;
-        min-height: 0 !important;
-    }
-
-    .ws-ds-mobile .mk-lcard-chip--loc {
-        color: var(--ws-text-secondary) !important;
-        font-size: var(--mobile-meta) !important;
-    }
-
-    .ws-ds-mobile .mk-lcard-chip--loc i {
-        font-size: 0.625rem !important;
-        opacity: 0.7;
-    }
-
-    .ws-ds-mobile .mk-lcard-chip--tx {
-        font-size: var(--mobile-secondary) !important;
-        padding: 1px 6px !important;
-        border-radius: 6px !important;
-        background: color-mix(in srgb, var(--ws-surface-2) 45%, var(--ws-mob-card-bg)) !important;
-        border: 1px solid var(--ws-mob-card-border) !important;
-    }
-
-    .ws-ds-mobile .mk-lcard-specs {
-        display: none !important;
-    }
-
-    .ws-ds-mobile .mk-lcard-foot {
-        grid-column: 2 !important;
-        grid-row: 4 !important;
-        display: flex !important;
-        flex-direction: row !important;
-        align-items: center !important;
-        gap: 6px !important;
-        padding: 4px 0 0 !important;
-        margin: 0 !important;
-        border: none !important;
-    }
-
-    .ws-ds-mobile .mk-lcard-btn--primary {
-        flex: 0 1 auto !important;
-        width: auto !important;
-        min-width: 0 !important;
-        min-height: var(--ws-mob-btn-h) !important;
-        height: var(--ws-mob-btn-h) !important;
-        padding: 0 10px !important;
-        font-size: var(--mobile-meta) !important;
-        font-weight: 600 !important;
-        border-radius: var(--ws-mob-btn-radius) !important;
-        background: var(--ws-primary) !important;
-        background-image: none !important;
-        box-shadow: none !important;
-        gap: 4px !important;
-    }
-
-    .ws-ds-mobile .mk-lcard-btn--primary span::before {
-        content: none;
-    }
-
-    .ws-ds-mobile .mk-lcard-more {
-        display: block !important;
-        flex: 0 0 auto !important;
-    }
-
-    .ws-ds-mobile .mk-lcard-btn--icon {
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        width: var(--ws-mob-btn-h) !important;
-        height: var(--ws-mob-btn-h) !important;
-        min-width: var(--ws-mob-btn-h) !important;
-        min-height: var(--ws-mob-btn-h) !important;
-        padding: 0 !important;
-        border-radius: var(--ws-mob-btn-radius) !important;
-        border: 1px solid var(--ws-mob-card-border) !important;
-        background: transparent !important;
-        color: var(--ws-text-secondary) !important;
-        box-shadow: none !important;
-    }
+    /* Listing cards — see v10 mockup block below (.mk-lcard-native) */
 
     /* ─── CRM list cards — SaaS compact ─── */
     .crm-contacts-mobile .crm-contacts-table tbody tr.crm-row-selectable {
@@ -2309,7 +2091,8 @@
         .crm-prop-tabs .crm-tab-pro,
         .crm-deal-tabs .crm-tab-pro,
         .mk-ds-card-glass,
-        .ws-ds-mobile .mk-lcard,
+        .ws-ds-mobile .mk-lcard-native,
+        .ws-ds-mobile .mk-lcard:not(.mk-lcard-native),
         .crm-files-mobile .crm-files-card,
         .crm-deals-mobile .crm-deals-card,
         .ws-bottom-nav-item,
@@ -2330,7 +2113,8 @@
         .crm-prop-tabs .crm-tab-pro,
         .crm-deal-tabs .crm-tab-pro,
         .mk-ds-card-glass,
-        .ws-ds-mobile .mk-lcard,
+        .ws-ds-mobile .mk-lcard-native,
+        .ws-ds-mobile .mk-lcard:not(.mk-lcard-native),
         .crm-files-mobile .crm-files-card,
         .mk-ds-card-act,
         .mk-lcard-btn
@@ -2837,178 +2621,372 @@
         gap: 0 !important;
     }
 
-    /* ── Listing card native (property feed) ── */
+    /* ── Listing card v10 — mockup-accurate (image 40% + content panel + specs rail) ── */
+    .ws-ds-mobile .mk-listing-cards-shell {
+        gap: 10px !important;
+        padding: 0 !important;
+    }
+
     .ws-ds-mobile .mk-lcard-native {
         display: grid !important;
-        grid-template-columns: var(--ws-mob-thumb) minmax(0, 1fr) !important;
-        grid-template-rows: auto auto auto auto auto !important;
-        column-gap: 10px !important;
-        row-gap: 1px !important;
-        padding: var(--ws-mob-card-pad-list) 12px !important;
-        max-height: var(--ws-mob-card-max-h) !important;
+        grid-template-columns: 40% minmax(0, 1fr) !important;
+        grid-template-areas: "media panel" !important;
+        gap: 12px !important;
+        padding: 12px !important;
+        min-height: 136px !important;
+        max-height: none !important;
+        overflow: visible !important;
+        align-items: stretch !important;
+        border-radius: 14px !important;
+        box-shadow: 0 2px 12px rgba(15, 23, 42, 0.07) !important;
+        transform: none !important;
+    }
+
+    .ws-ds-mobile .mk-lcard-native:active {
+        transform: scale(0.992) !important;
+    }
+
+    .ws-ds-mobile .mk-lcard-native .mk-lcard-native__media {
+        grid-area: media !important;
+        position: relative !important;
+        width: 100% !important;
+        height: 100% !important;
+        min-height: 116px !important;
+        max-height: none !important;
+        aspect-ratio: auto !important;
+        border-radius: 12px !important;
         overflow: hidden !important;
+        align-self: stretch !important;
+    }
+
+    .ws-ds-mobile .mk-lcard-native .mk-lcard-cover-link,
+    .ws-ds-mobile .mk-lcard-native .mk-lcard-cover-img,
+    .ws-ds-mobile .mk-lcard-native .mk-lcard-cover-empty {
+        width: 100% !important;
+        height: 100% !important;
+        min-height: 116px !important;
+        max-height: none !important;
+        aspect-ratio: auto !important;
+        object-fit: cover !important;
+        border-radius: 12px !important;
+    }
+
+    .ws-ds-mobile .mk-lcard-native .mk-lcard-cover-empty {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        background: linear-gradient(145deg, #f1f5f9 0%, #e2e8f0 100%) !important;
+        color: #94a3b8 !important;
+        font-size: 1.5rem !important;
+    }
+
+    .ws-ds-mobile .mk-lcard-native .mk-lcard-cover-shade,
+    .ws-ds-mobile .mk-lcard-native .mk-lcard-nav,
+    .ws-ds-mobile .mk-lcard-native .mk-lcard-cover-count,
+    .ws-ds-mobile .mk-lcard-native .mk-lcard-native__cover-meta,
+    .ws-ds-mobile .mk-lcard-native .mk-img-auth--cover {
+        display: none !important;
+    }
+
+    .ws-ds-mobile .mk-lcard-native .mk-lcard-native__prop-badge {
+        position: absolute !important;
+        top: 8px !important;
+        inset-inline-start: 8px !important;
+        z-index: 3 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        padding: 2px 7px !important;
+        font-size: 10px !important;
+        font-weight: 700 !important;
+        line-height: 1.2 !important;
+        border-radius: 6px !important;
+        background: var(--ws-primary) !important;
+        color: #fff !important;
+        box-shadow: 0 2px 6px rgba(79, 70, 229, 0.25) !important;
+    }
+
+    .ws-ds-mobile .mk-lcard-native .mk-lcard-native__photos {
+        position: absolute !important;
+        bottom: 8px !important;
+        inset-inline-start: 8px !important;
+        z-index: 3 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 3px !important;
+        padding: 2px 7px !important;
+        font-size: 10px !important;
+        font-weight: 700 !important;
+        border-radius: 6px !important;
+        background: rgba(15, 23, 42, 0.62) !important;
+        color: #fff !important;
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+    }
+
+    .ws-ds-mobile .mk-lcard-native .mk-lcard-native__photos i {
+        font-size: 9px !important;
+        opacity: 0.9;
+    }
+
+    .ws-ds-mobile .mk-lcard-native .mk-lcard-native__panel {
+        grid-area: panel !important;
+        display: grid !important;
+        grid-template-columns: auto minmax(0, 1fr) !important;
+        grid-template-rows: auto auto auto auto auto !important;
+        gap: 3px 10px !important;
+        min-width: 0 !important;
         align-content: start !important;
+        padding: 0 !important;
     }
 
-    .ws-ds-mobile .mk-lcard-native .mk-lcard-cover {
-        grid-column: 1 !important;
-        grid-row: 1 / 6 !important;
-        width: var(--ws-mob-thumb) !important;
-        height: var(--ws-mob-thumb) !important;
-        min-height: var(--ws-mob-thumb) !important;
-        max-height: var(--ws-mob-thumb) !important;
-        align-self: start !important;
-    }
-
-    .ws-ds-mobile .mk-lcard-native .mk-lcard-cover-top {
-        inset-inline: auto 4px !important;
-        inset-block: 4px auto !important;
-        align-items: flex-end !important;
-    }
-
-    .ws-ds-mobile .mk-lcard-native .mk-lcard-body,
-    .ws-ds-mobile .mk-lcard-native .mk-lcard-native__body {
-        display: contents !important;
-    }
-
-    .ws-ds-mobile .mk-lcard-native .mk-lcard-native__kpi {
+    .ws-ds-mobile .mk-lcard-native .mk-lcard-native__status {
         grid-column: 2 !important;
         grid-row: 1 !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        gap: 0 !important;
+        justify-self: start !important;
+        align-self: start !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        padding: 2px 8px !important;
+        font-size: var(--mobile-secondary) !important;
+        font-weight: 700 !important;
+        line-height: 1.2 !important;
+        border-radius: 999px !important;
+        background: #ecfdf5 !important;
+        color: #059669 !important;
+        border: 1px solid #a7f3d0 !important;
     }
 
-    .ws-ds-mobile .mk-lcard-native .mk-lcard-native__kpi .mk-lcard-price:first-child strong,
-    .ws-ds-mobile .mk-lcard-native .mk-lcard-native__kpi .mk-lcard-price:first-child .mk-money {
-        font-size: var(--mobile-price) !important;
-        font-weight: 800 !important;
-        color: var(--ws-primary) !important;
-        letter-spacing: -0.02em;
+    .ws-ds-mobile .mk-lcard-native .mk-tx-rent.mk-lcard-native__status {
+        background: #eff6ff !important;
+        color: #2563eb !important;
+        border-color: #bfdbfe !important;
     }
 
-    .ws-ds-mobile .mk-lcard-native .mk-lcard-native__kpi .mk-lcard-price:not(:first-child):not(.mk-lcard-price--area) {
-        display: none !important;
+    .ws-ds-mobile .mk-lcard-native .mk-tx-deposit.mk-lcard-native__status {
+        background: #fff7ed !important;
+        color: #c2410c !important;
+        border-color: #fed7aa !important;
     }
 
-    .ws-ds-mobile .mk-lcard-native .mk-lcard-native__kpi .mk-lcard-price--area {
-        display: none !important;
-    }
-
-    .ws-ds-mobile .mk-lcard-native .mk-lcard-native__head {
+    .ws-ds-mobile .mk-lcard-native .mk-lcard-native__title {
         grid-column: 2 !important;
         grid-row: 2 !important;
+        margin: 2px 0 0 !important;
         min-width: 0 !important;
     }
 
-    .ws-ds-mobile .mk-lcard-native .mk-lcard-title a {
+    .ws-ds-mobile .mk-lcard-native .mk-lcard-native__title a {
         font-size: var(--mobile-card-title) !important;
         font-weight: 700 !important;
-        line-height: 1.25 !important;
+        line-height: 1.35 !important;
+        letter-spacing: -0.01em !important;
+        color: var(--ws-text) !important;
+        display: -webkit-box !important;
         -webkit-line-clamp: 2 !important;
-    }
-
-    .ws-ds-mobile .mk-lcard-native .mk-lcard-native__tags {
-        display: none !important;
+        -webkit-box-orient: vertical !important;
+        overflow: hidden !important;
     }
 
     .ws-ds-mobile .mk-lcard-native .mk-lcard-native__loc {
         grid-column: 2 !important;
         grid-row: 3 !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 4px !important;
         margin: 0 !important;
-        gap: 6px !important;
+        min-width: 0 !important;
+        font-size: var(--mobile-meta) !important;
+        color: var(--ws-text-muted) !important;
+        line-height: 1.3 !important;
     }
 
-    .ws-ds-mobile .mk-lcard-native .mk-lcard-native__loc .mk-lcard-chip--loc {
-        font-size: var(--mobile-meta) !important;
-        color: var(--ws-text-secondary) !important;
-        max-width: 100%;
+    .ws-ds-mobile .mk-lcard-native .mk-lcard-native__loc i {
+        flex-shrink: 0;
+        font-size: 10px !important;
+        opacity: 0.75;
+        color: var(--ws-text-muted) !important;
+    }
+
+    .ws-ds-mobile .mk-lcard-native .mk-lcard-native__loc span {
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
     }
 
-    .ws-ds-mobile .mk-lcard-native .mk-lcard-native__status {
-        flex-shrink: 0;
-        font-size: var(--mobile-secondary) !important;
-        padding: 1px 6px !important;
-        border-radius: 6px !important;
-        background: color-mix(in srgb, var(--ws-surface-2) 50%, var(--ws-mob-card-bg)) !important;
-        border: 1px solid var(--ws-mob-card-border) !important;
-    }
-
-    .ws-ds-mobile .mk-lcard-native .mk-lcard-native__facts {
+    .ws-ds-mobile .mk-lcard-native .mk-lcard-native__pricebox {
         grid-column: 2 !important;
         grid-row: 4 !important;
         display: flex !important;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 8px;
-        margin: 0;
-        font-size: var(--mobile-meta) !important;
-        color: var(--ws-text-muted) !important;
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 1px !important;
+        margin: 2px 0 0 !important;
+        min-width: 0 !important;
     }
 
-    .ws-ds-mobile .mk-lcard-native .mk-lcard-native__fact {
-        display: inline-flex;
-        align-items: center;
-        gap: 3px;
+    .ws-ds-mobile .mk-lcard-native .mk-lcard-native__price {
+        font-size: 17px !important;
+        font-weight: 800 !important;
+        line-height: 1.2 !important;
+        letter-spacing: -0.02em !important;
+        color: var(--ws-primary) !important;
+    }
+
+    .ws-ds-mobile .mk-lcard-native .mk-lcard-native__price.is-muted {
+        color: var(--ws-text-muted) !important;
+        font-weight: 600 !important;
+    }
+
+    .ws-ds-mobile .mk-lcard-native .mk-lcard-native__ppm {
+        font-size: var(--mobile-secondary) !important;
+        font-weight: 500 !important;
+        color: var(--ws-text-muted) !important;
+        line-height: 1.2 !important;
+    }
+
+    .ws-ds-mobile .mk-lcard-native .mk-lcard-native__rail {
+        grid-column: 1 !important;
+        grid-row: 1 / 5 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: center !important;
+        align-items: center !important;
+        gap: 8px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        list-style: none !important;
+        min-width: 2.75rem !important;
+    }
+
+    .ws-ds-mobile .mk-lcard-native .mk-lcard-native__rail-item {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        gap: 3px !important;
+        font-size: 10px !important;
+        font-weight: 600 !important;
+        line-height: 1.15 !important;
+        color: var(--ws-text-secondary) !important;
+        text-align: center !important;
+    }
+
+    .ws-ds-mobile .mk-lcard-native .mk-lcard-native__rail-item i {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 1.625rem !important;
+        height: 1.625rem !important;
+        border-radius: 8px !important;
+        font-size: 0.625rem !important;
+        background: #f1f5f9 !important;
+        color: #64748b !important;
+    }
+
+    .ws-ds-mobile .mk-lcard-native .mk-lcard-native__rail-item span {
+        max-width: 3.5rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
         white-space: nowrap;
     }
 
-    .ws-ds-mobile .mk-lcard-native .mk-lcard-native__fact i {
-        font-size: 0.625rem;
-        opacity: 0.65;
-    }
-
-    .ws-ds-mobile .mk-lcard-native .mk-lcard-native__specs-desk {
-        display: none !important;
-    }
-
-    .ws-ds-mobile .mk-lcard-native .mk-lcard-native__actions {
-        grid-column: 2 !important;
+    .ws-ds-mobile .mk-lcard-native .mk-lcard-native__foot {
+        grid-column: 1 / -1 !important;
         grid-row: 5 !important;
         display: flex !important;
         flex-direction: row !important;
         align-items: center !important;
-        gap: 6px !important;
-        padding: 3px 0 0 !important;
-        margin: 0 !important;
+        justify-content: space-between !important;
+        gap: 8px !important;
+        margin: 6px 0 0 !important;
+        padding: 0 !important;
+        border: none !important;
+        border-top: none !important;
+    }
+
+    .ws-ds-mobile .mk-lcard-native .mk-lcard-btn--primary {
+        display: none !important;
     }
 
     .ws-ds-mobile .mk-lcard-native .mk-lcard-native__cta {
-        flex: 0 1 auto !important;
-        width: auto !important;
-        min-height: var(--ws-mob-btn-h) !important;
-        height: var(--ws-mob-btn-h) !important;
-        padding: 0 10px !important;
-        font-size: var(--mobile-meta) !important;
-        font-weight: 600 !important;
-        gap: 4px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 5px !important;
+        padding: 0 !important;
+        min-height: 0 !important;
+        height: auto !important;
+        background: transparent !important;
+        border: none !important;
         box-shadow: none !important;
-        background-image: none !important;
+        font-size: 13px !important;
+        font-weight: 700 !important;
+        color: var(--ws-primary) !important;
+        text-decoration: none !important;
     }
 
     .ws-ds-mobile .mk-lcard-native .mk-lcard-native__cta i {
-        font-size: 0.6875rem;
-        opacity: 0.9;
+        font-size: 0.6875rem !important;
+        opacity: 0.85;
     }
 
-    .ws-ds-mobile .mk-listing-cards-shell {
-        gap: 6px !important;
+    .ws-ds-mobile .mk-lcard-native .mk-lcard-native__menu {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 1.75rem !important;
+        height: 1.75rem !important;
+        min-width: 1.75rem !important;
+        min-height: 1.75rem !important;
+        padding: 0 !important;
+        border-radius: 8px !important;
+        border: 1px solid var(--ws-mob-card-border) !important;
+        background: transparent !important;
+        color: var(--ws-text-muted) !important;
+        box-shadow: none !important;
     }
 
-    /* ── Dataset card native (collection row — not property card) ── */
+    /* CRM property cards — same native pattern on mobile */
+    .crm-files-mobile .crm-files-mcard {
+        display: grid !important;
+        grid-template-columns: 38% minmax(0, 1fr) !important;
+        grid-template-areas: "media panel" !important;
+        gap: 10px !important;
+        padding: 10px 12px !important;
+        min-height: 132px !important;
+        box-shadow: 0 2px 10px rgba(15, 23, 42, 0.06) !important;
+        overflow: hidden !important;
+    }
+
+    .crm-files-mobile .crm-files-mcard__media,
+    .crm-files-mobile .crm-files-card-thumb {
+        grid-area: media !important;
+        min-height: 112px !important;
+        border-radius: 12px !important;
+        overflow: hidden !important;
+    }
+
+    .crm-files-mobile .crm-files-mcard__panel {
+        grid-area: panel !important;
+        min-width: 0 !important;
+    }
+
+    .crm-files-mobile .crm-files-card-bg,
+    .crm-files-mobile .crm-files-card-mesh,
+    .crm-files-mobile .crm-files-card-accent {
+        display: none !important;
+    }
+
+    /* ── Dataset card native v10 (collection row — mockup language) ── */
     .mk-filing-mobile .mk-ds-card-native .mk-ds-card-glass {
         display: grid !important;
-        grid-template-columns: var(--ws-mob-thumb-sm) minmax(0, 1fr) auto !important;
+        grid-template-columns: 56px minmax(0, 1fr) auto !important;
         grid-template-rows: auto auto !important;
-        gap: 2px 10px !important;
-        padding: 10px 12px !important;
-        min-height: 72px !important;
+        gap: 4px 12px !important;
+        padding: 12px !important;
+        min-height: 76px !important;
         max-height: none !important;
-        border-inline-start: 3px solid var(--ws-primary) !important;
-        border-radius: 12px !important;
+        border-inline-start: none !important;
+        border-radius: 14px !important;
+        box-shadow: 0 2px 12px rgba(15, 23, 42, 0.07) !important;
     }
 
     .mk-filing-mobile .mk-ds-card-native .mk-ds-card-cover {
@@ -3185,12 +3163,52 @@
         display: flex !important;
     }
 
-    .mk-lcard-native__facts {
+    /* Desktop: restore classic vertical listing card */
+    .mk-lcard-native {
+        display: flex !important;
+        flex-direction: column !important;
+        min-height: 0 !important;
+    }
+
+    .mk-lcard-native__media {
+        width: 100% !important;
+        min-height: 0 !important;
+        aspect-ratio: 16 / 9 !important;
+    }
+
+    .mk-lcard-native__prop-badge,
+    .mk-lcard-native__photos {
         display: none !important;
     }
 
-    .mk-lcard-native__specs-desk {
+    .mk-lcard-native__cover-meta {
         display: flex !important;
+    }
+
+    .mk-lcard-native__panel {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 8px !important;
+        padding: 12px !important;
+    }
+
+    .mk-lcard-native__rail {
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        gap: 8px !important;
+    }
+
+    .mk-lcard-native__rail-item {
+        flex-direction: row !important;
+    }
+
+    .mk-lcard-native__cta {
+        display: inline-flex !important;
+        padding: 8px 14px !important;
+        border-radius: 10px !important;
+        background: var(--ws-primary) !important;
+        color: #fff !important;
     }
 }
 

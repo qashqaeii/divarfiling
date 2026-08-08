@@ -366,8 +366,8 @@
         padding: 0.7rem 0.75rem 1rem;
     }
 
-    /* ── Listing cards — premium feed ── */
-    .ws-ds-mobile .mk-lcard {
+    /* ── Listing cards — legacy (native cards use workspace-mobile-premium v10) ── */
+    .ws-ds-mobile .mk-lcard:not(.mk-lcard-native) {
         border-radius: 18px;
         border-color: color-mix(in srgb, var(--ws-border) 58%, transparent);
         box-shadow:
@@ -375,18 +375,18 @@
             0 0 0 1px color-mix(in srgb, var(--ws-primary) 4%, transparent);
         overflow: hidden;
     }
-    .ws-ds-mobile .mk-lcard:active {
+    .ws-ds-mobile .mk-lcard:not(.mk-lcard-native):active {
         transform: scale(0.985);
     }
-    .ws-ds-mobile .mk-lcard-cover {
+    .ws-ds-mobile .mk-lcard:not(.mk-lcard-native) .mk-lcard-cover {
         aspect-ratio: 16 / 9.5;
         border-radius: 0;
     }
-    .ws-ds-mobile .mk-lcard-body {
+    .ws-ds-mobile .mk-lcard:not(.mk-lcard-native) .mk-lcard-body {
         padding: 0.75rem 0.8rem 0.8rem;
         gap: 0.5rem;
     }
-    .ws-ds-mobile .mk-lcard-title a {
+    .ws-ds-mobile .mk-lcard:not(.mk-lcard-native) .mk-lcard-title a {
         font-size: 0.9rem;
         font-weight: 800;
         letter-spacing: -0.015em;
@@ -396,7 +396,7 @@
         -webkit-box-orient: vertical;
         overflow: hidden;
     }
-    .ws-ds-mobile .mk-lcard-price-row {
+    .ws-ds-mobile .mk-lcard:not(.mk-lcard-native) .mk-lcard-price-row {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 0.4rem;
@@ -405,47 +405,47 @@
         background: color-mix(in srgb, var(--ws-primary) 5%, var(--ws-surface-2));
         border: 1px solid color-mix(in srgb, var(--ws-primary) 10%, var(--ws-border));
     }
-    .ws-ds-mobile .mk-lcard-price {
+    .ws-ds-mobile .mk-lcard:not(.mk-lcard-native) .mk-lcard-price {
         min-width: 0;
         padding: 0;
         background: transparent;
         border: none;
     }
-    .ws-ds-mobile .mk-lcard-price-lbl {
+    .ws-ds-mobile .mk-lcard:not(.mk-lcard-native) .mk-lcard-price-lbl {
         font-size: 0.6rem;
         font-weight: 700;
         color: var(--ws-text-muted);
     }
-    .ws-ds-mobile .mk-lcard-price strong {
+    .ws-ds-mobile .mk-lcard:not(.mk-lcard-native) .mk-lcard-price strong {
         font-size: 0.88rem;
         font-weight: 850;
         letter-spacing: -0.02em;
         overflow-wrap: anywhere;
     }
-    .ws-ds-mobile .mk-lcard-meta-row,
-    .ws-ds-mobile .mk-lcard-specs {
+    .ws-ds-mobile .mk-lcard:not(.mk-lcard-native) .mk-lcard-meta-row,
+    .ws-ds-mobile .mk-lcard:not(.mk-lcard-native) .mk-lcard-specs {
         gap: 0.3rem;
         flex-wrap: wrap;
     }
-    .ws-ds-mobile .mk-lcard-chip {
+    .ws-ds-mobile .mk-lcard:not(.mk-lcard-native) .mk-lcard-chip {
         font-size: 0.66rem;
         font-weight: 700;
         padding: 0.22rem 0.48rem;
         border-radius: 999px;
     }
-    .ws-ds-mobile .mk-lcard-foot {
+    .ws-ds-mobile .mk-lcard:not(.mk-lcard-native) .mk-lcard-foot {
         margin-top: 0.15rem;
         padding-top: 0.55rem;
         border-top: 1px solid color-mix(in srgb, var(--ws-border) 45%, transparent);
         gap: 0.4rem;
     }
-    .ws-ds-mobile .mk-lcard-btn {
+    .ws-ds-mobile .mk-lcard:not(.mk-lcard-native) .mk-lcard-btn {
         min-height: 2.45rem;
         border-radius: 12px;
         font-size: 0.74rem;
         font-weight: 750;
     }
-    .ws-ds-mobile .mk-lcard-btn--primary {
+    .ws-ds-mobile .mk-lcard:not(.mk-lcard-native) .mk-lcard-btn--primary {
         flex: 1;
         justify-content: center;
         background: linear-gradient(
@@ -457,7 +457,7 @@
         color: #fff;
         border: none;
     }
-    .ws-ds-mobile .mk-lcard-btn--icon {
+    .ws-ds-mobile .mk-lcard:not(.mk-lcard-native) .mk-lcard-btn--icon {
         width: 2.45rem;
         min-width: 2.45rem;
     }

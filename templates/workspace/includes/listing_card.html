@@ -1,7 +1,7 @@
 {% load humanize workspace_tags %}
 {% with feat=listing_features|dict_get:listing.id score=value_map|dict_get:listing.id lm=listing_metas|dict_get:listing.token pf=personal_files_map|dict_get:listing.token %}
 <article class="mk-lcard mk-lcard-native" data-token="{{ listing.token }}" data-href="{% url 'workspace:listing_detail' listing.dataset_id listing.id %}">
-    <div class="mk-lcard-cover{% if listing.images|length > 1 %} mk-lcard-cover--gallery{% endif %}">
+    <div class="mk-lcard-cover mk-lcard-native__media{% if listing.images|length > 1 %} mk-lcard-cover--gallery{% endif %}">
         {% if listing.images %}
         <a href="{% url 'workspace:listing_detail' listing.dataset_id listing.id %}" class="mk-lcard-cover-link" tabindex="-1" aria-label="مشاهده آگهی">
             <img class="mk-lcard-cover-img" src="{{ listing.images.0 }}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">
@@ -19,9 +19,6 @@
         <button type="button" class="mk-lcard-nav mk-lcard-nav--next" aria-label="عکس بعدی">
             <i class="fas fa-chevron-left" aria-hidden="true"></i>
         </button>
-        <span class="mk-lcard-cover-count" aria-live="polite">
-            <b data-gallery-idx>1</b><span class="mk-lcard-cover-count-sep">/</span><span data-gallery-total>{{ gallery_imgs|length }}</span>
-        </span>
         {% endwith %}
         {% endif %}
         {% else %}
@@ -32,7 +29,14 @@
         </a>
         {% endif %}
         <span class="mk-lcard-cover-shade" aria-hidden="true"></span>
-        <div class="mk-lcard-cover-top">
+        <span class="mk-lcard-native__prop-badge">ملک</span>
+        {% if listing.images|length %}
+        <span class="mk-lcard-native__photos" aria-label="{{ listing.images|length }} تصویر">
+            <i class="fas fa-camera" aria-hidden="true"></i>
+            <span>{{ listing.images|length }}</span>
+        </span>
+        {% endif %}
+        <div class="mk-lcard-cover-top mk-lcard-native__cover-meta">
             {% include 'workspace/includes/listing_advertiser_pill.html' %}
             {% with badge=score|ws_value_badge %}
             {% if badge == 'below' %}
@@ -47,104 +51,73 @@
         {% include 'workspace/includes/listing_image_auth_badge.html' with auth_class='mk-img-auth--cover' %}
     </div>
 
-    <div class="mk-lcard-body mk-lcard-native__body">
-        <div class="mk-lcard-price-row mk-lcard-native__kpi">
-            {% if tx.show_price %}
-            <div class="mk-lcard-price">
-                <span class="mk-lcard-price-lbl">قیمت</span>
-                {% if listing.price %}<strong class="mk-money" title="{{ listing.price|ws_money }}">{{ listing.price|ws_money_compact }}</strong>{% else %}<span class="mk-lcard-empty">—</span>{% endif %}
-            </div>
-            {% endif %}
-            {% if tx.show_deposit %}
-            <div class="mk-lcard-price">
-                <span class="mk-lcard-price-lbl">ودیعه</span>
-                {% if listing.deposit %}<strong class="mk-money mk-money--deposit" title="{{ listing.deposit|ws_money }}">{{ listing.deposit|ws_money_compact }}</strong>{% else %}<span class="mk-lcard-empty">—</span>{% endif %}
-            </div>
-            {% endif %}
-            {% if tx.show_rent %}
-            <div class="mk-lcard-price">
-                <span class="mk-lcard-price-lbl">اجاره</span>
-                {% if listing.rent %}<strong class="mk-money mk-money--rent" title="{{ listing.rent|ws_money }}">{{ listing.rent|ws_money_compact }}</strong>
-                {% elif listing.deposit %}<span class="mk-rent-tag" title="رهن کامل">رهن</span>
-                {% else %}<span class="mk-lcard-empty">—</span>{% endif %}
-            </div>
-            {% endif %}
-            {% if listing.area %}
-            <div class="mk-lcard-price mk-lcard-price--area">
-                <span class="mk-lcard-price-lbl">متراژ</span>
-                <strong>{{ listing.area|floatformat:0 }}<small> م²</small></strong>
-            </div>
-            {% endif %}
-        </div>
+    <div class="mk-lcard-body mk-lcard-native__panel">
+        <span class="mk-lcard-native__status mk-tx-{{ tx.mode }}">{{ tx.badge }}</span>
 
-        <div class="mk-lcard-head mk-lcard-native__head">
-            <h3 class="mk-lcard-title">
-                <a href="{% url 'workspace:listing_detail' listing.dataset_id listing.id %}" title="{{ listing.title }}">{{ listing.title }}</a>
-            </h3>
-            {% if lm.tag or lm.is_favorite or pf or show_dataset_column or feat.is_vacant %}
-            <div class="mk-lcard-tags mk-lcard-native__tags">
-                {% if show_dataset_column %}<span class="mk-lcard-tag mk-lcard-tag--dataset" title="{{ listing.dataset.name }}">{{ listing.dataset.name|truncatechars:18 }}</span>{% endif %}
-                {% if feat.is_vacant %}<span class="mk-lcard-tag mk-lcard-tag--vacant" title="ملک تخلیه است"><i class="fas fa-door-open" aria-hidden="true"></i> تخلیه</span>{% endif %}
-                {% if lm.tag %}<span class="mk-lcard-tag">{{ lm.tag }}</span>{% endif %}
-                {% if lm.is_favorite %}<span class="mk-lcard-tag mk-lcard-tag--star" title="علاقه‌مند"><i class="fas fa-star" aria-hidden="true"></i></span>{% endif %}
-                {% if pf %}<span class="mk-lcard-tag mk-lcard-tag--folder" title="در فایل‌های شخصی"><i class="fas fa-folder" aria-hidden="true"></i></span>{% endif %}
-            </div>
-            {% endif %}
-        </div>
+        <h3 class="mk-lcard-title mk-lcard-native__title">
+            <a href="{% url 'workspace:listing_detail' listing.dataset_id listing.id %}" title="{{ listing.title }}">{{ listing.title }}</a>
+        </h3>
 
-        <div class="mk-lcard-meta-row mk-lcard-native__loc">
-            {% if listing.neighborhood or listing.city %}
-            <span class="mk-lcard-chip mk-lcard-chip--loc">
-                <i class="fas fa-location-dot" aria-hidden="true"></i>
-                {% if listing.neighborhood %}{{ listing.neighborhood|truncatechars:22 }}{% elif listing.city %}{{ listing.city|truncatechars:22 }}{% endif %}
-            </span>
-            {% endif %}
-            <span class="mk-lcard-chip mk-lcard-chip--tx mk-tx-{{ tx.mode }} mk-lcard-native__status">{{ tx.badge }}</span>
-        </div>
-
-        {% if listing.area or feat.rooms or listing.rooms %}
-        <div class="mk-lcard-native__facts" aria-label="متراژ و اتاق">
-            {% if listing.area %}<span class="mk-lcard-native__fact"><i class="fas fa-ruler-combined" aria-hidden="true"></i>{{ listing.area|floatformat:0 }} م²</span>{% endif %}
-            {% if feat.rooms or listing.rooms %}<span class="mk-lcard-native__fact"><i class="fas fa-door-open" aria-hidden="true"></i>{{ feat.rooms|default:listing.rooms }} خواب</span>{% endif %}
-        </div>
+        {% if listing.neighborhood or listing.city %}
+        <p class="mk-lcard-native__loc">
+            <i class="fas fa-location-dot" aria-hidden="true"></i>
+            <span>{% if listing.neighborhood %}{{ listing.neighborhood|truncatechars:18 }}{% if listing.city %}، {% endif %}{% endif %}{% if listing.city %}{{ listing.city|truncatechars:14 }}{% endif %}</span>
+        </p>
         {% endif %}
 
-        {% if feat.rooms or listing.rooms or feat.floor or feat.build_year or feat.elevator is True or feat.parking is True or feat.storage is True %}
-        <div class="mk-lcard-specs mk-lcard-native__specs-desk">
+        <div class="mk-lcard-native__pricebox">
+            {% if tx.show_price and listing.price %}
+            <strong class="mk-lcard-native__price mk-money" title="{{ listing.price|ws_money }}">{{ listing.price|ws_money_compact }}</strong>
+            {% if listing.area %}
+            {% widthratio listing.price listing.area 1 as ppm_val %}
+            <span class="mk-lcard-native__ppm">{{ ppm_val|ws_money_compact }} / متر</span>
+            {% endif %}
+            {% elif tx.show_deposit and listing.deposit %}
+            <strong class="mk-lcard-native__price mk-money mk-money--deposit" title="{{ listing.deposit|ws_money }}">{{ listing.deposit|ws_money_compact }}</strong>
+            <span class="mk-lcard-native__ppm">ودیعه</span>
+            {% elif tx.show_rent and listing.rent %}
+            <strong class="mk-lcard-native__price mk-money mk-money--rent" title="{{ listing.rent|ws_money }}">{{ listing.rent|ws_money_compact }}</strong>
+            <span class="mk-lcard-native__ppm">اجاره ماهانه</span>
+            {% elif tx.show_rent and listing.deposit %}
+            <strong class="mk-lcard-native__price">رهن کامل</strong>
+            {% else %}
+            <strong class="mk-lcard-native__price is-muted">—</strong>
+            {% endif %}
+        </div>
+
+        <ul class="mk-lcard-native__rail" aria-label="مشخصات">
+            {% if listing.area %}
+            <li class="mk-lcard-native__rail-item">
+                <i class="fas fa-ruler-combined" aria-hidden="true"></i>
+                <span>{{ listing.area|floatformat:0 }} متر</span>
+            </li>
+            {% endif %}
             {% if feat.rooms or listing.rooms %}
-            <span class="mk-lcard-chip"><i class="fas fa-door-open" aria-hidden="true"></i>{{ feat.rooms|default:listing.rooms }} خواب</span>
-            {% endif %}
-            {% if feat.floor %}
-            <span class="mk-lcard-chip"><i class="fas fa-layer-group" aria-hidden="true"></i>طبقه {{ feat.floor }}</span>
-            {% endif %}
-            {% if feat.build_year %}
-            <span class="mk-lcard-chip"><i class="fas fa-calendar" aria-hidden="true"></i>{{ feat.build_year }}</span>
-            {% endif %}
-            {% if feat.elevator is True %}
-            <span class="mk-lcard-chip"><i class="fas fa-building" aria-hidden="true"></i>آسانسور</span>
+            <li class="mk-lcard-native__rail-item">
+                <i class="fas fa-bed" aria-hidden="true"></i>
+                <span>{{ feat.rooms|default:listing.rooms }} خواب</span>
+            </li>
             {% endif %}
             {% if feat.parking is True %}
-            <span class="mk-lcard-chip"><i class="fas fa-car" aria-hidden="true"></i>پارکینگ</span>
+            <li class="mk-lcard-native__rail-item">
+                <i class="fas fa-car" aria-hidden="true"></i>
+                <span>پارکینگ</span>
+            </li>
+            {% elif feat.elevator is True %}
+            <li class="mk-lcard-native__rail-item">
+                <i class="fas fa-building" aria-hidden="true"></i>
+                <span>آسانسور</span>
+            </li>
             {% endif %}
-            {% if feat.storage is True %}
-            <span class="mk-lcard-chip"><i class="fas fa-box" aria-hidden="true"></i>انباری</span>
-            {% endif %}
-        </div>
-        {% elif feat.highlights %}
-        <div class="mk-lcard-specs">
-            {% for h in feat.highlights|slice:":3" %}
-            <span class="mk-lcard-chip mk-lcard-chip--muted">{{ h|truncatechars:16 }}</span>
-            {% endfor %}
-        </div>
-        {% endif %}
+        </ul>
 
-        <footer class="mk-lcard-foot mk-lcard-native__actions">
-            <a href="{% url 'workspace:listing_detail' listing.dataset_id listing.id %}" class="mk-lcard-btn mk-lcard-btn--primary mk-lcard-native__cta">
+        <footer class="mk-lcard-foot mk-lcard-native__foot">
+            <a href="{% url 'workspace:listing_detail' listing.dataset_id listing.id %}" class="mk-lcard-native__cta">
                 <span>مشاهده فایل</span>
                 <i class="fas fa-arrow-left" aria-hidden="true"></i>
             </a>
             <details class="mk-action-menu mk-lcard-more">
-                <summary class="mk-lcard-btn mk-lcard-btn--icon" aria-label="عملیات بیشتر"><i class="fas fa-ellipsis-vertical" aria-hidden="true"></i></summary>
+                <summary class="mk-lcard-btn mk-lcard-btn--icon mk-lcard-native__menu" aria-label="عملیات بیشتر"><i class="fas fa-ellipsis-vertical" aria-hidden="true"></i></summary>
                 <div class="mk-action-menu-panel" role="menu">
                     <button type="button" class="mk-action-menu-item js-edit-listing"
                         data-id="{{ listing.id }}" data-dataset-id="{{ listing.dataset_id }}">{% include 'includes/icon_slot.html' with decor='file_edit' size='inline' only %} ویرایش</button>

@@ -319,7 +319,224 @@ body.ws-body .ws-amenity:hover .df-decor-icon {
     transform: none;
 }
 
-/* ─── Reduced motion ─── */
+/* ═══════════════════════════════════════════════════════════
+   Luxury palette — Font Awesome + interactive glyphs
+   Soft hover color shift across violet · gold · teal · indigo
+   Loads last in base.html (after mobile-premium-v7)
+   ═══════════════════════════════════════════════════════════ */
+
+body.ws-body {
+    --ws-luxe-violet: #7c3aed;
+    --ws-luxe-violet-deep: #6d28d9;
+    --ws-luxe-indigo: #4f46e5;
+    --ws-luxe-gold: #c9a227;
+    --ws-luxe-gold-soft: #d4af37;
+    --ws-luxe-teal: #0d9488;
+    --ws-luxe-cyan: #0891b2;
+    --ws-luxe-rose: #e11d48;
+    --ws-luxe-slate: #64748b;
+    --ws-luxe-hover-ease: cubic-bezier(0.4, 0, 0.2, 1);
+    --ws-luxe-hover-ms: 220ms;
+}
+
+/* Base transition — all FA icons inside interactive workspace controls */
+body.ws-body :is(
+    .ws-nav-item,
+    .ws-nav-btn,
+    .ws-sidebar-util-btn,
+    .ws-bottom-nav-item,
+    .crm-nav-item,
+    .crm-dash-act,
+    .crm-contacts-mob-icon-btn,
+    .crm-contacts-mob-toolbar-item,
+    .crm-contacts-mob-add-btn,
+    .crm-contacts-mob-filter-trigger,
+    .crm-contacts-mob-row-more-trigger,
+    .crm-contacts-mob-row-more-item,
+    .crm-contacts-mob-act,
+    .crm-contacts-fab,
+    .crm-contact-mob-menu-trigger,
+    .crm-contact-mob-menu-item,
+    .crm-contact-mob-primary__btn,
+    .crm-contact-dock-btn,
+    .crm-contact-dock-more-item,
+    .crm-contact-intel-strip__cell,
+    .crm-contact-hero__back,
+    .crm-contact-hero__action,
+    .crm-contact-hero__quick,
+    .crm-contact-hero__edit-btn,
+    .crm-contact-seg__ico,
+    .crm-contacts-view-btn,
+    .crm-contacts-row-act,
+    .crm-contact-panel-head .crm-dash-act,
+    .crm-timeline-event__action,
+    .mk-hub-head-btn,
+    .mk-hero-btn,
+    .mk-hub-quick-item,
+    .mk-row-btn,
+    .mk-filing-mob-icon-btn,
+    .mk-action-menu-item,
+    .ws-mobile-topbar-act,
+    button,
+    a[role="menuitem"]
+) :is(i, .fa, .fas, .far, .fab, .fal, .fa-solid, .fa-regular, .fa-brands) {
+    transition:
+        color var(--ws-luxe-hover-ms) var(--ws-luxe-hover-ease),
+        opacity var(--ws-luxe-hover-ms) var(--ws-luxe-hover-ease),
+        filter var(--ws-luxe-hover-ms) var(--ws-luxe-hover-ease),
+        transform var(--ws-icon-duration, 180ms) var(--ws-icon-ease, ease);
+}
+
+/* Default hover — violet luxury */
+@media (hover: hover) {
+    body.ws-body :is(
+        .crm-contacts-mob-icon-btn,
+        .crm-contacts-mob-toolbar-item,
+        .crm-contact-mob-menu-trigger,
+        .crm-contacts-mob-row-more-trigger,
+        .crm-contacts-mob-filter-trigger,
+        .crm-contact-hero__back,
+        .crm-contacts-view-btn,
+        .crm-contacts-row-act,
+        .crm-contact-seg__ico,
+        .ws-nav-item,
+        .ws-bottom-nav-item,
+        .crm-nav-item,
+        .mk-hub-head-btn,
+        .mk-row-btn
+    ):hover :is(i, .fa, .fas, .far, .fab) {
+        color: var(--ws-luxe-violet-deep);
+        filter: drop-shadow(0 1px 3px color-mix(in srgb, var(--ws-luxe-violet) 28%, transparent));
+    }
+
+    /* Call — teal */
+    body.ws-body :is(
+        .crm-contacts-mob-act--primary,
+        .crm-contact-mob-primary__btn--call,
+        .crm-contact-dock-btn--primary
+    ):hover :is(.fa-phone, i) {
+        color: #fff;
+        filter: drop-shadow(0 1px 4px color-mix(in srgb, var(--ws-luxe-teal) 45%, transparent));
+    }
+
+    /* Message — indigo/violet */
+    body.ws-body :is(
+        .crm-contacts-mob-act--secondary,
+        .crm-contact-mob-primary__btn--msg
+    ):hover :is(.fa-comment, .fa-comment-dots, i) {
+        color: var(--ws-luxe-indigo);
+        filter: drop-shadow(0 1px 3px color-mix(in srgb, var(--ws-luxe-indigo) 30%, transparent));
+    }
+
+    /* WhatsApp / social — teal-cyan */
+    body.ws-body :is(
+        .crm-contact-dock-more-item,
+        .crm-contacts-mob-row-more-item
+    ):hover :is(.fa-whatsapp, .fab) {
+        color: var(--ws-luxe-teal);
+    }
+
+    /* Calendar / follow-up — gold */
+    body.ws-body :is(
+        .crm-contact-mob-primary__btn--follow,
+        .crm-contact-dock-more-item,
+        .crm-contact-intel-strip__cell--next
+    ):hover :is(.fa-calendar-plus, .fa-calendar-check, .fa-bell, .fa-clock) {
+        color: var(--ws-luxe-gold-soft);
+    }
+
+    /* Deal / property — gold accent */
+    body.ws-body :is(
+        .crm-contact-dock-btn,
+        .crm-contact-intel-strip__cell--deal
+    ):hover :is(.fa-handshake, .fa-house, .fa-wand-magic-sparkles) {
+        color: var(--ws-luxe-gold);
+    }
+
+    /* Edit / pen — violet */
+    body.ws-body :is(
+        .crm-contact-mob-menu-item,
+        .crm-contact-dock-more-item,
+        .crm-contact-hero__edit-btn,
+        .crm-dash-act,
+        .crm-contact-panel-head .crm-dash-act
+    ):hover :is(.fa-pen, .fa-pen-to-square, .fa-sliders, .fa-sliders-h) {
+        color: var(--ws-luxe-violet);
+    }
+
+    /* Add / plus — violet glow */
+    body.ws-body :is(
+        .crm-contacts-mob-add-btn,
+        .crm-contacts-fab,
+        .crm-contact-dock-btn
+    ):hover :is(.fa-plus, .fa-user-plus) {
+        color: #fff;
+        filter: drop-shadow(0 2px 6px color-mix(in srgb, var(--ws-luxe-violet) 50%, transparent));
+    }
+
+    /* Intel strip cells */
+    body.ws-body .crm-contact-intel-strip__cell.is-action:hover .crm-contact-intel-strip__ico i {
+        color: var(--ws-luxe-violet-deep);
+    }
+
+    body.ws-body .crm-contact-intel-strip__cell--match.is-action:hover .crm-contact-intel-strip__ico i {
+        color: var(--ws-luxe-cyan);
+    }
+
+    body.ws-body .crm-contact-intel-strip__cell--contact.is-action:hover .crm-contact-intel-strip__ico i {
+        color: var(--ws-luxe-teal);
+    }
+
+    /* CRM dash actions */
+    body.ws-body .crm-dash-act:not(.crm-dash-act--primary):hover :is(i, .fa) {
+        color: var(--ws-luxe-violet-deep);
+    }
+
+    body.ws-body .crm-dash-act--primary:hover :is(i, .fa) {
+        color: #fff;
+        filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.12));
+    }
+
+    /* Tab chips active icon */
+    body.ws-body .crm-contact-tabs .crm-tab-pro:not(.active):hover .crm-contact-seg__ico i {
+        color: var(--ws-luxe-violet);
+    }
+
+    body.ws-body .crm-contacts-mob-filter-chip:not(.is-active):hover {
+        color: var(--ws-luxe-violet-deep);
+    }
+}
+
+/* Touch / active — same palette without requiring hover */
+body.ws-body :is(
+    .crm-contacts-mob-icon-btn,
+    .crm-contacts-mob-toolbar-item,
+    .crm-contact-mob-menu-trigger,
+    .crm-contacts-mob-row-more-trigger,
+    .crm-contacts-mob-filter-trigger,
+    .crm-contact-dock-btn,
+    .crm-contacts-mob-act,
+    .crm-contact-mob-primary__btn,
+    .crm-dash-act,
+    .crm-contact-intel-strip__cell.is-action
+):active :is(i, .fa, .fas, .far, .fab) {
+    color: var(--ws-luxe-violet-deep);
+    transition-duration: 120ms;
+}
+
+body.ws-body :is(
+    .crm-contacts-mob-act--primary,
+    .crm-contact-mob-primary__btn--call,
+    .crm-contact-dock-btn--primary
+):active :is(i, .fa) {
+    color: #fff;
+    filter: drop-shadow(0 1px 3px color-mix(in srgb, var(--ws-luxe-teal) 40%, transparent));
+}
+
+body.ws-body .crm-contacts-mob-act--secondary:active :is(.fa-comment, i) {
+    color: var(--ws-luxe-indigo);
+}
+
 @media (prefers-reduced-motion: reduce) {
     body.ws-body .df-decor-icon,
     body.ws-body .mk-hub-metric-icon,
@@ -336,5 +553,10 @@ body.ws-body .ws-amenity:hover .df-decor-icon {
         .mk-hub-head-btn
     ):hover .df-decor-icon {
         transform: none;
+    }
+
+    body.ws-body :is(i, .fa, .fas, .far, .fab) {
+        transition: color var(--ws-luxe-hover-ms) var(--ws-luxe-hover-ease) !important;
+        transform: none !important;
     }
 }

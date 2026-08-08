@@ -1,0 +1,313 @@
+/* ═══════════════════════════════════════════════════════════
+   Workspace Icon Micro Interaction Layer
+   Lucide SVG only — scoped to .ws-body (no PNG, no emoji)
+   Loads after workspace-polish.css
+   ═══════════════════════════════════════════════════════════ */
+
+body.ws-body {
+    --ws-icon-ease: cubic-bezier(0.4, 0, 0.2, 1);
+    --ws-icon-duration: 200ms;
+    --ws-icon-glow: drop-shadow(0 1px 2px rgba(124, 58, 237, 0.22));
+    --ws-icon-glow-soft: drop-shadow(0 1px 3px rgba(124, 58, 237, 0.16));
+}
+
+/* ─── Base: all Lucide icons in workspace ─── */
+body.ws-body .df-decor-icon {
+    transition:
+        color var(--ws-icon-duration) var(--ws-icon-ease),
+        transform var(--ws-icon-duration) var(--ws-icon-ease),
+        filter var(--ws-icon-duration) var(--ws-icon-ease),
+        opacity var(--ws-icon-duration) var(--ws-icon-ease);
+    transform-origin: center center;
+    will-change: transform;
+}
+
+body.ws-body .df-decor-icon svg.df-lucide-svg {
+    transition: stroke var(--ws-icon-duration) var(--ws-icon-ease);
+}
+
+/* Static / positioned icons — no lift */
+body.ws-body :is(
+    .mk-filter-search,
+    .mk-table-search,
+    .ws-tbx-search-wrap,
+    .crm-deals-search,
+    .ws-empty-icon,
+    .mk-filing-empty-icon
+) .df-decor-icon {
+    will-change: auto;
+}
+
+body.ws-body :is(
+    .mk-filter-search,
+    .mk-table-search,
+    .ws-tbx-search-wrap,
+    .crm-deals-search
+) .df-decor-icon {
+    transition: color var(--ws-icon-duration) var(--ws-icon-ease), opacity var(--ws-icon-duration) var(--ws-icon-ease);
+}
+
+/* ─── Interactive hover: primary color + micro lift ─── */
+body.ws-body :is(
+    .ws-nav-item,
+    .ws-nav-btn,
+    .ws-sidebar-util-btn,
+    .crm-nav-item,
+    .mk-hub-head-btn,
+    .mk-hero-btn,
+    .crm-dash-act,
+    .mk-hub-quick-item,
+    .mk-hub-metric,
+    .mk-row-btn,
+    .mk-action-menu-item,
+    .mk-hub-quick-item-icon,
+    .ws-bottom-nav-item
+):hover .df-decor-icon {
+    color: var(--mk-icon-color-active, #7c3aed);
+}
+
+body.ws-body :is(
+    .ws-nav-item,
+    .ws-nav-btn,
+    .ws-sidebar-util-btn,
+    .crm-nav-item,
+    .mk-hub-head-btn,
+    .mk-hero-btn,
+    .crm-dash-act,
+    .mk-hub-quick-item,
+    .mk-hub-metric,
+    .mk-row-btn,
+    .mk-action-menu-item,
+    .ws-bottom-nav-item
+):hover .df-decor-icon {
+    transform: scale(1.05) translateY(-1px);
+}
+
+/* Search icons — keep positional transform, no lift */
+body.ws-body :is(
+    .mk-filter-search,
+    .mk-table-search,
+    .ws-tbx-search-wrap,
+    .crm-deals-search
+):hover .df-decor-icon {
+    transform: translateY(-50%);
+}
+
+/* Primary buttons — keep white icon, subtle depth only */
+body.ws-body :is(
+    .mk-hub-head-btn--primary,
+    .crm-dash-act--primary
+):hover .df-decor-icon {
+    color: #fff;
+    transform: scale(1.05) translateY(-1px);
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.14));
+}
+
+/* ─── Active state: subtle glow ─── */
+body.ws-body :is(
+    .ws-nav-item.active,
+    .crm-nav-item.active,
+    .ws-sidebar-util-btn.active
+) .df-decor-icon {
+    color: var(--mk-icon-color-active, #7c3aed);
+    filter: var(--ws-icon-glow-soft);
+}
+
+body.ws-body .mk-hub-quick-item.is-active .df-decor-icon,
+body.ws-body .mk-hub-quick-item:active .df-decor-icon {
+    color: var(--mk-icon-color-active, #7c3aed);
+    filter: var(--ws-icon-glow-soft);
+}
+
+body.ws-body .ws-bottom-nav-item.is-active .df-decor-icon {
+    color: var(--mk-icon-color-active, #7c3aed);
+    filter: var(--ws-icon-glow);
+}
+
+/* ─── KPI icon containers ─── */
+body.ws-body .mk-hub-metric-icon,
+body.ws-body .mk-ds-kpi-icon,
+body.ws-body .ws-stat-icon,
+body.ws-body .crm-deal-kpi-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 12px;
+    background: rgba(124, 58, 237, 0.06);
+    opacity: 1;
+    transition:
+        background var(--ws-icon-duration) var(--ws-icon-ease),
+        transform var(--ws-icon-duration) var(--ws-icon-ease);
+}
+
+body.ws-body .mk-hub-metric:hover .mk-hub-metric-icon,
+body.ws-body .mk-hub-metric:focus-visible .mk-hub-metric-icon {
+    background: rgba(124, 58, 237, 0.1);
+}
+
+body.ws-body .mk-hub-metric-icon .df-decor-icon,
+body.ws-body .mk-ds-kpi-icon .df-decor-icon {
+    --df-decor-size: 1.125rem;
+    opacity: 0.88;
+    color: var(--mk-icon-color, #64748b);
+}
+
+body.ws-body .mk-hub-metric:hover .mk-hub-metric-icon .df-decor-icon {
+    opacity: 1;
+    color: var(--mk-icon-color-active, #7c3aed);
+    transform: scale(1.05) translateY(-1px);
+}
+
+/* Tone-aware KPI containers (keep metric data-tone colors on icon) */
+body.ws-body .mk-hub-metric[data-tone="green"] .mk-hub-metric-icon {
+    background: rgba(16, 185, 129, 0.07);
+}
+body.ws-body .mk-hub-metric[data-tone="green"]:hover .mk-hub-metric-icon {
+    background: rgba(16, 185, 129, 0.11);
+}
+body.ws-body .mk-hub-metric[data-tone="green"] .mk-hub-metric-icon .df-decor-icon {
+    color: #10b981;
+}
+body.ws-body .mk-hub-metric[data-tone="green"]:hover .mk-hub-metric-icon .df-decor-icon {
+    color: #059669;
+}
+
+body.ws-body .mk-hub-metric[data-tone="blue"] .mk-hub-metric-icon,
+body.ws-body .mk-hub-metric[data-tone="cyan"] .mk-hub-metric-icon {
+    background: rgba(37, 99, 235, 0.06);
+}
+body.ws-body .mk-hub-metric[data-tone="blue"]:hover .mk-hub-metric-icon,
+body.ws-body .mk-hub-metric[data-tone="cyan"]:hover .mk-hub-metric-icon {
+    background: rgba(37, 99, 235, 0.1);
+}
+
+body.ws-body .mk-hub-metric[data-tone="amber"] .mk-hub-metric-icon {
+    background: rgba(245, 158, 11, 0.08);
+}
+body.ws-body .mk-hub-metric[data-tone="rose"] .mk-hub-metric-icon {
+    background: rgba(244, 63, 94, 0.07);
+}
+
+/* ─── Quick navigation ─── */
+body.ws-body .mk-hub-quick-item {
+    transition:
+        background var(--ws-icon-duration) var(--ws-icon-ease),
+        color var(--ws-icon-duration) var(--ws-icon-ease);
+}
+
+body.ws-body .mk-hub-quick-item:hover {
+    background: rgba(124, 58, 237, 0.05);
+}
+
+body.ws-body .mk-hub-quick-item-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform var(--ws-icon-duration) var(--ws-icon-ease);
+}
+
+body.ws-body .mk-hub-quick-item:hover .mk-hub-quick-item-icon {
+    animation: ws-icon-quick-nudge 0.38s var(--ws-icon-ease);
+}
+
+@keyframes ws-icon-quick-nudge {
+    0% {
+        transform: translateY(0) scale(1);
+    }
+    45% {
+        transform: translateY(-2px) scale(1.06);
+    }
+    100% {
+        transform: translateY(-1px) scale(1.05);
+    }
+}
+
+/* ─── Accent: AI, notifications, analytics, key actions ─── */
+body.ws-body :is(
+    .ws-ai-trigger,
+    .ws-ai-card,
+    .crm-drawer-head-ai-icon,
+    .crm-contact-hero__edit-btn--ai,
+    .crm-ai-compose-cta
+) .df-decor-icon {
+    color: #7c3aed;
+}
+
+body.ws-body :is(
+    .ws-ai-trigger,
+    .crm-ai-compose-cta
+):hover .df-decor-icon {
+    color: #6d28d9;
+    filter: var(--ws-icon-glow-soft);
+}
+
+body.ws-body .ws-nav-item:has(.ws-nav-badge:not([hidden])) .df-decor-icon,
+body.ws-body .ws-nav-item:has(.ws-nav-badge:not(:empty)) .df-decor-icon {
+    color: #6d28d9;
+}
+
+body.ws-body .ws-nav-item:has(.ws-nav-badge):hover .df-decor-icon {
+    filter: var(--ws-icon-glow-soft);
+}
+
+body.ws-body :is(
+    .mk-insight-icon,
+    .ws-tbx-analysis-icon,
+    .ws-home-insights-toggle-icon
+) .df-decor-icon {
+    color: #7c3aed;
+    opacity: 0.92;
+}
+
+body.ws-body .mk-insight-icon--chart .df-decor-icon {
+    color: #10b981;
+}
+
+body.ws-body .mk-insight-icon--pie .df-decor-icon {
+    color: #7c3aed;
+}
+
+body.ws-body .mk-insight-icon--comm .df-decor-icon {
+    color: #2563eb;
+}
+
+body.ws-body :is(
+    .mk-hub-head-btn--primary,
+    .crm-dash-act--primary,
+    .mk-filing-mob-icon-btn--primary
+) .df-decor-icon {
+    filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.1));
+}
+
+/* Amenity chips — micro feedback only, no lift */
+body.ws-body .ws-amenity .df-decor-icon {
+    transition: color var(--ws-icon-duration) var(--ws-icon-ease), opacity var(--ws-icon-duration) var(--ws-icon-ease);
+}
+
+body.ws-body .ws-amenity:hover .df-decor-icon {
+    color: var(--mk-icon-color-active, #7c3aed);
+    transform: none;
+}
+
+/* ─── Reduced motion ─── */
+@media (prefers-reduced-motion: reduce) {
+    body.ws-body .df-decor-icon,
+    body.ws-body .mk-hub-metric-icon,
+    body.ws-body .mk-hub-quick-item,
+    body.ws-body .mk-hub-quick-item-icon {
+        transition: color var(--ws-icon-duration) var(--ws-icon-ease), filter var(--ws-icon-duration) var(--ws-icon-ease);
+        animation: none !important;
+    }
+
+    body.ws-body :is(
+        .ws-nav-item,
+        .mk-hub-quick-item,
+        .mk-hub-metric,
+        .mk-hub-head-btn
+    ):hover .df-decor-icon {
+        transform: none;
+    }
+}

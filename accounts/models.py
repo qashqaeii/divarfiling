@@ -1384,6 +1384,14 @@ class AcquisitionAutomationCampaign(models.Model):
         help_text='پس از ساخت کمپین، enroll_pilot اجرا شود',
     )
     landing_url = models.URLField(default='https://divarfiling.ir/', max_length=500)
+    district_cursor = models.PositiveIntegerField(
+        default=0,
+        help_text='اندیس منطقه بعدی در districts — هر اجرا یک منطقه',
+    )
+    min_phones_per_district = models.PositiveIntegerField(
+        default=20,
+        help_text='هدف حداقل شماره در هر اجرای منطقه',
+    )
     next_run_at = models.DateTimeField(null=True, blank=True, db_index=True)
     last_run_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)

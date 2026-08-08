@@ -152,5 +152,7 @@ AcquisitionAutomationCampaign (due)
 ## Notes
 
 - Only **one run at a time** (Redis lock + DB check).
-- On rate limit / HIP: run status `rate_limited`, next run delayed by `ACQUISITION_COOLDOWN_HOURS` (default 4).
+- **No Playwright** in automation — `browser_hip=False`, first captcha stops the run.
+- On rate limit / HIP: run status `rate_limited`, partial leads still ingested if any phones were collected.
+- Next run delayed by `max(ACQUISITION_COOLDOWN_HOURS, campaign.interval_hours)`.
 - Session files remain in **phone-detector** — Django does not own sessions.

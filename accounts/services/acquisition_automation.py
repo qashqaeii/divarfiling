@@ -62,12 +62,53 @@ def has_active_run() -> bool:
     ).exists()
 
 
+def normalized_districts(campaign: AcquisitionAutomationCampaign) -> list[str]:
+    return [str(d).strip() for d in (campaign.districts or []) if str(d).strip()]
+
+
 def pick_district(campaign: AcquisitionAutomationCampaign) -> str:
-    districts = [str(d).strip() for d in (campaign.districts or []) if str(d).strip()]
+    """منطقه فعلی طبق district_cursor — هر run فقط یک منطقه."""
+    districts = normalized_districts(campaign)
     if not districts:
         raise ValueError(f'کمپین #{campaign.pk} منطقه‌ای ندارد.')
-    idx = campaign.runs.count() % len(districts)
+    idx = int(campaign.district_cursor or 0) % len(districts)
     return districts[idx]
+
+
+def district_rotation_info(campaign: AcquisitionAutomationCampaign) -> dict:
+    districts = normalized_districts(campaign)
+    total = len(districts)
+    if total == 0:
+        return {
+            'current': '',
+            'current_index': 0,
+            'total': 0,
+            'next': '',
+            'progress_label': '—',
+        }
+    idx = int(campaign.district_cursor or 0) % total
+    nxt = districts[(idx + 1) % total]
+    return {
+        'current': districts[idx],
+        'current_index': idx + 1,
+        'total': total,
+        'next': nxt,
+        'progress_label': f'{idx + 1}/{total}',
+    }
+
+
+def advance_district_cursor(campaign_id: int) -> None:
+    """پس از پایان هر run به منطقه بعدی برو (چرخشی)."""
+    campaign = AcquisitionAutomationCampaign.objects.filter(pk=campaign_id).only(
+        'id', 'district_cursor', 'districts',
+    ).first()
+    if not campaign:
+        return
+    total = len(normalized_districts(campaign))
+    if total <= 1:
+        return
+    nxt = (int(campaign.district_cursor or 0) + 1) % total
+    AcquisitionAutomationCampaign.objects.filter(pk=campaign_id).update(district_cursor=nxt)
 
 
 def schedule_due_campaigns(*, max_jobs: int = 1) -> list[AcquisitionRun]:
@@ -96,11 +137,17 @@ def schedule_due_campaigns(*, max_jobs: int = 1) -> list[AcquisitionRun]:
             continue
 
         district = pick_district(campaign)
+        rot = district_rotation_info(campaign)
         run = AcquisitionRun.objects.create(
             campaign=campaign,
             status=AcquisitionRun.Status.QUEUED,
             district=district,
-            metrics={'category': campaign.category, 'limit': campaign.limit_per_run},
+            metrics={
+                'category': campaign.category,
+                'limit': campaign.limit_per_run,
+                'district_index': rot['current_index'],
+                'district_total': rot['total'],
+            },
         )
         campaign.last_run_at = now
         campaign.next_run_at = now + timedelta(hours=max(1, int(campaign.interval_hours or 6)))
@@ -274,13 +321,29 @@ def finalize_run_from_worker(
     run.save()
 
     if worker_status == 'rate_limited':
-        cooldown = timezone.now() + timedelta(hours=_cooldown_hours())
+        campaign = AcquisitionAutomationCampaign.objects.filter(pk=run.campaign_id).first()
+        hours = _cooldown_hours()
+        if campaign:
+            hours = max(hours, int(campaign.interval_hours or 6))
+        cooldown = timezone.now() + timedelta(hours=hours)
         AcquisitionAutomationCampaign.objects.filter(pk=run.campaign_id).update(
             next_run_at=cooldown,
         )
+        if not run.error_message:
+            run.error_message = (
+                'محدودیت کپچا/HIP — اجرای بعدی پس از '
+                f'{hours} ساعت.'
+            )
+            run.save(update_fields=['error_message'])
 
     ingest_result: dict = {}
-    if auto_ingest and worker_status == 'completed' and (run.output_json or run.output_path):
+    can_ingest = worker_status == 'completed'
+    if worker_status == 'rate_limited':
+        can_ingest = bool(run.phones_extracted) or bool(
+            (run.output_json or {}).get('consultants') if isinstance(run.output_json, dict) else False
+        )
+
+    if auto_ingest and can_ingest and (run.output_json or run.output_path):
         try:
             ingest_result = ingest_acquisition_run(run)
         except LeadImportError as exc:
@@ -294,6 +357,10 @@ def finalize_run_from_worker(
             run.error_message = str(exc)
             run.save(update_fields=['status', 'error_message'])
             ingest_result = {'error': str(exc)}
+
+    # هر run (موفق یا captcha) → منطقه بعدی در اجرای بعدی
+    if worker_status in ('completed', 'rate_limited', 'failed', 'ingested'):
+        advance_district_cursor(run.campaign_id)
 
     release_run_lock()
     return {

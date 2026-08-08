@@ -112,3 +112,89 @@ class AcquisitionAutomationUITests(TestCase):
         self.assertEqual(c.districts, ['ونک', 'آجودانیه'])
         self.assertEqual(c.limit_per_run, 25)
         self.assertTrue(c.is_active)
+
+
+class DistrictRotationTests(TestCase):
+    def setUp(self):
+        self.campaign = AcquisitionAutomationCampaign.objects.create(
+            name='تهران · چرخشی',
+            city='تهران',
+            districts=['ونک', 'آشتیانی', 'امانیه'],
+            category='apartment-sell',
+            limit_per_run=20,
+            interval_hours=6,
+            is_active=True,
+        )
+
+    def test_pick_district_uses_cursor(self):
+        from accounts.services.acquisition_automation import pick_district
+
+        self.assertEqual(pick_district(self.campaign), 'ونک')
+        self.campaign.district_cursor = 1
+        self.campaign.save(update_fields=['district_cursor'])
+        self.assertEqual(pick_district(self.campaign), 'آشتیانی')
+
+    def test_finalize_advances_cursor(self):
+        from accounts.services.acquisition_automation import finalize_run_from_worker, pick_district
+
+        run = AcquisitionRun.objects.create(
+            campaign=self.campaign,
+            status=AcquisitionRun.Status.RUNNING,
+            district='ونک',
+            output_json={'metadata': {}, 'consultants': []},
+        )
+        finalize_run_from_worker(
+            run.pk,
+            worker_status='completed',
+            output_payload=run.output_json,
+            auto_ingest=False,
+        )
+        self.campaign.refresh_from_db()
+        self.assertEqual(self.campaign.district_cursor, 1)
+        self.assertEqual(pick_district(self.campaign), 'آشتیانی')
+
+    def test_schedule_stores_rotation_metrics(self):
+        from accounts.services.acquisition_automation import schedule_due_campaigns
+
+        self.campaign.next_run_at = timezone.now()
+        self.campaign.save()
+        created = schedule_due_campaigns(max_jobs=1)
+        self.assertEqual(len(created), 1)
+        run = created[0]
+        self.assertEqual(run.district, 'ونک')
+        self.assertEqual(run.metrics.get('district_index'), 1)
+        self.assertEqual(run.metrics.get('district_total'), 3)
+
+
+class AutomationPartialIngestTests(TestCase):
+    def test_rate_limited_with_phones_can_ingest(self):
+        from accounts.services.acquisition_automation import finalize_run_from_worker
+
+        campaign = AcquisitionAutomationCampaign.objects.create(
+            name='تست',
+            city='تهران',
+            districts=['ونک'],
+            interval_hours=6,
+        )
+        run = AcquisitionRun.objects.create(
+            campaign=campaign,
+            status=AcquisitionRun.Status.RUNNING,
+            district='ونک',
+            output_json={
+                'metadata': {'city': 'تهران', 'district': 'ونک', 'category': 'apartment-sell'},
+                'consultants': [
+                    {'consultant_name': 'آژانس تست', 'phone': '09123334444', 'district': 'ونک'},
+                ],
+            },
+            phones_extracted=1,
+        )
+        result = finalize_run_from_worker(
+            run.pk,
+            worker_status='rate_limited',
+            output_payload=run.output_json,
+            error_message='captcha',
+            auto_ingest=True,
+        )
+        run.refresh_from_db()
+        self.assertEqual(run.status, AcquisitionRun.Status.INGESTED)
+        self.assertIsNotNone(run.import_batch_id)

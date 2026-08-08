@@ -799,7 +799,9 @@ def render_step_body(*, step: CampaignStep, variant: CampaignVariant, link: str,
         templates = parse_variant_templates(step.message_template)
         template = templates.get(variant.key) or templates.get('A') or step.message_template
     body = template.replace('{link}', link)
-    body = body.replace('{district}', lead.district or lead.city or 'منطقه شما')
+    from accounts.services.lead_import import display_district_for_lead
+
+    body = body.replace('{district}', display_district_for_lead(lead))
     body = body.replace('{name}', lead.display_name or '')
     return body.strip()
 

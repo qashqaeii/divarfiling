@@ -138,7 +138,7 @@ def preview_phone_detector_json(
         stats['read'] += 1
         phone = normalize_phone(str(item.get('phone') or ''))
         name = str(item.get('consultant_name') or item.get('title') or '')[:255]
-        row_district = str(item.get('district') or district or '')
+        row_district = resolve_district_label(meta_district=district, item_district=str(item.get('district') or ''))
         lead_type, confidence = classify_lead_name(name)
 
         if not is_valid_iran_mobile(phone):
@@ -281,6 +281,117 @@ def normalize_region_label(text: str) -> str:
     t = t.replace('ك', 'ک').replace('ي', 'ی').replace('ة', 'ه')
     t = re.sub(r'\s+', ' ', t).strip()
     return t
+
+
+_PERSIAN_CHAR_RE = re.compile(r'[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]')
+
+
+def looks_like_ascii_slug(text: str) -> bool:
+    t = (text or '').strip()
+    if not t or _PERSIAN_CHAR_RE.search(t):
+        return False
+    return bool(re.fullmatch(r'[a-z0-9]+(?:-[a-z0-9]+)*', t, re.I))
+
+
+def resolve_district_label(*, meta_district: str = '', item_district: str = '') -> str:
+    """
+    نام فارسی منطقه برای SMS/UI.
+    metadata.district فارسی است؛ consultants[].district معمولاً slug انگلیسی.
+    """
+    meta = normalize_region_label(meta_district)
+    item = (item_district or '').strip()
+    if meta and looks_like_ascii_slug(item):
+        return meta
+    if item and not looks_like_ascii_slug(item):
+        return normalize_region_label(item)
+    if meta:
+        return meta
+    if item and looks_like_ascii_slug(item):
+        return resolve_district_slug(item) or item
+    return normalize_region_label(item) or item
+
+
+_slug_to_district_cache: dict[str, str] | None = None
+
+
+def _places_file_candidates() -> list:
+    from pathlib import Path
+    from django.conf import settings
+
+    pd = (getattr(settings, 'PHONE_DETECTOR_DIR', None) or '').strip()
+    candidates = []
+    if pd:
+        root = Path(pd).expanduser().resolve().parent
+        candidates.append(root / 'config' / 'places-web.json')
+        candidates.append(Path(pd).expanduser().resolve() / 'config' / 'places-web.json')
+    base = Path(getattr(settings, 'BASE_DIR', Path.cwd()))
+    candidates.extend([
+        base.parent / 'config' / 'places-web.json',
+        Path('/root/config/places-web.json'),
+    ])
+    return candidates
+
+
+def _load_slug_to_district_map() -> dict[str, str]:
+    global _slug_to_district_cache
+    if _slug_to_district_cache is not None:
+        return _slug_to_district_cache
+    mapping: dict[str, str] = {}
+    for path in _places_file_candidates():
+        if not path.is_file():
+            continue
+        try:
+            data = json.loads(path.read_text(encoding='utf-8'))
+        except (OSError, json.JSONDecodeError):
+            continue
+        if not isinstance(data, list):
+            continue
+        for item in data:
+            if str(item.get('type')) != '4':
+                continue
+            name = normalize_region_label(str(item.get('name') or ''))
+            slug = str(item.get('slug') or '').strip().casefold()
+            if name and slug:
+                mapping[slug] = name
+        break
+    _slug_to_district_cache = mapping
+    return mapping
+
+
+def resolve_district_slug(slug: str) -> str:
+    key = (slug or '').strip().casefold()
+    if not key:
+        return ''
+    return _load_slug_to_district_map().get(key, '')
+
+
+def display_district_for_lead(lead: MarketingLead) -> str:
+    """برچسب فارسی منطقه برای {district} در پیامک."""
+    raw = (lead.district or '').strip()
+    if raw and not looks_like_ascii_slug(raw):
+        return normalize_region_label(raw) or 'منطقه شما'
+
+    batch = getattr(lead, 'first_batch', None)
+    if batch is None and lead.first_batch_id:
+        batch = LeadImportBatch.objects.filter(pk=lead.first_batch_id).only('district').first()
+    if batch:
+        batch_label = normalize_region_label(batch.district or '')
+        if batch_label:
+            return batch_label
+
+    for entry in (lead.districts_json or []):
+        label = normalize_region_label(str(entry or ''))
+        if label and not looks_like_ascii_slug(label):
+            return label
+
+    if raw:
+        resolved = resolve_district_slug(raw)
+        if resolved:
+            return resolved
+        return raw
+
+    city = normalize_region_label(lead.city or '')
+    return city or 'منطقه شما'
 
 
 def region_merge_key(city: str, district: str, category: str = '') -> str:
@@ -494,6 +605,7 @@ def commit_import_batch(batch_id: int, *, preview_rows: Optional[List[PreviewRow
             continue
         phone = row.phone
         user = find_user_by_phone(phone)
+        district_label = resolve_district_label(meta_district=batch.district, item_district=row.district)
 
         if row.outcome == 'existing_user' or (user and row.outcome != 'already_lead_update'):
             lead, was_created = MarketingLead.objects.get_or_create(
@@ -502,7 +614,7 @@ def commit_import_batch(batch_id: int, *, preview_rows: Optional[List[PreviewRow
                     'display_name': row.name,
                     'source': 'phone_detector',
                     'city': batch.city,
-                    'district': row.district or batch.district,
+                    'district': district_label or batch.district,
                     'listing_category': batch.listing_category,
                     'lead_type': row.lead_type,
                     'classification_confidence': row.confidence,
@@ -510,7 +622,7 @@ def commit_import_batch(batch_id: int, *, preview_rows: Optional[List[PreviewRow
                     'matched_user': user,
                     'first_batch': batch,
                     'last_seen_at': now,
-                    'districts_json': [row.district] if row.district else [],
+                    'districts_json': [district_label] if district_label else [],
                 },
             )
             if not was_created:
@@ -518,8 +630,10 @@ def commit_import_batch(batch_id: int, *, preview_rows: Optional[List[PreviewRow
                 lead.matched_user = user or lead.matched_user
                 lead.sighting_count = (lead.sighting_count or 0) + 1
                 lead.last_seen_at = now
-                if row.district and row.district not in (lead.districts_json or []):
-                    lead.districts_json = list(lead.districts_json or []) + [row.district]
+                if district_label and district_label not in (lead.districts_json or []):
+                    lead.districts_json = list(lead.districts_json or []) + [district_label]
+                if district_label and (not lead.district or looks_like_ascii_slug(lead.district)):
+                    lead.district = district_label
                 lead.save()
                 updated += 1
             else:
@@ -548,7 +662,7 @@ def commit_import_batch(batch_id: int, *, preview_rows: Optional[List[PreviewRow
                     'display_name': row.name,
                     'source': 'phone_detector',
                     'city': batch.city,
-                    'district': row.district or batch.district,
+                    'district': district_label or batch.district,
                     'listing_category': batch.listing_category,
                     'lead_type': row.lead_type,
                     'classification_confidence': row.confidence,
@@ -556,7 +670,7 @@ def commit_import_batch(batch_id: int, *, preview_rows: Optional[List[PreviewRow
                     'matched_user': user,
                     'first_batch': batch,
                     'last_seen_at': now,
-                    'districts_json': [row.district] if row.district else [],
+                    'districts_json': [district_label] if district_label else [],
                 },
             )
             if was_created:
@@ -566,11 +680,12 @@ def commit_import_batch(batch_id: int, *, preview_rows: Optional[List[PreviewRow
                 lead.last_seen_at = now
                 if row.name and not lead.display_name:
                     lead.display_name = row.name
-                if row.district and row.district not in (lead.districts_json or []):
-                    lead.districts_json = list(lead.districts_json or []) + [row.district]
+                if district_label and district_label not in (lead.districts_json or []):
+                    lead.districts_json = list(lead.districts_json or []) + [district_label]
                 if lead.status == MarketingLead.Status.COLD:
                     lead.city = lead.city or batch.city
-                    lead.district = lead.district or row.district or batch.district
+                    if district_label and (not lead.district or looks_like_ascii_slug(lead.district)):
+                        lead.district = district_label
                 lead.save()
                 updated += 1
 

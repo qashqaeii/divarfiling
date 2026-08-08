@@ -83,6 +83,7 @@ def list_automation_cities(*, limit: int = 80) -> list[dict]:
 
 
 def list_districts_for_city(city_name: str, *, limit: int = 400) -> list[str]:
+    """مناطق یک شهر — ترتیب همان فایل places-web (برای چرخش sequential)."""
     city_name = (city_name or '').strip()
     if not city_name:
         return []
@@ -100,7 +101,13 @@ def list_districts_for_city(city_name: str, *, limit: int = 400) -> list[str]:
             name = str(item.get('name') or '').strip()
             if name:
                 names.append(name)
-    return sorted(set(names))[:limit]
+    seen: set[str] = set()
+    ordered: list[str] = []
+    for name in names:
+        if name not in seen:
+            seen.add(name)
+            ordered.append(name)
+    return ordered[:limit]
 
 
 def parse_districts_input(raw: str) -> list[str]:
@@ -148,6 +155,8 @@ def automation_overview_stats() -> dict:
 
 
 def automation_campaigns_for_ui(*, limit: int = 30) -> list[dict]:
+    from accounts.services.acquisition_automation import district_rotation_info
+
     qs = (
         AcquisitionAutomationCampaign.objects.annotate(
             runs_count=Count('runs'),
@@ -161,12 +170,20 @@ def automation_campaigns_for_ui(*, limit: int = 30) -> list[dict]:
     rows: list[dict] = []
     for c in qs:
         last_run = c.runs.order_by('-created_at').first()
+        districts = list(c.districts or [])
+        rot = district_rotation_info(c)
+        if len(districts) <= 4:
+            districts_display = ' · '.join(districts) or '—'
+        else:
+            districts_display = f'{len(districts)} منطقه · {districts[0]} … {districts[-1]}'
         rows.append({
             'campaign': c,
             'runs_count': c.runs_count,
             'ingested_count': c.ingested_count,
             'last_run': last_run,
-            'districts_display': ' · '.join(c.districts or []) or '—',
+            'districts_display': districts_display,
+            'districts_count': len(districts),
+            'rotation': rot,
         })
     return rows
 
@@ -190,9 +207,13 @@ def create_automation_campaign_from_form(data: dict) -> AcquisitionAutomationCam
 
     category = (data.get('category') or 'apartment-sell').strip()
     try:
-        limit_per_run = max(5, min(500, int(data.get('limit_per_run') or 30)))
+        limit_per_run = max(5, min(40, int(data.get('limit_per_run') or 20)))
     except (TypeError, ValueError):
-        limit_per_run = 30
+        limit_per_run = 20
+    try:
+        min_phones = max(5, min(40, int(data.get('min_phones_per_district') or 20)))
+    except (TypeError, ValueError):
+        min_phones = 20
     try:
         interval_hours = max(1, min(168, int(data.get('interval_hours') or 6)))
     except (TypeError, ValueError):
@@ -204,6 +225,7 @@ def create_automation_campaign_from_form(data: dict) -> AcquisitionAutomationCam
         districts=districts,
         category=category,
         limit_per_run=limit_per_run,
+        min_phones_per_district=min_phones,
         interval_hours=interval_hours,
         is_active=bool(data.get('is_active', True)),
         auto_create_campaign=bool(data.get('auto_create_campaign', True)),
@@ -227,12 +249,25 @@ def update_automation_campaign_from_form(campaign_id: int, data: dict) -> Acquis
     if not districts:
         raise AutomationUIError('حداقل یک منطقه لازم است.', code='missing_districts')
 
+    old_districts = list(campaign.districts or [])
+    if districts != old_districts:
+        campaign.district_cursor = 0
+    if data.get('reset_district_rotation'):
+        campaign.district_cursor = 0
+
     campaign.name = name
     campaign.city = city
     campaign.districts = districts
     campaign.category = (data.get('category') or campaign.category).strip()
     try:
-        campaign.limit_per_run = max(5, min(500, int(data.get('limit_per_run') or campaign.limit_per_run)))
+        campaign.limit_per_run = max(5, min(40, int(data.get('limit_per_run') or campaign.limit_per_run)))
+    except (TypeError, ValueError):
+        pass
+    try:
+        campaign.min_phones_per_district = max(
+            5,
+            min(40, int(data.get('min_phones_per_district') or campaign.min_phones_per_district)),
+        )
     except (TypeError, ValueError):
         pass
     try:
@@ -270,9 +305,23 @@ def reset_automation_schedule(campaign_id: int) -> AcquisitionAutomationCampaign
     return campaign
 
 
+def reset_automation_district_rotation(campaign_id: int) -> AcquisitionAutomationCampaign:
+    """چرخش مناطق را از اولین منطقه دوباره شروع کن."""
+    campaign = AcquisitionAutomationCampaign.objects.filter(pk=campaign_id).first()
+    if not campaign:
+        raise AutomationUIError('کمپین یافت نشد.', code='not_found')
+    campaign.district_cursor = 0
+    campaign.save(update_fields=['district_cursor'])
+    return campaign
+
+
 def queue_automation_run_now(campaign_id: int) -> AcquisitionRun:
     """یک run فوری در صف — بدون انتظار cron."""
-    from accounts.services.acquisition_automation import has_active_run, pick_district
+    from accounts.services.acquisition_automation import (
+        district_rotation_info,
+        has_active_run,
+        pick_district,
+    )
 
     if has_active_run():
         raise AutomationUIError(
@@ -287,12 +336,19 @@ def queue_automation_run_now(campaign_id: int) -> AcquisitionRun:
         raise AutomationUIError('کمپین فعال یافت نشد.', code='not_found')
 
     district = pick_district(campaign)
+    rot = district_rotation_info(campaign)
     now = timezone.now()
     run = AcquisitionRun.objects.create(
         campaign=campaign,
         status=AcquisitionRun.Status.QUEUED,
         district=district,
-        metrics={'category': campaign.category, 'limit': campaign.limit_per_run, 'manual': True},
+        metrics={
+            'category': campaign.category,
+            'limit': campaign.limit_per_run,
+            'manual': True,
+            'district_index': rot['current_index'],
+            'district_total': rot['total'],
+        },
     )
     campaign.last_run_at = now
     campaign.next_run_at = now + timezone.timedelta(hours=max(1, int(campaign.interval_hours or 6)))

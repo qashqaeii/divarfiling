@@ -782,7 +782,7 @@
                 <div class="adm-lac-section-head" style="margin-bottom:.75rem">
                     <div>
                         <h3 style="margin:0;font-size:1.05rem">کمپین جمع‌آوری جدید</h3>
-                        <p class="adm-lac-kpi-sub">هر اجرا یک منطقه (چرخشی) · سپس import و کمپین SMS</p>
+                        <p class="adm-lac-kpi-sub">هر اجرا یک منطقه به ترتیب لیست — ونک → آشتیانی → … → دوباره از اول</p>
                     </div>
                 </div>
                 <form method="post" id="lac-automation-create-form">
@@ -804,8 +804,13 @@
                             </select>
                         </div>
                         <div class="adm-lac-field adm-lac-field--full">
-                            <label for="auto_districts">منطقه‌ها <span class="adm-lac-kpi-sub">(هر خط یک منطقه — یا از لیست انتخاب)</span></label>
-                            <textarea name="districts" id="auto_districts" rows="3" required placeholder="ونک"></textarea>
+                            <label for="auto_districts">منطقه‌ها <span class="adm-lac-kpi-sub">(هر خط یک منطقه — ترتیب = ترتیب اجرا)</span></label>
+                            <div class="adm-lac-field-actions" style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.35rem">
+                                <button type="button" class="adm-lac-btn adm-lac-btn--ghost adm-lac-btn--sm" id="lac-load-all-districts">
+                                    <i class="fas fa-list"></i> بارگذاری همه مناطق شهر
+                                </button>
+                            </div>
+                            <textarea name="districts" id="auto_districts" rows="6" required placeholder="ونک&#10;آشتیانی&#10;امانیه&#10;…"></textarea>
                             <div class="adm-lac-district-picker" id="lac-district-picker" hidden>
                                 <p class="adm-lac-kpi-sub">کلیک برای افزودن به لیست:</p>
                                 <div class="adm-lac-district-chips" id="lac-district-chips"></div>
@@ -821,7 +826,7 @@
                         </div>
                         <div class="adm-lac-field">
                             <label for="auto_limit">سقف هر اجرا</label>
-                            <input type="number" name="limit_per_run" id="auto_limit" value="20" min="5" max="500">
+                            <input type="number" name="limit_per_run" id="auto_limit" value="20" min="5" max="40" title="حداکثر ۴۰ — batch کوچک‌تر = کمتر کپچا">
                         </div>
                         <div class="adm-lac-field">
                             <label for="auto_interval">فاصله اجرا (ساعت)</label>
@@ -858,7 +863,8 @@
                 </div>
                 <p class="adm-lac-kpi-sub" style="margin-top:.75rem">
                     worker systemd: <code>divar-acquisition-worker</code><br>
-                    cron: هر ۱۵ دقیقه <code>run_acquisition_automation</code>
+                    cron: هر ۱۵ دقیقه <code>run_acquisition_automation</code><br>
+                    <strong>بدون Playwright</strong> — در صورت کپچا، استخراج همان run متوقف می‌شود و تا اجرای بعدی صبر می‌کند.
                 </p>
             </aside>
         </div>
@@ -874,7 +880,7 @@
                     <thead>
                         <tr>
                             <th>کمپین</th>
-                            <th>منطقه‌ها</th>
+                            <th>چرخش مناطق</th>
                             <th>تنظیمات</th>
                             <th>زمان‌بندی</th>
                             <th>آخرین اجرا</th>
@@ -894,10 +900,18 @@
                                 <span class="adm-lac-chip adm-lac-chip--live">فعال</span>
                                 {% endif %}
                             </td>
-                            <td>{{ row.districts_display }}</td>
+                            <td>
+                                {% if row.rotation.total %}
+                                <strong>{{ row.rotation.current }}</strong>
+                                <p class="adm-lac-kpi-sub">منطقه {{ row.rotation.progress_label|to_persian_digits }} از {{ row.districts_count|to_persian_digits }}</p>
+                                <p class="adm-lac-kpi-sub">بعدی: {{ row.rotation.next }}</p>
+                                {% else %}
+                                {{ row.districts_display }}
+                                {% endif %}
+                            </td>
                             <td>
                                 <span class="adm-lac-kpi-sub">{{ c.category }}</span><br>
-                                <span class="adm-lac-kpi-sub">سقف {{ c.limit_per_run|to_persian_digits }} · هر {{ c.interval_hours|to_persian_digits }}س</span>
+                                <span class="adm-lac-kpi-sub">هدف {{ c.min_phones_per_district|to_persian_digits }} شماره · سقف {{ c.limit_per_run|to_persian_digits }} · هر {{ c.interval_hours|to_persian_digits }}س</span>
                             </td>
                             <td>
                                 {% if c.next_run_at %}
@@ -939,10 +953,12 @@
                                             <input type="hidden" name="action" value="update_automation_campaign">
                                             <input type="hidden" name="campaign_id" value="{{ c.pk }}">
                                             <input name="name" value="{{ c.name }}" placeholder="نام">
-                                            <textarea name="districts" rows="2">{% for d in c.districts %}{{ d }}{% if not forloop.last %}
+                                            <textarea name="districts" rows="4">{% for d in c.districts %}{{ d }}{% if not forloop.last %}
 {% endif %}{% endfor %}</textarea>
-                                            <input type="number" name="limit_per_run" value="{{ c.limit_per_run }}" min="5" max="500">
+                                            <input type="number" name="limit_per_run" value="{{ c.limit_per_run }}" min="5" max="40">
+                                            <input type="number" name="min_phones_per_district" value="{{ c.min_phones_per_district }}" min="5" max="40" title="هدف حداقل شماره">
                                             <input type="number" name="interval_hours" value="{{ c.interval_hours }}" min="1" max="168">
+                                            <label class="adm-lac-check"><input type="checkbox" name="reset_district_rotation" value="1"> از اولین منطقه شروع کن</label>
                                             <label class="adm-lac-check"><input type="checkbox" name="auto_create_campaign" value="1" {% if c.auto_create_campaign %}checked{% endif %}> auto campaign</label>
                                             <label class="adm-lac-check"><input type="checkbox" name="auto_enroll_pilot" value="1" {% if c.auto_enroll_pilot %}checked{% endif %}> auto pilot</label>
                                             <button type="submit" class="adm-lac-btn adm-lac-btn--primary adm-lac-btn--sm">ذخیره</button>
@@ -1379,6 +1395,27 @@
   const districtPicker = document.getElementById('lac-district-picker');
   const districtChips = document.getElementById('lac-district-chips');
   const placesUrl = '{{ automation_places_url|escapejs }}';
+
+  function loadAllDistricts(city) {
+    if (!autoDistricts || !placesUrl) return;
+    fetch(placesUrl + '?city=' + encodeURIComponent(city || 'تهران'), { credentials: 'same-origin' })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (data.ok && data.districts && data.districts.length) {
+          autoDistricts.value = data.districts.join('\n');
+          if (autoName && !autoName.value.trim()) {
+            autoName.value = (city || 'تهران') + ' · همه مناطق · فروش';
+          }
+        }
+      })
+      .catch(function () {});
+  }
+
+  const loadAllBtn = document.getElementById('lac-load-all-districts');
+  const autoName = document.getElementById('auto_name');
+  if (loadAllBtn && autoCity) {
+    loadAllBtn.addEventListener('click', function () { loadAllDistricts(autoCity.value); });
+  }
 
   function appendDistrict(name) {
     if (!autoDistricts || !name) return;

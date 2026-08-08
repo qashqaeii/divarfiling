@@ -35,6 +35,7 @@ from accounts.services.acquisition_automation_ui import (
     places_config_available,
     queue_automation_run_now,
     reset_automation_schedule,
+    reset_automation_district_rotation,
     toggle_automation_campaign,
     update_automation_campaign_from_form,
 )
@@ -294,6 +295,8 @@ class AdminLeadAcquisitionView(StaffRequiredMixin, TemplateView):
                 return self._queue_automation_run(request)
             if action == 'reset_automation_schedule':
                 return self._reset_automation_schedule(request)
+            if action == 'reset_automation_district_rotation':
+                return self._reset_automation_district_rotation(request)
             if action == 'run_automation_scheduler':
                 return self._run_automation_scheduler(request)
         except (LeadImportError, LeadCampaignError, AutomationUIError) as exc:
@@ -754,6 +757,15 @@ class AdminLeadAcquisitionView(StaffRequiredMixin, TemplateView):
         messages.success(
             request,
             f'زمان‌بندی «{campaign.name}» ریست شد — cron در اولین فرصت queue می‌کند.',
+        )
+        return _lac_redirect('lac-automation')
+
+    def _reset_automation_district_rotation(self, request):
+        campaign_id = int(request.POST.get('campaign_id') or 0)
+        campaign = reset_automation_district_rotation(campaign_id)
+        messages.success(
+            request,
+            f'چرخش مناطق «{campaign.name}» از اولین منطقه شروع می‌شود.',
         )
         return _lac_redirect('lac-automation')
 

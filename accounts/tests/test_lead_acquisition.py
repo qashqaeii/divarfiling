@@ -12,6 +12,7 @@ from django.urls import reverse
 from accounts.models import (
     CampaignEnrollment,
     CampaignMessage,
+    CampaignStep,
     LeadAttribution,
     LeadCampaign,
     LeadTouchpoint,
@@ -30,6 +31,7 @@ from accounts.services.lead_campaign_send import (
     estimate_sms_cost_rial,
     generate_acquisition_campaign_name,
     pilot_per_variant_for_count,
+    render_step_body,
     reset_campaign_for_retry,
     send_campaign_step,
     send_step_message,
@@ -37,7 +39,13 @@ from accounts.services.lead_campaign_send import (
     update_acquisition_campaign,
 )
 from accounts.services.lead_funnel import campaign_funnel
-from accounts.services.lead_import import commit_import_batch, preview_phone_detector_json, create_preview_batch
+from accounts.services.lead_import import (
+    commit_import_batch,
+    create_preview_batch,
+    display_district_for_lead,
+    preview_phone_detector_json,
+    resolve_district_label,
+)
 from accounts.services.lead_sequence import run_acquisition_sequence
 from accounts.services.user_activation import get_or_create_default_activation_campaign
 
@@ -91,6 +99,50 @@ class LeadImportTests(TestCase):
 
         lead = MarketingLead.objects.get(phone_normalized='09121111111')
         self.assertEqual(lead.lead_type, MarketingLead.LeadType.AGENCY)
+        self.assertEqual(lead.district, 'آجودانیه')
+        eligible_rows = [r for r in preview.rows if r.outcome == 'eligible']
+        self.assertTrue(eligible_rows)
+        self.assertEqual(eligible_rows[0].district, 'آجودانیه')
+
+    def test_display_district_for_lead_resolves_slug(self):
+        raw = json.dumps(SAMPLE_JSON).encode('utf-8')
+        preview = preview_phone_detector_json(raw, filename='t.json')
+        batch = create_preview_batch(preview)
+        commit_import_batch(batch.pk, preview_rows=preview.rows)
+        lead = MarketingLead.objects.get(phone_normalized='09121111111')
+        lead.district = 'ajoodanieh'
+        lead.save(update_fields=['district'])
+        self.assertEqual(display_district_for_lead(lead), 'آجودانیه')
+
+    def test_render_step_body_uses_persian_district(self):
+        raw = json.dumps(SAMPLE_JSON).encode('utf-8')
+        preview = preview_phone_detector_json(raw, filename='t.json')
+        batch = create_preview_batch(preview)
+        commit_import_batch(batch.pk, preview_rows=preview.rows)
+        lead = MarketingLead.objects.get(phone_normalized='09121111111')
+        lead.district = 'vanak'
+        lead.save(update_fields=['district'])
+        batch.district = 'ونک'
+        batch.save(update_fields=['district'])
+        lead.first_batch = batch
+        lead.save(update_fields=['first_batch'])
+
+        step = CampaignStep(step_number=1, message_template='سلام {district} {link}')
+        variant = type('VariantStub', (), {'key': 'A'})()
+        body = render_step_body(
+            step=step,
+            variant=variant,
+            link='https://example.com/x',
+            lead=lead,
+        )
+        self.assertIn('ونک', body)
+        self.assertNotIn('vanak', body)
+
+    def test_resolve_district_label_prefers_metadata(self):
+        self.assertEqual(
+            resolve_district_label(meta_district='ونک', item_district='vanak'),
+            'ونک',
+        )
 
     def test_existing_user_not_suppressed(self):
         User.objects.create_user(username='eu1', password='x', phone='09123333333')

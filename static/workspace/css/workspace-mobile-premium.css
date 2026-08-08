@@ -333,6 +333,11 @@
         overflow: hidden;
     }
 
+    .crm-contact-detail-pro.crm-contact-mobile .crm-contact-hero--compact .crm-contact-hero__top {
+        max-height: none !important;
+        overflow: visible !important;
+    }
+
     .crm-contact-detail-pro .crm-contact-hero__title,
     .crm-deal-detail-mobile .crm-deal-title {
         font-size: var(--mobile-title) !important;
@@ -1030,14 +1035,14 @@
         flex-direction: row !important;
         align-items: stretch !important;
         gap: 4px !important;
-        padding: 0 !important;
+        padding: 4px !important;
         min-height: var(--ws-mob-dock-h) !important;
-        border-radius: 0 !important;
-        border: none !important;
-        background: transparent !important;
-        backdrop-filter: none !important;
-        -webkit-backdrop-filter: none !important;
-        box-shadow: none !important;
+        border-radius: 14px !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 75%, transparent) !important;
+        background: color-mix(in srgb, var(--ws-surface) 90%, transparent) !important;
+        backdrop-filter: blur(18px) saturate(1.12) !important;
+        -webkit-backdrop-filter: blur(18px) saturate(1.12) !important;
+        box-shadow: 0 4px 18px rgba(15, 23, 42, 0.08) !important;
     }
 
     :is(
@@ -1866,16 +1871,7 @@
         box-shadow: none !important;
     }
 
-    /* Dock — inherits single bottom bar chrome from Phase 5 */
-    :is(
-        .crm-contact-mobile-dock__inner,
-        .crm-prop-mobile-dock__inner,
-        .crm-deal-mobile-dock__inner,
-        .ws-ds-mob-dock__inner
-    ) {
-        background: transparent !important;
-    }
-
+    /* Dock primary buttons — flat on glass bar */
     :is(
         .crm-contact-dock-btn--primary,
         .crm-prop-dock-btn--primary,
@@ -1921,7 +1917,7 @@
         flex-direction: column !important;
         gap: 0 !important;
         padding: 0 !important;
-        overflow: hidden;
+        overflow: visible !important;
     }
 
     .crm-contact-detail-pro .crm-contact-hero--compact {
@@ -2944,35 +2940,18 @@
         box-shadow: none !important;
     }
 
-    /* CRM property cards — same native pattern on mobile */
+    /* CRM property cards — layout owned by crm-files-mobile-premium.css */
     .crm-files-mobile .crm-files-mcard {
-        display: grid !important;
-        grid-template-columns: 38% minmax(0, 1fr) !important;
-        grid-template-areas: "media panel" !important;
-        gap: 10px !important;
-        padding: 10px 12px !important;
-        min-height: 132px !important;
-        box-shadow: 0 2px 10px rgba(15, 23, 42, 0.06) !important;
-        overflow: hidden !important;
+        min-height: 0 !important;
     }
 
     .crm-files-mobile .crm-files-mcard__media,
     .crm-files-mobile .crm-files-card-thumb {
-        grid-area: media !important;
-        min-height: 112px !important;
-        border-radius: 12px !important;
-        overflow: hidden !important;
+        display: none !important;
     }
 
     .crm-files-mobile .crm-files-mcard__panel {
-        grid-area: panel !important;
-        min-width: 0 !important;
-    }
-
-    .crm-files-mobile .crm-files-card-bg,
-    .crm-files-mobile .crm-files-card-mesh,
-    .crm-files-mobile .crm-files-card-accent {
-        display: none !important;
+        display: contents !important;
     }
 
     /* ── Dataset card native v10 (collection row — mockup language) ── */

@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════
-   CRM Contact Detail — Mobile Premium (final layer)
+   CRM Contact Detail — Mobile Premium (final surface layer)
+   Loads after workspace-mobile-premium-v7 via ws_surface_css
    ═══════════════════════════════════════════════════════════ */
 
 .crm-contact-mob-menu,
@@ -27,7 +28,7 @@
     }
 
     .crm-contact-detail-pro.crm-contact-mobile.crm-page-chrome {
-        padding: 0 0 calc(5.5rem + env(safe-area-inset-bottom, 0px)) !important;
+        padding: 0 0 calc(var(--ws-mob-dock-clearance, 4.5rem) + env(safe-area-inset-bottom, 0px)) !important;
         gap: 0 !important;
         background: var(--ws-bg, #f4f6fb) !important;
     }
@@ -341,77 +342,129 @@
 
     /* Body layout */
     .crm-contact-detail-pro .crm-contact-workspace__body {
-        padding: 0.65rem 1rem 0 !important;
+        padding: 0.65rem var(--mobile-section-padding, 1rem) 0 !important;
+        overflow: visible !important;
     }
     .crm-contact-detail-pro .crm-detail-grid {
         padding: 0 !important;
         gap: 0.65rem !important;
+        overflow: visible !important;
+    }
+    .crm-contact-detail-pro .crm-contact-main {
+        overflow: visible !important;
+        overflow-x: visible !important;
     }
 
-    /* Tabs — horizontal chips */
-    .crm-contact-detail-pro .crm-contact-segrail {
-        position: sticky;
-        top: 0;
-        z-index: 20;
-        margin: 0 -1rem;
-        padding: 0 1rem 0.35rem;
-        background: linear-gradient(180deg, var(--ws-bg, #f4f6fb) 70%, transparent);
+    /* Tabs — horizontal chips (must stay visible; no negative-margin bleed) */
+    .crm-contact-detail-pro.crm-contact-mobile .crm-contact-segrail {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 24 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 0 0.5rem !important;
+        padding: 0 0 0.35rem !important;
+        overflow: visible !important;
+        background: linear-gradient(180deg, var(--ws-bg, #f4f6fb) 72%, transparent) !important;
+        border: none !important;
+        box-shadow: none !important;
     }
-    .crm-contact-detail-pro .crm-contact-tabs,
-    .crm-contact-detail-pro .crm-contact-tabs.crm-tabs-pro {
+    .crm-contact-detail-pro.crm-contact-mobile .crm-contact-segrail::before,
+    .crm-contact-detail-pro.crm-contact-mobile .crm-contact-segrail::after {
+        display: none !important;
+        content: none !important;
+    }
+    .crm-contact-detail-pro.crm-contact-mobile .crm-contact-tabs,
+    .crm-contact-detail-pro.crm-contact-mobile .crm-contact-tabs.crm-tabs-pro,
+    .crm-contact-detail-pro.crm-contact-mobile nav.crm-tabs.crm-tabs-pro.crm-contact-tabs {
         display: flex !important;
+        visibility: visible !important;
         flex-direction: row !important;
         flex-wrap: nowrap !important;
         grid-template-columns: unset !important;
+        grid-auto-flow: unset !important;
+        align-items: center !important;
         gap: 0.4rem !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        min-height: 2.85rem !important;
+        margin: 0 !important;
         padding: 0.35rem !important;
         overflow-x: auto !important;
+        overflow-y: visible !important;
         scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
         border-radius: 14px !important;
         border: 1px solid color-mix(in srgb, var(--ws-border) 65%, transparent) !important;
         background: var(--ws-surface) !important;
-        box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04) !important;
+        box-shadow: 0 2px 10px rgba(15, 23, 42, 0.05) !important;
+        position: relative !important;
+        top: auto !important;
     }
-    .crm-contact-detail-pro .crm-contact-tabs .crm-tab-pro {
+    .crm-contact-detail-pro.crm-contact-mobile .crm-contact-tabs::-webkit-scrollbar {
+        display: none;
+    }
+    .crm-contact-detail-pro.crm-contact-mobile .crm-contact-tabs .crm-tab-pro {
+        display: inline-flex !important;
+        visibility: visible !important;
         flex: 0 0 auto !important;
         flex-direction: row !important;
         align-items: center !important;
+        justify-content: center !important;
         gap: 0.35rem !important;
+        width: auto !important;
+        min-width: 0 !important;
+        max-width: none !important;
         min-height: 2.35rem !important;
+        height: auto !important;
         padding: 0.35rem 0.75rem !important;
+        margin: 0 !important;
         border-radius: 999px !important;
         border: 1px solid transparent !important;
         background: transparent !important;
         color: var(--ws-text-secondary) !important;
         font-size: 0.74rem !important;
+        font-weight: 700 !important;
         box-shadow: none !important;
         white-space: nowrap !important;
     }
-    .crm-contact-detail-pro .crm-contact-tabs .crm-tab-pro.active {
+    .crm-contact-detail-pro.crm-contact-mobile .crm-contact-tabs .crm-tab-pro .crm-contact-seg__full {
+        display: none !important;
+    }
+    .crm-contact-detail-pro.crm-contact-mobile .crm-contact-tabs .crm-tab-pro .crm-contact-seg__short {
+        display: inline !important;
+    }
+    .crm-contact-detail-pro.crm-contact-mobile .crm-contact-tabs .crm-tab-pro.active {
         background: var(--ws-primary) !important;
         color: #fff !important;
         border-color: transparent !important;
         box-shadow: 0 4px 12px color-mix(in srgb, var(--ws-primary) 35%, transparent) !important;
     }
-    .crm-contact-detail-pro .crm-contact-tabs .crm-tab-pro .crm-contact-seg__ico {
+    .crm-contact-detail-pro.crm-contact-mobile .crm-contact-tabs .crm-tab-pro .crm-contact-seg__ico {
+        display: inline-flex !important;
         width: 1.35rem !important;
         height: 1.35rem !important;
         border-radius: 8px !important;
         font-size: 0.62rem !important;
         background: color-mix(in srgb, var(--ws-primary) 10%, var(--ws-surface)) !important;
     }
-    .crm-contact-detail-pro .crm-contact-tabs .crm-tab-pro.active .crm-contact-seg__ico {
+    .crm-contact-detail-pro.crm-contact-mobile .crm-contact-tabs .crm-tab-pro.active .crm-contact-seg__ico {
         background: rgba(255, 255, 255, 0.2) !important;
         color: #fff !important;
     }
-    .crm-contact-detail-pro .crm-contact-tabs .crm-tab-pro em {
+    .crm-contact-detail-pro.crm-contact-mobile .crm-contact-tabs .crm-tab-pro em {
+        position: static !important;
         min-width: 1.1rem !important;
         height: 1.1rem !important;
         font-size: 0.58rem !important;
         margin: 0 !important;
         background: color-mix(in srgb, var(--ws-surface-2) 80%, var(--ws-surface)) !important;
     }
-    .crm-contact-detail-pro .crm-contact-tabs .crm-tab-pro.active em {
+    .crm-contact-detail-pro.crm-contact-mobile .crm-contact-tabs .crm-tab-pro.active em {
         background: rgba(255, 255, 255, 0.22) !important;
         color: #fff !important;
     }
@@ -485,14 +538,96 @@
         min-height: 44px;
     }
 
-    /* Bottom dock — extend saas-polish bar with "more" sheet */
-    .crm-contact-detail-pro.crm-contact-mobile .crm-contact-mobile-dock.crm-contact-action-bar {
+    /* Bottom dock — glass bar pinned to viewport bottom */
+    body.ws-body:has(.crm-contact-mobile-dock) .crm-contact-detail-pro.crm-contact-mobile .crm-contact-mobile-dock.crm-contact-action-bar {
         display: block !important;
         visibility: visible !important;
+        position: fixed !important;
+        inset-inline: 0 !important;
+        bottom: 0 !important;
+        z-index: 170 !important;
+        margin: 0 !important;
+        padding: 6px var(--mobile-section-padding, 16px) calc(6px + env(safe-area-inset-bottom, 0px)) !important;
         pointer-events: none;
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
     }
-    .crm-contact-detail-pro.crm-contact-mobile .crm-contact-mobile-dock__inner {
+
+    body.ws-body:has(.crm-contact-mobile-dock) .crm-contact-detail-pro.crm-contact-mobile .crm-contact-mobile-dock__inner {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: stretch !important;
+        justify-content: stretch !important;
+        gap: 0.25rem !important;
+        width: 100% !important;
+        min-height: 3.25rem !important;
+        padding: 0.35rem 0.4rem !important;
         pointer-events: auto !important;
+        border-radius: 18px !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 72%, transparent) !important;
+        background: color-mix(in srgb, var(--ws-surface) 88%, transparent) !important;
+        backdrop-filter: blur(22px) saturate(1.15) !important;
+        -webkit-backdrop-filter: blur(22px) saturate(1.15) !important;
+        box-shadow:
+            0 8px 28px rgba(15, 23, 42, 0.12),
+            0 2px 8px rgba(15, 23, 42, 0.06) !important;
+    }
+
+    body.ws-body:has(.crm-contact-mobile-dock) .crm-contact-detail-pro.crm-contact-mobile .crm-contact-dock-btn {
+        flex: 1 1 0 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 0.15rem !important;
+        min-width: 0 !important;
+        min-height: 2.85rem !important;
+        padding: 0.3rem 0.2rem !important;
+        border: none !important;
+        border-radius: 12px !important;
+        background: transparent !important;
+        color: var(--ws-text-secondary) !important;
+        font-family: inherit;
+        font-size: 0.58rem !important;
+        font-weight: 700 !important;
+        line-height: 1.15 !important;
+        text-decoration: none;
+        box-shadow: none !important;
+        transform: none !important;
+        white-space: nowrap !important;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    body.ws-body:has(.crm-contact-mobile-dock) .crm-contact-detail-pro.crm-contact-mobile .crm-contact-dock-btn i {
+        font-size: 1rem !important;
+        line-height: 1 !important;
+        flex-shrink: 0;
+    }
+
+    body.ws-body:has(.crm-contact-mobile-dock) .crm-contact-detail-pro.crm-contact-mobile .crm-contact-dock-btn span {
+        display: block !important;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    body.ws-body:has(.crm-contact-mobile-dock) .crm-contact-detail-pro.crm-contact-mobile .crm-contact-dock-btn--primary {
+        background: linear-gradient(135deg, var(--ws-primary), color-mix(in srgb, var(--ws-primary) 82%, #000)) !important;
+        color: #fff !important;
+        box-shadow: 0 3px 12px color-mix(in srgb, var(--ws-primary) 35%, transparent) !important;
+    }
+
+    body.ws-body:has(.crm-contact-mobile-dock) .crm-contact-detail-pro.crm-contact-mobile .crm-contact-dock-btn:active {
+        transform: scale(0.96) !important;
+        opacity: 0.92;
+    }
+
+    body.ws-body:has(.crm-contact-mobile-dock) .ws-bottom-nav {
+        display: none !important;
     }
 
     .crm-contact-dock-more {
@@ -505,6 +640,10 @@
         list-style: none;
         width: 100%;
         height: 100%;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
     }
     .crm-contact-dock-more > summary::-webkit-details-marker {
         display: none;
@@ -559,7 +698,11 @@
     .crm-contact-mob-primary__btn--follow {
         grid-column: 1 / -1;
     }
-    .crm-contact-detail-pro .crm-contact-dock-btn span {
-        font-size: 0.55rem;
+    body.ws-body:has(.crm-contact-mobile-dock) .crm-contact-detail-pro.crm-contact-mobile .crm-contact-dock-btn span {
+        font-size: 0.52rem;
+    }
+    body.ws-body:has(.crm-contact-mobile-dock) .crm-contact-detail-pro.crm-contact-mobile .crm-contact-dock-btn {
+        min-height: 2.65rem !important;
+        padding: 0.25rem 0.12rem !important;
     }
 }

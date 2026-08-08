@@ -1,0 +1,347 @@
+/* ═══════════════════════════════════════════════════════════
+   CRM Properties / Files — Mobile Premium (final surface)
+   Fixes broken grid from workspace-mobile-premium + polishes cards
+   ═══════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+    /* Hide desktop KPI strip (minimal.css forces display:grid on .crm-files-kpis) */
+    .crm-files-mobile .crm-files-kpis.crm-files-desk-kpis,
+    .crm-files-mobile .crm-files-desk-header {
+        display: none !important;
+    }
+
+    .crm-files-mobile.crm-page-chrome {
+        padding-bottom: calc(4.75rem + env(safe-area-inset-bottom, 0px)) !important;
+        background: var(--ws-bg, #f4f6fb) !important;
+    }
+
+    .crm-files-mobile .crm-shell-body {
+        padding-inline: var(--mobile-section-padding, 1rem) !important;
+        gap: 0.6rem !important;
+    }
+
+    /* ── Undo workspace-mobile-premium broken 2-col mcard grid ── */
+    .crm-files-mobile .crm-files-card.crm-files-mcard {
+        display: flex !important;
+        flex-direction: column !important;
+        grid-template-columns: unset !important;
+        grid-template-areas: unset !important;
+        gap: 0.55rem !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        min-height: 0 !important;
+        padding: 0.85rem !important;
+        border-radius: 18px !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 58%, transparent) !important;
+        background: var(--ws-surface) !important;
+        box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05) !important;
+        overflow: hidden !important;
+        position: relative;
+    }
+
+    .crm-files-mobile .crm-files-card.crm-files-mcard:active {
+        transform: scale(0.985);
+        box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04) !important;
+    }
+
+    .crm-files-mobile .crm-files-card-bg {
+        display: block !important;
+        opacity: 0.35;
+    }
+    .crm-files-mobile .crm-files-card-bg i {
+        font-size: 4.5rem !important;
+        opacity: 0.06 !important;
+        inset-inline-end: -0.5rem !important;
+        top: -0.25rem !important;
+    }
+    .crm-files-mobile .crm-files-card-mesh {
+        display: block !important;
+        opacity: 0.65;
+    }
+    .crm-files-mobile .crm-files-card-accent {
+        display: block !important;
+        height: 2px !important;
+        opacity: 1 !important;
+    }
+
+    /* ── Card head: icon + identity + chevron ── */
+    .crm-files-mobile .crm-files-mcard__top,
+    .crm-files-mobile .crm-files-card-head {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: flex-start !important;
+        gap: 0.65rem !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    .crm-files-mobile .crm-files-mcard__mark,
+    .crm-files-mobile .crm-files-card-type {
+        width: 2.75rem !important;
+        height: 2.75rem !important;
+        border-radius: 12px !important;
+        font-size: 0.95rem !important;
+        flex-shrink: 0 !important;
+        box-shadow: 0 4px 12px color-mix(in srgb, var(--deal-mode-accent, var(--ws-primary)) 22%, transparent) !important;
+    }
+
+    .crm-files-mobile .crm-files-mcard__head {
+        flex: 1 1 auto !important;
+        min-width: 0 !important;
+        gap: 0.28rem !important;
+    }
+
+    .crm-files-mobile .crm-files-card-tags {
+        flex-wrap: wrap !important;
+        gap: 0.25rem !important;
+        margin-bottom: 0.1rem !important;
+    }
+    .crm-files-mobile .crm-files-card-tags > :nth-child(n + 3) {
+        display: none !important;
+    }
+    .crm-files-mobile .crm-files-pill {
+        font-size: 0.6rem !important;
+        padding: 0.15rem 0.45rem !important;
+        font-weight: 800 !important;
+    }
+
+    .crm-files-mobile .crm-files-card-title {
+        font-size: 0.95rem !important;
+        font-weight: 800 !important;
+        line-height: 1.35 !important;
+        margin: 0 !important;
+        display: -webkit-box !important;
+        -webkit-line-clamp: 2 !important;
+        -webkit-box-orient: vertical !important;
+        overflow: hidden !important;
+        overflow-wrap: anywhere;
+    }
+
+    .crm-files-mobile .crm-files-card-loc {
+        font-size: 0.7rem !important;
+        font-weight: 600 !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        max-width: 100% !important;
+    }
+
+    .crm-files-mobile .crm-files-mcard__go {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 2rem !important;
+        height: 2rem !important;
+        border-radius: 10px !important;
+        flex-shrink: 0 !important;
+        margin-inline-start: 0 !important;
+        font-size: 0.7rem !important;
+        color: var(--ws-text-muted) !important;
+        background: color-mix(in srgb, var(--ws-surface-2) 55%, var(--ws-surface)) !important;
+        box-shadow: none !important;
+    }
+
+    /* Owner — inline compact */
+    .crm-files-mobile .crm-files-mcard__owner,
+    .crm-files-mobile .crm-files-card-owner {
+        padding: 0.45rem 0.55rem !important;
+        border-radius: 12px !important;
+        background: color-mix(in srgb, var(--ws-surface-2) 40%, var(--ws-surface)) !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 50%, transparent) !important;
+        box-shadow: none !important;
+    }
+    .crm-files-mobile .crm-files-mcard__owner-ico {
+        width: 1.85rem !important;
+        height: 1.85rem !important;
+        border-radius: 9px !important;
+        font-size: 0.72rem !important;
+    }
+    .crm-files-mobile .crm-files-mcard__owner-txt strong {
+        font-size: 0.78rem !important;
+    }
+
+    /* Metrics — 3-up row */
+    .crm-files-mobile .crm-files-mcard__metrics,
+    .crm-files-mobile .crm-files-card-metrics {
+        display: grid !important;
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        gap: 0.35rem !important;
+        width: 100% !important;
+    }
+    .crm-files-mobile .crm-files-metric-chip {
+        padding: 0.4rem 0.45rem !important;
+        border-radius: 11px !important;
+        background: color-mix(in srgb, var(--ws-surface-2) 35%, var(--ws-surface)) !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 48%, transparent) !important;
+        box-shadow: none !important;
+    }
+    .crm-files-mobile .crm-files-metric-chip em {
+        font-size: 0.54rem !important;
+    }
+    .crm-files-mobile .crm-files-metric-chip strong {
+        font-size: 0.76rem !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+
+    /* Amenities — horizontal, core only */
+    .crm-files-mobile .crm-files-card-amenities {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        gap: 0.3rem !important;
+        width: 100% !important;
+        padding: 0.3rem 0.35rem !important;
+        border-radius: 12px !important;
+        background: color-mix(in srgb, var(--ws-surface-2) 28%, var(--ws-surface)) !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 42%, transparent) !important;
+        overflow-x: auto !important;
+        scrollbar-width: none;
+    }
+    .crm-files-mobile .crm-files-card-amenities::-webkit-scrollbar {
+        display: none;
+    }
+    .crm-files-mobile .crm-files-amenity.is-extra {
+        display: none !important;
+    }
+    .crm-files-mobile .crm-files-amenity {
+        width: 1.9rem !important;
+        height: 1.9rem !important;
+        flex: 0 0 auto !important;
+        border-radius: 9px !important;
+        font-size: 0.72rem !important;
+    }
+
+    /* Price band */
+    .crm-files-mobile .crm-files-mcard__valueband,
+    .crm-files-mobile .crm-files-card-foot {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 0.45rem !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0.6rem 0.65rem !important;
+        border-radius: 14px !important;
+        border: 1px solid color-mix(in srgb, var(--deal-mode-accent, var(--ws-primary)) 18%, var(--ws-border)) !important;
+        background: color-mix(in srgb, var(--deal-mode-accent, var(--ws-primary)) 6%, var(--ws-surface)) !important;
+        box-shadow: none !important;
+    }
+
+    .crm-files-mobile .crm-files-card-price strong {
+        font-size: 1rem !important;
+        font-weight: 900 !important;
+        line-height: 1.25 !important;
+    }
+    .crm-files-mobile .crm-files-card-price em {
+        font-size: 0.58rem !important;
+    }
+    .crm-files-mobile .crm-files-card-price small {
+        display: block;
+        margin-top: 0.1rem;
+        font-size: 0.68rem !important;
+    }
+
+    .crm-files-mobile .crm-files-card-meta {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        align-items: center !important;
+        gap: 0.28rem !important;
+        width: 100% !important;
+    }
+    .crm-files-mobile .crm-files-card-meta time {
+        margin-inline-start: auto !important;
+        font-size: 0.62rem !important;
+    }
+    .crm-files-mobile .crm-files-meta-chip {
+        min-height: 1.55rem !important;
+        padding: 0.15rem 0.42rem !important;
+        font-size: 0.62rem !important;
+    }
+    .crm-files-mobile .crm-files-meta-chip--phone span {
+        max-width: 6.5rem !important;
+    }
+
+    /* Grid list density */
+    .crm-files-mobile .crm-files-grid,
+    .crm-files-mobile .crm-files-grid-v2 {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 0.6rem !important;
+        width: 100% !important;
+        padding-bottom: 0.25rem !important;
+    }
+
+    /* Table view → same native card pattern */
+    .crm-files-mobile .crm-ft tbody tr.crm-ft-row {
+        display: flex !important;
+        flex-direction: column !important;
+        grid-template-columns: unset !important;
+        gap: 0.5rem !important;
+        padding: 0.85rem !important;
+        border-radius: 18px !important;
+        background: var(--ws-surface) !important;
+        box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05) !important;
+    }
+    .crm-files-mobile .crm-ft tbody tr.crm-ft-row > td:not(.crm-ft-td-prop) {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 0.5rem !important;
+        width: 100% !important;
+        padding: 0.35rem 0.5rem !important;
+        border-radius: 10px !important;
+        background: color-mix(in srgb, var(--ws-surface-2) 35%, var(--ws-surface)) !important;
+    }
+    .crm-files-mobile .crm-ft tbody tr.crm-ft-row > td:not(.crm-ft-td-prop)::before {
+        flex-shrink: 0;
+        margin: 0 !important;
+    }
+    .crm-files-mobile .crm-ft-td-price {
+        order: 10;
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        background: color-mix(in srgb, var(--ws-primary) 6%, var(--ws-surface)) !important;
+        border: 1px solid color-mix(in srgb, var(--ws-primary) 15%, var(--ws-border)) !important;
+    }
+    .crm-files-mobile .crm-ft-td-price strong {
+        font-size: 1rem !important;
+    }
+
+    /* FAB */
+    .crm-files-mobile .crm-files-fab {
+        bottom: calc(4.25rem + env(safe-area-inset-bottom, 0px)) !important;
+        box-shadow: 0 8px 24px rgba(124, 58, 237, 0.32) !important;
+    }
+
+    /* Filters + quick chips */
+    .crm-files-mobile .crm-files-filters {
+        border-radius: 14px !important;
+        padding: 0.5rem 0.6rem !important;
+    }
+    .crm-files-mobile .crm-files-quick-btn {
+        min-height: 34px !important;
+        font-size: 0.7rem !important;
+    }
+    .crm-files-mobile .crm-files-mob-header {
+        border-radius: 0 0 20px 20px !important;
+    }
+    .crm-files-mobile .crm-files-mob-kpis {
+        padding-inline: var(--mobile-section-padding, 1rem) !important;
+    }
+}
+
+@media (max-width: 360px) {
+    .crm-files-mobile .crm-files-mcard__metrics,
+    .crm-files-mobile .crm-files-card-metrics {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+    .crm-files-mobile .crm-files-card-title {
+        font-size: 0.9rem !important;
+    }
+}

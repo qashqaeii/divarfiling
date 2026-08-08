@@ -862,15 +862,14 @@
     display: none;
 }
 
-/* ─── Action bar — mobile only (desktop uses hero actions) ─── */
-.crm-contact-detail-pro .crm-contact-action-bar {
-    display: none !important;
-}
-
-/* Mobile dock layout → workspace-saas-polish.css (fixed above bottom nav) */
+/* Mobile dock layout → workspace-saas-polish.css + crm-contact-detail-mobile-premium.css */
 
 /* ─── Desktop ─── */
 @media (min-width: 769px) {
+    /* Desktop uses hero actions — hide mobile dock */
+    .crm-contact-detail-pro .crm-contact-action-bar {
+        display: none !important;
+    }
     .crm-contact-detail-pro .crm-contact-hero--compact .crm-contact-hero__top {
         padding: 12px 16px;
     }

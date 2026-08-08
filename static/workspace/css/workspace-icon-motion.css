@@ -355,6 +355,7 @@ body.ws-body :is(
     .crm-contacts-mob-row-more-item,
     .crm-contacts-mob-act,
     .crm-contacts-fab,
+    .crm-files-fab,
     .crm-contact-mob-menu-trigger,
     .crm-contact-mob-menu-item,
     .crm-contact-mob-primary__btn,
@@ -474,6 +475,11 @@ body.ws-body :is(
         filter: drop-shadow(0 2px 6px color-mix(in srgb, var(--ws-luxe-violet) 50%, transparent));
     }
 
+    body.ws-body .crm-files-fab:hover :is(.fa-plus, i) {
+        color: var(--ws-luxe-violet-deep) !important;
+        filter: drop-shadow(0 2px 6px color-mix(in srgb, var(--ws-luxe-violet) 45%, transparent));
+    }
+
     /* Intel strip cells */
     body.ws-body .crm-contact-intel-strip__cell.is-action:hover .crm-contact-intel-strip__ico i {
         color: var(--ws-luxe-violet-deep);
@@ -487,13 +493,94 @@ body.ws-body :is(
         color: var(--ws-luxe-teal);
     }
 
-    /* CRM dash actions */
-    body.ws-body .crm-dash-act:not(.crm-dash-act--primary):hover :is(i, .fa) {
-        color: var(--ws-luxe-violet-deep);
+    /* CRM dash actions — per-action luxury palette (hover held = smooth color) */
+    body.ws-body .crm-app-dashboard .crm-dash-act--icon:hover,
+    body.ws-body .crm-app-dashboard .crm-dash-act--icon:focus-visible {
+        border-color: color-mix(in srgb, var(--ws-luxe-violet) 28%, var(--ws-border));
+        background: color-mix(in srgb, var(--ws-luxe-violet) 9%, var(--ws-surface));
+        box-shadow: 0 2px 10px color-mix(in srgb, var(--ws-luxe-violet) 14%, transparent);
+    }
+
+    body.ws-body .crm-app-dashboard .crm-dash-act--today:hover :is(i, .fa),
+    body.ws-body .crm-app-dashboard .crm-dash-act--today:focus-visible :is(i, .fa) {
+        color: var(--ws-luxe-violet-deep) !important;
+        filter: drop-shadow(0 1px 4px color-mix(in srgb, var(--ws-luxe-violet) 35%, transparent));
+    }
+
+    body.ws-body .crm-app-dashboard .crm-dash-act--lead:hover,
+    body.ws-body .crm-app-dashboard .crm-dash-act--lead:focus-visible {
+        border-color: color-mix(in srgb, var(--ws-luxe-gold) 35%, var(--ws-border));
+        background: color-mix(in srgb, var(--ws-luxe-gold) 10%, var(--ws-surface));
+        box-shadow: 0 2px 10px color-mix(in srgb, var(--ws-luxe-gold) 18%, transparent);
+    }
+
+    body.ws-body .crm-app-dashboard .crm-dash-act--lead:hover :is(i, .fa),
+    body.ws-body .crm-app-dashboard .crm-dash-act--lead:focus-visible :is(i, .fa) {
+        color: var(--ws-luxe-gold-soft) !important;
+        filter: drop-shadow(0 1px 4px color-mix(in srgb, var(--ws-luxe-gold) 40%, transparent));
+    }
+
+    body.ws-body .crm-app-dashboard .crm-dash-act--property:hover,
+    body.ws-body .crm-app-dashboard .crm-dash-act--property:focus-visible {
+        border-color: color-mix(in srgb, var(--ws-luxe-cyan) 32%, var(--ws-border));
+        background: color-mix(in srgb, var(--ws-luxe-cyan) 9%, var(--ws-surface));
+        box-shadow: 0 2px 10px color-mix(in srgb, var(--ws-luxe-cyan) 16%, transparent);
+    }
+
+    body.ws-body .crm-app-dashboard .crm-dash-act--property:hover :is(i, .fa),
+    body.ws-body .crm-app-dashboard .crm-dash-act--property:focus-visible :is(i, .fa) {
+        color: var(--ws-luxe-cyan) !important;
+        filter: drop-shadow(0 1px 4px color-mix(in srgb, var(--ws-luxe-cyan) 35%, transparent));
+    }
+
+    body.ws-body .crm-app-dashboard .crm-dash-act--reminder:hover,
+    body.ws-body .crm-app-dashboard .crm-dash-act--reminder:focus-visible {
+        border-color: color-mix(in srgb, var(--ws-luxe-gold) 30%, var(--ws-border));
+        background: color-mix(in srgb, var(--ws-luxe-gold) 8%, var(--ws-surface));
+    }
+
+    body.ws-body .crm-app-dashboard .crm-dash-act--reminder:hover :is(i, .fa),
+    body.ws-body .crm-app-dashboard .crm-dash-act--reminder:focus-visible :is(i, .fa) {
+        color: var(--ws-luxe-gold-soft) !important;
+        filter: drop-shadow(0 1px 4px color-mix(in srgb, var(--ws-luxe-gold) 35%, transparent));
+    }
+
+    body.ws-body .crm-app-dashboard .crm-dash-act--academy:hover,
+    body.ws-body .crm-app-dashboard .crm-dash-act--academy:focus-visible {
+        border-color: color-mix(in srgb, var(--ws-luxe-indigo) 32%, var(--ws-border));
+        background: color-mix(in srgb, var(--ws-luxe-indigo) 9%, var(--ws-surface));
+        box-shadow: 0 2px 10px color-mix(in srgb, var(--ws-luxe-indigo) 14%, transparent);
+    }
+
+    body.ws-body .crm-app-dashboard .crm-dash-act--academy:hover :is(i, .fa),
+    body.ws-body .crm-app-dashboard .crm-dash-act--academy:focus-visible :is(i, .fa) {
+        color: var(--ws-luxe-indigo) !important;
+        filter: drop-shadow(0 1px 4px color-mix(in srgb, var(--ws-luxe-indigo) 32%, transparent));
+    }
+
+    body.ws-body .crm-app-dashboard .crm-dash-act--primary:hover,
+    body.ws-body .crm-app-dashboard .crm-dash-act--primary:focus-visible {
+        background: linear-gradient(
+            135deg,
+            color-mix(in srgb, var(--ws-luxe-violet-deep) 88%, #000),
+            color-mix(in srgb, var(--ws-luxe-indigo) 75%, #312e81)
+        ) !important;
+        box-shadow: 0 6px 20px color-mix(in srgb, var(--ws-luxe-violet) 42%, transparent) !important;
+    }
+
+    body.ws-body .crm-app-dashboard .crm-dash-act--primary:hover :is(i, .fa),
+    body.ws-body .crm-app-dashboard .crm-dash-act--primary:focus-visible :is(i, .fa) {
+        color: #fff !important;
+        filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.18));
+    }
+
+    /* CRM dash actions — global fallback */
+    body.ws-body .crm-dash-act:not(.crm-dash-act--primary):not(.crm-dash-act--icon):hover :is(i, .fa) {
+        color: var(--ws-luxe-violet-deep) !important;
     }
 
     body.ws-body .crm-dash-act--primary:hover :is(i, .fa) {
-        color: #fff;
+        color: #fff !important;
         filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.12));
     }
 
@@ -522,6 +609,31 @@ body.ws-body :is(
 ):active :is(i, .fa, .fas, .far, .fab) {
     color: var(--ws-luxe-violet-deep);
     transition-duration: 120ms;
+}
+
+body.ws-body .crm-app-dashboard .crm-dash-act--today:active :is(i, .fa) {
+    color: var(--ws-luxe-violet-deep) !important;
+}
+
+body.ws-body .crm-app-dashboard .crm-dash-act--lead:active :is(i, .fa) {
+    color: var(--ws-luxe-gold-soft) !important;
+}
+
+body.ws-body .crm-app-dashboard .crm-dash-act--property:active :is(i, .fa) {
+    color: var(--ws-luxe-cyan) !important;
+}
+
+body.ws-body .crm-app-dashboard .crm-dash-act--reminder:active :is(i, .fa) {
+    color: var(--ws-luxe-gold-soft) !important;
+}
+
+body.ws-body .crm-app-dashboard .crm-dash-act--academy:active :is(i, .fa) {
+    color: var(--ws-luxe-indigo) !important;
+}
+
+body.ws-body .crm-app-dashboard .crm-dash-act--icon:active {
+    border-color: color-mix(in srgb, var(--ws-luxe-violet) 25%, var(--ws-border));
+    background: color-mix(in srgb, var(--ws-luxe-violet) 8%, var(--ws-surface));
 }
 
 body.ws-body :is(

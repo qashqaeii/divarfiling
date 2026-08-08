@@ -65,87 +65,94 @@
     flex-wrap: wrap;
     align-items: center;
     justify-content: flex-end;
-    gap: 0.3rem;
+    gap: 0.4rem;
     flex: 0 1 auto;
     min-width: 0;
     margin: 0;
-    padding: 0 !important;
-    background: transparent !important;
-    border: none !important;
-    border-radius: 0 !important;
-    box-shadow: none !important;
+    padding: 0.35rem !important;
+    background: color-mix(in srgb, var(--ws-surface) 88%, transparent) !important;
+    border: 1px solid color-mix(in srgb, var(--ws-border) 72%, transparent) !important;
+    border-radius: 14px !important;
+    box-shadow:
+        0 2px 12px rgba(15, 23, 42, 0.05),
+        inset 0 1px 0 rgba(255, 255, 255, 0.45) !important;
+    backdrop-filter: blur(12px) saturate(1.08);
+    -webkit-backdrop-filter: blur(12px) saturate(1.08);
 }
 
 .crm-app-dashboard .crm-dash--pro .crm-dash-act {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 0.28rem;
-    min-height: 2rem;
-    padding: 0.28rem 0.58rem;
-    border-radius: 999px;
-    border: 1px solid var(--ws-border);
+    gap: 0.4rem;
+    min-height: 2.65rem;
+    min-width: 2.65rem;
+    padding: 0.5rem 0.65rem;
+    border-radius: 12px;
+    border: 1px solid color-mix(in srgb, var(--ws-border) 70%, transparent);
     background: var(--ws-surface);
     color: var(--ws-text-secondary);
-    font-size: 0.7rem;
-    font-weight: 600;
+    font-size: 0.78rem;
+    font-weight: 700;
     line-height: 1.15;
     white-space: nowrap;
-    box-shadow: none;
-    transition: background 0.12s, border-color 0.12s, color 0.12s, transform 0.12s;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+    transition:
+        background var(--ws-luxe-hover-ms, 220ms) var(--ws-luxe-hover-ease, ease),
+        border-color var(--ws-luxe-hover-ms, 220ms) var(--ws-luxe-hover-ease, ease),
+        color var(--ws-luxe-hover-ms, 220ms) var(--ws-luxe-hover-ease, ease),
+        box-shadow var(--ws-luxe-hover-ms, 220ms) var(--ws-luxe-hover-ease, ease),
+        transform 0.12s ease;
 }
 
 .crm-app-dashboard .crm-dash--pro .crm-dash-act i,
 .crm-app-dashboard .crm-dash--pro .crm-dash-act .fas {
-    font-size: 0.68rem;
+    font-size: 0.92rem;
     width: auto;
-    opacity: 0.88;
+    opacity: 0.92;
     line-height: 1;
+    color: var(--ws-text-muted);
 }
 
-.crm-app-dashboard .crm-dash--pro .crm-dash-act:hover {
-    background: color-mix(in srgb, var(--ws-surface-2) 65%, var(--ws-surface));
-    border-color: color-mix(in srgb, var(--ws-primary) 18%, var(--ws-border));
-    color: var(--ws-text);
-    box-shadow: none;
+.crm-app-dashboard .crm-dash--pro .crm-dash-act:not(.crm-dash-act--primary) span {
+    display: none;
 }
 
-.crm-app-dashboard .crm-dash--pro .crm-dash-act:active {
-    transform: scale(0.97);
+.crm-app-dashboard .crm-dash--pro .crm-dash-act--icon {
+    width: 2.65rem;
+    min-width: 2.65rem;
+    padding: 0;
 }
 
 .crm-app-dashboard .crm-dash--pro .crm-dash-act--primary {
-    background: var(--ws-primary);
+    min-width: auto;
+    padding: 0.5rem 1rem;
+    background: linear-gradient(135deg, var(--ws-primary), color-mix(in srgb, var(--ws-primary) 78%, #4c1d95));
     color: #fff;
     border-color: transparent;
-    box-shadow: none;
-}
-
-.crm-app-dashboard .crm-dash--pro .crm-dash-act--primary:hover {
-    background: color-mix(in srgb, var(--ws-primary) 92%, #0f172a);
-    color: #fff;
-    border-color: transparent;
+    box-shadow: 0 4px 16px color-mix(in srgb, var(--ws-primary) 38%, transparent);
 }
 
 .crm-app-dashboard .crm-dash--pro .crm-dash-act--primary i,
 .crm-app-dashboard .crm-dash--pro .crm-dash-act--primary .fas {
     opacity: 1;
-    color: inherit;
+    color: #fff;
 }
 
-.crm-app-dashboard .crm-dash--pro .crm-dash-act--icon {
-    width: 2rem;
-    min-width: 2rem;
-    padding: 0;
+.crm-app-dashboard .crm-dash--pro .crm-dash-act--primary span {
+    display: inline;
+    font-size: 0.8rem;
+    font-weight: 800;
+    letter-spacing: -0.01em;
 }
 
-.crm-app-dashboard .crm-dash--pro .crm-dash-act--icon span {
-    display: none;
+.crm-app-dashboard .crm-dash--pro .crm-dash-act:active {
+    transform: scale(0.96);
 }
 
 .crm-app-dashboard .crm-dash-act--pulse {
     border-color: color-mix(in srgb, var(--ws-primary) 35%, var(--ws-border));
-    background: color-mix(in srgb, var(--ws-primary) 6%, var(--ws-surface));
+    background: color-mix(in srgb, var(--ws-primary) 8%, var(--ws-surface));
 }
 
 /* ─── Academy mission strip — minimal SaaS bar ─── */
@@ -429,6 +436,28 @@
     color: inherit;
     transition: background 0.12s;
     cursor: pointer;
+    display: grid !important;
+    grid-template-columns: auto 1fr;
+    grid-template-rows: auto auto;
+    align-items: center;
+    gap: 0.12rem 0.55rem;
+}
+
+.crm-app-dashboard .crm-dash--pro .crm-dash-kpi-icon {
+    grid-row: 1 / 3;
+    align-self: center;
+}
+
+.crm-app-dashboard .crm-dash--pro .crm-dash-kpi-val {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: end;
+}
+
+.crm-app-dashboard .crm-dash--pro .crm-dash-kpi-meta {
+    grid-column: 2;
+    grid-row: 2;
+    align-self: start;
 }
 
 .crm-app-dashboard .crm-dash--pro .crm-dash-kpi:hover {
@@ -446,6 +475,51 @@
 
 .crm-app-dashboard .crm-dash--pro .crm-dash-kpi-sub {
     font-size: 0.68rem;
+}
+
+/* KPI icons */
+.crm-app-dashboard .crm-dash--pro .crm-dash-kpi-icon {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.15rem;
+    height: 2.15rem;
+    border-radius: 10px;
+    font-size: 0.78rem;
+    background: var(--ws-surface-2);
+    color: var(--ws-text-muted);
+    border: 1px solid color-mix(in srgb, var(--ws-border) 70%, transparent);
+    transition: transform 0.12s ease, background 0.12s ease, color 0.12s ease;
+}
+
+.crm-app-dashboard .crm-dash--pro .crm-dash-kpi--contacts .crm-dash-kpi-icon {
+    background: color-mix(in srgb, var(--ws-primary) 12%, var(--ws-surface));
+    color: var(--ws-primary);
+    border-color: color-mix(in srgb, var(--ws-primary) 22%, var(--ws-border));
+}
+
+.crm-app-dashboard .crm-dash--pro .crm-dash-kpi--properties .crm-dash-kpi-icon {
+    background: rgba(37, 99, 235, 0.1);
+    color: #2563eb;
+    border-color: rgba(37, 99, 235, 0.18);
+}
+
+.crm-app-dashboard .crm-dash--pro .crm-dash-kpi--follow .crm-dash-kpi-icon,
+.crm-app-dashboard .crm-dash--pro .crm-dash-kpi--warn .crm-dash-kpi-icon {
+    background: rgba(217, 119, 6, 0.1);
+    color: #d97706;
+    border-color: rgba(217, 119, 6, 0.2);
+}
+
+.crm-app-dashboard .crm-dash--pro .crm-dash-kpi--reminders .crm-dash-kpi-icon {
+    background: rgba(13, 148, 136, 0.1);
+    color: #0d9488;
+    border-color: rgba(13, 148, 136, 0.2);
+}
+
+.crm-app-dashboard .crm-dash--pro .crm-dash-kpi:hover .crm-dash-kpi-icon {
+    transform: scale(1.04);
 }
 
 /* ─── Cells polish ─── */
@@ -568,14 +642,17 @@
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
         scroll-snap-type: x proximity;
-        gap: 0.22rem;
-        padding: 0.22rem !important;
+        gap: 0.35rem;
+        padding: 0.35rem !important;
         margin: 0;
-        background: color-mix(in srgb, var(--ws-surface-2) 50%, var(--ws-surface)) !important;
-        border: 1px solid var(--ws-border) !important;
-        border-radius: 11px !important;
+        background: color-mix(in srgb, var(--ws-surface) 90%, transparent) !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 72%, transparent) !important;
+        border-radius: 14px !important;
+        box-shadow: 0 2px 12px rgba(15, 23, 42, 0.05) !important;
         scrollbar-width: none;
         justify-content: flex-start;
+        backdrop-filter: blur(12px) saturate(1.08);
+        -webkit-backdrop-filter: blur(12px) saturate(1.08);
     }
 
     .crm-app-dashboard .crm-dash--pro .crm-dash-bar-actions::-webkit-scrollbar {
@@ -584,47 +661,41 @@
 
     .crm-app-dashboard .crm-dash--pro .crm-dash-act {
         flex: 0 0 auto;
-        min-height: 1.95rem;
-        padding: 0.28rem 0.5rem;
-        border-radius: 8px;
-        border: none;
-        background: transparent;
-        box-shadow: none;
+        min-height: 2.75rem;
+        min-width: 2.75rem;
+        padding: 0;
+        border-radius: 12px;
         scroll-snap-align: start;
-        font-size: 0.66rem;
+        font-size: 0.78rem;
     }
 
-    .crm-app-dashboard .crm-dash--pro .crm-dash-act span {
-        display: none !important;
+    .crm-app-dashboard .crm-dash--pro .crm-dash-act--icon {
+        width: 2.75rem;
+        min-width: 2.75rem;
     }
 
     .crm-app-dashboard .crm-dash--pro .crm-dash-act--primary {
-        padding-inline: 0.55rem;
-        background: color-mix(in srgb, var(--ws-primary) 10%, transparent);
-        color: var(--ws-primary);
-        border: 1px solid color-mix(in srgb, var(--ws-primary) 18%, var(--ws-border));
+        min-width: auto;
+        padding: 0.5rem 0.9rem;
+        background: linear-gradient(135deg, var(--ws-primary), color-mix(in srgb, var(--ws-primary) 78%, #4c1d95));
+        color: #fff;
+        border-color: transparent;
+        box-shadow: 0 4px 14px color-mix(in srgb, var(--ws-primary) 35%, transparent);
     }
 
     .crm-app-dashboard .crm-dash--pro .crm-dash-act--primary span {
         display: inline !important;
-        font-size: 0.64rem;
-        font-weight: 700;
-    }
-
-    .crm-app-dashboard .crm-dash--pro .crm-dash-act--icon {
-        width: 1.95rem;
-        min-width: 1.95rem;
-        padding: 0;
-        border-radius: 8px;
+        font-size: 0.78rem;
+        font-weight: 800;
     }
 
     .crm-app-dashboard .crm-dash--pro .crm-dash-act i,
     .crm-app-dashboard .crm-dash--pro .crm-dash-act .fas {
-        font-size: 0.72rem;
+        font-size: 0.95rem;
     }
 
     .crm-app-dashboard .crm-dash--pro .crm-dash-act--pulse {
-        background: color-mix(in srgb, var(--ws-primary) 8%, transparent);
+        background: color-mix(in srgb, var(--ws-primary) 10%, var(--ws-surface));
     }
 
     /* Mission strip — compact row, not stacked CTA */
@@ -689,41 +760,38 @@
         min-height: 2.65rem;
     }
 
-    /* KPI horizontal strip */
+    /* KPI — 2×2 grid cards with icons */
     .crm-app-dashboard .crm-dash--pro .crm-dash-kpis {
-        display: flex;
-        flex-wrap: nowrap;
-        gap: 0.45rem;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        scroll-snap-type: x mandatory;
-        background: transparent;
-        border: none;
-        border-radius: 0;
-        box-shadow: none;
-        scrollbar-width: none;
-        padding: 0.05rem;
-    }
-
-    .crm-app-dashboard .crm-dash--pro .crm-dash-kpis::-webkit-scrollbar {
-        display: none;
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 0.45rem !important;
+        overflow: visible !important;
+        background: transparent !important;
+        border: none !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        scroll-snap-type: none !important;
     }
 
     .crm-app-dashboard .crm-dash--pro .crm-dash-kpi {
-        flex: 0 0 auto;
-        width: 8.5rem;
-        min-width: 8.5rem;
-        min-height: 3.6rem;
-        flex-direction: column;
-        align-items: flex-start;
-        justify-content: center;
-        gap: 0.2rem;
-        padding: 0.65rem 0.75rem;
+        width: 100% !important;
+        min-width: 0 !important;
+        min-height: 4.1rem !important;
+        padding: 0.6rem 0.65rem !important;
         border: 1px solid var(--ws-border) !important;
-        border-radius: var(--crm-dash-radius);
-        background: var(--ws-surface);
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
-        scroll-snap-align: start;
+        border-radius: var(--crm-dash-radius) !important;
+        border-inline-start: 1px solid var(--ws-border) !important;
+        background: var(--ws-surface) !important;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+        scroll-snap-align: unset !important;
+    }
+
+    .crm-app-dashboard .crm-dash--pro .crm-dash-kpi-icon {
+        width: 1.85rem;
+        height: 1.85rem;
+        border-radius: 9px;
+        font-size: 0.7rem;
     }
 
     .crm-app-dashboard .crm-dash--pro .crm-dash-kpi:hover {
@@ -731,7 +799,8 @@
     }
 
     .crm-app-dashboard .crm-dash--pro .crm-dash-kpi-val {
-        font-size: 1.15rem;
+        font-size: 1.1rem;
+        line-height: 1;
     }
 
     .crm-app-dashboard .crm-dash--pro .crm-dash-kpi-sub {
@@ -905,9 +974,9 @@
         min-width: 6.85rem;
     }
 
-    .crm-app-dashboard .crm-dash--pro .crm-dash-act {
-        padding-inline: 0.7rem;
-        font-size: 0.72rem;
+    .crm-app-dashboard .crm-dash--pro .crm-dash-act--primary {
+        padding-inline: 0.75rem;
+        font-size: 0.74rem;
     }
 }
 

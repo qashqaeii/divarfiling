@@ -313,10 +313,83 @@
         font-size: 1rem !important;
     }
 
-    /* FAB */
+    /* FAB — glass icon-only */
     .crm-files-mobile .crm-files-fab {
-        bottom: calc(4.25rem + env(safe-area-inset-bottom, 0px)) !important;
-        box-shadow: 0 8px 24px rgba(124, 58, 237, 0.32) !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        position: fixed !important;
+        inset-inline-end: 1rem !important;
+        bottom: calc(var(--ws-mob-fab-offset, 4.25rem) + env(safe-area-inset-bottom, 0px)) !important;
+        z-index: 140 !important;
+        width: 3.25rem !important;
+        height: 3.25rem !important;
+        min-width: 3.25rem !important;
+        min-height: 3.25rem !important;
+        padding: 0 !important;
+        gap: 0 !important;
+        border: 1px solid color-mix(in srgb, var(--ws-primary) 26%, rgba(255, 255, 255, 0.55)) !important;
+        border-radius: 50% !important;
+        background: color-mix(in srgb, var(--ws-surface) 70%, transparent) !important;
+        background-image: linear-gradient(
+            145deg,
+            color-mix(in srgb, var(--ws-primary) 16%, transparent),
+            color-mix(in srgb, var(--ws-surface) 62%, transparent)
+        ) !important;
+        backdrop-filter: blur(22px) saturate(1.18) !important;
+        -webkit-backdrop-filter: blur(22px) saturate(1.18) !important;
+        color: var(--ws-primary) !important;
+        font-family: inherit;
+        cursor: pointer;
+        box-shadow:
+            0 10px 28px rgba(15, 23, 42, 0.11),
+            0 3px 10px color-mix(in srgb, var(--ws-primary) 18%, transparent),
+            inset 0 1px 0 rgba(255, 255, 255, 0.5) !important;
+        -webkit-tap-highlight-color: transparent;
+        transition:
+            transform 0.14s ease,
+            box-shadow 0.22s ease,
+            border-color 0.22s ease,
+            background 0.22s ease;
+    }
+
+    .crm-files-mobile .crm-files-fab span {
+        display: none !important;
+    }
+
+    .crm-files-mobile .crm-files-fab i {
+        font-size: 1.12rem;
+        line-height: 1;
+        color: var(--ws-primary);
+        transition: color 0.22s ease, filter 0.22s ease, transform 0.14s ease;
+    }
+
+    .crm-files-mobile .crm-files-fab:active {
+        transform: scale(0.94);
+        box-shadow:
+            0 6px 18px rgba(15, 23, 42, 0.08),
+            0 2px 6px color-mix(in srgb, var(--ws-primary) 14%, transparent),
+            inset 0 1px 0 rgba(255, 255, 255, 0.42) !important;
+    }
+
+    @media (hover: hover) {
+        .crm-files-mobile .crm-files-fab:hover {
+            border-color: color-mix(in srgb, var(--ws-primary) 38%, rgba(255, 255, 255, 0.6)) !important;
+            background-image: linear-gradient(
+                145deg,
+                color-mix(in srgb, var(--ws-primary) 22%, transparent),
+                color-mix(in srgb, var(--ws-surface) 58%, transparent)
+            ) !important;
+            box-shadow:
+                0 12px 32px rgba(15, 23, 42, 0.13),
+                0 4px 14px color-mix(in srgb, var(--ws-primary) 24%, transparent),
+                inset 0 1px 0 rgba(255, 255, 255, 0.58) !important;
+        }
+
+        .crm-files-mobile .crm-files-fab:hover i {
+            color: color-mix(in srgb, var(--ws-primary) 88%, #4c1d95);
+            filter: drop-shadow(0 1px 4px color-mix(in srgb, var(--ws-primary) 35%, transparent));
+        }
     }
 
     /* Filters + quick chips */

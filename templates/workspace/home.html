@@ -3,7 +3,7 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/crm.css' %}?v=97">
-<link rel="stylesheet" href="{% static 'workspace/css/home.css' %}?v=13">
+<link rel="stylesheet" href="{% static 'workspace/css/home.css' %}?v=14">
 {% endblock %}
 
 {% block page_title %}{% endblock %}
@@ -433,19 +433,19 @@
     <section class="mk-hub-insights ws-home-insights is-collapsed-mobile" data-tour="insights" id="wsHomeInsights">
         <button type="button" class="ws-home-insights-toggle" id="wsHomeInsightsToggle" aria-expanded="false" aria-controls="wsHomeInsightsBody">
             <span class="ws-home-insights-toggle-main">
-                <span class="ws-home-insights-toggle-icon" aria-hidden="true"><i class="fas fa-chart-area"></i></span>
+                <span class="ws-home-insights-toggle-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='chart_area' size='sm' only %}</span>
                 <span class="ws-home-insights-toggle-text">
                     <strong>آمار و نمودارها</strong>
                     <em>روند فعالیت، قیف و کانال ارتباط</em>
                 </span>
             </span>
-            <span class="ws-home-insights-toggle-chevron" aria-hidden="true"><i class="fas fa-chevron-down"></i></span>
+            <span class="ws-home-insights-toggle-chevron" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='chevron_down' size='xs' only %}</span>
         </button>
         <div class="ws-home-insights-body" id="wsHomeInsightsBody">
             <article class="mk-insight mk-insight--trend">
                 <header class="mk-insight-head">
                     <div class="mk-insight-title">
-                        <span class="mk-insight-icon mk-insight-icon--chart" aria-hidden="true"><i class="fas fa-chart-area"></i></span>
+                        <span class="mk-insight-icon mk-insight-icon--chart" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='chart_area' size='xs' only %}</span>
                         <div>
                             <h2 id="hubTrendTitle">روند ۷ روز</h2>
                             <p>فعالیت مخاطب، ملک و معامله</p>
@@ -467,7 +467,7 @@
             <article class="mk-insight mk-insight--donut">
                 <header class="mk-insight-head">
                     <div class="mk-insight-title">
-                        <span class="mk-insight-icon mk-insight-icon--pie" aria-hidden="true"><i class="fas fa-chart-pie"></i></span>
+                        <span class="mk-insight-icon mk-insight-icon--pie" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='chart_pie' size='xs' only %}</span>
                         <div>
                             <h2>وضعیت مخاطبین</h2>
                             <p>توزیع در قیف فروش</p>
@@ -499,7 +499,7 @@
             <article class="mk-insight mk-insight--channels">
                 <header class="mk-insight-head">
                     <div class="mk-insight-title">
-                        <span class="mk-insight-icon mk-insight-icon--comm" aria-hidden="true"><i class="fas fa-comments"></i></span>
+                        <span class="mk-insight-icon mk-insight-icon--comm" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='messages' size='xs' only %}</span>
                         <div>
                             <h2>کانال ارتباط</h2>
                             <p>ترجیح تماس مشتریان</p>
@@ -509,7 +509,7 @@
                 <ul class="mk-insight-channels">
                     {% for ch in communication_stats %}
                     <li class="mk-insight-channel" data-channel="{{ ch.key }}">
-                        <span class="mk-insight-channel-icon" aria-hidden="true"><i class="fas {{ ch.icon }}"></i></span>
+                        <span class="mk-insight-channel-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor=ch.decor size='xs' only %}</span>
                         <div class="mk-insight-channel-body">
                             <div class="mk-insight-channel-top">
                                 <span class="mk-insight-channel-name">{{ ch.label }}</span>

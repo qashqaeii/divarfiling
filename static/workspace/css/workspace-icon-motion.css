@@ -225,6 +225,46 @@ body.ws-body .mk-hub-quick-item:hover .mk-hub-quick-item-icon {
     }
 }
 
+body.ws-body :is(
+    .mk-insight-icon,
+    .mk-insight-channel-icon,
+    .ws-home-insights-toggle-icon,
+    .crm-dash-insights-toggle__icon
+) {
+    transition:
+        background var(--ws-icon-duration) var(--ws-icon-ease),
+        transform var(--ws-icon-duration) var(--ws-icon-ease);
+}
+
+body.ws-body .mk-insight:hover .mk-insight-icon .df-decor-icon {
+    transform: scale(1.05) translateY(-1px);
+    filter: var(--ws-icon-glow-soft);
+}
+
+body.ws-body .mk-insight-channel:hover .mk-insight-channel-icon .df-decor-icon {
+    transform: scale(1.05) translateY(-1px);
+}
+
+body.ws-body .ws-home-insights-toggle:hover .ws-home-insights-toggle-icon {
+    background: color-mix(in srgb, var(--ws-primary) 14%, var(--ws-surface-2));
+}
+
+body.ws-body .ws-home-insights-toggle:hover .ws-home-insights-toggle-icon .df-decor-icon {
+    color: #6d28d9;
+    transform: scale(1.05) translateY(-1px);
+    filter: var(--ws-icon-glow-soft);
+}
+
+body.ws-body .crm-dash-insights-toggle:hover .crm-dash-insights-toggle__icon {
+    background: color-mix(in srgb, var(--ws-primary) 14%, var(--ws-surface-2));
+}
+
+body.ws-body .crm-dash-insights-toggle:hover .crm-dash-insights-toggle__icon .df-decor-icon {
+    color: #6d28d9;
+    transform: scale(1.05) translateY(-1px);
+    filter: var(--ws-icon-glow-soft);
+}
+
 /* ─── Accent: AI, notifications, analytics, key actions ─── */
 body.ws-body :is(
     .ws-ai-trigger,

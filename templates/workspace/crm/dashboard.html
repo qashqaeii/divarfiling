@@ -8,7 +8,7 @@
 {% block crm_header %}{% endblock %}
 
 {% block crm_extra_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/crm-dashboard.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-dashboard.css' %}?v=2">
 <link rel="stylesheet" href="{% static 'workspace/css/academy.css' %}?v=5">
 {% endblock %}
 
@@ -224,13 +224,13 @@
 
         <button type="button" class="crm-dash-insights-toggle" id="crmDashInsightsToggle" aria-expanded="false" aria-controls="crmDashInsights">
             <span class="crm-dash-insights-toggle__main">
-                <span class="crm-dash-insights-toggle__icon" aria-hidden="true"><i class="fas fa-chart-area"></i></span>
+                <span class="crm-dash-insights-toggle__icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='chart_area' size='sm' only %}</span>
                 <span class="crm-dash-insights-toggle__text">
                     <strong>آمار و تحلیل</strong>
                     <em>روند، قیف تبدیل، کانال و فعالیت</em>
                 </span>
             </span>
-            <span class="crm-dash-insights-toggle__chevron" aria-hidden="true"><i class="fas fa-chevron-down"></i></span>
+            <span class="crm-dash-insights-toggle__chevron" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='chevron_down' size='xs' only %}</span>
         </button>
 
         <div class="crm-dash-insights" id="crmDashInsights">
@@ -299,7 +299,7 @@
                 <ul class="crm-ch-v2">
                     {% for ch in communication_stats %}
                     <li>
-                        <span class="crm-ch-v2-label"><i class="fas {{ ch.icon }}" aria-hidden="true"></i>{{ ch.label }}</span>
+                        <span class="crm-ch-v2-label">{% include 'includes/icon_slot.html' with decor=ch.decor size='xs' only %}{{ ch.label }}</span>
                         <span class="crm-ch-v2-track"><i style="width:{{ ch.pct }}%"></i></span>
                         <span class="crm-ch-v2-val">{{ ch.count }}</span>
                     </li>

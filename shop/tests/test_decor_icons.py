@@ -73,6 +73,13 @@ class LucideMappingTests(SimpleTestCase):
             'help_center': 'circle-help',
             'settings': 'settings-2',
             'trending_up': 'chart-no-axes-combined',
+            'chart_area': 'chart-area',
+            'chart_pie': 'chart-pie',
+            'messages': 'messages-square',
+            'chevron_down': 'chevron-down',
+            'email': 'mail',
+            'sms': 'message-square-text',
+            'whatsapp': 'message-circle',
             'house': 'layout-dashboard',
             'team': 'contact-round',
         }

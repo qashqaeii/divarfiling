@@ -1511,7 +1511,8 @@
         flex-shrink: 0;
         background: color-mix(in srgb, var(--ws-primary) 10%, var(--ws-surface-2));
         color: var(--ws-primary);
-        font-size: 0.85rem;
+        line-height: 0;
+        transition: background 0.2s ease;
     }
 
     .ws-home-insights-toggle-text {
@@ -1538,8 +1539,11 @@
 
     .ws-home-insights-toggle-chevron {
         flex-shrink: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
         color: var(--ws-text-muted);
-        font-size: 0.75rem;
+        line-height: 0;
         transition: transform 0.18s ease;
     }
 

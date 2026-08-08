@@ -37,6 +37,13 @@ DECOR_ICONS: dict[str, str] = {
     'scale': 'scale.png',
     'percent': 'percent.png',
     'bar_chart': 'bar_chart.png',
+    'chart_area': 'bar_chart.png',
+    'chart_pie': 'bar_chart.png',
+    'messages': 'message_template.png',
+    'chevron_down': 'bar_chart.png',
+    'email': 'message_template.png',
+    'sms': 'message_template.png',
+    'whatsapp': 'message_template.png',
     'layout_grid': 'layout_grid.png',
     # Legacy / marketing
     'clipboard_list': 'clipboard_list.png',

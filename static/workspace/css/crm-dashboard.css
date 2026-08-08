@@ -564,8 +564,9 @@
         justify-content: center;
         background: color-mix(in srgb, var(--ws-primary) 10%, var(--ws-surface-2));
         color: var(--ws-primary);
-        font-size: 0.85rem;
+        line-height: 0;
         flex-shrink: 0;
+        transition: background 0.2s ease;
     }
 
     .crm-app-dashboard .crm-dash-insights-toggle__text {
@@ -590,8 +591,11 @@
     }
 
     .crm-app-dashboard .crm-dash-insights-toggle__chevron {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
         color: var(--ws-text-muted);
-        font-size: 0.75rem;
+        line-height: 0;
         transition: transform 0.18s ease;
         flex-shrink: 0;
     }

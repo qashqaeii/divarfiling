@@ -1228,10 +1228,10 @@ def get_communication_stats(user) -> List[Dict[str, Any]]:
 
     total = sum(counts.values()) or 1
     return [
-        {'key': 'phone', 'label': 'تلفن', 'icon': 'fa-phone', 'count': counts['phone'], 'pct': round(counts['phone'] / total * 100)},
-        {'key': 'email', 'label': 'ایمیل', 'icon': 'fa-envelope', 'count': counts['email'], 'pct': round(counts['email'] / total * 100)},
-        {'key': 'whatsapp', 'label': 'واتساپ', 'icon': 'fa-brands fa-whatsapp', 'count': counts['whatsapp'], 'pct': round(counts['whatsapp'] / total * 100)},
-        {'key': 'sms', 'label': 'پیامک', 'icon': 'fa-comment-sms', 'count': counts['sms'], 'pct': round(counts['sms'] / total * 100)},
+        {'key': 'phone', 'label': 'تلفن', 'decor': 'phone', 'count': counts['phone'], 'pct': round(counts['phone'] / total * 100)},
+        {'key': 'email', 'label': 'ایمیل', 'decor': 'email', 'count': counts['email'], 'pct': round(counts['email'] / total * 100)},
+        {'key': 'whatsapp', 'label': 'واتساپ', 'decor': 'whatsapp', 'count': counts['whatsapp'], 'pct': round(counts['whatsapp'] / total * 100)},
+        {'key': 'sms', 'label': 'پیامک', 'decor': 'sms', 'count': counts['sms'], 'pct': round(counts['sms'] / total * 100)},
     ]
 
 

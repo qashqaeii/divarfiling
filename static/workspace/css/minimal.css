@@ -6039,8 +6039,8 @@ button.mk-ds-card-act {
     width: 34px; height: 34px;
     border-radius: 10px;
     display: flex; align-items: center; justify-content: center;
-    font-size: 0.78rem;
     flex-shrink: 0;
+    line-height: 0;
 }
 .mk-insight-icon--chart { background: rgba(16, 185, 129, 0.12); color: #10B981; }
 .mk-insight-icon--pie { background: rgba(124, 58, 237, 0.12); color: #7C3AED; }
@@ -6182,8 +6182,8 @@ button.mk-ds-card-act {
     width: 32px; height: 32px;
     border-radius: 9px;
     display: flex; align-items: center; justify-content: center;
-    font-size: 0.75rem;
     flex-shrink: 0;
+    line-height: 0;
 }
 .mk-insight-channel[data-channel="phone"] .mk-insight-channel-icon { background: rgba(16, 185, 129, 0.12); color: #10B981; }
 .mk-insight-channel[data-channel="email"] .mk-insight-channel-icon { background: rgba(37, 99, 235, 0.12); color: #2563EB; }
@@ -7170,6 +7170,12 @@ button.mk-ds-card-act {
     gap: 0.35rem;
 }
 .crm-ch-v2-label i { width: 14px; text-align: center; font-size: 0.65rem; color: var(--ws-primary); }
+.crm-ch-v2-label .df-decor-icon {
+    --df-decor-size: 0.875rem;
+    --mk-icon-stroke: 1.75;
+    color: var(--ws-primary);
+    flex-shrink: 0;
+}
 .crm-ch-v2-track {
     height: 5px;
     border-radius: 999px;

@@ -1,0 +1,1270 @@
+/* ═══════════════════════════════════════════════════════════
+   Workspace Mobile Premium — Final Mobile-First Experience
+   Loads AFTER all workspace CSS (including saas-polish)
+   UI only — no business logic changes
+   Breakpoints: 320 / 375 / 390 / 412 / 430
+   ═══════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+    :root {
+        /* Typography tokens */
+        --mobile-title: 18px;
+        --mobile-section: 15px;
+        --mobile-card: 14px;
+        --mobile-body: 13px;
+        --mobile-meta: 11px;
+
+        /* Layout tokens */
+        --ws-mob-gutter: 16px;
+        --ws-mob-gap: 10px;
+        --ws-mob-card-pad: 12px;
+        --ws-mob-radius: 16px;
+        --ws-mob-shadow: 0 2px 12px rgba(15, 23, 42, 0.06);
+
+        /* Shell — single bottom nav (64px) + safe area */
+        --ws-mob-nav-h: 4rem;
+        --ws-mob-nav-gap: 8px;
+        --ws-mob-nav-offset: calc(var(--ws-mob-nav-h) + var(--ws-mob-nav-gap) + env(safe-area-inset-bottom, 0px));
+        --ws-mob-dock-h: 2.75rem;
+        --ws-mob-dock-gap: 6px;
+        --ws-mob-dock-offset: calc(var(--ws-mob-nav-offset) + var(--ws-mob-dock-gap));
+        --ws-mob-fab-offset: var(--ws-mob-nav-offset);
+        --ws-mob-topbar-h: 3rem;
+    }
+
+    /* ─── PHASE 2 — Mobile layout system ─── */
+    html,
+    body.ws-body {
+        overflow-x: clip;
+    }
+
+    .ws-content,
+    .crm-app,
+    .crm-main,
+    .mk-page,
+    .mk-hub-pro,
+    .crm-page-chrome {
+        overflow-x: clip;
+        max-width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
+    }
+
+    .ws-content {
+        padding: var(--ws-mob-gutter) !important;
+        padding-bottom: calc(var(--ws-mob-nav-offset) + var(--ws-mob-gutter)) !important;
+        gap: var(--ws-mob-gap);
+    }
+
+    .ws-content:has(.crm-contact-detail-pro),
+    .ws-content:has(.crm-prop-detail-mobile),
+    .ws-content:has(.crm-deal-detail-mobile),
+    .ws-content:has(.ws-ds-mobile),
+    .ws-content:has(.ws-ld-mobile) {
+        padding-bottom: 0 !important;
+    }
+
+    .mk-page,
+    .crm-page-chrome,
+    .crm-app-dashboard,
+    .ws-home.mk-hub-pro {
+        gap: var(--ws-mob-gap) !important;
+    }
+
+    /* Cards — full width, soft, breathable */
+    :is(
+        .mk-hub-card,
+        .mk-panel,
+        .ws-glass-panel,
+        .ws-home-queue-card,
+        .crm-panel,
+        .crm-dash-kpis,
+        .crm-dash-bar,
+        .mk-hub-head,
+        .crm-contact-panel,
+        .crm-prop-panel,
+        .crm-deal-block,
+        .mk-filing-panel,
+        .announcements-section,
+        .crm-detail-action-center,
+        .crm-contacts-mobile .crm-contacts-table tbody tr.crm-row-selectable,
+        .crm-files-mobile .crm-files-card,
+        .crm-deals-mobile .crm-deals-card,
+        .mk-filing-mobile .mk-ds-card-glass,
+        .ws-ds-mobile .mk-lcard
+    ) {
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box;
+        border-radius: var(--ws-mob-radius) !important;
+        box-shadow: var(--ws-mob-shadow) !important;
+    }
+
+    :is(
+        .mk-panel-body,
+        .mk-hub-card-body,
+        .crm-panel-body,
+        .crm-contact-panel-body,
+        .crm-prop-panel-body,
+        .crm-files-mobile .crm-files-card,
+        .crm-deals-mobile .crm-deals-card
+    ) {
+        padding: var(--ws-mob-card-pad) !important;
+    }
+
+    /* ─── PHASE 3 — Mobile header (48–56px) ─── */
+    .ws-mobile-topbar {
+        min-height: var(--ws-mob-topbar-h) !important;
+        max-height: 3.5rem !important;
+        padding: max(0.25rem, env(safe-area-inset-top, 0px)) var(--ws-mob-gutter) 0.25rem !important;
+        background: var(--ws-surface) !important;
+        border-bottom: 1px solid color-mix(in srgb, var(--ws-border) 60%, transparent) !important;
+        box-shadow: none !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+    }
+
+    .ws-mobile-topbar-title {
+        font-size: var(--mobile-title) !important;
+        font-weight: 700 !important;
+        letter-spacing: -0.02em !important;
+    }
+
+    .ws-mobile-topbar-act,
+    .ws-mobile-menu {
+        width: 2.25rem !important;
+        height: 2.25rem !important;
+        min-width: 2.25rem !important;
+        min-height: 2.25rem !important;
+        border-radius: 10px !important;
+    }
+
+    /* Breadcrumbs — compact */
+    :is(
+        .crm-prop-hero-crumb,
+        .crm-contact-hero__crumb,
+        .crm-deal-crumb
+    ) {
+        font-size: var(--mobile-meta) !important;
+        gap: 0.25rem !important;
+    }
+
+    :is(
+        .crm-prop-hero-crumb a,
+        .crm-contact-hero__crumb a,
+        .crm-deal-crumb a
+    ) {
+        display: none;
+    }
+
+    :is(
+        .crm-prop-hero-crumb span,
+        .crm-contact-hero__crumb span,
+        .crm-deal-crumb span
+    ) {
+        max-width: 55vw;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    :is(
+        .crm-prop-hero-crumb .fa-chevron-left,
+        .crm-contact-hero__crumb .fa-chevron-left,
+        .crm-deal-crumb .fa-chevron-left
+    ) {
+        display: none;
+    }
+
+    /* ─── PHASE 10 — Typography scale ─── */
+    :is(
+        .mk-hub-head-title,
+        .crm-dash-bar-title,
+        .mk-filing-mob-title,
+        .crm-page-title,
+        .ws-mobile-topbar-title
+    ) {
+        font-size: var(--mobile-title) !important;
+        font-weight: 700 !important;
+        line-height: 1.3 !important;
+    }
+
+    :is(
+        .mk-section-title,
+        .crm-panel-head h2,
+        .crm-contact-panel-head-text h2,
+        .crm-prop-panel-head h2,
+        .crm-deal-block__title,
+        .crm-detail-action-center__title,
+        .ws-section-title
+    ) {
+        font-size: var(--mobile-section) !important;
+        font-weight: 600 !important;
+        line-height: 1.35 !important;
+    }
+
+    :is(
+        .mk-card-title,
+        .crm-contacts-table .crm-contacts-person-link,
+        .crm-files-card-title,
+        .crm-deals-card-title,
+        .mk-ds-card-title,
+        .ws-ds-mobile .mk-lcard-title a,
+        .crm-timeline-title
+    ) {
+        font-size: var(--mobile-card) !important;
+        font-weight: 600 !important;
+        line-height: 1.35 !important;
+    }
+
+    :is(
+        .crm-panel-body,
+        .crm-contact-panel-body,
+        .crm-timeline-text,
+        .mk-hub-card-body,
+        .crm-contacts-mob-meta,
+        .ws-ds-mobile .mk-lcard-body
+    ) {
+        font-size: var(--mobile-body) !important;
+        line-height: 1.45 !important;
+    }
+
+    :is(
+        .mk-hub-metric-lbl,
+        .crm-dash-kpi-lbl,
+        .crm-contacts-card-sub,
+        .mk-ds-card-date,
+        .crm-timeline-time,
+        .crm-detail-intel-card__label,
+        .mk-hub-metric-sub
+    ) {
+        font-size: var(--mobile-meta) !important;
+    }
+
+    /* Panel subtitles — reduce scroll */
+    :is(
+        .crm-contact-panel-head-text p,
+        .crm-prop-panel-head p,
+        .crm-deal-block__desc
+    ) {
+        display: none;
+    }
+
+    /* ─── Hide desktop decoration leftovers ─── */
+    :is(
+        .crm-prop-hero-ambient,
+        .crm-prop-hero-orb,
+        .crm-deal-dossier-mesh,
+        .crm-deal-hero__orb,
+        .crm-deal-dossier-accent,
+        .mk-filing-mob-header-mesh,
+        .mk-filing-mob-header-accent,
+        .ws-ds-mob-stage,
+        .crm-contact-intel-strip__pulse
+    ) {
+        display: none !important;
+    }
+
+    /* Softer canvas — less empty dashboard feel */
+    body.ws-body .ws-main {
+        background: var(--ws-bg) !important;
+    }
+
+    .crm-prop-detail-mobile.crm-page-chrome,
+    .crm-deal-detail-mobile.crm-page-chrome,
+    .ws-ds-mobile.mk-page,
+    .mk-filing-mobile.mk-page {
+        background: var(--ws-bg) !important;
+    }
+
+    /* ─── PHASE 4 — Compact detail heroes (max ~180px for identity blocks) ─── */
+    .crm-contact-detail-pro .crm-contact-workspace__header,
+    .crm-deal-detail-mobile .crm-deal-dossier.crm-deal-hero {
+        max-height: none;
+        border-radius: var(--ws-mob-radius) !important;
+        overflow: hidden;
+    }
+
+    .crm-contact-detail-pro .crm-contact-hero--compact .crm-contact-hero__top {
+        padding: var(--ws-mob-card-pad) var(--ws-mob-gutter) !important;
+        max-height: 180px;
+        overflow: hidden;
+    }
+
+    .crm-contact-detail-pro .crm-contact-hero__title,
+    .crm-deal-detail-mobile .crm-deal-title {
+        font-size: var(--mobile-title) !important;
+        font-weight: 700 !important;
+        line-height: 1.25 !important;
+        margin: 0 !important;
+    }
+
+    .crm-contact-detail-pro .crm-contact-hero__badges {
+        flex-wrap: wrap;
+        gap: 4px !important;
+    }
+
+    .crm-contact-detail-pro .crm-contact-hero__badges > :nth-child(n + 3) {
+        display: none;
+    }
+
+    .crm-contact-detail-pro .crm-contact-hero__meta-inline {
+        font-size: var(--mobile-meta) !important;
+        gap: 4px !important;
+    }
+
+    .crm-contact-detail-pro .crm-contact-hero__team:not(.crm-contact-team-bar--compact) {
+        display: none;
+    }
+
+    .crm-contact-detail-pro .crm-contact-team-bar--compact {
+        padding: 6px var(--ws-mob-gutter) !important;
+        font-size: var(--mobile-meta) !important;
+    }
+
+    .crm-contact-detail-pro .crm-contact-team-actions,
+    .crm-contact-detail-pro .crm-contact-share-list {
+        display: none;
+    }
+
+    .crm-deal-detail-mobile .crm-deal-dossier.crm-deal-hero {
+        padding: var(--ws-mob-card-pad) var(--ws-mob-gutter) !important;
+    }
+
+    .crm-deal-detail-mobile .crm-deal-hero__body {
+        max-height: 180px;
+        overflow: hidden;
+        padding: var(--ws-mob-card-pad) var(--ws-mob-gutter) !important;
+        gap: 8px !important;
+    }
+
+    .crm-deal-detail-mobile .crm-deal-hero__kicker,
+    .crm-deal-detail-mobile .crm-deal-hero__parties,
+    .crm-deal-detail-mobile .crm-deal-hero__date-badge {
+        display: none !important;
+    }
+
+    .crm-deal-detail-mobile .crm-deal-hero__mark {
+        width: 2.75rem !important;
+        height: 2.75rem !important;
+        border-radius: 10px !important;
+        font-size: 1rem !important;
+    }
+
+    .crm-deal-detail-mobile .crm-deal-hero__valueband {
+        display: flex !important;
+        padding: 0 var(--ws-mob-gutter) var(--ws-mob-card-pad) !important;
+        gap: 8px !important;
+    }
+
+    .crm-deal-detail-mobile .crm-deal-hero__value-main strong {
+        font-size: var(--mobile-card) !important;
+    }
+
+    .crm-deal-detail-mobile .crm-deal-hero__value-sub {
+        font-size: var(--mobile-meta) !important;
+    }
+
+    .crm-deal-detail-mobile .crm-deal-prob-ring {
+        width: 2.75rem !important;
+        height: 2.75rem !important;
+        font-size: var(--mobile-meta) !important;
+    }
+
+    /* ─── PHASE 8 — Property detail mobile-first ─── */
+    .crm-prop-detail-mobile .crm-prop-hero {
+        border-radius: var(--ws-mob-radius) !important;
+        margin: 0 !important;
+        box-shadow: var(--ws-mob-shadow) !important;
+        overflow: hidden;
+    }
+
+    .crm-prop-detail-mobile .crm-prop-hero-nav {
+        padding: var(--ws-mob-card-pad) !important;
+        min-height: 0 !important;
+        flex-wrap: nowrap !important;
+    }
+
+    .crm-prop-detail-mobile .crm-prop-hero-back {
+        width: 2rem !important;
+        height: 2rem !important;
+        min-width: 2rem !important;
+        border-radius: 10px !important;
+    }
+
+    .crm-prop-detail-mobile .crm-prop-hero-main {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 0 !important;
+    }
+
+    /* 1. Image — 16/9, not half-screen */
+    .crm-prop-detail-mobile .crm-prop-hero-visual {
+        order: 1;
+        width: 100%;
+        border: none !important;
+        position: relative;
+    }
+
+    .crm-prop-detail-mobile .crm-prop-hero-cover,
+    .crm-prop-detail-mobile .crm-prop-hero-cover img,
+    .crm-prop-detail-mobile .crm-prop-hero-cover--empty {
+        aspect-ratio: 16 / 9 !important;
+        width: 100% !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        height: auto !important;
+        object-fit: cover !important;
+        display: block;
+    }
+
+    .crm-prop-detail-mobile .crm-prop-hero-cover--empty {
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem !important;
+    }
+
+    .crm-prop-detail-mobile .crm-prop-hero-deal-pill {
+        font-size: var(--mobile-meta) !important;
+        padding: 2px 8px !important;
+        top: 8px !important;
+        inset-inline-start: 8px !important;
+    }
+
+    .crm-prop-detail-mobile .crm-prop-hero-img-badge {
+        font-size: var(--mobile-meta) !important;
+        padding: 2px 8px !important;
+    }
+
+    /* 2–4. Title, status, KPI — compact content block */
+    .crm-prop-detail-mobile .crm-prop-hero-content {
+        order: 2;
+        padding: var(--ws-mob-card-pad) !important;
+        gap: 6px !important;
+    }
+
+    .crm-prop-detail-mobile .crm-prop-hero-title {
+        font-size: var(--mobile-title) !important;
+        font-weight: 700 !important;
+        line-height: 1.3 !important;
+        order: 2;
+    }
+
+    .crm-prop-detail-mobile .crm-prop-hero-status-row {
+        order: 1;
+        gap: 4px !important;
+        flex-wrap: wrap;
+    }
+
+    .crm-prop-detail-mobile .crm-prop-hero-status-row .crm-prop-badge:nth-child(n + 3) {
+        display: none;
+    }
+
+    .crm-prop-detail-mobile .crm-prop-badge {
+        font-size: var(--mobile-meta) !important;
+        padding: 2px 8px !important;
+    }
+
+    .crm-prop-detail-mobile .crm-prop-hero-chips {
+        order: 3;
+        gap: 4px !important;
+    }
+
+    /* Location only in hero — rest in detail tabs */
+    .crm-prop-detail-mobile .crm-prop-hero-chip:not(.crm-prop-hero-chip--loc) {
+        display: none !important;
+    }
+
+    .crm-prop-detail-mobile .crm-prop-hero-chip--loc {
+        font-size: var(--mobile-meta) !important;
+        padding: 2px 0 !important;
+        background: transparent !important;
+        border: none !important;
+        max-width: 100%;
+    }
+
+    .crm-prop-detail-mobile .crm-prop-hero-board {
+        order: 4;
+        gap: 6px !important;
+        margin-top: 2px;
+    }
+
+    .crm-prop-detail-mobile .crm-prop-hero-pricezone {
+        display: flex !important;
+        flex-wrap: wrap;
+        gap: 6px !important;
+    }
+
+    .crm-prop-detail-mobile .crm-prop-hero-pricecard {
+        flex: 1 1 calc(50% - 3px);
+        min-width: 0;
+        padding: 8px 10px !important;
+        border-radius: 10px !important;
+    }
+
+    .crm-prop-detail-mobile .crm-prop-hero-pricecard-lbl {
+        font-size: var(--mobile-meta) !important;
+    }
+
+    .crm-prop-detail-mobile .crm-prop-hero-pricecard strong {
+        font-size: var(--mobile-card) !important;
+        font-weight: 700 !important;
+    }
+
+    /* Important metrics — horizontal strip, max 3 visible */
+    .crm-prop-detail-mobile .crm-prop-hero-kpis {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        overflow-x: auto !important;
+        gap: 6px !important;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 2px;
+    }
+
+    .crm-prop-detail-mobile .crm-prop-hero-kpis::-webkit-scrollbar {
+        display: none;
+    }
+
+    .crm-prop-detail-mobile .crm-prop-hero-kpi {
+        flex: 0 0 auto;
+        min-width: 5.5rem;
+        padding: 6px 8px !important;
+        border-radius: 10px !important;
+    }
+
+    .crm-prop-detail-mobile .crm-prop-hero-kpi:nth-child(n + 4) {
+        /* still scrollable — keep all but compact */
+    }
+
+    .crm-prop-detail-mobile .crm-prop-hero-kpi-ico {
+        width: 1.25rem !important;
+        height: 1.25rem !important;
+        font-size: 0.65rem !important;
+    }
+
+    .crm-prop-detail-mobile .crm-prop-hero-kpi-body em {
+        font-size: 0.625rem !important;
+    }
+
+    .crm-prop-detail-mobile .crm-prop-hero-kpi-body strong {
+        font-size: var(--mobile-body) !important;
+    }
+
+    /* Amenities + gallery — compact, collapsed from hero stack */
+    .crm-prop-detail-mobile .crm-prop-hero-amenities,
+    .crm-prop-detail-mobile .crm-prop-hero-gallery-wrap,
+    .crm-prop-detail-mobile .crm-prop-hero-share-block,
+    .crm-prop-detail-mobile .crm-prop-hero-share-view {
+        display: none !important;
+    }
+
+    .crm-prop-detail-mobile .crm-prop-share-banner {
+        margin: 0 0 var(--ws-mob-gap) !important;
+        padding: var(--ws-mob-card-pad) !important;
+        border-radius: var(--ws-mob-radius) !important;
+        font-size: var(--mobile-body) !important;
+    }
+
+    .crm-prop-detail-mobile .crm-prop-detail-grid {
+        padding: 0 !important;
+        gap: var(--ws-mob-gap) !important;
+    }
+
+    /* Listing detail — same hero treatment */
+    .ws-ld-mobile.crm-prop-detail-mobile .crm-prop-hero-cover,
+    .ws-ld-mobile.crm-prop-detail-mobile .crm-prop-hero-cover img {
+        aspect-ratio: 16 / 9 !important;
+        min-height: 0 !important;
+        max-height: none !important;
+    }
+
+    /* ─── Action center — intel only, no duplicate CTAs ─── */
+    .crm-detail-action-center__kicker,
+    .crm-detail-action-center__quick {
+        display: none !important;
+    }
+
+    .crm-detail-action-center {
+        padding: var(--ws-mob-card-pad) !important;
+        margin: 0 !important;
+    }
+
+    .crm-detail-action-center__head {
+        margin-bottom: 6px !important;
+    }
+
+    .crm-detail-action-center__title {
+        font-size: var(--mobile-section) !important;
+    }
+
+    .crm-detail-action-center__flag {
+        font-size: var(--mobile-meta) !important;
+        padding: 2px 8px !important;
+    }
+
+    .crm-detail-action-center__grid {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        overflow-x: auto !important;
+        gap: 6px !important;
+        scrollbar-width: none;
+    }
+
+    .crm-detail-action-center__grid::-webkit-scrollbar {
+        display: none;
+    }
+
+    .crm-detail-intel-card {
+        flex: 0 0 auto;
+        min-width: 7.5rem;
+        padding: 8px 10px !important;
+        border-radius: 10px !important;
+    }
+
+    .crm-contact-detail-pro .crm-contact-intel-strip {
+        min-height: 44px !important;
+        border-radius: var(--ws-mob-radius) !important;
+    }
+
+    .crm-contact-detail-pro .crm-contact-intel-strip__cell {
+        min-width: 5rem !important;
+        padding: 6px 8px !important;
+    }
+
+    .crm-contact-detail-pro .crm-contact-intel-strip__cell.is-action {
+        display: none !important;
+    }
+
+    /* ─── PHASE 5 — Single action dock system ─── */
+    :is(
+        .crm-contact-detail-pro .crm-contact-hero__actions-col,
+        .crm-contact-detail-pro .crm-contact-hero__actions,
+        .crm-contact-detail-pro .crm-contact-hero__actions--compact,
+        .crm-prop-detail-mobile .crm-prop-hero-actions,
+        .crm-deal-detail-mobile .crm-deal-hero__actions,
+        .crm-deal-detail-mobile .crm-deal-dossier-actions
+    ) {
+        display: none !important;
+    }
+
+    :is(
+        .crm-contact-mobile-dock,
+        .crm-contact-action-bar,
+        .crm-prop-mobile-dock,
+        .crm-deal-mobile-dock,
+        .ws-ds-mob-dock
+    ) {
+        display: block !important;
+        position: fixed !important;
+        inset-inline: var(--ws-mob-gutter) !important;
+        bottom: var(--ws-mob-dock-offset) !important;
+        z-index: 165 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+    }
+
+    :is(
+        .crm-contact-mobile-dock__inner,
+        .crm-prop-mobile-dock__inner,
+        .crm-deal-mobile-dock__inner,
+        .ws-ds-mob-dock__inner
+    ) {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: stretch !important;
+        gap: 4px !important;
+        padding: 4px !important;
+        min-height: var(--ws-mob-dock-h) !important;
+        border-radius: 14px !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 70%, transparent) !important;
+        background: color-mix(in srgb, var(--ws-surface) 94%, transparent) !important;
+        backdrop-filter: blur(12px) !important;
+        -webkit-backdrop-filter: blur(12px) !important;
+        box-shadow: var(--ws-mob-shadow) !important;
+    }
+
+    :is(
+        .crm-contact-dock-btn,
+        .crm-prop-dock-btn,
+        .crm-deal-dock-btn,
+        .ws-ds-mob-dock__btn
+    ) {
+        flex: 1 1 0 !important;
+        flex-direction: row !important;
+        justify-content: center !important;
+        min-width: 0 !important;
+        min-height: 2.5rem !important;
+        padding: 0 6px !important;
+        border-radius: 10px !important;
+        border: none !important;
+        background: transparent !important;
+        font-size: var(--mobile-meta) !important;
+        font-weight: 600 !important;
+        gap: 4px !important;
+        box-shadow: none !important;
+        transform: none !important;
+        color: var(--ws-text-secondary) !important;
+    }
+
+    :is(
+        .crm-contact-dock-btn,
+        .crm-prop-dock-btn,
+        .crm-deal-dock-btn,
+        .ws-ds-mob-dock__btn
+    ) i {
+        font-size: 0.875rem !important;
+    }
+
+    :is(
+        .crm-contact-dock-btn--primary,
+        .crm-prop-dock-btn--primary,
+        .crm-deal-dock-btn--primary,
+        .ws-ds-mob-dock__btn--primary
+    ) {
+        background: var(--ws-primary) !important;
+        color: #fff !important;
+    }
+
+    /* Hide duplicate FABs when page has action dock */
+    .ws-ds-mobile .ws-ds-mob-quick,
+    .mk-filing-mobile .mk-filing-fab {
+        display: none !important;
+    }
+
+    /* Page clearance — dock + bottom nav */
+    :is(
+        .crm-contact-detail-pro,
+        .crm-prop-detail-mobile.crm-page-chrome,
+        .crm-deal-detail-mobile.crm-page-chrome,
+        .ws-ds-mobile.mk-page,
+        .ws-ld-mobile.crm-page-chrome
+    ) {
+        padding-bottom: calc(
+            var(--ws-mob-dock-offset) + var(--ws-mob-dock-h) + var(--ws-mob-gutter)
+        ) !important;
+    }
+
+    .mk-filing-mobile.mk-page {
+        padding-bottom: calc(var(--ws-mob-nav-offset) + var(--ws-mob-gutter)) !important;
+    }
+
+    /* ─── PHASE 9 — Bottom navigation (64px, nav only) ─── */
+    .ws-bottom-nav {
+        display: flex !important;
+        inset-inline: 0 !important;
+        bottom: 0 !important;
+        min-height: var(--ws-mob-nav-h) !important;
+        padding: 6px var(--ws-mob-gutter) calc(6px + env(safe-area-inset-bottom, 0px)) !important;
+        border-radius: 0 !important;
+        border: none !important;
+        border-top: 1px solid color-mix(in srgb, var(--ws-border) 65%, transparent) !important;
+        background: var(--ws-surface) !important;
+        box-shadow: 0 -4px 16px rgba(15, 23, 42, 0.06) !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        z-index: 170 !important;
+        gap: 0 !important;
+    }
+
+    .ws-bottom-nav-item {
+        flex: 1 1 0 !important;
+        min-height: auto !important;
+        border-radius: 10px !important;
+        font-size: var(--mobile-meta) !important;
+        font-weight: 600 !important;
+        gap: 2px !important;
+        color: var(--ws-text-muted) !important;
+        padding: 4px 2px !important;
+    }
+
+    .ws-bottom-nav-item i {
+        font-size: 1.125rem !important;
+        width: 1.75rem !important;
+        height: 1.75rem !important;
+        border-radius: 8px !important;
+        background: transparent !important;
+        box-shadow: none !important;
+    }
+
+    .ws-bottom-nav-item.is-active {
+        color: var(--ws-primary) !important;
+        background: transparent !important;
+    }
+
+    .ws-bottom-nav-item.is-active i {
+        background: color-mix(in srgb, var(--ws-primary) 12%, transparent) !important;
+        color: var(--ws-primary) !important;
+        box-shadow: none !important;
+    }
+
+    .ws-status-bar {
+        display: none !important;
+    }
+
+    /* ─── Tabs — sticky, compact ─── */
+    :is(
+        .crm-contact-segrail,
+        .crm-prop-segrail,
+        .crm-deal-detail-mobile .crm-deal-tabs-wrap
+    ) {
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 12 !important;
+        margin: 0 !important;
+        border-radius: var(--ws-mob-radius) !important;
+        background: var(--ws-surface) !important;
+        box-shadow: var(--ws-mob-shadow) !important;
+    }
+
+    :is(
+        .crm-contact-tabs .crm-tab-pro,
+        .crm-prop-tabs .crm-tab-pro,
+        .crm-deal-tabs .crm-tab-pro
+    ) {
+        min-height: 2rem !important;
+        padding: 0 8px !important;
+        font-size: var(--mobile-meta) !important;
+        border-radius: 8px !important;
+    }
+
+    /* ─── PHASE 6 — Compact cards (KPI, timeline, lists) ─── */
+    :is(
+        .mk-hub-metric,
+        .crm-dash-kpi,
+        .crm-contacts-mob-kpis .crm-dash-kpi
+    ) {
+        padding: var(--ws-mob-card-pad) !important;
+        gap: 6px !important;
+        border-radius: var(--ws-mob-radius) !important;
+    }
+
+    .mk-hub-metric-val,
+    .crm-dash-kpi-val {
+        font-size: 1.125rem !important;
+        font-weight: 700 !important;
+    }
+
+    .mk-hub-metric-sub {
+        display: none !important;
+    }
+
+    .mk-hub-metric-icon .df-decor-icon {
+        --df-decor-size: 0.875rem;
+        opacity: 0.4;
+    }
+
+    /* Timeline — shorter cards */
+    .crm-timeline-item,
+    .crm-timeline-event {
+        padding: var(--ws-mob-card-pad) !important;
+        gap: 8px !important;
+    }
+
+    .crm-timeline-icon {
+        width: 1.75rem !important;
+        height: 1.75rem !important;
+        font-size: 0.7rem !important;
+    }
+
+    .crm-timeline-event__actions {
+        display: none;
+    }
+
+    /* ─── PHASE 7 — Dataset / filing card list ─── */
+    .mk-filing-mobile .mk-ds-grid {
+        padding: 0 !important;
+        gap: var(--ws-mob-gap) !important;
+    }
+
+    .mk-filing-mobile .mk-ds-card-glass {
+        padding: var(--ws-mob-card-pad) !important;
+    }
+
+    .mk-filing-mobile .mk-ds-card-main {
+        display: grid !important;
+        grid-template-columns: 4.5rem minmax(0, 1fr) !important;
+        gap: 10px !important;
+        align-items: start !important;
+    }
+
+    .mk-filing-mobile .mk-ds-card-cover {
+        width: 4.5rem !important;
+        height: 4.5rem !important;
+        min-height: 0 !important;
+        border-radius: 10px !important;
+        overflow: hidden;
+    }
+
+    .mk-filing-mobile .mk-ds-card-cover-orb,
+    .mk-filing-mobile .mk-ds-card-cover-top,
+    .mk-filing-mobile .mk-ds-card-cover-fmt-pill {
+        display: none !important;
+    }
+
+    .mk-filing-mobile .mk-ds-card-count {
+        font-size: var(--mobile-meta) !important;
+    }
+
+    .mk-filing-mobile .mk-ds-card-body {
+        padding: 0 !important;
+        gap: 4px !important;
+        min-width: 0;
+    }
+
+    .mk-filing-mobile .mk-ds-card-sub {
+        font-size: var(--mobile-meta) !important;
+        display: -webkit-box;
+        -webkit-line-clamp: 1;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .mk-filing-mobile .mk-ds-card-chips {
+        flex-wrap: nowrap !important;
+        overflow: hidden !important;
+        gap: 4px !important;
+    }
+
+    .mk-filing-mobile .mk-ds-card-chips > :nth-child(n + 3) {
+        display: none;
+    }
+
+    .mk-filing-mobile .mk-ds-card-chips span {
+        font-size: 0.625rem !important;
+        padding: 2px 6px !important;
+    }
+
+    .mk-filing-mobile .mk-ds-card-foot {
+        grid-column: 1 / -1;
+        display: flex !important;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        margin-top: 4px;
+        padding-top: 8px;
+        border-top: 1px solid color-mix(in srgb, var(--ws-border) 50%, transparent);
+    }
+
+    .mk-filing-mobile .mk-ds-card-date {
+        font-size: var(--mobile-meta) !important;
+    }
+
+    .mk-filing-mobile .mk-ds-card-acts {
+        gap: 4px !important;
+    }
+
+    .mk-filing-mobile .mk-ds-card-act:not(.mk-ds-card-act--open) {
+        display: none !important;
+    }
+
+    .mk-filing-mobile .mk-ds-card-act--open {
+        min-height: 2rem !important;
+        padding: 0 12px !important;
+        font-size: var(--mobile-meta) !important;
+        border-radius: 8px !important;
+    }
+
+    /* Dataset detail listing cards — compact SaaS feed */
+    .ws-ds-mobile .mk-lcard {
+        border-radius: var(--ws-mob-radius) !important;
+        box-shadow: var(--ws-mob-shadow) !important;
+    }
+
+    .ws-ds-mobile .mk-lcard-cover {
+        aspect-ratio: 16 / 9 !important;
+        max-height: 140px;
+    }
+
+    .ws-ds-mobile .mk-lcard-body {
+        padding: var(--ws-mob-card-pad) !important;
+        gap: 6px !important;
+    }
+
+    .ws-ds-mobile .mk-lcard-title a {
+        font-size: var(--mobile-card) !important;
+        -webkit-line-clamp: 1 !important;
+    }
+
+    .ws-ds-mobile .mk-lcard-price-row {
+        padding: 6px 8px !important;
+        gap: 6px !important;
+        border-radius: 10px !important;
+    }
+
+    .ws-ds-mobile .mk-lcard-price strong {
+        font-size: var(--mobile-body) !important;
+    }
+
+    .ws-ds-mobile .mk-lcard-chip:nth-child(n + 3),
+    .ws-ds-mobile .mk-lcard-specs > :nth-child(n + 3) {
+        display: none;
+    }
+
+    .ws-ds-mobile .mk-lcard-foot {
+        padding-top: 6px !important;
+        margin-top: 0 !important;
+    }
+
+    .ws-ds-mobile .mk-lcard-btn:not(.mk-lcard-btn--primary) {
+        display: none !important;
+    }
+
+    .ws-ds-mobile .mk-lcard-btn--primary {
+        min-height: 2rem !important;
+        font-size: var(--mobile-meta) !important;
+        border-radius: 8px !important;
+    }
+
+    /* ─── CRM list cards — SaaS compact ─── */
+    .crm-contacts-mobile .crm-contacts-table tbody tr.crm-row-selectable {
+        padding: var(--ws-mob-card-pad) !important;
+        border-radius: var(--ws-mob-radius) !important;
+        margin-bottom: var(--ws-mob-gap) !important;
+    }
+
+    .crm-contacts-mobile .crm-contacts-mob-meta {
+        font-size: var(--mobile-meta) !important;
+    }
+
+    .crm-files-mobile .crm-files-card-tags > :nth-child(n + 3),
+    .crm-deals-mobile .crm-deals-card-tags > :nth-child(n + 3) {
+        display: none;
+    }
+
+    :is(
+        .crm-files-mobile .crm-files-card,
+        .crm-deals-mobile .crm-deals-card
+    ) {
+        padding: var(--ws-mob-card-pad) !important;
+        gap: 4px !important;
+    }
+
+    /* FAB — list pages only, above nav */
+    :is(
+        .crm-contacts-fab,
+        .crm-files-fab,
+        .crm-deals-fab,
+        .crm-today-fab
+    ) {
+        bottom: calc(var(--ws-mob-fab-offset) + var(--ws-mob-gutter)) !important;
+        width: 3rem !important;
+        height: 3rem !important;
+        border-radius: 14px !important;
+        box-shadow: var(--ws-mob-shadow) !important;
+    }
+
+    /* ─── Home / CRM dashboard — compact, no empty dashboard ─── */
+    .ws-home .mk-hub-head {
+        padding: var(--ws-mob-card-pad) !important;
+        gap: 8px !important;
+    }
+
+    .ws-home .mk-hub-head-meta {
+        font-size: var(--mobile-meta) !important;
+        flex-wrap: wrap;
+        gap: 4px !important;
+    }
+
+    .ws-home .mk-hub-head-meta > :nth-child(n + 4) {
+        display: none;
+    }
+
+    .ws-home .mk-hub-head-actions {
+        width: 100%;
+        overflow-x: auto;
+        scrollbar-width: none;
+        gap: 4px !important;
+        padding: 4px !important;
+    }
+
+    .ws-home .mk-hub-head-btn {
+        min-height: 2.25rem !important;
+        padding: 0 10px !important;
+        font-size: var(--mobile-meta) !important;
+        flex-shrink: 0;
+    }
+
+    .ws-home .mk-hub-metrics {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: var(--ws-mob-gap) !important;
+    }
+
+    .ws-home-alert {
+        padding: var(--ws-mob-card-pad) !important;
+        border-radius: var(--ws-mob-radius) !important;
+    }
+
+    .ws-home-alert__desc {
+        display: none;
+    }
+
+    .crm-app-dashboard .crm-dash-kpis {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: var(--ws-mob-gap) !important;
+    }
+
+    .crm-app-dashboard .crm-action-rail {
+        overflow-x: auto;
+        scrollbar-width: none;
+        gap: 6px !important;
+    }
+
+    /* Filing header — compact */
+    .mk-filing-mobile .mk-filing-mob-header {
+        border-radius: var(--ws-mob-radius) !important;
+        margin-bottom: var(--ws-mob-gap) !important;
+        box-shadow: var(--ws-mob-shadow) !important;
+    }
+
+    .mk-filing-mobile .mk-filing-mob-header-inner {
+        padding: var(--ws-mob-card-pad) !important;
+    }
+
+    .mk-filing-mobile .mk-filing-mob-kicker {
+        display: none;
+    }
+
+    .mk-filing-mobile .mk-filing-mob-sub {
+        font-size: var(--mobile-meta) !important;
+        gap: 4px !important;
+    }
+
+    .mk-filing-mobile .mk-filing-mob-sub > :nth-child(n + 3) {
+        display: none;
+    }
+
+    .mk-filing-mobile .mk-filing-metrics {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: var(--ws-mob-gap) !important;
+    }
+
+    .mk-filing-mobile .mk-filing-desk-header {
+        display: none !important;
+    }
+
+    /* CRM list page headers */
+    :is(
+        .crm-contacts-mob-header,
+        .crm-files-mob-header,
+        .crm-deals-mob-header
+    ) {
+        padding: var(--ws-mob-card-pad) !important;
+        margin-bottom: var(--ws-mob-gap) !important;
+        border-radius: var(--ws-mob-radius) !important;
+    }
+
+    /* CRM app shell — no double padding */
+    .crm-app .crm-page-chrome:not(.crm-contact-detail-pro):not(.crm-prop-detail-mobile):not(.crm-deal-detail-mobile) {
+        padding-inline: 0 !important;
+        padding-top: 0 !important;
+    }
+
+    .crm-app--shell-full .crm-top {
+        display: none !important;
+    }
+
+    .ws-content:has(.crm-app) {
+        padding-bottom: calc(var(--ws-mob-nav-offset) + var(--ws-mob-gutter)) !important;
+    }
+
+    /* Dataset detail command header — compact */
+    .ws-ds-mobile .mk-ds-command {
+        border-radius: 0 0 var(--ws-mob-radius) var(--ws-mob-radius) !important;
+        box-shadow: var(--ws-mob-shadow) !important;
+    }
+
+    .ws-ds-mobile .mk-ds-mobile-bar {
+        min-height: var(--ws-mob-topbar-h) !important;
+        padding: var(--ws-mob-card-pad) !important;
+    }
+
+    .ws-ds-mobile .mk-ds-mobile-title {
+        font-size: var(--mobile-title) !important;
+    }
+
+    /* Hide duplicate contact dock */
+    .crm-contact-detail-pro.crm-contact-mobile .crm-contact-mobile-dock:not(.crm-contact-action-bar) {
+        display: none !important;
+    }
+}
+
+/* ─── 430px — mid mobile ─── */
+@media (max-width: 430px) {
+    .mk-filing-mobile .mk-filing-metrics,
+    .ws-home .mk-hub-metrics,
+    .crm-app-dashboard .crm-dash-kpis {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+
+    .crm-detail-intel-card {
+        min-width: 6.75rem;
+    }
+}
+
+/* ─── 375px — tight ─── */
+@media (max-width: 375px) {
+    :root {
+        --ws-mob-gutter: 12px;
+        --mobile-title: 17px;
+    }
+
+    :is(
+        .crm-contact-dock-btn span,
+        .crm-prop-dock-btn span,
+        .crm-deal-dock-btn span,
+        .ws-ds-mob-dock__btn span
+    ) {
+        display: none;
+    }
+
+    :is(
+        .crm-contact-dock-btn,
+        .crm-prop-dock-btn,
+        .crm-deal-dock-btn,
+        .ws-ds-mob-dock__btn
+    ) {
+        justify-content: center !important;
+        padding: 0 !important;
+    }
+
+    .ws-bottom-nav-item span {
+        font-size: 0.625rem !important;
+    }
+}
+
+/* ─── 320px — minimum width QA ─── */
+@media (max-width: 320px) {
+    :root {
+        --ws-mob-gutter: 10px;
+        --mobile-title: 16px;
+        --mobile-section: 14px;
+    }
+
+    .mk-hub-metric,
+    .crm-dash-kpi {
+        min-width: 0 !important;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    :is(
+        .crm-contact-dock-btn,
+        .crm-prop-dock-btn,
+        .crm-deal-dock-btn,
+        .ws-ds-mob-dock__btn,
+        .ws-bottom-nav-item,
+        .mk-hub-metric
+    ) {
+        transition: none !important;
+    }
+}

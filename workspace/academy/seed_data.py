@@ -137,7 +137,7 @@ VIDEOS = [
     ('filing', 4, 'filing-create-property', 'ساخت فایل شخصی از صفر',
      'ملک خودتان را ثبت کنید',
      'filing_04_create_property.mp4', 'academy/filing', 360, False, False,
-     '/workspace/crm/properties/?drawer=property', 'ساخت ملک', None, ''),
+     '/workspace/crm/properties/?open=drawer-property', 'ساخت ملک', None, ''),
     ('filing', 5, 'filing-property-dossier', 'پرونده ملک: همه اطلاعات در یک جا',
      'Property Dossier',
      'filing_05_property_dossier.mp4', 'academy/filing', 420, False, False, '', '', None, ''),

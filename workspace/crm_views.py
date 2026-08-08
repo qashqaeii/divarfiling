@@ -1132,7 +1132,7 @@ class CRMPropertyListView(CRMContextMixin, LoginRequiredMixin, ListView):
         }
         ctx['filtered_count'] = filtered.count()
         ctx['property_form'] = ctx.get('property_form', CRMPropertyForm())
-        ctx['open_drawer'] = self.request.GET.get('drawer', '')
+        ctx['open_drawer'] = ctx.get('open_drawer', '')
         ctx['deal_modes'] = PROPERTY_DEAL_MODES
         ctx['tx_statuses'] = PROPERTY_TX_STATUSES
         ctx['property_types'] = CRM_PROPERTIES
@@ -1241,7 +1241,7 @@ class CRMPropertyCreateView(LoginRequiredMixin, CreateView):
     template_name = 'workspace/crm/properties/list.html'
 
     def get(self, request, *args, **kwargs):
-        return redirect(f"{reverse('workspace:crm_properties')}?drawer=property")
+        return redirect('workspace:crm_properties')
 
     def form_valid(self, form):
         form.instance.user = self.request.user

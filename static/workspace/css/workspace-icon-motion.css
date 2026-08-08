@@ -649,6 +649,123 @@ body.ws-body .crm-contacts-mob-act--secondary:active :is(.fa-comment, i) {
     color: var(--ws-luxe-indigo);
 }
 
+/* ─── Desktop: smooth multi-color icon hover (global) ─── */
+@keyframes ws-icon-chroma-cycle {
+    0%   { color: #8b5cf6; }
+    11%  { color: #6366f1; }
+    22%  { color: #3b82f6; }
+    33%  { color: #06b6d4; }
+    44%  { color: #10b981; }
+    55%  { color: #84cc16; }
+    66%  { color: #facc15; }
+    77%  { color: #fb923c; }
+    88%  { color: #ec4899; }
+    100% { color: #8b5cf6; }
+}
+
+@media (hover: hover) and (min-width: 769px) {
+    body.ws-body :is(
+        a,
+        button,
+        summary,
+        label[for],
+        [role="button"],
+        [role="menuitem"],
+        [data-drawer-open],
+        [data-modal-open],
+        .ws-nav-item,
+        .ws-nav-btn,
+        .ws-sidebar-util-btn,
+        .ws-bottom-nav-item,
+        .crm-nav-item,
+        .crm-dash-act,
+        .crm-dash-kpi,
+        .mk-hub-head-btn,
+        .mk-hero-btn,
+        .mk-hub-quick-item,
+        .mk-hub-metric,
+        .mk-row-btn,
+        .mk-action-menu-item,
+        .crm-files-fab,
+        .crm-files-mob-icon-btn,
+        .crm-contacts-fab,
+        .crm-contacts-mob-icon-btn,
+        .crm-contacts-mob-toolbar-item,
+        .crm-contact-mob-menu-trigger,
+        .crm-contact-hero__back,
+        .crm-contact-hero__edit-btn,
+        .crm-contact-dock-btn,
+        .crm-prop-dock-btn,
+        .crm-prop-hero-act,
+        .ws-mobile-topbar-act,
+        .sup-mob-icon-btn,
+        .ph-mob-icon-btn,
+        .mk-filing-mob-icon-btn,
+        .mk-ds-desk-btn,
+        .crm-team-icon-btn-v2,
+        .crm-contact-seg__ico,
+        .crm-contact-intel-strip__cell.is-action,
+        .ws-amenity,
+        .crm-dash-insights-toggle,
+        .ws-home-insights-toggle
+    ):hover :is(
+        .df-decor-icon,
+        i.fa,
+        i.fas,
+        i.far,
+        i.fab,
+        i.fal,
+        i.fa-solid,
+        i.fa-regular,
+        i.fa-brands,
+        i[class*="fa-"]
+    ),
+    body.ws-body :is(
+        a,
+        button,
+        summary,
+        [role="button"],
+        [data-drawer-open],
+        [data-modal-open],
+        .ws-nav-item,
+        .crm-nav-item,
+        .crm-dash-act,
+        .mk-hub-head-btn
+    ):hover > :is(
+        i.fa,
+        i.fas,
+        i.far,
+        i.fab,
+        i.fal,
+        i[class*="fa-"]
+    ) {
+        animation: ws-icon-chroma-cycle 3.6s ease-in-out infinite !important;
+        filter: drop-shadow(0 1px 3px color-mix(in srgb, currentColor 32%, transparent));
+    }
+
+    body.ws-body :is(
+        a,
+        button,
+        summary,
+        [role="button"],
+        .ws-nav-item,
+        .crm-nav-item,
+        .crm-dash-act,
+        .mk-hub-head-btn
+    ):hover .df-decor-icon svg.df-lucide-svg {
+        stroke: currentColor;
+    }
+
+    body.ws-body :is(
+        .mk-filter-search,
+        .mk-table-search,
+        .ws-tbx-search-wrap,
+        .crm-deals-search
+    ):hover .df-decor-icon {
+        animation: none !important;
+    }
+}
+
 @media (prefers-reduced-motion: reduce) {
     body.ws-body .df-decor-icon,
     body.ws-body .mk-hub-metric-icon,
@@ -670,5 +787,6 @@ body.ws-body .crm-contacts-mob-act--secondary:active :is(.fa-comment, i) {
     body.ws-body :is(i, .fa, .fas, .far, .fab) {
         transition: color var(--ws-luxe-hover-ms) var(--ws-luxe-hover-ease) !important;
         transform: none !important;
+        animation: none !important;
     }
 }

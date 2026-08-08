@@ -312,9 +312,14 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Auto-open from server
+    // Auto-open from server (CRM drawers are handled in crm.js)
     const openId = document.body.dataset.openModal;
-    if (openId) WSModal.open(openId);
+    if (openId) {
+        const openEl = document.getElementById(openId);
+        if (!openEl || !openEl.classList.contains('crm-drawer')) {
+            WSModal.open(openId);
+        }
+    }
 
     // Auto-dismiss toasts — handled by mk-notices.js
 

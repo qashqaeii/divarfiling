@@ -3781,6 +3781,33 @@ function initContactDetailMobileMenus() {
     });
 }
 
+function crmDrawerIdFromQuery() {
+    const params = new URLSearchParams(window.location.search);
+    const openModal = (params.get('open') || '').trim();
+    if (openModal.startsWith('drawer-')) return openModal;
+    const drawer = (params.get('drawer') || '').trim();
+    if (!drawer) return '';
+    return drawer.startsWith('drawer-') ? drawer : `drawer-${drawer}`;
+}
+
+function crmStripDrawerQueryParams() {
+    const params = new URLSearchParams(window.location.search);
+    if (!params.has('open') && !params.has('drawer')) return;
+    params.delete('open');
+    params.delete('drawer');
+    const qs = params.toString();
+    const next = `${window.location.pathname}${qs ? `?${qs}` : ''}${window.location.hash}`;
+    window.history.replaceState({}, '', next);
+}
+
+function initCRMQueryDrawerIntent() {
+    const drawerId = crmDrawerIdFromQuery();
+    if (!drawerId || !document.getElementById(drawerId)) return false;
+    CRMDrawer.open(drawerId);
+    crmStripDrawerQueryParams();
+    return true;
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('[data-drawer-open]').forEach(btn => {
         btn.addEventListener('click', e => {
@@ -3805,7 +3832,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    document.querySelectorAll('.crm-drawer[data-open="1"]').forEach(d => CRMDrawer.open(d.id));
+    const openedFromQuery = initCRMQueryDrawerIntent();
+    if (!openedFromQuery) {
+        document.querySelectorAll('.crm-drawer[data-open="1"]').forEach(d => CRMDrawer.open(d.id));
+    }
 
     initCRMTypeProfiles();
     initPropertyDealMode();

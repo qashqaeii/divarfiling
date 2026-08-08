@@ -358,6 +358,18 @@ def acquisition_dashboard_charts(
             for field in ('enrolled', 'accepted', 'clicked', 'registered', 'paid'):
                 bucket[field] += int(variant.get(field, 0) or 0)
 
+    # خرید از کل بانک سرنخ (نه فقط جمع per-campaign که فقط enroll‌شده‌ها را می‌شمارد)
+    global_conv = LeadAttribution.objects.filter(
+        axis=LeadAttribution.Axis.CONVERSION,
+        touch_model=LeadAttribution.TouchModel.LAST,
+    )
+    global_paid = global_conv.count()
+    global_revenue = int(global_conv.aggregate(s=Sum('revenue_amount'))['s'] or 0)
+    if global_paid > totals['paid']:
+        totals['paid'] = global_paid
+    if global_revenue > totals['revenue']:
+        totals['revenue'] = global_revenue
+
     status_labels: Dict[str, str] = dict(LeadCampaign.Status.choices)
     status_items = []
     for code, label in LeadCampaign.Status.choices:

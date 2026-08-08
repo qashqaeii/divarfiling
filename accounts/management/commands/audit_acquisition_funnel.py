@@ -63,9 +63,14 @@ class Command(BaseCommand):
             f"  └─ وضعیت registered:         {g['registered_leads_with_paid_order']}",
         )
         self.stdout.write(f"  touchpoint paid/licensed:    {g['leads_with_paid_or_licensed_touchpoint']}")
-        self.stdout.write(f"  LeadAttribution conversion:  {a['conversion_last_enrolled_acquisition']}")
         self.stdout.write(
-            f"  خریدار بدون conversion attr: {g['enrolled_buyers_missing_conversion_attr']}",
+            f"  LeadAttribution (همه سرنخ‌ها): {a['conversion_last_all_leads']}",
+        )
+        self.stdout.write(
+            f"  └─ enroll کمپین جذب:         {a['conversion_last_enrolled_acquisition']}",
+        )
+        self.stdout.write(
+            f"  خریدار enroll بدون conversion: {g['enrolled_buyers_missing_conversion_attr']}",
         )
         self.stdout.write('')
         self.stdout.write(f"  سفارش paid کل سایت:          {g['paid_orders_site_total']}")

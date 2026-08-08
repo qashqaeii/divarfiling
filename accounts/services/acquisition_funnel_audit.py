@@ -155,6 +155,7 @@ def audit_acquisition_funnel(*, sample_limit: int = 15) -> dict[str, Any]:
     ).count()
 
     conversion_total = conversion_qs.count()
+    ui_purchases = int(dashboard.get('total_purchases', 0) or 0)
 
     mismatch = [b for b in buyers_enrolled if not b.has_conversion_attr]
     buyers_all_count = len(buyers_all)
@@ -178,11 +179,17 @@ def audit_acquisition_funnel(*, sample_limit: int = 15) -> dict[str, Any]:
             f'{buyers_all_count - conversion_total} سرنخ خریدار هنوز conversion ندارند — '
             'python manage.py backfill_acquisition_conversions',
         )
-    elif int(dashboard.get('total_purchases_ui', 0) or 0) != conversion_total:
+    elif ui_purchases != conversion_total:
         verdict = 'review'
-        notes.append('اختلاف جزئی بین KPI داشبورد و conversion — cache یا deploy جدید را بررسی کنید.')
+        notes.append(
+            f'اختلاف KPI داشبورد ({ui_purchases}) و conversion DB ({conversion_total}) — '
+            'cache یا deploy را بررسی کنید.',
+        )
     else:
-        notes.append('conversion attribution با خریداران سرنخ هم‌خوان است.')
+        notes.append(
+            f'هم‌خوان: {conversion_total} خرید در بانک سرنخ · '
+            f'{conversion_enrolled_qs.count()} نفر enroll کمپین جذب.',
+        )
 
     def _sample_rows(items: list[BuyerSample], limit: int) -> list[dict]:
         rows = []
@@ -222,10 +229,13 @@ def audit_acquisition_funnel(*, sample_limit: int = 15) -> dict[str, Any]:
             'ctr_pct': dashboard['ctr_pct'],
         },
         'attribution': {
-            'conversion_last_all_leads': conversion_qs.count(),
+            'conversion_last_all_leads': conversion_total,
             'conversion_last_enrolled_acquisition': conversion_enrolled_qs.count(),
             'acquisition_signups_attributed': registered_with_acq,
-            'conversion_revenue': int(
+            'conversion_revenue_all': int(
+                conversion_qs.aggregate(s=Sum('revenue_amount'))['s'] or 0,
+            ),
+            'conversion_revenue_enrolled': int(
                 conversion_enrolled_qs.aggregate(s=Sum('revenue_amount'))['s'] or 0,
             ),
         },

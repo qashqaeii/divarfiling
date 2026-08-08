@@ -1,0 +1,550 @@
+/* ═══════════════════════════════════════════════════════════
+   Workspace Experience Enhancement — SaaS-grade UX layer
+   Loads after workspace-icon-motion.css — presentation only
+   Layout & business logic unchanged
+   ═══════════════════════════════════════════════════════════ */
+
+body.ws-body {
+    --ws-accent-ai: var(--ds-accent-ai, #7C3AED);
+    --ws-accent-ai-soft: var(--ds-accent-ai-soft, rgba(124, 58, 237, 0.1));
+    --ws-accent-growth: var(--ds-accent-growth, #16A34A);
+    --ws-accent-growth-soft: var(--ds-accent-growth-soft, rgba(22, 163, 74, 0.1));
+    --ws-accent-info: var(--ds-accent-info, #2563EB);
+    --ws-accent-info-soft: var(--ds-accent-info-soft, rgba(37, 99, 235, 0.1));
+    --ws-accent-warning: var(--ds-accent-warning, #D97706);
+    --ws-accent-warning-soft: var(--ds-accent-warning-soft, rgba(217, 119, 6, 0.1));
+    --ws-xp-ease: cubic-bezier(0.4, 0, 0.2, 1);
+    --ws-xp-duration: 180ms;
+    --ws-xp-shadow-hover: 0 2px 8px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+[data-theme="dark"] body.ws-body {
+    --ws-xp-shadow-hover: 0 4px 14px rgba(0, 0, 0, 0.22), 0 1px 3px rgba(0, 0, 0, 0.14);
+}
+
+/* ─── 1. Card micro-interactions ─── */
+body.ws-body :is(
+    .mk-hub-card,
+    .ws-home-queue-card,
+    .mk-insight,
+    .mk-ds-card,
+    .crm-dash-alert-card,
+    .ws-home-alert
+) {
+    transition:
+        box-shadow var(--ws-xp-duration) var(--ws-xp-ease),
+        border-color var(--ws-xp-duration) var(--ws-xp-ease);
+}
+
+body.ws-body :is(
+    .mk-hub-card,
+    .ws-home-queue-card,
+    .mk-insight,
+    .mk-ds-card
+):hover {
+    transform: none;
+    box-shadow: var(--ws-xp-shadow-hover);
+    border-color: color-mix(in srgb, var(--ws-border) 70%, var(--ws-text-muted));
+}
+
+body.ws-body .mk-hub-metric {
+    transition:
+        box-shadow var(--ws-xp-duration) var(--ws-xp-ease),
+        border-color var(--ws-xp-duration) var(--ws-xp-ease);
+}
+
+body.ws-body .mk-hub-metric:hover {
+    transform: none;
+    box-shadow: var(--ws-xp-shadow-hover);
+    border-color: color-mix(in srgb, var(--ws-border) 65%, var(--ws-text-muted));
+}
+
+body.ws-body .mk-hub-metric[data-tone="purple"]:hover {
+    border-color: color-mix(in srgb, var(--ws-accent-ai) 18%, var(--ws-border));
+}
+
+body.ws-body .mk-hub-metric[data-tone="green"]:hover {
+    border-color: color-mix(in srgb, var(--ws-accent-growth) 18%, var(--ws-border));
+}
+
+body.ws-body .mk-hub-metric[data-tone="blue"]:hover,
+body.ws-body .mk-hub-metric[data-tone="cyan"]:hover {
+    border-color: color-mix(in srgb, var(--ws-accent-info) 18%, var(--ws-border));
+}
+
+body.ws-body .mk-hub-metric[data-tone="amber"]:hover,
+body.ws-body .mk-hub-metric--warn:hover {
+    border-color: color-mix(in srgb, var(--ws-accent-warning) 22%, var(--ws-border));
+}
+
+/* ─── 2. Intelligent accent — icons, badges, status only ─── */
+body.ws-body :is(
+    .ws-ai-trigger,
+    .ws-ai-card,
+    .crm-drawer-head-ai-icon,
+    .crm-contact-hero__edit-btn--ai,
+    .crm-ai-compose-cta
+) .df-decor-icon {
+    color: var(--ws-accent-ai);
+}
+
+body.ws-body .mk-insight-icon--pie .df-decor-icon,
+body.ws-body .mk-insight-icon--pie {
+    color: var(--ws-accent-ai);
+    background: var(--ws-accent-ai-soft);
+}
+
+body.ws-body .mk-insight-icon--chart .df-decor-icon,
+body.ws-body .mk-insight-icon--chart {
+    color: var(--ws-accent-growth);
+    background: var(--ws-accent-growth-soft);
+}
+
+body.ws-body .mk-insight-icon--comm .df-decor-icon,
+body.ws-body .mk-insight-icon--comm {
+    color: var(--ws-accent-info);
+    background: var(--ws-accent-info-soft);
+}
+
+body.ws-body .mk-insight-icon--bolt .df-decor-icon,
+body.ws-body .mk-insight-icon--bolt {
+    color: var(--ws-accent-warning);
+    background: var(--ws-accent-warning-soft);
+}
+
+body.ws-body .ws-nav-badge {
+    background: var(--ws-accent-ai-soft);
+    color: var(--ws-accent-ai);
+}
+
+body.ws-body .mk-hub-head-pill {
+    background: var(--ws-accent-ai-soft);
+    color: var(--ws-accent-ai);
+}
+
+body.ws-body .mk-hub-head-pill.is-warn,
+body.ws-body .crm-dash-bar-chip.is-warn {
+    background: var(--ws-accent-warning-soft);
+    color: var(--ws-accent-warning);
+}
+
+body.ws-body .crm-dash-bar-chip {
+    background: var(--ws-accent-ai-soft);
+    color: var(--ws-accent-ai);
+}
+
+body.ws-body .mk-hub-metric--warn .mk-hub-metric-val,
+body.ws-body .crm-dash-kpi--warn .crm-dash-kpi-val {
+    color: var(--ws-accent-warning);
+}
+
+body.ws-body .mk-hub-metric[data-tone="green"] .mk-hub-metric-icon .df-decor-icon {
+    color: var(--ws-accent-growth);
+}
+
+body.ws-body .mk-hub-metric[data-tone="blue"] .mk-hub-metric-icon .df-decor-icon,
+body.ws-body .mk-hub-metric[data-tone="cyan"] .mk-hub-metric-icon .df-decor-icon {
+    color: var(--ws-accent-info);
+}
+
+body.ws-body .mk-hub-metric[data-tone="purple"] .mk-hub-metric-icon .df-decor-icon,
+body.ws-body .mk-hub-metric[data-tone="indigo"] .mk-hub-metric-icon .df-decor-icon,
+body.ws-body .mk-hub-metric[data-tone="violet"] .mk-hub-metric-icon .df-decor-icon {
+    color: var(--ws-accent-ai);
+}
+
+body.ws-body .mk-hub-metric[data-tone="amber"] .mk-hub-metric-icon .df-decor-icon {
+    color: var(--ws-accent-warning);
+}
+
+/* ─── 3. KPI cards — premium analytics layout ─── */
+body.ws-body .mk-hub-metrics {
+    gap: var(--ds-space-3, 12px);
+}
+
+body.ws-body .mk-hub-metric {
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    min-height: 6.5rem;
+    padding: var(--ds-space-4, 16px) var(--ds-space-4, 16px) var(--ds-space-3, 12px);
+    gap: var(--ds-space-2, 8px);
+}
+
+body.ws-body .mk-hub-metric-body {
+    order: 1;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+body.ws-body .mk-hub-metric-icon {
+    order: 2;
+    align-self: flex-end;
+    margin-top: auto;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--ws-text-muted) 6%, transparent);
+    opacity: 1;
+}
+
+body.ws-body .mk-hub-metric-val {
+    font-size: 1.75rem;
+    font-weight: 700;
+    letter-spacing: -0.035em;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+}
+
+body.ws-body .mk-hub-metric-lbl {
+    font-size: 0.6875rem;
+    font-weight: 500;
+    color: var(--ws-text-secondary);
+    letter-spacing: 0.01em;
+}
+
+body.ws-body .mk-hub-metric-sub {
+    font-size: 0.625rem;
+    color: var(--ws-text-muted);
+    margin-top: 1px;
+}
+
+/* CRM dashboard KPI strip */
+body.ws-body .crm-dash-kpis {
+    border-radius: var(--ds-radius-card, 16px);
+    overflow: hidden;
+}
+
+body.ws-body .crm-dash-kpi {
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 2px;
+    padding: var(--ds-space-4, 16px) var(--ds-space-4, 16px);
+    text-decoration: none;
+    color: inherit;
+    transition:
+        background var(--ws-xp-duration) var(--ws-xp-ease),
+        border-color var(--ws-xp-duration) var(--ws-xp-ease);
+}
+
+body.ws-body .crm-dash-kpi:hover {
+    background: color-mix(in srgb, var(--ws-text-muted) 3%, var(--ws-surface));
+}
+
+body.ws-body .crm-dash-kpi-val {
+    font-size: 1.625rem;
+    font-weight: 700;
+    letter-spacing: -0.035em;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+}
+
+body.ws-body .crm-dash-kpi-lbl {
+    font-size: 0.6875rem;
+    font-weight: 500;
+    color: var(--ws-text-secondary);
+}
+
+body.ws-body .crm-dash-kpi-sub {
+    font-size: 0.625rem;
+    color: var(--ws-text-muted);
+    margin-top: 1px;
+}
+
+body.ws-body .crm-dash-kpi--warn {
+    background: color-mix(in srgb, var(--ws-accent-warning) 4%, var(--ws-surface));
+}
+
+body.ws-body .crm-dash-kpi--accent .crm-dash-kpi-val {
+    color: var(--ws-accent-ai);
+}
+
+body.ws-body .crm-dash-kpi--warn .crm-dash-kpi-val {
+    color: var(--ws-accent-warning);
+}
+
+/* Contacts mobile KPI */
+@media (max-width: 768px) {
+    body.ws-body .crm-contacts-mob-kpi {
+        padding: var(--ds-space-3, 12px) var(--ds-space-3, 12px);
+        border-radius: var(--ds-radius-sm, 8px);
+        gap: 2px;
+        min-height: 3.5rem;
+        transition:
+            box-shadow var(--ws-xp-duration) var(--ws-xp-ease),
+            border-color var(--ws-xp-duration) var(--ws-xp-ease),
+            background var(--ws-xp-duration) var(--ws-xp-ease);
+    }
+
+    body.ws-body .crm-contacts-mob-kpi:hover {
+        box-shadow: var(--ws-xp-shadow-hover);
+        border-color: color-mix(in srgb, var(--ws-border) 65%, var(--ws-text-muted));
+    }
+
+    body.ws-body .crm-contacts-mob-kpi-val {
+        font-size: 1.25rem;
+        font-weight: 700;
+        letter-spacing: -0.03em;
+    }
+
+    body.ws-body .crm-contacts-mob-kpi-lbl {
+        font-size: 0.6875rem;
+        font-weight: 500;
+    }
+
+    body.ws-body .crm-contacts-mob-kpi--accent .crm-contacts-mob-kpi-val {
+        color: var(--ws-accent-ai);
+    }
+
+    body.ws-body .crm-contacts-mob-kpi--warn .crm-contacts-mob-kpi-val {
+        color: var(--ws-accent-warning);
+    }
+}
+
+/* ─── 4. Empty space optimization ─── */
+body.ws-body .mk-hub-head,
+body.ws-body .crm-dash-bar,
+body.ws-body .mk-page-hero {
+    padding: var(--ds-space-4, 16px) var(--ds-space-5, 24px);
+    gap: var(--ds-space-3, 12px);
+}
+
+body.ws-body .mk-hub-head-meta {
+    margin-top: 2px;
+}
+
+body.ws-body .mk-page,
+body.ws-body .mk-hub-pro {
+    gap: var(--ds-space-4, 16px);
+}
+
+body.ws-body .ws-content {
+    padding: var(--ds-space-5, 24px) var(--ds-space-5, 24px);
+}
+
+body.ws-body .mk-hub-quick--bar {
+    margin-block-end: 0;
+}
+
+body.ws-body .mk-hub-quick-list {
+    padding: 3px;
+    min-height: 42px;
+}
+
+body.ws-body .mk-hub-quick-item {
+    min-height: 36px;
+    padding: var(--ds-space-2, 8px) var(--ds-space-3, 12px);
+}
+
+body.ws-body .crm-app-dashboard .crm-dash--pro {
+    gap: var(--ds-space-3, 12px);
+}
+
+body.ws-body .crm-app-dashboard .crm-dash--pro .crm-dash-bar {
+    padding: var(--ds-space-4, 16px) var(--ds-space-5, 24px);
+}
+
+/* ─── 5. Analytics & insights ─── */
+body.ws-body .mk-insight {
+    padding: var(--ds-space-4, 16px);
+}
+
+body.ws-body .mk-insight-head {
+    margin-bottom: var(--ds-space-3, 12px);
+    gap: var(--ds-space-3, 12px);
+}
+
+body.ws-body .mk-insight-icon {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+body.ws-body .mk-insight-title h2 {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+}
+
+body.ws-body .mk-insight-title p {
+    font-size: 0.6875rem;
+    color: var(--ws-text-muted);
+}
+
+body.ws-body .mk-insight-range-btn {
+    font-size: 0.6875rem;
+    font-weight: 500;
+    padding: 3px 8px;
+    border-radius: 999px;
+    transition:
+        background var(--ws-xp-duration) var(--ws-xp-ease),
+        color var(--ws-xp-duration) var(--ws-xp-ease);
+}
+
+body.ws-body .mk-insight-range-btn.is-active {
+    background: var(--ws-accent-ai-soft);
+    color: var(--ws-accent-ai);
+    font-weight: 600;
+}
+
+body.ws-body .mk-insight-legend-item {
+    font-size: 0.6875rem;
+    font-weight: 500;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: var(--ws-surface-2);
+    color: var(--ws-text-secondary);
+}
+
+body.ws-body .mk-insight-status-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+body.ws-body .mk-insight-status-count {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    color: var(--ws-text);
+}
+
+body.ws-body .mk-insight-status-name {
+    font-size: 0.75rem;
+    color: var(--ws-text-secondary);
+}
+
+body.ws-body .mk-insight-status-list li {
+    padding: var(--ds-space-2, 8px) var(--ds-space-3, 12px);
+    border-radius: var(--ds-radius-sm, 8px);
+    transition: background var(--ws-xp-duration) var(--ws-xp-ease);
+}
+
+body.ws-body .mk-insight-donut-center strong {
+    font-size: 1.375rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums;
+}
+
+body.ws-body .mk-insight-donut-center span {
+    font-size: 0.6875rem;
+    color: var(--ws-text-muted);
+}
+
+body.ws-body .mk-insight-channel-track {
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+body.ws-body .mk-insight-channel-val {
+    font-size: 0.75rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Trend / growth indicators in legend */
+body.ws-body .mk-insight-legend-item i,
+body.ws-body .mk-insight-legend-item .df-decor-icon {
+    opacity: 0.85;
+}
+
+/* ─── 6. Premium SaaS feel — clarity over decoration ─── */
+body.ws-body .mk-panel-head,
+body.ws-body .ws-glass-head,
+body.ws-body .ws-home-queue-head,
+body.ws-body .mk-hub-card-head {
+    margin-bottom: var(--ds-space-3, 12px);
+    padding-bottom: var(--ds-space-3, 12px);
+}
+
+body.ws-body .mk-tx-badge,
+body.ws-body .crm-status-badge {
+    font-size: 0.625rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+}
+
+body.ws-body .mk-tx-sale {
+    background: var(--ws-accent-growth-soft);
+    color: var(--ws-accent-growth);
+}
+
+body.ws-body .mk-tx-rent {
+    background: var(--ws-accent-info-soft);
+    color: var(--ws-accent-info);
+}
+
+/* Filing datasets — preserve mobile overrides, polish desktop */
+@media (min-width: 769px) {
+    body.ws-body .mk-filing-pro .mk-hub-metric {
+        min-height: 6.25rem;
+    }
+
+    body.ws-body .mk-filing-pro .mk-hub-metric-sub {
+        display: block;
+    }
+}
+
+/* Desktop KPI grid */
+@media (min-width: 768px) {
+    body.ws-body .mk-hub-metric-val {
+        font-size: 1.875rem;
+    }
+
+    body.ws-body .crm-dash-kpi-val {
+        font-size: 1.75rem;
+    }
+}
+
+@media (max-width: 768px) {
+    body.ws-body .ws-content {
+        padding: var(--ds-space-4, 16px);
+    }
+
+    body.ws-body .mk-hub-metric {
+        min-height: 5.5rem;
+        min-width: 7.5rem;
+    }
+
+    body.ws-body .mk-hub-metric-val {
+        font-size: 1.375rem;
+    }
+
+    /* Filing mobile keeps its compact column layout */
+    body.ws-body .mk-filing-mobile .mk-hub-metric {
+        min-height: auto;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    body.ws-body .mk-filing-mobile .mk-hub-metric-icon {
+        order: 0;
+        align-self: flex-start;
+        margin-top: 0;
+    }
+
+    body.ws-body .mk-filing-mobile .mk-hub-metric-body {
+        order: 1;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    body.ws-body :is(
+        .mk-hub-card,
+        .mk-hub-metric,
+        .mk-insight,
+        .crm-dash-kpi,
+        .crm-contacts-mob-kpi
+    ) {
+        transition: none;
+    }
+}

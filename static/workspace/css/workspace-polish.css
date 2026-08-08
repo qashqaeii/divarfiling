@@ -764,3 +764,45 @@ body.ws-body {
 .mk-hub-pro .mk-hub-metrics .mk-hub-metric {
     border-radius: var(--ds-radius-card);
 }
+
+/* Datasets list — filter bar visibility (desktop + mobile safety net) */
+.mk-filing-pro .mk-filing-toolbar {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ds-space-3);
+}
+
+@media (min-width: 769px) {
+    .mk-filing-pro.mk-filing-mobile .mk-filing-mob-filter-bar {
+        display: block !important;
+    }
+
+    .mk-filing-pro.mk-filing-mobile .mk-filing-mob-filter-details {
+        display: block !important;
+        border: none;
+        background: transparent;
+        box-shadow: none;
+        overflow: visible;
+    }
+
+    .mk-filing-pro.mk-filing-mobile .mk-filing-mob-filter-details > summary {
+        display: none !important;
+    }
+
+    .mk-filing-pro.mk-filing-mobile .mk-filing-filters-sheet {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1.45fr) repeat(3, minmax(0, 0.9fr)) auto;
+        gap: var(--ds-space-3);
+        align-items: center;
+        width: 100%;
+        padding: 0;
+    }
+}
+
+@media (max-width: 768px) {
+    .mk-filing-pro.mk-filing-mobile .mk-filing-mob-filter-bar {
+        display: flex !important;
+        flex-direction: column;
+        width: 100%;
+    }
+}

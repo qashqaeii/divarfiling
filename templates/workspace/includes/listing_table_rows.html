@@ -45,13 +45,13 @@
         {% if feat.rooms or listing.rooms or feat.floor or feat.build_year %}
         <div class="mk-specs-inline" title="{% if feat.rooms or listing.rooms %}{{ feat.rooms|default:listing.rooms }} خواب{% endif %}{% if feat.floor %}{% if feat.rooms or listing.rooms %} · {% endif %}طبقه {{ feat.floor }}{% endif %}{% if feat.build_year %}{% if feat.rooms or listing.rooms or feat.floor %} · {% endif %}سال {{ feat.build_year }}{% endif %}">
             {% if feat.rooms or listing.rooms %}
-            <span class="mk-specs-part"><strong>{{ feat.rooms|default:listing.rooms }}</strong><em>خ</em></span>
+            <span class="mk-spec-chip">{{ feat.rooms|default:listing.rooms }} خواب</span>
             {% endif %}
             {% if feat.floor %}
-            <span class="mk-specs-part"><em>ط</em><strong>{{ feat.floor }}</strong></span>
+            <span class="mk-spec-chip">طب {{ feat.floor }}</span>
             {% endif %}
             {% if feat.build_year %}
-            <span class="mk-specs-part mk-specs-part--year"><strong>{{ feat.build_year }}</strong></span>
+            <span class="mk-spec-chip mk-spec-chip--year">{{ feat.build_year }}</span>
             {% endif %}
         </div>
         {% elif feat.highlights %}

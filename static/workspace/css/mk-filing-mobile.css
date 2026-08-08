@@ -10,16 +10,32 @@
 }
 
 @media (min-width: 769px) {
-    .mk-filing-mobile .mk-filing-mob-filter-bar,
+    .mk-filing-mobile .mk-filing-mob-filter-bar {
+        display: block !important;
+        width: 100%;
+    }
     .mk-filing-mobile .mk-filing-mob-filter-details {
-        display: contents !important;
+        display: block !important;
+        border: none;
+        background: transparent;
+        box-shadow: none;
+        overflow: visible;
     }
     .mk-filing-mobile .mk-filing-mob-filter-details > summary {
         display: none !important;
     }
     .mk-filing-mobile .mk-filing-mob-filter-details > .mk-filing-filters-sheet,
     .mk-filing-mobile .mk-filing-mob-filter-details:not([open]) > .mk-filing-filters-sheet {
-        display: contents !important;
+        display: grid !important;
+        grid-template-columns: minmax(0, 1.45fr) repeat(3, minmax(0, 0.9fr)) auto;
+        gap: 0.45rem;
+        align-items: center;
+        width: 100%;
+        padding: 0;
+    }
+    .mk-filing-mobile .mk-filing-filter {
+        display: block;
+        width: 100%;
     }
 }
 

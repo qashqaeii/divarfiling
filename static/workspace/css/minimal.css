@@ -8955,9 +8955,10 @@ button.mk-ds-card-act {
 }
 
 .mk-data-table-listings .mk-col-specs {
-    overflow: hidden;
+    overflow: visible;
     padding-inline: 0.5rem;
     white-space: nowrap;
+    max-width: 10rem;
 }
 
 .mk-data-table-listings tbody tr:has(.mk-action-menu[open]) {
@@ -9107,11 +9108,11 @@ button.mk-ds-card-act {
     color: var(--ws-text-muted);
 }
 
-/* Specs — single-line compact metrics */
+/* Specs — compact pill chips in table */
 .mk-specs-inline {
     display: inline-flex;
     align-items: center;
-    gap: 0;
+    gap: 0.3rem;
     flex-wrap: nowrap;
     white-space: nowrap;
     max-width: 100%;
@@ -9129,11 +9130,32 @@ button.mk-ds-card-act {
 }
 
 .mk-specs-part + .mk-specs-part::before {
-    content: "·";
-    margin-inline: 0.35rem;
+    content: none;
+    display: none;
+}
+
+.mk-data-table-listings .mk-spec-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.18rem 0.42rem;
+    border-radius: 6px;
+    font-size: 0.68rem;
+    font-weight: 600;
+    line-height: 1.25;
+    color: var(--ws-text-secondary);
+    background: var(--ws-surface-2);
+    border: 1px solid var(--ws-border);
+    white-space: nowrap;
+    max-width: 5.25rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mk-data-table-listings .mk-spec-chip--year {
     color: var(--ws-text-muted);
     font-weight: 500;
-    opacity: 0.7;
+    font-size: 0.65rem;
+    max-width: 3.5rem;
 }
 
 .mk-specs-part strong {

@@ -471,13 +471,15 @@
         padding: 0.65rem 0.75rem 1.1rem;
     }
 
-    /* ── Bottom dock ── */
+    /* ── Bottom dock — replaces ws-bottom-nav on this page ── */
     .ws-ds-mob-dock {
         display: block;
         position: fixed;
-        inset-inline: 0.55rem;
-        bottom: calc(4.25rem + env(safe-area-inset-bottom, 0px));
+        inset-inline: 0;
+        bottom: 0;
         z-index: 150;
+        margin: 0;
+        padding: 6px 0.55rem calc(6px + env(safe-area-inset-bottom, 0px));
         pointer-events: none;
     }
     .ws-ds-mob-dock__inner {

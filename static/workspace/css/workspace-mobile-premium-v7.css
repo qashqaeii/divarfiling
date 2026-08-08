@@ -822,9 +822,23 @@
         padding-bottom: env(safe-area-inset-bottom, 0px);
     }
 
-    .crm-prop-mobile-dock,
-    .ws-ds-mob-dock {
-        bottom: calc(var(--ws-mob-nav-h) + env(safe-area-inset-bottom, 0px)) !important;
+    /* Action dock replaces bottom nav on dataset/listing pages — pin to viewport bottom */
+    body.ws-body:has(.ws-ds-mob-dock) .ws-ds-mob-dock,
+    body.ws-body:has(.crm-prop-mobile-dock) .crm-prop-mobile-dock,
+    body.ws-body:has(.crm-contact-mobile-dock) .crm-contact-mobile-dock,
+    body.ws-body:has(.crm-deal-mobile-dock) .crm-deal-mobile-dock {
+        position: fixed !important;
+        inset-inline: 0 !important;
+        bottom: 0 !important;
+        margin: 0 !important;
+        z-index: 170 !important;
+        padding: 6px var(--mobile-section-padding) calc(6px + env(safe-area-inset-bottom, 0px)) !important;
+        pointer-events: none;
+    }
+
+    body.ws-body:has(.ws-ds-mob-dock) .ws-ds-mob-dock__inner,
+    body.ws-body:has(.crm-prop-mobile-dock) .crm-prop-mobile-dock__inner {
+        pointer-events: auto;
     }
 }
 

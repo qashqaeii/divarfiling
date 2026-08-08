@@ -35,15 +35,41 @@
     --ds-text-secondary: #94A3B8;
     --ds-text-muted: #64748B;
 
-    /* Effects — minimal */
-    --ds-radius: 10px;
-    --ds-radius-sm: 8px;
+    /* Radius — unified scale */
     --ds-radius-xs: 5px;
-    --ds-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    --ds-radius-sm: 8px;
+    --ds-radius: 10px;
+    --ds-radius-card: 16px;
+    --ds-radius-lg: 20px;
+
+    /* Shadows — three-tier system */
+    --ds-shadow-card: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.08);
+    --ds-shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04);
+    --ds-shadow-modal: 0 20px 40px rgba(0, 0, 0, 0.18), 0 8px 16px rgba(0, 0, 0, 0.08);
+    --ds-shadow: var(--ds-shadow-card);
     --ds-shadow-glow: none;
+
+    /* Spacing scale */
+    --ds-space-1: 4px;
+    --ds-space-2: 8px;
+    --ds-space-3: 12px;
+    --ds-space-4: 16px;
+    --ds-space-5: 24px;
+    --ds-space-6: 32px;
+
+    /* Typography scale */
+    --ds-text-page-title: 1.5rem;      /* 24px */
+    --ds-text-section-title: 1.125rem; /* 18px */
+    --ds-text-card-title: 0.9375rem;   /* 15px */
+    --ds-text-body: 0.875rem;          /* 14px */
+    --ds-weight-page-title: 700;
+    --ds-weight-section-title: 600;
+    --ds-weight-card-title: 600;
+    --ds-weight-body: 400;
+
     --ds-blur: blur(16px);
     --ds-ease: cubic-bezier(0.4, 0, 0.2, 1);
-    --ds-sidebar-w: 200px;
+    --ds-sidebar-w: 220px;
 
     /* Responsive breakpoints (reference values — use in custom media queries) */
     --bp-xs: 480px;
@@ -56,20 +82,23 @@
 
 /* Light theme overrides */
 [data-theme="light"] {
-    --ds-bg: #F1F5F9;
+    --ds-bg: #F8FAFC;
     --ds-bg-elevated: #FFFFFF;
     --ds-card: #FFFFFF;
-    --ds-surface: #F8FAFC;
-    --ds-surface-hover: #F1F5F9;
+    --ds-surface: #FFFFFF;
+    --ds-surface-hover: #F8FAFC;
     --ds-border: #E2E8F0;
     --ds-border-strong: #CBD5E1;
-    --ds-glass: rgba(255, 255, 255, 0.85);
-    --ds-glass-border: rgba(0, 0, 0, 0.06);
+    --ds-glass: rgba(255, 255, 255, 0.92);
+    --ds-glass-border: rgba(0, 0, 0, 0.05);
     --ds-text: #0F172A;
-    --ds-text-secondary: #475569;
+    --ds-text-secondary: #64748B;
     --ds-text-muted: #94A3B8;
-    --ds-shadow: 0 4px 24px rgba(15, 23, 42, 0.06);
-    --ds-shadow-glow: 0 0 40px rgba(124, 58, 237, 0.08);
+    --ds-shadow-card: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --ds-shadow-hover: 0 4px 12px rgba(15, 23, 42, 0.06);
+    --ds-shadow-modal: 0 20px 48px rgba(15, 23, 42, 0.12);
+    --ds-shadow: var(--ds-shadow-card);
+    --ds-shadow-glow: none;
 }
 
 /* Cheerful theme — warm, vibrant, professional */

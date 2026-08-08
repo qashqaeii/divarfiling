@@ -30,30 +30,30 @@ html {
     --ws-sidebar-util-hover: rgba(255, 255, 255, 0.85);
     --ws-nav-badge-bg: rgba(124, 58, 237, 0.35);
     --ws-nav-badge-color: #e9d5ff;
-    --ws-radius: var(--ds-radius, 14px);
-    --ws-radius-sm: var(--ds-radius-sm, 10px);
-    --ws-radius-xs: var(--ds-radius-xs, 6px);
-    --ws-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
-    --ws-shadow: var(--ds-shadow, 0 4px 24px rgba(0, 0, 0, 0.35));
-    --ws-shadow-lg: 0 24px 48px rgba(0, 0, 0, 0.45);
-    --ws-sidebar-w: var(--ds-sidebar-w, 260px);
+    --ws-radius: var(--ds-radius-card, 16px);
+    --ws-radius-sm: var(--ds-radius-sm, 8px);
+    --ws-radius-xs: var(--ds-radius-sm, 8px);
+    --ws-shadow-sm: var(--ds-shadow-card, 0 1px 2px rgba(0, 0, 0, 0.2));
+    --ws-shadow: var(--ds-shadow-card, 0 4px 24px rgba(0, 0, 0, 0.35));
+    --ws-shadow-lg: var(--ds-shadow-modal, 0 24px 48px rgba(0, 0, 0, 0.45));
+    --ws-sidebar-w: var(--ds-sidebar-w, 220px);
     --ws-ease: var(--ds-ease, cubic-bezier(0.4, 0, 0.2, 1));
     --ws-modal-z: 1000;
 }
 
 [data-theme="light"] {
     color-scheme: light;
-    --ws-bg: #F1F5F9;
+    --ws-bg: #F8FAFC;
     --ws-surface: #FFFFFF;
     --ws-surface-2: #F8FAFC;
     --ws-border: #E2E8F0;
     --ws-border-light: #F1F5F9;
     --ws-text: #0F172A;
-    --ws-text-secondary: #475569;
+    --ws-text-secondary: #64748B;
     --ws-text-muted: #94A3B8;
     --ws-sidebar: #FFFFFF;
     --ws-sidebar-border: #E2E8F0;
-    --ws-sidebar-hover: rgba(15, 23, 42, 0.05);
+    --ws-sidebar-hover: rgba(15, 23, 42, 0.04);
     --ws-sidebar-text: #64748B;
     --ws-sidebar-text-hover: #334155;
     --ws-sidebar-text-active: #0F172A;
@@ -64,9 +64,9 @@ html {
     --ws-sidebar-util-hover: #475569;
     --ws-nav-badge-bg: rgba(124, 58, 237, 0.12);
     --ws-nav-badge-color: #6D28D9;
-    --ws-shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
-    --ws-shadow: 0 4px 24px rgba(15, 23, 42, 0.06);
-    --ws-shadow-lg: 0 24px 48px rgba(15, 23, 42, 0.12);
+    --ws-shadow-sm: var(--ds-shadow-card, 0 1px 2px rgba(15, 23, 42, 0.04));
+    --ws-shadow: var(--ds-shadow-card, 0 1px 2px rgba(15, 23, 42, 0.04));
+    --ws-shadow-lg: var(--ds-shadow-modal, 0 20px 48px rgba(15, 23, 42, 0.12));
 }
 
 [data-theme="dark"] {
@@ -262,7 +262,8 @@ body.ws-body::before {
 .ws-nav-item.active {
     background: var(--ws-sidebar-active-bg);
     color: var(--ws-sidebar-text-active);
-    box-shadow: inset 2px 0 0 var(--ws-primary);
+    font-weight: 600;
+    box-shadow: none;
 }
 
 .ws-nav-item i { width: 16px; text-align: center; font-size: .72rem; opacity: .75; }

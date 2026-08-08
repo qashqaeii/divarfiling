@@ -1,0 +1,186 @@
+{% load workspace_tags crm_tags %}
+<section class="crm-detail-action-center crm-detail-action-center--property" aria-label="مرکز اقدام">
+    <header class="crm-detail-action-center__head">
+        <div class="crm-detail-action-center__head-main">
+            <span class="crm-detail-action-center__kicker">Action Center</span>
+            <h2 class="crm-detail-action-center__title">کار بعدی چیست؟</h2>
+        </div>
+        {% if not mask_sensitive and follow_up_state == 'overdue' %}
+        <span class="crm-detail-action-center__flag is-warn">پیگیری معوق</span>
+        {% elif not mask_sensitive and follow_up_state == 'today' %}
+        <span class="crm-detail-action-center__flag is-accent">اقدام امروز</span>
+        {% elif property.transaction_status %}
+        <span class="crm-detail-action-center__flag is-info">{{ property.transaction_status }}</span>
+        {% endif %}
+    </header>
+
+    <div class="crm-detail-action-center__grid">
+        {% if not mask_sensitive %}
+        {% if property.next_follow_up %}
+        <article class="crm-detail-intel-card crm-detail-intel-card--primary{% if follow_up_state == 'overdue' %} is-warn{% elif follow_up_state == 'today' %} is-accent{% elif follow_up_state == 'upcoming' %} is-growth{% endif %}">
+            <span class="crm-detail-intel-card__icon" aria-hidden="true"><i class="fas fa-calendar-check"></i></span>
+            <div class="crm-detail-intel-card__body">
+                <span class="crm-detail-intel-card__label">پیگیری فایل</span>
+                <strong class="crm-detail-intel-card__value">{{ property.next_follow_up|ws_jalali }}</strong>
+                <span class="crm-detail-intel-card__meta">
+                    {% if follow_up_state == 'overdue' %}معوق — پیگیری فوری
+                    {% elif follow_up_state == 'today' %}امروز
+                    {% else %}برنامه‌ریزی شده{% endif %}
+                </span>
+            </div>
+            {% if can_edit_property %}
+            <button type="button" class="crm-detail-intel-card__link" data-drawer-open="drawer-followup" title="مدیریت پیگیری">
+                <i class="fas fa-chevron-left" aria-hidden="true"></i>
+            </button>
+            {% endif %}
+        </article>
+        {% elif can_edit_property %}
+        <article class="crm-detail-intel-card crm-detail-intel-card--primary">
+            <span class="crm-detail-intel-card__icon" aria-hidden="true"><i class="fas fa-calendar-check"></i></span>
+            <div class="crm-detail-intel-card__body">
+                <span class="crm-detail-intel-card__label">پیگیری فایل</span>
+                <strong class="crm-detail-intel-card__value is-muted">ثبت نشده</strong>
+                <span class="crm-detail-intel-card__meta">تاریخ پیگیری بعدی را مشخص کنید</span>
+            </div>
+            <button type="button" class="crm-detail-intel-card__link" data-drawer-open="drawer-followup" title="ثبت پیگیری">
+                <i class="fas fa-chevron-left" aria-hidden="true"></i>
+            </button>
+        </article>
+        {% endif %}
+        {% endif %}
+
+        <article class="crm-detail-intel-card is-info">
+            <span class="crm-detail-intel-card__icon" aria-hidden="true"><i class="fas fa-bolt"></i></span>
+            <div class="crm-detail-intel-card__body">
+                <span class="crm-detail-intel-card__label">وضعیت فایل</span>
+                <strong class="crm-detail-intel-card__value">{{ property.transaction_status }}</strong>
+                <span class="crm-detail-intel-card__meta">{{ property.deal_mode }}{% if property.publish_status %} · {{ property.publish_status }}{% endif %}</span>
+            </div>
+        </article>
+
+        <article class="crm-detail-intel-card">
+            <span class="crm-detail-intel-card__icon" aria-hidden="true"><i class="fas fa-clock"></i></span>
+            <div class="crm-detail-intel-card__body">
+                <span class="crm-detail-intel-card__label">آخرین بروزرسانی</span>
+                <strong class="crm-detail-intel-card__value">{{ property.updated_at|ws_jalali }}</strong>
+                <span class="crm-detail-intel-card__meta">ثبت: {{ property.created_at|ws_jalali }}</span>
+            </div>
+        </article>
+
+        {% if not mask_sensitive %}
+        <article class="crm-detail-intel-card{% if property.sale_price or property.deposit or property.monthly_rent %} is-growth{% endif %}">
+            <span class="crm-detail-intel-card__icon" aria-hidden="true"><i class="fas fa-tag"></i></span>
+            <div class="crm-detail-intel-card__body">
+                <span class="crm-detail-intel-card__label">قیمت فعلی</span>
+                {% if property.sale_price %}
+                <strong class="crm-detail-intel-card__value">{{ property.sale_price|ws_money }}</strong>
+                <span class="crm-detail-intel-card__meta">فروش{% if property.area %} · {{ property.area|ws_area }}{% endif %}</span>
+                {% elif property.deposit or property.monthly_rent %}
+                <strong class="crm-detail-intel-card__value">{% if property.deposit %}{{ property.deposit|ws_money }}{% endif %}{% if property.monthly_rent %} / {{ property.monthly_rent|ws_money }}{% endif %}</strong>
+                <span class="crm-detail-intel-card__meta">{% if property.deposit and property.monthly_rent %}رهن / اجاره{% elif property.deposit %}ودیعه{% else %}اجاره ماهانه{% endif %}</span>
+                {% else %}
+                <strong class="crm-detail-intel-card__value is-muted">ثبت نشده</strong>
+                <span class="crm-detail-intel-card__meta">قیمت را در ویرایش فایل ثبت کنید</span>
+                {% endif %}
+            </div>
+        </article>
+
+        <article class="crm-detail-intel-card{% if owner_contact or owner_name %} is-accent{% endif %}">
+            <span class="crm-detail-intel-card__icon" aria-hidden="true"><i class="fas fa-user-tie"></i></span>
+            <div class="crm-detail-intel-card__body">
+                <span class="crm-detail-intel-card__label">مالک / مشاور</span>
+                {% if owner_contact %}
+                <strong class="crm-detail-intel-card__value">{{ owner_contact.name|truncatechars:22 }}</strong>
+                <span class="crm-detail-intel-card__meta">{% if owner_contact.phone %}<span dir="ltr">{{ owner_contact.phone }}</span>{% else %}مالک فایل{% endif %}</span>
+                {% elif owner_name %}
+                <strong class="crm-detail-intel-card__value">{{ owner_name|truncatechars:22 }}</strong>
+                <span class="crm-detail-intel-card__meta">مالک فایل</span>
+                {% elif property_owner_user %}
+                <strong class="crm-detail-intel-card__value">{{ property_owner_user.get_full_name|default:property_owner_user.username|truncatechars:22 }}</strong>
+                <span class="crm-detail-intel-card__meta">{% if is_property_owner %}ثبت‌کننده: شما{% else %}مشاور / ثبت‌کننده{% endif %}</span>
+                {% else %}
+                <strong class="crm-detail-intel-card__value is-muted">ثبت نشده</strong>
+                <span class="crm-detail-intel-card__meta">مالک یا مشاور مشخص نیست</span>
+                {% endif %}
+            </div>
+            {% if owner_contact %}
+            <a href="{% url 'workspace:crm_detail' owner_contact.id %}" class="crm-detail-intel-card__link" title="پروفایل مالک">
+                <i class="fas fa-chevron-left" aria-hidden="true"></i>
+            </a>
+            {% endif %}
+        </article>
+
+        <article class="crm-detail-intel-card{% if contact_links %} is-growth{% endif %}">
+            <span class="crm-detail-intel-card__icon" aria-hidden="true"><i class="fas fa-users"></i></span>
+            <div class="crm-detail-intel-card__body">
+                <span class="crm-detail-intel-card__label">مشتریان مرتبط</span>
+                {% if contact_links %}
+                <strong class="crm-detail-intel-card__value">{{ contact_links|length }} مخاطب</strong>
+                <span class="crm-detail-intel-card__meta">{{ contact_links.0.customer.name|truncatechars:20 }}{% if contact_links|length > 1 %} و {{ contact_links|length|add:"-1" }} نفر دیگر{% endif %}</span>
+                {% else %}
+                <strong class="crm-detail-intel-card__value is-muted">۰ مخاطب</strong>
+                <span class="crm-detail-intel-card__meta">مشتری به این فایل پیوند نشده</span>
+                {% endif %}
+            </div>
+            <button type="button" class="crm-detail-intel-card__link" data-tab-jump="contacts" title="مشاهده مخاطبین">
+                <i class="fas fa-chevron-left" aria-hidden="true"></i>
+            </button>
+        </article>
+
+        {% if can_suggest_contacts and contact_match_data.total_count %}
+        <article class="crm-detail-intel-card is-accent">
+            <span class="crm-detail-intel-card__icon" aria-hidden="true"><i class="fas fa-wand-magic-sparkles"></i></span>
+            <div class="crm-detail-intel-card__body">
+                <span class="crm-detail-intel-card__label">پیشنهاد مشتری</span>
+                <strong class="crm-detail-intel-card__value">{{ contact_match_data.total_count }} تطبیق</strong>
+                <span class="crm-detail-intel-card__meta">مشتریان بالقوه برای این فایل</span>
+            </div>
+            <button type="button" class="crm-detail-intel-card__link" data-tab-jump="suggest-contacts" title="پیشنهاد مخاطب">
+                <i class="fas fa-chevron-left" aria-hidden="true"></i>
+            </button>
+        </article>
+        {% endif %}
+
+        <article class="crm-detail-intel-card{% if activities %} is-info{% endif %}">
+            <span class="crm-detail-intel-card__icon" aria-hidden="true"><i class="fas fa-clock-rotate-left"></i></span>
+            <div class="crm-detail-intel-card__body">
+                <span class="crm-detail-intel-card__label">آخرین فعالیت</span>
+                {% if activities %}
+                <strong class="crm-detail-intel-card__value">{{ activities.0.activity_type }}</strong>
+                <span class="crm-detail-intel-card__meta">{{ activities.0.customer.name|truncatechars:18 }} · {{ activities.0.created_at|ws_jalali }}</span>
+                {% else %}
+                <strong class="crm-detail-intel-card__value is-muted">—</strong>
+                <span class="crm-detail-intel-card__meta">فعالیتی روی این فایل ثبت نشده</span>
+                {% endif %}
+            </div>
+            <button type="button" class="crm-detail-intel-card__link" data-tab-jump="activity" title="مشاهده فعالیت‌ها">
+                <i class="fas fa-chevron-left" aria-hidden="true"></i>
+            </button>
+        </article>
+        {% endif %}
+    </div>
+
+    {% if can_edit_property and not mask_sensitive %}
+    <div class="crm-detail-action-center__quick" role="group" aria-label="اقدام سریع">
+        <button type="button" class="crm-detail-action-quick crm-detail-action-quick--primary" data-drawer-open="drawer-followup">
+            <i class="fas fa-calendar-plus" aria-hidden="true"></i><span>پیگیری</span>
+        </button>
+        {% if can_suggest_contacts %}
+        <button type="button" class="crm-detail-action-quick" data-tab-jump="suggest-contacts">
+            <i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i><span>پیشنهاد مشتری</span>
+        </button>
+        {% endif %}
+        <button type="button" class="crm-detail-action-quick" data-tab-jump="contacts">
+            <i class="fas fa-user-plus" aria-hidden="true"></i><span>مخاطب</span>
+        </button>
+        <button type="button" class="crm-detail-action-quick" data-drawer-open="drawer-edit">
+            <i class="fas fa-pen" aria-hidden="true"></i><span>ویرایش</span>
+        </button>
+        {% if can_edit_property and is_property_owner %}
+        <button type="button" class="crm-detail-action-quick" data-modal-open="modal-property-share">
+            <i class="fas fa-share-alt" aria-hidden="true"></i><span>اشتراک</span>
+        </button>
+        {% endif %}
+    </div>
+    {% endif %}
+</section>

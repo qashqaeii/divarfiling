@@ -147,6 +147,8 @@
         {% endif %}
     </section>
 
+    {% include 'workspace/crm/includes/detail_action_center_contact.html' %}
+
     <section class="crm-contact-mobile-glance" aria-label="خلاصه سریع">
         {% if not customer_is_shared %}
         <button type="button" class="crm-contact-glance-card crm-contact-glance-card--followup{% if follow_up_state == 'overdue' %} is-overdue{% elif follow_up_state == 'today' %} is-today{% endif %}" data-drawer-open="drawer-followup">

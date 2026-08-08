@@ -315,6 +315,7 @@ LEAD_CAMPAIGN_SEND_BATCH_SIZE = config('LEAD_CAMPAIGN_SEND_BATCH_SIZE', default=
 ACQUISITION_AUTOMATION_ENABLED = config('ACQUISITION_AUTOMATION_ENABLED', default=True, cast=bool)
 ACQUISITION_COOLDOWN_HOURS = config('ACQUISITION_COOLDOWN_HOURS', default=4, cast=int)
 ACQUISITION_WORKER_POLL_SECONDS = config('ACQUISITION_WORKER_POLL_SECONDS', default=30, cast=int)
+PHONE_DETECTOR_DIR = config('PHONE_DETECTOR_DIR', default='')
 # سازگاری قدیمی (تومان برای هر بخش) — اگر PER_PART_RIAL ست نباشد استفاده می‌شود
 LEAD_SMS_COST_TOMAN = config('LEAD_SMS_COST_TOMAN', default=0, cast=int)
 FARAZSMS_API_KEY = config('FARAZSMS_API_KEY', default='')

@@ -2094,16 +2094,22 @@ function normalizeHeatValues(values) {
 function computeHeatLayerOptions(source, palette, map, { weighted = false } = {}) {
     const count = source.length;
     const logFactor = Math.log10(Math.max(count, 10));
-    const radius = Math.min(52, Math.max(30, Math.round(26 + logFactor * 5)));
-    const blur = Math.round(radius * 0.88);
-    const zoom = map?.getZoom?.();
-    // maxZoom = زوم فعلی → شدت کامل در نمای فعلی (بدون محو شدن در زوم پایین)
-    const maxZoom = Number.isFinite(zoom) ? zoom : 12;
-    const maxIntensity = weighted ? 0.75 : 0.42;
+    let radius = Math.min(72, Math.max(36, Math.round(32 + logFactor * 6)));
+    if (map && source.length > 1 && window.L) {
+        const bounds = L.latLngBounds(source.map(m => [m.lat, m.lng]));
+        const sw = map.latLngToContainerPoint(bounds.getSouthWest());
+        const ne = map.latLngToContainerPoint(bounds.getNorthEast());
+        const span = Math.max(Math.abs(ne.x - sw.x), Math.abs(ne.y - sw.y), 1);
+        const adaptive = Math.round(span * 0.055);
+        radius = Math.min(80, Math.max(radius, adaptive));
+    }
+    const blur = Math.round(radius * 0.82);
+    const maxZoom = map?.getMaxZoom?.() || 18;
+    const maxIntensity = weighted ? 0.85 : 0.65;
     return {
         radius,
         blur,
-        minOpacity: 0.58,
+        minOpacity: 0.45,
         maxZoom,
         max: maxIntensity,
         gradient: buildLeafletHeatGradient(palette),
@@ -2183,14 +2189,40 @@ function computeMapFilterBounds(markers, settings = {}) {
 
 function countActiveMapFilters(filterState) {
     let n = 0;
+    if (filterState.txMode && filterState.txMode !== 'all') n += 1;
+    if (filterState.neighborhood) n += 1;
     if (filterState.priceMin != null && filterState.priceMin !== '') n += 1;
     if (filterState.priceMax != null && filterState.priceMax !== '') n += 1;
+    if (filterState.depositMin != null && filterState.depositMin !== '') n += 1;
+    if (filterState.depositMax != null && filterState.depositMax !== '') n += 1;
+    if (filterState.rentMin != null && filterState.rentMin !== '') n += 1;
+    if (filterState.rentMax != null && filterState.rentMax !== '') n += 1;
     if (filterState.areaMin != null && filterState.areaMin !== '') n += 1;
     if (filterState.areaMax != null && filterState.areaMax !== '') n += 1;
     if (filterState.rooms && filterState.rooms !== 'all') n += 1;
+    if (filterState.yearMin != null && filterState.yearMin !== '') n += 1;
+    if (filterState.yearMax != null && filterState.yearMax !== '') n += 1;
     if (filterState.freshness && filterState.freshness !== 'all') n += 1;
-    if (filterState.underOnly) n += 1;
+    if (filterState.valueTier && filterState.valueTier !== 'all') n += 1;
+    if (filterState.elevator) n += 1;
+    if (filterState.parking) n += 1;
+    if (filterState.storage) n += 1;
     return n;
+}
+
+function matchAmenityFilter(markerValue, required) {
+    if (!required) return true;
+    return markerValue === true;
+}
+
+function matchValueTierFilter(marketTier, filter) {
+    if (!filter || filter === 'all') return true;
+    return marketTier === filter;
+}
+
+function matchTxModeFilter(txMode, filter) {
+    if (!filter || filter === 'all') return true;
+    return txMode === filter;
 }
 
 function normalizeMoneyInput(val) {
@@ -2216,19 +2248,42 @@ function applyMapMarkerFilters(markers, filterState, sellerFilter) {
 
     const pMin = filterState.priceMin != null && filterState.priceMin !== '' ? normalizeMoneyInput(filterState.priceMin) : null;
     const pMax = filterState.priceMax != null && filterState.priceMax !== '' ? normalizeMoneyInput(filterState.priceMax) : null;
+    const dMin = filterState.depositMin != null && filterState.depositMin !== '' ? normalizeMoneyInput(filterState.depositMin) : null;
+    const dMax = filterState.depositMax != null && filterState.depositMax !== '' ? normalizeMoneyInput(filterState.depositMax) : null;
+    const rMin = filterState.rentMin != null && filterState.rentMin !== '' ? normalizeMoneyInput(filterState.rentMin) : null;
+    const rMax = filterState.rentMax != null && filterState.rentMax !== '' ? normalizeMoneyInput(filterState.rentMax) : null;
     const aMin = filterState.areaMin != null && filterState.areaMin !== '' ? Number(parseFormattedNumber(filterState.areaMin) || filterState.areaMin) : null;
     const aMax = filterState.areaMax != null && filterState.areaMax !== '' ? Number(parseFormattedNumber(filterState.areaMax) || filterState.areaMax) : null;
+    const yMin = filterState.yearMin != null && filterState.yearMin !== '' ? Number(parseFormattedNumber(filterState.yearMin) || filterState.yearMin) : null;
+    const yMax = filterState.yearMax != null && filterState.yearMax !== '' ? Number(parseFormattedNumber(filterState.yearMax) || filterState.yearMax) : null;
 
     return list.filter((m) => {
+        if (!matchTxModeFilter(m.tx_mode, filterState.txMode)) return false;
+        if (filterState.neighborhood && (m.neighborhood || '') !== filterState.neighborhood) return false;
         const fv = Number(m.filter_value) || 0;
         const area = Number(m.area) || 0;
+        const deposit = Number(m.deposit) || 0;
+        const rent = Number(m.rent) || 0;
         if (pMin != null && fv > 0 && fv < pMin) return false;
         if (pMax != null && fv > 0 && fv > pMax) return false;
+        if (dMin != null && deposit > 0 && deposit < dMin) return false;
+        if (dMax != null && deposit > 0 && deposit > dMax) return false;
+        if (rMin != null && rent > 0 && rent < rMin) return false;
+        if (rMax != null && rent > 0 && rent > rMax) return false;
         if (aMin != null && area > 0 && area < aMin) return false;
         if (aMax != null && area > 0 && area > aMax) return false;
         if (!matchRoomsFilter(m.rooms, filterState.rooms)) return false;
+        if (yMin != null || yMax != null) {
+            const year = Number(m.build_year) || 0;
+            if (!year) return false;
+            if (yMin != null && year < yMin) return false;
+            if (yMax != null && year > yMax) return false;
+        }
         if (!matchFreshnessFilter(m.published_ts, filterState.freshness)) return false;
-        if (filterState.underOnly && m.market_tier !== 'under') return false;
+        if (!matchValueTierFilter(m.market_tier, filterState.valueTier)) return false;
+        if (!matchAmenityFilter(m.elevator, filterState.elevator)) return false;
+        if (!matchAmenityFilter(m.parking, filterState.parking)) return false;
+        if (!matchAmenityFilter(m.storage, filterState.storage)) return false;
         return true;
     });
 }
@@ -2747,13 +2802,24 @@ function initMap(allMarkers, settings) {
     let highlightedMarkerId = null;
     let selectedMarkerId = null;
     const filterState = {
+        txMode: 'all',
+        neighborhood: '',
         priceMin: '',
         priceMax: '',
+        depositMin: '',
+        depositMax: '',
+        rentMin: '',
+        rentMax: '',
         areaMin: '',
         areaMax: '',
         rooms: 'all',
+        yearMin: '',
+        yearMax: '',
         freshness: 'all',
-        underOnly: false,
+        valueTier: 'all',
+        elevator: false,
+        parking: false,
+        storage: false,
     };
     const filterBounds = computeMapFilterBounds(allMarkers, settings);
 
@@ -2949,7 +3015,10 @@ function initMap(allMarkers, settings) {
         const maxVal = positives.length ? Math.max(...positives) : 0;
 
         const heatData = source.map((m, i) => {
-            const intensity = weighted ? intensities[i] : 1.0;
+            let intensity = weighted ? intensities[i] : 1.0;
+            if (!weighted && source.length <= 120) {
+                intensity = Math.min(1.8, 1.0 + 24 / Math.max(source.length, 1));
+            }
             return [m.lat, m.lng, intensity];
         });
 
@@ -3283,31 +3352,46 @@ function initMap(allMarkers, settings) {
     function syncFilterInputs() {
         const priceMinEl = document.getElementById('mkMapPriceMin');
         const priceMaxEl = document.getElementById('mkMapPriceMax');
+        const depositMinEl = document.getElementById('mkMapDepositMin');
+        const depositMaxEl = document.getElementById('mkMapDepositMax');
+        const rentMinEl = document.getElementById('mkMapRentMin');
+        const rentMaxEl = document.getElementById('mkMapRentMax');
         const areaMinEl = document.getElementById('mkMapAreaMin');
         const areaMaxEl = document.getElementById('mkMapAreaMax');
         const roomsEl = document.getElementById('mkMapRooms');
+        const yearMinEl = document.getElementById('mkMapYearMin');
+        const yearMaxEl = document.getElementById('mkMapYearMax');
         const freshEl = document.getElementById('mkMapFreshness');
-        const underEl = document.getElementById('mkMapUnderOnly');
+        const valueTierEl = document.getElementById('mkMapValueTier');
+        const txModeEl = document.getElementById('mkMapTxMode');
+        const neighborhoodEl = document.getElementById('mkMapNeighborhood');
+        const elevatorEl = document.getElementById('mkMapElevator');
+        const parkingEl = document.getElementById('mkMapParking');
+        const storageEl = document.getElementById('mkMapStorage');
         const ringsEl = document.getElementById('mkMapShowRings');
-        if (priceMinEl) {
-            priceMinEl.value = filterState.priceMin ? formatWithSeparators(filterState.priceMin) : '';
-            priceMinEl.dataset.rawValue = filterState.priceMin ? String(filterState.priceMin) : '';
-        }
-        if (priceMaxEl) {
-            priceMaxEl.value = filterState.priceMax ? formatWithSeparators(filterState.priceMax) : '';
-            priceMaxEl.dataset.rawValue = filterState.priceMax ? String(filterState.priceMax) : '';
-        }
-        if (areaMinEl) {
-            areaMinEl.value = filterState.areaMin ? formatWithSeparators(filterState.areaMin) : '';
-            areaMinEl.dataset.rawValue = filterState.areaMin ? String(filterState.areaMin) : '';
-        }
-        if (areaMaxEl) {
-            areaMaxEl.value = filterState.areaMax ? formatWithSeparators(filterState.areaMax) : '';
-            areaMaxEl.dataset.rawValue = filterState.areaMax ? String(filterState.areaMax) : '';
-        }
+        const setNum = (el, val) => {
+            if (!el) return;
+            el.value = val ? formatWithSeparators(val) : '';
+            el.dataset.rawValue = val ? String(val) : '';
+        };
+        setNum(priceMinEl, filterState.priceMin);
+        setNum(priceMaxEl, filterState.priceMax);
+        setNum(depositMinEl, filterState.depositMin);
+        setNum(depositMaxEl, filterState.depositMax);
+        setNum(rentMinEl, filterState.rentMin);
+        setNum(rentMaxEl, filterState.rentMax);
+        setNum(areaMinEl, filterState.areaMin);
+        setNum(areaMaxEl, filterState.areaMax);
+        setNum(yearMinEl, filterState.yearMin);
+        setNum(yearMaxEl, filterState.yearMax);
         if (roomsEl) roomsEl.value = filterState.rooms;
         if (freshEl) freshEl.value = filterState.freshness;
-        if (underEl) underEl.checked = filterState.underOnly;
+        if (valueTierEl) valueTierEl.value = filterState.valueTier;
+        if (txModeEl) txModeEl.value = filterState.txMode;
+        if (neighborhoodEl) neighborhoodEl.value = filterState.neighborhood || '';
+        if (elevatorEl) elevatorEl.checked = filterState.elevator;
+        if (parkingEl) parkingEl.checked = filterState.parking;
+        if (storageEl) storageEl.checked = filterState.storage;
         if (ringsEl) ringsEl.checked = showRings;
         updateFilterBadge();
     }
@@ -3315,32 +3399,65 @@ function initMap(allMarkers, settings) {
     function applyAdvancedFilters() {
         const priceMinEl = document.getElementById('mkMapPriceMin');
         const priceMaxEl = document.getElementById('mkMapPriceMax');
+        const depositMinEl = document.getElementById('mkMapDepositMin');
+        const depositMaxEl = document.getElementById('mkMapDepositMax');
+        const rentMinEl = document.getElementById('mkMapRentMin');
+        const rentMaxEl = document.getElementById('mkMapRentMax');
         const areaMinEl = document.getElementById('mkMapAreaMin');
         const areaMaxEl = document.getElementById('mkMapAreaMax');
         const roomsEl = document.getElementById('mkMapRooms');
+        const yearMinEl = document.getElementById('mkMapYearMin');
+        const yearMaxEl = document.getElementById('mkMapYearMax');
         const freshEl = document.getElementById('mkMapFreshness');
-        const underEl = document.getElementById('mkMapUnderOnly');
+        const valueTierEl = document.getElementById('mkMapValueTier');
+        const txModeEl = document.getElementById('mkMapTxMode');
+        const neighborhoodEl = document.getElementById('mkMapNeighborhood');
+        const elevatorEl = document.getElementById('mkMapElevator');
+        const parkingEl = document.getElementById('mkMapParking');
+        const storageEl = document.getElementById('mkMapStorage');
         const ringsEl = document.getElementById('mkMapShowRings');
+        filterState.txMode = txModeEl?.value || 'all';
+        filterState.neighborhood = neighborhoodEl?.value || '';
         filterState.priceMin = readFormattedInput(priceMinEl);
         filterState.priceMax = readFormattedInput(priceMaxEl);
+        filterState.depositMin = readFormattedInput(depositMinEl);
+        filterState.depositMax = readFormattedInput(depositMaxEl);
+        filterState.rentMin = readFormattedInput(rentMinEl);
+        filterState.rentMax = readFormattedInput(rentMaxEl);
         filterState.areaMin = readFormattedInput(areaMinEl);
         filterState.areaMax = readFormattedInput(areaMaxEl);
         filterState.rooms = roomsEl?.value || 'all';
+        filterState.yearMin = readFormattedInput(yearMinEl);
+        filterState.yearMax = readFormattedInput(yearMaxEl);
         filterState.freshness = freshEl?.value || 'all';
-        filterState.underOnly = !!underEl?.checked;
+        filterState.valueTier = valueTierEl?.value || 'all';
+        filterState.elevator = !!elevatorEl?.checked;
+        filterState.parking = !!parkingEl?.checked;
+        filterState.storage = !!storageEl?.checked;
         showRings = ringsEl ? ringsEl.checked : false;
         updateFilterBadge();
         refreshLayers();
     }
 
     function resetAdvancedFilters() {
+        filterState.txMode = 'all';
+        filterState.neighborhood = '';
         filterState.priceMin = '';
         filterState.priceMax = '';
+        filterState.depositMin = '';
+        filterState.depositMax = '';
+        filterState.rentMin = '';
+        filterState.rentMax = '';
         filterState.areaMin = '';
         filterState.areaMax = '';
         filterState.rooms = 'all';
+        filterState.yearMin = '';
+        filterState.yearMax = '';
         filterState.freshness = 'all';
-        filterState.underOnly = false;
+        filterState.valueTier = 'all';
+        filterState.elevator = false;
+        filterState.parking = false;
+        filterState.storage = false;
         showRings = false;
         syncFilterInputs();
         refreshLayers();
@@ -3353,8 +3470,8 @@ function initMap(allMarkers, settings) {
         const priceMinLabel = document.getElementById('mkMapPriceMinLabel');
         const priceMaxLabel = document.getElementById('mkMapPriceMaxLabel');
         const label = filterBounds.priceLabel || 'قیمت';
-        if (priceMinLabel) priceMinLabel.textContent = `حداقل ${label}`;
-        if (priceMaxLabel) priceMaxLabel.textContent = `حداکثر ${label}`;
+        if (priceMinLabel) priceMinLabel.innerHTML = `حداقل ${label} <small>(میلیون)</small>`;
+        if (priceMaxLabel) priceMaxLabel.innerHTML = `حداکثر ${label} <small>(میلیون)</small>`;
 
         const priceMinEl = document.getElementById('mkMapPriceMin');
         const priceMaxEl = document.getElementById('mkMapPriceMax');
@@ -3364,6 +3481,25 @@ function initMap(allMarkers, settings) {
         if (priceMaxEl && filterBounds.priceMax) priceMaxEl.placeholder = formatMapMoney(filterBounds.priceMax);
         if (areaMinEl && filterBounds.areaMin) areaMinEl.placeholder = `${filterBounds.areaMin.toLocaleString('fa-IR')} متر`;
         if (areaMaxEl && filterBounds.areaMax) areaMaxEl.placeholder = `${filterBounds.areaMax.toLocaleString('fa-IR')} متر`;
+
+        const serverFilters = settings?.filters || {};
+        if (serverFilters.neighborhood) filterState.neighborhood = serverFilters.neighborhood;
+        if (serverFilters.rooms) filterState.rooms = serverFilters.rooms;
+        if (serverFilters.freshness) filterState.freshness = serverFilters.freshness;
+        if (serverFilters.value) filterState.valueTier = serverFilters.value;
+        if (serverFilters.price_min) filterState.priceMin = String(serverFilters.price_min);
+        if (serverFilters.price_max) filterState.priceMax = String(serverFilters.price_max);
+        if (serverFilters.deposit_min) filterState.depositMin = String(serverFilters.deposit_min);
+        if (serverFilters.deposit_max) filterState.depositMax = String(serverFilters.deposit_max);
+        if (serverFilters.rent_min) filterState.rentMin = String(serverFilters.rent_min);
+        if (serverFilters.rent_max) filterState.rentMax = String(serverFilters.rent_max);
+        if (serverFilters.area_min) filterState.areaMin = String(serverFilters.area_min);
+        if (serverFilters.area_max) filterState.areaMax = String(serverFilters.area_max);
+        if (serverFilters.year_min) filterState.yearMin = String(serverFilters.year_min);
+        if (serverFilters.year_max) filterState.yearMax = String(serverFilters.year_max);
+        if (serverFilters.elevator === '1') filterState.elevator = true;
+        if (serverFilters.parking === '1') filterState.parking = true;
+        if (serverFilters.storage === '1') filterState.storage = true;
 
         toggle?.addEventListener('click', () => {
             const open = panel?.hasAttribute('hidden');
@@ -3380,17 +3516,28 @@ function initMap(allMarkers, settings) {
             clearTimeout(applyAdvancedFilters._timer);
             applyAdvancedFilters._timer = setTimeout(applyAdvancedFilters, 280);
         };
-        ['mkMapPriceMin', 'mkMapPriceMax', 'mkMapAreaMin', 'mkMapAreaMax'].forEach((id) => {
+        [
+            'mkMapPriceMin', 'mkMapPriceMax', 'mkMapDepositMin', 'mkMapDepositMax',
+            'mkMapRentMin', 'mkMapRentMax', 'mkMapAreaMin', 'mkMapAreaMax',
+            'mkMapYearMin', 'mkMapYearMax',
+        ].forEach((id) => {
             const el = document.getElementById(id);
             bindFormattedNumericInput(el, { onChange: debouncedApply });
             el?.addEventListener('change', applyAdvancedFilters);
         });
-        ['mkMapRooms', 'mkMapFreshness', 'mkMapUnderOnly', 'mkMapShowRings'].forEach((id) => {
+        [
+            'mkMapRooms', 'mkMapFreshness', 'mkMapValueTier', 'mkMapTxMode',
+            'mkMapNeighborhood', 'mkMapElevator', 'mkMapParking', 'mkMapStorage',
+            'mkMapShowRings',
+        ].forEach((id) => {
             const el = document.getElementById(id);
             el?.addEventListener('change', applyAdvancedFilters);
             el?.addEventListener('input', debouncedApply);
         });
         syncFilterInputs();
+        if (countActiveMapFilters(filterState) > 0) {
+            refreshLayers();
+        }
     }
 
     function setupSplitList() {
@@ -3420,6 +3567,20 @@ function initMap(allMarkers, settings) {
         setListOpen(false);
     }
 
+    function redrawActiveHeatLayer() {
+        const heatLayer = layers[activeMode];
+        if (!heatLayer?._isHeatLayer) return;
+        if (heatLayer.setOptions && heatLayer._heatPalette) {
+            heatLayer.setOptions(computeHeatLayerOptions(
+                layers._visible || getFilteredMarkers(),
+                heatLayer._heatPalette,
+                map,
+                { weighted: heatLayer._heatWeighted },
+            ));
+        }
+        heatLayer.redraw?.();
+    }
+
     function refreshLayers() {
         const keepId = selectedMarkerId;
         if (layers[activeMode]) map.removeLayer(layers[activeMode]);
@@ -3432,6 +3593,9 @@ function initMap(allMarkers, settings) {
         if (keepId != null && markerRegistry[keepId]) selectMarker(keepId);
         updateMapChrome(activeMode);
         refreshListPanel();
+        if (activeMode.startsWith('heat_')) {
+            requestAnimationFrame(() => redrawActiveHeatLayer());
+        }
     }
 
     layers = buildLayers();
@@ -3558,29 +3722,23 @@ function initMap(allMarkers, settings) {
     }
 
     function setMapMode(mode) {
-        if (!layers[mode] || mode === activeMode) return;
-        map.removeLayer(layers[activeMode]);
+        if (mode === activeMode) return;
+        if (layers[activeMode]) map.removeLayer(layers[activeMode]);
         activeMode = mode;
-        map.addLayer(layers[activeMode]);
+        layers = buildLayers();
+        if (!layers[activeMode]) activeMode = 'markers';
+        map.addLayer(layers[activeMode] || layers.markers);
         syncMarkerRegistry();
         if (selectedMarkerId != null && markerRegistry[selectedMarkerId]) {
             selectMarker(selectedMarkerId);
         }
-        updateMapChrome(mode);
-        if (layers[activeMode]?._isHeatLayer) {
+        updateMapChrome(activeMode);
+        refreshListPanel();
+        if (activeMode.startsWith('heat_')) {
             setTimeout(() => {
                 map.invalidateSize();
-                const heatLayer = layers[activeMode];
-                if (heatLayer?.setOptions && heatLayer._heatPalette) {
-                    heatLayer.setOptions(computeHeatLayerOptions(
-                        layers._visible || getFilteredMarkers(),
-                        heatLayer._heatPalette,
-                        map,
-                        { weighted: heatLayer._heatWeighted },
-                    ));
-                }
-                heatLayer?.redraw?.();
-            }, 100);
+                redrawActiveHeatLayer();
+            }, 80);
         }
     }
 
@@ -3616,7 +3774,19 @@ function initMap(allMarkers, settings) {
         }
         if (activeMode === 'grid' || activeMode.startsWith('heat_')) {
             clearTimeout(zoomRefreshTimer);
-            zoomRefreshTimer = setTimeout(() => refreshLayers(), 120);
+            zoomRefreshTimer = setTimeout(() => {
+                if (activeMode.startsWith('heat_')) {
+                    redrawActiveHeatLayer();
+                } else {
+                    refreshLayers();
+                }
+            }, 120);
+        }
+    });
+
+    map.whenReady(() => {
+        if (activeMode.startsWith('heat_')) {
+            setTimeout(() => redrawActiveHeatLayer(), 200);
         }
     });
 

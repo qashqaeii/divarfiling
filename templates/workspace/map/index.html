@@ -9,7 +9,7 @@
 
 {% block content %}
 
-<link rel="stylesheet" href="{% static 'workspace/css/map-pro.css' %}?v=20">
+<link rel="stylesheet" href="{% static 'workspace/css/map-pro.css' %}?v=21">
 {% if is_multi_map %}
 <link rel="stylesheet" href="{% static 'workspace/css/multi-listings.css' %}?v=1">
 {% endif %}
@@ -261,6 +261,42 @@
 
             <div class="mk-map-advanced-grid">
 
+                {% if map_config.show_tx_filter %}
+                <div class="mk-map-advanced-field">
+
+                    <label class="mk-map-advanced-label" for="mkMapTxMode">نوع معامله</label>
+
+                    <select class="mk-map-advanced-input" id="mkMapTxMode">
+
+                        <option value="all">همه</option>
+
+                        <option value="sale">فروش</option>
+
+                        <option value="rent">اجاره</option>
+
+                    </select>
+
+                </div>
+                {% endif %}
+
+                <div class="mk-map-advanced-field">
+
+                    <label class="mk-map-advanced-label" for="mkMapNeighborhood">محله</label>
+
+                    <select class="mk-map-advanced-input" id="mkMapNeighborhood">
+
+                        <option value="">همه محله‌ها</option>
+
+                        {% for nb in map_config.neighborhoods %}
+
+                        <option value="{{ nb }}">{{ nb }}</option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
                 <div class="mk-map-advanced-field">
 
                     <label class="mk-map-advanced-label" for="mkMapPriceMin" id="mkMapPriceMinLabel">حداقل {{ map_config.filter_value_label }} <small>(میلیون)</small></label>
@@ -276,6 +312,42 @@
                     <input type="text" class="mk-map-advanced-input mk-filter-num" id="mkMapPriceMax" inputmode="numeric" placeholder="مثلاً ۹۰۰" autocomplete="off">
 
                 </div>
+
+                {% if map_config.show_deposit or map_config.is_mixed %}
+                <div class="mk-map-advanced-field mk-map-advanced-field--rent" id="mkMapDepositMinWrap">
+
+                    <label class="mk-map-advanced-label" for="mkMapDepositMin">حداقل ودیعه <small>(میلیون)</small></label>
+
+                    <input type="text" class="mk-map-advanced-input mk-filter-num" id="mkMapDepositMin" inputmode="numeric" placeholder="مثلاً ۲۰۰" autocomplete="off">
+
+                </div>
+
+                <div class="mk-map-advanced-field mk-map-advanced-field--rent" id="mkMapDepositMaxWrap">
+
+                    <label class="mk-map-advanced-label" for="mkMapDepositMax">حداکثر ودیعه <small>(میلیون)</small></label>
+
+                    <input type="text" class="mk-map-advanced-input mk-filter-num" id="mkMapDepositMax" inputmode="numeric" placeholder="مثلاً ۵۰۰" autocomplete="off">
+
+                </div>
+                {% endif %}
+
+                {% if map_config.show_rent or map_config.is_mixed %}
+                <div class="mk-map-advanced-field mk-map-advanced-field--rent" id="mkMapRentMinWrap">
+
+                    <label class="mk-map-advanced-label" for="mkMapRentMin">حداقل اجاره <small>(میلیون)</small></label>
+
+                    <input type="text" class="mk-map-advanced-input mk-filter-num" id="mkMapRentMin" inputmode="numeric" placeholder="مثلاً ۱۵" autocomplete="off">
+
+                </div>
+
+                <div class="mk-map-advanced-field mk-map-advanced-field--rent" id="mkMapRentMaxWrap">
+
+                    <label class="mk-map-advanced-label" for="mkMapRentMax">حداکثر اجاره <small>(میلیون)</small></label>
+
+                    <input type="text" class="mk-map-advanced-input mk-filter-num" id="mkMapRentMax" inputmode="numeric" placeholder="مثلاً ۴۰" autocomplete="off">
+
+                </div>
+                {% endif %}
 
                 <div class="mk-map-advanced-field">
 
@@ -315,6 +387,22 @@
 
                 <div class="mk-map-advanced-field">
 
+                    <label class="mk-map-advanced-label" for="mkMapYearMin">سال ساخت از</label>
+
+                    <input type="text" class="mk-map-advanced-input mk-filter-num" id="mkMapYearMin" inputmode="numeric" placeholder="مثلاً ۱۳۹۵" autocomplete="off">
+
+                </div>
+
+                <div class="mk-map-advanced-field">
+
+                    <label class="mk-map-advanced-label" for="mkMapYearMax">سال ساخت تا</label>
+
+                    <input type="text" class="mk-map-advanced-input mk-filter-num" id="mkMapYearMax" inputmode="numeric" placeholder="مثلاً ۱۴۰۳" autocomplete="off">
+
+                </div>
+
+                <div class="mk-map-advanced-field">
+
                     <label class="mk-map-advanced-label" for="mkMapFreshness">تازگی</label>
 
                     <select class="mk-map-advanced-input" id="mkMapFreshness">
@@ -331,15 +419,49 @@
 
                 </div>
 
+                <div class="mk-map-advanced-field">
+
+                    <label class="mk-map-advanced-label" for="mkMapValueTier">ارزش نسبت به بازار</label>
+
+                    <select class="mk-map-advanced-input" id="mkMapValueTier">
+
+                        <option value="all">همه</option>
+
+                        <option value="below">زیر بازار</option>
+
+                        <option value="fair">متعارف</option>
+
+                        <option value="above">بالای بازار</option>
+
+                    </select>
+
+                </div>
+
             </div>
 
             <div class="mk-map-advanced-actions">
 
                 <label class="mk-map-advanced-check">
 
-                    <input type="checkbox" id="mkMapUnderOnly">
+                    <input type="checkbox" id="mkMapElevator">
 
-                    <span>فقط زیر بازار</span>
+                    <span>آسانسور</span>
+
+                </label>
+
+                <label class="mk-map-advanced-check">
+
+                    <input type="checkbox" id="mkMapParking">
+
+                    <span>پارکینگ</span>
+
+                </label>
+
+                <label class="mk-map-advanced-check">
+
+                    <input type="checkbox" id="mkMapStorage">
+
+                    <span>انباری</span>
 
                 </label>
 

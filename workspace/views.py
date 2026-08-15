@@ -1451,6 +1451,14 @@ def _build_map_context(
     tx = transaction_profile(transaction_type)
     is_rent_only = bool(tx['is_rent'] and not tx['is_sale'] and not tx['is_mixed'])
     filter_value_label = 'رهن کامل' if is_rent_only else 'قیمت'
+    tx_modes = {
+        transaction_profile(d.transaction_type)['mode']
+        for d in datasets
+    }
+    show_tx_filter = len(datasets) > 1 and (
+        'ترکیبی' in tx_modes or ({'فروش', 'اجاره'} <= tx_modes)
+    )
+    neighborhoods = get_neighborhoods_qs(geo_listings)
     map_config = {
         'map_cluster': settings.map_cluster,
         'map_heatmap': settings.map_heatmap,
@@ -1460,6 +1468,16 @@ def _build_map_context(
         'datasetName': map_title,
         'datasetCity': dataset_city or '',
         'is_rent': is_rent_only,
+        'is_mixed': bool(tx.get('is_mixed')),
+        'show_price': bool(tx.get('show_price')),
+        'show_deposit': bool(tx.get('show_deposit')),
+        'show_rent': bool(tx.get('show_rent')),
+        'show_tx_filter': show_tx_filter,
+        'neighborhoods': neighborhoods,
+        'filters': {
+            k: v for k, v in filters.items()
+            if v not in ('', None) and k != 'sort'
+        },
         'filter_value_label': filter_value_label,
         'filterValueLabel': filter_value_label,
         'is_multi': len(datasets) > 1,

@@ -523,6 +523,7 @@ def map_markers(
         to_jalali_display,
         transaction_profile,
     )
+    from workspace.services.features import extract_listing_features
     from workspace.services.formatting import format_area, format_toman
     from workspace.services.valuation import compute_expected_values, value_verdict
 
@@ -586,6 +587,10 @@ def map_markers(
             if dep or rent:
                 full_dep = int(dep + rent * 30)
 
+        ds_tx = transaction_profile(getattr(lst.dataset, 'transaction_type', '') or transaction_type)
+        ds_tx_mode = 'rent' if ds_tx['is_rent'] and not ds_tx['is_sale'] else 'sale'
+        feat = extract_listing_features(lst)
+
         if val_mode == 'rent':
             filter_value = full_dep or lst.deposit or lst.rent or 0
         elif tx.get('is_mixed'):
@@ -635,5 +640,12 @@ def map_markers(
             'filter_value': filter_value,
             'value': lst.price or full_dep or lst.rent or lst.deposit or 0,
             'pps': lst.price_per_sqm or 0,
+            'deposit': lst.deposit or 0,
+            'rent': lst.rent or 0,
+            'tx_mode': ds_tx_mode,
+            'build_year': feat.get('build_year'),
+            'elevator': feat.get('elevator'),
+            'parking': feat.get('parking'),
+            'storage': feat.get('storage'),
         })
     return markers

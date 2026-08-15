@@ -3387,7 +3387,7 @@ body.ws-body::before { opacity: 0.45; }
 .mk-col-size { white-space: nowrap; font-size: 0.7rem; }
 .mk-col-opened { font-size: 0.7rem; }
 
-.mk-data-table-filing .mk-col-actions { min-width: 8.5rem; }
+.mk-data-table-filing .mk-col-actions { min-width: 9.5rem; }
 .mk-col-check {
     width: 2rem;
     text-align: center;
@@ -4592,9 +4592,13 @@ button.mk-ds-card-act {
 .mk-hub-filing .mk-col-num,
 .mk-data-table-filing .mk-col-num { width: 7%; }
 .mk-hub-filing .mk-col-date,
-.mk-data-table-filing .mk-col-date { width: 12%; }
+.mk-data-table-filing .mk-col-date { width: 11%; }
 .mk-hub-filing .mk-col-actions,
-.mk-data-table-filing .mk-col-actions { width: 4.5rem; }
+.mk-data-table-filing .mk-col-actions {
+    width: 9.5rem;
+    min-width: 9.5rem;
+    overflow: visible;
+}
 
 .mk-hub-filing .mk-file-text,
 .mk-data-table-filing .mk-file-text {

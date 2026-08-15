@@ -2064,13 +2064,10 @@ function heatColorAt(t, palette = 'density') {
 function buildLeafletHeatGradient(palette) {
     const stops = HEAT_COLOR_STOPS[palette] || HEAT_COLOR_STOPS.density;
     const gradient = {};
+    gradient[0.1] = stops[0][1];
     stops.forEach(([t, hex]) => {
-        if (t >= 0.08) gradient[t] = hex;
+        gradient[t] = hex;
     });
-    // simpleheat با رنگ hex شفاف کار می‌کند؛ شروع گرادیان از ۰.۲۵
-    if (!Object.keys(gradient).some(k => parseFloat(k) <= 0.25)) {
-        gradient[0.25] = stops[0][1];
-    }
     return gradient;
 }
 
@@ -2106,26 +2103,28 @@ function mapHasView(map) {
 function computeHeatLayerOptions(source, palette, map, { weighted = false } = {}) {
     const count = source.length;
     const logFactor = Math.log10(Math.max(count, 10));
-    let radius = Math.min(72, Math.max(36, Math.round(32 + logFactor * 6)));
+    let radius = Math.min(80, Math.max(38, Math.round(34 + logFactor * 6)));
+    if (count < 60) radius = Math.max(radius, 52);
     if (mapHasView(map) && source.length > 1 && window.L) {
         try {
             const bounds = L.latLngBounds(source.map(m => [m.lat, m.lng]));
             const sw = map.latLngToContainerPoint(bounds.getSouthWest());
             const ne = map.latLngToContainerPoint(bounds.getNorthEast());
             const span = Math.max(Math.abs(ne.x - sw.x), Math.abs(ne.y - sw.y), 1);
-            const adaptive = Math.round(span * 0.055);
-            radius = Math.min(80, Math.max(radius, adaptive));
+            const adaptive = Math.round(span * 0.065);
+            radius = Math.min(90, Math.max(radius, adaptive));
         } catch (e) { /* map not ready yet */ }
     }
-    const blur = Math.round(radius * 0.82);
-    const maxZoom = map?.getMaxZoom?.() || 18;
-    const maxIntensity = weighted ? 0.85 : 0.65;
+    const blur = Math.round(radius * 0.85);
+    // leaflet-heat: شدت *= 2^-(maxZoom - zoom فعلی) — maxZoom باید زوم فعلی باشد
+    const zoom = mapHasView(map) ? map.getZoom() : 13;
+    const maxZoom = zoom;
     return {
         radius,
         blur,
-        minOpacity: 0.45,
+        minOpacity: 0.38,
         maxZoom,
-        max: maxIntensity,
+        max: 1.0,
         gradient: buildLeafletHeatGradient(palette),
     };
 }
@@ -3030,8 +3029,8 @@ function initMap(allMarkers, settings) {
 
         const heatData = source.map((m, i) => {
             let intensity = weighted ? intensities[i] : 1.0;
-            if (!weighted && source.length <= 120) {
-                intensity = Math.min(1.8, 1.0 + 24 / Math.max(source.length, 1));
+            if (!weighted) {
+                intensity = Math.min(2.5, 1.2 + 30 / Math.max(source.length, 1));
             }
             return [m.lat, m.lng, intensity];
         });
@@ -3041,12 +3040,21 @@ function initMap(allMarkers, settings) {
         layer._isHeatLayer = true;
         layer._heatPalette = palette;
         layer._heatWeighted = weighted;
+        layer._heatSource = source;
         layer.on('add', () => {
             requestAnimationFrame(() => {
                 const canvas = layer._canvas;
-                if (canvas) canvas.style.zIndex = '450';
+                if (canvas) {
+                    canvas.style.zIndex = '650';
+                    if (canvas.parentNode) canvas.parentNode.appendChild(canvas);
+                }
                 if (layer.setOptions) {
-                    layer.setOptions(computeHeatLayerOptions(source, palette, map, { weighted }));
+                    layer.setOptions(computeHeatLayerOptions(
+                        layer._heatSource || source,
+                        palette,
+                        map,
+                        { weighted },
+                    ));
                 }
                 layer.redraw?.();
             });
@@ -3581,9 +3589,10 @@ function initMap(allMarkers, settings) {
     function redrawActiveHeatLayer() {
         const heatLayer = layers[activeMode];
         if (!heatLayer?._isHeatLayer) return;
+        const source = heatLayer._heatSource || layers._visible || getFilteredMarkers();
         if (heatLayer.setOptions && heatLayer._heatPalette) {
             heatLayer.setOptions(computeHeatLayerOptions(
-                layers._visible || getFilteredMarkers(),
+                source,
                 heatLayer._heatPalette,
                 map,
                 { weighted: heatLayer._heatWeighted },
@@ -3794,7 +3803,14 @@ function initMap(allMarkers, settings) {
                 } else {
                     refreshLayers();
                 }
-            }, 120);
+            }, 80);
+        }
+    });
+
+    map.on('moveend', () => {
+        if (activeMode.startsWith('heat_')) {
+            clearTimeout(zoomRefreshTimer);
+            zoomRefreshTimer = setTimeout(() => redrawActiveHeatLayer(), 80);
         }
     });
 

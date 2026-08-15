@@ -1817,8 +1817,10 @@
 
 /* ── Heatmap visualization polish ── */
 .mk-map-pro .mk-map-stage[data-heat-mode="true"] .leaflet-overlay-pane canvas.leaflet-heatmap-layer {
-    z-index: 450;
+    z-index: 650 !important;
     pointer-events: none;
+    mix-blend-mode: screen;
+    opacity: 0.92;
 }
 
 .mk-map-pro .mk-map-legend.mk-map-legend--heat .mk-map-legend-badge {

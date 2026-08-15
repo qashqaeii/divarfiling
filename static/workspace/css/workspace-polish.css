@@ -492,6 +492,37 @@ body.ws-body {
     background: rgba(124, 58, 237, 0.06);
 }
 
+/* Filing table — compact ghost actions (۵ دکمه در یک ردیف) */
+.mk-filing-pro .mk-data-table-filing .mk-row-btn {
+    width: 1.375rem;
+    height: 1.375rem;
+    min-width: 1.375rem;
+    min-height: 1.375rem;
+    padding: 0;
+    border-radius: 5px;
+    font-size: 0.5625rem;
+    line-height: 1;
+    border: 1px solid color-mix(in srgb, var(--ws-border) 55%, transparent);
+    background: color-mix(in srgb, var(--ws-surface-2) 65%, var(--ws-surface));
+    color: var(--ws-text-muted);
+    box-shadow: none;
+}
+.mk-filing-pro .mk-data-table-filing .mk-row-btn:hover {
+    transform: none;
+    border-color: color-mix(in srgb, var(--ws-primary) 35%, var(--ws-border));
+    background: var(--ws-primary-soft);
+    color: var(--ws-primary);
+}
+.mk-filing-pro .mk-data-table-filing .mk-row-btn-danger:hover {
+    border-color: color-mix(in srgb, #dc2626 40%, var(--ws-border));
+    background: rgba(220, 38, 38, 0.08);
+    color: #dc2626;
+}
+.mk-filing-pro .mk-data-table-filing .mk-row-btn--open {
+    color: var(--ws-primary);
+    background: color-mix(in srgb, var(--ws-primary-soft) 80%, var(--ws-surface));
+}
+
 /* Badges — standardized */
 .mk-tx-badge,
 .crm-status-badge,

@@ -68,7 +68,10 @@
         </span>
     </td>
     <td class="mk-col-date mk-date mk-filing-desk-only" data-label="بروزرسانی" data-sort-value="{{ ds.updated_at|date:'U' }}">
-        {{ ds.updated_at|ws_jalali_datetime }}
+        <div class="mk-date-compact">
+            <span class="mk-date-compact__d">{{ ds.updated_at|ws_jalali_date }}</span>
+            <span class="mk-date-compact__t">{{ ds.updated_at|ws_time }}</span>
+        </div>
     </td>
     <td class="mk-col-actions" data-label="">
         <div class="mk-row-actions">

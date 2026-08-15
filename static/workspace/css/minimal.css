@@ -2502,8 +2502,8 @@ body.ws-body::before { opacity: 0.45; }
 .mk-col-date { white-space: nowrap; }
 .mk-col-actions { width: 1%; white-space: nowrap; }
 .mk-data-table-filing .mk-col-actions {
-    width: 11rem;
-    min-width: 11rem;
+    width: 7.75rem;
+    min-width: 7.75rem;
     white-space: nowrap;
 }
 .mk-num {
@@ -3049,22 +3049,43 @@ body.ws-body::before { opacity: 0.45; }
     -webkit-overflow-scrolling: touch;
 }
 .mk-filing-pro .mk-data-table-filing {
-    min-width: 980px;
+    min-width: 920px;
 }
 .mk-filing-pro .mk-data-table-filing .mk-col-date {
-    padding-inline-end: 0.65rem;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 9.5rem;
+    width: 7%;
+    min-width: 4.75rem;
+    padding-inline-end: 0.45rem;
+    overflow: visible;
+    vertical-align: middle;
+}
+.mk-date-compact {
+    display: flex;
+    flex-direction: column;
+    gap: 0.08rem;
+    line-height: 1.2;
+    white-space: nowrap;
+}
+.mk-date-compact__d {
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: var(--ws-text-secondary);
+    font-variant-numeric: tabular-nums;
+}
+.mk-date-compact__t {
+    font-size: 0.6rem;
+    color: var(--ws-text-muted);
+    font-variant-numeric: tabular-nums;
 }
 .mk-filing-pro .mk-data-table-filing .mk-col-actions {
-    width: 11rem;
-    min-width: 11rem;
-    padding-inline-start: 0.4rem;
+    width: 7.75rem;
+    min-width: 7.75rem;
+    max-width: 7.75rem;
+    padding-inline: 0.3rem;
 }
 .mk-filing-pro .mk-data-table-filing .mk-row-actions {
     flex-shrink: 0;
     justify-content: flex-start;
+    gap: 0.12rem;
 }
 .mk-filing-pro .mk-data-table-filing thead th {
     font-size: 0.65rem;
@@ -3412,7 +3433,7 @@ body.ws-body::before { opacity: 0.45; }
 .mk-col-size { white-space: nowrap; font-size: 0.7rem; }
 .mk-col-opened { font-size: 0.7rem; }
 
-.mk-data-table-filing .mk-col-actions { min-width: 11rem; }
+.mk-data-table-filing .mk-col-actions { min-width: 7.75rem; }
 .mk-col-check {
     width: 2rem;
     text-align: center;
@@ -4599,7 +4620,7 @@ button.mk-ds-card-act {
 }
 .mk-hub-filing .mk-col-file,
 .mk-data-table-filing .mk-col-file {
-    width: 30%;
+    width: 27%;
     padding-inline-end: 0.35rem;
 }
 .mk-hub-filing .mk-col-location,
@@ -4609,19 +4630,23 @@ button.mk-ds-card-act {
 }
 .mk-hub-filing .mk-col-subject,
 .mk-data-table-filing .mk-col-subject {
-    width: 10%;
+    width: 8%;
     padding-inline-start: 0.3rem;
 }
 .mk-hub-filing .mk-col-tx,
-.mk-data-table-filing .mk-col-tx { width: 9%; }
+.mk-data-table-filing .mk-col-tx { width: 8%; }
 .mk-hub-filing .mk-col-num,
-.mk-data-table-filing .mk-col-num { width: 7%; }
+.mk-data-table-filing .mk-col-num { width: 6%; }
 .mk-hub-filing .mk-col-date,
-.mk-data-table-filing .mk-col-date { width: 10%; }
+.mk-data-table-filing .mk-col-date {
+    width: 7%;
+    min-width: 4.75rem;
+}
 .mk-hub-filing .mk-col-actions,
 .mk-data-table-filing .mk-col-actions {
-    width: 11rem;
-    min-width: 11rem;
+    width: 7.75rem;
+    min-width: 7.75rem;
+    max-width: 7.75rem;
 }
 
 .mk-hub-filing .mk-file-text,

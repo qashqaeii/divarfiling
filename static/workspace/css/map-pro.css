@@ -1816,11 +1816,17 @@
 }
 
 /* ── Heatmap visualization polish ── */
+.mk-map-pro .mk-map-stage[data-heat-mode="true"] .mk-heat-canvas,
 .mk-map-pro .mk-map-stage[data-heat-mode="true"] .leaflet-overlay-pane canvas.leaflet-heatmap-layer {
     z-index: 650 !important;
     pointer-events: none;
-    mix-blend-mode: screen;
-    opacity: 0.92;
+    opacity: 0.9;
+}
+
+.mk-map-pro .leaflet-mkHeatPane-pane,
+.mk-map-pro .leaflet-pane.mkHeatPane {
+    z-index: 650 !important;
+    pointer-events: none !important;
 }
 
 .mk-map-pro .mk-map-legend.mk-map-legend--heat .mk-map-legend-badge {

@@ -2129,6 +2129,123 @@ function computeHeatLayerOptions(source, palette, map, { weighted = false } = {}
     };
 }
 
+function rgbaFromHex(hex, alpha) {
+    const [r, g, b] = parseHexRgb(hex);
+    return `rgba(${r},${g},${b},${alpha})`;
+}
+
+/** لایه هیت‌مپ اختصاصی — جایگزین leaflet-heat که روی برخی مرورگرها درست رندر نمی‌شود */
+function createMkHeatLayer(points, map, { palette = 'density', weighted = false, source = null, radius = 50 } = {}) {
+    if (!window.L) return L.layerGroup();
+
+    const MkHeatLayer = L.Layer.extend({
+        initialize(pts, opts) {
+            this._points = pts || [];
+            this._opts = opts || {};
+            this._radius = opts.radius || 50;
+            this._palette = opts.palette || 'density';
+            this._weighted = !!opts.weighted;
+            this._source = opts.source || null;
+        },
+        onAdd(m) {
+            this._map = m;
+            if (!m.getPane('mkHeatPane')) {
+                const pane = m.createPane('mkHeatPane');
+                pane.style.zIndex = '650';
+                pane.style.pointerEvents = 'none';
+            }
+            this._canvas = L.DomUtil.create('canvas', 'leaflet-heatmap-layer mk-heat-canvas');
+            this._canvas.style.pointerEvents = 'none';
+            m.getPane('mkHeatPane').appendChild(this._canvas);
+            this._onReset = () => this._reset();
+            m.on('moveend zoomend resize viewreset', this._onReset, this);
+            this._reset();
+        },
+        onRemove(m) {
+            m.off('moveend zoomend resize viewreset', this._onReset, this);
+            if (this._canvas?.parentNode) this._canvas.parentNode.removeChild(this._canvas);
+            this._canvas = null;
+        },
+        setOptions(opts = {}) {
+            if (opts.radius != null) this._radius = opts.radius;
+            if (opts.palette) this._palette = opts.palette;
+            if (opts.gradient) { /* گرادیان در paint محاسبه می‌شود */ }
+            this._reset();
+            return this;
+        },
+        setLatLngs(pts) {
+            this._points = pts || [];
+            this._reset();
+            return this;
+        },
+        redraw() {
+            this._reset();
+            return this;
+        },
+        _reset() {
+            if (!this._map || !this._canvas) return;
+            const m = this._map;
+            const size = m.getSize();
+            const topLeft = m.containerPointToLayerPoint([0, 0]);
+            L.DomUtil.setPosition(this._canvas, topLeft);
+            const w = Math.max(1, size.x | 0);
+            const h = Math.max(1, size.y | 0);
+            if (this._canvas.width !== w) this._canvas.width = w;
+            if (this._canvas.height !== h) this._canvas.height = h;
+            this._paint();
+        },
+        _paint() {
+            const ctx = this._canvas.getContext('2d');
+            if (!ctx) return;
+            const w = this._canvas.width;
+            const h = this._canvas.height;
+            ctx.clearRect(0, 0, w, h);
+            const m = this._map;
+            const points = this._points;
+            if (!points.length) return;
+
+            const topLeft = m.containerPointToLayerPoint([0, 0]);
+            const radius = this._radius || 50;
+            const palette = this._palette || 'density';
+
+            ctx.save();
+            ctx.globalCompositeOperation = 'lighter';
+            points.forEach((pt) => {
+                const lat = Number(pt[0]);
+                const lng = Number(pt[1]);
+                if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+                const raw = Number(pt[2]) || 1;
+                const layerPt = m.latLngToLayerPoint([lat, lng]);
+                const x = layerPt.x - topLeft.x;
+                const y = layerPt.y - topLeft.y;
+                if (x < -radius || y < -radius || x > w + radius || y > h + radius) return;
+
+                const t = this._weighted
+                    ? Math.max(0.2, Math.min(1, raw))
+                    : Math.max(0.4, Math.min(1, raw / 2.2));
+                const color = heatColorAt(t, palette);
+                const grad = ctx.createRadialGradient(x, y, 0, x, y, radius);
+                grad.addColorStop(0, rgbaFromHex(color, 0.7));
+                grad.addColorStop(0.3, rgbaFromHex(color, 0.42));
+                grad.addColorStop(0.65, rgbaFromHex(color, 0.16));
+                grad.addColorStop(1, rgbaFromHex(color, 0));
+                ctx.fillStyle = grad;
+                ctx.beginPath();
+                ctx.arc(x, y, radius, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            ctx.restore();
+        },
+    });
+
+    const layer = new MkHeatLayer(points, { palette, weighted, source, radius });
+    layer._isHeatLayer = true;
+    layer._heatPalette = palette;
+    layer._heatWeighted = weighted;
+    layer._heatSource = source;
+    return layer;
+}
+
 function valueTierColor(tier) {
     return MAP_VALUE_TIER_COLORS[tier] || MAP_VALUE_TIER_COLORS[0];
 }
@@ -2806,7 +2923,7 @@ function initMap(allMarkers, settings) {
     const useCluster = settings?.map_cluster !== false && window.L.markerClusterGroup;
 
     let sellerFilter = 'all';
-    const heatLayerReady = typeof L.heatLayer === 'function';
+    const heatLayerReady = !!window.L;
     let activeMode = settings?.map_heatmap && heatLayerReady ? 'heat_density' : 'markers';
     let showRings = false;
     let layers = {};
@@ -3011,10 +3128,10 @@ function initMap(allMarkers, settings) {
     function buildHeatLayer(source, { palette = 'density', valueKey = null, perSqm = false } = {}) {
         const emptyLayer = L.layerGroup();
         if (!source.length) return { layer: emptyLayer, stats: {} };
-        if (!L.heatLayer) {
+        if (!window.L) {
             return {
                 layer: emptyLayer,
-                stats: { rangeText: 'کتابخانه هیت‌مپ بارگذاری نشده — صفحه را رفرش کنید' },
+                stats: { rangeText: 'نقشه بارگذاری نشده — صفحه را رفرش کنید' },
             };
         }
 
@@ -3036,28 +3153,11 @@ function initMap(allMarkers, settings) {
         });
 
         const heatOpts = computeHeatLayerOptions(source, palette, map, { weighted });
-        const layer = L.heatLayer(heatData, heatOpts);
-        layer._isHeatLayer = true;
-        layer._heatPalette = palette;
-        layer._heatWeighted = weighted;
-        layer._heatSource = source;
-        layer.on('add', () => {
-            requestAnimationFrame(() => {
-                const canvas = layer._canvas;
-                if (canvas) {
-                    canvas.style.zIndex = '650';
-                    if (canvas.parentNode) canvas.parentNode.appendChild(canvas);
-                }
-                if (layer.setOptions) {
-                    layer.setOptions(computeHeatLayerOptions(
-                        layer._heatSource || source,
-                        palette,
-                        map,
-                        { weighted },
-                    ));
-                }
-                layer.redraw?.();
-            });
+        const layer = createMkHeatLayer(heatData, map, {
+            palette,
+            weighted,
+            source,
+            radius: heatOpts.radius,
         });
 
         let rangeText = '';
@@ -3590,14 +3690,13 @@ function initMap(allMarkers, settings) {
         const heatLayer = layers[activeMode];
         if (!heatLayer?._isHeatLayer) return;
         const source = heatLayer._heatSource || layers._visible || getFilteredMarkers();
-        if (heatLayer.setOptions && heatLayer._heatPalette) {
-            heatLayer.setOptions(computeHeatLayerOptions(
-                source,
-                heatLayer._heatPalette,
-                map,
-                { weighted: heatLayer._heatWeighted },
-            ));
-        }
+        const opts = computeHeatLayerOptions(
+            source,
+            heatLayer._heatPalette,
+            map,
+            { weighted: heatLayer._heatWeighted },
+        );
+        heatLayer.setOptions?.({ radius: opts.radius });
         heatLayer.redraw?.();
     }
 
@@ -3642,16 +3741,7 @@ function initMap(allMarkers, settings) {
         map.invalidateSize();
         mapPro?.updateZoomBadge?.();
         if (layers[activeMode]?._isHeatLayer) {
-            const heatLayer = layers[activeMode];
-            if (heatLayer?.setOptions && heatLayer._heatPalette) {
-                heatLayer.setOptions(computeHeatLayerOptions(
-                    layers._visible || getFilteredMarkers(),
-                    heatLayer._heatPalette,
-                    map,
-                    { weighted: heatLayer._heatWeighted },
-                ));
-            }
-            heatLayer?.redraw?.();
+            redrawActiveHeatLayer();
         }
     }, 150);
 

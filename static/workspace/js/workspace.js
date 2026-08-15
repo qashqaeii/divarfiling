@@ -2061,83 +2061,9 @@ function heatColorAt(t, palette = 'density') {
     return stops[stops.length - 1][1];
 }
 
-function buildLeafletHeatGradient(palette) {
-    const stops = HEAT_COLOR_STOPS[palette] || HEAT_COLOR_STOPS.density;
-    const gradient = {};
-    gradient[0.1] = stops[0][1];
-    stops.forEach(([t, hex]) => {
-        gradient[t] = hex;
-    });
-    return gradient;
-}
-
-function cssGradientFromStops(palette) {
-    const stops = HEAT_COLOR_STOPS[palette] || HEAT_COLOR_STOPS.density;
-    const parts = stops.map(([t, c]) => `${c} ${Math.round(t * 100)}%`);
-    return `linear-gradient(90deg, ${parts.join(', ')})`;
-}
-
-function normalizeHeatValues(values) {
-    const positives = values.filter(v => v > 0);
-    const minVal = positives.length ? Math.min(...positives) : 0;
-    const maxVal = positives.length ? Math.max(...positives) : 0;
-    return values.map((v) => {
-        if (!v || v <= 0) return 0.12;
-        if (maxVal <= minVal) return 0.55;
-        return 0.15 + 0.85 * ((v - minVal) / (maxVal - minVal));
-    });
-}
-
-function mapHasView(map) {
-    if (!map || typeof map.getZoom !== 'function') return false;
-    try {
-        if (map._loaded === false) return false;
-        const z = map.getZoom();
-        const c = map.getCenter();
-        return Number.isFinite(z) && c && Number.isFinite(c.lat) && Number.isFinite(c.lng);
-    } catch (e) {
-        return false;
-    }
-}
-
-function computeHeatLayerOptions(source, palette, map, { weighted = false } = {}) {
-    const count = source.length;
-    const logFactor = Math.log10(Math.max(count, 10));
-    let radius = Math.min(80, Math.max(38, Math.round(34 + logFactor * 6)));
-    if (count < 60) radius = Math.max(radius, 52);
-    if (mapHasView(map) && source.length > 1 && window.L) {
-        try {
-            const bounds = L.latLngBounds(source.map(m => [m.lat, m.lng]));
-            const sw = map.latLngToContainerPoint(bounds.getSouthWest());
-            const ne = map.latLngToContainerPoint(bounds.getNorthEast());
-            const span = Math.max(Math.abs(ne.x - sw.x), Math.abs(ne.y - sw.y), 1);
-            const adaptive = Math.round(span * 0.065);
-            radius = Math.min(90, Math.max(radius, adaptive));
-        } catch (e) { /* map not ready yet */ }
-    }
-    const blur = Math.round(radius * 0.85);
-    // leaflet-heat: شدت *= 2^-(maxZoom - zoom فعلی) — maxZoom باید زوم فعلی باشد
-    const zoom = mapHasView(map) ? map.getZoom() : 13;
-    const maxZoom = zoom;
-    return {
-        radius,
-        blur,
-        minOpacity: 0.42,
-        maxZoom,
-        max: 1.0,
-        gradient: buildLeafletHeatGradient(palette),
-    };
-}
-
 function rgbaFromHex(hex, alpha) {
     const [r, g, b] = parseHexRgb(hex);
     return `rgba(${r},${g},${b},${alpha})`;
-}
-
-/** شعاع هاله هیت‌مپ بر حسب زوم نقشه (پیکسل) */
-function heatGlowRadius(map) {
-    const z = map?.getZoom?.() ?? 13;
-    return Math.max(22, Math.min(62, Math.round(64 - z * 2.35)));
 }
 
 function valueTierColor(tier) {
@@ -2357,33 +2283,23 @@ function buildMapLegendScale(mode, stats) {
         value: 'price',
         full_deposit: 'full-deposit',
         grid: 'grid',
-        heat_density: 'heat-density',
-        heat_price: 'heat-price',
-        heat_pps: 'heat-pps',
     }[mode] || 'price';
 
     const labels = {
         value: { low: 'ارزان', high: 'گران' },
         full_deposit: { low: 'رهن کم', high: 'رهن زیاد' },
         grid: { low: 'کم', high: `${stats?.maxCount ?? '…'}` },
-        heat_density: { low: 'کم', high: 'زیاد' },
-        heat_price: { low: 'ارزان', high: 'گران' },
-        heat_pps: { low: 'ارزان/متر', high: 'گران/متر' },
     }[mode] || { low: 'ارزان', high: 'گران' };
 
     const caption = stats?.rangeText
         ? `<span class="mk-map-legend-caption">${stats.rangeText}</span>`
         : '';
 
-    const inlineStyle = ['heat_density', 'heat_price', 'heat_pps'].includes(mode)
-        ? ` style="background:${cssGradientFromStops(mode.replace('heat_', ''))}"`
-        : '';
-
     return `<div class="mk-map-legend-scale mk-map-legend-scale--inline">
         <div class="mk-map-legend-scale-row">
             <span class="mk-map-legend-scale-end">${labels.low}</span>
             <div class="mk-map-legend-scale-track" aria-hidden="true">
-                <span class="mk-map-legend-scale-bar mk-map-legend-scale-bar--${barClass}"${inlineStyle}></span>
+                <span class="mk-map-legend-scale-bar mk-map-legend-scale-bar--${barClass}"></span>
             </div>
             <span class="mk-map-legend-scale-end">${labels.high}</span>
         </div>
@@ -2504,9 +2420,6 @@ const MAP_MODE_LABELS = {
     grid: 'شبکه',
     market: 'بازار',
     full_deposit: 'رهن کامل',
-    heat_density: 'هیت تراکم',
-    heat_price: 'هیت قیمت',
-    heat_pps: 'هیت متر',
 };
 
 function getDefaultBasemapId() {
@@ -2965,10 +2878,6 @@ function initMap(allMarkers, settings) {
     function focusMarkerFromList(m) {
         if (!m) return;
         const entry = markerRegistry[m.id];
-        if (!entry && activeMode.startsWith('heat_')) {
-            map.flyTo([m.lat, m.lng], Math.min(19, focusMaxZoom + 1), { duration: 0.5 });
-            return;
-        }
         if (!entry) return;
 
         highlightedMarkerId = m.id;
@@ -3016,101 +2925,6 @@ function initMap(allMarkers, settings) {
 
     function gridFillColor(t) {
         return heatColorAt(t, 'density');
-    }
-
-    function buildHeatLayer(source, { palette = 'density', valueKey = null, perSqm = false } = {}) {
-        const emptyLayer = L.layerGroup();
-        if (!source.length) return { layer: emptyLayer, stats: {} };
-        if (!window.L) {
-            return {
-                layer: emptyLayer,
-                stats: { rangeText: 'نقشه بارگذاری نشده — صفحه را رفرش کنید' },
-            };
-        }
-
-        const weighted = palette !== 'density';
-        const values = weighted
-            ? source.map(m => Number(m[valueKey] || m.filter_value || m.price || 0) || 0)
-            : [];
-        const intensities = weighted ? normalizeHeatValues(values) : null;
-        const positives = weighted ? values.filter(v => v > 0) : [];
-        const minVal = positives.length ? Math.min(...positives) : 0;
-        const maxVal = positives.length ? Math.max(...positives) : 0;
-
-        const latlngs = [];
-        source.forEach((m, i) => {
-            const lat = Number(m.lat);
-            const lng = Number(m.lng);
-            if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
-            const intensity = weighted
-                ? Math.max(0.18, intensities[i] || 0.18)
-                : 0.72;
-            latlngs.push([lat, lng, intensity]);
-        });
-
-        function buildGlowFallback() {
-            const wrapper = L.layerGroup();
-            const paintGlow = () => {
-                wrapper.clearLayers();
-                const radius = heatGlowRadius(map) * 1.15;
-                const spreadBoost = Math.min(1, 24 / Math.max(source.length, 1));
-                source.forEach((m, i) => {
-                    const lat = Number(m.lat);
-                    const lng = Number(m.lng);
-                    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
-                    const t = weighted
-                        ? Math.max(0.22, intensities[i] || 0.22)
-                        : Math.min(1, 0.48 + spreadBoost);
-                    const color = heatColorAt(t, palette);
-                    wrapper.addLayer(L.circleMarker([lat, lng], {
-                        radius,
-                        fillColor: color,
-                        fillOpacity: weighted ? 0.58 : 0.52,
-                        color,
-                        weight: 0,
-                        opacity: 0,
-                        interactive: false,
-                    }));
-                });
-            };
-            paintGlow();
-            wrapper._isHeatLayer = true;
-            wrapper._rebuildGlow = paintGlow;
-            wrapper.redraw = paintGlow;
-            return wrapper;
-        }
-
-        let layer;
-        if (typeof L.heatLayer === 'function' && latlngs.length) {
-            const heatOpts = computeHeatLayerOptions(source, palette, map, { weighted });
-            layer = L.heatLayer(latlngs, heatOpts);
-            layer._isHeatLayer = true;
-            layer._heatPalette = palette;
-            layer._heatWeighted = weighted;
-            layer._heatSource = source;
-            layer._heatLatLngs = latlngs;
-            layer._rebuildGlow = function refreshHeatCanvas() {
-                if (!mapHasView(map)) return;
-                layer.setOptions(computeHeatLayerOptions(source, palette, map, { weighted }));
-                layer.redraw();
-            };
-        } else {
-            layer = buildGlowFallback();
-        }
-
-        let rangeText = '';
-        if (palette === 'density') {
-            rangeText = `${source.length.toLocaleString('fa-IR')} نقطه — هاله گرم‌تر = تراکم بیشتر`;
-        } else if (minVal && maxVal) {
-            rangeText = `از ${formatMapMoney(minVal, perSqm)} تا ${formatMapMoney(maxVal, perSqm)}`;
-        } else {
-            rangeText = 'داده کافی برای وزن‌دهی نیست';
-        }
-
-        return {
-            layer,
-            stats: { rangeText, minVal, maxVal },
-        };
     }
 
     function buildMarkerLayer(source, { colorMode = 'seller' } = {}) {
@@ -3323,17 +3137,11 @@ function initMap(allMarkers, settings) {
         const value = buildValueMarkerLayer(visible);
         const fullDeposit = buildValueMarkerLayer(visible, { valueKey: 'full_deposit' });
         const grid = buildGridLayer(visible);
-        const heatDensity = buildHeatLayer(visible, { palette: 'density' });
-        const heatPrice = buildHeatLayer(visible, { palette: 'price', valueKey: 'filter_value' });
-        const heatPps = buildHeatLayer(visible, { palette: 'pps', valueKey: 'pps', perSqm: true });
 
         layerStats = {
             value: value.stats,
             full_deposit: fullDeposit.stats,
             grid: grid.stats,
-            heat_density: heatDensity.stats,
-            heat_price: heatPrice.stats,
-            heat_pps: heatPps.stats,
             market: {
                 under: visible.filter(m => m.market_tier === 'under').length,
                 fair: visible.filter(m => m.market_tier === 'fair').length,
@@ -3347,9 +3155,6 @@ function initMap(allMarkers, settings) {
             value: value.layer,
             full_deposit: fullDeposit.layer,
             grid: grid.layer,
-            heat_density: heatDensity.layer,
-            heat_price: heatPrice.layer,
-            heat_pps: heatPps.layer,
             _count: visible.length,
             _visible: visible,
         };
@@ -3624,16 +3429,6 @@ function initMap(allMarkers, settings) {
         setListOpen(false);
     }
 
-    function redrawActiveHeatLayer() {
-        const heatLayer = layers[activeMode];
-        if (!heatLayer?._isHeatLayer) return;
-        if (typeof heatLayer._rebuildGlow === 'function') {
-            heatLayer._rebuildGlow();
-            return;
-        }
-        heatLayer.redraw?.();
-    }
-
     function refreshLayers() {
         const keepId = selectedMarkerId;
         if (layers[activeMode]) map.removeLayer(layers[activeMode]);
@@ -3646,9 +3441,6 @@ function initMap(allMarkers, settings) {
         if (keepId != null && markerRegistry[keepId]) selectMarker(keepId);
         updateMapChrome(activeMode);
         refreshListPanel();
-        if (activeMode.startsWith('heat_')) {
-            requestAnimationFrame(() => redrawActiveHeatLayer());
-        }
     }
 
     if (fullBounds.isValid()) {
@@ -3674,9 +3466,6 @@ function initMap(allMarkers, settings) {
     setTimeout(() => {
         map.invalidateSize();
         mapPro?.updateZoomBadge?.();
-        if (layers[activeMode]?._isHeatLayer) {
-            redrawActiveHeatLayer();
-        }
     }, 150);
 
     const hint = document.querySelector('.mk-map-overlay--hint');
@@ -3694,9 +3483,6 @@ function initMap(allMarkers, settings) {
         value: { badge: 'رنگ قیمت' },
         full_deposit: { badge: 'رهن کامل' },
         grid: { badge: 'شبکه' },
-        heat_density: { badge: 'هیت تراکم' },
-        heat_price: { badge: 'هیت قیمت' },
-        heat_pps: { badge: 'هیت متر' },
     };
 
     function marketLegendHtml() {
@@ -3730,20 +3516,16 @@ function initMap(allMarkers, settings) {
         </div>`;
     }
 
-    const filterValueLabel = settings?.filter_value_label || settings?.filterValueLabel || 'قیمت';
     const legendTemplates = {
         value: () => `${buildMapLegendScale('value', layerStats.value)}<span class="mk-map-legend-hint">کلیک روی هر نقطه برای جزئیات</span>`,
         full_deposit: () => `${buildMapLegendScale('full_deposit', layerStats.full_deposit)}<span class="mk-map-legend-hint">کلیک روی هر نقطه برای جزئیات</span>`,
         grid: () => buildMapLegendScale('grid', layerStats.grid),
         market: () => marketLegendHtml(),
-        heat_density: () => `${buildMapLegendScale('heat_density', layerStats.heat_density)}<span class="mk-map-legend-hint">هاله نرم — تراکم آگهی</span>`,
-        heat_price: () => `${buildMapLegendScale('heat_price', layerStats.heat_price)}<span class="mk-map-legend-hint">وزن بر اساس ${filterValueLabel}</span>`,
-        heat_pps: () => `${buildMapLegendScale('heat_pps', layerStats.heat_pps)}<span class="mk-map-legend-hint">قیمت هر متر مربع</span>`,
     };
 
     function updateMapChrome(mode) {
         if (hint) {
-            if (mode.startsWith('heat_') || mode === 'grid') {
+            if (mode === 'grid') {
                 hint.hidden = true;
             } else {
                 hint.hidden = !['markers', 'market', 'value', 'full_deposit'].includes(mode)
@@ -3761,10 +3543,7 @@ function initMap(allMarkers, settings) {
         }
         if (legend) {
             legend.dataset.mode = mode;
-            legend.classList.toggle('mk-map-legend--heat', mode.startsWith('heat_'));
         }
-        const stageEl = document.querySelector('.mk-map-stage');
-        if (stageEl) stageEl.dataset.heatMode = mode.startsWith('heat_') ? 'true' : 'false';
         modeButtons.forEach(btn => {
             const on = btn.dataset.mode === mode;
             btn.classList.toggle('is-active', on);
@@ -3785,12 +3564,6 @@ function initMap(allMarkers, settings) {
         }
         updateMapChrome(activeMode);
         refreshListPanel();
-        if (activeMode.startsWith('heat_')) {
-            setTimeout(() => {
-                map.invalidateSize();
-                redrawActiveHeatLayer();
-            }, 80);
-        }
     }
 
     function setSellerFilter(filter) {
@@ -3817,28 +3590,15 @@ function initMap(allMarkers, settings) {
     let zoomRefreshTimer;
     map.on('zoomend', () => {
         if (hint) {
-            if (activeMode.startsWith('heat_') || activeMode === 'grid') {
+            if (activeMode === 'grid') {
                 hint.hidden = true;
             } else if (['markers', 'market', 'value', 'full_deposit'].includes(activeMode)) {
                 hint.hidden = map.getZoom() >= clusterDisableZoom;
             }
         }
-        if (activeMode === 'grid' || activeMode.startsWith('heat_')) {
+        if (activeMode === 'grid') {
             clearTimeout(zoomRefreshTimer);
             zoomRefreshTimer = setTimeout(() => refreshLayers(), 100);
-        }
-    });
-
-    map.on('moveend', () => {
-        if (activeMode.startsWith('heat_')) {
-            clearTimeout(zoomRefreshTimer);
-            zoomRefreshTimer = setTimeout(() => redrawActiveHeatLayer(), 100);
-        }
-    });
-
-    map.whenReady(() => {
-        if (activeMode.startsWith('heat_')) {
-            setTimeout(() => redrawActiveHeatLayer(), 200);
         }
     });
 

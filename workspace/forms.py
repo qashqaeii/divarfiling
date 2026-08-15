@@ -510,6 +510,68 @@ class CRMPropertyForm(CRMMoneyFieldsMixin, forms.ModelForm):
             return feature_form_context(data, deal_mode=deal, property_type=ptype)
         return self._feature_ctx
 
+    def _resolve_form_deal_mode(self) -> str:
+        if self.is_bound and self.data is not None:
+            return self.data.get('deal_mode') or ''
+        instance = getattr(self, 'instance', None)
+        if instance is not None:
+            return instance.deal_mode or self.initial.get('deal_mode') or ''
+        return self.initial.get('deal_mode') or 'فروش'
+
+    def deal_price_context(self):
+        """متن و نمایش پنل‌های قیمت بر اساس نوع معامله (رندر اولیه + fallback JS)."""
+        profiles = {
+            'فروش': {
+                'title': 'قیمت فروش',
+                'hint': 'قیمت توافقی یا نهایی فروش',
+                'show_sale': True,
+                'show_deposit': False,
+                'show_rent': False,
+                'sale_label': 'قیمت فروش (تومان)',
+                'sale_heading': 'فروش',
+                'sale_hint': 'قیمت نهایی یا توافقی ملک',
+            },
+            'پیش‌فروش': {
+                'title': 'قیمت پیش‌فروش',
+                'hint': 'مبلغ پیش‌فروش واحد یا پروژه',
+                'show_sale': True,
+                'show_deposit': False,
+                'show_rent': False,
+                'sale_label': 'قیمت پیش‌فروش (تومان)',
+                'sale_heading': 'پیش‌فروش',
+                'sale_hint': 'مبلغ توافقی پیش‌فروش',
+            },
+            'رهن و اجاره': {
+                'title': 'رهن و اجاره',
+                'hint': 'مبالغ رهن و اجاره ماهانه',
+                'show_sale': False,
+                'show_deposit': True,
+                'show_rent': True,
+                'deposit_label': 'مبلغ رهن (تومان)',
+                'rent_label': 'اجاره ماهانه (تومان)',
+                'deposit_heading': 'رهن',
+                'deposit_hint': 'مبلغ رهن / تبدیل‌پذیر',
+                'rent_heading': 'اجاره',
+                'rent_hint': 'اجاره ماهانه پس از رهن',
+            },
+            'اجاره': {
+                'title': 'اجاره',
+                'hint': 'ودیعه و اجاره ماهانه',
+                'show_sale': False,
+                'show_deposit': True,
+                'show_rent': True,
+                'deposit_label': 'ودیعه (تومان)',
+                'rent_label': 'اجاره ماهانه (تومان)',
+                'deposit_heading': 'ودیعه',
+                'deposit_hint': 'مبلغ ودیعه نزد مالک',
+                'rent_heading': 'اجاره',
+                'rent_hint': 'اجاره ماهانه',
+            },
+        }
+        deal = self._resolve_form_deal_mode()
+        profile = profiles.get(deal) or profiles['فروش']
+        return {'deal_mode': deal, **profile}
+
     def feature_form_groups(self):
         return self.feature_form_context().get('groups') or []
 

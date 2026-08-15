@@ -274,58 +274,59 @@
         {% endwith %}
     </section>
 
-    <section class="crm-prop-form-block" data-form-section="pprice" data-crm-prop-price>
+    {% with price_ctx=form.deal_price_context %}
+    <section class="crm-prop-form-block" data-form-section="pprice" data-crm-prop-price data-deal-mode="{{ price_ctx.deal_mode }}">
         <header class="crm-prop-form-block-head">
             <i class="fas fa-tag" aria-hidden="true"></i>
-            <h3 data-crm-price-title>قیمت و یادداشت</h3>
-            <span class="crm-prop-form-block-hint" data-crm-price-hint>بر اساس نوع معامله</span>
+            <h3 data-crm-price-title>{{ price_ctx.title }}</h3>
+            <span class="crm-prop-form-block-hint" data-crm-price-hint>{{ price_ctx.hint }}</span>
         </header>
 
         <div class="crm-prop-price-panels">
-            <div class="crm-prop-price-panel crm-price-sale" data-price-panel="sale">
+            <div class="crm-prop-price-panel crm-price-sale{% if not price_ctx.show_sale %} hidden{% endif %}" data-price-panel="sale">
                 <div class="crm-prop-price-panel-head">
                     <span class="crm-prop-price-panel-ico" aria-hidden="true"><i class="fas fa-handshake"></i></span>
                     <div>
-                        <strong data-crm-price-sale-heading>فروش</strong>
-                        <em data-crm-price-sale-hint>قیمت نهایی یا توافقی ملک</em>
+                        <strong data-crm-price-sale-heading>{{ price_ctx.sale_heading }}</strong>
+                        <em data-crm-price-sale-hint>{{ price_ctx.sale_hint }}</em>
                     </div>
                 </div>
                 <div class="crm-fields crm-fields-2">
                     <div class="crm-field crm-field-full" data-field="sale_price">
-                        <label class="crm-label" data-crm-label-sale>قیمت فروش (تومان)</label>
+                        <label class="crm-label" data-crm-label-sale>{{ price_ctx.sale_label }}</label>
                         {{ form.sale_price }}
                         <p class="crm-prop-price-meta" data-crm-price-per-sqm hidden></p>
                     </div>
                 </div>
             </div>
 
-            <div class="crm-prop-price-panel crm-price-deposit" data-price-panel="deposit">
+            <div class="crm-prop-price-panel crm-price-deposit{% if not price_ctx.show_deposit %} hidden{% endif %}" data-price-panel="deposit">
                 <div class="crm-prop-price-panel-head">
                     <span class="crm-prop-price-panel-ico crm-prop-price-panel-ico--dep" aria-hidden="true"><i class="fas fa-vault"></i></span>
                     <div>
-                        <strong data-crm-price-deposit-heading>رهن / ودیعه</strong>
-                        <em data-crm-price-deposit-hint>مبلغ بلوکه‌شده نزد مالک یا بنگاه</em>
+                        <strong data-crm-price-deposit-heading>{{ price_ctx.deposit_heading }}</strong>
+                        <em data-crm-price-deposit-hint>{{ price_ctx.deposit_hint }}</em>
                     </div>
                 </div>
                 <div class="crm-fields crm-fields-2">
                     <div class="crm-field crm-field-full" data-field="deposit">
-                        <label class="crm-label" data-crm-label-deposit>مبلغ رهن (تومان)</label>
+                        <label class="crm-label" data-crm-label-deposit>{{ price_ctx.deposit_label }}</label>
                         {{ form.deposit }}
                     </div>
                 </div>
             </div>
 
-            <div class="crm-prop-price-panel crm-price-rent" data-price-panel="rent">
+            <div class="crm-prop-price-panel crm-price-rent{% if not price_ctx.show_rent %} hidden{% endif %}" data-price-panel="rent">
                 <div class="crm-prop-price-panel-head">
                     <span class="crm-prop-price-panel-ico crm-prop-price-panel-ico--rent" aria-hidden="true"><i class="fas fa-calendar-day"></i></span>
                     <div>
-                        <strong data-crm-price-rent-heading>اجاره</strong>
-                        <em data-crm-price-rent-hint>مبلغ اجاره ماهانه</em>
+                        <strong data-crm-price-rent-heading>{{ price_ctx.rent_heading }}</strong>
+                        <em data-crm-price-rent-hint>{{ price_ctx.rent_hint }}</em>
                     </div>
                 </div>
                 <div class="crm-fields crm-fields-2">
                     <div class="crm-field crm-field-full" data-field="monthly_rent">
-                        <label class="crm-label" data-crm-label-rent>اجاره ماهانه (تومان)</label>
+                        <label class="crm-label" data-crm-label-rent>{{ price_ctx.rent_label }}</label>
                         {{ form.monthly_rent }}
                     </div>
                 </div>
@@ -404,6 +405,7 @@
             <div class="crm-field crm-field-full"><label class="crm-label">یادداشت</label>{{ form.notes }}</div>
         </div>
     </section>
+    {% endwith %}
 
     {% if form.instance.pk %}
     {{ form.instance.images|json_script:"crm-prop-images-data" }}

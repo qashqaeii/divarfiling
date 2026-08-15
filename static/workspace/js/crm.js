@@ -284,11 +284,82 @@ function initCRMTypeProfiles(root) {
     });
 }
 
+const CRM_PROPERTY_DEAL_PRICE_PROFILES = {
+    'فروش': {
+        title: 'قیمت فروش',
+        hint: 'قیمت توافقی یا نهایی فروش',
+        showSale: true,
+        showDeposit: false,
+        showRent: false,
+        saleLabel: 'قیمت فروش (تومان)',
+        saleHeading: 'فروش',
+        saleHint: 'قیمت نهایی یا توافقی ملک',
+    },
+    'پیش‌فروش': {
+        title: 'قیمت پیش‌فروش',
+        hint: 'مبلغ پیش‌فروش واحد یا پروژه',
+        showSale: true,
+        showDeposit: false,
+        showRent: false,
+        saleLabel: 'قیمت پیش‌فروش (تومان)',
+        saleHeading: 'پیش‌فروش',
+        saleHint: 'مبلغ توافقی پیش‌فروش',
+    },
+    'رهن و اجاره': {
+        title: 'رهن و اجاره',
+        hint: 'مبالغ رهن و اجاره ماهانه',
+        showSale: false,
+        showDeposit: true,
+        showRent: true,
+        depositLabel: 'مبلغ رهن (تومان)',
+        rentLabel: 'اجاره ماهانه (تومان)',
+        depositHeading: 'رهن',
+        depositHint: 'مبلغ رهن / تبدیل‌پذیر',
+        rentHeading: 'اجاره',
+        rentHint: 'اجاره ماهانه پس از رهن',
+    },
+    'اجاره': {
+        title: 'اجاره',
+        hint: 'ودیعه و اجاره ماهانه',
+        showSale: false,
+        showDeposit: true,
+        showRent: true,
+        depositLabel: 'ودیعه (تومان)',
+        rentLabel: 'اجاره ماهانه (تومان)',
+        depositHeading: 'ودیعه',
+        depositHint: 'مبلغ ودیعه نزد مالک',
+        rentHeading: 'اجاره',
+        rentHint: 'اجاره ماهانه',
+    },
+};
+
+function crmResolveDealMode(dealSelect, priceSection) {
+    if (!dealSelect) return 'فروش';
+    const profiles = CRM_PROPERTY_DEAL_PRICE_PROFILES;
+    const pick = (raw) => {
+        const mode = String(raw || '').trim();
+        return mode && profiles[mode] ? mode : '';
+    };
+    const fromValue = pick(dealSelect.value);
+    if (fromValue) return fromValue;
+    const selected = dealSelect.options[dealSelect.selectedIndex];
+    if (selected) {
+        const fromOpt = pick(selected.value) || pick(selected.textContent);
+        if (fromOpt) return fromOpt;
+    }
+    const fromAttr = pick(dealSelect.getAttribute('data-initial-deal-mode'));
+    if (fromAttr) return fromAttr;
+    const section = priceSection || dealSelect.closest('[data-crm-prop-price]');
+    if (section) {
+        const fromSection = pick(section.dataset.dealMode);
+        if (fromSection) return fromSection;
+    }
+    return 'فروش';
+}
+
 function initPropertyDealMode(root) {
     const scope = root || document;
     scope.querySelectorAll('[data-deal-mode]').forEach(dealSelect => {
-        if (dealSelect.dataset.dealModeBound === '1') return;
-        dealSelect.dataset.dealModeBound = '1';
         const form = dealSelect.closest('form') || scope;
         const sale = form.querySelectorAll('.crm-price-sale');
         const deposit = form.querySelectorAll('.crm-price-deposit');
@@ -316,55 +387,7 @@ function initPropertyDealMode(root) {
         const occBtns = form.querySelectorAll('[data-occ-set]');
         const occPill = form.querySelector('[data-occ-pill]');
         const occConfirm = form.querySelector('[data-occ-confirm]');
-
-        const PROFILES = {
-            'فروش': {
-                title: 'قیمت فروش',
-                hint: 'قیمت توافقی یا نهایی فروش',
-                showSale: true,
-                showDeposit: false,
-                showRent: false,
-                saleLabel: 'قیمت فروش (تومان)',
-                saleHeading: 'فروش',
-                saleHint: 'قیمت نهایی یا توافقی ملک',
-            },
-            'پیش‌فروش': {
-                title: 'قیمت پیش‌فروش',
-                hint: 'مبلغ پیش‌فروش واحد یا پروژه',
-                showSale: true,
-                showDeposit: false,
-                showRent: false,
-                saleLabel: 'قیمت پیش‌فروش (تومان)',
-                saleHeading: 'پیش‌فروش',
-                saleHint: 'مبلغ توافقی پیش‌فروش',
-            },
-            'رهن و اجاره': {
-                title: 'رهن و اجاره',
-                hint: 'مبالغ رهن و اجاره ماهانه',
-                showSale: false,
-                showDeposit: true,
-                showRent: true,
-                depositLabel: 'مبلغ رهن (تومان)',
-                rentLabel: 'اجاره ماهانه (تومان)',
-                depositHeading: 'رهن',
-                depositHint: 'مبلغ رهن / تبدیل‌پذیر',
-                rentHeading: 'اجاره',
-                rentHint: 'اجاره ماهانه پس از رهن',
-            },
-            'اجاره': {
-                title: 'اجاره',
-                hint: 'ودیعه و اجاره ماهانه',
-                showSale: false,
-                showDeposit: true,
-                showRent: true,
-                depositLabel: 'ودیعه (تومان)',
-                rentLabel: 'اجاره ماهانه (تومان)',
-                depositHeading: 'ودیعه',
-                depositHint: 'مبلغ ودیعه نزد مالک',
-                rentHeading: 'اجاره',
-                rentHint: 'اجاره ماهانه',
-            },
-        };
+        const PROFILES = CRM_PROPERTY_DEAL_PRICE_PROFILES;
 
         function parseMoney(raw) {
             if (raw == null || raw === '') return null;
@@ -382,9 +405,9 @@ function initPropertyDealMode(root) {
             }
         }
 
-        function updatePerSqm() {
+        function updatePerSqm(mode) {
             if (!perSqmEl) return;
-            const profile = PROFILES[dealSelect.value] || PROFILES['فروش'];
+            const profile = PROFILES[mode] || PROFILES['فروش'];
             if (!profile.showSale) {
                 perSqmEl.hidden = true;
                 return;
@@ -431,14 +454,16 @@ function initPropertyDealMode(root) {
         }
 
         function apply(mode) {
-            const profile = PROFILES[mode] || PROFILES['فروش'];
+            const resolved = crmResolveDealMode(dealSelect, priceSection);
+            const effectiveMode = (mode && PROFILES[mode]) ? mode : resolved;
+            const profile = PROFILES[effectiveMode] || PROFILES['فروش'];
             const show = (els, on) => els.forEach(el => el.classList.toggle('hidden', !on));
             show(sale, profile.showSale);
             show(deposit, profile.showDeposit);
             show(rent, profile.showRent);
             syncOccupancyUI();
             if (priceSection) {
-                priceSection.dataset.dealMode = mode || '';
+                priceSection.dataset.dealMode = effectiveMode;
             }
             if (titleEl) titleEl.textContent = profile.title || 'قیمت و یادداشت';
             if (hintEl) hintEl.textContent = profile.hint || '';
@@ -451,10 +476,16 @@ function initPropertyDealMode(root) {
             if (saleHint && profile.saleHint) saleHint.textContent = profile.saleHint;
             if (depositHint && profile.depositHint) depositHint.textContent = profile.depositHint;
             if (rentHint && profile.rentHint) rentHint.textContent = profile.rentHint;
-            updatePerSqm();
+            updatePerSqm(effectiveMode);
         }
 
-        apply(dealSelect.value);
+        if (dealSelect.dataset.dealModeBound === '1') {
+            apply(crmResolveDealMode(dealSelect, priceSection));
+            return;
+        }
+        dealSelect.dataset.dealModeBound = '1';
+
+        apply(crmResolveDealMode(dealSelect, priceSection));
         dealSelect.addEventListener('change', () => apply(dealSelect.value));
         if (vacantCheckbox) {
             vacantCheckbox.addEventListener('change', () => syncOccupancyUI());
@@ -466,8 +497,8 @@ function initPropertyDealMode(root) {
                 vacantCheckbox.dispatchEvent(new Event('change', { bubbles: true }));
             });
         });
-        if (saleInput) saleInput.addEventListener('input', updatePerSqm);
-        if (areaInput) areaInput.addEventListener('input', updatePerSqm);
+        if (saleInput) saleInput.addEventListener('input', () => updatePerSqm(dealSelect.value));
+        if (areaInput) areaInput.addEventListener('input', () => updatePerSqm(dealSelect.value));
     });
 }
 

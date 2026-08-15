@@ -2122,7 +2122,7 @@ function computeHeatLayerOptions(source, palette, map, { weighted = false } = {}
     return {
         radius,
         blur,
-        minOpacity: 0.38,
+        minOpacity: 0.42,
         maxZoom,
         max: 1.0,
         gradient: buildLeafletHeatGradient(palette),
@@ -2134,116 +2134,10 @@ function rgbaFromHex(hex, alpha) {
     return `rgba(${r},${g},${b},${alpha})`;
 }
 
-/** لایه هیت‌مپ اختصاصی — جایگزین leaflet-heat که روی برخی مرورگرها درست رندر نمی‌شود */
-function createMkHeatLayer(points, map, { palette = 'density', weighted = false, source = null, radius = 50 } = {}) {
-    if (!window.L) return L.layerGroup();
-
-    const MkHeatLayer = L.Layer.extend({
-        initialize(pts, opts) {
-            this._points = pts || [];
-            this._opts = opts || {};
-            this._radius = opts.radius || 50;
-            this._palette = opts.palette || 'density';
-            this._weighted = !!opts.weighted;
-            this._source = opts.source || null;
-        },
-        onAdd(m) {
-            this._map = m;
-            if (!m.getPane('mkHeatPane')) {
-                const pane = m.createPane('mkHeatPane');
-                pane.style.zIndex = '650';
-                pane.style.pointerEvents = 'none';
-            }
-            this._canvas = L.DomUtil.create('canvas', 'leaflet-heatmap-layer mk-heat-canvas');
-            this._canvas.style.pointerEvents = 'none';
-            m.getPane('mkHeatPane').appendChild(this._canvas);
-            this._onReset = () => this._reset();
-            m.on('moveend zoomend resize viewreset', this._onReset, this);
-            this._reset();
-        },
-        onRemove(m) {
-            m.off('moveend zoomend resize viewreset', this._onReset, this);
-            if (this._canvas?.parentNode) this._canvas.parentNode.removeChild(this._canvas);
-            this._canvas = null;
-        },
-        setOptions(opts = {}) {
-            if (opts.radius != null) this._radius = opts.radius;
-            if (opts.palette) this._palette = opts.palette;
-            if (opts.gradient) { /* گرادیان در paint محاسبه می‌شود */ }
-            this._reset();
-            return this;
-        },
-        setLatLngs(pts) {
-            this._points = pts || [];
-            this._reset();
-            return this;
-        },
-        redraw() {
-            this._reset();
-            return this;
-        },
-        _reset() {
-            if (!this._map || !this._canvas) return;
-            const m = this._map;
-            const size = m.getSize();
-            const topLeft = m.containerPointToLayerPoint([0, 0]);
-            L.DomUtil.setPosition(this._canvas, topLeft);
-            const w = Math.max(1, size.x | 0);
-            const h = Math.max(1, size.y | 0);
-            if (this._canvas.width !== w) this._canvas.width = w;
-            if (this._canvas.height !== h) this._canvas.height = h;
-            this._paint();
-        },
-        _paint() {
-            const ctx = this._canvas.getContext('2d');
-            if (!ctx) return;
-            const w = this._canvas.width;
-            const h = this._canvas.height;
-            ctx.clearRect(0, 0, w, h);
-            const m = this._map;
-            const points = this._points;
-            if (!points.length) return;
-
-            const topLeft = m.containerPointToLayerPoint([0, 0]);
-            const radius = this._radius || 50;
-            const palette = this._palette || 'density';
-
-            ctx.save();
-            ctx.globalCompositeOperation = 'lighter';
-            points.forEach((pt) => {
-                const lat = Number(pt[0]);
-                const lng = Number(pt[1]);
-                if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
-                const raw = Number(pt[2]) || 1;
-                const layerPt = m.latLngToLayerPoint([lat, lng]);
-                const x = layerPt.x - topLeft.x;
-                const y = layerPt.y - topLeft.y;
-                if (x < -radius || y < -radius || x > w + radius || y > h + radius) return;
-
-                const t = this._weighted
-                    ? Math.max(0.2, Math.min(1, raw))
-                    : Math.max(0.4, Math.min(1, raw / 2.2));
-                const color = heatColorAt(t, palette);
-                const grad = ctx.createRadialGradient(x, y, 0, x, y, radius);
-                grad.addColorStop(0, rgbaFromHex(color, 0.7));
-                grad.addColorStop(0.3, rgbaFromHex(color, 0.42));
-                grad.addColorStop(0.65, rgbaFromHex(color, 0.16));
-                grad.addColorStop(1, rgbaFromHex(color, 0));
-                ctx.fillStyle = grad;
-                ctx.beginPath();
-                ctx.arc(x, y, radius, 0, Math.PI * 2);
-                ctx.fill();
-            });
-            ctx.restore();
-        },
-    });
-
-    const layer = new MkHeatLayer(points, { palette, weighted, source, radius });
-    layer._isHeatLayer = true;
-    layer._heatPalette = palette;
-    layer._heatWeighted = weighted;
-    layer._heatSource = source;
-    return layer;
+/** شعاع هاله هیت‌مپ بر حسب زوم نقشه (پیکسل) */
+function heatGlowRadius(map) {
+    const z = map?.getZoom?.() ?? 13;
+    return Math.max(22, Math.min(62, Math.round(64 - z * 2.35)));
 }
 
 function valueTierColor(tier) {
@@ -2923,8 +2817,7 @@ function initMap(allMarkers, settings) {
     const useCluster = settings?.map_cluster !== false && window.L.markerClusterGroup;
 
     let sellerFilter = 'all';
-    const heatLayerReady = !!window.L;
-    let activeMode = settings?.map_heatmap && heatLayerReady ? 'heat_density' : 'markers';
+    let activeMode = 'markers';
     let showRings = false;
     let layers = {};
     let layerStats = {};
@@ -3144,21 +3037,66 @@ function initMap(allMarkers, settings) {
         const minVal = positives.length ? Math.min(...positives) : 0;
         const maxVal = positives.length ? Math.max(...positives) : 0;
 
-        const heatData = source.map((m, i) => {
-            let intensity = weighted ? intensities[i] : 1.0;
-            if (!weighted) {
-                intensity = Math.min(2.5, 1.2 + 30 / Math.max(source.length, 1));
-            }
-            return [m.lat, m.lng, intensity];
+        const latlngs = [];
+        source.forEach((m, i) => {
+            const lat = Number(m.lat);
+            const lng = Number(m.lng);
+            if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+            const intensity = weighted
+                ? Math.max(0.18, intensities[i] || 0.18)
+                : 0.72;
+            latlngs.push([lat, lng, intensity]);
         });
 
-        const heatOpts = computeHeatLayerOptions(source, palette, map, { weighted });
-        const layer = createMkHeatLayer(heatData, map, {
-            palette,
-            weighted,
-            source,
-            radius: heatOpts.radius,
-        });
+        function buildGlowFallback() {
+            const wrapper = L.layerGroup();
+            const paintGlow = () => {
+                wrapper.clearLayers();
+                const radius = heatGlowRadius(map) * 1.15;
+                const spreadBoost = Math.min(1, 24 / Math.max(source.length, 1));
+                source.forEach((m, i) => {
+                    const lat = Number(m.lat);
+                    const lng = Number(m.lng);
+                    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+                    const t = weighted
+                        ? Math.max(0.22, intensities[i] || 0.22)
+                        : Math.min(1, 0.48 + spreadBoost);
+                    const color = heatColorAt(t, palette);
+                    wrapper.addLayer(L.circleMarker([lat, lng], {
+                        radius,
+                        fillColor: color,
+                        fillOpacity: weighted ? 0.58 : 0.52,
+                        color,
+                        weight: 0,
+                        opacity: 0,
+                        interactive: false,
+                    }));
+                });
+            };
+            paintGlow();
+            wrapper._isHeatLayer = true;
+            wrapper._rebuildGlow = paintGlow;
+            wrapper.redraw = paintGlow;
+            return wrapper;
+        }
+
+        let layer;
+        if (typeof L.heatLayer === 'function' && latlngs.length) {
+            const heatOpts = computeHeatLayerOptions(source, palette, map, { weighted });
+            layer = L.heatLayer(latlngs, heatOpts);
+            layer._isHeatLayer = true;
+            layer._heatPalette = palette;
+            layer._heatWeighted = weighted;
+            layer._heatSource = source;
+            layer._heatLatLngs = latlngs;
+            layer._rebuildGlow = function refreshHeatCanvas() {
+                if (!mapHasView(map)) return;
+                layer.setOptions(computeHeatLayerOptions(source, palette, map, { weighted }));
+                layer.redraw();
+            };
+        } else {
+            layer = buildGlowFallback();
+        }
 
         let rangeText = '';
         if (palette === 'density') {
@@ -3689,14 +3627,10 @@ function initMap(allMarkers, settings) {
     function redrawActiveHeatLayer() {
         const heatLayer = layers[activeMode];
         if (!heatLayer?._isHeatLayer) return;
-        const source = heatLayer._heatSource || layers._visible || getFilteredMarkers();
-        const opts = computeHeatLayerOptions(
-            source,
-            heatLayer._heatPalette,
-            map,
-            { weighted: heatLayer._heatWeighted },
-        );
-        heatLayer.setOptions?.({ radius: opts.radius });
+        if (typeof heatLayer._rebuildGlow === 'function') {
+            heatLayer._rebuildGlow();
+            return;
+        }
         heatLayer.redraw?.();
     }
 
@@ -3809,8 +3743,12 @@ function initMap(allMarkers, settings) {
 
     function updateMapChrome(mode) {
         if (hint) {
-            hint.hidden = !['markers', 'market', 'value', 'full_deposit'].includes(mode)
-                || map.getZoom() >= clusterDisableZoom;
+            if (mode.startsWith('heat_') || mode === 'grid') {
+                hint.hidden = true;
+            } else {
+                hint.hidden = !['markers', 'market', 'value', 'full_deposit'].includes(mode)
+                    || map.getZoom() >= clusterDisableZoom;
+            }
         }
         const meta = legendMeta[mode] || legendMeta.markers;
         const count = layers._count ?? getFilteredMarkers().length;
@@ -3887,20 +3825,14 @@ function initMap(allMarkers, settings) {
         }
         if (activeMode === 'grid' || activeMode.startsWith('heat_')) {
             clearTimeout(zoomRefreshTimer);
-            zoomRefreshTimer = setTimeout(() => {
-                if (activeMode.startsWith('heat_')) {
-                    redrawActiveHeatLayer();
-                } else {
-                    refreshLayers();
-                }
-            }, 80);
+            zoomRefreshTimer = setTimeout(() => refreshLayers(), 100);
         }
     });
 
     map.on('moveend', () => {
         if (activeMode.startsWith('heat_')) {
             clearTimeout(zoomRefreshTimer);
-            zoomRefreshTimer = setTimeout(() => redrawActiveHeatLayer(), 80);
+            zoomRefreshTimer = setTimeout(() => redrawActiveHeatLayer(), 100);
         }
     });
 

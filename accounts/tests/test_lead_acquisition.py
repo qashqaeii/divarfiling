@@ -870,3 +870,54 @@ class LeadOverviewDashboardTests(TestCase):
         self.assertIn('table_totals', charts)
         self.assertEqual(charts['table_totals']['campaign_count'], 1)
         self.assertIn('conversion_series', charts)
+
+    def test_campaign_revenue_in_rial_and_table_totals_match_rows(self):
+        from accounts.models import LeadList
+        from accounts.services.lead_funnel import acquisition_dashboard_charts, campaign_funnel
+        from shop.models import LicensePlan, Order, Product
+
+        raw = json.dumps(SAMPLE_JSON).encode('utf-8')
+        preview = preview_phone_detector_json(raw, filename='revenue.json')
+        batch = create_preview_batch(preview)
+        result = commit_import_batch(batch.pk, preview_rows=preview.rows)
+        lead_list = LeadList.objects.get(pk=result['list_id'])
+        campaign = create_acquisition_campaign(
+            name='Revenue test campaign',
+            lead_list=lead_list,
+            is_pilot=True,
+        )
+        enroll_pilot(campaign)
+        lead = MarketingLead.objects.filter(phone_normalized='09121111111').first()
+        self.assertIsNotNone(lead)
+
+        user = User.objects.create_user(username='revbuyer', password='x', phone='09121111111')
+        lead.matched_user = user
+        lead.status = MarketingLead.Status.REGISTERED
+        lead.save(update_fields=['matched_user', 'status'])
+
+        product = Product.objects.create(title='ربات', slug='bot-rev-test', is_active=True)
+        plan = LicensePlan.objects.create(
+            product=product,
+            name='یک هفته',
+            plan_type='daily',
+            price=Decimal('99000'),
+        )
+        order = Order.objects.create(
+            user=user,
+            product=product,
+            plan=plan,
+            amount=Decimal('99000'),
+            status='paid',
+        )
+        attribute_purchase(order=order)
+
+        funnel = campaign_funnel(campaign)
+        self.assertEqual(funnel['funnel']['paid'], 1)
+        self.assertEqual(funnel['attribution']['revenue'], 990_000)
+
+        charts = acquisition_dashboard_charts([campaign], [funnel])
+        row = charts['campaign_table'][0]
+        self.assertEqual(row['paid'], 1)
+        self.assertEqual(row['revenue'], 990_000)
+        self.assertEqual(charts['table_totals']['revenue'], row['revenue'])
+        self.assertEqual(charts['table_totals']['paid'], row['paid'])

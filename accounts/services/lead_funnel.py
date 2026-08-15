@@ -20,6 +20,103 @@ from accounts.models import (
 
 
 TEHRAN_TZ = 'Asia/Tehran'
+TOMAN_TO_RIAL = 10
+
+
+def _revenue_toman_to_rial(toman: int | float) -> int:
+    return int(toman or 0) * TOMAN_TO_RIAL
+
+
+def _lead_ids_for_acquisition_campaign(campaign: LeadCampaign) -> set[int]:
+    """سرنخ‌های کمپین جذب: ثبت‌نام‌شده + نسبت‌دهی acquisition."""
+    enroll_ids = set(
+        CampaignEnrollment.objects.filter(campaign=campaign)
+        .exclude(status=CampaignEnrollment.Status.HOLD)
+        .values_list('lead_id', flat=True)
+    )
+    acq_ids = set(
+        LeadAttribution.objects.filter(
+            campaign=campaign,
+            axis=LeadAttribution.Axis.ACQUISITION,
+            touch_model=LeadAttribution.TouchModel.LAST,
+        ).values_list('lead_id', flat=True)
+    )
+    return enroll_ids | acq_ids
+
+
+def _bulk_acquisition_campaign_id_for_leads(lead_ids: list[int]) -> dict[int, int]:
+    """نقشه lead_id → کمپین جذب (آخرین ثبت‌نام، سپس نسبت acquisition)."""
+    if not lead_ids:
+        return {}
+    mapping: dict[int, int] = {}
+    enroll_rows = (
+        CampaignEnrollment.objects.filter(
+            lead_id__in=lead_ids,
+            campaign__kind=LeadCampaign.Kind.ACQUISITION,
+        )
+        .exclude(status=CampaignEnrollment.Status.HOLD)
+        .order_by('lead_id', '-enrolled_at')
+        .values_list('lead_id', 'campaign_id')
+    )
+    for lead_id, campaign_id in enroll_rows:
+        if lead_id not in mapping:
+            mapping[lead_id] = campaign_id
+    missing = [lid for lid in lead_ids if lid not in mapping]
+    if missing:
+        attr_rows = (
+            LeadAttribution.objects.filter(
+                lead_id__in=missing,
+                axis=LeadAttribution.Axis.ACQUISITION,
+                touch_model=LeadAttribution.TouchModel.LAST,
+                campaign__kind=LeadCampaign.Kind.ACQUISITION,
+            )
+            .order_by('lead_id', '-created_at')
+            .values_list('lead_id', 'campaign_id')
+        )
+        for lead_id, campaign_id in attr_rows:
+            if lead_id not in mapping and campaign_id:
+                mapping[lead_id] = campaign_id
+    return mapping
+
+
+def conversion_stats_by_acquisition_campaign(
+    campaign_ids: list[int],
+) -> dict[int, dict[str, int]]:
+    """تعداد خرید و درآمد (ریال) به ازای هر کمپین جذب."""
+    cid_set = set(campaign_ids)
+    result = {cid: {'paid': 0, 'revenue': 0} for cid in cid_set}
+    if not cid_set:
+        return result
+
+    convs = list(
+        LeadAttribution.objects.filter(
+            axis=LeadAttribution.Axis.CONVERSION,
+            touch_model=LeadAttribution.TouchModel.LAST,
+        ).values_list('lead_id', 'revenue_amount', 'campaign_id')
+    )
+    if not convs:
+        return result
+
+    lead_ids = list({row[0] for row in convs})
+    lead_to_campaign = _bulk_acquisition_campaign_id_for_leads(lead_ids)
+    acq_campaign_ids = set(
+        LeadCampaign.objects.filter(
+            pk__in={row[2] for row in convs if row[2]},
+            kind=LeadCampaign.Kind.ACQUISITION,
+        ).values_list('pk', flat=True)
+    )
+
+    for lead_id, revenue_toman, conv_campaign_id in convs:
+        acq_cid = None
+        if conv_campaign_id and conv_campaign_id in acq_campaign_ids:
+            acq_cid = conv_campaign_id
+        else:
+            acq_cid = lead_to_campaign.get(lead_id)
+        if acq_cid in cid_set:
+            result[acq_cid]['paid'] += 1
+            result[acq_cid]['revenue'] += _revenue_toman_to_rial(revenue_toman or 0)
+    return result
+
 
 FUNNEL_STEP_DEFS = (
     ('eligible', 'واجد شرایط', '#64748b'),
@@ -111,11 +208,9 @@ def _build_funnel_steps(totals: Dict[str, int]) -> list[Dict[str, Any]]:
 
 def campaign_funnel(campaign: LeadCampaign) -> Dict[str, Any]:
     enroll_qs = CampaignEnrollment.objects.filter(campaign=campaign)
-    lead_ids = enroll_qs.exclude(
-        status=CampaignEnrollment.Status.HOLD,
-    ).values_list('lead_id', flat=True)
+    campaign_lead_ids = _lead_ids_for_acquisition_campaign(campaign)
 
-    leads = MarketingLead.objects.filter(id__in=lead_ids).count()
+    leads = MarketingLead.objects.filter(id__in=campaign_lead_ids).count()
     eligible = enroll_qs.filter(status=CampaignEnrollment.Status.ACTIVE).count()
     # HOLD هم در پایلوت شمرده می‌شود ولی eligible برای ارسال نیست
     enrolled_total = enroll_qs.count()
@@ -151,14 +246,15 @@ def campaign_funnel(campaign: LeadCampaign) -> Dict[str, Any]:
 
     # Conversion ممکن است روی کمپین activation باشد؛ برای گزارش کمپین جذب از leadهای همین کمپین
     conv = LeadAttribution.objects.filter(
-        lead_id__in=lead_ids,
+        lead_id__in=campaign_lead_ids,
         axis=LeadAttribution.Axis.CONVERSION,
         touch_model=LeadAttribution.TouchModel.LAST,
     )
     paid = conv.count()
     paid_direct = conv.filter(attribution_kind=LeadAttribution.Kind.DIRECT).count()
     paid_matched = conv.filter(attribution_kind=LeadAttribution.Kind.MATCHED).count()
-    revenue = conv.aggregate(s=Sum('revenue_amount'))['s'] or 0
+    revenue_toman = conv.aggregate(s=Sum('revenue_amount'))['s'] or 0
+    revenue = _revenue_toman_to_rial(revenue_toman)
 
     cost = msgs.filter(
         status__in=(
@@ -168,15 +264,15 @@ def campaign_funnel(campaign: LeadCampaign) -> Dict[str, Any]:
     ).aggregate(s=Sum('sms_cost_snapshot'))['s'] or 0
 
     activated = LeadTouchpoint.objects.filter(
-        lead_id__in=lead_ids,
+        lead_id__in=campaign_lead_ids,
         event_type=LeadTouchpoint.EventType.WORKSPACE_LOGIN,
     ).values('lead_id').distinct().count()
     checkout = LeadTouchpoint.objects.filter(
-        lead_id__in=lead_ids,
+        lead_id__in=campaign_lead_ids,
         event_type=LeadTouchpoint.EventType.CHECKOUT_START,
     ).values('lead_id').distinct().count()
     licensed = LeadTouchpoint.objects.filter(
-        lead_id__in=lead_ids,
+        lead_id__in=campaign_lead_ids,
         event_type=LeadTouchpoint.EventType.LICENSED,
     ).values('lead_id').distinct().count()
 
@@ -287,7 +383,8 @@ def overview_stats() -> Dict[str, Any]:
         touch_model=LeadAttribution.TouchModel.LAST,
     )
     total_purchases = purchases_qs.count()
-    purchase_revenue = purchases_qs.aggregate(s=Sum('revenue_amount'))['s'] or 0
+    purchase_revenue_toman = purchases_qs.aggregate(s=Sum('revenue_amount'))['s'] or 0
+    purchase_revenue = _revenue_toman_to_rial(purchase_revenue_toman)
 
     ctr_pct = round(100 * total_clicks / accepted_sms, 1) if accepted_sms else None
     purchase_rate_pct = None
@@ -358,18 +455,6 @@ def acquisition_dashboard_charts(
             for field in ('enrolled', 'accepted', 'clicked', 'registered', 'paid'):
                 bucket[field] += int(variant.get(field, 0) or 0)
 
-    # خرید از کل بانک سرنخ (نه فقط جمع per-campaign که فقط enroll‌شده‌ها را می‌شمارد)
-    global_conv = LeadAttribution.objects.filter(
-        axis=LeadAttribution.Axis.CONVERSION,
-        touch_model=LeadAttribution.TouchModel.LAST,
-    )
-    global_paid = global_conv.count()
-    global_revenue = int(global_conv.aggregate(s=Sum('revenue_amount'))['s'] or 0)
-    if global_paid > totals['paid']:
-        totals['paid'] = global_paid
-    if global_revenue > totals['revenue']:
-        totals['revenue'] = global_revenue
-
     status_labels: Dict[str, str] = dict(LeadCampaign.Status.choices)
     status_items = []
     for code, label in LeadCampaign.Status.choices:
@@ -382,7 +467,30 @@ def acquisition_dashboard_charts(
                 'color': STATUS_CHART_COLORS.get(code, '#94a3b8'),
             })
 
-    campaign_rows = [_campaign_row_from_funnel(row) for row in funnels]
+    campaign_ids = [int(c.pk) for c in campaigns]
+    conv_by_campaign = conversion_stats_by_acquisition_campaign(campaign_ids)
+
+    campaign_rows = []
+    for row in funnels:
+        item = _campaign_row_from_funnel(row)
+        stats = conv_by_campaign.get(item['id'], {})
+        if stats:
+            item['paid'] = int(stats.get('paid', 0) or 0)
+            item['revenue'] = int(stats.get('revenue', 0) or 0)
+            sms_cost = int(item.get('sms_cost', 0) or 0)
+            paid = item['paid']
+            revenue = item['revenue']
+            item['cac'] = int(sms_cost / paid) if paid else None
+            item['roas'] = (
+                round(float(Decimal(revenue) / Decimal(sms_cost)), 2)
+                if sms_cost and revenue else None
+            )
+            item['reg_to_paid'] = _rate(paid, item['registered'])
+            item['overall_cvr'] = _rate(paid, item['accepted'])
+        campaign_rows.append(item)
+
+    totals['paid'] = sum(int(r.get('paid', 0) or 0) for r in campaign_rows)
+    totals['revenue'] = sum(int(r.get('revenue', 0) or 0) for r in campaign_rows)
     campaign_rows.sort(key=lambda item: item['accepted'], reverse=True)
 
     chart_campaigns = campaign_rows[:8]

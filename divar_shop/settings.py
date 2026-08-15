@@ -123,6 +123,7 @@ if _DATABASE_ENGINE == 'django.db.backends.postgresql':
             'HOST': config('DATABASE_HOST', default='localhost'),
             'PORT': config('DATABASE_PORT', default='5432'),
             'CONN_MAX_AGE': config('DATABASE_CONN_MAX_AGE', default=600, cast=int),
+            'CONN_HEALTH_CHECKS': True,
         }
     }
 else:

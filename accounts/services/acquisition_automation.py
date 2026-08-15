@@ -371,9 +371,14 @@ def finalize_run_from_worker(
 
 
 def fetch_next_queued_run() -> Optional[AcquisitionRun]:
-    return (
-        AcquisitionRun.objects.filter(status=AcquisitionRun.Status.QUEUED)
-        .select_related('campaign')
-        .order_by('created_at', 'id')
-        .first()
-    )
+    from divar_shop.db_lifecycle import run_db_with_retry
+
+    def _query() -> Optional[AcquisitionRun]:
+        return (
+            AcquisitionRun.objects.filter(status=AcquisitionRun.Status.QUEUED)
+            .select_related('campaign')
+            .order_by('created_at', 'id')
+            .first()
+        )
+
+    return run_db_with_retry(_query, label='fetch_next_queued_run')

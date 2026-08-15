@@ -2091,17 +2091,31 @@ function normalizeHeatValues(values) {
     });
 }
 
+function mapHasView(map) {
+    if (!map || typeof map.getZoom !== 'function') return false;
+    try {
+        if (map._loaded === false) return false;
+        const z = map.getZoom();
+        const c = map.getCenter();
+        return Number.isFinite(z) && c && Number.isFinite(c.lat) && Number.isFinite(c.lng);
+    } catch (e) {
+        return false;
+    }
+}
+
 function computeHeatLayerOptions(source, palette, map, { weighted = false } = {}) {
     const count = source.length;
     const logFactor = Math.log10(Math.max(count, 10));
     let radius = Math.min(72, Math.max(36, Math.round(32 + logFactor * 6)));
-    if (map && source.length > 1 && window.L) {
-        const bounds = L.latLngBounds(source.map(m => [m.lat, m.lng]));
-        const sw = map.latLngToContainerPoint(bounds.getSouthWest());
-        const ne = map.latLngToContainerPoint(bounds.getNorthEast());
-        const span = Math.max(Math.abs(ne.x - sw.x), Math.abs(ne.y - sw.y), 1);
-        const adaptive = Math.round(span * 0.055);
-        radius = Math.min(80, Math.max(radius, adaptive));
+    if (mapHasView(map) && source.length > 1 && window.L) {
+        try {
+            const bounds = L.latLngBounds(source.map(m => [m.lat, m.lng]));
+            const sw = map.latLngToContainerPoint(bounds.getSouthWest());
+            const ne = map.latLngToContainerPoint(bounds.getNorthEast());
+            const span = Math.max(Math.abs(ne.x - sw.x), Math.abs(ne.y - sw.y), 1);
+            const adaptive = Math.round(span * 0.055);
+            radius = Math.min(80, Math.max(radius, adaptive));
+        } catch (e) { /* map not ready yet */ }
     }
     const blur = Math.round(radius * 0.82);
     const maxZoom = map?.getMaxZoom?.() || 18;
@@ -3535,9 +3549,6 @@ function initMap(allMarkers, settings) {
             el?.addEventListener('input', debouncedApply);
         });
         syncFilterInputs();
-        if (countActiveMapFilters(filterState) > 0) {
-            refreshLayers();
-        }
     }
 
     function setupSplitList() {
@@ -3598,11 +3609,6 @@ function initMap(allMarkers, settings) {
         }
     }
 
-    layers = buildLayers();
-    syncMarkerRegistry();
-    if (!layers[activeMode]) activeMode = 'markers';
-    map.addLayer(layers[activeMode] || layers.markers);
-
     if (fullBounds.isValid()) {
         if (allMarkers.length === 1) {
             map.setView([allMarkers[0].lat, allMarkers[0].lng], focusMaxZoom);
@@ -3613,7 +3619,15 @@ function initMap(allMarkers, settings) {
                 animate: false,
             });
         }
+    } else if (allMarkers.length) {
+        map.setView([allMarkers[0].lat, allMarkers[0].lng], 12);
     }
+
+    layers = buildLayers();
+    syncMarkerRegistry();
+    if (!layers[activeMode]) activeMode = 'markers';
+    map.addLayer(layers[activeMode] || layers.markers);
+
     mapPro?.updateZoomBadge?.();
     setTimeout(() => {
         map.invalidateSize();

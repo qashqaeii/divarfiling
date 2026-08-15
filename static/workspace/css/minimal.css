@@ -2501,6 +2501,11 @@ body.ws-body::before { opacity: 0.45; }
 .mk-col-num,
 .mk-col-date { white-space: nowrap; }
 .mk-col-actions { width: 1%; white-space: nowrap; }
+.mk-data-table-filing .mk-col-actions {
+    width: 11rem;
+    min-width: 11rem;
+    white-space: nowrap;
+}
 .mk-num {
     font-variant-numeric: tabular-nums;
     font-weight: 600;
@@ -3040,6 +3045,26 @@ body.ws-body::before { opacity: 0.45; }
 
 .mk-filing-pro .mk-filing-table-wrap {
     margin: 0;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+.mk-filing-pro .mk-data-table-filing {
+    min-width: 980px;
+}
+.mk-filing-pro .mk-data-table-filing .mk-col-date {
+    padding-inline-end: 0.65rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 9.5rem;
+}
+.mk-filing-pro .mk-data-table-filing .mk-col-actions {
+    width: 11rem;
+    min-width: 11rem;
+    padding-inline-start: 0.4rem;
+}
+.mk-filing-pro .mk-data-table-filing .mk-row-actions {
+    flex-shrink: 0;
+    justify-content: flex-start;
 }
 .mk-filing-pro .mk-data-table-filing thead th {
     font-size: 0.65rem;
@@ -3387,7 +3412,7 @@ body.ws-body::before { opacity: 0.45; }
 .mk-col-size { white-space: nowrap; font-size: 0.7rem; }
 .mk-col-opened { font-size: 0.7rem; }
 
-.mk-data-table-filing .mk-col-actions { min-width: 9.5rem; }
+.mk-data-table-filing .mk-col-actions { min-width: 11rem; }
 .mk-col-check {
     width: 2rem;
     text-align: center;
@@ -4592,12 +4617,11 @@ button.mk-ds-card-act {
 .mk-hub-filing .mk-col-num,
 .mk-data-table-filing .mk-col-num { width: 7%; }
 .mk-hub-filing .mk-col-date,
-.mk-data-table-filing .mk-col-date { width: 11%; }
+.mk-data-table-filing .mk-col-date { width: 10%; }
 .mk-hub-filing .mk-col-actions,
 .mk-data-table-filing .mk-col-actions {
-    width: 9.5rem;
-    min-width: 9.5rem;
-    overflow: visible;
+    width: 11rem;
+    min-width: 11rem;
 }
 
 .mk-hub-filing .mk-file-text,
@@ -8802,9 +8826,15 @@ button.mk-ds-card-act {
 .mk-data-table-listings--pro {
     table-layout: fixed;
     width: 100%;
+    min-width: 1120px;
     font-size: 0.8125rem;
     border-collapse: separate;
     border-spacing: 0;
+}
+
+.mk-listing-panel .mk-table-wrap-fit {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .mk-listing-panel .mk-table-wrap-fit {
@@ -8870,11 +8900,11 @@ button.mk-ds-card-act {
 .mk-data-table-listings .mk-col-w-money { width: 5.75rem; min-width: 5.25rem; }
 .mk-data-table-listings .mk-col-w-area { width: 4.25rem; min-width: 3.85rem; }
 .mk-data-table-listings .mk-col-w-specs { width: 7.25rem; min-width: 6.75rem; }
-.mk-data-table-listings .mk-col-w-amenity { width: 5rem; min-width: 4.5rem; }
+.mk-data-table-listings .mk-col-w-amenity { width: 5.5rem; min-width: 5rem; }
 .mk-data-table-listings .mk-col-w-pub { width: 7.25rem; min-width: 6.75rem; }
 .mk-data-table-listings .mk-col-w-nb { width: 7rem; min-width: 6rem; }
-.mk-data-table-listings .mk-col-w-value { width: 4.5rem; min-width: 4.25rem; }
-.mk-data-table-listings .mk-col-w-actions { width: 5.25rem; min-width: 5rem; }
+.mk-data-table-listings .mk-col-w-value { width: 5rem; min-width: 4.75rem; }
+.mk-data-table-listings .mk-col-w-actions { width: 5.5rem; min-width: 5.25rem; }
 
 .mk-data-table-listings .mk-col-value {
     text-align: center;

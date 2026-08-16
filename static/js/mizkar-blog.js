@@ -1,13 +1,118 @@
 (function () {
     'use strict';
 
-    var prose = document.getElementById('blog-content');
-    var tocList = document.getElementById('blog-toc-list');
-    var tocCard = document.getElementById('blog-toc');
-    var tocProgress = document.getElementById('blog-toc-progress');
-    var progressBar = document.getElementById('blog-read-progress');
-    var copyBtns = document.querySelectorAll('#blog-copy-link, #blog-copy-link-footer');
-    var tocToggle = document.getElementById('blog-toc-toggle');
+    /* ─── Sticky filter bar (list hub) ─── */
+    function initBlogFilterBar() {
+        var bar = document.querySelector('.mk-blog-filter-bar');
+        if (!bar) return;
+
+        function updateStickyTop() {
+            var top = 0;
+            var header = document.querySelector('.mk-site-header');
+            if (header) {
+                top = Math.ceil(header.getBoundingClientRect().height);
+            }
+            document.documentElement.style.setProperty('--mk-blog-sticky-top', top + 'px');
+        }
+
+        function updateStuckState() {
+            var header = document.querySelector('.mk-site-header');
+            var headerBottom = header ? header.getBoundingClientRect().bottom : 0;
+            var barTop = bar.getBoundingClientRect().top;
+            var stuck = window.scrollY > 8 && barTop <= headerBottom + 2;
+            bar.classList.toggle('is-stuck', stuck);
+        }
+
+        updateStickyTop();
+        window.addEventListener('resize', updateStickyTop, { passive: true });
+        window.addEventListener('scroll', updateStuckState, { passive: true });
+        updateStuckState();
+    }
+
+    /* ─── Infinite scroll (list hub) ─── */
+    function initBlogInfiniteScroll() {
+        var grid = document.getElementById('mk-blog-grid');
+        var sentinel = document.getElementById('mk-blog-load-sentinel');
+        if (!grid || !sentinel) return;
+
+        var statusEl = document.getElementById('mk-blog-load-status');
+        var loading = false;
+
+        function hasNext() {
+            return grid.getAttribute('data-has-next') === '1';
+        }
+
+        function getNextPage() {
+            var raw = grid.getAttribute('data-next-page');
+            return raw ? parseInt(raw, 10) : null;
+        }
+
+        function setLoading(on) {
+            loading = on;
+            if (statusEl) {
+                statusEl.hidden = !on;
+            }
+        }
+
+        function loadMore() {
+            var nextPage = getNextPage();
+            if (!hasNext() || !nextPage || loading) return;
+
+            setLoading(true);
+
+            var cat = grid.getAttribute('data-cat') || '';
+            var params = new URLSearchParams({ partial: '1', page: String(nextPage) });
+            if (cat) params.set('cat', cat);
+
+            fetch(window.location.pathname + '?' + params.toString(), {
+                headers: { Accept: 'application/json' },
+                credentials: 'same-origin',
+            })
+                .then(function (res) {
+                    if (!res.ok) throw new Error('load failed');
+                    return res.json();
+                })
+                .then(function (data) {
+                    if (!data.html) return;
+
+                    var wrap = document.createElement('div');
+                    wrap.innerHTML = data.html.trim();
+                    var cards = wrap.querySelectorAll('.mk-blog-card');
+
+                    cards.forEach(function (card) {
+                        card.classList.add('is-visible');
+                        grid.appendChild(card);
+                    });
+
+                    if (data.has_next && data.next_page) {
+                        grid.setAttribute('data-has-next', '1');
+                        grid.setAttribute('data-next-page', String(data.next_page));
+                    } else {
+                        grid.setAttribute('data-has-next', '0');
+                        grid.removeAttribute('data-next-page');
+                        sentinel.hidden = true;
+                    }
+                })
+                .catch(function () {
+                    if (statusEl) {
+                        statusEl.textContent = 'بارگذاری ناموفق بود. دوباره اسکرول کنید.';
+                        statusEl.hidden = false;
+                    }
+                })
+                .finally(function () {
+                    setLoading(false);
+                });
+        }
+
+        if ('IntersectionObserver' in window) {
+            var observer = new IntersectionObserver(function (entries) {
+                entries.forEach(function (entry) {
+                    if (entry.isIntersecting) loadMore();
+                });
+            }, { root: null, rootMargin: '320px 0px 320px 0px', threshold: 0 });
+            observer.observe(sentinel);
+        }
+    }
 
     /* ─── Scroll reveal (list page) ─── */
     var revealEls = document.querySelectorAll('.mk-blog-reveal');
@@ -25,6 +130,10 @@
         revealEls.forEach(function (el) { el.classList.add('is-visible'); });
     }
 
+    initBlogFilterBar();
+    initBlogInfiniteScroll();
+
+    var prose = document.getElementById('blog-content');
     if (!prose) return;
 
     /* ─── FAQ accordion ─── */
@@ -74,6 +183,13 @@
     })();
 
     /* ─── فهرست مطالب ─── */
+    var tocList = document.getElementById('blog-toc-list');
+    var tocCard = document.getElementById('blog-toc');
+    var tocProgress = document.getElementById('blog-toc-progress');
+    var progressBar = document.getElementById('blog-read-progress');
+    var copyBtns = document.querySelectorAll('#blog-copy-link, #blog-copy-link-footer');
+    var tocToggle = document.getElementById('blog-toc-toggle');
+
     if (tocList && tocCard) {
         var headings = prose.querySelectorAll('h2, h3');
         if (!headings.length) {

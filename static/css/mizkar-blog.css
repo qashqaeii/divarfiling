@@ -243,14 +243,22 @@
 
 /* ─── 5. Sticky filter bar ─── */
 .mk-blog-filter-bar {
+    position: -webkit-sticky;
     position: sticky;
-    top: var(--mk-blog-sticky-top);
-    z-index: 40;
+    top: var(--mk-blog-sticky-top, 4.25rem);
+    z-index: 900;
     padding: 0.65rem 0;
+    margin-bottom: 0.15rem;
     border-bottom: 1px solid var(--mk-border);
-    background: rgba(7, 11, 23, 0.82);
+    background: rgba(7, 11, 23, 0.92);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
+    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.mk-blog-filter-bar.is-stuck {
+    box-shadow: 0 10px 28px -14px rgba(0, 0, 0, 0.45);
+    border-bottom-color: var(--mk-blog-accent-border);
 }
 
 .mk-blog-filter-nav {
@@ -328,6 +336,39 @@
 /* ─── List band ─── */
 .mk-blog-list-band {
     padding: clamp(1.35rem, 3vw, 2rem) 0 clamp(2rem, 4vw, 3rem);
+    position: relative;
+    z-index: 1;
+}
+
+.mk-blog-load-sentinel {
+    height: 1px;
+    margin: 0;
+    pointer-events: none;
+}
+
+.mk-blog-load-status {
+    margin: 1.25rem 0 0;
+    text-align: center;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--mk-text-muted);
+}
+
+.mk-blog-load-status::before {
+    content: '';
+    display: inline-block;
+    width: 0.85rem;
+    height: 0.85rem;
+    margin-right: 0.45rem;
+    border: 2px solid var(--mk-blog-accent-border);
+    border-top-color: var(--mk-blog-accent);
+    border-radius: 50%;
+    vertical-align: -0.1rem;
+    animation: mk-blog-load-spin 0.75s linear infinite;
+}
+
+@keyframes mk-blog-load-spin {
+    to { transform: rotate(360deg); }
 }
 
 /* ─── 6. Featured post (2-column) ─── */
@@ -2030,7 +2071,7 @@
     }
 
     .mk-blog-filter-bar {
-        top: 3.5rem;
+        top: var(--mk-blog-sticky-top, 3.5rem);
     }
 
     .mk-blog-grid,

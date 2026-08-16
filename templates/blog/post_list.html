@@ -5,7 +5,7 @@
 {% block body_class %}mk-pub-page mk-blog-page{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/mizkar-blog.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'css/mizkar-blog.css' %}?v=4">
 {% endblock %}
 
 {% block content %}
@@ -126,41 +126,15 @@
             {% endif %}
 
             {# ─── شبکه مقالات ─── #}
-            <div class="mk-blog-grid">
-                {% for post in grid_posts %}
-                <article class="mk-blog-card mk-blog-reveal" style="--mk-reveal-delay: {{ forloop.counter0 }}">
-                    <a href="{% url 'blog:post_detail' post.slug %}" class="mk-blog-card-link">
-                        <div class="mk-blog-card-media">
-                            {% if post.featured_image %}
-                            <img src="{{ post.featured_image.url }}" alt="{{ post.title }}" class="mk-blog-card-img" loading="lazy">
-                            {% else %}
-                            <div class="mk-blog-card-placeholder">
-                                <i class="fas {{ post.category.slug|default:'article'|category_icon }}"></i>
-                            </div>
-                            {% endif %}
-                            <span class="mk-blog-card-readtime">
-                                <i class="fas fa-clock" aria-hidden="true"></i>
-                                {{ post.content|reading_time }} دقیقه
-                            </span>
-                        </div>
-                        <div class="mk-blog-card-body">
-                            {% if post.category %}
-                            <span class="mk-blog-tag">{{ post.category.name }}</span>
-                            {% endif %}
-                            <h2 class="mk-blog-card-title">{{ post.title }}</h2>
-                            <p class="mk-blog-card-excerpt">{{ post.excerpt|default:post.content|striptags|truncatewords:22 }}</p>
-                            <div class="mk-blog-card-foot">
-                                <div class="mk-blog-card-meta">
-                                    <span><i class="fas fa-calendar"></i>{{ post.published_at|to_jalali_date:"%Y/%m/%d" }}</span>
-                                    <span><i class="fas fa-eye"></i>{{ post.views_count }}</span>
-                                </div>
-                                <span class="mk-blog-card-more">مطالعه <i class="fas fa-arrow-left"></i></span>
-                            </div>
-                        </div>
-                    </a>
-                </article>
-                {% empty %}
-                {% if not featured_post %}
+            <div
+                class="mk-blog-grid"
+                id="mk-blog-grid"
+                data-has-next="{% if page_obj.has_next %}1{% else %}0{% endif %}"
+                {% if page_obj.has_next %}data-next-page="{{ page_obj.next_page_number }}"{% endif %}
+                data-cat="{{ active_category }}"
+            >
+                {% include 'blog/includes/post_grid_items.html' %}
+                {% if not grid_posts and not featured_post %}
                 <div class="mk-blog-empty mk-blog-reveal">
                     <div class="mk-blog-empty-icon" aria-hidden="true"><i class="fas fa-newspaper"></i></div>
                     <h2>هنوز مقاله‌ای منتشر نشده</h2>
@@ -170,24 +144,10 @@
                     </a>
                 </div>
                 {% endif %}
-                {% endfor %}
             </div>
 
-            {% if is_paginated %}
-            <nav class="mk-blog-pagination" aria-label="صفحه‌بندی مقالات">
-                {% if page_obj.has_previous %}
-                <a href="?{% if active_category %}cat={{ active_category }}&{% endif %}page={{ page_obj.previous_page_number }}" class="mk-blog-page-btn">
-                    <i class="fas fa-arrow-right"></i> قبلی
-                </a>
-                {% endif %}
-                <span class="mk-blog-page-status">صفحه {{ page_obj.number }} از {{ page_obj.paginator.num_pages }}</span>
-                {% if page_obj.has_next %}
-                <a href="?{% if active_category %}cat={{ active_category }}&{% endif %}page={{ page_obj.next_page_number }}" class="mk-blog-page-btn">
-                    بعدی <i class="fas fa-arrow-left"></i>
-                </a>
-                {% endif %}
-            </nav>
-            {% endif %}
+            <div id="mk-blog-load-sentinel" class="mk-blog-load-sentinel"{% if not page_obj.has_next %} hidden{% endif %} aria-hidden="true"></div>
+            <p id="mk-blog-load-status" class="mk-blog-load-status" hidden role="status">در حال بارگذاری مقالات…</p>
         </div>
     </section>
 
@@ -218,5 +178,5 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'js/mizkar-blog.js' %}?v=2" defer></script>
+<script src="{% static 'js/mizkar-blog.js' %}?v=3" defer></script>
 {% endblock %}

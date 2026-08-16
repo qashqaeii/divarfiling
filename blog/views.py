@@ -2,6 +2,8 @@
 ویوهای بلاگ
 """
 from django.db.models import Count, Q
+from django.http import JsonResponse
+from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.html import strip_tags
 from django.views.generic import ListView, DetailView
@@ -71,11 +73,35 @@ class PostListView(ListView):
             post_list = list(posts)
             context['featured_post'] = post_list[0]
             context['grid_posts'] = post_list[1:]
+            context['reveal_start_index'] = 0
         else:
             context['featured_post'] = None
             context['grid_posts'] = posts
+            if page_obj:
+                per_page = self.paginate_by or 12
+                context['reveal_start_index'] = (page_obj.number - 1) * per_page
+            else:
+                context['reveal_start_index'] = 0
 
         return context
+
+    def render_to_response(self, context, **response_kwargs):
+        if self.request.GET.get('partial') == '1':
+            page_obj = context.get('page_obj')
+            html = render_to_string(
+                'blog/includes/post_grid_items.html',
+                {
+                    'grid_posts': context.get('grid_posts'),
+                    'reveal_start_index': context.get('reveal_start_index', 0),
+                },
+                request=self.request,
+            )
+            return JsonResponse({
+                'html': html,
+                'has_next': bool(page_obj and page_obj.has_next()),
+                'next_page': page_obj.next_page_number() if page_obj and page_obj.has_next() else None,
+            })
+        return super().render_to_response(context, **response_kwargs)
 
 
 class PostDetailView(DetailView):

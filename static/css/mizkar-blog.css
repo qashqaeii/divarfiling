@@ -29,6 +29,21 @@
 
 .mk-blog-page .main-content {
     padding: 0;
+    /* responsive-base sets overflow-x:clip on .main-content which breaks position:sticky */
+    overflow: visible !important;
+    overflow-x: visible !important;
+}
+
+body.mk-blog-page .mk-pub-wrap {
+    overflow: visible !important;
+    overflow-x: visible !important;
+}
+
+/* responsive-base overrides header to position:relative — restore sticky on blog */
+html.mk-public body.mk-blog-page .mk-site-header {
+    position: sticky !important;
+    top: 0;
+    z-index: 1000;
 }
 
 /* ─── 2. Decorative orbs ─── */
@@ -242,6 +257,16 @@
 }
 
 /* ─── 5. Sticky filter bar ─── */
+.mk-blog-filter-bar-placeholder {
+    display: none;
+    width: 100%;
+    pointer-events: none;
+}
+
+.mk-blog-filter-bar-placeholder.is-active {
+    display: block;
+}
+
 .mk-blog-filter-bar {
     position: -webkit-sticky;
     position: sticky;
@@ -256,7 +281,18 @@
     transition: box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
-.mk-blog-filter-bar.is-stuck {
+/* JS fallback when native sticky is blocked by ancestor overflow */
+.mk-blog-filter-bar.is-fixed {
+    position: fixed;
+    left: 0;
+    right: 0;
+    width: 100%;
+    top: var(--mk-blog-sticky-top, 4.25rem);
+    margin-bottom: 0;
+}
+
+.mk-blog-filter-bar.is-stuck,
+.mk-blog-filter-bar.is-fixed {
     box-shadow: 0 10px 28px -14px rgba(0, 0, 0, 0.45);
     border-bottom-color: var(--mk-blog-accent-border);
 }

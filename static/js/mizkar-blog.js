@@ -6,27 +6,81 @@
         var bar = document.querySelector('.mk-blog-filter-bar');
         if (!bar) return;
 
+        var placeholder = document.createElement('div');
+        placeholder.className = 'mk-blog-filter-bar-placeholder';
+        placeholder.setAttribute('aria-hidden', 'true');
+        bar.parentNode.insertBefore(placeholder, bar);
+
+        var anchorTop = 0;
+        var header = document.querySelector('.mk-site-header');
+
         function updateStickyTop() {
             var top = 0;
-            var header = document.querySelector('.mk-site-header');
             if (header) {
                 top = Math.ceil(header.getBoundingClientRect().height);
             }
             document.documentElement.style.setProperty('--mk-blog-sticky-top', top + 'px');
+            return top;
         }
 
-        function updateStuckState() {
-            var header = document.querySelector('.mk-site-header');
-            var headerBottom = header ? header.getBoundingClientRect().bottom : 0;
-            var barTop = bar.getBoundingClientRect().top;
-            var stuck = window.scrollY > 8 && barTop <= headerBottom + 2;
-            bar.classList.toggle('is-stuck', stuck);
+        function measureAnchor() {
+            if (!bar.classList.contains('is-fixed')) {
+                anchorTop = bar.getBoundingClientRect().top + window.scrollY;
+            }
         }
 
+        function syncPlaceholder() {
+            placeholder.style.height = bar.offsetHeight + 'px';
+        }
+
+        function setFixed(on) {
+            bar.classList.toggle('is-fixed', on);
+            bar.classList.toggle('is-stuck', on);
+            placeholder.classList.toggle('is-active', on);
+            if (on) {
+                syncPlaceholder();
+            }
+        }
+
+        function updateBarState() {
+            var stickyTop = updateStickyTop();
+            var shouldFix = window.scrollY + stickyTop >= anchorTop - 1;
+
+            if (shouldFix !== bar.classList.contains('is-fixed')) {
+                setFixed(shouldFix);
+            }
+
+            if (!shouldFix) {
+                measureAnchor();
+            }
+        }
+
+        function onLayoutChange() {
+            var wasFixed = bar.classList.contains('is-fixed');
+            if (wasFixed) {
+                setFixed(false);
+            }
+            measureAnchor();
+            syncPlaceholder();
+            updateStickyTop();
+            if (wasFixed) {
+                updateBarState();
+            }
+        }
+
+        measureAnchor();
+        syncPlaceholder();
         updateStickyTop();
-        window.addEventListener('resize', updateStickyTop, { passive: true });
-        window.addEventListener('scroll', updateStuckState, { passive: true });
-        updateStuckState();
+        updateBarState();
+
+        window.addEventListener('resize', onLayoutChange, { passive: true });
+        window.addEventListener('scroll', updateBarState, { passive: true });
+
+        if (typeof ResizeObserver !== 'undefined') {
+            var ro = new ResizeObserver(onLayoutChange);
+            if (header) ro.observe(header);
+            ro.observe(bar);
+        }
     }
 
     /* ─── Infinite scroll (list hub) ─── */

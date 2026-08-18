@@ -23,7 +23,7 @@
 {% endblock %}
 
 {% block ws_surface_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/crm-prop-detail-mobile-premium.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-prop-detail-mobile-premium.css' %}?v=2">
 {% endblock %}
 
 {% block crm_content %}
@@ -425,7 +425,9 @@
         </div>
     </header>
 
+    {% if not mask_sensitive %}
     {% include 'workspace/crm/includes/detail_action_center_property.html' %}
+    {% endif %}
 
     <div class="crm-prop-detail-grid">
         <main class="crm-prop-main crm-detail-main">

@@ -157,3 +157,215 @@
         color: var(--ws-primary) !important;
     }
 }
+
+/* ═══════════════════════════════════════════════════════════
+   Property Action Center — professional intel grid
+   ═══════════════════════════════════════════════════════════ */
+
+.crm-detail-action-center--property {
+    border: 1px solid color-mix(in srgb, var(--ws-border) 80%, transparent);
+    border-radius: 16px;
+    background:
+        linear-gradient(180deg, color-mix(in srgb, var(--ws-primary) 3%, var(--ws-surface)) 0%, var(--ws-surface) 100%);
+    box-shadow: 0 4px 20px rgba(15, 23, 42, 0.05);
+    overflow: hidden;
+}
+
+.crm-detail-action-center--property .crm-detail-action-center__head {
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid color-mix(in srgb, var(--ws-border) 70%, transparent);
+    background: color-mix(in srgb, var(--ws-surface-2) 40%, transparent);
+}
+
+.crm-detail-action-center--property .crm-detail-action-center__kicker {
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: none;
+    color: var(--ws-primary);
+}
+
+.crm-detail-action-center--property .crm-detail-action-center__title {
+    font-size: 0.9375rem;
+    font-weight: 700;
+}
+
+.crm-detail-action-center--property .crm-detail-action-center__grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.65rem !important;
+    padding: 0.85rem !important;
+    background: transparent !important;
+    overflow: visible !important;
+    flex-wrap: unset !important;
+}
+
+.crm-detail-action-center--property .crm-detail-intel-card {
+    position: relative;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.55rem;
+    min-height: 6.75rem;
+    padding: 0.75rem 0.8rem 0.65rem !important;
+    border: 1px solid color-mix(in srgb, var(--ws-border) 75%, transparent) !important;
+    border-radius: 14px !important;
+    background: var(--ws-surface) !important;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    transition:
+        border-color 0.18s ease,
+        box-shadow 0.18s ease,
+        transform 0.18s ease;
+}
+
+.crm-detail-action-center--property .crm-detail-intel-card:hover {
+    border-color: color-mix(in srgb, var(--ws-primary) 22%, var(--ws-border)) !important;
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.07);
+    transform: translateY(-1px);
+}
+
+.crm-detail-action-center--property .crm-detail-intel-card--primary {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    align-items: flex-start;
+    min-height: 0;
+    padding: 0.85rem 0.95rem !important;
+    border-color: color-mix(in srgb, var(--ws-primary) 18%, var(--ws-border)) !important;
+    background: linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--ws-primary) 7%, var(--ws-surface)) 0%,
+        var(--ws-surface) 100%
+    ) !important;
+}
+
+.crm-detail-action-center--property .crm-detail-intel-card--primary.is-warn {
+    border-color: color-mix(in srgb, var(--ws-accent-warning) 28%, var(--ws-border)) !important;
+    background: linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--ws-accent-warning) 8%, var(--ws-surface)) 0%,
+        var(--ws-surface) 100%
+    ) !important;
+}
+
+.crm-detail-action-center--property .crm-detail-intel-card--primary.is-accent {
+    border-color: color-mix(in srgb, var(--ws-accent-ai) 24%, var(--ws-border)) !important;
+    background: linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--ws-accent-ai) 7%, var(--ws-surface)) 0%,
+        var(--ws-surface) 100%
+    ) !important;
+}
+
+.crm-detail-action-center--property .crm-detail-intel-card__icon {
+    width: 2.125rem;
+    height: 2.125rem;
+    border-radius: 11px;
+    font-size: 0.875rem;
+}
+
+.crm-detail-action-center--property .crm-detail-intel-card__body {
+    gap: 0.2rem;
+}
+
+.crm-detail-action-center--property .crm-detail-intel-card__label {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+}
+
+.crm-detail-action-center--property .crm-detail-intel-card__value {
+    font-size: 0.875rem;
+    line-height: 1.35;
+}
+
+.crm-detail-action-center--property .crm-detail-intel-card--primary .crm-detail-intel-card__value {
+    font-size: 1rem;
+}
+
+.crm-detail-action-center--property .crm-detail-intel-card__meta {
+    font-size: 0.6875rem;
+    line-height: 1.45;
+    -webkit-line-clamp: 2;
+}
+
+.crm-detail-action-center--property .crm-detail-intel-card__link {
+    position: absolute;
+    inset-inline-end: 0.55rem;
+    bottom: 0.55rem;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 999px;
+    border-color: color-mix(in srgb, var(--ws-border) 80%, transparent);
+    background: color-mix(in srgb, var(--ws-surface-2) 50%, var(--ws-surface));
+}
+
+.crm-detail-action-center--property .crm-detail-intel-card--primary .crm-detail-intel-card__link {
+    position: static;
+    align-self: center;
+    flex-shrink: 0;
+    width: 2rem;
+    height: 2rem;
+}
+
+.crm-detail-action-center--property .crm-detail-intel-card:has(.crm-detail-intel-card__link) {
+    padding-bottom: 2.35rem !important;
+}
+
+.crm-detail-action-center--property .crm-detail-intel-card--primary:has(.crm-detail-intel-card__link) {
+    padding-bottom: 0.85rem !important;
+}
+
+@media (min-width: 769px) {
+    .crm-detail-action-center--property .crm-detail-action-center__grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        padding: 1rem 1.1rem 1.1rem !important;
+        gap: 0.75rem !important;
+    }
+
+    .crm-detail-action-center--property .crm-detail-intel-card--primary {
+        grid-column: 1 / -1;
+    }
+
+    .crm-detail-action-center--property .crm-detail-action-center__head {
+        padding: 0.95rem 1.1rem;
+    }
+}
+
+@media (min-width: 1100px) {
+    .crm-detail-action-center--property .crm-detail-action-center__grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    }
+
+    .crm-detail-action-center--property .crm-detail-intel-card--primary {
+        grid-column: span 2;
+    }
+}
+
+@media (max-width: 768px) {
+    .crm-detail-action-center--property {
+        border: none !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        background: transparent !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    .crm-detail-action-center--property .crm-detail-action-center__head {
+        display: none !important;
+    }
+
+    .crm-detail-action-center--property .crm-detail-action-center__grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        padding: 0.65rem 0.75rem !important;
+        gap: 0.55rem !important;
+    }
+
+    .crm-detail-action-center--property .crm-detail-intel-card {
+        min-height: 6.25rem;
+        border-radius: 12px !important;
+    }
+
+    .crm-detail-action-center--property .crm-detail-intel-card:active {
+        transform: scale(0.98);
+    }
+}

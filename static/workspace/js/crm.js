@@ -340,12 +340,17 @@ function crmResolveDealMode(dealSelect, priceSection) {
         const mode = String(raw || '').trim();
         return mode && profiles[mode] ? mode : '';
     };
-    const fromValue = pick(dealSelect.value);
-    if (fromValue) return fromValue;
-    const selected = dealSelect.options[dealSelect.selectedIndex];
-    if (selected) {
-        const fromOpt = pick(selected.value) || pick(selected.textContent);
-        if (fromOpt) return fromOpt;
+    if (dealSelect.tagName === 'SELECT') {
+        const fromValue = pick(dealSelect.value);
+        if (fromValue) return fromValue;
+        const selected = dealSelect.options?.[dealSelect.selectedIndex];
+        if (selected) {
+            const fromOpt = pick(selected.value) || pick(selected.textContent);
+            if (fromOpt) return fromOpt;
+        }
+    } else {
+        const fromDataset = pick(dealSelect.dataset?.dealMode);
+        if (fromDataset) return fromDataset;
     }
     const fromAttr = pick(dealSelect.getAttribute('data-initial-deal-mode'));
     if (fromAttr) return fromAttr;
@@ -359,7 +364,7 @@ function crmResolveDealMode(dealSelect, priceSection) {
 
 function initPropertyDealMode(root) {
     const scope = root || document;
-    scope.querySelectorAll('[data-deal-mode]').forEach(dealSelect => {
+    scope.querySelectorAll('select[data-deal-mode], select[name="deal_mode"]').forEach(dealSelect => {
         const form = dealSelect.closest('form') || scope;
         const sale = form.querySelectorAll('.crm-price-sale');
         const deposit = form.querySelectorAll('.crm-price-deposit');
@@ -516,7 +521,7 @@ function initCRMFeatureProfile(root) {
         if (section.dataset.crmFeatBound === '1') return;
         section.dataset.crmFeatBound = '1';
         const form = section.closest('form') || scope;
-        const dealSelect = form.querySelector('[data-deal-mode], [name="deal_mode"]');
+        const dealSelect = form.querySelector('select[data-deal-mode], select[name="deal_mode"]');
         const typeSelect = form.querySelector('[name="property_type"]');
         const profileInput = section.querySelector('[data-crm-feat-profile]');
         const titleEl = section.querySelector('[data-crm-feat-title]');

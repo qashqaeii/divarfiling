@@ -13,136 +13,85 @@
 
     {# ── Hero ── #}
     <header class="abt-hero">
-        <div class="abt-hero__bg" aria-hidden="true">
-            <div class="abt-hero__orb abt-hero__orb--1"></div>
-            <div class="abt-hero__orb abt-hero__orb--2"></div>
-            <div class="abt-hero__grid"></div>
-        </div>
-        <div class="container abt-hero__inner">
-            <div class="abt-hero__content">
-                <span class="mk-pub-kicker">
-                    {% load decor_icons %}{% decor_icon 'sparkles' size='xs' boxed=True accent='violet' %}
-                    {{ site_brand.site_display_name }}
-                </span>
-                <h1 class="abt-hero__title">ابزار حرفه‌ای<br><span class="abt-hero__accent">برای بازار املاک</span></h1>
-                <p class="abt-hero__lead">فایلینگ دیوار با تمرکز بر دقت داده، سرعت و تجربه کاربری ساده ساخته شده — تا مشاوران و آژانس‌ها بتوانند روی تصمیم‌گیری تمرکز کنند، نه جمع‌آوری دستی اطلاعات.</p>
-                <div class="abt-hero__actions">
-                    <a href="{% url 'product_detail' slug='divar-extraction-bot' %}" class="btn btn-primary">
-                        <i class="fas fa-robot"></i> ربات استخراج
-                    </a>
-                    <a href="{% url 'contact' %}" class="btn btn-outline">
-                        <i class="fas fa-envelope"></i> تماس با ما
-                    </a>
-                </div>
+        <div class="container">
+            <div class="abt-hero__badge">
+                {% load decor_icons %}{% decor_icon 'sparkles' size='xs' boxed=True accent='violet' %}
+                <span>{{ site_brand.site_display_name }}</span>
             </div>
-            <div class="abt-hero__visual" aria-hidden="true">
-                <div class="abt-hero__card abt-hero__card--main">
-                    <div class="abt-hero__card-header">
-                        <span class="abt-hero__dot abt-hero__dot--red"></span>
-                        <span class="abt-hero__dot abt-hero__dot--yellow"></span>
-                        <span class="abt-hero__dot abt-hero__dot--green"></span>
-                        <span class="abt-hero__card-label">فایلینگ هوشمند</span>
-                    </div>
-                    <div class="abt-hero__card-body">
-                        <div class="abt-hero__metric">
-                            <span class="abt-hero__metric-num">۱۲۴</span>
-                            <span class="abt-hero__metric-lbl">آگهی استخراج‌شده امروز</span>
-                        </div>
-                        <div class="abt-hero__bar-group">
-                            <div class="abt-hero__bar" style="--w:82%"></div>
-                            <div class="abt-hero__bar" style="--w:64%"></div>
-                            <div class="abt-hero__bar" style="--w:91%"></div>
-                            <div class="abt-hero__bar" style="--w:47%"></div>
-                        </div>
-                        <div class="abt-hero__tags">
-                            <span class="abt-hero__tag abt-hero__tag--violet">CRM</span>
-                            <span class="abt-hero__tag abt-hero__tag--sky">استخراج</span>
-                            <span class="abt-hero__tag abt-hero__tag--emerald">فایلینگ</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="abt-hero__card abt-hero__card--badge">
-                    <i class="fas fa-shield-alt"></i>
-                    <span>پشتیبانی ۲۴/۷</span>
-                </div>
-                <div class="abt-hero__card abt-hero__card--stat">
-                    <div class="abt-hero__card-stat-num">۹۹٪</div>
-                    <div class="abt-hero__card-stat-lbl">رضایت</div>
-                </div>
+            <h1>
+                ابزار حرفه‌ای
+                <span class="abt-hero__grad">برای بازار املاک</span>
+            </h1>
+            <p class="abt-hero__lead">فایلینگ دیوار با تمرکز بر دقت داده، سرعت و تجربه کاربری ساده ساخته شده — تا مشاوران و آژانس‌ها بتوانند روی تصمیم‌گیری تمرکز کنند، نه جمع‌آوری دستی اطلاعات.</p>
+            <div class="abt-hero__actions">
+                <a href="{% url 'product_detail' slug='divar-extraction-bot' %}" class="btn btn-primary">
+                    <i class="fas fa-robot"></i> ربات استخراج
+                </a>
+                <a href="{% url 'contact' %}" class="btn btn-outline">
+                    <i class="fas fa-envelope"></i> تماس با ما
+                </a>
             </div>
         </div>
     </header>
 
     {# ── Mission ── #}
-    <section class="mk-pub-band abt-mission">
-        <div class="container">
-            <div class="abt-mission__inner">
-                <div class="abt-mission__text">
-                    <span class="mk-about-eyebrow">ماموریت</span>
-                    <h2>داده دقیق، تصمیم بهتر</h2>
-                    <p>ما ابزارهایی می‌سازیم که استخراج، سازماندهی و تحلیل آگهی‌های دیوار را برای حرفه‌ای‌های املاک ساده و قابل اعتماد می‌کند.</p>
-                    <p>هر محصول — از ربات استخراج تا میزکار CRM — با هدف کاهش کار تکراری و افزایش بهره‌وری تیم فروش طراحی شده است.</p>
-                </div>
-                <div class="abt-mission__pillars">
-                    <article class="abt-pillar">
-                        <div class="abt-pillar__icon">
-                            <span class="mk-icon mk-icon--md mk-icon--violet">{% include 'includes/icon_slot.html' with decor='rocket' only %}</span>
-                        </div>
-                        <div class="abt-pillar__body">
-                            <h3>ربات استخراج</h3>
-                            <p>استخراج ساخت‌یافته آگهی‌ها با فیلتر و خروجی آماده</p>
-                        </div>
-                        <div class="abt-pillar__arrow"><i class="fas fa-arrow-left"></i></div>
-                    </article>
-                    <article class="abt-pillar">
-                        <div class="abt-pillar__icon">
-                            <span class="mk-icon mk-icon--md mk-icon--sky">{% include 'includes/icon_slot.html' with decor='layers' only %}</span>
-                        </div>
-                        <div class="abt-pillar__body">
-                            <h3>میزکار CRM</h3>
-                            <p>مدیریت فایلینگ، پیگیری مشتری و همکاری تیمی</p>
-                        </div>
-                        <div class="abt-pillar__arrow"><i class="fas fa-arrow-left"></i></div>
-                    </article>
-                    <article class="abt-pillar">
-                        <div class="abt-pillar__icon">
-                            <span class="mk-icon mk-icon--md mk-icon--emerald">{% include 'includes/icon_slot.html' with decor='clipboard_list' only %}</span>
-                        </div>
-                        <div class="abt-pillar__body">
-                            <h3>امنیت و پشتیبانی</h3>
-                            <p>لایسنس امن، به‌روزرسانی منظم و پاسخگویی مستقیم</p>
-                        </div>
-                        <div class="abt-pillar__arrow"><i class="fas fa-arrow-left"></i></div>
-                    </article>
-                </div>
+    <section class="abt-band">
+        <div class="container abt-mission">
+            <div class="abt-mission__text">
+                <span class="abt-eyebrow">ماموریت</span>
+                <h2>داده دقیق،<br>تصمیم بهتر</h2>
+                <p>ما ابزارهایی می‌سازیم که استخراج، سازماندهی و تحلیل آگهی‌های دیوار را برای حرفه‌ای‌های املاک ساده و قابل اعتماد می‌کند.</p>
+                <p>هر محصول — از ربات استخراج تا میزکار CRM — با هدف کاهش کار تکراری و افزایش بهره‌وری تیم فروش طراحی شده است.</p>
+            </div>
+            <div class="abt-mission__products">
+                <article class="abt-product">
+                    <div class="abt-product__head">
+                        <span class="mk-icon mk-icon--md mk-icon--violet">{% include 'includes/icon_slot.html' with decor='rocket' only %}</span>
+                        <h3>ربات استخراج</h3>
+                    </div>
+                    <p>استخراج ساخت‌یافته آگهی‌ها با فیلتر و خروجی آماده — سریع، دقیق و قابل اعتماد.</p>
+                    <a href="{% url 'product_detail' slug='divar-extraction-bot' %}" class="abt-product__link">مشاهده محصول <i class="fas fa-arrow-left"></i></a>
+                </article>
+                <article class="abt-product">
+                    <div class="abt-product__head">
+                        <span class="mk-icon mk-icon--md mk-icon--sky">{% include 'includes/icon_slot.html' with decor='layers' only %}</span>
+                        <h3>میزکار CRM</h3>
+                    </div>
+                    <p>مدیریت فایلینگ، پیگیری مشتری و همکاری تیمی در یک محیط یکپارچه.</p>
+                    <a href="{% url 'platform_features_hub' %}" class="abt-product__link">مشاهده پلتفرم <i class="fas fa-arrow-left"></i></a>
+                </article>
             </div>
         </div>
     </section>
 
     {# ── Values ── #}
-    <section class="mk-pub-band mk-pub-band--alt abt-values-section">
+    <section class="abt-band abt-band--alt">
         <div class="container">
-            <header class="abt-section-head">
-                <span class="mk-about-eyebrow">ارزش‌ها</span>
+            <header class="abt-head">
+                <span class="abt-eyebrow">ارزش‌ها</span>
                 <h2>آنچه برای ما مهم است</h2>
             </header>
             <div class="abt-values">
-                <article class="abt-value abt-value--emerald">
+                <article class="abt-value">
+                    <span class="abt-value__num">۰۱</span>
                     <div class="abt-value__icon"><span class="mk-icon mk-icon--md mk-icon--emerald"><i class="fas fa-bullseye"></i></span></div>
                     <h3>دقت</h3>
                     <p>استخراج کامل و ساختارمند داده‌ها، بدون از دست دادن جزئیات مهم.</p>
                 </article>
-                <article class="abt-value abt-value--sky">
+                <article class="abt-value">
+                    <span class="abt-value__num">۰۲</span>
                     <div class="abt-value__icon"><span class="mk-icon mk-icon--md mk-icon--sky"><i class="fas fa-feather-alt"></i></span></div>
                     <h3>سادگی</h3>
                     <p>رابط کاربری مینیمال که یادگیری آن چند دقیقه طول می‌کشد.</p>
                 </article>
-                <article class="abt-value abt-value--violet">
+                <article class="abt-value">
+                    <span class="abt-value__num">۰۳</span>
                     <div class="abt-value__icon"><span class="mk-icon mk-icon--md mk-icon--violet"><i class="fas fa-headset"></i></span></div>
                     <h3>پشتیبانی واقعی</h3>
                     <p>ارتباط مستقیم با سازنده — نه ربات و نه تیکت بی‌پاسخ.</p>
                 </article>
-                <article class="abt-value abt-value--amber">
+                <article class="abt-value">
+                    <span class="abt-value__num">۰۴</span>
                     <div class="abt-value__icon"><span class="mk-icon mk-icon--md mk-icon--amber"><i class="fas fa-sync-alt"></i></span></div>
                     <h3>به‌روز ماندن</h3>
                     <p>تطبیق مداوم با تغییرات دیوار و نیازهای کاربران.</p>
@@ -151,43 +100,14 @@
         </div>
     </section>
 
-    {# ── Stats ── #}
-    <section class="abt-stats-section">
-        <div class="container">
-            <div class="abt-stats">
-                <div class="abt-stat">
-                    <div class="abt-stat__num">۱۰۰۰<span>+</span></div>
-                    <div class="abt-stat__label">کاربر فعال</div>
-                </div>
-                <div class="abt-stat__divider" aria-hidden="true"></div>
-                <div class="abt-stat">
-                    <div class="abt-stat__num">۵۰۰۰<span>+</span></div>
-                    <div class="abt-stat__label">لایسنس فعال</div>
-                </div>
-                <div class="abt-stat__divider" aria-hidden="true"></div>
-                <div class="abt-stat">
-                    <div class="abt-stat__num">۹۹<span>٪</span></div>
-                    <div class="abt-stat__label">رضایت مشتری</div>
-                </div>
-                <div class="abt-stat__divider" aria-hidden="true"></div>
-                <div class="abt-stat">
-                    <div class="abt-stat__num">۲۴<span>/۷</span></div>
-                    <div class="abt-stat__label">پشتیبانی</div>
-                </div>
-            </div>
-        </div>
-    </section>
-
     {# ── Creator ── #}
     {% include 'includes/creator_info.html' %}
 
     {# ── CTA ── #}
-    <section class="abt-cta-section">
+    <section class="abt-band abt-band--cta">
         <div class="container">
             <div class="abt-cta">
-                <div class="abt-cta__glow" aria-hidden="true"></div>
-                <div class="abt-cta__content">
-                    <span class="mk-about-eyebrow">شروع کنید</span>
+                <div class="abt-cta__text">
                     <h2>آماده شروع هستید؟</h2>
                     <p>ربات استخراج را ببینید، لایسنس بگیرید و فایلینگ خود را حرفه‌ای کنید.</p>
                 </div>

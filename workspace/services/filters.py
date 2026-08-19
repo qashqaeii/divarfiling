@@ -259,17 +259,28 @@ _ADVERTISER_SIGNAL_FILTER_VALUES = frozenset({
     ADVERTISER_SIGNAL_DISGUISED,
 })
 
+_ADVERTISER_SIGNAL_FILTER_ALIASES = {
+    'disguised': ADVERTISER_SIGNAL_DISGUISED,
+    'مالک واقعی': ADVERTISER_SIGNAL_GENUINE_PERSONAL,
+}
+
+
+def _normalize_consultant_filter(value: str) -> str:
+    raw = str(value or '').strip()
+    return _ADVERTISER_SIGNAL_FILTER_ALIASES.get(raw, raw)
+
 
 def needs_advertiser_signal_filter(filters: Dict) -> bool:
-    return filters.get('consultant') in _ADVERTISER_SIGNAL_FILTER_VALUES
+    return _normalize_consultant_filter(filters.get('consultant') or '') in _ADVERTISER_SIGNAL_FILTER_VALUES
 
 
 def apply_advertiser_signal_filter(listings: List, consultant: str) -> List:
-    if consultant not in _ADVERTISER_SIGNAL_FILTER_VALUES:
+    key = _normalize_consultant_filter(consultant)
+    if key not in _ADVERTISER_SIGNAL_FILTER_VALUES:
         return listings
     return [
         lst for lst in listings
-        if listing_advertiser_signal(lst) == consultant
+        if listing_advertiser_signal(lst) == key
     ]
 
 

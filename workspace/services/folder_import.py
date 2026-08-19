@@ -280,10 +280,15 @@ def build_dataset_name(path_info: Dict[str, Any], original_filename: str) -> str
         parts.append(district)
     elif city:
         parts.append(city)
-    if path_info.get('subcategory'):
-        parts.append(path_info['subcategory'])
-    elif path_info.get('transaction_type'):
-        parts.append(path_info['transaction_type'])
+    tx = str(path_info.get('transaction_type') or '').strip()
+    sub = str(path_info.get('subcategory') or '').strip()
+    if tx and sub:
+        parts.append(tx)
+        parts.append(sub)
+    elif sub:
+        parts.append(sub)
+    elif tx:
+        parts.append(tx)
     if parts:
         return ' — '.join(parts)
     return os.path.splitext(os.path.basename(original_filename))[0]

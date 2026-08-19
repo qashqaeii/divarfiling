@@ -1073,6 +1073,42 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // ─── quick-status widget ───────────────────────────────────────────
     // ─── تابع راه‌اندازی هر widget تغییر وضعیت ─────────────────────────
+    function positionMenu(btn, menu) {
+        // reset
+        menu.style.top = '';
+        menu.style.bottom = '';
+        menu.style.right = '';
+        menu.style.left = '';
+
+        var btnRect = btn.getBoundingClientRect();
+        var menuH = menu.offsetHeight || 220;
+        var menuW = menu.offsetWidth || 144;
+        var vpH = window.innerHeight;
+        var vpW = window.innerWidth;
+
+        // بالا یا پایین؟
+        if (btnRect.bottom + menuH + 8 > vpH && btnRect.top - menuH - 8 > 0) {
+            menu.style.bottom = '100%';
+            menu.style.top = 'auto';
+            menu.style.marginBottom = '4px';
+            menu.style.marginTop = '';
+        } else {
+            menu.style.top = '100%';
+            menu.style.bottom = 'auto';
+            menu.style.marginTop = '4px';
+            menu.style.marginBottom = '';
+        }
+
+        // چپ یا راست؟
+        if (btnRect.right - menuW < 0) {
+            menu.style.right = 'auto';
+            menu.style.left = '0';
+        } else {
+            menu.style.right = '0';
+            menu.style.left = 'auto';
+        }
+    }
+
     function initStatusWidget(btnId, menuId, labelId) {
         var btn = document.getElementById(btnId);
         var menu = document.getElementById(menuId);
@@ -1088,6 +1124,7 @@ document.addEventListener('DOMContentLoaded', function () {
             var open = !menu.hidden;
             menu.hidden = open;
             btn.setAttribute('aria-expanded', String(!open));
+            if (!open) positionMenu(btn, menu);
         });
 
         menu.addEventListener('click', function (e) {
@@ -1202,7 +1239,7 @@ document.addEventListener('DOMContentLoaded', function () {
     font-size: inherit; color: inherit; font-weight: 600;
 }
 .crm-prop-status-inline-btn:hover { text-decoration: underline; }
-.crm-prop-status-menu--side { right: auto; left: 0; }
+.crm-prop-status-menu--side { min-width: 10rem; }
 .crm-prop-status-menu {
     position: absolute; top: calc(100% + 4px); right: 0;
     background: #fff; border: 1px solid #e2e8f0; border-radius: .5rem;

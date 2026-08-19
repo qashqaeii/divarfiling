@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
+from workspace.services.advertiser_signal import row_matches_advertiser_filter
 from workspace.services.columns import extract_consultant_name
 from workspace.services.property_images import (
     best_divar_image_url_from_mapping,
@@ -277,10 +278,7 @@ def items_to_export_records(
         if is_roommate_ad(preview, category):
             skipped += 1
             continue
-        if adv == 'personal' and is_consultant_ad(preview):
-            skipped += 1
-            continue
-        if adv == 'consultant' and not is_consultant_ad(preview):
+        if not row_matches_advertiser_filter({**rec, **preview}, adv):
             skipped += 1
             continue
         filtered.append(rec)

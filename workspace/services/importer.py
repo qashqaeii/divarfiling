@@ -267,9 +267,12 @@ def find_existing_dataset(
     user,
     original_filename: str,
     path_info: dict | None = None,
+    *,
+    strict_identity: bool = False,
 ) -> Tuple[Optional[Dataset], bool]:
     """
     یافتن مجموعه‌داده قبلی — مسیر یکتا، مکان + نوع معامله.
+    strict_identity: فقط هویت فایل / نام فایل؛ بدون ادغام فازی بر اساس محله.
     برمی‌گرداند: (dataset, reactivating).
     """
     basename = os.path.basename(original_filename)
@@ -281,25 +284,28 @@ def find_existing_dataset(
 
         for key in _identity_lookup_keys(identity):
             hit = qs.filter(metadata__file_identity=key).order_by('pk').first()
-            if hit and transaction_match(hit.transaction_type, hit.original_filename, pi, basename):
+            if hit and _filename_tx_matches(hit, pi, basename):
                 return hit
 
         source_path = normalize_file_identity(pi.get('relative_path', ''))
         if source_path:
             for key in _identity_lookup_keys(source_path):
                 hit = qs.filter(metadata__source_path=key).order_by('pk').first()
-                if hit and transaction_match(hit.transaction_type, hit.original_filename, pi, basename):
+                if hit and _filename_tx_matches(hit, pi, basename):
                     return hit
             for key in (pi.get('relative_path', ''), normalize_source_path(pi.get('relative_path', ''))):
                 if not key:
                     continue
                 hit = qs.filter(metadata__source_path=key).order_by('pk').first()
-                if hit and transaction_match(hit.transaction_type, hit.original_filename, pi, basename):
+                if hit and _filename_tx_matches(hit, pi, basename):
                     return hit
 
         bare = _bare_reupload_match(qs, basename, pi)
         if bare:
             return bare
+
+        if strict_identity:
+            return None
 
         seen: Set = set()
         candidates: List[Dataset] = []
@@ -324,9 +330,7 @@ def find_existing_dataset(
                     ds.city, ds.district, ds.original_filename, ds.metadata,
                 )
                 stored_norm = _norm_identity(build_file_identity(rec_pi, ds.original_filename))
-                if stored_norm == norm_incoming and transaction_match(
-                    ds.transaction_type, ds.original_filename, pi, basename,
-                ):
+                if stored_norm == norm_incoming and _filename_tx_matches(ds, pi, basename):
                     return ds
 
         best: Optional[Dataset] = None

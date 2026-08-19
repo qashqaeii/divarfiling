@@ -341,3 +341,105 @@ class ExtractionIngestJsonTest(TestCase):
         ):
             with self.assertRaises(ValueError):
                 ingest_mobile_extraction(user, payload)
+
+
+def _personal_rent_detail(token: str) -> dict:
+    return {
+        'seo': {'web_info': {'title': 'اجاره آپارتمان', 'city_persian': 'تهران'}},
+        'share': {'web_url': f'https://divar.ir/v/{token}'},
+        'webengage': {'token': token, 'business_type': 'personal'},
+        'sections': [
+            {
+                'section_name': 'LIST_DATA',
+                'widgets': [
+                    {
+                        'widget_type': 'RENT_SLIDER',
+                        'data': {
+                            'credit': {'value': '۵۰۰٬۰۰۰٬۰۰۰ تومان'},
+                            'rent': {'value': '۱۵٬۰۰۰٬۰۰۰ تومان'},
+                        },
+                    },
+                ],
+            },
+        ],
+    }
+
+
+def _personal_sell_detail(token: str) -> dict:
+    return {
+        'seo': {'web_info': {'title': 'فروش آپارتمان', 'city_persian': 'تهران'}},
+        'share': {'web_url': f'https://divar.ir/v/{token}'},
+        'webengage': {'token': token, 'business_type': 'personal', 'price': 8_000_000_000},
+        'sections': [],
+    }
+
+
+class ExtractionIngestDatasetSplitTest(TestCase):
+    def test_same_district_different_categories_create_separate_datasets(self):
+        user = User.objects.create_user(username='09120001122', password='x')
+        common_filters = {
+            'city_name': 'تهران',
+            'district_names': ['استاد معین'],
+            'province_name': 'تهران',
+            'output_name_hint': 'ostad-moein',
+            'max_items': 1,
+        }
+        rent = ingest_mobile_extraction(user, {
+            'filters': {
+                **common_filters,
+                'category': 'apartment-rent',
+                'category_label': 'آپارتمان',
+                'transaction_type_label': 'اجاره مسکونی',
+            },
+            'started_at': timezone.now().isoformat(),
+            'finished_at': timezone.now().isoformat(),
+            'items': [{'token': 'split-rent', 'raw': _personal_rent_detail('split-rent')}],
+        })
+        sell = ingest_mobile_extraction(user, {
+            'filters': {
+                **common_filters,
+                'category': 'residential-sell',
+                'category_label': 'آپارتمان',
+                'transaction_type_label': 'فروش مسکونی',
+            },
+            'started_at': timezone.now().isoformat(),
+            'finished_at': timezone.now().isoformat(),
+            'items': [{'token': 'split-sell', 'raw': _personal_sell_detail('split-sell')}],
+        })
+        self.assertNotEqual(rent.dataset.pk, sell.dataset.pk)
+        self.assertFalse(sell.dataset_merged)
+        self.assertEqual(rent.dataset.transaction_type, 'اجاره مسکونی')
+        self.assertEqual(sell.dataset.transaction_type, 'فروش مسکونی')
+        self.assertEqual(rent.dataset.subcategory, 'آپارتمان')
+        self.assertEqual(sell.dataset.subcategory, 'آپارتمان')
+        self.assertIn('اجاره مسکونی', rent.dataset.name)
+        self.assertIn('فروش مسکونی', sell.dataset.name)
+        self.assertEqual(rent.dataset.listings.count(), 1)
+        self.assertEqual(sell.dataset.listings.count(), 1)
+
+    def test_same_category_same_district_merges(self):
+        user = User.objects.create_user(username='09120003344', password='x')
+        filters = {
+            'category': 'apartment-rent',
+            'category_label': 'آپارتمان',
+            'transaction_type_label': 'اجاره مسکونی',
+            'city_name': 'تهران',
+            'district_names': ['استاد معین'],
+            'output_name_hint': 'ostad-moein',
+            'max_items': 1,
+        }
+        first = ingest_mobile_extraction(user, {
+            'filters': filters,
+            'started_at': timezone.now().isoformat(),
+            'finished_at': timezone.now().isoformat(),
+            'items': [{'token': 'merge-a', 'raw': _personal_rent_detail('merge-a')}],
+        })
+        second = ingest_mobile_extraction(user, {
+            'filters': filters,
+            'started_at': timezone.now().isoformat(),
+            'finished_at': timezone.now().isoformat(),
+            'items': [{'token': 'merge-b', 'raw': _personal_rent_detail('merge-b')}],
+        })
+        self.assertEqual(first.dataset.pk, second.dataset.pk)
+        self.assertTrue(second.dataset_merged)
+        self.assertEqual(second.dataset.listings.count(), 2)

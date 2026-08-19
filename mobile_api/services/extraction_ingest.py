@@ -27,7 +27,7 @@ from workspace.services.price_history import load_latest_snapshots, should_recor
 MAX_MOBILE_ITEMS = 500
 MAX_CLOUD_EXTRACT_ITEMS = 500
 EXTRACTIONS_DAILY_LIMIT = 10
-INGEST_VERSION = 5
+INGEST_VERSION = 6
 logger = logging.getLogger(__name__)
 
 CATEGORY_LABELS = {
@@ -82,13 +82,42 @@ def _resolve_location(filters: Dict[str, Any]) -> tuple[str, str]:
     return city, district
 
 
-def _resolve_original_filename(filters: Dict[str, Any]) -> str:
-    hint = str(filters.get('output_name_hint') or '').strip()
+def _build_tx_slug(tx_type: str, subcat: str, category: str) -> str:
+    """اسلاگ نوع فایل هم‌تراز با پوشه ویندوز: اجاره_آپارتمان / فروش_مغازه_و_غرفه."""
+    tx = (tx_type or '').strip()
+    sub = (subcat or '').strip()
+    if not tx or not sub:
+        fallback_tx, fallback_sub = CATEGORY_LABELS.get(category, ('', category))
+        tx = tx or fallback_tx
+        sub = sub or fallback_sub
+    blob = f'{tx} {sub} {category}'.lower()
+    if 'اجاره' in blob or 'رهن' in blob or 'rent' in (category or ''):
+        kind_fa = 'اجاره'
+    elif 'فروش' in blob or 'sell' in (category or ''):
+        kind_fa = 'فروش'
+    else:
+        kind_fa = ''
+    sub_slug = sub.replace(' ', '_')
+    if kind_fa and sub_slug:
+        return f'{kind_fa}_{sub_slug}'
+    return sub_slug or category or 'استخراج_موبایل'
+
+
+def _stem_from_hint(hint: str) -> str:
+    base = (hint or '').strip()
+    if base.endswith(('.json', '.xlsx', '.xls')):
+        base = os.path.splitext(base)[0]
+    return re.sub(r'_\d{8}_\d{6}$', '', base)
+
+
+def _resolve_original_filename(filters: Dict[str, Any], category: str, tx_slug: str) -> str:
+    hint = _stem_from_hint(str(filters.get('output_name_hint') or ''))
+    identity_token = category or tx_slug
     if hint:
-        base = hint.split('_')[0] if re.match(r'^.+_\d{8}_\d{6}$', hint) else hint
-        base = base if not base.endswith(('.json', '.xlsx', '.xls')) else os.path.splitext(base)[0]
-        return f'{base}.json'
-    return 'mobile_extraction.json'
+        if identity_token and identity_token not in hint and tx_slug not in hint:
+            return f'{hint}_{identity_token}.json'
+        return f'{hint}.json'
+    return f'{tx_slug or category or "mobile_extraction"}.json'
 
 
 def _resolve_dataset_display_name(path_info: Dict[str, Any], original_filename: str) -> str:
@@ -102,6 +131,8 @@ def _resolve_dataset_display_name(path_info: Dict[str, Any], original_filename: 
         parts.append(district)
     elif city:
         parts.append(city)
+    if path_info.get('transaction_type'):
+        parts.append(path_info['transaction_type'])
     if path_info.get('subcategory'):
         parts.append(path_info['subcategory'])
     return ' — '.join(parts) if parts else built
@@ -192,13 +223,14 @@ def ingest_mobile_extraction(user, payload: Dict[str, Any]) -> IngestResult:
     file_meta = detect_metadata(df)
     columns = list(df.columns.astype(str))
 
-    original_filename = _resolve_original_filename(filters)
+    tx_slug = _build_tx_slug(tx_type, subcat, category)
+    original_filename = _resolve_original_filename(filters, category, tx_slug)
     path_info = {
         'city': city or normalize_location_label(file_meta.get('city', '')),
         'district': district or normalize_location_label(file_meta.get('district', '')),
         'transaction_type': tx_type or file_meta.get('transaction_type', ''),
         'subcategory': subcat,
-        'tx_slug': os.path.splitext(original_filename)[0],
+        'tx_slug': tx_slug,
         'filename': original_filename,
         'province': str(filters.get('province_name') or '').strip(),
     }
@@ -214,7 +246,9 @@ def ingest_mobile_extraction(user, payload: Dict[str, Any]) -> IngestResult:
     price_cache = load_latest_snapshots(user, tokens)
 
     with transaction.atomic():
-        existing, _reactivating = find_existing_dataset(user, original_filename, path_info)
+        existing, _reactivating = find_existing_dataset(
+            user, original_filename, path_info, strict_identity=True,
+        )
         metadata = {
             'source': 'mobile',
             'mobile_extraction': True,

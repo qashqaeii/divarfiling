@@ -7,6 +7,17 @@
             <a href="{% url 'workspace:listing_detail' listing.dataset_id listing.id %}" class="mk-listing-title" title="{{ listing.title }}">{{ listing.title }}</a>
             <div class="mk-listing-meta">
                 <code class="mk-token" title="{{ listing.token }}">{{ listing.token|truncatechars:8 }}</code>
+                {% if feat.advertiser %}
+                <span class="mk-adv-tag mk-adv-tag--meta {{ feat.advertiser.tag_class }}" title="{{ feat.advertiser.title }}">
+                    <span class="mk-adv-dot" aria-hidden="true"></span>
+                    <span class="mk-adv-label">{% if feat.advertiser.signal == 'consultant' %}مشاور املاک{% else %}{{ feat.advertiser.label }}{% endif %}</span>
+                </span>
+                {% elif feat.is_consultant %}
+                <span class="mk-adv-tag mk-adv-tag--meta mk-adv-tag--consultant" title="مشاور املاک">
+                    <span class="mk-adv-dot" aria-hidden="true"></span>
+                    <span class="mk-adv-label">مشاور املاک</span>
+                </span>
+                {% endif %}
                 {% if lm.tag %}<span class="mk-tag">{{ lm.tag }}</span>{% endif %}
                 {% if feat.is_vacant %}<span class="mk-tag mk-tag-vacant" title="ملک تخلیه است"><i class="fas fa-door-open" aria-hidden="true"></i> تخلیه</span>{% endif %}
                 {% if lm.is_favorite %}<span class="mk-tag mk-tag-star" title="علاقه‌مند"><i class="fas fa-star" aria-hidden="true"></i></span>{% endif %}

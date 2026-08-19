@@ -1017,11 +1017,11 @@ html.mk-public:not([data-theme="light"]) .ecc-alerts-head h2 {
 }
 
 @media (max-width: 1280px) {
-    .ecc-body {
+    .ecc-page:not(.ecc-page--v2) .ecc-body {
         grid-template-columns: 1fr;
     }
 
-    .ecc-sidebar {
+    .ecc-page:not(.ecc-page--v2) .ecc-sidebar {
         position: static;
         flex-direction: row;
         flex-wrap: nowrap;
@@ -1029,7 +1029,7 @@ html.mk-public:not([data-theme="light"]) .ecc-alerts-head h2 {
         max-height: none;
     }
 
-    .ecc-nav-item {
+    .ecc-page:not(.ecc-page--v2) .ecc-nav-item {
         flex-shrink: 0;
         white-space: nowrap;
     }
@@ -1245,8 +1245,11 @@ body.mk-admin-dashboard .adm-page.ecc-page--v2 {
     font-size: 0.78rem;
 }
 
-/* Slim sidebar */
+/* Slim sidebar — always vertical on v2 (beats generic 1280px row layout) */
 .ecc-page--v2 .ecc-sidebar {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
     position: sticky;
     top: 0.75rem;
     align-self: start;

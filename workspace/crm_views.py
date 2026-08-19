@@ -1219,7 +1219,12 @@ class CRMPropertyStatusUpdateView(LoginRequiredMixin, View):
             # یک سال بعد، یک ماه زودتر
             remind_month = j.month - 1 if j.month > 1 else 12
             remind_year = j.year + 1 if j.month > 1 else j.year
-            max_day = jdatetime.date(remind_year, remind_month, 1).daysinmonth
+            if remind_month <= 6:
+                max_day = 31
+            elif remind_month <= 11:
+                max_day = 30
+            else:
+                max_day = 30 if jdatetime.date(remind_year, 1, 1).isleap() else 29
             remind_day = min(j.day, max_day)
             remind_j = jdatetime.date(remind_year, remind_month, remind_day)
             suggested_due_jalali = f'{remind_j.year}/{remind_j.month:02d}/{remind_j.day:02d}'

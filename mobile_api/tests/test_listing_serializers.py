@@ -91,6 +91,30 @@ class ListingSerializerFallbackTests(TestCase):
         self.assertTrue(row['has_storage'])
         self.assertTrue(row['has_elevator'])
 
+    def test_detail_includes_feature_profile(self):
+        listing = Listing.objects.create(
+            dataset=self.dataset,
+            token='tok-feature-profile',
+            title='آپارتمان کامل',
+            price=8_000_000_000,
+            area=120,
+            data={
+                'پارکینگ': 'دارد',
+                'انباری': 'دارد',
+                'آسانسور': 'دارد',
+                'نوع سند': 'تک‌برگ',
+                'گرمایش': 'شوفاژ',
+                'سرمایش': 'اسپلیت',
+                'جنس کف': 'سرامیک',
+            },
+        )
+        detail = listing_detail_to_dict(listing)
+        self.assertIn('feature_profile', detail)
+        profile = detail['feature_profile']
+        self.assertTrue(profile.get('has_details') or profile.get('groups'))
+        self.assertIn('listing_highlights', detail)
+        self.assertIsInstance(detail['listing_highlights'], list)
+
     def test_detail_includes_amenity_fields(self):
         listing = Listing.objects.create(
             dataset=self.dataset,

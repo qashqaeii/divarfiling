@@ -277,6 +277,7 @@ def contact_to_dict(c: Customer) -> Dict[str, Any]:
         'is_builder': c.customer_type == 'سازنده',
         'social_links': getattr(c, 'social_links', None) or {},
         'active_channels': getattr(c, 'active_channels', None) or [],
+        'matching_tolerance_percent': c.matching_tolerance_percent,
     }
 
 
@@ -340,6 +341,9 @@ def listing_detail_to_dict(lst: Listing, *, user=None, request=None) -> Dict[str
     data = lst.data or {}
     images = _listing_image_urls(lst)
     specs = _listing_specs(lst)
+    feat = extract_listing_features(lst)
+    feature_profile = build_listing_feature_profile(lst, base_feat=feat)
+    listing_highlights = feature_highlights_for_listing(lst, limit=12)
 
     base.update({
         'description': lst.description or _data_value(data, 'توضیحات', 'description') or '',
@@ -354,6 +358,8 @@ def listing_detail_to_dict(lst: Listing, *, user=None, request=None) -> Dict[str
         'expires_at': lst.expires_at.isoformat() if lst.expires_at else None,
         'is_expired': lst.is_expired,
         'price_per_sqm': _calc_price_per_sqm(lst),
+        'feature_profile': feature_profile,
+        'listing_highlights': listing_highlights,
         **_listing_amenity_fields(lst),
     })
     if user is not None:

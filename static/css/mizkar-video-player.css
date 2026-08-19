@@ -350,39 +350,51 @@ html.mk-public[data-theme="light"] .pb-install-video-link {
 
 /* ─── variant: edu (مرکز آموزش) ─── */
 .edu-video-band {
-    padding: clamp(1.5rem, 3vw, 2.25rem) 0;
+    padding: clamp(2rem, 4vw, 3rem) 0;
     border-bottom: 1px solid var(--edu-border, rgba(148, 163, 184, 0.12));
 }
 .edu-video-band--filing {
-    background: linear-gradient(180deg, color-mix(in srgb, #0ea5e9 5%, transparent), transparent);
+    background: linear-gradient(180deg, color-mix(in srgb, #0ea5e9 6%, transparent), transparent 70%);
 }
 .edu-video-band--crm {
-    background: linear-gradient(180deg, color-mix(in srgb, #7c3aed 6%, transparent), transparent);
+    background: linear-gradient(180deg, color-mix(in srgb, #7c3aed 7%, transparent), transparent 70%);
 }
 
 .edu-video-shell {
     display: grid;
-    gap: clamp(1.25rem, 3vw, 2rem);
+    gap: clamp(1.5rem, 3.5vw, 2.5rem);
     align-items: center;
 }
 
 @media (min-width: 960px) {
     .edu-video-shell {
-        grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
     }
 }
 
+.edu-video-copy .edu-eyebrow {
+    display: block;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--edu-accent, #a78bfa);
+    margin-bottom: 0.5rem;
+}
+
 .edu-video-copy h2 {
-    margin: 0 0 0.65rem;
-    font-size: clamp(1.25rem, 2.5vw, 1.5rem);
+    margin: 0 0 0.75rem;
+    font-size: clamp(1.3rem, 2.8vw, 1.6rem);
     font-weight: 800;
     color: var(--edu-text, #f1f5f9);
+    letter-spacing: -0.03em;
+    line-height: 1.3;
 }
 
 .edu-video-copy p {
-    margin: 0 0 1rem;
-    font-size: 0.88rem;
-    line-height: 1.75;
+    margin: 0 0 1.1rem;
+    font-size: 0.9rem;
+    line-height: 1.8;
     color: var(--edu-muted, #94a3b8);
 }
 
@@ -390,26 +402,27 @@ html.mk-public[data-theme="light"] .pb-install-video-link {
     display: flex;
     flex-wrap: wrap;
     gap: 0.45rem;
-    margin-bottom: 1rem;
+    margin-bottom: 1.1rem;
 }
 
 .edu-video-chip {
     display: inline-flex;
     align-items: center;
     gap: 0.35rem;
-    padding: 0.3rem 0.65rem;
+    padding: 0.32rem 0.7rem;
     border-radius: 999px;
     font-size: 0.72rem;
     font-weight: 600;
     color: #cbd5e1;
     background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(148, 163, 184, 0.14);
+    border: 1px solid rgba(148, 163, 184, 0.15);
 }
 
 .edu-video-actions {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.6rem;
+    gap: 0.65rem;
+    align-items: center;
 }
 
 @media (max-width: 640px) {

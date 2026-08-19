@@ -164,7 +164,21 @@
 
                 <div class="crm-prop-hero-content">
                     <div class="crm-prop-hero-status-row">
+                        {% if can_edit_property %}
+                        <div class="crm-prop-status-quick" id="propStatusQuick">
+                            <button type="button" class="crm-prop-badge crm-prop-badge--status crm-prop-status-btn" id="propStatusBtn" aria-haspopup="listbox" aria-expanded="false">
+                                <span id="propStatusLabel">{{ property.transaction_status }}</span>
+                                <i class="fas fa-chevron-down" aria-hidden="true"></i>
+                            </button>
+                            <ul class="crm-prop-status-menu" id="propStatusMenu" role="listbox" hidden>
+                                {% for s in property_tx_statuses %}
+                                <li role="option" class="crm-prop-status-option{% if s == property.transaction_status %} is-active{% endif %}" data-value="{{ s }}">{{ s }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% else %}
                         <span class="crm-prop-badge crm-prop-badge--status">{{ property.transaction_status }}</span>
+                        {% endif %}
                         <span class="crm-prop-badge crm-prop-badge--type">{{ property.property_type }}</span>
                         {% if property.is_vacant %}
                         <span class="crm-prop-badge crm-prop-badge--vacant" title="ملک در حال حاضر تخلیه است">
@@ -1006,5 +1020,154 @@ document.addEventListener('DOMContentLoaded', function () {
 {% endif %}
 {% if ai_enabled and has_bot_license %}
 <script src="{% static 'workspace/js/ai.js' %}?v=6"></script>
+{% endif %}
+
+{% if can_edit_property %}
+{# ── دیالوگ یادآور سررسید اجاره ── #}
+<div id="rentalReminderDialog" class="crm-prop-rr-backdrop" hidden aria-modal="true" role="dialog" aria-labelledby="rrdTitle">
+    <div class="crm-prop-rr-box">
+        <h3 id="rrdTitle"><i class="fas fa-bell"></i> یادآور سررسید اجاره</h3>
+        <p id="rrdMsg"></p>
+        <div class="crm-prop-rr-actions">
+            <button type="button" class="btn-primary" id="rrdConfirm">بله، یادآور بساز</button>
+            <button type="button" class="btn-ghost" id="rrdCancel">خیر، نیازی نیست</button>
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    'use strict';
+
+    var CSRF = (document.cookie.match(/csrftoken=([^;]+)/) || [])[1] || '';
+    var STATUS_URL = "{% url 'workspace:crm_property_status' property.id %}";
+    var REMINDER_URL = "{% url 'workspace:crm_property_rental_reminder' property.id %}";
+    var DEAL_MODE = "{{ property.deal_mode }}";
+
+    // ─── quick-status widget ───────────────────────────────────────────
+    var btn = document.getElementById('propStatusBtn');
+    var menu = document.getElementById('propStatusMenu');
+    var label = document.getElementById('propStatusLabel');
+
+    if (btn && menu) {
+        btn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            var open = !menu.hidden;
+            menu.hidden = open;
+            btn.setAttribute('aria-expanded', String(!open));
+        });
+
+        document.addEventListener('click', function () {
+            menu.hidden = true;
+            btn.setAttribute('aria-expanded', 'false');
+        });
+
+        menu.addEventListener('click', function (e) {
+            var opt = e.target.closest('.crm-prop-status-option');
+            if (!opt) return;
+            var newStatus = opt.dataset.value;
+            changeStatus(newStatus);
+        });
+    }
+
+    function changeStatus(newStatus) {
+        fetch(STATUS_URL, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json', 'X-CSRFToken': CSRF},
+            body: JSON.stringify({transaction_status: newStatus}),
+        })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            if (!data.ok) { alert(data.error || 'خطا در تغییر وضعیت'); return; }
+            // update UI
+            if (label) label.textContent = data.transaction_status;
+            menu.querySelectorAll('.crm-prop-status-option').forEach(function (li) {
+                li.classList.toggle('is-active', li.dataset.value === data.transaction_status);
+            });
+            if (menu) { menu.hidden = true; if (btn) btn.setAttribute('aria-expanded', 'false'); }
+            // پیشنهاد یادآور اجاره
+            if (data.suggest_rental_reminder && data.suggested_due_jalali) {
+                openRentalReminderDialog(data.suggested_due_jalali);
+            }
+        })
+        .catch(function () { alert('خطا در ارتباط با سرور'); });
+    }
+
+    // ─── rental reminder dialog ────────────────────────────────────────
+    var dialog = document.getElementById('rentalReminderDialog');
+    var rrdMsg = document.getElementById('rrdMsg');
+    var rrdConfirm = document.getElementById('rrdConfirm');
+    var rrdCancel = document.getElementById('rrdCancel');
+    var _pendingDue = '';
+
+    function openRentalReminderDialog(dueJalali) {
+        _pendingDue = dueJalali;
+        rrdMsg.textContent = 'آیا می‌خواهید یک یادآور برای تاریخ ' + dueJalali + ' (یک ماه قبل از سررسید اجاره) ایجاد شود؟';
+        dialog.hidden = false;
+        rrdConfirm.focus();
+    }
+
+    if (rrdConfirm) {
+        rrdConfirm.addEventListener('click', function () {
+            dialog.hidden = true;
+            fetch(REMINDER_URL, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json', 'X-CSRFToken': CSRF},
+                body: JSON.stringify({due_jalali: _pendingDue}),
+            })
+            .then(function (r) { return r.json(); })
+            .then(function (d) {
+                if (d.ok) {
+                    var notice = document.createElement('div');
+                    notice.className = 'mk-notice mk-notice--success mk-notice--inline';
+                    notice.style.cssText = 'position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);z-index:9999;padding:.75rem 1.5rem;border-radius:.5rem';
+                    notice.textContent = 'یادآور سررسید اجاره با موفقیت ثبت شد.';
+                    document.body.appendChild(notice);
+                    setTimeout(function () { notice.remove(); }, 4000);
+                } else {
+                    alert(d.error || 'خطا در ثبت یادآور');
+                }
+            })
+            .catch(function () { alert('خطا در ارتباط با سرور'); });
+        });
+    }
+
+    if (rrdCancel) {
+        rrdCancel.addEventListener('click', function () { dialog.hidden = true; });
+    }
+})();
+</script>
+
+<style>
+.crm-prop-status-quick { position: relative; display: inline-block; }
+.crm-prop-status-btn { cursor: pointer; display: inline-flex; align-items: center; gap: .35rem; border: none; }
+.crm-prop-status-btn .fa-chevron-down { font-size: .7em; opacity: .7; }
+.crm-prop-status-menu {
+    position: absolute; top: calc(100% + 4px); right: 0;
+    background: #fff; border: 1px solid #e2e8f0; border-radius: .5rem;
+    box-shadow: 0 4px 16px rgba(0,0,0,.12); z-index: 300;
+    min-width: 9rem; padding: .25rem 0; list-style: none; margin: 0;
+}
+.crm-prop-status-option {
+    padding: .5rem 1rem; cursor: pointer; font-size: .875rem; white-space: nowrap;
+    transition: background .15s;
+}
+.crm-prop-status-option:hover { background: #f1f5f9; }
+.crm-prop-status-option.is-active { font-weight: 700; color: #0f172a; }
+
+.crm-prop-rr-backdrop {
+    position: fixed; inset: 0; background: rgba(0,0,0,.45);
+    z-index: 10000; display: flex; align-items: center; justify-content: center;
+}
+.crm-prop-rr-backdrop[hidden] { display: none; }
+.crm-prop-rr-box {
+    background: #fff; border-radius: .75rem; padding: 1.75rem 2rem;
+    max-width: 26rem; width: 90%; box-shadow: 0 8px 32px rgba(0,0,0,.18);
+    text-align: right; direction: rtl;
+}
+.crm-prop-rr-box h3 { margin: 0 0 .75rem; font-size: 1.05rem; }
+.crm-prop-rr-box p { margin: 0 0 1.25rem; line-height: 1.7; font-size: .93rem; color: #334155; }
+.crm-prop-rr-actions { display: flex; gap: .75rem; flex-direction: row-reverse; }
+</style>
 {% endif %}
 {% endblock %}

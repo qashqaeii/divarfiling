@@ -1207,11 +1207,71 @@ class CRMPropertyStatusUpdateView(LoginRequiredMixin, View):
             update_property_transaction_status(prop, new_status, user=request.user)
         except ValueError as exc:
             return JsonResponse({'ok': False, 'error': str(exc)}, status=400)
+
+        # پیشنهاد یادآور سررسید برای فایل‌های رهن/اجاره که به بایگانی منتقل شدند
+        suggest_reminder = False
+        suggested_due_jalali = ''
+        if new_status == 'بایگانی' and prop.deal_mode in ('رهن و اجاره', 'اجاره'):
+            import jdatetime
+            from django.utils import timezone
+            today = timezone.now().date()
+            j = jdatetime.date.fromgregorian(date=today)
+            # یک سال بعد، یک ماه زودتر
+            remind_month = j.month - 1 if j.month > 1 else 12
+            remind_year = j.year + 1 if j.month > 1 else j.year
+            max_day = jdatetime.date(remind_year, remind_month, 1).daysinmonth
+            remind_day = min(j.day, max_day)
+            remind_j = jdatetime.date(remind_year, remind_month, remind_day)
+            suggested_due_jalali = f'{remind_j.year}/{remind_j.month:02d}/{remind_j.day:02d}'
+            suggest_reminder = True
+
         return JsonResponse({
             'ok': True,
             'transaction_status': new_status,
             'property_id': prop.pk,
+            'suggest_rental_reminder': suggest_reminder,
+            'suggested_due_jalali': suggested_due_jalali,
         })
+
+
+class CRMPropertyRentalReminderView(LoginRequiredMixin, View):
+    """ایجاد یادآور سررسید اجاره برای فایل‌های رهن/اجاره بایگانی‌شده."""
+
+    def post(self, request, property_id):
+        import jdatetime
+        from workspace.services.jalali_input import parse_jalali_date_string as parse_jalali_date
+
+        prop = property_for_user(request.user, property_id)
+        if not prop:
+            return JsonResponse({'ok': False, 'error': 'ملک یافت نشد'}, status=404)
+        if prop.deal_mode not in ('رهن و اجاره', 'اجاره'):
+            return JsonResponse({'ok': False, 'error': 'فقط برای فایل‌های رهن/اجاره'}, status=400)
+
+        try:
+            payload = json.loads(request.body.decode('utf-8'))
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            return JsonResponse({'ok': False, 'error': 'درخواست نامعتبر'}, status=400)
+
+        due_jalali = (payload.get('due_jalali') or '').strip()
+        if not due_jalali:
+            return JsonResponse({'ok': False, 'error': 'تاریخ سررسید الزامی است'}, status=400)
+
+        due_date = parse_jalali_date(due_jalali)
+        if not due_date:
+            return JsonResponse({'ok': False, 'error': 'تاریخ نامعتبر است'}, status=400)
+
+        from django.utils import timezone
+        import datetime
+        due_dt = timezone.make_aware(datetime.datetime.combine(due_date, datetime.time(9, 0)))
+
+        reminder = Reminder(
+            user=request.user,
+            title=f'سررسید اجاره: {prop.title}',
+            note=f'یک ماه به سررسید اجاره ملک «{prop.title}» مانده است.',
+            due_at=due_dt,
+        )
+        reminder.save()
+        return JsonResponse({'ok': True, 'reminder_id': reminder.pk})
 
 
 class CRMPropertyPipelineOrderView(LoginRequiredMixin, View):
@@ -1405,6 +1465,7 @@ class CRMPropertyDetailView(CRMContextMixin, LoginRequiredMixin, DetailView):
         ctx['contact_suggestion_text'] = ''
         ctx['contact_suggestion_items'] = []
         ctx['contact_suggested'] = self.request.GET.get('suggested') == '1'
+        ctx['property_tx_statuses'] = PROPERTY_TX_STATUSES
         can_suggest_contacts = (
             bool(ctx.get('can_edit_property'))
             and not ctx.get('property_is_deleted')

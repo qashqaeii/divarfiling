@@ -164,21 +164,19 @@
 
                 <div class="crm-prop-hero-content">
                     <div class="crm-prop-hero-status-row">
-                        {% if can_edit_property %}
                         <div class="crm-prop-status-quick" id="propStatusQuick">
-                            <button type="button" class="crm-prop-badge crm-prop-badge--status crm-prop-status-btn" id="propStatusBtn" aria-haspopup="listbox" aria-expanded="false">
+                            <button type="button" class="crm-prop-badge crm-prop-badge--status crm-prop-status-btn" id="propStatusBtn" aria-haspopup="listbox" aria-expanded="false" {% if not can_edit_property %}disabled title="فقط مالک فایل می‌تواند وضعیت را تغییر دهد"{% endif %}>
                                 <span id="propStatusLabel">{{ property.transaction_status }}</span>
-                                <i class="fas fa-chevron-down" aria-hidden="true"></i>
+                                {% if can_edit_property %}<i class="fas fa-chevron-down" aria-hidden="true"></i>{% endif %}
                             </button>
+                            {% if can_edit_property %}
                             <ul class="crm-prop-status-menu" id="propStatusMenu" role="listbox" hidden>
                                 {% for s in property_tx_statuses %}
                                 <li role="option" class="crm-prop-status-option{% if s == property.transaction_status %} is-active{% endif %}" data-value="{{ s }}">{{ s }}</li>
                                 {% endfor %}
                             </ul>
+                            {% endif %}
                         </div>
-                        {% else %}
-                        <span class="crm-prop-badge crm-prop-badge--status">{{ property.transaction_status }}</span>
-                        {% endif %}
                         <span class="crm-prop-badge crm-prop-badge--type">{{ property.property_type }}</span>
                         {% if property.is_vacant %}
                         <span class="crm-prop-badge crm-prop-badge--vacant" title="ملک در حال حاضر تخلیه است">
@@ -712,7 +710,21 @@
                 <dl class="crm-prop-side-dl">
                     <div><dt>نوع</dt><dd>{{ property.property_type }}</dd></div>
                     <div><dt>معامله</dt><dd>{{ property.deal_mode }}</dd></div>
-                    <div><dt>وضعیت</dt><dd>{{ property.transaction_status }}</dd></div>
+                    <div><dt>وضعیت</dt><dd>
+                        {% if can_edit_property %}
+                        <div class="crm-prop-status-quick crm-prop-status-quick--inline" id="propStatusQuickSide">
+                            <button type="button" class="crm-prop-status-inline-btn" id="propStatusBtnSide" aria-haspopup="listbox" aria-expanded="false">
+                                <span id="propStatusLabelSide">{{ property.transaction_status }}</span>
+                                <i class="fas fa-chevron-down" aria-hidden="true"></i>
+                            </button>
+                            <ul class="crm-prop-status-menu crm-prop-status-menu--side" id="propStatusMenuSide" role="listbox" hidden>
+                                {% for s in property_tx_statuses %}
+                                <li role="option" class="crm-prop-status-option{% if s == property.transaction_status %} is-active{% endif %}" data-value="{{ s }}">{{ s }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% else %}{{ property.transaction_status }}{% endif %}
+                    </dd></div>
                     <div><dt>انتشار</dt><dd>{{ property.publish_status|default:"—" }}</dd></div>
                     {% if is_property_owner %}<div><dt>ثبت‌کننده</dt><dd>شما</dd></div>
                     {% elif property_owner_user %}<div><dt>ثبت‌کننده</dt><dd>{{ property_owner_user.get_full_name|default:property_owner_user.username }}</dd></div>{% endif %}
@@ -1045,32 +1057,42 @@ document.addEventListener('DOMContentLoaded', function () {
     var DEAL_MODE = "{{ property.deal_mode }}";
 
     // ─── quick-status widget ───────────────────────────────────────────
-    var btn = document.getElementById('propStatusBtn');
-    var menu = document.getElementById('propStatusMenu');
-    var label = document.getElementById('propStatusLabel');
+    // ─── تابع راه‌اندازی هر widget تغییر وضعیت ─────────────────────────
+    function initStatusWidget(btnId, menuId, labelId) {
+        var btn = document.getElementById(btnId);
+        var menu = document.getElementById(menuId);
+        var label = document.getElementById(labelId);
+        if (!btn || !menu) return;
 
-    if (btn && menu) {
         btn.addEventListener('click', function (e) {
             e.stopPropagation();
+            // بستن سایر منوها
+            document.querySelectorAll('.crm-prop-status-menu').forEach(function (m) {
+                if (m !== menu) { m.hidden = true; }
+            });
             var open = !menu.hidden;
             menu.hidden = open;
             btn.setAttribute('aria-expanded', String(!open));
         });
 
-        document.addEventListener('click', function () {
-            menu.hidden = true;
-            btn.setAttribute('aria-expanded', 'false');
-        });
-
         menu.addEventListener('click', function (e) {
             var opt = e.target.closest('.crm-prop-status-option');
             if (!opt) return;
-            var newStatus = opt.dataset.value;
-            changeStatus(newStatus);
+            changeStatus(opt.dataset.value, btn, menu, label);
         });
     }
 
-    function changeStatus(newStatus) {
+    document.addEventListener('click', function () {
+        document.querySelectorAll('.crm-prop-status-menu').forEach(function (m) { m.hidden = true; });
+        document.querySelectorAll('.crm-prop-status-btn, .crm-prop-status-inline-btn').forEach(function (b) {
+            b.setAttribute('aria-expanded', 'false');
+        });
+    });
+
+    initStatusWidget('propStatusBtn', 'propStatusMenu', 'propStatusLabel');
+    initStatusWidget('propStatusBtnSide', 'propStatusMenuSide', 'propStatusLabelSide');
+
+    function changeStatus(newStatus, btn, menu, label) {
         fetch(STATUS_URL, {
             method: 'POST',
             headers: {'Content-Type': 'application/json', 'X-CSRFToken': CSRF},
@@ -1079,12 +1101,16 @@ document.addEventListener('DOMContentLoaded', function () {
         .then(function (r) { return r.json(); })
         .then(function (data) {
             if (!data.ok) { alert(data.error || 'خطا در تغییر وضعیت'); return; }
-            // update UI
-            if (label) label.textContent = data.transaction_status;
-            menu.querySelectorAll('.crm-prop-status-option').forEach(function (li) {
+            // آپدیت همه labelها و منوها
+            ['propStatusLabel', 'propStatusLabelSide'].forEach(function (id) {
+                var el = document.getElementById(id);
+                if (el) el.textContent = data.transaction_status;
+            });
+            document.querySelectorAll('.crm-prop-status-option').forEach(function (li) {
                 li.classList.toggle('is-active', li.dataset.value === data.transaction_status);
             });
-            if (menu) { menu.hidden = true; if (btn) btn.setAttribute('aria-expanded', 'false'); }
+            if (menu) { menu.hidden = true; }
+            if (btn) btn.setAttribute('aria-expanded', 'false');
             // پیشنهاد یادآور اجاره
             if (data.suggest_rental_reminder && data.suggested_due_jalali) {
                 openRentalReminderDialog(data.suggested_due_jalali);
@@ -1141,7 +1167,18 @@ document.addEventListener('DOMContentLoaded', function () {
 <style>
 .crm-prop-status-quick { position: relative; display: inline-block; }
 .crm-prop-status-btn { cursor: pointer; display: inline-flex; align-items: center; gap: .35rem; border: none; }
-.crm-prop-status-btn .fa-chevron-down { font-size: .7em; opacity: .7; }
+.crm-prop-status-btn:disabled { cursor: default; opacity: .85; }
+.crm-prop-status-btn .fa-chevron-down,
+.crm-prop-status-inline-btn .fa-chevron-down { font-size: .7em; opacity: .7; }
+/* نسخه inline برای sidebar */
+.crm-prop-status-quick--inline { display: inline-block; }
+.crm-prop-status-inline-btn {
+    display: inline-flex; align-items: center; gap: .3rem;
+    background: none; border: none; padding: 0; cursor: pointer;
+    font-size: inherit; color: inherit; font-weight: 600;
+}
+.crm-prop-status-inline-btn:hover { text-decoration: underline; }
+.crm-prop-status-menu--side { right: auto; left: 0; }
 .crm-prop-status-menu {
     position: absolute; top: calc(100% + 4px); right: 0;
     background: #fff; border: 1px solid #e2e8f0; border-radius: .5rem;

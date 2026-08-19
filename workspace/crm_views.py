@@ -1400,6 +1400,7 @@ class CRMPropertyDetailView(CRMContextMixin, LoginRequiredMixin, DetailView):
             ctx['location_accuracy'] = None
             ctx['property_map_has_coords'] = False
             ctx['default_map_center'] = None
+            ctx['property_tx_statuses'] = PROPERTY_TX_STATUSES
             return ctx
         ctx['contact_links'] = p.contact_links.select_related('customer').all()
         ctx['activities'] = CustomerActivity.objects.filter(property=p).select_related('customer')[:30]

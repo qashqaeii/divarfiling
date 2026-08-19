@@ -1036,14 +1036,29 @@ document.addEventListener('DOMContentLoaded', function () {
 
 {% if can_edit_property %}
 {# ── دیالوگ یادآور سررسید اجاره ── #}
-<div id="rentalReminderDialog" class="crm-prop-rr-backdrop" hidden aria-modal="true" role="dialog" aria-labelledby="rrdTitle">
-    <div class="crm-prop-rr-box">
-        <h3 id="rrdTitle"><i class="fas fa-bell"></i> یادآور سررسید اجاره</h3>
-        <p id="rrdMsg"></p>
-        <div class="crm-prop-rr-actions">
-            <button type="button" class="btn-primary" id="rrdConfirm">بله، یادآور بساز</button>
-            <button type="button" class="btn-ghost" id="rrdCancel">خیر، نیازی نیست</button>
+<div id="rentalReminderDialog" class="rrd-backdrop" hidden aria-modal="true" role="dialog" aria-labelledby="rrdTitle">
+    <div class="rrd-card">
+        <div class="rrd-icon-wrap">
+            <span class="rrd-icon"><i class="fas fa-bell"></i></span>
         </div>
+        <div class="rrd-body">
+            <h3 class="rrd-title" id="rrdTitle">یادآور سررسید اجاره</h3>
+            <p class="rrd-subtitle">ملک اجاره به بایگانی منتقل شد</p>
+            <div class="rrd-date-row">
+                <i class="fas fa-calendar-alt"></i>
+                <span id="rrdDateLabel">—</span>
+            </div>
+            <p class="rrd-desc">یک ماه قبل از سررسید اجاره سال بعد، یادآوری برای پیگیری مجدد ارسال می‌شود.</p>
+        </div>
+        <div class="rrd-actions">
+            <button type="button" class="rrd-btn rrd-btn--confirm" id="rrdConfirm">
+                <i class="fas fa-bell-concierge"></i> بله، یادآور بساز
+            </button>
+            <button type="button" class="rrd-btn rrd-btn--cancel" id="rrdCancel">
+                نه، ممنون
+            </button>
+        </div>
+        <button type="button" class="rrd-close" id="rrdClose" aria-label="بستن"><i class="fas fa-times"></i></button>
     </div>
 </div>
 
@@ -1121,14 +1136,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // ─── rental reminder dialog ────────────────────────────────────────
     var dialog = document.getElementById('rentalReminderDialog');
-    var rrdMsg = document.getElementById('rrdMsg');
     var rrdConfirm = document.getElementById('rrdConfirm');
     var rrdCancel = document.getElementById('rrdCancel');
     var _pendingDue = '';
 
     function openRentalReminderDialog(dueJalali) {
         _pendingDue = dueJalali;
-        rrdMsg.textContent = 'آیا می‌خواهید یک یادآور برای تاریخ ' + dueJalali + ' (یک ماه قبل از سررسید اجاره) ایجاد شود؟';
+        var dateEl = document.getElementById('rrdDateLabel');
+        if (dateEl) dateEl.textContent = dueJalali;
         dialog.hidden = false;
         rrdConfirm.focus();
     }
@@ -1161,6 +1176,15 @@ document.addEventListener('DOMContentLoaded', function () {
     if (rrdCancel) {
         rrdCancel.addEventListener('click', function () { dialog.hidden = true; });
     }
+    var rrdClose = document.getElementById('rrdClose');
+    if (rrdClose) {
+        rrdClose.addEventListener('click', function () { dialog.hidden = true; });
+    }
+    if (dialog) {
+        dialog.addEventListener('click', function (e) {
+            if (e.target === dialog) dialog.hidden = true;
+        });
+    }
 })();
 </script>
 
@@ -1192,19 +1216,93 @@ document.addEventListener('DOMContentLoaded', function () {
 .crm-prop-status-option:hover { background: #f1f5f9; }
 .crm-prop-status-option.is-active { font-weight: 700; color: #0f172a; }
 
-.crm-prop-rr-backdrop {
-    position: fixed; inset: 0; background: rgba(0,0,0,.45);
-    z-index: 10000; display: flex; align-items: center; justify-content: center;
+/* ── backdrop ── */
+.rrd-backdrop {
+    position: fixed; inset: 0;
+    background: rgba(15,23,42,.55);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+    z-index: 10000;
+    display: flex; align-items: center; justify-content: center;
+    animation: rrdFadeIn .18s ease;
 }
-.crm-prop-rr-backdrop[hidden] { display: none; }
-.crm-prop-rr-box {
-    background: #fff; border-radius: .75rem; padding: 1.75rem 2rem;
-    max-width: 26rem; width: 90%; box-shadow: 0 8px 32px rgba(0,0,0,.18);
-    text-align: right; direction: rtl;
+.rrd-backdrop[hidden] { display: none; }
+@keyframes rrdFadeIn { from { opacity:0 } to { opacity:1 } }
+
+/* ── card ── */
+.rrd-card {
+    position: relative;
+    background: #fff;
+    border-radius: 1.25rem;
+    padding: 2rem 1.75rem 1.5rem;
+    max-width: 22rem; width: 92%;
+    box-shadow: 0 20px 60px rgba(15,23,42,.22), 0 4px 16px rgba(15,23,42,.1);
+    direction: rtl; text-align: right;
+    animation: rrdSlideUp .22s cubic-bezier(.34,1.56,.64,1);
 }
-.crm-prop-rr-box h3 { margin: 0 0 .75rem; font-size: 1.05rem; }
-.crm-prop-rr-box p { margin: 0 0 1.25rem; line-height: 1.7; font-size: .93rem; color: #334155; }
-.crm-prop-rr-actions { display: flex; gap: .75rem; flex-direction: row-reverse; }
+@keyframes rrdSlideUp { from { transform:translateY(24px); opacity:0 } to { transform:translateY(0); opacity:1 } }
+
+/* ── close btn ── */
+.rrd-close {
+    position: absolute; top: .9rem; left: .9rem;
+    width: 2rem; height: 2rem; border-radius: 50%;
+    border: none; background: #f1f5f9; color: #64748b;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: .8rem; transition: background .15s, color .15s;
+}
+.rrd-close:hover { background: #e2e8f0; color: #0f172a; }
+
+/* ── icon ── */
+.rrd-icon-wrap { text-align: center; margin-bottom: 1rem; }
+.rrd-icon {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 3.5rem; height: 3.5rem; border-radius: 50%;
+    background: linear-gradient(135deg, #fef3c7, #fde68a);
+    color: #d97706; font-size: 1.4rem;
+    box-shadow: 0 4px 12px rgba(217,119,6,.2);
+}
+
+/* ── body ── */
+.rrd-title {
+    margin: 0 0 .2rem; font-size: 1.05rem; font-weight: 700;
+    color: #0f172a; text-align: center;
+}
+.rrd-subtitle {
+    text-align: center; font-size: .8rem; color: #94a3b8;
+    margin: 0 0 1.1rem;
+}
+.rrd-date-row {
+    display: flex; align-items: center; justify-content: center; gap: .5rem;
+    background: #f8fafc; border: 1px solid #e2e8f0; border-radius: .6rem;
+    padding: .55rem 1rem; margin-bottom: .9rem;
+    font-size: .95rem; font-weight: 700; color: #1e40af;
+    direction: ltr;
+}
+.rrd-date-row i { color: #3b82f6; font-size: .85rem; }
+.rrd-desc {
+    font-size: .82rem; color: #64748b; line-height: 1.7;
+    margin: 0 0 1.4rem; text-align: center;
+}
+
+/* ── actions ── */
+.rrd-actions { display: flex; flex-direction: column; gap: .6rem; }
+.rrd-btn {
+    width: 100%; padding: .7rem 1rem; border-radius: .65rem;
+    border: none; cursor: pointer; font-size: .9rem; font-weight: 600;
+    transition: transform .12s, box-shadow .12s;
+    display: flex; align-items: center; justify-content: center; gap: .4rem;
+}
+.rrd-btn:active { transform: scale(.97); }
+.rrd-btn--confirm {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(59,130,246,.35);
+}
+.rrd-btn--confirm:hover { box-shadow: 0 6px 18px rgba(59,130,246,.45); }
+.rrd-btn--cancel {
+    background: #f1f5f9; color: #64748b;
+}
+.rrd-btn--cancel:hover { background: #e2e8f0; color: #334155; }
 </style>
 {% endif %}
 {% endblock %}

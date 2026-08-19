@@ -10,6 +10,9 @@
 
 body.mk-admin-dashboard .main-content {
     min-height: 0;
+    /* responsive-base overflow-x:clip breaks sticky sidebar scroll */
+    overflow: visible !important;
+    overflow-x: visible !important;
 }
 
 body.mk-admin-dashboard .mk-footer-pro {

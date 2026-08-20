@@ -1,104 +1,20 @@
-<div class="crm-matches-col crm-matches-col-v2{% if divar_locked %} crm-matches-col--locked{% endif %}">
-    <header class="crm-matches-col-head">
-        <h4 class="crm-matches-col-title">
-            <span class="crm-matches-col-icon">
-                {% if decor %}
-                {% include 'includes/icon_slot.html' with decor=decor size='sm' only %}
-                {% else %}
-                <i class="fas {{ icon }}" aria-hidden="true"></i>
-                {% endif %}
-            </span>
-            <span>{{ title }}</span>
-            {% if divar_locked %}
-            <span class="crm-match-lock"><i class="fas fa-lock"></i> نیاز به لایسنس</span>
-            {% else %}
-            <span class="crm-matches-count crm-matches-count-v2">{{ matches|length }}</span>
-            {% endif %}
-        </h4>
-    </header>
-
+<div class="crm-matches-col crm-matches-col-v3{% if divar_locked %} crm-matches-col--locked{% endif %}" data-match-source="{{ source }}">
     {% if divar_locked %}
-    <div class="crm-match-locked-card crm-match-locked-card-v2">
-        <div class="crm-match-locked-icon"><i class="fas fa-robot"></i></div>
-        <p>تطبیق با آگهی‌های استخراج‌شده دیوار نیاز به لایسنس فعال ربات دارد.</p>
-        <a href="{% url 'workspace:upgrade' %}?feature=crm_divar" class="crm-btn crm-btn-primary crm-btn-sm">فعال‌سازی</a>
-    </div>
-    {% elif matches %}
-    <ul class="crm-match-list crm-match-list-v2">
-        {% for m in matches %}
-        <li class="crm-match-card crm-match-card-v2" data-match-card>
-            <label class="crm-match-check crm-match-check-v2">
-                <input type="checkbox" class="crm-match-select"
-                       data-source="{{ source }}"
-                       {% if source == 'crm' %}data-property-id="{{ m.property_id }}"{% else %}data-token="{{ m.token }}"{% endif %}
-                       data-title="{{ m.title }}"
-                       data-price-label="{{ m.price_label }}"
-                       data-area="{{ m.area|default:'' }}"
-                       data-neighborhood="{{ m.neighborhood }}"
-                       data-link="{{ m.link }}"
-                       {% if m.match_intent %}data-match-intent="{{ m.match_intent }}"{% endif %}>
-                <span class="crm-match-score crm-match-score-v2" data-tier="{% if m.score >= 75 %}high{% elif m.score >= 50 %}mid{% else %}low{% endif %}" title="امتیاز تطبیق">{{ m.score }}</span>
-            </label>
-            <div class="crm-match-body crm-match-body-v2">
-                <div class="crm-match-title-row">
-                    <strong class="crm-match-title">{{ m.title }}</strong>
-                    {% if m.intent_label %}<span class="crm-match-intent">{{ m.intent_label }}</span>{% endif %}
-                </div>
-                <div class="crm-match-meta crm-match-meta-v2">
-                    {% if m.advertiser %}
-                    <span class="mk-adv-tag {{ m.advertiser.tag_class }}" title="{{ m.advertiser.title }}">
-                        <span class="mk-adv-dot" aria-hidden="true"></span>
-                        <span class="mk-adv-label">{{ m.advertiser.short_label }}</span>
-                    </span>
-                    {% endif %}
-                    {% if m.property_type %}<span><i class="fas fa-building" aria-hidden="true"></i> {{ m.property_type }}</span>{% endif %}
-                    {% if m.price_label %}<span class="crm-match-price"><i class="fas fa-coins" aria-hidden="true"></i> {{ m.price_label }}</span>{% endif %}
-                    {% if m.area %}<span><i class="fas fa-ruler-combined" aria-hidden="true"></i> {{ m.area|floatformat:0 }} متر</span>{% endif %}
-                    {% if m.neighborhood %}<span><i class="fas fa-location-dot" aria-hidden="true"></i> {{ m.neighborhood }}</span>{% endif %}
-                </div>
-                {% if m.reasons %}
-                <div class="crm-match-reasons crm-match-reasons-v2">
-                    {% for r in m.reasons %}<em>{{ r }}</em>{% endfor %}
-                </div>
-                {% endif %}
-            </div>
-            {% if m.internal_url or m.public_share_url or m.link %}
-            <div class="crm-match-links">
-                {% if m.internal_url %}
-                <a href="{{ m.internal_url }}" class="crm-match-link crm-match-link-v2 crm-match-link--app" title="در سیستم">
-                    <i class="fas fa-folder-open" aria-hidden="true"></i>
-                </a>
-                {% endif %}
-                {% if m.public_share_url %}
-                <a href="{{ m.public_share_url }}" target="_blank" rel="noopener" class="crm-match-link crm-match-link-v2 crm-match-link--public" title="لینک عمومی">
-                    <i class="fas fa-share-nodes" aria-hidden="true"></i>
-                </a>
-                {% endif %}
-                {% if m.link %}
-                <a href="{{ m.link }}" target="_blank" rel="noopener" class="crm-match-link crm-match-link-v2 crm-match-link--divar" title="دیوار">
-                    <i class="fas fa-external-link-alt" aria-hidden="true"></i>
-                </a>
-                {% endif %}
-            </div>
-            {% endif %}
+    <ul class="crm-match-list crm-match-list-v3">
+        <li class="crm-match-locked-card crm-match-locked-card-v3" data-match-locked>
+            <p>تطبیق با آگهی‌های دیوار نیاز به لایسنس فعال ربات دارد.</p>
+            <a href="{% url 'workspace:upgrade' %}?feature=crm_divar" class="crm-btn crm-btn-primary crm-btn-sm">فعال‌سازی</a>
         </li>
+    </ul>
+    {% elif matches %}
+    <ul class="crm-match-list crm-match-list-v3">
+        {% for m in matches %}
+        {% include 'workspace/crm/includes/match_card.html' with m=m source=source %}
         {% endfor %}
     </ul>
     {% else %}
-    <div class="crm-match-empty crm-match-empty-v2">
-        <span class="crm-match-empty-icon" aria-hidden="true">
-            {% if empty_decor %}
-            {% include 'includes/icon_slot.html' with decor=empty_decor size='md' only %}
-            {% elif decor %}
-            {% include 'includes/icon_slot.html' with decor=decor size='md' only %}
-            {% else %}
-            {% include 'includes/icon_slot.html' with decor='search' size='md' only %}
-            {% endif %}
-        </span>
-        <p>فایل مناسبی در این بخش یافت نشد.</p>
-        {% if source == 'divar' and not has_bot_license %}
-        <a href="{% url 'workspace:upgrade' %}?feature=upload" class="crm-match-upgrade-link">آپلود فایلینگ دیوار</a>
-        {% endif %}
+    <div class="crm-match-empty crm-match-empty-v3" data-match-empty-source="{{ source }}" hidden>
+        <p>{% if source == 'divar' %}آگهی دیوار مناسبی در این فهرست نیست.{% else %}فایل شخصی مناسبی در این فهرست نیست.{% endif %}</p>
     </div>
     {% endif %}
 </div>

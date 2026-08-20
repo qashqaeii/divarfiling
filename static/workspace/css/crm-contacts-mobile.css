@@ -1910,9 +1910,17 @@
     .crm-contact-mobile .crm-matches-grid {
         grid-template-columns: 1fr !important;
     }
-    .crm-contact-mobile .crm-match-card {
+    .crm-contact-mobile .crm-match-card:not(.crm-match-card-v3) {
         grid-template-columns: auto minmax(0, 1fr) !important;
         gap: 0.5rem;
+    }
+    .crm-contact-mobile #crmMatches.crm-matches-v3 .crm-match-feed-list,
+    .crm-contact-mobile #crmMatches.crm-matches-v3 .crm-match-list-v3 {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+    .crm-contact-mobile #crmMatches.crm-matches-v3 .crm-match-card-v3 {
+        grid-template-columns: 2.25rem minmax(0, 1fr) !important;
+        max-width: 100%;
     }
     .crm-contact-mobile img {
         max-width: 100%;

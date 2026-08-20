@@ -451,6 +451,8 @@ def _contact_matches_panel_context(user, customer, request):
         'has_bot_license': divar_enabled,
         'suggested': False,
         'suggestion_text': '',
+        'match_eligible': is_match_eligible(customer),
+        'can_edit_customer': can_edit_customer(user, customer),
     }
 
 

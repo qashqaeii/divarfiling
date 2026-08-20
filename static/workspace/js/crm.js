@@ -1678,7 +1678,10 @@ function initCRMQuickLead() {
 }
 
 function initCRMMatchingTolerance() {
-    const root = document.querySelector('[data-crm-match-tolerance]');
+    document.querySelectorAll('[data-crm-match-tolerance]').forEach(bindCRMMatchingToleranceRoot);
+}
+
+function bindCRMMatchingToleranceRoot(root) {
     if (!root || root.dataset.bound === '1') return;
     root.dataset.bound = '1';
 
@@ -1686,7 +1689,7 @@ function initCRMMatchingTolerance() {
     const output = root.querySelector('.crm-contact-pref-tolerance-value');
     const toast = root.querySelector('[data-crm-match-tolerance-toast]');
     const url = root.dataset.url || '';
-    if (!range || !url || range.disabled) return;
+    if (!range || !url) return;
 
     let previous = parseInt(range.value, 10);
     let timer = null;
@@ -1713,16 +1716,39 @@ function initCRMMatchingTolerance() {
     }
 
     function updateToleranceBadges(val) {
-        const label = `· تلورانس ${crmToPersianDigits(String(val))}٪`;
+        const pretty = `${crmToPersianDigits(String(val))}٪`;
         document.querySelectorAll('[data-crm-match-tolerance-badge]').forEach(el => {
-            el.textContent = label;
+            el.textContent = `· تلورانس ${pretty}`;
+        });
+        document.querySelectorAll('[data-crm-match-precision-value]').forEach(el => {
+            el.textContent = pretty;
+        });
+        document.querySelectorAll('.crm-contact-pref-tolerance-range').forEach(el => {
+            if (el === range) return;
+            el.value = String(val);
+            el.setAttribute('aria-valuenow', String(val));
+            el.style.setProperty('--crm-tol-pct', `${(val / 50) * 100}%`);
+        });
+        document.querySelectorAll('.crm-contact-pref-tolerance-value').forEach(el => {
+            el.textContent = pretty;
         });
     }
+
+    paintTrack();
+    syncOutput();
+
+    if (range.disabled) return;
 
     async function persist(value) {
         if (inflight) inflight.abort();
         inflight = new AbortController();
         root.classList.add('is-saving');
+        const matchesRoot = document.getElementById('crmMatches');
+        if (matchesRoot) {
+            matchesRoot.classList.add('is-refreshing');
+            const loading = matchesRoot.querySelector('[data-matches-loading]');
+            if (loading) loading.hidden = false;
+        }
         try {
             const res = await fetch(url, {
                 method: 'POST',
@@ -1740,10 +1766,11 @@ function initCRMMatchingTolerance() {
             previous = value;
             updateToleranceBadges(value);
 
-            const matchesRoot = document.getElementById('crmMatches');
-            if (matchesRoot && data.matches_html) {
-                matchesRoot.outerHTML = data.matches_html;
+            const panel = document.getElementById('crmMatches');
+            if (panel && data.matches_html) {
+                panel.outerHTML = data.matches_html;
                 initCRMMatches();
+                initCRMMatchingTolerance();
             }
 
             const tabCount = document.querySelector('[data-crm-match-tab-count]');
@@ -1758,6 +1785,12 @@ function initCRMMatchingTolerance() {
             paintTrack();
             syncOutput();
             showToast(err.message || 'خطا در ذخیره', true);
+            const panel = document.getElementById('crmMatches');
+            if (panel) {
+                panel.classList.remove('is-refreshing');
+                const loading = panel.querySelector('[data-matches-loading]');
+                if (loading) loading.hidden = true;
+            }
         } finally {
             root.classList.remove('is-saving');
             inflight = null;
@@ -1773,9 +1806,6 @@ function initCRMMatchingTolerance() {
         }, 350);
     }
 
-    paintTrack();
-    syncOutput();
-
     range.addEventListener('input', () => {
         syncOutput();
         paintTrack();
@@ -1790,17 +1820,55 @@ function initCRMMatchingTolerance() {
 }
 
 function initCRMMatches() {
-    const form = document.getElementById('crmSuggestForm');
-    if (!form) return;
+    const panel = document.getElementById('crmMatches');
+    if (!panel || panel.dataset.bound === '1') return;
+    panel.dataset.bound = '1';
 
     const jsonInput = document.getElementById('crmMatchesJson');
     const countEl = document.getElementById('crmSuggestCount');
     const submitBtn = document.getElementById('crmSuggestSubmit');
     const dock = document.getElementById('crmSuggestDock');
-    const selects = () => [...document.querySelectorAll('.crm-match-select:checked')];
+    const filterEmpty = panel.querySelector('[data-match-filter-empty]');
+
+    function flattenFeeds() {
+        panel.querySelectorAll('[data-match-feed]').forEach(feed => {
+            const cards = [...feed.querySelectorAll('[data-match-card], [data-match-locked]')];
+            if (!cards.length) return;
+            cards.sort((a, b) => (Number(b.dataset.score) || 0) - (Number(a.dataset.score) || 0));
+            const list = document.createElement('ul');
+            list.className = 'crm-match-list crm-match-list-v3 crm-match-feed-list';
+            cards.forEach((card) => list.appendChild(card));
+            feed.querySelectorAll('.crm-matches-col-v3').forEach((col) => col.remove());
+            feed.appendChild(list);
+        });
+    }
+
+    function visibleCards() {
+        return [...panel.querySelectorAll('[data-match-card]')].filter((card) => !card.hidden);
+    }
+
+    function applySourceFilter(source) {
+        panel.querySelectorAll('[data-match-card]').forEach((card) => {
+            card.hidden = source !== 'all' && card.dataset.source !== source;
+        });
+        panel.querySelectorAll('[data-match-locked]').forEach((el) => {
+            el.hidden = source === 'crm';
+        });
+        panel.querySelectorAll('[data-match-feed]').forEach((feed) => {
+            feed.classList.toggle('is-source-all', source === 'all');
+        });
+        const anyVisible = visibleCards().length > 0
+            || (source !== 'crm' && [...panel.querySelectorAll('[data-match-locked]')].some((el) => !el.hidden));
+        if (filterEmpty) filterEmpty.hidden = anyVisible;
+        panel.querySelectorAll('[data-match-filter]').forEach((btn) => {
+            const on = btn.dataset.matchFilter === source;
+            btn.classList.toggle('is-active', on);
+            btn.setAttribute('aria-selected', on ? 'true' : 'false');
+        });
+    }
 
     function syncCardState() {
-        document.querySelectorAll('[data-match-card]').forEach(card => {
+        panel.querySelectorAll('[data-match-card]').forEach(card => {
             const cb = card.querySelector('.crm-match-select');
             card.classList.toggle('is-selected', !!(cb && cb.checked));
         });
@@ -1825,27 +1893,50 @@ function initCRMMatches() {
     }
 
     function updateSelection() {
-        const items = selects().map(payloadFromCheckbox);
+        const items = [...panel.querySelectorAll('.crm-match-select:checked')].map(payloadFromCheckbox);
         if (jsonInput) jsonInput.value = JSON.stringify(items);
-        if (countEl) countEl.textContent = items.length;
+        if (countEl) countEl.textContent = typeof crmToPersianDigits === 'function'
+            ? crmToPersianDigits(String(items.length))
+            : String(items.length);
         if (submitBtn) submitBtn.disabled = items.length === 0;
-        if (dock) dock.classList.toggle('is-active', items.length > 0);
+        if (dock) {
+            dock.hidden = items.length === 0;
+            dock.classList.toggle('is-active', items.length > 0);
+        }
+        panel.classList.toggle('is-selecting', items.length > 0);
         syncCardState();
     }
 
-    document.querySelectorAll('.crm-match-select').forEach(cb => {
-        cb.addEventListener('change', updateSelection);
+    flattenFeeds();
+
+    const crmCount = panel.querySelectorAll('[data-match-card][data-source="crm"]').length;
+    const divarCount = panel.querySelectorAll('[data-match-card][data-source="divar"]').length;
+    const allCount = crmCount + divarCount;
+    const setCount = (filter, value) => {
+        const el = panel.querySelector(`[data-match-filter="${filter}"] em`);
+        if (el) el.textContent = typeof crmToPersianDigits === 'function' ? crmToPersianDigits(String(value)) : String(value);
+    };
+    setCount('all', allCount);
+    setCount('crm', crmCount);
+    setCount('divar', divarCount);
+
+    applySourceFilter('all');
+
+    panel.addEventListener('change', (ev) => {
+        if (ev.target && ev.target.classList.contains('crm-match-select')) updateSelection();
     });
 
-    const selectAll = document.getElementById('crmSelectAllMatches');
-    if (selectAll) {
-        selectAll.addEventListener('click', () => {
-            const boxes = document.querySelectorAll('.crm-match-select:not(:disabled)');
-            const allChecked = [...boxes].every(b => b.checked);
-            boxes.forEach(b => { b.checked = !allChecked; });
+    panel.addEventListener('click', (ev) => {
+        const filterBtn = ev.target.closest('[data-match-filter]');
+        if (filterBtn) {
+            applySourceFilter(filterBtn.dataset.matchFilter || 'all');
+            return;
+        }
+        if (ev.target.closest('#crmClearMatchSelection')) {
+            panel.querySelectorAll('.crm-match-select:checked').forEach((cb) => { cb.checked = false; });
             updateSelection();
-        });
-    }
+        }
+    });
 
     updateSelection();
 }

@@ -1,13 +1,14 @@
 {% load workspace_tags %}
+{% with ns=slider_ns|default:'prefs' %}
 {% if match_eligible %}
 <div class="crm-contact-pref-tolerance{% if not can_edit_customer %} is-readonly{% endif %}" data-crm-match-tolerance data-url="{% url 'workspace:crm_contact_matching_tolerance' customer.id %}">
     <div class="crm-contact-pref-tolerance-head">
-        <label class="crm-contact-pref-tolerance-label" for="crmMatchToleranceRange">انعطاف‌پذیری پیشنهادها</label>
-        <output class="crm-contact-pref-tolerance-value" id="crmMatchToleranceValue" for="crmMatchToleranceRange">{{ customer.matching_tolerance_percent|default:20 }}٪</output>
+        <label class="crm-contact-pref-tolerance-label" for="crmMatchToleranceRange-{{ ns }}">انعطاف‌پذیری پیشنهادها</label>
+        <output class="crm-contact-pref-tolerance-value" id="crmMatchToleranceValue-{{ ns }}" for="crmMatchToleranceRange-{{ ns }}">{{ customer.matching_tolerance_percent|default:20 }}٪</output>
     </div>
     <div class="crm-contact-pref-tolerance-track">
         <input type="range"
-               id="crmMatchToleranceRange"
+               id="crmMatchToleranceRange-{{ ns }}"
                class="crm-contact-pref-tolerance-range"
                min="0"
                max="50"
@@ -17,11 +18,12 @@
                aria-valuemin="0"
                aria-valuemax="50"
                aria-valuenow="{{ customer.matching_tolerance_percent|default:20 }}"
-               aria-describedby="crmMatchToleranceHint">
+               aria-describedby="crmMatchToleranceHint-{{ ns }}">
     </div>
-    <p class="crm-contact-pref-tolerance-hint" id="crmMatchToleranceHint">
+    <p class="crm-contact-pref-tolerance-hint" id="crmMatchToleranceHint-{{ ns }}">
         فایل‌هایی که تا این درصد خارج از محدوده بودجه و متراژ باشند، در پیشنهادها بررسی می‌شوند.
     </p>
     <div class="crm-contact-pref-tolerance-toast" data-crm-match-tolerance-toast hidden role="status"></div>
 </div>
 {% endif %}
+{% endwith %}

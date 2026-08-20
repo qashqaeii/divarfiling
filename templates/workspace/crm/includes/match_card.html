@@ -1,0 +1,77 @@
+<li class="crm-match-card crm-match-card-v3"
+    data-match-card
+    data-source="{{ source }}"
+    data-score="{{ m.score|default:0 }}">
+    <label class="crm-match-check crm-match-check-v3">
+        <input type="checkbox" class="crm-match-select"
+               data-source="{{ source }}"
+               {% if source == 'crm' %}data-property-id="{{ m.property_id }}"{% else %}data-token="{{ m.token }}"{% endif %}
+               data-title="{{ m.title }}"
+               data-price-label="{{ m.price_label }}"
+               data-area="{{ m.area|default:'' }}"
+               data-neighborhood="{{ m.neighborhood }}"
+               data-link="{{ m.link }}"
+               {% if m.match_intent %}data-match-intent="{{ m.match_intent }}"{% endif %}>
+        <span class="crm-match-check-ui" aria-hidden="true"></span>
+        <span class="sr-only">انتخاب {{ m.title }}</span>
+    </label>
+
+    <div class="crm-match-body crm-match-body-v3">
+        <div class="crm-match-title-row crm-match-title-row-v3">
+            <strong class="crm-match-title">{{ m.title }}</strong>
+            <span class="crm-match-source{% if source == 'divar' %} is-divar{% else %} is-crm{% endif %}">{% if source == 'divar' %}دیوار{% else %}شخصی{% endif %}</span>
+        </div>
+
+        {% if m.price_label %}
+        <p class="crm-match-price crm-match-price-v3{% if 'بالای بودجه' in m.price_label %} is-warn{% elif 'زیر بودجه' in m.price_label %} is-note{% endif %}">{{ m.price_label }}</p>
+        {% endif %}
+
+        <p class="crm-match-facts">
+            {% if m.deal_mode %}<span>{{ m.deal_mode }}</span>{% endif %}
+            {% if m.area %}<span>{{ m.area|floatformat:0 }} متر</span>{% endif %}
+            {% if m.neighborhood %}<span>{{ m.neighborhood }}</span>{% elif m.city %}<span>{{ m.city }}</span>{% endif %}
+        </p>
+
+        <span class="crm-match-score crm-match-score-v3" data-tier="{% if m.score >= 75 %}high{% elif m.score >= 50 %}mid{% else %}low{% endif %}">{{ m.score }}٪ تطابق</span>
+
+        {% if m.property_type or m.rooms or m.intent_label %}
+        <div class="crm-match-features">
+            {% if m.property_type %}<span>{{ m.property_type }}</span>{% endif %}
+            {% if m.rooms %}<span>{{ m.rooms }} خواب</span>{% endif %}
+            {% if m.intent_label %}<span>{{ m.intent_label }}</span>{% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    {% if m.reasons or m.advertiser or m.internal_url or m.public_share_url or m.link %}
+    <details class="crm-match-more">
+        <summary>بیشتر</summary>
+        <div class="crm-match-more-body">
+            {% if m.reasons %}
+            <div class="crm-match-reasons crm-match-reasons-v3">
+                {% for r in m.reasons %}
+                {% if r != m.price_label %}<em>{{ r }}</em>{% endif %}
+                {% endfor %}
+            </div>
+            {% endif %}
+            {% if m.advertiser %}
+            <span class="mk-adv-tag {{ m.advertiser.tag_class }}" title="{{ m.advertiser.title }}">
+                <span class="mk-adv-dot" aria-hidden="true"></span>
+                <span class="mk-adv-label">{{ m.advertiser.short_label }}</span>
+            </span>
+            {% endif %}
+            <div class="crm-match-more-actions">
+                {% if m.internal_url %}
+                <a href="{{ m.internal_url }}" class="crm-match-more-link">مشاهده در سیستم</a>
+                {% endif %}
+                {% if m.public_share_url %}
+                <a href="{{ m.public_share_url }}" target="_blank" rel="noopener" class="crm-match-more-link">لینک اشتراک</a>
+                {% endif %}
+                {% if m.link %}
+                <a href="{{ m.link }}" target="_blank" rel="noopener" class="crm-match-more-link">آگهی دیوار</a>
+                {% endif %}
+            </div>
+        </div>
+    </details>
+    {% endif %}
+</li>

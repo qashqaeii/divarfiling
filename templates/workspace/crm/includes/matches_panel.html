@@ -1,34 +1,44 @@
 {% load workspace_tags crm_tags %}
 
-<section class="crm-matches crm-matches-v2" id="crmMatches">
-    <header class="crm-matches-hero">
-        <div class="crm-matches-hero-bg" aria-hidden="true"></div>
-        <div class="crm-matches-hero-content">
-            <div class="crm-matches-hero-badge"><i class="fas fa-house" aria-hidden="true"></i> فایل‌های پیشنهادی</div>
-            {% if match_data.is_builder %}
-            <h3>پیشنهاد دوگانه برای سازنده <span class="crm-matches-tolerance-badge" data-crm-match-tolerance-badge>· تلورانس {{ match_data.matching_tolerance_percent|default:20 }}٪</span></h3>
-            <p>تأمین پروژه (خرید زمین/کلنگی) و بازار آپارتمان (فروش واحد) — در دو بخش جدا</p>
-            {% else %}
-            <h3>فایل‌های پیشنهادی بر اساس پروفایل مخاطب <span class="crm-matches-tolerance-badge" data-crm-match-tolerance-badge>· تلورانس {{ match_data.matching_tolerance_percent|default:20 }}٪</span></h3>
-            <p>بودجه، محله، متراژ و نوع معامله — در فایلینگ فقط آگهی مالک واقعی (بدون مشاور پنهان)</p>
-            {% endif %}
-            {% if match_data.eligible %}
-            <div class="crm-matches-hero-stats">
-                <span class="crm-matches-hero-stat"><strong>{{ match_data.crm_matches|length }}</strong> فایل شخصی</span>
-                <span class="crm-matches-hero-stat"><strong>{{ match_data.divar_matches|length }}</strong> آگهی دیوار</span>
-                <span class="crm-matches-hero-stat crm-matches-hero-stat--total"><strong>{% crm_match_tab_count match_data %}</strong> پیشنهاد فعال</span>
-            </div>
-            {% endif %}
-            {% if match_data.eligible and not match_data.total_count %}
-            <p class="crm-matches-empty-honest">فایل پیشنهادی قابل نمایش برای این مخاطب موجود نیست.</p>
-            {% endif %}
+<section class="crm-matches crm-matches-v3" id="crmMatches" data-crm-matches-panel>
+    <header class="crm-matches-head">
+        {% if match_data.eligible and match_data.total_count %}
+        <div class="crm-matches-head-copy">
+            <h3>{% crm_match_tab_count match_data %} فایل پیشنهادی برای این مخاطب</h3>
+            <p>{% if match_data.is_builder %}بر اساس نیاز پروژه و ترجیحات ثبت‌شده{% else %}بر اساس نیاز و ترجیحات ثبت‌شده{% endif %}</p>
         </div>
+        {% elif match_data.eligible %}
+        <div class="crm-matches-head-copy">
+            <h3>فایل پیشنهادی</h3>
+            <p>بر اساس نیاز و ترجیحات ثبت‌شده</p>
+        </div>
+        {% else %}
+        <div class="crm-matches-head-copy">
+            <h3>فایل پیشنهادی</h3>
+            <p>بر اساس نیاز و ترجیحات ثبت‌شده</p>
+        </div>
+        {% endif %}
+        {% if match_data.eligible %}
+        <details class="crm-matches-precision">
+            <summary>
+                دقت پیشنهادها: <span data-crm-match-precision-value>{{ match_data.matching_tolerance_percent|default:20 }}٪</span>
+            </summary>
+            <div class="crm-matches-precision-body">
+                {% include 'workspace/crm/includes/contact_matching_tolerance_slider.html' with slider_ns='matches' %}
+            </div>
+        </details>
+        {% endif %}
     </header>
 
+    <div class="crm-matches-loading" data-matches-loading hidden>
+        <span class="crm-matches-loading-dot" aria-hidden="true"></span>
+        در حال به‌روزرسانی پیشنهادها…
+    </div>
+
     {% if not match_data.eligible %}
-    <div class="crm-matches-ineligible">
-        <span class="crm-matches-ineligible-icon"><i class="fas fa-circle-info"></i></span>
+    <div class="crm-matches-ineligible crm-matches-ineligible-v3">
         <p>{{ match_data.message }}</p>
+        <button type="button" class="crm-btn crm-btn-ghost crm-btn-sm" data-drawer-open="drawer-edit" data-form-tab="prefs">ویرایش نیاز</button>
     </div>
     {% else %}
 
@@ -41,61 +51,78 @@
     </div>
     {% endif %}
 
+    {% if match_data.total_count %}
+    <div class="crm-matches-toolbar">
+        <div class="crm-matches-sources" role="tablist" aria-label="منبع پیشنهادها">
+            <button type="button" class="crm-matches-source is-active" role="tab" aria-selected="true" data-match-filter="all">
+                همه <em>{% crm_match_tab_count match_data %}</em>
+            </button>
+            <button type="button" class="crm-matches-source" role="tab" aria-selected="false" data-match-filter="crm">
+                فایل‌های شخصی <em>{{ match_data.crm_matches|length }}</em>
+            </button>
+            <button type="button" class="crm-matches-source" role="tab" aria-selected="false" data-match-filter="divar">
+                آگهی‌های دیوار <em>{{ match_data.divar_matches|length }}</em>
+            </button>
+        </div>
+        <div class="crm-matches-sort" aria-label="مرتب‌سازی">
+            <span>بهترین تطابق</span>
+        </div>
+    </div>
+
     {% if match_data.is_builder and match_data.match_groups %}
-    <div class="crm-matches-builder crm-matches-builder-v2">
+    <div class="crm-matches-builder crm-matches-builder-v3">
         {% for group in match_data.match_groups %}
-        <section class="crm-matches-group crm-matches-group-v2" id="crmMatchGroup-{{ group.id }}">
-            <header class="crm-matches-group-head crm-matches-group-head-v2">
-                <div class="crm-matches-group-icon" aria-hidden="true">
-                    {% if group.id == 'acquisition' %}<i class="fas fa-mountain-city"></i>{% else %}<i class="fas fa-building"></i>{% endif %}
-                </div>
-                <div>
-                    <h4>{{ group.title }}</h4>
-                    <p>{{ group.hint }}</p>
-                </div>
-                <span class="crm-matches-count crm-matches-count-v2">{{ group.total_count }}</span>
+        <section class="crm-matches-group crm-matches-group-v3" id="crmMatchGroup-{{ group.id }}">
+            <header class="crm-matches-group-head crm-matches-group-head-v3">
+                <h4>{{ group.title }}</h4>
+                <span class="crm-matches-count crm-matches-count-v3">{{ group.total_count }}</span>
             </header>
-            <div class="crm-matches-grid crm-matches-grid-v2">
-                {% include 'workspace/crm/includes/matches_column.html' with matches=group.crm_matches title='فایل‌های شخصی' decor='building' source='crm' has_bot_license=has_bot_license %}
-                {% include 'workspace/crm/includes/matches_column.html' with matches=group.divar_matches title='فایلینگ دیوار' decor='folder' source='divar' divar_locked=match_data.divar_locked has_bot_license=has_bot_license %}
+            <div class="crm-matches-feed" data-match-feed>
+                {% include 'workspace/crm/includes/matches_column.html' with matches=group.crm_matches title='فایل‌های شخصی' source='crm' has_bot_license=has_bot_license %}
+                {% include 'workspace/crm/includes/matches_column.html' with matches=group.divar_matches title='فایلینگ دیوار' source='divar' divar_locked=match_data.divar_locked has_bot_license=has_bot_license %}
             </div>
         </section>
         {% endfor %}
     </div>
     {% else %}
-    <div class="crm-matches-grid crm-matches-grid-v2">
-        {% include 'workspace/crm/includes/matches_column.html' with matches=match_data.crm_matches title='فایل‌های شخصی' decor='building' source='crm' %}
-        {% include 'workspace/crm/includes/matches_column.html' with matches=match_data.divar_matches title='فایلینگ دیوار' decor='folder' source='divar' divar_locked=match_data.divar_locked %}
+    <div class="crm-matches-feed" data-match-feed>
+        {% include 'workspace/crm/includes/matches_column.html' with matches=match_data.crm_matches title='فایل‌های شخصی' source='crm' %}
+        {% include 'workspace/crm/includes/matches_column.html' with matches=match_data.divar_matches title='فایلینگ دیوار' source='divar' divar_locked=match_data.divar_locked %}
     </div>
     {% endif %}
 
-    <form method="post" class="crm-suggest-form crm-suggest-form-v2" id="crmSuggestForm">
+    <p class="crm-matches-filter-empty" data-match-filter-empty hidden>در این منبع فایلی برای نمایش نیست.</p>
+
+    {% else %}
+    <div class="crm-matches-empty crm-matches-empty-v3">
+        <strong>فعلاً فایل مناسبی پیدا نشد.</strong>
+        <p>نیاز مخاطب را دقیق‌تر کنید یا فایل‌های مرتبط را بررسی کنید.</p>
+        <div class="crm-matches-empty-actions">
+            <button type="button" class="crm-btn crm-btn-ghost crm-btn-sm" data-drawer-open="drawer-edit" data-form-tab="prefs">ویرایش نیاز</button>
+            <button type="button" class="crm-btn crm-btn-ghost crm-btn-sm" data-tab-jump="properties">مشاهده فایل‌های مرتبط</button>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if match_data.total_count %}
+    <form method="post" class="crm-suggest-form crm-suggest-form-v3" id="crmSuggestForm">
         {% csrf_token %}
         <input type="hidden" name="action" value="suggest_properties">
         <input type="hidden" name="matches_json" id="crmMatchesJson" value="[]">
-        <div class="crm-suggest-dock" id="crmSuggestDock">
+        <div class="crm-suggest-dock" id="crmSuggestDock" hidden>
             <div class="crm-suggest-dock-inner">
                 <div class="crm-suggest-dock-meta">
-                    <span class="crm-suggest-dock-icon" aria-hidden="true"><i class="fas fa-check-double"></i></span>
-                    <div>
-                        <span class="crm-suggest-count"><strong id="crmSuggestCount">0</strong> ملک انتخاب شده</span>
-                        <small>پس از ثبت، از تب فایل‌های مرتبط انتخاب کنید و برای همین مخاطب ارسال کنید</small>
-                    </div>
+                    <span class="crm-suggest-count"><strong id="crmSuggestCount">0</strong> فایل انتخاب شده</span>
                 </div>
                 <div class="crm-suggest-actions">
-                    <button type="button" class="crm-btn crm-btn-ghost crm-btn-sm" id="crmSelectAllMatches">انتخاب همه</button>
-                    {% if suggestion_text %}
-                    <button type="button" class="crm-btn crm-btn-accent crm-btn-sm" data-copy="{{ suggestion_text }}"><i class="fas fa-copy"></i> کپی متن</button>
-                    {% if customer.phone %}
-                    <a href="https://wa.me/98{{ customer.phone|slice:'1:' }}?text={{ suggestion_text|urlencode }}" target="_blank" class="crm-btn crm-btn-primary crm-btn-sm"><i class="fab fa-whatsapp"></i> واتساپ</a>
-                    {% endif %}
-                    {% endif %}
+                    <button type="button" class="crm-btn crm-btn-ghost crm-btn-sm" id="crmClearMatchSelection">پاک کردن انتخاب</button>
                     <button type="submit" class="crm-btn crm-btn-primary crm-btn-sm crm-suggest-submit" id="crmSuggestSubmit" disabled>
-                        <i class="fas fa-paper-plane"></i> ثبت و پیشنهاد
+                        پیشنهاد به مخاطب
                     </button>
                 </div>
             </div>
         </div>
     </form>
+    {% endif %}
     {% endif %}
 </section>

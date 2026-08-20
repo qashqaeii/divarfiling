@@ -24,13 +24,20 @@ from workspace.models import (
 
 
 
+_MEMBERSHIP_CACHE_MISS = object()
+
+
 def get_membership(user) -> Optional[CRMAgencyMember]:
 
     if not user or not user.is_authenticated:
 
         return None
 
-    return (
+    cached = getattr(user, '_cached_crm_membership', _MEMBERSHIP_CACHE_MISS)
+    if cached is not _MEMBERSHIP_CACHE_MISS:
+        return cached
+
+    membership = (
 
         CRMAgencyMember.objects
 
@@ -54,6 +61,8 @@ def get_membership(user) -> Optional[CRMAgencyMember]:
         .first()
 
     )
+    setattr(user, '_cached_crm_membership', membership)
+    return membership
 
 
 

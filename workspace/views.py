@@ -123,6 +123,24 @@ class WorkspaceHomeView(WorkspaceLoginMixin, TemplateView):
         ctx['settings'] = get_or_create_settings(user)
         ctx['has_bot_license'] = has_active_bot_license(user)
         ctx['open_modal'] = self.request.GET.get('open', '')
+        from workspace.services.home_nba import build_home_nba
+        ctx['home_nba'] = build_home_nba(
+            user,
+            crm_nav_counts={
+                'today_overdue': ctx['crm_stats']['overdue_followups'],
+                'today_due': ctx['crm_stats']['due_today'],
+            },
+            datasets_qs=datasets_qs,
+            has_bot_license=ctx['has_bot_license'],
+            contact_count=ctx['crm_stats']['total_contacts'],
+            dataset_count=ctx['data_stats']['datasets'],
+        )
+        ctx['home_is_empty'] = (
+            not ctx['crm_stats']['total_contacts']
+            and not ctx['crm_stats']['total_properties']
+            and not ctx['data_stats']['datasets']
+            and not ctx['home_nba']
+        )
         return ctx
 
 

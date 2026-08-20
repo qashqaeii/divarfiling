@@ -16,7 +16,7 @@ from django.utils import timezone
 from workspace.constants import CONVERT_TYPE_MAP, LEAD_TYPES, ROLE_COLORS
 from workspace.models import (
     CRMProperty, Customer, CustomerActivity, CustomerDocument,
-    CustomerListing, Listing, PropertyContact, Reminder,
+    CustomerListing, Listing, PropertyContact, PropertyMatchAlert, Reminder,
 )
 from workspace.services.crm_scope import customers_qs, get_agency, properties_qs, reminders_qs
 
@@ -1314,6 +1314,14 @@ def filter_contacts(user, params: dict):
         qs = qs.filter(next_follow_up__lt=today, status__in=['جدید', 'در حال پیگیری'])
     elif due == 'none':
         qs = qs.filter(next_follow_up__isnull=True)
+    if params.get('match_alerts') == '1':
+        qs = qs.filter(
+            match_alerts__user=user,
+            match_alerts__status__in=[
+                PropertyMatchAlert.STATUS_PENDING,
+                PropertyMatchAlert.STATUS_NOTIFIED,
+            ],
+        ).distinct()
     sort = params.get('sort', '-updated_at')
     allowed = {'name', '-name', 'updated_at', '-updated_at', 'next_follow_up', '-next_follow_up', 'created_at', '-created_at'}
     if sort in allowed:

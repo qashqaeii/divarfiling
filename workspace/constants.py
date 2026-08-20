@@ -36,7 +36,7 @@ PROPERTY_TX_COLORS = {
 CRM_FILTER_SCOPES = ['contacts', 'properties', 'deals', 'listings']
 
 CRM_FILTER_PARAMS = {
-    'contacts': {'q', 'customer_type', 'status', 'priority', 'due', 'sort', 'tag'},
+    'contacts': {'q', 'customer_type', 'status', 'priority', 'due', 'sort', 'tag', 'match_alerts'},
     'properties': {
         'q', 'deal_mode', 'transaction_status', 'property_type', 'publish_status', 'city', 'sort',
         'parking', 'storage', 'elevator', 'rooms',

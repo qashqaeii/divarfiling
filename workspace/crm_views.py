@@ -169,11 +169,14 @@ def _crm_nav_counts(user):
         team_messages = unread_message_count(user)
     if membership and is_agency_feature_enabled('announcements', membership.agency):
         team_announcements = unread_announcement_count(user)
+    _items, today_stats = get_today_queue(user)
     return {
         'contacts': customers_qs(user).count(),
         'properties': properties_qs(user).count(),
         'reminders': reminders_qs(user).filter(is_done=False).count(),
-        'today': count_today_queue(user),
+        'today': today_stats['total'],
+        'today_overdue': today_stats['overdue'],
+        'today_due': today_stats['today'],
         'deals': deals_qs(user).exclude(
             stage__in=['بسته‌شده', 'از دست رفته'],
         ).count(),

@@ -18,6 +18,9 @@
             <h1 class="crm-contacts-mob-title">مخاطبین</h1>
             <p class="crm-contacts-mob-sub">
                 <span>{{ stats.total }} مخاطب</span>
+                {% if request.GET.match_alerts == '1' %}
+                <span class="crm-contacts-mob-sub-chip">فایل پیشنهادی</span>
+                {% endif %}
                 {% if stats.due_today %}
                 <span class="crm-contacts-mob-sub-chip is-warn">{{ stats.due_today }} امروز</span>
                 {% endif %}
@@ -52,6 +55,9 @@
     <header class="crm-dash-bar crm-contacts-desk-header">
         <div class="crm-dash-bar-main">
             <h1 class="crm-dash-bar-title">مخاطبین</h1>
+            {% if request.GET.match_alerts == '1' %}
+            <p class="crm-dash-bar-sub is-visible">فقط مخاطبانی که فایل پیشنهادی قابل بررسی دارند</p>
+            {% endif %}
         </div>
         <div class="crm-dash-bar-actions" role="toolbar" aria-label="عملیات مخاطبین">
             <button type="button" class="crm-dash-act" data-drawer-open="drawer-import" title="ورود گروهی مخاطبین">
@@ -128,14 +134,14 @@
         </div>
 
         <nav class="crm-contacts-mob-filter-chips" aria-label="فیلتر سریع">
-            <a href="{% url 'workspace:crm_contacts' %}?view={{ view_mode }}{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}" class="crm-contacts-mob-filter-chip{% if not request.GET.status and not request.GET.due and not request.GET.customer_type and not request.GET.priority %} is-active{% endif %}">همه</a>
+            <a href="{% url 'workspace:crm_contacts' %}?view={{ view_mode }}{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}" class="crm-contacts-mob-filter-chip{% if not request.GET.status and not request.GET.due and not request.GET.customer_type and not request.GET.priority and request.GET.match_alerts != '1' %} is-active{% endif %}">همه</a>
             <a href="{% url 'workspace:crm_contacts' %}?view={{ view_mode }}&status={{ 'جدید'|urlencode }}{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}" class="crm-contacts-mob-filter-chip{% if request.GET.status == 'جدید' %} is-active{% endif %}">جدید</a>
             <a href="{% url 'workspace:crm_contacts' %}?view={{ view_mode }}&status={{ 'در حال پیگیری'|urlencode }}{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}" class="crm-contacts-mob-filter-chip{% if request.GET.status == 'در حال پیگیری' %} is-active{% endif %}">پیگیری</a>
             <a href="{% url 'workspace:crm_contacts' %}?view={{ view_mode }}&customer_type={{ 'خریدار'|urlencode }}{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}" class="crm-contacts-mob-filter-chip{% if request.GET.customer_type == 'خریدار' %} is-active{% endif %}">خریدار</a>
             <a href="{% url 'workspace:crm_contacts' %}?view={{ view_mode }}&due=today{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}" class="crm-contacts-mob-filter-chip{% if request.GET.due == 'today' %} is-active{% endif %}">امروز</a>
         </nav>
 
-        {% if request.GET.customer_type or request.GET.status or request.GET.priority or request.GET.due %}
+        {% if request.GET.customer_type or request.GET.status or request.GET.priority or request.GET.due or request.GET.match_alerts == '1' %}
         <div class="crm-contacts-mob-active-chips" aria-label="فیلترهای فعال">
             {% if request.GET.customer_type %}
             <a href="?view={{ view_mode }}{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status|urlencode }}{% endif %}{% if request.GET.priority %}&priority={{ request.GET.priority|urlencode }}{% endif %}{% if request.GET.due %}&due={{ request.GET.due|urlencode }}{% endif %}" class="crm-contacts-mob-chip">
@@ -155,6 +161,11 @@
             {% if request.GET.due %}
             <a href="?view={{ view_mode }}{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}{% if request.GET.customer_type %}&customer_type={{ request.GET.customer_type|urlencode }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status|urlencode }}{% endif %}{% if request.GET.priority %}&priority={{ request.GET.priority|urlencode }}{% endif %}" class="crm-contacts-mob-chip">
                 <span>{% if request.GET.due == 'today' %}امروز{% elif request.GET.due == 'overdue' %}معوق{% else %}بدون تاریخ{% endif %}</span><i class="fas fa-times" aria-hidden="true"></i>
+            </a>
+            {% endif %}
+            {% if request.GET.match_alerts == '1' %}
+            <a href="?view={{ view_mode }}{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}{% if request.GET.customer_type %}&customer_type={{ request.GET.customer_type|urlencode }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status|urlencode }}{% endif %}{% if request.GET.priority %}&priority={{ request.GET.priority|urlencode }}{% endif %}{% if request.GET.due %}&due={{ request.GET.due|urlencode }}{% endif %}" class="crm-contacts-mob-chip">
+                <span>فایل پیشنهادی</span><i class="fas fa-times" aria-hidden="true"></i>
             </a>
             {% endif %}
         </div>

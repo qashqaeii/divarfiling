@@ -3,7 +3,7 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/crm.css' %}?v=97">
-<link rel="stylesheet" href="{% static 'workspace/css/home.css' %}?v=14">
+<link rel="stylesheet" href="{% static 'workspace/css/home.css' %}?v=16">
 {% endblock %}
 
 {% block page_title %}{% endblock %}
@@ -20,6 +20,9 @@
             </h1>
             <p class="mk-hub-head-meta">
                 <span>{{ today_jalali }}</span>
+                {% if home_nba and not home_is_empty %}
+                <span>امروز {{ home_nba|length }} مورد نیاز به توجه دارد</span>
+                {% endif %}
                 {% if bot_license_display.active %}
                 <span class="mk-hub-head-pill mk-hub-head-pill--license{% if bot_license_display.expiring_soon %} is-warn{% endif %}" title="وضعیت لایسنس ربات">
                     <i class="fas fa-key" aria-hidden="true"></i> {{ bot_license_display.label }}
@@ -33,54 +36,73 @@
                     <i class="fas fa-lock" aria-hidden="true"></i> {{ bot_license_display.label }}
                 </a>
                 {% endif %}
-                {% if crm_stats.overdue_followups %}
-                <a href="{% url 'workspace:crm_contacts' %}?due=overdue" class="mk-hub-head-pill is-warn">{{ crm_stats.overdue_followups }} معوق</a>
-                {% elif crm_stats.due_today %}
-                <a href="{% url 'workspace:crm_today' %}" class="mk-hub-head-pill">{{ crm_stats.due_today }} پیگیری امروز</a>
-                {% endif %}
             </p>
-        </div>
-        <div class="mk-hub-head-actions" role="toolbar" aria-label="عملیات سریع" data-tour="quick-actions">
-            {% if has_bot_license %}
-            <button type="button" class="mk-hub-head-btn" data-modal-open="modal-upload" title="آپلود">
-                {% include 'includes/icon_slot.html' with decor='upload' size='inline' only %}<span>آپلود</span>
-            </button>
-            {% else %}
-            <a href="{% url 'workspace:upgrade' %}?feature=upload" class="mk-hub-head-btn" title="آپلود">
-                <i class="fas fa-lock" aria-hidden="true"></i><span>آپلود</span>
-            </a>
-            {% endif %}
-            <a href="{% url 'workspace:crm_contacts' %}?open=drawer-contact" class="mk-hub-head-btn" title="مخاطب">
-                {% include 'includes/icon_slot.html' with decor='user' size='inline' only %}<span>مخاطب</span>
-            </a>
-            <a href="{% url 'workspace:crm_properties' %}?open=drawer-property" class="mk-hub-head-btn mk-hub-head-btn--primary" title="ملک">
-                {% include 'includes/icon_slot.html' with decor='building' size='sm' only %}<span>ملک</span>
-            </a>
-            <button type="button" class="mk-hub-head-btn" data-modal-open="modal-reminder" title="یادآور">
-                {% include 'includes/icon_slot.html' with decor='bell' size='inline' only %}<span>یادآور</span>
-            </button>
         </div>
     </header>
 
     {% include 'includes/announcements.html' with notice_layout='inline' %}
 
-    {% if crm_stats.overdue_followups %}
-    <a href="{% url 'workspace:crm_contacts' %}?due=overdue" class="ws-home-alert ws-home-alert--warn" role="alert">
-        <span class="ws-home-alert__pulse" aria-hidden="true"></span>
-        <span class="ws-home-alert__icon" aria-hidden="true"><i class="fas fa-clock"></i></span>
-        <span class="ws-home-alert__body">
-            <span class="ws-home-alert__kicker">اقدام فوری</span>
-            <span class="ws-home-alert__title">
-                <em class="ws-home-alert__count">{{ crm_stats.overdue_followups }}</em>
-                پیگیری معوق
+    {% if home_is_empty %}
+    <section class="ws-home-start" aria-label="شروع کار" data-tour="quick-actions">
+        <p class="ws-home-start-title">می‌خواهید از کجا شروع کنید؟</p>
+        <div class="ws-home-start-actions">
+            <a href="{% url 'workspace:crm_contacts' %}?open=drawer-contact" class="ws-home-start-card">
+                <strong>مخاطب دارم</strong>
+                <span>ثبت مخاطب و نیاز</span>
+            </a>
+            {% if has_bot_license %}
+            <a href="{% url 'workspace:dataset_list' %}" class="ws-home-start-card">
+                <strong>می‌خواهم فایل پیدا کنم</strong>
+                <span>ورود به فایلینگ</span>
+            </a>
+            {% else %}
+            <a href="{% url 'workspace:crm_properties' %}" class="ws-home-start-card">
+                <strong>کار با فایل‌های شخصی</strong>
+                <span>ثبت و مدیریت ملک‌های خودتان</span>
+            </a>
+            {% endif %}
+            <a href="{% url 'workspace:crm_properties' %}?open=drawer-property" class="ws-home-start-card">
+                <strong>فایل شخصی دارم</strong>
+                <span>ثبت ملک</span>
+            </a>
+        </div>
+    </section>
+    {% elif home_nba %}
+    <section class="ws-home-nba" aria-label="اقدام‌های پیشنهادی">
+        {% for action in home_nba %}
+        <a href="{{ action.url }}" class="ws-home-alert{% if action.tone != 'warn' %} ws-home-alert--info{% endif %}" role="status">
+            {% if action.tone == 'warn' %}<span class="ws-home-alert__pulse" aria-hidden="true"></span>{% endif %}
+            <span class="ws-home-alert__icon" aria-hidden="true"><i class="fas {% if action.key == 'overdue' %}fa-clock{% elif action.key == 'matches' %}fa-house{% elif action.key == 'new_filing' %}fa-folder-open{% elif action.key == 'agency_inbox' %}fa-users{% else %}fa-list-check{% endif %}"></i></span>
+            <span class="ws-home-alert__body">
+                <span class="ws-home-alert__title">
+                    <em class="ws-home-alert__count">{{ action.count }}</em>
+                    {{ action.title }}
+                </span>
+                <span class="ws-home-alert__desc">{{ action.desc }}</span>
             </span>
-            <span class="ws-home-alert__desc">برای حفظ روند فروش، همین حالا پیگیری کنید</span>
-        </span>
-        <span class="ws-home-alert__cta">
-            پیگیری
-            <i class="fas fa-arrow-left" aria-hidden="true"></i>
-        </span>
-    </a>
+            <span class="ws-home-alert__cta">
+                {{ action.cta }}
+                <i class="fas fa-arrow-left" aria-hidden="true"></i>
+            </span>
+        </a>
+        {% endfor %}
+    </section>
+    {% else %}
+    <section class="ws-home-nba-success" aria-label="وضعیت امروز">
+        <p>کار فوری باقی نمانده. یک کار جدید از میانبرهای زیر شروع کنید.</p>
+    </section>
+    {% endif %}
+
+    {% if not home_is_empty %}
+    <nav class="mk-hub-head-actions ws-home-work-actions" aria-label="شروع کار جدید" data-tour="quick-actions">
+        <a href="{% url 'workspace:crm_contacts' %}?open=drawer-contact" class="mk-hub-head-btn">مخاطب جدید</a>
+        <a href="{% url 'workspace:crm_properties' %}?open=drawer-property" class="mk-hub-head-btn">فایل شخصی جدید</a>
+        {% if has_bot_license %}
+        <a href="{% url 'workspace:multi_listings' %}" class="mk-hub-head-btn mk-hub-head-btn--primary">پیدا کردن فایل</a>
+        {% else %}
+        <a href="{% url 'workspace:crm_properties' %}" class="mk-hub-head-btn mk-hub-head-btn--primary">کار با فایل‌های شخصی</a>
+        {% endif %}
+    </nav>
     {% endif %}
 
     {% if support_nav_counts.unread_replies %}
@@ -101,7 +123,8 @@
     </a>
     {% endif %}
 
-    <section class="mk-hub-metrics ws-home-metrics" aria-label="شاخص‌های کلیدی" data-tour="metrics">
+    {% if not home_is_empty %}
+    <section class="mk-hub-metrics ws-home-metrics ws-home-metrics--supporting" aria-label="شاخص‌های کلیدی" data-tour="metrics">
         {% if has_bot_license %}
         <a href="{% url 'workspace:dataset_list' %}" class="mk-hub-metric ws-home-metric--focus" data-tone="purple">
             <span class="mk-hub-metric-icon">{% include 'includes/icon_slot.html' with decor='folder' size='metric' only %}</span>
@@ -131,35 +154,6 @@
                 <span class="mk-hub-metric-lbl">اجاره</span>
             </span>
         </a>
-        {% else %}
-        <div class="mk-hub-metric mk-hub-metric--locked ws-home-metric--focus" data-tone="purple">
-            <span class="mk-hub-metric-icon"><i class="fas fa-lock" aria-hidden="true"></i></span>
-            <span class="mk-hub-metric-body">
-                <span class="mk-hub-metric-val">—</span>
-                <span class="mk-hub-metric-lbl">فایلینگ</span>
-            </span>
-        </div>
-        <div class="mk-hub-metric mk-hub-metric--locked" data-tone="blue">
-            <span class="mk-hub-metric-icon"><i class="fas fa-lock" aria-hidden="true"></i></span>
-            <span class="mk-hub-metric-body">
-                <span class="mk-hub-metric-val">—</span>
-                <span class="mk-hub-metric-lbl">آگهی</span>
-            </span>
-        </div>
-        <div class="mk-hub-metric mk-hub-metric--locked" data-tone="green">
-            <span class="mk-hub-metric-icon"><i class="fas fa-lock" aria-hidden="true"></i></span>
-            <span class="mk-hub-metric-body">
-                <span class="mk-hub-metric-val">—</span>
-                <span class="mk-hub-metric-lbl">فروش</span>
-            </span>
-        </div>
-        <div class="mk-hub-metric mk-hub-metric--locked" data-tone="cyan">
-            <span class="mk-hub-metric-icon"><i class="fas fa-lock" aria-hidden="true"></i></span>
-            <span class="mk-hub-metric-body">
-                <span class="mk-hub-metric-val">—</span>
-                <span class="mk-hub-metric-lbl">اجاره</span>
-            </span>
-        </div>
         {% endif %}
         <a href="{% url 'workspace:crm_contacts' %}" class="mk-hub-metric ws-home-metric--focus" data-tone="indigo">
             <span class="mk-hub-metric-icon">{% include 'includes/icon_slot.html' with decor='users' size='metric' only %}</span>
@@ -172,7 +166,7 @@
             <span class="mk-hub-metric-icon">{% include 'includes/icon_slot.html' with decor='building' size='metric' only %}</span>
             <span class="mk-hub-metric-body">
                 <span class="mk-hub-metric-val">{{ crm_stats.total_properties }}</span>
-                <span class="mk-hub-metric-lbl">املاک</span>
+                <span class="mk-hub-metric-lbl">فایل‌های شخصی</span>
             </span>
         </a>
         <a href="{% url 'workspace:crm_today' %}" class="mk-hub-metric ws-home-metric--focus{% if crm_stats.overdue_followups %} mk-hub-metric--warn{% endif %}" data-tone="amber">
@@ -197,7 +191,9 @@
             </span>
         </a>
     </section>
+    {% endif %}
 
+    {% if not home_is_empty %}
     <nav class="mk-hub-quick mk-hub-quick--bar ws-home-quick" aria-label="دسترسی سریع" data-tour="quick-bar">
         <ul class="mk-hub-quick-list">
             {% if has_bot_license %}
@@ -213,14 +209,16 @@
             <li><a href="{% url 'workspace:upgrade' %}?feature=upload" class="mk-hub-quick-item"><span class="mk-hub-quick-item-icon" data-tone="purple"><i class="fas fa-lock"></i></span><span class="mk-hub-quick-item-text">آپلود</span></a></li>
             <li><a href="{% url 'workspace:upgrade' %}?feature=datasets" class="mk-hub-quick-item"><span class="mk-hub-quick-item-icon" data-tone="blue"><i class="fas fa-lock"></i></span><span class="mk-hub-quick-item-text">فایلینگ</span></a></li>
             {% endif %}
-            <li><a href="{% url 'workspace:crm_dashboard' %}" class="mk-hub-quick-item"><span class="mk-hub-quick-item-icon" data-tone="violet">{% include 'includes/icon_slot.html' with decor='trending_up' size='inline' only %}</span><span class="mk-hub-quick-item-text">CRM</span></a></li>
+            <li><a href="{% url 'workspace:crm_dashboard' %}" class="mk-hub-quick-item"><span class="mk-hub-quick-item-icon" data-tone="violet">{% include 'includes/icon_slot.html' with decor='trending_up' size='inline' only %}</span><span class="mk-hub-quick-item-text">مدیریت مشتری</span></a></li>
             <li><a href="{% url 'workspace:crm_today' %}" class="mk-hub-quick-item"><span class="mk-hub-quick-item-icon" data-tone="indigo">{% include 'includes/icon_slot.html' with decor='list_todo' size='inline' only %}</span><span class="mk-hub-quick-item-text">امروز</span></a></li>
             <li><a href="{% url 'workspace:crm_calendar' %}" class="mk-hub-quick-item"><span class="mk-hub-quick-item-icon" data-tone="green">{% include 'includes/icon_slot.html' with decor='calendar' size='inline' only %}</span><span class="mk-hub-quick-item-text">تقویم</span></a></li>
             <li><a href="{% url 'workspace:support_list' %}" class="mk-hub-quick-item"><span class="mk-hub-quick-item-icon" data-tone="teal"><i class="fas fa-headset" aria-hidden="true"></i></span><span class="mk-hub-quick-item-text">پشتیبانی</span></a></li>
         </ul>
     </nav>
+    {% endif %}
 
     {# ─── Main workspace: priority queue → filing → secondary ─── #}
+    {% if not home_is_empty %}
     <div class="mk-hub-main ws-home-workspace" data-tour="workspace-panels">
         <aside class="ws-home-queue ws-home-queue--priority" aria-label="کارهای امروز">
             <section class="ws-home-queue-card mk-hub-card ws-home-queue-card--split">
@@ -526,6 +524,7 @@
             </article>
         </div>
     </section>
+    {% endif %}
 
 </div>
 {% endblock %}

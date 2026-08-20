@@ -725,6 +725,25 @@ class CustomerDetailView(CRMContextMixin, LoginRequiredMixin, DetailView):
         )
         ctx['crm_statuses'] = CRM_STATUSES
         ctx.update(_contact_areas_context(self.request.user))
+        from workspace.services.contact_nba import build_contact_workflow
+        workflow = build_contact_workflow(
+            customer=c,
+            follow_up_state=ctx['follow_up_state'],
+            activities=ctx['activities'],
+            match_data=ctx.get('match_data'),
+            property_links=ctx['property_links'],
+            linked_listings=ctx['linked_listings'],
+            visits=ctx['visits'],
+            deals=ctx['deals'],
+            can_edit=bool(ctx['can_edit_customer']) and not ctx['customer_is_shared'],
+        )
+        ctx['contact_nba'] = workflow['nba']
+        ctx['contact_summary'] = workflow['summary']
+        ctx['after_call_prompt'] = (
+            self.request.GET.get('after_call') == '1'
+            and bool(ctx['can_edit_customer'])
+            and not ctx['customer_is_shared']
+        )
         return ctx
 
     def post(self, request, customer_id):
@@ -913,6 +932,8 @@ class CustomerDetailView(CRMContextMixin, LoginRequiredMixin, DetailView):
                 schedule_days=days if days > 0 else None,
             )
             messages.success(request, 'تماس ثبت شد.')
+            if days <= 0:
+                redirect_url += '?after_call=1'
 
         elif action == 'merge_customer':
             secondary_id = request.POST.get('merge_with_id')

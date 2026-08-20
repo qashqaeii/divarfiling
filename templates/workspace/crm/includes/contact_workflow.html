@@ -1,0 +1,100 @@
+{% load workspace_tags crm_tags %}
+<section class="crm-contact-workflow" aria-label="اقدام و خلاصه پرونده">
+    {% if after_call_prompt %}
+    <div class="crm-contact-nba crm-contact-after-call" role="status">
+        <div class="crm-contact-nba__copy">
+            <strong>تماس ثبت شد — پیگیری بعدی؟</strong>
+            <p>از میانبرهای موجود یک زمان انتخاب کنید، یا فعلاً رد شوید.</p>
+        </div>
+        <div class="crm-contact-after-call__actions crm-followup-v2-quick">
+            <form method="post">{% csrf_token %}<input type="hidden" name="action" value="quick_followup"><input type="hidden" name="days" value="1"><button type="submit">فردا</button></form>
+            <form method="post">{% csrf_token %}<input type="hidden" name="action" value="quick_followup"><input type="hidden" name="days" value="3"><button type="submit">۳ روز</button></form>
+            <form method="post">{% csrf_token %}<input type="hidden" name="action" value="quick_followup"><input type="hidden" name="days" value="7"><button type="submit">۱ هفته</button></form>
+            <button type="button" data-drawer-open="drawer-followup">انتخاب تاریخ</button>
+            <a href="{% url 'workspace:crm_detail' customer.id %}" class="crm-contact-after-call__skip">فعلاً نه</a>
+        </div>
+    </div>
+    {% elif contact_nba %}
+    <div class="crm-contact-nba{% if contact_nba.key == 'followup' or contact_nba.key == 'need' %} is-accent{% endif %}" role="status">
+        <div class="crm-contact-nba__copy">
+            <strong>{{ contact_nba.title }}</strong>
+            {% if contact_nba.desc %}<p>{{ contact_nba.desc }}</p>{% endif %}
+        </div>
+        {% if not customer_is_shared or contact_nba.action == 'url' or contact_nba.action == 'tab' %}
+        {% if contact_nba.action == 'drawer' %}
+        <button type="button" class="crm-contact-nba__cta" data-drawer-open="{{ contact_nba.drawer }}"{% if contact_nba.form_tab %} data-form-tab="{{ contact_nba.form_tab }}"{% endif %}>
+            {{ contact_nba.cta }}
+        </button>
+        {% elif contact_nba.action == 'tab' %}
+        <button type="button" class="crm-contact-nba__cta" data-tab-jump="{{ contact_nba.tab }}">
+            {{ contact_nba.cta }}
+        </button>
+        {% elif contact_nba.action == 'url' %}
+        <a href="{{ contact_nba.url }}" class="crm-contact-nba__cta">{{ contact_nba.cta }}</a>
+        {% elif contact_nba.action == 'form' %}
+        <form method="post" class="crm-contact-nba__form">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="{{ contact_nba.form_action }}">
+            <button type="submit" class="crm-contact-nba__cta">{{ contact_nba.cta }}</button>
+        </form>
+        {% endif %}
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <dl class="crm-contact-summary" aria-label="خلاصه مخاطب">
+        {% if customer.customer_type %}
+        <div class="crm-contact-summary__item">
+            <dt>نوع</dt>
+            <dd>{{ customer.customer_type }}</dd>
+        </div>
+        {% endif %}
+        {% if contact_summary.deal_mode %}
+        <div class="crm-contact-summary__item">
+            <dt>معامله</dt>
+            <dd>{{ contact_summary.deal_mode }}</dd>
+        </div>
+        {% endif %}
+        {% if customer.areas %}
+        <div class="crm-contact-summary__item">
+            <dt>محدوده</dt>
+            <dd>{{ customer.areas|truncatechars:42 }}</dd>
+        </div>
+        {% endif %}
+        {% if customer.budget_min or customer.budget_max %}
+        <div class="crm-contact-summary__item">
+            <dt>بودجه</dt>
+            <dd>{% if customer.budget_min %}{{ customer.budget_min|ws_money }}{% endif %}{% if customer.budget_min and customer.budget_max %} — {% endif %}{% if customer.budget_max %}{{ customer.budget_max|ws_money }}{% endif %}</dd>
+        </div>
+        {% elif customer.deposit_min or customer.rent_max or customer.rent_min %}
+        <div class="crm-contact-summary__item">
+            <dt>ودیعه / اجاره</dt>
+            <dd>{% if customer.deposit_min or customer.deposit_max %}ودیعه {% if customer.deposit_min %}{{ customer.deposit_min|ws_money }}{% endif %}{% if customer.deposit_min and customer.deposit_max %}–{% endif %}{% if customer.deposit_max %}{{ customer.deposit_max|ws_money }}{% endif %}{% endif %}{% if customer.rent_min or customer.rent_max %}{% if customer.deposit_min or customer.deposit_max %} · {% endif %}اجاره {% if customer.rent_min %}{{ customer.rent_min|ws_money }}{% endif %}{% if customer.rent_min and customer.rent_max %}–{% endif %}{% if customer.rent_max %}{{ customer.rent_max|ws_money }}{% endif %}{% endif %}</dd>
+        </div>
+        {% endif %}
+        {% if customer.status %}
+        <div class="crm-contact-summary__item">
+            <dt>وضعیت</dt>
+            <dd>{{ customer.status }}</dd>
+        </div>
+        {% endif %}
+        {% if contact_summary.last_call %}
+        <div class="crm-contact-summary__item">
+            <dt>آخرین تماس</dt>
+            <dd>{{ contact_summary.last_call.created_at|ws_jalali_datetime }}</dd>
+        </div>
+        {% endif %}
+        {% if customer.next_follow_up %}
+        <div class="crm-contact-summary__item{% if follow_up_state == 'overdue' %} is-warn{% endif %}">
+            <dt>پیگیری بعدی</dt>
+            <dd>{% if follow_up_state == 'overdue' %}معوق · {% endif %}{{ customer.next_follow_up|ws_jalali }}</dd>
+        </div>
+        {% endif %}
+        {% if contact_summary.match_count %}
+        <div class="crm-contact-summary__item">
+            <dt>فایل پیشنهادی</dt>
+            <dd>{{ contact_summary.match_count }} مورد</dd>
+        </div>
+        {% endif %}
+    </dl>
+</section>

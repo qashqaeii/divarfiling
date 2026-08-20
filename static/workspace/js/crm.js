@@ -3849,6 +3849,12 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.addEventListener('click', e => {
             e.preventDefault();
             CRMDrawer.open(btn.dataset.drawerOpen);
+            const formTab = btn.dataset.formTab;
+            if (formTab) {
+                const drawer = document.getElementById(btn.dataset.drawerOpen);
+                const section = drawer?.querySelector('.crm-form-sections');
+                if (section) crmActivateFormTab(section, formTab);
+            }
         });
     });
 

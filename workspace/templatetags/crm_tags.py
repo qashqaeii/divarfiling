@@ -270,7 +270,8 @@ def crm_activity_icon(activity_type):
         'وظیفه': 'fas fa-list-check',
         'یادآور': 'fas fa-bell',
         'تغییر وضعیت': 'fas fa-arrows-rotate',
-        'املاک': 'fas fa-building',
+        'املاک': 'fas fa-house',
+        'پیشنهاد': 'fas fa-house',
         'ایمیل': 'fas fa-envelope',
     }
     return icons.get(activity_type, 'fas fa-circle')

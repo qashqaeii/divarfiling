@@ -3135,14 +3135,11 @@ function initCRMContactStatusPicker() {
 }
 
 function initCRMContactTeam() {
-    const bar = document.querySelector('[data-crm-contact-team]');
-    if (!bar) return;
     const shareUrl = window.crmTeamShareUrl;
     const transferUrl = window.crmTeamTransferUrl;
     const revokeTpl = window.crmShareRevokeUrlTemplate || window.crmShareRevokeUrlBase;
-    const select = document.getElementById('crm-share-select');
-    const shareBtn = document.getElementById('crm-share-btn');
-    const transferBtn = document.getElementById('crm-transfer-btn');
+    const groups = document.querySelectorAll('[data-crm-team-share]');
+    if (!groups.length && !document.querySelector('[data-crm-contact-team]')) return;
 
     const postMember = async (url, memberId, note = '') => {
         const body = new FormData();
@@ -3156,6 +3153,12 @@ function initCRMContactTeam() {
         const data = await res.json();
         if (!data.ok) throw new Error(data.error || 'خطا');
     };
+
+    const bindGroup = (group) => {
+        const select = group.querySelector('select');
+        const shareBtn = group.querySelector('[data-crm-share]');
+        const transferBtn = group.querySelector('[data-crm-transfer]');
+        if (!select) return;
 
     if (shareBtn && shareUrl && select) {
         shareBtn.addEventListener('click', async () => {
@@ -3196,9 +3199,14 @@ function initCRMContactTeam() {
                 transferBtn.disabled = false;
             }
         });
-    }
+        }
+    };
 
-    bar.querySelectorAll('[data-revoke-share]').forEach(btn => {
+    groups.forEach(bindGroup);
+
+    document.querySelectorAll('[data-revoke-share]').forEach(btn => {
+        if (btn.dataset.crmRevokeBound === '1') return;
+        btn.dataset.crmRevokeBound = '1';
         btn.addEventListener('click', async () => {
             if (!revokeTpl || !window.confirm('اشتراک لغو شود؟')) return;
             try {
@@ -3806,12 +3814,12 @@ function initContactDetailMobileMenus() {
     if (!root) return;
 
     const closeMenus = (except) => {
-        root.querySelectorAll('.crm-contact-mob-menu[open], .crm-contact-dock-more[open]').forEach(menu => {
+        root.querySelectorAll('.crm-contact-mob-menu[open], .crm-contact-dock-more[open], .crm-contact-hero__more[open]').forEach(menu => {
             if (menu !== except) menu.removeAttribute('open');
         });
     };
 
-    root.querySelectorAll('.crm-contact-mob-menu, .crm-contact-dock-more').forEach(menu => {
+    root.querySelectorAll('.crm-contact-mob-menu, .crm-contact-dock-more, .crm-contact-hero__more').forEach(menu => {
         menu.addEventListener('toggle', () => {
             if (menu.open) closeMenus(menu);
         });
@@ -3833,7 +3841,7 @@ function initContactDetailMobileMenus() {
 
     document.addEventListener('click', (e) => {
         if (!root.contains(e.target)) return;
-        root.querySelectorAll('.crm-contact-mob-menu[open], .crm-contact-dock-more[open]').forEach(menu => {
+        root.querySelectorAll('.crm-contact-mob-menu[open], .crm-contact-dock-more[open], .crm-contact-hero__more[open]').forEach(menu => {
             if (!menu.contains(e.target)) menu.removeAttribute('open');
         });
     });

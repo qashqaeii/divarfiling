@@ -203,10 +203,27 @@
     border-color: color-mix(in srgb, var(--ws-primary) 35%, var(--ws-border));
 }
 
-.ws-home-work-actions {
-    justify-content: flex-start;
+.ws-home .ws-home-work-actions.mk-hub-head-actions {
+    flex: 0 0 auto;
+    width: auto;
+    max-width: 100%;
+    display: flex;
     flex-wrap: wrap;
-    gap: 0.45rem;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0.4rem;
+    padding: 0;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+}
+
+.ws-home .ws-home-work-actions .mk-hub-head-btn {
+    width: auto;
+    flex: 0 0 auto;
+    min-height: 2.15rem;
+    padding: 0.35rem 0.85rem;
+    font-size: 0.8rem;
 }
 
 .ws-home-metrics--supporting {
@@ -220,6 +237,22 @@
 @media (max-width: 720px) {
     .ws-home-start-actions {
         grid-template-columns: 1fr;
+    }
+
+    .ws-home .ws-home-work-actions.mk-hub-head-actions {
+        display: flex;
+        width: auto;
+        padding: 0;
+        background: transparent;
+        border: none;
+        grid-template-columns: none;
+    }
+
+    .ws-home .ws-home-work-actions .mk-hub-head-btn {
+        min-height: 2.15rem;
+        width: auto;
+        padding: 0.35rem 0.75rem;
+        font-size: 0.78rem;
     }
 }
 

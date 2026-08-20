@@ -252,11 +252,11 @@ body.ws-body {
 .mk-hub-metric {
     align-items: center;
     justify-content: space-between;
-    padding: var(--ds-space-4);
-    border-radius: var(--ds-radius-card);
-    border: 1px solid var(--ws-border);
-    background: var(--ws-surface);
-    box-shadow: var(--ws-shadow-card);
+    padding: var(--kpi-pad-standard, var(--ds-space-3) var(--ds-space-4));
+    border-radius: var(--kpi-radius, var(--ds-radius-sm));
+    border: var(--kpi-border, 1px solid var(--ws-border));
+    background: var(--kpi-bg, var(--ws-surface));
+    box-shadow: var(--kpi-shadow, none);
     gap: var(--ds-space-3);
     transition: box-shadow 0.15s var(--ds-ease), border-color 0.15s var(--ds-ease);
 }
@@ -267,8 +267,8 @@ body.ws-body {
 
 .mk-hub-metric:hover {
     transform: none;
-    box-shadow: var(--ws-shadow-hover);
-    border-color: color-mix(in srgb, var(--ws-primary) 20%, var(--ws-border));
+    box-shadow: none;
+    border-color: var(--ws-border);
 }
 
 .mk-hub-metric-body {
@@ -278,58 +278,58 @@ body.ws-body {
 }
 
 .mk-hub-metric-val {
-    font-size: 1.625rem;
-    font-weight: 700;
+    font-size: var(--kpi-value-size-standard, 1.25rem);
+    font-weight: var(--kpi-value-weight, 700);
     letter-spacing: -0.03em;
     line-height: 1.1;
-    color: var(--ws-text);
+    color: var(--kpi-value-color, var(--ws-text));
 }
 
 .mk-hub-metric-lbl {
-    font-size: 0.75rem;
-    font-weight: 500;
-    color: var(--ws-text-secondary);
+    font-size: var(--kpi-label-size, 0.6875rem);
+    font-weight: var(--kpi-label-weight, 600);
+    color: var(--kpi-label-color, var(--ws-text-secondary));
     line-height: 1.3;
 }
 
 .mk-hub-metric-icon {
     flex-shrink: 0;
-    opacity: 0.55;
+    opacity: var(--kpi-icon-opacity, 0.42);
     transition: opacity 0.15s;
 }
 
 .mk-hub-metric-icon .df-decor-icon {
-    --df-decor-size: 1.25rem;
+    --df-decor-size: 1rem;
     --mk-icon-stroke: 1.75;
 }
 
 .mk-hub-metric:hover .mk-hub-metric-icon {
-    opacity: 0.75;
+    opacity: 0.65;
 }
 
-/* CRM dashboard KPIs */
+/* CRM dashboard KPIs — compact strip (shared KPI tokens) */
 .crm-dash-kpis {
-    border-radius: var(--ds-radius-card);
-    border: 1px solid var(--ws-border);
-    box-shadow: var(--ws-shadow-card);
+    border-radius: var(--kpi-radius, 8px);
+    border: var(--kpi-border, 1px solid var(--ws-border));
+    box-shadow: var(--kpi-shadow, none);
     overflow: hidden;
 }
 
 .crm-dash-kpi {
-    padding: var(--ds-space-3) var(--ds-space-4);
-    gap: var(--ds-space-3);
+    padding: var(--kpi-pad-compact, var(--ds-space-2) var(--ds-space-3));
+    gap: var(--ds-space-2);
 }
 
 .crm-dash-kpi-val {
-    font-size: 1.5rem;
-    font-weight: 700;
+    font-size: var(--kpi-value-size-compact, 1.125rem);
+    font-weight: var(--kpi-value-weight, 700);
     letter-spacing: -0.03em;
 }
 
 .crm-dash-kpi-lbl {
-    font-size: 0.75rem;
-    font-weight: 500;
-    color: var(--ws-text-secondary);
+    font-size: var(--kpi-label-size, 0.6875rem);
+    font-weight: var(--kpi-label-weight, 600);
+    color: var(--kpi-label-color, var(--ws-text-secondary));
 }
 
 /* ─── Quick action navigation bar ─── */
@@ -632,7 +632,7 @@ body.ws-body {
     }
 
     .mk-hub-metric-val {
-        font-size: 1.5rem;
+        font-size: var(--kpi-value-size-standard, 1.25rem);
     }
 }
 
@@ -654,7 +654,7 @@ body.ws-body {
     }
 
     .mk-hub-metric-val {
-        font-size: 1.25rem;
+        font-size: var(--kpi-value-size-compact, 1.125rem);
     }
 }
 
@@ -761,20 +761,20 @@ body.ws-body {
 }
 
 .crm-app-dashboard .crm-dash--pro .crm-dash-kpis {
-    border-radius: var(--ds-radius-card);
-    box-shadow: var(--ws-shadow-card);
+    border-radius: var(--kpi-radius, 8px);
+    box-shadow: var(--kpi-shadow, none);
 }
 
 .crm-app-dashboard .crm-dash--pro .crm-dash-kpi-val {
-    font-size: 1.5rem;
-    font-weight: 700;
+    font-size: var(--kpi-value-size-standard, 1.25rem);
+    font-weight: var(--kpi-value-weight, 700);
     letter-spacing: -0.03em;
 }
 
 .crm-app-dashboard .crm-dash--pro .crm-dash-kpi-lbl {
-    font-size: 0.75rem;
-    font-weight: 500;
-    color: var(--ws-text-secondary);
+    font-size: var(--kpi-label-size, 0.6875rem);
+    font-weight: var(--kpi-label-weight, 600);
+    color: var(--kpi-label-color, var(--ws-text-secondary));
 }
 
 .crm-page-chrome .crm-contacts-table th,

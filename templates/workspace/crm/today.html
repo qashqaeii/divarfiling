@@ -43,23 +43,17 @@
         </div>
     </header>
 
-    <section class="crm-dash-kpis crm-today-kpis" aria-label="آمار کارهای امروز">
-        <a href="#col-overdue" class="crm-dash-kpi crm-dash-kpi--warn" data-today-jump="overdue">
-            <span class="crm-dash-kpi-val">{{ queue_stats.overdue }}</span>
-            <span class="crm-dash-kpi-meta"><span class="crm-dash-kpi-lbl">معوق</span></span>
+    <section class="kpi-strip kpi-strip--compact kpi-strip--4 crm-dash-kpis crm-today-kpis" aria-label="آمار کارهای امروز">
+        <a href="#col-overdue" class="kpi-card kpi-card--compact crm-dash-kpi crm-dash-kpi--warn is-warn" data-today-jump="overdue">
+            <span class="kpi-card__value crm-dash-kpi-val">{{ queue_stats.overdue }}</span>
+            <span class="kpi-card__body crm-dash-kpi-meta"><span class="kpi-card__label crm-dash-kpi-lbl">معوق</span></span>
         </a>
-        <a href="#col-today" class="crm-dash-kpi crm-dash-kpi--accent" data-today-jump="today">
-            <span class="crm-dash-kpi-val">{{ queue_stats.today }}</span>
-            <span class="crm-dash-kpi-meta"><span class="crm-dash-kpi-lbl">امروز</span></span>
+        <a href="#col-today" class="kpi-card kpi-card--compact crm-dash-kpi crm-dash-kpi--accent is-accent" data-today-jump="today">
+            <span class="kpi-card__value crm-dash-kpi-val">{{ queue_stats.today }}</span>
+            <span class="kpi-card__body crm-dash-kpi-meta"><span class="kpi-card__label crm-dash-kpi-lbl">امروز</span></span>
         </a>
-        <article class="crm-dash-kpi">
-            <span class="crm-dash-kpi-val">{{ queue_stats.followups }}</span>
-            <span class="crm-dash-kpi-meta"><span class="crm-dash-kpi-lbl">پیگیری</span></span>
-        </article>
-        <article class="crm-dash-kpi">
-            <span class="crm-dash-kpi-val">{{ queue_stats.reminders }}</span>
-            <span class="crm-dash-kpi-meta"><span class="crm-dash-kpi-lbl">یادآور</span></span>
-        </article>
+        {% include 'workspace/includes/kpi_item.html' with variant='compact' extra_class='crm-dash-kpi' value=queue_stats.followups label='پیگیری' %}
+        {% include 'workspace/includes/kpi_item.html' with variant='compact' extra_class='crm-dash-kpi' value=queue_stats.reminders label='یادآور' %}
     </section>
 
     {% if queue_items %}

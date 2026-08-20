@@ -75,23 +75,11 @@
         </div>
     </header>
 
-    <section class="crm-dash-kpis" aria-label="آمار مخاطبین">
-        <article class="crm-dash-kpi">
-            <span class="crm-dash-kpi-val">{{ stats.total }}</span>
-            <span class="crm-dash-kpi-meta"><span class="crm-dash-kpi-lbl">کل</span></span>
-        </article>
-        <article class="crm-dash-kpi">
-            <span class="crm-dash-kpi-val">{{ stats.new }}</span>
-            <span class="crm-dash-kpi-meta"><span class="crm-dash-kpi-lbl">جدید</span></span>
-        </article>
-        <article class="crm-dash-kpi crm-dash-kpi--accent">
-            <span class="crm-dash-kpi-val">{{ stats.in_progress }}</span>
-            <span class="crm-dash-kpi-meta"><span class="crm-dash-kpi-lbl">پیگیری</span></span>
-        </article>
-        <article class="crm-dash-kpi{% if stats.due_today %} crm-dash-kpi--warn{% endif %}">
-            <span class="crm-dash-kpi-val">{{ stats.due_today }}</span>
-            <span class="crm-dash-kpi-meta"><span class="crm-dash-kpi-lbl">امروز</span></span>
-        </article>
+    <section class="kpi-strip kpi-strip--compact kpi-strip--4 crm-dash-kpis" aria-label="آمار مخاطبین">
+        {% include 'workspace/includes/kpi_item.html' with variant='compact' extra_class='crm-dash-kpi' value=stats.total label='کل' %}
+        {% include 'workspace/includes/kpi_item.html' with variant='compact' extra_class='crm-dash-kpi' value=stats.new label='جدید' %}
+        {% include 'workspace/includes/kpi_item.html' with variant='compact' extra_class='crm-dash-kpi crm-dash-kpi--accent' accent=1 value=stats.in_progress label='پیگیری' %}
+        {% include 'workspace/includes/kpi_item.html' with variant='compact' extra_class='crm-dash-kpi' warn=stats.due_today value=stats.due_today label='امروز' %}
     </section>
 
     {% if duplicate_groups %}

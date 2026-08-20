@@ -3,7 +3,7 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/crm.css' %}?v=97">
-<link rel="stylesheet" href="{% static 'workspace/css/home.css' %}?v=18">
+<link rel="stylesheet" href="{% static 'workspace/css/home.css' %}?v=19">
 {% endblock %}
 
 {% block page_title %}{% endblock %}
@@ -136,76 +136,6 @@
     {% endif %}
 
     {% if not home_is_empty %}
-    <section class="mk-hub-metrics ws-home-metrics ws-home-metrics--supporting" aria-label="شاخص‌های کلیدی" data-tour="metrics">
-        {% if has_bot_license %}
-        <a href="{% url 'workspace:dataset_list' %}" class="mk-hub-metric ws-home-metric--focus" data-tone="purple">
-            <span class="mk-hub-metric-icon">{% include 'includes/icon_slot.html' with decor='folder' size='metric' only %}</span>
-            <span class="mk-hub-metric-body">
-                <span class="mk-hub-metric-val">{{ data_stats.datasets }}</span>
-                <span class="mk-hub-metric-lbl">فایلینگ</span>
-            </span>
-        </a>
-        <a href="{% url 'workspace:dataset_list' %}" class="mk-hub-metric" data-tone="blue">
-            <span class="mk-hub-metric-icon">{% include 'includes/icon_slot.html' with decor='database' size='metric' only %}</span>
-            <span class="mk-hub-metric-body">
-                <span class="mk-hub-metric-val">{{ data_stats.listings|intcomma }}</span>
-                <span class="mk-hub-metric-lbl">آگهی</span>
-            </span>
-        </a>
-        <a href="{% url 'workspace:dataset_list' %}?tx=sale" class="mk-hub-metric" data-tone="green">
-            <span class="mk-hub-metric-icon">{% include 'includes/icon_slot.html' with decor='tag' size='metric' only %}</span>
-            <span class="mk-hub-metric-body">
-                <span class="mk-hub-metric-val">{{ data_stats.sale }}</span>
-                <span class="mk-hub-metric-lbl">فروش</span>
-            </span>
-        </a>
-        <a href="{% url 'workspace:dataset_list' %}?tx=rent" class="mk-hub-metric" data-tone="cyan">
-            <span class="mk-hub-metric-icon">{% include 'includes/icon_slot.html' with decor='rotate_ccw' size='metric' only %}</span>
-            <span class="mk-hub-metric-body">
-                <span class="mk-hub-metric-val">{{ data_stats.rent }}</span>
-                <span class="mk-hub-metric-lbl">اجاره</span>
-            </span>
-        </a>
-        {% endif %}
-        <a href="{% url 'workspace:crm_contacts' %}" class="mk-hub-metric ws-home-metric--focus" data-tone="indigo">
-            <span class="mk-hub-metric-icon">{% include 'includes/icon_slot.html' with decor='users' size='metric' only %}</span>
-            <span class="mk-hub-metric-body">
-                <span class="mk-hub-metric-val">{{ crm_stats.total_contacts }}</span>
-                <span class="mk-hub-metric-lbl">مخاطبین</span>
-            </span>
-        </a>
-        <a href="{% url 'workspace:crm_properties' %}" class="mk-hub-metric ws-home-metric--focus" data-tone="violet">
-            <span class="mk-hub-metric-icon">{% include 'includes/icon_slot.html' with decor='building' size='metric' only %}</span>
-            <span class="mk-hub-metric-body">
-                <span class="mk-hub-metric-val">{{ crm_stats.total_properties }}</span>
-                <span class="mk-hub-metric-lbl">فایل‌های شخصی</span>
-            </span>
-        </a>
-        <a href="{% url 'workspace:crm_today' %}" class="mk-hub-metric ws-home-metric--focus{% if crm_stats.overdue_followups %} mk-hub-metric--warn{% endif %}" data-tone="amber">
-            <span class="mk-hub-metric-icon">{% include 'includes/icon_slot.html' with decor='list_todo' size='metric' only %}</span>
-            <span class="mk-hub-metric-body">
-                <span class="mk-hub-metric-val">{{ crm_stats.due_today }}</span>
-                <span class="mk-hub-metric-lbl">امروز</span>
-            </span>
-        </a>
-        <a href="{% url 'workspace:crm_reminders' %}" class="mk-hub-metric" data-tone="rose">
-            <span class="mk-hub-metric-icon">{% include 'includes/icon_slot.html' with decor='bell' size='metric' only %}</span>
-            <span class="mk-hub-metric-body">
-                <span class="mk-hub-metric-val">{{ crm_stats.active_reminders }}</span>
-                <span class="mk-hub-metric-lbl">یادآور</span>
-            </span>
-        </a>
-        <a href="{% url 'workspace:support_list' %}" class="mk-hub-metric{% if support_nav_counts.unread_replies %} mk-hub-metric--warn{% endif %}" data-tone="teal">
-            <span class="mk-hub-metric-icon"><i class="fas fa-headset" aria-hidden="true"></i></span>
-            <span class="mk-hub-metric-body">
-                <span class="mk-hub-metric-val">{% if support_nav_counts.open %}{{ support_nav_counts.open }}{% else %}۰{% endif %}</span>
-                <span class="mk-hub-metric-lbl">تیکت باز</span>
-            </span>
-        </a>
-    </section>
-    {% endif %}
-
-    {% if not home_is_empty %}
     <nav class="mk-hub-quick mk-hub-quick--bar ws-home-quick" aria-label="دسترسی سریع" data-tour="quick-bar">
         <ul class="mk-hub-quick-list">
             {% if has_bot_license %}
@@ -227,6 +157,36 @@
             <li><a href="{% url 'workspace:support_list' %}" class="mk-hub-quick-item"><span class="mk-hub-quick-item-icon" data-tone="teal"><i class="fas fa-headset" aria-hidden="true"></i></span><span class="mk-hub-quick-item-text">پشتیبانی</span></a></li>
         </ul>
     </nav>
+    {% endif %}
+
+    {% if not home_is_empty %}
+    <section class="kpi-strip kpi-strip--standard kpi-strip--home mk-hub-metrics ws-home-metrics ws-home-metrics--supporting" aria-label="شاخص‌های کلیدی" data-tour="metrics">
+        {% if has_bot_license %}
+        {% url 'workspace:dataset_list' as kpi_filing_url %}
+        {% with kpi_sale_url=kpi_filing_url|add:'?tx=sale' kpi_rent_url=kpi_filing_url|add:'?tx=rent' %}
+        {% include 'workspace/includes/kpi_item.html' with variant='standard' href=kpi_filing_url extra_class='mk-hub-metric ws-home-metric--focus' tone='purple' decor='folder' value=data_stats.datasets label='فایلینگ' %}
+        {% include 'workspace/includes/kpi_item.html' with variant='standard' href=kpi_filing_url extra_class='mk-hub-metric' tone='blue' decor='database' value=data_stats.listings|intcomma label='آگهی' %}
+        {% include 'workspace/includes/kpi_item.html' with variant='standard' href=kpi_sale_url extra_class='mk-hub-metric' tone='green' decor='tag' value=data_stats.sale label='فروش' %}
+        {% include 'workspace/includes/kpi_item.html' with variant='standard' href=kpi_rent_url extra_class='mk-hub-metric' tone='cyan' decor='rotate_ccw' value=data_stats.rent label='اجاره' %}
+        {% endwith %}
+        {% endif %}
+        {% url 'workspace:crm_contacts' as kpi_contacts_url %}
+        {% url 'workspace:crm_properties' as kpi_properties_url %}
+        {% url 'workspace:crm_today' as kpi_today_url %}
+        {% url 'workspace:crm_reminders' as kpi_reminders_url %}
+        {% url 'workspace:support_list' as kpi_support_url %}
+        {% include 'workspace/includes/kpi_item.html' with variant='standard' href=kpi_contacts_url extra_class='mk-hub-metric ws-home-metric--focus' tone='indigo' decor='users' value=crm_stats.total_contacts label='مخاطبین' %}
+        {% include 'workspace/includes/kpi_item.html' with variant='standard' href=kpi_properties_url extra_class='mk-hub-metric ws-home-metric--focus' tone='violet' decor='building' value=crm_stats.total_properties label='فایل‌های شخصی' %}
+        {% include 'workspace/includes/kpi_item.html' with variant='standard' href=kpi_today_url extra_class='mk-hub-metric ws-home-metric--focus' tone='amber' decor='list_todo' value=crm_stats.due_today label='امروز' warn=crm_stats.overdue_followups %}
+        {% include 'workspace/includes/kpi_item.html' with variant='standard' href=kpi_reminders_url extra_class='mk-hub-metric' tone='rose' decor='bell' value=crm_stats.active_reminders label='یادآور' %}
+        <a href="{{ kpi_support_url }}" class="kpi-card kpi-card--standard mk-hub-metric{% if support_nav_counts.unread_replies %} is-warn mk-hub-metric--warn{% endif %}" data-tone="teal">
+            <span class="kpi-card__icon mk-hub-metric-icon" aria-hidden="true"><i class="fas fa-headset"></i></span>
+            <span class="kpi-card__body mk-hub-metric-body">
+                <span class="kpi-card__value mk-hub-metric-val">{% if support_nav_counts.open %}{{ support_nav_counts.open }}{% else %}۰{% endif %}</span>
+                <span class="kpi-card__label mk-hub-metric-lbl">تیکت باز</span>
+            </span>
+        </a>
+    </section>
     {% endif %}
 
     {# ─── Main workspace: priority queue → filing → secondary ─── #}

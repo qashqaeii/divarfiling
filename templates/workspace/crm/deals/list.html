@@ -82,41 +82,16 @@
         </a>
     </section>
 
-    <section class="crm-deals-kpis crm-deals-desk-kpis" aria-label="شاخص‌های معاملات">
-        <article class="crm-deal-kpi crm-deal-kpi--accent">
-            <span class="crm-deal-kpi-icon crm-deal-kpi-icon--active" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='zap' size='metric' only %}</span>
-            <div class="crm-deal-kpi-body">
-                <span class="crm-deal-kpi-val">{{ stats.active }}</span>
-                <span class="crm-deal-kpi-lbl">فعال</span>
-            </div>
-        </article>
-        <article class="crm-deal-kpi">
-            <span class="crm-deal-kpi-icon crm-deal-kpi-icon--pipeline" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='trending_up' size='metric' only %}</span>
-            <div class="crm-deal-kpi-body">
-                <span class="crm-deal-kpi-val">{{ stats.pipeline_value|ws_money }}</span>
-                <span class="crm-deal-kpi-lbl">ارزش pipeline</span>
-            </div>
-        </article>
-        <article class="crm-deal-kpi">
-            <span class="crm-deal-kpi-icon crm-deal-kpi-icon--pipeline" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='scale' size='metric' only %}</span>
-            <div class="crm-deal-kpi-body">
-                <span class="crm-deal-kpi-val">{{ stats.weighted_forecast|ws_money }}</span>
-                <span class="crm-deal-kpi-lbl">پیش‌بینی وزنی</span>
-            </div>
-        </article>
-        <article class="crm-deal-kpi crm-deal-kpi--success">
-            <span class="crm-deal-kpi-icon crm-deal-kpi-icon--commission" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='coins' size='metric' only %}</span>
-            <div class="crm-deal-kpi-body">
-                <span class="crm-deal-kpi-val">{{ stats.commission_total|ws_money }}</span>
-                <span class="crm-deal-kpi-lbl">کمیسیون بسته</span>
-            </div>
-        </article>
-        <article class="crm-deal-kpi">
-            <span class="crm-deal-kpi-icon crm-deal-kpi-icon--closed" aria-hidden="true"><i class="fas fa-trophy"></i></span>
-            <div class="crm-deal-kpi-body">
-                <span class="crm-deal-kpi-val">{{ stats.win_rate }}%</span>
-                <span class="crm-deal-kpi-lbl">نرخ بستن</span>
-            </div>
+    <section class="kpi-strip kpi-strip--insight kpi-strip--5 crm-deals-kpis crm-deals-desk-kpis" aria-label="شاخص‌های معاملات">
+        {% include 'workspace/includes/kpi_item.html' with variant='insight' extra_class='crm-deal-kpi crm-deal-kpi--accent' accent=1 value=stats.active label='فعال' %}
+        {% include 'workspace/includes/kpi_item.html' with variant='insight' extra_class='crm-deal-kpi' value=stats.pipeline_value|ws_money label='ارزش pipeline' %}
+        {% include 'workspace/includes/kpi_item.html' with variant='insight' extra_class='crm-deal-kpi' value=stats.weighted_forecast|ws_money label='پیش‌بینی وزنی' %}
+        {% include 'workspace/includes/kpi_item.html' with variant='insight' extra_class='crm-deal-kpi crm-deal-kpi--success' value=stats.commission_total|ws_money label='کمیسیون بسته' %}
+        <article class="kpi-card kpi-card--insight crm-deal-kpi">
+            <span class="kpi-card__body crm-deal-kpi-body">
+                <span class="kpi-card__value crm-deal-kpi-val">{{ stats.win_rate }}%</span>
+                <span class="kpi-card__label crm-deal-kpi-lbl">نرخ بستن</span>
+            </span>
         </article>
     </section>
 

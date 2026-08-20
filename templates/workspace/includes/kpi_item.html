@@ -1,0 +1,16 @@
+{% if href %}
+<a href="{{ href }}" class="kpi-card kpi-card--{{ variant|default:'compact' }}{% if extra_class %} {{ extra_class }}{% endif %}{% if warn %} is-warn crm-dash-kpi--warn{% endif %}{% if accent %} is-accent{% endif %}{% if active %} is-active{% endif %}"{% if tone %} data-tone="{{ tone }}"{% endif %}{% if jump %} data-today-jump="{{ jump }}"{% endif %}>
+{% else %}
+<article class="kpi-card kpi-card--{{ variant|default:'compact' }}{% if extra_class %} {{ extra_class }}{% endif %}{% if warn %} is-warn crm-dash-kpi--warn{% endif %}{% if accent %} is-accent{% endif %}"{% if tone %} data-tone="{{ tone }}"{% endif %}>
+{% endif %}
+    {% if decor %}
+    <span class="kpi-card__icon mk-hub-metric-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor=decor size='metric' only %}</span>
+    {% elif fa %}
+    <span class="kpi-card__icon mk-hub-metric-icon" aria-hidden="true"><i class="fas {{ fa }}"></i></span>
+    {% endif %}
+    <span class="kpi-card__body mk-hub-metric-body crm-dash-kpi-meta crm-deal-kpi-body">
+        <span class="kpi-card__value mk-hub-metric-val crm-dash-kpi-val crm-deal-kpi-val">{{ value }}</span>
+        <span class="kpi-card__label mk-hub-metric-lbl crm-dash-kpi-lbl crm-deal-kpi-lbl">{{ label }}</span>
+        {% if context %}<span class="kpi-card__context mk-hub-metric-sub">{{ context }}</span>{% endif %}
+    </span>
+{% if href %}</a>{% else %}</article>{% endif %}

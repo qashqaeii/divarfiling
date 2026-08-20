@@ -1,0 +1,424 @@
+/* ═══════════════════════════════════════════════════════════
+   Workspace KPI Design System
+   Compact  80–96px  — Contacts, Today, Filing
+   Standard 100–120px — Home / workspace hub
+   Insight  110–130px — Deals / management metrics
+   Hierarchy: Label (secondary) → Value (primary) → Context → Icon
+   ═══════════════════════════════════════════════════════════ */
+
+.kpi-strip {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--kpi-gap, 0);
+    background: var(--kpi-bg);
+    border: var(--kpi-border);
+    border-radius: var(--kpi-radius);
+    box-shadow: var(--kpi-shadow);
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.kpi-strip--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.kpi-strip--4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.kpi-strip--5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.kpi-strip--6 { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+
+.kpi-strip--home {
+    grid-template-columns: repeat(auto-fit, minmax(6.25rem, 1fr));
+}
+
+.kpi-card,
+.kpi-strip .mk-hub-metric,
+.kpi-strip .crm-dash-kpi,
+.kpi-strip .crm-deal-kpi {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+    text-decoration: none;
+    color: inherit;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    border-inline-start: 1px solid var(--ws-border);
+    box-shadow: none;
+    position: relative;
+    overflow: hidden;
+    transform: none;
+}
+
+.kpi-strip > :first-child,
+.kpi-strip .kpi-card:first-child,
+.kpi-strip .mk-hub-metric:first-child,
+.kpi-strip .crm-dash-kpi:first-child,
+.kpi-strip .crm-deal-kpi:first-child {
+    border-inline-start: none;
+}
+
+.kpi-card:hover,
+.kpi-strip .mk-hub-metric:hover,
+.kpi-strip .crm-dash-kpi:hover,
+.kpi-strip .crm-deal-kpi:hover {
+    transform: none;
+    box-shadow: none;
+    background: var(--ws-surface-2, color-mix(in srgb, var(--ws-text) 3%, var(--kpi-bg)));
+}
+
+.kpi-card__body,
+.kpi-strip .mk-hub-metric-body,
+.kpi-strip .crm-dash-kpi-meta,
+.kpi-strip .crm-deal-kpi-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.12rem;
+    min-width: 0;
+    flex: 1;
+}
+
+/* Value is the only primary element */
+.kpi-card__value,
+.kpi-strip .mk-hub-metric-val,
+.kpi-strip .crm-dash-kpi-val,
+.kpi-strip .crm-deal-kpi-val {
+    font-weight: var(--kpi-value-weight);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    color: var(--kpi-value-color);
+}
+
+.kpi-card__label,
+.kpi-strip .mk-hub-metric-lbl,
+.kpi-strip .crm-dash-kpi-lbl,
+.kpi-strip .crm-deal-kpi-lbl {
+    display: block;
+    font-size: var(--kpi-label-size);
+    font-weight: var(--kpi-label-weight);
+    color: var(--kpi-label-color);
+    line-height: 1.25;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.kpi-card__context,
+.kpi-strip .mk-hub-metric-sub {
+    font-size: var(--kpi-context-size);
+    color: var(--kpi-label-color);
+    line-height: 1.2;
+}
+
+/* Icon stays secondary — no gradient boxes competing with the number */
+.kpi-card__icon,
+.kpi-strip .mk-hub-metric-icon,
+.kpi-strip .crm-deal-kpi-icon,
+.kpi-strip .crm-dash-kpi-icon {
+    flex-shrink: 0;
+    width: auto;
+    height: auto;
+    opacity: var(--kpi-icon-opacity);
+    background: transparent !important;
+    border: none;
+    border-radius: 0;
+    color: var(--kpi-label-color);
+    font-size: var(--kpi-icon-size);
+}
+
+.kpi-card__icon .df-decor-icon,
+.kpi-strip .mk-hub-metric-icon .df-decor-icon,
+.kpi-strip .crm-deal-kpi-icon .df-decor-icon {
+    --df-decor-size: 1rem;
+}
+
+.kpi-strip .mk-hub-metric::after,
+.kpi-strip .crm-deal-kpi::before {
+    display: none !important;
+}
+
+.kpi-card.is-accent .kpi-card__value,
+.kpi-strip .is-accent .kpi-card__value,
+.kpi-strip .crm-dash-kpi--accent .crm-dash-kpi-val,
+.kpi-strip .crm-deal-kpi--accent .crm-deal-kpi-val {
+    color: var(--kpi-accent);
+}
+
+.kpi-card.is-warn .kpi-card__value,
+.kpi-strip .is-warn .kpi-card__value,
+.kpi-strip .crm-dash-kpi--warn .crm-dash-kpi-val,
+.kpi-strip .mk-hub-metric--warn .mk-hub-metric-val {
+    color: var(--kpi-warn);
+}
+
+.kpi-card.is-active {
+    background: color-mix(in srgb, var(--kpi-accent) 6%, transparent);
+}
+
+.kpi-card.is-active .kpi-card__value {
+    color: var(--kpi-accent);
+}
+
+/* ── Compact: operational pages ── */
+.kpi-strip--compact .kpi-card,
+.kpi-strip--compact .mk-hub-metric,
+.kpi-strip--compact .crm-dash-kpi,
+.kpi-strip--compact .crm-deal-kpi {
+    min-height: 0;
+    padding: var(--kpi-pad-compact);
+}
+
+.kpi-strip--compact .kpi-card__value,
+.kpi-strip--compact .mk-hub-metric-val,
+.kpi-strip--compact .crm-dash-kpi-val,
+.kpi-strip--compact .crm-deal-kpi-val {
+    font-size: var(--kpi-value-size-compact);
+}
+
+.kpi-strip--compact .kpi-card__icon,
+.kpi-strip--compact .mk-hub-metric-icon,
+.kpi-strip--compact .crm-deal-kpi-icon,
+.kpi-strip--compact .crm-dash-kpi-icon,
+.kpi-strip--compact .kpi-card__context,
+.kpi-strip--compact .mk-hub-metric-sub {
+    display: none;
+}
+
+/* ── Standard: home / hub ── */
+.kpi-strip--standard .kpi-card,
+.kpi-strip--standard .mk-hub-metric,
+.kpi-strip--standard .crm-dash-kpi {
+    min-height: 0;
+    padding: var(--kpi-pad-standard);
+}
+
+.kpi-strip--standard .kpi-card__value,
+.kpi-strip--standard .mk-hub-metric-val,
+.kpi-strip--standard .crm-dash-kpi-val {
+    font-size: var(--kpi-value-size-standard);
+}
+
+.kpi-strip--standard .kpi-card__context,
+.kpi-strip--standard .mk-hub-metric-sub {
+    display: none;
+}
+
+/* ── Insight: deals / management ── */
+.kpi-strip--insight .kpi-card,
+.kpi-strip--insight .crm-deal-kpi {
+    min-height: 0;
+    padding: var(--kpi-pad-insight);
+}
+
+.kpi-strip--insight .kpi-card__value,
+.kpi-strip--insight .crm-deal-kpi-val {
+    font-size: var(--kpi-value-size-insight);
+}
+
+.kpi-strip--insight .kpi-card__context {
+    display: block;
+}
+
+/* Purple is accent/active only — not a full-card fill */
+.kpi-strip .crm-deal-kpi--accent,
+.kpi-strip .crm-deal-kpi--success {
+    background: transparent;
+    border-color: transparent;
+    border-inline-start-color: var(--ws-border);
+}
+
+/* Legacy CRM chrome: map onto compact tokens */
+body.ws-body .crm-page-chrome .crm-dash-kpis:not(.kpi-strip) {
+    border-radius: var(--kpi-radius);
+    box-shadow: var(--kpi-shadow);
+}
+
+body.ws-body .kpi-strip.crm-dash-kpis,
+body.ws-body .kpi-strip.crm-deals-kpis,
+body.ws-body .kpi-strip.mk-hub-metrics,
+body.ws-body .kpi-strip.mk-filing-metrics {
+    margin: 0;
+}
+
+body.ws-body .mk-filing-pro .kpi-strip.mk-filing-metrics {
+    margin-block: 0 0.35rem;
+}
+
+body.ws-body .crm-deals-page .kpi-strip.crm-deals-kpis {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 0;
+    margin-bottom: 0;
+    background: var(--kpi-bg);
+    border: var(--kpi-border);
+    border-radius: var(--kpi-radius);
+    box-shadow: none;
+    overflow: hidden;
+}
+
+body.ws-body .crm-deals-page .kpi-strip .crm-deal-kpi,
+body.ws-body .crm-deals-page .kpi-strip .kpi-card {
+    border-radius: 0;
+    box-shadow: none;
+    background: transparent;
+    border: none;
+    border-inline-start: 1px solid var(--ws-border);
+    transform: none;
+}
+
+body.ws-body .crm-app-dashboard .kpi-strip.crm-dash-kpis {
+    border-radius: var(--kpi-radius);
+    box-shadow: none;
+}
+
+body.ws-body .crm-app-dashboard .kpi-strip .crm-dash-kpi-val {
+    font-size: var(--kpi-value-size-standard);
+}
+
+body.ws-body .crm-app-dashboard .kpi-strip .crm-dash-kpi-lbl {
+    font-size: var(--kpi-label-size);
+    font-weight: var(--kpi-label-weight);
+    color: var(--kpi-label-color);
+}
+
+body.ws-body .ws-home .kpi-strip.ws-home-metrics {
+    margin-block: 0.15rem 0.4rem;
+}
+
+@media (max-width: 960px) {
+    .kpi-strip--home {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+    .kpi-strip--5 {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    .kpi-strip--5 > :nth-child(n+4) {
+        border-top: 1px solid var(--ws-border);
+    }
+    .kpi-strip--5 > :nth-child(4) {
+        border-inline-start: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .kpi-strip--compact,
+    .kpi-strip--standard,
+    .kpi-strip--insight {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .kpi-strip--home {
+        display: flex;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        grid-template-columns: none;
+    }
+    .kpi-strip--home::-webkit-scrollbar { display: none; }
+    .kpi-strip--home .kpi-card,
+    .kpi-strip--home .mk-hub-metric {
+        flex: 0 0 auto;
+        min-width: 5.5rem;
+        min-height: 0;
+        max-height: none;
+        padding: 0.45rem 0.65rem;
+    }
+    .kpi-strip--home .kpi-card__value,
+    .kpi-strip--home .mk-hub-metric-val {
+        font-size: 1.05rem;
+    }
+
+    .ws-home .kpi-strip.mk-hub-metrics,
+    .ws-home .kpi-strip.ws-home-metrics {
+        display: flex !important;
+        flex-wrap: nowrap;
+        gap: 0 !important;
+        overflow-x: auto;
+        border: var(--kpi-border);
+        border-radius: var(--kpi-radius);
+        background: var(--kpi-bg);
+        box-shadow: none;
+        padding: 0 !important;
+        margin-inline: 0;
+    }
+    .ws-home .kpi-strip .mk-hub-metric,
+    .ws-home .kpi-strip .kpi-card {
+        width: auto !important;
+        min-width: 5.75rem !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        border: none !important;
+        border-inline-start: 1px solid var(--ws-border) !important;
+        background: transparent !important;
+        scroll-snap-align: start;
+    }
+    .ws-home .kpi-strip > :first-child {
+        border-inline-start: none !important;
+    }
+
+    .kpi-strip--compact .kpi-card,
+    .kpi-strip--compact .mk-hub-metric,
+    .kpi-strip--compact .crm-dash-kpi,
+    .kpi-strip--compact .crm-deal-kpi,
+    .kpi-strip--insight .kpi-card,
+    .kpi-strip--insight .crm-deal-kpi {
+        min-height: 0;
+        padding: 0.45rem 0.55rem;
+    }
+
+    .kpi-strip--compact .kpi-card__value,
+    .kpi-strip--compact .mk-hub-metric-val,
+    .kpi-strip--compact .crm-dash-kpi-val,
+    .kpi-strip--insight .kpi-card__value,
+    .kpi-strip--insight .crm-deal-kpi-val {
+        font-size: 1.05rem;
+    }
+}
+
+@media (max-width: 430px) {
+    .kpi-strip--compact.kpi-strip--4 {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+}
+
+/* Filing mobile used to force four separate cards — keep the shared strip */
+@media (max-width: 768px) {
+    .mk-filing-mobile .kpi-strip.mk-filing-metrics {
+        display: grid !important;
+        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+        gap: 0 !important;
+        padding: 0;
+        margin: 0 0.7rem 0.35rem;
+        border-radius: var(--kpi-radius);
+        overflow: hidden;
+    }
+
+    .mk-filing-mobile .kpi-strip.mk-filing-metrics .kpi-card,
+    .mk-filing-mobile .kpi-strip.mk-filing-metrics .mk-hub-metric {
+        flex-direction: row !important;
+        align-items: center !important;
+        gap: 0.35rem !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        padding: 0.45rem 0.5rem !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        border: none !important;
+        border-inline-start: 1px solid var(--ws-border) !important;
+        background: transparent !important;
+    }
+
+    .mk-filing-mobile .kpi-strip.mk-filing-metrics > :first-child {
+        border-inline-start: none !important;
+    }
+
+    .mk-filing-mobile .kpi-strip.mk-filing-metrics .kpi-card__icon,
+    .mk-filing-mobile .kpi-strip.mk-filing-metrics .mk-hub-metric-icon,
+    .mk-filing-mobile .kpi-strip.mk-filing-metrics .mk-hub-metric-sub {
+        display: none !important;
+    }
+}
+
+@media (max-width: 430px) {
+    .mk-filing-mobile .kpi-strip.mk-filing-metrics {
+        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    }
+}

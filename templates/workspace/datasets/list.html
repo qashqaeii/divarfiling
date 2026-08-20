@@ -57,39 +57,11 @@
         </div>
     </header>
 
-    <section class="mk-hub-metrics mk-filing-metrics" aria-label="آمار فایلینگ">
-        <article class="mk-hub-metric" data-tone="purple">
-            <span class="mk-hub-metric-icon">{% include 'includes/icon_slot.html' with decor='folder' size='metric' only %}</span>
-            <span class="mk-hub-metric-body">
-                <span class="mk-hub-metric-val">{{ stats.files }}</span>
-                <span class="mk-hub-metric-lbl">پوشه استخراج</span>
-                <span class="mk-hub-metric-sub">استخراج دیوار</span>
-            </span>
-        </article>
-        <article class="mk-hub-metric" data-tone="blue">
-            <span class="mk-hub-metric-icon">{% include 'includes/icon_slot.html' with decor='database' size='metric' only %}</span>
-            <span class="mk-hub-metric-body">
-                <span class="mk-hub-metric-val">{{ stats.listings|intcomma }}</span>
-                <span class="mk-hub-metric-lbl">آگهی دیوار</span>
-                <span class="mk-hub-metric-sub">کل رکوردها</span>
-            </span>
-        </article>
-        <article class="mk-hub-metric" data-tone="green">
-            <span class="mk-hub-metric-icon">{% include 'includes/icon_slot.html' with decor='tag' size='metric' only %}</span>
-            <span class="mk-hub-metric-body">
-                <span class="mk-hub-metric-val">{{ stats.sale }}</span>
-                <span class="mk-hub-metric-lbl">فروش</span>
-                <span class="mk-hub-metric-sub">پوشه استخراج</span>
-            </span>
-        </article>
-        <article class="mk-hub-metric" data-tone="cyan">
-            <span class="mk-hub-metric-icon">{% include 'includes/icon_slot.html' with decor='rotate_ccw' size='metric' only %}</span>
-            <span class="mk-hub-metric-body">
-                <span class="mk-hub-metric-val">{{ stats.rent }}</span>
-                <span class="mk-hub-metric-lbl">اجاره</span>
-                <span class="mk-hub-metric-sub">پوشه استخراج</span>
-            </span>
-        </article>
+    <section class="kpi-strip kpi-strip--compact kpi-strip--4 mk-hub-metrics mk-filing-metrics" aria-label="آمار فایلینگ">
+        {% include 'workspace/includes/kpi_item.html' with variant='compact' extra_class='mk-hub-metric' tone='purple' value=stats.files label='پوشه استخراج' %}
+        {% include 'workspace/includes/kpi_item.html' with variant='compact' extra_class='mk-hub-metric' tone='blue' value=stats.listings|intcomma label='آگهی دیوار' %}
+        {% include 'workspace/includes/kpi_item.html' with variant='compact' extra_class='mk-hub-metric' tone='green' value=stats.sale label='فروش' %}
+        {% include 'workspace/includes/kpi_item.html' with variant='compact' extra_class='mk-hub-metric' tone='cyan' value=stats.rent label='اجاره' %}
     </section>
 
     <section class="mk-filing-toolbar" aria-label="فیلتر و جستجو">

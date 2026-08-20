@@ -58,7 +58,7 @@
         {% if customer.areas %}
         <div class="crm-contact-summary__item">
             <dt>محدوده</dt>
-            <dd>{{ customer.areas|truncatechars:42 }}</dd>
+            <dd>{{ customer.areas|truncatechars:22 }}</dd>
         </div>
         {% endif %}
         {% if customer.budget_min or customer.budget_max %}
@@ -66,10 +66,17 @@
             <dt>بودجه</dt>
             <dd>{% if customer.budget_min %}{{ customer.budget_min|ws_money }}{% endif %}{% if customer.budget_min and customer.budget_max %} — {% endif %}{% if customer.budget_max %}{{ customer.budget_max|ws_money }}{% endif %}</dd>
         </div>
-        {% elif customer.deposit_min or customer.rent_max or customer.rent_min %}
+        {% endif %}
+        {% if customer.deposit_min or customer.deposit_max %}
         <div class="crm-contact-summary__item">
-            <dt>ودیعه / اجاره</dt>
-            <dd>{% if customer.deposit_min or customer.deposit_max %}ودیعه {% if customer.deposit_min %}{{ customer.deposit_min|ws_money }}{% endif %}{% if customer.deposit_min and customer.deposit_max %}–{% endif %}{% if customer.deposit_max %}{{ customer.deposit_max|ws_money }}{% endif %}{% endif %}{% if customer.rent_min or customer.rent_max %}{% if customer.deposit_min or customer.deposit_max %} · {% endif %}اجاره {% if customer.rent_min %}{{ customer.rent_min|ws_money }}{% endif %}{% if customer.rent_min and customer.rent_max %}–{% endif %}{% if customer.rent_max %}{{ customer.rent_max|ws_money }}{% endif %}{% endif %}</dd>
+            <dt>ودیعه</dt>
+            <dd>{% if customer.deposit_min %}{{ customer.deposit_min|ws_money }}{% endif %}{% if customer.deposit_min and customer.deposit_max %} — {% endif %}{% if customer.deposit_max %}{{ customer.deposit_max|ws_money }}{% endif %}</dd>
+        </div>
+        {% endif %}
+        {% if customer.rent_min or customer.rent_max %}
+        <div class="crm-contact-summary__item">
+            <dt>اجاره ماهانه</dt>
+            <dd>{% if customer.rent_min %}{{ customer.rent_min|ws_money }}{% endif %}{% if customer.rent_min and customer.rent_max %} — {% endif %}{% if customer.rent_max %}{{ customer.rent_max|ws_money }}{% endif %}</dd>
         </div>
         {% endif %}
         {% if customer.status %}

@@ -3789,12 +3789,11 @@ function initContactAsideFolds() {
     if (!folds.length) return;
 
     const apply = () => {
-        const mobile = window.matchMedia('(max-width: 768px)').matches;
         folds.forEach(fold => {
             const keepOpen = fold.classList.contains('crm-contact-side-card--followup')
                 || fold.classList.contains('crm-contact-side-card--deals')
                 || fold.classList.contains('crm-contact-side-card--warn');
-            fold.open = !mobile || keepOpen;
+            fold.open = keepOpen;
         });
     };
 

@@ -251,22 +251,22 @@
                 <nav class="crm-tabs crm-tabs-pro crm-contact-tabs" role="tablist" aria-label="بخش‌های مخاطب">
                     <button type="button" class="crm-tab crm-tab-pro active" data-tab="timeline" role="tab" aria-selected="true">
                         <span class="crm-contact-seg__ico" aria-hidden="true"><i class="fas fa-stream"></i></span>
-                        <span class="crm-contact-seg__txt"><span class="crm-contact-seg__full">تایم‌لاین</span><span class="crm-contact-seg__short">فعالیت</span></span>
+                        <span class="crm-contact-seg__txt"><span class="crm-contact-seg__full">فعالیت</span><span class="crm-contact-seg__short">فعالیت</span></span>
                         <em{% if not activities %} class="is-empty"{% endif %}>{{ activities|length }}</em>
                     </button>
                     <button type="button" class="crm-tab crm-tab-pro" data-tab="matches" role="tab">
                         <span class="crm-contact-seg__ico" aria-hidden="true"><i class="fas fa-house"></i></span>
-                        <span class="crm-contact-seg__txt"><span class="crm-contact-seg__full">فایل‌های پیشنهادی</span><span class="crm-contact-seg__short">پیشنهاد</span></span>
+                        <span class="crm-contact-seg__txt"><span class="crm-contact-seg__full">پیشنهادها</span><span class="crm-contact-seg__short">پیشنهادها</span></span>
                         <em data-crm-match-tab-count{% if not contact_summary.match_count %} class="is-empty"{% endif %}>{% crm_match_tab_count match_data %}</em>
                     </button>
                     <button type="button" class="crm-tab crm-tab-pro" data-tab="visits" role="tab">
                         <span class="crm-contact-seg__ico" aria-hidden="true"><i class="fas fa-door-open"></i></span>
-                        <span class="crm-contact-seg__txt"><span class="crm-contact-seg__full">بازدیدها</span><span class="crm-contact-seg__short">بازدید</span></span>
+                        <span class="crm-contact-seg__txt"><span class="crm-contact-seg__full">بازدیدها</span><span class="crm-contact-seg__short">بازدیدها</span></span>
                         <em{% if not visits %} class="is-empty"{% endif %}>{{ visits|length }}</em>
                     </button>
                     <button type="button" class="crm-tab crm-tab-pro" data-tab="properties" role="tab">
                         <span class="crm-contact-seg__ico" aria-hidden="true"><i class="fas fa-link"></i></span>
-                        <span class="crm-contact-seg__txt"><span class="crm-contact-seg__full">فایل‌های مرتبط</span><span class="crm-contact-seg__short">مرتبط</span></span>
+                        <span class="crm-contact-seg__txt"><span class="crm-contact-seg__full">فایل‌ها</span><span class="crm-contact-seg__short">فایل‌ها</span></span>
                         <em{% with pl=property_links|length ll=linked_listings|length %}{% if not pl and not ll %} class="is-empty"{% endif %}>{{ pl|add:ll }}{% endwith %}</em>
                     </button>
                     <button type="button" class="crm-tab crm-tab-pro" data-tab="deals" role="tab">
@@ -487,7 +487,7 @@
         </div>
 
         <aside class="crm-detail-sidebar crm-contact-sidebar">
-            <details class="crm-contact-side-card crm-contact-side-card--prefs crm-contact-side-fold" open>
+            <details class="crm-contact-side-card crm-contact-side-card--prefs crm-contact-side-fold">
                 <summary class="crm-contact-side-head">
                     <span class="crm-contact-side-icon crm-contact-side-icon--prefs" aria-hidden="true"><i class="fas fa-sliders-h"></i></span>
                     <h3>ترجیحات</h3>

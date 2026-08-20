@@ -1881,7 +1881,11 @@ class CRMPropertyNearbyPoisView(LoginRequiredMixin, View):
     """دریافت و ذخیره امکانات اطراف فایل شخصی — on-demand."""
 
     def post(self, request, property_id):
-        from workspace.services.nearby_pois import NearbyPoiError, fetch_and_save_nearby_pois
+        from workspace.services.nearby_pois import (
+            NearbyPoiError,
+            fetch_and_save_nearby_pois,
+            overpass_client_fallback,
+        )
 
         prop = property_for_user(request.user, property_id)
         if not prop:
@@ -1892,21 +1896,33 @@ class CRMPropertyNearbyPoisView(LoginRequiredMixin, View):
             return JsonResponse({'ok': False, 'error': 'دسترسی ندارید.'}, status=403)
 
         force_refresh = False
+        client_elements = None
         if request.META.get('CONTENT_TYPE', '').startswith('application/json'):
             try:
                 payload = json.loads(request.body.decode('utf-8'))
             except (json.JSONDecodeError, UnicodeDecodeError):
                 return JsonResponse({'ok': False, 'error': 'درخواست نامعتبر'}, status=400)
             force_refresh = bool(payload.get('refresh'))
+            if 'elements' in payload:
+                client_elements = payload.get('elements')
 
         try:
-            data = fetch_and_save_nearby_pois(prop, request.user, force_refresh=force_refresh)
+            data = fetch_and_save_nearby_pois(
+                prop,
+                request.user,
+                force_refresh=force_refresh,
+                elements=client_elements,
+            )
         except NearbyPoiError as exc:
-            return JsonResponse({
+            body = {
                 'ok': False,
                 'code': exc.code,
                 'error': exc.message,
-            }, status=exc.status)
+            }
+            fallback = (exc.extra or {}).get('fallback')
+            if fallback:
+                body['fallback'] = fallback
+            return JsonResponse(body, status=exc.status)
         return JsonResponse(data)
 
 

@@ -232,22 +232,74 @@
             toggleMissing.classList.toggle('is-open', open);
         });
 
+        async function postNearby(body) {
+            const resp = await fetch(fetchUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken(),
+                    Accept: 'application/json',
+                },
+                body: JSON.stringify(body),
+                credentials: 'same-origin',
+            });
+            const data = await resp.json().catch(() => ({}));
+            return { resp, data };
+        }
+
+        async function fetchOverpassFromBrowser(fallback) {
+            const urls = Array.isArray(fallback?.urls) ? fallback.urls : [];
+            const query = fallback?.query || '';
+            if (!query || !urls.length) {
+                throw new Error('سرویس نقشه در دسترس نیست.');
+            }
+            let lastMessage = '';
+            for (const url of urls) {
+                const ctrl = new AbortController();
+                const timer = window.setTimeout(() => ctrl.abort(), 40000);
+                try {
+                    const resp = await fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+                        },
+                        body: new URLSearchParams({ data: query }),
+                        signal: ctrl.signal,
+                    });
+                    if (!resp.ok) {
+                        lastMessage = `HTTP ${resp.status}`;
+                        continue;
+                    }
+                    const payload = await resp.json();
+                    if (Array.isArray(payload?.elements)) {
+                        return payload.elements;
+                    }
+                } catch (err) {
+                    lastMessage = err?.name === 'AbortError' ? 'timeout' : (err?.message || 'network');
+                } finally {
+                    window.clearTimeout(timer);
+                }
+            }
+            throw new Error(
+                lastMessage
+                    ? 'سرویس نقشه از این شبکه در دسترس نیست. اتصال یا VPN را بررسی کنید و دوباره تلاش کنید.'
+                    : 'سرویس نقشه در دسترس نیست.',
+            );
+        }
+
         async function fetchNearby(refresh) {
             if (!fetchUrl || !hasCoords || busy) return;
             setError('');
             setLoading(true);
             try {
-                const resp = await fetch(fetchUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': getCsrfToken(),
-                        Accept: 'application/json',
-                    },
-                    body: JSON.stringify({ refresh: !!refresh }),
-                    credentials: 'same-origin',
-                });
-                const data = await resp.json().catch(() => ({}));
+                let { resp, data } = await postNearby({ refresh: !!refresh });
+                if ((!resp.ok || !data.ok) && data.fallback) {
+                    const elements = await fetchOverpassFromBrowser(data.fallback);
+                    ({ resp, data } = await postNearby({
+                        refresh: true,
+                        elements,
+                    }));
+                }
                 if (!resp.ok || !data.ok) {
                     throw new Error(data.error || 'دریافت امکانات و دسترسی‌ها ناموفق بود.');
                 }

@@ -282,7 +282,21 @@ NEARBY_POI_USER_DAILY_LIMIT = config('NEARBY_POI_USER_DAILY_LIMIT', default=25, 
 NEARBY_POI_GLOBAL_DAILY_LIMIT = config('NEARBY_POI_GLOBAL_DAILY_LIMIT', default=400, cast=int)
 NEARBY_POI_SEARCH_RADIUS_M = config('NEARBY_POI_SEARCH_RADIUS_M', default=3000, cast=int)
 NEARBY_POI_OVERPASS_TIMEOUT = config('NEARBY_POI_OVERPASS_TIMEOUT', default=30, cast=int)
+NEARBY_POI_OVERPASS_CONNECT_TIMEOUT = config('NEARBY_POI_OVERPASS_CONNECT_TIMEOUT', default=6, cast=int)
+NEARBY_POI_FORCE_IPV4 = config('NEARBY_POI_FORCE_IPV4', default=True, cast=bool)
 NEARBY_POI_STREET_RADIUS_M = config('NEARBY_POI_STREET_RADIUS_M', default=120, cast=int)
+NEARBY_POI_OVERPASS_URLS = config(
+    'NEARBY_POI_OVERPASS_URLS',
+    default=(
+        'https://maps.mail.ru/osm/tools/overpass/api/interpreter,'
+        'https://overpass.openstreetmap.ru/api/interpreter,'
+        'https://overpass.private.coffee/api/interpreter,'
+        'https://overpass.osm.ch/api/interpreter,'
+        'https://overpass-api.de/api/interpreter,'
+        'https://overpass.kumi.systems/api/interpreter'
+    ),
+    cast=Csv(),
+)
 
 # Cache — برای rate limit لایسنس (در production از Redis استفاده کنید)
 CACHES = {

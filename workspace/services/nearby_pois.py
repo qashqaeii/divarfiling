@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import logging
 import math
+import socket
+import threading
 from dataclasses import dataclass
 from datetime import date
 from typing import Any, Dict, List, Optional, Sequence, Tuple
@@ -20,9 +22,16 @@ logger = logging.getLogger(__name__)
 PAYLOAD_VERSION = 4
 
 DEFAULT_OVERPASS_URLS = (
+    'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
+    'https://overpass.openstreetmap.ru/api/interpreter',
+    'https://overpass.private.coffee/api/interpreter',
+    'https://overpass.osm.ch/api/interpreter',
     'https://overpass-api.de/api/interpreter',
     'https://overpass.kumi.systems/api/interpreter',
 )
+
+_OVERPASS_IPV4_LOCK = threading.Lock()
+MAX_INGEST_ELEMENTS = 8000
 
 POI_GROUPS: Tuple[Dict[str, str], ...] = (
     {'key': 'transport', 'label': 'دسترسی و حمل‌ونقل'},
@@ -256,10 +265,11 @@ _GROUP_LABELS = {g['key']: g['label'] for g in POI_GROUPS}
 class NearbyPoiError(Exception):
     """خطای کنترل‌شده امکانات اطراف."""
 
-    def __init__(self, code: str, message: str, *, status: int = 400):
+    def __init__(self, code: str, message: str, *, status: int = 400, extra: Optional[Dict[str, Any]] = None):
         self.code = code
         self.message = message
         self.status = status
+        self.extra = extra or {}
         super().__init__(message)
 
 
@@ -331,11 +341,44 @@ def _overpass_timeout() -> int:
     return int(getattr(settings, 'NEARBY_POI_OVERPASS_TIMEOUT', 30))
 
 
+def _overpass_connect_timeout() -> float:
+    return float(getattr(settings, 'NEARBY_POI_OVERPASS_CONNECT_TIMEOUT', 6))
+
+
+def _force_ipv4() -> bool:
+    return bool(getattr(settings, 'NEARBY_POI_FORCE_IPV4', True))
+
+
 def _overpass_urls() -> Sequence[str]:
     urls = getattr(settings, 'NEARBY_POI_OVERPASS_URLS', None)
     if urls:
-        return tuple(urls)
+        cleaned = tuple(str(u).strip() for u in urls if str(u).strip())
+        if cleaned:
+            return cleaned
     return DEFAULT_OVERPASS_URLS
+
+
+def _post_overpass(url: str, query: str, headers: Dict[str, str], timeout: Tuple[float, int]):
+    """درخواست Overpass؛ روی سرورهای با IPv6 خراب فقط IPv4 امتحان می‌شود."""
+    if not _force_ipv4():
+        return requests.post(url, data={'data': query}, headers=headers, timeout=timeout)
+
+    import urllib3.util.connection as urllib3_cn
+
+    with _OVERPASS_IPV4_LOCK:
+        original_family = urllib3_cn.allowed_gai_family
+        urllib3_cn.allowed_gai_family = lambda: socket.AF_INET
+        try:
+            return requests.post(url, data={'data': query}, headers=headers, timeout=timeout)
+        finally:
+            urllib3_cn.allowed_gai_family = original_family
+
+
+def overpass_client_fallback(lat: float, lng: float, *, radius_m: Optional[int] = None) -> Dict[str, Any]:
+    return {
+        'query': build_overpass_query(lat, lng, radius_m=radius_m),
+        'urls': list(_overpass_urls()),
+    }
 
 
 def _coords_key(lat: float, lng: float) -> Tuple[float, float]:
@@ -542,55 +585,98 @@ def fetch_overpass_elements(lat: float, lng: float, *, radius_m: Optional[int] =
     query = build_overpass_query(lat, lng, radius_m=radius_m)
     headers = {'User-Agent': 'DivarFilingCRM/1.0 (nearby-pois; contact@divarfiling.local)'}
     last_error: Optional[Exception] = None
+    timeout = (_overpass_connect_timeout(), _overpass_timeout())
+    had_timeout = False
+    had_busy = False
 
     for base_url in _overpass_urls():
         try:
-            resp = requests.post(
-                base_url,
-                data={'data': query},
-                headers=headers,
-                timeout=_overpass_timeout() + 5,
-            )
-            if resp.status_code == 429:
-                raise NearbyPoiError(
-                    'service_busy',
-                    'سرویس نقشه الان شلوغ است. لطفاً چند دقیقه بعد دوباره تلاش کنید.',
-                    status=503,
-                )
-            if resp.status_code in (502, 503, 504):
-                raise NearbyPoiError(
-                    'service_unavailable',
-                    'سرویس نقشه در دسترس نیست. لطفاً بعداً دوباره تلاش کنید.',
-                    status=503,
-                )
+            resp = _post_overpass(base_url, query, headers, timeout)
+            if resp.status_code in (429, 502, 503, 504):
+                had_busy = True
+                logger.warning('Overpass HTTP %s on %s', resp.status_code, base_url)
+                continue
             resp.raise_for_status()
             payload = resp.json()
             elements = payload.get('elements') or []
             if not isinstance(elements, list):
                 raise ValueError('پاسخ Overpass نامعتبر است')
+            logger.info('Overpass succeeded via %s (%s elements)', base_url, len(elements))
             return elements
         except NearbyPoiError:
             raise
         except requests.Timeout as exc:
             last_error = exc
+            had_timeout = True
             logger.warning('Overpass timeout on %s', base_url)
             continue
         except requests.RequestException as exc:
             last_error = exc
             logger.warning('Overpass request failed on %s: %s', base_url, exc)
             continue
+        except (ValueError, TypeError) as exc:
+            last_error = exc
+            logger.warning('Overpass invalid payload on %s: %s', base_url, exc)
+            continue
 
-    if isinstance(last_error, requests.Timeout):
+    extra = {'fallback': overpass_client_fallback(lat, lng, radius_m=radius_m)}
+    if isinstance(last_error, requests.Timeout) or (had_timeout and last_error is None):
         raise NearbyPoiError(
             'service_busy',
             'پاسخ سرویس نقشه طول کشید. لطفاً چند دقیقه بعد دوباره تلاش کنید.',
             status=504,
+            extra=extra,
+        )
+    if had_busy and last_error is None:
+        raise NearbyPoiError(
+            'service_busy',
+            'سرویس نقشه الان شلوغ است. لطفاً چند دقیقه بعد دوباره تلاش کنید.',
+            status=503,
+            extra=extra,
         )
     raise NearbyPoiError(
         'service_unavailable',
-        'سرویس نقشه در دسترس نیست. لطفاً بعداً دوباره تلاش کنید.',
+        'سرویس نقشه از سمت سرور در دسترس نیست. در حال تلاش از مرورگر شما…',
         status=503,
+        extra=extra,
     )
+
+
+def sanitize_overpass_elements(raw: Any) -> List[Dict[str, Any]]:
+    if not isinstance(raw, list):
+        raise NearbyPoiError('invalid_elements', 'داده نقشه نامعتبر است.', status=400)
+    cleaned: List[Dict[str, Any]] = []
+    for item in raw[:MAX_INGEST_ELEMENTS]:
+        if not isinstance(item, dict):
+            continue
+        out: Dict[str, Any] = {}
+        lat = item.get('lat')
+        lon = item.get('lon')
+        if lat is not None and lon is not None:
+            try:
+                out['lat'] = float(lat)
+                out['lon'] = float(lon)
+            except (TypeError, ValueError):
+                pass
+        center = item.get('center')
+        if isinstance(center, dict) and center.get('lat') is not None and center.get('lon') is not None:
+            try:
+                out['center'] = {'lat': float(center['lat']), 'lon': float(center['lon'])}
+            except (TypeError, ValueError):
+                pass
+        if 'lat' not in out and 'center' not in out:
+            continue
+        tags = item.get('tags')
+        if isinstance(tags, dict):
+            out['tags'] = {
+                str(key)[:64]: str(value)[:256]
+                for key, value in list(tags.items())[:50]
+                if value is not None
+            }
+        else:
+            out['tags'] = {}
+        cleaned.append(out)
+    return cleaned
 
 
 def resolve_nearby_items(
@@ -815,7 +901,13 @@ def api_response_payload(data: Dict[str, Any], *, cached: bool) -> Dict[str, Any
     }
 
 
-def fetch_and_save_nearby_pois(prop, user, *, force_refresh: bool = False) -> Dict[str, Any]:
+def fetch_and_save_nearby_pois(
+    prop,
+    user,
+    *,
+    force_refresh: bool = False,
+    elements: Optional[Sequence[Dict[str, Any]]] = None,
+) -> Dict[str, Any]:
     lat, lng, error = parse_map_coordinates(prop.latitude, prop.longitude)
     if error:
         raise NearbyPoiError(
@@ -824,13 +916,20 @@ def fetch_and_save_nearby_pois(prop, user, *, force_refresh: bool = False) -> Di
             status=400,
         )
 
-    if not force_refresh:
+    if not force_refresh and elements is None:
         cached = get_stored_nearby_pois_payload(prop)
         if cached:
             return api_response_payload(cached, cached=True)
 
     check_rate_limits(user)
-    payload = resolve_nearby_pois(lat, lng)
+    if elements is not None:
+        cleaned = sanitize_overpass_elements(elements)
+        items = resolve_nearby_items(lat, lng, cleaned)
+        payload = _build_payload(
+            lat, lng, items, fetched_at=timezone.now(), radius_m=_search_radius_m(),
+        )
+    else:
+        payload = resolve_nearby_pois(lat, lng)
     increment_rate_limits(user)
     prop.nearby_pois = payload
     prop.save(update_fields=['nearby_pois', 'updated_at'])

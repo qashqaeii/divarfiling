@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import json
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
@@ -83,6 +83,26 @@ class NearbyPoisServiceTests(TestCase):
         self.assertIn('amenity"="parking"', q)
         self.assertIn('way["highway"](around:120,35.7,51.4);', q)
         self.assertIn('around:3000,35.7,51.4', q)
+
+    @override_settings(
+        NEARBY_POI_OVERPASS_URLS=(
+            'https://example.invalid/a',
+            'https://example.invalid/b',
+        ),
+        NEARBY_POI_FORCE_IPV4=False,
+    )
+    @patch('workspace.services.nearby_pois._post_overpass')
+    def test_overpass_tries_next_url_after_http_503(self, mock_post):
+        from workspace.services.nearby_pois import fetch_overpass_elements
+        busy = MagicMock()
+        busy.status_code = 503
+        ok = MagicMock()
+        ok.status_code = 200
+        ok.json.return_value = {'elements': _sample_elements()}
+        mock_post.side_effect = [busy, ok]
+        elements = fetch_overpass_elements(35.7, 51.4)
+        self.assertEqual(len(elements), len(_sample_elements()))
+        self.assertEqual(mock_post.call_count, 2)
 
     def test_resolve_v3_transport_and_daily_categories(self):
         elements = [
@@ -342,6 +362,49 @@ class CRMPropertyNearbyPoisViewTests(TestCase):
         )
         self.assertEqual(resp.status_code, 503)
         self.assertEqual(resp.json()['code'], 'service_busy')
+
+    @patch('workspace.services.nearby_pois.fetch_overpass_elements')
+    def test_service_unavailable_includes_browser_fallback(self, mock_fetch):
+        from workspace.services.nearby_pois import overpass_client_fallback
+        fallback = overpass_client_fallback(35.7575, 51.4100)
+        mock_fetch.side_effect = NearbyPoiError(
+            'service_unavailable',
+            'سرویس نقشه از سمت سرور در دسترس نیست. در حال تلاش از مرورگر شما…',
+            status=503,
+            extra={'fallback': fallback},
+        )
+        resp = self.client.post(
+            self.url,
+            data=json.dumps({'refresh': True}),
+            content_type='application/json',
+        )
+        self.assertEqual(resp.status_code, 503)
+        data = resp.json()
+        self.assertEqual(data['code'], 'service_unavailable')
+        self.assertIn('query', data['fallback'])
+        self.assertTrue(data['fallback']['urls'])
+
+    def test_post_client_elements_saves_payload(self):
+        resp = self.client.post(
+            self.url,
+            data=json.dumps({'refresh': True, 'elements': _sample_elements()}),
+            content_type='application/json',
+        )
+        self.assertEqual(resp.status_code, 200)
+        data = resp.json()
+        self.assertTrue(data['ok'])
+        self.assertGreater(data['found_count'], 0)
+        self.prop.refresh_from_db()
+        self.assertTrue(self.prop.nearby_pois.get('items'))
+
+    def test_post_invalid_elements_rejected(self):
+        resp = self.client.post(
+            self.url,
+            data=json.dumps({'refresh': True, 'elements': {'bad': True}}),
+            content_type='application/json',
+        )
+        self.assertEqual(resp.status_code, 400)
+        self.assertEqual(resp.json()['code'], 'invalid_elements')
 
     def test_detail_page_renders_nearby_panel(self):
         resp = self.client.get(self.detail_url)

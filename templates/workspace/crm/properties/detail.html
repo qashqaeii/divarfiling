@@ -23,7 +23,7 @@
 {% endblock %}
 
 {% block ws_surface_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/crm-prop-detail-mobile-premium.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-prop-detail-mobile-premium.css' %}?v=3">
 {% endblock %}
 
 {% block crm_content %}
@@ -441,7 +441,7 @@
     {% include 'workspace/crm/includes/detail_action_center_property.html' %}
     {% endif %}
 
-    <div class="crm-prop-detail-grid">
+    <div class="crm-prop-detail-grid" data-prop-detail-grid>
         <main class="crm-prop-main crm-detail-main">
             <div class="crm-prop-segrail" data-prop-segrail>
             <nav class="crm-tabs crm-tabs-pro crm-prop-tabs" role="tablist" aria-label="بخش‌های ملک">
@@ -574,11 +574,8 @@
             </div>
 
             {% if can_suggest_contacts %}
-            <div data-panel="suggest-contacts" class="crm-prop-panel crm-prop-panel-pro" hidden role="tabpanel">
-                <header class="crm-prop-panel-head">
-                    <div><h2>مخاطب‌های پیشنهادی</h2><p>تطبیق هوشمند بر اساس ترجیحات و نوع مخاطب</p></div>
-                </header>
-                <div class="crm-prop-panel-body">
+            <div data-panel="suggest-contacts" class="crm-prop-panel crm-prop-panel-pro crm-prop-panel-pro--worklist" hidden role="tabpanel">
+                <div class="crm-prop-panel-body crm-prop-panel-body--flush">
                     {% include 'workspace/crm/includes/contact_matches_panel.html' %}
                 </div>
             </div>

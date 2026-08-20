@@ -1942,17 +1942,27 @@ function initCRMMatches() {
 }
 
 function initCRMPropContactMatches() {
-    const form = document.getElementById('crmPropSuggestForm');
-    if (!form) return;
+    const root = document.getElementById('crmPropContactMatches');
+    if (!root) return;
 
+    const form = document.getElementById('crmPropSuggestForm');
     const jsonInput = document.getElementById('crmPropMatchesJson');
     const countEl = document.getElementById('crmPropSuggestCount');
     const submitBtn = document.getElementById('crmPropSuggestSubmit');
     const dock = document.getElementById('crmPropSuggestDock');
-    const selects = () => [...document.querySelectorAll('.crm-prop-match-select:checked')];
+    const rows = () => [...root.querySelectorAll('[data-prop-match-card]')];
+    const selects = () => [...root.querySelectorAll('.crm-prop-match-select:checked')];
+
+    function visibleBoxes() {
+        return [...root.querySelectorAll('.crm-prop-match-select:not(:disabled)')]
+            .filter((cb) => {
+                const row = cb.closest('[data-prop-match-card]');
+                return row && !row.hidden;
+            });
+    }
 
     function syncCardState() {
-        document.querySelectorAll('[data-prop-match-card]').forEach(card => {
+        rows().forEach((card) => {
             const cb = card.querySelector('.crm-prop-match-select');
             card.classList.toggle('is-selected', !!(cb && cb.checked));
         });
@@ -1974,24 +1984,63 @@ function initCRMPropContactMatches() {
         if (countEl) countEl.textContent = items.length;
         if (submitBtn) submitBtn.disabled = items.length === 0;
         if (dock) dock.classList.toggle('is-active', items.length > 0);
+        root.classList.toggle('is-selecting', items.length > 0);
         syncCardState();
     }
 
-    document.querySelectorAll('.crm-prop-match-select').forEach(cb => {
+    root.querySelectorAll('.crm-prop-match-select').forEach((cb) => {
         cb.addEventListener('change', updateSelection);
     });
 
     const selectAll = document.getElementById('crmPropSelectAllMatches');
     if (selectAll) {
         selectAll.addEventListener('click', () => {
-            const boxes = document.querySelectorAll('.crm-prop-match-select:not(:disabled)');
-            const allChecked = [...boxes].every(b => b.checked);
+            const boxes = visibleBoxes();
+            const allChecked = boxes.length > 0 && boxes.every(b => b.checked);
             boxes.forEach(b => { b.checked = !allChecked; });
             updateSelection();
         });
     }
 
-    updateSelection();
+    const chipHost = root.querySelector('[data-prop-match-type-chips]');
+    if (chipHost) {
+        const types = [...new Set(rows().map(r => (r.dataset.customerType || '').trim()).filter(Boolean))];
+        if (types.length > 1) {
+            chipHost.hidden = false;
+            const emptyEl = root.querySelector('[data-prop-match-filter-empty]');
+            const makeChip = (value, label) => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'crm-pcm-chip' + (value === 'all' ? ' is-active' : '');
+                btn.setAttribute('role', 'tab');
+                btn.setAttribute('aria-selected', value === 'all' ? 'true' : 'false');
+                btn.dataset.matchType = value;
+                btn.textContent = label;
+                return btn;
+            };
+            chipHost.replaceChildren(makeChip('all', 'همه'));
+            types.forEach((t) => chipHost.appendChild(makeChip(t, t)));
+            chipHost.addEventListener('click', (ev) => {
+                const btn = ev.target.closest('[data-match-type]');
+                if (!btn) return;
+                const type = btn.dataset.matchType || 'all';
+                chipHost.querySelectorAll('[data-match-type]').forEach((c) => {
+                    const on = c === btn;
+                    c.classList.toggle('is-active', on);
+                    c.setAttribute('aria-selected', on ? 'true' : 'false');
+                });
+                let shown = 0;
+                rows().forEach((row) => {
+                    const match = type === 'all' || row.dataset.customerType === type;
+                    row.hidden = !match;
+                    if (match) shown += 1;
+                });
+                if (emptyEl) emptyEl.hidden = shown > 0;
+            });
+        }
+    }
+
+    if (form) updateSelection();
 }
 
 function initCRMContactPortfolio() {
@@ -2179,6 +2228,12 @@ function initContactSegrail() {
     });
 }
 
+function syncPropSuggestLayout(tab) {
+    const grid = document.querySelector('[data-prop-detail-grid]');
+    if (!grid) return;
+    grid.classList.toggle('is-suggest-contacts', tab === 'suggest-contacts');
+}
+
 function initCRMTabs() {
     document.querySelectorAll('.crm-tab').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -2197,8 +2252,12 @@ function initCRMTabs() {
             scrollCRMTabIntoView(btn);
             const rail = btn.closest('[data-contact-segrail], [data-prop-segrail]');
             if (rail && rail.hasAttribute('data-contact-segrail')) syncContactSegrailFades(rail);
+            if (btn.closest('.crm-prop-tabs')) syncPropSuggestLayout(tab);
         });
     });
+
+    const activePropTab = document.querySelector('.crm-prop-tabs .crm-tab.active');
+    if (activePropTab) syncPropSuggestLayout(activePropTab.dataset.tab);
 
     document.querySelectorAll('.crm-form-tab').forEach(btn => {
         btn.addEventListener('click', () => {

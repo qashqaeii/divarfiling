@@ -2438,3 +2438,464 @@
         padding-bottom: 5.5rem;
     }
 }
+
+/* ═══════════════════════════════════════════════════════════
+   Property detail — suggested contacts worklist
+   ═══════════════════════════════════════════════════════════ */
+
+.crm-prop-panel-pro--worklist {
+    overflow: visible;
+}
+
+.crm-prop-detail-mobile .crm-prop-panel-pro--worklist {
+    overflow: visible;
+    overflow-x: visible;
+}
+
+.crm-prop-panel-pro--worklist .crm-prop-panel-body--flush {
+    padding: 0;
+}
+
+.crm-pcm {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.crm-pcm .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.crm-pcm-head {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px 14px 10px;
+    border-bottom: 1px solid color-mix(in srgb, var(--ws-border) 80%, transparent);
+}
+
+.crm-pcm-head-copy h3 {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.92rem;
+    font-weight: 750;
+    letter-spacing: -0.02em;
+    line-height: 1.3;
+    color: var(--ws-text);
+}
+
+.crm-pcm-head-copy p {
+    margin: 3px 0 0;
+    font-size: 0.72rem;
+    line-height: 1.4;
+    color: var(--ws-text-muted);
+}
+
+.crm-pcm-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.35rem;
+    height: 1.25rem;
+    padding: 0 0.38rem;
+    border-radius: 999px;
+    font-size: 0.68rem;
+    font-weight: 800;
+    background: color-mix(in srgb, var(--ws-primary) 12%, var(--ws-surface-2));
+    color: var(--ws-primary);
+}
+
+.crm-pcm-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.crm-pcm-chip {
+    appearance: none;
+    border: 1px solid color-mix(in srgb, var(--ws-border) 85%, transparent);
+    background: color-mix(in srgb, var(--ws-surface-2) 55%, var(--ws-surface));
+    color: var(--ws-text-secondary);
+    font: inherit;
+    font-size: 0.68rem;
+    font-weight: 650;
+    padding: 4px 9px;
+    min-height: 28px;
+    border-radius: 999px;
+    cursor: pointer;
+}
+
+.crm-pcm-chip.is-active {
+    border-color: color-mix(in srgb, var(--ws-primary) 35%, var(--ws-border));
+    background: color-mix(in srgb, var(--ws-primary-soft) 55%, var(--ws-surface));
+    color: var(--ws-primary);
+}
+
+.crm-pcm-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.crm-pcm-row[hidden],
+.crm-pcm-chips[hidden],
+.crm-pcm-filter-empty[hidden] {
+    display: none !important;
+}
+
+.crm-pcm-row {
+    display: grid;
+    grid-template-columns: 1.7rem minmax(0, 1fr);
+    gap: 8px 10px;
+    align-items: start;
+    padding: 10px 14px;
+    border-bottom: 1px solid color-mix(in srgb, var(--ws-border) 70%, transparent);
+    background: transparent;
+}
+
+.crm-pcm-row:last-child {
+    border-bottom: 0;
+}
+
+.crm-pcm-row.is-selected {
+    background: color-mix(in srgb, var(--ws-primary-soft) 28%, var(--ws-surface));
+}
+
+.crm-pcm-check {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 2px;
+    cursor: pointer;
+}
+
+.crm-pcm-check input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    margin: 0;
+    cursor: pointer;
+}
+
+.crm-pcm-check-ui {
+    width: 1.1rem;
+    height: 1.1rem;
+    border-radius: 5px;
+    border: 1.5px solid color-mix(in srgb, var(--ws-border) 90%, var(--ws-text-muted));
+    background: var(--ws-surface);
+    display: block;
+}
+
+.crm-pcm-check input:checked + .crm-pcm-check-ui {
+    border-color: var(--ws-primary);
+    background: var(--ws-primary);
+    box-shadow: inset 0 0 0 2px var(--ws-surface);
+}
+
+.crm-pcm-check input:focus-visible + .crm-pcm-check-ui {
+    outline: 2px solid color-mix(in srgb, var(--ws-primary) 45%, transparent);
+    outline-offset: 2px;
+}
+
+.crm-pcm-body {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.crm-pcm-top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.crm-pcm-name {
+    font-size: 0.84rem;
+    font-weight: 750;
+    line-height: 1.35;
+    color: var(--ws-text);
+}
+
+.crm-pcm-score {
+    flex-shrink: 0;
+    font-size: 0.68rem;
+    font-weight: 650;
+    color: var(--ws-text-muted);
+}
+
+.crm-pcm-score[data-tier="high"] { color: #15803d; }
+.crm-pcm-score[data-tier="mid"] { color: #a16207; }
+.crm-pcm-score[data-tier="low"] { color: var(--ws-text-muted); }
+
+.crm-pcm-status {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 10px;
+    font-size: 0.7rem;
+    color: var(--ws-text-secondary);
+}
+
+.crm-pcm-status span:not(:last-child)::after {
+    content: "·";
+    margin-inline-start: 10px;
+    color: var(--ws-text-muted);
+}
+
+.crm-pcm-facts {
+    margin: 2px 0 0;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 2px 12px;
+}
+
+.crm-pcm-facts > div {
+    display: grid;
+    grid-template-columns: 3.4rem minmax(0, 1fr);
+    gap: 6px;
+    min-width: 0;
+    font-size: 0.7rem;
+    line-height: 1.4;
+}
+
+.crm-pcm-facts dt {
+    margin: 0;
+    color: var(--ws-text-muted);
+    font-weight: 550;
+}
+
+.crm-pcm-facts dd {
+    margin: 0;
+    color: var(--ws-text);
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+.crm-pcm-budget {
+    color: var(--ws-primary);
+}
+
+.crm-pcm-reasons {
+    margin: 0;
+    font-size: 0.66rem;
+    line-height: 1.4;
+    color: var(--ws-text-muted);
+}
+
+.crm-pcm-acts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 4px;
+}
+
+.crm-pcm-act {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    min-height: 32px;
+    padding: 0 10px;
+    border-radius: 8px;
+    border: 1px solid color-mix(in srgb, var(--ws-border) 85%, transparent);
+    background: var(--ws-surface);
+    color: var(--ws-text-secondary);
+    text-decoration: none;
+    font-size: 0.7rem;
+    font-weight: 650;
+}
+
+.crm-pcm-act:hover {
+    border-color: color-mix(in srgb, var(--ws-primary) 28%, var(--ws-border));
+    color: var(--ws-primary);
+}
+
+.crm-pcm-act--wa:hover {
+    color: #128c7e;
+    border-color: rgba(18, 140, 126, 0.35);
+}
+
+.crm-pcm-empty {
+    padding: 28px 16px;
+    text-align: center;
+}
+
+.crm-pcm-empty strong,
+.crm-pcm-empty p {
+    display: block;
+    margin: 0;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--ws-text);
+}
+
+.crm-pcm-empty p {
+    margin-top: 6px;
+    font-size: 0.74rem;
+    font-weight: 500;
+    color: var(--ws-text-secondary);
+}
+
+.crm-pcm-filter-empty {
+    margin: 0;
+    padding: 16px 14px 20px;
+    font-size: 0.74rem;
+    color: var(--ws-text-muted);
+    text-align: center;
+}
+
+.crm-pcm-form {
+    margin: 0;
+}
+
+.crm-pcm-dock {
+    position: sticky;
+    bottom: 0;
+    z-index: 6;
+    padding: 8px 10px 10px;
+    background: color-mix(in srgb, var(--ws-surface) 94%, transparent);
+    border-top: 1px solid color-mix(in srgb, var(--ws-border) 80%, transparent);
+}
+
+.crm-pcm-dock-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    flex-wrap: wrap;
+    padding: 8px 10px;
+    border-radius: 10px;
+    border: 1px solid var(--ws-border);
+    background: var(--ws-surface);
+}
+
+.crm-pcm-dock.is-active .crm-pcm-dock-inner {
+    border-color: color-mix(in srgb, var(--ws-primary) 32%, var(--ws-border));
+}
+
+.crm-pcm-dock .crm-suggest-count {
+    font-size: 0.74rem;
+    color: var(--ws-text-secondary);
+}
+
+.crm-pcm-dock-acts {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.crm-prop-detail-grid.is-suggest-contacts {
+    grid-template-columns: minmax(0, 1fr) 220px;
+}
+
+.crm-prop-detail-grid.is-suggest-contacts .crm-prop-aside {
+    opacity: 0.78;
+}
+
+.crm-prop-detail-grid.is-suggest-contacts .crm-prop-aside:hover,
+.crm-prop-detail-grid.is-suggest-contacts .crm-prop-aside:focus-within {
+    opacity: 1;
+}
+
+.crm-prop-detail-grid.is-suggest-contacts .crm-prop-side-card,
+.crm-prop-detail-grid.is-suggest-contacts .mk-owner-box {
+    padding: 0.55rem 0.65rem;
+    box-shadow: none;
+    border-color: color-mix(in srgb, var(--ws-border) 75%, transparent);
+}
+
+.crm-prop-detail-grid.is-suggest-contacts .crm-prop-side-card h3,
+.crm-prop-detail-grid.is-suggest-contacts .mk-owner-box__title {
+    font-size: 0.74rem;
+}
+
+.crm-prop-detail-grid.is-suggest-contacts .crm-followup-v2-history,
+.crm-prop-detail-grid.is-suggest-contacts .crm-followup-v2-quick,
+.crm-prop-detail-grid.is-suggest-contacts .mk-owner-box__hint {
+    display: none;
+}
+
+@media (max-width: 900px) {
+    .crm-pcm-facts {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .crm-pcm-dock-inner {
+        align-items: stretch;
+    }
+
+    .crm-pcm-dock-acts {
+        flex: 1;
+    }
+
+    .crm-pcm-dock-acts .crm-btn {
+        flex: 1;
+        min-height: 40px;
+    }
+}
+
+@media (max-width: 768px) {
+    .crm-prop-detail-grid.is-suggest-contacts .crm-prop-aside {
+        opacity: 0.9;
+        order: 2;
+    }
+
+    .crm-pcm-head {
+        padding: 10px 12px 8px;
+    }
+
+    .crm-pcm-row {
+        padding: 10px 12px 12px;
+        grid-template-columns: 1.6rem minmax(0, 1fr);
+    }
+
+    .crm-pcm-name {
+        font-size: 0.88rem;
+    }
+
+    .crm-pcm-act {
+        min-height: 40px;
+        flex: 1 1 calc(33.33% - 6px);
+    }
+
+    .crm-pcm.is-selecting,
+    .crm-pcm:has(.crm-pcm-form) {
+        padding-bottom: 4.25rem;
+    }
+
+    .crm-pcm-dock {
+        position: fixed;
+        inset-inline: 0.55rem;
+        bottom: calc(8.35rem + env(safe-area-inset-bottom, 0px));
+        z-index: 160;
+        padding: 0;
+        background: none;
+        border: 0;
+    }
+
+    .crm-pcm-dock-inner {
+        box-shadow: 0 8px 28px rgba(15, 23, 42, 0.14);
+    }
+
+    .crm-pcm-dock-acts .crm-suggest-submit {
+        min-height: 44px;
+    }
+}
+
+@media (min-width: 769px) {
+    .crm-pcm-facts {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}

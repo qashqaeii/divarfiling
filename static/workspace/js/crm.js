@@ -3748,41 +3748,96 @@ function initCRMDealsPage() {
 
 function initCRMPropertyAdvFilters() {
     const toggle = document.getElementById('crmPropAdvToggle');
+    const toggleMob = document.getElementById('crmPropAdvToggleMob');
     const panel = document.getElementById('crmPropAdvPanel');
-    if (toggle && panel && toggle.dataset.bound !== '1') {
-        toggle.dataset.bound = '1';
+    if (panel && panel.dataset.advBound !== '1') {
+        panel.dataset.advBound = '1';
         const setOpen = (open) => {
-            toggle.classList.toggle('is-open', open);
-            toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+            [toggle, toggleMob].forEach((btn) => {
+                if (!btn) return;
+                btn.classList.toggle('is-open', open);
+                btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+            });
             panel.classList.toggle('is-open', open);
             if (open) panel.removeAttribute('hidden');
             else panel.setAttribute('hidden', '');
         };
-        toggle.addEventListener('click', () => {
-            setOpen(!panel.classList.contains('is-open'));
+        [toggle, toggleMob].forEach((btn) => {
+            btn?.addEventListener('click', () => {
+                setOpen(!panel.classList.contains('is-open'));
+            });
         });
     }
 
+    const form = document.getElementById('crmPropertyFilters');
     const sheetToggle = document.getElementById('crmFilesFilterToggle');
     const sheet = document.getElementById('crmFilesFilterSheet');
-    if (sheetToggle && sheet && sheetToggle.dataset.bound !== '1') {
+    if (form && sheetToggle && sheet && sheetToggle.dataset.bound !== '1') {
         sheetToggle.dataset.bound = '1';
         const mq = window.matchMedia('(max-width: 768px)');
         const setSheet = (open) => {
             if (!mq.matches) {
                 sheet.classList.remove('is-open');
+                sheet.setAttribute('aria-hidden', 'true');
                 sheetToggle.setAttribute('aria-expanded', 'false');
                 sheetToggle.classList.remove('is-open');
+                document.body.classList.remove('crm-files-filter-open');
                 return;
             }
             sheet.classList.toggle('is-open', open);
             sheetToggle.classList.toggle('is-open', open);
             sheetToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+            sheet.setAttribute('aria-hidden', open ? 'false' : 'true');
+            document.body.classList.toggle('crm-files-filter-open', open);
         };
         sheetToggle.addEventListener('click', () => {
+            if (!mq.matches) return;
             setSheet(!sheet.classList.contains('is-open'));
         });
-        mq.addEventListener?.('change', () => setSheet(false));
+        sheet.querySelectorAll('[data-files-filter-close]').forEach((el) => {
+            el.addEventListener('click', () => setSheet(false));
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && sheet.classList.contains('is-open')) {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                setSheet(false);
+            }
+        }, true);
+        form.addEventListener('submit', () => {
+            if (mq.matches) setSheet(false);
+        });
+        const syncSelectDisabled = () => {
+            const mobile = mq.matches;
+            form.querySelectorAll('.crm-files-desk-select').forEach((sel) => {
+                sel.disabled = mobile;
+            });
+            form.querySelectorAll('.crm-files-mob-select').forEach((sel) => {
+                sel.disabled = !mobile;
+            });
+            const sheetBody = sheet.querySelector('.crm-files-mob-filter-body');
+            if (panel && sheetBody) {
+                if (mobile) sheetBody.appendChild(panel);
+                else form.appendChild(panel);
+            }
+            if (!mobile) setSheet(false);
+        };
+        if (typeof mq.addEventListener === 'function') mq.addEventListener('change', syncSelectDisabled);
+        else if (typeof mq.addListener === 'function') mq.addListener(syncSelectDisabled);
+        syncSelectDisabled();
+    }
+
+    const menuRoot = document.querySelector('.crm-files-mobile');
+    if (menuRoot && menuRoot.dataset.filesMenuBound !== '1') {
+        menuRoot.dataset.filesMenuBound = '1';
+        menuRoot.addEventListener('toggle', (e) => {
+            const opened = e.target;
+            if (!opened.matches('.crm-files-mob-toolbar-menu')) return;
+            if (!opened.open) return;
+            menuRoot.querySelectorAll('.crm-files-mob-toolbar-menu[open]').forEach((menu) => {
+                if (menu !== opened) menu.removeAttribute('open');
+            });
+        }, true);
     }
 
     document.querySelectorAll('.crm-files-mobile .crm-ft-row[data-href]').forEach((row) => {

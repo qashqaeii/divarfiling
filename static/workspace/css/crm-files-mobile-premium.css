@@ -6,6 +6,7 @@
 @media (max-width: 768px) {
     /* Hide desktop KPI strip (minimal.css forces display:grid on .crm-files-kpis) */
     .crm-files-mobile .crm-files-kpis.crm-files-desk-kpis,
+    .crm-files-mobile .kpi-strip.crm-files-kpi-strip,
     .crm-files-mobile .crm-files-desk-header {
         display: none !important;
     }
@@ -99,7 +100,7 @@
         gap: 0.25rem !important;
         margin-bottom: 0.1rem !important;
     }
-    .crm-files-mobile .crm-files-card-tags > :nth-child(n + 3) {
+    .crm-files-mobile .crm-files-card-tags > :nth-child(n + 4) {
         display: none !important;
     }
     .crm-files-mobile .crm-files-pill {
@@ -130,28 +131,18 @@
     }
 
     .crm-files-mobile .crm-files-mcard__go {
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        width: 2rem !important;
-        height: 2rem !important;
-        border-radius: 10px !important;
-        flex-shrink: 0 !important;
-        margin-inline-start: 0 !important;
-        font-size: 0.7rem !important;
-        color: var(--ws-text-muted) !important;
-        background: color-mix(in srgb, var(--ws-surface-2) 55%, var(--ws-surface)) !important;
-        box-shadow: none !important;
+        display: none !important;
     }
 
     /* Owner — inline compact */
     .crm-files-mobile .crm-files-mcard__owner,
     .crm-files-mobile .crm-files-card-owner {
-        padding: 0.45rem 0.55rem !important;
-        border-radius: 12px !important;
-        background: color-mix(in srgb, var(--ws-surface-2) 40%, var(--ws-surface)) !important;
-        border: 1px solid color-mix(in srgb, var(--ws-border) 50%, transparent) !important;
+        padding: 0 !important;
+        border: none !important;
+        background: none !important;
         box-shadow: none !important;
+        font-size: 0.72rem;
+        color: var(--ws-text-muted);
     }
     .crm-files-mobile .crm-files-mcard__owner-ico {
         width: 1.85rem !important;
@@ -191,45 +182,61 @@
     /* Amenities — horizontal, core only */
     .crm-files-mobile .crm-files-card-amenities {
         display: flex !important;
-        flex-direction: row !important;
-        flex-wrap: nowrap !important;
+        flex-wrap: wrap !important;
         align-items: center !important;
-        gap: 0.3rem !important;
+        gap: 0.28rem !important;
         width: 100% !important;
-        padding: 0.3rem 0.35rem !important;
-        border-radius: 12px !important;
-        background: color-mix(in srgb, var(--ws-surface-2) 28%, var(--ws-surface)) !important;
-        border: 1px solid color-mix(in srgb, var(--ws-border) 42%, transparent) !important;
-        overflow-x: auto !important;
-        scrollbar-width: none;
-    }
-    .crm-files-mobile .crm-files-card-amenities::-webkit-scrollbar {
-        display: none;
+        padding: 0 !important;
+        border: none !important;
+        background: transparent !important;
+        overflow: visible !important;
     }
     .crm-files-mobile .crm-files-amenity.is-extra {
-        display: none !important;
+        display: inline-flex !important;
     }
     .crm-files-mobile .crm-files-amenity {
-        width: 1.9rem !important;
-        height: 1.9rem !important;
+        width: 1.45rem !important;
+        height: 1.45rem !important;
         flex: 0 0 auto !important;
-        border-radius: 9px !important;
-        font-size: 0.72rem !important;
+        border-radius: 7px !important;
+        font-size: 0.68rem !important;
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
     }
 
-    /* Price band */
-    .crm-files-mobile .crm-files-mcard__valueband,
-    .crm-files-mobile .crm-files-card-foot {
+    .crm-files-mobile .crm-files-mcard > .crm-files-card-price {
+        padding: 0.5rem 0.6rem !important;
+        border-radius: 12px !important;
+    }
+    .crm-files-mobile .crm-files-card-foot,
+    .crm-files-mobile .crm-files-mcard__valueband {
         display: flex !important;
         flex-direction: column !important;
-        gap: 0.45rem !important;
+        gap: 0.4rem !important;
         width: 100% !important;
         margin: 0 !important;
-        padding: 0.6rem 0.65rem !important;
-        border-radius: 14px !important;
-        border: 1px solid color-mix(in srgb, var(--deal-mode-accent, var(--ws-primary)) 18%, var(--ws-border)) !important;
-        background: color-mix(in srgb, var(--deal-mode-accent, var(--ws-primary)) 6%, var(--ws-surface)) !important;
+        padding: 0.45rem 0 0 !important;
+        border-radius: 0 !important;
+        border: none !important;
+        border-top: 1px solid color-mix(in srgb, var(--ws-border) 55%, transparent) !important;
+        background: transparent !important;
         box-shadow: none !important;
+    }
+    .crm-files-mobile .crm-files-card-actions {
+        width: 100%;
+        display: flex;
+        gap: 0.3rem;
+    }
+    .crm-files-mobile .crm-files-card-act {
+        flex: 1;
+        min-height: 36px;
+        font-size: 0.7rem;
+        border-radius: 10px;
+    }
+    .crm-files-mobile .crm-files-card-act:nth-child(n + 3) {
+        flex: 0 0 auto;
+        padding-inline: 0.55rem;
     }
 
     .crm-files-mobile .crm-files-card-price strong {

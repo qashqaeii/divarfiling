@@ -3818,18 +3818,26 @@ function initContactHeroMorePanel() {
 
         const place = () => {
             const r = trigger.getBoundingClientRect();
-            const rtl = document.documentElement.dir === 'rtl' || document.body.classList.contains('rtl');
+            const pad = 8;
+            const vw = document.documentElement.clientWidth;
+            const vh = document.documentElement.clientHeight;
             panel.style.position = 'fixed';
             panel.style.zIndex = '20000';
-            panel.style.top = `${Math.round(r.bottom + 6)}px`;
-            panel.style.bottom = 'auto';
-            panel.style.left = 'auto';
-            panel.style.right = 'auto';
-            if (rtl || getComputedStyle(trigger).direction === 'rtl') {
-                panel.style.right = `${Math.round(document.documentElement.clientWidth - r.right)}px`;
-            } else {
-                panel.style.left = `${Math.round(r.left)}px`;
+            panel.style.inset = 'auto';
+            panel.style.maxWidth = `${Math.max(180, vw - pad * 2)}px`;
+            const pw = Math.max(panel.offsetWidth, 220);
+            const ph = panel.offsetHeight;
+            let left = r.right - pw;
+            if (left < pad) left = r.left;
+            if (left + pw > vw - pad) left = vw - pw - pad;
+            if (left < pad) left = pad;
+            let top = r.bottom + 6;
+            if (ph && top + ph > vh - pad) {
+                top = Math.max(pad, r.top - ph - 6);
             }
+            panel.style.top = `${Math.round(top)}px`;
+            panel.style.left = `${Math.round(left)}px`;
+            panel.style.right = 'auto';
         };
 
         details.addEventListener('toggle', () => {
@@ -3837,6 +3845,7 @@ function initContactHeroMorePanel() {
                 if (!holder.isConnected) details.appendChild(holder);
                 document.body.appendChild(panel);
                 place();
+                requestAnimationFrame(place);
                 window.addEventListener('scroll', place, true);
                 window.addEventListener('resize', place);
             } else if (holder.parentNode) {

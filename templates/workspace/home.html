@@ -174,18 +174,10 @@
         {% url 'workspace:crm_properties' as kpi_properties_url %}
         {% url 'workspace:crm_today' as kpi_today_url %}
         {% url 'workspace:crm_reminders' as kpi_reminders_url %}
-        {% url 'workspace:support_list' as kpi_support_url %}
         {% include 'workspace/includes/kpi_item.html' with variant='standard' href=kpi_contacts_url extra_class='mk-hub-metric ws-home-metric--focus' tone='indigo' decor='users' value=crm_stats.total_contacts label='مخاطبین' %}
         {% include 'workspace/includes/kpi_item.html' with variant='standard' href=kpi_properties_url extra_class='mk-hub-metric ws-home-metric--focus' tone='violet' decor='building' value=crm_stats.total_properties label='فایل‌های شخصی' %}
         {% include 'workspace/includes/kpi_item.html' with variant='standard' href=kpi_today_url extra_class='mk-hub-metric ws-home-metric--focus' tone='amber' decor='list_todo' value=crm_stats.due_today label='امروز' warn=crm_stats.overdue_followups %}
         {% include 'workspace/includes/kpi_item.html' with variant='standard' href=kpi_reminders_url extra_class='mk-hub-metric' tone='rose' decor='bell' value=crm_stats.active_reminders label='یادآور' %}
-        <a href="{{ kpi_support_url }}" class="kpi-card kpi-card--standard mk-hub-metric{% if support_nav_counts.unread_replies %} is-warn mk-hub-metric--warn{% endif %}" data-tone="teal">
-            <span class="kpi-card__icon mk-hub-metric-icon" aria-hidden="true"><i class="fas fa-headset"></i></span>
-            <span class="kpi-card__body mk-hub-metric-body">
-                <span class="kpi-card__value mk-hub-metric-val">{% if support_nav_counts.open %}{{ support_nav_counts.open }}{% else %}۰{% endif %}</span>
-                <span class="kpi-card__label mk-hub-metric-lbl">تیکت باز</span>
-            </span>
-        </a>
     </section>
     {% endif %}
 

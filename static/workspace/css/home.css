@@ -178,9 +178,10 @@
 
 .ws-home-start-card {
     display: flex;
-    flex-direction: column;
-    gap: 0.2rem;
-    padding: 0.85rem 0.9rem;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.75rem 0.85rem;
     border-radius: 14px;
     border: 1px solid var(--ws-border);
     background: var(--ws-surface);
@@ -188,19 +189,52 @@
     color: var(--ws-text);
 }
 
+.ws-home-start-icon {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.35rem;
+    height: 2.35rem;
+    border-radius: 10px;
+    background: color-mix(in srgb, currentColor 12%, var(--ws-surface-2, var(--ws-surface)));
+}
+
+.ws-home-start-icon[data-tone="indigo"] { color: #4F46E5; }
+.ws-home-start-icon[data-tone="blue"] { color: #2563EB; }
+.ws-home-start-icon[data-tone="violet"] { color: #8B5CF6; }
+.ws-home-start-icon[data-tone="purple"] { color: #7C3AED; }
+
+.ws-home-start-icon .df-decor-icon {
+    width: 1.15rem;
+    height: 1.15rem;
+}
+
+.ws-home-start-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.12rem;
+    min-width: 0;
+}
+
 .ws-home-start-card strong {
     font-size: 0.88rem;
     font-weight: 750;
 }
 
-.ws-home-start-card span {
+.ws-home-start-card em {
     font-size: 0.74rem;
+    font-style: normal;
     color: var(--ws-text-muted);
     line-height: 1.4;
 }
 
 .ws-home-start-card:hover {
     border-color: color-mix(in srgb, var(--ws-primary) 35%, var(--ws-border));
+}
+
+.ws-home-start-card:hover .ws-home-start-icon {
+    background: color-mix(in srgb, currentColor 18%, var(--ws-surface));
 }
 
 .ws-home .ws-home-work-actions.mk-hub-head-actions {

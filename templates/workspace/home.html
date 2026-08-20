@@ -3,7 +3,7 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/crm.css' %}?v=97">
-<link rel="stylesheet" href="{% static 'workspace/css/home.css' %}?v=17">
+<link rel="stylesheet" href="{% static 'workspace/css/home.css' %}?v=18">
 {% endblock %}
 
 {% block page_title %}{% endblock %}
@@ -47,23 +47,35 @@
         <p class="ws-home-start-title">می‌خواهید از کجا شروع کنید؟</p>
         <div class="ws-home-start-actions">
             <a href="{% url 'workspace:crm_contacts' %}?open=drawer-contact" class="ws-home-start-card">
-                <strong>مخاطب دارم</strong>
-                <span>ثبت مخاطب و نیاز</span>
+                <span class="ws-home-start-icon" data-tone="indigo" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='user' size='sm' only %}</span>
+                <span class="ws-home-start-text">
+                    <strong>مخاطب دارم</strong>
+                    <em>ثبت مخاطب و نیاز</em>
+                </span>
             </a>
             {% if has_bot_license %}
             <a href="{% url 'workspace:dataset_list' %}" class="ws-home-start-card">
-                <strong>می‌خواهم فایل پیدا کنم</strong>
-                <span>ورود به فایلینگ</span>
+                <span class="ws-home-start-icon" data-tone="blue" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='search' size='sm' only %}</span>
+                <span class="ws-home-start-text">
+                    <strong>می‌خواهم فایل پیدا کنم</strong>
+                    <em>ورود به فایلینگ</em>
+                </span>
             </a>
             {% else %}
             <a href="{% url 'workspace:crm_properties' %}" class="ws-home-start-card">
-                <strong>کار با فایل‌های شخصی</strong>
-                <span>ثبت و مدیریت ملک‌های خودتان</span>
+                <span class="ws-home-start-icon" data-tone="violet" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='folder' size='sm' only %}</span>
+                <span class="ws-home-start-text">
+                    <strong>کار با فایل‌های شخصی</strong>
+                    <em>ثبت و مدیریت ملک‌های خودتان</em>
+                </span>
             </a>
             {% endif %}
             <a href="{% url 'workspace:crm_properties' %}?open=drawer-property" class="ws-home-start-card">
-                <strong>فایل شخصی دارم</strong>
-                <span>ثبت ملک</span>
+                <span class="ws-home-start-icon" data-tone="purple" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='building' size='sm' only %}</span>
+                <span class="ws-home-start-text">
+                    <strong>فایل شخصی دارم</strong>
+                    <em>ثبت ملک</em>
+                </span>
             </a>
         </div>
     </section>

@@ -3774,6 +3774,33 @@ function initContactsMobileMenus() {
     });
 }
 
+function initContactAsideFolds() {
+    const root = document.querySelector('.crm-contact-detail-pro');
+    if (!root) return;
+    const folds = root.querySelectorAll('.crm-contact-side-fold');
+    if (!folds.length) return;
+
+    const apply = () => {
+        const mobile = window.matchMedia('(max-width: 768px)').matches;
+        folds.forEach(fold => {
+            const keepOpen = fold.classList.contains('crm-contact-side-card--followup')
+                || fold.classList.contains('crm-contact-side-card--deals')
+                || fold.classList.contains('crm-contact-side-card--warn');
+            fold.open = !mobile || keepOpen;
+        });
+    };
+
+    apply();
+    window.matchMedia('(max-width: 768px)').addEventListener('change', apply);
+
+    root.querySelectorAll('.crm-contact-side-fold .crm-contact-prefs-edit').forEach(btn => {
+        btn.addEventListener('click', e => {
+            e.preventDefault();
+            e.stopPropagation();
+        });
+    });
+}
+
 function initContactDetailMobileMenus() {
     const root = document.querySelector('.crm-contact-detail-pro');
     if (!root) return;
@@ -3899,6 +3926,9 @@ document.addEventListener('DOMContentLoaded', () => {
     initContactsMobileFilters();
     initContactsMobileMenus();
     initContactDetailMobileMenus();
+    initContactAsideFolds();
+    const afterCall = document.querySelector('.crm-contact-after-call');
+    if (afterCall) afterCall.scrollIntoView({ block: 'nearest', inline: 'nearest' });
     initCRMPropertyAdvFilters();
     initCRMDealStagesEditor();
     initCRMDealChecklist();

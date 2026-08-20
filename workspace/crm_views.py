@@ -740,10 +740,15 @@ class CustomerDetailView(CRMContextMixin, LoginRequiredMixin, DetailView):
         ctx['contact_nba'] = workflow['nba']
         ctx['contact_summary'] = workflow['summary']
         ctx['after_call_prompt'] = (
-            self.request.GET.get('after_call') == '1'
+            (
+                self.request.GET.get('after_call') == '1'
+                or self.request.session.get('crm_after_call_id') == c.pk
+            )
             and bool(ctx['can_edit_customer'])
             and not ctx['customer_is_shared']
         )
+        if ctx['after_call_prompt'] and self.request.session.get('crm_after_call_id') == c.pk:
+            self.request.session.pop('crm_after_call_id', None)
         return ctx
 
     def post(self, request, customer_id):
@@ -933,6 +938,7 @@ class CustomerDetailView(CRMContextMixin, LoginRequiredMixin, DetailView):
             )
             messages.success(request, 'تماس ثبت شد.')
             if days <= 0:
+                request.session['crm_after_call_id'] = customer.pk
                 redirect_url += '?after_call=1'
 
         elif action == 'merge_customer':

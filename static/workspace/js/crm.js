@@ -3808,6 +3808,51 @@ function initContactAsideFolds() {
     });
 }
 
+function initContactHeroMorePanel() {
+    document.querySelectorAll('.crm-contact-hero__more').forEach(details => {
+        const panel = details.querySelector('.crm-contact-hero__more-panel');
+        const trigger = details.querySelector('summary');
+        if (!panel || !trigger || panel.dataset.crmMorePortaled === '1') return;
+        panel.dataset.crmMorePortaled = '1';
+        const holder = document.createComment('crm-hero-more-panel');
+
+        const place = () => {
+            const r = trigger.getBoundingClientRect();
+            const rtl = document.documentElement.dir === 'rtl' || document.body.classList.contains('rtl');
+            panel.style.position = 'fixed';
+            panel.style.zIndex = '20000';
+            panel.style.top = `${Math.round(r.bottom + 6)}px`;
+            panel.style.bottom = 'auto';
+            panel.style.left = 'auto';
+            panel.style.right = 'auto';
+            if (rtl || getComputedStyle(trigger).direction === 'rtl') {
+                panel.style.right = `${Math.round(document.documentElement.clientWidth - r.right)}px`;
+            } else {
+                panel.style.left = `${Math.round(r.left)}px`;
+            }
+        };
+
+        details.addEventListener('toggle', () => {
+            if (details.open) {
+                if (!holder.isConnected) details.appendChild(holder);
+                document.body.appendChild(panel);
+                place();
+                window.addEventListener('scroll', place, true);
+                window.addEventListener('resize', place);
+            } else if (holder.parentNode) {
+                window.removeEventListener('scroll', place, true);
+                window.removeEventListener('resize', place);
+                holder.parentNode.insertBefore(panel, holder);
+                panel.removeAttribute('style');
+            }
+        });
+
+        panel.addEventListener('click', (e) => {
+            if (e.target.closest('[data-drawer-open]')) details.removeAttribute('open');
+        });
+    });
+}
+
 function initContactDetailMobileMenus() {
     const root = document.querySelector('.crm-contact-detail-pro');
     if (!root) return;
@@ -3839,7 +3884,8 @@ function initContactDetailMobileMenus() {
     });
 
     document.addEventListener('click', (e) => {
-        if (!root.contains(e.target)) return;
+        const onHeroMorePanel = e.target.closest('.crm-contact-hero__more-panel');
+        if (onHeroMorePanel) return;
         root.querySelectorAll('.crm-contact-mob-menu[open], .crm-contact-dock-more[open], .crm-contact-hero__more[open]').forEach(menu => {
             if (!menu.contains(e.target)) menu.removeAttribute('open');
         });
@@ -3933,6 +3979,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initContactsMobileFilters();
     initContactsMobileMenus();
     initContactDetailMobileMenus();
+    initContactHeroMorePanel();
     initContactAsideFolds();
     const afterCall = document.querySelector('.crm-contact-after-call');
     if (afterCall) afterCall.scrollIntoView({ block: 'nearest', inline: 'nearest' });

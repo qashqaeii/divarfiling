@@ -1,41 +1,43 @@
 {% load crm_tags %}
 <div class="crm-nav-shell">
-<nav class="crm-nav" aria-label="ناوبری CRM">
-    <a href="{% url 'workspace:crm_dashboard' %}" class="crm-nav-item {% if crm_section == 'dashboard' %}active{% endif %}">
-        <span class="ws-nav-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='trending_up' size='nav' only %}</span><span>داشبورد</span>
-    </a>
+<nav class="crm-nav" aria-label="ناوبری مدیریت مشتری">
     <a href="{% url 'workspace:crm_today' %}" class="crm-nav-item {% if crm_section == 'today' %}active{% endif %}">
-        <span class="ws-nav-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='list_todo' size='nav' only %}</span><span>امروز</span>
+        <span class="ws-nav-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='list_todo' size='nav' only %}</span><span>کارهای امروز</span>
         {% if crm_nav_counts.today %}<em class="crm-nav-count crm-nav-count-warn">{{ crm_nav_counts.today }}</em>{% endif %}
     </a>
     <a href="{% url 'workspace:crm_contacts' %}" class="crm-nav-item {% if crm_section == 'contacts' %}active{% endif %}">
         <span class="ws-nav-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='users' size='nav' only %}</span><span>مخاطبین</span>
         {% if crm_nav_counts.contacts %}<em class="crm-nav-count">{{ crm_nav_counts.contacts }}</em>{% endif %}
     </a>
-    <a href="{% url 'workspace:crm_deals' %}" class="crm-nav-item {% if crm_section == 'deals' %}active{% endif %}">
-        <span class="ws-nav-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='handshake' size='nav' only %}</span><span>معاملات</span>
-        {% if crm_nav_counts.deals %}<em class="crm-nav-count">{{ crm_nav_counts.deals }}</em>{% endif %}
-    </a>
     <a href="{% url 'workspace:crm_properties' %}" class="crm-nav-item {% if crm_section == 'properties' %}active{% endif %}">
         <span class="ws-nav-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='building' size='nav' only %}</span><span>فایل‌های شخصی</span>
         {% if crm_nav_counts.properties %}<em class="crm-nav-count">{{ crm_nav_counts.properties }}</em>{% endif %}
     </a>
+    <a href="{% url 'workspace:crm_deals' %}" class="crm-nav-item {% if crm_section == 'deals' %}active{% endif %}">
+        <span class="ws-nav-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='handshake' size='nav' only %}</span><span>معاملات</span>
+        {% if crm_nav_counts.deals %}<em class="crm-nav-count">{{ crm_nav_counts.deals }}</em>{% endif %}
+    </a>
     <a href="{% url 'workspace:crm_calendar' %}" class="crm-nav-item {% if crm_section == 'calendar' %}active{% endif %}">
         <span class="ws-nav-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='calendar' size='nav' only %}</span><span>تقویم</span>
+    </a>
+    {% if ws_show_agency_nav %}
+    <a href="{% url 'workspace:crm_team' %}" class="crm-nav-item {% if crm_section == 'team' %}active{% endif %}">
+        <span class="ws-nav-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='team' size='nav' only %}</span><span>آژانس</span>
+        {% if crm_nav_counts.team_hub_unread %}<em class="crm-nav-count crm-nav-count-warn">{{ crm_nav_counts.team_hub_unread|nav_badge_count }}</em>{% endif %}
+    </a>
+    {% endif %}
+    <a href="{% url 'workspace:crm_dashboard' %}" class="crm-nav-item {% if crm_section == 'dashboard' %}active{% endif %}">
+        <span class="ws-nav-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='trending_up' size='nav' only %}</span><span>نمای مدیریت مشتری</span>
+    </a>
+    <a href="{% url 'workspace:crm_reminders' %}" class="crm-nav-item {% if crm_section == 'reminders' %}active{% endif %}">
+        <span class="ws-nav-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='bell' size='nav' only %}</span><span>یادآورها</span>
+        {% if crm_nav_counts.reminders %}<em class="crm-nav-count crm-nav-count-warn">{{ crm_nav_counts.reminders }}</em>{% endif %}
     </a>
     <a href="{% url 'workspace:crm_templates' %}" class="crm-nav-item {% if crm_section == 'templates' %}active{% endif %}">
         <span class="ws-nav-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='message_template' size='nav' only %}</span><span>قالب پیام</span>
     </a>
     <a href="{% url 'workspace:crm_automation' %}" class="crm-nav-item {% if crm_section == 'automation' %}active{% endif %}">
         <span class="ws-nav-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='automation' size='nav' only %}</span><span>اتوماسیون</span>
-    </a>
-    <a href="{% url 'workspace:crm_team' %}" class="crm-nav-item {% if crm_section == 'team' %}active{% endif %}">
-        <span class="ws-nav-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='team' size='nav' only %}</span><span>آژانس</span>
-        {% if crm_nav_counts.team_hub_unread %}<em class="crm-nav-count crm-nav-count-warn">{{ crm_nav_counts.team_hub_unread|nav_badge_count }}</em>{% endif %}
-    </a>
-    <a href="{% url 'workspace:crm_reminders' %}" class="crm-nav-item {% if crm_section == 'reminders' %}active{% endif %}">
-        <span class="ws-nav-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='bell' size='nav' only %}</span><span>یادآورها</span>
-        {% if crm_nav_counts.reminders %}<em class="crm-nav-count crm-nav-count-warn">{{ crm_nav_counts.reminders }}</em>{% endif %}
     </a>
     <a href="{% url 'workspace:academy_home' %}" class="crm-nav-item {% if crm_section == 'academy' %}active{% endif %}" title="آکادمی فایلینگ دیوار">
         <span class="ws-nav-icon" aria-hidden="true"><i class="fas fa-graduation-cap"></i></span><span>آکادمی</span>

@@ -1,8 +1,8 @@
 {% extends 'workspace/base.html' %}
 {% load humanize static workspace_tags %}
 
-{% block page_title %}فایلینگ دیوار{% endblock %}
-{% block mobile_bar_title %}فایلینگ دیوار{% endblock %}
+{% block page_title %}فایلینگ{% endblock %}
+{% block mobile_bar_title %}فایلینگ{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/mk-filing-mobile.css' %}?v=5">
@@ -18,11 +18,11 @@
         <div class="mk-filing-mob-header-accent" aria-hidden="true"></div>
         <div class="mk-filing-mob-header-inner">
             <div class="mk-filing-mob-header-main">
-                <span class="mk-filing-mob-kicker"><i class="fas fa-folder-open" aria-hidden="true"></i> استخراج دیوار</span>
-                <h1 class="mk-filing-mob-title">فایلینگ دیوار</h1>
+                <span class="mk-filing-mob-kicker"><i class="fas fa-folder-open" aria-hidden="true"></i> پوشه استخراج</span>
+                <h1 class="mk-filing-mob-title">فایلینگ</h1>
                 <p class="mk-filing-mob-sub">
-                    <span>{{ stats.files }} فایل</span>
-                    {% if stats.listings %}<span class="mk-filing-mob-sub-chip">{{ stats.listings|intcomma }} آگهی</span>{% endif %}
+                    <span>{{ stats.files }} پوشه استخراج</span>
+                    {% if stats.listings %}<span class="mk-filing-mob-sub-chip">{{ stats.listings|intcomma }} آگهی دیوار</span>{% endif %}
                     {% if stats.sale %}<span class="mk-filing-mob-sub-chip is-sale">{{ stats.sale }} فروش</span>{% endif %}
                     {% if stats.rent %}<span class="mk-filing-mob-sub-chip is-rent">{{ stats.rent }} اجاره</span>{% endif %}
                 </p>
@@ -40,11 +40,11 @@
 
     <header class="mk-hub-head mk-filing-head mk-filing-desk-header">
         <div class="mk-hub-head-main">
-            <h1 class="mk-hub-head-title">فایلینگ دیوار</h1>
+            <h1 class="mk-hub-head-title">فایلینگ</h1>
             <p class="mk-hub-head-meta">
                 <span class="mk-filing-badge">دیوار</span>
                 <span class="mk-filing-meta-sep" aria-hidden="true">·</span>
-                <span>مدیریت، فیلتر و تحلیل فایل‌های استخراج‌شده</span>
+                <span>مدیریت، فیلتر و تحلیل پوشه‌های استخراج و آگهی‌های دیوار</span>
             </p>
         </div>
         <div class="mk-hub-head-actions" role="toolbar" aria-label="عملیات">
@@ -62,15 +62,15 @@
             <span class="mk-hub-metric-icon">{% include 'includes/icon_slot.html' with decor='folder' size='metric' only %}</span>
             <span class="mk-hub-metric-body">
                 <span class="mk-hub-metric-val">{{ stats.files }}</span>
-                <span class="mk-hub-metric-lbl">فایل</span>
-                <span class="mk-hub-metric-sub">مجموعه فایل</span>
+                <span class="mk-hub-metric-lbl">پوشه استخراج</span>
+                <span class="mk-hub-metric-sub">استخراج دیوار</span>
             </span>
         </article>
         <article class="mk-hub-metric" data-tone="blue">
             <span class="mk-hub-metric-icon">{% include 'includes/icon_slot.html' with decor='database' size='metric' only %}</span>
             <span class="mk-hub-metric-body">
                 <span class="mk-hub-metric-val">{{ stats.listings|intcomma }}</span>
-                <span class="mk-hub-metric-lbl">آگهی</span>
+                <span class="mk-hub-metric-lbl">آگهی دیوار</span>
                 <span class="mk-hub-metric-sub">کل رکوردها</span>
             </span>
         </article>
@@ -79,7 +79,7 @@
             <span class="mk-hub-metric-body">
                 <span class="mk-hub-metric-val">{{ stats.sale }}</span>
                 <span class="mk-hub-metric-lbl">فروش</span>
-                <span class="mk-hub-metric-sub">مجموعه‌داده</span>
+                <span class="mk-hub-metric-sub">پوشه استخراج</span>
             </span>
         </article>
         <article class="mk-hub-metric" data-tone="cyan">
@@ -87,7 +87,7 @@
             <span class="mk-hub-metric-body">
                 <span class="mk-hub-metric-val">{{ stats.rent }}</span>
                 <span class="mk-hub-metric-lbl">اجاره</span>
-                <span class="mk-hub-metric-sub">مجموعه‌داده</span>
+                <span class="mk-hub-metric-sub">پوشه استخراج</span>
             </span>
         </article>
     </section>
@@ -99,7 +99,7 @@
                 <div class="ws-mob-search-bar ws-mob-search-bar--filing">
                     <label class="mk-filter-search mk-filing-search ws-mob-search-bar__search">
                         <i class="fas fa-search" aria-hidden="true"></i>
-                        <input type="search" name="q" value="{{ filters.q }}" placeholder="جستجو فایل…" autocomplete="off" aria-label="جستجو">
+                        <input type="search" name="q" value="{{ filters.q }}" placeholder="جستجو پوشه استخراج…" autocomplete="off" aria-label="جستجو">
                     </label>
                     <button type="button" class="ws-mob-search-bar__btn ws-mob-search-bar__btn--filter" aria-controls="dsFilterDetails" aria-expanded="{% if has_filters %}true{% else %}false{% endif %}" data-ws-mob-filter-toggle>
                         <i class="fas fa-sliders" aria-hidden="true"></i>
@@ -172,8 +172,8 @@
     <section class="ws-glass-panel mk-panel mk-panel-flush mk-filing-panel">
         <header class="mk-filing-panel-head">
             <div class="mk-filing-panel-title">
-                <h2>{% if has_filters %}نتایج فیلتر{% else %}همه فایل‌ها{% endif %}</h2>
-                <span class="mk-filing-panel-count">{{ page_obj.paginator.count }} فایل</span>
+                <h2>{% if has_filters %}نتایج فیلتر{% else %}همه پوشه‌های استخراج{% endif %}</h2>
+                <span class="mk-filing-panel-count">{{ page_obj.paginator.count }} پوشه</span>
             </div>
             {% if datasets and view_mode != 'grid' %}
             <p class="mk-filing-panel-hint mk-filing-panel-hint--table"><i class="fas fa-sort" aria-hidden="true"></i> کلیک روی سرستون برای مرتب‌سازی</p>
@@ -195,11 +195,11 @@
                                 <th class="mk-col-check">
                                     <input type="checkbox" class="mk-checkbox" id="dsSelectAll" aria-label="انتخاب همه در این صفحه">
                                 </th>
-                                <th data-sort="name" class="mk-col-file">فایل</th>
+                                <th data-sort="name" class="mk-col-file">پوشه استخراج</th>
                                 <th data-sort="location" class="mk-col-location">مکان</th>
                                 <th data-sort="subject" class="mk-col-subject">موضوع</th>
                                 <th data-sort="tx" class="mk-col-tx">معامله</th>
-                                <th data-sort="count" data-sort-type="number" class="mk-col-num">آگهی</th>
+                                <th data-sort="count" data-sort-type="number" class="mk-col-num">آگهی دیوار</th>
                                 <th data-sort="date" data-sort-type="date" class="mk-col-date">بروزرسانی</th>
                                 <th class="mk-col-actions" aria-label="عملیات"></th>
                             </tr>
@@ -213,20 +213,20 @@
             {% endif %}
         </div>
 
-        {% mk_pagination page_obj page_query aria_label="صفحه‌بندی فایل‌ها" %}
+        {% mk_pagination page_obj page_query aria_label="صفحه‌بندی پوشه‌های استخراج" %}
 
         {% else %}
         <div class="ws-empty mk-filing-empty">
             {% if has_filters %}
             <span class="mk-filing-empty-icon" aria-hidden="true"><i class="fas fa-search"></i></span>
-            <p class="ws-empty-title">فایلی با این فیلتر یافت نشد</p>
+            <p class="ws-empty-title">پوشه‌ای با این فیلتر یافت نشد</p>
             <p class="mk-meta">فیلترها را تغییر دهید یا جستجو را پاک کنید.</p>
             <a href="{% url 'workspace:dataset_list' %}" class="ws-btn ws-btn-sm ws-btn-ghost">پاک کردن فیلترها</a>
             {% else %}
             <span class="mk-filing-empty-icon" aria-hidden="true"><i class="fas fa-cloud-upload-alt"></i></span>
-            <p class="ws-empty-title">فایلی آپلود نشده</p>
-            <p class="mk-meta">فایل Excel یا CSV استخراج‌شده از دیوار را آپلود کنید.</p>
-            <button type="button" class="ws-btn ws-btn-sm ws-btn-primary" data-modal-open="modal-upload">آپلود اولین فایل</button>
+            <p class="ws-empty-title">هنوز پوشه استخراج ندارید</p>
+            <p class="mk-meta">خروجی استخراج دیوار را به‌صورت Excel یا CSV آپلود کنید.</p>
+            <button type="button" class="ws-btn ws-btn-sm ws-btn-primary" data-modal-open="modal-upload">آپلود اولین پوشه استخراج</button>
             {% endif %}
         </div>
         {% endif %}
@@ -238,11 +238,11 @@
         <div id="dsBulkDeleteIds"></div>
     </form>
     <div class="mk-bulk-bar" id="dsBulkBar" hidden>
-        <span class="mk-bulk-count"><strong id="dsBulkCount">0</strong> فایل انتخاب شده</span>
+        <span class="mk-bulk-count"><strong id="dsBulkCount">0</strong> پوشه استخراج انتخاب شده</span>
         <div class="mk-bulk-actions">
             <button type="button" class="mk-bulk-btn mk-bulk-btn-primary" id="dsBulkView"
                 data-url="{% url 'workspace:multi_listings' %}">
-                <i class="fas fa-table-list" aria-hidden="true"></i> مشاهده آگهی‌ها
+                <i class="fas fa-table-list" aria-hidden="true"></i> مشاهده آگهی‌های دیوار
             </button>
             <button type="button" class="mk-bulk-btn" id="dsBulkClear">لغو انتخاب</button>
             <button type="button" class="mk-bulk-btn mk-bulk-btn-danger" id="dsBulkDelete">

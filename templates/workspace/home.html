@@ -8,7 +8,7 @@
 
 {% block page_title %}{% endblock %}
 
-{% block mobile_bar_title %}نمای کلی{% endblock %}
+{% block mobile_bar_title %}میزکار{% endblock %}
 
 {% block content %}
 <div class="mk-page mk-hub mk-hub-pro ws-home ws-home--compact" id="wsHome">
@@ -222,12 +222,12 @@
 
     {# ─── Main workspace: priority queue → filing → secondary ─── #}
     <div class="mk-hub-main ws-home-workspace" data-tour="workspace-panels">
-        <aside class="ws-home-queue ws-home-queue--priority" aria-label="صف کار امروز">
+        <aside class="ws-home-queue ws-home-queue--priority" aria-label="کارهای امروز">
             <section class="ws-home-queue-card mk-hub-card ws-home-queue-card--split">
                 <div class="ws-home-split-col">
                     <header class="ws-home-queue-head">
                         <h3><i class="fas fa-list-check" aria-hidden="true"></i> پیگیری امروز</h3>
-                        <a href="{% url 'workspace:crm_today' %}" class="ws-home-queue-link">صف کار</a>
+                        <a href="{% url 'workspace:crm_today' %}" class="ws-home-queue-link">کارهای امروز</a>
                     </header>
                     <ul class="mk-hub-feed">
                         {% for c in due_contacts %}

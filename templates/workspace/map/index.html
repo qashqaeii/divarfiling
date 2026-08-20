@@ -24,7 +24,7 @@
 
             <div class="mk-map-head-main">
 
-                <a href="{% if map_back_url %}{{ map_back_url }}{% else %}{% url 'workspace:dataset_detail' dataset.id %}{% endif %}" class="mk-map-back" title="{% if is_multi_map %}بازگشت به آگهی‌ها{% else %}بازگشت به فایل{% endif %}">
+                <a href="{% if map_back_url %}{{ map_back_url }}{% else %}{% url 'workspace:dataset_detail' dataset.id %}{% endif %}" class="mk-map-back" title="{% if is_multi_map %}بازگشت به آگهی‌های دیوار{% else %}بازگشت به پوشه استخراج{% endif %}">
 
                     <i class="fas fa-arrow-right" aria-hidden="true"></i>
 
@@ -616,7 +616,7 @@
 
             <p class="ws-empty-desc">آگهی‌های این فایل فیلد عرض/طول جغرافیایی ندارند.</p>
 
-            <a href="{% url 'workspace:dataset_detail' dataset.id %}" class="ws-btn ws-btn-sm ws-btn-ghost">بازگشت به فایل</a>
+            <a href="{% url 'workspace:dataset_detail' dataset.id %}" class="ws-btn ws-btn-sm ws-btn-ghost">بازگشت به پوشه استخراج</a>
 
         </div>
 

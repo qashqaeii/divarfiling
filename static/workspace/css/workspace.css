@@ -241,6 +241,49 @@ body.ws-body::before {
     color: var(--ws-sidebar-section);
 }
 
+.ws-nav-item--sub {
+    padding-right: .85rem;
+}
+
+.ws-nav-more {
+    margin: .25rem 0 0;
+    border: none;
+    flex-shrink: 0;
+}
+
+.ws-nav-more-summary {
+    display: flex;
+    align-items: center;
+    gap: .55rem;
+    width: 100%;
+    padding: .38rem .55rem;
+    color: var(--ws-sidebar-section);
+    font-size: .72rem;
+    font-weight: 600;
+    cursor: pointer;
+    list-style: none;
+    border-radius: var(--ws-radius-xs);
+    font-family: inherit;
+}
+
+.ws-nav-more-summary::-webkit-details-marker {
+    display: none;
+}
+
+.ws-nav-more-summary:hover {
+    background: var(--ws-sidebar-hover);
+    color: var(--ws-sidebar-text-hover);
+}
+
+.ws-nav-more[open] > .ws-nav-more-summary {
+    color: var(--ws-sidebar-text-active);
+}
+
+.ws-nav-more-body {
+    display: flex;
+    flex-direction: column;
+}
+
 .ws-nav-item, .ws-nav-btn {
     display: flex; align-items: center; gap: .55rem;
     width: 100%; padding: .38rem .55rem;

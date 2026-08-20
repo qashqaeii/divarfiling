@@ -21,7 +21,7 @@ window.wsOnboardingConfig = {
             openSidebar: true,
             scrollSidebar: true,
             title: "منوی کناری میزکار",
-            desc: "قلب ناوبری میزکار همین‌جاست — سه بخش «میزکار»، «مدیریت مشتری» و «ابزارها». در مراحل بعد، هر مورد را جداگانه معرفی می‌کنیم."
+            desc: "ناوبری اصلی: میزکار، فایلینگ، مدیریت مشتری (CRM) و آژانس. قابلیت‌های کم‌کاربرد مثل یادآور، قالب، ابزار و پشتیبانی در «بیشتر» هستند."
         },
         {
             target: "[data-tour='nav-overview']",
@@ -30,7 +30,7 @@ window.wsOnboardingConfig = {
             placement: "left",
             openSidebar: true,
             scrollSidebar: true,
-            title: "نمای کلی",
+            title: "میزکار",
             desc: "صفحهٔ اصلی میزکار — خلاصهٔ وضعیت روز، شاخص‌های کلیدی، عملیات سریع و بینش‌های تحلیلی در یک نگاه."
         },
         {
@@ -40,8 +40,8 @@ window.wsOnboardingConfig = {
             placement: "left",
             openSidebar: true,
             scrollSidebar: true,
-            title: "فایلینگ دیوار",
-            desc: "{% if has_bot_license %}مدیریت دیتاست‌ها و آگهی‌های استخراج‌شده از دیوار — جستجو، فیلتر، خروجی و تحلیل فایلینگ حرفه‌ای.{% else %}با خرید ربات استخراج، آگهی‌های دیوار را خودکار جمع‌آوری و در فایلینگ اختصاصی مدیریت کنید. آیکون قفل یعنی نیاز به ارتقا دارید.{% endif %}"
+            title: "فایلینگ",
+            desc: "{% if has_bot_license %}مدیریت پوشه‌های استخراج و آگهی‌های دیوار — جستجو، فیلتر، خروجی و تحلیل.{% else %}با خرید ربات استخراج، آگهی‌های دیوار را جمع‌آوری و در فایلینگ مدیریت کنید. آیکون قفل یعنی نیاز به ارتقا دارید.{% endif %}"
         },
         {
             target: "[data-tour='nav-crm']",
@@ -50,8 +50,8 @@ window.wsOnboardingConfig = {
             placement: "left",
             openSidebar: true,
             scrollSidebar: true,
-            title: "داشبورد CRM",
-            desc: "نمای یکپارچهٔ قیف فروش، فعالیت تیم و KPIهای مشتری — تصویر کلی از وضعیت کسب‌وکار مشاور املاک شما."
+            title: "نمای مدیریت مشتری",
+            desc: "نمای یکپارچهٔ قیف فروش و شاخص‌های مخاطبین — از بخش بیشتر در دسترس است. کار روزانه از «کارهای امروز» و «مخاطبین» شروع می‌شود."
         },
         {
             target: "[data-tour='nav-today']",
@@ -60,8 +60,8 @@ window.wsOnboardingConfig = {
             placement: "left",
             openSidebar: true,
             scrollSidebar: true,
-            title: "صف کار امروز",
-            desc: "لیست اولویت‌دار پیگیری‌ها، تماس‌ها و کارهای امروز — هر روز از همین‌جا شروع کنید تا هیچ مشتری از قلم نیفتد."
+            title: "کارهای امروز",
+            desc: "لیست اولویت‌دار پیگیری‌ها، تماس‌ها و یادآورها — هر روز از همین‌جا شروع کنید تا هیچ مخاطبی از قلم نیفتد."
         },
         {
             target: "[data-tour='nav-contacts']",
@@ -91,7 +91,7 @@ window.wsOnboardingConfig = {
             openSidebar: true,
             scrollSidebar: true,
             title: "فایل‌های شخصی",
-            desc: "آرشیو ملک‌های شما مستقل از دیوار — فایل‌های اختصاصی آژانس با جزئیات، تصاویر و وضعیت انتشار."
+            desc: "آرشیو ملک‌های شما مستقل از دیوار — هر رکورد یک ملک است، با جزئیات، تصاویر و وضعیت انتشار."
         },
         {
             target: "[data-tour='nav-reminders']",
@@ -140,10 +140,9 @@ window.wsOnboardingConfig = {
             placement: "left",
             openSidebar: true,
             scrollSidebar: true,
-            title: "تیم",
+            title: "آژانس",
             desc: "همکاری و تخصیص کار بین اعضای آژانس — نقش‌ها، دسترسی‌ها و پیگیری مشترک روی مخاطبین و معاملات."
         },
-        {% comment %}مقایسه — موقتاً مخفی از سایدبار{% endcomment %}
         {
             target: "[data-tour='nav-tools']",
             icon: "fa-wand-magic-sparkles",

@@ -11,6 +11,39 @@ from workspace.services.jalali_input import format_jalali_today_label
 from workspace.services.support_tickets import get_user_ticket_stats
 from workspace.crm_views import _crm_nav_counts
 
+_WS_NAV_MORE_URL_NAMES = frozenset({
+    'crm_dashboard',
+    'crm_reminders',
+    'crm_templates',
+    'crm_automation',
+    'tools',
+    'compare',
+    'docs_api',
+    'upgrade',
+    'help',
+    'support_list',
+    'support_create',
+    'support_detail',
+})
+
+
+def _ws_nav_flags(request, has_agency_membership):
+    match = getattr(request, 'resolver_match', None)
+    url_name = getattr(match, 'url_name', '') or ''
+    path = request.path or ''
+    more_open = (
+        url_name in _WS_NAV_MORE_URL_NAMES
+        or path.startswith('/workspace/academy')
+        or path.startswith('/workspace/product')
+        or path.startswith('/workspace/support')
+        or path.startswith('/workspace/ai')
+        or (url_name == 'crm_team' and not has_agency_membership)
+    )
+    return {
+        'ws_show_agency_nav': has_agency_membership,
+        'ws_nav_more_open': more_open,
+    }
+
 
 def workspace_context(request):
     ctx = {'today_jalali': format_jalali_today_label()}
@@ -55,4 +88,11 @@ def workspace_context(request):
         })
         if access['has_bot_license']:
             ctx['ws_upload_form'] = DatasetUploadForm()
+        has_agency_membership = False
+        try:
+            from workspace.services.crm_scope import get_membership
+            has_agency_membership = get_membership(user) is not None
+        except Exception:
+            has_agency_membership = False
+        ctx.update(_ws_nav_flags(request, has_agency_membership))
     return ctx

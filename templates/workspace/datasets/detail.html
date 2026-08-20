@@ -314,13 +314,13 @@
     <div class="ws-modal-overlay" data-modal-close></div>
     <div class="ws-modal-panel ws-modal-panel-sm">
         <div class="ws-modal-head">
-            <h2 class="ws-modal-title">تغییر نام فایل</h2>
+            <h2 class="ws-modal-title">تغییر نام پوشه استخراج</h2>
             <button type="button" class="ws-modal-close" data-modal-close><i class="fas fa-times" aria-hidden="true"></i></button>
         </div>
         <form method="post" action="{% url 'workspace:dataset_rename' dataset.id %}" class="ws-modal-body">
             {% csrf_token %}
             <div class="ws-field">
-                <label class="ws-label">نام مجموعه‌داده</label>
+                <label class="ws-label">نام پوشه استخراج</label>
                 <input type="text" name="name" class="ws-input" value="{{ dataset.name }}" required>
             </div>
             <div class="ws-modal-foot">
@@ -344,7 +344,7 @@
         <form method="post" action="{% url 'workspace:dataset_delete_consultants' dataset.id %}" class="ws-modal-body">
             {% csrf_token %}
             <p class="ws-modal-text">
-                <strong>{{ consultant_count|intcomma }}</strong> آگهی مشاور از این فایل حذف می‌شود.
+                <strong>{{ consultant_count|intcomma }}</strong> آگهی مشاور از این پوشه استخراج حذف می‌شود.
                 این عمل قابل بازگشت نیست.
             </p>
             <div class="ws-modal-foot">

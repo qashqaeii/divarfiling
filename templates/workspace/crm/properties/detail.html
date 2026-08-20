@@ -457,7 +457,7 @@
                 {% if can_suggest_contacts %}
                 <button type="button" class="crm-tab crm-tab-pro" data-tab="suggest-contacts" role="tab" aria-selected="false">
                     <span class="crm-prop-seg__ico" aria-hidden="true"><i class="fas fa-wand-magic-sparkles"></i></span>
-                    <span class="crm-prop-seg__txt"><span class="crm-prop-seg__full">پیشنهاد مخاطب</span><span class="crm-prop-seg__short">پیشنهاد</span></span>
+                    <span class="crm-prop-seg__txt"><span class="crm-prop-seg__full">مخاطب‌های پیشنهادی</span><span class="crm-prop-seg__short">پیشنهاد</span></span>
                     {% if contact_match_data.total_count %}<em>{{ contact_match_data.total_count }}</em>{% endif %}
                 </button>
                 {% endif %}
@@ -576,7 +576,7 @@
             {% if can_suggest_contacts %}
             <div data-panel="suggest-contacts" class="crm-prop-panel crm-prop-panel-pro" hidden role="tabpanel">
                 <header class="crm-prop-panel-head">
-                    <div><h2>پیشنهاد مخاطب</h2><p>تطبیق هوشمند بر اساس ترجیحات و نوع مشتری</p></div>
+                    <div><h2>مخاطب‌های پیشنهادی</h2><p>تطبیق هوشمند بر اساس ترجیحات و نوع مخاطب</p></div>
                 </header>
                 <div class="crm-prop-panel-body">
                     {% include 'workspace/crm/includes/contact_matches_panel.html' %}

@@ -1,7 +1,8 @@
 {% extends 'workspace/crm/base_crm.html' %}
 {% load static workspace_tags crm_tags %}
 
-{% block page_title %}{% endblock %}
+{% block page_title %}مدیریت مشتری (CRM){% endblock %}
+{% block mobile_bar_title %}مدیریت مشتری{% endblock %}
 {% block crm_title %}{% endblock %}
 {% block crm_desc %}{% endblock %}
 {% block crm_search %}{% endblock %}
@@ -20,7 +21,7 @@
 
     <header class="crm-dash-bar">
         <div class="crm-dash-bar-main">
-            <h1 class="crm-dash-bar-title">داشبورد CRM</h1>
+            <h1 class="crm-dash-bar-title">مدیریت مشتری (CRM)</h1>
             <p class="crm-dash-bar-sub is-visible">
                 {% if today_jalali %}<span>{{ today_jalali }}</span>{% endif %}
                 {% if stats.due_today %}
@@ -32,10 +33,10 @@
             </p>
         </div>
         <div class="crm-dash-bar-actions" role="toolbar" aria-label="عملیات سریع">
-            <a href="{% url 'workspace:crm_today' %}" class="crm-dash-act crm-dash-act--icon crm-dash-act--today{% if today_count %} crm-dash-act--pulse{% endif %}" title="صف کار امروز" aria-label="صف کار امروز{% if today_count %} ({{ today_count }}){% endif %}">
+            <a href="{% url 'workspace:crm_today' %}" class="crm-dash-act crm-dash-act--icon crm-dash-act--today{% if today_count %} crm-dash-act--pulse{% endif %}" title="کارهای امروز" aria-label="کارهای امروز{% if today_count %} ({{ today_count }}){% endif %}">
                 <i class="fas fa-list-check" aria-hidden="true"></i>
             </a>
-            <button type="button" class="crm-dash-act crm-dash-act--icon crm-dash-act--lead" data-drawer-open="drawer-quick-lead" title="سرنخ سریع" aria-label="سرنخ سریع">
+            <button type="button" class="crm-dash-act crm-dash-act--icon crm-dash-act--lead" data-drawer-open="drawer-quick-lead" title="مخاطب سریع" aria-label="مخاطب سریع">
                 <i class="fas fa-bolt" aria-hidden="true"></i>
             </button>
             <a href="{% url 'workspace:crm_contacts' %}?open=drawer-contact" class="crm-dash-act crm-dash-act--icon crm-dash-act--primary" title="مخاطب جدید" aria-label="مخاطب جدید">
@@ -139,7 +140,7 @@
         <section class="crm-cell crm-cell--today crm-cell--priority">
             <header class="crm-cell-head">
                 <h2><i class="fas fa-list-check" aria-hidden="true"></i> پیگیری امروز</h2>
-                <a href="{% url 'workspace:crm_today' %}" class="crm-cell-link">صف کار</a>
+                <a href="{% url 'workspace:crm_today' %}" class="crm-cell-link">کارهای امروز</a>
             </header>
             <ul class="crm-feed-v2">
                 {% for c in due_contacts %}

@@ -1,7 +1,7 @@
 {% extends 'workspace/crm/base_crm.html' %}
 {% load static workspace_tags crm_tags %}
 
-{% block page_title %}کارهای امروز — CRM{% endblock %}
+{% block page_title %}کارهای امروز{% endblock %}
 {% block mobile_bar_title %}کارهای امروز{% endblock %}
 {% block crm_title %}{% endblock %}
 {% block crm_desc %}{% endblock %}
@@ -30,9 +30,9 @@
                 {% endif %}
             </p>
         </div>
-        <div class="crm-dash-bar-actions" role="toolbar" aria-label="عملیات صف">
+        <div class="crm-dash-bar-actions" role="toolbar" aria-label="عملیات کارهای امروز">
             <button type="button" class="crm-dash-act crm-dash-act--primary" data-drawer-open="drawer-quick-lead">
-                <i class="fas fa-bolt" aria-hidden="true"></i><span>سرنخ</span>
+                <i class="fas fa-bolt" aria-hidden="true"></i><span>مخاطب سریع</span>
             </button>
             <a href="{% url 'workspace:crm_contacts' %}" class="crm-dash-act" title="مخاطبین">
                 <i class="fas fa-users" aria-hidden="true"></i><span>مخاطبین</span>
@@ -43,7 +43,7 @@
         </div>
     </header>
 
-    <section class="crm-dash-kpis crm-today-kpis" aria-label="آمار صف">
+    <section class="crm-dash-kpis crm-today-kpis" aria-label="آمار کارهای امروز">
         <a href="#col-overdue" class="crm-dash-kpi crm-dash-kpi--warn" data-today-jump="overdue">
             <span class="crm-dash-kpi-val">{{ queue_stats.overdue }}</span>
             <span class="crm-dash-kpi-meta"><span class="crm-dash-kpi-lbl">معوق</span></span>
@@ -63,7 +63,7 @@
     </section>
 
     {% if queue_items %}
-    <div class="crm-today-tabs" role="tablist" aria-label="ستون‌های صف کار">
+    <div class="crm-today-tabs" role="tablist" aria-label="ستون‌های کارهای امروز">
         <button type="button" class="crm-today-tab{% if queue_stats.overdue %} is-active is-warn{% endif %}" role="tab" id="tab-overdue" aria-selected="{% if queue_stats.overdue %}true{% else %}false{% endif %}" aria-controls="panel-overdue" data-today-tab="overdue">
             <i class="fas fa-clock" aria-hidden="true"></i>
             <span>معوق</span>
@@ -125,12 +125,12 @@
     </div>
 
     {% else %}
-    {% include 'workspace/crm/includes/list_empty_state.html' with tone='success' decor='list_todo' title='صف کار خالی است' desc='همه پیگیری‌ها و یادآورها انجام شده‌اند. وقت خوبی برای ثبت سرنخ جدید است.' btn_text='ثبت سرنخ جدید' btn_icon='fa-plus' btn_drawer='drawer-quick-lead' extra_class='crm-today-empty' %}
+    {% include 'workspace/crm/includes/list_empty_state.html' with tone='success' decor='list_todo' title='کارهای امروز خالی است' desc='همه پیگیری‌ها و یادآورها انجام شده‌اند. مخاطب جدید ثبت کنید یا برای مخاطب فعلی پیگیری بگذارید.' btn_text='ثبت مخاطب جدید' btn_icon='fa-plus' btn_drawer='drawer-quick-lead' extra_class='crm-today-empty' %}
     {% endif %}
 
-    <button type="button" class="crm-today-fab" data-drawer-open="drawer-quick-lead" aria-label="ثبت سرنخ جدید">
+    <button type="button" class="crm-today-fab" data-drawer-open="drawer-quick-lead" aria-label="ثبت مخاطب جدید">
         <i class="fas fa-bolt" aria-hidden="true"></i>
-        <span>سرنخ</span>
+        <span>مخاطب</span>
     </button>
 </div>
 {% endblock %}

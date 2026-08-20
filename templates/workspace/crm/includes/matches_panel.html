@@ -9,13 +9,13 @@
             <h3>پیشنهاد دوگانه برای سازنده <span class="crm-matches-tolerance-badge" data-crm-match-tolerance-badge>· تلورانس {{ match_data.matching_tolerance_percent|default:20 }}٪</span></h3>
             <p>تأمین پروژه (خرید زمین/کلنگی) و بازار آپارتمان (فروش واحد) — در دو بخش جدا</p>
             {% else %}
-            <h3>پیشنهاد ملک بر اساس پروفایل مخاطب <span class="crm-matches-tolerance-badge" data-crm-match-tolerance-badge>· تلورانس {{ match_data.matching_tolerance_percent|default:20 }}٪</span></h3>
+            <h3>فایل‌های پیشنهادی بر اساس پروفایل مخاطب <span class="crm-matches-tolerance-badge" data-crm-match-tolerance-badge>· تلورانس {{ match_data.matching_tolerance_percent|default:20 }}٪</span></h3>
             <p>بودجه، محله، متراژ و نوع معامله — در فایلینگ فقط آگهی مالک واقعی (بدون مشاور پنهان)</p>
             {% endif %}
             {% if match_data.eligible %}
             <div class="crm-matches-hero-stats">
                 <span class="crm-matches-hero-stat"><strong>{{ match_data.crm_matches|length }}</strong> فایل شخصی</span>
-                <span class="crm-matches-hero-stat"><strong>{{ match_data.divar_matches|length }}</strong> فایلینگ دیوار</span>
+                <span class="crm-matches-hero-stat"><strong>{{ match_data.divar_matches|length }}</strong> آگهی دیوار</span>
                 <span class="crm-matches-hero-stat crm-matches-hero-stat--total"><strong>{% crm_match_tab_count match_data %}</strong> پیشنهاد فعال</span>
             </div>
             {% endif %}
@@ -33,7 +33,7 @@
     <div class="mk-notice mk-notice--success mk-notice--inline mk-notice--compact" role="status">
         <span class="mk-notice__icon" aria-hidden="true"><i class="fas fa-circle-check"></i></span>
         <div class="mk-notice__body">
-            <span class="mk-notice__text">پیشنهادها ثبت شد — برای مشاهده پرونده به تب <button type="button" class="crm-matches-toast-link" data-tab-jump="properties">املاک</button> بروید.</span>
+            <span class="mk-notice__text">پیشنهادها ثبت شد — برای مشاهده پرونده به تب <button type="button" class="crm-matches-toast-link" data-tab-jump="properties">فایل‌های شخصی</button> بروید.</span>
         </div>
     </div>
     {% endif %}

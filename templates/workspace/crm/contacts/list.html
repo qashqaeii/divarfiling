@@ -1,7 +1,7 @@
 {% extends 'workspace/crm/base_crm.html' %}
 {% load workspace_tags crm_tags %}
 
-{% block page_title %}CRM — مخاطبین{% endblock %}
+{% block page_title %}مخاطبین{% endblock %}
 {% block mobile_bar_title %}مخاطبین{% endblock %}
 {% block crm_title %}{% endblock %}
 {% block crm_desc %}{% endblock %}
@@ -30,7 +30,7 @@
                 </summary>
                 <div class="crm-contacts-mob-toolbar-panel" role="menu">
                     <button type="button" class="crm-contacts-mob-toolbar-item" role="menuitem" data-drawer-open="drawer-quick-lead">
-                        <i class="fas fa-bolt" aria-hidden="true"></i><span>سرنخ سریع</span>
+                        <i class="fas fa-bolt" aria-hidden="true"></i><span>مخاطب سریع</span>
                     </button>
                     <button type="button" class="crm-contacts-mob-toolbar-item" role="menuitem" data-drawer-open="drawer-import">
                         <i class="fas fa-file-import" aria-hidden="true"></i><span>ورود فایل</span>
@@ -61,7 +61,7 @@
                 <i class="fas fa-file-excel" aria-hidden="true"></i>
             </a>
             <button type="button" class="crm-dash-act" data-drawer-open="drawer-quick-lead">
-                <i class="fas fa-bolt" aria-hidden="true"></i><span>سرنخ</span>
+                <i class="fas fa-bolt" aria-hidden="true"></i><span>مخاطب سریع</span>
             </button>
             <button type="button" class="crm-dash-act crm-dash-act--primary" data-drawer-open="drawer-contact">
                 <i class="fas fa-user-plus" aria-hidden="true"></i><span>مخاطب</span>
@@ -296,7 +296,7 @@
                                                 </a>
                                                 {% if c.customer_type in match_eligible_types %}
                                                 <a href="{% url 'workspace:crm_detail' c.id %}?tab=matches" class="crm-contacts-mob-row-more-item" role="menuitem">
-                                                    <i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i><span>پیشنهاد ملک</span>
+                                                    <i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i><span>فایل‌های پیشنهادی</span>
                                                 </a>
                                                 {% endif %}
                                                 {% if c.phone %}
@@ -364,7 +364,7 @@
                                 </div>
                                 <div class="crm-contacts-row-actions crm-contacts-desk-actions">
                                     {% if c.customer_type in match_eligible_types %}
-                                    <a href="{% url 'workspace:crm_detail' c.id %}?tab=matches" class="crm-contacts-row-act crm-contacts-row-act--match" title="پیشنهاد ملک"><i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i></a>
+                                    <a href="{% url 'workspace:crm_detail' c.id %}?tab=matches" class="crm-contacts-row-act crm-contacts-row-act--match" title="فایل‌های پیشنهادی"><i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i></a>
                                     {% endif %}
                                     <a href="{% url 'workspace:crm_detail' c.id %}" class="crm-contacts-row-act" title="پروفایل"><i class="fas fa-arrow-left" aria-hidden="true"></i></a>
                                     {% if c.phone %}<a href="tel:{{ c.phone }}" class="crm-contacts-row-act" title="تماس"><i class="fas fa-phone" aria-hidden="true"></i></a>{% endif %}
@@ -377,7 +377,7 @@
                                 {% if stats.total %}
                                 {% include 'workspace/crm/includes/list_empty_state.html' with tone='muted' compact=1 decor='users' title='مخاطبی با این فیلتر نیست' desc='فیلتر یا جستجو را تغییر دهید، یا مخاطب جدید ثبت کنید.' btn_text='ثبت مخاطب' btn_icon='fa-user-plus' btn_drawer='drawer-contact' extra_class='crm-empty-state--inline' %}
                                 {% else %}
-                                {% include 'workspace/crm/includes/list_empty_state.html' with compact=1 decor='users' title='مخاطبی ثبت نشده' desc='اولین مخاطب یا سرنخ خود را ثبت کنید و پیگیری حرفه‌ای را از همین‌جا شروع کنید.' btn_text='ثبت اولین مخاطب' btn_icon='fa-user-plus' btn_drawer='drawer-contact' extra_class='crm-empty-state--inline' %}
+                                {% include 'workspace/crm/includes/list_empty_state.html' with compact=1 decor='users' title='مخاطبی ثبت نشده' desc='اولین مخاطب خود را ثبت کنید و پیگیری حرفه‌ای را از همین‌جا شروع کنید.' btn_text='ثبت اولین مخاطب' btn_icon='fa-user-plus' btn_drawer='drawer-contact' extra_class='crm-empty-state--inline' %}
                                 {% endif %}
                             </td>
                         </tr>

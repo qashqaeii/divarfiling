@@ -26,7 +26,7 @@
         </div>
     </td>
     {% if show_dataset_column %}
-    <td class="mk-col-dataset" data-label="فایل">
+    <td class="mk-col-dataset" data-label="پوشه استخراج">
         <a href="{% url 'workspace:dataset_detail' listing.dataset_id %}" class="mk-dataset-pill" title="{{ listing.dataset.name }}">{{ listing.dataset.name|truncatechars:18 }}</a>
     </td>
     {% endif %}

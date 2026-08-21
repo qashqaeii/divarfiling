@@ -85,55 +85,60 @@ def contact_detail_payload(user, contact_id: int, *, request=None) -> Optional[d
     )
 
 
+def _field_present(data: Dict[str, Any], key: str) -> bool:
+    """JSON null یعنی بدون تغییر؛ کلید غایب هم بدون تغییر."""
+    return key in data and data.get(key) is not None
+
+
 def update_contact(user, contact_id: int, data: Dict[str, Any]) -> Optional[Customer]:
     c = get_contact(user, contact_id)
     if not c:
         return None
-    if 'full_name' in data or 'name' in data:
+    if _field_present(data, 'full_name') or _field_present(data, 'name'):
         c.name = (data.get('full_name') or data.get('name') or c.name).strip()
-    if 'phone' in data:
+    if _field_present(data, 'phone'):
         phone = normalize_phone(data['phone'])
         if phone:
             c.phone = phone
-    if 'status' in data and data['status']:
+    if _field_present(data, 'status') and data['status']:
         c.status = data['status']
-    if 'customer_type' in data and data['customer_type']:
+    if _field_present(data, 'customer_type') and data['customer_type']:
         c.customer_type = data['customer_type']
-    if 'priority' in data and data['priority']:
+    if _field_present(data, 'priority') and data['priority']:
         c.priority = data['priority']
-    if 'notes' in data:
+    if _field_present(data, 'notes'):
         c.notes = data['notes'] or ''
-    if 'property_type' in data:
+    if _field_present(data, 'property_type'):
         c.property_type = (data['property_type'] or '').strip()
-    if 'rooms' in data:
+    if _field_present(data, 'rooms'):
         c.rooms = (data['rooms'] or '').strip()
-    if 'areas' in data:
+    if _field_present(data, 'areas'):
         c.areas = (data['areas'] or '').strip()
     for field in ('budget_min', 'budget_max', 'deposit_min', 'deposit_max', 'rent_min', 'rent_max',
                   'builder_buy_budget_min', 'builder_buy_budget_max'):
-        if field in data:
+        if _field_present(data, field):
             setattr(c, field, _optional_bigint(data[field]))
-    if 'builder_buy_property_types' in data:
+    if _field_present(data, 'builder_buy_property_types'):
         raw = data['builder_buy_property_types']
         if isinstance(raw, list):
             c.builder_buy_property_types = ', '.join(str(x).strip() for x in raw if str(x).strip())
         else:
             c.builder_buy_property_types = (raw or '').strip()
-    if 'builder_buy_types' in data:
+    if _field_present(data, 'builder_buy_types'):
         raw = data['builder_buy_types']
         if isinstance(raw, list):
             c.builder_buy_property_types = ', '.join(str(x).strip() for x in raw if str(x).strip())
         else:
             c.builder_buy_property_types = (raw or '').strip()
-    if 'builder_buy_areas' in data:
+    if _field_present(data, 'builder_buy_areas'):
         c.builder_buy_areas = (data['builder_buy_areas'] or '').strip()
     for field in ('builder_buy_min_area', 'builder_buy_max_area'):
-        if field in data:
+        if _field_present(data, field):
             setattr(c, field, _optional_int(data[field]))
-    if 'budget' in data and 'budget_max' not in data:
+    if _field_present(data, 'budget') and not _field_present(data, 'budget_max'):
         c.budget_max = _optional_bigint(data['budget'])
     for field in ('min_area', 'max_area'):
-        if field in data:
+        if _field_present(data, field):
             setattr(c, field, _optional_int(data[field]))
     if 'social_links' in data and isinstance(data['social_links'], dict):
         from workspace.services.public_share_common import normalize_social_links
@@ -145,6 +150,19 @@ def update_contact(user, contact_id: int, data: Dict[str, Any]) -> Optional[Cust
             social_links=c.social_links,
             phone=c.phone or '',
         )
+    if 'city' in data and data['city'] is not None:
+        c.city = (data.get('city') or '').strip()
+    if 'district' in data and data['district'] is not None:
+        c.district = (data.get('district') or '').strip()
+    if 'phone_alt' in data and data['phone_alt'] is not None:
+        alt = normalize_phone(data.get('phone_alt') or '')
+        c.phone_alt = alt
+    for field in ('rooms_min', 'rooms_max', 'year_min', 'year_max', 'floor_min', 'floor_max'):
+        if field in data and data[field] is not None:
+            setattr(c, field, _optional_int(data[field]))
+    for bool_field in ('want_parking', 'want_storage', 'want_elevator'):
+        if bool_field in data and data[bool_field] is not None:
+            setattr(c, bool_field, bool(data.get(bool_field)))
     c.save()
     return c
 

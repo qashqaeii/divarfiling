@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block title %}بازگشت به اپ — فایلینگ دیوار{% endblock %}
+{% block body_class %}mk-pub-page{% endblock %}
+
+{% block extra_head %}
+<meta http-equiv="refresh" content="2;url={{ deep_link }}">
+{% endblock %}
+
+{% block content %}
+<div class="mk-pub-wrap">
+    <div class="container mk-pub-result">
+        <div class="mk-pub-result-card">
+            <h1>{{ headline }}</h1>
+            <p class="mk-pub-result-msg">{{ message }}</p>
+            <div class="mk-pub-result-actions">
+                <a href="{{ deep_link }}" class="btn btn-primary">بازگشت به اپ</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

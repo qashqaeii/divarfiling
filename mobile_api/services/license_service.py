@@ -60,14 +60,26 @@ def license_status_payload(user) -> Dict[str, Any]:
         end_date = timezone.localtime(lic.expires_at).date()
         today = timezone.localtime(timezone.now()).date()
         days_remaining = max(0, (end_date - today).days)
-    return {
+    payload = {
         'valid': p['valid'],
         'plan': p.get('plan'),
         'features': p.get('features'),
         'expires_at': p.get('expires_at'),
         'days_remaining': days_remaining,
         'expiring_soon': days_remaining is not None and days_remaining <= 7,
+        'license_id': lic.pk if lic else None,
+        'status': 'active' if p['valid'] else ('expired' if lic else 'none'),
+        'can_renew': False,
     }
+    if lic:
+        try:
+            from licenses.services.renewal import evaluate_license_renewal
+
+            ok, _msg = evaluate_license_renewal(lic)
+            payload['can_renew'] = bool(ok)
+        except Exception:
+            payload['can_renew'] = False
+    return payload
 
 
 def require_bot_license(user) -> Optional[str]:

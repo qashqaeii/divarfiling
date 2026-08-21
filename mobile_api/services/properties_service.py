@@ -288,26 +288,31 @@ def update_property_from_mobile(user, property_id: int, data: Dict[str, Any]) ->
         'business_type': 'business_type',
     }
     for api_key, model_field in simple_fields.items():
-        if api_key in data:
-            setattr(prop, model_field, data.get(api_key) or '')
-    if 'owner_phone' in data and 'phone' not in data:
+        if api_key not in data or data.get(api_key) is None:
+            continue
+        setattr(prop, model_field, data.get(api_key) or '')
+    if 'owner_phone' in data and data.get('owner_phone') is not None and 'phone' not in data:
         prop.phone = (data.get('owner_phone') or '')[:20]
 
-    if 'area' in data:
+    if 'area' in data and data.get('area') is not None:
         prop.area = _parse_float(data.get('area'))
-    if 'sale_price' in data:
+    if 'sale_price' in data and data.get('sale_price') is not None:
         prop.sale_price = _parse_int(data.get('sale_price'))
-    if 'deposit' in data:
+    if 'deposit' in data and data.get('deposit') is not None:
         prop.deposit = _parse_int(data.get('deposit'))
     if 'rent' in data or 'monthly_rent' in data:
-        prop.monthly_rent = _parse_int(data.get('rent', data.get('monthly_rent')))
-    if 'floor' in data:
+        rent_val = data.get('rent', data.get('monthly_rent'))
+        if rent_val is not None:
+            prop.monthly_rent = _parse_int(rent_val)
+    if 'floor' in data and data.get('floor') is not None:
         prop.floor = _parse_int(data.get('floor'))
-    if 'build_year' in data:
+    if 'build_year' in data and data.get('build_year') is not None:
         prop.build_year = _parse_int(data.get('build_year'))
-    for bool_field in ('has_parking', 'has_storage', 'has_elevator'):
-        if bool_field in data:
+    for bool_field in ('has_parking', 'has_storage', 'has_elevator', 'is_vacant'):
+        if bool_field in data and data.get(bool_field) is not None:
             setattr(prop, bool_field, bool(data.get(bool_field)))
+    if 'total_floors' in data and data.get('total_floors') is not None:
+        prop.total_floors = _parse_int(data.get('total_floors'))
     if 'publish_status' in data:
         prop.publish_status = (data.get('publish_status') or prop.publish_status)[:30]
 

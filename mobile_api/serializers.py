@@ -224,6 +224,7 @@ def user_to_dict(user) -> Dict[str, Any]:
         'full_name': full_name.strip() or str(user.phone or user.username),
         'phone': user.phone or '',
         'agency_name': agency_name,
+        'phone_verified': bool(getattr(user, 'phone_verified', False)),
     }
 
 
@@ -513,6 +514,7 @@ def property_to_dict(p: CRMProperty, *, detailed: bool = False, request=None) ->
             'has_parking': p.has_parking,
             'has_storage': p.has_storage,
             'has_elevator': p.has_elevator,
+            'is_vacant': p.is_vacant,
             'amenities': p.amenities or '',
             'notes': p.notes or '',
         })

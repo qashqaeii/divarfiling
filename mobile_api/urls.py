@@ -1,8 +1,7 @@
 """URLهای API موبایل — /api/mobile/v1/"""
 from django.urls import path
 
-from mobile_api import views
-from mobile_api import team_views
+from mobile_api import commerce_views, team_views, views
 
 app_name = 'mobile_api'
 
@@ -10,11 +9,21 @@ urlpatterns = [
     path('auth/login', views.LoginView.as_view(), name='login'),
     path('auth/refresh', views.RefreshView.as_view(), name='refresh'),
     path('auth/logout', views.LogoutView.as_view(), name='logout'),
+    path('auth/otp/request', commerce_views.OtpRequestView.as_view(), name='otp_request'),
+    path('auth/otp/resend', commerce_views.OtpResendView.as_view(), name='otp_resend'),
+    path('auth/otp/verify', commerce_views.OtpVerifyView.as_view(), name='otp_verify'),
+    path('auth/register', commerce_views.RegisterCompleteView.as_view(), name='register'),
+    path('auth/password-reset', commerce_views.PasswordResetCompleteView.as_view(), name='password_reset'),
+    path('auth/verify-phone/request', commerce_views.VerifyPhoneRequestView.as_view(), name='verify_phone_request'),
+    path('auth/verify-phone/verify', commerce_views.VerifyPhoneCompleteView.as_view(), name='verify_phone_verify'),
 
     path('devices/register', views.DeviceRegisterView.as_view(), name='device_register'),
     path('devices/me', views.DevicePatchView.as_view(), name='device_patch'),
 
     path('license/status', views.LicenseStatusView.as_view(), name='license_status'),
+    path('shop/plans', commerce_views.ShopPlansView.as_view(), name='shop_plans'),
+    path('shop/checkout', commerce_views.ShopCheckoutView.as_view(), name='shop_checkout'),
+    path('shop/orders/<uuid:order_id>', commerce_views.ShopOrderStatusView.as_view(), name='shop_order'),
 
     path('app/version', views.AppVersionView.as_view(), name='app_version'),
 

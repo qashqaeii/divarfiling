@@ -15,5 +15,6 @@ urlpatterns = [
     path('success/<uuid:order_id>/', payment_views.PaymentSuccessView.as_view(), name='success'),
     path('download/<uuid:order_id>/', payment_views.OrderDownloadView.as_view(), name='download'),
     path('failed/', payment_views.PaymentFailedView.as_view(), name='failed'),
+    path('app-return/<uuid:order_id>/', payment_views.PaymentAppReturnView.as_view(), name='app_return'),
 ]
 

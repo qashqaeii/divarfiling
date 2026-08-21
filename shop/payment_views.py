@@ -120,6 +120,16 @@ def _finalize_successful_payment(order: Order, transaction: Transaction, verify_
         logger.exception('plan funnel payment_success ensure failed for order %s', order.id)
 
 
+def _redirect_after_gateway(order: Order):
+    from shop.services.mobile_checkout import is_mobile_checkout
+
+    if is_mobile_checkout(order.id):
+        return redirect('payment:app_return', order_id=order.id)
+    if order.status == 'paid':
+        return redirect('payment:success', order_id=order.id)
+    return redirect('payment:failed')
+
+
 class PaymentCheckoutView(LoginRequiredMixin, View):
     """مرور نهایی سفارش قبل از انتقال به درگاه زیبال"""
 
@@ -376,7 +386,7 @@ class PaymentCallbackView(View):
         transaction.save(update_fields=['callback_payload'])
 
         if order.status == 'paid':
-            return redirect('payment:success', order_id=order.id)
+            return _redirect_after_gateway(order)
 
         if success_flag != '1' or gateway_status != '2':
             error_message = zibal_service.get_callback_status_message(gateway_status)
@@ -397,7 +407,7 @@ class PaymentCallbackView(View):
                 )
             except Exception:
                 logger.exception('plan funnel payment_failed failed for order %s', order.id)
-            return redirect('payment:failed')
+            return _redirect_after_gateway(order)
 
         expected_amount_rial = zibal_service.toman_to_rial(order.amount)
 
@@ -408,7 +418,7 @@ class PaymentCallbackView(View):
             )
         except zibal_service.ZibalConfigurationError:
             request.session['payment_error'] = 'خطا در پیکربندی درگاه پرداخت.'
-            return redirect('payment:failed')
+            return _redirect_after_gateway(order)
         except zibal_service.ZibalVerifyError as exc:
             transaction.status = 'failed'
             transaction.gateway_result_code = exc.result_code
@@ -426,16 +436,16 @@ class PaymentCallbackView(View):
                 )
             except Exception:
                 logger.exception('plan funnel payment_failed failed for order %s', order.id)
-            return redirect('payment:failed')
+            return _redirect_after_gateway(order)
         except Exception:
             logger.exception('Zibal verify failed for trackId %s', track_id)
             request.session['payment_error'] = 'خطا در تایید پرداخت. در صورت کسر وجه با پشتیبانی تماس بگیرید.'
-            return redirect('payment:failed')
+            return _redirect_after_gateway(order)
 
         _finalize_successful_payment(order, transaction, verify_result)
         request.session.pop('payment_error', None)
         request.session.pop('payment_failed_order_id', None)
-        return redirect('payment:success', order_id=order.id)
+        return _redirect_after_gateway(order)
 
 
 class PaymentSuccessView(LoginRequiredMixin, View):
@@ -504,3 +514,34 @@ class PaymentFailedView(TemplateView):
             except Order.DoesNotExist:
                 pass
         return ctx
+
+
+class PaymentAppReturnView(View):
+    """بازگشت از درگاه به اپ اندروید — بدون نیاز به نشست وب."""
+
+    template_name = 'shop/payment_app_return.html'
+
+    def get(self, request, order_id):
+        order = get_object_or_404(Order.objects.select_related('plan'), id=order_id)
+        from shop.services.mobile_checkout import is_mobile_checkout
+
+        if not is_mobile_checkout(order.id) and order.status not in ('paid', 'failed', 'pending', 'cancelled'):
+            return redirect('payment:failed')
+        deep_link = f'divarfiling://payment?order_id={order.id}'
+        status = order.status
+        if status == 'paid':
+            headline = 'پرداخت موفق بود'
+            message = 'لایسنس در حساب شما فعال شده است. به اپ بازگردید.'
+        elif status in ('failed', 'cancelled'):
+            headline = 'پرداخت انجام نشد'
+            message = request.session.get('payment_error') or 'پرداخت لغو شد یا ناموفق بود. می‌توانید دوباره تلاش کنید.'
+        else:
+            headline = 'در انتظار تأیید پرداخت'
+            message = 'اگر مبلغ کسر شده، چند لحظه صبر کنید و در اپ وضعیت را بررسی کنید.'
+        return render(request, self.template_name, {
+            'order': order,
+            'status': status,
+            'headline': headline,
+            'message': message,
+            'deep_link': deep_link,
+        })

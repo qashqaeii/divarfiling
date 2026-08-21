@@ -380,37 +380,18 @@ class OtpRegisterPasswordView(View):
         if not form.is_valid():
             return render(request, self.template_name, ctx)
 
-        if User.objects.filter(phone=phone).exists():
-            messages.error(request, 'این شماره قبلاً ثبت‌نام شده است.')
-            _clear_otp_session(request)
-            return redirect('login')
-
-        username = phone_username(phone)
-        base = username
-        n = 1
-        while User.objects.filter(username=username).exists():
-            username = f'{base}_{n}'
-            n += 1
-
-        user = User(
-            username=username,
-            phone=phone,
-            phone_verified=True,
-            phone_verified_at=timezone.now(),
-        )
-        user.set_password(form.cleaned_data['password1'])
-        user.save()
-        UserProfile.objects.get_or_create(user=user)
-
-        from affiliates.services import assign_referred_user, capture_referral_from_request
-        affiliate = capture_referral_from_request(request)
-        assign_referred_user(user, affiliate)
+        from accounts.services.account_completion import AccountCompletionError, create_user_from_verified_phone
 
         try:
-            from accounts.services.lead_attribution import attribute_signup
-            attribute_signup(user=user, request=request)
-        except Exception:
-            logger.exception('lead acquisition signup attribution failed')
+            user = create_user_from_verified_phone(
+                phone,
+                form.cleaned_data['password1'],
+                request=request,
+            )
+        except AccountCompletionError as exc:
+            messages.error(request, exc.message)
+            _clear_otp_session(request)
+            return redirect('login')
 
         login(request, user, backend='accounts.backends.PhoneAuthBackend')
         next_url = _safe_next(request)
@@ -706,14 +687,15 @@ class OtpPasswordResetPasswordView(View):
         if not form.is_valid():
             return render(request, self.template_name, ctx)
 
-        user = User.objects.filter(phone=phone, is_active=True).first()
-        if not user:
-            messages.error(request, 'حساب کاربری یافت نشد.')
+        from accounts.services.account_completion import AccountCompletionError, set_password_for_phone
+
+        try:
+            set_password_for_phone(phone, form.cleaned_data['password1'])
+        except AccountCompletionError as exc:
+            messages.error(request, exc.message)
             _clear_otp_session(request)
             return redirect('password_reset')
 
-        user.set_password(form.cleaned_data['password1'])
-        user.save(update_fields=['password'])
         _clear_otp_session(request)
         messages.success(request, 'رمز عبور شما با موفقیت تغییر کرد. اکنون می‌توانید وارد شوید.')
         return redirect('login')

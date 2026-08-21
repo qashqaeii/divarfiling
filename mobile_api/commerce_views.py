@@ -22,6 +22,8 @@ from mobile_api.services.shop_checkout_service import (
     create_checkout,
     list_mobile_plans,
     order_status_payload,
+    preview_plan_discount,
+    verify_mobile_order,
 )
 from mobile_api.throttles import MobileLoginThrottle, MobileUserThrottle
 from mobile_api.views import _parse_body, _tokens_for_user
@@ -178,14 +180,41 @@ class ShopCheckoutView(APIView):
         except (TypeError, ValueError):
             return api_error('پلن را انتخاب کنید.', code='VALIDATION_ERROR')
         renew_id = data.get('renew_license_id') or data.get('license_id')
+        discount_code = data.get('discount_code') or data.get('coupon') or ''
         try:
             payload = create_checkout(
                 request.user,
                 plan_id=plan_id,
                 renew_license_id=int(renew_id) if renew_id else None,
+                discount_code=str(discount_code).strip() or None,
                 request=request,
             )
             return api_ok(payload)
+        except MobileShopError as exc:
+            return _shop_error(exc)
+
+
+class ShopDiscountPreviewView(APIView):
+    permission_classes = [IsAuthenticated]
+    throttle_classes = [MobileUserThrottle]
+
+    def post(self, request):
+        data = _parse_body(request)
+        plan_id = data.get('plan_id')
+        try:
+            plan_id = int(plan_id)
+        except (TypeError, ValueError):
+            return api_error('پلن را انتخاب کنید.', code='VALIDATION_ERROR')
+        code = (data.get('discount_code') or data.get('coupon') or '').strip()
+        if not code:
+            return api_error('کد تخفیف را وارد کنید.', code='VALIDATION_ERROR')
+        try:
+            return api_ok(preview_plan_discount(
+                request.user,
+                plan_id=plan_id,
+                discount_code=code,
+                request=request,
+            ))
         except MobileShopError as exc:
             return _shop_error(exc)
 
@@ -197,5 +226,11 @@ class ShopOrderStatusView(APIView):
     def get(self, request, order_id):
         try:
             return api_ok(order_status_payload(request.user, order_id))
+        except MobileShopError as exc:
+            return _shop_error(exc)
+
+    def post(self, request, order_id):
+        try:
+            return api_ok(verify_mobile_order(request.user, order_id))
         except MobileShopError as exc:
             return _shop_error(exc)

@@ -52,6 +52,7 @@ def list_notifications(user, *, limit: int = 20, page: int = 1, page_size: int =
 
 def list_notifications_paginated(user, *, page: int = 1, page_size: int = 20) -> tuple[List[dict], dict]:
     from django.core.paginator import Paginator
+    dismiss_stale_license_alerts(user)
     qs = MobileNotification.objects.filter(user=user).order_by('-created_at')
     paginator = Paginator(qs, page_size)
     page_obj = paginator.get_page(page)
@@ -62,6 +63,21 @@ def list_notifications_paginated(user, *, page: int = 1, page_size: int = 20) ->
 
 def unread_count(user) -> int:
     return MobileNotification.objects.filter(user=user, is_read=False).count()
+
+
+def dismiss_stale_license_alerts(user, license_status: Optional[Dict[str, Any]] = None) -> int:
+    """پس از تمدید موفق، اعلان انقضای قدیمی را خوانده‌شده می‌کند."""
+    status = license_status
+    if status is None:
+        from mobile_api.services.license_service import license_status_payload
+        status = license_status_payload(user)
+    if not status.get('valid') or status.get('expiring_soon'):
+        return 0
+    return MobileNotification.objects.filter(
+        user=user,
+        notification_type='license_expiry',
+        is_read=False,
+    ).update(is_read=True, read_at=timezone.now())
 
 
 def mark_read(user, notification_id: int) -> bool:

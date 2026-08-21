@@ -5,7 +5,8 @@ import json
 import logging
 
 from django.contrib.auth import authenticate, get_user_model
-from rest_framework.parsers import FormParser, MultiPartParser
+from rest_framework.negotiation import DefaultContentNegotiation
+from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework_simplejwt.exceptions import TokenError
@@ -95,6 +96,7 @@ from mobile_api.services.settings_service import (
     get_profile,
     update_notification_prefs,
     update_profile,
+    update_profile_avatar,
 )
 from mobile_api.services.schedule_service import (
     create_schedule,
@@ -151,6 +153,23 @@ def _parse_body(request) -> dict:
 
 def _device_id(request) -> str:
     return (request.META.get('HTTP_X_DEVICE_ID') or '').strip()
+
+
+class FileDownloadNegotiation(DefaultContentNegotiation):
+    """جلوگیری از 404 درگاه DRF وقتی ?format=csv|xlsx برای فایل باینری ارسال می‌شود."""
+
+    def select_renderer(self, request, renderers, format_suffix=None):
+        renderer = renderers[0]
+        return renderer, renderer.media_type
+
+
+def _export_format(request, default: str = 'xlsx') -> str:
+    raw = (
+        request.query_params.get('export_format')
+        or request.query_params.get('format')
+        or default
+    )
+    return str(raw or default).strip().lower()
 
 
 class LoginView(APIView):
@@ -428,12 +447,13 @@ class ListingPublicShareView(APIView):
 
 class DatasetExportView(APIView):
     permission_classes = [IsAuthenticated]
+    content_negotiation_class = FileDownloadNegotiation
 
     def get(self, request, dataset_id):
         response, error_code = export_dataset_response(
             request.user,
             str(dataset_id),
-            request.GET.get('format', 'xlsx'),
+            _export_format(request, 'xlsx'),
         )
         if error_code == 'LICENSE_REQUIRED':
             return api_error(
@@ -448,16 +468,18 @@ class DatasetExportView(APIView):
 
 class ContactsExportView(APIView):
     permission_classes = [IsAuthenticated]
+    content_negotiation_class = FileDownloadNegotiation
 
     def get(self, request):
-        return export_contacts_response(request.user, request.GET, request.GET.get('format', 'xlsx'))
+        return export_contacts_response(request.user, request.GET, _export_format(request, 'xlsx'))
 
 
 class PropertiesExportView(APIView):
     permission_classes = [IsAuthenticated]
+    content_negotiation_class = FileDownloadNegotiation
 
     def get(self, request):
-        return export_properties_response(request.user, request.GET, request.GET.get('format', 'xlsx'))
+        return export_properties_response(request.user, request.GET, _export_format(request, 'xlsx'))
 
 
 class FilingSearchView(APIView):
@@ -664,11 +686,28 @@ class ProfileView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        return api_ok(get_profile(request.user))
+        return api_ok(get_profile(request.user, request=request))
 
     def patch(self, request):
         data = _parse_body(request)
-        return api_ok(update_profile(request.user, data))
+        return api_ok(update_profile(request.user, data, request=request))
+
+
+class ProfileAvatarView(APIView):
+    permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
+
+    def post(self, request):
+        avatar = request.FILES.get('avatar')
+        if not avatar:
+            return api_error('فایل تصویر ارسال نشده است.', code='VALIDATION_ERROR')
+        try:
+            return api_ok(update_profile_avatar(request.user, avatar=avatar, request=request))
+        except ValueError as exc:
+            return api_error(str(exc), code='VALIDATION_ERROR')
+
+    def delete(self, request):
+        return api_ok(update_profile_avatar(request.user, clear=True, request=request))
 
 
 class NotificationPrefsView(APIView):

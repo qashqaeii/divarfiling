@@ -214,10 +214,19 @@ def _dataset_thumbnail(ds: Dataset) -> str:
     return urls[0] if urls else ''
 
 
-def user_to_dict(user) -> Dict[str, Any]:
+def user_to_dict(user, request=None) -> Dict[str, Any]:
     agency_name = ''
-    if hasattr(user, 'profile'):
-        agency_name = getattr(user.profile, 'company_name', '') or ''
+    avatar_url = ''
+    profile = getattr(user, 'profile', None)
+    if profile is not None:
+        agency_name = getattr(profile, 'company_name', '') or ''
+        avatar = getattr(profile, 'avatar', None)
+        if avatar:
+            try:
+                url = avatar.url
+                avatar_url = request.build_absolute_uri(url) if request else url
+            except Exception:
+                avatar_url = ''
     full_name = user.get_full_name() or user.username or ''
     return {
         'id': user.pk,
@@ -225,6 +234,7 @@ def user_to_dict(user) -> Dict[str, Any]:
         'phone': user.phone or '',
         'agency_name': agency_name,
         'phone_verified': bool(getattr(user, 'phone_verified', False)),
+        'avatar_url': avatar_url,
     }
 
 
@@ -286,16 +296,25 @@ def dataset_to_dict(ds: Dataset) -> Dict[str, Any]:
     source = (ds.metadata or {}).get('source', 'windows')
     if (ds.metadata or {}).get('mobile_extraction'):
         source = 'mobile'
+    meta = ds.metadata or {}
+    filters = meta.get('filters') if isinstance(meta.get('filters'), dict) else {}
+    category = str(
+        filters.get('category_name') or filters.get('category') or meta.get('category') or ''
+    ).strip()
     return {
         'id': str(ds.pk),
         'name': ds.name,
         'source': source,
         'transaction_type': ds.transaction_type or '',
+        'subcategory': ds.subcategory or '',
+        'category': category,
         'city': ds.city or '',
         'district': ds.district or '',
         'item_count': ds.row_count if ds.row_count is not None else 0,
         'thumbnail_url': _dataset_thumbnail(ds),
         'created_at': ds.created_at.isoformat() if ds.created_at else None,
+        'original_filename': ds.original_filename or '',
+        'file_format': ds.file_format or '',
     }
 
 

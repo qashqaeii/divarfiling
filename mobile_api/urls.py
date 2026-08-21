@@ -23,6 +23,7 @@ urlpatterns = [
     path('license/status', views.LicenseStatusView.as_view(), name='license_status'),
     path('shop/plans', commerce_views.ShopPlansView.as_view(), name='shop_plans'),
     path('shop/checkout', commerce_views.ShopCheckoutView.as_view(), name='shop_checkout'),
+    path('shop/discount', commerce_views.ShopDiscountPreviewView.as_view(), name='shop_discount'),
     path('shop/orders/<uuid:order_id>', commerce_views.ShopOrderStatusView.as_view(), name='shop_order'),
 
     path('app/version', views.AppVersionView.as_view(), name='app_version'),
@@ -30,6 +31,7 @@ urlpatterns = [
     path('dashboard', views.DashboardView.as_view(), name='dashboard'),
 
     path('settings/profile', views.ProfileView.as_view(), name='profile'),
+    path('settings/profile/avatar', views.ProfileAvatarView.as_view(), name='profile_avatar'),
     path('settings/notifications', views.NotificationPrefsView.as_view(), name='notifications'),
 
     path('notifications', views.NotificationsListView.as_view(), name='notifications_list'),

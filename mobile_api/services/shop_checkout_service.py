@@ -10,7 +10,7 @@ from django.utils import timezone
 
 from licenses.services.renewal import evaluate_license_renewal, get_renewable_license_for_user
 from shop.bot_catalog import get_bot_product
-from shop.models import LicensePlan, Order, PaymentSettings
+from shop.models import DiscountCode, LicensePlan, Order, PaymentSettings
 from shop.services.mobile_checkout import mark_mobile_checkout
 from shop.services.plan_guards import evaluate_plan_purchase
 from shop.services.plan_pricing import calculate_plan_purchase_prices
@@ -112,7 +112,52 @@ def _reuse_pending_order(user, plan: LicensePlan, renewal_license) -> Optional[O
     return qs.order_by('-created_at').first()
 
 
-def create_checkout(user, *, plan_id: int, renew_license_id: Optional[int] = None, request=None) -> Dict[str, Any]:
+def _resolve_discount_code(user, code: Optional[str]):
+    raw = (code or '').strip().upper()
+    if not raw:
+        return None
+    try:
+        obj = DiscountCode.objects.get(code=raw)
+    except DiscountCode.DoesNotExist:
+        raise MobileShopError('کد تخفیف یافت نشد.', code='DISCOUNT_INVALID')
+    is_valid, error_msg = obj.is_valid(user)
+    if not is_valid:
+        raise MobileShopError(error_msg or 'کد تخفیف نامعتبر است.', code='DISCOUNT_INVALID')
+    return obj
+
+
+def preview_plan_discount(user, *, plan_id: int, discount_code: str, request=None) -> Dict[str, Any]:
+    product = get_bot_product()
+    if product is None:
+        raise MobileShopError('محصول لایسنس در حال حاضر در دسترس نیست.', code='PRODUCT_UNAVAILABLE', status=404)
+    plan = product.plans.filter(pk=plan_id, is_active=True).first()
+    if plan is None:
+        raise MobileShopError('پلن انتخاب‌شده معتبر نیست.', code='PLAN_NOT_FOUND', status=404)
+    ok, message, reason = evaluate_plan_purchase(user, plan)
+    if not ok:
+        code = 'PHONE_VERIFY_REQUIRED' if reason == 'phone_verify' else 'PLAN_BLOCKED'
+        raise MobileShopError(message or 'امکان خرید این پلن وجود ندارد.', code=code, status=403)
+
+    discount_code_obj = _resolve_discount_code(user, discount_code)
+    base_pricing = calculate_plan_purchase_prices(plan, product, user, request=request, quantity=1)
+    pricing = calculate_plan_purchase_prices(
+        plan, product, user, request=request, quantity=1, discount_code=discount_code_obj,
+    )
+    if discount_code_obj and pricing['final_price'] >= base_pricing['final_price']:
+        raise MobileShopError('کد تخفیف قابل اعمال نیست.', code='DISCOUNT_INVALID')
+    return {
+        'plan_id': plan.pk,
+        'code': discount_code_obj.code if discount_code_obj else '',
+        'original_price': int(pricing['original_price']),
+        'base_final_price': int(base_pricing['final_price']),
+        'discount_amount': int(pricing['discount_amount']),
+        'code_discount_amount': max(0, int(base_pricing['final_price']) - int(pricing['final_price'])),
+        'final_price': int(pricing['final_price']),
+        'has_discount': bool(pricing['has_discount']),
+    }
+
+
+def create_checkout(user, *, plan_id: int, renew_license_id: Optional[int] = None, discount_code: Optional[str] = None, request=None) -> Dict[str, Any]:
     product = get_bot_product()
     if product is None:
         raise MobileShopError('محصول لایسنس در حال حاضر در دسترس نیست.', code='PRODUCT_UNAVAILABLE', status=404)
@@ -139,15 +184,23 @@ def create_checkout(user, *, plan_id: int, renew_license_id: Optional[int] = Non
         if renewal_license.order.product_id != product.id:
             raise MobileShopError('این لایسنس متعلق به این محصول نیست.', code='RENEW_INVALID', status=400)
 
+    discount_code_obj = _resolve_discount_code(user, discount_code) if discount_code else None
+
     with transaction.atomic():
         type(user).objects.select_for_update().filter(pk=user.pk).first()
-        existing = _reuse_pending_order(user, plan, renewal_license)
+        existing = None if discount_code_obj else _reuse_pending_order(user, plan, renewal_license)
         if existing:
             mark_mobile_checkout(existing.id)
             order = existing
             reused = True
         else:
-            pricing = calculate_plan_purchase_prices(plan, product, user, request=request, quantity=1)
+            pricing = calculate_plan_purchase_prices(
+                plan, product, user, request=request, quantity=1, discount_code=discount_code_obj,
+            )
+            if discount_code_obj:
+                base_pricing = calculate_plan_purchase_prices(plan, product, user, request=request, quantity=1)
+                if pricing['final_price'] >= base_pricing['final_price']:
+                    raise MobileShopError('کد تخفیف قابل اعمال نیست.', code='DISCOUNT_INVALID')
             pay_settings = PaymentSettings.load()
             available = pay_settings.available_methods()
             if not available:
@@ -171,6 +224,8 @@ def create_checkout(user, *, plan_id: int, renew_license_id: Optional[int] = Non
             )
             if renewal_license:
                 order.renewal_license = renewal_license
+            if discount_code_obj:
+                order.discount_code = discount_code_obj
             try:
                 from affiliates.services import resolve_order_affiliate
 
@@ -180,6 +235,10 @@ def create_checkout(user, *, plan_id: int, renew_license_id: Optional[int] = Non
             except Exception:
                 pass
             order.save()
+            if discount_code_obj:
+                DiscountCode.objects.filter(pk=discount_code_obj.pk).update(
+                    used_count=discount_code_obj.used_count + 1,
+                )
             mark_mobile_checkout(order.id)
             reused = False
 
@@ -270,3 +329,50 @@ def order_status_payload(user, order_id) -> Dict[str, Any]:
         'paid_at': order.paid_at.isoformat() if order.paid_at else None,
         'is_renewal': bool(order.renewal_license_id),
     }
+
+
+def verify_mobile_order(user, order_id) -> Dict[str, Any]:
+    """وضعیت سفارش را از دیتابیس می‌خواند و در صورت pending بودن، verify درگاه را reuse می‌کند."""
+    payload = order_status_payload(user, order_id)
+    if payload['status'] == 'paid':
+        from mobile_api.services.notification_service import dismiss_stale_license_alerts
+        dismiss_stale_license_alerts(user)
+        return payload
+
+    order = Order.objects.select_related('transaction', 'plan').filter(
+        id=payload['order_id'], user=user,
+    ).first()
+    if order is None or order.status != 'pending':
+        return payload
+
+    track_id = order.zibal_track_id or getattr(getattr(order, 'transaction', None), 'zibal_track_id', '') or ''
+    if not track_id:
+        return payload
+
+    from shop.models import Transaction
+    from shop.payment_views import _finalize_successful_payment
+
+    try:
+        expected_amount_rial = zibal_service.toman_to_rial(order.amount)
+        verify_result = zibal_service.verify_payment(
+            track_id=str(track_id),
+            expected_amount_rial=expected_amount_rial,
+        )
+    except zibal_service.ZibalVerifyError:
+        return order_status_payload(user, order.id)
+    except Exception:
+        return order_status_payload(user, order.id)
+
+    try:
+        txn = order.transaction
+    except Transaction.DoesNotExist:
+        txn = None
+    if txn is None:
+        return order_status_payload(user, order.id)
+
+    _finalize_successful_payment(order, txn, verify_result)
+    order.refresh_from_db()
+    from mobile_api.services.notification_service import dismiss_stale_license_alerts
+    dismiss_stale_license_alerts(user)
+    return order_status_payload(user, order.id)
+

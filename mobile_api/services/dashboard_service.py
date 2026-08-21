@@ -8,7 +8,7 @@ from django.utils import timezone
 from mobile_api.services.crm_service import today_payload
 from mobile_api.services.filing_service import list_datasets
 from mobile_api.services.license_service import license_status_payload
-from mobile_api.services.notification_service import list_notifications, unread_count
+from mobile_api.services.notification_service import dismiss_stale_license_alerts, list_notifications, unread_count
 from workspace.models import CRMDeal, Dataset
 from workspace.services.crm import get_dashboard_stats
 from workspace.services.access import has_active_bot_license
@@ -19,6 +19,7 @@ def dashboard_payload(user) -> Dict[str, Any]:
     today = today_payload(user)
     datasets, _ = list_datasets(user, page=1, page_size=8)
     license_info = license_status_payload(user)
+    dismiss_stale_license_alerts(user, license_status=license_info)
     notifications = list_notifications(user, limit=5)
     today_date = timezone.now().date()
 

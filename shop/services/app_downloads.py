@@ -8,17 +8,17 @@ from django.conf import settings
 from django.http import FileResponse, Http404
 from django.urls import reverse
 
-ANDROID_APK_FILENAME = 'divar-filing-v2.5.3-38-release.apk'
-ANDROID_APP_VERSION = '2.5.3'
-ANDROID_APP_BUILD = 38
+ANDROID_APK_FILENAME = 'divar-filing-v2.6.0-40-release.apk'
+ANDROID_APP_VERSION = '2.6.0'
+ANDROID_APP_BUILD = 40
 ANDROID_PACKAGE_ID = 'ir.divarfiling.mobile'
 ANDROID_MIN_ANDROID = '8.0'
 # اگر کاربر نسخهٔ قدیمی‌تر از این داشته باشد، آپدیت اجباری است
 ANDROID_MIN_SUPPORTED_BUILD = 30
 ANDROID_FORCE_UPDATE = False
 ANDROID_RELEASE_NOTES = (
-    'تیم آژانس داخل اپ، هوش مصنوعی کاربردی، فیلتر حرفه‌ای فایلینگ، '
-    'تقویم و یادآور، تیکت پشتیبانی کامل، ویرایش مخاطب/آگهی و ظاهر یکدست‌تر.'
+    'CRM حرفه‌ای: صفحه مخاطبین، ویرایش کامل مخاطب، معاملات، فایل‌های شخصی، '
+    'پیشنهادهای هوشمند، اشتراک عمومی و بهبودهای UI/UX موبایل.'
 )
 # در صورت تنظیم، کلاینت صحت فایل را بعد از دانلود بررسی می‌کند
 ANDROID_APK_SHA256 = ''

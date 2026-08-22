@@ -35,6 +35,8 @@ def list_deals_paginated(
 
 
 def get_deal_detail(user, deal_id: int) -> Optional[dict]:
+    from workspace.services.crm_deal_checklist import ensure_deal_checklist
+
     deal = (
         deals_qs(user)
         .filter(pk=deal_id)
@@ -43,6 +45,7 @@ def get_deal_detail(user, deal_id: int) -> Optional[dict]:
     )
     if not deal:
         return None
+    ensure_deal_checklist(deal)
     return deal_to_dict(deal, detailed=True)
 
 
@@ -137,3 +140,23 @@ def pipeline_payload(user) -> Dict[str, Any]:
 
 def stages_payload(user) -> List[str]:
     return get_user_deal_stages(user)
+
+
+def toggle_deal_checklist_item(user, deal_id: int, item_id: str, *, done=None) -> Optional[dict]:
+    from workspace.services.crm_deal_checklist import toggle_checklist_item
+
+    deal = deal_for_user(user, deal_id)
+    if not deal:
+        return None
+    try:
+        return toggle_checklist_item(deal, item_id, done=done)
+    except ValueError as exc:
+        raise ValueError(str(exc)) from exc
+
+
+def delete_deal(user, deal_id: int) -> bool:
+    deal = deal_for_user(user, deal_id)
+    if not deal:
+        return False
+    deal.delete()
+    return True

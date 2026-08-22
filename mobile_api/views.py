@@ -327,7 +327,10 @@ class ContactDetailView(APIView):
 
     def patch(self, request, contact_id):
         data = _parse_body(request)
-        c = update_contact(request.user, contact_id, data)
+        try:
+            c = update_contact(request.user, contact_id, data)
+        except ValueError as exc:
+            return api_error(str(exc), code='VALIDATION_ERROR')
         if not c:
             return api_error('مخاطب یافت نشد.', code='NOT_FOUND', status=404)
         return api_ok(contact_to_dict(c))
@@ -1131,6 +1134,35 @@ class DealDetailView(APIView):
             return api_error('معامله یافت نشد.', code='NOT_FOUND', status=404)
         payload = get_deal_detail(request.user, deal_id)
         return api_ok(payload)
+
+    def delete(self, request, deal_id):
+        from mobile_api.services.deals_service import delete_deal
+        if not delete_deal(request.user, deal_id):
+            return api_error('معامله یافت نشد.', code='NOT_FOUND', status=404)
+        return api_ok({})
+
+
+class DealChecklistView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, deal_id):
+        from mobile_api.services.deals_service import toggle_deal_checklist_item
+        data = _parse_body(request)
+        item_id = (data.get('item_id') or '').strip()
+        if not item_id:
+            return api_error('آیتم نامعتبر است.', code='VALIDATION_ERROR')
+        try:
+            result = toggle_deal_checklist_item(
+                request.user,
+                deal_id,
+                item_id,
+                done=data.get('done') if 'done' in data else None,
+            )
+        except ValueError as exc:
+            return api_error(str(exc), code='VALIDATION_ERROR')
+        if not result:
+            return api_error('معامله یافت نشد.', code='NOT_FOUND', status=404)
+        return api_ok(result)
 
 
 class DealStageView(APIView):

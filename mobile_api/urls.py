@@ -69,6 +69,7 @@ urlpatterns = [
     path('crm/deals/stages', views.DealStagesView.as_view(), name='deals_stages'),
     path('crm/deals', views.DealsListView.as_view(), name='deals'),
     path('crm/deals/<int:deal_id>', views.DealDetailView.as_view(), name='deal_detail'),
+    path('crm/deals/<int:deal_id>/checklist', views.DealChecklistView.as_view(), name='deal_checklist'),
     path('crm/deals/<int:deal_id>/stage', views.DealStageView.as_view(), name='deal_stage'),
     path('crm/properties', views.PropertiesListView.as_view(), name='properties'),
     path('crm/properties/export', views.PropertiesExportView.as_view(), name='properties_export'),

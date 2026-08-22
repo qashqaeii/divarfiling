@@ -272,6 +272,8 @@ def contact_to_dict(c: Customer) -> Dict[str, Any]:
         'notes': c.notes or '',
         'address': c.city or '',
         'city': c.city or '',
+        'district': c.district or '',
+        'phone_alt': c.phone_alt or '',
         'email': getattr(c, 'email', '') or '',
         'latitude': None,
         'longitude': None,

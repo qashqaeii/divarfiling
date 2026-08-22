@@ -100,6 +100,10 @@ def update_contact(user, contact_id: int, data: Dict[str, Any]) -> Optional[Cust
         phone = normalize_phone(data['phone'])
         if phone:
             c.phone = phone
+    if _field_present(data, 'email'):
+        c.email = (data.get('email') or '').strip()
+    if 'source' in data and data['source'] is not None:
+        c.source = (data.get('source') or '').strip()[:30]
     if _field_present(data, 'status') and data['status']:
         c.status = data['status']
     if _field_present(data, 'customer_type') and data['customer_type']:
@@ -163,6 +167,14 @@ def update_contact(user, contact_id: int, data: Dict[str, Any]) -> Optional[Cust
     for bool_field in ('want_parking', 'want_storage', 'want_elevator'):
         if bool_field in data and data[bool_field] is not None:
             setattr(c, bool_field, bool(data.get(bool_field)))
+    if _field_present(data, 'matching_tolerance_percent'):
+        from workspace.services.crm_matching import normalize_matching_tolerance_percent
+        try:
+            c.matching_tolerance_percent = normalize_matching_tolerance_percent(
+                data.get('matching_tolerance_percent'),
+            )
+        except ValueError as exc:
+            raise ValueError(str(exc)) from exc
     c.save()
     return c
 

@@ -2,6 +2,8 @@ from decimal import Decimal
 
 from django.contrib.auth import get_user_model
 from django.test import TestCase
+from django.urls import reverse
+import json
 
 from licenses.models import License
 from licenses.services.claim import issue_licenses_for_paid_order
@@ -103,6 +105,60 @@ class PlanPricingTests(TestCase):
         self.assertEqual(pricing['unit_sale_price'], Decimal('990000'))
         self.assertEqual(pricing['original_price'], Decimal('1980000'))
         self.assertEqual(pricing['final_price'], Decimal('1980000'))
+
+
+class ApplyDiscountQuantityTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='agency2', password='test-pass-123')
+        self.client.login(username='agency2', password='test-pass-123')
+        self.product = Product.objects.create(
+            title='ربات',
+            slug='bot-apply-discount-qty',
+            description='test',
+            is_active=True,
+            repeat_purchase_discount=10,
+        )
+        self.plan = LicensePlan.objects.create(
+            product=self.product,
+            name='آژانس حرفه‌ای',
+            plan_type='quarterly',
+            price=2_500_000,
+            compare_at_price=2_500_000,
+            duration_days=90,
+            max_activations=2,
+            allow_bulk_purchase=True,
+            min_quantity=2,
+            max_quantity=10,
+            is_active=True,
+        )
+        Order.objects.create(
+            user=self.user,
+            product=self.product,
+            plan=self.plan,
+            quantity=1,
+            amount=2_250_000,
+            original_price=2_500_000,
+            status='paid',
+        )
+
+    def test_apply_discount_scales_with_quantity(self):
+        url = reverse('apply_discount', kwargs={'slug': self.product.slug})
+        cases = (
+            (1, 2, 4_500_000),
+            (2, 2, 4_500_000),
+            (3, 3, 6_750_000),
+        )
+        for requested_qty, expected_qty, expected_final in cases:
+            response = self.client.post(
+                url,
+                data=json.dumps({'plan_id': self.plan.id, 'quantity': requested_qty, 'discount_code': ''}),
+                content_type='application/json',
+            )
+            self.assertEqual(response.status_code, 200, response.content)
+            payload = response.json()
+            self.assertTrue(payload['success'], payload)
+            self.assertEqual(payload['quantity'], expected_qty)
+            self.assertEqual(payload['final_price'], expected_final)
 
 
 class BulkLicenseIssueTests(TestCase):

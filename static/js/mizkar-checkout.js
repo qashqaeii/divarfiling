@@ -29,6 +29,15 @@
         };
 
         var pricingRequestId = 0;
+        var qtyDebounceTimer = null;
+
+        function scheduleQuantityUpdate() {
+            if (!qtyInput) return;
+            clearTimeout(qtyDebounceTimer);
+            qtyDebounceTimer = setTimeout(function () {
+                applyQuantityChange(parseInt(qtyInput.value, 10) || 1);
+            }, 200);
+        }
 
         function getSelectedPlan() {
             return document.querySelector('input[name="plan"]:checked');
@@ -46,41 +55,83 @@
 
         function syncQuantityField() {
             var selected = getSelectedPlan();
-            if (!qtyInput || !qtyFieldset) return;
+            if (!qtyInput || !qtyFieldset) return 1;
 
             var allowBulk = selected && selected.dataset.allowBulk === 'true';
             qtyFieldset.hidden = !allowBulk;
             if (!allowBulk) {
                 qtyInput.value = '1';
                 if (qtyNote) qtyNote.textContent = '';
-                return;
+                return 1;
             }
 
             var min = parseInt(selected.dataset.minQuantity, 10) || 1;
             var max = parseInt(selected.dataset.maxQuantity, 10) || 20;
             qtyInput.min = String(min);
             qtyInput.max = String(max);
-            var qty = getQuantity();
+            var qty = parseInt(qtyInput.value, 10) || min;
+            qty = Math.max(min, Math.min(max, qty));
             qtyInput.value = String(qty);
             if (qtyNote) {
                 qtyNote.textContent = 'هر لایسنس شامل ۱ ویندوز + ۱ اندروید — جمعاً ' + qty + ' کلید جداگانه صادر می‌شود.';
             }
+            return qty;
         }
 
         function fallbackPricingFromDataset(selected, qty) {
             var unitList = parseInt(selected.dataset.unitListPrice || selected.dataset.originalPrice, 10) || 0;
-            var unitSale = parseInt(selected.dataset.unitSalePrice || selected.dataset.finalPrice, 10) || 0;
+            var unitSale = parseInt(selected.dataset.unitSalePrice, 10) || 0;
+            var unitFinal = parseInt(selected.dataset.finalPrice, 10) || unitSale;
+            var hasRepeat = selected.dataset.hasRepeatDiscount === 'true';
+            var repeatPct = parseInt(selected.dataset.repeatDiscountPercentage, 10) || 0;
+
             pricingState.original = unitList * qty;
-            pricingState.final = unitSale * qty;
-            pricingState.discountDetails = [];
+            if (hasRepeat && repeatPct > 0) {
+                var subtotal = unitSale * qty;
+                var repeatAmount = Math.floor(subtotal * repeatPct / 100);
+                pricingState.final = Math.max(0, subtotal - repeatAmount);
+                if (repeatAmount > 0) {
+                    pricingState.discountDetails = [{
+                        type: 'repeat_purchase',
+                        label: repeatPct + '% تخفیف خرید مجدد',
+                        amount: repeatAmount,
+                    }];
+                }
+            } else {
+                pricingState.final = unitFinal * qty;
+                pricingState.discountDetails = [];
+            }
+        }
+
+        function applyQuantityChange(explicitQty) {
+            var selected = getSelectedPlan();
+            if (!selected || !qtyInput) return;
+
+            var qty = explicitQty !== undefined ? explicitQty : syncQuantityField();
+            if (selected.dataset.allowBulk !== 'true') {
+                qty = 1;
+            } else {
+                var min = parseInt(selected.dataset.minQuantity, 10) || 1;
+                var max = parseInt(selected.dataset.maxQuantity, 10) || 20;
+                qty = Math.max(min, Math.min(max, qty));
+                qtyInput.value = String(qty);
+                if (qtyNote) {
+                    qtyNote.textContent = 'هر لایسنس شامل ۱ ویندوز + ۱ اندروید — جمعاً ' + qty + ' کلید جداگانه صادر می‌شود.';
+                }
+            }
+
+            if (discountInput) discountInput.value = '';
+            clearDiscountMessage();
+            fallbackPricingFromDataset(selected, qty);
+            renderSummary();
+            fetchPlanPricing({ discountCode: '', quantity: qty });
         }
 
         function renderSummary() {
             var selected = getSelectedPlan();
             if (!selected) return;
 
-            syncQuantityField();
-            var qty = getQuantity();
+            var qty = syncQuantityField();
             var card = selected.closest('.ck-plan');
             var planName = card.querySelector('.ck-plan-name').textContent.trim();
 
@@ -122,7 +173,7 @@
             var code = options.discountCode !== undefined
                 ? options.discountCode
                 : (discountInput ? discountInput.value.trim().toUpperCase() : '');
-            var qty = getQuantity();
+            var qty = options.quantity !== undefined ? options.quantity : syncQuantityField();
             var requestId = ++pricingRequestId;
 
             pricingState.loading = true;
@@ -196,7 +247,7 @@
             var code = discountInput.value.trim().toUpperCase();
             if (!code) {
                 clearDiscountMessage();
-                fetchPlanPricing({ discountCode: '' });
+                fetchPlanPricing({ discountCode: '', quantity: syncQuantityField() });
                 return;
             }
 
@@ -205,7 +256,7 @@
             discountInput.value = code;
 
             var requestId = ++pricingRequestId;
-            var qty = getQuantity();
+            var qty = syncQuantityField();
 
             fetch(applyDiscountUrl, {
                 method: 'POST',
@@ -258,7 +309,10 @@
 
                 if (discountInput) discountInput.value = '';
                 clearDiscountMessage();
-                fetchPlanPricing({ discountCode: '' });
+                var qty = syncQuantityField();
+                fallbackPricingFromDataset(this, qty);
+                renderSummary();
+                fetchPlanPricing({ discountCode: '', quantity: qty });
             });
         });
 
@@ -274,19 +328,16 @@
         });
 
         if (qtyInput) {
-            qtyInput.addEventListener('change', function () {
-                if (discountInput) discountInput.value = '';
-                clearDiscountMessage();
-                fetchPlanPricing({ discountCode: '' });
-            });
+            qtyInput.addEventListener('input', scheduleQuantityUpdate);
+            qtyInput.addEventListener('change', scheduleQuantityUpdate);
         }
 
         document.querySelectorAll('[data-qty-step]').forEach(function (btn) {
             btn.addEventListener('click', function () {
                 if (!qtyInput) return;
                 var step = parseInt(btn.dataset.qtyStep, 10) || 0;
-                qtyInput.value = String(getQuantity() + step);
-                qtyInput.dispatchEvent(new Event('change', { bubbles: true }));
+                var current = syncQuantityField();
+                applyQuantityChange(current + step);
             });
         });
 
@@ -352,7 +403,7 @@
                     return;
                 }
                 if (qtyInput) {
-                    qtyInput.value = String(getQuantity());
+                    qtyInput.value = String(syncQuantityField());
                 }
                 form.requestSubmit();
             });
@@ -363,7 +414,10 @@
         var initial = getSelectedPlan();
         if (initial) {
             initial.closest('.ck-plan').classList.add('is-selected');
-            fetchPlanPricing({ discountCode: '' });
+            var initialQty = syncQuantityField();
+            fallbackPricingFromDataset(initial, initialQty);
+            renderSummary();
+            fetchPlanPricing({ discountCode: '', quantity: initialQty });
         }
 
         var loyaltyNotice = document.querySelector('[data-loyalty-notice]');

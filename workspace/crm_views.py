@@ -1046,6 +1046,17 @@ class CustomerExportView(LoginRequiredMixin, View):
         return export_customers_excel_response(request.user, request.GET)
 
 
+def _crm_reminder_stats_for_user(user):
+    qs = reminders_qs(user)
+    now = timezone.now()
+    return {
+        'active': qs.filter(is_done=False).count(),
+        'done': qs.filter(is_done=True).count(),
+        'overdue': qs.filter(is_done=False, due_at__lt=now).count(),
+        'today': qs.filter(is_done=False, due_at__date=timezone.localdate()).count(),
+    }
+
+
 class CRMReminderListView(CRMContextMixin, LoginRequiredMixin, ListView):
     model = Reminder
     template_name = 'workspace/crm/reminders/list.html'
@@ -1061,18 +1072,26 @@ class CRMReminderListView(CRMContextMixin, LoginRequiredMixin, ListView):
             return qs.order_by('due_at')
         return qs.filter(is_done=False).order_by('due_at')
 
+    def render_to_response(self, context, **response_kwargs):
+        if self.request.GET.get('partial') == '1':
+            page_obj = context.get('page_obj')
+            html = render_to_string(
+                'workspace/crm/reminders/_timeline_items.html',
+                {'reminders': context.get('reminders')},
+                request=self.request,
+            )
+            return JsonResponse({
+                'html': html,
+                'has_next': bool(page_obj and page_obj.has_next()),
+                'next_page': page_obj.next_page_number() if page_obj and page_obj.has_next() else None,
+            })
+        return super().render_to_response(context, **response_kwargs)
+
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         user = self.request.user
-        qs = reminders_qs(user)
-        now = timezone.now()
         ctx['show'] = self.request.GET.get('show', 'active')
-        ctx['stats'] = {
-            'active': qs.filter(is_done=False).count(),
-            'done': qs.filter(is_done=True).count(),
-            'overdue': qs.filter(is_done=False, due_at__lt=now).count(),
-            'today': qs.filter(is_done=False, due_at__date=timezone.localdate()).count(),
-        }
+        ctx['stats'] = _crm_reminder_stats_for_user(user)
         ctx['reminder_form'] = ctx.get('reminder_form', CRMReminderForm())
         ctx['crm_customers'] = customers_qs(user).order_by('name')[:200]
         ctx['open_drawer'] = self.request.GET.get('drawer', '')
@@ -1112,7 +1131,10 @@ class CRMReminderListView(CRMContextMixin, LoginRequiredMixin, ListView):
 class CRMReminderToggleView(LoginRequiredMixin, View):
     def post(self, request, reminder_id):
         reminder = reminders_qs(request.user).filter(pk=reminder_id).first()
+        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
         if not reminder:
+            if is_ajax:
+                return JsonResponse({'ok': False, 'error': 'یادآور یافت نشد.'}, status=404)
             messages.error(request, 'یادآور یافت نشد.')
             nxt = request.POST.get('next')
             return redirect(nxt if nxt else reverse('workspace:crm_reminders'))
@@ -1121,6 +1143,13 @@ class CRMReminderToggleView(LoginRequiredMixin, View):
         reminder.save(update_fields=['is_done'])
         if not was_done and reminder.is_done and reminder.recurrence:
             advance_recurring_reminder(reminder)
+        if is_ajax:
+            return JsonResponse({
+                'ok': True,
+                'reminder_id': reminder.pk,
+                'is_done': reminder.is_done,
+                'stats': _crm_reminder_stats_for_user(request.user),
+            })
         messages.success(request, 'وضعیت یادآور به‌روز شد.')
         nxt = request.POST.get('next')
         return redirect(nxt if nxt else reverse('workspace:crm_reminders'))

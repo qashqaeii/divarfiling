@@ -67,3 +67,50 @@ class CRMReminderCreateViewTests(TestCase):
         self.assertTrue(
             Reminder.objects.filter(user=self.user, customer=self.customer, title='یادآور مخاطب').exists()
         )
+
+
+class CRMReminderListAjaxTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username='09123334455',
+            phone='09123334455',
+            password='testpass123',
+        )
+        self.client = Client()
+        self.client.force_login(self.user)
+
+    def _make_reminder(self, title, is_done=False, offset_days=0):
+        return Reminder.objects.create(
+            user=self.user,
+            title=title,
+            due_at=timezone.now() + timedelta(days=offset_days),
+            is_done=is_done,
+        )
+
+    def test_partial_load_returns_json_with_html(self):
+        for i in range(25):
+            self._make_reminder(f'یادآور {i}', offset_days=i)
+        url = reverse('workspace:crm_reminders')
+        response = self.client.get(url, {'partial': '1', 'page': '2', 'show': 'active'})
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIn('html', data)
+        self.assertTrue(data['html'].strip())
+        self.assertIn('has_next', data)
+
+    def test_toggle_reminder_ajax_returns_json(self):
+        reminder = self._make_reminder('تست AJAX')
+        url = reverse('workspace:crm_reminder_toggle', kwargs={'reminder_id': reminder.pk})
+        response = self.client.post(
+            url,
+            {},
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertTrue(data['ok'])
+        self.assertTrue(data['is_done'])
+        self.assertEqual(data['reminder_id'], reminder.pk)
+        self.assertIn('stats', data)
+        reminder.refresh_from_db()
+        self.assertTrue(reminder.is_done)

@@ -1,0 +1,65 @@
+{% load workspace_tags crm_tags %}
+{% for r in reminders %}
+{% with tone=r|crm_reminder_tone %}
+<article class="crm-rm-card crm-rm-card--{{ tone }}" role="listitem" data-reminder-id="{{ r.id }}">
+    <div class="crm-rm-card__mesh" aria-hidden="true"></div>
+    <span class="crm-rm-card__accent" aria-hidden="true"></span>
+
+    <div class="crm-rm-time-col">
+        <time class="crm-rm-time" datetime="{{ r.due_at|date:'c' }}">{{ r.due_at|crm_reminder_time_only }}</time>
+        <span class="crm-rm-date">{{ r.due_at|ws_jalali_date }}</span>
+        <span class="crm-rm-tone-badge">{{ r|crm_reminder_rel_label }}</span>
+    </div>
+
+    <div class="crm-rm-rail" aria-hidden="true">
+        <span class="crm-rm-dot"></span>
+        <span class="crm-rm-line"></span>
+    </div>
+
+    <div class="crm-rm-panel">
+        <div class="crm-rm-content">
+            <div class="crm-rm-head">
+                <h3 class="crm-rm-title {% if r.is_done %}is-done{% endif %}">{{ r.title }}</h3>
+                {% if r.recurrence %}
+                <span class="crm-rm-recur" title="تکرارشونده"><i class="fas fa-rotate" aria-hidden="true"></i></span>
+                {% endif %}
+            </div>
+            {% if r.note %}
+            <p class="crm-rm-note">{{ r.note|truncatechars:160 }}</p>
+            {% endif %}
+            <div class="crm-rm-chips">
+                {% if r.customer_id %}
+                <a href="{% url 'workspace:crm_detail' r.customer_id %}" class="crm-rm-chip crm-rm-chip--contact">
+                    <span class="crm-rm-avatar crm-rm-avatar--hue-{{ r.customer.name|crm_avatar_hue }}" aria-hidden="true">{{ r.customer.name|crm_initials }}</span>
+                    <span>{{ r.customer.name }}</span>
+                </a>
+                {% endif %}
+                {% if r.token %}
+                <span class="crm-rm-chip crm-rm-chip--token">
+                    <i class="fas fa-hashtag" aria-hidden="true"></i>
+                    <span>{{ r.token }}</span>
+                </span>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="crm-rm-action-col">
+            <form method="post" action="{% url 'workspace:crm_reminder_toggle' r.id %}" class="crm-rm-check-form">
+                {% csrf_token %}
+                <button
+                    type="submit"
+                    class="crm-rm-complete-btn {% if r.is_done %}is-done{% endif %}"
+                    aria-label="{% if r.is_done %}بازگردانی یادآور{% else %}علامت‌گذاری به‌عنوان انجام‌شده{% endif %}"
+                    title="{% if r.is_done %}بازگردانی{% else %}انجام شد{% endif %}"
+                >
+                    <span class="crm-rm-complete-icon" aria-hidden="true">
+                        <i class="fas fa-{% if r.is_done %}rotate-left{% else %}check{% endif %}"></i>
+                    </span>
+                    <span class="crm-rm-complete-label">{% if r.is_done %}بازگردانی{% else %}انجام شد{% endif %}</span>
+                </button>
+            </form>
+        </div>
+    </div>
+</article>
+{% endwith %}
+{% endfor %}

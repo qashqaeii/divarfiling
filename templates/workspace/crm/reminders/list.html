@@ -9,7 +9,7 @@
 {% block crm_search %}{% endblock %}
 
 {% block crm_extra_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/crm-reminders-mobile.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-reminders-mobile.css' %}?v=2">
 {% endblock %}
 
 {% block crm_content %}
@@ -23,9 +23,9 @@
                 <span class="crm-rm-mob-kicker"><i class="fas fa-bell" aria-hidden="true"></i> پیگیری هوشمند</span>
                 <h1 class="crm-rm-mob-title">یادآورها</h1>
                 <p class="crm-rm-mob-sub">
-                    <span>{{ stats.active }} فعال</span>
-                    {% if stats.overdue %}<span class="crm-rm-mob-sub-chip is-overdue">{{ stats.overdue }} معوق</span>{% endif %}
-                    {% if stats.today %}<span class="crm-rm-mob-sub-chip is-today">{{ stats.today }} امروز</span>{% endif %}
+                    <span data-stat="active">{{ stats.active }} فعال</span>
+                    {% if stats.overdue %}<span class="crm-rm-mob-sub-chip is-overdue" data-stat-wrap="overdue">{{ stats.overdue }} معوق</span>{% endif %}
+                    {% if stats.today %}<span class="crm-rm-mob-sub-chip is-today" data-stat-wrap="today">{{ stats.today }} امروز</span>{% endif %}
                 </p>
             </div>
             <div class="crm-rm-mob-header-actions" role="toolbar" aria-label="عملیات یادآورها">
@@ -56,7 +56,7 @@
             <span class="crm-rm-kpi-glow" aria-hidden="true"></span>
             <span class="crm-rm-kpi-icon" aria-hidden="true"><i class="fas fa-bell"></i></span>
             <div class="crm-rm-kpi-body">
-                <span class="crm-rm-kpi-val">{{ stats.active }}</span>
+                <span class="crm-rm-kpi-val" data-stat="active">{{ stats.active }}</span>
                 <span class="crm-rm-kpi-lbl">فعال</span>
             </div>
         </a>
@@ -64,7 +64,7 @@
             <span class="crm-rm-kpi-glow" aria-hidden="true"></span>
             <span class="crm-rm-kpi-icon" aria-hidden="true"><i class="fas fa-triangle-exclamation"></i></span>
             <div class="crm-rm-kpi-body">
-                <span class="crm-rm-kpi-val">{{ stats.overdue }}</span>
+                <span class="crm-rm-kpi-val" data-stat="overdue">{{ stats.overdue }}</span>
                 <span class="crm-rm-kpi-lbl">معوق</span>
             </div>
         </a>
@@ -72,7 +72,7 @@
             <span class="crm-rm-kpi-glow" aria-hidden="true"></span>
             <span class="crm-rm-kpi-icon" aria-hidden="true"><i class="fas fa-sun"></i></span>
             <div class="crm-rm-kpi-body">
-                <span class="crm-rm-kpi-val">{{ stats.today }}</span>
+                <span class="crm-rm-kpi-val" data-stat="today">{{ stats.today }}</span>
                 <span class="crm-rm-kpi-lbl">امروز</span>
             </div>
         </a>
@@ -80,7 +80,7 @@
             <span class="crm-rm-kpi-glow" aria-hidden="true"></span>
             <span class="crm-rm-kpi-icon" aria-hidden="true"><i class="fas fa-circle-check"></i></span>
             <div class="crm-rm-kpi-body">
-                <span class="crm-rm-kpi-val">{{ stats.done }}</span>
+                <span class="crm-rm-kpi-val" data-stat="done">{{ stats.done }}</span>
                 <span class="crm-rm-kpi-lbl">انجام‌شده</span>
             </div>
         </a>
@@ -91,12 +91,12 @@
             <a href="?show=active" class="crm-rm-seg-btn {% if show == 'active' %}is-active{% endif %}" role="tab" {% if show == 'active' %}aria-selected="true"{% endif %}>
                 <i class="fas fa-bolt" aria-hidden="true"></i>
                 <span>فعال</span>
-                {% if stats.active %}<em class="crm-rm-seg-count">{{ stats.active }}</em>{% endif %}
+                {% if stats.active %}<em class="crm-rm-seg-count" data-stat="active">{{ stats.active }}</em>{% endif %}
             </a>
             <a href="?show=done" class="crm-rm-seg-btn {% if show == 'done' %}is-active{% endif %}" role="tab" {% if show == 'done' %}aria-selected="true"{% endif %}>
                 <i class="fas fa-check" aria-hidden="true"></i>
                 <span>انجام‌شده</span>
-                {% if stats.done %}<em class="crm-rm-seg-count">{{ stats.done }}</em>{% endif %}
+                {% if stats.done %}<em class="crm-rm-seg-count" data-stat="done">{{ stats.done }}</em>{% endif %}
             </a>
             <a href="?show=all" class="crm-rm-seg-btn {% if show == 'all' %}is-active{% endif %}" role="tab" {% if show == 'all' %}aria-selected="true"{% endif %}>
                 <i class="fas fa-layer-group" aria-hidden="true"></i>
@@ -105,9 +105,9 @@
         </nav>
 
         <div class="crm-rm-result-bar">
-            <span class="crm-rm-result-count">{{ page_obj.paginator.count }} یادآور</span>
+            <span class="crm-rm-result-count" data-stat="total">{{ page_obj.paginator.count }} یادآور</span>
             {% if show == 'active' and stats.overdue %}
-            <span class="crm-rm-result-hint"><i class="fas fa-circle" aria-hidden="true"></i> {{ stats.overdue }} مورد نیاز به پیگیری فوری</span>
+            <span class="crm-rm-result-hint" data-stat-wrap="overdue"><i class="fas fa-circle" aria-hidden="true"></i> {{ stats.overdue }} مورد نیاز به پیگیری فوری</span>
             {% endif %}
         </div>
 
@@ -119,73 +119,19 @@
         {% endif %}
 
         {% if reminders %}
-        <div class="crm-rm-timeline" role="list">
-            {% for r in reminders %}
-            {% with tone=r|crm_reminder_tone %}
-            <article class="crm-rm-card crm-rm-card--{{ tone }}" role="listitem">
-                <div class="crm-rm-card__mesh" aria-hidden="true"></div>
-                <span class="crm-rm-card__accent" aria-hidden="true"></span>
-
-                <div class="crm-rm-time-col">
-                    <time class="crm-rm-time" datetime="{{ r.due_at|date:'c' }}">{{ r.due_at|crm_reminder_time_only }}</time>
-                    <span class="crm-rm-date">{{ r.due_at|ws_jalali_date }}</span>
-                    <span class="crm-rm-tone-badge">{{ r|crm_reminder_rel_label }}</span>
-                </div>
-
-                <div class="crm-rm-rail" aria-hidden="true">
-                    <span class="crm-rm-dot"></span>
-                    {% if not forloop.last %}<span class="crm-rm-line"></span>{% endif %}
-                </div>
-
-                <div class="crm-rm-panel">
-                    <div class="crm-rm-content">
-                        <div class="crm-rm-head">
-                            <h3 class="crm-rm-title {% if r.is_done %}is-done{% endif %}">{{ r.title }}</h3>
-                            {% if r.recurrence %}
-                            <span class="crm-rm-recur" title="تکرارشونده"><i class="fas fa-rotate" aria-hidden="true"></i></span>
-                            {% endif %}
-                        </div>
-                        {% if r.note %}
-                        <p class="crm-rm-note">{{ r.note|truncatechars:160 }}</p>
-                        {% endif %}
-                        <div class="crm-rm-chips">
-                            {% if r.customer_id %}
-                            <a href="{% url 'workspace:crm_detail' r.customer_id %}" class="crm-rm-chip crm-rm-chip--contact">
-                                <span class="crm-rm-avatar crm-rm-avatar--hue-{{ r.customer.name|crm_avatar_hue }}" aria-hidden="true">{{ r.customer.name|crm_initials }}</span>
-                                <span>{{ r.customer.name }}</span>
-                            </a>
-                            {% endif %}
-                            {% if r.token %}
-                            <span class="crm-rm-chip crm-rm-chip--token">
-                                <i class="fas fa-hashtag" aria-hidden="true"></i>
-                                <span>{{ r.token }}</span>
-                            </span>
-                            {% endif %}
-                        </div>
-                    </div>
-
-                    <div class="crm-rm-action-col">
-                        <form method="post" action="{% url 'workspace:crm_reminder_toggle' r.id %}" class="crm-rm-check-form">
-                            {% csrf_token %}
-                            <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                            <button
-                                type="submit"
-                                class="crm-rm-complete-btn {% if r.is_done %}is-done{% endif %}"
-                                aria-label="{% if r.is_done %}بازگردانی یادآور{% else %}علامت‌گذاری به‌عنوان انجام‌شده{% endif %}"
-                                title="{% if r.is_done %}بازگردانی{% else %}انجام شد{% endif %}"
-                            >
-                                <span class="crm-rm-complete-icon" aria-hidden="true">
-                                    <i class="fas fa-{% if r.is_done %}rotate-left{% else %}check{% endif %}"></i>
-                                </span>
-                                <span class="crm-rm-complete-label">{% if r.is_done %}بازگردانی{% else %}انجام شد{% endif %}</span>
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            </article>
-            {% endwith %}
-            {% endfor %}
+        <div
+            class="crm-rm-timeline"
+            role="list"
+            id="crm-rm-timeline"
+            data-show="{{ show }}"
+            data-has-next="{% if page_obj.has_next %}1{% else %}0{% endif %}"
+            {% if page_obj.has_next %}data-next-page="{{ page_obj.next_page_number }}"{% endif %}
+            data-total="{{ page_obj.paginator.count }}"
+        >
+            {% include 'workspace/crm/reminders/_timeline_items.html' %}
         </div>
+        <div id="crm-rm-load-sentinel" class="crm-rm-load-sentinel"{% if not page_obj.has_next %} hidden{% endif %} aria-hidden="true"></div>
+        <p id="crm-rm-load-status" class="crm-rm-load-status" hidden role="status">در حال بارگذاری یادآورها…</p>
         {% else %}
         {% if stats.active or stats.done %}
             {% if show == 'done' %}
@@ -200,17 +146,6 @@
         {% endif %}
         {% endif %}
 
-        {% if page_obj.has_other_pages %}
-        <div class="crm-pagination crm-rm-pagination">
-            {% if page_obj.has_previous %}
-            <a href="?page={{ page_obj.previous_page_number }}&show={{ show }}" class="crm-btn crm-btn-ghost crm-btn-sm">قبلی</a>
-            {% endif %}
-            <span>{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
-            {% if page_obj.has_next %}
-            <a href="?page={{ page_obj.next_page_number }}&show={{ show }}" class="crm-btn crm-btn-ghost crm-btn-sm">بعدی</a>
-            {% endif %}
-        </div>
-        {% endif %}
     </div>
 
     <button type="button" class="crm-rm-fab" data-drawer-open="drawer-reminder" aria-label="یادآور جدید">
@@ -264,4 +199,8 @@
         </form>
     </div>
 </aside>
+{% endblock %}
+
+{% block crm_js %}
+<script src="{% static 'workspace/js/crm-reminders-list.js' %}?v=1"></script>
 {% endblock %}

@@ -60,7 +60,8 @@ def get_notification_prefs(user, device_id: str = '') -> Dict[str, Any]:
     if device_id:
         dev = MobileDevice.objects.filter(user=user, device_id=device_id).first()
         if dev and dev.notification_prefs:
-            prefs.update(dev.notification_prefs)
+            stored = {k: v for k, v in (dev.notification_prefs or {}).items() if k in prefs}
+            prefs.update(stored)
     return prefs
 
 

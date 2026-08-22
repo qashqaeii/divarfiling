@@ -15,6 +15,7 @@ class MobileDevice(models.Model):
     os_version = models.CharField(max_length=40, blank=True)
     app_version = models.CharField(max_length=40, blank=True)
     fcm_token = models.CharField(max_length=512, blank=True)
+    is_active = models.BooleanField(default=True, db_index=True)
     notification_prefs = models.JSONField(default=dict, blank=True)
     license_activation = models.ForeignKey(
         'licenses.LicenseActivation',
@@ -38,13 +39,12 @@ class MobileDevice(models.Model):
 DEFAULT_NOTIFICATION_PREFS = {
     'crm_reminders': True,
     'today_digest': True,
-    'new_dataset': True,
-    'price_drop': True,
     'customer_match': True,
     'extract_complete': True,
     'extract_schedule_due': True,
     'overdue_followup': True,
     'license_alerts': True,
+    'announcements': True,
     'digest_hour': 8,
 }
 
@@ -61,6 +61,8 @@ class MobileNotification(models.Model):
     body = models.TextField(blank=True)
     deep_link = models.CharField(max_length=300, blank=True)
     data = models.JSONField(default=dict, blank=True)
+    dedup_key = models.CharField(max_length=80, blank=True, db_index=True)
+    push_status = models.CharField(max_length=20, blank=True, default='')
     is_read = models.BooleanField(default=False, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)
     read_at = models.DateTimeField(null=True, blank=True)
@@ -69,9 +71,109 @@ class MobileNotification(models.Model):
         verbose_name = 'اعلان موبایل'
         verbose_name_plural = 'اعلان‌های موبایل'
         ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['user', 'dedup_key'], name='mobile_notif_user_dedup'),
+        ]
 
     def __str__(self):
         return f'{self.user_id} — {self.title[:40]}'
+
+
+class MobileNotificationBroadcast(models.Model):
+    """ارسال گروهی اعلان از Django Admin."""
+    TARGET_ALL = 'all'
+    TARGET_LICENSED = 'licensed'
+    TARGET_UNLICENSED = 'unlicensed'
+    TARGET_EXPIRING = 'expiring'
+    TARGET_SELECTED = 'selected'
+    TARGET_CHOICES = [
+        (TARGET_ALL, 'همه کاربران موبایل'),
+        (TARGET_LICENSED, 'دارای لایسنس فعال'),
+        (TARGET_UNLICENSED, 'بدون لایسنس فعال'),
+        (TARGET_EXPIRING, 'لایسنس در حال انقضا'),
+        (TARGET_SELECTED, 'کاربران انتخاب‌شده'),
+    ]
+
+    STATUS_DRAFT = 'draft'
+    STATUS_SCHEDULED = 'scheduled'
+    STATUS_SENDING = 'sending'
+    STATUS_SENT = 'sent'
+    STATUS_PARTIAL = 'partial'
+    STATUS_FAILED = 'failed'
+    STATUS_CHOICES = [
+        (STATUS_DRAFT, 'پیش‌نویس'),
+        (STATUS_SCHEDULED, 'زمان‌بندی‌شده'),
+        (STATUS_SENDING, 'در حال ارسال'),
+        (STATUS_SENT, 'ارسال شد'),
+        (STATUS_PARTIAL, 'ارسال ناقص'),
+        (STATUS_FAILED, 'ناموفق'),
+    ]
+
+    title = models.CharField(max_length=200, verbose_name='عنوان')
+    body = models.TextField(verbose_name='متن')
+    notification_type = models.CharField(
+        max_length=40,
+        default='announcement',
+        verbose_name='نوع',
+    )
+    deep_link = models.CharField(
+        max_length=300,
+        blank=True,
+        default='divarfiling://notifications',
+        verbose_name='مقصد',
+    )
+    priority = models.CharField(max_length=20, default='default', verbose_name='اولویت')
+    target = models.CharField(
+        max_length=20,
+        choices=TARGET_CHOICES,
+        default=TARGET_ALL,
+        verbose_name='مخاطب',
+    )
+    selected_users = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        blank=True,
+        related_name='mobile_notification_broadcasts',
+        verbose_name='کاربران انتخاب‌شده',
+    )
+    scheduled_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        db_index=True,
+        verbose_name='زمان ارسال',
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default=STATUS_DRAFT,
+        db_index=True,
+        verbose_name='وضعیت',
+    )
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='created_mobile_broadcasts',
+        verbose_name='ایجادکننده',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    sent_at = models.DateTimeField(null=True, blank=True)
+    target_user_count = models.PositiveIntegerField(default=0)
+    target_device_count = models.PositiveIntegerField(default=0)
+    success_count = models.PositiveIntegerField(default=0)
+    fail_count = models.PositiveIntegerField(default=0)
+    last_error = models.TextField(blank=True)
+
+    class Meta:
+        verbose_name = 'ارسال اعلان گروهی'
+        verbose_name_plural = 'ارسال‌های اعلان گروهی'
+        ordering = ['-created_at']
+        permissions = [
+            ('send_broadcast', 'ارسال اعلان گروهی موبایل'),
+        ]
+
+    def __str__(self):
+        return f'{self.title[:40]} — {self.get_status_display()}'
 
 
 class MobileExtractionSchedule(models.Model):

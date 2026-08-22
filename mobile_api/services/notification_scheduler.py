@@ -9,6 +9,7 @@ from django.contrib.auth import get_user_model
 from django.utils import timezone
 
 from mobile_api.models import DEFAULT_NOTIFICATION_PREFS, MobileDevice, MobileNotification
+from mobile_api.services.notification_catalog import TYPE_TO_PREF, sanitize_deep_link
 from mobile_api.services.notification_service import create_notification
 from mobile_api.services.notification_copy import (
     extract_schedule_due as copy_extract_schedule_due,
@@ -23,22 +24,6 @@ from workspace.services.crm_today import get_today_queue
 
 User = get_user_model()
 logger = logging.getLogger(__name__)
-
-TYPE_TO_PREF = {
-    'reminder_call': 'crm_reminders',
-    'reminder_visit': 'crm_reminders',
-    'today_digest': 'today_digest',
-    'overdue_followup': 'overdue_followup',
-    'extract_complete': 'extract_complete',
-    'extract_schedule_due': 'extract_schedule_due',
-    'extract_schedule_created': 'extract_schedule_due',
-    'new_dataset': 'new_dataset',
-    'price_drop': 'price_drop',
-    'customer_match': 'customer_match',
-    'license_expiry': 'license_alerts',
-    'support_reply': 'crm_reminders',  # اعلان پاسخ پشتیبانی؛ از کانال اعلان‌های فعال استفاده می‌کند
-}
-
 
 LICENSE_EXPIRY_THRESHOLDS = (14, 7, 3, 1, 0)
 
@@ -92,9 +77,10 @@ def _reminder_notified(reminder: Reminder) -> bool:
 
 
 def _reminder_deep_link(reminder: Reminder) -> str:
-    if reminder.customer_id:
-        return f'divarfiling://crm/contacts/{reminder.customer_id}'
-    return 'divarfiling://calendar'
+    return sanitize_deep_link(
+        f'divarfiling://crm/contacts/{reminder.customer_id}' if reminder.customer_id else 'divarfiling://calendar',
+        'reminder_call',
+    )
 
 
 def _reminder_notification_type(reminder: Reminder) -> str:
@@ -143,6 +129,7 @@ def process_due_reminders(*, window_minutes: int = 90) -> int:
             data={
                 'reminder_id': reminder.pk,
                 'contact_id': reminder.customer_id,
+                'source': 'server_fallback',
             },
             send_push=True,
         )
@@ -166,6 +153,7 @@ def process_today_digest(*, force: bool = False) -> int:
         if total <= 0:
             continue
         overdue = stats.get('overdue', 0)
+        today_key = now.date().isoformat()
         title, body = copy_today_digest(total, overdue)
         create_notification(
             user,
@@ -173,7 +161,7 @@ def process_today_digest(*, force: bool = False) -> int:
             title=title,
             body=body,
             deep_link='divarfiling://crm/today',
-            data={'total': total, 'overdue': overdue},
+            data={'total': total, 'overdue': overdue, 'day': today_key},
             send_push=True,
         )
         sent += 1
@@ -195,6 +183,7 @@ def process_overdue_followups(*, digest_hour_only: bool = True) -> int:
         overdue = stats.get('overdue', 0)
         if overdue <= 0:
             continue
+        today_key = now.date().isoformat()
         title, body = copy_overdue_followup(overdue)
         create_notification(
             user,
@@ -202,7 +191,7 @@ def process_overdue_followups(*, digest_hour_only: bool = True) -> int:
             title=title,
             body=body,
             deep_link='divarfiling://crm/today',
-            data={'overdue': overdue},
+            data={'overdue': overdue, 'day': today_key},
             send_push=True,
         )
         sent += 1
@@ -250,7 +239,7 @@ def process_license_expiry() -> int:
             notification_type='license_expiry',
             title=title,
             body=body,
-            deep_link='divarfiling://settings',
+            deep_link='divarfiling://plans',
             data={'license_id': lic.pk, 'threshold': threshold, 'days_remaining': days},
             send_push=True,
         )
@@ -268,6 +257,7 @@ def process_due_extraction_schedules() -> int:
             continue
         if _sent_today(schedule.user, 'extract_schedule_due', data_key='schedule_id', data_value=schedule.pk):
             continue
+        today_key = timezone.localtime(timezone.now()).date().isoformat()
         title, body = copy_extract_schedule_due(schedule.title)
         create_notification(
             schedule.user,
@@ -278,6 +268,7 @@ def process_due_extraction_schedules() -> int:
             data={
                 'schedule_id': schedule.pk,
                 'action': 'run_schedule',
+                'day': today_key,
             },
             send_push=True,
         )
@@ -288,14 +279,33 @@ def process_due_extraction_schedules() -> int:
 
 
 def run_all_scheduled(*, force_digest: bool = False) -> dict:
-    return {
+    started = timezone.now()
+    result = {
         'reminders': process_due_reminders(),
         'today_digest': process_today_digest(force=force_digest),
         'overdue_followup': process_overdue_followups(digest_hour_only=not force_digest),
         'license_expiry': process_license_expiry(),
         'extraction_schedules': process_due_extraction_schedules(),
         'customer_matches': _process_customer_matches_safe(),
+        'broadcasts': _process_due_broadcasts_safe(),
     }
+    duration_ms = int((timezone.now() - started).total_seconds() * 1000)
+    result['duration_ms'] = duration_ms
+    logger.info(
+        'mobile notifications job finished duration_ms=%s counts=%s',
+        duration_ms,
+        {k: v for k, v in result.items() if k != 'duration_ms'},
+    )
+    return result
+
+
+def _process_due_broadcasts_safe() -> int:
+    try:
+        from mobile_api.services.broadcast_service import process_due_broadcasts
+        return process_due_broadcasts()
+    except Exception:
+        logger.exception('broadcast notification job failed')
+        return 0
 
 
 def _process_customer_matches_safe() -> int:
@@ -309,7 +319,8 @@ def _process_customer_matches_safe() -> int:
 
 def _users_with_mobile_devices() -> Iterable:
     user_ids = (
-        MobileDevice.objects.exclude(fcm_token='')
+        MobileDevice.objects.filter(is_active=True)
+        .exclude(fcm_token='')
         .values_list('user_id', flat=True)
         .distinct()
     )

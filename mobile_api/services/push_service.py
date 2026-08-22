@@ -9,7 +9,7 @@ import requests
 from django.conf import settings
 
 from mobile_api.models import MobileDevice
-from mobile_api.services.notification_copy import welcome_message
+from mobile_api.services.notification_catalog import get_spec
 
 logger = logging.getLogger(__name__)
 
@@ -65,35 +65,75 @@ def _extract_fcm_error_code(payload: Dict[str, Any]) -> str:
     return ''
 
 
+def _active_tokens_for_user(user) -> list:
+    return list(
+        MobileDevice.objects.filter(user=user, is_active=True)
+        .exclude(fcm_token='')
+        .values_list('fcm_token', flat=True)
+        .distinct()
+    )
+
+
 def send_push_to_user(
     user,
     *,
     title: str,
     body: str,
     data: Optional[Dict[str, Any]] = None,
+    display_notification: Optional[bool] = None,
 ) -> int:
-    """ارسال به تمام دستگاه‌های کاربر. تعداد موفق را برمی‌گرداند."""
-    tokens = list(
-        MobileDevice.objects.filter(user=user)
-        .exclude(fcm_token='')
-        .values_list('fcm_token', flat=True)
-        .distinct()
+    """ارسال به دستگاه‌های فعال کاربر. تعداد پذیرش FCM را برمی‌گرداند (نه نمایش روی گوشی)."""
+    stats = send_push_to_tokens(
+        _active_tokens_for_user(user),
+        title=title,
+        body=body,
+        data=data,
+        display_notification=display_notification,
     )
-    if not tokens:
-        return 0
+    return stats['success']
 
-    payload_data = {k: str(v) for k, v in (data or {}).items()}
+
+def send_push_to_tokens(
+    tokens,
+    *,
+    title: str,
+    body: str,
+    data: Optional[Dict[str, Any]] = None,
+    display_notification: Optional[bool] = None,
+) -> Dict[str, int]:
+    unique = [t for t in dict.fromkeys(tokens) if t]
+    if not unique:
+        return {'attempted': 0, 'success': 0, 'failure': 0}
+
+    payload_data = {k: str(v) for k, v in (data or {}).items() if v is not None}
     payload_data.setdefault('title', title)
     payload_data.setdefault('body', body or title)
-    sent = 0
-    for token in tokens:
-        if _send_fcm_v1(token, title, body, payload_data) or _send_fcm_legacy(token, title, body, payload_data):
-            sent += 1
-    return sent
+    ntype = payload_data.get('type', '')
+    spec = get_spec(ntype)
+    if display_notification is None:
+        display_notification = spec.display_fcm_notification
+    payload_data.setdefault('channel', spec.channel)
+    payload_data.setdefault('priority', spec.priority)
+    success = 0
+    for token in unique:
+        ok = _send_fcm_v1(
+            token, title, body, payload_data,
+            display_notification=display_notification,
+            channel=spec.channel,
+        ) or _send_fcm_legacy(token, title, body, payload_data)
+        if ok:
+            success += 1
+    return {
+        'attempted': len(unique),
+        'success': success,
+        'failure': len(unique) - success,
+    }
 
 
 def send_welcome_push(user) -> int:
-    """Push خوش‌آمدگویی — فقط وقتی fcm_token برای اولین‌بار ثبت می‌شود."""
+    """سازگاری قدیمی — welcome از create_notification ساخته می‌شود."""
+    from mobile_api.services.notification_copy import welcome_message
+
     title, body = welcome_message()
     return send_push_to_user(
         user,
@@ -103,22 +143,39 @@ def send_welcome_push(user) -> int:
             'type': 'welcome',
             'deep_link': 'divarfiling://home',
         },
+        display_notification=True,
     )
 
 
-def _send_fcm_v1(token: str, title: str, body: str, data: Dict[str, str]) -> bool:
+def _send_fcm_v1(
+    token: str,
+    title: str,
+    body: str,
+    data: Dict[str, str],
+    *,
+    display_notification: bool = False,
+    channel: str = '',
+) -> bool:
     access = _get_v1_access_token()
     if not access:
         return False
     project_id = _fcm_project_id()
     url = f'https://fcm.googleapis.com/v1/projects/{project_id}/messages:send'
+    android: Dict[str, Any] = {
+        'priority': 'HIGH',
+        'ttl': '86400s',
+    }
+    if display_notification:
+        android['notification'] = {
+            'title': title,
+            'body': body or title,
+            'channel_id': channel or data.get('channel', ''),
+        }
     message = {
         'message': {
             'token': token,
             'data': data,
-            'android': {
-                'priority': 'HIGH',
-            },
+            'android': android,
         },
     }
     try:

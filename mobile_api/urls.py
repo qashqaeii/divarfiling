@@ -36,6 +36,8 @@ urlpatterns = [
 
     path('notifications', views.NotificationsListView.as_view(), name='notifications_list'),
     path('notifications/unread-count', views.NotificationsUnreadView.as_view(), name='notifications_unread'),
+    path('notifications/read-all', views.NotificationsMarkAllReadView.as_view(), name='notifications_read_all'),
+    path('notifications/local-delivered', views.NotificationLocalDeliveredView.as_view(), name='notifications_local_delivered'),
     path('notifications/<int:notification_id>/read', views.NotificationReadView.as_view(), name='notification_read'),
 
     path('sync', views.SyncPullView.as_view(), name='sync_pull'),

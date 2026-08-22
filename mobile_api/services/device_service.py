@@ -14,13 +14,13 @@ from workspace.services.access import _assigned_license_qs, _paid_license_qs
 
 
 def _maybe_send_welcome_push(user, old_token: str, new_token: str) -> None:
-    """First-time FCM registration — confirms push pipeline end-to-end."""
+    """First-time FCM registration — یک welcome در inbox + FCM."""
     if not (new_token or '').strip():
         return
     if (old_token or '').strip():
         return
-    from mobile_api.services.push_service import send_welcome_push
-    send_welcome_push(user)
+    from mobile_api.services.notification_service import maybe_create_welcome
+    maybe_create_welcome(user)
 
 
 def register_or_update_device(user, payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -43,6 +43,7 @@ def register_or_update_device(user, payload: Dict[str, Any]) -> Dict[str, Any]:
                 'os_version': (payload.get('os_version') or '')[:40],
                 'app_version': (payload.get('app_version') or '')[:40],
                 'fcm_token': new_token,
+                'is_active': True,
                 'license_activation': activation,
                 'last_seen_at': timezone.now(),
             },
@@ -67,10 +68,24 @@ def update_device_fcm(user, device_id: str, fcm_token: str) -> bool:
     old_token = (device.fcm_token or '') if device else ''
     updated = MobileDevice.objects.filter(user=user, device_id=device_id).update(
         fcm_token=token,
+        is_active=bool(token),
         last_seen_at=timezone.now(),
     )
     if updated and token:
         _maybe_send_welcome_push(user, old_token, token)
+    return updated > 0
+
+
+def deactivate_device(user, device_id: str) -> bool:
+    """Logout — توکن FCM این دستگاه پاک می‌شود تا push حساب قبلی نرسد."""
+    device_id = normalize_hardware_fingerprint(device_id or '')
+    if not device_id:
+        return False
+    updated = MobileDevice.objects.filter(user=user, device_id=device_id).update(
+        fcm_token='',
+        is_active=False,
+        last_seen_at=timezone.now(),
+    )
     return updated > 0
 
 

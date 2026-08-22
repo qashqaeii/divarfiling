@@ -53,7 +53,7 @@ from mobile_api.services.properties_service import (
     soft_delete_property,
     update_property_from_mobile,
 )
-from mobile_api.services.device_service import register_or_update_device, update_device_fcm
+from mobile_api.services.device_service import deactivate_device, register_or_update_device, update_device_fcm
 from mobile_api.services.documents_service import (
     delete_contact_document,
     delete_property_document,
@@ -86,7 +86,9 @@ from mobile_api.throttles import (
     MobileUserThrottle,
 )
 from mobile_api.services.notification_service import (
+    ensure_local_reminder_inbox,
     list_notifications_paginated,
+    mark_all_read,
     mark_read,
     unread_count,
 )
@@ -227,6 +229,7 @@ class LogoutView(APIView):
                 token.blacklist()
             except Exception:
                 pass
+        deactivate_device(request.user, _device_id(request))
         return api_ok({})
 
 
@@ -1060,6 +1063,31 @@ class NotificationReadView(APIView):
         if not mark_read(request.user, notification_id):
             return api_error('اعلان یافت نشد.', code='NOT_FOUND', status=404)
         return api_ok({})
+
+
+class NotificationsMarkAllReadView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        count = mark_all_read(request.user)
+        return api_ok({'count': count})
+
+
+class NotificationLocalDeliveredView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        data = _parse_body(request)
+        try:
+            reminder_id = int(data.get('reminder_id') or 0)
+        except (TypeError, ValueError):
+            reminder_id = 0
+        if reminder_id <= 0:
+            return api_error('شناسه یادآور الزامی است.', code='VALIDATION_ERROR')
+        note = ensure_local_reminder_inbox(request.user, reminder_id)
+        if not note:
+            return api_error('یادآور یافت نشد.', code='NOT_FOUND', status=404)
+        return api_ok({'notification_id': note.pk})
 
 
 class DealsListView(APIView):

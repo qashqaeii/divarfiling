@@ -5,3 +5,6 @@ class MobileApiConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'mobile_api'
     verbose_name = 'API موبایل'
+
+    def ready(self):
+        from mobile_api import signals  # noqa: F401

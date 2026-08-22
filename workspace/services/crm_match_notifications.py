@@ -168,6 +168,7 @@ def _notify_customer_matches(
             'top_title': top.get('title', ''),
             'source': top.get('source', ''),
             'digest': False,
+            'day': timezone.localdate().isoformat(),
         },
         send_push=send_push,
     )
@@ -207,7 +208,7 @@ def _notify_customer_match_digest(
         notification_type='customer_match',
         title=title,
         body=body,
-        deep_link='divarfiling://crm/contacts',
+        deep_link=f'divarfiling://crm/contacts/{top_customer.pk}/matches',
         data={
             'digest': True,
             'contact_count': len(batch),
@@ -217,6 +218,8 @@ def _notify_customer_match_digest(
             'top_contact_name': top_customer.name,
             'top_score': top.get('score'),
             'top_title': top.get('title', ''),
+            'contact_id': top_customer.pk,
+            'day': timezone.localdate().isoformat(),
         },
         send_push=send_push,
     )

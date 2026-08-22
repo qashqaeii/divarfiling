@@ -52,24 +52,45 @@ def license_payload_for_user(user) -> Dict[str, Any]:
     }
 
 
+def _display_license(user) -> Optional[License]:
+    lic = _primary_license(user)
+    if lic:
+        return lic
+    return (
+        License.objects.filter(order__user=user, order__status='paid')
+        .select_related('order', 'plan')
+        .exclude(status='suspended')
+        .order_by('-expires_at', '-created_at')
+        .first()
+    )
+
+
 def license_status_payload(user) -> Dict[str, Any]:
     p = license_payload_for_user(user)
-    lic = _primary_license(user) if p.get('valid') else _paid_license_qs(user).first()
+    lic = _display_license(user)
     days_remaining = None
     if lic and lic.expires_at:
         end_date = timezone.localtime(lic.expires_at).date()
         today = timezone.localtime(timezone.now()).date()
         days_remaining = max(0, (end_date - today).days)
+    plan_name = p.get('plan') or (lic.plan.name if lic and lic.plan_id else None)
+    expires = p.get('expires_at') or (lic.expires_at.isoformat() if lic and lic.expires_at else None)
     payload = {
         'valid': p['valid'],
-        'plan': p.get('plan'),
+        'plan': plan_name,
         'features': p.get('features'),
-        'expires_at': p.get('expires_at'),
+        'expires_at': expires,
         'days_remaining': days_remaining,
         'expiring_soon': days_remaining is not None and days_remaining <= 7,
         'license_id': lic.pk if lic else None,
         'status': 'active' if p['valid'] else ('expired' if lic else 'none'),
         'can_renew': False,
+        'started_at': lic.created_at.isoformat() if lic and lic.created_at else None,
+        'purchased_at': (
+            lic.order.paid_at.isoformat()
+            if lic and getattr(lic, 'order', None) and lic.order.paid_at
+            else None
+        ),
     }
     if lic:
         try:

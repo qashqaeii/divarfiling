@@ -12,7 +12,7 @@ from licenses.services.renewal import evaluate_license_renewal, get_renewable_li
 from shop.bot_catalog import get_bot_product
 from shop.models import DiscountCode, LicensePlan, Order, PaymentSettings
 from shop.services.mobile_checkout import mark_mobile_checkout
-from shop.services.plan_guards import evaluate_plan_purchase
+from shop.services.plan_guards import evaluate_plan_purchase, is_daily_plan, user_has_purchased_daily_plan
 from shop.services.plan_pricing import calculate_plan_purchase_prices
 from shop.services import zibal as zibal_service
 
@@ -52,6 +52,8 @@ def list_mobile_plans(user) -> Dict[str, Any]:
 
     plans = []
     for plan in product.plans.filter(is_active=True).order_by('order', 'price'):
+        if is_daily_plan(plan) and user_has_purchased_daily_plan(user):
+            continue
         purchase_ok, purchase_message, purchase_reason = evaluate_plan_purchase(user, plan)
         pricing = calculate_plan_purchase_prices(plan, product, user, quantity=1)
         plans.append({

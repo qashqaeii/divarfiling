@@ -201,17 +201,48 @@ def _property_image_urls(raw_images, *, request=None, limit=None):
     return urls
 
 
+def _dataset_cover_urls(ds: Dataset, *, limit: int = 8) -> List[str]:
+    return resolve_dataset_covers_batch([ds.pk], limit_per_dataset=limit).get(ds.pk, [])
+
+
 def _dataset_thumbnail(ds: Dataset) -> str:
-    lst = (
-        Listing.objects.filter(dataset=ds)
-        .order_by('-created_at')
-        .only('images', 'data')
-        .first()
-    )
-    if not lst:
-        return ''
-    urls = _listing_image_urls(lst)
+    urls = _dataset_cover_urls(ds, limit=1)
     return urls[0] if urls else ''
+
+
+def resolve_dataset_covers_batch(
+    dataset_ids: List[int],
+    *,
+    limit_per_dataset: int = 8,
+) -> Dict[int, List[str]]:
+    """اولین URL تصویر از چند آگهی مختلف هر دیتاست — برای fallback وقتی لینک دیوار منقضی شده."""
+    ids = [int(i) for i in dataset_ids if i]
+    if not ids:
+        return {}
+
+    covers: Dict[int, List[str]] = {did: [] for did in ids}
+    seen: Dict[int, set] = {did: set() for did in ids}
+
+    rows = (
+        Listing.objects.filter(dataset_id__in=ids)
+        .order_by('dataset_id', 'id')
+        .only('dataset_id', 'images', 'data')
+    )
+    for lst in rows:
+        did = lst.dataset_id
+        if did not in covers or len(covers[did]) >= limit_per_dataset:
+            continue
+        listing_urls = _listing_image_urls(lst)
+        if not listing_urls:
+            continue
+        first = listing_urls[0]
+        dedupe_key = first.split('?', 1)[0].rstrip('/')
+        if dedupe_key in seen[did]:
+            continue
+        seen[did].add(dedupe_key)
+        covers[did].append(first)
+
+    return covers
 
 
 def user_to_dict(user, request=None) -> Dict[str, Any]:
@@ -294,7 +325,7 @@ def contact_to_dict(c: Customer) -> Dict[str, Any]:
     }
 
 
-def dataset_to_dict(ds: Dataset) -> Dict[str, Any]:
+def dataset_to_dict(ds: Dataset, *, cover_urls: Optional[List[str]] = None) -> Dict[str, Any]:
     source = (ds.metadata or {}).get('source', 'windows')
     if (ds.metadata or {}).get('mobile_extraction'):
         source = 'mobile'
@@ -303,6 +334,7 @@ def dataset_to_dict(ds: Dataset) -> Dict[str, Any]:
     category = str(
         filters.get('category_name') or filters.get('category') or meta.get('category') or ''
     ).strip()
+    thumb_urls = cover_urls if cover_urls is not None else _dataset_cover_urls(ds)
     return {
         'id': str(ds.pk),
         'name': ds.name,
@@ -313,7 +345,8 @@ def dataset_to_dict(ds: Dataset) -> Dict[str, Any]:
         'city': ds.city or '',
         'district': ds.district or '',
         'item_count': ds.row_count if ds.row_count is not None else 0,
-        'thumbnail_url': _dataset_thumbnail(ds),
+        'thumbnail_url': thumb_urls[0] if thumb_urls else '',
+        'thumbnail_urls': thumb_urls,
         'created_at': ds.created_at.isoformat() if ds.created_at else None,
         'original_filename': ds.original_filename or '',
         'file_format': ds.file_format or '',

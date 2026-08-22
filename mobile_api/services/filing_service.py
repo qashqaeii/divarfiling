@@ -9,7 +9,7 @@ from django.db import transaction
 from django.db.models import Count, Min, Q
 from django.utils import timezone
 
-from mobile_api.serializers import dataset_to_dict, listing_detail_to_dict, listing_to_dict
+from mobile_api.serializers import dataset_to_dict, listing_detail_to_dict, listing_to_dict, resolve_dataset_covers_batch
 from workspace.models import Dataset, Listing
 from workspace.services.access import has_active_bot_license
 from workspace.services.filters import (
@@ -32,7 +32,12 @@ def list_datasets(user, *, page: int = 1, page_size: int = 20) -> Tuple[List[dic
         return [], {'page': page, 'page_size': page_size, 'total': 0}
     paginator = Paginator(_datasets_qs(user), page_size)
     page_obj = paginator.get_page(page)
-    return [dataset_to_dict(ds) for ds in page_obj.object_list], {
+    datasets = list(page_obj.object_list)
+    covers_map = resolve_dataset_covers_batch([ds.pk for ds in datasets])
+    return [
+        dataset_to_dict(ds, cover_urls=covers_map.get(ds.pk, []))
+        for ds in datasets
+    ], {
         'page': page,
         'page_size': page_size,
         'total': paginator.count,

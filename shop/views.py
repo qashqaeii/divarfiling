@@ -142,13 +142,10 @@ class ProductDetailView(DetailView):
 
         # بررسی اینکه آیا کاربر قبلاً امتیاز داده یا نظر داده
         if self.request.user.is_authenticated:
-            from shop.services.plan_guards import user_has_purchased_daily_plan
+            from shop.services.plan_guards import filter_visible_plans, user_has_purchased_daily_plan
 
             context['daily_plan_used'] = user_has_purchased_daily_plan(self.request.user)
-            context['buyable_plans'] = [
-                plan for plan in context['plans']
-                if not (context['daily_plan_used'] and plan.plan_type == 'daily')
-            ]
+            context['buyable_plans'] = filter_visible_plans(context['plans'], self.request.user)
 
             user_rating = ProductRating.objects.filter(
                 product=product,
@@ -351,6 +348,7 @@ class BuyView(LoginRequiredMixin, CreateView):
         context = super().get_context_data(**kwargs)
         from shop.services.plan_guards import (
             evaluate_plan_purchase,
+            is_plan_visible_in_catalog,
             user_has_purchased_daily_plan,
         )
 
@@ -360,6 +358,8 @@ class BuyView(LoginRequiredMixin, CreateView):
 
         plans_with_prices = []
         for plan in self.product.plans.filter(is_active=True).order_by('order', 'price'):
+            if not is_plan_visible_in_catalog(self.request.user, plan):
+                continue
             purchase_ok, purchase_message, _purchase_reason = evaluate_plan_purchase(
                 self.request.user,
                 plan,

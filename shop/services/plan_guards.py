@@ -32,6 +32,19 @@ def user_has_purchased_daily_plan(user) -> bool:
     ).exists()
 
 
+def is_plan_visible_in_catalog(user, plan: LicensePlan | None) -> bool:
+    """پلن آزمایشی پس از یک‌بار خرید در لیست پلن‌ها نمایش داده نمی‌شود."""
+    if not plan:
+        return False
+    if is_daily_plan(plan) and user_has_purchased_daily_plan(user):
+        return False
+    return True
+
+
+def filter_visible_plans(plans, user):
+    return [plan for plan in plans if is_plan_visible_in_catalog(user, plan)]
+
+
 def evaluate_plan_purchase(user, plan: LicensePlan | None) -> tuple[bool, str | None, str]:
     """بررسی امکان خرید پلن — (مجاز، پیام خطا، دلیل مسدودیت)."""
     if not is_daily_plan(plan):

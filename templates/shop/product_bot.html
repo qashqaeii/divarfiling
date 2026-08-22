@@ -151,7 +151,7 @@
                     </ul>
                 </div>
                 <div class="pb-plan-deck">
-                    {% for plan in plans %}
+                    {% for plan in buyable_plans %}
                     {% cycle 'amber' 'sky' 'violet' 'emerald' as plan_accent silent %}
                     {% cycle 'trial' 'starter' 'pro' 'plus' as plan_tier silent %}
                     {% cycle 'fa-bolt' 'fa-calendar-day' 'fa-calendar-week' 'fa-calendar' as plan_icon silent %}
@@ -210,12 +210,8 @@
                             <li><i class="fas fa-check" aria-hidden="true"></i> فعال‌سازی فوری پس از خرید</li>
                             <li><i class="fas fa-check" aria-hidden="true"></i> پشتیبانی نصب و راه‌اندازی</li>
                         </ul>
-                        <a href="{% if daily_plan_used and plan.plan_type == 'daily' %}{% url 'buy' product.slug %}{% else %}{% url 'buy' product.slug %}?plan={{ plan.id }}{% endif %}" class="pb-plan-card-cta{% if plan.is_featured %} pb-plan-card-cta--primary{% endif %}{% if daily_plan_used and plan.plan_type == 'daily' %} pb-plan-card-cta--disabled{% endif %}"{% if daily_plan_used and plan.plan_type == 'daily' %} aria-disabled="true"{% endif %}>
-                            {% if daily_plan_used and plan.plan_type == 'daily' %}
-                            <span>قبلاً استفاده شده</span>
-                            {% else %}
+                        <a href="{% url 'buy' product.slug %}?plan={{ plan.id }}" class="pb-plan-card-cta{% if plan.is_featured %} pb-plan-card-cta--primary{% endif %}">
                             <span>خرید {{ plan.get_plan_type_display }}</span>
-                            {% endif %}
                             <i class="fas fa-arrow-left" aria-hidden="true"></i>
                         </a>
                     </article>

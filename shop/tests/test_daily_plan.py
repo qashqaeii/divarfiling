@@ -253,6 +253,10 @@ class DailyPlanRepeatPurchaseTests(TestCase):
         response = self.client.get(f'{buy_url}?plan={self.daily_plan.pk}')
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, buy_url)
+        response = self.client.get(buy_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, self.daily_plan.name)
+        self.assertNotContains(response, 'plan_' + str(self.daily_plan.pk))
 
     def test_repeat_daily_purchase_blocked_on_post(self):
         self._create_expired_daily_order()

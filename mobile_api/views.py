@@ -80,6 +80,7 @@ from mobile_api.services.filing_service import (
     unlink_listing_contact,
     update_listing,
     update_listing_meta,
+    delete_listing,
 )
 from mobile_api.services.mobile_export import export_contacts_response, export_properties_response
 from mobile_api.services.insights_service import dataset_insights_payload, dataset_map_payload
@@ -465,6 +466,12 @@ class ListingDetailView(APIView):
         payload = update_listing(request.user, token, request.data, request)
         if not payload:
             return api_error('آگهی یافت نشد یا داده نامعتبر است.', code='NOT_FOUND', status=404)
+        return api_ok(payload)
+
+    def delete(self, request, token):
+        payload = delete_listing(request.user, token)
+        if not payload:
+            return api_error('آگهی یافت نشد.', code='NOT_FOUND', status=404)
         return api_ok(payload)
 
 

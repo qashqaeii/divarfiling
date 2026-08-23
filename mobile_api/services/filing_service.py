@@ -373,6 +373,24 @@ def update_listing(user, token: str, payload: dict, request=None) -> Optional[di
     return listing_detail_to_dict(lst, user=user, request=request)
 
 
+def delete_listing(user, token: str) -> Optional[dict]:
+    """حذف آگهی متعلق به کاربر از فایلینگ."""
+    if not has_active_bot_license(user):
+        return None
+    lst = Listing.objects.filter(
+        dataset__user=user,
+        token=token,
+    ).select_related('dataset').first()
+    if not lst:
+        return None
+    dataset = lst.dataset
+    title = (lst.title or '')[:80]
+    lst.delete()
+    if dataset is not None:
+        dataset.sync_row_count()
+    return {'token': token, 'title': title, 'deleted': True}
+
+
 def update_listing_meta(user, token: str, payload: dict, request=None) -> Optional[dict]:
     if not has_active_bot_license(user):
         return None

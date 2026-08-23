@@ -173,3 +173,41 @@ class FilingApiTests(TestCase):
         resp = self.client.get(f'/api/mobile/v1/filing/datasets/{uuid.uuid4()}/export')
         self.assertEqual(resp.status_code, 404)
         self.assertEqual(resp.json()['code'], 'NOT_FOUND')
+
+    def test_delete_listing(self, _license):
+        token = 'tok-venk-120'
+        self.assertTrue(Listing.objects.filter(dataset=self.dataset, token=token).exists())
+        resp = self.client.delete(f'/api/mobile/v1/filing/listings/{token}')
+        self.assertEqual(resp.status_code, 200)
+        body = resp.json()
+        self.assertTrue(body['ok'])
+        self.assertTrue(body['data']['deleted'])
+        self.assertFalse(Listing.objects.filter(dataset=self.dataset, token=token).exists())
+
+    def test_delete_listing_not_found(self, _license):
+        resp = self.client.delete('/api/mobile/v1/filing/listings/missing-token')
+        self.assertEqual(resp.status_code, 404)
+        self.assertEqual(resp.json()['code'], 'NOT_FOUND')
+
+    def test_delete_listing_other_user_forbidden(self, _license):
+        other = User.objects.create_user(
+            username='09120001111',
+            phone='09120001111',
+            password='test',
+        )
+        other_dataset = Dataset.objects.create(
+            user=other,
+            name='فایل دیگران',
+            original_filename='other.xlsx',
+            file_format='xlsx',
+        )
+        Listing.objects.create(
+            dataset=other_dataset,
+            token='tok-foreign',
+            title='آگهی دیگران',
+            price=1_000_000_000,
+            area=50,
+        )
+        resp = self.client.delete('/api/mobile/v1/filing/listings/tok-foreign')
+        self.assertEqual(resp.status_code, 404)
+        self.assertTrue(Listing.objects.filter(token='tok-foreign').exists())

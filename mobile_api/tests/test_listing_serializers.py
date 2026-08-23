@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 
 from mobile_api.serializers import listing_detail_to_dict, listing_to_dict
-from workspace.models import Dataset, Listing
+from workspace.models import Customer, CustomerListing, Dataset, Listing
 
 User = get_user_model()
 
@@ -146,3 +146,68 @@ class ListingSerializerFallbackTests(TestCase):
         self.assertIn('linked_contacts', detail)
         self.assertIsInstance(detail['linked_contacts'], list)
         self.assertFalse(detail['meta']['is_favorite'])
+
+    def test_detail_includes_market_benchmark(self):
+        cheap = Listing.objects.create(
+            dataset=self.dataset,
+            token='tok-mkt-cheap',
+            title='ارزان',
+            price=10_000_000_000,
+            area=100,
+            neighborhood='جردن',
+        )
+        Listing.objects.create(
+            dataset=self.dataset,
+            token='tok-mkt-mid',
+            title='میانه',
+            price=20_000_000_000,
+            area=100,
+            neighborhood='جردن',
+        )
+        expensive = Listing.objects.create(
+            dataset=self.dataset,
+            token='tok-mkt-high',
+            title='گران',
+            price=40_000_000_000,
+            area=100,
+            neighborhood='جردن',
+        )
+        detail = listing_detail_to_dict(expensive)
+        self.assertIn('market', detail)
+        market = detail['market']
+        self.assertEqual(market['market_tier'], 'over')
+        self.assertEqual(market['short_verdict'], 'بالای بازار')
+        self.assertGreater(market['diff_pct'], 12)
+        self.assertTrue(market['market_median_fmt'])
+        self.assertTrue(market['listing_metric_fmt'])
+        self.assertTrue(market['diff_amount_fmt'])
+        self.assertGreaterEqual(market['sample_count'], 3)
+        cheap_detail = listing_detail_to_dict(cheap)
+        self.assertIn('market', cheap_detail)
+        self.assertEqual(cheap_detail['market']['market_tier'], 'under')
+        self.assertEqual(cheap_detail['market']['short_verdict'], 'زیر بازار')
+        self.assertIsNotNone(cheap_detail['market']['diff_pct'])
+        self.assertLess(cheap_detail['market']['diff_pct'], -12)
+
+    def test_linked_contacts_matching_owner_and_tenant_phones_get_roles(self):
+        listing = Listing.objects.create(
+            dataset=self.dataset,
+            token='tok-occupancy-roles',
+            title='آپارتمان',
+            price=8_000_000_000,
+            area=90,
+            data={
+                'شماره تماس': '09121112233',
+                'نام مالک': 'علی رضایی',
+                'شماره مستاجر': '09123334455',
+                'نام مستاجر': 'سارا محمدی',
+            },
+        )
+        owner = Customer.objects.create(user=self.user, name='علی رضایی', phone='09121112233')
+        tenant = Customer.objects.create(user=self.user, name='سارا محمدی', phone='09123334455')
+        CustomerListing.objects.create(customer=owner, token=listing.token, role='پیشنهادی')
+        CustomerListing.objects.create(customer=tenant, token=listing.token, role='پیشنهادی')
+        detail = listing_detail_to_dict(listing, user=self.user)
+        roles = {row['phone']: row['role'] for row in detail['linked_contacts']}
+        self.assertEqual(roles['09121112233'], 'مالک')
+        self.assertEqual(roles['09123334455'], 'مستاجر')

@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Optional, Tuple
 import pandas as pd
 
 from workspace.services.columns import is_consultant
-from workspace.services.display import transaction_profile
+from workspace.services.display import market_tier_from_score, transaction_profile
 from workspace.services.formatting import format_area, format_pct, format_toman, full_deposit_equiv, round_pct
 from workspace.services.market_analytics import (
     build_professional_report,
@@ -874,25 +874,80 @@ def benchmark_listing(listing, df: pd.DataFrame, transaction_type: str = '') -> 
             full_dep = full_deposit_equiv(listing.deposit, listing.rent, 30)
         result['metric'] = 'full_deposit'
         result['label'] = 'رهن کامل معادل'
-        result['price_per_sqm_fmt'] = format_toman(full_dep) if full_dep else '—'
+        listing_metric = None
+        try:
+            if full_dep is not None and full_dep == full_dep:
+                listing_metric = float(full_dep)
+        except (TypeError, ValueError):
+            listing_metric = None
+        result['listing_metric'] = listing_metric
+        result['price_per_sqm_fmt'] = format_toman(listing_metric) if listing_metric else '—'
         med = scored['full_deposit'].median()
-        result['market_median_fmt'] = format_toman(med) if pd.notna(med) else '—'
+        market_median = float(med) if pd.notna(med) else None
+        result['market_median'] = market_median
+        result['market_median_fmt'] = format_toman(market_median) if market_median is not None else '—'
         if listing.rent == 0 and (listing.deposit or 0) > 0:
             result['note'] = 'رهن کامل — مقایسه بر اساس رهن کامل معادل'
     else:
         pps = listing.price_per_sqm
+        if pps is None or (isinstance(pps, float) and pd.isna(pps)):
+            pps = r.get('price_per_sqm')
         result['metric'] = 'price_per_sqm'
         result['label'] = 'قیمت هر متر'
-        result['price_per_sqm_fmt'] = format_toman(pps, per_sqm=True) if pps else '—'
+        listing_metric = None
+        try:
+            if pps is not None and pps == pps:
+                listing_metric = float(pps)
+        except (TypeError, ValueError):
+            listing_metric = None
+        result['listing_metric'] = listing_metric
+        result['price_per_sqm_fmt'] = format_toman(listing_metric, per_sqm=True) if listing_metric else '—'
         med = scored['price_per_sqm'].median()
-        result['market_median_fmt'] = format_toman(med, per_sqm=True) if pd.notna(med) else '—'
+        market_median = float(med) if pd.notna(med) else None
+        result['market_median'] = market_median
+        result['market_median_fmt'] = format_toman(market_median, per_sqm=True) if market_median is not None else '—'
 
-    result['diff_pct'] = score
-    result['verdict'] = value_verdict(score)
-    if score is not None and score <= -12:
-        result['verdict'] = 'زیر بازار — فرصت مناسب برای مشتری'
-    elif score is not None and score >= 12:
-        result['verdict'] = 'بالای بازار — پیشنهاد مذاکره'
-    elif score is not None:
-        result['verdict'] = 'در محدوده متعارف بازار (تعدیل‌شده)'
+    result['diff_pct'] = None
+    try:
+        if score is not None and not pd.isna(score):
+            result['diff_pct'] = round(float(score), 1)
+    except (TypeError, ValueError):
+        result['diff_pct'] = None
+    listing_metric = result.get('listing_metric')
+    market_median = result.get('market_median')
+    score_num = result['diff_pct']
+    if (
+        score_num is None
+        and listing_metric is not None
+        and market_median not in (None, 0)
+        and market_median == market_median
+    ):
+        try:
+            score_num = round((float(listing_metric) - float(market_median)) / float(market_median) * 100, 1)
+        except (TypeError, ValueError, ZeroDivisionError):
+            score_num = None
+    _apply_benchmark_score(result, score_num)
+    result['sample_count'] = int(len(scored))
+    if listing_metric is not None and market_median is not None:
+        diff_amount = listing_metric - market_median
+        result['diff_amount'] = round(diff_amount, 0)
+        per_sqm = mode != 'rent'
+        result['diff_amount_fmt'] = format_toman(abs(diff_amount), per_sqm=per_sqm)
+    else:
+        result['diff_amount'] = None
+        result['diff_amount_fmt'] = ''
     return result
+
+
+def _apply_benchmark_score(result: Dict, score_num: Optional[float]) -> None:
+    result['diff_pct'] = score_num
+    result['value_score'] = score_num
+    result['market_tier'] = market_tier_from_score(score_num)
+    if score_num is not None and score_num <= -12:
+        result['verdict'] = 'زیر بازار — فرصت مناسب برای مشتری'
+    elif score_num is not None and score_num >= 12:
+        result['verdict'] = 'بالای بازار — پیشنهاد مذاکره'
+    elif score_num is not None:
+        result['verdict'] = 'در محدوده متعادل بازار'
+    else:
+        result['verdict'] = value_verdict(score_num)

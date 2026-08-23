@@ -1,8 +1,11 @@
 """سریالایزرهای dict برای API موبایل."""
 from __future__ import annotations
 
+import logging
 import re
 from typing import Any, Dict, List, Optional
+
+logger = logging.getLogger(__name__)
 
 from mobile_api.activity_types import workspace_type_to_api
 from workspace.models import (
@@ -437,6 +440,83 @@ def listing_to_dict(lst: Listing) -> Dict[str, Any]:
     }
 
 
+def _finite_number(value: Any) -> Optional[float]:
+    if value is None or value == '':
+        return None
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return None
+    if number != number:
+        return None
+    return number
+
+
+def _listing_market_to_dict(lst: Listing) -> Optional[Dict[str, Any]]:
+    """مقایسه قیمت آگهی با میانه فایل — همان منطق صفحه جزئیات میزکار."""
+    dataset = getattr(lst, 'dataset', None)
+    if dataset is None:
+        return None
+    try:
+        from workspace.services.analyzer import benchmark_listing, listings_to_dataframe
+        from workspace.services.display import market_tier_from_score
+        from workspace.services.formatting import format_toman
+
+        listings_qs = dataset.listings.all()
+        if listings_qs.count() < 2:
+            return None
+        df = listings_to_dataframe(listings_qs)
+        if df is None or len(df) < 2:
+            return None
+        bench = benchmark_listing(lst, df, dataset.transaction_type or '')
+        listing_metric = _finite_number(bench.get('listing_metric'))
+        market_median = _finite_number(bench.get('market_median'))
+        score = _finite_number(bench.get('value_score'))
+        if score is None and listing_metric is not None and market_median not in (None, 0):
+            score = round((listing_metric - market_median) / market_median * 100, 1)
+        if score is None and listing_metric is None and market_median is None:
+            return None
+        tier = bench.get('market_tier') or ''
+        if tier in ('', 'unknown') or score is not None:
+            computed = market_tier_from_score(score)
+            if computed != 'unknown':
+                tier = computed
+        short = {
+            'under': 'زیر بازار',
+            'over': 'بالای بازار',
+            'fair': 'متعادل',
+        }.get(tier, '')
+        if not short:
+            return None
+        diff_amount = _finite_number(bench.get('diff_amount'))
+        if diff_amount is None and listing_metric is not None and market_median is not None:
+            diff_amount = listing_metric - market_median
+        per_sqm = (bench.get('metric') or 'price_per_sqm') == 'price_per_sqm'
+        diff_amount_fmt = bench.get('diff_amount_fmt') or ''
+        if not diff_amount_fmt and diff_amount is not None:
+            diff_amount_fmt = format_toman(abs(diff_amount), per_sqm=per_sqm)
+        return {
+            'value_score': score,
+            'market_tier': tier,
+            'short_verdict': short,
+            'verdict': bench.get('verdict') or short,
+            'label': bench.get('label') or '',
+            'metric': bench.get('metric') or '',
+            'listing_metric': listing_metric,
+            'listing_metric_fmt': bench.get('price_per_sqm_fmt') or '',
+            'market_median': market_median,
+            'market_median_fmt': bench.get('market_median_fmt') or '',
+            'diff_pct': score,
+            'diff_amount': round(diff_amount, 0) if diff_amount is not None else None,
+            'diff_amount_fmt': diff_amount_fmt,
+            'sample_count': int(bench.get('sample_count') or len(df)),
+            'note': bench.get('note') or '',
+        }
+    except Exception:
+        logger.exception('listing market benchmark failed token=%s', getattr(lst, 'token', ''))
+        return None
+
+
 def listing_detail_to_dict(lst: Listing, *, user=None, request=None) -> Dict[str, Any]:
     base = listing_to_dict(lst)
     data = lst.data or {}
@@ -471,6 +551,12 @@ def listing_detail_to_dict(lst: Listing, *, user=None, request=None) -> Dict[str
         'feature_fields': feature_fields_for_edit(lst),
         **_listing_amenity_fields(lst),
     })
+    market = _listing_market_to_dict(lst)
+    if market:
+        base['market'] = market
+        base['value_score'] = market.get('value_score')
+        base['market_tier'] = market.get('market_tier')
+        base['verdict'] = market.get('short_verdict')
     if user is not None:
         from workspace.services.listing_public_share import (
             get_or_create_listing_share,
@@ -479,7 +565,7 @@ def listing_detail_to_dict(lst: Listing, *, user=None, request=None) -> Dict[str
         share = get_or_create_listing_share(user, lst)
         base['public_share'] = listing_public_share_to_dict(share, request)
         base['meta'] = listing_meta_to_dict(user, lst.token)
-        base['linked_contacts'] = listing_linked_contacts_to_dict(user, lst.token)
+        base['linked_contacts'] = listing_linked_contacts_to_dict(user, lst.token, listing=lst)
     else:
         from workspace.constants import LISTING_TAGS
         base['meta'] = {
@@ -507,18 +593,30 @@ def listing_meta_to_dict(user, token: str) -> Dict[str, Any]:
     }
 
 
-def listing_linked_contacts_to_dict(user, token: str) -> List[Dict[str, Any]]:
+def listing_linked_contacts_to_dict(user, token: str, listing: Optional[Listing] = None) -> List[Dict[str, Any]]:
+    from accounts.phone_utils import normalize_phone
     from workspace.services.crm import customers_linked_to_token
+
+    owner_phone = normalize_phone(owner_phone_from_listing(listing)) if listing is not None else ''
+    tenant_phone = normalize_phone(tenant_phone_from_listing(listing)) if listing is not None else ''
+    vacant = listing_is_vacant(listing) if listing is not None else False
 
     rows: List[Dict[str, Any]] = []
     for link in customers_linked_to_token(user, token):
         customer = link.customer
+        phone = customer.phone or ''
+        phone_key = normalize_phone(phone)
+        role = link.role or ''
+        if owner_phone and phone_key == owner_phone:
+            role = 'مالک'
+        elif tenant_phone and not vacant and phone_key == tenant_phone:
+            role = 'مستاجر'
         rows.append({
             'id': link.pk,
             'customer_id': customer.pk,
             'full_name': customer.name or '',
-            'phone': customer.phone or '',
-            'role': link.role or '',
+            'phone': phone,
+            'role': role,
             'deal_type': link.deal_type or '',
             'notes': link.notes or '',
             'status': customer.status or '',

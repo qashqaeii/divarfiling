@@ -65,6 +65,27 @@ class FilingApiTests(TestCase):
         tokens = [row['token'] for row in resp.json()['data']]
         self.assertEqual(tokens, ['tok-small-65'])
 
+    @patch('mobile_api.services.filing_service._value_map_for_dataset')
+    def test_listings_include_value_fields(self, mock_value_map, _license):
+        listings = list(Listing.objects.filter(dataset=self.dataset).order_by('pk'))
+        mock_value_map.return_value = {
+            listings[0].pk: -15.2,
+            listings[1].pk: 8.0,
+        }
+        resp = self.client.get(
+            f'/api/mobile/v1/filing/datasets/{self.dataset.pk}/listings',
+        )
+        self.assertEqual(resp.status_code, 200)
+        rows = {row['token']: row for row in resp.json()['data']}
+        under = rows['tok-venk-120']
+        self.assertEqual(under['value_score'], -15.2)
+        self.assertEqual(under['market_tier'], 'under')
+        self.assertEqual(under['verdict'], 'زیر بازار')
+        fair = rows['tok-small-65']
+        self.assertEqual(fair['value_score'], 8.0)
+        self.assertEqual(fair['market_tier'], 'fair')
+        self.assertEqual(fair['verdict'], 'متعارف')
+
     def test_global_search(self, _license):
         resp = self.client.get('/api/mobile/v1/filing/search', {'q': 'ونک'})
         self.assertEqual(resp.status_code, 200)
@@ -95,7 +116,24 @@ class FilingApiTests(TestCase):
         for row in resp.json()['data']:
             self.assertEqual(row['dataset_id'], str(self.dataset.pk))
 
-    def test_dataset_insights(self, _license):
+    def test_dataset_detail_includes_stats(self, _license):
+        resp = self.client.get(f'/api/mobile/v1/filing/datasets/{self.dataset.pk}')
+        self.assertEqual(resp.status_code, 200)
+        body = resp.json()['data']
+        self.assertEqual(body['item_count'], 2)
+        self.assertIn('updated_at', body)
+        self.assertIn('genuine_personal_count', body)
+
+    def test_dataset_rename(self, _license):
+        resp = self.client.patch(
+            f'/api/mobile/v1/filing/datasets/{self.dataset.pk}',
+            {'name': 'فایل جردن'},
+            format='json',
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.json()['data']['name'], 'فایل جردن')
+        self.dataset.refresh_from_db()
+        self.assertEqual(self.dataset.name, 'فایل جردن')
         resp = self.client.get(f'/api/mobile/v1/filing/datasets/{self.dataset.pk}/insights')
         self.assertEqual(resp.status_code, 200)
         body = resp.json()

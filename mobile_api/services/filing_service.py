@@ -65,7 +65,51 @@ def dataset_detail_payload(user, dataset_id: str) -> Optional[dict]:
     ds = get_dataset(user, dataset_id)
     if not ds:
         return None
-    return dataset_to_dict(ds)
+    ds.touch()
+    return dataset_to_dict(ds, include_stats=True)
+
+
+def rename_dataset(user, dataset_id: str, name: str) -> Tuple[Optional[dict], Optional[str]]:
+    ds = get_dataset(user, dataset_id)
+    if not ds:
+        return None, 'NOT_FOUND'
+    cleaned = (name or '').strip()
+    if not cleaned:
+        return None, 'INVALID_NAME'
+    if len(cleaned) > 255:
+        return None, 'INVALID_NAME'
+    ds.name = cleaned
+    ds.mark_updated()
+    ds.save(update_fields=['name', 'updated_at'])
+    return dataset_to_dict(ds, include_stats=True), None
+
+
+def delete_dataset_consultants(user, dataset_id: str) -> Tuple[Optional[dict], Optional[str], int]:
+    from workspace.services.columns import consultant_q
+
+    ds = get_dataset(user, dataset_id)
+    if not ds:
+        return None, 'NOT_FOUND', 0
+    qs = consultant_q(ds.listings.all())
+    deleted = qs.count()
+    if deleted:
+        qs.delete()
+        ds.sync_row_count()
+    return dataset_to_dict(ds, include_stats=True), None, deleted
+
+
+def delete_dataset_disguised_consultants(user, dataset_id: str) -> Tuple[Optional[dict], Optional[str], int]:
+    from workspace.services.advertiser_signal import disguised_consultant_listing_ids
+
+    ds = get_dataset(user, dataset_id)
+    if not ds:
+        return None, 'NOT_FOUND', 0
+    ids = disguised_consultant_listing_ids(ds.listings.all())
+    deleted = len(ids)
+    if ids:
+        ds.listings.filter(pk__in=ids).delete()
+        ds.sync_row_count()
+    return dataset_to_dict(ds, include_stats=True), None, deleted
 
 
 def _default_sort_for_dataset(ds: Optional[Dataset]) -> str:
@@ -133,6 +177,51 @@ def _value_map_for_listings(listings: List) -> Dict[int, Optional[float]]:
         except (KeyError, TypeError, ValueError):
             continue
     return value_map
+
+
+def _value_map_for_dataset(ds: Dataset) -> Dict[int, float]:
+    """ارزش هر آگهی نسبت به کل فایل — هم‌راستا با میزکار."""
+    from workspace.services.analyzer import compute_expected_values, enrich_dataframe
+    from workspace.services.display import transaction_profile
+
+    all_listings = list(Listing.objects.filter(dataset=ds))
+    if not all_listings:
+        return {}
+    tx = transaction_profile(ds.transaction_type or '')
+    mode = 'rent' if tx.get('is_rent') and not tx.get('show_price') else 'sale'
+    try:
+        enriched = compute_expected_values(enrich_dataframe(all_listings), mode=mode)
+    except Exception:
+        return {}
+    value_map: Dict[int, float] = {}
+    for _, r in enriched.iterrows():
+        score = r.get('value_score')
+        if score is None:
+            continue
+        try:
+            if score != score:
+                continue
+        except TypeError:
+            pass
+        try:
+            value_map[int(r['listing_id'])] = float(score)
+        except (KeyError, TypeError, ValueError):
+            continue
+    return value_map
+
+
+def _listing_dict_with_value(lst: Listing, value_map: Dict[int, float]) -> dict:
+    payload = listing_to_dict(lst)
+    score = value_map.get(lst.pk)
+    if score is None:
+        return payload
+    from workspace.services.display import market_tier_from_score
+    from workspace.services.valuation import value_verdict
+
+    payload['value_score'] = round(score, 1)
+    payload['market_tier'] = market_tier_from_score(score)
+    payload['verdict'] = value_verdict(score)
+    return payload
 
 
 def filter_listings_queryset(
@@ -203,7 +292,9 @@ def list_listings(
     neighborhoods = get_neighborhoods_qs(Listing.objects.filter(dataset=ds))
     paginator = Paginator(qs, page_size)
     page_obj = paginator.get_page(page)
-    return [listing_to_dict(lst) for lst in page_obj.object_list], {
+    value_map = _value_map_for_dataset(ds)
+    items = [_listing_dict_with_value(lst, value_map) for lst in page_obj.object_list]
+    return items, {
         'page': page,
         'page_size': page_size,
         'total': paginator.count,

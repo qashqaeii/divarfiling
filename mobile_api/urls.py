@@ -84,6 +84,8 @@ urlpatterns = [
 
     path('filing/datasets', views.DatasetsListView.as_view(), name='datasets'),
     path('filing/datasets/<uuid:dataset_id>', views.DatasetDetailView.as_view(), name='dataset_detail'),
+    path('filing/datasets/<uuid:dataset_id>/delete-consultants', views.DatasetDeleteConsultantsView.as_view(), name='dataset_delete_consultants'),
+    path('filing/datasets/<uuid:dataset_id>/delete-disguised-consultants', views.DatasetDeleteDisguisedConsultantsView.as_view(), name='dataset_delete_disguised_consultants'),
     path('filing/datasets/<uuid:dataset_id>/export', views.DatasetExportView.as_view(), name='dataset_export'),
     path('filing/datasets/<uuid:dataset_id>/listings', views.DatasetListingsView.as_view(), name='dataset_listings'),
     path('filing/datasets/<uuid:dataset_id>/insights', views.DatasetInsightsView.as_view(), name='dataset_insights'),

@@ -67,11 +67,14 @@ from mobile_api.services.extraction_ingest import extraction_limits_payload, ing
 from mobile_api.services.filing_service import (
     dataset_detail_payload,
     delete_dataset,
+    delete_dataset_consultants,
+    delete_dataset_disguised_consultants,
     export_dataset_response,
     get_dataset,
     get_listing_detail,
     list_datasets,
     list_listings,
+    rename_dataset,
     search_listings,
     update_listing,
 )
@@ -391,10 +394,39 @@ class DatasetDetailView(APIView):
             return api_error('مجموعه یافت نشد.', code='NOT_FOUND', status=404)
         return api_ok(payload)
 
+    def patch(self, request, dataset_id):
+        name = request.data.get('name') if isinstance(request.data, dict) else None
+        payload, err = rename_dataset(request.user, str(dataset_id), name or '')
+        if err == 'NOT_FOUND':
+            return api_error('مجموعه یافت نشد.', code='NOT_FOUND', status=404)
+        if err == 'INVALID_NAME':
+            return api_error('نام فایل نامعتبر است.', code='VALIDATION', status=400)
+        return api_ok(payload)
+
     def delete(self, request, dataset_id):
         if not delete_dataset(request.user, str(dataset_id)):
             return api_error('مجموعه یافت نشد.', code='NOT_FOUND', status=404)
         return api_ok({'deleted': True})
+
+
+class DatasetDeleteConsultantsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, dataset_id):
+        payload, err, deleted = delete_dataset_consultants(request.user, str(dataset_id))
+        if err == 'NOT_FOUND':
+            return api_error('مجموعه یافت نشد.', code='NOT_FOUND', status=404)
+        return api_ok({'dataset': payload, 'deleted_count': deleted})
+
+
+class DatasetDeleteDisguisedConsultantsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, dataset_id):
+        payload, err, deleted = delete_dataset_disguised_consultants(request.user, str(dataset_id))
+        if err == 'NOT_FOUND':
+            return api_error('مجموعه یافت نشد.', code='NOT_FOUND', status=404)
+        return api_ok({'dataset': payload, 'deleted_count': deleted})
 
 
 class DatasetInsightsView(APIView):

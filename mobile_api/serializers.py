@@ -325,7 +325,12 @@ def contact_to_dict(c: Customer) -> Dict[str, Any]:
     }
 
 
-def dataset_to_dict(ds: Dataset, *, cover_urls: Optional[List[str]] = None) -> Dict[str, Any]:
+def dataset_to_dict(
+    ds: Dataset,
+    *,
+    cover_urls: Optional[List[str]] = None,
+    include_stats: bool = False,
+) -> Dict[str, Any]:
     source = (ds.metadata or {}).get('source', 'windows')
     if (ds.metadata or {}).get('mobile_extraction'):
         source = 'mobile'
@@ -335,7 +340,8 @@ def dataset_to_dict(ds: Dataset, *, cover_urls: Optional[List[str]] = None) -> D
         filters.get('category_name') or filters.get('category') or meta.get('category') or ''
     ).strip()
     thumb_urls = cover_urls if cover_urls is not None else _dataset_cover_urls(ds)
-    return {
+    item_count = ds.listings.count() if include_stats else (ds.row_count if ds.row_count is not None else 0)
+    payload: Dict[str, Any] = {
         'id': str(ds.pk),
         'name': ds.name,
         'source': source,
@@ -344,13 +350,26 @@ def dataset_to_dict(ds: Dataset, *, cover_urls: Optional[List[str]] = None) -> D
         'category': category,
         'city': ds.city or '',
         'district': ds.district or '',
-        'item_count': ds.row_count if ds.row_count is not None else 0,
+        'item_count': item_count,
         'thumbnail_url': thumb_urls[0] if thumb_urls else '',
         'thumbnail_urls': thumb_urls,
         'created_at': ds.created_at.isoformat() if ds.created_at else None,
+        'updated_at': ds.updated_at.isoformat() if ds.updated_at else None,
+        'last_opened_at': ds.last_opened_at.isoformat() if ds.last_opened_at else None,
         'original_filename': ds.original_filename or '',
         'file_format': ds.file_format or '',
     }
+    if include_stats:
+        from workspace.services.advertiser_signal import count_listings_by_advertiser_display
+
+        adv_counts = count_listings_by_advertiser_display(ds.listings.all())
+        payload.update({
+            'genuine_personal_count': adv_counts['genuine_personal'],
+            'disguised_consultant_count': adv_counts['disguised_consultant'],
+            'consultant_count': adv_counts['consultant'],
+            'personal_other_count': adv_counts['personal_other'],
+        })
+    return payload
 
 
 def listing_to_dict(lst: Listing) -> Dict[str, Any]:

@@ -478,7 +478,53 @@ def listing_detail_to_dict(lst: Listing, *, user=None, request=None) -> Dict[str
         )
         share = get_or_create_listing_share(user, lst)
         base['public_share'] = listing_public_share_to_dict(share, request)
+        base['meta'] = listing_meta_to_dict(user, lst.token)
+        base['linked_contacts'] = listing_linked_contacts_to_dict(user, lst.token)
+    else:
+        from workspace.constants import LISTING_TAGS
+        base['meta'] = {
+            'note': '',
+            'tag': '',
+            'is_favorite': False,
+            'updated_at': None,
+            'tag_options': [tag for tag in LISTING_TAGS if tag],
+        }
+        base['linked_contacts'] = []
     return base
+
+
+def listing_meta_to_dict(user, token: str) -> Dict[str, Any]:
+    from workspace.constants import LISTING_TAGS
+    from workspace.models import ListingMeta
+
+    meta = ListingMeta.objects.filter(user=user, token=token).first()
+    return {
+        'note': (meta.note if meta else '') or '',
+        'tag': (meta.tag if meta else '') or '',
+        'is_favorite': bool(meta.is_favorite) if meta else False,
+        'updated_at': meta.updated_at.isoformat() if meta and meta.updated_at else None,
+        'tag_options': [tag for tag in LISTING_TAGS if tag],
+    }
+
+
+def listing_linked_contacts_to_dict(user, token: str) -> List[Dict[str, Any]]:
+    from workspace.services.crm import customers_linked_to_token
+
+    rows: List[Dict[str, Any]] = []
+    for link in customers_linked_to_token(user, token):
+        customer = link.customer
+        rows.append({
+            'id': link.pk,
+            'customer_id': customer.pk,
+            'full_name': customer.name or '',
+            'phone': customer.phone or '',
+            'role': link.role or '',
+            'deal_type': link.deal_type or '',
+            'notes': link.notes or '',
+            'status': customer.status or '',
+            'updated_at': link.updated_at.isoformat() if link.updated_at else None,
+        })
+    return rows
 
 
 def _calc_price_per_sqm(lst: Listing) -> Optional[int]:

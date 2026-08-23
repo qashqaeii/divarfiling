@@ -106,6 +106,19 @@ class ListingEditTests(SimpleTestCase):
         self.assertEqual(payload['latitude'], 35.6)
         self.assertEqual(payload['images'], ['https://example.com/a.jpg'])
         self.assertTrue(any(f['key'] == 'جهت ساختمان' for f in payload['feature_fields']))
+        direction = next(f for f in payload['feature_fields'] if f['key'] == 'جهت ساختمان')
+        self.assertEqual(direction['input'], 'select')
+        self.assertIn('شمالی', direction['choices'])
+        self.assertIn('جنوبی', direction['choices'])
+        floor = next(f for f in payload['feature_fields'] if f['key'] == 'جنس کف')
+        self.assertEqual(floor['input'], 'select')
+        self.assertIn('سرامیک', floor['choices'])
+        bathroom = next(f for f in payload['feature_fields'] if f['key'] == 'سرویس بهداشتی')
+        self.assertEqual(bathroom['input'], 'select')
+        self.assertIn('فرنگی', bathroom['choices'])
+        unit_status = next(f for f in payload['feature_fields'] if f['key'] == 'وضعیت واحد')
+        self.assertEqual(unit_status['input'], 'select')
+        self.assertIn('تخلیه', unit_status['choices'])
 
     def test_apply_full_edit_updates_model_and_features(self):
         class Listing:

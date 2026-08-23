@@ -15,6 +15,7 @@ from workspace.services.listing_features import (
     _feature_state,
     feature_details_for_edit,
 )
+from workspace.services.property_features import CHOICES_OCCUPANCY, FIELDS as CRM_FEATURE_FIELDS
 
 OWNER_PHONE_KEYS = ('شماره تماس', 'owner_phone', 'phone', 'موبایل', 'تلفن', 'تماس')
 OWNER_NAME_KEYS = ('نام مالک', 'owner_name', 'نام و نام خانوادگی مالک', 'نام صاحب')
@@ -50,6 +51,61 @@ DEDICATED_FEATURE_KEYS = frozenset({
 
 OCCUPANCY_KEYS = ('وضعیت سکونت', 'وضعیت واحد', 'occupancy', 'unit_status')
 VACANT_MARKERS = ('تخلیه', 'تخليه', 'خالی', 'خالي', 'vacant', 'empty')
+
+# کلیدهای دیوار که در کاتالوگ CRM نام متفاوت دارند ولی همان گزینه‌ها را می‌گیرند
+_LISTING_FEATURE_CHOICE_ALIASES = {
+    'وضعیت واحد': CHOICES_OCCUPANCY,
+}
+
+
+def _input_meta_for_feature(key: str, val: str = '') -> Dict[str, Any]:
+    """نوع ورودی و گزینه‌های انتخابی — هم‌تراز با فرم ورود ملک CRM."""
+    if key in BOOLISH_FEATURE_KEYS:
+        return {'input': 'tri', 'choices': []}
+
+    spec = CRM_FEATURE_FIELDS.get(key)
+    choices: List[str] = []
+    widget = ''
+    if spec:
+        widget = str(spec.get('widget') or '')
+        choices = [str(c).strip() for c in (spec.get('choices') or ()) if str(c).strip()]
+        if widget == 'toggle':
+            return {'input': 'tri', 'choices': []}
+    elif key in _LISTING_FEATURE_CHOICE_ALIASES:
+        choices = [str(c).strip() for c in _LISTING_FEATURE_CHOICE_ALIASES[key] if str(c).strip()]
+
+    if choices:
+        cleaned_val = str(val or '').strip()
+        if cleaned_val and cleaned_val not in choices:
+            choices = [cleaned_val] + choices
+        return {'input': 'select', 'choices': choices}
+
+    if val and _feature_state(val) in ('yes', 'no'):
+        return {'input': 'tri', 'choices': []}
+    return {'input': 'text', 'choices': []}
+
+
+def _make_feature_field(
+    key: str,
+    val: str,
+    *,
+    group_id: str,
+    group_title: str,
+    group_icon: str,
+) -> Dict[str, Any]:
+    cleaned = '' if val is None else str(val)
+    meta = _input_meta_for_feature(key, cleaned)
+    return {
+        'key': key,
+        'label': key,
+        'value': cleaned,
+        'group_id': group_id,
+        'group_title': group_title,
+        'group_icon': group_icon,
+        'input': meta['input'],
+        'choices': meta['choices'],
+        'state': _feature_state(cleaned) if cleaned else 'unknown',
+    }
 
 
 def occupancy_status_from_listing(listing) -> str:
@@ -257,48 +313,37 @@ def _feature_fields_for_edit(listing) -> List[Dict[str, Any]]:
             if key in DEDICATED_FEATURE_KEYS:
                 continue
             used.add(key)
-            val = raw.get(key, '')
-            fields.append({
-                'key': key,
-                'label': key,
-                'value': val,
-                'group_id': group['id'],
-                'group_title': group['title'],
-                'group_icon': group.get('icon', 'fa-list'),
-                'input': 'tri' if key in BOOLISH_FEATURE_KEYS else 'text',
-                'state': _feature_state(val) if val else 'unknown',
-            })
+            fields.append(_make_feature_field(
+                key,
+                raw.get(key, ''),
+                group_id=group['id'],
+                group_title=group['title'],
+                group_icon=group.get('icon', 'fa-list'),
+            ))
 
     # ستون‌های استاندارد که در گروه نیستند
     for key in LISTING_FEATURE_COLUMNS:
         if key in used or key in DEDICATED_FEATURE_KEYS:
             continue
         used.add(key)
-        val = raw.get(key, '')
-        fields.append({
-            'key': key,
-            'label': key,
-            'value': val,
-            'group_id': 'extra',
-            'group_title': 'سایر جزئیات',
-            'group_icon': 'fa-ellipsis-h',
-            'input': 'tri' if key in BOOLISH_FEATURE_KEYS else 'text',
-            'state': _feature_state(val) if val else 'unknown',
-        })
+        fields.append(_make_feature_field(
+            key,
+            raw.get(key, ''),
+            group_id='extra',
+            group_title='سایر جزئیات',
+            group_icon='fa-ellipsis-h',
+        ))
 
     for key, val in sorted(raw.items()):
         if key in used or key in DEDICATED_FEATURE_KEYS:
             continue
-        fields.append({
-            'key': key,
-            'label': key,
-            'value': val,
-            'group_id': 'extra',
-            'group_title': 'سایر جزئیات',
-            'group_icon': 'fa-ellipsis-h',
-            'input': 'tri' if key in BOOLISH_FEATURE_KEYS or _feature_state(val) in ('yes', 'no') else 'text',
-            'state': _feature_state(val) if val else 'unknown',
-        })
+        fields.append(_make_feature_field(
+            key,
+            val,
+            group_id='extra',
+            group_title='سایر جزئیات',
+            group_icon='fa-ellipsis-h',
+        ))
 
     return fields
 

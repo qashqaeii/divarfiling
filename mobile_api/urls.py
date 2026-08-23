@@ -92,6 +92,9 @@ urlpatterns = [
     path('filing/datasets/<uuid:dataset_id>/map', views.DatasetMapView.as_view(), name='dataset_map'),
     path('filing/search', views.FilingSearchView.as_view(), name='filing_search'),
     path('filing/listings/<str:token>', views.ListingDetailView.as_view(), name='listing_detail'),
+    path('filing/listings/<str:token>/meta', views.ListingMetaView.as_view(), name='listing_meta'),
+    path('filing/listings/<str:token>/favorite', views.ListingFavoriteView.as_view(), name='listing_favorite'),
+    path('filing/listings/<str:token>/contacts/<int:link_id>', views.ListingLinkedContactDeleteView.as_view(), name='listing_linked_contact_delete'),
     path('filing/listings/<str:token>/public-share', views.ListingPublicShareView.as_view(), name='listing_public_share'),
 
     path('support/tickets', views.SupportTicketsListCreateView.as_view(), name='support_tickets'),

@@ -373,6 +373,63 @@ def update_listing(user, token: str, payload: dict, request=None) -> Optional[di
     return listing_detail_to_dict(lst, user=user, request=request)
 
 
+def update_listing_meta(user, token: str, payload: dict, request=None) -> Optional[dict]:
+    if not has_active_bot_license(user):
+        return None
+    lst = Listing.objects.filter(dataset__user=user, token=token).select_related('dataset').first()
+    if not lst:
+        return None
+    from workspace.constants import LISTING_TAGS
+    from workspace.models import ListingMeta
+
+    meta, _ = ListingMeta.objects.get_or_create(user=user, token=lst.token)
+    if 'note' in payload and payload.get('note') is not None:
+        meta.note = str(payload.get('note') or '').strip()
+    if 'tag' in payload and payload.get('tag') is not None:
+        tag = str(payload.get('tag') or '').strip()
+        if tag in LISTING_TAGS:
+            meta.tag = tag
+        elif tag == '':
+            meta.tag = ''
+    if 'is_favorite' in payload and payload.get('is_favorite') is not None:
+        raw = payload.get('is_favorite')
+        if isinstance(raw, bool):
+            meta.is_favorite = raw
+        else:
+            meta.is_favorite = str(raw).strip().lower() in ('1', 'true', 'yes', 'on')
+    meta.save()
+    return listing_detail_to_dict(lst, user=user, request=request)
+
+
+def toggle_listing_favorite(user, token: str, request=None) -> Optional[dict]:
+    if not has_active_bot_license(user):
+        return None
+    lst = Listing.objects.filter(dataset__user=user, token=token).select_related('dataset').first()
+    if not lst:
+        return None
+    from workspace.models import ListingMeta
+
+    meta, _ = ListingMeta.objects.get_or_create(user=user, token=lst.token)
+    meta.is_favorite = not bool(meta.is_favorite)
+    meta.save(update_fields=['is_favorite', 'updated_at'])
+    return listing_detail_to_dict(lst, user=user, request=request)
+
+
+def unlink_listing_contact(user, token: str, link_id: int, request=None) -> Optional[dict]:
+    if not has_active_bot_license(user):
+        return None
+    lst = Listing.objects.filter(dataset__user=user, token=token).select_related('dataset').first()
+    if not lst:
+        return None
+    from workspace.services.crm import customers_linked_to_token
+
+    link = customers_linked_to_token(user, token).filter(pk=link_id).first()
+    if not link:
+        return None
+    link.delete()
+    return listing_detail_to_dict(lst, user=user, request=request)
+
+
 def export_dataset_response(user, dataset_id: str, fmt: str):
     from workspace.services.export import export_csv_response, export_excel_response, export_json_response
 

@@ -76,7 +76,10 @@ from mobile_api.services.filing_service import (
     list_listings,
     rename_dataset,
     search_listings,
+    toggle_listing_favorite,
+    unlink_listing_contact,
     update_listing,
+    update_listing_meta,
 )
 from mobile_api.services.mobile_export import export_contacts_response, export_properties_response
 from mobile_api.services.insights_service import dataset_insights_payload, dataset_map_payload
@@ -462,6 +465,36 @@ class ListingDetailView(APIView):
         payload = update_listing(request.user, token, request.data, request)
         if not payload:
             return api_error('آگهی یافت نشد یا داده نامعتبر است.', code='NOT_FOUND', status=404)
+        return api_ok(payload)
+
+
+class ListingMetaView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request, token):
+        payload = update_listing_meta(request.user, token, request.data, request)
+        if not payload:
+            return api_error('آگهی یافت نشد.', code='NOT_FOUND', status=404)
+        return api_ok(payload)
+
+
+class ListingFavoriteView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, token):
+        payload = toggle_listing_favorite(request.user, token, request)
+        if not payload:
+            return api_error('آگهی یافت نشد.', code='NOT_FOUND', status=404)
+        return api_ok(payload)
+
+
+class ListingLinkedContactDeleteView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, token, link_id):
+        payload = unlink_listing_contact(request.user, token, link_id, request)
+        if not payload:
+            return api_error('پیوند یافت نشد.', code='NOT_FOUND', status=404)
         return api_ok(payload)
 
 

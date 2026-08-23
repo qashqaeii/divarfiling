@@ -417,6 +417,29 @@
                             '<option value="دارد"' + (sel === '1' ? ' selected' : '') + '>دارد</option>' +
                             '<option value="ندارد"' + (sel === '0' ? ' selected' : '') + '>ندارد</option>' +
                         '</select>';
+                } else if (item.input === 'select' || (item.choices && item.choices.length)) {
+                    var choices = item.choices || [];
+                    var opts = ['<option value=""' + (val === '' ? ' selected' : '') + '>نامشخص</option>'];
+                    var seen = {};
+                    choices.forEach(function (choice) {
+                        var c = String(choice || '');
+                        if (!c || seen[c]) return;
+                        seen[c] = true;
+                        opts.push(
+                            '<option value="' + escapeHtml(c) + '"' + (val === c ? ' selected' : '') + '>' +
+                            escapeHtml(c) +
+                            '</option>'
+                        );
+                    });
+                    if (val && !seen[val]) {
+                        opts.splice(1, 0,
+                            '<option value="' + escapeHtml(val) + '" selected>' + escapeHtml(val) + '</option>'
+                        );
+                    }
+                    inputHtml =
+                        '<select class="ws-select ws-select-sm" data-feat-key="' + escapeHtml(key) + '">' +
+                            opts.join('') +
+                        '</select>';
                 } else {
                     inputHtml =
                         '<input type="text" class="ws-input ws-input-sm" data-feat-key="' + escapeHtml(key) + '" value="' + escapeHtml(val) + '" autocomplete="off">';

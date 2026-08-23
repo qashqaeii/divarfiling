@@ -303,6 +303,11 @@ def _feature_fields_for_edit(listing) -> List[Dict[str, Any]]:
     return fields
 
 
+def feature_fields_for_edit(listing) -> List[Dict[str, Any]]:
+    """خروجی پایدار برای فرم ویرایش موبایل و داشبورد."""
+    return _feature_fields_for_edit(listing)
+
+
 def listing_edit_payload(listing, feat: Optional[dict] = None) -> Dict[str, Any]:
     """داده کامل برای مودال ویرایش — بدون escape دستی."""
     feat = feat or extract_listing_features(listing)
@@ -677,7 +682,10 @@ class _JsonPostAdapter:
             self._payload['is_expired'] = '1' if self._payload['is_expired'] else '0'
 
     def __contains__(self, key: str) -> bool:
-        return key in self._payload
+        if key not in self._payload:
+            return False
+        # null در PATCH یعنی «این فیلد را تغییر نده» — نه پاک‌کردن مقدار.
+        return self._payload[key] is not None
 
     def keys(self):
         return self._payload.keys()

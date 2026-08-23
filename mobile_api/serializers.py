@@ -21,7 +21,16 @@ from workspace.services.advertiser_signal import (
     listing_advertiser_display,
     listing_advertiser_signal,
 )
-from workspace.services.listing_edit import owner_name_from_listing, owner_phone_from_listing
+from workspace.services.listing_edit import (
+    address_from_listing,
+    district_from_listing,
+    feature_fields_for_edit,
+    listing_is_vacant,
+    owner_name_from_listing,
+    owner_phone_from_listing,
+    tenant_name_from_listing,
+    tenant_phone_from_listing,
+)
 from workspace.services.columns import _parse_images
 from workspace.services.property_images import deduplicate_divar_image_urls, normalize_external_image_url
 
@@ -131,6 +140,15 @@ _CORE_AMENITY_API_KEYS = {
     'آسانسور': 'has_elevator',
 }
 
+_EXTRA_AMENITY_FEAT_KEYS = (
+    ('balcony', 'has_balcony'),
+    ('lobby', 'has_lobby'),
+    ('pool', 'has_pool'),
+    ('roof_garden', 'has_roof_garden'),
+    ('jacuzzi', 'has_jacuzzi'),
+    ('gym', 'has_gym'),
+)
+
 
 def _listing_amenity_fields(lst: Listing) -> Dict[str, Any]:
     """وضعیت واحد و امکانات اصلی — همان منطق پلتفرم وب."""
@@ -141,6 +159,12 @@ def _listing_amenity_fields(lst: Listing) -> Dict[str, Any]:
         'has_parking': None,
         'has_storage': None,
         'has_elevator': None,
+        'has_balcony': feat.get('balcony'),
+        'has_lobby': feat.get('lobby'),
+        'has_pool': feat.get('pool'),
+        'has_roof_garden': feat.get('roof_garden'),
+        'has_jacuzzi': feat.get('jacuzzi'),
+        'has_gym': feat.get('gym'),
         'unit_status': _data_value(data, 'وضعیت واحد', 'وضعیت سکونت'),
     }
     for item in profile.get('core') or []:
@@ -152,6 +176,9 @@ def _listing_amenity_fields(lst: Listing) -> Dict[str, Any]:
             result[api_key] = True
         elif state == 'no':
             result[api_key] = False
+    for feat_key, api_key in _EXTRA_AMENITY_FEAT_KEYS:
+        if result.get(api_key) is None:
+            result[api_key] = feat.get(feat_key)
     return result
 
 
@@ -428,12 +455,20 @@ def listing_detail_to_dict(lst: Listing, *, user=None, request=None) -> Dict[str
         'business_type': lst.business_type or '',
         'owner_phone': owner_phone_from_listing(lst),
         'owner_name': owner_name_from_listing(lst),
+        'tenant_phone': tenant_phone_from_listing(lst),
+        'tenant_name': tenant_name_from_listing(lst),
+        'is_vacant': listing_is_vacant(lst),
+        'address': address_from_listing(lst),
+        'neighborhood': lst.neighborhood or '',
+        'region': district_from_listing(lst),
+        'link': lst.link or '',
         'published_at': lst.published_at.isoformat() if lst.published_at else None,
         'expires_at': lst.expires_at.isoformat() if lst.expires_at else None,
         'is_expired': lst.is_expired,
         'price_per_sqm': _calc_price_per_sqm(lst),
         'feature_profile': feature_profile,
         'listing_highlights': listing_highlights,
+        'feature_fields': feature_fields_for_edit(lst),
         **_listing_amenity_fields(lst),
     })
     if user is not None:

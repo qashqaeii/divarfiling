@@ -134,3 +134,8 @@ class ListingSerializerFallbackTests(TestCase):
         self.assertFalse(detail['has_storage'])
         self.assertTrue(detail['has_elevator'])
         self.assertEqual(detail['unit_status'], 'تخلیه')
+        self.assertTrue(detail['is_vacant'])
+        self.assertIn('feature_fields', detail)
+        self.assertIn('address', detail)
+        self.assertIn('tenant_name', detail)
+        self.assertIn('has_balcony', detail)

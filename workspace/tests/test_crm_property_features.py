@@ -191,6 +191,37 @@ class CRMPropertyFeatureDataTests(TestCase):
             to_persian_digits('1405/04/27'),
         )
 
+    def test_occupancy_vacancy_date_on_sale_property(self):
+        from workspace.services.jalali_input import to_persian_digits
+
+        form = CRMPropertyForm(data={
+            'title': 'فروش با تاریخ تخلیه',
+            'property_type': 'آپارتمان',
+            'deal_mode': 'فروش',
+            'transaction_status': 'فعال',
+            'publish_status': 'پیش‌نویس',
+            'feat_profile': 'sale',
+            'feat__تاریخ تخلیه': '1405/06/09',
+        })
+        self.assertTrue(form.is_valid(), form.errors)
+        prop = form.save(commit=False)
+        prop.user = self.user
+        prop.save()
+        prop.refresh_from_db()
+        self.assertEqual(
+            prop.feature_data.get('تاریخ تخلیه'),
+            to_persian_digits('1405/06/09'),
+        )
+        groups = form.feature_form_groups()
+        rent_terms_items = [
+            item['key']
+            for profile in form.feature_form_context()['all_profiles']
+            for group in profile['groups']
+            if group['id'] == 'rent_terms'
+            for item in group['items']
+        ]
+        self.assertNotIn('تاریخ تخلیه', rent_terms_items)
+
     def test_create_view_with_feature_and_image_url(self):
         url = reverse('workspace:crm_property_create')
         resp = self.client.post(url, {

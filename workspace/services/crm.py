@@ -1351,6 +1351,16 @@ def filter_properties(user, params: dict):
     if city:
         qs = qs.filter(city__icontains=city)
 
+    folder_id = (params.get('folder_id') or '').strip()
+    if folder_id:
+        try:
+            qs = qs.filter(
+                folder_items__folder_id=int(folder_id),
+                folder_items__folder__user=user,
+            )
+        except (TypeError, ValueError):
+            pass
+
     for field, key in (
         ('has_parking', 'parking'),
         ('has_storage', 'storage'),
@@ -1844,6 +1854,10 @@ def customers_to_export_rows(customers) -> List[Dict[str, Any]]:
             'منبع': c.source,
             'شهر': c.city,
             'منطقه': c.district,
+            'شغل': c.job,
+            'نام شرکت': c.company_name,
+            'کد ملی': c.national_id,
+            'مهلت اجاره': _excel_safe_value(c.lease_deadline),
             'بودجه از': c.budget_min,
             'بودجه تا': c.budget_max,
             'ودیعه از': c.deposit_min,

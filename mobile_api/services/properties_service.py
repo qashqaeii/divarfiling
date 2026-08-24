@@ -4,12 +4,13 @@ from __future__ import annotations
 from typing import Any, Dict, List, Optional, Tuple
 
 from django.core.paginator import Paginator
+from django.db.models import Prefetch
 from django.utils import timezone
 
 from mobile_api.serializers import property_detail_to_dict, property_to_dict
 from workspace.constants import CRM_PROPERTIES, PROPERTY_DEAL_MODES, PROPERTY_TX_STATUSES
-from workspace.models import CRMProperty, Customer, CustomerActivity, CustomerDocument, PropertyContact
-from workspace.services.crm import filter_properties, link_customer_property, resolve_listing_for_property, update_property_transaction_status, upsert_property_owner
+from workspace.models import CRMProperty, CRMPropertyFolderItem, Customer, CustomerActivity, CustomerDocument, PropertyContact
+from workspace.services.crm import filter_properties, link_customer_property, resolve_listing_for_property, update_property_transaction_status, upsert_property_owner, upsert_property_tenant
 from workspace.services.crm_property_share import build_property_share_context
 from workspace.services.crm_scope import can_edit_property, customers_qs, get_agency, properties_qs, property_for_user
 from workspace.services.features import extract_listing_features
@@ -25,7 +26,12 @@ def list_properties_paginated(
     request=None,
 ) -> Tuple[List[dict], dict]:
     params = {k: str(v) for k, v in (query or {}).items() if v is not None and str(v).strip()}
-    qs = filter_properties(user, params)
+    qs = filter_properties(user, params).prefetch_related(
+        Prefetch(
+            'folder_items',
+            queryset=CRMPropertyFolderItem.objects.select_related('folder'),
+        ),
+    )
     paginator = Paginator(qs, page_size)
     page_obj = paginator.get_page(page)
     items = [property_to_dict(p, request=request) for p in page_obj.object_list]
@@ -77,6 +83,8 @@ def get_property_detail(user, property_id: int, *, request=None) -> Optional[dic
     normalized = _property_image_urls(payload['property'].get('images') or [], request=request)
     payload['property']['images'] = normalized
     payload['property']['thumbnail_url'] = normalized[0] if normalized else ''
+    from workspace.services.crm_property_folders import list_property_folders, serialize_folder
+    payload['available_folders'] = [serialize_folder(f) for f in list_property_folders(user)]
     from workspace.services.crm_scope import is_property_owner
     if is_property_owner(user, prop) and prop.deleted_at is None:
         from workspace.services.property_public_share import (
@@ -236,9 +244,13 @@ def create_property_from_mobile(user, data: Dict[str, Any]) -> CRMProperty:
         owner_name=(data.get('owner_name') or '')[:200],
         business_type=(data.get('business_type') or '')[:50],
     )
-    for bool_field in ('has_parking', 'has_storage', 'has_elevator'):
+    for bool_field in ('has_parking', 'has_storage', 'has_elevator', 'is_vacant'):
         if bool_field in data:
             setattr(prop, bool_field, bool(data.get(bool_field)))
+    if data.get('tenant_name') is not None:
+        prop.tenant_name = (data.get('tenant_name') or '')[:200]
+    if data.get('tenant_phone') is not None:
+        prop.tenant_phone = (data.get('tenant_phone') or '')[:20]
     prop.save()
 
     if prop.phone or prop.owner_name:
@@ -249,6 +261,13 @@ def create_property_from_mobile(user, data: Dict[str, Any]) -> CRMProperty:
             crm_property=prop,
             source='موبایل',
         )
+    upsert_property_tenant(
+        user,
+        phone=prop.tenant_phone,
+        name=prop.tenant_name,
+        crm_property=prop,
+        source='موبایل',
+    )
 
     contact_id = data.get('contact_id') or data.get('customer_id')
     if contact_id:
@@ -315,9 +334,22 @@ def update_property_from_mobile(user, property_id: int, data: Dict[str, Any]) ->
         prop.total_floors = _parse_int(data.get('total_floors'))
     if 'publish_status' in data:
         prop.publish_status = (data.get('publish_status') or prop.publish_status)[:30]
+    if 'tenant_name' in data and data.get('tenant_name') is not None:
+        prop.tenant_name = (data.get('tenant_name') or '')[:200]
+    if 'tenant_phone' in data and data.get('tenant_phone') is not None:
+        prop.tenant_phone = (data.get('tenant_phone') or '')[:20]
+    if 'vacancy_date' in data:
+        from workspace.services.property_features import normalize_feature_date_value
+        fd = dict(prop.feature_data or {})
+        raw_vacancy = str(data.get('vacancy_date') or '').strip()
+        if raw_vacancy:
+            fd['تاریخ تخلیه'] = normalize_feature_date_value(raw_vacancy)
+        else:
+            fd.pop('تاریخ تخلیه', None)
+        prop.feature_data = fd
 
     prop.save()
-    if 'phone' in data or 'owner_phone' in data or 'owner_name' in data:
+    if prop.phone or prop.owner_name:
         upsert_property_owner(
             user,
             phone=prop.phone,
@@ -325,6 +357,13 @@ def update_property_from_mobile(user, property_id: int, data: Dict[str, Any]) ->
             crm_property=prop,
             source='موبایل',
         )
+    upsert_property_tenant(
+        user,
+        phone=prop.tenant_phone,
+        name=prop.tenant_name,
+        crm_property=prop,
+        source='موبایل',
+    )
     return prop
 
 

@@ -86,9 +86,13 @@
 window.crmFilterSaveUrl = '{% url "workspace:crm_filter_save" %}';
 window.crmFilterDeleteUrlBase = '{% url "workspace:crm_filter_delete" filter_id=0 %}'.replace('/0/', '/');
 window.crmFilterPinUrlBase = '{% url "workspace:crm_filter_pin" filter_id=0 %}'.replace('/0/', '/');
+window.crmZonkanUrl = '{% url "workspace:crm_property_folders" %}';
+window.crmZonkanDetailUrlBase = '{% url "workspace:crm_property_folder_detail" folder_id=0 %}'.replace('/0/', '/');
+window.crmZonkanReorderUrl = '{% url "workspace:crm_property_folders_reorder" %}';
+window.crmZonkanMembershipUrl = '{% url "workspace:crm_property_folder_membership" folder_id=0 property_id=0 %}'.replace('/0/properties/0/', '/');
 </script>
 
-<script src="{% static 'workspace/js/crm.js' %}?v=81"></script>
+<script src="{% static 'workspace/js/crm.js' %}?v=83"></script>
 <script src="{% static 'workspace/js/crm-form-map.js' %}?v=2"></script>
 
 {% if crm_video.available %}

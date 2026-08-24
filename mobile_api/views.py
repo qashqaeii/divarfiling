@@ -1284,7 +1284,9 @@ class PropertiesListView(APIView):
             'q': request.GET.get('q', ''),
             'deal_mode': request.GET.get('deal_mode', ''),
             'transaction_status': request.GET.get('transaction_status', ''),
+            'property_type': request.GET.get('property_type', ''),
             'city': request.GET.get('city', ''),
+            'folder_id': request.GET.get('folder_id', ''),
         }
         items, meta = list_properties_paginated(
             request.user, page=page, page_size=page_size, query=query, request=request,
@@ -1319,6 +1321,81 @@ class PropertyDetailView(APIView):
     def delete(self, request, property_id):
         if not soft_delete_property(request.user, property_id):
             return api_error('ملک یافت نشد.', code='NOT_FOUND', status=404)
+        return api_ok({})
+
+
+class PropertyFoldersListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        from workspace.services.crm_property_folders import list_property_folders, serialize_folder
+        rows = list_property_folders(request.user)
+        return api_ok([serialize_folder(f) for f in rows])
+
+    def post(self, request):
+        from workspace.services.crm_property_folders import create_property_folder, serialize_folder
+        data = _parse_body(request)
+        try:
+            folder = create_property_folder(
+                request.user,
+                name=data.get('name', ''),
+                description=data.get('description', ''),
+                color=data.get('color', ''),
+                icon=data.get('icon', ''),
+                is_pinned=bool(data.get('is_pinned')),
+            )
+        except ValueError as exc:
+            return api_error(str(exc), code='VALIDATION_ERROR')
+        return api_ok(serialize_folder(folder), status=201)
+
+
+class PropertyFolderDetailView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request, folder_id):
+        from workspace.services.crm_property_folders import serialize_folder, update_property_folder
+        try:
+            folder = update_property_folder(request.user, folder_id, _parse_body(request))
+        except ValueError as exc:
+            return api_error(str(exc), code='VALIDATION_ERROR')
+        return api_ok(serialize_folder(folder))
+
+    def delete(self, request, folder_id):
+        from workspace.services.crm_property_folders import delete_property_folder
+        if not delete_property_folder(request.user, folder_id):
+            return api_error('زونکن یافت نشد.', code='NOT_FOUND', status=404)
+        return api_ok({})
+
+
+class PropertyFolderReorderView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        from workspace.services.crm_property_folders import reorder_property_folders, serialize_folder
+        data = _parse_body(request)
+        folder_ids = data.get('folder_ids') or data.get('order') or []
+        rows = reorder_property_folders(request.user, folder_ids)
+        return api_ok([serialize_folder(f) for f in rows])
+
+
+class PropertyFolderMembershipView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, folder_id, property_id):
+        from workspace.services.crm_property_folders import add_property_to_folder, folder_for_user, serialize_folder
+        try:
+            add_property_to_folder(request.user, folder_id, property_id)
+            folder = folder_for_user(request.user, folder_id)
+        except ValueError as exc:
+            return api_error(str(exc), code='VALIDATION_ERROR')
+        return api_ok(serialize_folder(folder) if folder else {})
+
+    def delete(self, request, folder_id, property_id):
+        from workspace.services.crm_property_folders import remove_property_from_folder
+        try:
+            remove_property_from_folder(request.user, folder_id, property_id)
+        except ValueError as exc:
+            return api_error(str(exc), code='VALIDATION_ERROR')
         return api_ok({})
 
 

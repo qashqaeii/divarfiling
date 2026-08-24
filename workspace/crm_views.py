@@ -1175,8 +1175,15 @@ class CRMPropertyListView(CRMContextMixin, LoginRequiredMixin, ListView):
         return self.paginate_by
 
     def get_queryset(self):
+        from django.db.models import Prefetch
+        from workspace.models import CRMPropertyFolderItem
         return filter_properties(self.request.user, self.request.GET).annotate(
             contact_count=Count('contact_links', distinct=True),
+        ).prefetch_related(
+            Prefetch(
+                'folder_items',
+                queryset=CRMPropertyFolderItem.objects.select_related('folder'),
+            ),
         )
 
     def get_context_data(self, **kwargs):
@@ -1203,10 +1210,11 @@ class CRMPropertyListView(CRMContextMixin, LoginRequiredMixin, ListView):
         ctx['sort'] = self.request.GET.get('sort', '-updated_at')
         ctx['filter_qs'] = urlencode({
             k: v for k, v in self.request.GET.items()
-            if k not in ('view', 'page', 'drawer') and v
+            if k not in ('view', 'page', 'drawer', 'folder_id') and v
         })
         ctx['has_filters'] = any(self.request.GET.get(k) for k in (
             'q', 'deal_mode', 'transaction_status', 'property_type', 'publish_status', 'city', 'sort',
+            'folder_id',
             'parking', 'storage', 'elevator', 'rooms',
             'area_min', 'area_max', 'price_min', 'price_max',
             'year_min', 'year_max', 'age_max',
@@ -1224,6 +1232,11 @@ class CRMPropertyListView(CRMContextMixin, LoginRequiredMixin, ListView):
         ctx['saved_filter_base'] = reverse('workspace:crm_properties')
         ctx['saved_filter_params'] = current_params_from_request(self.request, 'properties')
         ctx['saved_filter_can_save'] = bool(ctx['saved_filter_params'])
+        from workspace.services.crm_property_folders import FOLDER_COLORS, FOLDER_ICONS, list_property_folders
+        ctx['property_folders'] = list_property_folders(user)
+        ctx['active_folder_id'] = self.request.GET.get('folder_id', '')
+        ctx['folder_colors'] = FOLDER_COLORS
+        ctx['folder_icons'] = FOLDER_ICONS
         ctx['property_import_form'] = ctx.get('property_import_form', CRMPropertyImportForm())
         ctx['property_import_headers'] = property_import_template_headers()
         ctx['property_import_column_specs'] = property_import_column_specs()
@@ -1570,6 +1583,12 @@ class CRMPropertyDetailView(CRMContextMixin, LoginRequiredMixin, DetailView):
             from workspace.services.nearby_pois import property_share_nearby_meta
             ctx['public_share_nearby_meta'] = property_share_nearby_meta(p)
 
+        from workspace.services.crm_property_folders import FOLDER_COLORS, FOLDER_ICONS, list_property_folders
+        ctx['property_folders'] = list_property_folders(self.request.user)
+        ctx['property_folder_ids'] = list(p.folder_items.values_list('folder_id', flat=True))
+        ctx['folder_colors'] = FOLDER_COLORS
+        ctx['folder_icons'] = FOLDER_ICONS
+
         # نقشه موقعیت — انتهای صفحه جزئیات
         mask = bool(ctx.get('mask_sensitive'))
         can_edit_map = bool(ctx.get('can_edit_property')) and not mask
@@ -1814,7 +1833,7 @@ class CRMPropertyUpdateView(LoginRequiredMixin, UpdateView):
             if images != (self.object.images or []):
                 self.object.images = images
                 self.object.save(update_fields=['images', 'updated_at'])
-        if 'phone' in form.changed_data or 'owner_name' in form.changed_data:
+        if self.object.phone or self.object.owner_name:
             upsert_property_owner(
                 self.request.user,
                 phone=self.object.phone,
@@ -1822,19 +1841,13 @@ class CRMPropertyUpdateView(LoginRequiredMixin, UpdateView):
                 crm_property=self.object,
                 source='سایر',
             )
-        if (
-            'tenant_phone' in form.changed_data
-            or 'tenant_name' in form.changed_data
-            or 'is_vacant' in form.changed_data
-            or 'deal_mode' in form.changed_data
-        ):
-            upsert_property_tenant(
-                self.request.user,
-                phone=self.object.tenant_phone,
-                name=self.object.tenant_name,
-                crm_property=self.object,
-                source='سایر',
-            )
+        upsert_property_tenant(
+            self.request.user,
+            phone=self.object.tenant_phone,
+            name=self.object.tenant_name,
+            crm_property=self.object,
+            source='سایر',
+        )
         messages.success(self.request, 'ملک به‌روز شد.')
         return redirect('workspace:crm_property_detail', property_id=self.object.pk)
 
@@ -2702,6 +2715,98 @@ class CRMPropertySharePreviewView(LoginRequiredMixin, View):
             'whatsapp_url': wa_url,
             'count': len(matches),
         })
+
+
+class CRMPropertyFolderListCreateView(LoginRequiredMixin, View):
+    """لیست و ایجاد زونکن فایل شخصی — JSON."""
+
+    def get(self, request):
+        from workspace.services.crm_property_folders import list_property_folders, serialize_folder
+        rows = list_property_folders(request.user)
+        return JsonResponse({
+            'ok': True,
+            'folders': [serialize_folder(f) for f in rows],
+        })
+
+    def post(self, request):
+        from workspace.services.crm_property_folders import create_property_folder, serialize_folder
+        try:
+            if request.META.get('CONTENT_TYPE', '').startswith('application/json'):
+                payload = json.loads(request.body.decode('utf-8'))
+            else:
+                payload = request.POST
+            folder = create_property_folder(
+                request.user,
+                name=payload.get('name', ''),
+                description=payload.get('description', ''),
+                color=payload.get('color', ''),
+                icon=payload.get('icon', ''),
+                is_pinned=bool(payload.get('is_pinned')),
+            )
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            return JsonResponse({'ok': False, 'error': 'درخواست نامعتبر'}, status=400)
+        except ValueError as exc:
+            return JsonResponse({'ok': False, 'error': str(exc)}, status=400)
+        return JsonResponse({'ok': True, 'folder': serialize_folder(folder)})
+
+
+class CRMPropertyFolderDetailView(LoginRequiredMixin, View):
+    """ویرایش و حذف زونکن — JSON."""
+
+    def patch(self, request, folder_id):
+        from workspace.services.crm_property_folders import serialize_folder, update_property_folder
+        try:
+            payload = json.loads(request.body.decode('utf-8'))
+            folder = update_property_folder(request.user, folder_id, payload)
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            return JsonResponse({'ok': False, 'error': 'درخواست نامعتبر'}, status=400)
+        except ValueError as exc:
+            return JsonResponse({'ok': False, 'error': str(exc)}, status=400)
+        return JsonResponse({'ok': True, 'folder': serialize_folder(folder)})
+
+    def delete(self, request, folder_id):
+        from workspace.services.crm_property_folders import delete_property_folder
+        if not delete_property_folder(request.user, folder_id):
+            return JsonResponse({'ok': False, 'error': 'زونکن یافت نشد'}, status=404)
+        return JsonResponse({'ok': True})
+
+
+class CRMPropertyFolderReorderView(LoginRequiredMixin, View):
+    """مرتب‌سازی زونکن‌ها — JSON."""
+
+    def post(self, request):
+        from workspace.services.crm_property_folders import reorder_property_folders, serialize_folder
+        try:
+            payload = json.loads(request.body.decode('utf-8'))
+            folder_ids = payload.get('folder_ids') or payload.get('order') or []
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            return JsonResponse({'ok': False, 'error': 'درخواست نامعتبر'}, status=400)
+        rows = reorder_property_folders(request.user, folder_ids)
+        return JsonResponse({
+            'ok': True,
+            'folders': [serialize_folder(f) for f in rows],
+        })
+
+
+class CRMPropertyFolderMembershipView(LoginRequiredMixin, View):
+    """افزودن/حذف ملک در زونکن — JSON."""
+
+    def post(self, request, folder_id, property_id):
+        from workspace.services.crm_property_folders import add_property_to_folder, serialize_folder, folder_for_user
+        try:
+            add_property_to_folder(request.user, folder_id, property_id)
+            folder = folder_for_user(request.user, folder_id)
+        except ValueError as exc:
+            return JsonResponse({'ok': False, 'error': str(exc)}, status=400)
+        return JsonResponse({'ok': True, 'folder': serialize_folder(folder) if folder else None})
+
+    def delete(self, request, folder_id, property_id):
+        from workspace.services.crm_property_folders import remove_property_from_folder
+        try:
+            remove_property_from_folder(request.user, folder_id, property_id)
+        except ValueError as exc:
+            return JsonResponse({'ok': False, 'error': str(exc)}, status=400)
+        return JsonResponse({'ok': True})
 
 
 class CRMSavedFilterListView(LoginRequiredMixin, View):

@@ -167,11 +167,27 @@ class CustomerForm(CRMMoneyFieldsMixin, forms.ModelForm):
         }),
     )
 
+    lease_deadline = forms.CharField(
+        label='مهلت اجاره',
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'crm-input crm-jalali-date crm-lease-date-input',
+            'data-jdp': '',
+            'data-jdp-only-date': '',
+            'placeholder': 'اختیاری',
+            'autocomplete': 'off',
+            'inputmode': 'numeric',
+            'dir': 'ltr',
+        }),
+    )
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if self.instance.pk and self.instance.next_follow_up and not self.is_bound:
             jalali = format_jalali_date(self.instance.next_follow_up)
             self.initial['next_follow_up'] = jalali
+        if self.instance.pk and self.instance.lease_deadline and not self.is_bound:
+            self.initial['lease_deadline'] = format_jalali_date(self.instance.lease_deadline)
         if not self.is_bound:
             raw_types = (self.instance.builder_buy_property_types or '').replace('،', ',')
             selected = [t.strip() for t in raw_types.split(',') if t.strip()]
@@ -188,6 +204,17 @@ class CustomerForm(CRMMoneyFieldsMixin, forms.ModelForm):
 
     def clean_next_follow_up(self):
         raw = self.cleaned_data.get('next_follow_up')
+        if not raw:
+            return None
+        if hasattr(raw, 'year'):
+            return raw
+        parsed = parse_jalali_date_string(str(raw))
+        if parsed is None:
+            raise forms.ValidationError('تاریخ شمسی نامعتبر است. مثال: ۱۴۰۴/۰۶/۱۵')
+        return parsed
+
+    def clean_lease_deadline(self):
+        raw = self.cleaned_data.get('lease_deadline')
         if not raw:
             return None
         if hasattr(raw, 'year'):
@@ -230,7 +257,7 @@ class CustomerForm(CRMMoneyFieldsMixin, forms.ModelForm):
             'want_parking', 'want_storage', 'want_elevator', 'areas',
             'builder_buy_budget_min', 'builder_buy_budget_max',
             'builder_buy_areas', 'builder_buy_min_area', 'builder_buy_max_area',
-            'tags', 'notes', 'next_follow_up',
+            'tags', 'notes', 'next_follow_up', 'lease_deadline',
         ]
         widgets = {
             'name': forms.TextInput(attrs={
@@ -241,12 +268,12 @@ class CustomerForm(CRMMoneyFieldsMixin, forms.ModelForm):
             }),
             'phone': forms.TextInput(attrs={'class': 'crm-input', 'placeholder': '۰۹۱۲...'}),
             'phone_alt': forms.TextInput(attrs={'class': 'crm-input', 'placeholder': 'اختیاری'}),
-            'email': forms.EmailInput(attrs={'class': 'crm-input'}),
-            'city': forms.TextInput(attrs={'class': 'crm-input'}),
-            'district': forms.TextInput(attrs={'class': 'crm-input'}),
-            'job': forms.TextInput(attrs={'class': 'crm-input'}),
-            'company_name': forms.TextInput(attrs={'class': 'crm-input'}),
-            'national_id': forms.TextInput(attrs={'class': 'crm-input'}),
+            'email': forms.EmailInput(attrs={'class': 'crm-input', 'placeholder': 'اختیاری'}),
+            'city': forms.TextInput(attrs={'class': 'crm-input', 'placeholder': 'اختیاری'}),
+            'district': forms.TextInput(attrs={'class': 'crm-input', 'placeholder': 'اختیاری'}),
+            'job': forms.TextInput(attrs={'class': 'crm-input', 'placeholder': 'اختیاری'}),
+            'company_name': forms.TextInput(attrs={'class': 'crm-input', 'placeholder': 'اختیاری'}),
+            'national_id': forms.TextInput(attrs={'class': 'crm-input', 'placeholder': 'اختیاری'}),
             'customer_type': forms.Select(attrs={'class': 'crm-select', 'data-crm-type': '1'}),
             'status': forms.Select(attrs={'class': 'crm-select'}),
             'priority': forms.Select(attrs={'class': 'crm-select'}),
@@ -575,10 +602,19 @@ class CRMPropertyForm(CRMMoneyFieldsMixin, forms.ModelForm):
     def feature_form_groups(self):
         return self.feature_form_context().get('groups') or []
 
+    @property
+    def occupancy_vacancy_date(self) -> str:
+        from workspace.services.property_features import format_feature_date_display
+        data = getattr(self, '_parsed_feature_data', None)
+        if not isinstance(data, dict):
+            data = getattr(self.instance, 'feature_data', None) or {}
+        return format_feature_date_display(str(data.get('تاریخ تخلیه') or ''))
+
     def clean(self):
         from workspace.services.property_features import (
             FEATURE_MANAGED_AMENITY_LABELS,
             amenity_labels_from_feature_data,
+            normalize_feature_date_value,
             parse_feature_data_from_post,
             sync_total_floors_from_feature_data,
         )
@@ -596,6 +632,12 @@ class CRMPropertyForm(CRMMoneyFieldsMixin, forms.ModelForm):
                 property_type=cleaned.get('property_type') or self.data.get('property_type') or '',
                 existing=existing,
             )
+            if 'feat__تاریخ تخلیه' in self.data:
+                raw_vacancy = str(self.data.get('feat__تاریخ تخلیه') or '').strip()
+                if raw_vacancy:
+                    self._parsed_feature_data['تاریخ تخلیه'] = normalize_feature_date_value(raw_vacancy)
+                else:
+                    self._parsed_feature_data.pop('تاریخ تخلیه', None)
             # امکانات مدیریت‌شده فقط از سوییچ ویژگی‌ها می‌آیند
             feature_on = set(amenity_labels_from_feature_data(self._parsed_feature_data))
             selected = [

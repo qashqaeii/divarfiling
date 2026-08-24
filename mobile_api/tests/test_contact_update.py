@@ -65,3 +65,42 @@ class ContactUpdateApiTests(APITestCase):
         self.assertEqual(data['budget_min'], 5_000_000_000)
         self.assertEqual(data['property_type'], 'آپارتمان')
         self.assertEqual(data['min_area'], 90)
+
+    def test_patch_optional_identity_and_lease_deadline(self):
+        resp = self.client.patch(
+            f'/api/mobile/v1/crm/contacts/{self.customer.pk}',
+            {
+                'email': 'rent@example.com',
+                'city': 'تهران',
+                'district': 'ونک',
+                'job': 'مهندس',
+                'company_name': 'شرکت آریا',
+                'national_id': '0012345678',
+                'lease_deadline': '۱۴۰۵/۰۴/۲۷',
+            },
+            format='json',
+        )
+        self.assertEqual(resp.status_code, 200)
+        data = resp.json()['data']
+        self.assertEqual(data['email'], 'rent@example.com')
+        self.assertEqual(data['job'], 'مهندس')
+        self.assertEqual(data['company_name'], 'شرکت آریا')
+        self.assertEqual(data['national_id'], '0012345678')
+        self.assertEqual(data['lease_deadline'], '2026-07-18')
+        self.customer.refresh_from_db()
+        self.assertEqual(self.customer.job, 'مهندس')
+        self.assertEqual(str(self.customer.lease_deadline), '2026-07-18')
+
+    def test_clear_lease_deadline(self):
+        from datetime import date
+        self.customer.lease_deadline = date(2026, 7, 18)
+        self.customer.save(update_fields=['lease_deadline'])
+        resp = self.client.patch(
+            f'/api/mobile/v1/crm/contacts/{self.customer.pk}',
+            {'lease_deadline': ''},
+            format='json',
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.assertIsNone(resp.json()['data']['lease_deadline'])
+        self.customer.refresh_from_db()
+        self.assertIsNone(self.customer.lease_deadline)

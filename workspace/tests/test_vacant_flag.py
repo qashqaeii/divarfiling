@@ -170,3 +170,21 @@ class ListingVacantEditTests(TestCase):
             listing_edit_payload(self.listing)['vacancy_date'],
             to_persian_digits('1405/04/27'),
         )
+
+    def test_vacancy_date_not_in_extra_profile_group(self):
+        from workspace.services.jalali_input import to_persian_digits
+        from workspace.services.listing_features import build_listing_feature_profile
+
+        self.listing.data = {
+            **(self.listing.data or {}),
+            'تاریخ تخلیه': to_persian_digits('1405/06/09'),
+            'vacancy_date': to_persian_digits('1405/06/09'),
+        }
+        self.listing.save()
+        profile = build_listing_feature_profile(self.listing)
+        all_items = [item for g in profile['groups'] for item in g['items']]
+        all_keys = {item['key'] for item in all_items}
+        self.assertNotIn('vacancy_date', all_keys)
+        lifestyle = next(g for g in profile['groups'] if g['id'] == 'lifestyle')
+        vac_item = next(i for i in lifestyle['items'] if i['label'] == 'تاریخ تخلیه')
+        self.assertEqual(vac_item['value'], to_persian_digits('1405/06/09'))

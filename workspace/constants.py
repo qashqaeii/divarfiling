@@ -39,6 +39,7 @@ CRM_FILTER_PARAMS = {
     'contacts': {'q', 'customer_type', 'status', 'priority', 'due', 'sort', 'tag', 'match_alerts'},
     'properties': {
         'q', 'deal_mode', 'transaction_status', 'property_type', 'publish_status', 'city', 'sort',
+        'folder_id',
         'parking', 'storage', 'elevator', 'rooms',
         'area_min', 'area_max', 'price_min', 'price_max',
         'year_min', 'year_max', 'age_max',
@@ -350,6 +351,13 @@ ROLE_COLORS = {
 }
 
 LEAD_TYPES = {'سرنخ', 'متقاضی خرید', 'متقاضی اجاره'}
+
+# نوع ذخیره‌شده «متقاضی اجاره» است؛ در برخی نماها «متقاضی رهن و اجاره» نمایش داده می‌شود.
+LEASE_DEADLINE_TYPES = frozenset({'متقاضی اجاره', 'متقاضی رهن و اجاره'})
+
+
+def shows_lease_deadline(customer_type: str) -> bool:
+    return (customer_type or '').strip() in LEASE_DEADLINE_TYPES
 
 CONVERT_TYPE_MAP = {
     'سرنخ': ['خریدار', 'مستاجر', 'مالک', 'موجر', 'سرمایه‌گذار', 'سازنده'],

@@ -399,6 +399,52 @@
                     </div>
                 </div>
             </div>
+
+            <details class="mk-occ__more crm-occ__more" data-occ-more {% if form.occupancy_vacancy_date %}open{% endif %}>
+                <summary class="mk-occ__more-sum">
+                    <span class="mk-occ__more-ico" aria-hidden="true"><i class="fas fa-calendar-check"></i></span>
+                    <span class="mk-occ__more-txt">
+                        <strong>موارد بیشتر</strong>
+                        <em data-occ-more-hint>{% if form.occupancy_vacancy_date %}تاریخ انتخاب‌شده در تقویم شمسی{% else %}تاریخ تخلیه اختیاری — تقویم شمسی{% endif %}</em>
+                    </span>
+                    <span class="mk-occ__more-val" data-occ-more-val {% if not form.occupancy_vacancy_date %}hidden{% endif %}>{{ form.occupancy_vacancy_date }}</span>
+                    <i class="fas fa-chevron-down mk-occ__more-chev" aria-hidden="true"></i>
+                </summary>
+                <div class="mk-occ__more-body">
+                    <div class="mk-occ__date-head">
+                        <strong>تاریخ تخلیه</strong>
+                        <em>اختیاری — زمان آماده‌تحویل یا پایان سکونت فعلی</em>
+                    </div>
+                    <label class="crm-label" for="crmOccVacancyDate">انتخاب از تقویم شمسی</label>
+                    <div class="mk-occ__date-wrap">
+                        <span class="mk-occ__date-ico" aria-hidden="true"><i class="fas fa-calendar-alt"></i></span>
+                        <input
+                            type="text"
+                            name="feat__تاریخ تخلیه"
+                            id="crmOccVacancyDate"
+                            class="crm-input mk-occ__date-input"
+                            value="{{ form.occupancy_vacancy_date }}"
+                            placeholder="۱۴۰۵/۰۴/۲۷"
+                            autocomplete="off"
+                            inputmode="numeric"
+                            dir="ltr"
+                            data-jdp
+                            data-jdp-only-date
+                            data-occ-date
+                        >
+                        <button type="button" class="mk-occ__date-clear" data-occ-date-clear {% if not form.occupancy_vacancy_date %}hidden{% endif %} title="پاک کردن تاریخ" aria-label="پاک کردن تاریخ تخلیه">
+                            <i class="fas fa-times" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                    <p class="mk-occ__date-hint">روی فیلد بزنید تا تقویم شمسی باز شود. خالی گذاشتن مشکلی ندارد.</p>
+                    <div class="mk-occ__date-presets" role="group" aria-label="میانبر تاریخ تخلیه">
+                        <button type="button" class="mk-occ__date-chip" data-occ-date-preset="today">امروز</button>
+                        <button type="button" class="mk-occ__date-chip" data-occ-date-preset="tomorrow">فردا</button>
+                        <button type="button" class="mk-occ__date-chip" data-occ-date-preset="week">۱ هفته دیگر</button>
+                        <button type="button" class="mk-occ__date-chip" data-occ-date-preset="month">۱ ماه دیگر</button>
+                    </div>
+                </div>
+            </details>
         </div>
 
         <div class="crm-fields crm-fields-2 crm-prop-price-notes">

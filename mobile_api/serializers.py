@@ -337,6 +337,10 @@ def contact_to_dict(c: Customer) -> Dict[str, Any]:
         'district': c.district or '',
         'phone_alt': c.phone_alt or '',
         'email': getattr(c, 'email', '') or '',
+        'job': getattr(c, 'job', '') or '',
+        'company_name': getattr(c, 'company_name', '') or '',
+        'national_id': getattr(c, 'national_id', '') or '',
+        'lease_deadline': c.lease_deadline.isoformat() if getattr(c, 'lease_deadline', None) else None,
         'latitude': None,
         'longitude': None,
         'next_follow_up_at': c.next_follow_up.isoformat() if c.next_follow_up else None,
@@ -759,7 +763,10 @@ def property_to_dict(p: CRMProperty, *, detailed: bool = False, request=None) ->
         'created_at': p.created_at.isoformat() if p.created_at else None,
         'updated_at': p.updated_at.isoformat() if p.updated_at else None,
     }
+    from workspace.services.crm_property_folders import folders_for_property
+    data['folders'] = folders_for_property(p)
     if detailed:
+        from workspace.services.property_features import vacancy_date_from_property
         data.update({
             'address': p.address or '',
             'floor': p.floor,
@@ -769,6 +776,9 @@ def property_to_dict(p: CRMProperty, *, detailed: bool = False, request=None) ->
             'has_storage': p.has_storage,
             'has_elevator': p.has_elevator,
             'is_vacant': p.is_vacant,
+            'tenant_name': p.tenant_name or '',
+            'tenant_phone': p.tenant_phone or '',
+            'vacancy_date': vacancy_date_from_property(p),
             'amenities': p.amenities or '',
             'notes': p.notes or '',
         })

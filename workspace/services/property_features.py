@@ -529,6 +529,15 @@ def amenity_labels_from_feature_data(feature_data: Optional[dict]) -> List[str]:
     return labels
 
 
+OCCUPANCY_PANEL_FEATURE_KEYS = frozenset({'تاریخ تخلیه'})
+
+
+def vacancy_date_from_property(prop) -> str:
+    """تاریخ تخلیه ذخیره‌شده در feature_data — شمسی با ارقام فارسی."""
+    data = getattr(prop, 'feature_data', None) or {}
+    return format_feature_date_display(str(data.get('تاریخ تخلیه') or ''))
+
+
 def sync_total_floors_from_feature_data(feature_data: Optional[dict]) -> Optional[int]:
     raw = (feature_data or {}).get('تعداد کل طبقات ساختمان')
     if raw is None or str(raw).strip() == '':
@@ -554,6 +563,8 @@ def feature_form_groups_with_values(
     for group in profile['groups']:
         items = []
         for key in group['keys']:
+            if key in OCCUPANCY_PANEL_FEATURE_KEYS:
+                continue
             meta = dict(FIELDS[key])
             raw_val = str(data.get(key) or '').strip()
             if meta['widget'] == 'toggle':

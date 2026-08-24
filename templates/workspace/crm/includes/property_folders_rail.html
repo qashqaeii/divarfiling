@@ -1,0 +1,161 @@
+{% load workspace_tags %}
+<section class="crm-zonkan" data-crm-zonkan aria-label="زونکن‌های فایل شخصی">
+    <div class="crm-zonkan__head">
+        <div class="crm-zonkan__head-txt">
+            <h2 class="crm-zonkan__title"><i class="fas fa-folder-tree" aria-hidden="true"></i> زونکن‌ها</h2>
+            <p class="crm-zonkan__hint">دسته‌بندی سریع فایل‌های مجتمع، پروژه یا محله</p>
+        </div>
+        <div class="crm-zonkan__actions">
+            {% if property_folders %}
+            <button type="button" class="crm-zonkan__manage" data-zonkan-manage-open title="مدیریت زونکن‌ها">
+                <i class="fas fa-sliders-h" aria-hidden="true"></i>
+                <span>مدیریت</span>
+            </button>
+            {% endif %}
+            <button type="button" class="crm-zonkan__create" data-zonkan-create title="زونکن جدید">
+                <i class="fas fa-plus" aria-hidden="true"></i>
+                <span>زونکن جدید</span>
+            </button>
+        </div>
+    </div>
+
+    <div class="crm-zonkan__rail" tabindex="0" data-zonkan-rail>
+        {% with base_qs=filter_qs|default:'' %}
+        <a href="{% url 'workspace:crm_properties' %}?view={{ view_mode }}{% if base_qs %}&{{ base_qs }}{% endif %}"
+           class="crm-zonkan-card crm-zonkan-card--all{% if not active_folder_id %} is-active{% endif %}"
+           style="--zonkan-color:#64748b"
+           data-zonkan-card-all>
+            <span class="crm-zonkan-card__ico" aria-hidden="true"><i class="fas fa-layer-group"></i></span>
+            <span class="crm-zonkan-card__body">
+                <strong>همه فایل‌ها</strong>
+                <em>{{ stats.total }} فایل</em>
+            </span>
+        </a>
+        {% for folder in property_folders %}
+        <div class="crm-zonkan-card-wrap{% if active_folder_id == folder.id|stringformat:'s' %} is-active{% endif %}"
+             data-zonkan-wrap="{{ folder.id }}">
+            <a href="?folder_id={{ folder.id }}&view={{ view_mode }}{% if base_qs %}&{{ base_qs }}{% endif %}"
+               class="crm-zonkan-card{% if active_folder_id == folder.id|stringformat:'s' %} is-active{% endif %}{% if folder.is_pinned %} is-pinned{% endif %}"
+               style="--zonkan-color:{{ folder.color }}"
+               data-zonkan-id="{{ folder.id }}"
+               title="{{ folder.description|default:folder.name }}">
+                <span class="crm-zonkan-card__ico" aria-hidden="true"><i class="fas {{ folder.icon|default:'fa-folder' }}"></i></span>
+                <span class="crm-zonkan-card__body">
+                    <strong>{{ folder.name }}</strong>
+                    <em>{{ folder.property_count|default:0 }} فایل</em>
+                </span>
+                {% if folder.is_pinned %}<span class="crm-zonkan-card__pin" title="سنجاق‌شده"><i class="fas fa-thumbtack"></i></span>{% endif %}
+            </a>
+            <button type="button" class="crm-zonkan-card__menu" data-zonkan-card-menu="{{ folder.id }}" aria-label="عملیات زونکن">
+                <i class="fas fa-ellipsis-v" aria-hidden="true"></i>
+            </button>
+        </div>
+        {% endfor %}
+        {% endwith %}
+    </div>
+</section>
+
+<dialog class="crm-zonkan-modal" id="crmZonkanModal" data-zonkan-modal>
+    <form method="dialog" class="crm-zonkan-modal__box" data-zonkan-form>
+        <header class="crm-zonkan-modal__head">
+            <h3 data-zonkan-modal-title>زونکن جدید</h3>
+            <button type="button" class="crm-zonkan-modal__close" data-zonkan-close aria-label="بستن">
+                <i class="fas fa-times" aria-hidden="true"></i>
+            </button>
+        </header>
+        <div class="crm-zonkan-modal__body">
+            <input type="hidden" data-zonkan-edit-id value="">
+            <label class="crm-label" for="crmZonkanName">نام زونکن</label>
+            <input type="text" id="crmZonkanName" class="crm-input" maxlength="80" placeholder="مثلاً برج سپهر، اجاره شمال تهران…" required data-zonkan-name>
+
+            <label class="crm-label" for="crmZonkanDesc">توضیح <span class="crm-label-optional">(اختیاری)</span></label>
+            <input type="text" id="crmZonkanDesc" class="crm-input" maxlength="240" placeholder="توضیح کوتاه برای یادآوری" data-zonkan-desc>
+
+            <label class="crm-zonkan-pin-row">
+                <input type="checkbox" data-zonkan-pin>
+                <span><i class="fas fa-thumbtack" aria-hidden="true"></i> سنجاق در ابتدای لیست</span>
+            </label>
+
+            <span class="crm-label">رنگ</span>
+            <div class="crm-zonkan-colors" role="group" aria-label="رنگ زونکن">
+                {% for c in folder_colors %}
+                <button type="button" class="crm-zonkan-color{% if forloop.first %} is-active{% endif %}" data-zonkan-color="{{ c }}" style="--swatch:{{ c }}" aria-label="رنگ {{ forloop.counter }}"></button>
+                {% endfor %}
+            </div>
+
+            <span class="crm-label">آیکن</span>
+            <div class="crm-zonkan-icons" role="group" aria-label="آیکن زونکن">
+                {% for ic in folder_icons %}
+                <button type="button" class="crm-zonkan-icon{% if forloop.first %} is-active{% endif %}" data-zonkan-icon="{{ ic }}" aria-label="{{ ic }}">
+                    <i class="fas {{ ic }}" aria-hidden="true"></i>
+                </button>
+                {% endfor %}
+            </div>
+        </div>
+        <footer class="crm-zonkan-modal__foot">
+            <button type="button" class="crm-dash-act crm-dash-act--danger crm-zonkan-modal__delete" data-zonkan-delete hidden>حذف زونکن</button>
+            <span class="crm-zonkan-modal__spacer"></span>
+            <button type="button" class="crm-dash-act" data-zonkan-close>انصراف</button>
+            <button type="submit" class="crm-dash-act crm-dash-act--primary" data-zonkan-submit>ذخیره زونکن</button>
+        </footer>
+    </form>
+</dialog>
+
+{% if property_folders %}
+<dialog class="crm-zonkan-manage" id="crmZonkanManage" data-zonkan-manage-modal>
+    <div class="crm-zonkan-manage__box">
+        <header class="crm-zonkan-manage__head">
+            <div>
+                <h3>مدیریت زونکن‌ها</h3>
+                <p>بکشید و رها کنید برای مرتب‌سازی · سنجاق، ویرایش یا حذف</p>
+            </div>
+            <button type="button" class="crm-zonkan-modal__close" data-zonkan-manage-close aria-label="بستن">
+                <i class="fas fa-times" aria-hidden="true"></i>
+            </button>
+        </header>
+        <ul class="crm-zonkan-manage__list" data-zonkan-manage-list>
+            {% for folder in property_folders %}
+            <li class="crm-zonkan-manage__item{% if folder.is_pinned %} is-pinned{% endif %}"
+                draggable="true"
+                data-zonkan-manage-item
+                data-folder-id="{{ folder.id }}"
+                data-folder-name="{{ folder.name|escape }}"
+                data-folder-desc="{{ folder.description|default:''|escape }}"
+                data-folder-color="{{ folder.color }}"
+                data-folder-icon="{{ folder.icon|default:'fa-folder' }}"
+                data-folder-pinned="{{ folder.is_pinned|yesno:'1,0' }}"
+                style="--zonkan-color:{{ folder.color }}">
+                <span class="crm-zonkan-manage__drag" aria-hidden="true"><i class="fas fa-grip-vertical"></i></span>
+                <span class="crm-zonkan-manage__dot" aria-hidden="true"></span>
+                <span class="crm-zonkan-manage__info">
+                    <strong>{{ folder.name }}</strong>
+                    <em>{{ folder.property_count|default:0 }} فایل{% if folder.description %} · {{ folder.description }}{% endif %}</em>
+                </span>
+                <div class="crm-zonkan-manage__acts">
+                    <button type="button" class="crm-zonkan-manage__act{% if folder.is_pinned %} is-on{% endif %}" data-zonkan-manage-pin="{{ folder.id }}" title="سنجاق">
+                        <i class="fas fa-thumbtack" aria-hidden="true"></i>
+                    </button>
+                    <button type="button" class="crm-zonkan-manage__act" data-zonkan-manage-edit="{{ folder.id }}" title="ویرایش">
+                        <i class="fas fa-pen" aria-hidden="true"></i>
+                    </button>
+                    <button type="button" class="crm-zonkan-manage__act crm-zonkan-manage__act--danger" data-zonkan-manage-delete="{{ folder.id }}" title="حذف">
+                        <i class="fas fa-trash-alt" aria-hidden="true"></i>
+                    </button>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+        <footer class="crm-zonkan-manage__foot">
+            <button type="button" class="crm-dash-act" data-zonkan-manage-close>بستن</button>
+            <button type="button" class="crm-dash-act crm-dash-act--primary" data-zonkan-reorder-save>ذخیره ترتیب</button>
+        </footer>
+    </div>
+</dialog>
+
+<menu class="crm-zonkan-pop" id="crmZonkanPop" data-zonkan-pop hidden>
+    <button type="button" data-zonkan-pop-pin><i class="fas fa-thumbtack"></i> سنجاق / برداشتن</button>
+    <button type="button" data-zonkan-pop-edit><i class="fas fa-pen"></i> ویرایش</button>
+    <button type="button" data-zonkan-pop-delete class="is-danger"><i class="fas fa-trash-alt"></i> حذف</button>
+</menu>
+{% endif %}
+

@@ -84,3 +84,35 @@ class UpsertPropertyTenantTests(TestCase):
         )
         self.assertEqual(PropertyContact.objects.filter(property=self.prop, role='مستاجر').count(), 0)
         self.assertEqual(Customer.objects.filter(user=self.user, customer_type='مستاجر').count(), 1)
+
+
+class MobilePropertyTenantSyncTests(TestCase):
+    def setUp(self):
+        User = get_user_model()
+        self.user = User.objects.create_user(username='mobile_tenant', password='x')
+        self.prop = CRMProperty.objects.create(
+            user=self.user,
+            title='ملک موبایل',
+            property_type='آپارتمان',
+            deal_mode='اجاره',
+            is_vacant=False,
+        )
+
+    def test_update_property_from_mobile_creates_tenant_contact(self):
+        from mobile_api.services.properties_service import update_property_from_mobile
+
+        updated = update_property_from_mobile(
+            self.user,
+            self.prop.pk,
+            {
+                'tenant_name': 'رضا کریمی',
+                'tenant_phone': '09123334455',
+                'is_vacant': False,
+            },
+        )
+        self.assertIsNotNone(updated)
+        link = PropertyContact.objects.get(property=self.prop, role='مستاجر')
+        self.assertEqual(link.customer.name, 'رضا کریمی')
+        self.assertEqual(link.customer.phone, '09123334455')
+        self.assertEqual(link.customer.customer_type, 'مستاجر')
+        self.assertTrue(link.is_primary)

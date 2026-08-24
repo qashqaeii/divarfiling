@@ -121,6 +121,17 @@ _SCALAR_FEATURE_KEYS = frozenset({
     'سرمایش', 'گرمایش', 'تأمین‌کننده آب گرم', 'سند',
     'تاریخ تخلیه',
 })
+_EXTRA_PROFILE_SKIP_KEYS = frozenset({
+    'vacancy_date',
+    'تاریخ تخلیه یا آماده تحویل',
+})
+_FEATURE_LABEL_ALIASES = {
+    'vacancy_date': 'تاریخ تخلیه',
+    'تاریخ تخلیه یا آماده تحویل': 'تاریخ تخلیه',
+}
+_DATE_DISPLAY_KEYS = frozenset({
+    'تاریخ تخلیه', 'vacancy_date', 'تاریخ تخلیه یا آماده تحویل',
+})
 _BUILD_YEAR_KEYS = frozenset({
     'ساخت', 'سال ساخت', 'build_year', 'سن بنا', 'سال ساخت بنا', 'بازسازی شده',
 })
@@ -515,13 +526,18 @@ def emoji_for_key(key: str) -> str:
 
 def _format_item_display(key: str, value: str) -> Dict[str, Any]:
     cleaned = _clean_value(value)
+    label = _FEATURE_LABEL_ALIASES.get(key, key)
     chips: List[str] = []
     if key == 'مناسب برای' and cleaned:
         chips = [c for c in _CHIP_SPLIT.split(cleaned) if c]
 
     # کلیدهای عددی/متنی (تعداد، جنس، جهت، …) — مقدار خام بماند
-    if is_scalar_feature_key(key):
-        if _is_explicit_bool_value(cleaned):
+    if is_scalar_feature_key(key) or key in _DATE_DISPLAY_KEYS or label in _DATE_DISPLAY_KEYS:
+        if key in _DATE_DISPLAY_KEYS or label in _DATE_DISPLAY_KEYS:
+            from workspace.services.property_features import normalize_feature_date_value
+            state = 'neutral'
+            display = normalize_feature_date_value(cleaned) or cleaned
+        elif _is_explicit_bool_value(cleaned):
             state = _feature_state(cleaned)
             display = 'دارد' if state == 'yes' else ('ندارد' if state == 'no' else cleaned)
         else:
@@ -538,10 +554,10 @@ def _format_item_display(key: str, value: str) -> Dict[str, Any]:
 
     return {
         'key': key,
-        'label': key,
+        'label': label,
         'value': display,
         'state': state,
-        'icon': _icon_for_key(key),
+        'icon': _icon_for_key(label if label != key else key),
         'chips': chips,
         'is_chip': bool(chips),
     }
@@ -673,7 +689,9 @@ def build_listing_feature_profile(listing, base_feat: Optional[Dict[str, Any]] =
     # ویژگی‌های اضافی (ستون‌های داینامیک ربات)
     extra_items: List[Dict[str, Any]] = []
     for key, val in sorted(raw.items()):
-        if key in used_keys or key in {s['key'] for s in LISTING_CORE_AMENITIES}:
+        if key in used_keys or key in _EXTRA_PROFILE_SKIP_KEYS or key in {s['key'] for s in LISTING_CORE_AMENITIES}:
+            continue
+        if not _clean_value(val):
             continue
         extra_items.append(_format_item_display(key, val))
     if extra_items:

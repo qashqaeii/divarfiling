@@ -161,6 +161,22 @@ def update_contact(user, contact_id: int, data: Dict[str, Any]) -> Optional[Cust
     if 'phone_alt' in data and data['phone_alt'] is not None:
         alt = normalize_phone(data.get('phone_alt') or '')
         c.phone_alt = alt
+    if 'job' in data and data['job'] is not None:
+        c.job = (data.get('job') or '').strip()[:120]
+    if 'company_name' in data and data['company_name'] is not None:
+        c.company_name = (data.get('company_name') or '').strip()[:200]
+    if 'national_id' in data and data['national_id'] is not None:
+        c.national_id = (data.get('national_id') or '').strip()[:20]
+    if _field_present(data, 'lease_deadline'):
+        from workspace.services.jalali_input import parse_jalali_date_string
+        raw = data.get('lease_deadline')
+        if raw == '':
+            c.lease_deadline = None
+        else:
+            parsed = parse_jalali_date_string(str(raw).strip())
+            if parsed is None:
+                raise ValueError('تاریخ مهلت اجاره نامعتبر است.')
+            c.lease_deadline = parsed
     for field in ('rooms_min', 'rooms_max', 'year_min', 'year_max', 'floor_min', 'floor_max'):
         if field in data and data[field] is not None:
             setattr(c, field, _optional_int(data[field]))

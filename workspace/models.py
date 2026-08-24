@@ -302,6 +302,7 @@ class Customer(models.Model):
     is_legal_entity = models.BooleanField(default=False, verbose_name='شخص حقوقی')
     company_name = models.CharField(max_length=200, blank=True, verbose_name='نام شرکت')
     national_id = models.CharField(max_length=20, blank=True, verbose_name='کد ملی')
+    lease_deadline = models.DateField(null=True, blank=True, verbose_name='مهلت اجاره')
     converted_from = models.ForeignKey(
         'self', on_delete=models.SET_NULL, null=True, blank=True,
         related_name='conversions', verbose_name='تبدیل‌شده از',
@@ -1206,6 +1207,63 @@ class CRMSavedFilter(models.Model):
 
     def __str__(self):
         return f'{self.name} ({self.scope})'
+
+
+class CRMPropertyFolder(models.Model):
+    """زونکن — دسته‌بندی فایل‌های شخصی."""
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+        related_name='crm_property_folders', verbose_name='کاربر',
+    )
+    name = models.CharField(max_length=80, verbose_name='نام زونکن')
+    description = models.CharField(max_length=240, blank=True, verbose_name='توضیح')
+    color = models.CharField(max_length=7, default='#6366f1', verbose_name='رنگ')
+    icon = models.CharField(max_length=40, default='fa-folder', verbose_name='آیکن')
+    sort_order = models.PositiveIntegerField(default=0, verbose_name='ترتیب')
+    is_pinned = models.BooleanField(default=False, verbose_name='سنجاق')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'زونکن فایل شخصی'
+        verbose_name_plural = 'زونکن‌های فایل شخصی'
+        ordering = ['-is_pinned', 'sort_order', 'name']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'name'],
+                name='uniq_crm_property_folder_name',
+            ),
+        ]
+
+    def __str__(self):
+        return self.name
+
+
+class CRMPropertyFolderItem(models.Model):
+    """عضویت ملک در زونکن."""
+    folder = models.ForeignKey(
+        CRMPropertyFolder, on_delete=models.CASCADE,
+        related_name='items', verbose_name='زونکن',
+    )
+    property = models.ForeignKey(
+        CRMProperty, on_delete=models.CASCADE,
+        related_name='folder_items', verbose_name='ملک',
+    )
+    added_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'عضو زونکن'
+        verbose_name_plural = 'اعضای زونکن'
+        ordering = ['-added_at']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['folder', 'property'],
+                name='uniq_crm_folder_property',
+            ),
+        ]
+
+    def __str__(self):
+        return f'{self.folder_id} → {self.property_id}'
 
 
 class PropertyMatchAlert(models.Model):

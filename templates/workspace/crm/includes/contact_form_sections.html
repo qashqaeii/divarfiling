@@ -49,6 +49,30 @@
             {% crm_field form.company_name 'نام شرکت' 'crm-legal-field' %}
             {% crm_field form.national_id 'کد ملی' %}
         </div>
+        <div class="crm-field crm-field-full crm-lease-deadline{% if form.instance.customer_type != 'متقاضی اجاره' and form.instance.customer_type != 'متقاضی رهن و اجاره' %} hidden{% endif %}{% if form.lease_deadline.errors %} crm-field-has-error{% endif %}" data-field="lease_deadline">
+            <div class="crm-lease-date-head">
+                <strong>مهلت اجاره</strong>
+                <em>تاریخ پایان قرارداد اجاره مورد نظر — تقویم شمسی</em>
+            </div>
+            <label class="crm-label" for="{{ form.lease_deadline.id_for_label }}">انتخاب از تقویم شمسی</label>
+            <div class="crm-lease-date-wrap">
+                <span class="crm-lease-date-ico" aria-hidden="true"><i class="fas fa-calendar-alt"></i></span>
+                {{ form.lease_deadline }}
+                <button type="button" class="crm-lease-date-clear" data-lease-date-clear hidden title="پاک کردن تاریخ" aria-label="پاک کردن مهلت اجاره">
+                    <i class="fas fa-times" aria-hidden="true"></i>
+                </button>
+            </div>
+            {% for error in form.lease_deadline.errors %}
+            <p class="crm-field-error" role="alert">{{ error }}</p>
+            {% endfor %}
+            <p class="crm-lease-date-hint">روی فیلد بزنید تا تقویم شمسی باز شود. خالی گذاشتن مشکلی ندارد.</p>
+            <div class="crm-lease-date-presets" role="group" aria-label="میانبر مهلت اجاره">
+                <button type="button" class="crm-lease-date-chip" data-lease-date-preset="month">۱ ماه</button>
+                <button type="button" class="crm-lease-date-chip" data-lease-date-preset="quarter">۳ ماه</button>
+                <button type="button" class="crm-lease-date-chip" data-lease-date-preset="half">۶ ماه</button>
+                <button type="button" class="crm-lease-date-chip" data-lease-date-preset="year">۱ سال</button>
+            </div>
+        </div>
         <button type="button" class="crm-contact-channels-open" data-crm-channels-open>
             <i class="fas fa-pen-to-square" aria-hidden="true"></i>
             ویرایش شناسه شبکه‌های اجتماعی

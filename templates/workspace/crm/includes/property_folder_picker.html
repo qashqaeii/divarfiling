@@ -1,0 +1,23 @@
+{% if can_edit_property and property_folders %}
+<section class="crm-zonkan-picker" data-zonkan-picker data-property-id="{{ property.id }}" aria-label="زونکن‌های ملک">
+    <header class="crm-zonkan-picker__head">
+        <span class="crm-zonkan-picker__ico"><i class="fas fa-folder-open" aria-hidden="true"></i></span>
+        <div>
+            <strong>زونکن‌ها</strong>
+            <em>این فایل در کدام مجموعه‌ها قرار دارد؟</em>
+        </div>
+    </header>
+    <div class="crm-zonkan-picker__grid">
+        {% for folder in property_folders %}
+        <button type="button"
+                class="crm-zonkan-picker__chip{% if folder.id in property_folder_ids %} is-on{% endif %}"
+                data-zonkan-toggle="{{ folder.id }}"
+                style="--zonkan-color:{{ folder.color }}">
+            <i class="fas {{ folder.icon|default:'fa-folder' }}" aria-hidden="true"></i>
+            <span>{{ folder.name }}</span>
+            <i class="fas fa-check crm-zonkan-picker__tick" aria-hidden="true"></i>
+        </button>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}

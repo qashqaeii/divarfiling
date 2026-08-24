@@ -49,6 +49,8 @@ DEDICATED_FEATURE_KEYS = frozenset({
     'آسانسور', 'پارکینگ', 'انباری',
     'وضعیت سکونت',
     'تاریخ تخلیه',
+    'vacancy_date',
+    'تاریخ تخلیه یا آماده تحویل',
 }) | CORE_AMENITY_LABELS
 
 OCCUPANCY_KEYS = ('وضعیت سکونت', 'وضعیت واحد', 'occupancy', 'unit_status')

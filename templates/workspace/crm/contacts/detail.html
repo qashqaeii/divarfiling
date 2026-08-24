@@ -573,7 +573,7 @@
                 </div>
 
                 {% else %}
-                {% if customer.property_type or customer.budget_min or customer.budget_max or customer.deposit_min or customer.deposit_max or customer.rent_min or customer.rent_max or customer.min_area or customer.max_area or customer.rooms_min or customer.rooms_max or customer.rooms or customer.year_min or customer.year_max or customer.floor_min or customer.floor_max or customer.want_parking or customer.want_storage or customer.want_elevator or customer.areas %}
+                {% if customer.property_type or customer.budget_min or customer.budget_max or customer.deposit_min or customer.deposit_max or customer.rent_min or customer.rent_max or customer.lease_deadline or customer.min_area or customer.max_area or customer.rooms_min or customer.rooms_max or customer.rooms or customer.year_min or customer.year_max or customer.floor_min or customer.floor_max or customer.want_parking or customer.want_storage or customer.want_elevator or customer.areas %}
                 <div class="crm-contact-prefs">
                     {% if customer.property_type %}
                     <div class="crm-contact-pref-type">
@@ -608,6 +608,16 @@
                         <div class="crm-contact-pref-body">
                             <span class="crm-contact-pref-lbl">اجاره ماهانه</span>
                             <strong>{% if customer.rent_min %}{{ customer.rent_min|ws_money }}{% else %}—{% endif %} — {% if customer.rent_max %}{{ customer.rent_max|ws_money }}{% else %}—{% endif %}</strong>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if customer.lease_deadline %}
+                    <div class="crm-contact-pref-row">
+                        <span class="crm-contact-pref-ico" aria-hidden="true"><i class="fas fa-hourglass-end"></i></span>
+                        <div class="crm-contact-pref-body">
+                            <span class="crm-contact-pref-lbl">مهلت اجاره</span>
+                            <strong>{{ customer.lease_deadline|ws_jalali }}</strong>
                         </div>
                     </div>
                     {% endif %}

@@ -108,6 +108,64 @@ function initCRMJalaliPickers(root) {
     });
 }
 
+function crmJalaliYmdFromDate(date) {
+    const parts = new Intl.DateTimeFormat('fa-IR-u-ca-persian', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+    }).formatToParts(date);
+    let y = '', m = '', d = '';
+    parts.forEach((part) => {
+        if (part.type === 'year') y = part.value;
+        if (part.type === 'month') m = part.value;
+        if (part.type === 'day') d = part.value;
+    });
+    if (!y || !m || !d) return '';
+    return `${y}/${m}/${d}`;
+}
+
+function crmLeaseDeadlinePreset(kind) {
+    const now = new Date();
+    const target = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    if (kind === 'month') target.setMonth(target.getMonth() + 1);
+    else if (kind === 'quarter') target.setMonth(target.getMonth() + 3);
+    else if (kind === 'half') target.setMonth(target.getMonth() + 6);
+    else if (kind === 'year') target.setFullYear(target.getFullYear() + 1);
+    return crmJalaliYmdFromDate(target);
+}
+
+function initCRMLeaseDeadline(root) {
+    const scope = root || document;
+    scope.querySelectorAll('.crm-lease-deadline').forEach((block) => {
+        if (block.dataset.crmLeaseBound === '1') return;
+        block.dataset.crmLeaseBound = '1';
+        const input = block.querySelector('[name="lease_deadline"]');
+        const clearBtn = block.querySelector('[data-lease-date-clear]');
+        const sync = () => {
+            const raw = input ? String(input.value || '').trim() : '';
+            if (clearBtn) clearBtn.hidden = !raw;
+        };
+        if (input) {
+            input.addEventListener('change', sync);
+            input.addEventListener('input', sync);
+        }
+        if (clearBtn) {
+            clearBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (input) input.value = '';
+                sync();
+            });
+        }
+        block.querySelectorAll('[data-lease-date-preset]').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                if (input) input.value = crmLeaseDeadlinePreset(btn.getAttribute('data-lease-date-preset'));
+                sync();
+            });
+        });
+        sync();
+    });
+}
+
 const CRMDrawer = {
     active: null,
     open(id) {
@@ -124,6 +182,8 @@ const CRMDrawer = {
         initPropertyDealMode(drawer);
         initCRMFeatureProfile(drawer);
         initCRMTypeProfiles(drawer);
+        initCRMLeaseDeadline(drawer);
+        initCRMPropertyOccVacancyDate(drawer);
         initCRMContactChannels(drawer);
         initCRMAreasPicker(drawer);
         initCRMFormErrors();
@@ -176,6 +236,7 @@ function initCRMTypeProfiles(root) {
         const prefsFloor = section.querySelectorAll('.crm-prefs-floor');
         const prefsLocation = section.querySelectorAll('.crm-prefs-location');
         const prefsAmenities = section.querySelectorAll('.crm-prefs-amenities-block');
+        const leaseDeadlineFields = section.querySelectorAll('.crm-lease-deadline');
         const propertyTypeSelect = section.querySelector('[name="property_type"]');
 
         function applyResidentialVisibility(propType, prefsMode) {
@@ -216,6 +277,7 @@ function initCRMTypeProfiles(root) {
             show(rentFields, showRent);
             show(builderBuyFields, isBuilder);
             show(builderBuyMoney, isBuilder);
+            show(leaseDeadlineFields, type === 'متقاضی اجاره' || type === 'متقاضی رهن و اجاره');
 
             const bl = p.budget_labels || ['بودجه از', 'بودجه تا'];
             const dl = p.deposit_labels || ['ودیعه از', 'ودیعه تا'];
@@ -362,6 +424,62 @@ function crmResolveDealMode(dealSelect, priceSection) {
     return 'فروش';
 }
 
+function crmOccVacancyPreset(kind) {
+    const now = new Date();
+    const target = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    if (kind === 'tomorrow') target.setDate(target.getDate() + 1);
+    else if (kind === 'week') target.setDate(target.getDate() + 7);
+    else if (kind === 'month') target.setMonth(target.getMonth() + 1);
+    return crmJalaliYmdFromDate(target);
+}
+
+function bindCRMOccVacancyDate(shell) {
+    if (!shell || shell.dataset.occVacancyBound === '1') return;
+    shell.dataset.occVacancyBound = '1';
+    const input = shell.querySelector('[data-occ-date]');
+    const clearBtn = shell.querySelector('[data-occ-date-clear]');
+    const moreVal = shell.querySelector('[data-occ-more-val]');
+    const moreHint = shell.querySelector('[data-occ-more-hint]');
+    const more = shell.querySelector('[data-occ-more]');
+    const sync = () => {
+        const raw = input ? String(input.value || '').trim() : '';
+        if (clearBtn) clearBtn.hidden = !raw;
+        if (moreVal) {
+            moreVal.textContent = raw;
+            moreVal.hidden = !raw;
+        }
+        if (moreHint) {
+            moreHint.textContent = raw
+                ? 'تاریخ انتخاب‌شده در تقویم شمسی'
+                : 'تاریخ تخلیه اختیاری — تقویم شمسی';
+        }
+        if (more && raw) more.open = true;
+    };
+    if (input) {
+        input.addEventListener('change', sync);
+        input.addEventListener('input', sync);
+    }
+    if (clearBtn) {
+        clearBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (input) input.value = '';
+            sync();
+        });
+    }
+    shell.querySelectorAll('[data-occ-date-preset]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            if (input) input.value = crmOccVacancyPreset(btn.getAttribute('data-occ-date-preset'));
+            sync();
+        });
+    });
+    sync();
+}
+
+function initCRMPropertyOccVacancyDate(root) {
+    const scope = root || document;
+    scope.querySelectorAll('[data-occ-shell]').forEach((shell) => bindCRMOccVacancyDate(shell));
+}
+
 function initPropertyDealMode(root) {
     const scope = root || document;
     scope.querySelectorAll('select[data-deal-mode], select[name="deal_mode"]').forEach(dealSelect => {
@@ -504,6 +622,7 @@ function initPropertyDealMode(root) {
         });
         if (saleInput) saleInput.addEventListener('input', () => updatePerSqm(dealSelect.value));
         if (areaInput) areaInput.addEventListener('input', () => updatePerSqm(dealSelect.value));
+        bindCRMOccVacancyDate(occShell);
     });
 }
 
@@ -4120,6 +4239,354 @@ function crmDrawerIdFromQuery() {
     return drawer.startsWith('drawer-') ? drawer : `drawer-${drawer}`;
 }
 
+function initCRMPropertyFolders(root) {
+    const scope = root || document;
+    const section = scope.querySelector('[data-crm-zonkan]');
+    if (!section || section.dataset.zonkanBound === '1') return;
+    section.dataset.zonkanBound = '1';
+
+    const modal = scope.querySelector('[data-zonkan-modal]');
+    if (!modal) return;
+
+    const manageModal = scope.querySelector('[data-zonkan-manage-modal]');
+    const popMenu = scope.querySelector('[data-zonkan-pop]');
+    const form = modal.querySelector('[data-zonkan-form]');
+    const titleEl = modal.querySelector('[data-zonkan-modal-title]');
+    const editIdInput = modal.querySelector('[data-zonkan-edit-id]');
+    const nameInput = modal.querySelector('[data-zonkan-name]');
+    const descInput = modal.querySelector('[data-zonkan-desc]');
+    const pinInput = modal.querySelector('[data-zonkan-pin]');
+    const deleteBtn = modal.querySelector('[data-zonkan-delete]');
+    const baseUrl = window.crmZonkanUrl || '/workspace/crm/property-folders/';
+    const detailBase = window.crmZonkanDetailUrlBase || `${baseUrl}`;
+    const reorderUrl = window.crmZonkanReorderUrl || `${baseUrl}reorder/`;
+
+    let selectedColor = modal.querySelector('[data-zonkan-color].is-active')?.getAttribute('data-zonkan-color') || '#6366f1';
+    let selectedIcon = modal.querySelector('[data-zonkan-icon].is-active')?.getAttribute('data-zonkan-icon') || 'fa-folder';
+    let popFolderId = null;
+
+    function folderDetailUrl(id) {
+        return `${detailBase}${id}/`;
+    }
+
+    function closeModal() {
+        if (typeof modal.close === 'function') modal.close();
+    }
+
+    function closeManageModal() {
+        if (manageModal && typeof manageModal.close === 'function') manageModal.close();
+    }
+
+    function hidePop() {
+        if (!popMenu) return;
+        popMenu.hidden = true;
+        popFolderId = null;
+    }
+
+    function setModalSelections(color, icon) {
+        selectedColor = color || selectedColor;
+        selectedIcon = icon || selectedIcon;
+        modal.querySelectorAll('[data-zonkan-color]').forEach((el) => {
+            el.classList.toggle('is-active', el.getAttribute('data-zonkan-color') === selectedColor);
+        });
+        modal.querySelectorAll('[data-zonkan-icon]').forEach((el) => {
+            el.classList.toggle('is-active', el.getAttribute('data-zonkan-icon') === selectedIcon);
+        });
+    }
+
+    function openCreateModal() {
+        if (editIdInput) editIdInput.value = '';
+        if (titleEl) titleEl.textContent = 'زونکن جدید';
+        if (nameInput) nameInput.value = '';
+        if (descInput) descInput.value = '';
+        if (pinInput) pinInput.checked = false;
+        if (deleteBtn) deleteBtn.hidden = true;
+        setModalSelections('#6366f1', 'fa-folder');
+        if (typeof modal.showModal === 'function') modal.showModal();
+    }
+
+    function openEditModal(folderId) {
+        const item = manageModal?.querySelector(`[data-folder-id="${folderId}"]`)
+            || section.querySelector(`[data-zonkan-wrap="${folderId}"]`);
+        const dataItem = manageModal?.querySelector(`[data-folder-id="${folderId}"]`);
+        const source = dataItem || null;
+        const wrap = section.querySelector(`[data-zonkan-id="${folderId}"]`);
+        const name = source?.getAttribute('data-folder-name')
+            || wrap?.querySelector('strong')?.textContent?.trim()
+            || '';
+        const desc = source?.getAttribute('data-folder-desc') || '';
+        const color = source?.getAttribute('data-folder-color')
+            || wrap?.style.getPropertyValue('--zonkan-color')?.trim()
+            || '#6366f1';
+        const icon = source?.getAttribute('data-folder-icon') || 'fa-folder';
+        const pinned = source?.getAttribute('data-folder-pinned') === '1'
+            || wrap?.classList.contains('is-pinned');
+
+        if (editIdInput) editIdInput.value = String(folderId);
+        if (titleEl) titleEl.textContent = 'ویرایش زونکن';
+        if (nameInput) nameInput.value = name;
+        if (descInput) descInput.value = desc;
+        if (pinInput) pinInput.checked = !!pinned;
+        if (deleteBtn) deleteBtn.hidden = false;
+        setModalSelections(color, icon);
+        closeManageModal();
+        hidePop();
+        if (typeof modal.showModal === 'function') modal.showModal();
+    }
+
+    async function patchFolder(folderId, payload) {
+        const resp = await fetch(folderDetailUrl(folderId), {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCsrfToken(),
+            },
+            body: JSON.stringify(payload),
+        });
+        const data = await resp.json();
+        if (!data.ok) throw new Error(data.error || 'عملیات ناموفق بود');
+        return data;
+    }
+
+    async function deleteFolder(folderId) {
+        const label = manageModal?.querySelector(`[data-folder-id="${folderId}"] strong`)?.textContent?.trim()
+            || 'این زونکن';
+        if (!window.confirm(`«${label}» حذف شود؟ فایل‌های داخل آن حذف نمی‌شوند.`)) return false;
+        const resp = await fetch(folderDetailUrl(folderId), {
+            method: 'DELETE',
+            headers: { 'X-CSRFToken': getCsrfToken() },
+        });
+        const data = await resp.json();
+        if (!data.ok) throw new Error(data.error || 'حذف ناموفق بود');
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('folder_id') === String(folderId)) params.delete('folder_id');
+        const qs = params.toString();
+        window.location.href = qs ? `${window.location.pathname}?${qs}` : window.location.pathname;
+        return true;
+    }
+
+    async function togglePin(folderId) {
+        const item = manageModal?.querySelector(`[data-folder-id="${folderId}"]`);
+        const nextPinned = item ? !item.classList.contains('is-pinned') : true;
+        await patchFolder(folderId, { is_pinned: nextPinned });
+        window.location.reload();
+    }
+
+    modal.querySelectorAll('[data-zonkan-close]').forEach((btn) => {
+        btn.addEventListener('click', closeModal);
+    });
+    modal.querySelectorAll('[data-zonkan-color]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            modal.querySelectorAll('[data-zonkan-color]').forEach((el) => el.classList.remove('is-active'));
+            btn.classList.add('is-active');
+            selectedColor = btn.getAttribute('data-zonkan-color') || selectedColor;
+        });
+    });
+    modal.querySelectorAll('[data-zonkan-icon]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            modal.querySelectorAll('[data-zonkan-icon]').forEach((el) => el.classList.remove('is-active'));
+            btn.classList.add('is-active');
+            selectedIcon = btn.getAttribute('data-zonkan-icon') || selectedIcon;
+        });
+    });
+    section.querySelectorAll('[data-zonkan-create]').forEach((btn) => {
+        btn.addEventListener('click', openCreateModal);
+    });
+    deleteBtn?.addEventListener('click', async () => {
+        const folderId = editIdInput ? editIdInput.value : '';
+        if (!folderId) return;
+        try {
+            await deleteFolder(folderId);
+        } catch (err) {
+            window.alert(err.message || 'خطا در حذف زونکن');
+        }
+    });
+    form?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const name = nameInput ? String(nameInput.value || '').trim() : '';
+        if (!name) return;
+        const editId = editIdInput ? String(editIdInput.value || '').trim() : '';
+        const payload = {
+            name,
+            description: descInput ? descInput.value : '',
+            color: selectedColor,
+            icon: selectedIcon,
+            is_pinned: pinInput ? !!pinInput.checked : false,
+        };
+        try {
+            const resp = await fetch(editId ? folderDetailUrl(editId) : baseUrl, {
+                method: editId ? 'PATCH' : 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken(),
+                },
+                body: JSON.stringify(payload),
+            });
+            const data = await resp.json();
+            if (!data.ok) {
+                window.alert(data.error || 'ذخیره زونکن ناموفق بود');
+                return;
+            }
+            if (!editId && data.folder?.id) {
+                const params = new URLSearchParams(window.location.search);
+                params.set('folder_id', String(data.folder.id));
+                window.location.href = `${window.location.pathname}?${params.toString()}`;
+                return;
+            }
+            window.location.reload();
+        } catch (_err) {
+            window.alert('خطا در ذخیره زونکن');
+        }
+    });
+
+    manageModal?.querySelectorAll('[data-zonkan-manage-close]').forEach((btn) => {
+        btn.addEventListener('click', closeManageModal);
+    });
+    section.querySelectorAll('[data-zonkan-manage-open]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            if (typeof manageModal.showModal === 'function') manageModal.showModal();
+        });
+    });
+
+    const manageList = manageModal?.querySelector('[data-zonkan-manage-list]');
+    let dragEl = null;
+    manageList?.querySelectorAll('[data-zonkan-manage-item]').forEach((item) => {
+        item.addEventListener('dragstart', () => {
+            dragEl = item;
+            item.classList.add('is-dragging');
+        });
+        item.addEventListener('dragend', () => {
+            dragEl = null;
+            item.classList.remove('is-dragging');
+        });
+        item.addEventListener('dragover', (e) => e.preventDefault());
+        item.addEventListener('drop', (e) => {
+            e.preventDefault();
+            if (!dragEl || dragEl === item) return;
+            const rect = item.getBoundingClientRect();
+            const after = e.clientY > rect.top + rect.height / 2;
+            if (after) item.after(dragEl);
+            else item.before(dragEl);
+        });
+    });
+    manageModal?.querySelector('[data-zonkan-reorder-save]')?.addEventListener('click', async () => {
+        const btn = manageModal.querySelector('[data-zonkan-reorder-save]');
+        const ids = [...manageList.querySelectorAll('[data-zonkan-manage-item]')].map(
+            (el) => Number(el.getAttribute('data-folder-id')),
+        );
+        btn.disabled = true;
+        try {
+            const resp = await fetch(reorderUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken(),
+                },
+                body: JSON.stringify({ folder_ids: ids }),
+            });
+            const data = await resp.json();
+            if (!data.ok) throw new Error(data.error || 'ذخیره ترتیب ناموفق بود');
+            window.location.reload();
+        } catch (err) {
+            window.alert(err.message || 'خطا در ذخیره ترتیب');
+        } finally {
+            btn.disabled = false;
+        }
+    });
+    manageModal?.querySelectorAll('[data-zonkan-manage-pin]').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+            const folderId = btn.getAttribute('data-zonkan-manage-pin');
+            try {
+                await togglePin(folderId);
+            } catch (err) {
+                window.alert(err.message || 'خطا در سنجاق');
+            }
+        });
+    });
+    manageModal?.querySelectorAll('[data-zonkan-manage-edit]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            openEditModal(btn.getAttribute('data-zonkan-manage-edit'));
+        });
+    });
+    manageModal?.querySelectorAll('[data-zonkan-manage-delete]').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+            try {
+                await deleteFolder(btn.getAttribute('data-zonkan-manage-delete'));
+            } catch (err) {
+                window.alert(err.message || 'خطا در حذف');
+            }
+        });
+    });
+
+    section.querySelectorAll('[data-zonkan-card-menu]').forEach((btn) => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (!popMenu) return;
+            popFolderId = btn.getAttribute('data-zonkan-card-menu');
+            const rect = btn.getBoundingClientRect();
+            popMenu.style.top = `${rect.bottom + 6}px`;
+            popMenu.style.left = `${Math.max(8, rect.left - 120)}px`;
+            popMenu.hidden = false;
+        });
+    });
+    popMenu?.querySelector('[data-zonkan-pop-pin]')?.addEventListener('click', async () => {
+        if (!popFolderId) return;
+        try {
+            await togglePin(popFolderId);
+        } catch (err) {
+            window.alert(err.message || 'خطا');
+        }
+    });
+    popMenu?.querySelector('[data-zonkan-pop-edit]')?.addEventListener('click', () => {
+        if (popFolderId) openEditModal(popFolderId);
+    });
+    popMenu?.querySelector('[data-zonkan-pop-delete]')?.addEventListener('click', async () => {
+        if (!popFolderId) return;
+        try {
+            await deleteFolder(popFolderId);
+        } catch (err) {
+            window.alert(err.message || 'خطا');
+        }
+    });
+    document.addEventListener('click', (e) => {
+        if (!popMenu || popMenu.hidden) return;
+        if (e.target.closest('[data-zonkan-pop]') || e.target.closest('[data-zonkan-card-menu]')) return;
+        hidePop();
+    });
+}
+
+function initCRMPropertyFolderPicker(root) {
+    const scope = root || document;
+    const membershipBase = window.crmZonkanMembershipUrl || '/workspace/crm/property-folders/';
+    scope.querySelectorAll('[data-zonkan-picker]').forEach((picker) => {
+        if (picker.dataset.zonkanPickerBound === '1') return;
+        picker.dataset.zonkanPickerBound = '1';
+        const propertyId = picker.getAttribute('data-property-id');
+        picker.querySelectorAll('[data-zonkan-toggle]').forEach((btn) => {
+            btn.addEventListener('click', async () => {
+                const folderId = btn.getAttribute('data-zonkan-toggle');
+                const isOn = btn.classList.contains('is-on');
+                const url = `${membershipBase}${folderId}/properties/${propertyId}/`;
+                try {
+                    const resp = await fetch(url, {
+                        method: isOn ? 'DELETE' : 'POST',
+                        headers: { 'X-CSRFToken': getCsrfToken() },
+                    });
+                    const data = await resp.json();
+                    if (!data.ok) {
+                        window.alert(data.error || 'عملیات ناموفق بود');
+                        return;
+                    }
+                    btn.classList.toggle('is-on', !isOn);
+                } catch (_err) {
+                    window.alert('خطا در به‌روزرسانی زونکن');
+                }
+            });
+        });
+    });
+}
+
 function crmStripDrawerQueryParams() {
     const params = new URLSearchParams(window.location.search);
     if (!params.has('open') && !params.has('drawer')) return;
@@ -4181,6 +4648,8 @@ document.addEventListener('DOMContentLoaded', () => {
     initCRMTabs();
     initContactSegrail();
     initCRMJalaliPickers(document);
+    initCRMLeaseDeadline(document);
+    initCRMPropertyOccVacancyDate(document);
     initCRMMoneyInputs(document);
     initCRMFormErrors();
     initCRMContactFormGuard();
@@ -4190,6 +4659,8 @@ document.addEventListener('DOMContentLoaded', () => {
     initCRMDealPipeline();
     initCRMPropertyPipeline();
     initCRMSavedFilters();
+    initCRMPropertyFolders(document);
+    initCRMPropertyFolderPicker(document);
     initContactsMobileFilters();
     initContactsMobileMenus();
     initContactDetailMobileMenus();

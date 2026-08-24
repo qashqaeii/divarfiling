@@ -8933,7 +8933,8 @@ select.crm-files-adv-control {
     visibility: visible;
     transform: translateX(50%) translateY(0);
 }
-.crm-files-card-foot {
+.crm-files-card-foot,
+.crm-files-mcard__valueband {
     margin-top: auto;
     padding-top: 0.5rem;
     border-top: 1px solid var(--ws-border-light);
@@ -8941,6 +8942,9 @@ select.crm-files-adv-control {
     flex-direction: column;
     align-items: stretch;
     gap: 0.4rem;
+    position: relative;
+    z-index: 4;
+    pointer-events: auto;
 }
 .crm-files-card-foot .crm-files-card-meta {
     flex-direction: row;

@@ -83,3 +83,41 @@ class PropertyContactMatchesApiTests(APITestCase):
             f'/api/mobile/v1/crm/properties/{self.property.pk}/contact-matches',
         )
         self.assertEqual(resp.status_code, 404)
+
+    def test_link_owner_by_manual_name_and_phone(self):
+        resp = self.client.post(
+            f'/api/mobile/v1/crm/properties/{self.property.pk}/contacts',
+            {
+                'full_name': 'مالک جدید',
+                'phone': '09125551234',
+                'role': 'مالک',
+            },
+            format='json',
+        )
+        self.assertEqual(resp.status_code, 201)
+        data = resp.json()['data']
+        self.assertEqual(data['role'], 'مالک')
+        self.assertTrue(
+            PropertyContact.objects.filter(
+                property=self.property,
+                role='مالک',
+                customer__phone='09125551234',
+            ).exists()
+        )
+        self.assertTrue(
+            Customer.objects.filter(user=self.user, phone='09125551234', name='مالک جدید').exists()
+        )
+
+    def test_link_owner_reuses_existing_contact_by_phone(self):
+        resp = self.client.post(
+            f'/api/mobile/v1/crm/properties/{self.property.pk}/contacts',
+            {
+                'full_name': 'نام دیگر',
+                'phone': '09126660001',
+                'role': 'مالک',
+            },
+            format='json',
+        )
+        self.assertEqual(resp.status_code, 201)
+        data = resp.json()['data']
+        self.assertEqual(data['customer_id'], self.customer.pk)

@@ -374,22 +374,44 @@ def link_property_contact(user, property_id: int, data: Dict[str, Any]) -> Prope
     if not can_edit_property(user, prop):
         raise ValueError('امکان ویرایش این ملک را ندارید.')
 
-    customer_id = data.get('customer_id') or data.get('contact_id')
-    if not customer_id:
-        raise ValueError('مخاطب الزامی است.')
-    customer = customers_qs(user).filter(pk=int(customer_id)).first()
-    if not customer:
-        raise ValueError('مخاطب یافت نشد.')
+    customer = _resolve_property_link_customer(user, data)
 
+    role = (data.get('role') or 'مالک').strip()
     return link_customer_property(
         customer,
         prop,
-        (data.get('role') or 'پیشنهادی').strip(),
+        role,
         (data.get('deal_type') or 'سایر').strip(),
         interest_level=(data.get('interest_level') or '').strip(),
-        is_primary=bool(data.get('is_primary', False)),
+        is_primary=bool(data.get('is_primary', role == 'مالک')),
         notes=(data.get('notes') or '').strip(),
     )
+
+
+def _resolve_property_link_customer(user, data: Dict[str, Any]):
+    from accounts.phone_utils import normalize_phone
+    from workspace.services.crm import customers_qs, find_customer_by_phone
+    from mobile_api.services.crm_service import create_quick_lead
+
+    customer_id = data.get('customer_id') or data.get('contact_id')
+    if customer_id:
+        customer = customers_qs(user).filter(pk=int(customer_id)).first()
+        if not customer:
+            raise ValueError('مخاطب یافت نشد.')
+        return customer
+
+    name = (data.get('full_name') or data.get('name') or '').strip()
+    phone = normalize_phone(data.get('phone') or '')
+    if not name:
+        raise ValueError('نام مالک الزامی است.')
+    if not phone:
+        raise ValueError('شماره تلفن مالک نامعتبر است.')
+
+    existing = find_customer_by_phone(user, phone)
+    if existing:
+        return existing
+
+    return create_quick_lead(user, {'full_name': name, 'phone': phone, 'source': 'موبایل'})
 
 
 def change_property_status(user, property_id: int, status: str) -> Optional[CRMProperty]:

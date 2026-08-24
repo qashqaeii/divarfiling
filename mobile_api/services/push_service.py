@@ -89,7 +89,7 @@ def _get_v1_access_token(*, force_refresh: bool = False) -> Optional[str]:
             path,
             scopes=[FCM_SCOPE],
         )
-        creds.refresh(google.auth.transport.requests.Request(timeout=_fcm_http_timeout()))
+        creds.refresh(google.auth.transport.requests.Request())
         token = creds.token
         expiry = creds.expiry.timestamp() if getattr(creds, 'expiry', None) else now + 3300
         _oauth_token_cache['token'] = token
@@ -101,6 +101,9 @@ def _get_v1_access_token(*, force_refresh: bool = False) -> Optional[str]:
     except requests.RequestException as exc:
         logger.warning('FCM OAuth token refresh network error: %s', exc)
         _record_fcm_failure('oauth_network')
+    except TypeError as exc:
+        logger.warning('FCM OAuth transport incompatible: %s', exc)
+        _record_fcm_failure('oauth_error')
     except Exception:
         logger.exception('FCM v1 token refresh failed')
         _record_fcm_failure('oauth_error')

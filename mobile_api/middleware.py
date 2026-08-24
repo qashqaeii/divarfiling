@@ -28,7 +28,9 @@ class MobileAuthLoggingMiddleware:
         if response.status_code != 401:
             return response
 
-        auth_reason = getattr(request, 'mobile_auth_failure', None) or 'unauthenticated'
+        auth_reason = getattr(request, 'mobile_auth_failure', None)
+        if not auth_reason:
+            auth_reason = 'unauthenticated'
         user_id = ''
         if getattr(request, 'user', None) and request.user.is_authenticated:
             user_id = str(request.user.pk)

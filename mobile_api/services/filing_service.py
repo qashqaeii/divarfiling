@@ -326,6 +326,8 @@ def get_listing_public_share(user, token: str, request=None) -> Optional[dict]:
         listing_public_share_to_dict,
     )
     share = get_or_create_listing_share(user, lst)
+    if not share:
+        return None
     return listing_public_share_to_dict(share, request)
 
 
@@ -341,6 +343,8 @@ def update_listing_public_share(user, token: str, payload: dict, request=None) -
         update_listing_public_share as _update_share,
     )
     share = get_or_create_listing_share(user, lst)
+    if not share:
+        return None
     _update_share(share, payload)
     return listing_public_share_to_dict(share, request)
 

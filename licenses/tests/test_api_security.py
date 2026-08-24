@@ -254,6 +254,31 @@ class LicenseAPITests(TestCase):
         self.assertEqual(Dataset.objects.filter(user=self.user).count(), 1)
 
 
+@override_settings(LICENSE_ALLOW_LOCAL_DEV=True, LICENSE_RATE_LIMIT_IMPORT=1, LICENSE_RATE_LIMIT_WINDOW=300)
+class LicenseImportRateLimitTests(TestCase):
+    def setUp(self):
+        from django.core.cache import cache
+        cache.clear()
+        self.client = APIClient()
+
+    def test_import_rate_limit_returns_429_with_retry_after(self):
+        from unittest.mock import patch
+
+        from licenses.services.security import RateLimitExceeded
+
+        with patch(
+            'licenses.api_views.import_dataset_for_bot',
+            side_effect=RateLimitExceeded(retry_after=120),
+        ):
+            resp = self.client.post('/api/licenses/import-dataset/', {}, format='multipart')
+
+        self.assertEqual(resp.status_code, 429)
+        body = resp.json()
+        self.assertEqual(body.get('code'), 'rate_limit_exceeded')
+        self.assertEqual(body.get('retry_after'), 120)
+        self.assertEqual(resp['Retry-After'], '120')
+
+
 @override_settings(DEBUG=False, LICENSE_ALLOW_LOCAL_DEV=False, LICENSE_BOT_API_KEY='test-bot-key')
 class LicenseAPIBotKeyTests(TestCase):
     def setUp(self):

@@ -21,8 +21,14 @@ def api_error(
     code: str = 'ERROR',
     status: int = 400,
     fields: Optional[dict] = None,
+    retry_after: Optional[int] = None,
 ) -> Response:
     body: dict = {'ok': False, 'error': message, 'code': code}
     if fields:
         body['fields'] = fields
-    return Response(body, status=status)
+    if retry_after is not None:
+        body['retry_after'] = retry_after
+    response = Response(body, status=status)
+    if retry_after is not None:
+        response['Retry-After'] = str(retry_after)
+    return response

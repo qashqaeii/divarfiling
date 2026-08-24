@@ -87,6 +87,31 @@ def remove_outliers_median_ratio(
     }
 
 
+def _stats_from_distribution(dist: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    """آمار قیمت از distribution_stats — بدون تولید mean جعلی."""
+    if dist.get('count', 0) < 2 or 'mean' not in dist:
+        return None
+    return {
+        'mean': int(dist['mean']),
+        'median': int(dist['median']),
+        'min': int(dist['min']),
+        'max': int(dist['max']),
+        'p10': int(dist['p10']),
+        'p25': int(dist['p25']),
+        'p50': int(dist['p50']),
+        'p75': int(dist['p75']),
+        'p90': int(dist['p90']),
+        'count': dist['count'],
+        'cv': dist.get('cv'),
+        'median_fmt': dist['median_fmt'],
+        'mean_fmt': dist['mean_fmt'],
+        'range_50_fmt': dist['range_50_fmt'],
+        'range_80_fmt': dist['range_80_fmt'],
+        'range_fmt': dist['range_50_fmt'],
+        'spread_50_pct': dist.get('spread_50_pct'),
+    }
+
+
 def compute_statistics(df: pd.DataFrame, transaction_type: str = '') -> Dict[str, Any]:
     df = _ensure_pps(df)
     tx = transaction_profile(transaction_type)
@@ -95,48 +120,16 @@ def compute_statistics(df: pd.DataFrame, transaction_type: str = '') -> Dict[str
     if tx['show_price'] and 'price' in df.columns and df['price'].notna().any():
         prices = df['price'].dropna()
         dist = _fmt_dist(distribution_stats(prices))
-        stats['price'] = {
-            'mean': int(dist['mean']),
-            'median': int(dist['median']),
-            'min': int(dist['min']),
-            'max': int(dist['max']),
-            'p10': int(dist['p10']),
-            'p25': int(dist['p25']),
-            'p50': int(dist['p50']),
-            'p75': int(dist['p75']),
-            'p90': int(dist['p90']),
-            'count': dist['count'],
-            'cv': dist.get('cv'),
-            'median_fmt': dist['median_fmt'],
-            'mean_fmt': dist['mean_fmt'],
-            'range_50_fmt': dist['range_50_fmt'],
-            'range_80_fmt': dist['range_80_fmt'],
-            'range_fmt': dist['range_50_fmt'],
-            'spread_50_pct': dist.get('spread_50_pct'),
-        }
+        price_stats = _stats_from_distribution(dist)
+        if price_stats:
+            stats['price'] = price_stats
 
     if tx['show_price_per_sqm'] and 'price_per_sqm' in df.columns and df['price_per_sqm'].notna().any():
         pps = df['price_per_sqm'].dropna()
         dist = _fmt_dist(distribution_stats(pps), per_sqm=True)
-        stats['price_per_sqm'] = {
-            'mean': int(dist['mean']),
-            'median': int(dist['median']),
-            'min': int(dist['min']),
-            'max': int(dist['max']),
-            'p10': int(dist['p10']),
-            'p25': int(dist['p25']),
-            'p50': int(dist['p50']),
-            'p75': int(dist['p75']),
-            'p90': int(dist['p90']),
-            'count': dist['count'],
-            'cv': dist.get('cv'),
-            'median_fmt': dist['median_fmt'],
-            'mean_fmt': dist['mean_fmt'],
-            'range_50_fmt': dist['range_50_fmt'],
-            'range_80_fmt': dist['range_80_fmt'],
-            'range_fmt': dist['range_50_fmt'],
-            'spread_50_pct': dist.get('spread_50_pct'),
-        }
+        pps_stats = _stats_from_distribution(dist)
+        if pps_stats:
+            stats['price_per_sqm'] = pps_stats
 
     if 'area' in df.columns and df['area'].notna().any():
         areas = df['area'].dropna()

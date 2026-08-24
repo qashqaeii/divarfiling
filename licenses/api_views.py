@@ -12,6 +12,7 @@ from licenses.permissions import BotLicenseAPIPermission
 from licenses.services.api import LicenseAPIError, activate_license, deactivate_license, validate_license
 from licenses.services.bot_import import import_dataset_for_bot
 from licenses.services.client_events import ClientEventAPIError, record_client_event
+from licenses.services.security import RateLimitExceeded
 
 
 def _error_response(exc: LicenseAPIError) -> Response:
@@ -61,6 +62,15 @@ class BotDatasetImportView(APIView):
     def post(self, request):
         try:
             return Response(import_dataset_for_bot(request))
+        except RateLimitExceeded as exc:
+            payload = {
+                'error': str(exc),
+                'code': 'rate_limit_exceeded',
+                'retry_after': exc.retry_after,
+            }
+            response = Response(payload, status=429)
+            response['Retry-After'] = str(exc.retry_after)
+            return response
         except LicenseAPIError as exc:
             return _error_response(exc)
 

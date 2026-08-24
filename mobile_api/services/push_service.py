@@ -1,12 +1,13 @@
-"""ارسال Push Notification از طریق FCM HTTP v1 (و fallback قدیمی)."""
+"""ارسال Push Notification از طریق FCM HTTP v1."""
 from __future__ import annotations
 
-import json
 import logging
-from typing import Any, Dict, Optional
+import time
+from typing import Any, Dict, Optional, Tuple
 
 import requests
 from django.conf import settings
+from django.core.cache import cache
 
 from mobile_api.models import MobileDevice
 from mobile_api.services.notification_catalog import get_spec
@@ -15,6 +16,20 @@ logger = logging.getLogger(__name__)
 
 FCM_SCOPE = 'https://www.googleapis.com/auth/firebase.messaging'
 UNREGISTERED_CODES = frozenset({'UNREGISTERED', 'INVALID_ARGUMENT', 'NOT_FOUND'})
+
+# timeout کوتاه برای سرور ایران — connect/read جدا
+FCM_CONNECT_TIMEOUT = 3
+FCM_READ_TIMEOUT = 5
+FCM_NETWORK_RETRIES = 1
+FCM_RETRY_BACKOFF_SEC = 0.5
+
+FCM_CIRCUIT_FAIL_KEY = 'fcm:circuit:failures'
+FCM_CIRCUIT_OPEN_KEY = 'fcm:circuit:open'
+FCM_CIRCUIT_FAIL_THRESHOLD = 3
+FCM_CIRCUIT_FAIL_WINDOW = 60
+FCM_CIRCUIT_COOLDOWN = 120
+
+_oauth_token_cache: Dict[str, Any] = {'token': None, 'expires_at': 0.0}
 
 
 def _fcm_project_id() -> str:
@@ -29,10 +44,43 @@ def _fcm_server_key() -> str:
     return getattr(settings, 'FCM_SERVER_KEY', '') or ''
 
 
-def _get_v1_access_token() -> Optional[str]:
+def _fcm_http_timeout() -> Tuple[float, float]:
+    connect = getattr(settings, 'FCM_CONNECT_TIMEOUT', FCM_CONNECT_TIMEOUT)
+    read = getattr(settings, 'FCM_READ_TIMEOUT', FCM_READ_TIMEOUT)
+    return float(connect), float(read)
+
+
+def _circuit_is_open() -> bool:
+    return bool(cache.get(FCM_CIRCUIT_OPEN_KEY))
+
+
+def _record_fcm_failure(reason: str) -> None:
+    try:
+        failures = cache.get(FCM_CIRCUIT_FAIL_KEY, 0) + 1
+        cache.set(FCM_CIRCUIT_FAIL_KEY, failures, FCM_CIRCUIT_FAIL_WINDOW)
+        if failures >= FCM_CIRCUIT_FAIL_THRESHOLD:
+            cache.set(FCM_CIRCUIT_OPEN_KEY, True, FCM_CIRCUIT_COOLDOWN)
+            logger.warning(
+                'FCM circuit opened cooldown_sec=%s reason=%s failures=%s',
+                FCM_CIRCUIT_COOLDOWN,
+                reason,
+                failures,
+            )
+    except Exception:
+        logger.exception('FCM circuit breaker update failed')
+
+
+def _get_v1_access_token(*, force_refresh: bool = False) -> Optional[str]:
     path = _fcm_service_account_file()
     if not path:
         return None
+
+    now = time.time()
+    cached = _oauth_token_cache.get('token')
+    expires_at = float(_oauth_token_cache.get('expires_at') or 0)
+    if not force_refresh and cached and expires_at > now + 60:
+        return cached
+
     try:
         from google.oauth2 import service_account
         import google.auth.transport.requests
@@ -41,11 +89,22 @@ def _get_v1_access_token() -> Optional[str]:
             path,
             scopes=[FCM_SCOPE],
         )
-        creds.refresh(google.auth.transport.requests.Request())
-        return creds.token
+        creds.refresh(google.auth.transport.requests.Request(timeout=_fcm_http_timeout()))
+        token = creds.token
+        expiry = creds.expiry.timestamp() if getattr(creds, 'expiry', None) else now + 3300
+        _oauth_token_cache['token'] = token
+        _oauth_token_cache['expires_at'] = expiry
+        return token
+    except requests.Timeout:
+        logger.warning('FCM OAuth token refresh timeout (oauth2.googleapis.com)')
+        _record_fcm_failure('oauth_timeout')
+    except requests.RequestException as exc:
+        logger.warning('FCM OAuth token refresh network error: %s', exc)
+        _record_fcm_failure('oauth_network')
     except Exception:
         logger.exception('FCM v1 token refresh failed')
-        return None
+        _record_fcm_failure('oauth_error')
+    return None
 
 
 def _invalidate_fcm_token(token: str) -> None:
@@ -105,6 +164,13 @@ def send_push_to_tokens(
     if not unique:
         return {'attempted': 0, 'success': 0, 'failure': 0}
 
+    if _circuit_is_open():
+        logger.warning(
+            'FCM circuit open — skipping push attempted=%s endpoint=fcm.googleapis.com',
+            len(unique),
+        )
+        return {'attempted': len(unique), 'success': 0, 'failure': len(unique)}
+
     payload_data = {k: str(v) for k, v in (data or {}).items() if v is not None}
     payload_data.setdefault('title', title)
     payload_data.setdefault('body', body or title)
@@ -114,13 +180,19 @@ def send_push_to_tokens(
         display_notification = spec.display_fcm_notification
     payload_data.setdefault('channel', spec.channel)
     payload_data.setdefault('priority', spec.priority)
+
+    access_token = _get_v1_access_token()
     success = 0
     for token in unique:
         ok = _send_fcm_v1(
-            token, title, body, payload_data,
+            token,
+            title,
+            body,
+            payload_data,
             display_notification=display_notification,
             channel=spec.channel,
-        ) or _send_fcm_legacy(token, title, body, payload_data)
+            access_token=access_token,
+        )
         if ok:
             success += 1
     return {
@@ -155,10 +227,12 @@ def _send_fcm_v1(
     *,
     display_notification: bool = False,
     channel: str = '',
+    access_token: Optional[str] = None,
 ) -> bool:
-    access = _get_v1_access_token()
+    access = access_token or _get_v1_access_token()
     if not access:
         return False
+
     project_id = _fcm_project_id()
     url = f'https://fcm.googleapis.com/v1/projects/{project_id}/messages:send'
     android: Dict[str, Any] = {
@@ -178,34 +252,61 @@ def _send_fcm_v1(
             'android': android,
         },
     }
-    try:
-        resp = requests.post(
-            url,
-            headers={
-                'Authorization': f'Bearer {access}',
-                'Content-Type': 'application/json',
-            },
-            json=message,
-            timeout=10,
-        )
-        if resp.status_code == 200:
-            return True
+
+    attempts = FCM_NETWORK_RETRIES + 1
+    for attempt in range(attempts):
         try:
-            payload = resp.json()
-        except ValueError:
-            payload = {}
-        error_code = _extract_fcm_error_code(payload)
-        if resp.status_code in (404, 400) and error_code in UNREGISTERED_CODES:
-            logger.info('FCM token unregistered; clearing from database')
-            _invalidate_fcm_token(token)
+            resp = requests.post(
+                url,
+                headers={
+                    'Authorization': f'Bearer {access}',
+                    'Content-Type': 'application/json',
+                },
+                json=message,
+                timeout=_fcm_http_timeout(),
+            )
+            if resp.status_code == 200:
+                return True
+            if resp.status_code == 401 and attempt == 0:
+                access = _get_v1_access_token(force_refresh=True)
+                if access:
+                    continue
+            try:
+                payload = resp.json()
+            except ValueError:
+                payload = {}
+            error_code = _extract_fcm_error_code(payload)
+            if resp.status_code in (404, 400) and error_code in UNREGISTERED_CODES:
+                logger.info('FCM token unregistered code=%s; clearing from database', error_code)
+                _invalidate_fcm_token(token)
+                return False
+            logger.warning(
+                'FCM v1 HTTP error status=%s code=%s endpoint=fcm.googleapis.com',
+                resp.status_code,
+                error_code or '-',
+            )
             return False
-        logger.warning('FCM v1 HTTP %s: %s', resp.status_code, resp.text[:300])
-    except requests.Timeout:
-        logger.warning('FCM v1 timeout talking to fcm.googleapis.com')
-    except requests.RequestException as exc:
-        logger.warning('FCM v1 network error: %s', exc)
-    except Exception:
-        logger.exception('FCM v1 send error')
+        except requests.Timeout:
+            logger.warning(
+                'FCM v1 network timeout endpoint=fcm.googleapis.com attempt=%s/%s',
+                attempt + 1,
+                attempts,
+            )
+            _record_fcm_failure('send_timeout')
+            if attempt < attempts - 1:
+                time.sleep(FCM_RETRY_BACKOFF_SEC * (2 ** attempt))
+                continue
+            return False
+        except requests.RequestException as exc:
+            logger.warning('FCM v1 network error endpoint=fcm.googleapis.com: %s', exc)
+            _record_fcm_failure('send_network')
+            if attempt < attempts - 1:
+                time.sleep(FCM_RETRY_BACKOFF_SEC * (2 ** attempt))
+                continue
+            return False
+        except Exception:
+            logger.exception('FCM v1 send error')
+            return False
     return False
 
 
@@ -225,7 +326,7 @@ def _send_fcm_legacy(token: str, title: str, body: str, data: Dict[str, str]) ->
                 'data': data,
                 'priority': 'high',
             },
-            timeout=10,
+            timeout=_fcm_http_timeout(),
         )
         if resp.status_code == 200:
             result = resp.json()
@@ -241,9 +342,11 @@ def _send_fcm_legacy(token: str, title: str, body: str, data: Dict[str, str]) ->
         else:
             logger.warning('FCM legacy HTTP %s: %s', resp.status_code, resp.text[:200])
     except requests.Timeout:
-        logger.warning('FCM legacy timeout talking to fcm.googleapis.com')
+        logger.warning('FCM legacy network timeout endpoint=fcm.googleapis.com/fcm/send')
+        _record_fcm_failure('legacy_timeout')
     except requests.RequestException as exc:
         logger.warning('FCM legacy network error: %s', exc)
+        _record_fcm_failure('legacy_network')
     except Exception:
         logger.exception('FCM legacy send error')
     return False

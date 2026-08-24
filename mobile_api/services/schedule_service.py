@@ -17,6 +17,15 @@ from mobile_api.services.extraction_ingest import (
 
 logger = logging.getLogger(__name__)
 
+
+class ScheduleRunError(ValueError):
+    """خطای قابل‌پیش‌بینی شروع run — با code machine-readable."""
+
+    def __init__(self, message: str, code: str):
+        super().__init__(message)
+        self.code = code
+
+
 MIN_INTERVAL_HOURS = 0.25
 MAX_INTERVAL_HOURS = 168.0
 MAX_SCHEDULES_PER_USER = 10
@@ -241,16 +250,19 @@ def start_schedule_run(
 ) -> MobileExtractionRun:
     schedule = get_schedule(user, schedule_id)
     if not schedule:
-        raise ValueError('زمان‌بندی یافت نشد.')
+        raise ScheduleRunError('زمان‌بندی یافت نشد.', 'not_found')
     if not schedule.is_enabled:
-        raise ValueError('زمان‌بندی غیرفعال است.')
+        raise ScheduleRunError('زمان‌بندی غیرفعال است.', 'inactive')
     _expire_stale_runs(schedule)
     active = _get_active_run(schedule)
     if active:
         # اگر اپ کرش کرده یا Worker قطع شده، همان run را برمی‌گردانیم تا ادامه دهد.
         return active
     if schedule.consecutive_failures >= MAX_CONSECUTIVE_FAILURES:
-        raise ValueError('زمان‌بندی به‌دلیل خطاهای متوالی متوقف شده — دوباره فعال کنید.')
+        raise ScheduleRunError(
+            'زمان‌بندی به‌دلیل خطاهای متوالی متوقف شده — دوباره فعال کنید.',
+            'consecutive_failures',
+        )
 
     try:
         check_mobile_extraction_allowed(user)
@@ -271,7 +283,7 @@ def start_schedule_run(
         schedule.save(update_fields=[
             'last_status', 'last_error', 'last_run_at', 'next_run_at', 'updated_at',
         ])
-        raise
+        raise ScheduleRunError(str(exc), 'quota_exceeded') from exc
 
     filters = dict(schedule.filters or {})
     filters['max_items'] = schedule.max_items

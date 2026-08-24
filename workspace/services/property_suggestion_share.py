@@ -41,6 +41,8 @@ def public_share_url_for_property(user, request, prop: CRMProperty) -> str:
 
 def public_share_url_for_listing(user, request, listing: Listing) -> str:
     share = get_or_create_listing_share(user, listing)
+    if not share:
+        return ''
     path = reverse('listing_public:view', kwargs={'share_token': share.share_token})
     return absolute_uri(request, path)
 

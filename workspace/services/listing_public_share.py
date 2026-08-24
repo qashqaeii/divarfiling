@@ -5,6 +5,7 @@ import secrets
 from typing import Any, Dict, Optional
 from urllib.parse import quote
 
+from django.db import IntegrityError
 from django.urls import reverse
 from django.utils import timezone
 
@@ -43,6 +44,66 @@ from workspace.services.public_share_common import (
 from workspace.services.property_images import deduplicate_divar_image_urls, normalize_external_image_url
 
 _PUBLIC_HIDDEN_SECTIONS = frozenset({'تماس'})
+
+
+class ListingShareTemplateStub:
+    """مقادیر پیش‌فرض مودال اشتراک وقتی هنوز share ساخته نشده."""
+
+    welcome_message = ''
+    view_count = 0
+    is_active = True
+    show_divar_link = False
+    approximate_location = False
+    approximate_location_radius_m = 500
+    show_full_address = False
+    show_internal_notes = False
+    show_nearby_pois = False
+    consultant_name = ''
+    consultant_phone = ''
+    share_token = ''
+
+
+def get_listing_share(user, listing: Listing) -> Optional[ListingPublicShare]:
+    """فقط share موجود را برمی‌گرداند — بدون mutation."""
+    if not listing or not listing.pk:
+        return None
+    return ListingPublicShare.objects.filter(
+        listing_id=listing.pk, created_by=user, is_active=True,
+    ).order_by('-created_at').first()
+
+
+def listing_share_for_display(user, listing: Listing):
+    """Share واقعی یا stub برای رندر template."""
+    return get_listing_share(user, listing) or ListingShareTemplateStub()
+
+
+def get_or_create_listing_share(user, listing: Listing) -> Optional[ListingPublicShare]:
+    """Share را فقط هنگام درخواست صریح کاربر می‌سازد."""
+    if not listing or not listing.pk:
+        return None
+    if not Listing.objects.filter(pk=listing.pk).exists():
+        return None
+
+    share = get_listing_share(user, listing)
+    if share:
+        return share
+
+    token = _generate_share_token()
+    while ListingPublicShare.objects.filter(share_token=token).exists():
+        token = _generate_share_token()
+    try:
+        return ListingPublicShare.objects.create(
+            share_token=token,
+            listing_id=listing.pk,
+            created_by=user,
+        )
+    except IntegrityError:
+        existing = get_listing_share(user, listing)
+        if existing:
+            return existing
+        if not Listing.objects.filter(pk=listing.pk).exists():
+            return None
+        raise
 
 
 def _generate_share_token() -> str:
@@ -114,23 +175,9 @@ def consultant_contact_urls(phone: str, message: str = '') -> Dict[str, str]:
     return urls
 
 
-def get_or_create_listing_share(user, listing: Listing) -> ListingPublicShare:
-    share = ListingPublicShare.objects.filter(
-        listing=listing, created_by=user, is_active=True,
-    ).order_by('-created_at').first()
-    if share:
-        return share
-    token = _generate_share_token()
-    while ListingPublicShare.objects.filter(share_token=token).exists():
-        token = _generate_share_token()
-    return ListingPublicShare.objects.create(
-        share_token=token,
-        listing=listing,
-        created_by=user,
-    )
-
-
 def public_share_url(request, share: ListingPublicShare) -> str:
+    if not share or not getattr(share, 'share_token', None):
+        return ''
     path = reverse('listing_public:view', kwargs={'share_token': share.share_token})
     return request.build_absolute_uri(path)
 

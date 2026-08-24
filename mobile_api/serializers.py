@@ -565,11 +565,11 @@ def listing_detail_to_dict(lst: Listing, *, user=None, request=None) -> Dict[str
         base['verdict'] = market.get('short_verdict')
     if user is not None:
         from workspace.services.listing_public_share import (
-            get_or_create_listing_share,
+            get_listing_share,
             listing_public_share_to_dict,
         )
-        share = get_or_create_listing_share(user, lst)
-        base['public_share'] = listing_public_share_to_dict(share, request)
+        share = get_listing_share(user, lst)
+        base['public_share'] = listing_public_share_to_dict(share, request) if share else None
         base['meta'] = listing_meta_to_dict(user, lst.token)
         base['linked_contacts'] = listing_linked_contacts_to_dict(user, lst.token, listing=lst)
     else:

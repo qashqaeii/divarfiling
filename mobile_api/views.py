@@ -108,6 +108,7 @@ from mobile_api.services.settings_service import (
     update_profile_avatar,
 )
 from mobile_api.services.schedule_service import (
+    ScheduleRunError,
     create_schedule,
     delete_schedule,
     fail_schedule_run,
@@ -722,6 +723,8 @@ class ExtractionScheduleRunStartView(APIView):
                 'schedule': schedule_to_dict(schedule) if schedule else None,
                 'filters': run.filters_snapshot,
             })
+        except ScheduleRunError as exc:
+            return api_error(str(exc), code=exc.code)
         except ValueError as exc:
             return api_error(str(exc), code='VALIDATION_ERROR')
 
@@ -1896,7 +1899,7 @@ class AISummarizeListingView(APIView):
         listing = (
             Listing.objects.filter(dataset__user=request.user, token=listing_token)
             .select_related('dataset')
-            .order_by('-updated_at')
+            .order_by('-created_at', '-id')
             .first()
         )
         if not listing:

@@ -34,13 +34,12 @@ class MobileListingPublicShareTests(TestCase):
         self.client.force_authenticate(user=self.user)
 
     @patch('mobile_api.services.filing_service.has_active_bot_license', return_value=True)
-    def test_listing_detail_includes_public_share(self, _mock):
+    def test_listing_detail_does_not_auto_create_public_share(self, _mock):
         resp = self.client.get(f'/api/mobile/v1/filing/listings/{self.listing.token}')
         self.assertEqual(resp.status_code, 200)
         data = resp.json()['data']
         self.assertIn('public_share', data)
-        self.assertTrue(data['public_share']['share_url'])
-        self.assertTrue(data['public_share']['share_token'])
+        self.assertIsNone(data['public_share'])
 
     @patch('mobile_api.services.filing_service.has_active_bot_license', return_value=True)
     def test_public_share_patch(self, _mock):
@@ -55,7 +54,15 @@ class MobileListingPublicShareTests(TestCase):
         self.assertTrue(share['show_divar_link'])
 
     @patch('mobile_api.services.filing_service.has_active_bot_license', return_value=True)
-    def test_listing_patch_includes_public_share_url(self, _mock):
+    def test_listing_patch_includes_public_share_after_create(self, _mock):
+        create = self.client.patch(
+            f'/api/mobile/v1/filing/listings/{self.listing.token}/public-share',
+            {'welcome_message': 'سلام'},
+            format='json',
+            HTTP_HOST='testserver',
+        )
+        self.assertEqual(create.status_code, 200)
+
         resp = self.client.patch(
             f'/api/mobile/v1/filing/listings/{self.listing.token}',
             {'title': 'آپارتمان به‌روز'},
@@ -65,5 +72,6 @@ class MobileListingPublicShareTests(TestCase):
         self.assertEqual(resp.status_code, 200)
         data = resp.json()['data']
         self.assertIn('public_share', data)
+        self.assertIsNotNone(data['public_share'])
         self.assertTrue(data['public_share']['share_url'])
         self.assertIn('/p/', data['public_share']['share_url'])

@@ -1732,7 +1732,6 @@ class CRMPropertyDetailView(CRMContextMixin, LoginRequiredMixin, DetailView):
             if not link:
                 messages.error(request, 'پیوند یافت نشد.')
             else:
-                from workspace.services.crm import log_activity
                 name = link.customer.name
                 log_activity(
                     link.customer,

@@ -32,7 +32,9 @@ from workspace.models import (
     PriceHistory, Reminder, WorkspaceSettings,
 )
 from workspace.services.listing_public_share import (
-    get_or_create_listing_share, public_share_url,
+    get_or_create_listing_share,
+    listing_share_for_display,
+    public_share_url,
 )
 from workspace.services.crm_scope import can_edit_customer, customer_for_user, customers_qs
 from workspace.services.crm import (
@@ -1066,9 +1068,9 @@ class ListingDetailView(DatasetOwnerMixin, DetailView):
             ),
             benchmark=ctx['benchmark'],
         )
-        share = get_or_create_listing_share(self.request.user, listing)
+        share = listing_share_for_display(self.request.user, listing)
         ctx['public_share'] = share
-        ctx['public_share_url'] = public_share_url(self.request, share)
+        ctx['public_share_url'] = public_share_url(self.request, share) if getattr(share, 'share_token', '') else ''
         from workspace.services.public_share_common import build_map_navigation, share_profile_context
         profile = share_profile_context(
             self.request.user, share,
@@ -1166,6 +1168,8 @@ class ListingShareManageView(DatasetOwnerMixin, View):
         dataset = self.get_dataset()
         listing = get_object_or_404(dataset.listings, pk=listing_id)
         share = get_or_create_listing_share(request.user, listing)
+        if not share:
+            return JsonResponse({'ok': False, 'error': 'آگهی یافت نشد.'}, status=404)
         from workspace.services.public_share_common import share_profile_context
         url = public_share_url(request, share)
         profile = share_profile_context(
@@ -1193,6 +1197,11 @@ class ListingShareManageView(DatasetOwnerMixin, View):
         dataset = self.get_dataset()
         listing = get_object_or_404(dataset.listings, pk=listing_id)
         share = get_or_create_listing_share(request.user, listing)
+        if not share:
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({'ok': False, 'error': 'آگهی یافت نشد.'}, status=404)
+            messages.error(request, 'آگهی یافت نشد.')
+            return redirect('workspace:dataset_listings', dataset_id=dataset_id)
         from workspace.services.public_share_common import (
             apply_share_form_extras,
             clamp_approx_radius_m,

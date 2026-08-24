@@ -123,6 +123,18 @@ class ExtractionScheduleApiTests(TestCase):
         schedule.refresh_from_db()
         self.assertEqual(schedule.last_status, 'failed')
 
+    def test_start_run_inactive_schedule_returns_machine_readable_code(self):
+        schedule = MobileExtractionSchedule.objects.create(
+            user=self.user,
+            title='غیرفعال',
+            filters=self.filters,
+            max_items=20,
+            is_enabled=False,
+        )
+        resp = self.client.post(f'/api/mobile/v1/extractions/schedules/{schedule.pk}/runs/start')
+        self.assertEqual(resp.status_code, 400)
+        self.assertEqual(resp.json().get('code'), 'inactive')
+
     def test_start_run_resumes_active_run_instead_of_400(self):
         schedule = MobileExtractionSchedule.objects.create(
             user=self.user,

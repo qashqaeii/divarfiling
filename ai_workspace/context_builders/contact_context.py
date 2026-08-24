@@ -45,6 +45,8 @@ def _resolve_match_public_url(user, match: Dict[str, Any]) -> str:
             ).first()
             if listing:
                 share = get_or_create_listing_share(user, listing)
+                if not share:
+                    return ''
                 return absolute_public_share_url(
                     'listing_public:view',
                     share_token=share.share_token,

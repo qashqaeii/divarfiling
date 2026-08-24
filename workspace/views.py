@@ -40,7 +40,7 @@ from workspace.services.crm import (
     customers_linked_to_token, get_communication_stats, get_crm_property_by_token,
     get_dashboard_stats, get_overdue_contacts, get_pipeline_data, get_recent_contacts,
     get_recent_properties, get_upcoming_reminders, guess_deal_type_from_listing,
-    link_listing_to_customer, primary_owner_contact, upsert_property_owner,
+    link_listing_to_customer, primary_owner_contact, upsert_listing_tenant, upsert_property_owner,
 )
 from workspace.services.analyzer import (
     benchmark_listing, build_analysis_dashboard, compute_outliers_report, compute_statistics,
@@ -68,6 +68,7 @@ from workspace.services.listing_features import (
 from workspace.services.listing_map import build_listing_map_marker
 from workspace.services.listing_edit import (
     apply_listing_edit_post, listing_edit_payload,
+    listing_is_vacant, tenant_name_from_listing, tenant_phone_from_listing,
     owner_name_from_listing, owner_phone_from_listing,
 )
 from workspace.services.filters import (
@@ -1240,6 +1241,15 @@ class ListingUpdateView(DatasetOwnerMixin, View):
                     phone=request.POST.get('owner_phone', ''),
                     name=request.POST.get('owner_name', ''),
                     listing=listing,
+                    source='دیوار',
+                )
+            if any(k in request.POST for k in ('tenant_phone', 'tenant_name', 'is_vacant')):
+                upsert_listing_tenant(
+                    request.user,
+                    phone=tenant_phone_from_listing(listing),
+                    name=tenant_name_from_listing(listing),
+                    listing=listing,
+                    is_vacant=listing_is_vacant(listing),
                     source='دیوار',
                 )
             messages.success(request, 'آگهی به‌روزرسانی شد.')

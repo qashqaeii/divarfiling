@@ -354,8 +354,13 @@ def update_listing(user, token: str, payload: dict, request=None) -> Optional[di
     ).select_related('dataset').first()
     if not lst:
         return None
-    from workspace.services.listing_edit import apply_listing_edit_json
-    from workspace.services.crm import upsert_property_owner
+    from workspace.services.listing_edit import (
+        apply_listing_edit_json,
+        listing_is_vacant,
+        tenant_name_from_listing,
+        tenant_phone_from_listing,
+    )
+    from workspace.services.crm import upsert_listing_tenant, upsert_property_owner
 
     try:
         apply_listing_edit_json(lst, payload)
@@ -366,6 +371,15 @@ def update_listing(user, token: str, payload: dict, request=None) -> Optional[di
                 phone=payload.get('owner_phone') or '',
                 name=payload.get('owner_name') or '',
                 listing=lst,
+                source='موبایل',
+            )
+        if any(k in payload for k in ('tenant_phone', 'tenant_name', 'is_vacant', 'vacancy_date')):
+            upsert_listing_tenant(
+                user,
+                phone=tenant_phone_from_listing(lst),
+                name=tenant_name_from_listing(lst),
+                listing=lst,
+                is_vacant=listing_is_vacant(lst),
                 source='موبایل',
             )
     except (ValueError, TypeError):

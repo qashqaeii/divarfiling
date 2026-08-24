@@ -410,6 +410,169 @@ def upsert_property_tenant(
     return customer
 
 
+def _resolve_tenant_customer_for_listing(
+    user,
+    *,
+    phone_key: str,
+    name_raw: str,
+    listing,
+    source: str,
+) -> Customer:
+    """یافتن/ساخت مخاطب مستاجر برای آگهی فایلینگ."""
+    by_phone = find_customer_by_phone(user, phone_key)
+    existing_link = (
+        CustomerListing.objects.filter(
+            customer__user=user,
+            token=listing.token,
+            role='مستاجر',
+        )
+        .select_related('customer')
+        .order_by('-updated_at')
+        .first()
+    )
+    current_tenant = existing_link.customer if existing_link else None
+
+    if by_phone is not None:
+        customer = by_phone
+    elif current_tenant is not None:
+        customer = current_tenant
+    else:
+        customer = Customer.objects.create(
+            user=user,
+            agency=get_agency(user),
+            name=name_raw or f'مستاجر {phone_key[-4:]}',
+            phone=phone_key,
+            customer_type='مستاجر',
+            status='جدید',
+            priority='متوسط',
+            source=source if source in (
+                'دیوار', 'معرف', 'ورود به املاک', 'تماس ورودی',
+                'اینستاگرام', 'سایت', 'تلگرام', 'موبایل', 'سایر',
+            ) else 'سایر',
+        )
+        log_activity(
+            customer,
+            'یادداشت',
+            content='ثبت خودکار به‌عنوان مستاجر فعلی آگهی',
+            title='ثبت مستاجر',
+            token=listing.token or '',
+        )
+        return customer
+
+    update_fields = ['updated_at']
+    if name_raw and customer.name != name_raw:
+        customer.name = name_raw
+        update_fields.append('name')
+    current_phone = normalize_phone(customer.phone)
+    if current_phone != phone_key:
+        if by_phone is None or by_phone.pk == customer.pk:
+            customer.phone = phone_key
+            update_fields.append('phone')
+    elif not current_phone:
+        customer.phone = phone_key
+        update_fields.append('phone')
+    if customer.customer_type not in ('مستاجر', 'متقاضی اجاره'):
+        customer.customer_type = 'مستاجر'
+        update_fields.append('customer_type')
+    if len(update_fields) > 1:
+        customer.save(update_fields=update_fields)
+    return customer
+
+
+def upsert_listing_tenant(
+    user,
+    *,
+    phone: str = '',
+    name: str = '',
+    listing: Optional[Listing] = None,
+    is_vacant: bool = False,
+    source: str = 'دیوار',
+) -> Optional[Customer]:
+    """
+    ذخیره مستاجر روی آگهی فایلینگ و پیوند با مخاطب CRM (نقش «مستاجر»).
+    """
+    from django.db import transaction as db_transaction
+    from workspace.services.formatting import format_toman
+
+    if listing is None or not listing.token:
+        return None
+
+    phone_raw = (phone or '').strip()
+    name_raw = (name or '').strip()
+    phone_key = normalize_phone(phone_raw)
+    crm_property = get_crm_property_by_token(user, listing.token)
+
+    with db_transaction.atomic():
+        if is_vacant or not phone_key:
+            CustomerListing.objects.filter(
+                customer__user=user,
+                token=listing.token,
+                role='مستاجر',
+            ).delete()
+            if crm_property is not None:
+                crm_property.tenant_phone = ''
+                crm_property.tenant_name = ''
+                crm_property.save(update_fields=['tenant_phone', 'tenant_name', 'updated_at'])
+                PropertyContact.objects.filter(
+                    property=crm_property, role='مستاجر',
+                ).delete()
+            return None
+
+        customer = _resolve_tenant_customer_for_listing(
+            user,
+            phone_key=phone_key,
+            name_raw=name_raw,
+            listing=listing,
+            source=source,
+        )
+        deal_type = guess_deal_type_from_listing(listing)
+        price_parts = []
+        if listing.price:
+            price_parts.append(format_toman(listing.price))
+        if listing.deposit:
+            price_parts.append(f'رهن {format_toman(listing.deposit)}')
+        if listing.rent:
+            price_parts.append(f'اجاره {format_toman(listing.rent)}')
+
+        CustomerListing.objects.filter(
+            customer__user=user,
+            token=listing.token,
+            role='مستاجر',
+        ).exclude(customer=customer).delete()
+        existing_cl = CustomerListing.objects.filter(
+            customer=customer,
+            token=listing.token,
+            role='مستاجر',
+        ).first()
+        if existing_cl is None:
+            link_customer_listing(
+                customer,
+                token=listing.token,
+                title=listing.title or '',
+                price=' · '.join(price_parts),
+                area=f'{listing.area} متر' if listing.area else '',
+                link=listing.link or '',
+                role='مستاجر',
+                deal_type=deal_type,
+                notes='مستاجر فعلی ساکن در ملک',
+                crm_property=crm_property,
+            )
+        elif crm_property is not None and existing_cl.crm_property_id != crm_property.pk:
+            existing_cl.crm_property = crm_property
+            existing_cl.save(update_fields=['crm_property', 'updated_at'])
+
+        if crm_property is not None:
+            upsert_property_tenant(
+                user,
+                phone=phone_key,
+                name=name_raw,
+                crm_property=crm_property,
+                source=source,
+            )
+
+    return customer
+
+
 def log_activity(
     customer: Customer,
     activity_type: str,

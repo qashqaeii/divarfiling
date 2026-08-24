@@ -51,6 +51,8 @@ DEDICATED_FEATURE_KEYS = frozenset({
     'تاریخ تخلیه',
     'vacancy_date',
     'تاریخ تخلیه یا آماده تحویل',
+    'tenant_name', 'tenant_phone',
+    'نام مستاجر', 'شماره مستاجر',
 }) | CORE_AMENITY_LABELS
 
 OCCUPANCY_KEYS = ('وضعیت سکونت', 'وضعیت واحد', 'occupancy', 'unit_status')
@@ -204,18 +206,12 @@ def _apply_tenant_fields(listing, *, phone: str = '', name: str = '', is_vacant:
         return
     phone = (phone or '').strip()
     name = (name or '').strip()
+    for key in TENANT_PHONE_KEYS + TENANT_NAME_KEYS:
+        data.pop(key, None)
     if phone:
         data['شماره مستاجر'] = phone
-        data['tenant_phone'] = phone
-    else:
-        for key in TENANT_PHONE_KEYS:
-            data.pop(key, None)
     if name:
         data['نام مستاجر'] = name
-        data['tenant_name'] = name
-    else:
-        for key in TENANT_NAME_KEYS:
-            data.pop(key, None)
     listing.data = data
 
 

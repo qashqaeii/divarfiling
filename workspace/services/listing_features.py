@@ -124,6 +124,8 @@ _SCALAR_FEATURE_KEYS = frozenset({
 _EXTRA_PROFILE_SKIP_KEYS = frozenset({
     'vacancy_date',
     'تاریخ تخلیه یا آماده تحویل',
+    'tenant_name',
+    'tenant_phone',
 })
 _FEATURE_LABEL_ALIASES = {
     'vacancy_date': 'تاریخ تخلیه',

@@ -38,6 +38,35 @@
     gap: 0.45rem;
 }
 
+.crm-zonkan-brand-icon {
+    width: 1.65rem;
+    height: 1.65rem;
+    object-fit: contain;
+    flex-shrink: 0;
+    display: block;
+}
+
+.crm-zonkan-brand-icon--lg {
+    width: 2.35rem;
+    height: 2.35rem;
+}
+
+.crm-zonkan-modal__title {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 1rem;
+    font-weight: 800;
+}
+
+.crm-zonkan-manage__head-brand {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.55rem;
+    min-width: 0;
+}
+
 .crm-zonkan__title i {
     width: 1.65rem;
     height: 1.65rem;
@@ -625,11 +654,15 @@
     border-radius: 11px;
     display: grid;
     place-items: center;
-    font-size: 0.88rem;
-    color: #6366f1;
     background: linear-gradient(145deg, rgba(99, 102, 241, 0.16), rgba(99, 102, 241, 0.08));
     border: 1px solid rgba(99, 102, 241, 0.2);
     box-shadow: 0 2px 8px rgba(99, 102, 241, 0.12);
+}
+
+.crm-zonkan-picker--detail .crm-zonkan-picker__ico .crm-zonkan-brand-icon,
+.crm-zonkan-picker--detail .crm-zonkan-picker__ico .crm-zonkan-brand-icon--lg {
+    width: 1.85rem;
+    height: 1.85rem;
 }
 
 .crm-zonkan-picker__titles {

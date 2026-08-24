@@ -1,8 +1,8 @@
-{% load workspace_tags %}
+{% load workspace_tags static %}
 <section class="crm-zonkan" data-crm-zonkan aria-label="زونکن‌های فایل شخصی">
     <div class="crm-zonkan__head">
         <div class="crm-zonkan__head-txt">
-            <h2 class="crm-zonkan__title"><i class="fas fa-folder-tree" aria-hidden="true"></i> زونکن‌ها</h2>
+            <h2 class="crm-zonkan__title">{% include "workspace/crm/includes/zonkan_brand_icon.html" %} زونکن‌ها</h2>
             <p class="crm-zonkan__hint">دسته‌بندی سریع فایل‌های مجتمع، پروژه یا محله</p>
         </div>
         <div class="crm-zonkan__actions">
@@ -76,7 +76,7 @@
 <dialog class="crm-zonkan-modal" id="crmZonkanModal" data-zonkan-modal>
     <form method="dialog" class="crm-zonkan-modal__box" data-zonkan-form>
         <header class="crm-zonkan-modal__head">
-            <h3 data-zonkan-modal-title>زونکن جدید</h3>
+            <h3 class="crm-zonkan-modal__title">{% include "workspace/crm/includes/zonkan_brand_icon.html" %} <span data-zonkan-modal-title>زونکن جدید</span></h3>
             <button type="button" class="crm-zonkan-modal__close" data-zonkan-close aria-label="بستن">
                 <i class="fas fa-times" aria-hidden="true"></i>
             </button>
@@ -123,9 +123,12 @@
 <dialog class="crm-zonkan-manage" id="crmZonkanManage" data-zonkan-manage-modal>
     <div class="crm-zonkan-manage__box">
         <header class="crm-zonkan-manage__head">
-            <div>
+            <div class="crm-zonkan-manage__head-brand">
+                {% include "workspace/crm/includes/zonkan_brand_icon.html" %}
+                <div>
                 <h3>مدیریت زونکن‌ها</h3>
                 <p>بکشید و رها کنید برای مرتب‌سازی · سنجاق، ویرایش یا حذف</p>
+                </div>
             </div>
             <button type="button" class="crm-zonkan-modal__close" data-zonkan-manage-close aria-label="بستن">
                 <i class="fas fa-times" aria-hidden="true"></i>
@@ -176,4 +179,4 @@
     <button type="button" data-zonkan-pop-delete class="is-danger"><i class="fas fa-trash-alt"></i> حذف</button>
 </menu>
 {% endif %}
-
+

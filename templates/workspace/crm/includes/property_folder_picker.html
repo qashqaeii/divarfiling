@@ -1,8 +1,9 @@
 {% if can_edit_property %}
+{% load static %}
 <section class="crm-zonkan-picker crm-zonkan-picker--detail" data-zonkan-picker data-property-id="{{ property.id }}" aria-label="زونکن‌های ملک">
     <header class="crm-zonkan-picker__head">
         <div class="crm-zonkan-picker__brand">
-            <span class="crm-zonkan-picker__ico" aria-hidden="true"><i class="fas fa-folder-tree"></i></span>
+            <span class="crm-zonkan-picker__ico" aria-hidden="true">{% include "workspace/crm/includes/zonkan_brand_icon.html" with size="lg" %}</span>
             <div class="crm-zonkan-picker__titles">
                 <h3 class="crm-zonkan-picker__title">زونکن‌ها</h3>
                 <p class="crm-zonkan-picker__sub">این فایل در کدام مجموعه‌ها قرار دارد؟</p>

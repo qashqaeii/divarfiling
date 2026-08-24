@@ -51,8 +51,26 @@
             </button>
         </div>
         {% endfor %}
+        {% if not property_folders %}
+        <button type="button"
+                class="crm-zonkan-card crm-zonkan-card--empty"
+                data-zonkan-create
+                title="ساخت اولین زونکن">
+            <span class="crm-zonkan-card__ico" aria-hidden="true"><i class="fas fa-folder-plus"></i></span>
+            <span class="crm-zonkan-card__body">
+                <strong>اولین زونکن</strong>
+                <em>برای مجتمع، پروژه یا محله</em>
+            </span>
+        </button>
+        {% endif %}
         {% endwith %}
     </div>
+    {% if not property_folders %}
+    <p class="crm-zonkan__empty-hint">
+        <i class="fas fa-lightbulb" aria-hidden="true"></i>
+        با زونکن، فایل‌های یک مجتمع یا محله را در یک کلیک فیلتر کنید — مثل «برج سپهر» یا «اجاره شمال تهران».
+    </p>
+    {% endif %}
 </section>
 
 <dialog class="crm-zonkan-modal" id="crmZonkanModal" data-zonkan-modal>

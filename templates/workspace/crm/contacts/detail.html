@@ -612,7 +612,7 @@
                     </div>
                     {% endif %}
 
-                    {% if customer.lease_deadline %}
+                    {% if customer.lease_deadline and customer.customer_type|shows_lease_deadline_filter %}
                     <div class="crm-contact-pref-row">
                         <span class="crm-contact-pref-ico" aria-hidden="true"><i class="fas fa-hourglass-end"></i></span>
                         <div class="crm-contact-pref-body">
@@ -1263,6 +1263,7 @@
 {% block crm_js %}
 <script src="{% static 'workspace/js/ai.js' %}?v=6"></script>
 <script>window.crmTypeProfiles = {{ type_profiles_json|safe }};</script>
+<script>window.crmLeaseDeadlineTypes = {{ lease_deadline_types_json|safe }};</script>
 <script>window.crmContactStatusUrl = "{% url 'workspace:crm_contact_status' customer.id %}";</script>
 {% if crm_agency and is_customer_owner %}
 <script>

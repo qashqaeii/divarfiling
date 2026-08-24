@@ -6,6 +6,7 @@ from workspace.models import CRMProperty, CRMPropertyFolder, CRMPropertyFolderIt
 from workspace.services.crm import filter_properties
 from workspace.services.crm_property_folders import (
     add_property_to_folder,
+    bulk_add_properties_to_folder,
     create_property_folder,
     folders_for_property,
     list_property_folders,
@@ -56,6 +57,21 @@ class CRMPropertyFolderTests(TestCase):
         removed = remove_property_from_folder(self.user, self.folder.pk, self.prop_a.pk)
         self.assertTrue(removed)
         self.assertFalse(CRMPropertyFolderItem.objects.filter(folder=self.folder).exists())
+
+    def test_bulk_add_properties_to_folder(self):
+        result = bulk_add_properties_to_folder(
+            self.user,
+            self.folder.pk,
+            [self.prop_a.pk, self.prop_b.pk, self.prop_a.pk],
+        )
+        self.assertEqual(result['added'], 2)
+        self.assertEqual(result['matched'], 2)
+        self.assertEqual(
+            CRMPropertyFolderItem.objects.filter(folder=self.folder).count(),
+            2,
+        )
+        result2 = bulk_add_properties_to_folder(self.user, self.folder.pk, [self.prop_a.pk])
+        self.assertEqual(result2['added'], 0)
 
     def test_filter_properties_by_folder_id(self):
         add_property_to_folder(self.user, self.folder.pk, self.prop_a.pk)

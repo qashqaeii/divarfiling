@@ -4,11 +4,24 @@ from datetime import date
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 
+from workspace.constants import shows_lease_deadline
 from workspace.forms import CustomerForm
 from workspace.models import Customer
 from workspace.services.jalali_input import format_jalali_date, parse_jalali_date_string
 
 User = get_user_model()
+
+
+class LeaseDeadlineVisibilityTests(TestCase):
+    def test_shows_for_tenant_and_rent_seekers(self):
+        self.assertTrue(shows_lease_deadline('مستاجر'))
+        self.assertTrue(shows_lease_deadline('متقاضی اجاره'))
+        self.assertTrue(shows_lease_deadline('متقاضی رهن و اجاره'))
+
+    def test_hidden_for_other_types(self):
+        self.assertFalse(shows_lease_deadline('خریدار'))
+        self.assertFalse(shows_lease_deadline('مالک'))
+        self.assertFalse(shows_lease_deadline(''))
 
 
 class ContactOptionalFieldsFormTests(TestCase):

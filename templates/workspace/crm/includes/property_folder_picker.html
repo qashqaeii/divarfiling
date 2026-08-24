@@ -1,23 +1,58 @@
-{% if can_edit_property and property_folders %}
-<section class="crm-zonkan-picker" data-zonkan-picker data-property-id="{{ property.id }}" aria-label="زونکن‌های ملک">
+{% if can_edit_property %}
+<section class="crm-zonkan-picker crm-zonkan-picker--detail" data-zonkan-picker data-property-id="{{ property.id }}" aria-label="زونکن‌های ملک">
     <header class="crm-zonkan-picker__head">
-        <span class="crm-zonkan-picker__ico"><i class="fas fa-folder-open" aria-hidden="true"></i></span>
-        <div>
-            <strong>زونکن‌ها</strong>
-            <em>این فایل در کدام مجموعه‌ها قرار دارد؟</em>
+        <div class="crm-zonkan-picker__brand">
+            <span class="crm-zonkan-picker__ico" aria-hidden="true"><i class="fas fa-folder-tree"></i></span>
+            <div class="crm-zonkan-picker__titles">
+                <h3 class="crm-zonkan-picker__title">زونکن‌ها</h3>
+                <p class="crm-zonkan-picker__sub">این فایل در کدام مجموعه‌ها قرار دارد؟</p>
+            </div>
         </div>
+        {% if property_folders and property_folder_ids %}
+        <span class="crm-zonkan-picker__stat">{{ property_folder_ids|length }} مجموعه فعال</span>
+        {% endif %}
     </header>
-    <div class="crm-zonkan-picker__grid">
+
+    {% if property_folders %}
+    <div class="crm-zonkan-picker__grid" role="group" aria-label="انتخاب زونکن">
         {% for folder in property_folders %}
         <button type="button"
-                class="crm-zonkan-picker__chip{% if folder.id in property_folder_ids %} is-on{% endif %}"
+                class="crm-zonkan-picker__card{% if folder.id in property_folder_ids %} is-on{% endif %}"
                 data-zonkan-toggle="{{ folder.id }}"
-                style="--zonkan-color:{{ folder.color }}">
-            <i class="fas {{ folder.icon|default:'fa-folder' }}" aria-hidden="true"></i>
-            <span>{{ folder.name }}</span>
-            <i class="fas fa-check crm-zonkan-picker__tick" aria-hidden="true"></i>
+                style="--zonkan-color: {{ folder.color }}"
+                aria-pressed="{% if folder.id in property_folder_ids %}true{% else %}false{% endif %}">
+            <span class="crm-zonkan-picker__card-accent" aria-hidden="true"></span>
+            <span class="crm-zonkan-picker__card-ico" aria-hidden="true">
+                <i class="fas {{ folder.icon|default:'fa-folder' }}"></i>
+            </span>
+            <span class="crm-zonkan-picker__card-body">
+                <strong class="crm-zonkan-picker__card-name">{{ folder.name }}</strong>
+                <em class="crm-zonkan-picker__card-meta">
+                    {% if folder.id in property_folder_ids %}عضو این مجموعه{% else %}افزودن به مجموعه{% endif %}
+                </em>
+            </span>
+            <span class="crm-zonkan-picker__card-check" aria-hidden="true">
+                <i class="fas fa-check"></i>
+            </span>
         </button>
         {% endfor %}
     </div>
+    <p class="crm-zonkan-picker__hint">
+        <i class="fas fa-hand-pointer" aria-hidden="true"></i>
+        برای افزودن یا حذف از مجموعه، روی کارت زونکن بزنید — یک فایل می‌تواند در چند زونکن باشد.
+    </p>
+    {% else %}
+    <div class="crm-zonkan-picker__empty">
+        <span class="crm-zonkan-picker__empty-ico" aria-hidden="true"><i class="fas fa-folder-plus"></i></span>
+        <div class="crm-zonkan-picker__empty-text">
+            <strong>هنوز زونکنی نساخته‌اید</strong>
+            <p>
+                از
+                <a href="{% url 'workspace:crm_properties' %}">فهرست فایل‌های شخصی</a>
+                با دکمه «زونکن جدید» اولین مجموعه (مثل پروژه یا محله) را بسازید.
+            </p>
+        </div>
+    </div>
+    {% endif %}
 </section>
 {% endif %}

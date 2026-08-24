@@ -127,6 +127,11 @@ urlpatterns = [
     path('crm/property-folders/reorder/', crm_views.CRMPropertyFolderReorderView.as_view(), name='crm_property_folders_reorder'),
     path('crm/property-folders/<int:folder_id>/', crm_views.CRMPropertyFolderDetailView.as_view(), name='crm_property_folder_detail'),
     path(
+        'crm/property-folders/<int:folder_id>/properties/bulk/',
+        crm_views.CRMPropertyFolderBulkMembershipView.as_view(),
+        name='crm_property_folder_bulk',
+    ),
+    path(
         'crm/property-folders/<int:folder_id>/properties/<int:property_id>/',
         crm_views.CRMPropertyFolderMembershipView.as_view(),
         name='crm_property_folder_membership',

@@ -353,7 +353,7 @@ ROLE_COLORS = {
 LEAD_TYPES = {'سرنخ', 'متقاضی خرید', 'متقاضی اجاره'}
 
 # نوع ذخیره‌شده «متقاضی اجاره» است؛ در برخی نماها «متقاضی رهن و اجاره» نمایش داده می‌شود.
-LEASE_DEADLINE_TYPES = frozenset({'متقاضی اجاره', 'متقاضی رهن و اجاره'})
+LEASE_DEADLINE_TYPES = frozenset({'مستاجر', 'متقاضی اجاره', 'متقاضی رهن و اجاره'})
 
 
 def shows_lease_deadline(customer_type: str) -> bool:

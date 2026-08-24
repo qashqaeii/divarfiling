@@ -1,7 +1,7 @@
 from django import template
 from django.utils.html import format_html
 
-from workspace.constants import AGENCY_ROLE_STYLES, DEAL_STAGE_COLORS, PROPERTY_TX_COLORS, ROLE_COLORS
+from workspace.constants import AGENCY_ROLE_STYLES, DEAL_STAGE_COLORS, PROPERTY_TX_COLORS, ROLE_COLORS, shows_lease_deadline
 from workspace.services.crm import role_color
 
 register = template.Library()
@@ -38,6 +38,12 @@ def nav_badge_count(value):
     if n > 99:
         return '99+'
     return str(n)
+
+
+@register.filter
+def shows_lease_deadline_filter(customer_type):
+    """آیا فیلد مهلت اجاره برای این نوع مخاطب نمایش داده شود؟"""
+    return shows_lease_deadline(customer_type)
 
 
 @register.filter

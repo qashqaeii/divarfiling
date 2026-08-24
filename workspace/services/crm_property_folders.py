@@ -203,6 +203,36 @@ def add_property_to_folder(user, folder_id: int, property_id: int) -> CRMPropert
     return item
 
 
+def bulk_add_properties_to_folder(user, folder_id: int, property_ids: List[int]) -> Dict[str, Any]:
+    """افزودن چند ملک به یک زونکن — بدون حذف عضویت‌های قبلی."""
+    folder = folder_for_user(user, folder_id)
+    if not folder:
+        raise ValueError('زونکن یافت نشد')
+    ids: List[int] = []
+    for raw in property_ids or []:
+        try:
+            pid = int(raw)
+        except (TypeError, ValueError):
+            continue
+        if pid > 0 and pid not in ids:
+            ids.append(pid)
+    if not ids:
+        raise ValueError('ملکی انتخاب نشده است')
+    props = CRMProperty.objects.filter(user=user, pk__in=ids, deleted_at__isnull=True)
+    added = 0
+    for prop in props:
+        _item, created = CRMPropertyFolderItem.objects.get_or_create(folder=folder, property=prop)
+        if created:
+            added += 1
+    folder = folder_for_user(user, folder_id)
+    return {
+        'added': added,
+        'requested': len(ids),
+        'matched': props.count(),
+        'folder': serialize_folder(folder) if folder else None,
+    }
+
+
 def remove_property_from_folder(user, folder_id: int, property_id: int) -> bool:
     folder = folder_for_user(user, folder_id)
     if not folder:

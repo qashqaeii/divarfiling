@@ -134,6 +134,14 @@ function crmLeaseDeadlinePreset(kind) {
     return crmJalaliYmdFromDate(target);
 }
 
+function crmShowsLeaseDeadline(type) {
+    const types = window.crmLeaseDeadlineTypes;
+    const allowed = Array.isArray(types)
+        ? types
+        : ['مستاجر', 'متقاضی اجاره', 'متقاضی رهن و اجاره'];
+    return allowed.includes(String(type || '').trim());
+}
+
 function initCRMLeaseDeadline(root) {
     const scope = root || document;
     scope.querySelectorAll('.crm-lease-deadline').forEach((block) => {
@@ -277,7 +285,7 @@ function initCRMTypeProfiles(root) {
             show(rentFields, showRent);
             show(builderBuyFields, isBuilder);
             show(builderBuyMoney, isBuilder);
-            show(leaseDeadlineFields, type === 'متقاضی اجاره' || type === 'متقاضی رهن و اجاره');
+            show(leaseDeadlineFields, crmShowsLeaseDeadline(type));
 
             const bl = p.budget_labels || ['بودجه از', 'بودجه تا'];
             const dl = p.deposit_labels || ['ودیعه از', 'ودیعه تا'];
@@ -4579,11 +4587,219 @@ function initCRMPropertyFolderPicker(root) {
                         return;
                     }
                     btn.classList.toggle('is-on', !isOn);
+                    btn.setAttribute('aria-pressed', isOn ? 'false' : 'true');
+                    const meta = btn.querySelector('.crm-zonkan-picker__card-meta');
+                    if (meta) meta.textContent = isOn ? 'افزودن به مجموعه' : 'عضو این مجموعه';
                 } catch (_err) {
                     window.alert('خطا در به‌روزرسانی زونکن');
                 }
             });
         });
+    });
+}
+
+function crmPropFolderIdsFromEl(el) {
+    const raw = el?.getAttribute('data-prop-folder-ids') || '';
+    return raw.split(',').map((s) => s.trim()).filter(Boolean);
+}
+
+function crmPropFolderMembershipUrl(folderId, propertyId) {
+    const base = window.crmZonkanMembershipUrl || '/workspace/crm/property-folders/';
+    return `${base}${folderId}/properties/${propertyId}/`;
+}
+
+function crmPropFolderBulkUrl(folderId) {
+    const base = window.crmZonkanBulkUrl || '/workspace/crm/property-folders/';
+    return `${base}${folderId}/properties/bulk/`;
+}
+
+function initCRMPropertyFolderAssign(root) {
+    const scope = root || document;
+    const modal = scope.querySelector('[data-zonkan-assign-modal]');
+    if (!modal || modal.dataset.zonkanAssignBound === '1') return;
+    modal.dataset.zonkanAssignBound = '1';
+
+    const titleEl = modal.querySelector('[data-zonkan-assign-title]');
+    const subEl = modal.querySelector('[data-zonkan-assign-sub]');
+    const listEl = modal.querySelector('[data-zonkan-assign-list]');
+    const bulkBar = scope.getElementById('crmPropFolderBulk');
+    const bulkCount = scope.getElementById('crmPropFolderBulkCount');
+    const bulkClear = scope.getElementById('crmPropFolderBulkClear');
+    const bulkOpen = scope.getElementById('crmPropFolderBulkOpen');
+    const selectModeBtn = scope.getElementById('crmPropSelectMode');
+    const checks = () => [...scope.querySelectorAll('.crm-prop-row-check')];
+
+    let assignMode = 'single';
+    let assignPropertyIds = [];
+
+    function selectedIds() {
+        return checks().filter((c) => c.checked).map((c) => c.value);
+    }
+
+    function updateBulkBar() {
+        const n = selectedIds().length;
+        if (bulkBar) {
+            bulkBar.hidden = n === 0;
+            bulkBar.classList.toggle('is-visible', n > 0);
+        }
+        if (bulkCount) bulkCount.textContent = n;
+    }
+
+    function setSelectMode(on) {
+        scope.querySelectorAll('.crm-files-pro-v2, .crm-files-pro').forEach((page) => {
+            page.classList.toggle('crm-files-pro--select-mode', on);
+        });
+        if (selectModeBtn) {
+            selectModeBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+            selectModeBtn.classList.toggle('is-active', on);
+        }
+        if (!on) {
+            checks().forEach((c) => { c.checked = false; });
+            updateBulkBar();
+        }
+    }
+
+    function syncAssignTicks() {
+        if (!listEl) return;
+        const idSet = new Set(assignPropertyIds.map(String));
+        const isBulk = assignMode === 'bulk';
+        listEl.querySelectorAll('[data-zonkan-assign-folder]').forEach((btn) => {
+            btn.classList.remove('is-on', 'is-partial');
+            if (isBulk || idSet.size !== 1) return;
+            const folderId = btn.getAttribute('data-zonkan-assign-folder');
+            const propEl = scope.querySelector(`[data-property-id="${assignPropertyIds[0]}"]`);
+            const memberIds = crmPropFolderIdsFromEl(propEl);
+            btn.classList.toggle('is-on', memberIds.includes(String(folderId)));
+        });
+    }
+
+    function openAssignModal(mode, propertyIds) {
+        assignMode = mode;
+        assignPropertyIds = propertyIds.map(String);
+        if (titleEl) {
+            titleEl.textContent = mode === 'bulk'
+                ? `افزودن ${assignPropertyIds.length} فایل به زونکن`
+                : 'مدیریت زونکن‌های فایل';
+        }
+        if (subEl) {
+            subEl.textContent = mode === 'bulk'
+                ? 'فایل‌های انتخاب‌شده به زونکن اضافه می‌شوند (عضویت قبلی حفظ می‌شود)'
+                : 'برای افزودن یا حذف از زونکن، روی نام مجموعه بزنید';
+        }
+        syncAssignTicks();
+        if (typeof modal.showModal === 'function') modal.showModal();
+        else modal.setAttribute('open', '');
+    }
+
+    function closeAssignModal() {
+        if (typeof modal.close === 'function') modal.close();
+        else modal.removeAttribute('open');
+    }
+
+    async function toggleSingleMembership(folderId, propertyId) {
+        const propEl = scope.querySelector(`[data-property-id="${propertyId}"]`);
+        const memberIds = crmPropFolderIdsFromEl(propEl);
+        const isOn = memberIds.includes(String(folderId));
+        const url = crmPropFolderMembershipUrl(folderId, propertyId);
+        const resp = await fetch(url, {
+            method: isOn ? 'DELETE' : 'POST',
+            headers: { 'X-CSRFToken': getCsrfToken() },
+        });
+        const data = await resp.json();
+        if (!data.ok) throw new Error(data.error || 'عملیات ناموفق بود');
+        const next = isOn
+            ? memberIds.filter((id) => id !== String(folderId))
+            : [...memberIds, String(folderId)];
+        if (propEl) propEl.setAttribute('data-prop-folder-ids', next.join(','));
+        return !isOn;
+    }
+
+    async function bulkAddToFolder(folderId) {
+        const url = crmPropFolderBulkUrl(folderId);
+        const resp = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCsrfToken(),
+            },
+            body: JSON.stringify({ property_ids: assignPropertyIds.map(Number) }),
+        });
+        const data = await resp.json();
+        if (!data.ok) throw new Error(data.error || 'عملیات ناموفق بود');
+        assignPropertyIds.forEach((pid) => {
+            const propEl = scope.querySelector(`[data-property-id="${pid}"]`);
+            if (!propEl) return;
+            const ids = crmPropFolderIdsFromEl(propEl);
+            if (!ids.includes(String(folderId))) ids.push(String(folderId));
+            propEl.setAttribute('data-prop-folder-ids', ids.join(','));
+        });
+        return data;
+    }
+
+    modal.querySelectorAll('[data-zonkan-assign-close]').forEach((btn) => {
+        btn.addEventListener('click', closeAssignModal);
+    });
+
+    listEl?.querySelectorAll('[data-zonkan-assign-folder]').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+            const folderId = btn.getAttribute('data-zonkan-assign-folder');
+            btn.disabled = true;
+            try {
+                if (assignMode === 'bulk') {
+                    const data = await bulkAddToFolder(folderId);
+                    closeAssignModal();
+                    checks().forEach((c) => { c.checked = false; });
+                    updateBulkBar();
+                    setSelectMode(false);
+                    const added = data.added ?? 0;
+                    window.alert(added > 0
+                        ? `${added} فایل به زونکن اضافه شد`
+                        : 'فایل‌ها از قبل در این زونکن بودند');
+                    window.location.reload();
+                    return;
+                }
+                const propertyId = assignPropertyIds[0];
+                const nowOn = await toggleSingleMembership(folderId, propertyId);
+                btn.classList.toggle('is-on', nowOn);
+                window.location.reload();
+            } catch (err) {
+                window.alert(err.message || 'خطا در به‌روزرسانی زونکن');
+            } finally {
+                btn.disabled = false;
+            }
+        });
+    });
+
+    scope.querySelectorAll('[data-prop-folder-assign]').forEach((btn) => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const pid = btn.getAttribute('data-prop-folder-assign');
+            if (pid) openAssignModal('single', [pid]);
+        });
+    });
+
+    bulkOpen?.addEventListener('click', () => {
+        const ids = selectedIds();
+        if (!ids.length) return;
+        openAssignModal('bulk', ids);
+    });
+
+    bulkClear?.addEventListener('click', () => {
+        checks().forEach((c) => { c.checked = false; });
+        updateBulkBar();
+        setSelectMode(false);
+    });
+
+    checks().forEach((c) => c.addEventListener('change', updateBulkBar));
+
+    selectModeBtn?.addEventListener('click', () => {
+        const on = !scope.querySelector('.crm-files-pro--select-mode');
+        setSelectMode(on);
+    });
+
+    scope.querySelectorAll('.crm-files-card-select, .crm-ft-td-check').forEach((wrap) => {
+        wrap.addEventListener('click', (e) => e.stopPropagation());
     });
 }
 
@@ -4661,6 +4877,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initCRMSavedFilters();
     initCRMPropertyFolders(document);
     initCRMPropertyFolderPicker(document);
+    initCRMPropertyFolderAssign(document);
     initContactsMobileFilters();
     initContactsMobileMenus();
     initContactDetailMobileMenus();

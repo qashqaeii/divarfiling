@@ -24,7 +24,7 @@ from workspace.constants import (
     DEAL_STAGES, DEFAULT_STAGNANT_DAYS, LEAD_ROUTING_CHOICES, LOST_REASONS, MESSAGE_PLACEHOLDERS,
     MESSAGE_TEMPLATE_CATEGORIES, PROPERTY_ADVERTISER_TYPES, PROPERTY_DEAL_MODES, PROPERTY_PUBLISH_STATUSES,
     PROPERTY_TX_STATUSES, QUICK_ACTIVITY_TYPES, TYPE_PROFILES, VISIT_OUTCOMES, WEBHOOK_EVENTS,
-    WEBHOOK_EVENT_LABELS,
+    WEBHOOK_EVENT_LABELS, LEASE_DEADLINE_TYPES,
 )
 from workspace.services.property_images import (
     MAX_PROPERTY_IMAGES, parse_images_payload, store_property_image,
@@ -341,6 +341,7 @@ class CustomerListView(CRMContextMixin, LoginRequiredMixin, ListView):
         ctx['crm_priorities'] = CRM_PRIORITIES
         ctx['crm_sources'] = CRM_SOURCES
         ctx['type_profiles_json'] = json.dumps(TYPE_PROFILES, ensure_ascii=False)
+        ctx['lease_deadline_types_json'] = json.dumps(sorted(LEASE_DEADLINE_TYPES), ensure_ascii=False)
         ctx['crm_section'] = 'contacts'
         ctx['filter_qs'] = urlencode({
             k: v for k, v in self.request.GET.items()
@@ -698,6 +699,7 @@ class CustomerDetailView(CRMContextMixin, LoginRequiredMixin, DetailView):
         ctx['user_properties'] = properties_qs(self.request.user).order_by('-updated_at')[:100]
         ctx['open_drawer'] = self.request.GET.get('drawer', '')
         ctx['type_profiles_json'] = json.dumps(TYPE_PROFILES, ensure_ascii=False)
+        ctx['lease_deadline_types_json'] = json.dumps(sorted(LEASE_DEADLINE_TYPES), ensure_ascii=False)
         ctx['whatsapp_text'] = build_customer_whatsapp_text(c)
         from workspace.services.contact_channels import contact_channels_for_display
         ctx['contact_messaging_channels'] = contact_channels_for_display(
@@ -1232,8 +1234,12 @@ class CRMPropertyListView(CRMContextMixin, LoginRequiredMixin, ListView):
         ctx['saved_filter_base'] = reverse('workspace:crm_properties')
         ctx['saved_filter_params'] = current_params_from_request(self.request, 'properties')
         ctx['saved_filter_can_save'] = bool(ctx['saved_filter_params'])
-        from workspace.services.crm_property_folders import FOLDER_COLORS, FOLDER_ICONS, list_property_folders
+        from workspace.services.crm_property_folders import FOLDER_COLORS, FOLDER_ICONS, list_property_folders, serialize_folder
         ctx['property_folders'] = list_property_folders(user)
+        ctx['property_folders_json'] = json.dumps(
+            [serialize_folder(f) for f in ctx['property_folders']],
+            ensure_ascii=False,
+        )
         ctx['active_folder_id'] = self.request.GET.get('folder_id', '')
         ctx['folder_colors'] = FOLDER_COLORS
         ctx['folder_icons'] = FOLDER_ICONS
@@ -1249,8 +1255,10 @@ class CRMPropertyListView(CRMContextMixin, LoginRequiredMixin, ListView):
         }
         ctx['open_modal'] = ctx.get('open_modal', self.request.GET.get('open', ''))
         from workspace.services.property_public_share import build_property_amenity_dossier_items
+        from workspace.services.crm_property_folders import folders_for_property
         for prop in ctx.get('properties') or []:
             prop.card_amenities = build_property_amenity_dossier_items(prop)
+            prop.folder_badges = folders_for_property(prop)
         if ctx['stats']['total'] == 0 and not ctx.get('has_filters'):
             from workspace.academy.context_helpers import inject_academy_context
             inject_academy_context(ctx, user, 'properties_empty')
@@ -2807,6 +2815,22 @@ class CRMPropertyFolderMembershipView(LoginRequiredMixin, View):
         except ValueError as exc:
             return JsonResponse({'ok': False, 'error': str(exc)}, status=400)
         return JsonResponse({'ok': True})
+
+
+class CRMPropertyFolderBulkMembershipView(LoginRequiredMixin, View):
+    """افزودن گروهی ملک‌ها به زونکن — JSON."""
+
+    def post(self, request, folder_id):
+        from workspace.services.crm_property_folders import bulk_add_properties_to_folder
+        try:
+            payload = json.loads(request.body.decode('utf-8'))
+            property_ids = payload.get('property_ids') or payload.get('ids') or []
+            result = bulk_add_properties_to_folder(request.user, folder_id, property_ids)
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            return JsonResponse({'ok': False, 'error': 'درخواست نامعتبر'}, status=400)
+        except ValueError as exc:
+            return JsonResponse({'ok': False, 'error': str(exc)}, status=400)
+        return JsonResponse({'ok': True, **result})
 
 
 class CRMSavedFilterListView(LoginRequiredMixin, View):

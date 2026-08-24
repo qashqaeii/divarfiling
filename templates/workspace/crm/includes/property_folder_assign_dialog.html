@@ -1,0 +1,35 @@
+{% if property_folders %}
+<dialog class="crm-zonkan-assign" id="crmZonkanAssign" data-zonkan-assign-modal aria-labelledby="crmZonkanAssignTitle">
+    <div class="crm-zonkan-assign__box">
+        <header class="crm-zonkan-assign__head">
+            <div>
+                <h3 id="crmZonkanAssignTitle" data-zonkan-assign-title>افزودن به زونکن</h3>
+                <p data-zonkan-assign-sub>یک یا چند فایل را به مجموعه اضافه کنید</p>
+            </div>
+            <button type="button" class="crm-zonkan-modal__close" data-zonkan-assign-close aria-label="بستن">
+                <i class="fas fa-times" aria-hidden="true"></i>
+            </button>
+        </header>
+        <ul class="crm-zonkan-assign__list" data-zonkan-assign-list role="list">
+            {% for folder in property_folders %}
+            <li>
+                <button type="button"
+                        class="crm-zonkan-assign__item"
+                        data-zonkan-assign-folder="{{ folder.id }}"
+                        style="--zonkan-color:{{ folder.color }}">
+                    <span class="crm-zonkan-assign__ico" aria-hidden="true"><i class="fas {{ folder.icon|default:'fa-folder' }}"></i></span>
+                    <span class="crm-zonkan-assign__info">
+                        <strong>{{ folder.name }}</strong>
+                        <em>{{ folder.property_count|default:0 }} فایل</em>
+                    </span>
+                    <span class="crm-zonkan-assign__tick" aria-hidden="true"><i class="fas fa-check"></i></span>
+                </button>
+            </li>
+            {% endfor %}
+        </ul>
+        <footer class="crm-zonkan-assign__foot">
+            <button type="button" class="crm-dash-act" data-zonkan-assign-close>بستن</button>
+        </footer>
+    </div>
+</dialog>
+{% endif %}

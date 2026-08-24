@@ -495,6 +495,7 @@
 {% block crm_js %}
 <script>
 window.crmTypeProfiles = {{ type_profiles_json|safe }};
+window.crmLeaseDeadlineTypes = {{ lease_deadline_types_json|safe }};
 window.crmQuickLeadUrl = "{% url 'workspace:crm_quick_lead' %}";
 window.crmStatusUrlTemplate = "{{ status_update_url_template }}";
 window.crmPanelBase = "{% url 'workspace:crm_contact_panel' 0 %}".replace('/0/', '/');

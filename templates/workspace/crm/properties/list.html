@@ -10,6 +10,7 @@
 
 {% block crm_extra_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/crm-files-mobile.css' %}?v=16">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-zonkan.css' %}?v=2">
 {% endblock %}
 
 {% block ws_surface_css %}
@@ -346,6 +347,12 @@
 
         <div class="crm-files-result-bar">
             <span>{% if has_filters %}{{ filtered_count }} از {{ stats.total }} فایل{% else %}{{ stats.total }} فایل{% endif %}</span>
+            {% if property_folders and view_mode != 'pipeline' %}
+            <button type="button" class="crm-files-select-mode" id="crmPropSelectMode" aria-pressed="false">
+                <i class="fas fa-check-double" aria-hidden="true"></i>
+                <span>انتخاب چندتایی</span>
+            </button>
+            {% endif %}
         </div>
 
         {% if view_mode == 'pipeline' %}
@@ -357,6 +364,7 @@
             <table class="crm-ft">
                 <thead>
                     <tr>
+                        {% if property_folders %}<th class="crm-ft-th-check" aria-label="انتخاب"></th>{% endif %}
                         <th class="crm-ft-th-prop">ملک</th>
                         <th>معامله</th>
                         <th>مرحله</th>
@@ -368,7 +376,12 @@
                 </thead>
                 <tbody>
                     {% for p in properties %}
-                    <tr class="crm-ft-row" style="--tx-accent: {{ p.transaction_status|crm_tx_status_dot }};" data-href="{% url 'workspace:crm_property_detail' p.id %}">
+                    <tr class="crm-ft-row" style="--tx-accent: {{ p.transaction_status|crm_tx_status_dot }};" data-href="{% url 'workspace:crm_property_detail' p.id %}" data-property-id="{{ p.id }}" data-prop-folder-ids="{% for item in p.folder_items.all %}{{ item.folder_id }}{% if not forloop.last %},{% endif %}{% endfor %}">
+                        {% if property_folders %}
+                        <td class="crm-ft-td-check" data-label="انتخاب">
+                            <input type="checkbox" class="crm-checkbox crm-prop-row-check" value="{{ p.id }}" aria-label="انتخاب {{ p.title }}">
+                        </td>
+                        {% endif %}
                         <td class="crm-ft-td-prop" data-label="ملک">
                             <a href="{% url 'workspace:crm_property_detail' p.id %}" class="crm-ft-prop">
                                 <span class="crm-ft-prop-type" title="{{ p.property_type }}"><i class="fas {{ p.property_type|crm_property_type_icon }}" aria-hidden="true"></i></span>
@@ -424,7 +437,7 @@
                     </tr>
                     {% empty %}
                     <tr class="crm-empty-state-row">
-                        <td colspan="7">
+                        <td colspan="{% if property_folders %}8{% else %}7{% endif %}">
                             {% if stats.total %}
                             {% include 'workspace/crm/includes/list_empty_state.html' with tone='muted' compact=1 decor='building' title='ملکی با این فیلتر نیست' desc='فیلتر یا جستجو را تغییر دهید، یا ملک جدید ثبت کنید.' btn_text='ثبت ملک' btn_icon='fa-plus' btn_drawer='drawer-property' extra_class='crm-empty-state--inline' %}
                             {% else %}
@@ -441,8 +454,15 @@
             {% for p in properties %}
             <article class="crm-files-card crm-files-mcard {% if p.deal_mode == 'فروش' %}crm-files-card--sale{% else %}crm-files-card--rent{% endif %}"
                      style="--tx-accent: {{ p.transaction_status|crm_tx_status_dot }}; --deal-mode-accent: {% if p.deal_mode == 'فروش' %}#2563eb{% else %}#0f766e{% endif %};"
-                     aria-label="{{ p.title }}">
+                     aria-label="{{ p.title }}"
+                     data-property-id="{{ p.id }}"
+                     data-prop-folder-ids="{% for item in p.folder_items.all %}{{ item.folder_id }}{% if not forloop.last %},{% endif %}{% endfor %}">
                 <div class="crm-files-card-accent" aria-hidden="true"></div>
+                {% if property_folders %}
+                <label class="crm-files-card-select" aria-label="انتخاب {{ p.title }}">
+                    <input type="checkbox" class="crm-checkbox crm-prop-row-check" value="{{ p.id }}">
+                </label>
+                {% endif %}
                 <a href="{% url 'workspace:crm_property_detail' p.id %}" class="crm-files-card-hit" aria-label="مشاهده {{ p.title }}"></a>
 
                 <header class="crm-files-card-head crm-files-mcard__top">
@@ -464,6 +484,11 @@
                     <span class="crm-files-pill crm-files-pill--vacant" title="ملک تخلیه است"><i class="fas fa-door-open" aria-hidden="true"></i> تخلیه</span>
                     {% endif %}
                     {% if p.property_type %}<span class="crm-files-pill crm-files-pill--type">{{ p.property_type }}</span>{% endif %}
+                    {% for fb in p.folder_badges %}
+                    <span class="crm-files-folder-badge" style="--zonkan-color:{{ fb.color }}" title="{{ fb.name }}">
+                        <i class="fas {{ fb.icon|default:'fa-folder' }}" aria-hidden="true"></i>{{ fb.name }}
+                    </span>
+                    {% endfor %}
                 </div>
 
                 {% if p.owner_name %}
@@ -520,6 +545,11 @@
                     <div class="crm-files-card-actions">
                         <a href="{% url 'workspace:crm_property_detail' p.id %}" class="crm-files-card-act crm-files-card-act--primary">مشاهده</a>
                         <a href="{% url 'workspace:crm_property_edit' p.id %}" class="crm-files-card-act" title="ویرایش">ویرایش</a>
+                        {% if property_folders %}
+                        <button type="button" class="crm-files-card-act crm-files-card-act--folder" data-prop-folder-assign="{{ p.id }}" title="افزودن به زونکن">
+                            <i class="fas fa-folder-plus" aria-hidden="true"></i> زونکن
+                        </button>
+                        {% endif %}
                         <a href="{% url 'workspace:crm_property_detail' p.id %}" class="crm-files-card-act" title="اشتراک فایل">اشتراک</a>
                         <a href="{% url 'workspace:crm_property_detail' p.id %}" class="crm-files-card-act" title="اتصال به مخاطب">مخاطب</a>
                     </div>
@@ -561,6 +591,25 @@
     <button type="button" class="crm-files-fab" data-drawer-open="drawer-property" aria-label="ملک جدید" title="ملک جدید">
         <i class="fas fa-plus" aria-hidden="true"></i>
     </button>
+
+    {% if property_folders and view_mode != 'pipeline' %}
+    <div class="crm-bulk-dock crm-prop-folder-bulk" id="crmPropFolderBulk" hidden aria-live="polite">
+        <div class="crm-bulk-dock-inner">
+            <div class="crm-bulk-dock-meta">
+                <span class="crm-bulk-dock-count" id="crmPropFolderBulkCount">0</span>
+                <span class="crm-bulk-dock-label">فایل انتخاب شده</span>
+                <button type="button" class="crm-bulk-dock-clear" id="crmPropFolderBulkClear" aria-label="لغو انتخاب">
+                    <i class="fas fa-times" aria-hidden="true"></i>
+                </button>
+            </div>
+            <button type="button" class="crm-bulk-dock-apply" id="crmPropFolderBulkOpen">
+                <i class="fas fa-folder-plus" aria-hidden="true"></i>
+                افزودن به زونکن
+            </button>
+        </div>
+    </div>
+    {% include 'workspace/crm/includes/property_folder_assign_dialog.html' %}
+    {% endif %}
 </div>
 {% endblock %}
 
@@ -586,4 +635,10 @@
 </aside>
 
 {% include 'workspace/crm/includes/drawer_property_import.html' %}
+{% endblock %}
+
+{% block crm_js %}
+<script>
+window.crmPropertyFolders = {{ property_folders_json|default:'[]'|safe }};
+</script>
 {% endblock %}

@@ -15,7 +15,7 @@
 
 
 
-<link rel="stylesheet" href="{% static 'workspace/css/crm.css' %}?v=163">
+<link rel="stylesheet" href="{% static 'workspace/css/crm.css' %}?v=164">
 
 {% if crm_video.available %}
 <link rel="stylesheet" href="{% static 'css/mizkar-video-player.css' %}?v=2">
@@ -24,6 +24,7 @@
 <link rel="stylesheet" href="{% static 'workspace/css/crm-mobile.css' %}?v=17">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-contacts-mobile.css' %}?v=15">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-contacts-mobile-premium.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-lease-deadline.css' %}?v=1">
 
 {% block crm_extra_css %}{% endblock %}
 {% include 'workspace/academy/includes/academy_assets_css.html' %}
@@ -90,9 +91,10 @@ window.crmZonkanUrl = '{% url "workspace:crm_property_folders" %}';
 window.crmZonkanDetailUrlBase = '{% url "workspace:crm_property_folder_detail" folder_id=0 %}'.replace('/0/', '/');
 window.crmZonkanReorderUrl = '{% url "workspace:crm_property_folders_reorder" %}';
 window.crmZonkanMembershipUrl = '{% url "workspace:crm_property_folder_membership" folder_id=0 property_id=0 %}'.replace('/0/properties/0/', '/');
+window.crmZonkanBulkUrl = '{% url "workspace:crm_property_folder_bulk" folder_id=0 %}'.replace('/0/', '/');
 </script>
 
-<script src="{% static 'workspace/js/crm.js' %}?v=83"></script>
+<script src="{% static 'workspace/js/crm.js' %}?v=86"></script>
 <script src="{% static 'workspace/js/crm-form-map.js' %}?v=2"></script>
 
 {% if crm_video.available %}

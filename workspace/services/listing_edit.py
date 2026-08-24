@@ -21,6 +21,7 @@ OWNER_PHONE_KEYS = ('شماره تماس', 'owner_phone', 'phone', 'موبایل
 OWNER_NAME_KEYS = ('نام مالک', 'owner_name', 'نام و نام خانوادگی مالک', 'نام صاحب')
 TENANT_PHONE_KEYS = ('شماره مستاجر', 'tenant_phone', 'شماره مستأجر', 'تلفن مستاجر')
 TENANT_NAME_KEYS = ('نام مستاجر', 'tenant_name', 'نام مستأجر', 'نام و نام خانوادگی مستاجر')
+VACANCY_DATE_KEYS = ('تاریخ تخلیه', 'vacancy_date', 'تاریخ تخلیه یا آماده تحویل')
 ADDRESS_KEYS = ('آدرس', 'address', 'مکان_آدرس')
 DISTRICT_KEYS = ('منطقه', 'district', 'district_persian', 'مکان_منطقه')
 
@@ -47,6 +48,7 @@ DEDICATED_FEATURE_KEYS = frozenset({
     'بالکن', 'جکوزی', 'لابی', 'استخر', 'روف گاردن', 'سالن ورزش',
     'آسانسور', 'پارکینگ', 'انباری',
     'وضعیت سکونت',
+    'تاریخ تخلیه',
 }) | CORE_AMENITY_LABELS
 
 OCCUPANCY_KEYS = ('وضعیت سکونت', 'وضعیت واحد', 'occupancy', 'unit_status')
@@ -159,6 +161,32 @@ def tenant_name_from_listing(listing) -> str:
         if value is not None and str(value).strip():
             return str(value).strip()
     return ''
+
+
+def vacancy_date_from_listing(listing) -> str:
+    """تاریخ تخلیه ذخیره‌شده — شمسی با ارقام فارسی، یا رشته خالی."""
+    from workspace.services.property_features import normalize_feature_date_value
+
+    data = listing.data or {}
+    for key in VACANCY_DATE_KEYS:
+        value = data.get(key)
+        if value is not None and str(value).strip():
+            return normalize_feature_date_value(str(value).strip())
+    return ''
+
+
+def _apply_vacancy_date(listing, raw: str) -> None:
+    from workspace.services.property_features import normalize_feature_date_value
+
+    data = dict(listing.data or {})
+    cleaned = normalize_feature_date_value((raw or '').strip())
+    if cleaned:
+        data['تاریخ تخلیه'] = cleaned
+        data['vacancy_date'] = cleaned
+    else:
+        for key in VACANCY_DATE_KEYS:
+            data.pop(key, None)
+    listing.data = data
 
 
 def _clear_tenant_from_data(data: dict) -> None:
@@ -404,6 +432,7 @@ def listing_edit_payload(listing, feat: Optional[dict] = None) -> Dict[str, Any]
         'owner_name': owner_name_from_listing(listing),
         'tenant_phone': tenant_phone_from_listing(listing),
         'tenant_name': tenant_name_from_listing(listing),
+        'vacancy_date': vacancy_date_from_listing(listing),
         'link': listing.link or '',
         'description': listing.description or '',
         'is_expired': bool(listing.is_expired),
@@ -678,6 +707,11 @@ def apply_listing_edit_post(listing, post) -> None:
             name=post.get('tenant_name', '') if 'tenant_name' in post else tenant_name_from_listing(listing),
             is_vacant=listing_is_vacant(listing),
         )
+        data = dict(listing.data or {})
+
+    if 'vacancy_date' in post:
+        listing.data = data
+        _apply_vacancy_date(listing, post.get('vacancy_date', ''))
         data = dict(listing.data or {})
 
     _apply_feature_post(data, post)

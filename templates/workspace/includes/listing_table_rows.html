@@ -19,7 +19,7 @@
                 </span>
                 {% endif %}
                 {% if lm.tag %}<span class="mk-tag">{{ lm.tag }}</span>{% endif %}
-                {% if feat.is_vacant %}<span class="mk-tag mk-tag-vacant" title="ملک تخلیه است"><i class="fas fa-door-open" aria-hidden="true"></i> تخلیه</span>{% endif %}
+                {% if feat.is_vacant %}<span class="mk-tag mk-tag-vacant" title="{% if feat.vacancy_date %}تاریخ تخلیه: {{ feat.vacancy_date }}{% else %}ملک تخلیه است{% endif %}"><i class="fas fa-door-open" aria-hidden="true"></i> تخلیه{% if feat.vacancy_date %} · {{ feat.vacancy_date }}{% endif %}</span>{% elif feat.vacancy_date %}<span class="mk-tag" title="تاریخ تخلیه"><i class="fas fa-calendar-check" aria-hidden="true"></i> {{ feat.vacancy_date }}</span>{% endif %}
                 {% if lm.is_favorite %}<span class="mk-tag mk-tag-star" title="علاقه‌مند"><i class="fas fa-star" aria-hidden="true"></i></span>{% endif %}
                 {% if pf %}<span class="mk-tag mk-tag-folder" title="در فایل‌های شخصی"><i class="fas fa-folder" aria-hidden="true"></i></span>{% endif %}
             </div>

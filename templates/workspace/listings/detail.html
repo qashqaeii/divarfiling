@@ -124,6 +124,11 @@
                             <i class="fas fa-door-open" aria-hidden="true"></i> تخلیه
                         </span>
                         {% endif %}
+                        {% if feat.vacancy_date %}
+                        <span class="crm-prop-badge" title="تاریخ تخلیه / آماده تحویل">
+                            <i class="fas fa-calendar-check" aria-hidden="true"></i> تخلیه: {{ feat.vacancy_date }}
+                        </span>
+                        {% endif %}
                     </div>
 
                     <h1 class="crm-prop-hero-title">{{ listing.title }}</h1>
@@ -785,7 +790,7 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'workspace/js/listing-edit.js' %}?v=5"></script>
+<script src="{% static 'workspace/js/listing-edit.js' %}?v=6"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     initListingEdit({

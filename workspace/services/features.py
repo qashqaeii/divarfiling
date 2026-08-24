@@ -383,7 +383,7 @@ def extract_listing_features(listing) -> Dict[str, Any]:
 
     from workspace.services.listing_features import feature_highlights_for_listing
     from workspace.services.advertiser_signal import listing_advertiser_display
-    from workspace.services.listing_edit import listing_is_vacant
+    from workspace.services.listing_edit import listing_is_vacant, vacancy_date_from_listing
     highlights = feature_highlights_for_listing(listing)
     advertiser = listing_advertiser_display(listing)
     image_authenticity = parse_image_authenticity(_get_from_data(data, IMAGE_AUTH_KEYS))
@@ -427,6 +427,7 @@ def extract_listing_features(listing) -> Dict[str, Any]:
         'highlights': highlights,
         'image_authenticity': image_authenticity,
         'is_vacant': listing_is_vacant(listing),
+        'vacancy_date': vacancy_date_from_listing(listing),
     }
 
 

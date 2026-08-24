@@ -141,6 +141,8 @@ class ListingSerializerFallbackTests(TestCase):
         self.assertIn('سرامیک', floor['choices'])
         self.assertIn('address', detail)
         self.assertIn('tenant_name', detail)
+        self.assertIn('vacancy_date', detail)
+        self.assertEqual(detail['vacancy_date'], '')
         self.assertIn('has_balcony', detail)
         self.assertIn('meta', detail)
         self.assertIn('linked_contacts', detail)

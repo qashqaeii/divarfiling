@@ -1407,6 +1407,179 @@ html.mk-public[data-theme="light"] .mk-dashboard-page {
     }
 }
 
+.mk-occ__more {
+    margin-top: 0.85rem;
+    border-radius: 14px;
+    border: 1px solid color-mix(in srgb, var(--ws-border, #e2e8f0) 88%, transparent);
+    background: color-mix(in srgb, var(--ws-surface, #fff) 88%, var(--ws-surface-2, #f8fafc));
+    overflow: hidden;
+}
+.mk-occ__more-sum {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.75rem 0.85rem;
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+}
+.mk-occ__more-sum::-webkit-details-marker { display: none; }
+.mk-occ__more-sum::marker { content: ''; }
+.mk-occ__more-ico {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: #0f766e;
+    background: color-mix(in srgb, #0f766e 14%, transparent);
+    font-size: 0.85rem;
+}
+.mk-occ__more-txt {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    min-width: 0;
+    flex: 1;
+}
+.mk-occ__more-txt strong {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--ws-text, #0f172a);
+}
+.mk-occ__more-txt em {
+    font-style: normal;
+    font-size: 0.7rem;
+    color: var(--ws-text-muted, #64748b);
+}
+.mk-occ__more-val {
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: #0f766e;
+    background: color-mix(in srgb, #0f766e 12%, transparent);
+    border-radius: 999px;
+    padding: 0.22rem 0.6rem;
+    font-variant-numeric: tabular-nums;
+    dir: ltr;
+}
+.mk-occ__more-val[hidden] { display: none !important; }
+.mk-occ__more-chev {
+    color: var(--ws-text-muted, #64748b);
+    font-size: 0.72rem;
+    transition: transform 0.18s ease;
+    margin-inline-start: auto;
+}
+.mk-occ__more[open] .mk-occ__more-chev {
+    transform: rotate(180deg);
+}
+.mk-occ__more[open] {
+    border-color: color-mix(in srgb, #0f766e 28%, var(--ws-border, #e2e8f0));
+}
+.mk-occ__more-body {
+    padding: 0 0.9rem 0.95rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+.mk-occ__date-head {
+    display: flex;
+    flex-direction: column;
+    gap: 0.08rem;
+    margin-bottom: 0.15rem;
+}
+.mk-occ__date-head strong {
+    font-size: 0.8rem;
+    color: var(--ws-text, #0f172a);
+}
+.mk-occ__date-head em {
+    font-style: normal;
+    font-size: 0.68rem;
+    color: var(--ws-text-muted, #64748b);
+}
+.mk-occ__date-wrap {
+    position: relative;
+    display: block;
+}
+.mk-occ__date-ico {
+    position: absolute;
+    inset-inline-start: 0.8rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #0f766e;
+    pointer-events: none;
+    z-index: 1;
+}
+.mk-occ__date-input {
+    padding-inline-start: 2.4rem !important;
+    padding-inline-end: 2.4rem !important;
+    text-align: center;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    font-variant-numeric: tabular-nums;
+    cursor: pointer;
+    background:
+        linear-gradient(165deg, color-mix(in srgb, #0f766e 7%, #fff) 0%, #fff 58%);
+}
+.mk-occ__date-input:focus {
+    outline: none;
+    border-color: color-mix(in srgb, #0f766e 48%, transparent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, #0f766e 16%, transparent);
+}
+.mk-occ__date-clear {
+    position: absolute;
+    inset-inline-end: 0.45rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 1.7rem;
+    height: 1.7rem;
+    border: 0;
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--ws-text-muted, #64748b) 12%, transparent);
+    color: var(--ws-text-muted, #64748b);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.mk-occ__date-clear[hidden] { display: none !important; }
+.mk-occ__date-clear:hover {
+    background: color-mix(in srgb, #be123c 16%, transparent);
+    color: #be123c;
+}
+.mk-occ__date-hint {
+    margin: 0.1rem 0 0;
+    font-size: 0.68rem;
+    color: var(--ws-text-muted, #64748b);
+    line-height: 1.45;
+}
+.mk-occ__date-presets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: 0.2rem;
+}
+.mk-occ__date-chip {
+    border: 1px solid color-mix(in srgb, #0f766e 22%, var(--ws-border, #e2e8f0));
+    background: color-mix(in srgb, #0f766e 8%, transparent);
+    color: #0f766e;
+    border-radius: 999px;
+    padding: 0.28rem 0.7rem;
+    font-size: 0.72rem;
+    font-weight: 650;
+    font-family: inherit;
+    cursor: pointer;
+}
+.mk-occ__date-chip:hover {
+    background: color-mix(in srgb, #0f766e 16%, transparent);
+}
+html[data-theme="dark"] .mk-occ__date-input,
+html.mk-theme-dark .mk-occ__date-input {
+    background: linear-gradient(165deg, color-mix(in srgb, #0f766e 12%, var(--ws-surface-2, #1A2332)) 0%, var(--ws-surface, #0f172a) 60%);
+}
+
 .mk-edit-amenities-label {
     display: block;
     font-size: 0.65rem;

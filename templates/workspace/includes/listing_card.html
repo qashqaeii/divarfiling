@@ -114,6 +114,17 @@
                 <span>آسانسور</span>
             </li>
             {% endif %}
+            {% if feat.is_vacant %}
+            <li class="mk-lcard-native__rail-item" title="{% if feat.vacancy_date %}تاریخ تخلیه: {{ feat.vacancy_date }}{% else %}ملک تخلیه است{% endif %}">
+                <i class="fas fa-door-open" aria-hidden="true"></i>
+                <span>تخلیه{% if feat.vacancy_date %} · {{ feat.vacancy_date }}{% endif %}</span>
+            </li>
+            {% elif feat.vacancy_date %}
+            <li class="mk-lcard-native__rail-item" title="تاریخ تخلیه">
+                <i class="fas fa-calendar-check" aria-hidden="true"></i>
+                <span>{{ feat.vacancy_date }}</span>
+            </li>
+            {% endif %}
         </ul>
 
         <footer class="mk-lcard-foot mk-lcard-native__foot">

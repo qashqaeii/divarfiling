@@ -128,3 +128,45 @@ class ListingVacantEditTests(TestCase):
         self.assertTrue(payload['is_vacant'])
         self.assertEqual(payload['tenant_name'], '')
         self.assertEqual(payload['tenant_phone'], '')
+
+    def test_vacancy_date_optional_jalali(self):
+        from workspace.services.jalali_input import to_persian_digits
+
+        apply_listing_edit_post(self.listing, {
+            'is_vacant': ['0'],
+            'vacancy_date': '1405/04/27',
+        })
+        self.listing.save()
+        self.listing.refresh_from_db()
+        payload = listing_edit_payload(self.listing)
+        self.assertEqual(payload['vacancy_date'], to_persian_digits('1405/04/27'))
+        self.assertEqual(self.listing.data.get('تاریخ تخلیه'), to_persian_digits('1405/04/27'))
+
+        apply_listing_edit_post(self.listing, {
+            'is_vacant': ['0', '1'],
+            'vacancy_date': '1405/04/27',
+        })
+        self.listing.save()
+        self.listing.refresh_from_db()
+        payload = listing_edit_payload(self.listing)
+        self.assertTrue(payload['is_vacant'])
+        self.assertEqual(payload['vacancy_date'], to_persian_digits('1405/04/27'))
+
+        apply_listing_edit_post(self.listing, {'vacancy_date': ''})
+        self.listing.save()
+        self.listing.refresh_from_db()
+        payload = listing_edit_payload(self.listing)
+        self.assertEqual(payload['vacancy_date'], '')
+        self.assertNotIn('تاریخ تخلیه', self.listing.data or {})
+
+    def test_vacancy_date_json_edit(self):
+        from workspace.services.jalali_input import to_persian_digits
+        from workspace.services.listing_edit import apply_listing_edit_json
+
+        apply_listing_edit_json(self.listing, {'vacancy_date': '1405/04/27'})
+        self.listing.save()
+        self.listing.refresh_from_db()
+        self.assertEqual(
+            listing_edit_payload(self.listing)['vacancy_date'],
+            to_persian_digits('1405/04/27'),
+        )

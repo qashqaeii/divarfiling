@@ -72,3 +72,5 @@ class ListingFeatureEditChoicesTests(SimpleTestCase):
         floor = next(f for f in payload['feature_fields'] if f['key'] == 'جنس کف')
         self.assertEqual(floor['input'], 'select')
         self.assertIn('پارکت', floor['choices'])
+        self.assertNotIn('تاریخ تخلیه', [f['key'] for f in payload['feature_fields']])
+        self.assertEqual(payload['vacancy_date'], '')

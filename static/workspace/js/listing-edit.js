@@ -109,6 +109,12 @@
             tenantPanel: qs('#editTenantPanel'),
             tenantName: qs('#editTenantName'),
             tenantPhone: qs('#editTenantPhone'),
+            vacancyDate: qs('#editVacancyDate'),
+            occMore: qs('#editOccMore'),
+            occMoreVal: qs('#editOccMore [data-occ-more-val]'),
+            occMoreHint: qs('#editOccMore [data-occ-more-hint]'),
+            occDateClear: qs('#editOccMore [data-occ-date-clear]'),
+            occDatePresets: qsa('#editOccMore [data-occ-date-preset]'),
             occPill: qs('#editVacantRow [data-occ-pill]'),
             occConfirm: qs('#editVacantRow [data-occ-confirm]'),
             occBtns: qsa('#editVacantRow [data-occ-set]'),
@@ -122,6 +128,8 @@
 
         this._bindMoneyHints();
         this._bindOccupancySwitch();
+        this._bindVacancyDate();
+        this._initJalaliPicker();
         this._bindNav();
         this._bindImages();
         this._bindEditButtons();
@@ -158,6 +166,98 @@
             f.tenantPhone.disabled = vacantOn;
             if (vacantOn) f.tenantPhone.value = '';
         }
+        this._syncVacancyDateUI();
+    };
+
+    ListingEditController.prototype._toPersianDigits = function (value) {
+        return String(value == null ? '' : value).replace(/[0-9]/g, function (d) {
+            return '۰۱۲۳۴۵۶۷۸۹'[d];
+        });
+    };
+
+    ListingEditController.prototype._jalaliYmdFromDate = function (date) {
+        var parts = new Intl.DateTimeFormat('en-u-ca-persian', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+        }).formatToParts(date);
+        var y = '', m = '', d = '';
+        parts.forEach(function (part) {
+            if (part.type === 'year') y = part.value;
+            if (part.type === 'month') m = part.value;
+            if (part.type === 'day') d = part.value;
+        });
+        if (!y || !m || !d) return '';
+        return this._toPersianDigits(y + '/' + m + '/' + d);
+    };
+
+    ListingEditController.prototype._presetVacancyDate = function (kind) {
+        var now = new Date();
+        var target = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        if (kind === 'tomorrow') target.setDate(target.getDate() + 1);
+        else if (kind === 'week') target.setDate(target.getDate() + 7);
+        else if (kind === 'month') target.setMonth(target.getMonth() + 1);
+        return this._jalaliYmdFromDate(target);
+    };
+
+    ListingEditController.prototype._setVacancyDate = function (value) {
+        var f = this.fields;
+        if (!f.vacancyDate) return;
+        f.vacancyDate.value = value || '';
+        this._syncVacancyDateUI();
+    };
+
+    ListingEditController.prototype._syncVacancyDateUI = function () {
+        var f = this.fields;
+        var raw = f.vacancyDate ? String(f.vacancyDate.value || '').trim() : '';
+        if (f.occDateClear) f.occDateClear.hidden = !raw;
+        if (f.occMoreVal) {
+            f.occMoreVal.textContent = raw;
+            f.occMoreVal.hidden = !raw;
+        }
+        if (f.occMoreHint) {
+            f.occMoreHint.textContent = raw
+                ? 'تاریخ انتخاب‌شده در تقویم شمسی'
+                : 'تاریخ تخلیه اختیاری — تقویم شمسی';
+        }
+        if (f.occMore && raw) f.occMore.open = true;
+    };
+
+    ListingEditController.prototype._initJalaliPicker = function () {
+        if (typeof jalaliDatepicker === 'undefined' || this._jalaliReady) return;
+        jalaliDatepicker.startWatch({
+            minDate: 'attr',
+            maxDate: 'attr',
+            zIndex: 20050,
+            separatorChars: { date: '/', between: ' ', time: ':' },
+            persianDigits: true,
+            autoHide: true,
+            time: false,
+            hasSecond: false,
+            hideAfterChange: true,
+        });
+        this._jalaliReady = true;
+    };
+
+    ListingEditController.prototype._bindVacancyDate = function () {
+        var self = this;
+        var f = this.fields;
+        if (f.vacancyDate) {
+            f.vacancyDate.addEventListener('change', function () { self._syncVacancyDateUI(); });
+            f.vacancyDate.addEventListener('input', function () { self._syncVacancyDateUI(); });
+        }
+        if (f.occDateClear) {
+            f.occDateClear.addEventListener('click', function (e) {
+                e.preventDefault();
+                self._setVacancyDate('');
+            });
+        }
+        (f.occDatePresets || []).forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var kind = btn.getAttribute('data-occ-date-preset');
+                self._setVacancyDate(self._presetVacancyDate(kind));
+            });
+        });
     };
 
     ListingEditController.prototype._bindOccupancySwitch = function () {
@@ -535,6 +635,8 @@
             setField(f.tenantName, '');
             setField(f.tenantPhone, '');
         }
+        this._setVacancyDate(data.vacancy_date || '');
+        if (f.occMore) f.occMore.open = !!(data.vacancy_date);
 
         ['price', 'deposit', 'rent'].forEach(function (key) {
             var input = f[key];

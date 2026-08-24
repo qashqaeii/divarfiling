@@ -7,11 +7,31 @@ from django.urls import reverse
 from shop.services.app_downloads import (
     ANDROID_APK_FILENAME,
     android_apk_available,
+    android_apk_version_info,
     build_android_apk_response,
+    parse_apk_version_from_filename,
 )
 
 
 class AndroidAppDownloadTests(TestCase):
+    def test_parse_apk_version_from_filename(self):
+        self.assertEqual(
+            parse_apk_version_from_filename('divar-filing-v2.6.2-42-direct-release.apk'),
+            ('2.6.2', 42),
+        )
+        self.assertEqual(
+            parse_apk_version_from_filename('divar-filing-v2.6.0-40-release.apk'),
+            ('2.6.0', 40),
+        )
+        self.assertIsNone(parse_apk_version_from_filename('random.apk'))
+
+    def test_android_apk_version_info_from_resolved_filename(self):
+        with patch('shop.services.app_downloads.android_apk_filename_resolved') as mock_name:
+            mock_name.return_value = 'divar-filing-v2.6.2-42-direct-release.apk'
+            version, build = android_apk_version_info()
+        self.assertEqual(version, '2.6.2')
+        self.assertEqual(build, 42)
+
     def test_download_url_returns_apk_when_file_exists(self):
         if not android_apk_available():
             self.skipTest('APK file not present in django/files/')

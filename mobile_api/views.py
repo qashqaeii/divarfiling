@@ -249,7 +249,11 @@ class AppVersionView(APIView):
     def get(self, request):
         from mobile_api.services.app_update_service import app_version_payload
 
-        return api_ok(app_version_payload(request))
+        response = api_ok(app_version_payload(request))
+        response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+        response['Pragma'] = 'no-cache'
+        response['Expires'] = '0'
+        return response
 
 
 class DeviceRegisterView(APIView):

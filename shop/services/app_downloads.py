@@ -2,32 +2,65 @@
 from __future__ import annotations
 
 import os
-from typing import Any, Dict, Optional
+import re
+from typing import Any, Dict, Optional, Tuple
 
 from django.conf import settings
 from django.http import FileResponse, Http404
 from django.urls import reverse
 
-ANDROID_APK_FILENAME = 'divar-filing-v2.6.0-40-release.apk'
-ANDROID_APP_VERSION = '2.6.0'
-ANDROID_APP_BUILD = 40
+# مقادیر پیش‌فرض وقتی فایل APK روی سرور نیست یا نام فایل قابل parse نیست
+ANDROID_APK_FILENAME = 'divar-filing-v2.6.2-42-direct-release.apk'
+ANDROID_APP_VERSION = '2.6.2'
+ANDROID_APP_BUILD = 42
 ANDROID_PACKAGE_ID = 'ir.divarfiling.mobile'
 ANDROID_MIN_ANDROID = '8.0'
 # اگر کاربر نسخهٔ قدیمی‌تر از این داشته باشد، آپدیت اجباری است
 ANDROID_MIN_SUPPORTED_BUILD = 30
 ANDROID_FORCE_UPDATE = False
 ANDROID_RELEASE_NOTES = (
-    'CRM حرفه‌ای: صفحه مخاطبین، ویرایش کامل مخاطب، معاملات، فایل‌های شخصی، '
-    'پیشنهادهای هوشمند، اشتراک عمومی و بهبودهای UI/UX موبایل.'
+    'بازطراحی زونکن‌ها با آیکن و پیش‌نمایش، بهبود UI/UX فایل‌های شخصی، '
+    'و رفع مشکلات بروزرسانی داخلی اپ.'
 )
 # در صورت تنظیم، کلاینت صحت فایل را بعد از دانلود بررسی می‌کند
 ANDROID_APK_SHA256 = ''
 WINDOWS_APP_VERSION = '2.15.0'
 WINDOWS_INSTALLER_FILENAME = 'DivarFilingExtractor_Setup_2.15.0.zip'
 
+_APK_VERSION_RE = re.compile(
+    r'divar-filing-v(?P<version>\d+\.\d+\.\d+)-(?P<build>\d+)',
+    re.IGNORECASE,
+)
+
 
 def _files_dir() -> str:
     return os.path.join(settings.BASE_DIR, 'files')
+
+
+def parse_apk_version_from_filename(filename: str) -> Optional[Tuple[str, int]]:
+    """استخراج version_name و version_code از نام فایل APK."""
+    match = _APK_VERSION_RE.search(filename or '')
+    if not match:
+        return None
+    try:
+        build = int(match.group('build'))
+    except (TypeError, ValueError):
+        return None
+    version = match.group('version')
+    if not version:
+        return None
+    return version, build
+
+
+def _apk_build_sort_key(path: str) -> Tuple[int, float]:
+    filename = os.path.basename(path)
+    parsed = parse_apk_version_from_filename(filename)
+    build = parsed[1] if parsed else 0
+    try:
+        mtime = os.path.getmtime(path)
+    except OSError:
+        mtime = 0.0
+    return build, mtime
 
 
 def android_apk_path() -> str:
@@ -44,13 +77,22 @@ def android_apk_path() -> str:
     ]
     if not candidates:
         return preferred
-    candidates.sort(key=lambda p: os.path.getmtime(p), reverse=True)
+    candidates.sort(key=_apk_build_sort_key, reverse=True)
     return candidates[0]
 
 
 def android_apk_filename_resolved() -> str:
     path = android_apk_path()
     return os.path.basename(path) if os.path.isfile(path) else ANDROID_APK_FILENAME
+
+
+def android_apk_version_info() -> Tuple[str, int]:
+    """version_name و version_code — اول از نام فایل APK، سپس از ثابت‌ها."""
+    filename = android_apk_filename_resolved()
+    parsed = parse_apk_version_from_filename(filename)
+    if parsed:
+        return parsed[0], parsed[1]
+    return ANDROID_APP_VERSION, int(ANDROID_APP_BUILD)
 
 
 def android_apk_available() -> bool:
@@ -116,12 +158,13 @@ def resolve_windows_download_for_user(user) -> Optional[Dict[str, Any]]:
 
 def build_app_download_context(request) -> Dict[str, Any]:
     user = getattr(request, 'user', None)
+    version_name, version_code = android_apk_version_info()
     return {
         'android': {
             'available': android_apk_available(),
-            'version': ANDROID_APP_VERSION,
-            'build': ANDROID_APP_BUILD,
-            'version_label': f'v{ANDROID_APP_VERSION} ({ANDROID_APP_BUILD})',
+            'version': version_name,
+            'build': version_code,
+            'version_label': f'v{version_name} ({version_code})',
             'size_label': android_apk_size_label(),
             'filename': ANDROID_APK_FILENAME if not android_apk_available() else android_apk_filename_resolved(),
             'package_id': ANDROID_PACKAGE_ID,
@@ -145,7 +188,7 @@ def build_android_update_payload(
 ) -> Dict[str, Any]:
     """متادیتای نسخه برای آپدیت داخل اپ اندروید."""
     available = android_apk_available()
-    version_code = int(ANDROID_APP_BUILD)
+    version_name, version_code = android_apk_version_info()
     min_supported = int(ANDROID_MIN_SUPPORTED_BUILD)
     force = bool(ANDROID_FORCE_UPDATE)
     update_available = False
@@ -163,7 +206,7 @@ def build_android_update_payload(
 
     return {
         'package_id': ANDROID_PACKAGE_ID,
-        'version_name': ANDROID_APP_VERSION,
+        'version_name': version_name,
         'version_code': version_code,
         'min_supported_version_code': min_supported,
         'force_update': force,
@@ -184,7 +227,7 @@ def build_android_update_payload(
 def build_android_apk_response() -> FileResponse:
     path = android_apk_path()
     if not os.path.isfile(path):
-        raise Http404('فایل اپ اندروید در سرور موجود نیست.')
+        raise Http404('فайل اپ اندروید در سرور موجود نیست.')
     try:
         file_handle = open(path, 'rb')
     except OSError as exc:
@@ -197,6 +240,8 @@ def build_android_apk_response() -> FileResponse:
         )
         response['Content-Type'] = 'application/vnd.android.package-archive'
         response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+        response['Pragma'] = 'no-cache'
+        response['Expires'] = '0'
         return response
     except Exception:
         file_handle.close()

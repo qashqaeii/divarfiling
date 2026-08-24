@@ -91,10 +91,10 @@ window.crmZonkanUrl = '{% url "workspace:crm_property_folders" %}';
 window.crmZonkanDetailUrlBase = '{% url "workspace:crm_property_folder_detail" folder_id=0 %}'.replace('/0/', '/');
 window.crmZonkanReorderUrl = '{% url "workspace:crm_property_folders_reorder" %}';
 window.crmZonkanMembershipUrl = '{% url "workspace:crm_property_folder_membership" folder_id=0 property_id=0 %}'.replace('/0/properties/0/', '/');
-window.crmZonkanBulkUrl = '{% url "workspace:crm_property_folder_bulk" folder_id=0 %}'.replace('/0/', '/');
+window.crmZonkanBulkUrl = '{% url "workspace:crm_property_folder_bulk" folder_id=0 %}'.replace('/0/properties/bulk/', '/');
 </script>
 
-<script src="{% static 'workspace/js/crm.js' %}?v=86"></script>
+<script src="{% static 'workspace/js/crm.js' %}?v=87"></script>
 <script src="{% static 'workspace/js/crm-form-map.js' %}?v=2"></script>
 
 {% if crm_video.available %}

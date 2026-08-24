@@ -4705,13 +4705,21 @@ function initCRMPropertyFolderAssign(root) {
             method: isOn ? 'DELETE' : 'POST',
             headers: { 'X-CSRFToken': getCsrfToken() },
         });
-        const data = await resp.json();
+        const data = await crmParseJsonResponse(resp);
         if (!data.ok) throw new Error(data.error || 'عملیات ناموفق بود');
         const next = isOn
             ? memberIds.filter((id) => id !== String(folderId))
             : [...memberIds, String(folderId)];
         if (propEl) propEl.setAttribute('data-prop-folder-ids', next.join(','));
         return !isOn;
+    }
+
+    async function crmParseJsonResponse(resp) {
+        const ct = (resp.headers.get('content-type') || '').toLowerCase();
+        if (!ct.includes('application/json')) {
+            throw new Error(resp.ok ? 'پاسخ سرور نامعتبر بود' : `خطای سرور (${resp.status})`);
+        }
+        return resp.json();
     }
 
     async function bulkAddToFolder(folderId) {
@@ -4724,7 +4732,7 @@ function initCRMPropertyFolderAssign(root) {
             },
             body: JSON.stringify({ property_ids: assignPropertyIds.map(Number) }),
         });
-        const data = await resp.json();
+        const data = await crmParseJsonResponse(resp);
         if (!data.ok) throw new Error(data.error || 'عملیات ناموفق بود');
         assignPropertyIds.forEach((pid) => {
             const propEl = scope.querySelector(`[data-property-id="${pid}"]`);

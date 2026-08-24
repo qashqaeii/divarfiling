@@ -8673,13 +8673,28 @@ select.crm-files-adv-control {
     filter: drop-shadow(0 8px 18px color-mix(in srgb, var(--tx-accent, var(--ws-primary)) 12%, transparent));
     transition: opacity 0.18s, transform 0.18s;
 }
-.crm-files-card > :not(.crm-files-card-bg):not(.crm-files-card-accent):not(.crm-files-card-hit) {
+.crm-files-card > :not(.crm-files-card-bg):not(.crm-files-card-accent):not(.crm-files-card-hit):not(.crm-files-card-body):not(.crm-files-card-foot):not(.crm-files-card-select) {
+    position: relative;
+    z-index: 1;
+    pointer-events: none;
+}
+.crm-files-card-body {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    flex: 1;
+    min-width: 0;
+}
+.crm-files-card-body > :not(.crm-files-card-hit) {
     position: relative;
     z-index: 1;
     pointer-events: none;
 }
 .crm-files-card a:not(.crm-files-card-hit),
-.crm-files-card button {
+.crm-files-card button,
+.crm-files-card label,
+.crm-files-card input {
     pointer-events: auto;
     position: relative;
     z-index: 3;
@@ -8713,7 +8728,7 @@ select.crm-files-adv-control {
 .crm-files-mcard .crm-files-card-tags {
     justify-content: flex-start;
 }
-.crm-files-mcard > .crm-files-card-price {
+.crm-files-mcard .crm-files-card-price {
     display: flex;
     flex-direction: column;
     gap: 0.08rem;
@@ -8820,7 +8835,7 @@ select.crm-files-adv-control {
     overflow: visible;
 }
 /* ?????? ?? ???? ???? ???? ?? hover ? tooltip ??? ??? */
-.crm-files-card > .crm-files-card-amenities {
+.crm-files-card-body > .crm-files-card-amenities {
     z-index: 3;
     pointer-events: none;
     overflow: visible;
@@ -8943,7 +8958,7 @@ select.crm-files-adv-control {
     align-items: stretch;
     gap: 0.4rem;
     position: relative;
-    z-index: 4;
+    z-index: 5;
     pointer-events: auto;
 }
 .crm-files-card-foot .crm-files-card-meta {

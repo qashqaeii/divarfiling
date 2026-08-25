@@ -181,12 +181,14 @@ class ShopCheckoutView(APIView):
             return api_error('پلن را انتخاب کنید.', code='VALIDATION_ERROR')
         renew_id = data.get('renew_license_id') or data.get('license_id')
         discount_code = data.get('discount_code') or data.get('coupon') or ''
+        quantity = data.get('quantity', 1)
         try:
             payload = create_checkout(
                 request.user,
                 plan_id=plan_id,
                 renew_license_id=int(renew_id) if renew_id else None,
                 discount_code=str(discount_code).strip() or None,
+                quantity=quantity,
                 request=request,
             )
             return api_ok(payload)
@@ -208,11 +210,13 @@ class ShopDiscountPreviewView(APIView):
         code = (data.get('discount_code') or data.get('coupon') or '').strip()
         if not code:
             return api_error('کد تخفیف را وارد کنید.', code='VALIDATION_ERROR')
+        quantity = data.get('quantity', 1)
         try:
             return api_ok(preview_plan_discount(
                 request.user,
                 plan_id=plan_id,
                 discount_code=code,
+                quantity=quantity,
                 request=request,
             ))
         except MobileShopError as exc:

@@ -181,6 +181,41 @@ class MobileShopPlansTests(TestCase):
         self.assertEqual(len(plans), 1)
         self.assertEqual(plans[0]['final_price'], 1000000)
         self.assertTrue(plans[0]['is_featured'])
+        self.assertFalse(plans[0]['allow_bulk_purchase'])
+
+    def test_agency_plan_bulk_fields_and_quantity_checkout(self):
+        agency = LicensePlan.objects.create(
+            product=self.product,
+            name='آژانس حرفه‌ای',
+            plan_type='yearly',
+            price=500000,
+            duration_days=365,
+            is_active=True,
+            allow_bulk_purchase=True,
+            min_quantity=2,
+            max_quantity=10,
+        )
+        with patch('mobile_api.services.shop_checkout_service.zibal_service.request_payment') as mock_pay, \
+             patch('mobile_api.services.shop_checkout_service.zibal_service.get_start_pay_url', return_value='https://gateway.example/pay'), \
+             patch('mobile_api.services.shop_checkout_service.zibal_service.build_callback_url', return_value='https://divarfiling.ir/payment/callback/'):
+            mock_pay.return_value = MagicMock(track_id='t2', result_code=100, message='ok', raw={})
+            with patch('shop.models.PaymentSettings.load') as pay_load:
+                settings = MagicMock()
+                settings.zibal_enabled = True
+                settings.available_methods.return_value = ['zibal']
+                pay_load.return_value = settings
+                resp = self.client.post('/api/mobile/v1/shop/checkout', {
+                    'plan_id': agency.pk,
+                    'quantity': 3,
+                }, format='json')
+        self.assertTrue(resp.data.get('ok'), resp.data)
+        self.assertEqual(resp.data['data']['quantity'], 3)
+        self.assertEqual(resp.data['data']['amount'], 1500000)
+        plans_resp = self.client.get('/api/mobile/v1/shop/plans')
+        agency_plan = next(p for p in plans_resp.data['data']['plans'] if p['id'] == agency.pk)
+        self.assertTrue(agency_plan['allow_bulk_purchase'])
+        self.assertEqual(agency_plan['min_quantity'], 2)
+        self.assertEqual(agency_plan['max_quantity'], 10)
 
     @patch('mobile_api.services.shop_checkout_service.zibal_service.request_payment')
     @patch('mobile_api.services.shop_checkout_service.zibal_service.get_start_pay_url', return_value='https://gateway.example/pay')

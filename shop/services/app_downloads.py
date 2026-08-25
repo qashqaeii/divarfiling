@@ -10,17 +10,17 @@ from django.http import FileResponse, Http404
 from django.urls import reverse
 
 # مقادیر پیش‌فرض وقتی فایل APK روی سرور نیست یا نام فایل قابل parse نیست
-ANDROID_APK_FILENAME = 'divar-filing-v2.6.2-42-direct-release.apk'
-ANDROID_APP_VERSION = '2.6.2'
-ANDROID_APP_BUILD = 42
+ANDROID_APK_FILENAME = 'divar-filing-v2.6.3-43-direct-release.apk'
+ANDROID_APP_VERSION = '2.6.3'
+ANDROID_APP_BUILD = 43
 ANDROID_PACKAGE_ID = 'ir.divarfiling.mobile'
 ANDROID_MIN_ANDROID = '8.0'
 # اگر کاربر نسخهٔ قدیمی‌تر از این داشته باشد، آپدیت اجباری است
 ANDROID_MIN_SUPPORTED_BUILD = 30
 ANDROID_FORCE_UPDATE = False
 ANDROID_RELEASE_NOTES = (
-    'بازطراحی زونکن‌ها با آیکن و پیش‌نمایش، بهبود UI/UX فایل‌های شخصی، '
-    'و رفع مشکلات بروزرسانی داخلی اپ.'
+    'رفع خطای محاسبه امکانات اطراف، بهبود معاملات و فایل‌های شخصی، '
+    'و پایداری بیشتر صفحهٔ معاملات.'
 )
 # در صورت تنظیم، کلاینت صحت فایل را بعد از دانلود بررسی می‌کند
 ANDROID_APK_SHA256 = ''

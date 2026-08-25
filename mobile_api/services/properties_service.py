@@ -602,7 +602,6 @@ def fetch_property_nearby_pois_from_mobile(
 ) -> dict:
     """دریافت و ذخیره امکانات اطراف — هم‌تراز CRMPropertyNearbyPoisView."""
     from workspace.services.nearby_pois import NearbyPoiError, fetch_and_save_nearby_pois
-    from workspace.services.property_public_share import build_property_share_context
 
     prop = property_for_user(user, property_id)
     if not prop:

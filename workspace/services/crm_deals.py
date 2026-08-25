@@ -236,8 +236,12 @@ def filter_deals(user, params: dict):
     elif bucket == 'stale':
         stale_ids = []
         meta_map = stage_meta_map(user)
-        active_qs = qs.filter(stage__in=active_stages_for_user(user))
-        for deal in active_qs.only('id', 'stage', 'stage_changed_at', 'updated_at', 'created_at', 'user_id'):
+        active_qs = (
+            qs.filter(stage__in=active_stages_for_user(user))
+            .select_related(None)
+            .only('id', 'stage', 'stage_changed_at', 'updated_at', 'created_at', 'user_id')
+        )
+        for deal in active_qs:
             if is_deal_stale(deal, meta_map.get(deal.stage)):
                 stale_ids.append(deal.pk)
         qs = qs.filter(pk__in=stale_ids)

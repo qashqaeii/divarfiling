@@ -2,7 +2,8 @@
 from datetime import timedelta
 
 from django.contrib.auth import get_user_model
-from django.test import TestCase
+from django.test import Client, TestCase
+from django.urls import reverse
 from django.utils import timezone
 
 from workspace.constants import DEAL_STAGE_LOST, DEAL_STAGE_WON, DEFAULT_DEAL_STAGE_DEFS
@@ -15,7 +16,7 @@ from workspace.services.crm_deal_stages import (
     serialize_stages_payload,
     validate_deal_stage_defs,
 )
-from workspace.services.crm_deals import create_deal, is_deal_stale, update_deal_stage
+from workspace.services.crm_deals import create_deal, filter_deals, is_deal_stale, update_deal_stage
 
 User = get_user_model()
 
@@ -77,8 +78,35 @@ class DealStagesServiceTests(TestCase):
         deal.save(update_fields=['stage_changed_at'])
         self.assertTrue(is_deal_stale(deal))
 
+    def test_filter_stale_bucket_does_not_raise_field_error(self):
+        deal = create_deal(self.user, self.customer, title='کهنه فیلتر', stage='سرنخ')
+        deal.stage_changed_at = timezone.now() - timedelta(days=10)
+        deal.save(update_fields=['stage_changed_at'])
+        qs = filter_deals(self.user, {'bucket': 'stale'})
+        ids = list(qs.values_list('id', flat=True))
+        self.assertIn(deal.pk, ids)
+
     def test_payload_includes_presets(self):
         payload = serialize_stages_payload(self.user)
         self.assertIn('definitions', payload)
         self.assertIn('presets', payload)
         self.assertGreaterEqual(len(payload['presets']), 3)
+
+
+class CRMDealListViewTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='09120002222', password='test')
+        self.customer = Customer.objects.create(
+            user=self.user, name='مخاطب معامله', phone='09120002222', status='جدید',
+        )
+        self.client = Client()
+        self.client.force_login(self.user)
+        deal = create_deal(self.user, self.customer, title='کهنه لیست', stage='سرنخ')
+        deal.stage_changed_at = timezone.now() - timedelta(days=10)
+        deal.save(update_fields=['stage_changed_at'])
+
+    def test_stale_bucket_page_returns_200(self):
+        response = self.client.get(reverse('workspace:crm_deals'), {'bucket': 'stale'})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'crm-deals-mobile.css')
+        self.assertContains(response, 'کهنه لیست')

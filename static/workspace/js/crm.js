@@ -4277,15 +4277,16 @@ function initCRMPropertyAdvFilters() {
         }, true);
     }
 
-    document.querySelectorAll('.crm-files-mobile .crm-ft-row[data-href]').forEach((row) => {
-        if (row.dataset.hrefBound === '1') return;
-        row.dataset.hrefBound = '1';
-        row.addEventListener('click', (e) => {
+    if (document.body.dataset.filesRowHrefBound !== '1') {
+        document.body.dataset.filesRowHrefBound = '1';
+        document.addEventListener('click', (e) => {
+            const row = e.target.closest('.crm-files-mobile .crm-ft-row[data-href]');
+            if (!row) return;
             if (e.target.closest('a, button, input, select, label')) return;
             const href = row.getAttribute('data-href');
             if (href) window.location.href = href;
         });
-    });
+    }
 }
 
 function initCRMPropGalleryLightbox() {
@@ -5088,14 +5089,14 @@ function initCRMPropertyFolderAssign(root) {
         });
     });
 
-    scope.querySelectorAll('[data-prop-folder-assign]').forEach((btn) => {
-        btn.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            const pid = btn.getAttribute('data-prop-folder-assign');
-            if (pid) openAssignModal('single', [pid]);
-        });
-    });
+    scope.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-prop-folder-assign]');
+        if (!btn || !scope.contains(btn)) return;
+        e.preventDefault();
+        e.stopPropagation();
+        const pid = btn.getAttribute('data-prop-folder-assign');
+        if (pid) openAssignModal('single', [pid]);
+    }, true);
 
     bulkOpen?.addEventListener('click', () => {
         const ids = selectedIds();
@@ -5109,15 +5110,15 @@ function initCRMPropertyFolderAssign(root) {
         setSelectMode(false);
     });
 
-    checks().forEach((c) => c.addEventListener('change', updateBulkBar));
+    scope.addEventListener('change', (e) => {
+        if (e.target && e.target.classList && e.target.classList.contains('crm-prop-row-check')) {
+            updateBulkBar();
+        }
+    });
 
     selectModeBtn?.addEventListener('click', () => {
         const on = !scope.querySelector('.crm-files-pro--select-mode');
         setSelectMode(on);
-    });
-
-    scope.querySelectorAll('.crm-files-card-select, .crm-ft-td-check').forEach((wrap) => {
-        wrap.addEventListener('click', (e) => e.stopPropagation());
     });
 }
 

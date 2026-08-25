@@ -1,4 +1,6 @@
 """تست API معاملات و املاک موبایل."""
+from unittest.mock import patch
+
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from rest_framework.test import APIClient
@@ -164,3 +166,22 @@ class DealsPropertiesApiTests(TestCase):
         )
         self.assertEqual(settings_resp.status_code, 200)
         self.assertEqual(settings_resp.json()['data']['defaults']['advisor_share_percent'], 75)
+
+    @patch('workspace.services.nearby_pois.fetch_and_save_nearby_pois')
+    def test_property_nearby_pois_calculate(self, mock_fetch):
+        mock_fetch.return_value = {
+            'items': [],
+            'found_count': 0,
+            'cached': False,
+        }
+        self.property.latitude = 35.7575
+        self.property.longitude = 51.4095
+        self.property.save(update_fields=['latitude', 'longitude'])
+        resp = self.client.post(
+            f'/api/mobile/v1/crm/properties/{self.property.pk}/nearby-pois',
+            {},
+            format='json',
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.assertTrue(resp.json()['ok'])
+        mock_fetch.assert_called_once()

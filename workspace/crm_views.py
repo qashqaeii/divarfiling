@@ -1183,6 +1183,23 @@ class CRMPropertyListView(CRMContextMixin, LoginRequiredMixin, ListView):
             return None
         return self.paginate_by
 
+    def render_to_response(self, context, **response_kwargs):
+        if self.request.GET.get('partial') == '1' and context.get('view_mode') != 'pipeline':
+            page_obj = context.get('page_obj')
+            view_mode = context.get('view_mode') or 'grid'
+            template = (
+                'workspace/crm/properties/_property_table_rows.html'
+                if view_mode == 'table'
+                else 'workspace/crm/properties/_property_cards.html'
+            )
+            html = render_to_string(template, context, request=self.request)
+            return JsonResponse({
+                'html': html,
+                'has_next': bool(page_obj and page_obj.has_next()),
+                'next_page': page_obj.next_page_number() if page_obj and page_obj.has_next() else None,
+            })
+        return super().render_to_response(context, **response_kwargs)
+
     def get_queryset(self):
         from django.db.models import Prefetch
         from workspace.models import CRMPropertyFolderItem
@@ -1198,6 +1215,21 @@ class CRMPropertyListView(CRMContextMixin, LoginRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         user = self.request.user
+        ctx['view_mode'] = self.request.GET.get('view', 'grid')
+        from workspace.services.crm_property_folders import (
+            FOLDER_COLORS, FOLDER_ICONS, folders_for_property, list_property_folders, serialize_folder,
+        )
+        from workspace.services.property_public_share import build_property_amenity_dossier_items
+        ctx['property_folders'] = list_property_folders(user)
+        ctx['property_folders_json'] = json.dumps(
+            [serialize_folder(f) for f in ctx['property_folders']],
+            ensure_ascii=False,
+        )
+        for prop in ctx.get('properties') or []:
+            prop.card_amenities = build_property_amenity_dossier_items(prop)
+            prop.folder_badges = folders_for_property(prop)
+        if self.request.GET.get('partial') == '1':
+            return ctx
         props = properties_qs(user)
         filtered = filter_properties(user, self.request.GET)
         ctx['stats'] = {
@@ -1215,11 +1247,10 @@ class CRMPropertyListView(CRMContextMixin, LoginRequiredMixin, ListView):
         ctx['property_types'] = CRM_PROPERTIES
         ctx['publish_statuses'] = PROPERTY_PUBLISH_STATUSES
         ctx['crm_section'] = 'properties'
-        ctx['view_mode'] = self.request.GET.get('view', 'grid')
         ctx['sort'] = self.request.GET.get('sort', '-updated_at')
         ctx['filter_qs'] = urlencode({
             k: v for k, v in self.request.GET.items()
-            if k not in ('view', 'page', 'drawer', 'folder_id') and v
+            if k not in ('view', 'page', 'drawer', 'folder_id', 'partial') and v
         })
         ctx['has_filters'] = any(self.request.GET.get(k) for k in (
             'q', 'deal_mode', 'transaction_status', 'property_type', 'publish_status', 'city', 'sort',
@@ -1241,12 +1272,6 @@ class CRMPropertyListView(CRMContextMixin, LoginRequiredMixin, ListView):
         ctx['saved_filter_base'] = reverse('workspace:crm_properties')
         ctx['saved_filter_params'] = current_params_from_request(self.request, 'properties')
         ctx['saved_filter_can_save'] = bool(ctx['saved_filter_params'])
-        from workspace.services.crm_property_folders import FOLDER_COLORS, FOLDER_ICONS, list_property_folders, serialize_folder
-        ctx['property_folders'] = list_property_folders(user)
-        ctx['property_folders_json'] = json.dumps(
-            [serialize_folder(f) for f in ctx['property_folders']],
-            ensure_ascii=False,
-        )
         ctx['active_folder_id'] = self.request.GET.get('folder_id', '')
         ctx['folder_colors'] = FOLDER_COLORS
         ctx['folder_icons'] = FOLDER_ICONS
@@ -1261,11 +1286,6 @@ class CRMPropertyListView(CRMContextMixin, LoginRequiredMixin, ListView):
             'advertiser_types': list(PROPERTY_ADVERTISER_TYPES),
         }
         ctx['open_modal'] = ctx.get('open_modal', self.request.GET.get('open', ''))
-        from workspace.services.property_public_share import build_property_amenity_dossier_items
-        from workspace.services.crm_property_folders import folders_for_property
-        for prop in ctx.get('properties') or []:
-            prop.card_amenities = build_property_amenity_dossier_items(prop)
-            prop.folder_badges = folders_for_property(prop)
         if ctx['stats']['total'] == 0 and not ctx.get('has_filters'):
             from workspace.academy.context_helpers import inject_academy_context
             inject_academy_context(ctx, user, 'properties_empty')

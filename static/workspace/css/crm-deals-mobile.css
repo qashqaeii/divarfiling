@@ -1118,3 +1118,62 @@
         border-radius: 16px;
     }
 }
+
+/* Desktop table — load last so polish CSS cannot flatten the deals UI */
+@media (min-width: 769px) {
+    .crm-deals-page .crm-deals-table-card {
+        border-radius: 18px;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 80%, transparent);
+        box-shadow: 0 10px 28px rgba(15, 23, 42, 0.05);
+        overflow: hidden;
+        background: var(--ws-surface);
+    }
+    .crm-deals-page .crm-deals-table thead th {
+        padding: 0.85rem 1rem;
+        font-size: 0.7rem;
+        font-weight: 800;
+        color: var(--ws-text-muted);
+        background: color-mix(in srgb, var(--ws-surface-2) 70%, var(--ws-surface));
+        white-space: nowrap;
+    }
+    .crm-deals-page .crm-deals-table tbody td {
+        padding: 0.85rem 1rem;
+        vertical-align: middle;
+    }
+    .crm-deals-page .crm-deals-table tbody tr {
+        border-bottom: 1px solid color-mix(in srgb, var(--ws-border) 70%, transparent);
+    }
+    .crm-deals-page .crm-deals-prob {
+        min-width: 4.25rem;
+        gap: 0.28rem;
+    }
+    .crm-deals-page .crm-deals-prob-track {
+        height: 6px;
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--ws-border) 80%, transparent);
+        overflow: hidden;
+        display: block;
+    }
+    .crm-deals-page .crm-deals-prob-track i {
+        display: block;
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, #7c3aed, #6366f1);
+    }
+    .crm-deals-page .crm-deals-col-commission {
+        white-space: nowrap;
+        font-variant-numeric: tabular-nums;
+    }
+    .crm-deals-page .crm-deals-stale-banner {
+        display: flex;
+        align-items: center;
+        gap: 0.55rem;
+        padding: 0.7rem 0.95rem;
+        border-radius: 14px;
+        text-decoration: none;
+        line-height: 1.5;
+    }
+    .crm-deals-page .crm-deals-stale-banner i {
+        flex-shrink: 0;
+    }
+}

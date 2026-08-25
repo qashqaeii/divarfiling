@@ -105,3 +105,33 @@ def normalize_crm_tone(tone: str | None) -> str:
 
 def crm_tone_meta(tone: str | None) -> dict:
     return CRM_MESSAGE_TONES[normalize_crm_tone(tone)]
+
+
+INTERNAL_MODEL_LABEL = 'مدل داخلی سیستم'
+
+
+def resolve_model_label(
+    *,
+    provider: str = '',
+    model: str = '',
+    is_fallback: bool = False,
+    source: str = 'ai',
+) -> str:
+    """برچسب نمایشی مدل تولید متن — fallback سیستمی: «مدل داخلی سیستم»."""
+    provider = (provider or '').strip()
+    model = (model or '').strip()
+    source = (source or 'ai').strip()
+
+    if source == 'fallback' or provider == 'rule_based':
+        return INTERNAL_MODEL_LABEL
+    if is_fallback and not model:
+        return INTERNAL_MODEL_LABEL
+    if model:
+        return model
+    if provider == 'openrouter':
+        return 'مدل پشتیبان'
+    if provider == 'gemini':
+        return 'Gemini'
+    if is_fallback:
+        return INTERNAL_MODEL_LABEL
+    return ''

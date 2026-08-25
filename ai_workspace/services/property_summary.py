@@ -168,6 +168,29 @@ def generate_property_summary(
     )
 
 
+def build_fallback_for_property(user, prop: CRMProperty) -> Dict[str, Any]:
+    """خلاصه ساختاریافته — مدل داخلی سیستم برای فایل شخصی."""
+    from ai_workspace.context_builders import property_context
+    from ai_workspace.fallbacks.listing_summary import build
+
+    profile = _feature_profile_for_property(user, prop)
+    benchmark = benchmark_crm_property(user, prop)
+    context = property_context.build(prop, benchmark, feature_profile=profile)
+    return build(context)['data']
+
+
+def build_fallback_for_listing(user, dataset, listing) -> Dict[str, Any]:
+    """خلاصه ساختاریافته — مدل داخلی سیستم برای آگهی فایلینگ."""
+    from ai_workspace.context_builders import listing_context
+    from ai_workspace.fallbacks.listing_summary import build
+    from workspace.services.analyzer import benchmark_listing, listings_to_dataframe
+
+    df = listings_to_dataframe(dataset.listings.all())
+    benchmark = benchmark_listing(listing, df, dataset.transaction_type) if len(df) else {}
+    context = listing_context.build(listing, dataset, benchmark)
+    return build(context)['data']
+
+
 def generate_summary_for_user(user, property_id: int) -> GatewayResult:
     prop = property_for_user(user, property_id)
     if not prop or prop.deleted_at is not None:

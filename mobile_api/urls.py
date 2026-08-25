@@ -122,6 +122,7 @@ urlpatterns = [
     path('ai/quota', views.AIQuotaView.as_view(), name='ai_quota'),
     path('ai/draft-message', views.AIDraftMessageView.as_view(), name='ai_draft_message'),
     path('ai/summarize-listing', views.AISummarizeListingView.as_view(), name='ai_summarize_listing'),
+    path('ai/summarize-property', views.AISummarizePropertyView.as_view(), name='ai_summarize_property'),
 
     path('crm/team/overview', team_views.TeamOverviewView.as_view(), name='team_overview'),
     path('crm/team/members', team_views.TeamMembersView.as_view(), name='team_members'),

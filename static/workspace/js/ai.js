@@ -29,10 +29,19 @@
 
     function renderBadge(data) {
         if (!data) return '';
+        const modelLabel = (data.model_label || '').trim();
+        if (modelLabel) {
+            const isSystem = modelLabel === 'مدل داخلی سیستم'
+                || modelLabel === 'منطق سیستم'
+                || data.provider === 'rule_based'
+                || data.source === 'fallback';
+            const cls = isSystem ? 'ws-ai-badge--fallback' : 'ws-ai-badge--model';
+            return `<span class="ws-ai-badge ${cls}" title="مدل تولید">${escapeHtml(modelLabel)}</span>`;
+        }
         const provider = data.provider;
 
         if (provider === 'rule_based') {
-            return '<span class="ws-ai-badge ws-ai-badge--fallback">حالت پایه</span>';
+            return '<span class="ws-ai-badge ws-ai-badge--fallback">مدل داخلی سیستم</span>';
         }
         if (provider === 'openrouter') {
             return '<span class="ws-ai-badge ws-ai-badge--backup">هوش مصنوعی (پشتیبان)</span>';
@@ -42,6 +51,9 @@
         }
         if (data.from_cache || provider === 'cache') {
             return '<span class="ws-ai-badge ws-ai-badge--cache">از کش</span>';
+        }
+        if (data.model) {
+            return `<span class="ws-ai-badge ws-ai-badge--model">${escapeHtml(data.model)}</span>`;
         }
         return '';
     }

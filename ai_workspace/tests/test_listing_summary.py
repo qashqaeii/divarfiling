@@ -22,5 +22,5 @@ class ListingFallbackTests(TestCase):
         data = result['data']
         self.assertIn('summary', data)
         self.assertIn('highlights', data)
-        self.assertNotIn('advertiser_note', data)
-        self.assertIn('زیر', data['summary'])
+        self.assertTrue(len(data['highlights']) >= 2)
+        self.assertIn('negotiation_tip', data)

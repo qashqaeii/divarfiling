@@ -1832,12 +1832,32 @@ def _ai_quota_payload(user, *, enabled: bool | None = None):
         }
 
 
-def _ai_text_payload(*, text: str, quota_remaining: int, is_fallback: bool, summary=None):
+def _ai_text_payload(
+    *,
+    text: str,
+    quota_remaining: int,
+    is_fallback: bool,
+    summary=None,
+    provider: str = '',
+    model: str = '',
+    source: str = 'ai',
+):
+    from ai_workspace.constants import resolve_model_label
+
+    effective_source = 'fallback' if (is_fallback and not provider) else source
     payload = {
         'text': text,
         'quota_remaining': quota_remaining,
         'is_fallback': bool(is_fallback),
-        'source': 'fallback' if is_fallback else 'ai',
+        'source': effective_source,
+        'provider': provider or '',
+        'model': model or '',
+        'model_label': resolve_model_label(
+            provider=provider,
+            model=model,
+            is_fallback=is_fallback,
+            source=effective_source,
+        ),
     }
     if summary is not None:
         payload['summary'] = summary
@@ -1868,6 +1888,24 @@ def _fallback_listing_summary(listing) -> str:
         parts.append(f'متراژ {listing.area} متر')
     if listing.rooms:
         parts.append(f'{listing.rooms} خواب')
+    return ' · '.join(str(p) for p in parts if p)
+
+
+def _fallback_property_summary(prop) -> str:
+    parts = [prop.title or 'ملک']
+    loc = ' — '.join(p for p in (prop.neighborhood, prop.city) if p)
+    if loc:
+        parts.append(loc)
+    if prop.sale_price:
+        parts.append(f'قیمت: {prop.sale_price:,}')
+    elif prop.monthly_rent or prop.deposit:
+        rent_part = f'اجاره {prop.monthly_rent:,}' if prop.monthly_rent else ''
+        dep_part = f'ودیعه {prop.deposit:,}' if prop.deposit else ''
+        parts.append(' · '.join(p for p in (dep_part, rent_part) if p))
+    if prop.area:
+        parts.append(f'متراژ {prop.area:g} متر')
+    if prop.rooms:
+        parts.append(f'{prop.rooms} خواب')
     return ' · '.join(str(p) for p in parts if p)
 
 
@@ -1997,6 +2035,8 @@ class AISummarizeListingView(APIView):
                             quota_remaining=quota_remaining,
                             is_fallback=bool(getattr(result, 'is_fallback', False) or payload.get('is_fallback')),
                             summary=summary_data,
+                            provider=payload.get('provider') or getattr(result, 'provider', ''),
+                            model=payload.get('model') or getattr(result, 'model', ''),
                         )
                     )
             except QuotaExceededError as exc:
@@ -2011,12 +2051,102 @@ class AISummarizeListingView(APIView):
                 logger.exception('ai summarize-listing failed token=%s', listing_token)
 
         text = _fallback_listing_summary(listing)
+        from ai_workspace.services.property_summary import build_fallback_for_listing
+        try:
+            summary_data = build_fallback_for_listing(request.user, listing.dataset, listing)
+            text = summary_data.get('summary') or text
+        except Exception:
+            summary_data = {'summary': text}
         return api_ok(
             _ai_text_payload(
                 text=text,
                 quota_remaining=quota_remaining,
                 is_fallback=True,
-                summary={'summary': text},
+                summary=summary_data,
+                provider='rule_based',
+                source='fallback',
+            )
+        )
+
+
+class AISummarizePropertyView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        from ai_workspace.constants import is_ai_enabled
+        from ai_workspace.services.gateway import FeatureDisabledError
+        from ai_workspace.services.listing_summary import result_to_dict as listing_result_to_dict
+        from ai_workspace.services.property_summary import generate_summary_for_user
+        from ai_workspace.services.quota import QuotaExceededError, get_status
+        from workspace.services.crm_scope import property_for_user
+
+        data = _parse_body(request)
+        raw_id = data.get('property_id')
+        try:
+            property_id = int(raw_id)
+        except (TypeError, ValueError):
+            property_id = 0
+        if property_id <= 0:
+            return api_error('شناسه فایل شخصی الزامی است.', code='VALIDATION_ERROR')
+
+        prop = property_for_user(request.user, property_id)
+        if not prop or prop.deleted_at is not None:
+            return api_error('فایل شخصی یافت نشد.', code='NOT_FOUND', status=404)
+
+        quota_payload = _ai_quota_payload(request.user)
+        quota_remaining = int(quota_payload.get('remaining') or 0)
+
+        if is_ai_enabled():
+            try:
+                result = generate_summary_for_user(request.user, property_id)
+                payload = listing_result_to_dict(result)
+                summary_data = payload.get('data') or {}
+                text = summary_data.get('summary') if isinstance(summary_data, dict) else ''
+                if not text:
+                    text = (result.text or '').strip()
+                if text:
+                    quota_remaining = get_status(request.user).remaining
+                    return api_ok(
+                        _ai_text_payload(
+                            text=text,
+                            quota_remaining=quota_remaining,
+                            is_fallback=bool(getattr(result, 'is_fallback', False) or payload.get('is_fallback')),
+                            summary=summary_data,
+                            provider=payload.get('provider') or getattr(result, 'provider', ''),
+                            model=payload.get('model') or getattr(result, 'model', ''),
+                        )
+                    )
+            except LookupError:
+                return api_error('فایل شخصی یافت نشد.', code='NOT_FOUND', status=404)
+            except QuotaExceededError as exc:
+                return api_error(
+                    str(exc) or 'سهمیه روزانه AI تمام شده است.',
+                    code='QUOTA_EXCEEDED',
+                    status=429,
+                )
+            except FeatureDisabledError:
+                pass
+            except Exception:
+                logger.exception('ai summarize-property failed property_id=%s', property_id)
+
+        from ai_workspace.services.property_summary import build_fallback_for_property
+        try:
+            summary_data = build_fallback_for_property(request.user, prop)
+            text = summary_data.get('summary') or ''
+        except Exception:
+            text = _fallback_property_summary(prop)
+            summary_data = {'summary': text}
+        if not text:
+            text = _fallback_property_summary(prop)
+            summary_data = {'summary': text}
+        return api_ok(
+            _ai_text_payload(
+                text=text,
+                quota_remaining=quota_remaining,
+                is_fallback=True,
+                summary=summary_data,
+                provider='rule_based',
+                source='fallback',
             )
         )
 

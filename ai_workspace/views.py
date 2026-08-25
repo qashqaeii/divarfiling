@@ -42,7 +42,7 @@ class ListingSummaryView(AIEnabledMixin, View):
         listing = get_object_or_404(dataset.listings, pk=listing_id)
         try:
             result = generate_summary(request.user, dataset, listing)
-            return JsonResponse(listing_result_to_dict(result))
+            return JsonResponse(listing_result_to_dict(result, user=request.user))
         except FeatureDisabledError as exc:
             return JsonResponse({'ok': False, 'error': str(exc)}, status=403)
         except QuotaExceededError as exc:
@@ -53,7 +53,7 @@ class PropertySummaryView(AIEnabledMixin, View):
     def post(self, request, property_id):
         try:
             result = generate_summary_for_user(request.user, property_id)
-            return JsonResponse(listing_result_to_dict(result))
+            return JsonResponse(listing_result_to_dict(result, user=request.user))
         except LookupError:
             return JsonResponse({'ok': False, 'error': 'فایل شخصی یافت نشد'}, status=404)
         except FeatureDisabledError as exc:

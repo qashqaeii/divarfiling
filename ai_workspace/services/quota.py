@@ -159,3 +159,24 @@ def status_to_dict(status: QuotaStatus) -> Dict[str, Any]:
         'has_license': status.has_license,
         'features': status.features,
     }
+
+
+def feature_quota_dict(user, feature: str) -> Dict[str, Any]:
+    """سهمیه یک قابلیت AI — برای UI وب و پاسخ JSON."""
+    status = get_status(user)
+    feat = status.features.get(feature) or {}
+    limit = int(feat.get('limit') or 0)
+    used = int(feat.get('used') or 0)
+    remaining = int(feat.get('remaining') or 0)
+    return {
+        'feature': feature,
+        'feature_label': FEATURE_LABELS.get(feature, feature),
+        'feature_limit': limit,
+        'feature_used': used,
+        'feature_remaining': remaining,
+        'feature_percent_used': round(used * 100 / limit) if limit else 0,
+        'daily_limit': status.daily_limit,
+        'daily_used': status.used_today,
+        'daily_remaining': status.remaining,
+        'is_unlimited': status.is_unlimited,
+    }

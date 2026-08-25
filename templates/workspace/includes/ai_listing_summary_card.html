@@ -1,0 +1,98 @@
+{% load persian_tags %}
+<section class="ws-ai-card ws-ai-card--listing" id="wsAiListingSummary" data-ai-card aria-label="خلاصه هوشمند فایل">
+    <div class="ws-ai-card__glow" aria-hidden="true"></div>
+    <div class="ws-ai-card__mesh" aria-hidden="true"></div>
+    <div class="ws-ai-card__inner">
+        <header class="ws-ai-card__header">
+            <div class="ws-ai-card__brand">
+                <span class="ws-ai-card__orb">
+                    {% include 'includes/icon_slot.html' with decor='ai' size='hero' class_name='ws-ai-card__icon' only %}
+                </span>
+                <div class="ws-ai-card__titles">
+                    <p class="ws-ai-card__eyebrow">هوش مصنوعی فایلینگ دیوار</p>
+                    <h3 class="ws-ai-card__title">خلاصه هوشمند فایل</h3>
+                </div>
+            </div>
+            <button type="button"
+                    class="ws-ai-card__cta ws-ai-trigger"
+                    data-ai-feature="listing_summary"
+                    data-ai-url="{{ ai_summary_url }}">
+                <span class="ws-ai-card__cta-glow" aria-hidden="true"></span>
+                <span class="ws-ai-card__cta-icon" aria-hidden="true">
+                    {% include 'includes/icon_slot.html' with decor='ai_wand' size='inline' class_name='ws-ai-card__cta-icon-img' only %}
+                </span>
+                <span class="ws-ai-card__cta-label">تولید خلاصه</span>
+            </button>
+        </header>
+
+        {% if ai_listing_summary_quota %}
+        <div class="ws-ai-quota{% if ai_listing_summary_quota.is_unlimited %} ws-ai-quota--unlimited{% elif ai_listing_summary_quota.feature_remaining <= 2 %} ws-ai-quota--low{% endif %}"
+             data-ai-quota-panel
+             role="group"
+             aria-label="ظرفیت روزانه خلاصه هوشمند">
+            <div class="ws-ai-quota__head">
+                <span class="ws-ai-quota__icon" aria-hidden="true"><i class="fas fa-gauge-high"></i></span>
+                <div class="ws-ai-quota__copy">
+                    <span class="ws-ai-quota__title">ظرفیت روزانه خلاصه هوشمند</span>
+                    {% if ai_listing_summary_quota.is_unlimited %}
+                    <span class="ws-ai-quota__subtitle">دسترسی نامحدود</span>
+                    {% else %}
+                    <span class="ws-ai-quota__subtitle">
+                        <span data-ai-quota-used>{{ ai_listing_summary_quota.feature_used|to_persian_digits }}</span>
+                        از
+                        <span data-ai-quota-limit>{{ ai_listing_summary_quota.feature_limit|to_persian_digits }}</span>
+                        درخواست استفاده شده
+                    </span>
+                    {% endif %}
+                </div>
+                {% if ai_listing_summary_quota.is_unlimited %}
+                <span class="ws-ai-quota__pill ws-ai-quota__pill--unlimited">نامحدود</span>
+                {% else %}
+                <span class="ws-ai-quota__pill" data-ai-quota-remaining-pill>
+                    {{ ai_listing_summary_quota.feature_remaining|to_persian_digits }} باقی‌مانده
+                </span>
+                {% endif %}
+            </div>
+            {% if not ai_listing_summary_quota.is_unlimited %}
+            <div class="ws-ai-quota__track"
+                 role="progressbar"
+                 aria-valuemin="0"
+                 aria-valuemax="{{ ai_listing_summary_quota.feature_limit }}"
+                 aria-valuenow="{{ ai_listing_summary_quota.feature_used }}"
+                 data-ai-quota-track>
+                <div class="ws-ai-quota__fill"
+                     data-ai-quota-fill
+                     style="width: {{ ai_listing_summary_quota.feature_percent_used }}%;"></div>
+            </div>
+            <p class="ws-ai-quota__hint">
+                <i class="fas fa-bolt" aria-hidden="true"></i>
+                کل AI امروز:
+                <strong data-ai-daily-remaining>{{ ai_listing_summary_quota.daily_remaining|to_persian_digits }}</strong>
+                از
+                <strong data-ai-daily-limit>{{ ai_listing_summary_quota.daily_limit|to_persian_digits }}</strong>
+                درخواست باقی‌مانده
+            </p>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <div class="ws-ai-card__chips" aria-hidden="true">
+            <span class="ws-ai-card__chip"><i class="fas fa-chart-line"></i> تحلیل بازار</span>
+            <span class="ws-ai-card__chip"><i class="fas fa-handshake"></i> نکته مذاکره</span>
+            <span class="ws-ai-card__chip"><i class="fas fa-building" aria-hidden="true"></i> ویژگی‌های ملک</span>
+        </div>
+
+        <div class="ws-ai-card__body">
+            <div class="ws-ai-card__empty" data-ai-empty>
+                <p class="ws-ai-card__empty-title">خلاصه حرفه‌ای این ملک را یک‌کلیکه بگیرید</p>
+                <p class="ws-ai-card__empty-desc">مناسب ارائه به مشتری، مذاکره و یادداشت داخلی — بر پایه داده‌های همین فایل.</p>
+            </div>
+            <div class="ws-ai-result ws-ai-card__result" hidden></div>
+        </div>
+
+        <footer class="ws-ai-card__footer">
+            <i class="fas fa-shield-halved" aria-hidden="true"></i>
+            <span>مکمل تحلیل آماری — اعداد از سیستم فایلینگ؛ AI فقط توضیح می‌دهد.</span>
+        </footer>
+    </div>
+</section>

@@ -552,52 +552,7 @@
     </div>
 
     {% if ai_enabled and has_bot_license %}
-    <section class="ws-ai-card ws-ai-card--listing" id="wsAiListingSummary" data-ai-card aria-label="خلاصه هوشمند فایل">
-        <div class="ws-ai-card__glow" aria-hidden="true"></div>
-        <div class="ws-ai-card__mesh" aria-hidden="true"></div>
-        <div class="ws-ai-card__inner">
-            <header class="ws-ai-card__header">
-                <div class="ws-ai-card__brand">
-                    <span class="ws-ai-card__orb">
-                        {% include 'includes/icon_slot.html' with decor='ai' size='hero' class_name='ws-ai-card__icon' only %}
-                    </span>
-                    <div class="ws-ai-card__titles">
-                        <p class="ws-ai-card__eyebrow">هوش مصنوعی فایلینگ دیوار</p>
-                        <h3 class="ws-ai-card__title">خلاصه هوشمند فایل</h3>
-                    </div>
-                </div>
-                <button type="button"
-                        class="ws-ai-card__cta ws-ai-trigger"
-                        data-ai-feature="listing_summary"
-                        data-ai-url="{% url 'workspace:ai_workspace:listing_summary' dataset.id listing.id %}">
-                    <span class="ws-ai-card__cta-glow" aria-hidden="true"></span>
-                    <span class="ws-ai-card__cta-icon" aria-hidden="true">
-                        {% include 'includes/icon_slot.html' with decor='ai_wand' size='inline' class_name='ws-ai-card__cta-icon-img' only %}
-                    </span>
-                    <span class="ws-ai-card__cta-label">تولید خلاصه</span>
-                </button>
-            </header>
-
-            <div class="ws-ai-card__chips" aria-hidden="true">
-                <span class="ws-ai-card__chip"><i class="fas fa-chart-line"></i> تحلیل بازار</span>
-                <span class="ws-ai-card__chip"><i class="fas fa-handshake"></i> نکته مذاکره</span>
-                <span class="ws-ai-card__chip"><i class="fas fa-building" aria-hidden="true"></i> ویژگی‌های ملک</span>
-            </div>
-
-            <div class="ws-ai-card__body">
-                <div class="ws-ai-card__empty" data-ai-empty>
-                    <p class="ws-ai-card__empty-title">خلاصه حرفه‌ای این ملک را یک‌کلیکه بگیرید</p>
-                    <p class="ws-ai-card__empty-desc">مناسب ارائه به مشتری، مذاکره و یادداشت داخلی — بر پایه داده‌های همین فایل.</p>
-                </div>
-                <div class="ws-ai-result ws-ai-card__result" hidden></div>
-            </div>
-
-            <footer class="ws-ai-card__footer">
-                <i class="fas fa-shield-halved" aria-hidden="true"></i>
-                <span>مکمل تحلیل آماری — اعداد از سیستم فایلینگ؛ AI فقط توضیح می‌دهد.</span>
-            </footer>
-        </div>
-    </section>
+    {% include 'workspace/includes/ai_listing_summary_card.html' with ai_summary_url=listing_summary_ai_url ai_listing_summary_quota=ai_listing_summary_quota only %}
     {% endif %}
 
     {% if listing.latitude and listing.longitude %}
@@ -876,6 +831,6 @@ document.addEventListener('DOMContentLoaded', function () {
 </script>
 {% endif %}
 {% if ai_enabled and has_bot_license %}
-<script src="{% static 'workspace/js/ai.js' %}?v=6"></script>
+<script src="{% static 'workspace/js/ai.js' %}?v=7"></script>
 {% endif %}
 {% endblock %}

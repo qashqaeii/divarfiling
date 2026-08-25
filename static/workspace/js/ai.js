@@ -19,6 +19,73 @@
             .replace(/"/g, '&quot;');
     }
 
+    function toPersianDigits(value) {
+        return String(value ?? '').replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[Number(d)]);
+    }
+
+    function quotaStateClass(quota) {
+        if (!quota || quota.is_unlimited) return 'ws-ai-quota--unlimited';
+        if ((quota.feature_remaining ?? 0) <= 0) return 'ws-ai-quota--depleted';
+        if ((quota.feature_remaining ?? 0) <= 2) return 'ws-ai-quota--low';
+        return '';
+    }
+
+    function updateCardQuota(card, quota) {
+        if (!card || !quota || quota.is_unlimited) return;
+        const panel = card.querySelector('[data-ai-quota-panel]');
+        if (!panel) return;
+
+        panel.classList.remove('ws-ai-quota--low', 'ws-ai-quota--depleted', 'ws-ai-quota--unlimited');
+        const extra = quotaStateClass(quota);
+        if (extra) panel.classList.add(extra);
+
+        const usedEl = panel.querySelector('[data-ai-quota-used]');
+        const limitEl = panel.querySelector('[data-ai-quota-limit]');
+        const remainingPill = panel.querySelector('[data-ai-quota-remaining-pill]');
+        const fillEl = panel.querySelector('[data-ai-quota-fill]');
+        const trackEl = panel.querySelector('[data-ai-quota-track]');
+        const dailyRemainingEl = panel.querySelector('[data-ai-daily-remaining]');
+        const dailyLimitEl = panel.querySelector('[data-ai-daily-limit]');
+
+        const used = quota.feature_used ?? 0;
+        const limit = quota.feature_limit ?? 0;
+        const remaining = quota.feature_remaining ?? 0;
+        const percent = limit ? Math.min(100, Math.round(used * 100 / limit)) : 0;
+
+        if (usedEl) usedEl.textContent = toPersianDigits(used);
+        if (limitEl) limitEl.textContent = toPersianDigits(limit);
+        if (remainingPill) remainingPill.textContent = `${toPersianDigits(remaining)} باقی‌مانده`;
+        if (fillEl) fillEl.style.width = `${percent}%`;
+        if (trackEl) {
+            trackEl.setAttribute('aria-valuenow', String(used));
+            trackEl.setAttribute('aria-valuemax', String(limit));
+        }
+        if (dailyRemainingEl) dailyRemainingEl.textContent = toPersianDigits(quota.daily_remaining ?? 0);
+        if (dailyLimitEl) dailyLimitEl.textContent = toPersianDigits(quota.daily_limit ?? 0);
+    }
+
+    function renderQuotaInline(quota) {
+        if (!quota) return '';
+        if (quota.is_unlimited) {
+            return '<span class="ws-ai-quota-inline ws-ai-quota-inline--unlimited"><i class="fas fa-infinity" aria-hidden="true"></i> ظرفیت نامحدود</span>';
+        }
+        const used = quota.feature_used ?? 0;
+        const limit = quota.feature_limit ?? 0;
+        const remaining = quota.feature_remaining ?? 0;
+        return `<span class="ws-ai-quota-inline" title="ظرفیت روزانه خلاصه هوشمند">
+            <i class="fas fa-gauge-high" aria-hidden="true"></i>
+            ${toPersianDigits(used)} از ${toPersianDigits(limit)} درخواست
+            · ${toPersianDigits(remaining)} باقی‌مانده
+        </span>`;
+    }
+
+    function renderResultMeta(data) {
+        const badge = renderBadge(data);
+        const quota = renderQuotaInline(data.quota);
+        if (!badge && !quota) return '';
+        return `<div class="ws-ai-result-meta">${badge}${quota}</div>`;
+    }
+
     function setLoading(btn, loading) {
         if (!btn) return;
         btn.disabled = loading;
@@ -61,7 +128,7 @@
     function renderListingSummary(data) {
         const d = data.data || {};
         const highlights = (d.highlights || []).map(h => `<li>${escapeHtml(h)}</li>`).join('');
-        let html = renderBadge(data);
+        let html = renderResultMeta(data);
         if (d.summary) html += `<p class="ws-ai-summary">${escapeHtml(d.summary)}</p>`;
         if (highlights) html += `<ul class="ws-ai-highlights">${highlights}</ul>`;
         if (d.negotiation_tip) html += `<p class="ws-ai-tip"><strong>مذاکره:</strong> ${escapeHtml(d.negotiation_tip)}</p>`;
@@ -134,6 +201,7 @@
         try {
             const data = await postJson(btn.dataset.aiUrl);
             showResult(result, renderListingSummary(data));
+            if (card && data.quota) updateCardQuota(card, data.quota);
         } catch (e) {
             showResult(result, `<p class="ws-ai-error">${escapeHtml(e.message)}</p>`);
         } finally {

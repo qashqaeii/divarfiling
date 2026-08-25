@@ -1638,6 +1638,12 @@ class CRMPropertyDetailView(CRMContextMixin, LoginRequiredMixin, DetailView):
             ctx['show_nearby_pois'] = False
             ctx['nearby_pois_ctx'] = {}
             ctx['nearby_pois_url'] = ''
+        from ai_workspace.constants import FEATURE_LISTING_SUMMARY, is_ai_enabled
+        from ai_workspace.services.quota import feature_quota_dict
+        if is_ai_enabled() and ctx.get('has_bot_license'):
+            ctx['ai_listing_summary_quota'] = feature_quota_dict(
+                self.request.user, FEATURE_LISTING_SUMMARY,
+            )
         return ctx
 
     def _detail_redirect(self, property_id, *, tab='contacts', drawer=''):

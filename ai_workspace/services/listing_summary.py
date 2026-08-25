@@ -9,6 +9,7 @@ from workspace.services.analyzer import benchmark_listing, listings_to_dataframe
 from ai_workspace.constants import FEATURE_LISTING_SUMMARY, resolve_model_label
 from ai_workspace.context_builders import listing_context
 from ai_workspace.services.gateway import GatewayResult, run
+from ai_workspace.services.quota import feature_quota_dict
 
 
 def generate_summary(user, dataset: Dataset, listing: Listing) -> GatewayResult:
@@ -24,8 +25,8 @@ def generate_summary(user, dataset: Dataset, listing: Listing) -> GatewayResult:
     )
 
 
-def result_to_dict(result: GatewayResult) -> Dict[str, Any]:
-    return {
+def result_to_dict(result: GatewayResult, user=None) -> Dict[str, Any]:
+    payload = {
         'ok': True,
         'feature': result.feature,
         'provider': result.provider,
@@ -41,3 +42,6 @@ def result_to_dict(result: GatewayResult) -> Dict[str, Any]:
         'data': result.data,
         'latency_ms': result.latency_ms,
     }
+    if user is not None:
+        payload['quota'] = feature_quota_dict(user, result.feature)
+    return payload

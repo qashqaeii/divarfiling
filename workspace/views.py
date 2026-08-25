@@ -1085,6 +1085,16 @@ class ListingDetailView(DatasetOwnerMixin, DetailView):
         ctx['listings_edit_data'] = {
             str(listing.pk): listing_edit_payload(listing, ctx['feat']),
         }
+        from ai_workspace.constants import FEATURE_LISTING_SUMMARY, is_ai_enabled
+        from ai_workspace.services.quota import feature_quota_dict
+        if is_ai_enabled() and ctx.get('has_bot_license'):
+            ctx['ai_listing_summary_quota'] = feature_quota_dict(
+                self.request.user, FEATURE_LISTING_SUMMARY,
+            )
+            ctx['listing_summary_ai_url'] = reverse(
+                'workspace:ai_workspace:listing_summary',
+                kwargs={'dataset_id': dataset.id, 'listing_id': listing.id},
+            )
         return ctx
 
     def _whatsapp_text(self, listing, tx):

@@ -7,7 +7,13 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
 
 from ai_workspace.constants import FEATURE_LISTING_SUMMARY
-from ai_workspace.services.quota import QuotaExceededError, check_quota, consume_quota, get_or_create_quota
+from ai_workspace.services.quota import (
+    QuotaExceededError,
+    check_quota,
+    consume_quota,
+    feature_quota_dict,
+    get_or_create_quota,
+)
 
 User = get_user_model()
 
@@ -54,3 +60,14 @@ class QuotaTests(TestCase):
         with self.assertRaises(QuotaExceededError) as ctx:
             check_quota(self.user, FEATURE_LISTING_SUMMARY)
         self.assertEqual(ctx.exception.code, 'daily_limit')
+
+    @patch('ai_workspace.services.quota.has_active_bot_license', return_value=True)
+    def test_feature_quota_dict(self, _mock):
+        quota = get_or_create_quota(self.user)
+        quota.listing_summary_used = 3
+        quota.save()
+        payload = feature_quota_dict(self.user, FEATURE_LISTING_SUMMARY)
+        self.assertEqual(payload['feature_used'], 3)
+        self.assertEqual(payload['feature_limit'], 10)
+        self.assertEqual(payload['feature_remaining'], 7)
+        self.assertEqual(payload['feature_percent_used'], 30)

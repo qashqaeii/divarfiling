@@ -436,10 +436,16 @@ def update_property_from_mobile(user, property_id: int, data: Dict[str, Any]) ->
         _merge_mobile_feature_data(prop, data.get('feature_data'))
     if 'images' in data and data.get('images') is not None:
         prop.images = list(data.get('images') or [])
+    old_lat, old_lng = prop.latitude, prop.longitude
     if 'latitude' in data:
         prop.latitude = _parse_float(data.get('latitude'))
     if 'longitude' in data:
         prop.longitude = _parse_float(data.get('longitude'))
+    if ('latitude' in data or 'longitude' in data) and (
+        prop.latitude != old_lat or prop.longitude != old_lng
+    ):
+        if prop.nearby_pois:
+            prop.nearby_pois = {}
 
     prop.save()
     if prop.phone or prop.owner_name:
@@ -558,6 +564,58 @@ def update_property_public_share(
     share = get_or_create_property_share(user, prop)
     _update_share(share, payload)
     return property_public_share_to_dict(share, request)
+
+
+def update_property_location_from_mobile(user, property_id: int, data: Dict[str, Any]) -> Optional[dict]:
+    """ذخیره مختصات ملک از نقشه — هم‌تراز CRMPropertyLocationUpdateView."""
+    from workspace.services.listing_map import parse_map_coordinates
+    from workspace.services.public_share_common import build_map_navigation
+
+    prop = property_for_user(user, property_id)
+    if not prop or not can_edit_property(user, prop):
+        return None
+
+    lat, lng, error = parse_map_coordinates(data.get('latitude'), data.get('longitude'))
+    if error:
+        raise ValueError(error)
+
+    prop.latitude = lat
+    prop.longitude = lng
+    update_fields = ['latitude', 'longitude', 'updated_at']
+    if prop.nearby_pois:
+        prop.nearby_pois = {}
+        update_fields.append('nearby_pois')
+    prop.save(update_fields=update_fields)
+    return {
+        'latitude': lat,
+        'longitude': lng,
+        'map_navigation': build_map_navigation(lat, lng),
+        'property': property_to_dict(prop, detailed=True),
+    }
+
+
+def fetch_property_nearby_pois_from_mobile(
+    user,
+    property_id: int,
+    *,
+    force_refresh: bool = False,
+) -> dict:
+    """دریافت و ذخیره امکانات اطراف — هم‌تراز CRMPropertyNearbyPoisView."""
+    from workspace.services.nearby_pois import NearbyPoiError, fetch_and_save_nearby_pois
+    from workspace.services.property_public_share import build_property_share_context
+
+    prop = property_for_user(user, property_id)
+    if not prop:
+        raise ValueError('ملک یافت نشد.')
+
+    share_ctx = build_property_share_context(user, prop)
+    if share_ctx.mask_sensitive:
+        raise PermissionError('دسترسی ندارید.')
+
+    try:
+        return fetch_and_save_nearby_pois(prop, user, force_refresh=force_refresh)
+    except NearbyPoiError as exc:
+        raise ValueError(exc.message) from exc
 
 
 def upload_property_image(user, property_id: int, uploaded_file, *, request=None) -> dict:

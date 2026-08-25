@@ -48,11 +48,13 @@ from mobile_api.services.deals_service import (
 from mobile_api.services.properties_service import (
     change_property_status,
     create_property_from_mobile,
+    fetch_property_nearby_pois_from_mobile,
     get_property_detail,
     link_property_contact,
     list_properties_paginated,
     soft_delete_property,
     update_property_from_mobile,
+    update_property_location_from_mobile,
     upload_property_image,
 )
 from mobile_api.services.device_service import deactivate_device, register_or_update_device, update_device_fcm
@@ -1349,6 +1351,39 @@ class PropertyDetailView(APIView):
         if not soft_delete_property(request.user, property_id):
             return api_error('ملک یافت نشد.', code='NOT_FOUND', status=404)
         return api_ok({})
+
+
+class PropertyLocationView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, property_id):
+        data = _parse_body(request)
+        try:
+            payload = update_property_location_from_mobile(request.user, property_id, data)
+        except ValueError as exc:
+            return api_error(str(exc), code='VALIDATION_ERROR')
+        if not payload:
+            return api_error('دسترسی ندارید.', code='FORBIDDEN', status=403)
+        return api_ok(payload)
+
+
+class PropertyNearbyPoisView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, property_id):
+        data = _parse_body(request)
+        force_refresh = bool(data.get('refresh'))
+        try:
+            result = fetch_property_nearby_pois_from_mobile(
+                request.user,
+                property_id,
+                force_refresh=force_refresh,
+            )
+        except PermissionError as exc:
+            return api_error(str(exc), code='FORBIDDEN', status=403)
+        except ValueError as exc:
+            return api_error(str(exc), code='VALIDATION_ERROR')
+        return api_ok(result)
 
 
 class PropertyFoldersListView(APIView):

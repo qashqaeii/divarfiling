@@ -822,6 +822,12 @@ def property_detail_to_dict(
         property_data['address'] = ''
         property_data['notes'] = ''
         property_data['neighborhood'] = ''
+    from workspace.services.listing_map import parse_map_coordinates
+    from workspace.services.nearby_pois import nearby_pois_page_context
+    from workspace.services.public_share_common import build_map_navigation
+
+    lat, lng, _ = parse_map_coordinates(prop.latitude, prop.longitude)
+    map_navigation = build_map_navigation(lat, lng) if lat is not None and lng is not None else None
     return {
         'property': property_data,
         'contacts': [] if mask_sensitive else [property_contact_to_dict(c) for c in (contacts or [])],
@@ -832,6 +838,8 @@ def property_detail_to_dict(
         'can_edit': can_edit,
         'mask_sensitive': mask_sensitive,
         'contact_count': 0 if mask_sensitive else len(contacts or []),
+        'map_navigation': map_navigation,
+        'nearby_pois_ctx': nearby_pois_page_context(prop),
     }
 
 

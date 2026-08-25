@@ -528,3 +528,10 @@ def _today_item_to_api(item: Dict[str, Any]) -> Dict[str, Any]:
         },
         'reminder': None,
     }
+
+
+def crm_neighborhoods_payload(user) -> Dict[str, Any]:
+    """محله‌های distinct از فایلینگ‌های فعال کاربر — برای انتخاب محله مخاطب."""
+    from workspace.services.filters import get_user_dataset_neighborhoods
+
+    return {'neighborhoods': get_user_dataset_neighborhoods(user)}

@@ -44,6 +44,7 @@ urlpatterns = [
     path('sync/push', views.SyncPushView.as_view(), name='sync_push'),
 
     path('crm/contacts', views.ContactsListView.as_view(), name='contacts'),
+    path('crm/neighborhoods', views.CrmNeighborhoodsView.as_view(), name='crm_neighborhoods'),
     path('crm/contacts/export', views.ContactsExportView.as_view(), name='contacts_export'),
     path('crm/contacts/quick-lead', views.QuickLeadView.as_view(), name='quick_lead'),
     path('crm/contacts/<int:contact_id>', views.ContactDetailView.as_view(), name='contact_detail'),
@@ -89,6 +90,7 @@ urlpatterns = [
     path('crm/properties/<int:property_id>/contacts', views.PropertyContactsView.as_view(), name='property_contacts'),
     path('crm/properties/<int:property_id>/documents', views.PropertyDocumentsView.as_view(), name='property_documents'),
     path('crm/properties/<int:property_id>/documents/<int:document_id>', views.PropertyDocumentDetailView.as_view(), name='property_document_detail'),
+    path('crm/properties/<int:property_id>/images', views.PropertyImagesView.as_view(), name='property_images'),
 
     path('filing/datasets', views.DatasetsListView.as_view(), name='datasets'),
     path('filing/datasets/<uuid:dataset_id>', views.DatasetDetailView.as_view(), name='dataset_detail'),

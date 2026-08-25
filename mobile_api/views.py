@@ -52,6 +52,7 @@ from mobile_api.services.properties_service import (
     list_properties_paginated,
     soft_delete_property,
     update_property_from_mobile,
+    upload_property_image,
 )
 from mobile_api.services.device_service import deactivate_device, register_or_update_device, update_device_fcm
 from mobile_api.services.documents_service import (
@@ -307,6 +308,15 @@ class LicenseStatusView(APIView):
 
     def get(self, request):
         return api_ok(license_status_payload(request.user))
+
+
+class CrmNeighborhoodsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        from mobile_api.services.crm_service import crm_neighborhoods_payload
+
+        return api_ok(crm_neighborhoods_payload(request.user))
 
 
 class ContactsListView(APIView):
@@ -1491,6 +1501,24 @@ class PropertyDocumentDetailView(APIView):
         if not delete_property_document(request.user, property_id, document_id):
             return api_error('مدرک یافت نشد.', code='NOT_FOUND', status=404)
         return api_ok({'deleted': True})
+
+
+class PropertyImagesView(APIView):
+    permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def post(self, request, property_id):
+        uploaded = request.FILES.get('image')
+        try:
+            payload = upload_property_image(
+                request.user,
+                property_id,
+                uploaded,
+                request=request,
+            )
+            return api_ok(payload, status=201)
+        except ValueError as exc:
+            return api_error(str(exc), code='VALIDATION_ERROR')
 
 
 class CloudExtractionListCreateView(APIView):

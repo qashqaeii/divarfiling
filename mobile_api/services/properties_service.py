@@ -558,3 +558,25 @@ def update_property_public_share(
     share = get_or_create_property_share(user, prop)
     _update_share(share, payload)
     return property_public_share_to_dict(share, request)
+
+
+def upload_property_image(user, property_id: int, uploaded_file, *, request=None) -> dict:
+    """آپلود تصویر ملک — هم‌تراز CRMPropertyImagesView در وب."""
+    from django.core.files.uploadedfile import UploadedFile
+    from workspace.services.property_images import MAX_PROPERTY_IMAGES, store_property_image
+
+    if not isinstance(uploaded_file, UploadedFile):
+        raise ValueError('فایلی انتخاب نشده است.')
+    prop = property_for_user(user, property_id)
+    if not prop:
+        raise ValueError('ملک یافت نشد.')
+    if not can_edit_property(user, prop):
+        raise ValueError('دسترسی ندارید.')
+    images = list(prop.images or [])
+    if len(images) >= MAX_PROPERTY_IMAGES:
+        raise ValueError(f'حداکثر {MAX_PROPERTY_IMAGES} تصویر مجاز است.')
+    url = store_property_image(user, prop, uploaded_file)
+    images.append(url)
+    prop.images = images
+    prop.save(update_fields=['images', 'updated_at'])
+    return {'url': url, 'images': images}

@@ -1,6 +1,7 @@
 """تست محاسبه کمیسیون، تقسیم مشاور/املاک و داشبورد مالی معاملات."""
 from django.contrib.auth import get_user_model
 from django.test import TestCase
+from django.urls import reverse
 
 from workspace.constants import DEAL_STAGE_WON, DEFAULT_DEAL_FINANCE
 from workspace.models import CRMDeal, Customer
@@ -95,3 +96,23 @@ class DealFinanceServiceTests(TestCase):
         self.assertEqual(payload['kpis']['advisor_income'], deal.advisor_commission)
         self.assertTrue(payload['defaults'])
         self.assertEqual(payload['defaults']['advisor_share_percent'], DEFAULT_DEAL_FINANCE['advisor_share_percent'])
+
+    def test_dashboard_period_bounds_do_not_raise(self):
+        for period in ('month', 'last_month', 'year', 'all'):
+            payload = finance_dashboard(self.user, period)
+            self.assertIn('period_label', payload)
+            self.assertIn('kpis', payload)
+            self.assertIn('monthly', payload)
+
+
+class CRMDealFinanceViewTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='09120003333', password='test')
+        self.client.force_login(self.user)
+
+    def test_finance_page_renders_for_all_periods(self):
+        url = reverse('workspace:crm_deals_finance')
+        for period in ('month', 'last_month', 'year', 'all'):
+            response = self.client.get(url, {'period': period})
+            self.assertEqual(response.status_code, 200, period)
+            self.assertContains(response, 'crm-deal-finance.css')

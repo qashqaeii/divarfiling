@@ -10,12 +10,12 @@
 
 {% block ws_surface_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/crm-deals-mobile.css' %}?v=6">
-<link rel="stylesheet" href="{% static 'workspace/css/crm-deal-finance.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-deal-finance.css' %}?v=3">
 {% endblock %}
 
 {% block crm_content %}
 {% with k=finance.kpis s=finance.split %}
-<div class="crm-shell-page crm-page-chrome crm-fin-page">
+<div class="crm-shell-page crm-deals-mobile crm-page-chrome crm-fin-page">
     <header class="crm-deals-mob-header crm-fin-header">
         <div class="crm-deals-mob-header-mesh" aria-hidden="true"></div>
         <div class="crm-deals-mob-header-accent" aria-hidden="true"></div>

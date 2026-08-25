@@ -10,6 +10,15 @@ import jdatetime
 _FA_DIGITS = str.maketrans('۰۱۲۳۴۵۶۷۸۹', '0123456789')
 
 
+def jalali_is_leap_year(year: int) -> bool:
+    """بررسی سال کبیسه شمسی — jdatetime.date.isleap متد نمونه است نه classmethod."""
+    return jdatetime.date(int(year), 1, 1).isleap()
+
+
+def jalali_esfand_days(year: int) -> int:
+    return 30 if jalali_is_leap_year(year) else 29
+
+
 def _normalize_digits(value: str) -> str:
     return (value or '').strip().translate(_FA_DIGITS)
 
@@ -116,7 +125,7 @@ def jalali_month_bounds(reference: Union[date, datetime, None] = None) -> tuple[
         jtoday = jdatetime.date.today()
     jstart = jdatetime.date(jtoday.year, jtoday.month, 1)
     month_days = jdatetime.j_days_in_month[jtoday.month - 1]
-    if jtoday.month == 12 and jdatetime.date.isleap(jtoday.year):
+    if jtoday.month == 12 and jalali_is_leap_year(jtoday.year):
         month_days = 30
     jend = jdatetime.date(jtoday.year, jtoday.month, month_days)
     g_start = jstart.togregorian()
@@ -143,7 +152,7 @@ def jalali_quarter_ahead_display(reference: Union[date, datetime, None] = None) 
         jend_month -= 12
         jend_year += 1
     month_days = jdatetime.j_days_in_month[jend_month - 1]
-    if jend_month == 12 and jdatetime.date.isleap(jend_year):
+    if jend_month == 12 and jalali_is_leap_year(jend_year):
         month_days = 30
     jend = jdatetime.date(jend_year, jend_month, month_days)
     g_start = jtoday.togregorian()

@@ -27,7 +27,7 @@ from workspace.constants import (
 from workspace.mixins import get_or_create_settings
 from workspace.models import CRMDeal
 from workspace.services.crm_scope import deals_qs
-from workspace.services.jalali_input import jalali_month_bounds
+from workspace.services.jalali_input import jalali_esfand_days, jalali_month_bounds
 
 JALALI_MONTHS_FA = (
     'فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور',
@@ -329,7 +329,7 @@ def _period_bounds(period: str) -> Tuple[Optional[date], Optional[date], str]:
         return None, None, labels[period]
     if period == 'year':
         jtoday = jdatetime.date.fromgregorian(date=today)
-        esfand_days = 30 if jdatetime.date.isleap(jtoday.year) else 29
+        esfand_days = jalali_esfand_days(jtoday.year)
         start = jdatetime.date(jtoday.year, 1, 1).togregorian()
         end = jdatetime.date(jtoday.year, 12, esfand_days).togregorian()
         return start, end, f'{labels[period]} {jtoday.year}'
@@ -349,8 +349,8 @@ def _last_jalali_months(count: int = 6) -> List[dict]:
     rows = []
     for _ in range(count):
         days = jdatetime.j_days_in_month[j.month - 1]
-        if j.month == 12 and jdatetime.date.isleap(j.year):
-            days = 30
+        if j.month == 12:
+            days = jalali_esfand_days(j.year)
         end = jdatetime.date(j.year, j.month, days)
         rows.append({
             'key': f'{j.year}-{j.month:02d}',

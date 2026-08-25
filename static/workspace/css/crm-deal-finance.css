@@ -8,6 +8,7 @@
   --fin-gold-soft: #fef3c7;
   --fin-rose: #be123c;
   --fin-rose-soft: #ffe4e6;
+  font-family: inherit;
 }
 
 .crm-fin-header .crm-deals-mob-header-accent {
@@ -66,8 +67,10 @@
 .crm-fin-hero-card strong {
   display: block;
   font-size: 1.35rem;
+  font-weight: 800;
   letter-spacing: -0.02em;
   margin: 8px 0 6px;
+  font-variant-numeric: tabular-nums;
 }
 
 .crm-fin-hero-card em,
@@ -111,7 +114,9 @@
   display: block;
   margin-top: 6px;
   font-size: 0.98rem;
+  font-weight: 800;
   color: #0f172a;
+  font-variant-numeric: tabular-nums;
 }
 
 .crm-fin-kpi--net strong { color: var(--fin-advisor); }
@@ -427,6 +432,13 @@
   .crm-fin-kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .crm-fin-grid { grid-template-columns: 1.1fr 0.9fr; }
   .crm-fin-forecast-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .crm-fin-page.crm-shell-page {
+    gap: 1rem;
+    padding-inline: 0.25rem;
+  }
+  .crm-fin-page .crm-deals-desk-header {
+    display: flex;
+  }
 }
 
 @media (max-width: 768px) {

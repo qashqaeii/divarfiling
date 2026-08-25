@@ -13,8 +13,9 @@ from workspace.services.crm_scope import deals_qs
 from workspace.services.crm import log_activity
 from workspace.services.crm_deal_checklist import ensure_deal_checklist
 from workspace.services.crm_deal_stages import (
-    active_stages_for_user, get_user_deal_stages, is_lost_stage, is_terminal_stage,
-    is_valid_deal_stage, is_won_stage,
+    active_stages_for_user, get_user_deal_stage_defs, get_user_deal_stages,
+    is_lost_stage, is_terminal_stage, is_valid_deal_stage,
+    probability_for_stage, stage_def_for, stage_meta_map,
 )
 
 
@@ -25,11 +26,29 @@ def calculate_commission(value: Optional[int], rate: float) -> Optional[int]:
 
 
 def apply_deal_commission(deal: CRMDeal, *, save: bool = True) -> CRMDeal:
-    if deal.commission_amount is None and deal.value:
-        deal.commission_amount = calculate_commission(deal.value, deal.commission_rate)
-    if save:
-        deal.save(update_fields=['commission_amount', 'updated_at'])
+    from workspace.services.crm_deal_finance import apply_deal_finance
+
+    apply_deal_finance(deal, save=save)
     return deal
+
+
+def deal_stage_age_days(deal: CRMDeal) -> int:
+    ts = deal.stage_changed_at or deal.updated_at or deal.created_at
+    if not ts:
+        return 0
+    if timezone.is_naive(ts):
+        ts = timezone.make_aware(ts)
+    return max(0, (timezone.now() - ts).days)
+
+
+def is_deal_stale(deal: CRMDeal, stage_def: Optional[dict] = None) -> bool:
+    if is_terminal_stage(deal.stage):
+        return False
+    meta = stage_def if stage_def is not None else stage_def_for(deal.user, deal.stage)
+    rot = int((meta or {}).get('rot_days') or 0)
+    if rot <= 0:
+        return False
+    return deal_stage_age_days(deal) >= rot
 
 
 def create_deal(
@@ -41,7 +60,7 @@ def create_deal(
     listing_token: str = '',
     stage: str = 'سرنخ',
     value: Optional[int] = None,
-    probability: int = 50,
+    probability: Optional[int] = None,
     expected_close_date: Optional[date] = None,
     commission_rate: float = DEFAULT_COMMISSION_RATE,
     notes: str = '',
@@ -55,6 +74,10 @@ def create_deal(
         if property_obj:
             title = f'{property_obj.title} — {customer.name}'
 
+    if probability is None:
+        probability = probability_for_stage(user, stage)
+
+    now = timezone.now()
     deal = CRMDeal(
         user=user,
         customer=customer,
@@ -67,13 +90,21 @@ def create_deal(
         expected_close_date=expected_close_date,
         commission_rate=commission_rate,
         notes=notes,
+        stage_changed_at=now,
     )
     if property_obj:
         if property_obj.sale_price and not value:
             deal.value = property_obj.sale_price
         elif property_obj.monthly_rent and not value:
             deal.value = property_obj.monthly_rent
-    apply_deal_commission(deal, save=False)
+    from workspace.services.crm_deal_finance import apply_deal_finance, apply_finance_defaults
+
+    apply_finance_defaults(deal, user)
+    sides = (deal.buyer_commission_rate or 0) + (deal.seller_commission_rate or 0)
+    if deal.deal_kind != 'rent' and abs((commission_rate or 0) - sides) > 0.05:
+        deal.buyer_commission_rate = (commission_rate or 0) / 2.0
+        deal.seller_commission_rate = (commission_rate or 0) / 2.0
+    apply_deal_finance(deal, save=False)
     deal.save()
     ensure_deal_checklist(deal)
     log_activity(
@@ -94,11 +125,19 @@ def update_deal_stage(deal: CRMDeal, new_stage: str, *, lost_reason: str = '') -
     old_stage = deal.stage
     deal.stage = new_stage
     update_fields = ['stage', 'updated_at']
+    if old_stage != new_stage:
+        deal.stage_changed_at = timezone.now()
+        update_fields.append('stage_changed_at')
+        deal.probability = probability_for_stage(deal.user, new_stage)
+        update_fields.append('probability')
     if is_lost_stage(new_stage) and lost_reason:
         deal.lost_reason = lost_reason
         update_fields.append('lost_reason')
     if is_terminal_stage(new_stage) and not deal.closed_at:
         deal.closed_at = timezone.now()
+        update_fields.append('closed_at')
+    elif not is_terminal_stage(new_stage) and deal.closed_at:
+        deal.closed_at = None
         update_fields.append('closed_at')
     deal.save(update_fields=update_fields)
     if old_stage != new_stage:
@@ -114,13 +153,22 @@ def update_deal_stage(deal: CRMDeal, new_stage: str, *, lost_reason: str = '') -
 
 def get_deal_pipeline(user, per_column: int = 20) -> List[Dict[str, Any]]:
     rows = []
-    for stage in get_user_deal_stages(user):
+    for stage_def in get_user_deal_stage_defs(user):
+        stage = stage_def['name']
         qs = deals_qs(user).filter(stage=stage).select_related('customer', 'property')
+        deals = list(qs.order_by('-updated_at')[:per_column])
+        stale_n = sum(1 for d in deals if is_deal_stale(d, stage_def))
         rows.append({
             'stage': stage,
+            'definition': stage_def,
             'count': qs.count(),
+            'stale_count': stale_n,
             'total_value': qs.aggregate(s=Sum('value'))['s'] or 0,
-            'deals': list(qs.order_by('-updated_at')[:per_column]),
+            'deals': deals,
+            'color': stage_def.get('color') or '#94a3b8',
+            'bg': stage_def.get('bg'),
+            'icon': stage_def.get('icon'),
+            'probability': stage_def.get('probability'),
         })
     return rows
 
@@ -137,18 +185,31 @@ def get_deal_stats(user) -> Dict[str, Any]:
     closed = qs.filter(stage=DEAL_STAGE_WON)
     lost = qs.filter(stage=DEAL_STAGE_LOST)
     commission_total = closed.aggregate(s=Sum('commission_amount'))['s'] or 0
+    advisor_income = closed.aggregate(s=Sum('advisor_commission'))['s'] or 0
+    agency_income = closed.aggregate(s=Sum('agency_commission'))['s'] or 0
+    commission_received = closed.aggregate(s=Sum('received_amount'))['s'] or 0
     closed_n = closed.count()
     lost_n = lost.count()
     win_rate = round(closed_n / max(closed_n + lost_n, 1) * 100)
+
+    stale_n = 0
+    meta_map = stage_meta_map(user)
+    for deal in active.only('stage', 'stage_changed_at', 'updated_at', 'created_at', 'user_id'):
+        if is_deal_stale(deal, meta_map.get(deal.stage)):
+            stale_n += 1
 
     return {
         'total': qs.count(),
         'active': active.count(),
         'closed': closed_n,
         'lost': lost_n,
+        'stale': stale_n,
         'pipeline_value': active.aggregate(s=Sum('value'))['s'] or 0,
         'weighted_forecast': weighted,
         'commission_total': commission_total,
+        'advisor_income': advisor_income,
+        'agency_income': agency_income,
+        'commission_received': commission_received,
         'win_rate': win_rate,
         'by_stage': dict(qs.values('stage').annotate(c=Count('id')).values_list('stage', 'c')),
     }
@@ -172,10 +233,21 @@ def filter_deals(user, params: dict):
         qs = qs.filter(stage=DEAL_STAGE_WON)
     elif bucket == 'lost':
         qs = qs.filter(stage=DEAL_STAGE_LOST)
+    elif bucket == 'stale':
+        stale_ids = []
+        meta_map = stage_meta_map(user)
+        active_qs = qs.filter(stage__in=active_stages_for_user(user))
+        for deal in active_qs.only('id', 'stage', 'stage_changed_at', 'updated_at', 'created_at', 'user_id'):
+            if is_deal_stale(deal, meta_map.get(deal.stage)):
+                stale_ids.append(deal.pk)
+        qs = qs.filter(pk__in=stale_ids)
     customer_id = params.get('customer_id', '').strip()
     if customer_id:
         qs = qs.filter(customer_id=customer_id)
     sort = params.get('sort', '-updated_at')
-    allowed = {'title', '-title', 'updated_at', '-updated_at', 'value', '-value', 'expected_close_date'}
+    allowed = {
+        'title', '-title', 'updated_at', '-updated_at', 'value', '-value',
+        'expected_close_date', '-expected_close_date', 'probability', '-probability',
+    }
     qs = qs.order_by(sort if sort in allowed else '-updated_at')
     return qs

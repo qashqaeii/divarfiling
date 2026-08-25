@@ -14,7 +14,15 @@ from workspace.services.crm_deals import (
     get_deal_stats,
     update_deal_stage,
 )
-from workspace.services.crm_deal_stages import get_user_deal_stages
+from workspace.services.crm_deal_stages import (
+    apply_stage_preset,
+    get_user_deal_stage_defs,
+    get_user_deal_stages,
+    reset_user_deal_stages,
+    save_user_deal_stage_defs,
+    serialize_stages_payload,
+    stage_meta_map,
+)
 from workspace.services.crm_scope import deal_for_user, deals_qs, get_agency, property_for_user
 
 
@@ -29,7 +37,8 @@ def list_deals_paginated(
     qs = filter_deals(user, params)
     paginator = Paginator(qs, page_size)
     page_obj = paginator.get_page(page)
-    items = [deal_to_dict(d) for d in page_obj.object_list]
+    meta_map = stage_meta_map(user)
+    items = [deal_to_dict(d, stage_meta=meta_map.get(d.stage) or {}) for d in page_obj.object_list]
     meta = {'page': page, 'page_size': page_size, 'total': paginator.count}
     return items, meta
 
@@ -46,7 +55,8 @@ def get_deal_detail(user, deal_id: int) -> Optional[dict]:
     if not deal:
         return None
     ensure_deal_checklist(deal)
-    return deal_to_dict(deal, detailed=True)
+    meta = stage_meta_map(user).get(deal.stage) or {}
+    return deal_to_dict(deal, detailed=True, stage_meta=meta)
 
 
 def create_deal_from_mobile(user, data: Dict[str, Any]) -> CRMDeal:
@@ -69,6 +79,16 @@ def create_deal_from_mobile(user, data: Dict[str, Any]) -> CRMDeal:
     else:
         value = None
 
+    probability = None
+    if 'probability' in data and data.get('probability') not in (None, ''):
+        probability = int(data.get('probability'))
+
+    expected_close = data.get('expected_close_date') or None
+    if expected_close:
+        from datetime import date as date_cls
+        if isinstance(expected_close, str):
+            expected_close = date_cls.fromisoformat(expected_close[:10])
+
     return create_deal(
         user,
         customer,
@@ -77,7 +97,8 @@ def create_deal_from_mobile(user, data: Dict[str, Any]) -> CRMDeal:
         listing_token=(data.get('listing_token') or '')[:100],
         stage=(data.get('stage') or 'سرنخ').strip(),
         value=value,
-        probability=int(data.get('probability') or 50),
+        probability=probability,
+        expected_close_date=expected_close,
         commission_rate=float(data.get('commission_rate') or 1.0),
         notes=(data.get('notes') or '').strip(),
     )
@@ -98,9 +119,20 @@ def update_deal_from_mobile(user, deal_id: int, data: Dict[str, Any]) -> Optiona
     if 'notes' in data:
         deal.notes = data.get('notes') or ''
     if 'commission_rate' in data:
-        deal.commission_rate = float(data.get('commission_rate') or deal.commission_rate)
+        new_rate = float(data.get('commission_rate') or deal.commission_rate)
+        if abs(new_rate - (deal.commission_rate or 0)) > 0.05:
+            deal.buyer_commission_rate = new_rate / 2.0
+            deal.seller_commission_rate = new_rate / 2.0
+        deal.commission_rate = new_rate
     if 'listing_token' in data:
         deal.listing_token = (data.get('listing_token') or '')[:100]
+    if 'expected_close_date' in data:
+        raw = data.get('expected_close_date')
+        if not raw:
+            deal.expected_close_date = None
+        else:
+            from datetime import date as date_cls
+            deal.expected_close_date = date_cls.fromisoformat(str(raw)[:10])
 
     property_id = data.get('property_id')
     if property_id is not None:
@@ -109,7 +141,13 @@ def update_deal_from_mobile(user, deal_id: int, data: Dict[str, Any]) -> Optiona
         else:
             deal.property = None
 
+    from workspace.services.crm_deal_finance import apply_deal_finance
+
+    apply_deal_finance(deal, save=False)
     deal.save()
+    stage = (data.get('stage') or '').strip()
+    if stage and stage != deal.stage:
+        update_deal_stage(deal, stage, lost_reason=(data.get('lost_reason') or ''))
     return deal
 
 
@@ -123,23 +161,49 @@ def change_deal_stage(user, deal_id: int, stage: str, *, lost_reason: str = '') 
 
 def pipeline_payload(user) -> Dict[str, Any]:
     stages = get_user_deal_stages(user)
+    meta_map = stage_meta_map(user)
     columns = []
     for row in get_deal_pipeline(user, per_column=15):
         columns.append({
             'stage': row['stage'],
             'count': row['count'],
+            'stale_count': row.get('stale_count') or 0,
             'total_value': row['total_value'],
-            'deals': [deal_to_dict(d) for d in row['deals']],
+            'color': row.get('color') or '',
+            'bg': row.get('bg') or '',
+            'icon': row.get('icon') or '',
+            'probability': row.get('probability'),
+            'definition': row.get('definition') or {},
+            'deals': [
+                deal_to_dict(d, stage_meta=meta_map.get(d.stage) or {})
+                for d in row['deals']
+            ],
         })
     return {
         'stages': stages,
+        'definitions': get_user_deal_stage_defs(user),
         'columns': columns,
         'stats': get_deal_stats(user),
     }
 
 
-def stages_payload(user) -> List[str]:
-    return get_user_deal_stages(user)
+def stages_payload(user) -> dict:
+    return serialize_stages_payload(user)
+
+
+def save_stages_from_mobile(user, data: Dict[str, Any]) -> dict:
+    if data.get('reset'):
+        reset_user_deal_stages(user)
+        return serialize_stages_payload(user)
+    preset = (data.get('preset') or '').strip()
+    if preset:
+        apply_stage_preset(user, preset)
+        return serialize_stages_payload(user)
+    raw = data.get('definitions')
+    if raw is None:
+        raw = data.get('stages') or []
+    save_user_deal_stage_defs(user, raw)
+    return serialize_stages_payload(user)
 
 
 def toggle_deal_checklist_item(user, deal_id: int, item_id: str, *, done=None) -> Optional[dict]:
@@ -160,3 +224,32 @@ def delete_deal(user, deal_id: int) -> bool:
         return False
     deal.delete()
     return True
+
+
+def finance_dashboard_payload(user, period: str = 'month') -> dict:
+    from workspace.services.crm_deal_finance import finance_dashboard
+
+    return finance_dashboard(user, period)
+
+
+def finance_settings_payload(user) -> dict:
+    from workspace.services.crm_deal_finance import get_finance_defaults
+
+    return {'defaults': get_finance_defaults(user)}
+
+
+def save_finance_settings_from_mobile(user, data: Dict[str, Any]) -> dict:
+    from workspace.services.crm_deal_finance import save_finance_defaults
+
+    payload = data.get('defaults') if isinstance(data.get('defaults'), dict) else data
+    return {'defaults': save_finance_defaults(user, payload)}
+
+
+def update_deal_finance_from_mobile(user, deal_id: int, data: Dict[str, Any]) -> Optional[CRMDeal]:
+    from workspace.services.crm_deal_finance import apply_deal_finance
+
+    deal = deal_for_user(user, deal_id)
+    if not deal:
+        return None
+    apply_deal_finance(deal, data, save=True)
+    return deal

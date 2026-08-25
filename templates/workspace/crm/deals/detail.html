@@ -10,11 +10,12 @@
 
 {% block crm_extra_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/crm-deal-detail-mobile.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-deal-finance.css' %}?v=1">
 {% endblock %}
 
 {% block crm_content %}
 <div class="crm-deal-detail-pro crm-deal-detail-mobile crm-page-chrome{% if deal.stage == 'بسته‌شده' %} is-won{% elif deal.stage == 'از دست رفته' %} is-lost{% endif %}"
-     style="--deal-accent: {{ deal.stage|crm_deal_stage_dot }}; --deal-prob: {{ deal.probability }};">
+     style="--deal-accent: {{ deal.stage|crm_deal_stage_dot:deal_stage_meta }}; --deal-prob: {{ deal.probability }};">
 
     <section class="crm-deal-dossier crm-deal-hero" aria-label="پرونده معامله">
         <div class="crm-deal-dossier-mesh" aria-hidden="true"></div>
@@ -40,6 +41,9 @@
                     <i class="fas fa-user" aria-hidden="true"></i>
                 </a>
                 {% endif %}
+                <button type="button" class="crm-deal-hero__icon-btn" data-drawer-open="drawer-finance" title="مالی" aria-label="تنظیمات مالی">
+                    <i class="fas fa-coins" aria-hidden="true"></i>
+                </button>
                 <button type="button" class="crm-deal-hero__icon-btn crm-deal-hero__icon-btn--primary" data-drawer-open="drawer-edit" title="ویرایش" aria-label="ویرایش">
                     <i class="fas fa-pen" aria-hidden="true"></i>
                 </button>
@@ -48,13 +52,13 @@
 
         <div class="crm-deal-hero__body">
             <div class="crm-deal-hero__mark" style="{% crm_deal_stage_style deal.stage %}" aria-hidden="true">
-                <i class="fas {{ deal.stage|crm_deal_stage_icon }}"></i>
+                <i class="fas {{ deal.stage|crm_deal_stage_icon:deal_stage_meta }}"></i>
                 <em>{{ deal.probability }}%</em>
             </div>
             <div class="crm-deal-hero__copy">
                 <div class="crm-deal-badges">
                     <span class="crm-deal-stage-badge" style="{% crm_deal_stage_style deal.stage %}">
-                        <i class="fas {{ deal.stage|crm_deal_stage_icon }}" aria-hidden="true"></i>
+                        <i class="fas {{ deal.stage|crm_deal_stage_icon:deal_stage_meta }}" aria-hidden="true"></i>
                         {{ deal.stage }}
                     </span>
                     {% if deal.expected_close_date %}
@@ -111,7 +115,7 @@
                     <i class="fas fa-arrow-right" aria-hidden="true"></i>
                 </a>
                 <span class="crm-deal-type-icon" style="{% crm_deal_stage_style deal.stage %}" aria-hidden="true">
-                    <i class="fas {{ deal.stage|crm_deal_stage_icon }}"></i>
+                    <i class="fas {{ deal.stage|crm_deal_stage_icon:deal_stage_meta }}"></i>
                 </span>
                 <div class="crm-deal-dossier-copy">
                     <nav class="crm-deal-crumb" aria-label="مسیر">
@@ -170,8 +174,8 @@
                 <article class="crm-deal-metric crm-deal-metric--comm">
                     <span class="crm-deal-metric-icon" aria-hidden="true"><i class="fas fa-hand-holding-dollar"></i></span>
                     <div class="crm-deal-metric-body">
-                        <em>کمیسیون</em>
-                        <strong>{% if deal.commission_amount %}{{ deal.commission_amount|ws_money }}{% else %}—{% endif %}</strong>
+                        <em>کمیسیون کل</em>
+                        <strong>{% if finance.commission_amount %}{{ finance.commission_amount|ws_money }}{% else %}—{% endif %}</strong>
                     </div>
                 </article>
                 <article class="crm-deal-metric crm-deal-metric--forecast">
@@ -199,14 +203,14 @@
                     <input type="hidden" name="stage" value="{{ s }}">
                     <button type="submit"
                         class="crm-deal-step {% if forloop.counter0 < deal_stage_index %}is-done{% elif deal.stage == s %}is-active{% endif %}{% if s == 'از دست رفته' %} is-lost{% endif %}"
-                        style="--stage-accent: {{ s|crm_deal_stage_dot }}"
+                        style="--stage-accent: {{ s|crm_deal_stage_dot:deal_stage_meta }}"
                         title="انتقال به {{ s }}"
                         {% if deal.stage == s %}aria-current="step"{% endif %}>
                         <span class="crm-deal-step-dot">
                             {% if forloop.counter0 < deal_stage_index %}
                             <i class="fas fa-check" aria-hidden="true"></i>
                             {% else %}
-                            <i class="fas {{ s|crm_deal_stage_icon }}" aria-hidden="true"></i>
+                            <i class="fas {{ s|crm_deal_stage_icon:deal_stage_meta }}" aria-hidden="true"></i>
                             {% endif %}
                         </span>
                         <span class="crm-deal-step-label">{{ s }}</span>
@@ -277,7 +281,17 @@
                     {% if deal.commission_rate %}
                     <div class="crm-deal-dl-item crm-deal-dl-item--rate">
                         <dt><i class="fas fa-percent" aria-hidden="true"></i>نرخ کمیسیون</dt>
-                        <dd>{{ deal.commission_rate }}%</dd>
+                        <dd>{{ finance.commission_rate }}%</dd>
+                    </div>
+                    {% endif %}
+                    {% if finance.advisor_commission or finance.agency_commission %}
+                    <div class="crm-deal-dl-item crm-deal-dl-item--money">
+                        <dt><i class="fas fa-user-tie" aria-hidden="true"></i>سهم مشاور</dt>
+                        <dd>{{ finance.advisor_commission|ws_money }}</dd>
+                    </div>
+                    <div class="crm-deal-dl-item crm-deal-dl-item--money">
+                        <dt><i class="fas fa-building" aria-hidden="true"></i>سهم املاک</dt>
+                        <dd>{{ finance.agency_commission|ws_money }}</dd>
                     </div>
                     {% endif %}
                     {% if deal.contract_number %}
@@ -376,6 +390,51 @@
                 </a>
             </article>
             {% endif %}
+
+            <article class="crm-deal-side-card crm-deal-block crm-deal-finance-card">
+                <div class="crm-deal-block__mesh" aria-hidden="true"></div>
+                <span class="crm-deal-block__accent" aria-hidden="true"></span>
+                <header class="crm-deal-side-head">
+                    <span class="crm-deal-side-icon crm-deal-side-icon--comm" aria-hidden="true"><i class="fas fa-coins"></i></span>
+                    <div class="crm-deal-side-head-text">
+                        <span class="crm-deal-block__kicker">مدیریت مالی</span>
+                        <h3>کمیسیون این معامله</h3>
+                    </div>
+                </header>
+                <div class="crm-deal-side-card__body">
+                    <div class="crm-fin-mini-grid">
+                        <div class="crm-fin-mini is-advisor">
+                            <em>سهم شما</em>
+                            <strong>{% if finance.advisor_commission %}{{ finance.advisor_commission|ws_money }}{% else %}—{% endif %}</strong>
+                        </div>
+                        <div class="crm-fin-mini is-agency">
+                            <em>سهم املاک</em>
+                            <strong>{% if finance.agency_commission %}{{ finance.agency_commission|ws_money }}{% else %}—{% endif %}</strong>
+                        </div>
+                        <div class="crm-fin-mini">
+                            <em>خریدار / مستأجر</em>
+                            <strong>{% if finance.buyer_commission_amount %}{{ finance.buyer_commission_amount|ws_money }}{% else %}—{% endif %}</strong>
+                        </div>
+                        <div class="crm-fin-mini">
+                            <em>فروشنده / مالک</em>
+                            <strong>{% if finance.seller_commission_amount %}{{ finance.seller_commission_amount|ws_money }}{% else %}—{% endif %}</strong>
+                        </div>
+                    </div>
+                    <p class="crm-deal-commission-base">
+                        {{ finance.deal_kind_label }} · {{ finance.commission_mode_label }}
+                        · <span class="crm-fin-status is-{{ finance.payout_status }}">{{ finance.payout_status_label }}</span>
+                    </p>
+                    {% if finance.net_advisor %}
+                    <p class="crm-deal-commission-base">خالص شما پس از هزینه: <strong>{{ finance.net_advisor|ws_money }}</strong></p>
+                    {% endif %}
+                    <button type="button" class="crm-dash-act crm-dash-act--block" data-drawer-open="drawer-finance">
+                        <i class="fas fa-sliders" aria-hidden="true"></i><span>تنظیمات کامل مالی</span>
+                    </button>
+                    <a href="{% url 'workspace:crm_deals_finance' %}" class="crm-dash-act crm-dash-act--block">
+                        <i class="fas fa-chart-line" aria-hidden="true"></i><span>داشبورد مالی</span>
+                    </a>
+                </div>
+            </article>
 
             {% if crm_agency and can_manage_team %}
             <article class="crm-deal-side-card crm-deal-block crm-deal-commission-card" data-crm-commission data-deal-id="{{ deal.pk }}">
@@ -484,6 +543,10 @@
                 </button>
             </form>
             {% endif %}
+            <button type="button" class="crm-deal-dock-btn" data-drawer-open="drawer-finance" title="مالی">
+                <i class="fas fa-coins" aria-hidden="true"></i>
+                <span>مالی</span>
+            </button>
             <button type="button" class="crm-deal-dock-btn crm-deal-dock-btn--primary" data-drawer-open="drawer-edit" title="ویرایش">
                 <i class="fas fa-pen" aria-hidden="true"></i>
                 <span>ویرایش</span>
@@ -503,6 +566,87 @@
             <div class="crm-drawer-foot">
                 <button type="button" class="crm-btn crm-btn-ghost" data-drawer-close>انصراف</button>
                 <button type="submit" class="crm-btn crm-btn-primary">ذخیره</button>
+            </div>
+        </form>
+    </div>
+</aside>
+<aside class="crm-drawer" id="drawer-finance">
+    <div class="crm-drawer-overlay" data-drawer-close></div>
+    <div class="crm-drawer-panel crm-drawer-panel-lg">
+        <div class="crm-drawer-head">
+            <div>
+                <h2>تنظیمات مالی معامله</h2>
+                <p>کمیسیون طرفین، سهم مشاور و املاک، هزینه و وصول</p>
+            </div>
+            <button type="button" class="crm-drawer-close" data-drawer-close><i class="fas fa-times"></i></button>
+        </div>
+        <form method="post" action="{% url 'workspace:crm_deal_finance' deal.id %}" class="crm-drawer-form" data-crm-finance-form data-basis="{{ finance.basis|default_if_none:0 }}">
+            <div class="crm-drawer-body">
+                {% csrf_token %}
+                <div class="crm-fin-preview" data-finance-preview>
+                    <strong>پیش‌نمایش محاسبه</strong>
+                    <ul>
+                        <li><span>کمیسیون خریدار</span><b data-preview="buyer">{{ finance.buyer_commission_amount|ws_money }}</b></li>
+                        <li><span>کمیسیون فروشنده</span><b data-preview="seller">{{ finance.seller_commission_amount|ws_money }}</b></li>
+                        <li><span>کمیسیون کل</span><b data-preview="total">{{ finance.commission_amount|ws_money }}</b></li>
+                        <li><span>سهم مشاور</span><b data-preview="advisor">{{ finance.advisor_commission|ws_money }}</b></li>
+                        <li><span>سهم املاک</span><b data-preview="agency">{{ finance.agency_commission|ws_money }}</b></li>
+                        <li><span>خالص مشاور</span><b data-preview="net">{{ finance.net_advisor|ws_money }}</b></li>
+                    </ul>
+                </div>
+                <div class="crm-fin-form-grid">
+                    <label>نوع معامله
+                        <select name="deal_kind" class="crm-select" data-fin-field="deal_kind">
+                            <option value="sale"{% if finance.deal_kind == 'sale' %} selected{% endif %}>فروش</option>
+                            <option value="rent"{% if finance.deal_kind == 'rent' %} selected{% endif %}>اجاره</option>
+                        </select>
+                    </label>
+                    <label>نحوه محاسبه
+                        <select name="commission_mode" class="crm-select" data-fin-field="commission_mode">
+                            <option value="percent"{% if finance.commission_mode == 'percent' %} selected{% endif %}>درصد از ارزش</option>
+                            <option value="fixed"{% if finance.commission_mode == 'fixed' %} selected{% endif %}>مبلغ ثابت</option>
+                        </select>
+                    </label>
+                    <label>نرخ خریدار / مستأجر (٪)
+                        <input class="crm-input" type="number" name="buyer_commission_rate" step="0.1" min="0" value="{{ finance.buyer_commission_rate }}" data-fin-field="buyer_rate">
+                    </label>
+                    <label>نرخ فروشنده / مالک (٪)
+                        <input class="crm-input" type="number" name="seller_commission_rate" step="0.1" min="0" value="{{ finance.seller_commission_rate }}" data-fin-field="seller_rate">
+                    </label>
+                    <label>مبلغ کمیسیون خریدار
+                        <input class="crm-input" type="text" name="buyer_commission_amount" value="{{ finance.buyer_commission_amount|default:'' }}" data-fin-field="buyer_amount" inputmode="numeric">
+                    </label>
+                    <label>مبلغ کمیسیون فروشنده
+                        <input class="crm-input" type="text" name="seller_commission_amount" value="{{ finance.seller_commission_amount|default:'' }}" data-fin-field="seller_amount" inputmode="numeric">
+                    </label>
+                    <label>سهم مشاور (٪)
+                        <input class="crm-input" type="number" name="advisor_share_percent" step="1" min="0" max="100" value="{{ finance.advisor_share_percent }}" data-fin-field="advisor_pct">
+                    </label>
+                    <label>سهم املاک (٪)
+                        <input class="crm-input" type="number" name="agency_share_percent" step="1" min="0" max="100" value="{{ finance.agency_share_percent }}" data-fin-field="agency_pct">
+                    </label>
+                    <label>هزینه‌های معامله
+                        <input class="crm-input" type="text" name="deal_costs" value="{{ finance.deal_costs|default:0 }}" data-fin-field="costs" inputmode="numeric">
+                    </label>
+                    <label>مبلغ وصول‌شده
+                        <input class="crm-input" type="text" name="received_amount" value="{{ finance.received_amount|default:0 }}" data-fin-field="received" inputmode="numeric">
+                    </label>
+                    <label>وضعیت وصول
+                        <select name="payout_status" class="crm-select">
+                            <option value="unpaid"{% if finance.payout_status == 'unpaid' %} selected{% endif %}>وصول نشده</option>
+                            <option value="partial"{% if finance.payout_status == 'partial' %} selected{% endif %}>نیمه‌وصول</option>
+                            <option value="paid"{% if finance.payout_status == 'paid' %} selected{% endif %}>وصول شده</option>
+                            <option value="waived"{% if finance.payout_status == 'waived' %} selected{% endif %}>بخشوده</option>
+                        </select>
+                    </label>
+                    <label class="crm-fin-span-2">یادداشت مالی
+                        <textarea class="crm-textarea" name="payout_notes" rows="3">{{ finance.payout_notes }}</textarea>
+                    </label>
+                </div>
+            </div>
+            <div class="crm-drawer-foot">
+                <button type="button" class="crm-btn crm-btn-ghost" data-drawer-close>انصراف</button>
+                <button type="submit" class="crm-btn crm-btn-primary">ذخیره مالی</button>
             </div>
         </form>
     </div>

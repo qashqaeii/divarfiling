@@ -933,14 +933,43 @@ class CRMDealForm(CRMMoneyFieldsMixin, forms.ModelForm):
 
     def save(self, commit=True):
         deal = super().save(commit=False)
+        is_new = not deal.pk
+        previous_stage = None
+        if not is_new:
+            previous_stage = CRMDeal.objects.filter(pk=deal.pk).values_list('stage', flat=True).first()
         if self.user and not deal.user_id:
             deal.user = self.user
         if self.user and not deal.agency_id:
             from workspace.services.crm_scope import get_agency
             deal.agency = get_agency(self.user)
-        if deal.value and deal.commission_rate and not deal.commission_amount:
-            from workspace.services.crm_deals import calculate_commission
-            deal.commission_amount = calculate_commission(deal.value, deal.commission_rate)
+        previous_rate = None
+        if not is_new:
+            previous_rate = CRMDeal.objects.filter(pk=deal.pk).values_list('commission_rate', flat=True).first()
+        from workspace.services.crm_deal_finance import apply_deal_finance, apply_finance_defaults
+
+        if is_new:
+            apply_finance_defaults(deal, self.user)
+            sides = (deal.buyer_commission_rate or 0) + (deal.seller_commission_rate or 0)
+            if deal.deal_kind != 'rent' and abs((deal.commission_rate or 0) - sides) > 0.05:
+                deal.buyer_commission_rate = (deal.commission_rate or 0) / 2.0
+                deal.seller_commission_rate = (deal.commission_rate or 0) / 2.0
+        elif previous_rate is not None and abs((deal.commission_rate or 0) - previous_rate) > 0.05:
+            deal.buyer_commission_rate = (deal.commission_rate or 0) / 2.0
+            deal.seller_commission_rate = (deal.commission_rate or 0) / 2.0
+        apply_deal_finance(deal, save=False)
+        if is_new:
+            from django.utils import timezone
+            deal.stage_changed_at = timezone.now()
+            if self.user:
+                from workspace.services.crm_deal_stages import probability_for_stage
+                if deal.probability in (None, 50):
+                    deal.probability = probability_for_stage(self.user, deal.stage)
+        elif previous_stage and previous_stage != deal.stage:
+            from django.utils import timezone
+            from workspace.services.crm_deal_stages import probability_for_stage
+            deal.stage_changed_at = timezone.now()
+            if self.user:
+                deal.probability = probability_for_stage(self.user, deal.stage)
         if commit:
             deal.save()
             from workspace.services.crm_deal_checklist import ensure_deal_checklist

@@ -100,3 +100,67 @@ class DealsPropertiesApiTests(TestCase):
         data = resp.json()['data']
         self.assertIn('columns', data)
         self.assertIn('stages', data)
+        self.assertIn('definitions', data)
+
+    def test_deal_stages_get_and_save(self):
+        resp = self.client.get('/api/mobile/v1/crm/deals/stages')
+        self.assertEqual(resp.status_code, 200)
+        data = resp.json()['data']
+        self.assertIn('stages', data)
+        self.assertIn('definitions', data)
+        defs = data['definitions']
+        defs[0]['name'] = 'فرصت'
+        save_resp = self.client.post(
+            '/api/mobile/v1/crm/deals/stages',
+            {'definitions': defs},
+            format='json',
+        )
+        self.assertEqual(save_resp.status_code, 200)
+        self.assertTrue(save_resp.json()['ok'])
+        names = save_resp.json()['data']['stages']
+        self.assertEqual(names[0], 'فرصت')
+
+    def test_deal_finance_dashboard_and_update(self):
+        create_resp = self.client.post(
+            '/api/mobile/v1/crm/deals',
+            {
+                'customer_id': self.customer.pk,
+                'property_id': self.property.pk,
+                'title': 'معامله مالی',
+                'stage': 'بسته‌شده',
+                'amount': 2_000_000_000,
+            },
+            format='json',
+        )
+        self.assertEqual(create_resp.status_code, 201)
+        deal_id = create_resp.json()['data']['id']
+        self.assertIn('advisor_commission', create_resp.json()['data'])
+
+        patch_resp = self.client.patch(
+            f'/api/mobile/v1/crm/deals/{deal_id}/finance',
+            {
+                'buyer_commission_rate': 0.5,
+                'seller_commission_rate': 0.5,
+                'advisor_share_percent': 80,
+                'agency_share_percent': 20,
+                'payout_status': 'paid',
+            },
+            format='json',
+        )
+        self.assertEqual(patch_resp.status_code, 200)
+        data = patch_resp.json()['data']
+        self.assertEqual(data['advisor_share_percent'], 80)
+        self.assertEqual(data['payout_status'], 'paid')
+
+        dash = self.client.get('/api/mobile/v1/crm/deals/finance', {'period': 'all'})
+        self.assertEqual(dash.status_code, 200)
+        kpis = dash.json()['data']['kpis']
+        self.assertGreaterEqual(kpis['closed_count'], 1)
+
+        settings_resp = self.client.post(
+            '/api/mobile/v1/crm/deals/finance/settings',
+            {'advisor_share_percent': 75, 'agency_share_percent': 25},
+            format='json',
+        )
+        self.assertEqual(settings_resp.status_code, 200)
+        self.assertEqual(settings_resp.json()['data']['defaults']['advisor_share_percent'], 75)

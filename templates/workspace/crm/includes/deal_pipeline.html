@@ -16,7 +16,7 @@
 
          data-stage="{{ col.stage }}"
 
-         style="--deal-accent: {{ col.stage|crm_deal_stage_dot }}">
+         style="--deal-accent: {% if col.color %}{{ col.color }}{% else %}{{ col.stage|crm_deal_stage_dot:deal_stage_meta }}{% endif %}">
 
 
 
@@ -28,7 +28,7 @@
 
                 <span class="crm-deal-pipeline-head-icon" aria-hidden="true">
 
-                    <i class="fas {{ col.stage|crm_deal_stage_icon }}"></i>
+                    <i class="fas {% if col.icon %}{{ col.icon }}{% else %}{{ col.stage|crm_deal_stage_icon:deal_stage_meta }}{% endif %}"></i>
 
                 </span>
 
@@ -60,7 +60,7 @@
 
             {% if pipeline_interactive %}
 
-            <article class="crm-deal-pipeline-card crm-pipe-card--draggable{% if col.stage == 'بسته‌شده' %} crm-deal-pipeline-card--won{% elif col.stage == 'از دست رفته' %} crm-deal-pipeline-card--lost{% endif %}"
+            <article class="crm-deal-pipeline-card crm-pipe-card--draggable{% if col.stage == 'بسته‌شده' %} crm-deal-pipeline-card--won{% elif col.stage == 'از دست رفته' %} crm-deal-pipeline-card--lost{% endif %}{% if d|crm_deal_is_stale:deal_stage_meta %} is-stale{% endif %}"
 
                      draggable="true"
 

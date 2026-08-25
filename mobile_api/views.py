@@ -39,10 +39,15 @@ from mobile_api.services.dashboard_service import dashboard_payload
 from mobile_api.services.deals_service import (
     change_deal_stage,
     create_deal_from_mobile,
+    finance_dashboard_payload,
+    finance_settings_payload,
     get_deal_detail,
     list_deals_paginated,
     pipeline_payload,
+    save_finance_settings_from_mobile,
+    save_stages_from_mobile,
     stages_payload,
+    update_deal_finance_from_mobile,
     update_deal_from_mobile,
 )
 from mobile_api.services.properties_service import (
@@ -1300,7 +1305,55 @@ class DealStagesView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        return api_ok({'stages': stages_payload(request.user)})
+        return api_ok(stages_payload(request.user))
+
+    def post(self, request):
+        data = _parse_body(request)
+        try:
+            payload = save_stages_from_mobile(request.user, data)
+        except ValueError as exc:
+            return api_error(str(exc), code='VALIDATION_ERROR')
+        return api_ok(payload)
+
+    def put(self, request):
+        return self.post(request)
+
+
+class DealFinanceDashboardView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        period = (request.GET.get('period') or 'month').strip()
+        return api_ok(finance_dashboard_payload(request.user, period))
+
+
+class DealFinanceSettingsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        return api_ok(finance_settings_payload(request.user))
+
+    def post(self, request):
+        data = _parse_body(request)
+        return api_ok(save_finance_settings_from_mobile(request.user, data))
+
+    def put(self, request):
+        return self.post(request)
+
+
+class DealFinanceUpdateView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request, deal_id):
+        data = _parse_body(request)
+        deal = update_deal_finance_from_mobile(request.user, deal_id, data)
+        if not deal:
+            return api_error('معامله یافت نشد.', code='NOT_FOUND', status=404)
+        payload = get_deal_detail(request.user, deal_id)
+        return api_ok(payload)
+
+    def post(self, request, deal_id):
+        return self.patch(request, deal_id)
 
 
 class PropertiesListView(APIView):

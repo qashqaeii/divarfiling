@@ -2884,119 +2884,355 @@ function initCRMDealStagesEditor() {
     const list = document.getElementById('crmStagesList');
     const saveBtn = document.getElementById('crmStagesSave');
     const addBtn = document.getElementById('crmStagesAdd');
+    const resetBtn = document.getElementById('crmStagesReset');
     const dataEl = document.getElementById('crmDealStagesData');
     if (!editor || !list || !dataEl) return;
 
-    const WON = 'بسته‌شده';
-    const LOST = 'از دست رفته';
+    const WON = editor.dataset.won || 'بسته‌شده';
+    const LOST = editor.dataset.lost || 'از دست رفته';
     const url = editor.dataset.stagesUrl || window.crmDealStagesUrl || '';
-    let stages = [];
-    try {
-        stages = JSON.parse(dataEl.textContent || '[]');
-    } catch (e) {
-        stages = [];
-    }
+    const preview = document.getElementById('crmStagesPreview');
+    const presetsEl = document.getElementById('crmStagesPresets');
 
-    function middleStages() {
-        return stages.slice(0, -2);
-    }
+    const parseScript = (id, fallback) => {
+        const el = document.getElementById(id);
+        if (!el) return fallback;
+        try {
+            return JSON.parse(el.textContent || 'null') || fallback;
+        } catch (e) {
+            return fallback;
+        }
+    };
+
+    const palette = parseScript('crmDealStageColors', [
+        '#475569', '#1d4ed8', '#0ea5e9', '#0d9488', '#15803d',
+        '#b45309', '#d97706', '#be185d', '#4338ca', '#7c3aed', '#b91c1c',
+    ]);
+    const icons = parseScript('crmDealStageIcons', [
+        'fa-seedling', 'fa-lightbulb', 'fa-phone', 'fa-comments', 'fa-handshake',
+        'fa-door-open', 'fa-building', 'fa-file-signature', 'fa-file-contract',
+        'fa-key', 'fa-trophy', 'fa-circle-xmark',
+    ]);
+    const presets = parseScript('crmDealStagePresets', []);
+    const counts = parseScript('crmDealStageCounts', {});
+
+    const lighten = (hex) => {
+        const raw = String(hex || '').replace('#', '');
+        if (raw.length !== 6) return '#f1f5f9';
+        const n = parseInt(raw, 16);
+        const r = (n >> 16) & 255;
+        const g = (n >> 8) & 255;
+        const b = n & 255;
+        const mix = (c) => Math.round(c + (255 - c) * 0.86);
+        return `#${[mix(r), mix(g), mix(b)].map((c) => c.toString(16).padStart(2, '0')).join('')}`;
+    };
+
+    const hydrate = (raw) => {
+        if (!Array.isArray(raw) || !raw.length) return [];
+        if (typeof raw[0] === 'string') {
+            return raw.map((name, idx) => ({
+                id: `stage-${idx}`,
+                name,
+                color: palette[idx % palette.length],
+                bg: lighten(palette[idx % palette.length]),
+                icon: icons[idx % icons.length],
+                probability: name === WON ? 100 : name === LOST ? 0 : 40,
+                rot_days: name === WON || name === LOST ? 0 : 5,
+                kind: name === WON ? 'won' : name === LOST ? 'lost' : 'active',
+                description: '',
+                locked: name === WON || name === LOST,
+            }));
+        }
+        return raw.map((item, idx) => ({
+            id: item.id || `stage-${idx}`,
+            name: item.name || `مرحله ${idx + 1}`,
+            color: item.color || palette[idx % palette.length],
+            bg: item.bg || lighten(item.color || palette[idx % palette.length]),
+            icon: item.icon || 'fa-handshake',
+            probability: Number(item.probability ?? 50),
+            rot_days: Number(item.rot_days || 0),
+            kind: item.kind || 'active',
+            description: item.description || '',
+            locked: Boolean(item.locked) || item.name === WON || item.name === LOST,
+        }));
+    };
+
+    let stages = hydrate(parseScript('crmDealStagesData', []));
+    let expandedId = null;
+
+    const middle = () => stages.filter((s) => s.name !== WON && s.name !== LOST);
+    const terminal = () => {
+        const won = stages.find((s) => s.name === WON) || {
+            id: 'won', name: WON, color: '#15803d', bg: '#dcfce7', icon: 'fa-trophy',
+            probability: 100, rot_days: 0, kind: 'won', description: '', locked: true,
+        };
+        const lost = stages.find((s) => s.name === LOST) || {
+            id: 'lost', name: LOST, color: '#b91c1c', bg: '#fee2e2', icon: 'fa-circle-xmark',
+            probability: 0, rot_days: 0, kind: 'lost', description: '', locked: true,
+        };
+        return [won, lost];
+    };
+    const syncOrder = (mids) => { stages = [...mids, ...terminal()]; };
+
+    const escapeHtml = (value) => String(value || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/"/g, '&quot;');
+
+    const renderPreview = () => {
+        if (!preview) return;
+        preview.innerHTML = stages.map((s) => `
+            <span class="crm-stages-preview-seg" style="background:${escapeHtml(s.color)}" title="${escapeHtml(s.name)}"></span>
+        `).join('');
+    };
+
+    const renderPresets = () => {
+        if (!presetsEl) return;
+        presetsEl.innerHTML = presets.map((p) => `
+            <button type="button" class="crm-stages-preset" data-preset="${escapeHtml(p.id)}" title="${escapeHtml(p.description || '')}">
+                <strong>${escapeHtml(p.name)}</strong>
+                <span>${(p.stage_names || []).length} مرحله</span>
+            </button>
+        `).join('');
+        presetsEl.querySelectorAll('[data-preset]').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                const preset = presets.find((p) => p.id === btn.dataset.preset);
+                if (!preset) return;
+                stages = hydrate(preset.definitions || []);
+                expandedId = null;
+                render();
+            });
+        });
+    };
+
+    const pickerHtml = (stage, kind, options, current) => {
+        if (kind === 'color') {
+            return `<div class="crm-stages-swatches">${options.map((c) => `
+                <button type="button" class="crm-stages-swatch${c === current ? ' is-active' : ''}" data-field="color" data-id="${escapeHtml(stage.id)}" data-value="${escapeHtml(c)}" style="background:${escapeHtml(c)}" aria-label="${escapeHtml(c)}"></button>
+            `).join('')}</div>`;
+        }
+        return `<div class="crm-stages-icons">${options.map((ic) => `
+            <button type="button" class="crm-stages-icon${ic === current ? ' is-active' : ''}" data-field="icon" data-id="${escapeHtml(stage.id)}" data-value="${escapeHtml(ic)}" aria-label="${escapeHtml(ic)}">
+                <i class="fas ${escapeHtml(ic)}"></i>
+            </button>
+        `).join('')}</div>`;
+    };
+
+    const cardHtml = (stage, idx, total, locked) => {
+        const count = counts[stage.name] || 0;
+        const expanded = expandedId === stage.id;
+        return `
+            <li class="crm-stages-card${locked ? ' is-locked' : ''}${expanded ? ' is-expanded' : ''}" data-id="${escapeHtml(stage.id)}" ${locked ? '' : 'draggable="true"'}>
+                <div class="crm-stages-card-main">
+                    ${locked ? '<span class="crm-stages-grip is-off"><i class="fas fa-lock"></i></span>' : '<span class="crm-stages-grip" aria-hidden="true"><i class="fas fa-grip-vertical"></i></span>'}
+                    <span class="crm-stages-dot" style="background:${escapeHtml(stage.color)}"></span>
+                    <span class="crm-stages-mark" style="background:${escapeHtml(stage.bg)};color:${escapeHtml(stage.color)}"><i class="fas ${escapeHtml(stage.icon)}"></i></span>
+                    <div class="crm-stages-card-copy">
+                        <input type="text" class="crm-stages-input" value="${escapeHtml(stage.name)}" maxlength="40" ${locked ? 'readonly' : ''} aria-label="نام مرحله">
+                        <p>${count} معامله · احتمال ${stage.probability}٪${stage.rot_days ? ` · کهنگی ${stage.rot_days} روز` : ''}</p>
+                    </div>
+                    <div class="crm-stages-item-actions">
+                        <button type="button" class="crm-stages-expand" title="جزئیات" data-expand="${escapeHtml(stage.id)}"><i class="fas fa-sliders"></i></button>
+                        ${locked ? '' : `
+                            <button type="button" class="crm-stages-up" title="بالا" ${idx === 0 ? 'disabled' : ''}><i class="fas fa-chevron-up"></i></button>
+                            <button type="button" class="crm-stages-down" title="پایین" ${idx === total - 1 ? 'disabled' : ''}><i class="fas fa-chevron-down"></i></button>
+                            <button type="button" class="crm-stages-remove" title="حذف"><i class="fas fa-trash-can"></i></button>
+                        `}
+                    </div>
+                </div>
+                <div class="crm-stages-card-extra">
+                    <label class="crm-stages-field">
+                        <span>توضیح کوتاه</span>
+                        <input type="text" class="crm-stages-desc" maxlength="140" value="${escapeHtml(stage.description)}" placeholder="مثلاً بازدید ملک توسط خریدار">
+                    </label>
+                    <label class="crm-stages-field">
+                        <span>احتمال بستن (${stage.probability}٪)</span>
+                        <input type="range" class="crm-stages-prob" min="0" max="100" step="5" value="${stage.probability}" ${locked ? 'disabled' : ''}>
+                    </label>
+                    ${locked ? '' : `
+                    <label class="crm-stages-field">
+                        <span>مهلت کهنگی (روز) — ۰ یعنی غیرفعال</span>
+                        <input type="number" class="crm-stages-rot" min="0" max="90" value="${stage.rot_days || 0}">
+                    </label>`}
+                    <div class="crm-stages-field">
+                        <span>رنگ</span>
+                        ${pickerHtml(stage, 'color', palette, stage.color)}
+                    </div>
+                    <div class="crm-stages-field">
+                        <span>آیکون</span>
+                        ${pickerHtml(stage, 'icon', icons, stage.icon)}
+                    </div>
+                </div>
+            </li>`;
+    };
 
     function render() {
-        list.innerHTML = '';
-        middleStages().forEach((name, idx) => {
-            const li = document.createElement('li');
-            li.className = 'crm-stages-item';
-            li.draggable = true;
-            li.dataset.index = String(idx);
-            li.innerHTML = `
-                <span class="crm-stages-grip" aria-hidden="true"><i class="fas fa-grip-vertical"></i></span>
-                <input type="text" class="crm-stages-input" value="${name.replace(/"/g, '&quot;')}" maxlength="60" aria-label="نام مرحله">
-                <div class="crm-stages-item-actions">
-                    <button type="button" class="crm-stages-up" title="بالا" ${idx === 0 ? 'disabled' : ''}><i class="fas fa-chevron-up"></i></button>
-                    <button type="button" class="crm-stages-down" title="پایین" ${idx === middleStages().length - 1 ? 'disabled' : ''}><i class="fas fa-chevron-down"></i></button>
-                    <button type="button" class="crm-stages-remove" title="حذف"><i class="fas fa-trash-can"></i></button>
-                </div>`;
-            list.appendChild(li);
-        });
-        const locked = document.createElement('li');
-        locked.className = 'crm-stages-locked';
-        locked.innerHTML = `<span><i class="fas fa-lock"></i> ${WON}</span><span><i class="fas fa-lock"></i> ${LOST}</span>`;
-        list.appendChild(locked);
+        const mids = middle();
+        list.innerHTML = mids.map((s, idx) => cardHtml(s, idx, mids.length, false)).join('')
+            + terminal().map((s) => cardHtml(s, 0, 0, true)).join('');
+        renderPreview();
         bindListEvents();
     }
 
-    function syncFromInputs() {
-        const mids = [...list.querySelectorAll('.crm-stages-item .crm-stages-input')].map(i => i.value.trim());
-        stages = [...mids, WON, LOST];
+    function readCard(li) {
+        const id = li.dataset.id;
+        const stage = stages.find((s) => s.id === id);
+        if (!stage) return;
+        const nameInput = li.querySelector('.crm-stages-input');
+        if (nameInput && !stage.locked) stage.name = nameInput.value.trim() || stage.name;
+        const desc = li.querySelector('.crm-stages-desc');
+        if (desc) stage.description = desc.value.trim();
+        const prob = li.querySelector('.crm-stages-prob');
+        if (prob && !stage.locked) stage.probability = Number(prob.value);
+        const rot = li.querySelector('.crm-stages-rot');
+        if (rot) stage.rot_days = Number(rot.value || 0);
+        stage.bg = lighten(stage.color);
+    }
+
+    function syncFromDom() {
+        list.querySelectorAll('.crm-stages-card').forEach(readCard);
+        syncOrder(middle());
     }
 
     function bindListEvents() {
-        list.querySelectorAll('.crm-stages-input').forEach(inp => {
-            inp.addEventListener('input', syncFromInputs);
+        list.querySelectorAll('.crm-stages-input, .crm-stages-desc, .crm-stages-prob, .crm-stages-rot').forEach((el) => {
+            el.addEventListener('input', () => {
+                const li = el.closest('.crm-stages-card');
+                if (li) readCard(li);
+                renderPreview();
+                const label = el.closest('.crm-stages-field')?.querySelector('span');
+                if (el.classList.contains('crm-stages-prob') && label) {
+                    label.textContent = `احتمال بستن (${el.value}٪)`;
+                }
+            });
         });
-        list.querySelectorAll('.crm-stages-remove').forEach(btn => {
+        list.querySelectorAll('[data-expand]').forEach((btn) => {
             btn.addEventListener('click', () => {
-                syncFromInputs();
-                const idx = Number(btn.closest('.crm-stages-item')?.dataset.index);
-                const mids = middleStages();
+                const id = btn.dataset.expand;
+                expandedId = expandedId === id ? null : id;
+                syncFromDom();
+                render();
+            });
+        });
+        list.querySelectorAll('[data-field]').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                const stage = stages.find((s) => s.id === btn.dataset.id);
+                if (!stage) return;
+                if (btn.dataset.field === 'color') {
+                    stage.color = btn.dataset.value;
+                    stage.bg = lighten(stage.color);
+                } else {
+                    stage.icon = btn.dataset.value;
+                }
+                syncFromDom();
+                render();
+            });
+        });
+        list.querySelectorAll('.crm-stages-remove').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                syncFromDom();
+                const id = btn.closest('.crm-stages-card')?.dataset.id;
+                const mids = middle();
                 if (mids.length <= 1) return;
-                mids.splice(idx, 1);
-                stages = [...mids, WON, LOST];
+                syncOrder(mids.filter((s) => s.id !== id));
                 render();
             });
         });
-        list.querySelectorAll('.crm-stages-up').forEach(btn => {
+        list.querySelectorAll('.crm-stages-up').forEach((btn) => {
             btn.addEventListener('click', () => {
-                syncFromInputs();
-                const idx = Number(btn.closest('.crm-stages-item')?.dataset.index);
+                syncFromDom();
+                const id = btn.closest('.crm-stages-card')?.dataset.id;
+                const mids = middle();
+                const idx = mids.findIndex((s) => s.id === id);
                 if (idx <= 0) return;
-                const mids = middleStages();
                 [mids[idx - 1], mids[idx]] = [mids[idx], mids[idx - 1]];
-                stages = [...mids, WON, LOST];
+                syncOrder(mids);
                 render();
             });
         });
-        list.querySelectorAll('.crm-stages-down').forEach(btn => {
+        list.querySelectorAll('.crm-stages-down').forEach((btn) => {
             btn.addEventListener('click', () => {
-                syncFromInputs();
-                const idx = Number(btn.closest('.crm-stages-item')?.dataset.index);
-                const mids = middleStages();
-                if (idx >= mids.length - 1) return;
+                syncFromDom();
+                const id = btn.closest('.crm-stages-card')?.dataset.id;
+                const mids = middle();
+                const idx = mids.findIndex((s) => s.id === id);
+                if (idx < 0 || idx >= mids.length - 1) return;
                 [mids[idx], mids[idx + 1]] = [mids[idx + 1], mids[idx]];
-                stages = [...mids, WON, LOST];
+                syncOrder(mids);
                 render();
             });
         });
 
-        let dragIdx = null;
-        list.querySelectorAll('.crm-stages-item').forEach(item => {
-            item.addEventListener('dragstart', () => { dragIdx = Number(item.dataset.index); item.classList.add('is-dragging'); });
-            item.addEventListener('dragend', () => { dragIdx = null; item.classList.remove('is-dragging'); });
-            item.addEventListener('dragover', e => e.preventDefault());
-            item.addEventListener('drop', e => {
+        let dragId = null;
+        list.querySelectorAll('.crm-stages-card:not(.is-locked)').forEach((item) => {
+            item.addEventListener('dragstart', () => { dragId = item.dataset.id; item.classList.add('is-dragging'); });
+            item.addEventListener('dragend', () => { dragId = null; item.classList.remove('is-dragging'); });
+            item.addEventListener('dragover', (e) => e.preventDefault());
+            item.addEventListener('drop', (e) => {
                 e.preventDefault();
-                const targetIdx = Number(item.dataset.index);
-                if (dragIdx === null || dragIdx === targetIdx) return;
-                syncFromInputs();
-                const mids = middleStages();
-                const [moved] = mids.splice(dragIdx, 1);
-                mids.splice(targetIdx, 0, moved);
-                stages = [...mids, WON, LOST];
+                const targetId = item.dataset.id;
+                if (!dragId || dragId === targetId) return;
+                syncFromDom();
+                const mids = middle();
+                const from = mids.findIndex((s) => s.id === dragId);
+                const to = mids.findIndex((s) => s.id === targetId);
+                if (from < 0 || to < 0) return;
+                const [moved] = mids.splice(from, 1);
+                mids.splice(to, 0, moved);
+                syncOrder(mids);
                 render();
             });
         });
     }
 
     addBtn?.addEventListener('click', () => {
-        syncFromInputs();
-        const mids = middleStages();
-        mids.push(`مرحله ${mids.length + 1}`);
-        stages = [...mids, WON, LOST];
+        syncFromDom();
+        const mids = middle();
+        if (mids.length >= 12) return;
+        const idx = mids.length + 1;
+        const color = palette[idx % palette.length];
+        mids.push({
+            id: `stage-new-${Date.now()}`,
+            name: `مرحله ${idx}`,
+            color,
+            bg: lighten(color),
+            icon: 'fa-handshake',
+            probability: 50,
+            rot_days: 5,
+            kind: 'active',
+            description: '',
+            locked: false,
+        });
+        syncOrder(mids);
+        expandedId = mids[mids.length - 1].id;
         render();
     });
 
+    resetBtn?.addEventListener('click', async () => {
+        if (!window.confirm('قیف به حالت پیش‌فرض فروش کامل برمی‌گردد. ادامه می‌دهید؟')) return;
+        resetBtn.disabled = true;
+        try {
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken(),
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                body: JSON.stringify({ reset: true }),
+            });
+            const data = await res.json();
+            if (!data.ok) throw new Error(data.error || 'خطا');
+            window.location.reload();
+        } catch (err) {
+            window.alert(err.message || 'بازگشت به پیش‌فرض انجام نشد.');
+        } finally {
+            resetBtn.disabled = false;
+        }
+    });
+
     saveBtn?.addEventListener('click', async () => {
-        syncFromInputs();
+        syncFromDom();
         saveBtn.disabled = true;
         try {
             const res = await fetch(url, {
@@ -3006,7 +3242,7 @@ function initCRMDealStagesEditor() {
                     'X-CSRFToken': getCsrfToken(),
                     'X-Requested-With': 'XMLHttpRequest',
                 },
-                body: JSON.stringify({ stages }),
+                body: JSON.stringify({ definitions: stages }),
             });
             const data = await res.json();
             if (!data.ok) throw new Error(data.error || 'خطا');
@@ -3018,6 +3254,7 @@ function initCRMDealStagesEditor() {
         }
     });
 
+    renderPresets();
     render();
 }
 
@@ -3846,6 +4083,67 @@ function initCRMCommissionSplit() {
             saveBtn.disabled = false;
         }
     });
+}
+
+function initCRMDealFinance() {
+    const form = document.querySelector('[data-crm-finance-form]');
+    if (!form || form.dataset.finBound === '1') return;
+    form.dataset.finBound = '1';
+
+    const money = (n) => {
+        const v = Math.round(Number(n) || 0);
+        try {
+            return new Intl.NumberFormat('fa-IR').format(v) + ' تومان';
+        } catch (err) {
+            return v + ' تومان';
+        }
+    };
+    const num = (el) => {
+        if (!el) return 0;
+        return Number(String(el.value || '0').replace(/[^\d.-]/g, '')) || 0;
+    };
+    const field = (name) => form.querySelector(`[data-fin-field="${name}"]`);
+
+    const render = () => {
+        const basis = Number(form.getAttribute('data-basis') || '0') || 0;
+        const mode = field('commission_mode')?.value || 'percent';
+        const buyerRate = num(field('buyer_rate'));
+        const sellerRate = num(field('seller_rate'));
+        let buyerAmt = num(field('buyer_amount'));
+        let sellerAmt = num(field('seller_amount'));
+        if (mode !== 'fixed' && basis > 0) {
+            buyerAmt = Math.round(basis * buyerRate / 100);
+            sellerAmt = Math.round(basis * sellerRate / 100);
+        }
+        const total = buyerAmt + sellerAmt;
+        let advisorPct = num(field('advisor_pct'));
+        let agencyPct = num(field('agency_pct'));
+        const shareTotal = advisorPct + agencyPct;
+        if (shareTotal > 0 && Math.abs(shareTotal - 100) > 0.01) {
+            advisorPct = advisorPct / shareTotal * 100;
+            agencyPct = 100 - advisorPct;
+        } else if (shareTotal <= 0) {
+            advisorPct = 70;
+            agencyPct = 30;
+        }
+        const advisor = Math.round(total * advisorPct / 100);
+        const agency = total - advisor;
+        const costs = num(field('costs'));
+        const set = (key, val) => {
+            const el = form.querySelector(`[data-preview="${key}"]`);
+            if (el) el.textContent = money(val);
+        };
+        set('buyer', buyerAmt);
+        set('seller', sellerAmt);
+        set('total', total);
+        set('advisor', advisor);
+        set('agency', agency);
+        set('net', advisor - costs);
+    };
+
+    form.addEventListener('input', render);
+    form.addEventListener('change', render);
+    render();
 }
 
 function initCRMDealsPage() {
@@ -4907,6 +5205,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (afterCall) afterCall.scrollIntoView({ block: 'nearest', inline: 'nearest' });
     initCRMPropertyAdvFilters();
     initCRMDealStagesEditor();
+    initCRMDealFinance();
     initCRMDealChecklist();
     initCRMCommissionSplit();
     initCRMContactTeam();

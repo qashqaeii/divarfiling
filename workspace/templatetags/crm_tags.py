@@ -1,7 +1,9 @@
 from django import template
 from django.utils.html import format_html
 
-from workspace.constants import AGENCY_ROLE_STYLES, DEAL_STAGE_COLORS, PROPERTY_TX_COLORS, ROLE_COLORS, shows_lease_deadline
+from workspace.constants import (
+    AGENCY_ROLE_STYLES, DEAL_STAGE_COLORS, DEAL_STAGE_ICONS, PROPERTY_TX_COLORS, ROLE_COLORS, shows_lease_deadline,
+)
 from workspace.services.crm import role_color
 
 register = template.Library()
@@ -118,14 +120,23 @@ def crm_follow_due_class(customer):
     return ''
 
 
-@register.simple_tag
-def crm_deal_stage_style(stage):
+@register.simple_tag(takes_context=True)
+def crm_deal_stage_style(context, stage):
+    meta = (context.get('deal_stage_meta') or {}).get(stage) or {}
+    if meta.get('bg') or meta.get('color'):
+        bg = meta.get('bg') or '#f1f5f9'
+        fg = meta.get('color') or '#475569'
+        return f'background:{bg};color:{fg}'
     bg, fg = DEAL_STAGE_COLORS.get(stage, ('#f1f5f9', '#475569'))
     return f'background:{bg};color:{fg}'
 
 
 @register.filter
-def crm_deal_stage_dot(stage):
+def crm_deal_stage_dot(stage, meta_map=None):
+    if isinstance(meta_map, dict):
+        row = meta_map.get(stage) or {}
+        if row.get('color'):
+            return row['color']
     return DEAL_STAGE_COLORS.get(stage, ('', '#94a3b8'))[1]
 
 
@@ -155,20 +166,22 @@ def crm_tx_status_icon(status):
     return PROPERTY_TX_ICONS.get(status, 'fa-building')
 
 
-DEAL_STAGE_ICONS = {
-    'سرنخ': 'fa-seedling',
-    'مذاکره': 'fa-comments',
-    'بازدید': 'fa-door-open',
-    'پیش‌قرارداد': 'fa-file-signature',
-    'قرارداد': 'fa-file-contract',
-    'بسته‌شده': 'fa-trophy',
-    'از دست رفته': 'fa-circle-xmark',
-}
+@register.filter
+def crm_deal_stage_icon(stage, meta_map=None):
+    if isinstance(meta_map, dict):
+        row = meta_map.get(stage) or {}
+        if row.get('icon'):
+            return row['icon']
+    return DEAL_STAGE_ICONS.get(stage, 'fa-handshake')
 
 
 @register.filter
-def crm_deal_stage_icon(stage):
-    return DEAL_STAGE_ICONS.get(stage, 'fa-handshake')
+def crm_deal_is_stale(deal, meta_map=None):
+    from workspace.services.crm_deals import is_deal_stale
+    meta = None
+    if isinstance(meta_map, dict):
+        meta = meta_map.get(getattr(deal, 'stage', None))
+    return is_deal_stale(deal, meta)
 
 
 @register.simple_tag

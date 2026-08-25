@@ -703,7 +703,17 @@ def document_to_dict(doc: CustomerDocument, *, request=None) -> Dict[str, Any]:
     }
 
 
-def deal_to_dict(d: CRMDeal, *, detailed: bool = False) -> Dict[str, Any]:
+def deal_to_dict(d: CRMDeal, *, detailed: bool = False, stage_meta: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    from workspace.services.crm_deals import deal_stage_age_days, is_deal_stale
+
+    meta = stage_meta if stage_meta is not None else None
+    if meta is None:
+        from workspace.services.crm_deal_stages import stage_def_for
+        meta = stage_def_for(d.user, d.stage) or {}
+    days_in_stage = deal_stage_age_days(d)
+    from workspace.services.crm_deal_finance import serialize_deal_finance
+
+    finance = serialize_deal_finance(d)
     data = {
         'id': d.pk,
         'title': d.title,
@@ -713,10 +723,37 @@ def deal_to_dict(d: CRMDeal, *, detailed: bool = False) -> Dict[str, Any]:
         'property_id': d.property_id,
         'customer_id': d.customer_id,
         'probability': d.probability,
-        'commission_rate': d.commission_rate,
-        'commission_amount': d.commission_amount,
+        'commission_rate': finance['commission_rate'],
+        'commission_amount': finance['commission_amount'],
+        'deal_kind': finance['deal_kind'],
+        'deal_kind_label': finance['deal_kind_label'],
+        'commission_mode': finance['commission_mode'],
+        'buyer_commission_rate': finance['buyer_commission_rate'],
+        'seller_commission_rate': finance['seller_commission_rate'],
+        'buyer_commission_amount': finance['buyer_commission_amount'],
+        'seller_commission_amount': finance['seller_commission_amount'],
+        'advisor_share_percent': finance['advisor_share_percent'],
+        'agency_share_percent': finance['agency_share_percent'],
+        'advisor_commission': finance['advisor_commission'],
+        'agency_commission': finance['agency_commission'],
+        'deal_costs': finance['deal_costs'],
+        'received_amount': finance['received_amount'],
+        'outstanding': finance['outstanding'],
+        'net_advisor': finance['net_advisor'],
+        'payout_status': finance['payout_status'],
+        'payout_status_label': finance['payout_status_label'],
+        'payout_notes': finance['payout_notes'],
         'notes': d.notes or '',
         'updated_at': d.updated_at.isoformat() if d.updated_at else None,
+        'customer_name': d.customer.name if getattr(d, 'customer', None) else '',
+        'property_title': d.property.title if getattr(d, 'property', None) else '',
+        'expected_close_date': d.expected_close_date.isoformat() if d.expected_close_date else None,
+        'is_stale': is_deal_stale(d, meta),
+        'days_in_stage': days_in_stage,
+        'stage_color': meta.get('color') or '',
+        'stage_bg': meta.get('bg') or '',
+        'stage_icon': meta.get('icon') or '',
+        'rot_days': int(meta.get('rot_days') or 0),
     }
     if detailed:
         data.update({
@@ -724,9 +761,8 @@ def deal_to_dict(d: CRMDeal, *, detailed: bool = False) -> Dict[str, Any]:
             'lost_reason': d.lost_reason or '',
             'contract_number': d.contract_number or '',
             'contract_amount': d.contract_amount,
-            'expected_close_date': d.expected_close_date.isoformat() if d.expected_close_date else None,
-            'customer_name': d.customer.name if getattr(d, 'customer', None) else '',
-            'property_title': d.property.title if getattr(d, 'property', None) else '',
+            'stage_description': meta.get('description') or '',
+            'stage_changed_at': d.stage_changed_at.isoformat() if d.stage_changed_at else None,
         })
     return data
 

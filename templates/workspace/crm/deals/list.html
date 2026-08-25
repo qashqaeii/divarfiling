@@ -32,6 +32,9 @@
                 <button type="button" class="crm-deals-mob-icon-btn" data-drawer-open="drawer-deal-stages" title="مراحل" aria-label="تنظیم مراحل">
                     <i class="fas fa-sliders" aria-hidden="true"></i>
                 </button>
+                <a href="{% url 'workspace:crm_deals_finance' %}" class="crm-deals-mob-icon-btn" title="مالی" aria-label="داشبورد مالی">
+                    <i class="fas fa-coins" aria-hidden="true"></i>
+                </a>
                 <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}view=pipeline" class="crm-deals-mob-icon-btn{% if view_mode == 'pipeline' %} is-active{% endif %}" title="کانبان" aria-label="نمای کانبان">
                     <i class="fas fa-table-columns" aria-hidden="true"></i>
                 </a>
@@ -50,6 +53,9 @@
             <button type="button" class="crm-dash-act" data-drawer-open="drawer-deal-stages" title="تنظیم مراحل pipeline">
                 <i class="fas fa-sliders" aria-hidden="true"></i><span>مراحل</span>
             </button>
+            <a href="{% url 'workspace:crm_deals_finance' %}" class="crm-dash-act" title="داشبورد مالی معاملات">
+                <i class="fas fa-coins" aria-hidden="true"></i><span>مالی</span>
+            </a>
             <a href="{% url 'workspace:crm_contacts' %}" class="crm-dash-act" title="مخاطبین">
                 <i class="fas fa-users" aria-hidden="true"></i><span>مخاطبین</span>
             </a>
@@ -72,9 +78,9 @@
             <span class="crm-deals-mob-kpi-val">{{ stats.weighted_forecast|ws_money }}</span>
             <span class="crm-deals-mob-kpi-lbl">پیش‌بینی</span>
         </a>
-        <a href="?view={{ view_mode }}&bucket=closed" class="crm-deals-mob-kpi crm-deals-mob-kpi--comm{% if request.GET.bucket == 'closed' %} is-active{% endif %}">
-            <span class="crm-deals-mob-kpi-val">{{ stats.commission_total|ws_money }}</span>
-            <span class="crm-deals-mob-kpi-lbl">کمیسیون</span>
+        <a href="{% url 'workspace:crm_deals_finance' %}" class="crm-deals-mob-kpi crm-deals-mob-kpi--comm{% if request.GET.bucket == 'closed' %} is-active{% endif %}">
+            <span class="crm-deals-mob-kpi-val">{{ stats.advisor_income|ws_money }}</span>
+            <span class="crm-deals-mob-kpi-lbl">درآمد شما</span>
         </a>
         <a href="?view={{ view_mode }}&bucket=closed" class="crm-deals-mob-kpi crm-deals-mob-kpi--win{% if request.GET.bucket == 'closed' %} is-active{% endif %}">
             <span class="crm-deals-mob-kpi-val">{{ stats.win_rate }}%</span>
@@ -95,13 +101,21 @@
         </article>
     </section>
 
+    {% if stats.stale %}
+    <a href="?view={{ view_mode }}&bucket=stale" class="crm-deals-stale-banner{% if request.GET.bucket == 'stale' %} is-active{% endif %}">
+        <i class="fas fa-hourglass-end" aria-hidden="true"></i>
+        <strong>{{ stats.stale }}</strong>
+        معامله در مرحله فعلی کهنه شده‌اند — نیاز به پیگیری دارند
+    </a>
+    {% endif %}
+
     {% if stats.total %}
     <div class="crm-deals-funnel" aria-label="توزیع مراحل">
         <div class="crm-deals-funnel-bar" aria-hidden="true">
             {% for s in deal_stages %}
             {% with cnt=stats.by_stage|dict_get:s|default:0 %}
             {% if cnt %}
-            <span class="crm-deals-funnel-seg" style="flex: {{ cnt }}; background: {{ s|crm_deal_stage_dot }};" title="{{ s }}: {{ cnt }}"></span>
+            <span class="crm-deals-funnel-seg" style="flex: {{ cnt }}; background: {{ s|crm_deal_stage_dot:deal_stage_meta }};" title="{{ s }}: {{ cnt }}"></span>
             {% endif %}
             {% endwith %}
             {% endfor %}
@@ -111,7 +125,7 @@
             {% with cnt=stats.by_stage|dict_get:s|default:0 %}
             <a href="?view={{ view_mode }}{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}&stage={{ s|urlencode }}"
                class="crm-deals-funnel-chip{% if request.GET.stage == s %} is-active{% endif %}{% if not cnt %} is-empty{% endif %}"
-               style="--stage-accent: {{ s|crm_deal_stage_dot }}">
+               style="--stage-accent: {{ s|crm_deal_stage_dot:deal_stage_meta }}">
                 <span class="crm-deals-funnel-dot" aria-hidden="true"></span>
                 <span class="crm-deals-funnel-name">{{ s }}</span>
                 <span class="crm-deals-funnel-count">{{ cnt }}</span>
@@ -198,7 +212,7 @@
                             <th class="crm-deals-col-stage" scope="col">مرحله</th>
                             <th class="crm-deals-col-value" scope="col">ارزش</th>
                             <th class="crm-deals-col-prob" scope="col">احتمال</th>
-                            <th class="crm-deals-col-commission" scope="col">کمیسیون</th>
+                            <th class="crm-deals-col-commission" scope="col">سهم مشاور</th>
                             <th class="crm-deals-col-updated" scope="col">بروزرسانی</th>
                             <th class="crm-deals-col-action" scope="col"><span class="visually-hidden">عملیات</span></th>
                         </tr>
@@ -206,7 +220,7 @@
                     <tbody>
                         {% for d in deals %}
                         <tr class="crm-deals-row{% if d.stage == 'بسته‌شده' %} is-won{% elif d.stage == 'از دست رفته' %} is-lost{% endif %}{% if d.expected_close_date and d.expected_close_date < today and d.stage != 'بسته‌شده' and d.stage != 'از دست رفته' %} is-overdue{% endif %}"
-                            style="--deal-accent: {{ d.stage|crm_deal_stage_dot }}; --deal-prob: {{ d.probability }};"
+                            style="--deal-accent: {{ d.stage|crm_deal_stage_dot:deal_stage_meta }}; --deal-prob: {{ d.probability }};"
                             data-href="{% url 'workspace:crm_deal_detail' d.id %}">
                             <td class="crm-deals-col-deal" data-label="معامله">
                                 {# Mobile premium card #}
@@ -217,12 +231,12 @@
 
                                     <header class="crm-deal-mcard__top">
                                         <div class="crm-deal-mcard__mark" style="{% crm_deal_stage_style d.stage %}" aria-hidden="true">
-                                            <i class="fas {{ d.stage|crm_deal_stage_icon }}"></i>
+                                            <i class="fas {{ d.stage|crm_deal_stage_icon:deal_stage_meta }}"></i>
                                         </div>
                                         <div class="crm-deal-mcard__head">
                                             <div class="crm-deal-mcard__badges">
                                                 <span class="crm-deal-mcard__stage" style="{% crm_deal_stage_style d.stage %}">
-                                                    <i class="fas {{ d.stage|crm_deal_stage_icon }}" aria-hidden="true"></i>
+                                                    <i class="fas {{ d.stage|crm_deal_stage_icon:deal_stage_meta }}" aria-hidden="true"></i>
                                                     {{ d.stage }}
                                                 </span>
                                                 {% if d.expected_close_date %}
@@ -271,8 +285,8 @@
                                             <strong>{% if d.value %}{{ d.value|ws_money }}{% else %}ثبت نشده{% endif %}</strong>
                                         </div>
                                         <div class="crm-deal-mcard__metric crm-deal-mcard__metric--comm">
-                                            <em>کمیسیون</em>
-                                            <strong>{% if d.commission_amount %}{{ d.commission_amount|ws_money }}{% else %}—{% endif %}</strong>
+                                            <em>سهم شما</em>
+                                            <strong>{% if d.advisor_commission %}{{ d.advisor_commission|ws_money }}{% elif d.commission_amount %}{{ d.commission_amount|ws_money }}{% else %}—{% endif %}</strong>
                                         </div>
                                         <a href="{% url 'workspace:crm_deal_detail' d.id %}" class="crm-deal-mcard__go" aria-label="جزئیات معامله">
                                             <i class="fas fa-arrow-left" aria-hidden="true"></i>
@@ -340,7 +354,10 @@
                                 </div>
                             </td>
                             <td class="crm-deals-money crm-deals-col-commission crm-deals-col--desk" data-label="کمیسیون">
-                                {% if d.commission_amount %}
+                                {% if d.advisor_commission %}
+                                <span class="crm-deals-commission-amount">{{ d.advisor_commission|ws_money }}</span>
+                                {% if d.commission_amount %}<small class="crm-muted">کل {{ d.commission_amount|ws_money }}</small>{% endif %}
+                                {% elif d.commission_amount %}
                                 <span class="crm-deals-commission-amount">{{ d.commission_amount|ws_money }}</span>
                                 {% else %}
                                 <span class="crm-muted">—</span>
@@ -408,30 +425,43 @@
 
 <aside class="crm-drawer" id="drawer-deal-stages">
     <div class="crm-drawer-overlay" data-drawer-close></div>
-    <div class="crm-drawer-panel crm-drawer-panel-lg">
+    <div class="crm-drawer-panel crm-drawer-panel-lg crm-stages-drawer">
         <div class="crm-drawer-head">
             <div>
-                <h2>مراحل pipeline</h2>
-                <p>مراحل میانی را اضافه، حذف یا مرتب کنید. دو مرحله آخر ثابت هستند.</p>
+                <h2>طراحی قیف فروش</h2>
+                <p>مراحل، رنگ، احتمال بستن و مهلت کهنگی را برای دفتر خود تنظیم کنید.</p>
             </div>
             <button type="button" class="crm-drawer-close" data-drawer-close><i class="fas fa-times" aria-hidden="true"></i></button>
         </div>
         <div class="crm-drawer-body crm-stages-editor" id="crmDealStagesEditor"
-             data-stages-url="{% url 'workspace:crm_deal_stages' %}">
+             data-stages-url="{% url 'workspace:crm_deal_stages' %}"
+             data-won="بسته‌شده"
+             data-lost="از دست رفته">
             {{ deal_stages_json|json_script:"crmDealStagesData" }}
+            {{ deal_stages_payload.presets|json_script:"crmDealStagePresets" }}
+            {{ deal_stages_payload.counts|json_script:"crmDealStageCounts" }}
+            {{ deal_stages_payload.icons|json_script:"crmDealStageIcons" }}
+            {{ deal_stages_payload.colors|json_script:"crmDealStageColors" }}
+            <div class="crm-stages-presets" id="crmStagesPresets" role="list"></div>
+            <div class="crm-stages-preview" id="crmStagesPreview" aria-hidden="true"></div>
             <ul class="crm-stages-list" id="crmStagesList" aria-label="مراحل معامله"></ul>
-            <button type="button" class="crm-dash-act crm-stages-add" id="crmStagesAdd">
-                <i class="fas fa-plus" aria-hidden="true"></i><span>مرحله جدید</span>
-            </button>
+            <div class="crm-stages-toolbar">
+                <button type="button" class="crm-dash-act crm-stages-add" id="crmStagesAdd">
+                    <i class="fas fa-plus" aria-hidden="true"></i><span>مرحله جدید</span>
+                </button>
+                <button type="button" class="crm-dash-act crm-stages-reset" id="crmStagesReset">
+                    <i class="fas fa-rotate-left" aria-hidden="true"></i><span>بازگشت به پیش‌فرض</span>
+                </button>
+            </div>
             <p class="crm-stages-hint">
                 <i class="fas fa-lock" aria-hidden="true"></i>
-                «بسته‌شده» و «از دست رفته» همیشه در انتها می‌مانند.
+                «بسته‌شده» و «از دست رفته» ثابت می‌مانند. با جابه‌جایی مرحله، احتمال بستن معامله به‌صورت خودکار به‌روز می‌شود.
             </p>
         </div>
         <div class="crm-drawer-foot">
             <button type="button" class="crm-btn crm-btn-ghost" data-drawer-close>انصراف</button>
             <button type="button" class="crm-btn crm-btn-primary" id="crmStagesSave">
-                <i class="fas fa-check" aria-hidden="true"></i> ذخیره مراحل
+                <i class="fas fa-check" aria-hidden="true"></i> ذخیره قیف
             </button>
         </div>
     </div>

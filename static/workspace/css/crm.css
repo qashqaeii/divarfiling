@@ -15621,39 +15621,95 @@ select.crm-files-adv-control {
     .crm-saved-filters-actions { opacity: 1; }
 }
 
-/* ?????? B2: Deal stages editor ??????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????? */
-.crm-stages-editor { display: flex; flex-direction: column; gap: 0.75rem; }
+/* ── B2: Deal stages editor ─────────────────────────────────────────────── */
+.crm-stages-editor { display: flex; flex-direction: column; gap: 0.85rem; }
+.crm-stages-drawer .crm-drawer-panel { max-width: 42rem; }
+.crm-stages-presets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+.crm-stages-preset {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.1rem;
+    padding: 0.5rem 0.7rem;
+    border-radius: 12px;
+    border: 1px solid var(--ws-border);
+    background: var(--ws-surface);
+    cursor: pointer;
+    text-align: right;
+}
+.crm-stages-preset strong { font-size: 0.72rem; color: var(--ws-text); }
+.crm-stages-preset span { font-size: 0.58rem; color: var(--ws-text-muted); }
+.crm-stages-preset:hover { border-color: color-mix(in srgb, var(--ws-primary) 45%, var(--ws-border)); }
+.crm-stages-preview {
+    display: flex;
+    height: 8px;
+    border-radius: 999px;
+    overflow: hidden;
+    background: var(--ws-border);
+}
+.crm-stages-preview-seg { flex: 1; min-width: 8px; }
 .crm-stages-list {
     list-style: none;
     margin: 0;
     padding: 0;
     display: flex;
     flex-direction: column;
-    gap: 0.4rem;
+    gap: 0.5rem;
 }
-.crm-stages-item {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-    padding: 0.45rem 0.5rem;
-    border-radius: 12px;
+.crm-stages-card {
+    border-radius: 14px;
     border: 1px solid var(--ws-border);
     background: var(--ws-surface);
+    overflow: hidden;
     transition: box-shadow 0.12s, opacity 0.12s;
 }
-.crm-stages-item.is-dragging { opacity: 0.55; }
+.crm-stages-card.is-dragging { opacity: 0.55; }
+.crm-stages-card.is-expanded { box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08); }
+.crm-stages-card-main {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.55rem 0.6rem;
+}
+.crm-stages-card-copy { flex: 1; min-width: 0; }
+.crm-stages-card-copy p {
+    margin: 0.1rem 0 0;
+    font-size: 0.58rem;
+    color: var(--ws-text-muted);
+}
+.crm-stages-dot {
+    width: 0.55rem;
+    height: 0.55rem;
+    border-radius: 999px;
+    flex-shrink: 0;
+}
+.crm-stages-mark {
+    width: 1.85rem;
+    height: 1.85rem;
+    border-radius: 9px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.72rem;
+    flex-shrink: 0;
+}
 .crm-stages-grip {
     color: var(--ws-text-muted);
     opacity: 0.45;
     font-size: 0.62rem;
     cursor: grab;
 }
+.crm-stages-grip.is-off { cursor: default; opacity: 0.7; }
 .crm-stages-input {
-    flex: 1;
+    width: 100%;
     border: none;
     background: transparent;
-    font-size: 0.72rem;
-    font-weight: 600;
+    font-size: 0.78rem;
+    font-weight: 700;
     color: var(--ws-text);
     outline: none;
     min-width: 0;
@@ -15663,10 +15719,10 @@ select.crm-files-adv-control {
     gap: 0.15rem;
 }
 .crm-stages-item-actions button {
-    width: 1.5rem;
-    height: 1.5rem;
+    width: 1.55rem;
+    height: 1.55rem;
     border: 1px solid var(--ws-border);
-    border-radius: 7px;
+    border-radius: 8px;
     background: var(--ws-bg);
     color: var(--ws-text-muted);
     cursor: pointer;
@@ -15674,27 +15730,53 @@ select.crm-files-adv-control {
 }
 .crm-stages-item-actions button:disabled { opacity: 0.35; cursor: default; }
 .crm-stages-remove:hover { color: #dc2626; border-color: #fecaca; }
-.crm-stages-locked {
-    display: flex;
-    gap: 0.5rem;
-    padding: 0.5rem;
-    margin-top: 0.25rem;
+.crm-stages-card-extra {
+    display: none;
+    padding: 0 0.75rem 0.75rem;
+    gap: 0.55rem;
+    flex-direction: column;
+    border-top: 1px solid color-mix(in srgb, var(--ws-border) 80%, transparent);
+}
+.crm-stages-card.is-expanded .crm-stages-card-extra { display: flex; }
+.crm-stages-field { display: flex; flex-direction: column; gap: 0.3rem; }
+.crm-stages-field > span { font-size: 0.6rem; font-weight: 600; color: var(--ws-text-muted); }
+.crm-stages-desc, .crm-stages-rot {
+    border: 1px solid var(--ws-border);
     border-radius: 10px;
-    background: color-mix(in srgb, var(--ws-text-muted) 6%, var(--ws-surface));
-    font-size: 0.62rem;
-    font-weight: 600;
-    color: var(--ws-text-muted);
+    padding: 0.4rem 0.55rem;
+    font-size: 0.72rem;
+    background: var(--ws-bg);
+    color: var(--ws-text);
 }
-.crm-stages-locked span {
-    flex: 1;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    padding: 0.35rem 0.5rem;
+.crm-stages-swatches, .crm-stages-icons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+}
+.crm-stages-swatch {
+    width: 1.35rem;
+    height: 1.35rem;
+    border-radius: 999px;
+    border: 2px solid transparent;
+    cursor: pointer;
+}
+.crm-stages-swatch.is-active { border-color: var(--ws-text); }
+.crm-stages-icon {
+    width: 1.85rem;
+    height: 1.85rem;
     border-radius: 8px;
-    border: 1px dashed var(--ws-border);
+    border: 1px solid var(--ws-border);
+    background: var(--ws-bg);
+    color: var(--ws-text-muted);
+    cursor: pointer;
 }
-.crm-stages-add { align-self: flex-start; }
+.crm-stages-icon.is-active {
+    color: var(--ws-primary);
+    border-color: color-mix(in srgb, var(--ws-primary) 50%, var(--ws-border));
+    background: color-mix(in srgb, var(--ws-primary) 10%, var(--ws-surface));
+}
+.crm-stages-toolbar { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.crm-stages-add, .crm-stages-reset { align-self: flex-start; }
 .crm-stages-hint {
     margin: 0;
     font-size: 0.6rem;
@@ -15703,6 +15785,21 @@ select.crm-files-adv-control {
     align-items: center;
     gap: 0.35rem;
 }
+.crm-deals-stale-banner {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    margin: 0.5rem 1rem 0;
+    padding: 0.55rem 0.75rem;
+    border-radius: 12px;
+    background: #fff7ed;
+    color: #9a3412;
+    font-size: 0.72rem;
+    text-decoration: none;
+    border: 1px solid #fed7aa;
+}
+.crm-deals-stale-banner.is-active { box-shadow: 0 0 0 2px #fdba74; }
+.crm-deal-pipeline-card.is-stale { outline: 1px dashed #f59e0b; }
 
 /* ?????? B8: Deal checklist ??????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????? */
 .crm-deal-checklist {

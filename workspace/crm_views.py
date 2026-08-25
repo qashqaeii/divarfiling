@@ -130,8 +130,14 @@ from workspace.services.crm_deals import (
     apply_deal_commission, create_deal, filter_deals, get_deal_pipeline,
     get_deal_stats, update_deal_stage,
 )
+from workspace.services.crm_deal_finance import (
+    apply_deal_finance, finance_dashboard, get_finance_defaults,
+    save_finance_defaults, serialize_deal_finance,
+)
 from workspace.services.crm_deal_stages import (
-    get_user_deal_stages, is_valid_deal_stage, save_user_deal_stages,
+    apply_stage_preset, get_user_deal_stage_defs, get_user_deal_stages,
+    is_valid_deal_stage, reset_user_deal_stages, save_user_deal_stage_defs,
+    serialize_stages_payload, stage_meta_map,
 )
 from workspace.services.crm_deal_checklist import (
     checklist_progress, ensure_deal_checklist, toggle_checklist_item,
@@ -2129,7 +2135,10 @@ class CRMDealListView(CRMContextMixin, LoginRequiredMixin, ListView):
         ctx = super().get_context_data(**kwargs)
         ctx['stats'] = get_deal_stats(self.request.user)
         ctx['deal_stages'] = get_user_deal_stages(self.request.user)
-        ctx['deal_stages_json'] = json.dumps(ctx['deal_stages'], ensure_ascii=False)
+        ctx['deal_stage_defs'] = get_user_deal_stage_defs(self.request.user)
+        ctx['deal_stage_meta'] = stage_meta_map(self.request.user)
+        ctx['deal_stages_json'] = json.dumps(ctx['deal_stage_defs'], ensure_ascii=False)
+        ctx['deal_stages_payload'] = serialize_stages_payload(self.request.user)
         ctx['view_mode'] = self.request.GET.get('view', 'table')
         ctx['pipeline'] = get_deal_pipeline(self.request.user, per_column=30)
         ctx['pipeline_interactive'] = True
@@ -2179,6 +2188,8 @@ class CRMDealDetailView(CRMContextMixin, LoginRequiredMixin, DetailView):
         ensure_deal_checklist(d)
         ctx['deal_form'] = CRMDealForm(user=self.request.user, instance=d)
         ctx['deal_stages'] = stages
+        ctx['deal_stage_defs'] = get_user_deal_stage_defs(self.request.user)
+        ctx['deal_stage_meta'] = stage_meta_map(self.request.user)
         ctx['deal_stage_index'] = stages.index(d.stage) if d.stage in stages else 0
         ctx['checklist'] = d.checklist or []
         ctx['checklist_progress'] = checklist_progress(ctx['checklist'])
@@ -2192,6 +2203,8 @@ class CRMDealDetailView(CRMContextMixin, LoginRequiredMixin, DetailView):
         ctx['commission_splits'] = list(
             d.commission_splits.select_related('member__user').order_by('-percent')
         )
+        ctx['finance'] = serialize_deal_finance(d)
+        ctx['finance_defaults'] = get_finance_defaults(self.request.user)
         return ctx
 
     def post(self, request, deal_id):
@@ -2283,11 +2296,10 @@ class CRMDealStageUpdateView(LoginRequiredMixin, View):
 
 
 class CRMDealStagesView(LoginRequiredMixin, View):
-    """مدیریت مراحل سفارشی pipeline — B2."""
+    """مدیریت مراحل سفارشی pipeline."""
 
     def get(self, request):
-        stages = get_user_deal_stages(request.user)
-        return JsonResponse({'ok': True, 'stages': stages})
+        return JsonResponse({'ok': True, **serialize_stages_payload(request.user)})
 
     def post(self, request):
         try:
@@ -2295,10 +2307,22 @@ class CRMDealStagesView(LoginRequiredMixin, View):
         except (json.JSONDecodeError, UnicodeDecodeError):
             return JsonResponse({'ok': False, 'error': 'درخواست نامعتبر'}, status=400)
         try:
-            stages = save_user_deal_stages(request.user, payload.get('stages') or [])
+            if payload.get('reset'):
+                defs = reset_user_deal_stages(request.user)
+            elif payload.get('preset'):
+                defs = apply_stage_preset(request.user, str(payload.get('preset')).strip())
+            else:
+                raw = payload.get('definitions')
+                if raw is None:
+                    raw = payload.get('stages') or []
+                defs = save_user_deal_stage_defs(request.user, raw)
         except ValueError as exc:
             return JsonResponse({'ok': False, 'error': str(exc)}, status=400)
-        return JsonResponse({'ok': True, 'stages': stages})
+        return JsonResponse({
+            'ok': True,
+            'stages': [d['name'] for d in defs],
+            'definitions': defs,
+        })
 
 
 class CRMDealChecklistView(LoginRequiredMixin, View):
@@ -2323,6 +2347,81 @@ class CRMDealChecklistView(LoginRequiredMixin, View):
         except ValueError as exc:
             return JsonResponse({'ok': False, 'error': str(exc)}, status=400)
         return JsonResponse({'ok': True, **result})
+
+
+class CRMDealFinanceDashboardView(CRMContextMixin, LoginRequiredMixin, TemplateView):
+    template_name = 'workspace/crm/deals/finance.html'
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        period = (self.request.GET.get('period') or 'month').strip()
+        ctx['finance'] = finance_dashboard(self.request.user, period)
+        ctx['crm_section'] = 'deals-finance'
+        ctx['period'] = ctx['finance']['period']
+        return ctx
+
+
+class CRMDealFinanceSettingsView(LoginRequiredMixin, View):
+    def get(self, request):
+        return JsonResponse({'ok': True, 'defaults': get_finance_defaults(request.user)})
+
+    def post(self, request):
+        payload = {}
+        if request.META.get('CONTENT_TYPE', '').startswith('application/json'):
+            try:
+                payload = json.loads(request.body.decode('utf-8'))
+            except (json.JSONDecodeError, UnicodeDecodeError):
+                return JsonResponse({'ok': False, 'error': 'درخواست نامعتبر'}, status=400)
+        else:
+            payload = request.POST.dict()
+        defaults = save_finance_defaults(request.user, payload.get('defaults') if isinstance(payload.get('defaults'), dict) else payload)
+        if request.META.get('CONTENT_TYPE', '').startswith('application/json'):
+            return JsonResponse({'ok': True, 'defaults': defaults})
+        messages.success(request, 'پیش‌فرض کمیسیون ذخیره شد.')
+        nxt = request.POST.get('next') or reverse('workspace:crm_deals_finance')
+        return redirect(nxt)
+
+
+class CRMDealFinanceUpdateView(LoginRequiredMixin, View):
+    def post(self, request, deal_id):
+        deal = deal_for_user(request.user, deal_id)
+        if not deal:
+            if request.META.get('CONTENT_TYPE', '').startswith('application/json'):
+                return JsonResponse({'ok': False, 'error': 'معامله یافت نشد'}, status=404)
+            messages.error(request, 'معامله یافت نشد.')
+            return redirect('workspace:crm_deals')
+        if request.META.get('CONTENT_TYPE', '').startswith('application/json'):
+            try:
+                payload = json.loads(request.body.decode('utf-8'))
+            except (json.JSONDecodeError, UnicodeDecodeError):
+                return JsonResponse({'ok': False, 'error': 'درخواست نامعتبر'}, status=400)
+        else:
+            payload = {
+                'deal_kind': request.POST.get('deal_kind'),
+                'commission_mode': request.POST.get('commission_mode'),
+                'buyer_commission_rate': request.POST.get('buyer_commission_rate'),
+                'seller_commission_rate': request.POST.get('seller_commission_rate'),
+                'buyer_commission_amount': request.POST.get('buyer_commission_amount'),
+                'seller_commission_amount': request.POST.get('seller_commission_amount'),
+                'advisor_share_percent': request.POST.get('advisor_share_percent'),
+                'agency_share_percent': request.POST.get('agency_share_percent'),
+                'deal_costs': request.POST.get('deal_costs'),
+                'received_amount': request.POST.get('received_amount'),
+                'payout_status': request.POST.get('payout_status'),
+                'payout_notes': request.POST.get('payout_notes'),
+            }
+            payload = {k: v for k, v in payload.items() if v not in (None, '')}
+        try:
+            apply_deal_finance(deal, payload, save=True)
+        except (TypeError, ValueError) as exc:
+            if request.META.get('CONTENT_TYPE', '').startswith('application/json'):
+                return JsonResponse({'ok': False, 'error': str(exc)}, status=400)
+            messages.error(request, 'ذخیره تنظیمات مالی انجام نشد.')
+            return redirect('workspace:crm_deal_detail', deal_id=deal.pk)
+        if request.META.get('CONTENT_TYPE', '').startswith('application/json'):
+            return JsonResponse({'ok': True, 'finance': serialize_deal_finance(deal)})
+        messages.success(request, 'تنظیمات مالی معامله ذخیره شد.')
+        return redirect('workspace:crm_deal_detail', deal_id=deal.pk)
 
 
 class CustomerBulkActionView(LoginRequiredMixin, View):

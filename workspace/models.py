@@ -748,10 +748,42 @@ class CRMDeal(models.Model):
     )
     commission_rate = models.FloatField(default=1.0, verbose_name='نرخ کمیسیون (%)')
     commission_amount = models.BigIntegerField(null=True, blank=True, verbose_name='مبلغ کمیسیون')
+    deal_kind = models.CharField(
+        max_length=12, default='sale',
+        choices=[('sale', 'فروش'), ('rent', 'اجاره')],
+        verbose_name='نوع معامله',
+    )
+    commission_mode = models.CharField(
+        max_length=12, default='percent',
+        choices=[('percent', 'درصد از ارزش'), ('fixed', 'مبلغ ثابت')],
+        verbose_name='نحوه محاسبه کمیسیون',
+    )
+    buyer_commission_rate = models.FloatField(default=0.5, verbose_name='نرخ کمیسیون خریدار (%)')
+    seller_commission_rate = models.FloatField(default=0.5, verbose_name='نرخ کمیسیون فروشنده (%)')
+    buyer_commission_amount = models.BigIntegerField(null=True, blank=True, verbose_name='کمیسیون خریدار')
+    seller_commission_amount = models.BigIntegerField(null=True, blank=True, verbose_name='کمیسیون فروشنده')
+    advisor_share_percent = models.FloatField(default=70.0, verbose_name='سهم مشاور (%)')
+    agency_share_percent = models.FloatField(default=30.0, verbose_name='سهم املاک (%)')
+    advisor_commission = models.BigIntegerField(null=True, blank=True, verbose_name='کمیسیون مشاور')
+    agency_commission = models.BigIntegerField(null=True, blank=True, verbose_name='کمیسیون املاک')
+    deal_costs = models.BigIntegerField(default=0, verbose_name='هزینه‌های معامله')
+    received_amount = models.BigIntegerField(default=0, verbose_name='مبلغ وصول‌شده')
+    payout_status = models.CharField(
+        max_length=12, default='unpaid',
+        choices=[
+            ('unpaid', 'وصول نشده'),
+            ('partial', 'نیمه‌وصول'),
+            ('paid', 'وصول شده'),
+            ('waived', 'بخشوده'),
+        ],
+        verbose_name='وضعیت وصول',
+    )
+    payout_notes = models.TextField(blank=True, verbose_name='یادداشت مالی')
     contract_number = models.CharField(max_length=100, blank=True, verbose_name='شماره قرارداد')
     contract_amount = models.BigIntegerField(null=True, blank=True, verbose_name='مبلغ قرارداد')
     contract_date = models.DateField(null=True, blank=True, verbose_name='تاریخ قرارداد')
     notes = models.TextField(blank=True, verbose_name='یادداشت')
+    stage_changed_at = models.DateTimeField(null=True, blank=True, verbose_name='زمان ورود به مرحله')
     closed_at = models.DateTimeField(null=True, blank=True, verbose_name='تاریخ بسته‌شدن')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -1691,6 +1723,10 @@ class WorkspaceSettings(models.Model):
     crm_deal_stages = models.JSONField(
         default=list, blank=True,
         verbose_name='مراحل سفارشی pipeline معامله',
+    )
+    crm_finance_defaults = models.JSONField(
+        default=dict, blank=True,
+        verbose_name='پیش‌فرض کمیسیون و تقسیم مالی معاملات',
     )
     onboarding_completed = models.BooleanField(
         default=False,

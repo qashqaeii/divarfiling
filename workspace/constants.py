@@ -386,6 +386,50 @@ DEAL_ACTIVE_STAGES = ['سرنخ', 'مذاکره', 'بازدید', 'پیش‌قر
 LOST_REASONS = ['قیمت بالا', 'رقبا', 'انصراف مشتری', 'ملک فروخته شد', 'مدارک ناقص', 'سایر']
 DEFAULT_COMMISSION_RATE = 1.0
 
+DEAL_KIND_SALE = 'sale'
+DEAL_KIND_RENT = 'rent'
+DEAL_KIND_CHOICES = [
+    (DEAL_KIND_SALE, 'فروش'),
+    (DEAL_KIND_RENT, 'اجاره'),
+]
+DEAL_KIND_LABELS = dict(DEAL_KIND_CHOICES)
+
+COMMISSION_MODE_PERCENT = 'percent'
+COMMISSION_MODE_FIXED = 'fixed'
+COMMISSION_MODE_CHOICES = [
+    (COMMISSION_MODE_PERCENT, 'درصد از ارزش معامله'),
+    (COMMISSION_MODE_FIXED, 'مبلغ ثابت'),
+]
+COMMISSION_MODE_LABELS = dict(COMMISSION_MODE_CHOICES)
+
+PAYOUT_UNPAID = 'unpaid'
+PAYOUT_PARTIAL = 'partial'
+PAYOUT_PAID = 'paid'
+PAYOUT_WAIVED = 'waived'
+PAYOUT_STATUS_CHOICES = [
+    (PAYOUT_UNPAID, 'وصول نشده'),
+    (PAYOUT_PARTIAL, 'نیمه‌وصول'),
+    (PAYOUT_PAID, 'وصول شده'),
+    (PAYOUT_WAIVED, 'بخشوده'),
+]
+PAYOUT_STATUS_LABELS = dict(PAYOUT_STATUS_CHOICES)
+
+DEFAULT_ADVISOR_SHARE_PERCENT = 70.0
+DEFAULT_AGENCY_SHARE_PERCENT = 30.0
+DEFAULT_SALE_BUYER_RATE = 0.5
+DEFAULT_SALE_SELLER_RATE = 0.5
+DEFAULT_RENT_BUYER_RATE = 50.0
+DEFAULT_RENT_SELLER_RATE = 50.0
+
+DEFAULT_DEAL_FINANCE = {
+    'sale_buyer_rate': DEFAULT_SALE_BUYER_RATE,
+    'sale_seller_rate': DEFAULT_SALE_SELLER_RATE,
+    'rent_buyer_rate': DEFAULT_RENT_BUYER_RATE,
+    'rent_seller_rate': DEFAULT_RENT_SELLER_RATE,
+    'advisor_share_percent': DEFAULT_ADVISOR_SHARE_PERCENT,
+    'agency_share_percent': DEFAULT_AGENCY_SHARE_PERCENT,
+}
+
 DEAL_STAGE_WON = 'بسته‌شده'
 DEAL_STAGE_LOST = 'از دست رفته'
 DEAL_TERMINAL_STAGES = (DEAL_STAGE_WON, DEAL_STAGE_LOST)
@@ -480,6 +524,240 @@ DEAL_STAGE_COLORS = {
     'قرارداد': ('#fce7f3', '#be185d'),
     'بسته‌شده': ('#dcfce7', '#15803d'),
     'از دست رفته': ('#fee2e2', '#b91c1c'),
+}
+
+DEAL_STAGE_ICONS = {
+    'سرنخ': 'fa-seedling',
+    'مذاکره': 'fa-comments',
+    'بازدید': 'fa-door-open',
+    'پیش‌قرارداد': 'fa-file-signature',
+    'قرارداد': 'fa-file-contract',
+    'بسته‌شده': 'fa-trophy',
+    'از دست رفته': 'fa-circle-xmark',
+}
+
+DEAL_STAGE_ICON_CATALOG = [
+    'fa-seedling', 'fa-lightbulb', 'fa-phone', 'fa-comments', 'fa-handshake',
+    'fa-door-open', 'fa-building', 'fa-calendar-check', 'fa-file-signature',
+    'fa-file-contract', 'fa-key', 'fa-coins', 'fa-star', 'fa-bolt',
+    'fa-trophy', 'fa-circle-xmark',
+]
+
+DEAL_STAGE_COLOR_PALETTE = [
+    '#475569', '#1d4ed8', '#0ea5e9', '#0d9488', '#15803d',
+    '#b45309', '#d97706', '#be185d', '#4338ca', '#7c3aed',
+    '#b91c1c', '#64748b',
+]
+
+DEAL_STAGE_KIND_ACTIVE = 'active'
+DEAL_STAGE_KIND_WON = 'won'
+DEAL_STAGE_KIND_LOST = 'lost'
+
+DEFAULT_DEAL_STAGE_DEFS = [
+    {
+        'id': 'lead',
+        'name': 'سرنخ',
+        'color': '#475569',
+        'bg': '#f1f5f9',
+        'icon': 'fa-seedling',
+        'probability': 15,
+        'rot_days': 3,
+        'kind': DEAL_STAGE_KIND_ACTIVE,
+        'description': 'اولین تماس و ثبت نیاز یا فایل مشتری',
+    },
+    {
+        'id': 'negotiate',
+        'name': 'مذاکره',
+        'color': '#1d4ed8',
+        'bg': '#dbeafe',
+        'icon': 'fa-comments',
+        'probability': 35,
+        'rot_days': 5,
+        'kind': DEAL_STAGE_KIND_ACTIVE,
+        'description': 'مذاکره قیمت، شرایط و انتظارات طرفین',
+    },
+    {
+        'id': 'visit',
+        'name': 'بازدید',
+        'color': '#b45309',
+        'bg': '#fef3c7',
+        'icon': 'fa-door-open',
+        'probability': 55,
+        'rot_days': 4,
+        'kind': DEAL_STAGE_KIND_ACTIVE,
+        'description': 'بازدید ملک یا جلسه حضوری با طرفین',
+    },
+    {
+        'id': 'precontract',
+        'name': 'پیش‌قرارداد',
+        'color': '#4338ca',
+        'bg': '#e0e7ff',
+        'icon': 'fa-file-signature',
+        'probability': 75,
+        'rot_days': 7,
+        'kind': DEAL_STAGE_KIND_ACTIVE,
+        'description': 'توافق اولیه، بیعانه و پیش‌نویس قرارداد',
+    },
+    {
+        'id': 'contract',
+        'name': 'قرارداد',
+        'color': '#be185d',
+        'bg': '#fce7f3',
+        'icon': 'fa-file-contract',
+        'probability': 90,
+        'rot_days': 10,
+        'kind': DEAL_STAGE_KIND_ACTIVE,
+        'description': 'تنظیم و امضای قرارداد نهایی',
+    },
+    {
+        'id': 'won',
+        'name': DEAL_STAGE_WON,
+        'color': '#15803d',
+        'bg': '#dcfce7',
+        'icon': 'fa-trophy',
+        'probability': 100,
+        'rot_days': 0,
+        'kind': DEAL_STAGE_KIND_WON,
+        'description': 'معامله با موفقیت بسته شد',
+        'locked': True,
+    },
+    {
+        'id': 'lost',
+        'name': DEAL_STAGE_LOST,
+        'color': '#b91c1c',
+        'bg': '#fee2e2',
+        'icon': 'fa-circle-xmark',
+        'probability': 0,
+        'rot_days': 0,
+        'kind': DEAL_STAGE_KIND_LOST,
+        'description': 'فرصت از دست رفته یا منتفی شده',
+        'locked': True,
+    },
+]
+
+DEAL_STAGE_PRESETS = {
+    'default': {
+        'id': 'default',
+        'name': 'فروش کامل',
+        'description': 'قیف استاندارد مشاوره املاک — از سرنخ تا قرارداد',
+        'definitions': DEFAULT_DEAL_STAGE_DEFS,
+    },
+    'sale': {
+        'id': 'sale',
+        'name': 'فروش حرفه‌ای',
+        'description': 'تماس، بازدید، پیشنهاد و قرارداد برای معاملات فروش',
+        'definitions': [
+            {
+                'id': 'lead', 'name': 'سرنخ', 'color': '#475569', 'bg': '#f1f5f9',
+                'icon': 'fa-seedling', 'probability': 10, 'rot_days': 2,
+                'kind': DEAL_STAGE_KIND_ACTIVE, 'description': 'ثبت فایل یا تقاضای خرید',
+            },
+            {
+                'id': 'contact', 'name': 'تماس اولیه', 'color': '#0ea5e9', 'bg': '#e0f2fe',
+                'icon': 'fa-phone', 'probability': 25, 'rot_days': 2,
+                'kind': DEAL_STAGE_KIND_ACTIVE, 'description': 'برقراری تماس و صلاحیت‌سنجی',
+            },
+            {
+                'id': 'visit', 'name': 'بازدید', 'color': '#b45309', 'bg': '#fef3c7',
+                'icon': 'fa-door-open', 'probability': 45, 'rot_days': 4,
+                'kind': DEAL_STAGE_KIND_ACTIVE, 'description': 'بازدید ملک توسط خریدار',
+            },
+            {
+                'id': 'offer', 'name': 'پیشنهاد', 'color': '#7c3aed', 'bg': '#f3e8ff',
+                'icon': 'fa-star', 'probability': 65, 'rot_days': 5,
+                'kind': DEAL_STAGE_KIND_ACTIVE, 'description': 'ارائه پیشنهاد قیمت و شرایط',
+            },
+            {
+                'id': 'negotiate', 'name': 'مذاکره', 'color': '#1d4ed8', 'bg': '#dbeafe',
+                'icon': 'fa-comments', 'probability': 80, 'rot_days': 6,
+                'kind': DEAL_STAGE_KIND_ACTIVE, 'description': 'چانه‌زنی و توافق نهایی',
+            },
+            {
+                'id': 'contract', 'name': 'قرارداد', 'color': '#be185d', 'bg': '#fce7f3',
+                'icon': 'fa-file-contract', 'probability': 92, 'rot_days': 8,
+                'kind': DEAL_STAGE_KIND_ACTIVE, 'description': 'امضا و انتقال',
+            },
+            {
+                'id': 'won', 'name': DEAL_STAGE_WON, 'color': '#15803d', 'bg': '#dcfce7',
+                'icon': 'fa-trophy', 'probability': 100, 'rot_days': 0,
+                'kind': DEAL_STAGE_KIND_WON, 'description': 'فروش موفق', 'locked': True,
+            },
+            {
+                'id': 'lost', 'name': DEAL_STAGE_LOST, 'color': '#b91c1c', 'bg': '#fee2e2',
+                'icon': 'fa-circle-xmark', 'probability': 0, 'rot_days': 0,
+                'kind': DEAL_STAGE_KIND_LOST, 'description': 'از دست رفته', 'locked': True,
+            },
+        ],
+    },
+    'rent': {
+        'id': 'rent',
+        'name': 'اجاره و رهن',
+        'description': 'قیف کوتاه‌تر برای معاملات اجاره و رهن',
+        'definitions': [
+            {
+                'id': 'lead', 'name': 'سرنخ', 'color': '#475569', 'bg': '#f1f5f9',
+                'icon': 'fa-seedling', 'probability': 15, 'rot_days': 2,
+                'kind': DEAL_STAGE_KIND_ACTIVE, 'description': 'تقاضای اجاره یا فایل موجر',
+            },
+            {
+                'id': 'visit', 'name': 'بازدید', 'color': '#b45309', 'bg': '#fef3c7',
+                'icon': 'fa-door-open', 'probability': 50, 'rot_days': 3,
+                'kind': DEAL_STAGE_KIND_ACTIVE, 'description': 'بازدید ملک توسط مستاجر',
+            },
+            {
+                'id': 'negotiate', 'name': 'مذاکره رهن', 'color': '#0d9488', 'bg': '#ccfbf1',
+                'icon': 'fa-comments', 'probability': 70, 'rot_days': 4,
+                'kind': DEAL_STAGE_KIND_ACTIVE, 'description': 'توافق رهن، اجاره و موعد تخلیه',
+            },
+            {
+                'id': 'contract', 'name': 'قرارداد اجاره', 'color': '#be185d', 'bg': '#fce7f3',
+                'icon': 'fa-key', 'probability': 90, 'rot_days': 5,
+                'kind': DEAL_STAGE_KIND_ACTIVE, 'description': 'تنظیم اجاره‌نامه',
+            },
+            {
+                'id': 'won', 'name': DEAL_STAGE_WON, 'color': '#15803d', 'bg': '#dcfce7',
+                'icon': 'fa-trophy', 'probability': 100, 'rot_days': 0,
+                'kind': DEAL_STAGE_KIND_WON, 'description': 'اجاره موفق', 'locked': True,
+            },
+            {
+                'id': 'lost', 'name': DEAL_STAGE_LOST, 'color': '#b91c1c', 'bg': '#fee2e2',
+                'icon': 'fa-circle-xmark', 'probability': 0, 'rot_days': 0,
+                'kind': DEAL_STAGE_KIND_LOST, 'description': 'از دست رفته', 'locked': True,
+            },
+        ],
+    },
+    'short': {
+        'id': 'short',
+        'name': 'قیف سریع',
+        'description': 'حداقل مراحل برای مشاورانی که گردش کار کوتاه دارند',
+        'definitions': [
+            {
+                'id': 'lead', 'name': 'سرنخ', 'color': '#475569', 'bg': '#f1f5f9',
+                'icon': 'fa-seedling', 'probability': 20, 'rot_days': 3,
+                'kind': DEAL_STAGE_KIND_ACTIVE, 'description': 'فرصت جدید',
+            },
+            {
+                'id': 'visit', 'name': 'بازدید', 'color': '#b45309', 'bg': '#fef3c7',
+                'icon': 'fa-door-open', 'probability': 55, 'rot_days': 4,
+                'kind': DEAL_STAGE_KIND_ACTIVE, 'description': 'بازدید و ارزیابی',
+            },
+            {
+                'id': 'contract', 'name': 'قرارداد', 'color': '#be185d', 'bg': '#fce7f3',
+                'icon': 'fa-file-contract', 'probability': 85, 'rot_days': 7,
+                'kind': DEAL_STAGE_KIND_ACTIVE, 'description': 'بستن معامله',
+            },
+            {
+                'id': 'won', 'name': DEAL_STAGE_WON, 'color': '#15803d', 'bg': '#dcfce7',
+                'icon': 'fa-trophy', 'probability': 100, 'rot_days': 0,
+                'kind': DEAL_STAGE_KIND_WON, 'description': 'موفق', 'locked': True,
+            },
+            {
+                'id': 'lost', 'name': DEAL_STAGE_LOST, 'color': '#b91c1c', 'bg': '#fee2e2',
+                'icon': 'fa-circle-xmark', 'probability': 0, 'rot_days': 0,
+                'kind': DEAL_STAGE_KIND_LOST, 'description': 'از دست رفته', 'locked': True,
+            },
+        ],
+    },
 }
 
 DEFAULT_DEAL_CHECKLIST = [

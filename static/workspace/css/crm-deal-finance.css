@@ -1,0 +1,447 @@
+/* داشبورد مالی معاملات */
+.crm-fin-page {
+  --fin-advisor: #0f766e;
+  --fin-advisor-soft: #ccfbf1;
+  --fin-agency: #7c3aed;
+  --fin-agency-soft: #ede9fe;
+  --fin-gold: #b45309;
+  --fin-gold-soft: #fef3c7;
+  --fin-rose: #be123c;
+  --fin-rose-soft: #ffe4e6;
+}
+
+.crm-fin-header .crm-deals-mob-header-accent {
+  background: linear-gradient(90deg, #0f766e, #7c3aed);
+}
+
+.crm-fin-desk-sub {
+  margin: 4px 0 0;
+  color: var(--crm-muted, #64748b);
+  font-size: 0.85rem;
+}
+
+.crm-fin-periods {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 2px 12px;
+  scrollbar-width: none;
+}
+
+.crm-fin-period {
+  flex: 0 0 auto;
+  border-radius: 999px;
+  padding: 8px 14px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  color: #334155;
+  font-weight: 700;
+  font-size: 0.82rem;
+  text-decoration: none;
+}
+
+.crm-fin-period.is-active {
+  background: #0f766e;
+  border-color: #0f766e;
+  color: #fff;
+}
+
+.crm-fin-hero {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.crm-fin-hero-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 20px;
+  padding: 18px 18px 16px;
+  color: #fff;
+  min-height: 124px;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.12);
+}
+
+.crm-fin-hero-card strong {
+  display: block;
+  font-size: 1.35rem;
+  letter-spacing: -0.02em;
+  margin: 8px 0 6px;
+}
+
+.crm-fin-hero-card em,
+.crm-fin-hero-kicker {
+  font-style: normal;
+  opacity: 0.86;
+  font-size: 0.78rem;
+}
+
+.crm-fin-hero-kicker {
+  font-weight: 800;
+}
+
+.crm-fin-hero-card--advisor { background: linear-gradient(135deg, #0f766e, #14b8a6); }
+.crm-fin-hero-card--agency { background: linear-gradient(135deg, #6d28d9, #a78bfa); }
+.crm-fin-hero-card--volume { background: linear-gradient(135deg, #1e293b, #334155); }
+
+.crm-fin-kpis {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.crm-fin-kpi {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 12px 14px;
+}
+
+.crm-fin-kpi em {
+  display: block;
+  font-style: normal;
+  color: #64748b;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.crm-fin-kpi strong {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.98rem;
+  color: #0f172a;
+}
+
+.crm-fin-kpi--net strong { color: var(--fin-advisor); }
+.crm-fin-kpi--in strong { color: #15803d; }
+.crm-fin-kpi--out strong { color: var(--fin-rose); }
+
+.crm-fin-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.crm-fin-panel {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 16px;
+}
+
+.crm-fin-panel-head h2 {
+  margin: 0;
+  font-size: 1.02rem;
+}
+
+.crm-fin-panel-head p {
+  margin: 4px 0 14px;
+  color: #64748b;
+  font-size: 0.8rem;
+}
+
+.crm-fin-split {
+  display: flex;
+  height: 14px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: #f1f5f9;
+}
+
+.crm-fin-split i,
+.crm-fin-split b {
+  display: block;
+  height: 100%;
+  font-style: normal;
+}
+
+.crm-fin-split-advisor { background: var(--fin-advisor); }
+.crm-fin-split-agency { background: var(--fin-agency); }
+
+.crm-fin-split-legend {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.crm-fin-split-legend span {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+
+.crm-fin-split-legend .is-advisor { background: var(--fin-advisor); }
+.crm-fin-split-legend .is-agency { background: var(--fin-agency); }
+
+.crm-fin-payout {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.crm-fin-payout-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  border-radius: 14px;
+  padding: 10px 12px;
+  background: #f8fafc;
+}
+
+.crm-fin-payout-item strong { display: block; font-size: 0.86rem; }
+.crm-fin-payout-item em { font-style: normal; color: #64748b; font-size: 0.74rem; }
+.crm-fin-payout-item.is-paid { background: #ecfdf5; }
+.crm-fin-payout-item.is-partial { background: #fffbeb; }
+.crm-fin-payout-item.is-unpaid { background: #fff1f2; }
+.crm-fin-payout-item.is-waived { background: #f1f5f9; }
+
+.crm-fin-months {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 8px;
+  align-items: end;
+  min-height: 160px;
+}
+
+.crm-fin-month {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+}
+
+.crm-fin-month-bars {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 4px;
+  height: 120px;
+  width: 100%;
+}
+
+.crm-fin-month-bars span {
+  display: block;
+  width: 10px;
+  min-height: 6px;
+  border-radius: 999px 999px 4px 4px;
+}
+
+.crm-fin-month-bars .is-total { background: #cbd5e1; }
+.crm-fin-month-bars .is-advisor { background: var(--fin-advisor); }
+
+.crm-fin-month strong { font-size: 0.72rem; }
+.crm-fin-month em { font-style: normal; font-size: 0.68rem; color: #64748b; }
+
+.crm-fin-months-legend {
+  margin: 12px 0 0;
+  color: #64748b;
+  font-size: 0.78rem;
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+
+.crm-fin-months-legend span {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  display: inline-block;
+  margin-left: 6px;
+}
+
+.crm-fin-months-legend .is-total { background: #cbd5e1; }
+.crm-fin-months-legend .is-advisor { background: var(--fin-advisor); }
+
+.crm-fin-forecast-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.crm-fin-forecast-grid article {
+  background: #f8fafc;
+  border-radius: 14px;
+  padding: 12px;
+}
+
+.crm-fin-forecast-grid em {
+  display: block;
+  font-style: normal;
+  color: #64748b;
+  font-size: 0.75rem;
+}
+
+.crm-fin-forecast-grid strong {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.95rem;
+}
+
+.crm-fin-table-wrap { overflow-x: auto; }
+.crm-fin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.86rem;
+}
+
+.crm-fin-table th,
+.crm-fin-table td {
+  text-align: right;
+  padding: 10px 8px;
+  border-bottom: 1px solid #e2e8f0;
+  white-space: nowrap;
+}
+
+.crm-fin-table td em {
+  display: block;
+  font-style: normal;
+  color: #64748b;
+  font-size: 0.75rem;
+}
+
+.crm-fin-table a {
+  color: #0f172a;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.crm-fin-table .is-advisor { color: var(--fin-advisor); font-weight: 800; }
+.crm-fin-table .is-agency { color: var(--fin-agency); font-weight: 800; }
+
+.crm-fin-status {
+  display: inline-flex;
+  border-radius: 999px;
+  padding: 4px 8px;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.crm-fin-status.is-paid { background: #dcfce7; color: #166534; }
+.crm-fin-status.is-partial { background: #fef3c7; color: #92400e; }
+.crm-fin-status.is-unpaid { background: #ffe4e6; color: #9f1239; }
+.crm-fin-status.is-waived { background: #e2e8f0; color: #334155; }
+
+.crm-fin-empty {
+  text-align: center;
+  padding: 28px 12px;
+}
+
+.crm-fin-empty i { font-size: 1.6rem; color: var(--fin-advisor); }
+.crm-fin-empty h3 { margin: 10px 0 6px; }
+.crm-fin-empty p { color: #64748b; margin-bottom: 14px; }
+
+.crm-fin-fieldset {
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 12px;
+  margin: 0 0 12px;
+  display: grid;
+  gap: 10px;
+}
+
+.crm-fin-fieldset legend {
+  padding: 0 6px;
+  font-weight: 800;
+  font-size: 0.82rem;
+}
+
+.crm-deal-finance-card .crm-fin-mini-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.crm-fin-mini {
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 10px;
+}
+
+.crm-fin-mini em {
+  display: block;
+  font-style: normal;
+  color: #64748b;
+  font-size: 0.72rem;
+}
+
+.crm-fin-mini strong { display: block; margin-top: 4px; font-size: 0.86rem; }
+.crm-fin-mini.is-advisor strong { color: var(--fin-advisor); }
+.crm-fin-mini.is-agency strong { color: var(--fin-agency); }
+
+.crm-fin-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.crm-fin-form-grid label,
+.crm-fin-preview label {
+  display: grid;
+  gap: 6px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #334155;
+}
+
+.crm-fin-preview {
+  background: linear-gradient(180deg, #f0fdfa, #fff);
+  border: 1px solid #99f6e4;
+  border-radius: 16px;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+.crm-fin-preview ul {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.crm-fin-preview li {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.82rem;
+}
+
+.crm-fin-span-2 { grid-column: 1 / -1; }
+
+@media (min-width: 900px) {
+  .crm-fin-hero { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .crm-fin-kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .crm-fin-grid { grid-template-columns: 1.1fr 0.9fr; }
+  .crm-fin-forecast-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+@media (max-width: 768px) {
+  .crm-fin-table thead { display: none; }
+  .crm-fin-table tr {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    padding: 10px 0;
+    border-bottom: 1px solid #e2e8f0;
+  }
+  .crm-fin-table td {
+    border: 0;
+    padding: 0;
+    white-space: normal;
+  }
+  .crm-fin-table td:first-child { grid-column: 1 / -1; }
+}

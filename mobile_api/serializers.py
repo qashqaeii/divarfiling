@@ -781,6 +781,9 @@ def property_to_dict(p: CRMProperty, *, detailed: bool = False, request=None) ->
             'vacancy_date': vacancy_date_from_property(p),
             'amenities': p.amenities or '',
             'notes': p.notes or '',
+            'latitude': p.latitude,
+            'longitude': p.longitude,
+            'feature_data': dict(p.feature_data or {}),
         })
     return data
 

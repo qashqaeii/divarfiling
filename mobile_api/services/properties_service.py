@@ -108,6 +108,85 @@ def _parse_float(value) -> Optional[float]:
     return float(value)
 
 
+def _merge_mobile_feature_data(prop: CRMProperty, incoming: Optional[dict]) -> None:
+    from workspace.services.property_features import (
+        CRM_FEATURE_FORM_KEYS,
+        FIELDS,
+        normalize_feature_date_value,
+        profile_keys,
+        resolve_feature_profile,
+        _normalize_toggle,
+    )
+
+    if not isinstance(incoming, dict):
+        return
+    profile_id = resolve_feature_profile(prop.deal_mode, prop.property_type)
+    active_keys = profile_keys(profile_id)
+    out = {k: v for k, v in (prop.feature_data or {}).items() if k not in active_keys}
+    for key, val in incoming.items():
+        feat_key = str(key or '').strip()
+        if feat_key not in CRM_FEATURE_FORM_KEYS:
+            continue
+        text = str(val or '').strip()
+        meta = FIELDS.get(feat_key) or {}
+        if meta.get('widget') == 'date' and text:
+            text = normalize_feature_date_value(text)
+        elif meta.get('widget') == 'toggle' and text:
+            text = _normalize_toggle(text)
+        if text:
+            out[feat_key] = text
+        elif feat_key in active_keys:
+            out.pop(feat_key, None)
+    prop.feature_data = out
+
+
+def _apply_mobile_extended_fields(prop: CRMProperty, data: Dict[str, Any]) -> None:
+    from workspace.constants import PROPERTY_PUBLISH_STATUSES
+
+    if 'publish_status' in data and data.get('publish_status') is not None:
+        ps = str(data.get('publish_status') or '').strip()
+        if ps in PROPERTY_PUBLISH_STATUSES:
+            prop.publish_status = ps[:30]
+    if 'latitude' in data:
+        prop.latitude = _parse_float(data.get('latitude'))
+    if 'longitude' in data:
+        prop.longitude = _parse_float(data.get('longitude'))
+    if 'amenities' in data and data.get('amenities') is not None:
+        prop.amenities = str(data.get('amenities') or '')
+    if 'business_type' in data and data.get('business_type') is not None:
+        prop.business_type = str(data.get('business_type') or '')[:50]
+    if 'phone' in data and data.get('phone') is not None:
+        prop.phone = str(data.get('phone') or '')[:20]
+    elif 'owner_phone' in data and data.get('owner_phone') is not None:
+        prop.phone = str(data.get('owner_phone') or '')[:20]
+    if 'owner_name' in data and data.get('owner_name') is not None:
+        prop.owner_name = str(data.get('owner_name') or '')[:200]
+    if 'feature_data' in data:
+        _merge_mobile_feature_data(prop, data.get('feature_data'))
+    if 'vacancy_date' in data:
+        from workspace.services.property_features import normalize_feature_date_value
+        fd = dict(prop.feature_data or {})
+        raw_vacancy = str(data.get('vacancy_date') or '').strip()
+        if raw_vacancy:
+            fd['تاریخ تخلیه'] = normalize_feature_date_value(raw_vacancy)
+        else:
+            fd.pop('تاریخ تخلیه', None)
+        prop.feature_data = fd
+    if 'images' in data and data.get('images') is not None:
+        prop.images = list(data.get('images') or [])
+    for bool_field in ('has_parking', 'has_storage', 'has_elevator', 'is_vacant'):
+        if bool_field in data and data.get(bool_field) is not None:
+            setattr(prop, bool_field, bool(data.get(bool_field)))
+    if data.get('is_vacant'):
+        prop.tenant_name = ''
+        prop.tenant_phone = ''
+    else:
+        if 'tenant_name' in data and data.get('tenant_name') is not None:
+            prop.tenant_name = str(data.get('tenant_name') or '')[:200]
+        if 'tenant_phone' in data and data.get('tenant_phone') is not None:
+            prop.tenant_phone = str(data.get('tenant_phone') or '')[:20]
+
+
 def _apply_mobile_property_overrides(prop: CRMProperty, data: Dict[str, Any], *, title_required: bool = True) -> None:
     """اعمال فیلدهای ارسالی موبایل روی ملک ساخته‌شده از آگهی."""
     if (data.get('title') or '').strip():
@@ -150,6 +229,7 @@ def _apply_mobile_property_overrides(prop: CRMProperty, data: Dict[str, Any], *,
             setattr(prop, bool_field, bool(data.get(bool_field)))
     if data.get('images'):
         prop.images = list(data.get('images') or [])
+    _apply_mobile_extended_fields(prop, data)
     prop.save()
 
 
@@ -243,6 +323,9 @@ def create_property_from_mobile(user, data: Dict[str, Any]) -> CRMProperty:
         phone=(data.get('phone') or data.get('owner_phone') or '')[:20],
         owner_name=(data.get('owner_name') or '')[:200],
         business_type=(data.get('business_type') or '')[:50],
+        amenities=(data.get('amenities') or ''),
+        latitude=_parse_float(data.get('latitude')),
+        longitude=_parse_float(data.get('longitude')),
     )
     for bool_field in ('has_parking', 'has_storage', 'has_elevator', 'is_vacant'):
         if bool_field in data:
@@ -251,6 +334,7 @@ def create_property_from_mobile(user, data: Dict[str, Any]) -> CRMProperty:
         prop.tenant_name = (data.get('tenant_name') or '')[:200]
     if data.get('tenant_phone') is not None:
         prop.tenant_phone = (data.get('tenant_phone') or '')[:20]
+    _apply_mobile_extended_fields(prop, data)
     prop.save()
 
     if prop.phone or prop.owner_name:
@@ -347,6 +431,15 @@ def update_property_from_mobile(user, property_id: int, data: Dict[str, Any]) ->
         else:
             fd.pop('تاریخ تخلیه', None)
         prop.feature_data = fd
+
+    if 'feature_data' in data:
+        _merge_mobile_feature_data(prop, data.get('feature_data'))
+    if 'images' in data and data.get('images') is not None:
+        prop.images = list(data.get('images') or [])
+    if 'latitude' in data:
+        prop.latitude = _parse_float(data.get('latitude'))
+    if 'longitude' in data:
+        prop.longitude = _parse_float(data.get('longitude'))
 
     prop.save()
     if prop.phone or prop.owner_name:

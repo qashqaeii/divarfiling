@@ -21,6 +21,7 @@ from workspace.services.jalali_input import parse_goal_period_strings
 from workspace.services.crm_scope import agency_members, can_manage_team, can_operate_team_leads, get_membership
 from workspace.services.crm_sync import export_crm_payload, import_crm_payload, record_sync_log
 from workspace.services.crm_webhooks import test_webhook
+from workspace.export_security import ExportSecurityMixin
 
 
 class _TeamAPIBase(LoginRequiredMixin, View):
@@ -140,7 +141,7 @@ class TeamApiKeyRegenerateAPIView(_TeamAPIBase):
         return JsonResponse({'ok': True, 'key': key})
 
 
-class TeamSyncExportAPIView(_TeamAPIBase):
+class TeamSyncExportAPIView(ExportSecurityMixin, _TeamAPIBase):
     def get(self, request):
         if not can_manage_team(request.user):
             return self._deny()
@@ -192,7 +193,7 @@ class TeamSettingsAPIView(_TeamAPIBase):
         })
 
 
-class TeamReportCSVView(_TeamAPIBase):
+class TeamReportCSVView(ExportSecurityMixin, _TeamAPIBase):
     def get(self, request):
         agency = self._agency()
         if not agency or not can_manage_team(request.user):

@@ -1,7 +1,7 @@
 """URLهای API موبایل — /api/mobile/v1/"""
 from django.urls import path
 
-from mobile_api import commerce_views, team_views, views
+from mobile_api import commerce_views, export_security_views, team_views, views
 
 app_name = 'mobile_api'
 
@@ -16,6 +16,10 @@ urlpatterns = [
     path('auth/password-reset', commerce_views.PasswordResetCompleteView.as_view(), name='password_reset'),
     path('auth/verify-phone/request', commerce_views.VerifyPhoneRequestView.as_view(), name='verify_phone_request'),
     path('auth/verify-phone/verify', commerce_views.VerifyPhoneCompleteView.as_view(), name='verify_phone_verify'),
+
+    path('export-security/verify-password', export_security_views.ExportSecurityVerifyPasswordView.as_view(), name='export_security_verify_password'),
+    path('export-security/verify-otp', export_security_views.ExportSecurityVerifyOtpView.as_view(), name='export_security_verify_otp'),
+    path('export-security/resend-otp', export_security_views.ExportSecurityResendOtpView.as_view(), name='export_security_resend_otp'),
 
     path('devices/register', views.DeviceRegisterView.as_view(), name='device_register'),
     path('devices/me', views.DevicePatchView.as_view(), name='device_patch'),

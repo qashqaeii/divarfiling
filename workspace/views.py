@@ -25,6 +25,7 @@ from workspace.services.columns import consultant_q
 from workspace.services.price_history import dedupe_price_history
 from workspace.services.property_images import deduplicate_divar_image_urls, normalize_external_image_url
 from workspace.mixins import DatasetOwnerMixin, LicenseRequiredMixin, WorkspaceLoginMixin, get_or_create_settings
+from workspace.export_security import ExportSecurityMixin
 from workspace.services.access import BOT_LOCKED_FEATURES, get_bot_product_buy_url, has_active_bot_license
 from workspace.constants import DEAL_TYPES, LISTING_ROLES
 from workspace.models import (
@@ -978,7 +979,7 @@ class DatasetRenameView(DatasetOwnerMixin, UpdateView):
         return render(self.request, 'workspace/datasets/detail.html', ctx)
 
 
-class DatasetExportView(DatasetOwnerMixin, View):
+class DatasetExportView(ExportSecurityMixin, DatasetOwnerMixin, View):
     def get(self, request, dataset_id):
         dataset = self.get_dataset()
         fmt = request.GET.get('format', 'csv')

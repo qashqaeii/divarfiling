@@ -29,6 +29,7 @@ from workspace.constants import (
 from workspace.services.property_images import (
     MAX_PROPERTY_IMAGES, parse_images_payload, store_property_image,
 )
+from workspace.export_security import ExportSecurityMixin
 from workspace.forms import (
     ActivityForm, CRMAutomationRuleForm, CRMDealForm, CRMMessageTemplateForm,
     CRMPropertyForm, CRMPropertyImportForm, CRMReminderForm, ConvertLeadForm,
@@ -1043,7 +1044,7 @@ class CustomerDeleteView(LoginRequiredMixin, View):
         return redirect('workspace:crm_contacts')
 
 
-class CustomerExportView(LoginRequiredMixin, View):
+class CustomerExportView(ExportSecurityMixin, LoginRequiredMixin, View):
     def get(self, request):
         return export_customers_excel_response(request.user, request.GET)
 
@@ -1157,7 +1158,7 @@ class CRMReminderToggleView(LoginRequiredMixin, View):
         return redirect(nxt if nxt else reverse('workspace:crm_reminders'))
 
 
-class CRMPropertyExportView(LoginRequiredMixin, View):
+class CRMPropertyExportView(ExportSecurityMixin, LoginRequiredMixin, View):
     def get(self, request):
         fmt = request.GET.get('format', 'xlsx').lower()
         if fmt == 'csv':
@@ -2892,7 +2893,7 @@ class CRMTeamApiKeyRegenerateView(LoginRequiredMixin, View):
         return JsonResponse({'ok': True, 'key': key})
 
 
-class CRMTeamReportCSVView(LoginRequiredMixin, View):
+class CRMTeamReportCSVView(ExportSecurityMixin, LoginRequiredMixin, View):
     def get(self, request):
         from django.http import HttpResponse
         from workspace.services.crm_agency_analytics import export_team_performance_csv
@@ -3327,7 +3328,7 @@ class CRMDealCommissionSplitView(LoginRequiredMixin, View):
         return JsonResponse({'ok': True})
 
 
-class CRMSyncExportView(LoginRequiredMixin, View):
+class CRMSyncExportView(ExportSecurityMixin, LoginRequiredMixin, View):
     def get(self, request):
         from django.http import JsonResponse as JR
         if not can_manage_team(request.user):

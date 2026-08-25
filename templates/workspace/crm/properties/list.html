@@ -37,7 +37,7 @@
                     <button type="button" class="crm-files-mob-toolbar-item" role="menuitem" data-drawer-open="drawer-property-import">
                         <i class="fas fa-file-import" aria-hidden="true"></i><span>ورود فایل</span>
                     </button>
-                    <a href="{% url 'workspace:crm_properties_export' %}?{{ filter_qs }}" class="crm-files-mob-toolbar-item" role="menuitem">
+                    <a href="{% url 'workspace:crm_properties_export' %}?{{ filter_qs }}" class="crm-files-mob-toolbar-item js-secure-export" data-export-label="فایل‌های شخصی Excel" role="menuitem">
                         <i class="fas fa-file-excel" aria-hidden="true"></i><span>خروجی Excel</span>
                     </a>
                     <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}view=pipeline" class="crm-files-mob-toolbar-item" role="menuitem">
@@ -66,12 +66,12 @@
                     <i class="fas fa-chevron-down crm-files-export-caret" aria-hidden="true"></i>
                 </summary>
                 <div class="crm-files-export-menu" role="menu">
-                    <a href="{% url 'workspace:crm_properties_export' %}?{{ filter_qs }}" class="crm-files-export-item" role="menuitem">
+                    <a href="{% url 'workspace:crm_properties_export' %}?{{ filter_qs }}" class="crm-files-export-item js-secure-export" data-export-label="فایل‌های شخصی Excel" role="menuitem">
                         <i class="fas fa-file-excel" aria-hidden="true"></i>
                         <span class="crm-files-export-item-main">Excel</span>
                         <span class="crm-files-export-item-sub">.xlsx — مناسب ویرایش و گزارش</span>
                     </a>
-                    <a href="{% url 'workspace:crm_properties_export' %}?{% if filter_qs %}{{ filter_qs }}&{% endif %}format=csv" class="crm-files-export-item" role="menuitem">
+                    <a href="{% url 'workspace:crm_properties_export' %}?{% if filter_qs %}{{ filter_qs }}&{% endif %}format=csv" class="crm-files-export-item js-secure-export" data-export-label="فایل‌های شخصی CSV" role="menuitem">
                         <i class="fas fa-file-csv" aria-hidden="true"></i>
                         <span class="crm-files-export-item-main">CSV</span>
                         <span class="crm-files-export-item-sub">.csv — سازگار با سایر نرم‌افزارها</span>

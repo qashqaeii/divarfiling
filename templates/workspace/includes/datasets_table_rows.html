@@ -78,7 +78,7 @@
             <a href="{% url 'workspace:dataset_detail' ds.id %}" class="mk-row-btn mk-row-btn--open" title="باز کردن"><i class="fas fa-arrow-left" aria-hidden="true"></i></a>
             <a href="{% url 'workspace:dataset_analyze' ds.id %}" class="mk-row-btn" title="تحلیل"><i class="fas fa-chart-bar" aria-hidden="true"></i></a>
             <a href="{% url 'workspace:dataset_map' ds.id %}" class="mk-row-btn" title="نقشه"><i class="fas fa-map" aria-hidden="true"></i></a>
-            <a href="{% url 'workspace:dataset_export' ds.id %}?format=csv" class="mk-row-btn" title="دانلود"><i class="fas fa-download" aria-hidden="true"></i></a>
+            <a href="{% url 'workspace:dataset_export' ds.id %}?format=csv" class="mk-row-btn js-secure-export" data-export-label="خروجی CSV" title="دانلود"><i class="fas fa-download" aria-hidden="true"></i></a>
             <button type="button" class="mk-row-btn mk-row-btn-danger" title="حذف"
                 data-confirm
                 data-confirm-title="حذف فایل"

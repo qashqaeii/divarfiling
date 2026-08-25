@@ -13,6 +13,7 @@ from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from accounts.phone_utils import find_user_by_phone
+from workspace.export_security import require_export_authorization_api
 from mobile_api.responses import api_error, api_ok
 from mobile_api.services.crm_service import (
     complete_follow_up_task,
@@ -543,6 +544,9 @@ class DatasetExportView(APIView):
     content_negotiation_class = FileDownloadNegotiation
 
     def get(self, request, dataset_id):
+        denied = require_export_authorization_api(request, request.user)
+        if denied:
+            return denied
         response, error_code = export_dataset_response(
             request.user,
             str(dataset_id),
@@ -564,6 +568,9 @@ class ContactsExportView(APIView):
     content_negotiation_class = FileDownloadNegotiation
 
     def get(self, request):
+        denied = require_export_authorization_api(request, request.user)
+        if denied:
+            return denied
         return export_contacts_response(request.user, request.GET, _export_format(request, 'xlsx'))
 
 
@@ -572,6 +579,9 @@ class PropertiesExportView(APIView):
     content_negotiation_class = FileDownloadNegotiation
 
     def get(self, request):
+        denied = require_export_authorization_api(request, request.user)
+        if denied:
+            return denied
         return export_properties_response(request.user, request.GET, _export_format(request, 'xlsx'))
 
 

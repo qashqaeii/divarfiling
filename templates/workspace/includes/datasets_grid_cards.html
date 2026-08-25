@@ -59,7 +59,7 @@
                     </a>
                     <a href="{% url 'workspace:dataset_analyze' ds.id %}" class="mk-ds-card-act" title="تحلیل"><i class="fas fa-chart-line" aria-hidden="true"></i></a>
                     <a href="{% url 'workspace:dataset_map' ds.id %}" class="mk-ds-card-act" title="نقشه"><i class="fas fa-map-location-dot" aria-hidden="true"></i></a>
-                    <a href="{% url 'workspace:dataset_export' ds.id %}?format=csv" class="mk-ds-card-act" title="دانلود"><i class="fas fa-download" aria-hidden="true"></i></a>
+                    <a href="{% url 'workspace:dataset_export' ds.id %}?format=csv" class="mk-ds-card-act js-secure-export" data-export-label="خروجی CSV" title="دانلود"><i class="fas fa-download" aria-hidden="true"></i></a>
                     <button type="button" class="mk-ds-card-act mk-ds-card-act--danger" title="حذف"
                         data-confirm
                         data-confirm-title="حذف فایل"

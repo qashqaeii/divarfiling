@@ -1,7 +1,7 @@
 """URLهای workspace."""
 from django.urls import include, path
 
-from workspace import crm_views, support_views, team_api_views, team_messages_api_views, views
+from workspace import crm_views, export_security_views, support_views, team_api_views, team_messages_api_views, views
 from workspace.academy import api_views as academy_api_views
 from workspace.academy import views as academy_views
 
@@ -10,6 +10,9 @@ app_name = 'workspace'
 urlpatterns = [
     path('', views.WorkspaceHomeView.as_view(), name='home'),
     path('api/onboarding/complete/', views.OnboardingCompleteView.as_view(), name='onboarding_complete'),
+    path('api/export-security/verify-password/', export_security_views.ExportSecurityVerifyPasswordView.as_view(), name='export_security_verify_password'),
+    path('api/export-security/verify-otp/', export_security_views.ExportSecurityVerifyOtpView.as_view(), name='export_security_verify_otp'),
+    path('api/export-security/resend-otp/', export_security_views.ExportSecurityResendOtpView.as_view(), name='export_security_resend_otp'),
     path('ai/', include(('ai_workspace.urls', 'ai_workspace'))),
     path('product/', include(('product_hub.urls', 'product_hub'))),
 

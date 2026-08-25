@@ -3230,6 +3230,18 @@ function initCRMTeamPage() {
             ? document.getElementById('crm-sync-export-agency-btn')
             : document.getElementById('crm-sync-export-btn');
         if (!btn || !window.crmSyncExportUrl) return;
+        const url = scope === 'agency'
+            ? `${window.crmSyncExportUrl}?scope=agency`
+            : window.crmSyncExportUrl;
+        if (window.ExportSecurity) {
+            window.ExportSecurity.requestExport(url, {
+                type: 'fetch-json',
+                label: scope === 'agency' ? 'خروجی JSON تیم' : 'خروجی JSON',
+                filename: `crm-export-${scope}-${new Date().toISOString().slice(0, 10)}.json`,
+                button: btn,
+            });
+            return;
+        }
         btn.disabled = true;
         const label = btn.querySelector('span');
         const prev = label?.textContent;

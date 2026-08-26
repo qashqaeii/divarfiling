@@ -211,3 +211,25 @@ class FilingApiTests(TestCase):
         resp = self.client.delete('/api/mobile/v1/filing/listings/tok-foreign')
         self.assertEqual(resp.status_code, 404)
         self.assertTrue(Listing.objects.filter(token='tok-foreign').exists())
+
+    def test_datasets_ordered_by_updated_at(self, _license):
+        Dataset.objects.filter(pk=self.dataset.pk).update(updated_at='2019-01-01T00:00:00Z')
+        older = Dataset.objects.create(
+            user=self.user,
+            name='قدیمی',
+            original_filename='old.xlsx',
+            file_format='xlsx',
+        )
+        newer = Dataset.objects.create(
+            user=self.user,
+            name='جدید',
+            original_filename='new.xlsx',
+            file_format='xlsx',
+        )
+        Dataset.objects.filter(pk=older.pk).update(updated_at='2020-01-01T00:00:00Z')
+        Dataset.objects.filter(pk=newer.pk).update(updated_at='2026-01-01T00:00:00Z')
+
+        resp = self.client.get('/api/mobile/v1/filing/datasets')
+        self.assertEqual(resp.status_code, 200)
+        names = [row['name'] for row in resp.json()['data']]
+        self.assertEqual(names, ['جدید', 'قدیمی', 'فایل ونک'])

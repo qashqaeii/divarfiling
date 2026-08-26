@@ -48,9 +48,10 @@ class Dataset(models.Model):
     class Meta:
         verbose_name = 'مجموعه‌داده'
         verbose_name_plural = 'مجموعه‌داده‌ها'
-        ordering = ['-last_opened_at', '-created_at']
+        ordering = ['-updated_at', '-created_at']
         indexes = [
             models.Index(fields=['user', '-created_at']),
+            models.Index(fields=['user', '-updated_at']),
         ]
 
     def __str__(self):

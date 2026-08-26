@@ -366,10 +366,11 @@ def ingest_mobile_extraction(user, payload: Dict[str, Any]) -> IngestResult:
             PriceHistory.objects.bulk_create(price_records, batch_size=200)
 
         dataset.row_count = Listing.objects.filter(dataset=dataset).count()
+        dataset.updated_at = now
         dataset.save(update_fields=[
             'row_count', 'metadata', 'last_opened_at', 'is_active',
             'city', 'district', 'columns', 'column_count',
-            'transaction_type', 'subcategory',
+            'transaction_type', 'subcategory', 'updated_at',
         ])
 
     ingested_count = len(seen_tokens)

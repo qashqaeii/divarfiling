@@ -106,10 +106,10 @@ class WorkspaceHomeView(WorkspaceLoginMixin, TemplateView):
         }
         ctx['crm_stats'] = get_dashboard_stats(user)
         ctx['charts_json'] = json.dumps(build_dashboard_charts(user), ensure_ascii=False)
-        ctx['active_dataset'] = datasets_qs.order_by('-last_opened_at', '-created_at').first()
+        ctx['active_dataset'] = datasets_qs.order_by('-updated_at', '-created_at').first()
         ctx['recent_datasets'] = _attach_dataset_covers(
             datasets_qs.annotate(listing_count=Count('listings'))
-            .order_by('-last_opened_at', '-created_at')[:8]
+            .order_by('-updated_at', '-created_at')[:8]
         )
         pipeline = get_pipeline_data(user, per_column=3)
         ctx['pipeline'] = pipeline
@@ -257,7 +257,7 @@ def _dataset_list_context(request, extra=None):
     qs = _apply_dataset_filters(
         _dataset_base_qs(request.user),
         request,
-    ).order_by('-last_opened_at', '-created_at')
+    ).order_by('-updated_at', '-created_at')
     paginator = Paginator(qs, 25)
     page_obj = paginator.get_page(request.GET.get('page', 1))
     _attach_dataset_covers(page_obj.object_list)
@@ -293,7 +293,7 @@ class DatasetListView(LicenseRequiredMixin, ListView):
         return _apply_dataset_filters(
             _dataset_base_qs(self.request.user),
             self.request,
-        ).order_by('-last_opened_at', '-created_at')
+        ).order_by('-updated_at', '-created_at')
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
@@ -770,7 +770,7 @@ class MultiDatasetListingsView(LicenseRequiredMixin, TemplateView):
             ids = ids[: self.max_datasets]
         datasets = list(
             Dataset.objects.filter(user=request.user, is_active=True, pk__in=ids)
-            .order_by('-last_opened_at', '-created_at')
+            .order_by('-updated_at', '-created_at')
         )
         if not datasets:
             messages.error(request, 'فایل‌های انتخاب‌شده یافت نشد.')
@@ -1603,7 +1603,7 @@ class MultiDatasetMapView(LicenseRequiredMixin, TemplateView):
             ids = ids[: self.max_datasets]
         datasets = list(
             Dataset.objects.filter(user=request.user, is_active=True, pk__in=ids)
-            .order_by('-last_opened_at', '-created_at')
+            .order_by('-updated_at', '-created_at')
         )
         if not datasets:
             messages.error(request, 'فایل‌های انتخاب‌شده یافت نشد.')
@@ -1650,7 +1650,7 @@ class ToolsView(LicenseRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         datasets = list(
-            _dataset_base_qs(self.request.user).order_by('-last_opened_at', '-created_at'),
+            _dataset_base_qs(self.request.user).order_by('-updated_at', '-created_at'),
         )
         ctx['datasets'] = datasets
 

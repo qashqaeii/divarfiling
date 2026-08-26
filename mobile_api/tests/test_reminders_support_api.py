@@ -65,6 +65,38 @@ class RemindersApiTests(TestCase):
         )
 
 
+class SupportTicketListApiTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='09127778899', password='test')
+        self.client = APIClient()
+        token = RefreshToken.for_user(self.user)
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {token.access_token}')
+        self.ticket = create_ticket(
+            user=self.user,
+            subject='سوال فایلینگ',
+            category=TICKET_CATEGORY_OTHER,
+            priority=TICKET_PRIORITY_NORMAL,
+            body='راهنمایی لازم دارم',
+        )
+
+    def test_list_returns_stats_in_meta(self):
+        response = self.client.get('/api/mobile/v1/support/tickets')
+        self.assertEqual(response.status_code, 200, response.content)
+        body = response.json()
+        self.assertTrue(body['ok'])
+        self.assertIn('stats', body['meta'])
+        stats = body['meta']['stats']
+        self.assertGreaterEqual(stats['total'], 1)
+        self.assertIn('open', stats)
+        self.assertIn('unread_replies', stats)
+
+    def test_list_search_by_subject(self):
+        response = self.client.get('/api/mobile/v1/support/tickets', {'q': 'فایلینگ'})
+        self.assertEqual(response.status_code, 200)
+        data = response.json()['data']
+        self.assertTrue(any(item['subject'] == 'سوال فایلینگ' for item in data))
+
+
 class SupportTicketThreadApiTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(username='09124445566', password='test')

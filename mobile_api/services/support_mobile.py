@@ -52,6 +52,7 @@ def ticket_to_dict(ticket, *, request=None, include_messages: bool = False) -> D
         'updated_at': ticket.updated_at.isoformat() if ticket.updated_at else None,
         'last_message_at': ticket.last_message_at.isoformat() if ticket.last_message_at else None,
         'closed_at': ticket.closed_at.isoformat() if ticket.closed_at else None,
+        'description': (ticket.description or '').strip(),
     }
     if include_messages:
         messages = (

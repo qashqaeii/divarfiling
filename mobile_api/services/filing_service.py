@@ -24,7 +24,7 @@ from workspace.services.filters import (
 
 
 def _datasets_qs(user):
-    return Dataset.objects.filter(user=user, is_active=True).order_by('-created_at')
+    return Dataset.objects.filter(user=user, is_active=True).order_by('-updated_at', '-created_at')
 
 
 def list_datasets(user, *, page: int = 1, page_size: int = 20) -> Tuple[List[dict], dict]:

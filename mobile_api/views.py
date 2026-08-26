@@ -1748,9 +1748,17 @@ class SupportTicketsListCreateView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        from workspace.services.support_tickets import filter_user_tickets
-        tickets = filter_user_tickets(request.user)
-        return api_ok([_ticket_to_dict(t, request=request) for t in tickets[:50]])
+        from workspace.services.support_tickets import filter_user_tickets, get_user_ticket_stats
+
+        status = (request.GET.get('status') or '').strip()
+        priority = (request.GET.get('priority') or '').strip()
+        q = (request.GET.get('q') or '').strip()
+        tickets = filter_user_tickets(request.user, status=status, priority=priority, q=q)
+        stats = get_user_ticket_stats(request.user)
+        return api_ok(
+            [_ticket_to_dict(t, request=request) for t in tickets[:50]],
+            meta={'stats': stats, 'total': tickets.count()},
+        )
 
     def post(self, request):
         from workspace.services.support_tickets import create_ticket

@@ -1954,6 +1954,8 @@ def apply_contact_suggestions(
             'phone': customer.phone or '',
             'whatsapp_text': wa_text,
             'whatsapp_url': whatsapp_url_for_customer(customer, wa_text),
+            'active_channels': list(getattr(customer, 'active_channels', None) or []),
+            'social_links': dict(getattr(customer, 'social_links', None) or {}),
         })
 
     if not suggestions:

@@ -1370,6 +1370,7 @@ def _customer_match_card(customer: Customer, score_item: Dict[str, Any]) -> Dict
         'customer_id': customer.pk,
         'id': customer.pk,
         'name': customer.name,
+        'full_name': customer.name,
         'phone': customer.phone or '',
         'customer_type': customer.customer_type or '',
         'score': score_item['score'],
@@ -1381,6 +1382,8 @@ def _customer_match_card(customer: Customer, score_item: Dict[str, Any]) -> Dict
         'match_intent': score_item.get('match_intent') or '',
         'matching_tolerance_percent': customer_matching_tolerance_percent(customer),
         'status': customer.status or '',
+        'active_channels': list(getattr(customer, 'active_channels', None) or []),
+        'social_links': dict(getattr(customer, 'social_links', None) or {}),
         'can_suggest': True,
     }
 

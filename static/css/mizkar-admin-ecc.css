@@ -2705,9 +2705,37 @@ body.mk-admin-dashboard .adm-page.ecc-page--v2 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.ecc-kpi-grid--snapshot {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.ecc-kpi-kind-badge {
+    font-size: 0.58rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 0.12rem 0.38rem;
+    border-radius: 999px;
+    background: rgba(59, 130, 246, 0.12);
+    color: var(--ecc-accent-blue);
+}
+
+.ecc-kpi-kind-badge--snapshot {
+    background: rgba(148, 163, 184, 0.16);
+    color: var(--ecc-text-muted);
+}
+
+.ecc-kpi-val--pending {
+    opacity: 0.55;
+}
+
 @media (max-width: 1024px) {
     .ecc-sales-charts-grid {
         grid-template-columns: 1fr;
+    }
+
+    .ecc-kpi-grid--snapshot {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
 

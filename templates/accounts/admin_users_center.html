@@ -1,0 +1,364 @@
+{% extends 'accounts/admin_panel_base.html' %}
+{% load static %}
+{% load persian_tags %}
+{% load currency_tags %}
+
+{% block title %}کاربران | پنل مدیریت{% endblock %}
+
+{% block admin_panel_title %}کاربران{% endblock %}
+
+{% block admin_panel_header_actions %}
+<a href="{% url 'admin_panel_export' 'users_management' %}?format=xlsx" class="ecc-btn ecc-btn--primary" title="خروجی مدیریت کاربران">
+    <i class="fas fa-file-excel"></i>
+</a>
+<a href="{% url 'admin_panel_export' 'all_users' %}?format=xlsx" class="ecc-btn ecc-btn--ghost" title="همه کاربران">
+    <i class="fas fa-users"></i>
+</a>
+<a href="/admin/accounts/user/" class="ecc-btn ecc-btn--ghost" target="_blank" rel="noopener" title="Django Admin">
+    <i class="fas fa-cog"></i>
+</a>
+{% endblock %}
+
+{% block admin_panel_content %}
+
+<section class="ecc-section ecc-cmd-kpi" aria-label="شاخص‌های بازه‌ای">
+    <header class="ecc-section-head ecc-section-head--slim">
+        <div>
+            <h2><i class="fas fa-calendar-days"></i> KPI بازه‌ای</h2>
+            <p>{{ range_label }}</p>
+        </div>
+    </header>
+    <div class="ecc-kpi-grid ecc-kpi-grid--cmd">
+        {% for card in range_kpi_cards %}
+        <article class="ecc-kpi" data-accent="{{ card.accent }}" data-status="{{ card.status }}" data-kpi-kind="range">
+            <div class="ecc-kpi-top">
+                <span class="ecc-kpi-icon"><i class="fas {{ card.icon }}"></i></span>
+                <span class="ecc-kpi-kind-badge">بازه</span>
+                {% if card.delta is not None %}
+                <span class="ecc-kpi-delta{% if card.delta >= 0 %} is-up{% else %} is-down{% endif %}">
+                    {% if card.delta >= 0 %}+{% endif %}{{ card.delta|to_persian_digits }}٪
+                </span>
+                {% endif %}
+            </div>
+            {% if card.pending %}
+            <strong class="ecc-kpi-val ecc-kpi-val--pending">—</strong>
+            {% else %}
+            <strong class="ecc-kpi-val" data-count-up="{{ card.value }}" data-format="{{ card.format }}">۰</strong>
+            {% endif %}
+            <span class="ecc-kpi-lbl">{{ card.label }}</span>
+            <span class="ecc-kpi-sub">{{ card.delta_label }} · {{ card.sublabel }}</span>
+            <div class="ecc-kpi-spark" data-sparkline='{{ card.sparkline_json|safe }}'>
+                <canvas id="spark-{{ card.key }}"></canvas>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+</section>
+
+<section class="ecc-section ecc-cmd-kpi" aria-label="شاخص‌های Snapshot">
+    <header class="ecc-section-head ecc-section-head--slim">
+        <div>
+            <h2><i class="fas fa-camera"></i> KPI Snapshot</h2>
+            <p>وضعیت فعلی</p>
+        </div>
+    </header>
+    <div class="ecc-kpi-grid ecc-kpi-grid--snapshot">
+        {% for card in snapshot_kpi_cards %}
+        <article class="ecc-kpi" data-accent="{{ card.accent }}" data-status="{{ card.status }}" data-kpi-kind="snapshot">
+            <div class="ecc-kpi-top">
+                <span class="ecc-kpi-icon"><i class="fas {{ card.icon }}"></i></span>
+                <span class="ecc-kpi-kind-badge ecc-kpi-kind-badge--snapshot">Snapshot</span>
+            </div>
+            <strong class="ecc-kpi-val" data-count-up="{{ card.value }}" data-format="{{ card.format }}">۰</strong>
+            <span class="ecc-kpi-lbl">{{ card.label }}</span>
+            <span class="ecc-kpi-sub">{{ card.delta_label }} · {{ card.sublabel }}</span>
+            <div class="ecc-kpi-spark" data-sparkline='{{ card.sparkline_json|safe }}'>
+                <canvas id="spark-{{ card.key }}"></canvas>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+</section>
+
+<section class="ecc-section ecc-cmd-actions" id="users-actions" aria-label="نیازمند اقدام">
+    <header class="ecc-cmd-actions-head">
+        <div>
+            <h2><i class="fas fa-bolt"></i> نیازمند اقدام</h2>
+            <p>Snapshot</p>
+        </div>
+        <span class="ecc-cmd-actions-count">{{ action_items|length|to_persian_digits }}</span>
+    </header>
+    {% if action_items %}
+    <div class="ecc-cmd-actions-list">
+        {% for item in action_items %}
+        <a href="{{ item.href }}" class="ecc-cmd-action" data-priority="{{ item.priority }}" data-accent="{{ item.accent }}">
+            <span class="ecc-cmd-action-priority" aria-hidden="true"></span>
+            <span class="ecc-cmd-action-icon"><i class="fas {{ item.icon }}"></i></span>
+            <span class="ecc-cmd-action-body">
+                <strong>{{ item.title }}</strong>
+                <em>{{ item.detail }}</em>
+            </span>
+            <span class="ecc-cmd-action-count">{{ item.count|to_persian_digits }}</span>
+            <span class="ecc-cmd-action-cta">{{ item.cta }} <i class="fas fa-arrow-left"></i></span>
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="ecc-empty ecc-empty--compact">
+        <i class="fas fa-circle-check"></i>
+        <strong>مورد فوری در کاربران وجود ندارد</strong>
+    </div>
+    {% endif %}
+</section>
+
+<section class="ecc-section ecc-cmd-charts ecc-sales-charts" aria-label="روند کاربران">
+    <div class="ecc-cmd-charts-grid ecc-sales-charts-grid">
+        <article class="ecc-card ecc-card--chart">
+            <div class="ecc-card-head">
+                <div>
+                    <h3><i class="fas fa-user-plus"></i> روند ثبت‌نام</h3>
+                    <p>{{ range_label }}</p>
+                </div>
+            </div>
+            <div class="ecc-chart-wrap ecc-chart-wrap--tall">
+                <canvas id="chart-signups"></canvas>
+            </div>
+        </article>
+        <article class="ecc-card ecc-card--chart">
+            <div class="ecc-card-head">
+                <div>
+                    <h3><i class="fas fa-signal"></i> کاربران فعال روزانه</h3>
+                    <p>{{ range_label }}</p>
+                </div>
+            </div>
+            <div class="ecc-chart-wrap ecc-chart-wrap--tall">
+                <canvas id="chart-users-active"></canvas>
+            </div>
+        </article>
+    </div>
+</section>
+
+<section class="ecc-section" aria-label="ثبت‌نام‌های اخیر">
+    <header class="ecc-section-head">
+        <div>
+            <h2><i class="fas fa-clock"></i> ثبت‌نام‌های اخیر</h2>
+        </div>
+        <a href="{% url 'admin_panel_export' 'new_users' %}?format=xlsx&days={{ chart_days }}" class="ecc-btn ecc-btn--ghost ecc-btn--sm">
+            خروجی <i class="fas fa-file-excel"></i>
+        </a>
+    </header>
+    <div class="adm-table-wrap">
+        <table class="adm-table adm-table--pro">
+            <thead>
+                <tr>
+                    <th>کاربر</th>
+                    <th>موبایل</th>
+                    <th>فعال</th>
+                    <th>تاریخ عضویت</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in recent_users %}
+                <tr>
+                    <td><strong>{{ u.get_full_name|default:u.username }}</strong></td>
+                    <td>{{ u.phone|default:"—" }}</td>
+                    <td>{% if u.is_active %}بله{% else %}خیر{% endif %}</td>
+                    <td>{{ u.date_joined|to_jalali_fa }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="4">کاربری ثبت نشده</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<section class="ecc-section" aria-label="کاربران برتر">
+    <header class="ecc-section-head">
+        <div>
+            <h2><i class="fas fa-crown"></i> کاربران برتر</h2>
+            <p>بر اساس مجموع پرداخت</p>
+        </div>
+    </header>
+    <div class="adm-table-wrap">
+        <table class="adm-table adm-table--pro">
+            <thead>
+                <tr>
+                    <th>کاربر</th>
+                    <th>مجموع پرداخت</th>
+                    <th>سفارش</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in top_users %}
+                <tr>
+                    <td><strong>{{ u.get_full_name|default:u.username }}</strong></td>
+                    <td>{{ u.total_spent|currency }}</td>
+                    <td>{{ u.order_count|to_persian_digits }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="3">داده‌ای نیست</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<section class="ecc-section" id="users-table-no-license" aria-label="بدون لایسنس">
+    <header class="ecc-section-head">
+        <div>
+            <h2><i class="fas fa-user-slash"></i> بدون لایسنس فعال</h2>
+            <p>{{ snapshot_counts.users_without_license|to_persian_digits }} کاربر</p>
+        </div>
+        <a href="{% url 'admin_panel_export' 'users_without_license' %}?format=xlsx" class="ecc-btn ecc-btn--ghost ecc-btn--sm">
+            خروجی <i class="fas fa-file-excel"></i>
+        </a>
+    </header>
+    <div class="adm-table-wrap">
+        <table class="adm-table adm-table--pro">
+            <thead>
+                <tr>
+                    <th>کاربر</th>
+                    <th>سفارش پرداخت‌شده</th>
+                    <th>سفارش معلق</th>
+                    <th>عضویت</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in users_without_license_list %}
+                <tr>
+                    <td><strong>{{ u.get_full_name|default:u.username }}</strong></td>
+                    <td>{{ u.paid_orders|to_persian_digits }}</td>
+                    <td>{{ u.pending_orders|to_persian_digits }}</td>
+                    <td>{{ u.date_joined|to_jalali_fa }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="4">همه کاربران فعال لایسنس دارند</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<section class="ecc-section" id="ecc-users" aria-label="مدیریت کاربران">
+    <header class="ecc-section-head">
+        <div>
+            <h2><i class="fas fa-table"></i> مدیریت کاربران</h2>
+            <p>جستجو، فیلتر و جزئیات</p>
+        </div>
+    </header>
+    <div
+        id="ecc-users-mgmt"
+        data-users-list-url="{{ users_list_url }}"
+        data-users-detail-url-template="{{ users_detail_url_template }}"
+    >
+        <div class="ecc-users-mgmt-tools">
+            <input type="search" id="eccUsersMgmtSearch" class="ecc-table-search" placeholder="جستجو نام، موبایل، ایمیل…" autocomplete="off">
+            <div class="ecc-users-mgmt-filters">
+                <select id="eccUsersMgmtLicense" class="ecc-users-mgmt-select" aria-label="لایسنس">
+                    <option value="">لایسنس — همه</option>
+                    <option value="yes">دارای لایسنس</option>
+                    <option value="no">بدون لایسنس</option>
+                </select>
+                <select id="eccUsersMgmtWindows" class="ecc-users-mgmt-select" aria-label="ویندوز">
+                    <option value="">ویندوز — همه</option>
+                    <option value="downloaded">دانلود شده</option>
+                    <option value="activated">فعال‌شده</option>
+                    <option value="launched">اجرا شده</option>
+                </select>
+                <select id="eccUsersMgmtAndroid" class="ecc-users-mgmt-select" aria-label="اندروید">
+                    <option value="">اندروید — همه</option>
+                    <option value="yes">نصب‌شده</option>
+                    <option value="no">ندارد</option>
+                </select>
+                <select id="eccUsersMgmtDatasets" class="ecc-users-mgmt-select" aria-label="دیتاست">
+                    <option value="">دیتاست — همه</option>
+                    <option value="yes">دارد</option>
+                    <option value="no">ندارد</option>
+                </select>
+                <select id="eccUsersMgmtCrm" class="ecc-users-mgmt-select" aria-label="CRM">
+                    <option value="">CRM — همه</option>
+                    <option value="yes">دارد</option>
+                    <option value="no">ندارد</option>
+                </select>
+                <select id="eccUsersMgmtPaid" class="ecc-users-mgmt-select" aria-label="پرداخت">
+                    <option value="">پرداخت — همه</option>
+                    <option value="yes">پرداخت‌کننده</option>
+                    <option value="no">بدون پرداخت</option>
+                </select>
+            </div>
+        </div>
+        <div class="adm-table-wrap adm-table-wrap--tall">
+            <table class="adm-table adm-table--pro ecc-users-mgmt-table">
+                <thead>
+                    <tr>
+                        <th>کاربر</th>
+                        <th>لایسنس</th>
+                        <th>پرداخت</th>
+                        <th>ویندوز</th>
+                        <th>اندروید</th>
+                        <th>دیتاست</th>
+                        <th>CRM</th>
+                        <th>آخرین ورود</th>
+                    </tr>
+                </thead>
+                <tbody id="eccUsersMgmtBody">
+                    <tr><td colspan="8" class="adm-empty">در حال بارگذاری…</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="ecc-users-mgmt-pager" id="eccUsersMgmtPager" hidden>
+            <button type="button" class="ecc-btn ecc-btn--ghost ecc-btn--sm" id="eccUsersMgmtPrev">قبلی</button>
+            <span class="ecc-users-mgmt-page-info" id="eccUsersMgmtPageInfo"></span>
+            <button type="button" class="ecc-btn ecc-btn--ghost ecc-btn--sm" id="eccUsersMgmtNext">بعدی</button>
+        </div>
+    </div>
+</section>
+
+<section class="ecc-section" aria-label="خروجی‌های کاربران">
+    <header class="ecc-section-head ecc-section-head--slim">
+        <div>
+            <h2><i class="fas fa-file-export"></i> خروجی‌ها</h2>
+        </div>
+    </header>
+    <div class="ecc-module-dock">
+        {% for exp in export_links %}
+        <a class="ecc-module" data-accent="{{ exp.accent }}" href="{{ exp.url }}">
+            <span class="ecc-module-icon"><i class="fas {{ exp.icon }}"></i></span>
+            <span class="ecc-module-text">
+                <strong>{{ exp.title }}</strong>
+                <em>{% if exp.supports_days %}بازه {{ chart_days|to_persian_digits }} روز{% else %}کل{% endif %}</em>
+            </span>
+            {% if exp.count %}<span class="ecc-module-badge">{{ exp.count|to_persian_digits }}</span>{% endif %}
+        </a>
+        {% endfor %}
+    </div>
+</section>
+
+<div class="ecc-user-drawer" id="eccUserDrawer" hidden aria-hidden="true">
+    <div class="ecc-user-drawer-overlay" data-user-drawer-close tabindex="-1" aria-hidden="true"></div>
+    <aside class="ecc-user-drawer-panel" role="dialog" aria-labelledby="eccUserDrawerTitle">
+        <header class="ecc-user-drawer-head">
+            <div>
+                <h2 id="eccUserDrawerTitle">جزئیات کاربر</h2>
+                <p class="ecc-user-drawer-sub" id="eccUserDrawerSub"></p>
+            </div>
+            <button type="button" class="ecc-user-drawer-close" data-user-drawer-close aria-label="بستن">
+                <i class="fas fa-times"></i>
+            </button>
+        </header>
+        <div class="ecc-user-drawer-body" id="eccUserDrawerBody"></div>
+    </aside>
+</div>
+
+{% endblock %}
+
+{% block admin_panel_extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+window.admCharts = {{ charts_json|safe }};
+window.admChartDays = {{ chart_days }};
+</script>
+<script src="{% static 'js/mizkar-admin-dashboard.js' %}?v=14"></script>
+<script src="{% static 'js/mizkar-admin-users-mgmt.js' %}?v=2"></script>
+{% endblock %}

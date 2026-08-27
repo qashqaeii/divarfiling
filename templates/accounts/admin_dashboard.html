@@ -239,4 +239,10 @@ window.admCharts = {{ charts_json|safe }};
 window.admChartDays = {{ chart_days }};
 </script>
 <script src="{% static 'js/mizkar-admin-dashboard.js' %}?v=13"></script>
+<script>
+if (location.hash === '#ecc-users') {
+    var q = location.search || '?days=30';
+    window.location.replace('{% url "admin_panel_users" %}' + q);
+}
+</script>
 {% endblock %}

@@ -298,6 +298,7 @@
             ['chart-operations', charts.operations_gauge],
             ['chart-revenue', charts.revenue_trend],
             ['chart-signups', charts.user_signups],
+            ['chart-users-active', charts.users_active_trend],
             ['chart-order-status', charts.order_status],
             ['chart-license-status', charts.license_status],
             ['chart-payment', charts.payment_methods],

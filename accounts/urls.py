@@ -27,6 +27,7 @@ from .admin_views import (
     AdminRecoveryCenterView,
     AdminSalesCenterView,
     AdminSystemSummaryView,
+    AdminUsersCenterView,
     AdminUsersManagementDetailView,
     AdminUsersManagementListView,
 )
@@ -232,6 +233,7 @@ urlpatterns = [
         name='admin_panel_recovery_center_json',
     ),
     path('admin-panel/sales/', AdminSalesCenterView.as_view(), name='admin_panel_sales'),
+    path('admin-panel/users/', AdminUsersCenterView.as_view(), name='admin_panel_users'),
     path('profile/', views.ProfileView.as_view(), name='profile'),
     path('password-reset/', otp_views.OtpPasswordResetStartView.as_view(), name='password_reset'),
     path('password-reset/verify/', otp_views.OtpPasswordResetVerifyView.as_view(), name='otp_password_reset_verify'),

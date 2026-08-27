@@ -68,6 +68,7 @@ from accounts.services.admin_recovery_center import (
     get_recovery_center_context,
 )
 from accounts.services.admin_sales_center import get_sales_center_context
+from accounts.services.admin_users_center import get_users_center_context
 from accounts.services.admin_phonebook_sync import (
     PhonebookSyncError,
     get_phonebook_sync_status,
@@ -735,6 +736,25 @@ class AdminSalesCenterView(StaffRequiredMixin, TemplateView):
         days, range_key = parse_admin_panel_range(self.request)
         compare = self.request.GET.get('compare') == '1'
         data = get_sales_center_context(days=days, compare=compare)
+        for card in data.get('kpi_cards', []):
+            card['sparkline_json'] = json.dumps(card.get('sparkline', []))
+        ctx.update(data)
+        ctx['chart_days'] = days
+        ctx['admin_panel_range_key'] = range_key
+        ctx['charts_json'] = json.dumps(data['charts'], ensure_ascii=False)
+        return ctx
+
+
+class AdminUsersCenterView(StaffRequiredMixin, TemplateView):
+    """مرکز کاربران — KPI، روند و مدیریت AJAX."""
+
+    template_name = 'accounts/admin_users_center.html'
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        days, range_key = parse_admin_panel_range(self.request)
+        compare = self.request.GET.get('compare') == '1'
+        data = get_users_center_context(days=days, compare=compare)
         for card in data.get('kpi_cards', []):
             card['sparkline_json'] = json.dumps(card.get('sparkline', []))
         ctx.update(data)

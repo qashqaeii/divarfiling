@@ -20,6 +20,7 @@ class AdminPanelShellServiceTests(TestCase):
         self.assertEqual(resolve_admin_panel_nav_active('/accounts/admin-panel/marketing/leads/'), 'leads')
         self.assertEqual(resolve_admin_panel_nav_active('/accounts/admin-panel/plan-conversion/'), 'plan_conversion')
         self.assertEqual(resolve_admin_panel_nav_active('/accounts/admin-panel/sales/'), 'sales')
+        self.assertEqual(resolve_admin_panel_nav_active('/accounts/admin-panel/users/'), 'users')
 
     def test_context_processor_staff_only(self):
         factory = RequestFactory()

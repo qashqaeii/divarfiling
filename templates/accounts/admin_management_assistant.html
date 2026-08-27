@@ -1,0 +1,270 @@
+{% extends 'accounts/admin_panel_base.html' %}
+{% load static %}
+{% load persian_tags %}
+
+{% block title %}دستیار مدیریت | پنل مدیریت{% endblock %}
+
+{% block admin_panel_title %}دستیار مدیریت{% endblock %}
+
+{% block admin_panel_extra_css %}
+<link rel="stylesheet" href="{% static 'css/mizkar-admin-assistant.css' %}?v=1">
+{% endblock %}
+
+{% block admin_panel_header_meta %}
+<span class="maa-header-pill">
+    امروز {{ insights_total|to_persian_digits }} پیشنهاد برای شما داریم
+</span>
+{% endblock %}
+
+{% block admin_panel_content %}
+<div class="maa-page" id="maa-page"
+     data-preview-url="{% url 'admin_panel_assistant_preview' %}"
+     data-send-url="{% url 'admin_panel_assistant_send' %}"
+     data-automation-url="{% url 'admin_panel_assistant_automation' %}">
+
+    <div class="maa-summary">
+        <div class="maa-summary-item" data-severity="critical">
+            <strong>{{ severity_counts.critical|to_persian_digits }}</strong>
+            <span>نیازمند اقدام فوری</span>
+        </div>
+        <div class="maa-summary-item" data-severity="high">
+            <strong>{{ severity_counts.high|to_persian_digits }}</strong>
+            <span>پیشنهاد مهم</span>
+        </div>
+        <div class="maa-summary-item" data-severity="medium">
+            <strong>{{ severity_counts.medium|to_persian_digits }}</strong>
+            <span>پیشنهاد</span>
+        </div>
+        <div class="maa-summary-item" data-severity="opportunity">
+            <strong>{{ severity_counts.opportunity|to_persian_digits }}</strong>
+            <span>فرصت رشد</span>
+        </div>
+    </div>
+
+    <nav class="maa-tabs" aria-label="بخش‌های دستیار">
+        <a href="?tab=suggestions" class="maa-tab{% if tab == 'suggestions' %} is-active{% endif %}">پیشنهادها</a>
+        <a href="?tab=automations" class="maa-tab{% if tab == 'automations' %} is-active{% endif %}">
+            اتوماسیون‌ها
+            {% if active_automations_count %}
+            <span class="maa-tab-badge">{{ active_automations_count|to_persian_digits }}</span>
+            {% endif %}
+        </a>
+        <a href="?tab=history" class="maa-tab{% if tab == 'history' %} is-active{% endif %}">تاریخچه</a>
+    </nav>
+
+    {% if tab == 'suggestions' %}
+    <section class="maa-section" aria-label="پیشنهادهای امروز">
+        <header class="maa-section-head">
+            <h2>امروز چه کارهایی انجام بدهم؟</h2>
+            <p>هر پیشنهاد: چه اتفاقی افتاده · چرا مهم است · پیشنهاد من · اقدام</p>
+        </header>
+
+        {% if insights %}
+        <div class="maa-insights">
+            {% for item in insights %}
+            <article class="maa-insight" data-severity="{{ item.severity }}" data-accent="{{ item.accent }}" data-key="{{ item.key }}">
+                <div class="maa-insight-head">
+                    <span class="maa-insight-icon"><i class="fas {{ item.icon }}"></i></span>
+                    <div>
+                        <h3>{{ item.title }}</h3>
+                        <p class="maa-insight-happened">{{ item.what_happened }}</p>
+                    </div>
+                </div>
+
+                <dl class="maa-insight-meta">
+                    <div>
+                        <dt>اثر احتمالی</dt>
+                        <dd>{{ item.importance }}</dd>
+                    </div>
+                    {% if item.context %}
+                    <div>
+                        <dt>زمینه</dt>
+                        <dd>{{ item.context }}</dd>
+                    </div>
+                    {% endif %}
+                    <div>
+                        <dt>پیشنهاد</dt>
+                        <dd class="maa-insight-rec">{{ item.recommendation }}</dd>
+                    </div>
+                </dl>
+
+                <div class="maa-insight-actions">
+                    {% if item.view_url %}
+                    <a href="{{ item.view_url }}" class="ecc-btn ecc-btn--ghost ecc-btn--sm">مشاهده</a>
+                    {% endif %}
+                    {% if item.segment_key or item.message_template %}
+                    <button type="button" class="ecc-btn ecc-btn--primary ecc-btn--sm maa-btn-send"
+                            data-insight="{{ item.key }}"
+                            data-title="{{ item.title }}"
+                            data-count="{{ item.count }}">
+                        ارسال پیام
+                    </button>
+                    {% endif %}
+                    {% if item.automation_available and item.automation_key %}
+                    <button type="button" class="ecc-btn ecc-btn--ghost ecc-btn--sm maa-btn-automate"
+                            data-rule="{{ item.automation_key }}">
+                        خودکارسازی
+                    </button>
+                    {% endif %}
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="ecc-empty">
+            <i class="fas fa-circle-check"></i>
+            <strong>همه‌چیز مرتب است</strong>
+            <span>پیشنهاد فوری برای امروز نداریم</span>
+        </div>
+        {% endif %}
+
+        <aside class="maa-results-strip" aria-label="نتیجه اقدامات">
+            <h3>نتیجه اقدامات این هفته</h3>
+            <div class="maa-results-grid">
+                <div><strong>{{ action_results.messages_sent|to_persian_digits }}</strong><span>پیام</span></div>
+                <div><strong>{{ action_results.automations_run|to_persian_digits }}</strong><span>اجرای خودکار</span></div>
+            </div>
+        </aside>
+    </section>
+    {% endif %}
+
+    {% if tab == 'automations' %}
+    <section class="maa-section" aria-label="اتوماسیون‌ها">
+        <header class="maa-section-head">
+            <h2>اتوماسیون‌های فعال</h2>
+            <p>از این به بعد خودکار انجام شود — با cooldown و guardrail</p>
+        </header>
+
+        <div class="maa-auto-table-wrap">
+            <table class="maa-auto-table">
+                <thead>
+                    <tr>
+                        <th>اتوماسیون</th>
+                        <th>شرط</th>
+                        <th>وضعیت</th>
+                        <th>عملیات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for rule in automation_rules %}
+                    <tr data-rule="{{ rule.key }}">
+                        <td>
+                            <strong>{{ rule.name }}</strong>
+                            <small>{{ rule.audience_label }}</small>
+                        </td>
+                        <td>{{ rule.condition_label }}</td>
+                        <td>
+                            <span class="maa-auto-status{% if rule.is_active %} is-on{% endif %}">
+                                {% if rule.is_active %}فعال{% else %}خاموش{% endif %}
+                            </span>
+                        </td>
+                        <td>
+                            <button type="button"
+                                    class="ecc-btn ecc-btn--ghost ecc-btn--sm maa-btn-toggle-auto"
+                                    data-rule="{{ rule.key }}"
+                                    data-active="{% if rule.is_active %}0{% else %}1{% endif %}">
+                                {% if rule.is_active %}توقف{% else %}فعال کردن{% endif %}
+                            </button>
+                            <button type="button"
+                                    class="ecc-btn ecc-btn--ghost ecc-btn--sm maa-btn-automate-detail"
+                                    data-rule="{{ rule.key }}">
+                                جزئیات
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+    {% endif %}
+
+    {% if tab == 'history' %}
+    <section class="maa-section" aria-label="تاریخچه">
+        <header class="maa-section-head">
+            <h2>تاریخچه اقدامات</h2>
+            <p>چه کارهایی انجام شده و نتیجه چه بود</p>
+        </header>
+
+        {% if history %}
+        <div class="maa-history">
+            {% for row in history %}
+            <article class="maa-history-item">
+                <time>{{ row.started_at|date:"H:i" }}</time>
+                <div>
+                    <strong>{{ row.title }}</strong>
+                    <p>
+                        Match: {{ row.matched_count|to_persian_digits }}
+                        · موفق: {{ row.success_count|to_persian_digits }}
+                        · رد: {{ row.skipped_count|to_persian_digits }}
+                        {% if row.failed_count %}· خطا: {{ row.failed_count|to_persian_digits }}{% endif %}
+                        {% if row.dry_run %} · Dry Run{% endif %}
+                        · {{ row.status }}
+                    </p>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="ecc-empty ecc-empty--compact">
+            <i class="fas fa-clock"></i>
+            <span>هنوز تاریخچه‌ای ثبت نشده</span>
+        </div>
+        {% endif %}
+    </section>
+    {% endif %}
+</div>
+
+<div class="maa-modal" id="maa-send-modal" hidden aria-hidden="true">
+    <div class="maa-modal-backdrop" data-close-modal></div>
+    <div class="maa-modal-panel" role="dialog" aria-labelledby="maa-send-title">
+        <header class="maa-modal-head">
+            <h3 id="maa-send-title">ارسال پیام</h3>
+            <button type="button" class="maa-modal-close" data-close-modal aria-label="بستن">
+                <i class="fas fa-times"></i>
+            </button>
+        </header>
+        <div class="maa-modal-body">
+            <p class="maa-modal-recipients">گیرندگان: <strong id="maa-send-count">—</strong></p>
+            <label for="maa-send-message">متن پیشنهادی</label>
+            <textarea id="maa-send-message" rows="6"></textarea>
+            <div class="maa-modal-recipient-list" id="maa-recipient-list"></div>
+        </div>
+        <footer class="maa-modal-foot">
+            <button type="button" class="ecc-btn ecc-btn--ghost" id="maa-preview-recipients">پیش‌نمایش کاربران</button>
+            <button type="button" class="ecc-btn ecc-btn--primary" id="maa-confirm-send">ارسال</button>
+        </footer>
+    </div>
+</div>
+
+<div class="maa-modal" id="maa-auto-modal" hidden aria-hidden="true">
+    <div class="maa-modal-backdrop" data-close-modal></div>
+    <div class="maa-modal-panel" role="dialog" aria-labelledby="maa-auto-title">
+        <header class="maa-modal-head">
+            <h3 id="maa-auto-title">خودکارسازی</h3>
+            <button type="button" class="maa-modal-close" data-close-modal aria-label="بستن">
+                <i class="fas fa-times"></i>
+            </button>
+        </header>
+        <div class="maa-modal-body" id="maa-auto-body">
+            <dl class="maa-auto-detail">
+                <div><dt>شرط</dt><dd id="maa-auto-condition">—</dd></div>
+                <div><dt>مخاطب</dt><dd id="maa-auto-audience">—</dd></div>
+                <div><dt>عمل</dt><dd id="maa-auto-action">—</dd></div>
+                <div><dt>قالب</dt><dd id="maa-auto-template">—</dd></div>
+                <div><dt>Cooldown</dt><dd id="maa-auto-cooldown">—</dd></div>
+            </dl>
+        </div>
+        <footer class="maa-modal-foot">
+            <button type="button" class="ecc-btn ecc-btn--primary" id="maa-confirm-auto">فعال کردن</button>
+        </footer>
+    </div>
+</div>
+{% endblock %}
+
+{% block admin_panel_extra_js %}
+<script>
+window.maaAutomationRules = {{ automation_rules_json|safe }};
+</script>
+<script src="{% static 'js/mizkar-admin-assistant.js' %}?v=1"></script>
+{% endblock %}

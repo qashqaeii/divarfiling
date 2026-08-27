@@ -1,0 +1,850 @@
+"""Management Automation Runtime — Runner، Audience، Revalidation، Dedup."""
+from __future__ import annotations
+
+import logging
+from dataclasses import dataclass, field
+from datetime import timedelta
+from typing import Any, Callable, Dict, List, Optional, Tuple
+
+from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.db import IntegrityError, transaction
+from django.db.models import Exists, OuterRef, Q
+from django.utils import timezone
+
+from accounts.models import (
+    ManagementAutomationExecution,
+    ManagementAutomationRecipient,
+    ManagementAutomationRule,
+)
+from accounts.phone_utils import is_valid_iran_mobile, normalize_phone
+from accounts.services.admin_management_assistant import INSIGHT_MESSAGE_TEMPLATES
+from accounts.services.admin_marketing import render_message
+from accounts.services.admin_windows_app import WINDOWS_ACTIVATION_Q
+from accounts.services.growth_suppression import (
+    PURPOSE_LICENSE_RENEWAL,
+    PURPOSE_MARKETING,
+    PURPOSE_RECOVERY,
+    is_send_allowed,
+)
+from accounts.services.notifications import notify_marketing
+from accounts.services.pending_orders import PENDING_ORDER_STATUSES, pending_orders_queryset
+from accounts.services.sms import get_sms_balance_snapshot
+from licenses.models import ClientAppEvent, License, LicenseActivation
+from shop.models import DownloadLog, Order
+from workspace.models import Customer, Ticket
+
+User = get_user_model()
+logger = logging.getLogger(__name__)
+
+TERMINAL_RECIPIENT_STATUSES = (
+    ManagementAutomationRecipient.Status.SENT,
+    ManagementAutomationRecipient.Status.DRY_RUN,
+    ManagementAutomationRecipient.Status.ALERT,
+    ManagementAutomationRecipient.Status.SKIPPED,
+)
+
+DEFAULT_QUIET_START = 23
+DEFAULT_QUIET_END = 8
+
+
+@dataclass
+class AutomationCandidate:
+    trigger_key: str
+    user: Any = None
+    phone: str = ''
+    context: Dict[str, str] = field(default_factory=dict)
+    metadata: Dict[str, Any] = field(default_factory=dict)
+
+
+def _json_safe(value: Any) -> Any:
+    if isinstance(value, dict):
+        return {k: _json_safe(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_json_safe(v) for v in value]
+    if hasattr(value, 'hex'):
+        return str(value)
+    return value
+
+
+def _safe_metadata(meta: Dict[str, Any]) -> Dict[str, Any]:
+    return _json_safe(meta or {})
+
+
+def _local_now(now=None):
+    now = now or timezone.now()
+    return timezone.localtime(now) if timezone.is_aware(now) else now
+
+
+def _site_link() -> str:
+    return (getattr(settings, 'SITE_URL', '') or 'https://divarfiling.ir').rstrip('/') + '/'
+
+
+def _renewal_link() -> str:
+    return getattr(settings, 'LICENSE_RENEWAL_LANDING_URL', f'{_site_link()}pricing/')
+
+
+def _name_part(user) -> str:
+    name = (getattr(user, 'first_name', '') or '').strip()
+    return f' {name}' if name else ''
+
+
+def _phone_ok(raw: str) -> str:
+    phone = normalize_phone(raw or '')
+    if not is_valid_iran_mobile(phone):
+        return ''
+    return phone
+
+
+def rule_is_due(rule: ManagementAutomationRule, *, now=None, force: bool = False) -> bool:
+    if force:
+        return True
+    if not rule.last_run_at:
+        return True
+    local = _local_now(now)
+    last = _local_now(rule.last_run_at)
+    if rule.cadence == ManagementAutomationRule.Cadence.HOURLY:
+        return (local - last) >= timedelta(hours=1)
+    return local.date() > last.date()
+
+
+def in_quiet_hours(rule: ManagementAutomationRule, *, now=None) -> bool:
+    start = rule.quiet_hours_start
+    end = rule.quiet_hours_end
+    if start is None and end is None:
+        start, end = DEFAULT_QUIET_START, DEFAULT_QUIET_END
+    if start is None or end is None:
+        return False
+    hour = _local_now(now).hour
+    if start <= end:
+        return start <= hour < end
+    return hour >= start or hour < end
+
+
+def _has_active_license(user_id: int, *, now=None) -> bool:
+    now = now or timezone.now()
+    return License.objects.filter(
+        order__user_id=user_id,
+        order__status='paid',
+        status='active',
+    ).filter(Q(expires_at__isnull=True) | Q(expires_at__gt=now)).exists()
+
+
+def _resolve_license_expiring(*, within_days: int = 3) -> List[AutomationCandidate]:
+    now = timezone.now()
+    horizon = now + timedelta(days=within_days)
+    out: List[AutomationCandidate] = []
+    qs = (
+        License.objects.filter(
+            order__status='paid',
+            status='active',
+            expires_at__isnull=False,
+            expires_at__gt=now,
+            expires_at__lte=horizon,
+        )
+        .select_related('order', 'order__user', 'order__product', 'plan')
+        .order_by('expires_at')[:500]
+    )
+    for lic in qs:
+        user = lic.order.user
+        phone = _phone_ok(getattr(user, 'phone', ''))
+        if not phone:
+            continue
+        exp_date = timezone.localtime(lic.expires_at).date()
+        days_left = max(1, (lic.expires_at - now).days)
+        product = getattr(lic.order.product, 'title', None) or getattr(lic.plan, 'name', '') or 'فایلینگ'
+        out.append(AutomationCandidate(
+            trigger_key=f'license_expiring:{lic.pk}:{exp_date.isoformat()}',
+            user=user,
+            phone=phone,
+            context={
+                'name_part': _name_part(user),
+                'product': product,
+                'days': str(days_left),
+                'link': _renewal_link(),
+            },
+            metadata={'license_id': lic.pk, 'user_id': user.pk, 'expires_at': exp_date.isoformat()},
+        ))
+    return out
+
+
+def _resolve_expired_renewal(*, within_days: int = 14) -> List[AutomationCandidate]:
+    now = timezone.now()
+    cutoff = now - timedelta(days=within_days)
+    out: List[AutomationCandidate] = []
+    seen_users: set[int] = set()
+    qs = (
+        License.objects.filter(
+            order__status='paid',
+            expires_at__isnull=False,
+            expires_at__lte=now,
+            expires_at__gte=cutoff,
+        )
+        .select_related('order', 'order__user', 'order__product', 'plan')
+        .order_by('-expires_at')[:500]
+    )
+    for lic in qs:
+        user = lic.order.user
+        if user.pk in seen_users or _has_active_license(user.pk, now=now):
+            continue
+        phone = _phone_ok(getattr(user, 'phone', ''))
+        if not phone:
+            continue
+        seen_users.add(user.pk)
+        exp_date = timezone.localtime(lic.expires_at).date()
+        product = getattr(lic.order.product, 'title', None) or getattr(lic.plan, 'name', '') or 'فایلینگ'
+        out.append(AutomationCandidate(
+            trigger_key=f'expired_license:{lic.pk}:{exp_date.isoformat()}',
+            user=user,
+            phone=phone,
+            context={
+                'name_part': _name_part(user),
+                'product': product,
+                'link': _renewal_link(),
+            },
+            metadata={'license_id': lic.pk, 'user_id': user.pk},
+        ))
+    return out
+
+
+def _resolve_pending_orders(*, stale_hours: int = 2) -> List[AutomationCandidate]:
+    cutoff = timezone.now() - timedelta(hours=stale_hours)
+    out: List[AutomationCandidate] = []
+    qs = (
+        pending_orders_queryset(dedupe_by_user=True)
+        .filter(created_at__lte=cutoff)
+        .select_related('user', 'product', 'plan')
+        .order_by('-created_at')[:500]
+    )
+    for order in qs:
+        user = order.user
+        phone = _phone_ok(getattr(user, 'phone', ''))
+        if not phone:
+            continue
+        from accounts.services.admin_marketing import _checkout_url, _format_amount
+        out.append(AutomationCandidate(
+            trigger_key=f'pending_order:{order.pk}',
+            user=user,
+            phone=phone,
+            context={
+                'name_part': _name_part(user),
+                'product': order.product.title if order.product_id else 'محصول',
+                'amount': _format_amount(order.amount),
+                'link': _checkout_url(order.pk),
+                'code': '',
+            },
+            metadata={'order_id': str(order.pk), 'user_id': user.pk},
+        ))
+    return out
+
+
+def _resolve_failed_orders(*, days_lookback: int = 1) -> List[AutomationCandidate]:
+    since = timezone.now() - timedelta(days=max(1, days_lookback))
+    out: List[AutomationCandidate] = []
+    qs = (
+        Order.objects.filter(status='failed', created_at__gte=since)
+        .select_related('user', 'product', 'plan')
+        .order_by('-created_at')[:500]
+    )
+    for order in qs:
+        user = order.user
+        phone = _phone_ok(getattr(user, 'phone', ''))
+        if not phone:
+            continue
+        from accounts.services.admin_marketing import _checkout_url, _format_amount
+        out.append(AutomationCandidate(
+            trigger_key=f'failed_order:{order.pk}',
+            user=user,
+            phone=phone,
+            context={
+                'name_part': _name_part(user),
+                'product': order.product.title if order.product_id else 'محصول',
+                'link': _checkout_url(order.pk),
+                'code': '',
+            },
+            metadata={'order_id': str(order.pk), 'user_id': user.pk},
+        ))
+    return out
+
+
+def _resolve_users_onboarding(*, min_hours: int = 24) -> List[AutomationCandidate]:
+    since = timezone.now() - timedelta(days=14)
+    cutoff = timezone.now() - timedelta(hours=min_hours)
+    now = timezone.now()
+    active_license_q = License.objects.filter(
+        order__user=OuterRef('pk'),
+        status='active',
+    ).filter(Q(expires_at__isnull=True) | Q(expires_at__gt=now))
+    out: List[AutomationCandidate] = []
+    qs = (
+        User.objects.filter(is_active=True, date_joined__gte=since, date_joined__lte=cutoff)
+        .annotate(has_active=Exists(active_license_q))
+        .filter(has_active=False)[:500]
+    )
+    for user in qs:
+        phone = _phone_ok(getattr(user, 'phone', ''))
+        if not phone:
+            continue
+        out.append(AutomationCandidate(
+            trigger_key=f'user_onboarding:{user.pk}',
+            user=user,
+            phone=phone,
+            context={'name_part': _name_part(user), 'link': _site_link(), 'code': ''},
+            metadata={'user_id': user.pk},
+        ))
+    return out
+
+
+def _resolve_windows_download_no_activate() -> List[AutomationCandidate]:
+    activated_ids = LicenseActivation.objects.filter(WINDOWS_ACTIVATION_Q).values_list(
+        'license__order__user_id', flat=True,
+    )
+    user_ids = (
+        DownloadLog.objects.values_list('user_id', flat=True)
+        .distinct()
+        .exclude(user_id__in=activated_ids)
+    )[:500]
+    out: List[AutomationCandidate] = []
+    for user in User.objects.filter(pk__in=list(user_ids)):
+        phone = _phone_ok(getattr(user, 'phone', ''))
+        if not phone:
+            continue
+        out.append(AutomationCandidate(
+            trigger_key=f'windows_download:{user.pk}',
+            user=user,
+            phone=phone,
+            context={'name_part': _name_part(user), 'link': _site_link()},
+            metadata={'user_id': user.pk},
+        ))
+    return out
+
+
+def _resolve_windows_activate_no_launch() -> List[AutomationCandidate]:
+    launched = ClientAppEvent.objects.filter(
+        event_type=ClientAppEvent.EventType.FIRST_LAUNCH,
+    ).values_list('user_id', flat=True)
+    user_ids = (
+        LicenseActivation.objects.filter(WINDOWS_ACTIVATION_Q)
+        .exclude(license__order__user_id__in=launched)
+        .values_list('license__order__user_id', flat=True)
+        .distinct()
+    )[:500]
+    out: List[AutomationCandidate] = []
+    for user in User.objects.filter(pk__in=list(user_ids)):
+        phone = _phone_ok(getattr(user, 'phone', ''))
+        if not phone:
+            continue
+        out.append(AutomationCandidate(
+            trigger_key=f'windows_no_launch:{user.pk}',
+            user=user,
+            phone=phone,
+            context={'name_part': _name_part(user), 'link': _site_link()},
+            metadata={'user_id': user.pk},
+        ))
+    return out
+
+
+def _resolve_crm_not_started() -> List[AutomationCandidate]:
+    now = timezone.now()
+    active_license_q = License.objects.filter(
+        order__user=OuterRef('pk'),
+        status='active',
+    ).filter(Q(expires_at__isnull=True) | Q(expires_at__gt=now))
+    has_crm_q = Customer.objects.filter(user=OuterRef('pk'))
+    out: List[AutomationCandidate] = []
+    qs = (
+        User.objects.filter(is_active=True)
+        .annotate(has_active=Exists(active_license_q), has_crm=Exists(has_crm_q))
+        .filter(has_active=True, has_crm=False)[:500]
+    )
+    for user in qs:
+        phone = _phone_ok(getattr(user, 'phone', ''))
+        if not phone:
+            continue
+        out.append(AutomationCandidate(
+            trigger_key=f'crm_not_started:{user.pk}',
+            user=user,
+            phone=phone,
+            context={'name_part': _name_part(user), 'link': _site_link()},
+            metadata={'user_id': user.pk},
+        ))
+    return out
+
+
+def _resolve_sms_balance_alert(*, now=None) -> List[AutomationCandidate]:
+    sms = get_sms_balance_snapshot()
+    if not (sms.get('is_low') and sms.get('ok')):
+        return []
+    local = _local_now(now)
+    bucket = local.strftime('%Y-%m-%d-%H') if True else local.date().isoformat()
+    credit = int(sms.get('credit') or sms.get('sms_count') or 0)
+    return [AutomationCandidate(
+        trigger_key=f'sms_low:{bucket}',
+        context={'credit': str(credit)},
+        metadata={'credit': credit, 'alert': True},
+    )]
+
+
+def _resolve_stale_tickets_alert(*, hours: int = 12, now=None) -> List[AutomationCandidate]:
+    cutoff = timezone.now() - timedelta(hours=hours)
+    count = (
+        Ticket.objects.exclude(status='closed')
+        .filter(staff_has_unread=True)
+        .filter(Q(last_message_at__lte=cutoff) | Q(last_message_at__isnull=True, created_at__lte=cutoff))
+        .count()
+    )
+    if not count:
+        return []
+    local = _local_now(now)
+    bucket = local.strftime('%Y-%m-%d-%H')
+    return [AutomationCandidate(
+        trigger_key=f'stale_tickets:{bucket}',
+        metadata={'count': count, 'alert': True},
+    )]
+
+
+AUDIENCE_RESOLVERS: Dict[str, Callable[[], List[AutomationCandidate]]] = {
+    'license_expiring_3d': lambda: _resolve_license_expiring(within_days=3),
+    'expired_renewal_campaign': lambda: _resolve_expired_renewal(within_days=14),
+    'pending_recovery': lambda: _resolve_pending_orders(stale_hours=2),
+    'failed_payment_followup': lambda: _resolve_failed_orders(days_lookback=1),
+    'users_onboarding': lambda: _resolve_users_onboarding(min_hours=24),
+    'windows_activation_nudge': _resolve_windows_download_no_activate,
+    'windows_activate_no_launch': _resolve_windows_activate_no_launch,
+    'crm_not_started_nudge': _resolve_crm_not_started,
+    'sms_balance_low': _resolve_sms_balance_alert,
+    'stale_tickets_alert': lambda: _resolve_stale_tickets_alert(hours=12),
+}
+
+
+def resolve_audience(rule: ManagementAutomationRule) -> List[AutomationCandidate]:
+    resolver = AUDIENCE_RESOLVERS.get(rule.key)
+    if resolver:
+        return resolver()
+    if rule.segment_key:
+        from accounts.services.admin_marketing import build_segment_recipients
+        params = dict(rule.conditions or {})
+        stale_hours = params.get('stale_hours')
+        days_lookback = params.get('days_lookback')
+        product_id = params.get('product_id')
+        recipients = build_segment_recipients(
+            rule.segment_key,
+            stale_hours=stale_hours,
+            days_lookback=days_lookback,
+            product_id=product_id,
+            limit=rule.max_recipients_per_run or 50,
+        )
+        out = []
+        for idx, rec in enumerate(recipients):
+            order_id = rec.context.get('order_id')
+            trig = f'segment:{rule.segment_key}:{order_id or rec.phone or idx}'
+            out.append(AutomationCandidate(
+                trigger_key=trig,
+                user=rec.user,
+                phone=rec.phone,
+                context=dict(rec.context),
+                metadata={'segment_key': rule.segment_key},
+            ))
+        return out
+    return []
+
+
+def revalidate_candidate(rule: ManagementAutomationRule, candidate: AutomationCandidate) -> Tuple[bool, str]:
+    meta = candidate.metadata or {}
+    now = timezone.now()
+
+    if rule.key in ('license_expiring_3d',):
+        lic_id = meta.get('license_id')
+        if not lic_id:
+            return False, 'missing_license'
+        lic = License.objects.filter(pk=lic_id).select_related('order').first()
+        if not lic or lic.status != 'active':
+            return False, 'license_not_active'
+        if lic.expires_at and lic.expires_at <= now:
+            return False, 'already_expired'
+        if lic.order.user_id and _has_active_license(lic.order.user_id, now=now):
+            if License.objects.filter(
+                pk=lic_id, status='active',
+            ).filter(Q(expires_at__isnull=True) | Q(expires_at__gt=now)).exists():
+                pass
+            else:
+                return False, 'renewed'
+        return True, ''
+
+    if rule.key == 'expired_renewal_campaign':
+        user_id = meta.get('user_id')
+        if user_id and _has_active_license(user_id, now=now):
+            return False, 'renewed'
+        return True, ''
+
+    if rule.key == 'pending_recovery':
+        order_id = meta.get('order_id')
+        if not order_id:
+            return False, 'missing_order'
+        order = Order.objects.filter(pk=order_id).first()
+        if not order or order.status not in PENDING_ORDER_STATUSES:
+            return False, 'order_paid_or_gone'
+        if order.user_id and Order.objects.filter(user_id=order.user_id, status='paid').exists():
+            return False, 'user_has_paid_order'
+        return True, ''
+
+    if rule.key == 'failed_payment_followup':
+        order_id = meta.get('order_id')
+        if not order_id:
+            return False, 'missing_order'
+        order = Order.objects.filter(pk=order_id).first()
+        if not order or order.status != 'failed':
+            return False, 'order_not_failed'
+        if order.user_id and Order.objects.filter(
+            user_id=order.user_id, status='paid', created_at__gte=order.created_at,
+        ).exists():
+            return False, 'later_paid'
+        return True, ''
+
+    if rule.key == 'users_onboarding':
+        user_id = meta.get('user_id')
+        if user_id and _has_active_license(user_id, now=now):
+            return False, 'has_license'
+        return True, ''
+
+    if rule.key == 'windows_activation_nudge':
+        user_id = meta.get('user_id')
+        if user_id and LicenseActivation.objects.filter(
+            WINDOWS_ACTIVATION_Q, license__order__user_id=user_id,
+        ).exists():
+            return False, 'activated'
+        return True, ''
+
+    if rule.key == 'windows_activate_no_launch':
+        user_id = meta.get('user_id')
+        if user_id and ClientAppEvent.objects.filter(
+            user_id=user_id, event_type=ClientAppEvent.EventType.FIRST_LAUNCH,
+        ).exists():
+            return False, 'launched'
+        return True, ''
+
+    if rule.key in ('sms_balance_low', 'stale_tickets_alert'):
+        return True, ''
+
+    if rule.key == 'crm_not_started_nudge':
+        user_id = meta.get('user_id')
+        if user_id and Customer.objects.filter(user_id=user_id).exists():
+            return False, 'crm_started'
+        return True, ''
+
+    return True, ''
+
+
+def _trigger_already_handled(rule: ManagementAutomationRule, trigger_key: str) -> bool:
+    return ManagementAutomationRecipient.objects.filter(
+        rule=rule,
+        trigger_key=trigger_key,
+        status__in=TERMINAL_RECIPIENT_STATUSES,
+    ).exists()
+
+
+def _user_cooldown_active(rule: ManagementAutomationRule, user_id: int, *, now=None) -> bool:
+    if not user_id or not rule.cooldown_days:
+        return False
+    since = (now or timezone.now()) - timedelta(days=rule.cooldown_days)
+    sent_count = ManagementAutomationRecipient.objects.filter(
+        rule=rule,
+        user_id=user_id,
+        status__in=(
+            ManagementAutomationRecipient.Status.SENT,
+            ManagementAutomationRecipient.Status.DRY_RUN,
+            ManagementAutomationRecipient.Status.ALERT,
+        ),
+        sent_at__gte=since,
+    ).count()
+    return sent_count >= max(1, rule.max_sends_per_user)
+
+
+def _message_for_rule(rule: ManagementAutomationRule, context: Dict[str, str]) -> str:
+    template = (rule.message_template or '').strip()
+    if not template and rule.insight_key:
+        template = INSIGHT_MESSAGE_TEMPLATES.get(rule.insight_key, '')
+    if not template:
+        template = 'سلام{name_part}، پیام فایلینگ دیوار: {link}'
+    ctx = {
+        'name': '',
+        'name_part': context.get('name_part', ''),
+        'product': context.get('product', 'فایلینگ دیوار'),
+        'plan': context.get('plan', ''),
+        'amount': context.get('amount', ''),
+        'link': context.get('link', _site_link()),
+        'code': context.get('code', ''),
+        'days': context.get('days', ''),
+    }
+    return render_message(template, ctx)
+
+
+def _sms_purpose_for_rule(rule: ManagementAutomationRule) -> str:
+    if rule.key in ('pending_recovery', 'failed_payment_followup'):
+        return PURPOSE_RECOVERY
+    if rule.key in ('license_expiring_3d', 'expired_renewal_campaign'):
+        return PURPOSE_LICENSE_RENEWAL
+    return PURPOSE_MARKETING
+
+
+def _process_candidate(
+    *,
+    rule: ManagementAutomationRule,
+    execution: ManagementAutomationExecution,
+    candidate: AutomationCandidate,
+    dry_run: bool,
+) -> str:
+    """Returns outcome: success | failed | skipped | deduped."""
+    if _trigger_already_handled(rule, candidate.trigger_key):
+        execution.skipped_count += 1
+        return 'deduped'
+
+    ok, reason = revalidate_candidate(rule, candidate)
+    if not ok:
+        try:
+            with transaction.atomic():
+                ManagementAutomationRecipient.objects.create(
+                    execution=execution,
+                    rule=rule,
+                    user=candidate.user,
+                    trigger_key=candidate.trigger_key,
+                    status=ManagementAutomationRecipient.Status.SKIPPED,
+                    skipped_reason=reason[:200],
+                    metadata=_safe_metadata(candidate.metadata),
+                )
+        except IntegrityError:
+            return 'deduped'
+        execution.skipped_count += 1
+        return 'skipped'
+
+    user_id = getattr(candidate.user, 'pk', None) or candidate.metadata.get('user_id')
+    if user_id and _user_cooldown_active(rule, user_id):
+        execution.skipped_count += 1
+        return 'skipped'
+
+    if rule.action_type == ManagementAutomationRule.ActionType.MANAGEMENT_ALERT:
+        status = (
+            ManagementAutomationRecipient.Status.DRY_RUN if dry_run
+            else ManagementAutomationRecipient.Status.ALERT
+        )
+        try:
+            with transaction.atomic():
+                ManagementAutomationRecipient.objects.create(
+                    execution=execution,
+                    rule=rule,
+                    user=candidate.user,
+                    trigger_key=candidate.trigger_key,
+                    status=status,
+                    sent_at=timezone.now(),
+                    metadata=_safe_metadata(candidate.metadata),
+                )
+        except IntegrityError:
+            execution.skipped_count += 1
+            return 'deduped'
+        execution.success_count += 1
+        return 'success'
+
+    if rule.action_type == ManagementAutomationRule.ActionType.MANUAL_REVIEW:
+        status = (
+            ManagementAutomationRecipient.Status.DRY_RUN if dry_run
+            else ManagementAutomationRecipient.Status.ALERT
+        )
+        try:
+            with transaction.atomic():
+                ManagementAutomationRecipient.objects.create(
+                    execution=execution,
+                    rule=rule,
+                    trigger_key=candidate.trigger_key,
+                    status=status,
+                    sent_at=timezone.now(),
+                    metadata=_safe_metadata(candidate.metadata),
+                )
+        except IntegrityError:
+            execution.skipped_count += 1
+            return 'deduped'
+        execution.success_count += 1
+        return 'success'
+
+    if rule.action_type != ManagementAutomationRule.ActionType.SEND_SMS:
+        execution.skipped_count += 1
+        return 'skipped'
+
+    phone = _phone_ok(candidate.phone)
+    if not phone:
+        execution.skipped_count += 1
+        return 'skipped'
+
+    purpose = _sms_purpose_for_rule(rule)
+    if not is_send_allowed(phone, purpose=purpose, user=candidate.user):
+        try:
+            with transaction.atomic():
+                ManagementAutomationRecipient.objects.create(
+                    execution=execution,
+                    rule=rule,
+                    user=candidate.user,
+                    trigger_key=candidate.trigger_key,
+                    status=ManagementAutomationRecipient.Status.SKIPPED,
+                    skipped_reason='suppressed',
+                    metadata=_safe_metadata(candidate.metadata),
+                )
+        except IntegrityError:
+            return 'deduped'
+        execution.skipped_count += 1
+        return 'skipped'
+
+    body = _message_for_rule(rule, candidate.context)
+
+    if dry_run:
+        try:
+            with transaction.atomic():
+                ManagementAutomationRecipient.objects.create(
+                    execution=execution,
+                    rule=rule,
+                    user=candidate.user,
+                    trigger_key=candidate.trigger_key,
+                    status=ManagementAutomationRecipient.Status.DRY_RUN,
+                    sent_at=timezone.now(),
+                    metadata=_safe_metadata({**candidate.metadata, 'body_preview': body[:200]}),
+                )
+        except IntegrityError:
+            execution.skipped_count += 1
+            return 'deduped'
+        execution.success_count += 1
+        return 'success'
+
+    try:
+        with transaction.atomic():
+            recipient = ManagementAutomationRecipient.objects.create(
+                execution=execution,
+                rule=rule,
+                user=candidate.user,
+                trigger_key=candidate.trigger_key,
+                status=ManagementAutomationRecipient.Status.PENDING,
+                metadata=_safe_metadata(candidate.metadata),
+            )
+    except IntegrityError:
+        execution.skipped_count += 1
+        return 'deduped'
+
+    ok_send, sms_log = notify_marketing(phone=phone, text=body)
+    recipient.sent_at = timezone.now()
+    if ok_send:
+        recipient.status = ManagementAutomationRecipient.Status.SENT
+        recipient.metadata = _safe_metadata({**recipient.metadata, 'sms_log_id': sms_log.pk})
+        recipient.save(update_fields=['status', 'sent_at', 'metadata'])
+        execution.success_count += 1
+        return 'success'
+
+    recipient.status = ManagementAutomationRecipient.Status.FAILED
+    recipient.skipped_reason = (getattr(sms_log, 'error_message', '') or 'send_failed')[:200]
+    recipient.save(update_fields=['status', 'sent_at', 'skipped_reason'])
+    execution.failed_count += 1
+    return 'failed'
+
+
+def run_rule(
+    rule: ManagementAutomationRule,
+    *,
+    dry_run: bool = False,
+    force: bool = False,
+    now=None,
+) -> Optional[ManagementAutomationExecution]:
+    now = now or timezone.now()
+
+    if not rule.is_active or rule.is_paused:
+        return None
+
+    if not rule_is_due(rule, now=now, force=force):
+        return None
+
+    if in_quiet_hours(rule, now=now) and rule.action_type == ManagementAutomationRule.ActionType.SEND_SMS:
+        return None
+
+    with transaction.atomic():
+        locked = ManagementAutomationRule.objects.select_for_update().get(pk=rule.pk)
+        if not rule_is_due(locked, now=now, force=force):
+            return None
+        locked.last_run_at = now
+        locked.save(update_fields=['last_run_at', 'updated_at'])
+
+    execution = ManagementAutomationExecution.objects.create(
+        rule=rule,
+        dry_run=dry_run,
+        status=ManagementAutomationExecution.Status.RUNNING,
+    )
+
+    try:
+        candidates = resolve_audience(rule)
+        execution.matched_count = len(candidates)
+        limit = max(1, rule.max_recipients_per_run or 50)
+        candidates = candidates[:limit]
+
+        for candidate in candidates:
+            execution.processed_count += 1
+            try:
+                _process_candidate(
+                    rule=rule,
+                    execution=execution,
+                    candidate=candidate,
+                    dry_run=dry_run,
+                )
+            except Exception as exc:
+                logger.exception('mgmt automation candidate failed rule=%s', rule.key)
+                execution.failed_count += 1
+                err = (execution.error_summary or '') + f'; {exc}'[:120]
+                execution.error_summary = err.strip('; ')[:500]
+
+        execution.status = ManagementAutomationExecution.Status.COMPLETED
+    except Exception as exc:
+        logger.exception('mgmt automation rule failed rule=%s', rule.key)
+        execution.status = ManagementAutomationExecution.Status.FAILED
+        execution.error_summary = str(exc)[:500]
+    finally:
+        execution.finished_at = timezone.now()
+        execution.save()
+
+    return execution
+
+
+def run_management_automations(
+    *,
+    dry_run: bool = False,
+    rule_key: Optional[str] = None,
+    force: bool = False,
+) -> Dict[str, Any]:
+    """Runner مرکزی — fail-safe برای هر Rule."""
+    qs = ManagementAutomationRule.objects.filter(is_active=True, is_paused=False)
+    if rule_key:
+        qs = qs.filter(key=rule_key)
+
+    summary = {
+        'dry_run': dry_run,
+        'rules_examined': 0,
+        'rules_run': 0,
+        'rules_skipped': 0,
+        'executions': [],
+        'errors': [],
+    }
+
+    for rule in qs.order_by('key'):
+        summary['rules_examined'] += 1
+        try:
+            execution = run_rule(rule, dry_run=dry_run, force=force)
+            if execution:
+                summary['rules_run'] += 1
+                summary['executions'].append({
+                    'rule_key': rule.key,
+                    'execution_id': execution.pk,
+                    'matched': execution.matched_count,
+                    'success': execution.success_count,
+                    'failed': execution.failed_count,
+                    'skipped': execution.skipped_count,
+                    'status': execution.status,
+                })
+            else:
+                summary['rules_skipped'] += 1
+        except Exception as exc:
+            logger.exception('mgmt automation runner rule=%s', rule.key)
+            summary['errors'].append({'rule_key': rule.key, 'error': str(exc)[:200]})
+
+    return summary

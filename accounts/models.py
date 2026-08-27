@@ -1460,3 +1460,170 @@ class AcquisitionRun(models.Model):
 
     def __str__(self):
         return f'Run #{self.pk} [{self.status}] {self.district or "—"}'
+
+
+class ManagementAutomationRule(models.Model):
+    """قوانین خودکارسازی دستیار مدیریت — فعال/غیرفعال توسط مدیر."""
+
+    class Cadence(models.TextChoices):
+        HOURLY = 'hourly', 'ساعتی'
+        DAILY = 'daily', 'روزانه'
+
+    class ActionType(models.TextChoices):
+        SEND_SMS = 'send_sms', 'ارسال SMS'
+        MANAGEMENT_ALERT = 'management_alert', 'هشدار مدیریت'
+        MANUAL_REVIEW = 'manual_review', 'بررسی دستی'
+
+    key = models.CharField(max_length=64, unique=True, db_index=True, verbose_name='کلید')
+    name = models.CharField(max_length=200, verbose_name='نام')
+    is_active = models.BooleanField(default=False, db_index=True, verbose_name='فعال')
+    is_paused = models.BooleanField(default=False, db_index=True, verbose_name='متوقف موقت')
+    cadence = models.CharField(
+        max_length=16,
+        choices=Cadence.choices,
+        default=Cadence.DAILY,
+        db_index=True,
+        verbose_name='Cadence',
+    )
+    action_type = models.CharField(
+        max_length=24,
+        choices=ActionType.choices,
+        default=ActionType.SEND_SMS,
+        verbose_name='نوع اقدام',
+    )
+    insight_key = models.CharField(max_length=64, blank=True, verbose_name='کلید Insight')
+    segment_key = models.CharField(max_length=64, blank=True, verbose_name='کلید سگمنت')
+    cooldown_days = models.PositiveIntegerField(default=7, verbose_name='Cooldown (روز)')
+    max_recipients_per_run = models.PositiveIntegerField(default=50, verbose_name='حداکثر گیرنده در هر اجرا')
+    max_sends_per_user = models.PositiveIntegerField(default=1, verbose_name='حداکثر ارسال به کاربر')
+    quiet_hours_start = models.PositiveSmallIntegerField(
+        null=True, blank=True, verbose_name='شروع ساعات سکوت (ساعت محلی)',
+    )
+    quiet_hours_end = models.PositiveSmallIntegerField(
+        null=True, blank=True, verbose_name='پایان ساعات سکوت (ساعت محلی)',
+    )
+    message_template = models.TextField(blank=True, verbose_name='قالب پیام')
+    conditions = models.JSONField(default=dict, blank=True, verbose_name='شرایط')
+    last_run_at = models.DateTimeField(null=True, blank=True, verbose_name='آخرین اجرا')
+    activated_at = models.DateTimeField(null=True, blank=True, verbose_name='فعال‌سازی')
+    activated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='management_automation_rules',
+        verbose_name='فعال‌کننده',
+    )
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='ایجاد')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='به‌روزرسانی')
+
+    class Meta:
+        verbose_name = 'قانون خودکارسازی مدیریت'
+        verbose_name_plural = 'قوانین خودکارسازی مدیریت'
+        ordering = ['name']
+
+    def __str__(self):
+        state = 'فعال' if self.is_active and not self.is_paused else 'خاموش'
+        return f'{self.name} [{state}]'
+
+
+class ManagementAutomationExecution(models.Model):
+    """اجرای یک Rule در Runner."""
+
+    class Status(models.TextChoices):
+        RUNNING = 'running', 'در حال اجرا'
+        COMPLETED = 'completed', 'تکمیل‌شده'
+        FAILED = 'failed', 'ناموفق'
+        SKIPPED = 'skipped', 'رد شده'
+
+    rule = models.ForeignKey(
+        ManagementAutomationRule,
+        on_delete=models.CASCADE,
+        related_name='executions',
+        verbose_name='قانون',
+    )
+    started_at = models.DateTimeField(auto_now_add=True, db_index=True, verbose_name='شروع')
+    finished_at = models.DateTimeField(null=True, blank=True, verbose_name='پایان')
+    status = models.CharField(
+        max_length=16,
+        choices=Status.choices,
+        default=Status.RUNNING,
+        db_index=True,
+        verbose_name='وضعیت',
+    )
+    dry_run = models.BooleanField(default=False, verbose_name='Dry Run')
+    matched_count = models.PositiveIntegerField(default=0, verbose_name='Match شده')
+    processed_count = models.PositiveIntegerField(default=0, verbose_name='پردازش‌شده')
+    success_count = models.PositiveIntegerField(default=0, verbose_name='موفق')
+    failed_count = models.PositiveIntegerField(default=0, verbose_name='ناموفق')
+    skipped_count = models.PositiveIntegerField(default=0, verbose_name='رد شده')
+    error_summary = models.TextField(blank=True, verbose_name='خلاصه خطا')
+
+    class Meta:
+        verbose_name = 'اجرای Automation مدیریت'
+        verbose_name_plural = 'اجراهای Automation مدیریت'
+        ordering = ['-started_at']
+
+    def __str__(self):
+        return f'{self.rule.key} #{self.pk} [{self.status}]'
+
+
+class ManagementAutomationRecipient(models.Model):
+    """لاگ سطح گیرنده — dedup با trigger_key."""
+
+    class Status(models.TextChoices):
+        PENDING = 'pending', 'در انتظار'
+        SENT = 'sent', 'ارسال‌شده'
+        SKIPPED = 'skipped', 'رد شده'
+        FAILED = 'failed', 'ناموفق'
+        DRY_RUN = 'dry_run', 'Dry Run'
+        ALERT = 'alert', 'هشدار'
+
+    execution = models.ForeignKey(
+        ManagementAutomationExecution,
+        on_delete=models.CASCADE,
+        related_name='recipients',
+        verbose_name='اجرای Run',
+    )
+    rule = models.ForeignKey(
+        ManagementAutomationRule,
+        on_delete=models.CASCADE,
+        related_name='recipient_logs',
+        verbose_name='قانون',
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='management_automation_recipients',
+        verbose_name='کاربر',
+    )
+    trigger_key = models.CharField(max_length=220, db_index=True, verbose_name='Trigger Key')
+    status = models.CharField(
+        max_length=16,
+        choices=Status.choices,
+        default=Status.PENDING,
+        db_index=True,
+        verbose_name='وضعیت',
+    )
+    skipped_reason = models.CharField(max_length=200, blank=True, verbose_name='دلیل رد')
+    sent_at = models.DateTimeField(null=True, blank=True, verbose_name='زمان ارسال')
+    converted_at = models.DateTimeField(null=True, blank=True, verbose_name='زمان تبدیل')
+    conversion_type = models.CharField(max_length=64, blank=True, verbose_name='نوع تبدیل')
+    metadata = models.JSONField(default=dict, blank=True, verbose_name='متادیتا')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='ایجاد')
+
+    class Meta:
+        verbose_name = 'گیرنده Automation مدیریت'
+        verbose_name_plural = 'گیرندگان Automation مدیریت'
+        ordering = ['id']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['rule', 'trigger_key'],
+                name='uniq_mgmt_auto_rule_trigger',
+            ),
+        ]
+
+    def __str__(self):
+        return f'{self.trigger_key} [{self.status}]'

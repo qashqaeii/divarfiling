@@ -23,6 +23,9 @@ from .models import (
     MarketingAutomationRun,
     MarketingCampaign,
     MarketingCampaignRecipient,
+    ManagementAutomationRule,
+    ManagementAutomationExecution,
+    ManagementAutomationRecipient,
     MarketingLead,
     OtpRequest,
     SmsMessageLog,
@@ -244,7 +247,40 @@ class LeadAttributionAdmin(admin.ModelAdmin):
 class SuppressionEntryAdmin(admin.ModelAdmin):
     list_display = ['phone_normalized', 'reason', 'created_at']
     list_filter = ['reason']
-    search_fields = ['phone_normalized']
+    search_fields = ['phone_normalized'    ]
+
+
+@admin.register(ManagementAutomationRule)
+class ManagementAutomationRuleAdmin(admin.ModelAdmin):
+    list_display = ['key', 'name', 'is_active', 'is_paused', 'cadence', 'action_type', 'cooldown_days', 'last_run_at', 'updated_at']
+    list_filter = ['is_active', 'is_paused', 'cadence', 'action_type']
+    search_fields = ['key', 'name']
+    readonly_fields = ['created_at', 'updated_at']
+
+
+@admin.register(ManagementAutomationExecution)
+class ManagementAutomationExecutionAdmin(admin.ModelAdmin):
+    list_display = [
+        'id', 'rule', 'status', 'dry_run', 'matched_count', 'success_count',
+        'failed_count', 'skipped_count', 'started_at',
+    ]
+    list_filter = ['status', 'dry_run']
+    readonly_fields = [
+        'rule', 'started_at', 'finished_at', 'status', 'dry_run',
+        'matched_count', 'processed_count', 'success_count', 'failed_count',
+        'skipped_count', 'error_summary',
+    ]
+
+
+@admin.register(ManagementAutomationRecipient)
+class ManagementAutomationRecipientAdmin(admin.ModelAdmin):
+    list_display = ['id', 'rule', 'trigger_key', 'status', 'sent_at', 'skipped_reason']
+    list_filter = ['status', 'rule']
+    search_fields = ['trigger_key', 'skipped_reason']
+    readonly_fields = [
+        'execution', 'rule', 'user', 'trigger_key', 'status', 'skipped_reason',
+        'sent_at', 'converted_at', 'conversion_type', 'metadata', 'created_at',
+    ]
 
 
 @admin.register(GrowthJourney)

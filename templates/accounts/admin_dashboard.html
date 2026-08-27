@@ -96,6 +96,75 @@
     {% endif %}
 </section>
 
+<section class="ecc-section ecc-cmd-assistant" aria-label="دستیار مدیریت">
+    <header class="ecc-cmd-actions-head">
+        <div>
+            <h2><i class="fas fa-wand-magic-sparkles"></i> دستیار مدیریت</h2>
+            <p>
+                {% if assistant_preview.total %}
+                {{ assistant_preview.total|to_persian_digits }} پیشنهاد جدید برای شما داریم
+                {% else %}
+                پیشنهاد جدیدی برای امروز نیست
+                {% endif %}
+            </p>
+        </div>
+        {% if assistant_preview.total %}
+        <span class="ecc-cmd-actions-count">{{ assistant_preview.total|to_persian_digits }}</span>
+        {% endif %}
+    </header>
+    {% if assistant_preview.top_insights %}
+    <ul class="ecc-cmd-assistant-list">
+        {% for item in assistant_preview.top_insights %}
+        <li class="ecc-cmd-assistant-item" data-severity="{{ item.severity }}">
+            <span class="ecc-cmd-assistant-dot" aria-hidden="true"></span>
+            <span>{{ item.title }}</span>
+        </li>
+        {% endfor %}
+    </ul>
+    <a href="{% url 'admin_panel_assistant' %}" class="ecc-btn ecc-btn--ghost ecc-btn--sm ecc-cmd-assistant-link">
+        مشاهده همه پیشنهادها <i class="fas fa-arrow-left"></i>
+    </a>
+    {% else %}
+    <div class="ecc-empty ecc-empty--compact">
+        <i class="fas fa-circle-check"></i>
+        <span>همه‌چیز منظم است — فعلاً پیشنهاد فوری نداریم</span>
+    </div>
+    {% endif %}
+</section>
+
+<section class="ecc-section ecc-cmd-assistant" aria-label="دستیار مدیریت">
+    <header class="ecc-cmd-actions-head">
+        <div>
+            <h2><i class="fas fa-wand-magic-sparkles"></i> دستیار مدیریت</h2>
+            <p>
+                {% if assistant_preview.total %}
+                {{ assistant_preview.total|to_persian_digits }} پیشنهاد جدید برای شما
+                {% else %}
+                پیشنهاد فوری نداریم
+                {% endif %}
+            </p>
+        </div>
+        <a href="{% url 'admin_panel_assistant' %}" class="ecc-btn ecc-btn--ghost ecc-btn--sm">
+            مشاهده همه <i class="fas fa-arrow-left"></i>
+        </a>
+    </header>
+    {% if assistant_preview.top_insights %}
+    <ul class="ecc-cmd-assistant-list">
+        {% for item in assistant_preview.top_insights %}
+        <li class="ecc-cmd-assistant-item" data-severity="{{ item.severity }}">
+            <span class="ecc-cmd-assistant-dot" aria-hidden="true"></span>
+            <span>{{ item.title }}</span>
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <div class="ecc-empty ecc-empty--compact">
+        <i class="fas fa-circle-check"></i>
+        <span>همه‌چیز مرتب است — پیشنهاد جدیدی نیست</span>
+    </div>
+    {% endif %}
+</section>
+
 <section class="ecc-section ecc-cmd-charts" id="ecc-charts" aria-label="نمودارهای مدیریتی">
     <div class="ecc-cmd-charts-grid">
         <article class="ecc-card ecc-card--chart ecc-cmd-chart-revenue">

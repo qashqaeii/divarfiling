@@ -1,0 +1,430 @@
+/* دستیار مدیریت — Management Assistant */
+.maa-page {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.maa-header-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.35rem 0.75rem;
+    border-radius: 999px;
+    background: rgba(124, 58, 237, 0.12);
+    color: #5b21b6;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.maa-summary {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.75rem;
+}
+
+@media (max-width: 768px) {
+    .maa-summary {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+.maa-summary-item {
+    padding: 0.85rem 1rem;
+    border-radius: 12px;
+    background: #fff;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.maa-summary-item strong {
+    display: block;
+    font-size: 1.5rem;
+    line-height: 1.2;
+    margin-bottom: 0.15rem;
+}
+
+.maa-summary-item span {
+    font-size: 0.8rem;
+    color: #64748b;
+}
+
+.maa-summary-item[data-severity="critical"] strong { color: #e11d48; }
+.maa-summary-item[data-severity="high"] strong { color: #d97706; }
+.maa-summary-item[data-severity="medium"] strong { color: #2563eb; }
+.maa-summary-item[data-severity="opportunity"] strong { color: #059669; }
+
+.maa-tabs {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+    padding-bottom: 0.5rem;
+}
+
+.maa-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.45rem 0.85rem;
+    border-radius: 999px;
+    color: #475569;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.maa-tab.is-active {
+    background: rgba(124, 58, 237, 0.12);
+    color: #5b21b6;
+}
+
+.maa-tab-badge {
+    display: inline-flex;
+    min-width: 1.25rem;
+    height: 1.25rem;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background: #10b981;
+    color: #fff;
+    font-size: 0.7rem;
+    padding: 0 0.35rem;
+}
+
+.maa-section-head h2 {
+    margin: 0 0 0.25rem;
+    font-size: 1.1rem;
+}
+
+.maa-section-head p {
+    margin: 0;
+    color: #64748b;
+    font-size: 0.85rem;
+}
+
+.maa-insights {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+}
+
+.maa-insight {
+    padding: 1rem 1.1rem;
+    border-radius: 14px;
+    background: #fff;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    border-right: 4px solid #94a3b8;
+}
+
+.maa-insight[data-severity="critical"] { border-right-color: #e11d48; }
+.maa-insight[data-severity="high"] { border-right-color: #d97706; }
+.maa-insight[data-severity="medium"] { border-right-color: #2563eb; }
+.maa-insight[data-severity="opportunity"] { border-right-color: #059669; }
+
+.maa-insight-head {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+    margin-bottom: 0.75rem;
+}
+
+.maa-insight-icon {
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(124, 58, 237, 0.1);
+    color: #7c3aed;
+    flex-shrink: 0;
+}
+
+.maa-insight-head h3 {
+    margin: 0 0 0.25rem;
+    font-size: 1rem;
+    line-height: 1.45;
+}
+
+.maa-insight-happened {
+    margin: 0;
+    color: #475569;
+    font-size: 0.88rem;
+}
+
+.maa-insight-meta {
+    display: grid;
+    gap: 0.5rem;
+    margin: 0 0 0.85rem;
+}
+
+.maa-insight-meta dt {
+    font-size: 0.72rem;
+    color: #94a3b8;
+    margin-bottom: 0.1rem;
+}
+
+.maa-insight-meta dd {
+    margin: 0;
+    font-size: 0.88rem;
+    color: #334155;
+}
+
+.maa-insight-rec {
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.maa-insight-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.maa-results-strip {
+    margin-top: 1rem;
+    padding: 0.85rem 1rem;
+    border-radius: 12px;
+    background: rgba(15, 23, 42, 0.03);
+}
+
+.maa-results-strip h3 {
+    margin: 0 0 0.5rem;
+    font-size: 0.9rem;
+}
+
+.maa-results-grid {
+    display: flex;
+    gap: 1.5rem;
+}
+
+.maa-results-grid strong {
+    display: block;
+    font-size: 1.25rem;
+}
+
+.maa-results-grid span {
+    font-size: 0.8rem;
+    color: #64748b;
+}
+
+.maa-auto-table-wrap {
+    overflow-x: auto;
+    border-radius: 12px;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    background: #fff;
+}
+
+.maa-auto-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+}
+
+.maa-auto-table th,
+.maa-auto-table td {
+    padding: 0.75rem 0.85rem;
+    text-align: right;
+    border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+    vertical-align: top;
+}
+
+.maa-auto-table th {
+    background: rgba(15, 23, 42, 0.03);
+    color: #64748b;
+    font-weight: 600;
+}
+
+.maa-auto-table small {
+    display: block;
+    color: #94a3b8;
+    margin-top: 0.15rem;
+}
+
+.maa-auto-status {
+    display: inline-flex;
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
+    background: rgba(100, 116, 139, 0.12);
+    color: #64748b;
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+
+.maa-auto-status.is-on {
+    background: rgba(16, 185, 129, 0.15);
+    color: #059669;
+}
+
+.maa-history {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+}
+
+.maa-history-item {
+    display: grid;
+    grid-template-columns: 4rem 1fr;
+    gap: 0.75rem;
+    padding: 0.75rem 0.85rem;
+    border-radius: 10px;
+    background: #fff;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.maa-history-item time {
+    color: #64748b;
+    font-size: 0.85rem;
+}
+
+.maa-history-item strong {
+    display: block;
+    margin-bottom: 0.15rem;
+}
+
+.maa-history-item p {
+    margin: 0;
+    color: #64748b;
+    font-size: 0.85rem;
+}
+
+/* Modals */
+.maa-modal[hidden] {
+    display: none !important;
+}
+
+.maa-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.maa-modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.45);
+}
+
+.maa-modal-panel {
+    position: relative;
+    width: min(520px, 100%);
+    max-height: 90vh;
+    overflow: auto;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 20px 50px rgba(15, 23, 42, 0.2);
+}
+
+.maa-modal-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.1rem;
+    border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.maa-modal-head h3 {
+    margin: 0;
+    font-size: 1rem;
+}
+
+.maa-modal-close {
+    border: 0;
+    background: transparent;
+    color: #64748b;
+    cursor: pointer;
+    padding: 0.25rem;
+}
+
+.maa-modal-body {
+    padding: 1rem 1.1rem;
+}
+
+.maa-modal-body label {
+    display: block;
+    margin-bottom: 0.35rem;
+    font-size: 0.85rem;
+    color: #64748b;
+}
+
+.maa-modal-body textarea {
+    width: 100%;
+    border: 1px solid rgba(15, 23, 42, 0.12);
+    border-radius: 10px;
+    padding: 0.65rem 0.75rem;
+    font-family: inherit;
+    font-size: 0.9rem;
+    resize: vertical;
+}
+
+.maa-modal-recipients {
+    margin: 0 0 0.75rem;
+    font-size: 0.9rem;
+}
+
+.maa-modal-recipient-list {
+    margin-top: 0.75rem;
+    max-height: 160px;
+    overflow: auto;
+    font-size: 0.82rem;
+    color: #475569;
+}
+
+.maa-modal-foot {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    padding: 0.85rem 1.1rem;
+    border-top: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.maa-auto-detail {
+    display: grid;
+    gap: 0.65rem;
+    margin: 0;
+}
+
+.maa-auto-detail dt {
+    font-size: 0.72rem;
+    color: #94a3b8;
+}
+
+.maa-auto-detail dd {
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+/* Command Center preview */
+.ecc-cmd-assistant-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+}
+
+.ecc-cmd-assistant-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.88rem;
+    color: #334155;
+}
+
+.ecc-cmd-assistant-dot {
+    width: 0.55rem;
+    height: 0.55rem;
+    border-radius: 999px;
+    background: #94a3b8;
+    flex-shrink: 0;
+}
+
+.ecc-cmd-assistant-item[data-severity="critical"] .ecc-cmd-assistant-dot { background: #e11d48; }
+.ecc-cmd-assistant-item[data-severity="high"] .ecc-cmd-assistant-dot { background: #d97706; }
+.ecc-cmd-assistant-item[data-severity="medium"] .ecc-cmd-assistant-dot { background: #2563eb; }
+.ecc-cmd-assistant-item[data-severity="opportunity"] .ecc-cmd-assistant-dot { background: #059669; }

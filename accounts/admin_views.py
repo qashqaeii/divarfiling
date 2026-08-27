@@ -77,6 +77,13 @@ from accounts.services.admin_windows_center import get_windows_center_context
 from accounts.services.admin_crm_center import get_crm_center_context
 from accounts.services.admin_affiliates_center import get_affiliates_center_context
 from accounts.services.admin_exports_center import get_exports_center_context
+from accounts.services.admin_management_assistant import (
+    get_assistant_preview,
+    get_management_assistant_context,
+    preview_insight_recipients,
+    send_insight_campaign,
+    toggle_automation_rule,
+)
 from accounts.services.admin_phonebook_sync import (
     PhonebookSyncError,
     get_phonebook_sync_status,
@@ -119,6 +126,7 @@ class AdminDashboardView(StaffRequiredMixin, TemplateView):
         ctx['chart_days'] = days
         ctx['admin_panel_range_key'] = range_key
         ctx['charts_json'] = json.dumps(dashboard['charts'], ensure_ascii=False)
+        ctx['assistant_preview'] = get_assistant_preview()
         return ctx
 
 
@@ -930,3 +938,80 @@ class AdminExportsCenterView(StaffRequiredMixin, TemplateView):
         ctx['admin_panel_range_key'] = range_key
         ctx['admin_panel_compare'] = compare
         return ctx
+
+
+class AdminManagementAssistantView(StaffRequiredMixin, TemplateView):
+    """دستیار مدیریت — پیشنهادها، خودکارسازی و تاریخچه."""
+
+    template_name = 'accounts/admin_management_assistant.html'
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        days, range_key = parse_admin_panel_range(self.request)
+        tab = self.request.GET.get('tab', 'suggestions')
+        data = get_management_assistant_context(tab=tab)
+        ctx.update(data)
+        ctx['chart_days'] = days
+        ctx['admin_panel_range_key'] = range_key
+        ctx['automation_rules_json'] = json.dumps(
+            data.get('automation_rules', []),
+            ensure_ascii=False,
+            default=str,
+        )
+        return ctx
+
+
+class AdminManagementAssistantPreviewView(StaffRequiredMixin, View):
+    """پیش‌نمایش گیرندگان یک پیشنهاد."""
+
+    def get(self, request):
+        insight_key = (request.GET.get('insight') or '').strip()
+        payload = preview_insight_recipients(insight_key)
+        return JsonResponse(payload, json_dumps_params={'ensure_ascii': False})
+
+
+class AdminManagementAssistantSendView(StaffRequiredMixin, View):
+    """ارسال پیام برای یک پیشنهاد مدیریتی."""
+
+    def post(self, request):
+        try:
+            body = json.loads(request.body.decode('utf-8') or '{}')
+        except json.JSONDecodeError:
+            return JsonResponse({'ok': False, 'error': 'درخواست نامعتبر است.'}, status=400)
+
+        insight_key = (body.get('insight_key') or '').strip()
+        message_template = (body.get('message_template') or '').strip()
+        selected_phones = body.get('selected_phones') or None
+        if selected_phones is not None:
+            selected_phones = [str(p).strip() for p in selected_phones if str(p).strip()]
+
+        if body.get('confirm_send') != '1':
+            return JsonResponse({'ok': False, 'error': 'تأیید ارسال لازم است.'}, status=400)
+
+        try:
+            result = send_insight_campaign(
+                insight_key=insight_key,
+                message_template=message_template,
+                created_by=request.user,
+                selected_phones=selected_phones,
+            )
+        except MarketingSendError as exc:
+            return JsonResponse({'ok': False, 'error': exc.message}, status=400)
+
+        return JsonResponse(result, json_dumps_params={'ensure_ascii': False})
+
+
+class AdminManagementAssistantAutomationView(StaffRequiredMixin, View):
+    """فعال/غیرفعال کردن خودکارسازی."""
+
+    def post(self, request):
+        try:
+            body = json.loads(request.body.decode('utf-8') or '{}')
+        except json.JSONDecodeError:
+            return JsonResponse({'ok': False, 'error': 'درخواست نامعتبر است.'}, status=400)
+
+        rule_key = (body.get('rule_key') or '').strip()
+        active = bool(body.get('active'))
+        result = toggle_automation_rule(rule_key=rule_key, active=active, user=request.user)
+        status = 200 if result.get('ok') else 400
+        return JsonResponse(result, json_dumps_params={'ensure_ascii': False}, status=status)

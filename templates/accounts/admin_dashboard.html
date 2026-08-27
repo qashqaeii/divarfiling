@@ -102,7 +102,7 @@
             <h2><i class="fas fa-wand-magic-sparkles"></i> دستیار مدیریت</h2>
             <p>
                 {% if assistant_preview.total %}
-                {{ assistant_preview.total|to_persian_digits }} پیشنهاد جدید برای شما داریم
+                {{ assistant_preview.total|to_persian_digits }} پیشنهاد هوشمند برای اقدام امروز
                 {% else %}
                 پیشنهاد جدیدی برای امروز نیست
                 {% endif %}
@@ -113,17 +113,32 @@
         {% endif %}
     </header>
     {% if assistant_preview.top_insights %}
-    <ul class="ecc-cmd-assistant-list">
+    <div class="ecc-cmd-assistant-list">
         {% for item in assistant_preview.top_insights %}
-        <li class="ecc-cmd-assistant-item" data-severity="{{ item.severity }}">
-            <span class="ecc-cmd-assistant-dot" aria-hidden="true"></span>
-            <span>{{ item.title }}</span>
-        </li>
+        <a href="{% url 'admin_panel_assistant' %}#insight-{{ item.key }}"
+           class="ecc-cmd-assistant-card"
+           data-severity="{{ item.severity }}"
+           data-accent="{{ item.accent }}">
+            <span class="ecc-cmd-assistant-severity" aria-hidden="true"></span>
+            <span class="ecc-cmd-assistant-icon"><i class="fas {{ item.icon }}"></i></span>
+            <span class="ecc-cmd-assistant-body">
+                <strong>{{ item.title }}</strong>
+                <em>{{ item.recommendation }}</em>
+            </span>
+            <span class="ecc-cmd-assistant-badge">{{ item.severity_label }}</span>
+            <span class="ecc-cmd-assistant-cta">مشاهده <i class="fas fa-arrow-left"></i></span>
+        </a>
         {% endfor %}
-    </ul>
-    <a href="{% url 'admin_panel_assistant' %}" class="ecc-btn ecc-btn--ghost ecc-btn--sm ecc-cmd-assistant-link">
-        مشاهده همه پیشنهادها <i class="fas fa-arrow-left"></i>
-    </a>
+    </div>
+    <footer class="ecc-cmd-assistant-foot">
+        <a href="{% url 'admin_panel_assistant' %}" class="ecc-btn ecc-btn--ghost ecc-btn--sm">
+            مشاهده همه پیشنهادها
+            {% if assistant_preview.total %}
+            <span class="ecc-cmd-assistant-foot-count">{{ assistant_preview.total|to_persian_digits }}</span>
+            {% endif %}
+            <i class="fas fa-arrow-left"></i>
+        </a>
+    </footer>
     {% else %}
     <div class="ecc-empty ecc-empty--compact">
         <i class="fas fa-circle-check"></i>

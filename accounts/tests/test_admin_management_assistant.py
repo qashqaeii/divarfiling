@@ -160,4 +160,5 @@ class ManagementAssistantViewTests(TestCase):
         resp = self.client.get(reverse('admin_panel'))
         self.assertEqual(resp.status_code, 200)
         self.assertContains(resp, 'دستیار مدیریت')
+        self.assertContains(resp, 'ecc-cmd-assistant-card')
         self.assertEqual(resp.content.decode().count('ecc-section ecc-cmd-assistant'), 1)

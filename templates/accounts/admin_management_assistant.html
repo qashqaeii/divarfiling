@@ -62,7 +62,7 @@
         {% if insights %}
         <div class="maa-insights">
             {% for item in insights %}
-            <article class="maa-insight" data-severity="{{ item.severity }}" data-accent="{{ item.accent }}" data-key="{{ item.key }}">
+            <article class="maa-insight" id="insight-{{ item.key }}" data-severity="{{ item.severity }}" data-accent="{{ item.accent }}" data-key="{{ item.key }}">
                 <div class="maa-insight-head">
                     <span class="maa-insight-icon"><i class="fas {{ item.icon }}"></i></span>
                     <div>

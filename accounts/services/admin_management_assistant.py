@@ -1133,7 +1133,11 @@ def get_assistant_preview() -> Dict[str, Any]:
                 'key': i.key,
                 'title': i.title,
                 'severity': i.severity,
+                'severity_label': SEVERITY_LABELS.get(i.severity, ''),
                 'count': i.count,
+                'icon': i.icon,
+                'accent': i.accent,
+                'recommendation': i.recommendation,
             }
             for i in top
         ],

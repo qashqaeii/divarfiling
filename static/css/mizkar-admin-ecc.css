@@ -2474,6 +2474,164 @@ body.mk-admin-dashboard .adm-page.ecc-page--v2 {
     white-space: nowrap;
 }
 
+/* Command Center — Management Assistant preview */
+.ecc-cmd-assistant {
+    padding: 1rem 1.1rem;
+    border-radius: 16px;
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    background:
+        linear-gradient(135deg, rgba(99, 102, 241, 0.07) 0%, rgba(16, 185, 129, 0.04) 100%),
+        var(--ecc-surface);
+    box-shadow: var(--ecc-shadow-md);
+}
+
+.ecc-cmd-assistant-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+}
+
+.ecc-cmd-assistant-card {
+    display: grid;
+    grid-template-columns: 0.35rem auto 1fr auto auto;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.7rem 0.75rem;
+    border-radius: 12px;
+    border: 1px solid var(--ecc-border);
+    background: var(--ecc-surface);
+    text-decoration: none;
+    color: inherit;
+    transition: transform 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
+}
+
+.ecc-cmd-assistant-card:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--ecc-shadow-sm);
+    border-color: rgba(99, 102, 241, 0.28);
+}
+
+.ecc-cmd-assistant-severity {
+    align-self: stretch;
+    border-radius: 999px;
+    min-height: 100%;
+}
+
+.ecc-cmd-assistant-card[data-severity="critical"] .ecc-cmd-assistant-severity { background: #f43f5e; }
+.ecc-cmd-assistant-card[data-severity="high"] .ecc-cmd-assistant-severity { background: #f59e0b; }
+.ecc-cmd-assistant-card[data-severity="medium"] .ecc-cmd-assistant-severity { background: #3b82f6; }
+.ecc-cmd-assistant-card[data-severity="opportunity"] .ecc-cmd-assistant-severity { background: #10b981; }
+
+.ecc-cmd-assistant-icon {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(99, 102, 241, 0.1);
+    color: #6366f1;
+    flex-shrink: 0;
+}
+
+.ecc-cmd-assistant-body {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.ecc-cmd-assistant-body strong {
+    font-size: 0.86rem;
+    line-height: 1.45;
+}
+
+.ecc-cmd-assistant-body em {
+    font-style: normal;
+    font-size: 0.74rem;
+    color: var(--ecc-text-muted);
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.ecc-cmd-assistant-badge {
+    display: none;
+    font-size: 0.62rem;
+    font-weight: 700;
+    padding: 0.18rem 0.45rem;
+    border-radius: 999px;
+    white-space: nowrap;
+}
+
+@media (min-width: 769px) {
+    .ecc-cmd-assistant-badge {
+        display: inline-flex;
+    }
+
+    .ecc-cmd-assistant-card[data-severity="critical"] .ecc-cmd-assistant-badge {
+        background: rgba(244, 63, 94, 0.12);
+        color: #e11d48;
+    }
+
+    .ecc-cmd-assistant-card[data-severity="high"] .ecc-cmd-assistant-badge {
+        background: rgba(245, 158, 11, 0.12);
+        color: #d97706;
+    }
+
+    .ecc-cmd-assistant-card[data-severity="medium"] .ecc-cmd-assistant-badge {
+        background: rgba(59, 130, 246, 0.12);
+        color: #2563eb;
+    }
+
+    .ecc-cmd-assistant-card[data-severity="opportunity"] .ecc-cmd-assistant-badge {
+        background: rgba(16, 185, 129, 0.12);
+        color: #059669;
+    }
+}
+
+.ecc-cmd-assistant-cta {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #6366f1;
+    white-space: nowrap;
+}
+
+.ecc-cmd-assistant-foot {
+    display: flex;
+    justify-content: flex-start;
+    margin-top: 0.75rem;
+    padding-top: 0.65rem;
+    border-top: 1px dashed rgba(99, 102, 241, 0.18);
+}
+
+.ecc-cmd-assistant-foot .ecc-btn {
+    width: 100%;
+    justify-content: center;
+}
+
+@media (min-width: 640px) {
+    .ecc-cmd-assistant-foot .ecc-btn {
+        width: auto;
+    }
+}
+
+.ecc-cmd-assistant-foot-count {
+    display: inline-flex;
+    min-width: 1.35rem;
+    height: 1.35rem;
+    align-items: center;
+    justify-content: center;
+    padding: 0 0.35rem;
+    border-radius: 999px;
+    background: rgba(99, 102, 241, 0.12);
+    color: #6366f1;
+    font-size: 0.72rem;
+    font-weight: 800;
+}
+
 .ecc-cmd-charts-grid {
     display: grid;
     grid-template-columns: 1.35fr 0.85fr;
@@ -2669,6 +2827,23 @@ body.mk-admin-dashboard .adm-page.ecc-page--v2 {
     }
 
     .ecc-cmd-action-cta {
+        grid-column: 2 / -1;
+        margin-top: 0.1rem;
+        white-space: normal;
+    }
+
+    .ecc-cmd-assistant-card {
+        grid-template-columns: 0.35rem auto 1fr;
+        grid-template-rows: auto auto;
+        gap: 0.45rem 0.65rem;
+        padding: 0.75rem;
+    }
+
+    .ecc-cmd-assistant-body {
+        grid-column: 3;
+    }
+
+    .ecc-cmd-assistant-cta {
         grid-column: 2 / -1;
         margin-top: 0.1rem;
         white-space: normal;

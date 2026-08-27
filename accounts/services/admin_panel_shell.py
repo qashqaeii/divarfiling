@@ -1,7 +1,7 @@
 """Context سبک برای Shell مشترک پنل ادمین."""
 from __future__ import annotations
 
-from typing import Any, Dict
+from typing import Any, Dict, Tuple
 
 from django.utils import timezone
 
@@ -9,21 +9,29 @@ from accounts.services.pending_orders import PENDING_ORDER_STATUSES
 from shop.models import Order
 from workspace.models import Ticket
 
+COMMAND_CENTER_RANGES: Tuple[int, ...] = (1, 7, 30, 90)
 
-def get_admin_panel_days(request) -> int:
+
+def parse_admin_panel_range(request) -> Tuple[int, str]:
+    """بازه مجاز Command Center — days=1 یعنی «امروز»."""
     raw = request.GET.get('days', '30')
     try:
         days = int(raw)
     except (TypeError, ValueError):
         days = 30
-    return max(7, min(days, 365))
+    if days not in COMMAND_CENTER_RANGES:
+        days = 30
+    return days, str(days)
+
+
+def get_admin_panel_days(request) -> int:
+    days, _ = parse_admin_panel_range(request)
+    return days
 
 
 def get_admin_panel_range_key(request) -> str:
-    raw = str(request.GET.get('days', '30'))
-    if raw in ('1', '7', '30', '90'):
-        return raw
-    return '30'
+    _, range_key = parse_admin_panel_range(request)
+    return range_key
 
 
 def get_admin_panel_nav_badges() -> Dict[str, int]:
@@ -61,8 +69,7 @@ def resolve_admin_panel_nav_active(path: str) -> str:
 def build_admin_panel_shell_context(request) -> Dict[str, Any]:
     badges = get_admin_panel_nav_badges()
     alert_count = sum(1 for key in ('orders_pending', 'unread_tickets') if badges.get(key, 0) > 0)
-    days = get_admin_panel_days(request)
-    range_key = get_admin_panel_range_key(request)
+    days, range_key = parse_admin_panel_range(request)
     query_suffix = f'?days={range_key}'
     if request.GET.get('compare') == '1':
         query_suffix += '&compare=1'

@@ -64,4 +64,4 @@ class AdminPanelShellViewTests(TestCase):
         request.user = self.staff
         ctx = build_admin_panel_shell_context(request)
         self.assertEqual(ctx['admin_panel_range_key'], '1')
-        self.assertGreaterEqual(ctx['chart_days'], 7)
+        self.assertEqual(ctx['chart_days'], 1)

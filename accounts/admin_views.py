@@ -20,7 +20,8 @@ from accounts.services.admin_database_backup import (
     get_database_backup_info,
     iter_backup_file_chunks,
 )
-from accounts.services.admin_dashboard import get_admin_dashboard_context, get_command_center_context
+from accounts.services.admin_dashboard import get_command_center_context
+from accounts.services.admin_panel_shell import parse_admin_panel_range
 from accounts.services.admin_exports import EXPORT_REGISTRY, build_export
 from accounts.services.admin_marketing import (
     AUTOMATION_FLOWS,
@@ -99,17 +100,14 @@ class AdminDashboardView(StaffRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        days = self.request.GET.get('days', '30')
-        try:
-            days = int(days)
-        except (TypeError, ValueError):
-            days = 30
-        days = max(7, min(days, 365))
+        days, range_key = parse_admin_panel_range(self.request)
 
         dashboard = get_command_center_context(days=days)
         for card in dashboard.get('kpi_cards', []):
             card['sparkline_json'] = json.dumps(card.get('sparkline', []))
         ctx.update(dashboard)
+        ctx['chart_days'] = days
+        ctx['admin_panel_range_key'] = range_key
         ctx['charts_json'] = json.dumps(dashboard['charts'], ensure_ascii=False)
         return ctx
 

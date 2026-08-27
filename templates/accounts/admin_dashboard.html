@@ -102,7 +102,7 @@
             <div class="ecc-card-head">
                 <div>
                     <h3><i class="fas fa-chart-area"></i> روند درآمد</h3>
-                    <p>{{ chart_days|to_persian_digits }} روز اخیر</p>
+                    <p>{% if chart_days == 1 %}امروز{% else %}{{ chart_days|to_persian_digits }} روز اخیر{% endif %}</p>
                 </div>
             </div>
             <div class="ecc-chart-wrap ecc-chart-wrap--tall">

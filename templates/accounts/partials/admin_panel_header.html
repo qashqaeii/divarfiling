@@ -11,13 +11,17 @@
         <div class="ecc-header-toolbar">
             <div class="ecc-range ecc-range--global" role="group" aria-label="بازه زمانی">
                 <a href="?days=1{% if admin_panel_compare %}&amp;compare=1{% endif %}"
-                   class="ecc-range-btn{% if admin_panel_range_key == '1' %} is-active{% endif %}">امروز</a>
+                   class="ecc-range-btn{% if admin_panel_range_key == '1' %} is-active{% endif %}"
+                   data-range="1">امروز</a>
                 <a href="?days=7{% if admin_panel_compare %}&amp;compare=1{% endif %}"
-                   class="ecc-range-btn{% if admin_panel_range_key == '7' %} is-active{% endif %}">۷ روز</a>
+                   class="ecc-range-btn{% if admin_panel_range_key == '7' %} is-active{% endif %}"
+                   data-range="7">۷ روز</a>
                 <a href="?days=30{% if admin_panel_compare %}&amp;compare=1{% endif %}"
-                   class="ecc-range-btn{% if admin_panel_range_key == '30' %} is-active{% endif %}">۳۰ روز</a>
+                   class="ecc-range-btn{% if admin_panel_range_key == '30' %} is-active{% endif %}"
+                   data-range="30">۳۰ روز</a>
                 <a href="?days=90{% if admin_panel_compare %}&amp;compare=1{% endif %}"
-                   class="ecc-range-btn{% if admin_panel_range_key == '90' %} is-active{% endif %}">۹۰ روز</a>
+                   class="ecc-range-btn{% if admin_panel_range_key == '90' %} is-active{% endif %}"
+                   data-range="90">۹۰ روز</a>
             </div>
             <label class="ecc-compare-toggle" title="مقایسه با دوره قبل">
                 <input type="checkbox" id="ecc-compare-toggle"{% if admin_panel_compare %} checked{% endif %}>

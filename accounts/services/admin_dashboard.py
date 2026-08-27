@@ -966,22 +966,74 @@ def build_kpi_cards(stats: Dict[str, Any], today_stats: Dict[str, Any], yesterda
     ]
 
 
-def _revenue_for_period(days: int) -> int:
-    since = _today() - timedelta(days=days)
+def _previous_period_bounds(days: int):
+    """بازه قبلی با همان طول تقویمی."""
+    start, end = _date_range(days)
+    length = (end - start).days + 1
+    prev_end = start - timedelta(days=1)
+    prev_start = prev_end - timedelta(days=length - 1)
+    return prev_start, prev_end
+
+
+def _range_label_fa(days: int) -> str:
+    if days == 1:
+        return 'امروز'
+    return f'{days} روز اخیر'
+
+
+def _revenue_between(start, end) -> int:
     return int(
-        Order.objects.filter(status='paid', paid_at__date__gte=since).aggregate(t=Sum('amount'))['t'] or 0
+        Order.objects.filter(
+            status='paid',
+            paid_at__date__gte=start,
+            paid_at__date__lte=end,
+        ).aggregate(t=Sum('amount'))['t'] or 0
     )
 
 
+def _orders_paid_between(start, end) -> int:
+    return Order.objects.filter(
+        status='paid',
+        paid_at__date__gte=start,
+        paid_at__date__lte=end,
+    ).count()
+
+
+def _new_users_between(start, end) -> int:
+    return User.objects.filter(
+        date_joined__date__gte=start,
+        date_joined__date__lte=end,
+    ).count()
+
+
+def _revenue_for_period(days: int) -> int:
+    start, end = _date_range(days)
+    return _revenue_between(start, end)
+
+
 def _orders_paid_for_period(days: int) -> int:
-    since = _today() - timedelta(days=days)
-    return Order.objects.filter(status='paid', paid_at__date__gte=since).count()
+    start, end = _date_range(days)
+    return _orders_paid_between(start, end)
 
 
-def _new_users_for_period(days: int, stats: Dict[str, Any]) -> int:
-    if days <= 7:
-        return int(stats.get('users_new_week') or 0)
-    return int(stats.get('users_new_month') or 0)
+def _new_users_for_period(days: int) -> int:
+    start, end = _date_range(days)
+    return _new_users_between(start, end)
+
+
+def _previous_revenue_for_period(days: int) -> int:
+    start, end = _previous_period_bounds(days)
+    return _revenue_between(start, end)
+
+
+def _previous_orders_paid_for_period(days: int) -> int:
+    start, end = _previous_period_bounds(days)
+    return _orders_paid_between(start, end)
+
+
+def _previous_new_users_for_period(days: int) -> int:
+    start, end = _previous_period_bounds(days)
+    return _new_users_between(start, end)
 
 
 def build_command_center_kpi_cards(
@@ -992,23 +1044,33 @@ def build_command_center_kpi_cards(
     chart_days: int,
 ) -> List[Dict[str, Any]]:
     """۶ KPI اصلی مرکز فرمان."""
+    del today_stats, yesterday_stats  # snapshot KPIs only; range KPIs use period helpers
+
     spark_rev = _revenue_sparkline(7)
     spark_orders = _orders_sparkline(7)
     spark_signups = _signups_sparkline(7)
     spark_lic = _licenses_sparkline(7)
+    range_label = _range_label_fa(chart_days)
+
     period_revenue = _revenue_for_period(chart_days)
     period_orders = _orders_paid_for_period(chart_days)
-    period_users = _new_users_for_period(chart_days, stats)
-    prev_revenue = _revenue_for_period(chart_days * 2) - period_revenue
+    period_users = _new_users_for_period(chart_days)
+    prev_revenue = _previous_revenue_for_period(chart_days)
+    prev_orders = _previous_orders_paid_for_period(chart_days)
+    prev_users = _previous_new_users_for_period(chart_days)
 
     def _delta(current, previous):
         return _pct_change(int(current or 0), int(previous or 0))
+
+    new_users_sublabel = (
+        'ثبت‌نام امروز' if chart_days == 1 else f'ثبت‌نام در {range_label}'
+    )
 
     return [
         {
             'key': 'revenue_period',
             'label': 'درآمد بازه',
-            'sublabel': f'{chart_days} روز · تومان',
+            'sublabel': f'{range_label} · تومان',
             'value': period_revenue,
             'format': 'money',
             'delta': _delta(period_revenue, prev_revenue),
@@ -1021,10 +1083,10 @@ def build_command_center_kpi_cards(
         {
             'key': 'orders_paid_period',
             'label': 'سفارش پرداخت‌شده',
-            'sublabel': f'{chart_days} روز',
+            'sublabel': range_label,
             'value': period_orders,
             'format': 'count',
-            'delta': _delta(period_orders, _orders_paid_for_period(chart_days * 2) - period_orders),
+            'delta': _delta(period_orders, prev_orders),
             'delta_label': 'نسبت دوره قبل',
             'sparkline': spark_orders,
             'icon': 'fa-cart-shopping',
@@ -1034,11 +1096,11 @@ def build_command_center_kpi_cards(
         {
             'key': 'users_new_period',
             'label': 'کاربران جدید',
-            'sublabel': f'{chart_days} روز',
+            'sublabel': new_users_sublabel,
             'value': period_users,
             'format': 'count',
-            'delta': _delta(today_stats['signups_today'], yesterday_stats['signups_yesterday']),
-            'delta_label': 'ثبت‌نام امروز',
+            'delta': _delta(period_users, prev_users),
+            'delta_label': 'نسبت دوره قبل',
             'sparkline': spark_signups,
             'icon': 'fa-user-plus',
             'accent': 'blue',
@@ -1047,11 +1109,11 @@ def build_command_center_kpi_cards(
         {
             'key': 'users_active',
             'label': 'کاربران فعال',
-            'sublabel': f"{stats['users_total']} کل",
+            'sublabel': 'وضعیت فعلی',
             'value': stats['users_active'],
             'format': 'count',
             'delta': None,
-            'delta_label': f"{users_analytics.get('online_today', 0)} آنلاین امروز",
+            'delta_label': f"{users_analytics.get('online_today', 0)} آنلاین امروز · {stats['users_total']} کل",
             'sparkline': spark_signups,
             'icon': 'fa-users',
             'accent': 'cyan',
@@ -1060,11 +1122,11 @@ def build_command_center_kpi_cards(
         {
             'key': 'licenses_active',
             'label': 'لایسنس فعال',
-            'sublabel': f"{stats['licenses_expiring_soon']} در شرف انقضا",
+            'sublabel': 'وضعیت فعلی',
             'value': stats['licenses_active'],
             'format': 'count',
             'delta': None,
-            'delta_label': f"{stats['activations_total']} دستگاه",
+            'delta_label': f"{stats['activations_total']} دستگاه · {stats['licenses_expiring_soon']} در شرف انقضا",
             'sparkline': spark_lic,
             'icon': 'fa-key',
             'accent': 'amber',
@@ -1072,8 +1134,8 @@ def build_command_center_kpi_cards(
         },
         {
             'key': 'retention_30d',
-            'label': 'Retention',
-            'sublabel': '۳۰ روزه',
+            'label': 'Retention 30 روزه',
+            'sublabel': 'وضعیت فعلی',
             'value': users_analytics.get('retention_30d', 0),
             'format': 'percent',
             'delta': None,

@@ -1,6 +1,8 @@
 (function () {
     'use strict';
 
+    var MOBILE_SIDEBAR_MQ = '(max-width: 1024px)';
+
     var SECTION_NAV_MAP = {
         'ecc-command': 'command',
         'ecc-glance': 'command',
@@ -36,14 +38,43 @@
         var closeBtn = qs('#ecc-sidebar-close');
         if (!sidebar) return;
 
+        var mq = window.matchMedia(MOBILE_SIDEBAR_MQ);
+
+        function isMobile() {
+            return mq.matches;
+        }
+
         function open() {
+            if (!isMobile()) return;
             document.body.classList.add('ecc-sidebar-open');
-            if (backdrop) backdrop.hidden = false;
+            sidebar.setAttribute('aria-hidden', 'false');
+            if (openBtn) openBtn.setAttribute('aria-expanded', 'true');
+            if (backdrop) backdrop.setAttribute('aria-hidden', 'false');
+            if (closeBtn) {
+                window.requestAnimationFrame(function () {
+                    closeBtn.focus();
+                });
+            }
         }
 
         function close() {
             document.body.classList.remove('ecc-sidebar-open');
-            if (backdrop) backdrop.hidden = true;
+            if (openBtn) openBtn.setAttribute('aria-expanded', 'false');
+            if (backdrop) backdrop.setAttribute('aria-hidden', 'true');
+            if (isMobile()) {
+                sidebar.setAttribute('aria-hidden', 'true');
+            } else {
+                sidebar.removeAttribute('aria-hidden');
+            }
+        }
+
+        function syncLayout() {
+            if (isMobile()) {
+                sidebar.setAttribute('aria-hidden', document.body.classList.contains('ecc-sidebar-open') ? 'false' : 'true');
+            } else {
+                close();
+                sidebar.removeAttribute('aria-hidden');
+            }
         }
 
         if (openBtn) openBtn.addEventListener('click', open);
@@ -52,11 +83,24 @@
 
         qsa('.ecc-nav-item', sidebar).forEach(function (item) {
             item.addEventListener('click', function () {
-                if (window.matchMedia('(max-width: 960px)').matches) {
-                    close();
-                }
+                if (isMobile()) close();
             });
         });
+
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape' && document.body.classList.contains('ecc-sidebar-open')) {
+                close();
+                if (openBtn) openBtn.focus();
+            }
+        });
+
+        if (typeof mq.addEventListener === 'function') {
+            mq.addEventListener('change', syncLayout);
+        } else if (typeof mq.addListener === 'function') {
+            mq.addListener(syncLayout);
+        }
+
+        syncLayout();
     }
 
     function initCompareToggle() {

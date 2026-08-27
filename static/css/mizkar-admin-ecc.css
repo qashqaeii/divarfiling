@@ -1662,11 +1662,11 @@ body.mk-admin-dashboard .adm-page.ecc-page--v2 {
 }
 
 @media (max-width: 1280px) {
-    .ecc-page--v2 .ecc-body {
+    .ecc-page--v2:not(.ecc-page--shell) .ecc-body {
         grid-template-columns: 156px minmax(0, 1fr);
     }
 
-    .ecc-page--v2 .ecc-sidebar {
+    .ecc-page--v2:not(.ecc-page--shell) .ecc-sidebar {
         position: sticky;
         top: 0.75rem;
         flex-direction: column;
@@ -1676,18 +1676,18 @@ body.mk-admin-dashboard .adm-page.ecc-page--v2 {
         max-height: calc(100dvh - 1.5rem);
     }
 
-    .ecc-page--v2 .ecc-nav-item {
+    .ecc-page--v2:not(.ecc-page--shell) .ecc-nav-item {
         flex-shrink: 0;
         white-space: nowrap;
     }
 }
 
 @media (max-width: 1024px) {
-    .ecc-page--v2 .ecc-body {
+    .ecc-page--v2:not(.ecc-page--shell) .ecc-body {
         grid-template-columns: 1fr;
     }
 
-    .ecc-page--v2 .ecc-sidebar {
+    .ecc-page--v2:not(.ecc-page--shell) .ecc-sidebar {
         position: sticky;
         top: 0;
         z-index: 30;
@@ -1702,7 +1702,7 @@ body.mk-admin-dashboard .adm-page.ecc-page--v2 {
         -webkit-overflow-scrolling: touch;
     }
 
-    .ecc-page--v2 .ecc-nav-item {
+    .ecc-page--v2:not(.ecc-page--shell) .ecc-nav-item {
         flex: 0 0 auto;
     }
 
@@ -2087,6 +2087,11 @@ body.mk-admin-dashboard .adm-page.ecc-page--v2 {
     inset: 0;
     background: rgba(15, 23, 42, 0.45);
     z-index: 120;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.22s ease, visibility 0.22s ease;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .ecc-sidebar--grouped .ecc-nav-item {
@@ -2508,11 +2513,31 @@ body.mk-admin-dashboard .adm-page.ecc-page--v2 {
     }
 
     .ecc-cmd-action {
-        grid-template-columns: 0.35rem auto 1fr auto;
+        grid-template-columns: 0.35rem auto 1fr;
+        grid-template-rows: auto auto;
+        gap: 0.45rem 0.65rem;
+        padding: 0.75rem;
+    }
+
+    .ecc-cmd-action-body {
+        grid-column: 3;
+    }
+
+    .ecc-cmd-action-count {
+        grid-column: 3;
+        justify-self: start;
+        font-size: 0.92rem;
     }
 
     .ecc-cmd-action-cta {
-        display: none;
+        grid-column: 2 / -1;
+        margin-top: 0.1rem;
+        white-space: normal;
+    }
+
+    .ecc-cmd-chart-revenue .ecc-chart-wrap--tall {
+        min-height: 220px;
+        height: 240px;
     }
 
     .ecc-page--shell .ecc-module-dock {
@@ -2527,46 +2552,151 @@ body.mk-admin-dashboard .adm-page.ecc-page--v2 {
     }
 }
 
-@media (max-width: 960px) {
+@media (max-width: 1024px) {
     .ecc-sidebar-toggle {
         display: inline-flex;
+        flex-shrink: 0;
+        min-width: 2.75rem;
+        min-height: 2.75rem;
     }
 
     .ecc-page--shell .ecc-body {
         grid-template-columns: 1fr;
     }
 
-    .ecc-sidebar--grouped {
+    .ecc-page--shell .ecc-sidebar--grouped {
         position: fixed;
         top: 0;
         right: 0;
-        width: min(280px, 88vw);
+        display: flex;
+        flex-direction: column;
+        flex-wrap: nowrap;
+        width: min(300px, 88vw);
         height: 100dvh;
         max-height: none;
         border-radius: 0;
+        border-right: 0;
         z-index: 130;
         transform: translateX(100%);
-        transition: transform 0.22s ease;
-        padding-top: 2.5rem;
+        transition: transform 0.22s ease, visibility 0.22s ease;
+        padding-top: calc(2.75rem + env(safe-area-inset-top, 0px));
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+        overflow-x: hidden;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+        box-shadow: -8px 0 32px rgba(15, 23, 42, 0.18);
+        visibility: hidden;
+        pointer-events: none;
+    }
+
+    body.ecc-sidebar-open {
+        overflow: hidden;
+        touch-action: none;
     }
 
     body.ecc-sidebar-open .ecc-sidebar--grouped {
         transform: translateX(0);
+        visibility: visible;
+        pointer-events: auto;
+    }
+
+    body.ecc-sidebar-open .ecc-sidebar-backdrop {
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
     }
 
     .ecc-sidebar-close {
         display: inline-flex;
         align-items: center;
         justify-content: center;
+        top: calc(0.45rem + env(safe-area-inset-top, 0px));
+        min-width: 2.75rem;
+        min-height: 2.75rem;
+    }
+
+    .ecc-sidebar--grouped .ecc-nav-item,
+    .ecc-sidebar--grouped .ecc-nav-group-toggle {
+        min-height: 2.75rem;
+        padding: 0.55rem 0.65rem;
     }
 
     .ecc-page--shell .ecc-header--shell {
         flex-direction: column;
+        padding: 0.65rem 0.75rem;
+    }
+
+    .ecc-page--shell .ecc-header-title-row {
+        width: 100%;
+    }
+
+    .ecc-page--shell .ecc-header-title {
+        font-size: 0.98rem;
+        flex: 1;
+        min-width: 0;
+    }
+
+    .ecc-page--shell .ecc-header-toolbar {
+        width: 100%;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        overscroll-behavior-x: contain;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        padding-bottom: 0.15rem;
+    }
+
+    .ecc-page--shell .ecc-header-toolbar::-webkit-scrollbar {
+        display: none;
+    }
+
+    .ecc-page--shell .ecc-range--global {
+        flex-shrink: 0;
+    }
+
+    .ecc-page--shell .ecc-range-btn {
+        min-height: 2.25rem;
+        display: inline-flex;
+        align-items: center;
+        white-space: nowrap;
+    }
+
+    .ecc-page--shell .ecc-header-meta--shell {
+        font-size: 0.68rem;
+        gap: 0.25rem 0.55rem;
     }
 
     .ecc-page--shell .ecc-header-actions {
         width: 100%;
         justify-content: flex-end;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+    }
+
+    .ecc-page--shell .ecc-header-actions .ecc-btn {
+        min-width: 2.75rem;
+        min-height: 2.75rem;
+    }
+}
+
+@media (max-width: 640px) {
+    body.mk-admin-dashboard .adm-page.ecc-page--shell {
+        padding: 0.55rem 0.45rem 1.25rem;
+    }
+
+    .ecc-page--shell .ecc-header-meta--shell {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .ecc-cmd-actions-head {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .ecc-cmd-summary-grid {
+        grid-template-columns: 1fr;
     }
 }
 

@@ -244,5 +244,9 @@ if (location.hash === '#ecc-users') {
     var q = location.search || '?days=30';
     window.location.replace('{% url "admin_panel_users" %}' + q);
 }
+if (location.hash === '#ecc-licensing') {
+    var q2 = location.search || '?days=30';
+    window.location.replace('{% url "admin_panel_licenses" %}' + q2);
+}
 </script>
 {% endblock %}

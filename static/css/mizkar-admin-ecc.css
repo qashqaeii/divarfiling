@@ -2739,3 +2739,45 @@ body.mk-admin-dashboard .adm-page.ecc-page--v2 {
     }
 }
 
+.ecc-lic-status-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+}
+
+.ecc-lic-status-pill {
+    flex: 1 1 140px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.65rem 0.85rem;
+    border-radius: 12px;
+    border: 1px solid var(--ecc-border);
+    background: var(--ecc-surface-2);
+}
+
+.ecc-lic-status-pill span {
+    font-size: 0.72rem;
+    color: var(--ecc-text-muted);
+}
+
+.ecc-lic-status-pill strong {
+    font-size: 1rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.ecc-lic-status-pill[data-accent="emerald"] strong { color: var(--ecc-accent-emerald); }
+.ecc-lic-status-pill[data-accent="amber"] strong { color: var(--ecc-accent-amber); }
+.ecc-lic-status-pill[data-accent="rose"] strong { color: var(--ecc-accent-rose); }
+
+.ecc-lic-renewal-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+@media (max-width: 900px) {
+    .ecc-lic-renewal-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+

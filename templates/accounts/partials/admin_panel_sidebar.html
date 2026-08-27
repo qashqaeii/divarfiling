@@ -60,8 +60,8 @@
                data-nav-id="users">
                 <span>کاربران</span>
             </a>
-            <a href="{% url 'admin_panel' %}{{ days_qs }}#ecc-licensing"
-               class="ecc-nav-item ecc-nav-item--sub"
+            <a href="{% url 'admin_panel_licenses' %}{{ days_qs }}"
+               class="ecc-nav-item ecc-nav-item--sub{% if active == 'licenses' %} is-active{% endif %}"
                data-nav-id="licenses">
                 <span>لایسنس</span>
             </a>

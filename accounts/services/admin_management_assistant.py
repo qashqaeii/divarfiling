@@ -13,6 +13,7 @@ from django.utils import timezone
 
 from accounts.models import (
     ManagementAutomationExecution,
+    ManagementAutomationRecipient,
     ManagementAutomationRule,
 )
 from accounts.services.admin_dashboard import _date_range, _pct_change, _today
@@ -243,6 +244,17 @@ AUTOMATION_RULE_CATALOG: List[Dict[str, Any]] = [
         'cooldown_days': 0,
     },
 ]
+
+CADENCE_LABELS = {
+    'hourly': 'ساعتی',
+    'daily': 'روزانه',
+}
+
+ACTION_TYPE_LABELS = {
+    'send_sms': 'ارسال SMS',
+    'management_alert': 'هشدار مدیریت',
+    'manual_review': 'بررسی دستی',
+}
 
 MANAGEMENT_FLOW_KEYS = tuple(
     sorted({row['flow_key'] for row in AUTOMATION_RULE_CATALOG} | {'license_renewal', 'pending_recovery'})
@@ -710,13 +722,32 @@ def build_management_insights() -> List[ManagementInsight]:
 
 
 def _insight_to_dict(insight: ManagementInsight) -> Dict[str, Any]:
+    automation_active = False
+    automation_name = ''
+    automation_next_run = ''
+    recommendation = insight.recommendation
+
+    if insight.automation_key:
+        rule = ManagementAutomationRule.objects.filter(
+            key=insight.automation_key,
+            is_active=True,
+            is_paused=False,
+        ).first()
+        if rule:
+            automation_active = True
+            automation_name = rule.name
+            automation_next_run = _compute_next_run_label(rule)
+            recommendation = (
+                f'اتوماسیون «{rule.name}» فعال است و این افراد در اجرای بعدی بررسی خواهند شد.'
+            )
+
     return {
         'key': insight.key,
         'title': insight.title,
         'what_happened': insight.what_happened,
         'importance': insight.importance,
         'context': insight.context,
-        'recommendation': insight.recommendation,
+        'recommendation': recommendation,
         'severity': insight.severity,
         'severity_label': SEVERITY_LABELS.get(insight.severity, ''),
         'category': insight.category,
@@ -730,6 +761,9 @@ def _insight_to_dict(insight: ManagementInsight) -> Dict[str, Any]:
         'view_url': insight.view_url,
         'message_template': insight.message_template,
         'automation_available': insight.automation_available,
+        'automation_active': automation_active,
+        'automation_name': automation_name,
+        'automation_next_run': automation_next_run,
         'actions': [
             {'key': a.key, 'label': a.label, 'style': a.style, 'modal': a.modal}
             for a in insight.actions
@@ -1116,6 +1150,443 @@ def toggle_automation_rule(*, rule_key: str, active: bool, user) -> Dict[str, An
         rule.activated_by = user
     rule.save(update_fields=['is_active', 'activated_at', 'activated_by', 'updated_at'])
     return {'ok': True, 'key': rule_key, 'is_active': rule.is_active}
+
+
+def _catalog_for_key(rule_key: str) -> Optional[Dict[str, Any]]:
+    return next((c for c in AUTOMATION_RULE_CATALOG if c['key'] == rule_key), None)
+
+
+def _get_rule_db(rule_key: str) -> Optional[ManagementAutomationRule]:
+    ensure_automation_rules()
+    return ManagementAutomationRule.objects.filter(key=rule_key).first()
+
+
+def _format_run_time(dt) -> str:
+    if not dt:
+        return '—'
+    local = timezone.localtime(dt)
+    today = timezone.localdate()
+    if local.date() == today:
+        return f'امروز {local.strftime("%H:%M")}'
+    yesterday = today - timedelta(days=1)
+    if local.date() == yesterday:
+        return f'دیروز {local.strftime("%H:%M")}'
+    return local.strftime('%Y/%m/%d %H:%M')
+
+
+def _compute_next_run_label(rule: ManagementAutomationRule) -> str:
+    if not rule.is_active or rule.is_paused:
+        return '—'
+    from accounts.services.management_automation_runner import rule_is_due
+
+    now = timezone.now()
+    if rule_is_due(rule, now=now, force=False):
+        return 'به‌زودی (در اجرای بعدی Runner)'
+
+    local = timezone.localtime(now)
+    if rule.cadence == ManagementAutomationRule.Cadence.HOURLY:
+        if rule.last_run_at:
+            next_hour = timezone.localtime(rule.last_run_at) + timedelta(hours=1)
+            if next_hour <= local:
+                next_hour = local.replace(minute=0, second=0, microsecond=0) + timedelta(hours=1)
+            return next_hour.strftime('%H:%M')
+        return 'ساعت بعد'
+
+    if rule.last_run_at and timezone.localtime(rule.last_run_at).date() == local.date():
+        return 'فردا'
+    return 'امروز'
+
+
+def _quiet_hours_label(rule: ManagementAutomationRule) -> str:
+    start = rule.quiet_hours_start
+    end = rule.quiet_hours_end
+    if start is None and end is None:
+        start, end = 23, 8
+    if start is None or end is None:
+        return 'بدون محدودیت'
+    allowed_start = end
+    allowed_end = start
+    return f'{allowed_start:02d}:00 → {allowed_end:02d}:00'
+
+
+def _rule_stats_30d(rule: ManagementAutomationRule) -> Dict[str, int]:
+    since = timezone.now() - timedelta(days=30)
+    executions = ManagementAutomationExecution.objects.filter(
+        rule=rule,
+        started_at__gte=since,
+        dry_run=False,
+    )
+    matched = sum(ex.matched_count for ex in executions)
+    sent = sum(ex.success_count for ex in executions)
+    skipped = sum(ex.skipped_count for ex in executions)
+    failed = sum(ex.failed_count for ex in executions)
+    converted = ManagementAutomationRecipient.objects.filter(
+        rule=rule,
+        sent_at__gte=since,
+        converted_at__isnull=False,
+    ).count()
+    return {
+        'matched': matched,
+        'sent': sent,
+        'skipped': skipped,
+        'failed': failed,
+        'converted': converted,
+        'revenue': 0,
+    }
+
+
+def _candidate_preview_row(rule: ManagementAutomationRule, candidate) -> Dict[str, Any]:
+    from accounts.services.management_automation_runner import (
+        classify_candidate_for_preview,
+        _message_for_rule,
+    )
+
+    row = _candidate_to_preview_row(candidate)
+    status, reason_key, status_label = classify_candidate_for_preview(rule, candidate)
+    meta = candidate.metadata or {}
+    ctx = candidate.context or {}
+
+    extra_detail = []
+    if meta.get('expires_at'):
+        extra_detail.append(f'انقضا: {meta["expires_at"]}')
+    if ctx.get('amount'):
+        extra_detail.append(ctx['amount'])
+    if extra_detail:
+        base_detail = row.get('detail') or ''
+        row['detail'] = ' · '.join(filter(None, [base_detail, *extra_detail]))
+
+    row.update({
+        'status': status,
+        'status_label': status_label,
+        'skip_reason': reason_key if status == 'skip' else '',
+        'user_id': meta.get('user_id'),
+    })
+    if status == 'ready' and rule.action_type == ManagementAutomationRule.ActionType.SEND_SMS:
+        row['message_preview'] = _message_for_rule(rule, ctx)[:200]
+    return row
+
+
+def preview_automation_rule(rule_key: str) -> Dict[str, Any]:
+    from accounts.services.management_automation_runner import resolve_audience
+
+    catalog = _catalog_for_key(rule_key)
+    rule = _get_rule_db(rule_key)
+    if not catalog or not rule:
+        return {'ok': False, 'error': 'قانون یافت نشد.', 'recipients': [], 'count': 0}
+
+    candidates = resolve_audience(rule)
+    rows = [_candidate_preview_row(rule, c) for c in candidates[:100]]
+    ready_count = sum(1 for r in rows if r['status'] == 'ready')
+    skip_count = sum(1 for r in rows if r['status'] == 'skip')
+
+    sample_message = ''
+    if rule.action_type == ManagementAutomationRule.ActionType.SEND_SMS:
+        from accounts.services.management_automation_runner import (
+            _message_for_rule,
+            classify_candidate_for_preview,
+        )
+        for c in candidates:
+            st, _, _ = classify_candidate_for_preview(rule, c)
+            if st == 'ready':
+                sample_message = _message_for_rule(rule, c.context or {})
+                break
+
+    return {
+        'ok': True,
+        'count': len(candidates),
+        'ready_count': ready_count,
+        'skip_count': skip_count,
+        'recipients': rows,
+        'sample_message': sample_message,
+    }
+
+
+def get_automation_rule_detail(rule_key: str) -> Dict[str, Any]:
+    catalog = _catalog_for_key(rule_key)
+    rule = _get_rule_db(rule_key)
+    if not catalog or not rule:
+        return {'ok': False, 'error': 'قانون یافت نشد.'}
+
+    preview = preview_automation_rule(rule_key)
+    stats = _rule_stats_30d(rule)
+
+    template = (rule.message_template or '').strip()
+    if not template and rule.insight_key:
+        template = INSIGHT_MESSAGE_TEMPLATES.get(rule.insight_key, '')
+
+    sample_message = preview.get('sample_message') or ''
+    if not sample_message and template:
+        sample_message = render_message(template, {
+            'name_part': ' علی',
+            'product': 'فایلینگ دیوار',
+            'link': _site_link(),
+            'days': '۳',
+        })
+
+    if rule.is_paused:
+        status_label = 'متوقف موقت'
+        status_tone = 'paused'
+    elif rule.is_active:
+        status_label = 'فعال'
+        status_tone = 'active'
+    else:
+        status_label = 'خاموش'
+        status_tone = 'inactive'
+
+    recent_executions = []
+    for ex in rule.executions.order_by('-started_at')[:5]:
+        recent_executions.append({
+            'id': ex.pk,
+            'started_at': ex.started_at,
+            'started_label': _format_run_time(ex.started_at),
+            'status': ex.status,
+            'dry_run': ex.dry_run,
+            'matched_count': ex.matched_count,
+            'success_count': ex.success_count,
+            'skipped_count': ex.skipped_count,
+            'failed_count': ex.failed_count,
+        })
+
+    return {
+        'ok': True,
+        'rule': {
+            'key': rule.key,
+            'name': catalog['name'],
+            'condition_label': catalog['condition_label'],
+            'audience_label': catalog['audience_label'],
+            'action_label': catalog['action_label'],
+            'template_label': catalog['template_label'],
+            'cooldown_label': catalog['cooldown_label'],
+            'is_active': rule.is_active,
+            'is_paused': rule.is_paused,
+            'cadence': rule.cadence,
+            'cadence_label': CADENCE_LABELS.get(rule.cadence, rule.cadence),
+            'action_type': rule.action_type,
+            'action_type_label': ACTION_TYPE_LABELS.get(rule.action_type, rule.action_type),
+            'cooldown_days': rule.cooldown_days,
+            'max_recipients_per_run': rule.max_recipients_per_run,
+            'quiet_hours_label': _quiet_hours_label(rule),
+            'last_run_at': rule.last_run_at,
+            'last_run_label': _format_run_time(rule.last_run_at),
+            'next_run_label': _compute_next_run_label(rule),
+            'message_template': template,
+            'default_message_template': get_default_message_template(rule_key),
+            'is_custom_template': bool((rule.message_template or '').strip()),
+            'quiet_hours_start': rule.quiet_hours_start,
+            'quiet_hours_end': rule.quiet_hours_end,
+            'allowed_hours_start': rule.quiet_hours_end if rule.quiet_hours_end is not None else 8,
+            'allowed_hours_end': rule.quiet_hours_start if rule.quiet_hours_start is not None else 23,
+            'editable': rule.action_type == ManagementAutomationRule.ActionType.SEND_SMS,
+        },
+        'status_label': status_label,
+        'status_tone': status_tone,
+        'stats_30d': stats,
+        'sample_message': sample_message,
+        'recent_executions': recent_executions,
+        'audience': {
+            'count': preview.get('count', 0),
+            'ready_count': preview.get('ready_count', 0),
+            'skip_count': preview.get('skip_count', 0),
+            'recipients': preview.get('recipients', []),
+        },
+    }
+
+
+def run_automation_rule_now(
+    *,
+    rule_key: str,
+    dry_run: bool = False,
+    force: bool = True,
+) -> Dict[str, Any]:
+    from accounts.services.management_automation_runner import run_rule
+
+    rule = _get_rule_db(rule_key)
+    if not rule:
+        return {'ok': False, 'error': 'قانون یافت نشد.'}
+
+    if not dry_run and (not rule.is_active or rule.is_paused):
+        return {'ok': False, 'error': 'قانون غیرفعال یا متوقف است.'}
+
+    execution = run_rule(
+        rule,
+        dry_run=dry_run,
+        force=force,
+        staff_override=dry_run,
+    )
+    if not execution:
+        return {
+            'ok': False,
+            'error': 'اجرا انجام نشد — ممکن است زمان اجرا نرسیده یا ساعات سکوت باشد.',
+        }
+
+    return {
+        'ok': True,
+        'dry_run': dry_run,
+        'execution_id': execution.pk,
+        'matched': execution.matched_count,
+        'success': execution.success_count,
+        'failed': execution.failed_count,
+        'skipped': execution.skipped_count,
+        'status': execution.status,
+    }
+
+
+def get_default_message_template(rule_key: str) -> str:
+    catalog = _catalog_for_key(rule_key)
+    rule = _get_rule_db(rule_key)
+    if not catalog or not rule:
+        return ''
+    if rule.insight_key:
+        return INSIGHT_MESSAGE_TEMPLATES.get(rule.insight_key, '')
+    return ''
+
+
+def _sample_message_context() -> Dict[str, str]:
+    return {
+        'name': 'علی',
+        'name_part': ' علی',
+        'product': 'فایلینگ دیوار',
+        'plan': 'ماهانه',
+        'amount': '891,000',
+        'link': _site_link(),
+        'code': 'TEST',
+        'days': '۳',
+    }
+
+
+def preview_rule_message(rule_key: str, message_template: str = '') -> Dict[str, Any]:
+    catalog = _catalog_for_key(rule_key)
+    rule = _get_rule_db(rule_key)
+    if not catalog or not rule:
+        return {'ok': False, 'error': 'قانون یافت نشد.'}
+
+    template = (message_template or '').strip()
+    if not template:
+        template = (rule.message_template or '').strip()
+    if not template:
+        template = get_default_message_template(rule_key)
+
+    if not template:
+        return {'ok': False, 'error': 'قالب پیامی برای این Rule تعریف نشده.'}
+
+    return {
+        'ok': True,
+        'message_template': template,
+        'sample_message': render_message(template, _sample_message_context()),
+    }
+
+
+def update_automation_rule_settings(
+    *,
+    rule_key: str,
+    reset_template: bool = False,
+    **fields,
+) -> Dict[str, Any]:
+    catalog = _catalog_for_key(rule_key)
+    rule = _get_rule_db(rule_key)
+    if not catalog or not rule:
+        return {'ok': False, 'error': 'قانون یافت نشد.'}
+
+    update_fields: List[str] = []
+
+    if reset_template:
+        if rule.message_template:
+            rule.message_template = ''
+            update_fields.append('message_template')
+    elif 'message_template' in fields:
+        if rule.action_type != ManagementAutomationRule.ActionType.SEND_SMS:
+            return {'ok': False, 'error': 'این Rule پیام SMS ندارد.'}
+        template = (fields.get('message_template') or '').strip()
+        if not template:
+            return {'ok': False, 'error': 'متن پیام نمی‌تواند خالی باشد.'}
+        if len(template) > 500:
+            return {'ok': False, 'error': 'متن پیام بیش از حد مجاز است.'}
+        rule.message_template = template
+        update_fields.append('message_template')
+
+    if 'cooldown_days' in fields:
+        days = int(fields['cooldown_days'])
+        if days < 0 or days > 90:
+            return {'ok': False, 'error': 'Cooldown باید بین ۰ تا ۹۰ روز باشد.'}
+        rule.cooldown_days = days
+        update_fields.append('cooldown_days')
+
+    if 'max_recipients_per_run' in fields:
+        limit = int(fields['max_recipients_per_run'])
+        if limit < 1 or limit > 200:
+            return {'ok': False, 'error': 'حداکثر گیرنده باید بین ۱ تا ۲۰۰ باشد.'}
+        rule.max_recipients_per_run = limit
+        update_fields.append('max_recipients_per_run')
+
+    if 'cadence' in fields:
+        cadence = str(fields['cadence']).strip()
+        if cadence not in (
+            ManagementAutomationRule.Cadence.HOURLY,
+            ManagementAutomationRule.Cadence.DAILY,
+        ):
+            return {'ok': False, 'error': 'Cadence نامعتبر است.'}
+        rule.cadence = cadence
+        update_fields.append('cadence')
+
+    if 'quiet_hours_start' in fields or 'quiet_hours_end' in fields:
+        start = fields.get('quiet_hours_start', rule.quiet_hours_start)
+        end = fields.get('quiet_hours_end', rule.quiet_hours_end)
+        if start is not None and start != '':
+            start = int(start)
+            if start < 0 or start > 23:
+                return {'ok': False, 'error': 'ساعت شروع نامعتبر است.'}
+        else:
+            start = None
+        if end is not None and end != '':
+            end = int(end)
+            if end < 0 or end > 23:
+                return {'ok': False, 'error': 'ساعت پایان نامعتبر است.'}
+        else:
+            end = None
+        rule.quiet_hours_start = start
+        rule.quiet_hours_end = end
+        update_fields.extend(['quiet_hours_start', 'quiet_hours_end'])
+
+    if not update_fields and not reset_template:
+        return {'ok': False, 'error': 'تغییری برای ذخیره وجود ندارد.'}
+
+    if update_fields:
+        rule.save(update_fields=list(dict.fromkeys(update_fields + ['updated_at'])))
+
+    return {'ok': True, 'key': rule_key}
+
+
+def send_automation_test_message(
+    *,
+    rule_key: str,
+    user,
+    message_template: str = '',
+) -> Dict[str, Any]:
+    from accounts.phone_utils import is_valid_iran_mobile, normalize_phone
+    from accounts.services.notifications import notify_marketing
+
+    catalog = _catalog_for_key(rule_key)
+    rule = _get_rule_db(rule_key)
+    if not catalog or not rule:
+        return {'ok': False, 'error': 'قانون یافت نشد.'}
+    if rule.action_type != ManagementAutomationRule.ActionType.SEND_SMS:
+        return {'ok': False, 'error': 'این Rule پیام SMS ندارد.'}
+
+    phone = normalize_phone(getattr(user, 'phone', '') or '')
+    if not is_valid_iran_mobile(phone):
+        return {'ok': False, 'error': 'شماره موبایل حساب staff برای ارسال آزمایشی نامعتبر است.'}
+
+    preview = preview_rule_message(rule_key, message_template=message_template)
+    if not preview.get('ok'):
+        return preview
+
+    body = preview['sample_message']
+    ok, sms_log = notify_marketing(phone=phone, text=body)
+    if not ok:
+        err = getattr(sms_log, 'error_message', '') or 'ارسال ناموفق بود.'
+        return {'ok': False, 'error': err[:200]}
+
+    return {'ok': True, 'phone_masked': _mask_phone_for_display(phone)}
 
 
 def get_assistant_preview() -> Dict[str, Any]:

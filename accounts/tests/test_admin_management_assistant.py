@@ -10,9 +10,13 @@ from accounts.services.admin_management_assistant import (
     build_management_insights,
     ensure_automation_rules,
     get_assistant_preview,
+    get_automation_rule_detail,
     get_management_assistant_context,
+    preview_automation_rule,
     preview_insight_recipients,
+    preview_rule_message,
     toggle_automation_rule,
+    update_automation_rule_settings,
 )
 from accounts.services.admin_panel_shell import resolve_admin_panel_nav_active
 from accounts.services.pending_orders import PENDING_ORDER_STATUSES
@@ -108,6 +112,111 @@ class ManagementAssistantServiceTests(TestCase):
         self.assertEqual(ctx['tab'], 'automations')
         self.assertTrue(ctx['automation_rules'])
 
+    def test_preview_automation_rule(self):
+        product = Product.objects.create(title='P', slug='maa-auto', is_active=True)
+        plan = LicensePlan.objects.create(
+            product=product, name='ماهانه', plan_type='monthly', price=100000,
+            duration_days=30, is_active=True,
+        )
+        order = Order.objects.create(
+            user=self.user,
+            product=product,
+            plan=plan,
+            amount=100000,
+            status='paid',
+        )
+        License.objects.create(
+            order=order,
+            plan=plan,
+            status='active',
+            expires_at=timezone.now() + timezone.timedelta(days=2),
+        )
+        ensure_automation_rules()
+        data = preview_automation_rule('license_expiring_3d')
+        self.assertTrue(data['ok'])
+        self.assertGreaterEqual(data['count'], 1)
+        self.assertIn('ready_count', data)
+        self.assertTrue(data['recipients'])
+        self.assertIn('status', data['recipients'][0])
+
+    def test_automation_rule_detail(self):
+        ensure_automation_rules()
+        data = get_automation_rule_detail('license_expiring_3d')
+        self.assertTrue(data['ok'])
+        self.assertIn('rule', data)
+        self.assertIn('stats_30d', data)
+        self.assertIn('audience', data)
+        self.assertIn('sample_message', data)
+
+    def test_insight_automation_active_note(self):
+        ensure_automation_rules()
+        toggle_automation_rule(
+            rule_key='license_expiring_3d',
+            active=True,
+            user=self.staff,
+        )
+        product = Product.objects.create(title='P', slug='maa-ins', is_active=True)
+        plan = LicensePlan.objects.create(
+            product=product, name='م', plan_type='monthly', price=100000,
+            duration_days=30, is_active=True,
+        )
+        order = Order.objects.create(
+            user=self.user,
+            product=product,
+            plan=plan,
+            amount=100000,
+            status='paid',
+        )
+        License.objects.create(
+            order=order,
+            plan=plan,
+            status='active',
+            expires_at=timezone.now() + timezone.timedelta(days=2),
+        )
+        ctx = get_management_assistant_context(tab='suggestions')
+        expiring = next(i for i in ctx['insights'] if i['key'] == 'license_expiring_3d')
+        self.assertTrue(expiring['automation_active'])
+        self.assertIn('اتوماسیون', expiring['recommendation'])
+
+    def test_update_automation_settings(self):
+        ensure_automation_rules()
+        result = update_automation_rule_settings(
+            rule_key='license_expiring_3d',
+            cooldown_days=5,
+            max_recipients_per_run=40,
+            cadence='hourly',
+            quiet_hours_start=23,
+            quiet_hours_end=8,
+        )
+        self.assertTrue(result['ok'])
+        rule = ManagementAutomationRule.objects.get(key='license_expiring_3d')
+        self.assertEqual(rule.cooldown_days, 5)
+        self.assertEqual(rule.max_recipients_per_run, 40)
+        self.assertEqual(rule.cadence, 'hourly')
+
+    def test_update_message_template_and_reset(self):
+        ensure_automation_rules()
+        custom = 'سلام{name_part}، پیام تست: {link}'
+        result = update_automation_rule_settings(
+            rule_key='license_expiring_3d',
+            message_template=custom,
+        )
+        self.assertTrue(result['ok'])
+        rule = ManagementAutomationRule.objects.get(key='license_expiring_3d')
+        self.assertEqual(rule.message_template, custom)
+
+        preview = preview_rule_message('license_expiring_3d', message_template=custom)
+        self.assertTrue(preview['ok'])
+        self.assertIn('پیام تست', preview['sample_message'])
+
+        reset = update_automation_rule_settings(
+            rule_key='license_expiring_3d',
+            reset_template=True,
+        )
+        self.assertTrue(reset['ok'])
+        rule.refresh_from_db()
+        self.assertEqual(rule.message_template, '')
+
 
 @override_settings(TIME_ZONE='Asia/Tehran')
 class ManagementAssistantViewTests(TestCase):
@@ -148,6 +257,42 @@ class ManagementAssistantViewTests(TestCase):
         )
         self.assertEqual(resp.status_code, 200)
         self.assertTrue(resp.json()['ok'])
+
+    def test_automation_detail_json(self):
+        ensure_automation_rules()
+        url = reverse('admin_panel_assistant_automation_detail')
+        resp = self.client.get(url, {'rule_key': 'license_expiring_3d'})
+        self.assertEqual(resp.status_code, 200)
+        data = resp.json()
+        self.assertTrue(data['ok'])
+        self.assertIn('audience', data)
+
+    def test_automation_preview_json(self):
+        ensure_automation_rules()
+        url = reverse('admin_panel_assistant_automation_preview')
+        resp = self.client.get(url, {'rule_key': 'license_expiring_3d'})
+        self.assertEqual(resp.status_code, 200)
+        self.assertIn('ok', resp.json())
+
+    def test_automation_settings_json(self):
+        ensure_automation_rules()
+        url = reverse('admin_panel_assistant_automation_settings')
+        resp = self.client.post(
+            url,
+            data='{"rule_key":"license_expiring_3d","confirm_save":"1","cooldown_days":6}',
+            content_type='application/json',
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.assertTrue(resp.json()['ok'])
+
+    def test_automation_message_preview_json(self):
+        ensure_automation_rules()
+        url = reverse('admin_panel_assistant_automation_message_preview')
+        resp = self.client.get(url, {'rule_key': 'license_expiring_3d'})
+        self.assertEqual(resp.status_code, 200)
+        data = resp.json()
+        self.assertTrue(data['ok'])
+        self.assertTrue(data['sample_message'])
 
     def test_non_staff_denied(self):
         user = User.objects.create_user(username='norm', password='x', phone='09120000104')

@@ -7,7 +7,7 @@
 {% block admin_panel_title %}دستیار مدیریت{% endblock %}
 
 {% block admin_panel_extra_css %}
-<link rel="stylesheet" href="{% static 'css/mizkar-admin-assistant.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'css/mizkar-admin-assistant.css' %}?v=4">
 {% endblock %}
 
 {% block admin_panel_header_meta %}
@@ -20,7 +20,13 @@
 <div class="maa-page" id="maa-page"
      data-preview-url="{% url 'admin_panel_assistant_preview' %}"
      data-send-url="{% url 'admin_panel_assistant_send' %}"
-     data-automation-url="{% url 'admin_panel_assistant_automation' %}">
+     data-automation-url="{% url 'admin_panel_assistant_automation' %}"
+     data-automation-detail-url="{% url 'admin_panel_assistant_automation_detail' %}"
+     data-automation-preview-url="{% url 'admin_panel_assistant_automation_preview' %}"
+     data-automation-run-url="{% url 'admin_panel_assistant_automation_run' %}"
+     data-automation-settings-url="{% url 'admin_panel_assistant_automation_settings' %}"
+     data-automation-message-preview-url="{% url 'admin_panel_assistant_automation_message_preview' %}"
+     data-automation-test-send-url="{% url 'admin_panel_assistant_automation_test_send' %}">
 
     <div class="maa-summary">
         <div class="maa-summary-item" data-severity="critical">
@@ -84,7 +90,14 @@
                     {% endif %}
                     <div>
                         <dt>پیشنهاد</dt>
-                        <dd class="maa-insight-rec">{{ item.recommendation }}</dd>
+                        <dd class="maa-insight-rec{% if item.automation_active %} maa-insight-rec--auto{% endif %}">{{ item.recommendation }}</dd>
+                        {% if item.automation_active %}
+                        <p class="maa-insight-auto-note">
+                            <i class="fas fa-robot"></i>
+                            {{ item.automation_name }} — فعال
+                            {% if item.automation_next_run %}· اجرای بعدی: {{ item.automation_next_run }}{% endif %}
+                        </p>
+                        {% endif %}
                     </div>
                 </dl>
 
@@ -93,12 +106,19 @@
                     <a href="{{ item.view_url }}" class="ecc-btn ecc-btn--ghost ecc-btn--sm">مشاهده</a>
                     {% endif %}
                     {% if item.segment_key or item.message_template %}
+                    {% if not item.automation_active %}
                     <button type="button" class="ecc-btn ecc-btn--primary ecc-btn--sm maa-btn-send"
                             data-insight="{{ item.key }}"
                             data-title="{{ item.title }}"
                             data-count="{{ item.count }}">
                         ارسال پیام
                     </button>
+                    {% else %}
+                    <button type="button" class="ecc-btn ecc-btn--ghost ecc-btn--sm maa-btn-automate-detail"
+                            data-rule="{{ item.automation_key }}">
+                        مشاهده مخاطبان
+                    </button>
+                    {% endif %}
                     {% endif %}
                     {% if item.automation_available and item.automation_key %}
                     <button type="button" class="ecc-btn ecc-btn--ghost ecc-btn--sm maa-btn-automate"
@@ -239,23 +259,111 @@
 
 <div class="maa-modal" id="maa-auto-modal" hidden aria-hidden="true">
     <div class="maa-modal-backdrop" data-close-modal></div>
-    <div class="maa-modal-panel" role="dialog" aria-labelledby="maa-auto-title">
+    <div class="maa-modal-panel maa-modal-panel--wide" role="dialog" aria-labelledby="maa-auto-title">
         <header class="maa-modal-head">
-            <h3 id="maa-auto-title">خودکارسازی</h3>
+            <div>
+                <h3 id="maa-auto-title">خودکارسازی</h3>
+                <span class="maa-auto-status-badge" id="maa-auto-status-badge">—</span>
+            </div>
             <button type="button" class="maa-modal-close" data-close-modal aria-label="بستن">
                 <i class="fas fa-times"></i>
             </button>
         </header>
-        <div class="maa-modal-body" id="maa-auto-body">
-            <dl class="maa-auto-detail">
-                <div><dt>شرط</dt><dd id="maa-auto-condition">—</dd></div>
-                <div><dt>مخاطب</dt><dd id="maa-auto-audience">—</dd></div>
-                <div><dt>عمل</dt><dd id="maa-auto-action">—</dd></div>
-                <div><dt>قالب</dt><dd id="maa-auto-template">—</dd></div>
-                <div><dt>Cooldown</dt><dd id="maa-auto-cooldown">—</dd></div>
-            </dl>
+        <div class="maa-modal-body maa-auto-detail-body" id="maa-auto-body">
+            <div class="maa-auto-loading" id="maa-auto-loading">در حال بارگذاری جزئیات…</div>
+            <div class="maa-auto-content" id="maa-auto-content" hidden>
+                <section class="maa-auto-section">
+                    <div class="maa-auto-section-head">
+                        <h4>تنظیمات Rule</h4>
+                        <button type="button" class="ecc-btn ecc-btn--ghost ecc-btn--sm" id="maa-auto-toggle-settings">ویرایش</button>
+                    </div>
+                    <dl class="maa-auto-grid maa-auto-settings-view" id="maa-auto-settings-view">
+                        <div><dt>Cadence</dt><dd id="maa-auto-cadence-view">—</dd></div>
+                        <div><dt>Cooldown</dt><dd id="maa-auto-cooldown-view">—</dd></div>
+                        <div><dt>حداکثر در هر اجرا</dt><dd id="maa-auto-max-view">—</dd></div>
+                        <div><dt>ساعت مجاز</dt><dd id="maa-auto-quiet-view">—</dd></div>
+                    </dl>
+                    <form class="maa-auto-settings-form" id="maa-auto-settings-form" hidden>
+                        <div class="maa-auto-form-grid">
+                            <label>Cadence
+                                <select id="maa-setting-cadence" name="cadence">
+                                    <option value="hourly">ساعتی</option>
+                                    <option value="daily">روزانه</option>
+                                </select>
+                            </label>
+                            <label>Cooldown (روز)
+                                <input type="number" id="maa-setting-cooldown" name="cooldown_days" min="0" max="90">
+                            </label>
+                            <label>حداکثر گیرنده
+                                <input type="number" id="maa-setting-max-recipients" name="max_recipients_per_run" min="1" max="200">
+                            </label>
+                            <label>شروع ساعات مجاز
+                                <input type="number" id="maa-setting-quiet-start" name="quiet_hours_start" min="0" max="23" placeholder="۸">
+                            </label>
+                            <label>پایان ساعات مجاز
+                                <input type="number" id="maa-setting-quiet-end" name="quiet_hours_end" min="0" max="23" placeholder="۲۳">
+                            </label>
+                        </div>
+                        <div class="maa-auto-form-actions">
+                            <button type="button" class="ecc-btn ecc-btn--primary ecc-btn--sm" id="maa-auto-save-settings">ذخیره تنظیمات</button>
+                            <button type="button" class="ecc-btn ecc-btn--ghost ecc-btn--sm" id="maa-auto-cancel-settings">انصراف</button>
+                        </div>
+                    </form>
+                </section>
+
+                <section class="maa-auto-section" id="maa-auto-message-section" hidden>
+                    <div class="maa-auto-section-head">
+                        <h4>پیام</h4>
+                        <span class="maa-auto-template-badge" id="maa-auto-template-badge">پیش‌فرض</span>
+                    </div>
+                    <textarea class="maa-auto-message-input" id="maa-auto-message-input" rows="5"></textarea>
+                    <blockquote class="maa-auto-message" id="maa-auto-message-preview" hidden></blockquote>
+                    <div class="maa-auto-message-actions">
+                        <button type="button" class="ecc-btn ecc-btn--ghost ecc-btn--sm" id="maa-auto-preview-message">Preview</button>
+                        <button type="button" class="ecc-btn ecc-btn--ghost ecc-btn--sm" id="maa-auto-save-message">ذخیره پیام</button>
+                        <button type="button" class="ecc-btn ecc-btn--ghost ecc-btn--sm" id="maa-auto-reset-message">بازگشت به پیش‌فرض</button>
+                        <button type="button" class="ecc-btn ecc-btn--ghost ecc-btn--sm" id="maa-auto-test-send">ارسال آزمایشی برای خودم</button>
+                    </div>
+                </section>
+
+                <section class="maa-auto-section">
+                    <h4>زمان‌بندی اجرا</h4>
+                    <dl class="maa-auto-grid">
+                        <div><dt>آخرین اجرا</dt><dd id="maa-auto-last-run">—</dd></div>
+                        <div><dt>اجرای بعدی</dt><dd id="maa-auto-next-run">—</dd></div>
+                        <div><dt>شرط</dt><dd id="maa-auto-condition">—</dd></div>
+                        <div><dt>مخاطب</dt><dd id="maa-auto-audience">—</dd></div>
+                    </dl>
+                </section>
+
+                <section class="maa-auto-section">
+                    <h4>۳۰ روز اخیر</h4>
+                    <div class="maa-auto-stats" id="maa-auto-stats">
+                        <div><strong id="maa-stat-matched">0</strong><span>Match</span></div>
+                        <div><strong id="maa-stat-sent">0</strong><span>ارسال</span></div>
+                        <div><strong id="maa-stat-skipped">0</strong><span>Skip</span></div>
+                        <div><strong id="maa-stat-converted">0</strong><span>تبدیل</span></div>
+                    </div>
+                </section>
+
+                <section class="maa-auto-section">
+                    <div class="maa-auto-section-head">
+                        <h4>مخاطبان واجد شرایط</h4>
+                        <span class="maa-auto-audience-count" id="maa-auto-audience-count">—</span>
+                    </div>
+                    <div class="maa-modal-recipient-list maa-auto-audience-list" id="maa-auto-audience-list" aria-live="polite"></div>
+                </section>
+
+                <section class="maa-auto-section" id="maa-auto-recent-section" hidden>
+                    <h4>اجراهای اخیر</h4>
+                    <div class="maa-auto-recent" id="maa-auto-recent"></div>
+                </section>
+            </div>
         </div>
-        <footer class="maa-modal-foot">
+        <footer class="maa-modal-foot maa-auto-foot">
+            <button type="button" class="ecc-btn ecc-btn--ghost" id="maa-auto-refresh-audience">پیش‌نمایش مخاطبان</button>
+            <button type="button" class="ecc-btn ecc-btn--ghost" id="maa-auto-dry-run">اجرای آزمایشی</button>
+            <button type="button" class="ecc-btn ecc-btn--ghost" id="maa-auto-run-now">اجرای الان</button>
             <button type="button" class="ecc-btn ecc-btn--primary" id="maa-confirm-auto">فعال کردن</button>
         </footer>
     </div>
@@ -266,5 +374,5 @@
 <script>
 window.maaAutomationRules = {{ automation_rules_json|safe }};
 </script>
-<script src="{% static 'js/mizkar-admin-assistant.js' %}?v=2"></script>
+<script src="{% static 'js/mizkar-admin-assistant.js' %}?v=4"></script>
 {% endblock %}

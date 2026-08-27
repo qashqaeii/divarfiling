@@ -79,10 +79,16 @@ from accounts.services.admin_affiliates_center import get_affiliates_center_cont
 from accounts.services.admin_exports_center import get_exports_center_context
 from accounts.services.admin_management_assistant import (
     get_assistant_preview,
+    get_automation_rule_detail,
     get_management_assistant_context,
+    preview_automation_rule,
     preview_insight_recipients,
+    preview_rule_message,
+    run_automation_rule_now,
+    send_automation_test_message,
     send_insight_campaign,
     toggle_automation_rule,
+    update_automation_rule_settings,
 )
 from accounts.services.admin_phonebook_sync import (
     PhonebookSyncError,
@@ -1013,5 +1019,113 @@ class AdminManagementAssistantAutomationView(StaffRequiredMixin, View):
         rule_key = (body.get('rule_key') or '').strip()
         active = bool(body.get('active'))
         result = toggle_automation_rule(rule_key=rule_key, active=active, user=request.user)
+        status = 200 if result.get('ok') else 400
+        return JsonResponse(result, json_dumps_params={'ensure_ascii': False}, status=status)
+
+
+class AdminManagementAssistantAutomationDetailView(StaffRequiredMixin, View):
+    """جزئیات کامل یک Rule — مرکز کنترل Automation."""
+
+    def get(self, request):
+        rule_key = (request.GET.get('rule_key') or '').strip()
+        payload = get_automation_rule_detail(rule_key)
+        status = 200 if payload.get('ok') else 404
+        return JsonResponse(payload, json_dumps_params={'ensure_ascii': False}, status=status)
+
+
+class AdminManagementAssistantAutomationPreviewView(StaffRequiredMixin, View):
+    """پیش‌نمایش مخاطبان یک Rule."""
+
+    def get(self, request):
+        rule_key = (request.GET.get('rule_key') or '').strip()
+        payload = preview_automation_rule(rule_key)
+        status = 200 if payload.get('ok') else 404
+        return JsonResponse(payload, json_dumps_params={'ensure_ascii': False}, status=status)
+
+
+class AdminManagementAssistantAutomationRunView(StaffRequiredMixin, View):
+    """اجرای دستی یا Dry Run یک Rule."""
+
+    def post(self, request):
+        try:
+            body = json.loads(request.body.decode('utf-8') or '{}')
+        except json.JSONDecodeError:
+            return JsonResponse({'ok': False, 'error': 'درخواست نامعتبر است.'}, status=400)
+
+        rule_key = (body.get('rule_key') or '').strip()
+        dry_run = bool(body.get('dry_run'))
+        force = body.get('force', True)
+        if body.get('confirm_run') != '1':
+            return JsonResponse({'ok': False, 'error': 'تأیید اجرا لازم است.'}, status=400)
+
+        result = run_automation_rule_now(rule_key=rule_key, dry_run=dry_run, force=bool(force))
+        status = 200 if result.get('ok') else 400
+        return JsonResponse(result, json_dumps_params={'ensure_ascii': False}, status=status)
+
+
+class AdminManagementAssistantAutomationSettingsView(StaffRequiredMixin, View):
+    """ذخیره تنظیمات Safe یک Rule."""
+
+    def post(self, request):
+        try:
+            body = json.loads(request.body.decode('utf-8') or '{}')
+        except json.JSONDecodeError:
+            return JsonResponse({'ok': False, 'error': 'درخواست نامعتبر است.'}, status=400)
+
+        rule_key = (body.get('rule_key') or '').strip()
+        if body.get('confirm_save') != '1':
+            return JsonResponse({'ok': False, 'error': 'تأیید ذخیره لازم است.'}, status=400)
+
+        fields = {}
+        for key in (
+            'message_template',
+            'cooldown_days',
+            'max_recipients_per_run',
+            'cadence',
+            'quiet_hours_start',
+            'quiet_hours_end',
+        ):
+            if key in body:
+                fields[key] = body[key]
+
+        result = update_automation_rule_settings(
+            rule_key=rule_key,
+            reset_template=bool(body.get('reset_template')),
+            **fields,
+        )
+        status = 200 if result.get('ok') else 400
+        return JsonResponse(result, json_dumps_params={'ensure_ascii': False}, status=status)
+
+
+class AdminManagementAssistantAutomationMessagePreviewView(StaffRequiredMixin, View):
+    """پیش‌نمایش متن پیام Rule."""
+
+    def get(self, request):
+        rule_key = (request.GET.get('rule_key') or '').strip()
+        message_template = (request.GET.get('message_template') or '').strip()
+        payload = preview_rule_message(rule_key, message_template=message_template)
+        status = 200 if payload.get('ok') else 400
+        return JsonResponse(payload, json_dumps_params={'ensure_ascii': False}, status=status)
+
+
+class AdminManagementAssistantAutomationTestSendView(StaffRequiredMixin, View):
+    """ارسال آزمایشی پیام Rule به staff."""
+
+    def post(self, request):
+        try:
+            body = json.loads(request.body.decode('utf-8') or '{}')
+        except json.JSONDecodeError:
+            return JsonResponse({'ok': False, 'error': 'درخواست نامعتبر است.'}, status=400)
+
+        rule_key = (body.get('rule_key') or '').strip()
+        message_template = (body.get('message_template') or '').strip()
+        if body.get('confirm_send') != '1':
+            return JsonResponse({'ok': False, 'error': 'تأیید ارسال لازم است.'}, status=400)
+
+        result = send_automation_test_message(
+            rule_key=rule_key,
+            user=request.user,
+            message_template=message_template,
+        )
         status = 200 if result.get('ok') else 400
         return JsonResponse(result, json_dumps_params={'ensure_ascii': False}, status=status)

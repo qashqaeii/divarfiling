@@ -47,6 +47,25 @@ TERMINAL_RECIPIENT_STATUSES = (
 DEFAULT_QUIET_START = 23
 DEFAULT_QUIET_END = 8
 
+SKIP_REASON_LABELS: Dict[str, str] = {
+    'deduped': 'اخیراً پیام گرفته',
+    'cooldown': 'Cooldown فعال',
+    'renewed': 'خرید/تمدید جدید',
+    'license_not_active': 'لایسنس غیرفعال',
+    'already_expired': 'لایسنس منقضی شده',
+    'missing_license': 'لایسنس یافت نشد',
+    'order_paid_or_gone': 'سفارش پرداخت شده',
+    'user_has_paid_order': 'خرید جدید انجام شده',
+    'order_not_failed': 'پرداخت دیگر ناموفق نیست',
+    'later_paid': 'پرداخت بعدی موفق بود',
+    'has_license': 'لایسنس فعال دارد',
+    'activated': 'فعال‌سازی انجام شده',
+    'launched': 'برنامه اجرا شده',
+    'crm_started': 'CRM شروع شده',
+    'suppressed': 'مسدود شده (suppression)',
+    'missing_order': 'سفارش یافت نشد',
+}
+
 
 @dataclass
 class AutomationCandidate:
@@ -742,17 +761,39 @@ def _process_candidate(
     return 'failed'
 
 
+def classify_candidate_for_preview(
+    rule: ManagementAutomationRule,
+    candidate: AutomationCandidate,
+) -> Tuple[str, str, str]:
+    """Returns (status, reason_key, reason_label) — status: ready | skip."""
+    if _trigger_already_handled(rule, candidate.trigger_key):
+        return 'skip', 'deduped', SKIP_REASON_LABELS['deduped']
+
+    ok, reason = revalidate_candidate(rule, candidate)
+    if not ok:
+        label = SKIP_REASON_LABELS.get(reason, reason or 'رد شده')
+        return 'skip', reason, label
+
+    user_id = getattr(candidate.user, 'pk', None) or candidate.metadata.get('user_id')
+    if user_id and _user_cooldown_active(rule, user_id):
+        return 'skip', 'cooldown', SKIP_REASON_LABELS['cooldown']
+
+    return 'ready', '', 'آماده ارسال'
+
+
 def run_rule(
     rule: ManagementAutomationRule,
     *,
     dry_run: bool = False,
     force: bool = False,
     now=None,
+    staff_override: bool = False,
 ) -> Optional[ManagementAutomationExecution]:
     now = now or timezone.now()
 
-    if not rule.is_active or rule.is_paused:
-        return None
+    if not staff_override:
+        if not rule.is_active or rule.is_paused:
+            return None
 
     if not rule_is_due(rule, now=now, force=force):
         return None

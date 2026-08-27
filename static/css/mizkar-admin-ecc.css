@@ -2944,3 +2944,61 @@ body.mk-admin-dashboard .adm-page.ecc-page--v2 {
     color: var(--ecc-text-muted);
     font-size: 0.88rem;
 }
+
+/* Support Center */
+.ecc-sup-actions-hero {
+    border: 1px solid rgba(244, 63, 94, 0.2);
+    background: linear-gradient(135deg, rgba(244, 63, 94, 0.06), rgba(59, 130, 246, 0.04));
+}
+
+.ecc-sup-actions-list .ecc-sup-action[data-priority="critical"] {
+    border-color: rgba(244, 63, 94, 0.35);
+}
+
+.ecc-sup-status {
+    font-size: 0.82rem;
+}
+
+.ecc-sup-unread-badge {
+    display: inline-block;
+    margin-right: 0.35rem;
+    padding: 0.1rem 0.4rem;
+    border-radius: 999px;
+    font-size: 0.65rem;
+    font-weight: 600;
+    background: rgba(244, 63, 94, 0.18);
+    color: var(--ecc-accent-rose);
+}
+
+.adm-table--pro tr.is-unread td:first-child {
+    box-shadow: inset 3px 0 0 var(--ecc-accent-rose);
+}
+
+.ecc-sup-intel-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 0.75rem;
+}
+
+.ecc-sup-intel-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.75rem 0.9rem;
+    border-radius: 10px;
+    background: var(--ecc-surface-2, rgba(255, 255, 255, 0.04));
+    border: 1px solid var(--ecc-border, rgba(255, 255, 255, 0.08));
+}
+
+.ecc-sup-intel-item span {
+    font-size: 0.75rem;
+    color: var(--ecc-text-muted);
+}
+
+.ecc-sup-intel-item strong {
+    font-size: 1.1rem;
+}
+
+.ecc-sup-charts .ecc-card--chart {
+    max-width: 100%;
+}

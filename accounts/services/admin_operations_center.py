@@ -470,7 +470,7 @@ def build_operations_action_items(
             'icon': 'fa-headset',
             'accent': 'rose',
             'cta': 'پشتیبانی',
-            'href': reverse('admin_panel') + panel_qs + '#ecc-support',
+            'href': reverse('admin_panel_support') + f'?days={days}',
         })
 
     priority_order = {'critical': 0, 'high': 1, 'medium': 2, 'low': 3}

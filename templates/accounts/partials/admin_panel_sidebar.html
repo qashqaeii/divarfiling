@@ -84,8 +84,8 @@
                data-nav-id="operations">
                 <span>عملیات</span>
             </a>
-            <a href="{% url 'admin_panel' %}{{ days_qs }}#ecc-support"
-               class="ecc-nav-item ecc-nav-item--sub"
+            <a href="{% url 'admin_panel_support' %}{{ days_qs }}"
+               class="ecc-nav-item ecc-nav-item--sub{% if active == 'support' %} is-active{% endif %}"
                data-nav-id="support">
                 <span>پشتیبانی</span>
                 {% firstof admin_panel_nav_badges.unread_tickets stats.unread_tickets as ticket_badge %}

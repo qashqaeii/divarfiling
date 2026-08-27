@@ -303,6 +303,7 @@
             ['chart-renewal-revenue', charts.renewal_revenue_trend],
             ['chart-ops-sms-trend', charts.sms_usage_trend],
             ['chart-ops-datasets-trend', charts.dataset_activity_trend],
+            ['chart-support-tickets-flow', charts.tickets_flow],
             ['chart-order-status', charts.order_status],
             ['chart-license-status', charts.license_status],
             ['chart-payment', charts.payment_methods],

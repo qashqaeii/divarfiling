@@ -1554,79 +1554,150 @@ def build_action_queue(stats: Dict[str, Any]) -> List[Dict[str, Any]]:
     return items
 
 
-def get_activity_feed(limit: int = 14) -> List[Dict[str, Any]]:
-    """فید فعالیت اخیر — سفارش، ثبت‌نام، تیکت، کارت‌به‌کارت."""
+ACTIVITY_TYPE_ALIASES = {
+    'all': None,
+    'payment': 'order_paid',
+    'order_paid': 'order_paid',
+    'signup': 'signup',
+    'ticket': 'ticket',
+    'card_transfer': 'card_transfer',
+    'card': 'card_transfer',
+}
+
+
+def _resolve_activity_type(activity_type: str | None) -> str | None:
+    key = (activity_type or 'all').strip()
+    return ACTIVITY_TYPE_ALIASES.get(key, key if key != 'all' else None)
+
+
+def _safe_user_display(user) -> str:
+    return user.get_full_name() or user.username or 'کاربر'
+
+
+def collect_activity_events(
+    *,
+    start=None,
+    end=None,
+    activity_type: str | None = None,
+    per_type_limit: int | None = None,
+    snapshot: bool = False,
+) -> List[Dict[str, Any]]:
+    """جمع‌آوری رویدادهای Activity — reuse برای فید داشبورد و Activity Center."""
+    selected = None if snapshot else _resolve_activity_type(activity_type)
     events: List[Dict[str, Any]] = []
 
-    for order in (
-        Order.objects.filter(status='paid')
-        .select_related('user', 'product')
-        .order_by('-paid_at')[:8]
-    ):
-        if not order.paid_at:
-            continue
-        events.append({
-            'type': 'order_paid',
-            'icon': 'fa-circle-check',
-            'accent': 'emerald',
-            'title': f'پرداخت {order.product.title if order.product_id else "سفارش"}',
-            'meta': order.user.get_full_name() or order.user.username,
-            'initials': _user_initials(order.user),
-            'amount': int(order.amount or 0),
-            'at': order.paid_at,
-            'href': '#ecc-sales',
-        })
+    def include(event_type: str) -> bool:
+        return selected is None or selected == event_type
 
-    for user in User.objects.order_by('-date_joined')[:6]:
-        events.append({
-            'type': 'signup',
-            'icon': 'fa-user-plus',
-            'accent': 'blue',
-            'title': 'ثبت‌نام جدید',
-            'meta': user.get_full_name() or user.username or user.phone,
-            'initials': _user_initials(user),
-            'amount': None,
-            'at': user.date_joined,
-            'href': '#ecc-users',
-        })
+    if include('order_paid'):
+        qs = Order.objects.filter(status='paid').select_related('user', 'product').order_by('-paid_at')
+        if snapshot:
+            qs = qs[:8]
+        else:
+            qs = qs.filter(paid_at__date__gte=start, paid_at__date__lte=end)
+            if per_type_limit:
+                qs = qs[:per_type_limit]
+        for order in qs:
+            if not order.paid_at:
+                continue
+            events.append({
+                'type': 'order_paid',
+                'object_id': order.pk,
+                'icon': 'fa-circle-check',
+                'accent': 'emerald',
+                'title': f'پرداخت {order.product.title if order.product_id else "سفارش"}',
+                'meta': _safe_user_display(order.user),
+                'initials': _user_initials(order.user),
+                'amount': int(order.amount or 0),
+                'at': order.paid_at,
+                'status_label': 'پرداخت‌شده',
+                'href': '#ecc-sales',
+            })
 
-    for ticket in (
-        Ticket.objects.exclude(status='closed')
-        .select_related('user')
-        .order_by('-created_at')[:5]
-    ):
-        events.append({
-            'type': 'ticket',
-            'icon': 'fa-headset',
-            'accent': 'rose',
-            'title': ticket.subject[:60],
-            'meta': ticket.user.get_full_name() or ticket.user.username,
-            'initials': _user_initials(ticket.user),
-            'amount': None,
-            'at': ticket.created_at,
-            'unread': ticket.staff_has_unread,
-            'href': '#ecc-support',
-        })
+    if include('signup'):
+        qs = User.objects.order_by('-date_joined')
+        if snapshot:
+            qs = qs[:6]
+        else:
+            qs = qs.filter(date_joined__date__gte=start, date_joined__date__lte=end)
+            if per_type_limit:
+                qs = qs[:per_type_limit]
+        for user in qs:
+            meta = user.get_full_name() or user.username
+            if snapshot and not meta:
+                meta = user.phone or 'کاربر'
+            events.append({
+                'type': 'signup',
+                'object_id': user.pk,
+                'icon': 'fa-user-plus',
+                'accent': 'blue',
+                'title': 'ثبت‌نام جدید',
+                'meta': meta or 'کاربر',
+                'initials': _user_initials(user),
+                'amount': None,
+                'at': user.date_joined,
+                'status_label': 'عضو جدید',
+                'href': '#ecc-users',
+            })
 
-    for ct in (
-        CardTransferSubmission.objects.filter(status='pending')
-        .select_related('order__user', 'order__product')
-        .order_by('-created_at')[:4]
-    ):
-        events.append({
-            'type': 'card_transfer',
-            'icon': 'fa-money-check',
-            'accent': 'amber',
-            'title': 'کارت‌به‌کارت در انتظار',
-            'meta': ct.order.user.get_full_name() or ct.order.user.username,
-            'initials': _user_initials(ct.order.user),
-            'amount': int(ct.order.amount or 0),
-            'at': ct.created_at,
-            'href': '#ecc-sales',
-        })
+    if include('ticket'):
+        qs = Ticket.objects.select_related('user').order_by('-created_at')
+        if snapshot:
+            qs = qs.exclude(status='closed')[:5]
+        else:
+            qs = qs.filter(created_at__date__gte=start, created_at__date__lte=end)
+            if per_type_limit:
+                qs = qs[:per_type_limit]
+        for ticket in qs:
+            events.append({
+                'type': 'ticket',
+                'object_id': ticket.pk,
+                'icon': 'fa-headset',
+                'accent': 'rose',
+                'title': ticket.subject[:60],
+                'meta': _safe_user_display(ticket.user),
+                'initials': _user_initials(ticket.user),
+                'amount': None,
+                'at': ticket.created_at,
+                'unread': ticket.staff_has_unread,
+                'status_label': ticket.get_status_display_fa(),
+                'href': '#ecc-support',
+            })
+
+    if include('card_transfer'):
+        qs = (
+            CardTransferSubmission.objects.select_related('order__user', 'order__product')
+            .order_by('-created_at')
+        )
+        if snapshot:
+            qs = qs.filter(status='pending')[:4]
+        else:
+            qs = qs.filter(created_at__date__gte=start, created_at__date__lte=end)
+            if per_type_limit:
+                qs = qs[:per_type_limit]
+        for ct in qs:
+            title = 'کارت‌به‌کارت در انتظار' if ct.status == 'pending' else 'کارت‌به‌کارت'
+            events.append({
+                'type': 'card_transfer',
+                'object_id': ct.pk,
+                'icon': 'fa-money-check',
+                'accent': 'amber',
+                'title': title,
+                'meta': _safe_user_display(ct.order.user),
+                'initials': _user_initials(ct.order.user),
+                'amount': int(ct.order.amount or 0),
+                'at': ct.created_at,
+                'status_label': ct.get_status_display(),
+                'href': '#ecc-sales',
+            })
 
     events.sort(key=lambda e: e['at'], reverse=True)
-    return events[:limit]
+    return events
+
+
+def get_activity_feed(limit: int = 14) -> List[Dict[str, Any]]:
+    """فید فعالیت اخیر — سفارش، ثبت‌نام، تیکت، کارت‌به‌کارت."""
+    return collect_activity_events(snapshot=True)[:limit]
 
 
 def build_health_indicators(stats: Dict[str, Any], sms_balance: Dict[str, Any]) -> List[Dict[str, Any]]:

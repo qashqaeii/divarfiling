@@ -256,5 +256,9 @@ if (location.hash === '#ecc-support') {
     var q4 = location.search || '?days=30';
     window.location.replace('{% url "admin_panel_support" %}' + q4);
 }
+if (location.hash === '#ecc-activity') {
+    var q5 = location.search || '?days=30';
+    window.location.replace('{% url "admin_panel_activity" %}' + q5);
+}
 </script>
 {% endblock %}

@@ -1,0 +1,114 @@
+{% extends 'accounts/admin_panel_base.html' %}
+{% load static %}
+{% load persian_tags %}
+{% load currency_tags %}
+
+{% block title %}فعالیت | پنل مدیریت{% endblock %}
+
+{% block admin_panel_title %}فعالیت{% endblock %}
+
+{% block admin_panel_content %}
+
+<section class="ecc-section" id="ecc-activity" aria-label="خلاصه فعالیت">
+    <header class="ecc-section-head ecc-section-head--slim">
+        <div>
+            <h2><i class="fas fa-stream"></i> خلاصه بازه</h2>
+            <p>{{ range_label }}</p>
+        </div>
+    </header>
+    <ul class="ecc-stat-strip ecc-act-summary">
+        <li data-accent="violet">
+            <span>کل رویدادها</span>
+            <strong>{{ summary.total|to_persian_digits }}</strong>
+        </li>
+        <li data-accent="emerald">
+            <span>پرداخت‌ها</span>
+            <strong>{{ summary.order_paid|to_persian_digits }}</strong>
+        </li>
+        <li data-accent="blue">
+            <span>ثبت‌نام‌ها</span>
+            <strong>{{ summary.signup|to_persian_digits }}</strong>
+        </li>
+        <li data-accent="rose">
+            <span>تیکت‌ها</span>
+            <strong>{{ summary.ticket|to_persian_digits }}</strong>
+        </li>
+        <li data-accent="amber">
+            <span>کارت‌به‌کارت</span>
+            <strong>{{ summary.card_transfer|to_persian_digits }}</strong>
+        </li>
+    </ul>
+</section>
+
+<section class="ecc-section" aria-label="فیلتر فعالیت">
+    <div class="ecc-feed-filters" role="group" aria-label="فیلتر نوع رویداد">
+        {% for key, label in activity_filters %}
+        <a href="{{ base_query_suffix }}{% if key != 'all' %}&amp;type={{ key }}{% endif %}"
+           class="ecc-feed-filter{% if activity_type == key %} is-active{% endif %}"
+           data-filter="{{ key }}">{{ label }}</a>
+        {% endfor %}
+    </div>
+</section>
+
+<section class="ecc-section" aria-label="Timeline فعالیت">
+    <header class="ecc-section-head ecc-section-head--slim">
+        <div>
+            <h2><i class="fas fa-clock-rotate-left"></i> Timeline</h2>
+            <p>{{ total_count|to_persian_digits }} رویداد · صفحه {{ page|to_persian_digits }} از {{ total_pages|to_persian_digits }}</p>
+        </div>
+    </header>
+
+    {% if timeline_groups %}
+    <div class="ecc-act-timeline">
+        {% for group in timeline_groups %}
+        <div class="ecc-act-day-group">
+            <h3 class="ecc-act-day-label">{{ group.label }}</h3>
+            <ul class="ecc-feed ecc-feed--timeline">
+                {% for event in group.events %}
+                <li class="ecc-feed-item ecc-feed-item--static" data-type="{{ event.type }}">
+                    <span class="ecc-feed-avatar" data-accent="{{ event.accent }}" aria-hidden="true">
+                        <i class="fas {{ event.icon }}"></i>
+                    </span>
+                    <div class="ecc-feed-body">
+                        <strong>{{ event.title }}</strong>
+                        <span>{{ event.description }}</span>
+                        {% if event.amount %}
+                        <span class="ecc-act-amount">{{ event.amount|toman }}</span>
+                        {% endif %}
+                        {% if event.status_label %}
+                        <span class="ecc-act-status" data-accent="{{ event.accent }}">{{ event.status_label }}</span>
+                        {% endif %}
+                        {% if event.unread %}
+                        <span class="ecc-act-status" data-accent="rose">جدید</span>
+                        {% endif %}
+                    </div>
+                    <div class="ecc-feed-side">
+                        <time class="ecc-feed-time" datetime="{{ event.at|date:'c' }}">{{ event.at|to_jalali_fa:"%H:%M" }}</time>
+                        {% if event.detail_url %}
+                        <a href="{{ event.detail_url }}" class="ecc-btn ecc-btn--ghost ecc-btn--sm" target="_blank" rel="noopener">جزئیات</a>
+                        {% endif %}
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="ecc-cmd-actions-empty">رویدادی در این بازه و فیلتر یافت نشد.</p>
+    {% endif %}
+
+    {% if total_pages > 1 %}
+    <nav class="ecc-act-pagination" aria-label="صفحه‌بندی فعالیت">
+        {% if has_prev %}
+        <a href="{{ prev_page_url }}" class="ecc-btn ecc-btn--ghost ecc-btn--sm">قبلی</a>
+        {% endif %}
+        <span>{{ page|to_persian_digits }} / {{ total_pages|to_persian_digits }}</span>
+        {% if has_next %}
+        <a href="{{ next_page_url }}" class="ecc-btn ecc-btn--ghost ecc-btn--sm">بعدی</a>
+        {% endif %}
+    </nav>
+    {% endif %}
+</section>
+
+{% endblock %}

@@ -38,16 +38,26 @@ def get_admin_panel_range_key(request) -> str:
 
 def get_admin_panel_nav_badges() -> Dict[str, int]:
     """Badgeهای Sidebar — فقط شمارش سبک."""
+    from django.db import DatabaseError, InterfaceError
+
     try:
         assistant_insights = len(build_management_insights())
     except Exception:
         assistant_insights = 0
-    return {
-        'orders_pending': Order.objects.filter(status__in=PENDING_ORDER_STATUSES).count(),
-        'unread_tickets': Ticket.objects.filter(staff_has_unread=True).exclude(status='closed').count(),
-        'pending_withdrawals': Withdrawal.objects.filter(status='pending').count(),
-        'assistant_insights': assistant_insights,
-    }
+    try:
+        return {
+            'orders_pending': Order.objects.filter(status__in=PENDING_ORDER_STATUSES).count(),
+            'unread_tickets': Ticket.objects.filter(staff_has_unread=True).exclude(status='closed').count(),
+            'pending_withdrawals': Withdrawal.objects.filter(status='pending').count(),
+            'assistant_insights': assistant_insights,
+        }
+    except (DatabaseError, InterfaceError):
+        return {
+            'orders_pending': 0,
+            'unread_tickets': 0,
+            'pending_withdrawals': 0,
+            'assistant_insights': assistant_insights,
+        }
 
 
 def resolve_admin_panel_nav_active(path: str) -> str:

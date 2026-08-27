@@ -4,6 +4,7 @@ Context processors برای قالب‌ها
 from django.conf import settings
 
 from divar_shop.brand import site_brand_context
+from divar_shop.db_safe import DB_CONTEXT_ERRORS
 
 from .models import Announcement, Banner
 
@@ -15,11 +16,37 @@ def _is_public_site_request(request) -> bool:
     return not any(path.startswith(prefix) for prefix in blocked)
 
 
+def _shop_context_fallback(request):
+    from shop.bot_catalog import footer_content, get_bot_product, app_download_hub_content
+    from shop.services.app_downloads import build_app_download_context
+
+    bot = get_bot_product()
+    goftino_id = getattr(settings, 'GOFTINO_WIDGET_ID', '') or ''
+    return {
+        'products': [bot] if bot else [],
+        'bot_product': bot,
+        'footer_content': footer_content(),
+        'site_brand': site_brand_context(),
+        'announcements': [],
+        'banners': [],
+        'goftino_widget_id': goftino_id,
+        'show_goftino': bool(goftino_id) and _is_public_site_request(request),
+        'app_downloads': build_app_download_context(request),
+        'app_download_hub': app_download_hub_content(),
+    }
+
+
 def shop_context(request):
     """افزودن متغیرهای فروشگاه به context"""
+    try:
+        return _build_shop_context(request)
+    except DB_CONTEXT_ERRORS:
+        return _shop_context_fallback(request)
+
+
+def _build_shop_context(request):
     from shop.services.notice_dismiss import filter_dismissed
 
-    # اطلاعیه‌های فعال (بدون موارد بسته‌شده در این نشست)
     announcements = Announcement.objects.filter(is_active=True)
     visible_announcements = []
     for ann in announcements:
@@ -29,7 +56,6 @@ def shop_context(request):
         request, visible_announcements, kind='announcement',
     )
 
-    # بنرهای فعال
     banners = Banner.objects.filter(is_active=True)
     visible_banners = []
     for banner in banners:

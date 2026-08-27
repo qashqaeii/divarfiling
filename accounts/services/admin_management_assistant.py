@@ -721,18 +721,33 @@ def build_management_insights() -> List[ManagementInsight]:
     return insights[:7]
 
 
-def _insight_to_dict(insight: ManagementInsight) -> Dict[str, Any]:
+def _active_automation_rules_map() -> Dict[str, ManagementAutomationRule]:
+    ensure_automation_rules()
+    return {
+        r.key: r
+        for r in ManagementAutomationRule.objects.filter(is_active=True, is_paused=False)
+    }
+
+
+def _insight_to_dict(
+    insight: ManagementInsight,
+    active_rules: Optional[Dict[str, ManagementAutomationRule]] = None,
+) -> Dict[str, Any]:
     automation_active = False
     automation_name = ''
     automation_next_run = ''
     recommendation = insight.recommendation
 
     if insight.automation_key:
-        rule = ManagementAutomationRule.objects.filter(
-            key=insight.automation_key,
-            is_active=True,
-            is_paused=False,
-        ).first()
+        rule = None
+        if active_rules is not None:
+            rule = active_rules.get(insight.automation_key)
+        else:
+            rule = ManagementAutomationRule.objects.filter(
+                key=insight.automation_key,
+                is_active=True,
+                is_paused=False,
+            ).first()
         if rule:
             automation_active = True
             automation_name = rule.name
@@ -1618,6 +1633,7 @@ def get_assistant_preview() -> Dict[str, Any]:
 def get_management_assistant_context(*, tab: str = 'suggestions') -> Dict[str, Any]:
     ensure_automation_rules()
     insights = build_management_insights()
+    active_rules = _active_automation_rules_map()
     severity_counts = {k: 0 for k in SEVERITY_LABELS}
     for ins in insights:
         severity_counts[ins.severity] = severity_counts.get(ins.severity, 0) + 1
@@ -1626,7 +1642,7 @@ def get_management_assistant_context(*, tab: str = 'suggestions') -> Dict[str, A
 
     return {
         'tab': tab if tab in ('suggestions', 'automations', 'history') else 'suggestions',
-        'insights': [_insight_to_dict(i) for i in insights],
+        'insights': [_insight_to_dict(i, active_rules) for i in insights],
         'insights_total': len(insights),
         'severity_counts': severity_counts,
         'automation_rules': get_automation_rules(),

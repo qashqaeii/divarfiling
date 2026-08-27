@@ -1,4 +1,5 @@
 """Context processor برای workspace."""
+from divar_shop.db_safe import DB_CONTEXT_ERRORS
 from ai_workspace.constants import CRM_MESSAGE_TONE_CHOICES, is_ai_enabled
 from workspace.forms import DatasetUploadForm, ReminderForm, WorkspaceSettingsForm
 from workspace.mixins import get_or_create_settings
@@ -50,6 +51,13 @@ def workspace_context(request):
     user = getattr(request, 'user', None)
     if user is None or not user.is_authenticated:
         return ctx
+    try:
+        return _build_workspace_context(request, user, ctx)
+    except DB_CONTEXT_ERRORS:
+        return ctx
+
+
+def _build_workspace_context(request, user, ctx):
     settings_obj = get_or_create_settings(user)
     access = get_bot_access_state(user)
     try:

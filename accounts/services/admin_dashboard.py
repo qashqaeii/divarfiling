@@ -966,6 +966,227 @@ def build_kpi_cards(stats: Dict[str, Any], today_stats: Dict[str, Any], yesterda
     ]
 
 
+def _revenue_for_period(days: int) -> int:
+    since = _today() - timedelta(days=days)
+    return int(
+        Order.objects.filter(status='paid', paid_at__date__gte=since).aggregate(t=Sum('amount'))['t'] or 0
+    )
+
+
+def _orders_paid_for_period(days: int) -> int:
+    since = _today() - timedelta(days=days)
+    return Order.objects.filter(status='paid', paid_at__date__gte=since).count()
+
+
+def _new_users_for_period(days: int, stats: Dict[str, Any]) -> int:
+    if days <= 7:
+        return int(stats.get('users_new_week') or 0)
+    return int(stats.get('users_new_month') or 0)
+
+
+def build_command_center_kpi_cards(
+    stats: Dict[str, Any],
+    today_stats: Dict[str, Any],
+    yesterday_stats: Dict[str, Any],
+    users_analytics: Dict[str, Any],
+    chart_days: int,
+) -> List[Dict[str, Any]]:
+    """۶ KPI اصلی مرکز فرمان."""
+    spark_rev = _revenue_sparkline(7)
+    spark_orders = _orders_sparkline(7)
+    spark_signups = _signups_sparkline(7)
+    spark_lic = _licenses_sparkline(7)
+    period_revenue = _revenue_for_period(chart_days)
+    period_orders = _orders_paid_for_period(chart_days)
+    period_users = _new_users_for_period(chart_days, stats)
+    prev_revenue = _revenue_for_period(chart_days * 2) - period_revenue
+
+    def _delta(current, previous):
+        return _pct_change(int(current or 0), int(previous or 0))
+
+    return [
+        {
+            'key': 'revenue_period',
+            'label': 'درآمد بازه',
+            'sublabel': f'{chart_days} روز · تومان',
+            'value': period_revenue,
+            'format': 'money',
+            'delta': _delta(period_revenue, prev_revenue),
+            'delta_label': 'نسبت دوره قبل',
+            'sparkline': spark_rev,
+            'icon': 'fa-sack-dollar',
+            'accent': 'emerald',
+            'status': 'ok',
+        },
+        {
+            'key': 'orders_paid_period',
+            'label': 'سفارش پرداخت‌شده',
+            'sublabel': f'{chart_days} روز',
+            'value': period_orders,
+            'format': 'count',
+            'delta': _delta(period_orders, _orders_paid_for_period(chart_days * 2) - period_orders),
+            'delta_label': 'نسبت دوره قبل',
+            'sparkline': spark_orders,
+            'icon': 'fa-cart-shopping',
+            'accent': 'violet',
+            'status': 'ok',
+        },
+        {
+            'key': 'users_new_period',
+            'label': 'کاربران جدید',
+            'sublabel': f'{chart_days} روز',
+            'value': period_users,
+            'format': 'count',
+            'delta': _delta(today_stats['signups_today'], yesterday_stats['signups_yesterday']),
+            'delta_label': 'ثبت‌نام امروز',
+            'sparkline': spark_signups,
+            'icon': 'fa-user-plus',
+            'accent': 'blue',
+            'status': 'ok',
+        },
+        {
+            'key': 'users_active',
+            'label': 'کاربران فعال',
+            'sublabel': f"{stats['users_total']} کل",
+            'value': stats['users_active'],
+            'format': 'count',
+            'delta': None,
+            'delta_label': f"{users_analytics.get('online_today', 0)} آنلاین امروز",
+            'sparkline': spark_signups,
+            'icon': 'fa-users',
+            'accent': 'cyan',
+            'status': 'ok',
+        },
+        {
+            'key': 'licenses_active',
+            'label': 'لایسنس فعال',
+            'sublabel': f"{stats['licenses_expiring_soon']} در شرف انقضا",
+            'value': stats['licenses_active'],
+            'format': 'count',
+            'delta': None,
+            'delta_label': f"{stats['activations_total']} دستگاه",
+            'sparkline': spark_lic,
+            'icon': 'fa-key',
+            'accent': 'amber',
+            'status': 'warn' if stats['licenses_expiring_soon'] > 3 else 'ok',
+        },
+        {
+            'key': 'retention_30d',
+            'label': 'Retention',
+            'sublabel': '۳۰ روزه',
+            'value': users_analytics.get('retention_30d', 0),
+            'format': 'percent',
+            'delta': None,
+            'delta_label': 'هدف ۷۰٪',
+            'sparkline': spark_signups,
+            'icon': 'fa-chart-line',
+            'accent': 'indigo',
+            'status': 'ok' if users_analytics.get('retention_30d', 0) >= 60 else 'warn',
+        },
+    ]
+
+
+def build_command_action_items(stats: Dict[str, Any], sms_balance: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """ادغام هشدارها و صف اقدام — بدون تکرار."""
+    from django.urls import reverse
+
+    failed_orders = Order.objects.filter(status='failed').count()
+    extra_counts = {
+        'orders_failed': failed_orders,
+        'sms_low': 1 if sms_balance.get('is_low') and sms_balance.get('ok') else 0,
+    }
+    priority_rank = {'critical': 0, 'high': 1, 'medium': 2, 'opportunity': 3}
+
+    catalog = [
+        ('critical', 'orders_failed', 'پرداخت ناموفق', 'fa-circle-xmark', 'rose', 'بررسی', 'page:recovery'),
+        ('critical', 'unread_tickets', 'تیکت باز', 'fa-headset', 'rose', 'پاسخ', 'export:open_tickets'),
+        ('critical', 'sms_low', 'موجودی SMS کم', 'fa-comment-sms', 'amber', 'شارژ', 'page:marketing'),
+        ('high', 'licenses_expiring_soon', 'لایسنس در شرف انقضا', 'fa-hourglass-half', 'amber', 'تمدید', 'page:marketing'),
+        ('high', 'orders_pending', 'سفارش پرداخت‌نشده', 'fa-clock', 'violet', 'بازیابی', 'page:recovery'),
+        ('high', 'pending_card_transfers', 'کارت‌به‌کارت معلق', 'fa-money-check', 'cyan', 'بررسی', 'export:card_transfers_pending'),
+        ('medium', 'pending_withdrawals', 'برداشت همکار', 'fa-wallet', 'emerald', 'تأیید', 'export:pending_withdrawals'),
+        ('medium', 'users_pending_payment', 'کاربر با سفارش معلق', 'fa-user-clock', 'blue', 'تماس', 'page:recovery'),
+        ('opportunity', 'users_without_license', 'کاربر بدون لایسنس', 'fa-user-slash', 'indigo', 'کمپین فروش', 'page:marketing'),
+    ]
+
+    page_links = {
+        'recovery': reverse('admin_panel_recovery_center'),
+        'marketing': reverse('admin_panel_marketing'),
+    }
+
+    items: List[Dict[str, Any]] = []
+    seen_keys = set()
+
+    for priority, key, title, icon, accent, cta, link in catalog:
+        if key in seen_keys:
+            continue
+        count = int(extra_counts.get(key, stats.get(key) or 0))
+        if count <= 0:
+            continue
+        seen_keys.add(key)
+
+        if link.startswith('export:'):
+            export_key = link.split(':', 1)[1]
+            href = reverse('admin_panel_export', args=[export_key]) + '?format=xlsx'
+        else:
+            page_key = link.split(':', 1)[1]
+            href = page_links[page_key]
+
+        detail = f'{count} مورد'
+        if key == 'sms_low':
+            count_display = int(sms_balance.get('credit') or 0)
+            detail = f'{count_display:,} تومان باقی‌مانده'
+        else:
+            count_display = count
+
+        items.append({
+            'key': key,
+            'priority': priority,
+            'title': title,
+            'count': count_display,
+            'detail': detail,
+            'icon': icon,
+            'accent': accent,
+            'cta': cta,
+            'href': href,
+        })
+
+    items.sort(key=lambda row: (priority_rank.get(row['priority'], 9), -int(row['count'] or 0)))
+    return items
+
+
+def get_command_center_context(days: int = 30) -> Dict[str, Any]:
+    """Context سبک برای صفحه مرکز فرمان."""
+    stats = get_overview_stats()
+    sms_balance = get_sms_balance_snapshot()
+    today_stats = get_today_stats()
+    yesterday_stats = get_yesterday_stats()
+    users_analytics = get_users_analytics_stats(stats)
+    licensing_stats = get_licensing_center_stats()
+    action_items = build_command_action_items(stats, sms_balance)
+    charts_full = build_charts_payload(days)
+
+    return {
+        'stats': stats,
+        'today_stats': today_stats,
+        'yesterday_stats': yesterday_stats,
+        'sms_balance': sms_balance,
+        'kpi_cards': build_command_center_kpi_cards(
+            stats, today_stats, yesterday_stats, users_analytics, days,
+        ),
+        'command_action_items': action_items,
+        'alert_count': len(action_items),
+        'command_modules': build_command_modules(stats, alert_count=len(action_items)),
+        'growth_snapshot': get_growth_pipeline_snapshot(),
+        'users_analytics': users_analytics,
+        'licensing_stats': licensing_stats,
+        'health_indicators': build_health_indicators(stats, sms_balance),
+        'system_meta': get_system_meta(),
+        'charts': {'revenue_analytics': charts_full['revenue_analytics']},
+        'chart_days': days,
+    }
+
+
 def build_alerts_center(stats: Dict[str, Any], sms_balance: Dict[str, Any]) -> List[Dict[str, Any]]:
     """هشدارهای مدیریتی با اولویت."""
     alerts: List[Dict[str, Any]] = []

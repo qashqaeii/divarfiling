@@ -49,7 +49,7 @@ class AdminPanelShellViewTests(TestCase):
         self.assertContains(resp, 'ecc-sidebar--grouped')
         self.assertContains(resp, 'ecc-nav-group')
         self.assertContains(resp, 'ecc-header--shell')
-        self.assertContains(resp, 'ecc-kpi-grid')
+        self.assertContains(resp, 'ecc-kpi-grid--cmd')
 
     def test_marketing_page_uses_shell(self):
         self.client.login(username='admstaff', password='pass1234')

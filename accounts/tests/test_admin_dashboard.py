@@ -5,9 +5,11 @@ from django.urls import reverse
 
 from accounts.services.admin_dashboard import (
     build_action_queue,
+    build_command_action_items,
     get_activity_feed,
     get_admin_dashboard_context,
     get_affiliate_partners,
+    get_command_center_context,
     get_licensing_center_stats,
     get_plan_sales_breakdown,
     get_recent_affiliate_sales,
@@ -207,11 +209,25 @@ class AdminDashboardServiceTests(TestCase):
         self.assertEqual(get_users_online_count(minutes=15), 1)
 
     def test_kpi_users_online_today_card(self):
-        ctx = get_admin_dashboard_context(days=30)
-        online_card = next(c for c in ctx['kpi_cards'] if c['key'] == 'users_online')
-        self.assertEqual(online_card['label'], 'کاربران آنلاین امروز')
+        ctx = get_command_center_context(days=30)
+        keys = {c['key'] for c in ctx['kpi_cards']}
+        self.assertIn('users_active', keys)
+        self.assertIn('retention_30d', keys)
+        self.assertEqual(len(ctx['kpi_cards']), 6)
         self.assertIn('users_analytics', ctx)
-        self.assertIn('online_today', ctx['users_analytics'])
+
+    def test_command_center_context_slim(self):
+        ctx = get_command_center_context(days=30)
+        self.assertIn('command_action_items', ctx)
+        self.assertIn('revenue_analytics', ctx['charts'])
+        self.assertNotIn('order_status', ctx['charts'])
+        self.assertEqual(len(ctx['kpi_cards']), 6)
+
+    def test_command_action_items_deduped(self):
+        stats = get_command_center_context(days=30)['stats']
+        items = build_command_action_items(stats, {'ok': True, 'is_low': False})
+        keys = [i['key'] for i in items]
+        self.assertEqual(len(keys), len(set(keys)))
 
 
 class AdminDashboardViewTests(TestCase):
@@ -233,11 +249,12 @@ class AdminDashboardViewTests(TestCase):
         self.client.login(username='admstaff', password='pass1234')
         resp = self.client.get(url)
         self.assertEqual(resp.status_code, 200)
-        self.assertContains(resp, 'ecc-kpi-grid')
-        self.assertContains(resp, 'کاربران آنلاین امروز')
-        self.assertContains(resp, 'تمدید اکانت')
-        self.assertContains(resp, 'ecc-renewals')
-        self.assertContains(resp, 'مرکز لایسنس')
+        self.assertContains(resp, 'ecc-kpi-grid--cmd')
+        self.assertContains(resp, 'نیازمند اقدام')
+        self.assertContains(resp, 'ecc-cmd-actions')
+        self.assertContains(resp, 'chart-revenue-analytics')
+        self.assertContains(resp, 'ecc-cmd-summary')
+        self.assertNotContains(resp, 'ecc-renewals')
 
     def test_dashboard_with_days_param(self):
         self.client.login(username='admstaff', password='pass1234')

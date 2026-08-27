@@ -4,23 +4,10 @@
     var SECTION_NAV_MAP = {
         'ecc-command': 'command',
         'ecc-glance': 'command',
+        'ecc-charts': 'growth',
         'ecc-growth': 'growth',
-        'ecc-revenue': 'sales',
-        'ecc-sales': 'sales',
-        'ecc-recovery': 'recovery',
-        'ecc-marketing': 'marketing',
-        'ecc-plan-conversion': 'plan_conversion',
-        'ecc-users': 'users',
-        'ecc-licensing': 'licenses',
-        'ecc-crm': 'crm',
-        'ecc-operations': 'operations',
-        'ecc-support': 'support',
-        'ecc-blog': 'blog',
-        'ecc-academy': 'academy',
-        'ecc-activity': 'activity',
-        'ecc-windows': 'windows',
-        'ecc-affiliates': 'affiliates',
-        'ecc-exports': 'exports'
+        'ecc-summary': 'users',
+        'ecc-today': 'command'
     };
 
     function qs(sel, root) {

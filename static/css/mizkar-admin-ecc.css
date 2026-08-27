@@ -2197,6 +2197,336 @@ body.mk-admin-dashboard .adm-page.ecc-page--v2 {
     gap: 0.85rem;
 }
 
+/* ═══════════════════════════════════════════════════════════
+   Command Center — slim dashboard (phase 2)
+   ═══════════════════════════════════════════════════════════ */
+
+.ecc-kpi-grid--cmd {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.ecc-cmd-actions {
+    padding: 1rem 1.1rem;
+    border-radius: 16px;
+    border: 1px solid rgba(124, 58, 237, 0.18);
+    background: linear-gradient(135deg, rgba(124, 58, 237, 0.05) 0%, rgba(244, 63, 94, 0.03) 100%), var(--ecc-surface);
+    box-shadow: var(--ecc-shadow-md);
+}
+
+.ecc-cmd-actions-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.85rem;
+}
+
+.ecc-cmd-actions-head h2 {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+}
+
+.ecc-cmd-actions-head p {
+    margin: 0.2rem 0 0;
+    font-size: 0.76rem;
+    color: var(--ecc-text-muted);
+}
+
+.ecc-cmd-actions-count {
+    min-width: 2rem;
+    height: 2rem;
+    padding: 0 0.55rem;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.82rem;
+    font-weight: 800;
+    color: var(--ecc-accent-violet);
+    background: rgba(124, 58, 237, 0.12);
+    border: 1px solid rgba(124, 58, 237, 0.2);
+}
+
+.ecc-cmd-actions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+}
+
+.ecc-cmd-action {
+    display: grid;
+    grid-template-columns: 0.35rem auto 1fr auto auto;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.65rem 0.75rem;
+    border-radius: 12px;
+    border: 1px solid var(--ecc-border);
+    background: var(--ecc-surface);
+    text-decoration: none;
+    color: inherit;
+    transition: transform 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
+}
+
+.ecc-cmd-action:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--ecc-shadow-sm);
+    border-color: rgba(124, 58, 237, 0.25);
+}
+
+.ecc-cmd-action-priority {
+    align-self: stretch;
+    border-radius: 999px;
+    min-height: 100%;
+}
+
+.ecc-cmd-action[data-priority="critical"] .ecc-cmd-action-priority { background: #f43f5e; }
+.ecc-cmd-action[data-priority="high"] .ecc-cmd-action-priority { background: #f59e0b; }
+.ecc-cmd-action[data-priority="medium"] .ecc-cmd-action-priority { background: #eab308; }
+.ecc-cmd-action[data-priority="opportunity"] .ecc-cmd-action-priority { background: #10b981; }
+
+.ecc-cmd-action-icon {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(124, 58, 237, 0.08);
+    color: var(--ecc-accent-violet);
+}
+
+.ecc-cmd-action-body {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+}
+
+.ecc-cmd-action-body strong {
+    font-size: 0.86rem;
+}
+
+.ecc-cmd-action-body em {
+    font-style: normal;
+    font-size: 0.74rem;
+    color: var(--ecc-text-muted);
+}
+
+.ecc-cmd-action-count {
+    font-size: 1rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    color: var(--ecc-text);
+}
+
+.ecc-cmd-action-cta {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--ecc-accent-violet);
+    white-space: nowrap;
+}
+
+.ecc-cmd-charts-grid {
+    display: grid;
+    grid-template-columns: 1.35fr 0.85fr;
+    gap: 0.85rem;
+}
+
+.ecc-cmd-chart-revenue .ecc-chart-wrap--tall {
+    min-height: 280px;
+    height: 300px;
+}
+
+.ecc-cmd-growth-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.ecc-cmd-funnel {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.25rem 0;
+}
+
+.ecc-cmd-funnel-step {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.55rem 0.7rem;
+    border-radius: 10px;
+    border: 1px solid var(--ecc-border);
+    background: var(--ecc-surface-2);
+}
+
+.ecc-cmd-funnel-step em {
+    font-style: normal;
+    font-size: 0.74rem;
+    color: var(--ecc-text-muted);
+}
+
+.ecc-cmd-funnel-step strong {
+    font-size: 1rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.ecc-cmd-funnel-arrow {
+    text-align: center;
+    font-size: 0.62rem;
+    color: var(--ecc-text-muted);
+    opacity: 0.6;
+}
+
+.ecc-cmd-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.75rem;
+}
+
+.ecc-cmd-summary-card {
+    padding: 0.85rem 0.95rem;
+    border-radius: 14px;
+    border: 1px solid var(--ecc-border);
+    background: var(--ecc-surface);
+    box-shadow: var(--ecc-shadow-sm);
+}
+
+.ecc-cmd-summary-card header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.55rem;
+}
+
+.ecc-cmd-summary-card header h3 {
+    margin: 0;
+    font-size: 0.86rem;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.ecc-cmd-summary-card header a {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--ecc-accent-violet);
+    text-decoration: none;
+}
+
+.ecc-cmd-summary-card ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.ecc-cmd-summary-card li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    font-size: 0.76rem;
+}
+
+.ecc-cmd-summary-card li span {
+    color: var(--ecc-text-muted);
+}
+
+.ecc-cmd-summary-card li strong {
+    font-variant-numeric: tabular-nums;
+}
+
+.ecc-cmd-today {
+    padding: 0.75rem 0.95rem;
+    border-radius: 14px;
+    border: 1px solid var(--ecc-border);
+    background: var(--ecc-surface);
+}
+
+.ecc-cmd-today-head h2 {
+    margin: 0 0 0.55rem;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.ecc-cmd-today-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.65rem;
+}
+
+.ecc-cmd-today-grid div {
+    padding: 0.55rem 0.65rem;
+    border-radius: 10px;
+    background: var(--ecc-surface-2);
+    border: 1px solid var(--ecc-border);
+}
+
+.ecc-cmd-today-grid em {
+    display: block;
+    font-style: normal;
+    font-size: 0.72rem;
+    color: var(--ecc-text-muted);
+    margin-bottom: 0.15rem;
+}
+
+.ecc-cmd-today-grid strong {
+    font-size: 0.95rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.ecc-page--shell .ecc-module-dock {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+@media (max-width: 1200px) {
+    .ecc-kpi-grid--cmd {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .ecc-cmd-charts-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .ecc-kpi-grid--cmd,
+    .ecc-cmd-summary-grid,
+    .ecc-cmd-today-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .ecc-cmd-action {
+        grid-template-columns: 0.35rem auto 1fr auto;
+    }
+
+    .ecc-cmd-action-cta {
+        display: none;
+    }
+
+    .ecc-page--shell .ecc-module-dock {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 520px) {
+    .ecc-kpi-grid--cmd,
+    .ecc-cmd-today-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
 @media (max-width: 960px) {
     .ecc-sidebar-toggle {
         display: inline-flex;

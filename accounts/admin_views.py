@@ -20,7 +20,7 @@ from accounts.services.admin_database_backup import (
     get_database_backup_info,
     iter_backup_file_chunks,
 )
-from accounts.services.admin_dashboard import get_admin_dashboard_context
+from accounts.services.admin_dashboard import get_admin_dashboard_context, get_command_center_context
 from accounts.services.admin_exports import EXPORT_REGISTRY, build_export
 from accounts.services.admin_marketing import (
     AUTOMATION_FLOWS,
@@ -106,7 +106,7 @@ class AdminDashboardView(StaffRequiredMixin, TemplateView):
             days = 30
         days = max(7, min(days, 365))
 
-        dashboard = get_admin_dashboard_context(days=days)
+        dashboard = get_command_center_context(days=days)
         for card in dashboard.get('kpi_cards', []):
             card['sparkline_json'] = json.dumps(card.get('sparkline', []))
         ctx.update(dashboard)

@@ -248,5 +248,9 @@ if (location.hash === '#ecc-licensing') {
     var q2 = location.search || '?days=30';
     window.location.replace('{% url "admin_panel_licenses" %}' + q2);
 }
+if (location.hash === '#ecc-operations') {
+    var q3 = location.search || '?days=30';
+    window.location.replace('{% url "admin_panel_operations" %}' + q3);
+}
 </script>
 {% endblock %}

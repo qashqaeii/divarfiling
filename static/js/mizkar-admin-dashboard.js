@@ -301,6 +301,8 @@
             ['chart-users-active', charts.users_active_trend],
             ['chart-licenses-activity', charts.licenses_activity],
             ['chart-renewal-revenue', charts.renewal_revenue_trend],
+            ['chart-ops-sms-trend', charts.sms_usage_trend],
+            ['chart-ops-datasets-trend', charts.dataset_activity_trend],
             ['chart-order-status', charts.order_status],
             ['chart-license-status', charts.license_status],
             ['chart-payment', charts.payment_methods],

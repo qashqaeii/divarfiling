@@ -1,0 +1,246 @@
+{% extends 'accounts/admin_panel_base.html' %}
+{% load static %}
+{% load persian_tags %}
+{% load currency_tags %}
+
+{% block title %}عملیات | پنل مدیریت{% endblock %}
+
+{% block admin_panel_title %}عملیات{% endblock %}
+
+{% block admin_panel_header_actions %}
+<a href="{{ system_summary_url }}&download=1" class="ecc-btn ecc-btn--primary" title="خلاصه سیستم JSON">
+    <i class="fas fa-file-code"></i>
+</a>
+<a href="{{ backup_urls.auto }}" class="ecc-btn ecc-btn--ghost" title="بک‌آپ دیتابیس">
+    <i class="fas fa-download"></i>
+</a>
+<a href="/admin/" class="ecc-btn ecc-btn--ghost" target="_blank" rel="noopener" title="Django Admin">
+    <i class="fas fa-cog"></i>
+</a>
+{% endblock %}
+
+{% block admin_panel_content %}
+
+<section class="ecc-section ecc-ops-health" id="ops-health" aria-label="سلامت سیستم">
+    <header class="ecc-section-head ecc-section-head--slim">
+        <div>
+            <h2><i class="fas fa-heart-pulse"></i> سلامت سیستم</h2>
+            <p>وضعیت زیرسیستم‌های عملیاتی</p>
+        </div>
+    </header>
+    <div class="ecc-ops-health-grid">
+        {% for h in system_health %}
+        <article class="ecc-ops-health-card" id="ops-health-{{ h.key }}" data-status="{{ h.status }}">
+            <span class="ecc-ops-health-icon"><i class="fas {{ h.icon }}"></i></span>
+            <div class="ecc-ops-health-body">
+                <span class="ecc-ops-health-label">{{ h.label }}</span>
+                <strong class="ecc-ops-health-detail">{{ h.detail|to_persian_digits }}</strong>
+            </div>
+            <span class="ecc-ops-health-badge ecc-ops-health-badge--{{ h.status }}">
+                {% if h.status == 'ok' %}سالم{% elif h.status == 'warning' %}هشدار{% else %}بحرانی{% endif %}
+            </span>
+        </article>
+        {% endfor %}
+    </div>
+</section>
+
+<section class="ecc-section ecc-cmd-actions ecc-ops-actions-top" id="ops-actions" aria-label="نیازمند اقدام">
+    <header class="ecc-cmd-actions-head">
+        <div>
+            <h2><i class="fas fa-bolt"></i> نیازمند اقدام</h2>
+            <p>هشدارهای عملیاتی</p>
+        </div>
+        <span class="ecc-cmd-actions-count">{{ action_items|length|to_persian_digits }}</span>
+    </header>
+    {% if action_items %}
+    <div class="ecc-cmd-actions-list">
+        {% for item in action_items %}
+        <a href="{{ item.href }}" class="ecc-cmd-action" data-priority="{{ item.priority }}" data-accent="{{ item.accent }}">
+            <span class="ecc-cmd-action-priority" aria-hidden="true"></span>
+            <span class="ecc-cmd-action-icon"><i class="fas {{ item.icon }}"></i></span>
+            <span class="ecc-cmd-action-body">
+                <strong>{{ item.title }}</strong>
+                <em>{{ item.detail|to_persian_digits }}</em>
+            </span>
+            <span class="ecc-cmd-action-count">{{ item.count|to_persian_digits }}</span>
+            <span class="ecc-cmd-action-cta">{{ item.cta }}</span>
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="ecc-cmd-actions-empty">مورد فوری نیست — همه سرویس‌ها در وضعیت قابل قبول هستند.</p>
+    {% endif %}
+</section>
+
+<section class="ecc-section ecc-cmd-kpi" aria-label="شاخص‌های Snapshot">
+    <header class="ecc-section-head ecc-section-head--slim">
+        <div>
+            <h2><i class="fas fa-camera"></i> KPI Snapshot</h2>
+            <p>وضعیت فعلی</p>
+        </div>
+    </header>
+    <div class="ecc-kpi-grid ecc-kpi-grid--snapshot">
+        {% for card in snapshot_kpi_cards %}
+        <article class="ecc-kpi" data-accent="{{ card.accent }}" data-status="{{ card.status }}" data-kpi-kind="snapshot">
+            <div class="ecc-kpi-top">
+                <span class="ecc-kpi-icon"><i class="fas {{ card.icon }}"></i></span>
+                <span class="ecc-kpi-kind-badge ecc-kpi-kind-badge--snapshot">Snapshot</span>
+            </div>
+            {% if card.display_text %}
+            <strong class="ecc-kpi-val ecc-kpi-val--text">{{ card.display_text|to_persian_digits }}</strong>
+            {% elif card.pending %}
+            <strong class="ecc-kpi-val ecc-kpi-val--pending">—</strong>
+            {% else %}
+            <strong class="ecc-kpi-val" data-count-up="{{ card.value }}" data-format="{{ card.format }}">۰</strong>
+            {% endif %}
+            <span class="ecc-kpi-lbl">{{ card.label }}</span>
+            <span class="ecc-kpi-sub">{{ card.delta_label }} · {{ card.sublabel|to_persian_digits }}</span>
+        </article>
+        {% endfor %}
+    </div>
+</section>
+
+<section class="ecc-section ecc-cmd-kpi" id="ops-range-kpi" aria-label="شاخص‌های بازه‌ای">
+    <header class="ecc-section-head ecc-section-head--slim">
+        <div>
+            <h2><i class="fas fa-calendar-days"></i> KPI بازه‌ای</h2>
+            <p>{{ range_label }}</p>
+        </div>
+    </header>
+    <div class="ecc-kpi-grid ecc-kpi-grid--cmd">
+        {% for card in range_kpi_cards %}
+        <article class="ecc-kpi" data-accent="{{ card.accent }}" data-status="{{ card.status }}" data-kpi-kind="range">
+            <div class="ecc-kpi-top">
+                <span class="ecc-kpi-icon"><i class="fas {{ card.icon }}"></i></span>
+                <span class="ecc-kpi-kind-badge">بازه</span>
+                {% if card.delta is not None %}
+                <span class="ecc-kpi-delta{% if card.delta >= 0 %} is-up{% else %} is-down{% endif %}">
+                    {% if card.delta >= 0 %}+{% endif %}{{ card.delta|to_persian_digits }}٪
+                </span>
+                {% endif %}
+            </div>
+            <strong class="ecc-kpi-val" data-count-up="{{ card.value }}" data-format="{{ card.format }}">۰</strong>
+            <span class="ecc-kpi-lbl">{{ card.label }}</span>
+            <span class="ecc-kpi-sub">{{ card.delta_label }} · {{ card.sublabel }}</span>
+            {% if card.sparkline %}
+            <div class="ecc-kpi-spark" data-sparkline='{{ card.sparkline_json|safe }}'>
+                <canvas id="spark-{{ card.key }}"></canvas>
+            </div>
+            {% endif %}
+        </article>
+        {% endfor %}
+    </div>
+</section>
+
+<section class="ecc-section ecc-ops-backup" id="ops-backup" aria-label="بک‌آپ دیتابیس">
+    <header class="ecc-section-head ecc-section-head--slim">
+        <div>
+            <h2><i class="fas fa-hard-drive"></i> بک‌آپ پایگاه داده</h2>
+            <p>{{ backup_info.engine_label|to_persian_digits }}</p>
+        </div>
+    </header>
+    <article class="ecc-card ecc-ops-backup-card">
+        <ul class="ecc-ops-backup-meta">
+            <li><span>روش پیش‌فرض</span><strong>{{ backup_info.default_label|to_persian_digits }}</strong></li>
+            <li><span>pg_dump</span><strong>{% if backup_info.pg_dump_available %}در دسترس{% else %}—{% endif %}</strong></li>
+            <li><span>فرمت</span><strong>{{ backup_info.default_format|to_persian_digits }}</strong></li>
+        </ul>
+        <div class="ecc-ops-backup-actions">
+            <a href="{{ backup_urls.auto }}" class="ecc-btn ecc-btn--primary ecc-btn--sm">
+                <i class="fas fa-download"></i> بک‌آپ (خودکار)
+            </a>
+            <a href="{{ backup_urls.dumpdata }}" class="ecc-btn ecc-btn--ghost ecc-btn--sm">
+                JSON
+            </a>
+            {% if backup_info.supports_custom_dump %}
+            <a href="{{ backup_urls.pg_dump }}" class="ecc-btn ecc-btn--ghost ecc-btn--sm">
+                SQL
+            </a>
+            {% endif %}
+        </div>
+        <p class="ecc-ops-backup-note">آخرین زمان بک‌آپ در سیستم ثبت نمی‌شود — پس از دانلود، فایل را در محل امن نگه دارید.</p>
+    </article>
+</section>
+
+{% if charts_enabled %}
+<section class="ecc-section ecc-ops-charts" aria-label="روند عملیاتی">
+    <div class="ecc-cmd-charts-grid ecc-ops-charts-grid">
+        {% if charts.sms_usage_trend %}
+        <article class="ecc-card ecc-card--chart">
+            <div class="ecc-card-head">
+                <div>
+                    <h3><i class="fas fa-chart-line"></i> روند SMS</h3>
+                    <p>{{ range_label }}</p>
+                </div>
+            </div>
+            <div class="ecc-chart-wrap ecc-chart-wrap--tall">
+                <canvas id="chart-ops-sms-trend"></canvas>
+            </div>
+        </article>
+        {% endif %}
+        {% if charts.dataset_activity_trend %}
+        <article class="ecc-card ecc-card--chart">
+            <div class="ecc-card-head">
+                <div>
+                    <h3><i class="fas fa-chart-column"></i> Dataset جدید</h3>
+                    <p>{{ range_label }}</p>
+                </div>
+            </div>
+            <div class="ecc-chart-wrap ecc-chart-wrap--tall">
+                <canvas id="chart-ops-datasets-trend"></canvas>
+            </div>
+        </article>
+        {% endif %}
+    </div>
+</section>
+{% else %}
+<section class="ecc-section ecc-ops-compact-metrics" aria-label="فعالیت بازه">
+    <header class="ecc-section-head ecc-section-head--slim">
+        <div>
+            <h2><i class="fas fa-chart-simple"></i> فعالیت بازه</h2>
+            <p>{{ range_label }} — بدون داده کافی برای نمودار</p>
+        </div>
+    </header>
+    <div class="ecc-ops-compact-row">
+        <div class="ecc-ops-compact-item"><span>پیامک</span><strong>{{ period_metrics.sms_sent|to_persian_digits }}</strong></div>
+        <div class="ecc-ops-compact-item"><span>SMS ناموفق</span><strong>{{ period_metrics.sms_failed|to_persian_digits }}</strong></div>
+        <div class="ecc-ops-compact-item"><span>Dataset جدید</span><strong>{{ period_metrics.datasets_created|to_persian_digits }}</strong></div>
+    </div>
+</section>
+{% endif %}
+
+<section class="ecc-section ecc-ops-meta" id="ops-sms" aria-label="متادیتای سیستم">
+    <header class="ecc-section-head ecc-section-head--slim">
+        <div>
+            <h2><i class="fas fa-circle-info"></i> متادیتای سیستم</h2>
+        </div>
+    </header>
+    <div class="ecc-ops-meta-grid">
+        <div><span>نسخه</span><strong>v{{ system_metadata.version|to_persian_digits }}</strong></div>
+        <div><span>محیط</span><strong>{{ system_metadata.environment }}</strong></div>
+        <div><span>آپ‌تایم</span><strong>{% if system_metadata.uptime_days is not None %}{{ system_metadata.uptime_days|to_persian_digits }} روز{% else %}—{% endif %}</strong></div>
+        <div><span>موتور DB</span><strong>{{ system_metadata.engine_label|to_persian_digits }}</strong></div>
+        <div><span>SMS</span><strong>{% if sms_balance.ok %}{{ sms_balance.provider_label }}{% else %}خطا{% endif %}</strong></div>
+        <div>
+            <span>خلاصه JSON</span>
+            <strong><a href="{{ system_summary_url }}" class="ecc-link">system-summary.json</a></strong>
+        </div>
+    </div>
+</section>
+
+<section class="ecc-section" id="ecc-operations" aria-hidden="true"></section>
+
+{% endblock %}
+
+{% block admin_panel_extra_js %}
+{% if charts_enabled %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+window.admCharts = {{ charts_json|safe }};
+window.admChartDays = {{ chart_days }};
+</script>
+<script src="{% static 'js/mizkar-admin-dashboard.js' %}?v=16"></script>
+{% else %}
+<script src="{% static 'js/mizkar-admin-dashboard.js' %}?v=16"></script>
+{% endif %}
+{% endblock %}

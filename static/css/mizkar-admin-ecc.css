@@ -2781,3 +2781,166 @@ body.mk-admin-dashboard .adm-page.ecc-page--v2 {
     }
 }
 
+/* Operations Center */
+.ecc-ops-health-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 0.75rem;
+}
+
+.ecc-ops-health-card {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 0.65rem;
+    padding: 0.85rem 1rem;
+    border-radius: var(--ecc-radius-md, 12px);
+    background: var(--ecc-surface-2, rgba(255, 255, 255, 0.04));
+    border: 1px solid var(--ecc-border, rgba(255, 255, 255, 0.08));
+}
+
+.ecc-ops-health-card[data-status="ok"] { border-color: rgba(16, 185, 129, 0.35); }
+.ecc-ops-health-card[data-status="warning"] { border-color: rgba(245, 158, 11, 0.4); }
+.ecc-ops-health-card[data-status="critical"] { border-color: rgba(244, 63, 94, 0.45); }
+
+.ecc-ops-health-icon {
+    width: 2rem;
+    height: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--ecc-text-muted);
+}
+
+.ecc-ops-health-body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.ecc-ops-health-label {
+    font-size: 0.78rem;
+    color: var(--ecc-text-muted);
+}
+
+.ecc-ops-health-detail {
+    font-size: 0.92rem;
+    font-weight: 600;
+}
+
+.ecc-ops-health-badge {
+    font-size: 0.68rem;
+    padding: 0.15rem 0.45rem;
+    border-radius: 999px;
+    font-weight: 600;
+}
+
+.ecc-ops-health-badge--ok { background: rgba(16, 185, 129, 0.18); color: var(--ecc-accent-emerald); }
+.ecc-ops-health-badge--warning { background: rgba(245, 158, 11, 0.18); color: var(--ecc-accent-amber); }
+.ecc-ops-health-badge--critical { background: rgba(244, 63, 94, 0.18); color: var(--ecc-accent-rose); }
+
+.ecc-ops-actions-top { margin-top: 0; }
+
+.ecc-ops-backup-card {
+    padding: 1rem 1.15rem;
+}
+
+.ecc-ops-backup-meta {
+    list-style: none;
+    margin: 0 0 1rem;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 0.75rem;
+}
+
+.ecc-ops-backup-meta li {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.ecc-ops-backup-meta span {
+    font-size: 0.75rem;
+    color: var(--ecc-text-muted);
+}
+
+.ecc-ops-backup-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.ecc-ops-backup-note {
+    margin: 0;
+    font-size: 0.78rem;
+    color: var(--ecc-text-muted);
+}
+
+.ecc-ops-charts-grid {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.ecc-ops-compact-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.ecc-ops-compact-item {
+    flex: 1;
+    min-width: 120px;
+    padding: 0.85rem 1rem;
+    border-radius: var(--ecc-radius-md, 12px);
+    background: var(--ecc-surface-2, rgba(255, 255, 255, 0.04));
+    border: 1px solid var(--ecc-border, rgba(255, 255, 255, 0.08));
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.ecc-ops-compact-item span {
+    font-size: 0.78rem;
+    color: var(--ecc-text-muted);
+}
+
+.ecc-ops-compact-item strong {
+    font-size: 1.25rem;
+}
+
+.ecc-ops-meta-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 0.75rem;
+}
+
+.ecc-ops-meta-grid > div {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    padding: 0.65rem 0.85rem;
+    border-radius: 10px;
+    background: var(--ecc-surface-2, rgba(255, 255, 255, 0.04));
+}
+
+.ecc-ops-meta-grid span {
+    font-size: 0.75rem;
+    color: var(--ecc-text-muted);
+}
+
+.ecc-kpi-val--text {
+    font-size: 1rem;
+    line-height: 1.35;
+}
+
+.ecc-cmd-actions-empty {
+    margin: 0;
+    padding: 0.75rem 0;
+    color: var(--ecc-text-muted);
+    font-size: 0.88rem;
+}

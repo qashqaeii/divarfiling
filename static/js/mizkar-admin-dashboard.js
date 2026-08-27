@@ -301,6 +301,8 @@
             ['chart-users-active', charts.users_active_trend],
             ['chart-licenses-activity', charts.licenses_activity],
             ['chart-renewal-revenue', charts.renewal_revenue_trend],
+            ['chart-crm-usage-trend', charts.crm_usage_trend],
+            ['chart-crm-deals-trend', charts.crm_deals_trend],
             ['chart-ops-sms-trend', charts.sms_usage_trend],
             ['chart-ops-datasets-trend', charts.dataset_activity_trend],
             ['chart-support-tickets-flow', charts.tickets_flow],

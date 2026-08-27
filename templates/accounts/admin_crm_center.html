@@ -1,0 +1,318 @@
+{% extends 'accounts/admin_panel_base.html' %}
+{% load static %}
+{% load persian_tags %}
+
+{% block title %}CRM | پنل مدیریت{% endblock %}
+
+{% block admin_panel_title %}CRM{% endblock %}
+
+{% block admin_panel_header_actions %}
+<a href="{{ workspace_urls.dashboard }}" class="ecc-btn ecc-btn--primary" target="_blank" rel="noopener" title="Workspace CRM">
+    <i class="fas fa-arrow-up-right-from-square"></i>
+</a>
+<a href="{{ admin_list_urls.customers }}" class="ecc-btn ecc-btn--ghost" target="_blank" rel="noopener" title="Django Admin — مشتری">
+    <i class="fas fa-cog"></i>
+</a>
+{% endblock %}
+
+{% block admin_panel_content %}
+
+<section class="ecc-section ecc-cmd-kpi" aria-label="KPI بازه‌ای">
+    <header class="ecc-section-head ecc-section-head--slim">
+        <div>
+            <h2><i class="fas fa-calendar-days"></i> KPI بازه‌ای</h2>
+            <p>{{ range_label }}</p>
+        </div>
+    </header>
+    <div class="ecc-kpi-grid ecc-kpi-grid--cmd">
+        {% for card in range_kpi_cards %}
+        <article class="ecc-kpi" data-accent="{{ card.accent }}" data-status="{{ card.status }}" data-kpi-kind="range">
+            <div class="ecc-kpi-top">
+                <span class="ecc-kpi-icon"><i class="fas {{ card.icon }}"></i></span>
+                <span class="ecc-kpi-kind-badge">بازه</span>
+                {% if card.delta is not None %}
+                <span class="ecc-kpi-delta{% if card.delta >= 0 %} is-up{% else %} is-down{% endif %}">
+                    {% if card.delta >= 0 %}+{% endif %}{{ card.delta|to_persian_digits }}٪
+                </span>
+                {% endif %}
+            </div>
+            <strong class="ecc-kpi-val" data-count-up="{{ card.value }}" data-format="{{ card.format }}">۰</strong>
+            <span class="ecc-kpi-lbl">{{ card.label }}</span>
+            <span class="ecc-kpi-sub">{{ card.delta_label }} · {{ card.sublabel }}</span>
+        </article>
+        {% endfor %}
+    </div>
+</section>
+
+<section class="ecc-section ecc-cmd-kpi" aria-label="KPI Snapshot">
+    <header class="ecc-section-head ecc-section-head--slim">
+        <div>
+            <h2><i class="fas fa-camera"></i> KPI Snapshot</h2>
+            <p>وضعیت فعلی</p>
+        </div>
+    </header>
+    <div class="ecc-kpi-grid ecc-kpi-grid--snapshot">
+        {% for card in snapshot_kpi_cards %}
+        <article class="ecc-kpi" data-accent="{{ card.accent }}" data-status="{{ card.status }}" data-kpi-kind="snapshot">
+            <div class="ecc-kpi-top">
+                <span class="ecc-kpi-icon"><i class="fas {{ card.icon }}"></i></span>
+                <span class="ecc-kpi-kind-badge ecc-kpi-kind-badge--snapshot">وضعیت فعلی</span>
+            </div>
+            <strong class="ecc-kpi-val" data-count-up="{{ card.value }}" data-format="{{ card.format }}">۰</strong>
+            <span class="ecc-kpi-lbl">{{ card.label }}</span>
+            <span class="ecc-kpi-sub">{{ card.sublabel }}</span>
+        </article>
+        {% endfor %}
+    </div>
+</section>
+
+<section class="ecc-section" id="ecc-crm" aria-label="CRM Adoption">
+    <header class="ecc-section-head ecc-section-head--slim">
+        <div>
+            <h2><i class="fas fa-chart-pie"></i> CRM Adoption</h2>
+            <p>
+                {% if adoption.adoption_pct is not None %}
+                {{ adoption.adoption_pct|to_persian_digits }}٪ از {{ adoption.eligible_users|to_persian_digits }} کاربر فعال
+                {% else %}
+                میزان استفاده واقعی
+                {% endif %}
+            </p>
+        </div>
+    </header>
+    <ul class="ecc-stat-strip ecc-crm-adoption">
+        <li data-accent="blue">
+            <span>دارای مشتری</span>
+            <strong>{{ adoption.users_with_customer|to_persian_digits }}</strong>
+        </li>
+        <li data-accent="cyan">
+            <span>دارای ملک</span>
+            <strong>{{ adoption.users_with_property|to_persian_digits }}</strong>
+        </li>
+        <li data-accent="violet">
+            <span>دارای معامله</span>
+            <strong>{{ adoption.users_with_deal|to_persian_digits }}</strong>
+        </li>
+        <li data-accent="indigo">
+            <span>فعال در بازه</span>
+            <strong>{{ adoption.crm_active_users_period|to_persian_digits }}</strong>
+        </li>
+        <li data-accent="slate">
+            <span>بدون CRM</span>
+            <strong>{{ adoption.users_without_crm|to_persian_digits }}</strong>
+        </li>
+    </ul>
+</section>
+
+{% if pipeline_distribution %}
+<section class="ecc-section" aria-label="Pipeline معاملات">
+    <header class="ecc-section-head ecc-section-head--slim">
+        <div>
+            <h2><i class="fas fa-layer-group"></i> Pipeline معاملات باز</h2>
+            <p>توزیع stage واقعی</p>
+        </div>
+        <a href="{{ workspace_urls.deals }}" class="ecc-btn ecc-btn--ghost ecc-btn--sm" target="_blank" rel="noopener">Workspace</a>
+    </header>
+    <div class="ecc-crm-pipeline">
+        {% for row in pipeline_distribution %}
+        <div class="ecc-crm-pipeline-item">
+            <span>{{ row.stage }}</span>
+            <strong>{{ row.count|to_persian_digits }}</strong>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+<section class="ecc-section ecc-cmd-actions" id="crm-actions" aria-label="نیازمند اقدام">
+    <header class="ecc-cmd-actions-head">
+        <div>
+            <h2><i class="fas fa-bolt"></i> نیازمند اقدام</h2>
+            <p>موارد CRM با اولویت</p>
+        </div>
+        <span class="ecc-cmd-actions-count">{{ action_items|length|to_persian_digits }}</span>
+    </header>
+    {% if action_items %}
+    <div class="ecc-cmd-actions-list">
+        {% for item in action_items %}
+        <a href="{{ item.href }}" class="ecc-cmd-action" data-priority="{{ item.priority }}" data-accent="{{ item.accent }}"{% if item.href|slice:":4" == "http" or '/admin/' in item.href or '/workspace/' in item.href %} target="_blank" rel="noopener"{% endif %}>
+            <span class="ecc-cmd-action-priority" aria-hidden="true"></span>
+            <span class="ecc-cmd-action-icon"><i class="fas {{ item.icon }}"></i></span>
+            <span class="ecc-cmd-action-body">
+                <strong>{{ item.title }}</strong>
+                <em>{{ item.detail|to_persian_digits }}</em>
+            </span>
+            <span class="ecc-cmd-action-count">{{ item.count|to_persian_digits }}</span>
+            <span class="ecc-cmd-action-cta">{{ item.cta }}</span>
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="ecc-cmd-actions-empty">مورد فوری CRM وجود ندارد.</p>
+    {% endif %}
+</section>
+
+{% if charts_enabled %}
+<section class="ecc-section ecc-cmd-charts" aria-label="روند CRM">
+    <div class="ecc-cmd-charts-grid">
+        {% if charts.crm_usage_trend %}
+        <article class="ecc-card ecc-card--chart">
+            <div class="ecc-card-head">
+                <div>
+                    <h3><i class="fas fa-chart-line"></i> CRM Usage Trend</h3>
+                    <p>{{ range_label }}</p>
+                </div>
+            </div>
+            <div class="ecc-chart-wrap">
+                <canvas id="chart-crm-usage-trend"></canvas>
+            </div>
+        </article>
+        {% endif %}
+        {% if charts.crm_deals_trend %}
+        <article class="ecc-card ecc-card--chart">
+            <div class="ecc-card-head">
+                <div>
+                    <h3><i class="fas fa-handshake"></i> Deals Trend</h3>
+                    <p>{{ range_label }}</p>
+                </div>
+            </div>
+            <div class="ecc-chart-wrap">
+                <canvas id="chart-crm-deals-trend"></canvas>
+            </div>
+        </article>
+        {% endif %}
+    </div>
+</section>
+{% endif %}
+
+<section class="ecc-section" id="crm-table-deals" aria-label="معاملات باز">
+    <header class="ecc-section-head">
+        <div>
+            <h2><i class="fas fa-handshake"></i> معاملات باز</h2>
+            <p>پیش‌نمایش {{ table_preview_rows|to_persian_digits }} مورد</p>
+        </div>
+        <a href="{{ workspace_urls.deals }}" class="ecc-btn ecc-btn--ghost ecc-btn--sm" target="_blank" rel="noopener">
+            Workspace <i class="fas fa-arrow-left"></i>
+        </a>
+    </header>
+    <div class="adm-table-wrap">
+        <table class="adm-table adm-table--pro">
+            <thead>
+                <tr>
+                    <th>کاربر</th>
+                    <th>عنوان</th>
+                    <th>مشتری</th>
+                    <th>مرحله</th>
+                    <th>به‌روزرسانی</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in open_deals_rows %}
+                <tr>
+                    <td>{{ row.user_display }}</td>
+                    <td>{{ row.title }}</td>
+                    <td>{{ row.customer_label }}</td>
+                    <td><span class="ecc-act-status" data-accent="violet">{{ row.stage }}</span></td>
+                    <td>{{ row.updated_at|to_jalali_fa }}</td>
+                    <td>
+                        {% if row.customer_admin_url %}
+                        <a href="{{ row.customer_admin_url }}" class="ecc-btn ecc-btn--ghost ecc-btn--sm" target="_blank" rel="noopener">مشتری</a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="6">معامله بازی نیست.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<section class="ecc-section" id="crm-table-reminders" aria-label="یادآورهای عقب‌افتاده">
+    <header class="ecc-section-head">
+        <div>
+            <h2><i class="fas fa-bell"></i> یادآورهای عقب‌افتاده</h2>
+            <p>پیش‌نمایش {{ table_preview_rows|to_persian_digits }} مورد</p>
+        </div>
+        <a href="{{ admin_list_urls.reminders }}" class="ecc-btn ecc-btn--ghost ecc-btn--sm" target="_blank" rel="noopener">
+            Admin <i class="fas fa-arrow-left"></i>
+        </a>
+    </header>
+    <div class="adm-table-wrap">
+        <table class="adm-table adm-table--pro">
+            <thead>
+                <tr>
+                    <th>کاربر</th>
+                    <th>عنوان</th>
+                    <th>موعد</th>
+                    <th>تأخیر</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in overdue_reminder_rows %}
+                <tr>
+                    <td>{{ row.user_display }}</td>
+                    <td>{{ row.title }}</td>
+                    <td>{{ row.due_at|to_jalali_fa }}</td>
+                    <td>{{ row.delay_label|to_persian_digits }}</td>
+                    <td><a href="{{ row.admin_url }}" class="ecc-btn ecc-btn--ghost ecc-btn--sm" target="_blank" rel="noopener">جزئیات</a></td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5">یادآور عقب‌افتاده‌ای نیست.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<section class="ecc-section" id="crm-table-active-users" aria-label="کاربران فعال CRM">
+    <header class="ecc-section-head">
+        <div>
+            <h2><i class="fas fa-users"></i> کاربران فعال CRM</h2>
+            <p>پیش‌نمایش {{ table_preview_rows|to_persian_digits }} مورد · {{ range_label }}</p>
+        </div>
+        <a href="{{ admin_list_urls.customers }}" class="ecc-btn ecc-btn--ghost ecc-btn--sm" target="_blank" rel="noopener">
+            Admin <i class="fas fa-arrow-left"></i>
+        </a>
+    </header>
+    <div class="adm-table-wrap">
+        <table class="adm-table adm-table--pro">
+            <thead>
+                <tr>
+                    <th>کاربر</th>
+                    <th>مشتری</th>
+                    <th>ملک</th>
+                    <th>معامله</th>
+                    <th>آخرین فعالیت</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in active_user_rows %}
+                <tr>
+                    <td>{{ row.user_display }}</td>
+                    <td>{{ row.customers_count|to_persian_digits }}</td>
+                    <td>{{ row.properties_count|to_persian_digits }}</td>
+                    <td>{{ row.deals_count|to_persian_digits }}</td>
+                    <td>{% if row.last_activity_at %}{{ row.last_activity_at|to_jalali_fa }}{% else %}—{% endif %}</td>
+                    <td><a href="{{ row.user_admin_url }}" class="ecc-btn ecc-btn--ghost ecc-btn--sm" target="_blank" rel="noopener">کاربر</a></td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="6">فعالیتی در این بازه ثبت نشده.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+{% endblock %}
+
+{% block admin_panel_extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+window.admCharts = {{ charts_json|safe }};
+window.admChartDays = {{ chart_days }};
+</script>
+<script src="{% static 'js/mizkar-admin-dashboard.js' %}?v=16"></script>
+{% endblock %}

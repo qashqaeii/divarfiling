@@ -65,8 +65,8 @@
                data-nav-id="licenses">
                 <span>لایسنس</span>
             </a>
-            <a href="{% url 'admin_panel' %}{{ days_qs }}#ecc-crm"
-               class="ecc-nav-item ecc-nav-item--sub"
+            <a href="{% url 'admin_panel_crm' %}{{ days_qs }}"
+               class="ecc-nav-item ecc-nav-item--sub{% if active == 'crm' %} is-active{% endif %}"
                data-nav-id="crm">
                 <span>CRM</span>
             </a>

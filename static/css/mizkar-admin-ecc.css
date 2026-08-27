@@ -1037,6 +1037,42 @@ a.ecc-feed-filter {
     grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
 }
 
+/* ─── CRM Center ─── */
+.ecc-crm-adoption {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
+    gap: var(--ecc-space-2);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.ecc-crm-pipeline {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.ecc-crm-pipeline-item {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.35rem 0.65rem;
+    border-radius: 999px;
+    border: 1px solid var(--ecc-border);
+    background: var(--ecc-surface-2);
+    font-size: 0.72rem;
+}
+
+.ecc-crm-pipeline-item span {
+    color: var(--ecc-text-muted);
+}
+
+.ecc-crm-pipeline-item strong {
+    font-variant-numeric: tabular-nums;
+    color: var(--ecc-text);
+}
+
 /* ─── Tables enhanced ─── */
 .ecc-table-tools {
     display: flex;

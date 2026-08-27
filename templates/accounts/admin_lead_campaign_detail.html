@@ -1,17 +1,17 @@
-{% extends 'base.html' %}
+{% extends 'accounts/admin_panel_base.html' %}
 {% load static %}
 {% load persian_tags %}
 {% load currency_tags %}
 
 {% block title %}{{ campaign.name }} | گزارش جذب سرنخ{% endblock %}
-{% block body_class %}mk-admin-dashboard{% endblock %}
 
-{% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/mizkar-admin-dashboard.css' %}?v=10">
+{% block admin_panel_title %}گزارش کمپین سرنخ{% endblock %}
+
+{% block admin_panel_extra_css %}
 <link rel="stylesheet" href="{% static 'css/admin-lead-acquisition.css' %}?v=3">
 {% endblock %}
 
-{% block content %}
+{% block admin_panel_content %}
 {% with f=funnel.funnel a=funnel.attribution %}
 <div class="adm-page adm-lac-page">
 
@@ -284,7 +284,7 @@
 {% endwith %}
 {% endblock %}
 
-{% block extra_js %}
+{% block admin_panel_extra_js %}
 <script>
 (function () {
   var root = document.getElementById('lac-funnel');

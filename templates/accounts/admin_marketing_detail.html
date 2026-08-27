@@ -1,17 +1,13 @@
-{% extends 'base.html' %}
+{% extends 'accounts/admin_panel_base.html' %}
 {% load static %}
 {% load persian_tags %}
 {% load currency_tags %}
 
 {% block title %}گزارش کمپین {{ campaign.name }} | پنل مدیریت{% endblock %}
 
-{% block body_class %}mk-admin-dashboard{% endblock %}
+{% block admin_panel_title %}گزارش کمپین{% endblock %}
 
-{% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/mizkar-admin-dashboard.css' %}?v=10">
-{% endblock %}
-
-{% block content %}
+{% block admin_panel_content %}
 <div class="adm-page adm-mkt-page adm-mkt-detail">
     <header class="adm-hero adm-mkt-hero">
         <div class="adm-hero-main">
@@ -176,7 +172,7 @@
 </div>
 {% endblock %}
 
-{% block extra_js %}
+{% block admin_panel_extra_js %}
 <script>
 (function () {
   var buttons = document.querySelectorAll('.adm-mkt-recipient-filters [data-filter]');

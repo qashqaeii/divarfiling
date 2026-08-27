@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load persian_tags %}
+
+{% block body_class %}mk-admin-dashboard{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/mizkar-admin-dashboard.css' %}?v=14">
+<link rel="stylesheet" href="{% static 'css/mizkar-admin-ecc.css' %}?v=8">
+{% block admin_panel_extra_css %}{% endblock %}
+{% endblock %}
+
+{% block content %}
+<div class="adm-page ecc-page ecc-page--v2 ecc-page--shell">
+    <div class="ecc-shell">
+        {% include 'accounts/partials/admin_panel_header.html' %}
+
+        <div class="ecc-body">
+            {% include 'accounts/partials/admin_panel_sidebar.html' %}
+            <main class="ecc-main">
+                {% block admin_panel_content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+
+    {% block admin_panel_overlay %}{% endblock %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/mizkar-admin-panel-shell.js' %}?v=1"></script>
+{% block admin_panel_extra_js %}{% endblock %}
+{% endblock %}

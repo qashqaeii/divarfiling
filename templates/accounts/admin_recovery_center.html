@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends 'accounts/admin_panel_base.html' %}
 {% load static %}
 {% load persian_tags %}
 {% load currency_tags %}
@@ -7,13 +7,14 @@
 
 {% block body_class %}mk-admin-dashboard ab-luxe arc-luxe{% endblock %}
 
-{% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/mizkar-admin-dashboard.css' %}?v=10">
+{% block admin_panel_title %}مرکز بازیابی{% endblock %}
+
+{% block admin_panel_extra_css %}
 <link rel="stylesheet" href="{% static 'css/admin-blog.css' %}?v=2">
 <link rel="stylesheet" href="{% static 'css/admin-recovery-center.css' %}?v=2">
 {% endblock %}
 
-{% block content %}
+{% block admin_panel_content %}
 <div class="ab-page arc-page">
 
     <div class="ab-ambient arc-ambient" aria-hidden="true">

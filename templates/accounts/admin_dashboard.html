@@ -1,97 +1,45 @@
-{% extends 'base.html' %}
+{% extends 'accounts/admin_panel_base.html' %}
 {% load static %}
 {% load persian_tags %}
 {% load currency_tags %}
 
 {% block title %}مرکز فرمان | پنل مدیریت{% endblock %}
 
-{% block body_class %}mk-admin-dashboard{% endblock %}
+{% block admin_panel_title %}مرکز فرمان{% endblock %}
 
-{% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/mizkar-admin-dashboard.css' %}?v=14">
-<link rel="stylesheet" href="{% static 'css/mizkar-admin-ecc.css' %}?v=7">
+{% block admin_panel_header_meta %}
+<span class="ecc-status-pill">{{ system_meta.server_label }}</span>
+<span class="ecc-health" aria-label="سلامت سیستم">
+    {% for h in health_indicators %}
+    <span class="ecc-health-dot ecc-health-dot--{{ h.status }}" title="{{ h.label }}: {{ h.detail }}"></span>
+    {% endfor %}
+</span>
 {% endblock %}
 
-{% block content %}
-<div class="adm-page ecc-page ecc-page--v2">
-    <div class="ecc-shell">
+{% block admin_panel_header_meta_extra %}
+<li>v{{ system_meta.version|to_persian_digits }}</li>
+{% if stats.system_start_at %}
+<li>{{ stats.system_uptime_days|to_persian_digits }} روز آنلاین</li>
+{% endif %}
+<li class="ecc-header-clock">
+    <time id="ecc-live-clock">--:--:--</time>
+    <span id="ecc-live-date"></span>
+</li>
+{% endblock %}
 
-        {# ─── Command bar ─── #}
-        <header class="ecc-header ecc-header--compact" id="ecc-command">
-            <div class="ecc-header-main">
-                <div class="ecc-header-title-row">
-                    <h1 class="ecc-header-title">مرکز فرمان</h1>
-                    <span class="ecc-status-pill">{{ system_meta.server_label }}</span>
-                    <span class="ecc-health" aria-label="سلامت سیستم">
-                        {% for h in health_indicators %}
-                        <span class="ecc-health-dot ecc-health-dot--{{ h.status }}" title="{{ h.label }}: {{ h.detail }}"></span>
-                        {% endfor %}
-                    </span>
-                </div>
-                <ul class="ecc-header-meta">
-                    <li>v{{ system_meta.version|to_persian_digits }}</li>
-                    {% if stats.system_start_at %}
-                    <li>{{ stats.system_uptime_days|to_persian_digits }} روز آنلاین</li>
-                    {% endif %}
-                    <li class="ecc-header-clock">
-                        <time id="ecc-live-clock">--:--:--</time>
-                        <span id="ecc-live-date"></span>
-                    </li>
-                </ul>
-            </div>
-            <div class="ecc-header-actions">
-                {% if alert_count %}
-                <a href="#ecc-glance" class="ecc-alert-badge">
-                    <i class="fas fa-bell"></i>
-                    {{ alert_count|to_persian_digits }}
-                </a>
-                {% endif %}
-                <button type="button" class="ecc-btn" id="ecc-refresh-btn" title="بروزرسانی">
-                    <i class="fas fa-rotate"></i>
-                </button>
-                <a href="{% url 'admin_panel_export' 'paid_orders' %}?format=xlsx&days={{ chart_days }}" class="ecc-btn ecc-btn--primary" title="خروجی اکسل">
-                    <i class="fas fa-file-excel"></i>
-                </a>
-                <a href="{% url 'admin_panel_system_summary' %}?days={{ chart_days }}&download=1" class="ecc-btn ecc-btn--ghost" title="JSON">
-                    <i class="fas fa-file-code"></i>
-                </a>
-                <a href="/admin/" class="ecc-btn ecc-btn--ghost" target="_blank" rel="noopener" title="Django Admin">
-                    <i class="fas fa-cog"></i>
-                </a>
-            </div>
-        </header>
+{% block admin_panel_header_actions %}
+<a href="{% url 'admin_panel_export' 'paid_orders' %}?format=xlsx&days={{ chart_days }}" class="ecc-btn ecc-btn--primary" title="خروجی اکسل">
+    <i class="fas fa-file-excel"></i>
+</a>
+<a href="{% url 'admin_panel_system_summary' %}?days={{ chart_days }}&download=1" class="ecc-btn ecc-btn--ghost" title="JSON">
+    <i class="fas fa-file-code"></i>
+</a>
+<a href="/admin/" class="ecc-btn ecc-btn--ghost" target="_blank" rel="noopener" title="Django Admin">
+    <i class="fas fa-cog"></i>
+</a>
+{% endblock %}
 
-        <div class="ecc-body">
-            <nav class="ecc-sidebar" aria-label="ناوبری داشبورد">
-                <a href="#ecc-command" class="ecc-nav-item is-active"><i class="fas fa-gauge-high"></i> فرمان</a>
-                <a href="#ecc-glance" class="ecc-nav-item"><i class="fas fa-eye"></i> یک نگاه</a>
-                <a href="#ecc-growth" class="ecc-nav-item"><i class="fas fa-route"></i> رشد</a>
-                <a href="#ecc-revenue" class="ecc-nav-item"><i class="fas fa-chart-area"></i> درآمد</a>
-                <a href="#ecc-sales" class="ecc-nav-item">
-                    <i class="fas fa-cart-shopping"></i> فروش
-                    {% if stats.orders_pending %}<span class="ecc-nav-badge">{{ stats.orders_pending|to_persian_digits }}</span>{% endif %}
-                </a>
-                <a href="#ecc-recovery" class="ecc-nav-item"><i class="fas fa-rotate-left"></i> بازیابی</a>
-                <a href="#ecc-marketing" class="ecc-nav-item"><i class="fas fa-bullhorn"></i> بازاریابی</a>
-                <a href="#ecc-plan-conversion" class="ecc-nav-item"><i class="fas fa-filter-circle-dollar"></i> تبدیل</a>
-                <a href="#ecc-users" class="ecc-nav-item"><i class="fas fa-users"></i> کاربران</a>
-                <a href="#ecc-licensing" class="ecc-nav-item"><i class="fas fa-key"></i> لایسنس</a>
-                <a href="#ecc-crm" class="ecc-nav-item"><i class="fas fa-building"></i> CRM</a>
-                <a href="#ecc-operations" class="ecc-nav-item"><i class="fas fa-server"></i> عملیات</a>
-                <a href="#ecc-support" class="ecc-nav-item">
-                    <i class="fas fa-headset"></i> پشتیبانی
-                    {% if stats.unread_tickets %}<span class="ecc-nav-badge">{{ stats.unread_tickets|to_persian_digits }}</span>{% endif %}
-                </a>
-                <a href="#ecc-blog" class="ecc-nav-item"><i class="fas fa-newspaper"></i> مقالات</a>
-                <a href="#ecc-academy" class="ecc-nav-item"><i class="fas fa-graduation-cap"></i> آکادمی</a>
-                <a href="#ecc-activity" class="ecc-nav-item"><i class="fas fa-stream"></i> فعالیت</a>
-                <a href="#ecc-windows" class="ecc-nav-item"><i class="fab fa-windows"></i> ویندوز</a>
-                <a href="#ecc-affiliates" class="ecc-nav-item"><i class="fas fa-handshake"></i> همکاری</a>
-                <a href="#ecc-exports" class="ecc-nav-item"><i class="fas fa-file-export"></i> خروجی</a>
-            </nav>
-
-            <main class="ecc-main">
-
+{% block admin_panel_content %}
                 {# ─── Module dock ─── #}
                 <section class="ecc-section ecc-order-modules" aria-label="میانبرهای مدیریت">
                     <div class="ecc-module-dock">
@@ -1306,10 +1254,9 @@
                     </article>
                 </section>
 
-            </main>
-        </div>
-    </div>
+{% endblock %}
 
+{% block admin_panel_overlay %}
     {# ─── User management detail drawer ─── #}
     <aside class="ecc-user-drawer" id="eccUserDrawer" aria-hidden="true" hidden>
         <div class="ecc-user-drawer-overlay" data-user-drawer-close></div>
@@ -1328,15 +1275,14 @@
             </div>
         </div>
     </aside>
-</div>
 {% endblock %}
 
-{% block extra_js %}
+{% block admin_panel_extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script>
 window.admCharts = {{ charts_json|safe }};
 window.admChartDays = {{ chart_days }};
 </script>
-<script src="{% static 'js/mizkar-admin-dashboard.js' %}?v=11"></script>
+<script src="{% static 'js/mizkar-admin-dashboard.js' %}?v=12"></script>
 <script src="{% static 'js/mizkar-admin-users-mgmt.js' %}?v=1"></script>
 {% endblock %}

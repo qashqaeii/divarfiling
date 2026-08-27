@@ -99,6 +99,7 @@ TEMPLATES = [
                 'shop.context_processors.shop_context',
                 'workspace.context_processors.workspace_context',
                 'affiliates.context_processors.affiliate_context',
+                'accounts.context_processors.admin_panel_shell',
             ],
         },
     },

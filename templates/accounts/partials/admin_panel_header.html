@@ -1,0 +1,52 @@
+{% load persian_tags %}
+<header class="ecc-header ecc-header--shell" id="ecc-command">
+    <div class="ecc-header-main">
+        <div class="ecc-header-title-row">
+            <button type="button" class="ecc-sidebar-toggle" id="ecc-sidebar-toggle" aria-label="باز کردن منو" aria-controls="ecc-sidebar">
+                <i class="fas fa-bars" aria-hidden="true"></i>
+            </button>
+            <h1 class="ecc-header-title">{% block admin_panel_title %}پنل مدیریت{% endblock %}</h1>
+            {% block admin_panel_header_meta %}{% endblock %}
+        </div>
+        <div class="ecc-header-toolbar">
+            <div class="ecc-range ecc-range--global" role="group" aria-label="بازه زمانی">
+                <a href="?days=1{% if admin_panel_compare %}&amp;compare=1{% endif %}"
+                   class="ecc-range-btn{% if admin_panel_range_key == '1' %} is-active{% endif %}">امروز</a>
+                <a href="?days=7{% if admin_panel_compare %}&amp;compare=1{% endif %}"
+                   class="ecc-range-btn{% if admin_panel_range_key == '7' %} is-active{% endif %}">۷ روز</a>
+                <a href="?days=30{% if admin_panel_compare %}&amp;compare=1{% endif %}"
+                   class="ecc-range-btn{% if admin_panel_range_key == '30' %} is-active{% endif %}">۳۰ روز</a>
+                <a href="?days=90{% if admin_panel_compare %}&amp;compare=1{% endif %}"
+                   class="ecc-range-btn{% if admin_panel_range_key == '90' %} is-active{% endif %}">۹۰ روز</a>
+            </div>
+            <label class="ecc-compare-toggle" title="مقایسه با دوره قبل">
+                <input type="checkbox" id="ecc-compare-toggle"{% if admin_panel_compare %} checked{% endif %}>
+                <span>مقایسه</span>
+            </label>
+        </div>
+        <ul class="ecc-header-meta ecc-header-meta--shell">
+            <li class="ecc-header-updated">
+                <i class="fas fa-clock" aria-hidden="true"></i>
+                بروزرسانی:
+                <time id="ecc-updated-at" datetime="{{ admin_panel_updated_at|date:'c' }}">
+                    {{ admin_panel_updated_at|to_jalali_fa:"%H:%M" }}
+                </time>
+            </li>
+            {% block admin_panel_header_meta_extra %}{% endblock %}
+        </ul>
+    </div>
+    <div class="ecc-header-actions">
+        {% with alerts=alert_count|default:admin_panel_alert_count|default:0 %}
+        {% if alerts %}
+        <a href="{% url 'admin_panel' %}#ecc-glance" class="ecc-alert-badge" title="هشدارها">
+            <i class="fas fa-bell" aria-hidden="true"></i>
+            {{ alerts|to_persian_digits }}
+        </a>
+        {% endif %}
+        {% endwith %}
+        <button type="button" class="ecc-btn" id="ecc-refresh-btn" title="بروزرسانی">
+            <i class="fas fa-rotate" aria-hidden="true"></i>
+        </button>
+        {% block admin_panel_header_actions %}{% endblock %}
+    </div>
+</header>

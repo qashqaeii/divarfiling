@@ -430,6 +430,7 @@
     }
 
     function initNavigation() {
+        if (document.querySelector('.ecc-sidebar--grouped')) return;
         const navItems = document.querySelectorAll('.ecc-nav-item');
         const sections = Array.from(document.querySelectorAll('.ecc-section[id]')).map(function (el) {
             return el.id;
@@ -547,7 +548,7 @@
 
     function initRefresh() {
         const btn = document.getElementById('ecc-refresh-btn');
-        if (!btn) return;
+        if (!btn || btn.dataset.shellRefreshBound) return;
         btn.addEventListener('click', function () {
             btn.classList.add('is-loading');
             window.location.reload();

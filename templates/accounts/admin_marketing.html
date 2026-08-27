@@ -1,18 +1,17 @@
-{% extends 'base.html' %}
+{% extends 'accounts/admin_panel_base.html' %}
 {% load static %}
 {% load persian_tags %}
 {% load currency_tags %}
 
 {% block title %}اتوماسیون بازاریابی | پنل مدیریت{% endblock %}
 
-{% block body_class %}mk-admin-dashboard{% endblock %}
+{% block admin_panel_title %}اتوماسیون بازاریابی{% endblock %}
 
-{% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/mizkar-admin-dashboard.css' %}?v=10">
+{% block admin_panel_extra_css %}
 <link rel="stylesheet" href="{% static 'css/admin-marketing.css' %}?v=3">
 {% endblock %}
 
-{% block content %}
+{% block admin_panel_content %}
 <div class="adm-page adm-mkt-page adm-map-page">
 
     {# ─── Hero ─── #}
@@ -944,7 +943,7 @@
 </div>
 {% endblock %}
 
-{% block extra_js %}
+{% block admin_panel_extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 {{ default_template|json_script:"adm-map-ai-template" }}
 <script>

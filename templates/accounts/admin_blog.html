@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends 'accounts/admin_panel_base.html' %}
 {% load static %}
 {% load persian_tags %}
 {% load currency_tags %}
@@ -7,12 +7,13 @@
 
 {% block body_class %}mk-admin-dashboard ab-luxe{% endblock %}
 
-{% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/mizkar-admin-dashboard.css' %}?v=10">
+{% block admin_panel_title %}مدیریت مقالات{% endblock %}
+
+{% block admin_panel_extra_css %}
 <link rel="stylesheet" href="{% static 'css/admin-blog.css' %}?v=5">
 {% endblock %}
 
-{% block content %}
+{% block admin_panel_content %}
 <div class="ab-page">
 
     {# ─── Ambient background ─── #}
@@ -577,7 +578,7 @@
 </div>
 {% endblock %}
 
-{% block extra_js %}
+{% block admin_panel_extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script>
 window.admBlogAnalytics = {{ blog_analytics_json|safe }};

@@ -1,18 +1,18 @@
-{% extends 'base.html' %}
+{% extends 'accounts/admin_panel_base.html' %}
 {% load static %}
 {% load persian_tags %}
 
 {% block title %}پایپلاین رشد | پنل مدیریت{% endblock %}
-{% block body_class %}mk-admin-dashboard{% endblock %}
 
-{% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/mizkar-admin-dashboard.css' %}?v=10">
+{% block admin_panel_title %}پایپلاین رشد{% endblock %}
+
+{% block admin_panel_extra_css %}
 <link rel="stylesheet" href="{% static 'css/admin-marketing.css' %}?v=3">
 <link rel="stylesheet" href="{% static 'css/admin-lead-acquisition.css' %}?v=9">
 <link rel="stylesheet" href="{% static 'css/admin-growth-pipeline.css' %}?v=2">
 {% endblock %}
 
-{% block content %}
+{% block admin_panel_content %}
 <div class="adm-page adm-mkt-page adm-lac-page adm-gp-page">
 
     <div class="adm-gp-top">
@@ -344,7 +344,7 @@
 </div>
 {% endblock %}
 
-{% block extra_js %}
+{% block admin_panel_extra_js %}
 <script type="application/json" id="gp-charts-data">{{ charts_json|safe }}</script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="{% static 'js/admin-growth-pipeline.js' %}?v=1"></script>

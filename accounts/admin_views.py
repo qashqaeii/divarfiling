@@ -73,6 +73,7 @@ from accounts.services.admin_licenses_center import get_licenses_center_context
 from accounts.services.admin_operations_center import get_operations_center_context
 from accounts.services.admin_support_center import get_support_center_context
 from accounts.services.admin_activity_center import get_activity_center_context
+from accounts.services.admin_windows_center import get_windows_center_context
 from accounts.services.admin_phonebook_sync import (
     PhonebookSyncError,
     get_phonebook_sync_status,
@@ -843,6 +844,27 @@ class AdminActivityCenterView(StaffRequiredMixin, TemplateView):
             page=page,
             compare=compare,
         )
+        ctx.update(data)
+        ctx['chart_days'] = days
+        ctx['admin_panel_range_key'] = range_key
+        ctx['admin_panel_compare'] = compare
+        return ctx
+
+
+class AdminWindowsCenterView(StaffRequiredMixin, TemplateView):
+    """مرکز ویندوز — Funnel نصب و فعال‌سازی."""
+
+    template_name = 'accounts/admin_windows_center.html'
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        days, range_key = parse_admin_panel_range(self.request)
+        compare = self.request.GET.get('compare') == '1'
+        try:
+            page = max(1, int(self.request.GET.get('page', 1)))
+        except (TypeError, ValueError):
+            page = 1
+        data = get_windows_center_context(days=days, page=page, compare=compare)
         ctx.update(data)
         ctx['chart_days'] = days
         ctx['admin_panel_range_key'] = range_key

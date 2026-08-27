@@ -25,6 +25,7 @@ class AdminPanelShellServiceTests(TestCase):
         self.assertEqual(resolve_admin_panel_nav_active('/accounts/admin-panel/operations/'), 'operations')
         self.assertEqual(resolve_admin_panel_nav_active('/accounts/admin-panel/support/'), 'support')
         self.assertEqual(resolve_admin_panel_nav_active('/accounts/admin-panel/activity/'), 'activity')
+        self.assertEqual(resolve_admin_panel_nav_active('/accounts/admin-panel/windows/'), 'windows')
 
     def test_context_processor_staff_only(self):
         factory = RequestFactory()

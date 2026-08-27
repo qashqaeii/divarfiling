@@ -1009,6 +1009,34 @@ a.ecc-feed-filter {
     color: var(--ecc-text-muted);
 }
 
+/* ─── Windows Center ─── */
+.ecc-win-summary li {
+    position: relative;
+}
+
+.ecc-win-delta {
+    display: block;
+    margin-top: 0.15rem;
+    font-size: 0.62rem;
+    font-weight: 700;
+    font-style: normal;
+}
+
+.ecc-win-delta.is-up { color: #059669; }
+.ecc-win-delta.is-down { color: #e11d48; }
+
+.ecc-win-funnel {
+    max-width: 22rem;
+}
+
+.ecc-act-status[data-accent="download"] { background: rgba(59, 130, 246, 0.12); color: #2563eb; }
+.ecc-act-status[data-accent="activation"] { background: rgba(124, 58, 237, 0.12); color: #7c3aed; }
+.ecc-act-status[data-accent="first_launch"] { background: rgba(16, 185, 129, 0.12); color: #059669; }
+
+.ecc-win-snapshot .ecc-stat-strip {
+    grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
+}
+
 /* ─── Tables enhanced ─── */
 .ecc-table-tools {
     display: flex;

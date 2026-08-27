@@ -1,0 +1,279 @@
+{% extends 'accounts/admin_panel_base.html' %}
+{% load static %}
+{% load persian_tags %}
+
+{% block title %}ویندوز | پنل مدیریت{% endblock %}
+
+{% block admin_panel_title %}ویندوز{% endblock %}
+
+{% block admin_panel_header_meta %}
+<span class="ecc-status-pill">v{{ app_version|to_persian_digits }}</span>
+{% endblock %}
+
+{% block admin_panel_header_actions %}
+<a href="{{ export_urls.downloads }}" class="ecc-btn ecc-btn--primary" title="خروجی دانلودها">
+    <i class="fas fa-file-excel"></i>
+</a>
+<a href="{{ admin_list_urls.downloads }}" class="ecc-btn ecc-btn--ghost" target="_blank" rel="noopener" title="Django Admin — دانلود">
+    <i class="fas fa-cog"></i>
+</a>
+{% endblock %}
+
+{% block admin_panel_content %}
+
+<section class="ecc-section" id="ecc-windows" aria-label="خلاصه بازه">
+    <header class="ecc-section-head ecc-section-head--slim">
+        <div>
+            <h2><i class="fab fa-windows"></i> خلاصه بازه</h2>
+            <p>{{ range_label }}</p>
+        </div>
+    </header>
+    <ul class="ecc-stat-strip ecc-win-summary">
+        <li data-accent="blue">
+            <span>دانلود</span>
+            <strong>{{ range_summary.downloads|to_persian_digits }}</strong>
+            {% if range_deltas.downloads is not None %}
+            <em class="ecc-win-delta{% if range_deltas.downloads >= 0 %} is-up{% else %} is-down{% endif %}">
+                {% if range_deltas.downloads >= 0 %}+{% endif %}{{ range_deltas.downloads|to_persian_digits }}٪
+            </em>
+            {% endif %}
+        </li>
+        <li data-accent="violet">
+            <span>کاربر دانلودکننده</span>
+            <strong>{{ range_summary.download_users|to_persian_digits }}</strong>
+        </li>
+        <li data-accent="cyan">
+            <span>فعال‌سازی</span>
+            <strong>{{ range_summary.activations|to_persian_digits }}</strong>
+            {% if range_deltas.activations is not None %}
+            <em class="ecc-win-delta{% if range_deltas.activations >= 0 %} is-up{% else %} is-down{% endif %}">
+                {% if range_deltas.activations >= 0 %}+{% endif %}{{ range_deltas.activations|to_persian_digits }}٪
+            </em>
+            {% endif %}
+        </li>
+        <li data-accent="emerald">
+            <span>اولین اجرا</span>
+            <strong>{{ range_summary.first_launches|to_persian_digits }}</strong>
+            {% if range_deltas.first_launches is not None %}
+            <em class="ecc-win-delta{% if range_deltas.first_launches >= 0 %} is-up{% else %} is-down{% endif %}">
+                {% if range_deltas.first_launches >= 0 %}+{% endif %}{{ range_deltas.first_launches|to_persian_digits }}٪
+            </em>
+            {% endif %}
+        </li>
+    </ul>
+</section>
+
+<section class="ecc-section" aria-label="Funnel ویندوز">
+    <header class="ecc-section-head ecc-section-head--slim">
+        <div>
+            <h2><i class="fas fa-filter"></i> Funnel</h2>
+            <p>
+                {% if funnel_conversion.download_to_activation is not None %}
+                تبدیل فعال‌سازی: {{ funnel_conversion.download_to_activation|to_persian_digits }}٪
+                {% endif %}
+                {% if funnel_conversion.download_to_launch is not None %}
+                · تبدیل اجرا: {{ funnel_conversion.download_to_launch|to_persian_digits }}٪
+                {% endif %}
+            </p>
+        </div>
+    </header>
+    <div class="ecc-cmd-funnel ecc-win-funnel">
+        {% for step in funnel_steps %}
+        <div class="ecc-cmd-funnel-step" data-accent="{{ step.accent }}">
+            <em>{{ step.label }}</em>
+            <strong data-count-up="{{ step.count }}">{{ step.count|to_persian_digits }}</strong>
+        </div>
+        {% if not forloop.last %}
+        <div class="ecc-cmd-funnel-arrow" aria-hidden="true"><i class="fas fa-chevron-down"></i></div>
+        {% endif %}
+        {% endfor %}
+    </div>
+</section>
+
+<section class="ecc-section" id="windows-funnel-table" aria-label="Funnel کاربران">
+    <header class="ecc-section-head">
+        <div>
+            <h2><i class="fas fa-users"></i> مسیر کاربران</h2>
+            <p>{{ funnel_total|to_persian_digits }} کاربر · صفحه {{ page|to_persian_digits }} از {{ total_pages|to_persian_digits }}</p>
+        </div>
+    </header>
+    <div class="adm-table-wrap">
+        <table class="adm-table adm-table--pro">
+            <thead>
+                <tr>
+                    <th>کاربر</th>
+                    <th>پلن</th>
+                    <th>دانلود</th>
+                    <th>آخرین دانلود</th>
+                    <th>فعال‌سازی</th>
+                    <th>اولین اجرا</th>
+                    <th>وضعیت</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in funnel_rows %}
+                <tr>
+                    <td>{{ row.user_display }}</td>
+                    <td>{{ row.plan_label }}</td>
+                    <td>{{ row.download_count|to_persian_digits }}</td>
+                    <td>{% if row.last_download_at %}{{ row.last_download_at|to_jalali_fa }}{% else %}—{% endif %}</td>
+                    <td>{% if row.activation_at %}{{ row.activation_at|to_jalali_fa }}{% else %}—{% endif %}</td>
+                    <td>{% if row.first_launch_at %}{{ row.first_launch_at|to_jalali_fa }}{% else %}—{% endif %}</td>
+                    <td><span class="ecc-act-status" data-accent="{{ row.status_key }}">{{ row.status_label }}</span></td>
+                    <td>
+                        <a href="{{ row.user_admin_url }}" class="ecc-btn ecc-btn--ghost ecc-btn--sm" target="_blank" rel="noopener">کاربر</a>
+                        {% if row.launch_admin_url %}
+                        <a href="{{ row.launch_admin_url }}" class="ecc-btn ecc-btn--ghost ecc-btn--sm" target="_blank" rel="noopener">اجرا</a>
+                        {% elif row.activation_admin_url %}
+                        <a href="{{ row.activation_admin_url }}" class="ecc-btn ecc-btn--ghost ecc-btn--sm" target="_blank" rel="noopener">فعال‌سازی</a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="8">کاربری در این بازه دانلود نکرده است.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if total_pages > 1 %}
+    <nav class="ecc-act-pagination" aria-label="صفحه‌بندی Funnel">
+        {% if has_prev %}
+        <a href="{{ prev_page_url }}#windows-funnel-table" class="ecc-btn ecc-btn--ghost ecc-btn--sm">قبلی</a>
+        {% endif %}
+        <span>{{ page|to_persian_digits }} / {{ total_pages|to_persian_digits }}</span>
+        {% if has_next %}
+        <a href="{{ next_page_url }}#windows-funnel-table" class="ecc-btn ecc-btn--ghost ecc-btn--sm">بعدی</a>
+        {% endif %}
+    </nav>
+    {% endif %}
+</section>
+
+<section class="ecc-section" id="windows-table-downloads" aria-label="دانلودهای اخیر">
+    <header class="ecc-section-head">
+        <div>
+            <h2><i class="fas fa-download"></i> دانلودهای اخیر</h2>
+            <p>پیش‌نمایش {{ table_preview_rows|to_persian_digits }} مورد</p>
+        </div>
+        <a href="{{ export_urls.downloads }}" class="ecc-btn ecc-btn--ghost ecc-btn--sm">
+            خروجی <i class="fas fa-file-excel"></i>
+        </a>
+    </header>
+    <div class="adm-table-wrap">
+        <table class="adm-table adm-table--pro">
+            <thead>
+                <tr>
+                    <th>کاربر</th>
+                    <th>محصول</th>
+                    <th>پلن</th>
+                    <th>تاریخ</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in download_rows %}
+                <tr>
+                    <td>{{ row.user_display }}</td>
+                    <td>{{ row.product_label|truncatechars:30 }}</td>
+                    <td>{{ row.plan_label }}</td>
+                    <td>{{ row.created_at|to_jalali_fa }}</td>
+                    <td><a href="{{ row.admin_url }}" class="ecc-btn ecc-btn--ghost ecc-btn--sm" target="_blank" rel="noopener">جزئیات</a></td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5">دانلودی در این بازه نیست.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<section class="ecc-section" id="windows-table-activations" aria-label="فعال‌سازی‌های اخیر">
+    <header class="ecc-section-head">
+        <div>
+            <h2><i class="fas fa-key"></i> فعال‌سازی‌های اخیر</h2>
+            <p>پیش‌نمایش {{ table_preview_rows|to_persian_digits }} مورد</p>
+        </div>
+        <a href="{{ admin_list_urls.activations }}" class="ecc-btn ecc-btn--ghost ecc-btn--sm" target="_blank" rel="noopener">
+            Admin <i class="fas fa-arrow-left"></i>
+        </a>
+    </header>
+    <div class="adm-table-wrap">
+        <table class="adm-table adm-table--pro">
+            <thead>
+                <tr>
+                    <th>کاربر</th>
+                    <th>پلن</th>
+                    <th>تاریخ</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in activation_rows %}
+                <tr>
+                    <td>{{ row.user_display }}</td>
+                    <td>{{ row.plan_label }}</td>
+                    <td>{{ row.activated_at|to_jalali_fa }}</td>
+                    <td><a href="{{ row.admin_url }}" class="ecc-btn ecc-btn--ghost ecc-btn--sm" target="_blank" rel="noopener">جزئیات</a></td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="4">فعال‌سازی در این بازه نیست.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<section class="ecc-section" id="windows-table-launches" aria-label="اولین اجراهای اخیر">
+    <header class="ecc-section-head">
+        <div>
+            <h2><i class="fas fa-play"></i> اولین اجرا</h2>
+            <p>پیش‌نمایش {{ table_preview_rows|to_persian_digits }} مورد</p>
+        </div>
+        <a href="{{ export_urls.launches }}" class="ecc-btn ecc-btn--ghost ecc-btn--sm">
+            خروجی <i class="fas fa-file-excel"></i>
+        </a>
+    </header>
+    <div class="adm-table-wrap">
+        <table class="adm-table adm-table--pro">
+            <thead>
+                <tr>
+                    <th>کاربر</th>
+                    <th>پلن</th>
+                    <th>نسخه</th>
+                    <th>تاریخ</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in launch_rows %}
+                <tr>
+                    <td>{{ row.user_display }}</td>
+                    <td>{{ row.plan_label }}</td>
+                    <td dir="ltr">{{ row.app_version }}</td>
+                    <td>{{ row.created_at|to_jalali_fa }}</td>
+                    <td><a href="{{ row.admin_url }}" class="ecc-btn ecc-btn--ghost ecc-btn--sm" target="_blank" rel="noopener">جزئیات</a></td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5">اولین اجرایی در این بازه نیست.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<section class="ecc-section ecc-win-snapshot" aria-label="وضعیت کلی">
+    <header class="ecc-section-head ecc-section-head--slim">
+        <div>
+            <h2><i class="fas fa-database"></i> وضعیت کلی</h2>
+            <p>Snapshot</p>
+        </div>
+    </header>
+    <ul class="ecc-stat-strip">
+        <li><span>کل دانلود</span><strong>{{ snapshot.windows_downloads_total|to_persian_digits }}</strong></li>
+        <li><span>دانلود (۷ روز)</span><strong>{{ snapshot.windows_downloads_week|to_persian_digits }}</strong></li>
+        <li><span>فعال‌سازی</span><strong>{{ snapshot.windows_activations_total|to_persian_digits }}</strong></li>
+        <li><span>اولین اجرا</span><strong>{{ snapshot.windows_first_launches_total|to_persian_digits }}</strong></li>
+    </ul>
+</section>
+
+{% endblock %}

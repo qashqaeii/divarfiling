@@ -1861,7 +1861,7 @@ def get_admin_dashboard_context(days: int = 30) -> Dict[str, Any]:
         'windows_download_logs': get_windows_download_logs(TABLE_FETCH_LIMIT),
         'windows_activations': get_windows_activations(TABLE_FETCH_LIMIT),
         'windows_first_launches': get_windows_first_launches(TABLE_FETCH_LIMIT),
-        'windows_user_funnel': get_windows_user_funnel(TABLE_FETCH_LIMIT),
+        'windows_user_funnel': get_windows_user_funnel(TABLE_FETCH_LIMIT)[0],
     }
 
 

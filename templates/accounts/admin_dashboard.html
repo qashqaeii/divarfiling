@@ -260,5 +260,9 @@ if (location.hash === '#ecc-activity') {
     var q5 = location.search || '?days=30';
     window.location.replace('{% url "admin_panel_activity" %}' + q5);
 }
+if (location.hash === '#ecc-windows') {
+    var q6 = location.search || '?days=30';
+    window.location.replace('{% url "admin_panel_windows" %}' + q6);
+}
 </script>
 {% endblock %}

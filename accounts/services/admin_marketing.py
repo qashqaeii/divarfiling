@@ -175,8 +175,10 @@ def build_segment_recipients(
         )
     elif segment_key == 'users_with_active_license':
         items = _segment_users_with_active_license(product_id=product_id)
+    elif segment_key == 'users_without_license':
+        items = _segment_users_without_license(days_lookback=days_lookback)
     else:
-        items = _segment_users_without_license()
+        items = []
 
     # dedupe by phone — keep first (newest)
     seen: set[str] = set()
@@ -378,20 +380,25 @@ def _segment_users_with_active_license(
     return rows
 
 
-def _segment_users_without_license() -> List[SegmentRecipient]:
+def _segment_users_without_license(*, days_lookback: Optional[int] = None) -> List[SegmentRecipient]:
     active_license = License.objects.filter(
         order__user=OuterRef('pk'),
         status='active',
     ).filter(Q(expires_at__isnull=True) | Q(expires_at__gt=timezone.now()))
+    qs = User.objects.filter(is_active=True)
+    if days_lookback:
+        since = timezone.now() - timedelta(days=days_lookback)
+        qs = qs.filter(date_joined__gte=since)
     qs = (
-        User.objects.filter(is_active=True)
-        .annotate(has_active_license=Exists(active_license))
+        qs.annotate(has_active_license=Exists(active_license))
         .filter(has_active_license=False)
         .order_by('-date_joined')
     )
     rows: List[SegmentRecipient] = []
     for user in qs:
         name = _user_first_name(user)
+        if not name:
+            name = (user.get_full_name() or '').strip() or (user.username or '').strip()
         rows.append(SegmentRecipient(
             user=user,
             phone=user.phone or '',

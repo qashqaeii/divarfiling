@@ -11,10 +11,12 @@ from accounts.services.admin_management_assistant import (
     ensure_automation_rules,
     get_assistant_preview,
     get_management_assistant_context,
+    preview_insight_recipients,
     toggle_automation_rule,
 )
 from accounts.services.admin_panel_shell import resolve_admin_panel_nav_active
 from accounts.services.pending_orders import PENDING_ORDER_STATUSES
+from licenses.models import License
 from shop.models import LicensePlan, Order, Product
 
 User = get_user_model()
@@ -76,6 +78,31 @@ class ManagementAssistantServiceTests(TestCase):
         self.assertIn('total', preview)
         self.assertIn('top_insights', preview)
 
+    def test_preview_license_expiring_recipients(self):
+        product = Product.objects.create(title='P', slug='maa-lic', is_active=True)
+        plan = LicensePlan.objects.create(
+            product=product, name='ماهانه', plan_type='monthly', price=100000,
+            duration_days=30, is_active=True,
+        )
+        order = Order.objects.create(
+            user=self.user,
+            product=product,
+            plan=plan,
+            amount=100000,
+            status='paid',
+        )
+        License.objects.create(
+            order=order,
+            plan=plan,
+            status='active',
+            expires_at=timezone.now() + timezone.timedelta(days=2),
+        )
+        data = preview_insight_recipients('license_expiring_3d')
+        self.assertTrue(data['ok'])
+        self.assertGreaterEqual(data['count'], 1)
+        self.assertTrue(data['recipients'])
+        self.assertIn('display', data['recipients'][0])
+
     def test_context_tabs(self):
         ctx = get_management_assistant_context(tab='automations')
         self.assertEqual(ctx['tab'], 'automations')
@@ -133,3 +160,4 @@ class ManagementAssistantViewTests(TestCase):
         resp = self.client.get(reverse('admin_panel'))
         self.assertEqual(resp.status_code, 200)
         self.assertContains(resp, 'دستیار مدیریت')
+        self.assertEqual(resp.content.decode().count('ecc-section ecc-cmd-assistant'), 1)

@@ -7,7 +7,7 @@
 {% block admin_panel_title %}دستیار مدیریت{% endblock %}
 
 {% block admin_panel_extra_css %}
-<link rel="stylesheet" href="{% static 'css/mizkar-admin-assistant.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'css/mizkar-admin-assistant.css' %}?v=2">
 {% endblock %}
 
 {% block admin_panel_header_meta %}
@@ -226,9 +226,9 @@
         </header>
         <div class="maa-modal-body">
             <p class="maa-modal-recipients">گیرندگان: <strong id="maa-send-count">—</strong></p>
+            <div class="maa-modal-recipient-list" id="maa-recipient-list" aria-live="polite"></div>
             <label for="maa-send-message">متن پیشنهادی</label>
             <textarea id="maa-send-message" rows="6"></textarea>
-            <div class="maa-modal-recipient-list" id="maa-recipient-list"></div>
         </div>
         <footer class="maa-modal-foot">
             <button type="button" class="ecc-btn ecc-btn--ghost" id="maa-preview-recipients">پیش‌نمایش کاربران</button>
@@ -266,5 +266,5 @@
 <script>
 window.maaAutomationRules = {{ automation_rules_json|safe }};
 </script>
-<script src="{% static 'js/mizkar-admin-assistant.js' %}?v=1"></script>
+<script src="{% static 'js/mizkar-admin-assistant.js' %}?v=2"></script>
 {% endblock %}

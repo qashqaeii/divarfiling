@@ -547,6 +547,7 @@ def build_management_insights() -> List[ManagementInsight]:
             icon='fa-user-plus',
             accent='indigo',
             segment_key='users_without_license',
+            segment_params={'days_lookback': 7},
             automation_key='users_onboarding',
             flow_key='mgmt_users_onboarding',
             view_url=reverse('admin_panel_users') + '?days=7',
@@ -842,6 +843,155 @@ def get_action_results_summary(days: int = 7) -> Dict[str, Any]:
     }
 
 
+def _mask_phone_for_display(phone: str) -> str:
+    from accounts.phone_utils import normalize_phone
+
+    normalized = normalize_phone(phone or '')
+    if len(normalized) < 7:
+        return normalized or ''
+    return f'{normalized[:4]}…{normalized[-3:]}'
+
+
+def _display_name_from_user(user) -> str:
+    if not user:
+        return ''
+    first = (getattr(user, 'first_name', '') or '').strip()
+    if first:
+        return first
+    full = (user.get_full_name() or '').strip()
+    if full:
+        return full
+    username = (getattr(user, 'username', '') or '').strip()
+    if username and not username.startswith('user_'):
+        return username
+    return ''
+
+
+def _enrich_preview_recipients(recipients: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    from accounts.phone_utils import find_user_by_phone
+
+    out: List[Dict[str, Any]] = []
+    for row in recipients:
+        phone = row.get('phone') or ''
+        name = (row.get('name') or '').strip()
+        if not name:
+            user = find_user_by_phone(phone)
+            name = _display_name_from_user(user)
+        masked = _mask_phone_for_display(phone)
+        product = row.get('product') or ''
+        plan = row.get('plan') or ''
+        display = name or masked or 'کاربر'
+        detail_parts = []
+        for part in (product, plan):
+            if part and part != display:
+                detail_parts.append(part)
+        out.append({
+            **row,
+            'name': name,
+            'display': display,
+            'detail': ' · '.join(detail_parts),
+            'masked_phone': masked,
+        })
+    return out
+
+
+def _candidate_to_preview_row(candidate) -> Dict[str, Any]:
+    user = candidate.user
+    ctx = candidate.context or {}
+    name = (ctx.get('name') or '').strip()
+    if not name:
+        name = _display_name_from_user(user)
+    masked = _mask_phone_for_display(candidate.phone)
+    product = ctx.get('product') or ''
+    display = name or masked or 'کاربر'
+    detail_parts = []
+    if product and product != display:
+        detail_parts.append(product)
+    days = ctx.get('days')
+    if days:
+        detail_parts.append(f'{days} روز مانده')
+    return {
+        'phone': candidate.phone,
+        'name': name,
+        'name_part': ctx.get('name_part') or '',
+        'product': product,
+        'plan': ctx.get('plan') or '',
+        'display': display,
+        'detail': ' · '.join(detail_parts),
+        'masked_phone': masked,
+        'link': ctx.get('link') or '',
+    }
+
+
+def _resolve_insight_audience_candidates(insight_key: str):
+    from accounts.services import management_automation_runner as runner
+
+    resolver_map = {
+        'license_expiring_3d': lambda: runner._resolve_license_expiring(within_days=3),
+        'expired_not_renewed': lambda: runner._resolve_expired_renewal(within_days=14),
+        'high_renewal_chance': _resolve_high_renewal_chance_candidates,
+        'windows_download_no_activate': runner._resolve_windows_download_no_activate,
+        'windows_activate_no_launch': runner._resolve_windows_activate_no_launch,
+        'crm_not_started': runner._resolve_crm_not_started,
+    }
+    resolver = resolver_map.get(insight_key)
+    if not resolver:
+        return None
+    return resolver()
+
+
+def _resolve_high_renewal_chance_candidates():
+    from accounts.services.management_automation_runner import (
+        AutomationCandidate,
+        _name_part,
+        _phone_ok,
+        _renewal_link,
+    )
+
+    now = timezone.now()
+    recent = now - timedelta(days=7)
+    active_q = License.objects.filter(
+        order__user=OuterRef('pk'),
+        order__status='paid',
+        status='active',
+    ).filter(Q(expires_at__isnull=True) | Q(expires_at__gt=now))
+    renewed_q = Order.objects.filter(
+        user=OuterRef('pk'),
+        status='paid',
+        paid_at__gte=recent,
+    )
+    qs = (
+        User.objects.filter(is_active=True, last_login__gte=recent)
+        .annotate(
+            has_active=Exists(active_q),
+            renewed_recently=Exists(renewed_q),
+            had_license=Exists(
+                Order.objects.filter(user=OuterRef('pk'), status='paid', licenses__isnull=False)
+            ),
+        )
+        .filter(has_active=False, renewed_recently=False, had_license=True)
+        .exclude(last_login__isnull=True)
+        .order_by('-last_login')[:500]
+    )
+    out = []
+    for user in qs:
+        phone = _phone_ok(getattr(user, 'phone', ''))
+        if not phone:
+            continue
+        out.append(AutomationCandidate(
+            trigger_key=f'high_renewal:{user.pk}',
+            user=user,
+            phone=phone,
+            context={
+                'name_part': _name_part(user),
+                'product': 'فایلینگ',
+                'link': _renewal_link(),
+            },
+            metadata={'user_id': user.pk},
+        ))
+    return out
+
+
 def preview_insight_recipients(insight_key: str) -> Dict[str, Any]:
     insights = {i.key: i for i in build_management_insights()}
     insight = insights.get(insight_key)
@@ -851,11 +1001,22 @@ def preview_insight_recipients(insight_key: str) -> Dict[str, Any]:
     if insight.segment_key:
         params = dict(insight.segment_params or {})
         preview = preview_segment(insight.segment_key, **params)
+        recipients = _enrich_preview_recipients(preview.get('recipients', [])[:50])
         return {
             'ok': True,
             'count': preview.get('count', 0),
-            'recipients': preview.get('recipients', [])[:50],
-            'sample_message': _sample_message_for_insight(insight, preview.get('recipients', [])),
+            'recipients': recipients,
+            'sample_message': _sample_message_for_insight(insight, recipients),
+        }
+
+    candidates = _resolve_insight_audience_candidates(insight_key)
+    if candidates is not None:
+        recipients = [_candidate_to_preview_row(c) for c in candidates[:50]]
+        return {
+            'ok': True,
+            'count': len(candidates),
+            'recipients': recipients,
+            'sample_message': _sample_message_for_insight(insight, recipients),
         }
 
     return {
@@ -863,6 +1024,7 @@ def preview_insight_recipients(insight_key: str) -> Dict[str, Any]:
         'count': insight.count,
         'recipients': [],
         'sample_message': insight.message_template.replace('{link}', _site_link()),
+        'preview_note': 'این پیشنهاد لیست گیرنده فردی ندارد — از لینک مشاهده اقدام کنید.',
     }
 
 

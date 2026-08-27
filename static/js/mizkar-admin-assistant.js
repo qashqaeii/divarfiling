@@ -21,16 +21,28 @@
         return match ? decodeURIComponent(match[1]) : '';
     }
 
+    function escapeHtml(value) {
+        return String(value || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
     function openModal(modal) {
         if (!modal) return;
         modal.hidden = false;
         modal.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('maa-modal-open');
     }
 
     function closeModal(modal) {
         if (!modal) return;
         modal.hidden = true;
         modal.setAttribute('aria-hidden', 'true');
+        if (!document.querySelector('.maa-modal:not([hidden])')) {
+            document.body.classList.remove('maa-modal-open');
+        }
     }
 
     document.querySelectorAll('[data-close-modal]').forEach(function (el) {
@@ -51,6 +63,74 @@
         }).then(function (r) { return r.json(); });
     }
 
+    function renderRecipientList(listEl, data) {
+        if (!listEl) return;
+        listEl.classList.remove('is-loading');
+
+        if (!data || !data.ok) {
+            listEl.innerHTML = '<p class="maa-recipient-empty">' + escapeHtml(data && data.error ? data.error : 'خطا در بارگذاری گیرندگان.') + '</p>';
+            return;
+        }
+
+        if (data.preview_note && (!data.recipients || !data.recipients.length)) {
+            listEl.innerHTML = '<p class="maa-recipient-empty">' + escapeHtml(data.preview_note) + '</p>';
+            return;
+        }
+
+        if (!data.recipients || !data.recipients.length) {
+            listEl.innerHTML = '<p class="maa-recipient-empty">گیرنده‌ای برای نمایش نیست.</p>';
+            return;
+        }
+
+        var rows = data.recipients.slice(0, 30).map(function (r) {
+            var display = r.display || r.name || r.user_display || r.masked_phone || 'کاربر';
+            var detail = r.detail || r.product || '';
+            var meta = r.masked_phone && display !== r.masked_phone ? r.masked_phone : '';
+            var metaHtml = meta ? '<span class="maa-recipient-meta">' + escapeHtml(meta) + '</span>' : '';
+            var detailHtml = detail ? '<span class="maa-recipient-detail">' + escapeHtml(detail) + '</span>' : '';
+            return (
+                '<div class="maa-recipient-row">' +
+                    '<span class="maa-recipient-name">' + escapeHtml(display) + '</span>' +
+                    detailHtml +
+                    metaHtml +
+                '</div>'
+            );
+        }).join('');
+
+        var more = '';
+        if (data.count > 30) {
+            more = '<p class="maa-recipient-more">+' + escapeHtml(String(data.count - 30)) + ' نفر دیگر</p>';
+        }
+
+        listEl.innerHTML = rows + more;
+    }
+
+    function showRecipientLoading(listEl) {
+        if (!listEl) return;
+        listEl.classList.add('is-loading');
+        listEl.innerHTML = '<p class="maa-recipient-empty">در حال بارگذاری گیرندگان…</p>';
+    }
+
+    function refreshSendPreview() {
+        var list = document.getElementById('maa-recipient-list');
+        if (!currentInsight) return Promise.resolve(null);
+        showRecipientLoading(list);
+        return loadPreview(currentInsight).then(function (data) {
+            if (!data || !data.ok) {
+                renderRecipientList(list, data);
+                return data;
+            }
+            if (data.sample_message) {
+                document.getElementById('maa-send-message').value = data.sample_message;
+            }
+            if (typeof data.count !== 'undefined') {
+                document.getElementById('maa-send-count').textContent = String(data.count);
+            }
+            renderRecipientList(list, data);
+            return data;
+        });
+    }
+
     document.querySelectorAll('.maa-btn-send').forEach(function (btn) {
         btn.addEventListener('click', function () {
             currentInsight = btn.dataset.insight || '';
@@ -59,37 +139,16 @@
             document.getElementById('maa-send-title').textContent = title;
             document.getElementById('maa-send-count').textContent = count;
             document.getElementById('maa-send-message').value = '';
-            document.getElementById('maa-recipient-list').innerHTML = '';
+            showRecipientLoading(document.getElementById('maa-recipient-list'));
             openModal(sendModal);
-
-            loadPreview(currentInsight).then(function (data) {
-                if (!data || !data.ok) return;
-                if (data.sample_message) {
-                    document.getElementById('maa-send-message').value = data.sample_message;
-                }
-                if (typeof data.count !== 'undefined') {
-                    document.getElementById('maa-send-count').textContent = String(data.count);
-                }
-            });
+            refreshSendPreview();
         });
     });
 
     var previewBtn = document.getElementById('maa-preview-recipients');
     if (previewBtn) {
         previewBtn.addEventListener('click', function () {
-            if (!currentInsight) return;
-            loadPreview(currentInsight).then(function (data) {
-                var list = document.getElementById('maa-recipient-list');
-                if (!list) return;
-                if (!data || !data.ok || !data.recipients || !data.recipients.length) {
-                    list.textContent = 'گیرنده‌ای برای نمایش نیست.';
-                    return;
-                }
-                list.innerHTML = data.recipients.slice(0, 20).map(function (r) {
-                    var name = r.name || r.user_display || 'کاربر';
-                    return '<div>• ' + name + '</div>';
-                }).join('');
-            });
+            refreshSendPreview();
         });
     }
 

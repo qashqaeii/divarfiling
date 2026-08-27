@@ -268,5 +268,13 @@ if (location.hash === '#ecc-crm') {
     var q7 = location.search || '?days=30';
     window.location.replace('{% url "admin_panel_crm" %}' + q7);
 }
+if (location.hash === '#ecc-affiliates') {
+    var q8 = location.search || '?days=30';
+    window.location.replace('{% url "admin_panel_affiliates" %}' + q8);
+}
+if (location.hash === '#ecc-exports') {
+    var q9 = location.search || '?days=30';
+    window.location.replace('{% url "admin_panel_exports" %}' + q9);
+}
 </script>
 {% endblock %}

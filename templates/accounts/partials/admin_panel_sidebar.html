@@ -138,13 +138,15 @@
             <i class="fas fa-chevron-down ecc-nav-group-chevron" aria-hidden="true"></i>
         </button>
         <div class="ecc-nav-group-items">
-            <a href="{% url 'admin_panel' %}{{ days_qs }}#ecc-affiliates"
-               class="ecc-nav-item ecc-nav-item--sub"
+            <a href="{% url 'admin_panel_affiliates' %}{{ days_qs }}"
+               class="ecc-nav-item ecc-nav-item--sub{% if active == 'affiliates' %} is-active{% endif %}"
                data-nav-id="affiliates">
                 <span>همکاری</span>
+                {% firstof admin_panel_nav_badges.pending_withdrawals stats.pending_withdrawals as withdrawal_badge %}
+                {% if withdrawal_badge %}<span class="ecc-nav-badge">{{ withdrawal_badge|to_persian_digits }}</span>{% endif %}
             </a>
-            <a href="{% url 'admin_panel' %}{{ days_qs }}#ecc-exports"
-               class="ecc-nav-item ecc-nav-item--sub"
+            <a href="{% url 'admin_panel_exports' %}{{ days_qs }}"
+               class="ecc-nav-item ecc-nav-item--sub{% if active == 'exports' %} is-active{% endif %}"
                data-nav-id="exports">
                 <span>خروجی</span>
             </a>

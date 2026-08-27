@@ -1,0 +1,65 @@
+{% extends 'accounts/admin_panel_base.html' %}
+{% load static %}
+{% load persian_tags %}
+
+{% block title %}خروجی گزارش‌ها | پنل مدیریت{% endblock %}
+
+{% block admin_panel_title %}خروجی{% endblock %}
+
+{% block admin_panel_content %}
+
+<section class="ecc-section" id="ecc-exports" aria-label="خلاصه خروجی">
+    <header class="ecc-section-head ecc-section-head--slim">
+        <div>
+            <h2><i class="fas fa-file-export"></i> کاتالوگ گزارش‌ها</h2>
+            <p>{{ export_total_count|to_persian_digits }} گزارش · {{ export_row_total|to_persian_digits }} ردیف قابل خروجی</p>
+        </div>
+    </header>
+    <ul class="ecc-stat-strip ecc-act-summary">
+        {% for group in export_groups %}
+        <li data-accent="violet">
+            <span>{{ group.label }}</span>
+            <strong>{{ group.count|to_persian_digits }}</strong>
+        </li>
+        {% endfor %}
+    </ul>
+</section>
+
+<section class="ecc-section" aria-label="فیلتر دسته">
+    <div class="ecc-feed-filters" role="group" aria-label="دسته گزارش">
+        {% for key, label in category_filters %}
+        <a href="{{ base_query_suffix }}{% if key != 'all' %}&amp;category={{ key }}{% endif %}"
+           class="ecc-feed-filter{% if category == key %} is-active{% endif %}"
+           data-filter="{{ key }}">{{ label }}</a>
+        {% endfor %}
+    </div>
+</section>
+
+{% for group in export_groups %}
+<section class="ecc-section" aria-label="{{ group.label }}">
+    <header class="ecc-section-head ecc-section-head--slim">
+        <div>
+            <h2><i class="fas fa-folder-open"></i> {{ group.label }}</h2>
+            <p>{{ group.items|length|to_persian_digits }} گزارش</p>
+        </div>
+    </header>
+    <div class="ecc-module-dock">
+        {% for exp in group.items %}
+        <a class="ecc-module" data-accent="{{ exp.accent }}" href="{{ exp.download_url }}">
+            <span class="ecc-module-icon"><i class="fas {{ exp.icon }}"></i></span>
+            <span class="ecc-module-text">
+                <strong>{{ exp.title }}</strong>
+                <em>{{ exp.description }}</em>
+            </span>
+            {% if exp.count %}<span class="ecc-module-badge">{{ exp.count|to_persian_digits }}</span>{% endif %}
+        </a>
+        {% endfor %}
+    </div>
+</section>
+{% empty %}
+<section class="ecc-section" aria-label="خالی">
+    <p class="ecc-cmd-actions-empty">گزارشی برای این فیلتر یافت نشد.</p>
+</section>
+{% endfor %}
+
+{% endblock %}

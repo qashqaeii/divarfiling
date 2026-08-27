@@ -6,6 +6,7 @@ from typing import Any, Dict, Tuple
 from django.utils import timezone
 
 from accounts.services.pending_orders import PENDING_ORDER_STATUSES
+from affiliates.models import Withdrawal
 from shop.models import Order
 from workspace.models import Ticket
 
@@ -39,6 +40,7 @@ def get_admin_panel_nav_badges() -> Dict[str, int]:
     return {
         'orders_pending': Order.objects.filter(status__in=PENDING_ORDER_STATUSES).count(),
         'unread_tickets': Ticket.objects.filter(staff_has_unread=True).exclude(status='closed').count(),
+        'pending_withdrawals': Withdrawal.objects.filter(status='pending').count(),
     }
 
 
@@ -63,6 +65,8 @@ def resolve_admin_panel_nav_active(path: str) -> str:
         ('/accounts/admin-panel/activity/', 'activity'),
         ('/accounts/admin-panel/windows/', 'windows'),
         ('/accounts/admin-panel/crm/', 'crm'),
+        ('/accounts/admin-panel/affiliates/', 'affiliates'),
+        ('/accounts/admin-panel/exports/', 'exports'),
         ('/accounts/admin-panel/plan-conversion/', 'plan_conversion'),
         ('/accounts/admin-panel/blog/', 'blog'),
         ('/accounts/admin-panel/academy/', 'academy'),

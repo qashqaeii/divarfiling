@@ -75,6 +75,8 @@ from accounts.services.admin_support_center import get_support_center_context
 from accounts.services.admin_activity_center import get_activity_center_context
 from accounts.services.admin_windows_center import get_windows_center_context
 from accounts.services.admin_crm_center import get_crm_center_context
+from accounts.services.admin_affiliates_center import get_affiliates_center_context
+from accounts.services.admin_exports_center import get_exports_center_context
 from accounts.services.admin_phonebook_sync import (
     PhonebookSyncError,
     get_phonebook_sync_status,
@@ -890,4 +892,41 @@ class AdminCrmCenterView(StaffRequiredMixin, TemplateView):
         ctx['admin_panel_range_key'] = range_key
         ctx['admin_panel_compare'] = compare
         ctx['charts_json'] = json.dumps(data['charts'], ensure_ascii=False)
+        return ctx
+
+
+class AdminAffiliatesCenterView(StaffRequiredMixin, TemplateView):
+    """مرکز همکاری در فروش — مشاوران، کمیسیون و برداشت."""
+
+    template_name = 'accounts/admin_affiliates_center.html'
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        days, range_key = parse_admin_panel_range(self.request)
+        compare = self.request.GET.get('compare') == '1'
+        data = get_affiliates_center_context(days=days, compare=compare)
+        for card in data.get('range_kpi_cards', []) + data.get('snapshot_kpi_cards', []):
+            card['sparkline_json'] = '[]'
+        ctx.update(data)
+        ctx['chart_days'] = days
+        ctx['admin_panel_range_key'] = range_key
+        ctx['admin_panel_compare'] = compare
+        return ctx
+
+
+class AdminExportsCenterView(StaffRequiredMixin, TemplateView):
+    """مرکز خروجی — کاتالوگ گزارش‌های Excel."""
+
+    template_name = 'accounts/admin_exports_center.html'
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        days, range_key = parse_admin_panel_range(self.request)
+        compare = self.request.GET.get('compare') == '1'
+        category = self.request.GET.get('category', 'all') or 'all'
+        data = get_exports_center_context(days=days, category=category, compare=compare)
+        ctx.update(data)
+        ctx['chart_days'] = days
+        ctx['admin_panel_range_key'] = range_key
+        ctx['admin_panel_compare'] = compare
         return ctx

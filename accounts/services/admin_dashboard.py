@@ -1166,7 +1166,7 @@ def build_command_action_items(stats: Dict[str, Any], sms_balance: Dict[str, Any
         ('high', 'licenses_expiring_soon', 'لایسنس در شرف انقضا', 'fa-hourglass-half', 'amber', 'تمدید', 'page:marketing'),
         ('high', 'orders_pending', 'سفارش پرداخت‌نشده', 'fa-clock', 'violet', 'بازیابی', 'page:recovery'),
         ('high', 'pending_card_transfers', 'کارت‌به‌کارت معلق', 'fa-money-check', 'cyan', 'بررسی', 'export:card_transfers_pending'),
-        ('medium', 'pending_withdrawals', 'برداشت همکار', 'fa-wallet', 'emerald', 'تأیید', 'export:pending_withdrawals'),
+        ('medium', 'pending_withdrawals', 'برداشت همکار', 'fa-wallet', 'emerald', 'تأیید', 'page:affiliates'),
         ('medium', 'users_pending_payment', 'کاربر با سفارش معلق', 'fa-user-clock', 'blue', 'تماس', 'page:recovery'),
         ('opportunity', 'users_without_license', 'کاربر بدون لایسنس', 'fa-user-slash', 'indigo', 'کمپین فروش', 'page:marketing'),
     ]
@@ -1174,6 +1174,7 @@ def build_command_action_items(stats: Dict[str, Any], sms_balance: Dict[str, Any
     page_links = {
         'recovery': reverse('admin_panel_recovery_center'),
         'marketing': reverse('admin_panel_marketing'),
+        'affiliates': reverse('admin_panel_affiliates'),
     }
 
     items: List[Dict[str, Any]] = []

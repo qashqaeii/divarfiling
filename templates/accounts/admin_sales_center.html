@@ -1,0 +1,307 @@
+{% extends 'accounts/admin_panel_base.html' %}
+{% load static %}
+{% load persian_tags %}
+{% load currency_tags %}
+
+{% block title %}فروش و درآمد | پنل مدیریت{% endblock %}
+
+{% block admin_panel_title %}فروش و درآمد{% endblock %}
+
+{% block admin_panel_header_actions %}
+<a href="{% url 'admin_panel_export' 'paid_orders' %}?format=xlsx&days={{ chart_days }}" class="ecc-btn ecc-btn--primary" title="خروجی سفارش‌های پرداخت‌شده">
+    <i class="fas fa-file-excel"></i>
+</a>
+<a href="{% url 'admin_panel_recovery_center' %}?days={{ chart_days }}" class="ecc-btn ecc-btn--ghost" title="مرکز بازیابی">
+    <i class="fas fa-rotate-left"></i>
+</a>
+<a href="/admin/shop/order/" class="ecc-btn ecc-btn--ghost" target="_blank" rel="noopener" title="Django Admin">
+    <i class="fas fa-cog"></i>
+</a>
+{% endblock %}
+
+{% block admin_panel_content %}
+
+<section class="ecc-section ecc-cmd-kpi" aria-label="شاخص‌های فروش">
+    <div class="ecc-kpi-grid ecc-kpi-grid--cmd">
+        {% for card in kpi_cards %}
+        <article class="ecc-kpi" data-accent="{{ card.accent }}" data-status="{{ card.status }}">
+            <div class="ecc-kpi-top">
+                <span class="ecc-kpi-icon"><i class="fas {{ card.icon }}"></i></span>
+                {% if card.delta is not None %}
+                <span class="ecc-kpi-delta{% if card.delta >= 0 %} is-up{% else %} is-down{% endif %}">
+                    {% if card.delta >= 0 %}+{% endif %}{{ card.delta|to_persian_digits }}٪
+                </span>
+                {% endif %}
+            </div>
+            <strong class="ecc-kpi-val" data-count-up="{{ card.value }}" data-format="{{ card.format }}">۰</strong>
+            <span class="ecc-kpi-lbl">{{ card.label }}</span>
+            <span class="ecc-kpi-sub">{{ card.delta_label }} · {{ card.sublabel }}</span>
+            <div class="ecc-kpi-spark" data-sparkline='{{ card.sparkline_json|safe }}'>
+                <canvas id="spark-{{ card.key }}"></canvas>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+</section>
+
+<section class="ecc-section ecc-cmd-actions" id="sales-actions" aria-label="نیازمند اقدام">
+    <header class="ecc-cmd-actions-head">
+        <div>
+            <h2><i class="fas fa-bolt"></i> نیازمند اقدام</h2>
+            <p>وضعیت فعلی — Snapshot</p>
+        </div>
+        <span class="ecc-cmd-actions-count">{{ action_items|length|to_persian_digits }}</span>
+    </header>
+    {% if action_items %}
+    <div class="ecc-cmd-actions-list">
+        {% for item in action_items %}
+        <a href="{{ item.href }}" class="ecc-cmd-action" data-priority="{{ item.priority }}" data-accent="{{ item.accent }}">
+            <span class="ecc-cmd-action-priority" aria-hidden="true"></span>
+            <span class="ecc-cmd-action-icon"><i class="fas {{ item.icon }}"></i></span>
+            <span class="ecc-cmd-action-body">
+                <strong>{{ item.title }}</strong>
+                <em>{{ item.detail }}</em>
+            </span>
+            <span class="ecc-cmd-action-count">{{ item.count|to_persian_digits }}</span>
+            <span class="ecc-cmd-action-cta">{{ item.cta }} <i class="fas fa-arrow-left"></i></span>
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="ecc-empty ecc-empty--compact">
+        <i class="fas fa-circle-check"></i>
+        <strong>مورد فوری در فروش وجود ندارد</strong>
+        <span>سفارش معلق یا پرداخت ناموفق ثبت نشده است</span>
+    </div>
+    {% endif %}
+</section>
+
+<section class="ecc-section ecc-cmd-charts ecc-sales-charts" aria-label="روند فروش">
+    <div class="ecc-cmd-charts-grid ecc-sales-charts-grid">
+        <article class="ecc-card ecc-card--chart">
+            <div class="ecc-card-head">
+                <div>
+                    <h3><i class="fas fa-chart-area"></i> روند درآمد</h3>
+                    <p>{{ range_label }}</p>
+                </div>
+            </div>
+            <div class="ecc-chart-wrap ecc-chart-wrap--tall">
+                <canvas id="chart-revenue"></canvas>
+            </div>
+        </article>
+        <article class="ecc-card ecc-card--chart">
+            <div class="ecc-card-head">
+                <div>
+                    <h3><i class="fas fa-chart-column"></i> روند سفارش</h3>
+                    <p>{{ range_label }}</p>
+                </div>
+            </div>
+            <div class="ecc-chart-wrap ecc-chart-wrap--tall">
+                <canvas id="chart-sales-trend"></canvas>
+            </div>
+        </article>
+    </div>
+</section>
+
+<section class="ecc-section ecc-cmd-summary" aria-label="ترکیب فروش">
+    <header class="ecc-section-head ecc-section-head--slim">
+        <div>
+            <h2><i class="fas fa-layer-group"></i> ترکیب فروش</h2>
+            <p>{{ range_label }}</p>
+        </div>
+    </header>
+    <div class="ecc-cmd-summary-grid">
+        <article class="ecc-cmd-summary-card" data-accent="emerald">
+            <header>
+                <h3><i class="fas fa-box"></i> محصول</h3>
+            </header>
+            {% if product_revenue %}
+            <ul>
+                {% for row in product_revenue %}
+                <li><span>{{ row.label }}</span><strong>{{ row.total|currency }} <small>({{ row.count|to_persian_digits }})</small></strong></li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="ecc-card-sub">فروشی در این بازه ثبت نشده</p>
+            {% endif %}
+        </article>
+        <article class="ecc-cmd-summary-card" data-accent="violet">
+            <header>
+                <h3><i class="fas fa-tags"></i> پلن</h3>
+            </header>
+            {% if plan_sales %}
+            <ul>
+                {% for row in plan_sales %}
+                <li><span>{{ row.short_label }}</span><strong>{{ row.total|currency }} <small>({{ row.count|to_persian_digits }})</small></strong></li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="ecc-card-sub">فروش پلن در این بازه ثبت نشده</p>
+            {% endif %}
+        </article>
+        <article class="ecc-cmd-summary-card" data-accent="cyan">
+            <header>
+                <h3><i class="fas fa-credit-card"></i> روش پرداخت</h3>
+            </header>
+            {% if payment_methods %}
+            <ul>
+                {% for row in payment_methods %}
+                <li><span>{{ row.label }}</span><strong>{{ row.total|currency }} <small>({{ row.count|to_persian_digits }})</small></strong></li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="ecc-card-sub">پرداخت موفقی در این بازه نیست</p>
+            {% endif %}
+        </article>
+    </div>
+</section>
+
+<section class="ecc-section" id="sales-table-recent" aria-label="آخرین سفارش‌ها">
+    <header class="ecc-section-head">
+        <div>
+            <h2><i class="fas fa-list"></i> آخرین سفارش‌ها</h2>
+            <p>۵ مورد اخیر</p>
+        </div>
+        <a href="{% url 'admin_panel_export' 'paid_orders' %}?format=xlsx&days={{ chart_days }}" class="ecc-btn ecc-btn--ghost ecc-btn--sm">
+            خروجی <i class="fas fa-file-excel"></i>
+        </a>
+    </header>
+    <div class="adm-table-wrap">
+        <table class="adm-table adm-table--pro">
+            <thead>
+                <tr>
+                    <th>کاربر</th>
+                    <th>محصول</th>
+                    <th>مبلغ</th>
+                    <th>وضعیت</th>
+                    <th>تاریخ</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in recent_orders %}
+                <tr>
+                    <td><strong>{{ order.user.get_full_name|default:order.user.username }}</strong></td>
+                    <td>{{ order.product.title }}{% if order.plan %} · {{ order.plan.name }}{% endif %}</td>
+                    <td>{{ order.amount|currency }}</td>
+                    <td>{{ order.get_status_display }}</td>
+                    <td>{{ order.created_at|to_jalali_fa }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5">سفارشی ثبت نشده</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<section class="ecc-section" id="sales-table-failed" aria-label="پرداخت‌های ناموفق">
+    <header class="ecc-section-head">
+        <div>
+            <h2><i class="fas fa-circle-xmark"></i> پرداخت‌های ناموفق</h2>
+            <p>{{ snapshot_counts.orders_failed|to_persian_digits }} مورد · Snapshot</p>
+        </div>
+        <a href="{% url 'admin_panel_export' 'failed_orders' %}?format=xlsx" class="ecc-btn ecc-btn--ghost ecc-btn--sm">
+            خروجی <i class="fas fa-file-excel"></i>
+        </a>
+    </header>
+    <div class="adm-table-wrap">
+        <table class="adm-table adm-table--pro">
+            <thead>
+                <tr>
+                    <th>کاربر</th>
+                    <th>محصول</th>
+                    <th>مبلغ</th>
+                    <th>روش</th>
+                    <th>تاریخ</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in failed_orders %}
+                <tr>
+                    <td><strong>{{ order.user.get_full_name|default:order.user.username }}</strong></td>
+                    <td>{{ order.product.title }}</td>
+                    <td>{{ order.amount|currency }}</td>
+                    <td>{{ order.get_payment_method_display }}</td>
+                    <td>{{ order.created_at|to_jalali_fa }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5">سفارش ناموفقی وجود ندارد</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<section class="ecc-section" id="sales-table-pending" aria-label="سفارش‌های پرداخت‌نشده">
+    <header class="ecc-section-head">
+        <div>
+            <h2><i class="fas fa-clock"></i> سفارش‌های پرداخت‌نشده</h2>
+            <p>{{ snapshot_counts.orders_pending|to_persian_digits }} مورد · Snapshot</p>
+        </div>
+        <div class="ecc-section-head-actions">
+            <a href="{{ recovery_center_url }}" class="ecc-btn ecc-btn--ghost ecc-btn--sm">
+                بازیابی <i class="fas fa-rotate-left"></i>
+            </a>
+            <a href="{% url 'admin_panel_export' 'pending_orders' %}?format=xlsx" class="ecc-btn ecc-btn--ghost ecc-btn--sm">
+                خروجی <i class="fas fa-file-excel"></i>
+            </a>
+        </div>
+    </header>
+    <div class="adm-table-wrap">
+        <table class="adm-table adm-table--pro">
+            <thead>
+                <tr>
+                    <th>کاربر</th>
+                    <th>محصول</th>
+                    <th>مبلغ</th>
+                    <th>وضعیت</th>
+                    <th>تاریخ</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in pending_orders %}
+                <tr>
+                    <td><strong>{{ order.user.get_full_name|default:order.user.username }}</strong></td>
+                    <td>{{ order.product.title }}</td>
+                    <td>{{ order.amount|currency }}</td>
+                    <td>{{ order.get_status_display }}</td>
+                    <td>{{ order.created_at|to_jalali_fa }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5">سفارش معلقی وجود ندارد</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<section class="ecc-section" aria-label="خروجی‌های فروش">
+    <header class="ecc-section-head ecc-section-head--slim">
+        <div>
+            <h2><i class="fas fa-file-export"></i> خروجی‌های فروش</h2>
+        </div>
+    </header>
+    <div class="ecc-module-dock">
+        {% for exp in export_links %}
+        <a class="ecc-module" data-accent="{{ exp.accent }}" href="{{ exp.url }}">
+            <span class="ecc-module-icon"><i class="fas {{ exp.icon }}"></i></span>
+            <span class="ecc-module-text">
+                <strong>{{ exp.title }}</strong>
+                <em>{% if exp.supports_days %}بازه {{ chart_days|to_persian_digits }} روز{% else %}کل{% endif %}</em>
+            </span>
+            {% if exp.count %}<span class="ecc-module-badge">{{ exp.count|to_persian_digits }}</span>{% endif %}
+        </a>
+        {% endfor %}
+    </div>
+</section>
+
+{% endblock %}
+
+{% block admin_panel_extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+window.admCharts = {{ charts_json|safe }};
+window.admChartDays = {{ chart_days }};
+</script>
+<script src="{% static 'js/mizkar-admin-dashboard.js' %}?v=13"></script>
+{% endblock %}

@@ -55,6 +55,7 @@ def resolve_admin_panel_nav_active(path: str) -> str:
         ('/accounts/admin-panel/marketing/lead-campaigns/', 'leads'),
         ('/accounts/admin-panel/marketing/', 'marketing'),
         ('/accounts/admin-panel/recovery-center/', 'recovery'),
+        ('/accounts/admin-panel/sales/', 'sales'),
         ('/accounts/admin-panel/plan-conversion/', 'plan_conversion'),
         ('/accounts/admin-panel/blog/', 'blog'),
         ('/accounts/admin-panel/academy/', 'academy'),

@@ -19,8 +19,8 @@
             <i class="fas fa-chevron-down ecc-nav-group-chevron" aria-hidden="true"></i>
         </button>
         <div class="ecc-nav-group-items">
-            <a href="{% url 'admin_panel' %}{{ days_qs }}#ecc-sales"
-               class="ecc-nav-item ecc-nav-item--sub"
+            <a href="{% url 'admin_panel_sales' %}{{ days_qs }}"
+               class="ecc-nav-item ecc-nav-item--sub{% if active == 'sales' %} is-active{% endif %}"
                data-nav-id="sales">
                 <span>فروش و درآمد</span>
                 {% firstof admin_panel_nav_badges.orders_pending stats.orders_pending as sales_badge %}

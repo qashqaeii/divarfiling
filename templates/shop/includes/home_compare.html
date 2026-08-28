@@ -1,0 +1,47 @@
+{% load static %}
+<section class="h-compare" data-h-compare aria-labelledby="h-compare-title">
+    <div class="container">
+        <header class="h-compare__head mk-reveal">
+            <h2 class="h-compare__title" id="h-compare-title">{{ home_page.before_after.title }}</h2>
+        </header>
+
+        <div class="h-compare__shell mk-reveal">
+            <div class="h-compare__toggle" role="tablist" aria-label="مقایسه قبل و بعد">
+                <button type="button" class="h-compare__tab" role="tab" data-h-compare-tab="before" aria-selected="false">
+                    {{ home_page.before_after.before_label }}
+                </button>
+                <button type="button" class="h-compare__tab is-active" role="tab" data-h-compare-tab="after" aria-selected="true">
+                    {{ home_page.before_after.after_label }}
+                </button>
+                <span class="h-compare__toggle-thumb" data-h-compare-thumb aria-hidden="true"></span>
+            </div>
+
+            <div class="h-compare__panels">
+                <div class="h-compare__panel h-compare__panel--before" data-h-compare-panel="before" hidden>
+                    <ul class="h-compare__list">
+                        {% for item in home_page.before_after.before_items %}
+                        <li><i class="fas fa-xmark" aria-hidden="true"></i><span>{{ item }}</span></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <div class="h-compare__panel h-compare__panel--after is-visible" data-h-compare-panel="after">
+                    <ul class="h-compare__list">
+                        {% for item in home_page.before_after.after_items %}
+                        <li><i class="fas fa-check" aria-hidden="true"></i><span>{{ item }}</span></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+
+            <input
+                type="range"
+                class="h-compare__slider"
+                data-h-compare-slider
+                min="0"
+                max="100"
+                value="100"
+                aria-label="کشیدن برای مقایسه قبل و بعد"
+            >
+        </div>
+    </div>
+</section>

@@ -1,0 +1,32 @@
+{% load static %}
+<section class="h-flow" data-h-flow aria-labelledby="h-flow-title">
+    <div class="container">
+        <header class="h-flow__head mk-reveal">
+            <span class="h-flow__kicker">{{ home_page.product_flow.kicker }}</span>
+            <h2 class="h-flow__title" id="h-flow-title">{{ home_page.product_flow.title }}</h2>
+        </header>
+    </div>
+
+    <div class="h-flow__track-wrap" data-h-flow-wrap>
+        <div class="h-flow__track" data-h-flow-track role="list">
+            {% for step in home_page.product_flow.steps %}
+            <article
+                class="h-flow__step{% if forloop.first %} is-active{% endif %}"
+                data-h-flow-step="{{ forloop.counter0 }}"
+                data-accent="{{ step.accent }}"
+                role="listitem"
+            >
+                <span class="h-flow__icon"><i class="fas {{ step.icon }}" aria-hidden="true"></i></span>
+                <strong class="h-flow__name">{{ step.title }}</strong>
+                <p class="h-flow__desc">{{ step.desc }}</p>
+                {% if not forloop.last %}
+                <span class="h-flow__arrow" aria-hidden="true"><i class="fas fa-chevron-down"></i></span>
+                {% endif %}
+            </article>
+            {% endfor %}
+        </div>
+        <div class="h-flow__progress" aria-hidden="true">
+            <span class="h-flow__progress-fill" data-h-flow-progress></span>
+        </div>
+    </div>
+</section>

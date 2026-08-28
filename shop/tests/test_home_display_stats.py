@@ -4,7 +4,11 @@ from django.core.cache import cache
 from django.test import TestCase
 from django.utils import timezone
 
-from shop.bot_catalog import HOME_STATS_DISPLAY_MULTIPLIER, home_display_stats
+from shop.bot_catalog import (
+    HOME_STATS_DISPLAY_MULTIPLIER,
+    HOME_STATS_LICENSES_EXTRA_MULTIPLIER,
+    home_display_stats,
+)
 from shop.models import LicensePlan, Order, Product
 
 
@@ -53,7 +57,10 @@ class HomeDisplayStatsTests(TestCase):
         self.assertEqual(stats['raw']['total_orders'], 1)
         self.assertEqual(stats['total_orders'], 1 * HOME_STATS_DISPLAY_MULTIPLIER)
         self.assertEqual(stats['raw']['total_licenses'], 1)
-        self.assertEqual(stats['total_licenses'], 1 * HOME_STATS_DISPLAY_MULTIPLIER)
+        self.assertEqual(
+            stats['total_licenses'],
+            1 * HOME_STATS_DISPLAY_MULTIPLIER * HOME_STATS_LICENSES_EXTRA_MULTIPLIER,
+        )
         self.assertGreaterEqual(stats['total_users'], 1 * HOME_STATS_DISPLAY_MULTIPLIER)
         self.assertGreaterEqual(stats['satisfaction_rate'], 1)
         self.assertLessEqual(stats['satisfaction_rate'], 99)

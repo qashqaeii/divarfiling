@@ -1,28 +1,28 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
 {% load static humanize decor_icons %}
 {% load currency_tags %}
 
-{% block title %}خانه — فایلینگ دیوار{% endblock %}
+{% block title %}Ø®Ø§Ù†Ù‡ â€” ÙØ§ÛŒÙ„ÛŒÙ†Ú¯ Ø¯ÛŒÙˆØ§Ø±{% endblock %}
 
 {% block body_class %}mk-home-page{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/mizkar-home.css' %}?v=92">
 <link rel="stylesheet" href="{% static 'css/home-hero-mobile.css' %}?v=16">
-<link rel="stylesheet" href="{% static 'css/home-day-story.css' %}?v=7">
+<link rel="stylesheet" href="{% static 'css/home-v2.css' %}?v=1">
 {% endblock %}
 
 {% block content %}
 
-{# ─── Hero ─── #}
-<section class="home-hero mk-hero mk-hero--split mk-hero--pro mk-hero--cinema" aria-label="معرفی فایلینگ دیوار">
+{# â”€â”€â”€ Hero â”€â”€â”€ #}
+<section class="home-hero mk-hero mk-hero--split mk-hero--pro mk-hero--cinema" aria-label="Ù…Ø¹Ø±ÙÛŒ ÙØ§ÛŒÙ„ÛŒÙ†Ú¯ Ø¯ÛŒÙˆØ§Ø±">
 
     <div class="home-hero__mobile">
         <div class="home-hero__media">
             <img
                 class="home-hero__bg-img"
                 src="{% static 'hero.webp' %}?v=2"
-                alt="مرکز فرمان بازار املاک فایلینگ دیوار"
+                alt="Ù…Ø±Ú©Ø² ÙØ±Ù…Ø§Ù† Ø¨Ø§Ø²Ø§Ø± Ø§Ù…Ù„Ø§Ú© ÙØ§ÛŒÙ„ÛŒÙ†Ú¯ Ø¯ÛŒÙˆØ§Ø±"
                 width="1200"
                 height="800"
                 decoding="async"
@@ -76,7 +76,7 @@
                     </a>
                 </div>
 
-                <ul class="home-hero__trust home-hero__trust-row" aria-label="مزایای شروع">
+                <ul class="home-hero__trust home-hero__trust-row" aria-label="Ù…Ø²Ø§ÛŒØ§ÛŒ Ø´Ø±ÙˆØ¹">
                     {% for item in home_page.hero.trust_items %}
                     <li><i class="fas fa-check" aria-hidden="true"></i><span>{{ item }}</span></li>
                     {% endfor %}
@@ -101,7 +101,7 @@
                 <span class="mk-hero-mag-shine" aria-hidden="true"></span>
             </div>
         </div>
-        {# پالس‌های ظریف AI — بیرون از bg تا زیر فیلتر/استک مخفی نشوند #}
+        {# Ù¾Ø§Ù„Ø³â€ŒÙ‡Ø§ÛŒ Ø¸Ø±ÛŒÙ AI â€” Ø¨ÛŒØ±ÙˆÙ† Ø§Ø² bg ØªØ§ Ø²ÛŒØ± ÙÛŒÙ„ØªØ±/Ø§Ø³ØªÚ© Ù…Ø®ÙÛŒ Ù†Ø´ÙˆÙ†Ø¯ #}
         <div class="mk-hero-ai-pulses" aria-hidden="true">
             <span class="mk-hero-ai-dot mk-hero-ai-dot--a"></span>
             <span class="mk-hero-ai-dot mk-hero-ai-dot--b"></span>
@@ -144,7 +144,7 @@
                             {{ home_page.hero.cta_secondary_label }}
                         </a>
                     </div>
-                    <ul class="mk-hero-trust mk-hero-trust-row" aria-label="مزایای شروع">
+                    <ul class="mk-hero-trust mk-hero-trust-row" aria-label="Ù…Ø²Ø§ÛŒØ§ÛŒ Ø´Ø±ÙˆØ¹">
                         {% for item in home_page.hero.trust_items %}
                         <li><i class="fas fa-check" aria-hidden="true"></i><span>{{ item }}</span></li>
                         {% endfor %}
@@ -157,60 +157,48 @@
 
 <div class="mk-home-body">
 
-<div class="mk-home-intro-band" aria-hidden="false">
-
-{# ─── آمار لایو ─── #}
-<section class="mk-home-stats" aria-label="آمار زنده و واقعی پلتفرم">
+{# â”€â”€â”€ Ø¢Ù…Ø§Ø± Ù„Ø§ÛŒÙˆ (Ø§Ø±ØªÙ‚Ø§ ÛŒØ§ÙØªÙ‡) â”€â”€â”€ #}
+<section class="h-stats" aria-label="Ø¢Ù…Ø§Ø± Ø²Ù†Ø¯Ù‡ Ù¾Ù„ØªÙØ±Ù…">
     <div class="container">
-        <div class="mk-stats-panel mk-reveal">
-            <header class="mk-stats-panel-head">
-                <div class="mk-stats-live">
-                    <span class="mk-stats-live-dot" aria-hidden="true"></span>
-                    <span class="mk-stats-live-label">لایو</span>
-                    <span class="mk-stats-live-text">آمار زنده و واقعی از سامانه</span>
+        <div class="h-stats__panel mk-reveal">
+            <header class="h-stats__head">
+                <div class="h-stats__live">
+                    <span class="h-stats__live-dot" aria-hidden="true"></span>
+                    <span>Ø¢Ù…Ø§Ø± Ø²Ù†Ø¯Ù‡</span>
                 </div>
                 {% if stats.uptime_label %}
-                <div class="mk-stats-uptime"
-                     title="{% if stats.uptime_started_jalali %}شروع از {{ stats.uptime_started_jalali }}{% endif %}">
-                    <i class="fas fa-clock" aria-hidden="true"></i>
-                    <span class="mk-stats-uptime-kicker">زمان کارکرد سیستم</span>
-                    <strong class="mk-stats-uptime-val">{{ stats.uptime_label }}</strong>
-                    {% if stats.uptime_started_jalali %}
-                    <span class="mk-stats-uptime-since">از {{ stats.uptime_started_jalali }}</span>
-                    {% endif %}
-                </div>
+                <span class="h-stats__uptime" style="font-size:0.75rem;font-weight:600;color:#64748b;">
+                    <i class="fas fa-clock" aria-hidden="true"></i> {{ stats.uptime_label }}
+                </span>
                 {% endif %}
             </header>
-            <div class="mk-stats-strip">
-                <article class="mk-stat-item" data-accent="violet">
-                    <span class="mk-stat-item-icon"><i class="fas fa-users"></i></span>
-                    <span class="mk-stat-item-text">
-                        <span class="mk-stat-val" data-count="{{ stats.total_users }}">{{ stats.total_users|intcomma }}</span>
-                        <span class="mk-stat-lbl">کاربر فعال</span>
+            <div class="h-stats__grid">
+                <article class="h-stats__item">
+                    <span class="h-stats__item-icon"><i class="fas fa-users" aria-hidden="true"></i></span>
+                    <span>
+                        <span class="h-stats__val" data-count="{{ stats.total_users }}">{{ stats.total_users|intcomma }}</span>
+                        <span class="h-stats__lbl">Ú©Ø§Ø±Ø¨Ø± ÙØ¹Ø§Ù„</span>
                     </span>
                 </article>
-                <span class="mk-stat-sep" aria-hidden="true"></span>
-                <article class="mk-stat-item" data-accent="sky">
-                    <span class="mk-stat-item-icon"><i class="fas fa-shopping-bag"></i></span>
-                    <span class="mk-stat-item-text">
-                        <span class="mk-stat-val" data-count="{{ stats.total_orders }}">{{ stats.total_orders|intcomma }}</span>
-                        <span class="mk-stat-lbl">خرید موفق</span>
+                <article class="h-stats__item">
+                    <span class="h-stats__item-icon"><i class="fas fa-shopping-bag" aria-hidden="true"></i></span>
+                    <span>
+                        <span class="h-stats__val" data-count="{{ stats.total_orders }}">{{ stats.total_orders|intcomma }}</span>
+                        <span class="h-stats__lbl">Ø®Ø±ÛŒØ¯ Ù…ÙˆÙÙ‚</span>
                     </span>
                 </article>
-                <span class="mk-stat-sep" aria-hidden="true"></span>
-                <article class="mk-stat-item" data-accent="emerald">
-                    <span class="mk-stat-item-icon"><i class="fas fa-key"></i></span>
-                    <span class="mk-stat-item-text">
-                        <span class="mk-stat-val" data-count="{{ stats.total_licenses }}">{{ stats.total_licenses|intcomma }}</span>
-                        <span class="mk-stat-lbl">لایسنس فعال</span>
+                <article class="h-stats__item">
+                    <span class="h-stats__item-icon"><i class="fas fa-key" aria-hidden="true"></i></span>
+                    <span>
+                        <span class="h-stats__val" data-count="{{ stats.total_licenses }}">{{ stats.total_licenses|intcomma }}</span>
+                        <span class="h-stats__lbl">Ù„Ø§ÛŒØ³Ù†Ø³ ÙØ¹Ø§Ù„</span>
                     </span>
                 </article>
-                <span class="mk-stat-sep" aria-hidden="true"></span>
-                <article class="mk-stat-item" data-accent="amber">
-                    <span class="mk-stat-item-icon"><i class="fas fa-heart"></i></span>
-                    <span class="mk-stat-item-text">
-                        <span class="mk-stat-val">{{ stats.satisfaction_rate }}<small>%</small></span>
-                        <span class="mk-stat-lbl">رضایت کاربران</span>
+                <article class="h-stats__item">
+                    <span class="h-stats__item-icon"><i class="fas fa-heart" aria-hidden="true"></i></span>
+                    <span>
+                        <span class="h-stats__val">{{ stats.satisfaction_rate }}<small>%</small></span>
+                        <span class="h-stats__lbl">Ø±Ø¶Ø§ÛŒØª Ú©Ø§Ø±Ø¨Ø±Ø§Ù†</span>
                     </span>
                 </article>
             </div>
@@ -218,12 +206,17 @@
     </div>
 </section>
 
-{# ─── یک روز عادی مشاور املاک ─── #}
-{% include 'shop/includes/day_in_life.html' %}
+{% include 'shop/includes/home_scrollytelling.html' %}
+{% include 'shop/includes/home_compare.html' %}
+{% include 'shop/includes/home_flow.html' %}
+{% include 'shop/includes/home_pillars.html' %}
 
-{# ─── پلن‌ها: رایگان vs ربات ─── #}
-<section class="mk-section mk-pricing-tiers" aria-label="پلن‌های پلتفرم">
+{# â”€â”€â”€ Ù¾Ù„Ù†â€ŒÙ‡Ø§ (ÙØ´Ø±Ø¯Ù‡) â”€â”€â”€ #}
+<section class="mk-section mk-pricing-tiers h-pricing" aria-label="Ù¾Ù„Ù†â€ŒÙ‡Ø§ÛŒ Ù¾Ù„ØªÙØ±Ù…">
     <div class="container">
+        <header class="mk-section-head mk-reveal">
+            <h2 class="mk-section-title">Ø§Ù†ØªØ®Ø§Ø¨ Ù…Ø³ÛŒØ± Ø´Ø±ÙˆØ¹</h2>
+        </header>
         <div class="mk-tier-grid mk-reveal">
             {% for tier in home_page.pricing_tiers %}
             <article class="mk-tier-card mk-tier-card--{{ tier.accent }}" data-tier="{{ tier.id }}">
@@ -246,7 +239,7 @@
                 <footer class="mk-tier-foot">
                     {% if tier.id == 'free' %}
                     {% if user.is_authenticated %}
-                    <a href="{% url 'workspace:home' %}" class="mk-tier-cta"><i class="fas fa-layer-group"></i> ورود به میزکار</a>
+                    <a href="{% url 'workspace:home' %}" class="mk-tier-cta"><i class="fas fa-layer-group"></i> ÙˆØ±ÙˆØ¯ Ø¨Ù‡ Ù…ÛŒØ²Ú©Ø§Ø±</a>
                     {% else %}
                     <a href="{% url 'register' %}" class="mk-tier-cta"><i class="fas {{ tier.cta_icon }}"></i> {{ tier.cta_label }}</a>
                     {% endif %}
@@ -260,748 +253,12 @@
     </div>
 </section>
 
-{# ─── جریان کاری ─── #}
-<section class="mk-section mk-workflow" aria-label="جریان کاری">
-    <div class="container">
-        <div class="mk-workflow-strip mk-reveal">
-            {% for step in home_page.workflow_steps %}
-            <article class="mk-workflow-step" data-accent="{{ step.accent }}">
-                <span class="mk-workflow-icon">{% include 'includes/icon_slot.html' with decor=step.decor_icon fa=step.icon only %}</span>
-                <span class="mk-workflow-text">
-                    <strong>{{ step.title }}</strong>
-                    <em>{{ step.desc }}</em>
-                </span>
-            </article>
-            {% if not forloop.last %}<span class="mk-workflow-arrow" aria-hidden="true"><i class="fas fa-chevron-left"></i></span>{% endif %}
-            {% endfor %}
-        </div>
-    </div>
-</section>
-
-{# ─── اکوسیستم میزکار (Bento) ─── #}
-<section class="mk-section mk-eco-bento">
-    <div class="container">
-        <header class="mk-section-head mk-reveal">
-            <span class="mk-section-kicker">{% decor_icon 'sparkles' size='xs' %} اکوسیستم</span>
-            <h2 class="mk-section-title">همه ابزارها، یک میزکار</h2>
-            <p class="mk-section-desc">از CRM رایگان تا تحلیل پیشرفته — ماژول‌های یکپارچه برای مشاور حرفه‌ای</p>
-        </header>
-        <div class="mk-eco-grid mk-reveal mk-reveal-stagger">
-            {% for mod in home_page.platform_modules %}
-            {% if mod.landing_url_name %}
-            <a href="{% url mod.landing_url_name %}" class="mk-eco-card-link">
-            {% endif %}
-            <article class="mk-eco-card mk-eco-card--{{ mod.size }} mk-eco-card--{{ mod.accent }}" data-mod="{{ mod.id }}">
-                <div class="mk-eco-card-top">
-                    <span class="mk-eco-icon">{% include 'includes/icon_slot.html' with decor=mod.decor_icon fa=mod.icon only %}</span>
-                    {% if mod.stat %}<span class="mk-eco-badge">{{ mod.stat }}</span>{% endif %}
-                </div>
-                <div class="mk-eco-body">
-                    <h3>{{ mod.title }}</h3>
-                    <p>{{ mod.desc }}</p>
-                </div>
-                <span class="mk-eco-glow" aria-hidden="true"></span>
-            </article>
-            {% if mod.landing_url_name %}
-            </a>
-            {% endif %}
-            {% endfor %}
-        </div>
-    </div>
-</section>
-
-</div>{# /.mk-home-intro-band #}
-
-{# ─── گالری تصویری ─── #}
-<section class="mk-section mk-visual-gallery">
-    <div class="container">
-        <header class="mk-section-head mk-reveal">
-            <span class="mk-section-kicker"><i class="fas fa-images"></i> {{ home_page.visual_gallery.kicker }}</span>
-            <h2 class="mk-section-title">{{ home_page.visual_gallery.title }}</h2>
-            <p class="mk-section-desc">{{ home_page.visual_gallery.desc }}</p>
-        </header>
-        <div class="mk-gallery-split mk-reveal mk-reveal-stagger" data-mk-gallery-root>
-            {# RTL: ستون اول = راست (۲ کارت بزرگ) · ستون دوم = چپ (۶ کارت کوچک) #}
-            <div class="mk-gallery-col mk-gallery-col--featured">
-                {% for item in home_page.visual_gallery.items %}
-                {% if item.size == 'wide' %}
-                {% include 'shop/includes/gallery_card.html' with item=item card_mod='mk-gallery-card--hero' only %}
-                {% endif %}
-                {% endfor %}
-            </div>
-            <div class="mk-gallery-col mk-gallery-col--smalls">
-                <div class="mk-gallery-sm-grid">
-                    {% for item in home_page.visual_gallery.items %}
-                    {% if item.size != 'wide' %}
-                    {% include 'shop/includes/gallery_card.html' with item=item card_mod='mk-gallery-card--compact' only %}
-                    {% endif %}
-                    {% endfor %}
-                </div>
-            </div>
-        </div>
-
-        <div class="mk-gallery-mobile mk-reveal" data-gallery-mobile aria-roledescription="carousel" aria-label="گالری اسکرین‌شات میزکار">
-            <div class="mk-gallery-mobile-glow" aria-hidden="true"></div>
-            <div class="mk-gallery-mobile-viewport" data-gallery-mobile-viewport tabindex="0">
-                <div class="mk-gallery-mobile-track" data-gallery-mobile-track>
-                    {% for item in home_page.visual_gallery.items %}
-                    <article class="mk-gallery-mobile-slide mk-gallery-card--{{ item.accent }}" data-gallery-mobile-slide data-caption="{{ item.caption }}">
-                        <div class="mk-gallery-mobile-shell">
-                            <div class="mk-gallery-mobile-chrome" aria-hidden="true">
-                                <span class="mk-gallery-mobile-dot mk-gallery-mobile-dot--close"></span>
-                                <span class="mk-gallery-mobile-dot mk-gallery-mobile-dot--min"></span>
-                                <span class="mk-gallery-mobile-dot mk-gallery-mobile-dot--max"></span>
-                                <span class="mk-gallery-mobile-url">filingdivar.ir/workspace</span>
-                            </div>
-                            <button
-                                type="button"
-                                class="mk-gallery-mobile-open"
-                                data-mk-gallery
-                                data-src="{% static item.image %}"
-                                data-caption="{{ item.caption }}"
-                                aria-label="بزرگنمایی: {{ item.caption }}"
-                            >
-                                <img
-                                    src="{% static item.image %}"
-                                    alt="{{ item.caption }}"
-                                    class="mk-gallery-mobile-img"
-                                    loading="lazy"
-                                    decoding="async"
-                                    width="800"
-                                    height="500"
-                                    draggable="false"
-                                >
-                                <span class="mk-gallery-mobile-shine" aria-hidden="true"></span>
-                                <span class="mk-gallery-mobile-lens" aria-hidden="true"><i class="fas fa-expand"></i></span>
-                            </button>
-                        </div>
-                        <p class="mk-gallery-mobile-caption">{{ item.caption }}</p>
-                    </article>
-                    {% endfor %}
-                </div>
-            </div>
-            <div class="mk-gallery-mobile-ui">
-                <div class="mk-gallery-mobile-progress" aria-hidden="true">
-                    <span class="mk-gallery-mobile-progress-fill" data-gallery-mobile-progress></span>
-                </div>
-                <div class="mk-gallery-mobile-meta">
-                    <p class="mk-gallery-mobile-label" data-gallery-mobile-label>{{ home_page.visual_gallery.items.0.caption }}</p>
-                    <span class="mk-gallery-mobile-counter" data-gallery-mobile-counter>۱ / {{ home_page.visual_gallery.items|length }}</span>
-                </div>
-                <div class="mk-gallery-mobile-dots" data-gallery-mobile-dots role="tablist" aria-label="انتخاب اسکرین‌شات"></div>
-            </div>
-        </div>
-    </div>
-</section>
-
-{# ─── پوشش سراسری ایران ─── #}
-<section class="mk-section mk-nationwide">
-    <div class="container">
-        <div class="mk-nationwide-grid mk-reveal">
-            <div class="mk-nationwide-copy">
-                <span class="mk-section-kicker"><i class="fas fa-map-marked-alt"></i> {{ home_page.nationwide.kicker }}</span>
-                <h2 class="mk-section-title mk-section-title--left">{{ home_page.nationwide.title }}</h2>
-                <p class="mk-nationwide-desc">{{ home_page.nationwide.desc }}</p>
-                <ul class="mk-nationwide-points">
-                    {% for p in home_page.nationwide.points %}
-                    <li>
-                        <span class="mk-nationwide-point-icon">{% include 'includes/icon_slot.html' with decor=p.decor_icon fa=p.icon only %}</span>
-                        <div class="mk-nationwide-point-text">
-                            <strong>{{ p.title }}</strong>
-                            <span>{{ p.desc }}</span>
-                        </div>
-                    </li>
-                    {% endfor %}
-                </ul>
-            </div>
-            <div class="mk-nationwide-visual">
-                <figure class="mk-nationwide-figure">
-                    <img
-                        src="{% static 'banner-center.webp' %}"
-                        alt="ربات استخراج دیوار در تمام شهرهای ایران"
-                        class="mk-nationwide-img"
-                        width="960"
-                        height="640"
-                        loading="lazy"
-                        decoding="async"
-                    >
-                    <span class="mk-nationwide-img-overlay" aria-hidden="true"></span>
-                </figure>
-                <div class="mk-city-marquee" data-city-marquee>
-                    <div class="mk-city-marquee-track" data-marquee-track>
-                        {% for city in home_page.nationwide.cities %}
-                        <span class="mk-city-chip">{{ city }}</span>
-                        {% endfor %}
-                        {% for city in home_page.nationwide.cities %}
-                        <span class="mk-city-chip">{{ city }}</span>
-                        {% endfor %}
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-{# ─── اسلایدر نمایش ─── #}
-<section class="mk-section mk-home-showcase">
-    <div class="container">
-        <header class="mk-section-head mk-reveal">
-            <h2 class="mk-section-title">پلتفرم یکپارچه مشاوران املاک</h2>
-            <p class="mk-section-desc">از مدیریت مشتری تا تحلیل بازار — در یک میزکار</p>
-        </header>
-
-        <div class="mk-showcase mk-reveal" data-showcase>
-            <div class="mk-showcase-viewport" data-showcase-viewport>
-                <div class="mk-showcase-track" data-showcase-track>
-                    {% for slide in home_page.showcase_slides %}
-                    <article class="mk-showcase-slide mk-showcase-slide--{{ slide.accent }}" data-showcase-slide>
-                        <div class="mk-showcase-content">
-                            <span class="mk-showcase-eyebrow"><i class="fas {{ slide.icon }}"></i> {{ slide.eyebrow }}</span>
-                            <h3 class="mk-showcase-title">{{ slide.title }}</h3>
-                            <p class="mk-showcase-desc">{{ slide.desc }}</p>
-                        </div>
-                        <div class="mk-showcase-visual mk-showcase-visual--{{ slide.visual }}{% if slide.image %} mk-showcase-visual--photo{% endif %}">
-                            {% if slide.image %}
-                            <picture class="mk-showcase-picture">
-                                <img
-                                    src="{% static slide.image %}"
-                                    alt="{{ slide.title }}"
-                                    class="mk-showcase-img"
-                                    loading="lazy"
-                                    decoding="async"
-                                    width="960"
-                                    height="540"
-                                >
-                            </picture>
-                            {% elif slide.visual == 'workspace' %}
-                            <div class="mk-mock mk-mock--dash">
-                                <span class="mk-mock-bar"></span>
-                                <span class="mk-mock-bar mk-mock-bar--short"></span>
-                                <span class="mk-mock-bar mk-mock-bar--mid"></span>
-                                <div class="mk-mock-grid">
-                                    <span></span><span></span><span></span>
-                                </div>
-                            </div>
-                            {% elif slide.visual == 'analytics' %}
-                            <div class="mk-mock mk-mock--chart">
-                                <div class="mk-mock-bars">
-                                    <span style="--h:42%"></span>
-                                    <span style="--h:68%"></span>
-                                    <span style="--h:55%"></span>
-                                    <span style="--h:82%"></span>
-                                    <span style="--h:61%"></span>
-                                </div>
-                            </div>
-                            {% elif slide.visual == 'map' %}
-                            <div class="mk-mock mk-mock--map">
-                                <span class="mk-mock-pin mk-mock-pin--1"></span>
-                                <span class="mk-mock-pin mk-mock-pin--2"></span>
-                                <span class="mk-mock-pin mk-mock-pin--3"></span>
-                            </div>
-                            {% elif slide.visual == 'tools' %}
-                            <div class="mk-mock mk-mock--tools">
-                                <span class="mk-mock-calc"><i class="fas fa-exchange-alt"></i></span>
-                                <span class="mk-mock-calc"><i class="fas fa-ruler-combined"></i></span>
-                                <span class="mk-mock-calc"><i class="fas fa-percent"></i></span>
-                            </div>
-                            {% elif slide.visual == 'crm' %}
-                            <div class="mk-mock mk-mock--crm">
-                                <span class="mk-mock-pipe"></span>
-                                <span class="mk-mock-pipe mk-mock-pipe--mid"></span>
-                                <span class="mk-mock-pipe mk-mock-pipe--short"></span>
-                                <div class="mk-mock-crm-dots">
-                                    <span></span><span></span><span></span>
-                                </div>
-                            </div>
-                            {% else %}
-                            <div class="mk-mock mk-mock--bot">
-                                <span class="mk-mock-node"></span>
-                                <span class="mk-mock-line"></span>
-                                <span class="mk-mock-node mk-mock-node--sm"></span>
-                            </div>
-                            {% endif %}
-                        </div>
-                    </article>
-                    {% endfor %}
-                </div>
-            </div>
-            <div class="mk-showcase-controls">
-                <button type="button" class="mk-showcase-btn" data-showcase-prev aria-label="اسلاید قبلی">
-                    <i class="fas fa-chevron-right"></i>
-                </button>
-                <div class="mk-showcase-dots" data-showcase-dots role="tablist" aria-label="انتخاب اسلاید"></div>
-                <button type="button" class="mk-showcase-btn" data-showcase-next aria-label="اسلاید بعدی">
-                    <i class="fas fa-chevron-left"></i>
-                </button>
-            </div>
-        </div>
-    </div>
-</section>
-
-{# ─── CRM Suite ─── #}
-<section class="mk-section mk-crm-suite">
-    <div class="container">
-        <div class="mk-crm-grid mk-reveal">
-            <div class="mk-crm-copy">
-                <span class="mk-section-kicker"><i class="fas fa-users"></i> {{ home_page.crm_suite.kicker }}</span>
-                <h2 class="mk-section-title mk-section-title--left">{{ home_page.crm_suite.title }}</h2>
-                <p class="mk-crm-desc">{{ home_page.crm_suite.desc }}</p>
-                <ul class="mk-crm-features">
-                    {% for f in home_page.crm_suite.features %}
-                    <li>
-                        <span class="mk-crm-feat-icon">{% include 'includes/icon_slot.html' with decor=f.decor_icon fa=f.icon only %}</span>
-                        <div>
-                            <strong>{{ f.title }}</strong>
-                            <span>{{ f.desc }}</span>
-                        </div>
-                    </li>
-                    {% endfor %}
-                </ul>
-                <div class="mk-crm-metrics">
-                    {% for m in home_page.crm_suite.metrics %}
-                    <span class="mk-crm-metric">
-                        <strong>{{ m.value }}</strong>
-                        <em>{{ m.label }}</em>
-                    </span>
-                    {% endfor %}
-                </div>
-                <a href="{% url 'seo_landing_real_estate_crm' %}" class="btn btn-primary mk-crm-landing-link">
-                    <i class="fas fa-arrow-left"></i> CRM مشاور املاک — راهنمای کامل
-                </a>
-            </div>
-            <div class="mk-crm-visual">
-                <figure class="mk-crm-screenshot">
-                    <img
-                        src="{% static home_page.crm_suite.image %}"
-                        alt="داشبورد CRM فایلینگ دیوار"
-                        class="mk-crm-screenshot-img"
-                        loading="lazy"
-                        decoding="async"
-                        width="960"
-                        height="600"
-                    >
-                    <span class="mk-crm-screenshot-frame" aria-hidden="true"></span>
-                    <span class="mk-crm-screenshot-badge"><i class="fas fa-gift"></i> رایگان</span>
-                </figure>
-            </div>
-        </div>
-    </div>
-</section>
-
-{# ─── امکانات ─── #}
-<section class="mk-section mk-cap-pro" id="mk-home-capabilities">
-    <div class="container">
-        <header class="mk-section-head mk-reveal">
-            <span class="mk-section-kicker">{% decor_icon 'layers' size='xs' %} میزکار</span>
-            <h2 class="mk-section-title">امکانات میزکار</h2>
-            <p class="mk-section-desc">ابزارهایی که روزانه به کار شما می‌آیند — در سه حوزه یکپارچه</p>
-            <div class="mk-cap-meta" aria-label="خلاصه امکانات">
-                <span class="mk-cap-meta-pill"><strong>۱۴+</strong> ابزار</span>
-                <span class="mk-cap-meta-pill"><strong>۳</strong> حوزه</span>
-                <span class="mk-cap-meta-pill mk-cap-meta-pill--accent"><i class="fas fa-circle-check"></i> CRM رایگان</span>
-            </div>
-        </header>
-
-        <div class="mk-cap-hub mk-reveal mk-reveal-stagger">
-            {% for group in home_page.capability_groups %}
-            <section class="mk-cap-cluster mk-cap-cluster--{{ group.id }} mk-cap-cluster--{{ group.accent }}" aria-labelledby="cap-group-{{ group.id }}">
-                <header class="mk-cap-cluster-head" id="cap-group-{{ group.id }}">
-                    <span class="mk-cap-cluster-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor=group.decor_icon fa=group.icon only %}</span>
-                    <div class="mk-cap-cluster-text">
-                        <h3>{{ group.label }}</h3>
-                        <p>{{ group.desc }}</p>
-                    </div>
-                    <span class="mk-cap-cluster-count">{{ group.items|length }} ابزار</span>
-                </header>
-                <div class="mk-cap-cluster-grid">
-                    {% if group.pillar_link %}
-                    <a href="{% url group.pillar_link.landing_url_name %}" class="mk-cap-pillar-card mk-cap-pillar-card--{{ group.accent }}">
-                        <span class="mk-cap-icon" data-accent="{{ group.accent }}"><i class="fas fa-arrow-left"></i></span>
-                        <div class="mk-cap-card-body">
-                            <h4>{{ group.pillar_link.title }}</h4>
-                            <p>{{ group.pillar_link.desc }}</p>
-                        </div>
-                    </a>
-                    {% endif %}
-                    {% for f in group.items %}
-                    <article class="mk-cap-card">
-                        <span class="mk-cap-card-num" aria-hidden="true">{{ forloop.counter|stringformat:"02d" }}</span>
-                        <span class="mk-cap-icon" data-accent="{{ group.accent }}"><i class="fas {{ f.icon }}"></i></span>
-                        <div class="mk-cap-card-body">
-                            <h4>{{ f.title }}</h4>
-                            <p>{{ f.desc }}</p>
-                        </div>
-                        <span class="mk-cap-card-glow" aria-hidden="true"></span>
-                    </article>
-                    {% endfor %}
-                </div>
-            </section>
-            {% endfor %}
-        </div>
-    </div>
-</section>
-
-{# ─── تیم و آژانس ─── #}
-<section class="mk-section mk-team-spot">
-    <div class="container">
-        <div class="mk-team-grid mk-reveal">
-            <div class="mk-team-copy">
-                <span class="mk-section-kicker"><i class="fas fa-users-gear"></i> {{ home_page.team_section.kicker }}</span>
-                <h2 class="mk-section-title mk-section-title--left">{{ home_page.team_section.title }}</h2>
-                <p class="mk-team-desc">{{ home_page.team_section.desc }}</p>
-                <ul class="mk-team-features">
-                    {% for f in home_page.team_section.features %}
-                    <li>
-                        <span class="mk-team-feat-icon"><i class="fas {{ f.icon }}"></i></span>
-                        <div>
-                            <strong>{{ f.title }}</strong>
-                            <span>{{ f.desc }}</span>
-                        </div>
-                    </li>
-                    {% endfor %}
-                </ul>
-                <div class="mk-team-metrics">
-                    {% for m in home_page.team_section.metrics %}
-                    <span class="mk-team-metric">
-                        <strong>{{ m.value }}</strong>
-                        <em>{{ m.label }}</em>
-                    </span>
-                    {% endfor %}
-                </div>
-            </div>
-            <figure class="mk-team-visual">
-                <img
-                    src="{% static home_page.team_section.image %}"
-                    alt="مدیریت تیم آژانس املاک"
-                    class="mk-team-img"
-                    loading="lazy"
-                    decoding="async"
-                    width="960"
-                    height="600"
-                >
-                <span class="mk-team-img-glow" aria-hidden="true"></span>
-            </figure>
-        </div>
-    </div>
-</section>
-
-{# ─── مقایسه ─── #}
-<section class="mk-section mk-compare-pro mk-compare-visual">
-    <div class="container">
-        <h2 class="mk-cmp-a11y">تفاوت در عمل — فایلینگ دیوار در مقابل روش سنتی</h2>
-
-        <figure class="mk-cmp-showcase mk-reveal">
-            <div class="mk-cmp-showcase-ambience" aria-hidden="true">
-                <span class="mk-cmp-showcase-orb mk-cmp-showcase-orb--cyan"></span>
-                <span class="mk-cmp-showcase-orb mk-cmp-showcase-orb--violet"></span>
-                <span class="mk-cmp-showcase-grid"></span>
-            </div>
-
-            <div class="mk-cmp-showcase-shell">
-                <div class="mk-cmp-showcase-bevel" aria-hidden="true"></div>
-                <button
-                    type="button"
-                    class="mk-cmp-showcase-open"
-                    data-mk-gallery
-                    data-src="{% static 'TAFAVOT.png' %}"
-                    data-caption="مقایسه فایلینگ دیوار با روش سنتی — سرعت، دقت، تحلیل، زمان‌بندی"
-                    aria-label="بزرگنمایی اینفوگرافیک مقایسه"
-                >
-                    <span class="mk-cmp-showcase-media">
-                        <img
-                            src="{% static 'TAFAVOT.png' %}"
-                            alt="اینفوگرافیک مقایسه: فایلینگ دیوار در برابر روش سنتی در چهار بعد سرعت، دقت، تحلیل و زمان‌بندی"
-                            class="mk-cmp-showcase-img"
-                            loading="lazy"
-                            decoding="async"
-                            width="1200"
-                            height="675"
-                        >
-                        <span class="mk-cmp-showcase-shine" aria-hidden="true"></span>
-                        <span class="mk-cmp-showcase-lens" aria-hidden="true"></span>
-                    </span>
-                    <span class="mk-cmp-showcase-hover">
-                        <i class="fas fa-expand-alt" aria-hidden="true"></i>
-                        <span>مشاهده بزرگ</span>
-                    </span>
-                </button>
-            </div>
-        </figure>
-    </div>
-</section>
-
-{# ─── داده‌ها ─── #}
-<section class="mk-section mk-data-atlas">
-    <div class="container">
-        <header class="mk-section-head mk-data-head mk-reveal">
-            <span class="mk-section-kicker"><i class="fas fa-gem"></i> ساختار داده</span>
-            <h2 class="mk-section-title">داده‌های استخراج‌شده</h2>
-            <p class="mk-section-desc">هر آگهی با جزئیات کامل ثبت می‌شود — آماده تحلیل و CRM</p>
-            <div class="mk-data-head-strip" aria-hidden="true">
-                <span><i class="fas fa-table-cells"></i> {{ home_page.data_sample.fields_count }} فیلد</span>
-                <span class="mk-data-head-dot"></span>
-                <span><i class="fas fa-file-export"></i> {% for fmt in home_page.data_sample.formats %}{{ fmt }}{% if not forloop.last %} · {% endif %}{% endfor %}</span>
-            </div>
-        </header>
-
-        <div class="mk-data-theater mk-reveal">
-            <div class="mk-data-theater-bg" aria-hidden="true">
-                <span class="mk-data-mesh"></span>
-                <span class="mk-data-glow mk-data-glow--a"></span>
-                <span class="mk-data-glow mk-data-glow--b"></span>
-                <span class="mk-data-glow mk-data-glow--c"></span>
-            </div>
-
-            <div class="mk-data-layout">
-                <article class="mk-data-record" aria-label="نمونه آگهی استخراج‌شده">
-                    <span class="mk-data-record-ring" aria-hidden="true"></span>
-                    <span class="mk-data-record-scan" aria-hidden="true"></span>
-
-                    <div class="mk-data-terminal">
-                        <span class="mk-data-terminal-dots" aria-hidden="true"><span></span><span></span><span></span></span>
-                        <code class="mk-data-terminal-file">record_{{ home_page.data_sample.id }}.json</code>
-                        <span class="mk-data-terminal-live"><span class="mk-data-pulse"></span> SYNC</span>
-                    </div>
-
-                    <div class="mk-data-summit">
-                        <div class="mk-data-summit-main">
-                            <div class="mk-data-badges">
-                                <span class="mk-data-badge mk-data-badge--ok">
-                                    <i class="fas fa-circle-check" aria-hidden="true"></i>
-                                    {{ home_page.data_sample.badge }}
-                                </span>
-                                {% if home_page.data_sample.type %}
-                                <span class="mk-data-badge mk-data-badge--type">{{ home_page.data_sample.type }}</span>
-                                {% endif %}
-                            </div>
-                            <div class="mk-data-title-row">
-                                <h3 class="mk-data-title">{{ home_page.data_sample.title }}</h3>
-                                <span class="mk-data-id">#{{ home_page.data_sample.id }}</span>
-                            </div>
-                        </div>
-
-                        <div class="mk-data-monument">
-                            <span class="mk-data-monument-halo" aria-hidden="true"></span>
-                            <span class="mk-data-monument-label">{{ home_page.data_sample.price_display.label }}</span>
-                            <div class="mk-data-monument-price">
-                                <span class="mk-data-monument-val">{{ home_page.data_sample.price_display.amount }}</span>
-                                <span class="mk-data-monument-unit">{{ home_page.data_sample.price_display.unit }}</span>
-                            </div>
-                            <ul class="mk-data-monument-facts">
-                                {% for fact in home_page.data_sample.quick_facts %}
-                                <li><i class="fas {{ fact.icon }}" aria-hidden="true"></i>{{ fact.value }}</li>
-                                {% endfor %}
-                            </ul>
-                        </div>
-                    </div>
-
-                    <blockquote class="mk-data-quote">
-                        <span class="mk-data-quote-mark" aria-hidden="true"><i class="fas fa-quote-right"></i></span>
-                        <div>
-                            <span class="mk-data-quote-label">توضیحات</span>
-                            <p>{{ home_page.data_sample.narrative }}</p>
-                        </div>
-                    </blockquote>
-
-                    <div class="mk-data-bento">
-                        {% for cluster in home_page.data_sample.clusters %}
-                        <section
-                            class="mk-data-bento-cell{% if forloop.counter == 2 or forloop.counter == 4 %} mk-data-bento-cell--wide{% endif %}{% if forloop.counter == 2 %} mk-data-bento-cell--map{% endif %}"
-                            data-accent="{{ cluster.accent }}"
-                        >
-                            <header class="mk-data-bento-head">
-                                <span class="mk-data-bento-icon">{% include 'includes/icon_slot.html' with decor=cluster.decor_icon fa=cluster.icon only %}</span>
-                                <h4>{{ cluster.title }}</h4>
-                                {% if forloop.counter == 2 %}
-                                <span class="mk-data-map-pin" aria-hidden="true"><i class="fas fa-location-crosshairs"></i></span>
-                                {% endif %}
-                            </header>
-                            <dl class="mk-data-bento-fields">
-                                {% for field in cluster.fields %}
-                                <div class="mk-data-bento-field{% if field.mono %} is-mono{% endif %}">
-                                    <dt>{{ field.label }}</dt>
-                                    <dd>{{ field.value }}</dd>
-                                </div>
-                                {% endfor %}
-                            </dl>
-                        </section>
-                        {% endfor %}
-                    </div>
-
-                    <div class="mk-data-amenity-bar">
-                        <span class="mk-data-amenity-label"><i class="fas fa-sparkles" aria-hidden="true"></i> امکانات</span>
-                        <div class="mk-data-amenity-tags">
-                            {% for tag in home_page.data_sample.amenity_tags %}
-                            <span>{{ tag }}</span>
-                            {% endfor %}
-                        </div>
-                    </div>
-
-                    <footer class="mk-data-record-foot">
-                        <span class="mk-data-foot-badge">
-                            <i class="fas fa-database" aria-hidden="true"></i>
-                            {{ home_page.data_sample.fields_count }} فیلد ثبت‌شده
-                        </span>
-                        <div class="mk-data-export-btns">
-                            {% for fmt in home_page.data_sample.formats %}
-                            <span class="mk-data-export-btn mk-data-export-btn--decor">
-                                {% if fmt == 'Excel' %}{% decor_icon 'file_text' size='xs' %}{% else %}{% decor_icon 'download' size='xs' %}{% endif %}
-                                {{ fmt }}
-                            </span>
-                            {% endfor %}
-                        </div>
-                    </footer>
-                </article>
-
-                <aside class="mk-data-satellite" aria-label="انواع معاملات">
-                    <div class="mk-data-radar" aria-hidden="true">
-                        <span class="mk-data-radar-ring mk-data-radar-ring--a"></span>
-                        <span class="mk-data-radar-ring mk-data-radar-ring--b"></span>
-                        <span class="mk-data-radar-core">{% decor_icon 'layers' size='sm' %}</span>
-                    </div>
-
-                    <header class="mk-data-satellite-head">
-                        <h3>انواع معاملات</h3>
-                        <p>پوشش کامل دسته‌بندی‌های املاک در دیوار</p>
-                    </header>
-
-                    <ol class="mk-data-tx-list">
-                        {% for tx in home_page.transaction_types %}
-                        <li class="mk-data-tx-item" data-accent="{{ tx.accent }}">
-                            <span class="mk-data-tx-num" aria-hidden="true">{{ forloop.counter|stringformat:"02d" }}</span>
-                            <span class="mk-data-tx-icon"><i class="fas {{ tx.icon }}" aria-hidden="true"></i></span>
-                            <span class="mk-data-tx-label">{{ tx.label }}</span>
-                        </li>
-                        {% endfor %}
-                    </ol>
-                </aside>
-            </div>
-        </div>
-    </div>
-</section>
-
-{# ─── محصول ربات ─── #}
-{% if bot_product %}
-<section class="mk-section mk-bot-spot">
-    <div class="container">
-        <div class="mk-bot-shell mk-reveal">
-            <div class="mk-bot-aurora" aria-hidden="true">
-                <span class="mk-bot-aurora-blob mk-bot-aurora-blob--a"></span>
-                <span class="mk-bot-aurora-blob mk-bot-aurora-blob--b"></span>
-            </div>
-
-            <div class="mk-bot-grid">
-                <div class="mk-bot-copy">
-                    <header class="mk-bot-head">
-                        <span class="mk-bot-eyebrow">{{ home_page.bot_spotlight.eyebrow }}</span>
-                        <h2 class="mk-bot-title">{{ bot_product.title }}</h2>
-                        <p class="mk-bot-lead">{{ bot_product.short_description }}</p>
-                    </header>
-
-                    <ol class="mk-bot-pipeline">
-                        {% for step in home_page.bot_spotlight.flow %}
-                        {% cycle 'violet' 'sky' 'emerald' as bot_accent silent %}
-                        <li class="mk-bot-pipeline-step" data-accent="{{ bot_accent }}">
-                            <span class="mk-bot-pipeline-rail" aria-hidden="true"></span>
-                            <span class="mk-bot-pipeline-num">{{ forloop.counter|stringformat:"02d" }}</span>
-                            <span class="mk-bot-pipeline-icon">{% include 'includes/icon_slot.html' with decor=step.decor_icon fa=step.icon only %}</span>
-                            <span class="mk-bot-pipeline-text">
-                                {{ step.text }}{% if step.code %} <code>{{ step.code }}</code>{% endif %}
-                            </span>
-                        </li>
-                        {% endfor %}
-                    </ol>
-
-                    <a href="{% url 'license_guide' %}" class="mk-bot-guide">
-                        <i class="fas fa-book-open" aria-hidden="true"></i>
-                        {{ home_page.bot_spotlight.guide_label }}
-                        <i class="fas fa-arrow-left" aria-hidden="true"></i>
-                    </a>
-                </div>
-
-                <aside class="mk-bot-dock">
-                    <span class="mk-bot-dock-watermark" aria-hidden="true"><i class="fas fa-robot"></i></span>
-                    <div class="mk-bot-dock-inner">
-                        {% with plan=bot_product.plans.first %}
-                        {% if plan %}
-                        <div class="mk-bot-price">
-                            <span class="mk-bot-price-label">شروع از</span>
-                            <div class="mk-bot-price-line">
-                                <span class="mk-bot-price-val">{{ plan.price|currency }}</span>
-                                <span class="mk-bot-price-unit">تومان</span>
-                            </div>
-                        </div>
-                        {% endif %}
-                        {% endwith %}
-                        <ul class="mk-bot-dock-perks">
-                            <li><i class="fas fa-check" aria-hidden="true"></i> لایسنس ماهانه و فصلی</li>
-                            <li><i class="fas fa-check" aria-hidden="true"></i> نصب روی ویندوز</li>
-                            <li><i class="fas fa-check" aria-hidden="true"></i> اتصال به میزکار</li>
-                        </ul>
-                        <a href="{% url 'product_detail' bot_product.slug %}" class="mk-bot-cta btn btn-primary">
-                            <i class="fas fa-robot" aria-hidden="true"></i>
-                            مشاهده ربات
-                        </a>
-                    </div>
-                </aside>
-            </div>
-        </div>
-    </div>
-</section>
-{% endif %}
-
-{# ─── آموزش ─── #}
-<section class="mk-section mk-edu-cta">
-    <div class="container">
-        <article class="mk-edu-shell mk-reveal">
-            <div class="mk-edu-copy">
-                <span class="mk-edu-kicker"><i class="fas fa-graduation-cap"></i> {{ home_page.education_cta.kicker }}</span>
-                <h2 class="mk-edu-title">{{ home_page.education_cta.title }}</h2>
-                <p class="mk-edu-desc">{{ home_page.education_cta.desc }}</p>
-                <div class="mk-edu-topics">
-                    {% for topic in home_page.education_cta.topics %}
-                    <span class="mk-edu-topic">{{ topic }}</span>
-                    {% endfor %}
-                </div>
-                <div class="mk-edu-meta">
-                    <span class="mk-edu-stat"><strong>{{ home_page.education_cta.steps_count }}</strong> گام آموزشی</span>
-                    <span class="mk-edu-stat"><i class="fas fa-image"></i> راهنمای تصویری</span>
-                </div>
-                <div class="mk-edu-actions">
-                    <a href="{% url 'education' %}" class="mk-edu-btn">
-                        <i class="fas fa-book-open"></i>
-                        ورود به مرکز آموزش
-                        <i class="fas fa-arrow-left"></i>
-                    </a>
-                    <a href="{% url 'public_academy_playlist' %}" class="mk-edu-btn mk-edu-btn--ghost">
-                        <i class="fas fa-play"></i>
-                        {{ home_page.education_cta.academy_label }}
-                    </a>
-                </div>
-            </div>
-            <figure class="mk-edu-visual">
-                <img
-                    src="{% static home_page.education_cta.image %}"
-                    alt="راهنمای نصب ربات استخراج"
-                    class="mk-edu-img"
-                    loading="lazy"
-                    decoding="async"
-                    width="800"
-                    height="500"
-                >
-                <span class="mk-edu-visual-ring" aria-hidden="true"></span>
-            </figure>
-        </article>
-    </div>
-</section>
-
-{# ─── FAQ ─── #}
-<section class="mk-section mk-faq-min">
+{# â”€â”€â”€ FAQ (ÙØ´Ø±Ø¯Ù‡) â”€â”€â”€ #}
+<section class="mk-section mk-faq-min h-faq">
     <div class="container mk-faq-wrap">
         <header class="mk-faq-intro mk-reveal">
             <span class="mk-faq-eyebrow">{{ home_page.faq_section.eyebrow }}</span>
             <h2 class="mk-faq-title">{{ home_page.faq_section.title }}</h2>
-            <p class="mk-faq-desc">{{ home_page.faq_section.desc }}</p>
         </header>
         <div class="mk-faq-panel mk-reveal" data-faq>
             {% for faq in home_page.faqs %}
@@ -1018,32 +275,7 @@
     </div>
 </section>
 
-{# ─── CTA ─── #}
-<section class="mk-section mk-cta-min">
-    <div class="container">
-        <article class="mk-cta-card mk-reveal">
-            <div class="mk-cta-main">
-                <h2 class="mk-cta-title">{{ home_page.cta_section.title }}</h2>
-                <p class="mk-cta-desc">{{ home_page.cta_section.desc }}</p>
-            </div>
-            <div class="mk-cta-actions">
-                {% if user.is_authenticated %}
-                <a href="{% url 'workspace:home' %}" class="mk-cta-btn mk-cta-btn--primary">
-                    <i class="fas fa-table-columns"></i> ورود به میزکار
-                </a>
-                {% else %}
-                <a href="{% url 'register' %}" class="mk-cta-btn mk-cta-btn--primary">
-                    <i class="fas fa-user-plus"></i> ثبت‌نام
-                </a>
-                <a href="{% url 'login' %}" class="mk-cta-btn mk-cta-btn--ghost">ورود</a>
-                {% endif %}
-                <a href="{% url 'product_list' %}" class="mk-cta-btn mk-cta-btn--line">
-                    <i class="fas fa-robot"></i> ربات استخراج
-                </a>
-            </div>
-        </article>
-    </div>
-</section>
+{% include 'shop/includes/home_final_cta.html' %}
 
 </div>{# /.mk-home-body #}
 
@@ -1051,4 +283,5 @@
 
 {% block extra_js %}
 <script src="{% static 'js/mizkar-home.js' %}?v=14" defer></script>
+<script src="{% static 'js/home-story.js' %}?v=1" defer></script>
 {% endblock %}

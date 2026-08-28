@@ -1,0 +1,134 @@
+{% load static %}
+{# Interactive pinned scrollytelling — Desktop sticky / Mobile vertical #}
+<section class="h-story" id="mk-day-story" data-h-story aria-labelledby="h-story-title">
+    <div class="container h-story__hook mk-reveal">
+        <span class="h-story__kicker"><i class="fas fa-film" aria-hidden="true"></i> {{ home_page.story_hook.kicker }}</span>
+        <h2 class="h-story__title" id="h-story-title">{{ home_page.story_hook.title }}</h2>
+        <p class="h-story__sub">{{ home_page.story_hook.subtitle }}</p>
+    </div>
+
+    <div class="h-story__rail" data-h-story-rail style="--scene-count: {{ home_page.story_scenes|length }}">
+        <div class="h-story__pin" data-h-story-pin>
+            <div class="container">
+            <nav class="h-story__progress" aria-label="مراحل داستان">
+                {% for scene in home_page.story_scenes %}
+                <button
+                    type="button"
+                    class="h-story__progress-step{% if forloop.first %} is-active{% endif %}"
+                    data-h-progress="{{ forloop.counter0 }}"
+                    aria-label="مرحله {{ scene.step }}: {{ scene.title }}"
+                    aria-current="{% if forloop.first %}step{% else %}false{% endif %}"
+                >
+                    <span class="h-story__progress-num">{{ scene.step }}</span>
+                </button>
+                {% if not forloop.last %}<span class="h-story__progress-line" aria-hidden="true"></span>{% endif %}
+                {% endfor %}
+            </nav>
+
+            <div class="h-story__stage" data-h-story-stage>
+                {% for scene in home_page.story_scenes %}
+                <article
+                    class="h-story__scene{% if forloop.first %} is-active{% endif %}"
+                    data-h-scene="{{ forloop.counter0 }}"
+                    data-accent="{{ scene.accent }}"
+                    aria-hidden="{% if forloop.first %}false{% else %}true{% endif %}"
+                >
+                    <div class="h-story__copy">
+                        <span class="h-story__step">{{ scene.step }}</span>
+                        <h3 class="h-story__scene-title">{{ scene.title }}</h3>
+                        <p class="h-story__pain">{{ scene.pain }}</p>
+                        <div class="h-story__solution">
+                            <span class="h-story__solution-badge"><i class="fas fa-bolt" aria-hidden="true"></i> {{ scene.solution_badge }}</span>
+                            <p>{{ scene.solution }}</p>
+                        </div>
+                    </div>
+                    <figure class="h-story__visual">
+                        <div class="h-story__visual-pain">
+                            <img
+                                src="{% static scene.pain_image %}"
+                                alt=""
+                                width="640"
+                                height="480"
+                                loading="lazy"
+                                decoding="async"
+                                class="h-story__img"
+                            >
+                            <span class="h-story__visual-tag h-story__visual-tag--pain">درد</span>
+                        </div>
+                        <div class="h-story__visual-fix">
+                            <div class="h-story__chrome" aria-hidden="true">
+                                <span></span><span></span><span></span>
+                                <em>filingdivar.ir</em>
+                            </div>
+                            <img
+                                src="{% static scene.solution_image %}"
+                                alt="{{ scene.solution }}"
+                                width="640"
+                                height="400"
+                                loading="lazy"
+                                decoding="async"
+                                class="h-story__img"
+                            >
+                            <span class="h-story__visual-tag h-story__visual-tag--fix">راه‌حل</span>
+                        </div>
+                    </figure>
+                </article>
+                {% endfor %}
+            </div>
+
+            <div class="h-story__bar" aria-hidden="true">
+                <span class="h-story__bar-fill" data-h-story-bar></span>
+            </div>
+            </div>{# /.container #}
+        </div>
+
+        <div class="h-story__sentinels" aria-hidden="true">
+            {% for scene in home_page.story_scenes %}
+            <div class="h-story__sentinel" data-h-sentinel="{{ forloop.counter0 }}"></div>
+            {% endfor %}
+        </div>
+    </div>
+
+    {# Mobile vertical cards (same content, no pin) #}
+    <div class="h-story__mobile" data-h-story-mobile>
+        {% for scene in home_page.story_scenes %}
+        <article class="h-story__mobile-card" data-accent="{{ scene.accent }}">
+            <header class="h-story__mobile-head">
+                <span class="h-story__step">{{ scene.step }}</span>
+                <h3>{{ scene.title }}</h3>
+            </header>
+            <p class="h-story__pain">{{ scene.pain }}</p>
+            <figure class="h-story__mobile-fig">
+                <img src="{% static scene.solution_image %}" alt="{{ scene.solution }}" width="640" height="400" loading="lazy" decoding="async">
+            </figure>
+            <p class="h-story__mobile-fix"><i class="fas fa-check" aria-hidden="true"></i> {{ scene.solution }}</p>
+        </article>
+        {% endfor %}
+    </div>
+</section>
+
+{# Cinematic reveal #}
+<section class="h-climax" data-h-climax aria-labelledby="h-climax-title">
+    <div class="h-climax__veil" aria-hidden="true"></div>
+    <div class="container h-climax__inner mk-reveal">
+        <span class="h-climax__time"><i class="fas fa-moon" aria-hidden="true"></i> {{ home_page.story_climax.time }}</span>
+        <h2 class="h-climax__title" id="h-climax-title">{{ home_page.story_climax.title }}</h2>
+        <p class="h-climax__sub">{{ home_page.story_climax.subtitle }}</p>
+        <p class="h-climax__line">{{ home_page.story_climax.line }}</p>
+        <figure class="h-climax__product">
+            <div class="h-story__chrome" aria-hidden="true">
+                <span></span><span></span><span></span>
+                <em>داشبورد میزکار</em>
+            </div>
+            <img
+                src="{% static home_page.story_climax.image %}"
+                alt="{{ home_page.story_climax.image_alt }}"
+                width="1200"
+                height="750"
+                loading="lazy"
+                decoding="async"
+                class="h-climax__img"
+            >
+        </figure>
+    </div>
+</section>

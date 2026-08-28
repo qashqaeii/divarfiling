@@ -1155,7 +1155,9 @@ def product_rating_display_stats():
 
 # ضریب نمایش آمار صفحه اصلی (عدد واقعی دیتابیس × این مقدار)
 HOME_STATS_DISPLAY_MULTIPLIER = 3
-HOME_STATS_CACHE_KEY = 'shop:home_display_stats:v2'
+# ضریب اضافه فقط برای «لایسنس فعال» روی مقدار نمایشی (×2 = دو برابر عدد فعلی)
+HOME_STATS_LICENSES_EXTRA_MULTIPLIER = 2
+HOME_STATS_CACHE_KEY = 'shop:home_display_stats:v3'
 HOME_STATS_CACHE_TTL = 60  # ثانیه — آمار لایو با کش کوتاه
 
 
@@ -1247,7 +1249,7 @@ def home_display_stats():
     stats = {
         'total_users': users_raw * mult,
         'total_orders': orders_raw * mult,
-        'total_licenses': licenses_raw * mult,
+        'total_licenses': licenses_raw * mult * HOME_STATS_LICENSES_EXTRA_MULTIPLIER,
         'satisfaction_rate': _home_satisfaction_rate(),
         'is_live': True,
         'display_multiplier': mult,
@@ -1293,6 +1295,149 @@ def home_page_content():
             'cta_bot_label': 'فعال‌سازی ربات استخراج',
             'cta_bot_icon': 'fa-robot',
         },
+        'story_hook': {
+            'kicker': 'داستان یک روز',
+            'title': 'هر درد، یک راه‌حل در میزکار',
+            'subtitle': 'اسکرول کن — محصول را در عمل ببین',
+        },
+        'story_scenes': [
+            {
+                'step': '01',
+                'title': 'دنبال فایل مالک بودی؟',
+                'pain': 'بین ده‌ها آگهی دنبال فایل واقعی می‌گردی',
+                'solution': 'تشخیص و فیلتر فایل مناسب',
+                'solution_badge': 'سیگنال آگهی‌دهنده',
+                'pain_image': 'images/story-owner-search.webp',
+                'solution_image': 'images/story-owner-search-rahkar.webp',
+                'accent': 'violet',
+            },
+            {
+                'step': '02',
+                'title': 'مشتری منتظره',
+                'pain': 'نیاز مشتری بین دفتر، اکسل و واتساپ گم می‌شود',
+                'solution': 'CRM + پیشنهاد فایل مناسب',
+                'solution_badge': 'تطبیق هوشمند',
+                'pain_image': 'images/story-customer-office.webp',
+                'solution_image': 'images/story-customer-office-rahkar.webp',
+                'accent': 'sky',
+            },
+            {
+                'step': '03',
+                'title': 'یادت رفت تماس بگیری',
+                'pain': 'یک پیگیری فراموش‌شده می‌تواند یک معامله را از بین ببرد',
+                'solution': 'یادآوری + صف کار امروز',
+                'solution_badge': 'صف امروز',
+                'pain_image': 'images/story-followup-missed.webp',
+                'solution_image': 'images/story-followup-missed-rahkar.webp',
+                'accent': 'amber',
+            },
+            {
+                'step': '04',
+                'title': 'فایل داری ولی پیداش نمی‌کنی',
+                'pain': 'فایل‌ها زیاد شده‌اند اما پیدا کردن فایل مناسب زمان می‌برد',
+                'solution': 'جستجوی هوشمند و فیلتر',
+                'solution_badge': 'فیلتر پیشرفته',
+                'pain_image': 'images/story-files-chaos.webp',
+                'solution_image': 'images/story-files-chaos-rahkar.webp',
+                'accent': 'rose',
+            },
+            {
+                'step': '05',
+                'title': 'فایل‌ها سرمایه تو هستند',
+                'pain': 'اطلاعات مشتری و فایل نباید بدون کنترل در دسترس همه باشد',
+                'solution': 'سطح دسترسی · مدیریت تیم · امنیت اطلاعات',
+                'solution_badge': 'کنترل دسترسی',
+                'pain_image': 'images/story-security-vault.webp',
+                'solution_image': 'images/story-security-vault-rahkar.webp',
+                'accent': 'emerald',
+            },
+        ],
+        'story_climax': {
+            'time': 'آخر شب',
+            'title': 'امروز واقعاً فروختی؟',
+            'subtitle': 'یا فقط دنبال فایل بودی؟',
+            'line': 'کار اصلی تو فروش است — نه جستجو.',
+            'image': 'images/help-workspace-home.png',
+            'image_alt': 'داشبورد میزکار فایلینگ دیوار',
+        },
+        'before_after': {
+            'title': 'وقتشه روش کارت را عوض کنی',
+            'before_label': 'قبل',
+            'after_label': 'با فایلینگ دیوار',
+            'before_items': [
+                'جستجوی چندساعته بین آگهی‌ها',
+                'دفتر + Excel + WhatsApp',
+                'پیگیری فراموش‌شده',
+                'فایل‌های پراکنده',
+            ],
+            'after_items': [
+                'فایل مناسب در چند ثانیه',
+                'یک میزکار یکپارچه',
+                'یادآوری و صف امروز',
+                'جستجوی هوشمند',
+            ],
+        },
+        'product_flow': {
+            'kicker': 'جریان کار',
+            'title': 'از استخراج تا معامله',
+            'steps': [
+                {'icon': 'fa-robot', 'title': 'استخراج', 'desc': 'فایل‌ها را پیدا کن', 'accent': 'violet'},
+                {'icon': 'fa-database', 'title': 'فایلینگ', 'desc': 'مرتب و فیلتر کن', 'accent': 'indigo'},
+                {'icon': 'fa-chart-line', 'title': 'تحلیل', 'desc': 'بازار را بفهم', 'accent': 'emerald'},
+                {'icon': 'fa-map', 'title': 'نقشه', 'desc': 'موقعیت را ببین', 'accent': 'sky'},
+                {'icon': 'fa-users', 'title': 'CRM', 'desc': 'مشتری را پیگیری کن', 'accent': 'violet'},
+                {'icon': 'fa-handshake', 'title': 'معامله', 'desc': 'فرصت را به قرارداد تبدیل کن', 'accent': 'amber'},
+            ],
+        },
+        'product_pillars': [
+            {
+                'id': 'filing',
+                'title': 'فایلینگ هوشمند',
+                'outcome': 'فایل مناسب را سریع پیدا کن — نه بعد از ساعت‌ها جستجو',
+                'image': 'images/help-map-view.png',
+                'accent': 'indigo',
+                'landing_slug': 'filing',
+                'features': [
+                    'فیلتر مالک و مشاور',
+                    'جستجوی پیشرفته',
+                    'ساختار استان / شهر / محله',
+                ],
+            },
+            {
+                'id': 'crm',
+                'title': 'CRM املاک',
+                'outcome': 'مشتری را از سرنخ تا قرارداد — بدون فراموشی',
+                'image': 'images/help-crm-dashboard.png',
+                'accent': 'violet',
+                'landing_url_name': 'seo_landing_real_estate_crm',
+                'features': [
+                    'قیف وضعیت',
+                    'صف کار امروز',
+                    'تطبیق فایل و مشتری',
+                ],
+            },
+            {
+                'id': 'market',
+                'title': 'تحلیل بازار',
+                'outcome': 'بازار را ببین — قبل از اینکه رقیب جلو بزند',
+                'image': 'images/help-analyze-dashboard.png',
+                'accent': 'emerald',
+                'landing_slug': 'market-intelligence',
+                'features': [
+                    'گزارش چندلایه',
+                    'قیمت متر و روند',
+                    'مقایسه دوره‌ای',
+                ],
+            },
+        ],
+        'extra_chips': [
+            {'label': 'اتوماسیون', 'icon': 'fa-robot'},
+            {'label': 'نقشه Pro', 'icon': 'fa-map'},
+            {'label': 'تقویم', 'icon': 'fa-calendar'},
+            {'label': 'Compare', 'icon': 'fa-scale-balanced'},
+            {'label': 'مدیریت تیم', 'icon': 'fa-users-gear'},
+            {'label': 'اشتراک فایل', 'icon': 'fa-share-nodes'},
+        ],
         'pricing_tiers': [
             {
                 'id': 'free',
@@ -1790,8 +1935,11 @@ def home_page_content():
             'desc': 'پاسخ سوالات رایج قبل از شروع کار با فایلینگ دیوار',
         },
         'cta_section': {
-            'title': 'آماده تجربه میزکار هستید؟',
-            'desc': 'CRM و میزکار رایگان است — همین حالا شروع کنید. ربات استخراج را هر زمان اضافه کنید.',
+            'title': 'اولین فایل را همین امروز وارد میزکارت کن.',
+            'desc': 'CRM رایگان — بدون نصب. ربات استخراج را هر زمان اضافه کن.',
+            'primary_label': 'شروع رایگان',
+            'secondary_label': 'مشاهده امکانات',
+            'secondary_href': '#h-pillars',
         },
         'faqs': [
             {

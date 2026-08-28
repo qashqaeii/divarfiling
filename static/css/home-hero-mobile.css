@@ -288,11 +288,20 @@
 
     /* Subtitle */
     .home-hero__subtitle {
-        margin: 0 0 1.25rem;
+        margin: 0 0 0.45rem;
         font-size: 0.92rem;
         font-weight: 500;
         line-height: 1.7;
         color: var(--hh-subtitle);
+        max-width: 100%;
+    }
+
+    .home-hero__subtitle-note {
+        margin: 0 0 1.25rem;
+        font-size: 0.82rem;
+        font-weight: 500;
+        line-height: 1.65;
+        color: var(--hh-subtitle-note, rgba(148, 163, 184, 0.92));
         max-width: 100%;
     }
 
@@ -398,18 +407,37 @@
         opacity: 0.7;
     }
 
-    .home-hero__trust {
+    .home-hero__trust-row {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.35rem 0.65rem;
+        list-style: none;
         margin: 0;
         padding: 0.15rem 0.1rem 0;
-        font-size: 0.75rem;
-        font-weight: 600;
-        line-height: 1.55;
-        color: #64748b;
-        text-align: center;
     }
 
-    html.mk-public[data-theme="dark"] .home-hero__trust {
-        color: #94a3b8;
+    .home-hero__trust-row li {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.28rem;
+        font-size: 0.72rem;
+        font-weight: 600;
+        line-height: 1.4;
+        color: #059669;
+    }
+
+    .home-hero__trust-row li i {
+        font-size: 0.62rem;
+        color: #34d399;
+    }
+
+    html.mk-public[data-theme="dark"] .home-hero__trust-row li {
+        color: #6ee7b7;
+    }
+
+    html.mk-public[data-theme="dark"] .home-hero__trust-row li i {
+        color: #34d399;
     }
 
     /* Feature cards — 2-column grid */

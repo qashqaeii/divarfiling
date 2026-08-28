@@ -1273,17 +1273,22 @@ def home_page_content():
             'title_line2': 'به معامله تبدیل می‌شوند.',
             'title': 'جایی که فرصت‌ها… به معامله تبدیل می‌شوند.',
             'subtitle': (
-                'فایلینگ دیوار با تحلیل هوشمند بازار، فرصت‌های ارزشمند را از میان هزاران آگهی کشف می‌کند '
-                'و پیش از دیگران در اختیار شما قرار می‌دهد؛ تا تمرکزتان روی بستن قرارداد باشد، نه جستجوی فایل.'
+                'فایل مناسب را سریع پیدا کن، مشتری‌ها را منظم پیگیری کن و تغییرات بازار را ببین؛ '
+                'همه در یک میزکار.'
             ),
-            'trust': 'رایگان شروع کنید · بدون پیچیدگی فنی · مخصوص بازار ایران',
+            'subtitle_secondary': (
+                'استخراج آگهی، فایلینگ، CRM و تحلیل بازار املاک در یک سیستم یکپارچه.'
+            ),
+            'trust_items': [
+                'شروع رایگان',
+                'بدون نیاز به نصب',
+                'مخصوص بازار املاک ایران',
+            ],
             'cta_primary_label': 'ورود به میزکار',
             'cta_primary_icon': 'fa-layer-group',
-            'cta_guest_label': 'شروع کار حرفه‌ای',
+            'cta_guest_label': 'شروع رایگان',
             'cta_guest_icon': 'fa-rocket',
-            'cta_academy_label': 'ویدیوهای آکادمی',
-            'cta_academy_icon': 'fa-play',
-            'cta_secondary_label': 'تفاوت را ببینید',
+            'cta_secondary_label': 'ببین چطور کار می‌کند',
             'cta_secondary_icon': 'fa-arrow-down',
             'cta_bot_label': 'فعال‌سازی ربات استخراج',
             'cta_bot_icon': 'fa-robot',
@@ -1406,6 +1411,7 @@ def home_page_content():
             'image': 'images/help-bot-install.png',
             'steps_count': '۲۵+',
             'topics': ['نصب ربات', 'فایلینگ', 'تحلیل', 'CRM', 'تیم'],
+            'academy_label': 'ویدیوهای آکادمی',
         },
         'nationwide': {
             'kicker': 'پوشش سراسری',

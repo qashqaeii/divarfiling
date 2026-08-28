@@ -365,6 +365,19 @@ html.js .author-page-wrap .mk-reveal-stagger.is-visible > *:nth-child(6) { trans
     color: var(--mk-text-muted);
 }
 
+.author-section-desc--lead {
+    font-weight: 700;
+    color: var(--mk-text, #e2e8f0);
+}
+
+.author-section-intro {
+    margin: 0.85rem auto 0;
+    max-width: 42rem;
+    font-size: 0.9rem;
+    line-height: 1.85;
+    color: var(--mk-text-muted);
+}
+
 /* Highlights */
 .author-highlight-grid {
     display: grid;
@@ -502,6 +515,14 @@ html.js .author-page-wrap .mk-reveal-stagger.is-visible > *:nth-child(6) { trans
     font-weight: 600;
     color: #fff;
     background: linear-gradient(transparent, rgba(0, 0, 0, 0.78));
+}
+
+.author-showcase-desc {
+    margin: 0;
+    padding: 0.75rem 0.85rem 0.95rem;
+    font-size: 0.82rem;
+    line-height: 1.65;
+    color: var(--mk-text-muted);
 }
 
 /* Pillars */
@@ -725,8 +746,14 @@ html.mk-public[data-theme="light"] .author-cta-inner h2 {
 }
 
 html.mk-public[data-theme="light"] .author-bio,
-html.mk-public[data-theme="light"] .author-section-desc {
+html.mk-public[data-theme="light"] .author-section-desc,
+html.mk-public[data-theme="light"] .author-section-intro,
+html.mk-public[data-theme="light"] .author-showcase-desc {
     color: #475569;
+}
+
+html.mk-public[data-theme="light"] .author-section-desc--lead {
+    color: #334155;
 }
 
 html.mk-public[data-theme="light"] .author-tagline {

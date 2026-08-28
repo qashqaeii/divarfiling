@@ -318,8 +318,8 @@ def schema_author(context, author_data):
         'name': author_data.get('name_fa') or author_data.get('name', ''),
         'alternateName': author_data.get('name', ''),
         'url': page_url,
-        'jobTitle': author_data.get('role', ''),
-        'description': author_data.get('tagline', ''),
+        'jobTitle': author_data.get('tagline') or author_data.get('role', ''),
+        'description': (author_data.get('bio') or author_data.get('tagline', ''))[:320],
         'knowsAbout': author_data.get('expertise', []),
         'worksFor': {
             '@type': 'Organization',

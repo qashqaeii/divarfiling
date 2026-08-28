@@ -9,7 +9,7 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/mizkar-home.css' %}?v=92">
 <link rel="stylesheet" href="{% static 'css/home-hero-mobile.css' %}?v=16">
-<link rel="stylesheet" href="{% static 'css/home-v2.css' %}?v=5">
+<link rel="stylesheet" href="{% static 'css/home-v2.css' %}?v=9">
 {% endblock %}
 
 {% block content %}
@@ -214,7 +214,10 @@
 <section class="mk-section mk-pricing-tiers h-pricing" aria-label="پلن‌های پلتفرم">
     <div class="container">
         <header class="mk-section-head mk-reveal">
-            <h2 class="mk-section-title">انتخاب مسیر شروع</h2>
+            <h2 class="mk-section-title">{{ home_page.pricing_section.title }}</h2>
+            {% if home_page.pricing_section.subtitle %}
+            <p class="mk-section-desc">{{ home_page.pricing_section.subtitle }}</p>
+            {% endif %}
         </header>
         <div class="mk-tier-grid mk-reveal">
             {% for tier in home_page.pricing_tiers %}
@@ -229,6 +232,9 @@
                 <div class="mk-tier-price">
                     <span class="mk-tier-price-val">{{ tier.price }}</span>
                     <span class="mk-tier-price-note">{{ tier.price_note }}</span>
+                    {% if tier.price_hint %}
+                    <span class="mk-tier-price-hint">{{ tier.price_hint }}</span>
+                    {% endif %}
                 </div>
                 <ul class="mk-tier-features">
                     {% for feat in tier.features %}
@@ -282,5 +288,5 @@
 
 {% block extra_js %}
 <script src="{% static 'js/mizkar-home.js' %}?v=14" defer></script>
-<script src="{% static 'js/home-story.js' %}?v=3" defer></script>
+<script src="{% static 'js/home-story.js' %}?v=5" defer></script>
 {% endblock %}

@@ -29,6 +29,13 @@
                     class="h-flow__node-btn"
                     data-h-flow-btn="{{ forloop.counter0 }}"
                     aria-pressed="{% if forloop.first %}true{% else %}false{% endif %}"
+                    aria-haspopup="dialog"
+                    aria-expanded="false"
+                    aria-controls="h-flow-popup"
+                    data-flow-step="{{ forloop.counter|stringformat:'02d' }}"
+                    data-flow-title="{{ step.title }}"
+                    data-flow-detail="{{ step.detail }}"
+                    data-flow-icon="{{ step.icon }}"
                 >
                     <span class="h-flow__node-ring" aria-hidden="true">
                         <span class="h-flow__node-index">{{ forloop.counter|stringformat:"02d" }}</span>
@@ -42,5 +49,28 @@
             </li>
             {% endfor %}
         </ol>
+
+        <div
+            class="h-flow__popup"
+            id="h-flow-popup"
+            data-h-flow-popup
+            role="dialog"
+            aria-modal="false"
+            aria-labelledby="h-flow-popup-title"
+            hidden
+        >
+            <div class="h-flow__popup-card" data-h-flow-popup-card>
+                <div class="h-flow__popup-head">
+                    <span class="h-flow__popup-icon" data-h-flow-popup-icon aria-hidden="true"></span>
+                    <span class="h-flow__popup-step" data-h-flow-popup-step></span>
+                    <button type="button" class="h-flow__popup-close" data-h-flow-popup-close aria-label="بستن">
+                        <i class="fas fa-xmark" aria-hidden="true"></i>
+                    </button>
+                </div>
+                <strong class="h-flow__popup-title" id="h-flow-popup-title" data-h-flow-popup-title></strong>
+                <p class="h-flow__popup-text" data-h-flow-popup-text></p>
+            </div>
+            <span class="h-flow__popup-arrow" aria-hidden="true"></span>
+        </div>
     </div>
 </section>

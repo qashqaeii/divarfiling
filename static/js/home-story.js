@@ -50,13 +50,34 @@
             return;
         }
 
+        var visibleScenes = new Map();
+
         var observer = new IntersectionObserver(function (entries) {
             entries.forEach(function (entry) {
+                var idx = parseInt(entry.target.getAttribute('data-h-sentinel'), 10);
                 if (entry.isIntersecting) {
-                    setScene(parseInt(entry.target.getAttribute('data-h-sentinel'), 10));
+                    visibleScenes.set(idx, entry.intersectionRatio);
+                } else {
+                    visibleScenes.delete(idx);
                 }
             });
-        }, { threshold: 0.55, rootMargin: '-10% 0px -10% 0px' });
+
+            if (!visibleScenes.size) return;
+
+            var bestIdx = 0;
+            var bestRatio = -1;
+            visibleScenes.forEach(function (ratio, idx) {
+                if (ratio > bestRatio) {
+                    bestRatio = ratio;
+                    bestIdx = idx;
+                }
+            });
+
+            setScene(bestIdx);
+        }, {
+            threshold: [0, 0.15, 0.35, 0.55, 0.75, 1],
+            rootMargin: '-14% 0px -14% 0px',
+        });
 
         function bindSentinels() {
             sentinels.forEach(function (s) { observer.observe(s); });
@@ -82,6 +103,30 @@
         }
 
         onModeChange();
+    }
+
+    function initStoryMobileReveal() {
+        var cards = document.querySelectorAll('.h-story__mobile-card');
+        if (!cards.length) return;
+
+        if (prefersReduced || !('IntersectionObserver' in window)) {
+            cards.forEach(function (card) {
+                card.classList.add('is-inview');
+            });
+            return;
+        }
+
+        var observer = new IntersectionObserver(function (entries) {
+            entries.forEach(function (entry) {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('is-inview');
+                }
+            });
+        }, { threshold: 0.2, rootMargin: '-6% 0px -8% 0px' });
+
+        cards.forEach(function (card) {
+            observer.observe(card);
+        });
     }
 
     function initClimaxReveal() {
@@ -142,6 +187,14 @@
         var nodes = wrap.querySelectorAll('.h-flow__node[data-h-flow-step]');
         var progress = wrap.querySelector('[data-h-flow-progress]');
         var buttons = wrap.querySelectorAll('[data-h-flow-btn]');
+        var popup = wrap.querySelector('[data-h-flow-popup]');
+        var popupCard = wrap.querySelector('[data-h-flow-popup-card]');
+        var popupStep = wrap.querySelector('[data-h-flow-popup-step]');
+        var popupTitle = wrap.querySelector('[data-h-flow-popup-title]');
+        var popupText = wrap.querySelector('[data-h-flow-popup-text]');
+        var popupIcon = wrap.querySelector('[data-h-flow-popup-icon]');
+        var popupClose = wrap.querySelector('[data-h-flow-popup-close]');
+        var openIndex = -1;
         if (!track || !nodes.length) return;
 
         function setActive(index) {
@@ -159,22 +212,127 @@
             }
         }
 
+        function closePopup() {
+            if (!popup) return;
+            openIndex = -1;
+            popup.classList.remove('is-open');
+            popup.setAttribute('hidden', '');
+            nodes.forEach(function (node) {
+                node.classList.remove('is-popup-open');
+                var btn = node.querySelector('.h-flow__node-btn');
+                if (btn) {
+                    btn.setAttribute('aria-expanded', 'false');
+                }
+            });
+        }
+
+        function positionPopup(node) {
+            if (!popup || !node) return;
+            var centerX = node.offsetLeft + node.offsetWidth / 2;
+            var topY = node.offsetTop;
+            popup.style.left = centerX + 'px';
+            popup.style.top = topY + 'px';
+        }
+
+        function showPopup(index, btn) {
+            if (!desktopMq.matches || !popup || !btn) return;
+
+            if (openIndex === index && popup.classList.contains('is-open')) {
+                closePopup();
+                return;
+            }
+
+            var node = nodes[index];
+            var accent = node.getAttribute('data-accent') || 'violet';
+
+            if (popupStep) {
+                popupStep.textContent = 'مرحله ' + btn.getAttribute('data-flow-step');
+            }
+            if (popupTitle) {
+                popupTitle.textContent = btn.getAttribute('data-flow-title') || '';
+            }
+            if (popupText) {
+                popupText.textContent = btn.getAttribute('data-flow-detail') || '';
+            }
+            if (popupIcon) {
+                popupIcon.innerHTML = '<i class="fas ' + btn.getAttribute('data-flow-icon') + '" aria-hidden="true"></i>';
+            }
+            if (popupCard) {
+                popupCard.setAttribute('data-accent', accent);
+            }
+
+            nodes.forEach(function (node, i) {
+                node.classList.toggle('is-popup-open', i === index);
+                var nodeBtn = node.querySelector('.h-flow__node-btn');
+                if (nodeBtn) {
+                    nodeBtn.setAttribute('aria-expanded', i === index ? 'true' : 'false');
+                }
+            });
+
+            positionPopup(node);
+            popup.removeAttribute('hidden');
+            requestAnimationFrame(function () {
+                popup.classList.add('is-open');
+            });
+            openIndex = index;
+        }
+
         buttons.forEach(function (btn) {
             btn.addEventListener('click', function () {
                 var index = parseInt(btn.getAttribute('data-h-flow-btn'), 10);
                 setActive(index);
-                if (!desktopMq.matches && track.scrollTo) {
-                    var node = nodes[index];
-                    if (node) {
-                        var offset = node.offsetLeft - (track.clientWidth - node.offsetWidth) / 2;
-                        track.scrollTo({
-                            left: offset,
-                            behavior: prefersReduced ? 'auto' : 'smooth',
-                        });
+                if (desktopMq.matches) {
+                    showPopup(index, btn);
+                } else {
+                    closePopup();
+                    if (track.scrollTo) {
+                        var node = nodes[index];
+                        if (node) {
+                            var offset = node.offsetLeft - (track.clientWidth - node.offsetWidth) / 2;
+                            track.scrollTo({
+                                left: offset,
+                                behavior: prefersReduced ? 'auto' : 'smooth',
+                            });
+                        }
                     }
                 }
             });
         });
+
+        if (popupClose) {
+            popupClose.addEventListener('click', closePopup);
+        }
+
+        document.addEventListener('click', function (event) {
+            if (!popup || !popup.classList.contains('is-open')) return;
+            if (event.target.closest('[data-h-flow-popup]')) return;
+            if (event.target.closest('[data-h-flow-btn]')) return;
+            closePopup();
+        });
+
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape') {
+                closePopup();
+            }
+        });
+
+        function onFlowModeChange() {
+            if (!desktopMq.matches) {
+                closePopup();
+            }
+        }
+
+        if (typeof desktopMq.addEventListener === 'function') {
+            desktopMq.addEventListener('change', onFlowModeChange);
+        } else if (typeof desktopMq.addListener === 'function') {
+            desktopMq.addListener(onFlowModeChange);
+        }
+
+        window.addEventListener('resize', function () {
+            if (openIndex >= 0 && desktopMq.matches) {
+                positionPopup(nodes[openIndex]);
+            }
+        }, { passive: true });
 
         setActive(0);
 
@@ -232,6 +390,7 @@
 
     document.addEventListener('DOMContentLoaded', function () {
         initStoryScroll();
+        initStoryMobileReveal();
         initClimaxReveal();
         initCompare();
         initFlow();

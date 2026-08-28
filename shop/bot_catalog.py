@@ -189,7 +189,7 @@ def bot_license_plans():
         {
             'name': 'پلن آزمایشی ۱ هفته‌ای',
             'plan_type': 'daily',
-            'price': 200_000,
+            'price': 250_000,
             'duration_days': 7,
             'max_activations': 2,
             'order': 0,
@@ -1264,6 +1264,72 @@ def home_display_stats():
     return stats
 
 
+def _format_toman_compact(amount: int) -> str:
+    """نمایش فشرده قیمت به فارسی — مثلاً ۲۵۰ هزار یا ۲.۵ میلیون."""
+    if amount >= 1_000_000:
+        whole = amount // 1_000_000
+        remainder = amount % 1_000_000
+        if remainder and remainder % 100_000 == 0:
+            return f'{whole}٫{remainder // 100_000} میلیون'
+        return f'{whole} میلیون'
+    thousands = amount // 1_000
+    formatted = f'{thousands:,}'.replace(',', '،')
+    return f'{formatted} هزار'
+
+
+def _home_pricing_tiers() -> list[dict]:
+    """کارت‌های قیمت صفحه اصلی — همگام با bot_license_plans."""
+    plans = bot_license_plans()
+    daily = next(
+        p for p in plans
+        if p['plan_type'] == 'daily' and not p.get('allow_bulk_purchase')
+    )
+    monthly = next(p for p in plans if p['plan_type'] == 'monthly' and p['order'] == 1)
+    daily_marketing = bot_plan_marketing_by_key()[('daily', False, 0)]
+
+    daily_price = _format_toman_compact(daily['price'])
+    monthly_price = _format_toman_compact(monthly['price'])
+
+    return [
+        {
+            'id': 'free',
+            'icon': 'fa-gift',
+            'decor_icon': 'layers',
+            'title': 'میزکار رایگان',
+            'price': '۰',
+            'price_note': 'تومان — برای همیشه',
+            'badge': 'شروع فوری',
+            'accent': 'emerald',
+            'features': [
+                'CRM کامل: مخاطبین، معاملات و فایل‌های شخصی',
+                'صف امروز، یادآور، تقویم و قالب پیام',
+                'مدیریت تیم آژانس و اتوماسیون پیگیری',
+            ],
+            'cta_label': 'ثبت‌نام رایگان',
+            'cta_icon': 'fa-user-plus',
+        },
+        {
+            'id': 'pro',
+            'icon': 'fa-robot',
+            'decor_icon': 'rocket',
+            'title': 'لایسنس ربات',
+            'price': daily_price,
+            'price_note': 'تومان / آزمایش ۷ روزه',
+            'price_hint': f'پلن ماهانه از {monthly_price} تومان',
+            'badge': 'استخراج + تحلیل',
+            'accent': 'violet',
+            'features': [
+                daily_marketing['features'][0]['text'],
+                daily_marketing['features'][1]['text'],
+                'استخراج دیوار، فایلینگ، تحلیل چندلایه و نقشه Pro',
+                daily_marketing['features'][5]['text'],
+            ],
+            'cta_label': 'مشاهده پلن‌ها',
+            'cta_icon': 'fa-tags',
+        },
+    ]
+
+
 def home_page_content():
     """محتوای صفحه اصلی — فایلینگ دیوار."""
     return {
@@ -1296,9 +1362,9 @@ def home_page_content():
             'cta_bot_icon': 'fa-robot',
         },
         'story_hook': {
-            'kicker': 'داستان یک روز',
-            'title': 'هر درد، یک راه‌حل در میزکار',
-            'subtitle': 'اسکرول کن — محصول را در عمل ببین',
+            'kicker': 'روایت یک روز',
+            'title': 'از چالش تا راه‌حل — در یک میزکار',
+            'subtitle': 'اسکرول کنید؛ هر مرحله را در محصول زنده ببینید',
         },
         'story_scenes': [
             {
@@ -1389,12 +1455,48 @@ def home_page_content():
             'title': 'از استخراج تا معامله',
             'subtitle': 'مسیر فایل از دیوار تا قرارداد — در یک خط پیوسته',
             'steps': [
-                {'icon': 'fa-robot', 'title': 'استخراج', 'desc': 'فایل‌ها را پیدا کن', 'accent': 'violet'},
-                {'icon': 'fa-database', 'title': 'فایلینگ', 'desc': 'مرتب و فیلتر کن', 'accent': 'indigo'},
-                {'icon': 'fa-chart-line', 'title': 'تحلیل', 'desc': 'بازار را بفهم', 'accent': 'emerald'},
-                {'icon': 'fa-map', 'title': 'نقشه', 'desc': 'موقعیت را ببین', 'accent': 'sky'},
-                {'icon': 'fa-users', 'title': 'CRM', 'desc': 'مشتری را پیگیری کن', 'accent': 'violet'},
-                {'icon': 'fa-handshake', 'title': 'معامله', 'desc': 'فرصت را به قرارداد تبدیل کن', 'accent': 'amber'},
+                {
+                    'icon': 'fa-robot',
+                    'title': 'استخراج',
+                    'desc': 'فایل‌ها را پیدا کن',
+                    'detail': 'ربات استخراج، آگهی‌های مرتبط دیوار را خودکار وارد میزکار می‌کند — بدون جستجوی دستی چندساعته.',
+                    'accent': 'violet',
+                },
+                {
+                    'icon': 'fa-database',
+                    'title': 'فایلینگ',
+                    'desc': 'مرتب و فیلتر کن',
+                    'detail': 'فایل‌ها با ساختار استان، شهر و محله سازماندهی می‌شوند؛ فیلتر مالک، مشاور و نوع ملک همیشه آماده است.',
+                    'accent': 'indigo',
+                },
+                {
+                    'icon': 'fa-chart-line',
+                    'title': 'تحلیل',
+                    'desc': 'بازار را بفهم',
+                    'detail': 'قیمت متر، روند بازار و مقایسه دوره‌ای — قبل از پیشنهاد قیمت یا مذاکره، تصویر واقعی بازار را ببینید.',
+                    'accent': 'emerald',
+                },
+                {
+                    'icon': 'fa-map',
+                    'title': 'نقشه',
+                    'desc': 'موقعیت را ببین',
+                    'detail': 'نقشه Pro موقعیت فایل‌ها را روی محله نشان می‌دهد — دسترسی، اطراف و چگالی عرضه را یک‌جا بررسی کنید.',
+                    'accent': 'sky',
+                },
+                {
+                    'icon': 'fa-users',
+                    'title': 'CRM',
+                    'desc': 'مشتری را پیگیری کن',
+                    'detail': 'سرنخ تا قرارداد در قیف معاملات؛ صف کار امروز و یادآوری پیگیری — هیچ تماسی در مسیر فروش گم نمی‌شود.',
+                    'accent': 'violet',
+                },
+                {
+                    'icon': 'fa-handshake',
+                    'title': 'معامله',
+                    'desc': 'فرصت را به قرارداد تبدیل کن',
+                    'detail': 'فایل مناسب به مشتری درست وصل می‌شود — از اولین تماس تا امضای قرارداد، همه‌چیز در یک خط پیوسته.',
+                    'accent': 'amber',
+                },
             ],
         },
         'product_pillars_section': {
@@ -1454,42 +1556,11 @@ def home_page_content():
             {'label': 'مدیریت تیم', 'icon': 'fa-users-gear'},
             {'label': 'اشتراک فایل', 'icon': 'fa-share-nodes'},
         ],
-        'pricing_tiers': [
-            {
-                'id': 'free',
-                'icon': 'fa-gift',
-                'decor_icon': 'layers',
-                'title': 'میزکار رایگان',
-                'price': '۰ تومان',
-                'price_note': 'برای همیشه',
-                'badge': 'شروع فوری',
-                'accent': 'emerald',
-                'features': [
-                    'CRM کامل — مخاطبین، معاملات، فایل‌های شخصی',
-                    'صف کار امروز، یادآور، تقویم و قالب پیام',
-                    'اتوماسیون پیگیری و مدیریت تیم آژانس',
-                ],
-                'cta_label': 'ثبت‌نام رایگان',
-                'cta_icon': 'fa-user-plus',
-            },
-            {
-                'id': 'pro',
-                'icon': 'fa-robot',
-                'decor_icon': 'rocket',
-                'title': 'ربات + تحلیل',
-                'price': 'از ۵۰ هزار',
-                'price_note': 'تومان / آزمایش یک‌هفته‌ای',
-                'badge': 'قدرتمندترین',
-                'accent': 'violet',
-                'features': [
-                    'ربات استخراج دیوار روی ویندوز',
-                    'فایلینگ، تحلیل چندلایه، نقشه Pro و مقایسه',
-                    'آپلود یک‌کلیکی و اتصال آگهی‌ها به CRM',
-                ],
-                'cta_label': 'مشاهده ربات',
-                'cta_icon': 'fa-robot',
-            },
-        ],
+        'pricing_section': {
+            'title': 'انتخاب مسیر شروع',
+            'subtitle': 'CRM میزکار رایگان است — لایسنس ربات برای استخراج، فایلینگ و تحلیل',
+        },
+        'pricing_tiers': _home_pricing_tiers(),
         'visual_gallery': {
             'kicker': 'در عمل ببینید',
             'title': 'میزکار واقعی، نه وعده روی کاغذ',

@@ -1503,6 +1503,17 @@ class ManagementAutomationRule(models.Model):
         null=True, blank=True, verbose_name='پایان ساعات سکوت (ساعت محلی)',
     )
     message_template = models.TextField(blank=True, verbose_name='قالب پیام')
+    message_template_updated_at = models.DateTimeField(
+        null=True, blank=True, verbose_name='به‌روزرسانی قالب پیام',
+    )
+    message_template_updated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='management_automation_message_updates',
+        verbose_name='ویرایش‌کننده قالب پیام',
+    )
     conditions = models.JSONField(default=dict, blank=True, verbose_name='شرایط')
     last_run_at = models.DateTimeField(null=True, blank=True, verbose_name='آخرین اجرا')
     activated_at = models.DateTimeField(null=True, blank=True, verbose_name='فعال‌سازی')

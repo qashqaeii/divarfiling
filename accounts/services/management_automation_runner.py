@@ -18,8 +18,12 @@ from accounts.models import (
     ManagementAutomationRule,
 )
 from accounts.phone_utils import is_valid_iran_mobile, normalize_phone
-from accounts.services.admin_management_assistant import INSIGHT_MESSAGE_TEMPLATES
-from accounts.services.admin_marketing import render_message
+from accounts.services.automation_message_templates import (
+    enrich_candidate_context,
+    get_effective_template,
+    render_template,
+    rule_template_is_valid,
+)
 from accounts.services.admin_windows_app import WINDOWS_ACTIVATION_Q
 from accounts.services.growth_suppression import (
     PURPOSE_LICENSE_RENEWAL,
@@ -103,6 +107,27 @@ def _renewal_link() -> str:
     return getattr(settings, 'LICENSE_RENEWAL_LANDING_URL', f'{_site_link()}pricing/')
 
 
+def _format_expiry_date(dt) -> str:
+    if not dt:
+        return ''
+    try:
+        import jdatetime
+        local = timezone.localtime(dt)
+        j = jdatetime.date.fromgregorian(date=local.date())
+        from workspace.services.jalali_input import to_persian_digits
+        return to_persian_digits(j.strftime('%Y/%m/%d'))
+    except Exception:
+        return timezone.localtime(dt).strftime('%Y-%m-%d')
+
+
+def _plan_name(lic_or_order) -> str:
+    plan = getattr(lic_or_order, 'plan', None)
+    if plan and getattr(plan, 'name', None):
+        return plan.name
+    product = getattr(getattr(lic_or_order, 'order', None), 'product', None) or getattr(lic_or_order, 'product', None)
+    return getattr(product, 'title', '') or 'فایلینگ دیوار'
+
+
 def _name_part(user) -> str:
     name = (getattr(user, 'first_name', '') or '').strip()
     return f' {name}' if name else ''
@@ -172,6 +197,8 @@ def _resolve_license_expiring(*, within_days: int = 3) -> List[AutomationCandida
         exp_date = timezone.localtime(lic.expires_at).date()
         days_left = max(1, (lic.expires_at - now).days)
         product = getattr(lic.order.product, 'title', None) or getattr(lic.plan, 'name', '') or 'فایلینگ'
+        plan = _plan_name(lic)
+        exp_label = _format_expiry_date(lic.expires_at)
         out.append(AutomationCandidate(
             trigger_key=f'license_expiring:{lic.pk}:{exp_date.isoformat()}',
             user=user,
@@ -179,7 +206,12 @@ def _resolve_license_expiring(*, within_days: int = 3) -> List[AutomationCandida
             context={
                 'name_part': _name_part(user),
                 'product': product,
+                'plan': plan,
+                'license_plan': plan,
                 'days': str(days_left),
+                'days_left': str(days_left),
+                'expiry_date': exp_label,
+                'license_expiry': exp_label,
                 'link': _renewal_link(),
             },
             metadata={'license_id': lic.pk, 'user_id': user.pk, 'expires_at': exp_date.isoformat()},
@@ -212,6 +244,8 @@ def _resolve_expired_renewal(*, within_days: int = 14) -> List[AutomationCandida
         seen_users.add(user.pk)
         exp_date = timezone.localtime(lic.expires_at).date()
         product = getattr(lic.order.product, 'title', None) or getattr(lic.plan, 'name', '') or 'فایلینگ'
+        plan = _plan_name(lic)
+        exp_label = _format_expiry_date(lic.expires_at)
         out.append(AutomationCandidate(
             trigger_key=f'expired_license:{lic.pk}:{exp_date.isoformat()}',
             user=user,
@@ -219,7 +253,12 @@ def _resolve_expired_renewal(*, within_days: int = 14) -> List[AutomationCandida
             context={
                 'name_part': _name_part(user),
                 'product': product,
+                'plan': plan,
+                'license_plan': plan,
+                'expiry_date': exp_label,
+                'license_expiry': exp_label,
                 'link': _renewal_link(),
+                'code': '',
             },
             metadata={'license_id': lic.pk, 'user_id': user.pk},
         ))
@@ -241,6 +280,7 @@ def _resolve_pending_orders(*, stale_hours: int = 2) -> List[AutomationCandidate
         if not phone:
             continue
         from accounts.services.admin_marketing import _checkout_url, _format_amount
+        amount = _format_amount(order.amount)
         out.append(AutomationCandidate(
             trigger_key=f'pending_order:{order.pk}',
             user=user,
@@ -248,7 +288,11 @@ def _resolve_pending_orders(*, stale_hours: int = 2) -> List[AutomationCandidate
             context={
                 'name_part': _name_part(user),
                 'product': order.product.title if order.product_id else 'محصول',
-                'amount': _format_amount(order.amount),
+                'order_product': order.product.title if order.product_id else 'محصول',
+                'plan': order.plan.name if order.plan_id else '',
+                'amount': amount,
+                'order_amount': amount,
+                'order_id': str(order.pk),
                 'link': _checkout_url(order.pk),
                 'code': '',
             },
@@ -271,6 +315,7 @@ def _resolve_failed_orders(*, days_lookback: int = 1) -> List[AutomationCandidat
         if not phone:
             continue
         from accounts.services.admin_marketing import _checkout_url, _format_amount
+        amount = _format_amount(order.amount)
         out.append(AutomationCandidate(
             trigger_key=f'failed_order:{order.pk}',
             user=user,
@@ -278,6 +323,11 @@ def _resolve_failed_orders(*, days_lookback: int = 1) -> List[AutomationCandidat
             context={
                 'name_part': _name_part(user),
                 'product': order.product.title if order.product_id else 'محصول',
+                'order_product': order.product.title if order.product_id else 'محصول',
+                'plan': order.plan.name if order.plan_id else '',
+                'amount': amount,
+                'order_amount': amount,
+                'order_id': str(order.pk),
                 'link': _checkout_url(order.pk),
                 'code': '',
             },
@@ -308,7 +358,11 @@ def _resolve_users_onboarding(*, min_hours: int = 24) -> List[AutomationCandidat
             trigger_key=f'user_onboarding:{user.pk}',
             user=user,
             phone=phone,
-            context={'name_part': _name_part(user), 'link': _site_link(), 'code': ''},
+            context={
+                'name_part': _name_part(user),
+                'link': _site_link(),
+                'code': '',
+            },
             metadata={'user_id': user.pk},
         ))
     return out
@@ -579,23 +633,27 @@ def _user_cooldown_active(rule: ManagementAutomationRule, user_id: int, *, now=N
     return sent_count >= max(1, rule.max_sends_per_user)
 
 
-def _message_for_rule(rule: ManagementAutomationRule, context: Dict[str, str]) -> str:
-    template = (rule.message_template or '').strip()
-    if not template and rule.insight_key:
-        template = INSIGHT_MESSAGE_TEMPLATES.get(rule.insight_key, '')
+def _message_for_rule(rule: ManagementAutomationRule, context: Dict[str, str], *, user=None) -> Tuple[str, str]:
+    """Render پیام Rule — (body, skip_reason). skip_reason غیرخالی یعنی ارسال نشود."""
+    template = get_effective_template(rule)
     if not template:
-        template = 'سلام{name_part}، پیام فایلینگ دیوار: {link}'
-    ctx = {
-        'name': '',
-        'name_part': context.get('name_part', ''),
-        'product': context.get('product', 'فایلینگ دیوار'),
-        'plan': context.get('plan', ''),
-        'amount': context.get('amount', ''),
-        'link': context.get('link', _site_link()),
-        'code': context.get('code', ''),
-        'days': context.get('days', ''),
-    }
-    return render_message(template, ctx)
+        return '', 'missing_template'
+
+    enriched = enrich_candidate_context(context, user=user)
+    result = render_template(
+        template,
+        enriched,
+        rule_key=rule.key,
+        strict_send=True,
+    )
+    if not result.ok:
+        reason = 'missing_variables'
+        if result.missing_variables:
+            reason = f'missing_variables:{",".join(result.missing_variables[:3])}'
+        elif result.error:
+            reason = result.error[:200]
+        return '', reason
+    return result.message, ''
 
 
 def _sms_purpose_for_rule(rule: ManagementAutomationRule) -> str:
@@ -688,6 +746,11 @@ def _process_candidate(
         execution.skipped_count += 1
         return 'skipped'
 
+    template_check = rule_template_is_valid(rule)
+    if not template_check.ok:
+        execution.skipped_count += 1
+        return 'skipped'
+
     phone = _phone_ok(candidate.phone)
     if not phone:
         execution.skipped_count += 1
@@ -711,7 +774,23 @@ def _process_candidate(
         execution.skipped_count += 1
         return 'skipped'
 
-    body = _message_for_rule(rule, candidate.context)
+    body, render_reason = _message_for_rule(rule, candidate.context, user=candidate.user)
+    if not body:
+        try:
+            with transaction.atomic():
+                ManagementAutomationRecipient.objects.create(
+                    execution=execution,
+                    rule=rule,
+                    user=candidate.user,
+                    trigger_key=candidate.trigger_key,
+                    status=ManagementAutomationRecipient.Status.SKIPPED,
+                    skipped_reason=(render_reason or 'render_failed')[:200],
+                    metadata=_safe_metadata(candidate.metadata),
+                )
+        except IntegrityError:
+            return 'deduped'
+        execution.skipped_count += 1
+        return 'skipped'
 
     if dry_run:
         try:
@@ -800,6 +879,19 @@ def run_rule(
 
     if in_quiet_hours(rule, now=now) and rule.action_type == ManagementAutomationRule.ActionType.SEND_SMS:
         return None
+
+    if (
+        rule.action_type == ManagementAutomationRule.ActionType.SEND_SMS
+        and not rule_template_is_valid(rule).ok
+    ):
+        execution = ManagementAutomationExecution.objects.create(
+            rule=rule,
+            dry_run=dry_run,
+            status=ManagementAutomationExecution.Status.FAILED,
+            error_summary='قالب پیام نامعتبر است — ارسال متوقف شد.',
+            finished_at=now,
+        )
+        return execution
 
     with transaction.atomic():
         locked = ManagementAutomationRule.objects.select_for_update().get(pk=rule.pk)

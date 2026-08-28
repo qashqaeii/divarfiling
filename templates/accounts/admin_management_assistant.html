@@ -313,14 +313,33 @@
 
                 <section class="maa-auto-section" id="maa-auto-message-section" hidden>
                     <div class="maa-auto-section-head">
-                        <h4>پیام</h4>
+                        <div class="maa-auto-message-head">
+                            <h4>پیام</h4>
+                            <div class="maa-auto-message-summary" id="maa-auto-message-summary" hidden></div>
+                        </div>
                         <span class="maa-auto-template-badge" id="maa-auto-template-badge">پیش‌فرض</span>
                     </div>
-                    <textarea class="maa-auto-message-input" id="maa-auto-message-input" rows="5"></textarea>
+                    <div class="maa-auto-template-alert" id="maa-auto-template-alert" hidden></div>
+                    <div class="maa-auto-variables" id="maa-auto-variables" hidden>
+                        <p class="maa-auto-variables-label">متغیرهای قابل استفاده</p>
+                        <div class="maa-auto-variable-chips" id="maa-auto-variable-chips"></div>
+                    </div>
+                    <textarea class="maa-auto-message-input" id="maa-auto-message-input" rows="6" spellcheck="false"></textarea>
+                    <div class="maa-auto-sms-counter" id="maa-auto-sms-counter">۰ کاراکتر</div>
+                    <div class="maa-auto-preview-toolbar">
+                        <label class="maa-auto-preview-mode">
+                            <span>Preview:</span>
+                            <select id="maa-auto-preview-mode">
+                                <option value="sample">Sample Preview</option>
+                                <option value="recipient">Recipient Preview</option>
+                            </select>
+                        </label>
+                    </div>
                     <blockquote class="maa-auto-message" id="maa-auto-message-preview" hidden></blockquote>
+                    <ul class="maa-auto-preview-warnings" id="maa-auto-preview-warnings" hidden></ul>
                     <div class="maa-auto-message-actions">
                         <button type="button" class="ecc-btn ecc-btn--ghost ecc-btn--sm" id="maa-auto-preview-message">Preview</button>
-                        <button type="button" class="ecc-btn ecc-btn--ghost ecc-btn--sm" id="maa-auto-save-message">ذخیره پیام</button>
+                        <button type="button" class="ecc-btn ecc-btn--primary ecc-btn--sm" id="maa-auto-save-message">ذخیره پیام</button>
                         <button type="button" class="ecc-btn ecc-btn--ghost ecc-btn--sm" id="maa-auto-reset-message">بازگشت به پیش‌فرض</button>
                         <button type="button" class="ecc-btn ecc-btn--ghost ecc-btn--sm" id="maa-auto-test-send">ارسال آزمایشی برای خودم</button>
                     </div>
@@ -374,5 +393,5 @@
 <script>
 window.maaAutomationRules = {{ automation_rules_json|safe }};
 </script>
-<script src="{% static 'js/mizkar-admin-assistant.js' %}?v=4"></script>
+<script src="{% static 'js/mizkar-admin-assistant.js' %}?v=5"></script>
 {% endblock %}

@@ -749,6 +749,138 @@ body.maa-modal-open {
     color: #1d4ed8;
 }
 
+.maa-auto-template-badge.is-invalid {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.maa-auto-message-head {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    min-width: 0;
+}
+
+.maa-auto-message-summary {
+    font-size: 0.72rem;
+    color: #64748b;
+    line-height: 1.45;
+}
+
+.maa-auto-message-summary code {
+    font-size: 0.68rem;
+    background: #f1f5f9;
+    padding: 0.05rem 0.25rem;
+    border-radius: 0.25rem;
+}
+
+.maa-auto-template-alert {
+    margin-bottom: 0.55rem;
+    padding: 0.55rem 0.7rem;
+    border-radius: 0.45rem;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #b91c1c;
+    font-size: 0.8rem;
+}
+
+.maa-auto-variables {
+    margin-bottom: 0.55rem;
+}
+
+.maa-auto-variables-label {
+    margin: 0 0 0.35rem;
+    font-size: 0.75rem;
+    color: #64748b;
+}
+
+.maa-auto-variable-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+}
+
+.maa-auto-var-chip {
+    position: relative;
+    border: 1px solid #e2e8f0;
+    background: #fff;
+    color: #334155;
+    border-radius: 999px;
+    padding: 0.2rem 0.55rem;
+    font-size: 0.74rem;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.maa-auto-var-chip:hover {
+    background: #eff6ff;
+    border-color: #bfdbfe;
+    color: #1d4ed8;
+}
+
+.maa-auto-var-chip[data-tooltip]:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    z-index: 5;
+    bottom: calc(100% + 0.35rem);
+    right: 0;
+    min-width: 10rem;
+    max-width: 14rem;
+    padding: 0.45rem 0.55rem;
+    border-radius: 0.45rem;
+    background: #0f172a;
+    color: #f8fafc;
+    font-size: 0.72rem;
+    line-height: 1.45;
+    white-space: pre-line;
+    pointer-events: none;
+}
+
+.maa-auto-sms-counter {
+    margin: -0.25rem 0 0.55rem;
+    font-size: 0.74rem;
+    color: #64748b;
+}
+
+.maa-auto-sms-counter.is-long {
+    color: #b45309;
+}
+
+.maa-auto-preview-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 0.45rem;
+}
+
+.maa-auto-preview-mode {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.78rem;
+    color: #64748b;
+}
+
+.maa-auto-preview-mode select {
+    padding: 0.25rem 0.45rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.4rem;
+    font-size: 0.78rem;
+    font-family: inherit;
+}
+
+.maa-auto-preview-warnings {
+    margin: 0.35rem 0 0.55rem;
+    padding: 0;
+    list-style: none;
+}
+
+.maa-auto-preview-warnings li {
+    font-size: 0.78rem;
+    color: #b45309;
+    padding: 0.15rem 0;
+}
+
 .maa-auto-settings-form label {
     display: flex;
     flex-direction: column;

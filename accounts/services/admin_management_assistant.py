@@ -17,6 +17,17 @@ from accounts.models import (
     ManagementAutomationRule,
 )
 from accounts.services.admin_dashboard import _date_range, _pct_change, _today
+from accounts.services.automation_message_templates import (
+    RULE_DEFAULT_TEMPLATES,
+    build_sample_context,
+    estimate_sms_info,
+    get_default_template,
+    parse_template_variables,
+    render_template,
+    rule_template_is_valid,
+    validate_template,
+    variables_for_rule,
+)
 from accounts.services.admin_marketing import (
     SEGMENT_DEFAULT_TEMPLATES,
     build_segment_recipients,
@@ -46,37 +57,15 @@ SEVERITY_LABELS = {
 }
 
 INSIGHT_MESSAGE_TEMPLATES: Dict[str, str] = {
-    'expired_not_renewed': (
-        'سلام{name_part}، اشتراک فایلینگ دیوار شما به پایان رسیده. '
-        'برای ادامه کار می‌تونید همین الان تمدید کنید: {link}'
-    ),
-    'license_expiring_3d': (
-        'سلام 👋\n'
-        'اشتراک فایلینگ دیوار شما به‌زودی به پایان می‌رسه.\n'
-        'برای اینکه دسترسی‌تون قطع نشه، می‌تونید همین الان تمدیدش کنید: {link}'
-    ),
-    'pending_orders': SEGMENT_DEFAULT_TEMPLATES.get('pending_orders', ''),
-    'failed_payments_today': (
-        'سلام{name_part}، پرداخت سفارش «{product}» ناموفق بود. '
-        'اگر به کمک نیاز دارید یا می‌خواهید دوباره تلاش کنید: {link}'
-    ),
-    'users_without_license_7d': SEGMENT_DEFAULT_TEMPLATES.get('users_without_license', ''),
-    'windows_download_no_activate': (
-        'سلام{name_part}، نسخه ویندوز فایلینگ دیوار را دانلود کردید. '
-        'برای فعال‌سازی و شروع کار این راهنما را ببینید: {link}'
-    ),
-    'windows_activate_no_launch': (
-        'سلام{name_part}، برنامه ویندوز فعال شده ولی هنوز اجرا نشده. '
-        'برای شروع سریع این راهنما را ببینید: {link}'
-    ),
-    'high_renewal_chance': (
-        'سلام{name_part}، خوشحالیم دوباره سر زدید! '
-        'لایسنس قبلی‌تان تمام شده — برای تمدید سریع: {link}'
-    ),
-    'crm_not_started': (
-        'سلام{name_part}، با CRM فایلینگ دیوار مشتریان خود را منظم ثبت کنید. '
-        'شروع سریع: {link}'
-    ),
+    'expired_not_renewed': RULE_DEFAULT_TEMPLATES['expired_renewal_campaign'],
+    'license_expiring_3d': RULE_DEFAULT_TEMPLATES['license_expiring_3d'],
+    'pending_orders': RULE_DEFAULT_TEMPLATES['pending_recovery'],
+    'failed_payments_today': RULE_DEFAULT_TEMPLATES['failed_payment_followup'],
+    'users_without_license_7d': RULE_DEFAULT_TEMPLATES['users_onboarding'],
+    'windows_download_no_activate': RULE_DEFAULT_TEMPLATES['windows_activation_nudge'],
+    'windows_activate_no_launch': RULE_DEFAULT_TEMPLATES['windows_activate_no_launch'],
+    'high_renewal_chance': RULE_DEFAULT_TEMPLATES['expired_renewal_campaign'],
+    'crm_not_started': RULE_DEFAULT_TEMPLATES['crm_not_started_nudge'],
 }
 
 AUTOMATION_RULE_CATALOG: List[Dict[str, Any]] = [
@@ -1277,7 +1266,8 @@ def _candidate_preview_row(rule: ManagementAutomationRule, candidate) -> Dict[st
         'user_id': meta.get('user_id'),
     })
     if status == 'ready' and rule.action_type == ManagementAutomationRule.ActionType.SEND_SMS:
-        row['message_preview'] = _message_for_rule(rule, ctx)[:200]
+        body, _ = _message_for_rule(rule, ctx, user=candidate.user)
+        row['message_preview'] = (body or '')[:200]
     return row
 
 
@@ -1303,7 +1293,8 @@ def preview_automation_rule(rule_key: str) -> Dict[str, Any]:
         for c in candidates:
             st, _, _ = classify_candidate_for_preview(rule, c)
             if st == 'ready':
-                sample_message = _message_for_rule(rule, c.context or {})
+                body, _ = _message_for_rule(rule, c.context or {}, user=c.user)
+                sample_message = body
                 break
 
     return {
@@ -1326,17 +1317,18 @@ def get_automation_rule_detail(rule_key: str) -> Dict[str, Any]:
     stats = _rule_stats_30d(rule)
 
     template = (rule.message_template or '').strip()
-    if not template and rule.insight_key:
-        template = INSIGHT_MESSAGE_TEMPLATES.get(rule.insight_key, '')
+    if not template:
+        template = get_default_template(rule_key)
+
+    template_validation = validate_template(template, rule_key) if template else rule_template_is_valid(rule)
+    variables_used = template_validation.variables_used if template_validation.ok else parse_template_variables(template)
 
     sample_message = preview.get('sample_message') or ''
-    if not sample_message and template:
-        sample_message = render_message(template, {
-            'name_part': ' علی',
-            'product': 'فایلینگ دیوار',
-            'link': _site_link(),
-            'days': '۳',
-        })
+    if not sample_message and template and template_validation.ok:
+        sample_result = render_template(template, build_sample_context(rule_key), rule_key=rule_key)
+        sample_message = sample_result.message if sample_result.ok else ''
+
+    sms_info = estimate_sms_info(template) if template else estimate_sms_info('')
 
     if rule.is_paused:
         status_label = 'متوقف موقت'
@@ -1387,6 +1379,16 @@ def get_automation_rule_detail(rule_key: str) -> Dict[str, Any]:
             'message_template': template,
             'default_message_template': get_default_message_template(rule_key),
             'is_custom_template': bool((rule.message_template or '').strip()),
+            'template_valid': template_validation.ok,
+            'template_error': '' if template_validation.ok else template_validation.error,
+            'variables_used': variables_used,
+            'allowed_variables': variables_for_rule(rule_key),
+            'sms_info': sms_info,
+            'message_template_updated_at': rule.message_template_updated_at,
+            'message_template_updated_by': (
+                rule.message_template_updated_by.get_username()
+                if rule.message_template_updated_by_id else ''
+            ),
             'quiet_hours_start': rule.quiet_hours_start,
             'quiet_hours_end': rule.quiet_hours_end,
             'allowed_hours_start': rule.quiet_hours_end if rule.quiet_hours_end is not None else 8,
@@ -1447,29 +1449,25 @@ def run_automation_rule_now(
 
 
 def get_default_message_template(rule_key: str) -> str:
-    catalog = _catalog_for_key(rule_key)
-    rule = _get_rule_db(rule_key)
-    if not catalog or not rule:
-        return ''
-    if rule.insight_key:
-        return INSIGHT_MESSAGE_TEMPLATES.get(rule.insight_key, '')
-    return ''
+    return get_default_template(rule_key) or ''
 
 
-def _sample_message_context() -> Dict[str, str]:
-    return {
-        'name': 'علی',
-        'name_part': ' علی',
-        'product': 'فایلینگ دیوار',
-        'plan': 'ماهانه',
-        'amount': '891,000',
-        'link': _site_link(),
-        'code': 'TEST',
-        'days': '۳',
-    }
+def _sample_message_context(rule_key: str = '') -> Dict[str, str]:
+    return build_sample_context(rule_key)
 
 
-def preview_rule_message(rule_key: str, message_template: str = '') -> Dict[str, Any]:
+def preview_rule_message(
+    rule_key: str,
+    message_template: str = '',
+    *,
+    mode: str = 'sample',
+    recipient_index: int = 0,
+) -> Dict[str, Any]:
+    from accounts.services.management_automation_runner import (
+        classify_candidate_for_preview,
+        resolve_audience,
+    )
+
     catalog = _catalog_for_key(rule_key)
     rule = _get_rule_db(rule_key)
     if not catalog or not rule:
@@ -1484,10 +1482,63 @@ def preview_rule_message(rule_key: str, message_template: str = '') -> Dict[str,
     if not template:
         return {'ok': False, 'error': 'قالب پیامی برای این Rule تعریف نشده.'}
 
+    validation = validate_template(template, rule_key)
+    if not validation.ok:
+        return {
+            'ok': False,
+            'error': validation.error,
+            'variables_used': validation.variables_used,
+            'invalid_variables': validation.invalid_variables,
+            'disallowed_variables': validation.disallowed_variables,
+        }
+
+    sample_result = render_template(
+        template,
+        build_sample_context(rule_key),
+        rule_key=rule_key,
+    )
+    recipient_result = None
+    recipient_preview = None
+    recipient_label = ''
+
+    if mode == 'recipient':
+        candidates = resolve_audience(rule)
+        ready_candidates = []
+        for candidate in candidates:
+            st, _, _ = classify_candidate_for_preview(rule, candidate)
+            if st == 'ready':
+                ready_candidates.append(candidate)
+        if not ready_candidates:
+            return {
+                'ok': False,
+                'error': 'مخاطب آماده‌ای برای Preview واقعی یافت نشد.',
+                'mode': mode,
+            }
+        idx = max(0, min(recipient_index, len(ready_candidates) - 1))
+        chosen = ready_candidates[idx]
+        from accounts.services.automation_message_templates import enrich_candidate_context
+        ctx = enrich_candidate_context(chosen.context or {}, user=chosen.user)
+        recipient_result = render_template(template, ctx, rule_key=rule_key, strict_send=False)
+        recipient_preview = recipient_result.message if recipient_result.ok else ''
+        recipient_label = _candidate_to_preview_row(chosen).get('display') or 'مخاطب'
+
+    active_result = recipient_result if mode == 'recipient' and recipient_result else sample_result
+    rendered = active_result.message if active_result.ok else ''
+    sms_info = estimate_sms_info(rendered or template)
+
     return {
         'ok': True,
+        'mode': mode,
         'message_template': template,
-        'sample_message': render_message(template, _sample_message_context()),
+        'sample_message': sample_result.message if sample_result.ok else '',
+        'recipient_message': recipient_preview or '',
+        'rendered_message': rendered,
+        'recipient_label': recipient_label,
+        'variables_used': validation.variables_used,
+        'warnings': active_result.warnings,
+        'missing_variables': active_result.missing_variables,
+        'sms_info': sms_info,
+        'template_valid': True,
     }
 
 
@@ -1495,6 +1546,7 @@ def update_automation_rule_settings(
     *,
     rule_key: str,
     reset_template: bool = False,
+    updated_by=None,
     **fields,
 ) -> Dict[str, Any]:
     catalog = _catalog_for_key(rule_key)
@@ -1508,6 +1560,9 @@ def update_automation_rule_settings(
         if rule.message_template:
             rule.message_template = ''
             update_fields.append('message_template')
+        rule.message_template_updated_at = timezone.now()
+        rule.message_template_updated_by = updated_by
+        update_fields.extend(['message_template_updated_at', 'message_template_updated_by'])
     elif 'message_template' in fields:
         if rule.action_type != ManagementAutomationRule.ActionType.SEND_SMS:
             return {'ok': False, 'error': 'این Rule پیام SMS ندارد.'}
@@ -1516,8 +1571,17 @@ def update_automation_rule_settings(
             return {'ok': False, 'error': 'متن پیام نمی‌تواند خالی باشد.'}
         if len(template) > 500:
             return {'ok': False, 'error': 'متن پیام بیش از حد مجاز است.'}
+        validation = validate_template(template, rule_key)
+        if not validation.ok:
+            return {'ok': False, 'error': validation.error}
         rule.message_template = template
-        update_fields.append('message_template')
+        rule.message_template_updated_at = timezone.now()
+        rule.message_template_updated_by = updated_by
+        update_fields.extend([
+            'message_template',
+            'message_template_updated_at',
+            'message_template_updated_by',
+        ])
 
     if 'cooldown_days' in fields:
         days = int(fields['cooldown_days'])
@@ -1577,8 +1641,12 @@ def send_automation_test_message(
     user,
     message_template: str = '',
 ) -> Dict[str, Any]:
+    import logging
+
     from accounts.phone_utils import is_valid_iran_mobile, normalize_phone
     from accounts.services.notifications import notify_marketing
+
+    test_logger = logging.getLogger('accounts.automation_test_send')
 
     catalog = _catalog_for_key(rule_key)
     rule = _get_rule_db(rule_key)
@@ -1591,17 +1659,26 @@ def send_automation_test_message(
     if not is_valid_iran_mobile(phone):
         return {'ok': False, 'error': 'شماره موبایل حساب staff برای ارسال آزمایشی نامعتبر است.'}
 
-    preview = preview_rule_message(rule_key, message_template=message_template)
+    preview = preview_rule_message(rule_key, message_template=message_template, mode='sample')
     if not preview.get('ok'):
         return preview
 
-    body = preview['sample_message']
+    body = preview.get('rendered_message') or preview.get('sample_message') or ''
+    if not body.strip():
+        return {'ok': False, 'error': 'متن پیام پس از render خالی شد.'}
+
+    test_logger.info(
+        'automation test send rule=%s staff_user=%s phone=%s',
+        rule_key,
+        getattr(user, 'pk', None),
+        phone[:4] + '***',
+    )
     ok, sms_log = notify_marketing(phone=phone, text=body)
     if not ok:
         err = getattr(sms_log, 'error_message', '') or 'ارسال ناموفق بود.'
         return {'ok': False, 'error': err[:200]}
 
-    return {'ok': True, 'phone_masked': _mask_phone_for_display(phone)}
+    return {'ok': True, 'phone_masked': _mask_phone_for_display(phone), 'test_send': True}
 
 
 def get_assistant_preview() -> Dict[str, Any]:

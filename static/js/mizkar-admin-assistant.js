@@ -36,6 +36,137 @@
             .replace(/"/g, '&quot;');
     }
 
+    function setHidden(el, hidden) {
+        if (!el) return;
+        el.hidden = hidden;
+    }
+
+    function insertAtCursor(textarea, text) {
+        if (!textarea) return;
+        var start = textarea.selectionStart;
+        var end = textarea.selectionEnd;
+        var value = textarea.value || '';
+        textarea.value = value.slice(0, start) + text + value.slice(end);
+        var pos = start + text.length;
+        textarea.focus();
+        textarea.setSelectionRange(pos, pos);
+        textarea.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+
+    function estimateSmsClient(text) {
+        var content = text || '';
+        var length = content.length;
+        var isUnicode = /[^\u0000-\u007f]/.test(content);
+        var singleLimit = isUnicode ? 70 : 160;
+        var segmentSize = isUnicode ? 67 : 153;
+        var segments = 0;
+        if (length > 0) {
+            segments = length <= singleLimit ? 1 : Math.ceil(length / segmentSize);
+        }
+        return {
+            char_count: length,
+            segments: segments,
+            segment_label: segments ? ('حدود ' + segments + ' پیامک') : '—',
+            long_warning: segments > 1 ? 'پیام طولانی است و ممکن است در چند پیامک ارسال شود.' : ''
+        };
+    }
+
+    function updateSmsCounter(text) {
+        var counter = document.getElementById('maa-auto-sms-counter');
+        if (!counter) return;
+        var info = estimateSmsClient(text || '');
+        counter.textContent = info.char_count + ' کاراکتر · ' + info.segment_label;
+        counter.classList.toggle('is-long', !!info.long_warning);
+        counter.title = info.long_warning || '';
+    }
+
+    function renderVariableChips(variables) {
+        var wrap = document.getElementById('maa-auto-variables');
+        var chipsEl = document.getElementById('maa-auto-variable-chips');
+        var input = document.getElementById('maa-auto-message-input');
+        if (!wrap || !chipsEl) return;
+
+        var items = variables || [];
+        if (!items.length) {
+            wrap.hidden = true;
+            chipsEl.innerHTML = '';
+            return;
+        }
+
+        wrap.hidden = false;
+        chipsEl.innerHTML = items.map(function (v) {
+            var tooltip = v.label + '\n' + (v.placeholder || ('{' + v.key + '}')) + '\nنمونه: ' + (v.example || '—');
+            return (
+                '<button type="button" class="maa-auto-var-chip" data-var="' + escapeHtml(v.key) + '" ' +
+                'data-tooltip="' + escapeHtml(tooltip) + '" title="' + escapeHtml(v.label) + '">' +
+                escapeHtml(v.label) +
+                '</button>'
+            );
+        }).join('');
+
+        chipsEl.querySelectorAll('.maa-auto-var-chip').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var key = btn.getAttribute('data-var');
+                if (!key) return;
+                insertAtCursor(input, '{' + key + '}');
+            });
+        });
+    }
+
+    function renderMessageSummary(rule) {
+        var summary = document.getElementById('maa-auto-message-summary');
+        var alertEl = document.getElementById('maa-auto-template-alert');
+        var badge = document.getElementById('maa-auto-template-badge');
+        if (!rule) return;
+
+        var used = rule.variables_used || [];
+        var usedHtml = used.length
+            ? used.map(function (k) { return '<code>{' + escapeHtml(k) + '}</code>'; }).join(' ')
+            : '—';
+
+        if (summary) {
+            summary.hidden = false;
+            summary.innerHTML =
+                (rule.is_custom_template ? 'ویرایش‌شده' : 'پیش‌فرض') +
+                ' · متغیرهای استفاده‌شده: ' + usedHtml;
+        }
+
+        if (alertEl) {
+            if (rule.template_valid === false) {
+                alertEl.hidden = false;
+                alertEl.textContent = '🔴 پیام نیاز به اصلاح دارد — ' + (rule.template_error || 'قالب نامعتبر است.');
+            } else {
+                alertEl.hidden = true;
+                alertEl.textContent = '';
+            }
+        }
+
+        if (badge) {
+            if (rule.template_valid === false) {
+                badge.textContent = 'نیاز به اصلاح';
+                badge.className = 'maa-auto-template-badge is-invalid';
+            } else {
+                badge.textContent = rule.is_custom_template ? 'سفارشی' : 'پیش‌فرض';
+                badge.className = 'maa-auto-template-badge' + (rule.is_custom_template ? ' is-custom' : '');
+            }
+        }
+    }
+
+    function renderPreviewWarnings(warnings) {
+        var list = document.getElementById('maa-auto-preview-warnings');
+        if (!list) return;
+        var items = warnings || [];
+        if (!items.length) {
+            list.hidden = true;
+            list.innerHTML = '';
+            return;
+        }
+        list.hidden = false;
+        list.innerHTML = items.map(function (w) {
+            return '<li>' + escapeHtml(w) + '</li>';
+        }).join('');
+    }
+
     function openModal(modal) {
         if (!modal) return;
         modal.hidden = false;
@@ -326,15 +457,17 @@
         var templateBadge = document.getElementById('maa-auto-template-badge');
         if (rule.editable) {
             if (msgSection) msgSection.hidden = false;
-            if (msgInput) msgInput.value = rule.message_template || '';
+            if (msgInput) {
+                msgInput.value = rule.message_template || '';
+                updateSmsCounter(msgInput.value);
+            }
+            renderVariableChips(rule.allowed_variables || []);
+            renderMessageSummary(rule);
             if (msgPreview) {
                 msgPreview.hidden = true;
                 msgPreview.textContent = '';
             }
-            if (templateBadge) {
-                templateBadge.textContent = rule.is_custom_template ? 'سفارشی' : 'پیش‌فرض';
-                templateBadge.className = 'maa-auto-template-badge' + (rule.is_custom_template ? ' is-custom' : '');
-            }
+            renderPreviewWarnings([]);
         } else if (msgSection) {
             msgSection.hidden = true;
         }
@@ -588,25 +721,49 @@
         });
     }
 
+    var msgInputEl = document.getElementById('maa-auto-message-input');
+    if (msgInputEl) {
+        msgInputEl.addEventListener('input', function () {
+            updateSmsCounter(msgInputEl.value || '');
+        });
+    }
+
     var previewMessageBtn = document.getElementById('maa-auto-preview-message');
     if (previewMessageBtn) {
         previewMessageBtn.addEventListener('click', function () {
             if (!automationMessagePreviewUrl || !currentRule) return;
             var template = document.getElementById('maa-auto-message-input').value || '';
+            var modeEl = document.getElementById('maa-auto-preview-mode');
+            var mode = modeEl ? modeEl.value : 'sample';
             var url = automationMessagePreviewUrl +
                 '?rule_key=' + encodeURIComponent(currentRule) +
-                '&message_template=' + encodeURIComponent(template);
+                '&message_template=' + encodeURIComponent(template) +
+                '&mode=' + encodeURIComponent(mode);
             fetch(url, { credentials: 'same-origin', headers: { 'Accept': 'application/json' } })
                 .then(function (r) { return r.json(); })
                 .then(function (data) {
                     var msgPreview = document.getElementById('maa-auto-message-preview');
                     if (!data.ok) {
                         alert(data.error || 'Preview ناموفق بود.');
+                        renderPreviewWarnings([]);
                         return;
                     }
+                    var rendered = data.rendered_message || data.sample_message || data.recipient_message || '';
                     if (msgPreview) {
-                        msgPreview.textContent = data.sample_message || '';
+                        var label = mode === 'recipient' && data.recipient_label
+                            ? ('[' + data.recipient_label + ']\n')
+                            : '';
+                        msgPreview.textContent = label + rendered;
                         msgPreview.hidden = false;
+                    }
+                    renderPreviewWarnings(data.warnings || []);
+                    if (data.sms_info) {
+                        var counter = document.getElementById('maa-auto-sms-counter');
+                        if (counter) {
+                            counter.textContent =
+                                data.sms_info.char_count + ' کاراکتر · ' + (data.sms_info.segment_label || '—');
+                            counter.classList.toggle('is-long', !!data.sms_info.long_warning);
+                        }
                     }
                 })
                 .catch(function () { alert('خطا در Preview.'); });

@@ -1091,6 +1091,7 @@ class AdminManagementAssistantAutomationSettingsView(StaffRequiredMixin, View):
         result = update_automation_rule_settings(
             rule_key=rule_key,
             reset_template=bool(body.get('reset_template')),
+            updated_by=request.user,
             **fields,
         )
         status = 200 if result.get('ok') else 400
@@ -1103,7 +1104,17 @@ class AdminManagementAssistantAutomationMessagePreviewView(StaffRequiredMixin, V
     def get(self, request):
         rule_key = (request.GET.get('rule_key') or '').strip()
         message_template = (request.GET.get('message_template') or '').strip()
-        payload = preview_rule_message(rule_key, message_template=message_template)
+        mode = (request.GET.get('mode') or 'sample').strip()
+        try:
+            recipient_index = int(request.GET.get('recipient_index') or 0)
+        except (TypeError, ValueError):
+            recipient_index = 0
+        payload = preview_rule_message(
+            rule_key,
+            message_template=message_template,
+            mode=mode,
+            recipient_index=recipient_index,
+        )
         status = 200 if payload.get('ok') else 400
         return JsonResponse(payload, json_dumps_params={'ensure_ascii': False}, status=status)
 

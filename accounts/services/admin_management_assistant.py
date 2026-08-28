@@ -1746,6 +1746,7 @@ def _rule_stats_30d(rule: ManagementAutomationRule) -> Dict[str, int]:
 def _candidate_preview_row(rule: ManagementAutomationRule, candidate) -> Dict[str, Any]:
     from accounts.services.management_automation_runner import (
         classify_candidate_for_preview,
+        build_preview_message_context,
         _message_for_rule,
     )
 
@@ -1770,7 +1771,8 @@ def _candidate_preview_row(rule: ManagementAutomationRule, candidate) -> Dict[st
         'user_id': meta.get('user_id'),
     })
     if status == 'ready' and rule.action_type == ManagementAutomationRule.ActionType.SEND_SMS:
-        body, _ = _message_for_rule(rule, ctx, user=candidate.user)
+        preview_ctx, _ = build_preview_message_context(rule, candidate)
+        body, _ = _message_for_rule(rule, preview_ctx, user=candidate.user)
         row['message_preview'] = (body or '')[:200]
     return row
 
@@ -1797,7 +1799,9 @@ def preview_automation_rule(rule_key: str) -> Dict[str, Any]:
         for c in candidates:
             st, _, _ = classify_candidate_for_preview(rule, c)
             if st == 'ready':
-                body, _ = _message_for_rule(rule, c.context or {}, user=c.user)
+                from accounts.services.management_automation_runner import build_preview_message_context
+                preview_ctx, _ = build_preview_message_context(rule, c)
+                body, _ = _message_for_rule(rule, preview_ctx, user=c.user)
                 sample_message = body
                 break
 
@@ -2020,15 +2024,19 @@ def preview_rule_message(
             }
         idx = max(0, min(recipient_index, len(ready_candidates) - 1))
         chosen = ready_candidates[idx]
-        from accounts.services.automation_message_templates import enrich_candidate_context
-        ctx = enrich_candidate_context(chosen.context or {}, user=chosen.user)
+        from accounts.services.management_automation_runner import build_preview_message_context
+        ctx, discount_warnings = build_preview_message_context(rule, chosen)
         recipient_result = render_template(template, ctx, rule_key=rule_key, strict_send=False)
         recipient_preview = recipient_result.message if recipient_result.ok else ''
         recipient_label = _candidate_to_preview_row(chosen).get('display') or 'مخاطب'
+        extra_warnings = list(discount_warnings)
+    else:
+        extra_warnings = []
 
     active_result = recipient_result if mode == 'recipient' and recipient_result else sample_result
     rendered = active_result.message if active_result.ok else ''
     sms_info = estimate_sms_info(rendered or template)
+    combined_warnings = list(active_result.warnings) + extra_warnings
 
     return {
         'ok': True,
@@ -2039,7 +2047,7 @@ def preview_rule_message(
         'rendered_message': rendered,
         'recipient_label': recipient_label,
         'variables_used': validation.variables_used,
-        'warnings': active_result.warnings,
+        'warnings': combined_warnings,
         'missing_variables': active_result.missing_variables,
         'sms_info': sms_info,
         'template_valid': True,

@@ -143,6 +143,13 @@ class AutomationMessagePersistenceTests(TestCase):
         self.assertTrue(preview['ok'])
         self.assertTrue(preview['sample_message'])
 
+    def test_discount_rule_sample_preview_has_code(self):
+        preview = preview_rule_message('pending_recovery_discount', mode='sample')
+        self.assertTrue(preview['ok'])
+        rendered = preview['rendered_message'] or preview['sample_message']
+        self.assertIn('DF-', rendered)
+        self.assertNotIn('{discount_code}', rendered)
+
     def test_test_send_staff_only_and_logged(self):
         with patch('accounts.services.notifications.notify_marketing', return_value=(True, type('L', (), {'pk': 1})())) as mock_send:
             result = send_automation_test_message(

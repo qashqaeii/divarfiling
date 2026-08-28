@@ -975,6 +975,32 @@ def _user_cooldown_active(rule: ManagementAutomationRule, user_id: int, *, now=N
     return sent_count >= max(1, rule.max_sends_per_user)
 
 
+def _order_id_from_metadata(meta: Dict[str, Any]) -> Optional[int]:
+    raw = (meta or {}).get('order_id')
+    if not raw:
+        return None
+    try:
+        return int(raw)
+    except (TypeError, ValueError):
+        return None
+
+
+def build_preview_message_context(rule: ManagementAutomationRule, candidate: AutomationCandidate) -> Tuple[Dict[str, str], List[str]]:
+    """Context پیام برای Preview — شامل تخفیف نمایشی در صورت نیاز."""
+    from accounts.services.discount_engine import enrich_preview_discount_context
+
+    ctx = enrich_candidate_context(candidate.context or {}, user=candidate.user)
+    extra_warnings: List[str] = []
+    if rule.key in RULE_DISCOUNT_POLICIES:
+        ctx, extra_warnings = enrich_preview_discount_context(
+            ctx,
+            rule_key=rule.key,
+            user=candidate.user,
+            order_id=_order_id_from_metadata(candidate.metadata),
+        )
+    return ctx, extra_warnings
+
+
 def _message_for_rule(rule: ManagementAutomationRule, context: Dict[str, str], *, user=None) -> Tuple[str, str]:
     """Render پیام Rule — (body, skip_reason). skip_reason غیرخالی یعنی ارسال نشود."""
     template = get_effective_template(rule)

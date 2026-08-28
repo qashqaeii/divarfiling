@@ -7,7 +7,7 @@ import string
 from dataclasses import dataclass
 from datetime import timedelta
 from decimal import Decimal
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from django.conf import settings
 from django.db import transaction
@@ -347,7 +347,7 @@ def enrich_context_with_discount(
     return ctx, None
 
 
-def discount_context_for_preview(rule_key: str) -> Dict[str, str]:
+def discount_context_for_preview(rule_key: str, *, order_id: Optional[int] = None) -> Dict[str, str]:
     """نمونه context تخفیف برای preview."""
     policy_key = _policy_for_rule(rule_key)
     if not policy_key:
@@ -357,7 +357,7 @@ def discount_context_for_preview(rule_key: str) -> Dict[str, str]:
     percent = str(int(policy.get('percent') or 10))
     sample_code = f"{config['global'].get('code_prefix', 'DF')}-H7K4P2"
     expiry = _format_expiry(timezone.now() + timedelta(hours=int(policy.get('valid_hours') or 48)))
-    link = checkout_link_with_code(sample_code)
+    link = checkout_link_with_code(sample_code, order_id=order_id)
     return {
         'code': sample_code,
         'discount_code': sample_code,
@@ -365,4 +365,61 @@ def discount_context_for_preview(rule_key: str) -> Dict[str, str]:
         'discount_amount': '',
         'discount_expiry': expiry,
         'checkout_link': link,
+        'link': link,
     }
+
+
+def active_discount_context_for_user(user, *, order_id: Optional[int] = None) -> Dict[str, str]:
+    """کد تخفیف فعال موجود کاربر — بدون صدور جدید."""
+    user_id = getattr(user, 'pk', None)
+    if not user_id:
+        return {}
+    active = _active_issuance_for_user(user_id)
+    if not active or not active.discount_code_id:
+        return {}
+    dc = active.discount_code
+    is_valid, _ = dc.is_valid(user)
+    if not is_valid:
+        return {}
+    code = dc.code
+    link = checkout_link_with_code(code, order_id=order_id)
+    return {
+        'code': code,
+        'discount_code': code,
+        'discount_percent': (
+            str(int(dc.discount_value)) if dc.discount_type == 'percentage' else ''
+        ),
+        'discount_amount': (
+            str(int(dc.discount_value)) if dc.discount_type == 'fixed' else ''
+        ),
+        'discount_expiry': _format_expiry(dc.valid_until),
+        'checkout_link': link,
+        'link': link,
+    }
+
+
+def enrich_preview_discount_context(
+    context: Dict[str, str],
+    *,
+    rule_key: str,
+    user=None,
+    order_id: Optional[int] = None,
+) -> tuple[Dict[str, str], List[str]]:
+    """غنی‌سازی preview — بدون صدور کد جدید."""
+    if rule_key not in RULE_DISCOUNT_POLICIES:
+        return dict(context or {}), []
+
+    ctx = dict(context or {})
+    warnings: List[str] = []
+
+    if user is not None:
+        active_ctx = active_discount_context_for_user(user, order_id=order_id)
+        if active_ctx:
+            ctx.update(active_ctx)
+            return ctx, warnings
+
+    ctx.update(discount_context_for_preview(rule_key, order_id=order_id))
+    warnings.append(
+        'ℹ️ کد و درصد تخفیف در Preview نمایشی است؛ هنگام ارسال واقعی کد اختصاصی صادر می‌شود.'
+    )
+    return ctx, warnings

@@ -4,29 +4,43 @@
         <header class="h-flow__head mk-reveal">
             <span class="h-flow__kicker">{{ home_page.product_flow.kicker }}</span>
             <h2 class="h-flow__title" id="h-flow-title">{{ home_page.product_flow.title }}</h2>
+            {% if home_page.product_flow.subtitle %}
+            <p class="h-flow__subtitle">{{ home_page.product_flow.subtitle }}</p>
+            {% endif %}
         </header>
     </div>
 
-    <div class="h-flow__track-wrap" data-h-flow-wrap>
-        <div class="h-flow__track" data-h-flow-track role="list">
+    <div class="h-flow__stage" data-h-flow-wrap>
+        <div class="h-flow__rail" aria-hidden="true">
+            <span class="h-flow__rail-track"></span>
+            <span class="h-flow__rail-fill" data-h-flow-progress></span>
+        </div>
+
+        <ol class="h-flow__nodes" data-h-flow-track role="list">
             {% for step in home_page.product_flow.steps %}
-            <article
-                class="h-flow__step{% if forloop.first %} is-active{% endif %}"
+            <li
+                class="h-flow__node{% if forloop.first %} is-active{% endif %}"
                 data-h-flow-step="{{ forloop.counter0 }}"
                 data-accent="{{ step.accent }}"
                 role="listitem"
             >
-                <span class="h-flow__icon"><i class="fas {{ step.icon }}" aria-hidden="true"></i></span>
-                <strong class="h-flow__name">{{ step.title }}</strong>
-                <p class="h-flow__desc">{{ step.desc }}</p>
-                {% if not forloop.last %}
-                <span class="h-flow__arrow" aria-hidden="true"><i class="fas fa-chevron-down"></i></span>
-                {% endif %}
-            </article>
+                <button
+                    type="button"
+                    class="h-flow__node-btn"
+                    data-h-flow-btn="{{ forloop.counter0 }}"
+                    aria-pressed="{% if forloop.first %}true{% else %}false{% endif %}"
+                >
+                    <span class="h-flow__node-ring" aria-hidden="true">
+                        <span class="h-flow__node-index">{{ forloop.counter|stringformat:"02d" }}</span>
+                        <span class="h-flow__node-icon"><i class="fas {{ step.icon }}" aria-hidden="true"></i></span>
+                    </span>
+                    <span class="h-flow__node-copy">
+                        <strong class="h-flow__node-title">{{ step.title }}</strong>
+                        <em class="h-flow__node-desc">{{ step.desc }}</em>
+                    </span>
+                </button>
+            </li>
             {% endfor %}
-        </div>
-        <div class="h-flow__progress" aria-hidden="true">
-            <span class="h-flow__progress-fill" data-h-flow-progress></span>
-        </div>
+        </ol>
     </div>
 </section>

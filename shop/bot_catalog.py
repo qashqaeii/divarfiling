@@ -1362,24 +1362,32 @@ def home_page_content():
         },
         'before_after': {
             'title': 'وقتشه روش کارت را عوض کنی',
+            'subtitle': 'همان کار روزانه — نتیجه‌ای متفاوت',
             'before_label': 'قبل',
             'after_label': 'با فایلینگ دیوار',
-            'before_items': [
-                'جستجوی چندساعته بین آگهی‌ها',
-                'دفتر + Excel + WhatsApp',
-                'پیگیری فراموش‌شده',
-                'فایل‌های پراکنده',
-            ],
-            'after_items': [
-                'فایل مناسب در چند ثانیه',
-                'یک میزکار یکپارچه',
-                'یادآوری و صف امروز',
-                'جستجوی هوشمند',
+            'pairs': [
+                {
+                    'before': 'جستجوی چندساعته بین آگهی‌ها',
+                    'after': 'فایل مناسب در چند ثانیه',
+                },
+                {
+                    'before': 'دفتر + Excel + WhatsApp',
+                    'after': 'یک میزکار یکپارچه',
+                },
+                {
+                    'before': 'پیگیری فراموش‌شده',
+                    'after': 'یادآوری و صف امروز',
+                },
+                {
+                    'before': 'فایل‌های پراکنده',
+                    'after': 'جستجوی هوشمند',
+                },
             ],
         },
         'product_flow': {
             'kicker': 'جریان کار',
             'title': 'از استخراج تا معامله',
+            'subtitle': 'مسیر فایل از دیوار تا قرارداد — در یک خط پیوسته',
             'steps': [
                 {'icon': 'fa-robot', 'title': 'استخراج', 'desc': 'فایل‌ها را پیدا کن', 'accent': 'violet'},
                 {'icon': 'fa-database', 'title': 'فایلینگ', 'desc': 'مرتب و فیلتر کن', 'accent': 'indigo'},
@@ -1389,10 +1397,16 @@ def home_page_content():
                 {'icon': 'fa-handshake', 'title': 'معامله', 'desc': 'فرصت را به قرارداد تبدیل کن', 'accent': 'amber'},
             ],
         },
+        'product_pillars_section': {
+            'kicker': 'سه ستون اصلی',
+            'title': 'همه چیز در یک میزکار',
+            'subtitle': 'فایلینگ، CRM و تحلیل — هر کدام یک لایه از همان میزکار',
+        },
         'product_pillars': [
             {
                 'id': 'filing',
                 'title': 'فایلینگ هوشمند',
+                'nav_icon': 'fa-layer-group',
                 'outcome': 'فایل مناسب را سریع پیدا کن — نه بعد از ساعت‌ها جستجو',
                 'image': 'images/help-map-view.png',
                 'accent': 'indigo',
@@ -1406,6 +1420,7 @@ def home_page_content():
             {
                 'id': 'crm',
                 'title': 'CRM املاک',
+                'nav_icon': 'fa-users',
                 'outcome': 'مشتری را از سرنخ تا قرارداد — بدون فراموشی',
                 'image': 'images/help-crm-dashboard.png',
                 'accent': 'violet',
@@ -1419,6 +1434,7 @@ def home_page_content():
             {
                 'id': 'market',
                 'title': 'تحلیل بازار',
+                'nav_icon': 'fa-chart-pie',
                 'outcome': 'بازار را ببین — قبل از اینکه رقیب جلو بزند',
                 'image': 'images/help-analyze-dashboard.png',
                 'accent': 'emerald',

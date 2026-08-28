@@ -2,46 +2,93 @@
 <section class="h-pillars" id="h-pillars" aria-labelledby="h-pillars-title">
     <div class="container">
         <header class="h-pillars__head mk-reveal">
-            <span class="h-pillars__kicker">سه ستون اصلی</span>
-            <h2 class="h-pillars__title" id="h-pillars-title">همه چیز در یک میزکار</h2>
+            <span class="h-pillars__kicker">{{ home_page.product_pillars_section.kicker }}</span>
+            <h2 class="h-pillars__title" id="h-pillars-title">{{ home_page.product_pillars_section.title }}</h2>
+            {% if home_page.product_pillars_section.subtitle %}
+            <p class="h-pillars__subtitle">{{ home_page.product_pillars_section.subtitle }}</p>
+            {% endif %}
         </header>
 
-        <div class="h-pillars__grid mk-reveal">
-            {% for pillar in home_page.product_pillars %}
-            <article class="h-pillar h-pillar--{{ pillar.accent }}" data-pillar="{{ pillar.id }}">
-                <figure class="h-pillar__visual">
-                    <img
-                        src="{% static pillar.image %}"
-                        alt="{{ pillar.title }}"
-                        width="800"
-                        height="500"
-                        loading="lazy"
-                        decoding="async"
-                        class="h-pillar__img"
-                    >
-                </figure>
-                <div class="h-pillar__body">
-                    <h3 class="h-pillar__title">{{ pillar.title }}</h3>
-                    <p class="h-pillar__outcome">{{ pillar.outcome }}</p>
-                    <ul class="h-pillar__features">
-                        {% for feat in pillar.features %}
-                        <li><i class="fas fa-check" aria-hidden="true"></i> {{ feat }}</li>
-                        {% endfor %}
-                    </ul>
-                    {% if pillar.landing_url_name %}
-                    <a href="{% url pillar.landing_url_name %}" class="h-pillar__link">بیشتر بدانید <i class="fas fa-arrow-left" aria-hidden="true"></i></a>
-                    {% elif pillar.landing_slug %}
-                    <a href="{% url 'platform_features_page' slug_path=pillar.landing_slug %}" class="h-pillar__link">بیشتر بدانید <i class="fas fa-arrow-left" aria-hidden="true"></i></a>
-                    {% endif %}
-                </div>
-            </article>
-            {% endfor %}
+        <div class="h-pillars__showcase mk-reveal" data-h-pillars>
+            <nav class="h-pillars__nav" role="tablist" aria-label="ستون‌های محصول">
+                {% for pillar in home_page.product_pillars %}
+                <button
+                    type="button"
+                    class="h-pillars__nav-btn{% if forloop.first %} is-active{% endif %}"
+                    role="tab"
+                    id="h-pillar-tab-{{ pillar.id }}"
+                    aria-controls="h-pillar-panel-{{ pillar.id }}"
+                    aria-selected="{% if forloop.first %}true{% else %}false{% endif %}"
+                    data-h-pillar-tab="{{ forloop.counter0 }}"
+                    data-accent="{{ pillar.accent }}"
+                >
+                    <span class="h-pillars__nav-icon"><i class="fas {{ pillar.nav_icon|default:'fa-cube' }}" aria-hidden="true"></i></span>
+                    <span class="h-pillars__nav-label">{{ pillar.title }}</span>
+                </button>
+                {% endfor %}
+            </nav>
+
+            <div class="h-pillars__panels">
+                {% for pillar in home_page.product_pillars %}
+                <article
+                    class="h-pillar-panel h-pillar-panel--{{ pillar.accent }}{% if forloop.first %} is-active{% endif %}"
+                    role="tabpanel"
+                    id="h-pillar-panel-{{ pillar.id }}"
+                    aria-labelledby="h-pillar-tab-{{ pillar.id }}"
+                    data-h-pillar-panel="{{ forloop.counter0 }}"
+                    data-pillar="{{ pillar.id }}"
+                    {% if not forloop.first %}hidden{% endif %}
+                >
+                    <figure class="h-pillar-panel__visual">
+                        <div class="h-pillar-panel__frame" aria-hidden="true">
+                            <span></span><span></span><span></span>
+                        </div>
+                        <img
+                            src="{% static pillar.image %}"
+                            alt="{{ pillar.title }}"
+                            width="800"
+                            height="500"
+                            loading="lazy"
+                            decoding="async"
+                            class="h-pillar-panel__img"
+                        >
+                        <span class="h-pillar-panel__badge">{{ pillar.title }}</span>
+                    </figure>
+                    <div class="h-pillar-panel__body">
+                        <h3 class="h-pillar-panel__title">{{ pillar.title }}</h3>
+                        <p class="h-pillar-panel__outcome">{{ pillar.outcome }}</p>
+                        <ul class="h-pillar-panel__features">
+                            {% for feat in pillar.features %}
+                            <li>
+                                <span class="h-pillar-panel__feat-icon" aria-hidden="true"><i class="fas fa-check"></i></span>
+                                {{ feat }}
+                            </li>
+                            {% endfor %}
+                        </ul>
+                        {% if pillar.landing_url_name %}
+                        <a href="{% url pillar.landing_url_name %}" class="h-pillar-panel__link">
+                            بیشتر بدانید
+                            <i class="fas fa-arrow-left" aria-hidden="true"></i>
+                        </a>
+                        {% elif pillar.landing_slug %}
+                        <a href="{% url 'platform_features_page' slug_path=pillar.landing_slug %}" class="h-pillar-panel__link">
+                            بیشتر بدانید
+                            <i class="fas fa-arrow-left" aria-hidden="true"></i>
+                        </a>
+                        {% endif %}
+                    </div>
+                </article>
+                {% endfor %}
+            </div>
         </div>
 
-        <div class="h-pillars__chips mk-reveal" aria-label="سایر امکانات">
-            {% for chip in home_page.extra_chips %}
-            <span class="h-pillar-chip"><i class="fas {{ chip.icon }}" aria-hidden="true"></i> {{ chip.label }}</span>
-            {% endfor %}
+        <div class="h-pillars__orbit mk-reveal" aria-label="سایر امکانات">
+            <span class="h-pillars__orbit-label">+ امکانات بیشتر</span>
+            <div class="h-pillars__orbit-track">
+                {% for chip in home_page.extra_chips %}
+                <span class="h-pillar-chip"><i class="fas {{ chip.icon }}" aria-hidden="true"></i> {{ chip.label }}</span>
+                {% endfor %}
+            </div>
         </div>
     </div>
 </section>

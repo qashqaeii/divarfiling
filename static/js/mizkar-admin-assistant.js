@@ -454,7 +454,7 @@
         var msgSection = document.getElementById('maa-auto-message-section');
         var msgInput = document.getElementById('maa-auto-message-input');
         var msgPreview = document.getElementById('maa-auto-message-preview');
-        var templateBadge = document.getElementById('maa-auto-template-badge');
+        var previewWrap = document.getElementById('maa-message-preview-wrap');
         if (rule.editable) {
             if (msgSection) msgSection.hidden = false;
             if (msgInput) {
@@ -464,9 +464,9 @@
             renderVariableChips(rule.allowed_variables || []);
             renderMessageSummary(rule);
             if (msgPreview) {
-                msgPreview.hidden = true;
                 msgPreview.textContent = '';
             }
+            if (previewWrap) previewWrap.hidden = true;
             renderPreviewWarnings([]);
         } else if (msgSection) {
             msgSection.hidden = true;
@@ -743,9 +743,11 @@
                 .then(function (r) { return r.json(); })
                 .then(function (data) {
                     var msgPreview = document.getElementById('maa-auto-message-preview');
+                    var previewWrap = document.getElementById('maa-message-preview-wrap');
                     if (!data.ok) {
                         alert(data.error || 'Preview ناموفق بود.');
                         renderPreviewWarnings([]);
+                        if (previewWrap) previewWrap.hidden = true;
                         return;
                     }
                     var rendered = data.rendered_message || data.sample_message || data.recipient_message || '';
@@ -754,8 +756,8 @@
                             ? ('[' + data.recipient_label + ']\n')
                             : '';
                         msgPreview.textContent = label + rendered;
-                        msgPreview.hidden = false;
                     }
+                    if (previewWrap) previewWrap.hidden = !rendered;
                     renderPreviewWarnings(data.warnings || []);
                     if (data.sms_info) {
                         var counter = document.getElementById('maa-auto-sms-counter');
@@ -784,10 +786,9 @@
             if (!window.confirm('متن پیام به پیش‌فرض سیستم بازگردانده شود؟')) return;
             saveAutomationSettings({ reset_template: true }, function () {
                 var msgPreview = document.getElementById('maa-auto-message-preview');
-                if (msgPreview) {
-                    msgPreview.hidden = true;
-                    msgPreview.textContent = '';
-                }
+                var previewWrap = document.getElementById('maa-message-preview-wrap');
+                if (msgPreview) msgPreview.textContent = '';
+                if (previewWrap) previewWrap.hidden = true;
             });
         });
     }

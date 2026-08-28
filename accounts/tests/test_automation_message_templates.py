@@ -66,26 +66,26 @@ class AutomationMessageTemplateRegistryTests(TestCase):
         self.assertNotIn('bad', rendered)
 
     def test_optional_missing_code_strict_send(self):
-        tpl = 'کد {code} برای {link}'
+        tpl = 'کد {discount_code} تا {discount_expiry} · {checkout_link}'
         result = render_template(
             tpl,
-            {'code': '', 'link': 'https://example.com'},
-            rule_key='pending_recovery',
+            {'discount_code': '', 'discount_expiry': '', 'checkout_link': ''},
+            rule_key='pending_recovery_discount',
             strict_send=True,
         )
         self.assertFalse(result.ok)
-        self.assertIn('code', result.missing_variables)
+        self.assertIn('discount_code', result.missing_variables)
 
     def test_optional_missing_code_preview_warns(self):
-        tpl = 'کد {code} برای {link}'
+        tpl = 'کد {discount_code} برای {checkout_link}'
         result = render_template(
             tpl,
-            {'code': '', 'link': 'https://example.com'},
-            rule_key='pending_recovery',
+            {'discount_code': '', 'checkout_link': 'https://example.com'},
+            rule_key='pending_recovery_discount',
             strict_send=False,
         )
         self.assertTrue(result.ok)
-        self.assertTrue(any('code' in w for w in result.warnings))
+        self.assertTrue(any('discount_code' in w for w in result.warnings))
 
     def test_persian_unicode_render(self):
         ctx = build_sample_context('license_expiring_3d')
@@ -218,8 +218,8 @@ class AutomationMessageRuntimeTests(TestCase):
         self.assertEqual(ex.status, 'failed')
 
     def test_missing_code_skips_recipient_not_corrupt_sms(self):
-        rule = self._activate('pending_recovery')
-        rule.message_template = 'سلام{name_part} کد {code} · {link}'
+        rule = self._activate('pending_recovery_discount')
+        rule.message_template = 'سلام{name_part} کد {discount_code} · {checkout_link}'
         rule.save(update_fields=['message_template'])
 
         order = Order.objects.create(
@@ -227,11 +227,15 @@ class AutomationMessageRuntimeTests(TestCase):
             amount=100000, status=PENDING_ORDER_STATUSES[0],
         )
         Order.objects.filter(pk=order.pk).update(
-            created_at=timezone.now() - timedelta(hours=5),
+            created_at=timezone.now() - timedelta(hours=30),
         )
 
         with patch('accounts.services.management_automation_runner.notify_marketing') as mock_send:
-            ex = run_rule(rule, dry_run=False, force=True)
+            with patch(
+                'accounts.services.management_automation_runner.enrich_context_with_discount',
+                return_value=({'name_part': ' تست', 'discount_code': '', 'checkout_link': ''}, 'discount_not_issued'),
+            ):
+                ex = run_rule(rule, dry_run=False, force=True)
         mock_send.assert_not_called()
         self.assertGreaterEqual(ex.skipped_count, 1)
 

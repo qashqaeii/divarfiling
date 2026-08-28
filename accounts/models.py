@@ -1638,3 +1638,63 @@ class ManagementAutomationRecipient(models.Model):
 
     def __str__(self):
         return f'{self.trigger_key} [{self.status}]'
+
+
+class DiscountPolicyConfig(models.Model):
+    """تنظیمات مرکزی سیاست تخفیف اتوماسیون — singleton."""
+
+    singleton_key = models.CharField(max_length=16, unique=True, default='default', verbose_name='کلید')
+    policies = models.JSONField(default=dict, blank=True, verbose_name='سیاست‌ها')
+    global_settings = models.JSONField(default=dict, blank=True, verbose_name='تنظیمات عمومی')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='به‌روزرسانی')
+
+    class Meta:
+        verbose_name = 'تنظیمات سیاست تخفیف'
+        verbose_name_plural = 'تنظیمات سیاست تخفیف'
+
+    def __str__(self):
+        return 'سیاست تخفیف اتوماسیون'
+
+
+class UserDiscountIssuance(models.Model):
+    """ثبت صدور کد تخفیف اختصاصی برای کاربر."""
+
+    class SourceType(models.TextChoices):
+        AUTOMATION = 'automation', 'اتوماسیون'
+        MANUAL = 'manual', 'دستی'
+        INSIGHT = 'insight', 'Insight'
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='discount_issuances',
+        verbose_name='کاربر',
+    )
+    discount_code = models.ForeignKey(
+        'shop.DiscountCode',
+        on_delete=models.CASCADE,
+        related_name='user_issuances',
+        verbose_name='کد تخفیف',
+    )
+    policy_key = models.CharField(max_length=64, db_index=True, verbose_name='سیاست')
+    source_rule = models.CharField(max_length=64, blank=True, verbose_name='Rule مبدأ')
+    source_type = models.CharField(
+        max_length=16,
+        choices=SourceType.choices,
+        default=SourceType.AUTOMATION,
+        verbose_name='منبع',
+    )
+    metadata = models.JSONField(default=dict, blank=True, verbose_name='متادیتا')
+    issued_at = models.DateTimeField(auto_now_add=True, db_index=True, verbose_name='زمان صدور')
+
+    class Meta:
+        verbose_name = 'صدور کد تخفیف'
+        verbose_name_plural = 'صدور کدهای تخفیف'
+        ordering = ['-issued_at']
+        indexes = [
+            models.Index(fields=['user', '-issued_at']),
+            models.Index(fields=['policy_key', '-issued_at']),
+        ]
+
+    def __str__(self):
+        return f'{self.user_id} · {self.discount_code.code}'

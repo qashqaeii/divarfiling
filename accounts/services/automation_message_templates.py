@@ -62,6 +62,26 @@ VARIABLE_REGISTRY: Dict[str, VariableDef] = {
         'code', 'کد تخفیف', 'کد تخفیف در صورت وجود کمپین',
         'SAVE10', 'product', optional=True,
     ),
+    'discount_code': VariableDef(
+        'discount_code', 'کد تخفیف اختصاصی', 'کد تخفیف یکبارمصرف صادرشده',
+        'DF-H7K4P2', 'product', optional=True,
+    ),
+    'discount_percent': VariableDef(
+        'discount_percent', 'درصد تخفیف', 'درصد تخفیف کد',
+        '15', 'product', optional=True, allow_empty=True,
+    ),
+    'discount_amount': VariableDef(
+        'discount_amount', 'مبلغ تخفیف', 'مبلغ ثابت تخفیف',
+        '50000', 'product', optional=True, allow_empty=True,
+    ),
+    'discount_expiry': VariableDef(
+        'discount_expiry', 'انقضای کد', 'زمان انقضای کد تخفیف',
+        '1404/06/12 20:00', 'time', optional=True,
+    ),
+    'checkout_link': VariableDef(
+        'checkout_link', 'لینک خرید با کد', 'لینک checkout با کد تخفیف',
+        'https://divarfiling.ir/pricing/?code=DF-H7K4P2', 'product', optional=True,
+    ),
     'link': VariableDef(
         'link', 'لینک اقدام', 'لینک اصلی اقدام (تمدید/خرید)',
         'https://divarfiling.ir/pricing/', 'product',
@@ -131,11 +151,17 @@ RULE_ALLOWED_VARIABLES: Dict[str, Set[str]] = {
     },
     'expired_renewal_campaign': {
         'name_part', 'full_name', 'plan', 'product', 'expiry_date',
-        'license_plan', 'license_expiry', 'link', 'code', 'date',
+        'license_plan', 'license_expiry', 'link', 'code', 'discount_code',
+        'discount_percent', 'discount_expiry', 'checkout_link', 'date',
     },
     'pending_recovery': {
         'name_part', 'full_name', 'product', 'order_product', 'order_amount',
-        'order_id', 'plan', 'price_formatted', 'code', 'link',
+        'order_id', 'plan', 'price_formatted', 'link',
+    },
+    'pending_recovery_discount': {
+        'name_part', 'full_name', 'product', 'order_product', 'order_amount',
+        'order_id', 'plan', 'price_formatted', 'code', 'discount_code',
+        'discount_percent', 'discount_expiry', 'checkout_link', 'link',
     },
     'failed_payment_followup': {
         'name_part', 'full_name', 'product', 'order_product', 'order_amount',
@@ -144,14 +170,33 @@ RULE_ALLOWED_VARIABLES: Dict[str, Set[str]] = {
     'users_onboarding': {
         'name_part', 'full_name', 'link', 'academy_link',
     },
+    'returning_customer_renewal': {
+        'name_part', 'full_name', 'plan', 'product', 'link', 'code', 'discount_code',
+        'discount_percent', 'discount_expiry', 'checkout_link',
+    },
+    'purchase_no_download': {
+        'name_part', 'full_name', 'download_link', 'guide_link', 'link',
+    },
     'windows_activation_nudge': {
         'name_part', 'full_name', 'download_link', 'activation_link', 'guide_link', 'link',
     },
     'windows_activate_no_launch': {
         'name_part', 'full_name', 'guide_link', 'link',
     },
+    'launch_no_dataset': {
+        'name_part', 'full_name', 'academy_link', 'guide_link', 'link',
+    },
+    'dataset_no_crm': {
+        'name_part', 'full_name', 'crm_link', 'academy_link', 'link',
+    },
     'crm_not_started_nudge': {
         'name_part', 'full_name', 'crm_link', 'academy_link', 'link',
+    },
+    'crm_abandoned_nudge': {
+        'name_part', 'full_name', 'crm_link', 'link',
+    },
+    'license_inactive_usage': {
+        'name_part', 'full_name', 'guide_link', 'academy_link', 'link',
     },
 }
 
@@ -164,14 +209,21 @@ RULE_DEFAULT_TEMPLATES: Dict[str, str] = {
     'expired_renewal_campaign': (
         'سلام{name_part} 👋\n'
         'اشتراک فایلینگ دیوارت تموم شده.\n'
-        'برای فعال شدن دوباره سرویس، از اینجا تمدید کن:\n'
-        '{link}'
+        'کد تخفیف اختصاصی‌ت: {discount_code}\n'
+        'تا {discount_expiry} فعاله.\n'
+        'تمدید: {checkout_link}'
     ),
     'pending_recovery': (
         'سلام{name_part} 👋\n'
         'خرید {product} هنوز کامل نشده.\n'
         'اگه قصد خرید داری، از اینجا ادامه بده:\n'
         '{link}'
+    ),
+    'pending_recovery_discount': (
+        'سلام{name_part} 👋\n'
+        'برای تکمیل خرید {product}، یک تخفیف اختصاصی برات فعال کردیم:\n'
+        '{discount_code} ({discount_percent}٪)\n'
+        'تا {discount_expiry} · {checkout_link}'
     ),
     'failed_payment_followup': (
         'سلام{name_part} 👋\n'
@@ -183,6 +235,18 @@ RULE_DEFAULT_TEMPLATES: Dict[str, str] = {
         'سلام{name_part} 👋\n'
         'برای شروع کار با فایلینگ دیوار، این راهنمای کوتاه رو ببین:\n'
         '{academy_link}'
+    ),
+    'returning_customer_renewal': (
+        'سلام{name_part} 👋\n'
+        'خوش برگشتی! برای تمدید، کد اختصاصی‌ت:\n'
+        '{discount_code} ({discount_percent}٪)\n'
+        'تا {discount_expiry} · {checkout_link}'
+    ),
+    'purchase_no_download': (
+        'سلام{name_part} 👋\n'
+        'لایسنس فعال شده؛ نسخه ویندوز رو هنوز دانلود نکردی.\n'
+        'لینک دانلود:\n'
+        '{download_link}'
     ),
     'windows_activation_nudge': (
         'سلام{name_part} 👋\n'
@@ -196,11 +260,34 @@ RULE_DEFAULT_TEMPLATES: Dict[str, str] = {
         'راهنمای شروع سریع:\n'
         '{guide_link}'
     ),
+    'launch_no_dataset': (
+        'سلام{name_part} 👋\n'
+        'هنوز اولین فایلینگت رو نساختی؟\n'
+        'این آموزش کوتاه کمکت می‌کنه سریع شروع کنی:\n'
+        '{academy_link}'
+    ),
+    'dataset_no_crm': (
+        'سلام{name_part} 👋\n'
+        'حالا که فایل‌هات آماده‌ست، مشتری‌ها و پیگیری‌هات رو داخل CRM مرتب کن.\n'
+        'ثبت اولین مشتری:\n'
+        '{crm_link}'
+    ),
     'crm_not_started_nudge': (
         'سلام{name_part} 👋\n'
         'با CRM فایلینگ دیوار می‌تونی مشتری‌ها و پیگیری‌هات رو مرتب مدیریت کنی.\n'
         'شروع سریع:\n'
         '{crm_link}'
+    ),
+    'crm_abandoned_nudge': (
+        'سلام{name_part} 👋\n'
+        'چند وقته از CRM استفاده نکردی.\n'
+        'اگه پیگیری مشتری داری، از اینجا ادامه بده:\n'
+        '{crm_link}'
+    ),
+    'license_inactive_usage': (
+        'سلام{name_part} 👋\n'
+        'برای شروع دوباره، این آموزش کوتاه رو ببین:\n'
+        '{guide_link}'
     ),
 }
 
@@ -366,6 +453,12 @@ def build_sample_context(rule_key: str = '') -> Dict[str, str]:
     if rule_key == 'license_expiring_3d':
         ctx['days_left'] = '۳'
         ctx['days'] = '۳'
+    try:
+        from accounts.services.discount_engine import discount_context_for_preview
+
+        ctx.update(discount_context_for_preview(rule_key))
+    except Exception:
+        pass
     return ctx
 
 

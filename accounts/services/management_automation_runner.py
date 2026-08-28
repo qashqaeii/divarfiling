@@ -36,7 +36,8 @@ from accounts.services.pending_orders import PENDING_ORDER_STATUSES, pending_ord
 from accounts.services.sms import get_sms_balance_snapshot
 from licenses.models import ClientAppEvent, License, LicenseActivation
 from shop.models import DownloadLog, Order
-from workspace.models import Customer, Ticket
+from accounts.services.discount_engine import RULE_DISCOUNT_POLICIES, enrich_context_with_discount
+from workspace.models import Customer, CustomerActivity, Dataset, Ticket
 
 User = get_user_model()
 logger = logging.getLogger(__name__)
@@ -301,16 +302,23 @@ def _resolve_pending_orders(*, stale_hours: int = 2) -> List[AutomationCandidate
     return out
 
 
-def _resolve_failed_orders(*, days_lookback: int = 1) -> List[AutomationCandidate]:
+def _resolve_failed_orders(*, days_lookback: int = 1, min_minutes: int = 30) -> List[AutomationCandidate]:
     since = timezone.now() - timedelta(days=max(1, days_lookback))
+    min_cutoff = timezone.now() - timedelta(minutes=min_minutes)
     out: List[AutomationCandidate] = []
     qs = (
-        Order.objects.filter(status='failed', created_at__gte=since)
+        Order.objects.filter(status='failed', created_at__gte=since, created_at__lte=min_cutoff)
         .select_related('user', 'product', 'plan')
         .order_by('-created_at')[:500]
     )
+    failed_counts: Dict[int, int] = {}
+    for order in qs:
+        if order.user_id:
+            failed_counts[order.user_id] = failed_counts.get(order.user_id, 0) + 1
     for order in qs:
         user = order.user
+        if user and failed_counts.get(user.pk, 0) >= 3:
+            continue
         phone = _phone_ok(getattr(user, 'phone', ''))
         if not phone:
             continue
@@ -476,16 +484,302 @@ def _resolve_stale_tickets_alert(*, hours: int = 12, now=None) -> List[Automatio
     )]
 
 
+def _resolve_pending_orders_discount(*, stale_hours: int = 24) -> List[AutomationCandidate]:
+    cutoff = timezone.now() - timedelta(hours=stale_hours)
+    out: List[AutomationCandidate] = []
+    qs = (
+        pending_orders_queryset(dedupe_by_user=True)
+        .filter(created_at__lte=cutoff)
+        .select_related('user', 'product', 'plan')
+        .order_by('-created_at')[:500]
+    )
+    for order in qs:
+        user = order.user
+        phone = _phone_ok(getattr(user, 'phone', ''))
+        if not phone:
+            continue
+        from accounts.services.admin_marketing import _checkout_url, _format_amount
+        amount = _format_amount(order.amount)
+        out.append(AutomationCandidate(
+            trigger_key=f'pending_discount:{order.pk}',
+            user=user,
+            phone=phone,
+            context={
+                'name_part': _name_part(user),
+                'product': order.product.title if order.product_id else 'محصول',
+                'order_product': order.product.title if order.product_id else 'محصول',
+                'plan': order.plan.name if order.plan_id else '',
+                'amount': amount,
+                'order_amount': amount,
+                'order_id': str(order.pk),
+                'link': _checkout_url(order.pk),
+            },
+            metadata={'order_id': str(order.pk), 'user_id': user.pk, 'issue_discount': True},
+        ))
+    return out
+
+
+def _resolve_returning_customer_renewal() -> List[AutomationCandidate]:
+    now = timezone.now()
+    recent = now - timedelta(days=7)
+    active_q = License.objects.filter(
+        order__user=OuterRef('pk'),
+        order__status='paid',
+        status='active',
+    ).filter(Q(expires_at__isnull=True) | Q(expires_at__gt=now))
+    renewed_q = Order.objects.filter(user=OuterRef('pk'), status='paid', paid_at__gte=recent)
+    had_license_q = Order.objects.filter(user=OuterRef('pk'), status='paid', licenses__isnull=False)
+    out: List[AutomationCandidate] = []
+    qs = (
+        User.objects.filter(is_active=True, last_login__gte=recent)
+        .annotate(
+            has_active=Exists(active_q),
+            renewed_recently=Exists(renewed_q),
+            had_license=Exists(had_license_q),
+        )
+        .filter(has_active=False, renewed_recently=False, had_license=True)
+        .exclude(last_login__isnull=True)[:500]
+    )
+    for user in qs:
+        phone = _phone_ok(getattr(user, 'phone', ''))
+        if not phone:
+            continue
+        out.append(AutomationCandidate(
+            trigger_key=f'returning_customer:{user.pk}',
+            user=user,
+            phone=phone,
+            context={
+                'name_part': _name_part(user),
+                'link': _renewal_link(),
+            },
+            metadata={'user_id': user.pk, 'issue_discount': True},
+        ))
+    return out
+
+
+def _resolve_purchase_no_download(*, min_hours: int = 24) -> List[AutomationCandidate]:
+    now = timezone.now()
+    cutoff = now - timedelta(hours=min_hours)
+    downloaded = set(DownloadLog.objects.values_list('user_id', flat=True).distinct())
+    active_license_q = License.objects.filter(
+        order__user=OuterRef('pk'),
+        order__status='paid',
+        status='active',
+    ).filter(Q(expires_at__isnull=True) | Q(expires_at__gt=now))
+    paid_q = Order.objects.filter(user=OuterRef('pk'), status='paid', paid_at__lte=cutoff)
+    out: List[AutomationCandidate] = []
+    qs = (
+        User.objects.filter(is_active=True)
+        .annotate(has_active=Exists(active_license_q), had_paid=Exists(paid_q))
+        .filter(has_active=True, had_paid=True)
+        .exclude(pk__in=downloaded)[:500]
+    )
+    for user in qs:
+        phone = _phone_ok(getattr(user, 'phone', ''))
+        if not phone:
+            continue
+        out.append(AutomationCandidate(
+            trigger_key=f'purchase_no_download:{user.pk}',
+            user=user,
+            phone=phone,
+            context={'name_part': _name_part(user), 'link': _site_link()},
+            metadata={'user_id': user.pk},
+        ))
+    return out
+
+
+def _resolve_launch_no_dataset(*, hours: int = 48) -> List[AutomationCandidate]:
+    cutoff = timezone.now() - timedelta(hours=hours)
+    launched_ids = ClientAppEvent.objects.filter(
+        event_type=ClientAppEvent.EventType.FIRST_LAUNCH,
+        created_at__lte=cutoff,
+    ).values_list('user_id', flat=True)
+    has_dataset_q = Dataset.objects.filter(user=OuterRef('pk'))
+    out: List[AutomationCandidate] = []
+    qs = (
+        User.objects.filter(is_active=True, pk__in=launched_ids)
+        .annotate(has_ds=Exists(has_dataset_q))
+        .filter(has_ds=False)[:500]
+    )
+    for user in qs:
+        phone = _phone_ok(getattr(user, 'phone', ''))
+        if not phone:
+            continue
+        out.append(AutomationCandidate(
+            trigger_key=f'launch_no_dataset:{user.pk}',
+            user=user,
+            phone=phone,
+            context={'name_part': _name_part(user), 'link': _site_link()},
+            metadata={'user_id': user.pk},
+        ))
+    return out
+
+
+def _resolve_dataset_no_crm(*, days: int = 3) -> List[AutomationCandidate]:
+    cutoff = timezone.now() - timedelta(days=days)
+    has_dataset_q = Dataset.objects.filter(user=OuterRef('pk'), created_at__lte=cutoff)
+    has_crm_q = Customer.objects.filter(user=OuterRef('pk'))
+    out: List[AutomationCandidate] = []
+    qs = (
+        User.objects.filter(is_active=True)
+        .annotate(has_ds=Exists(has_dataset_q), has_crm=Exists(has_crm_q))
+        .filter(has_ds=True, has_crm=False)[:500]
+    )
+    for user in qs:
+        phone = _phone_ok(getattr(user, 'phone', ''))
+        if not phone:
+            continue
+        out.append(AutomationCandidate(
+            trigger_key=f'dataset_no_crm:{user.pk}',
+            user=user,
+            phone=phone,
+            context={'name_part': _name_part(user), 'link': _site_link()},
+            metadata={'user_id': user.pk},
+        ))
+    return out
+
+
+def _resolve_crm_abandoned(*, inactive_days: int = 14) -> List[AutomationCandidate]:
+    cutoff = timezone.now() - timedelta(days=inactive_days)
+    has_crm_q = Customer.objects.filter(user=OuterRef('pk'))
+    recent_activity_q = CustomerActivity.objects.filter(
+        customer__user=OuterRef('pk'),
+        created_at__gte=cutoff,
+    )
+    out: List[AutomationCandidate] = []
+    qs = (
+        User.objects.filter(is_active=True)
+        .annotate(has_crm=Exists(has_crm_q), recent_crm=Exists(recent_activity_q))
+        .filter(has_crm=True, recent_crm=False)[:500]
+    )
+    for user in qs:
+        phone = _phone_ok(getattr(user, 'phone', ''))
+        if not phone:
+            continue
+        out.append(AutomationCandidate(
+            trigger_key=f'crm_abandoned:{user.pk}',
+            user=user,
+            phone=phone,
+            context={'name_part': _name_part(user), 'link': _site_link()},
+            metadata={'user_id': user.pk},
+        ))
+    return out
+
+
+def _resolve_license_inactive_usage(*, inactive_days: int = 14) -> List[AutomationCandidate]:
+    now = timezone.now()
+    cutoff = now - timedelta(days=inactive_days)
+    active_license_q = License.objects.filter(
+        order__user=OuterRef('pk'),
+        status='active',
+    ).filter(Q(expires_at__isnull=True) | Q(expires_at__gt=now))
+    had_usage_q = ClientAppEvent.objects.filter(user=OuterRef('pk'))
+    out: List[AutomationCandidate] = []
+    qs = (
+        User.objects.filter(is_active=True)
+        .annotate(has_active=Exists(active_license_q), had_usage=Exists(had_usage_q))
+        .filter(has_active=True, had_usage=True)[:500]
+    )
+    for user in qs:
+        recent_event = ClientAppEvent.objects.filter(user_id=user.pk, created_at__gte=cutoff).exists()
+        recent_ds = Dataset.objects.filter(user_id=user.pk, updated_at__gte=cutoff).exists()
+        recent_login = user.last_login and user.last_login >= cutoff
+        if recent_event or recent_ds or recent_login:
+            continue
+        phone = _phone_ok(getattr(user, 'phone', ''))
+        if not phone:
+            continue
+        out.append(AutomationCandidate(
+            trigger_key=f'license_inactive:{user.pk}',
+            user=user,
+            phone=phone,
+            context={'name_part': _name_part(user), 'link': _site_link()},
+            metadata={'user_id': user.pk},
+        ))
+    return out
+
+
+def _resolve_churn_risk_alert(*, now=None) -> List[AutomationCandidate]:
+    now = now or timezone.now()
+    horizon = now + timedelta(days=7)
+    inactive_cutoff = now - timedelta(days=10)
+    count = 0
+    active_licenses = License.objects.filter(
+        order__status='paid',
+        status='active',
+        expires_at__isnull=False,
+        expires_at__gt=now,
+        expires_at__lte=horizon,
+    ).select_related('order__user')[:500]
+    for lic in active_licenses:
+        user = lic.order.user
+        if not user:
+            continue
+        if ClientAppEvent.objects.filter(user_id=user.pk).exists():
+            recent = (
+                (user.last_login and user.last_login >= inactive_cutoff)
+                or ClientAppEvent.objects.filter(user_id=user.pk, created_at__gte=inactive_cutoff).exists()
+                or Dataset.objects.filter(user_id=user.pk, updated_at__gte=inactive_cutoff).exists()
+            )
+            if not recent:
+                count += 1
+    if not count:
+        return []
+    bucket = _local_now(now).date().isoformat()
+    return [AutomationCandidate(
+        trigger_key=f'churn_risk:{bucket}',
+        metadata={'count': count, 'alert': True},
+    )]
+
+
+def _resolve_revenue_drop_alert(*, now=None) -> List[AutomationCandidate]:
+    from accounts.services.admin_management_assistant import _revenue_drop_pct
+
+    cur, prev, delta = _revenue_drop_pct()
+    if delta is None or delta > -15:
+        return []
+    bucket = _local_now(now).date().isoformat()
+    return [AutomationCandidate(
+        trigger_key=f'revenue_drop:{bucket}',
+        metadata={'count': abs(int(delta)), 'cur': cur, 'prev': prev, 'alert': True},
+    )]
+
+
+def _resolve_sms_failure_alert(*, now=None) -> List[AutomationCandidate]:
+    from accounts.models import SmsMessageLog
+
+    since = timezone.now() - timedelta(hours=6)
+    failed = SmsMessageLog.objects.filter(status=SmsMessageLog.Status.FAILED, created_at__gte=since).count()
+    if failed < 5:
+        return []
+    local = _local_now(now)
+    bucket = local.strftime('%Y-%m-%d-%H')
+    return [AutomationCandidate(
+        trigger_key=f'sms_failures:{bucket}',
+        metadata={'count': failed, 'alert': True},
+    )]
+
+
 AUDIENCE_RESOLVERS: Dict[str, Callable[[], List[AutomationCandidate]]] = {
     'license_expiring_3d': lambda: _resolve_license_expiring(within_days=3),
     'expired_renewal_campaign': lambda: _resolve_expired_renewal(within_days=14),
     'pending_recovery': lambda: _resolve_pending_orders(stale_hours=2),
+    'pending_recovery_discount': lambda: _resolve_pending_orders_discount(stale_hours=24),
     'failed_payment_followup': lambda: _resolve_failed_orders(days_lookback=1),
     'users_onboarding': lambda: _resolve_users_onboarding(min_hours=24),
+    'returning_customer_renewal': _resolve_returning_customer_renewal,
+    'purchase_no_download': lambda: _resolve_purchase_no_download(min_hours=24),
     'windows_activation_nudge': _resolve_windows_download_no_activate,
     'windows_activate_no_launch': _resolve_windows_activate_no_launch,
+    'launch_no_dataset': lambda: _resolve_launch_no_dataset(hours=48),
+    'dataset_no_crm': lambda: _resolve_dataset_no_crm(days=3),
     'crm_not_started_nudge': _resolve_crm_not_started,
+    'crm_abandoned_nudge': lambda: _resolve_crm_abandoned(inactive_days=14),
+    'license_inactive_usage': lambda: _resolve_license_inactive_usage(inactive_days=14),
+    'churn_risk_alert': _resolve_churn_risk_alert,
+    'revenue_drop_alert': _resolve_revenue_drop_alert,
     'sms_balance_low': _resolve_sms_balance_alert,
+    'sms_failure_alert': _resolve_sms_failure_alert,
     'stale_tickets_alert': lambda: _resolve_stale_tickets_alert(hours=12),
 }
 
@@ -550,7 +844,7 @@ def revalidate_candidate(rule: ManagementAutomationRule, candidate: AutomationCa
             return False, 'renewed'
         return True, ''
 
-    if rule.key == 'pending_recovery':
+    if rule.key in ('pending_recovery', 'pending_recovery_discount'):
         order_id = meta.get('order_id')
         if not order_id:
             return False, 'missing_order'
@@ -596,7 +890,55 @@ def revalidate_candidate(rule: ManagementAutomationRule, candidate: AutomationCa
             return False, 'launched'
         return True, ''
 
-    if rule.key in ('sms_balance_low', 'stale_tickets_alert'):
+    if rule.key == 'returning_customer_renewal':
+        user_id = meta.get('user_id')
+        if user_id and _has_active_license(user_id, now=now):
+            return False, 'renewed'
+        return True, ''
+
+    if rule.key == 'purchase_no_download':
+        user_id = meta.get('user_id')
+        if user_id and DownloadLog.objects.filter(user_id=user_id).exists():
+            return False, 'downloaded'
+        return True, ''
+
+    if rule.key == 'launch_no_dataset':
+        user_id = meta.get('user_id')
+        if user_id and Dataset.objects.filter(user_id=user_id).exists():
+            return False, 'has_dataset'
+        return True, ''
+
+    if rule.key == 'dataset_no_crm':
+        user_id = meta.get('user_id')
+        if user_id and Customer.objects.filter(user_id=user_id).exists():
+            return False, 'crm_started'
+        return True, ''
+
+    if rule.key == 'crm_abandoned_nudge':
+        user_id = meta.get('user_id')
+        cutoff = now - timedelta(days=14)
+        if user_id and CustomerActivity.objects.filter(
+            customer__user_id=user_id, created_at__gte=cutoff,
+        ).exists():
+            return False, 'crm_active'
+        return True, ''
+
+    if rule.key == 'license_inactive_usage':
+        user_id = meta.get('user_id')
+        if user_id and not _has_active_license(user_id, now=now):
+            return False, 'license_not_active'
+        cutoff = now - timedelta(days=14)
+        if user_id:
+            user = User.objects.filter(pk=user_id).first()
+            if user and (
+                (user.last_login and user.last_login >= cutoff)
+                or ClientAppEvent.objects.filter(user_id=user_id, created_at__gte=cutoff).exists()
+                or Dataset.objects.filter(user_id=user_id, updated_at__gte=cutoff).exists()
+            ):
+                return False, 'active_again'
+        return True, ''
+
+    if rule.key in ('sms_balance_low', 'stale_tickets_alert', 'churn_risk_alert', 'revenue_drop_alert', 'sms_failure_alert'):
         return True, ''
 
     if rule.key == 'crm_not_started_nudge':
@@ -656,10 +998,36 @@ def _message_for_rule(rule: ManagementAutomationRule, context: Dict[str, str], *
     return result.message, ''
 
 
+def _maybe_apply_discount(rule: ManagementAutomationRule, candidate: AutomationCandidate) -> Tuple[Dict[str, str], str]:
+    """صدور تخفیف در صورت نیاز Rule — (context, skip_reason)."""
+    if rule.key not in RULE_DISCOUNT_POLICIES:
+        return candidate.context, ''
+    if not candidate.user:
+        return candidate.context, 'missing_user_for_discount'
+    order_id = candidate.metadata.get('order_id')
+    try:
+        oid = int(order_id) if order_id else None
+    except (TypeError, ValueError):
+        oid = None
+    ctx, err = enrich_context_with_discount(
+        candidate.context,
+        rule_key=rule.key,
+        user=candidate.user,
+        order_id=oid,
+        metadata=candidate.metadata,
+    )
+    if err and err != 'active_exists':
+        if not ctx.get('discount_code') and not ctx.get('code'):
+            return ctx, f'discount:{err}'
+    if not (ctx.get('discount_code') or ctx.get('code')):
+        return ctx, 'discount_not_issued'
+    return ctx, ''
+
+
 def _sms_purpose_for_rule(rule: ManagementAutomationRule) -> str:
-    if rule.key in ('pending_recovery', 'failed_payment_followup'):
+    if rule.key in ('pending_recovery', 'pending_recovery_discount', 'failed_payment_followup'):
         return PURPOSE_RECOVERY
-    if rule.key in ('license_expiring_3d', 'expired_renewal_campaign'):
+    if rule.key in ('license_expiring_3d', 'expired_renewal_campaign', 'returning_customer_renewal'):
         return PURPOSE_LICENSE_RENEWAL
     return PURPOSE_MARKETING
 
@@ -774,7 +1142,28 @@ def _process_candidate(
         execution.skipped_count += 1
         return 'skipped'
 
-    body, render_reason = _message_for_rule(rule, candidate.context, user=candidate.user)
+    send_context = dict(candidate.context)
+    discount_skip = ''
+    if rule.key in RULE_DISCOUNT_POLICIES:
+        send_context, discount_skip = _maybe_apply_discount(rule, candidate)
+        if discount_skip:
+            try:
+                with transaction.atomic():
+                    ManagementAutomationRecipient.objects.create(
+                        execution=execution,
+                        rule=rule,
+                        user=candidate.user,
+                        trigger_key=candidate.trigger_key,
+                        status=ManagementAutomationRecipient.Status.SKIPPED,
+                        skipped_reason=discount_skip[:200],
+                        metadata=_safe_metadata(candidate.metadata),
+                    )
+            except IntegrityError:
+                return 'deduped'
+            execution.skipped_count += 1
+            return 'skipped'
+
+    body, render_reason = _message_for_rule(rule, send_context, user=candidate.user)
     if not body:
         try:
             with transaction.atomic():

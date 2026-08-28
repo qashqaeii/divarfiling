@@ -152,50 +152,66 @@
     <section class="maa-section" aria-label="اتوماسیون‌ها">
         <header class="maa-section-head">
             <h2>اتوماسیون‌های فعال</h2>
-            <p>از این به بعد خودکار انجام شود — با cooldown و guardrail</p>
+            <p>۵ گروه: تبدیل · تمدید · فعال‌سازی · engagement · مدیریت</p>
         </header>
 
-        <div class="maa-auto-table-wrap">
-            <table class="maa-auto-table">
-                <thead>
-                    <tr>
-                        <th>اتوماسیون</th>
-                        <th>شرط</th>
-                        <th>وضعیت</th>
-                        <th>عملیات</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for rule in automation_rules %}
-                    <tr data-rule="{{ rule.key }}">
-                        <td>
-                            <strong>{{ rule.name }}</strong>
-                            <small>{{ rule.audience_label }}</small>
-                        </td>
-                        <td>{{ rule.condition_label }}</td>
-                        <td>
-                            <span class="maa-auto-status{% if rule.is_active %} is-on{% endif %}">
-                                {% if rule.is_active %}فعال{% else %}خاموش{% endif %}
-                            </span>
-                        </td>
-                        <td>
-                            <button type="button"
-                                    class="ecc-btn ecc-btn--ghost ecc-btn--sm maa-btn-toggle-auto"
-                                    data-rule="{{ rule.key }}"
-                                    data-active="{% if rule.is_active %}0{% else %}1{% endif %}">
-                                {% if rule.is_active %}توقف{% else %}فعال کردن{% endif %}
-                            </button>
-                            <button type="button"
-                                    class="ecc-btn ecc-btn--ghost ecc-btn--sm maa-btn-automate-detail"
-                                    data-rule="{{ rule.key }}">
-                                جزئیات
-                            </button>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        {% for group in automation_groups %}
+        <div class="maa-auto-group">
+            <header class="maa-auto-group-head">
+                <h3>{{ group.icon }} {{ group.label }}</h3>
+                {% if group.active_count %}
+                <span class="maa-auto-group-badge">{{ group.active_count|to_persian_digits }} فعال</span>
+                {% endif %}
+            </header>
+            <div class="maa-auto-table-wrap">
+                <table class="maa-auto-table">
+                    <thead>
+                        <tr>
+                            <th>اتوماسیون</th>
+                            <th>شرط</th>
+                            <th>وضعیت</th>
+                            <th>عملیات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for rule in group.rules %}
+                        <tr data-rule="{{ rule.key }}">
+                            <td>
+                                <strong>{{ rule.name }}</strong>
+                                <small>{{ rule.audience_label }}</small>
+                                {% if rule.supports_discount %}<small class="maa-auto-tag">تخفیف خودکار</small>{% endif %}
+                            </td>
+                            <td>{{ rule.condition_label }}</td>
+                            <td>
+                                <span class="maa-auto-status{% if rule.is_active %} is-on{% endif %}">
+                                    {% if rule.is_active %}فعال{% else %}خاموش{% endif %}
+                                </span>
+                            </td>
+                            <td>
+                                <button type="button"
+                                        class="ecc-btn ecc-btn--ghost ecc-btn--sm maa-btn-toggle-auto"
+                                        data-rule="{{ rule.key }}"
+                                        data-active="{% if rule.is_active %}0{% else %}1{% endif %}">
+                                    {% if rule.is_active %}توقف{% else %}فعال کردن{% endif %}
+                                </button>
+                                <button type="button"
+                                        class="ecc-btn ecc-btn--ghost ecc-btn--sm maa-btn-automate-detail"
+                                        data-rule="{{ rule.key }}">
+                                    جزئیات
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
+        {% empty %}
+        <div class="ecc-empty ecc-empty--compact">
+            <i class="fas fa-robot"></i>
+            <span>اتوماسیونی تعریف نشده</span>
+        </div>
+        {% endfor %}
     </section>
     {% endif %}
 

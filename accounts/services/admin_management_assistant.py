@@ -44,7 +44,9 @@ from accounts.services.pending_orders import PENDING_ORDER_STATUSES, pending_ord
 from accounts.services.sms import get_sms_balance_snapshot
 from licenses.models import ClientAppEvent, License, LicenseActivation
 from shop.models import DownloadLog, Order
-from workspace.models import Customer, Ticket
+from workspace.models import Customer, CustomerActivity, Dataset, Ticket
+from workspace.models import Dataset
+from workspace.models import CustomerActivity
 
 User = get_user_model()
 
@@ -64,13 +66,102 @@ INSIGHT_MESSAGE_TEMPLATES: Dict[str, str] = {
     'users_without_license_7d': RULE_DEFAULT_TEMPLATES['users_onboarding'],
     'windows_download_no_activate': RULE_DEFAULT_TEMPLATES['windows_activation_nudge'],
     'windows_activate_no_launch': RULE_DEFAULT_TEMPLATES['windows_activate_no_launch'],
-    'high_renewal_chance': RULE_DEFAULT_TEMPLATES['expired_renewal_campaign'],
+    'high_renewal_chance': RULE_DEFAULT_TEMPLATES['returning_customer_renewal'],
     'crm_not_started': RULE_DEFAULT_TEMPLATES['crm_not_started_nudge'],
+    'purchase_no_download': RULE_DEFAULT_TEMPLATES['purchase_no_download'],
+    'launch_no_dataset': RULE_DEFAULT_TEMPLATES['launch_no_dataset'],
+    'dataset_no_crm': RULE_DEFAULT_TEMPLATES['dataset_no_crm'],
+    'crm_abandoned': RULE_DEFAULT_TEMPLATES['crm_abandoned_nudge'],
+    'license_inactive_usage': RULE_DEFAULT_TEMPLATES['license_inactive_usage'],
+    'churn_risk': RULE_DEFAULT_TEMPLATES['license_expiring_3d'],
 }
 
+AUTOMATION_GROUPS: List[Dict[str, str]] = [
+    {'key': 'conversion', 'label': 'تبدیل به خرید', 'icon': '💰'},
+    {'key': 'retention', 'label': 'تمدید و بازگشت', 'icon': '🔑'},
+    {'key': 'activation', 'label': 'فعال‌سازی', 'icon': '🚀'},
+    {'key': 'engagement', 'label': 'موفقیت کاربر', 'icon': '🤝'},
+    {'key': 'management', 'label': 'مدیریت', 'icon': '🧠'},
+]
+
 AUTOMATION_RULE_CATALOG: List[Dict[str, Any]] = [
+    # ── تبدیل به خرید ──
+    {
+        'key': 'users_onboarding',
+        'group': 'conversion',
+        'name': 'ثبت‌نام بدون خرید',
+        'insight_key': 'users_without_license_7d',
+        'flow_key': 'mgmt_users_onboarding',
+        'segment_key': 'users_without_license',
+        'cadence': 'daily',
+        'action_type': 'send_sms',
+        'condition_label': '۲۴ ساعت از ثبت‌نام — بدون لایسنس',
+        'audience_label': 'کاربران تازه‌ثبت‌نام',
+        'action_label': 'ارسال راهنمای شروع',
+        'template_label': 'معرفی محصول',
+        'cooldown_label': 'یک بار برای هر کاربر',
+        'default_active': False,
+        'max_recipients_per_run': 50,
+        'cooldown_days': 14,
+    },
+    {
+        'key': 'pending_recovery',
+        'group': 'conversion',
+        'name': 'سفارش نیمه‌کاره',
+        'insight_key': 'pending_orders',
+        'flow_key': 'pending_recovery',
+        'segment_key': 'pending_orders',
+        'cadence': 'hourly',
+        'action_type': 'send_sms',
+        'condition_label': 'سفارش پرداخت‌نشده بیش از ۲ ساعت',
+        'audience_label': 'کاربران با سفارش معلق',
+        'action_label': 'یادآوری خرید',
+        'template_label': 'یادآوری خرید',
+        'cooldown_label': 'حداکثر یک پیام در ۷ روز',
+        'default_active': False,
+        'max_recipients_per_run': 30,
+        'cooldown_days': 7,
+    },
+    {
+        'key': 'pending_recovery_discount',
+        'group': 'conversion',
+        'name': 'تخفیف خرید نیمه‌کاره',
+        'insight_key': 'pending_orders',
+        'flow_key': 'pending_recovery',
+        'cadence': 'daily',
+        'action_type': 'send_sms',
+        'condition_label': 'سفارش معلق ۲۴+ ساعت — صدور تخفیف',
+        'audience_label': 'کاربران با سفارش معلق',
+        'action_label': 'صدور کد + SMS',
+        'template_label': 'تخفیف اختصاصی',
+        'cooldown_label': 'یک بار برای هر سفارش',
+        'default_active': False,
+        'supports_discount': True,
+        'max_recipients_per_run': 20,
+        'cooldown_days': 14,
+    },
+    {
+        'key': 'failed_payment_followup',
+        'group': 'conversion',
+        'name': 'پرداخت ناموفق',
+        'insight_key': 'failed_payments_today',
+        'flow_key': 'mgmt_failed_payment',
+        'segment_key': 'failed_orders',
+        'cadence': 'hourly',
+        'action_type': 'send_sms',
+        'condition_label': 'پرداخت ناموفق — ۳۰ دقیقه تا ۲۴ ساعت',
+        'audience_label': 'کاربران با پرداخت ناموفق',
+        'action_label': 'راهنمای پرداخت',
+        'template_label': 'راهنمای پرداخت',
+        'cooldown_label': 'یک بار برای هر سفارش',
+        'default_active': False,
+        'max_recipients_per_run': 30,
+        'cooldown_days': 7,
+    },
+    # ── تمدید و بازگشت ──
     {
         'key': 'license_expiring_3d',
+        'group': 'retention',
         'name': 'یادآوری تمدید ۳ روز قبل',
         'insight_key': 'license_expiring_3d',
         'flow_key': 'license_renewal',
@@ -86,66 +177,87 @@ AUTOMATION_RULE_CATALOG: List[Dict[str, Any]] = [
         'cooldown_days': 7,
     },
     {
-        'key': 'pending_recovery',
-        'name': 'بازیابی خرید نیمه‌کاره',
-        'insight_key': 'pending_orders',
-        'flow_key': 'pending_recovery',
-        'segment_key': 'pending_orders',
-        'cadence': 'hourly',
-        'action_type': 'send_sms',
-        'condition_label': 'سفارش پرداخت‌نشده بیش از ۲ ساعت',
-        'audience_label': 'کاربران با سفارش معلق',
-        'action_label': 'ارسال SMS',
-        'template_label': 'یادآوری خرید',
-        'cooldown_label': 'حداکثر یک پیام در ۷ روز',
-        'default_active': False,
-        'max_recipients_per_run': 30,
-        'cooldown_days': 7,
-    },
-    {
-        'key': 'failed_payment_followup',
-        'name': 'پیام بعد از پرداخت ناموفق',
-        'insight_key': 'failed_payments_today',
-        'flow_key': 'mgmt_failed_payment',
-        'segment_key': 'failed_orders',
-        'cadence': 'hourly',
-        'action_type': 'send_sms',
-        'condition_label': 'پرداخت ناموفق در ۲۴ ساعت اخیر',
-        'audience_label': 'کاربران با پرداخت ناموفق',
-        'action_label': 'ارسال SMS',
-        'template_label': 'راهنمای پرداخت',
-        'cooldown_label': 'یک بار برای هر سفارش',
-        'default_active': False,
-        'max_recipients_per_run': 30,
-        'cooldown_days': 7,
-    },
-    {
-        'key': 'users_onboarding',
-        'name': 'خوش‌آمدگویی کاربر جدید',
-        'insight_key': 'users_without_license_7d',
-        'flow_key': 'mgmt_users_onboarding',
-        'segment_key': 'users_without_license',
+        'key': 'expired_renewal_campaign',
+        'group': 'retention',
+        'name': 'کمپین بازگشت لایسنس منقضی',
+        'insight_key': 'expired_not_renewed',
+        'flow_key': 'license_renewal',
         'cadence': 'daily',
         'action_type': 'send_sms',
-        'condition_label': 'ثبت‌نام بدون لایسنس — ۲۴ ساعت بعد',
-        'audience_label': 'کاربران تازه‌ثبت‌نام',
-        'action_label': 'ارسال SMS',
-        'template_label': 'معرفی نسخه کامل',
+        'condition_label': 'منقضی ۱–۱۴ روز — بدون تمدید',
+        'audience_label': 'مشتریان قبلی',
+        'action_label': 'کد بازگشت + SMS',
+        'template_label': 'تمدید با تخفیف',
+        'cooldown_label': 'حداکثر یک پیام در ۷ روز',
+        'default_active': False,
+        'supports_discount': True,
+        'max_recipients_per_run': 50,
+        'cooldown_days': 7,
+    },
+    {
+        'key': 'returning_customer_renewal',
+        'group': 'retention',
+        'name': 'مشتری برگشته بدون تمدید',
+        'insight_key': 'high_renewal_chance',
+        'flow_key': 'license_renewal',
+        'cadence': 'daily',
+        'action_type': 'send_sms',
+        'condition_label': 'مشتری قبلی — login اخیر — بدون لایسنس',
+        'audience_label': 'Leadهای گرم بازگشت',
+        'action_label': 'پیام بازگشت + تخفیف',
+        'template_label': 'بازگشت با کد',
+        'cooldown_label': 'یک بار در ۷ روز',
+        'default_active': False,
+        'supports_discount': True,
+        'max_recipients_per_run': 30,
+        'cooldown_days': 7,
+    },
+    {
+        'key': 'churn_risk_alert',
+        'group': 'retention',
+        'name': 'مشتری در خطر ریزش',
+        'insight_key': 'churn_risk',
+        'flow_key': 'mgmt_churn_alert',
+        'cadence': 'daily',
+        'action_type': 'manual_review',
+        'condition_label': 'لایسنس فعال + افت فعالیت + انقضا نزدیک',
+        'audience_label': 'مشتریان پرارزش',
+        'action_label': 'پیگیری دستی',
+        'template_label': '—',
+        'cooldown_label': 'یک هشدار در روز',
+        'default_active': False,
+        'max_recipients_per_run': 1,
+        'cooldown_days': 1,
+    },
+    # ── فعال‌سازی ──
+    {
+        'key': 'purchase_no_download',
+        'group': 'activation',
+        'name': 'خرید بدون دانلود',
+        'insight_key': 'purchase_no_download',
+        'flow_key': 'mgmt_windows_download',
+        'cadence': 'daily',
+        'action_type': 'send_sms',
+        'condition_label': 'لایسنس فعال — ۲۴ ساعت بدون دانلود ویندوز',
+        'audience_label': 'خریداران جدید',
+        'action_label': 'لینک دانلود',
+        'template_label': 'Customer Success',
         'cooldown_label': 'یک بار برای هر کاربر',
         'default_active': False,
-        'max_recipients_per_run': 50,
+        'max_recipients_per_run': 30,
         'cooldown_days': 14,
     },
     {
         'key': 'windows_activation_nudge',
-        'name': 'راهنمای فعال‌سازی ویندوز',
+        'group': 'activation',
+        'name': 'دانلود بدون فعال‌سازی',
         'insight_key': 'windows_download_no_activate',
         'flow_key': 'mgmt_windows_activation',
         'cadence': 'daily',
         'action_type': 'send_sms',
-        'condition_label': 'دانلود بدون فعال‌سازی',
-        'audience_label': 'کاربران دانلودکننده ویندوز',
-        'action_label': 'ارسال SMS',
+        'condition_label': 'دانلود شده — ۲۴ ساعت بدون فعال‌سازی',
+        'audience_label': 'کاربران دانلودکننده',
+        'action_label': 'راهنمای فعال‌سازی',
         'template_label': 'راهنمای فعال‌سازی',
         'cooldown_label': 'یک بار برای هر کاربر',
         'default_active': False,
@@ -154,55 +266,146 @@ AUTOMATION_RULE_CATALOG: List[Dict[str, Any]] = [
     },
     {
         'key': 'windows_activate_no_launch',
-        'name': 'راهنمای اولین اجرای ویندوز',
+        'group': 'activation',
+        'name': 'فعال‌سازی بدون اولین اجرا',
         'insight_key': 'windows_activate_no_launch',
         'flow_key': 'mgmt_windows_launch',
         'cadence': 'daily',
         'action_type': 'send_sms',
-        'condition_label': 'فعال‌سازی بدون اولین اجرا',
+        'condition_label': 'فعال‌سازی شده — بدون first launch',
         'audience_label': 'کاربران فعال‌سازی‌شده',
-        'action_label': 'ارسال SMS',
-        'template_label': 'راهنمای شروع',
+        'action_label': 'راهنمای شروع',
+        'template_label': 'شروع سریع',
         'cooldown_label': 'یک بار برای هر کاربر',
         'default_active': False,
         'max_recipients_per_run': 30,
         'cooldown_days': 14,
     },
     {
-        'key': 'expired_renewal_campaign',
-        'name': 'کمپین بازگشت لایسنس منقضی',
-        'insight_key': 'expired_not_renewed',
-        'flow_key': 'license_renewal',
+        'key': 'launch_no_dataset',
+        'group': 'activation',
+        'name': 'اجرای اول بدون Dataset',
+        'insight_key': 'launch_no_dataset',
+        'flow_key': 'mgmt_activation_dataset',
         'cadence': 'daily',
         'action_type': 'send_sms',
-        'condition_label': 'منقضی تا ۱۴ روز — بدون تمدید',
-        'audience_label': 'مشتریان قبلی',
-        'action_label': 'ارسال SMS',
-        'template_label': 'یادآوری تمدید',
-        'cooldown_label': 'حداکثر یک پیام در ۷ روز',
+        'condition_label': 'first launch — ۴۸ ساعت بدون dataset',
+        'audience_label': 'کاربران تازه‌فعال',
+        'action_label': 'آموزش فایلینگ',
+        'template_label': 'اولین Dataset',
+        'cooldown_label': 'یک بار برای هر کاربر',
         'default_active': False,
-        'max_recipients_per_run': 50,
-        'cooldown_days': 7,
+        'max_recipients_per_run': 30,
+        'cooldown_days': 14,
+    },
+    {
+        'key': 'dataset_no_crm',
+        'group': 'activation',
+        'name': 'Dataset بدون CRM',
+        'insight_key': 'dataset_no_crm',
+        'flow_key': 'mgmt_crm',
+        'cadence': 'daily',
+        'action_type': 'send_sms',
+        'condition_label': 'Dataset دارد — ۳ روز بدون مشتری CRM',
+        'audience_label': 'کاربران با فایلینگ',
+        'action_label': 'CTA ثبت مشتری',
+        'template_label': 'شروع CRM',
+        'cooldown_label': 'یک بار برای هر کاربر',
+        'default_active': False,
+        'max_recipients_per_run': 30,
+        'cooldown_days': 21,
+    },
+    # ── موفقیت کاربر ──
+    {
+        'key': 'crm_abandoned_nudge',
+        'group': 'engagement',
+        'name': 'CRM رها شده',
+        'insight_key': 'crm_abandoned',
+        'flow_key': 'mgmt_crm',
+        'cadence': 'daily',
+        'action_type': 'send_sms',
+        'condition_label': 'قبلاً CRM داشته — ۱۴ روز بدون فعالیت',
+        'audience_label': 'کاربران CRM',
+        'action_label': 'پیام بازگشت',
+        'template_label': 'ادامه CRM',
+        'cooldown_label': 'یک بار در ۳۰ روز',
+        'default_active': False,
+        'max_recipients_per_run': 30,
+        'cooldown_days': 30,
+    },
+    {
+        'key': 'license_inactive_usage',
+        'group': 'engagement',
+        'name': 'لایسنس فعال — استفاده کم',
+        'insight_key': 'license_inactive_usage',
+        'flow_key': 'mgmt_engagement',
+        'cadence': 'daily',
+        'action_type': 'send_sms',
+        'condition_label': 'لایسنس فعال — ۱۴ روز بدون activity',
+        'audience_label': 'مشتریان در حال کم‌شدن engagement',
+        'action_label': 'Customer Success',
+        'template_label': 'بازگشت به استفاده',
+        'cooldown_label': 'یک بار در ۲۱ روز',
+        'default_active': False,
+        'max_recipients_per_run': 30,
+        'cooldown_days': 21,
     },
     {
         'key': 'crm_not_started_nudge',
-        'name': 'آموزش شروع CRM',
+        'group': 'engagement',
+        'name': 'لایسنس فعال — CRM شروع نشده',
         'insight_key': 'crm_not_started',
         'flow_key': 'mgmt_crm',
         'cadence': 'daily',
         'action_type': 'send_sms',
-        'condition_label': 'لایسنس فعال بدون مشتری CRM',
+        'condition_label': 'لایسنس فعال — بدون مشتری CRM',
         'audience_label': 'کاربران فعال',
-        'action_label': 'ارسال SMS',
+        'action_label': 'آموزش CRM',
         'template_label': 'آموزش CRM',
         'cooldown_label': 'یک بار برای هر کاربر',
         'default_active': False,
         'max_recipients_per_run': 30,
         'cooldown_days': 30,
     },
+    # ── مدیریت ──
+    {
+        'key': 'revenue_drop_alert',
+        'group': 'management',
+        'name': 'هشدار افت Revenue',
+        'insight_key': 'revenue_drop_7d',
+        'flow_key': 'mgmt_sales_alert',
+        'cadence': 'daily',
+        'action_type': 'management_alert',
+        'condition_label': 'درآمد ۷ روز اخیر >۱۵٪ کمتر',
+        'audience_label': 'مدیر سیستم',
+        'action_label': 'هشدار مدیریت',
+        'template_label': '—',
+        'cooldown_label': 'یک هشدار در روز',
+        'default_active': False,
+        'max_recipients_per_run': 1,
+        'cooldown_days': 1,
+    },
+    {
+        'key': 'stale_tickets_alert',
+        'group': 'management',
+        'name': 'تیکت قدیمی بدون پاسخ',
+        'insight_key': 'stale_tickets',
+        'flow_key': 'mgmt_support_alert',
+        'cadence': 'hourly',
+        'action_type': 'manual_review',
+        'condition_label': 'تیکت بیش از ۱۲ ساعت بدون پاسخ',
+        'audience_label': 'تیم پشتیبانی',
+        'action_label': 'بررسی دستی',
+        'template_label': '—',
+        'cooldown_label': 'یک هشدار در ساعت',
+        'default_active': False,
+        'max_recipients_per_run': 1,
+        'cooldown_days': 0,
+    },
     {
         'key': 'sms_balance_low',
-        'name': 'هشدار موجودی SMS',
+        'group': 'management',
+        'name': 'موجودی SMS پایین',
         'insight_key': 'sms_balance_low',
         'flow_key': 'mgmt_sms_alert',
         'cadence': 'hourly',
@@ -217,15 +420,16 @@ AUTOMATION_RULE_CATALOG: List[Dict[str, Any]] = [
         'cooldown_days': 0,
     },
     {
-        'key': 'stale_tickets_alert',
-        'name': 'هشدار تیکت بدون پاسخ',
-        'insight_key': 'stale_tickets',
-        'flow_key': 'mgmt_support_alert',
+        'key': 'sms_failure_alert',
+        'group': 'management',
+        'name': 'خطای غیرعادی SMS',
+        'insight_key': 'sms_failure_spike',
+        'flow_key': 'mgmt_sms_alert',
         'cadence': 'hourly',
-        'action_type': 'manual_review',
-        'condition_label': 'تیکت بیش از ۱۲ ساعت بدون پاسخ',
-        'audience_label': 'تیم پشتیبانی',
-        'action_label': 'بررسی دستی',
+        'action_type': 'management_alert',
+        'condition_label': 'نرخ خطای SMS بالاتر از حد',
+        'audience_label': 'مدیر سیستم',
+        'action_label': 'هشدار مدیریت',
         'template_label': '—',
         'cooldown_label': 'یک هشدار در ساعت',
         'default_active': False,
@@ -415,6 +619,143 @@ def _count_high_renewal_chance() -> int:
         .exclude(last_login__isnull=True)
         .count()
     )
+
+
+def _count_crm_abandoned(*, inactive_days: int = 14) -> int:
+    cutoff = timezone.now() - timedelta(days=inactive_days)
+    has_crm_q = Customer.objects.filter(user=OuterRef('pk'))
+    recent_activity_q = CustomerActivity.objects.filter(
+        customer__user=OuterRef('pk'),
+        created_at__gte=cutoff,
+    )
+    return (
+        User.objects.filter(is_active=True)
+        .annotate(has_crm=Exists(has_crm_q), recent_crm=Exists(recent_activity_q))
+        .filter(has_crm=True, recent_crm=False)
+        .count()
+    )
+
+
+def _count_purchase_no_download(*, min_hours: int = 24) -> int:
+    now = timezone.now()
+    cutoff = now - timedelta(hours=min_hours)
+    downloaded_users = DownloadLog.objects.values_list('user_id', flat=True).distinct()
+    active_license_q = License.objects.filter(
+        order__user=OuterRef('pk'),
+        order__status='paid',
+        status='active',
+    ).filter(Q(expires_at__isnull=True) | Q(expires_at__gt=now))
+    paid_recent_q = Order.objects.filter(
+        user=OuterRef('pk'),
+        status='paid',
+        paid_at__lte=cutoff,
+    )
+    return (
+        User.objects.filter(is_active=True)
+        .annotate(has_active=Exists(active_license_q), had_paid=Exists(paid_recent_q))
+        .filter(has_active=True, had_paid=True)
+        .exclude(pk__in=downloaded_users)
+        .count()
+    )
+
+
+def _count_launch_no_dataset(*, hours: int = 48) -> int:
+    cutoff = timezone.now() - timedelta(hours=hours)
+    launched = ClientAppEvent.objects.filter(
+        event_type=ClientAppEvent.EventType.FIRST_LAUNCH,
+        created_at__lte=cutoff,
+    ).values_list('user_id', flat=True)
+    has_dataset = Dataset.objects.filter(user=OuterRef('pk'))
+    return (
+        User.objects.filter(is_active=True, pk__in=launched)
+        .annotate(has_ds=Exists(has_dataset))
+        .filter(has_ds=False)
+        .count()
+    )
+
+
+def _count_dataset_no_crm(*, days: int = 3) -> int:
+    cutoff = timezone.now() - timedelta(days=days)
+    has_dataset = Dataset.objects.filter(user=OuterRef('pk'), created_at__lte=cutoff)
+    has_crm = Customer.objects.filter(user=OuterRef('pk'))
+    return (
+        User.objects.filter(is_active=True)
+        .annotate(has_ds=Exists(has_dataset), has_crm=Exists(has_crm))
+        .filter(has_ds=True, has_crm=False)
+        .count()
+    )
+
+
+def _count_license_inactive_usage(*, inactive_days: int = 14) -> int:
+    now = timezone.now()
+    cutoff = now - timedelta(days=inactive_days)
+    active_license_q = License.objects.filter(
+        order__user=OuterRef('pk'),
+        status='active',
+    ).filter(Q(expires_at__isnull=True) | Q(expires_at__gt=now))
+    had_usage_q = ClientAppEvent.objects.filter(user=OuterRef('pk'))
+    recent_login_q = Q(last_login__gte=cutoff)
+    recent_event_q = Exists(
+        ClientAppEvent.objects.filter(user=OuterRef('pk'), created_at__gte=cutoff)
+    )
+    recent_dataset_q = Exists(
+        Dataset.objects.filter(user=OuterRef('pk'), updated_at__gte=cutoff)
+    )
+    qs = (
+        User.objects.filter(is_active=True)
+        .annotate(
+            has_active=Exists(active_license_q),
+            had_usage=Exists(had_usage_q),
+            recent_event=recent_event_q,
+            recent_dataset=recent_dataset_q,
+        )
+        .filter(has_active=True, had_usage=True)
+    )
+    inactive = []
+    for user in qs[:1000]:
+        if user.last_login and user.last_login >= cutoff:
+            continue
+        if user.recent_event or user.recent_dataset:
+            continue
+        inactive.append(user.pk)
+    return len(inactive)
+
+
+def _count_churn_risk() -> int:
+    now = timezone.now()
+    horizon = now + timedelta(days=7)
+    active_licenses = License.objects.filter(
+        order__status='paid',
+        status='active',
+        expires_at__isnull=False,
+        expires_at__gt=now,
+        expires_at__lte=horizon,
+    ).select_related('order__user')[:500]
+    count = 0
+    inactive_cutoff = now - timedelta(days=10)
+    for lic in active_licenses:
+        user = lic.order.user
+        if not user:
+            continue
+        recent_event = ClientAppEvent.objects.filter(
+            user_id=user.pk, created_at__gte=inactive_cutoff,
+        ).exists()
+        recent_ds = Dataset.objects.filter(
+            user_id=user.pk, updated_at__gte=inactive_cutoff,
+        ).exists()
+        recent_login = user.last_login and user.last_login >= inactive_cutoff
+        if not (recent_event or recent_ds or recent_login):
+            if ClientAppEvent.objects.filter(user_id=user.pk).exists():
+                count += 1
+    return count
+
+
+def _count_sms_failure_spike(*, hours: int = 6, min_failures: int = 5) -> int:
+    from accounts.models import SmsMessageLog
+
+    since = timezone.now() - timedelta(hours=hours)
+    failed = SmsMessageLog.objects.filter(status=SmsMessageLog.Status.FAILED, created_at__gte=since).count()
+    return failed if failed >= min_failures else 0
 
 
 def _count_crm_not_started() -> tuple[int, int]:
@@ -608,8 +949,123 @@ def build_management_insights() -> List[ManagementInsight]:
             count=win_launch,
             icon='fa-play',
             accent='cyan',
+            automation_key='windows_activate_no_launch',
+            flow_key='mgmt_windows_launch',
             view_url=reverse('admin_panel_windows') + '?days=30',
-            automation_available=False,
+        ))
+
+    purchase_no_dl = _count_purchase_no_download()
+    if purchase_no_dl:
+        insights.append(_build_insight(
+            key='purchase_no_download',
+            title=f'{purchase_no_dl} مشتری لایسنس دارد ولی ویندوز دانلود نکرده',
+            what_happened='خرید موفق ثبت شده اما دانلود نسخه ویندوز انجام نشده.',
+            importance='Customer Success — نزدیک به ارزش واقعی محصول',
+            context='',
+            recommendation='ارسال لینک دانلود',
+            severity='medium',
+            category='windows',
+            count=purchase_no_dl,
+            icon='fa-box-open',
+            accent='cyan',
+            automation_key='purchase_no_download',
+            flow_key='mgmt_windows_download',
+            view_url=reverse('admin_panel_windows') + '?days=30',
+        ))
+
+    launch_no_ds = _count_launch_no_dataset()
+    if launch_no_ds:
+        insights.append(_build_insight(
+            key='launch_no_dataset',
+            title=f'{launch_no_ds} کاربر اجرا کرده ولی Dataset نساخته',
+            what_happened='first launch ثبت شده اما اولین فایلینگ ساخته نشده.',
+            importance='Activation Event کلیدی محصول',
+            context='',
+            recommendation='ارسال آموزش ساخت اولین Dataset',
+            severity='medium',
+            category='activation',
+            count=launch_no_ds,
+            icon='fa-table',
+            accent='indigo',
+            automation_key='launch_no_dataset',
+            flow_key='mgmt_activation_dataset',
+            view_url=reverse('admin_panel_operations') + '?days=30',
+        ))
+
+    dataset_no_crm = _count_dataset_no_crm()
+    if dataset_no_crm:
+        insights.append(_build_insight(
+            key='dataset_no_crm',
+            title=f'{dataset_no_crm} کاربر Dataset دارد ولی CRM شروع نکرده',
+            what_happened='فایلینگ آماده است اما مشتری CRM ثبت نشده.',
+            importance='Cross-feature activation',
+            context='',
+            recommendation='دعوت به ثبت اولین مشتری CRM',
+            severity='opportunity',
+            category='crm',
+            count=dataset_no_crm,
+            icon='fa-diagram-project',
+            accent='emerald',
+            automation_key='dataset_no_crm',
+            flow_key='mgmt_crm',
+            view_url=reverse('admin_panel_crm') + '?days=30',
+        ))
+
+    crm_abandoned = _count_crm_abandoned()
+    if crm_abandoned:
+        insights.append(_build_insight(
+            key='crm_abandoned',
+            title=f'{crm_abandoned} کاربر CRM را رها کرده',
+            what_happened='قبلاً فعالیت CRM داشته‌اند اما ۱۴ روز بدون استفاده.',
+            importance='افزایش Stickiness محصول',
+            context='',
+            recommendation='پیام بازگشت به CRM',
+            severity='medium',
+            category='crm',
+            count=crm_abandoned,
+            icon='fa-address-book',
+            accent='emerald',
+            automation_key='crm_abandoned_nudge',
+            flow_key='mgmt_crm',
+            view_url=reverse('admin_panel_crm') + '?days=30',
+        ))
+
+    inactive_usage = _count_license_inactive_usage()
+    if inactive_usage:
+        insights.append(_build_insight(
+            key='license_inactive_usage',
+            title=f'{inactive_usage} مشتری فعال در حال کم‌شدن استفاده',
+            what_happened='لایسنس فعال دارند اما ۱۴ روز بدون activity.',
+            importance='پیشگیری از ریزش قبل از انقضا',
+            context='',
+            recommendation='پیام Customer Success',
+            severity='high',
+            category='engagement',
+            count=inactive_usage,
+            icon='fa-chart-line',
+            accent='amber',
+            automation_key='license_inactive_usage',
+            flow_key='mgmt_engagement',
+            view_url=reverse('admin_panel_users') + '?days=30',
+        ))
+
+    churn_risk = _count_churn_risk()
+    if churn_risk:
+        insights.append(_build_insight(
+            key='churn_risk',
+            title=f'{churn_risk} مشتری در خطر ریزش',
+            what_happened='لایسنس نزدیک انقضا + افت فعالیت + سابقه استفاده.',
+            importance='نیاز به پیگیری شخصی یا پیام هدفمند',
+            context='',
+            recommendation='بررسی دستی یا پیام شخصی',
+            severity='critical',
+            category='license',
+            count=churn_risk,
+            icon='fa-triangle-exclamation',
+            accent='rose',
+            automation_key='churn_risk_alert',
+            flow_key='mgmt_churn_alert',
+            view_url=reverse('admin_panel_licenses') + '?days=30',
         ))
 
     stale_tickets = _count_stale_tickets(hours=12)
@@ -620,14 +1076,15 @@ def build_management_insights() -> List[ManagementInsight]:
             what_happened=f'{stale_tickets} تیکت باز بیش از ۱۲ ساعت منتظر پاسخ staff هستند.',
             importance='افت رضایت و اعتماد مشتری',
             context='',
-            recommendation='مشاهده و پاسخ — معمولاً خودکارسازی توصیه نمی‌شود.',
+            recommendation='مشاهده و پاسخ — اتوماسیون فقط هشدار می‌دهد.',
             severity='critical',
             category='support',
             count=stale_tickets,
             icon='fa-headset',
             accent='rose',
+            automation_key='stale_tickets_alert',
+            flow_key='mgmt_support_alert',
             view_url=reverse('admin_panel_support') + '?days=7',
-            automation_available=False,
         ))
 
     sms = get_sms_balance_snapshot()
@@ -639,14 +1096,34 @@ def build_management_insights() -> List[ManagementInsight]:
             what_happened=f'موجودی فعلی حدود {credit:,} تومان است.',
             importance='قطع کمپین‌ها و یادآوری‌ها',
             context='',
-            recommendation='موجودی را افزایش دهید — هشدار خودکار زیر آستانه فعال کنید.',
+            recommendation='موجودی را افزایش دهید.',
             severity='high',
             category='sms',
             count=1,
             icon='fa-comment-sms',
             accent='amber',
+            automation_key='sms_balance_low',
+            flow_key='mgmt_sms_alert',
             view_url=reverse('admin_panel_marketing'),
-            automation_available=False,
+        ))
+
+    sms_failures = _count_sms_failure_spike()
+    if sms_failures:
+        insights.append(_build_insight(
+            key='sms_failure_spike',
+            title=f'{sms_failures} خطای SMS در ۶ ساعت اخیر',
+            what_happened='نرخ خطای ارسال پیامک بالاتر از حد معمول است.',
+            importance='اختلال در اتوماسیون‌ها و کمپین‌ها',
+            context='',
+            recommendation='وضعیت SMS provider را بررسی کنید.',
+            severity='high',
+            category='sms',
+            count=sms_failures,
+            icon='fa-exclamation-triangle',
+            accent='rose',
+            automation_key='sms_failure_alert',
+            flow_key='mgmt_sms_alert',
+            view_url=reverse('admin_panel_marketing'),
         ))
 
     cur_rev, prev_rev, rev_delta = _revenue_drop_pct()
@@ -663,8 +1140,9 @@ def build_management_insights() -> List[ManagementInsight]:
             count=abs(int(rev_delta)),
             icon='fa-chart-line',
             accent='violet',
+            automation_key='revenue_drop_alert',
+            flow_key='mgmt_sales_alert',
             view_url=reverse('admin_panel_sales') + '?days=7',
-            automation_available=False,
         ))
 
     crm_without, crm_total = _count_crm_not_started()
@@ -683,8 +1161,9 @@ def build_management_insights() -> List[ManagementInsight]:
                 count=crm_without,
                 icon='fa-address-book',
                 accent='emerald',
+                automation_key='crm_not_started_nudge',
+                flow_key='mgmt_crm',
                 view_url=reverse('admin_panel_crm') + '?days=30',
-                automation_available=False,
             ))
 
     renewal_hot = _count_high_renewal_chance()
@@ -695,13 +1174,13 @@ def build_management_insights() -> List[ManagementInsight]:
             what_happened='این کاربران قبلاً خریدار بوده‌اند، لایسنسشان تمام شده و دوباره به سیستم برگشته‌اند.',
             importance='فرصت تمدید با نرخ تبدیل بالا',
             context='',
-            recommendation='همین امروز پیام تمدید ارسال کن.',
+            recommendation='همین امروز پیام تمدید با کد اختصاصی ارسال کن.',
             severity='high',
             category='license',
             count=renewal_hot,
             icon='fa-fire',
             accent='rose',
-            automation_key='expired_renewal_campaign',
+            automation_key='returning_customer_renewal',
             flow_key='license_renewal',
             view_url=reverse('admin_panel_licenses') + '?days=30',
         ))
@@ -816,12 +1295,18 @@ def ensure_automation_rules() -> None:
 def get_automation_rules() -> List[Dict[str, Any]]:
     ensure_automation_rules()
     db_rules = {r.key: r for r in ManagementAutomationRule.objects.all()}
+    group_map = {g['key']: g for g in AUTOMATION_GROUPS}
     rows = []
     for catalog in AUTOMATION_RULE_CATALOG:
         rule = db_rules.get(catalog['key'])
+        group_key = catalog.get('group', '')
+        group = group_map.get(group_key, {})
         rows.append({
             'key': catalog['key'],
             'name': catalog['name'],
+            'group': group_key,
+            'group_label': group.get('label', ''),
+            'group_icon': group.get('icon', ''),
             'insight_key': catalog.get('insight_key', ''),
             'flow_key': catalog.get('flow_key', ''),
             'condition_label': catalog['condition_label'],
@@ -829,6 +1314,7 @@ def get_automation_rules() -> List[Dict[str, Any]]:
             'action_label': catalog['action_label'],
             'template_label': catalog['template_label'],
             'cooldown_label': catalog['cooldown_label'],
+            'supports_discount': bool(catalog.get('supports_discount')),
             'is_active': bool(rule and rule.is_active),
             'last_run_at': rule.last_run_at if rule else None,
             'cooldown_days': rule.cooldown_days if rule else 7,
@@ -837,6 +1323,24 @@ def get_automation_rules() -> List[Dict[str, Any]]:
             'is_paused': bool(rule and rule.is_paused),
         })
     return rows
+
+
+def get_automation_rules_grouped() -> List[Dict[str, Any]]:
+    rules = get_automation_rules()
+    grouped: Dict[str, List[Dict[str, Any]]] = {g['key']: [] for g in AUTOMATION_GROUPS}
+    for row in rules:
+        grouped.setdefault(row.get('group') or 'management', []).append(row)
+    out = []
+    for group in AUTOMATION_GROUPS:
+        items = grouped.get(group['key'], [])
+        if not items:
+            continue
+        out.append({
+            **group,
+            'rules': items,
+            'active_count': sum(1 for r in items if r['is_active']),
+        })
+    return out
 
 
 def get_automation_history(limit: int = 30) -> List[Dict[str, Any]]:
@@ -1723,6 +2227,7 @@ def get_management_assistant_context(*, tab: str = 'suggestions') -> Dict[str, A
         'insights_total': len(insights),
         'severity_counts': severity_counts,
         'automation_rules': get_automation_rules(),
+        'automation_groups': get_automation_rules_grouped(),
         'active_automations_count': active_automations,
         'history': get_automation_history(limit=30),
         'action_results': get_action_results_summary(days=7),

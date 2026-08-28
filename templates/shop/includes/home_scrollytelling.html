@@ -89,19 +89,23 @@
         </div>
     </div>
 
-    {# Mobile vertical cards (same content, no pin) #}
+    {# Mobile vertical cards #}
     <div class="h-story__mobile" data-h-story-mobile>
         {% for scene in home_page.story_scenes %}
         <article class="h-story__mobile-card" data-accent="{{ scene.accent }}">
-            <header class="h-story__mobile-head">
+            <div class="h-story__mobile-top">
                 <span class="h-story__step">{{ scene.step }}</span>
-                <h3>{{ scene.title }}</h3>
-            </header>
+                <span class="h-story__mobile-progress">{{ forloop.counter }} / {{ home_page.story_scenes|length }}</span>
+            </div>
+            <h3 class="h-story__mobile-title">{{ scene.title }}</h3>
             <p class="h-story__pain">{{ scene.pain }}</p>
             <figure class="h-story__mobile-fig">
                 <img src="{% static scene.solution_image %}" alt="{{ scene.solution }}" width="640" height="400" loading="lazy" decoding="async">
             </figure>
-            <p class="h-story__mobile-fix"><i class="fas fa-check" aria-hidden="true"></i> {{ scene.solution }}</p>
+            <div class="h-story__mobile-fix">
+                <span class="h-story__solution-badge"><i class="fas fa-bolt" aria-hidden="true"></i> {{ scene.solution_badge }}</span>
+                <p>{{ scene.solution }}</p>
+            </div>
         </article>
         {% endfor %}
     </div>

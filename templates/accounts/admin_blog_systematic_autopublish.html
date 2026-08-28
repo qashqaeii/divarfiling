@@ -8,125 +8,360 @@
 {% block admin_panel_title %}انتشار خودکار{% endblock %}
 
 {% block admin_panel_extra_css %}
-<link rel="stylesheet" href="{% static 'css/admin-blog.css' %}?v=6">
+<link rel="stylesheet" href="{% static 'css/admin-blog.css' %}?v=12">
 {% endblock %}
 
 {% block admin_panel_content %}
 <div class="ab-page ab-systematic-page ab-autopublish-page">
+
+    <div class="ab-ambient" aria-hidden="true">
+        <span class="ab-orb ab-orb--1"></span>
+        <span class="ab-orb ab-orb--2"></span>
+        <span class="ab-orb ab-orb--3"></span>
+        <span class="ab-grain"></span>
+    </div>
+
     {% include 'accounts/partials/admin_blog_systematic_tabs.html' with active_tab='autopublish' %}
 
-    <header class="ab-hero ab-hero--compact">
+    <header class="ab-hero ab-ap-hero">
         <div class="ab-hero__main">
-            <h1 class="ab-hero__title">انتشار <em>خودکار</em></h1>
-            <p class="ab-hero__lead">حداکثر یک مقاله در روز — فقط اگر تمام Quality Gateها عبور شود.</p>
+            <div class="ab-hero__top">
+                <a href="{% url 'admin_panel_blog' %}#blog-systematic" class="ab-back">
+                    <i class="fas fa-arrow-right"></i>
+                    <span>بازگشت به استودیو مقالات</span>
+                </a>
+                <div class="ab-hero__badges">
+                    {% if config.is_enabled and not config.shadow_mode %}
+                    <span class="ab-pill ab-pill--live"><span class="ab-pill__dot"></span> Auto Publish فعال</span>
+                    {% elif config.shadow_mode %}
+                    <span class="ab-pill ab-pill--shadow"><i class="fas fa-eye"></i> Shadow Mode</span>
+                    {% else %}
+                    <span class="ab-pill">خاموش</span>
+                    {% endif %}
+                    <span class="ab-pill">QA ≥ {{ config.quality_threshold|to_persian_digits }}</span>
+                </div>
+            </div>
+
+            <div class="ab-hero__body">
+                <p class="ab-hero__eyebrow">Conditional Auto Publishing</p>
+                <h1 class="ab-hero__title">انتشار <em>خودکار</em></h1>
+                <p class="ab-hero__lead">حداکثر یک مقاله در روز — فقط اگر Dataset، تصاویر، SEO و اعداد از تمام Quality Gateها عبور کنند. در غیر این صورت به «نیازمند بررسی» می‌رود.</p>
+            </div>
+        </div>
+
+        <div class="ab-hero__visual ab-ap-hero__visual" aria-hidden="true">
+            <div class="ab-ap-orbit">
+                <div class="ab-ap-orbit__ring"></div>
+                <div class="ab-ap-orbit__score">
+                    {% if candidate %}
+                    <strong>{{ candidate.opportunity_score|floatformat:0|to_persian_digits }}</strong>
+                    <small>امتیاز فرصت</small>
+                    {% else %}
+                    <strong>—</strong>
+                    <small>بدون کاندید</small>
+                    {% endif %}
+                </div>
+                <div class="ab-ap-orbit__chip ab-ap-orbit__chip--1"><i class="fas fa-database"></i> Data</div>
+                <div class="ab-ap-orbit__chip ab-ap-orbit__chip--2"><i class="fas fa-shield-halved"></i> QA</div>
+                <div class="ab-ap-orbit__chip ab-ap-orbit__chip--3"><i class="fas fa-image"></i> Media</div>
+                <div class="ab-ap-orbit__chip ab-ap-orbit__chip--4"><i class="fas fa-magnifying-glass-chart"></i> SEO</div>
+            </div>
         </div>
     </header>
 
-    <section class="ab-autopublish-status">
-        <div class="ab-autopublish-card">
-            <h2>وضعیت</h2>
-            <ul class="ab-autopublish-kv">
-                <li><span>انتشار خودکار</span><strong>{% if config.is_enabled %}🟢 فعال{% else %}⚪ خاموش{% endif %}</strong></li>
-                <li><span>Shadow mode</span><strong>{% if config.shadow_mode %}بله{% else %}خیر{% endif %}</strong></li>
-                <li><span>حداکثر روزانه</span><strong>{{ config.max_daily_publish|to_persian_digits }} مقاله</strong></li>
-                <li><span>حداقل امتیاز انتشار</span><strong>{{ config.quality_threshold|to_persian_digits }}/۱۰۰</strong></li>
-                <li><span>آخرین اجرا</span><strong>{% if config.last_run_at %}{{ config.last_run_at|to_jalali_fa }}{% else %}—{% endif %}</strong></li>
-                <li><span>امروز</span><strong>
-                    {% if today_status == 'published' %}منتشر شد
-                    {% elif today_status == 'skipped' %}چیزی مناسب نبود
-                    {% elif today_status == 'needs_review' %}نیازمند بررسی
-                    {% else %}هنوز اجرا نشده{% endif %}
-                </strong></li>
-            </ul>
-        </div>
+    <div class="ab-kpi-grid ab-ap-kpi-grid">
+        <article class="ab-kpi" data-accent="{% if config.is_enabled and not config.shadow_mode %}emerald{% else %}rose{% endif %}">
+            <div class="ab-kpi__icon"><i class="fas fa-power-off"></i></div>
+            <div class="ab-kpi__body">
+                <span class="ab-kpi__val">{% if config.is_enabled and not config.shadow_mode %}فعال{% elif config.shadow_mode %}Shadow{% else %}خاموش{% endif %}</span>
+                <span class="ab-kpi__lbl">انتشار خودکار</span>
+            </div>
+        </article>
+        <article class="ab-kpi" data-accent="teal">
+            <div class="ab-kpi__icon"><i class="fas fa-calendar-day"></i></div>
+            <div class="ab-kpi__body">
+                <span class="ab-kpi__val">{{ config.max_daily_publish|to_persian_digits }}/روز</span>
+                <span class="ab-kpi__lbl">سقف روزانه</span>
+            </div>
+        </article>
+        <article class="ab-kpi" data-accent="gold">
+            <div class="ab-kpi__icon"><i class="fas fa-star"></i></div>
+            <div class="ab-kpi__body">
+                <span class="ab-kpi__val">{{ config.quality_threshold|to_persian_digits }}/۱۰۰</span>
+                <span class="ab-kpi__lbl">حداقل امتیاز QA</span>
+            </div>
+        </article>
+        <article class="ab-kpi" data-accent="violet">
+            <div class="ab-kpi__icon"><i class="fas fa-clock"></i></div>
+            <div class="ab-kpi__body">
+                <span class="ab-kpi__val">{{ next_run_hint }}</span>
+                <span class="ab-kpi__lbl">اجرای بعدی</span>
+            </div>
+        </article>
+        <article class="ab-kpi" data-accent="{% if today_status == 'published' %}emerald{% elif today_status == 'needs_review' %}amber{% elif today_status == 'skipped' %}rose{% else %}teal{% endif %}">
+            <div class="ab-kpi__icon"><i class="fas fa-sun"></i></div>
+            <div class="ab-kpi__body">
+                <span class="ab-kpi__val ab-kpi__val--sm">{{ today_status_label }}</span>
+                <span class="ab-kpi__lbl">وضعیت امروز</span>
+            </div>
+        </article>
+    </div>
 
+    <div class="ab-ap-bento">
         {% if candidate %}
-        <div class="ab-autopublish-card ab-autopublish-card--candidate">
-            <h2>Candidate بعدی</h2>
-            <blockquote>
-                <strong>{{ candidate.district }} {{ candidate.city }}</strong> — {{ candidate.subcategory }} {{ candidate.transaction_type }}<br>
-                {{ candidate.row_count|to_persian_digits }} رکورد{% if candidate.valid_count %} · {{ candidate.valid_count|to_persian_digits }} فایل معتبر{% endif %}<br>
-                {% if candidate.quality_pct %}Quality: {{ candidate.quality_pct|floatformat:1 }}٪<br>{% endif %}
-                SEO Opportunity: {% if candidate.opportunity_score >= 80 %}بالا{% elif candidate.opportunity_score >= 60 %}متوسط{% else %}پایین{% endif %}<br>
-                اقدام: {{ candidate.action_hint }}<br>
-                امتیاز فرصت: {{ candidate.opportunity_score|to_persian_digits }}/۱۰۰
-            </blockquote>
-        </div>
+        <article class="ab-glass ab-ap-candidate">
+            <div class="ab-glass__head">
+                <div>
+                    <h2><i class="fas fa-bolt"></i> بهترین فرصت محتوایی</h2>
+                    <p>Candidate بعدی — آماده pipeline در اجرای cron بعدی</p>
+                </div>
+                <span class="ab-ap-badge ab-ap-badge--{% if candidate.opportunity_score >= 85 %}high{% elif candidate.opportunity_score >= 70 %}mid{% else %}low{% endif %}">
+                    {% if candidate.opportunity_score >= 85 %}SEO Opportunity: بالا{% elif candidate.opportunity_score >= 70 %}متوسط{% else %}پایین{% endif %}
+                </span>
+            </div>
+            <div class="ab-ap-candidate__body">
+                <div class="ab-ap-candidate__main">
+                    <h3>{{ candidate.district }} {{ candidate.city }}</h3>
+                    <p class="ab-ap-candidate__sub">{{ candidate.subcategory }} · {{ candidate.transaction_type }}</p>
+                    <div class="ab-ap-candidate__metrics">
+                        <div class="ab-ap-metric">
+                            <span class="ab-ap-metric__val">{{ candidate.row_count|to_persian_digits }}</span>
+                            <span class="ab-ap-metric__lbl">رکورد</span>
+                        </div>
+                        {% if candidate.valid_count %}
+                        <div class="ab-ap-metric">
+                            <span class="ab-ap-metric__val">{{ candidate.valid_count|to_persian_digits }}</span>
+                            <span class="ab-ap-metric__lbl">فایل معتبر</span>
+                        </div>
+                        {% endif %}
+                        {% if candidate.quality_pct %}
+                        <div class="ab-ap-metric">
+                            <span class="ab-ap-metric__val">{{ candidate.quality_pct|floatformat:1 }}٪</span>
+                            <span class="ab-ap-metric__lbl">کیفیت داده</span>
+                        </div>
+                        {% endif %}
+                        <div class="ab-ap-metric">
+                            <span class="ab-ap-metric__val">{% if candidate.action_hint == 'create_new' %}CREATE{% elif candidate.action_hint == 'update_existing' %}UPDATE{% else %}SKIP{% endif %}</span>
+                            <span class="ab-ap-metric__lbl">اقدام پیشنهادی</span>
+                        </div>
+                    </div>
+                    {% if candidate.has_direct_duplicate %}
+                    <p class="ab-ap-note ab-ap-note--warn"><i class="fas fa-link"></i> مقاله مرتبط موجود — به‌روزرسانی توصیه می‌شود</p>
+                    {% else %}
+                    <p class="ab-ap-note ab-ap-note--ok"><i class="fas fa-check-circle"></i> مقاله مشابه مستقیم: ندارد</p>
+                    {% endif %}
+                </div>
+                <div class="ab-ap-score-ring" style="--ab-ap-score: {{ candidate.opportunity_score|default:0 }};">
+                    <svg viewBox="0 0 120 120" aria-hidden="true">
+                        <circle class="ab-ap-score-ring__bg" cx="60" cy="60" r="52"></circle>
+                        <circle class="ab-ap-score-ring__fill" cx="60" cy="60" r="52"></circle>
+                    </svg>
+                    <div class="ab-ap-score-ring__label">
+                        <strong>{{ candidate.opportunity_score|floatformat:1|to_persian_digits }}</strong>
+                        <small>/ ۱۰۰</small>
+                    </div>
+                </div>
+            </div>
+        </article>
         {% else %}
-        <div class="ab-autopublish-card">
-            <h2>Candidate بعدی</h2>
-            <p>فعلاً Dataset مناسبی برای انتشار خودکار یافت نشد.</p>
-        </div>
+        <article class="ab-glass ab-ap-candidate ab-ap-candidate--empty">
+            <div class="ab-glass__head">
+                <div>
+                    <h2><i class="fas fa-inbox"></i> Candidate بعدی</h2>
+                    <p>هیچ Datasetی استاندارد انتشار خودکار را ندارد</p>
+                </div>
+            </div>
+            <div class="ab-ap-empty">
+                <i class="fas fa-calendar-xmark"></i>
+                <p>امروز مقاله‌ای منتشر نمی‌شود مگر Dataset واجد شرایط پیدا شود.<br>این بهتر از انتشار محتوای ضعیف است.</p>
+            </div>
+        </article>
         {% endif %}
-    </section>
 
-    {% if last_failure %}
-    <section class="ab-autopublish-card ab-autopublish-card--fail">
-        <h2>آخرین خطا / رد</h2>
-        <p>{{ last_failure.run_date|to_jalali_date }} · {{ last_failure.get_status_display }}</p>
-        <ul>
-            {% for reason in last_failure.failure_reasons %}
-            <li>❌ {{ reason }}</li>
-            {% empty %}
-            <li>—</li>
-            {% endfor %}
-        </ul>
-    </section>
-    {% endif %}
+        <aside class="ab-ap-sidebar">
+            {% if last_published and last_published.post %}
+            <article class="ab-glass ab-ap-side-card">
+                <div class="ab-glass__head">
+                    <div>
+                        <h2><i class="fas fa-check-double"></i> آخرین انتشار</h2>
+                        <p>{{ last_published.published_at|to_jalali_fa:"%Y/%m/%d %H:%M" }}</p>
+                    </div>
+                    {% if last_published.quality_score %}
+                    <span class="ab-ap-qa-pill">{{ last_published.quality_score|floatformat:0|to_persian_digits }} QA</span>
+                    {% endif %}
+                </div>
+                <div class="ab-ap-side-card__body">
+                    <a href="{{ last_published.post.get_absolute_url }}" class="ab-ap-article-link" target="_blank" rel="noopener">{{ last_published.post.title }}</a>
+                    {% if last_published.dataset %}
+                    <span class="ab-ap-meta">{{ last_published.dataset.name|truncatechars:48 }}</span>
+                    {% endif %}
+                </div>
+            </article>
+            {% endif %}
 
-    {% if last_published and last_published.post %}
-    <section class="ab-autopublish-card">
-        <h2>آخرین مقاله منتشرشده</h2>
-        <p><a href="{{ last_published.post.get_absolute_url }}">{{ last_published.post.title }}</a></p>
-        <p>امتیاز QA: {{ last_published.quality_score|default:'—' }} · {{ last_published.published_at|to_jalali_fa }}</p>
-    </section>
-    {% endif %}
+            {% if last_failure and last_failure.failure_reasons %}
+            <article class="ab-glass ab-ap-side-card ab-ap-side-card--fail">
+                <div class="ab-glass__head">
+                    <div>
+                        <h2><i class="fas fa-triangle-exclamation"></i> آخرین رد / خطا</h2>
+                        <p>{{ last_failure.run_date|to_jalali_date }} · {{ last_failure.get_status_display }}</p>
+                    </div>
+                </div>
+                <ul class="ab-ap-fail-list">
+                    {% for reason in last_failure.failure_reasons %}
+                    <li><i class="fas fa-xmark"></i> {{ reason }}</li>
+                    {% endfor %}
+                </ul>
+            </article>
+            {% endif %}
 
-    <section class="ab-autopublish-card">
-        <h2>تنظیمات</h2>
-        <form method="post" action="{% url 'admin_panel_blog_systematic_autopublish_settings' %}" class="ab-autopublish-form">
+            <article class="ab-glass ab-ap-side-card ab-ap-side-card--info">
+                <div class="ab-glass__head">
+                    <div>
+                        <h2><i class="fas fa-route"></i> Pipeline</h2>
+                        <p>مسیر انتشار مشروط</p>
+                    </div>
+                </div>
+                <ol class="ab-ap-pipeline">
+                    <li><span>۱</span> انتخاب Dataset</li>
+                    <li><span>۲</span> CREATE / UPDATE</li>
+                    <li><span>۳</span> Analyze + Media</li>
+                    <li><span>۴</span> QA Gates</li>
+                    <li><span>۵</span> Publish / Review</li>
+                </ol>
+            </article>
+        </aside>
+    </div>
+
+    <section class="ab-glass ab-ap-settings" id="ab-ap-settings">
+        <div class="ab-glass__head">
+            <div>
+                <h2><i class="fas fa-sliders"></i> تنظیمات انتشار</h2>
+                <p>Shadow را یک هفته فعال نگه دارید؛ سپس Auto Publish را روشن کنید</p>
+            </div>
+        </div>
+        <form method="post" action="{% url 'admin_panel_blog_systematic_autopublish_settings' %}" class="ab-ap-form">
             {% csrf_token %}
-            <label><input type="checkbox" name="is_enabled" {% if config.is_enabled %}checked{% endif %}> انتشار خودکار فعال</label>
-            <label><input type="checkbox" name="shadow_mode" {% if config.shadow_mode %}checked{% endif %}> Shadow mode (بدون Publish واقعی)</label>
-            <label>حداکثر روزانه <input type="number" name="max_daily_publish" min="1" max="3" value="{{ config.max_daily_publish }}"></label>
-            <label>حداقل امتیاز <input type="number" name="quality_threshold" min="50" max="100" value="{{ config.quality_threshold }}"></label>
-            <label>حداقل رکورد <input type="number" name="min_records" min="100" value="{{ config.min_records }}"></label>
-            <label>حداقل نسبت معتبر <input type="number" name="min_valid_ratio" min="0.5" max="1" step="0.01" value="{{ config.min_valid_ratio }}"></label>
-            <label>حداکثر سن دیتاست (روز) <input type="number" name="max_dataset_age_days" min="7" value="{{ config.max_dataset_age_days }}"></label>
-            <label>حداقل Insight <input type="number" name="min_insights" min="1" value="{{ config.min_insights }}"></label>
-            <button type="submit" class="ab-btn ab-btn--gold">ذخیره تنظیمات</button>
+            <div class="ab-ap-form__toggles">
+                <label class="ab-ap-toggle">
+                    <input type="checkbox" name="is_enabled" {% if config.is_enabled %}checked{% endif %}>
+                    <span class="ab-ap-toggle__track"></span>
+                    <span class="ab-ap-toggle__text">
+                        <strong>انتشار خودکار فعال</strong>
+                        <small>Publish واقعی پس از عبور QA</small>
+                    </span>
+                </label>
+                <label class="ab-ap-toggle">
+                    <input type="checkbox" name="shadow_mode" {% if config.shadow_mode %}checked{% endif %}>
+                    <span class="ab-ap-toggle__track"></span>
+                    <span class="ab-ap-toggle__text">
+                        <strong>Shadow Mode</strong>
+                        <small>ساخت + QA بدون Publish</small>
+                    </span>
+                </label>
+            </div>
+            <div class="ab-ap-form__grid">
+                <label class="ab-ap-field">
+                    <span>حداکثر روزانه</span>
+                    <input type="number" name="max_daily_publish" min="1" max="3" value="{{ config.max_daily_publish }}">
+                </label>
+                <label class="ab-ap-field">
+                    <span>حداقل امتیاز QA</span>
+                    <input type="number" name="quality_threshold" min="50" max="100" value="{{ config.quality_threshold }}">
+                </label>
+                <label class="ab-ap-field">
+                    <span>حداقل رکورد</span>
+                    <input type="number" name="min_records" min="100" value="{{ config.min_records }}">
+                </label>
+                <label class="ab-ap-field">
+                    <span>حداقل نسبت معتبر</span>
+                    <input type="number" name="min_valid_ratio" min="0.5" max="1" step="0.01" value="{{ config.min_valid_ratio }}">
+                </label>
+                <label class="ab-ap-field">
+                    <span>حداکثر سن دیتاست (روز)</span>
+                    <input type="number" name="max_dataset_age_days" min="7" value="{{ config.max_dataset_age_days }}">
+                </label>
+                <label class="ab-ap-field">
+                    <span>حداقل Insight</span>
+                    <input type="number" name="min_insights" min="1" value="{{ config.min_insights }}">
+                </label>
+            </div>
+            <div class="ab-ap-form__foot">
+                <button type="submit" class="ab-btn ab-btn--gold"><i class="fas fa-save"></i> ذخیره تنظیمات</button>
+                <div class="ab-ap-cmd">
+                    <code id="ab-ap-cmd-text">python manage.py run_systematic_article_autopublish --shadow</code>
+                    <button type="button" class="ab-btn ab-btn--ghost ab-btn--xs" id="ab-ap-cmd-copy" title="کپی"><i class="fas fa-copy"></i></button>
+                </div>
+            </div>
         </form>
-        <p class="ab-autopublish-hint">اجرای Production: <code>python manage.py run_systematic_article_autopublish</code></p>
     </section>
 
-    <section class="ab-autopublish-card">
-        <h2>تاریخچه اجرا</h2>
-        <table class="ab-sys-table">
-            <thead>
-                <tr>
-                    <th>تاریخ</th>
-                    <th>دیتاست</th>
-                    <th>اقدام</th>
-                    <th>امتیاز QA</th>
-                    <th>نتیجه</th>
-                    <th>دلیل</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for item in history %}
-                <tr>
-                    <td>{{ item.run_date|to_jalali_date }}</td>
-                    <td>{% if item.dataset %}{{ item.dataset.name|truncatechars:40 }}{% else %}—{% endif %}</td>
-                    <td>{{ item.get_action_display }}</td>
-                    <td>{{ item.quality_score|default:'—' }}</td>
-                    <td>{{ item.get_status_display }}{% if item.would_publish and item.publish_mode == 'shadow' %} · در حالت واقعی منتشر می‌شد{% endif %}</td>
-                    <td>{% for r in item.failure_reasons %}<span class="ab-fail-reason">{{ r }}</span>{% empty %}—{% endfor %}</td>
-                </tr>
-                {% empty %}
-                <tr><td colspan="6">هنوز اجرایی ثبت نشده است.</td></tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <section class="ab-glass ab-ap-history" id="ab-ap-history">
+        <div class="ab-glass__head">
+            <div>
+                <h2><i class="fas fa-clock-rotate-left"></i> تاریخچه اجرا</h2>
+                <p>شفافیت کامل — دلیل Publish نشدن در هر Run</p>
+            </div>
+        </div>
+        <div class="ab-sys-table-wrap ab-ap-table-wrap">
+            <table class="ab-sys-table ab-ap-table">
+                <thead>
+                    <tr>
+                        <th>تاریخ</th>
+                        <th>دیتاست</th>
+                        <th>اقدام</th>
+                        <th>QA</th>
+                        <th>نتیجه</th>
+                        <th>دلیل / یادداشت</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in history %}
+                    <tr>
+                        <td><time>{{ item.run_date|to_jalali_date }}</time></td>
+                        <td>
+                            {% if item.dataset %}
+                            <strong>{{ item.dataset.name|truncatechars:36 }}</strong>
+                            {% if item.opportunity_score %}<small class="ab-muted">فرصت {{ item.opportunity_score|floatformat:0|to_persian_digits }}</small>{% endif %}
+                            {% else %}—{% endif %}
+                        </td>
+                        <td><span class="ab-ap-action ab-ap-action--{{ item.action }}">{{ item.get_action_display }}</span></td>
+                        <td>{% if item.quality_score %}<span class="ab-ap-qa-pill">{{ item.quality_score|floatformat:0|to_persian_digits }}</span>{% else %}—{% endif %}</td>
+                        <td>
+                            <span class="ab-ap-status ab-ap-status--{{ item.status }}">{{ item.get_status_display }}</span>
+                            {% if item.would_publish and item.publish_mode == 'shadow' %}
+                            <small class="ab-ap-shadow-note">در حالت واقعی منتشر می‌شد</small>
+                            {% endif %}
+                        </td>
+                        <td class="ab-ap-reasons">
+                            {% for r in item.failure_reasons %}
+                            <span class="ab-ap-reason">{{ r }}</span>
+                            {% empty %}
+                            {% if item.status == 'published' or item.status == 'updated' %}<span class="ab-ap-reason ab-ap-reason--ok">عبور از QA</span>{% else %}—{% endif %}
+                            {% endfor %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="6" class="ab-ap-table-empty">هنوز اجرایی ثبت نشده — cron را با Shadow شروع کنید</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </section>
 </div>
+
+<script>
+(function () {
+    var btn = document.getElementById('ab-ap-cmd-copy');
+    var code = document.getElementById('ab-ap-cmd-text');
+    if (btn && code && navigator.clipboard) {
+        btn.addEventListener('click', function () {
+            navigator.clipboard.writeText(code.textContent.trim()).then(function () {
+                btn.innerHTML = '<i class="fas fa-check"></i>';
+                setTimeout(function () { btn.innerHTML = '<i class="fas fa-copy"></i>'; }, 1500);
+            });
+        });
+    }
+})();
+</script>
 {% endblock %}

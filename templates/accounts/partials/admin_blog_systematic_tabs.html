@@ -1,6 +1,16 @@
-<nav class="ab-sys-tabs" aria-label="بخش‌های مقالات سیستماتیک">
-    <a href="{% url 'admin_panel_blog_systematic' %}" class="ab-sys-tabs__link{% if active_tab == 'datasets' %} is-active{% endif %}">دیتاست‌ها</a>
-    <a href="{% url 'admin_panel_blog_systematic' %}?article_status=ready" class="ab-sys-tabs__link{% if active_tab == 'queue' %} is-active{% endif %}">صف تولید</a>
-    <a href="{% url 'admin_panel_blog_systematic_autopublish' %}" class="ab-sys-tabs__link{% if active_tab == 'autopublish' %} is-active{% endif %}">انتشار خودکار</a>
-    <span class="ab-sys-tabs__link ab-sys-tabs__link--muted">تاریخچه</span>
+<nav class="ab-nav ab-sys-nav" aria-label="بخش‌های مقالات سیستماتیک">
+    <div class="ab-nav__track">
+        <a href="{% url 'admin_panel_blog_systematic' %}" class="ab-nav__item{% if active_tab == 'datasets' %} is-active{% endif %}">
+            <i class="fas fa-database"></i><span>دیتاست‌ها</span>
+        </a>
+        <a href="{% url 'admin_panel_blog_systematic' %}?article_status=ready" class="ab-nav__item{% if active_tab == 'queue' %} is-active{% endif %}">
+            <i class="fas fa-list-check"></i><span>صف تولید</span>
+        </a>
+        <a href="{% url 'admin_panel_blog_systematic_autopublish' %}" class="ab-nav__item{% if active_tab == 'autopublish' %} is-active{% endif %}">
+            <i class="fas fa-wand-magic-sparkles"></i><span>انتشار خودکار</span>
+        </a>
+        <a href="{% url 'admin_panel_blog_systematic_autopublish' %}#ab-ap-history" class="ab-nav__item{% if active_tab == 'history' %} is-active{% endif %}">
+            <i class="fas fa-clock-rotate-left"></i><span>تاریخچه</span>
+        </a>
+    </div>
 </nav>

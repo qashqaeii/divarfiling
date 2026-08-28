@@ -316,6 +316,27 @@ def get_autopublish_dashboard_context() -> dict[str, Any]:
             today_status = 'needs_review'
         elif last_run.status == SystematicArticleAutoPublishRun.Status.SKIPPED:
             today_status = 'skipped'
+        elif last_run.status in (
+            SystematicArticleAutoPublishRun.Status.GENERATING,
+            SystematicArticleAutoPublishRun.Status.QA_RUNNING,
+            SystematicArticleAutoPublishRun.Status.QUEUED,
+        ):
+            today_status = 'running'
+
+    if published_today >= config.max_daily_publish:
+        next_run_hint = 'فردا'
+    elif config.is_enabled or config.shadow_mode:
+        next_run_hint = 'امروز (via cron)'
+    else:
+        next_run_hint = '—'
+
+    today_labels = {
+        'published': 'منتشر شد',
+        'skipped': 'چیزی مناسب نبود',
+        'needs_review': 'نیازمند بررسی',
+        'running': 'در حال اجرا',
+        'none': 'هنوز اجرا نشده',
+    }
 
     return {
         'config': config,
@@ -328,4 +349,6 @@ def get_autopublish_dashboard_context() -> dict[str, Any]:
         'history': history,
         'published_today': published_today,
         'today_status': today_status,
+        'today_status_label': today_labels.get(today_status, '—'),
+        'next_run_hint': next_run_hint,
     }

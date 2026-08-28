@@ -2,10 +2,11 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Set
 
 from django.contrib.auth import get_user_model
-from django.db.models import Count, Max, Q
+from django.core.cache import cache
+from django.db.models import Count, Exists, Max, OuterRef, Q
 from django.db.models.functions import TruncDate
 from django.urls import reverse
 from django.utils import timezone
@@ -21,13 +22,14 @@ from accounts.services.admin_dashboard import (
     get_crm_overview_stats,
 )
 from workspace.constants import DEAL_STAGE_WON, DEAL_TERMINAL_STAGES
-from workspace.models import CRMDeal, CRMProperty, Customer, Reminder
+from workspace.models import CRMDeal, CRMProperty, Customer, CustomerActivity, Reminder
 
 User = get_user_model()
 
 STALE_OPEN_DEAL_DAYS = 30
 OPEN_DEAL_Q = ~Q(stage__in=DEAL_TERMINAL_STAGES)
 ACTIVE_PROPERTY_Q = Q(deleted_at__isnull=True)
+CRM_CENTER_CACHE_SECONDS = 120
 
 
 def _safe_user_display(user) -> str:
@@ -72,25 +74,28 @@ def _reminders_created_between(start, end) -> int:
     ).count()
 
 
-def _crm_active_users_between(start, end) -> int:
-    activity_q = Q(
-        crm_customers__created_at__date__gte=start,
-        crm_customers__created_at__date__lte=end,
-    ) | Q(
-        crm_properties__created_at__date__gte=start,
-        crm_properties__created_at__date__lte=end,
-        crm_properties__deleted_at__isnull=True,
-    ) | Q(
-        crm_deals__created_at__date__gte=start,
-        crm_deals__created_at__date__lte=end,
-    ) | Q(
-        reminders__created_at__date__gte=start,
-        reminders__created_at__date__lte=end,
-    ) | Q(
-        crm_customers__activities__created_at__date__gte=start,
-        crm_customers__activities__created_at__date__lte=end,
+def _crm_active_user_ids_between(start, end) -> Set[int]:
+    """شناسه کاربران فعال CRM در بازه — بدون JOIN سنگین روی User."""
+    date_q = {'created_at__date__gte': start, 'created_at__date__lte': end}
+    ids: Set[int] = set()
+    ids.update(Customer.objects.filter(**date_q).values_list('user_id', flat=True))
+    ids.update(
+        CRMProperty.objects.filter(deleted_at__isnull=True, **date_q).values_list('user_id', flat=True)
     )
-    return User.objects.filter(is_active=True).filter(activity_q).distinct().count()
+    ids.update(CRMDeal.objects.filter(**date_q).values_list('user_id', flat=True))
+    ids.update(Reminder.objects.filter(**date_q).values_list('user_id', flat=True))
+    ids.update(
+        CustomerActivity.objects.filter(**date_q).values_list('customer__user_id', flat=True)
+    )
+    ids.discard(None)
+    return ids
+
+
+def _crm_active_users_between(start, end) -> int:
+    ids = _crm_active_user_ids_between(start, end)
+    if not ids:
+        return 0
+    return User.objects.filter(is_active=True, pk__in=ids).count()
 
 
 def _build_range_kpi_cards(
@@ -194,26 +199,32 @@ def _build_snapshot_kpi_cards(snapshot: Dict[str, Any]) -> List[Dict[str, Any]]:
 
 def _build_adoption_stats(*, crm_active_users_period: int) -> Dict[str, Any]:
     eligible_users = User.objects.filter(is_active=True).count()
-    users_with_customer = User.objects.filter(crm_customers__isnull=False).distinct().count()
-    users_with_property = User.objects.filter(
+    if not eligible_users:
+        return {
+            'eligible_users': 0,
+            'users_with_customer': 0,
+            'users_with_property': 0,
+            'users_with_deal': 0,
+            'users_with_any_crm': 0,
+            'users_without_crm': 0,
+            'crm_active_users_period': crm_active_users_period,
+            'adoption_pct': None,
+        }
+
+    active_qs = User.objects.filter(is_active=True)
+    users_with_customer = active_qs.filter(crm_customers__isnull=False).distinct().count()
+    users_with_property = active_qs.filter(
         crm_properties__deleted_at__isnull=True,
     ).distinct().count()
-    users_with_deal = User.objects.filter(crm_deals__isnull=False).distinct().count()
-    users_with_any = User.objects.filter(
-        Q(crm_customers__isnull=False)
-        | Q(crm_properties__deleted_at__isnull=True)
-        | Q(crm_deals__isnull=False),
-    ).distinct().count()
-    users_without = (
-        User.objects.filter(is_active=True)
-        .exclude(
-            Q(crm_customers__isnull=False)
-            | Q(crm_properties__deleted_at__isnull=True)
-            | Q(crm_deals__isnull=False),
-        )
-        .distinct()
-        .count()
+    users_with_deal = active_qs.filter(crm_deals__isnull=False).distinct().count()
+
+    has_any_q = (
+        Exists(Customer.objects.filter(user_id=OuterRef('pk')))
+        | Exists(CRMProperty.objects.filter(user_id=OuterRef('pk'), deleted_at__isnull=True))
+        | Exists(CRMDeal.objects.filter(user_id=OuterRef('pk')))
     )
+    users_with_any = active_qs.annotate(_has_any=has_any_q).filter(_has_any=True).count()
+    users_without = max(0, eligible_users - users_with_any)
     adoption_pct = round((users_with_any / eligible_users) * 100, 1) if eligible_users else None
     return {
         'eligible_users': eligible_users,
@@ -464,77 +475,99 @@ def _serialize_active_users(users_qs) -> List[Dict[str, Any]]:
 
 
 def _active_crm_users_preview(start, end, limit: int = TABLE_PREVIEW_ROWS) -> List[Dict[str, Any]]:
-    activity_q = Q(
-        crm_customers__created_at__date__gte=start,
-        crm_customers__created_at__date__lte=end,
-    ) | Q(
-        crm_properties__created_at__date__gte=start,
-        crm_properties__created_at__date__lte=end,
-        crm_properties__deleted_at__isnull=True,
-    ) | Q(
-        crm_deals__created_at__date__gte=start,
-        crm_deals__created_at__date__lte=end,
-    ) | Q(
-        reminders__created_at__date__gte=start,
-        reminders__created_at__date__lte=end,
-    ) | Q(
-        crm_customers__activities__created_at__date__gte=start,
-        crm_customers__activities__created_at__date__lte=end,
+    user_ids = _crm_active_user_ids_between(start, end)
+    if not user_ids:
+        return []
+
+    date_q = Q(created_at__date__gte=start, created_at__date__lte=end)
+    last_by_user: Dict[int, Any] = {}
+
+    def _merge_last(rows, key='last'):
+        for row in rows:
+            uid = row['user_id']
+            ts = row[key]
+            if ts and (uid not in last_by_user or ts > last_by_user[uid]):
+                last_by_user[uid] = ts
+
+    _merge_last(
+        Customer.objects.filter(user_id__in=user_ids).filter(date_q)
+        .values('user_id').annotate(last=Max('updated_at'))
     )
-    qs = (
-        User.objects.filter(is_active=True)
-        .filter(activity_q)
-        .annotate(
+    _merge_last(
+        CRMProperty.objects.filter(user_id__in=user_ids, deleted_at__isnull=True).filter(date_q)
+        .values('user_id').annotate(last=Max('updated_at'))
+    )
+    _merge_last(
+        CRMDeal.objects.filter(user_id__in=user_ids).filter(date_q)
+        .values('user_id').annotate(last=Max('updated_at'))
+    )
+    _merge_last(
+        Reminder.objects.filter(user_id__in=user_ids).filter(date_q)
+        .values('user_id').annotate(last=Max('created_at'))
+    )
+
+    ranked_ids = sorted(
+        last_by_user.keys(),
+        key=lambda uid: last_by_user[uid],
+        reverse=True,
+    )[:limit]
+    if not ranked_ids:
+        ranked_ids = list(user_ids)[:limit]
+
+    annotated = {
+        row.pk: row
+        for row in User.objects.filter(pk__in=ranked_ids).annotate(
             customers_count=Count('crm_customers', distinct=True),
-            properties_count=Count('crm_properties', distinct=True, filter=Q(crm_properties__deleted_at__isnull=True)),
+            properties_count=Count(
+                'crm_properties',
+                distinct=True,
+                filter=Q(crm_properties__deleted_at__isnull=True),
+            ),
             deals_count=Count('crm_deals', distinct=True),
-            last_customer_at=Max('crm_customers__updated_at'),
-            last_property_at=Max('crm_properties__updated_at', filter=Q(crm_properties__deleted_at__isnull=True)),
-            last_deal_at=Max('crm_deals__updated_at'),
-            last_reminder_at=Max('reminders__created_at'),
-            last_activity_at=Max('crm_customers__activities__created_at'),
         )
-        .distinct()
-        .order_by('-last_deal_at', '-last_customer_at')[:limit]
-    )
+    }
+
     result = []
-    for user in qs:
-        candidates = [
-            user.last_deal_at,
-            user.last_customer_at,
-            user.last_property_at,
-            user.last_reminder_at,
-            user.last_activity_at,
-        ]
-        last_activity_at = max((dt for dt in candidates if dt), default=None)
+    for uid in ranked_ids:
+        user = annotated.get(uid)
+        if not user:
+            continue
         result.append({
             'user': user,
             'customers_count': user.customers_count,
             'properties_count': user.properties_count,
             'deals_count': user.deals_count,
-            'last_activity_at': last_activity_at,
+            'last_activity_at': last_by_user.get(uid),
         })
     return result
 
 
 def _build_snapshot_from_overview() -> Dict[str, Any]:
     overview = get_crm_overview_stats()
-    now = timezone.now()
-    deals_open = CRMDeal.objects.filter(OPEN_DEAL_Q).count()
-    properties_total = CRMProperty.objects.filter(ACTIVE_PROPERTY_Q).count()
     return {
         'contacts_total': overview['contacts_total'],
-        'properties_total': properties_total,
+        'properties_total': overview['properties_total'],
         'deals_total': overview['deals_total'],
-        'deals_open': deals_open,
+        'deals_open': overview['deals_open'],
         'reminders_total': overview['reminders_total'],
-        'reminders_due': Reminder.objects.filter(is_done=False, due_at__lte=now).count(),
+        'reminders_due': overview['reminders_due'],
     }
 
 
 def get_crm_center_context(*, days: int = 30, compare: bool = False) -> Dict[str, Any]:
     del compare
 
+    cache_key = f'admin:crm_center:v2:{days}'
+    cached = cache.get(cache_key)
+    if cached is not None:
+        return cached
+
+    ctx = _build_crm_center_context(days=days)
+    cache.set(cache_key, ctx, CRM_CENTER_CACHE_SECONDS)
+    return ctx
+
+
+def _build_crm_center_context(*, days: int = 30) -> Dict[str, Any]:
     start, end = _date_range(days)
     prev_start, prev_end = _previous_period_bounds(days)
     range_label = _range_label_fa(days)

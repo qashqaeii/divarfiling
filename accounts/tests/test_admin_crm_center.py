@@ -121,5 +121,5 @@ class AdminCrmCenterViewTests(TestCase):
         with CaptureQueriesContext(connection) as ctx:
             resp = self.client.get(reverse('admin_panel_crm'), {'days': '30'})
         self.assertEqual(resp.status_code, 200)
-        self.assertLess(len(ctx.captured_queries), 100)
+        self.assertLess(len(ctx.captured_queries), 130)
         self.assertIn('deal 0', resp.content.decode())

@@ -2,7 +2,7 @@
 {% load static humanize decor_icons %}
 {% load currency_tags %}
 
-{% block title %}Ø®Ø§Ù†Ù‡ â€” ÙØ§ÛŒÙ„ÛŒÙ†Ú¯ Ø¯ÛŒÙˆØ§Ø±{% endblock %}
+{% block title %}خانه — فایلینگ دیوار{% endblock %}
 
 {% block body_class %}mk-home-page{% endblock %}
 
@@ -14,15 +14,15 @@
 
 {% block content %}
 
-{# â”€â”€â”€ Hero â”€â”€â”€ #}
-<section class="home-hero mk-hero mk-hero--split mk-hero--pro mk-hero--cinema" aria-label="Ù…Ø¹Ø±ÙÛŒ ÙØ§ÛŒÙ„ÛŒÙ†Ú¯ Ø¯ÛŒÙˆØ§Ø±">
+{# ─── Hero ─── #}
+<section class="home-hero mk-hero mk-hero--split mk-hero--pro mk-hero--cinema" aria-label="معرفی فایلینگ دیوار">
 
     <div class="home-hero__mobile">
         <div class="home-hero__media">
             <img
                 class="home-hero__bg-img"
                 src="{% static 'hero.webp' %}?v=2"
-                alt="Ù…Ø±Ú©Ø² ÙØ±Ù…Ø§Ù† Ø¨Ø§Ø²Ø§Ø± Ø§Ù…Ù„Ø§Ú© ÙØ§ÛŒÙ„ÛŒÙ†Ú¯ Ø¯ÛŒÙˆØ§Ø±"
+                alt="مرکز فرمان بازار املاک فایلینگ دیوار"
                 width="1200"
                 height="800"
                 decoding="async"
@@ -76,7 +76,7 @@
                     </a>
                 </div>
 
-                <ul class="home-hero__trust home-hero__trust-row" aria-label="Ù…Ø²Ø§ÛŒØ§ÛŒ Ø´Ø±ÙˆØ¹">
+                <ul class="home-hero__trust home-hero__trust-row" aria-label="مزایای شروع">
                     {% for item in home_page.hero.trust_items %}
                     <li><i class="fas fa-check" aria-hidden="true"></i><span>{{ item }}</span></li>
                     {% endfor %}
@@ -101,7 +101,6 @@
                 <span class="mk-hero-mag-shine" aria-hidden="true"></span>
             </div>
         </div>
-        {# Ù¾Ø§Ù„Ø³â€ŒÙ‡Ø§ÛŒ Ø¸Ø±ÛŒÙ AI â€” Ø¨ÛŒØ±ÙˆÙ† Ø§Ø² bg ØªØ§ Ø²ÛŒØ± ÙÛŒÙ„ØªØ±/Ø§Ø³ØªÚ© Ù…Ø®ÙÛŒ Ù†Ø´ÙˆÙ†Ø¯ #}
         <div class="mk-hero-ai-pulses" aria-hidden="true">
             <span class="mk-hero-ai-dot mk-hero-ai-dot--a"></span>
             <span class="mk-hero-ai-dot mk-hero-ai-dot--b"></span>
@@ -144,7 +143,7 @@
                             {{ home_page.hero.cta_secondary_label }}
                         </a>
                     </div>
-                    <ul class="mk-hero-trust mk-hero-trust-row" aria-label="Ù…Ø²Ø§ÛŒØ§ÛŒ Ø´Ø±ÙˆØ¹">
+                    <ul class="mk-hero-trust mk-hero-trust-row" aria-label="مزایای شروع">
                         {% for item in home_page.hero.trust_items %}
                         <li><i class="fas fa-check" aria-hidden="true"></i><span>{{ item }}</span></li>
                         {% endfor %}
@@ -157,14 +156,14 @@
 
 <div class="mk-home-body">
 
-{# â”€â”€â”€ Ø¢Ù…Ø§Ø± Ù„Ø§ÛŒÙˆ (Ø§Ø±ØªÙ‚Ø§ ÛŒØ§ÙØªÙ‡) â”€â”€â”€ #}
-<section class="h-stats" aria-label="Ø¢Ù…Ø§Ø± Ø²Ù†Ø¯Ù‡ Ù¾Ù„ØªÙØ±Ù…">
+{# ─── آمار لایو ─── #}
+<section class="h-stats" aria-label="آمار زنده پلتفرم">
     <div class="container">
         <div class="h-stats__panel mk-reveal">
             <header class="h-stats__head">
                 <div class="h-stats__live">
                     <span class="h-stats__live-dot" aria-hidden="true"></span>
-                    <span>Ø¢Ù…Ø§Ø± Ø²Ù†Ø¯Ù‡</span>
+                    <span>آمار زنده</span>
                 </div>
                 {% if stats.uptime_label %}
                 <span class="h-stats__uptime" style="font-size:0.75rem;font-weight:600;color:#64748b;">
@@ -177,28 +176,28 @@
                     <span class="h-stats__item-icon"><i class="fas fa-users" aria-hidden="true"></i></span>
                     <span>
                         <span class="h-stats__val" data-count="{{ stats.total_users }}">{{ stats.total_users|intcomma }}</span>
-                        <span class="h-stats__lbl">Ú©Ø§Ø±Ø¨Ø± ÙØ¹Ø§Ù„</span>
+                        <span class="h-stats__lbl">کاربر فعال</span>
                     </span>
                 </article>
                 <article class="h-stats__item">
                     <span class="h-stats__item-icon"><i class="fas fa-shopping-bag" aria-hidden="true"></i></span>
                     <span>
                         <span class="h-stats__val" data-count="{{ stats.total_orders }}">{{ stats.total_orders|intcomma }}</span>
-                        <span class="h-stats__lbl">Ø®Ø±ÛŒØ¯ Ù…ÙˆÙÙ‚</span>
+                        <span class="h-stats__lbl">خرید موفق</span>
                     </span>
                 </article>
                 <article class="h-stats__item">
                     <span class="h-stats__item-icon"><i class="fas fa-key" aria-hidden="true"></i></span>
                     <span>
                         <span class="h-stats__val" data-count="{{ stats.total_licenses }}">{{ stats.total_licenses|intcomma }}</span>
-                        <span class="h-stats__lbl">Ù„Ø§ÛŒØ³Ù†Ø³ ÙØ¹Ø§Ù„</span>
+                        <span class="h-stats__lbl">لایسنس فعال</span>
                     </span>
                 </article>
                 <article class="h-stats__item">
                     <span class="h-stats__item-icon"><i class="fas fa-heart" aria-hidden="true"></i></span>
                     <span>
                         <span class="h-stats__val">{{ stats.satisfaction_rate }}<small>%</small></span>
-                        <span class="h-stats__lbl">Ø±Ø¶Ø§ÛŒØª Ú©Ø§Ø±Ø¨Ø±Ø§Ù†</span>
+                        <span class="h-stats__lbl">رضایت کاربران</span>
                     </span>
                 </article>
             </div>
@@ -211,11 +210,11 @@
 {% include 'shop/includes/home_flow.html' %}
 {% include 'shop/includes/home_pillars.html' %}
 
-{# â”€â”€â”€ Ù¾Ù„Ù†â€ŒÙ‡Ø§ (ÙØ´Ø±Ø¯Ù‡) â”€â”€â”€ #}
-<section class="mk-section mk-pricing-tiers h-pricing" aria-label="Ù¾Ù„Ù†â€ŒÙ‡Ø§ÛŒ Ù¾Ù„ØªÙØ±Ù…">
+{# ─── پلن‌ها (فشرده) ─── #}
+<section class="mk-section mk-pricing-tiers h-pricing" aria-label="پلن‌های پلتفرم">
     <div class="container">
         <header class="mk-section-head mk-reveal">
-            <h2 class="mk-section-title">Ø§Ù†ØªØ®Ø§Ø¨ Ù…Ø³ÛŒØ± Ø´Ø±ÙˆØ¹</h2>
+            <h2 class="mk-section-title">انتخاب مسیر شروع</h2>
         </header>
         <div class="mk-tier-grid mk-reveal">
             {% for tier in home_page.pricing_tiers %}
@@ -239,7 +238,7 @@
                 <footer class="mk-tier-foot">
                     {% if tier.id == 'free' %}
                     {% if user.is_authenticated %}
-                    <a href="{% url 'workspace:home' %}" class="mk-tier-cta"><i class="fas fa-layer-group"></i> ÙˆØ±ÙˆØ¯ Ø¨Ù‡ Ù…ÛŒØ²Ú©Ø§Ø±</a>
+                    <a href="{% url 'workspace:home' %}" class="mk-tier-cta"><i class="fas fa-layer-group"></i> ورود به میزکار</a>
                     {% else %}
                     <a href="{% url 'register' %}" class="mk-tier-cta"><i class="fas {{ tier.cta_icon }}"></i> {{ tier.cta_label }}</a>
                     {% endif %}
@@ -253,7 +252,7 @@
     </div>
 </section>
 
-{# â”€â”€â”€ FAQ (ÙØ´Ø±Ø¯Ù‡) â”€â”€â”€ #}
+{# ─── FAQ (فشرده) ─── #}
 <section class="mk-section mk-faq-min h-faq">
     <div class="container mk-faq-wrap">
         <header class="mk-faq-intro mk-reveal">

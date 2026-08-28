@@ -8,6 +8,7 @@
     {% endif %}
     {% endif %}
     <li><a href="{% url 'product_list' %}" class="mk-nav-link"><span class="mk-nav-link-icon" aria-hidden="true"><i class="fas fa-robot"></i></span><span class="mk-nav-link-text">ربات استخراج</span></a></li>
+    <li><a href="{% if bot_product %}{% url 'buy' slug=bot_product.slug %}{% else %}{% url 'buy' slug='divar-extraction-bot' %}{% endif %}" class="mk-nav-link{% if request.resolver_match.url_name == 'buy' %} is-active{% endif %}"><span class="mk-nav-link-icon" aria-hidden="true"><i class="fas fa-tags"></i></span><span class="mk-nav-link-text">تعرفه</span></a></li>
     <li><a href="{% url 'blog:post_list' %}" class="mk-nav-link"><span class="mk-nav-link-icon" aria-hidden="true"><i class="fas fa-newspaper"></i></span><span class="mk-nav-link-text">مقالات</span></a></li>
     <li><a href="{% url 'education' %}" class="mk-nav-link{% if request.resolver_match.url_name == 'education' %} is-active{% endif %}"><span class="mk-nav-link-icon" aria-hidden="true"><i class="fas fa-graduation-cap"></i></span><span class="mk-nav-link-text">آموزش</span></a></li>
     <li><a href="{% url 'about' %}" class="mk-nav-link"><span class="mk-nav-link-icon" aria-hidden="true"><i class="fas fa-circle-info"></i></span><span class="mk-nav-link-text">درباره ما</span></a></li>

@@ -51,6 +51,8 @@ from .admin_views import (
 )
 from .admin_blog_systematic_views import (
     AdminBlogSystematicBuildPreviewView,
+    AdminBlogSystematicAutoPublishSettingsView,
+    AdminBlogSystematicAutoPublishView,
     AdminBlogSystematicDraftView,
     AdminBlogSystematicListView,
     AdminBlogSystematicPreviewStatusView,
@@ -240,6 +242,16 @@ urlpatterns = [
         'admin-panel/blog/systematic/',
         AdminBlogSystematicListView.as_view(),
         name='admin_panel_blog_systematic',
+    ),
+    path(
+        'admin-panel/blog/systematic/autopublish/',
+        AdminBlogSystematicAutoPublishView.as_view(),
+        name='admin_panel_blog_systematic_autopublish',
+    ),
+    path(
+        'admin-panel/blog/systematic/autopublish/settings/',
+        AdminBlogSystematicAutoPublishSettingsView.as_view(),
+        name='admin_panel_blog_systematic_autopublish_settings',
     ),
     path(
         'admin-panel/blog/systematic/datasets/<uuid:dataset_id>/preview/',

@@ -211,3 +211,126 @@ class MarketArticleLink(models.Model):
     def __str__(self):
         return self.market_key
 
+
+class SystematicArticleAutoPublishConfig(models.Model):
+    """تنظیمات singleton انتشار خودکار مقالات سیستماتیک."""
+
+    id = models.PositiveSmallIntegerField(primary_key=True, default=1, editable=False)
+    is_enabled = models.BooleanField(default=False, verbose_name='انتشار خودکار فعال')
+    shadow_mode = models.BooleanField(default=True, verbose_name='حالت Shadow')
+    max_daily_publish = models.PositiveSmallIntegerField(default=1, verbose_name='حداکثر انتشار روزانه')
+    quality_threshold = models.PositiveSmallIntegerField(default=90, verbose_name='حداقل امتیاز انتشار')
+    publish_time = models.TimeField(null=True, blank=True, verbose_name='زمان ترجیحی اجرا')
+    min_records = models.PositiveIntegerField(default=150, verbose_name='حداقل رکورد')
+    min_valid_ratio = models.FloatField(default=0.85, verbose_name='حداقل نسبت داده معتبر')
+    max_dataset_age_days = models.PositiveIntegerField(default=90, verbose_name='حداکثر سن دیتاست (روز)')
+    min_insights = models.PositiveSmallIntegerField(default=2, verbose_name='حداقل Insight')
+    last_run_at = models.DateTimeField(null=True, blank=True, verbose_name='آخرین اجرا')
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'تنظیمات انتشار خودکار'
+        verbose_name_plural = 'تنظیمات انتشار خودکار'
+
+    def __str__(self):
+        mode = 'فعال' if self.is_enabled else 'خاموش'
+        if self.shadow_mode:
+            mode += ' · Shadow'
+        return f'انتشار خودکار [{mode}]'
+
+
+class SystematicArticleAutoPublishRun(models.Model):
+    """اجرای روزانه انتشار خودکار — لاگ، QA و نتیجه."""
+
+    class Status(models.TextChoices):
+        CANDIDATE = 'candidate', 'کاندید'
+        QUEUED = 'queued', 'در صف'
+        GENERATING = 'generating', 'در حال تولید'
+        QA_RUNNING = 'qa_running', 'کنترل کیفیت'
+        QA_FAILED = 'qa_failed', 'رد QA'
+        READY_TO_PUBLISH = 'ready_to_publish', 'آماده انتشار'
+        PUBLISHED = 'published', 'منتشرشده'
+        UPDATED = 'updated', 'به‌روزرسانی‌شده'
+        NEEDS_REVIEW = 'needs_review', 'نیازمند بررسی'
+        SKIPPED = 'skipped', 'رد شده'
+
+    class Action(models.TextChoices):
+        CREATE_NEW = 'create_new', 'ساخت جدید'
+        UPDATE_EXISTING = 'update_existing', 'به‌روزرسانی'
+        SKIP = 'skip', 'رد'
+
+    class PublishMode(models.TextChoices):
+        LIVE = 'live', 'انتشار واقعی'
+        SHADOW = 'shadow', 'Shadow'
+        DRY_RUN = 'dry_run', 'Dry Run'
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    run_date = models.DateField(db_index=True, verbose_name='تاریخ اجرا (محلی)')
+    dataset = models.ForeignKey(
+        'workspace.Dataset',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='autopublish_runs',
+        verbose_name='دیتاست',
+    )
+    market_article_run = models.ForeignKey(
+        MarketArticleRun,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='autopublish_runs',
+        verbose_name='اجرای مقاله',
+    )
+    post = models.ForeignKey(
+        Post,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='autopublish_runs',
+        verbose_name='مقاله',
+    )
+    status = models.CharField(
+        max_length=24,
+        choices=Status.choices,
+        default=Status.CANDIDATE,
+        db_index=True,
+        verbose_name='وضعیت',
+    )
+    action = models.CharField(
+        max_length=24,
+        choices=Action.choices,
+        default=Action.SKIP,
+        verbose_name='اقدام',
+    )
+    publish_mode = models.CharField(
+        max_length=16,
+        choices=PublishMode.choices,
+        default=PublishMode.LIVE,
+        verbose_name='حالت اجرا',
+    )
+    opportunity_score = models.FloatField(null=True, blank=True, verbose_name='امتیاز فرصت')
+    quality_score = models.FloatField(null=True, blank=True, verbose_name='امتیاز QA')
+    critical_errors_count = models.PositiveSmallIntegerField(default=0, verbose_name='خطاهای بحرانی')
+    qa_report = models.JSONField(default=dict, blank=True, verbose_name='گزارش QA')
+    failure_reasons = models.JSONField(default=list, blank=True, verbose_name='دلایل رد')
+    would_publish = models.BooleanField(default=False, verbose_name='در حالت واقعی منتشر می‌شد')
+    candidate_snapshot = models.JSONField(default=dict, blank=True, verbose_name='خلاصه کاندید')
+    published_at = models.DateTimeField(null=True, blank=True, verbose_name='زمان انتشار')
+    post_publish_verified = models.BooleanField(default=False, verbose_name='تأیید پس از انتشار')
+    post_publish_report = models.JSONField(default=dict, blank=True, verbose_name='گزارش پس از انتشار')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'اجرای انتشار خودکار'
+        verbose_name_plural = 'اجراهای انتشار خودکار'
+        ordering = ['-run_date', '-created_at']
+        indexes = [
+            models.Index(fields=['run_date', 'status']),
+        ]
+
+    def __str__(self):
+        ds = self.dataset.name if self.dataset_id else '—'
+        return f'{self.run_date} · {ds} · {self.status}'
+

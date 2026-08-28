@@ -2,7 +2,15 @@
 پنل مدیریت بلاگ
 """
 from django.contrib import admin
-from .models import Category, MarketArticleLink, MarketArticleRun, Post, Tag
+from .models import (
+    Category,
+    MarketArticleLink,
+    MarketArticleRun,
+    Post,
+    SystematicArticleAutoPublishConfig,
+    SystematicArticleAutoPublishRun,
+    Tag,
+)
 
 
 @admin.register(Category)
@@ -39,3 +47,17 @@ class MarketArticleRunAdmin(admin.ModelAdmin):
 class MarketArticleLinkAdmin(admin.ModelAdmin):
     list_display = ['market_key', 'post', 'primary_dataset', 'last_generated_at']
     search_fields = ['market_key']
+
+
+@admin.register(SystematicArticleAutoPublishConfig)
+class SystematicArticleAutoPublishConfigAdmin(admin.ModelAdmin):
+    list_display = ['is_enabled', 'shadow_mode', 'max_daily_publish', 'quality_threshold', 'last_run_at']
+    readonly_fields = ['updated_at', 'last_run_at']
+
+
+@admin.register(SystematicArticleAutoPublishRun)
+class SystematicArticleAutoPublishRunAdmin(admin.ModelAdmin):
+    list_display = ['run_date', 'status', 'action', 'quality_score', 'dataset', 'published_at']
+    list_filter = ['status', 'action', 'publish_mode', 'run_date']
+    search_fields = ['dataset__name', 'failure_reasons']
+    readonly_fields = ['created_at', 'updated_at']

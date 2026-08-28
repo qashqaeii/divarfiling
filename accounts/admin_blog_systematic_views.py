@@ -11,7 +11,7 @@ from django.views import View
 from django.views.generic import TemplateView
 
 from accounts.admin_views import StaffRequiredMixin
-from blog.models import MarketArticleRun
+from blog.models import MarketArticleRun, SystematicArticleAutoPublishConfig
 from blog.services.market_article_eligibility import (
     count_eligible_datasets,
     filter_options,
@@ -26,6 +26,7 @@ from blog.services.market_article_pipeline import (
     save_seo_edits,
     update_existing_post,
 )
+from blog.services.market_article_autopublish import get_autopublish_dashboard_context
 from workspace.models import Dataset
 from workspace.views import DatasetAnalyzeView
 
@@ -219,3 +220,33 @@ class StaffDatasetAnalyzeView(StaffRequiredMixin, DatasetAnalyzeView):
         if not request.user.is_staff:
             return self.handle_no_permission()
         return TemplateView.dispatch(self, request, *args, **kwargs)
+
+
+class AdminBlogSystematicAutoPublishView(StaffRequiredMixin, TemplateView):
+    template_name = 'accounts/admin_blog_systematic_autopublish.html'
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx.update(get_autopublish_dashboard_context())
+        ctx['active_tab'] = 'autopublish'
+        return ctx
+
+
+class AdminBlogSystematicAutoPublishSettingsView(StaffRequiredMixin, View):
+    def post(self, request):
+        config = SystematicArticleAutoPublishConfig.objects.get(pk=1)
+        config.is_enabled = request.POST.get('is_enabled') == 'on'
+        config.shadow_mode = request.POST.get('shadow_mode') == 'on'
+        try:
+            config.max_daily_publish = max(1, int(request.POST.get('max_daily_publish') or 1))
+            config.quality_threshold = max(50, min(100, int(request.POST.get('quality_threshold') or 90)))
+            config.min_records = max(100, int(request.POST.get('min_records') or 150))
+            config.min_valid_ratio = float(request.POST.get('min_valid_ratio') or 0.85)
+            config.max_dataset_age_days = max(7, int(request.POST.get('max_dataset_age_days') or 90))
+            config.min_insights = max(1, int(request.POST.get('min_insights') or 2))
+        except (TypeError, ValueError):
+            messages.error(request, 'مقادیر تنظیمات نامعتبر است.')
+            return redirect('admin_panel_blog_systematic_autopublish')
+        config.save()
+        messages.success(request, 'تنظیمات انتشار خودکار ذخیره شد.')
+        return redirect('admin_panel_blog_systematic_autopublish')

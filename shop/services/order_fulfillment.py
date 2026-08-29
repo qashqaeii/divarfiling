@@ -73,7 +73,10 @@ def approve_card_transfer(submission, reviewer) -> License | None:
         submission.reviewed_by = reviewer
         submission.reviewed_at = timezone.now()
         submission.save()
-        return License.objects.filter(order=order).first()
+        license_obj = License.objects.filter(order=order).first()
+        if license_obj:
+            return license_obj
+        return fulfill_order_after_payment(order)
 
     submission.status = 'approved'
     submission.reviewed_by = reviewer

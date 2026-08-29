@@ -226,3 +226,83 @@ class ZibalPaymentFlowTests(TestCase):
         )
         self.assertEqual(resp.status_code, 302)
         self.assertIn('/payment/checkout/', resp.url)
+
+
+class CardTransferAdminApprovalTests(TestCase):
+    """تأیید کارت‌به‌کارت — شبیه‌سازی رفتار Django Admin."""
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username='cardpayer', password='pass1234', phone='09128888888',
+        )
+        self.staff = User.objects.create_user(
+            username='cardadmin', password='pass1234', phone='09129999999', is_staff=True,
+        )
+        self.product, self.plan = _setup_payment_product()
+        self.order = Order.objects.create(
+            user=self.user,
+            product=self.product,
+            plan=self.plan,
+            amount=self.plan.price,
+            status='pending_verification',
+            payment_method='card_transfer',
+        )
+        from shop.models import CardTransferSubmission
+        self.submission = CardTransferSubmission.objects.create(
+            order=self.order,
+            status='pending',
+            reference_number='073124565907',
+            payer_name='حسن زاده',
+        )
+
+    def test_approve_works_when_form_prefilled_status(self):
+        """Admin فرم status=approved را قبل از save روی obj می‌گذارد."""
+        from licenses.models import License
+        from shop.services.order_fulfillment import approve_card_transfer
+
+        self.submission.status = 'approved'
+        approve_card_transfer(self.submission, self.staff)
+
+        self.submission.refresh_from_db()
+        self.order.refresh_from_db()
+        self.assertEqual(self.submission.status, 'approved')
+        self.assertEqual(self.order.status, 'paid')
+        self.assertTrue(License.objects.filter(order=self.order).exists())
+        self.assertIsNotNone(self.submission.reviewed_at)
+
+    def test_order_admin_paid_syncs_pending_card_submission(self):
+        from licenses.models import License
+        from shop.admin import OrderAdmin
+        from shop.models import Order
+
+        admin = OrderAdmin(Order, None)
+        request = type('R', (), {'user': self.staff})()
+        self.order.status = 'paid'
+        admin.save_model(
+            request,
+            self.order,
+            form=type('F', (), {'changed_data': ['status']})(),
+            change=True,
+        )
+
+        self.submission.refresh_from_db()
+        self.order.refresh_from_db()
+        self.assertEqual(self.submission.status, 'approved')
+        self.assertEqual(self.order.status, 'paid')
+        self.assertTrue(License.objects.filter(order=self.order).exists())
+
+    def test_resaving_already_paid_order_syncs_pending_submission(self):
+        from licenses.models import License
+        from shop.admin import OrderAdmin
+        from shop.models import Order
+
+        self.order.status = 'paid'
+        self.order.save(update_fields=['status'])
+
+        admin = OrderAdmin(Order, None)
+        request = type('R', (), {'user': self.staff})()
+        admin.save_model(request, self.order, form=type('F', (), {'changed_data': []})(), change=True)
+
+        self.submission.refresh_from_db()
+        self.assertEqual(self.submission.status, 'approved')
+        self.assertTrue(License.objects.filter(order=self.order).exists())

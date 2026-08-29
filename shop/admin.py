@@ -13,7 +13,11 @@ from .models import (
     ProductRating, ProductReview, ReviewHelpful,
     Announcement, Banner, PaymentSettings, CardTransferSubmission,
 )
-from .services.order_fulfillment import approve_card_transfer, reject_card_transfer
+from .services.order_fulfillment import (
+    approve_card_transfer,
+    fulfill_order_after_payment,
+    reject_card_transfer,
+)
 
 
 class ProductMediaInline(admin.TabularInline):
@@ -94,6 +98,19 @@ class OrderAdmin(admin.ModelAdmin):
     list_filter = ['status', 'payment_method', 'created_at', 'discount_code']
     search_fields = ['id', 'user__username', 'user__email', 'discount_code__code']
     readonly_fields = ['id', 'created_at', 'paid_at']
+
+    def save_model(self, request, obj, form, change):
+        old_status = None
+        if change and obj.pk:
+            old_status = Order.objects.filter(pk=obj.pk).values_list('status', flat=True).first()
+        super().save_model(request, obj, form, change)
+        if not change or obj.status != 'paid':
+            return
+        pending_ct = CardTransferSubmission.objects.filter(order=obj, status='pending').first()
+        if pending_ct:
+            approve_card_transfer(pending_ct, request.user)
+        elif old_status != 'paid':
+            fulfill_order_after_payment(obj)
 
 
 @admin.register(PaymentSettings)
@@ -186,11 +203,16 @@ class CardTransferSubmissionAdmin(admin.ModelAdmin):
     def save_model(self, request, obj, form, change):
         if change and 'status' in form.changed_data:
             old = CardTransferSubmission.objects.get(pk=obj.pk)
+            admin_note = (obj.admin_note or '').strip()
             if old.status == 'pending' and obj.status == 'approved':
                 approve_card_transfer(obj, request.user)
+                if admin_note:
+                    CardTransferSubmission.objects.filter(pk=obj.pk).update(admin_note=admin_note)
+                admin_messages.success(request, 'پرداخت کارت‌به‌کارت تایید شد و لایسنس صادر شد.')
                 return
             if old.status == 'pending' and obj.status == 'rejected':
-                reject_card_transfer(obj, request.user, obj.admin_note)
+                reject_card_transfer(obj, request.user, admin_note)
+                admin_messages.warning(request, 'درخواست کارت‌به‌کارت رد شد.')
                 return
         super().save_model(request, obj, form, change)
 

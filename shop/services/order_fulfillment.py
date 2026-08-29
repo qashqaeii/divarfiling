@@ -59,10 +59,14 @@ def fulfill_order_after_payment(
 
 def approve_card_transfer(submission, reviewer) -> License | None:
     """تایید درخواست کارت به کارت توسط مدیر."""
-    from shop.models import Transaction
+    from shop.models import CardTransferSubmission, Transaction
 
+    # همیشه از DB بخوان — در Django Admin وضعیت فرم قبل از save روی obj اعمال شده
+    submission = CardTransferSubmission.objects.select_related('order').get(pk=submission.pk)
     order = submission.order
     if submission.status != 'pending':
+        if submission.status == 'approved' and order.status == 'paid':
+            return License.objects.filter(order=order).first()
         return None
     if order.status == 'paid':
         submission.status = 'approved'
@@ -96,6 +100,9 @@ def approve_card_transfer(submission, reviewer) -> License | None:
 
 def reject_card_transfer(submission, reviewer, admin_note: str = '') -> None:
     """رد درخواست کارت به کارت."""
+    from shop.models import CardTransferSubmission
+
+    submission = CardTransferSubmission.objects.select_related('order').get(pk=submission.pk)
     order = submission.order
     if submission.status != 'pending':
         return

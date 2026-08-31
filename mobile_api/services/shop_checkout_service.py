@@ -323,7 +323,7 @@ def _initiate_or_payload(order: Order, *, request, reused: bool) -> Dict[str, An
         ) from exc
 
     _create_or_update_pending_transaction(order, request_result.track_id, request_result)
-    pay_url = zibal_service.get_start_pay_url(request_result.track_id)
+    pay_url = zibal_service.get_start_pay_bridge_url(request_result.track_id, request=request)
     mark_mobile_checkout(order.id)
     return {
         'order_id': str(order.id),

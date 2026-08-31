@@ -234,7 +234,7 @@ class PaymentInitiateView(LoginRequiredMixin, View):
             return redirect('payment:checkout', order_id=order.id)
 
         _create_or_update_pending_transaction(order, request_result.track_id, request_result)
-        pay_url = zibal_service.get_start_pay_url(request_result.track_id)
+        pay_url = zibal_service.get_start_pay_bridge_url(request_result.track_id, request=request)
 
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             from django.http import JsonResponse
@@ -351,6 +351,21 @@ class CardTransferPendingView(LoginRequiredMixin, TemplateView):
         if order.status not in ('pending_verification', 'pending'):
             return redirect('dashboard')
         return super().get(request, *args, **kwargs)
+
+
+class PaymentStartView(View):
+    """هدایت به درگاه زیبال — Referer از دامنهٔ سایت ارسال می‌شود (الزام شاپرک/زیبال)."""
+
+    def get(self, request, track_id):
+        track_id = (track_id or '').strip()
+        if not track_id.isdigit():
+            request.session['payment_error'] = 'کد پیگیری تراکنش نامعتبر است.'
+            return redirect('payment:failed')
+
+        if not Transaction.objects.filter(zibal_track_id=track_id).exists():
+            logger.warning('Zibal start bridge: unknown trackId %s', track_id)
+
+        return redirect(zibal_service.get_start_pay_url(track_id))
 
 
 class PaymentCallbackView(View):

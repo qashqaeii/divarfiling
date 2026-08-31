@@ -139,12 +139,23 @@ class ZibalPaymentFlowTests(TestCase):
         resp = self.client.post(reverse('payment:initiate', args=[self.order.id]))
         self.assertEqual(resp.status_code, 200)
         self.assertContains(resp, '999888777')
-        self.assertContains(resp, 'gateway.zibal.ir/start/999888777')
+        self.assertContains(resp, '/payment/start/999888777')
         self.order.refresh_from_db()
         self.assertEqual(self.order.zibal_track_id, '999888777')
         transaction = Transaction.objects.get(order=self.order)
         self.assertEqual(transaction.status, 'pending')
         self.assertEqual(transaction.zibal_track_id, '999888777')
+
+    def test_start_bridge_redirects_to_zibal(self):
+        Transaction.objects.create(
+            order=self.order,
+            zibal_track_id='555666777',
+            amount=self.order.amount,
+            status='pending',
+        )
+        resp = self.client.get(reverse('payment:start', args=['555666777']))
+        self.assertEqual(resp.status_code, 302)
+        self.assertEqual(resp.url, 'https://gateway.zibal.ir/start/555666777')
 
     @patch('shop.payment_views.zibal_service.verify_payment')
     def test_callback_success_fulfills_order(self, mock_verify):

@@ -196,7 +196,7 @@ class MobileShopPlansTests(TestCase):
             max_quantity=10,
         )
         with patch('mobile_api.services.shop_checkout_service.zibal_service.request_payment') as mock_pay, \
-             patch('mobile_api.services.shop_checkout_service.zibal_service.get_start_pay_url', return_value='https://gateway.example/pay'), \
+             patch('mobile_api.services.shop_checkout_service.zibal_service.get_start_pay_bridge_url', return_value='https://divarfiling.ir/payment/start/t2/'), \
              patch('mobile_api.services.shop_checkout_service.zibal_service.build_callback_url', return_value='https://divarfiling.ir/payment/callback/'):
             mock_pay.return_value = MagicMock(track_id='t2', result_code=100, message='ok', raw={})
             with patch('shop.models.PaymentSettings.load') as pay_load:
@@ -218,7 +218,7 @@ class MobileShopPlansTests(TestCase):
         self.assertEqual(agency_plan['max_quantity'], 10)
 
     @patch('mobile_api.services.shop_checkout_service.zibal_service.request_payment')
-    @patch('mobile_api.services.shop_checkout_service.zibal_service.get_start_pay_url', return_value='https://gateway.example/pay')
+    @patch('mobile_api.services.shop_checkout_service.zibal_service.get_start_pay_bridge_url', return_value='https://divarfiling.ir/payment/start/t1/')
     @patch('mobile_api.services.shop_checkout_service.zibal_service.build_callback_url', return_value='https://divarfiling.ir/payment/callback/')
     def test_checkout_reuses_pending_order(self, _cb, _url, mock_pay):
         mock_pay.return_value = MagicMock(track_id='t1', result_code=100, message='ok', raw={})

@@ -235,3 +235,22 @@ def verify_payment(*, track_id: str, expected_amount_rial: int | None = None) ->
 def get_start_pay_url(track_id: str) -> str:
     base = getattr(settings, 'ZIBAL_START_PAY_URL', 'https://gateway.zibal.ir/start/')
     return f'{base}{track_id}'
+
+
+def get_start_pay_bridge_url(track_id: str, request=None) -> str:
+    """
+    آدرس واسط روی دامنهٔ پذیرنده.
+
+    برای اپ موبایل و بات‌ها که مستقیماً gateway.zibal.ir را باز می‌کنند،
+    هدر Referer ارسال نمی‌شود. با عبور از این URL، مرورگر هنگام ریدایرکت
+    به /start زیبال، Referer دامنهٔ ثبت‌شده را می‌فرستد (الزام شاپرک).
+    """
+    from django.urls import reverse
+
+    path = reverse('payment:start', kwargs={'track_id': track_id})
+    if request is not None:
+        return request.build_absolute_uri(path)
+    site = (getattr(settings, 'SITE_URL', '') or '').rstrip('/')
+    if site:
+        return f'{site}{path}'
+    return path

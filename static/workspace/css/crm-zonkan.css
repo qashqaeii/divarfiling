@@ -3,16 +3,154 @@
    Loaded explicitly on properties list/detail pages
    ═══════════════════════════════════════════════════════════ */
 
-.crm-files-pro-v2 .crm-shell-body > .crm-zonkan {
+.crm-files-pro-v2 .crm-shell-body > .crm-zonkan,
+.crm-files-pro-v2 .crm-shell-body > .crm-filing-nav {
     margin: 0.65rem 1rem 0.35rem;
-    padding: 1rem 1.05rem 1.05rem;
-    border-radius: 14px;
+    padding: 0.75rem 0.85rem 0.8rem;
+    border-radius: 12px;
     border: 1px solid var(--ws-border-light, #e8e6ef);
-    background:
-        radial-gradient(120% 80% at 100% 0%, rgba(99, 102, 241, 0.07), transparent 58%),
-        var(--ws-surface, #fff);
-    box-shadow: 0 2px 14px rgba(15, 23, 42, 0.04);
+    background: var(--ws-surface, #fff);
+    box-shadow: 0 1px 8px rgba(15, 23, 42, 0.04);
     flex-shrink: 0;
+}
+
+/* ── Unified filing nav (کمد + زونکن) ── */
+.crm-filing-nav__head {
+    margin-bottom: 0.55rem;
+}
+
+.crm-filing-nav__brand {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+}
+
+.crm-filing-nav__title {
+    margin: 0;
+    font-size: 0.86rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--ws-text, #0f172a);
+}
+
+.crm-filing-nav__hint {
+    margin: 0.12rem 0 0;
+    font-size: 0.68rem;
+    line-height: 1.4;
+    color: var(--ws-text-muted, #64748b);
+}
+
+.crm-filing-nav__tier {
+    padding-top: 0.45rem;
+}
+
+.crm-filing-nav__tier + .crm-filing-nav__tier {
+    margin-top: 0.35rem;
+    padding-top: 0.55rem;
+    border-top: 1px dashed var(--ws-border-light, #e8e6ef);
+}
+
+.crm-filing-nav__tier-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.35rem;
+}
+
+.crm-filing-nav__tier-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: var(--ws-text-secondary, #475569);
+    text-transform: none;
+}
+
+.crm-filing-nav__tier-label i {
+    width: 1.25rem;
+    height: 1.25rem;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.62rem;
+    color: #6366f1;
+    background: rgba(99, 102, 241, 0.1);
+}
+
+.crm-filing-nav__tier-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.crm-filing-nav__act {
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 8px;
+    border: 1px solid var(--ws-border-light, #e8e6ef);
+    background: var(--ws-surface, #fff);
+    color: var(--ws-text-secondary, #475569);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.72rem;
+    transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+
+.crm-filing-nav__act:hover {
+    border-color: color-mix(in srgb, var(--ws-primary, #6366f1) 30%, var(--ws-border, #e2e8f0));
+    color: var(--ws-primary, #6366f1);
+}
+
+.crm-filing-nav__act--primary {
+    border-color: color-mix(in srgb, var(--ws-primary, #6366f1) 35%, #fff);
+    background: color-mix(in srgb, var(--ws-primary, #6366f1) 10%, #fff);
+    color: var(--ws-primary, #6366f1);
+}
+
+.crm-filing-nav__rail {
+    padding-bottom: 0.15rem;
+}
+
+.crm-filing-nav .crm-zonkan-card--compact {
+    min-width: 8.75rem;
+    max-width: 10.5rem;
+    padding: 0.52rem 0.62rem;
+    border-radius: 10px;
+    gap: 0.45rem;
+}
+
+.crm-filing-nav .crm-zonkan-card--compact .crm-zonkan-card__ico {
+    width: 1.65rem;
+    height: 1.65rem;
+    font-size: 0.68rem;
+}
+
+.crm-filing-nav .crm-zonkan-card--compact .crm-zonkan-card__body strong {
+    font-size: 0.76rem;
+}
+
+.crm-filing-nav .crm-zonkan-card--compact .crm-zonkan-card__body em {
+    font-size: 0.64rem;
+}
+
+.crm-filing-nav .crm-zonkan-card--compact:hover {
+    transform: translateY(-1px);
+}
+
+.crm-filing-nav .crm-zonkan-card__pin {
+    font-size: 0.55rem;
+}
+
+.crm-filing-nav .crm-zonkan__rail {
+    gap: 0.45rem;
+    padding-top: 0;
 }
 
 .crm-zonkan__head {
@@ -1162,5 +1300,15 @@
 
 .crm-kabinet-card--orphan.is-active {
     box-shadow: 0 0 0 2px rgba(148, 163, 184, 0.45);
+}
+
+@media (max-width: 768px) {
+    .crm-filing-nav__hint {
+        display: none;
+    }
+
+    .crm-filing-nav .crm-zonkan-card--compact {
+        min-width: 7.75rem;
+    }
 }
 

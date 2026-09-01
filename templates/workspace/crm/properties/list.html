@@ -10,7 +10,7 @@
 
 {% block crm_extra_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/crm-files-mobile.css' %}?v=17">
-<link rel="stylesheet" href="{% static 'workspace/css/crm-zonkan.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-zonkan.css' %}?v=4">
 {% endblock %}
 
 {% block ws_surface_css %}
@@ -116,8 +116,7 @@
     </section>
 
     <div class="crm-shell-body">
-        {% include 'workspace/crm/includes/property_cabinets_rail.html' %}
-        {% include 'workspace/crm/includes/property_folders_rail.html' %}
+        {% include 'workspace/crm/includes/property_filing_nav.html' %}
         <form method="get" class="crm-files-filters crm-page-filters" id="crmPropertyFilters">
             <input type="hidden" name="view" value="{{ view_mode }}">
             {% if active_cabinet_id %}<input type="hidden" name="cabinet_id" value="{{ active_cabinet_id }}" id="crmPropCabinetId">{% endif %}

@@ -1,0 +1,62 @@
+{% load workspace_tags static %}
+<div class="crm-filing-nav__tier crm-filing-nav__tier--folder" data-crm-zonkan>
+    <div class="crm-filing-nav__tier-bar">
+        <span class="crm-filing-nav__tier-label"><i class="fas fa-folder" aria-hidden="true"></i> زونکن</span>
+        <div class="crm-filing-nav__tier-actions">
+            {% if property_folders %}
+            <button type="button" class="crm-filing-nav__act" data-zonkan-manage-open title="مدیریت زونکن‌ها">
+                <i class="fas fa-sliders-h" aria-hidden="true"></i>
+            </button>
+            {% endif %}
+            <button type="button" class="crm-filing-nav__act crm-filing-nav__act--primary" data-zonkan-create title="زونکن جدید">
+                <i class="fas fa-plus" aria-hidden="true"></i>
+            </button>
+        </div>
+    </div>
+    <div class="crm-zonkan__rail crm-filing-nav__rail" tabindex="0" data-zonkan-rail>
+        {% with base_qs=filter_qs|default:'' %}
+        <a href="{% url 'workspace:crm_properties' %}?view={{ view_mode }}{% if active_cabinet_id %}&cabinet_id={{ active_cabinet_id }}{% endif %}{% if base_qs %}&{{ base_qs }}{% endif %}"
+           class="crm-zonkan-card crm-zonkan-card--compact crm-zonkan-card--all{% if not active_folder_id %} is-active{% endif %}"
+           style="--zonkan-color:#64748b"
+           data-zonkan-card-all>
+            <span class="crm-zonkan-card__ico" aria-hidden="true"><i class="fas fa-layer-group"></i></span>
+            <span class="crm-zonkan-card__body">
+                <strong>همه فایل‌ها</strong>
+                <em>{{ stats.total }} فایل</em>
+            </span>
+        </a>
+        {% for folder in property_folders %}
+        <div class="crm-zonkan-card-wrap{% if active_folder_id == folder.id|stringformat:'s' %} is-active{% endif %}"
+             data-zonkan-wrap="{{ folder.id }}">
+            <a href="?folder_id={{ folder.id }}&view={{ view_mode }}{% if active_cabinet_id %}&cabinet_id={{ active_cabinet_id }}{% endif %}{% if base_qs %}&{{ base_qs }}{% endif %}"
+               class="crm-zonkan-card crm-zonkan-card--compact{% if active_folder_id == folder.id|stringformat:'s' %} is-active{% endif %}{% if folder.is_pinned %} is-pinned{% endif %}"
+               style="--zonkan-color:{{ folder.color }}"
+               data-zonkan-id="{{ folder.id }}"
+               title="{{ folder.description|default:folder.name }}">
+                <span class="crm-zonkan-card__ico" aria-hidden="true"><i class="fas {{ folder.icon|default:'fa-folder' }}"></i></span>
+                <span class="crm-zonkan-card__body">
+                    <strong>{{ folder.name }}</strong>
+                    <em>{{ folder.property_count|default:0 }} فایل{% if folder.cabinet %} · {{ folder.cabinet.name }}{% endif %}</em>
+                </span>
+                {% if folder.is_pinned %}<span class="crm-zonkan-card__pin" title="سنجاق‌شده"><i class="fas fa-thumbtack"></i></span>{% endif %}
+            </a>
+            <button type="button" class="crm-zonkan-card__menu" data-zonkan-card-menu="{{ folder.id }}" aria-label="عملیات زونکن">
+                <i class="fas fa-ellipsis-v" aria-hidden="true"></i>
+            </button>
+        </div>
+        {% endfor %}
+        {% if not property_folders %}
+        <button type="button"
+                class="crm-zonkan-card crm-zonkan-card--compact crm-zonkan-card--empty"
+                data-zonkan-create
+                title="ساخت اولین زونکن">
+            <span class="crm-zonkan-card__ico" aria-hidden="true"><i class="fas fa-folder-plus"></i></span>
+            <span class="crm-zonkan-card__body">
+                <strong>زونکن جدید</strong>
+                <em>مجتمع، پروژه…</em>
+            </span>
+        </button>
+        {% endif %}
+        {% endwith %}
+    </div>
+</div>

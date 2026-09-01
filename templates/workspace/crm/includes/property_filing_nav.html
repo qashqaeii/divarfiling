@@ -1,0 +1,18 @@
+{% load workspace_tags static %}
+<section class="crm-filing-nav" aria-label="سازمان‌دهی فایل‌های شخصی">
+    <header class="crm-filing-nav__head">
+        <div class="crm-filing-nav__brand">
+            {% include "workspace/crm/includes/zonkan_brand_icon.html" %}
+            <div class="crm-filing-nav__titles">
+                <h2 class="crm-filing-nav__title">سازمان‌دهی فایل‌ها</h2>
+                <p class="crm-filing-nav__hint">کمد برای گروه‌بندی · زونکن برای فیلتر سریع</p>
+            </div>
+        </div>
+    </header>
+
+    {% include 'workspace/crm/includes/property_cabinets_tier.html' %}
+    {% include 'workspace/crm/includes/property_folders_tier.html' %}
+</section>
+
+{% include 'workspace/crm/includes/property_cabinets_modals.html' %}
+{% include 'workspace/crm/includes/property_folders_modals.html' %}

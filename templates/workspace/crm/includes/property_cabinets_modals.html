@@ -1,0 +1,102 @@
+<dialog class="crm-zonkan-modal crm-kabinet-modal" id="crmKabinetModal" data-kabinet-modal>
+    <form method="dialog" class="crm-zonkan-modal__box" data-kabinet-form>
+        <header class="crm-zonkan-modal__head">
+            <h3 class="crm-zonkan-modal__title"><i class="fas fa-archive"></i> <span data-kabinet-modal-title>کمد جدید</span></h3>
+            <button type="button" class="crm-zonkan-modal__close" data-kabinet-close aria-label="بستن">
+                <i class="fas fa-times" aria-hidden="true"></i>
+            </button>
+        </header>
+        <div class="crm-zonkan-modal__body">
+            <input type="hidden" data-kabinet-edit-id value="">
+            <label class="crm-label" for="crmKabinetName">نام کمد</label>
+            <input type="text" id="crmKabinetName" class="crm-input" maxlength="80" placeholder="مثلاً فروش، اجاره، پروژه‌ها…" required data-kabinet-name>
+            <label class="crm-label" for="crmKabinetDesc">توضیح <span class="crm-label-optional">(اختیاری)</span></label>
+            <input type="text" id="crmKabinetDesc" class="crm-input" maxlength="240" placeholder="توضیح کوتاه" data-kabinet-desc>
+            <label class="crm-zonkan-pin-row">
+                <input type="checkbox" data-kabinet-pin>
+                <span><i class="fas fa-thumbtack" aria-hidden="true"></i> سنجاق در ابتدای لیست</span>
+            </label>
+            <span class="crm-label">رنگ</span>
+            <div class="crm-zonkan-colors" role="group" aria-label="رنگ کمد">
+                {% for c in cabinet_colors %}
+                <button type="button" class="crm-zonkan-color{% if forloop.first %} is-active{% endif %}" data-kabinet-color="{{ c }}" style="--swatch:{{ c }}" aria-label="رنگ {{ forloop.counter }}"></button>
+                {% endfor %}
+            </div>
+            <span class="crm-label">آیکن</span>
+            <div class="crm-zonkan-icons" role="group" aria-label="آیکن کمد">
+                {% for ic in cabinet_icons %}
+                <button type="button" class="crm-zonkan-icon{% if forloop.first %} is-active{% endif %}" data-kabinet-icon="{{ ic }}" aria-label="{{ ic }}">
+                    <i class="fas {{ ic }}" aria-hidden="true"></i>
+                </button>
+                {% endfor %}
+            </div>
+        </div>
+        <footer class="crm-zonkan-modal__foot">
+            <button type="button" class="crm-dash-act crm-dash-act--danger crm-zonkan-modal__delete" data-kabinet-delete hidden>حذف کمد</button>
+            <span class="crm-zonkan-modal__spacer"></span>
+            <button type="button" class="crm-dash-act" data-kabinet-close>انصراف</button>
+            <button type="submit" class="crm-dash-act crm-dash-act--primary">ذخیره کمد</button>
+        </footer>
+    </form>
+</dialog>
+
+{% if property_cabinets %}
+<dialog class="crm-zonkan-manage crm-kabinet-manage" id="crmKabinetManage" data-kabinet-manage-modal>
+    <div class="crm-zonkan-manage__box">
+        <header class="crm-zonkan-manage__head">
+            <div class="crm-zonkan-manage__head-brand">
+                <i class="fas fa-archive crm-kabinet-manage-icon" aria-hidden="true"></i>
+                <div>
+                    <h3>مدیریت کمدها</h3>
+                    <p>بکشید و رها کنید · سنجاق، ویرایش یا حذف</p>
+                </div>
+            </div>
+            <button type="button" class="crm-zonkan-modal__close" data-kabinet-manage-close aria-label="بستن">
+                <i class="fas fa-times" aria-hidden="true"></i>
+            </button>
+        </header>
+        <ul class="crm-zonkan-manage__list" data-kabinet-manage-list>
+            {% for cabinet in property_cabinets %}
+            <li class="crm-zonkan-manage__item{% if cabinet.is_pinned %} is-pinned{% endif %}"
+                draggable="true"
+                data-kabinet-manage-item
+                data-cabinet-id="{{ cabinet.id }}"
+                data-cabinet-name="{{ cabinet.name|escape }}"
+                data-cabinet-desc="{{ cabinet.description|default:''|escape }}"
+                data-cabinet-color="{{ cabinet.color }}"
+                data-cabinet-icon="{{ cabinet.icon|default:'fa-folder' }}"
+                data-cabinet-pinned="{{ cabinet.is_pinned|yesno:'1,0' }}"
+                style="--zonkan-color:{{ cabinet.color }}">
+                <span class="crm-zonkan-manage__drag" aria-hidden="true"><i class="fas fa-grip-vertical"></i></span>
+                <span class="crm-zonkan-manage__dot" aria-hidden="true"></span>
+                <span class="crm-zonkan-manage__info">
+                    <strong>{{ cabinet.name }}</strong>
+                    <em>{{ cabinet.folder_count|default:0 }} زونکن · {{ cabinet.property_count|default:0 }} فایل{% if cabinet.description %} · {{ cabinet.description }}{% endif %}</em>
+                </span>
+                <div class="crm-zonkan-manage__acts">
+                    <button type="button" class="crm-zonkan-manage__act{% if cabinet.is_pinned %} is-on{% endif %}" data-kabinet-manage-pin="{{ cabinet.id }}" title="سنجاق">
+                        <i class="fas fa-thumbtack" aria-hidden="true"></i>
+                    </button>
+                    <button type="button" class="crm-zonkan-manage__act" data-kabinet-manage-edit="{{ cabinet.id }}" title="ویرایش">
+                        <i class="fas fa-pen" aria-hidden="true"></i>
+                    </button>
+                    <button type="button" class="crm-zonkan-manage__act crm-zonkan-manage__act--danger" data-kabinet-manage-delete="{{ cabinet.id }}" title="حذف">
+                        <i class="fas fa-trash-alt" aria-hidden="true"></i>
+                    </button>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+        <footer class="crm-zonkan-manage__foot">
+            <button type="button" class="crm-dash-act" data-kabinet-manage-close>بستن</button>
+            <button type="button" class="crm-dash-act crm-dash-act--primary" data-kabinet-reorder-save>ذخیره ترتیب</button>
+        </footer>
+    </div>
+</dialog>
+
+<menu class="crm-zonkan-pop crm-kabinet-pop" id="crmKabinetPop" data-kabinet-pop hidden>
+    <button type="button" data-kabinet-pop-pin><i class="fas fa-thumbtack"></i> سنجاق / برداشتن</button>
+    <button type="button" data-kabinet-pop-edit><i class="fas fa-pen"></i> ویرایش</button>
+    <button type="button" data-kabinet-pop-delete class="is-danger"><i class="fas fa-trash-alt"></i> حذف</button>
+</menu>
+{% endif %}

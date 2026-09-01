@@ -16,7 +16,7 @@
 {% endblock %}
 
 {% block crm_extra_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/crm-zonkan.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-zonkan.css' %}?v=6">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-prop-detail-mobile.css' %}?v=3">
 {% if show_nearby_pois %}
 <link rel="stylesheet" href="{% static 'workspace/css/crm-nearby-pois.css' %}?v=6">
@@ -126,7 +126,7 @@
                     <button type="button" class="crm-prop-hero-act" data-drawer-open="drawer-document" title="آپلود مدرک">
                         <i class="fas fa-paperclip"></i><span>مدرک</span>
                     </button>
-                    <button type="button" class="crm-prop-hero-act" data-crm-prop-duplicate="{{ property.pk }}" title="کپی فایل">
+                    <button type="button" class="crm-prop-hero-act" data-crm-prop-duplicate="{{ property.pk }}" aria-label="کپی فایل">
                         <i class="fas fa-copy"></i><span>کپی فایل</span>
                     </button>
                     <button type="button" class="crm-prop-hero-act crm-prop-hero-act--primary" data-drawer-open="drawer-edit">

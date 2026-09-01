@@ -1,16 +1,23 @@
-<dialog class="crm-modal crm-prop-duplicate-modal" data-crm-prop-duplicate-modal aria-labelledby="crmPropDuplicateTitle">
-    <div class="crm-modal__panel">
-        <header class="crm-modal__head">
-            <h2 id="crmPropDuplicateTitle" class="crm-modal__title">کپی این فایل ساخته شود؟</h2>
+<dialog class="crm-zonkan-modal crm-prop-duplicate-modal" data-crm-prop-duplicate-modal aria-labelledby="crmPropDuplicateTitle">
+    <div class="crm-zonkan-modal__box">
+        <header class="crm-zonkan-modal__head">
+            <h3 class="crm-zonkan-modal__title" id="crmPropDuplicateTitle">
+                <i class="fas fa-copy" aria-hidden="true"></i>
+                <span>کپی این فایل ساخته شود؟</span>
+            </h3>
+            <button type="button" class="crm-zonkan-modal__close" data-crm-prop-duplicate-cancel aria-label="بستن">
+                <i class="fas fa-times" aria-hidden="true"></i>
+            </button>
         </header>
-        <div class="crm-modal__body">
-            <p class="crm-modal__text">
-                یک فایل جدید با اطلاعات مشابه ایجاد می‌شود و می‌توانید بعد از ساخت، مشخصات آن را ویرایش کنید.
+        <div class="crm-zonkan-modal__body crm-prop-duplicate-modal__body">
+            <p class="crm-prop-duplicate-modal__text">
+                یک فایل جدید با اطلاعات مشابه ایجاد می‌شود. بعد از ساخت می‌توانید طبقه، متراژ، قیمت و سایر مشخصات را ویرایش کنید.
             </p>
         </div>
-        <footer class="crm-modal__foot">
-            <button type="button" class="crm-btn crm-btn-ghost" data-crm-prop-duplicate-cancel>انصراف</button>
-            <button type="button" class="crm-btn crm-btn-primary" data-crm-prop-duplicate-confirm>
+        <footer class="crm-zonkan-modal__foot">
+            <span class="crm-zonkan-modal__spacer"></span>
+            <button type="button" class="crm-dash-act" data-crm-prop-duplicate-cancel>انصراف</button>
+            <button type="button" class="crm-dash-act crm-dash-act--primary" data-crm-prop-duplicate-confirm>
                 <i class="fas fa-copy" aria-hidden="true"></i>
                 <span data-crm-prop-duplicate-confirm-label>ساخت کپی</span>
             </button>

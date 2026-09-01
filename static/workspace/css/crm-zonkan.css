@@ -461,6 +461,10 @@
     max-width: min(92vw, 26rem);
 }
 
+.crm-zonkan-modal[open] {
+    margin: auto;
+}
+
 .crm-zonkan-modal::backdrop {
     background: rgba(15, 23, 42, 0.45);
 }
@@ -572,6 +576,30 @@
 
 .crm-zonkan-modal__spacer {
     flex: 1;
+}
+
+.crm-prop-duplicate-modal {
+    max-width: min(92vw, 22rem);
+}
+
+.crm-prop-duplicate-modal__text {
+    margin: 0;
+    font-size: 0.8rem;
+    line-height: 1.55;
+    color: var(--ws-text-muted, #64748b);
+}
+
+.crm-prop-duplicate-modal .crm-zonkan-modal__title i {
+    width: 1.65rem;
+    height: 1.65rem;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.72rem;
+    color: #6366f1;
+    background: rgba(99, 102, 241, 0.12);
+    border: 1px solid rgba(99, 102, 241, 0.18);
 }
 
 /* ── Manage panel ── */

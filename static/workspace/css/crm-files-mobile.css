@@ -73,16 +73,33 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-height: 1.7rem;
-    padding: 0.18rem 0.5rem;
+    gap: 0.32rem;
+    min-height: 1.85rem;
+    padding: 0.22rem 0.58rem;
     border-radius: 999px;
     border: 1px solid var(--ws-border-light);
     background: var(--ws-surface);
     color: var(--ws-text-secondary);
-    font-size: 0.62rem;
-    font-weight: 700;
+    font-family: inherit;
+    font-size: 0.72rem;
+    font-weight: 650;
+    letter-spacing: -0.01em;
     text-decoration: none;
-    line-height: 1;
+    line-height: 1.25;
+    white-space: nowrap;
+}
+button.crm-files-card-act {
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+}
+.crm-files-card-act i {
+    font-size: 0.68rem;
+    opacity: 0.88;
+    flex-shrink: 0;
+}
+.crm-files-card-act span {
+    font: inherit;
 }
 .crm-files-card-act--primary {
     background: color-mix(in srgb, var(--ws-primary) 10%, var(--ws-surface));

@@ -5533,7 +5533,6 @@ function initCRMPropertyDuplicate() {
     modal.dataset.propDuplicateBound = '1';
 
     const base = window.crmPropertyDuplicateUrlBase || '/workspace/crm/properties/';
-    const cancelBtn = modal.querySelector('[data-crm-prop-duplicate-cancel]');
     const confirmBtn = modal.querySelector('[data-crm-prop-duplicate-confirm]');
     const confirmLabel = modal.querySelector('[data-crm-prop-duplicate-confirm-label]');
     let activePropertyId = null;
@@ -5551,7 +5550,9 @@ function initCRMPropertyDuplicate() {
     function setBusy(next) {
         busy = next;
         if (confirmBtn) confirmBtn.disabled = next;
-        if (cancelBtn) cancelBtn.disabled = next;
+        modal.querySelectorAll('[data-crm-prop-duplicate-cancel]').forEach((btn) => {
+            btn.disabled = next;
+        });
         if (confirmLabel) {
             confirmLabel.textContent = next ? 'در حال ساخت…' : 'ساخت کپی';
         }
@@ -5568,7 +5569,12 @@ function initCRMPropertyDuplicate() {
         if (typeof modal.showModal === 'function') modal.showModal();
     });
 
-    cancelBtn?.addEventListener('click', closeModal);
+    modal.querySelectorAll('[data-crm-prop-duplicate-cancel]').forEach((btn) => {
+        btn.addEventListener('click', closeModal);
+    });
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal && !busy) closeModal();
+    });
     modal.addEventListener('cancel', (e) => {
         if (busy) e.preventDefault();
     });

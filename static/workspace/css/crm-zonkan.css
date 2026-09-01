@@ -3,9 +3,22 @@
    Loaded explicitly on properties list/detail pages
    ═══════════════════════════════════════════════════════════ */
 
+/* KPI strip and shell body share the same horizontal track */
+.crm-files-pro-v2.crm-page-chrome > .kpi-strip.crm-files-kpi-strip,
+.crm-files-pro-v2.crm-page-chrome > .crm-shell-body {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.crm-files-pro-v2 .crm-shell-body {
+    scrollbar-gutter: auto;
+}
+
 .crm-files-pro-v2 .crm-shell-body > .crm-zonkan,
 .crm-files-pro-v2 .crm-shell-body > .crm-filing-nav {
-    margin: 0.65rem 1rem 0.35rem;
+    margin: 0.65rem 0 0.35rem;
     padding: 0.75rem 0.85rem 0.8rem;
     border-radius: 12px;
     border: 1px solid var(--ws-border-light, #e8e6ef);
@@ -636,6 +649,27 @@
 
 .crm-zonkan-manage__item.is-dragging {
     opacity: 0.45;
+}
+
+/* ── Filing nav: drag folder → drop on cabinet ── */
+.crm-zonkan-card-wrap[data-zonkan-wrap] {
+    cursor: grab;
+}
+
+.crm-zonkan-card-wrap[data-zonkan-wrap].is-dragging {
+    opacity: 0.5;
+    cursor: grabbing;
+}
+
+.crm-zonkan-card-wrap[data-zonkan-wrap].is-dragging .crm-zonkan-card {
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+}
+
+.crm-zonkan-card-wrap[data-kabinet-wrap].is-drop-target > .crm-kabinet-card,
+.crm-zonkan-card-wrap[data-kabinet-wrap].is-drop-target > .crm-zonkan-card {
+    border-color: color-mix(in srgb, var(--ws-primary) 55%, var(--ws-border-light, #e8e6ef));
+    background: color-mix(in srgb, var(--ws-primary) 10%, var(--ws-surface, #fff));
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--ws-primary) 28%, transparent);
 }
 
 .crm-zonkan-manage__item.is-pinned {

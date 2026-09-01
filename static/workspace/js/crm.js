@@ -4892,6 +4892,83 @@ function initCRMPropertyFolders(root) {
     });
 }
 
+function initCRMPropertyFilingDragDrop(root) {
+    const scope = root || document;
+    const nav = scope.querySelector('.crm-filing-nav');
+    if (!nav || nav.dataset.filingDndBound === '1') return;
+    nav.dataset.filingDndBound = '1';
+
+    const assignBase = window.crmKabinetFolderAssignUrlBase || '/workspace/crm/property-cabinets/';
+    let draggingFolderId = null;
+    let suppressClick = false;
+
+    function assignUrl(cabinetId, folderId) {
+        return `${assignBase}${cabinetId}/folders/${folderId}/`;
+    }
+
+    nav.querySelectorAll('[data-zonkan-wrap]').forEach((wrap) => {
+        const folderId = wrap.getAttribute('data-zonkan-wrap');
+        if (!folderId) return;
+        wrap.setAttribute('draggable', 'true');
+
+        wrap.addEventListener('dragstart', (e) => {
+            if (e.target.closest('[data-zonkan-card-menu]')) {
+                e.preventDefault();
+                return;
+            }
+            draggingFolderId = folderId;
+            suppressClick = false;
+            wrap.classList.add('is-dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', folderId);
+        });
+        wrap.addEventListener('dragend', () => {
+            draggingFolderId = null;
+            suppressClick = true;
+            wrap.classList.remove('is-dragging');
+            nav.querySelectorAll('.is-drop-target').forEach((el) => el.classList.remove('is-drop-target'));
+            window.setTimeout(() => { suppressClick = false; }, 0);
+        });
+        wrap.querySelector('a[data-zonkan-id]')?.addEventListener('click', (e) => {
+            if (suppressClick) e.preventDefault();
+        });
+    });
+
+    nav.querySelectorAll('[data-kabinet-wrap]').forEach((wrap) => {
+        const cabinetId = wrap.querySelector('[data-kabinet-id]')?.getAttribute('data-kabinet-id');
+        if (!cabinetId || cabinetId === 'none') return;
+
+        wrap.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            wrap.classList.add('is-drop-target');
+        });
+        wrap.addEventListener('dragleave', (e) => {
+            if (!wrap.contains(e.relatedTarget)) wrap.classList.remove('is-drop-target');
+        });
+        wrap.addEventListener('drop', async (e) => {
+            e.preventDefault();
+            wrap.classList.remove('is-drop-target');
+            const folderId = e.dataTransfer.getData('text/plain') || draggingFolderId;
+            if (!folderId) return;
+            try {
+                const resp = await fetch(assignUrl(cabinetId, folderId), {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': getCsrfToken() },
+                });
+                const data = await resp.json();
+                if (!data.ok) {
+                    window.alert(data.error || 'انتقال زونکن به کمد ناموفق بود');
+                    return;
+                }
+                window.location.reload();
+            } catch (_err) {
+                window.alert('خطا در انتقال زونکن به کمد');
+            }
+        });
+    });
+}
+
 function initCRMPropertyCabinets(root) {
     const scope = root || document;
     const section = scope.querySelector('[data-crm-kabinet]');
@@ -5524,6 +5601,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initCRMSavedFilters();
     initCRMPropertyFolders(document);
     initCRMPropertyCabinets(document);
+    initCRMPropertyFilingDragDrop(document);
     initCRMPropertyFolderPicker(document);
     initCRMPropertyFolderAssign(document);
     initContactsMobileFilters();

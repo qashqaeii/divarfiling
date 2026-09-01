@@ -9,7 +9,7 @@
 {% block crm_actions %}{% endblock %}
 
 {% block ws_surface_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/crm-deals-mobile.css' %}?v=6">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-deals-mobile.css' %}?v=8">
 {% endblock %}
 
 {% block crm_content %}
@@ -204,7 +204,7 @@
         {% else %}
         <div class="crm-deals-table-card">
             <div class="crm-deals-table-scroll">
-                <table class="crm-deals-table">
+                <table class="crm-deals-table crm-deals-table--minimal">
                     <thead>
                         <tr>
                             <th class="crm-deals-col-deal" scope="col">معامله</th>
@@ -311,12 +311,10 @@
 
                                 {# Desktop table cell #}
                                 <a href="{% url 'workspace:crm_deal_detail' d.id %}" class="crm-deals-cell-deal crm-deals-cell-deal--desk">
-                                    <span class="crm-deals-deal-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='handshake' size='inline' only %}</span>
                                     <span class="crm-deals-deal-text">
                                         <strong>{{ d.title }}</strong>
                                         {% if d.expected_close_date %}
                                         <span class="crm-deals-deal-meta{% if d.expected_close_date < today %} crm-deals-deal-meta--overdue{% endif %}">
-                                            {% include 'includes/icon_slot.html' with decor='calendar' size='inline' only %}
                                             بستن {{ d.expected_close_date|ws_jalali }}
                                         </span>
                                         {% elif d.property %}
@@ -327,7 +325,6 @@
                             </td>
                             <td class="crm-deals-col-contact crm-deals-col--desk" data-label="مخاطب">
                                 <a href="{% url 'workspace:crm_detail' d.customer_id %}" class="crm-deals-cell-contact" onclick="event.stopPropagation()">
-                                    <span class="crm-deals-avatar crm-deals-avatar--hue-{{ d.customer.name|crm_avatar_hue }}">{{ d.customer.name|crm_initials }}</span>
                                     <span class="crm-deals-contact-name">{{ d.customer.name }}</span>
                                 </a>
                             </td>
@@ -339,7 +336,6 @@
                                 <div class="crm-deals-value-cell">
                                     {% if d.value %}
                                     <span class="crm-deals-value-amount">{{ d.value|ws_money }}</span>
-                                    <span class="crm-deals-value-bar" aria-hidden="true" title="احتمال {{ d.probability }}٪"><i style="width: {{ d.probability }}%"></i></span>
                                     {% else %}
                                     <span class="crm-muted">—</span>
                                     {% endif %}
@@ -361,7 +357,13 @@
                                 <span class="crm-muted">—</span>
                                 {% endif %}
                             </td>
-                            <td class="crm-deals-col-updated crm-deals-col--desk" data-label="بروزرسانی"><time datetime="{{ d.updated_at|date:'c' }}">{{ d.updated_at|ws_jalali }}</time></td>
+                            <td class="crm-deals-col-updated crm-deals-col--desk" data-label="بروزرسانی">
+                                <time class="crm-deals-updated-at" datetime="{{ d.updated_at|date:'c' }}">
+                                    <span class="crm-deals-updated-at__date">{{ d.updated_at|ws_jalali_date }}</span>
+                                    <span class="crm-deals-updated-at__sep" aria-hidden="true">·</span>
+                                    <span class="crm-deals-updated-at__time">{{ d.updated_at|ws_time }}</span>
+                                </time>
+                            </td>
                             <td class="crm-deals-col-action crm-deals-col--desk">
                                 <a href="{% url 'workspace:crm_deal_detail' d.id %}" class="crm-deals-row-action" title="مشاهده جزئیات" onclick="event.stopPropagation()"><i class="fas fa-arrow-left" aria-hidden="true"></i></a>
                             </td>

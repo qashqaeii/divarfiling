@@ -11257,10 +11257,10 @@ select.crm-files-adv-control {
     cursor: pointer;
 }
 .crm-deals-col-updated {
-    width: 96px;
+    width: 11%;
+    min-width: 0;
     font-size: 0.68rem;
     color: var(--ws-text-muted);
-    white-space: nowrap;
 }
 .crm-deals-overdue {
     color: #dc2626 !important;
@@ -11274,6 +11274,7 @@ select.crm-files-adv-control {
     border-spacing: 0;
     table-layout: fixed;
     font-size: 0.8125rem;
+    font-family: 'Vazirmatn', system-ui, sans-serif;
 }
 .crm-deals-pro .crm-deals-table-scroll {
     scrollbar-width: thin;
@@ -11285,10 +11286,11 @@ select.crm-files-adv-control {
     z-index: 3;
 }
 .crm-deals-pro .crm-deals-table thead th {
-    padding: 0.8rem 1rem;
+    padding: 0.8rem 0.85rem;
+    font-family: 'Vazirmatn', system-ui, sans-serif;
     font-size: 0.72rem;
     font-weight: 700;
-    letter-spacing: 0;
+    letter-spacing: 0.01em;
     text-transform: none;
     text-align: right;
     color: var(--ws-text-secondary);
@@ -11298,9 +11300,11 @@ select.crm-files-adv-control {
     box-shadow: 0 1px 0 color-mix(in srgb, var(--ws-border) 70%, transparent);
 }
 .crm-deals-pro .crm-deals-table tbody td {
-    padding: 0.85rem 1rem;
+    padding: 0.85rem 0.85rem;
     border-bottom: 1px solid var(--ws-border-light, #f1f5f9);
     vertical-align: middle;
+    overflow: hidden;
+    min-width: 0;
 }
 .crm-deals-pro .crm-deals-table tbody tr:last-child td {
     border-bottom: none;
@@ -11312,14 +11316,15 @@ select.crm-files-adv-control {
     background: color-mix(in srgb, var(--ws-primary) 5%, var(--ws-surface)) !important;
     box-shadow: inset -3px 0 0 var(--ws-primary);
 }
-.crm-deals-pro .crm-deals-col-deal { width: 26%; min-width: 210px; }
-.crm-deals-pro .crm-deals-col-contact { width: 15%; min-width: 130px; }
-.crm-deals-pro .crm-deals-col-stage { width: 11%; min-width: 96px; }
-.crm-deals-pro .crm-deals-col-value { width: 13%; min-width: 118px; }
-.crm-deals-pro .crm-deals-col-prob { width: 11%; min-width: 96px; }
-.crm-deals-pro .crm-deals-col-commission { width: 12%; min-width: 108px; }
-.crm-deals-pro .crm-deals-col-updated { width: 10%; min-width: 88px; }
-.crm-deals-pro .crm-deals-col-action { width: 48px; padding-inline: 0.35rem !important; text-align: center; }
+.crm-deals-pro .crm-deals-col-deal { width: 24%; min-width: 0; }
+.crm-deals-pro .crm-deals-col-contact { width: 10%; min-width: 0; }
+.crm-deals-pro .crm-deals-col-stage { width: 9%; min-width: 0; }
+.crm-deals-pro .crm-deals-col-next { width: 11%; min-width: 0; }
+.crm-deals-pro .crm-deals-col-value { width: 12%; min-width: 0; }
+.crm-deals-pro .crm-deals-col-prob { width: 8%; min-width: 0; }
+.crm-deals-pro .crm-deals-col-commission { width: 11%; min-width: 0; }
+.crm-deals-pro .crm-deals-col-updated { width: 12%; min-width: 0; padding-inline: 0.75rem !important; }
+.crm-deals-pro .crm-deals-col-action { width: 40px; min-width: 40px; padding-inline: 0.2rem !important; text-align: center; }
 
 .crm-deals-pro .crm-deals-deal-text strong {
     font-size: 0.875rem;
@@ -11439,12 +11444,181 @@ select.crm-files-adv-control {
     box-shadow: 0 0 8px color-mix(in srgb, #6366f1 35%, transparent);
 }
 
-.crm-deals-pro .crm-deals-col-updated time {
+.crm-deals-pro .crm-deals-col-next {
+    overflow: hidden;
+}
+.crm-deals-pro .crm-deals-col-commission {
+    white-space: normal;
+    line-height: 1.35;
+}
+.crm-deals-pro .crm-deals-col-commission small {
     display: block;
-    font-size: 0.6875rem;
-    line-height: 1.45;
+    margin-top: 0.12rem;
+    font-size: 0.62rem;
+    line-height: 1.25;
+}
+.crm-deals-pro .crm-deals-col-updated {
+    overflow: hidden;
+}
+.crm-deals-updated-at {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    max-width: 100%;
+    line-height: 1.35;
+    font-family: 'Vazirmatn', system-ui, sans-serif;
+    white-space: nowrap;
+}
+.crm-deals-updated-at__date {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--ws-text-secondary);
     font-variant-numeric: tabular-nums;
+}
+.crm-deals-updated-at__sep {
+    color: var(--ws-border, #cbd5e1);
+    font-weight: 400;
+    user-select: none;
+}
+.crm-deals-updated-at__time {
+    font-size: 0.68rem;
+    font-weight: 500;
     color: var(--ws-text-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+/* Minimal modern deals table */
+.crm-deals-pro .crm-deals-table--minimal {
+    font-size: 0.8rem;
+}
+.crm-deals-pro .crm-deals-table--minimal thead th {
+    padding: 0.62rem 0.75rem;
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: var(--ws-text-muted);
+    background: var(--ws-surface);
+    border-bottom: 1px solid var(--ws-border);
+    box-shadow: none;
+    letter-spacing: 0.02em;
+}
+.crm-deals-pro .crm-deals-table--minimal tbody td {
+    padding: 0.72rem 0.75rem;
+    border-bottom: 1px solid color-mix(in srgb, var(--ws-border) 55%, transparent);
+}
+.crm-deals-pro .crm-deals-table--minimal tbody tr.crm-deals-row:nth-child(even) {
+    background: transparent;
+}
+.crm-deals-pro .crm-deals-table--minimal tbody tr.crm-deals-row:hover {
+    background: color-mix(in srgb, var(--ws-primary) 3%, var(--ws-surface)) !important;
+    box-shadow: inset -2px 0 0 color-mix(in srgb, var(--ws-primary) 70%, transparent);
+}
+.crm-deals-pro .crm-deals-table--minimal .crm-deals-cell-deal,
+.crm-deals-pro .crm-deals-table--minimal .crm-deals-cell-contact {
+    display: block;
+    gap: 0;
+}
+.crm-deals-pro .crm-deals-table--minimal .crm-deals-deal-icon,
+.crm-deals-pro .crm-deals-table--minimal .crm-deals-avatar {
+    display: none !important;
+}
+.crm-deals-pro .crm-deals-table--minimal .crm-deals-deal-text strong {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    -webkit-line-clamp: 1;
+    color: var(--ws-text);
+}
+.crm-deals-pro .crm-deals-table--minimal .crm-deals-cell-deal:hover strong,
+.crm-deals-pro .crm-deals-table--minimal .crm-deals-cell-contact:hover .crm-deals-contact-name {
+    color: var(--ws-primary);
+}
+.crm-deals-pro .crm-deals-table--minimal .crm-deals-deal-meta {
+    display: block;
+    margin-top: 0.12rem;
+    font-size: 0.65rem;
+    font-weight: 500;
+    color: var(--ws-text-muted);
+}
+.crm-deals-pro .crm-deals-table--minimal .crm-deals-deal-meta--overdue {
+    display: inline-block;
+    color: #b91c1c;
+    background: transparent;
+    padding: 0;
+}
+.crm-deals-pro .crm-deals-table--minimal .crm-deals-contact-name {
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--ws-text-secondary);
+}
+.crm-deals-pro .crm-deals-table--minimal .crm-deals-stage {
+    padding: 0.18rem 0.45rem;
+    font-size: 0.65rem;
+    font-weight: 600;
+    border-radius: 6px;
+    background: color-mix(in srgb, currentColor 8%, transparent);
+}
+.crm-deals-pro .crm-deals-table--minimal .crm-deals-value-amount,
+.crm-deals-pro .crm-deals-table--minimal .crm-deals-commission-amount {
+    font-size: 0.78rem;
+    font-weight: 700;
+}
+.crm-deals-pro .crm-deals-table--minimal .crm-deals-value-bar {
+    display: none;
+}
+.crm-deals-pro .crm-deals-table--minimal .crm-deals-prob-val {
+    font-size: 0.72rem;
+    font-weight: 700;
+    min-width: 1.85rem;
+}
+.crm-deals-pro .crm-deals-table--minimal .crm-deals-prob-track {
+    height: 4px;
+    background: color-mix(in srgb, var(--ws-border) 70%, transparent);
+}
+.crm-deals-pro .crm-deals-table--minimal .crm-deals-prob-track i {
+    box-shadow: none;
+    background: color-mix(in srgb, var(--ws-primary) 75%, #6366f1);
+}
+.crm-deals-pro .crm-deals-table--minimal .crm-deal-na-chip {
+    padding: 0.12rem 0.4rem;
+    font-size: 0.68rem;
+    font-weight: 600;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    color: var(--ws-text-secondary);
+}
+.crm-deals-pro .crm-deals-table--minimal .crm-deal-na-chip.is-overdue {
+    color: #b45309;
+    background: transparent;
+}
+.crm-deals-pro .crm-deals-table--minimal .crm-deal-na-chip.is-empty {
+    color: var(--ws-text-muted);
+    font-weight: 500;
+}
+.crm-deals-pro .crm-deals-table--minimal .crm-deals-row-action {
+    width: 28px;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    opacity: 0;
+    color: var(--ws-text-muted);
+    transition: opacity 0.14s, background 0.14s, color 0.14s;
+}
+.crm-deals-pro .crm-deals-table--minimal .crm-deals-row:hover .crm-deals-row-action {
+    opacity: 1;
+}
+.crm-deals-pro .crm-deals-table--minimal .crm-deals-row-action:hover {
+    background: color-mix(in srgb, var(--ws-primary) 8%, transparent);
+    color: var(--ws-primary);
+}
+.crm-deals-pro .crm-deals-table--minimal .crm-deals-col-updated {
+    text-align: left;
+    direction: ltr;
+}
+.crm-deals-pro .crm-deals-table--minimal .crm-deals-updated-at {
+    justify-content: flex-end;
+    width: 100%;
 }
 
 .crm-deals-pro .crm-deals-row-action {

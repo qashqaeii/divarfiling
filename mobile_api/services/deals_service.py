@@ -26,6 +26,25 @@ from workspace.services.crm_deal_stages import (
 from workspace.services.crm_scope import deal_for_user, deals_qs, get_agency, property_for_user
 
 
+def _parse_mobile_date(value):
+    """ISO یا شمسی را به date تبدیل می‌کند."""
+    from datetime import date as date_cls
+
+    from workspace.services.jalali_input import parse_jalali_date_string
+
+    if value in (None, ''):
+        return None
+    if hasattr(value, 'year') and not hasattr(value, 'hour'):
+        return value
+    parsed = parse_jalali_date_string(str(value))
+    if parsed:
+        return parsed
+    try:
+        return date_cls.fromisoformat(str(value)[:10])
+    except ValueError:
+        return None
+
+
 def list_deals_paginated(
     user,
     *,
@@ -85,9 +104,7 @@ def create_deal_from_mobile(user, data: Dict[str, Any]) -> CRMDeal:
 
     expected_close = data.get('expected_close_date') or None
     if expected_close:
-        from datetime import date as date_cls
-        if isinstance(expected_close, str):
-            expected_close = date_cls.fromisoformat(expected_close[:10])
+        expected_close = _parse_mobile_date(expected_close)
 
     from workspace.services.crm_deal_followup import parse_next_action_payload
     na = parse_next_action_payload(data.get('next_action') or data)
@@ -138,8 +155,15 @@ def update_deal_from_mobile(user, deal_id: int, data: Dict[str, Any]) -> Optiona
         if not raw:
             deal.expected_close_date = None
         else:
-            from datetime import date as date_cls
-            deal.expected_close_date = date_cls.fromisoformat(str(raw)[:10])
+            deal.expected_close_date = _parse_mobile_date(raw) or deal.expected_close_date
+    if 'contract_number' in data:
+        deal.contract_number = (data.get('contract_number') or '')[:100]
+    if 'contract_amount' in data:
+        raw = data.get('contract_amount')
+        deal.contract_amount = int(raw) if raw not in (None, '') else None
+    if 'contract_date' in data:
+        raw = data.get('contract_date')
+        deal.contract_date = _parse_mobile_date(raw) if raw else None
 
     property_id = data.get('property_id')
     if property_id is not None:

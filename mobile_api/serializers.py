@@ -772,6 +772,7 @@ def deal_to_dict(d: CRMDeal, *, detailed: bool = False, stage_meta: Optional[Dic
             'contract_amount': d.contract_amount,
             'stage_description': meta.get('description') or '',
             'stage_changed_at': d.stage_changed_at.isoformat() if d.stage_changed_at else None,
+            'contract_date': d.contract_date.isoformat() if d.contract_date else None,
             'timeline_preview': get_deal_timeline(d, limit=8, offset=0)['items'],
         })
     return data

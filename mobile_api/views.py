@@ -1369,6 +1369,7 @@ class PropertiesListView(APIView):
             'property_type': request.GET.get('property_type', ''),
             'city': request.GET.get('city', ''),
             'folder_id': request.GET.get('folder_id', ''),
+            'cabinet_id': request.GET.get('cabinet_id', ''),
         }
         items, meta = list_properties_paginated(
             request.user, page=page, page_size=page_size, query=query, request=request,
@@ -1444,7 +1445,8 @@ class PropertyFoldersListView(APIView):
 
     def get(self, request):
         from workspace.services.crm_property_folders import list_property_folders, serialize_folder
-        rows = list_property_folders(request.user)
+        cabinet_id = request.GET.get('cabinet_id') or None
+        rows = list_property_folders(request.user, cabinet_id=cabinet_id)
         return api_ok([serialize_folder(f) for f in rows])
 
     def post(self, request):
@@ -1458,6 +1460,7 @@ class PropertyFoldersListView(APIView):
                 color=data.get('color', ''),
                 icon=data.get('icon', ''),
                 is_pinned=bool(data.get('is_pinned')),
+                cabinet_id=data.get('cabinet_id'),
             )
         except ValueError as exc:
             return api_error(str(exc), code='VALIDATION_ERROR')
@@ -1512,6 +1515,87 @@ class PropertyFolderMembershipView(APIView):
         except ValueError as exc:
             return api_error(str(exc), code='VALIDATION_ERROR')
         return api_ok({})
+
+
+class PropertyCabinetsListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        from workspace.services.crm_property_cabinets import list_property_cabinets, serialize_cabinet
+        rows = list_property_cabinets(request.user)
+        return api_ok([serialize_cabinet(c) for c in rows])
+
+    def post(self, request):
+        from workspace.services.crm_property_cabinets import create_property_cabinet, serialize_cabinet
+        data = _parse_body(request)
+        try:
+            cabinet = create_property_cabinet(
+                request.user,
+                name=data.get('name', ''),
+                description=data.get('description', ''),
+                color=data.get('color', ''),
+                icon=data.get('icon', ''),
+                is_pinned=bool(data.get('is_pinned')),
+            )
+        except ValueError as exc:
+            return api_error(str(exc), code='VALIDATION_ERROR')
+        return api_ok(serialize_cabinet(cabinet), status=201)
+
+
+class PropertyCabinetDetailView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request, cabinet_id):
+        from workspace.services.crm_property_cabinets import serialize_cabinet, update_property_cabinet
+        try:
+            cabinet = update_property_cabinet(request.user, cabinet_id, _parse_body(request))
+        except ValueError as exc:
+            return api_error(str(exc), code='VALIDATION_ERROR')
+        return api_ok(serialize_cabinet(cabinet))
+
+    def delete(self, request, cabinet_id):
+        from workspace.services.crm_property_cabinets import delete_property_cabinet
+        if not delete_property_cabinet(request.user, cabinet_id):
+            return api_error('کمد یافت نشد.', code='NOT_FOUND', status=404)
+        return api_ok({})
+
+
+class PropertyCabinetReorderView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        from workspace.services.crm_property_cabinets import reorder_property_cabinets, serialize_cabinet
+        data = _parse_body(request)
+        cabinet_ids = data.get('cabinet_ids') or data.get('order') or []
+        rows = reorder_property_cabinets(request.user, cabinet_ids)
+        return api_ok([serialize_cabinet(c) for c in rows])
+
+
+class PropertyCabinetFolderAssignView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, cabinet_id, folder_id):
+        from workspace.services.crm_property_cabinets import assign_folder_to_cabinet
+        from workspace.services.crm_property_folders import serialize_folder
+        try:
+            folder = assign_folder_to_cabinet(request.user, folder_id, cabinet_id)
+        except ValueError as exc:
+            return api_error(str(exc), code='VALIDATION_ERROR')
+        return api_ok(serialize_folder(folder))
+
+    def delete(self, request, cabinet_id, folder_id):
+        from workspace.services.crm_property_cabinets import remove_folder_from_cabinet
+        from workspace.services.crm_property_folders import folder_for_user, serialize_folder
+        folder = folder_for_user(request.user, folder_id)
+        if not folder:
+            return api_error('زونکن یافت نشد.', code='NOT_FOUND', status=404)
+        if not folder.cabinet_id or int(folder.cabinet_id) != int(cabinet_id):
+            return api_error('زونکن در این کمد نیست.', code='VALIDATION_ERROR')
+        try:
+            folder = remove_folder_from_cabinet(request.user, folder_id)
+        except ValueError as exc:
+            return api_error(str(exc), code='VALIDATION_ERROR')
+        return api_ok(serialize_folder(folder))
 
 
 class PropertyPublicShareView(APIView):

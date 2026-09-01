@@ -21,7 +21,7 @@
 
     <div class="crm-zonkan__rail" tabindex="0" data-zonkan-rail>
         {% with base_qs=filter_qs|default:'' %}
-        <a href="{% url 'workspace:crm_properties' %}?view={{ view_mode }}{% if base_qs %}&{{ base_qs }}{% endif %}"
+        <a href="{% url 'workspace:crm_properties' %}?view={{ view_mode }}{% if active_cabinet_id %}&cabinet_id={{ active_cabinet_id }}{% endif %}{% if base_qs %}&{{ base_qs }}{% endif %}"
            class="crm-zonkan-card crm-zonkan-card--all{% if not active_folder_id %} is-active{% endif %}"
            style="--zonkan-color:#64748b"
            data-zonkan-card-all>
@@ -34,7 +34,7 @@
         {% for folder in property_folders %}
         <div class="crm-zonkan-card-wrap{% if active_folder_id == folder.id|stringformat:'s' %} is-active{% endif %}"
              data-zonkan-wrap="{{ folder.id }}">
-            <a href="?folder_id={{ folder.id }}&view={{ view_mode }}{% if base_qs %}&{{ base_qs }}{% endif %}"
+            <a href="?folder_id={{ folder.id }}&view={{ view_mode }}{% if active_cabinet_id %}&cabinet_id={{ active_cabinet_id }}{% endif %}{% if base_qs %}&{{ base_qs }}{% endif %}"
                class="crm-zonkan-card{% if active_folder_id == folder.id|stringformat:'s' %} is-active{% endif %}{% if folder.is_pinned %} is-pinned{% endif %}"
                style="--zonkan-color:{{ folder.color }}"
                data-zonkan-id="{{ folder.id }}"
@@ -42,7 +42,7 @@
                 <span class="crm-zonkan-card__ico" aria-hidden="true"><i class="fas {{ folder.icon|default:'fa-folder' }}"></i></span>
                 <span class="crm-zonkan-card__body">
                     <strong>{{ folder.name }}</strong>
-                    <em>{{ folder.property_count|default:0 }} فایل</em>
+                    <em>{{ folder.property_count|default:0 }} فایل{% if folder.cabinet %} · {{ folder.cabinet.name }}{% endif %}</em>
                 </span>
                 {% if folder.is_pinned %}<span class="crm-zonkan-card__pin" title="سنجاق‌شده"><i class="fas fa-thumbtack"></i></span>{% endif %}
             </a>
@@ -93,6 +93,14 @@
                 <input type="checkbox" data-zonkan-pin>
                 <span><i class="fas fa-thumbtack" aria-hidden="true"></i> سنجاق در ابتدای لیست</span>
             </label>
+
+            <label class="crm-label" for="crmZonkanCabinet">کمد</label>
+            <select id="crmZonkanCabinet" class="crm-input" data-zonkan-cabinet>
+                <option value="">بدون کمد</option>
+                {% for cab in property_cabinets %}
+                <option value="{{ cab.id }}">{{ cab.name }}</option>
+                {% endfor %}
+            </select>
 
             <span class="crm-label">رنگ</span>
             <div class="crm-zonkan-colors" role="group" aria-label="رنگ زونکن">
@@ -145,6 +153,7 @@
                 data-folder-color="{{ folder.color }}"
                 data-folder-icon="{{ folder.icon|default:'fa-folder' }}"
                 data-folder-pinned="{{ folder.is_pinned|yesno:'1,0' }}"
+                data-folder-cabinet="{{ folder.cabinet_id|default:'' }}"
                 style="--zonkan-color:{{ folder.color }}">
                 <span class="crm-zonkan-manage__drag" aria-hidden="true"><i class="fas fa-grip-vertical"></i></span>
                 <span class="crm-zonkan-manage__dot" aria-hidden="true"></span>
@@ -153,6 +162,14 @@
                     <em>{{ folder.property_count|default:0 }} فایل{% if folder.description %} · {{ folder.description }}{% endif %}</em>
                 </span>
                 <div class="crm-zonkan-manage__acts">
+                    {% if property_cabinets %}
+                    <select class="crm-zonkan-manage__cabinet-select" data-zonkan-manage-cabinet="{{ folder.id }}" title="انتقال به کمد">
+                        <option value=""{% if not folder.cabinet_id %} selected{% endif %}>بدون کمد</option>
+                        {% for cab in property_cabinets %}
+                        <option value="{{ cab.id }}"{% if folder.cabinet_id == cab.id %} selected{% endif %}>{{ cab.name }}</option>
+                        {% endfor %}
+                    </select>
+                    {% endif %}
                     <button type="button" class="crm-zonkan-manage__act{% if folder.is_pinned %} is-on{% endif %}" data-zonkan-manage-pin="{{ folder.id }}" title="سنجاق">
                         <i class="fas fa-thumbtack" aria-hidden="true"></i>
                     </button>

@@ -92,9 +92,13 @@ window.crmZonkanDetailUrlBase = '{% url "workspace:crm_property_folder_detail" f
 window.crmZonkanReorderUrl = '{% url "workspace:crm_property_folders_reorder" %}';
 window.crmZonkanMembershipUrl = '{% url "workspace:crm_property_folder_membership" folder_id=0 property_id=0 %}'.replace('/0/properties/0/', '/');
 window.crmZonkanBulkUrl = '{% url "workspace:crm_property_folder_bulk" folder_id=0 %}'.replace('/0/properties/bulk/', '/');
+window.crmKabinetUrl = '{% url "workspace:crm_property_cabinets" %}';
+window.crmKabinetDetailUrlBase = '{% url "workspace:crm_property_cabinet_detail" cabinet_id=0 %}'.replace('/0/', '/');
+window.crmKabinetReorderUrl = '{% url "workspace:crm_property_cabinets_reorder" %}';
+window.crmKabinetFolderAssignUrlBase = '{% url "workspace:crm_property_cabinet_folder_assign" cabinet_id=0 folder_id=0 %}'.replace('/0/folders/0/', '/');
 </script>
 
-<script src="{% static 'workspace/js/crm.js' %}?v=89"></script>
+<script src="{% static 'workspace/js/crm.js' %}?v=90"></script>
 <script src="{% static 'workspace/js/crm-form-map.js' %}?v=2"></script>
 
 {% if crm_video.available %}

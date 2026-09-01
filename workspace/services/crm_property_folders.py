@@ -2,12 +2,14 @@
 from __future__ import annotations
 
 import re
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 from django.db import IntegrityError
 from django.db.models import Count, Max
 
-from workspace.models import CRMProperty, CRMPropertyFolder, CRMPropertyFolderItem
+from workspace.models import CRMProperty, CRMPropertyCabinet, CRMPropertyFolder, CRMPropertyFolderItem
+
+CABINET_NONE = 'none'
 
 FOLDER_COLORS = (
     '#6366f1', '#0ea5e9', '#10b981', '#f59e0b',
@@ -19,6 +21,8 @@ FOLDER_ICONS = (
     'fa-house-chimney', 'fa-landmark',
 )
 _HEX_COLOR_RE = re.compile(r'^#[0-9a-fA-F]{6}$')
+
+CabinetFilter = Union[int, str, None]
 
 
 def _clean_color(value: str) -> str:
@@ -37,16 +41,55 @@ def _clean_icon(value: str) -> str:
     return 'fa-folder'
 
 
+def _cabinet_brief(cabinet: Optional[CRMPropertyCabinet]) -> Optional[Dict[str, Any]]:
+    if not cabinet:
+        return None
+    return {
+        'id': cabinet.pk,
+        'name': cabinet.name,
+        'color': cabinet.color or FOLDER_COLORS[0],
+        'icon': cabinet.icon or 'fa-folder',
+    }
+
+
+def _validate_folder_cabinet_user(folder: CRMPropertyFolder, cabinet: CRMPropertyCabinet) -> None:
+    if folder.user_id != cabinet.user_id:
+        raise ValueError('کمد و زونکن باید متعلق به یک کاربر باشند')
+
+
+def _apply_cabinet_id(folder: CRMPropertyFolder, user, cabinet_id) -> None:
+    if cabinet_id is None or cabinet_id == '' or str(cabinet_id).lower() in ('null', 'none'):
+        folder.cabinet = None
+        return
+    try:
+        cid = int(cabinet_id)
+    except (TypeError, ValueError) as exc:
+        raise ValueError('شناسه کمد نامعتبر است') from exc
+    cabinet = CRMPropertyCabinet.objects.filter(user=user, pk=cid).first()
+    if not cabinet:
+        raise ValueError('کمد یافت نشد')
+    _validate_folder_cabinet_user(folder, cabinet)
+    folder.cabinet = cabinet
+
+
 def folder_for_user(user, folder_id: int) -> Optional[CRMPropertyFolder]:
     if not folder_id:
         return None
-    return CRMPropertyFolder.objects.filter(user=user, pk=int(folder_id)).first()
+    return CRMPropertyFolder.objects.filter(user=user, pk=int(folder_id)).select_related('cabinet').first()
 
 
-def list_property_folders(user) -> List[CRMPropertyFolder]:
+def list_property_folders(user, cabinet_id: CabinetFilter = None) -> List[CRMPropertyFolder]:
+    qs = CRMPropertyFolder.objects.filter(user=user).select_related('cabinet')
+    if cabinet_id is not None and str(cabinet_id).strip() != '':
+        if str(cabinet_id).lower() == CABINET_NONE:
+            qs = qs.filter(cabinet__isnull=True)
+        else:
+            try:
+                qs = qs.filter(cabinet_id=int(cabinet_id))
+            except (TypeError, ValueError):
+                pass
     return list(
-        CRMPropertyFolder.objects.filter(user=user)
-        .annotate(property_count=Count('items', distinct=True))
+        qs.annotate(property_count=Count('items', distinct=True))
         .order_by('-is_pinned', 'sort_order', 'name')
     )
 
@@ -61,6 +104,9 @@ def serialize_folder(
         count = getattr(folder, 'property_count', None)
     if count is None:
         count = folder.items.count()
+    cabinet = getattr(folder, 'cabinet', None)
+    if cabinet is None and folder.cabinet_id:
+        cabinet = CRMPropertyCabinet.objects.filter(pk=folder.cabinet_id).first()
     return {
         'id': folder.pk,
         'name': folder.name,
@@ -70,6 +116,8 @@ def serialize_folder(
         'sort_order': folder.sort_order,
         'is_pinned': folder.is_pinned,
         'property_count': int(count or 0),
+        'cabinet': _cabinet_brief(cabinet),
+        'cabinet_id': folder.cabinet_id,
         'created_at': folder.created_at.isoformat() if folder.created_at else None,
         'updated_at': folder.updated_at.isoformat() if folder.updated_at else None,
     }
@@ -106,6 +154,7 @@ def create_property_folder(
     color: str = '',
     icon: str = '',
     is_pinned: bool = False,
+    cabinet_id=None,
 ) -> CRMPropertyFolder:
     clean_name = (name or '').strip()
     if not clean_name:
@@ -116,7 +165,7 @@ def create_property_folder(
         next_order = (
             CRMPropertyFolder.objects.filter(user=user).aggregate(m=Max('sort_order'))['m'] or 0
         ) + 10
-        return CRMPropertyFolder.objects.create(
+        folder = CRMPropertyFolder(
             user=user,
             name=clean_name,
             description=(description or '').strip()[:240],
@@ -125,6 +174,10 @@ def create_property_folder(
             is_pinned=bool(is_pinned),
             sort_order=next_order,
         )
+        if cabinet_id is not None:
+            _apply_cabinet_id(folder, user, cabinet_id)
+        folder.save()
+        return CRMPropertyFolder.objects.select_related('cabinet').get(pk=folder.pk)
     except IntegrityError as exc:
         raise ValueError('زونکنی با این نام وجود دارد') from exc
 
@@ -151,11 +204,13 @@ def update_property_folder(user, folder_id: int, data: dict) -> CRMPropertyFolde
             pass
     if 'is_pinned' in data and data.get('is_pinned') is not None:
         folder.is_pinned = bool(data.get('is_pinned'))
+    if 'cabinet_id' in data:
+        _apply_cabinet_id(folder, user, data.get('cabinet_id'))
     try:
         folder.save()
     except IntegrityError as exc:
         raise ValueError('زونکنی با این نام وجود دارد') from exc
-    return folder
+    return CRMPropertyFolder.objects.select_related('cabinet').get(pk=folder.pk)
 
 
 def delete_property_folder(user, folder_id: int) -> bool:

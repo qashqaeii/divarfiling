@@ -1242,11 +1242,45 @@ class CRMSavedFilter(models.Model):
         return f'{self.name} ({self.scope})'
 
 
+class CRMPropertyCabinet(models.Model):
+    """کمد — گروه‌بندی زونکن‌های فایل شخصی."""
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+        related_name='crm_property_cabinets', verbose_name='کاربر',
+    )
+    name = models.CharField(max_length=80, verbose_name='نام کمد')
+    description = models.CharField(max_length=240, blank=True, verbose_name='توضیح')
+    color = models.CharField(max_length=7, default='#6366f1', verbose_name='رنگ')
+    icon = models.CharField(max_length=40, default='fa-folder', verbose_name='آیکن')
+    sort_order = models.PositiveIntegerField(default=0, verbose_name='ترتیب')
+    is_pinned = models.BooleanField(default=False, verbose_name='سنجاق')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'کمد فایل شخصی'
+        verbose_name_plural = 'کمدهای فایل شخصی'
+        ordering = ['-is_pinned', 'sort_order', 'name']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'name'],
+                name='uniq_crm_property_cabinet_name',
+            ),
+        ]
+
+    def __str__(self):
+        return self.name
+
+
 class CRMPropertyFolder(models.Model):
     """زونکن — دسته‌بندی فایل‌های شخصی."""
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
         related_name='crm_property_folders', verbose_name='کاربر',
+    )
+    cabinet = models.ForeignKey(
+        CRMPropertyCabinet, null=True, blank=True, on_delete=models.SET_NULL,
+        related_name='folders', verbose_name='کمد',
     )
     name = models.CharField(max_length=80, verbose_name='نام زونکن')
     description = models.CharField(max_length=240, blank=True, verbose_name='توضیح')

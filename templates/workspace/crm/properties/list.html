@@ -116,9 +116,11 @@
     </section>
 
     <div class="crm-shell-body">
+        {% include 'workspace/crm/includes/property_cabinets_rail.html' %}
         {% include 'workspace/crm/includes/property_folders_rail.html' %}
         <form method="get" class="crm-files-filters crm-page-filters" id="crmPropertyFilters">
             <input type="hidden" name="view" value="{{ view_mode }}">
+            {% if active_cabinet_id %}<input type="hidden" name="cabinet_id" value="{{ active_cabinet_id }}" id="crmPropCabinetId">{% endif %}
             {% if active_folder_id %}<input type="hidden" name="folder_id" value="{{ active_folder_id }}" id="crmPropFolderId">{% endif %}
 
             <div class="crm-files-filter-primary">

@@ -1219,12 +1219,25 @@ class CRMPropertyListView(CRMContextMixin, LoginRequiredMixin, ListView):
         from workspace.services.crm_property_folders import (
             FOLDER_COLORS, FOLDER_ICONS, folders_for_property, list_property_folders, serialize_folder,
         )
+        from workspace.services.crm_property_cabinets import (
+            list_property_cabinets,
+            serialize_cabinet,
+            unassigned_folder_count,
+        )
         from workspace.services.property_public_share import build_property_amenity_dossier_items
-        ctx['property_folders'] = list_property_folders(user)
+        ctx['active_cabinet_id'] = self.request.GET.get('cabinet_id', '')
+        cabinet_filter = ctx['active_cabinet_id'] or None
+        ctx['property_folders'] = list_property_folders(user, cabinet_id=cabinet_filter)
         ctx['property_folders_json'] = json.dumps(
             [serialize_folder(f) for f in ctx['property_folders']],
             ensure_ascii=False,
         )
+        ctx['property_cabinets'] = list_property_cabinets(user)
+        ctx['property_cabinets_json'] = json.dumps(
+            [serialize_cabinet(c) for c in ctx['property_cabinets']],
+            ensure_ascii=False,
+        )
+        ctx['unassigned_folder_count'] = unassigned_folder_count(user)
         for prop in ctx.get('properties') or []:
             prop.card_amenities = build_property_amenity_dossier_items(prop)
             prop.folder_badges = folders_for_property(prop)
@@ -1250,11 +1263,11 @@ class CRMPropertyListView(CRMContextMixin, LoginRequiredMixin, ListView):
         ctx['sort'] = self.request.GET.get('sort', '-updated_at')
         ctx['filter_qs'] = urlencode({
             k: v for k, v in self.request.GET.items()
-            if k not in ('view', 'page', 'drawer', 'folder_id', 'partial') and v
+            if k not in ('view', 'page', 'drawer', 'folder_id', 'cabinet_id', 'partial') and v
         })
         ctx['has_filters'] = any(self.request.GET.get(k) for k in (
             'q', 'deal_mode', 'transaction_status', 'property_type', 'publish_status', 'city', 'sort',
-            'folder_id',
+            'folder_id', 'cabinet_id',
             'parking', 'storage', 'elevator', 'rooms',
             'area_min', 'area_max', 'price_min', 'price_max',
             'year_min', 'year_max', 'age_max',
@@ -1275,6 +1288,8 @@ class CRMPropertyListView(CRMContextMixin, LoginRequiredMixin, ListView):
         ctx['active_folder_id'] = self.request.GET.get('folder_id', '')
         ctx['folder_colors'] = FOLDER_COLORS
         ctx['folder_icons'] = FOLDER_ICONS
+        ctx['cabinet_colors'] = FOLDER_COLORS
+        ctx['cabinet_icons'] = FOLDER_ICONS
         ctx['property_import_form'] = ctx.get('property_import_form', CRMPropertyImportForm())
         ctx['property_import_headers'] = property_import_template_headers()
         ctx['property_import_column_specs'] = property_import_column_specs()
@@ -2855,7 +2870,8 @@ class CRMPropertyFolderListCreateView(LoginRequiredMixin, View):
 
     def get(self, request):
         from workspace.services.crm_property_folders import list_property_folders, serialize_folder
-        rows = list_property_folders(request.user)
+        cabinet_id = request.GET.get('cabinet_id') or None
+        rows = list_property_folders(request.user, cabinet_id=cabinet_id)
         return JsonResponse({
             'ok': True,
             'folders': [serialize_folder(f) for f in rows],
@@ -2875,6 +2891,7 @@ class CRMPropertyFolderListCreateView(LoginRequiredMixin, View):
                 color=payload.get('color', ''),
                 icon=payload.get('icon', ''),
                 is_pinned=bool(payload.get('is_pinned')),
+                cabinet_id=payload.get('cabinet_id'),
             )
         except (json.JSONDecodeError, UnicodeDecodeError):
             return JsonResponse({'ok': False, 'error': 'درخواست نامعتبر'}, status=400)
@@ -2956,6 +2973,104 @@ class CRMPropertyFolderBulkMembershipView(LoginRequiredMixin, View):
         except ValueError as exc:
             return JsonResponse({'ok': False, 'error': str(exc)}, status=400)
         return JsonResponse({'ok': True, **result})
+
+
+class CRMPropertyCabinetListCreateView(LoginRequiredMixin, View):
+    """لیست و ایجاد کمد فایل شخصی — JSON."""
+
+    def get(self, request):
+        from workspace.services.crm_property_cabinets import list_property_cabinets, serialize_cabinet
+        rows = list_property_cabinets(request.user)
+        return JsonResponse({
+            'ok': True,
+            'cabinets': [serialize_cabinet(c) for c in rows],
+        })
+
+    def post(self, request):
+        from workspace.services.crm_property_cabinets import create_property_cabinet, serialize_cabinet
+        try:
+            if request.META.get('CONTENT_TYPE', '').startswith('application/json'):
+                payload = json.loads(request.body.decode('utf-8'))
+            else:
+                payload = request.POST
+            cabinet = create_property_cabinet(
+                request.user,
+                name=payload.get('name', ''),
+                description=payload.get('description', ''),
+                color=payload.get('color', ''),
+                icon=payload.get('icon', ''),
+                is_pinned=bool(payload.get('is_pinned')),
+            )
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            return JsonResponse({'ok': False, 'error': 'درخواست نامعتبر'}, status=400)
+        except ValueError as exc:
+            return JsonResponse({'ok': False, 'error': str(exc)}, status=400)
+        return JsonResponse({'ok': True, 'cabinet': serialize_cabinet(cabinet)})
+
+
+class CRMPropertyCabinetDetailView(LoginRequiredMixin, View):
+    """ویرایش و حذف کمد — JSON."""
+
+    def patch(self, request, cabinet_id):
+        from workspace.services.crm_property_cabinets import serialize_cabinet, update_property_cabinet
+        try:
+            payload = json.loads(request.body.decode('utf-8'))
+            cabinet = update_property_cabinet(request.user, cabinet_id, payload)
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            return JsonResponse({'ok': False, 'error': 'درخواست نامعتبر'}, status=400)
+        except ValueError as exc:
+            return JsonResponse({'ok': False, 'error': str(exc)}, status=400)
+        return JsonResponse({'ok': True, 'cabinet': serialize_cabinet(cabinet)})
+
+    def delete(self, request, cabinet_id):
+        from workspace.services.crm_property_cabinets import delete_property_cabinet
+        if not delete_property_cabinet(request.user, cabinet_id):
+            return JsonResponse({'ok': False, 'error': 'کمد یافت نشد'}, status=404)
+        return JsonResponse({'ok': True})
+
+
+class CRMPropertyCabinetReorderView(LoginRequiredMixin, View):
+    """مرتب‌سازی کمدها — JSON."""
+
+    def post(self, request):
+        from workspace.services.crm_property_cabinets import reorder_property_cabinets, serialize_cabinet
+        try:
+            payload = json.loads(request.body.decode('utf-8'))
+            cabinet_ids = payload.get('cabinet_ids') or payload.get('order') or []
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            return JsonResponse({'ok': False, 'error': 'درخواست نامعتبر'}, status=400)
+        rows = reorder_property_cabinets(request.user, cabinet_ids)
+        return JsonResponse({
+            'ok': True,
+            'cabinets': [serialize_cabinet(c) for c in rows],
+        })
+
+
+class CRMPropertyCabinetFolderAssignView(LoginRequiredMixin, View):
+    """انتساب زونکن به کمد — JSON."""
+
+    def post(self, request, cabinet_id, folder_id):
+        from workspace.services.crm_property_cabinets import assign_folder_to_cabinet
+        from workspace.services.crm_property_folders import serialize_folder
+        try:
+            folder = assign_folder_to_cabinet(request.user, folder_id, cabinet_id)
+        except ValueError as exc:
+            return JsonResponse({'ok': False, 'error': str(exc)}, status=400)
+        return JsonResponse({'ok': True, 'folder': serialize_folder(folder)})
+
+    def delete(self, request, cabinet_id, folder_id):
+        from workspace.services.crm_property_cabinets import remove_folder_from_cabinet
+        from workspace.services.crm_property_folders import folder_for_user, serialize_folder
+        folder = folder_for_user(request.user, folder_id)
+        if not folder:
+            return JsonResponse({'ok': False, 'error': 'زونکن یافت نشد'}, status=404)
+        if not folder.cabinet_id or int(folder.cabinet_id) != int(cabinet_id):
+            return JsonResponse({'ok': False, 'error': 'زونکن در این کمد نیست'}, status=400)
+        try:
+            folder = remove_folder_from_cabinet(request.user, folder_id)
+        except ValueError as exc:
+            return JsonResponse({'ok': False, 'error': str(exc)}, status=400)
+        return JsonResponse({'ok': True, 'folder': serialize_folder(folder)})
 
 
 class CRMSavedFilterListView(LoginRequiredMixin, View):

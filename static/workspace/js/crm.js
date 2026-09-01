@@ -4575,6 +4575,7 @@ function initCRMPropertyFolders(root) {
     const nameInput = modal.querySelector('[data-zonkan-name]');
     const descInput = modal.querySelector('[data-zonkan-desc]');
     const pinInput = modal.querySelector('[data-zonkan-pin]');
+    const cabinetInput = modal.querySelector('[data-zonkan-cabinet]');
     const deleteBtn = modal.querySelector('[data-zonkan-delete]');
     const baseUrl = window.crmZonkanUrl || '/workspace/crm/property-folders/';
     const detailBase = window.crmZonkanDetailUrlBase || `${baseUrl}`;
@@ -4619,6 +4620,7 @@ function initCRMPropertyFolders(root) {
         if (nameInput) nameInput.value = '';
         if (descInput) descInput.value = '';
         if (pinInput) pinInput.checked = false;
+        if (cabinetInput) cabinetInput.value = '';
         if (deleteBtn) deleteBtn.hidden = true;
         setModalSelections('#6366f1', 'fa-folder');
         if (typeof modal.showModal === 'function') modal.showModal();
@@ -4640,12 +4642,14 @@ function initCRMPropertyFolders(root) {
         const icon = source?.getAttribute('data-folder-icon') || 'fa-folder';
         const pinned = source?.getAttribute('data-folder-pinned') === '1'
             || wrap?.classList.contains('is-pinned');
+        const cabinetId = source?.getAttribute('data-folder-cabinet') || '';
 
         if (editIdInput) editIdInput.value = String(folderId);
         if (titleEl) titleEl.textContent = 'ویرایش زونکن';
         if (nameInput) nameInput.value = name;
         if (descInput) descInput.value = desc;
         if (pinInput) pinInput.checked = !!pinned;
+        if (cabinetInput) cabinetInput.value = cabinetId;
         if (deleteBtn) deleteBtn.hidden = false;
         setModalSelections(color, icon);
         closeManageModal();
@@ -4731,6 +4735,7 @@ function initCRMPropertyFolders(root) {
             color: selectedColor,
             icon: selectedIcon,
             is_pinned: pinInput ? !!pinInput.checked : false,
+            cabinet_id: cabinetInput ? cabinetInput.value : null,
         };
         try {
             const resp = await fetch(editId ? folderDetailUrl(editId) : baseUrl, {
@@ -4836,6 +4841,18 @@ function initCRMPropertyFolders(root) {
             }
         });
     });
+    manageModal?.querySelectorAll('[data-zonkan-manage-cabinet]').forEach((sel) => {
+        sel.addEventListener('change', async () => {
+            const folderId = sel.getAttribute('data-zonkan-manage-cabinet');
+            const cabinetId = sel.value;
+            try {
+                await patchFolder(folderId, { cabinet_id: cabinetId || null });
+                window.location.reload();
+            } catch (err) {
+                window.alert(err.message || 'خطا در انتقال زونکن');
+            }
+        });
+    });
 
     section.querySelectorAll('[data-zonkan-card-menu]').forEach((btn) => {
         btn.addEventListener('click', (e) => {
@@ -4871,6 +4888,317 @@ function initCRMPropertyFolders(root) {
     document.addEventListener('click', (e) => {
         if (!popMenu || popMenu.hidden) return;
         if (e.target.closest('[data-zonkan-pop]') || e.target.closest('[data-zonkan-card-menu]')) return;
+        hidePop();
+    });
+}
+
+function initCRMPropertyCabinets(root) {
+    const scope = root || document;
+    const section = scope.querySelector('[data-crm-kabinet]');
+    if (!section || section.dataset.kabinetBound === '1') return;
+    section.dataset.kabinetBound = '1';
+
+    const modal = scope.querySelector('[data-kabinet-modal]');
+    if (!modal) return;
+
+    const manageModal = scope.querySelector('[data-kabinet-manage-modal]');
+    const popMenu = scope.querySelector('[data-kabinet-pop]');
+    const form = modal.querySelector('[data-kabinet-form]');
+    const titleEl = modal.querySelector('[data-kabinet-modal-title]');
+    const editIdInput = modal.querySelector('[data-kabinet-edit-id]');
+    const nameInput = modal.querySelector('[data-kabinet-name]');
+    const descInput = modal.querySelector('[data-kabinet-desc]');
+    const pinInput = modal.querySelector('[data-kabinet-pin]');
+    const deleteBtn = modal.querySelector('[data-kabinet-delete]');
+    const baseUrl = window.crmKabinetUrl || '/workspace/crm/property-cabinets/';
+    const detailBase = window.crmKabinetDetailUrlBase || `${baseUrl}`;
+    const reorderUrl = window.crmKabinetReorderUrl || `${baseUrl}reorder/`;
+
+    let selectedColor = modal.querySelector('[data-kabinet-color].is-active')?.getAttribute('data-kabinet-color') || '#6366f1';
+    let selectedIcon = modal.querySelector('[data-kabinet-icon].is-active')?.getAttribute('data-kabinet-icon') || 'fa-folder';
+    let popCabinetId = null;
+
+    function cabinetDetailUrl(id) {
+        return `${detailBase}${id}/`;
+    }
+
+    function closeModal() {
+        if (typeof modal.close === 'function') modal.close();
+    }
+
+    function closeManageModal() {
+        if (manageModal && typeof manageModal.close === 'function') manageModal.close();
+    }
+
+    function hidePop() {
+        if (!popMenu) return;
+        popMenu.hidden = true;
+        popCabinetId = null;
+    }
+
+    function setModalSelections(color, icon) {
+        selectedColor = color || selectedColor;
+        selectedIcon = icon || selectedIcon;
+        modal.querySelectorAll('[data-kabinet-color]').forEach((el) => {
+            el.classList.toggle('is-active', el.getAttribute('data-kabinet-color') === selectedColor);
+        });
+        modal.querySelectorAll('[data-kabinet-icon]').forEach((el) => {
+            el.classList.toggle('is-active', el.getAttribute('data-kabinet-icon') === selectedIcon);
+        });
+    }
+
+    function openCreateModal() {
+        if (editIdInput) editIdInput.value = '';
+        if (titleEl) titleEl.textContent = 'کمد جدید';
+        if (nameInput) nameInput.value = '';
+        if (descInput) descInput.value = '';
+        if (pinInput) pinInput.checked = false;
+        if (deleteBtn) deleteBtn.hidden = true;
+        setModalSelections('#6366f1', 'fa-folder');
+        if (typeof modal.showModal === 'function') modal.showModal();
+    }
+
+    function openEditModal(cabinetId) {
+        const source = manageModal?.querySelector(`[data-cabinet-id="${cabinetId}"]`);
+        const wrap = section.querySelector(`[data-kabinet-id="${cabinetId}"]`);
+        const name = source?.getAttribute('data-cabinet-name')
+            || wrap?.querySelector('strong')?.textContent?.trim()
+            || '';
+        const desc = source?.getAttribute('data-cabinet-desc') || '';
+        const color = source?.getAttribute('data-cabinet-color')
+            || wrap?.style.getPropertyValue('--zonkan-color')?.trim()
+            || '#6366f1';
+        const icon = source?.getAttribute('data-cabinet-icon') || 'fa-folder';
+        const pinned = source?.getAttribute('data-cabinet-pinned') === '1';
+
+        if (editIdInput) editIdInput.value = String(cabinetId);
+        if (titleEl) titleEl.textContent = 'ویرایش کمد';
+        if (nameInput) nameInput.value = name;
+        if (descInput) descInput.value = desc;
+        if (pinInput) pinInput.checked = !!pinned;
+        if (deleteBtn) deleteBtn.hidden = false;
+        setModalSelections(color, icon);
+        closeManageModal();
+        hidePop();
+        if (typeof modal.showModal === 'function') modal.showModal();
+    }
+
+    async function patchCabinet(cabinetId, payload) {
+        const resp = await fetch(cabinetDetailUrl(cabinetId), {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCsrfToken(),
+            },
+            body: JSON.stringify(payload),
+        });
+        const data = await resp.json();
+        if (!data.ok) throw new Error(data.error || 'عملیات ناموفق بود');
+        return data;
+    }
+
+    async function deleteCabinet(cabinetId) {
+        const label = manageModal?.querySelector(`[data-cabinet-id="${cabinetId}"] strong`)?.textContent?.trim()
+            || 'این کمد';
+        if (!window.confirm(`«${label}» حذف شود؟ زونکن‌ها و فایل‌های داخل آن حذف نمی‌شوند.`)) return false;
+        const resp = await fetch(cabinetDetailUrl(cabinetId), {
+            method: 'DELETE',
+            headers: { 'X-CSRFToken': getCsrfToken() },
+        });
+        const data = await resp.json();
+        if (!data.ok) throw new Error(data.error || 'حذف ناموفق بود');
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('cabinet_id') === String(cabinetId)) params.delete('cabinet_id');
+        const qs = params.toString();
+        window.location.href = qs ? `${window.location.pathname}?${qs}` : window.location.pathname;
+        return true;
+    }
+
+    async function togglePin(cabinetId) {
+        const item = manageModal?.querySelector(`[data-cabinet-id="${cabinetId}"]`);
+        const nextPinned = item ? !item.classList.contains('is-pinned') : true;
+        await patchCabinet(cabinetId, { is_pinned: nextPinned });
+        window.location.reload();
+    }
+
+    modal.querySelectorAll('[data-kabinet-close]').forEach((btn) => {
+        btn.addEventListener('click', closeModal);
+    });
+    modal.querySelectorAll('[data-kabinet-color]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            modal.querySelectorAll('[data-kabinet-color]').forEach((el) => el.classList.remove('is-active'));
+            btn.classList.add('is-active');
+            selectedColor = btn.getAttribute('data-kabinet-color') || selectedColor;
+        });
+    });
+    modal.querySelectorAll('[data-kabinet-icon]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            modal.querySelectorAll('[data-kabinet-icon]').forEach((el) => el.classList.remove('is-active'));
+            btn.classList.add('is-active');
+            selectedIcon = btn.getAttribute('data-kabinet-icon') || selectedIcon;
+        });
+    });
+    section.querySelectorAll('[data-kabinet-create]').forEach((btn) => {
+        btn.addEventListener('click', openCreateModal);
+    });
+    deleteBtn?.addEventListener('click', async () => {
+        const cabinetId = editIdInput ? editIdInput.value : '';
+        if (!cabinetId) return;
+        try {
+            await deleteCabinet(cabinetId);
+        } catch (err) {
+            window.alert(err.message || 'خطا در حذف کمد');
+        }
+    });
+    form?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const name = nameInput ? String(nameInput.value || '').trim() : '';
+        if (!name) return;
+        const editId = editIdInput ? String(editIdInput.value || '').trim() : '';
+        const payload = {
+            name,
+            description: descInput ? descInput.value : '',
+            color: selectedColor,
+            icon: selectedIcon,
+            is_pinned: pinInput ? !!pinInput.checked : false,
+        };
+        try {
+            const resp = await fetch(editId ? cabinetDetailUrl(editId) : baseUrl, {
+                method: editId ? 'PATCH' : 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken(),
+                },
+                body: JSON.stringify(payload),
+            });
+            const data = await resp.json();
+            if (!data.ok) {
+                window.alert(data.error || 'ذخیره کمد ناموفق بود');
+                return;
+            }
+            if (!editId && data.cabinet?.id) {
+                const params = new URLSearchParams(window.location.search);
+                params.set('cabinet_id', String(data.cabinet.id));
+                params.delete('folder_id');
+                window.location.href = `${window.location.pathname}?${params.toString()}`;
+                return;
+            }
+            window.location.reload();
+        } catch (_err) {
+            window.alert('خطا در ذخیره کمد');
+        }
+    });
+
+    manageModal?.querySelectorAll('[data-kabinet-manage-close]').forEach((btn) => {
+        btn.addEventListener('click', closeManageModal);
+    });
+    section.querySelectorAll('[data-kabinet-manage-open]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            if (typeof manageModal.showModal === 'function') manageModal.showModal();
+        });
+    });
+
+    const manageList = manageModal?.querySelector('[data-kabinet-manage-list]');
+    let dragEl = null;
+    manageList?.querySelectorAll('[data-kabinet-manage-item]').forEach((item) => {
+        item.addEventListener('dragstart', () => {
+            dragEl = item;
+            item.classList.add('is-dragging');
+        });
+        item.addEventListener('dragend', () => {
+            dragEl = null;
+            item.classList.remove('is-dragging');
+        });
+        item.addEventListener('dragover', (e) => e.preventDefault());
+        item.addEventListener('drop', (e) => {
+            e.preventDefault();
+            if (!dragEl || dragEl === item) return;
+            const rect = item.getBoundingClientRect();
+            const after = e.clientY > rect.top + rect.height / 2;
+            if (after) item.after(dragEl);
+            else item.before(dragEl);
+        });
+    });
+    manageModal?.querySelector('[data-kabinet-reorder-save]')?.addEventListener('click', async () => {
+        const btn = manageModal.querySelector('[data-kabinet-reorder-save]');
+        const ids = [...manageList.querySelectorAll('[data-kabinet-manage-item]')].map(
+            (el) => Number(el.getAttribute('data-cabinet-id')),
+        );
+        btn.disabled = true;
+        try {
+            const resp = await fetch(reorderUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken(),
+                },
+                body: JSON.stringify({ cabinet_ids: ids }),
+            });
+            const data = await resp.json();
+            if (!data.ok) throw new Error(data.error || 'ذخیره ترتیب ناموفق بود');
+            window.location.reload();
+        } catch (err) {
+            window.alert(err.message || 'خطا در ذخیره ترتیب');
+        } finally {
+            btn.disabled = false;
+        }
+    });
+    manageModal?.querySelectorAll('[data-kabinet-manage-pin]').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+            try {
+                await togglePin(btn.getAttribute('data-kabinet-manage-pin'));
+            } catch (err) {
+                window.alert(err.message || 'خطا');
+            }
+        });
+    });
+    manageModal?.querySelectorAll('[data-kabinet-manage-edit]').forEach((btn) => {
+        btn.addEventListener('click', () => openEditModal(btn.getAttribute('data-kabinet-manage-edit')));
+    });
+    manageModal?.querySelectorAll('[data-kabinet-manage-delete]').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+            try {
+                await deleteCabinet(btn.getAttribute('data-kabinet-manage-delete'));
+            } catch (err) {
+                window.alert(err.message || 'خطا');
+            }
+        });
+    });
+
+    section.querySelectorAll('[data-kabinet-card-menu]').forEach((btn) => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (!popMenu) return;
+            popCabinetId = btn.getAttribute('data-kabinet-card-menu');
+            const rect = btn.getBoundingClientRect();
+            popMenu.style.top = `${rect.bottom + 6}px`;
+            popMenu.style.left = `${Math.max(8, rect.left - 120)}px`;
+            popMenu.hidden = false;
+        });
+    });
+    popMenu?.querySelector('[data-kabinet-pop-pin]')?.addEventListener('click', async () => {
+        if (!popCabinetId) return;
+        try {
+            await togglePin(popCabinetId);
+        } catch (err) {
+            window.alert(err.message || 'خطا');
+        }
+    });
+    popMenu?.querySelector('[data-kabinet-pop-edit]')?.addEventListener('click', () => {
+        if (popCabinetId) openEditModal(popCabinetId);
+    });
+    popMenu?.querySelector('[data-kabinet-pop-delete]')?.addEventListener('click', async () => {
+        if (!popCabinetId) return;
+        try {
+            await deleteCabinet(popCabinetId);
+        } catch (err) {
+            window.alert(err.message || 'خطا');
+        }
+    });
+    document.addEventListener('click', (e) => {
+        if (popMenu?.hidden) return;
+        if (e.target.closest('[data-kabinet-pop]') || e.target.closest('[data-kabinet-card-menu]')) return;
         hidePop();
     });
 }
@@ -5195,6 +5523,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initCRMPropertyPipeline();
     initCRMSavedFilters();
     initCRMPropertyFolders(document);
+    initCRMPropertyCabinets(document);
     initCRMPropertyFolderPicker(document);
     initCRMPropertyFolderAssign(document);
     initContactsMobileFilters();

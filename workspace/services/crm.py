@@ -1523,6 +1523,22 @@ def filter_properties(user, params: dict):
             )
         except (TypeError, ValueError):
             pass
+    else:
+        cabinet_id = (params.get('cabinet_id') or '').strip()
+        if cabinet_id:
+            try:
+                if cabinet_id.lower() == 'none':
+                    qs = qs.filter(
+                        folder_items__folder__cabinet__isnull=True,
+                        folder_items__folder__user=user,
+                    ).distinct()
+                else:
+                    qs = qs.filter(
+                        folder_items__folder__cabinet_id=int(cabinet_id),
+                        folder_items__folder__user=user,
+                    ).distinct()
+            except (TypeError, ValueError):
+                pass
 
     for field, key in (
         ('has_parking', 'parking'),

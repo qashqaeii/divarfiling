@@ -1,0 +1,94 @@
+<section class="crm-deal-next-action crm-deal-block{% if next_action.is_overdue %} is-overdue{% endif %}{% if not next_action %} is-empty{% endif %}"
+         id="crmDealNextAction"
+         data-next-action-url="{% url 'workspace:crm_deal_next_action' deal.id %}"
+         data-complete-url="{% url 'workspace:crm_deal_complete_next_action' deal.id %}"
+         aria-label="اقدام بعدی">
+    <div class="crm-deal-block__mesh" aria-hidden="true"></div>
+    <span class="crm-deal-block__accent" aria-hidden="true"></span>
+    <header class="crm-deal-next-action__head">
+        <div>
+            <span class="crm-deal-block__kicker">الان چه کاری انجام دهید؟</span>
+            <h2>اقدام بعدی</h2>
+        </div>
+        {% if next_action %}
+        <div class="crm-deal-next-action__actions">
+            <button type="button" class="crm-dash-act crm-dash-act--ghost crm-deal-next-complete" data-action="complete">
+                <i class="fas fa-check" aria-hidden="true"></i><span>انجام شد</span>
+            </button>
+            <button type="button" class="crm-dash-act crm-deal-next-edit" data-drawer-open="drawer-next-action">
+                <i class="fas fa-pen" aria-hidden="true"></i><span>ویرایش</span>
+            </button>
+        </div>
+        {% else %}
+        <button type="button" class="crm-dash-act crm-dash-act--primary" data-drawer-open="drawer-next-action">تعیین اقدام</button>
+        {% endif %}
+    </header>
+    {% if next_action %}
+    <div class="crm-deal-next-action__body">
+        {% if next_action.is_overdue %}
+        <p class="crm-deal-next-action__warn"><i class="fas fa-clock" aria-hidden="true"></i> پیگیری عقب‌افتاده</p>
+        {% endif %}
+        <p class="crm-deal-next-action__type">
+            <i class="fas {{ next_action.icon }}" aria-hidden="true"></i>
+            {{ next_action.label }}
+        </p>
+        {% if next_action.schedule_label %}
+        <p class="crm-deal-next-action__when">{{ next_action.schedule_label }}</p>
+        {% endif %}
+        {% if next_action.note %}
+        <p class="crm-deal-next-action__note">{{ next_action.note }}</p>
+        {% endif %}
+    </div>
+    {% else %}
+    <p class="crm-deal-next-action__empty">اقدام بعدی تعیین نشده — برای پیگیری منظم، زمان بعدی را مشخص کنید.</p>
+    {% endif %}
+</section>
+
+<nav class="crm-deal-quick-bar" aria-label="عملیات سریع">
+    {% if deal.customer_id and deal.customer.phone %}
+    <a href="tel:{{ deal.customer.phone }}" class="crm-deal-quick-btn">
+        <i class="fas fa-phone" aria-hidden="true"></i><span>تماس</span>
+    </a>
+    {% endif %}
+    <button type="button" class="crm-deal-quick-btn crm-deal-quick-btn--primary" data-drawer-open="drawer-followup">
+        <i class="fas fa-comment-dots" aria-hidden="true"></i><span>ثبت پیگیری</span>
+    </button>
+    <button type="button" class="crm-deal-quick-btn" data-drawer-open="drawer-edit">
+        <i class="fas fa-arrows-turn-right" aria-hidden="true"></i><span>تغییر مرحله</span>
+    </button>
+</nav>
+
+<section class="crm-deal-timeline crm-deal-block" id="crmDealTimeline"
+         data-timeline-url="{% url 'workspace:crm_deal_timeline' deal.id %}"
+         aria-label="تاریخچه معامله">
+    <div class="crm-deal-block__mesh" aria-hidden="true"></div>
+    <span class="crm-deal-block__accent" aria-hidden="true"></span>
+    <header class="crm-deal-panel-head">
+        <span class="crm-deal-panel-mark" aria-hidden="true"><i class="fas fa-clock-rotate-left"></i></span>
+        <div class="crm-deal-panel-head-text">
+            <span class="crm-deal-block__kicker">آخرین اتفاقات</span>
+            <h2>تاریخچه معامله</h2>
+        </div>
+    </header>
+    <ol class="crm-deal-timeline-list" id="crmDealTimelineList">
+        {% for item in deal_timeline %}
+        <li class="crm-deal-timeline-item" data-kind="{{ item.kind }}">
+            <span class="crm-deal-timeline-dot" aria-hidden="true"><i class="fas {{ item.icon }}"></i></span>
+            <div class="crm-deal-timeline-copy">
+                <div class="crm-deal-timeline-meta">
+                    <strong>{{ item.title }}</strong>
+                    <time>{{ item.day_label }}{% if item.time_label %} · {{ item.time_label }}{% endif %}</time>
+                </div>
+                {% if item.body %}<p>{{ item.body }}</p>{% endif %}
+            </div>
+        </li>
+        {% empty %}
+        <li class="crm-deal-timeline-empty">هنوز پیگیری ثبت نشده — اولین تماس یا بازدید را ثبت کنید.</li>
+        {% endfor %}
+    </ol>
+    {% if deal_timeline_has_more %}
+    <button type="button" class="crm-dash-act crm-dash-act--ghost crm-deal-timeline-more" id="crmDealTimelineMore">
+        نمایش بیشتر
+    </button>
+    {% endif %}
+</section>

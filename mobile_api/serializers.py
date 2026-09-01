@@ -717,6 +717,9 @@ def deal_to_dict(d: CRMDeal, *, detailed: bool = False, stage_meta: Optional[Dic
     from workspace.services.crm_deal_finance import serialize_deal_finance
 
     finance = serialize_deal_finance(d)
+    from workspace.services.crm_deal_followup import last_follow_up_summary, serialize_next_action
+    next_action = serialize_next_action(d)
+    last_follow_up = last_follow_up_summary(d)
     data = {
         'id': d.pk,
         'title': d.title,
@@ -757,8 +760,11 @@ def deal_to_dict(d: CRMDeal, *, detailed: bool = False, stage_meta: Optional[Dic
         'stage_bg': meta.get('bg') or '',
         'stage_icon': meta.get('icon') or '',
         'rot_days': int(meta.get('rot_days') or 0),
+        'next_action': next_action,
+        'last_follow_up': last_follow_up,
     }
     if detailed:
+        from workspace.services.crm_deal_followup import get_deal_timeline
         data.update({
             'checklist': d.checklist or [],
             'lost_reason': d.lost_reason or '',
@@ -766,6 +772,7 @@ def deal_to_dict(d: CRMDeal, *, detailed: bool = False, stage_meta: Optional[Dic
             'contract_amount': d.contract_amount,
             'stage_description': meta.get('description') or '',
             'stage_changed_at': d.stage_changed_at.isoformat() if d.stage_changed_at else None,
+            'timeline_preview': get_deal_timeline(d, limit=8, offset=0)['items'],
         })
     return data
 

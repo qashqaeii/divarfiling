@@ -797,6 +797,9 @@ class CRMDeal(models.Model):
     contract_amount = models.BigIntegerField(null=True, blank=True, verbose_name='مبلغ قرارداد')
     contract_date = models.DateField(null=True, blank=True, verbose_name='تاریخ قرارداد')
     notes = models.TextField(blank=True, verbose_name='یادداشت')
+    next_action_type = models.CharField(max_length=30, blank=True, verbose_name='نوع اقدام بعدی')
+    next_action_at = models.DateTimeField(null=True, blank=True, verbose_name='زمان اقدام بعدی')
+    next_action_note = models.CharField(max_length=300, blank=True, verbose_name='یادداشت اقدام بعدی')
     stage_changed_at = models.DateTimeField(null=True, blank=True, verbose_name='زمان ورود به مرحله')
     closed_at = models.DateTimeField(null=True, blank=True, verbose_name='تاریخ بسته‌شدن')
     created_at = models.DateTimeField(auto_now_add=True)
@@ -809,10 +812,34 @@ class CRMDeal(models.Model):
         indexes = [
             models.Index(fields=['user', 'stage']),
             models.Index(fields=['user', '-updated_at']),
+            models.Index(fields=['user', 'next_action_at']),
         ]
 
     def __str__(self):
         return self.title
+
+
+class CRMDealFollowUp(models.Model):
+    """پیگیری ثبت‌شده برای معامله."""
+    deal = models.ForeignKey(
+        'CRMDeal', on_delete=models.CASCADE,
+        related_name='follow_ups', verbose_name='معامله',
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='deal_follow_ups', verbose_name='کاربر',
+    )
+    follow_up_type = models.CharField(max_length=30, verbose_name='نوع پیگیری')
+    note = models.TextField(blank=True, verbose_name='نتیجه')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'پیگیری معامله'
+        verbose_name_plural = 'پیگیری‌های معامله'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['deal', '-created_at']),
+        ]
 
 
 class PropertyVisit(models.Model):

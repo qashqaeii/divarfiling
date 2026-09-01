@@ -105,7 +105,7 @@
     <a href="?view={{ view_mode }}&bucket=stale" class="crm-deals-stale-banner{% if request.GET.bucket == 'stale' %} is-active{% endif %}">
         <i class="fas fa-hourglass-end" aria-hidden="true"></i>
         <strong>{{ stats.stale }}</strong>
-        معامله در مرحله فعلی کهنه شده‌اند — نیاز به پیگیری دارند
+        معامله نیاز به پیگیری دارند — در مرحله فعلی مانده‌اند
     </a>
     {% endif %}
 
@@ -210,6 +210,7 @@
                             <th class="crm-deals-col-deal" scope="col">معامله</th>
                             <th class="crm-deals-col-contact" scope="col">مخاطب</th>
                             <th class="crm-deals-col-stage" scope="col">مرحله</th>
+                            <th class="crm-deals-col-next" scope="col">اقدام بعدی</th>
                             <th class="crm-deals-col-value" scope="col">ارزش</th>
                             <th class="crm-deals-col-prob" scope="col">احتمال</th>
                             <th class="crm-deals-col-commission" scope="col">سهم مشاور</th>
@@ -294,15 +295,9 @@
                                     </div>
 
                                     <footer class="crm-deal-mcard__foot">
-                                        {% if d.stage == 'بسته‌شده' %}
-                                        <span class="crm-deal-mcard__chip is-win"><i class="fas fa-trophy" aria-hidden="true"></i>بسته شد</span>
-                                        {% elif d.stage == 'از دست رفته' %}
-                                        <span class="crm-deal-mcard__chip is-lost"><i class="fas fa-circle-xmark" aria-hidden="true"></i>از دست رفته</span>
-                                        {% elif not d.expected_close_date %}
-                                        <span class="crm-deal-mcard__chip is-muted"><i class="fas fa-calendar" aria-hidden="true"></i>بدون تاریخ بستن</span>
-                                        {% else %}
-                                        <span class="crm-deal-mcard__chip"><i class="fas fa-handshake" aria-hidden="true"></i>در جریان</span>
-                                        {% endif %}
+                                        <div class="crm-deal-mcard__next">
+                                            {% include 'workspace/crm/includes/deal_next_action_chip.html' with deal=d %}
+                                        </div>
                                         <time class="crm-deal-mcard__updated" datetime="{{ d.updated_at|date:'c' }}">
                                             <i class="fas fa-clock" aria-hidden="true"></i>
                                             {{ d.updated_at|ws_jalali }}
@@ -337,6 +332,9 @@
                                 </a>
                             </td>
                             <td class="crm-deals-col-stage crm-deals-col--desk" data-label="مرحله"><span class="crm-pill crm-pill-sm crm-deals-stage" style="{% crm_deal_stage_style d.stage %}">{{ d.stage }}</span></td>
+                            <td class="crm-deals-col-next crm-deals-col--desk" data-label="اقدام بعدی">
+                                {% include 'workspace/crm/includes/deal_next_action_chip.html' with deal=d %}
+                            </td>
                             <td class="crm-deals-money crm-deals-col-value crm-deals-col--desk" data-label="ارزش">
                                 <div class="crm-deals-value-cell">
                                     {% if d.value %}
@@ -370,7 +368,7 @@
                         </tr>
                         {% empty %}
                         <tr class="crm-empty-state-row">
-                            <td colspan="8">
+                            <td colspan="9">
                                 {% if stats.total %}
                                 {% include 'workspace/crm/includes/list_empty_state.html' with tone='muted' compact=1 decor='handshake' title='معامله‌ای با این فیلتر نیست' desc='فیلتر یا جستجو را تغییر دهید، یا معاملهٔ جدید ثبت کنید.' btn_text='ثبت معامله' btn_icon='fa-plus' btn_drawer='drawer-deal' extra_class='crm-empty-state--inline' %}
                                 {% else %}
@@ -409,13 +407,13 @@
             <div><h2>معامله جدید</h2><p>ثبت فرصت فروش یا اجاره</p></div>
             <button type="button" class="crm-drawer-close" data-drawer-close><i class="fas fa-times"></i></button>
         </div>
-        <form method="post" action="{% url 'workspace:crm_deal_create' %}" class="crm-drawer-form">
+        <form method="post" action="{% url 'workspace:crm_deal_create' %}" class="crm-drawer-form crm-deal-create-drawer">
             <div class="crm-drawer-body">
                 {% csrf_token %}
                 <input type="hidden" name="next" value="{% url 'workspace:crm_deals' %}">
-                <div class="crm-form-grid">{% render_fields deal_form 2 %}</div>
+                {% include 'workspace/crm/includes/deal_create_form.html' with form=deal_create_form %}
             </div>
-            <div class="crm-drawer-foot">
+            <div class="crm-drawer-foot crm-deal-create-foot">
                 <button type="button" class="crm-btn crm-btn-ghost" data-drawer-close>انصراف</button>
                 <button type="submit" class="crm-btn crm-btn-primary">ثبت معامله</button>
             </div>

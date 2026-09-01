@@ -89,7 +89,10 @@ def create_deal_from_mobile(user, data: Dict[str, Any]) -> CRMDeal:
         if isinstance(expected_close, str):
             expected_close = date_cls.fromisoformat(expected_close[:10])
 
-    return create_deal(
+    from workspace.services.crm_deal_followup import parse_next_action_payload
+    na = parse_next_action_payload(data.get('next_action') or data)
+
+    deal = create_deal(
         user,
         customer,
         title=(data.get('title') or '').strip(),
@@ -101,7 +104,11 @@ def create_deal_from_mobile(user, data: Dict[str, Any]) -> CRMDeal:
         expected_close_date=expected_close,
         commission_rate=float(data.get('commission_rate') or 1.0),
         notes=(data.get('notes') or '').strip(),
+        next_action_type=na.get('action_type', ''),
+        next_action_at=na.get('action_at'),
+        next_action_note=na.get('note', ''),
     )
+    return deal
 
 
 def update_deal_from_mobile(user, deal_id: int, data: Dict[str, Any]) -> Optional[CRMDeal]:
@@ -253,3 +260,88 @@ def update_deal_finance_from_mobile(user, deal_id: int, data: Dict[str, Any]) ->
         return None
     apply_deal_finance(deal, data, save=True)
     return deal
+
+
+def create_follow_up_from_mobile(user, deal_id: int, data: Dict[str, Any]) -> Optional[dict]:
+    from workspace.services.crm_deal_followup import (
+        clear_next_action, create_follow_up, get_deal_timeline,
+        parse_next_action_payload, serialize_next_action,
+    )
+
+    deal = deal_for_user(user, deal_id)
+    if not deal:
+        return None
+    follow_type = (data.get('type') or data.get('follow_up_type') or '').strip()
+    note = (data.get('note') or data.get('result') or '').strip()
+    if not follow_type:
+        raise ValueError('نوع پیگیری الزامی است.')
+    from workspace.services.crm_deal_followup import (
+        _follow_up_next_action_payload, clear_next_action, create_follow_up, get_deal_timeline,
+        parse_next_action_payload, serialize_next_action,
+    )
+
+    na = parse_next_action_payload(_follow_up_next_action_payload(data))
+    create_follow_up(
+        deal,
+        user,
+        follow_up_type=follow_type,
+        note=note,
+        next_action_type='' if na.get('clear') else na.get('action_type', ''),
+        next_action_at=None if na.get('clear') else na.get('action_at'),
+        next_action_note='' if na.get('clear') else na.get('note', ''),
+    )
+    if na.get('clear'):
+        clear_next_action(deal, save=True)
+    return {
+        'next_action': serialize_next_action(deal),
+        'timeline_preview': get_deal_timeline(deal, limit=8, offset=0)['items'],
+    }
+
+
+def update_next_action_from_mobile(user, deal_id: int, data: Dict[str, Any]) -> Optional[dict]:
+    from workspace.services.crm_deal_followup import (
+        clear_next_action, parse_next_action_payload, serialize_next_action, set_next_action,
+    )
+
+    deal = deal_for_user(user, deal_id)
+    if not deal:
+        return None
+    na = parse_next_action_payload(data)
+    if na.get('clear') or (not na.get('action_type') and not na.get('action_at')):
+        clear_next_action(deal, save=True)
+    else:
+        set_next_action(
+            deal,
+            action_type=na.get('action_type', ''),
+            action_at=na.get('action_at'),
+            note=na.get('note', ''),
+            save=True,
+        )
+    return {'next_action': serialize_next_action(deal)}
+
+
+def complete_next_action_from_mobile(user, deal_id: int, data: Dict[str, Any]) -> Optional[dict]:
+    from workspace.services.crm_deal_followup import (
+        complete_next_action, get_deal_timeline, serialize_next_action,
+    )
+
+    deal = deal_for_user(user, deal_id)
+    if not deal:
+        return None
+    note = (data.get('note') or data.get('result') or '').strip()
+    follow_up = complete_next_action(deal, user, result_note=note)
+    if not follow_up:
+        raise ValueError('اقدام بعدی تعیین نشده.')
+    return {
+        'next_action': serialize_next_action(deal),
+        'timeline_preview': get_deal_timeline(deal, limit=8, offset=0)['items'],
+    }
+
+
+def timeline_payload(user, deal_id: int, *, limit: int = 30, offset: int = 0) -> Optional[dict]:
+    from workspace.services.crm_deal_followup import get_deal_timeline
+
+    deal = deal_for_user(user, deal_id)
+    if not deal:
+        return None
+    return get_deal_timeline(deal, limit=limit, offset=offset)

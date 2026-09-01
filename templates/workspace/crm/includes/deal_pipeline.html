@@ -112,6 +112,12 @@
 
 
 
+                    <div class="crm-deal-pipeline-next">
+                        {% include 'workspace/crm/includes/deal_next_action_chip.html' with deal=d %}
+                    </div>
+
+
+
                     {% if d.commission_amount or d.expected_close_date %}
 
                     <div class="crm-deal-pipeline-chips">

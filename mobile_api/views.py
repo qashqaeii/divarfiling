@@ -38,7 +38,9 @@ from mobile_api.services.crm_service import (
 from mobile_api.services.dashboard_service import dashboard_payload
 from mobile_api.services.deals_service import (
     change_deal_stage,
+    complete_next_action_from_mobile,
     create_deal_from_mobile,
+    create_follow_up_from_mobile,
     finance_dashboard_payload,
     finance_settings_payload,
     get_deal_detail,
@@ -47,8 +49,10 @@ from mobile_api.services.deals_service import (
     save_finance_settings_from_mobile,
     save_stages_from_mobile,
     stages_payload,
+    timeline_payload,
     update_deal_finance_from_mobile,
     update_deal_from_mobile,
+    update_next_action_from_mobile,
 )
 from mobile_api.services.properties_service import (
     change_property_status,
@@ -1354,6 +1358,63 @@ class DealFinanceUpdateView(APIView):
 
     def post(self, request, deal_id):
         return self.patch(request, deal_id)
+
+
+class DealFollowUpView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, deal_id):
+        data = _parse_body(request)
+        try:
+            payload = create_follow_up_from_mobile(request.user, deal_id, data)
+        except ValueError as exc:
+            return api_error(str(exc), code='VALIDATION_ERROR')
+        if not payload:
+            return api_error('معامله یافت نشد.', code='NOT_FOUND', status=404)
+        return api_ok(payload)
+
+
+class DealNextActionView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request, deal_id):
+        data = _parse_body(request)
+        payload = update_next_action_from_mobile(request.user, deal_id, data)
+        if not payload:
+            return api_error('معامله یافت نشد.', code='NOT_FOUND', status=404)
+        return api_ok(payload)
+
+    def post(self, request, deal_id):
+        return self.patch(request, deal_id)
+
+
+class DealCompleteNextActionView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, deal_id):
+        data = _parse_body(request)
+        try:
+            payload = complete_next_action_from_mobile(request.user, deal_id, data)
+        except ValueError as exc:
+            return api_error(str(exc), code='VALIDATION_ERROR')
+        if not payload:
+            return api_error('معامله یافت نشد.', code='NOT_FOUND', status=404)
+        return api_ok(payload)
+
+
+class DealTimelineView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, deal_id):
+        try:
+            limit = min(int(request.GET.get('limit', 30)), 50)
+            offset = max(int(request.GET.get('offset', 0)), 0)
+        except (TypeError, ValueError):
+            limit, offset = 30, 0
+        payload = timeline_payload(request.user, deal_id, limit=limit, offset=offset)
+        if not payload:
+            return api_error('معامله یافت نشد.', code='NOT_FOUND', status=404)
+        return api_ok(payload)
 
 
 class PropertiesListView(APIView):

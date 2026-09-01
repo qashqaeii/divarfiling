@@ -21,7 +21,8 @@ from django.views.generic import CreateView, DetailView, ListView, TemplateView,
 
 from workspace.constants import (
     AGENCY_ROLES, CRM_PRIORITIES, CRM_PROPERTIES, CRM_SOURCES, CRM_STATUSES, CRM_TYPES,
-    DEAL_STAGES, DEFAULT_STAGNANT_DAYS, LEAD_ROUTING_CHOICES, LOST_REASONS, MESSAGE_PLACEHOLDERS,
+    DEAL_FOLLOWUP_TYPES, DEAL_NEXT_ACTION_TYPES, DEAL_STAGES, DEFAULT_STAGNANT_DAYS,
+    LEAD_ROUTING_CHOICES, LOST_REASONS, MESSAGE_PLACEHOLDERS,
     MESSAGE_TEMPLATE_CATEGORIES, PROPERTY_ADVERTISER_TYPES, PROPERTY_DEAL_MODES, PROPERTY_PUBLISH_STATUSES,
     PROPERTY_TX_STATUSES, QUICK_ACTIVITY_TYPES, TYPE_PROFILES, VISIT_OUTCOMES, WEBHOOK_EVENTS,
     WEBHOOK_EVENT_LABELS, LEASE_DEADLINE_TYPES,
@@ -31,7 +32,7 @@ from workspace.services.property_images import (
 )
 from workspace.export_security import ExportSecurityMixin
 from workspace.forms import (
-    ActivityForm, CRMAutomationRuleForm, CRMDealForm, CRMMessageTemplateForm,
+    ActivityForm, CRMAutomationRuleForm, CRMDealCreateForm, CRMDealForm, CRMMessageTemplateForm,
     CRMPropertyForm, CRMPropertyImportForm, CRMReminderForm, ConvertLeadForm,
     CustomerDocumentForm, CustomerForm, CustomerImportForm, FollowUpForm,
     PropertyLinkForm, PropertyVisitForm, QuickLeadForm,
@@ -141,6 +142,10 @@ from workspace.services.crm_deal_stages import (
 )
 from workspace.services.crm_deal_checklist import (
     checklist_progress, ensure_deal_checklist, toggle_checklist_item,
+)
+from workspace.services.crm_deal_followup import (
+    _follow_up_next_action_payload, complete_next_action, create_follow_up, get_deal_timeline,
+    parse_next_action_payload, serialize_next_action, set_next_action, clear_next_action,
 )
 from workspace.services.crm_matching import (
     MATCH_TYPES,
@@ -729,7 +734,8 @@ class CustomerDetailView(CRMContextMixin, LoginRequiredMixin, DetailView):
         ctx['deals'] = c.deals.select_related('property').all()[:10]
         ctx['visits'] = c.visits.select_related('property').all()[:20]
         ctx['visit_form'] = PropertyVisitForm(user=self.request.user)
-        ctx['deal_form'] = CRMDealForm(user=self.request.user, initial={'customer': c})
+        ctx['deal_form'] = CRMDealCreateForm(user=self.request.user, initial={'customer': c})
+        ctx['deal_create_form'] = ctx['deal_form']
         ctx['duplicate_candidates'] = find_duplicates_for_customer_strict(c)
         ctx['visit_outcomes'] = VISIT_OUTCOMES
         ctx['message_templates'] = list_templates(self.request.user)
@@ -934,7 +940,7 @@ class CustomerDetailView(CRMContextMixin, LoginRequiredMixin, DetailView):
                 return render(request, self.template_name, ctx)
 
         elif action == 'add_deal':
-            form = CRMDealForm(request.POST, user=request.user)
+            form = CRMDealCreateForm(request.POST, user=request.user)
             if form.is_valid():
                 deal = form.save()
                 apply_deal_commission(deal)
@@ -2207,6 +2213,9 @@ class CRMDealListView(CRMContextMixin, LoginRequiredMixin, ListView):
         ctx['pipeline'] = get_deal_pipeline(self.request.user, per_column=30)
         ctx['pipeline_interactive'] = True
         ctx['deal_form'] = ctx.get('deal_form', CRMDealForm(user=self.request.user))
+        ctx['deal_create_form'] = CRMDealCreateForm(user=self.request.user)
+        ctx['deal_next_action_types'] = DEAL_NEXT_ACTION_TYPES
+        ctx['deal_followup_types'] = DEAL_FOLLOWUP_TYPES
         ctx['deal_stage_url_template'] = reverse(
             'workspace:crm_deal_stage', kwargs={'deal_id': 0},
         ).replace('/0/', '/{id}/')
@@ -2223,7 +2232,7 @@ class CRMDealListView(CRMContextMixin, LoginRequiredMixin, ListView):
 
 class CRMDealCreateView(LoginRequiredMixin, View):
     def post(self, request):
-        form = CRMDealForm(request.POST, user=request.user)
+        form = CRMDealCreateForm(request.POST, user=request.user)
         if form.is_valid():
             deal = form.save()
             apply_deal_commission(deal)
@@ -2269,6 +2278,15 @@ class CRMDealDetailView(CRMContextMixin, LoginRequiredMixin, DetailView):
         )
         ctx['finance'] = serialize_deal_finance(d)
         ctx['finance_defaults'] = get_finance_defaults(self.request.user)
+        ctx['next_action'] = serialize_next_action(d)
+        ctx['deal_next_action_types'] = DEAL_NEXT_ACTION_TYPES
+        ctx['deal_followup_types'] = DEAL_FOLLOWUP_TYPES
+        timeline = get_deal_timeline(d, limit=12, offset=0)
+        ctx['deal_timeline'] = timeline['items']
+        ctx['deal_timeline_has_more'] = timeline['has_more']
+        ctx['deal_timeline_total'] = timeline['total']
+        if d.customer_id and d.customer.phone:
+            ctx['deal_customer_phone'] = d.customer.phone
         return ctx
 
     def post(self, request, deal_id):
@@ -2411,6 +2429,103 @@ class CRMDealChecklistView(LoginRequiredMixin, View):
         except ValueError as exc:
             return JsonResponse({'ok': False, 'error': str(exc)}, status=400)
         return JsonResponse({'ok': True, **result})
+
+
+class CRMDealFollowUpView(LoginRequiredMixin, View):
+    """ثبت پیگیری سریع معامله."""
+
+    def post(self, request, deal_id):
+        deal = deal_for_user(request.user, deal_id)
+        if not deal:
+            return JsonResponse({'ok': False, 'error': 'معامله یافت نشد'}, status=404)
+        try:
+            payload = json.loads(request.body.decode('utf-8'))
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            return JsonResponse({'ok': False, 'error': 'درخواست نامعتبر'}, status=400)
+        follow_type = (payload.get('type') or payload.get('follow_up_type') or '').strip()
+        note = (payload.get('note') or payload.get('result') or '').strip()
+        if not follow_type:
+            return JsonResponse({'ok': False, 'error': 'نوع پیگیری الزامی است'}, status=400)
+        na = parse_next_action_payload(_follow_up_next_action_payload(payload))
+        follow_up = create_follow_up(
+            deal,
+            request.user,
+            follow_up_type=follow_type,
+            note=note,
+            next_action_type='' if na.get('clear') else na.get('action_type', ''),
+            next_action_at=None if na.get('clear') else na.get('action_at'),
+            next_action_note='' if na.get('clear') else na.get('note', ''),
+        )
+        if na.get('clear'):
+            clear_next_action(deal, save=True)
+        return JsonResponse({
+            'ok': True,
+            'follow_up_id': follow_up.pk,
+            'next_action': serialize_next_action(deal),
+            'timeline_preview': get_deal_timeline(deal, limit=5, offset=0)['items'],
+        })
+
+
+class CRMDealNextActionView(LoginRequiredMixin, View):
+    def patch(self, request, deal_id):
+        return self._handle(request, deal_id)
+
+    def post(self, request, deal_id):
+        return self._handle(request, deal_id)
+
+    def _handle(self, request, deal_id):
+        deal = deal_for_user(request.user, deal_id)
+        if not deal:
+            return JsonResponse({'ok': False, 'error': 'معامله یافت نشد'}, status=404)
+        try:
+            payload = json.loads(request.body.decode('utf-8'))
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            return JsonResponse({'ok': False, 'error': 'درخواست نامعتبر'}, status=400)
+        na = parse_next_action_payload(payload)
+        if na.get('clear') or (not na.get('action_type') and not na.get('action_at')):
+            clear_next_action(deal, save=True)
+        else:
+            set_next_action(
+                deal,
+                action_type=na.get('action_type', ''),
+                action_at=na.get('action_at'),
+                note=na.get('note', ''),
+                save=True,
+            )
+        return JsonResponse({'ok': True, 'next_action': serialize_next_action(deal)})
+
+
+class CRMDealCompleteNextActionView(LoginRequiredMixin, View):
+    def post(self, request, deal_id):
+        deal = deal_for_user(request.user, deal_id)
+        if not deal:
+            return JsonResponse({'ok': False, 'error': 'معامله یافت نشد'}, status=404)
+        try:
+            payload = json.loads(request.body.decode('utf-8'))
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            payload = {}
+        note = (payload.get('note') or payload.get('result') or '').strip()
+        follow_up = complete_next_action(deal, request.user, result_note=note)
+        if not follow_up:
+            return JsonResponse({'ok': False, 'error': 'اقدام بعدی تعیین نشده'}, status=400)
+        return JsonResponse({
+            'ok': True,
+            'next_action': serialize_next_action(deal),
+            'timeline_preview': get_deal_timeline(deal, limit=5, offset=0)['items'],
+        })
+
+
+class CRMDealTimelineView(LoginRequiredMixin, View):
+    def get(self, request, deal_id):
+        deal = deal_for_user(request.user, deal_id)
+        if not deal:
+            return JsonResponse({'ok': False, 'error': 'معامله یافت نشد'}, status=404)
+        try:
+            limit = min(int(request.GET.get('limit', 30)), 50)
+            offset = max(int(request.GET.get('offset', 0)), 0)
+        except (TypeError, ValueError):
+            limit, offset = 30, 0
+        return JsonResponse({'ok': True, **get_deal_timeline(deal, limit=limit, offset=offset)})
 
 
 class CRMDealFinanceDashboardView(CRMContextMixin, LoginRequiredMixin, TemplateView):

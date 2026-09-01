@@ -1,0 +1,60 @@
+{% load workspace_tags %}
+<div class="crm-deal-create-form">
+    <div class="crm-deal-create-primary">
+        <div class="crm-form-field">
+            <label for="{{ form.customer.id_for_label }}">مخاطب <span class="crm-req">*</span></label>
+            {{ form.customer }}
+        </div>
+        <div class="crm-form-field">
+            <label for="{{ form.property.id_for_label }}">ملک مرتبط</label>
+            {{ form.property }}
+            <p class="crm-field-hint">انتخاب فایل شخصی — اختیاری</p>
+        </div>
+        <div class="crm-form-field">
+            <label for="{{ form.title.id_for_label }}">عنوان معامله <span class="crm-req">*</span></label>
+            {{ form.title }}
+        </div>
+        <div class="crm-form-grid crm-form-grid--2">
+            <div class="crm-form-field">
+                <label for="{{ form.stage.id_for_label }}">مرحله</label>
+                {{ form.stage }}
+            </div>
+            <div class="crm-form-field">
+                <label for="{{ form.value.id_for_label }}">ارزش تقریبی</label>
+                {{ form.value }}
+            </div>
+        </div>
+    </div>
+
+    <details class="crm-deal-create-next">
+        <summary>اقدام بعدی</summary>
+        <div class="crm-deal-create-next-body">
+            <div class="crm-form-field">
+                <label for="{{ form.next_action_type.id_for_label }}">نوع</label>
+                {{ form.next_action_type }}
+            </div>
+            <div class="crm-form-field">
+                <label for="{{ form.next_action_at.id_for_label }}">تاریخ و ساعت</label>
+                {{ form.next_action_at }}
+            </div>
+            <div class="crm-form-field">
+                <label for="{{ form.next_action_note.id_for_label }}">یادداشت کوتاه</label>
+                {{ form.next_action_note }}
+            </div>
+        </div>
+    </details>
+
+    <details class="crm-deal-create-more">
+        <summary>اطلاعات بیشتر</summary>
+        <div class="crm-deal-create-more-body">
+            <div class="crm-form-field">
+                <label for="{{ form.expected_close_date.id_for_label }}">تاریخ تخمینی بستن</label>
+                {{ form.expected_close_date }}
+            </div>
+            <div class="crm-form-field">
+                <label for="{{ form.notes.id_for_label }}">یادداشت</label>
+                {{ form.notes }}
+            </div>
+        </div>
+    </details>
+</div>

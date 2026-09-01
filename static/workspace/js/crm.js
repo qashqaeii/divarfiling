@@ -4146,6 +4146,126 @@ function initCRMDealFinance() {
     render();
 }
 
+function initCRMDealActions() {
+    const root = document.querySelector('.crm-deal-detail-pro');
+    if (!root || root.dataset.dealActionsBound === '1') return;
+    root.dataset.dealActionsBound = '1';
+
+    const csrf = () => document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+
+    const renderTimelineItems = (items) => {
+        const list = document.getElementById('crmDealTimelineList');
+        if (!list || !Array.isArray(items)) return;
+        list.innerHTML = items.map(item => `
+            <li class="crm-deal-timeline-item" data-kind="${item.kind || ''}">
+                <span class="crm-deal-timeline-dot" aria-hidden="true"><i class="fas ${item.icon || 'fa-circle'}"></i></span>
+                <div class="crm-deal-timeline-copy">
+                    <div class="crm-deal-timeline-meta">
+                        <strong>${item.title || ''}</strong>
+                        <time>${item.day_label || ''}${item.time_label ? ` · ${item.time_label}` : ''}</time>
+                    </div>
+                    ${item.body ? `<p>${item.body}</p>` : ''}
+                </div>
+            </li>`).join('');
+    };
+
+    const followForm = document.getElementById('crmDealFollowUpForm');
+    if (followForm) {
+        followForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const url = followForm.dataset.followupUrl || window.crmDealFollowUpUrl;
+            if (!url) return;
+            const fd = new FormData(followForm);
+            const payload = {
+                type: fd.get('type'),
+                note: fd.get('note'),
+                next_action_type: fd.get('next_action_type'),
+                next_action_at: fd.get('next_action_at'),
+                next_action_note: fd.get('next_action_note'),
+            };
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf() },
+                body: JSON.stringify(payload),
+            });
+            const data = await res.json();
+            if (!data.ok) { alert(data.error || 'خطا'); return; }
+            if (data.timeline_preview) renderTimelineItems(data.timeline_preview);
+            window.location.reload();
+        });
+    }
+
+    const nextForm = document.getElementById('crmDealNextActionForm');
+    if (nextForm) {
+        nextForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const url = nextForm.dataset.nextActionUrl || window.crmDealNextActionUrl;
+            if (!url) return;
+            const fd = new FormData(nextForm);
+            const payload = {
+                type: fd.get('type'),
+                at: fd.get('at'),
+                note: fd.get('note'),
+            };
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf() },
+                body: JSON.stringify(payload),
+            });
+            const data = await res.json();
+            if (!data.ok) { alert(data.error || 'خطا'); return; }
+            window.location.reload();
+        });
+    }
+
+    root.querySelector('.crm-deal-next-complete')?.addEventListener('click', async () => {
+        const url = window.crmDealCompleteNextActionUrl;
+        if (!url) return;
+        const note = window.prompt('نتیجه کوتاه (اختیاری):', '') || '';
+        const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf() },
+            body: JSON.stringify({ note }),
+        });
+        const data = await res.json();
+        if (!data.ok) { alert(data.error || 'خطا'); return; }
+        window.location.reload();
+    });
+
+    const moreBtn = document.getElementById('crmDealTimelineMore');
+    if (moreBtn) {
+        let offset = document.querySelectorAll('#crmDealTimelineList .crm-deal-timeline-item').length;
+        moreBtn.addEventListener('click', async () => {
+            const url = window.crmDealTimelineUrl;
+            if (!url) return;
+            const res = await fetch(`${url}?limit=20&offset=${offset}`);
+            const data = await res.json();
+            if (!data.ok || !data.items?.length) {
+                moreBtn.hidden = true;
+                return;
+            }
+            const list = document.getElementById('crmDealTimelineList');
+            data.items.forEach(item => {
+                const li = document.createElement('li');
+                li.className = 'crm-deal-timeline-item';
+                li.dataset.kind = item.kind || '';
+                li.innerHTML = `
+                    <span class="crm-deal-timeline-dot" aria-hidden="true"><i class="fas ${item.icon || 'fa-circle'}"></i></span>
+                    <div class="crm-deal-timeline-copy">
+                        <div class="crm-deal-timeline-meta">
+                            <strong>${item.title || ''}</strong>
+                            <time>${item.day_label || ''}${item.time_label ? ` · ${item.time_label}` : ''}</time>
+                        </div>
+                        ${item.body ? `<p>${item.body}</p>` : ''}
+                    </div>`;
+                list?.appendChild(li);
+            });
+            offset += data.items.length;
+            if (!data.has_more) moreBtn.hidden = true;
+        });
+    }
+}
+
 function initCRMDealsPage() {
     const page = document.querySelector('.crm-deals-pro');
     if (!page) return;
@@ -5694,6 +5814,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initCRMDealStagesEditor();
     initCRMDealFinance();
     initCRMDealChecklist();
+    initCRMDealActions();
     initCRMCommissionSplit();
     initCRMContactTeam();
     initCRMContactStatusPicker();

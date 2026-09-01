@@ -185,6 +185,12 @@ def crm_deal_is_stale(deal, meta_map=None):
 
 
 @register.simple_tag
+def crm_deal_next_action(deal):
+    from workspace.services.crm_deal_followup import serialize_next_action
+    return serialize_next_action(deal)
+
+
+@register.simple_tag
 def crm_match_tab_count(match_data):
     """تعداد کل پیشنهادهای تطبیق — برای badge تب."""
     if not match_data or not match_data.get('eligible'):

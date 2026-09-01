@@ -64,6 +64,9 @@ def create_deal(
     expected_close_date: Optional[date] = None,
     commission_rate: float = DEFAULT_COMMISSION_RATE,
     notes: str = '',
+    next_action_type: str = '',
+    next_action_at=None,
+    next_action_note: str = '',
 ) -> CRMDeal:
     stages = get_user_deal_stages(user)
     if stage not in stages:
@@ -107,6 +110,15 @@ def create_deal(
     apply_deal_finance(deal, save=False)
     deal.save()
     ensure_deal_checklist(deal)
+    if next_action_type or next_action_at:
+        from workspace.services.crm_deal_followup import set_next_action
+        set_next_action(
+            deal,
+            action_type=next_action_type,
+            action_at=next_action_at,
+            note=next_action_note,
+            save=True,
+        )
     log_activity(
         customer,
         'املاک',

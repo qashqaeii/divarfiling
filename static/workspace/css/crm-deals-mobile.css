@@ -1177,3 +1177,36 @@
         flex-shrink: 0;
     }
 }
+
+/* Next action chips — list, table, pipeline */
+.crm-deals-page .crm-deal-na-chip,
+.crm-deals-pro .crm-deal-na-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: #334155;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.crm-deals-page .crm-deal-na-chip.is-overdue,
+.crm-deals-pro .crm-deal-na-chip.is-overdue {
+    color: #b45309;
+}
+.crm-deals-page .crm-deal-na-chip.is-empty,
+.crm-deals-pro .crm-deal-na-chip.is-empty {
+    color: #94a3b8;
+    font-weight: 600;
+}
+.crm-deals-page .crm-deals-col-next {
+    min-width: 7.5rem;
+    max-width: 11rem;
+}
+.crm-deals-pro .crm-deal-pipeline-next {
+    margin-top: 0.35rem;
+    font-size: 0.72rem;
+    line-height: 1.35;
+}

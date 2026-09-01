@@ -221,6 +221,8 @@
         </nav>
     </section>
 
+    {% include 'workspace/crm/includes/deal_action_timeline.html' %}
+
     <section class="crm-deal-checklist crm-deal-block" id="crmDealChecklist"
              data-checklist-url="{% url 'workspace:crm_deal_checklist' deal.id %}"
              aria-label="چک‌لیست مدارک">
@@ -651,11 +653,86 @@
         </form>
     </div>
 </aside>
+<aside class="crm-drawer" id="drawer-followup">
+    <div class="crm-drawer-overlay" data-drawer-close></div>
+    <div class="crm-drawer-panel crm-drawer-panel-lg">
+        <div class="crm-drawer-head"><h2>ثبت پیگیری</h2><p>چه کاری انجام شد؟</p><button type="button" class="crm-drawer-close" data-drawer-close><i class="fas fa-times"></i></button></div>
+        <form class="crm-drawer-form" id="crmDealFollowUpForm" data-followup-url="{% url 'workspace:crm_deal_followup' deal.id %}">
+            <div class="crm-drawer-body">
+                <label class="crm-form-field">نوع پیگیری
+                    <select name="type" class="crm-select" required>
+                        {% for key, label in deal_followup_types %}
+                        <option value="{{ key }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+                <label class="crm-form-field">نتیجه پیگیری
+                    <textarea name="note" class="crm-textarea" rows="4" placeholder="مثلاً: مشتری فایل را پسندید و برای فردا بازدید هماهنگ شد." required></textarea>
+                </label>
+                <details class="crm-deal-create-next" open>
+                    <summary>اقدام بعدی (اختیاری)</summary>
+                    <div class="crm-deal-create-next-body">
+                        <label class="crm-form-field">نوع
+                            <select name="next_action_type" class="crm-select">
+                                <option value="">— بدون اقدام —</option>
+                                {% for key, label in deal_next_action_types %}
+                                <option value="{{ key }}">{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </label>
+                        <label class="crm-form-field">تاریخ و ساعت
+                            <input type="text" name="next_action_at" class="crm-input crm-jalali-datetime" data-jdp="" placeholder="۱۴۰۴/۰۶/۱۵ ۱۸:۰۰" autocomplete="off">
+                        </label>
+                        <label class="crm-form-field">یادداشت
+                            <input type="text" name="next_action_note" class="crm-input" placeholder="یادداشت کوتاه">
+                        </label>
+                    </div>
+                </details>
+            </div>
+            <div class="crm-drawer-foot">
+                <button type="button" class="crm-btn crm-btn-ghost" data-drawer-close>انصراف</button>
+                <button type="submit" class="crm-btn crm-btn-primary">ثبت پیگیری</button>
+            </div>
+        </form>
+    </div>
+</aside>
+<aside class="crm-drawer" id="drawer-next-action">
+    <div class="crm-drawer-overlay" data-drawer-close></div>
+    <div class="crm-drawer-panel">
+        <div class="crm-drawer-head"><h2>اقدام بعدی</h2><button type="button" class="crm-drawer-close" data-drawer-close><i class="fas fa-times"></i></button></div>
+        <form class="crm-drawer-form" id="crmDealNextActionForm" data-next-action-url="{% url 'workspace:crm_deal_next_action' deal.id %}">
+            <div class="crm-drawer-body">
+                <label class="crm-form-field">نوع
+                    <select name="type" class="crm-select">
+                        <option value="">— حذف اقدام —</option>
+                        {% for key, label in deal_next_action_types %}
+                        <option value="{{ key }}"{% if next_action and next_action.type == key %} selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+                <label class="crm-form-field">تاریخ و ساعت
+                    <input type="text" name="at" class="crm-input crm-jalali-datetime" data-jdp="" value="{% if next_action %}{{ next_action.at_input|default:'' }}{% endif %}" placeholder="۱۴۰۴/۰۶/۱۵ ۱۸:۰۰" autocomplete="off">
+                </label>
+                <label class="crm-form-field">یادداشت
+                    <input type="text" name="note" class="crm-input" value="{% if next_action %}{{ next_action.note|default:'' }}{% endif %}">
+                </label>
+            </div>
+            <div class="crm-drawer-foot">
+                <button type="button" class="crm-btn crm-btn-ghost" data-drawer-close>انصراف</button>
+                <button type="submit" class="crm-btn crm-btn-primary">ذخیره</button>
+            </div>
+        </form>
+    </div>
+</aside>
 {% endblock %}
 
 {% block crm_js %}
 <script>
 window.crmDealChecklistUrl = "{% url 'workspace:crm_deal_checklist' deal.id %}";
 window.crmDealCommissionUrl = "{% url 'workspace:crm_deal_commission' deal.id %}";
+window.crmDealFollowUpUrl = "{% url 'workspace:crm_deal_followup' deal.id %}";
+window.crmDealNextActionUrl = "{% url 'workspace:crm_deal_next_action' deal.id %}";
+window.crmDealCompleteNextActionUrl = "{% url 'workspace:crm_deal_complete_next_action' deal.id %}";
+window.crmDealTimelineUrl = "{% url 'workspace:crm_deal_timeline' deal.id %}";
 </script>
 {% endblock %}

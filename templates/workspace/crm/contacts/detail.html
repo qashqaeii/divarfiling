@@ -1144,7 +1144,7 @@
             <div class="crm-drawer-body">
             {% csrf_token %}
             <input type="hidden" name="action" value="add_deal">
-            <div class="ws-fields">{% render_fields deal_form 2 %}</div>
+            {% include 'workspace/crm/includes/deal_create_form.html' with form=deal_create_form|default:deal_form %}
             </div>
             <div class="crm-drawer-foot">
                 <button type="button" class="crm-btn crm-btn-ghost" data-drawer-close>انصراف</button>

@@ -1422,3 +1422,130 @@
         box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05);
     }
 }
+
+/* ── Next Action, Quick Follow-up, Timeline ── */
+.crm-deal-next-action {
+    margin: 0.75rem 0.85rem 0;
+    padding: 0.85rem 1rem;
+    border-radius: 14px;
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(99, 102, 241, 0.04));
+    border: 1px solid rgba(59, 130, 246, 0.15);
+}
+.crm-deal-next-action.is-overdue {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(239, 68, 68, 0.05));
+    border-color: rgba(245, 158, 11, 0.35);
+}
+.crm-deal-next-action__head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+.crm-deal-next-action__type {
+    font-size: 1.05rem;
+    font-weight: 800;
+    margin: 0.35rem 0 0;
+}
+.crm-deal-next-action__when {
+    color: var(--ws-muted, #64748b);
+    margin: 0.15rem 0 0;
+}
+.crm-deal-next-action__warn {
+    color: #b45309;
+    font-weight: 700;
+    font-size: 0.82rem;
+    margin: 0 0 0.35rem;
+}
+.crm-deal-quick-bar {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.65rem 0.85rem;
+    overflow-x: auto;
+}
+.crm-deal-quick-btn {
+    flex: 1 0 auto;
+    min-height: 44px;
+    padding: 0.55rem 0.85rem;
+    border-radius: 12px;
+    border: 1px solid rgba(15, 23, 42, 0.1);
+    background: #fff;
+    font-weight: 700;
+    font-size: 0.82rem;
+    text-decoration: none;
+    color: inherit;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+}
+.crm-deal-quick-btn--primary {
+    background: linear-gradient(145deg, #2563eb, #1d4ed8);
+    color: #fff;
+    border-color: transparent;
+}
+.crm-deal-timeline-list {
+    list-style: none;
+    margin: 0;
+    padding: 0 0.85rem 0.85rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+}
+.crm-deal-timeline-item {
+    display: grid;
+    grid-template-columns: 2rem 1fr;
+    gap: 0.65rem;
+    align-items: start;
+}
+.crm-deal-timeline-dot {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 999px;
+    background: rgba(59, 130, 246, 0.1);
+    color: #2563eb;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.78rem;
+}
+.crm-deal-timeline-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem 0.65rem;
+    align-items: baseline;
+}
+.crm-deal-timeline-meta time {
+    color: var(--ws-muted, #64748b);
+    font-size: 0.78rem;
+}
+.crm-deal-na-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: #334155;
+}
+.crm-deal-na-chip.is-overdue { color: #b45309; }
+.crm-deal-na-chip.is-empty { color: #94a3b8; font-weight: 600; }
+.crm-deal-create-drawer .crm-deal-create-primary,
+.crm-deal-create-drawer details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+}
+.crm-deal-create-drawer details summary {
+    cursor: pointer;
+    font-weight: 700;
+    padding: 0.35rem 0;
+}
+.crm-deal-create-foot {
+    position: sticky;
+    bottom: 0;
+    background: #fff;
+    z-index: 2;
+}
+.crm-deal-pipeline-next {
+    margin-top: 0.35rem;
+}

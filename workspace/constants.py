@@ -386,6 +386,58 @@ DEAL_ACTIVE_STAGES = ['سرنخ', 'مذاکره', 'بازدید', 'پیش‌قر
 LOST_REASONS = ['قیمت بالا', 'رقبا', 'انصراف مشتری', 'ملک فروخته شد', 'مدارک ناقص', 'سایر']
 DEFAULT_COMMISSION_RATE = 1.0
 
+# ── اقدام بعدی و پیگیری معامله ──
+DEAL_ACTION_CALL = 'call'
+DEAL_ACTION_MESSAGE = 'message'
+DEAL_ACTION_SEND_FILE = 'send_file'
+DEAL_ACTION_VISIT = 'visit'
+DEAL_ACTION_NEGOTIATION = 'negotiation'
+DEAL_ACTION_CONTRACT = 'contract_followup'
+DEAL_ACTION_DOCUMENTS = 'documents'
+DEAL_ACTION_COMMISSION = 'commission'
+DEAL_ACTION_OTHER = 'other'
+
+DEAL_NEXT_ACTION_TYPES = [
+    (DEAL_ACTION_CALL, 'تماس'),
+    (DEAL_ACTION_MESSAGE, 'پیام'),
+    (DEAL_ACTION_SEND_FILE, 'ارسال فایل'),
+    (DEAL_ACTION_VISIT, 'بازدید'),
+    (DEAL_ACTION_NEGOTIATION, 'مذاکره'),
+    (DEAL_ACTION_CONTRACT, 'پیگیری قرارداد'),
+    (DEAL_ACTION_DOCUMENTS, 'دریافت مدارک'),
+    (DEAL_ACTION_COMMISSION, 'پیگیری کمیسیون'),
+    (DEAL_ACTION_OTHER, 'سایر'),
+]
+DEAL_NEXT_ACTION_LABELS = dict(DEAL_NEXT_ACTION_TYPES)
+DEAL_NEXT_ACTION_KEYS = {k for k, _ in DEAL_NEXT_ACTION_TYPES}
+
+DEAL_FOLLOWUP_NOTE = 'note'
+DEAL_FOLLOWUP_TYPES = [
+    (DEAL_ACTION_CALL, 'تماس'),
+    (DEAL_ACTION_MESSAGE, 'پیام'),
+    (DEAL_ACTION_VISIT, 'بازدید'),
+    (DEAL_ACTION_NEGOTIATION, 'مذاکره'),
+    (DEAL_ACTION_SEND_FILE, 'ارسال فایل'),
+    (DEAL_ACTION_CONTRACT, 'پیگیری قرارداد'),
+    (DEAL_FOLLOWUP_NOTE, 'یادداشت'),
+    (DEAL_ACTION_OTHER, 'سایر'),
+]
+DEAL_FOLLOWUP_LABELS = dict(DEAL_FOLLOWUP_TYPES)
+DEAL_FOLLOWUP_KEYS = {k for k, _ in DEAL_FOLLOWUP_TYPES}
+
+DEAL_ACTION_ICONS = {
+    DEAL_ACTION_CALL: 'fa-phone',
+    DEAL_ACTION_MESSAGE: 'fa-comment-dots',
+    DEAL_ACTION_SEND_FILE: 'fa-paper-plane',
+    DEAL_ACTION_VISIT: 'fa-door-open',
+    DEAL_ACTION_NEGOTIATION: 'fa-handshake',
+    DEAL_ACTION_CONTRACT: 'fa-file-signature',
+    DEAL_ACTION_DOCUMENTS: 'fa-folder-open',
+    DEAL_ACTION_COMMISSION: 'fa-coins',
+    DEAL_FOLLOWUP_NOTE: 'fa-note-sticky',
+    DEAL_ACTION_OTHER: 'fa-ellipsis',
+}
+
 DEAL_KIND_SALE = 'sale'
 DEAL_KIND_RENT = 'rent'
 DEAL_KIND_CHOICES = [

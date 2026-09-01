@@ -1,0 +1,10 @@
+{% load crm_tags %}
+{% crm_deal_next_action deal as na %}
+{% if na %}
+<span class="crm-deal-na-chip{% if na.is_overdue %} is-overdue{% endif %}" title="{{ na.note }}">
+    <i class="fas {{ na.icon }}" aria-hidden="true"></i>
+    <span>{{ na.compact_label }}</span>
+</span>
+{% else %}
+<span class="crm-deal-na-chip is-empty">اقدام بعدی تعیین نشده</span>
+{% endif %}

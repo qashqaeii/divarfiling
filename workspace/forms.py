@@ -6,8 +6,8 @@ from django.utils import timezone
 
 from workspace.constants import BUILDER_BUY_PROPERTY_TYPES
 from workspace.constants import (
-    ACTIVITY_TYPES, AUTOMATION_ACTIONS, AUTOMATION_TRIGGERS, DEAL_STAGES, DEAL_TYPES,
-    INTEREST_LEVELS, LISTING_ROLES, LOST_REASONS, MESSAGE_CHANNELS,
+    ACTIVITY_TYPES, AUTOMATION_ACTIONS, AUTOMATION_TRIGGERS, DEAL_NEXT_ACTION_TYPES,
+    DEAL_STAGES, DEAL_TYPES, INTEREST_LEVELS, LISTING_ROLES, LOST_REASONS, MESSAGE_CHANNELS,
     MESSAGE_TEMPLATE_CATEGORIES, REMINDER_RECURRENCE, VISIT_OUTCOMES, VISIT_REJECT_REASONS,
 )
 from workspace.services.jalali_input import (
@@ -1048,6 +1048,129 @@ class CRMDealForm(CRMMoneyFieldsMixin, forms.ModelForm):
                 'autocomplete': 'off',
             }),
             'notes': forms.Textarea(attrs={'class': 'crm-textarea', 'rows': 3}),
+        }
+
+
+class CRMDealCreateForm(CRMMoneyFieldsMixin, forms.ModelForm):
+    """فرم سبک ایجاد معامله — بدون فیلدهای مالی/قرارداد."""
+    money_fields = ('value',)
+    next_action_at = forms.CharField(
+        required=False,
+        label='زمان اقدام بعدی',
+        widget=forms.TextInput(attrs={
+            'class': 'crm-input crm-jalali-datetime',
+            'data-jdp': '',
+            'placeholder': '۱۴۰۴/۰۶/۱۵ ۱۸:۰۰',
+            'autocomplete': 'off',
+        }),
+    )
+
+    def __init__(self, *args, user=None, **kwargs):
+        self.user = user
+        super().__init__(*args, **kwargs)
+        if user:
+            from workspace.services.crm_scope import customers_qs, properties_qs
+            from workspace.services.crm_deal_stages import get_user_deal_stages
+            self.fields['customer'].queryset = customers_qs(user).order_by('name')
+            self.fields['property'].queryset = properties_qs(user).order_by('-updated_at')
+            stages = get_user_deal_stages(user)
+            self.fields['stage'].widget = forms.Select(
+                attrs={'class': 'crm-select'},
+                choices=[(s, s) for s in stages],
+            )
+        self.fields['customer'].label = 'مخاطب'
+        self.fields['property'].label = 'ملک مرتبط'
+        self.fields['property'].required = False
+        self.fields['property'].empty_label = 'انتخاب فایل شخصی — اختیاری'
+        self.fields['title'].widget.attrs.update({
+            'placeholder': 'مثلاً: خرید آپارتمان برای آقای رضایی',
+            'class': 'crm-input',
+        })
+        self.fields['value'].label = 'ارزش تقریبی'
+        self.fields['next_action_type'].label = 'نوع اقدام بعدی'
+        self.fields['next_action_type'].required = False
+        self.fields['next_action_type'].widget = forms.Select(
+            attrs={'class': 'crm-select'},
+            choices=[('', '— بدون اقدام —')] + list(DEAL_NEXT_ACTION_TYPES),
+        )
+        self.fields['next_action_note'].label = 'یادداشت اقدام'
+        self.fields['next_action_note'].required = False
+        self.fields['next_action_note'].widget = forms.TextInput(attrs={
+            'class': 'crm-input',
+            'placeholder': 'مثلاً: برای نتیجه بازدید پیگیری شود',
+        })
+        if self.instance.pk and getattr(self.instance, 'expected_close_date', None):
+            self.fields['expected_close_date'].initial = format_jalali_date(self.instance.expected_close_date)
+
+    def clean_expected_close_date(self):
+        return self._clean_jalali_date('expected_close_date')
+
+    def _clean_jalali_date(self, field_name):
+        raw = self.cleaned_data.get(field_name)
+        if not raw:
+            return None
+        if hasattr(raw, 'year'):
+            return raw
+        parsed = parse_jalali_date_string(str(raw))
+        if parsed is None:
+            raise forms.ValidationError('تاریخ شمسی نامعتبر است.')
+        return parsed
+
+    def clean_next_action_at(self):
+        raw = self.cleaned_data.get('next_action_at')
+        if not raw:
+            return None
+        from datetime import datetime as dt_cls
+        if isinstance(raw, dt_cls):
+            return raw
+        parsed = parse_jalali_datetime_string(str(raw))
+        if parsed is None:
+            raise forms.ValidationError('تاریخ و ساعت نامعتبر است.')
+        return parsed
+
+    def save(self, commit=True):
+        deal = super().save(commit=False)
+        is_new = not deal.pk
+        if self.user and not deal.user_id:
+            deal.user = self.user
+        if self.user and not deal.agency_id:
+            from workspace.services.crm_scope import get_agency
+            deal.agency = get_agency(self.user)
+        from workspace.services.crm_deal_finance import apply_deal_finance, apply_finance_defaults
+        if is_new:
+            apply_finance_defaults(deal, self.user)
+            from django.utils import timezone as tz
+            deal.stage_changed_at = tz.now()
+            if self.user:
+                from workspace.services.crm_deal_stages import probability_for_stage
+                deal.probability = probability_for_stage(self.user, deal.stage)
+        action_at = self.cleaned_data.get('next_action_at')
+        if action_at:
+            deal.next_action_at = action_at
+        apply_deal_finance(deal, save=False)
+        if commit:
+            deal.save()
+            from workspace.services.crm_deal_checklist import ensure_deal_checklist
+            ensure_deal_checklist(deal)
+        return deal
+
+    class Meta:
+        model = CRMDeal
+        fields = [
+            'customer', 'property', 'title', 'stage', 'value',
+            'expected_close_date', 'next_action_type', 'next_action_note', 'notes',
+        ]
+        widgets = {
+            'customer': forms.Select(attrs={'class': 'crm-select crm-deal-customer-select'}),
+            'property': forms.Select(attrs={'class': 'crm-select crm-deal-property-select'}),
+            'title': forms.TextInput(attrs={'class': 'crm-input'}),
+            'stage': forms.Select(attrs={'class': 'crm-select'}),
+            'value': forms.TextInput(attrs=_CRM_MONEY_WIDGET_ATTRS),
+            'expected_close_date': forms.TextInput(attrs={
+                'class': 'crm-input crm-jalali-date', 'data-jdp': '', 'data-jdp-only-date': '',
+                'placeholder': '۱۴۰۴/۰۸/۰۱', 'autocomplete': 'off',
+            }),
+            'notes': forms.Textarea(attrs={'class': 'crm-textarea', 'rows': 2, 'placeholder': 'یادداشت کوتاه — اختیاری'}),
         }
 
 

@@ -85,6 +85,7 @@ urlpatterns = [
     path('crm/properties/<int:property_id>/contact-matches', views.PropertyContactMatchesView.as_view(), name='property_contact_matches'),
     path('crm/properties/<int:property_id>/suggest-contacts', views.PropertySuggestContactsView.as_view(), name='property_suggest_contacts'),
     path('crm/properties/<int:property_id>/public-share', views.PropertyPublicShareView.as_view(), name='property_public_share'),
+    path('crm/properties/<int:property_id>/duplicate', views.PropertyDuplicateView.as_view(), name='property_duplicate'),
     path('crm/properties/<int:property_id>/status', views.PropertyStatusView.as_view(), name='property_status'),
     path('crm/properties/<int:property_id>/location', views.PropertyLocationView.as_view(), name='property_location'),
     path('crm/properties/<int:property_id>/nearby-pois', views.PropertyNearbyPoisView.as_view(), name='property_nearby_pois'),

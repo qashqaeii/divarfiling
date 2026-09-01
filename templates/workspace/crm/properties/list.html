@@ -377,13 +377,14 @@
                         <th>قیمت</th>
                         <th class="crm-ft-th-num">مخاطب</th>
                         <th class="crm-ft-th-time">بروزرسانی</th>
+                        <th class="crm-ft-th-actions" aria-label="عملیات"></th>
                     </tr>
                 </thead>
                 <tbody id="crm-files-list-body">
                     {% include 'workspace/crm/properties/_property_table_rows.html' %}
                     {% if not properties %}
                     <tr class="crm-empty-state-row">
-                        <td colspan="{% if property_folders %}8{% else %}7{% endif %}">
+                        <td colspan="{% if property_folders %}9{% else %}8{% endif %}">
                             {% if stats.total %}
                             {% include 'workspace/crm/includes/list_empty_state.html' with tone='muted' compact=1 decor='building' title='ملکی با این فیلتر نیست' desc='فیلتر یا جستجو را تغییر دهید، یا ملک جدید ثبت کنید.' btn_text='ثبت ملک' btn_icon='fa-plus' btn_drawer='drawer-property' extra_class='crm-empty-state--inline' %}
                             {% else %}
@@ -465,6 +466,7 @@
 </aside>
 
 {% include 'workspace/crm/includes/drawer_property_import.html' %}
+{% include 'workspace/crm/includes/property_duplicate_modal.html' %}
 {% endblock %}
 
 {% block crm_js %}

@@ -458,6 +458,12 @@ class CRMProperty(models.Model):
     images = models.JSONField(default=list, blank=True, verbose_name='تصاویر')
     videos = models.JSONField(default=list, blank=True, verbose_name='ویدئوها')
     token = models.CharField(max_length=100, blank=True, db_index=True, verbose_name='شناسه آگهی')
+    source_platform = models.CharField(
+        max_length=30, blank=True, db_index=True, verbose_name='پلتفرم منبع',
+    )
+    source_external_id = models.CharField(
+        max_length=100, blank=True, db_index=True, verbose_name='شناسه آگهی منبع',
+    )
     link = models.URLField(max_length=500, blank=True, verbose_name='لینک')
     business_type = models.CharField(max_length=50, blank=True, verbose_name='نوع آگهی‌دهنده')
     phone = models.CharField(max_length=20, blank=True, verbose_name='شماره تماس')
@@ -476,6 +482,13 @@ class CRMProperty(models.Model):
         verbose_name_plural = 'املاک CRM'
         ordering = ['-updated_at']
         indexes = [models.Index(fields=['user', 'deal_mode', 'transaction_status'])]
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'source_platform', 'source_external_id'],
+                condition=models.Q(source_external_id__gt=''),
+                name='uniq_crmproperty_user_source_listing',
+            ),
+        ]
 
     def __str__(self):
         return self.title or f'ملک #{self.pk}'

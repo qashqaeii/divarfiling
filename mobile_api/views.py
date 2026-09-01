@@ -1379,8 +1379,11 @@ class PropertiesListView(APIView):
     def post(self, request):
         data = _parse_body(request)
         try:
-            prop = create_property_from_mobile(request.user, data)
-            return api_ok(property_to_dict(prop, detailed=True, request=request), status=201)
+            prop, created = create_property_from_mobile(request.user, data)
+            payload = property_to_dict(prop, detailed=True, request=request)
+            payload['already_added'] = not created
+            payload['created'] = created
+            return api_ok(payload, status=201)
         except ValueError as exc:
             return api_error(str(exc), code='VALIDATION_ERROR')
 
@@ -1616,6 +1619,20 @@ class PropertyPublicShareView(APIView):
         if not payload:
             return api_error('ملک یافت نشد.', code='NOT_FOUND', status=404)
         return api_ok(payload)
+
+
+class PropertyDuplicateView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, property_id):
+        from workspace.services.crm_property_duplicate import duplicate_property
+        try:
+            new_prop = duplicate_property(request.user, property_id)
+        except PermissionError:
+            return api_error('دسترسی ندارید.', code='FORBIDDEN', status=403)
+        except ValueError as exc:
+            return api_error(str(exc), code='VALIDATION_ERROR', status=400)
+        return api_ok(property_to_dict(new_prop, detailed=True, request=request), status=201)
 
 
 class PropertyStatusView(APIView):

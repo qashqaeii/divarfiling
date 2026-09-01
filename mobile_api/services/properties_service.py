@@ -265,7 +265,7 @@ def _enrich_property_dict_from_listing(prop_dict: Dict[str, Any], listing) -> No
             prop_dict['thumbnail_url'] = prop_dict['images'][0]
 
 
-def create_property_from_mobile(user, data: Dict[str, Any]) -> CRMProperty:
+def create_property_from_mobile(user, data: Dict[str, Any]) -> tuple[CRMProperty, bool]:
     title = (data.get('title') or '').strip()
     if not title:
         raise ValueError('عنوان ملک الزامی است.')
@@ -281,9 +281,9 @@ def create_property_from_mobile(user, data: Dict[str, Any]) -> CRMProperty:
             .first()
         )
         if listing:
-            prop, _created = add_listing_to_personal_files(user, listing)
+            prop, created = add_listing_to_personal_files(user, listing)
             _apply_mobile_property_overrides(prop, data, title_required=False)
-            return prop
+            return prop, created
 
     deal_mode = (data.get('deal_mode') or 'فروش').strip()
     if deal_mode not in PROPERTY_DEAL_MODES:
@@ -364,7 +364,7 @@ def create_property_from_mobile(user, data: Dict[str, Any]) -> CRMProperty:
                 role=(data.get('role') or 'مالک'),
                 defaults={'deal_type': 'فروش'},
             )
-    return prop
+    return prop, True
 
 
 def update_property_from_mobile(user, property_id: int, data: Dict[str, Any]) -> Optional[CRMProperty]:

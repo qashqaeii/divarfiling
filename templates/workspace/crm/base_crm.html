@@ -96,6 +96,7 @@ window.crmKabinetUrl = '{% url "workspace:crm_property_cabinets" %}';
 window.crmKabinetDetailUrlBase = '{% url "workspace:crm_property_cabinet_detail" cabinet_id=0 %}'.replace('/0/', '/');
 window.crmKabinetReorderUrl = '{% url "workspace:crm_property_cabinets_reorder" %}';
 window.crmKabinetFolderAssignUrlBase = '{% url "workspace:crm_property_cabinet_folder_assign" cabinet_id=0 folder_id=0 %}'.replace('/0/folders/0/', '/');
+window.crmPropertyDuplicateUrlBase = '{% url "workspace:crm_property_duplicate" property_id=0 %}'.replace('/0/duplicate/', '/');
 </script>
 
 <script src="{% static 'workspace/js/crm.js' %}?v=90"></script>

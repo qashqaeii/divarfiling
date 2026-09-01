@@ -96,6 +96,9 @@
         <div class="crm-files-card-actions">
             <a href="{% url 'workspace:crm_property_detail' p.id %}" class="crm-files-card-act crm-files-card-act--primary">مشاهده</a>
             <a href="{% url 'workspace:crm_property_edit' p.id %}" class="crm-files-card-act" title="ویرایش">ویرایش</a>
+            <button type="button" class="crm-files-card-act" data-crm-prop-duplicate="{{ p.id }}" title="کپی فایل">
+                <i class="fas fa-copy" aria-hidden="true"></i> کپی فایل
+            </button>
             {% if property_folders %}
             <button type="button" class="crm-files-card-act crm-files-card-act--folder" data-prop-folder-assign="{{ p.id }}" title="افزودن به زونکن">
                 <i class="fas fa-folder-plus" aria-hidden="true"></i> زونکن

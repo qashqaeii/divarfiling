@@ -920,6 +920,9 @@ def property_from_listing(user, listing) -> CRMProperty:
             total_floors = int(re.search(r'\d+', str(total_floors_raw)).group())
         except (AttributeError, ValueError, TypeError):
             pass
+    from workspace.services.listing_personal_status import DIVAR_SOURCE_PLATFORM
+
+    platform, external_id = DIVAR_SOURCE_PLATFORM, str(listing.token or '').strip()
     return CRMProperty.objects.create(
         user=user,
         agency=get_agency(user),
@@ -950,6 +953,8 @@ def property_from_listing(user, listing) -> CRMProperty:
         feature_data=extract_feature_data_from_listing_data(merged_data),
         images=listing.images or [],
         token=listing.token,
+        source_platform=platform if external_id else '',
+        source_external_id=external_id,
         link=listing.link or '',
         business_type=biz or 'شخصی',
         phone=owner_phone,
@@ -960,10 +965,15 @@ def property_from_listing(user, listing) -> CRMProperty:
 
 def get_crm_property_by_token(user, token: str) -> Optional[CRMProperty]:
     """ملک CRM متناظر با شناسه آگهی (در صورت وجود)."""
+    from workspace.services.listing_personal_status import (
+        DIVAR_SOURCE_PLATFORM,
+        get_crm_property_by_source,
+    )
+
     token = str(token or '').strip()
     if not token:
         return None
-    return properties_qs(user).filter(token=token).first()
+    return get_crm_property_by_source(user, DIVAR_SOURCE_PLATFORM, token)
 
 
 def migrate_customer_listings_to_crm_property(user, token: str, prop: CRMProperty) -> int:
@@ -1039,9 +1049,16 @@ def add_listing_to_personal_files(user, listing) -> tuple[CRMProperty, bool]:
     انتقال آگهی به فایل‌های شخصی:
     ساخت/بازیابی CRMProperty، ذخیره محلی تصاویر، مهاجرت املاک مرتبط، حذف از فایلینگ دیوار.
     """
-    from workspace.services.listing_edit import owner_name_from_listing, owner_phone_from_listing
+    from django.db import IntegrityError, transaction
 
-    existing = get_crm_property_by_token(user, listing.token)
+    from workspace.services.listing_edit import owner_name_from_listing, owner_phone_from_listing
+    from workspace.services.listing_personal_status import (
+        DIVAR_SOURCE_PLATFORM,
+        get_crm_property_by_source,
+    )
+
+    token = str(getattr(listing, 'token', '') or '').strip()
+    existing = get_crm_property_by_source(user, DIVAR_SOURCE_PLATFORM, token) if token else None
     if existing:
         phone = owner_phone_from_listing(listing) or existing.phone
         name = owner_name_from_listing(listing) or existing.owner_name
@@ -1056,32 +1073,49 @@ def add_listing_to_personal_files(user, listing) -> tuple[CRMProperty, bool]:
         finalize_listing_moved_to_personal(user, listing, existing)
         return existing, False
 
-    prop = property_from_listing(user, listing)
-    phone = owner_phone_from_listing(listing) or prop.phone
-    name = owner_name_from_listing(listing) or prop.owner_name
-    if normalize_phone(phone):
-        # فقط PropertyContact — CustomerListing بعداً مهاجرت/حذف می‌شود
-        upsert_property_owner(
-            user,
-            phone=phone,
-            name=name,
-            crm_property=prop,
-            source='دیوار',
-        )
-    if not prop.is_vacant:
-        from workspace.services.listing_edit import tenant_name_from_listing, tenant_phone_from_listing
-        t_phone = tenant_phone_from_listing(listing) or prop.tenant_phone
-        t_name = tenant_name_from_listing(listing) or prop.tenant_name
-        if normalize_phone(t_phone) or (t_name or '').strip():
-            upsert_property_tenant(
+    try:
+        with transaction.atomic():
+            prop = property_from_listing(user, listing)
+            phone = owner_phone_from_listing(listing) or prop.phone
+            name = owner_name_from_listing(listing) or prop.owner_name
+            if normalize_phone(phone):
+                upsert_property_owner(
+                    user,
+                    phone=phone,
+                    name=name,
+                    crm_property=prop,
+                    source='دیوار',
+                )
+            if not prop.is_vacant:
+                from workspace.services.listing_edit import tenant_name_from_listing, tenant_phone_from_listing
+                t_phone = tenant_phone_from_listing(listing) or prop.tenant_phone
+                t_name = tenant_name_from_listing(listing) or prop.tenant_name
+                if normalize_phone(t_phone) or (t_name or '').strip():
+                    upsert_property_tenant(
+                        user,
+                        phone=t_phone,
+                        name=t_name,
+                        crm_property=prop,
+                        source='دیوار',
+                    )
+            finalize_listing_moved_to_personal(user, listing, prop)
+            return prop, True
+    except IntegrityError:
+        existing = get_crm_property_by_source(user, DIVAR_SOURCE_PLATFORM, token)
+        if not existing:
+            raise
+        phone = owner_phone_from_listing(listing) or existing.phone
+        name = owner_name_from_listing(listing) or existing.owner_name
+        if normalize_phone(phone):
+            upsert_property_owner(
                 user,
-                phone=t_phone,
-                name=t_name,
-                crm_property=prop,
+                phone=phone,
+                name=name,
+                crm_property=existing,
                 source='دیوار',
             )
-    finalize_listing_moved_to_personal(user, listing, prop)
-    return prop, True
+        finalize_listing_moved_to_personal(user, listing, existing)
+        return existing, False
 
 
 def resolve_listing_for_property(user, prop) -> Optional[Listing]:

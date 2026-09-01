@@ -2033,6 +2033,25 @@ class CRMPropertyNearbyPoisView(LoginRequiredMixin, View):
         return JsonResponse(data)
 
 
+class CRMPropertyDuplicateView(LoginRequiredMixin, View):
+    """کپی فایل شخصی — JSON برای Web UI."""
+
+    def post(self, request, property_id):
+        from workspace.services.crm_property_duplicate import duplicate_property
+        try:
+            new_prop = duplicate_property(request.user, property_id)
+        except PermissionError:
+            return JsonResponse({'ok': False, 'error': 'دسترسی ندارید.'}, status=403)
+        except ValueError as exc:
+            return JsonResponse({'ok': False, 'error': str(exc)}, status=400)
+        edit_url = reverse('workspace:crm_property_edit', kwargs={'property_id': new_prop.pk})
+        return JsonResponse({
+            'ok': True,
+            'property': {'id': new_prop.pk, 'title': new_prop.title},
+            'redirect_url': edit_url,
+        })
+
+
 class CRMPropertyDeleteView(LoginRequiredMixin, View):
     def post(self, request, property_id):
         prop = property_for_user(request.user, property_id)

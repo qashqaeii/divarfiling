@@ -123,6 +123,7 @@ urlpatterns = [
     path('crm/properties/<int:property_id>/status/', crm_views.CRMPropertyStatusUpdateView.as_view(), name='crm_property_status'),
     path('crm/properties/<int:property_id>/rental-reminder/', crm_views.CRMPropertyRentalReminderView.as_view(), name='crm_property_rental_reminder'),
     path('crm/properties/pipeline-order/', crm_views.CRMPropertyPipelineOrderView.as_view(), name='crm_property_pipeline_order'),
+    path('crm/properties/<int:property_id>/duplicate/', crm_views.CRMPropertyDuplicateView.as_view(), name='crm_property_duplicate'),
     path('crm/properties/<int:property_id>/delete/', crm_views.CRMPropertyDeleteView.as_view(), name='crm_property_delete'),
     path('crm/properties/<int:property_id>/public-share/', crm_views.CRMPropertyPublicShareManageView.as_view(), name='crm_property_public_share'),
     path('crm/filters/', crm_views.CRMSavedFilterListView.as_view(), name='crm_filters'),

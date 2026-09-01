@@ -58,6 +58,11 @@
 
     <div class="mk-lcard-body mk-lcard-native__panel">
         <span class="mk-lcard-native__status mk-tx-{{ tx.mode }}">{{ tx.badge }}</span>
+        {% if pf %}
+        <span class="mk-lcard-personal-badge" title="این آگهی قبلاً به فایل‌های شخصی شما اضافه شده است.">
+            <i class="fas fa-check" aria-hidden="true"></i> به فایل‌های شخصی اضافه شده
+        </span>
+        {% endif %}
 
         <h3 class="mk-lcard-title mk-lcard-native__title">
             <a href="{% url 'workspace:listing_detail' listing.dataset_id listing.id %}" title="{{ listing.title }}">{{ listing.title }}</a>
@@ -143,7 +148,8 @@
                         <button type="submit" class="mk-action-menu-item"><i class="fas fa-star" aria-hidden="true"></i> {% if lm.is_favorite %}علاقه‌مند{% else %}افزودن به علاقه‌مند{% endif %}</button>
                     </form>
                     {% if pf %}
-                    <a href="{% url 'workspace:crm_property_detail' pf.id %}" class="mk-action-menu-item"><i class="fas fa-folder-open" aria-hidden="true"></i> فایل شخصی</a>
+                    <a href="{% url 'workspace:crm_property_detail' pf %}" class="mk-action-menu-item"><i class="fas fa-folder-open" aria-hidden="true"></i> مشاهده فایل شخصی</a>
+                    <span class="mk-action-menu-item mk-action-menu-item--disabled" title="این آگهی قبلاً به فایل‌های شخصی شما اضافه شده است."><i class="fas fa-check" aria-hidden="true"></i> قبلاً اضافه شده</span>
                     {% else %}
                     <form method="post" action="{% url 'workspace:listing_add_personal' listing.dataset_id listing.id %}" class="mk-inline-form">
                         {% csrf_token %}

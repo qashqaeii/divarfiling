@@ -664,10 +664,8 @@ class DatasetDetailView(DatasetOwnerMixin, TemplateView):
             user=self.request.user, token__in=page_tokens,
         )
         ctx['listing_metas'] = {m.token: m for m in metas}
-        personal_props = CRMProperty.objects.filter(
-            user=self.request.user, token__in=page_tokens,
-        )
-        ctx['personal_files_map'] = {p.token: p for p in personal_props}
+        from workspace.services.listing_personal_status import personal_property_ids_by_tokens
+        ctx['personal_files_map'] = personal_property_ids_by_tokens(self.request.user, page_tokens)
         ctx['tx'] = tx
         all_qs = dataset.listings.all()
         from workspace.services.advertiser_signal import count_listings_by_advertiser_display
@@ -872,10 +870,8 @@ class MultiDatasetListingsView(LicenseRequiredMixin, TemplateView):
             user=self.request.user, token__in=page_tokens,
         )
         ctx['listing_metas'] = {m.token: m for m in metas}
-        personal_props = CRMProperty.objects.filter(
-            user=self.request.user, token__in=page_tokens,
-        )
-        ctx['personal_files_map'] = {p.token: p for p in personal_props}
+        from workspace.services.listing_personal_status import personal_property_ids_by_tokens
+        ctx['personal_files_map'] = personal_property_ids_by_tokens(self.request.user, page_tokens)
         ctx['tx'] = tx
         from workspace.services.advertiser_signal import count_listings_by_advertiser_display
         adv_counts = count_listings_by_advertiser_display(

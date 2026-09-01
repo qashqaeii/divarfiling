@@ -5527,6 +5527,78 @@ function initCRMPropertyFolderAssign(root) {
     });
 }
 
+function initCRMPropertyDuplicate() {
+    const modal = document.querySelector('[data-crm-prop-duplicate-modal]');
+    if (!modal || modal.dataset.propDuplicateBound === '1') return;
+    modal.dataset.propDuplicateBound = '1';
+
+    const base = window.crmPropertyDuplicateUrlBase || '/workspace/crm/properties/';
+    const cancelBtn = modal.querySelector('[data-crm-prop-duplicate-cancel]');
+    const confirmBtn = modal.querySelector('[data-crm-prop-duplicate-confirm]');
+    const confirmLabel = modal.querySelector('[data-crm-prop-duplicate-confirm-label]');
+    let activePropertyId = null;
+    let busy = false;
+
+    function duplicateUrl(propertyId) {
+        return `${base}${propertyId}/duplicate/`;
+    }
+
+    function closeModal() {
+        if (typeof modal.close === 'function') modal.close();
+        activePropertyId = null;
+    }
+
+    function setBusy(next) {
+        busy = next;
+        if (confirmBtn) confirmBtn.disabled = next;
+        if (cancelBtn) cancelBtn.disabled = next;
+        if (confirmLabel) {
+            confirmLabel.textContent = next ? 'در حال ساخت…' : 'ساخت کپی';
+        }
+    }
+
+    document.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-crm-prop-duplicate]');
+        if (!btn) return;
+        e.preventDefault();
+        e.stopPropagation();
+        const propertyId = btn.getAttribute('data-crm-prop-duplicate');
+        if (!propertyId || busy) return;
+        activePropertyId = propertyId;
+        if (typeof modal.showModal === 'function') modal.showModal();
+    });
+
+    cancelBtn?.addEventListener('click', closeModal);
+    modal.addEventListener('cancel', (e) => {
+        if (busy) e.preventDefault();
+    });
+
+    confirmBtn?.addEventListener('click', async () => {
+        if (!activePropertyId || busy) return;
+        setBusy(true);
+        try {
+            const resp = await fetch(duplicateUrl(activePropertyId), {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCsrfToken(),
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+            });
+            const data = await resp.json();
+            if (!data.ok) {
+                window.alert(data.error || 'کپی فایل انجام نشد.');
+                return;
+            }
+            closeModal();
+            window.location.href = data.redirect_url || `${base}${data.property?.id}/edit/`;
+        } catch (_err) {
+            window.alert('خطا در کپی فایل');
+        } finally {
+            setBusy(false);
+        }
+    });
+}
+
 function crmStripDrawerQueryParams() {
     const params = new URLSearchParams(window.location.search);
     if (!params.has('open') && !params.has('drawer')) return;
@@ -5602,6 +5674,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initCRMPropertyFolders(document);
     initCRMPropertyCabinets(document);
     initCRMPropertyFilingDragDrop(document);
+    initCRMPropertyDuplicate();
     initCRMPropertyFolderPicker(document);
     initCRMPropertyFolderAssign(document);
     initContactsMobileFilters();

@@ -407,7 +407,7 @@ def dataset_to_dict(
     return payload
 
 
-def listing_to_dict(lst: Listing) -> Dict[str, Any]:
+def listing_to_dict(lst: Listing, *, personal_status: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     image_urls = _listing_image_urls(lst)
     thumb = image_urls[0] if image_urls else ''
     adv_display = listing_advertiser_display(lst)
@@ -416,7 +416,7 @@ def listing_to_dict(lst: Listing) -> Dict[str, Any]:
     specs = _listing_specs(lst)
     transaction_type = 'اجاره' if (lst.rent or lst.deposit) else ('فروش' if lst.price else '')
 
-    return {
+    payload = {
         'token': lst.token,
         'title': lst.title or '',
         'price': lst.price,
@@ -443,6 +443,9 @@ def listing_to_dict(lst: Listing) -> Dict[str, Any]:
         'feature_highlights': feature_highlights_for_listing(lst, limit=5),
         **_listing_amenity_fields(lst),
     }
+    if personal_status is not None:
+        payload.update(personal_status)
+    return payload
 
 
 def _finite_number(value: Any) -> Optional[float]:
@@ -522,8 +525,8 @@ def _listing_market_to_dict(lst: Listing) -> Optional[Dict[str, Any]]:
         return None
 
 
-def listing_detail_to_dict(lst: Listing, *, user=None, request=None) -> Dict[str, Any]:
-    base = listing_to_dict(lst)
+def listing_detail_to_dict(lst: Listing, *, user=None, request=None, personal_status: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    base = listing_to_dict(lst, personal_status=personal_status)
     data = lst.data or {}
     images = _listing_image_urls(lst)
     specs = _listing_specs(lst)

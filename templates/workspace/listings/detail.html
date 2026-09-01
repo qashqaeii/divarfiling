@@ -48,9 +48,12 @@
                         </button>
                     </form>
                     {% if crm_property %}
-                    <a href="{% url 'workspace:crm_property_detail' crm_property.id %}" class="crm-prop-hero-act" title="مشاهده در فایل‌های شخصی">
-                        <i class="fas fa-folder-open" aria-hidden="true"></i><span>فایل شخصی</span>
+                    <a href="{% url 'workspace:crm_property_detail' crm_property.id %}" class="crm-prop-hero-act" title="مشاهده فایل شخصی">
+                        <i class="fas fa-folder-open" aria-hidden="true"></i><span>مشاهده فایل شخصی</span>
                     </a>
+                    <span class="crm-prop-hero-act crm-prop-hero-act--disabled" title="این آگهی قبلاً به فایل‌های شخصی شما اضافه شده است.">
+                        <i class="fas fa-check" aria-hidden="true"></i><span>قبلاً اضافه شده</span>
+                    </span>
                     {% else %}
                     <form method="post" action="{% url 'workspace:listing_add_personal' dataset.id listing.id %}" class="ws-ld-hero-form">
                         {% csrf_token %}
@@ -117,7 +120,7 @@
                         </span>
                         {% endif %}
                         {% if meta.is_favorite %}<span class="crm-prop-badge crm-prop-badge--deal">علاقه‌مند</span>{% endif %}
-                        {% if crm_property %}<span class="crm-prop-badge crm-prop-badge--status">فایل شخصی</span>{% endif %}
+                        {% if crm_property %}<span class="crm-prop-badge crm-prop-badge--personal" title="این فایل قبلاً به فایل‌های شخصی شما اضافه شده است.">به فایل‌های شخصی اضافه شده</span>{% endif %}
                         {% if listing.is_expired %}<span class="crm-prop-badge ws-ld-badge-expired">منقضی</span>{% endif %}
                         {% if feat.is_vacant %}
                         <span class="crm-prop-badge ws-ld-badge-vacant" title="ملک در حال حاضر تخلیه است">
@@ -526,7 +529,10 @@
                     <div><dt>فایلینگ</dt><dd>{{ dataset.name }}</dd></div>
                     {% if listing.published_at %}<div><dt>انتشار</dt><dd>{{ listing.published_at|ws_jalali }}</dd></div>{% endif %}
                     {% if listing.is_expired %}<div><dt>وضعیت</dt><dd>منقضی</dd></div>{% endif %}
-                    {% if crm_property %}<div><dt>فایل شخصی</dt><dd><a href="{% url 'workspace:crm_property_detail' crm_property.id %}">مشاهده</a></dd></div>{% endif %}
+                    {% if crm_property %}
+                    <div><dt>فایل شخصی</dt><dd><a href="{% url 'workspace:crm_property_detail' crm_property.id %}">مشاهده فایل شخصی</a></dd></div>
+                    <p class="ws-ld-personal-notice">این فایل قبلاً به فایل‌های شخصی شما اضافه شده است.</p>
+                    {% endif %}
                 </dl>
             </div>
 
@@ -681,8 +687,9 @@
                 {% if crm_property %}
                 <a href="{% url 'workspace:crm_property_detail' crm_property.id %}" class="ws-ld-mob-more__act">
                     <i class="fas fa-folder-open" aria-hidden="true"></i>
-                    <span>فایل شخصی</span>
+                    <span>مشاهده فایل شخصی</span>
                 </a>
+                <p class="ws-ld-mob-more__notice">این فایل قبلاً به فایل‌های شخصی شما اضافه شده است.</p>
                 {% else %}
                 <form method="post" action="{% url 'workspace:listing_add_personal' dataset.id listing.id %}" class="ws-ld-mob-more__form">
                     {% csrf_token %}

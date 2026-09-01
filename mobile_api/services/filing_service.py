@@ -210,8 +210,8 @@ def _value_map_for_dataset(ds: Dataset) -> Dict[int, float]:
     return value_map
 
 
-def _listing_dict_with_value(lst: Listing, value_map: Dict[int, float]) -> dict:
-    payload = listing_to_dict(lst)
+def _listing_dict_with_value(lst: Listing, value_map: Dict[int, float], *, personal_status: Optional[dict] = None) -> dict:
+    payload = listing_to_dict(lst, personal_status=personal_status)
     score = value_map.get(lst.pk)
     if score is None:
         return payload
@@ -293,7 +293,20 @@ def list_listings(
     paginator = Paginator(qs, page_size)
     page_obj = paginator.get_page(page)
     value_map = _value_map_for_dataset(ds)
-    items = [_listing_dict_with_value(lst, value_map) for lst in page_obj.object_list]
+    from workspace.services.listing_personal_status import (
+        annotate_listings_personal_status,
+        personal_status_payload,
+    )
+
+    annotated = annotate_listings_personal_status(
+        Listing.objects.filter(pk__in=[lst.pk for lst in page_obj.object_list]),
+        user,
+    )
+    status_by_pk = {lst.pk: personal_status_payload(lst) for lst in annotated}
+    items = [
+        _listing_dict_with_value(lst, value_map, personal_status=status_by_pk.get(lst.pk))
+        for lst in page_obj.object_list
+    ]
     return items, {
         'page': page,
         'page_size': page_size,
@@ -312,7 +325,17 @@ def get_listing_detail(user, token: str, request=None) -> Optional[dict]:
     ).select_related('dataset').first()
     if not lst:
         return None
-    return listing_detail_to_dict(lst, user=user, request=request)
+    from workspace.services.listing_personal_status import (
+        DIVAR_SOURCE_PLATFORM,
+        get_crm_property_by_source,
+    )
+
+    prop = get_crm_property_by_source(user, DIVAR_SOURCE_PLATFORM, lst.token)
+    status = {
+        'is_added_to_personal': bool(prop),
+        'personal_property_id': prop.pk if prop else None,
+    }
+    return listing_detail_to_dict(lst, user=user, request=request, personal_status=status)
 
 
 def get_listing_public_share(user, token: str, request=None) -> Optional[dict]:
@@ -510,9 +533,23 @@ def search_listings(
     )
     paginator = Paginator(qs, page_size)
     page_obj = paginator.get_page(page)
+    from workspace.services.listing_personal_status import (
+        annotate_listings_personal_status,
+        personal_status_payload,
+    )
+
+    page_listings = list(page_obj.object_list)
+    if page_listings:
+        annotated = annotate_listings_personal_status(
+            Listing.objects.filter(pk__in=[lst.pk for lst in page_listings]),
+            user,
+        )
+        status_by_token = {lst.token: personal_status_payload(lst) for lst in annotated}
+    else:
+        status_by_token = {}
     items: List[dict] = []
-    for lst in page_obj.object_list:
-        row = listing_to_dict(lst)
+    for lst in page_listings:
+        row = listing_to_dict(lst, personal_status=status_by_token.get(lst.token))
         row['dataset_name'] = lst.dataset.name if lst.dataset else ''
         items.append(row)
     return items, {

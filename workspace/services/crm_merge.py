@@ -1,16 +1,58 @@
 """ادغام مخاطبین تکراری CRM."""
 from __future__ import annotations
 
+import re
 from collections import defaultdict
 from typing import Any, Dict, List, Optional, Tuple
 
 from django.db import transaction
+from django.db.models import Q
 
 from workspace.models import (
     CRMDeal, Customer, CustomerActivity, CustomerDocument,
     CustomerListing, PropertyContact, PropertyVisit, Reminder,
 )
 from workspace.services.crm import log_activity, normalize_phone
+from workspace.services.crm_scope import customers_qs
+
+
+def normalize_contact_name(name: str) -> str:
+    """نرمال‌سازی نام برای مقایسه تکراری."""
+    return re.sub(r'\s+', ' ', (name or '').strip())
+
+
+def duplicate_contact_message(existing: Customer) -> str:
+    phone_display = existing.phone or '—'
+    return (
+        f'مخاطبی با نام «{existing.name}» و شماره «{phone_display}» '
+        f'قبلاً در مخاطبین ثبت شده است.'
+    )
+
+
+def find_duplicate_contact(
+    user,
+    name: str,
+    phone: str,
+    *,
+    exclude_pk: Optional[int] = None,
+) -> Optional[Customer]:
+    """یافتن مخاطب تکراری بر اساس نام و شماره تماس (هر دو باید یکسان باشند)."""
+    phone_key = normalize_phone(phone)
+    name_key = normalize_contact_name(name).casefold()
+    if len(phone_key) < 10 or not name_key:
+        return None
+
+    qs = customers_qs(user).filter(Q(phone__gt='') | Q(phone_alt__gt=''))
+    if exclude_pk:
+        qs = qs.exclude(pk=exclude_pk)
+
+    for customer in qs.only('id', 'name', 'phone', 'phone_alt'):
+        if not _phone_matches(customer, phone_key):
+            continue
+        if normalize_contact_name(customer.name).casefold() != name_key:
+            continue
+        return customer
+    return None
 
 
 def find_duplicate_groups(user, *, min_group_size: int = 2) -> List[Dict[str, Any]]:

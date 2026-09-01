@@ -65,10 +65,12 @@ def _import_contacts(user, agency, rows: List[dict], *, merge: bool, dry_run: bo
             continue
         existing = None
         if phone:
-            existing = customers_qs(user).filter(phone=phone).first()
-        if existing and merge:
-            stats['conflicts'] += 1
+            from workspace.services.crm_merge import find_duplicate_contact
+            existing = find_duplicate_contact(user, name, phone)
+        if existing:
             stats['skipped'] += 1
+            if merge:
+                stats['conflicts'] += 1
             continue
         if dry_run:
             stats['contacts'] += 1

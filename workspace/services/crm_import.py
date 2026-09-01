@@ -54,10 +54,14 @@ def import_contacts_from_file(user, uploaded_file) -> Tuple[int, int, List[str]]
     if df.empty:
         return 0, 0, ['فایل خالی است.']
 
-    existing_phones = {
-        normalize_phone(c.phone)
-        for c in Customer.objects.filter(user=user).exclude(phone='')
-    }
+    from workspace.services.crm_merge import normalize_contact_name
+
+    existing_keys = set()
+    for c in Customer.objects.filter(user=user):
+        phone_key = normalize_phone(c.phone)
+        name_key = normalize_contact_name(c.name).casefold()
+        if len(phone_key) >= 10 and name_key:
+            existing_keys.add((name_key, phone_key))
 
     for idx, row in df.iterrows():
         row_dict = {str(k): row[k] for k in df.columns}
@@ -69,7 +73,8 @@ def import_contacts_from_file(user, uploaded_file) -> Tuple[int, int, List[str]]
 
         phone = _clean_str(data.get('phone'))
         phone_key = normalize_phone(phone)
-        if phone_key and phone_key in existing_phones:
+        name_key = normalize_contact_name(name_val).casefold()
+        if len(phone_key) >= 10 and name_key and (name_key, phone_key) in existing_keys:
             skipped += 1
             continue
 
@@ -105,8 +110,8 @@ def import_contacts_from_file(user, uploaded_file) -> Tuple[int, int, List[str]]
             notes=_clean_str(data.get('notes')),
         )
         log_activity(customer, 'یادداشت', content='واردشده از فایل', title='Import')
-        if phone_key:
-            existing_phones.add(phone_key)
+        if len(phone_key) >= 10 and name_key:
+            existing_keys.add((name_key, phone_key))
         created += 1
 
     return created, skipped, errors

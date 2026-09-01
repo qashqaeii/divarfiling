@@ -191,6 +191,10 @@ def update_contact(user, contact_id: int, data: Dict[str, Any]) -> Optional[Cust
             )
         except ValueError as exc:
             raise ValueError(str(exc)) from exc
+    from workspace.services.crm_merge import duplicate_contact_message, find_duplicate_contact
+    duplicate = find_duplicate_contact(user, c.name, c.phone, exclude_pk=c.pk)
+    if duplicate:
+        raise ValueError(duplicate_contact_message(duplicate))
     c.save()
     return c
 
@@ -208,12 +212,17 @@ def _optional_int(value):
 
 
 def create_quick_lead(user, data: Dict[str, Any]) -> Customer:
+    from workspace.services.crm_merge import duplicate_contact_message, find_duplicate_contact
+
     name = (data.get('full_name') or data.get('name') or '').strip()
     phone = normalize_phone(data.get('phone') or '')
     if not name:
         raise ValueError('نام الزامی است.')
     if not phone:
         raise ValueError('شماره تلفن نامعتبر است.')
+    duplicate = find_duplicate_contact(user, name, phone)
+    if duplicate:
+        raise ValueError(duplicate_contact_message(duplicate))
     source = (data.get('source') or 'موبایل').strip()[:30]
     valid_sources = {s for s, _ in Customer._meta.get_field('source').choices}
     if source not in valid_sources:

@@ -390,7 +390,7 @@ class CustomerQuickCreateView(LoginRequiredMixin, View):
     """ثبت سریع سرنخ."""
 
     def post(self, request):
-        form = QuickLeadForm(request.POST)
+        form = QuickLeadForm(request.POST, user=request.user)
         if form.is_valid():
             customer = form.save(user=request.user)
             log_activity(customer, 'یادداشت', content='سرنخ سریع ثبت شد.', title='ثبت سرنخ')
@@ -600,6 +600,11 @@ class CustomerCreateView(LoginRequiredMixin, CreateView):
     form_class = CustomerForm
     template_name = 'workspace/crm/contacts/list.html'
     success_url = reverse_lazy('workspace:crm_contacts')
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
 
     def get(self, request, *args, **kwargs):
         return redirect(f"{reverse('workspace:crm_contacts')}?open=drawer-contact")
@@ -1013,6 +1018,11 @@ class CustomerUpdateView(LoginRequiredMixin, UpdateView):
 
     def get_queryset(self):
         return customers_qs(self.request.user).filter(user=self.request.user)
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
 
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
@@ -1735,7 +1745,7 @@ class CRMPropertyDetailView(CRMContextMixin, LoginRequiredMixin, DetailView):
                 messages.success(request, 'مدرک آپلود شد.')
             redirect_url = self._detail_redirect(property_id, tab='docs')
         elif action == 'create_link_contact':
-            lead_form = QuickLeadForm(request.POST)
+            lead_form = QuickLeadForm(request.POST, user=request.user)
             link_form = PropertyLinkForm(request.POST)
             if lead_form.is_valid() and link_form.is_valid():
                 customer = lead_form.save(user=request.user)

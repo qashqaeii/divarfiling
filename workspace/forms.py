@@ -181,7 +181,8 @@ class CustomerForm(CRMMoneyFieldsMixin, forms.ModelForm):
         }),
     )
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, user=None, **kwargs):
+        self._crm_user = user
         super().__init__(*args, **kwargs)
         if self.instance.pk and self.instance.next_follow_up and not self.is_bound:
             jalali = format_jalali_date(self.instance.next_follow_up)
@@ -223,6 +224,26 @@ class CustomerForm(CRMMoneyFieldsMixin, forms.ModelForm):
         if parsed is None:
             raise forms.ValidationError('تاریخ شمسی نامعتبر است. مثال: ۱۴۰۴/۰۶/۱۵')
         return parsed
+
+    def clean_phone(self):
+        from workspace.services.crm import normalize_phone
+        return normalize_phone(self.cleaned_data.get('phone') or '')
+
+    def clean(self):
+        cleaned = super().clean()
+        user = self._crm_user or getattr(self.instance, 'user', None)
+        if not user:
+            return cleaned
+        from workspace.services.crm_merge import duplicate_contact_message, find_duplicate_contact
+        duplicate = find_duplicate_contact(
+            user,
+            cleaned.get('name', ''),
+            cleaned.get('phone', ''),
+            exclude_pk=self.instance.pk if self.instance.pk else None,
+        )
+        if duplicate:
+            raise forms.ValidationError(duplicate_contact_message(duplicate))
+        return cleaned
 
     def save(self, commit=True):
         instance = super().save(commit=False)
@@ -313,6 +334,27 @@ class CustomerForm(CRMMoneyFieldsMixin, forms.ModelForm):
 
 class QuickLeadForm(forms.ModelForm):
     """ثبت سریع سرنخ — نام، تلفن، منبع."""
+
+    def __init__(self, *args, user=None, **kwargs):
+        self._crm_user = user
+        super().__init__(*args, **kwargs)
+
+    def clean_phone(self):
+        from workspace.services.crm import normalize_phone
+        return normalize_phone(self.cleaned_data.get('phone') or '')
+
+    def clean(self):
+        cleaned = super().clean()
+        if self._crm_user:
+            from workspace.services.crm_merge import duplicate_contact_message, find_duplicate_contact
+            duplicate = find_duplicate_contact(
+                self._crm_user,
+                cleaned.get('name', ''),
+                cleaned.get('phone', ''),
+            )
+            if duplicate:
+                raise forms.ValidationError(duplicate_contact_message(duplicate))
+        return cleaned
 
     class Meta:
         model = Customer

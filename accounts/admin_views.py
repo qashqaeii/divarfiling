@@ -184,14 +184,19 @@ class AdminExportView(StaffRequiredMixin, View):
         days = request.GET.get('days')
         days_int = None
         if days:
-            try:
-                days_int = max(1, min(int(days), 365))
-            except (TypeError, ValueError):
-                days_int = None
+            if str(days).strip().lower() == 'all':
+                from accounts.services.admin_dashboard import ALL_TIME_DAYS
+                days_int = ALL_TIME_DAYS
+            else:
+                try:
+                    days_int = max(1, min(int(days), 365))
+                except (TypeError, ValueError):
+                    days_int = None
 
         meta = EXPORT_REGISTRY[export_key]
         if meta.get('supports_days') and days_int is None:
-            days_int = 30
+            from accounts.services.admin_dashboard import ALL_TIME_DAYS
+            days_int = ALL_TIME_DAYS
 
         return build_export(export_key, fmt=fmt, days=days_int)
 
@@ -681,7 +686,7 @@ class AdminPlanConversionView(StaffRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        days = _parse_int(self.request.GET.get('days'), 30, minimum=7, maximum=365)
+        days, range_key = parse_admin_panel_range(self.request)
         data = get_plan_conversion_context(days=days)
         ctx.update(data)
         ctx['summary'] = data['summary']
@@ -693,6 +698,7 @@ class AdminPlanConversionView(StaffRequiredMixin, TemplateView):
             if k != 'series'
         }
         ctx['plan_conversion_json'] = json.dumps(chart_payload, ensure_ascii=False, default=str)
+        ctx['admin_panel_range_key'] = range_key
         return ctx
 
 
@@ -700,7 +706,7 @@ class AdminPlanConversionJsonView(StaffRequiredMixin, View):
     """خروجی JSON کامل آنالیز تبدیل پلن‌ها."""
 
     def get(self, request):
-        days = _parse_int(request.GET.get('days'), 30, minimum=7, maximum=365)
+        days, _range_key = parse_admin_panel_range(request)
         payload = build_plan_conversion_json(days=days)
         download = request.GET.get('download', '0') not in ('0', 'false', 'no', '')
         response = JsonResponse(payload, json_dumps_params={'ensure_ascii': False, 'indent': 2})
@@ -719,7 +725,7 @@ class AdminRecoveryCenterView(StaffRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        days = _parse_int(self.request.GET.get('days'), 30, minimum=7, maximum=365)
+        days, range_key = parse_admin_panel_range(self.request)
         page = _parse_int(self.request.GET.get('page'), 1, minimum=1, maximum=9999)
         data = get_recovery_center_context(days=days, page=page)
         ctx.update(data)
@@ -729,6 +735,7 @@ class AdminRecoveryCenterView(StaffRequiredMixin, TemplateView):
             default=str,
         )
         ctx['page'] = page
+        ctx['admin_panel_range_key'] = range_key
         return ctx
 
 
@@ -736,7 +743,7 @@ class AdminRecoveryCenterJsonView(StaffRequiredMixin, View):
     """JSON data product — Recovery Center."""
 
     def get(self, request):
-        days = _parse_int(request.GET.get('days'), 30, minimum=7, maximum=365)
+        days, _range_key = parse_admin_panel_range(request)
         page = _parse_int(request.GET.get('page'), 1, minimum=1, maximum=9999)
         payload = build_recovery_center_json(days=days, page=page)
         download = request.GET.get('download', '0') not in ('0', 'false', 'no', '')

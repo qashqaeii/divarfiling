@@ -167,7 +167,7 @@
         <div>
             <h2><i class="fas fa-clock"></i> ثبت‌نام‌های اخیر</h2>
         </div>
-        <a href="{% url 'admin_panel_export' 'new_users' %}?format=xlsx&days={{ chart_days }}" class="ecc-btn ecc-btn--ghost ecc-btn--sm">
+        <a href="{% url 'admin_panel_export' 'new_users' %}?format=xlsx&days={{ admin_panel_range_key }}" class="ecc-btn ecc-btn--ghost ecc-btn--sm">
             خروجی <i class="fas fa-file-excel"></i>
         </a>
     </header>
@@ -351,7 +351,7 @@
             <span class="ecc-module-icon"><i class="fas {{ exp.icon }}"></i></span>
             <span class="ecc-module-text">
                 <strong>{{ exp.title }}</strong>
-                <em>{% if exp.supports_days %}بازه {{ chart_days|to_persian_digits }} روز{% else %}کل{% endif %}</em>
+                <em>{% if exp.supports_days %}{% if admin_panel_range_key == 'all' %}کل بازه{% else %}بازه {{ chart_days|to_persian_digits }} روز{% endif %}{% else %}کل{% endif %}</em>
             </span>
             {% if exp.count %}<span class="ecc-module-badge">{{ exp.count|to_persian_digits }}</span>{% endif %}
         </a>

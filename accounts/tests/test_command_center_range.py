@@ -8,10 +8,12 @@ from django.urls import reverse
 from django.utils import timezone
 
 from accounts.services.admin_dashboard import (
+    ALL_TIME_DAYS,
     _date_range,
     _new_users_for_period,
     _orders_paid_for_period,
     _previous_period_bounds,
+    _range_label_fa,
     _revenue_for_period,
     get_command_center_context,
 )
@@ -45,6 +47,13 @@ class CommandCenterRangeHelperTests(TestCase):
             status='paid',
             paid_at=paid_at,
         )
+
+    def test_all_time_range_label(self):
+        self.assertEqual(_range_label_fa(ALL_TIME_DAYS), 'کل بازه')
+
+    def test_all_time_window_starts_at_system_start(self):
+        start, end = _date_range(ALL_TIME_DAYS)
+        self.assertLessEqual(start, end)
 
     def test_today_window_is_single_calendar_day(self):
         start, end = _date_range(1)
@@ -103,12 +112,34 @@ class CommandCenterRangeViewTests(TestCase):
         )
         self.client.login(username='admstaff', password='pass1234')
 
+    def test_parse_admin_panel_range_all_default(self):
+        factory = RequestFactory()
+        request = factory.get('/accounts/admin-panel/')
+        days, key = parse_admin_panel_range(request)
+        self.assertEqual(days, 0)
+        self.assertEqual(key, 'all')
+
+    def test_parse_admin_panel_range_all_explicit(self):
+        factory = RequestFactory()
+        request = factory.get('/accounts/admin-panel/', {'days': 'all'})
+        days, key = parse_admin_panel_range(request)
+        self.assertEqual(days, 0)
+        self.assertEqual(key, 'all')
+
     def test_parse_admin_panel_range_today(self):
         factory = RequestFactory()
         request = factory.get('/accounts/admin-panel/', {'days': '1'})
         days, key = parse_admin_panel_range(request)
         self.assertEqual(days, 1)
         self.assertEqual(key, '1')
+
+    def test_default_range_is_all(self):
+        resp = self.client.get(reverse('admin_panel'))
+        self.assertEqual(resp.status_code, 200)
+        content = resp.content.decode()
+        self.assertIn('data-range="all"', content)
+        self.assertIn('ecc-range-btn is-active', content)
+        self.assertIn('کل بازه', content)
 
     def test_only_one_range_button_active_for_90(self):
         resp = self.client.get(reverse('admin_panel'), {'days': '90'})
@@ -121,6 +152,7 @@ class CommandCenterRangeViewTests(TestCase):
 
     def test_compare_preserved_in_range_links(self):
         resp = self.client.get(reverse('admin_panel'), {'days': '30', 'compare': '1'})
+        self.assertContains(resp, '?days=all&amp;compare=1')
         self.assertContains(resp, '?days=7&amp;compare=1')
 
     def test_retention_label_fixed_30d(self):

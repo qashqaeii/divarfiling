@@ -28,10 +28,10 @@
 {% endblock %}
 
 {% block admin_panel_header_actions %}
-<a href="{% url 'admin_panel_export' 'paid_orders' %}?format=xlsx&days={{ chart_days }}" class="ecc-btn ecc-btn--primary" title="خروجی اکسل">
+<a href="{% url 'admin_panel_export' 'paid_orders' %}?format=xlsx&days={{ admin_panel_range_key }}" class="ecc-btn ecc-btn--primary" title="خروجی اکسل">
     <i class="fas fa-file-excel"></i>
 </a>
-<a href="{% url 'admin_panel_system_summary' %}?days={{ chart_days }}&download=1" class="ecc-btn ecc-btn--ghost" title="JSON">
+<a href="{% url 'admin_panel_system_summary' %}?days={{ admin_panel_range_key }}&download=1" class="ecc-btn ecc-btn--ghost" title="JSON">
     <i class="fas fa-file-code"></i>
 </a>
 <a href="/admin/" class="ecc-btn ecc-btn--ghost" target="_blank" rel="noopener" title="Django Admin">
@@ -44,7 +44,7 @@
 <section class="ecc-section ecc-cmd-kpi" aria-label="شاخص‌های کلیدی">
     <header class="ecc-cmd-section-label">
         <span>شاخص‌های کلیدی</span>
-        <em>{% if chart_days == 1 %}امروز{% else %}{{ chart_days|to_persian_digits }} روز{% endif %}</em>
+        <em>{% if admin_panel_range_key == 'all' %}کل بازه{% elif chart_days == 1 %}امروز{% else %}{{ chart_days|to_persian_digits }} روز{% endif %}</em>
     </header>
     <div class="ecc-kpi-grid ecc-kpi-grid--cmd">
         {% for card in kpi_cards %}
@@ -154,14 +154,14 @@
 <section class="ecc-section ecc-cmd-charts" id="ecc-charts" aria-label="نمودارهای مدیریتی">
     <header class="ecc-cmd-section-label">
         <span>تحلیل و روند</span>
-        <em>{% if chart_days == 1 %}امروز{% else %}{{ chart_days|to_persian_digits }} روز{% endif %}</em>
+        <em>{% if admin_panel_range_key == 'all' %}کل بازه{% elif chart_days == 1 %}امروز{% else %}{{ chart_days|to_persian_digits }} روز{% endif %}</em>
     </header>
     <div class="ecc-cmd-charts-grid">
         <article class="ecc-card ecc-card--chart ecc-cmd-chart-revenue">
             <div class="ecc-card-head">
                 <div>
                     <h3><i class="fas fa-chart-area"></i> روند درآمد</h3>
-                    <p>{% if chart_days == 1 %}امروز{% else %}{{ chart_days|to_persian_digits }} روز اخیر{% endif %}</p>
+                    <p>{% if admin_panel_range_key == 'all' %}کل بازه{% elif chart_days == 1 %}امروز{% else %}{{ chart_days|to_persian_digits }} روز اخیر{% endif %}</p>
                 </div>
             </div>
             <div class="ecc-chart-wrap ecc-chart-wrap--tall">
@@ -298,44 +298,44 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script>
 window.admCharts = {{ charts_json|safe }};
-window.admChartDays = {{ chart_days }};
+window.admChartDays = {{ chart_days_effective|default:chart_days }};
 </script>
 <script src="{% static 'js/mizkar-admin-dashboard.js' %}?v=14"></script>
 <script>
 if (location.hash === '#ecc-users') {
-    var q = location.search || '?days=30';
+    var q = location.search || '?days=all';
     window.location.replace('{% url "admin_panel_users" %}' + q);
 }
 if (location.hash === '#ecc-licensing') {
-    var q2 = location.search || '?days=30';
+    var q2 = location.search || '?days=all';
     window.location.replace('{% url "admin_panel_licenses" %}' + q2);
 }
 if (location.hash === '#ecc-operations') {
-    var q3 = location.search || '?days=30';
+    var q3 = location.search || '?days=all';
     window.location.replace('{% url "admin_panel_operations" %}' + q3);
 }
 if (location.hash === '#ecc-support') {
-    var q4 = location.search || '?days=30';
+    var q4 = location.search || '?days=all';
     window.location.replace('{% url "admin_panel_support" %}' + q4);
 }
 if (location.hash === '#ecc-activity') {
-    var q5 = location.search || '?days=30';
+    var q5 = location.search || '?days=all';
     window.location.replace('{% url "admin_panel_activity" %}' + q5);
 }
 if (location.hash === '#ecc-windows') {
-    var q6 = location.search || '?days=30';
+    var q6 = location.search || '?days=all';
     window.location.replace('{% url "admin_panel_windows" %}' + q6);
 }
 if (location.hash === '#ecc-crm') {
-    var q7 = location.search || '?days=30';
+    var q7 = location.search || '?days=all';
     window.location.replace('{% url "admin_panel_crm" %}' + q7);
 }
 if (location.hash === '#ecc-affiliates') {
-    var q8 = location.search || '?days=30';
+    var q8 = location.search || '?days=all';
     window.location.replace('{% url "admin_panel_affiliates" %}' + q8);
 }
 if (location.hash === '#ecc-exports') {
-    var q9 = location.search || '?days=30';
+    var q9 = location.search || '?days=all';
     window.location.replace('{% url "admin_panel_exports" %}' + q9);
 }
 </script>

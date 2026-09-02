@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import csv
 import io
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import Any, Callable, Dict, Iterable, List, Tuple
 
 import jdatetime
@@ -115,9 +115,14 @@ def _paid_orders_rows(days: int | None = None) -> Tuple[List[str], Iterable[Expo
         'تخفیف (تومان)', 'روش پرداخت', 'تاریخ پرداخت', 'تاریخ ایجاد',
     ]
     qs = Order.objects.filter(status='paid').select_related('user', 'product', 'plan')
-    if days:
-        since = timezone.now() - timedelta(days=days)
-        qs = qs.filter(paid_at__gte=since)
+    if days is not None:
+        from accounts.services.admin_dashboard import all_time_start_date, is_all_time_range
+
+        if is_all_time_range(days):
+            qs = qs.filter(paid_at__date__gte=all_time_start_date())
+        elif days:
+            since = timezone.now() - timedelta(days=days)
+            qs = qs.filter(paid_at__gte=since)
     qs = qs.order_by('-paid_at')
     rows = [
         {
@@ -199,7 +204,15 @@ def _all_users_rows() -> Tuple[List[str], Iterable[ExportRow]]:
 
 def _new_users_rows(days: int = 30) -> Tuple[List[str], Iterable[ExportRow]]:
     headers = ['نام', 'موبایل', 'ایمیل', 'سفارش پرداخت‌شده', 'تاریخ عضویت']
-    since = timezone.now() - timedelta(days=days)
+    from accounts.services.admin_dashboard import all_time_start_date, is_all_time_range
+
+    if is_all_time_range(days):
+        since = timezone.make_aware(
+            datetime.combine(all_time_start_date(), datetime.min.time()),
+            timezone.get_current_timezone(),
+        )
+    else:
+        since = timezone.now() - timedelta(days=days)
     qs = (
         User.objects.filter(date_joined__gte=since)
         .annotate(paid_orders=Count('orders', filter=Q(orders__status='paid')))
@@ -703,14 +716,24 @@ EXPORT_REGISTRY: Dict[str, Dict[str, Any]] = {
 
 def get_export_count(export_key: str, days: int | None = None) -> int:
     """تعداد ردیف هر گزارش برای نمایش در داشبورد."""
+    from accounts.services.admin_dashboard import all_time_start_date, is_all_time_range
+
     meta = EXPORT_REGISTRY.get(export_key)
     if not meta:
         return 0
-    if export_key == 'paid_orders' and days:
+    if export_key == 'paid_orders' and days is not None:
+        if is_all_time_range(days):
+            return Order.objects.filter(status='paid', paid_at__date__gte=all_time_start_date()).count()
         since = timezone.now() - timedelta(days=days)
         return Order.objects.filter(status='paid', paid_at__gte=since).count()
-    if export_key == 'new_users' and days:
-        since = timezone.now() - timedelta(days=days)
+    if export_key == 'new_users' and days is not None:
+        if is_all_time_range(days):
+            since = timezone.make_aware(
+                datetime.combine(all_time_start_date(), datetime.min.time()),
+                timezone.get_current_timezone(),
+            )
+        else:
+            since = timezone.now() - timedelta(days=days)
         return User.objects.filter(date_joined__gte=since).count()
     _, rows = meta['builder']()
     if isinstance(rows, list):
@@ -742,7 +765,7 @@ def build_export(export_key: str, fmt: str = 'xlsx', days: int | None = None) ->
         return HttpResponse('گزارش یافت نشد', status=404)
 
     builder = meta['builder']
-    if meta.get('supports_days') and days:
+    if meta.get('supports_days') and days is not None:
         if export_key == 'paid_orders':
             headers, rows = _paid_orders_rows(days=days)
         elif export_key == 'new_users':
@@ -756,8 +779,10 @@ def build_export(export_key: str, fmt: str = 'xlsx', days: int | None = None) ->
         rows = list(rows)
 
     filename_base = f'filing-divar-{export_key}'
-    if days and meta.get('supports_days'):
-        filename_base += f'-{days}d'
+    if days is not None and meta.get('supports_days'):
+        from accounts.services.admin_dashboard import is_all_time_range
+
+        filename_base += '-all' if is_all_time_range(days) else f'-{days}d'
 
     if fmt == 'csv':
         return _build_csv_response(headers, rows, filename_base)

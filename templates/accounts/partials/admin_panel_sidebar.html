@@ -4,7 +4,7 @@
         <i class="fas fa-times" aria-hidden="true"></i>
     </button>
 
-    {% with days_qs=admin_panel_query_suffix|default:'?days=30' active=admin_panel_nav_active|default:'' %}
+    {% with days_qs=admin_panel_query_suffix|default:'?days=all' active=admin_panel_nav_active|default:'' %}
 
     <a href="{% url 'admin_panel' %}{{ days_qs }}"
        class="ecc-nav-item{% if active == 'command' %} is-active{% endif %}"

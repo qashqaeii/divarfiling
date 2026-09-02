@@ -73,8 +73,38 @@ def _today():
     return timezone.now().date()
 
 
+ALL_TIME_DAYS = 0
+
+
+def is_all_time_range(days: int | None) -> bool:
+    return days == ALL_TIME_DAYS
+
+
+def all_time_start_date():
+    """اولین روز تقویمی داده‌های سیستم برای بازه «کل»."""
+    system_start_at = get_system_start_at()
+    if system_start_at:
+        local = (
+            timezone.localtime(system_start_at)
+            if timezone.is_aware(system_start_at)
+            else system_start_at
+        )
+        return local.date()
+    return _today()
+
+
+def effective_range_days(days: int) -> int:
+    """طول بازه به روز — برای نمودار و برچسب‌ها."""
+    if is_all_time_range(days):
+        start, end = _date_range(days)
+        return max(1, (end - start).days + 1)
+    return days
+
+
 def _date_range(days: int):
     end = _today()
+    if is_all_time_range(days):
+        return all_time_start_date(), end
     start = end - timedelta(days=days - 1)
     return start, end
 
@@ -241,6 +271,7 @@ def get_overview_stats() -> Dict[str, Any]:
 
 def get_revenue_series(days: int = 30) -> Dict[str, List]:
     start, end = _date_range(days)
+    label_days = effective_range_days(days)
     rows = (
         Order.objects.filter(status='paid', paid_at__date__gte=start, paid_at__date__lte=end)
         .annotate(day=TruncDate('paid_at'))
@@ -248,12 +279,13 @@ def get_revenue_series(days: int = 30) -> Dict[str, List]:
         .annotate(total=Sum('amount'))
         .order_by('day')
     )
-    labels, values = _fill_daily_series(start, end, rows, value_key='total', money=True, days=days)
+    labels, values = _fill_daily_series(start, end, rows, value_key='total', money=True, days=label_days)
     return {'labels': labels, 'values': values}
 
 
 def get_user_registration_series(days: int = 30) -> Dict[str, List]:
     start, end = _date_range(days)
+    label_days = effective_range_days(days)
     rows = (
         User.objects.filter(date_joined__date__gte=start, date_joined__date__lte=end)
         .annotate(day=TruncDate('date_joined'))
@@ -261,7 +293,7 @@ def get_user_registration_series(days: int = 30) -> Dict[str, List]:
         .annotate(count=Count('id'))
         .order_by('day')
     )
-    labels, values = _fill_daily_series(start, end, rows, days=days)
+    labels, values = _fill_daily_series(start, end, rows, days=label_days)
     return {'labels': labels, 'values': values}
 
 
@@ -781,6 +813,7 @@ def get_users_active_on_date(day=None) -> int:
 
 def get_order_count_series(days: int = 30) -> Dict[str, List]:
     start, end = _date_range(days)
+    label_days = effective_range_days(days)
     rows = (
         Order.objects.filter(status='paid', paid_at__date__gte=start, paid_at__date__lte=end)
         .annotate(day=TruncDate('paid_at'))
@@ -788,13 +821,14 @@ def get_order_count_series(days: int = 30) -> Dict[str, List]:
         .annotate(count=Count('id'))
         .order_by('day')
     )
-    labels, values = _fill_daily_series(start, end, rows, days=days)
+    labels, values = _fill_daily_series(start, end, rows, days=label_days)
     return {'labels': labels, 'values': values}
 
 
 def _sparkline_values(days: int, rows, value_key: str = 'count', money: bool = False) -> List[int]:
     start, end = _date_range(days)
-    _, values = _fill_daily_series(start, end, rows, value_key=value_key, money=money, days=days)
+    label_days = effective_range_days(days)
+    _, values = _fill_daily_series(start, end, rows, value_key=value_key, money=money, days=label_days)
     return values
 
 
@@ -968,6 +1002,10 @@ def build_kpi_cards(stats: Dict[str, Any], today_stats: Dict[str, Any], yesterda
 
 def _previous_period_bounds(days: int):
     """بازه قبلی با همان طول تقویمی."""
+    if is_all_time_range(days):
+        start, _end = _date_range(days)
+        empty_day = start - timedelta(days=1)
+        return empty_day, empty_day
     start, end = _date_range(days)
     length = (end - start).days + 1
     prev_end = start - timedelta(days=1)
@@ -975,7 +1013,15 @@ def _previous_period_bounds(days: int):
     return prev_start, prev_end
 
 
+def _range_delta(days: int, current, previous):
+    if is_all_time_range(days):
+        return None
+    return _pct_change(int(current or 0), int(previous or 0))
+
+
 def _range_label_fa(days: int) -> str:
+    if is_all_time_range(days):
+        return 'کل بازه'
     if days == 1:
         return 'امروز'
     return f'{days} روز اخیر'
@@ -1059,11 +1105,10 @@ def build_command_center_kpi_cards(
     prev_orders = _previous_orders_paid_for_period(chart_days)
     prev_users = _previous_new_users_for_period(chart_days)
 
-    def _delta(current, previous):
-        return _pct_change(int(current or 0), int(previous or 0))
-
     new_users_sublabel = (
-        'ثبت‌نام امروز' if chart_days == 1 else f'ثبت‌نام در {range_label}'
+        'ثبت‌نام امروز'
+        if chart_days == 1
+        else ('ثبت‌نام در کل بازه' if is_all_time_range(chart_days) else f'ثبت‌نام در {range_label}')
     )
 
     return [
@@ -1073,7 +1118,7 @@ def build_command_center_kpi_cards(
             'sublabel': f'{range_label} · تومان',
             'value': period_revenue,
             'format': 'money',
-            'delta': _delta(period_revenue, prev_revenue),
+            'delta': _range_delta(chart_days, period_revenue, prev_revenue),
             'delta_label': 'نسبت دوره قبل',
             'sparkline': spark_rev,
             'icon': 'fa-sack-dollar',
@@ -1086,7 +1131,7 @@ def build_command_center_kpi_cards(
             'sublabel': range_label,
             'value': period_orders,
             'format': 'count',
-            'delta': _delta(period_orders, prev_orders),
+            'delta': _range_delta(chart_days, period_orders, prev_orders),
             'delta_label': 'نسبت دوره قبل',
             'sparkline': spark_orders,
             'icon': 'fa-cart-shopping',
@@ -1099,7 +1144,7 @@ def build_command_center_kpi_cards(
             'sublabel': new_users_sublabel,
             'value': period_users,
             'format': 'count',
-            'delta': _delta(period_users, prev_users),
+            'delta': _range_delta(chart_days, period_users, prev_users),
             'delta_label': 'نسبت دوره قبل',
             'sparkline': spark_signups,
             'icon': 'fa-user-plus',

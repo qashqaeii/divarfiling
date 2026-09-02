@@ -27,15 +27,17 @@
         </div>
         <div class="biz-toolbar-actions">
             <div class="biz-range" role="group" aria-label="بازه زمانی">
-                <a href="?days=7" class="biz-range-btn{% if days == 7 %} is-active{% endif %}">۷ روز</a>
-                <a href="?days=30" class="biz-range-btn{% if days == 30 %} is-active{% endif %}">۳۰ روز</a>
-                <a href="?days=90" class="biz-range-btn{% if days == 90 %} is-active{% endif %}">۹۰ روز</a>
-                <a href="?days=365" class="biz-range-btn{% if days == 365 %} is-active{% endif %}">سالانه</a>
+                <a href="?days=all" class="biz-range-btn{% if admin_panel_range_key == 'all' %} is-active{% endif %}">کل بازه</a>
+                <a href="?days=1" class="biz-range-btn{% if admin_panel_range_key == '1' %} is-active{% endif %}">امروز</a>
+                <a href="?days=7" class="biz-range-btn{% if admin_panel_range_key == '7' %} is-active{% endif %}">۷ روز</a>
+                <a href="?days=30" class="biz-range-btn{% if admin_panel_range_key == '30' %} is-active{% endif %}">۳۰ روز</a>
+                <a href="?days=90" class="biz-range-btn{% if admin_panel_range_key == '90' %} is-active{% endif %}">۹۰ روز</a>
+                <a href="?days=365" class="biz-range-btn{% if admin_panel_range_key == '365' %} is-active{% endif %}">سالانه</a>
             </div>
-            <a href="{% url 'admin_panel_plan_conversion_json' %}?days={{ days }}&download=1" class="biz-btn biz-btn--ghost biz-btn--sm">
+            <a href="{% url 'admin_panel_plan_conversion_json' %}?days={{ admin_panel_range_key }}&download=1" class="biz-btn biz-btn--ghost biz-btn--sm">
                 <i class="fas fa-file-code" aria-hidden="true"></i> JSON
             </a>
-            <a href="{% url 'admin_panel_recovery_center' %}?days={{ days }}" class="biz-btn biz-btn--ghost biz-btn--sm">
+            <a href="{% url 'admin_panel_recovery_center' %}?days={{ admin_panel_range_key }}" class="biz-btn biz-btn--ghost biz-btn--sm">
                 <i class="fas fa-rotate-left" aria-hidden="true"></i> بازیابی
             </a>
         </div>

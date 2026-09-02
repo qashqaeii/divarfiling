@@ -9,6 +9,7 @@ import jdatetime
 from django.db.models.functions import Coalesce
 from django.utils import timezone
 
+from accounts.services.admin_dashboard import ALL_TIME_DAYS, all_time_start_date, is_all_time_range
 from shop.models import Order, PlanFunnelEvent
 from workspace.services.jalali_input import PERSIAN_MONTHS, to_persian_digits
 
@@ -233,6 +234,25 @@ def count_daily_to_monthly_upgrades(*, since=None, window_days: int = UPGRADE_WI
 
 
 def period_bounds(days: int):
+    if is_all_time_range(days):
+        now = timezone.now()
+        period_end = timezone.localdate()
+        period_start = all_time_start_date()
+        since = timezone.make_aware(
+            datetime.combine(period_start, datetime.min.time()),
+            timezone.get_current_timezone(),
+        )
+        effective = max(1, (period_end - period_start).days + 1)
+        prev_since = since - timedelta(days=effective)
+        return {
+            'days': ALL_TIME_DAYS,
+            'now': now,
+            'since': since,
+            'prev_since': prev_since,
+            'prev_until': since,
+            'period_start': period_start,
+            'period_end': period_end,
+        }
     days = clamp_days(days)
     now = timezone.now()
     since = now - timedelta(days=days)

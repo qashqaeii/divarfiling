@@ -5,24 +5,29 @@ from typing import Any, Dict, Tuple
 
 from django.utils import timezone
 
+from accounts.services.admin_dashboard import ALL_TIME_DAYS, effective_range_days
 from accounts.services.admin_management_assistant import build_management_insights
 from accounts.services.pending_orders import PENDING_ORDER_STATUSES
 from affiliates.models import Withdrawal
 from shop.models import Order
 from workspace.models import Ticket
 
+ADMIN_PANEL_RANGE_ALL = 'all'
 COMMAND_CENTER_RANGES: Tuple[int, ...] = (1, 7, 30, 90)
+EXTENDED_PANEL_RANGES: Tuple[int, ...] = (1, 7, 30, 90, 365)
 
 
 def parse_admin_panel_range(request) -> Tuple[int, str]:
-    """بازه مجاز Command Center — days=1 یعنی «امروز»."""
-    raw = request.GET.get('days', '30')
+    """بازه مجاز پنل — پیش‌فرض «کل بازه»؛ days=1 یعنی «امروز»."""
+    raw = (request.GET.get('days') or ADMIN_PANEL_RANGE_ALL).strip().lower()
+    if raw == ADMIN_PANEL_RANGE_ALL:
+        return ALL_TIME_DAYS, ADMIN_PANEL_RANGE_ALL
     try:
         days = int(raw)
     except (TypeError, ValueError):
-        days = 30
-    if days not in COMMAND_CENTER_RANGES:
-        days = 30
+        return ALL_TIME_DAYS, ADMIN_PANEL_RANGE_ALL
+    if days not in EXTENDED_PANEL_RANGES:
+        return ALL_TIME_DAYS, ADMIN_PANEL_RANGE_ALL
     return days, str(days)
 
 
@@ -101,13 +106,14 @@ def build_admin_panel_shell_context(request) -> Dict[str, Any]:
     alert_count = sum(1 for key in ('orders_pending', 'unread_tickets') if badges.get(key, 0) > 0)
     days, range_key = parse_admin_panel_range(request)
     query_suffix = f'?days={range_key}'
-    if request.GET.get('compare') == '1':
+    if request.GET.get('compare') == '1' and range_key != ADMIN_PANEL_RANGE_ALL:
         query_suffix += '&compare=1'
     return {
         'admin_panel_shell': True,
         'chart_days': days,
+        'chart_days_effective': effective_range_days(days),
         'admin_panel_range_key': range_key,
-        'admin_panel_compare': request.GET.get('compare') == '1',
+        'admin_panel_compare': request.GET.get('compare') == '1' and range_key != ADMIN_PANEL_RANGE_ALL,
         'admin_panel_nav_active': resolve_admin_panel_nav_active(request.path),
         'admin_panel_updated_at': timezone.now(),
         'admin_panel_nav_badges': badges,

@@ -7,6 +7,17 @@
 
 {% block admin_panel_title %}کاربران{% endblock %}
 
+{% block admin_panel_title %}کاربران{% endblock %}
+
+{% block admin_panel_header_subtitle %}
+مدیریت کاربران، رشد و فعال‌سازی
+{% endblock %}
+
+{% block admin_panel_extra_css %}
+<link rel="stylesheet" href="{% static 'css/mizkar-admin-business.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'css/mizkar-admin-customers.css' %}?v=1">
+{% endblock %}
+
 {% block admin_panel_header_actions %}
 <a href="{% url 'admin_panel_export' 'users_management' %}?format=xlsx" class="ecc-btn ecc-btn--primary" title="خروجی مدیریت کاربران">
     <i class="fas fa-file-excel"></i>
@@ -20,71 +31,36 @@
 {% endblock %}
 
 {% block admin_panel_content %}
+<div class="cust-page biz-page biz-page--users">
 
-<section class="ecc-section ecc-cmd-kpi" aria-label="شاخص‌های بازه‌ای">
-    <header class="ecc-section-head ecc-section-head--slim">
-        <div>
-            <h2><i class="fas fa-calendar-days"></i> KPI بازه‌ای</h2>
-            <p>{{ range_label }}</p>
-        </div>
-    </header>
-    <div class="ecc-kpi-grid ecc-kpi-grid--cmd">
-        {% for card in range_kpi_cards %}
-        <article class="ecc-kpi" data-accent="{{ card.accent }}" data-status="{{ card.status }}" data-kpi-kind="range">
-            <div class="ecc-kpi-top">
-                <span class="ecc-kpi-icon"><i class="fas {{ card.icon }}"></i></span>
-                <span class="ecc-kpi-kind-badge">بازه</span>
-                {% if card.delta is not None %}
-                <span class="ecc-kpi-delta{% if card.delta >= 0 %} is-up{% else %} is-down{% endif %}">
-                    {% if card.delta >= 0 %}+{% endif %}{{ card.delta|to_persian_digits }}٪
-                </span>
-                {% endif %}
-            </div>
-            {% if card.pending %}
-            <strong class="ecc-kpi-val ecc-kpi-val--pending">—</strong>
-            {% else %}
-            <strong class="ecc-kpi-val" data-count-up="{{ card.value }}" data-format="{{ card.format }}">۰</strong>
-            {% endif %}
-            <span class="ecc-kpi-lbl">{{ card.label }}</span>
-            <span class="ecc-kpi-sub">{{ card.delta_label }} · {{ card.sublabel }}</span>
-            <div class="ecc-kpi-spark" data-sparkline='{{ card.sparkline_json|safe }}'>
-                <canvas id="spark-{{ card.key }}"></canvas>
-            </div>
-        </article>
-        {% endfor %}
+<div class="biz-toolbar">
+    <div class="biz-toolbar-meta">
+        <span class="biz-meta-pill"><i class="fas fa-calendar-days" aria-hidden="true"></i> {{ range_label }}</span>
+        {% if action_items %}
+        <span class="biz-meta-pill biz-meta-pill--warn">{{ action_items|length|to_persian_digits }} نیازمند اقدام</span>
+        {% endif %}
     </div>
-</section>
+    <div class="biz-toolbar-actions">
+        <a href="{% url 'admin_panel_licenses' %}" class="biz-btn biz-btn--ghost biz-btn--sm"><i class="fas fa-key" aria-hidden="true"></i> لایسنس</a>
+        <a href="{% url 'admin_panel_crm' %}" class="biz-btn biz-btn--ghost biz-btn--sm"><i class="fas fa-address-book" aria-hidden="true"></i> CRM</a>
+    </div>
+</div>
 
-<section class="ecc-section ecc-cmd-kpi" aria-label="شاخص‌های Snapshot">
-    <header class="ecc-section-head ecc-section-head--slim">
-        <div>
-            <h2><i class="fas fa-camera"></i> KPI Snapshot</h2>
-            <p>وضعیت فعلی</p>
-        </div>
-    </header>
-    <div class="ecc-kpi-grid ecc-kpi-grid--snapshot">
-        {% for card in snapshot_kpi_cards %}
-        <article class="ecc-kpi" data-accent="{{ card.accent }}" data-status="{{ card.status }}" data-kpi-kind="snapshot">
-            <div class="ecc-kpi-top">
-                <span class="ecc-kpi-icon"><i class="fas {{ card.icon }}"></i></span>
-                <span class="ecc-kpi-kind-badge ecc-kpi-kind-badge--snapshot">Snapshot</span>
-            </div>
-            <strong class="ecc-kpi-val" data-count-up="{{ card.value }}" data-format="{{ card.format }}">۰</strong>
-            <span class="ecc-kpi-lbl">{{ card.label }}</span>
-            <span class="ecc-kpi-sub">{{ card.delta_label }} · {{ card.sublabel }}</span>
-            <div class="ecc-kpi-spark" data-sparkline='{{ card.sparkline_json|safe }}'>
-                <canvas id="spark-{{ card.key }}"></canvas>
-            </div>
-        </article>
-        {% endfor %}
-    </div>
-</section>
+<div class="cust-tabs-wrap">
+    <nav class="cust-tabs" aria-label="بخش‌های کاربران">
+        <a href="#users-actions" class="cust-tab">اقدام{% if action_items %}<span class="cust-tab-badge cust-tab-badge--alert">{{ action_items|length|to_persian_digits }}</span>{% endif %}</a>
+        <a href="#users-kpi" class="cust-tab">شاخص‌ها</a>
+        <a href="#users-charts" class="cust-tab">روند</a>
+        <a href="#users-recent" class="cust-tab">جدول‌ها</a>
+        <a href="#ecc-users" class="cust-tab">مدیریت</a>
+    </nav>
+</div>
 
 <section class="ecc-section ecc-cmd-actions" id="users-actions" aria-label="نیازمند اقدام">
     <header class="ecc-cmd-actions-head">
         <div>
             <h2><i class="fas fa-bolt"></i> نیازمند اقدام</h2>
-            <p>Snapshot</p>
+            <p>موارد فوری کاربران</p>
         </div>
         <span class="ecc-cmd-actions-count">{{ action_items|length|to_persian_digits }}</span>
     </header>
@@ -111,7 +87,57 @@
     {% endif %}
 </section>
 
-<section class="ecc-section ecc-cmd-charts ecc-sales-charts" aria-label="روند کاربران">
+<section class="ecc-section ecc-cmd-kpi cust-kpi-block" id="users-kpi" aria-label="شاخص‌ها">
+    <header class="ecc-section-head ecc-section-head--slim">
+        <div>
+            <h2><i class="fas fa-chart-simple"></i> شاخص‌های کلیدی</h2>
+            <p>{{ range_label }}</p>
+        </div>
+    </header>
+    <p class="cust-kpi-group-label">بازه زمانی</p>
+    <div class="ecc-kpi-grid ecc-kpi-grid--cmd">
+        {% for card in range_kpi_cards %}
+        <article class="ecc-kpi" data-accent="{{ card.accent }}" data-status="{{ card.status }}" data-kpi-kind="range">
+            <div class="ecc-kpi-top">
+                <span class="ecc-kpi-icon"><i class="fas {{ card.icon }}"></i></span>
+                {% if card.delta is not None %}
+                <span class="ecc-kpi-delta{% if card.delta >= 0 %} is-up{% else %} is-down{% endif %}">
+                    {% if card.delta >= 0 %}+{% endif %}{{ card.delta|to_persian_digits }}٪
+                </span>
+                {% endif %}
+            </div>
+            {% if card.pending %}
+            <strong class="ecc-kpi-val ecc-kpi-val--pending">—</strong>
+            {% else %}
+            <strong class="ecc-kpi-val" data-count-up="{{ card.value }}" data-format="{{ card.format }}">۰</strong>
+            {% endif %}
+            <span class="ecc-kpi-lbl">{{ card.label }}</span>
+            <span class="ecc-kpi-sub">{{ card.sublabel }}</span>
+            <div class="ecc-kpi-spark" data-sparkline='{{ card.sparkline_json|safe }}'>
+                <canvas id="spark-{{ card.key }}"></canvas>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+    <p class="cust-kpi-group-label">وضعیت فعلی</p>
+    <div class="ecc-kpi-grid ecc-kpi-grid--snapshot">
+        {% for card in snapshot_kpi_cards %}
+        <article class="ecc-kpi" data-accent="{{ card.accent }}" data-status="{{ card.status }}" data-kpi-kind="snapshot">
+            <div class="ecc-kpi-top">
+                <span class="ecc-kpi-icon"><i class="fas {{ card.icon }}"></i></span>
+            </div>
+            <strong class="ecc-kpi-val" data-count-up="{{ card.value }}" data-format="{{ card.format }}">۰</strong>
+            <span class="ecc-kpi-lbl">{{ card.label }}</span>
+            <span class="ecc-kpi-sub">{{ card.sublabel }}</span>
+            <div class="ecc-kpi-spark" data-sparkline='{{ card.sparkline_json|safe }}'>
+                <canvas id="spark-{{ card.key }}"></canvas>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+</section>
+
+<section class="ecc-section ecc-cmd-charts ecc-sales-charts" id="users-charts" aria-label="روند کاربران">
     <div class="ecc-cmd-charts-grid ecc-sales-charts-grid">
         <article class="ecc-card ecc-card--chart">
             <div class="ecc-card-head">
@@ -138,7 +164,7 @@
     </div>
 </section>
 
-<section class="ecc-section" aria-label="ثبت‌نام‌های اخیر">
+<section class="ecc-section" id="users-recent" aria-label="ثبت‌نام‌های اخیر">
     <header class="ecc-section-head">
         <div>
             <h2><i class="fas fa-clock"></i> ثبت‌نام‌های اخیر</h2>
@@ -351,6 +377,7 @@
     </aside>
 </div>
 
+</div>
 {% endblock %}
 
 {% block admin_panel_extra_js %}

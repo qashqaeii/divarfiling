@@ -1,0 +1,596 @@
+/* ═══════════════════════════════════════════════════════════
+   Customers — Users · Licenses · CRM (Executive UI)
+   Extends mizkar-admin-business.css patterns
+   ═══════════════════════════════════════════════════════════ */
+
+.ecc-main:has(.cust-page) .ecc-header--shell {
+    padding: 0.55rem 0.85rem;
+}
+
+.cust-page {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+/* ── Sticky section nav ── */
+.cust-tabs-wrap {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    margin: 0 -0.1rem;
+    padding: 0.1rem 0.1rem 0.3rem;
+    background: linear-gradient(180deg, var(--ecc-bg, #f1f5f9) 75%, transparent);
+}
+
+.cust-tabs {
+    display: flex;
+    gap: 0.2rem;
+    padding: 0.2rem;
+    border-radius: var(--biz-radius, 10px);
+    background: rgba(148, 163, 184, 0.1);
+    border: 1px solid var(--biz-border, rgba(15, 23, 42, 0.08));
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+}
+
+.cust-tabs::-webkit-scrollbar { display: none; }
+
+.cust-tab {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.28rem;
+    padding: 0.38rem 0.55rem;
+    border-radius: 7px;
+    color: var(--biz-text-muted, #64748b);
+    text-decoration: none;
+    font-size: 0.74rem;
+    font-weight: 600;
+    white-space: nowrap;
+    min-height: 2.05rem;
+    transition: background 0.15s, color 0.15s;
+}
+
+.cust-tab:hover {
+    color: var(--biz-text-secondary, #475569);
+    background: rgba(255, 255, 255, 0.45);
+}
+
+.cust-tab.is-active,
+.cust-tab:target {
+    background: #fff;
+    color: #5b21b6;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+}
+
+.cust-tab-badge {
+    display: inline-flex;
+    min-width: 1rem;
+    height: 1rem;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background: rgba(124, 58, 237, 0.12);
+    color: #5b21b6;
+    font-size: 0.6rem;
+    font-weight: 700;
+    padding: 0 0.25rem;
+}
+
+.cust-tab-badge--alert {
+    background: rgba(225, 29, 72, 0.12);
+    color: #e11d48;
+}
+
+/* ── KPI block ── */
+.cust-kpi-block .ecc-section-head {
+    margin-bottom: 0.4rem !important;
+    padding-bottom: 0.35rem;
+    border-bottom: 1px solid var(--biz-border, rgba(15, 23, 42, 0.08));
+}
+
+.cust-kpi-group-label {
+    margin: 0.45rem 0 0.35rem;
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #94a3b8;
+}
+
+.cust-kpi-group-label:first-of-type {
+    margin-top: 0;
+}
+
+.cust-page .ecc-kpi-grid {
+    gap: 0.45rem !important;
+}
+
+.cust-page .ecc-kpi-grid--cmd,
+.cust-page .ecc-kpi-grid--snapshot {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (min-width: 640px) {
+    .cust-page .ecc-kpi-grid--cmd {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    .cust-page .ecc-kpi-grid--snapshot {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+}
+
+@media (min-width: 1024px) {
+    .cust-page .ecc-kpi-grid--cmd {
+        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    }
+}
+
+.cust-page .ecc-kpi {
+    position: relative;
+    padding: 0.5rem 0.55rem 0.45rem !important;
+    border-radius: var(--biz-radius, 10px) !important;
+    border: 1px solid var(--biz-border, rgba(15, 23, 42, 0.08)) !important;
+    background: #fff !important;
+    box-shadow: none !important;
+    overflow: hidden;
+}
+
+.cust-page .ecc-kpi::before {
+    content: '';
+    position: absolute;
+    inset-inline-end: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: #cbd5e1;
+}
+
+.cust-page .ecc-kpi[data-accent="violet"]::before,
+.cust-page .ecc-kpi[data-accent="purple"]::before { background: #7c3aed; }
+.cust-page .ecc-kpi[data-accent="emerald"]::before,
+.cust-page .ecc-kpi[data-accent="green"]::before { background: #059669; }
+.cust-page .ecc-kpi[data-accent="cyan"]::before,
+.cust-page .ecc-kpi[data-accent="blue"]::before { background: #2563eb; }
+.cust-page .ecc-kpi[data-accent="amber"]::before,
+.cust-page .ecc-kpi[data-accent="orange"]::before { background: #d97706; }
+.cust-page .ecc-kpi[data-accent="rose"]::before,
+.cust-page .ecc-kpi[data-accent="red"]::before { background: #e11d48; }
+.cust-page .ecc-kpi[data-accent="indigo"]::before { background: #4f46e5; }
+.cust-page .ecc-kpi[data-accent="slate"]::before { background: #64748b; }
+
+.cust-page .ecc-kpi-top {
+    margin-bottom: 0.2rem;
+}
+
+.cust-page .ecc-kpi-icon {
+    width: 1.45rem !important;
+    height: 1.45rem !important;
+    font-size: 0.65rem !important;
+}
+
+.cust-page .ecc-kpi-kind-badge {
+    font-size: 0.58rem !important;
+    padding: 0.08rem 0.35rem !important;
+}
+
+.cust-page .ecc-kpi-val {
+    font-size: 1.15rem !important;
+    line-height: 1.2;
+}
+
+.cust-page .ecc-kpi-lbl {
+    font-size: 0.68rem !important;
+}
+
+.cust-page .ecc-kpi-sub {
+    font-size: 0.6rem !important;
+    opacity: 0.85;
+}
+
+.cust-page .ecc-kpi-spark {
+    height: 1.75rem !important;
+    margin-top: 0.25rem;
+}
+
+.cust-page .ecc-kpi-delta {
+    font-size: 0.62rem !important;
+}
+
+/* ── Action cards compact ── */
+.cust-page .ecc-cmd-actions {
+    padding: 0 !important;
+    background: transparent !important;
+    border: 0 !important;
+}
+
+.cust-page .ecc-cmd-actions-head {
+    margin-bottom: 0.4rem !important;
+    padding: 0 0 0.35rem !important;
+    border-bottom: 1px solid var(--biz-border, rgba(15, 23, 42, 0.08));
+}
+
+.cust-page .ecc-cmd-actions-head h2 {
+    font-size: 0.88rem !important;
+}
+
+.cust-page .ecc-cmd-actions-head p {
+    font-size: 0.72rem !important;
+}
+
+.cust-page .ecc-cmd-actions-count {
+    font-size: 0.72rem !important;
+    min-width: 1.5rem;
+    height: 1.5rem;
+}
+
+.cust-page .ecc-cmd-actions-list {
+    gap: 0.35rem !important;
+}
+
+.cust-page .ecc-cmd-action {
+    padding: 0.5rem 0.6rem !important;
+    border-radius: var(--biz-radius, 10px) !important;
+    gap: 0.45rem !important;
+    border: 1px solid var(--biz-border, rgba(15, 23, 42, 0.08)) !important;
+    background: #fff !important;
+}
+
+.cust-page .ecc-cmd-action-priority {
+    width: 3px !important;
+    align-self: stretch;
+    border-radius: 3px;
+}
+
+.cust-page .ecc-cmd-action-icon {
+    width: 1.65rem !important;
+    height: 1.65rem !important;
+    font-size: 0.72rem !important;
+}
+
+.cust-page .ecc-cmd-action-body strong {
+    font-size: 0.82rem !important;
+}
+
+.cust-page .ecc-cmd-action-body em {
+    font-size: 0.72rem !important;
+}
+
+.cust-page .ecc-cmd-action-count {
+    font-size: 0.95rem !important;
+    font-weight: 800;
+}
+
+.cust-page .ecc-cmd-action-cta {
+    font-size: 0.68rem !important;
+    opacity: 0.85;
+}
+
+@media (max-width: 639px) {
+    .cust-page .ecc-cmd-action {
+        flex-wrap: wrap;
+    }
+    .cust-page .ecc-cmd-action-cta {
+        width: 100%;
+        text-align: left;
+        margin-top: 0.15rem;
+    }
+}
+
+/* ── License status pills ── */
+.cust-page .ecc-lic-status-row {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.45rem;
+}
+
+.cust-page .ecc-lic-status-pill {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.45rem 0.6rem;
+    border-radius: var(--biz-radius, 10px);
+    background: #fff;
+    border: 1px solid var(--biz-border, rgba(15, 23, 42, 0.08));
+    font-size: 0.72rem;
+    color: var(--biz-text-muted, #64748b);
+}
+
+.cust-page .ecc-lic-status-pill strong {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--biz-text, #0f172a);
+}
+
+.cust-page .ecc-lic-status-pill[data-accent="emerald"] { border-inline-end: 3px solid #059669; }
+.cust-page .ecc-lic-status-pill[data-accent="amber"] { border-inline-end: 3px solid #d97706; }
+.cust-page .ecc-lic-status-pill[data-accent="rose"] { border-inline-end: 3px solid #e11d48; }
+
+/* ── CRM adoption strip ── */
+.cust-page .ecc-stat-strip.ecc-crm-adoption {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.4rem;
+    padding: 0;
+    list-style: none;
+    margin: 0;
+}
+
+@media (min-width: 640px) {
+    .cust-page .ecc-stat-strip.ecc-crm-adoption {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+}
+
+.cust-page .ecc-stat-strip.ecc-crm-adoption li {
+    padding: 0.45rem 0.55rem;
+    border-radius: var(--biz-radius, 10px);
+    background: #fff;
+    border: 1px solid var(--biz-border, rgba(15, 23, 42, 0.08));
+    text-align: center;
+}
+
+.cust-page .ecc-stat-strip.ecc-crm-adoption li span {
+    display: block;
+    font-size: 0.62rem;
+    color: var(--biz-text-muted, #64748b);
+}
+
+.cust-page .ecc-stat-strip.ecc-crm-adoption li strong {
+    display: block;
+    font-size: 1rem;
+    font-weight: 800;
+    margin-top: 0.1rem;
+}
+
+.cust-page .ecc-crm-pipeline {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.35rem;
+}
+
+@media (min-width: 640px) {
+    .cust-page .ecc-crm-pipeline {
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    }
+}
+
+.cust-page .ecc-crm-pipeline-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.4rem 0.55rem;
+    border-radius: 8px;
+    background: #fff;
+    border: 1px solid var(--biz-border, rgba(15, 23, 42, 0.08));
+    font-size: 0.72rem;
+}
+
+.cust-page .ecc-crm-pipeline-item strong {
+    font-size: 0.95rem;
+    font-weight: 800;
+}
+
+/* ── Sections & charts ── */
+.cust-page .ecc-section {
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.cust-page .ecc-section-head {
+    margin-bottom: 0.4rem !important;
+    padding-bottom: 0.35rem !important;
+    border-bottom: 1px solid var(--biz-border, rgba(15, 23, 42, 0.08));
+}
+
+.cust-page .ecc-section-head h2 {
+    font-size: 0.88rem !important;
+    margin: 0 !important;
+}
+
+.cust-page .ecc-section-head h2 i {
+    font-size: 0.78rem;
+    opacity: 0.7;
+    margin-left: 0.25rem;
+}
+
+.cust-page .ecc-section-head p {
+    font-size: 0.72rem !important;
+    margin: 0.1rem 0 0 !important;
+    color: var(--biz-text-muted, #64748b);
+}
+
+.cust-page .ecc-card--chart {
+    padding: 0.65rem 0.75rem !important;
+    border-radius: var(--biz-radius-lg, 12px) !important;
+}
+
+.cust-page .ecc-card-head h3 {
+    font-size: 0.82rem !important;
+}
+
+.cust-page .ecc-chart-wrap--tall {
+    min-height: 180px !important;
+}
+
+.cust-page .ecc-cmd-charts-grid {
+    gap: 0.5rem !important;
+}
+
+/* ── Tables ── */
+.cust-page .adm-table-wrap {
+    border-radius: var(--biz-radius-lg, 12px);
+    border: 1px solid var(--biz-border, rgba(15, 23, 42, 0.08));
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.cust-page .adm-table th,
+.cust-page .adm-table td {
+    padding: 0.45rem 0.55rem !important;
+    font-size: 0.78rem !important;
+}
+
+.cust-page .adm-table th {
+    font-size: 0.68rem !important;
+    background: rgba(15, 23, 42, 0.025);
+}
+
+.cust-page .adm-table tbody tr:hover {
+    background: rgba(124, 58, 237, 0.03);
+}
+
+/* Mobile table cards */
+@media (max-width: 767px) {
+    .cust-page .cust-table-cards .adm-table thead {
+        display: none;
+    }
+
+    .cust-page .cust-table-cards .adm-table tbody tr {
+        display: block;
+        padding: 0.5rem 0.6rem;
+        border-bottom: 1px solid var(--biz-border, rgba(15, 23, 42, 0.08));
+    }
+
+    .cust-page .cust-table-cards .adm-table tbody tr:last-child {
+        border-bottom: 0;
+    }
+
+    .cust-page .cust-table-cards .adm-table td {
+        display: flex;
+        justify-content: space-between;
+        gap: 0.5rem;
+        padding: 0.2rem 0 !important;
+        border: 0 !important;
+    }
+
+    .cust-page .cust-table-cards .adm-table td::before {
+        content: attr(data-label);
+        font-size: 0.62rem;
+        font-weight: 700;
+        color: #94a3b8;
+        text-transform: uppercase;
+        flex-shrink: 0;
+    }
+
+    .cust-page .cust-table-cards .adm-table td[colspan] {
+        display: block;
+        text-align: center;
+    }
+
+    .cust-page .cust-table-cards .adm-table td[colspan]::before {
+        display: none;
+    }
+}
+
+/* ── User management tools ── */
+.cust-page .ecc-users-mgmt-tools {
+    gap: 0.45rem;
+    margin-bottom: 0.45rem;
+}
+
+.cust-page .ecc-table-search,
+.cust-page .ecc-users-mgmt-select {
+    font-size: 0.78rem !important;
+    padding: 0.4rem 0.55rem !important;
+    border-radius: 8px !important;
+    min-height: 2.1rem;
+}
+
+.cust-page .ecc-users-mgmt-filters {
+    gap: 0.35rem !important;
+}
+
+.cust-page .ecc-users-mgmt-pager {
+    margin-top: 0.45rem;
+}
+
+/* ── Module dock / exports ── */
+.cust-page .ecc-module-dock {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.4rem;
+}
+
+@media (min-width: 640px) {
+    .cust-page .ecc-module-dock {
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    }
+}
+
+.cust-page .ecc-module {
+    padding: 0.45rem 0.55rem !important;
+    border-radius: var(--biz-radius, 10px) !important;
+}
+
+.cust-page .ecc-module-text strong {
+    font-size: 0.78rem !important;
+}
+
+.cust-page .ecc-module-text em {
+    font-size: 0.62rem !important;
+}
+
+/* ── Renewal summary cards ── */
+.cust-page .ecc-cmd-summary-grid {
+    gap: 0.4rem !important;
+}
+
+.cust-page .ecc-cmd-summary-card {
+    padding: 0.55rem 0.65rem !important;
+    border-radius: var(--biz-radius, 10px) !important;
+}
+
+.cust-page .ecc-cmd-summary-card header h3 {
+    font-size: 0.72rem !important;
+}
+
+.cust-page .ecc-cmd-summary-card li strong {
+    font-size: 1rem !important;
+}
+
+/* ── Drawer polish ── */
+.cust-page + .ecc-user-drawer .ecc-user-drawer-panel,
+.ecc-user-drawer .ecc-user-drawer-panel {
+    border-radius: 14px 0 0 14px;
+}
+
+/* ── Sidebar active states ── */
+.ecc-page--shell:has(.cust-page) .ecc-nav-item[data-nav-id="users"].is-active,
+.ecc-page--shell:has(.cust-page) .ecc-nav-item[data-nav-id="licenses"].is-active,
+.ecc-page--shell:has(.cust-page) .ecc-nav-item[data-nav-id="crm"].is-active {
+    background: rgba(124, 58, 237, 0.1);
+    color: #5b21b6;
+    font-weight: 700;
+}
+
+.ecc-page--shell:has(.cust-page) .ecc-nav-item--sub.is-active {
+    background: rgba(124, 58, 237, 0.08);
+    color: #5b21b6;
+}
+
+/* ── Empty states ── */
+.cust-page .ecc-empty {
+    padding: 1rem !important;
+    font-size: 0.8rem;
+    border-radius: var(--biz-radius, 10px);
+    border: 1px dashed var(--biz-border, rgba(15, 23, 42, 0.08));
+}
+
+.cust-page .ecc-empty--compact {
+    padding: 0.75rem !important;
+}
+
+.cust-page .ecc-cmd-actions-empty {
+    font-size: 0.78rem;
+    color: var(--biz-text-muted, #64748b);
+    padding: 0.65rem;
+    text-align: center;
+    border-radius: var(--biz-radius, 10px);
+    background: rgba(15, 23, 42, 0.02);
+    border: 1px dashed var(--biz-border, rgba(15, 23, 42, 0.08));
+}

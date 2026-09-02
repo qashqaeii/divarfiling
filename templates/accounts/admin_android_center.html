@@ -6,6 +6,10 @@
 
 {% block admin_panel_title %}اندروید{% endblock %}
 
+{% block admin_panel_extra_css %}
+<link rel="stylesheet" href="{% static 'css/admin-android-center.css' %}?v=1">
+{% endblock %}
+
 {% block admin_panel_header_meta %}
 <span class="ecc-status-pill">v{{ app_version|to_persian_digits }}</span>
 {% endblock %}
@@ -14,417 +18,477 @@
 <a href="{{ export_urls.devices }}" class="ecc-btn ecc-btn--primary" title="خروجی دستگاه‌ها">
     <i class="fas fa-file-excel"></i>
 </a>
-<a href="{{ admin_list_urls.devices }}" class="ecc-btn ecc-btn--ghost" target="_blank" rel="noopener" title="Django Admin — دستگاه‌ها">
+<a href="{{ admin_list_urls.devices }}" class="ecc-btn ecc-btn--ghost" target="_blank" rel="noopener" title="Django Admin">
     <i class="fas fa-cog"></i>
 </a>
 {% endblock %}
 
 {% block admin_panel_content %}
+<div class="aac-page" id="ecc-android">
 
-<section class="ecc-section" id="ecc-android" aria-label="خلاصه بازه">
-    <header class="ecc-section-head ecc-section-head--slim">
-        <div>
-            <h2><i class="fab fa-android"></i> خلاصه بازه</h2>
-            <p>{{ range_label }}</p>
+    <header class="aac-hero" aria-label="مرکز آمار اندروید">
+        <span class="aac-hero__orb aac-hero__orb--1" aria-hidden="true"></span>
+        <span class="aac-hero__orb aac-hero__orb--2" aria-hidden="true"></span>
+        <div class="aac-hero__inner">
+            <div>
+                <p class="aac-hero__kicker"><i class="fab fa-android"></i> Product Analytics</p>
+                <h1 class="aac-hero__title">مرکز آمار <em>اپ اندروید</em></h1>
+                <p class="aac-hero__desc">
+                    نصب، فعال‌سازی، استفاده روزانه، توزیع نسخه و یادآوری آپدیت — {{ range_label }}.
+                </p>
+                <div class="aac-hero__chips">
+                    <span class="aac-chip aac-chip--live"><i class="fas fa-circle"></i> نسخه سرور {{ app_version|to_persian_digits }}</span>
+                    <span class="aac-chip"><i class="fas fa-mobile-screen"></i> {{ snapshot.android_devices_active|to_persian_digits }} دستگاه فعال</span>
+                    {% if sms.outdated_count %}
+                    <span class="aac-chip aac-chip--warn"><i class="fas fa-arrow-up-from-bracket"></i> {{ sms.outdated_count|to_persian_digits }} نیاز به آپدیت</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="aac-hero__actions">
+                <a href="#aac-sms" class="aac-btn aac-btn--primary"><i class="fas fa-comment-sms"></i> پیامک آپدیت</a>
+                <a href="{{ export_urls.devices }}" class="aac-btn aac-btn--ghost"><i class="fas fa-file-excel"></i> Excel</a>
+                <a href="{{ admin_list_urls.devices }}" class="aac-btn aac-btn--ghost" target="_blank" rel="noopener"><i class="fas fa-database"></i> Admin</a>
+            </div>
         </div>
     </header>
-    <ul class="ecc-stat-strip ecc-win-summary">
-        <li data-accent="blue">
-            <span>ثبت دستگاه</span>
-            <strong>{{ range_summary.registrations|to_persian_digits }}</strong>
-            {% if range_deltas.registrations is not None %}
-            <em class="ecc-win-delta{% if range_deltas.registrations >= 0 %} is-up{% else %} is-down{% endif %}">
-                {% if range_deltas.registrations >= 0 %}+{% endif %}{{ range_deltas.registrations|to_persian_digits }}٪
-            </em>
-            {% endif %}
-        </li>
-        <li data-accent="violet">
-            <span>کاربر نصب‌کننده</span>
-            <strong>{{ range_summary.install_users|to_persian_digits }}</strong>
-        </li>
-        <li data-accent="cyan">
-            <span>کاربر فعال</span>
-            <strong>{{ range_summary.active_users|to_persian_digits }}</strong>
-            {% if range_deltas.active_users is not None %}
-            <em class="ecc-win-delta{% if range_deltas.active_users >= 0 %} is-up{% else %} is-down{% endif %}">
-                {% if range_deltas.active_users >= 0 %}+{% endif %}{{ range_deltas.active_users|to_persian_digits }}٪
-            </em>
-            {% endif %}
-        </li>
-        <li data-accent="emerald">
-            <span>DAU امروز</span>
-            <strong>{{ range_summary.dau_today|to_persian_digits }}</strong>
-        </li>
-        <li data-accent="amber">
-            <span>فعال‌سازی</span>
-            <strong>{{ range_summary.activations|to_persian_digits }}</strong>
-            {% if range_deltas.activations is not None %}
-            <em class="ecc-win-delta{% if range_deltas.activations >= 0 %} is-up{% else %} is-down{% endif %}">
-                {% if range_deltas.activations >= 0 %}+{% endif %}{{ range_deltas.activations|to_persian_digits }}٪
-            </em>
-            {% endif %}
-        </li>
-    </ul>
-</section>
 
-<section class="ecc-section" aria-label="Funnel اندروید">
-    <header class="ecc-section-head ecc-section-head--slim">
-        <div>
-            <h2><i class="fas fa-filter"></i> Funnel</h2>
-            <p>
-                {% if funnel_conversion.install_to_active is not None %}
-                تبدیل فعال: {{ funnel_conversion.install_to_active|to_persian_digits }}٪
-                {% endif %}
-                {% if funnel_conversion.install_to_usage is not None %}
-                · تبدیل استفاده: {{ funnel_conversion.install_to_usage|to_persian_digits }}٪
-                {% endif %}
-            </p>
-        </div>
-    </header>
-    <div class="ecc-cmd-funnel ecc-win-funnel">
-        {% for step in funnel_steps %}
-        <div class="ecc-cmd-funnel-step" data-accent="{{ step.accent }}">
-            <em>{{ step.label }}</em>
-            <strong data-count-up="{{ step.count }}">{{ step.count|to_persian_digits }}</strong>
-        </div>
-        {% if not forloop.last %}
-        <div class="ecc-cmd-funnel-arrow" aria-hidden="true"><i class="fas fa-chevron-down"></i></div>
-        {% endif %}
-        {% endfor %}
-    </div>
-</section>
-
-<section class="ecc-section" id="android-version-distribution" aria-label="توزیع نسخه">
-    <header class="ecc-section-head ecc-section-head--slim">
-        <div>
-            <h2><i class="fas fa-code-branch"></i> توزیع نسخه</h2>
-            <p>دستگاه‌های فعال</p>
-        </div>
-    </header>
-    <div class="adm-table-wrap">
-        <table class="adm-table adm-table--pro">
-            <thead>
-                <tr>
-                    <th>نسخه</th>
-                    <th>دستگاه</th>
-                    <th>کاربر</th>
-                    <th>سهم</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for row in version_rows %}
-                <tr>
-                    <td dir="ltr">{{ row.version }}</td>
-                    <td>{{ row.device_count|to_persian_digits }}</td>
-                    <td>{{ row.user_count|to_persian_digits }}</td>
-                    <td>
-                        <span class="ecc-act-status" data-accent="blue">{{ row.pct|to_persian_digits }}٪</span>
-                    </td>
-                </tr>
-                {% empty %}
-                <tr><td colspan="4">دستگاه فعالی ثبت نشده است.</td></tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</section>
-
-<section class="ecc-section" id="android-sms-update" aria-label="پیامک آپدیت">
-    <header class="ecc-section-head">
-        <div>
-            <h2><i class="fas fa-comment-sms"></i> یادآوری آپدیت (فراز SMS)</h2>
-            <p>
-                {{ sms.outdated_count|to_persian_digits }} کاربر با نسخه قدیمی‌تر از {{ sms.latest_version|to_persian_digits }}
-                · حداکثر {{ sms.batch_limit|to_persian_digits }} پیام در هر ارسال
-            </p>
-        </div>
-        {% if sms.balance.ok %}
-        <span class="ecc-status-pill{% if sms.balance.is_low %} is-warn{% endif %}">
-            {% if sms.balance.sms_count is not None %}
-            اعتبار: {{ sms.balance.sms_count|to_persian_digits }} پیامک
-            {% else %}
-            اعتبار: {{ sms.balance.credit|floatformat:0 }} ت
-            {% endif %}
-        </span>
-        {% endif %}
-    </header>
-
-    {% if sms.outdated_count == 0 %}
-    <p class="ecc-section-note">همه کاربران فعال روی آخرین نسخه هستند — گیرنده‌ای برای پیامک نیست.</p>
-    {% else %}
-    <form method="post" action="{{ sms.send_url }}" class="ecc-android-sms-form">
-        {% csrf_token %}
-        <input type="hidden" name="name" value="یادآوری آپدیت اندروید">
-
-        <label class="ecc-field">
-            <span>متن پیام</span>
-            <textarea name="message_template" rows="5" dir="rtl" required>{{ sms.default_template }}</textarea>
-        </label>
-        <p class="ecc-section-note">
-            متغیرها: <code dir="ltr">{name_part}</code>، <code dir="ltr">{version}</code>،
-            <code dir="ltr">{latest_version}</code>، <code dir="ltr">{link}</code>
-        </p>
-
-        <div class="adm-table-wrap">
-            <table class="adm-table adm-table--pro">
-                <thead>
-                    <tr>
-                        <th><input type="checkbox" id="android-sms-select-all" checked aria-label="انتخاب همه"></th>
-                        <th>کاربر</th>
-                        <th>نسخه فعلی</th>
-                        <th>مدل</th>
-                        <th>موبایل</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for row in sms.preview.recipients %}
-                    <tr>
-                        <td>
-                            <input type="checkbox" name="selected_phones" value="{{ row.phone }}" checked>
-                        </td>
-                        <td>{{ row.name|default:"—" }}</td>
-                        <td dir="ltr">{{ row.version|default:"—" }}</td>
-                        <td>{{ row.device_model|default:"—"|truncatechars:20 }}</td>
-                        <td dir="ltr">{{ row.phone }}</td>
-                    </tr>
-                    {% empty %}
-                    <tr><td colspan="5">گیرنده‌ای یافت نشد.</td></tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-
-        {% if sms.preview.count > sms.preview.capped_count %}
-        <p class="ecc-section-note">
-            {{ sms.preview.capped_count|to_persian_digits }} نفر از {{ sms.preview.count|to_persian_digits }} نفر نمایش داده شد.
-            برای ارسال به همه، چند بار با گروه‌های مختلف ارسال کنید یا از
-            <a href="{% url 'admin_panel_marketing' %}?segment=android_outdated">اتوماسیون بازاریابی</a> استفاده کنید.
-        </p>
-        {% endif %}
-
-        <div class="ecc-android-sms-actions">
-            <label class="ecc-field ecc-field--inline">
-                <span>عدم تکرار (روز)</span>
-                <input type="number" name="dedupe_days" value="7" min="0" max="90" style="width:5rem">
-            </label>
-            <label class="ecc-check">
-                <input type="checkbox" name="confirm_send" value="1" required>
-                <span>ارسال پیامک را تأیید می‌کنم</span>
-            </label>
-            <button type="submit" class="ecc-btn ecc-btn--primary">
-                <i class="fas fa-paper-plane"></i> ارسال با فراز SMS
-            </button>
-        </div>
-    </form>
-    {% endif %}
-</section>
-
-<script>
-(function () {
-    var master = document.getElementById('android-sms-select-all');
-    if (!master) return;
-    master.addEventListener('change', function () {
-        document.querySelectorAll('#android-sms-update input[name="selected_phones"]').forEach(function (cb) {
-            cb.checked = master.checked;
-        });
-    });
-})();
-</script>
-
-<section class="ecc-section" id="android-funnel-table" aria-label="Funnel کاربران">
-    <header class="ecc-section-head">
-        <div>
-            <h2><i class="fas fa-users"></i> مسیر کاربران</h2>
-            <p>{{ funnel_total|to_persian_digits }} کاربر · صفحه {{ page|to_persian_digits }} از {{ total_pages|to_persian_digits }}</p>
-        </div>
-    </header>
-    <div class="adm-table-wrap">
-        <table class="adm-table adm-table--pro">
-            <thead>
-                <tr>
-                    <th>کاربر</th>
-                    <th>پلن</th>
-                    <th>دستگاه</th>
-                    <th>فعال</th>
-                    <th>آخرین ثبت</th>
-                    <th>آخرین استفاده</th>
-                    <th>نسخه</th>
-                    <th>وضعیت</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for row in funnel_rows %}
-                <tr>
-                    <td>{{ row.user_display }}</td>
-                    <td>{{ row.plan_label }}</td>
-                    <td>{{ row.device_count|to_persian_digits }}</td>
-                    <td>{{ row.active_device_count|to_persian_digits }}</td>
-                    <td>{% if row.last_registered_at %}{{ row.last_registered_at|to_jalali_fa }}{% else %}—{% endif %}</td>
-                    <td>{% if row.last_seen_at %}{{ row.last_seen_at|to_jalali_fa }}{% else %}—{% endif %}</td>
-                    <td dir="ltr">{{ row.app_version }}</td>
-                    <td><span class="ecc-act-status" data-accent="{{ row.status_key }}">{{ row.status_label }}</span></td>
-                    <td>
-                        <a href="{{ row.user_admin_url }}" class="ecc-btn ecc-btn--ghost ecc-btn--sm" target="_blank" rel="noopener">کاربر</a>
-                        {% if row.activation_admin_url %}
-                        <a href="{{ row.activation_admin_url }}" class="ecc-btn ecc-btn--ghost ecc-btn--sm" target="_blank" rel="noopener">فعال‌سازی</a>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% empty %}
-                <tr><td colspan="9">کاربری در این بازه دستگاه ثبت نکرده است.</td></tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-    {% if total_pages > 1 %}
-    <nav class="ecc-act-pagination" aria-label="صفحه‌بندی Funnel">
-        {% if has_prev %}
-        <a href="{{ prev_page_url }}#android-funnel-table" class="ecc-btn ecc-btn--ghost ecc-btn--sm">قبلی</a>
-        {% endif %}
-        <span>{{ page|to_persian_digits }} / {{ total_pages|to_persian_digits }}</span>
-        {% if has_next %}
-        <a href="{{ next_page_url }}#android-funnel-table" class="ecc-btn ecc-btn--ghost ecc-btn--sm">بعدی</a>
-        {% endif %}
+    <nav class="aac-jump" aria-label="پرش به بخش‌ها">
+        <a href="#aac-overview" class="is-active">خلاصه</a>
+        <a href="#aac-funnel">Funnel</a>
+        <a href="#aac-versions">نسخه‌ها</a>
+        <a href="#aac-sms">پیامک</a>
+        <a href="#aac-users">کاربران</a>
+        <a href="#aac-data">جداول</a>
+        <a href="#aac-snapshot">Snapshot</a>
     </nav>
-    {% endif %}
-</section>
 
-<section class="ecc-section" id="android-table-registrations" aria-label="ثبت‌های اخیر">
-    <header class="ecc-section-head">
-        <div>
-            <h2><i class="fas fa-mobile-alt"></i> ثبت دستگاه‌های اخیر</h2>
-            <p>پیش‌نمایش {{ table_preview_rows|to_persian_digits }} مورد</p>
+    <section class="aac-panel" id="aac-overview" aria-label="خلاصه بازه">
+        <div class="aac-panel__head">
+            <div>
+                <h2><i class="fas fa-gauge-high"></i> KPI بازه‌ای</h2>
+                <p>{{ range_label }} · مقایسه با دوره قبل{% if admin_panel_compare %} فعال است{% endif %}</p>
+            </div>
         </div>
-        <a href="{{ export_urls.devices }}" class="ecc-btn ecc-btn--ghost ecc-btn--sm">
-            خروجی <i class="fas fa-file-excel"></i>
-        </a>
-    </header>
-    <div class="adm-table-wrap">
-        <table class="adm-table adm-table--pro">
-            <thead>
-                <tr>
-                    <th>کاربر</th>
-                    <th>مدل</th>
-                    <th>اندروید</th>
-                    <th>نسخه</th>
-                    <th>وضعیت</th>
-                    <th>تاریخ</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for row in registration_rows %}
-                <tr>
-                    <td>{{ row.user_display }}</td>
-                    <td>{{ row.device_model|truncatechars:24 }}</td>
-                    <td dir="ltr">{{ row.os_version }}</td>
-                    <td dir="ltr">{{ row.app_version }}</td>
-                    <td>{% if row.is_active %}<span class="ecc-act-status" data-accent="usage">فعال</span>{% else %}<span class="ecc-act-status" data-accent="install">غیرفعال</span>{% endif %}</td>
-                    <td>{{ row.registered_at|to_jalali_fa }}</td>
-                    <td><a href="{{ row.admin_url }}" class="ecc-btn ecc-btn--ghost ecc-btn--sm" target="_blank" rel="noopener">جزئیات</a></td>
-                </tr>
-                {% empty %}
-                <tr><td colspan="7">ثبت دستگاهی در این بازه نیست.</td></tr>
+        <div class="aac-panel__body">
+            <div class="aac-kpi-grid">
+                {% for card in range_kpi_cards %}
+                <article class="aac-kpi" data-accent="{{ card.accent }}">
+                    <div class="aac-kpi__top">
+                        <span class="aac-kpi__icon"><i class="fas {{ card.icon }}"></i></span>
+                        {% if card.delta is not None %}
+                        <span class="aac-kpi__delta{% if card.delta >= 0 %} is-up{% else %} is-down{% endif %}">
+                            {% if card.delta >= 0 %}+{% endif %}{{ card.delta|to_persian_digits }}٪
+                        </span>
+                        {% endif %}
+                    </div>
+                    <strong class="aac-kpi__val" data-count-up="{{ card.value }}">{{ card.value|to_persian_digits }}</strong>
+                    <span class="aac-kpi__lbl">{{ card.label }}</span>
+                    <span class="aac-kpi__sub">{{ card.sublabel }}</span>
+                </article>
                 {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</section>
-
-<section class="ecc-section" id="android-table-usage" aria-label="استفاده اخیر">
-    <header class="ecc-section-head">
-        <div>
-            <h2><i class="fas fa-signal"></i> استفاده اخیر</h2>
-            <p>پیش‌نمایش {{ table_preview_rows|to_persian_digits }} مورد</p>
+            </div>
         </div>
-        <a href="{{ export_urls.usage }}" class="ecc-btn ecc-btn--ghost ecc-btn--sm">
-            خروجی <i class="fas fa-file-excel"></i>
-        </a>
-    </header>
-    <div class="adm-table-wrap">
-        <table class="adm-table adm-table--pro">
-            <thead>
-                <tr>
-                    <th>کاربر</th>
-                    <th>مدل</th>
-                    <th>نسخه</th>
-                    <th>آخرین استفاده</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for row in usage_rows %}
-                <tr>
-                    <td>{{ row.user_display }}</td>
-                    <td>{{ row.device_model|truncatechars:24 }}</td>
-                    <td dir="ltr">{{ row.app_version }}</td>
-                    <td>{{ row.last_seen_at|to_jalali_fa }}</td>
-                    <td><a href="{{ row.admin_url }}" class="ecc-btn ecc-btn--ghost ecc-btn--sm" target="_blank" rel="noopener">جزئیات</a></td>
-                </tr>
-                {% empty %}
-                <tr><td colspan="5">استفاده‌ای در این بازه ثبت نشده است.</td></tr>
+    </section>
+
+    <div class="aac-split" id="aac-funnel">
+        <section class="aac-panel" aria-label="Funnel اندروید">
+            <div class="aac-panel__head">
+                <div>
+                    <h2><i class="fas fa-filter"></i> Funnel نصب تا استفاده</h2>
+                    <p>مسیر کاربر از ثبت دستگاه تا استفاده فعال</p>
+                </div>
+            </div>
+            <div class="aac-panel__body">
+                <div class="aac-funnel">
+                    {% for step in funnel_steps %}
+                    <div class="aac-funnel__step" data-accent="{{ step.accent }}">
+                        <em>{{ step.label }}</em>
+                        <strong data-count-up="{{ step.count }}">{{ step.count|to_persian_digits }}</strong>
+                    </div>
+                    {% if not forloop.last %}
+                    <div class="aac-funnel__arrow" aria-hidden="true"><i class="fas fa-chevron-left"></i></div>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+
+        <section class="aac-panel" aria-label="نرخ تبدیل">
+            <div class="aac-panel__head">
+                <div>
+                    <h2><i class="fas fa-percent"></i> نرخ تبدیل</h2>
+                    <p>کاربر-محور در بازه انتخاب‌شده</p>
+                </div>
+            </div>
+            <div class="aac-panel__body">
+                <div class="aac-conv-cards">
+                    <div class="aac-conv">
+                        <span>ثبت → دستگاه فعال</span>
+                        <strong>{% if funnel_conversion.install_to_active is not None %}{{ funnel_conversion.install_to_active|to_persian_digits }}٪{% else %}—{% endif %}</strong>
+                    </div>
+                    <div class="aac-conv">
+                        <span>ثبت → استفاده</span>
+                        <strong>{% if funnel_conversion.install_to_usage is not None %}{{ funnel_conversion.install_to_usage|to_persian_digits }}٪{% else %}—{% endif %}</strong>
+                    </div>
+                    <div class="aac-conv">
+                        <span>DAU / MAU</span>
+                        <strong>{% if funnel_conversion.dau_mau_ratio is not None %}{{ funnel_conversion.dau_mau_ratio|to_persian_digits }}٪{% else %}—{% endif %}</strong>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <section class="aac-panel" id="aac-versions" aria-label="توزیع نسخه">
+        <div class="aac-panel__head">
+            <div>
+                <h2><i class="fas fa-code-branch"></i> توزیع نسخه</h2>
+                <p>دستگاه‌های فعال · آخرین نسخه: {{ latest_version_name }}</p>
+            </div>
+        </div>
+        <div class="aac-panel__body">
+            {% if version_rows %}
+            <div class="aac-version-list">
+                {% for row in version_rows %}
+                <div class="aac-version-row">
+                    <span class="aac-version-tag{% if row.is_latest %} is-latest{% endif %}" dir="ltr">
+                        {% if row.is_latest %}<i class="fas fa-star"></i>{% endif %}
+                        {{ row.version }}
+                    </span>
+                    <div class="aac-version-bar" aria-hidden="true">
+                        <i style="width: {{ row.pct }}%"></i>
+                    </div>
+                    <span class="aac-version-meta">
+                        {{ row.device_count|to_persian_digits }} دستگاه · {{ row.user_count|to_persian_digits }} کاربر · {{ row.pct|to_persian_digits }}٪
+                    </span>
+                </div>
                 {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</section>
-
-<section class="ecc-section" id="android-table-activations" aria-label="فعال‌سازی‌های اخیر">
-    <header class="ecc-section-head">
-        <div>
-            <h2><i class="fas fa-key"></i> فعال‌سازی‌های اخیر</h2>
-            <p>پیش‌نمایش {{ table_preview_rows|to_persian_digits }} مورد</p>
+            </div>
+            {% else %}
+            <div class="aac-empty">
+                <i class="fas fa-mobile-screen"></i>
+                <strong>دستگاه فعالی ثبت نشده</strong>
+                <span>با اولین ثبت دستگاه، نمودار نسخه‌ها اینجا نمایش داده می‌شود.</span>
+            </div>
+            {% endif %}
         </div>
-        <a href="{{ admin_list_urls.activations }}" class="ecc-btn ecc-btn--ghost ecc-btn--sm" target="_blank" rel="noopener">
-            Admin <i class="fas fa-arrow-left"></i>
-        </a>
-    </header>
-    <div class="adm-table-wrap">
-        <table class="adm-table adm-table--pro">
-            <thead>
-                <tr>
-                    <th>کاربر</th>
-                    <th>پلن</th>
-                    <th>دستگاه</th>
-                    <th>تاریخ</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for row in activation_rows %}
-                <tr>
-                    <td>{{ row.user_display }}</td>
-                    <td>{{ row.plan_label }}</td>
-                    <td>{{ row.label|truncatechars:30 }}</td>
-                    <td>{{ row.activated_at|to_jalali_fa }}</td>
-                    <td><a href="{{ row.admin_url }}" class="ecc-btn ecc-btn--ghost ecc-btn--sm" target="_blank" rel="noopener">جزئیات</a></td>
-                </tr>
-                {% empty %}
-                <tr><td colspan="5">فعال‌سازی در این بازه نیست.</td></tr>
+    </section>
+
+    <section class="aac-panel" id="aac-sms" aria-label="پیامک آپدیت">
+        <div class="aac-panel__head">
+            <div>
+                <h2><i class="fas fa-comment-sms"></i> یادآوری آپدیت — فراز SMS</h2>
+                <p>
+                    {{ sms.outdated_count|to_persian_digits }} کاربر با نسخه قدیمی‌تر از {{ sms.latest_version|to_persian_digits }}
+                </p>
+            </div>
+            {% if sms.balance.ok %}
+            <span class="aac-chip{% if sms.balance.is_low %} aac-chip--warn{% else %} aac-chip--live{% endif %}">
+                <i class="fas fa-wallet"></i>
+                {% if sms.balance.sms_count is not None %}
+                {{ sms.balance.sms_count|to_persian_digits }} پیامک
+                {% else %}
+                {{ sms.balance.credit|floatformat:0 }} تومان
+                {% endif %}
+            </span>
+            {% endif %}
+        </div>
+        <div class="aac-panel__body">
+            {% if sms.outdated_count == 0 %}
+            <div class="aac-empty">
+                <i class="fas fa-circle-check"></i>
+                <strong>همه روی آخرین نسخه هستند</strong>
+                <span>گیرنده‌ای برای پیامک آپدیت وجود ندارد.</span>
+            </div>
+            {% else %}
+            <form method="post" action="{{ sms.send_url }}" class="aac-sms-grid">
+                {% csrf_token %}
+                <input type="hidden" name="name" value="یادآوری آپدیت اندروید">
+
+                <div class="aac-compose">
+                    <label class="aac-field">
+                        <span>متن پیام</span>
+                        <textarea id="aac-sms-template" name="message_template" rows="6" dir="rtl" required>{{ sms.default_template }}</textarea>
+                    </label>
+                    <div class="aac-vars">
+                        <code dir="ltr">{name_part}</code>
+                        <code dir="ltr">{version}</code>
+                        <code dir="ltr">{latest_version}</code>
+                        <code dir="ltr">{link}</code>
+                    </div>
+                    <div class="aac-sms-meta">
+                        <span>انتخاب‌شده: <strong id="aac-sms-selected-count">۰</strong> نفر</span>
+                        <span>حداکثر {{ sms.batch_limit|to_persian_digits }} پیام / ارسال</span>
+                    </div>
+
+                    <div class="aac-table-wrap">
+                        <table class="aac-table" id="aac-sms-recipients-table">
+                            <thead>
+                                <tr>
+                                    <th><input type="checkbox" id="aac-sms-select-all" checked aria-label="انتخاب همه"></th>
+                                    <th>کاربر</th>
+                                    <th>نسخه</th>
+                                    <th>مدل</th>
+                                    <th>موبایل</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for row in sms.preview.recipients %}
+                                <tr>
+                                    <td><input type="checkbox" name="selected_phones" value="{{ row.phone }}" checked></td>
+                                    <td>{{ row.name|default:"—" }}</td>
+                                    <td><span class="aac-version-pill" dir="ltr">{{ row.version|default:"—" }}</span></td>
+                                    <td>{{ row.device_model|default:"—"|truncatechars:22 }}</td>
+                                    <td dir="ltr">{{ row.phone }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {% if sms.preview.count > sms.preview.capped_count %}
+                    <p class="aac-kpi__sub">
+                        {{ sms.preview.capped_count|to_persian_digits }} از {{ sms.preview.count|to_persian_digits }} نفر —
+                        <a href="{% url 'admin_panel_marketing' %}?segment=android_outdated">ارسال از بازاریابی</a>
+                    </p>
+                    {% endif %}
+
+                    <div class="aac-sms-actions">
+                        <label class="aac-field" style="max-width:8rem;margin:0">
+                            <span>عدم تکرار (روز)</span>
+                            <input type="number" name="dedupe_days" value="7" min="0" max="90">
+                        </label>
+                        <label class="aac-check">
+                            <input type="checkbox" name="confirm_send" value="1" required>
+                            <span>ارسال را تأیید می‌کنم</span>
+                        </label>
+                        <button type="submit" class="aac-btn aac-btn--danger">
+                            <i class="fas fa-paper-plane"></i> ارسال با فراز SMS
+                        </button>
+                    </div>
+                </div>
+
+                <aside class="aac-phone-preview" aria-label="پیش‌نمایش پیام">
+                    <div class="aac-phone-preview__header">
+                        <i class="fas fa-signal"></i> پیش‌نمایش پیامک
+                    </div>
+                    <div class="aac-phone-preview__bubble" id="aac-sms-preview-text"
+                         data-sample-version="{% if sms.preview.recipients %}{{ sms.preview.recipients.0.version }}{% else %}2.0.0{% endif %}"
+                         data-sample-latest="{{ sms.latest_version }}"
+                         data-sample-link="{% if sms.preview.recipients %}{{ sms.preview.recipients.0.link }}{% endif %}">{{ sms.default_template }}</div>
+                </aside>
+            </form>
+            {% endif %}
+        </div>
+    </section>
+
+    <section class="aac-panel" id="aac-users" aria-label="مسیر کاربران">
+        <div class="aac-panel__head">
+            <div>
+                <h2><i class="fas fa-route"></i> مسیر کاربران</h2>
+                <p>{{ funnel_total|to_persian_digits }} کاربر · صفحه {{ page|to_persian_digits }} از {{ total_pages|to_persian_digits }}</p>
+            </div>
+        </div>
+        <div class="aac-panel__body">
+            <div class="aac-table-tools">
+                <input type="search" class="aac-table-search" data-aac-search="aac-users-table" placeholder="جستجو در کاربران…" aria-label="جستجو">
+            </div>
+            <div class="aac-table-wrap">
+                <table class="aac-table" id="aac-users-table">
+                    <thead>
+                        <tr>
+                            <th>کاربر</th>
+                            <th>پلن</th>
+                            <th>دستگاه</th>
+                            <th>فعال</th>
+                            <th>آخرین ثبت</th>
+                            <th>آخرین استفاده</th>
+                            <th>نسخه</th>
+                            <th>وضعیت</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in funnel_rows %}
+                        <tr>
+                            <td class="aac-user-cell"><strong>{{ row.user_display }}</strong></td>
+                            <td>{{ row.plan_label }}</td>
+                            <td>{{ row.device_count|to_persian_digits }}</td>
+                            <td>{{ row.active_device_count|to_persian_digits }}</td>
+                            <td>{% if row.last_registered_at %}{{ row.last_registered_at|to_jalali_fa }}{% else %}—{% endif %}</td>
+                            <td>{% if row.last_seen_at %}{{ row.last_seen_at|to_jalali_fa }}{% else %}—{% endif %}</td>
+                            <td><span class="aac-version-pill" dir="ltr">{{ row.app_version }}</span></td>
+                            <td><span class="aac-badge" data-accent="{{ row.status_key }}">{{ row.status_label }}</span></td>
+                            <td>
+                                <div class="aac-row-actions">
+                                    <a href="{{ row.user_admin_url }}" class="aac-btn aac-btn--sm aac-btn--ghost" target="_blank" rel="noopener">کاربر</a>
+                                    {% if row.activation_admin_url %}
+                                    <a href="{{ row.activation_admin_url }}" class="aac-btn aac-btn--sm aac-btn--ghost" target="_blank" rel="noopener">لایسنس</a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="9">کاربری در این بازه دستگاه ثبت نکرده است.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% if total_pages > 1 %}
+            <nav class="aac-pagination" aria-label="صفحه‌بندی">
+                {% if has_prev %}
+                <a href="{{ prev_page_url }}#aac-users" class="aac-btn aac-btn--sm aac-btn--ghost">قبلی</a>
+                {% endif %}
+                <span>{{ page|to_persian_digits }} / {{ total_pages|to_persian_digits }}</span>
+                {% if has_next %}
+                <a href="{{ next_page_url }}#aac-users" class="aac-btn aac-btn--sm aac-btn--ghost">بعدی</a>
+                {% endif %}
+            </nav>
+            {% endif %}
+        </div>
+    </section>
+
+    <section class="aac-panel" id="aac-data" aria-label="جداول عملیاتی">
+        <div class="aac-panel__head">
+            <div>
+                <h2><i class="fas fa-table"></i> جداول عملیاتی</h2>
+                <p>پیش‌نمایش {{ table_preview_rows|to_persian_digits }} ردیف در هر بخش</p>
+            </div>
+        </div>
+        <div class="aac-panel__body" data-aac-tabs>
+            <div class="aac-tabs" role="tablist">
+                <button type="button" class="aac-tab is-active" data-tab="registrations" role="tab">ثبت دستگاه</button>
+                <button type="button" class="aac-tab" data-tab="usage" role="tab">استفاده اخیر</button>
+                <button type="button" class="aac-tab" data-tab="activations" role="tab">فعال‌سازی</button>
+            </div>
+
+            <div class="aac-tab-panel is-active" data-panel="registrations" role="tabpanel">
+                <div class="aac-table-tools">
+                    <input type="search" class="aac-table-search" data-aac-search="aac-reg-table" placeholder="جستجو…">
+                    <a href="{{ export_urls.devices }}" class="aac-btn aac-btn--sm aac-btn--ghost"><i class="fas fa-file-excel"></i> Excel</a>
+                </div>
+                <div class="aac-table-wrap">
+                    <table class="aac-table" id="aac-reg-table">
+                        <thead>
+                            <tr>
+                                <th>کاربر</th>
+                                <th>مدل</th>
+                                <th>اندروید</th>
+                                <th>نسخه</th>
+                                <th>وضعیت</th>
+                                <th>تاریخ</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in registration_rows %}
+                            <tr>
+                                <td class="aac-user-cell"><strong>{{ row.user_display }}</strong></td>
+                                <td>{{ row.device_model|truncatechars:24 }}</td>
+                                <td dir="ltr">{{ row.os_version }}</td>
+                                <td><span class="aac-version-pill" dir="ltr">{{ row.app_version }}</span></td>
+                                <td>{% if row.is_active %}<span class="aac-badge aac-badge--ok">فعال</span>{% else %}<span class="aac-badge aac-badge--muted">غیرفعال</span>{% endif %}</td>
+                                <td>{{ row.registered_at|to_jalali_fa }}</td>
+                                <td><a href="{{ row.admin_url }}" class="aac-btn aac-btn--sm aac-btn--ghost" target="_blank" rel="noopener">جزئیات</a></td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="7">ثبت دستگاهی در این بازه نیست.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="aac-tab-panel" data-panel="usage" role="tabpanel">
+                <div class="aac-table-tools">
+                    <input type="search" class="aac-table-search" data-aac-search="aac-usage-table" placeholder="جستجو…">
+                    <a href="{{ export_urls.usage }}" class="aac-btn aac-btn--sm aac-btn--ghost"><i class="fas fa-file-excel"></i> Excel</a>
+                </div>
+                <div class="aac-table-wrap">
+                    <table class="aac-table" id="aac-usage-table">
+                        <thead>
+                            <tr>
+                                <th>کاربر</th>
+                                <th>مدل</th>
+                                <th>نسخه</th>
+                                <th>آخرین استفاده</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in usage_rows %}
+                            <tr>
+                                <td class="aac-user-cell"><strong>{{ row.user_display }}</strong></td>
+                                <td>{{ row.device_model|truncatechars:24 }}</td>
+                                <td><span class="aac-version-pill" dir="ltr">{{ row.app_version }}</span></td>
+                                <td>{{ row.last_seen_at|to_jalali_fa }}</td>
+                                <td><a href="{{ row.admin_url }}" class="aac-btn aac-btn--sm aac-btn--ghost" target="_blank" rel="noopener">جزئیات</a></td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="5">استفاده‌ای در این بازه ثبت نشده است.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="aac-tab-panel" data-panel="activations" role="tabpanel">
+                <div class="aac-table-tools">
+                    <input type="search" class="aac-table-search" data-aac-search="aac-act-table" placeholder="جستجو…">
+                    <a href="{{ admin_list_urls.activations }}" class="aac-btn aac-btn--sm aac-btn--ghost" target="_blank" rel="noopener">Admin</a>
+                </div>
+                <div class="aac-table-wrap">
+                    <table class="aac-table" id="aac-act-table">
+                        <thead>
+                            <tr>
+                                <th>کاربر</th>
+                                <th>پلن</th>
+                                <th>دستگاه</th>
+                                <th>تاریخ</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in activation_rows %}
+                            <tr>
+                                <td class="aac-user-cell"><strong>{{ row.user_display }}</strong></td>
+                                <td>{{ row.plan_label }}</td>
+                                <td>{{ row.label|truncatechars:30 }}</td>
+                                <td>{{ row.activated_at|to_jalali_fa }}</td>
+                                <td><a href="{{ row.admin_url }}" class="aac-btn aac-btn--sm aac-btn--ghost" target="_blank" rel="noopener">جزئیات</a></td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="5">فعال‌سازی در این بازه نیست.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="aac-panel" id="aac-snapshot" aria-label="وضعیت کلی">
+        <div class="aac-panel__head">
+            <div>
+                <h2><i class="fas fa-database"></i> Snapshot کلی</h2>
+                <p>وضعیت لحظه‌ای اکوسیستم اندروید</p>
+            </div>
+        </div>
+        <div class="aac-panel__body">
+            <div class="aac-snapshot-grid">
+                {% for card in snapshot_kpi_cards %}
+                <div class="aac-snapshot-item">
+                    <span>{{ card.label }}</span>
+                    <strong data-count-up="{{ card.value }}">{{ card.value|to_persian_digits }}</strong>
+                </div>
                 {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</section>
-
-<section class="ecc-section ecc-win-snapshot" aria-label="وضعیت کلی">
-    <header class="ecc-section-head ecc-section-head--slim">
-        <div>
-            <h2><i class="fas fa-database"></i> وضعیت کلی</h2>
-            <p>Snapshot</p>
+            </div>
         </div>
-    </header>
-    <ul class="ecc-stat-strip">
-        <li><span>کل دستگاه</span><strong>{{ snapshot.android_devices_total|to_persian_digits }}</strong></li>
-        <li><span>دستگاه فعال</span><strong>{{ snapshot.android_devices_active|to_persian_digits }}</strong></li>
-        <li><span>کاربران</span><strong>{{ snapshot.android_users_total|to_persian_digits }}</strong></li>
-        <li><span>ثبت (۷ روز)</span><strong>{{ snapshot.android_registrations_week|to_persian_digits }}</strong></li>
-        <li><span>DAU</span><strong>{{ snapshot.android_dau|to_persian_digits }}</strong></li>
-        <li><span>WAU</span><strong>{{ snapshot.android_wau|to_persian_digits }}</strong></li>
-        <li><span>MAU</span><strong>{{ snapshot.android_mau|to_persian_digits }}</strong></li>
-        <li><span>فعال‌سازی</span><strong>{{ snapshot.android_activations_total|to_persian_digits }}</strong></li>
-    </ul>
-</section>
+    </section>
 
+</div>
+{% endblock %}
+
+{% block admin_panel_extra_js %}
+<script src="{% static 'js/mizkar-admin-android-center.js' %}?v=1"></script>
 {% endblock %}

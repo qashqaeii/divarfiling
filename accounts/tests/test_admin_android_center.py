@@ -164,8 +164,8 @@ class AdminAndroidCenterViewTests(TestCase):
             resp = self.client.get(reverse('admin_panel_android'), {'days': days})
             self.assertEqual(resp.status_code, 200)
             content = resp.content.decode()
-            self.assertIn('ecc-android', content)
-            self.assertIn('android-funnel-table', content)
+            self.assertIn('aac-page', content)
+            self.assertIn('aac-overview', content)
             self.assertIn(f'data-range="{days}"', content)
 
         self.assertEqual(resolve_admin_panel_nav_active('/accounts/admin-panel/android/'), 'android')
@@ -202,5 +202,5 @@ class AdminAndroidCenterViewTests(TestCase):
         resp = self.client.get(reverse('admin_panel_android'))
         self.assertEqual(resp.status_code, 200)
         content = resp.content.decode()
-        self.assertIn('android-sms-update', content)
+        self.assertIn('aac-sms', content)
         self.assertIn('فراز SMS', content)

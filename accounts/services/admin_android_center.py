@@ -140,6 +140,56 @@ def _serialize_activations(items) -> List[Dict[str, Any]]:
     return rows
 
 
+def _build_range_kpi_cards(
+    *,
+    range_label: str,
+    range_summary: Dict[str, int],
+    range_deltas: Dict[str, int | None],
+) -> List[Dict[str, Any]]:
+    def card(key, label, value, icon, accent, delta_key=None):
+        return {
+            'key': key,
+            'label': label,
+            'sublabel': range_label,
+            'value': value,
+            'icon': icon,
+            'accent': accent,
+            'delta': range_deltas.get(delta_key) if delta_key else None,
+        }
+
+    return [
+        card('registrations', 'ثبت دستگاه', range_summary['registrations'], 'fa-mobile-screen', 'green', 'registrations'),
+        card('install_users', 'کاربر نصب‌کننده', range_summary['install_users'], 'fa-user-plus', 'teal'),
+        card('active_users', 'کاربر فعال', range_summary['active_users'], 'fa-signal', 'cyan', 'active_users'),
+        card('dau_today', 'DAU امروز', range_summary['dau_today'], 'fa-bolt', 'emerald'),
+        card('activations', 'فعال‌سازی', range_summary['activations'], 'fa-key', 'amber', 'activations'),
+    ]
+
+
+def _build_snapshot_kpi_cards(snapshot: Dict[str, int]) -> List[Dict[str, Any]]:
+    return [
+        {'key': 'devices_total', 'label': 'کل دستگاه', 'value': snapshot['android_devices_total'], 'icon': 'fa-tablet-screen-button', 'accent': 'green'},
+        {'key': 'devices_active', 'label': 'دستگاه فعال', 'value': snapshot['android_devices_active'], 'icon': 'fa-circle-check', 'accent': 'emerald'},
+        {'key': 'users_total', 'label': 'کاربران', 'value': snapshot['android_users_total'], 'icon': 'fa-users', 'accent': 'teal'},
+        {'key': 'registrations_week', 'label': 'ثبت (۷ روز)', 'value': snapshot['android_registrations_week'], 'icon': 'fa-calendar-week', 'accent': 'cyan'},
+        {'key': 'dau', 'label': 'DAU', 'value': snapshot['android_dau'], 'icon': 'fa-sun', 'accent': 'blue'},
+        {'key': 'wau', 'label': 'WAU', 'value': snapshot['android_wau'], 'icon': 'fa-chart-simple', 'accent': 'violet'},
+        {'key': 'mau', 'label': 'MAU', 'value': snapshot['android_mau'], 'icon': 'fa-chart-line', 'accent': 'indigo'},
+        {'key': 'activations_total', 'label': 'فعال‌سازی', 'value': snapshot['android_activations_total'], 'icon': 'fa-shield-halved', 'accent': 'amber'},
+    ]
+
+
+def _enrich_version_rows(version_rows: List[Dict[str, Any]], latest_version_name: str) -> List[Dict[str, Any]]:
+    from accounts.services.admin_android_app import is_android_version_outdated
+
+    enriched = []
+    for row in version_rows:
+        item = dict(row)
+        item['is_latest'] = not is_android_version_outdated(row['version'], latest_version_name)
+        enriched.append(item)
+    return enriched
+
+
 def get_android_center_context(
     days: int = 30,
     page: int = 1,
@@ -153,7 +203,6 @@ def get_android_center_context(
     prev_summary = build_android_range_summary(prev_start, prev_end)
     funnel_steps = build_android_funnel_steps(start, end)
     snapshot = get_android_app_stats()
-    version_rows = get_android_version_distribution()
 
     funnel_rows, funnel_total = get_android_user_funnel(
         start=start,
@@ -170,23 +219,38 @@ def get_android_center_context(
     version_name, version_code = android_apk_version_info()
     app_version_label = f'{version_name} ({version_code})'
     sms_preview = preview_segment('android_outdated', sample_size=10)
-    _, _, latest_label = get_latest_android_version_label()
+    latest_version_name, _, latest_label = get_latest_android_version_label()
+    version_rows = _enrich_version_rows(
+        get_android_version_distribution(),
+        latest_version_name,
+    )
+
+    range_deltas = {
+        'registrations': _pct_change(range_summary['registrations'], prev_summary['registrations']),
+        'active_users': _pct_change(range_summary['active_users'], prev_summary['active_users']),
+        'activations': _pct_change(range_summary['activations'], prev_summary['activations']),
+    }
+    mau = snapshot.get('android_mau') or 0
+    dau_mau_ratio = round((snapshot['android_dau'] / mau) * 100) if mau else None
 
     return {
         'range_label': _range_label_fa(days),
         'days': days,
         'app_version': app_version_label,
+        'latest_version_name': latest_version_name,
         'range_summary': range_summary,
-        'range_deltas': {
-            'registrations': _pct_change(range_summary['registrations'], prev_summary['registrations']),
-            'active_users': _pct_change(range_summary['active_users'], prev_summary['active_users']),
-            'activations': _pct_change(range_summary['activations'], prev_summary['activations']),
-        },
-        'snapshot': snapshot,
+        'range_deltas': range_deltas,
+        'range_kpi_cards': _build_range_kpi_cards(
+            range_label=_range_label_fa(days),
+            range_summary=range_summary,
+            range_deltas=range_deltas,
+        ),
+        'snapshot_kpi_cards': _build_snapshot_kpi_cards(snapshot),
         'funnel_steps': funnel_steps,
         'funnel_conversion': {
             'install_to_active': active_conv,
             'install_to_usage': usage_conv,
+            'dau_mau_ratio': dau_mau_ratio,
         },
         'version_rows': version_rows,
         'funnel_rows': _serialize_funnel_rows(funnel_rows),

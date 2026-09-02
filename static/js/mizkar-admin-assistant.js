@@ -189,9 +189,24 @@
         });
     });
 
-    function findRule(key) {
-        return rules.find(function (r) { return r.key === key; }) || null;
+    function setButtonLoading(btn, loading) {
+        if (!btn) return;
+        btn.disabled = !!loading;
+        btn.classList.toggle('is-loading', !!loading);
     }
+
+    document.querySelectorAll('.maa-btn-details-toggle').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var controlsId = btn.getAttribute('aria-controls');
+            var panel = controlsId ? document.getElementById(controlsId) : null;
+            if (!panel) return;
+            var expanded = btn.getAttribute('aria-expanded') === 'true';
+            btn.setAttribute('aria-expanded', expanded ? 'false' : 'true');
+            panel.hidden = expanded;
+            btn.textContent = expanded ? 'جزئیات' : 'بستن جزئیات';
+        });
+    });
+
 
     function loadPreview(insightKey) {
         if (!previewUrl || !insightKey) return Promise.resolve(null);
@@ -344,7 +359,7 @@
     if (confirmSend) {
         confirmSend.addEventListener('click', function () {
             if (!currentInsight || !sendUrl) return;
-            confirmSend.disabled = true;
+            setButtonLoading(confirmSend, true);
             fetch(sendUrl, {
                 method: 'POST',
                 credentials: 'same-origin',
@@ -370,7 +385,7 @@
                     }
                 })
                 .catch(function () { alert('خطا در ارسال.'); })
-                .finally(function () { confirmSend.disabled = false; });
+                .finally(function () { setButtonLoading(confirmSend, false); });
         });
     }
 
@@ -557,7 +572,7 @@
 
     document.querySelectorAll('.maa-btn-toggle-auto').forEach(function (btn) {
         btn.addEventListener('click', function () {
-            toggleAutomation(btn.dataset.rule, btn.dataset.active === '1');
+            toggleAutomation(btn.dataset.rule, btn.dataset.active === '1', btn);
         });
     });
 
@@ -826,8 +841,12 @@
         });
     }
 
-    function toggleAutomation(ruleKey, active) {
+    function toggleAutomation(ruleKey, active, triggerBtn) {
         if (!automationUrl || !ruleKey) return;
+        var buttons = triggerBtn
+            ? [triggerBtn]
+            : Array.prototype.slice.call(document.querySelectorAll('.maa-btn-toggle-auto[data-rule="' + ruleKey + '"]'));
+        buttons.forEach(function (b) { setButtonLoading(b, true); });
         fetch(automationUrl, {
             method: 'POST',
             credentials: 'same-origin',
@@ -846,6 +865,9 @@
                     alert(data.error || 'عملیات ناموفق بود.');
                 }
             })
-            .catch(function () { alert('خطا در ذخیره تنظیمات.'); });
+            .catch(function () { alert('خطا در ذخیره تنظیمات.'); })
+            .finally(function () {
+                buttons.forEach(function (b) { setButtonLoading(b, false); });
+            });
     }
 })();

@@ -1292,6 +1292,33 @@ def ensure_automation_rules() -> None:
                 rule.save(update_fields=update_fields + ['updated_at'])
 
 
+def _rule_list_status(rule: Optional[ManagementAutomationRule]) -> tuple[str, str]:
+    if not rule:
+        return 'خاموش', 'inactive'
+    if rule.is_paused:
+        return 'متوقف موقت', 'paused'
+    if rule.is_active:
+        return 'فعال', 'active'
+    return 'خاموش', 'inactive'
+
+
+def _last_execution_summary(rule: Optional[ManagementAutomationRule]) -> str:
+    if not rule:
+        return '—'
+    ex = rule.executions.order_by('-started_at').first()
+    if not ex:
+        return '—'
+    if ex.dry_run:
+        return 'آخرین: Dry Run'
+    if ex.failed_count:
+        return f'آخرین: {ex.failed_count} خطا'
+    if ex.success_count:
+        return f'آخرین: {ex.success_count} موفق'
+    if ex.matched_count:
+        return f'آخرین: {ex.matched_count} تطبیق'
+    return ex.get_status_display()
+
+
 def get_automation_rules() -> List[Dict[str, Any]]:
     ensure_automation_rules()
     db_rules = {r.key: r for r in ManagementAutomationRule.objects.all()}
@@ -1301,6 +1328,7 @@ def get_automation_rules() -> List[Dict[str, Any]]:
         rule = db_rules.get(catalog['key'])
         group_key = catalog.get('group', '')
         group = group_map.get(group_key, {})
+        status_label, status_tone = _rule_list_status(rule)
         rows.append({
             'key': catalog['key'],
             'name': catalog['name'],
@@ -1317,6 +1345,11 @@ def get_automation_rules() -> List[Dict[str, Any]]:
             'supports_discount': bool(catalog.get('supports_discount')),
             'is_active': bool(rule and rule.is_active),
             'last_run_at': rule.last_run_at if rule else None,
+            'last_run_label': _format_run_time(rule.last_run_at) if rule else '—',
+            'next_run_label': _compute_next_run_label(rule) if rule else '—',
+            'last_result_label': _last_execution_summary(rule),
+            'status_label': status_label,
+            'status_tone': status_tone,
             'cooldown_days': rule.cooldown_days if rule else 7,
             'cadence': catalog.get('cadence', 'daily'),
             'action_type': catalog.get('action_type', 'send_sms'),

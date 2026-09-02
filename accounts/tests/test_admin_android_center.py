@@ -10,9 +10,13 @@ from accounts.services.admin_android_app import (
     build_android_range_summary,
     get_android_user_funnel,
     get_android_version_distribution,
+    get_outdated_android_users,
+    is_android_version_outdated,
+    parse_app_version_tuple,
 )
 from accounts.services.admin_android_center import get_android_center_context
 from accounts.services.admin_dashboard import _date_range
+from accounts.services.admin_marketing import build_segment_recipients
 from accounts.services.admin_panel_shell import resolve_admin_panel_nav_active
 from licenses.models import License, LicenseActivation
 from mobile_api.models import MobileDevice
@@ -111,6 +115,27 @@ class AndroidCenterServiceTests(TestCase):
         self.assertIn('devices', ctx['export_urls'])
         self.assertIn('android_devices', ctx['export_urls']['devices'])
 
+    def test_version_outdated_detection(self):
+        self.assertEqual(parse_app_version_tuple('2.6.4'), (2, 6, 4))
+        self.assertTrue(is_android_version_outdated('2.6.3', '2.6.4'))
+        self.assertFalse(is_android_version_outdated('2.6.4', '2.6.4'))
+        self.assertTrue(is_android_version_outdated('', '2.6.4'))
+
+    def test_outdated_segment_lists_user(self):
+        self._create_device(app_version='2.0.0')
+        recipients = build_segment_recipients('android_outdated')
+        self.assertEqual(len(recipients), 1)
+        self.assertEqual(recipients[0].context.get('version'), '2.0.0')
+        self.assertIn('latest_version', recipients[0].context)
+
+    def test_sms_context_present(self):
+        self._create_device(app_version='2.0.0')
+        ctx = get_android_center_context(days=30)
+        self.assertIn('sms', ctx)
+        self.assertGreaterEqual(ctx['sms']['outdated_count'], 1)
+        self.assertIn('default_template', ctx['sms'])
+        self.assertIn('send_url', ctx['sms'])
+
 
 @override_settings(TIME_ZONE='Asia/Tehran')
 class AdminAndroidCenterViewTests(TestCase):
@@ -150,3 +175,32 @@ class AdminAndroidCenterViewTests(TestCase):
         resp = self.client.get(reverse('admin_panel_android'), {'days': '30', 'compare': '1'})
         self.assertEqual(resp.status_code, 200)
         self.assertIn('compare=1', resp.content.decode())
+
+    def test_sms_preview_json(self):
+        MobileDevice.objects.create(
+            user=self.user,
+            device_id='preview-device',
+            app_version='1.0.0',
+            is_active=True,
+        )
+        self.client.force_login(self.staff)
+        resp = self.client.get(reverse('admin_panel_android_sms_preview'))
+        self.assertEqual(resp.status_code, 200)
+        data = resp.json()
+        self.assertTrue(data.get('ok'))
+        self.assertEqual(data.get('key'), 'android_outdated')
+        self.assertGreaterEqual(data.get('count', 0), 1)
+
+    def test_android_page_renders_sms_section(self):
+        MobileDevice.objects.create(
+            user=self.user,
+            device_id='sms-device',
+            app_version='1.0.0',
+            is_active=True,
+        )
+        self.client.force_login(self.staff)
+        resp = self.client.get(reverse('admin_panel_android'))
+        self.assertEqual(resp.status_code, 200)
+        content = resp.content.decode()
+        self.assertIn('android-sms-update', content)
+        self.assertIn('فراز SMS', content)

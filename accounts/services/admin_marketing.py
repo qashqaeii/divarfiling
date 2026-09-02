@@ -41,6 +41,12 @@ SEGMENT_DEFAULT_TEMPLATES = {
         'سلام{name_part}، پیشنهاد ویژه برای کاربران «{product}». '
         'با کد {code} از میزکار: {link}'
     ),
+    'android_outdated': (
+        'سلام{name_part} 👋\n'
+        'نسخه جدید اپ فایلینگ دیوار ({latest_version}) آماده است.\n'
+        'نسخه فعلی شما: {version}\n'
+        'برای آپدیت: {link}'
+    ),
     'abandoned_checkout': (
         'سلام{name_part}، سفارش «{product}» هنوز تکمیل نشده. '
         'ادامه خرید: {link}'
@@ -91,6 +97,15 @@ SEGMENT_REGISTRY: Dict[str, Dict[str, Any]] = {
         'supports_stale_hours': False,
         'supports_days_lookback': False,
         'supports_product': True,
+    },
+    'android_outdated': {
+        'title': 'اندروید — نسخه قدیمی',
+        'description': 'کاربرانی که اپ اندروید نصب دارند اما به آخرین نسخه آپدیت نکرده‌اند',
+        'icon': 'fa-mobile-screen',
+        'accent': 'green',
+        'supports_stale_hours': False,
+        'supports_days_lookback': False,
+        'supports_product': False,
     },
     'abandoned_checkout': {
         'title': 'رها کردن Checkout',
@@ -177,6 +192,8 @@ def build_segment_recipients(
         items = _segment_users_with_active_license(product_id=product_id)
     elif segment_key == 'users_without_license':
         items = _segment_users_without_license(days_lookback=days_lookback)
+    elif segment_key == 'android_outdated':
+        items = _segment_android_outdated()
     else:
         items = []
 
@@ -416,6 +433,36 @@ def _segment_users_without_license(*, days_lookback: Optional[int] = None) -> Li
     return rows
 
 
+def _segment_android_outdated() -> List[SegmentRecipient]:
+    from accounts.services.admin_android_app import get_android_download_url, get_outdated_android_users
+
+    download_url = get_android_download_url()
+    rows: List[SegmentRecipient] = []
+    for item in get_outdated_android_users(active_only=True):
+        user = item.user
+        name = _user_first_name(user)
+        if not name:
+            name = (user.get_full_name() or '').strip() or (user.username or '').strip()
+        rows.append(SegmentRecipient(
+            user=user,
+            phone=item.phone,
+            context={
+                'name': name,
+                'name_part': f' {name}' if name else '',
+                'product': 'اپ اندروید',
+                'plan': '',
+                'amount': '',
+                'link': download_url,
+                'order_id': '',
+                'code': '',
+                'version': item.app_version,
+                'latest_version': item.latest_version,
+                'device_model': item.device_model,
+            },
+        ))
+    return rows
+
+
 def preview_segment(
     segment_key: str,
     *,
@@ -458,6 +505,9 @@ def preview_segment(
             'link': ctx.get('link') or '',
             'order_id': ctx.get('order_id') or '',
             'code': ctx.get('code') or '',
+            'version': ctx.get('version') or '',
+            'latest_version': ctx.get('latest_version') or '',
+            'device_model': ctx.get('device_model') or '',
         }
 
     return {

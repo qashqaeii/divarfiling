@@ -11,12 +11,14 @@ from accounts.services.admin_android_app import (
     ANDROID_FUNNEL_PAGE_SIZE,
     build_android_funnel_steps,
     build_android_range_summary,
+    count_outdated_android_users,
     get_android_activations,
     get_android_app_stats,
     get_android_recent_usage,
     get_android_registrations,
     get_android_user_funnel,
     get_android_version_distribution,
+    get_latest_android_version_label,
 )
 from accounts.services.admin_dashboard import (
     TABLE_PREVIEW_ROWS,
@@ -25,6 +27,12 @@ from accounts.services.admin_dashboard import (
     _previous_period_bounds,
     _range_label_fa,
 )
+from accounts.services.admin_marketing import (
+    MARKETING_BATCH_LIMIT,
+    SEGMENT_DEFAULT_TEMPLATES,
+    preview_segment,
+)
+from accounts.services.sms import get_sms_balance_snapshot
 from shop.services.app_downloads import android_apk_version_info
 
 
@@ -161,6 +169,8 @@ def get_android_center_context(
 
     version_name, version_code = android_apk_version_info()
     app_version_label = f'{version_name} ({version_code})'
+    sms_preview = preview_segment('android_outdated', sample_size=10)
+    _, _, latest_label = get_latest_android_version_label()
 
     return {
         'range_label': _range_label_fa(days),
@@ -206,5 +216,16 @@ def get_android_center_context(
         'export_urls': {
             'devices': reverse('admin_panel_export', args=['android_devices']) + '?format=xlsx',
             'usage': reverse('admin_panel_export', args=['android_active_devices']) + '?format=xlsx',
+        },
+        'sms': {
+            'segment_key': 'android_outdated',
+            'outdated_count': count_outdated_android_users(),
+            'latest_version': latest_label,
+            'batch_limit': MARKETING_BATCH_LIMIT,
+            'default_template': SEGMENT_DEFAULT_TEMPLATES.get('android_outdated', ''),
+            'preview': sms_preview,
+            'balance': get_sms_balance_snapshot(),
+            'preview_url': reverse('admin_panel_android_sms_preview'),
+            'send_url': reverse('admin_panel_android_sms_send'),
         },
     }

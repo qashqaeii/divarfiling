@@ -911,6 +911,67 @@ class AdminAndroidCenterView(StaffRequiredMixin, TemplateView):
         return ctx
 
 
+class AdminAndroidSmsPreviewView(StaffRequiredMixin, View):
+    """پیش‌نمایش گیرندگان نسخه قدیمی اندروید."""
+
+    def get(self, request):
+        try:
+            data = preview_segment('android_outdated', sample_size=10)
+        except ValueError as exc:
+            return JsonResponse({'ok': False, 'error': str(exc)}, status=400)
+        return JsonResponse(
+            {'ok': True, **data},
+            encoder=DjangoJSONEncoder,
+            json_dumps_params={'ensure_ascii': False},
+        )
+
+
+class AdminAndroidSmsSendView(StaffRequiredMixin, View):
+    """ارسال پیامک Faraz به کاربران با نسخه قدیمی اندروید."""
+
+    def post(self, request):
+        if request.POST.get('confirm_send') != '1':
+            messages.error(request, 'برای ارسال، تأیید قطعی را فعال کنید.')
+            return redirect('admin_panel_android')
+
+        selected_phones = [
+            p.strip() for p in request.POST.getlist('selected_phones') if (p or '').strip()
+        ]
+        if not selected_phones:
+            messages.error(request, 'حداقل یک گیرنده را برای ارسال انتخاب کنید.')
+            return redirect('admin_panel_android')
+
+        message_template = (
+            request.POST.get('message_template')
+            or SEGMENT_DEFAULT_TEMPLATES.get('android_outdated', '')
+        )
+        dedupe_days = _parse_int(request.POST.get('dedupe_days'), 7, minimum=0, maximum=90) or 0
+
+        try:
+            campaign = create_campaign_draft(
+                name=request.POST.get('name') or 'یادآوری آپدیت اندروید',
+                segment_key='android_outdated',
+                message_template=message_template,
+                discount_mode='none',
+                created_by=request.user,
+                dedupe_days=dedupe_days,
+            )
+            run_campaign_send(campaign, selected_phones=selected_phones)
+        except MarketingSendError as exc:
+            messages.error(request, exc.message)
+            return redirect('admin_panel_android')
+        except Exception:
+            messages.error(request, 'خطای غیرمنتظره در ارسال پیامک.')
+            return redirect('admin_panel_android')
+
+        messages.success(
+            request,
+            f'پیامک آپدیت اندروید ارسال شد: {campaign.sent_count} موفق، '
+            f'{campaign.failed_count} ناموفق، {campaign.skipped_count} ردشده.',
+        )
+        return redirect('admin_panel_marketing_detail', pk=campaign.pk)
+
+
 class AdminCrmCenterView(StaffRequiredMixin, TemplateView):
     """مرکز CRM — Adoption و عملیات فایلینگ."""
 

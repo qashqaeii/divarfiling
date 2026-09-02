@@ -2,8 +2,11 @@
 from __future__ import annotations
 
 import math
+import re
+from collections import defaultdict
+from dataclasses import dataclass
 from datetime import timedelta
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from django.contrib.auth import get_user_model
 from django.db.models import Count, Max, Q
@@ -346,3 +349,90 @@ def get_android_activations(limit: int = TABLE_FETCH_LIMIT, *, start=None, end=N
     if start is not None and end is not None:
         qs = qs.filter(activated_at__date__gte=start, activated_at__date__lte=end)
     return qs[:limit]
+
+
+_VERSION_TUPLE_RE = re.compile(r'(\d+)\.(\d+)\.(\d+)')
+
+
+def parse_app_version_tuple(version: str) -> Optional[Tuple[int, int, int]]:
+    """استخراج نسخه semver از رشته app_version."""
+    match = _VERSION_TUPLE_RE.search(version or '')
+    if not match:
+        return None
+    return int(match.group(1)), int(match.group(2)), int(match.group(3))
+
+
+def is_android_version_outdated(device_version: str, latest_version: str) -> bool:
+    """آیا نسخه دستگاه از آخرین نسخه منتشرشده قدیمی‌تر است."""
+    latest = parse_app_version_tuple(latest_version)
+    if latest is None:
+        return False
+    device = parse_app_version_tuple(device_version)
+    if device is None:
+        return True
+    return device < latest
+
+
+def get_latest_android_version_label() -> Tuple[str, int, str]:
+    """version_name، build و برچسب نمایشی آخرین APK."""
+    from shop.services.app_downloads import android_apk_version_info
+
+    version_name, version_code = android_apk_version_info()
+    return version_name, version_code, f'v{version_name} ({version_code})'
+
+
+def get_android_download_url() -> str:
+    from django.conf import settings
+    from django.urls import reverse
+
+    site = (getattr(settings, 'SITE_URL', '') or 'https://divarfiling.ir').rstrip('/')
+    return f'{site}{reverse("android_app_download")}'
+
+
+@dataclass
+class OutdatedAndroidUser:
+    user: Any
+    phone: str
+    app_version: str
+    latest_version: str
+    device_model: str
+    last_seen_at: Any
+
+
+def get_outdated_android_users(*, active_only: bool = True) -> List[OutdatedAndroidUser]:
+    """کاربرانی که حداقل یک دستگاه فعال با نسخه قدیمی دارند."""
+    latest_name, _, latest_label = get_latest_android_version_label()
+    qs = MobileDevice.objects.select_related('user')
+    if active_only:
+        qs = qs.filter(is_active=True)
+
+    grouped: Dict[int, List[MobileDevice]] = defaultdict(list)
+    for device in qs.order_by('-last_seen_at'):
+        grouped[device.user_id].append(device)
+
+    rows: List[OutdatedAndroidUser] = []
+    for devices in grouped.values():
+        outdated_devices = [
+            d for d in devices
+            if is_android_version_outdated(d.app_version, latest_name)
+        ]
+        if not outdated_devices:
+            continue
+        primary = outdated_devices[0]
+        user = primary.user
+        phone = (getattr(user, 'phone', '') or '').strip()
+        if not phone:
+            continue
+        rows.append(OutdatedAndroidUser(
+            user=user,
+            phone=phone,
+            app_version=(primary.app_version or '').strip() or 'نامشخص',
+            latest_version=latest_label,
+            device_model=(primary.device_model or '').strip() or '—',
+            last_seen_at=primary.last_seen_at,
+        ))
+    return rows
+
+
+def count_outdated_android_users(*, active_only: bool = True) -> int:
+    return len(get_outdated_android_users(active_only=active_only))

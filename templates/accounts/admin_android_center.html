@@ -129,6 +129,108 @@
     </div>
 </section>
 
+<section class="ecc-section" id="android-sms-update" aria-label="پیامک آپدیت">
+    <header class="ecc-section-head">
+        <div>
+            <h2><i class="fas fa-comment-sms"></i> یادآوری آپدیت (فراز SMS)</h2>
+            <p>
+                {{ sms.outdated_count|to_persian_digits }} کاربر با نسخه قدیمی‌تر از {{ sms.latest_version|to_persian_digits }}
+                · حداکثر {{ sms.batch_limit|to_persian_digits }} پیام در هر ارسال
+            </p>
+        </div>
+        {% if sms.balance.ok %}
+        <span class="ecc-status-pill{% if sms.balance.is_low %} is-warn{% endif %}">
+            {% if sms.balance.sms_count is not None %}
+            اعتبار: {{ sms.balance.sms_count|to_persian_digits }} پیامک
+            {% else %}
+            اعتبار: {{ sms.balance.credit|floatformat:0 }} ت
+            {% endif %}
+        </span>
+        {% endif %}
+    </header>
+
+    {% if sms.outdated_count == 0 %}
+    <p class="ecc-section-note">همه کاربران فعال روی آخرین نسخه هستند — گیرنده‌ای برای پیامک نیست.</p>
+    {% else %}
+    <form method="post" action="{{ sms.send_url }}" class="ecc-android-sms-form">
+        {% csrf_token %}
+        <input type="hidden" name="name" value="یادآوری آپدیت اندروید">
+
+        <label class="ecc-field">
+            <span>متن پیام</span>
+            <textarea name="message_template" rows="5" dir="rtl" required>{{ sms.default_template }}</textarea>
+        </label>
+        <p class="ecc-section-note">
+            متغیرها: <code dir="ltr">{name_part}</code>، <code dir="ltr">{version}</code>،
+            <code dir="ltr">{latest_version}</code>، <code dir="ltr">{link}</code>
+        </p>
+
+        <div class="adm-table-wrap">
+            <table class="adm-table adm-table--pro">
+                <thead>
+                    <tr>
+                        <th><input type="checkbox" id="android-sms-select-all" checked aria-label="انتخاب همه"></th>
+                        <th>کاربر</th>
+                        <th>نسخه فعلی</th>
+                        <th>مدل</th>
+                        <th>موبایل</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in sms.preview.recipients %}
+                    <tr>
+                        <td>
+                            <input type="checkbox" name="selected_phones" value="{{ row.phone }}" checked>
+                        </td>
+                        <td>{{ row.name|default:"—" }}</td>
+                        <td dir="ltr">{{ row.version|default:"—" }}</td>
+                        <td>{{ row.device_model|default:"—"|truncatechars:20 }}</td>
+                        <td dir="ltr">{{ row.phone }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5">گیرنده‌ای یافت نشد.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if sms.preview.count > sms.preview.capped_count %}
+        <p class="ecc-section-note">
+            {{ sms.preview.capped_count|to_persian_digits }} نفر از {{ sms.preview.count|to_persian_digits }} نفر نمایش داده شد.
+            برای ارسال به همه، چند بار با گروه‌های مختلف ارسال کنید یا از
+            <a href="{% url 'admin_panel_marketing' %}?segment=android_outdated">اتوماسیون بازاریابی</a> استفاده کنید.
+        </p>
+        {% endif %}
+
+        <div class="ecc-android-sms-actions">
+            <label class="ecc-field ecc-field--inline">
+                <span>عدم تکرار (روز)</span>
+                <input type="number" name="dedupe_days" value="7" min="0" max="90" style="width:5rem">
+            </label>
+            <label class="ecc-check">
+                <input type="checkbox" name="confirm_send" value="1" required>
+                <span>ارسال پیامک را تأیید می‌کنم</span>
+            </label>
+            <button type="submit" class="ecc-btn ecc-btn--primary">
+                <i class="fas fa-paper-plane"></i> ارسال با فراز SMS
+            </button>
+        </div>
+    </form>
+    {% endif %}
+</section>
+
+<script>
+(function () {
+    var master = document.getElementById('android-sms-select-all');
+    if (!master) return;
+    master.addEventListener('change', function () {
+        document.querySelectorAll('#android-sms-update input[name="selected_phones"]').forEach(function (cb) {
+            cb.checked = master.checked;
+        });
+    });
+})();
+</script>
+
 <section class="ecc-section" id="android-funnel-table" aria-label="Funnel کاربران">
     <header class="ecc-section-head">
         <div>

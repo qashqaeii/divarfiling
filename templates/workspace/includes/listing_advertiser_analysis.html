@@ -42,30 +42,26 @@
         <div class="ws-adv-analysis__result ws-adv-analysis__result--{{ advertiser_analysis.classification }}">
             <div class="ws-adv-analysis__classification">
                 <strong>{{ advertiser_analysis.classification_label_qualified }}</strong>
-                <span class="ws-adv-analysis__confidence">{{ advertiser_analysis.confidence_label }}</span>
+                <span class="ws-adv-analysis__confidence">· {{ advertiser_analysis.confidence_label }}</span>
             </div>
+            {% if advertiser_analysis.primary_reason_label %}
+            <p class="ws-adv-analysis__reason-line">{{ advertiser_analysis.primary_reason_label }}</p>
+            {% endif %}
             <p class="ws-adv-analysis__summary">{{ advertiser_analysis.summary }}</p>
         </div>
-
-        {% if advertiser_analysis.primary_reason_label %}
-        <div class="ws-adv-analysis__primary-reason">
-            <span class="ws-adv-analysis__section-label">دلیل اصلی</span>
-            <p>{{ advertiser_analysis.primary_reason_label }}</p>
-        </div>
-        {% endif %}
 
         {% if advertiser_analysis.primary_signals or advertiser_analysis.secondary_signals or advertiser_analysis.owner_signals %}
         <div>
             <span class="ws-adv-analysis__section-label">نشانه‌ها</span>
             <div class="ws-adv-analysis__signals-wrap">
                 {% for signal in advertiser_analysis.primary_signals %}
-                <span class="ws-adv-analysis__signal ws-adv-analysis__signal--primary">{{ signal }}</span>
+                <span class="ws-adv-analysis__signal">{{ signal }}</span>
                 {% endfor %}
                 {% for signal in advertiser_analysis.secondary_signals %}
-                <span class="ws-adv-analysis__signal ws-adv-analysis__signal--secondary">{{ signal }}</span>
+                <span class="ws-adv-analysis__signal">{{ signal }}</span>
                 {% endfor %}
                 {% for signal in advertiser_analysis.owner_signals %}
-                <span class="ws-adv-analysis__signal ws-adv-analysis__signal--owner">{{ signal }}</span>
+                <span class="ws-adv-analysis__signal">{{ signal }}</span>
                 {% endfor %}
             </div>
         </div>

@@ -1,18 +1,28 @@
 /**
- * Advertiser analysis explainability — badge + centered modal + feedback.
+ * Advertiser analysis — anchored popover on desktop, bottom sheet on mobile.
  */
 (function () {
     'use strict';
+
+    var MOBILE_MQ = window.matchMedia('(max-width: 768px)');
 
     function getCsrfToken() {
         var match = document.cookie.match(/csrftoken=([^;]+)/);
         return match ? decodeURIComponent(match[1]) : '';
     }
 
+    function isMobileLayout() {
+        return MOBILE_MQ.matches;
+    }
+
     function initAdvertiserAnalysis() {
         var root = document.querySelector('[data-adv-analysis]');
         var overlay = document.querySelector('[data-adv-analysis-overlay]');
         if (!root || !overlay) return;
+
+        if (overlay.parentElement !== document.body) {
+            document.body.appendChild(overlay);
+        }
 
         var toggle = root.querySelector('[data-adv-analysis-toggle]');
         var panel = overlay.querySelector('[data-adv-analysis-panel]');
@@ -28,15 +38,55 @@
             }
         }
 
+        function resetPanelPosition() {
+            if (!panel) return;
+            panel.style.top = '';
+            panel.style.right = '';
+            panel.style.left = '';
+            panel.style.bottom = '';
+            panel.style.width = '';
+        }
+
+        function positionDesktopPopover() {
+            if (!toggle || !panel || isMobileLayout()) {
+                resetPanelPosition();
+                return;
+            }
+
+            var rect = toggle.getBoundingClientRect();
+            var gap = 8;
+            var width = Math.min(336, window.innerWidth - 24);
+            panel.style.width = width + 'px';
+
+            var panelHeight = panel.offsetHeight;
+            var top = rect.bottom + gap;
+            var right = Math.max(12, window.innerWidth - rect.right);
+
+            if (top + panelHeight > window.innerHeight - 12) {
+                top = Math.max(12, rect.top - panelHeight - gap);
+            }
+
+            panel.style.top = top + 'px';
+            panel.style.right = right + 'px';
+            panel.style.left = 'auto';
+            panel.style.bottom = 'auto';
+        }
+
         function setOpen(open) {
             if (!toggle || !overlay) return;
             toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
             overlay.hidden = !open;
             overlay.classList.toggle('is-open', open);
             overlay.setAttribute('aria-hidden', open ? 'false' : 'true');
-            document.body.classList.toggle('ws-adv-analysis-open', open);
-            if (open && panel) {
-                panel.focus();
+            document.body.classList.toggle('ws-adv-analysis-open', open && isMobileLayout());
+
+            if (open) {
+                requestAnimationFrame(function () {
+                    positionDesktopPopover();
+                    if (panel) panel.focus();
+                });
+            } else {
+                resetPanelPosition();
             }
         }
 
@@ -77,6 +127,20 @@
                 closePanel();
             }
         });
+
+        window.addEventListener('resize', function () {
+            if (toggle && toggle.getAttribute('aria-expanded') === 'true') {
+                positionDesktopPopover();
+            }
+        });
+
+        if (typeof MOBILE_MQ.addEventListener === 'function') {
+            MOBILE_MQ.addEventListener('change', function () {
+                if (toggle && toggle.getAttribute('aria-expanded') === 'true') {
+                    positionDesktopPopover();
+                }
+            });
+        }
 
         var feedbackRoot = overlay.querySelector('[data-adv-feedback-root]');
         if (!feedbackRoot || !config.feedback_url) return;
@@ -126,6 +190,7 @@
                         correctionBox.classList.remove('is-hidden');
                     }
                     setActiveFeedback('incorrect');
+                    requestAnimationFrame(positionDesktopPopover);
                     return;
                 }
                 submitFeedback({ feedback: 'correct' })
@@ -136,6 +201,7 @@
                             correctionBox.classList.add('is-hidden');
                         }
                         showMsg('ممنون! بازخورد شما ثبت شد.');
+                        requestAnimationFrame(positionDesktopPopover);
                     })
                     .catch(function (err) {
                         showMsg(err.message || 'خطا در ثبت', true);

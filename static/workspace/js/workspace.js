@@ -2307,6 +2307,21 @@ function buildMapLegendScale(mode, stats) {
     </div>`;
 }
 
+function createCartoBasemapLayer(styleId, options, layerOpts = {}) {
+    if (window.CartoBasemap?.hasKey()) {
+        return window.CartoBasemap.createCartoLayer(L, styleId, options, layerOpts);
+    }
+    if (window.CartoBasemap) {
+        return window.CartoBasemap.createOsmStandardLayer(L, options);
+    }
+    return L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: options?.attribution || '&copy; OpenStreetMap',
+        maxZoom: options?.maxZoom || 19,
+        subdomains: 'abc',
+        crossOrigin: true,
+    });
+}
+
 const MAP_BASEMAP_STORAGE_KEY = 'ws-map-basemap';
 
 const MAP_BASEMAPS = {
@@ -2316,12 +2331,12 @@ const MAP_BASEMAPS = {
         preview: 'voyager',
         exportSafe: true,
         create() {
-            return L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+            return createCartoBasemapLayer('voyager', {
                 attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
                 maxZoom: 20,
                 subdomains: 'abcd',
                 crossOrigin: true,
-            });
+            }, { retina: true });
         },
     },
     standard: {
@@ -2344,12 +2359,12 @@ const MAP_BASEMAPS = {
         preview: 'light',
         exportSafe: true,
         create() {
-            return L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            return createCartoBasemapLayer('light', {
                 attribution: '&copy; OSM &copy; CARTO',
                 maxZoom: 20,
                 subdomains: 'abcd',
                 crossOrigin: true,
-            });
+            }, { retina: true });
         },
     },
     dark: {
@@ -2358,12 +2373,12 @@ const MAP_BASEMAPS = {
         preview: 'dark',
         exportSafe: true,
         create() {
-            return L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            return createCartoBasemapLayer('dark', {
                 attribution: '&copy; OSM &copy; CARTO',
                 maxZoom: 20,
                 subdomains: 'abcd',
                 crossOrigin: true,
-            });
+            }, { retina: true });
         },
     },
     satellite: {
@@ -2423,11 +2438,15 @@ const MAP_MODE_LABELS = {
 };
 
 function getDefaultBasemapId() {
+    let preferred;
     try {
         const stored = localStorage.getItem(MAP_BASEMAP_STORAGE_KEY);
-        if (stored && MAP_BASEMAPS[stored]) return stored;
+        if (stored && MAP_BASEMAPS[stored]) preferred = stored;
     } catch (e) { /* ignore */ }
-    return document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'voyager';
+    if (!preferred) {
+        preferred = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'voyager';
+    }
+    return window.CartoBasemap?.resolveBasemapId(preferred) || preferred;
 }
 
 function waitForMapTiles(map, timeoutMs = 4000) {
@@ -2706,6 +2725,9 @@ function setupMapProUI(map, options = {}) {
 
 function initMap(allMarkers, settings) {
     if (!allMarkers || !allMarkers.length || !window.L) return;
+    if (settings?.cartoBasemapKey && window.CartoBasemap) {
+        window.CartoBasemap.setKey(settings.cartoBasemapKey);
+    }
     const el = document.getElementById('wsMap');
     if (!el) return;
 

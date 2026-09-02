@@ -13,8 +13,11 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
+from django.conf import settings
 from django.core.files.base import ContentFile
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
+
+from workspace.carto_basemap import OSM_TILE_SUBDOMAINS, OSM_TILE_TEMPLATE, carto_tile_template
 
 logger = logging.getLogger(__name__)
 
@@ -27,12 +30,11 @@ TILE_SIZE = 256
 USER_AGENT = 'DivarFilingMarketArticle/1.0 (https://divarfiling.ir; market-report)'
 
 TILE_TEMPLATES = {
-    'street': 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png',
-    'light': 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
-    'dark': 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
     'satellite': 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
 }
 STREET_SUBS = 'abcd'
+OSM_SUBS = OSM_TILE_SUBDOMAINS
+_CARTO_STYLES = frozenset({'street', 'light', 'dark'})
 
 # ترکیب‌های متنوع basemap × لایه — فقط هاله/شبکه (بدون نقطه)
 _FEATURED_COMBOS = (
@@ -563,9 +565,19 @@ def _fetch_tile(url: str, *, retries: int = 3, timeout: int = 10) -> Image.Image
 def _tile_url(style: str, z: int, x: int, y: int) -> str:
     if style == 'satellite':
         return TILE_TEMPLATES['satellite'].format(z=z, y=y, x=x)
-    tmpl = TILE_TEMPLATES.get(style) or TILE_TEMPLATES['street']
-    sub = random.choice(list(STREET_SUBS))
-    return tmpl.format(s=sub, z=z, x=x, y=y)
+    if style in _CARTO_STYLES:
+        tmpl = carto_tile_template(style)
+        if tmpl:
+            sub = random.choice(list(STREET_SUBS))
+            return tmpl.format(s=sub, z=z, x=x, y=y)
+        sub = random.choice(list(OSM_SUBS))
+        return OSM_TILE_TEMPLATE.format(s=sub, z=z, x=x, y=y)
+    tmpl = carto_tile_template('street')
+    if tmpl:
+        sub = random.choice(list(STREET_SUBS))
+        return tmpl.format(s=sub, z=z, x=x, y=y)
+    sub = random.choice(list(OSM_SUBS))
+    return OSM_TILE_TEMPLATE.format(s=sub, z=z, x=x, y=y)
 
 
 def _build_basemap(

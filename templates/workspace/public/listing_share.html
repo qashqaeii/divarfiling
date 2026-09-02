@@ -767,7 +767,8 @@
 {% if listing_map_marker %}{{ listing_map_marker|json_script:"listing-map-marker" }}{% endif %}
 {% if office_map_marker %}{{ office_map_marker|json_script:"office-map-marker" }}{% endif %}
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="{% static 'workspace/js/listing-map.js' %}?v=8"></script>
+{% include 'workspace/includes/carto_basemap_config.html' %}
+<script src="{% static 'workspace/js/listing-map.js' %}?v=9"></script>
 {% endif %}
 <script src="{% static 'js/listing-public-share.js' %}?v=10"></script>
 {% endblock %}

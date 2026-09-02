@@ -68,3 +68,7 @@ def run_production_checks() -> None:
         logger.warning(
             'ZIBAL_MERCHANT_ID is empty — online payment will fail until configured.'
         )
+
+    from workspace.carto_basemap import warn_if_carto_key_missing
+
+    warn_if_carto_key_missing()

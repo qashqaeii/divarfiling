@@ -4,18 +4,33 @@
 
     const MAP_BASEMAP_STORAGE_KEY = 'ws-map-basemap';
 
+    function createCartoBasemapLayer(styleId, options, layerOpts) {
+        if (global.CartoBasemap?.hasKey()) {
+            return global.CartoBasemap.createCartoLayer(L, styleId, options, layerOpts);
+        }
+        if (global.CartoBasemap) {
+            return global.CartoBasemap.createOsmStandardLayer(L, options);
+        }
+        return L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: options?.attribution || '&copy; OpenStreetMap',
+            maxZoom: options?.maxZoom || 19,
+            subdomains: 'abc',
+            crossOrigin: true,
+        });
+    }
+
     const MAP_BASEMAPS = {
         voyager: {
             label: 'شهری',
             hint: 'خیابان‌ها و محله‌ها',
             preview: 'voyager',
             create() {
-                return L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+                return createCartoBasemapLayer('voyager', {
                     attribution: '&copy; OSM &copy; CARTO',
                     maxZoom: 20,
                     subdomains: 'abcd',
                     crossOrigin: true,
-                });
+                }, { retina: true });
             },
         },
         standard: {
@@ -36,12 +51,12 @@
             hint: 'مینیمال و تمیز',
             preview: 'light',
             create() {
-                return L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                return createCartoBasemapLayer('light', {
                     attribution: '&copy; OSM &copy; CARTO',
                     maxZoom: 20,
                     subdomains: 'abcd',
                     crossOrigin: true,
-                });
+                }, { retina: true });
             },
         },
         dark: {
@@ -49,12 +64,12 @@
             hint: 'مناسب شب',
             preview: 'dark',
             create() {
-                return L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                return createCartoBasemapLayer('dark', {
                     attribution: '&copy; OSM &copy; CARTO',
                     maxZoom: 20,
                     subdomains: 'abcd',
                     crossOrigin: true,
-                });
+                }, { retina: true });
             },
         },
         satellite: {
@@ -114,11 +129,15 @@
     }
 
     function getDefaultBasemapId() {
+        let preferred;
         try {
             const stored = localStorage.getItem(MAP_BASEMAP_STORAGE_KEY);
-            if (stored && MAP_BASEMAPS[stored]) return stored;
+            if (stored && MAP_BASEMAPS[stored]) preferred = stored;
         } catch (e) { /* ignore */ }
-        return document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'voyager';
+        if (!preferred) {
+            preferred = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'voyager';
+        }
+        return global.CartoBasemap?.resolveBasemapId(preferred) || preferred;
     }
 
     function isListingApproxLocation(options = {}) {
@@ -236,6 +255,9 @@
     }
 
     function initListingDetailMap(options = {}) {
+        if (options.cartoBasemapKey && global.CartoBasemap) {
+            global.CartoBasemap.setKey(options.cartoBasemapKey);
+        }
         const uiPrefix = options.uiPrefix || 'wsLd';
         const mapId = options.mapId || `${uiPrefix}LocationMap`;
         const el = document.getElementById(mapId);

@@ -68,6 +68,7 @@ from workspace.services.listing_features import (
     build_listing_amenity_dossier_items,
     build_listing_feature_profile,
 )
+from workspace.carto_basemap import get_carto_basemap_api_key
 from workspace.services.listing_map import build_listing_map_marker
 from workspace.services.listing_edit import (
     apply_listing_edit_post, listing_edit_payload,
@@ -1504,6 +1505,7 @@ def _build_map_context(
     )
     neighborhoods = get_neighborhoods_qs(geo_listings)
     map_config = {
+        'cartoBasemapKey': get_carto_basemap_api_key(),
         'map_cluster': settings.map_cluster,
         'map_heatmap': settings.map_heatmap,
         'focusMaxZoom': 17,

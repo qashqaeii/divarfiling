@@ -1,5 +1,6 @@
 """Context processor برای workspace."""
 from divar_shop.db_safe import DB_CONTEXT_ERRORS
+from workspace.carto_basemap import get_carto_basemap_api_key
 from ai_workspace.constants import CRM_MESSAGE_TONE_CHOICES, is_ai_enabled
 from workspace.forms import DatasetUploadForm, ReminderForm, WorkspaceSettingsForm
 from workspace.mixins import get_or_create_settings
@@ -47,7 +48,10 @@ def _ws_nav_flags(request, has_agency_membership):
 
 
 def workspace_context(request):
-    ctx = {'today_jalali': format_jalali_today_label()}
+    ctx = {
+        'today_jalali': format_jalali_today_label(),
+        'carto_basemap_key': get_carto_basemap_api_key(),
+    }
     user = getattr(request, 'user', None)
     if user is None or not user.is_authenticated:
         return ctx

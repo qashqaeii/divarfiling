@@ -158,11 +158,20 @@
                 scrollWheelZoom: true,
             }).setView(center, zoom);
 
-            tileLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-                attribution: '&copy; OSM &copy; CARTO',
-                subdomains: 'abcd',
-                maxZoom: 19,
-            }).addTo(map);
+            tileLayer = global.CartoBasemap?.hasKey()
+                ? global.CartoBasemap.createCartoLayer(L, 'voyager', {
+                    attribution: '&copy; OSM &copy; CARTO',
+                    subdomains: 'abcd',
+                    maxZoom: 19,
+                }, { retina: true })
+                : (global.CartoBasemap
+                    ? global.CartoBasemap.createOsmStandardLayer(L, { maxZoom: 19 })
+                    : L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '&copy; OSM',
+                        subdomains: 'abc',
+                        maxZoom: 19,
+                    }));
+            tileLayer.addTo(map);
 
             if (has) {
                 setCoords(lat, lng, { pan: false });

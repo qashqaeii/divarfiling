@@ -279,6 +279,9 @@ OPENROUTER_TIMEOUT_SECONDS = config('OPENROUTER_TIMEOUT_SECONDS', default=8, cas
 AI_GLOBAL_DAILY_CAP = config('AI_GLOBAL_DAILY_CAP', default=350, cast=int)
 AI_DAILY_TOKEN_LIMIT = config('AI_DAILY_TOKEN_LIMIT', default=30000, cast=int)
 
+# CARTO raster basemaps (Leaflet tile layers) — free tier with API key
+CARTO_BASEMAP_API_KEY = config('CARTO_BASEMAP_API_KEY', default='')
+
 # امکانات اطراف فایل شخصی — Overpass/OSM (on-demand)
 NEARBY_POI_USER_DAILY_LIMIT = config('NEARBY_POI_USER_DAILY_LIMIT', default=25, cast=int)
 NEARBY_POI_GLOBAL_DAILY_LIMIT = config('NEARBY_POI_GLOBAL_DAILY_LIMIT', default=400, cast=int)

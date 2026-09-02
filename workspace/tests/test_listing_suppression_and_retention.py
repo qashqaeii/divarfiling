@@ -15,7 +15,11 @@ from mobile_api.services.extraction_ingest import ingest_mobile_extraction
 from workspace.models import CRMProperty, Dataset, Listing, UserListingSuppression
 from workspace.services.crm import add_listing_to_personal_files
 from workspace.services.filing_delete import delete_divar_listing_from_filing
-from workspace.services.filing_retention import purge_stale_filing_listings
+from workspace.services.filing_retention import (
+    _delete_listing_batch,
+    build_retention_breakdown,
+    purge_stale_filing_listings,
+)
 from workspace.services.importer import import_dataset
 from workspace.services.ingest_mode import INGEST_MODE_INCREMENTAL, INGEST_MODE_SNAPSHOT
 from workspace.services.listing_personal_status import DIVAR_SOURCE_PLATFORM
@@ -255,8 +259,11 @@ class RetentionTests(TestCase):
         Listing.objects.filter(pk=listing.pk).update(created_at=old)
         with override_settings(FILING_LISTING_RETENTION_DAYS=31):
             stats = purge_stale_filing_listings(dry_run=True)
-        self.assertGreaterEqual(stats['eligible'], 1)
+        self.assertGreaterEqual(stats['base_age_eligible'], 1)
+        self.assertGreaterEqual(stats['final_eligible'], 1)
+        self.assertEqual(stats['eligible'], stats['final_eligible'])
         self.assertEqual(stats['deleted'], 0)
+        self.assertTrue(stats['dry_run'])
         self.assertTrue(Listing.objects.filter(token='dry-1').exists())
 
     def test_retention_syncs_row_count(self):
@@ -361,7 +368,7 @@ class RetentionCascadeTests(TestCase):
         self.user = User.objects.create_user(username='09129990001', password='x')
         self.dataset = Dataset.objects.create(user=self.user, name='ret', is_active=True)
 
-    def test_listing_public_share_cascade_on_retention(self):
+    def test_active_public_share_protected_from_retention(self):
         from workspace.models import ListingPublicShare
 
         old = timezone.now() - timezone.timedelta(days=40)
@@ -371,9 +378,29 @@ class RetentionCascadeTests(TestCase):
             share_token='abc12345',
             listing=listing,
             created_by=self.user,
+            is_active=True,
         )
         with override_settings(FILING_LISTING_RETENTION_DAYS=31):
-            purge_stale_filing_listings(dry_run=False)
+            stats = purge_stale_filing_listings(dry_run=False)
+        self.assertEqual(stats['deleted'], 0)
+        self.assertTrue(Listing.objects.filter(pk=listing.pk).exists())
+        self.assertTrue(ListingPublicShare.objects.filter(pk=share.pk).exists())
+
+    def test_inactive_public_share_not_protected(self):
+        from workspace.models import ListingPublicShare
+
+        old = timezone.now() - timezone.timedelta(days=40)
+        listing = Listing.objects.create(dataset=self.dataset, token='share-off', title='x')
+        Listing.objects.filter(pk=listing.pk).update(created_at=old)
+        share = ListingPublicShare.objects.create(
+            share_token='off12345',
+            listing=listing,
+            created_by=self.user,
+            is_active=False,
+        )
+        with override_settings(FILING_LISTING_RETENTION_DAYS=31):
+            stats = purge_stale_filing_listings(dry_run=False)
+        self.assertGreaterEqual(stats['deleted'], 1)
         self.assertFalse(Listing.objects.filter(pk=listing.pk).exists())
         self.assertFalse(ListingPublicShare.objects.filter(pk=share.pk).exists())
 
@@ -393,6 +420,202 @@ class RetentionCascadeTests(TestCase):
         with override_settings(FILING_LISTING_RETENTION_DAYS=31):
             purge_stale_filing_listings(dry_run=False)
         self.assertTrue(CRMProperty.objects.filter(pk=prop.pk).exists())
+
+
+class RetentionProtectionTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='09127770001', password='x')
+        self.dataset = Dataset.objects.create(user=self.user, name='prot', is_active=True)
+
+    def _stale(self, token: str):
+        listing = Listing.objects.create(dataset=self.dataset, token=token, title='x')
+        old = timezone.now() - timezone.timedelta(days=40)
+        Listing.objects.filter(pk=listing.pk).update(created_at=old, published_at=old)
+        return listing
+
+    def test_favorite_protected_from_retention(self):
+        from workspace.models import ListingMeta
+
+        listing = self._stale('fav-prot')
+        ListingMeta.objects.create(user=self.user, token=listing.token, is_favorite=True)
+        with override_settings(FILING_LISTING_RETENTION_DAYS=31):
+            stats = purge_stale_filing_listings(dry_run=False)
+        self.assertEqual(stats['deleted'], 0)
+        self.assertTrue(Listing.objects.filter(token='fav-prot').exists())
+
+    def test_meaningful_note_protected_from_retention(self):
+        from workspace.models import ListingMeta
+
+        listing = self._stale('note-prot')
+        ListingMeta.objects.create(user=self.user, token=listing.token, note='تماس گرفتم')
+        with override_settings(FILING_LISTING_RETENTION_DAYS=31):
+            stats = purge_stale_filing_listings(dry_run=False)
+        self.assertEqual(stats['deleted'], 0)
+        self.assertTrue(Listing.objects.filter(token='note-prot').exists())
+
+    def test_workflow_tag_protected_from_retention(self):
+        from workspace.models import ListingMeta
+
+        listing = self._stale('tag-prot')
+        ListingMeta.objects.create(user=self.user, token=listing.token, tag='بازدید')
+        with override_settings(FILING_LISTING_RETENTION_DAYS=31):
+            stats = purge_stale_filing_listings(dry_run=False)
+        self.assertEqual(stats['deleted'], 0)
+        self.assertTrue(Listing.objects.filter(token='tag-prot').exists())
+
+    def test_rejected_tag_not_protected(self):
+        from workspace.models import ListingMeta
+
+        listing = self._stale('tag-rej')
+        ListingMeta.objects.create(user=self.user, token=listing.token, tag='رد')
+        with override_settings(FILING_LISTING_RETENTION_DAYS=31):
+            stats = purge_stale_filing_listings(dry_run=False)
+        self.assertGreaterEqual(stats['deleted'], 1)
+        self.assertFalse(Listing.objects.filter(token='tag-rej').exists())
+
+    def test_customer_listing_not_protected_but_reported(self):
+        from workspace.models import Customer, CustomerListing
+
+        listing = self._stale('cust-rel')
+        customer = Customer.objects.create(user=self.user, name='مشتری')
+        CustomerListing.objects.create(customer=customer, token=listing.token, title='snap')
+        with override_settings(FILING_LISTING_RETENTION_DAYS=31):
+            breakdown = build_retention_breakdown()
+            stats = purge_stale_filing_listings(dry_run=False)
+        self.assertGreaterEqual(breakdown['protected_customer_relation'], 1)
+        self.assertGreaterEqual(stats['deleted'], 1)
+        self.assertTrue(CustomerListing.objects.filter(token='cust-rel').exists())
+
+    def test_multi_batch_purge(self):
+        old = timezone.now() - timezone.timedelta(days=40)
+        for i in range(3):
+            listing = Listing.objects.create(dataset=self.dataset, token=f'batch-{i}', title='x')
+            Listing.objects.filter(pk=listing.pk).update(created_at=old, published_at=old)
+        with override_settings(FILING_LISTING_RETENTION_DAYS=31):
+            stats = purge_stale_filing_listings(dry_run=False, batch_size=1)
+        self.assertEqual(stats['deleted'], 3)
+        self.assertEqual(stats['batches'], 3)
+        self.dataset.refresh_from_db()
+        self.assertEqual(self.dataset.row_count, 0)
+
+    def test_breakdown_counts_no_double_count_in_final(self):
+        from workspace.models import ListingMeta, ListingPublicShare
+
+        listing = self._stale('overlap')
+        ListingMeta.objects.create(user=self.user, token=listing.token, is_favorite=True, note='y')
+        ListingPublicShare.objects.create(
+            share_token='ov123456',
+            listing=listing,
+            created_by=self.user,
+            is_active=True,
+        )
+        with override_settings(FILING_LISTING_RETENTION_DAYS=31):
+            breakdown = build_retention_breakdown()
+        self.assertGreaterEqual(breakdown['protected_public_share'], 1)
+        self.assertGreaterEqual(breakdown['protected_favorite'], 1)
+        self.assertGreaterEqual(breakdown['protected_note'], 1)
+        self.assertEqual(breakdown['unique_protected'], 1)
+        self.assertEqual(breakdown['final_eligible'], breakdown['base_age_eligible'] - breakdown['unique_protected'])
+
+    def test_partial_batch_failure_keeps_row_count_correct(self):
+        old = timezone.now() - timezone.timedelta(days=40)
+        for i in range(3):
+            listing = Listing.objects.create(dataset=self.dataset, token=f'fail-{i}', title='x')
+            Listing.objects.filter(pk=listing.pk).update(created_at=old, published_at=old)
+        self.dataset.row_count = 3
+        self.dataset.save(update_fields=['row_count'])
+
+        calls = {'n': 0}
+        real_delete = _delete_listing_batch
+
+        def fail_on_second_batch(batch_ids):
+            calls['n'] += 1
+            if calls['n'] == 2:
+                raise RuntimeError('simulated batch failure')
+            return real_delete(batch_ids)
+
+        with patch('workspace.services.filing_retention._delete_listing_batch', side_effect=fail_on_second_batch):
+            with override_settings(FILING_LISTING_RETENTION_DAYS=31):
+                with self.assertRaises(RuntimeError):
+                    purge_stale_filing_listings(dry_run=False, batch_size=1)
+
+        self.dataset.refresh_from_db()
+        remaining = Listing.objects.filter(dataset=self.dataset).count()
+        self.assertEqual(remaining, 2)
+        self.assertEqual(self.dataset.row_count, remaining)
+
+
+class RetentionCrossUserTests(TestCase):
+    def setUp(self):
+        self.user_a = User.objects.create_user(username='09131110001', password='x', phone='09131110001')
+        self.user_b = User.objects.create_user(username='09131110002', password='x', phone='09131110002')
+        self.dataset_a = Dataset.objects.create(user=self.user_a, name='a', is_active=True)
+        self.dataset_b = Dataset.objects.create(user=self.user_b, name='b', is_active=True)
+        self.old = timezone.now() - timezone.timedelta(days=40)
+
+    def _stale(self, dataset, token: str):
+        listing = Listing.objects.create(dataset=dataset, token=token, title='x')
+        Listing.objects.filter(pk=listing.pk).update(created_at=self.old, published_at=self.old)
+        return listing
+
+    def test_user_a_favorite_does_not_protect_user_b_same_token(self):
+        from workspace.models import ListingMeta
+
+        self._stale(self.dataset_a, 'shared-tok')
+        self._stale(self.dataset_b, 'shared-tok')
+        ListingMeta.objects.create(user=self.user_a, token='shared-tok', is_favorite=True)
+        with override_settings(FILING_LISTING_RETENTION_DAYS=31):
+            breakdown = build_retention_breakdown()
+            purge_stale_filing_listings(dry_run=False)
+        self.assertEqual(breakdown['protected_favorite'], 1)
+        self.assertEqual(breakdown['final_eligible'], 1)
+        self.assertTrue(Listing.objects.filter(dataset=self.dataset_a, token='shared-tok').exists())
+        self.assertFalse(Listing.objects.filter(dataset=self.dataset_b, token='shared-tok').exists())
+
+    def test_user_a_note_does_not_protect_user_b_same_token(self):
+        from workspace.models import ListingMeta
+
+        self._stale(self.dataset_a, 'note-shared')
+        self._stale(self.dataset_b, 'note-shared')
+        ListingMeta.objects.create(user=self.user_a, token='note-shared', note='یادداشت')
+        with override_settings(FILING_LISTING_RETENTION_DAYS=31):
+            breakdown = build_retention_breakdown()
+            purge_stale_filing_listings(dry_run=False)
+        self.assertEqual(breakdown['protected_note'], 1)
+        self.assertEqual(breakdown['final_eligible'], 1)
+        self.assertTrue(Listing.objects.filter(dataset=self.dataset_a, token='note-shared').exists())
+        self.assertFalse(Listing.objects.filter(dataset=self.dataset_b, token='note-shared').exists())
+
+    def test_user_a_workflow_tag_does_not_protect_user_b_same_token(self):
+        from workspace.models import ListingMeta
+
+        self._stale(self.dataset_a, 'tag-shared')
+        self._stale(self.dataset_b, 'tag-shared')
+        ListingMeta.objects.create(user=self.user_a, token='tag-shared', tag='تماس')
+        with override_settings(FILING_LISTING_RETENTION_DAYS=31):
+            breakdown = build_retention_breakdown()
+            purge_stale_filing_listings(dry_run=False)
+        self.assertEqual(breakdown['protected_workflow_tag'], 1)
+        self.assertEqual(breakdown['final_eligible'], 1)
+        self.assertTrue(Listing.objects.filter(dataset=self.dataset_a, token='tag-shared').exists())
+        self.assertFalse(Listing.objects.filter(dataset=self.dataset_b, token='tag-shared').exists())
+
+    def test_user_a_customer_link_does_not_protect_user_b_same_token(self):
+        from workspace.models import Customer, CustomerListing
+
+        self._stale(self.dataset_a, 'cust-shared')
+        self._stale(self.dataset_b, 'cust-shared')
+        customer = Customer.objects.create(user=self.user_a, name='مشتری A')
+        CustomerListing.objects.create(customer=customer, token='cust-shared', title='snap')
+        with override_settings(FILING_LISTING_RETENTION_DAYS=31):
+            breakdown = build_retention_breakdown()
+            purge_stale_filing_listings(dry_run=False)
+        self.assertEqual(breakdown['protected_customer_relation'], 1)
+        self.assertEqual(breakdown['final_eligible'], 2)
+        purge_stale_filing_listings(dry_run=False)
+        self.assertFalse(Listing.objects.filter(dataset=self.dataset_a, token='cust-shared').exists())
+        self.assertFalse(Listing.objects.filter(dataset=self.dataset_b, token='cust-shared').exists())
+        self.assertTrue(CustomerListing.objects.filter(token='cust-shared').exists())
 
 
 class DeleteSemanticsTests(TestCase):

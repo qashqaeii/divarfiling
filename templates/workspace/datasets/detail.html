@@ -231,6 +231,13 @@
         {% include 'workspace/includes/listing_filter_bar.html' %}
     </section>
 
+    <div class="mk-notice mk-notice--info mk-notice--inline ws-filing-retention-policy" data-notice-kind="filing_retention_policy" data-notice-id="filing-retention-policy-v1">
+        <div class="mk-notice__body">
+            <p class="mk-notice__text">فایل‌های بدون فعالیت، پس از ۶۲ روز وارد چرخه پاک‌سازی می‌شوند و در اولین روز ماه بعد حذف خواهند شد. فایل‌های مهم را به فایل شخصی منتقل کنید.</p>
+        </div>
+        <button type="button" class="mk-notice__close" data-mk-notice-close aria-label="بستن"><i class="fas fa-times"></i></button>
+    </div>
+
     <section class="ws-glass-panel mk-panel mk-panel-flush mk-listing-panel" data-list-view="{{ listing_view_mode|default:'auto' }}">
         <header class="ws-glass-head mk-panel-head mk-panel-head-table">
             <div class="mk-panel-head-text">

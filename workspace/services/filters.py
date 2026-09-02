@@ -100,6 +100,7 @@ def parse_filter_params_from_mapping(g) -> Dict[str, Any]:
         'year_max': _year_param(str(get('year_max', '') or '')),
         'sort': str(get('sort', '') or ''),
         'dataset_id': str(get('dataset_id', '') or '').strip(),
+        'retention_warning': str(get('retention_warning', '') or '').strip(),
     }
 
 
@@ -158,6 +159,11 @@ def apply_listing_filters(qs: QuerySet, filters: Dict, user) -> QuerySet:
 
     if filters.get('has_geo') == '1':
         qs = qs.exclude(latitude__isnull=True).exclude(longitude__isnull=True)
+
+    if filters.get('retention_warning') == '1':
+        from workspace.services.listing_retention_status import listing_ids_in_retention_warning
+        warning_ids = listing_ids_in_retention_warning(user, qs)
+        qs = qs.filter(pk__in=warning_ids) if warning_ids else qs.none()
 
     return qs
 

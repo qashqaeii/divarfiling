@@ -110,6 +110,11 @@ SPECS: Dict[str, NotificationSpec] = {
         CHANNEL_ANNOUNCEMENTS, PRIORITY_DEFAULT, 'divarfiling://notifications',
         GROUP_ANNOUNCEMENTS, False, True, False,
     ),
+    'filing_retention_warning': NotificationSpec(
+        'filing_retention_warning', 'هشدار پاک‌سازی فایلینگ', 'announcements',
+        CHANNEL_ANNOUNCEMENTS, PRIORITY_DEFAULT, 'divarfiling://filing?retention_warning=1',
+        GROUP_ANNOUNCEMENTS, True, False, True,
+    ),
 }
 
 BROADCAST_TYPES: Tuple[str, ...] = (
@@ -201,4 +206,6 @@ def dedup_key_for(notification_type: str, data: Optional[dict] = None) -> str:
         return 'welcome'
     if notification_type in ('announcement', 'app_update', 'product_update') and payload.get('broadcast_id'):
         return f'broadcast:{payload["broadcast_id"]}'
+    if notification_type == 'filing_retention_warning' and payload.get('cycle_key'):
+        return f'retention_warning:{payload["cycle_key"]}'
     return ''

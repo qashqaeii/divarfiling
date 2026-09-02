@@ -223,6 +223,12 @@
                         <span class="mk-filter-check__ico" aria-hidden="true"><i class="fas fa-clone"></i></span>
                         <span class="mk-filter-check__txt">تکراری</span>
                     </label>
+                    <label class="mk-filter-check{% if filters.retention_warning == '1' %} is-on{% endif %}">
+                        <input type="checkbox" name="retention_warning" value="1" {% if filters.retention_warning == '1' %}checked{% endif %}>
+                        <span class="mk-filter-check__box" aria-hidden="true"><i class="fas fa-check"></i></span>
+                        <span class="mk-filter-check__ico" aria-hidden="true"><i class="fas fa-triangle-exclamation"></i></span>
+                        <span class="mk-filter-check__txt">در آستانه پاک‌سازی</span>
+                    </label>
                     <label class="mk-filter-check{% if filters.has_geo == '1' %} is-on{% endif %}">
                         <input type="checkbox" name="has_geo" value="1" {% if filters.has_geo == '1' %}checked{% endif %}>
                         <span class="mk-filter-check__box" aria-hidden="true"><i class="fas fa-check"></i></span>

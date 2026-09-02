@@ -92,11 +92,15 @@ def get_or_create_listing_share(user, listing: Listing) -> Optional[ListingPubli
     while ListingPublicShare.objects.filter(share_token=token).exists():
         token = _generate_share_token()
     try:
-        return ListingPublicShare.objects.create(
+        share = ListingPublicShare.objects.create(
             share_token=token,
             listing_id=listing.pk,
             created_by=user,
         )
+        from workspace.services.listing_activity import touch_listing_activity
+
+        touch_listing_activity(user, listing.token)
+        return share
     except IntegrityError:
         existing = get_listing_share(user, listing)
         if existing:

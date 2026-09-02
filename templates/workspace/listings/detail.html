@@ -17,6 +17,25 @@
 {% block content %}
 <div class="crm-prop-detail-v2 crm-prop-detail-mobile crm-page-chrome ws-ld-detail ws-ld-mobile{% if tx.is_sale %} ws-ld-detail--sale{% elif tx.is_rent %} ws-ld-detail--rent{% elif tx.show_deposit %} ws-ld-detail--deposit{% endif %}">
 
+    {% if listing_retention.status == 'warning' %}
+    <div class="mk-notice mk-notice--warning mk-notice--banner ws-retention-warning" role="status">
+        <div class="mk-notice__icon" aria-hidden="true"><i class="fas fa-triangle-exclamation"></i></div>
+        <div class="mk-notice__body">
+            <strong class="mk-notice__title">این فایل در آستانه پاک‌سازی است</strong>
+            <p class="mk-notice__text">
+                {% if listing_retention.days_remaining == 0 %}
+                این فایل امروز در پاک‌سازی دوره‌ای حذف می‌شود.
+                {% elif listing_retention.days_remaining == 1 %}
+                به‌دلیل نداشتن فعالیت اخیر، این فایل فردا از فایلینگ حذف می‌شود.
+                {% else %}
+                به‌دلیل نداشتن فعالیت اخیر، این فایل {{ listing_retention.days_remaining }} روز دیگر از فایلینگ حذف می‌شود.
+                {% endif %}
+            </p>
+            <p class="mk-notice__hint">برای نگه‌داشتن این فایل، آن را به فایل شخصی منتقل کنید یا فعالیت آن را به‌روزرسانی کنید.</p>
+        </div>
+    </div>
+    {% endif %}
+
     <header class="crm-prop-hero crm-prop-hero--{% if tx.is_sale %}sale{% elif tx.show_deposit and not tx.is_sale %}deposit{% elif tx.is_rent %}rent{% else %}default{% endif %}" aria-label="خلاصه آگهی">
         <span class="ws-ld-hero-ribbon" aria-hidden="true"></span>
         <div class="ws-ld-hero-mesh" aria-hidden="true"></div>

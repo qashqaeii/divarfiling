@@ -6,7 +6,7 @@ from workspace.models import (
     CRMPropertyPublicShare, PropertyMatchAlert,
     Dataset, Listing, ListingMeta, ListingPublicShare, PriceHistory,
     PropertyContact, Reminder, Ticket, TicketAttachment, TicketMessage,
-    UserListingSuppression, WorkspaceSettings,
+    UserListingSuppression, UserListingActivity, WorkspaceSettings,
 )
 from workspace.services.support_tickets import close_ticket, reopen_ticket
 
@@ -44,6 +44,14 @@ class ListingMetaAdmin(admin.ModelAdmin):
 class UserListingSuppressionAdmin(admin.ModelAdmin):
     list_display = ('user', 'source_platform', 'external_id', 'reason', 'created_at')
     list_filter = ('source_platform', 'reason')
+    search_fields = ('external_id', 'user__username')
+    raw_id_fields = ('user',)
+
+
+@admin.register(UserListingActivity)
+class UserListingActivityAdmin(admin.ModelAdmin):
+    list_display = ('user', 'source_platform', 'external_id', 'last_activity_at', 'updated_at')
+    list_filter = ('source_platform',)
     search_fields = ('external_id', 'user__username')
     raw_id_fields = ('user',)
 

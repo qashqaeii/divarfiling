@@ -1,16 +1,27 @@
-"""نگهداری موقت آگهی‌های فایلینگ — حذف بر اساس سن، بدون سرکوب کاربر."""
+"""نگهداری موقت آگهی‌های فایلینگ — inactivity + پاک‌سازی ماهانه."""
 from __future__ import annotations
 
 import logging
-from datetime import timedelta
 
-from django.conf import settings
 from django.db import transaction
 from django.db.models import Count, Exists, OuterRef, Q, QuerySet
 from django.utils import timezone
 
-from workspace.constants import FILING_LISTING_RETENTION_DAYS_DEFAULT
+from workspace.constants import FILING_LISTING_RETENTION_DAYS_DEFAULT, WORKFLOW_RETENTION_TAGS
 from workspace.models import Listing, ListingMeta, ListingPublicShare
+from workspace.services.listing_activity import get_listing_activity_map
+from workspace.services.listing_personal_status import DIVAR_SOURCE_PLATFORM
+from workspace.services.listing_retention_calendar import (
+    current_month_cleanup_datetime,
+    filing_listing_retention_days,
+    is_monthly_cleanup_day,
+    retention_feature_deployed_at,
+)
+from workspace.services.listing_retention_status import (
+    _customer_listing_relation_exists,
+    inactive_listings_base_qs,
+    is_listing_purge_due,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -19,38 +30,10 @@ MIN_RETENTION_DAYS = 1
 MAX_RETENTION_DAYS = 3650
 DEFAULT_BATCH_SIZE = 500
 
-# برچسب‌های فایلینگ که نشان‌دهنده تعامل فعال مشاور با آگهی هستند.
-WORKFLOW_RETENTION_TAGS = ('تماس', 'بازدید', 'علاقه‌مند')
-
-
-def filing_listing_retention_days() -> int:
-    raw = getattr(settings, 'FILING_LISTING_RETENTION_DAYS', DEFAULT_RETENTION_DAYS)
-    try:
-        days = int(raw)
-    except (TypeError, ValueError):
-        days = DEFAULT_RETENTION_DAYS
-    return max(MIN_RETENTION_DAYS, min(MAX_RETENTION_DAYS, days))
-
-
-def listing_retention_anchor(listing: Listing):
-    """
-    تاریخ مبنای retention:
-    1. published_at — زمان انتشار/ایجاد آگهی در دیوار (در صورت وجود)
-    2. created_at — زمان اولین ذخیره در فایلینگ
-    """
-    if listing.published_at:
-        return listing.published_at
-    return listing.created_at
-
 
 def stale_filing_listings_qs(*, as_of=None) -> QuerySet:
-    """آگهی‌های فایلینگ قدیمی‌تر از آستانه — فقط دیتاست‌های فعال (بدون exclusion)."""
-    as_of = as_of or timezone.now()
-    cutoff = as_of - timedelta(days=filing_listing_retention_days())
-    return Listing.objects.filter(dataset__is_active=True).filter(
-        Q(published_at__lt=cutoff)
-        | Q(published_at__isnull=True, created_at__lt=cutoff),
-    )
+    """Listingهای inactive — بر اساس effective_last_activity (نه published_at)."""
+    return inactive_listings_base_qs(as_of=as_of)
 
 
 def _active_public_share_exists() -> Exists:
@@ -91,19 +74,7 @@ def _owner_workflow_tag_meta_exists() -> Exists:
     )
 
 
-def _customer_listing_relation_exists() -> Exists:
-    from workspace.models import CustomerListing
-
-    return Exists(
-        CustomerListing.objects.filter(
-            token=OuterRef('token'),
-            customer__user_id=OuterRef('dataset__user_id'),
-        ),
-    )
-
-
 def _listing_retention_protection_q() -> Q:
-    """هر شرطی که آگهی را از retention خودکار معاف می‌کند."""
     return (
         Q(Exists(
             ListingPublicShare.objects.filter(
@@ -132,16 +103,55 @@ def _listing_retention_protection_q() -> Q:
             ),
         ))
         | Q(_customer_listing_relation_exists())
-    )
+    )  # Exists wrapped in Q for OR-combination
 
 
-def purge_eligible_filing_listings_qs(*, as_of=None) -> QuerySet:
-    """آگهی‌های واجد شرایط حذف پس از اعمال exclusionهای تعامل کاربر."""
-    return stale_filing_listings_qs(as_of=as_of).exclude(_listing_retention_protection_q())
+def _purge_due_listing_ids(
+    *,
+    as_of=None,
+    limit: int | None = None,
+) -> list:
+    as_of = as_of or timezone.now()
+    cleanup_at = current_month_cleanup_datetime(as_of)
+    base = stale_filing_listings_qs(as_of=as_of).exclude(_listing_retention_protection_q()).order_by('pk')
+    tokens = list(base.values_list('token', flat=True).distinct())
+    user_tokens: dict[int, set[str]] = {}
+    for user_id, token in base.values_list('dataset__user_id', 'token'):
+        user_tokens.setdefault(user_id, set()).add(token)
+
+    activity_by_user: dict[int, dict[str, timezone.datetime]] = {}
+    from django.contrib.auth import get_user_model
+    User = get_user_model()
+    for user_id, tok_set in user_tokens.items():
+        activity_by_user[user_id] = get_listing_activity_map(
+            User(pk=user_id),
+            list(tok_set),
+            source_platform=DIVAR_SOURCE_PLATFORM,
+        )
+
+    due_ids: list = []
+    for listing in base.iterator(chunk_size=500):
+        activity_at = activity_by_user.get(listing.dataset.user_id, {}).get(listing.token)
+        if is_listing_purge_due(
+            listing,
+            activity_at=activity_at,
+            as_of=as_of,
+            cleanup_at=cleanup_at,
+        ):
+            due_ids.append(listing.pk)
+            if limit is not None and len(due_ids) >= limit:
+                break
+    return due_ids
+
+
+def purge_eligible_filing_listings_qs(*, as_of=None, force_schedule: bool = False) -> QuerySet:
+    if not force_schedule and not is_monthly_cleanup_day(as_of):
+        return Listing.objects.none()
+    due_ids = _purge_due_listing_ids(as_of=as_of)
+    return Listing.objects.filter(pk__in=due_ids)
 
 
 def _sync_dataset_row_counts(dataset_ids: set) -> None:
-    """همگام‌سازی row_count فقط برای datasetهای تحت تأثیر — بدون N+1."""
     from workspace.models import Dataset
 
     if not dataset_ids:
@@ -172,40 +182,38 @@ def _owner_any_meta_exists() -> Exists:
     )
 
 
-def build_retention_breakdown(*, as_of=None) -> dict:
-    """
-    شمارش dry-run با breakdown — category counts ممکن است overlap داشته باشند.
-    unique_protected و final_eligible بدون double-count هستند.
-    """
+def build_retention_breakdown(*, as_of=None, force_schedule: bool = False) -> dict:
     base = stale_filing_listings_qs(as_of=as_of)
     share_q = _active_public_share_exists()
     fav_q = _owner_favorite_meta_exists()
     note_q = _owner_meaningful_note_meta_exists()
     tag_q = _owner_workflow_tag_meta_exists()
     customer_q = _customer_listing_relation_exists()
-
     protected_q = _listing_retention_protection_q()
-    unique_protected_qs = base.filter(protected_q)
-    final_qs = base.exclude(protected_q)
+    inactive_unprotected = base.exclude(protected_q)
+
+    if force_schedule or is_monthly_cleanup_day(as_of):
+        final_count = len(_purge_due_listing_ids(as_of=as_of))
+    else:
+        final_count = 0
 
     return {
+        'cleanup_date': timezone.localtime(current_month_cleanup_datetime(as_of)).date().isoformat(),
         'retention_days': filing_listing_retention_days(),
+        'base_inactive_eligible': base.count(),
         'base_age_eligible': base.count(),
         'protected_public_share': base.filter(share_q).count(),
         'protected_favorite': base.filter(fav_q).count(),
         'protected_note': base.filter(note_q).count(),
         'protected_workflow_tag': base.filter(tag_q).count(),
         'protected_customer_relation': base.filter(customer_q).count(),
-        'unique_protected': unique_protected_qs.count(),
-        'final_eligible': final_qs.count(),
+        'unique_protected': base.filter(protected_q).count(),
+        'final_eligible': final_count,
+        'scheduled_cleanup_day': is_monthly_cleanup_day(as_of),
     }
 
 
 def build_listing_meta_audit_counts(*, as_of=None) -> dict:
-    """
-    شمارش read-only ListingMeta روی base_age_eligible — جفت دقیق (user, token).
-    برای audit production؛ از filter(user_id__in=..., token__in=...) استفاده نکنید.
-    """
     base = stale_filing_listings_qs(as_of=as_of)
     return {
         'any_meta': base.filter(_owner_any_meta_exists()).count(),
@@ -227,56 +235,57 @@ def purge_stale_filing_listings(
     dry_run: bool = False,
     batch_size: int = DEFAULT_BATCH_SIZE,
     max_delete: int | None = None,
+    force_schedule: bool = False,
 ) -> dict:
-    """
-    حذف آگهی‌های قدیمی فایلینگ.
-    CRMProperty / سرکوب کاربر / ListingMeta / CustomerListing دست نخورده.
-    آگهی با share فعال، علاقه‌مند، یادداشت، برچسب workflow، یا CustomerListing حذف نمی‌شود.
-    """
     if max_delete is not None and max_delete < 0:
         raise ValueError('max_delete must be non-negative')
 
     batch_size = max(1, min(batch_size, 5000))
-    breakdown = build_retention_breakdown()
+    breakdown = build_retention_breakdown(as_of=None, force_schedule=force_schedule)
     stats = {
         **breakdown,
         'eligible': breakdown['final_eligible'],
         'deleted': 0,
         'affected_datasets': 0,
+        'affected_users': 0,
         'batches': 0,
         'remaining_eligible': breakdown['final_eligible'],
         'dry_run': dry_run,
         'batch_size': batch_size,
         'max_delete': max_delete,
+        'force_schedule': force_schedule,
     }
+
+    if not force_schedule and not breakdown['scheduled_cleanup_day']:
+        stats['skipped_reason'] = 'not_monthly_cleanup_day'
+        return stats
+
     if dry_run or stats['eligible'] == 0 or max_delete == 0:
         return stats
 
     affected_dataset_ids: set = set()
+    affected_user_ids: set = set()
     deleted_listings = 0
     batches = 0
     delete_quota = max_delete
+    processed_offset = 0
 
     while True:
         if delete_quota is not None and delete_quota <= 0:
             break
 
-        fetch_size = batch_size
+        fetch_limit = batch_size
         if delete_quota is not None:
-            fetch_size = min(batch_size, delete_quota)
+            fetch_limit = min(batch_size, delete_quota)
 
-        batch_ids = list(
-            purge_eligible_filing_listings_qs()
-            .order_by('pk')
-            .values_list('pk', flat=True)[:fetch_size]
-        )
+        batch_ids = _purge_due_listing_ids(limit=fetch_limit)
         if not batch_ids:
             break
 
         with transaction.atomic():
-            batch_dataset_ids = set(
-                Listing.objects.filter(pk__in=batch_ids).values_list('dataset_id', flat=True),
-            )
+            batch_rows = Listing.objects.filter(pk__in=batch_ids).values_list('dataset_id', 'dataset__user_id')
+            batch_dataset_ids = {row[0] for row in batch_rows}
+            affected_user_ids.update(row[1] for row in batch_rows)
             deleted, detail = _delete_listing_batch(batch_ids)
             batch_deleted = detail.get('workspace.Listing', deleted)
             deleted_listings += batch_deleted
@@ -296,8 +305,9 @@ def purge_stale_filing_listings(
 
     stats['deleted'] = deleted_listings
     stats['affected_datasets'] = len(affected_dataset_ids)
+    stats['affected_users'] = len(affected_user_ids)
     stats['batches'] = batches
-    stats['remaining_eligible'] = purge_eligible_filing_listings_qs().count()
+    stats['remaining_eligible'] = len(_purge_due_listing_ids())
     logger.info(
         'purge_stale_filing_listings deleted=%s eligible=%s datasets=%s batches=%s retention_days=%s',
         stats['deleted'],

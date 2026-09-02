@@ -667,6 +667,8 @@ class DatasetDetailView(DatasetOwnerMixin, TemplateView):
         ctx['listing_metas'] = {m.token: m for m in metas}
         from workspace.services.listing_personal_status import personal_property_ids_by_tokens
         ctx['personal_files_map'] = personal_property_ids_by_tokens(self.request.user, page_tokens)
+        from workspace.services.listing_retention_status import batch_retention_info_map
+        ctx['listing_retention_map'] = batch_retention_info_map(list(ctx['listings']), self.request.user)
         ctx['tx'] = tx
         all_qs = dataset.listings.all()
         from workspace.services.advertiser_signal import count_listings_by_advertiser_display
@@ -873,6 +875,8 @@ class MultiDatasetListingsView(LicenseRequiredMixin, TemplateView):
         ctx['listing_metas'] = {m.token: m for m in metas}
         from workspace.services.listing_personal_status import personal_property_ids_by_tokens
         ctx['personal_files_map'] = personal_property_ids_by_tokens(self.request.user, page_tokens)
+        from workspace.services.listing_retention_status import batch_retention_info_map
+        ctx['listing_retention_map'] = batch_retention_info_map(list(ctx['listings']), self.request.user)
         ctx['tx'] = tx
         from workspace.services.advertiser_signal import count_listings_by_advertiser_display
         adv_counts = count_listings_by_advertiser_display(
@@ -1092,6 +1096,8 @@ class ListingDetailView(DatasetOwnerMixin, DetailView):
                 'workspace:ai_workspace:listing_summary',
                 kwargs={'dataset_id': dataset.id, 'listing_id': listing.id},
             )
+        from workspace.services.listing_retention_status import retention_info_for_listing
+        ctx['listing_retention'] = retention_info_for_listing(listing)
         return ctx
 
     def _whatsapp_text(self, listing, tx):
@@ -1165,6 +1171,8 @@ class ListingDetailView(DatasetOwnerMixin, DetailView):
         form = ListingMetaForm(request.POST, instance=meta)
         if form.is_valid():
             form.save()
+            from workspace.services.listing_activity import touch_listing_activity
+            touch_listing_activity(request.user, listing.token)
             messages.success(request, 'متادیتا ذخیره شد.')
         return redirect('workspace:listing_detail', dataset_id=dataset_id, listing_id=listing_id)
 
@@ -1231,6 +1239,9 @@ class ListingShareManageView(DatasetOwnerMixin, View):
             )
         share.is_active = request.POST.get('is_active') in ('1', 'true', 'on')
         share.save()
+        from workspace.services.listing_activity import touch_listing_activity
+
+        touch_listing_activity(request.user, listing.token)
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return JsonResponse({
                 'ok': True,
@@ -1251,6 +1262,8 @@ class ListingUpdateView(DatasetOwnerMixin, View):
         try:
             apply_listing_edit_post(listing, request.POST)
             listing.save()
+            from workspace.services.listing_activity import touch_listing_activity
+            touch_listing_activity(request.user, listing.token)
             dataset.mark_updated()
             if 'owner_phone' in request.POST or 'owner_name' in request.POST:
                 upsert_property_owner(
@@ -1302,6 +1315,8 @@ class ListingFavoriteToggleView(DatasetOwnerMixin, View):
         )
         meta.is_favorite = not meta.is_favorite
         meta.save(update_fields=['is_favorite', 'updated_at'])
+        from workspace.services.listing_activity import touch_listing_activity
+        touch_listing_activity(request.user, listing.token)
         return redirect(request.POST.get('next') or reverse(
             'workspace:dataset_detail', kwargs={'dataset_id': dataset.pk},
         ))

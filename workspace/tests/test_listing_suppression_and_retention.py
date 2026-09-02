@@ -177,7 +177,7 @@ class CRMSafetyWithSuppressionTests(TestCase):
         listing = Listing.objects.create(dataset=ds, token='old-tok', title='قدیمی')
         Listing.objects.filter(pk=listing.pk).update(created_at=old, published_at=None)
         with override_settings(FILING_LISTING_RETENTION_DAYS=RETENTION_DAYS):
-            stats = purge_stale_filing_listings(dry_run=False)
+            stats = purge_stale_filing_listings(dry_run=False, force_schedule=True)
         self.assertGreaterEqual(stats['deleted'], 1)
         self.assertFalse(
             UserListingSuppression.objects.filter(user=self.user, external_id='old-tok').exists(),
@@ -255,7 +255,7 @@ class RetentionTests(TestCase):
         Listing.objects.filter(pk=stale.pk).update(created_at=old, published_at=None)
         Listing.objects.filter(pk=keep.pk).update(created_at=fresh, published_at=fresh)
         with override_settings(FILING_LISTING_RETENTION_DAYS=RETENTION_DAYS):
-            stats = purge_stale_filing_listings(dry_run=False)
+            stats = purge_stale_filing_listings(dry_run=False, force_schedule=True)
         self.assertGreaterEqual(stats['deleted'], 1)
         self.assertFalse(Listing.objects.filter(token='stale-1').exists())
         self.assertTrue(Listing.objects.filter(token='fresh-1').exists())
@@ -265,7 +265,7 @@ class RetentionTests(TestCase):
         listing = Listing.objects.create(dataset=self.dataset, token='dry-1', title='x')
         Listing.objects.filter(pk=listing.pk).update(created_at=old)
         with override_settings(FILING_LISTING_RETENTION_DAYS=RETENTION_DAYS):
-            stats = purge_stale_filing_listings(dry_run=True)
+            stats = purge_stale_filing_listings(dry_run=True, force_schedule=True)
         self.assertGreaterEqual(stats['base_age_eligible'], 1)
         self.assertGreaterEqual(stats['final_eligible'], 1)
         self.assertEqual(stats['eligible'], stats['final_eligible'])
@@ -280,7 +280,7 @@ class RetentionTests(TestCase):
         self.dataset.row_count = 1
         self.dataset.save(update_fields=['row_count'])
         with override_settings(FILING_LISTING_RETENTION_DAYS=RETENTION_DAYS):
-            purge_stale_filing_listings(dry_run=False)
+            purge_stale_filing_listings(dry_run=False, force_schedule=True)
         self.dataset.refresh_from_db()
         self.assertEqual(self.dataset.row_count, 0)
 
@@ -388,7 +388,7 @@ class RetentionCascadeTests(TestCase):
             is_active=True,
         )
         with override_settings(FILING_LISTING_RETENTION_DAYS=RETENTION_DAYS):
-            stats = purge_stale_filing_listings(dry_run=False)
+            stats = purge_stale_filing_listings(dry_run=False, force_schedule=True)
         self.assertEqual(stats['deleted'], 0)
         self.assertTrue(Listing.objects.filter(pk=listing.pk).exists())
         self.assertTrue(ListingPublicShare.objects.filter(pk=share.pk).exists())
@@ -406,7 +406,7 @@ class RetentionCascadeTests(TestCase):
             is_active=False,
         )
         with override_settings(FILING_LISTING_RETENTION_DAYS=RETENTION_DAYS):
-            stats = purge_stale_filing_listings(dry_run=False)
+            stats = purge_stale_filing_listings(dry_run=False, force_schedule=True)
         self.assertGreaterEqual(stats['deleted'], 1)
         self.assertFalse(Listing.objects.filter(pk=listing.pk).exists())
         self.assertFalse(ListingPublicShare.objects.filter(pk=share.pk).exists())
@@ -425,7 +425,7 @@ class RetentionCascadeTests(TestCase):
             token='crm-ret',
         )
         with override_settings(FILING_LISTING_RETENTION_DAYS=RETENTION_DAYS):
-            purge_stale_filing_listings(dry_run=False)
+            purge_stale_filing_listings(dry_run=False, force_schedule=True)
         self.assertTrue(CRMProperty.objects.filter(pk=prop.pk).exists())
 
 
@@ -446,7 +446,7 @@ class RetentionProtectionTests(TestCase):
         listing = self._stale('fav-prot')
         ListingMeta.objects.create(user=self.user, token=listing.token, is_favorite=True)
         with override_settings(FILING_LISTING_RETENTION_DAYS=RETENTION_DAYS):
-            stats = purge_stale_filing_listings(dry_run=False)
+            stats = purge_stale_filing_listings(dry_run=False, force_schedule=True)
         self.assertEqual(stats['deleted'], 0)
         self.assertTrue(Listing.objects.filter(token='fav-prot').exists())
 
@@ -456,7 +456,7 @@ class RetentionProtectionTests(TestCase):
         listing = self._stale('note-prot')
         ListingMeta.objects.create(user=self.user, token=listing.token, note='تماس گرفتم')
         with override_settings(FILING_LISTING_RETENTION_DAYS=RETENTION_DAYS):
-            stats = purge_stale_filing_listings(dry_run=False)
+            stats = purge_stale_filing_listings(dry_run=False, force_schedule=True)
         self.assertEqual(stats['deleted'], 0)
         self.assertTrue(Listing.objects.filter(token='note-prot').exists())
 
@@ -466,7 +466,7 @@ class RetentionProtectionTests(TestCase):
         listing = self._stale('tag-prot')
         ListingMeta.objects.create(user=self.user, token=listing.token, tag='بازدید')
         with override_settings(FILING_LISTING_RETENTION_DAYS=RETENTION_DAYS):
-            stats = purge_stale_filing_listings(dry_run=False)
+            stats = purge_stale_filing_listings(dry_run=False, force_schedule=True)
         self.assertEqual(stats['deleted'], 0)
         self.assertTrue(Listing.objects.filter(token='tag-prot').exists())
 
@@ -476,7 +476,7 @@ class RetentionProtectionTests(TestCase):
         listing = self._stale('tag-rej')
         ListingMeta.objects.create(user=self.user, token=listing.token, tag='رد')
         with override_settings(FILING_LISTING_RETENTION_DAYS=RETENTION_DAYS):
-            stats = purge_stale_filing_listings(dry_run=False)
+            stats = purge_stale_filing_listings(dry_run=False, force_schedule=True)
         self.assertGreaterEqual(stats['deleted'], 1)
         self.assertFalse(Listing.objects.filter(token='tag-rej').exists())
 
@@ -487,8 +487,8 @@ class RetentionProtectionTests(TestCase):
         customer = Customer.objects.create(user=self.user, name='مشتری')
         CustomerListing.objects.create(customer=customer, token=listing.token, title='snap')
         with override_settings(FILING_LISTING_RETENTION_DAYS=RETENTION_DAYS):
-            breakdown = build_retention_breakdown()
-            stats = purge_stale_filing_listings(dry_run=False)
+            breakdown = build_retention_breakdown(force_schedule=True)
+            stats = purge_stale_filing_listings(dry_run=False, force_schedule=True)
         self.assertGreaterEqual(breakdown['protected_customer_relation'], 1)
         self.assertEqual(stats['deleted'], 0)
         self.assertTrue(Listing.objects.filter(token='cust-rel').exists())
@@ -501,7 +501,7 @@ class RetentionProtectionTests(TestCase):
         customer = Customer.objects.create(user=self.user, name='مشتری')
         CustomerListing.objects.create(customer=customer, token=listing.token, title='snap')
         with override_settings(FILING_LISTING_RETENTION_DAYS=RETENTION_DAYS):
-            breakdown = build_retention_breakdown()
+            breakdown = build_retention_breakdown(force_schedule=True)
         self.assertEqual(breakdown['protected_customer_relation'], 1)
         self.assertEqual(breakdown['unique_protected'], 1)
         self.assertEqual(breakdown['final_eligible'], 0)
@@ -512,7 +512,7 @@ class RetentionProtectionTests(TestCase):
             listing = Listing.objects.create(dataset=self.dataset, token=f'batch-{i}', title='x')
             Listing.objects.filter(pk=listing.pk).update(created_at=old, published_at=old)
         with override_settings(FILING_LISTING_RETENTION_DAYS=RETENTION_DAYS):
-            stats = purge_stale_filing_listings(dry_run=False, batch_size=1)
+            stats = purge_stale_filing_listings(dry_run=False, force_schedule=True, batch_size=1)
         self.assertEqual(stats['deleted'], 3)
         self.assertEqual(stats['batches'], 3)
         self.dataset.refresh_from_db()
@@ -530,7 +530,7 @@ class RetentionProtectionTests(TestCase):
             is_active=True,
         )
         with override_settings(FILING_LISTING_RETENTION_DAYS=RETENTION_DAYS):
-            breakdown = build_retention_breakdown()
+            breakdown = build_retention_breakdown(force_schedule=True)
         self.assertGreaterEqual(breakdown['protected_public_share'], 1)
         self.assertGreaterEqual(breakdown['protected_favorite'], 1)
         self.assertGreaterEqual(breakdown['protected_note'], 1)
@@ -557,7 +557,7 @@ class RetentionProtectionTests(TestCase):
         with patch('workspace.services.filing_retention._delete_listing_batch', side_effect=fail_on_second_batch):
             with override_settings(FILING_LISTING_RETENTION_DAYS=RETENTION_DAYS):
                 with self.assertRaises(RuntimeError):
-                    purge_stale_filing_listings(dry_run=False, batch_size=1)
+                    purge_stale_filing_listings(dry_run=False, force_schedule=True, batch_size=1)
 
         self.dataset.refresh_from_db()
         remaining = Listing.objects.filter(dataset=self.dataset).count()
@@ -585,8 +585,8 @@ class RetentionCrossUserTests(TestCase):
         self._stale(self.dataset_b, 'shared-tok')
         ListingMeta.objects.create(user=self.user_a, token='shared-tok', is_favorite=True)
         with override_settings(FILING_LISTING_RETENTION_DAYS=RETENTION_DAYS):
-            breakdown = build_retention_breakdown()
-            purge_stale_filing_listings(dry_run=False)
+            breakdown = build_retention_breakdown(force_schedule=True)
+            purge_stale_filing_listings(dry_run=False, force_schedule=True)
         self.assertEqual(breakdown['protected_favorite'], 1)
         self.assertEqual(breakdown['final_eligible'], 1)
         self.assertTrue(Listing.objects.filter(dataset=self.dataset_a, token='shared-tok').exists())
@@ -599,8 +599,8 @@ class RetentionCrossUserTests(TestCase):
         self._stale(self.dataset_b, 'note-shared')
         ListingMeta.objects.create(user=self.user_a, token='note-shared', note='یادداشت')
         with override_settings(FILING_LISTING_RETENTION_DAYS=RETENTION_DAYS):
-            breakdown = build_retention_breakdown()
-            purge_stale_filing_listings(dry_run=False)
+            breakdown = build_retention_breakdown(force_schedule=True)
+            purge_stale_filing_listings(dry_run=False, force_schedule=True)
         self.assertEqual(breakdown['protected_note'], 1)
         self.assertEqual(breakdown['final_eligible'], 1)
         self.assertTrue(Listing.objects.filter(dataset=self.dataset_a, token='note-shared').exists())
@@ -613,8 +613,8 @@ class RetentionCrossUserTests(TestCase):
         self._stale(self.dataset_b, 'tag-shared')
         ListingMeta.objects.create(user=self.user_a, token='tag-shared', tag='تماس')
         with override_settings(FILING_LISTING_RETENTION_DAYS=RETENTION_DAYS):
-            breakdown = build_retention_breakdown()
-            purge_stale_filing_listings(dry_run=False)
+            breakdown = build_retention_breakdown(force_schedule=True)
+            purge_stale_filing_listings(dry_run=False, force_schedule=True)
         self.assertEqual(breakdown['protected_workflow_tag'], 1)
         self.assertEqual(breakdown['final_eligible'], 1)
         self.assertTrue(Listing.objects.filter(dataset=self.dataset_a, token='tag-shared').exists())
@@ -628,11 +628,11 @@ class RetentionCrossUserTests(TestCase):
         customer = Customer.objects.create(user=self.user_a, name='مشتری A')
         CustomerListing.objects.create(customer=customer, token='cust-shared', title='snap')
         with override_settings(FILING_LISTING_RETENTION_DAYS=RETENTION_DAYS):
-            breakdown = build_retention_breakdown()
-            purge_stale_filing_listings(dry_run=False)
+            breakdown = build_retention_breakdown(force_schedule=True)
+            purge_stale_filing_listings(dry_run=False, force_schedule=True)
         self.assertEqual(breakdown['protected_customer_relation'], 1)
         self.assertEqual(breakdown['final_eligible'], 1)
-        purge_stale_filing_listings(dry_run=False)
+        purge_stale_filing_listings(dry_run=False, force_schedule=True)
         self.assertTrue(Listing.objects.filter(dataset=self.dataset_a, token='cust-shared').exists())
         self.assertFalse(Listing.objects.filter(dataset=self.dataset_b, token='cust-shared').exists())
         self.assertTrue(CustomerListing.objects.filter(token='cust-shared').exists())
@@ -649,7 +649,7 @@ class Retention62DayThresholdTests(TestCase):
         Listing.objects.filter(pk=listing.pk).update(published_at=age, created_at=age)
         with override_settings(FILING_LISTING_RETENTION_DAYS=RETENTION_DAYS):
             self.assertFalse(stale_filing_listings_qs().filter(pk=listing.pk).exists())
-            stats = purge_stale_filing_listings(dry_run=False)
+            stats = purge_stale_filing_listings(dry_run=False, force_schedule=True)
         self.assertEqual(stats['deleted'], 0)
         self.assertTrue(Listing.objects.filter(pk=listing.pk).exists())
 
@@ -659,7 +659,7 @@ class Retention62DayThresholdTests(TestCase):
         Listing.objects.filter(pk=listing.pk).update(published_at=age, created_at=age)
         with override_settings(FILING_LISTING_RETENTION_DAYS=RETENTION_DAYS):
             self.assertTrue(stale_filing_listings_qs().filter(pk=listing.pk).exists())
-            stats = purge_stale_filing_listings(dry_run=False)
+            stats = purge_stale_filing_listings(dry_run=False, force_schedule=True)
         self.assertGreaterEqual(stats['deleted'], 1)
         self.assertFalse(Listing.objects.filter(pk=listing.pk).exists())
 
@@ -687,7 +687,7 @@ class MaxDeleteTests(TestCase):
         for i in range(10):
             self._create_stale(f'cap-{i}')
         with override_settings(FILING_LISTING_RETENTION_DAYS=RETENTION_DAYS):
-            stats = purge_stale_filing_listings(dry_run=False, batch_size=2, max_delete=5)
+            stats = purge_stale_filing_listings(dry_run=False, force_schedule=True, batch_size=2, max_delete=5)
         self.assertEqual(stats['deleted'], 5)
         self.assertEqual(Listing.objects.filter(dataset=self.dataset).count(), 5)
         self.assertEqual(stats['remaining_eligible'], 5)
@@ -696,7 +696,7 @@ class MaxDeleteTests(TestCase):
         for i in range(8):
             self._create_stale(f'lim-{i}')
         with override_settings(FILING_LISTING_RETENTION_DAYS=RETENTION_DAYS):
-            stats = purge_stale_filing_listings(dry_run=False, batch_size=2, max_delete=5)
+            stats = purge_stale_filing_listings(dry_run=False, force_schedule=True, batch_size=2, max_delete=5)
         self.assertEqual(stats['deleted'], 5)
         self.assertEqual(stats['batches'], 3)
 
@@ -704,8 +704,8 @@ class MaxDeleteTests(TestCase):
         for i in range(6):
             self._create_stale(f'cont-{i}')
         with override_settings(FILING_LISTING_RETENTION_DAYS=RETENTION_DAYS):
-            first = purge_stale_filing_listings(dry_run=False, batch_size=2, max_delete=3)
-            second = purge_stale_filing_listings(dry_run=False, batch_size=2, max_delete=10)
+            first = purge_stale_filing_listings(dry_run=False, force_schedule=True, batch_size=2, max_delete=3)
+            second = purge_stale_filing_listings(dry_run=False, force_schedule=True, batch_size=2, max_delete=10)
         self.assertEqual(first['deleted'], 3)
         self.assertEqual(second['deleted'], 3)
         self.assertEqual(Listing.objects.filter(dataset=self.dataset).count(), 0)
@@ -714,7 +714,7 @@ class MaxDeleteTests(TestCase):
         for i in range(5):
             self._create_stale(f'rem-{i}')
         with override_settings(FILING_LISTING_RETENTION_DAYS=RETENTION_DAYS):
-            stats = purge_stale_filing_listings(dry_run=False, batch_size=250, max_delete=3)
+            stats = purge_stale_filing_listings(dry_run=False, force_schedule=True, batch_size=250, max_delete=3)
         self.assertEqual(stats['deleted'], 3)
         self.assertEqual(stats['remaining_eligible'], 2)
 
@@ -730,13 +730,13 @@ class MaxDeleteTests(TestCase):
     def test_max_delete_zero_performs_no_deletes(self):
         self._create_stale('zero-max')
         with override_settings(FILING_LISTING_RETENTION_DAYS=RETENTION_DAYS):
-            stats = purge_stale_filing_listings(dry_run=False, max_delete=0)
+            stats = purge_stale_filing_listings(dry_run=False, force_schedule=True, max_delete=0)
         self.assertEqual(stats['deleted'], 0)
         self.assertTrue(Listing.objects.filter(token='zero-max').exists())
 
     def test_negative_max_delete_raises(self):
         with self.assertRaises(ValueError):
-            purge_stale_filing_listings(dry_run=False, max_delete=-1)
+            purge_stale_filing_listings(dry_run=False, force_schedule=True, max_delete=-1)
 
 
 class DeleteSemanticsTests(TestCase):
@@ -761,7 +761,7 @@ class DeleteSemanticsTests(TestCase):
         listing = Listing.objects.create(dataset=self.dataset, token='sem-ret', title='x')
         Listing.objects.filter(pk=listing.pk).update(created_at=old)
         with override_settings(FILING_LISTING_RETENTION_DAYS=RETENTION_DAYS):
-            purge_stale_filing_listings(dry_run=False)
+            purge_stale_filing_listings(dry_run=False, force_schedule=True)
         self.assertFalse(UserListingSuppression.objects.filter(user=self.user, external_id='sem-ret').exists())
 
     def test_dataset_delete_no_mass_suppression(self):

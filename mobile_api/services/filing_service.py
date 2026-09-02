@@ -210,8 +210,8 @@ def _value_map_for_dataset(ds: Dataset) -> Dict[int, float]:
     return value_map
 
 
-def _listing_dict_with_value(lst: Listing, value_map: Dict[int, float], *, personal_status: Optional[dict] = None) -> dict:
-    payload = listing_to_dict(lst, personal_status=personal_status)
+def _listing_dict_with_value(lst: Listing, value_map: Dict[int, float], *, personal_status: Optional[dict] = None, retention: Optional[dict] = None) -> dict:
+    payload = listing_to_dict(lst, personal_status=personal_status, retention=retention)
     score = value_map.get(lst.pk)
     if score is None:
         return payload
@@ -303,8 +303,16 @@ def list_listings(
         user,
     )
     status_by_pk = {lst.pk: personal_status_payload(lst) for lst in annotated}
+    from workspace.services.listing_retention_status import batch_retention_info_map, retention_info_to_api
+
+    retention_map = batch_retention_info_map(list(page_obj.object_list), user)
     items = [
-        _listing_dict_with_value(lst, value_map, personal_status=status_by_pk.get(lst.pk))
+        _listing_dict_with_value(
+            lst,
+            value_map,
+            personal_status=status_by_pk.get(lst.pk),
+            retention=retention_info_to_api(retention_map.get(lst.token, {})),
+        )
         for lst in page_obj.object_list
     ]
     return items, {
@@ -336,7 +344,10 @@ def get_listing_detail(user, token: str, request=None) -> Optional[dict]:
         'is_added_to_personal': bool(prop),
         'personal_property_id': prop.pk if prop else None,
     }
-    return listing_detail_to_dict(lst, user=user, request=request, personal_status=status)
+    from workspace.services.listing_retention_status import retention_info_for_listing, retention_info_to_api
+
+    retention = retention_info_to_api(retention_info_for_listing(lst))
+    return listing_detail_to_dict(lst, user=user, request=request, personal_status=status, retention=retention)
 
 
 def get_listing_public_share(user, token: str, request=None) -> Optional[dict]:
@@ -370,6 +381,9 @@ def update_listing_public_share(user, token: str, payload: dict, request=None) -
     if not share:
         return None
     _update_share(share, payload)
+    from workspace.services.listing_activity import touch_listing_activity
+
+    touch_listing_activity(user, lst.token)
     return listing_public_share_to_dict(share, request)
 
 
@@ -464,7 +478,12 @@ def update_listing_meta(user, token: str, payload: dict, request=None) -> Option
         else:
             meta.is_favorite = str(raw).strip().lower() in ('1', 'true', 'yes', 'on')
     meta.save()
-    return listing_detail_to_dict(lst, user=user, request=request)
+    from workspace.services.listing_activity import touch_listing_activity
+    from workspace.services.listing_retention_status import retention_info_for_listing, retention_info_to_api
+
+    touch_listing_activity(user, lst.token)
+    retention = retention_info_to_api(retention_info_for_listing(lst))
+    return listing_detail_to_dict(lst, user=user, request=request, retention=retention)
 
 
 def toggle_listing_favorite(user, token: str, request=None) -> Optional[dict]:
@@ -478,7 +497,12 @@ def toggle_listing_favorite(user, token: str, request=None) -> Optional[dict]:
     meta, _ = ListingMeta.objects.get_or_create(user=user, token=lst.token)
     meta.is_favorite = not bool(meta.is_favorite)
     meta.save(update_fields=['is_favorite', 'updated_at'])
-    return listing_detail_to_dict(lst, user=user, request=request)
+    from workspace.services.listing_activity import touch_listing_activity
+    from workspace.services.listing_retention_status import retention_info_for_listing, retention_info_to_api
+
+    touch_listing_activity(user, lst.token)
+    retention = retention_info_to_api(retention_info_for_listing(lst))
+    return listing_detail_to_dict(lst, user=user, request=request, retention=retention)
 
 
 def unlink_listing_contact(user, token: str, link_id: int, request=None) -> Optional[dict]:
@@ -554,9 +578,16 @@ def search_listings(
         status_by_token = {lst.token: personal_status_payload(lst) for lst in annotated}
     else:
         status_by_token = {}
+    from workspace.services.listing_retention_status import batch_retention_info_map, retention_info_to_api
+
+    retention_map = batch_retention_info_map(page_listings, user)
     items: List[dict] = []
     for lst in page_listings:
-        row = listing_to_dict(lst, personal_status=status_by_token.get(lst.token))
+        row = listing_to_dict(
+            lst,
+            personal_status=status_by_token.get(lst.token),
+            retention=retention_info_to_api(retention_map.get(lst.token, {})),
+        )
         row['dataset_name'] = lst.dataset.name if lst.dataset else ''
         items.append(row)
     return items, {

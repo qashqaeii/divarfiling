@@ -1,5 +1,5 @@
 {% load humanize workspace_tags %}
-{% with feat=listing_features|dict_get:listing.id score=value_map|dict_get:listing.id lm=listing_metas|dict_get:listing.token pf=personal_files_map|dict_get:listing.token %}
+{% with feat=listing_features|dict_get:listing.id score=value_map|dict_get:listing.id lm=listing_metas|dict_get:listing.token pf=personal_files_map|dict_get:listing.token ret=listing_retention_map|dict_get:listing.token %}
 <article class="mk-lcard mk-lcard-native" data-token="{{ listing.token }}" data-href="{% url 'workspace:listing_detail' listing.dataset_id listing.id %}">
     <div class="mk-lcard-cover mk-lcard-native__media{% if listing.images|length > 1 %} mk-lcard-cover--gallery{% endif %}{% if listing.images %} mk-lcard-cover--lightbox{% endif %}"{% if listing.images %} data-ws-gallery{% endif %}>
         {% if listing.images %}
@@ -61,6 +61,12 @@
         {% if pf %}
         <span class="mk-lcard-personal-badge" title="این آگهی قبلاً به فایل‌های شخصی شما اضافه شده است.">
             <i class="fas fa-check" aria-hidden="true"></i> به فایل‌های شخصی اضافه شده
+        </span>
+        {% endif %}
+        {% if ret.status == 'warning' %}
+        <span class="mk-lcard-retention-badge" title="در آستانه پاک‌سازی فایلینگ">
+            <i class="fas fa-triangle-exclamation" aria-hidden="true"></i>
+            در آستانه پاک‌سازی{% if ret.days_remaining is not None %} · {{ ret.days_remaining }} روز{% endif %}
         </span>
         {% endif %}
 

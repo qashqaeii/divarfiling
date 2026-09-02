@@ -875,6 +875,10 @@ def link_customer_listing(
         property_obj=crm_property,
         metadata={'role': role, 'deal_type': deal_type},
     )
+    ext_token = token or (crm_property.token if crm_property else '')
+    if ext_token:
+        from workspace.services.listing_activity import touch_listing_activity
+        touch_listing_activity(customer.user, ext_token)
     return obj
 
 

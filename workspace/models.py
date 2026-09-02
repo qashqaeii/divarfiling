@@ -162,6 +162,35 @@ class UserListingSuppression(models.Model):
         return f'{self.user_id}:{self.source_platform}:{self.external_id}'
 
 
+class UserListingActivity(models.Model):
+    """آخرین فعالیت معنادار کاربر روی یک token فایلینگ — بدون FK به Listing."""
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+        related_name='listing_activities', verbose_name='کاربر',
+    )
+    source_platform = models.CharField(max_length=30, db_index=True, verbose_name='پلتفرم منبع')
+    external_id = models.CharField(max_length=100, db_index=True, verbose_name='شناسه خارجی')
+    last_activity_at = models.DateTimeField(verbose_name='آخرین فعالیت')
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'فعالیت آگهی کاربر'
+        verbose_name_plural = 'فعالیت‌های آگهی کاربر'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'source_platform', 'external_id'],
+                name='uniq_user_listing_activity',
+            ),
+        ]
+        indexes = [
+            models.Index(fields=['user', 'source_platform', 'external_id']),
+            models.Index(fields=['last_activity_at']),
+        ]
+
+    def __str__(self):
+        return f'{self.user_id}:{self.source_platform}:{self.external_id}'
+
+
 class ListingMeta(models.Model):
     """متادیتای کاربر برای هر آگهی (برچسب، یادداشت، علاقه‌مند)."""
     TAG_CHOICES = [(t, t or 'بدون برچسب') for t in LISTING_TAGS]

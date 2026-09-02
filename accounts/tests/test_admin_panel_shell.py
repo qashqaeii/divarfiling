@@ -26,6 +26,7 @@ class AdminPanelShellServiceTests(TestCase):
         self.assertEqual(resolve_admin_panel_nav_active('/accounts/admin-panel/support/'), 'support')
         self.assertEqual(resolve_admin_panel_nav_active('/accounts/admin-panel/activity/'), 'activity')
         self.assertEqual(resolve_admin_panel_nav_active('/accounts/admin-panel/windows/'), 'windows')
+        self.assertEqual(resolve_admin_panel_nav_active('/accounts/admin-panel/android/'), 'android')
         self.assertEqual(resolve_admin_panel_nav_active('/accounts/admin-panel/crm/'), 'crm')
         self.assertEqual(resolve_admin_panel_nav_active('/accounts/admin-panel/affiliates/'), 'affiliates')
         self.assertEqual(resolve_admin_panel_nav_active('/accounts/admin-panel/exports/'), 'exports')

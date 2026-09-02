@@ -480,6 +480,64 @@ def _windows_first_launches_rows() -> Tuple[List[str], Iterable[ExportRow]]:
     return headers, rows
 
 
+def _android_devices_rows() -> Tuple[List[str], Iterable[ExportRow]]:
+    from mobile_api.models import MobileDevice
+
+    headers = [
+        'کاربر', 'موبایل', 'مدل دستگاه', 'اندروید', 'نسخه اپ',
+        'فعال', 'تاریخ ثبت', 'آخرین استفاده', 'پلن',
+    ]
+    qs = (
+        MobileDevice.objects.select_related(
+            'user',
+            'license_activation',
+            'license_activation__license',
+            'license_activation__license__plan',
+        )
+        .order_by('-registered_at')
+    )
+    rows = []
+    for device in qs:
+        activation = device.license_activation
+        plan_name = ''
+        if activation and activation.license_id and activation.license.plan_id:
+            plan_name = activation.license.plan.name
+        rows.append({
+            'کاربر': _user_display(device.user),
+            'موبایل': device.user.phone or '',
+            'مدل دستگاه': device.device_model or '',
+            'اندروید': device.os_version or '',
+            'نسخه اپ': device.app_version or '',
+            'فعال': 'بله' if device.is_active else 'خیر',
+            'تاریخ ثبت': _jalali(device.registered_at),
+            'آخرین استفاده': _jalali(device.last_seen_at),
+            'پلن': plan_name,
+        })
+    return headers, rows
+
+
+def _android_active_devices_rows() -> Tuple[List[str], Iterable[ExportRow]]:
+    from mobile_api.models import MobileDevice
+
+    headers = ['کاربر', 'موبایل', 'مدل دستگاه', 'نسخه اپ', 'آخرین استفاده']
+    qs = (
+        MobileDevice.objects.filter(is_active=True)
+        .select_related('user')
+        .order_by('-last_seen_at')
+    )
+    rows = [
+        {
+            'کاربر': _user_display(device.user),
+            'موبایل': device.user.phone or '',
+            'مدل دستگاه': device.device_model or '',
+            'نسخه اپ': device.app_version or '',
+            'آخرین استفاده': _jalali(device.last_seen_at),
+        }
+        for device in qs
+    ]
+    return headers, rows
+
+
 def _users_management_export_rows() -> Tuple[List[str], Iterable[ExportRow]]:
     from accounts.services.admin_users_management import export_users_management_rows
     return export_users_management_rows()
@@ -623,6 +681,22 @@ EXPORT_REGISTRY: Dict[str, Dict[str, Any]] = {
         'icon': 'fa-play',
         'accent': 'emerald',
         'builder': _windows_first_launches_rows,
+    },
+    'android_devices': {
+        'title': 'دستگاه‌های اندروید',
+        'description': 'ثبت دستگاه، نسخه اپ و آخرین استفاده',
+        'category': 'licenses',
+        'icon': 'fa-mobile-alt',
+        'accent': 'green',
+        'builder': _android_devices_rows,
+    },
+    'android_active_devices': {
+        'title': 'دستگاه‌های فعال اندروید',
+        'description': 'کاربران با دستگاه فعال و آخرین بازدید',
+        'category': 'licenses',
+        'icon': 'fa-signal',
+        'accent': 'teal',
+        'builder': _android_active_devices_rows,
     },
 }
 

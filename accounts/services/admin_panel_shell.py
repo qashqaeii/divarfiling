@@ -81,6 +81,7 @@ def resolve_admin_panel_nav_active(path: str) -> str:
         ('/accounts/admin-panel/support/', 'support'),
         ('/accounts/admin-panel/activity/', 'activity'),
         ('/accounts/admin-panel/windows/', 'windows'),
+        ('/accounts/admin-panel/android/', 'android'),
         ('/accounts/admin-panel/crm/', 'crm'),
         ('/accounts/admin-panel/affiliates/', 'affiliates'),
         ('/accounts/admin-panel/exports/', 'exports'),

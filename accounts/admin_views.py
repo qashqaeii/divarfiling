@@ -73,6 +73,7 @@ from accounts.services.admin_licenses_center import get_licenses_center_context
 from accounts.services.admin_operations_center import get_operations_center_context
 from accounts.services.admin_support_center import get_support_center_context
 from accounts.services.admin_activity_center import get_activity_center_context
+from accounts.services.admin_android_center import get_android_center_context
 from accounts.services.admin_windows_center import get_windows_center_context
 from accounts.services.admin_crm_center import get_crm_center_context
 from accounts.services.admin_affiliates_center import get_affiliates_center_context
@@ -882,6 +883,27 @@ class AdminWindowsCenterView(StaffRequiredMixin, TemplateView):
         except (TypeError, ValueError):
             page = 1
         data = get_windows_center_context(days=days, page=page, compare=compare)
+        ctx.update(data)
+        ctx['chart_days'] = days
+        ctx['admin_panel_range_key'] = range_key
+        ctx['admin_panel_compare'] = compare
+        return ctx
+
+
+class AdminAndroidCenterView(StaffRequiredMixin, TemplateView):
+    """مرکز اندروید — Funnel نصب، فعال‌سازی و استفاده."""
+
+    template_name = 'accounts/admin_android_center.html'
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        days, range_key = parse_admin_panel_range(self.request)
+        compare = self.request.GET.get('compare') == '1'
+        try:
+            page = max(1, int(self.request.GET.get('page', 1)))
+        except (TypeError, ValueError):
+            page = 1
+        data = get_android_center_context(days=days, page=page, compare=compare)
         ctx.update(data)
         ctx['chart_days'] = days
         ctx['admin_panel_range_key'] = range_key

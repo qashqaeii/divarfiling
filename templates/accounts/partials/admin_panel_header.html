@@ -5,7 +5,13 @@
             <button type="button" class="ecc-sidebar-toggle" id="ecc-sidebar-toggle" aria-label="باز کردن منو" aria-controls="ecc-sidebar" aria-expanded="false">
                 <i class="fas fa-bars" aria-hidden="true"></i>
             </button>
-            <h1 class="ecc-header-title">{% block admin_panel_title %}پنل مدیریت{% endblock %}</h1>
+            <div class="ecc-header-title-block">
+                <h1 class="ecc-header-title">{% block admin_panel_title %}پنل مدیریت{% endblock %}</h1>
+                <p class="ecc-header-subtitle" id="ecc-header-range-label">
+                    {% if admin_panel_range_key == '1' %}گزارش امروز{% elif admin_panel_range_key == '7' %}۷ روز اخیر{% elif admin_panel_range_key == '90' %}۹۰ روز اخیر{% else %}۳۰ روز اخیر{% endif %}
+                    {% if admin_panel_compare %} · مقایسه با دوره قبل{% endif %}
+                </p>
+            </div>
             {% block admin_panel_header_meta %}{% endblock %}
         </div>
         <div class="ecc-header-toolbar">

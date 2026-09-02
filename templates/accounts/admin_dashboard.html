@@ -42,6 +42,10 @@
 {% block admin_panel_content %}
 
 <section class="ecc-section ecc-cmd-kpi" aria-label="شاخص‌های کلیدی">
+    <header class="ecc-cmd-section-label">
+        <span>شاخص‌های کلیدی</span>
+        <em>{% if chart_days == 1 %}امروز{% else %}{{ chart_days|to_persian_digits }} روز{% endif %}</em>
+    </header>
     <div class="ecc-kpi-grid ecc-kpi-grid--cmd">
         {% for card in kpi_cards %}
         <article class="ecc-kpi" data-accent="{{ card.accent }}" data-status="{{ card.status }}">
@@ -148,6 +152,10 @@
 </section>
 
 <section class="ecc-section ecc-cmd-charts" id="ecc-charts" aria-label="نمودارهای مدیریتی">
+    <header class="ecc-cmd-section-label">
+        <span>تحلیل و روند</span>
+        <em>{% if chart_days == 1 %}امروز{% else %}{{ chart_days|to_persian_digits }} روز{% endif %}</em>
+    </header>
     <div class="ecc-cmd-charts-grid">
         <article class="ecc-card ecc-card--chart ecc-cmd-chart-revenue">
             <div class="ecc-card-head">
@@ -201,6 +209,9 @@
 </section>
 
 <section class="ecc-section ecc-cmd-summary" id="ecc-summary" aria-label="خلاصه حوزه‌ها">
+    <header class="ecc-cmd-section-label">
+        <span>خلاصه حوزه‌ها</span>
+    </header>
     <div class="ecc-cmd-summary-grid">
         <article class="ecc-cmd-summary-card" data-accent="teal">
             <header>
@@ -289,7 +300,7 @@
 window.admCharts = {{ charts_json|safe }};
 window.admChartDays = {{ chart_days }};
 </script>
-<script src="{% static 'js/mizkar-admin-dashboard.js' %}?v=13"></script>
+<script src="{% static 'js/mizkar-admin-dashboard.js' %}?v=14"></script>
 <script>
 if (location.hash === '#ecc-users') {
     var q = location.search || '?days=30';

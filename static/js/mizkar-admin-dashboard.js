@@ -62,9 +62,12 @@
                     rtl: true,
                     labels: {
                         color: theme.text,
-                        font: { family: 'Vazirmatn, Vazir, Tahoma, sans-serif', size: 11 },
-                        padding: 14,
+                        font: { family: 'Vazirmatn, Vazir, Tahoma, sans-serif', size: 11, weight: '500' },
+                        padding: 12,
                         usePointStyle: true,
+                        pointStyle: 'circle',
+                        boxWidth: 8,
+                        boxHeight: 8,
                     },
                 },
                 tooltip: {

@@ -3316,3 +3316,731 @@ body.mk-admin-dashboard .adm-page.ecc-page--v2 {
 .ecc-sup-charts .ecc-card--chart {
     max-width: 100%;
 }
+
+/* ═══════════════════════════════════════════════════════════
+   Command Center UI Polish — minimal professional dashboard
+   ═══════════════════════════════════════════════════════════ */
+
+.ecc-page--shell .ecc-main {
+    gap: 1.15rem;
+}
+
+/* ─── Header / Hero ─── */
+.ecc-page--shell .ecc-header--shell {
+    padding: 0.95rem 1.1rem;
+    border-radius: 14px;
+    background: var(--ecc-surface);
+    box-shadow: none;
+}
+
+.ecc-header-title-block {
+    display: flex;
+    flex-direction: column;
+    gap: 0.12rem;
+    min-width: 0;
+}
+
+.ecc-page--shell .ecc-header-title {
+    font-size: 1.08rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.25;
+}
+
+.ecc-header-subtitle {
+    margin: 0;
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: var(--ecc-text-muted);
+    line-height: 1.35;
+}
+
+.ecc-page--shell .ecc-header-toolbar {
+    gap: 0.55rem 0.7rem;
+}
+
+.ecc-page--shell .ecc-range--global {
+    padding: 3px;
+    border-radius: 10px;
+    background: var(--ecc-surface-2);
+    border: 1px solid var(--ecc-border);
+    gap: 2px;
+}
+
+.ecc-page--shell .ecc-range-btn {
+    padding: 0.38rem 0.72rem;
+    border-radius: 8px;
+    font-size: 0.73rem;
+    font-weight: 600;
+    transition: background 0.14s ease, color 0.14s ease, box-shadow 0.14s ease;
+}
+
+.ecc-page--shell .ecc-range-btn.is-active {
+    background: var(--ecc-surface);
+    color: var(--ecc-text);
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.07);
+    font-weight: 700;
+}
+
+.ecc-page--shell .ecc-range-btn:hover:not(.is-active) {
+    background: transparent;
+    color: var(--ecc-text-secondary);
+}
+
+.ecc-page--shell .ecc-compare-toggle {
+    padding: 0.38rem 0.65rem;
+    border-radius: 10px;
+    border: 1px solid var(--ecc-border);
+    background: var(--ecc-surface-2);
+    transition: border-color 0.14s, background 0.14s, color 0.14s;
+}
+
+.ecc-page--shell .ecc-compare-toggle:has(input:checked) {
+    border-color: rgba(124, 58, 237, 0.3);
+    background: rgba(124, 58, 237, 0.06);
+    color: var(--ecc-accent-violet);
+}
+
+.ecc-page--shell .ecc-header-meta--shell {
+    font-size: 0.7rem;
+    gap: 0.3rem 0.75rem;
+}
+
+.ecc-page--shell .ecc-header-actions .ecc-btn:hover,
+.ecc-page--shell .ecc-btn:hover {
+    transform: none;
+}
+
+.ecc-page--shell .ecc-status-pill::before {
+    animation: none;
+}
+
+/* ─── Sidebar ─── */
+.ecc-page--shell .ecc-sidebar--grouped {
+    padding: 0.5rem;
+    border-radius: 14px;
+    box-shadow: none;
+}
+
+.ecc-sidebar--grouped .ecc-nav-item {
+    position: relative;
+    border-radius: 8px;
+    padding: 0.42rem 0.55rem;
+}
+
+.ecc-sidebar--grouped .ecc-nav-item.is-active {
+    background: rgba(124, 58, 237, 0.08);
+    color: var(--ecc-accent-violet);
+    box-shadow: none;
+}
+
+.ecc-sidebar--grouped .ecc-nav-item.is-active::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 55%;
+    border-radius: 3px 0 0 3px;
+    background: var(--ecc-accent-violet);
+}
+
+.ecc-sidebar--grouped .ecc-nav-group-toggle {
+    border-radius: 8px;
+    font-size: 0.71rem;
+}
+
+.ecc-sidebar--grouped .ecc-nav-item--sub {
+    padding-right: 0.75rem !important;
+}
+
+.ecc-sidebar--grouped .ecc-nav-badge {
+    background: rgba(148, 163, 184, 0.14);
+    color: var(--ecc-text-muted);
+    font-weight: 700;
+    height: 1.15rem;
+    min-width: 1.15rem;
+    padding: 0 0.3rem;
+}
+
+.ecc-sidebar--grouped .ecc-nav-item.is-active .ecc-nav-badge {
+    background: rgba(124, 58, 237, 0.18);
+    color: var(--ecc-accent-violet);
+}
+
+/* ─── Section labels ─── */
+.ecc-cmd-section-label {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.55rem;
+    padding: 0 0.1rem;
+}
+
+.ecc-cmd-section-label span {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--ecc-text-secondary);
+    letter-spacing: -0.01em;
+}
+
+.ecc-cmd-section-label em {
+    font-style: normal;
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: var(--ecc-text-muted);
+}
+
+/* ─── KPI cards ─── */
+.ecc-kpi-grid--cmd {
+    gap: 0.6rem;
+}
+
+.ecc-kpi-grid--cmd .ecc-kpi {
+    min-height: 122px;
+    padding: 0.8rem 0.85rem 0.55rem;
+    gap: 0.28rem;
+    border-radius: 12px;
+    box-shadow: none;
+    animation: none;
+    transition: border-color 0.14s ease, box-shadow 0.14s ease;
+}
+
+.ecc-kpi-grid--cmd .ecc-kpi::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    height: 2px;
+    border-radius: 12px 12px 0 0;
+    opacity: 0.75;
+}
+
+.ecc-kpi-grid--cmd .ecc-kpi[data-accent="emerald"]::before { background: var(--ecc-accent-emerald); }
+.ecc-kpi-grid--cmd .ecc-kpi[data-accent="violet"]::before { background: var(--ecc-accent-violet); }
+.ecc-kpi-grid--cmd .ecc-kpi[data-accent="blue"]::before { background: var(--ecc-accent-blue); }
+.ecc-kpi-grid--cmd .ecc-kpi[data-accent="amber"]::before { background: var(--ecc-accent-amber); }
+.ecc-kpi-grid--cmd .ecc-kpi[data-accent="cyan"]::before { background: var(--ecc-accent-cyan); }
+.ecc-kpi-grid--cmd .ecc-kpi[data-accent="indigo"]::before { background: var(--ecc-accent-indigo); }
+.ecc-kpi-grid--cmd .ecc-kpi[data-accent="rose"]::before { background: var(--ecc-accent-rose); }
+
+.ecc-kpi-grid--cmd .ecc-kpi:hover {
+    transform: none;
+    box-shadow: 0 2px 10px rgba(15, 23, 42, 0.05);
+    border-color: rgba(124, 58, 237, 0.18);
+}
+
+.ecc-kpi-grid--cmd .ecc-kpi-top {
+    margin-bottom: 0.1rem;
+}
+
+.ecc-kpi-grid--cmd .ecc-kpi-icon {
+    width: 1.85rem;
+    height: 1.85rem;
+    font-size: 0.78rem;
+    border-radius: 8px;
+}
+
+.ecc-kpi-grid--cmd .ecc-kpi-val {
+    font-size: clamp(1.2rem, 2.1vw, 1.48rem);
+    line-height: 1.15;
+}
+
+.ecc-kpi-grid--cmd .ecc-kpi-lbl {
+    font-size: 0.71rem;
+    font-weight: 600;
+    color: var(--ecc-text-secondary);
+}
+
+.ecc-kpi-grid--cmd .ecc-kpi-sub {
+    font-size: 0.64rem;
+    line-height: 1.35;
+}
+
+.ecc-kpi-grid--cmd .ecc-kpi-spark {
+    height: 26px;
+    opacity: 0.75;
+}
+
+.ecc-kpi-grid--cmd .ecc-kpi-delta {
+    font-size: 0.68rem;
+    padding: 0.12rem 0.4rem;
+}
+
+/* ─── Action center ─── */
+.ecc-cmd-actions {
+    padding: 1rem 1.05rem;
+    border-radius: 14px;
+    border: 1px solid var(--ecc-border);
+    background: var(--ecc-surface);
+    box-shadow: none;
+}
+
+.ecc-cmd-actions-head {
+    margin-bottom: 0.75rem;
+    align-items: center;
+}
+
+.ecc-cmd-actions-head h2 {
+    font-size: 0.92rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    gap: 0.5rem;
+}
+
+.ecc-cmd-actions-head h2 i {
+    width: 1.6rem;
+    height: 1.6rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    font-size: 0.72rem;
+    background: rgba(245, 158, 11, 0.1);
+    color: #d97706;
+}
+
+.ecc-cmd-actions-head p {
+    font-size: 0.73rem;
+    margin-top: 0.15rem;
+}
+
+.ecc-cmd-actions-count {
+    min-width: 1.7rem;
+    height: 1.7rem;
+    font-size: 0.76rem;
+    font-weight: 700;
+    background: var(--ecc-surface-2);
+    border: 1px solid var(--ecc-border);
+    color: var(--ecc-text-muted);
+}
+
+.ecc-cmd-actions:has(.ecc-cmd-actions-list) .ecc-cmd-actions-count {
+    background: rgba(245, 158, 11, 0.1);
+    border-color: rgba(245, 158, 11, 0.22);
+    color: #d97706;
+}
+
+.ecc-cmd-actions-list {
+    gap: 0.4rem;
+}
+
+.ecc-cmd-action {
+    grid-template-columns: 3px auto 1fr auto auto;
+    gap: 0.7rem;
+    padding: 0.65rem 0.8rem;
+    border-radius: 10px;
+    border: 1px solid var(--ecc-border);
+    background: var(--ecc-surface-2);
+    transition: background 0.14s ease, border-color 0.14s ease;
+}
+
+.ecc-cmd-action:hover {
+    transform: none;
+    box-shadow: none;
+    background: var(--ecc-surface);
+    border-color: rgba(124, 58, 237, 0.22);
+}
+
+.ecc-cmd-action:focus-visible {
+    outline: 2px solid rgba(124, 58, 237, 0.4);
+    outline-offset: 1px;
+}
+
+.ecc-cmd-action[data-priority="critical"] {
+    border-color: rgba(244, 63, 94, 0.22);
+    background: rgba(244, 63, 94, 0.03);
+}
+
+.ecc-cmd-action[data-priority="high"] {
+    border-color: rgba(245, 158, 11, 0.2);
+}
+
+.ecc-cmd-action-icon {
+    width: 1.85rem;
+    height: 1.85rem;
+    border-radius: 8px;
+    font-size: 0.76rem;
+}
+
+.ecc-cmd-action-body strong {
+    font-size: 0.82rem;
+    font-weight: 700;
+    line-height: 1.4;
+}
+
+.ecc-cmd-action-body em {
+    font-size: 0.72rem;
+    line-height: 1.35;
+}
+
+.ecc-cmd-action-count {
+    font-size: 0.92rem;
+    font-weight: 800;
+    min-width: 1.5rem;
+    text-align: center;
+}
+
+.ecc-cmd-action-cta {
+    font-size: 0.7rem;
+    opacity: 0.85;
+}
+
+.ecc-cmd-action-cta i {
+    font-size: 0.62rem;
+    margin-right: 0.2rem;
+}
+
+/* ─── Management assistant ─── */
+.ecc-cmd-assistant {
+    padding: 1rem 1.05rem;
+    border-radius: 14px;
+    border: 1px solid var(--ecc-border);
+    background: var(--ecc-surface);
+    box-shadow: none;
+}
+
+.ecc-cmd-assistant .ecc-cmd-actions-head h2 i {
+    background: rgba(99, 102, 241, 0.1);
+    color: #6366f1;
+}
+
+.ecc-cmd-assistant-list {
+    gap: 0.4rem;
+}
+
+.ecc-cmd-assistant-card {
+    grid-template-columns: 3px auto 1fr auto auto;
+    gap: 0.7rem;
+    padding: 0.65rem 0.8rem;
+    border-radius: 10px;
+    border: 1px solid var(--ecc-border);
+    background: var(--ecc-surface-2);
+    transition: background 0.14s ease, border-color 0.14s ease;
+}
+
+.ecc-cmd-assistant-card:hover {
+    transform: none;
+    box-shadow: none;
+    background: var(--ecc-surface);
+    border-color: rgba(99, 102, 241, 0.24);
+}
+
+.ecc-cmd-assistant-card:focus-visible {
+    outline: 2px solid rgba(99, 102, 241, 0.4);
+    outline-offset: 1px;
+}
+
+.ecc-cmd-assistant-icon {
+    width: 1.85rem;
+    height: 1.85rem;
+    border-radius: 8px;
+    font-size: 0.76rem;
+}
+
+.ecc-cmd-assistant-body strong {
+    font-size: 0.82rem;
+}
+
+.ecc-cmd-assistant-body em {
+    font-size: 0.72rem;
+}
+
+.ecc-cmd-assistant-foot {
+    margin-top: 0.65rem;
+    padding-top: 0.6rem;
+    border-top: 1px solid var(--ecc-border);
+}
+
+/* ─── Charts ─── */
+.ecc-cmd-charts-grid {
+    gap: 0.75rem;
+}
+
+.ecc-cmd-charts .ecc-card {
+    box-shadow: none;
+    border-radius: 14px;
+    padding: 0.85rem 0.95rem;
+}
+
+.ecc-cmd-charts .ecc-card-head {
+    margin-bottom: 0.55rem;
+}
+
+.ecc-cmd-charts .ecc-card-head h3 {
+    font-size: 0.86rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.ecc-cmd-charts .ecc-card-head h3 i {
+    font-size: 0.76rem;
+    color: var(--ecc-accent-violet);
+    opacity: 0.85;
+}
+
+.ecc-cmd-charts .ecc-card-head p {
+    font-size: 0.71rem;
+    margin-top: 0.12rem;
+}
+
+.ecc-cmd-chart-revenue .ecc-chart-wrap--tall {
+    min-height: 250px;
+    height: 270px;
+    background: transparent;
+    border: 1px dashed var(--ecc-border);
+    border-radius: 10px;
+    padding: 0.45rem 0.35rem;
+}
+
+.ecc-cmd-growth-panel {
+    gap: 0.35rem;
+}
+
+.ecc-cmd-funnel {
+    gap: 0.2rem;
+}
+
+.ecc-cmd-funnel-step {
+    padding: 0.48rem 0.7rem;
+    border-radius: 8px;
+    border: none;
+    background: var(--ecc-surface-2);
+}
+
+.ecc-cmd-funnel-step em {
+    font-size: 0.72rem;
+}
+
+.ecc-cmd-funnel-step strong {
+    font-size: 0.95rem;
+    font-weight: 800;
+}
+
+.ecc-cmd-funnel-step[data-accent="slate"] strong { color: #64748b; }
+.ecc-cmd-funnel-step[data-accent="cyan"] strong { color: #0891b2; }
+.ecc-cmd-funnel-step[data-accent="violet"] strong { color: var(--ecc-accent-violet); }
+.ecc-cmd-funnel-step[data-accent="amber"] strong { color: #d97706; }
+.ecc-cmd-funnel-step[data-accent="emerald"] strong { color: #059669; }
+
+.ecc-cmd-funnel-arrow {
+    font-size: 0.55rem;
+    opacity: 0.45;
+    line-height: 1;
+}
+
+/* ─── Summary blocks ─── */
+.ecc-cmd-summary-grid {
+    gap: 0.65rem;
+}
+
+.ecc-cmd-summary-card {
+    padding: 0.85rem 0.95rem;
+    border-radius: 12px;
+    box-shadow: none;
+    position: relative;
+    overflow: hidden;
+}
+
+.ecc-cmd-summary-card::after {
+    content: '';
+    position: absolute;
+    top: 0.85rem;
+    bottom: 0.85rem;
+    right: 0;
+    width: 3px;
+    border-radius: 3px 0 0 3px;
+    opacity: 0.65;
+}
+
+.ecc-cmd-summary-card[data-accent="teal"]::after { background: #14b8a6; }
+.ecc-cmd-summary-card[data-accent="blue"]::after { background: var(--ecc-accent-blue); }
+.ecc-cmd-summary-card[data-accent="amber"]::after { background: var(--ecc-accent-amber); }
+
+.ecc-cmd-summary-card header {
+    margin-bottom: 0.5rem;
+}
+
+.ecc-cmd-summary-card header h3 {
+    font-size: 0.82rem;
+    font-weight: 700;
+}
+
+.ecc-cmd-summary-card header a {
+    font-size: 0.7rem;
+    opacity: 0.85;
+}
+
+.ecc-cmd-summary-card li {
+    font-size: 0.74rem;
+    padding: 0.15rem 0;
+}
+
+.ecc-cmd-summary-card li + li {
+    border-top: 1px solid var(--ecc-border);
+    padding-top: 0.35rem;
+    margin-top: 0.05rem;
+}
+
+/* ─── Module dock ─── */
+.ecc-page--shell .ecc-order-modules {
+    padding: 0;
+}
+
+.ecc-page--shell .ecc-module-dock {
+    gap: 0.45rem;
+}
+
+.ecc-page--shell .ecc-module {
+    min-height: 2.65rem;
+    padding: 0.48rem 0.58rem;
+    border-radius: 10px;
+    box-shadow: none;
+    transition: border-color 0.14s ease, background 0.14s ease;
+}
+
+.ecc-page--shell .ecc-module:hover {
+    transform: none;
+    box-shadow: none;
+    border-color: rgba(124, 58, 237, 0.22);
+    background: rgba(124, 58, 237, 0.03);
+}
+
+.ecc-page--shell .ecc-module-icon {
+    width: 1.65rem;
+    height: 1.65rem;
+    font-size: 0.72rem;
+    border-radius: 7px;
+}
+
+.ecc-page--shell .ecc-module-text strong {
+    font-size: 0.72rem;
+}
+
+.ecc-page--shell .ecc-module-text em {
+    font-size: 0.62rem;
+}
+
+/* ─── Today strip ─── */
+.ecc-cmd-today {
+    padding: 0.85rem 0.95rem;
+    border-radius: 12px;
+    background: var(--ecc-surface);
+    border: 1px solid var(--ecc-border);
+}
+
+.ecc-cmd-today-head h2 {
+    margin-bottom: 0.5rem;
+    font-size: 0.86rem;
+    font-weight: 700;
+}
+
+.ecc-cmd-today-head h2 i {
+    color: #f59e0b;
+    font-size: 0.78rem;
+}
+
+.ecc-cmd-today-grid {
+    gap: 0.5rem;
+}
+
+.ecc-cmd-today-grid div {
+    padding: 0.5rem 0.6rem;
+    border-radius: 8px;
+    background: var(--ecc-surface-2);
+    border: 1px solid transparent;
+    transition: border-color 0.14s ease;
+}
+
+.ecc-cmd-today-grid div:hover {
+    border-color: var(--ecc-border);
+}
+
+.ecc-cmd-today-grid em {
+    font-size: 0.68rem;
+    margin-bottom: 0.12rem;
+}
+
+.ecc-cmd-today-grid strong {
+    font-size: 0.92rem;
+}
+
+/* ─── Empty states ─── */
+.ecc-cmd-actions .ecc-empty--compact,
+.ecc-cmd-assistant .ecc-empty--compact {
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    text-align: right;
+    gap: 0.6rem;
+    padding: 0.85rem 1rem;
+    border-radius: 10px;
+    background: var(--ecc-surface-2);
+    border: 1px dashed var(--ecc-border);
+}
+
+.ecc-cmd-actions .ecc-empty--compact i,
+.ecc-cmd-assistant .ecc-empty--compact i {
+    width: 1.85rem;
+    height: 1.85rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: rgba(16, 185, 129, 0.1);
+    font-size: 0.78rem;
+    flex-shrink: 0;
+}
+
+.ecc-cmd-actions .ecc-empty--compact strong,
+.ecc-cmd-assistant .ecc-empty--compact span {
+    font-size: 0.76rem;
+}
+
+/* ─── Mobile refinements ─── */
+@media (max-width: 768px) {
+    .ecc-kpi-grid--cmd .ecc-kpi {
+        min-height: 110px;
+        padding: 0.7rem 0.75rem 0.5rem;
+    }
+
+    .ecc-kpi-grid--cmd .ecc-kpi-val {
+        font-size: 1.15rem;
+    }
+
+    .ecc-cmd-section-label {
+        margin-bottom: 0.45rem;
+    }
+
+    .ecc-cmd-action,
+    .ecc-cmd-assistant-card {
+        padding: 0.7rem 0.75rem;
+    }
+
+    .ecc-cmd-chart-revenue .ecc-chart-wrap--tall {
+        min-height: 210px;
+        height: 230px;
+    }
+}
+
+@media (max-width: 640px) {
+    .ecc-header-title-block {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .ecc-header-subtitle {
+        font-size: 0.68rem;
+    }
+
+    .ecc-cmd-actions .ecc-empty--compact,
+    .ecc-cmd-assistant .ecc-empty--compact {
+        flex-direction: column;
+        text-align: center;
+    }
+}

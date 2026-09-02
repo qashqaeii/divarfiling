@@ -540,6 +540,19 @@ AGENCY_COMMAND_CENTER_FEATURES = {
 }
 
 MESSAGE_RETENTION_DAYS = 30
+
+# فایلینگ — نگه‌داری موقت آگهی‌های استخراج‌شده (روز)
+FILING_LISTING_RETENTION_DAYS_DEFAULT = 31
+
+# سرکوب آگهی — دلیل حذف عمدی توسط کاربر
+LISTING_SUPPRESSION_REASON_USER_DELETED = 'user_deleted'
+LISTING_SUPPRESSION_REASONS = [
+    (LISTING_SUPPRESSION_REASON_USER_DELETED, 'حذف توسط کاربر'),
+]
+
+# حالت ingest — snapshot = محتوای payload معتبر کل دیتاست؛ incremental = فقط افزودن/به‌روزرسانی
+INGEST_MODE_SNAPSHOT = 'snapshot'
+INGEST_MODE_INCREMENTAL = 'incremental'
 MESSAGE_MAX_ATTACHMENT_BYTES = 5 * 1024 * 1024
 MESSAGE_ALLOWED_EXTENSIONS = frozenset({
     '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.jpg', '.jpeg', '.png', '.webp',

@@ -33,11 +33,11 @@ class LicenseRequiredMixin(WorkspaceLoginMixin):
 
 
 class DatasetOwnerMixin(LicenseRequiredMixin):
-    """بررسی مالکیت dataset."""
+    """بررسی مالکیت dataset — فقط دیتاست‌های فعال."""
 
     def get_dataset(self):
         pk = self.kwargs.get('dataset_id') or self.kwargs.get('pk')
-        return get_object_or_404(Dataset, pk=pk, user=self.request.user)
+        return get_object_or_404(Dataset, pk=pk, user=self.request.user, is_active=True)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

@@ -217,6 +217,12 @@ ZIBAL_START_PAY_URL = 'https://gateway.zibal.ir/start/'
 CHECKOUT_ABANDON_HOURS = config('CHECKOUT_ABANDON_HOURS', default=2, cast=int)
 CHECKOUT_ABANDON_BATCH_LIMIT = config('CHECKOUT_ABANDON_BATCH_LIMIT', default=500, cast=int)
 
+# نگه‌داری موقت آگهی‌های فایلینگ (روز) — CRM و سرکوب کاربر مستقل می‌مانند
+FILING_LISTING_RETENTION_DAYS = config('FILING_LISTING_RETENTION_DAYS', default=31, cast=int)
+
+# نگه‌داری موقت آگهی‌های فایلینگ (روز) — CRM و سرکوب کاربر مستقل می‌مانند
+FILING_LISTING_RETENTION_DAYS = config('FILING_LISTING_RETENTION_DAYS', default=31, cast=int)
+
 # Recovery Audience — فاز ۲.۱ (Dry Run؛ بدون SMS)
 RECOVERY_STEP_1_MIN_HOURS = config('RECOVERY_STEP_1_MIN_HOURS', default=2, cast=int)
 RECOVERY_STEP_2_MIN_HOURS = config('RECOVERY_STEP_2_MIN_HOURS', default=24, cast=int)

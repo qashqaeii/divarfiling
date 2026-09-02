@@ -1006,13 +1006,14 @@ def migrate_customer_listings_to_crm_property(user, token: str, prop: CRMPropert
 
 
 def remove_listing_from_filing(user, listing) -> int:
-    """حذف آگهی (و نسخه‌های هم‌توکن کاربر) از فایلینگ دیوار."""
+    """حذف آگهی (و نسخه‌های هم‌توکن کاربر) از فایلینگ دیوار — بدون سرکوب."""
+    from workspace.services.filing_delete import hard_delete_filing_copies_for_token
+
     token = str(getattr(listing, 'token', '') or '').strip()
     if token:
-        qs = Listing.objects.filter(token=token, dataset__user=user).select_related('dataset')
-    else:
-        qs = Listing.objects.filter(pk=listing.pk).select_related('dataset')
+        return hard_delete_filing_copies_for_token(user, token)
 
+    qs = Listing.objects.filter(pk=listing.pk).select_related('dataset')
     dataset_ids = set()
     deleted = 0
     for row in list(qs):
@@ -1124,7 +1125,7 @@ def resolve_listing_for_property(user, prop) -> Optional[Listing]:
     if not token:
         return None
     return (
-        Listing.objects.filter(token=token, dataset__user=user)
+        Listing.objects.filter(token=token, dataset__user=user, dataset__is_active=True)
         .select_related('dataset')
         .order_by('-published_at', '-id')
         .first()

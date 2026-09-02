@@ -321,6 +321,7 @@ def get_listing_detail(user, token: str, request=None) -> Optional[dict]:
         return None
     lst = Listing.objects.filter(
         dataset__user=user,
+        dataset__is_active=True,
         token=token,
     ).select_related('dataset').first()
     if not lst:
@@ -415,21 +416,27 @@ def update_listing(user, token: str, payload: dict, request=None) -> Optional[di
 
 
 def delete_listing(user, token: str) -> Optional[dict]:
-    """حذف آگهی متعلق به کاربر از فایلینگ."""
+    """حذف آگهی متعلق به کاربر از فایلینگ — سرکوب + حذف همه copies."""
+    from workspace.services.filing_delete import delete_divar_listing_from_filing
+    from workspace.services.listing_suppression import is_suppressed
+    from workspace.services.listing_personal_status import DIVAR_SOURCE_PLATFORM
+
     if not has_active_bot_license(user):
+        return None
+    token = str(token or '').strip()
+    if not token:
+        return None
+    had_listing = Listing.objects.filter(dataset__user=user, token=token).exists()
+    if not had_listing and not is_suppressed(user, DIVAR_SOURCE_PLATFORM, token):
         return None
     lst = Listing.objects.filter(
         dataset__user=user,
         token=token,
     ).select_related('dataset').first()
-    if not lst:
-        return None
-    dataset = lst.dataset
-    title = (lst.title or '')[:80]
-    lst.delete()
-    if dataset is not None:
-        dataset.sync_row_count()
-    return {'token': token, 'title': title, 'deleted': True}
+    title = (lst.title or '')[:80] if lst else ''
+    result = delete_divar_listing_from_filing(user, token)
+    result['title'] = title
+    return result
 
 
 def update_listing_meta(user, token: str, payload: dict, request=None) -> Optional[dict]:

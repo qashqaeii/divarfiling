@@ -12,6 +12,9 @@ from django.utils import timezone
 
 from workspace.models import Dataset, Listing, PriceHistory
 from workspace.services.columns import detect_metadata, row_to_listing_fields
+from workspace.services.ingest_mode import resolve_ingest_mode, should_prune_stale_listings
+from workspace.services.listing_personal_status import DIVAR_SOURCE_PLATFORM
+from workspace.services.listing_suppression import get_suppressed_external_ids
 from workspace.services.price_history import load_latest_snapshots, should_record_price
 from workspace.services.folder_import import (
     build_dataset_name, build_file_identity, dataset_path_info_from_record, locations_match,
@@ -28,6 +31,7 @@ class ImportResult:
     added_count: int
     updated_count: int
     skipped_count: int
+    suppressed_count: int
     is_update: bool
     reactivated: bool
     total_in_file: int
@@ -355,10 +359,6 @@ def find_existing_dataset(
     if active:
         return active, False
 
-    inactive = _lookup(Dataset.objects.filter(user=user, is_active=False), True)
-    if inactive:
-        return inactive, True
-
     return None, False
 
 
@@ -488,7 +488,7 @@ def import_dataset(
     meta['file_identity'] = build_file_identity(effective_path_info, basename)
 
     file_size = os.path.getsize(file_path)
-    existing, reactivating = find_existing_dataset(user, basename, effective_path_info)
+    existing, _reactivating = find_existing_dataset(user, basename, effective_path_info)
     is_update = existing is not None
 
     if is_update:
@@ -546,8 +546,15 @@ def import_dataset(
     added_count = 0
     updated_count = 0
     skipped_count = 0
+    suppressed_count = 0
     price_cache = load_latest_snapshots(user, _tokens_in_dataframe(df))
-    prune_stale = is_update and _has_folder_path(effective_path_info)
+    ingest_mode = resolve_ingest_mode(path_info=effective_path_info, is_mobile=False)
+    meta['ingest_mode'] = ingest_mode
+    prune_stale = should_prune_stale_listings(is_update=is_update, ingest_mode=ingest_mode)
+    suppressed_tokens = get_suppressed_external_ids(
+        user, DIVAR_SOURCE_PLATFORM, _tokens_in_dataframe(df),
+    )
+    listings_to_purge_suppressed: List[Listing] = []
 
     with transaction.atomic():
         if not is_update:
@@ -560,6 +567,12 @@ def import_dataset(
                 token = f'row_{idx}'
                 fields['token'] = token
             tokens_in_file.add(token)
+
+            if token in suppressed_tokens:
+                suppressed_count += 1
+                if token in existing_by_token:
+                    listings_to_purge_suppressed.append(existing_by_token[token])
+                continue
 
             if token in existing_by_token or token in seen_tokens:
                 if token in existing_by_token:
@@ -621,6 +634,10 @@ def import_dataset(
             for i in range(0, len(price_records), BATCH_SIZE):
                 PriceHistory.objects.bulk_create(price_records[i:i + BATCH_SIZE])
 
+        if listings_to_purge_suppressed:
+            purge_ids = [lst.pk for lst in listings_to_purge_suppressed]
+            Listing.objects.filter(pk__in=purge_ids).delete()
+
         if prune_stale and tokens_in_file:
             Listing.objects.filter(dataset=dataset).exclude(
                 token__in=tokens_in_file,
@@ -637,7 +654,8 @@ def import_dataset(
         dataset.columns = merged_columns
         dataset.metadata = meta
         dataset.last_opened_at = timezone.now()
-        dataset.is_active = True
+        if not is_update:
+            dataset.is_active = True
         if _has_folder_path(effective_path_info) or not is_update:
             if effective_path_info.get('city'):
                 dataset.city = effective_path_info['city']
@@ -658,25 +676,18 @@ def import_dataset(
         added_count=added_count,
         updated_count=updated_count,
         skipped_count=skipped_count,
+        suppressed_count=suppressed_count,
         is_update=is_update,
-        reactivated=reactivating,
+        reactivated=False,
         total_in_file=len(df),
     )
 
 
 def import_message(result: ImportResult) -> Tuple[str, str]:
     """(level, message) — level: success | info | warning"""
-    if result.reactivated:
-        if result.added_count > 0:
-            return (
-                'success',
-                f'فایل حذف‌شده «{result.dataset.name}» بازیابی شد — '
-                f'{result.added_count:,} آگهی جدید اضافه شد.',
-            )
-        return (
-            'info',
-            f'فایل حذف‌شده «{result.dataset.name}» بازیابی شد — داده جدیدی نبود.',
-        )
+    suppressed_note = ''
+    if result.suppressed_count:
+        suppressed_note = f' ({result.suppressed_count:,} سرکوب‌شده)'
     if result.is_update:
         if result.added_count > 0 or result.updated_count > 0:
             parts = []
@@ -687,7 +698,7 @@ def import_message(result: ImportResult) -> Tuple[str, str]:
             dup = f' ({result.skipped_count:,} بدون تغییر)' if result.skipped_count else ''
             return (
                 'info',
-                f'فایل «{result.dataset.name}» — {" و ".join(parts)}.{dup}',
+                f'فایل «{result.dataset.name}» — {" و ".join(parts)}.{dup}{suppressed_note}',
             )
         if result.skipped_count:
             return (
@@ -702,7 +713,7 @@ def import_message(result: ImportResult) -> Tuple[str, str]:
     if result.added_count:
         return (
             'success',
-            f'فایل جدید «{result.dataset.name}» — {result.added_count:,} آگهی وارد شد.',
+            f'فایل جدید «{result.dataset.name}» — {result.added_count:,} آگهی وارد شد.{suppressed_note}',
         )
     return (
         'warning',

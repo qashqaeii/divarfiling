@@ -22,6 +22,9 @@ from workspace.services.importer import (
     _update_listing_from_fields,
     find_existing_dataset,
 )
+from workspace.services.ingest_mode import resolve_ingest_mode
+from workspace.services.listing_personal_status import DIVAR_SOURCE_PLATFORM
+from workspace.services.listing_suppression import get_suppressed_external_ids
 from workspace.services.price_history import load_latest_snapshots, should_record_price
 
 MAX_MOBILE_ITEMS = 500
@@ -55,6 +58,7 @@ class IngestResult:
     created_count: int = 0
     updated_count: int = 0
     duplicate_count: int = 0
+    suppressed_count: int = 0
     dataset_merged: bool = False
     genuine_personal_count: int = 0
     disguised_consultant_count: int = 0
@@ -253,6 +257,7 @@ def ingest_mobile_extraction(user, payload: Dict[str, Any]) -> IngestResult:
             'source': 'mobile',
             'mobile_extraction': True,
             'ingest_version': INGEST_VERSION,
+            'ingest_mode': resolve_ingest_mode(path_info=path_info, is_mobile=True),
             'source_client': str(filters.get('source_client') or 'android_light'),
             'filters': filters,
             'started_at': payload.get('started_at'),
@@ -270,7 +275,6 @@ def ingest_mobile_extraction(user, payload: Dict[str, Any]) -> IngestResult:
             metadata = _preserve_dataset_location_meta(metadata, path_info, dataset)
             dataset.metadata = {**(dataset.metadata or {}), **metadata}
             dataset.last_opened_at = now
-            dataset.is_active = True
             dataset.column_count = len(columns)
             merged_columns = list(dict.fromkeys(list((dataset.columns or [])) + columns))
             dataset.columns = merged_columns
@@ -309,10 +313,13 @@ def ingest_mobile_extraction(user, payload: Dict[str, Any]) -> IngestResult:
 
         listings_to_create: List[Listing] = []
         listings_to_update: List[Listing] = []
+        listings_to_purge_suppressed: List[Listing] = []
         price_records: List[PriceHistory] = []
         seen_tokens: set = set()
         duplicate_skipped = 0
+        suppressed_count = 0
         ingested_signals: List[str] = []
+        suppressed_tokens = get_suppressed_external_ids(user, DIVAR_SOURCE_PLATFORM, tokens)
 
         for idx in range(len(df)):
             fields = row_to_listing_fields(df.iloc[idx], df)
@@ -321,6 +328,13 @@ def ingest_mobile_extraction(user, payload: Dict[str, Any]) -> IngestResult:
                 duplicate_skipped += 1
                 continue
             seen_tokens.add(token)
+
+            if token in suppressed_tokens:
+                suppressed_count += 1
+                if token in existing_by_token:
+                    listings_to_purge_suppressed.append(existing_by_token[token])
+                continue
+
             signal = fields.get('advertiser_signal') or ''
             if signal:
                 ingested_signals.append(signal)
@@ -362,13 +376,17 @@ def ingest_mobile_extraction(user, payload: Dict[str, Any]) -> IngestResult:
                 ],
                 batch_size=200,
             )
+        if listings_to_purge_suppressed:
+            Listing.objects.filter(
+                pk__in=[lst.pk for lst in listings_to_purge_suppressed],
+            ).delete()
         if price_records:
             PriceHistory.objects.bulk_create(price_records, batch_size=200)
 
         dataset.row_count = Listing.objects.filter(dataset=dataset).count()
         dataset.updated_at = now
         dataset.save(update_fields=[
-            'row_count', 'metadata', 'last_opened_at', 'is_active',
+            'row_count', 'metadata', 'last_opened_at',
             'city', 'district', 'columns', 'column_count',
             'transaction_type', 'subcategory', 'updated_at',
         ])
@@ -382,6 +400,7 @@ def ingest_mobile_extraction(user, payload: Dict[str, Any]) -> IngestResult:
         created_count=len(listings_to_create),
         updated_count=len(listings_to_update),
         duplicate_count=duplicate_skipped,
+        suppressed_count=suppressed_count,
         dataset_merged=bool(existing),
         genuine_personal_count=signal_counts['genuine_personal'],
         disguised_consultant_count=signal_counts['disguised_consultant'],

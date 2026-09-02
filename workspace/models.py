@@ -8,9 +8,10 @@ from django.utils import timezone
 from .constants import (
     ACTIVITY_TYPES, AUTOMATION_ACTIONS, AUTOMATION_TRIGGERS, CRM_PRIORITIES, CRM_PROPERTIES,
     CRM_SOURCES, CRM_STATUSES, CRM_TYPES, DEAL_STAGES, DEAL_TYPES, INTEREST_LEVELS,
-    LISTING_ROLES, LISTING_TAGS, LOST_REASONS, MESSAGE_CHANNELS, MESSAGE_TEMPLATE_CATEGORIES,
-    PROPERTY_DEAL_MODES, PROPERTY_PUBLISH_STATUSES, PROPERTY_TX_STATUSES, REMINDER_RECURRENCE,
-    VISIT_OUTCOMES, VISIT_REJECT_REASONS,
+    LISTING_ROLES, LISTING_TAGS, LISTING_SUPPRESSION_REASONS,
+    LISTING_SUPPRESSION_REASON_USER_DELETED, LOST_REASONS, MESSAGE_CHANNELS,
+    MESSAGE_TEMPLATE_CATEGORIES, PROPERTY_DEAL_MODES, PROPERTY_PUBLISH_STATUSES,
+    PROPERTY_TX_STATUSES, REMINDER_RECURRENCE, VISIT_OUTCOMES, VISIT_REJECT_REASONS,
 )
 from .support_constants import (
     TICKET_CATEGORY_CHOICES,
@@ -126,6 +127,39 @@ class Listing(models.Model):
         if self.price and self.area and self.area > 0:
             return int(self.price / self.area)
         return None
+
+
+class UserListingSuppression(models.Model):
+    """آگهی‌هایی که کاربر عمداً از فایلینگ حذف کرده — مانع نمایش مجدد در استخراج."""
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+        related_name='listing_suppressions', verbose_name='کاربر',
+    )
+    source_platform = models.CharField(max_length=30, db_index=True, verbose_name='پلتفرم منبع')
+    external_id = models.CharField(max_length=100, db_index=True, verbose_name='شناسه خارجی')
+    reason = models.CharField(
+        max_length=30,
+        choices=LISTING_SUPPRESSION_REASONS,
+        default=LISTING_SUPPRESSION_REASON_USER_DELETED,
+        verbose_name='دلیل',
+    )
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='تاریخ ثبت')
+
+    class Meta:
+        verbose_name = 'سرکوب آگهی کاربر'
+        verbose_name_plural = 'سرکوب آگهی‌های کاربر'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'source_platform', 'external_id'],
+                name='uniq_user_listing_suppression',
+            ),
+        ]
+        indexes = [
+            models.Index(fields=['user', 'source_platform']),
+        ]
+
+    def __str__(self):
+        return f'{self.user_id}:{self.source_platform}:{self.external_id}'
 
 
 class ListingMeta(models.Model):

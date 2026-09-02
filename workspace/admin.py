@@ -5,7 +5,8 @@ from workspace.models import (
     CRMProperty, Customer, CustomerActivity, CustomerDocument, CustomerListing,
     CRMPropertyPublicShare, PropertyMatchAlert,
     Dataset, Listing, ListingMeta, ListingPublicShare, PriceHistory,
-    PropertyContact, Reminder, Ticket, TicketAttachment, TicketMessage, WorkspaceSettings,
+    PropertyContact, Reminder, Ticket, TicketAttachment, TicketMessage,
+    UserListingSuppression, WorkspaceSettings,
 )
 from workspace.services.support_tickets import close_ticket, reopen_ticket
 
@@ -37,6 +38,14 @@ class ListingAdmin(admin.ModelAdmin):
 @admin.register(ListingMeta)
 class ListingMetaAdmin(admin.ModelAdmin):
     list_display = ('user', 'token', 'tag', 'is_favorite')
+
+
+@admin.register(UserListingSuppression)
+class UserListingSuppressionAdmin(admin.ModelAdmin):
+    list_display = ('user', 'source_platform', 'external_id', 'reason', 'created_at')
+    list_filter = ('source_platform', 'reason')
+    search_fields = ('external_id', 'user__username')
+    raw_id_fields = ('user',)
 
 
 @admin.register(Customer)

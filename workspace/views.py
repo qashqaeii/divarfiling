@@ -1280,12 +1280,16 @@ class ListingUpdateView(DatasetOwnerMixin, View):
 
 class ListingDeleteView(DatasetOwnerMixin, View):
     def post(self, request, dataset_id, listing_id):
+        from workspace.services.filing_delete import delete_divar_listing_from_filing
+
         dataset = self.get_dataset()
         listing = get_object_or_404(dataset.listings, pk=listing_id)
         title = listing.title[:40] if listing.title else listing.token
-        listing.delete()
-        dataset.sync_row_count()
-        messages.success(request, f'آگهی «{title}» حذف شد.')
+        delete_divar_listing_from_filing(request.user, listing.token)
+        messages.success(
+            request,
+            f'آگهی «{title}» از فایلینگ حذف شد و در استخراج‌های بعدی نمایش داده نخواهد شد.',
+        )
         return redirect('workspace:dataset_detail', dataset_id=dataset.pk)
 
 

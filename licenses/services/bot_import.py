@@ -114,6 +114,7 @@ def import_dataset_for_bot(request) -> dict:
         'added_count': result.added_count,
         'updated_count': result.updated_count,
         'skipped_count': result.skipped_count,
+        'suppressed_count': result.suppressed_count,
         'is_update': result.is_update,
         'reactivated': result.reactivated,
         'total_in_file': result.total_in_file,

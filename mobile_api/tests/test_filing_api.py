@@ -154,27 +154,32 @@ class FilingApiTests(TestCase):
         self.assertGreaterEqual(len(body['data']['markers']), 2)
 
     def test_dataset_export_ok(self, _license):
-        resp = self.client.get(
-            f'/api/mobile/v1/filing/datasets/{self.dataset.pk}/export',
-            {'format': 'json'},
-        )
+        with patch('mobile_api.views.require_export_authorization_api', return_value=None):
+            resp = self.client.get(
+                f'/api/mobile/v1/filing/datasets/{self.dataset.pk}/export',
+                {'format': 'json'},
+            )
         self.assertEqual(resp.status_code, 200)
         self.assertIn('application/json', resp.get('Content-Type', ''))
 
     def test_dataset_export_requires_license(self, _license):
-        with patch('mobile_api.services.filing_service.has_active_bot_license', return_value=False):
-            resp = self.client.get(f'/api/mobile/v1/filing/datasets/{self.dataset.pk}/export')
+        with patch('mobile_api.views.require_export_authorization_api', return_value=None):
+            with patch('mobile_api.services.filing_service.has_active_bot_license', return_value=False):
+                resp = self.client.get(f'/api/mobile/v1/filing/datasets/{self.dataset.pk}/export')
         self.assertEqual(resp.status_code, 403)
         self.assertEqual(resp.json()['code'], 'LICENSE_REQUIRED')
 
     def test_dataset_export_not_found(self, _license):
         import uuid
 
-        resp = self.client.get(f'/api/mobile/v1/filing/datasets/{uuid.uuid4()}/export')
+        with patch('mobile_api.views.require_export_authorization_api', return_value=None):
+            resp = self.client.get(f'/api/mobile/v1/filing/datasets/{uuid.uuid4()}/export')
         self.assertEqual(resp.status_code, 404)
         self.assertEqual(resp.json()['code'], 'NOT_FOUND')
 
     def test_delete_listing(self, _license):
+        from workspace.models import UserListingSuppression
+
         token = 'tok-venk-120'
         self.assertTrue(Listing.objects.filter(dataset=self.dataset, token=token).exists())
         resp = self.client.delete(f'/api/mobile/v1/filing/listings/{token}')
@@ -182,7 +187,9 @@ class FilingApiTests(TestCase):
         body = resp.json()
         self.assertTrue(body['ok'])
         self.assertTrue(body['data']['deleted'])
+        self.assertTrue(body['data'].get('suppressed'))
         self.assertFalse(Listing.objects.filter(dataset=self.dataset, token=token).exists())
+        self.assertTrue(UserListingSuppression.objects.filter(user=self.user, external_id=token).exists())
 
     def test_delete_listing_not_found(self, _license):
         resp = self.client.delete('/api/mobile/v1/filing/listings/missing-token')

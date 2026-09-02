@@ -637,6 +637,7 @@ class ExtractionUploadView(APIView):
                 'created_count': result.created_count,
                 'updated_count': result.updated_count,
                 'duplicate_count': result.duplicate_count,
+                'suppressed_count': result.suppressed_count,
                 'genuine_personal_count': result.genuine_personal_count,
                 'disguised_consultant_count': result.disguised_consultant_count,
                 'dataset_merged': result.dataset_merged,

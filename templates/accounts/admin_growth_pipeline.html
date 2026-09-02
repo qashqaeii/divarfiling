@@ -6,36 +6,43 @@
 
 {% block admin_panel_title %}پایپلاین رشد{% endblock %}
 
+{% block admin_panel_header_subtitle %}
+داشبورد زنده مسیر سرنخ تا خرید و تمدید
+{% endblock %}
+
 {% block admin_panel_extra_css %}
 <link rel="stylesheet" href="{% static 'css/admin-marketing.css' %}?v=3">
 <link rel="stylesheet" href="{% static 'css/admin-lead-acquisition.css' %}?v=9">
-<link rel="stylesheet" href="{% static 'css/admin-growth-pipeline.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'css/admin-growth-pipeline.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'css/mizkar-admin-business.css' %}?v=1">
 {% endblock %}
 
 {% block admin_panel_content %}
-<div class="adm-page adm-mkt-page adm-lac-page adm-gp-page">
+<div class="adm-page adm-mkt-page adm-lac-page adm-gp-page biz-page biz-page--growth">
 
-    <div class="adm-gp-top">
-        <div>
-            <h1>پایپلاین رشد</h1>
-            <p>داشبورد زنده مسیر سرنخ تا خرید و تمدید</p>
+    <div class="biz-toolbar">
+        <div class="biz-toolbar-meta">
+            <span class="biz-meta-pill"><i class="fas fa-route" aria-hidden="true"></i> {{ overview.total|default:0|to_persian_digits }} پرونده</span>
+            {% if run_summary.has_data %}
+            <span>آخرین اجرا: {{ run_summary.started_at|to_jalali_fa:"%m/%d %H:%M" }}</span>
+            {% endif %}
         </div>
-        <div class="adm-gp-top-actions">
-            <button type="button" class="adm-lac-btn adm-lac-btn--ghost adm-lac-btn--sm" id="gp-guide-open">
-                <i class="fas fa-circle-question"></i> راهنما
+        <div class="biz-toolbar-actions">
+            <button type="button" class="biz-btn biz-btn--ghost biz-btn--sm" id="gp-guide-open">
+                <i class="fas fa-circle-question" aria-hidden="true"></i> راهنما
             </button>
-            <a class="adm-lac-btn adm-lac-btn--ghost adm-lac-btn--sm" href="{% url 'admin_panel_lead_acquisition' %}">
-                <i class="fas fa-user-plus"></i> مرکز جذب
+            <a class="biz-btn biz-btn--ghost biz-btn--sm" href="{% url 'admin_panel_lead_acquisition' %}">
+                <i class="fas fa-user-plus" aria-hidden="true"></i> مرکز جذب
             </a>
-            <a class="adm-lac-btn adm-lac-btn--ghost adm-lac-btn--sm" href="{% url 'admin_panel_marketing' %}">
-                <i class="fas fa-bullhorn"></i> مارکتینگ
+            <a class="biz-btn biz-btn--ghost biz-btn--sm" href="{% url 'admin_panel_marketing' %}">
+                <i class="fas fa-bullhorn" aria-hidden="true"></i> بازاریابی
             </a>
             <form method="post" style="display:inline">
                 {% csrf_token %}
                 <input type="hidden" name="action" value="backfill">
-                <button type="submit" class="adm-lac-btn adm-lac-btn--ghost adm-lac-btn--sm"
+                <button type="submit" class="biz-btn biz-btn--ghost biz-btn--sm"
                         onclick="return confirm('همگام‌سازی وضعیت‌ها بدون ارسال پیامک؟');">
-                    <i class="fas fa-rotate"></i> همگام‌سازی
+                    <i class="fas fa-rotate" aria-hidden="true"></i> همگام‌سازی
                 </button>
             </form>
         </div>
@@ -154,7 +161,7 @@
         <div class="adm-lac-section-head">
             <div>
                 <h2>تخته وضعیت</h2>
-                <p>برای دیدن شماره‌ها روی هر وضعیت کلیک کنید</p>
+                <p>کلیک روی هر مرحله برای جزئیات</p>
             </div>
             {% if selected_stage %}
             <a class="adm-lac-btn adm-lac-btn--ghost adm-lac-btn--sm" href="{% url 'admin_panel_growth_pipeline' %}">پاک کردن فیلتر</a>
@@ -347,5 +354,5 @@
 {% block admin_panel_extra_js %}
 <script type="application/json" id="gp-charts-data">{{ charts_json|safe }}</script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-<script src="{% static 'js/admin-growth-pipeline.js' %}?v=1"></script>
+<script src="{% static 'js/admin-growth-pipeline.js' %}?v=2"></script>
 {% endblock %}

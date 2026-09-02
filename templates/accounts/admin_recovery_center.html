@@ -5,81 +5,52 @@
 
 {% block title %}مرکز بازیابی | پنل مدیریت{% endblock %}
 
-{% block body_class %}mk-admin-dashboard ab-luxe arc-luxe{% endblock %}
+{% block body_class %}mk-admin-dashboard{% endblock %}
 
 {% block admin_panel_title %}مرکز بازیابی{% endblock %}
 
+{% block admin_panel_header_subtitle %}
+قیف بازیابی، مسیر پیامک و سلامت موتور
+{% endblock %}
+
 {% block admin_panel_extra_css %}
-<link rel="stylesheet" href="{% static 'css/admin-blog.css' %}?v=2">
-<link rel="stylesheet" href="{% static 'css/admin-recovery-center.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'css/admin-recovery-center.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'css/mizkar-admin-business.css' %}?v=1">
 {% endblock %}
 
 {% block admin_panel_content %}
-<div class="ab-page arc-page">
+<div class="ab-page arc-page biz-page biz-page--recovery">
 
-    <div class="ab-ambient arc-ambient" aria-hidden="true">
-        <span class="ab-orb ab-orb--1 arc-orb--amber"></span>
-        <span class="ab-orb ab-orb--2"></span>
-        <span class="ab-orb ab-orb--3 arc-orb--teal"></span>
-        <span class="arc-grid-lines"></span>
-        <span class="ab-grain"></span>
+    <div class="biz-toolbar">
+        <div class="biz-toolbar-meta">
+            <span><i class="fas fa-calendar-day" aria-hidden="true"></i> {{ summary.period_start_jalali }} — {{ summary.period_end_jalali }}</span>
+            {% if data_freshness.last_event_at %}
+            <span class="biz-meta-pill biz-meta-pill--ok"><i class="fas fa-check" aria-hidden="true"></i> داده تازه</span>
+            {% endif %}
+        </div>
+        <div class="biz-toolbar-actions">
+            <div class="biz-range" role="group" aria-label="بازه زمانی">
+                <a href="?days=7" class="biz-range-btn{% if days == 7 %} is-active{% endif %}">۷ روز</a>
+                <a href="?days=30" class="biz-range-btn{% if days == 30 %} is-active{% endif %}">۳۰ روز</a>
+                <a href="?days=90" class="biz-range-btn{% if days == 90 %} is-active{% endif %}">۹۰ روز</a>
+            </div>
+            <a href="{% url 'admin_panel_recovery_center_json' %}?days={{ days }}&page={{ page }}&download=1" class="biz-btn biz-btn--ghost biz-btn--sm">
+                <i class="fas fa-file-code" aria-hidden="true"></i> JSON
+            </a>
+            <a href="{% url 'admin_panel_plan_conversion' %}?days={{ days }}" class="biz-btn biz-btn--ghost biz-btn--sm">
+                <i class="fas fa-filter-circle-dollar" aria-hidden="true"></i> تبدیل پلن
+            </a>
+        </div>
     </div>
 
-    <header class="ab-hero arc-hero">
-        <div class="ab-hero__main">
-            <div class="ab-hero__top">
-                <a href="{% url 'admin_panel' %}#ecc-recovery" class="ab-back">
-                    <i class="fas fa-arrow-right"></i>
-                    <span>بازگشت به داشبورد</span>
-                </a>
-                <div class="ab-hero__badges">
-                    <span class="ab-pill ab-pill--live"><span class="ab-pill__dot"></span> هوش بازیابی</span>
-                    <span class="ab-pill arc-pill--amber">لایه تصمیم v1</span>
-                </div>
-            </div>
-            <div class="ab-hero__body">
-                <p class="ab-hero__eyebrow arc-eyebrow">هوش درآمد</p>
-                <h1 class="ab-hero__title">مرکز <em>بازیابی</em></h1>
-                <p class="ab-hero__lead">قیف بازیابی تسویه، عملکرد مسیر پیامک، سلامت موتور و کاوشگر — بدون ارسال دستی.</p>
-                <p class="arc-period">
-                    <i class="fas fa-calendar-day"></i>
-                    بازه: <strong>{{ summary.period_start_jalali }}</strong>
-                    تا <strong>{{ summary.period_end_jalali }}</strong>
-                    <span class="arc-period__sep">·</span>
-                    به‌روزرسانی: {{ summary.generated_at_jalali }}
-                </p>
-            </div>
-            <div class="ab-hero__actions arc-hero-actions">
-                <div class="arc-range" role="group" aria-label="بازه زمانی">
-                    <a href="?days=7" class="arc-range-btn{% if days == 7 %} is-active{% endif %}">۷ روز</a>
-                    <a href="?days=30" class="arc-range-btn{% if days == 30 %} is-active{% endif %}">۳۰ روز</a>
-                    <a href="?days=90" class="arc-range-btn{% if days == 90 %} is-active{% endif %}">۹۰ روز</a>
-                </div>
-                <a href="{% url 'admin_panel_recovery_center_json' %}?days={{ days }}&page={{ page }}&download=1" class="ab-btn ab-btn--gold arc-btn-minimal">
-                    <i class="fas fa-file-code"></i><span>دانلود JSON</span>
-                </a>
-                <a href="{% url 'admin_panel_plan_conversion' %}?days={{ days }}" class="ab-btn ab-btn--ghost arc-btn-minimal">
-                    <i class="fas fa-filter-circle-dollar"></i><span>تبدیل پلن</span>
-                </a>
-            </div>
-        </div>
-        <div class="ab-hero__visual arc-hero-visual" aria-hidden="true">
-            <div class="arc-freshness">
-                <span class="arc-freshness__label">تازگی داده</span>
-                <ul>
-                    <li><small>آخرین رها کردن</small><strong>{% if data_freshness.last_event_at %}✓{% else %}—{% endif %}</strong></li>
-                    <li><small>آخرین اجرا</small><strong>{% if data_freshness.last_recovery_run_at %}✓{% else %}—{% endif %}</strong></li>
-                </ul>
-            </div>
-        </div>
-    </header>
-
-    <nav class="arc-tabs" id="arc-tabs" aria-label="بخش‌های مرکز بازیابی">
-        <button type="button" class="arc-tab is-active" data-tab="funnel">قیف</button>
-        <button type="button" class="arc-tab" data-tab="journey">مسیر پیامک</button>
-        <button type="button" class="arc-tab" data-tab="health">سلامت</button>
-        <button type="button" class="arc-tab" data-tab="explorer">کاوشگر</button>
-    </nav>
+    <div class="biz-tabs-wrap">
+        <nav class="arc-tabs" id="arc-tabs" aria-label="بخش‌های مرکز بازیابی">
+            <button type="button" class="arc-tab is-active" data-tab="funnel">قیف</button>
+            <button type="button" class="arc-tab" data-tab="journey">مسیر پیامک</button>
+            <button type="button" class="arc-tab" data-tab="health">سلامت</button>
+            <button type="button" class="arc-tab" data-tab="explorer">کاوشگر</button>
+        </nav>
+    </div>
 
     {# ─── Tab: Funnel ─── #}
     <section class="arc-panel is-active" id="arc-panel-funnel" data-panel="funnel">
@@ -120,7 +91,7 @@
         {% endif %}
 
         <div class="arc-alert arc-alert--info">
-            <i class="fas fa-chart-line"></i>
+            <i class="fas fa-chart-line" aria-hidden="true"></i>
             <span>KPI اجرایی فقط Strict matched است. Assisted در کاوشگر برای تحلیل نمایش داده می‌شود.</span>
         </div>
 

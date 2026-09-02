@@ -7,69 +7,51 @@
 
 {% block admin_panel_title %}اتوماسیون بازاریابی{% endblock %}
 
+{% block admin_panel_header_subtitle %}
+مشتری مناسب، پیام مناسب، در زمان مناسب
+{% endblock %}
+
 {% block admin_panel_extra_css %}
-<link rel="stylesheet" href="{% static 'css/admin-marketing.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'css/admin-marketing.css' %}?v=4">
+<link rel="stylesheet" href="{% static 'css/mizkar-admin-business.css' %}?v=1">
 {% endblock %}
 
 {% block admin_panel_content %}
-<div class="adm-page adm-mkt-page adm-map-page">
+<div class="adm-page adm-mkt-page adm-map-page biz-page biz-page--marketing">
 
-    {# ─── Hero ─── #}
-    <header class="adm-map-hero">
-        <div class="adm-map-hero-copy">
-            <p class="adm-map-hero-kicker">
-                <i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i>
-                Marketing Automation
-            </p>
-            <h1 class="adm-map-hero-title">مرکز اتوماسیون بازاریابی</h1>
-            <p class="adm-map-hero-tagline">مشتری مناسب، پیام مناسب، در زمان مناسب.</p>
-            <p class="adm-map-hero-desc">کمپین‌های هوشمند پیامکی برای کاربران فایلینگ دیوار با سگمنت‌بندی، کد تخفیف، شخصی‌سازی و گزارش لحظه‌ای.</p>
-            <nav class="adm-map-quick-actions" aria-label="دسترسی سریع">
-                <a href="#map-compose" class="adm-map-quick-btn"><i class="fas fa-plus"></i> کمپین جدید</a>
-                <a href="{% url 'admin_panel_growth_pipeline' %}" class="adm-map-quick-btn"><i class="fas fa-route"></i> پایپلاین رشد</a>
-                <a href="{% url 'admin_panel_lead_acquisition' %}" class="adm-map-quick-btn"><i class="fas fa-user-plus"></i> جذب سرنخ</a>
-                <a href="#map-phonebook" class="adm-map-quick-btn"><i class="fas fa-address-book"></i> دفترچه مخاطبین</a>
-                <a href="#map-overview" class="adm-map-quick-btn"><i class="fas fa-bullseye"></i> سگمنت‌ها</a>
-                <a href="#map-compose" class="adm-map-quick-btn"><i class="fas fa-gift"></i> کدهای تخفیف</a>
-                <a href="#map-analytics" class="adm-map-quick-btn"><i class="fas fa-chart-line"></i> گزارش‌ها</a>
-                <a href="https://farazsms.com/" target="_blank" rel="noopener" class="adm-map-quick-btn"><i class="fas fa-gear"></i> تنظیمات فراز SMS</a>
-            </nav>
-            <div class="adm-map-hero-meta">
-                <a href="{% url 'admin_panel' %}" class="adm-map-balance"><i class="fas fa-arrow-right"></i> داشبورد</a>
-                {% if sms_balance.ok %}
-                <span class="adm-map-balance {% if sms_balance.is_low %}adm-map-balance--low{% endif %}">
-                    <i class="fas fa-comment-sms"></i>
-                    اعتبار: {% if sms_balance.sms_count is not None %}{{ sms_balance.sms_count|currency }} پیامک{% else %}{{ sms_balance.credit|floatformat:0|currency }} ت{% endif %}
-                </span>
-                {% elif sms_balance.error %}
-                <span class="adm-map-balance adm-map-balance--low"><i class="fas fa-triangle-exclamation"></i> خطا در موجودی</span>
-                {% endif %}
-            </div>
+    <div class="biz-toolbar">
+        <div class="biz-toolbar-meta">
+            {% if sms_balance.ok %}
+            <span class="biz-meta-pill{% if sms_balance.is_low %} biz-meta-pill--warn{% endif %}">
+                <i class="fas fa-comment-sms" aria-hidden="true"></i>
+                {% if sms_balance.sms_count is not None %}{{ sms_balance.sms_count|currency }} پیامک{% else %}{{ sms_balance.credit|floatformat:0|currency }} ت{% endif %}
+            </span>
+            {% elif sms_balance.error %}
+            <span class="biz-meta-pill biz-meta-pill--warn"><i class="fas fa-triangle-exclamation" aria-hidden="true"></i> خطا در موجودی</span>
+            {% endif %}
+            <span>{{ marketing_stats.sent_total|currency }} پیام ارسال‌شده</span>
         </div>
-        <div class="adm-map-hero-visual" aria-hidden="true">
-            <div class="adm-map-illustration">
-                <div class="adm-map-illu-hub"><i class="fas fa-bullhorn"></i></div>
-                <div class="adm-map-illu-card adm-map-illu-card--phone"><i class="fas fa-mobile-screen"></i> پیامک</div>
-                <div class="adm-map-illu-card adm-map-illu-card--chart"><i class="fas fa-chart-pie"></i> Analytics</div>
-                <div class="adm-map-illu-card adm-map-illu-card--sms"><i class="fas fa-comment-dots"></i> Campaign</div>
-                <div class="adm-map-illu-card adm-map-illu-card--users"><i class="fas fa-users"></i> Segments</div>
-                <div class="adm-map-illu-card adm-map-illu-card--conv"><i class="fas fa-arrow-trend-up"></i> Conversion</div>
-            </div>
+        <div class="biz-toolbar-actions">
+            <a href="#map-compose" class="biz-btn biz-btn--primary biz-btn--sm"><i class="fas fa-plus" aria-hidden="true"></i> کمپین جدید</a>
+            <a href="{% url 'admin_panel_growth_pipeline' %}" class="biz-btn biz-btn--ghost biz-btn--sm"><i class="fas fa-route" aria-hidden="true"></i> رشد</a>
+            <a href="{% url 'admin_panel_lead_acquisition' %}" class="biz-btn biz-btn--ghost biz-btn--sm"><i class="fas fa-user-plus" aria-hidden="true"></i> جذب</a>
+            <a href="#map-phonebook" class="biz-btn biz-btn--ghost biz-btn--sm"><i class="fas fa-address-book" aria-hidden="true"></i> دفترچه</a>
         </div>
-    </header>
+    </div>
 
-    <nav class="adm-map-tabs" id="adm-map-tabs" aria-label="بخش‌های بازاریابی">
-        <div class="adm-map-tabs__inner">
-            <a href="#map-overview" class="adm-map-tab is-active">نمای کلی</a>
-            <a href="#map-compose" class="adm-map-tab">ساخت کمپین</a>
-            <a href="#map-templates" class="adm-map-tab">قالب‌ها</a>
-            <a href="#map-automation" class="adm-map-tab">اتوماسیون</a>
-            <a href="#map-phonebook" class="adm-map-tab">دفترچه</a>
-            <a href="#map-history" class="adm-map-tab">تاریخچه</a>
-            <a href="#map-analytics" class="adm-map-tab">Analytics</a>
-        </div>
-    </nav>
-    <div class="adm-map-tabs-spacer" id="adm-map-tabs-spacer" aria-hidden="true"></div>
+    <div class="biz-tabs-wrap">
+        <nav class="adm-map-tabs" id="adm-map-tabs" aria-label="بخش‌های بازاریابی">
+            <div class="adm-map-tabs__inner">
+                <a href="#map-overview" class="adm-map-tab is-active">نمای کلی</a>
+                <a href="#map-compose" class="adm-map-tab">ساخت کمپین</a>
+                <a href="#map-templates" class="adm-map-tab">قالب‌ها</a>
+                <a href="#map-automation" class="adm-map-tab">اتوماسیون</a>
+                <a href="#map-phonebook" class="adm-map-tab">دفترچه</a>
+                <a href="#map-history" class="adm-map-tab">تاریخچه</a>
+                <a href="#map-analytics" class="adm-map-tab">Analytics</a>
+            </div>
+        </nav>
+    </div>
 
     {% if messages %}
     <section class="adm-alerts" aria-label="پیام‌ها">
@@ -164,17 +146,15 @@
                         {% endif %}
                     </div>
                     <div class="adm-map-segment-pro-suggest">
-                        <strong>پیشنهاد</strong>
+                        <strong>اقدام پیشنهادی</strong>
                         {{ seg.suggestion }}
                     </div>
                     <div class="adm-map-segment-pro-actions">
+                        <a href="?segment={{ seg.key }}#map-compose" class="adm-dl-btn adm-dl-btn--primary" data-map-segment="{{ seg.key }}" data-map-action="campaign">شروع کمپین</a>
                         <a href="?segment={{ seg.key }}#map-overview" class="adm-dl-btn" data-map-segment="{{ seg.key }}" data-map-action="view">مشاهده</a>
                         {% if seg.preview_only or seg.send_enabled == False %}
-                        <button type="button" class="adm-dl-btn adm-dl-btn--primary" disabled title="فقط پیش‌نمایش">فقط پیش‌نمایش</button>
-                        {% else %}
-                        <a href="?segment={{ seg.key }}#map-compose" class="adm-dl-btn adm-dl-btn--primary" data-map-segment="{{ seg.key }}" data-map-action="campaign">شروع کمپین</a>
+                        <span class="biz-meta-pill" title="فقط پیش‌نمایش">پیش‌نمایش</span>
                         {% endif %}
-                        <a href="?segment={{ seg.key }}#map-compose" class="adm-dl-btn">ویرایش شرط</a>
                     </div>
                 </article>
                 {% endfor %}

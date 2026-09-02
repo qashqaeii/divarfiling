@@ -275,3 +275,32 @@ def get_windows_first_launches(limit: int = TABLE_FETCH_LIMIT, *, start=None, en
     if start is not None and end is not None:
         qs = qs.filter(created_at__date__gte=start, created_at__date__lte=end)
     return qs[:limit]
+
+
+def get_windows_version_distribution(*, limit: int = 12) -> List[Dict[str, Any]]:
+    """توزیع نسخه اپ از رویدادهای اولین اجرا."""
+    from accounts.services.admin_android_app import is_android_version_outdated
+    from shop.services.app_downloads import WINDOWS_APP_VERSION
+
+    rows = list(
+        ClientAppEvent.objects.filter(event_type=FIRST_LAUNCH)
+        .values('app_version')
+        .annotate(
+            launch_count=Count('id'),
+            user_count=Count('user_id', distinct=True),
+        )
+        .order_by('-launch_count')[:limit]
+    )
+    total = sum(row['launch_count'] for row in rows) or 1
+    result = []
+    for row in rows:
+        version = (row['app_version'] or '').strip() or 'نامشخص'
+        launch_count = row['launch_count']
+        result.append({
+            'version': version,
+            'launch_count': launch_count,
+            'user_count': row['user_count'],
+            'pct': round((launch_count / total) * 100),
+            'is_latest': not is_android_version_outdated(version, WINDOWS_APP_VERSION),
+        })
+    return result

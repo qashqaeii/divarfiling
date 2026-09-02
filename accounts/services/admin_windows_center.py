@@ -23,6 +23,7 @@ from accounts.services.admin_windows_app import (
     get_windows_download_logs,
     get_windows_first_launches,
     get_windows_user_funnel,
+    get_windows_version_distribution,
 )
 from shop.services.app_downloads import WINDOWS_APP_VERSION
 
@@ -130,6 +131,43 @@ def _serialize_launches(items) -> List[Dict[str, Any]]:
     return rows
 
 
+def _build_range_kpi_cards(
+    *,
+    range_label: str,
+    range_summary: Dict[str, int],
+    range_deltas: Dict[str, int | None],
+) -> List[Dict[str, Any]]:
+    def card(key, label, value, icon, accent, delta_key=None):
+        return {
+            'key': key,
+            'label': label,
+            'sublabel': range_label,
+            'value': value,
+            'icon': icon,
+            'accent': accent,
+            'delta': range_deltas.get(delta_key) if delta_key else None,
+        }
+
+    return [
+        card('downloads', 'دانلود', range_summary['downloads'], 'fa-download', 'blue', 'downloads'),
+        card('download_users', 'کاربر دانلودکننده', range_summary['download_users'], 'fa-users', 'indigo'),
+        card('activations', 'فعال‌سازی', range_summary['activations'], 'fa-key', 'violet', 'activations'),
+        card('first_launches', 'اولین اجرا', range_summary['first_launches'], 'fa-play', 'cyan', 'first_launches'),
+    ]
+
+
+def _build_snapshot_kpi_cards(snapshot: Dict[str, int]) -> List[Dict[str, Any]]:
+    return [
+        {'key': 'downloads_total', 'label': 'کل دانلود', 'value': snapshot['windows_downloads_total'], 'icon': 'fa-download'},
+        {'key': 'downloads_week', 'label': 'دانلود (۷ روز)', 'value': snapshot['windows_downloads_week'], 'icon': 'fa-calendar-week'},
+        {'key': 'downloads_month', 'label': 'دانلود (۳۰ روز)', 'value': snapshot['windows_downloads_month'], 'icon': 'fa-calendar'},
+        {'key': 'activations_total', 'label': 'فعال‌سازی', 'value': snapshot['windows_activations_total'], 'icon': 'fa-key'},
+        {'key': 'activations_week', 'label': 'فعال‌سازی (۷ روز)', 'value': snapshot['windows_activations_week'], 'icon': 'fa-shield-halved'},
+        {'key': 'launches_total', 'label': 'اولین اجرا', 'value': snapshot['windows_first_launches_total'], 'icon': 'fa-play'},
+        {'key': 'launches_week', 'label': 'اجرا (۷ روز)', 'value': snapshot['windows_first_launches_week'], 'icon': 'fa-rocket'},
+    ]
+
+
 def get_windows_center_context(
     days: int = 30,
     page: int = 1,
@@ -155,22 +193,33 @@ def get_windows_center_context(
 
     downloads = _conversion_pct(funnel_steps[1]['count'], funnel_steps[0]['count'])
     launches = _conversion_pct(funnel_steps[2]['count'], funnel_steps[0]['count'])
+    activation_to_launch = _conversion_pct(funnel_steps[2]['count'], funnel_steps[1]['count'])
+
+    range_deltas = {
+        'downloads': _pct_change(range_summary['downloads'], prev_summary['downloads']),
+        'activations': _pct_change(range_summary['activations'], prev_summary['activations']),
+        'first_launches': _pct_change(range_summary['first_launches'], prev_summary['first_launches']),
+    }
 
     return {
         'range_label': _range_label_fa(days),
         'days': days,
         'app_version': WINDOWS_APP_VERSION,
         'range_summary': range_summary,
-        'range_deltas': {
-            'downloads': _pct_change(range_summary['downloads'], prev_summary['downloads']),
-            'activations': _pct_change(range_summary['activations'], prev_summary['activations']),
-            'first_launches': _pct_change(range_summary['first_launches'], prev_summary['first_launches']),
-        },
+        'range_deltas': range_deltas,
+        'range_kpi_cards': _build_range_kpi_cards(
+            range_label=_range_label_fa(days),
+            range_summary=range_summary,
+            range_deltas=range_deltas,
+        ),
+        'snapshot_kpi_cards': _build_snapshot_kpi_cards(snapshot),
+        'version_rows': get_windows_version_distribution(),
         'snapshot': snapshot,
         'funnel_steps': funnel_steps,
         'funnel_conversion': {
             'download_to_activation': downloads,
             'download_to_launch': launches,
+            'activation_to_launch': activation_to_launch,
         },
         'funnel_rows': _serialize_funnel_rows(funnel_rows),
         'download_rows': _serialize_downloads(

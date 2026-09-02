@@ -98,6 +98,13 @@ class WindowsCenterServiceTests(TestCase):
         self.assertNotIn('secret-agent', payload)
         self.assertNotIn('1.2.3.4', payload)
 
+    def test_kpi_cards_in_context(self):
+        ctx = get_windows_center_context(days=30)
+        self.assertIn('range_kpi_cards', ctx)
+        self.assertEqual(len(ctx['range_kpi_cards']), 4)
+        self.assertIn('snapshot_kpi_cards', ctx)
+        self.assertIn('version_rows', ctx)
+
     def test_export_urls_present(self):
         ctx = get_windows_center_context(days=30)
         self.assertIn('downloads', ctx['export_urls'])
@@ -148,7 +155,8 @@ class AdminWindowsCenterViewTests(TestCase):
             self.assertEqual(resp.status_code, 200)
             content = resp.content.decode()
             self.assertIn('ecc-windows', content)
-            self.assertIn('windows-funnel-table', content)
+            self.assertIn('wac-page', content)
+            self.assertIn('wac-users', content)
             self.assertIn(f'data-range="{days}"', content)
 
         self.assertEqual(resolve_admin_panel_nav_active('/accounts/admin-panel/windows/'), 'windows')

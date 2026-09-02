@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 
 from workspace.models import Dataset, Listing
-from workspace.services.filters import apply_amenity_filters, apply_listing_filters, parse_filter_params
+from workspace.services.filters import apply_amenity_filters, apply_listing_filters, parse_filter_params, parse_filter_params_from_mapping
 
 
 class ListingRoomsFilterTests(TestCase):
@@ -45,3 +45,16 @@ class ListingRoomsFilterTests(TestCase):
         class Req:
             GET = {'rooms': '3'}
         self.assertEqual(parse_filter_params(Req())['rooms'], '3')
+
+    def test_year_params_reject_phone_and_out_of_range(self):
+        parsed = parse_filter_params_from_mapping({
+            'year_min': '0935792033',
+            'year_max': '۱۴۰۳',
+        })
+        self.assertIsNone(parsed['year_min'])
+        self.assertEqual(parsed['year_max'], 1403)
+
+    def test_year_params_accept_jalali_range(self):
+        parsed = parse_filter_params_from_mapping({'year_min': '1395', 'year_max': '1400'})
+        self.assertEqual(parsed['year_min'], 1395)
+        self.assertEqual(parsed['year_max'], 1400)

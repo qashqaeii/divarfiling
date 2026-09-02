@@ -144,9 +144,9 @@
                     {% endif %}
                     <div class="mk-range">
                         <span>ساخت</span>
-                        <input type="text" name="year_min" value="{{ filters.year_min|default:'' }}" class="mk-filter-num" placeholder="از" inputmode="numeric" autocomplete="off">
+                        <input type="text" name="year_min" value="{{ filters.year_min|default:'' }}" class="mk-filter-num mk-filter-year" placeholder="از" inputmode="numeric" autocomplete="off" autocorrect="off" spellcheck="false" data-lpignore="true" maxlength="4">
                         <i>—</i>
-                        <input type="text" name="year_max" value="{{ filters.year_max|default:'' }}" class="mk-filter-num" placeholder="تا" inputmode="numeric" autocomplete="off">
+                        <input type="text" name="year_max" value="{{ filters.year_max|default:'' }}" class="mk-filter-num mk-filter-year" placeholder="تا" inputmode="numeric" autocomplete="off" autocorrect="off" spellcheck="false" data-lpignore="true" maxlength="4">
                     </div>
                 </div>
                 <div class="mk-filter-value-block">

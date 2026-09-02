@@ -43,6 +43,19 @@ def _float_param(val: str) -> Optional[float]:
         return None
 
 
+_BUILD_YEAR_MIN = 1200
+_BUILD_YEAR_MAX = 1500
+
+
+def _year_param(val: str) -> Optional[int]:
+    n = _int_param(val)
+    if n is None:
+        return None
+    if n < _BUILD_YEAR_MIN or n > _BUILD_YEAR_MAX:
+        return None
+    return n
+
+
 def parse_filter_params_from_mapping(g) -> Dict[str, Any]:
     """پارس فیلتر از QueryDict / dict — مشترک وب و موبایل."""
     def get(k, default=''):
@@ -83,8 +96,8 @@ def parse_filter_params_from_mapping(g) -> Dict[str, Any]:
         'deposit_max': _int_param(str(get('deposit_max', '') or '')),
         'rent_min': _int_param(str(get('rent_min', '') or '')),
         'rent_max': _int_param(str(get('rent_max', '') or '')),
-        'year_min': _int_param(str(get('year_min', '') or '')),
-        'year_max': _int_param(str(get('year_max', '') or '')),
+        'year_min': _year_param(str(get('year_min', '') or '')),
+        'year_max': _year_param(str(get('year_max', '') or '')),
         'sort': str(get('sort', '') or ''),
         'dataset_id': str(get('dataset_id', '') or '').strip(),
     }

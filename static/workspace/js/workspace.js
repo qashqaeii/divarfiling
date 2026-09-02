@@ -1947,6 +1947,58 @@ function formatWithSeparators(val) {
     return n.toLocaleString('fa-IR');
 }
 
+const BUILD_YEAR_MIN = 1200;
+const BUILD_YEAR_MAX = 1500;
+
+function toPersianDigits(str) {
+    return String(str ?? '').replace(/\d/g, (d) => FA_DIGITS[Number(d)] || d);
+}
+
+function sanitizeBuildYear(raw) {
+    const s = parseFormattedNumber(raw);
+    if (!s) return '';
+    const n = Number(s);
+    if (!Number.isFinite(n)) return '';
+    if (n < BUILD_YEAR_MIN || n > BUILD_YEAR_MAX) return '';
+    return String(Math.round(n));
+}
+
+function parseBuildYearFilter(val) {
+    const clean = sanitizeBuildYear(val);
+    return clean ? Number(clean) : null;
+}
+
+function readYearInput(el) {
+    if (!el) return '';
+    if (el.dataset.rawValue != null && el.dataset.rawValue !== '') {
+        return sanitizeBuildYear(el.dataset.rawValue);
+    }
+    return sanitizeBuildYear(el.value);
+}
+
+function bindYearNumericInput(el, { onChange } = {}) {
+    if (!el || el.dataset.yearBound === '1') return;
+    el.dataset.yearBound = '1';
+    el.setAttribute('inputmode', 'numeric');
+    el.setAttribute('autocomplete', 'off');
+    el.setAttribute('autocorrect', 'off');
+    el.setAttribute('spellcheck', 'false');
+    el.setAttribute('data-lpignore', 'true');
+    el.setAttribute('data-1p-ignore', 'true');
+    el.setAttribute('maxlength', '4');
+
+    const applyFormat = () => {
+        const clean = sanitizeBuildYear(el.value);
+        el.dataset.rawValue = clean;
+        el.value = clean ? toPersianDigits(clean) : '';
+        onChange?.(clean);
+    };
+
+    el.addEventListener('input', applyFormat);
+    el.addEventListener('change', applyFormat);
+    if (el.value) applyFormat();
+}
+
 function readFormattedInput(el) {
     if (!el) return '';
     if (el.dataset.rawValue != null && el.dataset.rawValue !== '') return el.dataset.rawValue;
@@ -1976,6 +2028,10 @@ function bindFormattedNumericInput(el, { onChange } = {}) {
 function initFormattedNumericInputs(root = document) {
     const mapFmtIds = new Set(['mkMapPriceMin', 'mkMapPriceMax', 'mkMapAreaMin', 'mkMapAreaMax']);
     root.querySelectorAll('.mk-filter-num, .mk-filter-ranges input[type="number"]').forEach((el) => {
+        if (el.classList.contains('mk-filter-year')) {
+            bindYearNumericInput(el);
+            return;
+        }
         if (mapFmtIds.has(el.id)) return;
         bindFormattedNumericInput(el);
     });
@@ -1985,7 +2041,9 @@ function initFormattedNumericInputs(root = document) {
         form.dataset.fmtSubmitBound = '1';
         form.addEventListener('submit', () => {
             form.querySelectorAll('.mk-filter-num').forEach((el) => {
-                const raw = readFormattedInput(el);
+                const raw = el.classList.contains('mk-filter-year')
+                    ? readYearInput(el)
+                    : readFormattedInput(el);
                 el.value = raw;
                 el.dataset.rawValue = raw;
             });
@@ -2150,8 +2208,8 @@ function countActiveMapFilters(filterState) {
     if (filterState.areaMin != null && filterState.areaMin !== '') n += 1;
     if (filterState.areaMax != null && filterState.areaMax !== '') n += 1;
     if (filterState.rooms && filterState.rooms !== 'all') n += 1;
-    if (filterState.yearMin != null && filterState.yearMin !== '') n += 1;
-    if (filterState.yearMax != null && filterState.yearMax !== '') n += 1;
+    if (sanitizeBuildYear(filterState.yearMin)) n += 1;
+    if (sanitizeBuildYear(filterState.yearMax)) n += 1;
     if (filterState.freshness && filterState.freshness !== 'all') n += 1;
     if (filterState.valueTier && filterState.valueTier !== 'all') n += 1;
     if (filterState.elevator) n += 1;
@@ -2204,8 +2262,8 @@ function applyMapMarkerFilters(markers, filterState, sellerFilter) {
     const rMax = filterState.rentMax != null && filterState.rentMax !== '' ? normalizeMoneyInput(filterState.rentMax) : null;
     const aMin = filterState.areaMin != null && filterState.areaMin !== '' ? Number(parseFormattedNumber(filterState.areaMin) || filterState.areaMin) : null;
     const aMax = filterState.areaMax != null && filterState.areaMax !== '' ? Number(parseFormattedNumber(filterState.areaMax) || filterState.areaMax) : null;
-    const yMin = filterState.yearMin != null && filterState.yearMin !== '' ? Number(parseFormattedNumber(filterState.yearMin) || filterState.yearMin) : null;
-    const yMax = filterState.yearMax != null && filterState.yearMax !== '' ? Number(parseFormattedNumber(filterState.yearMax) || filterState.yearMax) : null;
+    const yMin = parseBuildYearFilter(filterState.yearMin);
+    const yMax = parseBuildYearFilter(filterState.yearMax);
 
     return list.filter((m) => {
         if (!matchTxModeFilter(m.tx_mode, filterState.txMode)) return false;
@@ -3260,6 +3318,12 @@ function initMap(allMarkers, settings) {
             el.value = val ? formatWithSeparators(val) : '';
             el.dataset.rawValue = val ? String(val) : '';
         };
+        const setYear = (el, val) => {
+            if (!el) return;
+            const clean = sanitizeBuildYear(val);
+            el.value = clean ? toPersianDigits(clean) : '';
+            el.dataset.rawValue = clean;
+        };
         setNum(priceMinEl, filterState.priceMin);
         setNum(priceMaxEl, filterState.priceMax);
         setNum(depositMinEl, filterState.depositMin);
@@ -3268,8 +3332,8 @@ function initMap(allMarkers, settings) {
         setNum(rentMaxEl, filterState.rentMax);
         setNum(areaMinEl, filterState.areaMin);
         setNum(areaMaxEl, filterState.areaMax);
-        setNum(yearMinEl, filterState.yearMin);
-        setNum(yearMaxEl, filterState.yearMax);
+        setYear(yearMinEl, filterState.yearMin);
+        setYear(yearMaxEl, filterState.yearMax);
         if (roomsEl) roomsEl.value = filterState.rooms;
         if (freshEl) freshEl.value = filterState.freshness;
         if (valueTierEl) valueTierEl.value = filterState.valueTier;
@@ -3313,8 +3377,8 @@ function initMap(allMarkers, settings) {
         filterState.areaMin = readFormattedInput(areaMinEl);
         filterState.areaMax = readFormattedInput(areaMaxEl);
         filterState.rooms = roomsEl?.value || 'all';
-        filterState.yearMin = readFormattedInput(yearMinEl);
-        filterState.yearMax = readFormattedInput(yearMaxEl);
+        filterState.yearMin = readYearInput(yearMinEl);
+        filterState.yearMax = readYearInput(yearMaxEl);
         filterState.freshness = freshEl?.value || 'all';
         filterState.valueTier = valueTierEl?.value || 'all';
         filterState.elevator = !!elevatorEl?.checked;
@@ -3381,8 +3445,8 @@ function initMap(allMarkers, settings) {
         if (serverFilters.rent_max) filterState.rentMax = String(serverFilters.rent_max);
         if (serverFilters.area_min) filterState.areaMin = String(serverFilters.area_min);
         if (serverFilters.area_max) filterState.areaMax = String(serverFilters.area_max);
-        if (serverFilters.year_min) filterState.yearMin = String(serverFilters.year_min);
-        if (serverFilters.year_max) filterState.yearMax = String(serverFilters.year_max);
+        if (serverFilters.year_min) filterState.yearMin = sanitizeBuildYear(serverFilters.year_min);
+        if (serverFilters.year_max) filterState.yearMax = sanitizeBuildYear(serverFilters.year_max);
         if (serverFilters.elevator === '1') filterState.elevator = true;
         if (serverFilters.parking === '1') filterState.parking = true;
         if (serverFilters.storage === '1') filterState.storage = true;
@@ -3408,7 +3472,11 @@ function initMap(allMarkers, settings) {
             'mkMapYearMin', 'mkMapYearMax',
         ].forEach((id) => {
             const el = document.getElementById(id);
-            bindFormattedNumericInput(el, { onChange: debouncedApply });
+            if (id === 'mkMapYearMin' || id === 'mkMapYearMax') {
+                bindYearNumericInput(el, { onChange: debouncedApply });
+            } else {
+                bindFormattedNumericInput(el, { onChange: debouncedApply });
+            }
             el?.addEventListener('change', applyAdvancedFilters);
         });
         [

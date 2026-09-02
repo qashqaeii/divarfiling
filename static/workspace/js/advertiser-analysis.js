@@ -1,5 +1,5 @@
 /**
- * Advertiser analysis explainability — listing detail badge popover + feedback.
+ * Advertiser analysis explainability — badge + centered modal + feedback.
  */
 (function () {
     'use strict';
@@ -11,11 +11,13 @@
 
     function initAdvertiserAnalysis() {
         var root = document.querySelector('[data-adv-analysis]');
-        if (!root) return;
+        var overlay = document.querySelector('[data-adv-analysis-overlay]');
+        if (!root || !overlay) return;
 
         var toggle = root.querySelector('[data-adv-analysis-toggle]');
-        var panel = root.querySelector('[data-adv-analysis-panel]');
-        var closeBtn = root.querySelector('[data-adv-analysis-close]');
+        var panel = overlay.querySelector('[data-adv-analysis-panel]');
+        var backdrop = overlay.querySelector('[data-adv-analysis-backdrop]');
+        var closeBtn = overlay.querySelector('[data-adv-analysis-close]');
         var dataEl = document.getElementById('ws-adv-analysis-data');
         var config = {};
         if (dataEl) {
@@ -27,9 +29,15 @@
         }
 
         function setOpen(open) {
-            if (!toggle || !panel) return;
+            if (!toggle || !overlay) return;
             toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-            panel.hidden = !open;
+            overlay.hidden = !open;
+            overlay.classList.toggle('is-open', open);
+            overlay.setAttribute('aria-hidden', open ? 'false' : 'true');
+            document.body.classList.toggle('ws-adv-analysis-open', open);
+            if (open && panel) {
+                panel.focus();
+            }
         }
 
         function closePanel() {
@@ -42,6 +50,7 @@
 
         if (toggle) {
             toggle.addEventListener('click', function (e) {
+                e.preventDefault();
                 e.stopPropagation();
                 var isOpen = toggle.getAttribute('aria-expanded') === 'true';
                 if (isOpen) closePanel();
@@ -53,15 +62,23 @@
             closeBtn.addEventListener('click', closePanel);
         }
 
-        document.addEventListener('click', function (e) {
-            if (!root.contains(e.target)) closePanel();
-        });
+        if (backdrop) {
+            backdrop.addEventListener('click', closePanel);
+        }
+
+        if (panel) {
+            panel.addEventListener('click', function (e) {
+                e.stopPropagation();
+            });
+        }
 
         document.addEventListener('keydown', function (e) {
-            if (e.key === 'Escape') closePanel();
+            if (e.key === 'Escape' && toggle && toggle.getAttribute('aria-expanded') === 'true') {
+                closePanel();
+            }
         });
 
-        var feedbackRoot = root.querySelector('[data-adv-feedback-root]');
+        var feedbackRoot = overlay.querySelector('[data-adv-feedback-root]');
         if (!feedbackRoot || !config.feedback_url) return;
 
         var msgEl = feedbackRoot.querySelector('[data-adv-feedback-msg]');
@@ -139,7 +156,7 @@
                 })
                     .then(function () {
                         setActiveFeedback('incorrect');
-                        showMsg('ممنون! بازخورد شما برای بهبود سیستم ثبت شد.');
+                        showMsg('ممنون! بازخورد شما ثبت شد.');
                     })
                     .catch(function (err) {
                         showMsg(err.message || 'خطا در ثبت', true);

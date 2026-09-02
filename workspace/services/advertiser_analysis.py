@@ -344,6 +344,21 @@ def build_public_analysis_payload(analysis: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
+def listing_advertiser_analysis_for_user(listing, user=None) -> Dict[str, Any]:
+    """تحلیل قابل‌نمایش برای UI — با وضعیت feedback کاربر."""
+    analysis = analyze_listing_advertiser(listing)
+    if user is not None:
+        from workspace.models import AdvertiserSignalFeedback
+
+        feedback_obj = AdvertiserSignalFeedback.objects.filter(
+            user=user,
+            listing=listing,
+            detector_version=analysis['detector_version'],
+        ).first()
+        attach_feedback_state(analysis, feedback_obj)
+    return build_public_analysis_payload(analysis)
+
+
 def attach_feedback_state(analysis: Dict[str, Any], feedback_obj) -> Dict[str, Any]:
     """وضعیت feedback کاربر را به analysis اضافه می‌کند."""
     if feedback_obj is None:

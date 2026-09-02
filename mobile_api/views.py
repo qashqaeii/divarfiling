@@ -550,6 +550,22 @@ class ListingPublicShareView(APIView):
         return api_ok(payload)
 
 
+class ListingAdvertiserFeedbackView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, token):
+        from mobile_api.services.filing_service import submit_listing_advertiser_feedback
+
+        payload, err = submit_listing_advertiser_feedback(request.user, token, request.data)
+        if err == 'LICENSE_REQUIRED':
+            return api_error('مجوز فعال یافت نشد.', code='LICENSE_REQUIRED', status=403)
+        if err == 'NOT_FOUND':
+            return api_error('آگهی یافت نشد.', code='NOT_FOUND', status=404)
+        if err:
+            return api_error(err, code='VALIDATION_ERROR', status=400)
+        return api_ok(payload)
+
+
 class DatasetExportView(APIView):
     permission_classes = [IsAuthenticated]
     content_negotiation_class = FileDownloadNegotiation

@@ -128,6 +128,7 @@ urlpatterns = [
     path('filing/listings/<str:token>/favorite', views.ListingFavoriteView.as_view(), name='listing_favorite'),
     path('filing/listings/<str:token>/contacts/<int:link_id>', views.ListingLinkedContactDeleteView.as_view(), name='listing_linked_contact_delete'),
     path('filing/listings/<str:token>/public-share', views.ListingPublicShareView.as_view(), name='listing_public_share'),
+    path('filing/listings/<str:token>/advertiser-feedback', views.ListingAdvertiserFeedbackView.as_view(), name='listing_advertiser_feedback'),
 
     path('support/tickets', views.SupportTicketsListCreateView.as_view(), name='support_tickets'),
     path('support/tickets/<int:ticket_id>', views.SupportTicketDetailView.as_view(), name='support_ticket_detail'),

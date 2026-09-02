@@ -577,6 +577,9 @@ def listing_detail_to_dict(lst: Listing, *, user=None, request=None, personal_st
         base['public_share'] = listing_public_share_to_dict(share, request) if share else None
         base['meta'] = listing_meta_to_dict(user, lst.token)
         base['linked_contacts'] = listing_linked_contacts_to_dict(user, lst.token, listing=lst)
+        from workspace.services.advertiser_analysis import listing_advertiser_analysis_for_user
+
+        base['advertiser_analysis'] = listing_advertiser_analysis_for_user(lst, user=user)
     else:
         from workspace.constants import LISTING_TAGS
         base['meta'] = {

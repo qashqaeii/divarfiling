@@ -520,6 +520,36 @@ def unlink_listing_contact(user, token: str, link_id: int, request=None) -> Opti
     return listing_detail_to_dict(lst, user=user, request=request)
 
 
+def submit_listing_advertiser_feedback(user, token: str, payload: dict) -> tuple[Optional[dict], Optional[str]]:
+    """ثبت بازخورد تشخیص آگهی‌دهنده — خروجی (data, error)."""
+    if not has_active_bot_license(user):
+        return None, 'LICENSE_REQUIRED'
+    lst = Listing.objects.filter(dataset__user=user, token=token).select_related('dataset').first()
+    if not lst:
+        return None, 'NOT_FOUND'
+
+    from workspace.services.advertiser_analysis import analyze_listing_advertiser
+    from workspace.services.advertiser_feedback import save_advertiser_feedback
+
+    feedback = str(payload.get('feedback') or '').strip()
+    user_correction = str(payload.get('user_correction') or '').strip()
+    analysis = analyze_listing_advertiser(lst)
+    obj, err = save_advertiser_feedback(
+        user=user,
+        listing=lst,
+        feedback=feedback,
+        predicted_classification=analysis['classification'],
+        detector_version=analysis['detector_version'],
+        user_correction=user_correction,
+    )
+    if err:
+        return None, err
+    return {
+        'feedback': obj.feedback if obj else feedback,
+        'user_correction': obj.user_correction if obj else user_correction,
+    }, None
+
+
 def export_dataset_response(user, dataset_id: str, fmt: str):
     from workspace.services.export import export_csv_response, export_excel_response, export_json_response
 

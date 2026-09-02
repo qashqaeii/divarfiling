@@ -1592,10 +1592,14 @@ body.ws-body::before { opacity: 0.45; }
     border-color: rgba(148, 163, 184, 0.15);
 }
 .mk-map-overlay--hint {
-    bottom: 1rem;
+    bottom: 3.15rem;
     inset-inline-start: 50%;
-    transform: translateX(50%);
+    transform: translateX(-50%);
     color: var(--ws-text-muted);
+    z-index: 475;
+    max-width: min(88%, 360px);
+    text-align: center;
+    pointer-events: none;
 }
 [dir="rtl"] .mk-map-overlay--hint {
     transform: translateX(50%);
@@ -2143,8 +2147,9 @@ body.ws-body::before { opacity: 0.45; }
 
 .mk-map-export-toast {
     position: absolute;
-    z-index: 700;
-    bottom: 4.5rem;
+    z-index: 720;
+    top: 3.25rem;
+    bottom: auto;
     inset-inline-start: 50%;
     transform: translateX(-50%);
     padding: 0.45rem 0.85rem;
@@ -2153,6 +2158,8 @@ body.ws-body::before { opacity: 0.45; }
     font-weight: 700;
     box-shadow: 0 8px 24px rgba(15, 23, 42, 0.14);
     pointer-events: none;
+    max-width: min(92%, 420px);
+    text-align: center;
 }
 [dir="rtl"] .mk-map-export-toast { transform: translateX(50%); }
 .mk-map-export-toast--success {

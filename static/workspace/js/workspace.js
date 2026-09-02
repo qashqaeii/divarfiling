@@ -2472,14 +2472,27 @@ function waitForMapTiles(map, timeoutMs = 4000) {
     });
 }
 
+function setMarkerZIndex(marker, zIndex) {
+    if (marker && typeof marker.setZIndexOffset === 'function') {
+        marker.setZIndexOffset(zIndex);
+    }
+}
+
 function showMapExportToast(message, type = 'info') {
     const toast = document.getElementById('mkMapExportToast');
+    const hint = document.querySelector('.mk-map-overlay--hint');
     if (!toast) return;
     toast.textContent = message;
     toast.className = `mk-map-export-toast mk-map-export-toast--${type}`;
     toast.hidden = false;
+    if (hint) hint.hidden = true;
     clearTimeout(showMapExportToast._timer);
-    showMapExportToast._timer = setTimeout(() => { toast.hidden = true; }, 4200);
+    showMapExportToast._timer = setTimeout(() => {
+        toast.hidden = true;
+        if (typeof showMapExportToast._restoreHint === 'function') {
+            showMapExportToast._restoreHint();
+        }
+    }, 4200);
 }
 
 async function captureMapScreenshot(map, meta = {}) {
@@ -2866,7 +2879,7 @@ function initMap(allMarkers, settings) {
                 } else {
                     prev.marker.setIcon(buildPinIcon(prev.data, { colorMode: layerColorMode }));
                 }
-                prev.marker.setZIndexOffset(0);
+                setMarkerZIndex(prev.marker, 0);
             }
         }
         selectedMarkerId = id;
@@ -2877,7 +2890,7 @@ function initMap(allMarkers, settings) {
             } else {
                 entry.marker.setIcon(buildPinIcon(entry.data, { selected: true, colorMode: layerColorMode }));
             }
-            entry.marker.setZIndexOffset(1200);
+            if (!isCircleLayer) setMarkerZIndex(entry.marker, 1200);
         }
         document.querySelectorAll('.mk-map-list-item').forEach((btn) => {
             btn.classList.toggle('is-selected', parseInt(btn.dataset.id, 10) === id);
@@ -2980,7 +2993,7 @@ function initMap(allMarkers, settings) {
             const isSelected = m.id === selectedMarkerId;
             const icon = buildPinIcon(m, { selected: isSelected, colorMode });
             const marker = registerMarker(L.marker([m.lat, m.lng], { icon }), m, localRegistry);
-            if (isSelected) marker.setZIndexOffset(1200);
+            if (isSelected) setMarkerZIndex(marker, 1200);
             marker.bindPopup(buildMapMarkerPopup(m), popupOpts);
             marker.on('click', () => selectMarker(m.id));
             marker.on('mouseover', () => highlightMarker(m.id, true));
@@ -3059,7 +3072,6 @@ function initMap(allMarkers, settings) {
             const marker = L.circleMarker([m.lat, m.lng], valueCircleStyle(m, { selected: isSelected }));
             marker._mkCircleStyle = (opts = {}) => valueCircleStyle(m, opts);
             registerMarker(marker, m, localRegistry);
-            if (isSelected) marker.setZIndexOffset(1200);
             marker.bindPopup(buildMapMarkerPopup(m), popupOpts);
             marker.on('click', () => selectMarker(m.id));
             marker.on('mouseover', () => highlightMarker(m.id, true));
@@ -3454,7 +3466,13 @@ function initMap(allMarkers, settings) {
     function refreshLayers() {
         const keepId = selectedMarkerId;
         if (layers[activeMode]) map.removeLayer(layers[activeMode]);
-        layers = buildLayers();
+        try {
+            layers = buildLayers();
+        } catch (err) {
+            console.error('Map layer rebuild failed:', err);
+            activeMode = 'markers';
+            layers = buildLayers();
+        }
         if (!layers[activeMode]) activeMode = 'markers';
         if (layers[activeMode]) {
             map.addLayer(layers[activeMode]);
@@ -3545,14 +3563,17 @@ function initMap(allMarkers, settings) {
         market: () => marketLegendHtml(),
     };
 
+    const MAP_HINT_MIN_ZOOM = 12;
+
+    function shouldShowZoomHint(mode) {
+        if (!['markers', 'market', 'value', 'full_deposit'].includes(mode)) return false;
+        if (mode === 'grid') return false;
+        return map.getZoom() < MAP_HINT_MIN_ZOOM;
+    }
+
     function updateMapChrome(mode) {
         if (hint) {
-            if (mode === 'grid') {
-                hint.hidden = true;
-            } else {
-                hint.hidden = !['markers', 'market', 'value', 'full_deposit'].includes(mode)
-                    || map.getZoom() >= clusterDisableZoom;
-            }
+            hint.hidden = !shouldShowZoomHint(mode);
         }
         const meta = legendMeta[mode] || legendMeta.markers;
         const count = layers._count ?? getFilteredMarkers().length;
@@ -3577,7 +3598,13 @@ function initMap(allMarkers, settings) {
         if (mode === activeMode) return;
         if (layers[activeMode]) map.removeLayer(layers[activeMode]);
         activeMode = mode;
-        layers = buildLayers();
+        try {
+            layers = buildLayers();
+        } catch (err) {
+            console.error('Map mode switch failed:', err);
+            activeMode = 'markers';
+            layers = buildLayers();
+        }
         if (!layers[activeMode]) activeMode = 'markers';
         map.addLayer(layers[activeMode] || layers.markers);
         syncMarkerRegistry();
@@ -3612,11 +3639,7 @@ function initMap(allMarkers, settings) {
     let zoomRefreshTimer;
     map.on('zoomend', () => {
         if (hint) {
-            if (activeMode === 'grid') {
-                hint.hidden = true;
-            } else if (['markers', 'market', 'value', 'full_deposit'].includes(activeMode)) {
-                hint.hidden = map.getZoom() >= clusterDisableZoom;
-            }
+            hint.hidden = !shouldShowZoomHint(activeMode);
         }
         if (activeMode === 'grid') {
             clearTimeout(zoomRefreshTimer);
@@ -3627,4 +3650,5 @@ function initMap(allMarkers, settings) {
     setupAdvancedFilters();
     setupSplitList();
     updateMapChrome(activeMode);
+    showMapExportToast._restoreHint = () => updateMapChrome(activeMode);
 }

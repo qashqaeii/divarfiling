@@ -878,7 +878,25 @@
 }
 
 .mk-map-pro .mk-map-overlay--hint {
-    bottom: 4.5rem;
+    bottom: 3.15rem;
+    z-index: 475;
+}
+
+/* Export toast — top of map stage, away from legend/hint */
+.mk-map-pro .mk-map-export-toast {
+    top: 3.25rem;
+    bottom: auto;
+    inset-inline-start: 50%;
+    transform: translateX(-50%);
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--map-glass-border);
+    box-shadow: var(--map-shadow);
+    max-width: min(92%, 420px);
+    text-align: center;
+}
+[dir="rtl"] .mk-map-pro .mk-map-export-toast {
+    transform: translateX(50%);
 }
 
 /* Clusters — toned down */
@@ -1220,10 +1238,7 @@
 
 /* ── Export toast ── */
 .mk-map-pro .mk-map-export-toast {
-    border-radius: 12px;
-    backdrop-filter: blur(10px);
-    border: 1px solid var(--map-glass-border);
-    box-shadow: var(--map-shadow);
+    z-index: 720;
 }
 
 /* غلبه بر minimal.css — لیست هرگز بالای نقشه */

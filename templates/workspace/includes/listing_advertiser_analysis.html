@@ -1,0 +1,126 @@
+{% load static %}
+{% if advertiser_analysis %}
+<div class="ws-adv-analysis" data-adv-analysis>
+    <button type="button"
+            class="ws-adv-analysis__badge crm-prop-badge ws-adv-analysis__badge--{{ advertiser_analysis.classification|default:'personal' }}"
+            data-adv-analysis-toggle
+            aria-expanded="false"
+            aria-controls="wsAdvAnalysisPanel"
+            title="تحلیل هوشمند آگهی‌دهنده">
+        <i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i>
+        <span class="ws-adv-analysis__badge-text">{{ advertiser_analysis.badge_label }}</span>
+        <i class="fas fa-chevron-down ws-adv-analysis__badge-caret" aria-hidden="true"></i>
+    </button>
+
+    <div class="ws-adv-analysis__panel"
+         id="wsAdvAnalysisPanel"
+         data-adv-analysis-panel
+         hidden
+         role="dialog"
+         aria-labelledby="wsAdvAnalysisTitle"
+         aria-modal="false">
+        <div class="ws-adv-analysis__panel-head">
+            <h2 class="ws-adv-analysis__title" id="wsAdvAnalysisTitle">
+                <i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i>
+                تحلیل هوشمند آگهی‌دهنده
+            </h2>
+            <button type="button" class="ws-adv-analysis__close" data-adv-analysis-close aria-label="بستن">
+                <i class="fas fa-times" aria-hidden="true"></i>
+            </button>
+        </div>
+
+        <div class="ws-adv-analysis__result ws-adv-analysis__result--{{ advertiser_analysis.classification }}">
+            <div class="ws-adv-analysis__classification">
+                <strong>{{ advertiser_analysis.classification_label_qualified }}</strong>
+                <span class="ws-adv-analysis__confidence">{{ advertiser_analysis.confidence_label }}</span>
+            </div>
+            <p class="ws-adv-analysis__summary">{{ advertiser_analysis.summary }}</p>
+        </div>
+
+        {% if advertiser_analysis.primary_reason_label %}
+        <div class="ws-adv-analysis__primary-reason">
+            <span class="ws-adv-analysis__section-label">دلیل اصلی</span>
+            <p>{{ advertiser_analysis.primary_reason_label }}</p>
+        </div>
+        {% endif %}
+
+        {% if advertiser_analysis.primary_signals %}
+        <div class="ws-adv-analysis__section">
+            <span class="ws-adv-analysis__section-label">نشانه‌های اصلی</span>
+            <ul class="ws-adv-analysis__signals ws-adv-analysis__signals--primary">
+                {% for signal in advertiser_analysis.primary_signals %}
+                <li>{{ signal }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        {% if advertiser_analysis.secondary_signals %}
+        <div class="ws-adv-analysis__section">
+            <span class="ws-adv-analysis__section-label">نشانه‌های تکمیلی</span>
+            <ul class="ws-adv-analysis__signals ws-adv-analysis__signals--secondary">
+                {% for signal in advertiser_analysis.secondary_signals %}
+                <li>{{ signal }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        {% if advertiser_analysis.owner_signals %}
+        <div class="ws-adv-analysis__section">
+            <span class="ws-adv-analysis__section-label">نشانه‌های مالکیت</span>
+            <ul class="ws-adv-analysis__signals ws-adv-analysis__signals--owner">
+                {% for signal in advertiser_analysis.owner_signals %}
+                <li>{{ signal }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        <p class="ws-adv-analysis__disclaimer">{{ advertiser_analysis.disclaimer }}</p>
+
+        <div class="ws-adv-analysis__feedback" data-adv-feedback-root>
+            <span class="ws-adv-analysis__section-label">آیا این تشخیص درست بود؟</span>
+            <div class="ws-adv-analysis__feedback-actions">
+                <button type="button"
+                        class="ws-adv-analysis__feedback-btn{% if advertiser_analysis.feedback.submitted == 'correct' %} is-active{% endif %}"
+                        data-adv-feedback="correct">
+                    <i class="fas fa-check" aria-hidden="true"></i> تشخیص درست بود
+                </button>
+                <button type="button"
+                        class="ws-adv-analysis__feedback-btn{% if advertiser_analysis.feedback.submitted == 'incorrect' %} is-active{% endif %}"
+                        data-adv-feedback="incorrect">
+                    <i class="fas fa-times" aria-hidden="true"></i> تشخیص اشتباه بود
+                </button>
+            </div>
+            <div class="ws-adv-analysis__correction{% if advertiser_analysis.feedback.submitted != 'incorrect' %} is-hidden{% endif %}"
+                 data-adv-correction
+                 {% if advertiser_analysis.feedback.submitted != 'incorrect' %}hidden{% endif %}>
+                <span class="ws-adv-analysis__section-label">به نظر شما این آگهی‌دهنده چیست؟</span>
+                <div class="ws-adv-analysis__correction-options">
+                    <label class="ws-adv-analysis__correction-opt">
+                        <input type="radio" name="adv_correction" value="genuine_personal"
+                               {% if advertiser_analysis.feedback.user_correction == 'genuine_personal' %}checked{% endif %}>
+                        مالک واقعی
+                    </label>
+                    <label class="ws-adv-analysis__correction-opt">
+                        <input type="radio" name="adv_correction" value="disguised_consultant"
+                               {% if advertiser_analysis.feedback.user_correction == 'disguised_consultant' %}checked{% endif %}>
+                        مشاور پنهان
+                    </label>
+                    <label class="ws-adv-analysis__correction-opt">
+                        <input type="radio" name="adv_correction" value="consultant"
+                               {% if advertiser_analysis.feedback.user_correction == 'consultant' %}checked{% endif %}>
+                        مشاور
+                    </label>
+                </div>
+                <button type="button" class="ws-adv-analysis__correction-submit" data-adv-correction-submit>
+                    ثبت نظر
+                </button>
+            </div>
+            <p class="ws-adv-analysis__feedback-msg" data-adv-feedback-msg hidden role="status"></p>
+        </div>
+    </div>
+</div>
+{{ advertiser_analysis_public|json_script:"ws-adv-analysis-data" }}
+{% endif %}

@@ -1,0 +1,25 @@
+{% extends "admin/change_list.html" %}
+
+{% block content %}
+{% if feedback_stats %}
+<div style="margin-bottom:1.25rem;padding:0.85rem 1rem;border:1px solid #e2e8f0;border-radius:8px;background:#f8fafc;">
+    <strong>خلاصه بازخورد تشخیص آگهی‌دهنده</strong>
+    <ul style="margin:0.5rem 0 0;padding-inline-start:1.2rem;">
+        <li>کل بازخوردها: {{ feedback_stats.total }}</li>
+        <li>درست: {{ feedback_stats.correct_count }} ({{ feedback_stats.correct_pct }}٪)</li>
+        <li>اشتباه: {{ feedback_stats.incorrect_count }} ({{ feedback_stats.incorrect_pct }}٪)</li>
+        <li>اشتباه روی «مالک واقعی»: {{ feedback_stats.incorrect_genuine }}</li>
+        <li>اشتباه روی «مشاور پنهان»: {{ feedback_stats.incorrect_disguised }}</li>
+    </ul>
+    {% if feedback_stats.by_version %}
+    <p style="margin:0.5rem 0 0;font-size:12px;color:#64748b;">
+        به تفکیک نسخه:
+        {% for row in feedback_stats.by_version %}
+        v{{ row.detector_version }} — {{ row.total }} ({{ row.correct }} درست / {{ row.incorrect }} اشتباه){% if not forloop.last %} · {% endif %}
+        {% endfor %}
+    </p>
+    {% endif %}
+</div>
+{% endif %}
+{{ block.super }}
+{% endblock %}

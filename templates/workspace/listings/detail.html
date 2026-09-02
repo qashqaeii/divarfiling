@@ -9,6 +9,7 @@
 <link rel="stylesheet" href="{% static 'css/listing-public-share.css' %}?v=2">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-prop-detail-mobile.css' %}?v=2">
 <link rel="stylesheet" href="{% static 'workspace/css/ws-ld-mobile.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'workspace/css/advertiser-analysis.css' %}?v=1">
 {% if listing.latitude and listing.longitude %}
 <link rel="stylesheet" href="{% static 'workspace/css/listing-map.css' %}?v=4">
 {% endif %}
@@ -133,11 +134,7 @@
                 <div class="crm-prop-hero-content">
                     <div class="crm-prop-hero-status-row">
                         <span class="crm-prop-badge crm-prop-badge--type">آگهی دیوار</span>
-                        {% if feat.advertiser %}
-                        <span class="crm-prop-badge crm-prop-badge--status" title="{{ feat.advertiser.title }}">
-                            <i class="fas {{ feat.advertiser.icon }}" aria-hidden="true"></i> {{ feat.advertiser.label }}
-                        </span>
-                        {% endif %}
+                        {% include 'workspace/includes/listing_advertiser_analysis.html' %}
                         {% if meta.is_favorite %}<span class="crm-prop-badge crm-prop-badge--deal">علاقه‌مند</span>{% endif %}
                         {% if crm_property %}<span class="crm-prop-badge crm-prop-badge--personal" title="این فایل قبلاً به فایل‌های شخصی شما اضافه شده است.">به فایل‌های شخصی اضافه شده</span>{% endif %}
                         {% if listing.is_expired %}<span class="crm-prop-badge ws-ld-badge-expired">منقضی</span>{% endif %}
@@ -855,6 +852,9 @@ document.addEventListener('DOMContentLoaded', function () {
     initListingDetailMap({ marker: marker, uiPrefix: 'wsLd', zoom: 17 });
 });
 </script>
+{% endif %}
+{% if advertiser_analysis %}
+<script src="{% static 'workspace/js/advertiser-analysis.js' %}?v=1"></script>
 {% endif %}
 {% if ai_enabled and has_bot_license %}
 <script src="{% static 'workspace/js/ai.js' %}?v=7"></script>

@@ -40,6 +40,7 @@ urlpatterns = [
     path('datasets/<uuid:dataset_id>/delete-consultants/', views.DeleteConsultantsView.as_view(), name='dataset_delete_consultants'),
     path('datasets/<uuid:dataset_id>/delete-disguised-consultants/', views.DeleteDisguisedConsultantsView.as_view(), name='dataset_delete_disguised_consultants'),
     path('datasets/<uuid:dataset_id>/listings/<int:listing_id>/benchmark/', views.BenchmarkAPIView.as_view(), name='listing_benchmark'),
+    path('datasets/<uuid:dataset_id>/listings/<int:listing_id>/advertiser-feedback/', views.ListingAdvertiserFeedbackView.as_view(), name='listing_advertiser_feedback'),
     path('datasets/<uuid:dataset_id>/listings/<int:listing_id>/share/', views.ListingShareManageView.as_view(), name='listing_share'),
 
     # Tools & Compare

@@ -1098,6 +1098,25 @@ class ListingDetailView(DatasetOwnerMixin, DetailView):
             )
         from workspace.services.listing_retention_status import retention_info_for_listing
         ctx['listing_retention'] = retention_info_for_listing(listing)
+        from workspace.models import AdvertiserSignalFeedback
+        from workspace.services.advertiser_analysis import (
+            analyze_listing_advertiser,
+            attach_feedback_state,
+            build_public_analysis_payload,
+        )
+        advertiser_analysis = analyze_listing_advertiser(listing)
+        feedback_obj = AdvertiserSignalFeedback.objects.filter(
+            user=self.request.user,
+            listing=listing,
+            detector_version=advertiser_analysis['detector_version'],
+        ).first()
+        attach_feedback_state(advertiser_analysis, feedback_obj)
+        ctx['advertiser_analysis'] = advertiser_analysis
+        ctx['advertiser_analysis_public'] = build_public_analysis_payload(advertiser_analysis)
+        ctx['advertiser_analysis_public']['feedback_url'] = reverse(
+            'workspace:listing_advertiser_feedback',
+            kwargs={'dataset_id': dataset.id, 'listing_id': listing.id},
+        )
         return ctx
 
     def _whatsapp_text(self, listing, tx):
@@ -1956,6 +1975,43 @@ class BenchmarkAPIView(DatasetOwnerMixin, View):
         df = listings_to_dataframe(dataset.listings.all())
         result = benchmark_listing(listing, df)
         return JsonResponse(result)
+
+
+class ListingAdvertiserFeedbackView(DatasetOwnerMixin, View):
+    """ثبت بازخورد کاربر روی تشخیص نوع آگهی‌دهنده."""
+
+    def post(self, request, dataset_id, listing_id):
+        import json
+
+        from workspace.services.advertiser_analysis import analyze_listing_advertiser
+        from workspace.services.advertiser_feedback import save_advertiser_feedback
+
+        dataset = self.get_dataset()
+        listing = get_object_or_404(dataset.listings, pk=listing_id)
+        try:
+            data = json.loads(request.body.decode('utf-8') or '{}')
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            return JsonResponse({'ok': False, 'error': 'درخواست نامعتبر است.'}, status=400)
+
+        feedback = str(data.get('feedback') or '').strip()
+        user_correction = str(data.get('user_correction') or '').strip()
+        analysis = analyze_listing_advertiser(listing)
+
+        obj, err = save_advertiser_feedback(
+            user=request.user,
+            listing=listing,
+            feedback=feedback,
+            predicted_classification=analysis['classification'],
+            detector_version=analysis['detector_version'],
+            user_correction=user_correction,
+        )
+        if err:
+            return JsonResponse({'ok': False, 'error': err}, status=400)
+        return JsonResponse({
+            'ok': True,
+            'feedback': obj.feedback if obj else feedback,
+            'user_correction': obj.user_correction if obj else user_correction,
+        })
 
 
 class OnboardingCompleteView(WorkspaceLoginMixin, View):

@@ -2,6 +2,7 @@ from django.contrib import admin
 from django.utils.html import format_html
 
 from workspace.models import (
+    AdvertiserSignalFeedback,
     CRMProperty, Customer, CustomerActivity, CustomerDocument, CustomerListing,
     CRMPropertyPublicShare, PropertyMatchAlert,
     Dataset, Listing, ListingMeta, ListingPublicShare, PriceHistory,
@@ -11,6 +12,24 @@ from workspace.models import (
 from workspace.services.support_tickets import close_ticket, reopen_ticket
 
 from workspace.academy import admin as academy_admin  # noqa: F401
+
+
+@admin.register(AdvertiserSignalFeedback)
+class AdvertiserSignalFeedbackAdmin(admin.ModelAdmin):
+    list_display = (
+        'user', 'listing_token', 'predicted_classification',
+        'feedback', 'user_correction', 'detector_version', 'updated_at',
+    )
+    list_filter = ('feedback', 'predicted_classification', 'detector_version')
+    search_fields = ('listing_token', 'user__username')
+    raw_id_fields = ('user', 'listing')
+    readonly_fields = ('created_at', 'updated_at')
+
+    def changelist_view(self, request, extra_context=None):
+        from workspace.services.advertiser_feedback import feedback_analytics_summary
+        extra_context = extra_context or {}
+        extra_context['feedback_stats'] = feedback_analytics_summary()
+        return super().changelist_view(request, extra_context=extra_context)
 
 
 @admin.register(PropertyMatchAlert)

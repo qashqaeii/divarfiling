@@ -8,6 +8,7 @@ from workspace.services.advertiser_signal_loader import ensure_advertiser_signal
 ensure_advertiser_signal_importable()
 
 from advertiser_signal import (  # noqa: E402
+    ADVERTISER_DETECTOR_VERSION,
     ADVERTISER_FILTER_ALL,
     ADVERTISER_FILTER_CONSULTANT,
     ADVERTISER_FILTER_GENUINE,
@@ -18,6 +19,7 @@ from advertiser_signal import (  # noqa: E402
     ADVERTISER_SIGNAL_DISGUISED,
     ADVERTISER_SIGNAL_GENUINE_PERSONAL,
     ADVERTISER_SIGNAL_LABELS,
+    analyze_advertiser_signal,
     advertiser_display_label_for_row,
     advertiser_signal_label,
     count_signals,
@@ -49,6 +51,7 @@ __all__ = [
     'ADVERTISER_SIGNAL_DISGUISED',
     'ADVERTISER_SIGNAL_GENUINE_PERSONAL',
     'ADVERTISER_SIGNAL_LABELS',
+    'analyze_advertiser_signal',
     'advertiser_display_label_for_row',
     'advertiser_signal_label',
     'count_listings_by_advertiser_display',

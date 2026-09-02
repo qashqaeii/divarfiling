@@ -74,14 +74,14 @@ class AdvertiserSignalDetectionTest(TestCase):
                 )
                 self.assertEqual(signal, ADVERTISER_SIGNAL_GENUINE_PERSONAL)
 
-    def test_owner_affirmation_overrides_disguised_markers(self):
-        """عبارت صریح مالکیت حتی اگر عبارت مشاور پنهان هم باشد → مالک."""
+    def test_colleague_restriction_overrides_owner_claim(self):
+        """منع تماس همکاران بر ادعای مالکیت اولویت دارد — نشانه مشاور پنهان."""
         signal = detect_advertiser_signal(
             title='اجاره آپارتمان',
             description='من مالک هستم. لطفاً همکارهای عزیز تماس نگیرید.',
             business_type='personal',
         )
-        self.assertEqual(signal, ADVERTISER_SIGNAL_GENUINE_PERSONAL)
+        self.assertEqual(signal, ADVERTISER_SIGNAL_DISGUISED)
         self.assertTrue(has_disguised_consultant_markers(
             title='',
             description='لطفاً همکارهای عزیز تماس نگیرید.',

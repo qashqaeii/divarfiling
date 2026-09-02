@@ -129,6 +129,60 @@ class Listing(models.Model):
         return None
 
 
+class AdvertiserSignalFeedback(models.Model):
+    """بازخورد کاربر روی تشخیص نوع آگهی‌دهنده — برای calibration آینده."""
+    FEEDBACK_CORRECT = 'correct'
+    FEEDBACK_INCORRECT = 'incorrect'
+    FEEDBACK_CHOICES = [
+        (FEEDBACK_CORRECT, 'درست'),
+        (FEEDBACK_INCORRECT, 'اشتباه'),
+    ]
+    CORRECTION_GENUINE = 'genuine_personal'
+    CORRECTION_DISGUISED = 'disguised_consultant'
+    CORRECTION_CONSULTANT = 'consultant'
+    CORRECTION_CHOICES = [
+        (CORRECTION_GENUINE, 'مالک واقعی'),
+        (CORRECTION_DISGUISED, 'مشاور پنهان'),
+        (CORRECTION_CONSULTANT, 'مشاور'),
+    ]
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+        related_name='advertiser_signal_feedbacks', verbose_name='کاربر',
+    )
+    listing = models.ForeignKey(
+        Listing, on_delete=models.CASCADE,
+        related_name='advertiser_feedbacks', verbose_name='آگهی',
+    )
+    listing_token = models.CharField(max_length=100, db_index=True, verbose_name='شناسه آگهی')
+    predicted_classification = models.CharField(max_length=32, verbose_name='تشخیص سیستم')
+    detector_version = models.PositiveSmallIntegerField(default=2, verbose_name='نسخه تشخیص')
+    feedback = models.CharField(max_length=16, choices=FEEDBACK_CHOICES, verbose_name='بازخورد')
+    user_correction = models.CharField(
+        max_length=32, blank=True, default='', choices=CORRECTION_CHOICES,
+        verbose_name='اصلاح کاربر',
+    )
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='تاریخ ثبت')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='آخرین به‌روزرسانی')
+
+    class Meta:
+        verbose_name = 'بازخورد تشخیص آگهی‌دهنده'
+        verbose_name_plural = 'بازخورد تشخیص آگهی‌دهنده'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'listing', 'detector_version'],
+                name='uniq_advertiser_feedback_per_version',
+            ),
+        ]
+        indexes = [
+            models.Index(fields=['detector_version', 'feedback']),
+            models.Index(fields=['predicted_classification', 'feedback']),
+        ]
+
+    def __str__(self):
+        return f'{self.user_id}:{self.listing_token}:v{self.detector_version}:{self.feedback}'
+
+
 class UserListingSuppression(models.Model):
     """آگهی‌هایی که کاربر عمداً از فایلینگ حذف کرده — مانع نمایش مجدد در استخراج."""
     user = models.ForeignKey(

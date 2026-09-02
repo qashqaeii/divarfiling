@@ -2478,21 +2478,8 @@ function setMarkerZIndex(marker, zIndex) {
     }
 }
 
-function showMapExportToast(message, type = 'info') {
-    const toast = document.getElementById('mkMapExportToast');
-    const hint = document.querySelector('.mk-map-overlay--hint');
-    if (!toast) return;
-    toast.textContent = message;
-    toast.className = `mk-map-export-toast mk-map-export-toast--${type}`;
-    toast.hidden = false;
-    if (hint) hint.hidden = true;
-    clearTimeout(showMapExportToast._timer);
-    showMapExportToast._timer = setTimeout(() => {
-        toast.hidden = true;
-        if (typeof showMapExportToast._restoreHint === 'function') {
-            showMapExportToast._restoreHint();
-        }
-    }, 4200);
+function showMapExportToast() {
+    /* toast UI removed */
 }
 
 async function captureMapScreenshot(map, meta = {}) {
@@ -3650,5 +3637,4 @@ function initMap(allMarkers, settings) {
     setupAdvancedFilters();
     setupSplitList();
     updateMapChrome(activeMode);
-    showMapExportToast._restoreHint = () => updateMapChrome(activeMode);
 }

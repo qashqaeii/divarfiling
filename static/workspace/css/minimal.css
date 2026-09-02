@@ -2145,46 +2145,6 @@ body.ws-body::before { opacity: 0.45; }
 }
 .mk-map-hud-status-sep { opacity: 0.45; }
 
-.mk-map-export-toast {
-    position: absolute;
-    z-index: 720;
-    top: 3.25rem;
-    bottom: auto;
-    inset-inline-start: 50%;
-    transform: translateX(-50%);
-    padding: 0.45rem 0.85rem;
-    border-radius: 10px;
-    font-size: 0.65rem;
-    font-weight: 700;
-    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.14);
-    pointer-events: none;
-    max-width: min(92%, 420px);
-    text-align: center;
-}
-[dir="rtl"] .mk-map-export-toast { transform: translateX(50%); }
-.mk-map-export-toast--success {
-    background: #ecfdf5;
-    color: #047857;
-    border: 1px solid rgba(16, 185, 129, 0.25);
-}
-.mk-map-export-toast--error {
-    background: #fef2f2;
-    color: #b91c1c;
-    border: 1px solid rgba(239, 68, 68, 0.25);
-}
-.mk-map-export-toast--info {
-    background: #eff6ff;
-    color: #1d4ed8;
-    border: 1px solid rgba(59, 130, 246, 0.25);
-}
-
-.mk-map-stage.mk-map-capturing .mk-map-hud,
-.mk-map-stage.mk-map-capturing .mk-map-overlay,
-.mk-map-stage.mk-map-capturing .mk-map-export-toast {
-    opacity: 0 !important;
-    pointer-events: none !important;
-}
-
 .mk-map-pro .leaflet-control-scale {
     margin-bottom: 0.35rem !important;
     margin-inline-end: 0.5rem !important;

@@ -9,11 +9,12 @@ from django.db import transaction
 from django.db.models import Count, Exists, OuterRef, Q, QuerySet
 from django.utils import timezone
 
+from workspace.constants import FILING_LISTING_RETENTION_DAYS_DEFAULT
 from workspace.models import Listing, ListingMeta, ListingPublicShare
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_RETENTION_DAYS = 31
+DEFAULT_RETENTION_DAYS = FILING_LISTING_RETENTION_DAYS_DEFAULT
 MIN_RETENTION_DAYS = 1
 MAX_RETENTION_DAYS = 3650
 DEFAULT_BATCH_SIZE = 500
@@ -130,6 +131,7 @@ def _listing_retention_protection_q() -> Q:
                 tag__in=WORKFLOW_RETENTION_TAGS,
             ),
         ))
+        | Q(_customer_listing_relation_exists())
     )
 
 
@@ -220,12 +222,20 @@ def build_listing_meta_audit_counts(*, as_of=None) -> dict:
     }
 
 
-def purge_stale_filing_listings(*, dry_run: bool = False, batch_size: int = DEFAULT_BATCH_SIZE) -> dict:
+def purge_stale_filing_listings(
+    *,
+    dry_run: bool = False,
+    batch_size: int = DEFAULT_BATCH_SIZE,
+    max_delete: int | None = None,
+) -> dict:
     """
     حذف آگهی‌های قدیمی فایلینگ.
     CRMProperty / سرکوب کاربر / ListingMeta / CustomerListing دست نخورده.
-    آگهی با share فعال، علاقه‌مند، یادداشت، یا برچسب workflow حذف نمی‌شود.
+    آگهی با share فعال، علاقه‌مند، یادداشت، برچسب workflow، یا CustomerListing حذف نمی‌شود.
     """
+    if max_delete is not None and max_delete < 0:
+        raise ValueError('max_delete must be non-negative')
+
     batch_size = max(1, min(batch_size, 5000))
     breakdown = build_retention_breakdown()
     stats = {
@@ -234,21 +244,31 @@ def purge_stale_filing_listings(*, dry_run: bool = False, batch_size: int = DEFA
         'deleted': 0,
         'affected_datasets': 0,
         'batches': 0,
+        'remaining_eligible': breakdown['final_eligible'],
         'dry_run': dry_run,
         'batch_size': batch_size,
+        'max_delete': max_delete,
     }
-    if dry_run or stats['eligible'] == 0:
+    if dry_run or stats['eligible'] == 0 or max_delete == 0:
         return stats
 
     affected_dataset_ids: set = set()
     deleted_listings = 0
     batches = 0
+    delete_quota = max_delete
 
     while True:
+        if delete_quota is not None and delete_quota <= 0:
+            break
+
+        fetch_size = batch_size
+        if delete_quota is not None:
+            fetch_size = min(batch_size, delete_quota)
+
         batch_ids = list(
             purge_eligible_filing_listings_qs()
             .order_by('pk')
-            .values_list('pk', flat=True)[:batch_size]
+            .values_list('pk', flat=True)[:fetch_size]
         )
         if not batch_ids:
             break
@@ -263,6 +283,9 @@ def purge_stale_filing_listings(*, dry_run: bool = False, batch_size: int = DEFA
             affected_dataset_ids.update(batch_dataset_ids)
             _sync_dataset_row_counts(batch_dataset_ids)
 
+        if delete_quota is not None:
+            delete_quota -= batch_deleted
+
         batches += 1
         logger.info(
             'purge_stale_filing_listings batch=%s deleted_in_batch=%s total_deleted=%s',
@@ -274,6 +297,7 @@ def purge_stale_filing_listings(*, dry_run: bool = False, batch_size: int = DEFA
     stats['deleted'] = deleted_listings
     stats['affected_datasets'] = len(affected_dataset_ids)
     stats['batches'] = batches
+    stats['remaining_eligible'] = purge_eligible_filing_listings_qs().count()
     logger.info(
         'purge_stale_filing_listings deleted=%s eligible=%s datasets=%s batches=%s retention_days=%s',
         stats['deleted'],

@@ -542,7 +542,7 @@ AGENCY_COMMAND_CENTER_FEATURES = {
 MESSAGE_RETENTION_DAYS = 30
 
 # فایلینگ — نگه‌داری موقت آگهی‌های استخراج‌شده (روز)
-FILING_LISTING_RETENTION_DAYS_DEFAULT = 31
+FILING_LISTING_RETENTION_DAYS_DEFAULT = 62
 
 # سرکوب آگهی — دلیل حذف عمدی توسط کاربر
 LISTING_SUPPRESSION_REASON_USER_DELETED = 'user_deleted'

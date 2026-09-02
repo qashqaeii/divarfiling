@@ -15,10 +15,12 @@ from mobile_api.services.extraction_ingest import ingest_mobile_extraction
 from workspace.models import CRMProperty, Dataset, Listing, UserListingSuppression
 from workspace.services.crm import add_listing_to_personal_files
 from workspace.services.filing_delete import delete_divar_listing_from_filing
+from workspace.constants import FILING_LISTING_RETENTION_DAYS_DEFAULT
 from workspace.services.filing_retention import (
     _delete_listing_batch,
     build_retention_breakdown,
     purge_stale_filing_listings,
+    stale_filing_listings_qs,
 )
 from workspace.services.importer import import_dataset
 from workspace.services.ingest_mode import INGEST_MODE_INCREMENTAL, INGEST_MODE_SNAPSHOT
@@ -27,6 +29,11 @@ from workspace.services.listing_suppression import is_suppressed
 from workspace.views import _soft_delete_datasets
 
 User = get_user_model()
+
+RETENTION_DAYS = FILING_LISTING_RETENTION_DAYS_DEFAULT
+STALE_LISTING_AGE_DAYS = RETENTION_DAYS + 5
+FRESH_LISTING_AGE_DAYS = 5
+BOUNDARY_RETAINED_AGE_DAYS = RETENTION_DAYS - 1
 
 
 def _rent_detail(token: str) -> dict:
@@ -166,10 +173,10 @@ class CRMSafetyWithSuppressionTests(TestCase):
 
     def test_retention_does_not_create_suppression(self):
         ds = Dataset.objects.create(user=self.user, name='old')
-        old = timezone.now() - timezone.timedelta(days=40)
+        old = timezone.now() - timezone.timedelta(days=STALE_LISTING_AGE_DAYS)
         listing = Listing.objects.create(dataset=ds, token='old-tok', title='قدیمی')
         Listing.objects.filter(pk=listing.pk).update(created_at=old, published_at=None)
-        with override_settings(FILING_LISTING_RETENTION_DAYS=31):
+        with override_settings(FILING_LISTING_RETENTION_DAYS=RETENTION_DAYS):
             stats = purge_stale_filing_listings(dry_run=False)
         self.assertGreaterEqual(stats['deleted'], 1)
         self.assertFalse(
@@ -241,23 +248,23 @@ class RetentionTests(TestCase):
         self.dataset = Dataset.objects.create(user=self.user, name='ret', is_active=True)
 
     def test_stale_listing_purged_fresh_kept(self):
-        old = timezone.now() - timezone.timedelta(days=40)
+        old = timezone.now() - timezone.timedelta(days=STALE_LISTING_AGE_DAYS)
         fresh = timezone.now() - timezone.timedelta(days=5)
         stale = Listing.objects.create(dataset=self.dataset, token='stale-1', title='قدیمی')
         keep = Listing.objects.create(dataset=self.dataset, token='fresh-1', title='تازه')
         Listing.objects.filter(pk=stale.pk).update(created_at=old, published_at=None)
         Listing.objects.filter(pk=keep.pk).update(created_at=fresh, published_at=fresh)
-        with override_settings(FILING_LISTING_RETENTION_DAYS=31):
+        with override_settings(FILING_LISTING_RETENTION_DAYS=RETENTION_DAYS):
             stats = purge_stale_filing_listings(dry_run=False)
         self.assertGreaterEqual(stats['deleted'], 1)
         self.assertFalse(Listing.objects.filter(token='stale-1').exists())
         self.assertTrue(Listing.objects.filter(token='fresh-1').exists())
 
     def test_dry_run_makes_no_changes(self):
-        old = timezone.now() - timezone.timedelta(days=40)
+        old = timezone.now() - timezone.timedelta(days=STALE_LISTING_AGE_DAYS)
         listing = Listing.objects.create(dataset=self.dataset, token='dry-1', title='x')
         Listing.objects.filter(pk=listing.pk).update(created_at=old)
-        with override_settings(FILING_LISTING_RETENTION_DAYS=31):
+        with override_settings(FILING_LISTING_RETENTION_DAYS=RETENTION_DAYS):
             stats = purge_stale_filing_listings(dry_run=True)
         self.assertGreaterEqual(stats['base_age_eligible'], 1)
         self.assertGreaterEqual(stats['final_eligible'], 1)
@@ -267,12 +274,12 @@ class RetentionTests(TestCase):
         self.assertTrue(Listing.objects.filter(token='dry-1').exists())
 
     def test_retention_syncs_row_count(self):
-        old = timezone.now() - timezone.timedelta(days=40)
+        old = timezone.now() - timezone.timedelta(days=STALE_LISTING_AGE_DAYS)
         listing = Listing.objects.create(dataset=self.dataset, token='sync-1', title='x')
         Listing.objects.filter(pk=listing.pk).update(created_at=old)
         self.dataset.row_count = 1
         self.dataset.save(update_fields=['row_count'])
-        with override_settings(FILING_LISTING_RETENTION_DAYS=31):
+        with override_settings(FILING_LISTING_RETENTION_DAYS=RETENTION_DAYS):
             purge_stale_filing_listings(dry_run=False)
         self.dataset.refresh_from_db()
         self.assertEqual(self.dataset.row_count, 0)
@@ -371,7 +378,7 @@ class RetentionCascadeTests(TestCase):
     def test_active_public_share_protected_from_retention(self):
         from workspace.models import ListingPublicShare
 
-        old = timezone.now() - timezone.timedelta(days=40)
+        old = timezone.now() - timezone.timedelta(days=STALE_LISTING_AGE_DAYS)
         listing = Listing.objects.create(dataset=self.dataset, token='share-tok', title='x')
         Listing.objects.filter(pk=listing.pk).update(created_at=old)
         share = ListingPublicShare.objects.create(
@@ -380,7 +387,7 @@ class RetentionCascadeTests(TestCase):
             created_by=self.user,
             is_active=True,
         )
-        with override_settings(FILING_LISTING_RETENTION_DAYS=31):
+        with override_settings(FILING_LISTING_RETENTION_DAYS=RETENTION_DAYS):
             stats = purge_stale_filing_listings(dry_run=False)
         self.assertEqual(stats['deleted'], 0)
         self.assertTrue(Listing.objects.filter(pk=listing.pk).exists())
@@ -389,7 +396,7 @@ class RetentionCascadeTests(TestCase):
     def test_inactive_public_share_not_protected(self):
         from workspace.models import ListingPublicShare
 
-        old = timezone.now() - timezone.timedelta(days=40)
+        old = timezone.now() - timezone.timedelta(days=STALE_LISTING_AGE_DAYS)
         listing = Listing.objects.create(dataset=self.dataset, token='share-off', title='x')
         Listing.objects.filter(pk=listing.pk).update(created_at=old)
         share = ListingPublicShare.objects.create(
@@ -398,7 +405,7 @@ class RetentionCascadeTests(TestCase):
             created_by=self.user,
             is_active=False,
         )
-        with override_settings(FILING_LISTING_RETENTION_DAYS=31):
+        with override_settings(FILING_LISTING_RETENTION_DAYS=RETENTION_DAYS):
             stats = purge_stale_filing_listings(dry_run=False)
         self.assertGreaterEqual(stats['deleted'], 1)
         self.assertFalse(Listing.objects.filter(pk=listing.pk).exists())
@@ -407,7 +414,7 @@ class RetentionCascadeTests(TestCase):
     def test_crm_property_survives_retention(self):
         from workspace.models import CRMProperty
 
-        old = timezone.now() - timezone.timedelta(days=40)
+        old = timezone.now() - timezone.timedelta(days=STALE_LISTING_AGE_DAYS)
         listing = Listing.objects.create(dataset=self.dataset, token='crm-ret', title='x')
         Listing.objects.filter(pk=listing.pk).update(created_at=old)
         prop = CRMProperty.objects.create(
@@ -417,7 +424,7 @@ class RetentionCascadeTests(TestCase):
             source_external_id='crm-ret',
             token='crm-ret',
         )
-        with override_settings(FILING_LISTING_RETENTION_DAYS=31):
+        with override_settings(FILING_LISTING_RETENTION_DAYS=RETENTION_DAYS):
             purge_stale_filing_listings(dry_run=False)
         self.assertTrue(CRMProperty.objects.filter(pk=prop.pk).exists())
 
@@ -429,7 +436,7 @@ class RetentionProtectionTests(TestCase):
 
     def _stale(self, token: str):
         listing = Listing.objects.create(dataset=self.dataset, token=token, title='x')
-        old = timezone.now() - timezone.timedelta(days=40)
+        old = timezone.now() - timezone.timedelta(days=STALE_LISTING_AGE_DAYS)
         Listing.objects.filter(pk=listing.pk).update(created_at=old, published_at=old)
         return listing
 
@@ -438,7 +445,7 @@ class RetentionProtectionTests(TestCase):
 
         listing = self._stale('fav-prot')
         ListingMeta.objects.create(user=self.user, token=listing.token, is_favorite=True)
-        with override_settings(FILING_LISTING_RETENTION_DAYS=31):
+        with override_settings(FILING_LISTING_RETENTION_DAYS=RETENTION_DAYS):
             stats = purge_stale_filing_listings(dry_run=False)
         self.assertEqual(stats['deleted'], 0)
         self.assertTrue(Listing.objects.filter(token='fav-prot').exists())
@@ -448,7 +455,7 @@ class RetentionProtectionTests(TestCase):
 
         listing = self._stale('note-prot')
         ListingMeta.objects.create(user=self.user, token=listing.token, note='تماس گرفتم')
-        with override_settings(FILING_LISTING_RETENTION_DAYS=31):
+        with override_settings(FILING_LISTING_RETENTION_DAYS=RETENTION_DAYS):
             stats = purge_stale_filing_listings(dry_run=False)
         self.assertEqual(stats['deleted'], 0)
         self.assertTrue(Listing.objects.filter(token='note-prot').exists())
@@ -458,7 +465,7 @@ class RetentionProtectionTests(TestCase):
 
         listing = self._stale('tag-prot')
         ListingMeta.objects.create(user=self.user, token=listing.token, tag='بازدید')
-        with override_settings(FILING_LISTING_RETENTION_DAYS=31):
+        with override_settings(FILING_LISTING_RETENTION_DAYS=RETENTION_DAYS):
             stats = purge_stale_filing_listings(dry_run=False)
         self.assertEqual(stats['deleted'], 0)
         self.assertTrue(Listing.objects.filter(token='tag-prot').exists())
@@ -468,30 +475,43 @@ class RetentionProtectionTests(TestCase):
 
         listing = self._stale('tag-rej')
         ListingMeta.objects.create(user=self.user, token=listing.token, tag='رد')
-        with override_settings(FILING_LISTING_RETENTION_DAYS=31):
+        with override_settings(FILING_LISTING_RETENTION_DAYS=RETENTION_DAYS):
             stats = purge_stale_filing_listings(dry_run=False)
         self.assertGreaterEqual(stats['deleted'], 1)
         self.assertFalse(Listing.objects.filter(token='tag-rej').exists())
 
-    def test_customer_listing_not_protected_but_reported(self):
+    def test_customer_listing_protected_from_retention(self):
         from workspace.models import Customer, CustomerListing
 
         listing = self._stale('cust-rel')
         customer = Customer.objects.create(user=self.user, name='مشتری')
         CustomerListing.objects.create(customer=customer, token=listing.token, title='snap')
-        with override_settings(FILING_LISTING_RETENTION_DAYS=31):
+        with override_settings(FILING_LISTING_RETENTION_DAYS=RETENTION_DAYS):
             breakdown = build_retention_breakdown()
             stats = purge_stale_filing_listings(dry_run=False)
         self.assertGreaterEqual(breakdown['protected_customer_relation'], 1)
-        self.assertGreaterEqual(stats['deleted'], 1)
+        self.assertEqual(stats['deleted'], 0)
+        self.assertTrue(Listing.objects.filter(token='cust-rel').exists())
         self.assertTrue(CustomerListing.objects.filter(token='cust-rel').exists())
 
+    def test_customer_relation_counts_in_unique_protected(self):
+        from workspace.models import Customer, CustomerListing
+
+        listing = self._stale('cust-uniq')
+        customer = Customer.objects.create(user=self.user, name='مشتری')
+        CustomerListing.objects.create(customer=customer, token=listing.token, title='snap')
+        with override_settings(FILING_LISTING_RETENTION_DAYS=RETENTION_DAYS):
+            breakdown = build_retention_breakdown()
+        self.assertEqual(breakdown['protected_customer_relation'], 1)
+        self.assertEqual(breakdown['unique_protected'], 1)
+        self.assertEqual(breakdown['final_eligible'], 0)
+
     def test_multi_batch_purge(self):
-        old = timezone.now() - timezone.timedelta(days=40)
+        old = timezone.now() - timezone.timedelta(days=STALE_LISTING_AGE_DAYS)
         for i in range(3):
             listing = Listing.objects.create(dataset=self.dataset, token=f'batch-{i}', title='x')
             Listing.objects.filter(pk=listing.pk).update(created_at=old, published_at=old)
-        with override_settings(FILING_LISTING_RETENTION_DAYS=31):
+        with override_settings(FILING_LISTING_RETENTION_DAYS=RETENTION_DAYS):
             stats = purge_stale_filing_listings(dry_run=False, batch_size=1)
         self.assertEqual(stats['deleted'], 3)
         self.assertEqual(stats['batches'], 3)
@@ -509,7 +529,7 @@ class RetentionProtectionTests(TestCase):
             created_by=self.user,
             is_active=True,
         )
-        with override_settings(FILING_LISTING_RETENTION_DAYS=31):
+        with override_settings(FILING_LISTING_RETENTION_DAYS=RETENTION_DAYS):
             breakdown = build_retention_breakdown()
         self.assertGreaterEqual(breakdown['protected_public_share'], 1)
         self.assertGreaterEqual(breakdown['protected_favorite'], 1)
@@ -518,7 +538,7 @@ class RetentionProtectionTests(TestCase):
         self.assertEqual(breakdown['final_eligible'], breakdown['base_age_eligible'] - breakdown['unique_protected'])
 
     def test_partial_batch_failure_keeps_row_count_correct(self):
-        old = timezone.now() - timezone.timedelta(days=40)
+        old = timezone.now() - timezone.timedelta(days=STALE_LISTING_AGE_DAYS)
         for i in range(3):
             listing = Listing.objects.create(dataset=self.dataset, token=f'fail-{i}', title='x')
             Listing.objects.filter(pk=listing.pk).update(created_at=old, published_at=old)
@@ -535,7 +555,7 @@ class RetentionProtectionTests(TestCase):
             return real_delete(batch_ids)
 
         with patch('workspace.services.filing_retention._delete_listing_batch', side_effect=fail_on_second_batch):
-            with override_settings(FILING_LISTING_RETENTION_DAYS=31):
+            with override_settings(FILING_LISTING_RETENTION_DAYS=RETENTION_DAYS):
                 with self.assertRaises(RuntimeError):
                     purge_stale_filing_listings(dry_run=False, batch_size=1)
 
@@ -551,7 +571,7 @@ class RetentionCrossUserTests(TestCase):
         self.user_b = User.objects.create_user(username='09131110002', password='x', phone='09131110002')
         self.dataset_a = Dataset.objects.create(user=self.user_a, name='a', is_active=True)
         self.dataset_b = Dataset.objects.create(user=self.user_b, name='b', is_active=True)
-        self.old = timezone.now() - timezone.timedelta(days=40)
+        self.old = timezone.now() - timezone.timedelta(days=STALE_LISTING_AGE_DAYS)
 
     def _stale(self, dataset, token: str):
         listing = Listing.objects.create(dataset=dataset, token=token, title='x')
@@ -564,7 +584,7 @@ class RetentionCrossUserTests(TestCase):
         self._stale(self.dataset_a, 'shared-tok')
         self._stale(self.dataset_b, 'shared-tok')
         ListingMeta.objects.create(user=self.user_a, token='shared-tok', is_favorite=True)
-        with override_settings(FILING_LISTING_RETENTION_DAYS=31):
+        with override_settings(FILING_LISTING_RETENTION_DAYS=RETENTION_DAYS):
             breakdown = build_retention_breakdown()
             purge_stale_filing_listings(dry_run=False)
         self.assertEqual(breakdown['protected_favorite'], 1)
@@ -578,7 +598,7 @@ class RetentionCrossUserTests(TestCase):
         self._stale(self.dataset_a, 'note-shared')
         self._stale(self.dataset_b, 'note-shared')
         ListingMeta.objects.create(user=self.user_a, token='note-shared', note='یادداشت')
-        with override_settings(FILING_LISTING_RETENTION_DAYS=31):
+        with override_settings(FILING_LISTING_RETENTION_DAYS=RETENTION_DAYS):
             breakdown = build_retention_breakdown()
             purge_stale_filing_listings(dry_run=False)
         self.assertEqual(breakdown['protected_note'], 1)
@@ -592,7 +612,7 @@ class RetentionCrossUserTests(TestCase):
         self._stale(self.dataset_a, 'tag-shared')
         self._stale(self.dataset_b, 'tag-shared')
         ListingMeta.objects.create(user=self.user_a, token='tag-shared', tag='تماس')
-        with override_settings(FILING_LISTING_RETENTION_DAYS=31):
+        with override_settings(FILING_LISTING_RETENTION_DAYS=RETENTION_DAYS):
             breakdown = build_retention_breakdown()
             purge_stale_filing_listings(dry_run=False)
         self.assertEqual(breakdown['protected_workflow_tag'], 1)
@@ -607,15 +627,116 @@ class RetentionCrossUserTests(TestCase):
         self._stale(self.dataset_b, 'cust-shared')
         customer = Customer.objects.create(user=self.user_a, name='مشتری A')
         CustomerListing.objects.create(customer=customer, token='cust-shared', title='snap')
-        with override_settings(FILING_LISTING_RETENTION_DAYS=31):
+        with override_settings(FILING_LISTING_RETENTION_DAYS=RETENTION_DAYS):
             breakdown = build_retention_breakdown()
             purge_stale_filing_listings(dry_run=False)
         self.assertEqual(breakdown['protected_customer_relation'], 1)
-        self.assertEqual(breakdown['final_eligible'], 2)
+        self.assertEqual(breakdown['final_eligible'], 1)
         purge_stale_filing_listings(dry_run=False)
-        self.assertFalse(Listing.objects.filter(dataset=self.dataset_a, token='cust-shared').exists())
+        self.assertTrue(Listing.objects.filter(dataset=self.dataset_a, token='cust-shared').exists())
         self.assertFalse(Listing.objects.filter(dataset=self.dataset_b, token='cust-shared').exists())
         self.assertTrue(CustomerListing.objects.filter(token='cust-shared').exists())
+
+
+class Retention62DayThresholdTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='09132220001', password='x')
+        self.dataset = Dataset.objects.create(user=self.user, name='thresh', is_active=True)
+
+    def test_listing_61_days_retained(self):
+        listing = Listing.objects.create(dataset=self.dataset, token='d61', title='x')
+        age = timezone.now() - timezone.timedelta(days=BOUNDARY_RETAINED_AGE_DAYS)
+        Listing.objects.filter(pk=listing.pk).update(published_at=age, created_at=age)
+        with override_settings(FILING_LISTING_RETENTION_DAYS=RETENTION_DAYS):
+            self.assertFalse(stale_filing_listings_qs().filter(pk=listing.pk).exists())
+            stats = purge_stale_filing_listings(dry_run=False)
+        self.assertEqual(stats['deleted'], 0)
+        self.assertTrue(Listing.objects.filter(pk=listing.pk).exists())
+
+    def test_listing_older_than_62_days_age_eligible(self):
+        listing = Listing.objects.create(dataset=self.dataset, token='d67', title='x')
+        age = timezone.now() - timezone.timedelta(days=STALE_LISTING_AGE_DAYS)
+        Listing.objects.filter(pk=listing.pk).update(published_at=age, created_at=age)
+        with override_settings(FILING_LISTING_RETENTION_DAYS=RETENTION_DAYS):
+            self.assertTrue(stale_filing_listings_qs().filter(pk=listing.pk).exists())
+            stats = purge_stale_filing_listings(dry_run=False)
+        self.assertGreaterEqual(stats['deleted'], 1)
+        self.assertFalse(Listing.objects.filter(pk=listing.pk).exists())
+
+    def test_exactly_62_day_cutoff_not_age_eligible(self):
+        as_of = timezone.now()
+        listing = Listing.objects.create(dataset=self.dataset, token='d62', title='x')
+        cutoff = as_of - timezone.timedelta(days=RETENTION_DAYS)
+        Listing.objects.filter(pk=listing.pk).update(published_at=cutoff, created_at=cutoff)
+        with override_settings(FILING_LISTING_RETENTION_DAYS=RETENTION_DAYS):
+            self.assertFalse(stale_filing_listings_qs(as_of=as_of).filter(pk=listing.pk).exists())
+
+
+class MaxDeleteTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='09133330001', password='x')
+        self.dataset = Dataset.objects.create(user=self.user, name='maxdel', is_active=True)
+        self.old = timezone.now() - timezone.timedelta(days=STALE_LISTING_AGE_DAYS)
+
+    def _create_stale(self, token: str):
+        listing = Listing.objects.create(dataset=self.dataset, token=token, title='x')
+        Listing.objects.filter(pk=listing.pk).update(created_at=self.old, published_at=self.old)
+        return listing
+
+    def test_max_delete_never_exceeds_limit(self):
+        for i in range(10):
+            self._create_stale(f'cap-{i}')
+        with override_settings(FILING_LISTING_RETENTION_DAYS=RETENTION_DAYS):
+            stats = purge_stale_filing_listings(dry_run=False, batch_size=2, max_delete=5)
+        self.assertEqual(stats['deleted'], 5)
+        self.assertEqual(Listing.objects.filter(dataset=self.dataset).count(), 5)
+        self.assertEqual(stats['remaining_eligible'], 5)
+
+    def test_batch_size_and_max_delete_stop_after_quota(self):
+        for i in range(8):
+            self._create_stale(f'lim-{i}')
+        with override_settings(FILING_LISTING_RETENTION_DAYS=RETENTION_DAYS):
+            stats = purge_stale_filing_listings(dry_run=False, batch_size=2, max_delete=5)
+        self.assertEqual(stats['deleted'], 5)
+        self.assertEqual(stats['batches'], 3)
+
+    def test_second_run_continues_after_max_delete(self):
+        for i in range(6):
+            self._create_stale(f'cont-{i}')
+        with override_settings(FILING_LISTING_RETENTION_DAYS=RETENTION_DAYS):
+            first = purge_stale_filing_listings(dry_run=False, batch_size=2, max_delete=3)
+            second = purge_stale_filing_listings(dry_run=False, batch_size=2, max_delete=10)
+        self.assertEqual(first['deleted'], 3)
+        self.assertEqual(second['deleted'], 3)
+        self.assertEqual(Listing.objects.filter(dataset=self.dataset).count(), 0)
+
+    def test_last_batch_respects_remaining_max_delete(self):
+        for i in range(5):
+            self._create_stale(f'rem-{i}')
+        with override_settings(FILING_LISTING_RETENTION_DAYS=RETENTION_DAYS):
+            stats = purge_stale_filing_listings(dry_run=False, batch_size=250, max_delete=3)
+        self.assertEqual(stats['deleted'], 3)
+        self.assertEqual(stats['remaining_eligible'], 2)
+
+    def test_dry_run_with_max_delete_zero_writes(self):
+        self._create_stale('dry-max')
+        before = Listing.objects.count()
+        with override_settings(FILING_LISTING_RETENTION_DAYS=RETENTION_DAYS):
+            stats = purge_stale_filing_listings(dry_run=True, max_delete=500)
+        self.assertEqual(stats['deleted'], 0)
+        self.assertEqual(stats['max_delete'], 500)
+        self.assertEqual(Listing.objects.count(), before)
+
+    def test_max_delete_zero_performs_no_deletes(self):
+        self._create_stale('zero-max')
+        with override_settings(FILING_LISTING_RETENTION_DAYS=RETENTION_DAYS):
+            stats = purge_stale_filing_listings(dry_run=False, max_delete=0)
+        self.assertEqual(stats['deleted'], 0)
+        self.assertTrue(Listing.objects.filter(token='zero-max').exists())
+
+    def test_negative_max_delete_raises(self):
+        with self.assertRaises(ValueError):
+            purge_stale_filing_listings(dry_run=False, max_delete=-1)
 
 
 class DeleteSemanticsTests(TestCase):
@@ -636,10 +757,10 @@ class DeleteSemanticsTests(TestCase):
         self.assertFalse(UserListingSuppression.objects.filter(user=self.user, external_id='sem-pers').exists())
 
     def test_retention_no_suppression(self):
-        old = timezone.now() - timezone.timedelta(days=40)
+        old = timezone.now() - timezone.timedelta(days=STALE_LISTING_AGE_DAYS)
         listing = Listing.objects.create(dataset=self.dataset, token='sem-ret', title='x')
         Listing.objects.filter(pk=listing.pk).update(created_at=old)
-        with override_settings(FILING_LISTING_RETENTION_DAYS=31):
+        with override_settings(FILING_LISTING_RETENTION_DAYS=RETENTION_DAYS):
             purge_stale_filing_listings(dry_run=False)
         self.assertFalse(UserListingSuppression.objects.filter(user=self.user, external_id='sem-ret').exists())
 

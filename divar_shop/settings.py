@@ -218,10 +218,13 @@ CHECKOUT_ABANDON_HOURS = config('CHECKOUT_ABANDON_HOURS', default=2, cast=int)
 CHECKOUT_ABANDON_BATCH_LIMIT = config('CHECKOUT_ABANDON_BATCH_LIMIT', default=500, cast=int)
 
 # نگه‌داری موقت آگهی‌های فایلینگ (روز) — CRM و سرکوب کاربر مستقل می‌مانند
-FILING_LISTING_RETENTION_DAYS = config('FILING_LISTING_RETENTION_DAYS', default=31, cast=int)
+from workspace.constants import FILING_LISTING_RETENTION_DAYS_DEFAULT
 
-# نگه‌داری موقت آگهی‌های فایلینگ (روز) — CRM و سرکوب کاربر مستقل می‌مانند
-FILING_LISTING_RETENTION_DAYS = config('FILING_LISTING_RETENTION_DAYS', default=31, cast=int)
+FILING_LISTING_RETENTION_DAYS = config(
+    'FILING_LISTING_RETENTION_DAYS',
+    default=FILING_LISTING_RETENTION_DAYS_DEFAULT,
+    cast=int,
+)
 
 # Recovery Audience — فاز ۲.۱ (Dry Run؛ بدون SMS)
 RECOVERY_STEP_1_MIN_HOURS = config('RECOVERY_STEP_1_MIN_HOURS', default=2, cast=int)

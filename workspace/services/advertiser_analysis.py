@@ -70,6 +70,13 @@ CONFIDENCE_LABELS: Dict[str, str] = {
     'low': 'اطمینان پایین',
 }
 
+CONFIDENCE_SHORT: Dict[str, str] = {
+    'very_high': 'خیلی بالا',
+    'high': 'بالا',
+    'medium': 'متوسط',
+    'low': 'پایین',
+}
+
 PRIMARY_REASON_PRIORITY: tuple[str, ...] = (
     'agent_contact_restriction',
     'structured_broker_metadata',
@@ -81,10 +88,7 @@ PRIMARY_REASON_PRIORITY: tuple[str, ...] = (
     'brokerage_sales_language',
 )
 
-DISCLAIMER_TEXT = (
-    'این تحلیل بر اساس متن آگهی و قواعد تشخیصی سیستم است و جایگزین '
-    'بررسی انسانی یا تماس مستقیم نمی‌شود.'
-)
+DISCLAIMER_TEXT = ''
 
 # ترتیب نمایش: reasonهای critical مهم‌تر
 _CRITICAL_REASONS = frozenset({
@@ -110,41 +114,37 @@ def _humanize_matched_text(text: str, reason_code: str) -> str:
         return ''
     if reason_code == 'agent_contact_restriction':
         if 'همکار' in t:
-            return 'از همکاران خواسته شده تماس نگیرند'
+            return 'تماس نگیرند (همکاران)'
         if 'مشاور' in t:
-            return 'از مشاوران خواسته شده تماس نگیرند'
+            return 'تماس نگیرند (مشاوران)'
         if 'املاک' in t:
-            return 'از املاک خواسته شده تماس نگیرند'
-        if 'بنگاه' in t or 'آژانس' in t:
-            return 'از بنگاه/آژانس خواسته شده تماس نگیرند'
-        if 'واسطه' in t or 'دلال' in t:
-            return 'از واسطه خواسته شده تماس نگیرند'
-        return 'محدودیت تماس برای فعالان بازار املاک در متن ذکر شده'
+            return 'تماس نگیرند (املاک)'
+        return 'محدودیت تماس'
     if reason_code in ('inventory_language', 'inventory_language_critical'):
         if 'کد فایل' in t or 'شماره فایل' in t:
-            return f'اشاره به {t}'
+            return t[:24]
         if 'مشابه' in t or 'موارد' in t or 'گزینه' in t:
-            return f'اشاره به {t}'
+            return 'فایل مشابه'
         if 'فایل' in t:
-            return f'استفاده از ادبیات فایل: «{t}»'
+            return t[:24]
     if reason_code == 'professional_workflow_language':
         if 'فیلم' in t:
-            return 'ارسال فیلم کامل ملک پیشنهاد شده'
+            return 'ارسال فیلم'
         if 'بازدید' in t or 'هماهنگ' in t:
-            return 'هماهنگی جهت بازدید ذکر شده'
-        return f'ادبیات حرفه‌ای: «{t}»'
+            return 'هماهنگی بازدید'
+        return t[:24] + ('…' if len(t) > 24 else '')
     if reason_code == 'professional_broker_identity':
-        return f'عبارات مشاوری: «{t}»'
+        return t[:28] + ('…' if len(t) > 28 else '')
     if reason_code == 'broker_branding':
-        return 'نشانه برندینگ دفتر املاک در متن'
+        return 'برند املاک'
     if reason_code == 'brokerage_sales_language':
-        return f'«{t}»'
+        return t[:24] + ('…' if len(t) > 24 else '')
     if reason_code == 'structured_broker_metadata':
-        return 'اطلاعات مشاور در داده‌های آگهی'
+        return 'اطلاعات مشاور'
     if reason_code == 'explicit_owner_claim':
-        return f'اظهار مالکیت: «{t}»'
+        return f'مالک: {t[:20]}' if len(t) > 20 else f'مالک: {t}'
     if reason_code in ('owner_language', 'soft_owner_language'):
-        return f'«{t}»'
+        return t[:24] + ('…' if len(t) > 24 else '')
     if len(t) > 80:
         return t[:77] + '…'
     return f'«{t}»'
@@ -168,34 +168,24 @@ def _qualified_classification_label(classification: str, confidence: str) -> str
 
 def _build_summary(
     classification: str,
-    confidence: str,
-    primary_reason: str,
-    has_owner: bool,
-    has_disguised: bool,
+    result_label: str,
+    signal_hints: List[str],
 ) -> str:
+    """یک خط: نشانه‌ها → نتیجه."""
+    clean = [s.strip('«»').strip() for s in signal_hints if s and s.strip()]
+    clean = list(dict.fromkeys(clean))[:3]
+
+    if classification == ADVERTISER_SIGNAL_GENUINE_PERSONAL:
+        if clean:
+            return f'{"، ".join(clean)} → {result_label}'
+        return f'بدون نشانه مشاوری → {result_label}'
+
     if classification == ADVERTISER_SIGNAL_CONSULTANT:
-        return REASON_DESCRIPTIONS.get('official_consultant', '')
+        return f'حساب مشاور رسمی → {result_label}'
 
-    if classification == ADVERTISER_SIGNAL_DISGUISED:
-        if primary_reason and primary_reason in REASON_DESCRIPTIONS:
-            return REASON_DESCRIPTIONS[primary_reason]
-        return 'در متن آگهی نشانه‌های قوی فعالیت مشاوری شناسایی شد.'
-
-    # genuine_personal
-    if has_owner:
-        return (
-            'بر اساس متن آگهی، نشانه قوی از فعالیت مشاوری شناسایی نشد. '
-            'آگهی‌دهنده به مالکیت مستقیم ملک اشاره کرده است.'
-        )
-    if has_disguised and confidence in ('low', 'medium'):
-        return (
-            'بر اساس متن آگهی، نشانه معناداری از فعالیت مشاوری دیده نشد؛ '
-            'با این حال برخی عبارات مبهم وجود دارد و بررسی بیشتر توصیه می‌شود.'
-        )
-    return (
-        'بر اساس متن آگهی و اطلاعات آگهی‌دهنده، '
-        'نشانه قوی از فعالیت مشاوری شناسایی نشد.'
-    )
+    if clean:
+        return f'{"، ".join(clean)} → {result_label}'
+    return f'→ {result_label}'
 
 
 def _group_signals_by_reason(
@@ -297,10 +287,12 @@ def analyze_listing_advertiser(listing) -> Dict[str, Any]:
     classification_label = advertiser_signal_label(classification) or 'شخصی'
     qualified_label = _qualified_classification_label(classification, confidence)
     confidence_label = CONFIDENCE_LABELS.get(confidence, 'اطمینان پایین')
+    confidence_short = CONFIDENCE_SHORT.get(confidence, 'پایین')
 
-    badge_label = f'{qualified_label} · {confidence_label}'
-    if confidence in ('very_high', 'high'):
-        badge_label = f'{classification_label} · {confidence_label}'
+    badge_label = f'{qualified_label} · {confidence_short}'
+
+    all_signals = groups['primary'] + groups['secondary'] + groups['owner']
+    summary = _build_summary(classification, qualified_label, all_signals)
 
     human_reasons = [
         REASON_LABELS.get(code, code)
@@ -314,20 +306,15 @@ def analyze_listing_advertiser(listing) -> Dict[str, Any]:
         'classification_label_qualified': qualified_label,
         'confidence': confidence,
         'confidence_label': confidence_label,
+        'confidence_short': confidence_short,
         'badge_label': badge_label,
         'critical': bool(raw.get('critical')),
         'primary_reason': primary_reason,
         'primary_reason_label': REASON_LABELS.get(primary_reason, ''),
-        'summary': _build_summary(
-            classification,
-            confidence,
-            primary_reason,
-            bool(groups['owner']),
-            bool(groups['primary'] or groups['secondary']),
-        ),
-        'primary_signals': groups['primary'],
-        'secondary_signals': groups['secondary'],
-        'owner_signals': groups['owner'],
+        'summary': summary,
+        'primary_signals': groups['primary'][:3],
+        'secondary_signals': groups['secondary'][:2],
+        'owner_signals': groups['owner'][:2],
         'reasons': human_reasons,
         'disclaimer': DISCLAIMER_TEXT,
         'detector_version': raw.get('detector_version', 1),
@@ -337,10 +324,10 @@ def analyze_listing_advertiser(listing) -> Dict[str, Any]:
 
 
 def build_public_analysis_payload(analysis: Dict[str, Any]) -> Dict[str, Any]:
-    """خروجی امن UI — بدون score و reason_code داخلی."""
+    """خروجی امن UI — بدون score، reason_code داخلی و disclaimer."""
     return {
         k: v for k, v in analysis.items()
-        if k not in ('score', 'primary_reason')
+        if k not in ('score', 'primary_reason', 'disclaimer', 'reasons', 'primary_reason_label')
     }
 
 

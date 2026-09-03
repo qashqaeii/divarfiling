@@ -69,7 +69,7 @@ class AdvertiserAnalysisExplainabilityTest(TestCase):
     def test_genuine_without_signals_professional_summary(self):
         analysis = analyze_listing_advertiser(self._listing('واحد تمیز و نوساز.'))
         self.assertEqual(analysis['classification'], 'genuine_personal')
-        self.assertIn('نشانه قوی', analysis['summary'])
+        self.assertIn('بدون نشانه مشاوری', analysis['summary'])
 
     def test_confidence_mapping_persian(self):
         analysis = analyze_listing_advertiser(

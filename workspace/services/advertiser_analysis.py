@@ -85,9 +85,9 @@ CONFIDENCE_NARRATIVE: Dict[str, str] = {
 }
 
 AI_MODEL_LABELS: tuple[str, ...] = (
-    'DivarMind Pro 2',
-    'Filing Analyst 4o',
-    'AmlakSense Turbo',
+    'Gemini 2.0 Flash',
+    'DeepSeek V3',
+    'GPT-4o',
 )
 
 PRIMARY_REASON_PRIORITY: tuple[str, ...] = (

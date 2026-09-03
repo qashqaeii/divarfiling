@@ -112,7 +112,7 @@ class AdvertiserAnalysisExplainabilityTest(TestCase):
         a2 = analyze_listing_advertiser(listing)
         self.assertEqual(a1['ai_model_label'], a2['ai_model_label'])
         self.assertIn(a1['ai_model_label'], (
-            'DivarMind Pro 2', 'Filing Analyst 4o', 'AmlakSense Turbo',
+            'Gemini 2.0 Flash', 'DeepSeek V3', 'GPT-4o',
         ))
 
     def test_attach_feedback_state(self):

@@ -30,7 +30,12 @@
          aria-modal="true"
          tabindex="-1">
         <div class="ws-adv-analysis__panel-head">
-            <h2 class="ws-adv-analysis__title" id="wsAdvAnalysisTitle">تحلیل آگهی‌دهنده</h2>
+            <div class="ws-adv-analysis__title-wrap">
+                {% if advertiser_analysis.ai_model_label %}
+                <span class="ws-adv-analysis__model">{{ advertiser_analysis.ai_model_label }}</span>
+                {% endif %}
+                <h2 class="ws-adv-analysis__title" id="wsAdvAnalysisTitle">تحلیل آگهی‌دهنده</h2>
+            </div>
             <button type="button" class="ws-adv-analysis__close" data-adv-analysis-close aria-label="بستن">
                 <i class="fas fa-times" aria-hidden="true"></i>
             </button>

@@ -77,6 +77,19 @@ CONFIDENCE_SHORT: Dict[str, str] = {
     'low': 'پایین',
 }
 
+CONFIDENCE_NARRATIVE: Dict[str, str] = {
+    'very_high': 'به احتمال خیلی بالا',
+    'high': 'به احتمال بالا',
+    'medium': 'به احتمال متوسط',
+    'low': 'به احتمال پایین',
+}
+
+AI_MODEL_LABELS: tuple[str, ...] = (
+    'DivarMind Pro 2',
+    'Filing Analyst 4o',
+    'AmlakSense Turbo',
+)
+
 PRIMARY_REASON_PRIORITY: tuple[str, ...] = (
     'agent_contact_restriction',
     'structured_broker_metadata',
@@ -166,26 +179,99 @@ def _qualified_classification_label(classification: str, confidence: str) -> str
     return advertiser_signal_label(classification) or 'شخصی'
 
 
+def _pick_ai_model_label(seed: str) -> str:
+    """نام مدل نمایشی — ثابت برای هر آگهی."""
+    key = (seed or 'default').encode('utf-8')
+    idx = sum(key) % len(AI_MODEL_LABELS)
+    return AI_MODEL_LABELS[idx]
+
+
+def _format_quoted_signals(phrases: List[str]) -> str:
+    quoted = [f'«{p}»' for p in phrases if p]
+    if not quoted:
+        return ''
+    if len(quoted) == 1:
+        return f'نشانه {quoted[0]}'
+    if len(quoted) == 2:
+        return f'نشانه‌های {quoted[0]} و {quoted[1]}'
+    return f'نشانه‌های {quoted[0]}، {quoted[1]} و {quoted[2]}'
+
+
+def _raw_signal_phrases(
+    raw: Any,
+    groups: Dict[str, List[str]],
+    classification: str,
+) -> List[str]:
+    disguised = list(raw.get('matched_disguised_signals') or [])
+    critical = list(raw.get('critical_signals') or [])
+    owner = list(raw.get('matched_owner_signals') or [])
+
+    if classification == ADVERTISER_SIGNAL_GENUINE_PERSONAL:
+        source = owner + disguised
+    elif classification == ADVERTISER_SIGNAL_CONSULTANT:
+        source = disguised
+    else:
+        source = critical + disguised
+
+    phrases: List[str] = []
+    seen: set[str] = set()
+    for text in source:
+        t = (text or '').strip()
+        if not t or t in seen:
+            continue
+        seen.add(t)
+        if len(t) > 40:
+            t = t[:37] + '…'
+        phrases.append(t)
+        if len(phrases) >= 3:
+            break
+
+    if not phrases:
+        for hint in groups['primary'] + groups['secondary'] + groups['owner']:
+            h = hint.strip('«»').strip()
+            if h and h not in seen:
+                seen.add(h)
+                phrases.append(h)
+                if len(phrases) >= 3:
+                    break
+    return phrases
+
+
+def _conclusion_phrase(classification: str, result_label: str) -> str:
+    if classification == ADVERTISER_SIGNAL_DISGUISED:
+        if result_label == 'نیازمند بررسی':
+            return 'این آگهی نیاز به بررسی بیشتر دارد'
+        return 'این آگهی مربوط به مشاور پنهان است'
+    if classification == ADVERTISER_SIGNAL_GENUINE_PERSONAL:
+        if result_label.startswith('احتمالاً'):
+            return 'این آگهی احتمالاً مربوط به مالک واقعی است'
+        return 'این آگهی مربوط به مالک واقعی است'
+    if classification == ADVERTISER_SIGNAL_CONSULTANT:
+        return 'این آگهی مربوط به مشاور رسمی است'
+    return f'نتیجه تحلیل: {result_label}'
+
+
 def _build_summary(
     classification: str,
     result_label: str,
-    signal_hints: List[str],
+    confidence: str,
+    signal_phrases: List[str],
 ) -> str:
-    """یک خط: نشانه‌ها → نتیجه."""
-    clean = [s.strip('«»').strip() for s in signal_hints if s and s.strip()]
-    clean = list(dict.fromkeys(clean))[:3]
+    """توضیح کوتاه و حرفه‌ای — انگار مدل هوشمند تحلیل کرده."""
+    likelihood = CONFIDENCE_NARRATIVE.get(confidence, 'به احتمال پایین')
+    conclusion = _conclusion_phrase(classification, result_label)
+    signals_text = _format_quoted_signals(signal_phrases)
+
+    if signals_text:
+        return f'در متن آگهی {signals_text} را دیدم؛ {likelihood} {conclusion}.'
 
     if classification == ADVERTISER_SIGNAL_GENUINE_PERSONAL:
-        if clean:
-            return f'{"، ".join(clean)} → {result_label}'
-        return f'بدون نشانه مشاوری → {result_label}'
+        return f'در متن آگهی نشانه مشخصی از فعالیت مشاوری ندیدم؛ {likelihood} {conclusion}.'
 
     if classification == ADVERTISER_SIGNAL_CONSULTANT:
-        return f'حساب مشاور رسمی → {result_label}'
+        return f'این آگهی با حساب مشاور رسمی منتشر شده؛ {likelihood} {conclusion}.'
 
-    if clean:
-        return f'{"، ".join(clean)} → {result_label}'
-    return f'→ {result_label}'
+    return f'{likelihood} {conclusion}.'
 
 
 def _group_signals_by_reason(
@@ -291,8 +377,9 @@ def analyze_listing_advertiser(listing) -> Dict[str, Any]:
 
     badge_label = f'{qualified_label} · {confidence_short}'
 
-    all_signals = groups['primary'] + groups['secondary'] + groups['owner']
-    summary = _build_summary(classification, qualified_label, all_signals)
+    signal_phrases = _raw_signal_phrases(raw, groups, classification)
+    summary = _build_summary(classification, qualified_label, confidence, signal_phrases)
+    ai_model_label = _pick_ai_model_label(getattr(listing, 'token', '') or '')
 
     human_reasons = [
         REASON_LABELS.get(code, code)
@@ -308,6 +395,7 @@ def analyze_listing_advertiser(listing) -> Dict[str, Any]:
         'confidence_label': confidence_label,
         'confidence_short': confidence_short,
         'badge_label': badge_label,
+        'ai_model_label': ai_model_label,
         'critical': bool(raw.get('critical')),
         'primary_reason': primary_reason,
         'primary_reason_label': REASON_LABELS.get(primary_reason, ''),

@@ -107,19 +107,31 @@ html[data-theme="dark"] .ws-adv-analysis__modal {
 
 .ws-adv-analysis__panel-head {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
     gap: 0.45rem;
     margin-bottom: 0.45rem;
+}
+
+.ws-adv-analysis__title-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 0.12rem;
+    min-width: 0;
+}
+
+.ws-adv-analysis__model {
+    font-size: 0.64rem;
+    font-weight: 600;
+    color: var(--ws-primary, #2563eb);
+    letter-spacing: 0.01em;
+    font-family: 'Vazirmatn', system-ui, sans-serif;
 }
 
 .ws-adv-analysis__title {
     margin: 0;
     font-size: 0.82rem;
     font-weight: 700;
-    display: flex;
-    align-items: center;
-    gap: 0.32rem;
 }
 
 .ws-adv-analysis__close {
@@ -165,8 +177,8 @@ html[data-theme="dark"] .ws-adv-analysis__modal {
 .ws-adv-analysis__summary {
     margin: 0 0 0.5rem;
     font-size: 0.76rem;
-    line-height: 1.45;
-    font-weight: 600;
+    line-height: 1.55;
+    font-weight: 500;
     color: var(--ws-text-secondary, #475569);
 }
 

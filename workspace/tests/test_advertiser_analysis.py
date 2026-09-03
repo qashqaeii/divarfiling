@@ -69,7 +69,7 @@ class AdvertiserAnalysisExplainabilityTest(TestCase):
     def test_genuine_without_signals_professional_summary(self):
         analysis = analyze_listing_advertiser(self._listing('واحد تمیز و نوساز.'))
         self.assertEqual(analysis['classification'], 'genuine_personal')
-        self.assertIn('بدون نشانه مشاوری', analysis['summary'])
+        self.assertIn('نشانه مشخصی', analysis['summary'])
 
     def test_confidence_mapping_persian(self):
         analysis = analyze_listing_advertiser(
@@ -98,6 +98,22 @@ class AdvertiserAnalysisExplainabilityTest(TestCase):
             self._listing('بدون واسطه. همکاران تماس نگیرید.'),
         )
         self.assertEqual(analysis['primary_reason'], 'agent_contact_restriction')
+
+    def test_narrative_summary_mentions_signals(self):
+        analysis = analyze_listing_advertiser(
+            self._listing('کارشناس فروش — کارشناس املاک'),
+        )
+        self.assertIn('در متن آگهی', analysis['summary'])
+        self.assertIn('مشاور پنهان', analysis['summary'])
+
+    def test_ai_model_label_is_stable(self):
+        listing = self._listing('تست', token='stable-token-1')
+        a1 = analyze_listing_advertiser(listing)
+        a2 = analyze_listing_advertiser(listing)
+        self.assertEqual(a1['ai_model_label'], a2['ai_model_label'])
+        self.assertIn(a1['ai_model_label'], (
+            'DivarMind Pro 2', 'Filing Analyst 4o', 'AmlakSense Turbo',
+        ))
 
     def test_attach_feedback_state(self):
         listing = self._listing('واحد')

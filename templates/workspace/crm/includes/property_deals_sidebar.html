@@ -1,0 +1,37 @@
+{% load workspace_tags crm_tags %}
+<section class="crm-prop-side-card crm-prop-side-card--pro crm-prop-side-card--deals" aria-label="معاملات این ملک">
+    <div class="crm-prop-side-card-head">
+        <h3>معاملات این ملک</h3>
+        {% if can_create_deal %}
+        <button type="button" class="crm-prop-side-deal-add" data-drawer-open="drawer-property-deal" title="ثبت معامله">
+            <i class="fas fa-plus" aria-hidden="true"></i>
+        </button>
+        {% endif %}
+    </div>
+    {% if property_deals %}
+    <ul class="crm-prop-deals-list">
+        {% for d in property_deals %}
+        <li class="crm-prop-deals-item">
+            <a href="{% url 'workspace:crm_deal_detail' d.id %}" class="crm-prop-deals-link">
+                <strong>{{ d.title|truncatechars:42 }}</strong>
+                <span class="crm-pill crm-pill-sm" style="{% crm_deal_stage_style d.stage %}">{{ d.stage }}</span>
+                {% if d.value %}<em>{{ d.value|ws_money }}</em>{% endif %}
+                <time>{{ d.updated_at|ws_jalali }}</time>
+            </a>
+        </li>
+        {% endfor %}
+    </ul>
+    {% if property_deals_total > 3 %}
+    <a href="{% url 'workspace:crm_deals' %}?q={{ property.title|urlencode }}" class="crm-prop-deals-all">مشاهده همه معاملات</a>
+    {% endif %}
+    {% else %}
+    <div class="crm-prop-deals-empty">
+        <p>هنوز معامله‌ای برای این ملک ثبت نشده است.</p>
+        {% if can_create_deal %}
+        <button type="button" class="crm-dash-act crm-dash-act--primary crm-dash-act--block" data-drawer-open="drawer-property-deal">
+            <i class="fas fa-handshake" aria-hidden="true"></i> ثبت اولین معامله
+        </button>
+        {% endif %}
+    </div>
+    {% endif %}
+</section>

@@ -227,6 +227,219 @@ def get_deal_stats(user) -> Dict[str, Any]:
     }
 
 
+def infer_deal_kind_from_property(prop) -> str:
+    """نوع معامله CRM از deal_mode ملک."""
+    mode = (getattr(prop, 'deal_mode', None) or '').strip()
+    if 'اجاره' in mode or mode == 'رهن و اجاره':
+        return 'rent'
+    return 'sale'
+
+
+def deal_kind_label_for_property(prop, deal_kind: str) -> str:
+    kind = (deal_kind or '').strip() or infer_deal_kind_from_property(prop)
+    mode = (getattr(prop, 'deal_mode', None) or '').strip()
+    if kind == 'rent' and mode == 'رهن و اجاره':
+        return 'رهن و اجاره'
+    if kind == 'rent':
+        return 'اجاره'
+    return 'فروش'
+
+
+def default_deal_value_for_property(prop, deal_kind: str = 'sale') -> Optional[int]:
+    kind = deal_kind or infer_deal_kind_from_property(prop)
+    if kind == 'rent':
+        return getattr(prop, 'monthly_rent', None) or None
+    return getattr(prop, 'sale_price', None) or None
+
+
+def suggest_deal_title(property_obj, customer=None, deal_kind: str = 'sale') -> str:
+    kind = deal_kind or infer_deal_kind_from_property(property_obj)
+    label = deal_kind_label_for_property(property_obj, kind)
+    base = (getattr(property_obj, 'title', None) or '').strip()
+    if not base:
+        parts = [
+            getattr(property_obj, 'property_type', '') or 'ملک',
+            getattr(property_obj, 'district', '') or getattr(property_obj, 'neighborhood', '') or '',
+        ]
+        base = ' '.join(p for p in parts if p).strip() or 'ملک'
+    title = f'{label} {base}'.strip()
+    if customer and getattr(customer, 'name', None):
+        return f'{title} به {customer.name}'
+    return title
+
+
+def property_deals_qs(user, property_obj):
+    return deals_qs(user).filter(property=property_obj).select_related('customer')
+
+
+def get_property_active_deals(user, property_obj):
+    return property_deals_qs(user, property_obj).filter(
+        stage__in=active_stages_for_user(user),
+    )
+
+
+def find_duplicate_active_deal(user, property_obj, customer):
+    if not customer:
+        return None
+    return get_property_active_deals(user, property_obj).filter(customer=customer).first()
+
+
+def customer_role_for_deal_kind(deal_kind: str) -> str:
+    return 'مستاجر' if deal_kind == 'rent' else 'خریدار'
+
+
+def customer_type_for_deal_kind(deal_kind: str) -> str:
+    return 'مستاجر' if deal_kind == 'rent' else 'خریدار'
+
+
+def deal_type_for_property_contact(property_obj, deal_kind: str) -> str:
+    mode = (getattr(property_obj, 'deal_mode', None) or '').strip()
+    if deal_kind == 'rent':
+        return mode if mode in ('رهن و اجاره', 'اجاره') else 'رهن و اجاره'
+    if mode == 'پیش‌فروش':
+        return 'پیش‌فروش'
+    return 'فروش'
+
+
+def _mask_phone_display(phone: str) -> str:
+    raw = (phone or '').strip()
+    if len(raw) < 8:
+        return raw or ''
+    return f'{raw[:4]}***{raw[-4:]}'
+
+
+def serialize_property_deal_customer(customer, *, related: bool = False, role: str = '') -> Dict[str, Any]:
+    name = customer.name or ''
+    if customer.is_legal_entity and customer.company_name:
+        name = customer.company_name
+        if customer.name:
+            name = f'{customer.company_name} — {customer.name}'
+    return {
+        'id': customer.pk,
+        'name': name,
+        'phone': _mask_phone_display(customer.phone or ''),
+        'phone_raw': customer.phone or '',
+        'type': customer.customer_type or '',
+        'role': role,
+        'related': related,
+        'is_legal': bool(customer.is_legal_entity),
+        'company_name': customer.company_name or '',
+    }
+
+
+def search_customers_for_property_deal(user, property_obj, query: str = '', limit: int = 12):
+    """مخاطبین مرتبط با ملک + جستجوی سراسری scoped."""
+    from django.db.models import Q
+    from workspace.services.crm_scope import customers_qs
+
+    q = (query or '').strip()
+    related: List[Dict[str, Any]] = []
+    seen = set()
+    for link in property_obj.contact_links.select_related('customer').order_by('-is_primary', '-updated_at'):
+        c = link.customer
+        if c.pk in seen:
+            continue
+        seen.add(c.pk)
+        if q:
+            hay = ' '.join(filter(None, [c.name, c.phone, c.company_name, c.national_id, link.role]))
+            if q not in hay and q.lower() not in hay.lower():
+                continue
+        related.append(serialize_property_deal_customer(c, related=True, role=link.role or ''))
+        if len(related) >= limit:
+            break
+
+    results: List[Dict[str, Any]] = list(related)
+    remaining = max(0, limit - len(results))
+    if remaining and q and len(q) >= 2:
+        qs = customers_qs(user).filter(
+            Q(name__icontains=q) | Q(phone__icontains=q) | Q(company_name__icontains=q)
+            | Q(national_id__icontains=q),
+        ).exclude(pk__in=seen).order_by('-updated_at')[:remaining]
+        for c in qs:
+            results.append(serialize_property_deal_customer(c))
+    return results
+
+
+def create_deal_from_property(
+    user,
+    property_obj,
+    customer: Customer,
+    *,
+    deal_kind: str = '',
+    title: str = '',
+    stage: str = '',
+    value: Optional[int] = None,
+    probability: Optional[int] = None,
+    expected_close_date: Optional[date] = None,
+    notes: str = '',
+    next_action_type: str = '',
+    next_action_at=None,
+    next_action_note: str = '',
+    link_contact: bool = True,
+) -> CRMDeal:
+    """ایجاد معامله از صفحه فایل شخصی — reuse create_deal."""
+    from workspace.models import PropertyContact
+    from workspace.services.crm import link_customer_property
+
+    kind = (deal_kind or infer_deal_kind_from_property(property_obj)).strip()
+    if kind not in ('sale', 'rent'):
+        kind = infer_deal_kind_from_property(property_obj)
+
+    stages = get_user_deal_stages(user)
+    stage_name = (stage or '').strip() or (stages[0] if stages else 'سرنخ')
+    if stage_name not in stages:
+        stage_name = stages[0]
+
+    if value is None:
+        value = default_deal_value_for_property(property_obj, kind)
+
+    deal_title = (title or '').strip() or suggest_deal_title(property_obj, customer, kind)
+
+    deal = create_deal(
+        user,
+        customer,
+        title=deal_title,
+        property_obj=property_obj,
+        stage=stage_name,
+        value=value,
+        probability=probability,
+        expected_close_date=expected_close_date,
+        notes=notes,
+        next_action_type=next_action_type,
+        next_action_at=next_action_at,
+        next_action_note=next_action_note,
+    )
+    if deal.deal_kind != kind:
+        deal.deal_kind = kind
+        from workspace.services.crm_deal_finance import apply_deal_finance
+        apply_deal_finance(deal, save=True)
+
+    log_activity(
+        customer,
+        'املاک',
+        content='معامله از فایل شخصی ایجاد شد.',
+        title='ثبت معامله',
+        property_obj=property_obj,
+        metadata={'deal_id': deal.pk, 'stage': deal.stage, 'source': 'property_detail'},
+    )
+
+    if link_contact:
+        role = customer_role_for_deal_kind(kind)
+        exists = PropertyContact.objects.filter(
+            customer=customer, property=property_obj,
+        ).exists()
+        if not exists:
+            link_customer_property(
+                customer,
+                property_obj,
+                role,
+                deal_type_for_property_contact(property_obj, kind),
+                log=True,
+            )
+
+    return deal
+
+
 def filter_deals(user, params: dict):
     qs = deals_qs(user).select_related('customer', 'property')
     q = params.get('q', '').strip()

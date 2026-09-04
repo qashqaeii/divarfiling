@@ -18,6 +18,7 @@
 {% block crm_extra_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/crm-zonkan.css' %}?v=6">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-prop-detail-mobile.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-property-deal-create.css' %}?v=1">
 {% if show_nearby_pois %}
 <link rel="stylesheet" href="{% static 'workspace/css/crm-nearby-pois.css' %}?v=6">
 {% endif %}
@@ -120,6 +121,11 @@
                     {% if is_property_owner and not property_is_deleted %}
                     <button type="button" class="crm-prop-hero-act crm-prop-hero-act--accent" data-modal-open="modal-property-share" title="اشتراک با مشتری">
                         <i class="fas fa-share-alt"></i><span>اشتراک مشتری</span>
+                    </button>
+                    {% endif %}
+                    {% if can_create_deal %}
+                    <button type="button" class="crm-prop-hero-act crm-prop-hero-act--deal" data-drawer-open="drawer-property-deal" title="ثبت معامله">
+                        <i class="fas fa-handshake"></i><span>ثبت معامله</span>
                     </button>
                     {% endif %}
                     {% if can_edit_property %}
@@ -706,6 +712,7 @@
             {% endif %}
             {% if not mask_sensitive %}
             {% include 'workspace/crm/includes/property_followup_sidebar.html' %}
+            {% include 'workspace/crm/includes/property_deals_sidebar.html' %}
             {% endif %}
             <div class="crm-prop-side-card crm-prop-side-card--pro">
                 <h3>خلاصه پرونده</h3>
@@ -854,7 +861,7 @@
     {% include 'workspace/includes/ai_listing_summary_card.html' with ai_summary_url=property_summary_ai_url ai_listing_summary_quota=ai_listing_summary_quota only %}
     {% endif %}
 
-    {% if owner_phone and not mask_sensitive or can_edit_property or is_property_owner and not property_is_deleted %}
+    {% if owner_phone and not mask_sensitive or can_create_deal or can_edit_property or is_property_owner and not property_is_deleted %}
     <nav class="crm-prop-mobile-dock" aria-label="عملیات سریع موبایل">
         <div class="crm-prop-mobile-dock__inner">
             {% if owner_phone and not mask_sensitive %}
@@ -866,6 +873,12 @@
                 <i class="fab fa-whatsapp" aria-hidden="true"></i>
                 <span>واتساپ</span>
             </a>
+            {% endif %}
+            {% if can_create_deal %}
+            <button type="button" class="crm-prop-dock-btn crm-prop-dock-btn--deal" data-drawer-open="drawer-property-deal" title="ثبت معامله">
+                <i class="fas fa-handshake" aria-hidden="true"></i>
+                <span>معامله</span>
+            </button>
             {% endif %}
             {% if can_edit_property %}
             <button type="button" class="crm-prop-dock-btn crm-prop-dock-btn--doc" data-drawer-open="drawer-document" title="آپلود مدرک">
@@ -891,6 +904,36 @@
 {% endblock %}
 
 {% block crm_drawers %}
+{% if can_create_deal %}
+<aside class="crm-drawer crm-drawer-prop-deal" id="drawer-property-deal" {% if open_drawer == 'property-deal' %}data-open="1"{% endif %}>
+    <div class="crm-drawer-overlay" data-drawer-close></div>
+    <div class="crm-drawer-panel crm-drawer-panel-lg crm-drawer-panel-prop-deal">
+        <div class="crm-drawer-head crm-drawer-head-accent">
+            <div>
+                <h2>ثبت معامله جدید</h2>
+                <p>برای این ملک یک معامله جدید ایجاد کنید.</p>
+            </div>
+            <button type="button" class="crm-drawer-close" data-drawer-close aria-label="بستن"><i class="fas fa-times"></i></button>
+        </div>
+        <form method="post"
+              action="{% url 'workspace:crm_property_deal_create' property.id %}"
+              class="crm-drawer-form crm-deal-create-drawer crm-prop-deal-create-form"
+              id="crmPropDealCreateForm"
+              data-ajax="1">
+            <div class="crm-drawer-body">
+                {% csrf_token %}
+                {% include 'workspace/crm/includes/property_deal_create_form.html' with form=property_deal_form %}
+            </div>
+            <div class="crm-drawer-foot crm-deal-create-foot crm-prop-deal-create-foot">
+                <button type="button" class="crm-btn crm-btn-ghost" data-drawer-close>انصراف</button>
+                <button type="submit" class="crm-btn crm-btn-primary" data-prop-deal-submit>
+                    <span data-prop-deal-submit-label>ثبت معامله</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</aside>
+{% endif %}
 {% if can_edit_property %}
 <aside class="crm-drawer" id="drawer-edit" {% if open_drawer == 'edit' %}data-open="1"{% endif %}>
     <div class="crm-drawer-overlay" data-drawer-close></div>
@@ -937,6 +980,9 @@
 {% endblock %}
 
 {% block crm_js %}
+{% if can_create_deal %}
+<script src="{% static 'workspace/js/crm-property-deal-create.js' %}?v=1"></script>
+{% endif %}
 {% if crm_agency and is_property_owner %}
 <script>
 window.crmPropShareUrl = "{% url 'workspace:crm_property_share' property.id %}";

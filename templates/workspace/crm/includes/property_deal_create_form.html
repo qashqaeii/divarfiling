@@ -1,0 +1,179 @@
+{% load workspace_tags crm_tags %}
+<div class="crm-prop-deal-form" id="crmPropDealFormRoot"
+     data-search-url="{% url 'workspace:crm_property_deal_customers' property.id %}"
+     data-duplicate-url="{% url 'workspace:crm_property_deal_duplicate' property.id %}"
+     data-quick-customer-url="{% url 'workspace:crm_property_deal_quick_customer' property.id %}"
+     data-property-url="{% url 'workspace:crm_property_detail' property.id %}"
+     data-deals-url="{% url 'workspace:crm_deals' %}?property_id={{ property.id }}">
+
+    {% if property_active_deals %}
+    <div class="crm-prop-deal-warn crm-prop-deal-warn--active" role="status">
+        <div class="crm-prop-deal-warn-head">
+            <i class="fas fa-circle-info" aria-hidden="true"></i>
+            <strong>برای این ملک {{ property_active_deals|length }} معامله فعال وجود دارد.</strong>
+        </div>
+        <ul class="crm-prop-deal-warn-list">
+            {% for d in property_active_deals|slice:":3" %}
+            <li>
+                <a href="{% url 'workspace:crm_deal_detail' d.id %}">{{ d.title|truncatechars:40 }}</a>
+                <span class="crm-pill crm-pill-sm" style="{% crm_deal_stage_style d.stage %}">{{ d.stage }}</span>
+            </li>
+            {% endfor %}
+        </ul>
+        {% if property_deals_total %}
+        <a href="{% url 'workspace:crm_deals' %}?q={{ property.title|urlencode }}" class="crm-prop-deal-warn-link">مشاهده معاملات فعال</a>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <div class="crm-prop-deal-summary" aria-label="خلاصه ملک">
+        <span class="crm-prop-deal-summary-kicker">ملک معامله</span>
+        <strong class="crm-prop-deal-summary-title">{{ property.title }}</strong>
+        <div class="crm-prop-deal-summary-meta">
+            <span>{{ property.deal_mode }}</span>
+            {% if property.sale_price and property_deal_kind != 'rent' %}
+            <span>{{ property.sale_price|ws_money }}</span>
+            {% elif property.monthly_rent %}
+            <span>اجاره {{ property.monthly_rent|ws_money }}</span>
+            {% elif property.deposit %}
+            <span>رهن {{ property.deposit|ws_money }}</span>
+            {% endif %}
+        </div>
+        {% if owner_contact or owner_name %}
+        <div class="crm-prop-deal-summary-owner">
+            <span>مالک:</span>
+            <strong>{% if owner_contact %}{{ owner_contact.name }}{% else %}{{ owner_name }}{% endif %}</strong>
+            {% if owner_contact.phone or owner_phone %}
+            <span dir="ltr">{% if owner_contact %}{{ owner_contact.phone|slice:":4" }}***{{ owner_contact.phone|slice:"-4:" }}{% else %}{{ owner_phone|slice:":4" }}***{{ owner_phone|slice:"-4:" }}{% endif %}</span>
+            {% endif %}
+        </div>
+        {% endif %}
+        <a href="{% url 'workspace:crm_property_detail' property.id %}" class="crm-prop-deal-summary-link" target="_blank" rel="noopener">
+            <i class="fas fa-external-link-alt" aria-hidden="true"></i> مشاهده فایل
+        </a>
+    </div>
+
+    <div class="crm-prop-deal-primary">
+        <div class="crm-form-field crm-prop-deal-customer-field">
+            <label>طرف معامله / مخاطب <span class="crm-req">*</span></label>
+            <div class="crm-prop-deal-customer-picker" data-prop-deal-customer-picker>
+                <div class="crm-prop-deal-customer-selected" data-prop-deal-selected hidden>
+                    <div class="crm-prop-deal-customer-selected-body">
+                        <strong data-prop-deal-selected-name></strong>
+                        <span data-prop-deal-selected-meta></span>
+                    </div>
+                    <button type="button" class="crm-prop-deal-customer-clear" data-prop-deal-clear aria-label="حذف انتخاب">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="crm-prop-deal-customer-search-wrap" data-prop-deal-search-wrap>
+                    <div class="crm-prop-deal-customer-search">
+                        <i class="fas fa-search" aria-hidden="true"></i>
+                        <input type="search"
+                               class="crm-input"
+                               data-prop-deal-search
+                               placeholder="جستجو: نام، موبایل، شرکت..."
+                               autocomplete="off"
+                               inputmode="search">
+                    </div>
+                    <div class="crm-prop-deal-customer-results" data-prop-deal-results hidden></div>
+                </div>
+                <button type="button" class="crm-prop-deal-add-contact" data-prop-deal-quick-open>
+                    <i class="fas fa-plus" aria-hidden="true"></i> افزودن مخاطب جدید
+                </button>
+            </div>
+            {{ form.customer }}
+            <p class="crm-field-hint">برای فروش معمولاً خریدار — برای اجاره مستأجر</p>
+        </div>
+
+        <div class="crm-prop-deal-dup-warn" data-prop-deal-dup-warn hidden role="alert"></div>
+
+        <div class="crm-form-grid crm-form-grid--2">
+            <div class="crm-form-field">
+                <label for="{{ form.deal_kind.id_for_label }}">نوع معامله</label>
+                {{ form.deal_kind }}
+            </div>
+            <div class="crm-form-field">
+                <label for="{{ form.value.id_for_label }}">ارزش معامله</label>
+                {{ form.value }}
+            </div>
+        </div>
+
+        <div class="crm-form-field">
+            <label for="{{ form.title.id_for_label }}">عنوان معامله</label>
+            {{ form.title }}
+        </div>
+    </div>
+
+    <details class="crm-prop-deal-advanced">
+        <summary>جزئیات بیشتر</summary>
+        <div class="crm-prop-deal-advanced-body">
+            <div class="crm-form-grid crm-form-grid--2">
+                <div class="crm-form-field">
+                    <label for="{{ form.stage.id_for_label }}">مرحله</label>
+                    {{ form.stage }}
+                </div>
+                <div class="crm-form-field">
+                    <label for="{{ form.probability.id_for_label }}">احتمال بستن</label>
+                    {{ form.probability }}
+                </div>
+            </div>
+            <div class="crm-form-field">
+                <label for="{{ form.expected_close_date.id_for_label }}">تاریخ احتمالی نهایی‌شدن</label>
+                {{ form.expected_close_date }}
+            </div>
+            <div class="crm-prop-deal-next-block">
+                <h4>اقدام بعدی</h4>
+                <div class="crm-form-field">
+                    <label for="{{ form.next_action_type.id_for_label }}">نوع</label>
+                    {{ form.next_action_type }}
+                </div>
+                <div class="crm-form-grid crm-form-grid--2">
+                    <div class="crm-form-field">
+                        <label for="{{ form.next_action_at.id_for_label }}">زمان</label>
+                        {{ form.next_action_at }}
+                    </div>
+                    <div class="crm-form-field">
+                        <label for="{{ form.next_action_note.id_for_label }}">توضیح کوتاه</label>
+                        {{ form.next_action_note }}
+                    </div>
+                </div>
+            </div>
+            <div class="crm-form-field">
+                <label for="{{ form.notes.id_for_label }}">یادداشت معامله</label>
+                {{ form.notes }}
+            </div>
+        </div>
+    </details>
+
+    {{ form.force_duplicate }}
+
+    <div class="crm-prop-deal-quick-create" data-prop-deal-quick hidden>
+        <div class="crm-prop-deal-quick-head">
+            <h4>مخاطب جدید</h4>
+            <button type="button" class="crm-prop-deal-quick-close" data-prop-deal-quick-close aria-label="بستن">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="crm-form-grid crm-form-grid--2">
+            <div class="crm-form-field">
+                <label for="propDealQuickName">نام <span class="crm-req">*</span></label>
+                <input type="text" id="propDealQuickName" class="crm-input" data-prop-deal-quick-name autocomplete="name">
+            </div>
+            <div class="crm-form-field">
+                <label for="propDealQuickPhone">موبایل</label>
+                <input type="tel" id="propDealQuickPhone" class="crm-input" data-prop-deal-quick-phone dir="ltr" inputmode="tel" autocomplete="tel">
+            </div>
+        </div>
+        <div class="crm-form-field">
+            <label for="propDealQuickType">نوع مخاطب</label>
+            <select id="propDealQuickType" class="crm-select" data-prop-deal-quick-type>
+                <option value="خریدار">خریدار</option>
+                <option value="مستاجر">مستأجر</option>
+                <option value="سرنخ">سرنخ</option>
+            </select>
+        </div>
+        <button type="button" class="crm-btn crm-btn-primary crm-btn-block" data-prop-deal-quick-save>ذخیره و انتخاب</button>
+        <p class="crm-prop-deal-quick-err" data-prop-deal-quick-err hidden></p>
+    </div>
+</div>

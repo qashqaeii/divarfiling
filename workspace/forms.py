@@ -1174,6 +1174,190 @@ class CRMDealCreateForm(CRMMoneyFieldsMixin, forms.ModelForm):
         }
 
 
+class PropertyDealCreateForm(forms.Form):
+    """فرم ثبت معامله از صفحه فایل شخصی — ملک قفل‌شده."""
+    deal_kind = forms.ChoiceField(
+        choices=[('sale', 'فروش'), ('rent', 'رهن و اجاره')],
+        label='نوع معامله',
+        widget=forms.Select(attrs={'class': 'crm-select', 'data-prop-deal-kind': '1'}),
+    )
+    customer = forms.ModelChoiceField(
+        queryset=Customer.objects.none(),
+        label='مخاطب',
+        widget=forms.HiddenInput(),
+    )
+    title = forms.CharField(
+        required=False,
+        label='عنوان معامله',
+        widget=forms.TextInput(attrs={
+            'class': 'crm-input',
+            'placeholder': 'عنوان — در صورت خالی، خودکار پیشنهاد می‌شود',
+            'data-prop-deal-title': '1',
+        }),
+    )
+    stage = forms.CharField(required=False, label='مرحله')
+    value = forms.CharField(
+        required=False,
+        label='ارزش معامله',
+        widget=forms.TextInput(attrs={**_CRM_MONEY_WIDGET_ATTRS}),
+    )
+    probability = forms.IntegerField(
+        required=False,
+        min_value=0,
+        max_value=100,
+        label='احتمال بستن (%)',
+        widget=forms.NumberInput(attrs={'class': 'crm-input', 'inputmode': 'numeric'}),
+    )
+    expected_close_date = forms.CharField(
+        required=False,
+        label='تاریخ احتمالی نهایی‌شدن',
+        widget=forms.TextInput(attrs={
+            'class': 'crm-input crm-jalali-date',
+            'data-jdp': '',
+            'data-jdp-only-date': '',
+            'placeholder': '۱۴۰۴/۰۸/۰۱',
+            'autocomplete': 'off',
+        }),
+    )
+    next_action_type = forms.CharField(required=False, label='نوع اقدام بعدی')
+    next_action_at = forms.CharField(
+        required=False,
+        label='زمان اقدام بعدی',
+        widget=forms.TextInput(attrs={
+            'class': 'crm-input crm-jalali-datetime',
+            'data-jdp': '',
+            'placeholder': '۱۴۰۴/۰۶/۱۵ ۱۸:۰۰',
+            'autocomplete': 'off',
+        }),
+    )
+    next_action_note = forms.CharField(
+        required=False,
+        label='یادداشت اقدام',
+        widget=forms.TextInput(attrs={
+            'class': 'crm-input',
+            'placeholder': 'مثلاً: برای نتیجه بازدید پیگیری شود',
+        }),
+    )
+    notes = forms.CharField(
+        required=False,
+        label='یادداشت معامله',
+        widget=forms.Textarea(attrs={'class': 'crm-textarea', 'rows': 2}),
+    )
+    force_duplicate = forms.BooleanField(required=False, widget=forms.HiddenInput())
+
+    def __init__(self, *args, user=None, property_obj=None, **kwargs):
+        self.user = user
+        self.property_obj = property_obj
+        super().__init__(*args, **kwargs)
+        if user:
+            from workspace.services.crm_scope import customers_qs
+            from workspace.services.crm_deal_stages import get_user_deal_stages
+            self.fields['customer'].queryset = customers_qs(user)
+            stages = get_user_deal_stages(user)
+            self.fields['stage'].widget = forms.Select(
+                attrs={'class': 'crm-select'},
+                choices=[(s, s) for s in stages],
+            )
+            if not self.initial.get('stage') and stages:
+                self.initial.setdefault('stage', stages[0])
+        if property_obj:
+            from workspace.services.crm_deals import (
+                default_deal_value_for_property,
+                infer_deal_kind_from_property,
+                suggest_deal_title,
+            )
+            kind = infer_deal_kind_from_property(property_obj)
+            self.initial.setdefault('deal_kind', kind)
+            if kind == 'rent' and property_obj.deal_mode == 'اجاره':
+                self.fields['deal_kind'].choices = [
+                    ('sale', 'فروش'),
+                    ('rent', 'اجاره'),
+                ]
+            val = default_deal_value_for_property(property_obj, kind)
+            if val and not self.initial.get('value'):
+                self.initial['value'] = format_money_input(val)
+            if not self.initial.get('title'):
+                self.initial['title'] = suggest_deal_title(property_obj, None, kind)
+        self.fields['next_action_type'].widget = forms.Select(
+            attrs={'class': 'crm-select'},
+            choices=[('', '— بدون اقدام —')] + list(DEAL_NEXT_ACTION_TYPES),
+        )
+
+    def clean_value(self):
+        raw = self.cleaned_data.get('value')
+        if raw in (None, ''):
+            return None
+        return self._parse_money(raw)
+
+    def _parse_money(self, raw):
+        return parse_money_input(str(raw))
+
+    def clean_expected_close_date(self):
+        raw = self.cleaned_data.get('expected_close_date')
+        if not raw:
+            return None
+        if hasattr(raw, 'year'):
+            return raw
+        parsed = parse_jalali_date_string(str(raw))
+        if parsed is None:
+            raise forms.ValidationError('تاریخ شمسی نامعتبر است.')
+        return parsed
+
+    def clean_next_action_at(self):
+        raw = self.cleaned_data.get('next_action_at')
+        if not raw:
+            return None
+        from datetime import datetime as dt_cls
+        if isinstance(raw, dt_cls):
+            return raw
+        parsed = parse_jalali_datetime_string(str(raw))
+        if parsed is None:
+            raise forms.ValidationError('تاریخ و ساعت نامعتبر است.')
+        return parsed
+
+    def clean_customer(self):
+        customer = self.cleaned_data.get('customer')
+        if not customer:
+            raise forms.ValidationError('مخاطب معامله را انتخاب کنید.')
+        return customer
+
+    def clean(self):
+        cleaned = super().clean()
+        if not self.user or not self.property_obj:
+            return cleaned
+        if cleaned.get('force_duplicate'):
+            return cleaned
+        from workspace.services.crm_deals import find_duplicate_active_deal
+        dup = find_duplicate_active_deal(
+            self.user, self.property_obj, cleaned.get('customer'),
+        )
+        if dup:
+            raise forms.ValidationError(
+                f'برای این مخاطب و این ملک یک معامله فعال وجود دارد: «{dup.title}» — مرحله {dup.stage}.',
+                code='duplicate_active_deal',
+            )
+        return cleaned
+
+    def save(self):
+        from workspace.services.crm_deals import create_deal_from_property
+        data = self.cleaned_data
+        return create_deal_from_property(
+            self.user,
+            self.property_obj,
+            data['customer'],
+            deal_kind=data.get('deal_kind') or '',
+            title=data.get('title') or '',
+            stage=data.get('stage') or '',
+            value=data.get('value'),
+            probability=data.get('probability'),
+            expected_close_date=data.get('expected_close_date'),
+            notes=data.get('notes') or '',
+            next_action_type=data.get('next_action_type') or '',
+            next_action_at=data.get('next_action_at'),
+            next_action_note=data.get('next_action_note') or '',
+        )
+
+
 class PropertyVisitForm(forms.ModelForm):
     visit_date = forms.CharField(
         label='تاریخ بازدید',

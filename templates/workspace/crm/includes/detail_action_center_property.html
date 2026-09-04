@@ -101,6 +101,25 @@
         </article>
         {% endif %}
 
+        {% if can_create_deal %}
+        <article class="crm-detail-intel-card{% if property_deals %} is-growth{% endif %}">
+            <span class="crm-detail-intel-card__icon" aria-hidden="true"><i class="fas fa-handshake"></i></span>
+            <div class="crm-detail-intel-card__body">
+                <span class="crm-detail-intel-card__label">معاملات</span>
+                {% if property_deals_total %}
+                <strong class="crm-detail-intel-card__value">{{ property_deals_total }} معامله</strong>
+                <span class="crm-detail-intel-card__meta">{{ property_deals.0.title|truncatechars:22 }}</span>
+                {% else %}
+                <strong class="crm-detail-intel-card__value is-muted">بدون معامله</strong>
+                <span class="crm-detail-intel-card__meta">ثبت معامله برای این فایل</span>
+                {% endif %}
+            </div>
+            <button type="button" class="crm-detail-intel-card__link" data-drawer-open="drawer-property-deal" title="ثبت معامله">
+                <i class="fas fa-chevron-left" aria-hidden="true"></i>
+            </button>
+        </article>
+        {% endif %}
+
         <article class="crm-detail-intel-card{% if activities %} is-info{% endif %}">
             <span class="crm-detail-intel-card__icon" aria-hidden="true"><i class="fas fa-clock-rotate-left"></i></span>
             <div class="crm-detail-intel-card__body">

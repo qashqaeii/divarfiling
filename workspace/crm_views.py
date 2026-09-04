@@ -35,7 +35,7 @@ from workspace.forms import (
     ActivityForm, CRMAutomationRuleForm, CRMDealCreateForm, CRMDealForm, CRMMessageTemplateForm,
     CRMPropertyForm, CRMPropertyImportForm, CRMReminderForm, ConvertLeadForm,
     CustomerDocumentForm, CustomerForm, CustomerImportForm, FollowUpForm,
-    PropertyLinkForm, PropertyVisitForm, QuickLeadForm,
+    PropertyDealCreateForm, PropertyLinkForm, PropertyVisitForm, QuickLeadForm,
 )
 from workspace.models import (
     CRMAgency, CRMAgencyAuditLog, CRMAgencyMember, CRMAgencyMembershipRequest, CRMAgencyTeamGoal,
@@ -56,7 +56,7 @@ from workspace.services.crm_agency_analytics import (
     get_team_performance,
 )
 from workspace.services.crm_scope import (
-    agency_members, can_edit_customer, can_edit_property, can_manage_team,
+    agency_members, can_create_property_deal, can_edit_customer, can_edit_property, can_manage_team,
     can_operate_team_leads, can_view_team_inbox, can_view_team_performance,
     customer_for_user,
     customers_qs, deal_for_user, deals_qs, get_agency, get_membership,
@@ -128,8 +128,11 @@ from workspace.services.crm_templates import (
     ensure_default_templates, list_templates, render_message_template, templates_by_category,
 )
 from workspace.services.crm_deals import (
-    apply_deal_commission, create_deal, filter_deals, get_deal_pipeline,
-    get_deal_stats, update_deal_stage,
+    apply_deal_commission, create_deal, filter_deals, find_duplicate_active_deal,
+    get_property_active_deals, infer_deal_kind_from_property, property_deals_qs,
+    search_customers_for_property_deal, serialize_property_deal_customer,
+    suggest_deal_title, update_deal_stage,
+    get_deal_pipeline, get_deal_stats,
 )
 from workspace.services.crm_deal_finance import (
     apply_deal_finance, finance_dashboard, get_finance_defaults,
@@ -1701,6 +1704,26 @@ class CRMPropertyDetailView(CRMContextMixin, LoginRequiredMixin, DetailView):
             ctx['ai_listing_summary_quota'] = feature_quota_dict(
                 self.request.user, FEATURE_LISTING_SUMMARY,
             )
+        if not ctx.get('property_is_deleted') and not ctx.get('mask_sensitive'):
+            can_deal = can_create_property_deal(self.request.user, p)
+            ctx['can_create_deal'] = can_deal
+            if can_deal:
+                kind = infer_deal_kind_from_property(p)
+                ctx['property_deals'] = list(
+                    property_deals_qs(self.request.user, p).order_by('-updated_at')[:3],
+                )
+                ctx['property_deals_total'] = property_deals_qs(self.request.user, p).count()
+                ctx['property_active_deals'] = list(get_property_active_deals(self.request.user, p)[:5])
+                ctx['property_deal_form'] = PropertyDealCreateForm(
+                    user=self.request.user,
+                    property_obj=p,
+                )
+                ctx['property_deal_kind'] = kind
+                ctx['property_deal_suggested_title'] = suggest_deal_title(p, None, kind)
+            else:
+                ctx['property_deals'] = []
+                ctx['property_deals_total'] = 0
+                ctx['property_active_deals'] = []
         return ctx
 
     def _detail_redirect(self, property_id, *, tab='contacts', drawer=''):
@@ -1872,6 +1895,120 @@ class CRMPropertyDetailView(CRMContextMixin, LoginRequiredMixin, DetailView):
             else:
                 messages.warning(request, 'پیگیری فعالی برای بستن وجود ندارد.')
         return redirect(redirect_url)
+
+
+def _property_deal_access_or_404(user, property_id):
+    prop = property_for_user(user, property_id)
+    if not prop or not can_create_property_deal(user, prop):
+        return None
+    return prop
+
+
+class CRMPropertyDealCreateView(LoginRequiredMixin, View):
+    """ثبت معامله از صفحه فایل شخصی."""
+
+    def post(self, request, property_id):
+        prop = _property_deal_access_or_404(request.user, property_id)
+        if not prop:
+            messages.error(request, 'دسترسی به این ملک برای ثبت معامله وجود ندارد.')
+            return redirect('workspace:crm_properties')
+        form = PropertyDealCreateForm(request.POST, user=request.user, property_obj=prop)
+        if form.is_valid():
+            deal = form.save()
+            apply_deal_commission(deal)
+            detail_url = reverse('workspace:crm_deal_detail', kwargs={'deal_id': deal.pk})
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({'ok': True, 'redirect': detail_url, 'deal_id': deal.pk})
+            messages.success(request, 'معامله با موفقیت ثبت شد.')
+            return redirect('workspace:crm_deal_detail', deal_id=deal.pk)
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            dup = None
+            customer_raw = request.POST.get('customer')
+            customer_obj = None
+            if customer_raw:
+                try:
+                    customer_obj = customer_for_user(request.user, int(customer_raw))
+                except (TypeError, ValueError):
+                    customer_obj = None
+            for err in form.non_field_errors():
+                if getattr(err, 'code', '') == 'duplicate_active_deal':
+                    dup = find_duplicate_active_deal(request.user, prop, customer_obj)
+            errors = {k: [str(e) for e in v] for k, v in form.errors.items()}
+            payload = {'ok': False, 'errors': errors}
+            if dup:
+                payload['duplicate'] = {
+                    'id': dup.pk,
+                    'title': dup.title,
+                    'stage': dup.stage,
+                    'url': reverse('workspace:crm_deal_detail', kwargs={'deal_id': dup.pk}),
+                }
+            return JsonResponse(payload, status=400)
+        messages.error(request, 'ثبت معامله انجام نشد. فیلدها را بررسی کنید.')
+        for err in form.non_field_errors():
+            messages.error(request, str(err))
+        return redirect(
+            reverse('workspace:crm_property_detail', kwargs={'property_id': prop.pk})
+            + '?drawer=property-deal',
+        )
+
+
+class CRMPropertyDealCustomerSearchView(LoginRequiredMixin, View):
+    def get(self, request, property_id):
+        prop = _property_deal_access_or_404(request.user, property_id)
+        if not prop:
+            return JsonResponse({'ok': False, 'error': 'دسترسی ندارید'}, status=403)
+        q = request.GET.get('q', '').strip()
+        results = search_customers_for_property_deal(request.user, prop, q)
+        return JsonResponse({'ok': True, 'results': results})
+
+
+class CRMPropertyDealDuplicateCheckView(LoginRequiredMixin, View):
+    def get(self, request, property_id):
+        prop = _property_deal_access_or_404(request.user, property_id)
+        if not prop:
+            return JsonResponse({'ok': False, 'error': 'دسترسی ندارید'}, status=403)
+        try:
+            customer_id = int(request.GET.get('customer_id', 0))
+        except (TypeError, ValueError):
+            return JsonResponse({'ok': False, 'error': 'مخاطب نامعتبر'}, status=400)
+        customer = customer_for_user(request.user, customer_id)
+        if not customer:
+            return JsonResponse({'ok': False, 'error': 'مخاطب یافت نشد'}, status=404)
+        dup = find_duplicate_active_deal(request.user, prop, customer)
+        if not dup:
+            return JsonResponse({'ok': True, 'duplicate': None})
+        return JsonResponse({
+            'ok': True,
+            'duplicate': {
+                'id': dup.pk,
+                'title': dup.title,
+                'stage': dup.stage,
+                'url': reverse('workspace:crm_deal_detail', kwargs={'deal_id': dup.pk}),
+            },
+        })
+
+
+class CRMPropertyDealQuickCustomerView(LoginRequiredMixin, View):
+    """ساخت سریع مخاطب از فرم ثبت معامله."""
+
+    def post(self, request, property_id):
+        prop = _property_deal_access_or_404(request.user, property_id)
+        if not prop:
+            return JsonResponse({'ok': False, 'error': 'دسترسی ندارید'}, status=403)
+        form = QuickLeadForm(request.POST, user=request.user)
+        if not form.is_valid():
+            return JsonResponse({'ok': False, 'errors': form.errors}, status=400)
+        customer = form.save(user=request.user)
+        deal_kind = (request.POST.get('deal_kind') or infer_deal_kind_from_property(prop)).strip()
+        from workspace.services.crm_deals import customer_type_for_deal_kind
+        ctype = (request.POST.get('customer_type') or '').strip()
+        customer.customer_type = ctype or customer_type_for_deal_kind(deal_kind)
+        customer.save(update_fields=['customer_type', 'updated_at'])
+        log_activity(customer, 'یادداشت', content='مخاطب سریع از ثبت معامله فایل شخصی', title='ثبت مخاطب')
+        return JsonResponse({
+            'ok': True,
+            'customer': serialize_property_deal_customer(customer),
+        })
 
 
 class CRMPropertyUpdateView(LoginRequiredMixin, UpdateView):

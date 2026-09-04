@@ -283,6 +283,15 @@ def can_edit_deal(user, deal: CRMDeal) -> bool:
     return is_deal_owner(user, deal)
 
 
+def can_create_property_deal(user, prop: CRMProperty) -> bool:
+    """ثبت معامله از فایل شخصی — مالک یا اشتراک کامل."""
+    if not prop or prop.deleted_at:
+        return False
+    if not property_for_user(user, prop.pk):
+        return False
+    return can_edit_property(user, prop)
+
+
 
 
 

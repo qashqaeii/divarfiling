@@ -14,6 +14,60 @@
         };
     }
 
+    function escapeHtml(s) {
+        return String(s || '').replace(/[&<>"']/g, (ch) => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+        }[ch]));
+    }
+
+    function escapeAttr(s) {
+        return escapeHtml(s).replace(/"/g, '&quot;');
+    }
+
+    function initProbability(root) {
+        const slider = root.querySelector('#crmPdcProbSlider');
+        const output = root.querySelector('#crmPdcProbOutput');
+        const fill = root.querySelector('[data-prop-deal-prob-fill]');
+        const hidden = root.querySelector('[data-prop-deal-probability-input]');
+        const trackWrap = root.querySelector('.crm-pdc-probability__track-wrap');
+        const presets = root.querySelectorAll('[data-prop-deal-prob-preset]');
+        const stageSelect = root.closest('form')?.querySelector('[data-prop-deal-stage]');
+        let stageProbs = {};
+        const probsEl = document.getElementById('crmPropDealStageProbs');
+        if (probsEl) {
+            try { stageProbs = JSON.parse(probsEl.textContent); } catch (e) { stageProbs = {}; }
+        }
+
+        if (!slider || !hidden) return;
+
+        function sync(val) {
+            const n = Math.max(0, Math.min(100, parseInt(val, 10) || 0));
+            slider.value = String(n);
+            hidden.value = String(n);
+            if (output) output.textContent = n + '٪';
+            if (fill) fill.style.width = n + '%';
+            if (trackWrap) trackWrap.style.setProperty('--pdc-thumb', n + '%');
+            presets.forEach((btn) => {
+                const p = parseInt(btn.dataset.propDealProbPreset, 10);
+                btn.classList.toggle('is-active', p === n);
+            });
+        }
+
+        sync(hidden.value || slider.value || 50);
+
+        slider.addEventListener('input', () => sync(slider.value));
+        presets.forEach((btn) => {
+            btn.addEventListener('click', () => sync(btn.dataset.propDealProbPreset));
+        });
+
+        if (stageSelect) {
+            stageSelect.addEventListener('change', () => {
+                const prob = stageProbs[stageSelect.value];
+                if (prob != null) sync(prob);
+            });
+        }
+    }
+
     function initPropertyDealCreate() {
         const form = document.getElementById('crmPropDealCreateForm');
         const root = document.getElementById('crmPropDealFormRoot');
@@ -46,6 +100,8 @@
 
         let selectedCustomer = null;
 
+        initProbability(root);
+
         function syncQuickTypeFromDealKind() {
             if (!quickType || !dealKindSelect) return;
             quickType.value = dealKindSelect.value === 'rent' ? 'مستاجر' : 'خریدار';
@@ -54,7 +110,7 @@
         function renderResults(items) {
             if (!resultsEl) return;
             if (!items || !items.length) {
-                resultsEl.innerHTML = '<div class="crm-prop-deal-customer-result" style="cursor:default;color:#94a3b8">نتیجه‌ای یافت نشد</div>';
+                resultsEl.innerHTML = '<div class="crm-prop-deal-customer-result" style="cursor:default;color:#94a3b8;padding:0.75rem">نتیجه‌ای یافت نشد</div>';
                 resultsEl.hidden = false;
                 return;
             }
@@ -68,16 +124,6 @@
                 </button>`;
             }).join('');
             resultsEl.hidden = false;
-        }
-
-        function escapeHtml(s) {
-            return String(s || '').replace(/[&<>"']/g, (ch) => ({
-                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
-            }[ch]));
-        }
-
-        function escapeAttr(s) {
-            return escapeHtml(s).replace(/"/g, '&quot;');
         }
 
         function selectCustomer(id, name, meta) {
@@ -112,7 +158,7 @@
                         dupWarn.hidden = true;
                         return;
                     }
-                    dupWarn.innerHTML = `برای این مخاطب و این ملک یک معامله فعال وجود دارد: <a href="${data.duplicate.url}">${escapeHtml(data.duplicate.title)}</a> — ${escapeHtml(data.duplicate.stage)}. می‌توانید با این حال معامله جدید بسازید.`;
+                    dupWarn.innerHTML = `برای این مخاطب یک معامله فعال وجود دارد: <a href="${data.duplicate.url}">${escapeHtml(data.duplicate.title)}</a> — ${escapeHtml(data.duplicate.stage)}`;
                     dupWarn.hidden = false;
                 })
                 .catch(() => {});
@@ -120,11 +166,9 @@
 
         function updateTitlePreview() {
             if (!titleInput || !selectedCustomer) return;
-            const base = titleInput.dataset.baseTitle || titleInput.placeholder || titleInput.value;
+            const base = titleInput.dataset.baseTitle || titleInput.value;
             if (!titleInput.dataset.userEdited) {
-                const kindLabel = dealKindSelect && dealKindSelect.options[dealKindSelect.selectedIndex]
-                    ? dealKindSelect.options[dealKindSelect.selectedIndex].text
-                    : '';
+                const kindLabel = dealKindSelect?.options[dealKindSelect.selectedIndex]?.text || '';
                 const propPart = (base || '').replace(/^(فروش|رهن و اجاره|اجاره)\s+/, '');
                 titleInput.value = `${kindLabel} ${propPart}`.trim() + (selectedCustomer.name ? ` به ${selectedCustomer.name}` : '');
             }
@@ -140,33 +184,25 @@
                 .catch(() => {});
         }, 280);
 
-        if (searchInput) {
-            searchInput.addEventListener('focus', () => doSearch(''));
-            searchInput.addEventListener('input', () => doSearch(searchInput.value.trim()));
-        }
+        searchInput?.addEventListener('focus', () => doSearch(''));
+        searchInput?.addEventListener('input', () => doSearch(searchInput.value.trim()));
 
-        if (resultsEl) {
-            resultsEl.addEventListener('click', (e) => {
-                const btn = e.target.closest('[data-id]');
-                if (!btn) return;
-                selectCustomer(btn.dataset.id, btn.dataset.name, btn.dataset.meta);
-            });
-        }
+        resultsEl?.addEventListener('click', (e) => {
+            const btn = e.target.closest('[data-id]');
+            if (!btn) return;
+            selectCustomer(btn.dataset.id, btn.dataset.name, btn.dataset.meta);
+        });
 
         root.querySelector('[data-prop-deal-clear]')?.addEventListener('click', clearCustomer);
 
-        if (dealKindSelect) {
-            dealKindSelect.addEventListener('change', () => {
-                syncQuickTypeFromDealKind();
-                updateTitlePreview();
-            });
-        }
+        dealKindSelect?.addEventListener('change', () => {
+            syncQuickTypeFromDealKind();
+            updateTitlePreview();
+        });
 
         if (titleInput) {
             titleInput.dataset.baseTitle = titleInput.value;
-            titleInput.addEventListener('input', () => {
-                titleInput.dataset.userEdited = '1';
-            });
+            titleInput.addEventListener('input', () => { titleInput.dataset.userEdited = '1'; });
         }
 
         quickOpen?.addEventListener('click', () => {
@@ -193,15 +229,10 @@
             body.append('phone', quickPhone?.value || '');
             body.append('source', 'سایر');
             body.append('deal_kind', dealKindSelect?.value || 'sale');
-            if (quickType?.value) {
-                body.append('customer_type', quickType.value);
-            }
+            if (quickType?.value) body.append('customer_type', quickType.value);
             fetch(quickUrl, {
                 method: 'POST',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRFToken': csrfToken(),
-                },
+                headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRFToken': csrfToken() },
                 body,
             })
                 .then((r) => r.json())
@@ -253,16 +284,15 @@
                         return;
                     }
                     if (data.duplicate && dupWarn) {
-                        dupWarn.innerHTML = `برای این مخاطب و این ملک یک معامله فعال وجود دارد. <a href="${data.duplicate.url}">مشاهده معامله موجود</a> — یا با فعال‌کردن «با این حال بساز» ادامه دهید.`;
+                        dupWarn.innerHTML = `معامله فعال مشابه وجود دارد. <a href="${data.duplicate.url}">مشاهده</a>`;
                         dupWarn.hidden = false;
-                        if (forceInput && confirm('معامله فعال مشابه وجود دارد. با این حال معامله جدید ساخته شود؟')) {
+                        if (forceInput && confirm('معامله فعال مشابه وجود دارد. با این حال ثبت شود؟')) {
                             forceInput.checked = true;
                             form.requestSubmit();
                         }
                     } else {
                         const msg = (data.errors && (data.errors.__all__ || data.errors.customer)) || 'ثبت معامله انجام نشد.';
-                        const text = Array.isArray(msg) ? msg.join(' ') : String(msg);
-                        alert(text);
+                        alert(Array.isArray(msg) ? msg.join(' ') : String(msg));
                     }
                 })
                 .catch(() => alert('خطا در ثبت معامله. دوباره تلاش کنید.'))

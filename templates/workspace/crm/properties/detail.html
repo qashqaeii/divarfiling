@@ -18,7 +18,7 @@
 {% block crm_extra_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/crm-zonkan.css' %}?v=6">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-prop-detail-mobile.css' %}?v=3">
-<link rel="stylesheet" href="{% static 'workspace/css/crm-property-deal-create.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-property-deal-create.css' %}?v=2">
 {% if show_nearby_pois %}
 <link rel="stylesheet" href="{% static 'workspace/css/crm-nearby-pois.css' %}?v=6">
 {% endif %}
@@ -927,6 +927,7 @@
             <div class="crm-drawer-foot crm-deal-create-foot crm-prop-deal-create-foot">
                 <button type="button" class="crm-btn crm-btn-ghost" data-drawer-close>انصراف</button>
                 <button type="submit" class="crm-btn crm-btn-primary" data-prop-deal-submit>
+                    <i class="fas fa-handshake" aria-hidden="true"></i>
                     <span data-prop-deal-submit-label>ثبت معامله</span>
                 </button>
             </div>
@@ -981,7 +982,7 @@
 
 {% block crm_js %}
 {% if can_create_deal %}
-<script src="{% static 'workspace/js/crm-property-deal-create.js' %}?v=1"></script>
+<script src="{% static 'workspace/js/crm-property-deal-create.js' %}?v=2"></script>
 {% endif %}
 {% if crm_agency and is_property_owner %}
 <script>

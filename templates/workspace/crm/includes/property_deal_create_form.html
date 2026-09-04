@@ -1,145 +1,194 @@
 {% load workspace_tags crm_tags %}
-<div class="crm-prop-deal-form" id="crmPropDealFormRoot"
+<div class="crm-pdc-form" id="crmPropDealFormRoot"
      data-search-url="{% url 'workspace:crm_property_deal_customers' property.id %}"
      data-duplicate-url="{% url 'workspace:crm_property_deal_duplicate' property.id %}"
      data-quick-customer-url="{% url 'workspace:crm_property_deal_quick_customer' property.id %}"
-     data-property-url="{% url 'workspace:crm_property_detail' property.id %}"
-     data-deals-url="{% url 'workspace:crm_deals' %}?property_id={{ property.id }}">
+     data-property-url="{% url 'workspace:crm_property_detail' property.id %}">
+    {% if property_deal_stage_probs %}{{ property_deal_stage_probs|json_script:"crmPropDealStageProbs" }}{% endif %}
 
     {% if property_active_deals %}
-    <div class="crm-prop-deal-warn crm-prop-deal-warn--active" role="status">
-        <div class="crm-prop-deal-warn-head">
-            <i class="fas fa-circle-info" aria-hidden="true"></i>
-            <strong>برای این ملک {{ property_active_deals|length }} معامله فعال وجود دارد.</strong>
+    <div class="crm-pdc-alert" role="status">
+        <div class="crm-pdc-alert__icon"><i class="fas fa-circle-info" aria-hidden="true"></i></div>
+        <div class="crm-pdc-alert__body">
+            <strong>{{ property_active_deals|length }} معامله فعال برای این ملک</strong>
+            <ul class="crm-pdc-alert__list">
+                {% for d in property_active_deals|slice:":3" %}
+                <li>
+                    <a href="{% url 'workspace:crm_deal_detail' d.id %}">{{ d.title|truncatechars:36 }}</a>
+                    <span class="crm-pill crm-pill-sm" style="{% crm_deal_stage_style d.stage %}">{{ d.stage }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+            {% if property_deals_total %}
+            <a href="{% url 'workspace:crm_deals' %}?q={{ property.title|urlencode }}" class="crm-pdc-alert__link">مشاهده همه</a>
+            {% endif %}
         </div>
-        <ul class="crm-prop-deal-warn-list">
-            {% for d in property_active_deals|slice:":3" %}
-            <li>
-                <a href="{% url 'workspace:crm_deal_detail' d.id %}">{{ d.title|truncatechars:40 }}</a>
-                <span class="crm-pill crm-pill-sm" style="{% crm_deal_stage_style d.stage %}">{{ d.stage }}</span>
-            </li>
-            {% endfor %}
-        </ul>
-        {% if property_deals_total %}
-        <a href="{% url 'workspace:crm_deals' %}?q={{ property.title|urlencode }}" class="crm-prop-deal-warn-link">مشاهده معاملات فعال</a>
-        {% endif %}
     </div>
     {% endif %}
 
-    <div class="crm-prop-deal-summary" aria-label="خلاصه ملک">
-        <span class="crm-prop-deal-summary-kicker">ملک معامله</span>
-        <strong class="crm-prop-deal-summary-title">{{ property.title }}</strong>
-        <div class="crm-prop-deal-summary-meta">
-            <span>{{ property.deal_mode }}</span>
-            {% if property.sale_price and property_deal_kind != 'rent' %}
-            <span>{{ property.sale_price|ws_money }}</span>
-            {% elif property.monthly_rent %}
-            <span>اجاره {{ property.monthly_rent|ws_money }}</span>
-            {% elif property.deposit %}
-            <span>رهن {{ property.deposit|ws_money }}</span>
-            {% endif %}
-        </div>
-        {% if owner_contact or owner_name %}
-        <div class="crm-prop-deal-summary-owner">
-            <span>مالک:</span>
-            <strong>{% if owner_contact %}{{ owner_contact.name }}{% else %}{{ owner_name }}{% endif %}</strong>
-            {% if owner_contact.phone or owner_phone %}
-            <span dir="ltr">{% if owner_contact %}{{ owner_contact.phone|slice:":4" }}***{{ owner_contact.phone|slice:"-4:" }}{% else %}{{ owner_phone|slice:":4" }}***{{ owner_phone|slice:"-4:" }}{% endif %}</span>
-            {% endif %}
-        </div>
-        {% endif %}
-        <a href="{% url 'workspace:crm_property_detail' property.id %}" class="crm-prop-deal-summary-link" target="_blank" rel="noopener">
-            <i class="fas fa-external-link-alt" aria-hidden="true"></i> مشاهده فایل
-        </a>
-    </div>
-
-    <div class="crm-prop-deal-primary">
-        <div class="crm-form-field crm-prop-deal-customer-field">
-            <label>طرف معامله / مخاطب <span class="crm-req">*</span></label>
-            <div class="crm-prop-deal-customer-picker" data-prop-deal-customer-picker>
-                <div class="crm-prop-deal-customer-selected" data-prop-deal-selected hidden>
-                    <div class="crm-prop-deal-customer-selected-body">
-                        <strong data-prop-deal-selected-name></strong>
-                        <span data-prop-deal-selected-meta></span>
-                    </div>
-                    <button type="button" class="crm-prop-deal-customer-clear" data-prop-deal-clear aria-label="حذف انتخاب">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <div class="crm-prop-deal-customer-search-wrap" data-prop-deal-search-wrap>
-                    <div class="crm-prop-deal-customer-search">
-                        <i class="fas fa-search" aria-hidden="true"></i>
-                        <input type="search"
-                               class="crm-input"
-                               data-prop-deal-search
-                               placeholder="جستجو: نام، موبایل، شرکت..."
-                               autocomplete="off"
-                               inputmode="search">
-                    </div>
-                    <div class="crm-prop-deal-customer-results" data-prop-deal-results hidden></div>
-                </div>
-                <button type="button" class="crm-prop-deal-add-contact" data-prop-deal-quick-open>
-                    <i class="fas fa-plus" aria-hidden="true"></i> افزودن مخاطب جدید
-                </button>
+    <section class="crm-pdc-section crm-pdc-section--property" aria-label="خلاصه ملک">
+        <header class="crm-pdc-section__head">
+            <span class="crm-pdc-section__icon"><i class="fas fa-building" aria-hidden="true"></i></span>
+            <div>
+                <h3 class="crm-pdc-section__title">ملک معامله</h3>
+                <p class="crm-pdc-section__sub">فایل انتخاب‌شده — غیرقابل تغییر</p>
             </div>
-            {{ form.customer }}
-            <p class="crm-field-hint">برای فروش معمولاً خریدار — برای اجاره مستأجر</p>
+        </header>
+        <div class="crm-pdc-property-card">
+            <strong class="crm-pdc-property-card__title">{{ property.title }}</strong>
+            <div class="crm-pdc-property-card__chips">
+                <span class="crm-pdc-chip">{{ property.deal_mode }}</span>
+                {% if property.sale_price and property_deal_kind != 'rent' %}
+                <span class="crm-pdc-chip crm-pdc-chip--price">{{ property.sale_price|ws_money }}</span>
+                {% elif property.monthly_rent %}
+                <span class="crm-pdc-chip crm-pdc-chip--price">اجاره {{ property.monthly_rent|ws_money }}</span>
+                {% elif property.deposit %}
+                <span class="crm-pdc-chip">رهن {{ property.deposit|ws_money }}</span>
+                {% endif %}
+            </div>
+            {% if owner_contact or owner_name %}
+            <div class="crm-pdc-property-card__owner">
+                <i class="fas fa-user-tie" aria-hidden="true"></i>
+                <span>{% if owner_contact %}{{ owner_contact.name }}{% else %}{{ owner_name }}{% endif %}</span>
+                {% if owner_contact.phone or owner_phone %}
+                <span class="crm-pdc-property-card__phone" dir="ltr">{% if owner_contact %}{{ owner_contact.phone|slice:":4" }}***{{ owner_contact.phone|slice:"-4:" }}{% else %}{{ owner_phone|slice:":4" }}***{{ owner_phone|slice:"-4:" }}{% endif %}</span>
+                {% endif %}
+            </div>
+            {% endif %}
+            <a href="{% url 'workspace:crm_property_detail' property.id %}" class="crm-pdc-property-card__link" target="_blank" rel="noopener">
+                مشاهده فایل <i class="fas fa-arrow-left" aria-hidden="true"></i>
+            </a>
         </div>
+    </section>
 
-        <div class="crm-prop-deal-dup-warn" data-prop-deal-dup-warn hidden role="alert"></div>
+    <section class="crm-pdc-section" aria-label="طرف معامله">
+        <header class="crm-pdc-section__head">
+            <span class="crm-pdc-section__icon"><i class="fas fa-user" aria-hidden="true"></i></span>
+            <div>
+                <h3 class="crm-pdc-section__title">طرف معامله <span class="crm-req">*</span></h3>
+                <p class="crm-pdc-section__sub">فروش → خریدار · اجاره → مستأجر</p>
+            </div>
+        </header>
 
-        <div class="crm-form-grid crm-form-grid--2">
-            <div class="crm-form-field">
+        <div class="crm-pdc-contact" data-prop-deal-customer-picker>
+            <div class="crm-pdc-contact__selected" data-prop-deal-selected hidden>
+                <div class="crm-pdc-contact__avatar" aria-hidden="true"><i class="fas fa-user-check"></i></div>
+                <div class="crm-pdc-contact__info">
+                    <strong data-prop-deal-selected-name></strong>
+                    <span data-prop-deal-selected-meta></span>
+                </div>
+                <button type="button" class="crm-pdc-contact__change" data-prop-deal-clear>تغییر</button>
+            </div>
+
+            <div class="crm-pdc-contact__search-wrap" data-prop-deal-search-wrap>
+                <label class="crm-pdc-search" aria-label="جستجوی مخاطب">
+                    <i class="fas fa-search" aria-hidden="true"></i>
+                    <input type="search"
+                           class="crm-pdc-search__input"
+                           data-prop-deal-search
+                           placeholder="نام، موبایل یا شرکت..."
+                           autocomplete="off"
+                           inputmode="search">
+                </label>
+                <div class="crm-pdc-contact__results" data-prop-deal-results hidden></div>
+            </div>
+
+            <button type="button" class="crm-pdc-contact__add" data-prop-deal-quick-open>
+                <i class="fas fa-plus" aria-hidden="true"></i>
+                <span>افزودن مخاطب جدید</span>
+            </button>
+        </div>
+        {{ form.customer }}
+
+        <div class="crm-pdc-dup" data-prop-deal-dup-warn hidden role="alert"></div>
+    </section>
+
+    <section class="crm-pdc-section" aria-label="اطلاعات اصلی معامله">
+        <header class="crm-pdc-section__head">
+            <span class="crm-pdc-section__icon"><i class="fas fa-handshake" aria-hidden="true"></i></span>
+            <div>
+                <h3 class="crm-pdc-section__title">اطلاعات معامله</h3>
+            </div>
+        </header>
+        <div class="crm-pdc-fields crm-pdc-fields--2">
+            <div class="crm-pdc-field">
                 <label for="{{ form.deal_kind.id_for_label }}">نوع معامله</label>
                 {{ form.deal_kind }}
             </div>
-            <div class="crm-form-field">
+            <div class="crm-pdc-field">
                 <label for="{{ form.value.id_for_label }}">ارزش معامله</label>
                 {{ form.value }}
             </div>
         </div>
-
-        <div class="crm-form-field">
+        <div class="crm-pdc-field">
             <label for="{{ form.title.id_for_label }}">عنوان معامله</label>
             {{ form.title }}
+            <p class="crm-pdc-hint">در صورت خالی بودن، عنوان خودکار پیشنهاد می‌شود</p>
         </div>
-    </div>
+    </section>
 
-    <details class="crm-prop-deal-advanced">
-        <summary>جزئیات بیشتر</summary>
-        <div class="crm-prop-deal-advanced-body">
-            <div class="crm-form-grid crm-form-grid--2">
-                <div class="crm-form-field">
-                    <label for="{{ form.stage.id_for_label }}">مرحله</label>
-                    {{ form.stage }}
-                </div>
-                <div class="crm-form-field">
-                    <label for="{{ form.probability.id_for_label }}">احتمال بستن</label>
-                    {{ form.probability }}
-                </div>
+    <details class="crm-pdc-advanced">
+        <summary class="crm-pdc-advanced__toggle">
+            <span><i class="fas fa-sliders" aria-hidden="true"></i> جزئیات بیشتر</span>
+            <i class="fas fa-chevron-down crm-pdc-advanced__chev" aria-hidden="true"></i>
+        </summary>
+        <div class="crm-pdc-advanced__body">
+            <div class="crm-pdc-field">
+                <label for="{{ form.stage.id_for_label }}">مرحله</label>
+                {{ form.stage }}
             </div>
-            <div class="crm-form-field">
+
+            <div class="crm-pdc-field crm-pdc-probability" data-prop-deal-probability>
+                <div class="crm-pdc-probability__head">
+                    <label for="crmPdcProbSlider">احتمال بستن</label>
+                    <output class="crm-pdc-probability__value" id="crmPdcProbOutput" for="crmPdcProbSlider">{% if form.probability.value %}{{ form.probability.value }}٪{% else %}—{% endif %}</output>
+                </div>
+                <div class="crm-pdc-probability__track-wrap">
+                    <div class="crm-pdc-probability__track" aria-hidden="true">
+                        <div class="crm-pdc-probability__fill" data-prop-deal-prob-fill></div>
+                    </div>
+                    <input type="range"
+                           id="crmPdcProbSlider"
+                           class="crm-pdc-probability__slider"
+                           min="0" max="100" step="5"
+                           value="{{ form.probability.value|default:50 }}"
+                           aria-valuemin="0" aria-valuemax="100"
+                           aria-label="احتمال بستن معامله">
+                </div>
+                <div class="crm-pdc-probability__presets" role="group" aria-label="احتمال سریع">
+                    <button type="button" class="crm-pdc-prob-preset" data-prop-deal-prob-preset="20">۲۰٪</button>
+                    <button type="button" class="crm-pdc-prob-preset" data-prop-deal-prob-preset="40">۴۰٪</button>
+                    <button type="button" class="crm-pdc-prob-preset" data-prop-deal-prob-preset="60">۶۰٪</button>
+                    <button type="button" class="crm-pdc-prob-preset" data-prop-deal-prob-preset="80">۸۰٪</button>
+                    <button type="button" class="crm-pdc-prob-preset" data-prop-deal-prob-preset="100">۱۰۰٪</button>
+                </div>
+                {{ form.probability }}
+            </div>
+
+            <div class="crm-pdc-field">
                 <label for="{{ form.expected_close_date.id_for_label }}">تاریخ احتمالی نهایی‌شدن</label>
                 {{ form.expected_close_date }}
             </div>
-            <div class="crm-prop-deal-next-block">
-                <h4>اقدام بعدی</h4>
-                <div class="crm-form-field">
+
+            <div class="crm-pdc-subsection">
+                <h4 class="crm-pdc-subsection__title">اقدام بعدی</h4>
+                <div class="crm-pdc-field">
                     <label for="{{ form.next_action_type.id_for_label }}">نوع</label>
                     {{ form.next_action_type }}
                 </div>
-                <div class="crm-form-grid crm-form-grid--2">
-                    <div class="crm-form-field">
+                <div class="crm-pdc-fields crm-pdc-fields--2">
+                    <div class="crm-pdc-field">
                         <label for="{{ form.next_action_at.id_for_label }}">زمان</label>
                         {{ form.next_action_at }}
                     </div>
-                    <div class="crm-form-field">
-                        <label for="{{ form.next_action_note.id_for_label }}">توضیح کوتاه</label>
+                    <div class="crm-pdc-field">
+                        <label for="{{ form.next_action_note.id_for_label }}">توضیح</label>
                         {{ form.next_action_note }}
                     </div>
                 </div>
             </div>
-            <div class="crm-form-field">
+
+            <div class="crm-pdc-field">
                 <label for="{{ form.notes.id_for_label }}">یادداشت معامله</label>
                 {{ form.notes }}
             </div>
@@ -148,24 +197,24 @@
 
     {{ form.force_duplicate }}
 
-    <div class="crm-prop-deal-quick-create" data-prop-deal-quick hidden>
-        <div class="crm-prop-deal-quick-head">
+    <div class="crm-pdc-quick" data-prop-deal-quick hidden>
+        <div class="crm-pdc-quick__head">
             <h4>مخاطب جدید</h4>
-            <button type="button" class="crm-prop-deal-quick-close" data-prop-deal-quick-close aria-label="بستن">
+            <button type="button" class="crm-pdc-quick__close" data-prop-deal-quick-close aria-label="بستن">
                 <i class="fas fa-times"></i>
             </button>
         </div>
-        <div class="crm-form-grid crm-form-grid--2">
-            <div class="crm-form-field">
+        <div class="crm-pdc-fields crm-pdc-fields--2">
+            <div class="crm-pdc-field">
                 <label for="propDealQuickName">نام <span class="crm-req">*</span></label>
                 <input type="text" id="propDealQuickName" class="crm-input" data-prop-deal-quick-name autocomplete="name">
             </div>
-            <div class="crm-form-field">
+            <div class="crm-pdc-field">
                 <label for="propDealQuickPhone">موبایل</label>
                 <input type="tel" id="propDealQuickPhone" class="crm-input" data-prop-deal-quick-phone dir="ltr" inputmode="tel" autocomplete="tel">
             </div>
         </div>
-        <div class="crm-form-field">
+        <div class="crm-pdc-field">
             <label for="propDealQuickType">نوع مخاطب</label>
             <select id="propDealQuickType" class="crm-select" data-prop-deal-quick-type>
                 <option value="خریدار">خریدار</option>
@@ -174,6 +223,6 @@
             </select>
         </div>
         <button type="button" class="crm-btn crm-btn-primary crm-btn-block" data-prop-deal-quick-save>ذخیره و انتخاب</button>
-        <p class="crm-prop-deal-quick-err" data-prop-deal-quick-err hidden></p>
+        <p class="crm-pdc-quick__err" data-prop-deal-quick-err hidden></p>
     </div>
 </div>

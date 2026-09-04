@@ -1205,8 +1205,8 @@ class PropertyDealCreateForm(forms.Form):
         required=False,
         min_value=0,
         max_value=100,
-        label='احتمال بستن (%)',
-        widget=forms.NumberInput(attrs={'class': 'crm-input', 'inputmode': 'numeric'}),
+        label='احتمال بستن',
+        widget=forms.HiddenInput(attrs={'data-prop-deal-probability-input': '1'}),
     )
     expected_close_date = forms.CharField(
         required=False,
@@ -1251,15 +1251,18 @@ class PropertyDealCreateForm(forms.Form):
         super().__init__(*args, **kwargs)
         if user:
             from workspace.services.crm_scope import customers_qs
-            from workspace.services.crm_deal_stages import get_user_deal_stages
+            from workspace.services.crm_deal_stages import get_user_deal_stages, probability_for_stage
             self.fields['customer'].queryset = customers_qs(user)
             stages = get_user_deal_stages(user)
             self.fields['stage'].widget = forms.Select(
-                attrs={'class': 'crm-select'},
+                attrs={'class': 'crm-select', 'data-prop-deal-stage': '1'},
                 choices=[(s, s) for s in stages],
             )
             if not self.initial.get('stage') and stages:
                 self.initial.setdefault('stage', stages[0])
+            stage_name = self.initial.get('stage') or (stages[0] if stages else '')
+            if stage_name and self.initial.get('probability') in (None, ''):
+                self.initial.setdefault('probability', probability_for_stage(user, stage_name))
         if property_obj:
             from workspace.services.crm_deals import (
                 default_deal_value_for_property,

@@ -1709,6 +1709,8 @@ class CRMPropertyDetailView(CRMContextMixin, LoginRequiredMixin, DetailView):
             ctx['can_create_deal'] = can_deal
             if can_deal:
                 kind = infer_deal_kind_from_property(p)
+                from workspace.services.crm_deal_stages import get_user_deal_stage_defs
+                stage_defs = get_user_deal_stage_defs(self.request.user)
                 ctx['property_deals'] = list(
                     property_deals_qs(self.request.user, p).order_by('-updated_at')[:3],
                 )
@@ -1720,6 +1722,9 @@ class CRMPropertyDetailView(CRMContextMixin, LoginRequiredMixin, DetailView):
                 )
                 ctx['property_deal_kind'] = kind
                 ctx['property_deal_suggested_title'] = suggest_deal_title(p, None, kind)
+                ctx['property_deal_stage_probs'] = {
+                    d['name']: int(d.get('probability') or 50) for d in stage_defs
+                }
             else:
                 ctx['property_deals'] = []
                 ctx['property_deals_total'] = 0

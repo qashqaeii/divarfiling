@@ -1,143 +1,330 @@
-/* ثبت معامله از فایل شخصی */
-.crm-drawer-panel-prop-deal {
-    max-width: min(850px, 96vw);
-}
-
-.crm-prop-deal-form {
+/* ── ثبت معامله از فایل شخصی — UI polish ── */
+.crm-drawer-prop-deal .crm-drawer-panel-prop-deal {
+    width: min(760px, 96vw);
+    max-width: 760px;
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    max-height: min(92vh, 900px);
 }
 
-.crm-prop-deal-summary {
-    padding: 0.85rem 1rem;
-    border-radius: 0.75rem;
-    background: var(--ws-surface-2, #f8fafc);
-    border: 1px solid var(--ws-border, #e2e8f0);
+.crm-drawer-prop-deal .crm-drawer-body {
+    flex: 1;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 1rem 1.15rem 1.25rem;
 }
 
-.crm-prop-deal-summary-kicker {
-    display: block;
-    font-size: 0.72rem;
+.crm-drawer-prop-deal .crm-prop-deal-create-foot {
+    position: sticky;
+    bottom: 0;
+    z-index: 3;
+    display: flex;
+    gap: 0.65rem;
+    padding: 0.85rem 1.15rem calc(0.85rem + env(safe-area-inset-bottom, 0px));
+    background: var(--ws-surface, #fff);
+    border-top: 1px solid var(--ws-border, #e2e8f0);
+    box-shadow: 0 -8px 24px rgba(15, 23, 42, 0.06);
+}
+
+.crm-drawer-prop-deal .crm-prop-deal-create-foot .crm-btn-primary {
+    flex: 1;
+    min-height: 2.75rem;
+    background: linear-gradient(135deg, #6366f1, #7c3aed);
+    border: none;
     font-weight: 700;
-    color: var(--ws-text-muted, #64748b);
-    margin-bottom: 0.2rem;
 }
 
-.crm-prop-deal-summary-title {
-    display: block;
-    font-size: 0.95rem;
-    color: var(--ws-text, #0f172a);
-    margin-bottom: 0.35rem;
+.crm-drawer-prop-deal .crm-prop-deal-create-foot .crm-btn-ghost {
+    min-height: 2.75rem;
 }
 
-.crm-prop-deal-summary-meta {
+/* Form layout */
+.crm-pdc-form {
     display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem 0.75rem;
-    font-size: 0.8rem;
-    color: var(--ws-text-muted, #64748b);
+    flex-direction: column;
+    gap: 1.1rem;
 }
 
-.crm-prop-deal-summary-owner {
-    margin-top: 0.5rem;
-    font-size: 0.78rem;
-    color: var(--ws-text-muted, #64748b);
+/* Alert */
+.crm-pdc-alert {
     display: flex;
-    flex-wrap: wrap;
-    gap: 0.35rem;
-}
-
-.crm-prop-deal-summary-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    margin-top: 0.55rem;
-    font-size: 0.78rem;
-    font-weight: 600;
-    color: var(--ws-accent, #2563eb);
-    text-decoration: none;
-}
-
-.crm-prop-deal-warn {
+    gap: 0.65rem;
     padding: 0.75rem 0.85rem;
-    border-radius: 0.65rem;
+    border-radius: 0.75rem;
     background: #fffbeb;
     border: 1px solid #fde68a;
     font-size: 0.82rem;
-}
-
-.crm-prop-deal-warn-head {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.45rem;
     color: #92400e;
 }
 
-.crm-prop-deal-warn-list {
-    margin: 0.5rem 0 0;
+.crm-pdc-alert__icon {
+    flex-shrink: 0;
+    width: 1.5rem;
+    height: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #d97706;
+}
+
+.crm-pdc-alert__list {
+    margin: 0.45rem 0 0;
     padding: 0 1rem 0 0;
     list-style: none;
 }
 
-.crm-prop-deal-warn-list li {
+.crm-pdc-alert__list li {
     display: flex;
-    align-items: center;
     flex-wrap: wrap;
+    align-items: center;
     gap: 0.35rem;
-    margin-top: 0.35rem;
+    margin-top: 0.3rem;
 }
 
-.crm-prop-deal-warn-link {
-    display: inline-block;
-    margin-top: 0.45rem;
+.crm-pdc-alert__list a {
+    color: #92400e;
     font-weight: 600;
+    text-decoration: none;
+}
+
+.crm-pdc-alert__link {
+    display: inline-block;
+    margin-top: 0.4rem;
+    font-weight: 700;
     font-size: 0.78rem;
     color: #b45309;
 }
 
-.crm-prop-deal-customer-search {
+/* Sections */
+.crm-pdc-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.crm-pdc-section__head {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.65rem;
+}
+
+.crm-pdc-section__icon {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 0.55rem;
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0 0.75rem;
+    justify-content: center;
+    background: linear-gradient(135deg, #ede9fe, #ddd6fe);
+    color: #7c3aed;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+}
+
+.crm-pdc-section--property .crm-pdc-section__icon {
+    background: linear-gradient(135deg, #eef2ff, #e0e7ff);
+    color: #4f46e5;
+}
+
+.crm-pdc-section__title {
+    margin: 0;
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: var(--ws-text, #0f172a);
+}
+
+.crm-pdc-section__sub {
+    margin: 0.15rem 0 0;
+    font-size: 0.74rem;
+    color: var(--ws-text-muted, #94a3b8);
+}
+
+/* Property card */
+.crm-pdc-property-card {
+    padding: 0.9rem 1rem;
+    border-radius: 0.85rem;
+    background: linear-gradient(145deg, #fafafa 0%, #f8fafc 100%);
     border: 1px solid var(--ws-border, #e2e8f0);
-    border-radius: 0.65rem;
-    background: var(--ws-surface, #fff);
 }
 
-.crm-prop-deal-customer-search:focus-within {
-    border-color: var(--ws-accent, #2563eb);
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+.crm-pdc-property-card__title {
+    display: block;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--ws-text, #0f172a);
+    line-height: 1.45;
+    margin-bottom: 0.5rem;
 }
 
-.crm-prop-deal-customer-search .crm-input {
-    border: none;
+.crm-pdc-property-card__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+
+.crm-pdc-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    background: #fff;
+    border: 1px solid var(--ws-border, #e2e8f0);
+    color: var(--ws-text-muted, #64748b);
+}
+
+.crm-pdc-chip--price {
+    background: #f5f3ff;
+    border-color: #ddd6fe;
+    color: #6d28d9;
+}
+
+.crm-pdc-property-card__owner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem;
+    margin-top: 0.55rem;
+    font-size: 0.78rem;
+    color: var(--ws-text-muted, #64748b);
+}
+
+.crm-pdc-property-card__phone {
+    font-variant-numeric: tabular-nums;
+}
+
+.crm-pdc-property-card__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-top: 0.6rem;
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: #7c3aed;
+    text-decoration: none;
+}
+
+.crm-pdc-property-card__link:hover {
+    color: #6d28d9;
+}
+
+/* Contact picker */
+.crm-pdc-contact {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+}
+
+.crm-pdc-contact__selected {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.7rem 0.85rem;
+    border-radius: 0.75rem;
+    background: linear-gradient(135deg, #f0fdf4, #ecfdf5);
+    border: 1px solid #bbf7d0;
+}
+
+.crm-pdc-contact__avatar {
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #22c55e;
+    color: #fff;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+}
+
+.crm-pdc-contact__info {
     flex: 1;
-    padding: 0.65rem 0;
-    background: transparent;
-    min-height: 2.75rem;
+    min-width: 0;
 }
 
-.crm-prop-deal-customer-results {
-    margin-top: 0.35rem;
+.crm-pdc-contact__info strong {
+    display: block;
+    font-size: 0.88rem;
+    color: #14532d;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.crm-pdc-contact__info span {
+    display: block;
+    font-size: 0.74rem;
+    color: #166534;
+    opacity: 0.85;
+    margin-top: 0.1rem;
+}
+
+.crm-pdc-contact__change {
+    border: none;
+    background: #fff;
+    color: #15803d;
+    font-size: 0.76rem;
+    font-weight: 700;
+    padding: 0.35rem 0.65rem;
+    border-radius: 0.45rem;
+    cursor: pointer;
+    border: 1px solid #bbf7d0;
+}
+
+.crm-pdc-search {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0 0.85rem;
+    min-height: 2.85rem;
+    border-radius: 0.75rem;
     border: 1px solid var(--ws-border, #e2e8f0);
-    border-radius: 0.65rem;
     background: var(--ws-surface, #fff);
-    max-height: 14rem;
-    overflow-y: auto;
-    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+    transition: border-color 0.15s, box-shadow 0.15s;
 }
 
-.crm-prop-deal-customer-result {
+.crm-pdc-search:focus-within {
+    border-color: #a78bfa;
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.12);
+}
+
+.crm-pdc-search > i {
+    color: #94a3b8;
+    font-size: 0.82rem;
+}
+
+.crm-pdc-search__input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    padding: 0.65rem 0;
+    font-size: 0.88rem;
+    outline: none;
+    min-width: 0;
+}
+
+.crm-pdc-contact__results {
+    border: 1px solid var(--ws-border, #e2e8f0);
+    border-radius: 0.75rem;
+    background: var(--ws-surface, #fff);
+    max-height: 12rem;
+    overflow-y: auto;
+    box-shadow: 0 12px 32px rgba(15, 23, 42, 0.1);
+}
+
+.crm-prop-deal-customer-result,
+.crm-pdc-contact__results .crm-prop-deal-customer-result {
     display: block;
     width: 100%;
     text-align: right;
-    padding: 0.65rem 0.85rem;
+    padding: 0.7rem 0.9rem;
     border: none;
     background: transparent;
     cursor: pointer;
-    border-bottom: 1px solid var(--ws-border, #f1f5f9);
+    border-bottom: 1px solid #f1f5f9;
+    transition: background 0.12s;
 }
 
 .crm-prop-deal-customer-result:last-child {
@@ -146,127 +333,312 @@
 
 .crm-prop-deal-customer-result:hover,
 .crm-prop-deal-customer-result:focus {
-    background: var(--ws-surface-2, #f8fafc);
+    background: #f8fafc;
+}
+
+.crm-prop-deal-customer-result.is-related {
+    background: #faf5ff;
 }
 
 .crm-prop-deal-customer-result strong {
     display: block;
-    font-size: 0.88rem;
+    font-size: 0.86rem;
+    color: var(--ws-text, #0f172a);
 }
 
 .crm-prop-deal-customer-result em {
     display: block;
     font-style: normal;
-    font-size: 0.75rem;
+    font-size: 0.74rem;
     color: var(--ws-text-muted, #64748b);
-    margin-top: 0.15rem;
+    margin-top: 0.12rem;
 }
 
-.crm-prop-deal-customer-result.is-related {
-    background: #f0fdf4;
-}
-
-.crm-prop-deal-customer-selected {
-    display: flex;
+.crm-pdc-contact__add {
+    display: inline-flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 0.5rem;
-    padding: 0.65rem 0.85rem;
-    border: 1px solid #86efac;
-    border-radius: 0.65rem;
-    background: #f0fdf4;
-}
-
-.crm-prop-deal-customer-clear {
+    justify-content: center;
+    gap: 0.4rem;
+    align-self: flex-start;
     border: none;
     background: transparent;
-    color: #64748b;
-    cursor: pointer;
-    padding: 0.35rem;
-}
-
-.crm-prop-deal-add-contact {
-    margin-top: 0.5rem;
-    border: 1px dashed var(--ws-border, #cbd5e1);
-    background: transparent;
-    border-radius: 0.55rem;
-    padding: 0.55rem 0.75rem;
-    width: 100%;
-    font-size: 0.82rem;
+    color: #7c3aed;
+    font-size: 0.8rem;
     font-weight: 600;
-    color: var(--ws-accent, #2563eb);
     cursor: pointer;
+    padding: 0.35rem 0.15rem;
 }
 
-.crm-prop-deal-dup-warn {
-    padding: 0.7rem 0.85rem;
-    border-radius: 0.6rem;
+.crm-pdc-contact__add:hover {
+    color: #6d28d9;
+}
+
+.crm-pdc-dup {
+    padding: 0.65rem 0.8rem;
+    border-radius: 0.65rem;
     background: #fef2f2;
     border: 1px solid #fecaca;
-    font-size: 0.82rem;
+    font-size: 0.8rem;
     color: #991b1b;
 }
 
-.crm-prop-deal-dup-warn a {
+.crm-pdc-dup a {
     font-weight: 700;
     color: #b91c1c;
 }
 
-.crm-prop-deal-advanced summary {
-    cursor: pointer;
-    font-weight: 700;
-    padding: 0.35rem 0;
+/* Fields */
+.crm-pdc-fields {
+    display: grid;
+    gap: 0.75rem;
 }
 
-.crm-prop-deal-advanced-body {
+.crm-pdc-fields--2 {
+    grid-template-columns: 1fr 1fr;
+}
+
+.crm-pdc-field {
     display: flex;
     flex-direction: column;
-    gap: 0.65rem;
-    padding-top: 0.5rem;
+    gap: 0.35rem;
 }
 
-.crm-prop-deal-next-block h4 {
-    margin: 0 0 0.35rem;
-    font-size: 0.85rem;
+.crm-pdc-field label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--ws-text, #334155);
 }
 
-.crm-prop-deal-quick-create {
-    margin-top: 0.75rem;
-    padding: 0.85rem;
+.crm-pdc-field .crm-input,
+.crm-pdc-field .crm-select,
+.crm-pdc-field .crm-textarea {
     border-radius: 0.65rem;
-    border: 1px solid var(--ws-border, #e2e8f0);
-    background: var(--ws-surface-2, #f8fafc);
+    border-color: var(--ws-border, #e2e8f0);
+    min-height: 2.65rem;
 }
 
-.crm-prop-deal-quick-head {
+.crm-pdc-field .crm-input:focus,
+.crm-pdc-field .crm-select:focus,
+.crm-pdc-field .crm-textarea:focus {
+    border-color: #a78bfa;
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+}
+
+.crm-pdc-hint {
+    margin: 0;
+    font-size: 0.72rem;
+    color: var(--ws-text-muted, #94a3b8);
+}
+
+/* Advanced accordion */
+.crm-pdc-advanced {
+    border: 1px solid var(--ws-border, #e2e8f0);
+    border-radius: 0.85rem;
+    background: var(--ws-surface, #fff);
+    overflow: hidden;
+}
+
+.crm-pdc-advanced__toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.85rem 1rem;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 0.86rem;
+    color: var(--ws-text, #334155);
+    list-style: none;
+    user-select: none;
+}
+
+.crm-pdc-advanced__toggle::-webkit-details-marker {
+    display: none;
+}
+
+.crm-pdc-advanced__toggle span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+}
+
+.crm-pdc-advanced__toggle i:first-child {
+    color: #7c3aed;
+}
+
+.crm-pdc-advanced__chev {
+    font-size: 0.7rem;
+    color: #94a3b8;
+    transition: transform 0.2s;
+}
+
+.crm-pdc-advanced[open] .crm-pdc-advanced__chev {
+    transform: rotate(180deg);
+}
+
+.crm-pdc-advanced__body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    padding: 0 1rem 1rem;
+    border-top: 1px solid var(--ws-border, #f1f5f9);
+}
+
+.crm-pdc-subsection {
+    padding-top: 0.25rem;
+}
+
+.crm-pdc-subsection__title {
+    margin: 0 0 0.55rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--ws-text-muted, #64748b);
+}
+
+/* Probability slider */
+.crm-pdc-probability__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.45rem;
+}
+
+.crm-pdc-probability__head label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--ws-text, #334155);
+}
+
+.crm-pdc-probability__value {
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: #7c3aed;
+    font-variant-numeric: tabular-nums;
+}
+
+.crm-pdc-probability__track-wrap {
+    position: relative;
+    padding: 0.35rem 0 0.5rem;
+}
+
+.crm-pdc-probability__track {
+    height: 0.45rem;
+    border-radius: 999px;
+    background: #e2e8f0;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.crm-pdc-probability__fill {
+    height: 100%;
+    width: 50%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #818cf8, #7c3aed);
+    transition: width 0.12s ease-out;
+}
+
+.crm-pdc-probability__slider {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+    z-index: 2;
+}
+
+.crm-pdc-probability__track-wrap::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: var(--pdc-thumb, 50%);
+    width: 1.15rem;
+    height: 1.15rem;
+    border-radius: 50%;
+    background: #fff;
+    border: 2px solid #7c3aed;
+    box-shadow: 0 2px 8px rgba(124, 58, 237, 0.35);
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    z-index: 1;
+    transition: left 0.12s ease-out;
+}
+
+.crm-pdc-probability__presets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-top: 0.35rem;
+}
+
+.crm-pdc-prob-preset {
+    border: 1px solid var(--ws-border, #e2e8f0);
+    background: var(--ws-surface, #fff);
+    color: var(--ws-text-muted, #64748b);
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 0.3rem 0.55rem;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: all 0.12s;
+}
+
+.crm-pdc-prob-preset:hover {
+    border-color: #c4b5fd;
+    color: #7c3aed;
+}
+
+.crm-pdc-prob-preset.is-active {
+    background: linear-gradient(135deg, #6366f1, #7c3aed);
+    border-color: transparent;
+    color: #fff;
+}
+
+.crm-pdc-probability [data-prop-deal-probability-input] {
+    display: none;
+}
+
+/* Quick create */
+.crm-pdc-quick {
+    padding: 0.9rem;
+    border-radius: 0.75rem;
+    border: 1px solid #ddd6fe;
+    background: #faf5ff;
+}
+
+.crm-pdc-quick__head {
     display: flex;
     align-items: center;
     justify-content: space-between;
     margin-bottom: 0.65rem;
 }
 
-.crm-prop-deal-quick-head h4 {
+.crm-pdc-quick__head h4 {
     margin: 0;
-    font-size: 0.9rem;
+    font-size: 0.88rem;
+    color: #5b21b6;
 }
 
-.crm-prop-deal-quick-close {
+.crm-pdc-quick__close {
     border: none;
     background: transparent;
+    color: #94a3b8;
     cursor: pointer;
-    color: #64748b;
+    padding: 0.25rem;
 }
 
-.crm-prop-deal-quick-err {
-    color: #b91c1c;
+.crm-pdc-quick__err {
+    margin: 0.5rem 0 0;
     font-size: 0.78rem;
-    margin-top: 0.5rem;
+    color: #b91c1c;
 }
 
+/* Hero button */
 .crm-prop-hero-act--deal {
-    color: var(--ws-accent, #2563eb);
+    color: #7c3aed;
 }
 
+/* Sidebar deals (unchanged structure) */
 .crm-prop-side-card--deals .crm-prop-side-card-head {
     display: flex;
     align-items: center;
@@ -281,7 +653,7 @@
     height: 1.75rem;
     border-radius: 0.45rem;
     cursor: pointer;
-    color: var(--ws-accent, #2563eb);
+    color: #7c3aed;
 }
 
 .crm-prop-deals-list {
@@ -307,7 +679,7 @@
 }
 
 .crm-prop-deals-link:hover {
-    border-color: var(--ws-accent, #2563eb);
+    border-color: #a78bfa;
 }
 
 .crm-prop-deals-link em {
@@ -336,36 +708,63 @@
     margin-top: 0.55rem;
     font-size: 0.78rem;
     font-weight: 600;
-    color: var(--ws-accent, #2563eb);
+    color: #7c3aed;
 }
 
-.crm-prop-deal-create-foot {
-    position: sticky;
-    bottom: 0;
-    background: var(--ws-surface, #fff);
-    z-index: 2;
-}
-
+/* Mobile */
 @media (max-width: 640px) {
-    .crm-drawer-prop-deal .crm-drawer-panel {
+    .crm-drawer-prop-deal .crm-drawer-panel-prop-deal {
         width: 100%;
         max-width: none;
-        height: 100%;
         max-height: none;
+        height: 100%;
         border-radius: 0;
     }
 
-    .crm-prop-deal-form .crm-form-grid--2 {
+    .crm-drawer-prop-deal .crm-drawer-body {
+        padding: 0.85rem 0.9rem 1rem;
+    }
+
+    .crm-pdc-fields--2 {
         grid-template-columns: 1fr;
+    }
+
+    .crm-pdc-search {
+        min-height: 3rem;
+    }
+
+    .crm-pdc-search__input {
+        font-size: 1rem;
+    }
+
+    .crm-pdc-field .crm-input,
+    .crm-pdc-field .crm-select {
+        min-height: 2.85rem;
+        font-size: 1rem;
+    }
+
+    .crm-pdc-probability__track-wrap {
+        padding: 0.5rem 0 0.65rem;
+    }
+
+    .crm-pdc-probability__track-wrap::after {
+        width: 1.35rem;
+        height: 1.35rem;
     }
 }
 
-[data-theme="dark"] .crm-prop-deal-summary,
-[data-theme="dark"] .crm-prop-deal-customer-search,
-[data-theme="dark"] .crm-prop-deal-customer-results {
+/* Dark theme */
+[data-theme="dark"] .crm-pdc-property-card,
+[data-theme="dark"] .crm-pdc-search,
+[data-theme="dark"] .crm-pdc-contact__results,
+[data-theme="dark"] .crm-pdc-advanced {
     background: var(--ws-surface-2);
 }
 
-[data-theme="dark"] .crm-prop-deal-create-foot {
+[data-theme="dark"] .crm-drawer-prop-deal .crm-prop-deal-create-foot {
+    background: var(--ws-surface);
+}
+
+[data-theme="dark"] .crm-pdc-chip {
     background: var(--ws-surface);
 }

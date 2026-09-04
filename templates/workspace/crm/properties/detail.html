@@ -18,7 +18,7 @@
 {% block crm_extra_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/crm-zonkan.css' %}?v=6">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-prop-detail-mobile.css' %}?v=3">
-<link rel="stylesheet" href="{% static 'workspace/css/crm-property-deal-create.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-property-deal-create.css' %}?v=4">
 {% if show_nearby_pois %}
 <link rel="stylesheet" href="{% static 'workspace/css/crm-nearby-pois.css' %}?v=6">
 {% endif %}
@@ -905,15 +905,15 @@
 
 {% block crm_drawers %}
 {% if can_create_deal %}
-<aside class="crm-drawer crm-drawer-prop-deal" id="drawer-property-deal" {% if open_drawer == 'property-deal' %}data-open="1"{% endif %}>
+<aside class="crm-drawer" id="drawer-property-deal" {% if open_drawer == 'property-deal' %}data-open="1"{% endif %}>
     <div class="crm-drawer-overlay" data-drawer-close></div>
-    <div class="crm-drawer-panel crm-drawer-panel-lg crm-drawer-panel-prop-deal">
-        <div class="crm-drawer-head crm-drawer-head-accent">
+    <div class="crm-drawer-panel crm-drawer-panel-lg">
+        <div class="crm-drawer-head">
             <div>
                 <h2>ثبت معامله جدید</h2>
                 <p>برای این ملک یک معامله جدید ایجاد کنید.</p>
             </div>
-            <button type="button" class="crm-drawer-close" data-drawer-close aria-label="بستن"><i class="fas fa-times"></i></button>
+            <button type="button" class="crm-drawer-close" data-drawer-close aria-label="بستن"><i class="fas fa-times" aria-hidden="true"></i></button>
         </div>
         <form method="post"
               action="{% url 'workspace:crm_property_deal_create' property.id %}"
@@ -924,7 +924,7 @@
                 {% csrf_token %}
                 {% include 'workspace/crm/includes/property_deal_create_form.html' with form=property_deal_form %}
             </div>
-            <div class="crm-drawer-foot crm-deal-create-foot crm-prop-deal-create-foot">
+            <div class="crm-drawer-foot crm-deal-create-foot">
                 <button type="button" class="crm-btn crm-btn-ghost" data-drawer-close>انصراف</button>
                 <button type="submit" class="crm-btn crm-btn-primary" data-prop-deal-submit>
                     <i class="fas fa-handshake" aria-hidden="true"></i>
@@ -982,7 +982,7 @@
 
 {% block crm_js %}
 {% if can_create_deal %}
-<script src="{% static 'workspace/js/crm-property-deal-create.js' %}?v=2"></script>
+<script src="{% static 'workspace/js/crm-property-deal-create.js' %}?v=4"></script>
 {% endif %}
 {% if crm_agency and is_property_owner %}
 <script>

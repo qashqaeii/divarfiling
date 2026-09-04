@@ -126,6 +126,23 @@
             resultsEl.hidden = false;
         }
 
+        function closeQuickPanel() {
+            if (quickPanel) quickPanel.hidden = true;
+            if (quickErr) quickErr.hidden = true;
+            if (quickOpen) quickOpen.hidden = false;
+        }
+
+        function openQuickPanel() {
+            if (quickPanel) {
+                quickPanel.hidden = false;
+            }
+            if (quickOpen) quickOpen.hidden = true;
+            syncQuickTypeFromDealKind();
+            if (quickErr) quickErr.hidden = true;
+            doSearch('');
+            window.setTimeout(() => quickName?.focus(), 80);
+        }
+
         function selectCustomer(id, name, meta) {
             selectedCustomer = { id, name, meta };
             if (customerInput) customerInput.value = id;
@@ -135,6 +152,8 @@
             if (searchWrap) searchWrap.hidden = true;
             if (resultsEl) resultsEl.hidden = true;
             if (searchInput) searchInput.value = '';
+            if (quickOpen) quickOpen.hidden = true;
+            closeQuickPanel();
             checkDuplicate(id);
             updateTitlePreview();
         }
@@ -145,6 +164,7 @@
             if (selectedEl) selectedEl.hidden = true;
             if (searchWrap) searchWrap.hidden = false;
             if (dupWarn) dupWarn.hidden = true;
+            if (quickOpen) quickOpen.hidden = false;
         }
 
         function checkDuplicate(customerId) {
@@ -206,13 +226,13 @@
         }
 
         quickOpen?.addEventListener('click', () => {
-            if (quickPanel) quickPanel.hidden = false;
-            syncQuickTypeFromDealKind();
+            if (quickPanel && !quickPanel.hidden) {
+                closeQuickPanel();
+                return;
+            }
+            openQuickPanel();
         });
-        quickClose?.addEventListener('click', () => {
-            if (quickPanel) quickPanel.hidden = true;
-            if (quickErr) quickErr.hidden = true;
-        });
+        quickClose?.addEventListener('click', closeQuickPanel);
 
         quickSave?.addEventListener('click', () => {
             if (!quickUrl) return;
@@ -246,7 +266,7 @@
                     }
                     const c = data.customer;
                     selectCustomer(String(c.id), c.name, [c.phone, c.type].filter(Boolean).join(' · '));
-                    if (quickPanel) quickPanel.hidden = true;
+                    closeQuickPanel();
                     if (quickName) quickName.value = '';
                     if (quickPhone) quickPhone.value = '';
                 })

@@ -51,34 +51,51 @@ def amount_display_block(value: Any) -> dict:
     }
 
 
-def _toman_words(amount: int) -> str:
-    """تبدیل ساده به حروف — برای نمایش قرارداد."""
+def _toman_words_chunk(amount: int) -> str:
+    """تبدیل ۰ تا ۹۹۹ به حروف فارسی."""
     if amount <= 0:
         return ''
-    units = ['', 'یک', 'دو', 'سه', 'چهار', 'پنج', 'شش', 'هفت', 'هشت', 'نه']
-    tens = ['', 'ده', 'بیست', 'سی', 'چهل', 'پنجاه', 'شصت', 'هفتاد', 'هشتاد', 'نود']
+    teens = (
+        'ده', 'یازده', 'دوازده', 'سیزده', 'چهارده', 'پانزده',
+        'شانزده', 'هفده', 'هجده', 'نوزده',
+    )
+    units = ('', 'یک', 'دو', 'سه', 'چهار', 'پنج', 'شش', 'هفت', 'هشت', 'نه')
+    tens = ('', 'ده', 'بیست', 'سی', 'چهل', 'پنجاه', 'شصت', 'هفتاد', 'هشتاد', 'نود')
+    hundreds = (
+        '', 'یکصد', 'دویست', 'سیصد', 'چهارصد', 'پانصد',
+        'ششصد', 'هفتصد', 'هشتصد', 'نهصد',
+    )
     if amount < 10:
-        return f'{units[amount]} تومان'
+        return units[amount]
+    if amount < 20:
+        return teens[amount - 10]
     if amount < 100:
-        u, t = amount % 10, amount // 10
-        part = tens[t]
-        if u:
-            part = f'{part} و {units[u]}'
-        return f'{part} تومان'
+        unit, ten = amount % 10, amount // 10
+        part = tens[ten]
+        if unit:
+            part = f'{part} و {units[unit]}'
+        return part
+    hundred, rest = amount // 100, amount % 100
+    head = hundreds[hundred]
+    if rest:
+        head = f'{head} و {_toman_words_chunk(rest)}'
+    return head
+
+
+def _toman_words(amount: int) -> str:
+    """تبدیل مبلغ تومان به حروف — برای نمایش قرارداد."""
+    if amount <= 0:
+        return ''
     if amount < 1_000:
-        h, rest = amount // 100, amount % 100
-        head = f'{units[h]}صد'
-        if rest:
-            head = f'{head} و {_toman_words(rest).replace(" تومان", "")}'
-        return f'{head} تومان'
+        return f'{_toman_words_chunk(amount)} تومان'
     if amount < 1_000_000:
-        th, rest = amount // 1000, amount % 1000
-        head = f'{_toman_words(th).replace(" تومان", "")} هزار'
+        thousand, rest = amount // 1_000, amount % 1_000
+        head = f'{_toman_words_chunk(thousand)} هزار'
         if rest:
-            head = f'{head} و {_toman_words(rest).replace(" تومان", "")}'
+            head = f'{head} و {_toman_words_chunk(rest)}'
         return f'{head} تومان'
-    mil, rest = amount // 1_000_000, amount % 1_000_000
-    head = f'{_toman_words(mil).replace(" تومان", "")} میلیون'
+    million, rest = amount // 1_000_000, amount % 1_000_000
+    head = f'{_toman_words_chunk(million)} میلیون'
     if rest:
         head = f'{head} و {_toman_words(rest).replace(" تومان", "")}'
     return f'{head} تومان'

@@ -3,7 +3,7 @@
 
 {% block page_title %}ویزارد قرارداد{% endblock %}
 {% block crm_extra_css %}
-<link rel="stylesheet" href="{% static 'contracts/css/contracts.css' %}?v=6">
+<link rel="stylesheet" href="{% static 'contracts/css/contracts.css' %}?v=7">
 {% endblock %}
 
 {% block crm_content %}
@@ -327,10 +327,10 @@
             <div class="crm-contract-prefill"><i class="fas fa-check-circle"></i> مبالغ از اطلاعات ملک پیشنهاد شده — بررسی کنید.</div>
             {% endif %}
             <div class="crm-contract-form-grid">
-                <label>تاریخ شروع<input class="crm-input" name="fin_lease_start" value="{{ wizard_data.financial.lease_start|default:'' }}" placeholder="1404/01/01"></label>
-                <label>تاریخ پایان<input class="crm-input" name="fin_lease_end" value="{{ wizard_data.financial.lease_end|default:'' }}" placeholder="1405/01/01"></label>
+                <label>تاریخ شروع<input class="crm-input crm-jalali-date" name="fin_lease_start" value="{{ wizard_data.financial.lease_start|default:'' }}" data-jdp data-jdp-only-date placeholder="۱۴۰۴/۰۱/۰۱" autocomplete="off"></label>
+                <label>تاریخ پایان<input class="crm-input crm-jalali-date" name="fin_lease_end" value="{{ wizard_data.financial.lease_end|default:'' }}" data-jdp data-jdp-only-date placeholder="۱۴۰۵/۰۱/۰۱" autocomplete="off"></label>
                 <label>روز پرداخت اجاره<input class="crm-input" name="fin_rent_day" value="{{ wizard_data.financial.rent_payment_day|default:'1' }}" inputmode="numeric"></label>
-                <label>تاریخ تحویل<input class="crm-input" name="fin_delivery_date" value="{{ wizard_data.financial.delivery_date|default:'' }}" placeholder="1404/01/01"></label>
+                <label>تاریخ تحویل<input class="crm-input crm-jalali-date" name="fin_delivery_date" value="{{ wizard_data.financial.delivery_date|default:'' }}" data-jdp data-jdp-only-date placeholder="۱۴۰۴/۰۱/۰۱" autocomplete="off"></label>
             </div>
             <div class="crm-contract-money-grid">
                 <div class="crm-contract-money-card">
@@ -361,7 +361,7 @@
                 <div class="crm-contract-form-grid">
                     <label>مبلغ ودیعه قبلی (تومان)<input class="crm-input ct-money-input" name="fin_prev_deposit" value="{{ wizard_data.financial.previous_deposit_amount|ct_format_number }}" inputmode="numeric"></label>
                     <label>شماره/مرجع قرارداد قبلی<input class="crm-input" name="fin_prev_contract_ref" value="{{ wizard_data.financial.previous_contract_ref|default:'' }}"></label>
-                    <label>تاریخ قرارداد قبلی<input class="crm-input" name="fin_prev_contract_date" value="{{ wizard_data.financial.previous_contract_date|default:'' }}"></label>
+                    <label>تاریخ قرارداد قبلی<input class="crm-input crm-jalali-date" name="fin_prev_contract_date" value="{{ wizard_data.financial.previous_contract_date|default:'' }}" data-jdp data-jdp-only-date autocomplete="off"></label>
                 </div>
             </div>
             <h3>شرایط قرارداد</h3>
@@ -445,7 +445,10 @@
                     <div class="ct-payment-card__form crm-contract-form-grid" style="display:none">
                         <label>عنوان<input class="crm-input" name="pay_{{ forloop.counter0 }}_label" value="{{ pay.label }}"></label>
                         <label>مبلغ (تومان)<input class="crm-input ct-money-input" name="pay_{{ forloop.counter0 }}_amount" value="{{ pay.amount|ct_format_number }}" inputmode="numeric"></label>
-                        <label>تاریخ<input class="crm-input" name="pay_{{ forloop.counter0 }}_due_date" value="{{ pay.due_date }}"></label>
+                        <label class="ct-field-labeled ct-field-labeled--date">
+                            <span class="ct-field-label"><i class="fas fa-calendar-day" aria-hidden="true"></i> تاریخ</span>
+                            <input class="crm-input crm-jalali-date" name="pay_{{ forloop.counter0 }}_due_date" value="{{ pay.due_date }}" data-jdp data-jdp-only-date placeholder="۱۴۰۵/۰۷/۱۰" autocomplete="off">
+                        </label>
                     </div>
                 </div>
                 {% endfor %}
@@ -460,8 +463,8 @@
                 <summary>تحویل و انتقال رسمی</summary>
                 <div class="ct-disclosure__body">
                     <div class="crm-contract-form-grid">
-                        <label>تاریخ تحویل<input class="crm-input" name="fin_delivery_date" value="{{ wizard_data.financial.delivery_date|default:'' }}"></label>
-                        <label>تاریخ انتقال رسمی<input class="crm-input" name="fin_official_transfer_date" value="{{ wizard_data.financial.official_transfer_date|default:'' }}"></label>
+                        <label>تاریخ تحویل<input class="crm-input crm-jalali-date" name="fin_delivery_date" value="{{ wizard_data.financial.delivery_date|default:'' }}" data-jdp data-jdp-only-date autocomplete="off"></label>
+                        <label>تاریخ انتقال رسمی<input class="crm-input crm-jalali-date" name="fin_official_transfer_date" value="{{ wizard_data.financial.official_transfer_date|default:'' }}" data-jdp data-jdp-only-date autocomplete="off"></label>
                         <label>محل انتقال<input class="crm-input" name="fin_transfer_place" value="{{ wizard_data.financial.transfer_place|default:'' }}"></label>
                         <label>شماره دفترخانه<input class="crm-input" name="fin_notary_number" value="{{ wizard_data.financial.notary_office_number|default:'' }}"></label>
                     </div>
@@ -633,5 +636,5 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'contracts/js/wizard.js' %}?v=6"></script>
+<script src="{% static 'contracts/js/wizard.js' %}?v=7"></script>
 {% endblock %}

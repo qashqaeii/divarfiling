@@ -175,6 +175,13 @@ class ContractWizardUXTests(TestCase):
     def test_recommended_contract_type_for_sale_deal(self):
         self.assertEqual(infer_recommended_contract_type(self.deal), 'sale')
 
+    def test_toman_words_teens_and_compound(self):
+        from contracts.services.money import _toman_words
+        words = _toman_words(125_215_151)
+        self.assertIn('پانزده', words)
+        self.assertNotIn('ده و پنج', words)
+        self.assertTrue(words.endswith('تومان'))
+
     def test_wizard_property_select_parsing(self):
         c = create_contract(self.user, self.deal.pk, CONTRACT_TYPE_SALE)
         data = parse_wizard_step({

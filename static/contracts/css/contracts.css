@@ -133,10 +133,13 @@
 }
 
 .crm-contract-wizard .crm-deal-stepper {
-    margin: 0;
+    margin: 0 0 0.65rem;
     border: 1px solid var(--ws-border);
-    border-radius: 8px;
-    overflow: hidden;
+    border-radius: 10px;
+    overflow: visible;
+    padding: 0.55rem 0.65rem 0.45rem;
+    position: relative;
+    background: var(--ws-surface);
 }
 .crm-contract-wizard .crm-deal-stepper-steps a.crm-deal-step {
     text-decoration: none;
@@ -940,22 +943,6 @@
 }
 .crm-contract-prefill--info i { color: var(--ws-primary); }
 
-/* ── Stepper: minimal professional ── */
-.crm-contract-wizard .crm-deal-stepper {
-    margin-bottom: 0.65rem;
-    border: 1px solid var(--ws-border);
-    border-radius: 10px;
-    background: var(--ws-surface);
-    overflow: visible;
-    padding: 0.55rem 0.65rem 0.45rem;
-}
-.crm-contract-wizard .crm-deal-stepper-track {
-    height: 2px;
-    background: var(--ws-border);
-    border-radius: 999px;
-    overflow: hidden;
-    margin-bottom: 0.55rem;
-}
 .crm-contract-wizard .crm-deal-stepper-track i {
     display: block;
     height: 100%;
@@ -963,24 +950,49 @@
     border-radius: inherit;
     transition: width 0.25s ease;
 }
+.crm-contract-wizard .crm-deal-stepper-steps::-webkit-scrollbar { display: none; }
+
+/* ── Stepper: minimal professional (override global crm-deal-stepper) ── */
+.crm-contract-wizard .crm-deal-stepper-track {
+    position: static;
+    inset: auto;
+    top: auto;
+    height: 2px;
+    background: var(--ws-border);
+    border-radius: 999px;
+    overflow: hidden;
+    margin-bottom: 0.55rem;
+    pointer-events: auto;
+    z-index: auto;
+}
 .crm-contract-wizard .crm-deal-stepper-steps {
     display: flex;
-    gap: 0.35rem;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.25rem;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
     padding-bottom: 0.15rem;
+    position: relative;
+    z-index: 1;
 }
-.crm-contract-wizard .crm-deal-stepper-steps::-webkit-scrollbar { display: none; }
 .crm-contract-wizard .crm-deal-step {
-    flex: 1 0 auto;
-    min-width: 4.5rem;
+    width: auto;
+    flex: 1 1 0;
+    min-width: 3.75rem;
+    max-width: none;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 0.28rem;
-    padding: 0.15rem 0.25rem;
+    padding: 0.15rem 0.2rem;
     text-align: center;
+    text-decoration: none;
+    transform: none;
+}
+.crm-contract-wizard .crm-deal-step:hover {
+    transform: none;
 }
 .crm-contract-wizard .crm-deal-step-dot {
     width: 1.35rem;
@@ -993,28 +1005,54 @@
     font-size: 0.48rem;
     color: var(--ws-text-muted);
     background: var(--ws-surface);
-    transition: border-color 0.15s, background 0.15s, color 0.15s;
-}
-.crm-contract-wizard .crm-deal-step.is-active .crm-deal-step-dot {
-    border-color: var(--ws-primary);
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--ws-primary) 14%, transparent);
-    color: var(--ws-primary);
-}
-.crm-contract-wizard .crm-deal-step.is-done .crm-deal-step-dot {
-    border-color: #059669;
-    background: rgba(16, 185, 129, 0.12);
-    color: #059669;
+    box-shadow: none;
 }
 .crm-contract-wizard .crm-deal-step-label {
     font-size: 0.58rem;
     font-weight: 600;
     color: var(--ws-text-muted);
     line-height: 1.35;
-    max-width: 5.5rem;
+    max-width: 100%;
+    white-space: normal;
+    word-break: keep-all;
+}
+.crm-contract-wizard .crm-deal-step.is-active .crm-deal-step-dot {
+    border-color: var(--ws-primary);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--ws-primary) 14%, transparent);
+    color: var(--ws-primary);
+    background: var(--ws-surface);
+}
+.crm-contract-wizard .crm-deal-step.is-done .crm-deal-step-dot {
+    border-color: #059669;
+    background: rgba(16, 185, 129, 0.12);
+    color: #059669;
 }
 .crm-contract-wizard .crm-deal-step.is-active .crm-deal-step-label {
     color: var(--ws-text);
     font-weight: 700;
+}
+.crm-contract-wizard .crm-deal-step.is-done .crm-deal-step-label {
+    color: var(--ws-text-secondary);
+}
+
+@media (min-width: 900px) {
+    .crm-contract-wizard .crm-deal-stepper-steps {
+        overflow-x: visible;
+    }
+    .crm-contract-wizard .crm-deal-step {
+        min-width: 0;
+    }
+    .crm-contract-wizard .crm-deal-step-label {
+        font-size: 0.62rem;
+    }
+}
+
+.crm-jalali-date[data-jdp] {
+    cursor: pointer;
+}
+.ct-payment-card__form .crm-jalali-date {
+    direction: ltr;
+    text-align: left;
 }
 
 /* ── Party cards: menu overflow fix ── */

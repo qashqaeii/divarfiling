@@ -70,28 +70,48 @@
     return num.toLocaleString('en-US');
   }
 
-  function tomanWords(amount) {
+  function tomanWordsChunk(amount) {
     if (!amount || amount <= 0) return '';
+    var teens = ['ده', 'یازده', 'دوازده', 'سیزده', 'چهارده', 'پانزده', 'شانزده', 'هفده', 'هجده', 'نوزده'];
     var units = ['', 'یک', 'دو', 'سه', 'چهار', 'پنج', 'شش', 'هفت', 'هشت', 'نه'];
     var tens = ['', 'ده', 'بیست', 'سی', 'چهل', 'پنجاه', 'شصت', 'هفتاد', 'هشتاد', 'نود'];
-    if (amount < 10) return units[amount] + ' تومان';
+    var hundreds = ['', 'یکصد', 'دویست', 'سیصد', 'چهارصد', 'پانصد', 'ششصد', 'هفتصد', 'هشتصد', 'نهصد'];
+    if (amount < 10) return units[amount];
+    if (amount < 20) return teens[amount - 10];
     if (amount < 100) {
-      var u = amount % 10, t = Math.floor(amount / 10);
-      return (tens[t] + (u ? ' و ' + units[u] : '')) + ' تومان';
+      var u = amount % 10;
+      var t = Math.floor(amount / 10);
+      return tens[t] + (u ? ' و ' + units[u] : '');
     }
-    if (amount < 1000) {
-      var h = Math.floor(amount / 100), r = amount % 100;
-      return (units[h] + 'صد' + (r ? ' و ' + tomanWords(r).replace(' تومان', '') : '')) + ' تومان';
-    }
-    if (amount < 1000000) {
-      var th = Math.floor(amount / 1000), rest = amount % 1000;
-      return (tomanWords(th).replace(' تومان', '') + ' هزار' + (rest ? ' و ' + tomanWords(rest).replace(' تومان', '') : '')) + ' تومان';
-    }
-    var mil = Math.floor(amount / 1000000), rem = amount % 1000000;
-    return (tomanWords(mil).replace(' تومان', '') + ' میلیون' + (rem ? ' و ' + tomanWords(rem).replace(' تومان', '') : '')) + ' تومان';
+    var h = Math.floor(amount / 100);
+    var r = amount % 100;
+    return hundreds[h] + (r ? ' و ' + tomanWordsChunk(r) : '');
   }
 
-  function   bindMoneyInput(input) {
+  function tomanWords(amount) {
+    if (!amount || amount <= 0) return '';
+    if (amount < 1000) return tomanWordsChunk(amount) + ' تومان';
+    if (amount < 1000000) {
+      var th = Math.floor(amount / 1000);
+      var rest = amount % 1000;
+      var head = tomanWordsChunk(th) + ' هزار';
+      if (rest) head += ' و ' + tomanWordsChunk(rest);
+      return head + ' تومان';
+    }
+    var mil = Math.floor(amount / 1000000);
+    var rem = amount % 1000000;
+    var milPart = tomanWordsChunk(mil) + ' میلیون';
+    if (rem) milPart += ' و ' + tomanWords(rem).replace(' تومان', '');
+    return milPart + ' تومان';
+  }
+
+  function initWizardJalaliPickers(scope) {
+    if (typeof initCRMJalaliPickers === 'function') {
+      initCRMJalaliPickers(scope || form);
+    }
+  }
+
+  function bindMoneyInput(input) {
     var wordsEl = input.closest('.crm-contract-money-card, .ct-money-card, label') &&
       input.closest('.crm-contract-money-card, .ct-money-card, label').querySelector('.ct-money-words');
     function update() {
@@ -556,12 +576,15 @@
         '<div class="ct-payment-card__form crm-contract-form-grid" style="display:block;margin-top:.65rem">' +
         '<label>عنوان<input class="crm-input" name="pay_' + idx + '_label" value="پرداخت ' + (idx + 1) + '"></label>' +
         '<label>مبلغ (تومان)<input class="crm-input ct-money-input" name="pay_' + idx + '_amount" inputmode="numeric"></label>' +
-        '<label>تاریخ<input class="crm-input" name="pay_' + idx + '_due_date" placeholder="1405/07/10"></label>' +
+        '<label>تاریخ<input class="crm-input crm-jalali-date" name="pay_' + idx + '_due_date" data-jdp data-jdp-only-date placeholder="۱۴۰۵/۰۷/۱۰" autocomplete="off"></label>' +
         '</div></div>';
       paymentsContainer.insertAdjacentHTML('beforeend', html);
       renderPaymentCards();
+      initWizardJalaliPickers(paymentsContainer.lastElementChild);
     });
   }
+
+  initWizardJalaliPickers(form);
 
   /* ——— Send confirmation ——— */
   var sendBtn = form.querySelector('[name="action"][value="prepare_send"]');

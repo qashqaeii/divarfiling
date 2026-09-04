@@ -3,7 +3,7 @@
 
 {% block page_title %}ویزارد قرارداد{% endblock %}
 {% block crm_extra_css %}
-<link rel="stylesheet" href="{% static 'contracts/css/contracts.css' %}?v=5">
+<link rel="stylesheet" href="{% static 'contracts/css/contracts.css' %}?v=6">
 {% endblock %}
 
 {% block crm_content %}
@@ -14,7 +14,7 @@
             <a href="{% url 'workspace:deal_contracts' deal.pk %}" class="crm-deal-back" aria-label="بازگشت"><i class="fas fa-arrow-right"></i></a>
             <div>
                 <h1 class="crm-dash-bar-title">{{ contract.get_contract_type_display }}</h1>
-                <p class="crm-dash-bar-sub is-visible">مرحله {{ step_number }} از {{ step_total }}{% if next_step_label %} — بعدی: {{ next_step_label }}{% endif %}</p>
+                <p class="crm-dash-bar-sub is-visible"><span class="ct-wizard-progress">مرحله {{ step_number }} از {{ step_total }}</span>{% if next_step_label %}<span class="ct-wizard-next-hint">بعدی: {{ next_step_label }}</span>{% endif %}</p>
             </div>
         </div>
     </header>
@@ -55,7 +55,7 @@
             </header>
             <div class="crm-deal-panel-body">
             {% if prefill_parties %}
-            <div class="crm-contracrm-contract-prefill"><i class="fas fa-check-circle"></i> اطلاعات طرفین از CRM وارد شده — فقط بررسی و تأیید کنید.</div>
+            <div class="crm-contract-prefill crm-contract-prefill--info"><i class="fas fa-circle-info"></i> اطلاعات طرفین از CRM وارد شده — فقط بررسی و تأیید کنید.</div>
             {% endif %}
             <div class="crm-contract-parties" id="ct-party-rows">
                 {% for p in wizard_data.parties %}
@@ -70,7 +70,7 @@
                             <p class="crm-contract-party__meta ct-party-card__meta">
                                 {% if not p.first_name and not p.last_name %}نام و اطلاعات این طرف هنوز تکمیل نشده است.
                                 {% else %}
-                                {% if p.mobile %}{{ p.mobile|ct_mask_phone }}{% endif %}
+                                {% if p.mobile %}<span dir="ltr">{{ p.mobile }}</span>{% endif %}
                                 {% if p.national_id %} · {{ p.national_id|slice:":4" }}***{{ p.national_id|slice:"-3:" }}{% endif %}
                                 {% if p.ownership_share %} · {{ p.ownership_share }}{% endif %}
                                 {% endif %}
@@ -111,7 +111,7 @@
                             <label>کد ملی<input class="crm-input" name="party_{{ forloop.counter0 }}_national_id" value="{{ p.national_id }}" inputmode="numeric"></label>
                             <label>موبایل<input class="crm-input" type="tel" name="party_{{ forloop.counter0 }}_mobile" value="{{ p.mobile }}" inputmode="tel"></label>
                             <label>قدرالسهم<input class="crm-input" name="party_{{ forloop.counter0 }}_ownership_share" value="{{ p.ownership_share|default:'' }}" placeholder="۶ دانگ"></label>
-                            <label class="crm-contracrm-contract-span-2">نشانی<input class="crm-input" name="party_{{ forloop.counter0 }}_address" value="{{ p.address }}"></label>
+                            <label class="crm-contract-span-2">نشانی<input class="crm-input" name="party_{{ forloop.counter0 }}_address" value="{{ p.address }}"></label>
                             <label>کد پستی<input class="crm-input" name="party_{{ forloop.counter0 }}_postal_code" value="{{ p.postal_code|default:'' }}" inputmode="numeric"></label>
                         </div>
                     </div>
@@ -163,38 +163,160 @@
         </section>
 
         {% elif wizard_step == 'property' %}
-        <section class="crm-deal-block crm-deal-panel">
-            <h2>مشخصات ملک</h2>
+        <section class="crm-deal-block crm-deal-panel ct-wizard-property">
+            <header class="crm-deal-panel-head">
+                <span class="crm-deal-panel-mark" aria-hidden="true"><i class="fas fa-building"></i></span>
+                <div class="crm-deal-panel-head-text">
+                    <h2>مشخصات ملک</h2>
+                    <p class="crm-contract-panel-lead">اطلاعات اصلی و تکمیلی ملک برای درج در قرارداد</p>
+                </div>
+            </header>
+            <div class="crm-deal-panel-body">
             {% if prefill_property %}
-            <div class="crm-contract-prefill"><i class="fas fa-check-circle"></i> اطلاعات ملک از فایل شخصی وارد شده است.</div>
+            <div class="crm-contract-prefill crm-contract-prefill--info"><i class="fas fa-circle-info"></i> اطلاعات ملک از فایل شخصی وارد شده است.</div>
             {% endif %}
-            <div class="crm-contract-form-grid">
-                <label>نوع ملک<input class="crm-input" name="prop_property_type" value="{{ wizard_data.property.property_type|default:'' }}" placeholder="آپارتمان"></label>
-                <label class="crm-contract-span-2">آدرس<input class="crm-input" name="prop_address" value="{{ wizard_data.property.address|default:'' }}"></label>
-                <label>متراژ (م²)<input class="crm-input" name="prop_area" value="{{ wizard_data.property.area|default:'' }}" inputmode="numeric"></label>
-                <label>طبقه<input class="crm-input" name="prop_floor" value="{{ wizard_data.property.floor|default:'' }}"></label>
-                <label>شهر<input class="crm-input" name="prop_city" value="{{ wizard_data.property.city|default:'' }}"></label>
-                <label>منطقه<input class="crm-input" name="prop_district" value="{{ wizard_data.property.district|default:'' }}"></label>
-                <label class="crm-contract-span-2"><input type="checkbox" name="prop_has_parking"{% if wizard_data.property.has_parking %} checked{% endif %}> پارکینگ دارد</label>
-                <label class="crm-contract-span-2"><input type="checkbox" name="prop_has_storage"{% if wizard_data.property.has_storage %} checked{% endif %}> انباری دارد</label>
+            <div class="crm-contract-form-grid ct-wizard-field-grid">
+                <label class="ct-field-labeled">
+                    <span class="ct-field-label"><i class="fas fa-building" aria-hidden="true"></i> نوع ملک</span>
+                    <input class="crm-input" name="prop_property_type" value="{{ wizard_data.property.property_type|default:'' }}" placeholder="آپارتمان">
+                </label>
+                <label class="ct-field-labeled crm-contract-span-2">
+                    <span class="ct-field-label"><i class="fas fa-location-dot" aria-hidden="true"></i> آدرس</span>
+                    <input class="crm-input" name="prop_address" value="{{ wizard_data.property.address|default:'' }}">
+                </label>
+                <label class="ct-field-labeled">
+                    <span class="ct-field-label"><i class="fas fa-ruler-combined" aria-hidden="true"></i> متراژ (م²)</span>
+                    <input class="crm-input" name="prop_area" value="{{ wizard_data.property.area|default:'' }}" inputmode="numeric">
+                </label>
+                <label class="ct-field-labeled">
+                    <span class="ct-field-label"><i class="fas fa-layer-group" aria-hidden="true"></i> طبقه</span>
+                    <input class="crm-input" name="prop_floor" value="{{ wizard_data.property.floor|default:'' }}">
+                </label>
+                <label class="ct-field-labeled">
+                    <span class="ct-field-label"><i class="fas fa-city" aria-hidden="true"></i> شهر</span>
+                    <input class="crm-input" name="prop_city" value="{{ wizard_data.property.city|default:'' }}">
+                </label>
+                <label class="ct-field-labeled">
+                    <span class="ct-field-label"><i class="fas fa-map-pin" aria-hidden="true"></i> منطقه</span>
+                    <input class="crm-input" name="prop_district" value="{{ wizard_data.property.district|default:'' }}">
+                </label>
             </div>
-            <details class="ct-disclosure">
-                <summary>اطلاعات تکمیلی</summary>
+            <div class="ct-toggle-grid">
+                <label class="ct-toggle-card">
+                    <input type="checkbox" name="prop_has_parking"{% if wizard_data.property.has_parking %} checked{% endif %}>
+                    <span class="ct-toggle-card__body"><i class="fas fa-square-parking" aria-hidden="true"></i> پارکینگ</span>
+                </label>
+                <label class="ct-toggle-card">
+                    <input type="checkbox" name="prop_has_storage"{% if wizard_data.property.has_storage %} checked{% endif %}>
+                    <span class="ct-toggle-card__body"><i class="fas fa-warehouse" aria-hidden="true"></i> انباری</span>
+                </label>
+                <label class="ct-toggle-card">
+                    <input type="checkbox" name="prop_has_elevator"{% if wizard_data.property.has_elevator %} checked{% endif %}>
+                    <span class="ct-toggle-card__body"><i class="fas fa-elevator" aria-hidden="true"></i> آسانسور</span>
+                </label>
+            </div>
+            <details class="ct-disclosure ct-disclosure--pro">
+                <summary><span class="ct-disclosure__title"><i class="fas fa-list-ul" aria-hidden="true"></i> اطلاعات تکمیلی ملک</span><span class="ct-disclosure__hint">جزئیاتی که در صورت نیاز داخل قرارداد درج می‌شوند</span></summary>
                 <div class="ct-disclosure__body">
-                    <div class="crm-contract-form-grid">
-                        <label>جهت واحد<input class="crm-input" name="prop_unit_direction" value="{{ wizard_data.property.unit_direction|default:'' }}"></label>
-                        <label>نوع نما<input class="crm-input" name="prop_facade_type" value="{{ wizard_data.property.facade_type|default:'' }}"></label>
-                        <label>شماره واحد<input class="crm-input" name="prop_unit" value="{{ wizard_data.property.unit|default:'' }}"></label>
-                        <label>پلاک ثبتی<input class="crm-input" name="prop_main_plaque" value="{{ wizard_data.property.main_plaque|default:'' }}"></label>
-                        <label>شماره اشتراک آب<input class="crm-input" name="util_water_sub" value="{{ wizard_data.property.utilities.water.subscription_no|default:'' }}"></label>
-                        <label>شماره اشتراک برق<input class="crm-input" name="util_electricity_sub" value="{{ wizard_data.property.utilities.electricity.subscription_no|default:'' }}"></label>
-                        <label>شماره اشتراک گاز<input class="crm-input" name="util_gas_sub" value="{{ wizard_data.property.utilities.gas.subscription_no|default:'' }}"></label>
-                        <label>سال ساخت<input class="crm-input" name="prop_build_year" value="{{ wizard_data.property.build_year|default:'' }}" inputmode="numeric"></label>
-                        <label>تعداد طبقات<input class="crm-input" name="prop_total_floors" value="{{ wizard_data.property.total_floors|default:'' }}" inputmode="numeric"></label>
+                    <div class="crm-contract-form-grid ct-wizard-field-grid">
+                        <label class="ct-field-labeled">
+                            <span class="ct-field-label"><i class="fas fa-compass" aria-hidden="true"></i> جهت واحد</span>
+                            <select class="crm-input" name="prop_unit_direction">
+                                <option value="">—</option>
+                                {% for opt in wizard_property_choices.unit_direction %}
+                                <option value="{{ opt }}"{% if wizard_data.property.unit_direction == opt %} selected{% endif %}>{{ opt }}</option>
+                                {% endfor %}
+                            </select>
+                        </label>
+                        <label class="ct-field-labeled">
+                            <span class="ct-field-label"><i class="fas fa-compass" aria-hidden="true"></i> جهت ساختمان</span>
+                            <select class="crm-input" name="prop_building_direction">
+                                <option value="">—</option>
+                                {% for opt in wizard_property_choices.building_direction %}
+                                <option value="{{ opt }}"{% if wizard_data.property.building_direction == opt %} selected{% endif %}>{{ opt }}</option>
+                                {% endfor %}
+                            </select>
+                        </label>
+                        <label class="ct-field-labeled">
+                            <span class="ct-field-label"><i class="fas fa-building-columns" aria-hidden="true"></i> نوع نما</span>
+                            <select class="crm-input" name="prop_facade_type">
+                                <option value="">—</option>
+                                {% for opt in wizard_property_choices.facade_type %}
+                                <option value="{{ opt }}"{% if wizard_data.property.facade_type == opt %} selected{% endif %}>{{ opt }}</option>
+                                {% endfor %}
+                            </select>
+                        </label>
+                        <label class="ct-field-labeled">
+                            <span class="ct-field-label"><i class="fas fa-border-all" aria-hidden="true"></i> نوع کف</span>
+                            <select class="crm-input" name="prop_floor_type">
+                                <option value="">—</option>
+                                {% for opt in wizard_property_choices.floor_type %}
+                                <option value="{{ opt }}"{% if wizard_data.property.floor_type == opt %} selected{% endif %}>{{ opt }}</option>
+                                {% endfor %}
+                            </select>
+                        </label>
+                        <label class="ct-field-labeled">
+                            <span class="ct-field-label"><i class="fas fa-kitchen-set" aria-hidden="true"></i> آشپزخانه</span>
+                            <select class="crm-input" name="prop_kitchen_type">
+                                <option value="">—</option>
+                                {% for opt in wizard_property_choices.kitchen_type %}
+                                <option value="{{ opt }}"{% if wizard_data.property.kitchen_type == opt %} selected{% endif %}>{{ opt }}</option>
+                                {% endfor %}
+                            </select>
+                        </label>
+                        <label class="ct-field-labeled">
+                            <span class="ct-field-label"><i class="fas fa-fire" aria-hidden="true"></i> گرمایش</span>
+                            <select class="crm-input" name="prop_heating">
+                                <option value="">—</option>
+                                {% for opt in wizard_property_choices.heating_type %}
+                                <option value="{{ opt }}"{% if wizard_data.property.heating_system == opt %} selected{% endif %}>{{ opt }}</option>
+                                {% endfor %}
+                            </select>
+                        </label>
+                        <label class="ct-field-labeled">
+                            <span class="ct-field-label"><i class="fas fa-snowflake" aria-hidden="true"></i> سرمایش</span>
+                            <select class="crm-input" name="prop_cooling">
+                                <option value="">—</option>
+                                {% for opt in wizard_property_choices.cooling_type %}
+                                <option value="{{ opt }}"{% if wizard_data.property.cooling_system == opt %} selected{% endif %}>{{ opt }}</option>
+                                {% endfor %}
+                            </select>
+                        </label>
+                        <label class="ct-field-labeled">
+                            <span class="ct-field-label"><i class="fas fa-door-open" aria-hidden="true"></i> شماره واحد</span>
+                            <input class="crm-input" name="prop_unit" value="{{ wizard_data.property.unit|default:'' }}">
+                        </label>
+                        <label class="ct-field-labeled">
+                            <span class="ct-field-label"><i class="fas fa-hashtag" aria-hidden="true"></i> پلاک ثبتی</span>
+                            <input class="crm-input" name="prop_main_plaque" value="{{ wizard_data.property.main_plaque|default:'' }}">
+                        </label>
+                        <label class="ct-field-labeled">
+                            <span class="ct-field-label"><i class="fas fa-calendar" aria-hidden="true"></i> سال ساخت</span>
+                            <input class="crm-input" name="prop_build_year" value="{{ wizard_data.property.build_year|default:'' }}" inputmode="numeric" min="1300" max="1500" placeholder="مثلاً ۱۴۰۰">
+                        </label>
+                        <label class="ct-field-labeled">
+                            <span class="ct-field-label"><i class="fas fa-stairs" aria-hidden="true"></i> تعداد طبقات</span>
+                            <input class="crm-input" name="prop_total_floors" value="{{ wizard_data.property.total_floors|default:'' }}" inputmode="numeric">
+                        </label>
+                    </div>
+                    <div class="ct-util-cards">
+                        <article class="ct-util-card">
+                            <h4><i class="fas fa-bolt" aria-hidden="true"></i> برق</h4>
+                            <label>شماره اشتراک<input class="crm-input" name="util_electricity_sub" value="{{ wizard_data.property.utilities.electricity.subscription_no|default:'' }}"></label>
+                        </article>
+                        <article class="ct-util-card">
+                            <h4><i class="fas fa-droplet" aria-hidden="true"></i> آب</h4>
+                            <label>شماره اشتراک<input class="crm-input" name="util_water_sub" value="{{ wizard_data.property.utilities.water.subscription_no|default:'' }}"></label>
+                        </article>
+                        <article class="ct-util-card">
+                            <h4><i class="fas fa-fire-flame-simple" aria-hidden="true"></i> گاز</h4>
+                            <label>شماره اشتراک<input class="crm-input" name="util_gas_sub" value="{{ wizard_data.property.utilities.gas.subscription_no|default:'' }}"></label>
+                        </article>
                     </div>
                 </div>
             </details>
             <input type="hidden" name="next_step" value="financial">
+            </div>
         </section>
 
         {% elif wizard_step == 'financial' %}
@@ -481,8 +603,8 @@
                         <h3>قرارداد</h3>
                     </div>
                 </header>
-                <div class="crm-deal-side-card__body">
-                    <dl class="crm-contract-context-dl">
+                <div class="crm-deal-side-card__body crm-contract-summary-body">
+                    <dl class="crm-contract-context-dl crm-contract-summary-dl">
                         <dt>نوع قرارداد</dt>
                         <dd>{{ contract.get_contract_type_display }}</dd>
                         <dt>معامله</dt>
@@ -511,5 +633,5 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'contracts/js/wizard.js' %}?v=5"></script>
+<script src="{% static 'contracts/js/wizard.js' %}?v=6"></script>
 {% endblock %}

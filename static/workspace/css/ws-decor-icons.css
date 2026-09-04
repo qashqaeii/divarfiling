@@ -170,16 +170,19 @@
     opacity: 0.5;
 }
 
-/* Search inputs */
+/* Search inputs — inline flex (not absolute) */
 .mk-filter-search .df-decor-icon,
 .ws-tbx-search-wrap .df-decor-icon,
-.crm-deals-search .df-decor-icon {
-    position: absolute;
-    inset-inline-end: 0.65rem;
-    top: 50%;
-    transform: translateY(-50%);
+.crm-deals-search .df-decor-icon,
+.crm-input-search .df-decor-icon,
+.crm-pdc-search .df-decor-icon,
+.crm-prop-contacts-search .df-decor-icon {
+    position: static;
+    transform: none;
+    inset: auto;
+    flex-shrink: 0;
     pointer-events: none;
-    opacity: 0.45;
+    opacity: 0.55;
     --df-decor-size: 0.875rem;
     --mk-icon-stroke: 1.75;
 }

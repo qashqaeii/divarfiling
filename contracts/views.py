@@ -58,6 +58,8 @@ class DealContractsSectionView(DealContractsMixin, TemplateView):
         ctx = super().get_context_data(**kwargs)
         deal = self.get_deal()
         qs = contract_for_deal(self.request.user, deal.pk)
+        from workspace.services.crm_deals import infer_recommended_contract_type
+
         ctx.update({
             'deal': deal,
             'contracts': qs,
@@ -68,6 +70,7 @@ class DealContractsSectionView(DealContractsMixin, TemplateView):
             },
             'crm_section': 'deals',
             'contract_types': CONTRACT_TYPES,
+            'recommended_contract_type': infer_recommended_contract_type(deal),
         })
         return ctx
 
@@ -116,6 +119,16 @@ class ContractWizardView(DealContractsMixin, TemplateView):
         selected_codes = {
             c.get('code') for c in (wizard.get('selected_clauses') or []) if c.get('code')
         }
+        from contracts.constants import WIZARD_UNIT_DIRECTIONS
+        from workspace.services.property_features import (
+            CHOICES_COOLING,
+            CHOICES_DIRECTION,
+            CHOICES_FACADE,
+            CHOICES_FLOORING,
+            CHOICES_HEATING,
+            CHOICES_KITCHEN,
+        )
+
         ctx.update({
             'deal': deal,
             'contract': contract,
@@ -140,6 +153,15 @@ class ContractWizardView(DealContractsMixin, TemplateView):
             'validation_errors': validation_errors,
             'validation_count': len(validation_errors),
             'contract_sections': render_contract_document(contract),
+            'wizard_property_choices': {
+                'unit_direction': WIZARD_UNIT_DIRECTIONS,
+                'building_direction': CHOICES_DIRECTION,
+                'facade_type': CHOICES_FACADE,
+                'floor_type': CHOICES_FLOORING,
+                'kitchen_type': CHOICES_KITCHEN,
+                'heating_type': CHOICES_HEATING,
+                'cooling_type': CHOICES_COOLING,
+            },
             'crm_section': 'deals',
         })
         return ctx

@@ -6,7 +6,7 @@ from django.test import Client, TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from contracts.constants import CONTRACT_TYPE_LEASE
+from contracts.constants import CONTRACT_TYPE_LEASE, CONTRACT_TYPE_SALE
 from contracts.services.tokens import hash_token
 from contracts.services.hashing import compute_content_hash
 from contracts.services.lifecycle import (
@@ -15,9 +15,12 @@ from contracts.services.lifecycle import (
     prepare_for_send,
     save_wizard_step,
 )
+from contracts.services.masking import mask_phone
 from contracts.services.otp_service import hash_otp_code
 from contracts.services.scope import contract_for_user, contracts_qs
+from contracts.services.wizard_parse import parse_wizard_step
 from workspace.models import CRMDeal, CRMProperty, Customer
+from workspace.services.crm_deals import get_property_deal_parties_context, infer_recommended_contract_type
 
 User = get_user_model()
 
@@ -143,3 +146,47 @@ class ContractOTPTests(TestCase):
         )
         self.assertNotIn('123456', otp.code_hash)
         self.assertEqual(len(otp.code_hash), 64)
+
+
+class ContractWizardUXTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='u4', phone='09128888888', password='x')
+        self.customer = Customer.objects.create(user=self.user, name='سعیدی', phone='09181232256')
+        self.prop = CRMProperty.objects.create(
+            user=self.user, title='ملک فروش', deal_mode='فروش', sale_price=100,
+        )
+        self.deal = CRMDeal.objects.create(
+            user=self.user, customer=self.customer, property=self.prop,
+            title='فروش ملک', deal_kind='sale',
+        )
+
+    def test_wizard_shows_full_phone_in_workspace(self):
+        c = create_contract(self.user, self.deal.pk, CONTRACT_TYPE_SALE)
+        self.client.force_login(self.user)
+        url = reverse('workspace:contract_wizard', kwargs={'deal_id': self.deal.pk, 'contract_id': c.pk})
+        resp = self.client.get(url + '?step=parties')
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, '09181232256')
+        self.assertNotContains(resp, '0918***2256')
+
+    def test_public_mask_phone_unchanged(self):
+        self.assertEqual(mask_phone('09181232256'), '0918***2256')
+
+    def test_recommended_contract_type_for_sale_deal(self):
+        self.assertEqual(infer_recommended_contract_type(self.deal), 'sale')
+
+    def test_wizard_property_select_parsing(self):
+        c = create_contract(self.user, self.deal.pk, CONTRACT_TYPE_SALE)
+        data = parse_wizard_step({
+            'prop_unit_direction': 'شمالی',
+            'prop_facade_type': 'سنگ',
+            'prop_floor_type': 'سرامیک',
+            'prop_kitchen_type': 'اپن',
+            'prop_heating': 'بخاری',
+            'prop_cooling': 'اسپلیت',
+            'prop_has_elevator': 'on',
+        }, 'property', 'sale')
+        self.assertEqual(data['unit_direction'], 'شمالی')
+        self.assertEqual(data['facade_type'], 'سنگ')
+        self.assertEqual(data['heating_system'], 'بخاری')
+        self.assertTrue(data['has_elevator'])

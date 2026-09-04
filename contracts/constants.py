@@ -326,3 +326,8 @@ USAGE_TYPES = (
 )
 
 COST_RESPONSIBILITY_OPTIONS = ('landlord', 'tenant')
+
+WIZARD_UNIT_DIRECTIONS = (
+    'شمالی', 'جنوبی', 'شرقی', 'غربی',
+    'شمال‌شرقی', 'شمال‌غربی', 'جنوب‌شرقی', 'جنوب‌غربی',
+)

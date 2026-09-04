@@ -18,7 +18,7 @@
 {% block crm_extra_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/crm-zonkan.css' %}?v=6">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-prop-detail-mobile.css' %}?v=3">
-<link rel="stylesheet" href="{% static 'workspace/css/crm-property-deal-create.css' %}?v=5">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-property-deal-create.css' %}?v=6">
 {% if show_nearby_pois %}
 <link rel="stylesheet" href="{% static 'workspace/css/crm-nearby-pois.css' %}?v=6">
 {% endif %}
@@ -548,9 +548,13 @@
                     </div>
                     {% endif %}
                     {% if contact_links %}
-                    <div class="crm-prop-contact-grid">
+                    <label class="crm-input-search crm-prop-contacts-search">
+                        {% include 'includes/icon_slot.html' with decor='search' size='inline' only %}
+                        <input type="search" placeholder="جستجو: نام، موبایل، نقش..." autocomplete="off" data-prop-contacts-filter aria-label="جستجو در مخاطبین">
+                    </label>
+                    <div class="crm-prop-contact-grid" data-prop-contacts-grid>
                         {% for link in contact_links %}
-                        <article class="crm-prop-contact-tile">
+                        <article class="crm-prop-contact-tile" data-contact-search="{{ link.customer.name }} {{ link.customer.phone }} {{ link.role }}">
                             <a href="{% url 'workspace:crm_detail' link.customer_id %}" class="crm-prop-contact-main">
                                 <span class="crm-prop-contact-avatar">{{ link.customer.name|crm_initials }}</span>
                                 <div class="crm-prop-contact-body">
@@ -982,7 +986,7 @@
 
 {% block crm_js %}
 {% if can_create_deal %}
-<script src="{% static 'workspace/js/crm-property-deal-create.js' %}?v=5"></script>
+<script src="{% static 'workspace/js/crm-property-deal-create.js' %}?v=6"></script>
 {% endif %}
 {% if crm_agency and is_property_owner %}
 <script>
@@ -998,6 +1002,20 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 {% endif %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var filterInput = document.querySelector('[data-prop-contacts-filter]');
+    var grid = document.querySelector('[data-prop-contacts-grid]');
+    if (!filterInput || !grid) return;
+    filterInput.addEventListener('input', function () {
+        var q = (filterInput.value || '').trim().toLowerCase();
+        grid.querySelectorAll('.crm-prop-contact-tile').forEach(function (tile) {
+            var hay = (tile.getAttribute('data-contact-search') || '').toLowerCase();
+            tile.classList.toggle('is-filter-hidden', q && hay.indexOf(q) === -1);
+        });
+    });
+});
+</script>
 {% if is_property_owner and public_property_share %}
 <script>
 document.addEventListener('DOMContentLoaded', function () {

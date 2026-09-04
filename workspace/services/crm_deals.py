@@ -313,17 +313,109 @@ def _mask_phone_display(phone: str) -> str:
     return f'{raw[:4]}***{raw[-4:]}'
 
 
+def infer_recommended_contract_type(deal) -> str:
+    """نوع قرارداد پیشنهادی برای داشبورد قراردادها (بدون محدود کردن انتخاب)."""
+    kind = (getattr(deal, 'deal_kind', None) or '').strip()
+    if kind == 'sale':
+        return 'sale'
+    if kind == 'rent':
+        return 'lease'
+    prop = getattr(deal, 'property', None)
+    if prop:
+        mode = (getattr(prop, 'deal_mode', None) or '').strip()
+        if 'فروش' in mode or mode == 'پیش‌فروش':
+            return 'sale'
+        if 'اجاره' in mode or 'رهن' in mode:
+            return 'lease'
+    return ''
+
+
+def get_property_deal_parties_context(property_obj, deal_kind: str = None) -> Dict[str, Any]:
+    """طرفین نمایشی برای ثبت معامله از فایل — بدون تغییر مدل CRMDeal."""
+    from workspace.models import PropertyContact
+    from workspace.services.crm import primary_owner_contact
+
+    kind = (deal_kind or infer_deal_kind_from_property(property_obj)).strip()
+    is_rent = kind == 'rent'
+    property_side_label = 'موجر' if is_rent else 'فروشنده'
+    customer_side_label = 'مستأجر' if is_rent else 'خریدار'
+
+    property_side = {
+        'label': property_side_label,
+        'role_hint': 'مالک فایل',
+        'name': '',
+        'phone': '',
+        'missing': True,
+        'contact_id': None,
+    }
+    owner = primary_owner_contact(crm_property=property_obj)
+    if owner:
+        display_name = owner.name or owner.company_name or ''
+        property_side.update({
+            'name': display_name,
+            'phone': owner.phone or '',
+            'missing': not display_name.strip(),
+            'contact_id': owner.pk,
+        })
+    elif property_obj.owner_name or property_obj.phone:
+        property_side.update({
+            'name': property_obj.owner_name or '',
+            'phone': property_obj.phone or '',
+            'missing': not (property_obj.owner_name or '').strip(),
+        })
+
+    suggested_tenant = None
+    if is_rent:
+        tenant_link = (
+            PropertyContact.objects
+            .filter(property=property_obj, role__in=('مستاجر', 'مستأجر'))
+            .select_related('customer')
+            .order_by('-is_primary', '-updated_at')
+            .first()
+        )
+        if tenant_link:
+            tenant = tenant_link.customer
+            suggested_tenant = {
+                'id': tenant.pk,
+                'name': tenant.name or '',
+                'phone': tenant.phone or '',
+            }
+        elif property_obj.tenant_name or property_obj.tenant_phone:
+            suggested_tenant = {
+                'id': None,
+                'name': property_obj.tenant_name or '',
+                'phone': property_obj.tenant_phone or '',
+            }
+
+    customer_side = {
+        'label': customer_side_label,
+        'role_hint': 'طرف معامله / مشتری',
+        'name': '',
+        'phone': '',
+        'missing': True,
+        'suggested': suggested_tenant,
+    }
+
+    return {
+        'deal_kind': kind,
+        'is_rent': is_rent,
+        'property_side': property_side,
+        'customer_side': customer_side,
+    }
+
+
 def serialize_property_deal_customer(customer, *, related: bool = False, role: str = '') -> Dict[str, Any]:
     name = customer.name or ''
     if customer.is_legal_entity and customer.company_name:
         name = customer.company_name
         if customer.name:
             name = f'{customer.company_name} — {customer.name}'
+    phone = customer.phone or ''
     return {
         'id': customer.pk,
         'name': name,
-        'phone': _mask_phone_display(customer.phone or ''),
-        'phone_raw': customer.phone or '',
+        'phone': phone,
+        'phone_masked': _mask_phone_display(phone),
         'type': customer.customer_type or '',
         'role': role,
         'related': related,

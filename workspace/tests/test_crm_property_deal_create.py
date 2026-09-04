@@ -8,6 +8,7 @@ from workspace.services.crm_deals import (
     create_deal,
     default_deal_value_for_property,
     find_duplicate_active_deal,
+    get_property_deal_parties_context,
     infer_deal_kind_from_property,
 )
 
@@ -182,3 +183,31 @@ class PropertyDealCreateTests(TestCase):
         self.assertEqual(deal.agency_id, agency.pk)
         detail = self.client.get(reverse('workspace:crm_deal_detail', kwargs={'deal_id': deal.pk}))
         self.assertEqual(detail.status_code, 200)
+
+    def test_property_deal_parties_context_sale(self):
+        owner = Customer.objects.create(
+            user=self.user, name='مالکی', phone='09181112222', customer_type='مالک',
+        )
+        PropertyContact.objects.create(
+            property=self.property, customer=owner, role='مالک', is_primary=True,
+        )
+        ctx = get_property_deal_parties_context(self.property, 'sale')
+        self.assertEqual(ctx['property_side']['label'], 'فروشنده')
+        self.assertEqual(ctx['customer_side']['label'], 'خریدار')
+        self.assertEqual(ctx['property_side']['name'], 'مالکی')
+        self.assertEqual(ctx['property_side']['phone'], '09181112222')
+
+    def test_property_deal_parties_context_rent(self):
+        owner = Customer.objects.create(
+            user=self.user, name='موجر', phone='09183334444', customer_type='مالک',
+        )
+        PropertyContact.objects.create(
+            property=self.rent_property, customer=owner, role='مالک', is_primary=True,
+        )
+        PropertyContact.objects.create(
+            property=self.rent_property, customer=self.tenant, role='مستاجر',
+        )
+        ctx = get_property_deal_parties_context(self.rent_property, 'rent')
+        self.assertEqual(ctx['property_side']['label'], 'موجر')
+        self.assertEqual(ctx['customer_side']['label'], 'مستأجر')
+        self.assertEqual(ctx['customer_side']['suggested']['id'], self.tenant.pk)

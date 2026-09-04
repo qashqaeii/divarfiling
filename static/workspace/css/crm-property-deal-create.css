@@ -256,6 +256,128 @@
     transition: border-color 0.15s, box-shadow 0.15s;
 }
 
+.crm-input-search,
+.crm-pdc-search.crm-input-search {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.crm-input-search .df-decor-icon,
+.crm-pdc-search .df-decor-icon {
+    flex-shrink: 0;
+    opacity: 0.55;
+    pointer-events: none;
+}
+
+.crm-pdc-parties {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.55rem;
+}
+
+@media (min-width: 480px) {
+    .crm-pdc-parties {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+.crm-pdc-party-card {
+    padding: 0.75rem 0.85rem;
+    border: 1px solid var(--crm-border, #ebe9f1);
+    border-radius: var(--crm-radius-sm, 10px);
+    background: var(--crm-surface-muted, #f8f7fa);
+    min-height: 6.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.crm-pdc-party-card--property {
+    background: color-mix(in srgb, var(--ws-primary) 4%, var(--crm-surface, #fff));
+    border-color: color-mix(in srgb, var(--ws-primary) 12%, var(--crm-border, #ebe9f1));
+}
+
+.crm-pdc-party-card--customer {
+    background: var(--crm-surface, #fff);
+}
+
+.crm-pdc-party-card__role {
+    display: inline-flex;
+    align-self: flex-start;
+    font-size: 0.58rem;
+    font-weight: 700;
+    padding: 0.12rem 0.45rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--ws-primary) 10%, transparent);
+    color: var(--ws-primary);
+}
+
+.crm-pdc-party-card__name {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--ws-text);
+    line-height: 1.35;
+}
+
+.crm-pdc-party-card__phone {
+    font-size: 0.72rem;
+    color: var(--ws-text-secondary);
+    font-variant-numeric: tabular-nums;
+}
+
+.crm-pdc-party-card__hint,
+.crm-pdc-party-card__empty {
+    font-size: 0.62rem;
+    font-style: normal;
+    color: var(--ws-text-muted);
+    margin: 0;
+}
+
+.crm-pdc-party-card--customer .crm-pdc-contact__selected {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    align-items: flex-start;
+}
+
+.crm-pdc-party-card--customer .crm-pdc-contact__change {
+    margin-top: 0.15rem;
+}
+
+.crm-prop-contacts-search {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    max-width: 320px;
+    margin-bottom: 0.75rem;
+    height: 34px;
+    padding: 0 0.65rem;
+    border: 1px solid var(--ws-border);
+    border-radius: 8px;
+    background: var(--ws-surface);
+}
+
+.crm-prop-contacts-search:focus-within {
+    border-color: color-mix(in srgb, var(--ws-primary) 40%, var(--ws-border));
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--ws-primary) 10%, transparent);
+}
+
+.crm-prop-contacts-search input {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    background: transparent;
+    outline: none;
+    font: inherit;
+    font-size: 0.76rem;
+    color: var(--ws-text);
+}
+
+.crm-prop-contact-tile.is-filter-hidden {
+    display: none;
+}
+
 .crm-pdc-search:focus-within {
     border-color: var(--crm-accent, #7c3aed);
     box-shadow: 0 0 0 3px var(--crm-accent-ring, rgba(124, 58, 237, 0.12));

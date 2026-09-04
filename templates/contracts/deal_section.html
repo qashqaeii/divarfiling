@@ -3,7 +3,7 @@
 
 {% block page_title %}قراردادها — {{ deal.title }}{% endblock %}
 {% block crm_extra_css %}
-<link rel="stylesheet" href="{% static 'contracts/css/contracts.css' %}?v=5">
+<link rel="stylesheet" href="{% static 'contracts/css/contracts.css' %}?v=6">
 {% endblock %}
 
 {% block crm_content %}
@@ -41,7 +41,10 @@
                 <form method="post" action="{% url 'workspace:contract_create' deal.pk %}">
                     {% csrf_token %}
                     <input type="hidden" name="contract_type" value="{{ value }}">
-                    <button type="submit" class="crm-contract-action">
+                    <button type="submit" class="crm-contract-action{% if value == recommended_contract_type %} is-recommended{% endif %}">
+                        {% if value == recommended_contract_type %}
+                        <span class="crm-contract-action__badge">مناسب این معامله</span>
+                        {% endif %}
                         <span class="crm-deal-side-icon crm-deal-side-icon--action" aria-hidden="true">
                             {% if value == 'lease' %}<i class="fas fa-key"></i>
                             {% elif value == 'sale' %}<i class="fas fa-handshake"></i>

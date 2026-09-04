@@ -85,7 +85,9 @@
         const selectedEl = root.querySelector('[data-prop-deal-selected]');
         const searchWrap = root.querySelector('[data-prop-deal-search-wrap]');
         const selectedName = root.querySelector('[data-prop-deal-selected-name]');
+        const selectedPhone = root.querySelector('[data-prop-deal-selected-phone]');
         const selectedMeta = root.querySelector('[data-prop-deal-selected-meta]');
+        const customerEmpty = root.querySelector('[data-pdc-customer-empty]');
         const dupWarn = root.querySelector('[data-prop-deal-dup-warn]');
         const submitBtn = form.querySelector('[data-prop-deal-submit]');
         const submitLabel = form.querySelector('[data-prop-deal-submit-label]');
@@ -117,10 +119,11 @@
             resultsEl.innerHTML = items.map((c) => {
                 const related = c.related ? ' is-related' : '';
                 const section = c.related ? 'مخاطب مرتبط — ' : '';
-                const meta = [c.phone, c.type || c.role].filter(Boolean).join(' · ');
-                return `<button type="button" class="crm-prop-deal-customer-result${related}" data-id="${c.id}" data-name="${escapeAttr(c.name)}" data-meta="${escapeAttr(meta)}">
+                const meta = [c.type || c.role].filter(Boolean).join(' · ');
+                const phone = c.phone || '';
+                return `<button type="button" class="crm-prop-deal-customer-result${related}" data-id="${c.id}" data-name="${escapeAttr(c.name)}" data-meta="${escapeAttr(meta)}" data-phone="${escapeAttr(phone)}">
                     <strong>${escapeHtml(section + c.name)}</strong>
-                    <em>${escapeHtml(meta)}</em>
+                    <em>${escapeHtml([phone, meta].filter(Boolean).join(' · '))}</em>
                 </button>`;
             }).join('');
             resultsEl.hidden = false;
@@ -131,6 +134,7 @@
             const quickOn = quickPanel && !quickPanel.hidden;
             if (selectedEl) selectedEl.hidden = !picked;
             if (searchWrap) searchWrap.hidden = picked && !quickOn;
+            if (customerEmpty) customerEmpty.hidden = picked || quickOn;
             const divider = root.querySelector('.crm-pdc-contact__divider');
             if (divider) divider.hidden = picked && !quickOn;
             if (quickOpen) quickOpen.hidden = quickOn;
@@ -152,10 +156,11 @@
             window.setTimeout(() => quickName?.focus(), 80);
         }
 
-        function selectCustomer(id, name, meta) {
-            selectedCustomer = { id, name, meta };
+        function selectCustomer(id, name, meta, phone) {
+            selectedCustomer = { id, name, meta, phone: phone || '' };
             if (customerInput) customerInput.value = id;
             if (selectedName) selectedName.textContent = name;
+            if (selectedPhone) selectedPhone.textContent = phone || '';
             if (selectedMeta) selectedMeta.textContent = meta || '';
             if (searchInput) searchInput.value = '';
             closeQuickPanel();
@@ -215,7 +220,7 @@
         resultsEl?.addEventListener('click', (e) => {
             const btn = e.target.closest('[data-id]');
             if (!btn) return;
-            selectCustomer(btn.dataset.id, btn.dataset.name, btn.dataset.meta);
+            selectCustomer(btn.dataset.id, btn.dataset.name, btn.dataset.meta, btn.dataset.phone);
         });
 
         root.querySelector('[data-prop-deal-clear]')?.addEventListener('click', clearCustomer);
@@ -270,7 +275,7 @@
                         return;
                     }
                     const c = data.customer;
-                    selectCustomer(String(c.id), c.name, [c.phone, c.type].filter(Boolean).join(' · '));
+                    selectCustomer(String(c.id), c.name, [c.type].filter(Boolean).join(' · '), c.phone || '');
                     closeQuickPanel();
                     if (quickName) quickName.value = '';
                     if (quickPhone) quickPhone.value = '';
@@ -328,6 +333,23 @@
         });
 
         syncQuickTypeFromDealKind();
+
+        const partiesEl = document.getElementById('crmPropDealParties');
+        if (partiesEl) {
+            try {
+                const parties = JSON.parse(partiesEl.textContent);
+                const suggested = parties?.customer_side?.suggested;
+                if (suggested && suggested.id) {
+                    selectCustomer(
+                        String(suggested.id),
+                        suggested.name || '',
+                        parties.customer_side?.label || '',
+                        suggested.phone || '',
+                    );
+                }
+            } catch (e) { /* ignore */ }
+        }
+
         syncContactLayout();
         doSearch('');
 

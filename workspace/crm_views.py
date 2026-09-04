@@ -129,7 +129,7 @@ from workspace.services.crm_templates import (
 )
 from workspace.services.crm_deals import (
     apply_deal_commission, create_deal, filter_deals, find_duplicate_active_deal,
-    get_property_active_deals, infer_deal_kind_from_property, property_deals_qs,
+    get_property_active_deals, get_property_deal_parties_context, infer_deal_kind_from_property, property_deals_qs,
     search_customers_for_property_deal, serialize_property_deal_customer,
     suggest_deal_title, update_deal_stage,
     get_deal_pipeline, get_deal_stats,
@@ -1722,6 +1722,7 @@ class CRMPropertyDetailView(CRMContextMixin, LoginRequiredMixin, DetailView):
                 )
                 ctx['property_deal_kind'] = kind
                 ctx['property_deal_suggested_title'] = suggest_deal_title(p, None, kind)
+                ctx['property_deal_parties'] = get_property_deal_parties_context(p, kind)
                 ctx['property_deal_stage_probs'] = {
                     d['name']: int(d.get('probability') or 50) for d in stage_defs
                 }

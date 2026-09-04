@@ -3,8 +3,10 @@
      data-search-url="{% url 'workspace:crm_property_deal_customers' property.id %}"
      data-duplicate-url="{% url 'workspace:crm_property_deal_duplicate' property.id %}"
      data-quick-customer-url="{% url 'workspace:crm_property_deal_quick_customer' property.id %}"
-     data-property-url="{% url 'workspace:crm_property_detail' property.id %}">
+     data-property-url="{% url 'workspace:crm_property_detail' property.id %}"
+     {% if property_deal_parties %}data-deal-kind="{{ property_deal_parties.deal_kind }}"{% endif %}>
     {% if property_deal_stage_probs %}{{ property_deal_stage_probs|json_script:"crmPropDealStageProbs" }}{% endif %}
+    {% if property_deal_parties %}{{ property_deal_parties|json_script:"crmPropDealParties" }}{% endif %}
 
     {% if property_active_deals %}
     <div class="crm-pdc-alert" role="status">
@@ -49,7 +51,7 @@
                 <i class="fas fa-user-tie" aria-hidden="true"></i>
                 <span>{% if owner_contact %}{{ owner_contact.name }}{% else %}{{ owner_name }}{% endif %}</span>
                 {% if owner_contact.phone or owner_phone %}
-                <span class="crm-pdc-property-card__phone" dir="ltr">{% if owner_contact %}{{ owner_contact.phone|slice:":4" }}***{{ owner_contact.phone|slice:"-4:" }}{% else %}{{ owner_phone|slice:":4" }}***{{ owner_phone|slice:"-4:" }}{% endif %}</span>
+                <span class="crm-pdc-property-card__phone" dir="ltr">{% if owner_contact %}{{ owner_contact.phone }}{% else %}{{ owner_phone }}{% endif %}</span>
                 {% endif %}
             </div>
             {% endif %}
@@ -59,74 +61,83 @@
         </div>
     </section>
 
-    <section class="crm-prop-form-block" aria-label="طرف معامله">
+    <section class="crm-prop-form-block" aria-label="طرفین معامله">
         <header class="crm-prop-form-block-head">
-            <i class="fas fa-user" aria-hidden="true"></i>
-            <h3>طرف معامله <span class="crm-req">*</span></h3>
-            <span class="crm-prop-form-block-hint">فروش → خریدار · اجاره → مستأجر</span>
+            <i class="fas fa-users" aria-hidden="true"></i>
+            <h3>طرفین معامله</h3>
+            <span class="crm-prop-form-block-hint">{% if property_deal_kind == 'rent' %}موجر و مستأجر{% else %}فروشنده و خریدار{% endif %}</span>
         </header>
 
-        <div class="crm-pdc-contact" data-prop-deal-customer-picker>
-            <div class="crm-pdc-contact__selected" data-prop-deal-selected hidden>
-                <div class="crm-pdc-contact__avatar" aria-hidden="true"><i class="fas fa-user-check"></i></div>
-                <div class="crm-pdc-contact__info">
-                    <strong data-prop-deal-selected-name></strong>
-                    <span data-prop-deal-selected-meta></span>
+        <div class="crm-pdc-parties">
+            <article class="crm-pdc-party-card crm-pdc-party-card--property" data-pdc-property-side>
+                <span class="crm-pdc-party-card__role">{% if property_deal_parties %}{{ property_deal_parties.property_side.label }}{% elif property_deal_kind == 'rent' %}موجر{% else %}فروشنده{% endif %}</span>
+                <strong class="crm-pdc-party-card__name" data-pdc-property-name>{% if property_deal_parties and not property_deal_parties.property_side.missing %}{{ property_deal_parties.property_side.name }}{% elif owner_contact %}{{ owner_contact.name }}{% elif owner_name %}{{ owner_name }}{% else %}—{% endif %}</strong>
+                <span class="crm-pdc-party-card__phone" dir="ltr" data-pdc-property-phone>{% if property_deal_parties and property_deal_parties.property_side.phone %}{{ property_deal_parties.property_side.phone }}{% elif owner_contact.phone %}{{ owner_contact.phone }}{% elif owner_phone %}{{ owner_phone }}{% endif %}</span>
+                <em class="crm-pdc-party-card__hint">مالک فایل</em>
+            </article>
+
+            <article class="crm-pdc-party-card crm-pdc-party-card--customer" data-prop-deal-customer-picker>
+                <span class="crm-pdc-party-card__role">{% if property_deal_parties %}{{ property_deal_parties.customer_side.label }}{% elif property_deal_kind == 'rent' %}مستأجر{% else %}خریدار{% endif %}</span>
+
+                <div class="crm-pdc-contact__selected" data-prop-deal-selected hidden>
+                    <strong class="crm-pdc-party-card__name" data-prop-deal-selected-name></strong>
+                    <span class="crm-pdc-party-card__phone" dir="ltr" data-prop-deal-selected-phone></span>
+                    <button type="button" class="crm-pdc-contact__change" data-prop-deal-clear>تغییر</button>
                 </div>
-                <button type="button" class="crm-pdc-contact__change" data-prop-deal-clear>تغییر</button>
-            </div>
 
-            <div class="crm-pdc-contact__pick" data-prop-deal-search-wrap>
-                <label class="crm-field crm-field-full">
-                    <span class="crm-label">انتخاب از مخاطبین</span>
-                    <div class="crm-pdc-search">
-                        <i class="fas fa-search" aria-hidden="true"></i>
-                        <input type="search"
-                               class="crm-input crm-pdc-search__input"
-                               data-prop-deal-search
-                               placeholder="نام، موبایل یا شرکت..."
-                               autocomplete="off"
-                               inputmode="search">
-                    </div>
-                </label>
-                <div class="crm-pdc-contact__results" data-prop-deal-results hidden aria-label="نتایج مخاطبین"></div>
-            </div>
-
-            <p class="crm-pdc-contact__divider">یا</p>
-
-            <button type="button" class="crm-pdc-contact__add" data-prop-deal-quick-open>
-                <i class="fas fa-plus" aria-hidden="true"></i>
-                <span>افزودن مخاطب جدید</span>
-            </button>
-
-            <div class="crm-pdc-quick" data-prop-deal-quick hidden>
-                <div class="crm-pdc-quick__head">
-                    <h4>مخاطب جدید</h4>
-                    <button type="button" class="crm-pdc-quick__close" data-prop-deal-quick-close aria-label="بستن">
-                        <i class="fas fa-times"></i>
-                    </button>
+                <div class="crm-pdc-contact__pick" data-prop-deal-search-wrap>
+                    <p class="crm-pdc-party-card__empty" data-pdc-customer-empty>{% if property_deal_parties and property_deal_parties.customer_side.label == 'خریدار' %}خریدار هنوز انتخاب نشده است{% elif property_deal_parties %}مستأجر هنوز انتخاب نشده است{% else %}مخاطب را انتخاب کنید{% endif %}</p>
+                    <label class="crm-field crm-field-full">
+                        <span class="crm-label">انتخاب از مخاطبین</span>
+                        <div class="crm-input-search crm-pdc-search">
+                            {% include 'includes/icon_slot.html' with decor='search' size='inline' only %}
+                            <input type="search"
+                                   class="crm-input crm-pdc-search__input"
+                                   data-prop-deal-search
+                                   placeholder="نام، موبایل یا شرکت..."
+                                   autocomplete="off"
+                                   inputmode="search">
+                        </div>
+                    </label>
+                    <div class="crm-pdc-contact__results" data-prop-deal-results hidden aria-label="نتایج مخاطبین"></div>
                 </div>
-                <div class="crm-fields crm-fields-2">
-                    <div class="crm-field">
-                        <label class="crm-label" for="propDealQuickName">نام <span class="crm-req">*</span></label>
-                        <input type="text" id="propDealQuickName" class="crm-input" data-prop-deal-quick-name autocomplete="name">
+
+                <p class="crm-pdc-contact__divider">یا</p>
+
+                <button type="button" class="crm-pdc-contact__add" data-prop-deal-quick-open>
+                    <i class="fas fa-plus" aria-hidden="true"></i>
+                    <span>{% if property_deal_kind == 'rent' %}افزودن مستأجر جدید{% else %}افزودن خریدار جدید{% endif %}</span>
+                </button>
+
+                <div class="crm-pdc-quick" data-prop-deal-quick hidden>
+                    <div class="crm-pdc-quick__head">
+                        <h4>مخاطب جدید</h4>
+                        <button type="button" class="crm-pdc-quick__close" data-prop-deal-quick-close aria-label="بستن">
+                            <i class="fas fa-times"></i>
+                        </button>
                     </div>
-                    <div class="crm-field">
-                        <label class="crm-label" for="propDealQuickPhone">موبایل</label>
-                        <input type="tel" id="propDealQuickPhone" class="crm-input" data-prop-deal-quick-phone dir="ltr" inputmode="tel" autocomplete="tel">
+                    <div class="crm-fields crm-fields-2">
+                        <div class="crm-field">
+                            <label class="crm-label" for="propDealQuickName">نام <span class="crm-req">*</span></label>
+                            <input type="text" id="propDealQuickName" class="crm-input" data-prop-deal-quick-name autocomplete="name">
+                        </div>
+                        <div class="crm-field">
+                            <label class="crm-label" for="propDealQuickPhone">موبایل</label>
+                            <input type="tel" id="propDealQuickPhone" class="crm-input" data-prop-deal-quick-phone dir="ltr" inputmode="tel" autocomplete="tel">
+                        </div>
+                        <div class="crm-field crm-field-full">
+                            <label class="crm-label" for="propDealQuickType">نوع مخاطب</label>
+                            <select id="propDealQuickType" class="crm-select" data-prop-deal-quick-type>
+                                <option value="خریدار">خریدار</option>
+                                <option value="مستاجر">مستأجر</option>
+                                <option value="سرنخ">سرنخ</option>
+                            </select>
+                        </div>
                     </div>
-                    <div class="crm-field crm-field-full">
-                        <label class="crm-label" for="propDealQuickType">نوع مخاطب</label>
-                        <select id="propDealQuickType" class="crm-select" data-prop-deal-quick-type>
-                            <option value="خریدار">خریدار</option>
-                            <option value="مستاجر">مستأجر</option>
-                            <option value="سرنخ">سرنخ</option>
-                        </select>
-                    </div>
+                    <button type="button" class="crm-btn crm-btn-primary crm-btn-block crm-pdc-quick__save" data-prop-deal-quick-save>ذخیره و انتخاب</button>
+                    <p class="crm-pdc-quick__err" data-prop-deal-quick-err hidden></p>
                 </div>
-                <button type="button" class="crm-btn crm-btn-primary crm-btn-block crm-pdc-quick__save" data-prop-deal-quick-save>ذخیره و انتخاب</button>
-                <p class="crm-pdc-quick__err" data-prop-deal-quick-err hidden></p>
-            </div>
+            </article>
         </div>
         {{ form.customer }}
 

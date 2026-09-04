@@ -115,6 +115,10 @@
     return ROLE_LABELS[role] || role || 'طرف';
   }
 
+  function formatPhoneDisplay(phone) {
+    return (phone || '').trim();
+  }
+
   function maskPhone(phone) {
     phone = (phone || '').trim();
     if (phone.length < 6) return phone || '';
@@ -160,7 +164,7 @@
         metaEl.textContent = 'نام و اطلاعات این طرف قرارداد هنوز تکمیل نشده است.';
       } else {
         var parts = [];
-        if (mob && mob.value) parts.push(maskPhone(mob.value));
+        if (mob && mob.value) parts.push(formatPhoneDisplay(mob.value));
         if (nid && nid.value) parts.push(maskNationalId(nid.value));
         if (share && share.value) parts.push(share.value);
         metaEl.textContent = parts.join(' · ') || '';
@@ -220,15 +224,26 @@
     btn.addEventListener('click', function (e) {
       e.stopPropagation();
       document.querySelectorAll('.ct-party-menu.is-open').forEach(function (w) {
-        if (w !== wrap) w.classList.remove('is-open');
+        if (w !== wrap) w.classList.remove('is-open', 'is-drop-up');
       });
+      var willOpen = !wrap.classList.contains('is-open');
       wrap.classList.toggle('is-open');
+      if (willOpen) {
+        var panel = wrap.querySelector('.ct-menu-panel');
+        wrap.classList.remove('is-drop-up');
+        if (panel) {
+          var rect = panel.getBoundingClientRect();
+          if (rect.bottom > window.innerHeight - 8) {
+            wrap.classList.add('is-drop-up');
+          }
+        }
+      }
     });
   }
 
   document.addEventListener('click', function () {
     document.querySelectorAll('.ct-party-menu.is-open').forEach(function (w) {
-      w.classList.remove('is-open');
+      w.classList.remove('is-open', 'is-drop-up');
     });
   });
 

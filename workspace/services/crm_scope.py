@@ -360,7 +360,8 @@ def deals_qs(user) -> QuerySet:
 
         q |= Q(pk__in=shared)
 
-    return CRMDeal.objects.filter(agency=m.agency).filter(q)
+    scope = Q(agency=m.agency) | Q(user=user, agency__isnull=True)
+    return CRMDeal.objects.filter(scope).filter(q)
 
 
 

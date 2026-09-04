@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 
-from workspace.models import CRMDeal, CRMProperty, Customer, PropertyContact
+from workspace.models import CRMDeal, CRMAgency, CRMAgencyMember, CRMProperty, Customer, PropertyContact
 from workspace.services.crm_deals import (
     create_deal,
     default_deal_value_for_property,
@@ -168,3 +168,17 @@ class PropertyDealCreateTests(TestCase):
         ).first()
         self.assertIsNotNone(link)
         self.assertEqual(link.role, 'خریدار')
+
+    def test_agency_member_can_open_deal_detail_after_create(self):
+        agency = CRMAgency.objects.create(name='آژانس تست', owner=self.user)
+        CRMAgencyMember.objects.create(agency=agency, user=self.user, role='advisor')
+        self.property.agency = agency
+        self.property.save(update_fields=['agency'])
+        self.buyer.agency = agency
+        self.buyer.save(update_fields=['agency'])
+        resp = self._post_deal(self.user, self.property, self.buyer, title='فروش آژانس')
+        self.assertEqual(resp.status_code, 302)
+        deal = CRMDeal.objects.get(property=self.property, title='فروش آژانس')
+        self.assertEqual(deal.agency_id, agency.pk)
+        detail = self.client.get(reverse('workspace:crm_deal_detail', kwargs={'deal_id': deal.pk}))
+        self.assertEqual(detail.status_code, 200)

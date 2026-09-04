@@ -80,9 +80,14 @@ def create_deal(
     if probability is None:
         probability = probability_for_stage(user, stage)
 
+    from workspace.services.crm_scope import get_agency
+
+    agency = get_agency(user)
+
     now = timezone.now()
     deal = CRMDeal(
         user=user,
+        agency=agency,
         customer=customer,
         property=property_obj,
         listing_token=listing_token or (property_obj.token if property_obj else ''),

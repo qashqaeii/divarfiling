@@ -26,12 +26,6 @@ def render_contract_document(contract: Contract, version: ContractVersion | None
         sections.append(_section('مدت اجاره', _render_lease_duration(fin), 'financial'))
         sections.append(_section('ودیعه و اجاره‌بها', _render_lease_money(fin), 'financial'))
         sections.append(_section('نحوه پرداخت', _render_lease_payment(fin), 'financial'))
-        if fin.get('delivery_date'):
-            sections.append(_section('تحویل ملک', _render_delivery(fin), 'financial'))
-        if fin.get('costs'):
-            sections.append(_section('هزینه‌ها', _render_costs(fin.get('costs') or {}), 'financial'))
-        if fin.get('penalties'):
-            sections.append(_section('وجه التزام', _render_penalties(fin.get('penalties') or {}), 'financial'))
     elif ctype == CONTRACT_TYPE_SALE:
         fin = snap.get('financial') or {}
         sections.append(_section('مبلغ معامله', _render_sale_price(fin), 'financial'))
@@ -48,8 +42,21 @@ def render_contract_document(contract: Contract, version: ContractVersion | None
     if witnesses_body:
         sections.append(_section('شاهدان', witnesses_body, 'witnesses'))
 
-    sections.extend(_render_clauses(snap.get('clauses') or []))
-    return [s for s in sections if s.get('body')]
+    sections.extend(_render_clauses(snap.get('clauses') or [], ctype))
+    sections = [s for s in sections if s.get('body')]
+    return _number_sections(sections)
+
+
+def _number_sections(sections: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """شماره‌گذاری پویا — بدون hard-code شکست‌ناپذیر."""
+    out = []
+    for idx, sec in enumerate(sections, 1):
+        title = sec.get('title', '')
+        if not title.startswith('ماده'):
+            sec = dict(sec)
+            sec['title'] = f'ماده {idx} — {title}'
+        out.append(sec)
+    return out
 
 
 def _section(title: str, body: str, edit_step: str) -> Dict[str, Any]:
@@ -234,15 +241,6 @@ def _render_witnesses(witnesses: List[Dict]) -> str:
     return '\n'.join(lines)
 
 
-def _render_clauses(clauses: List[Dict]) -> List[Dict[str, Any]]:
-    sections = []
-    for idx, c in enumerate(clauses, 1):
-        title = c.get('title', f'ماده {idx}')
-        badge = ' [توافق اختصاصی طرفین]' if c.get('is_custom') else ''
-        body = c.get('body_text', '')
-        sections.append({
-            'title': f'ماده {idx} — {title}{badge}',
-            'body': body,
-            'edit_step': 'clauses',
-        })
-    return sections
+def _render_clauses(clauses: List[Dict], contract_type: str) -> List[Dict[str, Any]]:
+    from contracts.services.clause_ux import render_clause_sections_for_review
+    return render_clause_sections_for_review(clauses, contract_type)

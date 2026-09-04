@@ -486,7 +486,80 @@
     sync();
   });
 
-  /* ——— Clause expand ——— */
+  /* ——— Clause Center ——— */
+  form.querySelectorAll('.ct-clause-preview-toggle').forEach(function (btn) {
+    btn.addEventListener('click', function (e) {
+      e.preventDefault();
+      var id = btn.getAttribute('data-preview-for');
+      var panel = document.getElementById('preview_' + id);
+      if (!panel) return;
+      var open = panel.hasAttribute('hidden');
+      if (open) {
+        panel.removeAttribute('hidden');
+        btn.textContent = 'بستن متن قرارداد';
+      } else {
+        panel.setAttribute('hidden', '');
+        btn.textContent = 'مشاهده متن قرارداد';
+      }
+    });
+  });
+
+  form.querySelectorAll('.ct-clause-card--penalty').forEach(function (card) {
+    var toggle = card.querySelector('.ct-penalty-toggle');
+    if (!toggle) return;
+    function sync() {
+      card.classList.toggle('is-disabled', !toggle.checked);
+      card.querySelectorAll('.ct-penalty-fields input, .ct-penalty-fields select').forEach(function (inp) {
+        inp.disabled = !toggle.checked;
+      });
+    }
+    toggle.addEventListener('change', sync);
+    sync();
+  });
+
+  form.querySelectorAll('.ct-clause-card').forEach(function (card) {
+    var optCb = card.querySelector('input[name="clause_optional"]');
+    if (optCb) {
+      optCb.addEventListener('change', function () {
+        card.classList.toggle('is-active', optCb.checked);
+      });
+    }
+  });
+
+  var customContainer = document.getElementById('ct-custom-agreements');
+  var addCustomBtn = document.getElementById('ct-add-custom-agreement');
+  var customIndex = customContainer ? customContainer.querySelectorAll('.ct-custom-agreement').length : 0;
+
+  function bindCustomRemove(el) {
+    var btn = el.querySelector('.ct-custom-agreement-remove');
+    if (btn) {
+      btn.addEventListener('click', function () {
+        el.remove();
+      });
+    }
+  }
+  if (customContainer) {
+    customContainer.querySelectorAll('.ct-custom-agreement').forEach(bindCustomRemove);
+  }
+  if (addCustomBtn && customContainer) {
+    addCustomBtn.addEventListener('click', function () {
+      var idx = customIndex++;
+      var wrap = document.createElement('div');
+      wrap.className = 'ct-custom-agreement';
+      wrap.setAttribute('data-index', String(idx));
+      wrap.innerHTML =
+        '<div class="crm-contract-form-grid">' +
+        '<label>عنوان (اختیاری)<input class="crm-input" name="custom_agreement_' + idx + '_title" placeholder="عنوان توافق"></label>' +
+        '<label class="crm-contract-span-2">متن توافق<textarea class="crm-input" name="custom_agreement_' + idx + '_body" rows="3" placeholder="متن توافق اختصاصی طرفین"></textarea></label>' +
+        '</div>' +
+        '<button type="button" class="ct-custom-agreement-remove">حذف</button>' +
+        '<span class="ct-clause-badge ct-clause-badge--custom">توافق اختصاصی طرفین</span>';
+      customContainer.appendChild(wrap);
+      bindCustomRemove(wrap);
+    });
+  }
+
+  /* ——— Legacy clause expand (fallback) ——— */
   form.querySelectorAll('.ct-clause-item').forEach(function (item) {
     var cb = item.querySelector('input[type=checkbox]');
     var expandBtn = item.querySelector('.ct-clause-expand');

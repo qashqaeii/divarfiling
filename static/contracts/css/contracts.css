@@ -907,6 +907,9 @@
 /* ── Contract dashboard: recommended type ── */
 .crm-contracts-page .crm-contract-action.is-recommended {
     position: relative;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    padding-top: 1.55rem;
     border-color: color-mix(in srgb, #059669 35%, var(--ws-border));
     background: color-mix(in srgb, #059669 7%, var(--ws-surface));
 }
@@ -914,10 +917,18 @@
     border-color: color-mix(in srgb, #059669 45%, var(--ws-border));
     background: color-mix(in srgb, #059669 10%, var(--ws-surface));
 }
-.crm-contract-action__badge {
+.crm-contracts-page .crm-contract-action.is-recommended .crm-deal-side-icon,
+.crm-contracts-page .crm-contract-action.is-recommended .crm-contract-action__text,
+.crm-contracts-page .crm-contract-action.is-recommended .crm-contract-action__arrow {
+    margin-top: 0;
+}
+.crm-contracts-page .crm-contract-action__badge {
     position: absolute;
     top: 0.35rem;
     inset-inline-start: 0.45rem;
+    inset-inline-end: 0.45rem;
+    width: max-content;
+    max-width: calc(100% - 0.9rem);
     font-size: 0.56rem;
     font-weight: 700;
     padding: 0.1rem 0.4rem;
@@ -925,6 +936,8 @@
     background: rgba(16, 185, 129, 0.14);
     color: #047857;
     line-height: 1.35;
+    z-index: 1;
+    pointer-events: none;
 }
 
 /* ── Wizard header progress ── */
@@ -1223,3 +1236,200 @@
         flex-direction: column;
     }
 }
+
+/* ── Clause Center (decision-first UX) ── */
+.ct-clause-center .ct-clause-layer-note {
+    margin: 0 0.85rem 0.65rem;
+    padding: 0.45rem 0.6rem;
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--ws-primary) 6%, var(--ws-surface));
+    border: 1px solid color-mix(in srgb, var(--ws-primary) 14%, var(--ws-border));
+    font-size: 0.68rem;
+    color: var(--ws-text-secondary);
+}
+.ct-clause-warnings {
+    list-style: none;
+    margin: 0 0.85rem 0.65rem;
+    padding: 0.45rem 0.6rem;
+    border-radius: 8px;
+    background: color-mix(in srgb, #f59e0b 8%, var(--ws-surface));
+    border: 1px solid color-mix(in srgb, #f59e0b 22%, var(--ws-border));
+    font-size: 0.66rem;
+    color: #92400e;
+}
+.ct-clause-warnings li + li { margin-top: 0.2rem; }
+.ct-clause-section {
+    margin: 0 0.85rem 0.85rem;
+}
+.ct-clause-section__title {
+    font-size: 0.82rem;
+    font-weight: 700;
+    margin: 0 0 0.45rem;
+    color: var(--ws-text);
+}
+.ct-clause-section__cards {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.45rem;
+}
+@media (min-width: 768px) {
+    .ct-clause-section__cards {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .ct-clause-section[data-section="custom"] .ct-clause-section__cards,
+    .ct-clause-section[data-section="costs"] .ct-clause-section__cards,
+    .ct-clause-section[data-section="penalties"] .ct-clause-section__cards {
+        grid-template-columns: 1fr;
+    }
+}
+.ct-clause-card {
+    border: 1px solid var(--ws-border);
+    border-radius: 10px;
+    padding: 0.65rem 0.7rem;
+    background: var(--ws-surface);
+}
+.ct-clause-card.is-active {
+    border-color: color-mix(in srgb, #059669 35%, var(--ws-border));
+    background: color-mix(in srgb, #059669 5%, var(--ws-surface));
+}
+.ct-clause-card--info {
+    background: color-mix(in srgb, var(--ws-primary) 5%, var(--ws-surface));
+    font-size: 0.7rem;
+    line-height: 1.55;
+}
+.ct-clause-card--critical {
+    border-color: color-mix(in srgb, #dc2626 30%, var(--ws-border));
+    background: color-mix(in srgb, #dc2626 6%, var(--ws-surface));
+    color: #991b1b;
+}
+.ct-clause-card__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.35rem;
+}
+.ct-clause-card__head h4 {
+    margin: 0;
+    font-size: 0.78rem;
+    font-weight: 700;
+}
+.ct-clause-card__question {
+    margin: 0 0 0.45rem;
+    font-size: 0.7rem;
+    color: var(--ws-text-secondary);
+    line-height: 1.5;
+}
+.ct-clause-card__warning {
+    margin: 0.35rem 0 0;
+    font-size: 0.64rem;
+    color: #b45309;
+}
+.ct-clause-choice {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+}
+.ct-clause-choice__opt {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.35rem 0.55rem;
+    border: 1px solid var(--ws-border);
+    border-radius: 999px;
+    font-size: 0.68rem;
+    cursor: pointer;
+    background: var(--ws-surface);
+}
+.ct-clause-choice__opt:has(input:checked) {
+    border-color: color-mix(in srgb, var(--ws-primary) 40%, var(--ws-border));
+    background: color-mix(in srgb, var(--ws-primary) 8%, var(--ws-surface));
+    font-weight: 600;
+}
+.ct-clause-choice__opt input { accent-color: var(--ws-primary); }
+.ct-clause-preview-toggle {
+    margin-top: 0.35rem;
+    font-size: 0.64rem;
+    color: var(--ws-primary);
+    background: none;
+    border: 0;
+    cursor: pointer;
+    font-family: inherit;
+    padding: 0;
+}
+.ct-clause-card__preview {
+    margin-top: 0.35rem;
+    padding: 0.45rem 0.55rem;
+    border-radius: 6px;
+    background: var(--ws-surface-2, color-mix(in srgb, var(--ws-border) 30%, var(--ws-surface)));
+    font-size: 0.66rem;
+    line-height: 1.6;
+    color: var(--ws-text-muted);
+}
+.ct-clause-badge {
+    font-size: 0.56rem;
+    font-weight: 700;
+    padding: 0.08rem 0.35rem;
+    border-radius: 999px;
+    white-space: nowrap;
+}
+.ct-clause-badge--standard {
+    background: color-mix(in srgb, var(--ws-primary) 12%, transparent);
+    color: var(--ws-primary);
+}
+.ct-clause-badge--custom {
+    background: color-mix(in srgb, #7c3aed 12%, transparent);
+    color: #6d28d9;
+}
+.ct-clause-staff-meta {
+    display: block;
+    margin-top: 0.35rem;
+    font-size: 0.58rem;
+    color: var(--ws-text-muted);
+    opacity: 0.85;
+}
+.ct-cost-grid { display: flex; flex-direction: column; gap: 0.35rem; }
+.ct-cost-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.35rem;
+    padding: 0.35rem 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--ws-border) 60%, transparent);
+}
+.ct-cost-row:last-child { border-bottom: 0; }
+.ct-cost-row__label { font-size: 0.7rem; font-weight: 600; min-width: 5rem; }
+.ct-segment--compact label span { padding: 0.25rem 0.45rem; font-size: 0.64rem; }
+.ct-penalty-fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.45rem;
+}
+.ct-clause-card--penalty.is-disabled .ct-penalty-fields { opacity: 0.55; }
+.ct-clause-card__toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    cursor: pointer;
+    flex: 1;
+}
+.ct-clause-card__toggle h4 { pointer-events: none; }
+.ct-custom-agreements { display: flex; flex-direction: column; gap: 0.55rem; }
+.ct-custom-agreement {
+    position: relative;
+    padding: 0.65rem;
+    border: 1px dashed color-mix(in srgb, #7c3aed 35%, var(--ws-border));
+    border-radius: 8px;
+    background: color-mix(in srgb, #7c3aed 4%, var(--ws-surface));
+}
+.ct-custom-agreement-remove {
+    margin-top: 0.35rem;
+    font-size: 0.64rem;
+    color: #dc2626;
+    background: none;
+    border: 0;
+    cursor: pointer;
+    font-family: inherit;
+}
+#ct-add-custom-agreement { margin: 0.45rem 0.85rem 0.65rem; }

@@ -263,19 +263,73 @@ def parse_witnesses(post: QueryDict) -> List[Dict[str, Any]]:
     return witnesses
 
 
-def parse_clauses(post: QueryDict) -> List[Dict[str, Any]]:
-    selected = []
-    for code in post.getlist('clause_code'):
-        selected.append({'code': code})
+def _parse_costs(post: QueryDict) -> Dict[str, str]:
+    costs = {}
+    for key in ('water', 'electricity', 'gas', 'phone', 'charge', 'minor_repairs', 'major_repairs', 'property_tax'):
+        val = _get(post, f'cost_{key}')
+        if val in COST_RESPONSIBILITY_OPTIONS:
+            costs[key] = val
+    return costs
+
+
+def _parse_penalties_from_prefixes(
+    post: QueryDict,
+    fields: tuple,
+) -> Dict[str, Any]:
+    penalties = {}
+    for row in fields:
+        key, prefix = row[0], row[1]
+        if post.get(f'{prefix}_enabled') == 'on':
+            penalties[key] = {
+                'enabled': True,
+                'amount_per_day': parse_toman_amount(_get(post, f'{prefix}_amount')),
+                'unit': _get(post, f'{prefix}_unit', 'daily'),
+            }
+    return penalties
+
+
+def parse_clauses(post: QueryDict, contract_type: str = '') -> Dict[str, Any]:
+    """پارس مرحله بندها — تصمیمات ساختاریافته + توافقات اختصاصی."""
+    from contracts.services.clause_ux import LEASE_PENALTY_FIELDS, SALE_PENALTY_FIELDS
+
+    optional = [{'code': code} for code in post.getlist('clause_optional')]
+    custom_agreements = []
+    indices = set()
+    for key in post:
+        if key.startswith('custom_agreement_') and key.endswith('_body'):
+            idx = key.split('_')[2]
+            if idx.isdigit():
+                indices.add(int(idx))
+    for idx in sorted(indices):
+        body = _get(post, f'custom_agreement_{idx}_body')
+        if body.strip():
+            custom_agreements.append({
+                'title': _get(post, f'custom_agreement_{idx}_title', 'توافق اختصاصی'),
+                'body': body.strip(),
+            })
     custom_title = _get(post, 'custom_clause_title')
     custom_body = _get(post, 'custom_clause_body')
-    if custom_title and custom_body:
-        selected.append({
-            'is_custom': True,
-            'title': custom_title,
-            'body_text': custom_body,
+    if custom_body.strip():
+        custom_agreements.append({
+            'title': custom_title or 'توافق اختصاصی',
+            'body': custom_body.strip(),
         })
-    return selected
+
+    result: Dict[str, Any] = {
+        'optional_clauses': optional,
+        'custom_agreements': custom_agreements,
+    }
+    if contract_type == 'lease':
+        result['transfer_choice'] = _get(post, 'clause_transfer', 'denied')
+        result['usage_type'] = _get(post, 'clause_usage', 'residential')
+        occ = _get(post, 'clause_occupants')
+        if occ:
+            result['occupants_count'] = occ
+        result['costs'] = _parse_costs(post)
+        result['penalties'] = _parse_penalties_from_prefixes(post, LEASE_PENALTY_FIELDS)
+    elif contract_type == 'sale':
+        result['penalties'] = _parse_penalties_from_prefixes(post, SALE_PENALTY_FIELDS)
+    return result
 
 
 def parse_wizard_step(post: QueryDict, step: str, contract_type: str) -> Dict[str, Any]:
@@ -296,5 +350,5 @@ def parse_wizard_step(post: QueryDict, step: str, contract_type: str) -> Dict[st
     if step == 'witnesses':
         return parse_witnesses(post)
     if step == 'clauses':
-        return parse_clauses(post)
+        return parse_clauses(post, contract_type)
     return {}

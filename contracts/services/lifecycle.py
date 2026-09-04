@@ -83,6 +83,8 @@ def create_contract(
             'jv': {} if contract_type == CONTRACT_TYPE_JV else None,
             'witnesses': [],
             'selected_clauses': [],
+            'clause_optional': [],
+            'custom_agreements': [],
         },
     )
     version = _create_version(contract, user, version_number=1)
@@ -123,7 +125,10 @@ def save_wizard_step(
     if step == 'jv' or (step == 'financial' and contract.contract_type == CONTRACT_TYPE_JV):
         wizard['jv'] = data
     elif step == 'clauses':
-        wizard['selected_clauses'] = data
+        from contracts.services.clause_ux import apply_clauses_step
+        wizard = apply_clauses_step(
+            wizard, data, contract.contract_type, user=user,
+        )
     else:
         wizard[step] = data
 
@@ -260,7 +265,16 @@ def sync_clauses_from_selection(contract: Contract, version: ContractVersion) ->
                 code=code, is_active=True,
             ).order_by('-version').first()
             if defn:
-                body = render_clause_body(defn, item.get('inline_values'))
+                wizard = contract.wizard_data or {}
+                fin = wizard.get('financial') or {}
+                if contract.contract_type == CONTRACT_TYPE_LEASE:
+                    from contracts.services.lease_clause_bank import render_lease_clause_body
+                    body = render_lease_clause_body(
+                        defn.code, defn.body_template,
+                        fin=fin, inline_values=item.get('inline_values'),
+                    )
+                else:
+                    body = render_clause_body(defn, item.get('inline_values'))
                 ContractClause.objects.create(
                     version=version,
                     definition=defn,

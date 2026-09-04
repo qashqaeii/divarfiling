@@ -22,6 +22,7 @@ from contracts.constants import (
     WIZARD_STEPS,
 )
 from contracts.models import Contract
+from contracts.services.clause_ux import build_clause_context, build_clause_sections, clause_warnings
 from contracts.services.clauses import get_applicable_clauses, get_legal_warnings
 from contracts.services.contract_renderer import render_contract_document
 from contracts.services.lifecycle import (
@@ -104,10 +105,7 @@ class ContractWizardView(DealContractsMixin, TemplateView):
         step = self.request.GET.get('step') or contract.wizard_step or 'type'
         if step not in WIZARD_STEPS:
             step = 'type'
-        context_data = {
-            **(wizard.get('property') or {}),
-            **(wizard.get('financial') or {}),
-        }
+        context_data = build_clause_context(wizard)
         display_steps = WIZARD_DISPLAY_STEPS.get(contract.contract_type, WIZARD_DISPLAY_STEPS['lease'])
         step_keys = [s[0] for s in display_steps]
         step_index = step_keys.index(step) if step in step_keys else 0
@@ -150,6 +148,12 @@ class ContractWizardView(DealContractsMixin, TemplateView):
             'available_clauses': get_applicable_clauses(
                 contract.contract_type, context_data, user=self.request.user,
             ),
+            'clause_sections': build_clause_sections(
+                contract.contract_type, wizard,
+                user=self.request.user,
+                is_staff=getattr(self.request.user, 'is_staff', False),
+            ),
+            'clause_step_warnings': clause_warnings(wizard, contract.contract_type),
             'validation_errors': validation_errors,
             'validation_count': len(validation_errors),
             'contract_sections': render_contract_document(contract),

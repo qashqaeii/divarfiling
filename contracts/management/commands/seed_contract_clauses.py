@@ -12,22 +12,10 @@ from contracts.constants import (
     RULE_LEASE_REQUIRES_WITNESSES,
 )
 from contracts.models import ContractClauseDefinition, ContractLegalRule, ContractLegalSource
-
-
-LEASE_CATEGORIES = [
-    ('LEASE_SUBJECT', 'موضوع قرارداد', 'موضوع این قرارداد، اجاره {property_type} واقع در {address} می‌باشد.'),
-    ('LEASE_TERM', 'مدت', 'مدت اجاره از {lease_start} تا {lease_end} به مدت {duration_months} ماه است.'),
-    ('LEASE_DEPOSIT', 'ودیعه', 'مبلغ قرض‌الحسنه/ودیعه مبلغ {deposit} تومان است.'),
-    ('LEASE_RENT', 'اجاره‌بها', 'اجاره ماهانه مبلغ {monthly_rent} تومان است.'),
-    ('LEASE_PAYMENT', 'نحوه پرداخت', 'اجاره‌بها تا روز {rent_payment_day} هر ماه پرداخت می‌شود.'),
-    ('LEASE_DELIVERY', 'تحویل ملک', 'موجر متعهد است ملک را در تاریخ {delivery_date} تحویل دهد.'),
-    ('LEASE_VACATE', 'تخلیه', 'مستأجر متعهد است در پایان مدت یا فسخ، ملک را تخلیه نماید.'),
-    ('LEASE_UTILITIES', 'آب و برق و گاز', 'هزینه انشعابات طبق توافق طرفین تقسیم می‌شود.'),
-    ('LEASE_REPAIRS', 'تعمیرات', 'تعمیرات اساسی بر عهده موجر و جزئی بر عهده مستأجر است.'),
-    ('LEASE_SUBLEASE', 'واگذاری', 'مستأجر بدون اجازه کتبی موجر حق واگذاری به غیر ندارد.'),
-    ('LEASE_PENALTY', 'وجه التزام', 'تأخیر در پرداخت مشمول وجه التزام روزانه {daily_penalty} تومان است.'),
-    ('LEASE_DISPUTE', 'حل اختلاف', 'اختلافات از طریق داوری یا مراجع قضایی حل می‌شود.'),
-]
+from contracts.services.lease_clause_bank import (
+    LEASE_DEPRECATED_CODES,
+    LEASE_PHASE1_DEFINITIONS,
+)
 
 SALE_CATEGORIES = [
     ('SALE_SUBJECT', 'موضوع معامله', 'فروش {property_type} واقع در {address}'),
@@ -50,6 +38,19 @@ JV_CATEGORIES = [
     ('JV_DISPUTE', 'حل اختلاف', 'اختلاف از طریق داوری حل می‌شود.'),
 ]
 
+# مواد اصلی renderer — در seed برای مرجع، غیرفعال به عنوان clause
+LEASE_CORE_SEED = [
+    ('LEASE_SUBJECT', 'موضوع قرارداد', 'subject', 'موضوع این قرارداد، اجاره {property_type} واقع در {address} می‌باشد.'),
+    ('LEASE_TERM', 'مدت', 'term', 'مدت اجاره از {lease_start} تا {lease_end} است.'),
+    ('LEASE_DEPOSIT', 'ودیعه', 'financial', 'مبلغ قرض‌الحسنه/ودیعه مبلغ {deposit} تومان است.'),
+    ('LEASE_RENT', 'اجاره‌بها', 'financial', 'اجاره ماهانه مبلغ {monthly_rent} تومان است.'),
+    ('LEASE_PAYMENT', 'نحوه پرداخت', 'payment', 'اجاره‌بها تا روز {rent_payment_day} هر ماه پرداخت می‌شود.'),
+    ('LEASE_RENT_PAYMENT', 'پرداخت اجاره‌بها', 'payment', (
+        'مستأجر متعهد است اجاره‌بهای ماهانه به مبلغ {{monthly_rent}} تومان را در موعد تعیین‌شده '
+        'یعنی روز {{rent_due_day}} هر ماه، از طریق روش پرداخت مورد توافق طرفین پرداخت نماید.'
+    )),
+]
+
 
 class Command(BaseCommand):
     help = 'Seed contract clause definitions and legal rules (review_pending)'
@@ -57,30 +58,59 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         src_civil, _ = ContractLegalSource.objects.get_or_create(
             code='CIVIL_CODE',
-            defaults={'title': 'قانون مدنی', 'article': 'ماده ۱۰، ۱۹۰'},
+            defaults={'title': 'قانون مدنی', 'article': 'ماده ۱۰'},
         )
         src_lease, _ = ContractLegalSource.objects.get_or_create(
             code='LANDLORD_TENANT',
-            defaults={'title': 'قانون روابط موجر و مستأجر'},
+            defaults={'title': 'قانون روابط موجر و مستأجر ۱۳۷۶ (اصلاح ۱۴۰۳)'},
         )
-        src_ecommerce, _ = ContractLegalSource.objects.get_or_create(
+        ContractLegalSource.objects.get_or_create(
             code='E_COMMERCE',
             defaults={'title': 'قانون تجارت الکترونیکی', 'article': 'مواد ۶ تا ۱۵'},
         )
 
-        for code, cat, body in LEASE_CATEGORIES:
+        sources = {'CIVIL_CODE': src_civil, 'LANDLORD_TENANT': src_lease}
+
+        for code, title, category, body in LEASE_CORE_SEED:
             ContractClauseDefinition.objects.update_or_create(
                 code=code, version=1,
                 defaults={
-                    'title': cat, 'category': cat, 'contract_type': CONTRACT_TYPE_LEASE,
+                    'title': title, 'category': category, 'contract_type': CONTRACT_TYPE_LEASE,
                     'body_template': body,
-                    'plain_explanation': f'توضیح ساده بند {cat} — نیازمند تأیید وکیل.',
-                    'is_recommended': True,
+                    'plain_explanation': 'ماده اصلی — از داده‌های ویزارد تولید می‌شود.',
+                    'is_active': False,
+                    'is_recommended': False,
+                    'is_optional': False,
                     'review_status': CLAUSE_REVIEW_PENDING,
-                    'legal_source': src_lease,
-                    'legal_reference': 'قانون روابط موجر و مستأجر',
+                    'legal_source': src_lease if category != 'subject' else src_civil,
                 },
             )
+
+        for item in LEASE_PHASE1_DEFINITIONS:
+            src = sources.get(item.get('legal_source_code', 'CIVIL_CODE'), src_civil)
+            ContractClauseDefinition.objects.update_or_create(
+                code=item['code'], version=1,
+                defaults={
+                    'title': item['title'],
+                    'category': item['category'],
+                    'contract_type': CONTRACT_TYPE_LEASE,
+                    'body_template': item['body_template'],
+                    'plain_explanation': item.get('plain_explanation', ''),
+                    'condition_expression': item.get('condition_expression', {}),
+                    'is_required': item.get('is_required', False),
+                    'is_recommended': item.get('is_recommended', True),
+                    'is_optional': item.get('is_optional', True),
+                    'is_active': True,
+                    'review_status': CLAUSE_REVIEW_PENDING,
+                    'legal_source': src,
+                    'legal_reference': item.get('legal_reference', ''),
+                    'legal_note': item.get('legal_note', ''),
+                },
+            )
+
+        ContractClauseDefinition.objects.filter(
+            code__in=LEASE_DEPRECATED_CODES, contract_type=CONTRACT_TYPE_LEASE,
+        ).update(is_active=False, review_status=CLAUSE_REVIEW_PENDING)
 
         for code, cat, body in SALE_CATEGORIES:
             ContractClauseDefinition.objects.update_or_create(
@@ -119,4 +149,7 @@ class Command(BaseCommand):
                 },
             )
 
-        self.stdout.write(self.style.SUCCESS('Clause library and legal rules seeded (review_pending).'))
+        self.stdout.write(self.style.SUCCESS(
+            'Lease Phase 1 clause bank seeded (all review_pending). '
+            f'{len(LEASE_PHASE1_DEFINITIONS)} active lease clauses.',
+        ))

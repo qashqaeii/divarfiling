@@ -3,7 +3,7 @@
 
 {% block page_title %}ویزارد قرارداد{% endblock %}
 {% block crm_extra_css %}
-<link rel="stylesheet" href="{% static 'contracts/css/contracts.css' %}?v=7">
+<link rel="stylesheet" href="{% static 'contracts/css/contracts.css' %}?v=8">
 {% endblock %}
 
 {% block crm_content %}
@@ -364,48 +364,6 @@
                     <label>تاریخ قرارداد قبلی<input class="crm-input crm-jalali-date" name="fin_prev_contract_date" value="{{ wizard_data.financial.previous_contract_date|default:'' }}" data-jdp data-jdp-only-date autocomplete="off"></label>
                 </div>
             </div>
-            <h3>شرایط قرارداد</h3>
-            <div class="ct-switch-row">
-                <span class="ct-switch-row__label">انتقال به غیر</span>
-                <label class="ct-toggle">
-                    <input type="checkbox" name="fin_transfer_allowed"{% if wizard_data.financial.transfer_to_third_party_allowed %} checked{% endif %}>
-                    <span class="ct-toggle__slider"></span>
-                </label>
-            </div>
-            <div class="ct-switch-row">
-                <span class="ct-switch-row__label">هزینه شارژ</span>
-                <div class="ct-segment">
-                    <label><input type="radio" name="cost_charge" value="tenant"{% if wizard_data.financial.costs.charge == 'tenant' or not wizard_data.financial.costs %} checked{% endif %}><span>مستأجر</span></label>
-                    <label><input type="radio" name="cost_charge" value="landlord"{% if wizard_data.financial.costs.charge == 'landlord' %} checked{% endif %}><span>موجر</span></label>
-                </div>
-            </div>
-            <div class="ct-switch-row">
-                <span class="ct-switch-row__label">تعمیرات جزئی</span>
-                <div class="ct-segment">
-                    <label><input type="radio" name="cost_minor_repairs" value="tenant"{% if wizard_data.financial.costs.minor_repairs == 'tenant' %} checked{% elif not wizard_data.financial.costs %} checked{% endif %}><span>مستأجر</span></label>
-                    <label><input type="radio" name="cost_minor_repairs" value="landlord"{% if wizard_data.financial.costs.minor_repairs == 'landlord' %} checked{% endif %}><span>موجر</span></label>
-                </div>
-            </div>
-            <div class="ct-switch-row">
-                <span class="ct-switch-row__label">تعمیرات اساسی</span>
-                <div class="ct-segment">
-                    <label><input type="radio" name="cost_major_repairs" value="landlord"{% if wizard_data.financial.costs.major_repairs == 'landlord' %} checked{% elif not wizard_data.financial.costs %} checked{% endif %}><span>موجر</span></label>
-                    <label><input type="radio" name="cost_major_repairs" value="tenant"{% if wizard_data.financial.costs.major_repairs == 'tenant' %} checked{% endif %}><span>مستأجر</span></label>
-                </div>
-            </div>
-            <div class="ct-penalty-block is-disabled">
-                <div class="ct-toggle-row">
-                    <strong>تأخیر در تخلیه</strong>
-                    <label class="ct-toggle">
-                        <input type="checkbox" class="ct-penalty-toggle" name="pen_tenant_vacate_enabled">
-                        <span class="ct-toggle__slider"></span>
-                    </label>
-                </div>
-                <label>مبلغ روزانه (تومان)
-                    <input class="crm-input ct-money-input" name="pen_tenant_vacate_amount" inputmode="numeric">
-                    <span class="ct-money-words"></span>
-                </label>
-            </div>
             <input type="hidden" name="next_step" value="clauses">
 
             {% elif contract.contract_type == 'sale' %}
@@ -521,30 +479,202 @@
         </section>
 
         {% elif wizard_step == 'clauses' %}
-        <section class="crm-deal-block crm-deal-panel">
+        <section class="crm-deal-block crm-deal-panel ct-clause-center">
             <h2>{% if contract.contract_type == 'lease' %}شرایط و بندها{% else %}بندهای قرارداد{% endif %}</h2>
-            <p class="crm-contract-panel-lead">بندهای مورد نظر را فعال کنید. متن کامل هر بند با کلیک «مشاهده متن» باز می‌شود.</p>
-            <div class="ct-clauses">
-                {% for clause in available_clauses %}
-                <div class="ct-clause-item{% if clause.code in selected_clause_codes %} is-active{% endif %}">
-                    <div class="ct-clause-item__head">
-                        <input type="checkbox" name="clause_code" value="{{ clause.code }}" id="clause_{{ clause.code }}"{% if clause.code in selected_clause_codes %} checked{% endif %}>
-                        <label for="clause_{{ clause.code }}" class="ct-clause-item__title">{{ clause.title }}</label>
-                        <span class="ct-clause-item__status">{% if clause.code in selected_clause_codes %}فعال{% else %}غیرفعال{% endif %}</span>
-                        <button type="button" class="ct-clause-expand">مشاهده متن</button>
+            <p class="crm-contract-panel-lead">تصمیم‌های قراردادی را انتخاب کنید؛ متن حقوقی هر بند فقط با «مشاهده متن قرارداد» نمایش داده می‌شود.</p>
+
+            <div class="ct-clause-layer-note">
+                <span class="ct-clause-layer-note__item"><strong>مواد اصلی</strong> از مراحل قبل (طرفین، ملک، مبلغ) تولید می‌شوند.</span>
+            </div>
+
+            {% if clause_step_warnings %}
+            <ul class="ct-clause-warnings">
+                {% for w in clause_step_warnings %}<li>{{ w }}</li>{% endfor %}
+            </ul>
+            {% endif %}
+
+            {% for section in clause_sections %}
+            <div class="ct-clause-section" data-section="{{ section.id }}">
+                <h3 class="ct-clause-section__title">{{ section.title }}</h3>
+                <div class="ct-clause-section__cards">
+                    {% for card in section.cards %}
+                    {% if card.type == 'usage_choice' %}
+                    <article class="ct-clause-card" data-card-id="{{ card.id }}">
+                        <header class="ct-clause-card__head">
+                            <h4>{{ card.title }}</h4>
+                            {% if card.is_standard %}<span class="ct-clause-badge ct-clause-badge--standard">بند استاندارد</span>{% endif %}
+                        </header>
+                        <p class="ct-clause-card__question">{{ card.question }}</p>
+                        <div class="ct-clause-choice">
+                            {% for opt in card.options %}
+                            <label class="ct-clause-choice__opt">
+                                <input type="radio" name="clause_usage" value="{{ opt.value }}"{% if card.value == opt.value %} checked{% endif %}>
+                                <span>{{ opt.label }}</span>
+                            </label>
+                            {% endfor %}
+                        </div>
+                        <label class="ct-clause-occupants">تعداد ساکن (اختیاری)
+                            <input class="crm-input" name="clause_occupants" value="{{ wizard_data.financial.occupants_count|default:'' }}" inputmode="numeric" placeholder="مثلاً ۳">
+                        </label>
+                        {% if card.summary %}<p class="ct-clause-card__summary">{{ card.summary }}</p>{% endif %}
+                        {% if card.clause_preview %}
+                        <button type="button" class="ct-clause-preview-toggle" data-preview-for="{{ card.id }}">مشاهده متن قرارداد</button>
+                        <div class="ct-clause-card__preview" id="preview_{{ card.id }}" hidden>{{ card.clause_preview|linebreaksbr }}</div>
+                        {% endif %}
+                    </article>
+
+                    {% elif card.type == 'choice' %}
+                    <article class="ct-clause-card" data-card-id="{{ card.id }}">
+                        <header class="ct-clause-card__head">
+                            <h4>{{ card.title }}</h4>
+                            {% if card.is_standard %}<span class="ct-clause-badge ct-clause-badge--standard">بند استاندارد</span>{% endif %}
+                        </header>
+                        <p class="ct-clause-card__question">{{ card.question }}</p>
+                        <div class="ct-clause-choice">
+                            {% for opt in card.options %}
+                            <label class="ct-clause-choice__opt">
+                                <input type="radio" name="clause_{{ card.id }}" value="{{ opt.value }}"{% if card.value == opt.value %} checked{% endif %}>
+                                <span>{{ opt.label }}</span>
+                            </label>
+                            {% endfor %}
+                        </div>
+                        {% if card.warning %}<p class="ct-clause-card__warning">{{ card.warning }}</p>{% endif %}
+                        {% if card.clause_preview %}
+                        <button type="button" class="ct-clause-preview-toggle" data-preview-for="{{ card.id }}">مشاهده متن قرارداد</button>
+                        <div class="ct-clause-card__preview" id="preview_{{ card.id }}" hidden>{{ card.clause_preview|linebreaksbr }}</div>
+                        {% endif %}
+                        {% if user.is_staff and card.review_status %}
+                        <span class="ct-clause-staff-meta">وضعیت حقوقی: {{ card.review_status }}</span>
+                        {% endif %}
+                    </article>
+
+                    {% elif card.type == 'cost_allocation' %}
+                    <article class="ct-clause-card ct-clause-card--costs">
+                        <header class="ct-clause-card__head"><h4>{{ card.title }}</h4></header>
+                        <p class="ct-clause-card__question">{{ card.question }}</p>
+                        <div class="ct-cost-grid">
+                            {% for row in card.rows %}
+                            <div class="ct-cost-row">
+                                <span class="ct-cost-row__label">{{ row.label }}</span>
+                                <div class="ct-segment ct-segment--compact">
+                                    <label><input type="radio" name="cost_{{ row.key }}" value="landlord"{% if row.value == 'landlord' %} checked{% endif %}><span>موجر</span></label>
+                                    <label><input type="radio" name="cost_{{ row.key }}" value="tenant"{% if row.value == 'tenant' or not row.value %} checked{% endif %}><span>مستأجر</span></label>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% if card.clause_preview %}
+                        <button type="button" class="ct-clause-preview-toggle" data-preview-for="{{ card.id }}">مشاهده متن قرارداد</button>
+                        <div class="ct-clause-card__preview" id="preview_{{ card.id }}" hidden>{{ card.clause_preview|linebreaksbr }}</div>
+                        {% endif %}
+                    </article>
+
+                    {% elif card.type == 'repairs_allocation' %}
+                    <article class="ct-clause-card ct-clause-card--repairs">
+                        <header class="ct-clause-card__head"><h4>{{ card.title }}</h4></header>
+                        <p class="ct-clause-card__question">{{ card.question }}</p>
+                        <div class="ct-cost-grid">
+                            <div class="ct-cost-row">
+                                <span class="ct-cost-row__label">تعمیرات اساسی</span>
+                                <div class="ct-segment ct-segment--compact">
+                                    <label><input type="radio" name="cost_major_repairs" value="landlord"{% if card.major_value == 'landlord' %} checked{% endif %}><span>موجر</span></label>
+                                    <label><input type="radio" name="cost_major_repairs" value="tenant"{% if card.major_value == 'tenant' %} checked{% endif %}><span>مستأجر</span></label>
+                                </div>
+                            </div>
+                            <div class="ct-cost-row">
+                                <span class="ct-cost-row__label">تعمیرات جزئی</span>
+                                <div class="ct-segment ct-segment--compact">
+                                    <label><input type="radio" name="cost_minor_repairs" value="tenant"{% if card.minor_value == 'tenant' %} checked{% endif %}><span>مستأجر</span></label>
+                                    <label><input type="radio" name="cost_minor_repairs" value="landlord"{% if card.minor_value == 'landlord' %} checked{% endif %}><span>موجر</span></label>
+                                </div>
+                            </div>
+                        </div>
+                        {% if card.clause_preview %}
+                        <button type="button" class="ct-clause-preview-toggle" data-preview-for="{{ card.id }}">مشاهده متن قرارداد</button>
+                        <div class="ct-clause-card__preview" id="preview_{{ card.id }}" hidden>{{ card.clause_preview|linebreaksbr }}</div>
+                        {% endif %}
+                    </article>
+
+                    {% elif card.type == 'penalty' %}
+                    <article class="ct-clause-card ct-clause-card--penalty{% if not card.enabled %} is-disabled{% endif %}">
+                        <header class="ct-clause-card__head">
+                            <h4>{{ card.title }}</h4>
+                            <label class="ct-toggle">
+                                <input type="checkbox" class="ct-penalty-toggle" name="{{ card.prefix }}_enabled"{% if card.enabled %} checked{% endif %}>
+                                <span class="ct-toggle__slider"></span>
+                            </label>
+                        </header>
+                        <div class="ct-penalty-fields">
+                            <label>مبلغ
+                                <input class="crm-input ct-money-input" name="{{ card.prefix }}_amount" value="{{ card.amount|ct_format_number }}" inputmode="numeric"{% if not card.enabled %} disabled{% endif %}>
+                            </label>
+                            <label>واحد
+                                <select class="crm-input" name="{{ card.prefix }}_unit"{% if not card.enabled %} disabled{% endif %}>
+                                    <option value="daily"{% if card.unit == 'daily' or not card.unit %} selected{% endif %}>روزانه</option>
+                                    <option value="fixed"{% if card.unit == 'fixed' %} selected{% endif %}>موردی</option>
+                                </select>
+                            </label>
+                        </div>
+                        {% if card.warning %}<p class="ct-clause-card__warning">{{ card.warning }}</p>{% endif %}
+                        {% if card.clause_preview %}
+                        <button type="button" class="ct-clause-preview-toggle" data-preview-for="{{ card.id }}">مشاهده متن قرارداد</button>
+                        <div class="ct-clause-card__preview" id="preview_{{ card.id }}" hidden>{{ card.clause_preview|linebreaksbr }}</div>
+                        {% endif %}
+                        {% if user.is_staff and card.review_status %}
+                        <span class="ct-clause-staff-meta">وضعیت حقوقی: {{ card.review_status }}</span>
+                        {% endif %}
+                    </article>
+
+                    {% elif card.type == 'optional_clause' %}
+                    <article class="ct-clause-card{% if card.enabled %} is-active{% endif %}">
+                        <header class="ct-clause-card__head">
+                            <label class="ct-clause-card__toggle">
+                                <input type="checkbox" name="clause_optional" value="{{ card.clause_code|default:card.id }}"{% if card.enabled %} checked{% endif %}>
+                                <h4>{{ card.title }}</h4>
+                            </label>
+                            <span class="ct-clause-badge ct-clause-badge--standard">بند استاندارد</span>
+                        </header>
+                        <p class="ct-clause-card__question">{{ card.question }}</p>
+                        {% if card.clause_preview %}
+                        <button type="button" class="ct-clause-preview-toggle" data-preview-for="{{ card.id }}">مشاهده متن قرارداد</button>
+                        <div class="ct-clause-card__preview" id="preview_{{ card.id }}" hidden>{{ card.clause_preview|linebreaksbr }}</div>
+                        {% endif %}
+                        {% if user.is_staff and card.review_status %}
+                        <span class="ct-clause-staff-meta">وضعیت حقوقی: {{ card.review_status }}</span>
+                        {% endif %}
+                    </article>
+
+                    {% elif card.type == 'info' %}
+                    <article class="ct-clause-card ct-clause-card--info{% if card.level == 'critical' %} ct-clause-card--critical{% endif %}">
+                        <p>{{ card.message }}</p>
+                    </article>
+
+                    {% elif card.type == 'custom_agreements' %}
+                    <div class="ct-custom-agreements" id="ct-custom-agreements">
+                        {% for ag in card.agreements %}
+                        <div class="ct-custom-agreement" data-index="{{ forloop.counter0 }}">
+                            <div class="crm-contract-form-grid">
+                                <label>عنوان (اختیاری)
+                                    <input class="crm-input" name="custom_agreement_{{ forloop.counter0 }}_title" value="{{ ag.title|default:'' }}" placeholder="عنوان توافق">
+                                </label>
+                                <label class="crm-contract-span-2">متن توافق
+                                    <textarea class="crm-input" name="custom_agreement_{{ forloop.counter0 }}_body" rows="3" placeholder="متن توافق اختصاصی طرفین">{{ ag.body|default:ag.body_text|default:'' }}</textarea>
+                                </label>
+                            </div>
+                            <button type="button" class="ct-custom-agreement-remove">حذف</button>
+                            <span class="ct-clause-badge ct-clause-badge--custom">توافق اختصاصی طرفین</span>
+                        </div>
+                        {% endfor %}
                     </div>
-                    <div class="ct-clause-item__body">{{ clause.body_template|linebreaksbr }}</div>
+                    <button type="button" class="crm-dash-act" id="ct-add-custom-agreement">افزودن توافق اختصاصی</button>
+                    {% endif %}
+                    {% endfor %}
                 </div>
-                {% empty %}
-                <p class="ct-muted">بند آماده‌ای یافت نشد.</p>
-                {% endfor %}
             </div>
-            <h3>توافق اختصاصی</h3>
-            <p class="ct-muted">در صورت توافق خاص بین طرفین، اینجا اضافه کنید.</p>
-            <div class="crm-contract-form-grid">
-                <label>عنوان<input class="crm-input" name="custom_clause_title" placeholder="عنوان توافق"></label>
-                <label class="crm-contract-span-2">متن توافق<textarea class="crm-input" name="custom_clause_body" rows="3" placeholder="متن توافق اختصاصی طرفین"></textarea></label>
-            </div>
+            {% empty %}
+            <p class="ct-muted">ساختار بندها آماده است؛ محتوای حقوقی پس از تأیید حقوقی در دسترس قرار می‌گیرد.</p>
+            {% endfor %}
+
             <input type="hidden" name="next_step" value="{% if contract.contract_type == 'lease' %}witnesses{% else %}review{% endif %}">
         </section>
 
@@ -636,5 +766,5 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'contracts/js/wizard.js' %}?v=7"></script>
+<script src="{% static 'contracts/js/wizard.js' %}?v=8"></script>
 {% endblock %}

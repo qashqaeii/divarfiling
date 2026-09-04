@@ -1,0 +1,34 @@
+<section class="crm-deal-timeline crm-deal-block" id="crmDealTimeline"
+         data-timeline-url="{% url 'workspace:crm_deal_timeline' deal.id %}"
+         aria-label="تاریخچه معامله">
+    <div class="crm-deal-block__mesh" aria-hidden="true"></div>
+    <span class="crm-deal-block__accent" aria-hidden="true"></span>
+    <header class="crm-deal-panel-head">
+        <span class="crm-deal-panel-mark" aria-hidden="true"><i class="fas fa-clock-rotate-left"></i></span>
+        <div class="crm-deal-panel-head-text">
+            <span class="crm-deal-block__kicker">آخرین اتفاقات</span>
+            <h2>تاریخچه معامله</h2>
+        </div>
+    </header>
+    <ol class="crm-deal-timeline-list" id="crmDealTimelineList">
+        {% for item in deal_timeline %}
+        <li class="crm-deal-timeline-item" data-kind="{{ item.kind }}">
+            <span class="crm-deal-timeline-dot" aria-hidden="true"><i class="fas {{ item.icon }}"></i></span>
+            <div class="crm-deal-timeline-copy">
+                <div class="crm-deal-timeline-meta">
+                    <strong>{{ item.title }}</strong>
+                    <time>{{ item.day_label }}{% if item.time_label %} · {{ item.time_label }}{% endif %}</time>
+                </div>
+                {% if item.body %}<p>{{ item.body }}</p>{% endif %}
+            </div>
+        </li>
+        {% empty %}
+        <li class="crm-deal-timeline-empty">هنوز پیگیری ثبت نشده — اولین تماس یا بازدید را ثبت کنید.</li>
+        {% endfor %}
+    </ol>
+    {% if deal_timeline_has_more %}
+    <button type="button" class="crm-dash-act crm-dash-act--ghost crm-deal-timeline-more" id="crmDealTimelineMore">
+        نمایش بیشتر
+    </button>
+    {% endif %}
+</section>

@@ -3,7 +3,7 @@
 
 {% block page_title %}مدیریت قرارداد{% endblock %}
 {% block crm_extra_css %}
-<link rel="stylesheet" href="{% static 'contracts/css/contracts.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'contracts/css/contracts.css' %}?v=4">
 {% endblock %}
 
 {% block crm_content %}
@@ -33,7 +33,7 @@
                     <span class="ct-party-progress__label">{{ item.label }}</span>
                     <span class="ct-party-progress__name">{{ item.name }}</span>
                     <span class="ct-party-progress__state {% if item.accepted %}is-done{% else %}is-pending{% endif %}">
-                        {% if item.accepted %}✓ تأیید کرده{% else %}○ هنوز تأیید نکرده{% endif %}
+                        {% if item.accepted %}<i class="fas fa-check-circle" aria-hidden="true"></i> تأیید کرده{% else %}<i class="far fa-circle" aria-hidden="true"></i> هنوز تأیید نکرده{% endif %}
                     </span>
                     {% if not item.accepted and item.invitation %}
                     <form method="post" style="margin:0">{% csrf_token %}
@@ -52,9 +52,9 @@
         <section class="ct-panel">
             <h2>فرآیند</h2>
             <ul class="ct-process-steps">
-                <li>{% if contract.status == 'finalized' %}✓{% else %}○{% endif %} قرارداد</li>
-                <li>{% if contract.status == 'finalized' %}✓{% elif contract.status in 'partially_accepted,fully_accepted' %}◐{% else %}○{% endif %} تأیید طرفین</li>
-                <li>{% if finalized_handover %}✓{% else %}○{% endif %} صورت‌جلسه تحویل</li>
+                <li>{% if contract.status == 'finalized' %}<i class="fas fa-check-circle" aria-hidden="true"></i>{% else %}<i class="far fa-circle" aria-hidden="true"></i>{% endif %} قرارداد</li>
+                <li>{% if contract.status == 'finalized' %}<i class="fas fa-check-circle" aria-hidden="true"></i>{% elif contract.status in 'partially_accepted,fully_accepted' %}<i class="fas fa-circle-half-stroke" aria-hidden="true"></i>{% else %}<i class="far fa-circle" aria-hidden="true"></i>{% endif %} تأیید طرفین</li>
+                <li>{% if finalized_handover %}<i class="fas fa-check-circle" aria-hidden="true"></i>{% else %}<i class="far fa-circle" aria-hidden="true"></i>{% endif %} صورت‌جلسه تحویل</li>
             </ul>
             {% if contract.status == 'finalized' and not finalized_handover and not handover %}
             <form method="post" action="{% url 'workspace:handover_create' deal.pk contract.pk %}">{% csrf_token %}
@@ -126,7 +126,7 @@
                 {% if contract.status != 'cancelled' and contract.status != 'finalized' %}
                 <form method="post">{% csrf_token %}
                     <input type="hidden" name="action" value="cancel">
-                    <button type="submit">لغو قرارداد</button>
+                    <button type="submit" class="is-destructive">لغو قرارداد</button>
                 </form>
                 {% endif %}
             </div>

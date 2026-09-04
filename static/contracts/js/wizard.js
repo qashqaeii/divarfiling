@@ -6,6 +6,42 @@
 
   var wizard = form.closest('.ct-wizard');
   var contractType = wizard ? wizard.getAttribute('data-contract-type') : '';
+  var currentStep = wizard ? wizard.getAttribute('data-current-step') : '';
+  var isSubmitting = false;
+
+  var ROLE_LABELS = {
+    landlord: 'موجر', tenant: 'مستأجر', seller: 'فروشنده',
+    buyer: 'خریدار', owner: 'مالک', builder: 'سازنده',
+  };
+
+  var REQUIRED_ROLES = {
+    lease: { landlord: 'حداقل یک موجر باید در قرارداد وجود داشته باشد.', tenant: 'حداقل یک مستأجر باید در قرارداد وجود داشته باشد.' },
+    sale: { seller: 'حداقل یک فروشنده باید در قرارداد وجود داشته باشد.', buyer: 'حداقل یک خریدار باید در قرارداد وجود داشته باشد.' },
+    jv: { owner: 'حداقل یک مالک باید در قرارداد وجود داشته باشد.', builder: 'حداقل یک سازنده باید در قرارداد وجود داشته باشد.' },
+  };
+
+  /* ——— Toast ——— */
+  var toastEl = document.createElement('div');
+  toastEl.className = 'ct-toast';
+  toastEl.setAttribute('role', 'status');
+  document.body.appendChild(toastEl);
+  var toastTimer;
+  function showToast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.add('is-visible');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { toastEl.classList.remove('is-visible'); }, 4000);
+  }
+
+  /* ——— Save flash ——— */
+  var flashEl = document.createElement('div');
+  flashEl.className = 'ct-save-flash';
+  flashEl.textContent = 'تغییرات ذخیره شد';
+  document.body.appendChild(flashEl);
+  function showSaveFlash() {
+    flashEl.classList.add('is-visible');
+    setTimeout(function () { flashEl.classList.remove('is-visible'); }, 2000);
+  }
 
   /* ——— Autosave ——— */
   var timer;
@@ -19,15 +55,11 @@
         body: fd,
         headers: { 'X-Requested-With': 'XMLHttpRequest' },
         credentials: 'same-origin',
+      }).then(function (r) {
+        if (r.ok) showSaveFlash();
       }).catch(function () {});
     }, 1500);
   });
-
-  /* ——— Money formatting ——— */
-  var ROLE_LABELS = {
-    landlord: 'موجر', tenant: 'مستأجر', seller: 'فروشنده',
-    buyer: 'خریدار', owner: 'مالک', builder: 'سازنده',
-  };
 
   function parseAmount(val) {
     return parseInt(String(val || '').replace(/[^\d]/g, ''), 10) || 0;
@@ -85,8 +117,20 @@
 
   function maskPhone(phone) {
     phone = (phone || '').trim();
-    if (phone.length < 6) return phone || '—';
+    if (phone.length < 6) return phone || '';
     return phone.slice(0, 4) + '***' + phone.slice(-4);
+  }
+
+  function maskNationalId(nid) {
+    nid = (nid || '').trim();
+    if (nid.length < 7) return '';
+    return nid.slice(0, 4) + '***' + nid.slice(-3);
+  }
+
+  function isPartyIncomplete(card) {
+    var fn = card.querySelector('[name$="_first_name"]');
+    var ln = card.querySelector('[name$="_last_name"]');
+    return !((fn && fn.value.trim()) || (ln && ln.value.trim()));
   }
 
   function updatePartySummary(card) {
@@ -94,28 +138,178 @@
     var fn = card.querySelector('[name$="_first_name"]');
     var ln = card.querySelector('[name$="_last_name"]');
     var mob = card.querySelector('[name$="_mobile"]');
+    var nid = card.querySelector('[name$="_national_id"]');
     var share = card.querySelector('[name$="_ownership_share"]');
     var roleEl = card.querySelector('.ct-party-card__role');
     var nameEl = card.querySelector('.ct-party-card__name');
     var metaEl = card.querySelector('.ct-party-card__meta');
+    var badgeEl = card.querySelector('.ct-party-card__badge');
+    var actionsEl = card.querySelector('.ct-party-card__actions');
+    var incomplete = isPartyIncomplete(card);
+
+    card.classList.toggle('is-incomplete', incomplete);
+
     if (roleEl && role) roleEl.textContent = roleLabel(role.value);
-    if (nameEl) nameEl.textContent = ((fn ? fn.value : '') + ' ' + (ln ? ln.value : '')).trim() || 'نام وارد نشده';
-    if (metaEl) {
-      var parts = [];
-      if (mob && mob.value) parts.push(maskPhone(mob.value));
-      if (share && share.value) parts.push(share.value);
-      metaEl.textContent = parts.join(' · ') || 'اطلاعات تکمیل نشده';
+    if (nameEl) {
+      nameEl.textContent = incomplete
+        ? 'نام وارد نشده'
+        : ((fn ? fn.value : '') + ' ' + (ln ? ln.value : '')).trim();
     }
+    if (metaEl) {
+      if (incomplete) {
+        metaEl.textContent = 'نام و اطلاعات این طرف قرارداد هنوز تکمیل نشده است.';
+      } else {
+        var parts = [];
+        if (mob && mob.value) parts.push(maskPhone(mob.value));
+        if (nid && nid.value) parts.push(maskNationalId(nid.value));
+        if (share && share.value) parts.push(share.value);
+        metaEl.textContent = parts.join(' · ') || '';
+      }
+    }
+    if (badgeEl) badgeEl.style.display = incomplete ? '' : 'none';
+
+    if (actionsEl && !card.classList.contains('is-editing')) {
+      var editBtn = actionsEl.querySelector('.ct-party-card__edit');
+      var completeBtn = actionsEl.querySelector('.ct-party-card__complete');
+      if (incomplete) {
+        if (editBtn) editBtn.style.display = 'none';
+        if (!completeBtn) {
+          completeBtn = document.createElement('button');
+          completeBtn.type = 'button';
+          completeBtn.className = 'ct-party-card__complete';
+          completeBtn.textContent = 'تکمیل اطلاعات';
+          actionsEl.insertBefore(completeBtn, actionsEl.firstChild);
+          completeBtn.addEventListener('click', function () {
+            card.classList.add('is-editing');
+            syncPartyGrid();
+          });
+        } else {
+          completeBtn.style.display = '';
+        }
+      } else {
+        if (completeBtn) completeBtn.style.display = 'none';
+        if (!editBtn) {
+          editBtn = document.createElement('button');
+          editBtn.type = 'button';
+          editBtn.className = 'ct-party-card__edit';
+          editBtn.textContent = 'ویرایش';
+          actionsEl.insertBefore(editBtn, actionsEl.firstChild);
+          editBtn.addEventListener('click', function () {
+            card.classList.toggle('is-editing');
+            editBtn.textContent = card.classList.contains('is-editing') ? 'بستن' : 'ویرایش';
+            syncPartyGrid();
+          });
+        } else {
+          editBtn.style.display = '';
+        }
+      }
+    }
+  }
+
+  function syncPartyGrid() {
+    if (!partyContainer) return;
+    var editing = partyContainer.querySelector('.ct-party-card.is-editing');
+    partyContainer.classList.toggle('has-editing', !!editing);
+  }
+
+  function reindexParties() {
+    if (!partyContainer) return;
+    partyContainer.querySelectorAll('.ct-party-card').forEach(function (card, idx) {
+      card.setAttribute('data-index', idx);
+      card.querySelectorAll('[name^="party_"]').forEach(function (el) {
+        el.name = el.name.replace(/party_\d+_/, 'party_' + idx + '_');
+      });
+    });
+    partyIndex = partyContainer.querySelectorAll('.ct-party-card').length;
+  }
+
+  function getPartyRoles() {
+    var roles = [];
+    if (!partyContainer) return roles;
+    partyContainer.querySelectorAll('[name$="_role"]').forEach(function (el) {
+      if (el.value) roles.push(el.value);
+    });
+    return roles;
+  }
+
+  function validateRequiredRoles() {
+    var required = REQUIRED_ROLES[contractType];
+    if (!required || currentStep !== 'parties') return true;
+    var roles = getPartyRoles();
+    var missing = [];
+    Object.keys(required).forEach(function (role) {
+      if (roles.indexOf(role) === -1) missing.push(required[role]);
+    });
+    if (missing.length) {
+      showToast(missing[0]);
+      return false;
+    }
+    return true;
+  }
+
+  /* Delete confirmation overlay */
+  var deleteOverlay = document.createElement('div');
+  deleteOverlay.className = 'ct-confirm-overlay';
+  deleteOverlay.innerHTML = '<div class="ct-confirm-sheet" role="dialog" aria-labelledby="ct-delete-title">' +
+    '<h3 id="ct-delete-title">حذف طرف قرارداد</h3>' +
+    '<p id="ct-delete-msg"></p>' +
+    '<div class="ct-confirm-actions">' +
+    '<button type="button" class="is-destructive" id="ct-delete-confirm">حذف از قرارداد</button>' +
+    '<button type="button" class="is-secondary" id="ct-delete-cancel">انصراف</button></div></div>';
+  document.body.appendChild(deleteOverlay);
+  var pendingDeleteCard = null;
+
+  deleteOverlay.querySelector('#ct-delete-cancel').addEventListener('click', function () {
+    deleteOverlay.classList.remove('is-visible');
+    pendingDeleteCard = null;
+  });
+  deleteOverlay.querySelector('#ct-delete-confirm').addEventListener('click', function () {
+    if (pendingDeleteCard) {
+      pendingDeleteCard.remove();
+      reindexParties();
+      syncPartyGrid();
+      form.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+    deleteOverlay.classList.remove('is-visible');
+    pendingDeleteCard = null;
+  });
+  deleteOverlay.addEventListener('click', function (e) {
+    if (e.target === deleteOverlay) {
+      deleteOverlay.classList.remove('is-visible');
+      pendingDeleteCard = null;
+    }
+  });
+
+  function confirmDeleteParty(card) {
+    var fn = card.querySelector('[name$="_first_name"]');
+    var ln = card.querySelector('[name$="_last_name"]');
+    var name = ((fn ? fn.value : '') + ' ' + (ln ? ln.value : '')).trim() || 'این طرف';
+    deleteOverlay.querySelector('#ct-delete-msg').textContent =
+      name + ' از این قرارداد حذف شود؟ اطلاعات مخاطب در CRM حذف نخواهد شد.';
+    pendingDeleteCard = card;
+    deleteOverlay.classList.add('is-visible');
   }
 
   function bindPartyCard(card) {
     var editBtn = card.querySelector('.ct-party-card__edit');
-    if (editBtn) {
-      editBtn.addEventListener('click', function () {
-        card.classList.toggle('is-editing');
-        editBtn.textContent = card.classList.contains('is-editing') ? 'بستن' : 'ویرایش';
-      });
+    var completeBtn = card.querySelector('.ct-party-card__complete');
+    var deleteBtn = card.querySelector('.ct-party-card__delete');
+
+    function toggleEdit() {
+      card.classList.toggle('is-editing');
+      if (editBtn) editBtn.textContent = card.classList.contains('is-editing') ? 'بستن' : 'ویرایش';
+      syncPartyGrid();
     }
+
+    if (editBtn) editBtn.addEventListener('click', toggleEdit);
+    if (completeBtn) completeBtn.addEventListener('click', function () {
+      card.classList.add('is-editing');
+      syncPartyGrid();
+    });
+    if (deleteBtn) {
+      deleteBtn.addEventListener('click', function () { confirmDeleteParty(card); });
+    }
+
     card.querySelectorAll('input, select').forEach(function (el) {
       el.addEventListener('input', function () { updatePartySummary(card); });
       el.addEventListener('change', function () { updatePartySummary(card); });
@@ -125,39 +319,77 @@
 
   if (partyContainer) {
     partyContainer.querySelectorAll('.ct-party-card').forEach(bindPartyCard);
+    syncPartyGrid();
   }
 
-  var addPartyBtn = document.getElementById('ct-add-party');
-  if (addPartyBtn && partyContainer) {
-    addPartyBtn.addEventListener('click', function () {
-      var idx = partyIndex++;
-      var defaultRole = contractType === 'lease' ? 'tenant' : contractType === 'sale' ? 'buyer' : 'builder';
-      var html = '<div class="ct-party-card is-editing" data-index="' + idx + '">' +
-        '<div class="ct-party-card__summary">' +
-        '<div class="ct-party-card__info">' +
-        '<div class="ct-party-card__role">' + roleLabel(defaultRole) + '</div>' +
-        '<p class="ct-party-card__name">نام وارد نشده</p>' +
-        '<p class="ct-party-card__meta">اطلاعات تکمیل نشده</p></div>' +
-        '<button type="button" class="ct-party-card__edit">بستن</button></div>' +
-        '<div class="ct-party-card__body"><div class="ct-form-grid">' +
-        '<label>نقش<select class="crm-input" name="party_' + idx + '_role">' +
-        Object.keys(ROLE_LABELS).map(function (k) {
-          return '<option value="' + k + '"' + (k === defaultRole ? ' selected' : '') + '>' + ROLE_LABELS[k] + '</option>';
-        }).join('') + '</select></label>' +
-        '<label>نوع<select class="crm-input" name="party_' + idx + '_person_type"><option value="natural">حقیقی</option><option value="legal">حقوقی</option></select></label>' +
-        '<label>نام<input class="crm-input" name="party_' + idx + '_first_name"></label>' +
-        '<label>نام خانوادگی<input class="crm-input" name="party_' + idx + '_last_name"></label>' +
-        '<label>نام پدر<input class="crm-input" name="party_' + idx + '_father_name"></label>' +
-        '<label>کد ملی<input class="crm-input" name="party_' + idx + '_national_id" inputmode="numeric"></label>' +
-        '<label>موبایل<input class="crm-input" type="tel" name="party_' + idx + '_mobile" inputmode="tel"></label>' +
-        '<label>قدرالسهم<input class="crm-input" name="party_' + idx + '_ownership_share" placeholder="۶ دانگ"></label>' +
-        '<label class="ct-span-2">نشانی<input class="crm-input" name="party_' + idx + '_address"></label>' +
-        '<label>کد پستی<input class="crm-input" name="party_' + idx + '_postal_code" inputmode="numeric"></label>' +
-        '</div></div></div>';
-      partyContainer.insertAdjacentHTML('beforeend', html);
-      bindPartyCard(partyContainer.lastElementChild);
+  function buildPartyCardHtml(idx, defaultRole) {
+    var roleOptions = Object.keys(ROLE_LABELS).map(function (k) {
+      return '<option value="' + k + '"' + (k === defaultRole ? ' selected' : '') + '>' + ROLE_LABELS[k] + '</option>';
+    }).join('');
+
+    return '<div class="ct-party-card is-editing is-incomplete" data-index="' + idx + '">' +
+      '<div class="ct-party-card__summary">' +
+      '<div class="ct-party-card__info">' +
+      '<div class="ct-party-card__role">' + roleLabel(defaultRole) + '</div>' +
+      '<div class="ct-party-card__badge"><i class="fas fa-exclamation-circle" aria-hidden="true"></i> اطلاعات ناقص</div>' +
+      '<p class="ct-party-card__name">نام وارد نشده</p>' +
+      '<p class="ct-party-card__meta">نام و اطلاعات این طرف قرارداد هنوز تکمیل نشده است.</p></div>' +
+      '<div class="ct-party-card__actions">' +
+      '<button type="button" class="ct-party-card__complete">تکمیل اطلاعات</button>' +
+      '<button type="button" class="ct-party-card__delete" aria-label="حذف از قرارداد" title="حذف از قرارداد"><i class="fas fa-trash-alt" aria-hidden="true"></i></button></div></div>' +
+      '<div class="ct-party-card__body"><div class="ct-form-grid">' +
+      '<label>نقش<select class="crm-input" name="party_' + idx + '_role">' + roleOptions + '</select></label>' +
+      '<label>نوع<select class="crm-input" name="party_' + idx + '_person_type"><option value="natural">حقیقی</option><option value="legal">حقوقی</option></select></label>' +
+      '<label>نام<input class="crm-input" name="party_' + idx + '_first_name"></label>' +
+      '<label>نام خانوادگی<input class="crm-input" name="party_' + idx + '_last_name"></label>' +
+      '<label>نام پدر<input class="crm-input" name="party_' + idx + '_father_name"></label>' +
+      '<label>کد ملی<input class="crm-input" name="party_' + idx + '_national_id" inputmode="numeric"></label>' +
+      '<label>موبایل<input class="crm-input" type="tel" name="party_' + idx + '_mobile" inputmode="tel"></label>' +
+      '<label>قدرالسهم<input class="crm-input" name="party_' + idx + '_ownership_share" placeholder="۶ دانگ"></label>' +
+      '<label class="ct-span-2">نشانی<input class="crm-input" name="party_' + idx + '_address"></label>' +
+      '<label>کد پستی<input class="crm-input" name="party_' + idx + '_postal_code" inputmode="numeric"></label>' +
+      '</div></div></div>';
+  }
+
+  var addPartyGroup = document.getElementById('ct-add-party-group');
+  if (addPartyGroup && partyContainer) {
+    addPartyGroup.querySelectorAll('.ct-add-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var role = btn.getAttribute('data-add-role') ||
+          (contractType === 'lease' ? 'tenant' : contractType === 'sale' ? 'buyer' : 'builder');
+        var idx = partyIndex++;
+        partyContainer.insertAdjacentHTML('beforeend', buildPartyCardHtml(idx, role));
+        bindPartyCard(partyContainer.lastElementChild);
+        syncPartyGrid();
+      });
     });
   }
+
+  /* ——— Form submit guard ——— */
+  form.addEventListener('submit', function (e) {
+    if (isSubmitting) {
+      e.preventDefault();
+      return;
+    }
+    if (currentStep === 'parties' && !validateRequiredRoles()) {
+      e.preventDefault();
+      return;
+    }
+    var submitBtn = e.submitter || form.querySelector('#ct-wizard-next');
+    if (submitBtn && submitBtn.type === 'submit' && submitBtn.name !== 'action') {
+      isSubmitting = true;
+      submitBtn.classList.add('is-loading');
+      submitBtn.disabled = true;
+      var orig = submitBtn.textContent;
+      submitBtn.textContent = 'در حال ذخیره…';
+      setTimeout(function () {
+        isSubmitting = false;
+        submitBtn.classList.remove('is-loading');
+        submitBtn.disabled = false;
+        submitBtn.textContent = orig;
+      }, 8000);
+    }
+  });
 
   /* ——— Deposit mode ——— */
   var depositModeRadios = form.querySelectorAll('input[name="fin_deposit_mode"]');
@@ -319,6 +551,8 @@
       overlay.classList.remove('is-visible');
     });
     overlay.querySelector('#ct-confirm-send').addEventListener('click', function () {
+      if (isSubmitting) return;
+      isSubmitting = true;
       overlay.classList.remove('is-visible');
       var hidden = document.createElement('input');
       hidden.type = 'hidden';
@@ -333,16 +567,12 @@
   }
 
   /* ——— Step done markers ——— */
-  var currentStep = wizard ? wizard.getAttribute('data-current-step') : '';
   if (currentStep) {
+    var activeLi = document.querySelector('.ct-steps-list li.is-active');
     document.querySelectorAll('.ct-steps-list li').forEach(function (li) {
       var link = li.querySelector('a');
-      if (!link) return;
-      var href = link.getAttribute('href') || '';
-      var step = href.replace('?step=', '');
-      if (step && step !== currentStep && li.compareDocumentPosition(
-        document.querySelector('.ct-steps-list li.is-active')
-      ) & Node.DOCUMENT_POSITION_FOLLOWING) {
+      if (!link || !activeLi) return;
+      if (li.compareDocumentPosition(activeLi) & Node.DOCUMENT_POSITION_FOLLOWING) {
         li.classList.add('is-done');
       }
     });

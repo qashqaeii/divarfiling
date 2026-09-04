@@ -11,6 +11,7 @@
 {% block crm_extra_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/crm-deal-detail-mobile.css' %}?v=5">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-deal-finance.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'contracts/css/contracts.css' %}?v=4">
 {% endblock %}
 
 {% block crm_content %}
@@ -218,37 +219,60 @@
         </nav>
     </section>
 
-    {% include 'workspace/crm/includes/deal_action_timeline.html' %}
+    {% include 'workspace/crm/includes/deal_next_action.html' %}
 
     <section class="crm-deal-block ct-deal-contracts" aria-label="قراردادها و اسناد">
         <div class="crm-deal-block__mesh" aria-hidden="true"></div>
-        <header class="crm-deal-checklist-head">
-            <div class="crm-deal-checklist-title">
+        <span class="crm-deal-block__accent" aria-hidden="true"></span>
+        <header class="ct-deal-contracts__head">
+            <div class="ct-deal-contracts__title">
                 <span class="crm-deal-side-icon" aria-hidden="true"><i class="fas fa-file-signature"></i></span>
                 <div>
                     <span class="crm-deal-block__kicker">مرکز قرارداد</span>
                     <h2>قراردادها و اسناد</h2>
+                    <p class="ct-deal-contracts__sub">ساخت، ارسال و مدیریت قراردادهای این معامله</p>
                 </div>
             </div>
-            <a href="{% url 'workspace:deal_contracts' deal.pk %}" class="crm-dash-act crm-dash-act--primary">
-                <i class="fas fa-plus" aria-hidden="true"></i><span>{% if deal_contracts_count %}مدیریت{% else %}ایجاد قرارداد{% endif %}</span>
+            {% if deal_contracts %}
+            <a href="{% url 'workspace:deal_contracts' deal.pk %}" class="crm-dash-act">
+                <i class="fas fa-folder-open" aria-hidden="true"></i><span>مشاهده همه</span>
             </a>
+            {% endif %}
         </header>
+
         {% if deal_contracts %}
+        <div class="ct-deal-contracts__summary">
+            <span class="ct-deal-contracts__stat"><i class="fas fa-file-contract" aria-hidden="true"></i> {{ deal_contracts_count }} قرارداد</span>
+        </div>
         <ul class="ct-deal-contracts-list">
             {% for c in deal_contracts %}
-            <li>
-                <a href="{% url 'workspace:contract_manage' deal.pk c.pk %}">
-                    <strong>{{ c.get_contract_type_display }}</strong>
-                    <span>{{ c.internal_number }} · {{ c.get_status_display }}</span>
+            <li class="ct-deal-contracts-item">
+                <a href="{% url 'workspace:contract_manage' deal.pk c.pk %}" class="ct-deal-contracts-link">
+                    <span class="ct-deal-contracts-item__type">{{ c.get_contract_type_display }}</span>
+                    <span class="ct-deal-contracts-item__meta">{{ c.internal_number }} · نسخه {% if c.current_version %}{{ c.current_version.version_number }}{% else %}—{% endif %}</span>
+                    <span class="ct-status ct-status--{{ c.status }}">{{ c.get_status_display }}</span>
                 </a>
+                {% if c.status == 'draft' %}
+                <a href="{% url 'workspace:contract_wizard' deal.pk c.pk %}" class="crm-dash-act crm-dash-act--primary ct-deal-contracts-item__cta">ادامه</a>
+                {% else %}
+                <a href="{% url 'workspace:contract_manage' deal.pk c.pk %}" class="crm-dash-act ct-deal-contracts-item__cta">مدیریت</a>
+                {% endif %}
             </li>
             {% endfor %}
         </ul>
         {% else %}
-        <p class="crm-muted">هنوز قراردادی برای این معامله ساخته نشده است.</p>
+        <div class="ct-deal-contracts-empty">
+            <span class="ct-deal-contracts-empty__icon" aria-hidden="true"><i class="fas fa-file-circle-plus"></i></span>
+            <p class="ct-deal-contracts-empty__title">هنوز قراردادی برای این معامله ساخته نشده است.</p>
+            <p class="ct-deal-contracts-empty__desc">اطلاعات ملک و طرف معامله آماده است و می‌توانید قرارداد را در چند مرحله ایجاد کنید.</p>
+            <a href="{% url 'workspace:deal_contracts' deal.pk %}" class="crm-dash-act crm-dash-act--primary ct-deal-contracts-empty__cta">
+                <i class="fas fa-plus" aria-hidden="true"></i><span>ایجاد قرارداد</span>
+            </a>
+        </div>
         {% endif %}
     </section>
+
+    {% include 'workspace/crm/includes/deal_timeline_section.html' %}
 
     <section class="crm-deal-checklist crm-deal-block" id="crmDealChecklist"
              data-checklist-url="{% url 'workspace:crm_deal_checklist' deal.id %}"

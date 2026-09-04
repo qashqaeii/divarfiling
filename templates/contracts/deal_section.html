@@ -3,109 +3,122 @@
 
 {% block page_title %}قراردادها — {{ deal.title }}{% endblock %}
 {% block crm_extra_css %}
-<link rel="stylesheet" href="{% static 'contracts/css/contracts.css' %}?v=4">
+<link rel="stylesheet" href="{% static 'contracts/css/contracts.css' %}?v=5">
 {% endblock %}
 
 {% block crm_content %}
-<div class="ct-center">
-    <header class="ct-center__head">
-        <div style="display:flex;align-items:flex-start;gap:.75rem;flex:1;min-width:0">
-            <a href="{% url 'workspace:crm_deal_detail' deal.pk %}" class="ct-back" aria-label="بازگشت به معامله"><i class="fas fa-arrow-right"></i></a>
+<div class="crm-page-chrome crm-contracts-page">
+
+    <header class="crm-dash-bar">
+        <div class="crm-dash-bar-main">
+            <a href="{% url 'workspace:crm_deal_detail' deal.pk %}" class="crm-deal-back" title="بازگشت به معامله" aria-label="بازگشت به معامله">
+                <i class="fas fa-arrow-right" aria-hidden="true"></i>
+            </a>
             <div>
-                <h1>قراردادها و اسناد</h1>
-                <p class="ct-muted">{{ deal.title }}</p>
+                <h1 class="crm-dash-bar-title">قراردادها و اسناد</h1>
+                <p class="crm-dash-bar-sub is-visible">{{ deal.title }}</p>
             </div>
         </div>
     </header>
 
-    <div class="ct-metrics">
-        <div class="ct-metric">
-            <span class="ct-metric__icon" aria-hidden="true"><i class="fas fa-file-contract"></i></span>
-            <div class="ct-metric__body"><em>فعال</em><strong>{{ contract_metrics.active }}</strong></div>
-        </div>
-        <div class="ct-metric">
-            <span class="ct-metric__icon" aria-hidden="true"><i class="fas fa-hourglass-half"></i></span>
-            <div class="ct-metric__body"><em>در انتظار تأیید</em><strong>{{ contract_metrics.pending }}</strong></div>
-        </div>
-        <div class="ct-metric">
-            <span class="ct-metric__icon" aria-hidden="true"><i class="fas fa-circle-check"></i></span>
-            <div class="ct-metric__body"><em>تکمیل‌شده</em><strong>{{ contract_metrics.completed }}</strong></div>
-        </div>
-    </div>
+    <section class="kpi-strip kpi-strip--insight kpi-strip--3 crm-deals-kpis" aria-label="شاخص‌های قرارداد">
+        {% include 'workspace/includes/kpi_item.html' with variant='insight' extra_class='crm-deal-kpi crm-deal-kpi--accent' accent=1 value=contract_metrics.active label='فعال' %}
+        {% include 'workspace/includes/kpi_item.html' with variant='insight' extra_class='crm-deal-kpi' value=contract_metrics.pending label='در انتظار تأیید' %}
+        {% include 'workspace/includes/kpi_item.html' with variant='insight' extra_class='crm-deal-kpi' value=contract_metrics.completed label='تکمیل‌شده' %}
+    </section>
 
-    <div class="ct-create">
-        <h2>ایجاد قرارداد جدید</h2>
-        <div class="ct-type-grid">
-            {% for value, label in contract_types %}
-            <form method="post" action="{% url 'workspace:contract_create' deal.pk %}">
-                {% csrf_token %}
-                <input type="hidden" name="contract_type" value="{{ value }}">
-                <button type="submit" class="ct-type-card">
-                    <span class="ct-type-card__icon" aria-hidden="true">
-                        {% if value == 'lease' %}<i class="fas fa-key"></i>
-                        {% elif value == 'sale' %}<i class="fas fa-handshake"></i>
-                        {% else %}<i class="fas fa-hard-hat"></i>{% endif %}
-                    </span>
-                    <strong>{{ label }}</strong>
-                    <span>{% if value == 'lease' %}تنظیم قرارداد اجاره، ودیعه و شرایط طرفین
-                        {% elif value == 'sale' %}ثبت مبلغ، پرداخت‌ها و تعهدات معامله
-                        {% else %}ثبت توافق اصلی مالک و سازنده{% endif %}</span>
-                </button>
-            </form>
-            {% endfor %}
-        </div>
-    </div>
-
-    <section class="ct-list">
-        <h2>قراردادهای این معامله</h2>
-        {% if contracts %}
-        {% for c in contracts %}
-        <article class="ct-contract-card">
-            <div class="ct-contract-card__main">
-                <p class="ct-contract-card__type">{{ c.get_contract_type_display }}</p>
-                <div class="ct-contract-card__meta">
-                    <span><i class="fas fa-hashtag" aria-hidden="true"></i> {{ c.internal_number }}</span>
-                    {% if c.current_version %}
-                    <span><i class="fas fa-code-branch" aria-hidden="true"></i> نسخه {{ c.current_version.version_number }}</span>
-                    {% endif %}
-                    <span><i class="fas fa-clock" aria-hidden="true"></i> {{ c.updated_at|ws_jalali_datetime }}</span>
-                    {% if c.current_version %}
-                    {% with parties=c.current_version.parties.count witnesses=c.current_version.witnesses.count accepted=c.current_version.acceptances.count %}
-                    {% if parties or witnesses %}
-                    <span><i class="fas fa-user-check" aria-hidden="true"></i> {{ accepted }}/{{ parties|add:witnesses }} تأیید</span>
-                    {% endif %}
-                    {% endwith %}
-                    {% endif %}
-                </div>
-                <span class="ct-status ct-status--{{ c.status }}">{{ c.get_status_display }}</span>
+    <section class="crm-deal-block crm-deal-panel" aria-label="ایجاد قرارداد">
+        <header class="crm-deal-panel-head">
+            <span class="crm-deal-panel-mark" aria-hidden="true"><i class="fas fa-file-circle-plus"></i></span>
+            <div class="crm-deal-panel-head-text">
+                <span class="crm-deal-block__kicker">جدید</span>
+                <h2>ایجاد قرارداد</h2>
             </div>
-            <div class="ct-contract-card__actions">
-                {% if c.status == 'draft' %}
-                <a href="{% url 'workspace:contract_wizard' deal.pk c.pk %}" class="crm-dash-act crm-dash-act--primary">ادامه / مدیریت</a>
-                {% else %}
-                <a href="{% url 'workspace:contract_manage' deal.pk c.pk %}" class="crm-dash-act crm-dash-act--primary">ادامه / مدیریت</a>
-                {% endif %}
-                <div class="ct-menu-wrap ct-contract-menu">
-                    <button type="button" class="ct-menu-btn" aria-label="عملیات بیشتر"><i class="fas fa-ellipsis-v"></i></button>
-                    <div class="ct-menu-panel">
-                        <a href="{% url 'workspace:contract_manage' deal.pk c.pk %}">مدیریت قرارداد</a>
-                        {% if c.status == 'draft' %}
-                        <a href="{% url 'workspace:contract_wizard' deal.pk c.pk %}">ادامه ویزارد</a>
-                        {% endif %}
-                        {% if c.current_version.pdf_file %}
-                        <a href="{% url 'workspace:contract_pdf' deal.pk c.pk %}">دانلود PDF</a>
-                        {% endif %}
+        </header>
+        <div class="crm-deal-panel-body">
+            <div class="crm-contract-actions">
+                {% for value, label in contract_types %}
+                <form method="post" action="{% url 'workspace:contract_create' deal.pk %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="contract_type" value="{{ value }}">
+                    <button type="submit" class="crm-contract-action">
+                        <span class="crm-deal-side-icon crm-deal-side-icon--action" aria-hidden="true">
+                            {% if value == 'lease' %}<i class="fas fa-key"></i>
+                            {% elif value == 'sale' %}<i class="fas fa-handshake"></i>
+                            {% else %}<i class="fas fa-hard-hat"></i>{% endif %}
+                        </span>
+                        <span class="crm-contract-action__text">
+                            <strong>{{ label }}</strong>
+                            <em>{% if value == 'lease' %}تنظیم اجاره، ودیعه و شرایط طرفین
+                                {% elif value == 'sale' %}ثبت مبلغ، پرداخت‌ها و تعهدات
+                                {% else %}توافق مالک و سازنده{% endif %}</em>
+                        </span>
+                        <i class="fas fa-chevron-left crm-contract-action__arrow" aria-hidden="true"></i>
+                    </button>
+                </form>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <section class="crm-deal-block crm-deal-panel" aria-label="قراردادهای معامله">
+        <header class="crm-deal-panel-head">
+            <span class="crm-deal-panel-mark" aria-hidden="true"><i class="fas fa-file-signature"></i></span>
+            <div class="crm-deal-panel-head-text">
+                <span class="crm-deal-block__kicker">پرونده</span>
+                <h2>قراردادهای این معامله</h2>
+                {% if contracts %}<p>{{ contracts|length }} قرارداد</p>{% endif %}
+            </div>
+        </header>
+        <div class="crm-deal-panel-body crm-deal-panel-body--flush">
+            {% if contracts %}
+            <ul class="crm-contract-rows">
+                {% for c in contracts %}
+                <li class="crm-contract-row">
+                    <div class="crm-contract-row__main">
+                        <strong>{{ c.get_contract_type_display }}</strong>
+                        <em>{{ c.internal_number }}</em>
                     </div>
-                </div>
+                    <div class="crm-contract-row__meta">
+                        {% if c.current_version %}<span>نسخه {{ c.current_version.version_number }}</span>{% endif %}
+                        <span>{{ c.updated_at|ws_jalali_datetime }}</span>
+                        {% if c.current_version %}
+                        {% with parties=c.current_version.parties.count witnesses=c.current_version.witnesses.count accepted=c.current_version.acceptances.count %}
+                        {% if parties or witnesses %}<span>{{ accepted }}/{{ parties|add:witnesses }} تأیید</span>{% endif %}
+                        {% endwith %}
+                        {% endif %}
+                        <span class="crm-badge crm-contract-status crm-contract-status--{{ c.status }}">{{ c.get_status_display }}</span>
+                    </div>
+                    <div class="crm-contract-row__actions">
+                        {% if c.status == 'draft' %}
+                        <a href="{% url 'workspace:contract_wizard' deal.pk c.pk %}" class="crm-dash-act crm-dash-act--primary">ادامه / مدیریت</a>
+                        {% else %}
+                        <a href="{% url 'workspace:contract_manage' deal.pk c.pk %}" class="crm-dash-act crm-dash-act--primary">ادامه / مدیریت</a>
+                        {% endif %}
+                        <div class="ct-menu-wrap crm-contract-menu">
+                            <button type="button" class="crm-dash-act crm-dash-act--icon ct-menu-btn" aria-label="عملیات بیشتر"><i class="fas fa-ellipsis-v"></i></button>
+                            <div class="ct-menu-panel">
+                                <a href="{% url 'workspace:contract_manage' deal.pk c.pk %}">مدیریت قرارداد</a>
+                                {% if c.status == 'draft' %}
+                                <a href="{% url 'workspace:contract_wizard' deal.pk c.pk %}">ادامه ویزارد</a>
+                                {% endif %}
+                                {% if c.current_version.pdf_file %}
+                                <a href="{% url 'workspace:contract_pdf' deal.pk c.pk %}">دانلود PDF</a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <div class="crm-deal-empty">
+                <span class="crm-deal-empty-icon" aria-hidden="true"><i class="fas fa-file-circle-plus"></i></span>
+                <strong>هنوز قراردادی برای این معامله ایجاد نشده است</strong>
+                <p>اطلاعات ملک و طرف معامله آماده است؛ می‌توانید قرارداد را در چند مرحله ایجاد کنید.</p>
             </div>
-        </article>
-        {% endfor %}
-        {% else %}
-        <div class="ct-empty">
-            <p>هنوز قراردادی برای این معامله ایجاد نشده است.</p>
-            <p class="ct-muted">اطلاعات ملک و طرف معامله آماده است؛ می‌توانید قرارداد را در چند مرحله ایجاد کنید.</p>
+            {% endif %}
         </div>
-        {% endif %}
     </section>
 </div>
 {% endblock %}
@@ -113,7 +126,7 @@
 {% block extra_js %}
 <script>
 (function(){
-  document.querySelectorAll('.ct-contract-menu').forEach(function(wrap){
+  document.querySelectorAll('.crm-contract-menu').forEach(function(wrap){
     wrap.querySelector('.ct-menu-btn').addEventListener('click',function(e){
       e.stopPropagation();
       document.querySelectorAll('.ct-menu-wrap.is-open').forEach(function(w){if(w!==wrap)w.classList.remove('is-open');});

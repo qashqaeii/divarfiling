@@ -91,9 +91,9 @@
     return (tomanWords(mil).replace(' تومان', '') + ' میلیون' + (rem ? ' و ' + tomanWords(rem).replace(' تومان', '') : '')) + ' تومان';
   }
 
-  function bindMoneyInput(input) {
-    var wordsEl = input.closest('.ct-money-card, label') &&
-      input.closest('.ct-money-card, label').querySelector('.ct-money-words');
+  function   bindMoneyInput(input) {
+    var wordsEl = input.closest('.crm-contract-money-card, .ct-money-card, label') &&
+      input.closest('.crm-contract-money-card, .ct-money-card, label').querySelector('.ct-money-words');
     function update() {
       var num = parseAmount(input.value);
       if (num) input.value = formatAmount(num);
@@ -176,8 +176,8 @@
         if (!completeBtn) {
           completeBtn = document.createElement('button');
           completeBtn.type = 'button';
-          completeBtn.className = 'ct-party-card__complete';
-          completeBtn.textContent = 'تکمیل اطلاعات';
+          completeBtn.className = 'crm-dash-act ct-party-card__complete';
+          completeBtn.textContent = 'تکمیل';
           actionsEl.insertBefore(completeBtn, actionsEl.firstChild);
           completeBtn.addEventListener('click', function () {
             card.classList.add('is-editing');
@@ -191,7 +191,7 @@
         if (!editBtn) {
           editBtn = document.createElement('button');
           editBtn.type = 'button';
-          editBtn.className = 'ct-party-card__edit';
+          editBtn.className = 'crm-dash-act ct-party-card__edit';
           editBtn.textContent = 'ویرایش';
           actionsEl.insertBefore(editBtn, actionsEl.firstChild);
           editBtn.addEventListener('click', function () {
@@ -211,6 +211,26 @@
     var editing = partyContainer.querySelector('.ct-party-card.is-editing');
     partyContainer.classList.toggle('has-editing', !!editing);
   }
+
+  function initPartyMenu(wrap) {
+    if (!wrap || wrap.dataset.menuBound) return;
+    wrap.dataset.menuBound = '1';
+    var btn = wrap.querySelector('.crm-dash-act--icon, .ct-menu-btn');
+    if (!btn) return;
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      document.querySelectorAll('.ct-party-menu.is-open').forEach(function (w) {
+        if (w !== wrap) w.classList.remove('is-open');
+      });
+      wrap.classList.toggle('is-open');
+    });
+  }
+
+  document.addEventListener('click', function () {
+    document.querySelectorAll('.ct-party-menu.is-open').forEach(function (w) {
+      w.classList.remove('is-open');
+    });
+  });
 
   function reindexParties() {
     if (!partyContainer) return;
@@ -294,6 +314,8 @@
     var editBtn = card.querySelector('.ct-party-card__edit');
     var completeBtn = card.querySelector('.ct-party-card__complete');
     var deleteBtn = card.querySelector('.ct-party-card__delete');
+    var menuWrap = card.querySelector('.ct-party-menu');
+    initPartyMenu(menuWrap);
 
     function toggleEdit() {
       card.classList.toggle('is-editing');
@@ -327,17 +349,19 @@
       return '<option value="' + k + '"' + (k === defaultRole ? ' selected' : '') + '>' + ROLE_LABELS[k] + '</option>';
     }).join('');
 
-    return '<div class="ct-party-card is-editing is-incomplete" data-index="' + idx + '">' +
-      '<div class="ct-party-card__summary">' +
-      '<div class="ct-party-card__info">' +
-      '<div class="ct-party-card__role">' + roleLabel(defaultRole) + '</div>' +
-      '<div class="ct-party-card__badge"><i class="fas fa-exclamation-circle" aria-hidden="true"></i> اطلاعات ناقص</div>' +
-      '<p class="ct-party-card__name">نام وارد نشده</p>' +
-      '<p class="ct-party-card__meta">نام و اطلاعات این طرف قرارداد هنوز تکمیل نشده است.</p></div>' +
-      '<div class="ct-party-card__actions">' +
-      '<button type="button" class="ct-party-card__complete">تکمیل اطلاعات</button>' +
-      '<button type="button" class="ct-party-card__delete" aria-label="حذف از قرارداد" title="حذف از قرارداد"><i class="fas fa-trash-alt" aria-hidden="true"></i></button></div></div>' +
-      '<div class="ct-party-card__body"><div class="ct-form-grid">' +
+    return '<article class="crm-deal-side-card crm-deal-block crm-contract-party ct-party-card is-editing is-incomplete" data-index="' + idx + '">' +
+      '<div class="crm-contract-party__row ct-party-card__summary">' +
+      '<div class="crm-contract-party__body ct-party-card__info">' +
+      '<span class="crm-deal-stage-badge ct-party-card__role">' + roleLabel(defaultRole) + '</span>' +
+      '<span class="crm-contract-party__warn ct-party-card__badge"><i class="fas fa-exclamation-circle"></i> اطلاعات ناقص</span>' +
+      '<p class="crm-contract-party__name ct-party-card__name">نام وارد نشده</p>' +
+      '<p class="crm-contract-party__meta ct-party-card__meta">نام و اطلاعات این طرف هنوز تکمیل نشده است.</p></div>' +
+      '<div class="crm-contract-party__acts ct-party-card__actions">' +
+      '<button type="button" class="crm-dash-act ct-party-card__complete">تکمیل</button>' +
+      '<div class="ct-menu-wrap ct-party-menu">' +
+      '<button type="button" class="crm-dash-act crm-dash-act--icon" aria-label="عملیات"><i class="fas fa-ellipsis-v"></i></button>' +
+      '<div class="ct-menu-panel"><button type="button" class="ct-party-card__delete is-destructive">حذف از قرارداد</button></div></div></div></div>' +
+      '<div class="ct-party-card__body"><div class="crm-contract-form-grid">' +
       '<label>نقش<select class="crm-input" name="party_' + idx + '_role">' + roleOptions + '</select></label>' +
       '<label>نوع<select class="crm-input" name="party_' + idx + '_person_type"><option value="natural">حقیقی</option><option value="legal">حقوقی</option></select></label>' +
       '<label>نام<input class="crm-input" name="party_' + idx + '_first_name"></label>' +
@@ -346,14 +370,14 @@
       '<label>کد ملی<input class="crm-input" name="party_' + idx + '_national_id" inputmode="numeric"></label>' +
       '<label>موبایل<input class="crm-input" type="tel" name="party_' + idx + '_mobile" inputmode="tel"></label>' +
       '<label>قدرالسهم<input class="crm-input" name="party_' + idx + '_ownership_share" placeholder="۶ دانگ"></label>' +
-      '<label class="ct-span-2">نشانی<input class="crm-input" name="party_' + idx + '_address"></label>' +
+      '<label class="crm-contract-span-2">نشانی<input class="crm-input" name="party_' + idx + '_address"></label>' +
       '<label>کد پستی<input class="crm-input" name="party_' + idx + '_postal_code" inputmode="numeric"></label>' +
-      '</div></div></div>';
+      '</div></div></article>';
   }
 
   var addPartyGroup = document.getElementById('ct-add-party-group');
   if (addPartyGroup && partyContainer) {
-    addPartyGroup.querySelectorAll('.ct-add-btn').forEach(function (btn) {
+    addPartyGroup.querySelectorAll('[data-add-role]').forEach(function (btn) {
       btn.addEventListener('click', function () {
         var role = btn.getAttribute('data-add-role') ||
           (contractType === 'lease' ? 'tenant' : contractType === 'sale' ? 'buyer' : 'builder');
@@ -514,7 +538,7 @@
         '<div class="ct-payment-card__actions">' +
         '<button type="button" data-action="edit">ویرایش</button>' +
         '<button type="button" data-action="delete">حذف</button></div></div>' +
-        '<div class="ct-payment-card__form ct-form-grid" style="display:block;margin-top:.75rem">' +
+        '<div class="ct-payment-card__form crm-contract-form-grid" style="display:block;margin-top:.65rem">' +
         '<label>عنوان<input class="crm-input" name="pay_' + idx + '_label" value="پرداخت ' + (idx + 1) + '"></label>' +
         '<label>مبلغ (تومان)<input class="crm-input ct-money-input" name="pay_' + idx + '_amount" inputmode="numeric"></label>' +
         '<label>تاریخ<input class="crm-input" name="pay_' + idx + '_due_date" placeholder="1405/07/10"></label>' +
@@ -566,15 +590,5 @@
     });
   }
 
-  /* ——— Step done markers ——— */
-  if (currentStep) {
-    var activeLi = document.querySelector('.ct-steps-list li.is-active');
-    document.querySelectorAll('.ct-steps-list li').forEach(function (li) {
-      var link = li.querySelector('a');
-      if (!link || !activeLi) return;
-      if (li.compareDocumentPosition(activeLi) & Node.DOCUMENT_POSITION_FOLLOWING) {
-        li.classList.add('is-done');
-      }
-    });
-  }
+  /* ——— End ——— */
 })();

@@ -3,61 +3,72 @@
 
 {% block page_title %}ویزارد قرارداد{% endblock %}
 {% block crm_extra_css %}
-<link rel="stylesheet" href="{% static 'contracts/css/contracts.css' %}?v=4">
+<link rel="stylesheet" href="{% static 'contracts/css/contracts.css' %}?v=5">
 {% endblock %}
 
 {% block crm_content %}
-<div class="ct-wizard" data-contract-id="{{ contract.pk }}" data-deal-id="{{ deal.pk }}" data-contract-type="{{ contract.contract_type }}" data-current-step="{{ wizard_step }}">
-    <header class="ct-wizard__head">
-        <a href="{% url 'workspace:deal_contracts' deal.pk %}" class="ct-back" aria-label="بازگشت"><i class="fas fa-arrow-right"></i></a>
-        <div>
-            <h1>{{ contract.get_contract_type_display }}</h1>
-            <p class="ct-muted">مرحله {{ step_number }} از {{ step_total }}{% if next_step_label %} — بعدی: {{ next_step_label }}{% endif %}</p>
+<div class="crm-page-chrome crm-contract-wizard ct-wizard" data-contract-id="{{ contract.pk }}" data-deal-id="{{ deal.pk }}" data-contract-type="{{ contract.contract_type }}" data-current-step="{{ wizard_step }}">
+
+    <header class="crm-dash-bar">
+        <div class="crm-dash-bar-main">
+            <a href="{% url 'workspace:deal_contracts' deal.pk %}" class="crm-deal-back" aria-label="بازگشت"><i class="fas fa-arrow-right"></i></a>
+            <div>
+                <h1 class="crm-dash-bar-title">{{ contract.get_contract_type_display }}</h1>
+                <p class="crm-dash-bar-sub is-visible">مرحله {{ step_number }} از {{ step_total }}{% if next_step_label %} — بعدی: {{ next_step_label }}{% endif %}</p>
+            </div>
         </div>
     </header>
 
-    <div class="ct-progress">
-        <div class="ct-progress__meta">
-            <span>پیشرفت</span>
-            <span>{{ step_number }}/{{ step_total }}</span>
+    <nav class="crm-deal-stepper" aria-label="مراحل قرارداد">
+        <div class="crm-deal-stepper-track" aria-hidden="true">
+            <i style="width: {% widthratio step_number step_total 100 %}%"></i>
         </div>
-        <div class="ct-progress__bar"><div class="ct-progress__fill" style="width:{% widthratio step_number step_total 100 %}%"></div></div>
-    </div>
+        <div class="crm-deal-stepper-steps">
+            {% for s, label in display_steps %}
+            <a href="?step={{ s }}"
+               class="crm-deal-step{% if s == wizard_step %} is-active{% elif forloop.counter < step_number %} is-done{% endif %}"
+               {% if s == wizard_step %}aria-current="step"{% endif %}>
+                <span class="crm-deal-step-dot" aria-hidden="true">
+                    {% if forloop.counter < step_number %}<i class="fas fa-check"></i>{% else %}<i class="fas fa-circle"></i>{% endif %}
+                </span>
+                <span class="crm-deal-step-label">{{ label }}</span>
+            </a>
+            {% endfor %}
+        </div>
+    </nav>
 
-    <ol class="ct-steps-list">
-        {% for s, label in display_steps %}
-        <li class="{% if s == wizard_step %}is-active{% endif %}">
-            <a href="?step={{ s }}">{{ label }}</a>
-        </li>
-        {% endfor %}
-    </ol>
-
-    <form method="post" class="ct-wizard-form" id="ct-wizard-form">
+    <form method="post" id="ct-wizard-form">
         {% csrf_token %}
         <input type="hidden" name="step" value="{{ wizard_step }}">
 
-        <div class="ct-wizard-layout">
-        <div class="ct-wizard-main">
+        <div class="crm-contract-wizard-layout">
+        <div class="crm-contract-wizard-main">
 
         {% if wizard_step == 'parties' %}
-        <section class="ct-panel" id="ct-parties-step">
-            <h2>طرفین قرارداد</h2>
-            <p class="ct-panel__lead">اطلاعات هر طرف را بررسی کنید. در صورت نیاز ویرایش یا حذف کنید.</p>
+        <section class="crm-deal-block crm-deal-panel" id="ct-parties-step">
+            <header class="crm-deal-panel-head">
+                <span class="crm-deal-panel-mark" aria-hidden="true"><i class="fas fa-users"></i></span>
+                <div class="crm-deal-panel-head-text">
+                    <h2>طرفین قرارداد</h2>
+                    <p class="crm-contract-panel-lead">اطلاعات هر طرف را بررسی کنید. در صورت نیاز ویرایش یا حذف کنید.</p>
+                </div>
+            </header>
+            <div class="crm-deal-panel-body">
             {% if prefill_parties %}
-            <div class="ct-prefill"><i class="fas fa-check-circle"></i> اطلاعات طرفین از CRM وارد شده است — فقط بررسی و تأیید کنید.</div>
+            <div class="crm-contracrm-contract-prefill"><i class="fas fa-check-circle"></i> اطلاعات طرفین از CRM وارد شده — فقط بررسی و تأیید کنید.</div>
             {% endif %}
-            <div class="ct-party-cards" id="ct-party-rows">
+            <div class="crm-contract-parties" id="ct-party-rows">
                 {% for p in wizard_data.parties %}
-                <div class="ct-party-card{% if not p.first_name and not p.last_name %} is-incomplete{% endif %}" data-index="{{ forloop.counter0 }}">
-                    <div class="ct-party-card__summary">
-                        <div class="ct-party-card__info">
-                            <div class="ct-party-card__role">{{ p.role|ct_role_label }}</div>
+                <article class="crm-deal-side-card crm-deal-block crm-contract-party ct-party-card{% if not p.first_name and not p.last_name %} is-incomplete{% endif %}" data-index="{{ forloop.counter0 }}">
+                    <div class="crm-contract-party__row ct-party-card__summary">
+                        <div class="crm-contract-party__body ct-party-card__info">
+                            <span class="crm-deal-stage-badge ct-party-card__role">{{ p.role|ct_role_label }}</span>
                             {% if not p.first_name and not p.last_name %}
-                            <div class="ct-party-card__badge"><i class="fas fa-exclamation-circle" aria-hidden="true"></i> اطلاعات ناقص</div>
+                            <span class="crm-contract-party__warn ct-party-card__badge"><i class="fas fa-exclamation-circle"></i> اطلاعات ناقص</span>
                             {% endif %}
-                            <p class="ct-party-card__name">{% if p.first_name or p.last_name %}{{ p.first_name }} {{ p.last_name }}{% else %}نام وارد نشده{% endif %}</p>
-                            <p class="ct-party-card__meta">
-                                {% if not p.first_name and not p.last_name %}نام و اطلاعات این طرف قرارداد هنوز تکمیل نشده است.
+                            <p class="crm-contract-party__name ct-party-card__name">{% if p.first_name or p.last_name %}{{ p.first_name }} {{ p.last_name }}{% else %}نام وارد نشده{% endif %}</p>
+                            <p class="crm-contract-party__meta ct-party-card__meta">
+                                {% if not p.first_name and not p.last_name %}نام و اطلاعات این طرف هنوز تکمیل نشده است.
                                 {% else %}
                                 {% if p.mobile %}{{ p.mobile|ct_mask_phone }}{% endif %}
                                 {% if p.national_id %} · {{ p.national_id|slice:":4" }}***{{ p.national_id|slice:"-3:" }}{% endif %}
@@ -65,17 +76,22 @@
                                 {% endif %}
                             </p>
                         </div>
-                        <div class="ct-party-card__actions">
+                        <div class="crm-contract-party__acts ct-party-card__actions">
                             {% if not p.first_name and not p.last_name %}
-                            <button type="button" class="ct-party-card__complete">تکمیل اطلاعات</button>
+                            <button type="button" class="crm-dash-act ct-party-card__complete">تکمیل</button>
                             {% else %}
-                            <button type="button" class="ct-party-card__edit">ویرایش</button>
+                            <button type="button" class="crm-dash-act ct-party-card__edit">ویرایش</button>
                             {% endif %}
-                            <button type="button" class="ct-party-card__delete" aria-label="حذف از قرارداد" title="حذف از قرارداد"><i class="fas fa-trash-alt" aria-hidden="true"></i><span class="sr-only">حذف</span></button>
+                            <div class="ct-menu-wrap ct-party-menu">
+                                <button type="button" class="crm-dash-act crm-dash-act--icon" aria-label="عملیات"><i class="fas fa-ellipsis-v"></i></button>
+                                <div class="ct-menu-panel">
+                                    <button type="button" class="ct-party-card__delete is-destructive">حذف از قرارداد</button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div class="ct-party-card__body">
-                        <div class="ct-form-grid">
+                        <div class="crm-contract-form-grid">
                             <label>نقش
                                 <select class="crm-input" name="party_{{ forloop.counter0 }}_role">
                                     {% for val, lbl in contract.contract_type|ct_party_roles %}
@@ -95,71 +111,77 @@
                             <label>کد ملی<input class="crm-input" name="party_{{ forloop.counter0 }}_national_id" value="{{ p.national_id }}" inputmode="numeric"></label>
                             <label>موبایل<input class="crm-input" type="tel" name="party_{{ forloop.counter0 }}_mobile" value="{{ p.mobile }}" inputmode="tel"></label>
                             <label>قدرالسهم<input class="crm-input" name="party_{{ forloop.counter0 }}_ownership_share" value="{{ p.ownership_share|default:'' }}" placeholder="۶ دانگ"></label>
-                            <label class="ct-span-2">نشانی<input class="crm-input" name="party_{{ forloop.counter0 }}_address" value="{{ p.address }}"></label>
+                            <label class="crm-contracrm-contract-span-2">نشانی<input class="crm-input" name="party_{{ forloop.counter0 }}_address" value="{{ p.address }}"></label>
                             <label>کد پستی<input class="crm-input" name="party_{{ forloop.counter0 }}_postal_code" value="{{ p.postal_code|default:'' }}" inputmode="numeric"></label>
                         </div>
                     </div>
-                </div>
+                </article>
                 {% empty %}
-                <div class="ct-party-card is-editing is-incomplete" data-index="0">
-                    <div class="ct-party-card__summary">
-                        <div class="ct-party-card__info">
-                            <div class="ct-party-card__role">{% if contract.contract_type == 'lease' %}موجر{% elif contract.contract_type == 'sale' %}فروشنده{% else %}مالک{% endif %}</div>
-                            <div class="ct-party-card__badge"><i class="fas fa-exclamation-circle" aria-hidden="true"></i> اطلاعات ناقص</div>
-                            <p class="ct-party-card__name">نام وارد نشده</p>
-                            <p class="ct-party-card__meta">نام و اطلاعات این طرف قرارداد هنوز تکمیل نشده است.</p>
+                <article class="crm-deal-side-card crm-deal-block crm-contract-party ct-party-card is-editing is-incomplete" data-index="0">
+                    <div class="crm-contract-party__row ct-party-card__summary">
+                        <div class="crm-contract-party__body ct-party-card__info">
+                            <span class="crm-deal-stage-badge ct-party-card__role">{% if contract.contract_type == 'lease' %}موجر{% elif contract.contract_type == 'sale' %}فروشنده{% else %}مالک{% endif %}</span>
+                            <span class="crm-contract-party__warn ct-party-card__badge"><i class="fas fa-exclamation-circle"></i> اطلاعات ناقص</span>
+                            <p class="crm-contract-party__name ct-party-card__name">نام وارد نشده</p>
+                            <p class="crm-contract-party__meta ct-party-card__meta">نام و اطلاعات این طرف هنوز تکمیل نشده است.</p>
                         </div>
-                        <div class="ct-party-card__actions">
-                            <button type="button" class="ct-party-card__complete">تکمیل اطلاعات</button>
-                            <button type="button" class="ct-party-card__delete" aria-label="حذف از قرارداد" title="حذف از قرارداد"><i class="fas fa-trash-alt" aria-hidden="true"></i></button>
+                        <div class="crm-contract-party__acts ct-party-card__actions">
+                            <button type="button" class="crm-dash-act ct-party-card__complete">تکمیل</button>
+                            <div class="ct-menu-wrap ct-party-menu">
+                                <button type="button" class="crm-dash-act crm-dash-act--icon" aria-label="عملیات"><i class="fas fa-ellipsis-v"></i></button>
+                                <div class="ct-menu-panel">
+                                    <button type="button" class="ct-party-card__delete is-destructive">حذف از قرارداد</button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div class="ct-party-card__body">
-                        <div class="ct-form-grid">
+                        <div class="crm-contract-form-grid">
                             <label>نقش<input class="crm-input" name="party_0_role" value="{% if contract.contract_type == 'lease' %}landlord{% elif contract.contract_type == 'sale' %}seller{% else %}owner{% endif %}"></label>
                             <label>نام<input class="crm-input" name="party_0_first_name"></label>
                             <label>نام خانوادگی<input class="crm-input" name="party_0_last_name"></label>
                             <label>موبایل<input class="crm-input" type="tel" name="party_0_mobile" inputmode="tel"></label>
                         </div>
                     </div>
-                </div>
+                </article>
                 {% endfor %}
             </div>
-            <div class="ct-add-party-group" id="ct-add-party-group">
+            <div class="crm-contract-add-parties" id="ct-add-party-group">
                 {% if contract.contract_type == 'lease' %}
-                <button type="button" class="ct-add-btn" data-add-role="landlord"><i class="fas fa-plus" aria-hidden="true"></i> افزودن موجر</button>
-                <button type="button" class="ct-add-btn" data-add-role="tenant"><i class="fas fa-plus" aria-hidden="true"></i> افزودن مستأجر</button>
+                <button type="button" class="crm-dash-act" data-add-role="landlord"><i class="fas fa-plus"></i> افزودن موجر</button>
+                <button type="button" class="crm-dash-act" data-add-role="tenant"><i class="fas fa-plus"></i> افزودن مستأجر</button>
                 {% elif contract.contract_type == 'sale' %}
-                <button type="button" class="ct-add-btn" data-add-role="seller"><i class="fas fa-plus" aria-hidden="true"></i> افزودن فروشنده</button>
-                <button type="button" class="ct-add-btn" data-add-role="buyer"><i class="fas fa-plus" aria-hidden="true"></i> افزودن خریدار</button>
+                <button type="button" class="crm-dash-act" data-add-role="seller"><i class="fas fa-plus"></i> افزودن فروشنده</button>
+                <button type="button" class="crm-dash-act" data-add-role="buyer"><i class="fas fa-plus"></i> افزودن خریدار</button>
                 {% else %}
-                <button type="button" class="ct-add-btn" data-add-role="owner"><i class="fas fa-plus" aria-hidden="true"></i> افزودن مالک</button>
-                <button type="button" class="ct-add-btn" data-add-role="builder"><i class="fas fa-plus" aria-hidden="true"></i> افزودن سازنده</button>
+                <button type="button" class="crm-dash-act" data-add-role="owner"><i class="fas fa-plus"></i> افزودن مالک</button>
+                <button type="button" class="crm-dash-act" data-add-role="builder"><i class="fas fa-plus"></i> افزودن سازنده</button>
                 {% endif %}
             </div>
             <input type="hidden" name="next_step" value="property">
+            </div>
         </section>
 
         {% elif wizard_step == 'property' %}
-        <section class="ct-panel">
+        <section class="crm-deal-block crm-deal-panel">
             <h2>مشخصات ملک</h2>
             {% if prefill_property %}
-            <div class="ct-prefill"><i class="fas fa-check-circle"></i> اطلاعات ملک از فایل شخصی وارد شده است.</div>
+            <div class="crm-contract-prefill"><i class="fas fa-check-circle"></i> اطلاعات ملک از فایل شخصی وارد شده است.</div>
             {% endif %}
-            <div class="ct-form-grid">
+            <div class="crm-contract-form-grid">
                 <label>نوع ملک<input class="crm-input" name="prop_property_type" value="{{ wizard_data.property.property_type|default:'' }}" placeholder="آپارتمان"></label>
-                <label class="ct-span-2">آدرس<input class="crm-input" name="prop_address" value="{{ wizard_data.property.address|default:'' }}"></label>
+                <label class="crm-contract-span-2">آدرس<input class="crm-input" name="prop_address" value="{{ wizard_data.property.address|default:'' }}"></label>
                 <label>متراژ (م²)<input class="crm-input" name="prop_area" value="{{ wizard_data.property.area|default:'' }}" inputmode="numeric"></label>
                 <label>طبقه<input class="crm-input" name="prop_floor" value="{{ wizard_data.property.floor|default:'' }}"></label>
                 <label>شهر<input class="crm-input" name="prop_city" value="{{ wizard_data.property.city|default:'' }}"></label>
                 <label>منطقه<input class="crm-input" name="prop_district" value="{{ wizard_data.property.district|default:'' }}"></label>
-                <label class="ct-span-2"><input type="checkbox" name="prop_has_parking"{% if wizard_data.property.has_parking %} checked{% endif %}> پارکینگ دارد</label>
-                <label class="ct-span-2"><input type="checkbox" name="prop_has_storage"{% if wizard_data.property.has_storage %} checked{% endif %}> انباری دارد</label>
+                <label class="crm-contract-span-2"><input type="checkbox" name="prop_has_parking"{% if wizard_data.property.has_parking %} checked{% endif %}> پارکینگ دارد</label>
+                <label class="crm-contract-span-2"><input type="checkbox" name="prop_has_storage"{% if wizard_data.property.has_storage %} checked{% endif %}> انباری دارد</label>
             </div>
             <details class="ct-disclosure">
                 <summary>اطلاعات تکمیلی</summary>
                 <div class="ct-disclosure__body">
-                    <div class="ct-form-grid">
+                    <div class="crm-contract-form-grid">
                         <label>جهت واحد<input class="crm-input" name="prop_unit_direction" value="{{ wizard_data.property.unit_direction|default:'' }}"></label>
                         <label>نوع نما<input class="crm-input" name="prop_facade_type" value="{{ wizard_data.property.facade_type|default:'' }}"></label>
                         <label>شماره واحد<input class="crm-input" name="prop_unit" value="{{ wizard_data.property.unit|default:'' }}"></label>
@@ -176,26 +198,26 @@
         </section>
 
         {% elif wizard_step == 'financial' %}
-        <section class="ct-panel">
+        <section class="crm-deal-block crm-deal-panel">
             {% if contract.contract_type == 'lease' %}
             <h2>مدت و مبلغ</h2>
             {% if prefill_financial %}
-            <div class="ct-prefill"><i class="fas fa-check-circle"></i> مبالغ از اطلاعات ملک پیشنهاد شده — بررسی کنید.</div>
+            <div class="crm-contract-prefill"><i class="fas fa-check-circle"></i> مبالغ از اطلاعات ملک پیشنهاد شده — بررسی کنید.</div>
             {% endif %}
-            <div class="ct-form-grid">
+            <div class="crm-contract-form-grid">
                 <label>تاریخ شروع<input class="crm-input" name="fin_lease_start" value="{{ wizard_data.financial.lease_start|default:'' }}" placeholder="1404/01/01"></label>
                 <label>تاریخ پایان<input class="crm-input" name="fin_lease_end" value="{{ wizard_data.financial.lease_end|default:'' }}" placeholder="1405/01/01"></label>
                 <label>روز پرداخت اجاره<input class="crm-input" name="fin_rent_day" value="{{ wizard_data.financial.rent_payment_day|default:'1' }}" inputmode="numeric"></label>
                 <label>تاریخ تحویل<input class="crm-input" name="fin_delivery_date" value="{{ wizard_data.financial.delivery_date|default:'' }}" placeholder="1404/01/01"></label>
             </div>
-            <div class="ct-money-grid">
-                <div class="ct-money-card">
+            <div class="crm-contract-money-grid">
+                <div class="crm-contract-money-card">
                     <label>ودیعه <span class="ct-unit-label">(تومان)</span>
                         <input class="crm-input ct-money-input" name="fin_deposit" value="{{ wizard_data.financial.deposit|ct_format_number }}" inputmode="numeric">
                         <span class="ct-money-words">{{ wizard_data.financial.deposit|ct_toman_words }}</span>
                     </label>
                 </div>
-                <div class="ct-money-card">
+                <div class="crm-contract-money-card">
                     <label>اجاره ماهانه <span class="ct-unit-label">(تومان)</span>
                         <input class="crm-input ct-money-input" name="fin_monthly_rent" value="{{ wizard_data.financial.monthly_rent|ct_format_number }}" inputmode="numeric">
                         <span class="ct-money-words">{{ wizard_data.financial.monthly_rent|ct_toman_words }}</span>
@@ -214,7 +236,7 @@
                 </label>
             </div>
             <div id="ct-prev-deposit-block" style="{% if wizard_data.financial.deposit_mode != 'retained' %}display:none{% endif %}">
-                <div class="ct-form-grid">
+                <div class="crm-contract-form-grid">
                     <label>مبلغ ودیعه قبلی (تومان)<input class="crm-input ct-money-input" name="fin_prev_deposit" value="{{ wizard_data.financial.previous_deposit_amount|ct_format_number }}" inputmode="numeric"></label>
                     <label>شماره/مرجع قرارداد قبلی<input class="crm-input" name="fin_prev_contract_ref" value="{{ wizard_data.financial.previous_contract_ref|default:'' }}"></label>
                     <label>تاریخ قرارداد قبلی<input class="crm-input" name="fin_prev_contract_date" value="{{ wizard_data.financial.previous_contract_date|default:'' }}"></label>
@@ -267,16 +289,16 @@
             {% elif contract.contract_type == 'sale' %}
             <h2>مبلغ و پرداخت</h2>
             {% if prefill_financial %}
-            <div class="ct-prefill"><i class="fas fa-check-circle"></i> مبلغ معامله از اطلاعات معامله پیشنهاد شده است.</div>
+            <div class="crm-contract-prefill"><i class="fas fa-check-circle"></i> مبلغ معامله از اطلاعات معامله پیشنهاد شده است.</div>
             {% endif %}
-            <div class="ct-money-grid">
-                <div class="ct-money-card">
+            <div class="crm-contract-money-grid">
+                <div class="crm-contract-money-card">
                     <label>مبلغ معامله <span class="ct-unit-label">(تومان)</span>
                         <input class="crm-input ct-money-input" name="fin_total_price" value="{{ wizard_data.financial.total_price|ct_format_number }}" inputmode="numeric">
                         <span class="ct-money-words">{{ wizard_data.financial.total_price|ct_toman_words }}</span>
                     </label>
                 </div>
-                <div class="ct-money-card">
+                <div class="crm-contract-money-card">
                     <label>بیعانه <span class="ct-unit-label">(تومان)</span>
                         <input class="crm-input ct-money-input" name="fin_earnest_money" value="{{ wizard_data.financial.earnest_money|ct_format_number }}" inputmode="numeric">
                         <span class="ct-money-words">{{ wizard_data.financial.earnest_money|ct_toman_words }}</span>
@@ -298,7 +320,7 @@
                             <button type="button" data-action="delete">حذف</button>
                         </div>
                     </div>
-                    <div class="ct-payment-card__form ct-form-grid" style="display:none">
+                    <div class="ct-payment-card__form crm-contract-form-grid" style="display:none">
                         <label>عنوان<input class="crm-input" name="pay_{{ forloop.counter0 }}_label" value="{{ pay.label }}"></label>
                         <label>مبلغ (تومان)<input class="crm-input ct-money-input" name="pay_{{ forloop.counter0 }}_amount" value="{{ pay.amount|ct_format_number }}" inputmode="numeric"></label>
                         <label>تاریخ<input class="crm-input" name="pay_{{ forloop.counter0 }}_due_date" value="{{ pay.due_date }}"></label>
@@ -315,7 +337,7 @@
             <details class="ct-disclosure">
                 <summary>تحویل و انتقال رسمی</summary>
                 <div class="ct-disclosure__body">
-                    <div class="ct-form-grid">
+                    <div class="crm-contract-form-grid">
                         <label>تاریخ تحویل<input class="crm-input" name="fin_delivery_date" value="{{ wizard_data.financial.delivery_date|default:'' }}"></label>
                         <label>تاریخ انتقال رسمی<input class="crm-input" name="fin_official_transfer_date" value="{{ wizard_data.financial.official_transfer_date|default:'' }}"></label>
                         <label>محل انتقال<input class="crm-input" name="fin_transfer_place" value="{{ wizard_data.financial.transfer_place|default:'' }}"></label>
@@ -327,8 +349,8 @@
 
             {% else %}
             <h2>آورده‌ها و سهم</h2>
-            <p class="ct-panel__lead">سهم مالک و سازنده را مشخص کنید.</p>
-            <div class="ct-form-grid">
+            <p class="crm-contract-panel-lead">سهم مالک و سازنده را مشخص کنید.</p>
+            <div class="crm-contract-form-grid">
                 <label>درصد مالک<input class="crm-input" name="jv_owner_percent" value="{{ wizard_data.jv.owner_percent|default:'' }}" inputmode="numeric" placeholder="۵۰"></label>
                 <label>درصد سازنده<input class="crm-input" name="jv_builder_percent" value="{{ wizard_data.jv.builder_percent|default:'' }}" inputmode="numeric" placeholder="۵۰"></label>
                 <label>ارزش ملک مالک (تومان)<input class="crm-input ct-money-input" name="jv_owner_property_value" value="{{ wizard_data.jv.contributions.owner_property_value|ct_format_number }}" inputmode="numeric"></label>
@@ -341,13 +363,13 @@
         </section>
 
         {% elif wizard_step == 'witnesses' %}
-        <section class="ct-panel">
+        <section class="crm-deal-block crm-deal-panel">
             <h2>شاهدان</h2>
-            <p class="ct-panel__lead">لینک تأیید قرارداد برای شاهدان نیز پیامک می‌شود.</p>
+            <p class="crm-contract-panel-lead">لینک تأیید قرارداد برای شاهدان نیز پیامک می‌شود.</p>
             <div class="ct-witness-grid">
                 <div class="ct-witness-card">
                     <h3>شاهد موجر</h3>
-                    <div class="ct-form-grid">
+                    <div class="crm-contract-form-grid">
                         <input type="hidden" name="witness_1_role" value="شاهد موجر">
                         {% with w=wizard_data.witnesses.0 %}
                         <label>نام<input class="crm-input" name="witness_1_first_name" value="{% if w %}{{ w.first_name }}{% endif %}"></label>
@@ -359,7 +381,7 @@
                 </div>
                 <div class="ct-witness-card">
                     <h3>شاهد مستأجر</h3>
-                    <div class="ct-form-grid">
+                    <div class="crm-contract-form-grid">
                         <input type="hidden" name="witness_2_role" value="شاهد مستأجر">
                         {% with w=wizard_data.witnesses.1 %}
                         <label>نام<input class="crm-input" name="witness_2_first_name" value="{% if w %}{{ w.first_name }}{% endif %}"></label>
@@ -374,9 +396,9 @@
         </section>
 
         {% elif wizard_step == 'clauses' %}
-        <section class="ct-panel">
+        <section class="crm-deal-block crm-deal-panel">
             <h2>{% if contract.contract_type == 'lease' %}شرایط و بندها{% else %}بندهای قرارداد{% endif %}</h2>
-            <p class="ct-panel__lead">بندهای مورد نظر را فعال کنید. متن کامل هر بند با کلیک «مشاهده متن» باز می‌شود.</p>
+            <p class="crm-contract-panel-lead">بندهای مورد نظر را فعال کنید. متن کامل هر بند با کلیک «مشاهده متن» باز می‌شود.</p>
             <div class="ct-clauses">
                 {% for clause in available_clauses %}
                 <div class="ct-clause-item{% if clause.code in selected_clause_codes %} is-active{% endif %}">
@@ -394,15 +416,15 @@
             </div>
             <h3>توافق اختصاصی</h3>
             <p class="ct-muted">در صورت توافق خاص بین طرفین، اینجا اضافه کنید.</p>
-            <div class="ct-form-grid">
+            <div class="crm-contract-form-grid">
                 <label>عنوان<input class="crm-input" name="custom_clause_title" placeholder="عنوان توافق"></label>
-                <label class="ct-span-2">متن توافق<textarea class="crm-input" name="custom_clause_body" rows="3" placeholder="متن توافق اختصاصی طرفین"></textarea></label>
+                <label class="crm-contract-span-2">متن توافق<textarea class="crm-input" name="custom_clause_body" rows="3" placeholder="متن توافق اختصاصی طرفین"></textarea></label>
             </div>
             <input type="hidden" name="next_step" value="{% if contract.contract_type == 'lease' %}witnesses{% else %}review{% endif %}">
         </section>
 
         {% elif wizard_step == 'review' %}
-        <section class="ct-panel ct-review-layout">
+        <section class="crm-deal-block crm-deal-panel crm-contract-review">
             {% if validation_count %}
             <div class="ct-review-status ct-review-status--pending">{{ validation_count }} مورد نیاز به تکمیل</div>
             {% else %}
@@ -435,7 +457,7 @@
         {% endif %}
 
         {% if wizard_step != 'review' %}
-        <div class="ct-wizard-nav">
+        <div class="crm-contract-wizard-nav">
             {% if step_number > 1 %}
             {% for s, label in display_steps %}
             {% if forloop.counter == step_number|add:"-1" %}
@@ -447,31 +469,47 @@
         </div>
         {% endif %}
 
-        </div>{# .ct-wizard-main #}
+        </div>{# .crm-contract-wizard-main #}
 
-        {% if wizard_step == 'parties' or wizard_step == 'property' or wizard_step == 'financial' %}
-        <aside class="ct-wizard-aside" aria-label="خلاصه قرارداد">
-            <div class="ct-panel">
-                <h3>خلاصه</h3>
-                <dl>
-                    <dt>نوع قرارداد</dt>
-                    <dd>{{ contract.get_contract_type_display }}</dd>
-                    <dt>معامله</dt>
-                    <dd>{{ deal.title|truncatechars:32 }}</dd>
-                    <dt>شناسه</dt>
-                    <dd>{{ contract.internal_number }}</dd>
-                    <dt>مرحله</dt>
-                    <dd>{{ step_number }} از {{ step_total }}</dd>
-                </dl>
-            </div>
+        {% if wizard_step == 'parties' or wizard_step == 'property' or wizard_step == 'financial' or wizard_step == 'clauses' or wizard_step == 'witnesses' %}
+        <aside class="crm-contract-wizard-aside" aria-label="خلاصه قرارداد">
+            <article class="crm-deal-side-card crm-deal-block">
+                <header class="crm-deal-side-head">
+                    <span class="crm-deal-side-icon crm-deal-side-icon--action" aria-hidden="true"><i class="fas fa-file-contract"></i></span>
+                    <div class="crm-deal-side-head-text">
+                        <span class="crm-deal-block__kicker">خلاصه</span>
+                        <h3>قرارداد</h3>
+                    </div>
+                </header>
+                <div class="crm-deal-side-card__body">
+                    <dl class="crm-contract-context-dl">
+                        <dt>نوع قرارداد</dt>
+                        <dd>{{ contract.get_contract_type_display }}</dd>
+                        <dt>معامله</dt>
+                        <dd>{{ deal.title|truncatechars:36 }}</dd>
+                        {% if deal.customer %}
+                        <dt>مخاطب</dt>
+                        <dd>{{ deal.customer.name }}</dd>
+                        {% endif %}
+                        {% if deal.property %}
+                        <dt>ملک</dt>
+                        <dd>{{ deal.property.title|truncatechars:32 }}</dd>
+                        {% endif %}
+                        <dt>شناسه</dt>
+                        <dd>{{ contract.internal_number }}</dd>
+                        <dt>مرحله</dt>
+                        <dd>{{ step_number }} از {{ step_total }}</dd>
+                    </dl>
+                </div>
+            </article>
         </aside>
         {% endif %}
 
-        </div>{# .ct-wizard-layout #}
+        </div>{# .crm-contract-wizard-layout #}
     </form>
 </div>
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'contracts/js/wizard.js' %}?v=4"></script>
+<script src="{% static 'contracts/js/wizard.js' %}?v=5"></script>
 {% endblock %}

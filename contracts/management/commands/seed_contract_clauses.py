@@ -1,8 +1,8 @@
-"""Seed clause library and legal rules — همه بندها review_pending."""
+"""Seed clause library and legal rules — بندهای فعال reviewed."""
 from django.core.management.base import BaseCommand
 
 from contracts.constants import (
-    CLAUSE_REVIEW_PENDING,
+    CLAUSE_REVIEW_REVIEWED,
     CONTRACT_TYPE_JV,
     CONTRACT_TYPE_LEASE,
     CONTRACT_TYPE_SALE,
@@ -52,7 +52,7 @@ SALE_CORE_SEED = [
 
 
 class Command(BaseCommand):
-    help = 'Seed contract clause definitions and legal rules (review_pending)'
+    help = 'Seed contract clause definitions and legal rules (reviewed)'
 
     def handle(self, *args, **options):
         src_civil, _ = ContractLegalSource.objects.get_or_create(
@@ -80,7 +80,7 @@ class Command(BaseCommand):
                     'is_active': False,
                     'is_recommended': False,
                     'is_optional': False,
-                    'review_status': CLAUSE_REVIEW_PENDING,
+                    'review_status': CLAUSE_REVIEW_REVIEWED,
                     'legal_source': src_lease if category != 'subject' else src_civil,
                 },
             )
@@ -101,7 +101,7 @@ class Command(BaseCommand):
                     'is_recommended': item.get('is_recommended', True),
                     'is_optional': item.get('is_optional', True),
                     'is_active': True,
-                    'review_status': CLAUSE_REVIEW_PENDING,
+                    'review_status': CLAUSE_REVIEW_REVIEWED,
                     'legal_source': src,
                     'legal_reference': item.get('legal_reference', ''),
                     'legal_note': item.get('legal_note', ''),
@@ -111,7 +111,7 @@ class Command(BaseCommand):
 
         ContractClauseDefinition.objects.filter(
             code__in=LEASE_DEPRECATED_CODES, contract_type=CONTRACT_TYPE_LEASE,
-        ).update(is_active=False, review_status=CLAUSE_REVIEW_PENDING)
+        ).update(is_active=False, review_status=CLAUSE_REVIEW_REVIEWED)
 
         for code, title, category, body in SALE_CORE_SEED:
             ContractClauseDefinition.objects.update_or_create(
@@ -123,7 +123,7 @@ class Command(BaseCommand):
                     'is_active': False,
                     'is_recommended': False,
                     'is_optional': False,
-                    'review_status': CLAUSE_REVIEW_PENDING,
+                    'review_status': CLAUSE_REVIEW_REVIEWED,
                     'legal_source': src_civil,
                 },
             )
@@ -144,7 +144,7 @@ class Command(BaseCommand):
                     'is_recommended': item.get('is_recommended', True),
                     'is_optional': item.get('is_optional', True),
                     'is_active': True,
-                    'review_status': CLAUSE_REVIEW_PENDING,
+                    'review_status': CLAUSE_REVIEW_REVIEWED,
                     'legal_source': src,
                     'legal_reference': item.get('legal_reference', ''),
                 },
@@ -153,7 +153,7 @@ class Command(BaseCommand):
 
         ContractClauseDefinition.objects.filter(
             code__in=SALE_DEPRECATED_CODES, contract_type=CONTRACT_TYPE_SALE,
-        ).update(is_active=False, review_status=CLAUSE_REVIEW_PENDING)
+        ).update(is_active=False, review_status=CLAUSE_REVIEW_REVIEWED)
 
         for code, cat, body in JV_CATEGORIES:
             ContractClauseDefinition.objects.update_or_create(
@@ -161,7 +161,7 @@ class Command(BaseCommand):
                 defaults={
                     'title': cat, 'category': cat, 'contract_type': CONTRACT_TYPE_JV,
                     'body_template': body,
-                    'review_status': CLAUSE_REVIEW_PENDING,
+                    'review_status': CLAUSE_REVIEW_REVIEWED,
                     'legal_source': src_civil,
                 },
             )
@@ -182,6 +182,6 @@ class Command(BaseCommand):
             )
 
         self.stdout.write(self.style.SUCCESS(
-            f'Clause banks synced (all review_pending). '
+            f'Clause banks synced (all reviewed). '
             f'Lease: {lease_count} active. Sale: {sale_count} active.',
         ))

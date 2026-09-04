@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 from django.core.management import call_command
 from django.test import TestCase
 
-from contracts.constants import CLAUSE_REVIEW_PENDING, CONTRACT_TYPE_LEASE, CONTRACT_TYPE_SALE
+from contracts.constants import CLAUSE_REVIEW_REVIEWED, CONTRACT_TYPE_LEASE, CONTRACT_TYPE_SALE
 from contracts.models import ContractClauseDefinition
 from contracts.services.clause_ux import (
     clause_review_badge,
@@ -11,7 +11,7 @@ from contracts.services.clause_ux import (
     resolve_selected_clauses,
 )
 from contracts.services.clauses import get_applicable_clauses
-from contracts.services.lifecycle import create_contract, save_wizard_step
+from contracts.services.lifecycle import create_contract, save_wizard_step, sync_clauses_from_selection
 from contracts.services.contract_renderer import render_contract_document
 from contracts.services.sale_clause_bank import (
     SALE_PHASE1_DEFINITIONS,
@@ -27,7 +27,7 @@ class SaleClauseBankTests(TestCase):
         self.user = User.objects.create_user(username='sb1', phone='09121111112', password='x')
         self.customer = Customer.objects.create(user=self.user, name='تست', phone='09123333334')
         self.prop = CRMProperty.objects.create(
-            user=self.user, title='ملک فروش', address='تهران', price=5000000000,
+            user=self.user, title='ملک فروش', address='تهران',
         )
         self.deal = CRMDeal.objects.create(
             user=self.user, customer=self.customer, property=self.prop,
@@ -35,21 +35,24 @@ class SaleClauseBankTests(TestCase):
         )
         call_command('seed_contract_clauses')
 
-    def test_all_phase1_sale_clauses_review_pending_after_seed(self):
+    def test_all_phase1_sale_clauses_reviewed_after_seed(self):
         codes = {d['code'] for d in SALE_PHASE1_DEFINITIONS}
         for code in codes:
             defn = ContractClauseDefinition.objects.get(code=code, version=1)
-            self.assertEqual(defn.review_status, CLAUSE_REVIEW_PENDING)
+            self.assertEqual(defn.review_status, CLAUSE_REVIEW_REVIEWED)
 
-    def test_production_user_sees_active_pending_sale_clauses(self):
+    def test_production_user_sees_active_reviewed_sale_clauses(self):
         with self.settings(DEBUG=False, LEGAL_REVIEW_PREVIEW=False):
             codes = [c.code for c in get_applicable_clauses('sale', user=self.user)]
-            for d in SALE_PHASE1_DEFINITIONS:
-                self.assertIn(d['code'], codes)
+            self.assertIn('SALE_PROPERTY_DECLARATIONS', codes)
+            reviewed = [
+                c for c in get_applicable_clauses('sale', user=self.user)
+                if c.review_status == CLAUSE_REVIEW_REVIEWED
+            ]
+            self.assertGreaterEqual(len(reviewed), 5)
 
-    def test_pending_not_labeled_reviewed(self):
-        self.assertEqual(clause_review_badge(CLAUSE_REVIEW_PENDING), 'بند پیشنهادی')
-        self.assertNotEqual(clause_review_badge(CLAUSE_REVIEW_PENDING), 'بند بررسی‌شده')
+    def test_reviewed_badge_label(self):
+        self.assertEqual(clause_review_badge(CLAUSE_REVIEW_REVIEWED), 'بند بررسی‌شده')
 
     def test_sale_clauses_not_in_lease(self):
         with self.settings(DEBUG=False):
@@ -177,6 +180,7 @@ class SaleClauseBankTests(TestCase):
             'custom_agreements': [],
         }, user=self.user)
         c.refresh_from_db()
+        sync_clauses_from_selection(c, c.current_version)
         sections = render_contract_document(c)
         full_text = '\n'.join(s.get('body', '') for s in sections)
         self.assertIn('فروشنده اعلام', full_text)

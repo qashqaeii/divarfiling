@@ -544,13 +544,16 @@
                         <div class="ct-clause-card__preview" id="preview_{{ card.id }}" hidden>{{ card.clause_preview|linebreaksbr }}</div>
                         {% endif %}
                         {% if user.is_staff and card.review_status %}
-                        <span class="ct-clause-staff-meta">وضعیت حقوقی: {{ card.review_status }}</span>
+                        <span class="ct-clause-staff-meta">وضعیت حقوقی: {{ card.review_status_label|default:card.review_status }}</span>
                         {% endif %}
                     </article>
 
                     {% elif card.type == 'cost_allocation' %}
                     <article class="ct-clause-card ct-clause-card--costs">
-                        <header class="ct-clause-card__head"><h4>{{ card.title }}</h4></header>
+                        <header class="ct-clause-card__head">
+                            <h4>{{ card.title }}</h4>
+                            {% if card.review_badge %}<span class="ct-clause-badge ct-clause-badge--{% if card.review_status == 'reviewed' %}reviewed{% else %}pending{% endif %}">{{ card.review_badge }}</span>{% endif %}
+                        </header>
                         <p class="ct-clause-card__question">{{ card.question }}</p>
                         <div class="ct-cost-grid">
                             {% for row in card.rows %}
@@ -596,7 +599,10 @@
 
                     {% elif card.type == 'repairs_allocation' %}
                     <article class="ct-clause-card ct-clause-card--repairs">
-                        <header class="ct-clause-card__head"><h4>{{ card.title }}</h4></header>
+                        <header class="ct-clause-card__head">
+                            <h4>{{ card.title }}</h4>
+                            {% if card.review_badge %}<span class="ct-clause-badge ct-clause-badge--{% if card.review_status == 'reviewed' %}reviewed{% else %}pending{% endif %}">{{ card.review_badge }}</span>{% endif %}
+                        </header>
                         <p class="ct-clause-card__question">{{ card.question }}</p>
                         <div class="ct-cost-grid">
                             <div class="ct-cost-row">
@@ -646,7 +652,7 @@
                         <div class="ct-clause-card__preview" id="preview_{{ card.id }}" hidden>{{ card.clause_preview|linebreaksbr }}</div>
                         {% endif %}
                         {% if user.is_staff and card.review_status %}
-                        <span class="ct-clause-staff-meta">وضعیت حقوقی: {{ card.review_status }}</span>
+                        <span class="ct-clause-staff-meta">وضعیت حقوقی: {{ card.review_status_label|default:card.review_status }}</span>
                         {% endif %}
                     </article>
 
@@ -665,7 +671,7 @@
                         <div class="ct-clause-card__preview" id="preview_{{ card.id }}" hidden>{{ card.clause_preview|linebreaksbr }}</div>
                         {% endif %}
                         {% if user.is_staff and card.review_status %}
-                        <span class="ct-clause-staff-meta">وضعیت حقوقی: {{ card.review_status }}</span>
+                        <span class="ct-clause-staff-meta">وضعیت حقوقی: {{ card.review_status_label|default:card.review_status }}</span>
                         {% endif %}
                     </article>
 

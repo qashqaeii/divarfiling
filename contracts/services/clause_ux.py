@@ -6,6 +6,7 @@ from typing import Any, Dict, List, Optional, Set, Tuple
 from contracts.constants import (
     CLAUSE_REVIEW_PENDING,
     CLAUSE_REVIEW_REVIEWED,
+    CLAUSE_REVIEW_STATUSES,
     CONTRACT_TYPE_JV,
     CONTRACT_TYPE_LEASE,
     CONTRACT_TYPE_SALE,
@@ -185,6 +186,11 @@ def clause_review_badge(review_status: str) -> Optional[str]:
     if review_status == CLAUSE_REVIEW_PENDING:
         return 'بند پیشنهادی'
     return None
+
+
+def clause_review_status_label(review_status: str) -> str:
+    labels = dict(CLAUSE_REVIEW_STATUSES)
+    return labels.get(review_status, review_status)
 
 
 def build_clause_context(wizard: Dict[str, Any], contract_type: str = CONTRACT_TYPE_LEASE) -> Dict[str, Any]:
@@ -375,6 +381,7 @@ def _clause_card(defn: Optional[ContractClauseDefinition], **extra) -> Dict[str,
         card.setdefault('clause_explanation', defn.plain_explanation)
         card.setdefault('review_status', defn.review_status)
         card.setdefault('review_badge', clause_review_badge(defn.review_status))
+        card.setdefault('review_status_label', clause_review_status_label(defn.review_status))
     return card
 
 
@@ -433,16 +440,21 @@ def build_clause_sections(
             {'key': key, 'label': label, 'value': costs.get(key) or 'tenant'}
             for key, label in LEASE_COST_UI_FIELDS
         ]
+        costs_def = library.get('LEASE_COSTS')
         cards_by_cat['costs_repairs'].append({
             'type': 'cost_allocation',
             'id': 'costs',
             'title': 'هزینه‌های جاری و مشترک',
             'question': 'هر هزینه بر عهده چه کسی است؟',
             'rows': cost_rows,
-            'clause_code': 'LEASE_COSTS' if library.get('LEASE_COSTS') else None,
-            'clause_preview': library['LEASE_COSTS'].body_template if library.get('LEASE_COSTS') else '',
+            'clause_code': 'LEASE_COSTS' if costs_def else None,
+            'clause_preview': costs_def.body_template if costs_def else '',
+            'review_status': costs_def.review_status if costs_def else '',
+            'review_badge': clause_review_badge(costs_def.review_status) if costs_def else None,
+            'review_status_label': clause_review_status_label(costs_def.review_status) if costs_def else '',
         })
 
+        repairs_def = library.get('LEASE_REPAIRS')
         cards_by_cat['costs_repairs'].append({
             'type': 'repairs_allocation',
             'id': 'repairs',
@@ -450,8 +462,11 @@ def build_clause_sections(
             'question': 'مسئول تعمیرات اساسی و جزئی چه کسی است؟',
             'major_value': costs.get('major_repairs') or 'landlord',
             'minor_value': costs.get('minor_repairs') or 'tenant',
-            'clause_code': 'LEASE_REPAIRS' if library.get('LEASE_REPAIRS') else None,
-            'clause_preview': library['LEASE_REPAIRS'].body_template if library.get('LEASE_REPAIRS') else '',
+            'clause_code': 'LEASE_REPAIRS' if repairs_def else None,
+            'clause_preview': repairs_def.body_template if repairs_def else '',
+            'review_status': repairs_def.review_status if repairs_def else '',
+            'review_badge': clause_review_badge(repairs_def.review_status) if repairs_def else None,
+            'review_status_label': clause_review_status_label(repairs_def.review_status) if repairs_def else '',
         })
 
         care_def = library.get('LEASE_CARE')
@@ -553,6 +568,7 @@ def build_clause_sections(
             'clause_preview': tenant_def.body_template if tenant_def else '',
             'review_status': tenant_def.review_status if tenant_def else '',
             'review_badge': clause_review_badge(tenant_def.review_status) if tenant_def else None,
+            'review_status_label': clause_review_status_label(tenant_def.review_status) if tenant_def else '',
         })
 
         del_def = library.get('SALE_DELIVERY')
@@ -621,6 +637,7 @@ def build_clause_sections(
             'clause_preview': costs_def.body_template if costs_def else '',
             'review_status': costs_def.review_status if costs_def else '',
             'review_badge': clause_review_badge(costs_def.review_status) if costs_def else None,
+            'review_status_label': clause_review_status_label(costs_def.review_status) if costs_def else '',
         })
 
         for key, prefix, title, penalty_code in SALE_PENALTY_FIELDS:

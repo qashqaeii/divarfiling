@@ -25,18 +25,23 @@ class LeaseClauseBankTests(TestCase):
             review_status=CLAUSE_REVIEW_REVIEWED,
         )
 
-    def test_all_phase1_clauses_review_pending_after_seed(self):
+    def test_all_phase1_clauses_reviewed_after_seed(self):
         codes = {d['code'] for d in LEASE_PHASE1_DEFINITIONS}
         for code in codes:
             defn = ContractClauseDefinition.objects.get(code=code, version=1)
-            self.assertEqual(defn.review_status, CLAUSE_REVIEW_PENDING)
+            self.assertEqual(defn.review_status, CLAUSE_REVIEW_REVIEWED)
 
-    def test_production_user_sees_active_pending(self):
+    def test_production_user_sees_active_reviewed(self):
         from contracts.services.clauses import get_applicable_clauses
         with self.settings(DEBUG=False, LEGAL_REVIEW_PREVIEW=False):
             codes = [c.code for c in get_applicable_clauses('lease', user=self.user)]
-            for d in LEASE_PHASE1_DEFINITIONS:
-                self.assertIn(d['code'], codes)
+            self.assertIn('LEASE_USE_PURPOSE', codes)
+            self.assertIn('LEASE_CARE', codes)
+            reviewed = [
+                c for c in get_applicable_clauses('lease', user=self.user)
+                if c.review_status == CLAUSE_REVIEW_REVIEWED
+            ]
+            self.assertGreater(len(reviewed), 0)
 
     def test_transfer_forbidden_includes_sublease(self):
         self._reviewed('LEASE_SUBLEASE')

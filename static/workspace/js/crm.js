@@ -3032,7 +3032,7 @@ function initCRMDealStagesEditor() {
                         <p>${count} معامله · احتمال ${stage.probability}٪${stage.rot_days ? ` · کهنگی ${stage.rot_days} روز` : ''}</p>
                     </div>
                     <div class="crm-stages-item-actions">
-                        <button type="button" class="crm-stages-expand" title="جزئیات" data-expand="${escapeHtml(stage.id)}"><i class="fas fa-sliders"></i></button>
+                        <button type="button" class="crm-stages-expand${expanded ? ' is-active' : ''}" title="جزئیات" data-expand="${escapeHtml(stage.id)}"><i class="fas fa-sliders"></i></button>
                         ${locked ? '' : `
                             <button type="button" class="crm-stages-up" title="بالا" ${idx === 0 ? 'disabled' : ''}><i class="fas fa-chevron-up"></i></button>
                             <button type="button" class="crm-stages-down" title="پایین" ${idx === total - 1 ? 'disabled' : ''}><i class="fas fa-chevron-down"></i></button>

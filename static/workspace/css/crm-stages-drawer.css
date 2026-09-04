@@ -1,0 +1,484 @@
+/* ═══════════════════════════════════════════════════════════
+   CRM — طراحی قیف فروش (deal stages drawer)
+   Scoped: .crm-stages-drawer-panel
+   ═══════════════════════════════════════════════════════════ */
+
+.crm-stages-drawer-panel {
+    max-width: 34rem;
+    font-family: 'Vazirmatn', system-ui, sans-serif;
+}
+
+/* ── Header ── */
+.crm-stages-drawer-panel .crm-drawer-head.crm-stages-drawer-head {
+    padding: 1.1rem 1.25rem;
+    border-bottom: 1px solid color-mix(in srgb, var(--ws-border) 70%, transparent);
+    background: var(--ws-surface);
+}
+
+.crm-stages-drawer-head__brand {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    min-width: 0;
+}
+
+.crm-stages-drawer-head__icon {
+    flex-shrink: 0;
+    width: 2.5rem;
+    height: 2.5rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    background: linear-gradient(145deg, color-mix(in srgb, #2563eb 12%, transparent), color-mix(in srgb, #7c3aed 10%, transparent));
+    color: #2563eb;
+    font-size: 0.92rem;
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, #2563eb 16%, transparent);
+}
+
+.crm-stages-drawer-head h2 {
+    margin: 0;
+    font-family: inherit;
+    font-size: 1rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--ws-text);
+    line-height: 1.25;
+}
+
+.crm-stages-drawer-head p {
+    margin: 0.22rem 0 0;
+    font-family: inherit;
+    font-size: 0.74rem;
+    font-weight: 450;
+    color: var(--ws-text-muted);
+    line-height: 1.5;
+}
+
+.crm-stages-drawer-panel .crm-drawer-close {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    border: 1px solid color-mix(in srgb, var(--ws-border) 75%, transparent);
+    background: var(--ws-surface);
+}
+
+/* ── Body ── */
+.crm-stages-drawer-panel .crm-drawer-body.crm-stages-editor {
+    padding: 1rem 1.25rem 1.25rem;
+    background: color-mix(in srgb, var(--ws-surface-2) 22%, var(--ws-surface));
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.crm-stages-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+}
+
+.crm-stages-section-head h3 {
+    margin: 0;
+    font-family: inherit;
+    font-size: 0.82rem;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    color: var(--ws-text);
+}
+
+.crm-stages-section-head p {
+    margin: 0.15rem 0 0;
+    font-family: inherit;
+    font-size: 0.68rem;
+    font-weight: 500;
+    color: var(--ws-text-muted);
+    line-height: 1.45;
+}
+
+.crm-stages-section-head--inline {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.crm-stages-section-head--inline p {
+    margin: 0;
+}
+
+/* Presets */
+.crm-stages-drawer-panel .crm-stages-presets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+
+.crm-stages-drawer-panel .crm-stages-preset {
+    flex: 1 1 calc(50% - 0.25rem);
+    min-width: 9rem;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.12rem;
+    padding: 0.62rem 0.75rem;
+    border-radius: 11px;
+    border: 1px solid color-mix(in srgb, var(--ws-border) 72%, transparent);
+    background: var(--ws-surface);
+    cursor: pointer;
+    text-align: right;
+    font-family: inherit;
+    transition: border-color 0.15s, box-shadow 0.15s, transform 0.12s;
+}
+
+.crm-stages-drawer-panel .crm-stages-preset:hover {
+    border-color: color-mix(in srgb, var(--ws-primary) 35%, var(--ws-border));
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+}
+
+.crm-stages-drawer-panel .crm-stages-preset:active {
+    transform: scale(0.98);
+}
+
+.crm-stages-drawer-panel .crm-stages-preset strong {
+    font-family: inherit;
+    font-size: 0.8rem;
+    font-weight: 800;
+    color: var(--ws-text);
+    letter-spacing: -0.01em;
+}
+
+.crm-stages-drawer-panel .crm-stages-preset span {
+    font-family: inherit;
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: var(--ws-text-muted);
+}
+
+/* Preview bar */
+.crm-stages-preview-wrap {
+    padding: 0.55rem 0.65rem;
+    border-radius: 11px;
+    border: 1px solid color-mix(in srgb, var(--ws-border) 65%, transparent);
+    background: var(--ws-surface);
+}
+
+.crm-stages-drawer-panel .crm-stages-preview {
+    display: flex;
+    height: 10px;
+    border-radius: 999px;
+    overflow: hidden;
+    background: color-mix(in srgb, var(--ws-border) 50%, transparent);
+    gap: 2px;
+}
+
+.crm-stages-drawer-panel .crm-stages-preview-seg {
+    flex: 1;
+    min-width: 6px;
+    border-radius: 999px;
+    transition: flex 0.2s;
+}
+
+/* Stage cards */
+.crm-stages-drawer-panel .crm-stages-list {
+    gap: 0.45rem;
+}
+
+.crm-stages-drawer-panel .crm-stages-card {
+    border-radius: 12px;
+    border: 1px solid color-mix(in srgb, var(--ws-border) 72%, transparent);
+    background: var(--ws-surface);
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+}
+
+.crm-stages-drawer-panel .crm-stages-card.is-expanded {
+    border-color: color-mix(in srgb, var(--ws-primary) 22%, var(--ws-border));
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+}
+
+.crm-stages-drawer-panel .crm-stages-card.is-locked {
+    background: color-mix(in srgb, var(--ws-surface-2) 35%, var(--ws-surface));
+}
+
+.crm-stages-drawer-panel .crm-stages-card-main {
+    padding: 0.6rem 0.65rem;
+    gap: 0.5rem;
+}
+
+.crm-stages-drawer-panel .crm-stages-grip {
+    width: 1.1rem;
+    display: inline-flex;
+    justify-content: center;
+    font-size: 0.68rem;
+    opacity: 0.35;
+}
+
+.crm-stages-drawer-panel .crm-stages-grip.is-off {
+    opacity: 0.55;
+    color: var(--ws-text-muted);
+}
+
+.crm-stages-drawer-panel .crm-stages-dot {
+    width: 0.5rem;
+    height: 0.5rem;
+}
+
+.crm-stages-drawer-panel .crm-stages-mark {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 10px;
+    font-size: 0.74rem;
+}
+
+.crm-stages-drawer-panel .crm-stages-input {
+    font-family: inherit;
+    font-size: 0.84rem;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+}
+
+.crm-stages-drawer-panel .crm-stages-card-copy p {
+    margin: 0.2rem 0 0;
+    font-family: inherit;
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: var(--ws-text-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.crm-stages-drawer-panel .crm-stages-item-actions {
+    gap: 0.2rem;
+}
+
+.crm-stages-drawer-panel .crm-stages-item-actions button {
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 9px;
+    border: 1px solid color-mix(in srgb, var(--ws-border) 75%, transparent);
+    background: var(--ws-surface);
+    color: var(--ws-text-muted);
+    font-size: 0.62rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+
+.crm-stages-drawer-panel .crm-stages-item-actions button:hover:not(:disabled) {
+    background: var(--ws-surface-2);
+    color: var(--ws-text-secondary);
+}
+
+.crm-stages-drawer-panel .crm-stages-expand.is-active,
+.crm-stages-drawer-panel .crm-stages-card.is-expanded .crm-stages-expand {
+    background: color-mix(in srgb, var(--ws-primary) 10%, var(--ws-surface));
+    border-color: color-mix(in srgb, var(--ws-primary) 25%, var(--ws-border));
+    color: var(--ws-primary);
+}
+
+.crm-stages-drawer-panel .crm-stages-remove:hover:not(:disabled) {
+    color: #dc2626;
+    border-color: #fecaca;
+    background: #fef2f2;
+}
+
+/* Expanded fields */
+.crm-stages-drawer-panel .crm-stages-card-extra {
+    padding: 0.65rem 0.75rem 0.75rem;
+    gap: 0.65rem;
+    border-top-color: color-mix(in srgb, var(--ws-border) 55%, transparent);
+    background: color-mix(in srgb, var(--ws-surface-2) 25%, var(--ws-surface));
+}
+
+.crm-stages-drawer-panel .crm-stages-field > span {
+    font-family: inherit;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--ws-text-secondary);
+}
+
+.crm-stages-drawer-panel .crm-stages-desc,
+.crm-stages-drawer-panel .crm-stages-rot {
+    font-family: inherit;
+    font-size: 0.78rem;
+    font-weight: 500;
+    border-radius: 9px;
+    border: 1px solid color-mix(in srgb, var(--ws-border) 75%, transparent);
+    background: var(--ws-surface);
+    padding: 0.45rem 0.6rem;
+    color: var(--ws-text);
+}
+
+.crm-stages-drawer-panel .crm-stages-desc:focus,
+.crm-stages-drawer-panel .crm-stages-rot:focus {
+    outline: none;
+    border-color: color-mix(in srgb, var(--ws-primary) 40%, var(--ws-border));
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--ws-primary) 10%, transparent);
+}
+
+.crm-stages-drawer-panel .crm-stages-prob {
+    width: 100%;
+    height: 6px;
+    margin: 0.35rem 0 0.15rem;
+    accent-color: var(--ws-primary);
+    cursor: pointer;
+}
+
+.crm-stages-drawer-panel .crm-stages-swatches,
+.crm-stages-drawer-panel .crm-stages-icons {
+    gap: 0.35rem;
+}
+
+.crm-stages-drawer-panel .crm-stages-swatch {
+    width: 1.5rem;
+    height: 1.5rem;
+    border: 2px solid color-mix(in srgb, var(--ws-border) 60%, transparent);
+    transition: transform 0.12s, border-color 0.12s;
+}
+
+.crm-stages-drawer-panel .crm-stages-swatch:hover {
+    transform: scale(1.08);
+}
+
+.crm-stages-drawer-panel .crm-stages-swatch.is-active {
+    border-color: var(--ws-text);
+    box-shadow: 0 0 0 2px var(--ws-surface), 0 0 0 3px var(--ws-text);
+}
+
+.crm-stages-drawer-panel .crm-stages-icon {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 9px;
+    font-size: 0.72rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Toolbar */
+.crm-stages-drawer-panel .crm-stages-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+
+.crm-stages-tool-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    min-height: 2.35rem;
+    padding: 0.4rem 0.85rem;
+    border-radius: 10px;
+    border: 1px solid color-mix(in srgb, var(--ws-primary) 25%, var(--ws-border));
+    background: color-mix(in srgb, var(--ws-primary) 8%, var(--ws-surface));
+    color: var(--ws-primary);
+    font-family: inherit;
+    font-size: 0.76rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.12s, border-color 0.12s;
+}
+
+.crm-stages-tool-btn:hover {
+    background: color-mix(in srgb, var(--ws-primary) 14%, var(--ws-surface));
+}
+
+.crm-stages-tool-btn--ghost {
+    border-color: color-mix(in srgb, var(--ws-border) 75%, transparent);
+    background: var(--ws-surface);
+    color: var(--ws-text-secondary);
+}
+
+.crm-stages-tool-btn--ghost:hover {
+    background: var(--ws-surface-2);
+    color: var(--ws-text);
+}
+
+/* Hint */
+.crm-stages-drawer-panel .crm-stages-hint {
+    margin: 0;
+    padding: 0.65rem 0.75rem;
+    border-radius: 11px;
+    border: 1px solid color-mix(in srgb, var(--ws-border) 60%, transparent);
+    background: color-mix(in srgb, var(--ws-surface-2) 40%, var(--ws-surface));
+    font-family: inherit;
+    font-size: 0.72rem;
+    font-weight: 500;
+    line-height: 1.55;
+    color: var(--ws-text-muted);
+    display: flex;
+    align-items: flex-start;
+    gap: 0.45rem;
+}
+
+.crm-stages-hint__icon {
+    flex-shrink: 0;
+    width: 1.35rem;
+    height: 1.35rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--ws-text-muted) 12%, transparent);
+    color: var(--ws-text-muted);
+    font-size: 0.62rem;
+}
+
+/* Footer */
+.crm-stages-drawer-panel .crm-stages-drawer-foot {
+    padding: 0.85rem 1.25rem calc(0.85rem + env(safe-area-inset-bottom, 0px));
+    border-top: 1px solid color-mix(in srgb, var(--ws-border) 70%, transparent);
+    background: var(--ws-surface);
+    gap: 0.45rem;
+}
+
+.crm-stages-drawer-panel .crm-stages-drawer-foot .crm-btn-primary {
+    min-height: 2.65rem;
+    padding-inline: 1.1rem;
+    font-family: inherit;
+    font-weight: 700;
+    gap: 0.35rem;
+    box-shadow: 0 2px 8px color-mix(in srgb, var(--ws-primary) 28%, transparent);
+}
+
+.crm-stages-drawer-panel .crm-stages-drawer-foot .crm-btn-ghost {
+    min-height: 2.65rem;
+    font-family: inherit;
+    font-weight: 600;
+}
+
+/* Hide presets section when empty */
+.crm-stages-section--presets:not(:has(.crm-stages-preset)) {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .crm-stages-drawer-panel {
+        max-width: 100%;
+    }
+
+    .crm-stages-drawer-panel .crm-drawer-body.crm-stages-editor {
+        padding: 0.85rem 1rem 1rem;
+    }
+
+    .crm-stages-drawer-panel .crm-stages-preset {
+        flex: 1 1 100%;
+    }
+
+    .crm-stages-drawer-panel .crm-stages-drawer-foot {
+        position: sticky;
+        bottom: 0;
+        z-index: 2;
+        box-shadow: 0 -4px 16px rgba(15, 23, 42, 0.06);
+    }
+}
+
+[data-theme="dark"] .crm-stages-drawer-panel .crm-stages-preset,
+[data-theme="dark"] .crm-stages-drawer-panel .crm-stages-preview-wrap,
+[data-theme="dark"] .crm-stages-drawer-panel .crm-stages-card,
+[data-theme="dark"] .crm-stages-drawer-panel .crm-stages-desc,
+[data-theme="dark"] .crm-stages-drawer-panel .crm-stages-rot,
+[data-theme="dark"] .crm-stages-drawer-panel .crm-stages-hint {
+    background: var(--ws-surface);
+}

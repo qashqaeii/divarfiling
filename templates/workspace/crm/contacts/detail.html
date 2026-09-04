@@ -1138,17 +1138,29 @@
 
 <aside class="crm-drawer" id="drawer-deal">
     <div class="crm-drawer-overlay" data-drawer-close></div>
-    <div class="crm-drawer-panel crm-drawer-panel-lg">
-        <div class="crm-drawer-head"><h2>معامله جدید</h2><button type="button" class="crm-drawer-close" data-drawer-close><i class="fas fa-times"></i></button></div>
-        <form method="post" class="crm-drawer-form">
+    <div class="crm-drawer-panel crm-drawer-panel-lg crm-deal-create-drawer-panel">
+        <div class="crm-drawer-head crm-deal-create-drawer-head">
+            <div class="crm-deal-create-drawer-head__brand">
+                <span class="crm-deal-create-drawer-head__icon" aria-hidden="true"><i class="fas fa-handshake"></i></span>
+                <div>
+                    <h2>معامله جدید</h2>
+                    <p>ثبت فرصت فروش یا اجاره در قیف فروش</p>
+                </div>
+            </div>
+            <button type="button" class="crm-drawer-close" data-drawer-close aria-label="بستن"><i class="fas fa-times" aria-hidden="true"></i></button>
+        </div>
+        <form method="post" class="crm-drawer-form crm-deal-create-drawer">
             <div class="crm-drawer-body">
             {% csrf_token %}
             <input type="hidden" name="action" value="add_deal">
             {% include 'workspace/crm/includes/deal_create_form.html' with form=deal_create_form|default:deal_form %}
             </div>
-            <div class="crm-drawer-foot">
+            <div class="crm-drawer-foot crm-deal-create-foot">
                 <button type="button" class="crm-btn crm-btn-ghost" data-drawer-close>انصراف</button>
-                <button type="submit" class="crm-btn crm-btn-primary">ثبت معامله</button>
+                <button type="submit" class="crm-btn crm-btn-primary">
+                    <i class="fas fa-check" aria-hidden="true"></i>
+                    ثبت معامله
+                </button>
             </div>
         </form>
     </div>

@@ -10,6 +10,8 @@
 
 {% block ws_surface_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/crm-deals-mobile.css' %}?v=9">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-deals-list-ui.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-stages-drawer.css' %}?v=1">
 {% endblock %}
 
 {% block crm_content %}
@@ -404,10 +406,16 @@
 {% block crm_drawers %}
 <aside class="crm-drawer" id="drawer-deal">
     <div class="crm-drawer-overlay" data-drawer-close></div>
-    <div class="crm-drawer-panel crm-drawer-panel-lg">
-        <div class="crm-drawer-head crm-drawer-head-accent">
-            <div><h2>معامله جدید</h2><p>ثبت فرصت فروش یا اجاره</p></div>
-            <button type="button" class="crm-drawer-close" data-drawer-close><i class="fas fa-times"></i></button>
+    <div class="crm-drawer-panel crm-drawer-panel-lg crm-deal-create-drawer-panel">
+        <div class="crm-drawer-head crm-deal-create-drawer-head">
+            <div class="crm-deal-create-drawer-head__brand">
+                <span class="crm-deal-create-drawer-head__icon" aria-hidden="true"><i class="fas fa-handshake"></i></span>
+                <div>
+                    <h2>معامله جدید</h2>
+                    <p>ثبت فرصت فروش یا اجاره در قیف فروش</p>
+                </div>
+            </div>
+            <button type="button" class="crm-drawer-close" data-drawer-close aria-label="بستن"><i class="fas fa-times" aria-hidden="true"></i></button>
         </div>
         <form method="post" action="{% url 'workspace:crm_deal_create' %}" class="crm-drawer-form crm-deal-create-drawer">
             <div class="crm-drawer-body">
@@ -417,7 +425,10 @@
             </div>
             <div class="crm-drawer-foot crm-deal-create-foot">
                 <button type="button" class="crm-btn crm-btn-ghost" data-drawer-close>انصراف</button>
-                <button type="submit" class="crm-btn crm-btn-primary">ثبت معامله</button>
+                <button type="submit" class="crm-btn crm-btn-primary">
+                    <i class="fas fa-check" aria-hidden="true"></i>
+                    ثبت معامله
+                </button>
             </div>
         </form>
     </div>
@@ -425,13 +436,16 @@
 
 <aside class="crm-drawer" id="drawer-deal-stages">
     <div class="crm-drawer-overlay" data-drawer-close></div>
-    <div class="crm-drawer-panel crm-drawer-panel-lg crm-stages-drawer">
-        <div class="crm-drawer-head">
-            <div>
-                <h2>طراحی قیف فروش</h2>
-                <p>مراحل، رنگ، احتمال بستن و مهلت کهنگی را برای دفتر خود تنظیم کنید.</p>
+    <div class="crm-drawer-panel crm-drawer-panel-lg crm-stages-drawer-panel">
+        <div class="crm-drawer-head crm-stages-drawer-head">
+            <div class="crm-stages-drawer-head__brand">
+                <span class="crm-stages-drawer-head__icon" aria-hidden="true"><i class="fas fa-sliders"></i></span>
+                <div>
+                    <h2>طراحی قیف فروش</h2>
+                    <p>مراحل، رنگ، احتمال بستن و مهلت کهنگی را برای دفتر خود تنظیم کنید.</p>
+                </div>
             </div>
-            <button type="button" class="crm-drawer-close" data-drawer-close><i class="fas fa-times" aria-hidden="true"></i></button>
+            <button type="button" class="crm-drawer-close" data-drawer-close aria-label="بستن"><i class="fas fa-times" aria-hidden="true"></i></button>
         </div>
         <div class="crm-drawer-body crm-stages-editor" id="crmDealStagesEditor"
              data-stages-url="{% url 'workspace:crm_deal_stages' %}"
@@ -442,26 +456,51 @@
             {{ deal_stages_payload.counts|json_script:"crmDealStageCounts" }}
             {{ deal_stages_payload.icons|json_script:"crmDealStageIcons" }}
             {{ deal_stages_payload.colors|json_script:"crmDealStageColors" }}
-            <div class="crm-stages-presets" id="crmStagesPresets" role="list"></div>
-            <div class="crm-stages-preview" id="crmStagesPreview" aria-hidden="true"></div>
-            <ul class="crm-stages-list" id="crmStagesList" aria-label="مراحل معامله"></ul>
+
+            <section class="crm-stages-section crm-stages-section--presets" aria-label="قالب‌های آماده">
+                <header class="crm-stages-section-head">
+                    <h3>قالب آماده</h3>
+                    <p>شروع سریع با یکی از قالب‌های پیش‌ساخته</p>
+                </header>
+                <div class="crm-stages-presets" id="crmStagesPresets" role="list"></div>
+            </section>
+
+            <section class="crm-stages-section crm-stages-section--preview" aria-label="پیش‌نمایش قیف">
+                <header class="crm-stages-section-head crm-stages-section-head--inline">
+                    <h3>پیش‌نمایش قیف</h3>
+                </header>
+                <div class="crm-stages-preview-wrap">
+                    <div class="crm-stages-preview" id="crmStagesPreview" aria-hidden="true"></div>
+                </div>
+            </section>
+
+            <section class="crm-stages-section crm-stages-section--list" aria-label="مراحل معامله">
+                <header class="crm-stages-section-head crm-stages-section-head--inline">
+                    <h3>مراحل</h3>
+                    <p>با کشیدن یا دکمه‌های بالا/پایین مرتب کنید</p>
+                </header>
+                <ul class="crm-stages-list" id="crmStagesList" aria-label="مراحل معامله"></ul>
+            </section>
+
             <div class="crm-stages-toolbar">
-                <button type="button" class="crm-dash-act crm-stages-add" id="crmStagesAdd">
+                <button type="button" class="crm-stages-tool-btn crm-stages-add" id="crmStagesAdd">
                     <i class="fas fa-plus" aria-hidden="true"></i><span>مرحله جدید</span>
                 </button>
-                <button type="button" class="crm-dash-act crm-stages-reset" id="crmStagesReset">
+                <button type="button" class="crm-stages-tool-btn crm-stages-tool-btn--ghost crm-stages-reset" id="crmStagesReset">
                     <i class="fas fa-rotate-left" aria-hidden="true"></i><span>بازگشت به پیش‌فرض</span>
                 </button>
             </div>
+
             <p class="crm-stages-hint">
-                <i class="fas fa-lock" aria-hidden="true"></i>
-                «بسته‌شده» و «از دست رفته» ثابت می‌مانند. با جابه‌جایی مرحله، احتمال بستن معامله به‌صورت خودکار به‌روز می‌شود.
+                <span class="crm-stages-hint__icon" aria-hidden="true"><i class="fas fa-lock"></i></span>
+                <span>«بسته‌شده» و «از دست رفته» ثابت می‌مانند. با جابه‌جایی مرحله، احتمال بستن معامله به‌صورت خودکار به‌روز می‌شود.</span>
             </p>
         </div>
-        <div class="crm-drawer-foot">
+        <div class="crm-drawer-foot crm-stages-drawer-foot">
             <button type="button" class="crm-btn crm-btn-ghost" data-drawer-close>انصراف</button>
             <button type="button" class="crm-btn crm-btn-primary" id="crmStagesSave">
-                <i class="fas fa-check" aria-hidden="true"></i> ذخیره قیف
+                <i class="fas fa-check" aria-hidden="true"></i>
+                ذخیره قیف
             </button>
         </div>
     </div>

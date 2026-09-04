@@ -63,7 +63,7 @@ def ct_format_number(value) -> str:
     return f'{amount:,}'
 
 
-@register.simple_tag
+@register.filter
 def ct_party_roles(contract_type: str):
     return PARTY_ROLES_BY_TYPE.get(contract_type, ())
 

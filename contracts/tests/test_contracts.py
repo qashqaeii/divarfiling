@@ -43,6 +43,25 @@ class ContractModelTests(TestCase):
         self.assertTrue(c.wizard_data.get('parties'))
         self.assertTrue(c.current_version_id)
 
+    def test_create_contract_with_legal_entity_customer(self):
+        legal_customer = Customer.objects.create(
+            user=self.user,
+            name='شرکت نمونه',
+            phone='09129999999',
+            is_legal_entity=True,
+            company_name='شرکت نمونه',
+            national_id='10123456789',
+        )
+        deal = CRMDeal.objects.create(
+            user=self.user, customer=legal_customer, property=self.prop,
+            title='معامله حقوقی', deal_kind='rent',
+        )
+        c = create_contract(self.user, deal.pk, CONTRACT_TYPE_LEASE)
+        party = c.current_version.parties.filter(role='tenant').first()
+        self.assertIsNotNone(party)
+        self.assertEqual(party.company_national_id, '10123456789')
+        self.assertEqual(party.national_id, '')
+
     def test_permission_scope(self):
         c = create_contract(self.user, self.deal.pk, CONTRACT_TYPE_LEASE)
         self.assertIsNotNone(contract_for_user(self.user, c.pk))

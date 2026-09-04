@@ -13,21 +13,26 @@ from contracts.constants import (
     PARTY_ROLE_SELLER,
     PARTY_ROLE_TENANT,
 )
+from contracts.constants import PERSON_TYPE_LEGAL, PERSON_TYPE_NATURAL
+from contracts.services.party_sanitize import sanitize_party_payload
 from workspace.models import CRMDeal, Customer
 
 
 def _customer_to_party_data(customer: Customer, role: str) -> Dict[str, Any]:
-    return {
+    person_type = PERSON_TYPE_LEGAL if customer.is_legal_entity else PERSON_TYPE_NATURAL
+    payload = {
         'role': role,
         'customer_id': customer.pk,
-        'person_type': 'legal' if customer.is_legal_entity else 'natural',
+        'person_type': person_type,
         'first_name': customer.name.split()[0] if customer.name else '',
         'last_name': ' '.join(customer.name.split()[1:]) if customer.name else '',
-        'national_id': customer.national_id or '',
+        'national_id': '' if person_type == PERSON_TYPE_LEGAL else (customer.national_id or ''),
+        'company_national_id': (customer.national_id or '') if person_type == PERSON_TYPE_LEGAL else '',
         'mobile': customer.phone or '',
         'address': '',
         'company_name': customer.company_name or '',
     }
+    return sanitize_party_payload(payload)
 
 
 def prefill_parties_from_deal(deal: CRMDeal, contract_type: str) -> List[Dict[str, Any]]:

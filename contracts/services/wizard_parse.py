@@ -7,6 +7,7 @@ from django.http import QueryDict
 
 from contracts.constants import COMMON_AREAS, COST_RESPONSIBILITY_OPTIONS
 from contracts.services.money import parse_toman_amount
+from contracts.services.party_sanitize import sanitize_party_payload, sanitize_witness_payload
 
 
 def _get(post: QueryDict, key: str, default: str = '') -> str:
@@ -31,7 +32,7 @@ def parse_parties(post: QueryDict) -> List[Dict[str, Any]]:
         prefix = f'party_{idx}_'
         if not _get(post, f'{prefix}role'):
             continue
-        parties.append({
+        parties.append(sanitize_party_payload({
             'role': _get(post, f'{prefix}role'),
             'person_type': _get(post, f'{prefix}person_type', 'natural'),
             'first_name': _get(post, f'{prefix}first_name'),
@@ -47,7 +48,7 @@ def parse_parties(post: QueryDict) -> List[Dict[str, Any]]:
             'representative_name': _get(post, f'{prefix}representative_name'),
             'representative_national_id': _get(post, f'{prefix}representative_national_id'),
             'representative_mobile': _get(post, f'{prefix}representative_mobile'),
-        })
+        }))
     return parties
 
 
@@ -251,14 +252,14 @@ def parse_witnesses(post: QueryDict) -> List[Dict[str, Any]]:
     witnesses = []
     for n in (1, 2):
         if _get(post, f'witness_{n}_first_name') or _get(post, f'witness_{n}_mobile'):
-            witnesses.append({
+            witnesses.append(sanitize_witness_payload({
                 'witness_number': n,
                 'witness_role': _get(post, f'witness_{n}_role', f'شاهد {n}'),
                 'first_name': _get(post, f'witness_{n}_first_name'),
                 'last_name': _get(post, f'witness_{n}_last_name'),
                 'national_id': _get(post, f'witness_{n}_national_id'),
                 'mobile': _get(post, f'witness_{n}_mobile'),
-            })
+            }))
     return witnesses
 
 

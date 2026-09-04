@@ -36,6 +36,7 @@ from contracts.services.deal_sync import sync_deal_legacy_fields
 from contracts.services.hashing import build_version_snapshot, compute_content_hash
 from contracts.services.immutability import VersionImmutableError, assert_version_mutable
 from contracts.services.numbering import generate_internal_number
+from contracts.services.party_sanitize import sanitize_party_payload, sanitize_witness_payload
 from contracts.services.prefill import (
     prefill_financial_from_deal,
     prefill_parties_from_deal,
@@ -185,6 +186,7 @@ def _sync_version_from_wizard(contract: Contract, version: ContractVersion) -> N
     wizard = contract.wizard_data or {}
     version.parties.all().delete()
     for idx, p in enumerate(wizard.get('parties') or []):
+        p = sanitize_party_payload(p)
         ContractParty.objects.create(
             contract=contract,
             version=version,
@@ -220,6 +222,7 @@ def _sync_version_from_wizard(contract: Contract, version: ContractVersion) -> N
 
     version.witnesses.all().delete()
     for w in wizard.get('witnesses') or []:
+        w = sanitize_witness_payload(w)
         ContractWitness.objects.create(
             contract=contract,
             version=version,

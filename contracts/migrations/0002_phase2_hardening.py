@@ -37,6 +37,30 @@ def forwards_hash_tokens(apps, schema_editor):
             acc.save(update_fields=['accepted_content_hash'])
 
 
+def drop_orphan_token_hash_indexes(apps, schema_editor):
+    """Drop leftover indexes from a failed partial run before adding unique constraints."""
+    if schema_editor.connection.vendor != 'postgresql':
+        return
+    targets = (
+        ('contracts_contract', 'verification_token_hash'),
+        ('contracts_contractinvitation', 'token_hash'),
+        ('contracts_contractaccesstoken', 'token_hash'),
+    )
+    with schema_editor.connection.cursor() as cursor:
+        for table, column in targets:
+            cursor.execute(
+                """
+                SELECT indexname
+                FROM pg_indexes
+                WHERE tablename = %s
+                  AND indexdef LIKE %s
+                """,
+                [table, f'%{column}%'],
+            )
+            for (index_name,) in cursor.fetchall():
+                cursor.execute(f'DROP INDEX IF EXISTS "{index_name}"')
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -53,7 +77,7 @@ class Migration(migrations.Migration):
             model_name='contract',
             name='verification_token_hash',
             field=models.CharField(
-                blank=True, max_length=64, null=True, db_index=True,
+                blank=True, max_length=64, null=True,
                 verbose_name='هش توکن تأیید عمومی',
             ),
         ),
@@ -61,7 +85,7 @@ class Migration(migrations.Migration):
             model_name='contractinvitation',
             name='token_hash',
             field=models.CharField(
-                blank=True, max_length=64, null=True, db_index=True, verbose_name='هش توکن',
+                blank=True, max_length=64, null=True, verbose_name='هش توکن',
             ),
         ),
         migrations.AddField(
@@ -78,7 +102,7 @@ class Migration(migrations.Migration):
             model_name='contractaccesstoken',
             name='token_hash',
             field=models.CharField(
-                blank=True, max_length=64, null=True, db_index=True, verbose_name='هش توکن',
+                blank=True, max_length=64, null=True, verbose_name='هش توکن',
             ),
         ),
         migrations.AddField(
@@ -94,6 +118,7 @@ class Migration(migrations.Migration):
         migrations.RemoveField(model_name='contract', name='verification_token'),
         migrations.RemoveField(model_name='contractinvitation', name='token'),
         migrations.RemoveField(model_name='contractaccesstoken', name='token'),
+        migrations.RunPython(drop_orphan_token_hash_indexes, migrations.RunPython.noop),
         migrations.AlterField(
             model_name='contract',
             name='verification_token_hash',

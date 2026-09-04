@@ -66,40 +66,6 @@
             <span class="crm-prop-form-block-hint">فروش → خریدار · اجاره → مستأجر</span>
         </header>
 
-        <button type="button" class="crm-pdc-contact__add" data-prop-deal-quick-open>
-            <i class="fas fa-plus" aria-hidden="true"></i>
-            <span>افزودن مخاطب جدید</span>
-        </button>
-
-        <div class="crm-pdc-quick" data-prop-deal-quick hidden>
-            <div class="crm-pdc-quick__head">
-                <h4>مخاطب جدید</h4>
-                <button type="button" class="crm-pdc-quick__close" data-prop-deal-quick-close aria-label="بستن">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="crm-fields crm-fields-2">
-                <div class="crm-field">
-                    <label class="crm-label" for="propDealQuickName">نام <span class="crm-req">*</span></label>
-                    <input type="text" id="propDealQuickName" class="crm-input" data-prop-deal-quick-name autocomplete="name">
-                </div>
-                <div class="crm-field">
-                    <label class="crm-label" for="propDealQuickPhone">موبایل</label>
-                    <input type="tel" id="propDealQuickPhone" class="crm-input" data-prop-deal-quick-phone dir="ltr" inputmode="tel" autocomplete="tel">
-                </div>
-                <div class="crm-field crm-field-full">
-                    <label class="crm-label" for="propDealQuickType">نوع مخاطب</label>
-                    <select id="propDealQuickType" class="crm-select" data-prop-deal-quick-type>
-                        <option value="خریدار">خریدار</option>
-                        <option value="مستاجر">مستأجر</option>
-                        <option value="سرنخ">سرنخ</option>
-                    </select>
-                </div>
-            </div>
-            <button type="button" class="crm-btn crm-btn-primary crm-btn-block" data-prop-deal-quick-save>ذخیره و انتخاب</button>
-            <p class="crm-pdc-quick__err" data-prop-deal-quick-err hidden></p>
-        </div>
-
         <div class="crm-pdc-contact" data-prop-deal-customer-picker>
             <div class="crm-pdc-contact__selected" data-prop-deal-selected hidden>
                 <div class="crm-pdc-contact__avatar" aria-hidden="true"><i class="fas fa-user-check"></i></div>
@@ -110,11 +76,9 @@
                 <button type="button" class="crm-pdc-contact__change" data-prop-deal-clear>تغییر</button>
             </div>
 
-            <p class="crm-pdc-contact__divider">یا انتخاب از مخاطبین</p>
-
-            <div class="crm-pdc-contact__search-wrap" data-prop-deal-search-wrap>
+            <div class="crm-pdc-contact__pick" data-prop-deal-search-wrap>
                 <label class="crm-field crm-field-full">
-                    <span class="crm-label">جستجوی مخاطب</span>
+                    <span class="crm-label">انتخاب از مخاطبین</span>
                     <div class="crm-pdc-search">
                         <i class="fas fa-search" aria-hidden="true"></i>
                         <input type="search"
@@ -125,7 +89,43 @@
                                inputmode="search">
                     </div>
                 </label>
-                <div class="crm-pdc-contact__results" data-prop-deal-results hidden></div>
+                <div class="crm-pdc-contact__results" data-prop-deal-results hidden aria-label="نتایج مخاطبین"></div>
+            </div>
+
+            <p class="crm-pdc-contact__divider">یا</p>
+
+            <button type="button" class="crm-pdc-contact__add" data-prop-deal-quick-open>
+                <i class="fas fa-plus" aria-hidden="true"></i>
+                <span>افزودن مخاطب جدید</span>
+            </button>
+
+            <div class="crm-pdc-quick" data-prop-deal-quick hidden>
+                <div class="crm-pdc-quick__head">
+                    <h4>مخاطب جدید</h4>
+                    <button type="button" class="crm-pdc-quick__close" data-prop-deal-quick-close aria-label="بستن">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="crm-fields crm-fields-2">
+                    <div class="crm-field">
+                        <label class="crm-label" for="propDealQuickName">نام <span class="crm-req">*</span></label>
+                        <input type="text" id="propDealQuickName" class="crm-input" data-prop-deal-quick-name autocomplete="name">
+                    </div>
+                    <div class="crm-field">
+                        <label class="crm-label" for="propDealQuickPhone">موبایل</label>
+                        <input type="tel" id="propDealQuickPhone" class="crm-input" data-prop-deal-quick-phone dir="ltr" inputmode="tel" autocomplete="tel">
+                    </div>
+                    <div class="crm-field crm-field-full">
+                        <label class="crm-label" for="propDealQuickType">نوع مخاطب</label>
+                        <select id="propDealQuickType" class="crm-select" data-prop-deal-quick-type>
+                            <option value="خریدار">خریدار</option>
+                            <option value="مستاجر">مستأجر</option>
+                            <option value="سرنخ">سرنخ</option>
+                        </select>
+                    </div>
+                </div>
+                <button type="button" class="crm-btn crm-btn-primary crm-btn-block crm-pdc-quick__save" data-prop-deal-quick-save>ذخیره و انتخاب</button>
+                <p class="crm-pdc-quick__err" data-prop-deal-quick-err hidden></p>
             </div>
         </div>
         {{ form.customer }}

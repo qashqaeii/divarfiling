@@ -110,7 +110,7 @@
         function renderResults(items) {
             if (!resultsEl) return;
             if (!items || !items.length) {
-                resultsEl.innerHTML = '<div class="crm-prop-deal-customer-result" style="cursor:default;color:#94a3b8;padding:0.75rem">نتیجه‌ای یافت نشد</div>';
+                resultsEl.innerHTML = '<div class="crm-pdc-contact__empty">مخاطبی یافت نشد — نام یا موبایل را جستجو کنید</div>';
                 resultsEl.hidden = false;
                 return;
             }
@@ -126,19 +126,28 @@
             resultsEl.hidden = false;
         }
 
+        function syncContactLayout() {
+            const picked = !!selectedCustomer;
+            const quickOn = quickPanel && !quickPanel.hidden;
+            if (selectedEl) selectedEl.hidden = !picked;
+            if (searchWrap) searchWrap.hidden = picked && !quickOn;
+            const divider = root.querySelector('.crm-pdc-contact__divider');
+            if (divider) divider.hidden = picked && !quickOn;
+            if (quickOpen) quickOpen.hidden = quickOn;
+            if (quickPanel) quickPanel.hidden = !quickOn;
+        }
+
         function closeQuickPanel() {
             if (quickPanel) quickPanel.hidden = true;
             if (quickErr) quickErr.hidden = true;
-            if (quickOpen) quickOpen.hidden = false;
+            syncContactLayout();
         }
 
         function openQuickPanel() {
-            if (quickPanel) {
-                quickPanel.hidden = false;
-            }
-            if (quickOpen) quickOpen.hidden = true;
+            if (quickPanel) quickPanel.hidden = false;
             syncQuickTypeFromDealKind();
             if (quickErr) quickErr.hidden = true;
+            syncContactLayout();
             doSearch('');
             window.setTimeout(() => quickName?.focus(), 80);
         }
@@ -148,12 +157,9 @@
             if (customerInput) customerInput.value = id;
             if (selectedName) selectedName.textContent = name;
             if (selectedMeta) selectedMeta.textContent = meta || '';
-            if (selectedEl) selectedEl.hidden = false;
-            if (searchWrap) searchWrap.hidden = true;
-            if (resultsEl) resultsEl.hidden = true;
             if (searchInput) searchInput.value = '';
-            if (quickOpen) quickOpen.hidden = true;
             closeQuickPanel();
+            syncContactLayout();
             checkDuplicate(id);
             updateTitlePreview();
         }
@@ -161,10 +167,9 @@
         function clearCustomer() {
             selectedCustomer = null;
             if (customerInput) customerInput.value = '';
-            if (selectedEl) selectedEl.hidden = true;
-            if (searchWrap) searchWrap.hidden = false;
             if (dupWarn) dupWarn.hidden = true;
-            if (quickOpen) quickOpen.hidden = false;
+            syncContactLayout();
+            doSearch('');
         }
 
         function checkDuplicate(customerId) {
@@ -323,7 +328,18 @@
         });
 
         syncQuickTypeFromDealKind();
+        syncContactLayout();
         doSearch('');
+
+        const drawer = document.getElementById('drawer-property-deal');
+        if (drawer) {
+            const refreshOnOpen = () => {
+                if (drawer.classList.contains('is-open')) doSearch('');
+            };
+            drawer.addEventListener('transitionend', refreshOnOpen);
+            const obs = new MutationObserver(refreshOnOpen);
+            obs.observe(drawer, { attributes: true, attributeFilter: ['class', 'data-open'] });
+        }
     }
 
     document.addEventListener('DOMContentLoaded', initPropertyDealCreate);

@@ -279,15 +279,6 @@
     min-width: 0;
 }
 
-.crm-pdc-contact__results {
-    border: 1px solid var(--crm-border, #ebe9f1);
-    border-radius: var(--crm-radius-sm, 8px);
-    background: var(--crm-surface, #fff);
-    max-height: 12rem;
-    overflow-y: auto;
-    box-shadow: var(--crm-shadow-sm, 0 4px 16px rgba(47, 43, 61, 0.08));
-}
-
 .crm-prop-deal-customer-result,
 .crm-pdc-contact__results .crm-prop-deal-customer-result {
     display: block;
@@ -336,21 +327,76 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 0.4rem;
-    align-self: flex-start;
-    border: none;
-    background: transparent;
-    color: var(--crm-accent, #7c3aed);
+    gap: 0.45rem;
+    width: 100%;
+    border: 1px dashed #c4b5fd;
+    background: #f5f3ff;
+    color: #6d28d9;
     font-family: inherit;
-    font-size: 0.78rem;
-    font-weight: 600;
+    font-size: 0.8rem;
+    font-weight: 700;
     cursor: pointer;
-    padding: 0.15rem 0;
-    margin-bottom: 0.55rem;
+    padding: 0.65rem 0.85rem;
+    margin-top: 0.15rem;
+    border-radius: var(--crm-radius-sm, 8px);
+    transition: background 0.15s, border-color 0.15s;
 }
 
 .crm-pdc-contact__add:hover {
-    color: var(--ws-primary);
+    background: #ede9fe;
+    border-color: #7c3aed;
+    color: #5b21b6;
+}
+
+.crm-pdc-contact__pick {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+}
+
+.crm-pdc-contact__results {
+    border: 1px solid var(--crm-border, #ebe9f1);
+    border-radius: var(--crm-radius-sm, 8px);
+    background: var(--crm-surface, #fff);
+    max-height: 14rem;
+    min-height: 2.5rem;
+    overflow-y: auto;
+    box-shadow: var(--crm-shadow-sm, 0 4px 16px rgba(47, 43, 61, 0.08));
+}
+
+.crm-pdc-contact__results:empty {
+    display: none;
+}
+
+.crm-pdc-contact__divider {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    margin: 0.65rem 0 0.15rem;
+    font-family: inherit;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--ws-text-muted);
+}
+
+.crm-pdc-contact__divider[hidden] {
+    display: none !important;
+}
+
+.crm-pdc-contact__divider::before,
+.crm-pdc-contact__divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--crm-border-light, #f0eef5);
+}
+
+.crm-pdc-contact__empty {
+    padding: 0.75rem 0.9rem;
+    font-family: inherit;
+    font-size: 0.76rem;
+    color: var(--ws-text-muted);
+    text-align: center;
 }
 
 .crm-pdc-dup {
@@ -388,13 +434,24 @@
     font-variant-numeric: tabular-nums;
 }
 
+/* Probability slider — LTR track for correct thumb/preset alignment in RTL pages */
+.crm-pdc-probability {
+    direction: rtl;
+}
+
+.crm-pdc-probability__track-wrap,
+.crm-pdc-probability__presets {
+    direction: ltr;
+}
+
 .crm-pdc-probability__track-wrap {
     position: relative;
-    padding: 0.35rem 0 0.5rem;
+    padding: 0.5rem 0 0.65rem;
+    margin-top: 0.15rem;
 }
 
 .crm-pdc-probability__track {
-    height: 0.45rem;
+    height: 0.5rem;
     border-radius: 999px;
     background: var(--crm-border, #ebe9f1);
     overflow: hidden;
@@ -405,13 +462,14 @@
     height: 100%;
     width: 50%;
     border-radius: 999px;
-    background: linear-gradient(90deg, var(--crm-accent, #818cf8), var(--ws-primary, #7c3aed));
+    background: linear-gradient(90deg, #818cf8, #7c3aed);
     transition: width 0.12s ease-out;
 }
 
 .crm-pdc-probability__slider {
     position: absolute;
-    inset: 0;
+    top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
     margin: 0;
@@ -425,12 +483,12 @@
     position: absolute;
     top: 50%;
     left: var(--pdc-thumb, 50%);
-    width: 1.15rem;
-    height: 1.15rem;
+    width: 1.2rem;
+    height: 1.2rem;
     border-radius: 50%;
-    background: var(--crm-surface, #fff);
-    border: 2px solid var(--crm-accent, #7c3aed);
-    box-shadow: 0 2px 8px rgba(124, 58, 237, 0.25);
+    background: #fff;
+    border: 2px solid #7c3aed;
+    box-shadow: 0 2px 8px rgba(124, 58, 237, 0.3);
     transform: translate(-50%, -50%);
     pointer-events: none;
     z-index: 1;
@@ -438,10 +496,10 @@
 }
 
 .crm-pdc-probability__presets {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.35rem;
-    margin-top: 0.35rem;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 0.25rem;
+    margin-top: 0.25rem;
 }
 
 .crm-pdc-prob-preset {
@@ -449,12 +507,13 @@
     background: var(--crm-surface, #fff);
     color: var(--ws-text-muted);
     font-family: inherit;
-    font-size: 0.72rem;
+    font-size: 0.68rem;
     font-weight: 600;
-    padding: 0.3rem 0.55rem;
-    border-radius: 999px;
+    padding: 0.28rem 0.2rem;
+    border-radius: 6px;
     cursor: pointer;
     transition: all 0.12s;
+    text-align: center;
 }
 
 .crm-pdc-prob-preset:hover {
@@ -472,37 +531,31 @@
     display: none;
 }
 
-/* Quick create — inline under طرف معامله header */
+/* Quick create */
 .crm-pdc-quick {
-    margin-bottom: 0.75rem;
+    margin-top: 0.15rem;
     padding: 0.9rem 1rem;
     border-radius: 12px;
-    border: 1px solid var(--crm-border, #ebe9f1);
-    background: var(--crm-surface-muted, #f8f7fa);
+    border: 1px solid #ddd6fe;
+    background: #faf5ff;
     font-family: inherit;
 }
 
-.crm-pdc-contact__divider {
-    display: none;
-    align-items: center;
-    gap: 0.65rem;
-    margin: 0.15rem 0 0.55rem;
-    font-family: inherit;
-    font-size: 0.72rem;
-    font-weight: 600;
-    color: var(--ws-text-muted);
+.crm-pdc-quick__save,
+.crm-pdc-quick .crm-btn-primary {
+    background: #7c3aed !important;
+    color: #fff !important;
+    border: 1px solid #6d28d9 !important;
+    font-weight: 700;
+    margin-top: 0.5rem;
+    min-height: 2.65rem;
+    box-shadow: 0 2px 8px rgba(124, 58, 237, 0.25);
 }
 
-.crm-pdc-quick:not([hidden]) + .crm-pdc-contact .crm-pdc-contact__divider {
-    display: flex;
-}
-
-.crm-pdc-contact__divider::before,
-.crm-pdc-contact__divider::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: var(--crm-border-light, #f0eef5);
+.crm-pdc-quick__save:hover,
+.crm-pdc-quick .crm-btn-primary:hover {
+    background: #6d28d9 !important;
+    color: #fff !important;
 }
 
 .crm-pdc-quick__head {

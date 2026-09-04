@@ -182,6 +182,12 @@ class ContractWizardUXTests(TestCase):
         self.assertNotIn('ده و پنج', words)
         self.assertTrue(words.endswith('تومان'))
 
+    def test_toman_words_billion_scale(self):
+        from contracts.services.money import _toman_words
+        words = _toman_words(10_000_000_000)
+        self.assertIn('میلیارد', words)
+        self.assertTrue(words.endswith('تومان'))
+
     def test_wizard_property_select_parsing(self):
         c = create_contract(self.user, self.deal.pk, CONTRACT_TYPE_SALE)
         data = parse_wizard_step({

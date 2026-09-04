@@ -91,18 +91,29 @@
   function tomanWords(amount) {
     if (!amount || amount <= 0) return '';
     if (amount < 1000) return tomanWordsChunk(amount) + ' تومان';
-    if (amount < 1000000) {
-      var th = Math.floor(amount / 1000);
-      var rest = amount % 1000;
-      var head = tomanWordsChunk(th) + ' هزار';
-      if (rest) head += ' و ' + tomanWordsChunk(rest);
-      return head + ' تومان';
+
+    var scales = [
+      [1000000000, 'میلیارد'],
+      [1000000, 'میلیون'],
+      [1000, 'هزار'],
+    ];
+    for (var i = 0; i < scales.length; i++) {
+      var scale = scales[i][0];
+      var label = scales[i][1];
+      if (amount >= scale) {
+        var quotient = Math.floor(amount / scale);
+        var remainder = amount % scale;
+        var head = quotient >= 1000
+          ? tomanWords(quotient).replace(' تومان', '')
+          : tomanWordsChunk(quotient);
+        var phrase = head + ' ' + label;
+        if (remainder) {
+          return phrase + ' و ' + tomanWords(remainder).replace(' تومان', '') + ' تومان';
+        }
+        return phrase + ' تومان';
+      }
     }
-    var mil = Math.floor(amount / 1000000);
-    var rem = amount % 1000000;
-    var milPart = tomanWordsChunk(mil) + ' میلیون';
-    if (rem) milPart += ' و ' + tomanWords(rem).replace(' تومان', '');
-    return milPart + ' تومان';
+    return tomanWordsChunk(amount) + ' تومان';
   }
 
   function initWizardJalaliPickers(scope) {

@@ -55,6 +55,8 @@ def _toman_words_chunk(amount: int) -> str:
     """تبدیل ۰ تا ۹۹۹ به حروف فارسی."""
     if amount <= 0:
         return ''
+    if amount >= 1000:
+        raise ValueError(f'_toman_words_chunk expects 0-999, got {amount}')
     teens = (
         'ده', 'یازده', 'دوازده', 'سیزده', 'چهارده', 'پانزده',
         'شانزده', 'هفده', 'هجده', 'نوزده',
@@ -88,14 +90,22 @@ def _toman_words(amount: int) -> str:
         return ''
     if amount < 1_000:
         return f'{_toman_words_chunk(amount)} تومان'
-    if amount < 1_000_000:
-        thousand, rest = amount // 1_000, amount % 1_000
-        head = f'{_toman_words_chunk(thousand)} هزار'
-        if rest:
-            head = f'{head} و {_toman_words_chunk(rest)}'
-        return f'{head} تومان'
-    million, rest = amount // 1_000_000, amount % 1_000_000
-    head = f'{_toman_words_chunk(million)} میلیون'
-    if rest:
-        head = f'{head} و {_toman_words(rest).replace(" تومان", "")}'
-    return f'{head} تومان'
+
+    for scale, label in (
+        (1_000_000_000, 'میلیارد'),
+        (1_000_000, 'میلیون'),
+        (1_000, 'هزار'),
+    ):
+        if amount >= scale:
+            quotient, remainder = divmod(amount, scale)
+            if quotient >= 1_000:
+                head = _toman_words(quotient).replace(' تومان', '')
+            else:
+                head = _toman_words_chunk(quotient)
+            phrase = f'{head} {label}'
+            if remainder:
+                tail = _toman_words(remainder).replace(' تومان', '')
+                return f'{phrase} و {tail} تومان'
+            return f'{phrase} تومان'
+
+    return f'{_toman_words_chunk(amount)} تومان'

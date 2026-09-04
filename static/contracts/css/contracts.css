@@ -602,10 +602,122 @@
 }
 .ct-muted { color: var(--ws-text-muted); font-size: 0.72rem; }
 
-/* Deal detail embed: rows inside block */
-.ct-deal-contracts .crm-contract-rows { border-top: 1px solid var(--ws-border); }
-.ct-deal-contracts .crm-contract-row { padding-inline: 0.85rem; }
-.ct-deal-contracts .crm-deal-empty { margin: 0.65rem 0.85rem 0.85rem; }
+/* Deal detail embed: contracts card */
+.ct-deal-contracts {
+    margin: 0.75rem 0.85rem 0;
+    padding: 0;
+    border-radius: 12px;
+    background: var(--ws-surface);
+    border: 1px solid var(--ws-border);
+    box-shadow: none;
+    overflow: hidden;
+}
+
+.ct-deal-contracts .crm-deal-panel-head {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--ws-border-light, var(--ws-border));
+    background: var(--ws-surface);
+}
+
+.ct-deal-contracts .crm-deal-panel-mark {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 0.78rem;
+    color: var(--ws-text-secondary);
+    background: var(--ws-surface-2);
+    border: 1px solid var(--ws-border);
+    box-shadow: none;
+}
+
+.ct-deal-contracts .crm-deal-panel-head-text h2 {
+    margin: 0;
+    font-size: 0.875rem;
+    font-weight: 700;
+    line-height: 1.3;
+}
+
+.ct-deal-contracts .crm-deal-block__kicker {
+    display: block;
+    margin-bottom: 0.12rem;
+    font-size: 0.625rem;
+    font-weight: 600;
+    color: var(--ws-text-muted);
+}
+
+.ct-deal-contracts .crm-deal-panel-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    flex-shrink: 0;
+    margin-inline-start: auto;
+    padding: 0.35rem 0.55rem;
+    border-radius: 8px;
+    border: 1px solid var(--ws-border);
+    background: var(--ws-surface);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: var(--ws-text-secondary);
+    text-decoration: none;
+    transition: border-color 0.12s, color 0.12s, background 0.12s;
+}
+
+.ct-deal-contracts .crm-deal-panel-link:hover {
+    border-color: color-mix(in srgb, var(--ws-primary) 35%, var(--ws-border));
+    color: var(--ws-primary);
+    background: var(--ws-surface-2);
+}
+
+.ct-deal-contracts .crm-contract-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    padding: 0.65rem;
+    border-top: none;
+}
+
+.ct-deal-contracts .crm-contract-row {
+    margin: 0;
+    padding: 0.7rem 0.75rem;
+    border: 1px solid var(--ws-border-light, var(--ws-border));
+    border-radius: 10px;
+    background: var(--ws-surface-2, #f8fafc);
+}
+
+.ct-deal-contracts .crm-contract-row:last-child {
+    border-bottom: 1px solid var(--ws-border-light, var(--ws-border));
+}
+
+.ct-deal-contracts .crm-contract-row__actions .crm-dash-act {
+    min-height: 2rem;
+    padding: 0.28rem 0.6rem;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    border-radius: 8px;
+    box-shadow: none;
+}
+
+.ct-deal-contracts .crm-deal-empty--compact {
+    margin: 0.65rem;
+    padding: 1rem;
+    border-radius: 10px;
+    border: 1px dashed var(--ws-border);
+    background: var(--ws-surface-2, #f8fafc);
+    text-align: center;
+}
+
+.ct-deal-contracts .crm-deal-empty--compact p {
+    font-size: 0.75rem;
+    color: var(--ws-text-muted);
+    margin: 0.35rem 0 0.65rem;
+}
 
 .crm-contract-process { list-style: none; margin: 0 0 0.65rem; padding: 0; }
 .crm-contract-process li {

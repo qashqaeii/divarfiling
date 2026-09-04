@@ -9,9 +9,9 @@
 {% block crm_actions %}{% endblock %}
 
 {% block crm_extra_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/crm-deal-detail-mobile.css' %}?v=5">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-deal-detail-mobile.css' %}?v=6">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-deal-finance.css' %}?v=1">
-<link rel="stylesheet" href="{% static 'contracts/css/contracts.css' %}?v=5">
+<link rel="stylesheet" href="{% static 'contracts/css/contracts.css' %}?v=6">
 {% endblock %}
 
 {% block crm_content %}
@@ -222,19 +222,17 @@
     {% include 'workspace/crm/includes/deal_next_action.html' %}
 
     <section class="crm-deal-block ct-deal-contracts" aria-label="قراردادها و اسناد">
-        <div class="crm-deal-block__mesh" aria-hidden="true"></div>
-        <span class="crm-deal-block__accent" aria-hidden="true"></span>
-        <header class="crm-deal-checklist-head">
-            <div class="crm-deal-checklist-title">
-                <span class="crm-deal-side-icon" aria-hidden="true"><i class="fas fa-file-signature"></i></span>
-                <div>
-                    <span class="crm-deal-block__kicker">مرکز قرارداد</span>
-                    <h2>قراردادها و اسناد</h2>
-                    <p>ساخت، ارسال و مدیریت قراردادهای این معامله</p>
-                </div>
+        <header class="crm-deal-panel-head">
+            <span class="crm-deal-panel-mark" aria-hidden="true"><i class="fas fa-file-signature"></i></span>
+            <div class="crm-deal-panel-head-text">
+                <span class="crm-deal-block__kicker">مرکز قرارداد</span>
+                <h2>قراردادها و اسناد</h2>
             </div>
             {% if deal_contracts %}
-            <a href="{% url 'workspace:deal_contracts' deal.pk %}" class="crm-dash-act"><i class="fas fa-folder-open"></i><span>مشاهده همه</span></a>
+            <a href="{% url 'workspace:deal_contracts' deal.pk %}" class="crm-deal-panel-link">
+                <i class="fas fa-folder-open" aria-hidden="true"></i>
+                <span>مشاهده همه</span>
+            </a>
             {% endif %}
         </header>
 
@@ -260,10 +258,10 @@
             {% endfor %}
         </ul>
         {% else %}
-        <div class="crm-deal-empty">
+        <div class="crm-deal-empty crm-deal-empty--compact">
             <span class="crm-deal-empty-icon" aria-hidden="true"><i class="fas fa-file-circle-plus"></i></span>
-            <strong>هنوز قراردادی برای این معامله ساخته نشده است</strong>
-            <p>اطلاعات ملک و طرف معامله آماده است و می‌توانید قرارداد را در چند مرحله ایجاد کنید.</p>
+            <strong>هنوز قراردادی ثبت نشده</strong>
+            <p>اطلاعات ملک و طرف معامله آماده است — قرارداد را در چند مرحله بسازید.</p>
             <a href="{% url 'workspace:deal_contracts' deal.pk %}" class="crm-dash-act crm-dash-act--primary"><i class="fas fa-plus"></i><span>ایجاد قرارداد</span></a>
         </div>
         {% endif %}

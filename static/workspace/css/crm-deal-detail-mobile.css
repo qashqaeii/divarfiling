@@ -1569,7 +1569,11 @@
     display: flex;
     align-items: stretch;
     gap: 0.45rem;
-    padding: 0.55rem 0.85rem;
+    margin: 0 0.85rem 0.75rem;
+    padding: 0.45rem;
+    border-radius: 12px;
+    border: 1px solid var(--ws-border);
+    background: var(--ws-surface);
     overflow-x: auto;
     scrollbar-width: none;
 }
@@ -1673,10 +1677,10 @@
 .crm-deal-timeline-list {
     list-style: none;
     margin: 0;
-    padding: 0.75rem 1rem 0.85rem;
+    padding: 0.65rem;
     display: flex;
     flex-direction: column;
-    gap: 0;
+    gap: 0.45rem;
 }
 .crm-deal-detail-pro .crm-deal-timeline-item,
 .crm-deal-timeline-item {
@@ -1685,17 +1689,14 @@
     grid-template-columns: 1.5rem 1fr;
     gap: 0.65rem;
     align-items: start;
-    padding: 0.55rem 0 0.55rem 0.15rem;
+    padding: 0.65rem 0.75rem;
+    border-radius: 10px;
+    border: 1px solid var(--ws-border-light, var(--ws-border));
+    background: var(--ws-surface-2, #f8fafc);
 }
 .crm-deal-detail-pro .crm-deal-timeline-item:not(:last-child)::before,
 .crm-deal-timeline-item:not(:last-child)::before {
-    content: '';
-    position: absolute;
-    inset-inline-start: 0.68rem;
-    top: 1.85rem;
-    bottom: -0.15rem;
-    width: 1px;
-    background: var(--ws-border);
+    display: none;
 }
 .crm-deal-detail-pro .crm-deal-timeline-dot,
 .crm-deal-timeline-dot {
@@ -1759,10 +1760,27 @@
     color: var(--ws-text-muted);
     list-style: none;
 }
+/* Contracts + timeline — override heavy mobile block chrome */
+.crm-deal-detail-mobile .ct-deal-contracts.crm-deal-block,
+.crm-deal-detail-mobile .crm-deal-timeline.crm-deal-block {
+    border-radius: 12px;
+    background: var(--ws-surface);
+    border: 1px solid var(--ws-border);
+    box-shadow: none;
+    overflow: hidden;
+}
+
+.crm-deal-detail-mobile .ct-deal-contracts .crm-deal-block__mesh,
+.crm-deal-detail-mobile .ct-deal-contracts .crm-deal-block__accent,
+.crm-deal-detail-mobile .crm-deal-timeline .crm-deal-block__mesh,
+.crm-deal-detail-mobile .crm-deal-timeline .crm-deal-block__accent {
+    display: none !important;
+}
+
 .crm-deal-detail-pro .crm-deal-timeline-more,
 .crm-deal-timeline-more {
-    width: calc(100% - 2rem);
-    margin: 0 1rem 0.85rem;
+    width: auto;
+    margin: 0 0.65rem 0.75rem;
     min-height: 2.15rem;
     border-radius: 8px;
     font-size: 0.75rem;
@@ -1771,12 +1789,13 @@
 
 @media (min-width: 769px) {
     .crm-deal-detail-pro .crm-deal-next-action,
-    .crm-deal-detail-pro .crm-deal-timeline {
+    .crm-deal-detail-pro .crm-deal-timeline,
+    .crm-deal-detail-pro .ct-deal-contracts {
         margin: 0;
     }
     .crm-deal-detail-pro .crm-deal-quick-bar {
-        padding: 0;
-        margin: 0.5rem 0 0.65rem;
+        padding: 0.45rem;
+        margin: 0 0 0.75rem;
     }
     .crm-deal-detail-pro .crm-deal-checklist-label {
         font-size: 0.8125rem;

@@ -329,7 +329,18 @@ def parse_clauses(post: QueryDict, contract_type: str = '') -> Dict[str, Any]:
         result['penalties'] = _parse_penalties_from_prefixes(post, LEASE_PENALTY_FIELDS)
     elif contract_type == 'sale':
         result['penalties'] = _parse_penalties_from_prefixes(post, SALE_PENALTY_FIELDS)
+        result['sale_costs'] = _parse_sale_costs(post)
+        result['property_has_tenant'] = _get(post, 'clause_has_tenant') == 'yes'
     return result
+
+
+def _parse_sale_costs(post: QueryDict) -> Dict[str, str]:
+    costs = {}
+    for key in ('transfer_costs', 'notary_costs', 'pre_delivery_costs', 'post_delivery_costs', 'other_costs'):
+        val = _get(post, f'sale_cost_{key}')
+        if val in ('seller', 'buyer', 'shared'):
+            costs[key] = val
+    return costs
 
 
 def parse_wizard_step(post: QueryDict, step: str, contract_type: str) -> Dict[str, Any]:

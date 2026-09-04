@@ -105,7 +105,7 @@ class ContractWizardView(DealContractsMixin, TemplateView):
         step = self.request.GET.get('step') or contract.wizard_step or 'type'
         if step not in WIZARD_STEPS:
             step = 'type'
-        context_data = build_clause_context(wizard)
+        context_data = build_clause_context(wizard, contract.contract_type)
         display_steps = WIZARD_DISPLAY_STEPS.get(contract.contract_type, WIZARD_DISPLAY_STEPS['lease'])
         step_keys = [s[0] for s in display_steps]
         step_index = step_keys.index(step) if step in step_keys else 0

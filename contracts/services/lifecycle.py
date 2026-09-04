@@ -273,6 +273,13 @@ def sync_clauses_from_selection(contract: Contract, version: ContractVersion) ->
                         defn.code, defn.body_template,
                         fin=fin, inline_values=item.get('inline_values'),
                     )
+                elif contract.contract_type == CONTRACT_TYPE_SALE:
+                    from contracts.services.sale_clause_bank import render_sale_clause_body
+                    prop = wizard.get('property') or {}
+                    body = render_sale_clause_body(
+                        defn.code, defn.body_template,
+                        fin=fin, prop=prop, inline_values=item.get('inline_values'),
+                    )
                 else:
                     body = render_clause_body(defn, item.get('inline_values'))
                 ContractClause.objects.create(

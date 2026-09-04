@@ -171,17 +171,17 @@ class TokenSecurityTests(ContractTestBase):
 
 
 class PendingClausesTests(ContractTestBase):
-    def test_production_excludes_pending(self):
+    def test_production_includes_active_pending(self):
         from contracts.models import ContractClauseDefinition
         from contracts.services.clauses import get_applicable_clauses
         ContractClauseDefinition.objects.create(
             code='TEST_PENDING', title='t', category='c', contract_type='lease',
-            body_template='x', review_status='review_pending',
+            body_template='x', review_status='review_pending', is_active=True,
         )
         with self.settings(DEBUG=False, LEGAL_REVIEW_PREVIEW=False):
             clauses = get_applicable_clauses('lease', user=self.user)
             codes = [c.code for c in clauses]
-            self.assertNotIn('TEST_PENDING', codes)
+            self.assertIn('TEST_PENDING', codes)
 
 
 class IDORTests(ContractTestBase):

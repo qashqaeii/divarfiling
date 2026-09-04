@@ -43,18 +43,19 @@ def get_applicable_clauses(
     contract_type: str,
     context: Optional[Dict[str, Any]] = None,
     *,
-    include_pending: bool = False,
+    include_pending: bool = True,
     user=None,
     as_of: Optional[date] = None,
+    reviewed_only: bool = False,
 ) -> List[ContractClauseDefinition]:
-    """بندهای قابل استفاده برای نوع قرارداد."""
-    if include_pending and not allow_pending_clauses(user=user):
-        include_pending = False
+    """بندهای فعال — review_status دیگر access control نیست (مگر reviewed_only=True)."""
     ref = as_of or timezone.localdate()
     qs = ContractClauseDefinition.objects.filter(
         contract_type=contract_type, is_active=True,
     )
-    if not include_pending:
+    if reviewed_only:
+        qs = qs.filter(review_status=CLAUSE_REVIEW_REVIEWED)
+    elif not include_pending and not allow_pending_clauses(user=user):
         qs = qs.filter(review_status=CLAUSE_REVIEW_REVIEWED)
     clauses = []
     ctx = context or {}

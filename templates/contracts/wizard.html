@@ -3,7 +3,7 @@
 
 {% block page_title %}ویزارد قرارداد{% endblock %}
 {% block crm_extra_css %}
-<link rel="stylesheet" href="{% static 'contracts/css/contracts.css' %}?v=8">
+<link rel="stylesheet" href="{% static 'contracts/css/contracts.css' %}?v=9">
 {% endblock %}
 
 {% block crm_content %}
@@ -502,7 +502,7 @@
                     <article class="ct-clause-card" data-card-id="{{ card.id }}">
                         <header class="ct-clause-card__head">
                             <h4>{{ card.title }}</h4>
-                            {% if card.is_standard %}<span class="ct-clause-badge ct-clause-badge--standard">بند استاندارد</span>{% endif %}
+                            {% if card.review_badge %}<span class="ct-clause-badge ct-clause-badge--{% if card.review_status == 'reviewed' %}reviewed{% else %}pending{% endif %}">{{ card.review_badge }}</span>{% endif %}
                         </header>
                         <p class="ct-clause-card__question">{{ card.question }}</p>
                         <div class="ct-clause-choice">
@@ -527,7 +527,7 @@
                     <article class="ct-clause-card" data-card-id="{{ card.id }}">
                         <header class="ct-clause-card__head">
                             <h4>{{ card.title }}</h4>
-                            {% if card.is_standard %}<span class="ct-clause-badge ct-clause-badge--standard">بند استاندارد</span>{% endif %}
+                            {% if card.review_badge %}<span class="ct-clause-badge ct-clause-badge--{% if card.review_status == 'reviewed' %}reviewed{% else %}pending{% endif %}">{{ card.review_badge }}</span>{% endif %}
                         </header>
                         <p class="ct-clause-card__question">{{ card.question }}</p>
                         <div class="ct-clause-choice">
@@ -559,6 +559,31 @@
                                 <div class="ct-segment ct-segment--compact">
                                     <label><input type="radio" name="cost_{{ row.key }}" value="landlord"{% if row.value == 'landlord' %} checked{% endif %}><span>موجر</span></label>
                                     <label><input type="radio" name="cost_{{ row.key }}" value="tenant"{% if row.value == 'tenant' or not row.value %} checked{% endif %}><span>مستأجر</span></label>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% if card.clause_preview %}
+                        <button type="button" class="ct-clause-preview-toggle" data-preview-for="{{ card.id }}">مشاهده متن قرارداد</button>
+                        <div class="ct-clause-card__preview" id="preview_{{ card.id }}" hidden>{{ card.clause_preview|linebreaksbr }}</div>
+                        {% endif %}
+                    </article>
+
+                    {% elif card.type == 'sale_cost_allocation' %}
+                    <article class="ct-clause-card ct-clause-card--costs">
+                        <header class="ct-clause-card__head">
+                            <h4>{{ card.title }}</h4>
+                            {% if card.review_badge %}<span class="ct-clause-badge ct-clause-badge--{% if card.review_status == 'reviewed' %}reviewed{% else %}pending{% endif %}">{{ card.review_badge }}</span>{% endif %}
+                        </header>
+                        <p class="ct-clause-card__question">{{ card.question }}</p>
+                        <div class="ct-cost-grid">
+                            {% for row in card.rows %}
+                            <div class="ct-cost-row">
+                                <span class="ct-cost-row__label">{{ row.label }}</span>
+                                <div class="ct-segment ct-segment--compact">
+                                    <label><input type="radio" name="sale_cost_{{ row.key }}" value="seller"{% if row.value == 'seller' %} checked{% endif %}><span>فروشنده</span></label>
+                                    <label><input type="radio" name="sale_cost_{{ row.key }}" value="buyer"{% if row.value == 'buyer' %} checked{% endif %}><span>خریدار</span></label>
+                                    <label><input type="radio" name="sale_cost_{{ row.key }}" value="shared"{% if row.value == 'shared' %} checked{% endif %}><span>مشترک</span></label>
                                 </div>
                             </div>
                             {% endfor %}
@@ -632,7 +657,7 @@
                                 <input type="checkbox" name="clause_optional" value="{{ card.clause_code|default:card.id }}"{% if card.enabled %} checked{% endif %}>
                                 <h4>{{ card.title }}</h4>
                             </label>
-                            <span class="ct-clause-badge ct-clause-badge--standard">بند استاندارد</span>
+                            {% if card.review_badge %}<span class="ct-clause-badge ct-clause-badge--{% if card.review_status == 'reviewed' %}reviewed{% else %}pending{% endif %}">{{ card.review_badge }}</span>{% endif %}
                         </header>
                         <p class="ct-clause-card__question">{{ card.question }}</p>
                         {% if card.clause_preview %}

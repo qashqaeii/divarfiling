@@ -31,12 +31,12 @@ class LeaseClauseBankTests(TestCase):
             defn = ContractClauseDefinition.objects.get(code=code, version=1)
             self.assertEqual(defn.review_status, CLAUSE_REVIEW_PENDING)
 
-    def test_production_user_cannot_see_pending(self):
+    def test_production_user_sees_active_pending(self):
         from contracts.services.clauses import get_applicable_clauses
         with self.settings(DEBUG=False, LEGAL_REVIEW_PREVIEW=False):
             codes = [c.code for c in get_applicable_clauses('lease', user=self.user)]
             for d in LEASE_PHASE1_DEFINITIONS:
-                self.assertNotIn(d['code'], codes)
+                self.assertIn(d['code'], codes)
 
     def test_transfer_forbidden_includes_sublease(self):
         self._reviewed('LEASE_SUBLEASE')

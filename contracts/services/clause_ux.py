@@ -4,6 +4,8 @@ from __future__ import annotations
 from typing import Any, Dict, List, Optional, Set, Tuple
 
 from contracts.constants import (
+    CLAUSE_REVIEW_PENDING,
+    CLAUSE_REVIEW_REVIEWED,
     CONTRACT_TYPE_JV,
     CONTRACT_TYPE_LEASE,
     CONTRACT_TYPE_SALE,
@@ -12,16 +14,20 @@ from contracts.models import ContractClauseDefinition
 from contracts.services.clauses import get_applicable_clauses
 from contracts.services.lease_clause_bank import (
     LEASE_CORE_RENDERER_CODES,
-    PENALTY_CODE_MAP,
+    PENALTY_CODE_MAP as LEASE_PENALTY_CODE_MAP,
     USAGE_TYPE_LABELS,
     build_lease_clause_context,
+)
+from contracts.services.sale_clause_bank import (
+    SALE_CORE_RENDERER_CODES,
+    SALE_COST_ITEM_LABELS,
+    SALE_PENALTY_CODE_MAP,
+    build_sale_clause_context,
 )
 
 MAIN_ARTICLE_CODES: Dict[str, Set[str]] = {
     CONTRACT_TYPE_LEASE: set(LEASE_CORE_RENDERER_CODES),
-    CONTRACT_TYPE_SALE: {
-        'SALE_SUBJECT', 'SALE_PRICE', 'SALE_PAYMENT', 'SALE_DELIVERY', 'SALE_TRANSFER',
-    },
+    CONTRACT_TYPE_SALE: set(SALE_CORE_RENDERER_CODES),
     CONTRACT_TYPE_JV: {
         'JV_CONTRIBUTION_OWNER', 'JV_CONTRIBUTION_BUILDER', 'JV_SHARE',
         'JV_UNITS', 'JV_SCHEDULE',
@@ -39,16 +45,13 @@ UI_CATEGORIES: Dict[str, List[Tuple[str, str]]] = {
         ('custom', 'توافقات اختصاصی'),
     ],
     CONTRACT_TYPE_SALE: [
-        ('property_status', 'وضعیت مورد معامله'),
-        ('payments', 'پرداخت‌ها'),
-        ('delivery', 'تحویل'),
-        ('official_transfer', 'اقدام برای انتقال رسمی'),
-        ('seller_docs', 'مدارک و تعهدات فروشنده'),
-        ('buyer_duties', 'تعهدات خریدار'),
+        ('property_status', 'وضعیت ملک'),
+        ('delivery_docs', 'تحویل و مدارک'),
+        ('official_transfer', 'انتقال رسمی'),
+        ('obligations', 'تعهدات طرفین'),
         ('costs', 'هزینه‌ها'),
-        ('penalties', 'وجه التزام‌ها'),
-        ('breach', 'تخلف از تعهدات'),
-        ('supplementary', 'شرایط تکمیلی'),
+        ('penalties', 'وجه التزام'),
+        ('termination', 'فسخ و شرایط'),
         ('custom', 'توافقات اختصاصی'),
     ],
     CONTRACT_TYPE_JV: [
@@ -95,11 +98,16 @@ REVIEW_ARTICLE_GROUPS: Dict[str, List[Tuple[str, str]]] = {
         ('custom', 'توافقات اختصاصی'),
     ],
     CONTRACT_TYPE_SALE: [
-        ('property', 'وضعیت مورد معامله'),
-        ('obligations', 'تعهدات طرفین'),
-        ('penalties', 'وجه التزام'),
-        ('termination', 'فسخ و شرایط'),
-        ('custom', 'توافقات اختصاصی'),
+        ('property_status', 'وضعیت اعلامی مورد معامله'),
+        ('payment_core', 'ثمن و نحوه پرداخت'),
+        ('delivery', 'تحویل مورد معامله'),
+        ('seller_obligations', 'تعهدات فروشنده'),
+        ('buyer_obligations', 'تعهدات خریدار'),
+        ('official_transfer', 'اقدامات مربوط به انتقال رسمی'),
+        ('costs', 'هزینه‌ها'),
+        ('penalties', 'وجه التزام‌ها'),
+        ('termination', 'تخلف از تعهدات و شرایط پایان قرارداد'),
+        ('custom', 'توافقات اختصاصی طرفین'),
     ],
     CONTRACT_TYPE_JV: [
         ('obligations', 'تعهدات طرفین'),
@@ -124,9 +132,19 @@ CLAUSE_REVIEW_GROUP: Dict[str, str] = {
     'LEASE_PENALTY_VACATE': 'penalties',
     'LEASE_PENALTY_DEPOSIT_RETURN': 'penalties',
     'LEASE_BREACH_TERMINATION': 'termination',
-    'SALE_MORTGAGE': 'property',
-    'SALE_TAX': 'obligations',
-    'SALE_DISPUTE': 'termination',
+    'SALE_PROPERTY_DECLARATIONS': 'property_status',
+    'SALE_EXISTING_TENANT': 'property_status',
+    'SALE_DELIVERY': 'delivery',
+    'SALE_DOCUMENTS': 'seller_obligations',
+    'SALE_OFFICIAL_TRANSFER': 'official_transfer',
+    'SALE_SELLER_OBLIGATIONS': 'seller_obligations',
+    'SALE_BUYER_OBLIGATIONS': 'buyer_obligations',
+    'SALE_PAYMENT_OBLIGATION': 'buyer_obligations',
+    'SALE_COSTS': 'costs',
+    'SALE_PENALTY_PAYMENT': 'penalties',
+    'SALE_PENALTY_DELIVERY': 'penalties',
+    'SALE_PENALTY_OFFICIAL_TRANSFER': 'penalties',
+    'SALE_BREACH_TERMINATION': 'termination',
     'JV_PENALTY': 'penalties',
     'JV_DISPUTE': 'termination',
 }
@@ -147,15 +165,31 @@ LEASE_PENALTY_FIELDS = (
 )
 
 SALE_PENALTY_FIELDS = (
-    ('payment_delay', 'pen_payment', 'تأخیر پرداخت'),
-    ('delivery_delay', 'pen_delivery', 'تأخیر تحویل'),
-    ('transfer_delay', 'pen_transfer', 'تأخیر اقدام برای انتقال رسمی'),
+    ('payment_delay', 'pen_payment', 'تأخیر پرداخت', 'SALE_PENALTY_PAYMENT'),
+    ('delivery_delay', 'pen_delivery', 'تأخیر تحویل', 'SALE_PENALTY_DELIVERY'),
+    ('transfer_delay', 'pen_transfer', 'تأخیر اقدام برای انتقال رسمی', 'SALE_PENALTY_OFFICIAL_TRANSFER'),
 )
 
+SALE_COST_UI_FIELDS = tuple(SALE_COST_ITEM_LABELS.items())
+
 DEFAULT_LEASE_OPTIONAL = frozenset({'LEASE_CARE', 'LEASE_BREACH_TERMINATION'})
+DEFAULT_SALE_OPTIONAL = frozenset({
+    'SALE_DOCUMENTS', 'SALE_SELLER_OBLIGATIONS', 'SALE_BUYER_OBLIGATIONS',
+    'SALE_PAYMENT_OBLIGATION', 'SALE_BREACH_TERMINATION',
+})
 
 
-def build_clause_context(wizard: Dict[str, Any]) -> Dict[str, Any]:
+def clause_review_badge(review_status: str) -> Optional[str]:
+    if review_status == CLAUSE_REVIEW_REVIEWED:
+        return 'بند بررسی‌شده'
+    if review_status == CLAUSE_REVIEW_PENDING:
+        return 'بند پیشنهادی'
+    return None
+
+
+def build_clause_context(wizard: Dict[str, Any], contract_type: str = CONTRACT_TYPE_LEASE) -> Dict[str, Any]:
+    if contract_type == CONTRACT_TYPE_SALE:
+        return build_sale_clause_context(wizard)
     return build_lease_clause_context(wizard)
 
 
@@ -228,11 +262,63 @@ def _resolve_lease_clauses(
             add_code('LEASE_DEPOSIT_RETURN')
 
     penalties = fin.get('penalties') or {}
-    for key, penalty_code in PENALTY_CODE_MAP.items():
+    for key, penalty_code in LEASE_PENALTY_CODE_MAP.items():
         item = penalties.get(key) or {}
         amt = item.get('amount_per_day') or item.get('amount') or 0
         if item.get('enabled') and amt:
             add_code(penalty_code, _penalty_inline_values(item))
+
+
+def _resolve_sale_clauses(
+    wizard: Dict[str, Any],
+    library: Dict[str, ContractClauseDefinition],
+    selected: List[Dict[str, Any]],
+    seen: Set[str],
+) -> None:
+    fin = wizard.get('financial') or {}
+    prop = wizard.get('property') or {}
+    context = build_sale_clause_context(wizard)
+
+    def add_code(code: str, inline_values: Optional[Dict] = None) -> None:
+        if code in seen or code not in library:
+            return
+        seen.add(code)
+        entry: Dict[str, Any] = {'code': code}
+        if inline_values:
+            entry['inline_values'] = inline_values
+        selected.append(entry)
+
+    add_code('SALE_PROPERTY_DECLARATIONS')
+    if context.get('property_has_tenant'):
+        add_code('SALE_EXISTING_TENANT')
+    if context.get('has_delivery_date'):
+        add_code('SALE_DELIVERY')
+    if context.get('has_official_transfer_plan'):
+        add_code('SALE_OFFICIAL_TRANSFER')
+    if context.get('has_sale_cost_allocations'):
+        add_code('SALE_COSTS')
+
+    optional_codes = {
+        item.get('code') for item in (wizard.get('clause_optional') or []) if item.get('code')
+    }
+    if not wizard.get('clause_optional'):
+        optional_codes = set(DEFAULT_SALE_OPTIONAL)
+    for code in optional_codes:
+        if code in DEFAULT_SALE_OPTIONAL or code in library:
+            add_code(code)
+
+    penalties = fin.get('penalties') or {}
+    for key, penalty_code in SALE_PENALTY_CODE_MAP.items():
+        item = penalties.get(key) or {}
+        amt = item.get('amount_per_day') or item.get('amount') or 0
+        if item.get('enabled') and amt:
+            unit = item.get('unit', 'daily')
+            add_code(penalty_code, {
+                'amount': str(amt),
+                'penalty_amount': str(amt),
+                'penalty_unit': unit,
+                'unit': unit,
+            })
 
 
 def resolve_selected_clauses(
@@ -241,7 +327,7 @@ def resolve_selected_clauses(
     *,
     user=None,
 ) -> List[Dict[str, Any]]:
-    context = build_clause_context(wizard)
+    context = build_clause_context(wizard, contract_type)
     library = _library_clauses(contract_type, context, user=user)
     selected: List[Dict[str, Any]] = []
     seen: Set[str] = set()
@@ -249,16 +335,7 @@ def resolve_selected_clauses(
     if contract_type == CONTRACT_TYPE_LEASE:
         _resolve_lease_clauses(wizard, library, selected, seen)
     elif contract_type == CONTRACT_TYPE_SALE:
-        prop = wizard.get('property') or {}
-        fin = wizard.get('financial') or {}
-        if prop.get('has_mortgage') and 'SALE_MORTGAGE' in library:
-            selected.append({'code': 'SALE_MORTGAGE'})
-        penalties = fin.get('penalties') or {}
-        for item in penalties.values():
-            if item.get('enabled') and (item.get('amount_per_day') or item.get('amount')):
-                if 'SALE_PENALTY' in library:
-                    selected.append({'code': 'SALE_PENALTY', 'inline_values': _penalty_inline_values(item)})
-                break
+        _resolve_sale_clauses(wizard, library, selected, seen)
     elif contract_type == CONTRACT_TYPE_JV:
         penalties = (wizard.get('financial') or {}).get('penalties') or {}
         for item in penalties.values():
@@ -297,7 +374,7 @@ def _clause_card(defn: Optional[ContractClauseDefinition], **extra) -> Dict[str,
         card.setdefault('clause_preview', defn.body_template)
         card.setdefault('clause_explanation', defn.plain_explanation)
         card.setdefault('review_status', defn.review_status)
-        card.setdefault('is_standard', True)
+        card.setdefault('review_badge', clause_review_badge(defn.review_status))
     return card
 
 
@@ -308,7 +385,7 @@ def build_clause_sections(
     user=None,
     is_staff: bool = False,
 ) -> List[Dict[str, Any]]:
-    context = build_clause_context(wizard)
+    context = build_clause_context(wizard, contract_type)
     library = _library_clauses(contract_type, context, user=user)
     fin = wizard.get('financial') or {}
     optional_active = {
@@ -449,27 +526,137 @@ def build_clause_sections(
 
     elif contract_type == CONTRACT_TYPE_SALE:
         prop = wizard.get('property') or {}
-        if prop.get('has_tenant'):
-            cards_by_cat['property_status'].append({
-                'type': 'info',
-                'title': 'مستأجر موجود',
-                'message': 'ملک دارای مستأجر اعلام شده — بند مربوطه در صورت تأیید حقوقی اضافه می‌شود.',
-            })
-        for key, prefix, title in SALE_PENALTY_FIELDS:
+        if not wizard.get('clause_optional'):
+            optional_active = set(DEFAULT_SALE_OPTIONAL)
+
+        decl_def = library.get('SALE_PROPERTY_DECLARATIONS')
+        cards_by_cat['property_status'].append(_clause_card(
+            decl_def,
+            type='info',
+            title='وضعیت اعلامی مورد معامله',
+            message='بر اساس اظهار فروشنده — فایلینگ استعلام ثبتی انجام نمی‌دهد.',
+        ))
+
+        tenant_def = library.get('SALE_EXISTING_TENANT')
+        has_tenant = prop.get('has_tenant') or fin.get('property_has_tenant')
+        cards_by_cat['property_status'].append({
+            'type': 'choice',
+            'id': 'has_tenant',
+            'title': 'مستأجر یا متصرف',
+            'question': 'آیا ملک در حال حاضر مستأجر یا متصرف دارد؟',
+            'value': 'yes' if has_tenant else 'no',
+            'options': [
+                {'value': 'no', 'label': 'خیر'},
+                {'value': 'yes', 'label': 'بله'},
+            ],
+            'clause_code': 'SALE_EXISTING_TENANT' if tenant_def else None,
+            'clause_preview': tenant_def.body_template if tenant_def else '',
+            'review_status': tenant_def.review_status if tenant_def else '',
+            'review_badge': clause_review_badge(tenant_def.review_status) if tenant_def else None,
+        })
+
+        del_def = library.get('SALE_DELIVERY')
+        if fin.get('delivery_date') or del_def:
+            cards_by_cat['delivery_docs'].append(_clause_card(
+                del_def,
+                type='info',
+                title='تحویل مورد معامله',
+                message=f'تاریخ تحویل: {fin.get("delivery_date") or "—"} (از مرحله مبلغ و پرداخت)',
+            ))
+
+        doc_def = library.get('SALE_DOCUMENTS')
+        cards_by_cat['delivery_docs'].append(_clause_card(
+            doc_def,
+            type='optional_clause',
+            id='SALE_DOCUMENTS',
+            title='ارائه مدارک مورد نیاز',
+            question=doc_def.plain_explanation if doc_def else 'مدارک لازم برای انتقال',
+            enabled='SALE_DOCUMENTS' in optional_active,
+        ))
+
+        xfer_def = library.get('SALE_OFFICIAL_TRANSFER')
+        if fin.get('official_transfer_date') or fin.get('transfer_date') or fin.get('transfer_place'):
+            cards_by_cat['official_transfer'].append(_clause_card(
+                xfer_def,
+                type='info',
+                title='اقدام برای انتقال رسمی',
+                message=(
+                    f'تاریخ: {fin.get("official_transfer_date") or fin.get("transfer_date") or "—"} — '
+                    f'محل: {fin.get("transfer_place") or "—"}'
+                ),
+            ))
+
+        seller_def = library.get('SALE_SELLER_OBLIGATIONS')
+        buyer_def = library.get('SALE_BUYER_OBLIGATIONS')
+        cards_by_cat['obligations'].append(_clause_card(
+            seller_def,
+            type='optional_clause',
+            id='SALE_SELLER_OBLIGATIONS',
+            title='تعهدات فروشنده',
+            question=seller_def.plain_explanation if seller_def else 'تعهدات فروشنده',
+            enabled='SALE_SELLER_OBLIGATIONS' in optional_active,
+        ))
+        cards_by_cat['obligations'].append(_clause_card(
+            buyer_def,
+            type='optional_clause',
+            id='SALE_BUYER_OBLIGATIONS',
+            title='تعهدات خریدار',
+            question=buyer_def.plain_explanation if buyer_def else 'تعهدات خریدار',
+            enabled='SALE_BUYER_OBLIGATIONS' in optional_active,
+        ))
+
+        sale_costs = fin.get('sale_costs') or {}
+        cost_rows = [
+            {'key': key, 'label': label, 'value': sale_costs.get(key) or ''}
+            for key, label in SALE_COST_UI_FIELDS
+        ]
+        costs_def = library.get('SALE_COSTS')
+        cards_by_cat['costs'].append({
+            'type': 'sale_cost_allocation',
+            'id': 'sale_costs',
+            'title': 'هزینه‌های مرتبط با معامله',
+            'question': 'هر هزینه بر عهده چه کسی است؟',
+            'rows': cost_rows,
+            'clause_code': 'SALE_COSTS' if costs_def else None,
+            'clause_preview': costs_def.body_template if costs_def else '',
+            'review_status': costs_def.review_status if costs_def else '',
+            'review_badge': clause_review_badge(costs_def.review_status) if costs_def else None,
+        })
+
+        for key, prefix, title, penalty_code in SALE_PENALTY_FIELDS:
             item = (fin.get('penalties') or {}).get(key) or {}
-            defn = library.get('SALE_PENALTY')
-            cards_by_cat['penalties'].append({
-                'type': 'penalty',
-                'id': key,
-                'title': title,
-                'prefix': prefix,
-                'enabled': bool(item.get('enabled')),
-                'amount': item.get('amount_per_day') or item.get('amount') or '',
-                'unit': item.get('unit', 'daily'),
-                'clause_code': 'SALE_PENALTY' if defn else None,
-                'clause_preview': defn.body_template if defn else '',
-                'review_status': defn.review_status if defn else '',
-            })
+            defn = library.get(penalty_code)
+            cards_by_cat['penalties'].append(_clause_card(
+                defn,
+                type='penalty',
+                id=key,
+                title=title,
+                prefix=prefix,
+                enabled=bool(item.get('enabled')),
+                amount=item.get('amount_per_day') or item.get('amount') or '',
+                unit=item.get('unit', 'daily'),
+            ))
+
+        term_def = library.get('SALE_BREACH_TERMINATION')
+        cards_by_cat['termination'].append(_clause_card(
+            term_def,
+            type='optional_clause',
+            id='SALE_BREACH_TERMINATION',
+            title='تخلف از تعهدات و پایان قرارداد',
+            question=term_def.plain_explanation if term_def else 'قواعد پایان قرارداد',
+            enabled='SALE_BREACH_TERMINATION' in optional_active,
+        ))
+
+        pay_def = library.get('SALE_PAYMENT_OBLIGATION')
+        if fin.get('payments') or fin.get('total_price'):
+            cards_by_cat['obligations'].append(_clause_card(
+                pay_def,
+                type='optional_clause',
+                id='SALE_PAYMENT_OBLIGATION',
+                title='تعهد پرداخت ثمن',
+                question='متن تعهد — مبالغ در ماده مالی نمایش داده می‌شود.',
+                enabled='SALE_PAYMENT_OBLIGATION' in optional_active,
+            ))
 
     elif contract_type == CONTRACT_TYPE_JV:
         cards_by_cat['duration_delivery'].append({
@@ -526,6 +713,15 @@ def apply_clauses_step(
             fin['occupants_count'] = parsed['occupants_count']
         fin['costs'] = parsed.get('costs') or fin.get('costs') or {}
         fin['penalties'] = parsed.get('penalties') or fin.get('penalties') or {}
+
+    elif contract_type == CONTRACT_TYPE_SALE:
+        fin['penalties'] = parsed.get('penalties') or fin.get('penalties') or {}
+        fin['sale_costs'] = parsed.get('sale_costs') or fin.get('sale_costs') or {}
+        if parsed.get('property_has_tenant') is not None:
+            wizard = dict(wizard)
+            prop = dict(wizard.get('property') or {})
+            prop['has_tenant'] = bool(parsed.get('property_has_tenant'))
+            wizard['property'] = prop
 
     wizard['financial'] = fin
     wizard['clause_optional'] = parsed.get('optional_clauses') or []

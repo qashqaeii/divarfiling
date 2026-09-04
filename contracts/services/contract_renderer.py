@@ -30,10 +30,8 @@ def render_contract_document(contract: Contract, version: ContractVersion | None
         fin = snap.get('financial') or {}
         sections.append(_section('مبلغ معامله', _render_sale_price(fin), 'financial'))
         sections.append(_section('برنامه پرداخت', _render_payments(fin), 'financial'))
-        sections.append(_section('اقدام برای انتقال رسمی', _render_transfer_plan(fin), 'financial'))
-        status_lines = _render_sale_status(snap.get('property') or {})
-        if status_lines:
-            sections.append(_section('وضعیت ملک (اظهار طرفین)', status_lines, 'property'))
+        if fin.get('official_transfer_date') or fin.get('transfer_date') or fin.get('transfer_place'):
+            sections.append(_section('اقدام برای انتقال رسمی', _render_transfer_plan(fin), 'financial'))
     elif ctype == CONTRACT_TYPE_JV:
         jv = snap.get('jv') or {}
         sections.append(_section('مشارکت', _render_jv(jv), 'jv'))

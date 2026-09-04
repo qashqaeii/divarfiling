@@ -8,6 +8,7 @@ from contracts.services.clause_ux import (
     MAIN_ARTICLE_CODES,
     apply_clauses_step,
     build_clause_context,
+    clause_review_badge,
     render_clause_sections_for_review,
     resolve_selected_clauses,
 )
@@ -43,14 +44,17 @@ class ClauseUxTests(TestCase):
             is_active=True,
         )
 
-    def test_production_excludes_pending_clauses(self):
+    def test_production_includes_active_pending_clauses(self):
         ContractClauseDefinition.objects.create(
             code='UX_PENDING', title='t', category='c', contract_type='lease',
-            body_template='x', review_status=CLAUSE_REVIEW_PENDING,
+            body_template='x', review_status=CLAUSE_REVIEW_PENDING, is_active=True,
         )
         with self.settings(DEBUG=False, LEGAL_REVIEW_PREVIEW=False):
             codes = [c.code for c in get_applicable_clauses('lease', user=self.user)]
-            self.assertNotIn('UX_PENDING', codes)
+            self.assertIn('UX_PENDING', codes)
+            self.assertEqual(clause_review_badge(CLAUSE_REVIEW_PENDING), 'بند پیشنهادی')
+            self.assertNotIn('تأیید', clause_review_badge(CLAUSE_REVIEW_PENDING) or '')
+            self.assertEqual(clause_review_badge(CLAUSE_REVIEW_REVIEWED), 'بند بررسی‌شده')
 
     def test_conditional_transfer_includes_sublease_clause(self):
         self._reviewed_lease_clause('LEASE_SUBLEASE', body_template='منع انتقال')

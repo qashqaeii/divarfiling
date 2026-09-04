@@ -1,0 +1,182 @@
+{% extends 'workspace/crm/base_crm.html' %}
+{% load static workspace_tags %}
+
+{% block page_title %}صورت‌جلسه تحویل{% endblock %}
+{% block crm_extra_css %}
+<link rel="stylesheet" href="{% static 'contracts/css/contracts.css' %}?v=3">
+{% endblock %}
+
+{% block crm_content %}
+<div class="ct-wizard ct-handover-wizard" data-current-step="{{ handover_step }}">
+    <header class="ct-wizard__head">
+        <a href="{% url 'workspace:contract_manage' deal.pk contract.pk %}" class="ct-back" aria-label="بازگشت"><i class="fas fa-arrow-right"></i></a>
+        <div>
+            <h1>صورت‌جلسه تحویل ملک</h1>
+            <p class="ct-muted">قرارداد {{ contract.internal_number }}</p>
+        </div>
+    </header>
+
+    <ol class="ct-steps-list">
+        <li class="{% if handover_step == 'basic' %}is-active{% endif %}"><a href="?step=basic">مشخصات</a></li>
+        <li class="{% if handover_step == 'keys' %}is-active{% endif %}"><a href="?step=keys">کلیدها</a></li>
+        <li class="{% if handover_step == 'meters' %}is-active{% endif %}"><a href="?step=meters">کنتورها</a></li>
+        <li class="{% if handover_step == 'conditions' %}is-active{% endif %}"><a href="?step=conditions">وضعیت ملک</a></li>
+        <li class="{% if handover_step == 'equipment' %}is-active{% endif %}"><a href="?step=equipment">تجهیزات</a></li>
+        <li class="{% if handover_step == 'review' %}is-active{% endif %}"><a href="?step=review">مرور</a></li>
+    </ol>
+
+    <form method="post" enctype="multipart/form-data" class="ct-wizard-form" id="ct-handover-form">
+        {% csrf_token %}
+        <input type="hidden" name="step" value="{{ handover_step }}">
+
+        {% if handover_step == 'basic' %}
+        <section class="ct-panel">
+            <h2>مشخصات تحویل</h2>
+            <div class="ct-form-grid">
+                <label>تاریخ تحویل<input class="crm-input" name="handover_date" value="{{ handover.handover_date|default:'' }}" placeholder="1404/01/01"></label>
+                <label>ساعت<input class="crm-input" name="handover_time" type="time" value="{{ handover.handover_time|default:'' }}"></label>
+            </div>
+            <h3>تحویل‌دهنده</h3>
+            <select class="crm-input crm-select" name="delivered_by_idx">
+                {% for p in snapshot.parties %}
+                <option value="{{ forloop.counter0 }}">{{ p.first_name }} {{ p.last_name }}</option>
+                {% endfor %}
+            </select>
+            <h3>تحویل‌گیرنده</h3>
+            <select class="crm-input crm-select" name="received_by_idx">
+                {% for p in snapshot.parties %}
+                <option value="{{ forloop.counter0 }}">{{ p.first_name }} {{ p.last_name }}</option>
+                {% endfor %}
+            </select>
+            <label class="ct-span-2">یادداشت<textarea class="crm-input" name="notes" rows="2">{{ handover.notes }}</textarea></label>
+            <input type="hidden" name="next_step" value="keys">
+        </section>
+
+        {% elif handover_step == 'keys' %}
+        <section class="ct-panel">
+            <h2>کلیدها و دسترسی‌ها</h2>
+            <div class="ct-key-list">
+                {% for kt in key_types %}
+                <div class="ct-key-item">
+                    <span class="ct-key-item__name">{{ kt }}</span>
+                    <div class="ct-key-item__count">
+                        <input type="hidden" name="key_{{ forloop.counter0 }}_type" value="{{ kt }}">
+                        <input class="crm-input" name="key_{{ forloop.counter0 }}_count" value="1" type="number" min="0" inputmode="numeric">
+                        <span class="ct-muted">عدد</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            <input type="hidden" name="next_step" value="meters">
+        </section>
+
+        {% elif handover_step == 'meters' %}
+        <section class="ct-panel">
+            <h2>قرائت کنتور</h2>
+            <div class="ct-meter-cards">
+                <div class="ct-meter-card">
+                    <h3>برق</h3>
+                    <div class="ct-form-grid">
+                        <label>شماره کنتور<input class="crm-input" name="meter_electricity_number"></label>
+                        <label>عدد فعلی<input class="crm-input" name="meter_electricity_reading" inputmode="numeric"></label>
+                    </div>
+                </div>
+                <div class="ct-meter-card">
+                    <h3>آب</h3>
+                    <div class="ct-form-grid">
+                        <label>شماره کنتور<input class="crm-input" name="meter_water_number"></label>
+                        <label>عدد فعلی<input class="crm-input" name="meter_water_reading" inputmode="numeric"></label>
+                    </div>
+                </div>
+                <div class="ct-meter-card">
+                    <h3>گاز</h3>
+                    <div class="ct-form-grid">
+                        <label>شماره کنتور<input class="crm-input" name="meter_gas_number"></label>
+                        <label>عدد فعلی<input class="crm-input" name="meter_gas_reading" inputmode="numeric"></label>
+                    </div>
+                </div>
+            </div>
+            <input type="hidden" name="next_step" value="conditions">
+        </section>
+
+        {% elif handover_step == 'conditions' %}
+        <section class="ct-panel">
+            <h2>وضعیت ملک</h2>
+            <p class="ct-panel__lead">وضعیت هر بخش را مشخص کنید. در صورت نیاز عکس اضافه کنید.</p>
+            {% for item in condition_items %}
+            <div class="ct-condition-card">
+                <div class="ct-condition-card__head">
+                    <strong>{{ item }}</strong>
+                    <select class="crm-input crm-select" name="cond_{{ item }}_status" style="width:auto;min-width:8rem">
+                        {% for val, lbl in condition_statuses %}
+                        <option value="{{ val }}">{{ lbl }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <label>توضیح<input class="crm-input" name="cond_{{ item }}_note" placeholder="توضیح کوتاه (اختیاری)"></label>
+            </div>
+            {% endfor %}
+            <h3>تصاویر</h3>
+            <label>افزودن عکس<input type="file" name="photo" accept="image/*" capture="environment"></label>
+            <p class="ct-muted">می‌توانید از دوربین موبایل عکس بگیرید.</p>
+            <input type="hidden" name="next_step" value="equipment">
+        </section>
+
+        {% elif handover_step == 'equipment' %}
+        <section class="ct-panel">
+            <h2>تجهیزات</h2>
+            <p class="ct-panel__lead">تجهیزات تحویلی را ثبت کنید.</p>
+            <div class="ct-form-grid">
+                <label>نام<input class="crm-input" name="eq_0_name" placeholder="پکیج"></label>
+                <label>تعداد<input class="crm-input" name="eq_0_count" value="1" inputmode="numeric"></label>
+                <label>وضعیت
+                    <select class="crm-input crm-select" name="eq_0_status">
+                        {% for val, lbl in condition_statuses %}
+                        <option value="{{ val }}">{{ lbl }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+            </div>
+            <input type="hidden" name="next_step" value="review">
+        </section>
+
+        {% elif handover_step == 'review' %}
+        <section class="ct-panel">
+            <div class="ct-review-status ct-review-status--ready">صورت‌جلسه آماده ارسال است</div>
+            <h2 style="text-align:center;margin:0 0 1rem">صورت‌جلسه تحویل ملک</h2>
+            <div class="ct-contract-document">
+                <article class="ct-doc-section">
+                    <header><h3>تاریخ تحویل</h3></header>
+                    <div class="ct-doc-body">{{ handover.handover_date|default:"—" }}{% if handover.handover_time %} — {{ handover.handover_time }}{% endif %}</div>
+                </article>
+                <article class="ct-doc-section">
+                    <header><h3>طرفین</h3><a href="?step=basic" class="ct-edit-link">ویرایش</a></header>
+                    <div class="ct-doc-body">تحویل‌دهنده: {{ snapshot.delivered_by.first_name|default:"" }} {{ snapshot.delivered_by.last_name|default:"" }}
+تحویل‌گیرنده: {{ snapshot.received_by.first_name|default:"" }} {{ snapshot.received_by.last_name|default:"" }}</div>
+                </article>
+                <article class="ct-doc-section">
+                    <header><h3>کلیدها</h3><a href="?step=keys" class="ct-edit-link">ویرایش</a></header>
+                    <div class="ct-doc-body">در مرحله قبل ثبت شده</div>
+                </article>
+                <article class="ct-doc-section">
+                    <header><h3>کنتورها</h3><a href="?step=meters" class="ct-edit-link">ویرایش</a></header>
+                    <div class="ct-doc-body">در مرحله قبل ثبت شده</div>
+                </article>
+                <article class="ct-doc-section">
+                    <header><h3>وضعیت ملک</h3><a href="?step=conditions" class="ct-edit-link">ویرایش</a></header>
+                    <div class="ct-doc-body">در مرحله قبل ثبت شده</div>
+                </article>
+            </div>
+            <p class="ct-muted">پس از ارسال، طرفین با OTP صورت‌جلسه را تأیید می‌کنند.</p>
+            <button type="submit" name="action" value="publish" class="crm-dash-act crm-dash-act--primary ct-btn-block">ارسال برای تأیید طرفین</button>
+        </section>
+        {% endif %}
+
+        {% if handover_step != 'review' %}
+        <div class="ct-wizard-nav">
+            <button type="submit" class="crm-dash-act crm-dash-act--primary">تأیید و ادامه</button>
+        </div>
+        {% endif %}
+    </form>
+</div>
+{% endblock %}

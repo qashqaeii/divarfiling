@@ -2287,6 +2287,9 @@ class CRMDealDetailView(CRMContextMixin, LoginRequiredMixin, DetailView):
         ctx['deal_timeline_total'] = timeline['total']
         if d.customer_id and d.customer.phone:
             ctx['deal_customer_phone'] = d.customer.phone
+        from contracts.services.scope import contract_for_deal
+        ctx['deal_contracts'] = list(contract_for_deal(self.request.user, d.pk)[:5])
+        ctx['deal_contracts_count'] = contract_for_deal(self.request.user, d.pk).count()
         return ctx
 
     def post(self, request, deal_id):

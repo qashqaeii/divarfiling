@@ -220,6 +220,36 @@
 
     {% include 'workspace/crm/includes/deal_action_timeline.html' %}
 
+    <section class="crm-deal-block ct-deal-contracts" aria-label="قراردادها و اسناد">
+        <div class="crm-deal-block__mesh" aria-hidden="true"></div>
+        <header class="crm-deal-checklist-head">
+            <div class="crm-deal-checklist-title">
+                <span class="crm-deal-side-icon" aria-hidden="true"><i class="fas fa-file-signature"></i></span>
+                <div>
+                    <span class="crm-deal-block__kicker">مرکز قرارداد</span>
+                    <h2>قراردادها و اسناد</h2>
+                </div>
+            </div>
+            <a href="{% url 'workspace:deal_contracts' deal.pk %}" class="crm-dash-act crm-dash-act--primary">
+                <i class="fas fa-plus" aria-hidden="true"></i><span>{% if deal_contracts_count %}مدیریت{% else %}ایجاد قرارداد{% endif %}</span>
+            </a>
+        </header>
+        {% if deal_contracts %}
+        <ul class="ct-deal-contracts-list">
+            {% for c in deal_contracts %}
+            <li>
+                <a href="{% url 'workspace:contract_manage' deal.pk c.pk %}">
+                    <strong>{{ c.get_contract_type_display }}</strong>
+                    <span>{{ c.internal_number }} · {{ c.get_status_display }}</span>
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="crm-muted">هنوز قراردادی برای این معامله ساخته نشده است.</p>
+        {% endif %}
+    </section>
+
     <section class="crm-deal-checklist crm-deal-block" id="crmDealChecklist"
              data-checklist-url="{% url 'workspace:crm_deal_checklist' deal.id %}"
              aria-label="چک‌لیست مدارک">

@@ -1,0 +1,413 @@
+{% extends 'workspace/crm/base_crm.html' %}
+{% load static workspace_tags contract_tags %}
+
+{% block page_title %}ویزارد قرارداد{% endblock %}
+{% block crm_extra_css %}
+<link rel="stylesheet" href="{% static 'contracts/css/contracts.css' %}?v=3">
+{% endblock %}
+
+{% block crm_content %}
+<div class="ct-wizard" data-contract-id="{{ contract.pk }}" data-deal-id="{{ deal.pk }}" data-contract-type="{{ contract.contract_type }}" data-current-step="{{ wizard_step }}">
+    <header class="ct-wizard__head">
+        <a href="{% url 'workspace:deal_contracts' deal.pk %}" class="ct-back" aria-label="بازگشت"><i class="fas fa-arrow-right"></i></a>
+        <div>
+            <h1>{{ contract.get_contract_type_display }}</h1>
+            <p class="ct-muted">مرحله {{ step_number }} از {{ step_total }}{% if next_step_label %} — بعدی: {{ next_step_label }}{% endif %}</p>
+        </div>
+    </header>
+
+    <div class="ct-progress">
+        <div class="ct-progress__meta">
+            <span>پیشرفت</span>
+            <span>{{ step_number }}/{{ step_total }}</span>
+        </div>
+        <div class="ct-progress__bar"><div class="ct-progress__fill" style="width:{% widthratio step_number step_total 100 %}%"></div></div>
+    </div>
+
+    <ol class="ct-steps-list">
+        {% for s, label in display_steps %}
+        <li class="{% if s == wizard_step %}is-active{% endif %}">
+            <a href="?step={{ s }}">{{ label }}</a>
+        </li>
+        {% endfor %}
+    </ol>
+
+    <form method="post" class="ct-wizard-form" id="ct-wizard-form">
+        {% csrf_token %}
+        <input type="hidden" name="step" value="{{ wizard_step }}">
+
+        {% if wizard_step == 'parties' %}
+        <section class="ct-panel" id="ct-parties-step">
+            <h2>طرفین قرارداد</h2>
+            <p class="ct-panel__lead">اطلاعات هر طرف را بررسی کنید. در صورت نیاز ویرایش کنید.</p>
+            {% if prefill_parties %}
+            <div class="ct-prefill"><i class="fas fa-check-circle"></i> اطلاعات طرفین از CRM وارد شده است — فقط بررسی و تأیید کنید.</div>
+            {% endif %}
+            <div class="ct-party-cards" id="ct-party-rows">
+                {% for p in wizard_data.parties %}
+                <div class="ct-party-card" data-index="{{ forloop.counter0 }}">
+                    <div class="ct-party-card__summary">
+                        <div class="ct-party-card__info">
+                            <div class="ct-party-card__role">{{ p.role|ct_role_label }}</div>
+                            <p class="ct-party-card__name">{{ p.first_name }} {{ p.last_name }}</p>
+                            <p class="ct-party-card__meta">{% if p.mobile %}{{ p.mobile|ct_mask_phone }}{% endif %}{% if p.ownership_share %} · {{ p.ownership_share }}{% endif %}</p>
+                        </div>
+                        <button type="button" class="ct-party-card__edit">ویرایش</button>
+                    </div>
+                    <div class="ct-party-card__body">
+                        <div class="ct-form-grid">
+                            <label>نقش
+                                <select class="crm-input" name="party_{{ forloop.counter0 }}_role">
+                                    {% for val, lbl in contract.contract_type|ct_party_roles %}
+                                    <option value="{{ val }}"{% if p.role == val %} selected{% endif %}>{{ lbl }}</option>
+                                    {% endfor %}
+                                </select>
+                            </label>
+                            <label>نوع
+                                <select class="crm-input" name="party_{{ forloop.counter0 }}_person_type">
+                                    <option value="natural"{% if p.person_type == 'natural' %} selected{% endif %}>حقیقی</option>
+                                    <option value="legal"{% if p.person_type == 'legal' %} selected{% endif %}>حقوقی</option>
+                                </select>
+                            </label>
+                            <label>نام<input class="crm-input" name="party_{{ forloop.counter0 }}_first_name" value="{{ p.first_name }}"></label>
+                            <label>نام خانوادگی<input class="crm-input" name="party_{{ forloop.counter0 }}_last_name" value="{{ p.last_name }}"></label>
+                            <label>نام پدر<input class="crm-input" name="party_{{ forloop.counter0 }}_father_name" value="{{ p.father_name|default:'' }}"></label>
+                            <label>کد ملی<input class="crm-input" name="party_{{ forloop.counter0 }}_national_id" value="{{ p.national_id }}" inputmode="numeric"></label>
+                            <label>موبایل<input class="crm-input" type="tel" name="party_{{ forloop.counter0 }}_mobile" value="{{ p.mobile }}" inputmode="tel"></label>
+                            <label>قدرالسهم<input class="crm-input" name="party_{{ forloop.counter0 }}_ownership_share" value="{{ p.ownership_share|default:'' }}" placeholder="۶ دانگ"></label>
+                            <label class="ct-span-2">نشانی<input class="crm-input" name="party_{{ forloop.counter0 }}_address" value="{{ p.address }}"></label>
+                            <label>کد پستی<input class="crm-input" name="party_{{ forloop.counter0 }}_postal_code" value="{{ p.postal_code|default:'' }}" inputmode="numeric"></label>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="ct-party-card is-editing" data-index="0">
+                    <div class="ct-party-card__summary">
+                        <div class="ct-party-card__info">
+                            <div class="ct-party-card__role">{% if contract.contract_type == 'lease' %}موجر{% elif contract.contract_type == 'sale' %}فروشنده{% else %}مالک{% endif %}</div>
+                            <p class="ct-party-card__name">نام وارد نشده</p>
+                            <p class="ct-party-card__meta">اطلاعات تکمیل نشده</p>
+                        </div>
+                        <button type="button" class="ct-party-card__edit">بستن</button>
+                    </div>
+                    <div class="ct-party-card__body">
+                        <div class="ct-form-grid">
+                            <label>نقش<input class="crm-input" name="party_0_role" value="{% if contract.contract_type == 'lease' %}landlord{% elif contract.contract_type == 'sale' %}seller{% else %}owner{% endif %}"></label>
+                            <label>نام<input class="crm-input" name="party_0_first_name"></label>
+                            <label>نام خانوادگی<input class="crm-input" name="party_0_last_name"></label>
+                            <label>موبایل<input class="crm-input" type="tel" name="party_0_mobile" inputmode="tel"></label>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            <button type="button" class="ct-add-btn" id="ct-add-party"><i class="fas fa-plus"></i> افزودن {% if contract.contract_type == 'lease' %}طرف دیگر{% else %}طرف{% endif %}</button>
+            <input type="hidden" name="next_step" value="property">
+        </section>
+
+        {% elif wizard_step == 'property' %}
+        <section class="ct-panel">
+            <h2>مشخصات ملک</h2>
+            {% if prefill_property %}
+            <div class="ct-prefill"><i class="fas fa-check-circle"></i> اطلاعات ملک از فایل شخصی وارد شده است.</div>
+            {% endif %}
+            <div class="ct-form-grid">
+                <label>نوع ملک<input class="crm-input" name="prop_property_type" value="{{ wizard_data.property.property_type|default:'' }}" placeholder="آپارتمان"></label>
+                <label class="ct-span-2">آدرس<input class="crm-input" name="prop_address" value="{{ wizard_data.property.address|default:'' }}"></label>
+                <label>متراژ (م²)<input class="crm-input" name="prop_area" value="{{ wizard_data.property.area|default:'' }}" inputmode="numeric"></label>
+                <label>طبقه<input class="crm-input" name="prop_floor" value="{{ wizard_data.property.floor|default:'' }}"></label>
+                <label>شهر<input class="crm-input" name="prop_city" value="{{ wizard_data.property.city|default:'' }}"></label>
+                <label>منطقه<input class="crm-input" name="prop_district" value="{{ wizard_data.property.district|default:'' }}"></label>
+                <label class="ct-span-2"><input type="checkbox" name="prop_has_parking"{% if wizard_data.property.has_parking %} checked{% endif %}> پارکینگ دارد</label>
+                <label class="ct-span-2"><input type="checkbox" name="prop_has_storage"{% if wizard_data.property.has_storage %} checked{% endif %}> انباری دارد</label>
+            </div>
+            <details class="ct-disclosure">
+                <summary>اطلاعات تکمیلی</summary>
+                <div class="ct-disclosure__body">
+                    <div class="ct-form-grid">
+                        <label>جهت واحد<input class="crm-input" name="prop_unit_direction" value="{{ wizard_data.property.unit_direction|default:'' }}"></label>
+                        <label>نوع نما<input class="crm-input" name="prop_facade_type" value="{{ wizard_data.property.facade_type|default:'' }}"></label>
+                        <label>شماره واحد<input class="crm-input" name="prop_unit" value="{{ wizard_data.property.unit|default:'' }}"></label>
+                        <label>پلاک ثبتی<input class="crm-input" name="prop_main_plaque" value="{{ wizard_data.property.main_plaque|default:'' }}"></label>
+                        <label>شماره اشتراک آب<input class="crm-input" name="util_water_sub" value="{{ wizard_data.property.utilities.water.subscription_no|default:'' }}"></label>
+                        <label>شماره اشتراک برق<input class="crm-input" name="util_electricity_sub" value="{{ wizard_data.property.utilities.electricity.subscription_no|default:'' }}"></label>
+                        <label>شماره اشتراک گاز<input class="crm-input" name="util_gas_sub" value="{{ wizard_data.property.utilities.gas.subscription_no|default:'' }}"></label>
+                        <label>سال ساخت<input class="crm-input" name="prop_build_year" value="{{ wizard_data.property.build_year|default:'' }}" inputmode="numeric"></label>
+                        <label>تعداد طبقات<input class="crm-input" name="prop_total_floors" value="{{ wizard_data.property.total_floors|default:'' }}" inputmode="numeric"></label>
+                    </div>
+                </div>
+            </details>
+            <input type="hidden" name="next_step" value="financial">
+        </section>
+
+        {% elif wizard_step == 'financial' %}
+        <section class="ct-panel">
+            {% if contract.contract_type == 'lease' %}
+            <h2>مدت و مبلغ</h2>
+            {% if prefill_financial %}
+            <div class="ct-prefill"><i class="fas fa-check-circle"></i> مبالغ از اطلاعات ملک پیشنهاد شده — بررسی کنید.</div>
+            {% endif %}
+            <div class="ct-form-grid">
+                <label>تاریخ شروع<input class="crm-input" name="fin_lease_start" value="{{ wizard_data.financial.lease_start|default:'' }}" placeholder="1404/01/01"></label>
+                <label>تاریخ پایان<input class="crm-input" name="fin_lease_end" value="{{ wizard_data.financial.lease_end|default:'' }}" placeholder="1405/01/01"></label>
+                <label>روز پرداخت اجاره<input class="crm-input" name="fin_rent_day" value="{{ wizard_data.financial.rent_payment_day|default:'1' }}" inputmode="numeric"></label>
+                <label>تاریخ تحویل<input class="crm-input" name="fin_delivery_date" value="{{ wizard_data.financial.delivery_date|default:'' }}" placeholder="1404/01/01"></label>
+            </div>
+            <div class="ct-money-grid">
+                <div class="ct-money-card">
+                    <label>ودیعه <span class="ct-unit-label">(تومان)</span>
+                        <input class="crm-input ct-money-input" name="fin_deposit" value="{{ wizard_data.financial.deposit|ct_format_number }}" inputmode="numeric">
+                        <span class="ct-money-words">{{ wizard_data.financial.deposit|ct_toman_words }}</span>
+                    </label>
+                </div>
+                <div class="ct-money-card">
+                    <label>اجاره ماهانه <span class="ct-unit-label">(تومان)</span>
+                        <input class="crm-input ct-money-input" name="fin_monthly_rent" value="{{ wizard_data.financial.monthly_rent|ct_format_number }}" inputmode="numeric">
+                        <span class="ct-money-words">{{ wizard_data.financial.monthly_rent|ct_toman_words }}</span>
+                    </label>
+                </div>
+            </div>
+            <h3>ودیعه</h3>
+            <div class="ct-option-group">
+                <label class="ct-option-card">
+                    <input type="radio" name="fin_deposit_mode" value="new"{% if wizard_data.financial.deposit_mode != 'retained' %} checked{% endif %}>
+                    <span class="ct-option-card__text"><strong>ودیعه در این قرارداد پرداخت می‌شود</strong></span>
+                </label>
+                <label class="ct-option-card">
+                    <input type="radio" name="fin_deposit_mode" value="retained"{% if wizard_data.financial.deposit_mode == 'retained' %} checked{% endif %}>
+                    <span class="ct-option-card__text"><strong>ودیعه قرارداد قبلی نزد موجر باقی مانده است</strong></span>
+                </label>
+            </div>
+            <div id="ct-prev-deposit-block" style="{% if wizard_data.financial.deposit_mode != 'retained' %}display:none{% endif %}">
+                <div class="ct-form-grid">
+                    <label>مبلغ ودیعه قبلی (تومان)<input class="crm-input ct-money-input" name="fin_prev_deposit" value="{{ wizard_data.financial.previous_deposit_amount|ct_format_number }}" inputmode="numeric"></label>
+                    <label>شماره/مرجع قرارداد قبلی<input class="crm-input" name="fin_prev_contract_ref" value="{{ wizard_data.financial.previous_contract_ref|default:'' }}"></label>
+                    <label>تاریخ قرارداد قبلی<input class="crm-input" name="fin_prev_contract_date" value="{{ wizard_data.financial.previous_contract_date|default:'' }}"></label>
+                </div>
+            </div>
+            <h3>شرایط قرارداد</h3>
+            <div class="ct-switch-row">
+                <span class="ct-switch-row__label">انتقال به غیر</span>
+                <label class="ct-toggle">
+                    <input type="checkbox" name="fin_transfer_allowed"{% if wizard_data.financial.transfer_to_third_party_allowed %} checked{% endif %}>
+                    <span class="ct-toggle__slider"></span>
+                </label>
+            </div>
+            <div class="ct-switch-row">
+                <span class="ct-switch-row__label">هزینه شارژ</span>
+                <div class="ct-segment">
+                    <label><input type="radio" name="cost_charge" value="tenant"{% if wizard_data.financial.costs.charge == 'tenant' or not wizard_data.financial.costs %} checked{% endif %}><span>مستأجر</span></label>
+                    <label><input type="radio" name="cost_charge" value="landlord"{% if wizard_data.financial.costs.charge == 'landlord' %} checked{% endif %}><span>موجر</span></label>
+                </div>
+            </div>
+            <div class="ct-switch-row">
+                <span class="ct-switch-row__label">تعمیرات جزئی</span>
+                <div class="ct-segment">
+                    <label><input type="radio" name="cost_minor_repairs" value="tenant"{% if wizard_data.financial.costs.minor_repairs == 'tenant' %} checked{% elif not wizard_data.financial.costs %} checked{% endif %}><span>مستأجر</span></label>
+                    <label><input type="radio" name="cost_minor_repairs" value="landlord"{% if wizard_data.financial.costs.minor_repairs == 'landlord' %} checked{% endif %}><span>موجر</span></label>
+                </div>
+            </div>
+            <div class="ct-switch-row">
+                <span class="ct-switch-row__label">تعمیرات اساسی</span>
+                <div class="ct-segment">
+                    <label><input type="radio" name="cost_major_repairs" value="landlord"{% if wizard_data.financial.costs.major_repairs == 'landlord' %} checked{% elif not wizard_data.financial.costs %} checked{% endif %}><span>موجر</span></label>
+                    <label><input type="radio" name="cost_major_repairs" value="tenant"{% if wizard_data.financial.costs.major_repairs == 'tenant' %} checked{% endif %}><span>مستأجر</span></label>
+                </div>
+            </div>
+            <div class="ct-penalty-block is-disabled">
+                <div class="ct-toggle-row">
+                    <strong>تأخیر در تخلیه</strong>
+                    <label class="ct-toggle">
+                        <input type="checkbox" class="ct-penalty-toggle" name="pen_tenant_vacate_enabled">
+                        <span class="ct-toggle__slider"></span>
+                    </label>
+                </div>
+                <label>مبلغ روزانه (تومان)
+                    <input class="crm-input ct-money-input" name="pen_tenant_vacate_amount" inputmode="numeric">
+                    <span class="ct-money-words"></span>
+                </label>
+            </div>
+            <input type="hidden" name="next_step" value="clauses">
+
+            {% elif contract.contract_type == 'sale' %}
+            <h2>مبلغ و پرداخت</h2>
+            {% if prefill_financial %}
+            <div class="ct-prefill"><i class="fas fa-check-circle"></i> مبلغ معامله از اطلاعات معامله پیشنهاد شده است.</div>
+            {% endif %}
+            <div class="ct-money-grid">
+                <div class="ct-money-card">
+                    <label>مبلغ معامله <span class="ct-unit-label">(تومان)</span>
+                        <input class="crm-input ct-money-input" name="fin_total_price" value="{{ wizard_data.financial.total_price|ct_format_number }}" inputmode="numeric">
+                        <span class="ct-money-words">{{ wizard_data.financial.total_price|ct_toman_words }}</span>
+                    </label>
+                </div>
+                <div class="ct-money-card">
+                    <label>بیعانه <span class="ct-unit-label">(تومان)</span>
+                        <input class="crm-input ct-money-input" name="fin_earnest_money" value="{{ wizard_data.financial.earnest_money|ct_format_number }}" inputmode="numeric">
+                        <span class="ct-money-words">{{ wizard_data.financial.earnest_money|ct_toman_words }}</span>
+                    </label>
+                </div>
+            </div>
+            <h3>برنامه پرداخت</h3>
+            <div class="ct-payments-list" id="ct-payments">
+                {% for pay in wizard_data.financial.payments %}
+                <div class="ct-payment-card" data-index="{{ forloop.counter0 }}">
+                    <div class="ct-payment-card__view">
+                        <div class="ct-payment-card__info">
+                            <div class="ct-payment-card__label">{{ pay.label }}</div>
+                            <div class="ct-payment-card__amount">{{ pay.amount|ct_format_toman }}</div>
+                            <div class="ct-payment-card__date">{{ pay.due_date }}</div>
+                        </div>
+                        <div class="ct-payment-card__actions">
+                            <button type="button" data-action="edit">ویرایش</button>
+                            <button type="button" data-action="delete">حذف</button>
+                        </div>
+                    </div>
+                    <div class="ct-payment-card__form ct-form-grid" style="display:none">
+                        <label>عنوان<input class="crm-input" name="pay_{{ forloop.counter0 }}_label" value="{{ pay.label }}"></label>
+                        <label>مبلغ (تومان)<input class="crm-input ct-money-input" name="pay_{{ forloop.counter0 }}_amount" value="{{ pay.amount|ct_format_number }}" inputmode="numeric"></label>
+                        <label>تاریخ<input class="crm-input" name="pay_{{ forloop.counter0 }}_due_date" value="{{ pay.due_date }}"></label>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            <button type="button" class="ct-add-btn" id="ct-add-payment"><i class="fas fa-plus"></i> افزودن پرداخت</button>
+            <div class="ct-payment-summary">
+                <div><em>مبلغ معامله</em><strong id="ct-pay-total">—</strong></div>
+                <div><em>جمع پرداخت‌ها</em><strong id="ct-pay-sum">—</strong></div>
+                <div><em>باقی‌مانده</em><strong id="ct-pay-remain">—</strong></div>
+            </div>
+            <details class="ct-disclosure">
+                <summary>تحویل و انتقال رسمی</summary>
+                <div class="ct-disclosure__body">
+                    <div class="ct-form-grid">
+                        <label>تاریخ تحویل<input class="crm-input" name="fin_delivery_date" value="{{ wizard_data.financial.delivery_date|default:'' }}"></label>
+                        <label>تاریخ انتقال رسمی<input class="crm-input" name="fin_official_transfer_date" value="{{ wizard_data.financial.official_transfer_date|default:'' }}"></label>
+                        <label>محل انتقال<input class="crm-input" name="fin_transfer_place" value="{{ wizard_data.financial.transfer_place|default:'' }}"></label>
+                        <label>شماره دفترخانه<input class="crm-input" name="fin_notary_number" value="{{ wizard_data.financial.notary_office_number|default:'' }}"></label>
+                    </div>
+                </div>
+            </details>
+            <input type="hidden" name="next_step" value="clauses">
+
+            {% else %}
+            <h2>آورده‌ها و سهم</h2>
+            <p class="ct-panel__lead">سهم مالک و سازنده را مشخص کنید.</p>
+            <div class="ct-form-grid">
+                <label>درصد مالک<input class="crm-input" name="jv_owner_percent" value="{{ wizard_data.jv.owner_percent|default:'' }}" inputmode="numeric" placeholder="۵۰"></label>
+                <label>درصد سازنده<input class="crm-input" name="jv_builder_percent" value="{{ wizard_data.jv.builder_percent|default:'' }}" inputmode="numeric" placeholder="۵۰"></label>
+                <label>ارزش ملک مالک (تومان)<input class="crm-input ct-money-input" name="jv_owner_property_value" value="{{ wizard_data.jv.contributions.owner_property_value|ct_format_number }}" inputmode="numeric"></label>
+                <label>هزینه ساخت (تومان)<input class="crm-input ct-money-input" name="jv_builder_cost" value="{{ wizard_data.jv.contributions.builder_construction_cost|ct_format_number }}" inputmode="numeric"></label>
+                <label>تاریخ شروع<input class="crm-input" name="jv_start_date" value="{{ wizard_data.jv.start_date|default:'' }}"></label>
+                <label>تاریخ تحویل<input class="crm-input" name="jv_delivery_date" value="{{ wizard_data.jv.delivery_date|default:'' }}"></label>
+            </div>
+            <input type="hidden" name="next_step" value="clauses">
+            {% endif %}
+        </section>
+
+        {% elif wizard_step == 'witnesses' %}
+        <section class="ct-panel">
+            <h2>شاهدان</h2>
+            <p class="ct-panel__lead">لینک تأیید قرارداد برای شاهدان نیز پیامک می‌شود.</p>
+            <div class="ct-witness-grid">
+                <div class="ct-witness-card">
+                    <h3>شاهد موجر</h3>
+                    <div class="ct-form-grid">
+                        <input type="hidden" name="witness_1_role" value="شاهد موجر">
+                        {% with w=wizard_data.witnesses.0 %}
+                        <label>نام<input class="crm-input" name="witness_1_first_name" value="{% if w %}{{ w.first_name }}{% endif %}"></label>
+                        <label>نام خانوادگی<input class="crm-input" name="witness_1_last_name" value="{% if w %}{{ w.last_name }}{% endif %}"></label>
+                        <label>کد ملی<input class="crm-input" name="witness_1_national_id" value="{% if w %}{{ w.national_id }}{% endif %}" inputmode="numeric"></label>
+                        <label>موبایل<input class="crm-input" type="tel" name="witness_1_mobile" value="{% if w %}{{ w.mobile }}{% endif %}" inputmode="tel"></label>
+                        {% endwith %}
+                    </div>
+                </div>
+                <div class="ct-witness-card">
+                    <h3>شاهد مستأجر</h3>
+                    <div class="ct-form-grid">
+                        <input type="hidden" name="witness_2_role" value="شاهد مستأجر">
+                        {% with w=wizard_data.witnesses.1 %}
+                        <label>نام<input class="crm-input" name="witness_2_first_name" value="{% if w %}{{ w.first_name }}{% endif %}"></label>
+                        <label>نام خانوادگی<input class="crm-input" name="witness_2_last_name" value="{% if w %}{{ w.last_name }}{% endif %}"></label>
+                        <label>کد ملی<input class="crm-input" name="witness_2_national_id" value="{% if w %}{{ w.national_id }}{% endif %}" inputmode="numeric"></label>
+                        <label>موبایل<input class="crm-input" type="tel" name="witness_2_mobile" value="{% if w %}{{ w.mobile }}{% endif %}" inputmode="tel"></label>
+                        {% endwith %}
+                    </div>
+                </div>
+            </div>
+            <input type="hidden" name="next_step" value="review">
+        </section>
+
+        {% elif wizard_step == 'clauses' %}
+        <section class="ct-panel">
+            <h2>{% if contract.contract_type == 'lease' %}شرایط و بندها{% else %}بندهای قرارداد{% endif %}</h2>
+            <p class="ct-panel__lead">بندهای مورد نظر را فعال کنید. متن کامل هر بند با کلیک «مشاهده متن» باز می‌شود.</p>
+            <div class="ct-clauses">
+                {% for clause in available_clauses %}
+                <div class="ct-clause-item{% if clause.code in selected_clause_codes %} is-active{% endif %}">
+                    <div class="ct-clause-item__head">
+                        <input type="checkbox" name="clause_code" value="{{ clause.code }}" id="clause_{{ clause.code }}"{% if clause.code in selected_clause_codes %} checked{% endif %}>
+                        <label for="clause_{{ clause.code }}" class="ct-clause-item__title">{{ clause.title }}</label>
+                        <span class="ct-clause-item__status">{% if clause.code in selected_clause_codes %}فعال{% else %}غیرفعال{% endif %}</span>
+                        <button type="button" class="ct-clause-expand">مشاهده متن</button>
+                    </div>
+                    <div class="ct-clause-item__body">{{ clause.body_template|linebreaksbr }}</div>
+                </div>
+                {% empty %}
+                <p class="ct-muted">بند آماده‌ای یافت نشد.</p>
+                {% endfor %}
+            </div>
+            <h3>توافق اختصاصی</h3>
+            <p class="ct-muted">در صورت توافق خاص بین طرفین، اینجا اضافه کنید.</p>
+            <div class="ct-form-grid">
+                <label>عنوان<input class="crm-input" name="custom_clause_title" placeholder="عنوان توافق"></label>
+                <label class="ct-span-2">متن توافق<textarea class="crm-input" name="custom_clause_body" rows="3" placeholder="متن توافق اختصاصی طرفین"></textarea></label>
+            </div>
+            <input type="hidden" name="next_step" value="{% if contract.contract_type == 'lease' %}witnesses{% else %}review{% endif %}">
+        </section>
+
+        {% elif wizard_step == 'review' %}
+        <section class="ct-panel">
+            {% if validation_count %}
+            <div class="ct-review-status ct-review-status--pending">{{ validation_count }} مورد نیاز به تکمیل</div>
+            {% else %}
+            <div class="ct-review-status ct-review-status--ready">قرارداد آماده ارسال است</div>
+            {% endif %}
+
+            <div class="ct-contract-document">
+                <h2 style="text-align:center;margin:0 0 1rem;font-size:1.15rem">{{ contract.get_contract_type_display }}</h2>
+                {% for sec in contract_sections %}
+                <article class="ct-doc-section">
+                    <header>
+                        <h3>{{ sec.title }}</h3>
+                        <a href="?step={{ sec.edit_step }}" class="ct-edit-link">ویرایش</a>
+                    </header>
+                    <div class="ct-doc-body">{{ sec.body|linebreaksbr }}</div>
+                </article>
+                {% empty %}
+                <p class="ct-muted">اطلاعات کافی برای نمایش سند وجود ندارد. مراحل قبل را تکمیل کنید.</p>
+                {% endfor %}
+            </div>
+
+            {% if validation_errors %}
+            <ul class="ct-errors">{% for e in validation_errors %}<li>{{ e }}</li>{% endfor %}</ul>
+            {% endif %}
+
+            <div class="ct-disclaimer ct-disclaimer--info"><p>{{ legal_disclaimer }}</p></div>
+            <label class="ct-ack"><input type="checkbox" name="creator_ack" required> {{ creator_ack }}</label>
+            <button type="submit" name="action" value="prepare_send" class="crm-dash-act crm-dash-act--primary ct-btn-block">ارسال برای تأیید طرفین</button>
+        </section>
+        {% endif %}
+
+        {% if wizard_step != 'review' %}
+        <div class="ct-wizard-nav">
+            <button type="submit" class="crm-dash-act crm-dash-act--primary">تأیید و ادامه</button>
+        </div>
+        {% endif %}
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'contracts/js/wizard.js' %}?v=3"></script>
+{% endblock %}

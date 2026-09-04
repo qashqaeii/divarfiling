@@ -67,6 +67,7 @@ INSTALLED_APPS = [
     'product_hub',
     'mobile_api',
     'desktop_api',
+    'contracts',
 ]
 
 MIDDLEWARE = [

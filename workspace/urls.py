@@ -1,6 +1,7 @@
 """URLهای workspace."""
 from django.urls import include, path
 
+from contracts.urls import workspace_urlpatterns as contract_workspace_urls
 from workspace import crm_views, export_security_views, support_views, team_api_views, team_messages_api_views, views
 from workspace.academy import api_views as academy_api_views
 from workspace.academy import views as academy_views
@@ -201,4 +202,7 @@ urlpatterns = [
     path('support/<int:ticket_id>/reply/', support_views.SupportTicketReplyView.as_view(), name='support_reply'),
     path('support/<int:ticket_id>/close/', support_views.SupportTicketCloseView.as_view(), name='support_close'),
     path('support/<int:ticket_id>/reopen/', support_views.SupportTicketReopenView.as_view(), name='support_reopen'),
+
+    # Digital contracts
+    *contract_workspace_urls,
 ]

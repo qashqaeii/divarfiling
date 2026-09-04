@@ -12,6 +12,7 @@ from django.views.generic import RedirectView
 from divar_shop.robots import robots_txt
 from divar_shop.sitemaps import sitemaps
 from accounts.lead_acquisition_views import LeadClickRedirectView
+from contracts.urls import public_urlpatterns as contract_public_urls
 
 
 def favicon_redirect(_request):
@@ -50,7 +51,7 @@ urlpatterns = [
     path('blog/', include('blog.urls')),
     path('workspace/', include('workspace.urls')),
     path('p/', include('workspace.public_urls')),
-]
+] + contract_public_urls
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

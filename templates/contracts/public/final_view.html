@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مشاهده قرارداد — فایلینگ دیوار</title>
+    <link rel="stylesheet" href="/static/contracts/css/public.css?v=1">
+</head>
+<body class="ct-public">
+    <main class="ct-public__card">
+        <h1>{{ contract.get_contract_type_display }}</h1>
+        <p>وضعیت: {{ contract.get_status_display }}</p>
+        {% if error %}<p class="ct-error">{{ error }}</p>{% endif %}
+        {% if not verified %}
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="request_otp">
+            <button type="submit">دریافت کد ورود</button>
+        </form>
+        {% if show_otp %}
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="verify_otp">
+            <input type="text" name="otp_code" placeholder="کد تأیید" required>
+            <button type="submit">مشاهده کامل</button>
+        </form>
+        {% endif %}
+        {% else %}
+        {% for clause in clauses %}
+        <article><h3>{{ clause.title }}</h3><p>{{ clause.body_text|linebreaksbr }}</p></article>
+        {% endfor %}
+        {% endif %}
+    </main>
+</body>
+</html>

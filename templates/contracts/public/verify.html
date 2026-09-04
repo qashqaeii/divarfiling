@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تأیید سند — فایلینگ دیوار</title>
+    <link rel="stylesheet" href="/static/contracts/css/public.css?v=1">
+</head>
+<body class="ct-public">
+    <main class="ct-public__card">
+        <h1>تأیید قرارداد دیجیتال</h1>
+        <dl class="ct-verify-dl">
+            <dt>شناسه داخلی فایلینگ</dt><dd>{{ contract.internal_number }}</dd>
+            <dt>نوع</dt><dd>{{ contract.get_contract_type_display }}</dd>
+            {% if version %}<dt>نسخه</dt><dd>{{ version.version_number }}</dd>{% endif %}
+            <dt>وضعیت</dt><dd>{{ status_label }}</dd>
+            {% if content_hash %}<dt>هش سند</dt><dd><code>{{ content_hash }}</code></dd>{% endif %}
+        </dl>
+        <p class="ct-muted">این صفحه فقط اطلاعات غیرحساس را نمایش می‌دهد.</p>
+        <p class="ct-muted"><strong>شناسه داخلی فایلینگ دیوار</strong> — این شناسه کد رهگیری رسمی دولتی نیست.</p>
+    </main>
+</body>
+</html>

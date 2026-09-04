@@ -1,0 +1,32 @@
+{% extends 'workspace/crm/base_crm.html' %}
+{% load static %}
+
+{% block page_title %}مرکز قراردادها{% endblock %}
+{% block crm_extra_css %}
+<link rel="stylesheet" href="{% static 'contracts/css/contracts.css' %}?v=1">
+{% endblock %}
+
+{% block crm_content %}
+<div class="ct-center">
+    <h1>مرکز قراردادهای دیجیتال</h1>
+    <form method="get" class="ct-filter">
+        <input type="search" name="q" value="{{ request.GET.q }}" placeholder="جستجو شناسه، معامله..." class="crm-input">
+        <select name="status" class="crm-input">
+            <option value="">همه وضعیت‌ها</option>
+            <option value="draft">پیش‌نویس</option>
+            <option value="sent">ارسال‌شده</option>
+            <option value="finalized">نهایی</option>
+        </select>
+        <button type="submit" class="crm-dash-act">فیلتر</button>
+    </form>
+    {% for c in contracts %}
+    <article class="ct-card">
+        <h3>{{ c.internal_number }} — {{ c.get_contract_type_display }}</h3>
+        <p>{{ c.get_status_display }} · {{ c.deal.title }}</p>
+        <a href="{% url 'workspace:contract_manage' c.deal_id c.pk %}">مدیریت</a>
+    </article>
+    {% empty %}
+    <p class="ct-muted">قراردادی یافت نشد.</p>
+    {% endfor %}
+</div>
+{% endblock %}

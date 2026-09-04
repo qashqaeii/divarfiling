@@ -1,0 +1,139 @@
+"""ویوهای صورت‌جلسه تحویل."""
+from __future__ import annotations
+
+from django.contrib import messages
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.http import FileResponse, Http404
+from django.shortcuts import redirect
+from django.urls import reverse
+from django.utils.decorators import method_decorator
+from django.views import View
+from django.views.decorators.csrf import csrf_protect
+from django.views.generic import TemplateView
+
+from contracts.constants import HANDOVER_ACK_ITEMS, HANDOVER_CONDITION_ITEMS, HANDOVER_CONDITION_STATUSES, HANDOVER_KEY_TYPES
+from contracts.services.attachments import attachment_for_user, build_attachment_response, save_contract_attachment
+from contracts.services.handover import HandoverError, create_handover, publish_handover, save_handover_step
+from contracts.services.handover_parse import parse_handover_step
+from contracts.services.scope import contract_for_user
+from contracts.views import DealContractsMixin
+
+
+class HandoverCreateView(DealContractsMixin, View):
+    def post(self, request, deal_id, contract_id):
+        try:
+            handover = create_handover(request.user, contract_id, request=request)
+        except HandoverError as exc:
+            messages.error(request, str(exc))
+            return redirect('workspace:contract_manage', deal_id=deal_id, contract_id=contract_id)
+        return redirect('workspace:handover_wizard', deal_id=deal_id, contract_id=contract_id, handover_id=handover.pk)
+
+
+class HandoverWizardView(DealContractsMixin, TemplateView):
+    template_name = 'contracts/handover_wizard.html'
+
+    def get_handover(self):
+        contract = contract_for_user(self.request.user, self.kwargs['contract_id'])
+        if not contract or contract.deal_id != self.kwargs['deal_id']:
+            raise Http404
+        handover = contract.handovers.filter(pk=self.kwargs['handover_id']).first()
+        if not handover:
+            raise Http404
+        return handover, contract
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        handover, contract = self.get_handover()
+        step = self.request.GET.get('step', 'basic')
+        ctx.update({
+            'deal': self.get_deal(),
+            'contract': contract,
+            'handover': handover,
+            'handover_step': step,
+            'snapshot': handover.snapshot_json or {},
+            'key_types': HANDOVER_KEY_TYPES,
+            'condition_items': HANDOVER_CONDITION_ITEMS,
+            'condition_statuses': HANDOVER_CONDITION_STATUSES,
+            'crm_section': 'deals',
+        })
+        return ctx
+
+    @method_decorator(csrf_protect)
+    def post(self, request, deal_id, contract_id, handover_id):
+        handover, contract = self.get_handover()
+        step = request.POST.get('step', 'basic')
+        try:
+            data = parse_handover_step(request.POST, step, handover)
+            save_handover_step(handover, step, data, user=request.user)
+            if request.FILES.get('photo'):
+                save_contract_attachment(
+                    contract=contract,
+                    version=handover.version,
+                    uploaded=request.FILES['photo'],
+                    attachment_type='property_photo',
+                    title=request.POST.get('photo_caption', ''),
+                    user=request.user,
+                    handover=handover,
+                )
+            if request.POST.get('action') == 'publish':
+                publish_handover(handover, user=request.user, request=request)
+                messages.success(request, 'صورت‌جلسه برای طرفین ارسال شد.')
+                return redirect('workspace:contract_manage', deal_id=deal_id, contract_id=contract_id)
+        except HandoverError as exc:
+            messages.error(request, str(exc))
+        next_step = request.POST.get('next_step', step)
+        url = reverse('workspace:handover_wizard', kwargs={
+            'deal_id': deal_id, 'contract_id': contract_id, 'handover_id': handover.pk,
+        })
+        return redirect(f'{url}?step={next_step}')
+
+
+class ContractAttachmentUploadView(DealContractsMixin, View):
+    def post(self, request, deal_id, contract_id):
+        contract = contract_for_user(request.user, contract_id)
+        if not contract or contract.deal_id != deal_id:
+            raise Http404
+        version = contract.current_version
+        uploaded = request.FILES.get('file')
+        if not uploaded:
+            messages.error(request, 'فایلی انتخاب نشده است.')
+            return redirect(request.META.get('HTTP_REFERER', reverse('workspace:contract_manage', kwargs={
+                'deal_id': deal_id, 'contract_id': contract_id,
+            })))
+        from django.core.exceptions import ValidationError
+        try:
+            save_contract_attachment(
+                contract=contract,
+                version=version,
+                uploaded=uploaded,
+                attachment_type=request.POST.get('attachment_type', 'other'),
+                title=request.POST.get('title', ''),
+                user=request.user,
+            )
+            messages.success(request, 'فایل آپلود شد.')
+        except ValidationError as exc:
+            messages.error(request, str(exc))
+        return redirect(request.META.get('HTTP_REFERER', reverse('workspace:contract_manage', kwargs={
+            'deal_id': deal_id, 'contract_id': contract_id,
+        })))
+
+
+class ContractAttachmentDownloadView(LoginRequiredMixin, View):
+    def get(self, request, deal_id, contract_id, attachment_id):
+        att = attachment_for_user(request.user, attachment_id)
+        if not att or att.contract_id != contract_id or att.contract.deal_id != deal_id:
+            raise Http404
+        inline = request.GET.get('inline') == '1'
+        return build_attachment_response(att, inline=inline)
+
+
+class HandoverPdfDownloadView(LoginRequiredMixin, View):
+    def get(self, request, deal_id, contract_id, handover_id):
+        contract = contract_for_user(request.user, contract_id)
+        if not contract or contract.deal_id != deal_id:
+            raise Http404
+        handover = contract.handovers.filter(pk=handover_id).first()
+        if not handover or not handover.pdf_file:
+            raise Http404
+        return FileResponse(handover.pdf_file.open('rb'), as_attachment=True,
+                            filename=handover.pdf_file.name.split('/')[-1])

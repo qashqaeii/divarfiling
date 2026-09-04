@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>تأیید قرارداد — فایلینگ دیوار</title>
+    <link rel="stylesheet" href="/static/contracts/css/public.css?v=2">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="ct-public">
+    <div class="ct-public__brand">
+        <div class="ct-public__logo">DF</div>
+        <strong>فایلینگ دیوار</strong>
+        <span>تأیید دیجیتال قرارداد</span>
+    </div>
+
+    <main class="ct-public__card">
+        <header class="ct-public__head">
+            <h1>{{ contract.get_contract_type_display }}</h1>
+            {% if role_label %}<p>نقش شما: <strong>{{ role_label }}</strong></p>{% endif %}
+            {% if sender_name %}<p>ارسال‌کننده: {{ sender_name }}</p>{% endif %}
+        </header>
+
+        {% if error %}<p class="ct-error">{{ error }}</p>{% endif %}
+
+        {% if not verified and not show_otp %}
+        <span class="ct-public__step">مرحله ۱ از ۳</span>
+        <p class="ct-muted">برای مشاهده و تأیید قرارداد، موبایل و کد ملی خود را وارد کنید.</p>
+        <form method="post" class="ct-public-form">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="verify_identity">
+            <label>شماره موبایل<input type="tel" name="mobile" required autocomplete="tel" inputmode="tel" placeholder="09123456789"></label>
+            <label>کد ملی<input type="text" name="national_id" maxlength="10" required inputmode="numeric" placeholder="کد ملی ۱۰ رقمی"></label>
+            <button type="submit">ارسال کد تأیید</button>
+        </form>
+
+        {% elif show_otp and not verified %}
+        <span class="ct-public__step">مرحله ۲ از ۳</span>
+        <p class="ct-muted">کد تأیید به موبایل شما پیامک شد.</p>
+        <form method="post" class="ct-public-form">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="verify_otp">
+            <label>کد تأیید<input type="text" name="otp_code" inputmode="numeric" required autocomplete="one-time-code" placeholder="کد ۶ رقمی"></label>
+            <button type="submit">تأیید کد</button>
+        </form>
+
+        {% else %}
+        <span class="ct-public__step">مرحله ۳ از ۳</span>
+        <section class="ct-contract-view">
+            {% for clause in clauses %}
+            <article class="ct-clause-view">
+                <h3>{{ clause.title }}{% if clause.is_custom %} <span class="ct-badge">توافق اختصاصی</span>{% endif %}</h3>
+                <p>{{ clause.body_text|linebreaksbr }}</p>
+                {% if clause.plain_explanation %}
+                <details><summary>توضیح ساده</summary>
+                <p>{{ clause.plain_explanation }}</p>
+                </details>
+                {% endif %}
+            </article>
+            {% endfor %}
+
+            <form method="post" class="ct-public-form" id="ct-accept-form">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="accept">
+                {% for item in party_ack_items %}
+                <label class="ct-ack"><input type="checkbox" name="ack" value="{{ forloop.counter }}" required> {{ item }}</label>
+                {% endfor %}
+                <div class="ct-signature-pad-wrap">
+                    <p class="ct-muted" style="margin:0 0 .5rem">امضای خود را در کادر زیر بکشید:</p>
+                    <canvas id="ct-signature" width="320" height="120"></canvas>
+                    <input type="hidden" name="signature_data" id="ct-signature-data">
+                    <button type="button" id="ct-signature-clear">پاک کردن امضا</button>
+                </div>
+                <button type="submit" class="ct-btn-primary">تأیید قرارداد</button>
+            </form>
+        </section>
+        {% endif %}
+
+        <div class="ct-disclaimer" style="margin-top:1.25rem;margin-bottom:0">
+            <p>{{ legal_disclaimer }}</p>
+        </div>
+    </main>
+    <script src="/static/contracts/js/signature.js?v=1"></script>
+</body>
+</html>

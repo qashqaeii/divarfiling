@@ -9,8 +9,8 @@
 {% block crm_actions %}{% endblock %}
 
 {% block ws_surface_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/crm-deals-mobile.css' %}?v=9">
-<link rel="stylesheet" href="{% static 'workspace/css/crm-deals-list-ui.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-deals-mobile.css' %}?v=10">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-deals-list-ui.css' %}?v=2">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-stages-drawer.css' %}?v=1">
 {% endblock %}
 
@@ -153,25 +153,26 @@
         <form method="get" class="crm-deals-filters crm-page-filters" id="crmDealFilters">
             <input type="hidden" name="view" value="{{ view_mode }}">
             {% if request.GET.bucket %}<input type="hidden" name="bucket" value="{{ request.GET.bucket }}">{% endif %}
-            <label class="crm-deals-search">
-                {% include 'includes/icon_slot.html' with decor='search' size='inline' only %}
-                <input type="search" name="q" value="{{ request.GET.q }}" placeholder="جستجو معامله، مخاطب..." autocomplete="off" aria-label="جستجو">
-            </label>
 
-            <div class="crm-deals-mob-filter-bar">
-                <details class="crm-deals-mob-filter-details{% if request.GET.q or request.GET.stage or request.GET.bucket or request.GET.sort %} is-active{% endif %}" id="crmDealsFilterDetails">
+            <div class="crm-deals-filters-toolbar">
+                <label class="crm-deals-search">
+                    {% include 'includes/icon_slot.html' with decor='search' size='inline' only %}
+                    <input type="search" name="q" value="{{ request.GET.q }}" placeholder="جستجو معامله، مخاطب..." autocomplete="off" aria-label="جستجو">
+                </label>
+
+                <details class="crm-deals-filter-expand{% if request.GET.stage or request.GET.sort %} is-active{% endif %}" id="crmDealsFilterDetails">
                     <summary class="crm-deals-mob-filter-trigger" id="crmDealsFilterToggle">
                         <i class="fas fa-sliders" aria-hidden="true"></i>
                         <span>فیلتر و مرتب‌سازی</span>
-                        {% if request.GET.q or request.GET.stage or request.GET.bucket or request.GET.sort %}<em class="crm-deals-mob-filter-badge">فعال</em>{% endif %}
+                        {% if request.GET.stage or request.GET.sort %}<em class="crm-deals-mob-filter-badge">فعال</em>{% endif %}
                         <i class="fas fa-chevron-down crm-deals-mob-filter-chevron" aria-hidden="true"></i>
                     </summary>
-                    <div class="crm-deals-filters-sheet" id="crmDealsFilterSheet" data-deals-filter-sheet>
-                        <select name="stage" class="crm-deals-select" aria-label="مرحله" onchange="this.form.submit()">
+                    <div class="crm-deals-filters-group" id="crmDealsFilterSheet" data-deals-filter-sheet>
+                        <select name="stage" class="crm-deals-select crm-deals-select--stage" aria-label="مرحله" onchange="this.form.submit()">
                             <option value="">همه مراحل</option>
                             {% for s in deal_stages %}<option value="{{ s }}" {% if request.GET.stage == s %}selected{% endif %}>{{ s }}</option>{% endfor %}
                         </select>
-                        <select name="sort" class="crm-deals-select" aria-label="مرتب‌سازی" onchange="this.form.submit()">
+                        <select name="sort" class="crm-deals-select crm-deals-select--sort" aria-label="مرتب‌سازی" onchange="this.form.submit()">
                             <option value="-updated_at" {% if request.GET.sort == '-updated_at' or not request.GET.sort %}selected{% endif %}>جدیدترین</option>
                             <option value="updated_at" {% if request.GET.sort == 'updated_at' %}selected{% endif %}>قدیمی‌ترین</option>
                             <option value="-value" {% if request.GET.sort == '-value' %}selected{% endif %}>بیشترین ارزش</option>
@@ -180,18 +181,20 @@
                             <option value="-expected_close_date" {% if request.GET.sort == '-expected_close_date' %}selected{% endif %}>دورترین بستن</option>
                             <option value="title" {% if request.GET.sort == 'title' %}selected{% endif %}>عنوان A-Z</option>
                         </select>
-                        <div class="crm-deals-filter-actions">
-                            {% include 'workspace/crm/includes/saved_filters.html' %}
-                            {% if request.GET.q or request.GET.stage or request.GET.bucket %}
-                            <a href="{% url 'workspace:crm_deals' %}?view={{ view_mode }}" class="crm-dash-act crm-dash-act--icon" title="پاک کردن فیلتر"><i class="fas fa-times" aria-hidden="true"></i></a>
-                            {% endif %}
-                            <div class="crm-deals-view-toggle crm-deals-view-toggle--desk" role="tablist">
-                                <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}view=table" class="crm-deals-view-btn {% if view_mode != 'pipeline' %}is-active{% endif %}" title="جدول"><i class="fas fa-table" aria-hidden="true"></i></a>
-                                <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}view=pipeline" class="crm-deals-view-btn {% if view_mode == 'pipeline' %}is-active{% endif %}" title="کانبان"><i class="fas fa-table-columns" aria-hidden="true"></i></a>
-                            </div>
-                        </div>
                     </div>
                 </details>
+
+                <div class="crm-deals-filter-actions">
+                    {% include 'workspace/crm/includes/saved_filters.html' %}
+                    {% if request.GET.q or request.GET.stage or request.GET.bucket %}
+                    <a href="{% url 'workspace:crm_deals' %}?view={{ view_mode }}" class="crm-dash-act crm-dash-act--icon" title="پاک کردن فیلتر"><i class="fas fa-times" aria-hidden="true"></i></a>
+                    {% endif %}
+                    <div class="crm-deals-view-toggle crm-deals-view-toggle--desk" role="tablist" aria-label="نمای نمایش">
+                        <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}view=table" class="crm-deals-view-btn {% if view_mode != 'pipeline' %}is-active{% endif %}" title="جدول"><i class="fas fa-table" aria-hidden="true"></i></a>
+                        <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}view=pipeline" class="crm-deals-view-btn {% if view_mode == 'pipeline' %}is-active{% endif %}" title="کانبان"><i class="fas fa-table-columns" aria-hidden="true"></i></a>
+                    </div>
+                </div>
+
                 <div class="crm-deals-view-toggle crm-deals-view-toggle--mob" role="tablist" aria-label="نمای نمایش">
                     <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}view=table" class="crm-deals-view-btn {% if view_mode != 'pipeline' %}is-active{% endif %}" title="جدول" aria-label="جدول"><i class="fas fa-table" aria-hidden="true"></i></a>
                     <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}view=pipeline" class="crm-deals-view-btn {% if view_mode == 'pipeline' %}is-active{% endif %}" title="کانبان" aria-label="کانبان"><i class="fas fa-table-columns" aria-hidden="true"></i></a>

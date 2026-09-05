@@ -2,11 +2,13 @@
 from datetime import date, timedelta
 
 from django.contrib.auth import get_user_model
-from django.test import Client, TestCase
+from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
+from unittest.mock import patch
 
 from contracts.constants import CONTRACT_TYPE_LEASE, CONTRACT_TYPE_SALE
+from accounts.services.otp import hash_otp_code
 from contracts.services.tokens import hash_token
 from contracts.services.hashing import compute_content_hash
 from contracts.services.lifecycle import (
@@ -16,7 +18,7 @@ from contracts.services.lifecycle import (
     save_wizard_step,
 )
 from contracts.services.masking import mask_phone
-from contracts.services.otp_service import hash_otp_code
+from contracts.services.otp_service import CONTRACT_OTP_SMS_PURPOSE, request_contract_otp
 from contracts.services.scope import contract_for_user, contracts_qs
 from contracts.services.wizard_parse import parse_wizard_step
 from workspace.models import CRMDeal, CRMProperty, Customer
@@ -146,6 +148,37 @@ class ContractOTPTests(TestCase):
         )
         self.assertNotIn('123456', otp.code_hash)
         self.assertEqual(len(otp.code_hash), 64)
+
+    @override_settings(
+        SMS_PROVIDER='console',
+        FARAZSMS_PATTERNS={'contract_otp': 'qwcrSwFnxo'},
+        FARAZSMS_OTP_ATTR='code',
+    )
+    @patch('contracts.services.otp_service.send_pattern_sms')
+    def test_contract_otp_sent_via_pattern(self, mock_send):
+        from contracts.models import Contract, ContractInvitation, ContractVersion
+
+        mock_send.return_value = type('R', (), {'message_id': '1', 'provider': 'console'})()
+        user = User.objects.create_user(username='u3b', phone='09126666661', password='x')
+        customer = Customer.objects.create(user=user, name='c', phone='09127777771')
+        deal = CRMDeal.objects.create(user=user, customer=customer, title='d')
+        contract = Contract.objects.create(
+            user=user, deal=deal, contract_type='lease', internal_number='DF-RNT-1405-000099',
+            verification_token_hash=hash_token('test-verify-2'),
+        )
+        version = ContractVersion.objects.create(contract=contract, version_number=1)
+        inv = ContractInvitation.objects.create(
+            contract=contract, version=version, mobile='09127777771',
+            token_hash=hash_token('inv-token-2'),
+            expires_at=timezone.now() + timedelta(days=1),
+        )
+        request_contract_otp(inv, '09127777771')
+        mock_send.assert_called_once()
+        phone, = mock_send.call_args.args
+        self.assertEqual(phone, '09127777771')
+        self.assertEqual(mock_send.call_args.kwargs['purpose'], CONTRACT_OTP_SMS_PURPOSE)
+        self.assertIn('code', mock_send.call_args.kwargs['attributes'])
+        self.assertEqual(len(mock_send.call_args.kwargs['attributes']['code']), 6)
 
 
 class ContractWizardUXTests(TestCase):

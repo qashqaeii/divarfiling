@@ -382,6 +382,7 @@ FARAZSMS_OTP_PURPOSES = (
     'register',
     'verify_phone',
     'password_reset',
+    'contract_otp',
 )
 FARAZSMS_BASE_URL = config('FARAZSMS_BASE_URL', default='https://api.iranpayamak.com')
 FARAZSMS_TIMEOUT = config('FARAZSMS_TIMEOUT', default=15, cast=int)
@@ -399,6 +400,7 @@ FARAZSMS_PATTERNS = {
     'license_renewal': config('FARAZSMS_PATTERN_LICENSE_RENEWAL', default=''),
     'system': config('FARAZSMS_PATTERN_SYSTEM', default=''),
     'marketing': config('FARAZSMS_PATTERN_MARKETING', default=''),
+    'contract_otp': config('FARAZSMS_PATTERN_CONTRACT_OTP', default=''),
 }
 # اگر الگوی جداگانه ندارید، یک الگو برای همه OTPها:
 _FARAZSMS_PATTERN_OTP = config('FARAZSMS_PATTERN_OTP', default='')

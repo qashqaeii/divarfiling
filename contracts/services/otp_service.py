@@ -18,7 +18,9 @@ from django.utils import timezone
 
 from accounts.phone_utils import is_valid_iran_mobile, normalize_phone
 from accounts.services.otp import OtpError, generate_otp_code, hash_otp_code
-from accounts.services.sms import SmsError, send_simple_sms
+from accounts.services.sms import SmsError, send_pattern_sms
+
+CONTRACT_OTP_SMS_PURPOSE = 'contract_otp'
 from contracts.constants import VERIFICATION_MISMATCH_MSG
 from contracts.models import ContractInvitation, ContractOTP
 
@@ -60,6 +62,16 @@ def _user_agent(request) -> str:
     if request is None:
         return ''
     return (request.META.get('HTTP_USER_AGENT') or '')[:500]
+
+
+def _send_contract_otp_sms(phone: str, code: str) -> None:
+    """ارسال OTP قرارداد با الگوی تأییدشده پنل پیامکی."""
+    attr_name = getattr(settings, 'FARAZSMS_OTP_ATTR', 'code') or 'code'
+    send_pattern_sms(
+        phone,
+        purpose=CONTRACT_OTP_SMS_PURPOSE,
+        attributes={attr_name: code},
+    )
 
 
 @transaction.atomic
@@ -111,9 +123,8 @@ def request_contract_otp(
         user_agent=_user_agent(request),
     )
 
-    msg = f'فایلینگ دیوار\nکد تأیید قرارداد: {code}\nاین پیام به معنی ثبت رسمی قرارداد نیست.'
     try:
-        send_simple_sms(normalized, msg)
+        _send_contract_otp_sms(normalized, code)
     except (SmsError, OtpError) as exc:
         logger.warning('contract OTP SMS failed: %s', exc)
         if settings.DEBUG:
@@ -217,9 +228,8 @@ def _request_otp_for_target(*, phone, purpose, request, handover_invitation=None
         ip_address=_client_ip(request) or None,
         user_agent=_user_agent(request),
     )
-    msg = f'فایلینگ دیوار\nکد تأیید: {code}'
     try:
-        send_simple_sms(normalized, msg)
+        _send_contract_otp_sms(normalized, code)
     except (SmsError, OtpError) as exc:
         logger.warning('OTP SMS failed: %s', exc)
         if settings.DEBUG:

@@ -236,3 +236,32 @@ class ContractWizardUXTests(TestCase):
         self.assertEqual(data['facade_type'], 'سنگ')
         self.assertEqual(data['heating_system'], 'بخاری')
         self.assertTrue(data['has_elevator'])
+
+
+class FinalViewContextTests(TestCase):
+    def test_build_final_view_includes_document_when_verified(self):
+        from contracts.models import Contract, ContractParty, ContractVersion
+        from contracts.services.final_view_context import build_final_view_context
+
+        user = User.objects.create_user(username='fv1', phone='09120000001', password='x')
+        customer = Customer.objects.create(user=user, name='c', phone='09120000002')
+        deal = CRMDeal.objects.create(user=user, customer=customer, title='d')
+        contract = Contract.objects.create(
+            user=user, deal=deal, contract_type='sale', internal_number='DF-SAL-1405-000010',
+            verification_token_hash=hash_token('fv-verify'),
+            status='finalized',
+        )
+        version = ContractVersion.objects.create(contract=contract, version_number=1, is_published=True)
+        ContractParty.objects.create(
+            contract=contract, version=version, role='seller',
+            first_name='علی', last_name='احمدی', mobile='09121111111',
+        )
+        ContractParty.objects.create(
+            contract=contract, version=version, role='buyer',
+            first_name='رضا', last_name='کریمی', mobile='09122222222',
+        )
+        ctx_locked = build_final_view_context(contract, verified=False)
+        self.assertEqual(ctx_locked['document_sections'], [])
+        ctx = build_final_view_context(contract, verified=True)
+        self.assertTrue(ctx['document_sections'])
+        self.assertEqual(ctx['contract_meta']['internal_number'], contract.internal_number)

@@ -1,35 +1,158 @@
+{% load static workspace_tags %}
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
     <title>مشاهده قرارداد — فایلینگ دیوار</title>
-    <link rel="stylesheet" href="/static/contracts/css/public.css?v=1">
+    <link rel="stylesheet" href="{% static 'contracts/css/public.css' %}?v=4">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
-<body class="ct-public">
-    <main class="ct-public__card">
-        <h1>{{ contract.get_contract_type_display }}</h1>
-        <p>وضعیت: {{ contract.get_status_display }}</p>
-        {% if error %}<p class="ct-error">{{ error }}</p>{% endif %}
-        {% if not verified %}
-        <form method="post">
-            {% csrf_token %}
-            <input type="hidden" name="action" value="request_otp">
-            <button type="submit">دریافت کد ورود</button>
-        </form>
-        {% if show_otp %}
-        <form method="post">
-            {% csrf_token %}
-            <input type="hidden" name="action" value="verify_otp">
-            <input type="text" name="otp_code" placeholder="کد تأیید" required>
-            <button type="submit">مشاهده کامل</button>
-        </form>
-        {% endif %}
-        {% else %}
-        {% for clause in clauses %}
-        <article><h3>{{ clause.title }}</h3><p>{{ clause.body_text|linebreaksbr }}</p></article>
-        {% endfor %}
-        {% endif %}
+<body class="ct-public ct-final-view{% if verified %} ct-final-view--open{% endif %}">
+
+    <header class="ct-final-hero">
+        <div class="ct-final-hero__inner">
+            <div class="ct-public__logo" aria-hidden="true">DF</div>
+            <div class="ct-final-hero__text">
+                <strong>فایلینگ دیوار</strong>
+                <span>نسخه نهایی قرارداد دیجیتال</span>
+            </div>
+            {% if verified %}
+            <span class="ct-final-badge ct-final-badge--success">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                نهایی‌شده
+            </span>
+            {% endif %}
+        </div>
+    </header>
+
+    {% if not verified %}
+    <main class="ct-final-gate">
+        <div class="ct-public__card ct-final-gate__card">
+            <div class="ct-final-gate__icon" aria-hidden="true">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none"><path d="M12 2a5 5 0 00-5 5v2H6a2 2 0 00-2 2v9a2 2 0 002 2h12a2 2 0 002-2v-9a2 2 0 00-2-2h-1V7a5 5 0 00-5-5zm-3 7V7a3 3 0 016 0v2H9z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+            </div>
+            <h1 class="ct-final-gate__title">{{ contract_meta.contract_type_label|default:contract.get_contract_type_display }}</h1>
+            {% if viewer_role %}<p class="ct-final-gate__role">نقش شما: <span>{{ viewer_role }}</span></p>{% endif %}
+            <ul class="ct-final-meta">
+                {% if contract_meta.internal_number %}<li><span>شناسه</span><strong>{{ contract_meta.internal_number }}</strong></li>{% endif %}
+                {% if contract_meta.version_number %}<li><span>نسخه</span><strong>{{ contract_meta.version_number }}</strong></li>{% endif %}
+                {% if contract_meta.finalized_at %}<li><span>تاریخ نهایی‌سازی</span><strong>{{ contract_meta.finalized_at|ws_jalali_datetime }}</strong></li>{% endif %}
+            </ul>
+
+            {% if error %}<p class="ct-error">{{ error }}</p>{% endif %}
+
+            {% if not show_otp %}
+            <p class="ct-muted ct-final-gate__hint">برای مشاهده متن کامل قرارداد و امضای طرفین، کد تأیید به موبایل ثبت‌شده شما ارسال می‌شود.</p>
+            <form method="post" class="ct-public-form">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="request_otp">
+                <button type="submit" class="ct-btn-primary">دریافت کد تأیید</button>
+            </form>
+            {% else %}
+            <p class="ct-muted ct-final-gate__hint">کد تأیید به موبایل شما پیامک شد.</p>
+            <form method="post" class="ct-public-form">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="verify_otp">
+                <label>کد تأیید
+                    <input type="text" name="otp_code" inputmode="numeric" autocomplete="one-time-code" required placeholder="کد ۶ رقمی" maxlength="8">
+                </label>
+                <button type="submit" class="ct-btn-primary">مشاهده قرارداد</button>
+            </form>
+            <form method="post" class="ct-final-resend">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="request_otp">
+                <button type="submit">ارسال مجدد کد</button>
+            </form>
+            {% endif %}
+
+            <div class="ct-disclaimer">
+                <p>{{ legal_disclaimer }}</p>
+            </div>
+        </div>
     </main>
+
+    {% else %}
+    <main class="ct-final-main">
+        <div class="ct-final-toolbar">
+            <div class="ct-final-toolbar__meta">
+                <h1>{{ contract_meta.contract_type_label }}</h1>
+                <p>
+                    شناسه <strong>{{ contract_meta.internal_number }}</strong>
+                    {% if contract_meta.version_number %} · نسخه {{ contract_meta.version_number }}{% endif %}
+                    {% if contract_meta.finalized_at %} · {{ contract_meta.finalized_at|ws_jalali_datetime }}{% endif %}
+                </p>
+                {% if viewer_role %}<p class="ct-final-toolbar__role">نقش شما: {{ viewer_role }}</p>{% endif %}
+            </div>
+            <div class="ct-final-toolbar__actions">
+                {% if has_pdf %}
+                <a href="{% url 'public_view_pdf' token=view_token %}" class="ct-final-btn ct-final-btn--outline" download>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3v12m0 0l4-4m-4 4L8 11M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    دانلود PDF
+                </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <article class="ct-final-document" id="ct-final-document">
+            {% for sec in document_sections %}
+            <section class="ct-final-section" id="sec-{{ sec.section_id }}">
+                <header class="ct-final-section__head">
+                    <span class="ct-final-section__num">{{ forloop.counter }}</span>
+                    <h2>{{ sec.title }}</h2>
+                </header>
+                <div class="ct-final-section__body">{{ sec.body|linebreaksbr }}</div>
+            </section>
+            {% empty %}
+            <p class="ct-muted">متن قرارداد در دسترس نیست.</p>
+            {% endfor %}
+        </article>
+
+        {% if signatories %}
+        <section class="ct-final-signatures" aria-labelledby="ct-sig-title">
+            <header class="ct-final-signatures__head">
+                <h2 id="ct-sig-title">امضا و تأیید طرفین</h2>
+                <p>هر طرف با تأیید OTP و امضای دیجیتال، این نسخه را پذیرفته است.</p>
+            </header>
+            <div class="ct-final-signatures__grid">
+                {% for sig in signatories %}
+                <article class="ct-sig-card{% if sig.hash_valid %} is-valid{% endif %}">
+                    <header class="ct-sig-card__head">
+                        <span class="ct-sig-card__role">{{ sig.role }}</span>
+                        {% if sig.hash_valid %}
+                        <span class="ct-sig-card__badge" title="هش سند معتبر است">تأیید شده</span>
+                        {% endif %}
+                    </header>
+                    <p class="ct-sig-card__name">{{ sig.name }}</p>
+                    <p class="ct-sig-card__meta">موبایل: {{ sig.mobile_masked }}</p>
+                    <p class="ct-sig-card__meta">زمان تأیید: {{ sig.accepted_at|ws_jalali_datetime }}</p>
+                    <div class="ct-sig-card__pad" aria-label="امضای {{ sig.name }}">
+                        {% if sig.signature_image_url %}
+                        <img src="{{ sig.signature_image_url }}" alt="امضای {{ sig.name }}" loading="lazy">
+                        {% else %}
+                        <div class="ct-sig-card__otp">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 12l2 2 4-4m5 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            <span>تأیید با کد یکبارمصرف</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </article>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+
+        <footer class="ct-final-footer">
+            {% if contract_meta.content_hash_short %}
+            <p class="ct-final-hash">اثر انگشت سند: <code dir="ltr">{{ contract_meta.content_hash_short }}</code></p>
+            {% endif %}
+            <div class="ct-disclaimer">
+                <p>{{ legal_disclaimer }}</p>
+            </div>
+        </footer>
+    </main>
+    {% endif %}
 </body>
 </html>

@@ -4,7 +4,7 @@ from __future__ import annotations
 import base64
 import io
 
-from django.http import Http404
+from django.http import FileResponse, Http404
 from django.shortcuts import render
 from django.utils import timezone
 from django.views import View
@@ -17,18 +17,10 @@ from contracts.services.notifications import notify_contract_event
 from contracts.services.otp_service import ContractOtpError, request_contract_otp
 from contracts.services.state_machine import transition_contract
 from contracts.services.tokens import lookup_access_token, lookup_contract_by_verify_token, lookup_invitation
+from contracts.services.final_view_context import PARTY_ROLE_LABELS, build_final_view_context
 from contracts.services.version_copy import version_display_snapshot
 
-ROLE_LABELS_FA = {
-    'landlord': 'موجر',
-    'tenant': 'مستأجر',
-    'seller': 'فروشنده',
-    'buyer': 'خریدار',
-    'owner': 'مالک',
-    'builder': 'سازنده',
-    'witness': 'شاهد',
-    'other': 'سایر',
-}
+ROLE_LABELS_FA = PARTY_ROLE_LABELS
 
 
 class PublicAcceptView(View):
@@ -207,19 +199,20 @@ class PublicFinalViewView(View):
             raise Http404
         return tok
 
+    def _base_ctx(self, tok, verified: bool) -> dict:
+        return build_final_view_context(
+            tok.contract,
+            access_token=tok,
+            verified=verified,
+        )
+
     def get(self, request, token):
         tok = self._get_token(token)
-        contract = tok.contract
         session_key = f'final_verified_{tok.token_hash}'
         verified = request.session.get(session_key, False)
-        ctx = {
-            'contract': contract,
-            'verified': verified,
-            'masked': not verified,
-        }
-        if verified and contract.current_version:
-            snap = version_display_snapshot(contract.current_version)
-            ctx['clauses'] = snap.get('clauses', [])
+        ctx = self._base_ctx(tok, verified)
+        ctx['show_otp'] = False
+        ctx['view_token'] = token
         return render(request, self.template_name, ctx)
 
     def post(self, request, token):
@@ -234,14 +227,13 @@ class PublicFinalViewView(View):
                     request_contract_otp(inv, mobile, purpose='final_view', request=request,
                                          access_token=tok)
                 except ContractOtpError as exc:
-                    return render(request, self.template_name, {
-                        'contract': tok.contract,
-                        'error': exc.message,
-                        'show_otp': True,
-                    })
-            return render(request, self.template_name, {
-                'contract': tok.contract, 'show_otp': True,
-            })
+                    ctx = self._base_ctx(tok, False)
+                    ctx.update({'error': exc.message, 'show_otp': True, 'view_token': token})
+                    return render(request, self.template_name, ctx)
+            ctx = self._base_ctx(tok, False)
+            ctx['show_otp'] = True
+            ctx['view_token'] = token
+            return render(request, self.template_name, ctx)
         if action == 'verify_otp':
             mobile = tok.party.mobile if tok.party_id else tok.witness.mobile
             inv = tok.contract.invitations.filter(mobile=mobile).order_by('-created_at').first()
@@ -250,11 +242,33 @@ class PublicFinalViewView(View):
                 try:
                     verify_contract_otp(inv, mobile, request.POST.get('otp_code', ''), request=request)
                 except ContractOtpError as exc:
-                    return render(request, self.template_name, {
-                        'contract': tok.contract,
-                        'error': exc.message,
-                        'show_otp': True,
-                    })
+                    ctx = self._base_ctx(tok, False)
+                    ctx.update({'error': exc.message, 'show_otp': True, 'view_token': token})
+                    return render(request, self.template_name, ctx)
             request.session[session_key] = True
+            log_audit_event(tok.contract, 'CONTRACT_VIEWED', version=tok.contract.current_version, request=request)
             return self.get(request, token)
         return self.get(request, token)
+
+
+class PublicFinalPdfView(View):
+    """دانلود PDF قرارداد نهایی — فقط پس از تأیید OTP در همان نشست."""
+
+    def get(self, request, token):
+        tok = lookup_access_token(token)
+        if not tok:
+            raise Http404
+        session_key = f'final_verified_{tok.token_hash}'
+        if not request.session.get(session_key):
+            raise Http404
+        contract = tok.contract
+        version = contract.current_version
+        if not version or not version.pdf_file:
+            raise Http404
+        filename = version.pdf_file.name.split('/')[-1]
+        return FileResponse(
+            version.pdf_file.open('rb'),
+            as_attachment=True,
+            filename=filename,
+            content_type='application/pdf',
+        )

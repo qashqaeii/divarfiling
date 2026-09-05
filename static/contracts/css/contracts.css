@@ -132,6 +132,56 @@
     .crm-contract-wizard-aside .crm-deal-side-card { margin: 0; }
 }
 
+/* Review step: use full workspace width (wizard aside is absent; avoid empty 28% column) */
+.ct-wizard--review .crm-contract-wizard-layout {
+    display: block;
+    width: 100%;
+    max-width: none;
+}
+.ct-wizard--review .crm-contract-wizard-main {
+    width: 100%;
+    max-width: 1240px;
+    margin-inline: auto;
+}
+.ct-wizard--review .crm-deal-stepper {
+    margin-bottom: 0.45rem;
+    padding: 0.4rem 0.55rem 0.35rem;
+}
+.ct-wizard--review .crm-deal-stepper-steps {
+    padding-bottom: 0.05rem;
+}
+.ct-wizard--review .crm-deal-step-label {
+    font-size: 0.6rem;
+}
+.ct-wizard--review .crm-deal-step-dot {
+    width: 1.15rem;
+    height: 1.15rem;
+    font-size: 0.48rem;
+}
+.ct-wizard--review .ct-review-page-header {
+    padding-bottom: 0.15rem;
+}
+.ct-wizard--review .ct-review-page-header .crm-dash-bar-title {
+    font-size: 0.95rem;
+}
+.ct-wizard--review .ct-review-page-header .crm-dash-bar-sub {
+    margin-top: 0.15rem;
+    font-size: 0.68rem;
+}
+.ct-wizard--review .ct-review-page-header .ct-review-meta {
+    margin-top: 0.25rem;
+    font-size: 0.64rem;
+}
+.ct-wizard--review .crm-contract-review.ct-review {
+    border: 0;
+    box-shadow: none;
+    background: transparent;
+    overflow: visible;
+}
+.ct-wizard--review .crm-contract-review.ct-review > .ct-review-header {
+    display: none;
+}
+
 .crm-contract-wizard .crm-deal-stepper {
     margin: 0 0 0.65rem;
     border: 1px solid var(--ws-border);
@@ -502,8 +552,8 @@
     color: #fff;
 }
 
-/* Document review — readable width only here */
-.crm-contract-review .crm-contract-document { max-width: 780px; }
+/* Document review — readable width on non-review steps only */
+.crm-contract-wizard:not(.ct-wizard--review) .crm-contract-review .crm-contract-document { max-width: 780px; }
 .ct-doc-section {
     border: 1px solid var(--ws-border);
     border-radius: 8px;
@@ -569,29 +619,72 @@
 .ct-review-header__meta dd { margin: 0; font-weight: 700; }
 
 .ct-review-layout {
-    display: block;
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    width: 100%;
 }
-.ct-review-main { min-width: 0; }
-.ct-review-sidebar { display: none; }
+.ct-review-main {
+    min-width: 0;
+    width: 100%;
+    order: 2;
+}
+.ct-review-sidebar {
+    display: block;
+    order: 1;
+    min-width: 0;
+}
 
-@media (min-width: 1024px) {
-    .ct-review-layout {
+@media (min-width: 1100px) {
+    .ct-wizard--review .ct-review-layout {
         display: grid;
-        grid-template-columns: minmax(0, 1fr) minmax(240px, 30%);
-        gap: 0.75rem;
+        grid-template-columns: minmax(0, 1fr) 300px;
+        grid-template-areas: "document summary";
+        gap: 1rem;
         align-items: start;
     }
-    .ct-review-sidebar { display: block; }
-    .ct-review-sidebar__inner {
+    .ct-wizard--review .ct-review-main {
+        grid-area: document;
+        order: unset;
+        min-width: 0;
+    }
+    .ct-wizard--review .ct-review-sidebar {
+        grid-area: summary;
+        order: unset;
+        display: block;
+    }
+    .ct-wizard--review .ct-review-sidebar__inner {
         position: sticky;
-        top: 0.75rem;
+        top: 0.65rem;
+        max-height: calc(100vh - 5.5rem);
+        overflow-y: auto;
         display: flex;
         flex-direction: column;
-        gap: 0.5rem;
+        gap: 0.4rem;
+        padding-bottom: 0.25rem;
     }
-    .ct-review-mobile-bar,
-    .ct-review-mobile-summary { display: none; }
-    .crm-contract-review .crm-contract-document { max-width: none; }
+    .ct-wizard--review .ct-review-mobile-bar,
+    .ct-wizard--review .ct-review-mobile-summary {
+        display: none;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 1099px) {
+    .ct-wizard--review .ct-review-sidebar__inner {
+        position: static;
+    }
+    .ct-wizard--review .ct-review-mobile-bar {
+        display: none;
+    }
+}
+
+@media (max-width: 767px) {
+    .ct-wizard--review .ct-review-sidebar {
+        display: none;
+    }
+    .ct-wizard--review .ct-review-mobile-summary {
+        display: block;
+    }
 }
 
 .ct-review-issues {
@@ -712,14 +805,16 @@
 }
 .ct-review-dates__list li span:last-child { font-weight: 600; }
 
-.crm-contract-review .crm-contract-document {
+.ct-wizard--review .crm-contract-review .crm-contract-document {
     max-width: none;
-    padding: 0.85rem 1rem;
+    width: 100%;
+    min-width: 0;
+    padding: 1rem 1.25rem;
     border: 1px solid var(--ws-border);
     border-radius: 12px;
     background: color-mix(in srgb, var(--ws-surface) 92%, var(--ws-bg, #f8fafc));
 }
-.ct-doc-section {
+.ct-wizard--review .ct-doc-section {
     border: 0;
     border-radius: 0;
     padding: 0.85rem 0;
@@ -728,8 +823,18 @@
     border-bottom: 1px solid var(--ws-border);
 }
 .ct-doc-section:last-child { border-bottom: 0; }
-.ct-doc-section h3 { font-size: 0.82rem; }
-.ct-doc-body { font-size: 0.78rem; line-height: 2; }
+.ct-wizard--review .ct-doc-section h3 { font-size: 0.85rem; }
+.ct-wizard--review .ct-doc-body {
+    font-size: 0.8rem;
+    line-height: 2.05;
+    padding-inline: 0.15rem;
+}
+.ct-wizard--review .ct-doc-body [dir="ltr"],
+.ct-wizard--review .ct-review-financial-highlight__amount,
+.ct-wizard--review .ct-review-financial-item__value,
+.ct-wizard--review .ct-review-payments-table td[dir="ltr"] {
+    unicode-bidi: isolate;
+}
 
 .ct-review-payments-table-wrap { overflow-x: auto; }
 .ct-review-payments-table {
@@ -818,6 +923,39 @@
 .ct-review-completeness__item--neutral span:last-child { color: var(--ws-text-muted); }
 
 .ct-review-sidebar-stat { margin: 0 0 0.35rem; font-size: 0.72rem; font-weight: 700; }
+.ct-review-sidebar-details {
+    border: 1px solid var(--ws-border);
+    border-radius: 8px;
+    background: var(--ws-surface);
+    font-size: 0.68rem;
+}
+.ct-review-sidebar-details summary {
+    padding: 0.45rem 0.55rem;
+    font-weight: 600;
+    cursor: pointer;
+    list-style: none;
+}
+.ct-review-sidebar-details summary::-webkit-details-marker { display: none; }
+.ct-review-sidebar-details .ct-review-sidebar-list {
+    padding: 0 0.55rem 0.45rem;
+    margin: 0;
+}
+.ct-review-sidebar .crm-deal-side-card {
+    margin: 0;
+    box-shadow: none;
+}
+.ct-review-sidebar .crm-deal-side-head {
+    padding: 0.5rem 0.6rem;
+}
+.ct-review-sidebar .crm-deal-side-head h3 {
+    font-size: 0.75rem;
+}
+.ct-review-sidebar .crm-deal-side-card__body {
+    padding: 0 0.6rem 0.55rem;
+}
+.ct-review-completeness__item {
+    padding: 0.32rem 0;
+}
 .ct-review-sidebar-list {
     list-style: none;
     margin: 0;
@@ -841,8 +979,24 @@
     line-height: 1.5;
 }
 .ct-review-send-btn:disabled {
-    opacity: 0.5;
-    pointer-events: none;
+    opacity: 1;
+    background: var(--ws-surface-2, #e2e8f0);
+    color: var(--ws-text-muted);
+    border-color: var(--ws-border);
+    cursor: not-allowed;
+    box-shadow: none;
+}
+.ct-review-send-btn:not(:disabled) {
+    opacity: 1;
+}
+.ct-review-send-hint {
+    margin: 0;
+    font-size: 0.64rem;
+    color: #b45309;
+    line-height: 1.45;
+}
+.ct-review-send-hint:not([hidden]) {
+    display: block;
 }
 
 .ct-review-mobile-bar {

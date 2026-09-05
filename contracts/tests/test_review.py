@@ -52,11 +52,21 @@ class ReviewStepTests(TestCase):
             'transfer_date': '1405/09/01',
             'transfer_place': 'دفترخانه ۱۲۳',
             'delivery_date': '1405/07/01',
-            'sale_costs': {'transfer_costs': 'shared', 'notary': 'seller'},
+            'sale_costs': {
+                'transfer_costs': 'shared',
+                'notary_costs': 'seller',
+                'pre_delivery_costs': 'buyer',
+                'other_costs': 'shared',
+            },
         }, user=self.user)
         save_wizard_step(c, 'clauses', {
             'property_has_tenant': False,
-            'sale_costs': {'transfer_costs': 'shared', 'notary': 'seller'},
+            'sale_costs': {
+                'transfer_costs': 'shared',
+                'notary_costs': 'seller',
+                'pre_delivery_costs': 'buyer',
+                'other_costs': 'shared',
+            },
             'penalties': {'payment_delay': {'enabled': True, 'amount': 2000000}},
             'optional_clauses': [],
             'custom_agreements': [{'title': 'توافق ۱', 'body': 'متن توافق اختصاصی طرفین'}],
@@ -195,6 +205,30 @@ class ReviewStepTests(TestCase):
         c = self._sale_contract()
         ctx = build_review_context(c, validation_errors=[])
         self.assertTrue(len(ctx['penalty_summary']) >= 1)
+
+    def test_sale_costs_summary_persian_labels(self):
+        c = self._sale_contract()
+        ctx = build_review_context(c, validation_errors=[])
+        labels = [row['label'] for row in ctx['costs_summary']]
+        self.assertIn('هزینه‌های انتقال', labels)
+        self.assertIn('هزینه‌های دفترخانه', labels)
+        self.assertIn('بدهی‌ها و هزینه‌های قبل از تحویل', labels)
+        self.assertIn('سایر هزینه توافق‌شده', labels)
+        joined = ' '.join(labels)
+        self.assertNotIn('other_costs', joined)
+        self.assertNotIn('notary_costs', joined)
+
+    def test_clause_completeness_wording(self):
+        c = self._sale_contract()
+        ctx = build_review_context(c, validation_errors=[])
+        clause_row = next(i for i in ctx['completeness'] if i['label'] == 'بندهای قرارداد')
+        self.assertTrue(clause_row['value'].endswith('مورد'))
+
+    def test_review_step_has_wide_modifier_class(self):
+        c = self._sale_contract()
+        url = reverse('workspace:contract_wizard', kwargs={'deal_id': self.deal_sale.pk, 'contract_id': c.pk})
+        resp = self.client.get(url + '?step=review')
+        self.assertContains(resp, 'ct-wizard--review')
 
     def test_section_ids_for_navigation(self):
         c = self._sale_contract()

@@ -692,9 +692,14 @@
       var ack = form.querySelector('[name="creator_ack"]');
       var blocked = reviewSection && reviewSection.dataset.readiness === 'blocked';
       var enabled = ack && ack.checked && !blocked;
+      var ackHint = document.getElementById('ct-review-ack-hint');
       sendBtns.forEach(function (btn) {
         btn.disabled = !enabled;
       });
+      if (ackHint) {
+        var showAckHint = ack && !ack.checked && !blocked;
+        ackHint.hidden = !showAckHint;
+      }
     }
 
     var ackInput = form.querySelector('[name="creator_ack"]');

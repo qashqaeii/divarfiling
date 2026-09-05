@@ -14,6 +14,7 @@ from contracts.services.clause_ux import clause_warnings, resolve_selected_claus
 from contracts.services.clauses import get_applicable_clauses
 from contracts.services.contract_renderer import render_contract_document
 from contracts.services.money import amount_display_block, format_toman, parse_toman_amount
+from contracts.services.sale_clause_bank import SALE_COST_ITEM_LABELS
 from contracts.services.version_copy import version_display_snapshot
 
 ROLE_LABELS = {
@@ -39,9 +40,8 @@ COST_LABELS = {
 }
 
 SALE_COST_LABELS = {
-    'transfer_costs': 'هزینه انتقال',
-    'notary': 'دفترخانه',
-    'post_delivery_costs': 'هزینه‌های بعد از تحویل',
+    **SALE_COST_ITEM_LABELS,
+    'notary': 'هزینه دفترخانه',
 }
 
 PENALTY_LABELS = {
@@ -400,6 +400,11 @@ def _build_penalty_summary(contract_type: str, fin: Dict) -> List[Dict[str, str]
     return out
 
 
+def _sale_cost_label(key: str) -> str:
+    normalized = 'notary_costs' if key == 'notary' else key
+    return SALE_COST_LABELS.get(normalized, SALE_COST_LABELS.get(key, 'سایر هزینه‌ها'))
+
+
 def _build_costs_summary(contract_type: str, fin: Dict) -> List[Dict[str, str]]:
     role_labels = {'landlord': 'موجر', 'tenant': 'مستأجر', 'seller': 'فروشنده', 'buyer': 'خریدار', 'shared': 'مشترک'}
     out = []
@@ -412,7 +417,7 @@ def _build_costs_summary(contract_type: str, fin: Dict) -> List[Dict[str, str]]:
         costs = fin.get('sale_costs') or {}
         for key, val in costs.items():
             if val:
-                out.append({'label': SALE_COST_LABELS.get(key, key), 'value': role_labels.get(val, val)})
+                out.append({'label': _sale_cost_label(key), 'value': role_labels.get(val, val)})
     return out
 
 
@@ -609,7 +614,7 @@ def _build_completeness(
     items.append({
         'label': 'بندهای قرارداد',
         'status': 'ok' if clause_stats.get('included') else 'missing',
-        'value': f'{clause_stats.get("included", 0)} بند',
+        'value': f'{clause_stats.get("included", 0)} مورد',
     })
     items.append({
         'label': 'توافقات اختصاصی',

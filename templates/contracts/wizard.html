@@ -3,11 +3,11 @@
 
 {% block page_title %}ویزارد قرارداد{% endblock %}
 {% block crm_extra_css %}
-<link rel="stylesheet" href="{% static 'contracts/css/contracts.css' %}?v=10">
+<link rel="stylesheet" href="{% static 'contracts/css/contracts.css' %}?v=11">
 {% endblock %}
 
 {% block crm_content %}
-<div class="crm-page-chrome crm-contract-wizard ct-wizard" data-contract-id="{{ contract.pk }}" data-deal-id="{{ deal.pk }}" data-contract-type="{{ contract.contract_type }}" data-current-step="{{ wizard_step }}">
+<div class="crm-page-chrome crm-contract-wizard ct-wizard{% if wizard_step == 'review' %} ct-wizard--review{% endif %}" data-contract-id="{{ contract.pk }}" data-deal-id="{{ deal.pk }}" data-contract-type="{{ contract.contract_type }}" data-current-step="{{ wizard_step }}">
 
     <header class="crm-dash-bar{% if wizard_step == 'review' %} ct-review-page-header{% endif %}">
         <div class="crm-dash-bar-main">
@@ -901,46 +901,32 @@
                             </div>
                         </article>
 
-                        <article class="crm-deal-side-card crm-deal-block ct-review-sidebar-card">
-                            <div class="crm-deal-side-card__body">
-                                <p class="ct-review-sidebar-stat">شرایط قرارداد</p>
-                                <p><span class="ct-review-stat-ok">{{ review_context.clause_stats.included }} بند فعال</span></p>
-                                {% if review_context.clause_stats.excluded %}
-                                <p><span class="ct-review-stat-muted">{{ review_context.clause_stats.excluded }} بند انتخاب نشده</span></p>
-                                {% endif %}
-                                <a href="?step=clauses" class="ct-edit-link">ویرایش شرایط قرارداد</a>
-                            </div>
-                        </article>
-
                         {% if review_context.penalty_summary %}
-                        <article class="crm-deal-side-card crm-deal-block ct-review-sidebar-card">
-                            <div class="crm-deal-side-card__body">
-                                <p class="ct-review-sidebar-stat">وجه التزام‌ها: {{ review_context.penalty_summary|length }} مورد</p>
-                                <ul class="ct-review-sidebar-list">
-                                    {% for p in review_context.penalty_summary %}
-                                    <li>{{ p.label }} — {{ p.unit }} {{ p.amount_display }}</li>
-                                    {% endfor %}
-                                </ul>
-                            </div>
-                        </article>
+                        <details class="ct-review-sidebar-details">
+                            <summary>وجه التزام‌ها ({{ review_context.penalty_summary|length }})</summary>
+                            <ul class="ct-review-sidebar-list">
+                                {% for p in review_context.penalty_summary %}
+                                <li><span>{{ p.label }}</span> — <span dir="ltr">{{ p.amount_display }}</span> {{ p.unit }}</li>
+                                {% endfor %}
+                            </ul>
+                        </details>
                         {% endif %}
 
                         {% if review_context.costs_summary %}
-                        <article class="crm-deal-side-card crm-deal-block ct-review-sidebar-card">
-                            <div class="crm-deal-side-card__body">
-                                <p class="ct-review-sidebar-stat">تقسیم هزینه‌ها</p>
-                                <ul class="ct-review-sidebar-list">
-                                    {% for c in review_context.costs_summary %}
-                                    <li>{{ c.label }}: {{ c.value }}</li>
-                                    {% endfor %}
-                                </ul>
-                            </div>
-                        </article>
+                        <details class="ct-review-sidebar-details">
+                            <summary>تقسیم هزینه‌ها</summary>
+                            <ul class="ct-review-sidebar-list">
+                                {% for c in review_context.costs_summary %}
+                                <li>{{ c.label }}: {{ c.value }}</li>
+                                {% endfor %}
+                            </ul>
+                        </details>
                         {% endif %}
 
                         <div class="ct-review-sidebar-actions">
                             <a href="{{ pdf_preview_url }}" class="crm-dash-act" target="_blank" rel="noopener">پیش‌نمایش PDF</a>
                             <button type="submit" name="action" value="prepare_send" class="crm-dash-act crm-dash-act--primary ct-btn-block ct-review-send-btn"{% if review_context.send_disabled %} disabled{% endif %}>ارسال برای تأیید طرفین</button>
+                            <p class="ct-review-send-hint" id="ct-review-ack-hint" hidden>برای ارسال، ابتدا تأیید مطالعه قرارداد را علامت بزنید.</p>
                             {% if review_context.send_disabled_reason %}
                             <p class="ct-review-send-reason">{{ review_context.send_disabled_reason }}</p>
                             {% elif review_context.version_locks_on_send %}
@@ -1028,5 +1014,5 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'contracts/js/wizard.js' %}?v=9"></script>
+<script src="{% static 'contracts/js/wizard.js' %}?v=10"></script>
 {% endblock %}

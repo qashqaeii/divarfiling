@@ -430,9 +430,79 @@ def _update_listing_from_fields(listing: Listing, fields: dict) -> bool:
     return changed
 
 
+def _listing_as_fields(listing: Listing) -> dict:
+    return {
+        'token': listing.token,
+        'title': listing.title,
+        'price': listing.price,
+        'deposit': listing.deposit,
+        'rent': listing.rent,
+        'area': listing.area,
+        'rooms': listing.rooms,
+        'neighborhood': listing.neighborhood,
+        'city': listing.city,
+        'latitude': listing.latitude,
+        'longitude': listing.longitude,
+        'business_type': listing.business_type,
+        'advertiser_signal': listing.advertiser_signal or '',
+        'description': listing.description,
+        'link': listing.link,
+        'images': listing.images or [],
+        'published_at': listing.published_at,
+        'expires_at': listing.expires_at,
+        'data': listing.data or {},
+    }
+
+
+LISTING_BULK_UPDATE_FIELDS = [
+    'title', 'price', 'deposit', 'rent', 'area', 'rooms',
+    'neighborhood', 'city', 'latitude', 'longitude',
+    'business_type', 'advertiser_signal', 'description', 'link', 'images',
+    'published_at', 'expires_at', 'data',
+]
+
+
+def bulk_create_listings_safe(
+    dataset: Dataset,
+    listings_to_create: List[Listing],
+    listings_to_update: List[Listing],
+    *,
+    batch_size: int = 200,
+) -> None:
+    """درج آگهی — در تضاد (dataset, token) ادغام می‌کند (retry / همزمانی)."""
+    if not listings_to_create:
+        return
+
+    incoming_by_token: dict[str, Listing] = {}
+    for listing in listings_to_create:
+        token = str(listing.token or '').strip()
+        if token:
+            incoming_by_token[token] = listing
+    tokens = list(incoming_by_token.keys())
+    if not tokens:
+        return
+
+    update_index = {lst.pk: lst for lst in listings_to_update if lst.pk}
+
+    Listing.objects.bulk_create(
+        listings_to_create,
+        batch_size=batch_size,
+        ignore_conflicts=True,
+    )
+
+    for existing in Listing.objects.filter(dataset=dataset, token__in=tokens):
+        incoming = incoming_by_token.get(existing.token)
+        if not incoming:
+            continue
+        if _update_listing_from_fields(existing, _listing_as_fields(incoming)):
+            if existing.pk not in update_index:
+                listings_to_update.append(existing)
+                update_index[existing.pk] = existing
+
+
 def _flush_listings(listings: List[Listing]) -> None:
     if listings:
-        Listing.objects.bulk_create(listings)
+        Listing.objects.bulk_create(listings, ignore_conflicts=True)
         listings.clear()
 
 
@@ -621,12 +691,7 @@ def import_dataset(
         if listings_to_update:
             Listing.objects.bulk_update(
                 listings_to_update,
-                [
-                    'title', 'price', 'deposit', 'rent', 'area', 'rooms',
-                    'neighborhood', 'city', 'latitude', 'longitude',
-                    'business_type', 'advertiser_signal', 'description', 'link', 'images',
-                    'published_at', 'expires_at', 'data',
-                ],
+                LISTING_BULK_UPDATE_FIELDS,
                 batch_size=BATCH_SIZE,
             )
 

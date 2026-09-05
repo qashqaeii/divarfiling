@@ -443,3 +443,26 @@ class ExtractionIngestDatasetSplitTest(TestCase):
         self.assertEqual(first.dataset.pk, second.dataset.pk)
         self.assertTrue(second.dataset_merged)
         self.assertEqual(second.dataset.listings.count(), 2)
+
+    def test_reupload_same_token_is_idempotent(self):
+        user = User.objects.create_user(username='09120005566', password='x')
+        filters = {
+            'category': 'apartment-rent',
+            'category_label': 'آپارتمان',
+            'transaction_type_label': 'اجاره مسکونی',
+            'city_name': 'تهران',
+            'district_names': ['ونک'],
+            'output_name_hint': 'vanak-dup',
+            'max_items': 1,
+        }
+        payload = {
+            'filters': filters,
+            'started_at': timezone.now().isoformat(),
+            'finished_at': timezone.now().isoformat(),
+            'items': [{'token': 'gaamfAxG', 'raw': _personal_rent_detail('gaamfAxG')}],
+        }
+        first = ingest_mobile_extraction(user, payload)
+        second = ingest_mobile_extraction(user, payload)
+        self.assertEqual(first.dataset.pk, second.dataset.pk)
+        self.assertTrue(second.dataset_merged)
+        self.assertEqual(second.dataset.listings.filter(token='gaamfAxG').count(), 1)

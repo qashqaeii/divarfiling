@@ -17,9 +17,11 @@ from workspace.services.advertiser_signal import count_signals
 from workspace.services.columns import detect_metadata, normalize_location_label, row_to_listing_fields
 from workspace.services.folder_import import build_dataset_name, build_file_identity
 from workspace.services.importer import (
+    LISTING_BULK_UPDATE_FIELDS,
     _listing_from_fields,
     _preserve_dataset_location_meta,
     _update_listing_from_fields,
+    bulk_create_listings_safe,
     find_existing_dataset,
 )
 from workspace.services.ingest_mode import resolve_ingest_mode
@@ -363,17 +365,13 @@ def ingest_mobile_extraction(user, payload: Dict[str, Any]) -> IngestResult:
         if not existing:
             dataset.save()
 
-        if listings_to_create:
-            Listing.objects.bulk_create(listings_to_create, batch_size=200)
+        bulk_create_listings_safe(
+            dataset, listings_to_create, listings_to_update, batch_size=200,
+        )
         if listings_to_update:
             Listing.objects.bulk_update(
                 listings_to_update,
-                [
-                    'title', 'price', 'deposit', 'rent', 'area', 'rooms',
-                    'neighborhood', 'city', 'latitude', 'longitude',
-                    'business_type', 'advertiser_signal', 'description', 'link', 'images',
-                    'published_at', 'expires_at', 'data',
-                ],
+                LISTING_BULK_UPDATE_FIELDS,
                 batch_size=200,
             )
         if listings_to_purge_suppressed:

@@ -72,8 +72,10 @@
             var qty = parseInt(qtyInput.value, 10) || min;
             qty = Math.max(min, Math.min(max, qty));
             qtyInput.value = String(qty);
-            if (qtyNote) {
-                qtyNote.textContent = 'هر لایسنس شامل ۱ ویندوز + ۱ اندروید — جمعاً ' + qty + ' کلید جداگانه صادر می‌شود.';
+            if (qtyNote && selected && selected.dataset.allowBulk === 'true') {
+                qtyNote.textContent = 'برای هر مشاور یک کلید مستقل شامل ویندوز و اندروید صادر می‌شود.';
+            } else if (qtyNote) {
+                qtyNote.textContent = '';
             }
             return qty;
         }
@@ -116,7 +118,7 @@
                 qty = Math.max(min, Math.min(max, qty));
                 qtyInput.value = String(qty);
                 if (qtyNote) {
-                    qtyNote.textContent = 'هر لایسنس شامل ۱ ویندوز + ۱ اندروید — جمعاً ' + qty + ' کلید جداگانه صادر می‌شود.';
+                    qtyNote.textContent = 'برای هر مشاور یک کلید مستقل شامل ویندوز و اندروید صادر می‌شود.';
                 }
             }
 
@@ -126,6 +128,59 @@
             renderSummary();
             fetchPlanPricing({ discountCode: '', quantity: qty });
         }
+
+        function renderAgencySummary(data) {
+            var box = document.getElementById('agency-pricing-summary');
+            if (!box) return;
+            var selected = getSelectedPlan();
+            if (!selected || selected.dataset.allowBulk !== 'true') {
+                box.hidden = true;
+                box.innerHTML = '';
+                return;
+            }
+            var qty = data.quantity || syncQuantityField();
+            var slots = data.total_activation_slots || (qty * 2);
+            var baseUnit = data.base_unit_price || parseInt(selected.dataset.unitSalePrice, 10) || 0;
+            var effUnit = data.effective_unit_price || baseUnit;
+            var appliedReason = data.applied_discount_reason || '';
+            var html = '<div class="ck-agency-summary-grid">' +
+                '<div><span>تعداد مشاور</span><strong>' + qty + '</strong></div>' +
+                '<div><span>تعداد لایسنس</span><strong>' + qty + '</strong></div>' +
+                '<div><span>ظرفیت دستگاه</span><strong>' + slots + '</strong></div>' +
+                '<div><span>قیمت پایه هر نفر</span><strong>' + formatNumber(baseUnit) + '</strong></div>';
+            if (appliedReason) {
+                html += '<div><span>' + appliedReason + '</span><strong>' + (data.applied_discount_percent || 0) + '٪</strong></div>';
+            }
+            html += '<div><span>قیمت هر نفر</span><strong>' + formatNumber(effUnit) + ' تومان</strong></div>' +
+                '</div>';
+            box.innerHTML = html;
+            box.hidden = false;
+        }
+
+        function setPlanMode(mode) {
+            var personalPanel = document.querySelector('[data-plan-panel="personal"]');
+            var agencyPanel = document.querySelector('[data-plan-panel="agency"]');
+            document.querySelectorAll('[data-plan-mode]').forEach(function (btn) {
+                var active = btn.dataset.planMode === mode;
+                btn.classList.toggle('is-active', active);
+                btn.setAttribute('aria-selected', active ? 'true' : 'false');
+            });
+            if (personalPanel) personalPanel.hidden = mode !== 'personal';
+            if (agencyPanel) agencyPanel.hidden = mode !== 'agency';
+            if (mode === 'agency') {
+                var firstAgency = agencyPanel && agencyPanel.querySelector('input[name="plan"]:not(:disabled)');
+                if (firstAgency && !firstAgency.checked) {
+                    firstAgency.checked = true;
+                    firstAgency.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+            }
+        }
+
+        document.querySelectorAll('[data-plan-mode]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                setPlanMode(btn.dataset.planMode);
+            });
+        });
 
         function renderSummary() {
             var selected = getSelectedPlan();
@@ -201,6 +256,7 @@
                         pricingState.original = data.original_price;
                         pricingState.final = data.final_price;
                         pricingState.discountDetails = data.discount_details || [];
+                        renderAgencySummary(data);
 
                         if (options.showDiscountSuccess && code) {
                             showDiscountMessage(

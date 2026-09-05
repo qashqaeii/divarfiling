@@ -15,7 +15,7 @@ class BuyForm(forms.ModelForm):
         min_value=1,
         initial=1,
         required=False,
-        label='تعداد لایسنس',
+        label='تعداد مشاور',
         widget=forms.NumberInput(attrs={
             'class': 'ck-qty-input',
             'min': '1',

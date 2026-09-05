@@ -82,9 +82,10 @@ class Command(BaseCommand):
         plans = bot_license_plans()
         active_names = []
         for data in plans:
-            active_names.append(data['name'])
             defaults = {**data, 'is_active': True}
-            # پلن آزمایشی با plan_type=daily — با تغییر نام هم همان رکورد به‌روز شود
+            active_names.append(data['name'])
+
+            # پلن آزمایشی — match by plan_type=daily
             if data['plan_type'] == 'daily':
                 plan = product.plans.filter(plan_type='daily').order_by('id').first()
                 if plan:
@@ -93,6 +94,33 @@ class Command(BaseCommand):
                     plan.save()
                     self.stdout.write(f'  پلن {plan.name}: به‌روز — {plan.price:,} تومان')
                     continue
+
+            # پلن آژانس — match by plan_type + bulk تا IDهای production حفظ شود
+            if data.get('allow_bulk_purchase'):
+                plan = product.plans.filter(
+                    plan_type=data['plan_type'],
+                    allow_bulk_purchase=True,
+                ).order_by('id').first()
+                if plan:
+                    for key, value in defaults.items():
+                        setattr(plan, key, value)
+                    plan.save()
+                    self.stdout.write(f'  پلن {plan.name}: به‌روز — {plan.price:,} تومان')
+                    continue
+
+            # پلن شخصی — match by plan_type (non-bulk)
+            if not data.get('allow_bulk_purchase'):
+                plan = product.plans.filter(
+                    plan_type=data['plan_type'],
+                    allow_bulk_purchase=False,
+                ).order_by('id').first()
+                if plan:
+                    for key, value in defaults.items():
+                        setattr(plan, key, value)
+                    plan.save()
+                    self.stdout.write(f'  پلن {plan.name}: به‌روز — {plan.price:,} تومان')
+                    continue
+
             plan, created = LicensePlan.objects.update_or_create(
                 product=product,
                 name=data['name'],

@@ -23,6 +23,7 @@ from mobile_api.services.shop_checkout_service import (
     list_mobile_plans,
     order_status_payload,
     preview_plan_discount,
+    preview_plan_pricing,
     verify_mobile_order,
 )
 from mobile_api.throttles import MobileLoginThrottle, MobileUserThrottle
@@ -208,10 +209,15 @@ class ShopDiscountPreviewView(APIView):
         except (TypeError, ValueError):
             return api_error('پلن را انتخاب کنید.', code='VALIDATION_ERROR')
         code = (data.get('discount_code') or data.get('coupon') or '').strip()
-        if not code:
-            return api_error('کد تخفیف را وارد کنید.', code='VALIDATION_ERROR')
         quantity = data.get('quantity', 1)
         try:
+            if not code:
+                return api_ok(preview_plan_pricing(
+                    request.user,
+                    plan_id=plan_id,
+                    quantity=quantity,
+                    request=request,
+                ))
             return api_ok(preview_plan_discount(
                 request.user,
                 plan_id=plan_id,

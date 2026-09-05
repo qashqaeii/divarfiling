@@ -3908,3 +3908,75 @@ html.mk-public[data-theme="light"] .ck-renewal-key {
     background: rgba(255, 255, 255, 0.85);
     color: #0f172a;
 }
+
+/* Agency unified checkout */
+.ck-plan-mode-tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.ck-plan-mode-tab {
+    flex: 1;
+    padding: 0.65rem 1rem;
+    border-radius: 999px;
+    border: 1px solid var(--ck-border, rgba(255, 255, 255, 0.12));
+    background: transparent;
+    color: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.ck-plan-mode-tab.is-active {
+    background: rgba(124, 58, 237, 0.22);
+    border-color: rgba(124, 58, 237, 0.45);
+}
+
+.ck-agency-panel {
+    border: 1px solid var(--ck-border, rgba(255, 255, 255, 0.12));
+    border-radius: 1rem;
+    padding: 1rem;
+    background: rgba(7, 11, 23, 0.35);
+}
+
+.ck-agency-duration {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin: 0.75rem 0 1rem;
+}
+
+.ck-agency-duration-btn {
+    flex: 1;
+    min-width: 5.5rem;
+    text-align: center;
+    padding: 0.55rem 0.75rem;
+    border-radius: 0.65rem;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    cursor: pointer;
+}
+
+.ck-agency-duration-btn.is-selected {
+    border-color: rgba(124, 58, 237, 0.55);
+    background: rgba(124, 58, 237, 0.16);
+}
+
+.ck-agency-duration-btn input { display: none; }
+
+.ck-agency-summary-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.35rem 0.75rem;
+    margin-top: 0.65rem;
+    font-size: 0.82rem;
+}
+
+.ck-agency-summary-grid span {
+    display: block;
+    opacity: 0.75;
+}
+
+.ck-agency-summary-grid strong {
+    display: block;
+    font-weight: 700;
+}

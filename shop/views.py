@@ -354,7 +354,7 @@ class BuyView(LoginRequiredMixin, CreateView):
 
         daily_plan_used = user_has_purchased_daily_plan(self.request.user)
 
-        from shop.services.plan_pricing import calculate_plan_purchase_prices
+        from shop.services.plan_pricing import calculate_plan_pricing
 
         plans_with_prices = []
         for plan in self.product.plans.filter(is_active=True).order_by('order', 'price'):
@@ -364,7 +364,7 @@ class BuyView(LoginRequiredMixin, CreateView):
                 self.request.user,
                 plan,
             )
-            pricing = calculate_plan_purchase_prices(
+            pricing = calculate_plan_pricing(
                 plan,
                 self.product,
                 self.request.user,
@@ -439,6 +439,8 @@ class BuyView(LoginRequiredMixin, CreateView):
         context.update({
             'product': self.product,
             'plans_with_prices': plans_with_prices,
+            'personal_plans': [p for p in plans_with_prices if not p['plan'].allow_bulk_purchase],
+            'agency_plans': [p for p in plans_with_prices if p['plan'].allow_bulk_purchase],
             'selected_plan_id': selected_plan_id,
             'has_previous_purchase': has_previous_purchase,
             'daily_plan_used': daily_plan_used,
@@ -479,10 +481,10 @@ class BuyView(LoginRequiredMixin, CreateView):
         if self.renewal_license:
             order.renewal_license = self.renewal_license
 
-        from shop.services.plan_pricing import calculate_plan_purchase_prices
+        from shop.services.plan_pricing import calculate_plan_pricing
 
         discount_code = form.cleaned_data.get('discount_code')
-        pricing = calculate_plan_purchase_prices(
+        pricing = calculate_plan_pricing(
             order.plan,
             self.product,
             self.request.user,
@@ -505,7 +507,7 @@ class BuyView(LoginRequiredMixin, CreateView):
                 form.add_error('discount_code', message)
                 return self.form_invalid(form)
             order.discount_code = discount_code
-            base_pricing = calculate_plan_purchase_prices(
+            base_pricing = calculate_plan_pricing(
                 order.plan,
                 self.product,
                 self.request.user,
@@ -1051,7 +1053,7 @@ def apply_discount_code(request, slug):
     """اعمال کد تخفیف و محاسبه قیمت نهایی"""
     import json
 
-    from shop.services.plan_pricing import calculate_plan_purchase_prices
+    from shop.services.plan_pricing import calculate_plan_pricing, serialize_pricing_for_api
 
     try:
         data = json.loads(request.body)
@@ -1093,10 +1095,10 @@ def apply_discount_code(request, slug):
                     'message': error_msg
                 }, status=400)
 
-        base_pricing = calculate_plan_purchase_prices(
+        base_pricing = calculate_plan_pricing(
             plan, product, request.user, request=request, quantity=quantity,
         )
-        pricing = calculate_plan_purchase_prices(
+        pricing = calculate_plan_pricing(
             plan,
             product,
             request.user,
@@ -1120,7 +1122,7 @@ def apply_discount_code(request, slug):
                     'label': f'{plan.promo_discount_percent()}% آفر ویژه',
                     'amount': promo_amount,
                 })
-        if base_pricing['has_repeat_discount']:
+        if base_pricing['has_repeat_discount'] and not plan.allow_bulk_purchase:
             repeat_amount = int(
                 (base_pricing['unit_sale_price'] * base_pricing['quantity'])
                 - (base_pricing['final_price'] if not discount_code_obj else pricing['final_price'])
@@ -1130,6 +1132,14 @@ def apply_discount_code(request, slug):
                 'label': f'{base_pricing["repeat_discount_percentage"]}% تخفیف خرید مجدد',
                 'amount': max(0, repeat_amount),
             })
+        elif base_pricing.get('applied_discount_reason') and plan.allow_bulk_purchase:
+            bulk_amount = int(base_pricing['original_price'] - (base_pricing['effective_unit_price'] * base_pricing['quantity']))
+            if bulk_amount > 0:
+                discount_details.append({
+                    'type': 'agency_bulk',
+                    'label': base_pricing['applied_discount_reason'],
+                    'amount': bulk_amount,
+                })
 
         if discount_code_obj:
             code_discount = int(base_pricing['final_price'] - pricing['final_price'])
@@ -1153,6 +1163,14 @@ def apply_discount_code(request, slug):
             'discount_details': discount_details,
             'has_discount': pricing['has_discount'],
             'quantity': pricing['quantity'],
+            'base_unit_price': int(pricing['base_unit_price']),
+            'effective_unit_price': int(pricing['effective_unit_price']),
+            'bulk_discount_percent': int(pricing['bulk_discount_percent']),
+            'repeat_discount_percent': int(pricing['repeat_discount_percent']),
+            'applied_discount_percent': int(pricing['applied_discount_percent']),
+            'applied_discount_reason': pricing['applied_discount_reason'] or '',
+            'licenses_count': int(pricing['licenses_count']),
+            'total_activation_slots': int(pricing['total_activation_slots']),
         })
 
     except (json.JSONDecodeError, ValueError, TypeError):

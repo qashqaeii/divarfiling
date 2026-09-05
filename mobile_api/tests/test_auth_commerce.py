@@ -186,14 +186,14 @@ class MobileShopPlansTests(TestCase):
     def test_agency_plan_bulk_fields_and_quantity_checkout(self):
         agency = LicensePlan.objects.create(
             product=self.product,
-            name='آژانس حرفه‌ای',
+            name='پلن آژانس — سالانه',
             plan_type='yearly',
             price=500000,
             duration_days=365,
             is_active=True,
             allow_bulk_purchase=True,
             min_quantity=2,
-            max_quantity=10,
+            max_quantity=25,
         )
         with patch('mobile_api.services.shop_checkout_service.zibal_service.request_payment') as mock_pay, \
              patch('mobile_api.services.shop_checkout_service.zibal_service.get_start_pay_bridge_url', return_value='https://divarfiling.ir/payment/start/t2/'), \
@@ -210,12 +210,15 @@ class MobileShopPlansTests(TestCase):
                 }, format='json')
         self.assertTrue(resp.data.get('ok'), resp.data)
         self.assertEqual(resp.data['data']['quantity'], 3)
-        self.assertEqual(resp.data['data']['amount'], 1500000)
+        # 500000 × 3 با تخفیف 15٪ = 1,275,000
+        self.assertEqual(resp.data['data']['amount'], 1275000)
         plans_resp = self.client.get('/api/mobile/v1/shop/plans')
         agency_plan = next(p for p in plans_resp.data['data']['plans'] if p['id'] == agency.pk)
         self.assertTrue(agency_plan['allow_bulk_purchase'])
         self.assertEqual(agency_plan['min_quantity'], 2)
-        self.assertEqual(agency_plan['max_quantity'], 10)
+        self.assertEqual(agency_plan['max_quantity'], 25)
+        self.assertEqual(agency_plan['bulk_discount_percent'], 10)
+        self.assertEqual(agency_plan['effective_unit_price'], 450000)
 
     @patch('mobile_api.services.shop_checkout_service.zibal_service.request_payment')
     @patch('mobile_api.services.shop_checkout_service.zibal_service.get_start_pay_bridge_url', return_value='https://divarfiling.ir/payment/start/t1/')

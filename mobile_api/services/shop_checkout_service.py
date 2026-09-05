@@ -13,7 +13,12 @@ from shop.bot_catalog import get_bot_product
 from shop.models import DiscountCode, LicensePlan, Order, PaymentSettings
 from shop.services.mobile_checkout import mark_mobile_checkout
 from shop.services.plan_guards import evaluate_plan_purchase, is_daily_plan, is_plan_visible_in_catalog, user_has_purchased_daily_plan
-from shop.services.plan_pricing import calculate_plan_purchase_prices, clamp_quantity
+from shop.services.plan_pricing import (
+    AGENCY_MIN_QUANTITY,
+    calculate_plan_pricing,
+    clamp_quantity,
+    serialize_pricing_for_api,
+)
 from shop.services import zibal as zibal_service
 
 
@@ -51,6 +56,45 @@ def _parse_quantity(plan: LicensePlan, raw, *, renewal: bool = False) -> int:
     return clamp_quantity(plan, qty)
 
 
+def _plan_payload(plan: LicensePlan, product, user, *, preview_quantity: int | None = None) -> dict:
+    qty = preview_quantity
+    if qty is None:
+        qty = plan.min_quantity if plan.allow_bulk_purchase else 1
+    pricing = calculate_plan_pricing(plan, product, user, quantity=qty)
+    serialized = serialize_pricing_for_api(pricing)
+    return {
+        'id': plan.pk,
+        'name': plan.name,
+        'plan_type': plan.plan_type,
+        'duration_days': plan.duration_days,
+        'duration_label': _plan_duration_label(plan),
+        'tagline': (plan.tagline or '').strip(),
+        'features': plan.normalized_features() if hasattr(plan, 'normalized_features') else [],
+        'original_price': serialized['original_price'],
+        'final_price': serialized['final_price'],
+        'unit_original_price': serialized['base_unit_price'],
+        'unit_final_price': serialized['effective_unit_price'],
+        'base_unit_price': serialized['base_unit_price'],
+        'effective_unit_price': serialized['effective_unit_price'],
+        'discount_amount': serialized['discount_amount'],
+        'has_discount': serialized['has_discount'],
+        'bulk_discount_percent': serialized['bulk_discount_percent'],
+        'repeat_discount_percent': serialized['repeat_discount_percent'],
+        'applied_discount_percent': serialized['applied_discount_percent'],
+        'applied_discount_reason': serialized['applied_discount_reason'],
+        'licenses_count': serialized['licenses_count'],
+        'total_activation_slots': serialized['total_activation_slots'],
+        'is_featured': bool(plan.is_featured),
+        'offer_badge': (plan.offer_badge or '').strip(),
+        'allow_bulk_purchase': bool(getattr(plan, 'allow_bulk_purchase', False)),
+        'min_quantity': int(getattr(plan, 'min_quantity', AGENCY_MIN_QUANTITY) or AGENCY_MIN_QUANTITY),
+        'max_quantity': int(getattr(plan, 'max_quantity', 25) or 25),
+        'purchase_blocked': False,
+        'purchase_block_message': '',
+        'purchase_block_reason': '',
+    }
+
+
 def list_mobile_plans(user) -> Dict[str, Any]:
     product = get_bot_product()
     if product is None:
@@ -65,30 +109,12 @@ def list_mobile_plans(user) -> Dict[str, Any]:
         if not is_plan_visible_in_catalog(user, plan):
             continue
         purchase_ok, purchase_message, purchase_reason = evaluate_plan_purchase(user, plan)
-        pricing = calculate_plan_purchase_prices(plan, product, user, quantity=1)
-        plans.append({
-            'id': plan.pk,
-            'name': plan.name,
-            'plan_type': plan.plan_type,
-            'duration_days': plan.duration_days,
-            'duration_label': _plan_duration_label(plan),
-            'tagline': (plan.tagline or '').strip(),
-            'features': plan.normalized_features() if hasattr(plan, 'normalized_features') else [],
-            'original_price': int(pricing['original_price']),
-            'final_price': int(pricing['final_price']),
-            'unit_original_price': int(pricing['original_price']),
-            'unit_final_price': int(pricing['final_price']),
-            'discount_amount': int(pricing['discount_amount']),
-            'has_discount': bool(pricing['has_discount']),
-            'is_featured': bool(plan.is_featured),
-            'offer_badge': (plan.offer_badge or '').strip(),
-            'allow_bulk_purchase': bool(getattr(plan, 'allow_bulk_purchase', False)),
-            'min_quantity': int(getattr(plan, 'min_quantity', 1) or 1),
-            'max_quantity': int(getattr(plan, 'max_quantity', 1) or 1),
-            'purchase_blocked': not purchase_ok,
-            'purchase_block_message': purchase_message or '',
-            'purchase_block_reason': purchase_reason or '',
-        })
+        preview_qty = clamp_quantity(plan, plan.min_quantity if plan.allow_bulk_purchase else 1)
+        payload = _plan_payload(plan, product, user, preview_quantity=preview_qty)
+        payload['purchase_blocked'] = not purchase_ok
+        payload['purchase_block_message'] = purchase_message or ''
+        payload['purchase_block_reason'] = purchase_reason or ''
+        plans.append(payload)
 
     renewable = None
     from workspace.services.access import _paid_license_qs
@@ -144,6 +170,27 @@ def _resolve_discount_code(user, code: Optional[str]):
     return obj
 
 
+def preview_plan_pricing(user, *, plan_id: int, quantity: int = 1, request=None) -> Dict[str, Any]:
+    """پیش‌نمایش قیمت بدون کد تخفیف — authoritative برای UI موبایل."""
+    product = get_bot_product()
+    if product is None:
+        raise MobileShopError('محصول لایسنس در حال حاضر در دسترس نیست.', code='PRODUCT_UNAVAILABLE', status=404)
+    plan = product.plans.filter(pk=plan_id, is_active=True).first()
+    if plan is None:
+        raise MobileShopError('پلن انتخاب‌شده معتبر نیست.', code='PLAN_NOT_FOUND', status=404)
+    ok, message, reason = evaluate_plan_purchase(user, plan)
+    if not ok:
+        code = 'PHONE_VERIFY_REQUIRED' if reason == 'phone_verify' else 'PLAN_BLOCKED'
+        raise MobileShopError(message or 'امکان خرید این پلن وجود ندارد.', code=code, status=403)
+
+    qty = _parse_quantity(plan, quantity)
+    pricing = calculate_plan_pricing(plan, product, user, request=request, quantity=qty)
+    payload = serialize_pricing_for_api(pricing)
+    payload['plan_id'] = plan.pk
+    payload['plan_name'] = plan.name
+    return payload
+
+
 def preview_plan_discount(user, *, plan_id: int, discount_code: str, quantity: int = 1, request=None) -> Dict[str, Any]:
     product = get_bot_product()
     if product is None:
@@ -158,25 +205,20 @@ def preview_plan_discount(user, *, plan_id: int, discount_code: str, quantity: i
 
     discount_code_obj = _resolve_discount_code(user, discount_code)
     qty = _parse_quantity(plan, quantity)
-    base_pricing = calculate_plan_purchase_prices(plan, product, user, request=request, quantity=qty)
-    pricing = calculate_plan_purchase_prices(
+    base_pricing = calculate_plan_pricing(plan, product, user, request=request, quantity=qty)
+    pricing = calculate_plan_pricing(
         plan, product, user, request=request, quantity=qty, discount_code=discount_code_obj,
     )
     if discount_code_obj and pricing['final_price'] >= base_pricing['final_price']:
         raise MobileShopError('کد تخفیف قابل اعمال نیست.', code='DISCOUNT_INVALID')
-    return {
+    payload = serialize_pricing_for_api(pricing)
+    payload.update({
         'plan_id': plan.pk,
-        'quantity': qty,
         'code': discount_code_obj.code if discount_code_obj else '',
-        'unit_original_price': int(pricing['original_price'] // qty) if qty else int(pricing['original_price']),
-        'unit_final_price': int(base_pricing['final_price'] // qty) if qty else int(base_pricing['final_price']),
-        'original_price': int(pricing['original_price']),
         'base_final_price': int(base_pricing['final_price']),
-        'discount_amount': int(pricing['discount_amount']),
         'code_discount_amount': max(0, int(base_pricing['final_price']) - int(pricing['final_price'])),
-        'final_price': int(pricing['final_price']),
-        'has_discount': bool(pricing['has_discount']),
-    }
+    })
+    return payload
 
 
 def create_checkout(user, *, plan_id: int, renew_license_id: Optional[int] = None, discount_code: Optional[str] = None, quantity: int = 1, request=None) -> Dict[str, Any]:
@@ -217,11 +259,11 @@ def create_checkout(user, *, plan_id: int, renew_license_id: Optional[int] = Non
             order = existing
             reused = True
         else:
-            pricing = calculate_plan_purchase_prices(
+            pricing = calculate_plan_pricing(
                 plan, product, user, request=request, quantity=qty, discount_code=discount_code_obj,
             )
             if discount_code_obj:
-                base_pricing = calculate_plan_purchase_prices(plan, product, user, request=request, quantity=qty)
+                base_pricing = calculate_plan_pricing(plan, product, user, request=request, quantity=qty)
                 if pricing['final_price'] >= base_pricing['final_price']:
                     raise MobileShopError('کد تخفیف قابل اعمال نیست.', code='DISCOUNT_INVALID')
             pay_settings = PaymentSettings.load()

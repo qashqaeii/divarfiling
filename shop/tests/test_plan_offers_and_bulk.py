@@ -8,7 +8,7 @@ import json
 from licenses.models import License
 from licenses.services.claim import issue_licenses_for_paid_order
 from shop.models import LicensePlan, Order, Product
-from shop.services.plan_pricing import calculate_plan_purchase_prices, clamp_quantity
+from shop.services.plan_pricing import calculate_plan_pricing, clamp_quantity
 
 User = get_user_model()
 
@@ -61,7 +61,7 @@ class PlanPricingTests(TestCase):
         self.assertTrue(any('دستگاه' in f['text'] for f in defaults))
 
     def test_pricing_uses_compare_at_as_original(self):
-        pricing = calculate_plan_purchase_prices(
+        pricing = calculate_plan_pricing(
             self.yearly, self.product, self.user, quantity=1,
         )
         self.assertEqual(pricing['original_price'], Decimal('8000000'))
@@ -77,34 +77,38 @@ class PlanPricingTests(TestCase):
 
     def test_bulk_pricing_multiplies_unit_price(self):
         self.yearly.allow_bulk_purchase = True
+        self.yearly.price = 8_000_000
+        self.yearly.min_quantity = 2
+        self.yearly.max_quantity = 25
         self.yearly.save()
-        pricing = calculate_plan_purchase_prices(
+        pricing = calculate_plan_pricing(
             self.yearly, self.product, self.user, quantity=3,
         )
         self.assertEqual(pricing['quantity'], 3)
-        self.assertEqual(pricing['final_price'], Decimal('21000000'))
+        self.assertEqual(pricing['effective_unit_price'], Decimal('6800000'))
+        self.assertEqual(pricing['final_price'], Decimal('20400000'))
 
     def test_agency_bulk_pricing_per_license(self):
-        """هر لایسنس آژانس = قیمت واحد پلن × تعداد."""
+        """هر لایسنس آژانس = قیمت واحد با تخفیف حجمی × تعداد."""
         agency = LicensePlan.objects.create(
             product=self.product,
-            name='یک ماهه آژانس',
+            name='پلن آژانس — ماهانه',
             plan_type='monthly',
             price=990_000,
             duration_days=30,
             max_activations=2,
             allow_bulk_purchase=True,
             min_quantity=2,
-            max_quantity=5,
+            max_quantity=25,
             is_active=True,
         )
-        pricing = calculate_plan_purchase_prices(
+        pricing = calculate_plan_pricing(
             agency, self.product, self.user, quantity=2,
         )
         self.assertEqual(pricing['quantity'], 2)
-        self.assertEqual(pricing['unit_sale_price'], Decimal('990000'))
-        self.assertEqual(pricing['original_price'], Decimal('1980000'))
-        self.assertEqual(pricing['final_price'], Decimal('1980000'))
+        self.assertEqual(pricing['base_unit_price'], Decimal('990000'))
+        self.assertEqual(pricing['effective_unit_price'], Decimal('891000'))
+        self.assertEqual(pricing['final_price'], Decimal('1782000'))
 
 
 class ApplyDiscountQuantityTests(TestCase):
@@ -120,7 +124,7 @@ class ApplyDiscountQuantityTests(TestCase):
         )
         self.plan = LicensePlan.objects.create(
             product=self.product,
-            name='آژانس حرفه‌ای',
+            name='پلن آژانس — سه‌ماهه',
             plan_type='quarterly',
             price=2_500_000,
             compare_at_price=2_500_000,
@@ -128,7 +132,7 @@ class ApplyDiscountQuantityTests(TestCase):
             max_activations=2,
             allow_bulk_purchase=True,
             min_quantity=2,
-            max_quantity=10,
+            max_quantity=25,
             is_active=True,
         )
         Order.objects.create(
@@ -146,7 +150,7 @@ class ApplyDiscountQuantityTests(TestCase):
         cases = (
             (1, 2, 4_500_000),
             (2, 2, 4_500_000),
-            (3, 3, 6_750_000),
+            (3, 3, 6_375_000),
         )
         for requested_qty, expected_qty, expected_final in cases:
             response = self.client.post(
@@ -178,8 +182,8 @@ class BulkLicenseIssueTests(TestCase):
             duration_days=90,
             max_activations=2,
             allow_bulk_purchase=True,
-            min_quantity=1,
-            max_quantity=10,
+            min_quantity=2,
+            max_quantity=25,
             is_active=True,
         )
         self.order = Order.objects.create(

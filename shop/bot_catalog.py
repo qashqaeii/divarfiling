@@ -97,6 +97,19 @@ def _shared_license_features():
     ]
 
 
+def _shared_agency_features():
+    """ویژگی‌های مشترک هر سه مدت پلن آژانس."""
+    return [
+        {'text': 'هر مشاور یک کلید مستقل', 'icon': 'fa-key'},
+        {'text': 'هر کلید: ۱ ویندوز + ۱ اندروید', 'icon': 'fa-link'},
+        {'text': 'CRM و مدیریت تیم', 'icon': 'fa-users-gear'},
+        {'text': 'استخراج، فایلینگ و تحلیل', 'icon': 'fa-database'},
+        {'text': 'تخصیص کلید به اعضای تیم', 'icon': 'fa-user-plus'},
+        {'text': 'تخفیف بیشتر با افزایش تعداد', 'icon': 'fa-percent'},
+        {'text': 'پشتیبانی راه‌اندازی آژانس', 'icon': 'fa-headset'},
+    ]
+
+
 def bot_plan_marketing_by_key():
     """
     tagline و features هر پلن — کلید: (plan_type, allow_bulk, order).
@@ -143,36 +156,24 @@ def bot_plan_marketing_by_key():
             ],
         },
         ('monthly', True, 4): {
-            'tagline': 'تیم ۲ تا ۵ مشاور — هر نفر یک کلید مستقل',
+            'tagline': 'مناسب تیم‌های ۲ تا ۲۵ مشاور',
             'features': [
-                {'text': '۳۰ روز — هر لایسنس کلید جدا', 'icon': 'fa-calendar-day'},
-                {'text': '۲ تا ۵ لایسنس در یک سفارش', 'icon': 'fa-users'},
-                {'text': 'هر کلید: ۱ ویندوز + ۱ اندروید', 'icon': 'fa-link'},
-                {'text': 'CRM و مدیریت تیم — رایگان', 'icon': 'fa-users-gear'},
-                {'text': 'استخراج، فایلینگ و تحلیل برای هر مشاور', 'icon': 'fa-database'},
-                {'text': 'پشتیبانی راه‌اندازی آژانس', 'icon': 'fa-headset'},
+                {'text': '۳۰ روز دسترسی هر لایسنس', 'icon': 'fa-calendar-day'},
+                *_shared_agency_features(),
             ],
         },
         ('quarterly', True, 5): {
-            'tagline': 'آژانس در حال رشد — ۲ تا ۱۰ مشاور',
+            'tagline': 'مناسب تیم‌های ۲ تا ۲۵ مشاور',
             'features': [
                 {'text': '۹۰ روز دسترسی هر لایسنس', 'icon': 'fa-calendar-week'},
-                {'text': '۲ تا ۱۰ کلید مستقل', 'icon': 'fa-users'},
-                {'text': 'هر مشاور: ویندوز + اندروید', 'icon': 'fa-link'},
-                *_shared_license_features()[0:4],
-                {'text': 'مناسب تیم‌های چندنفره', 'icon': 'fa-building'},
-                {'text': 'پشتیبانی VIP آژانس', 'icon': 'fa-headset'},
+                *_shared_agency_features(),
             ],
         },
         ('yearly', True, 6): {
-            'tagline': 'سازمان بزرگ — تا ۲۵ مشاور، یک سال',
+            'tagline': 'مناسب تیم‌های ۲ تا ۲۵ مشاور',
             'features': [
-                {'text': '۳۶۰ روز دسترسی هر لایسنس', 'icon': 'fa-calendar'},
-                {'text': '۲ تا ۲۵ کلید جداگانه', 'icon': 'fa-users'},
-                {'text': 'هر مشاور: ویندوز + اندروید', 'icon': 'fa-link'},
-                *_shared_license_features(),
-                {'text': 'Agency TV و ماتریس عملکرد تیم', 'icon': 'fa-chart-simple'},
-                {'text': 'صدور فاکتور + پشتیبانی اختصاصی', 'icon': 'fa-file-invoice'},
+                {'text': '۳۶۵ روز دسترسی هر لایسنس', 'icon': 'fa-calendar'},
+                *_shared_agency_features(),
             ],
         },
     }
@@ -221,37 +222,40 @@ def bot_license_plans():
             'order': 3,
         },
         {
-            'name': 'لایسنس یک ماهه آژانس',
+            'name': 'پلن آژانس — ماهانه',
             'plan_type': 'monthly',
             'price': 990_000,
             'duration_days': 30,
             'max_activations': 2,
             'allow_bulk_purchase': True,
             'min_quantity': 2,
-            'max_quantity': 5,
+            'max_quantity': 25,
+            'offer_badge': 'آژانس',
             'order': 4,
         },
         {
-            'name': 'آژانس حرفه‌ای',
+            'name': 'پلن آژانس — سه‌ماهه',
             'plan_type': 'quarterly',
             'price': 2_500_000,
             'duration_days': 90,
             'max_activations': 2,
             'allow_bulk_purchase': True,
             'min_quantity': 2,
-            'max_quantity': 10,
+            'max_quantity': 25,
+            'offer_badge': 'آژانس',
             'order': 5,
         },
         {
-            'name': 'آژانس سازمانی',
+            'name': 'پلن آژانس — سالانه',
             'plan_type': 'yearly',
             'price': 8_000_000,
             'compare_at_price': 10_000_000,
-            'duration_days': 360,
+            'duration_days': 365,
             'max_activations': 2,
             'allow_bulk_purchase': True,
             'min_quantity': 2,
             'max_quantity': 25,
+            'offer_badge': 'آژانس',
             'order': 6,
         },
     ]

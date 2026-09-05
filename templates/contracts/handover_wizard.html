@@ -1,182 +1,632 @@
 {% extends 'workspace/crm/base_crm.html' %}
-{% load static workspace_tags %}
+{% load static workspace_tags contract_tags %}
 
-{% block page_title %}صورت‌جلسه تحویل{% endblock %}
+{% block page_title %}صورت‌جلسه تحویل ملک{% endblock %}
+{% block mobile_bar_title %}صورت‌جلسه تحویل{% endblock %}
 {% block crm_extra_css %}
-<link rel="stylesheet" href="{% static 'contracts/css/contracts.css' %}?v=5">
+<link rel="stylesheet" href="{% static 'contracts/css/contracts.css' %}?v=13">
 {% endblock %}
 
 {% block crm_content %}
-<div class="ct-wizard ct-handover-wizard" data-current-step="{{ handover_step }}">
-    <header class="ct-wizard__head">
-        <a href="{% url 'workspace:contract_manage' deal.pk contract.pk %}" class="ct-back" aria-label="بازگشت"><i class="fas fa-arrow-right"></i></a>
-        <div>
-            <h1>صورت‌جلسه تحویل ملک</h1>
-            <p class="ct-muted">قرارداد {{ contract.internal_number }}</p>
+<div class="crm-page-chrome crm-contract-wizard ct-wizard ct-handover-wizard{% if handover_step == 'review' %} ct-wizard--review{% endif %}" data-current-step="{{ handover_step }}" data-next-key-index="{{ next_key_index }}">
+
+    <header class="crm-dash-bar{% if handover_step == 'review' %} ct-review-page-header{% endif %}">
+        <div class="crm-dash-bar-main">
+            <a href="{% url 'workspace:contract_manage' deal.pk contract.pk %}" class="crm-deal-back" aria-label="بازگشت به قرارداد"><i class="fas fa-arrow-right"></i></a>
+            <div>
+                {% if handover_step == 'review' %}
+                <h1 class="crm-dash-bar-title">صورت‌جلسه تحویل ملک</h1>
+                <p class="crm-dash-bar-sub is-visible">مرور نهایی پیش از ارسال برای تأیید طرفین</p>
+                <p class="ct-review-meta">
+                    <span>قرارداد {{ contract.internal_number }}</span>
+                    <span>{{ handover.get_handover_type_display }}</span>
+                    <span class="crm-contract-status crm-contract-status--{{ handover.status }}">{{ handover.get_status_display }}</span>
+                </p>
+                {% else %}
+                <h1 class="crm-dash-bar-title">صورت‌جلسه تحویل ملک</h1>
+                <p class="crm-dash-bar-sub is-visible">
+                    <span class="ct-wizard-progress">مرحله {{ step_number }} از {{ step_total }}</span>
+                    {% if next_step_label %}<span class="ct-wizard-next-hint">بعدی: {{ next_step_label }}</span>{% endif %}
+                </p>
+                {% endif %}
+            </div>
         </div>
     </header>
 
-    <ol class="ct-steps-list">
-        <li class="{% if handover_step == 'basic' %}is-active{% endif %}"><a href="?step=basic">مشخصات</a></li>
-        <li class="{% if handover_step == 'keys' %}is-active{% endif %}"><a href="?step=keys">کلیدها</a></li>
-        <li class="{% if handover_step == 'meters' %}is-active{% endif %}"><a href="?step=meters">کنتورها</a></li>
-        <li class="{% if handover_step == 'conditions' %}is-active{% endif %}"><a href="?step=conditions">وضعیت ملک</a></li>
-        <li class="{% if handover_step == 'equipment' %}is-active{% endif %}"><a href="?step=equipment">تجهیزات</a></li>
-        <li class="{% if handover_step == 'review' %}is-active{% endif %}"><a href="?step=review">مرور</a></li>
-    </ol>
+    <nav class="crm-deal-stepper" aria-label="مراحل صورت‌جلسه">
+        <div class="crm-deal-stepper-track" aria-hidden="true">
+            <i style="width: {{ progress_pct }}%"></i>
+        </div>
+        <div class="crm-deal-stepper-steps">
+            {% for s, label in display_steps %}
+            <a href="?step={{ s }}"
+               class="crm-deal-step{% if s == handover_step %} is-active{% elif forloop.counter < step_number %} is-done{% endif %}"
+               {% if s == handover_step %}aria-current="step"{% endif %}>
+                <span class="crm-deal-step-dot" aria-hidden="true">
+                    {% if forloop.counter < step_number %}<i class="fas fa-check"></i>{% else %}<i class="fas fa-circle"></i>{% endif %}
+                </span>
+                <span class="crm-deal-step-label">{{ label }}</span>
+            </a>
+            {% endfor %}
+        </div>
+    </nav>
 
     <form method="post" enctype="multipart/form-data" class="ct-wizard-form" id="ct-handover-form">
         {% csrf_token %}
         <input type="hidden" name="step" value="{{ handover_step }}">
 
+        <div class="crm-contract-wizard-layout">
+        <div class="crm-contract-wizard-main">
+
         {% if handover_step == 'basic' %}
-        <section class="ct-panel">
-            <h2>مشخصات تحویل</h2>
-            <div class="ct-form-grid">
-                <label>تاریخ تحویل<input class="crm-input" name="handover_date" value="{{ handover.handover_date|default:'' }}" placeholder="1404/01/01"></label>
-                <label>ساعت<input class="crm-input" name="handover_time" type="time" value="{{ handover.handover_time|default:'' }}"></label>
+        <section class="crm-deal-block crm-deal-panel">
+            <header class="crm-deal-panel-head">
+                <span class="crm-deal-panel-mark" aria-hidden="true"><i class="fas fa-clipboard-list"></i></span>
+                <div class="crm-deal-panel-head-text">
+                    <h2>مشخصات تحویل</h2>
+                    <p class="crm-contract-panel-lead">تاریخ، ساعت و طرفین تحویل را مشخص کنید.</p>
+                </div>
+            </header>
+            <div class="crm-deal-panel-body">
+                {% if property_data.address or property_data.property_type %}
+                <aside class="ho-property-chip" aria-label="ملک قرارداد">
+                    <i class="fas fa-building" aria-hidden="true"></i>
+                    <div>
+                        <strong>{% if property_data.property_type %}{{ property_data.property_type }}{% else %}ملک قرارداد{% endif %}</strong>
+                        {% if property_data.address %}<span>{{ property_data.address }}</span>{% endif %}
+                        {% if property_data.area %}<em>{{ property_data.area }} متر</em>{% endif %}
+                    </div>
+                </aside>
+                {% endif %}
+
+                <div class="crm-contract-form-grid ct-wizard-field-grid ho-datetime-grid">
+                    <label class="ct-field-labeled">
+                        <span class="ct-field-label"><i class="fas fa-calendar-day" aria-hidden="true"></i> تاریخ تحویل</span>
+                        <input class="crm-input crm-jalali-date" name="handover_date" value="{{ handover_date_display }}" data-jdp data-jdp-only-date placeholder="۱۴۰۴/۰۱/۰۱" autocomplete="off">
+                    </label>
+                    <label class="ct-field-labeled">
+                        <span class="ct-field-label"><i class="fas fa-clock" aria-hidden="true"></i> ساعت</span>
+                        <input class="crm-input" name="handover_time" type="time" value="{{ handover_time_display }}">
+                    </label>
+                </div>
+
+                <div class="ho-party-pair">
+                    <fieldset class="ho-party-col">
+                        <legend>تحویل‌دهنده</legend>
+                        <p class="ho-party-hint">معمولاً موجر یا فروشنده</p>
+                        {% for p in party_cards %}
+                        <label class="ho-party-card">
+                            <input type="radio" name="delivered_by_idx" value="{{ p.index }}"{% if p.is_delivered %} checked{% endif %} required>
+                            <span class="ho-party-card__body">
+                                <span class="crm-deal-stage-badge">{{ p.role_label|default:"طرف قرارداد" }}</span>
+                                <strong>{{ p.name }}</strong>
+                                <em>{% if p.mobile %}<span dir="ltr">{{ p.mobile }}</span>{% else %}موبایل ثبت نشده{% endif %}</em>
+                            </span>
+                        </label>
+                        {% empty %}
+                        <p class="ct-muted">طرفین قرارداد در دسترس نیست.</p>
+                        {% endfor %}
+                    </fieldset>
+                    <fieldset class="ho-party-col">
+                        <legend>تحویل‌گیرنده</legend>
+                        <p class="ho-party-hint">معمولاً مستأجر یا خریدار</p>
+                        {% for p in party_cards %}
+                        <label class="ho-party-card">
+                            <input type="radio" name="received_by_idx" value="{{ p.index }}"{% if p.is_received %} checked{% endif %} required>
+                            <span class="ho-party-card__body">
+                                <span class="crm-deal-stage-badge">{{ p.role_label|default:"طرف قرارداد" }}</span>
+                                <strong>{{ p.name }}</strong>
+                                <em>{% if p.mobile %}<span dir="ltr">{{ p.mobile }}</span>{% else %}موبایل ثبت نشده{% endif %}</em>
+                            </span>
+                        </label>
+                        {% empty %}
+                        <p class="ct-muted">طرفین قرارداد در دسترس نیست.</p>
+                        {% endfor %}
+                    </fieldset>
+                </div>
+                <p class="ho-party-warn" id="ho-same-party-warn" hidden>تحویل‌دهنده و تحویل‌گیرنده یک نفر انتخاب شده‌اند.</p>
+
+                <label class="ct-field-labeled ho-notes">
+                    <span class="ct-field-label"><i class="fas fa-align-right" aria-hidden="true"></i> یادداشت تحویل (اختیاری)</span>
+                    <textarea class="crm-input" name="notes" rows="3" placeholder="مثلاً تحویل با حضور طرفین در محل ملک انجام شد.">{{ notes_value }}</textarea>
+                </label>
+                <input type="hidden" name="next_step" value="keys">
             </div>
-            <h3>تحویل‌دهنده</h3>
-            <select class="crm-input crm-select" name="delivered_by_idx">
-                {% for p in snapshot.parties %}
-                <option value="{{ forloop.counter0 }}">{{ p.first_name }} {{ p.last_name }}</option>
-                {% endfor %}
-            </select>
-            <h3>تحویل‌گیرنده</h3>
-            <select class="crm-input crm-select" name="received_by_idx">
-                {% for p in snapshot.parties %}
-                <option value="{{ forloop.counter0 }}">{{ p.first_name }} {{ p.last_name }}</option>
-                {% endfor %}
-            </select>
-            <label class="ct-span-2">یادداشت<textarea class="crm-input" name="notes" rows="2">{{ handover.notes }}</textarea></label>
-            <input type="hidden" name="next_step" value="keys">
         </section>
 
         {% elif handover_step == 'keys' %}
-        <section class="ct-panel">
-            <h2>کلیدها و دسترسی‌ها</h2>
-            <div class="ct-key-list">
-                {% for kt in key_types %}
-                <div class="ct-key-item">
-                    <span class="ct-key-item__name">{{ kt }}</span>
-                    <div class="ct-key-item__count">
-                        <input type="hidden" name="key_{{ forloop.counter0 }}_type" value="{{ kt }}">
-                        <input class="crm-input" name="key_{{ forloop.counter0 }}_count" value="1" type="number" min="0" inputmode="numeric">
-                        <span class="ct-muted">عدد</span>
-                    </div>
+        <section class="crm-deal-block crm-deal-panel">
+            <header class="crm-deal-panel-head">
+                <span class="crm-deal-panel-mark" aria-hidden="true"><i class="fas fa-key"></i></span>
+                <div class="crm-deal-panel-head-text">
+                    <h2>کلیدها و دسترسی‌ها</h2>
+                    <p class="crm-contract-panel-lead">تعداد هر مورد تحویلی را مشخص کنید. موارد صفر ذخیره نمی‌شوند.</p>
                 </div>
-                {% endfor %}
+            </header>
+            <div class="crm-deal-panel-body">
+                <div class="ho-key-list" id="ho-key-list">
+                    {% for k in key_rows %}
+                    <article class="ho-key-row" data-key-row>
+                        <div class="ho-key-row__main">
+                            <span class="ho-key-row__icon" aria-hidden="true"><i class="fas {{ k.icon }}"></i></span>
+                            <div class="ho-key-row__info">
+                                {% if k.is_custom %}
+                                <input class="crm-input ho-key-row__name" name="key_{{ k.index }}_type" value="{{ k.type }}" placeholder="نوع کلید">
+                                {% else %}
+                                <strong>{{ k.type }}</strong>
+                                <input type="hidden" name="key_{{ k.index }}_type" value="{{ k.type }}">
+                                {% endif %}
+                            </div>
+                            <div class="ho-stepper" data-stepper>
+                                <button type="button" class="ho-stepper__btn" data-stepper-dec aria-label="کم کردن">−</button>
+                                <input class="crm-input ho-stepper__input" name="key_{{ k.index }}_count" value="{{ k.count }}" type="number" min="0" max="99" inputmode="numeric">
+                                <button type="button" class="ho-stepper__btn" data-stepper-inc aria-label="افزودن">+</button>
+                            </div>
+                        </div>
+                        <label class="ho-key-row__note">
+                            <span>یادداشت</span>
+                            <input class="crm-input" name="key_{{ k.index }}_notes" value="{{ k.notes }}" placeholder="مثلاً ریموت یدک">
+                        </label>
+                    </article>
+                    {% endfor %}
+                </div>
+                <div class="ho-add-row">
+                    <input class="crm-input" id="ho-custom-key-name" type="text" placeholder="کلید یا دسترسی سفارشی" maxlength="80">
+                    <button type="button" class="crm-dash-act" id="ho-add-key"><i class="fas fa-plus"></i> افزودن</button>
+                </div>
+                <input type="hidden" name="next_step" value="meters">
             </div>
-            <input type="hidden" name="next_step" value="meters">
         </section>
 
         {% elif handover_step == 'meters' %}
-        <section class="ct-panel">
-            <h2>قرائت کنتور</h2>
-            <div class="ct-meter-cards">
-                <div class="ct-meter-card">
-                    <h3>برق</h3>
-                    <div class="ct-form-grid">
-                        <label>شماره کنتور<input class="crm-input" name="meter_electricity_number"></label>
-                        <label>عدد فعلی<input class="crm-input" name="meter_electricity_reading" inputmode="numeric"></label>
-                    </div>
+        <section class="crm-deal-block crm-deal-panel">
+            <header class="crm-deal-panel-head">
+                <span class="crm-deal-panel-mark" aria-hidden="true"><i class="fas fa-gauge-high"></i></span>
+                <div class="crm-deal-panel-head-text">
+                    <h2>قرائت کنتور</h2>
+                    <p class="crm-contract-panel-lead">عدد فعلی هر کنتور را در محل ثبت کنید تا مبنای مصرف بعدی مشخص باشد.</p>
                 </div>
-                <div class="ct-meter-card">
-                    <h3>آب</h3>
-                    <div class="ct-form-grid">
-                        <label>شماره کنتور<input class="crm-input" name="meter_water_number"></label>
-                        <label>عدد فعلی<input class="crm-input" name="meter_water_reading" inputmode="numeric"></label>
-                    </div>
+            </header>
+            <div class="crm-deal-panel-body">
+                <div class="ho-meter-grid">
+                    {% for m in meter_rows %}
+                    <article class="ho-meter-card ho-meter-card--{{ m.utility }}">
+                        <header>
+                            <span class="ho-meter-card__icon" aria-hidden="true"><i class="fas {{ m.icon }}"></i></span>
+                            <div>
+                                <h3>{{ m.label }}</h3>
+                                <p>{{ m.unit }}</p>
+                            </div>
+                        </header>
+                        <label class="ct-field-labeled">
+                            <span class="ct-field-label">عدد فعلی</span>
+                            <input class="crm-input ho-meter-card__reading" name="meter_{{ m.utility }}_reading" value="{{ m.reading }}" inputmode="decimal" placeholder="۰">
+                        </label>
+                        <label class="ct-field-labeled">
+                            <span class="ct-field-label">شماره کنتور</span>
+                            <input class="crm-input" name="meter_{{ m.utility }}_number" value="{{ m.meter_number }}" inputmode="numeric" placeholder="اختیاری">
+                        </label>
+                        <label class="ct-field-labeled">
+                            <span class="ct-field-label">یادداشت</span>
+                            <input class="crm-input" name="meter_{{ m.utility }}_notes" value="{{ m.notes }}" placeholder="اختیاری">
+                        </label>
+                    </article>
+                    {% endfor %}
                 </div>
-                <div class="ct-meter-card">
-                    <h3>گاز</h3>
-                    <div class="ct-form-grid">
-                        <label>شماره کنتور<input class="crm-input" name="meter_gas_number"></label>
-                        <label>عدد فعلی<input class="crm-input" name="meter_gas_reading" inputmode="numeric"></label>
-                    </div>
-                </div>
+                <input type="hidden" name="next_step" value="conditions">
             </div>
-            <input type="hidden" name="next_step" value="conditions">
         </section>
 
         {% elif handover_step == 'conditions' %}
-        <section class="ct-panel">
-            <h2>وضعیت ملک</h2>
-            <p class="ct-panel__lead">وضعیت هر بخش را مشخص کنید. در صورت نیاز عکس اضافه کنید.</p>
-            {% for item in condition_items %}
-            <div class="ct-condition-card">
-                <div class="ct-condition-card__head">
-                    <strong>{{ item }}</strong>
-                    <select class="crm-input crm-select" name="cond_{{ item }}_status" style="width:auto;min-width:8rem">
-                        {% for val, lbl in condition_statuses %}
-                        <option value="{{ val }}">{{ lbl }}</option>
-                        {% endfor %}
-                    </select>
+        <section class="crm-deal-block crm-deal-panel">
+            <header class="crm-deal-panel-head">
+                <span class="crm-deal-panel-mark" aria-hidden="true"><i class="fas fa-clipboard-check"></i></span>
+                <div class="crm-deal-panel-head-text">
+                    <h2>وضعیت ملک</h2>
+                    <p class="crm-contract-panel-lead">وضعیت هر بخش را مشخص کنید و در صورت نیاز توضیح یا عکس اضافه کنید.</p>
                 </div>
-                <label>توضیح<input class="crm-input" name="cond_{{ item }}_note" placeholder="توضیح کوتاه (اختیاری)"></label>
+            </header>
+            <div class="crm-deal-panel-body">
+                <div class="ho-bulk-bar">
+                    <button type="button" class="crm-dash-act" id="ho-mark-all-ok"><i class="fas fa-check"></i> همه سالم</button>
+                    <button type="button" class="crm-dash-act" id="ho-reset-conditions">بازنشانی</button>
+                    <span class="ho-bulk-bar__stat" id="ho-condition-stat"></span>
+                </div>
+                <div class="ho-condition-list" id="ho-condition-list">
+                    {% for item in condition_rows %}
+                    <article class="ho-condition-card" data-condition-card data-status="{{ item.status }}">
+                        <div class="ho-condition-card__head">
+                            <span class="ho-condition-card__icon" aria-hidden="true"><i class="fas {{ item.icon }}"></i></span>
+                            <strong>{{ item.item }}</strong>
+                        </div>
+                        <div class="ho-status-seg" role="radiogroup" aria-label="وضعیت {{ item.item }}">
+                            {% for val, lbl in condition_statuses %}
+                            <label class="ho-status-seg__opt ho-status-seg__opt--{{ val }}">
+                                <input type="radio" name="cond_{{ item.item }}_status" value="{{ val }}"{% if item.status == val %} checked{% endif %}>
+                                <span>{{ lbl }}</span>
+                            </label>
+                            {% endfor %}
+                        </div>
+                        <label class="ho-condition-card__note">
+                            <span>توضیح</span>
+                            <input class="crm-input" name="cond_{{ item.item }}_note" value="{{ item.note }}" placeholder="توضیح کوتاه (اختیاری)">
+                        </label>
+                    </article>
+                    {% endfor %}
+                </div>
+
+                <div class="ho-photos">
+                    <h3>تصاویر ملک</h3>
+                    <p class="ct-muted">از دوربین موبایل عکس بگیرید یا از گالری انتخاب کنید. چند عکس همزمان قابل آپلود است.</p>
+                    {% if photos %}
+                    <ul class="ho-photo-grid">
+                        {% for photo in photos %}
+                        <li>
+                            <a href="{% url 'workspace:contract_attachment_download' deal.pk contract.pk photo.pk %}?inline=1" target="_blank" rel="noopener">
+                                <img src="{% url 'workspace:contract_attachment_download' deal.pk contract.pk photo.pk %}?inline=1" alt="{{ photo.title|default:'تصویر ملک' }}">
+                            </a>
+                            {% if photo.title %}<span>{{ photo.title }}</span>{% endif %}
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% endif %}
+                    <div class="ho-photo-actions">
+                        <label class="crm-dash-act ho-photo-btn">
+                            <i class="fas fa-camera"></i> عکس با دوربین
+                            <input type="file" name="photos" accept="image/*" capture="environment" hidden>
+                        </label>
+                        <label class="crm-dash-act ho-photo-btn">
+                            <i class="fas fa-images"></i> انتخاب از گالری
+                            <input type="file" name="photos" accept="image/*" multiple hidden>
+                        </label>
+                    </div>
+                    <div class="ho-photo-preview" id="ho-photo-preview" hidden></div>
+                    <label class="ct-field-labeled">
+                        <span class="ct-field-label">عنوان عکس‌های جدید</span>
+                        <input class="crm-input" name="photo_caption" placeholder="مثلاً پذیرایی — دیوار شمالی">
+                    </label>
+                </div>
+                <input type="hidden" name="next_step" value="equipment">
             </div>
-            {% endfor %}
-            <h3>تصاویر</h3>
-            <label>افزودن عکس<input type="file" name="photo" accept="image/*" capture="environment"></label>
-            <p class="ct-muted">می‌توانید از دوربین موبایل عکس بگیرید.</p>
-            <input type="hidden" name="next_step" value="equipment">
         </section>
 
         {% elif handover_step == 'equipment' %}
-        <section class="ct-panel">
-            <h2>تجهیزات</h2>
-            <p class="ct-panel__lead">تجهیزات تحویلی را ثبت کنید.</p>
-            <div class="ct-form-grid">
-                <label>نام<input class="crm-input" name="eq_0_name" placeholder="پکیج"></label>
-                <label>تعداد<input class="crm-input" name="eq_0_count" value="1" inputmode="numeric"></label>
-                <label>وضعیت
-                    <select class="crm-input crm-select" name="eq_0_status">
-                        {% for val, lbl in condition_statuses %}
-                        <option value="{{ val }}">{{ lbl }}</option>
-                        {% endfor %}
-                    </select>
-                </label>
+        <section class="crm-deal-block crm-deal-panel">
+            <header class="crm-deal-panel-head">
+                <span class="crm-deal-panel-mark" aria-hidden="true"><i class="fas fa-couch"></i></span>
+                <div class="crm-deal-panel-head-text">
+                    <h2>تجهیزات تحویلی</h2>
+                    <p class="crm-contract-panel-lead">وسایل و تجهیزات همراه ملک را ثبت کنید. ردیف خالی ذخیره نمی‌شود.</p>
+                </div>
+            </header>
+            <div class="crm-deal-panel-body">
+                <div class="ho-eq-chips" id="ho-eq-chips">
+                    {% for name in common_equipment %}
+                    <button type="button" class="ho-chip" data-eq-chip="{{ name }}">{{ name }}</button>
+                    {% endfor %}
+                </div>
+                <div class="ho-eq-list" id="ho-eq-list">
+                    {% for eq in equipment_rows %}
+                    <article class="ho-eq-card" data-eq-row>
+                        <div class="ho-eq-card__grid">
+                            <label class="ct-field-labeled ho-eq-card__name">
+                                <span class="ct-field-label">نام</span>
+                                <input class="crm-input" name="eq_{{ eq.index }}_name" value="{{ eq.name }}" placeholder="پکیج">
+                            </label>
+                            <label class="ct-field-labeled">
+                                <span class="ct-field-label">تعداد</span>
+                                <input class="crm-input" name="eq_{{ eq.index }}_count" value="{{ eq.count }}" inputmode="numeric">
+                            </label>
+                            <label class="ct-field-labeled">
+                                <span class="ct-field-label">وضعیت</span>
+                                <select class="crm-input crm-select" name="eq_{{ eq.index }}_status">
+                                    {% for val, lbl in condition_statuses %}
+                                    {% if val != 'unchecked' %}
+                                    <option value="{{ val }}"{% if eq.status == val %} selected{% endif %}>{{ lbl }}</option>
+                                    {% endif %}
+                                    {% endfor %}
+                                </select>
+                            </label>
+                            <label class="ct-field-labeled ho-eq-card__notes">
+                                <span class="ct-field-label">یادداشت</span>
+                                <input class="crm-input" name="eq_{{ eq.index }}_notes" value="{{ eq.notes }}" placeholder="اختیاری">
+                            </label>
+                        </div>
+                        <button type="button" class="ho-eq-card__remove" data-eq-remove aria-label="حذف تجهیز">حذف</button>
+                    </article>
+                    {% endfor %}
+                </div>
+                <button type="button" class="crm-dash-act" id="ho-add-eq"><i class="fas fa-plus"></i> افزودن تجهیز</button>
+                <input type="hidden" name="next_step" value="review">
             </div>
-            <input type="hidden" name="next_step" value="review">
         </section>
 
         {% elif handover_step == 'review' %}
-        <section class="ct-panel">
-            <div class="ct-review-status ct-review-status--ready">صورت‌جلسه آماده ارسال است</div>
-            <h2 style="text-align:center;margin:0 0 1rem">صورت‌جلسه تحویل ملک</h2>
-            <div class="ct-contract-document">
-                <article class="ct-doc-section">
-                    <header><h3>تاریخ تحویل</h3></header>
-                    <div class="ct-doc-body">{{ handover.handover_date|default:"—" }}{% if handover.handover_time %} — {{ handover.handover_time }}{% endif %}</div>
-                </article>
-                <article class="ct-doc-section">
-                    <header><h3>طرفین</h3><a href="?step=basic" class="ct-edit-link">ویرایش</a></header>
-                    <div class="ct-doc-body">تحویل‌دهنده: {{ snapshot.delivered_by.first_name|default:"" }} {{ snapshot.delivered_by.last_name|default:"" }}
-تحویل‌گیرنده: {{ snapshot.received_by.first_name|default:"" }} {{ snapshot.received_by.last_name|default:"" }}</div>
-                </article>
-                <article class="ct-doc-section">
-                    <header><h3>کلیدها</h3><a href="?step=keys" class="ct-edit-link">ویرایش</a></header>
-                    <div class="ct-doc-body">در مرحله قبل ثبت شده</div>
-                </article>
-                <article class="ct-doc-section">
-                    <header><h3>کنتورها</h3><a href="?step=meters" class="ct-edit-link">ویرایش</a></header>
-                    <div class="ct-doc-body">در مرحله قبل ثبت شده</div>
-                </article>
-                <article class="ct-doc-section">
-                    <header><h3>وضعیت ملک</h3><a href="?step=conditions" class="ct-edit-link">ویرایش</a></header>
-                    <div class="ct-doc-body">در مرحله قبل ثبت شده</div>
-                </article>
+        <section class="crm-deal-block crm-deal-panel crm-contract-review ct-review">
+            <div class="ct-review-layout">
+                <div class="ct-review-main">
+                    <div class="ct-review-status ct-review-status--{{ review.readiness }}" role="status">
+                        <span class="ct-review-status__title">{{ review.readiness_message }}</span>
+                        <span class="ct-review-status__detail">{{ review.readiness_detail }}</span>
+                    </div>
+
+                    {% if review.issues %}
+                    <ul class="ct-review-issues">
+                        {% for issue in review.issues %}
+                        <li class="ct-review-issue ct-review-issue--{{ issue.severity }}">
+                            <span>{{ issue.message }}</span>
+                            <a href="?step={{ issue.edit_step }}" class="ct-edit-link">{{ issue.edit_label }}</a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% endif %}
+
+                    <div class="ho-review-hero">
+                        <div>
+                            <span>تاریخ و ساعت تحویل</span>
+                            <strong>{{ review.date_display|default:"—" }}{% if review.time_display %} · {{ review.time_display }}{% endif %}</strong>
+                        </div>
+                        <div>
+                            <span>تحویل‌دهنده</span>
+                            <strong>{{ review.delivered.name|default:"—" }}</strong>
+                            <em>{{ review.delivered.role_label }}</em>
+                        </div>
+                        <div>
+                            <span>تحویل‌گیرنده</span>
+                            <strong>{{ review.received.name|default:"—" }}</strong>
+                            <em>{{ review.received.role_label }}</em>
+                        </div>
+                    </div>
+
+                    {% if review.property.address or review.property.property_type %}
+                    <article class="ct-doc-section">
+                        <header><h3>ملک</h3><a href="?step=basic" class="ct-edit-link">ویرایش</a></header>
+                        <div class="ct-doc-body">{% if review.property.property_type %}{{ review.property.property_type }} — {% endif %}{{ review.property.address|default:"—" }}{% if review.property.area %} · {{ review.property.area }} متر{% endif %}</div>
+                    </article>
+                    {% endif %}
+
+                    <article class="ct-doc-section">
+                        <header><h3>کلیدها و دسترسی‌ها</h3><a href="?step=keys" class="ct-edit-link">ویرایش</a></header>
+                        {% if review.keys %}
+                        <ul class="ho-review-list">
+                            {% for k in review.keys %}
+                            <li><strong>{{ k.type }}</strong><span>{{ k.count }} عدد{% if k.notes %} · {{ k.notes }}{% endif %}</span></li>
+                            {% endfor %}
+                        </ul>
+                        {% else %}
+                        <div class="ct-doc-body">موردی ثبت نشده است.</div>
+                        {% endif %}
+                    </article>
+
+                    <article class="ct-doc-section">
+                        <header><h3>کنتورها</h3><a href="?step=meters" class="ct-edit-link">ویرایش</a></header>
+                        {% if review.meters %}
+                        <ul class="ho-review-list">
+                            {% for m in review.meters %}
+                            <li><strong>{{ m.label }}</strong><span>{% if m.reading %}عدد {{ m.reading }}{% else %}بدون قرائت{% endif %}{% if m.meter_number %} · شماره {{ m.meter_number }}{% endif %}{% if m.notes %} · {{ m.notes }}{% endif %}</span></li>
+                            {% endfor %}
+                        </ul>
+                        {% else %}
+                        <div class="ct-doc-body">قرائتی ثبت نشده است.</div>
+                        {% endif %}
+                    </article>
+
+                    <article class="ct-doc-section">
+                        <header><h3>وضعیت ملک</h3><a href="?step=conditions" class="ct-edit-link">ویرایش</a></header>
+                        <div class="ho-review-pills">
+                            <span class="ho-pill ho-pill--ok">سالم {{ review.condition_counts.ok }}</span>
+                            <span class="ho-pill ho-pill--minor">جزئی {{ review.condition_counts.minor }}</span>
+                            <span class="ho-pill ho-pill--repair">تعمیر {{ review.condition_counts.repair }}</span>
+                            <span class="ho-pill ho-pill--damaged">آسیب {{ review.condition_counts.damaged }}</span>
+                            <span class="ho-pill ho-pill--unchecked">بررسی‌نشده {{ review.condition_counts.unchecked }}</span>
+                        </div>
+                        <ul class="ho-review-list ho-review-list--compact">
+                            {% for c in review.conditions %}
+                            {% if c.status != 'unchecked' %}
+                            <li><strong>{{ c.item }}</strong><span class="ho-pill ho-pill--{{ c.status }}">{{ c.status_label }}</span>{% if c.note %}<em>{{ c.note }}</em>{% endif %}</li>
+                            {% endif %}
+                            {% endfor %}
+                        </ul>
+                    </article>
+
+                    <article class="ct-doc-section">
+                        <header><h3>تجهیزات</h3><a href="?step=equipment" class="ct-edit-link">ویرایش</a></header>
+                        {% if review.equipment %}
+                        <ul class="ho-review-list">
+                            {% for eq in review.equipment %}
+                            <li><strong>{{ eq.name }}</strong><span>{{ eq.count }} عدد · {{ eq.status_label }}{% if eq.notes %} · {{ eq.notes }}{% endif %}</span></li>
+                            {% endfor %}
+                        </ul>
+                        {% else %}
+                        <div class="ct-doc-body">تجهیزی ثبت نشده است.</div>
+                        {% endif %}
+                    </article>
+
+                    {% if review.photos %}
+                    <article class="ct-doc-section">
+                        <header><h3>تصاویر</h3><a href="?step=conditions" class="ct-edit-link">ویرایش</a></header>
+                        <ul class="ho-photo-grid ho-photo-grid--review">
+                            {% for photo in review.photos %}
+                            <li>
+                                <a href="{% url 'workspace:contract_attachment_download' deal.pk contract.pk photo.pk %}?inline=1" target="_blank" rel="noopener">
+                                    <img src="{% url 'workspace:contract_attachment_download' deal.pk contract.pk photo.pk %}?inline=1" alt="{{ photo.title|default:'تصویر ملک' }}">
+                                </a>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </article>
+                    {% endif %}
+
+                    {% if review.notes %}
+                    <article class="ct-doc-section">
+                        <header><h3>یادداشت</h3><a href="?step=basic" class="ct-edit-link">ویرایش</a></header>
+                        <div class="ct-doc-body">{{ review.notes }}</div>
+                    </article>
+                    {% endif %}
+
+                    <div class="ct-review-final">
+                        <article class="ct-disclaimer-card">
+                            <header class="ct-disclaimer-card__head">
+                                <i class="fas fa-circle-info" aria-hidden="true"></i>
+                                <h3>درباره این صورت‌جلسه</h3>
+                            </header>
+                            <p>این سند وضعیت ملک، کلیدها، کنتورها و تجهیزات را در زمان تحویل ثبت می‌کند. پس از ارسال، هر دو طرف با پیامک و کد تأیید آن را امضا می‌کنند و دیگر قابل ویرایش نخواهد بود.</p>
+                        </article>
+                        <label class="ct-ack">
+                            <input type="checkbox" name="creator_ack" id="ho-creator-ack" required>
+                            <span>اطلاعات صورت‌جلسه را در محل بررسی کردم و صحت آن را تأیید می‌کنم.</span>
+                        </label>
+                    </div>
+                </div>
+
+                <aside class="ct-review-sidebar" aria-label="خلاصه صورت‌جلسه">
+                    <div class="ct-review-sidebar__inner">
+                        <article class="crm-deal-side-card crm-deal-block">
+                            <header class="crm-deal-side-head">
+                                <div class="crm-deal-side-head-text">
+                                    <span class="crm-deal-block__kicker">مرور نهایی</span>
+                                    <h3>خلاصه تحویل</h3>
+                                </div>
+                            </header>
+                            <div class="crm-deal-side-card__body">
+                                <ul class="ct-review-completeness">
+                                    {% for item in review.completeness %}
+                                    <li class="ct-review-completeness__item ct-review-completeness__item--{{ item.status }}">
+                                        <span>{{ item.label }}</span>
+                                        <span>{{ item.value }}</span>
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </article>
+                        <div class="ct-review-sidebar-actions">
+                            <button type="submit" name="action" value="publish" class="crm-dash-act crm-dash-act--primary ct-btn-block ct-review-send-btn"{% if review.send_disabled %} disabled{% endif %}>ارسال برای تأیید طرفین</button>
+                            <p class="ct-review-send-hint" id="ho-review-ack-hint" hidden>برای ارسال، ابتدا صحت اطلاعات را تأیید کنید.</p>
+                            {% if review.send_disabled %}
+                            <p class="ct-review-send-reason">تحویل‌دهنده و تحویل‌گیرنده الزامی است.</p>
+                            {% else %}
+                            <p class="ct-review-send-note">پس از ارسال، طرفین لینک تأیید را با پیامک دریافت می‌کنند.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </aside>
             </div>
-            <p class="ct-muted">پس از ارسال، طرفین با OTP صورت‌جلسه را تأیید می‌کنند.</p>
-            <button type="submit" name="action" value="publish" class="crm-dash-act crm-dash-act--primary ct-btn-block">ارسال برای تأیید طرفین</button>
+
+            <div class="ct-review-mobile-bar">
+                <div class="ct-review-mobile-bar__status">
+                    <span class="ct-review-status__title">{{ review.readiness_message }}</span>
+                    {% if review.blocking_count %}<span class="ct-review-mobile-bar__count">{{ review.blocking_count }} مورد</span>{% endif %}
+                </div>
+                <button type="submit" name="action" value="publish" class="crm-dash-act crm-dash-act--primary ct-review-send-btn"{% if review.send_disabled %} disabled{% endif %}>ارسال برای تأیید</button>
+            </div>
+            <details class="ct-review-mobile-summary">
+                <summary>خلاصه صورت‌جلسه</summary>
+                <ul class="ct-review-completeness">
+                    {% for item in review.completeness %}
+                    <li class="ct-review-completeness__item ct-review-completeness__item--{{ item.status }}">
+                        <span>{{ item.label }}</span>
+                        <span>{{ item.value }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </details>
         </section>
         {% endif %}
 
         {% if handover_step != 'review' %}
-        <div class="ct-wizard-nav">
-            <button type="submit" class="crm-dash-act crm-dash-act--primary">تأیید و ادامه</button>
+        <div class="crm-contract-wizard-nav">
+            {% if prev_step %}
+            <a href="?step={{ prev_step }}" class="crm-dash-act" id="ct-wizard-back">بازگشت</a>
+            {% endif %}
+            <button type="submit" class="crm-dash-act crm-dash-act--primary" id="ct-wizard-next">تأیید و ادامه</button>
         </div>
         {% endif %}
+
+        </div>{# .crm-contract-wizard-main #}
+
+        {% if handover_step != 'review' %}
+        <aside class="crm-contract-wizard-aside" aria-label="خلاصه صورت‌جلسه">
+            <article class="crm-deal-side-card crm-deal-block">
+                <header class="crm-deal-side-head">
+                    <span class="crm-deal-side-icon crm-deal-side-icon--action" aria-hidden="true"><i class="fas fa-clipboard-check"></i></span>
+                    <div class="crm-deal-side-head-text">
+                        <span class="crm-deal-block__kicker">خلاصه</span>
+                        <h3>صورت‌جلسه تحویل</h3>
+                    </div>
+                </header>
+                <div class="crm-deal-side-card__body crm-contract-summary-body">
+                    <dl class="crm-contract-context-dl crm-contract-summary-dl">
+                        <dt>قرارداد</dt>
+                        <dd>{{ contract.internal_number }}</dd>
+                        <dt>معامله</dt>
+                        <dd>{{ deal.title|truncatechars:36 }}</dd>
+                        {% if deal.property %}
+                        <dt>ملک</dt>
+                        <dd>{{ deal.property.title|truncatechars:32 }}</dd>
+                        {% endif %}
+                        <dt>وضعیت</dt>
+                        <dd>{{ handover.get_status_display }}</dd>
+                        <dt>مرحله</dt>
+                        <dd>{{ step_number }} از {{ step_total }}</dd>
+                    </dl>
+                </div>
+            </article>
+        </aside>
+        {% endif %}
+
+        </div>{# .crm-contract-wizard-layout #}
     </form>
 </div>
+<template id="ho-eq-row-tpl">
+    <article class="ho-eq-card" data-eq-row>
+        <div class="ho-eq-card__grid">
+            <label class="ct-field-labeled ho-eq-card__name">
+                <span class="ct-field-label">نام</span>
+                <input class="crm-input" name="eq___IDX___name" placeholder="پکیج">
+            </label>
+            <label class="ct-field-labeled">
+                <span class="ct-field-label">تعداد</span>
+                <input class="crm-input" name="eq___IDX___count" value="1" inputmode="numeric">
+            </label>
+            <label class="ct-field-labeled">
+                <span class="ct-field-label">وضعیت</span>
+                <select class="crm-input crm-select" name="eq___IDX___status">
+                    {% for val, lbl in condition_statuses %}
+                    {% if val != 'unchecked' %}
+                    <option value="{{ val }}">{{ lbl }}</option>
+                    {% endif %}
+                    {% endfor %}
+                </select>
+            </label>
+            <label class="ct-field-labeled ho-eq-card__notes">
+                <span class="ct-field-label">یادداشت</span>
+                <input class="crm-input" name="eq___IDX___notes" placeholder="اختیاری">
+            </label>
+        </div>
+        <button type="button" class="ho-eq-card__remove" data-eq-remove aria-label="حذف تجهیز">حذف</button>
+    </article>
+</template>
+<template id="ho-key-row-tpl">
+    <article class="ho-key-row" data-key-row>
+        <div class="ho-key-row__main">
+            <span class="ho-key-row__icon" aria-hidden="true"><i class="fas fa-key"></i></span>
+            <div class="ho-key-row__info">
+                <input class="crm-input ho-key-row__name" name="key___IDX___type" placeholder="نوع کلید">
+            </div>
+            <div class="ho-stepper" data-stepper>
+                <button type="button" class="ho-stepper__btn" data-stepper-dec aria-label="کم کردن">−</button>
+                <input class="crm-input ho-stepper__input" name="key___IDX___count" value="1" type="number" min="0" max="99" inputmode="numeric">
+                <button type="button" class="ho-stepper__btn" data-stepper-inc aria-label="افزودن">+</button>
+            </div>
+        </div>
+        <label class="ho-key-row__note">
+            <span>یادداشت</span>
+            <input class="crm-input" name="key___IDX___notes" placeholder="اختیاری">
+        </label>
+    </article>
+</template>
+{% endblock %}
+
+{% block crm_js %}
+<script src="{% static 'contracts/js/handover.js' %}?v=1"></script>
 {% endblock %}

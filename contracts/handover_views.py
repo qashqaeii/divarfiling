@@ -11,10 +11,12 @@ from django.views import View
 from django.views.decorators.csrf import csrf_protect
 from django.views.generic import TemplateView
 
-from contracts.constants import HANDOVER_ACK_ITEMS, HANDOVER_CONDITION_ITEMS, HANDOVER_CONDITION_STATUSES, HANDOVER_KEY_TYPES
+from django.core.exceptions import ValidationError
+
 from contracts.services.attachments import attachment_for_user, build_attachment_response, save_contract_attachment
 from contracts.services.handover import HandoverError, create_handover, publish_handover, save_handover_step
 from contracts.services.handover_parse import parse_handover_step
+from contracts.services.handover_wizard import VALID_STEPS, build_handover_wizard_context
 from contracts.services.scope import contract_for_user
 from contracts.views import DealContractsMixin
 
@@ -49,29 +51,33 @@ class HandoverWizardView(DealContractsMixin, TemplateView):
             'deal': self.get_deal(),
             'contract': contract,
             'handover': handover,
-            'handover_step': step,
-            'snapshot': handover.snapshot_json or {},
-            'key_types': HANDOVER_KEY_TYPES,
-            'condition_items': HANDOVER_CONDITION_ITEMS,
-            'condition_statuses': HANDOVER_CONDITION_STATUSES,
             'crm_section': 'deals',
         })
+        ctx.update(build_handover_wizard_context(handover, step=step))
         return ctx
 
     @method_decorator(csrf_protect)
     def post(self, request, deal_id, contract_id, handover_id):
         handover, contract = self.get_handover()
         step = request.POST.get('step', 'basic')
+        if step not in VALID_STEPS:
+            step = 'basic'
         try:
             data = parse_handover_step(request.POST, step, handover)
             save_handover_step(handover, step, data, user=request.user)
+            photos = list(request.FILES.getlist('photos'))
             if request.FILES.get('photo'):
+                photos.append(request.FILES['photo'])
+            caption = request.POST.get('photo_caption', '')
+            for uploaded in photos:
+                if not uploaded:
+                    continue
                 save_contract_attachment(
                     contract=contract,
                     version=handover.version,
-                    uploaded=request.FILES['photo'],
+                    uploaded=uploaded,
                     attachment_type='property_photo',
-                    title=request.POST.get('photo_caption', ''),
+                    title=caption,
                     user=request.user,
                     handover=handover,
                 )
@@ -79,9 +85,13 @@ class HandoverWizardView(DealContractsMixin, TemplateView):
                 publish_handover(handover, user=request.user, request=request)
                 messages.success(request, 'صورت‌جلسه برای طرفین ارسال شد.')
                 return redirect('workspace:contract_manage', deal_id=deal_id, contract_id=contract_id)
-        except HandoverError as exc:
+        except (HandoverError, ValidationError) as exc:
             messages.error(request, str(exc))
-        next_step = request.POST.get('next_step', step)
+            next_step = step
+        else:
+            next_step = request.POST.get('next_step', step)
+        if next_step not in VALID_STEPS:
+            next_step = step
         url = reverse('workspace:handover_wizard', kwargs={
             'deal_id': deal_id, 'contract_id': contract_id, 'handover_id': handover.pk,
         })

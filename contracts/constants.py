@@ -329,6 +329,29 @@ HANDOVER_CONDITION_STATUSES = (
     ('unchecked', 'بررسی نشده'),
 )
 
+HANDOVER_WIZARD_STEPS = (
+    ('basic', 'مشخصات'),
+    ('keys', 'کلیدها'),
+    ('meters', 'کنتورها'),
+    ('conditions', 'وضعیت ملک'),
+    ('equipment', 'تجهیزات'),
+    ('review', 'مرور'),
+)
+
+HANDOVER_METER_UTILITIES = (
+    ('electricity', 'برق', 'fa-bolt', 'کیلووات‌ساعت'),
+    ('water', 'آب', 'fa-droplet', 'مترمکعب'),
+    ('gas', 'گاز', 'fa-fire-flame-simple', 'مترمکعب'),
+)
+
+HANDOVER_COMMON_EQUIPMENT = (
+    'پکیج', 'کولر گازی', 'هود', 'گاز رومیزی', 'یخچال',
+    'ماشین لباسشویی', 'فر', 'لوستر', 'پرده', 'آیفون تصویری',
+)
+
+HANDOVER_DELIVERER_ROLES = ('landlord', 'seller', 'owner')
+HANDOVER_RECEIVER_ROLES = ('tenant', 'buyer', 'builder')
+
 COMMON_AREAS = (
     'راهرو', 'راه‌پله', 'آسانسور', 'پارکینگ', 'لابی', 'حیاط', 'پشت‌بام', 'انباری مشترک', 'سایر',
 )

@@ -77,3 +77,9 @@ def ct_audit_label(event_type: str) -> str:
 @register.filter
 def ct_cost_label(key: str) -> str:
     return COST_LABELS.get(key or '', key or '')
+
+
+@register.filter
+def ct_handover_status(status: str) -> str:
+    from contracts.constants import HANDOVER_CONDITION_STATUSES
+    return dict(HANDOVER_CONDITION_STATUSES).get(status or '', status or '')

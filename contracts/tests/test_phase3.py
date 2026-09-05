@@ -220,3 +220,86 @@ class HandoverTests(ContractTestBase):
         from contracts.services.handover import HandoverError
         with self.assertRaises(HandoverError):
             create_handover(self.user, c.pk)
+
+    def test_parse_skips_empty_keys_and_equipment(self):
+        from django.http import QueryDict
+        from contracts.services.handover_parse import parse_handover_step
+
+        c = create_contract(self.user, self.deal.pk, CONTRACT_TYPE_SALE)
+        c.status = 'finalized'
+        c.save(update_fields=['status'])
+        handover = create_handover(self.user, c.pk)
+        keys = QueryDict(mutable=True)
+        keys.update({
+            'key_0_type': 'کلید واحد',
+            'key_0_count': '2',
+            'key_1_type': 'کلید انباری',
+            'key_1_count': '0',
+        })
+        parsed = parse_handover_step(keys, 'keys', handover)
+        self.assertEqual(parsed['keys'], [{'type': 'کلید واحد', 'count': 2, 'notes': ''}])
+
+        eq = QueryDict(mutable=True)
+        eq.update({
+            'eq_0_name': 'پکیج',
+            'eq_0_count': '1',
+            'eq_0_status': 'ok',
+            'eq_1_name': '',
+            'eq_1_count': '1',
+            'eq_1_status': 'ok',
+        })
+        parsed_eq = parse_handover_step(eq, 'equipment', handover)
+        self.assertEqual(len(parsed_eq['equipment']), 1)
+        self.assertEqual(parsed_eq['equipment'][0]['name'], 'پکیج')
+
+    def test_wizard_renders_saved_values_and_mobile_nav(self):
+        from contracts.services.handover_wizard import build_handover_wizard_context
+
+        c = create_contract(self.user, self.deal.pk, CONTRACT_TYPE_SALE)
+        c.status = 'finalized'
+        c.save(update_fields=['status'])
+        handover = create_handover(self.user, c.pk)
+        snap = dict(handover.snapshot_json or {})
+        snap['parties'] = [
+            {'role': 'seller', 'first_name': 'علی', 'last_name': 'فروشنده', 'mobile': '09121111111', 'national_id': '1111111111'},
+            {'role': 'buyer', 'first_name': 'رضا', 'last_name': 'خریدار', 'mobile': '09122222222', 'national_id': '2222222222'},
+        ]
+        snap['property'] = {'address': 'تهران، نیاوران', 'property_type': 'آپارتمان', 'area': 120}
+        handover.snapshot_json = snap
+        handover.save(update_fields=['snapshot_json'])
+        save_handover_step(handover, 'keys', {
+            'keys': [{'type': 'کلید واحد', 'count': 3, 'notes': 'یدک'}],
+        })
+        save_handover_step(handover, 'meters', {
+            'meters': [
+                {'utility': 'electricity', 'meter_number': '123', 'reading': '4500', 'notes': ''},
+                {'utility': 'water', 'meter_number': '', 'reading': '', 'notes': ''},
+                {'utility': 'gas', 'meter_number': '', 'reading': '', 'notes': ''},
+            ],
+        })
+        ctx = build_handover_wizard_context(handover, step='keys')
+        self.assertEqual(ctx['step_number'], 2)
+        self.assertEqual(ctx['next_step'], 'meters')
+        unit_key = next(row for row in ctx['key_rows'] if row['type'] == 'کلید واحد')
+        self.assertEqual(unit_key['count'], 3)
+
+        self.client.force_login(self.user)
+        url = reverse('workspace:handover_wizard', kwargs={
+            'deal_id': self.deal.pk, 'contract_id': c.pk, 'handover_id': handover.pk,
+        })
+        keys_page = self.client.get(url + '?step=keys')
+        self.assertEqual(keys_page.status_code, 200)
+        self.assertContains(keys_page, 'کلیدها و دسترسی‌ها')
+        self.assertContains(keys_page, 'value="3"')
+        self.assertContains(keys_page, 'تأیید و ادامه')
+
+        meters_page = self.client.get(url + '?step=meters')
+        self.assertContains(meters_page, '4500')
+        self.assertContains(meters_page, 'قرائت کنتور')
+
+        review = self.client.get(url + '?step=review')
+        self.assertContains(review, 'ارسال برای تأیید طرفین')
+        self.assertContains(review, 'علی فروشنده')
+        self.assertContains(review, 'رضا خریدار')
+        self.assertContains(review, 'خلاصه تحویل')
+

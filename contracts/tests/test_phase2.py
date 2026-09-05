@@ -283,6 +283,33 @@ class LeaseE2ETests(ContractTestBase):
 
 
 class FinalizeIdempotencyTests(ContractTestBase):
+    def test_accept_with_drawn_signature_bytesio(self):
+        import io
+
+        from contracts.services.acceptance import accept_contract
+        from contracts.services.invitations import send_invitations
+
+        with patch('contracts.services.invitations.send_simple_sms'), \
+             patch('contracts.services.pdf.generate_contract_pdf'):
+            c = create_contract(self.user, self.deal.pk, CONTRACT_TYPE_LEASE)
+            wd = _lease_wizard_data()
+            for step in ('parties', 'property', 'financial', 'witnesses', 'clauses'):
+                save_wizard_step(c, step, wd.get(step) or wd['selected_clauses'], user=self.user)
+            prepare_for_send(c, user=self.user)
+            send_invitations(c, user=self.user)
+            inv = ContractInvitation.objects.filter(contract=c, is_revoked=False).first()
+            sig = io.BytesIO(b'\x89PNG\r\n\x1a\n' + b'0' * 32)
+            sig.name = 'signature.png'
+            acceptance = accept_contract(
+                inv,
+                phone=inv.mobile,
+                national_id=inv.party.national_id if inv.party_id else inv.witness.national_id,
+                ack_checkboxes=['a'],
+                signature_image=sig,
+                otp_already_verified=True,
+            )
+            self.assertTrue(acceptance.signature.image)
+
     def test_double_finalize_is_idempotent(self):
         from contracts.constants import CONTRACT_STATUS_FINALIZED
         from contracts.services.acceptance import accept_contract

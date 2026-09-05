@@ -3,7 +3,7 @@
 
 {% block page_title %}ویزارد قرارداد{% endblock %}
 {% block crm_extra_css %}
-<link rel="stylesheet" href="{% static 'contracts/css/contracts.css' %}?v=11">
+<link rel="stylesheet" href="{% static 'contracts/css/contracts.css' %}?v=12">
 {% endblock %}
 
 {% block crm_content %}
@@ -396,44 +396,60 @@
                 </div>
             </div>
             <h3>برنامه پرداخت</h3>
+            <p class="ct-payments-lead">مراحل پرداخت ثمن را با مبلغ و تاریخ سررسید مشخص کنید.</p>
             <div class="ct-payments-list" id="ct-payments">
                 {% for pay in wizard_data.financial.payments %}
                 <div class="ct-payment-card" data-index="{{ forloop.counter0 }}">
                     <div class="ct-payment-card__view">
+                        <div class="ct-payment-card__badge">{{ forloop.counter }}</div>
                         <div class="ct-payment-card__info">
-                            <div class="ct-payment-card__label">{{ pay.label }}</div>
-                            <div class="ct-payment-card__amount">{{ pay.amount|ct_format_toman }}</div>
-                            <div class="ct-payment-card__date">{{ pay.due_date }}</div>
+                            <div class="ct-payment-card__label">{{ pay.label|default:"پرداخت" }}</div>
+                            <div class="ct-payment-card__meta">
+                                <span class="ct-payment-card__amount" dir="ltr">{{ pay.amount|ct_format_toman }}</span>
+                                {% if pay.due_date %}<span class="ct-payment-card__date" dir="ltr"><i class="fas fa-calendar-day" aria-hidden="true"></i> {{ pay.due_date }}</span>{% endif %}
+                            </div>
                         </div>
                         <div class="ct-payment-card__actions">
-                            <button type="button" data-action="edit">ویرایش</button>
-                            <button type="button" data-action="delete">حذف</button>
+                            <button type="button" class="ct-payment-card__btn" data-action="edit"><i class="fas fa-pen"></i> ویرایش</button>
+                            <button type="button" class="ct-payment-card__btn ct-payment-card__btn--danger" data-action="delete"><i class="fas fa-trash-alt"></i></button>
                         </div>
                     </div>
-                    <div class="ct-payment-card__form crm-contract-form-grid" style="display:none">
-                        <label>عنوان<input class="crm-input" name="pay_{{ forloop.counter0 }}_label" value="{{ pay.label }}"></label>
-                        <label>مبلغ (تومان)<input class="crm-input ct-money-input" name="pay_{{ forloop.counter0 }}_amount" value="{{ pay.amount|ct_format_number }}" inputmode="numeric"></label>
-                        <label class="ct-field-labeled ct-field-labeled--date">
-                            <span class="ct-field-label"><i class="fas fa-calendar-day" aria-hidden="true"></i> تاریخ</span>
-                            <input class="crm-input crm-jalali-date" name="pay_{{ forloop.counter0 }}_due_date" value="{{ pay.due_date }}" data-jdp data-jdp-only-date placeholder="۱۴۰۵/۰۷/۱۰" autocomplete="off">
-                        </label>
+                    <div class="ct-payment-card__form" style="display:none">
+                        <div class="ct-payment-card__form-head">
+                            <strong>جزئیات پرداخت</strong>
+                            <button type="button" class="ct-payment-card__btn" data-action="done">تأیید</button>
+                        </div>
+                        <div class="crm-contract-form-grid ct-payment-card__fields">
+                            <label>عنوان<input class="crm-input" name="pay_{{ forloop.counter0 }}_label" value="{{ pay.label }}"></label>
+                            <label>مبلغ (تومان)<input class="crm-input ct-money-input" name="pay_{{ forloop.counter0 }}_amount" value="{{ pay.amount|ct_format_number }}" inputmode="numeric"><span class="ct-money-words"></span></label>
+                            <label class="crm-contract-span-2 ct-field-labeled ct-field-labeled--date">
+                                <span class="ct-field-label"><i class="fas fa-calendar-day" aria-hidden="true"></i> تاریخ سررسید</span>
+                                <input class="crm-input crm-jalali-date" name="pay_{{ forloop.counter0 }}_due_date" value="{{ pay.due_date }}" data-jdp data-jdp-only-date placeholder="۱۴۰۵/۰۷/۱۰" autocomplete="off">
+                            </label>
+                        </div>
                     </div>
                 </div>
                 {% endfor %}
             </div>
-            <button type="button" class="ct-add-btn" id="ct-add-payment"><i class="fas fa-plus"></i> افزودن پرداخت</button>
+            <button type="button" class="ct-add-btn ct-add-btn--payment" id="ct-add-payment"><i class="fas fa-plus"></i> افزودن مرحله پرداخت</button>
             <div class="ct-payment-summary">
-                <div><em>مبلغ معامله</em><strong id="ct-pay-total">—</strong></div>
-                <div><em>جمع پرداخت‌ها</em><strong id="ct-pay-sum">—</strong></div>
-                <div><em>باقی‌مانده</em><strong id="ct-pay-remain">—</strong></div>
+                <div class="ct-payment-summary__item"><em>مبلغ معامله</em><strong id="ct-pay-total" dir="ltr">—</strong></div>
+                <div class="ct-payment-summary__item"><em>جمع پرداخت‌ها</em><strong id="ct-pay-sum" dir="ltr">—</strong></div>
+                <div class="ct-payment-summary__item" id="ct-pay-remain-wrap"><em>باقی‌مانده</em><strong id="ct-pay-remain" dir="ltr">—</strong></div>
             </div>
-            <details class="ct-disclosure">
-                <summary>تحویل و انتقال رسمی</summary>
+            <details class="ct-disclosure ct-disclosure--transfer" id="ct-transfer-details">
+                <summary><i class="fas fa-file-signature" aria-hidden="true"></i> تحویل و انتقال رسمی</summary>
                 <div class="ct-disclosure__body">
                     <div class="crm-contract-form-grid">
-                        <label>تاریخ تحویل<input class="crm-input crm-jalali-date" name="fin_delivery_date" value="{{ wizard_data.financial.delivery_date|default:'' }}" data-jdp data-jdp-only-date autocomplete="off"></label>
-                        <label>تاریخ انتقال رسمی<input class="crm-input crm-jalali-date" name="fin_official_transfer_date" value="{{ wizard_data.financial.official_transfer_date|default:'' }}" data-jdp data-jdp-only-date autocomplete="off"></label>
-                        <label>محل انتقال<input class="crm-input" name="fin_transfer_place" value="{{ wizard_data.financial.transfer_place|default:'' }}"></label>
+                        <label class="ct-field-labeled ct-field-labeled--date">
+                            <span class="ct-field-label"><i class="fas fa-calendar-day" aria-hidden="true"></i> تاریخ تحویل</span>
+                            <input class="crm-input crm-jalali-date" name="fin_delivery_date" value="{{ wizard_data.financial.delivery_date|default:'' }}" data-jdp data-jdp-only-date placeholder="۱۴۰۵/۰۷/۰۱" autocomplete="off">
+                        </label>
+                        <label class="ct-field-labeled ct-field-labeled--date">
+                            <span class="ct-field-label"><i class="fas fa-calendar-day" aria-hidden="true"></i> تاریخ انتقال رسمی</span>
+                            <input class="crm-input crm-jalali-date" name="fin_official_transfer_date" value="{{ wizard_data.financial.official_transfer_date|default:'' }}" data-jdp data-jdp-only-date placeholder="۱۴۰۵/۰۹/۰۱" autocomplete="off">
+                        </label>
+                        <label>محل انتقال<input class="crm-input" name="fin_transfer_place" value="{{ wizard_data.financial.transfer_place|default:'' }}" placeholder="دفترخانه …"></label>
                         <label>شماره دفترخانه<input class="crm-input" name="fin_notary_number" value="{{ wizard_data.financial.notary_office_number|default:'' }}"></label>
                     </div>
                 </div>
@@ -596,7 +612,7 @@
                                 <div class="ct-segment ct-segment--compact">
                                     <label><input type="radio" name="sale_cost_{{ row.key }}" value="seller"{% if row.value == 'seller' %} checked{% endif %}><span>فروشنده</span></label>
                                     <label><input type="radio" name="sale_cost_{{ row.key }}" value="buyer"{% if row.value == 'buyer' %} checked{% endif %}><span>خریدار</span></label>
-                                    <label><input type="radio" name="sale_cost_{{ row.key }}" value="shared"{% if row.value == 'shared' %} checked{% endif %}><span>مشترک</span></label>
+                                    <label><input type="radio" name="sale_cost_{{ row.key }}" value="shared"{% if row.value == 'shared' or not row.value %} checked{% endif %}><span>مشترک</span></label>
                                 </div>
                             </div>
                             {% endfor %}
@@ -1014,5 +1030,5 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'contracts/js/wizard.js' %}?v=10"></script>
+<script src="{% static 'contracts/js/wizard.js' %}?v=11"></script>
 {% endblock %}

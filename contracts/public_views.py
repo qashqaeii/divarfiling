@@ -19,6 +19,17 @@ from contracts.services.state_machine import transition_contract
 from contracts.services.tokens import lookup_access_token, lookup_contract_by_verify_token, lookup_invitation
 from contracts.services.version_copy import version_display_snapshot
 
+ROLE_LABELS_FA = {
+    'landlord': 'موجر',
+    'tenant': 'مستأجر',
+    'seller': 'فروشنده',
+    'buyer': 'خریدار',
+    'owner': 'مالک',
+    'builder': 'سازنده',
+    'witness': 'شاهد',
+    'other': 'سایر',
+}
+
 
 class PublicAcceptView(View):
     template_name = 'contracts/public/accept.html'
@@ -41,7 +52,7 @@ class PublicAcceptView(View):
 
         role_label = ''
         if inv.party:
-            role_label = inv.party.role
+            role_label = ROLE_LABELS_FA.get(inv.party.role, inv.party.role)
         elif inv.witness:
             role_label = f'شاهد {inv.witness.witness_number}'
 

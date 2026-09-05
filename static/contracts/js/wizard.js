@@ -606,38 +606,120 @@
     if (remainEl.parentElement) {
       remainEl.parentElement.classList.toggle('is-warning', total > 0 && remain !== 0);
     }
+    var remainWrap = document.getElementById('ct-pay-remain-wrap');
+    if (remainWrap) remainWrap.classList.toggle('is-warning', total > 0 && remain !== 0);
+  }
+
+  function flushAutosave(callback) {
+    clearTimeout(timer);
+    var fd = new FormData(form);
+    fd.append('action', 'autosave');
+    fetch(form.action || window.location.href, {
+      method: 'POST',
+      body: fd,
+      headers: { 'X-Requested-With': 'XMLHttpRequest' },
+      credentials: 'same-origin',
+    }).then(function () {
+      if (callback) callback();
+    }).catch(function () {
+      if (callback) callback();
+    });
+  }
+
+  document.querySelectorAll('.crm-deal-stepper-steps a.crm-deal-step').forEach(function (link) {
+    link.addEventListener('click', function (e) {
+      var href = link.getAttribute('href');
+      if (!href || href.indexOf('step=') === -1) return;
+      e.preventDefault();
+      flushAutosave(function () {
+        window.location.href = href;
+      });
+    });
+  });
+
+  var transferDetails = document.getElementById('ct-transfer-details');
+  if (transferDetails) {
+    transferDetails.addEventListener('toggle', function () {
+      if (transferDetails.open) initWizardJalaliPickers(transferDetails);
+    });
+    if (transferDetails.open) initWizardJalaliPickers(transferDetails);
+  }
+
+  function syncPaymentCardView(card) {
+    var label = card.querySelector('[name$="_label"]');
+    var amount = card.querySelector('[name$="_amount"]');
+    var date = card.querySelector('[name$="_due_date"]');
+    var labelEl = card.querySelector('.ct-payment-card__label');
+    var amountEl = card.querySelector('.ct-payment-card__amount');
+    var dateEl = card.querySelector('.ct-payment-card__date');
+    if (labelEl && label) labelEl.textContent = label.value || 'پرداخت';
+    if (amountEl && amount) {
+      var num = parseAmount(amount.value);
+      amountEl.textContent = num ? formatAmount(num) + ' تومان' : '—';
+    }
+    if (dateEl && date) {
+      if (date.value) {
+        dateEl.innerHTML = '<i class="fas fa-calendar-day" aria-hidden="true"></i> ' + date.value;
+        dateEl.style.display = '';
+      } else {
+        dateEl.textContent = '';
+        dateEl.style.display = 'none';
+      }
+    }
+  }
+
+  function closePaymentCard(card) {
+    card.classList.remove('is-editing');
+    card.querySelector('.ct-payment-card__form').style.display = 'none';
+    card.querySelector('.ct-payment-card__view').style.display = 'flex';
+    syncPaymentCardView(card);
+    updatePaymentSummary();
+    form.dispatchEvent(new Event('input', { bubbles: true }));
   }
 
   function renderPaymentCards() {
     if (!paymentsContainer) return;
-    paymentsContainer.querySelectorAll('.ct-payment-card').forEach(function (card) {
+    paymentsContainer.querySelectorAll('.ct-payment-card').forEach(function (card, idx) {
+      var badge = card.querySelector('.ct-payment-card__badge');
+      if (badge) badge.textContent = String(idx + 1);
       var editBtn = card.querySelector('[data-action="edit"]');
+      var doneBtn = card.querySelector('[data-action="done"]');
       var delBtn = card.querySelector('[data-action="delete"]');
-      if (editBtn) {
+      if (editBtn && !editBtn.dataset.bound) {
+        editBtn.dataset.bound = '1';
         editBtn.addEventListener('click', function () {
+          card.classList.add('is-editing');
           card.querySelector('.ct-payment-card__form').style.display = 'block';
           card.querySelector('.ct-payment-card__view').style.display = 'none';
+          initWizardJalaliPickers(card);
         });
       }
-      if (delBtn) {
+      if (doneBtn && !doneBtn.dataset.bound) {
+        doneBtn.dataset.bound = '1';
+        doneBtn.addEventListener('click', function () { closePaymentCard(card); });
+      }
+      if (delBtn && !delBtn.dataset.bound) {
+        delBtn.dataset.bound = '1';
         delBtn.addEventListener('click', function () {
           card.remove();
+          renderPaymentCards();
           updatePaymentSummary();
+          form.dispatchEvent(new Event('input', { bubbles: true }));
         });
       }
-      card.querySelectorAll('.ct-money-input').forEach(bindMoneyInput);
-      card.querySelectorAll('input').forEach(function (inp) {
-        inp.addEventListener('input', function () {
-          var label = card.querySelector('[name$="_label"]');
-          var amount = card.querySelector('[name$="_amount"]');
-          var date = card.querySelector('[name$="_due_date"]');
-          card.querySelector('.ct-payment-card__label').textContent = label ? label.value : '';
-          card.querySelector('.ct-payment-card__amount').textContent =
-            amount && amount.value ? amount.value + ' تومان' : '';
-          card.querySelector('.ct-payment-card__date').textContent = date ? date.value : '';
-          updatePaymentSummary();
-        });
+      card.querySelectorAll('.ct-money-input').forEach(function (inp) {
+        if (!inp.dataset.moneyBound) {
+          inp.dataset.moneyBound = '1';
+          bindMoneyInput(inp);
+        }
       });
+      card.querySelectorAll('input').forEach(function (inp) {
+        if (inp.dataset.paySyncBound) return;
+        inp.dataset.paySyncBound = '1';
+        inp.addEventListener('input', function () { syncPaymentCardView(card); updatePaymentSummary(); });
+        inp.addEventListener('change', function () { syncPaymentCardView(card); updatePaymentSummary(); });
+      });
+      syncPaymentCardView(card);
     });
     updatePaymentSummary();
   }
@@ -648,20 +730,26 @@
   if (addPaymentBtn && paymentsContainer) {
     addPaymentBtn.addEventListener('click', function () {
       var idx = paymentIndex++;
-      var html = '<div class="ct-payment-card" data-index="' + idx + '">' +
-        '<div class="ct-payment-card__view">' +
-        '<div class="ct-payment-card__info">' +
-        '<div class="ct-payment-card__label">پرداخت</div>' +
-        '<div class="ct-payment-card__amount">—</div>' +
-        '<div class="ct-payment-card__date"></div></div>' +
+      var html = '<div class="ct-payment-card is-editing" data-index="' + idx + '">' +
+        '<div class="ct-payment-card__view" style="display:none">' +
+        '<div class="ct-payment-card__badge">' + (paymentsContainer.querySelectorAll('.ct-payment-card').length + 1) + '</div>' +
+        '<div class="ct-payment-card__info"><div class="ct-payment-card__label">پرداخت ' + (idx + 1) + '</div>' +
+        '<div class="ct-payment-card__meta"><span class="ct-payment-card__amount" dir="ltr">—</span>' +
+        '<span class="ct-payment-card__date" dir="ltr" style="display:none"></span></div></div>' +
         '<div class="ct-payment-card__actions">' +
-        '<button type="button" data-action="edit">ویرایش</button>' +
-        '<button type="button" data-action="delete">حذف</button></div></div>' +
-        '<div class="ct-payment-card__form crm-contract-form-grid" style="display:block;margin-top:.65rem">' +
+        '<button type="button" class="ct-payment-card__btn" data-action="edit"><i class="fas fa-pen"></i> ویرایش</button>' +
+        '<button type="button" class="ct-payment-card__btn ct-payment-card__btn--danger" data-action="delete"><i class="fas fa-trash-alt"></i></button>' +
+        '</div></div>' +
+        '<div class="ct-payment-card__form">' +
+        '<div class="ct-payment-card__form-head"><strong>جزئیات پرداخت</strong>' +
+        '<button type="button" class="ct-payment-card__btn" data-action="done">تأیید</button></div>' +
+        '<div class="crm-contract-form-grid ct-payment-card__fields">' +
         '<label>عنوان<input class="crm-input" name="pay_' + idx + '_label" value="پرداخت ' + (idx + 1) + '"></label>' +
-        '<label>مبلغ (تومان)<input class="crm-input ct-money-input" name="pay_' + idx + '_amount" inputmode="numeric"></label>' +
-        '<label>تاریخ<input class="crm-input crm-jalali-date" name="pay_' + idx + '_due_date" data-jdp data-jdp-only-date placeholder="۱۴۰۵/۰۷/۱۰" autocomplete="off"></label>' +
-        '</div></div>';
+        '<label>مبلغ (تومان)<input class="crm-input ct-money-input" name="pay_' + idx + '_amount" inputmode="numeric"><span class="ct-money-words"></span></label>' +
+        '<label class="crm-contract-span-2 ct-field-labeled ct-field-labeled--date">' +
+        '<span class="ct-field-label"><i class="fas fa-calendar-day" aria-hidden="true"></i> تاریخ سررسید</span>' +
+        '<input class="crm-input crm-jalali-date" name="pay_' + idx + '_due_date" data-jdp data-jdp-only-date placeholder="۱۴۰۵/۰۷/۱۰" autocomplete="off"></label>' +
+        '</div></div></div>';
       paymentsContainer.insertAdjacentHTML('beforeend', html);
       renderPaymentCards();
       initWizardJalaliPickers(paymentsContainer.lastElementChild);

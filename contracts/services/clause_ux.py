@@ -747,8 +747,10 @@ def apply_clauses_step(
             wizard['property'] = prop
 
     wizard['financial'] = fin
-    wizard['clause_optional'] = parsed.get('optional_clauses') or []
-    wizard['custom_agreements'] = parsed.get('custom_agreements') or []
+    if parsed.get('optional_clauses') is not None:
+        wizard['clause_optional'] = parsed.get('optional_clauses') or []
+    if parsed.get('custom_agreements') is not None:
+        wizard['custom_agreements'] = parsed.get('custom_agreements') or []
     wizard['selected_clauses'] = resolve_selected_clauses(
         contract_type, wizard, user=user,
     )

@@ -129,6 +129,17 @@ def save_wizard_step(
         wizard = apply_clauses_step(
             wizard, data, contract.contract_type, user=user,
         )
+    elif step == 'financial' and isinstance(data, dict):
+        prev_fin = wizard.get('financial') or {}
+        merged = dict(data)
+        for key in (
+            'sale_costs', 'penalties', 'costs',
+            'transfer_to_third_party_allowed', 'transfer_requires_landlord_consent',
+            'usage_type', 'occupants_count',
+        ):
+            if key not in merged and key in prev_fin:
+                merged[key] = prev_fin[key]
+        wizard['financial'] = merged
     else:
         wizard[step] = data
 

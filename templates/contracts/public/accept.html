@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
     <title>تأیید قرارداد — فایلینگ دیوار</title>
-    <link rel="stylesheet" href="/static/contracts/css/public.css?v=2">
+    <link rel="stylesheet" href="/static/contracts/css/public.css?v=3">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
@@ -18,7 +18,7 @@
     <main class="ct-public__card">
         <header class="ct-public__head">
             <h1>{{ contract.get_contract_type_display }}</h1>
-            {% if role_label %}<p>نقش شما: <strong>{{ role_label }}</strong></p>{% endif %}
+            {% if role_label %}<p>نقش شما: <span class="ct-public__role-badge">{{ role_label }}</span></p>{% endif %}
             {% if sender_name %}<p>ارسال‌کننده: {{ sender_name }}</p>{% endif %}
         </header>
 

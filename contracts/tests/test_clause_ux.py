@@ -2,7 +2,7 @@
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 
-from contracts.constants import CLAUSE_REVIEW_PENDING, CLAUSE_REVIEW_REVIEWED, CONTRACT_TYPE_LEASE
+from contracts.constants import CLAUSE_REVIEW_PENDING, CLAUSE_REVIEW_REVIEWED, CONTRACT_TYPE_LEASE, CONTRACT_TYPE_SALE
 from contracts.models import ContractClauseDefinition
 from contracts.services.clause_ux import (
     MAIN_ARTICLE_CODES,
@@ -173,3 +173,22 @@ class ClauseUxTests(TestCase):
         })
         self.assertTrue(ctx['property_has_tenant'])
         self.assertTrue(ctx['old_deposit_retained'])
+
+    def test_financial_step_preserves_clause_costs(self):
+        c = create_contract(self.user, self.deal.pk, CONTRACT_TYPE_SALE)
+        save_wizard_step(c, 'clauses', {
+            'optional_clauses': [],
+            'custom_agreements': [],
+            'penalties': {'payment_delay': {'enabled': True, 'amount': 1000000, 'unit': 'daily'}},
+            'sale_costs': {'transfer_costs': 'buyer', 'notary_costs': 'seller'},
+            'property_has_tenant': False,
+        }, user=self.user)
+        save_wizard_step(c, 'financial', {
+            'total_price': 1000000000,
+            'earnest_money': 0,
+            'payments': [{'label': 'پرداخت ۱', 'amount': 1000000000, 'due_date': '1405/07/10'}],
+        }, user=self.user)
+        c.refresh_from_db()
+        fin = c.wizard_data.get('financial') or {}
+        self.assertEqual(fin.get('sale_costs', {}).get('transfer_costs'), 'buyer')
+        self.assertTrue(fin.get('penalties', {}).get('payment_delay', {}).get('enabled'))

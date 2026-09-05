@@ -230,6 +230,18 @@ class ReviewStepTests(TestCase):
         resp = self.client.get(url + '?step=review')
         self.assertContains(resp, 'ct-wizard--review')
 
+    def test_clauses_step_renders_custom_agreement_with_body_key(self):
+        c = self._lease_contract()
+        url = reverse('workspace:contract_wizard', kwargs={'deal_id': self.deal_rent.pk, 'contract_id': c.pk})
+        wizard = dict(c.wizard_data or {})
+        wizard['custom_agreements'] = [{'title': 'آزار همسایگان', 'body': 'متن توافق بدون body_text'}]
+        c.wizard_data = wizard
+        c.save(update_fields=['wizard_data'])
+        resp = self.client.get(url + '?step=clauses')
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, 'آزار همسایگان')
+        self.assertContains(resp, 'متن توافق بدون body_text')
+
     def test_section_ids_for_navigation(self):
         c = self._sale_contract()
         sections = render_contract_document(c)

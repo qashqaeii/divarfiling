@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import secrets
 
+from django.core.files.base import ContentFile
 from django.db import transaction
 from django.utils import timezone
 
@@ -83,7 +84,11 @@ def accept_contract(
     if signature_image:
         sig = acceptance.signature
         sig.signature_type = 'drawn_signature'
-        sig.image = signature_image
+        if hasattr(signature_image, 'read'):
+            raw = signature_image.read()
+            sig.image.save('signature.png', ContentFile(raw), save=False)
+        else:
+            sig.image = signature_image
         sig.save()
 
     if invitation.party_id:

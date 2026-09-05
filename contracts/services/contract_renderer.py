@@ -18,27 +18,41 @@ def render_contract_document(contract: Contract, version: ContractVersion | None
     sections: List[Dict[str, Any]] = []
     ctype = contract.contract_type
 
-    sections.append(_section('طرفین قرارداد', _render_parties(snap.get('parties') or []), 'parties'))
-    sections.append(_section('مشخصات مورد معامله', _render_property(snap.get('property') or {}), 'property'))
+    sections.append(_section(
+        'طرفین قرارداد', _render_parties(snap.get('parties') or []), 'parties', nav_key='parties',
+    ))
+    sections.append(_section(
+        'مشخصات مورد معامله', _render_property(snap.get('property') or {}), 'property', nav_key='property',
+    ))
 
     if ctype == CONTRACT_TYPE_LEASE:
         fin = snap.get('financial') or {}
-        sections.append(_section('مدت اجاره', _render_lease_duration(fin), 'financial'))
-        sections.append(_section('ودیعه و اجاره‌بها', _render_lease_money(fin), 'financial'))
-        sections.append(_section('نحوه پرداخت', _render_lease_payment(fin), 'financial'))
+        sections.append(_section('مدت اجاره', _render_lease_duration(fin), 'financial', nav_key='financial'))
+        sections.append(_section('ودیعه و اجاره‌بها', _render_lease_money(fin), 'financial', nav_key='financial'))
+        sections.append(_section('نحوه پرداخت', _render_lease_payment(fin), 'financial', nav_key='financial'))
+        if fin.get('delivery_date'):
+            sections.append(_section('تحویل', _render_delivery(fin), 'financial', nav_key='financial'))
     elif ctype == CONTRACT_TYPE_SALE:
         fin = snap.get('financial') or {}
-        sections.append(_section('مبلغ معامله', _render_sale_price(fin), 'financial'))
-        sections.append(_section('برنامه پرداخت', _render_payments(fin), 'financial'))
+        sections.append(_section('مبلغ معامله', _render_sale_price(fin), 'financial', nav_key='financial'))
+        pay_body = _render_payments(fin)
+        sections.append(_section(
+            'برنامه پرداخت', pay_body, 'financial', nav_key='financial', section_kind='payments',
+        ))
         if fin.get('official_transfer_date') or fin.get('transfer_date') or fin.get('transfer_place'):
-            sections.append(_section('اقدام برای انتقال رسمی', _render_transfer_plan(fin), 'financial'))
+            sections.append(_section(
+                'اقدام برای انتقال رسمی', _render_transfer_plan(fin), 'financial', nav_key='financial',
+                section_kind='transfer',
+            ))
+        if fin.get('delivery_date'):
+            sections.append(_section('تحویل', _render_delivery(fin), 'financial', nav_key='financial'))
     elif ctype == CONTRACT_TYPE_JV:
         jv = snap.get('jv') or {}
-        sections.append(_section('مشارکت', _render_jv(jv), 'jv'))
+        sections.append(_section('مشارکت', _render_jv(jv), 'jv', nav_key='financial'))
 
     witnesses_body = _render_witnesses(snap.get('witnesses') or [])
     if witnesses_body:
-        sections.append(_section('شاهدان', witnesses_body, 'witnesses'))
+        sections.append(_section('شاهدان', witnesses_body, 'witnesses', nav_key='witnesses'))
 
     sections.extend(_render_clauses(snap.get('clauses') or [], ctype))
     sections = [s for s in sections if s.get('body')]
@@ -50,15 +64,20 @@ def _number_sections(sections: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     out = []
     for idx, sec in enumerate(sections, 1):
         title = sec.get('title', '')
+        sec = dict(sec)
         if not title.startswith('ماده'):
-            sec = dict(sec)
             sec['title'] = f'ماده {idx} — {title}'
+        nav_key = sec.get('nav_key', 'clauses')
+        if sec.get('is_custom_section'):
+            nav_key = 'custom'
+        sec['section_id'] = f'{nav_key}-{idx}'
+        sec['nav_key'] = nav_key
         out.append(sec)
     return out
 
 
-def _section(title: str, body: str, edit_step: str) -> Dict[str, Any]:
-    return {'title': title, 'body': body.strip(), 'edit_step': edit_step}
+def _section(title: str, body: str, edit_step: str, **extra: Any) -> Dict[str, Any]:
+    return {'title': title, 'body': body.strip(), 'edit_step': edit_step, **extra}
 
 
 def _render_parties(parties: List[Dict]) -> str:
@@ -70,16 +89,27 @@ def _render_parties(parties: List[Dict]) -> str:
     for p in parties:
         role = role_labels.get(p.get('role', ''), p.get('role', ''))
         name = f"{p.get('first_name', '')} {p.get('last_name', '')}".strip()
-        share = p.get('ownership_share') or ''
-        line = f'• {role}: {name}'
+        if p.get('company_name'):
+            name = p['company_name']
+        if not name:
+            continue
+        lines.append(f'{role}: {name}')
+        if p.get('father_name'):
+            lines.append(f'  نام پدر: {p["father_name"]}')
         if p.get('national_id'):
-            line += f' — کد ملی: {p["national_id"]}'
+            lines.append(f'  کد ملی: {p["national_id"]}')
         if p.get('mobile'):
-            line += f' — موبایل: {p["mobile"]}'
+            verified = ' (شماره موبایل تأیید شده)' if p.get('mobile_verified') else ''
+            lines.append(f'  موبایل: {p["mobile"]}{verified}')
+        if p.get('address'):
+            lines.append(f'  نشانی: {p["address"]}')
+        if p.get('postal_code'):
+            lines.append(f'  کد پستی: {p["postal_code"]}')
+        share = p.get('ownership_share') or ''
         if share:
-            line += f' — قدرالسهم: {share}'
-        lines.append(line)
-    return '\n'.join(lines)
+            lines.append(f'  قدرالسهم: {share}')
+        lines.append('')
+    return '\n'.join(lines).strip()
 
 
 def _render_property(prop: Dict) -> str:
@@ -93,6 +123,7 @@ def _render_property(prop: Dict) -> str:
         ('آدرس', prop.get('address')),
         ('متراژ', prop.get('area')),
         ('طبقه', prop.get('floor')),
+        ('تعداد اتاق', prop.get('bedrooms')),
         ('واحد', prop.get('unit')),
         ('سال ساخت', prop.get('build_year')),
         ('نوع سند', prop.get('deed_type')),
@@ -100,8 +131,22 @@ def _render_property(prop: Dict) -> str:
         ('پلاک فرعی', prop.get('sub_plaque')),
     ]
     lines = [f'{k}: {v}' for k, v in fields if v not in (None, '', False)]
-    if prop.get('declared_by_parties'):
-        lines.append('(بر اساس اظهار طرفین)')
+    amenities = []
+    if prop.get('has_parking'):
+        label = 'پارکینگ'
+        if prop.get('parking_number'):
+            label += f' ({prop["parking_number"]})'
+        amenities.append(label)
+    if prop.get('has_storage'):
+        label = 'انباری'
+        if prop.get('storage_number'):
+            label += f' ({prop["storage_number"]})'
+        amenities.append(label)
+    if prop.get('has_elevator'):
+        amenities.append('آسانسور')
+    if amenities:
+        lines.append('امکانات: ' + '، '.join(amenities))
+    lines.append('اطلاعات فوق بر اساس اطلاعات ثبت‌شده/اظهار طرفین است.')
     return '\n'.join(lines)
 
 
@@ -143,7 +188,9 @@ def _render_lease_payment(fin: Dict) -> str:
 
 
 def _render_delivery(fin: Dict) -> str:
-    lines = [f'تاریخ تحویل: {fin.get("delivery_date", "—")}']
+    lines = []
+    if fin.get('delivery_date'):
+        lines.append(f'تاریخ تحویل: {fin["delivery_date"]}')
     if fin.get('delivery_delay_penalty'):
         lines.append(f'وجه التزام تأخیر تحویل: {format_toman(fin["delivery_delay_penalty"])} در روز')
     return '\n'.join(lines)
@@ -193,7 +240,9 @@ def _render_payments(fin: Dict) -> str:
     total = fin.get('total_price')
     pay_sum = sum(int(p.get('amount') or 0) for p in fin.get('payments') or [])
     if total and pay_sum and int(total) != pay_sum:
-        lines.append(f'⚠ مجموع اقساط ({format_toman(pay_sum)}) با مبلغ کل ({format_toman(total)}) برابر نیست.')
+        lines.append(
+            f'توجه: مجموع اقساط ({format_toman(pay_sum)}) با مبلغ کل ({format_toman(total)}) برابر نیست.',
+        )
     return '\n'.join(lines)
 
 
@@ -221,10 +270,11 @@ def _render_sale_status(prop: Dict) -> str:
 
 
 def _render_jv(jv: Dict) -> str:
-    lines = [
-        f'درصد مالک: {jv.get("owner_percent", "—")}٪',
-        f'درصد سازنده: {jv.get("builder_percent", "—")}٪',
-    ]
+    lines = []
+    if jv.get('owner_percent') is not None:
+        lines.append(f'درصد مالک: {jv["owner_percent"]}٪')
+    if jv.get('builder_percent') is not None:
+        lines.append(f'درصد سازنده: {jv["builder_percent"]}٪')
     return '\n'.join(lines)
 
 
@@ -241,4 +291,7 @@ def _render_witnesses(witnesses: List[Dict]) -> str:
 
 def _render_clauses(clauses: List[Dict], contract_type: str) -> List[Dict[str, Any]]:
     from contracts.services.clause_ux import render_clause_sections_for_review
-    return render_clause_sections_for_review(clauses, contract_type)
+    sections = render_clause_sections_for_review(clauses, contract_type)
+    for sec in sections:
+        sec.setdefault('nav_key', 'custom' if sec.get('is_custom_section') else 'clauses')
+    return sections

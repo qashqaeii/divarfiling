@@ -671,26 +671,70 @@
   initWizardJalaliPickers(form);
 
   /* ——— Send confirmation ——— */
-  var sendBtn = form.querySelector('[name="action"][value="prepare_send"]');
-  if (sendBtn) {
+  var sendBtns = form.querySelectorAll('.ct-review-send-btn, [name="action"][value="prepare_send"]');
+  if (sendBtns.length) {
+    var reviewSection = form.querySelector('.ct-review');
     var overlay = document.createElement('div');
     overlay.className = 'ct-confirm-overlay';
-    overlay.innerHTML = '<div class="ct-confirm-sheet" role="dialog">' +
-      '<h3>ارسال برای تأیید طرفین</h3>' +
-      '<p>قرارداد برای طرفین پیامک می‌شود. آن‌ها با موبایل و کد ملی خود تأیید می‌کنند.</p>' +
+    overlay.setAttribute('role', 'dialog');
+    overlay.setAttribute('aria-modal', 'true');
+    overlay.innerHTML = '<div class="ct-confirm-sheet">' +
+      '<h3>ارسال قرارداد برای تأیید طرفین؟</h3>' +
+      '<p>پس از ارسال، لینک تأیید برای طرفین قرارداد ایجاد/ارسال می‌شود و نسخه ارسال‌شده به عنوان نسخه قابل تأیید ثبت خواهد شد.</p>' +
+      '<dl class="ct-confirm-summary" id="ct-confirm-summary"></dl>' +
+      '<p class="ct-review-send-note">پس از ارسال، برای تغییر مفاد قرارداد باید نسخه جدید ایجاد شود.</p>' +
       '<div class="ct-confirm-actions">' +
-      '<button type="button" class="is-primary" id="ct-confirm-send">ارسال برای تأیید طرفین</button>' +
-      '<button type="button" class="is-secondary" id="ct-confirm-cancel">انصراف</button></div></div>';
+      '<button type="button" class="is-primary" id="ct-confirm-send">تأیید و ارسال</button>' +
+      '<button type="button" class="is-secondary" id="ct-confirm-cancel">بازگشت</button></div></div>';
     document.body.appendChild(overlay);
 
-    sendBtn.addEventListener('click', function (e) {
-      e.preventDefault();
-      if (!form.querySelector('[name="creator_ack"]') ||
-          !form.querySelector('[name="creator_ack"]').checked) {
-        form.reportValidity();
-        return;
-      }
-      overlay.classList.add('is-visible');
+    function updateSendButtons() {
+      var ack = form.querySelector('[name="creator_ack"]');
+      var blocked = reviewSection && reviewSection.dataset.readiness === 'blocked';
+      var enabled = ack && ack.checked && !blocked;
+      sendBtns.forEach(function (btn) {
+        btn.disabled = !enabled;
+      });
+    }
+
+    var ackInput = form.querySelector('[name="creator_ack"]');
+    if (ackInput) {
+      ackInput.addEventListener('change', updateSendButtons);
+      updateSendButtons();
+    }
+
+    sendBtns.forEach(function (sendBtn) {
+      sendBtn.addEventListener('click', function (e) {
+        e.preventDefault();
+        var ack = form.querySelector('[name="creator_ack"]');
+        if (!ack || !ack.checked) {
+          form.reportValidity();
+          return;
+        }
+        if (reviewSection && reviewSection.dataset.readiness === 'blocked') {
+          return;
+        }
+        var summary = overlay.querySelector('#ct-confirm-summary');
+        if (summary && reviewSection) {
+          var partyCount = reviewSection.querySelectorAll('.ct-doc-section[data-nav-key="parties"]').length ? '' : '';
+          var metaItems = document.querySelectorAll('.ct-review-header__meta div');
+          summary.innerHTML = '';
+          if (metaItems.length) {
+            metaItems.forEach(function (item) {
+              var dt = item.querySelector('dt');
+              var dd = item.querySelector('dd');
+              if (dt && dd) {
+                summary.innerHTML += '<div><dt>' + dt.textContent + ':</dt><dd>' + dd.textContent + '</dd></div>';
+              }
+            });
+          }
+          var typeTitle = document.querySelector('.ct-review-header__title');
+          if (typeTitle) {
+            summary.innerHTML += '<div><dt>نوع:</dt><dd>' + typeTitle.textContent + '</dd></div>';
+          }
+        }
+        overlay.classList.add('is-visible');
+      });
     });
 
     overlay.querySelector('#ct-confirm-cancel').addEventListener('click', function () {
@@ -710,6 +754,37 @@
     overlay.addEventListener('click', function (e) {
       if (e.target === overlay) overlay.classList.remove('is-visible');
     });
+  }
+
+  /* ——— Review section navigation ——— */
+  var reviewNav = document.querySelector('.ct-review-nav');
+  if (reviewNav) {
+    reviewNav.addEventListener('click', function (e) {
+      var link = e.target.closest('a[href^="#"]');
+      if (!link) return;
+      e.preventDefault();
+      var target = document.querySelector(link.getAttribute('href'));
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        reviewNav.querySelectorAll('.ct-review-nav__chip').forEach(function (c) {
+          c.classList.toggle('is-active', c === link);
+        });
+      }
+    });
+
+    if ('IntersectionObserver' in window) {
+      var sections = document.querySelectorAll('.ct-doc-section[id], .ct-review-final[id]');
+      var observer = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (!entry.isIntersecting) return;
+          var id = entry.target.id;
+          reviewNav.querySelectorAll('.ct-review-nav__chip').forEach(function (chip) {
+            chip.classList.toggle('is-active', chip.getAttribute('href') === '#' + id);
+          });
+        });
+      }, { rootMargin: '-20% 0px -60% 0px', threshold: 0 });
+      sections.forEach(function (sec) { observer.observe(sec); });
+    }
   }
 
   /* ——— End ——— */

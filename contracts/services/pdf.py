@@ -34,7 +34,26 @@ def generate_contract_pdf(
     verify_raw_token: str = '',
     request=None,
 ) -> str:
-    if not version.is_published and version.contract.status != 'finalized':
+    pdf_bytes = generate_contract_pdf_bytes(
+        version, verify_raw_token=verify_raw_token, request=request, preview=False,
+    )
+    if not pdf_bytes:
+        return ''
+    contract = version.contract
+    filename = f'{contract.internal_number}_v{version.version_number}.pdf'
+    version.pdf_file.save(filename, ContentFile(pdf_bytes), save=True)
+    log_audit_event(contract, 'PDF_GENERATED', version=version, metadata={'filename': filename})
+    return version.pdf_file.name
+
+
+def generate_contract_pdf_bytes(
+    version: ContractVersion,
+    *,
+    verify_raw_token: str = '',
+    request=None,
+    preview: bool = False,
+) -> bytes:
+    if not preview and not version.is_published and version.contract.status != 'finalized':
         raise ValueError('PDF فقط از نسخه published/finalized تولید می‌شود.')
 
     try:
@@ -49,7 +68,7 @@ def generate_contract_pdf(
         from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
     except ImportError as exc:
         logger.warning('reportlab not available: %s', exc)
-        return ''
+        return b''
 
     contract = version.contract
     snap = version.snapshot_json or version_display_snapshot(version)
@@ -144,7 +163,4 @@ def generate_contract_pdf(
     story.append(Paragraph(LEGAL_DISCLAIMER_SHORT, footer_style))
 
     doc.build(story, onFirstPage=_footer, onLaterPages=_footer)
-    filename = f'{contract.internal_number}_v{version.version_number}.pdf'
-    version.pdf_file.save(filename, ContentFile(buffer.getvalue()), save=True)
-    log_audit_event(contract, 'PDF_GENERATED', version=version, metadata={'filename': filename})
-    return version.pdf_file.name
+    return buffer.getvalue()

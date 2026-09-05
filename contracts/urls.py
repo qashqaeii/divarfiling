@@ -39,6 +39,11 @@ workspace_urlpatterns = [
         name='contract_pdf',
     ),
     path(
+        'crm/deals/<int:deal_id>/contracts/<int:contract_id>/pdf/preview/',
+        views.ContractPdfPreviewView.as_view(),
+        name='contract_pdf_preview',
+    ),
+    path(
         'crm/deals/<int:deal_id>/contracts/<int:contract_id>/attachments/<int:attachment_id>/',
         handover_views.ContractAttachmentDownloadView.as_view(),
         name='contract_attachment_download',

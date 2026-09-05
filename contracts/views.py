@@ -1,6 +1,7 @@
 """ویوهای احراز هویت‌شده قرارداد."""
 from __future__ import annotations
 
+import io
 import json
 
 from django.contrib import messages
@@ -25,6 +26,7 @@ from contracts.models import Contract
 from contracts.services.clause_ux import build_clause_context, build_clause_sections, clause_warnings
 from contracts.services.clauses import get_applicable_clauses, get_legal_warnings
 from contracts.services.contract_renderer import render_contract_document
+from contracts.services.review_context import build_review_context
 from contracts.services.lifecycle import (
     ContractError,
     cancel_contract,
@@ -95,6 +97,19 @@ class ContractWizardView(DealContractsMixin, TemplateView):
         c = contract_for_user(self.request.user, self.kwargs['contract_id'])
         if not c or c.deal_id != self.kwargs['deal_id']:
             raise Http404
+        step = self.request.GET.get('step') or c.wizard_step or 'type'
+        if step == 'review' and c.current_version_id:
+            c = (
+                Contract.objects.select_related('current_version', 'deal')
+                .prefetch_related(
+                    'current_version__parties',
+                    'current_version__witnesses',
+                    'current_version__clauses',
+                    'current_version__payment_schedules__payments',
+                    'current_version__property_snapshot',
+                )
+                .get(pk=c.pk)
+            )
         return c
 
     def get_context_data(self, **kwargs):
@@ -113,6 +128,15 @@ class ContractWizardView(DealContractsMixin, TemplateView):
         validation_errors = (
             validate_contract_ready(contract, contract.current_version)
             if contract.current_version else []
+        )
+        contract_sections = render_contract_document(contract) if contract.current_version else []
+        review_context = (
+            build_review_context(
+                contract,
+                validation_errors=validation_errors,
+                version=contract.current_version,
+            )
+            if step == 'review' else None
         )
         selected_codes = {
             c.get('code') for c in (wizard.get('selected_clauses') or []) if c.get('code')
@@ -156,7 +180,15 @@ class ContractWizardView(DealContractsMixin, TemplateView):
             'clause_step_warnings': clause_warnings(wizard, contract.contract_type),
             'validation_errors': validation_errors,
             'validation_count': len(validation_errors),
-            'contract_sections': render_contract_document(contract),
+            'contract_sections': contract_sections,
+            'review_context': review_context,
+            'pdf_preview_url': (
+                reverse(
+                    'workspace:contract_pdf_preview',
+                    kwargs={'deal_id': deal.pk, 'contract_id': contract.pk},
+                )
+                if step == 'review' else ''
+            ),
             'wizard_property_choices': {
                 'unit_direction': WIZARD_UNIT_DIRECTIONS,
                 'building_direction': CHOICES_DIRECTION,
@@ -339,6 +371,32 @@ class ContractPdfDownloadView(LoginRequiredMixin, View):
             raise Http404
         return FileResponse(version.pdf_file.open('rb'), as_attachment=True,
                             filename=version.pdf_file.name.split('/')[-1])
+
+
+class ContractPdfPreviewView(LoginRequiredMixin, View):
+    """پیش‌نمایش PDF پیش از ارسال — بدون ذخیره فایل."""
+
+    def get(self, request, deal_id, contract_id):
+        contract = contract_for_user(request.user, contract_id)
+        if not contract or contract.deal_id != deal_id:
+            raise Http404
+        version = contract.current_version
+        if not version:
+            raise Http404
+        from contracts.services.pdf import generate_contract_pdf_bytes
+        try:
+            pdf_bytes = generate_contract_pdf_bytes(version, preview=True)
+        except ValueError:
+            raise Http404
+        if not pdf_bytes:
+            raise Http404
+        filename = f'{contract.internal_number}_v{version.version_number}_preview.pdf'
+        return FileResponse(
+            io.BytesIO(pdf_bytes),
+            as_attachment=False,
+            filename=filename,
+            content_type='application/pdf',
+        )
 
 
 class ContractsDashboardView(LoginRequiredMixin, CRMContextMixin, TemplateView):

@@ -1,8 +1,9 @@
-"""بانک Phase 1 بندهای فروش / مبایعه‌نامه — reviewed."""
+"""بانک Phase 1 بندهای فروش / مبایعه‌نامه."""
 from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
 
+from contracts.services.lease_clause_bank import penalty_basis_label
 from contracts.services.money import format_toman
 
 SALE_CORE_RENDERER_CODES = frozenset({
@@ -180,9 +181,9 @@ SALE_PHASE1_DEFINITIONS: List[Dict[str, Any]] = [
         'category': 'penalties',
         'plain_explanation': 'فقط در صورت فعال‌سازی و تعیین مبلغ توسط طرفین.',
         'body_template': (
-            'در صورت عدم انجام تعهد مربوط به حضور یا اقدام برای انتقال رسمی در موعد تعیین‌شده '
-            'توسط هر یک از طرفین، مسئولیت و وجه التزام توافق‌شده برای شخص متخلف مطابق مفاد این '
-            'قرارداد اعمال خواهد شد.'
+            'در صورت عدم انجام تعهد مربوط به حضور یا اقدام برای انتقال رسمی در موعد مقرر '
+            'توسط هر یک از طرفین، طرف متخلف مبلغ {{amount}} تومان {{penalty_basis}} به عنوان '
+            'وجه التزام قراردادی به طرف مقابل پرداخت خواهد کرد.'
         ),
         'legal_source_code': 'CIVIL_CODE',
     },
@@ -279,6 +280,7 @@ def render_sale_clause_body(
         amount = values.get('amount') or values.get('penalty_amount') or ''
         unit = values.get('penalty_unit') or values.get('unit') or 'daily'
         unit_label = 'روزانه' if unit == 'daily' else 'موردی'
+        basis = penalty_basis_label(str(unit))
         try:
             amount = format_toman(int(amount)) if amount else '—'
         except (TypeError, ValueError):
@@ -287,6 +289,7 @@ def render_sale_clause_body(
             body_template
             .replace('{{amount}}', amount)
             .replace('{{penalty_unit}}', unit_label)
+            .replace('{{penalty_basis}}', basis)
         )
 
     text = body_template

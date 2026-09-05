@@ -212,7 +212,13 @@ def _library_clauses(
 
 def _penalty_inline_values(item: Dict[str, Any]) -> Dict[str, str]:
     amount = item.get('amount_per_day') or item.get('amount') or ''
-    return {'amount': str(amount), 'penalty_amount': str(amount)}
+    unit = item.get('unit', 'daily')
+    return {
+        'amount': str(amount),
+        'penalty_amount': str(amount),
+        'penalty_unit': unit,
+        'unit': unit,
+    }
 
 
 def _resolve_lease_clauses(

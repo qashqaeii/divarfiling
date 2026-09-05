@@ -339,6 +339,24 @@ def validate_contract_ready(contract: Contract, version: ContractVersion) -> Lis
             errors.append('مبلغ قرض‌الحسنه/ودیعه الزامی است.')
         if not fin.get('lease_start') or not fin.get('lease_end'):
             errors.append('مدت اجاره (تاریخ شروع و پایان) الزامی است.')
+        if fin.get('deposit_mode') == 'retained':
+            prev_ref = (
+                fin.get('previous_contract_ref')
+                or fin.get('previous_contract_reference')
+                or ''
+            ).strip()
+            if not prev_ref:
+                errors.append(
+                    'برای باقی‌ماندن ودیعه قرارداد قبلی، مشخصات قرارداد قبلی را وارد کنید.',
+                )
+            try:
+                prev_amt = int(fin.get('previous_deposit_amount') or fin.get('deposit') or 0)
+            except (TypeError, ValueError):
+                prev_amt = 0
+            if prev_amt <= 0:
+                errors.append(
+                    'برای باقی‌ماندن ودیعه قرارداد قبلی، مبلغ ودیعه قبلی را وارد کنید.',
+                )
         if version.witnesses.count() < 2:
             errors.append('دو شاهد برای قرارداد اجاره الزامی است.')
     if contract.contract_type == CONTRACT_TYPE_SALE:

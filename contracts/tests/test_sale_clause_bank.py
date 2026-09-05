@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 from django.core.management import call_command
 from django.test import TestCase
 
-from contracts.constants import CLAUSE_REVIEW_REVIEWED, CONTRACT_TYPE_LEASE, CONTRACT_TYPE_SALE
+from contracts.constants import CLAUSE_REVIEW_PENDING, CLAUSE_REVIEW_REVIEWED, CONTRACT_TYPE_LEASE, CONTRACT_TYPE_SALE
 from contracts.models import ContractClauseDefinition
 from contracts.services.clause_ux import (
     clause_review_badge,
@@ -35,23 +35,24 @@ class SaleClauseBankTests(TestCase):
         )
         call_command('seed_contract_clauses')
 
-    def test_all_phase1_sale_clauses_reviewed_after_seed(self):
+    def test_all_phase1_sale_clauses_pending_after_seed(self):
         codes = {d['code'] for d in SALE_PHASE1_DEFINITIONS}
         for code in codes:
             defn = ContractClauseDefinition.objects.get(code=code, version=1)
-            self.assertEqual(defn.review_status, CLAUSE_REVIEW_REVIEWED)
+            self.assertEqual(defn.review_status, CLAUSE_REVIEW_PENDING)
 
-    def test_production_user_sees_active_reviewed_sale_clauses(self):
+    def test_production_user_sees_active_pending_sale_clauses(self):
         with self.settings(DEBUG=False, LEGAL_REVIEW_PREVIEW=False):
             codes = [c.code for c in get_applicable_clauses('sale', user=self.user)]
             self.assertIn('SALE_PROPERTY_DECLARATIONS', codes)
-            reviewed = [
+            pending = [
                 c for c in get_applicable_clauses('sale', user=self.user)
-                if c.review_status == CLAUSE_REVIEW_REVIEWED
+                if c.review_status == CLAUSE_REVIEW_PENDING
             ]
-            self.assertGreaterEqual(len(reviewed), 5)
+            self.assertEqual(len(pending), len(SALE_PHASE1_DEFINITIONS))
 
-    def test_reviewed_badge_label(self):
+    def test_pending_badge_label(self):
+        self.assertEqual(clause_review_badge(CLAUSE_REVIEW_PENDING), 'بند پیشنهادی')
         self.assertEqual(clause_review_badge(CLAUSE_REVIEW_REVIEWED), 'بند بررسی‌شده')
 
     def test_sale_clauses_not_in_lease(self):
@@ -205,3 +206,38 @@ class SaleClauseBankTests(TestCase):
             inline_values={'amount': 750000, 'penalty_unit': 'daily'},
         )
         self.assertIn('750', body)
+
+    def test_official_transfer_penalty_includes_amount_and_basis(self):
+        defn = ContractClauseDefinition.objects.get(code='SALE_PENALTY_OFFICIAL_TRANSFER', version=1)
+        body_daily = render_sale_clause_body(
+            'SALE_PENALTY_OFFICIAL_TRANSFER', defn.body_template,
+            inline_values={'amount': 5000000, 'penalty_unit': 'daily'},
+        )
+        self.assertIn('5', body_daily)
+        self.assertIn('به ازای هر روز تأخیر', body_daily)
+
+        body_fixed = render_sale_clause_body(
+            'SALE_PENALTY_OFFICIAL_TRANSFER', defn.body_template,
+            inline_values={'amount': 3000000, 'penalty_unit': 'fixed'},
+        )
+        self.assertIn('3', body_fixed)
+        self.assertIn('به صورت مقطوع', body_fixed)
+
+    def test_all_phase1_clauses_count_after_seed(self):
+        lease_pending = ContractClauseDefinition.objects.filter(
+            contract_type=CONTRACT_TYPE_LEASE, is_active=True,
+            review_status=CLAUSE_REVIEW_PENDING,
+        ).count()
+        sale_pending = ContractClauseDefinition.objects.filter(
+            contract_type=CONTRACT_TYPE_SALE, is_active=True,
+            review_status=CLAUSE_REVIEW_PENDING,
+        ).count()
+        self.assertEqual(lease_pending, 14)
+        self.assertEqual(sale_pending, 13)
+
+    def test_wizard_stale_legal_approval_text_removed(self):
+        from pathlib import Path
+        wizard_path = Path(__file__).resolve().parents[2] / 'templates' / 'contracts' / 'wizard.html'
+        content = wizard_path.read_text(encoding='utf-8')
+        self.assertNotIn('پس از تأیید حقوقی', content)
+        self.assertIn('بندهای پیشنهادی را متناسب با شرایط معامله', content)

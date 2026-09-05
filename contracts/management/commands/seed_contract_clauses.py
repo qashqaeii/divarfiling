@@ -1,7 +1,8 @@
-"""Seed clause library and legal rules — بندهای فعال reviewed."""
+"""Seed clause library and legal rules."""
 from django.core.management.base import BaseCommand
 
 from contracts.constants import (
+    CLAUSE_REVIEW_PENDING,
     CLAUSE_REVIEW_REVIEWED,
     CONTRACT_TYPE_JV,
     CONTRACT_TYPE_LEASE,
@@ -52,7 +53,7 @@ SALE_CORE_SEED = [
 
 
 class Command(BaseCommand):
-    help = 'Seed contract clause definitions and legal rules (reviewed)'
+    help = 'Seed contract clause definitions and legal rules'
 
     def handle(self, *args, **options):
         src_civil, _ = ContractLegalSource.objects.get_or_create(
@@ -101,7 +102,7 @@ class Command(BaseCommand):
                     'is_recommended': item.get('is_recommended', True),
                     'is_optional': item.get('is_optional', True),
                     'is_active': True,
-                    'review_status': CLAUSE_REVIEW_REVIEWED,
+                    'review_status': CLAUSE_REVIEW_PENDING,
                     'legal_source': src,
                     'legal_reference': item.get('legal_reference', ''),
                     'legal_note': item.get('legal_note', ''),
@@ -144,7 +145,7 @@ class Command(BaseCommand):
                     'is_recommended': item.get('is_recommended', True),
                     'is_optional': item.get('is_optional', True),
                     'is_active': True,
-                    'review_status': CLAUSE_REVIEW_REVIEWED,
+                    'review_status': CLAUSE_REVIEW_PENDING,
                     'legal_source': src,
                     'legal_reference': item.get('legal_reference', ''),
                 },
@@ -182,6 +183,7 @@ class Command(BaseCommand):
             )
 
         self.stdout.write(self.style.SUCCESS(
-            f'Clause banks synced (all reviewed). '
-            f'Lease: {lease_count} active. Sale: {sale_count} active.',
+            f'Clause banks synced. '
+            f'Lease: {lease_count} active (review_pending). '
+            f'Sale: {sale_count} active (review_pending).',
         ))

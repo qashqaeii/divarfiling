@@ -1,4 +1,4 @@
-"""بانک Phase 1 بندهای رهن و اجاره — metadata و متن پیشنهادی (reviewed)."""
+"""بانک Phase 1 بندهای رهن و اجاره — metadata و متن پیشنهادی."""
 from __future__ import annotations
 
 from typing import Any, Dict, List, Optional, Tuple
@@ -48,6 +48,13 @@ COST_ITEM_LABELS = {
 }
 
 PARTY_LABELS = {'landlord': 'موجر', 'tenant': 'مستأجر'}
+
+
+def penalty_basis_label(unit: str) -> str:
+    if unit == 'fixed':
+        return 'به صورت مقطوع'
+    return 'به ازای هر روز تأخیر'
+
 
 PENALTY_CODE_MAP = {
     'landlord_delivery_delay': 'LEASE_PENALTY_DELIVERY',
@@ -217,8 +224,9 @@ LEASE_PHASE1_DEFINITIONS: List[Dict[str, Any]] = [
         'category': 'penalties',
         'plain_explanation': 'وجه التزام فقط وقتی وارد قرارداد شود که خود طرفین آن را فعال و مبلغ آن را مشخص کرده باشند.',
         'body_template': (
-            'در صورت تأخیر موجر در تحویل مورد اجاره پس از تاریخ مقرر، موجر بابت هر روز تأخیر مبلغ '
-            '{{amount}} تومان به عنوان وجه التزام قراردادی به مستأجر پرداخت خواهد کرد.'
+            'در صورت تأخیر موجر در تحویل مورد اجاره پس از تاریخ مقرر، موجر مبلغ '
+            '{{amount}} تومان {{penalty_basis}} به عنوان وجه التزام قراردادی به مستأجر '
+            'پرداخت خواهد کرد.'
         ),
         'legal_reference': 'قانون مدنی — مواد 221، 226، 230',
         'legal_source_code': 'CIVIL_CODE',
@@ -229,9 +237,9 @@ LEASE_PHASE1_DEFINITIONS: List[Dict[str, Any]] = [
         'category': 'penalties',
         'plain_explanation': 'وجه التزام فقط وقتی وارد قرارداد شود که خود طرفین آن را فعال و مبلغ آن را مشخص کرده باشند.',
         'body_template': (
-            'در صورت ادامه تصرف مستأجر پس از پایان مدت قرارداد بدون توافق جدید، مستأجر بابت هر روز '
-            'تأخیر مبلغ {{amount}} تومان به عنوان وجه التزام قراردادی پرداخت خواهد کرد؛ اعمال این '
-            'شرط تابع حقوق و الزامات قانونی طرفین خواهد بود.'
+            'در صورت ادامه تصرف مستأجر پس از پایان مدت قرارداد بدون توافق جدید، مستأجر مبلغ '
+            '{{amount}} تومان {{penalty_basis}} به عنوان وجه التزام قراردادی پرداخت خواهد کرد؛ '
+            'اعمال این شرط تابع حقوق و الزامات قانونی طرفین خواهد بود.'
         ),
         'legal_reference': 'قانون مدنی — مواد 221، 226، 230',
         'legal_source_code': 'CIVIL_CODE',
@@ -243,7 +251,7 @@ LEASE_PHASE1_DEFINITIONS: List[Dict[str, Any]] = [
         'plain_explanation': 'وجه التزام فقط وقتی وارد قرارداد شود که خود طرفین آن را فعال و مبلغ آن را مشخص کرده باشند.',
         'body_template': (
             'در صورت تأخیر موجر در استرداد ودیعه پس از تحقق شرایط قراردادی و قانونی استرداد آن، موجر '
-            'بابت هر روز تأخیر مبلغ {{amount}} تومان به عنوان وجه التزام قراردادی پرداخت خواهد کرد.'
+            'مبلغ {{amount}} تومان {{penalty_basis}} به عنوان وجه التزام قراردادی پرداخت خواهد کرد.'
         ),
         'legal_reference': 'قانون مدنی — مواد 221، 226، 230؛ قانون روابط موجر و مستأجر — ماده 4',
         'legal_source_code': 'CIVIL_CODE',
@@ -351,11 +359,16 @@ def render_lease_clause_body(
 
     if code == 'LEASE_DEPOSIT_RETAINED':
         dep = _deposit_amount(fin)
-        ref = fin.get('previous_contract_ref') or fin.get('previous_contract_reference') or '—'
+        ref = (
+            fin.get('previous_contract_ref')
+            or fin.get('previous_contract_reference')
+            or ''
+        )
+        ref = str(ref).strip()
         return (
             body_template
-            .replace('{{deposit_amount}}', format_toman(dep) if dep else '—')
-            .replace('{{previous_contract_reference}}', str(ref))
+            .replace('{{deposit_amount}}', format_toman(dep) if dep else '')
+            .replace('{{previous_contract_reference}}', ref)
         )
 
     if code == 'LEASE_DELIVERY':
@@ -371,7 +384,13 @@ def render_lease_clause_body(
                 amount = format_toman(int(amount))
             except (TypeError, ValueError):
                 amount = str(amount)
-        return body_template.replace('{{amount}}', amount or '—')
+        unit = values.get('penalty_unit') or values.get('unit') or 'daily'
+        basis = penalty_basis_label(str(unit))
+        return (
+            body_template
+            .replace('{{amount}}', amount or '—')
+            .replace('{{penalty_basis}}', basis)
+        )
 
     text = body_template
     for key, val in values.items():

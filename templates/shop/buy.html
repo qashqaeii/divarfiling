@@ -6,7 +6,7 @@
 {% block body_class %}mk-checkout-page mk-checkout-page--buy{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/mizkar-checkout.css' %}?v=18">
+<link rel="stylesheet" href="{% static 'css/mizkar-checkout.css' %}?v=19">
 {% endblock %}
 
 {% block breadcrumbs %}{% endblock %}
@@ -208,7 +208,7 @@
                                     {% if plan_data.plan.id == selected_plan_id %}checked{% endif %}
                                     {% if plan_data.purchase_blocked %}disabled{% endif %}
                                     data-original-price="{{ plan_data.unit_list_price }}"
-                                    data-final-price="{{ plan_data.final_price }}"
+                                    data-final-price="{{ plan_data.unit_sale_price }}"
                                     data-unit-list-price="{{ plan_data.unit_list_price }}"
                                     data-unit-sale-price="{{ plan_data.unit_sale_price }}"
                                     data-has-repeat-discount="{% if plan_data.has_repeat_discount %}true{% else %}false{% endif %}"
@@ -246,21 +246,17 @@
                                 </header>
 
                                 <div class="ck-plan-price-block">
-                                    {% if plan_data.has_discount %}
-                                    <s class="ck-plan-was">{{ plan_data.original_price|currency }} تومان</s>
+                                    {% if plan_data.has_promo_offer %}
+                                    <s class="ck-plan-was">{{ plan_data.unit_list_price|currency }} تومان</s>
                                     {% endif %}
                                     <div class="ck-plan-price-row">
-                                        <span class="ck-plan-amount">{{ plan_data.final_price|currency }}</span>
+                                        <span class="ck-plan-amount">{{ plan_data.unit_sale_price|currency }}</span>
                                         <span class="ck-plan-currency">تومان</span>
                                     </div>
+                                    <span class="ck-plan-save ck-plan-save--muted">قیمت پایه — تخفیف‌ها در خلاصه</span>
                                     {% if plan_data.has_promo_offer %}
                                     <span class="ck-plan-save"><i class="fas fa-tags"></i> آفر ویژه</span>
                                     {% endif %}
-                                    {% for reason in plan_data.discount_reasons %}
-                                    {% if 'آفر' not in reason %}
-                                    <span class="ck-plan-save"><i class="fas fa-tag"></i> {{ reason }}</span>
-                                    {% endif %}
-                                    {% endfor %}
                                 </div>
 
                                 <ul class="ck-plan-feats">
@@ -299,7 +295,7 @@
                                         {% if plan_data.plan.id == selected_plan_id %}checked{% endif %}
                                         {% if plan_data.purchase_blocked %}disabled{% endif %}
                                         data-original-price="{{ plan_data.unit_list_price }}"
-                                        data-final-price="{{ plan_data.final_price }}"
+                                        data-final-price="{{ plan_data.unit_sale_price }}"
                                         data-unit-list-price="{{ plan_data.unit_list_price }}"
                                         data-unit-sale-price="{{ plan_data.unit_sale_price }}"
                                         data-has-repeat-discount="{% if plan_data.has_repeat_discount %}true{% else %}false{% endif %}"
@@ -349,5 +345,5 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'js/mizkar-checkout.js' %}?v=9" defer></script>
+<script src="{% static 'js/mizkar-checkout.js' %}?v=11" defer></script>
 {% endblock %}

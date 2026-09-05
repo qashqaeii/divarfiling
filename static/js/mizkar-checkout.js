@@ -169,9 +169,13 @@
             if (agencyPanel) agencyPanel.hidden = mode !== 'agency';
             if (mode === 'agency') {
                 var firstAgency = agencyPanel && agencyPanel.querySelector('input[name="plan"]:not(:disabled)');
-                if (firstAgency && !firstAgency.checked) {
+                var checkedAgency = agencyPanel && agencyPanel.querySelector('input[name="plan"]:checked');
+                if (firstAgency && !checkedAgency) {
                     firstAgency.checked = true;
                     firstAgency.dispatchEvent(new Event('change', { bubbles: true }));
+                } else if (checkedAgency) {
+                    syncQuantityField();
+                    fetchPlanPricing({ discountCode: '', quantity: syncQuantityField() });
                 }
             }
         }
@@ -182,17 +186,30 @@
             });
         });
 
+        function getPlanDisplayName(selected) {
+            if (!selected) return '—';
+            var card = selected.closest('.ck-plan, .ck-agency-duration-btn');
+            if (!card) return '—';
+            var nameEl = card.querySelector('.ck-plan-name');
+            if (nameEl) return nameEl.textContent.trim();
+            var durationLabel = card.querySelector('span');
+            var agencyTitle = document.querySelector('.ck-agency-panel-head .ck-plan-name');
+            if (durationLabel && agencyTitle) {
+                return agencyTitle.textContent.trim() + ' — ' + durationLabel.textContent.trim();
+            }
+            return agencyTitle ? agencyTitle.textContent.trim() : '—';
+        }
+
         function renderSummary() {
             var selected = getSelectedPlan();
             if (!selected) return;
 
             var qty = syncQuantityField();
-            var card = selected.closest('.ck-plan');
-            var planName = card.querySelector('.ck-plan-name').textContent.trim();
+            var planName = getPlanDisplayName(selected);
 
             var summaryName = planName;
             if (qty > 1) {
-                summaryName += ' × ' + qty;
+                summaryName += ' — ' + qty + ' مشاور';
             }
             document.getElementById('summary-plan-name').textContent = summaryName;
             document.getElementById('summary-original-price').textContent =
@@ -358,10 +375,16 @@
 
         document.querySelectorAll('input[name="plan"]').forEach(function (radio) {
             radio.addEventListener('change', function () {
-                document.querySelectorAll('.ck-plan').forEach(function (c) {
+                document.querySelectorAll('.ck-plan, .ck-agency-duration-btn').forEach(function (c) {
                     c.classList.remove('is-selected');
                 });
-                this.closest('.ck-plan').classList.add('is-selected');
+                var host = this.closest('.ck-plan, .ck-agency-duration-btn');
+                if (host) host.classList.add('is-selected');
+                if (this.dataset.allowBulk === 'true') {
+                    setPlanMode('agency');
+                } else {
+                    setPlanMode('personal');
+                }
 
                 if (discountInput) discountInput.value = '';
                 clearDiscountMessage();
@@ -372,11 +395,11 @@
             });
         });
 
-        document.querySelectorAll('.ck-plan').forEach(function (card) {
+        document.querySelectorAll('.ck-plan, .ck-agency-duration-btn').forEach(function (card) {
             card.addEventListener('click', function (e) {
                 if (e.target.tagName === 'INPUT') return;
                 var radio = card.querySelector('input[type="radio"]');
-                if (radio && !radio.checked) {
+                if (radio && !radio.disabled && !radio.checked) {
                     radio.checked = true;
                     radio.dispatchEvent(new Event('change', { bubbles: true }));
                 }
@@ -469,11 +492,15 @@
 
         var initial = getSelectedPlan();
         if (initial) {
-            initial.closest('.ck-plan').classList.add('is-selected');
+            setPlanMode(initial.dataset.allowBulk === 'true' ? 'agency' : 'personal');
+            var card = initial.closest('.ck-plan, .ck-agency-duration-btn');
+            if (card) card.classList.add('is-selected');
             var initialQty = syncQuantityField();
             fallbackPricingFromDataset(initial, initialQty);
             renderSummary();
             fetchPlanPricing({ discountCode: '', quantity: initialQty });
+        } else {
+            setPlanMode('personal');
         }
 
         var loyaltyNotice = document.querySelector('[data-loyalty-notice]');

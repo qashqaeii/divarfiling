@@ -4,7 +4,9 @@ from __future__ import annotations
 import copy
 from typing import Any, Dict, List, Optional
 
+from django.conf import settings
 from django.db import transaction
+from django.urls import reverse
 from django.utils import timezone
 
 from contracts.constants import (
@@ -506,14 +508,18 @@ def finalize_contract(contract: Contract, *, request=None) -> Contract:
             raise ContractError('هش تأیید یکی از طرفین با نسخه مطابقت ندارد.')
 
     version.content_hash = compute_content_hash(version)
-    version.snapshot_json = build_version_snapshot(version)
+    verify_raw, verify_hash = generate_bearer_token()
+    snap = build_version_snapshot(version)
+    site = getattr(settings, 'SITE_URL', 'https://divarfiling.ir')
+    snap['public_verification_url'] = (
+        f'{site.rstrip("/")}{reverse("public_verify", kwargs={"token": verify_raw})}'
+    )
+    version.snapshot_json = snap
     version.is_locked = True
     version.save(update_fields=['content_hash', 'snapshot_json', 'is_locked'])
 
     transition_contract(contract, CONTRACT_STATUS_FINALIZED)
     contract.finalized_at = timezone.now()
-    from contracts.services.tokens import generate_bearer_token
-    verify_raw, verify_hash = generate_bearer_token()
     contract.verification_token_hash = verify_hash
     contract.save(update_fields=['finalized_at', 'verification_token_hash', 'updated_at'])
 

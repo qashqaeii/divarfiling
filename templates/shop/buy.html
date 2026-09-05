@@ -6,7 +6,7 @@
 {% block body_class %}mk-checkout-page mk-checkout-page--buy{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/mizkar-checkout.css' %}?v=21">
+<link rel="stylesheet" href="{% static 'css/mizkar-checkout.css' %}?v=22">
 {% endblock %}
 
 {% block breadcrumbs %}{% endblock %}
@@ -61,6 +61,7 @@
         <div class="ck-layout">
             <form method="post" id="buy-form" class="ck-form ck-form--checkout">
                 {% csrf_token %}
+                <button type="submit" id="buy-form-hidden-submit" hidden tabindex="-1" aria-hidden="true">ارسال</button>
                 {% if renewal_license %}<input type="hidden" name="renew" value="{{ renewal_license.id }}">{% endif %}
 
                 <aside class="ck-order" aria-label="خلاصه سفارش">
@@ -365,7 +366,7 @@
             <span>قابل پرداخت</span>
             <strong id="mobile-final-price">—</strong>
         </div>
-        <button type="button" class="ck-pay-btn ck-pay-btn--compact" data-pay-btn form="buy-form">
+        <button type="button" class="ck-pay-btn ck-pay-btn--compact" data-pay-btn form="buy-form" id="mobile-pay-btn">
             <i class="fas fa-lock"></i> پرداخت
         </button>
     </div>
@@ -373,5 +374,5 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'js/mizkar-checkout.js' %}?v=12" defer></script>
+<script src="{% static 'js/mizkar-checkout.js' %}?v=13" defer></script>
 {% endblock %}

@@ -14,12 +14,16 @@
         var discountInput = document.getElementById('id_discount_code');
         var discountMsg = document.getElementById('discount-message');
         var payBtns = document.querySelectorAll('[data-pay-btn]');
+        var hiddenSubmit = document.getElementById('buy-form-hidden-submit');
         var qtyInput = document.getElementById('id_quantity');
         var qtyFieldset = document.getElementById('bulk-quantity-fieldset');
         var qtyNote = document.getElementById('bulk-quantity-note');
 
+        if (!form) return;
+
         var applyDiscountUrl = root.dataset.applyDiscountUrl;
-        var csrfToken = form.querySelector('[name=csrfmiddlewaretoken]').value;
+        var csrfInput = form.querySelector('[name=csrfmiddlewaretoken]');
+        var csrfToken = csrfInput ? csrfInput.value : '';
 
         var pricingState = {
             original: 0,
@@ -344,13 +348,52 @@
         }
 
         function showDiscountMessage(message, type) {
+            if (!discountMsg) return;
             discountMsg.className = 'ck-promo-msg is-' + type;
             discountMsg.textContent = message;
         }
 
         function clearDiscountMessage() {
+            if (!discountMsg) return;
             discountMsg.className = 'ck-promo-msg';
             discountMsg.textContent = '';
+        }
+
+        function submitBuyForm() {
+            if (!form) return false;
+            if (typeof form.requestSubmit === 'function') {
+                try {
+                    if (hiddenSubmit) {
+                        form.requestSubmit(hiddenSubmit);
+                    } else {
+                        form.requestSubmit();
+                    }
+                    return true;
+                } catch (err) {
+                    /* Safari/WebView قدیمی — fallback */
+                }
+            }
+            if (hiddenSubmit) {
+                hiddenSubmit.click();
+                return true;
+            }
+            form.submit();
+            return true;
+        }
+
+        function handlePayClick(e) {
+            if (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            if (!getSelectedPlan()) {
+                alert('لطفاً یک پلن انتخاب کنید.');
+                return false;
+            }
+            if (qtyInput) {
+                qtyInput.value = String(syncQuantityField());
+            }
+            return submitBuyForm();
         }
 
         function applyDiscount() {
@@ -521,16 +564,16 @@
         });
 
         payBtns.forEach(function (btn) {
-            btn.addEventListener('click', function () {
-                if (!getSelectedPlan()) {
-                    alert('لطفاً یک پلن انتخاب کنید.');
-                    return;
-                }
-                if (qtyInput) {
-                    qtyInput.value = String(syncQuantityField());
-                }
-                form.requestSubmit();
-            });
+            btn.addEventListener('click', handlePayClick);
+        });
+
+        form.addEventListener('submit', function (e) {
+            if (!getSelectedPlan()) {
+                e.preventDefault();
+                alert('لطفاً یک پلن انتخاب کنید.');
+            } else if (qtyInput) {
+                qtyInput.value = String(syncQuantityField());
+            }
         });
 
         updatePaymentHints();
@@ -547,6 +590,13 @@
         } else {
             setPlanMode('personal');
         }
+
+        setTimeout(function () {
+            if (pricingState.loading) {
+                pricingState.loading = false;
+                renderSummary();
+            }
+        }, 12000);
 
         var loyaltyNotice = document.querySelector('[data-loyalty-notice]');
         var loyaltyKey = 'ck-loyalty-dismissed';

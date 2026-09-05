@@ -6,7 +6,7 @@
 {% block body_class %}mk-checkout-page mk-checkout-page--buy{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/mizkar-checkout.css' %}?v=19">
+<link rel="stylesheet" href="{% static 'css/mizkar-checkout.css' %}?v=21">
 {% endblock %}
 
 {% block breadcrumbs %}{% endblock %}
@@ -89,17 +89,6 @@
                         </div>
 
                         <div class="ck-order-panel">
-                            <div class="ck-order-block ck-order-block--qty" id="bulk-quantity-fieldset"{% if is_renewal %} hidden{% endif %}>
-                                <span class="ck-order-block-label">تعداد مشاور</span>
-                                <div class="ck-bulk-qty-row ck-bulk-qty-row--compact">
-                                    <button type="button" class="ck-bulk-qty-btn" data-qty-step="-1" aria-label="کاهش">−</button>
-                                    <input type="number" name="quantity" id="id_quantity" class="ck-qty-input" value="2" min="2" max="25" step="1">
-                                    <button type="button" class="ck-bulk-qty-btn" data-qty-step="1" aria-label="افزایش">+</button>
-                                </div>
-                                <p class="ck-bulk-qty-note" id="bulk-quantity-note">برای هر مشاور یک کلید مستقل شامل ویندوز و اندروید صادر می‌شود.</p>
-                                <div class="ck-agency-summary" id="agency-pricing-summary" hidden></div>
-                            </div>
-
                             <div class="ck-order-block">
                                 <span class="ck-order-block-label">کد تخفیف <em>(اختیاری)</em></span>
                                 <div class="ck-promo ck-promo--sidebar">
@@ -188,8 +177,14 @@
 
                     <section class="ck-plans-stage" aria-labelledby="plans-heading">
                         <div class="ck-plan-mode-tabs" role="tablist" aria-label="نوع پلن">
-                            <button type="button" class="ck-plan-mode-tab is-active" data-plan-mode="personal" role="tab" aria-selected="true">شخصی</button>
-                            <button type="button" class="ck-plan-mode-tab" data-plan-mode="agency" role="tab" aria-selected="false">آژانس</button>
+                            <button type="button" class="ck-plan-mode-tab is-active" data-plan-mode="personal" role="tab" aria-selected="true">
+                                <i class="fas fa-user" aria-hidden="true"></i>
+                                <span>پلن شخصی</span>
+                            </button>
+                            <button type="button" class="ck-plan-mode-tab" data-plan-mode="agency" role="tab" aria-selected="false">
+                                <i class="fas fa-users" aria-hidden="true"></i>
+                                <span>پلن آژانس</span>
+                            </button>
                         </div>
 
                         <div class="ck-plans ck-plans--personal" data-plan-panel="personal" role="radiogroup" aria-label="پلن شخصی">
@@ -280,42 +275,75 @@
                         </div>
 
                         <div class="ck-agency-panel" data-plan-panel="agency" hidden>
+                            <div class="ck-agency-panel-glow" aria-hidden="true"></div>
                             <header class="ck-agency-panel-head">
-                                <h3 class="ck-plan-name">پلن آژانس</h3>
-                                <p class="ck-plan-tagline">مناسب تیم‌های ۲ تا ۲۵ مشاور — هر مشاور یک کلید مستقل</p>
+                                <div class="ck-agency-panel-icon" aria-hidden="true"><i class="fas fa-building"></i></div>
+                                <div>
+                                    <h3 class="ck-agency-title">پلن آژانس</h3>
+                                    <p class="ck-agency-subtitle">مناسب تیم‌های ۲ تا ۲۵ مشاور — هر مشاور یک کلید مستقل</p>
+                                </div>
                             </header>
-                            <div class="ck-agency-duration" role="radiogroup" aria-label="مدت پلن آژانس">
-                                {% for plan_data in agency_plans %}
-                                <label class="ck-agency-duration-btn{% if plan_data.plan.id == selected_plan_id %} is-selected{% endif %}">
-                                    <input
-                                        type="radio"
-                                        name="plan"
-                                        value="{{ plan_data.plan.id }}"
-                                        id="plan_{{ plan_data.plan.id }}"
-                                        {% if plan_data.plan.id == selected_plan_id %}checked{% endif %}
-                                        {% if plan_data.purchase_blocked %}disabled{% endif %}
-                                        data-original-price="{{ plan_data.unit_list_price }}"
-                                        data-final-price="{{ plan_data.unit_sale_price }}"
-                                        data-unit-list-price="{{ plan_data.unit_list_price }}"
-                                        data-unit-sale-price="{{ plan_data.unit_sale_price }}"
-                                        data-has-repeat-discount="{% if plan_data.has_repeat_discount %}true{% else %}false{% endif %}"
-                                        data-repeat-discount-percentage="{{ plan_data.repeat_discount_percentage }}"
-                                        data-allow-bulk="true"
-                                        data-min-quantity="{{ plan_data.plan.min_quantity }}"
-                                        data-max-quantity="{{ plan_data.plan.max_quantity }}"
-                                        data-plan-type="{{ plan_data.plan.plan_type }}"
-                                    >
-                                    <span>{% if plan_data.plan.plan_type == 'monthly' %}ماهانه{% elif plan_data.plan.plan_type == 'quarterly' %}سه‌ماهه{% else %}سالانه{% endif %}</span>
-                                </label>
-                                {% endfor %}
+
+                            <div class="ck-agency-section">
+                                <span class="ck-agency-section-label">مدت لایسنس</span>
+                                <div class="ck-agency-duration" role="radiogroup" aria-label="مدت پلن آژانس">
+                                    {% for plan_data in agency_plans %}
+                                    <label class="ck-agency-duration-btn{% if plan_data.plan.id == selected_plan_id %} is-selected{% endif %}">
+                                        <input
+                                            type="radio"
+                                            name="plan"
+                                            value="{{ plan_data.plan.id }}"
+                                            id="plan_{{ plan_data.plan.id }}"
+                                            {% if plan_data.plan.id == selected_plan_id %}checked{% endif %}
+                                            {% if plan_data.purchase_blocked %}disabled{% endif %}
+                                            data-original-price="{{ plan_data.unit_list_price }}"
+                                            data-final-price="{{ plan_data.unit_sale_price }}"
+                                            data-unit-list-price="{{ plan_data.unit_list_price }}"
+                                            data-unit-sale-price="{{ plan_data.unit_sale_price }}"
+                                            data-has-repeat-discount="{% if plan_data.has_repeat_discount %}true{% else %}false{% endif %}"
+                                            data-repeat-discount-percentage="{{ plan_data.repeat_discount_percentage }}"
+                                            data-allow-bulk="true"
+                                            data-min-quantity="{{ plan_data.plan.min_quantity }}"
+                                            data-max-quantity="{{ plan_data.plan.max_quantity }}"
+                                            data-plan-type="{{ plan_data.plan.plan_type }}"
+                                        >
+                                        <span class="ck-agency-duration-label">{% if plan_data.plan.plan_type == 'monthly' %}ماهانه{% elif plan_data.plan.plan_type == 'quarterly' %}سه‌ماهه{% else %}سالانه{% endif %}</span>
+                                        <span class="ck-agency-duration-meta">{% if plan_data.plan.plan_type == 'monthly' %}۳۰ روز{% elif plan_data.plan.plan_type == 'quarterly' %}۹۰ روز{% else %}۳۶۵ روز{% endif %}</span>
+                                        <span class="ck-agency-duration-price">{{ plan_data.unit_sale_price|currency }} <em>هر مشاور</em></span>
+                                    </label>
+                                    {% endfor %}
+                                </div>
                             </div>
-                            <ul class="ck-plan-feats ck-agency-feats">
-                                <li><span class="ck-plan-feat-icon"><i class="fas fa-key"></i></span><span>هر مشاور یک کلید مستقل</span></li>
-                                <li><span class="ck-plan-feat-icon"><i class="fas fa-link"></i></span><span>هر کلید: ۱ ویندوز + ۱ اندروید</span></li>
-                                <li><span class="ck-plan-feat-icon"><i class="fas fa-users-gear"></i></span><span>CRM و مدیریت تیم</span></li>
-                                <li><span class="ck-plan-feat-icon"><i class="fas fa-percent"></i></span><span>تخفیف بیشتر با افزایش تعداد</span></li>
+
+                            <div class="ck-agency-section ck-order-block ck-order-block--qty" id="bulk-quantity-fieldset"{% if is_renewal %} hidden{% endif %}>
+                                <span class="ck-agency-section-label">تعداد مشاور</span>
+                                <div class="ck-agency-qty-card">
+                                    <div class="ck-bulk-qty-row ck-agency-qty-row">
+                                        <button type="button" class="ck-bulk-qty-btn" data-qty-step="-1" aria-label="کاهش">−</button>
+                                        <div class="ck-agency-qty-display">
+                                            <input type="number" name="quantity" id="id_quantity" class="ck-qty-input" value="2" min="2" max="25" step="1" aria-label="تعداد مشاور">
+                                            <span class="ck-agency-qty-unit">مشاور</span>
+                                        </div>
+                                        <button type="button" class="ck-bulk-qty-btn" data-qty-step="1" aria-label="افزایش">+</button>
+                                    </div>
+                                    <p class="ck-bulk-qty-note" id="bulk-quantity-note">برای هر مشاور یک کلید مستقل — ۱ ویندوز + ۱ اندروید</p>
+                                </div>
+                                <div class="ck-agency-live-total" id="agency-live-total" hidden>
+                                    <span>مبلغ کل تیم</span>
+                                    <strong id="agency-live-total-value">—</strong>
+                                </div>
+                            </div>
+
+                            <ul class="ck-agency-feature-grid">
+                                <li><i class="fas fa-key" aria-hidden="true"></i><span>کلید مستقل هر مشاور</span></li>
+                                <li><i class="fas fa-link" aria-hidden="true"></i><span>ویندوز + اندروید</span></li>
+                                <li><i class="fas fa-users-gear" aria-hidden="true"></i><span>CRM و مدیریت تیم</span></li>
+                                <li><i class="fas fa-chart-line" aria-hidden="true"></i><span>استخراج و فایلینگ</span></li>
+                                <li><i class="fas fa-percent" aria-hidden="true"></i><span>تخفیف حجمی تا ۲۵٪</span></li>
+                                <li><i class="fas fa-headset" aria-hidden="true"></i><span>پشتیبانی راه‌اندازی</span></li>
                             </ul>
-                            <p class="ck-agency-cta-note">تعداد مشاور را در خلاصه سفارش تنظیم کنید — قیمت به‌صورت زنده محاسبه می‌شود.</p>
+
+                            <div class="ck-agency-summary" id="agency-pricing-summary" hidden></div>
                         </div>
                     </section>
 
@@ -345,5 +373,5 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'js/mizkar-checkout.js' %}?v=11" defer></script>
+<script src="{% static 'js/mizkar-checkout.js' %}?v=12" defer></script>
 {% endblock %}

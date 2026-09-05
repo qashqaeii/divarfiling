@@ -131,11 +131,12 @@
 
         function renderAgencySummary(data) {
             var box = document.getElementById('agency-pricing-summary');
-            if (!box) return;
+            var liveTotal = document.getElementById('agency-live-total');
+            var liveTotalValue = document.getElementById('agency-live-total-value');
             var selected = getSelectedPlan();
             if (!selected || selected.dataset.allowBulk !== 'true') {
-                box.hidden = true;
-                box.innerHTML = '';
+                if (box) { box.hidden = true; box.innerHTML = ''; }
+                if (liveTotal) liveTotal.hidden = true;
                 return;
             }
             var qty = data.quantity || syncQuantityField();
@@ -143,23 +144,39 @@
             var baseUnit = data.base_unit_price || parseInt(selected.dataset.unitSalePrice, 10) || 0;
             var effUnit = data.effective_unit_price || baseUnit;
             var appliedReason = data.applied_discount_reason || '';
-            var html = '<div class="ck-agency-summary-grid">' +
-                '<div><span>تعداد مشاور</span><strong>' + qty + '</strong></div>' +
-                '<div><span>تعداد لایسنس</span><strong>' + qty + '</strong></div>' +
-                '<div><span>ظرفیت دستگاه</span><strong>' + slots + '</strong></div>' +
-                '<div><span>قیمت پایه هر نفر</span><strong>' + formatNumber(baseUnit) + '</strong></div>';
-            if (appliedReason) {
-                html += '<div><span>' + appliedReason + '</span><strong>' + (data.applied_discount_percent || 0) + '٪</strong></div>';
+            var finalTotal = data.final_price || pricingState.final || 0;
+
+            if (liveTotal && liveTotalValue) {
+                liveTotalValue.textContent = formatNumber(finalTotal) + ' تومان';
+                liveTotal.hidden = false;
             }
-            html += '<div><span>قیمت هر نفر</span><strong>' + formatNumber(effUnit) + ' تومان</strong></div>' +
-                '</div>';
+
+            if (!box) return;
+
+            var html = '<div class="ck-agency-summary-grid">' +
+                item('تعداد مشاور', qty) +
+                item('کلید مستقل', qty) +
+                item('ظرفیت دستگاه', slots) +
+                item('قیمت پایه هر نفر', formatNumber(baseUnit), false) +
+                item('قیمت هر نفر', formatNumber(effUnit) + ' تومان', true);
+            if (appliedReason) {
+                html += '<div class="ck-agency-summary-discount"><span>' + appliedReason + '</span><strong>' +
+                    (data.applied_discount_percent || 0) + '٪</strong></div>';
+            }
+            html += '</div>';
             box.innerHTML = html;
             box.hidden = false;
+
+            function item(label, value, highlight) {
+                return '<div class="ck-agency-summary-item' + (highlight ? ' is-highlight' : '') + '">' +
+                    '<span>' + label + '</span><strong>' + value + '</strong></div>';
+            }
         }
 
         function setPlanMode(mode) {
             var personalPanel = document.querySelector('[data-plan-panel="personal"]');
             var agencyPanel = document.querySelector('[data-plan-panel="agency"]');
+            var liveTotal = document.getElementById('agency-live-total');
             document.querySelectorAll('[data-plan-mode]').forEach(function (btn) {
                 var active = btn.dataset.planMode === mode;
                 btn.classList.toggle('is-active', active);
@@ -167,6 +184,7 @@
             });
             if (personalPanel) personalPanel.hidden = mode !== 'personal';
             if (agencyPanel) agencyPanel.hidden = mode !== 'agency';
+
             if (mode === 'agency') {
                 var firstAgency = agencyPanel && agencyPanel.querySelector('input[name="plan"]:not(:disabled)');
                 var checkedAgency = agencyPanel && agencyPanel.querySelector('input[name="plan"]:checked');
@@ -176,6 +194,22 @@
                 } else if (checkedAgency) {
                     syncQuantityField();
                     fetchPlanPricing({ discountCode: '', quantity: syncQuantityField() });
+                }
+            } else {
+                if (liveTotal) liveTotal.hidden = true;
+                var agencySummary = document.getElementById('agency-pricing-summary');
+                if (agencySummary) {
+                    agencySummary.hidden = true;
+                    agencySummary.innerHTML = '';
+                }
+                var checkedPersonal = personalPanel && personalPanel.querySelector('input[name="plan"]:checked');
+                var firstPersonal = personalPanel && personalPanel.querySelector('input[name="plan"]:not(:disabled)');
+                if (!checkedPersonal && firstPersonal) {
+                    firstPersonal.checked = true;
+                    firstPersonal.dispatchEvent(new Event('change', { bubbles: true }));
+                } else if (checkedPersonal) {
+                    syncQuantityField();
+                    fetchPlanPricing({ discountCode: '', quantity: 1 });
                 }
             }
         }
@@ -192,8 +226,8 @@
             if (!card) return '—';
             var nameEl = card.querySelector('.ck-plan-name');
             if (nameEl) return nameEl.textContent.trim();
-            var durationLabel = card.querySelector('span');
-            var agencyTitle = document.querySelector('.ck-agency-panel-head .ck-plan-name');
+            var durationLabel = card.querySelector('.ck-agency-duration-label');
+            var agencyTitle = document.querySelector('.ck-agency-title');
             if (durationLabel && agencyTitle) {
                 return agencyTitle.textContent.trim() + ' — ' + durationLabel.textContent.trim();
             }
@@ -231,6 +265,13 @@
             document.getElementById('summary-final-price').textContent = finalText;
             var mobileTotal = document.getElementById('mobile-final-price');
             if (mobileTotal) mobileTotal.textContent = finalText;
+
+            var liveTotal = document.getElementById('agency-live-total');
+            var liveTotalValue = document.getElementById('agency-live-total-value');
+            if (liveTotal && liveTotalValue && selected.dataset.allowBulk === 'true') {
+                liveTotalValue.textContent = finalText;
+                liveTotal.hidden = false;
+            }
 
             payBtns.forEach(function (btn) {
                 btn.disabled = pricingState.loading;
@@ -283,6 +324,7 @@
                         }
                     } else {
                         fallbackPricingFromDataset(selected, qty);
+                        renderAgencySummary({ quantity: qty, final_price: pricingState.final });
                         if (options.showDiscountError) {
                             showDiscountMessage(data.message || 'خطا در محاسبه قیمت.', 'error');
                         }
@@ -293,6 +335,7 @@
                     if (requestId !== pricingRequestId) return;
                     pricingState.loading = false;
                     fallbackPricingFromDataset(selected, qty);
+                    renderAgencySummary({ quantity: qty, final_price: pricingState.final });
                     if (options.showDiscountError) {
                         showDiscountMessage('خطا در ارتباط. دوباره تلاش کنید.', 'error');
                     }
@@ -353,12 +396,14 @@
                         pricingState.original = data.original_price;
                         pricingState.final = data.final_price;
                         pricingState.discountDetails = data.discount_details || [];
+                        renderAgencySummary(data);
                         showDiscountMessage(
                             'کد اعمال شد — ' + formatNumber(data.total_discount) + ' تومان تخفیف',
                             'success'
                         );
                     } else {
                         fallbackPricingFromDataset(selected, qty);
+                        renderAgencySummary({ quantity: qty, final_price: pricingState.final });
                         showDiscountMessage(data.message || 'کد تخفیف معتبر نیست.', 'error');
                     }
                     renderSummary();

@@ -699,7 +699,7 @@
                                     <input class="crm-input" name="custom_agreement_{{ forloop.counter0 }}_title" value="{{ ag.title|default:'' }}" placeholder="عنوان توافق">
                                 </label>
                                 <label class="crm-contract-span-2">متن توافق
-                                    <textarea class="crm-input" name="custom_agreement_{{ forloop.counter0 }}_body" rows="3" placeholder="متن توافق اختصاصی طرفین">{{ ag.body|default:ag.body_text|default:'' }}</textarea>
+                                    <textarea class="crm-input" name="custom_agreement_{{ forloop.counter0 }}_body" rows="3" placeholder="متن توافق اختصاصی طرفین">{% firstof ag.body ag.body_text "" %}</textarea>
                                 </label>
                             </div>
                             <button type="button" class="ct-custom-agreement-remove">حذف</button>

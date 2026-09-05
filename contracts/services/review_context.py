@@ -359,9 +359,16 @@ def _build_important_dates(contract_type: str, fin: Dict, snap_dates: Dict) -> L
     return items
 
 
+def _clause_body_text(clause: Dict) -> str:
+    return (clause.get('body_text') or clause.get('body') or '').strip()
+
+
 def _build_clause_stats(contract: Contract, version: ContractVersion, snap: Dict) -> Dict[str, Any]:
     wizard = contract.wizard_data or {}
-    included = [c for c in (snap.get('clauses') or []) if c.get('is_active', True) and (c.get('body_text') or '').strip()]
+    included = [
+        c for c in (snap.get('clauses') or [])
+        if c.get('is_active', True) and _clause_body_text(c)
+    ]
     included_count = len(included)
     try:
         applicable = get_applicable_clauses(contract.contract_type, wizard, user=contract.user)
@@ -423,9 +430,9 @@ def _build_costs_summary(contract_type: str, fin: Dict) -> List[Dict[str, str]]:
 
 def _build_custom_agreements(clauses: List[Dict]) -> List[Dict[str, str]]:
     return [
-        {'title': c.get('title') or 'توافق اختصاصی', 'body': (c.get('body_text') or '').strip()}
+        {'title': c.get('title') or 'توافق اختصاصی', 'body': _clause_body_text(c)}
         for c in clauses
-        if c.get('is_custom') and c.get('is_active', True) and (c.get('body_text') or '').strip()
+        if c.get('is_custom') and c.get('is_active', True) and _clause_body_text(c)
     ]
 
 

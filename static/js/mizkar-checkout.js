@@ -43,8 +43,19 @@
             }, 200);
         }
 
+        function getActivePlanMode() {
+            var activeTab = document.querySelector('[data-plan-mode].is-active');
+            return activeTab && activeTab.dataset.planMode === 'agency' ? 'agency' : 'personal';
+        }
+
         function getSelectedPlan() {
-            return document.querySelector('input[name="plan"]:checked');
+            var mode = getActivePlanMode();
+            var panel = document.querySelector('[data-plan-panel="' + mode + '"]');
+            if (panel) {
+                var inPanel = panel.querySelector('input[name="plan"]:checked:not(:disabled)');
+                if (inPanel) return inPanel;
+            }
+            return document.querySelector('input[name="plan"]:checked:not(:disabled)');
         }
 
         function getQuantity() {
@@ -65,10 +76,14 @@
             qtyFieldset.hidden = !allowBulk;
             if (!allowBulk) {
                 qtyInput.value = '1';
+                qtyInput.min = '1';
+                qtyInput.max = '1';
+                qtyInput.disabled = true;
                 if (qtyNote) qtyNote.textContent = '';
                 return 1;
             }
 
+            qtyInput.disabled = false;
             var min = parseInt(selected.dataset.minQuantity, 10) || 1;
             var max = parseInt(selected.dataset.maxQuantity, 10) || 20;
             qtyInput.min = String(min);
@@ -76,10 +91,8 @@
             var qty = parseInt(qtyInput.value, 10) || min;
             qty = Math.max(min, Math.min(max, qty));
             qtyInput.value = String(qty);
-            if (qtyNote && selected && selected.dataset.allowBulk === 'true') {
+            if (qtyNote) {
                 qtyNote.textContent = 'برای هر مشاور یک کلید مستقل شامل ویندوز و اندروید صادر می‌شود.';
-            } else if (qtyNote) {
-                qtyNote.textContent = '';
             }
             return qty;
         }
@@ -386,12 +399,15 @@
                 e.preventDefault();
                 e.stopPropagation();
             }
-            if (!getSelectedPlan()) {
+            var selected = getSelectedPlan();
+            if (!selected) {
                 alert('لطفاً یک پلن انتخاب کنید.');
                 return false;
             }
-            if (qtyInput) {
-                qtyInput.value = String(syncQuantityField());
+            syncQuantityField();
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return false;
             }
             return submitBuyForm();
         }
@@ -568,11 +584,16 @@
         });
 
         form.addEventListener('submit', function (e) {
-            if (!getSelectedPlan()) {
+            var selected = getSelectedPlan();
+            if (!selected) {
                 e.preventDefault();
                 alert('لطفاً یک پلن انتخاب کنید.');
-            } else if (qtyInput) {
-                qtyInput.value = String(syncQuantityField());
+                return;
+            }
+            syncQuantityField();
+            if (!form.checkValidity()) {
+                e.preventDefault();
+                form.reportValidity();
             }
         });
 

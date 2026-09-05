@@ -39,7 +39,7 @@ from contracts.services.lifecycle import (
 )
 from contracts.services.invitations import resend_invitation, send_invitations
 from contracts.services.scope import contract_for_deal, contract_for_user, contracts_qs
-from contracts.services.wizard_parse import parse_wizard_step
+from contracts.services.audit import build_audit_timeline
 from workspace.crm_views import CRMContextMixin
 from workspace.services.crm_scope import deal_for_user
 
@@ -315,12 +315,17 @@ class ContractManageView(DealContractsMixin, DetailView):
         version = contract.current_version
         party_progress = self._party_progress(contract, version)
         pending_count = sum(1 for p in party_progress if not p['accepted'])
+        audit_qs = contract.audit_events.select_related(
+            'party', 'actor_user', 'version',
+        ).order_by('-created_at')[:50]
+        audit_timeline = build_audit_timeline(audit_qs)
         ctx.update({
             'deal': self.get_deal(),
             'version': version,
             'party_progress': party_progress,
             'pending_count': pending_count,
-            'audit_events': contract.audit_events.select_related('party', 'actor_user').order_by('-created_at')[:50],
+            'audit_timeline': audit_timeline,
+            'audit_total_count': contract.audit_events.count(),
             'invitations': contract.invitations.select_related('party', 'witness').order_by('-created_at'),
             'handover': contract.handovers.order_by('-created_at').first(),
             'finalized_handover': contract.handovers.filter(status='finalized').first(),

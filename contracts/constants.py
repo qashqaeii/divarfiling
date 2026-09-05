@@ -150,6 +150,29 @@ AUDIT_ACCESS_LINK_CREATED = 'ACCESS_LINK_CREATED'
 AUDIT_ACCESS_LINK_REVOKED = 'ACCESS_LINK_REVOKED'
 AUDIT_CONTRACT_CANCELLED = 'CONTRACT_CANCELLED'
 
+AUDIT_EVENT_LABELS = {
+    AUDIT_CONTRACT_CREATED: 'ایجاد قرارداد',
+    AUDIT_CONTRACT_UPDATED: 'به‌روزرسانی قرارداد',
+    AUDIT_VERSION_CREATED: 'ایجاد نسخه جدید',
+    AUDIT_VERSION_PUBLISHED: 'انتشار نسخه برای تأیید',
+    AUDIT_INVITATION_CREATED: 'ایجاد دعوت‌نامه تأیید',
+    AUDIT_SMS_SENT: 'ارسال پیامک دعوت',
+    AUDIT_INVITATION_OPENED: 'باز شدن لینک دعوت',
+    AUDIT_OTP_REQUESTED: 'درخواست کد تأیید',
+    AUDIT_OTP_VERIFIED: 'تأیید کد یکبارمصرف',
+    AUDIT_OTP_FAILED: 'خطا در تأیید کد',
+    AUDIT_CONTRACT_VIEWED: 'مشاهده قرارداد توسط طرف',
+    AUDIT_PARTY_ACCEPTED: 'تأیید قرارداد توسط طرف',
+    AUDIT_PARTY_SIGNED: 'ثبت امضای طرف',
+    AUDIT_WITNESS_ACCEPTED: 'تأیید قرارداد توسط شاهد',
+    AUDIT_CONTRACT_FULLY_ACCEPTED: 'تأیید کامل طرفین',
+    AUDIT_CONTRACT_FINALIZED: 'نهایی‌سازی قرارداد',
+    AUDIT_PDF_GENERATED: 'تولید فایل PDF',
+    AUDIT_ACCESS_LINK_CREATED: 'ایجاد لینک دسترسی',
+    AUDIT_ACCESS_LINK_REVOKED: 'لغو لینک دسترسی',
+    AUDIT_CONTRACT_CANCELLED: 'لغو قرارداد',
+}
+
 # ——— SMS ———
 SMS_STATUS_QUEUED = 'queued'
 SMS_STATUS_SENT = 'sent'

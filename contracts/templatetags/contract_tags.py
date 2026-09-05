@@ -69,5 +69,11 @@ def ct_party_roles(contract_type: str):
 
 
 @register.filter
+def ct_audit_label(event_type: str) -> str:
+    from contracts.services.audit import audit_event_label
+    return audit_event_label(event_type or '')
+
+
+@register.filter
 def ct_cost_label(key: str) -> str:
     return COST_LABELS.get(key or '', key or '')

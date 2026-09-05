@@ -1182,7 +1182,189 @@
 .ct-confirm-actions .is-primary { background: var(--ws-primary); color: #fff; }
 
 
-/* Manage page helpers */
+/* ——— Contract manage page ——— */
+.crm-contract-manage .ct-manage-header {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+.crm-contract-manage .ct-manage-header-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem;
+    margin-inline-start: auto;
+}
+.crm-contract-manage .ct-manage-inline-form {
+    display: inline;
+    margin: 0;
+}
+.ct-manage-banner {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.55rem 0.75rem;
+    border-radius: 10px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+.ct-manage-banner--success {
+    background: rgba(16, 185, 129, 0.08);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+    color: #047857;
+}
+.ct-manage-banner--warn {
+    background: rgba(245, 158, 11, 0.08);
+    border: 1px solid rgba(245, 158, 11, 0.2);
+    color: #b45309;
+}
+.crm-contract-manage .crm-contract-manage-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+@media (min-width: 900px) {
+    .crm-contract-manage .crm-contract-manage-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.55rem;
+        align-items: start;
+    }
+    .crm-contract-manage .crm-contract-manage-grid > .ct-manage-panel:first-child {
+        grid-column: 1 / -1;
+    }
+    .crm-contract-manage .ct-manage-history {
+        grid-column: 1 / -1;
+    }
+}
+.ct-manage-panel .crm-deal-panel-head-text p {
+    margin: 0.1rem 0 0;
+    font-size: 0.62rem;
+    color: var(--ws-text-muted);
+}
+.ct-manage-empty {
+    padding: 0.75rem;
+    font-size: 0.72rem;
+    color: var(--ws-text-muted);
+    list-style: none;
+}
+.ct-manage-resend-btn {
+    font-size: 0.64rem !important;
+    padding: 0.25rem 0.5rem !important;
+}
+.ct-manage-process {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+}
+.ct-manage-process li {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--ws-text-muted);
+}
+.ct-manage-process li.is-done { color: #047857; }
+.ct-manage-process li.is-active { color: #b45309; }
+.ct-manage-process__dot {
+    width: 0.65rem;
+    height: 0.65rem;
+    border-radius: 50%;
+    border: 2px solid currentColor;
+    flex-shrink: 0;
+    background: transparent;
+}
+.ct-manage-process li.is-done .ct-manage-process__dot {
+    background: currentColor;
+}
+.ct-manage-process li.is-active .ct-manage-process__dot {
+    background: color-mix(in srgb, currentColor 45%, transparent);
+}
+.ct-audit-timeline {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+.ct-audit-item {
+    display: flex;
+    gap: 0.65rem;
+    padding: 0.65rem 0.75rem;
+    border-bottom: 1px solid var(--ws-border);
+}
+.ct-audit-item:last-child { border-bottom: 0; }
+.ct-audit-item.is-hidden { display: none; }
+.ct-audit-item__marker {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: var(--ws-primary);
+    margin-top: 0.35rem;
+    flex-shrink: 0;
+    opacity: 0.7;
+}
+.ct-audit-item__body { flex: 1; min-width: 0; }
+.ct-audit-item__label {
+    margin: 0;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--ws-text);
+    line-height: 1.45;
+}
+.ct-audit-item__detail {
+    margin: 0.15rem 0 0;
+    font-size: 0.68rem;
+    color: var(--ws-text-muted);
+    line-height: 1.5;
+}
+.ct-audit-item__time {
+    display: block;
+    margin-top: 0.2rem;
+    font-size: 0.62rem;
+    color: var(--ws-text-muted);
+    direction: ltr;
+    text-align: right;
+    unicode-bidi: isolate;
+}
+.ct-audit-more-btn {
+    display: block;
+    width: calc(100% - 1.5rem);
+    margin: 0.5rem auto 0.65rem;
+    padding: 0.45rem 0.65rem;
+    border: 1px dashed var(--ws-border);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--ws-primary);
+    font-size: 0.72rem;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background 0.12s, border-color 0.12s;
+}
+.ct-audit-more-btn:hover {
+    background: color-mix(in srgb, var(--ws-primary) 6%, var(--ws-surface));
+    border-color: color-mix(in srgb, var(--ws-primary) 30%, var(--ws-border));
+}
+.ct-manage-more-menu .ct-menu-panel {
+    inset-inline-end: 0;
+    inset-inline-start: auto;
+    left: auto;
+    right: 0;
+    min-width: 190px;
+    z-index: 40;
+}
+.ct-manage-more-menu .ct-menu-panel button,
+.ct-manage-more-menu .ct-menu-panel a {
+    white-space: normal;
+    text-align: right;
+    line-height: 1.45;
+    padding: 0.5rem 0.7rem;
+}
+
+/* Manage page helpers (legacy) */
 .crm-contract-manage-grid {
     display: flex;
     flex-direction: column;
@@ -1380,12 +1562,7 @@
     font-size: 0.75rem;
 }
 .crm-contract-manage-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.4rem;
-    padding-top: 0.65rem;
-    border-top: 1px solid var(--ws-border);
-    margin-top: 0.65rem;
+    display: none;
 }
 
 /* Context sidebar dl */

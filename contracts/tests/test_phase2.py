@@ -345,3 +345,9 @@ class AuditSanitizationTests(TestCase):
         cleaned = _sanitize_metadata({'token': 'secret', 'invitation_id': 5})
         self.assertNotIn('token', cleaned)
         self.assertEqual(cleaned['invitation_id'], 5)
+
+    def test_audit_event_persian_labels(self):
+        from contracts.services.audit import audit_event_label
+        self.assertEqual(audit_event_label('PARTY_ACCEPTED'), 'تأیید قرارداد توسط طرف')
+        self.assertEqual(audit_event_label('CONTRACT_UPDATED'), 'به‌روزرسانی قرارداد')
+        self.assertNotIn('CONTRACT_', audit_event_label('SMS_SENT'))

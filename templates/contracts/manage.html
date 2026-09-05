@@ -3,33 +3,83 @@
 
 {% block page_title %}مدیریت قرارداد{% endblock %}
 {% block crm_extra_css %}
-<link rel="stylesheet" href="{% static 'contracts/css/contracts.css' %}?v=5">
+<link rel="stylesheet" href="{% static 'contracts/css/contracts.css' %}?v=13">
 {% endblock %}
 
 {% block crm_content %}
 <div class="crm-page-chrome crm-contracts-page crm-contract-manage">
 
-    <header class="crm-dash-bar">
+    <header class="crm-dash-bar ct-manage-header">
         <div class="crm-dash-bar-main">
             <a href="{% url 'workspace:deal_contracts' deal.pk %}" class="crm-deal-back" aria-label="بازگشت"><i class="fas fa-arrow-right"></i></a>
             <div>
                 <h1 class="crm-dash-bar-title">{{ contract.get_contract_type_display }}</h1>
-                <p class="crm-dash-bar-sub is-visible">شناسه {{ contract.internal_number }}{% if version %} · نسخه {{ version.version_number }}{% endif %}</p>
+                <p class="crm-dash-bar-sub is-visible">
+                    شناسه {{ contract.internal_number }}{% if version %} · نسخه {{ version.version_number }}{% endif %}
+                    · <span class="crm-contract-status crm-contract-status--{{ contract.status }}">{{ contract.get_status_display }}</span>
+                </p>
+            </div>
+        </div>
+        <div class="crm-dash-bar-actions ct-manage-header-actions" role="toolbar" aria-label="عملیات قرارداد">
+            {% if contract.status == 'finalized' %}
+            <a href="{% url 'workspace:contract_wizard' deal.pk contract.pk %}?step=review" class="crm-dash-act crm-dash-act--primary">مشاهده قرارداد</a>
+            <a href="{% url 'workspace:contract_pdf' deal.pk contract.pk %}" class="crm-dash-act">PDF</a>
+            {% elif contract.status == 'draft' or contract.is_editable %}
+            <a href="{% url 'workspace:contract_wizard' deal.pk contract.pk %}" class="crm-dash-act crm-dash-act--primary">ویرایش</a>
+            <form method="post" class="ct-manage-inline-form">{% csrf_token %}
+                <button type="submit" name="action" value="send" class="crm-dash-act">ارسال برای طرفین</button>
+            </form>
+            {% endif %}
+            {% if contract.status != 'finalized' and version.pdf_file %}
+            <a href="{% url 'workspace:contract_pdf' deal.pk contract.pk %}" class="crm-dash-act">PDF</a>
+            {% endif %}
+            <div class="ct-menu-wrap ct-manage-more-menu" id="ct-more-menu">
+                <button type="button" class="crm-dash-act crm-dash-act--icon" aria-label="عملیات بیشتر" aria-haspopup="true" aria-expanded="false">
+                    <i class="fas fa-ellipsis-v"></i>
+                </button>
+                <div class="ct-menu-panel" role="menu">
+                    <form method="post">{% csrf_token %}
+                        <button type="submit" name="action" value="copy" role="menuitem">کپی قرارداد</button>
+                    </form>
+                    {% if contract.current_version.has_acceptances %}
+                    <form method="post">{% csrf_token %}
+                        <button type="submit" name="action" value="new_version" role="menuitem">ایجاد نسخه جدید</button>
+                    </form>
+                    {% endif %}
+                    {% if contract.status != 'cancelled' and contract.status != 'finalized' %}
+                    <form method="post">{% csrf_token %}
+                        <input type="hidden" name="action" value="cancel">
+                        <button type="submit" class="is-destructive" role="menuitem">لغو قرارداد</button>
+                    </form>
+                    {% endif %}
+                    {% if contract.status == 'finalized' and not finalized_handover and not handover %}
+                    <form method="post" action="{% url 'workspace:handover_create' deal.pk contract.pk %}">{% csrf_token %}
+                        <button type="submit" role="menuitem">ثبت صورت‌جلسه تحویل</button>
+                    </form>
+                    {% elif handover and handover.status != 'finalized' %}
+                    <a href="{% url 'workspace:handover_wizard' deal.pk contract.pk handover.pk %}" role="menuitem">ادامه صورت‌جلسه</a>
+                    {% elif finalized_handover %}
+                    <a href="{% url 'workspace:handover_pdf' deal.pk contract.pk finalized_handover.pk %}" role="menuitem">دانلود صورت‌جلسه</a>
+                    {% endif %}
+                </div>
             </div>
         </div>
     </header>
 
     {% if contract.status == 'finalized' %}
-    <div class="crm-contract-prefill"><i class="fas fa-check-circle"></i> قرارداد با تأیید تمام طرفین نهایی شد.</div>
+    <div class="ct-manage-banner ct-manage-banner--success">
+        <i class="fas fa-check-circle" aria-hidden="true"></i>
+        <span>قرارداد با تأیید تمام طرفین نهایی شد.</span>
+    </div>
     {% elif contract.status in 'sent,viewed,partially_accepted,fully_accepted' %}
-    <div class="crm-contract-prefill" style="background:rgba(245,158,11,.08);border-color:rgba(245,158,11,.25);color:#b45309">
-        <i class="fas fa-hourglass-half"></i>
-        {% if pending_count %}در انتظار تأیید {{ pending_count }} نفر{% else %}در انتظار تأیید طرفین{% endif %}
+    <div class="ct-manage-banner ct-manage-banner--warn">
+        <i class="fas fa-hourglass-half" aria-hidden="true"></i>
+        <span>{% if pending_count %}در انتظار تأیید {{ pending_count }} نفر{% else %}در انتظار تأیید طرفین{% endif %}</span>
     </div>
     {% endif %}
 
     <div class="crm-contract-manage-grid">
-        <section class="crm-deal-block crm-deal-panel">
+        <section class="crm-deal-block crm-deal-panel ct-manage-panel">
             <header class="crm-deal-panel-head">
                 <span class="crm-deal-panel-mark" aria-hidden="true"><i class="fas fa-users"></i></span>
                 <div class="crm-deal-panel-head-text"><h2>وضعیت طرفین</h2></div>
@@ -41,122 +91,109 @@
                         <span class="crm-contract-party-progress__label">{{ item.label }}</span>
                         <span class="crm-contract-party-progress__name">{{ item.name }}</span>
                         <span class="crm-contract-party-progress__state {% if item.accepted %}is-done{% else %}is-pending{% endif %}">
-                            {% if item.accepted %}<i class="fas fa-check-circle"></i> تأیید{% else %}<i class="far fa-circle"></i> در انتظار{% endif %}
+                            {% if item.accepted %}<i class="fas fa-check-circle"></i> تأیید شده{% else %}<i class="far fa-circle"></i> در انتظار{% endif %}
                         </span>
                         {% if not item.accepted and item.invitation %}
-                        <form method="post" style="margin:0">{% csrf_token %}
+                        <form method="post" class="ct-manage-inline-form">{% csrf_token %}
                             <input type="hidden" name="action" value="resend">
                             <input type="hidden" name="invitation_id" value="{{ item.invitation.pk }}">
-                            <button type="submit" class="crm-dash-act" style="font-size:.68rem;padding:.25rem .5rem">ارسال مجدد</button>
+                            <button type="submit" class="crm-dash-act ct-manage-resend-btn">ارسال مجدد</button>
                         </form>
                         {% endif %}
                     </li>
                     {% empty %}
-                    <li class="crm-muted" style="padding:.65rem .75rem;font-size:.72rem">{% if contract.status == 'draft' %}قرارداد هنوز ارسال نشده.{% else %}اطلاعات طرفین در دسترس نیست.{% endif %}</li>
+                    <li class="ct-manage-empty">{% if contract.status == 'draft' %}قرارداد هنوز ارسال نشده است.{% else %}اطلاعات طرفین در دسترس نیست.{% endif %}</li>
                     {% endfor %}
                 </ul>
             </div>
         </section>
 
-        <section class="crm-deal-block crm-deal-panel">
+        <section class="crm-deal-block crm-deal-panel ct-manage-panel">
             <header class="crm-deal-panel-head">
                 <span class="crm-deal-panel-mark" aria-hidden="true"><i class="fas fa-route"></i></span>
                 <div class="crm-deal-panel-head-text"><h2>فرآیند</h2></div>
             </header>
             <div class="crm-deal-panel-body">
-                <ul class="crm-contract-process">
-                    <li>{% if contract.status == 'finalized' %}<i class="fas fa-check-circle"></i>{% else %}<i class="far fa-circle"></i>{% endif %} قرارداد</li>
-                    <li>{% if contract.status == 'finalized' %}<i class="fas fa-check-circle"></i>{% elif contract.status in 'partially_accepted,fully_accepted' %}<i class="fas fa-circle-half-stroke"></i>{% else %}<i class="far fa-circle"></i>{% endif %} تأیید طرفین</li>
-                    <li>{% if finalized_handover %}<i class="fas fa-check-circle"></i>{% else %}<i class="far fa-circle"></i>{% endif %} صورت‌جلسه تحویل</li>
-                </ul>
-                {% if contract.status == 'finalized' and not finalized_handover and not handover %}
-                <form method="post" action="{% url 'workspace:handover_create' deal.pk contract.pk %}">{% csrf_token %}
-                    <button type="submit" class="crm-dash-act crm-dash-act--primary">ثبت صورت‌جلسه تحویل</button>
-                </form>
-                {% elif handover and handover.status != 'finalized' %}
-                <a href="{% url 'workspace:handover_wizard' deal.pk contract.pk handover.pk %}" class="crm-dash-act crm-dash-act--primary">ادامه صورت‌جلسه</a>
-                {% endif %}
+                <ol class="ct-manage-process">
+                    <li class="{% if contract.status == 'finalized' %}is-done{% endif %}">
+                        <span class="ct-manage-process__dot" aria-hidden="true"></span>
+                        <span>قرارداد</span>
+                    </li>
+                    <li class="{% if contract.status == 'finalized' %}is-done{% elif contract.status in 'partially_accepted,fully_accepted' %}is-active{% endif %}">
+                        <span class="ct-manage-process__dot" aria-hidden="true"></span>
+                        <span>تأیید طرفین</span>
+                    </li>
+                    <li class="{% if finalized_handover %}is-done{% endif %}">
+                        <span class="ct-manage-process__dot" aria-hidden="true"></span>
+                        <span>صورت‌جلسه تحویل</span>
+                    </li>
+                </ol>
             </div>
         </section>
 
-        {% if contract.status != 'finalized' %}
-        <section class="crm-deal-block crm-deal-panel">
+        <section class="crm-deal-block crm-deal-panel ct-manage-panel ct-manage-history">
             <header class="crm-deal-panel-head">
                 <span class="crm-deal-panel-mark" aria-hidden="true"><i class="fas fa-clock-rotate-left"></i></span>
-                <div class="crm-deal-panel-head-text"><h2>تاریخچه</h2></div>
+                <div class="crm-deal-panel-head-text">
+                    <h2>تاریخچه</h2>
+                    {% if audit_total_count %}<p>{{ audit_total_count }} رویداد</p>{% endif %}
+                </div>
             </header>
-            <div class="crm-deal-panel-body">
-                <ul class="crm-contract-process">
-                    {% for ev in audit_events %}
-                    <li><time>{{ ev.created_at|ws_jalali_datetime }}</time> {{ ev.event_type }}</li>
+            <div class="crm-deal-panel-body crm-deal-panel-body--flush">
+                <ul class="ct-audit-timeline" id="ct-audit-timeline">
+                    {% for ev in audit_timeline %}
+                    <li class="ct-audit-item{% if forloop.counter > 5 %} is-hidden{% endif %}" data-event-type="{{ ev.event_type }}">
+                        <div class="ct-audit-item__marker" aria-hidden="true"></div>
+                        <div class="ct-audit-item__body">
+                            <p class="ct-audit-item__label">{{ ev.label }}</p>
+                            {% if ev.detail %}<p class="ct-audit-item__detail">{{ ev.detail }}</p>{% endif %}
+                            <time class="ct-audit-item__time" datetime="{{ ev.created_at|date:'c' }}">{{ ev.created_at|ws_jalali_datetime }}</time>
+                        </div>
+                    </li>
                     {% empty %}
-                    <li class="crm-muted">هنوز رویدادی ثبت نشده</li>
+                    <li class="ct-manage-empty">هنوز رویدادی ثبت نشده است.</li>
                     {% endfor %}
                 </ul>
+                {% if audit_timeline|length > 5 %}
+                <button type="button" class="ct-audit-more-btn" id="ct-audit-more">
+                    نمایش بیشتر ({{ audit_timeline|length|add:"-5" }} مورد)
+                </button>
+                {% endif %}
             </div>
         </section>
-        {% endif %}
-    </div>
-
-    {% if contract.status == 'finalized' %}
-    <div class="crm-contract-manage-actions">
-        <a href="{% url 'workspace:contract_wizard' deal.pk contract.pk %}?step=review" class="crm-dash-act crm-dash-act--primary">مشاهده قرارداد</a>
-        <a href="{% url 'workspace:contract_pdf' deal.pk contract.pk %}" class="crm-dash-act">دانلود PDF</a>
-        {% if finalized_handover %}
-        <a href="{% url 'workspace:handover_pdf' deal.pk contract.pk finalized_handover.pk %}" class="crm-dash-act">صورت‌جلسه تحویل</a>
-        {% elif handover %}
-        <a href="{% url 'workspace:handover_wizard' deal.pk contract.pk handover.pk %}" class="crm-dash-act">ادامه صورت‌جلسه</a>
-        {% else %}
-        <form method="post" action="{% url 'workspace:handover_create' deal.pk contract.pk %}" style="display:inline">{% csrf_token %}
-            <button type="submit" class="crm-dash-act">صورت‌جلسه تحویل</button>
-        </form>
-        {% endif %}
-    </div>
-    {% endif %}
-
-    <div class="crm-contract-manage-actions">
-        {% if contract.status == 'draft' or contract.is_editable %}
-        <a href="{% url 'workspace:contract_wizard' deal.pk contract.pk %}" class="crm-dash-act crm-dash-act--primary">ویرایش قرارداد</a>
-        <form method="post" style="display:inline">{% csrf_token %}
-            <button type="submit" name="action" value="send" class="crm-dash-act">ارسال برای طرفین</button>
-        </form>
-        {% endif %}
-        {% if contract.status != 'finalized' and version.pdf_file %}
-        <a href="{% url 'workspace:contract_pdf' deal.pk contract.pk %}" class="crm-dash-act">دانلود PDF</a>
-        {% endif %}
-        <div class="ct-menu-wrap" id="ct-more-menu">
-            <button type="button" class="crm-dash-act crm-dash-act--icon" aria-label="عملیات بیشتر"><i class="fas fa-ellipsis-v"></i></button>
-            <div class="ct-menu-panel">
-                <form method="post">{% csrf_token %}
-                    <button type="submit" name="action" value="copy">کپی قرارداد</button>
-                </form>
-                {% if contract.current_version.has_acceptances %}
-                <form method="post">{% csrf_token %}
-                    <button type="submit" name="action" value="new_version">ایجاد نسخه جدید</button>
-                </form>
-                {% endif %}
-                {% if contract.status != 'cancelled' and contract.status != 'finalized' %}
-                <form method="post">{% csrf_token %}
-                    <input type="hidden" name="action" value="cancel">
-                    <button type="submit" class="is-destructive">لغو قرارداد</button>
-                </form>
-                {% endif %}
-            </div>
-        </div>
     </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-(function(){
-  var wrap=document.getElementById('ct-more-menu');
-  if(!wrap)return;
-  wrap.querySelector('.crm-dash-act').addEventListener('click',function(e){
-    e.stopPropagation();
-    wrap.classList.toggle('is-open');
-  });
-  document.addEventListener('click',function(){wrap.classList.remove('is-open');});
+(function () {
+  var menu = document.getElementById('ct-more-menu');
+  if (menu) {
+    var btn = menu.querySelector('.crm-dash-act--icon');
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var open = menu.classList.toggle('is-open');
+      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+    document.addEventListener('click', function () {
+      menu.classList.remove('is-open');
+      btn.setAttribute('aria-expanded', 'false');
+    });
+    menu.querySelector('.ct-menu-panel').addEventListener('click', function (e) {
+      e.stopPropagation();
+    });
+  }
+
+  var moreBtn = document.getElementById('ct-audit-more');
+  if (moreBtn) {
+    moreBtn.addEventListener('click', function () {
+      document.querySelectorAll('.ct-audit-item.is-hidden').forEach(function (el) {
+        el.classList.remove('is-hidden');
+      });
+      moreBtn.remove();
+    });
+  }
 })();
 </script>
 {% endblock %}

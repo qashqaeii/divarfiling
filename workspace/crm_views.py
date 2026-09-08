@@ -2229,6 +2229,36 @@ class CRMPropertyDeleteView(LoginRequiredMixin, View):
         return redirect('workspace:crm_properties')
 
 
+class CRMPropertyBulkDeleteView(LoginRequiredMixin, View):
+    """حذف گروهی فایل‌های شخصی با تأیید دومرحله‌ای در UI."""
+
+    def post(self, request):
+        from workspace.services.crm import bulk_soft_delete_properties
+
+        ids = []
+        if request.META.get('CONTENT_TYPE', '').startswith('application/json'):
+            try:
+                payload = json.loads(request.body.decode('utf-8'))
+            except (json.JSONDecodeError, UnicodeDecodeError):
+                return JsonResponse({'ok': False, 'error': 'درخواست نامعتبر'}, status=400)
+            ids = payload.get('property_ids') or payload.get('ids') or []
+        else:
+            ids = request.POST.getlist('property_ids') or request.POST.get('ids', '').split(',')
+
+        result = bulk_soft_delete_properties(request.user, ids)
+        if result['deleted'] == 0:
+            return JsonResponse({
+                'ok': False,
+                'error': 'فایلی برای حذف انتخاب نشده یا دسترسی حذف ندارید.',
+                **result,
+            }, status=400)
+        return JsonResponse({
+            'ok': True,
+            'message': f'{result["deleted"]} فایل حذف شد.',
+            **result,
+        })
+
+
 class CRMPropertyPublicShareManageView(LoginRequiredMixin, View):
     """مدیریت لینک عمومی اشتراک فایل شخصی با مشتری."""
 

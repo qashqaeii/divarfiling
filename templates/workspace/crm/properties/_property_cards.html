@@ -6,11 +6,9 @@
          data-property-id="{{ p.id }}"
          data-prop-folder-ids="{% for item in p.folder_items.all %}{{ item.folder_id }}{% if not forloop.last %},{% endif %}{% endfor %}">
     <div class="crm-files-card-accent" aria-hidden="true"></div>
-    {% if property_folders %}
     <label class="crm-files-card-select" aria-label="انتخاب {{ p.title }}">
         <input type="checkbox" class="crm-checkbox crm-prop-row-check" value="{{ p.id }}">
     </label>
-    {% endif %}
 
     <div class="crm-files-card-body crm-properties-card__content">
     <a href="{% url 'workspace:crm_property_detail' p.id %}" class="crm-files-card-hit" aria-label="مشاهده {{ p.title }}"></a>

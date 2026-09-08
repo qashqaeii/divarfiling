@@ -18,7 +18,9 @@ from workspace.models import (
     CRMProperty, Customer, CustomerActivity, CustomerDocument,
     CustomerListing, Listing, PropertyContact, PropertyMatchAlert, Reminder,
 )
-from workspace.services.crm_scope import customers_qs, get_agency, properties_qs, reminders_qs
+from workspace.services.crm_scope import (
+    can_edit_property, customers_qs, get_agency, properties_qs, property_for_user, reminders_qs,
+)
 
 
 def normalize_phone(phone: str) -> str:
@@ -1643,6 +1645,39 @@ PROPERTY_ADV_FILTER_KEYS = (
 
 def property_advanced_filter_count(params: dict) -> int:
     return sum(1 for key in PROPERTY_ADV_FILTER_KEYS if str(params.get(key) or '').strip())
+
+
+BULK_PROPERTY_DELETE_LIMIT = 100
+
+
+def bulk_soft_delete_properties(user, property_ids) -> Dict[str, int]:
+    """حذف نرم فایل‌های شخصی انتخاب‌شده — فقط موارد قابل‌ویرایش کاربر."""
+    ids = []
+    seen = set()
+    for raw in property_ids or []:
+        try:
+            pid = int(raw)
+        except (TypeError, ValueError):
+            continue
+        if pid in seen:
+            continue
+        seen.add(pid)
+        ids.append(pid)
+        if len(ids) >= BULK_PROPERTY_DELETE_LIMIT:
+            break
+
+    deleted = 0
+    skipped = 0
+    now = timezone.now()
+    for pid in ids:
+        prop = property_for_user(user, pid)
+        if not prop or not can_edit_property(user, prop):
+            skipped += 1
+            continue
+        prop.deleted_at = now
+        prop.save(update_fields=['deleted_at'])
+        deleted += 1
+    return {'deleted': deleted, 'skipped': skipped}
 
 
 def recent_activities(user, limit: int = 15):

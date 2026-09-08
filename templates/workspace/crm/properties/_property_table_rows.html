@@ -1,11 +1,9 @@
 {% load workspace_tags crm_tags %}
 {% for p in properties %}
 <tr class="crm-ft-row crm-properties-table__row" style="--tx-accent: {{ p.transaction_status|crm_tx_status_dot }};" data-href="{% url 'workspace:crm_property_detail' p.id %}" data-property-id="{{ p.id }}" data-prop-folder-ids="{% for item in p.folder_items.all %}{{ item.folder_id }}{% if not forloop.last %},{% endif %}{% endfor %}">
-    {% if property_folders %}
     <td class="crm-ft-td-check" data-label="انتخاب">
         <input type="checkbox" class="crm-checkbox crm-prop-row-check" value="{{ p.id }}" aria-label="انتخاب {{ p.title }}">
     </td>
-    {% endif %}
     <td class="crm-ft-td-prop crm-properties-table__cell--title" data-label="ملک">
         <a href="{% url 'workspace:crm_property_detail' p.id %}" class="crm-ft-prop crm-properties-table__prop">
             <span class="crm-ft-prop-type crm-properties-table__type-icon" title="{{ p.property_type }}"><i class="fas {{ p.property_type|crm_property_type_icon }}" aria-hidden="true"></i></span>

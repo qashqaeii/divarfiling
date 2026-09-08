@@ -5452,24 +5452,47 @@ function crmPropFolderBulkUrl(folderId) {
 function initCRMPropertyFolderAssign(root) {
     const scope = root || document;
     const modal = scope.querySelector('[data-zonkan-assign-modal]');
-    if (!modal || modal.dataset.zonkanAssignBound === '1') return;
-    modal.dataset.zonkanAssignBound = '1';
-
-    const titleEl = modal.querySelector('[data-zonkan-assign-title]');
-    const subEl = modal.querySelector('[data-zonkan-assign-sub]');
-    const listEl = modal.querySelector('[data-zonkan-assign-list]');
     const bulkBar = scope.getElementById('crmPropFolderBulk');
+    if (!bulkBar && !modal) return;
+    if (bulkBar?.dataset.propBulkBound === '1') return;
+    if (!bulkBar && modal?.dataset.zonkanAssignBound === '1') return;
+    if (bulkBar) bulkBar.dataset.propBulkBound = '1';
+    if (modal) modal.dataset.zonkanAssignBound = '1';
+
+    const titleEl = modal?.querySelector('[data-zonkan-assign-title]');
+    const subEl = modal?.querySelector('[data-zonkan-assign-sub]');
+    const listEl = modal?.querySelector('[data-zonkan-assign-list]');
     const bulkCount = scope.getElementById('crmPropFolderBulkCount');
     const bulkClear = scope.getElementById('crmPropFolderBulkClear');
     const bulkOpen = scope.getElementById('crmPropFolderBulkOpen');
     const selectModeBtn = scope.getElementById('crmPropSelectMode');
+    const bulkActions = scope.getElementById('crmPropBulkActions');
+    const deleteBtn = scope.getElementById('crmPropBulkDelete');
+    const confirmPanel = scope.getElementById('crmPropBulkDeleteConfirm');
+    const confirmText = scope.getElementById('crmPropBulkDeleteText');
+    const confirmCancel = scope.getElementById('crmPropBulkDeleteCancel');
+    const confirmBtn = scope.getElementById('crmPropBulkDeleteConfirmBtn');
     const checks = () => [...scope.querySelectorAll('.crm-prop-row-check')];
 
     let assignMode = 'single';
     let assignPropertyIds = [];
+    let deleteBusy = false;
 
     function selectedIds() {
         return checks().filter((c) => c.checked).map((c) => c.value);
+    }
+
+    function setDeleteConfirm(on) {
+        bulkBar?.classList.toggle('is-confirm', on);
+        if (confirmPanel) confirmPanel.hidden = !on;
+        if (bulkActions) bulkActions.hidden = on;
+        deleteBtn?.setAttribute('aria-expanded', on ? 'true' : 'false');
+        if (on && confirmText) {
+            const n = selectedIds().length;
+            confirmText.textContent = n === 1
+                ? 'این فایل از لیست شما حذف می‌شود. این کار قابل بازگشت نیست.'
+                : `این ${n} فایل از لیست شما حذف می‌شوند. این کار قابل بازگشت نیست.`;
+        }
     }
 
     function updateBulkBar() {
@@ -5479,6 +5502,11 @@ function initCRMPropertyFolderAssign(root) {
             bulkBar.classList.toggle('is-visible', n > 0);
         }
         if (bulkCount) bulkCount.textContent = n;
+        scope.querySelectorAll('.crm-files-pro-v2, .crm-files-pro').forEach((page) => {
+            page.classList.toggle('crm-files-pro--bulk-open', n > 0);
+        });
+        if (n === 0) setDeleteConfirm(false);
+        else if (bulkBar?.classList.contains('is-confirm')) setDeleteConfirm(true);
     }
 
     function setSelectMode(on) {
@@ -5510,6 +5538,7 @@ function initCRMPropertyFolderAssign(root) {
     }
 
     function openAssignModal(mode, propertyIds) {
+        if (!modal) return;
         assignMode = mode;
         assignPropertyIds = propertyIds.map(String);
         if (titleEl) {
@@ -5528,6 +5557,7 @@ function initCRMPropertyFolderAssign(root) {
     }
 
     function closeAssignModal() {
+        if (!modal) return;
         if (typeof modal.close === 'function') modal.close();
         else modal.removeAttribute('open');
     }
@@ -5580,7 +5610,7 @@ function initCRMPropertyFolderAssign(root) {
         return data;
     }
 
-    modal.querySelectorAll('[data-zonkan-assign-close]').forEach((btn) => {
+    modal?.querySelectorAll('[data-zonkan-assign-close]').forEach((btn) => {
         btn.addEventListener('click', closeAssignModal);
     });
 
@@ -5616,7 +5646,7 @@ function initCRMPropertyFolderAssign(root) {
 
     scope.addEventListener('click', (e) => {
         const btn = e.target.closest('[data-prop-folder-assign]');
-        if (!btn || !scope.contains(btn)) return;
+        if (!btn || !scope.contains(btn) || !modal) return;
         e.preventDefault();
         e.stopPropagation();
         const pid = btn.getAttribute('data-prop-folder-assign');
@@ -5626,13 +5656,56 @@ function initCRMPropertyFolderAssign(root) {
     bulkOpen?.addEventListener('click', () => {
         const ids = selectedIds();
         if (!ids.length) return;
+        setDeleteConfirm(false);
         openAssignModal('bulk', ids);
     });
 
     bulkClear?.addEventListener('click', () => {
         checks().forEach((c) => { c.checked = false; });
+        setDeleteConfirm(false);
         updateBulkBar();
         setSelectMode(false);
+    });
+
+    deleteBtn?.addEventListener('click', () => {
+        if (!selectedIds().length || deleteBusy) return;
+        setDeleteConfirm(true);
+    });
+
+    confirmCancel?.addEventListener('click', () => {
+        if (deleteBusy) return;
+        setDeleteConfirm(false);
+    });
+
+    confirmBtn?.addEventListener('click', async () => {
+        const ids = selectedIds();
+        if (!ids.length || deleteBusy) return;
+        const url = window.crmPropertyBulkDeleteUrl || '/workspace/crm/properties/bulk-delete/';
+        deleteBusy = true;
+        confirmBtn.disabled = true;
+        confirmCancel && (confirmCancel.disabled = true);
+        const label = confirmBtn.querySelector('span');
+        const prevLabel = label ? label.textContent : '';
+        if (label) label.textContent = 'در حال حذف…';
+        try {
+            const resp = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken(),
+                },
+                body: JSON.stringify({ property_ids: ids.map(Number) }),
+            });
+            const data = await crmParseJsonResponse(resp);
+            if (!data.ok) throw new Error(data.error || 'حذف انجام نشد');
+            window.location.reload();
+        } catch (err) {
+            deleteBusy = false;
+            confirmBtn.disabled = false;
+            if (confirmCancel) confirmCancel.disabled = false;
+            if (label) label.textContent = prevLabel || 'حذف قطعی';
+            window.alert(err.message || 'حذف فایل‌ها انجام نشد');
+        }
     });
 
     scope.addEventListener('change', (e) => {

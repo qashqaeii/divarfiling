@@ -10,12 +10,12 @@
 
 {% block crm_extra_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/crm-files-mobile.css' %}?v=18">
-<link rel="stylesheet" href="{% static 'workspace/css/crm-zonkan.css' %}?v=6">
-<link rel="stylesheet" href="{% static 'workspace/css/crm-properties-views.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-zonkan.css' %}?v=7">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-properties-views.css' %}?v=3">
 {% endblock %}
 
 {% block ws_surface_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/crm-files-mobile-premium.css' %}?v=4">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-files-mobile-premium.css' %}?v=5">
 {% endblock %}
 
 {% block crm_content %}
@@ -60,16 +60,11 @@
             <h1 class="crm-dash-bar-title">فایل‌های شخصی</h1>
             <p class="crm-dash-bar-sub is-visible">مدیریت فایل‌ها، قیمت و وضعیت معامله</p>
         </div>
-        <div class="crm-dash-bar-actions" role="toolbar" aria-label="عملیات فایل‌ها">
-            <a href="{% url 'workspace:crm_properties_map' %}{% if map_filter_qs %}?{{ map_filter_qs }}{% endif %}" class="crm-dash-act crm-dash-act--icon" title="نقشه فایل‌های شخصی">
-                <i class="fas fa-map-location-dot" aria-hidden="true"></i>
-            </a>
-            <button type="button" class="crm-dash-act crm-dash-act--icon" data-drawer-open="drawer-property-import" title="ورود گروهی فایل‌های شخصی">
-                <i class="fas fa-file-import" aria-hidden="true"></i>
-            </button>
+        <div class="crm-dash-bar-actions crm-files-desk-actions" role="toolbar" aria-label="عملیات فایل‌ها">
             <details class="crm-files-export">
-                <summary class="crm-dash-act crm-dash-act--icon" title="خروجی فایل‌های {% if has_filters %}{{ filtered_count }} فیلترشده{% else %}{{ stats.total }}{% endif %}">
+                <summary class="crm-dash-act" title="خروجی فایل‌های {% if has_filters %}{{ filtered_count }} فیلترشده{% else %}{{ stats.total }}{% endif %}">
                     <i class="fas fa-file-export" aria-hidden="true"></i>
+                    <span>خروجی</span>
                     <i class="fas fa-chevron-down crm-files-export-caret" aria-hidden="true"></i>
                 </summary>
                 <div class="crm-files-export-menu" role="menu">
@@ -85,9 +80,18 @@
                     </a>
                 </div>
             </details>
-            <button type="button" class="crm-dash-act crm-dash-act--primary" data-drawer-open="drawer-property">
-                <i class="fas fa-plus" aria-hidden="true"></i><span>ملک جدید</span>
+            <button type="button" class="crm-dash-act" data-drawer-open="drawer-property-import" title="ورود گروهی فایل‌های شخصی">
+                <i class="fas fa-file-import" aria-hidden="true"></i>
+                <span>ورود گروهی</span>
             </button>
+            <button type="button" class="crm-dash-act crm-dash-act--primary" data-drawer-open="drawer-property" title="ثبت فایل جدید">
+                <i class="fas fa-file-circle-plus" aria-hidden="true"></i>
+                <span>فایل جدید</span>
+            </button>
+            <a href="{% url 'workspace:crm_properties_map' %}{% if map_filter_qs %}?{{ map_filter_qs }}{% endif %}" class="crm-dash-act" title="نقشه فایل‌های شخصی">
+                <i class="fas fa-map-location-dot" aria-hidden="true"></i>
+                <span>نقشه</span>
+            </a>
         </div>
     </header>
 
@@ -356,7 +360,7 @@
 
         <div class="crm-files-result-bar">
             <span>{% if has_filters %}{{ filtered_count }} از {{ stats.total }} فایل{% else %}{{ stats.total }} فایل{% endif %}</span>
-            {% if property_folders and view_mode != 'pipeline' %}
+            {% if view_mode != 'pipeline' %}
             <button type="button" class="crm-files-select-mode" id="crmPropSelectMode" aria-pressed="false">
                 <i class="fas fa-check-double" aria-hidden="true"></i>
                 <span>انتخاب چندتایی</span>
@@ -377,7 +381,7 @@
             <table class="crm-ft crm-properties-table">
                 <thead>
                     <tr>
-                        {% if property_folders %}<th class="crm-ft-th-check" aria-label="انتخاب"></th>{% endif %}
+                        <th class="crm-ft-th-check" aria-label="انتخاب"></th>
                         <th class="crm-ft-th-prop crm-properties-table__th--prop">ملک</th>
                         <th class="crm-properties-table__th--deal">معامله</th>
                         <th class="crm-properties-table__th--stage">مرحله</th>
@@ -392,7 +396,7 @@
                     {% include 'workspace/crm/properties/_property_table_rows.html' %}
                     {% if not properties %}
                     <tr class="crm-empty-state-row">
-                        <td colspan="{% if property_folders %}9{% else %}8{% endif %}">
+                        <td colspan="9">
                             {% if stats.total %}
                             {% include 'workspace/crm/includes/list_empty_state.html' with tone='muted' compact=1 decor='building' title='ملکی با این فیلتر نیست' desc='فیلتر یا جستجو را تغییر دهید، یا ملک جدید ثبت کنید.' btn_text='ثبت ملک' btn_icon='fa-plus' btn_drawer='drawer-property' extra_class='crm-empty-state--inline' %}
                             {% else %}
@@ -431,7 +435,7 @@
         <i class="fas fa-plus" aria-hidden="true"></i>
     </button>
 
-    {% if property_folders and view_mode != 'pipeline' %}
+    {% if view_mode != 'pipeline' %}
     <div class="crm-bulk-dock crm-prop-folder-bulk" id="crmPropFolderBulk" hidden aria-live="polite">
         <div class="crm-bulk-dock-inner">
             <div class="crm-bulk-dock-meta">
@@ -441,13 +445,33 @@
                     <i class="fas fa-times" aria-hidden="true"></i>
                 </button>
             </div>
-            <button type="button" class="crm-bulk-dock-apply" id="crmPropFolderBulkOpen">
-                <i class="fas fa-folder-plus" aria-hidden="true"></i>
-                افزودن به زونکن
-            </button>
+            <div class="crm-bulk-dock-actions" id="crmPropBulkActions">
+                {% if property_folders %}
+                <button type="button" class="crm-bulk-dock-apply" id="crmPropFolderBulkOpen">
+                    <i class="fas fa-folder-plus" aria-hidden="true"></i>
+                    <span>افزودن به زونکن</span>
+                </button>
+                {% endif %}
+                <button type="button" class="crm-bulk-dock-delete" id="crmPropBulkDelete" aria-expanded="false">
+                    <i class="fas fa-trash-can" aria-hidden="true"></i>
+                    <span>حذف فایل‌ها</span>
+                </button>
+            </div>
+            <div class="crm-bulk-dock-confirm" id="crmPropBulkDeleteConfirm" hidden>
+                <p class="crm-bulk-dock-confirm-text" id="crmPropBulkDeleteText">این فایل‌ها از لیست شما حذف می‌شوند.</p>
+                <div class="crm-bulk-dock-confirm-acts">
+                    <button type="button" class="crm-bulk-dock-cancel" id="crmPropBulkDeleteCancel">انصراف</button>
+                    <button type="button" class="crm-bulk-dock-destroy" id="crmPropBulkDeleteConfirmBtn">
+                        <i class="fas fa-trash-can" aria-hidden="true"></i>
+                        <span>حذف قطعی</span>
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
+    {% if property_folders %}
     {% include 'workspace/crm/includes/property_folder_assign_dialog.html' %}
+    {% endif %}
     {% endif %}
 </div>
 {% endblock %}
@@ -480,6 +504,7 @@
 {% block crm_js %}
 <script>
 window.crmPropertyFolders = {{ property_folders_json|default:'[]'|safe }};
+window.crmPropertyBulkDeleteUrl = '{% url "workspace:crm_properties_bulk_delete" %}';
 </script>
 {% if view_mode != 'pipeline' %}
 <script src="{% static 'workspace/js/crm-properties-list.js' %}?v=1"></script>

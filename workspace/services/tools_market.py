@@ -397,6 +397,47 @@ def _tone_from_score(score: Optional[float]) -> str:
     return 'neutral'
 
 
+def count_budget_matches(
+    dataset,
+    budget: int,
+    tolerance_pct: float = 10.0,
+) -> Dict[str, Any]:
+    """شمارش آگهی‌های فایل که در بودجه (با حاشیه) جا می‌شوند."""
+    from django.urls import reverse
+
+    from workspace.services.display import transaction_profile
+
+    if not budget or budget <= 0:
+        return {'count': 0, 'budget': budget, 'filter_url': ''}
+
+    tx = transaction_profile(dataset.transaction_type or '')
+    is_rent = bool(tx.get('is_rent')) and not tx.get('show_price_per_sqm')
+    max_val = int(budget * (1 + max(0.0, tolerance_pct) / 100))
+    ratio = 30.0
+    count = 0
+    for lst in dataset.listings.all().only('price', 'deposit', 'rent'):
+        if is_rent:
+            val = full_deposit_equiv(lst.deposit, lst.rent, ratio)
+        else:
+            val = lst.price
+        if val and val > 0 and val <= max_val:
+            count += 1
+
+    base = reverse('workspace:dataset_detail', kwargs={'dataset_id': dataset.pk})
+    if is_rent:
+        filter_url = f'{base}?deposit_max={max_val}'
+    else:
+        filter_url = f'{base}?price_max={max_val}'
+    return {
+        'count': count,
+        'budget': budget,
+        'max_value': max_val,
+        'tolerance_pct': tolerance_pct,
+        'is_rent': is_rent,
+        'filter_url': filter_url,
+    }
+
+
 def _build_eval_copy(verdict, actual, expected, score, area, neighborhood) -> str:
     parts = [verdict]
     if neighborhood:

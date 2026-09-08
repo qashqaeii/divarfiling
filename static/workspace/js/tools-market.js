@@ -107,13 +107,23 @@
         if (p25 && p75 && actual && p75 > p25) {
             posPct = Math.max(4, Math.min(96, ((actual - p25) / (p75 - p25)) * 100));
         }
+        const toneEmoji = {
+            great: '🟢', good: '🟢', neutral: '🟡', warn: '🟠', bad: '🔴',
+        }[data.tone || 'neutral'] || '🟡';
+        const suggestion = score != null && score <= -8
+            ? 'این فایل از نظر قیمت اولیه ارزش بررسی و تماس سریع دارد.'
+            : (score != null && score >= 8
+                ? 'قیمت بالاتر از بازار است — مذاکره یا بررسی دلیل اختلاف پیشنهاد می‌شود.'
+                : 'قیمت در محدوده متعارف بازار قرار دارد.');
         el.innerHTML = `
             <div class="ws-mkt-eval-live ${toneClass(data.tone)}">
                 <div class="ws-mkt-eval-verdict">
+                    <span class="ws-mkt-eval-emoji" aria-hidden="true">${toneEmoji}</span>
                     <span class="ws-mkt-eval-score">${data.score_fmt || '—'}</span>
                     <strong>${data.verdict}</strong>
                     <em>${data.scope || ''}</em>
                 </div>
+                <p class="ws-tbx-result-interpret">${suggestion}</p>
                 <div class="ws-mkt-gauge">
                     <div class="ws-mkt-gauge-track">
                         <div class="ws-mkt-gauge-marker ws-mkt-gauge-marker--${data.tone || 'neutral'}" style="inset-inline-start: ${gaugePct}%"></div>
@@ -124,22 +134,24 @@
                 </div>
                 ${p25 && p75 ? `
                 <div class="ws-mkt-band ws-mkt-band--compact">
-                    <div class="ws-mkt-band-labels"><span>${data.p25_fmt}</span><span>باند P25–P75</span><span>${data.p75_fmt}</span></div>
+                    <div class="ws-mkt-band-labels"><span>${data.p25_fmt}</span><span>محدوده بازار</span><span>${data.p75_fmt}</span></div>
                     <div class="ws-mkt-band-track">
                         <div class="ws-mkt-band-fill"></div>
                         <div class="ws-mkt-band-marker ws-mkt-band-marker--${data.tone || 'neutral'}" style="inset-inline-start: ${posPct}%"></div>
                     </div>
                 </div>` : ''}
                 <div class="ws-tbx-result-grid ws-tbx-result-grid--flex">
-                    <div class="ws-tbx-result-item"><span class="ws-tbx-result-item-val">${data.actual_fmt}</span><span class="ws-tbx-result-item-lbl">${data.labels?.actual_label || 'قیمت آگهی'}</span></div>
+                    <div class="ws-tbx-result-item"><span class="ws-tbx-result-item-val">${data.actual_fmt}</span><span class="ws-tbx-result-item-lbl">${data.labels?.actual_label || 'قیمت فایل'}</span></div>
                     <div class="ws-tbx-result-item"><span class="ws-tbx-result-item-val">${data.expected_fmt}</span><span class="ws-tbx-result-item-lbl">${data.labels?.expected_label || 'میانه هم‌رده'}</span></div>
                     <div class="ws-tbx-result-item"><span class="ws-tbx-result-item-val">${data.pps_actual_fmt || '—'}</span><span class="ws-tbx-result-item-lbl">${data.labels?.pps_label || 'هر متر'}</span></div>
                     <div class="ws-tbx-result-item"><span class="ws-tbx-result-item-val">${data.area_fmt || '—'}</span><span class="ws-tbx-result-item-lbl">متراژ</span></div>
                 </div>
                 ${data.negotiate_hint_fmt ? `<p class="ws-mkt-negotiate"><i class="fas fa-lightbulb" aria-hidden="true"></i> پیشنهاد مذاکره: <strong>${data.negotiate_hint_fmt}</strong></p>` : ''}
                 <div class="ws-tbx-result-actions">
-                    ${data.filing_url ? `<a href="${data.filing_url}" class="ws-mkt-link-btn ws-mkt-link-btn--filing"><i class="fas fa-folder-open" aria-hidden="true"></i> فایلینگ</a>` : ''}
+                    ${data.filing_url ? `<a href="${data.filing_url}" class="ws-mkt-link-btn ws-mkt-link-btn--filing"><i class="fas fa-folder-open" aria-hidden="true"></i> مشاهده فایل</a>` : ''}
                     ${data.link ? `<a href="${data.link}" target="_blank" rel="noopener noreferrer" class="ws-mkt-link-btn ws-mkt-link-btn--divar"><i class="fas fa-external-link-alt" aria-hidden="true"></i> دیوار</a>` : ''}
+                    <button type="button" class="ws-mkt-link-btn" data-action-discount><i class="fas fa-tags"></i> محاسبه مذاکره</button>
+                    <button type="button" class="ws-mkt-link-btn" data-action-opps><i class="fas fa-gem"></i> فرصت‌های مشابه</button>
                     <button type="button" class="ws-tbx-copy-btn" data-copy="${data.copy || ''}"><i class="fas fa-copy"></i> کپی نتیجه</button>
                 </div>
             </div>`;
@@ -156,6 +168,15 @@
                 });
             });
         }
+        el.querySelector('[data-action-discount]')?.addEventListener('click', () => {
+            if (typeof window.wsTbxSwitchTool === 'function') window.wsTbxSwitchTool('discount');
+            const priceEl = document.getElementById('tbxListPrice');
+            if (priceEl && data.actual) priceEl.value = String(data.actual);
+            document.getElementById('tbxDiscountPct')?.dispatchEvent(new Event('input', { bubbles: true }));
+        });
+        el.querySelector('[data-action-opps]')?.addEventListener('click', () => {
+            if (typeof window.wsTbxSwitchTool === 'function') window.wsTbxSwitchTool('opportunities');
+        });
     }
 
     function oppPriceLine(o) {
@@ -165,11 +186,24 @@
         return o.rent_equiv_fmt || o.deposit_fmt || '';
     }
 
+    function sortOpportunities(opps, mode) {
+        const list = [...(opps || [])];
+        if (mode === 'price') {
+            list.sort((a, b) => (a.price || a.full_deposit || 0) - (b.price || b.full_deposit || 0));
+        } else if (mode === 'area') {
+            list.sort((a, b) => (b.area || 0) - (a.area || 0));
+        } else {
+            list.sort((a, b) => (b.value_score || 0) - (a.value_score || 0));
+        }
+        return list;
+    }
+
     function renderOpportunities() {
         const list = document.getElementById('tbxOppsList');
         const count = document.getElementById('tbxOppsCount');
         if (!list) return;
-        const opps = toolkit?.opportunities || [];
+        const sortMode = document.getElementById('tbxOppsSort')?.value || 'score';
+        const opps = sortOpportunities(toolkit?.opportunities || [], sortMode);
         const modeLabel = toolkit?.transaction_mode || toolkit?.snapshot?.transaction_type || '';
         if (count) {
             count.textContent = opps.length
@@ -183,12 +217,13 @@
         list.innerHTML = opps.map((o, i) => `
             <article class="ws-mkt-opp-card" data-listing-id="${o.listing_id}" tabindex="0" role="button">
                 <div class="ws-mkt-opp-rank">${i + 1}</div>
-                <div class="ws-mkt-opp-score">${o.value_score != null ? `${o.value_score}٪` : '—'}</div>
+                <div class="ws-mkt-opp-score">${o.value_score != null ? `↓ ${o.value_score}٪` : '—'}</div>
                 <div class="ws-mkt-opp-body">
                     <strong>${o.title || o.token}</strong>
                     <em>${[o.neighborhood, o.area_fmt, oppPriceLine(o)].filter(Boolean).join(' · ')}</em>
                     <span class="ws-mkt-opp-reason">${o.reason || ''}</span>
                 </div>
+                <span class="ws-mkt-opp-view">مشاهده</span>
                 <i class="fas fa-chevron-left ws-mkt-opp-arrow" aria-hidden="true"></i>
             </article>`).join('');
         list.querySelectorAll('.ws-mkt-opp-card').forEach(card => {
@@ -238,15 +273,18 @@
         const posPct = p25 && p75 && p50 && p75 > p25
             ? Math.max(4, Math.min(96, ((p50 - p25) / (p75 - p25)) * 100))
             : 50;
+        const lowSample = (nb.count || 0) < 5;
         el.innerHTML = `
             <div class="ws-mkt-nb-live">
                 <div class="ws-mkt-nb-hero">
                     <span class="ws-mkt-nb-name">${nb.neighborhood}</span>
                     <span class="ws-mkt-nb-meta">${nb.count} آگهی · ${nb.metric_label}</span>
                 </div>
+                ${lowSample ? '<p class="ws-tbx-result-warn"><i class="fas fa-exclamation-triangle"></i> داده این محله برای نتیجه قطعی محدود است.</p>' : ''}
+                <div class="ws-mkt-nb-range-label">بازه معمول بازار</div>
                 <div class="ws-mkt-band">
                     <div class="ws-mkt-band-labels">
-                        <span>${nb.p25_fmt}</span><span>P25 – میانه – P75</span><span>${nb.p75_fmt}</span>
+                        <span>${nb.p25_fmt}</span><span>میانه: ${nb.p50_fmt}</span><span>${nb.p75_fmt}</span>
                     </div>
                     <div class="ws-mkt-band-track">
                         <div class="ws-mkt-band-fill"></div>
@@ -257,9 +295,10 @@
                     <div class="ws-tbx-result-item"><span class="ws-tbx-result-item-val">${nb.p50_fmt}</span><span class="ws-tbx-result-item-lbl">میانه (P50)</span></div>
                     <div class="ws-tbx-result-item"><span class="ws-tbx-result-item-val">${nb.p25_fmt}</span><span class="ws-tbx-result-item-lbl">P25 (ارزان)</span></div>
                     <div class="ws-tbx-result-item"><span class="ws-tbx-result-item-val">${nb.p75_fmt}</span><span class="ws-tbx-result-item-lbl">P75 (گران)</span></div>
-                    <div class="ws-tbx-result-item"><span class="ws-tbx-result-item-val">${nb.count}</span><span class="ws-tbx-result-item-lbl">تعداد آگهی</span></div>
+                    <div class="ws-tbx-result-item"><span class="ws-tbx-result-item-val">${nb.count}</span><span class="ws-tbx-result-item-lbl">تعداد نمونه</span></div>
                 </div>
                 <div class="ws-tbx-result-actions">
+                    <button type="button" class="ws-mkt-link-btn" data-action-opps><i class="fas fa-gem"></i> فرصت‌های زیر بازار</button>
                     <button type="button" class="ws-tbx-copy-btn" data-copy="${nb.neighborhood}: ${nb.p25_fmt} – ${nb.p50_fmt} – ${nb.p75_fmt} (${nb.count} آگهی)">
                         <i class="fas fa-copy"></i> کپی بازه محله
                     </button>
@@ -272,6 +311,9 @@
                 copyBtn.textContent = 'کپی شد';
             });
         }
+        el.querySelector('[data-action-opps]')?.addEventListener('click', () => {
+            if (typeof window.wsTbxSwitchTool === 'function') window.wsTbxSwitchTool('opportunities');
+        });
     }
 
     function renderNoDataset() {
@@ -400,6 +442,8 @@
         document.getElementById('tbxNbSelect')?.addEventListener('change', e => {
             renderNeighborhoodDetail(e.target.value);
         });
+
+        document.getElementById('tbxOppsSort')?.addEventListener('change', () => renderOpportunities());
 
         ['tbxEvalArea', 'tbxEvalPrice', 'tbxEvalDeposit', 'tbxEvalRent'].forEach(id => {
             document.getElementById(id)?.addEventListener('keydown', e => {

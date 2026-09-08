@@ -1022,3 +1022,318 @@ def build_public_nearby_pois_context(prop, share) -> Optional[Dict[str, Any]]:
         ) if approx else '',
         'disclaimer': 'فاصله خط مستقیم',
     }
+
+
+# ─── Tools: دسترسی‌های اطراف (shared engine, no DB persistence) ───────────────
+
+TOOL_RADIUS_OPTIONS_M: Tuple[int, ...] = (500, 1000, 2000, 3000)
+TOOL_DEFAULT_RADIUS_M = 1000
+TOOL_MARKER_CAP = 250
+TOOL_NEAREST_PER_CATEGORY = 3
+_TOOL_CACHE_TTL = 60 * 60
+
+TOOL_CATEGORY_PRIORITY: Tuple[str, ...] = (
+    'metro', 'bus', 'supermarket', 'park', 'pharmacy', 'hospital', 'clinic',
+    'school', 'university', 'cafe', 'restaurant', 'bank', 'atm', 'fuel',
+    'parking', 'mall', 'gym', 'fire_station', 'police', 'mosque',
+    'bakery', 'motorway', 'main_road', 'street_type',
+)
+
+
+def validate_tool_radius_m(radius_m: Any) -> int:
+    try:
+        radius = int(radius_m)
+    except (TypeError, ValueError):
+        return TOOL_DEFAULT_RADIUS_M
+    if radius in TOOL_RADIUS_OPTIONS_M:
+        return radius
+    return min(TOOL_RADIUS_OPTIONS_M, key=lambda x: abs(x - radius))
+
+
+def _radius_label_fa(radius_m: int) -> str:
+    if radius_m >= 1000:
+        km = radius_m / 1000
+        label = f'{km:g}'.replace('.', '/')
+        if '/' not in label:
+            label = str(int(km))
+        return f'شعاع {to_persian_digits(label)} کیلومتر'
+    return f'شعاع {to_persian_digits(radius_m)} متر'
+
+
+def _tool_cache_key(user_id: int, lat: float, lng: float, radius_m: int) -> str:
+    lat_key, lng_key = _coords_key(lat, lng)
+    return f'nearby_tool:v1:{user_id}:{lat_key}:{lng_key}:{radius_m}'
+
+
+def _collect_category_matches(
+    lat: float,
+    lng: float,
+    elements: Sequence[Dict[str, Any]],
+    category: Dict[str, Any],
+    radius_m: int,
+) -> List[Dict[str, Any]]:
+    matches: List[Dict[str, Any]] = []
+    for element in elements:
+        tags = element.get('tags') or {}
+        if not _element_matches_category(tags, category):
+            continue
+        coords = _element_coords(element)
+        if not coords:
+            continue
+        el_lat, el_lng = coords
+        dist = haversine_m(lat, lng, el_lat, el_lng)
+        if dist > radius_m:
+            continue
+        dist_m = int(round(dist))
+        matches.append({
+            'name': _element_name(tags, category['fallback_name']),
+            'distance_m': dist_m,
+            'distance_label': format_distance_label(dist),
+            'walk_label': estimate_walk_label(dist),
+            'lat': el_lat,
+            'lng': el_lng,
+        })
+    matches.sort(key=lambda x: x['distance_m'])
+    return matches
+
+
+def resolve_nearby_catalog(
+    lat: float,
+    lng: float,
+    elements: Sequence[Dict[str, Any]],
+    *,
+    radius_m: int,
+) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+    """شمارش و نزدیک‌ترین POIها برای ابزار — بدون تغییر رفتار CRM."""
+    categories: List[Dict[str, Any]] = []
+    markers: List[Dict[str, Any]] = []
+    empty_label = _radius_empty_label(radius_m)
+
+    for category in POI_CATEGORIES:
+        group_key = category['group']
+        base = {
+            'key': category['key'],
+            'group': group_key,
+            'group_label': _GROUP_LABELS.get(group_key, group_key),
+            'label': category['label'],
+            'icon': category['icon'],
+            'color': category['color'],
+        }
+        if category.get('kind') == 'street':
+            item = _resolve_street_type_item(lat, lng, elements, category)
+            d = item.as_dict()
+            categories.append({
+                **base,
+                'count': 1 if item.found else 0,
+                'nearest': [d] if item.found else [],
+                'found': item.found,
+                'empty_label': empty_label,
+            })
+            continue
+
+        matches = _collect_category_matches(lat, lng, elements, category, radius_m)
+        nearest_raw = matches[:TOOL_NEAREST_PER_CATEGORY]
+        nearest = [{
+            'name': m['name'],
+            'distance_m': m['distance_m'],
+            'distance_label': m['distance_label'],
+            'walk_label': m['walk_label'],
+        } for m in nearest_raw]
+        categories.append({
+            **base,
+            'count': len(matches),
+            'nearest': nearest,
+            'found': len(matches) > 0,
+            'empty_label': empty_label,
+        })
+        for m in matches:
+            if len(markers) >= TOOL_MARKER_CAP:
+                break
+            markers.append({
+                'key': category['key'],
+                'label': category['label'],
+                'icon': category['icon'],
+                'color': category['color'],
+                'name': m['name'],
+                'distance_m': m['distance_m'],
+                'distance_label': m['distance_label'],
+                'lat': m['lat'],
+                'lng': m['lng'],
+            })
+
+    priority = {key: idx for idx, key in enumerate(TOOL_CATEGORY_PRIORITY)}
+    categories.sort(key=lambda c: (priority.get(c['key'], 999), -c['count']))
+    return categories, markers
+
+
+def _build_tool_payload(
+    lat: float,
+    lng: float,
+    categories: Sequence[Dict[str, Any]],
+    markers: Sequence[Dict[str, Any]],
+    *,
+    radius_m: int,
+    fetched_at,
+) -> Dict[str, Any]:
+    lat_key, lng_key = _coords_key(lat, lng)
+    with_results = [c for c in categories if c.get('count', 0) > 0]
+    total_pois = sum(int(c.get('count') or 0) for c in categories)
+    return {
+        'version': PAYLOAD_VERSION,
+        'mode': 'tools_catalog',
+        'fetched_at': fetched_at.isoformat(),
+        'fetched_at_label': format_jalali_datetime(fetched_at),
+        'coords': {'lat': lat_key, 'lng': lng_key},
+        'radius_m': radius_m,
+        'radius_label': _radius_label_fa(radius_m),
+        'categories': list(categories),
+        'categories_with_results': with_results,
+        'markers': list(markers),
+        'category_count': len(categories),
+        'categories_found': len(with_results),
+        'total_pois': total_pois,
+        'disclaimer': 'فاصله خط مستقیم',
+    }
+
+
+def build_accessibility_report_copy(payload: Dict[str, Any]) -> str:
+    radius_label = payload.get('radius_label') or _radius_label_fa(
+        int(payload.get('radius_m') or TOOL_DEFAULT_RADIUS_M),
+    )
+    lines = [
+        'دسترسی‌های اطراف ملک',
+        f'محدوده بررسی: {radius_label}',
+        '',
+    ]
+    for cat in payload.get('categories_with_results') or []:
+        count = int(cat.get('count') or 0)
+        if count <= 0:
+            continue
+        lines.append(f'• {cat.get("label")}: {to_persian_digits(count)} مورد')
+
+    highlights: List[str] = []
+    for cat in payload.get('categories_with_results') or []:
+        for item in (cat.get('nearest') or [])[:2]:
+            name = item.get('name') or cat.get('label')
+            dist = item.get('distance_label') or ''
+            if name and dist:
+                highlights.append(f'• {name} — {dist}')
+        if len(highlights) >= 5:
+            break
+
+    if highlights:
+        lines.extend(['', 'نزدیک‌ترین دسترسی‌ها:', *highlights[:5]])
+
+    lines.append('')
+    lines.append('(فاصله خط مستقیم)')
+    return '\n'.join(lines)
+
+
+def build_accessibility_customer_copy(payload: Dict[str, Any]) -> str:
+    radius_m = int(payload.get('radius_m') or TOOL_DEFAULT_RADIUS_M)
+    radius_phrase = (
+        f'{to_persian_digits(radius_m // 1000)} کیلومتر'
+        if radius_m >= 1000
+        else f'{to_persian_digits(radius_m)} متر'
+    )
+    parts: List[str] = []
+    for key in ('metro', 'bus', 'park', 'pharmacy', 'cafe', 'supermarket', 'school'):
+        cat = next((c for c in (payload.get('categories') or []) if c.get('key') == key), None)
+        if not cat or int(cat.get('count') or 0) <= 0:
+            continue
+        count = int(cat['count'])
+        label = cat.get('label') or key
+        if key == 'metro':
+            parts.append(f'{to_persian_digits(count)} ایستگاه مترو')
+        elif key == 'bus':
+            parts.append(f'{to_persian_digits(count)} ایستگاه اتوبوس')
+        else:
+            parts.append(f'{to_persian_digits(count)} {label}')
+
+    if not parts:
+        return (
+            f'در شعاع {radius_phrase} این موقعیت، دسترسی ثبت‌شده‌ای در نقشه عمومی پیدا نشد. '
+            'می‌توانید شعاع جستجو را افزایش دهید.'
+        )
+
+    intro = (
+        f'این موقعیت از دسترسی مناسبی برخوردار است. در شعاع {radius_phrase} آن '
+        + '، '.join(parts)
+        + ' قرار دارد.'
+    )
+
+    nearest_bits: List[str] = []
+    for key, label in (('metro', 'ایستگاه مترو'), ('park', 'پارک'), ('pharmacy', 'داروخانه')):
+        cat = next((c for c in (payload.get('categories') or []) if c.get('key') == key), None)
+        nearest = (cat or {}).get('nearest') or []
+        if nearest:
+            item = nearest[0]
+            nearest_bits.append(
+                f'نزدیک‌ترین {label} حدود {item.get("distance_label") or ""} فاصله دارد'
+            )
+    if nearest_bits:
+        intro += ' ' + ' و '.join(nearest_bits[:3]) + '.'
+    return intro
+
+
+def tools_accessibility_api_payload(data: Dict[str, Any], *, cached: bool = False) -> Dict[str, Any]:
+    return {
+        'ok': True,
+        'cached': cached,
+        'fetched_at': data.get('fetched_at'),
+        'fetched_at_label': data.get('fetched_at_label'),
+        'radius_m': data.get('radius_m'),
+        'radius_label': data.get('radius_label'),
+        'coords': data.get('coords'),
+        'categories': data.get('categories') or [],
+        'categories_with_results': data.get('categories_with_results') or [],
+        'markers': data.get('markers') or [],
+        'categories_found': data.get('categories_found', 0),
+        'total_pois': data.get('total_pois', 0),
+        'disclaimer': data.get('disclaimer', 'فاصله خط مستقیم'),
+        'report_copy': build_accessibility_report_copy(data),
+        'customer_copy': build_accessibility_customer_copy(data),
+    }
+
+
+def fetch_nearby_accessibility_for_tools(
+    user,
+    lat: float,
+    lng: float,
+    radius_m: int,
+    *,
+    elements: Optional[Sequence[Dict[str, Any]]] = None,
+    use_cache: bool = True,
+) -> Dict[str, Any]:
+    """دریافت دسترسی‌های اطراف برای ابزار — بدون ذخیره در DB."""
+    radius_m = validate_tool_radius_m(radius_m)
+    parsed_lat, parsed_lng, error = parse_map_coordinates(lat, lng)
+    if error:
+        raise NearbyPoiError('invalid_coords', error, status=400)
+
+    cache_key = _tool_cache_key(user.pk, parsed_lat, parsed_lng, radius_m)
+    if use_cache and elements is None:
+        cached = cache.get(cache_key)
+        if isinstance(cached, dict) and cached.get('categories'):
+            return tools_accessibility_api_payload(cached, cached=True)
+
+    check_rate_limits(user)
+
+    if elements is not None:
+        cleaned = sanitize_overpass_elements(elements)
+    else:
+        cleaned = fetch_overpass_elements(parsed_lat, parsed_lng, radius_m=radius_m)
+
+    categories, markers = resolve_nearby_catalog(
+        parsed_lat, parsed_lng, cleaned, radius_m=radius_m,
+    )
+    payload = _build_tool_payload(
+        parsed_lat, parsed_lng, categories, markers,
+        radius_m=radius_m, fetched_at=timezone.now(),
+    )
+    increment_rate_limits(user)
+
+    if use_cache and elements is None:
+        cache.set(cache_key, payload, _TOOL_CACHE_TTL)
+
+    return tools_accessibility_api_payload(payload, cached=False)

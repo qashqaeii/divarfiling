@@ -8,11 +8,20 @@
     const TOOL_KEYS = [
         'mixed', 'deposit', 'compare', 'area', 'discount',
         'commission', 'rent_commission', 'budget', 'pricing',
-        'evaluate', 'opportunities', 'neighborhood',
+        'evaluate', 'opportunities', 'neighborhood', 'nearby_access',
     ];
+
+    const TOOL_GROUP_MAP = {
+        mixed: 'price', deposit: 'price', area: 'price',
+        discount: 'negotiate', commission: 'negotiate', rent_commission: 'negotiate',
+        compare: 'client', budget: 'client',
+        pricing: 'market', evaluate: 'market', opportunities: 'market', neighborhood: 'market',
+        nearby_access: 'location',
+    };
 
     let marketSnapshot = null;
     let marketSnapshots = {};
+    let budgetMatchCache = null;
 
     function loadJsonScript(id) {
         const el = document.getElementById(id);
@@ -94,6 +103,29 @@
         return sign + Number(n).toLocaleString('fa-IR', { maximumFractionDigits: 1 }) + '٪';
     }
 
+    function formatHumanMoney(n, perSqm) {
+        const v = Number(n) || 0;
+        if (!v) return '';
+        const suffix = perSqm ? ' /متر' : ' تومان';
+        if (v >= 1_000_000_000) {
+            const b = (v / 1_000_000_000).toLocaleString('fa-IR', { maximumFractionDigits: 1 });
+            return `${b} میلیارد${suffix}`;
+        }
+        if (v >= 1_000_000) {
+            const m = (v / 1_000_000).toLocaleString('fa-IR', { maximumFractionDigits: 0 });
+            return `${m} میلیون${suffix}`;
+        }
+        return `${v.toLocaleString('fa-IR')}${suffix}`;
+    }
+
+    function pricingConfidenceLabel(sampleCount) {
+        const n = Number(sampleCount) || 0;
+        if (n >= 30) return { label: 'بالا', tone: 'great' };
+        if (n >= 10) return { label: 'متوسط', tone: 'neutral' };
+        if (n >= 3) return { label: 'پایین', tone: 'warn' };
+        return { label: 'بسیار پایین', tone: 'bad' };
+    }
+
     function ppsToMillion(pps) {
         return pps / 1_000_000;
     }
@@ -127,14 +159,24 @@
         if (d === 0 && r === 0) return null;
         const fullDep = fullDepositEquiv(d, r, rate);
         const fullRent = Math.round(fullDep / rate);
+        const rateRows = [20, 25, 30].map(rn => ({
+            rate: rn,
+            fullDep: fullDepositEquiv(d, r, rn),
+            active: rn === rate,
+        }));
         return {
             hero: { val: formatToman(fullDep), lbl: 'رهن کامل معادل' },
+            interpret: `با نرخ ${rate.toLocaleString('fa-IR')}، ${formatToman(d)} ودیعه + ${formatToman(r)} اجاره معادل حدود ${formatHumanMoney(fullDep) || formatToman(fullDep)} رهن کامل است.`,
             items: [
                 { val: formatToman(fullRent), lbl: 'اجاره کامل معادل' },
                 { val: formatToman(d), lbl: 'ودیعه واردشده' },
                 { val: formatToman(r), lbl: 'اجاره واردشده' },
             ],
-            copy: `رهن کامل: ${formatToman(fullDep)} | اجاره کامل: ${formatToman(fullRent)}`,
+            rateTable: rateRows,
+            copy: `رهن کامل معادل: ${formatToman(fullDep)} (${formatToman(d)} ودیعه + ${formatToman(r)} اجاره، نرخ ${rate})`,
+            actions: marketSnapshot?.supports_pricing
+                ? [{ type: 'tool', tool: 'pricing', label: 'قیمت‌گذاری هوشمند', icon: 'fa-wand-magic-sparkles' }]
+                : [],
         };
     }
 
@@ -196,13 +238,23 @@
         const pct = Math.max(0, Math.min(discountPct || 0, 100));
         const savings = Math.round(listPrice * pct / 100);
         const finalPrice = listPrice - savings;
+        const startPct = Math.max(0, pct - 2);
+        const startPrice = Math.round(listPrice * (1 - startPct / 100));
         return {
-            hero: { val: formatToman(finalPrice), lbl: 'قیمت پس از تخفیف' },
+            hero: { val: formatToman(finalPrice), lbl: `پیشنهاد با ${pct}٪ تخفیف` },
+            interpret: pct > 0
+                ? `با ${pct}٪ تخفیف، ${formatHumanMoney(savings) || formatToman(savings)} از قیمت آگهی کم می‌شود.`
+                : 'قیمت آگهی بدون تخفیف.',
             items: [
                 { val: formatToman(listPrice), lbl: 'قیمت آگهی' },
-                { val: formatToman(savings), lbl: `تخفیف (${pct}٪)` },
+                { val: formatToman(savings), lbl: `مبلغ تخفیف (${pct}٪)` },
             ],
-            copy: `قیمت نهایی: ${formatToman(finalPrice)} (تخفیف ${pct}٪ = ${formatToman(savings)})`,
+            scenarios: [
+                { label: 'شروع پیشنهاد', val: formatToman(startPrice) },
+                { label: 'هدف مذاکره', val: formatToman(finalPrice) },
+                { label: 'قیمت آگهی', val: formatToman(listPrice) },
+            ],
+            copy: `قیمت آگهی: ${formatToman(listPrice)} | تخفیف ${pct}٪ | پیشنهاد: ${formatToman(finalPrice)}`,
         };
     }
 
@@ -292,12 +344,16 @@
         const posPct = bandHigh > bandLow
             ? Math.max(4, Math.min(96, ((total - bandLow) / (bandHigh - bandLow)) * 100))
             : 50;
+        const sampleCount = marketSnapshot.row_count || 0;
+        const conf = pricingConfidenceLabel(sampleCount);
         return {
             hero: { val: formatToman(total), lbl: totalLabel },
+            interpret: `بر اساس ${sampleCount.toLocaleString('fa-IR')} آگهی فایل «${marketSnapshot.dataset_name || ''}» — اطمینان تحلیل: ${conf.label}`,
             items: [
                 { val: formatM(ppsM), lbl: ppsLabel },
                 { val: formatAdjLabel(pct), lbl: 'تنظیم بازار' },
                 { val: formatM(ppsToMillion(p25)), lbl: 'P25 بازار' },
+                { val: formatM(ppsToMillion(base)), lbl: 'میانه بازار' },
                 { val: formatM(ppsToMillion(p75)), lbl: 'P75 بازار' },
                 { val: formatArea(area), lbl: 'متراژ' },
             ],
@@ -308,7 +364,12 @@
                 highFmt: formatToman(bandHigh),
                 posPct,
             },
-            copy: `پیشنهاد: ${formatToman(total)} | باند بازار: ${formatToman(bandLow)} – ${formatToman(bandHigh)}`,
+            confidence: conf,
+            copy: `پیشنهاد: ${formatToman(total)} (${formatM(ppsM)}/متر) | باند بازار: ${formatToman(bandLow)} – ${formatToman(bandHigh)} | ${sampleCount} نمونه`,
+            actions: [
+                { type: 'tool', tool: 'compare', label: 'مقایسه با آگهی دیگر', icon: 'fa-balance-scale' },
+                { type: 'tool', tool: 'neighborhood', label: 'بازه قیمت محله', icon: 'fa-map-marker-alt' },
+            ],
         };
     }
 
@@ -352,17 +413,31 @@
         }
 
         const metricLbl = isRent ? 'رهن کامل/متر' : 'قیمت/متر';
+        const cheaperPct = Math.abs(diffPct);
+        const winnerLabel = winner === 'b' ? labelB : (winner === 'a' ? labelA : '—');
         return {
-            hero: { val: verdict, lbl: 'نتیجه مقایسه' },
+            hero: { val: winner === 'tie' ? 'تقریباً برابر' : winnerLabel, lbl: winner === 'tie' ? 'نتیجه مقایسه' : 'انتخاب اقتصادی‌تر' },
+            interpret: winner === 'tie'
+                ? 'هر دو ملک از نظر قیمت هر متر تقریباً برابرند.'
+                : `${winnerLabel} حدود ${cheaperPct.toLocaleString('fa-IR')}٪ ارزان‌تر به ازای هر متر است.`,
+            compareTable: {
+                headers: ['', labelA, labelB],
+                rows: [
+                    ['قیمت کل', formatToman(totalA), formatToman(totalB)],
+                    ['متراژ', formatArea(areaA), formatArea(areaB)],
+                    [metricLbl, formatM(ppsToMillion(perA)), formatM(ppsToMillion(perB))],
+                    ['اختلاف', '—', formatPct(diffPct)],
+                ],
+            },
             items: [
                 { val: formatM(ppsToMillion(perA)), lbl: `${labelA} — ${metricLbl}`, winner: winner === 'a' },
                 { val: formatM(ppsToMillion(perB)), lbl: `${labelB} — ${metricLbl}`, winner: winner === 'b' },
-                { val: formatPct(diffPct), lbl: 'اختلاف (ب نسبت به الف)' },
-                { val: formatToman(totalA), lbl: `${labelA} — کل` },
-                { val: formatToman(totalB), lbl: `${labelB} — کل` },
             ],
             copy: `${verdict} | الف: ${formatM(ppsToMillion(perA))}/متر | ب: ${formatM(ppsToMillion(perB))}/متر`,
             winner,
+            actions: marketSnapshot?.dataset_id
+                ? [{ type: 'tool', tool: 'evaluate', label: 'ارزیابی با بازار', icon: 'fa-crosshairs' }]
+                : [],
         };
     }
 
@@ -382,56 +457,108 @@
         });
     }
 
-    function renderHero(container, hero, copyText, extraClass) {
-        container.innerHTML = `
-            <div class="ws-tbx-result-live">
-                <div class="ws-tbx-result-hero ${extraClass || ''}">
-                    <span class="ws-tbx-result-hero-val">${hero.val}</span>
-                    <span class="ws-tbx-result-hero-lbl">${hero.lbl}</span>
-                </div>
-                <div class="ws-tbx-result-actions">
-                    <button type="button" class="ws-tbx-copy-btn" data-copy="${copyText || hero.val}">
-                        <i class="fas fa-copy" aria-hidden="true"></i> کپی نتیجه
-                    </button>
-                </div>
-            </div>`;
+    function bindResultActions(container, data) {
+        container.querySelectorAll('[data-action-tool]').forEach(btn => {
+            btn.addEventListener('click', () => switchTool(btn.dataset.actionTool));
+        });
+        container.querySelectorAll('[data-action-href]').forEach(link => {
+            link.addEventListener('click', e => {
+                if (link.dataset.actionHref) window.location.href = link.dataset.actionHref;
+            });
+        });
         bindCopy(container.querySelector('.ws-tbx-copy-btn'));
     }
 
-    function renderGrid(container, data) {
+    function renderResult(container, data) {
+        if (!data) return;
+        const heroClass = data.verdictClass ? `ws-tbx-result-hero--${data.verdictClass}` : '';
         const itemsHtml = (data.items || []).map(it => `
             <div class="ws-tbx-result-item ${it.winner ? 'is-winner' : ''}">
                 <span class="ws-tbx-result-item-val">${it.val}</span>
                 <span class="ws-tbx-result-item-lbl">${it.lbl}</span>
             </div>`).join('');
-        const heroClass = data.verdictClass ? `ws-tbx-result-hero--${data.verdictClass}` : '';
         const bandHtml = data.band ? `
             <div class="ws-mkt-band">
                 <div class="ws-mkt-band-labels">
-                    <span>${data.band.lowFmt}</span>
-                    <span>باند بازار P25–P75</span>
-                    <span>${data.band.highFmt}</span>
+                    <span>${data.band.lowFmt}</span><span>محدوده منطقی بازار</span><span>${data.band.highFmt}</span>
                 </div>
                 <div class="ws-mkt-band-track">
                     <div class="ws-mkt-band-fill"></div>
                     <div class="ws-mkt-band-marker" style="inset-inline-start: ${data.band.posPct}%"></div>
                 </div>
             </div>` : '';
+        const rateTableHtml = data.rateTable ? `
+            <table class="ws-tbx-rate-table">
+                <thead><tr><th>نرخ</th><th>رهن کامل</th></tr></thead>
+                <tbody>${data.rateTable.map(row => `
+                    <tr class="${row.active ? 'is-active' : ''}">
+                        <td>${row.rate.toLocaleString('fa-IR')}</td>
+                        <td>${formatHumanMoney(row.fullDep) || formatToman(row.fullDep)}</td>
+                    </tr>`).join('')}</tbody>
+            </table>` : '';
+        const compareTableHtml = data.compareTable ? `
+            <table class="ws-tbx-compare-table">
+                <thead><tr>${data.compareTable.headers.map(h => `<th>${h}</th>`).join('')}</tr></thead>
+                <tbody>${data.compareTable.rows.map(row => `
+                    <tr>${row.map(cell => `<td>${cell}</td>`).join('')}</tr>`).join('')}</tbody>
+            </table>` : '';
+        const scenariosHtml = data.scenarios ? `
+            <div class="ws-tbx-scenarios">
+                <span class="ws-tbx-scenarios-title">سناریوهای مذاکره</span>
+                ${data.scenarios.map(s => `
+                    <div class="ws-tbx-scenario-row">
+                        <span>${s.label}</span><strong>${s.val}</strong>
+                    </div>`).join('')}
+            </div>` : '';
+        const budgetMatchHtml = data.budgetMatch ? `
+            <div class="ws-tbx-budget-match">
+                <strong>${data.budgetMatch.count.toLocaleString('fa-IR')} فایل متناسب با بودجه</strong>
+                ${data.budgetMatch.filter_url ? `<a href="${data.budgetMatch.filter_url}" class="ws-mkt-link-btn" data-action-href="${data.budgetMatch.filter_url}"><i class="fas fa-folder-open"></i> مشاهده فایل‌های مناسب</a>` : ''}
+            </div>` : '';
+        const confHtml = data.confidence ? `
+            <span class="ws-tbx-confidence ws-tbx-confidence--${data.confidence.tone}">اطمینان تحلیل: ${data.confidence.label}</span>` : '';
+        const actionsHtml = (data.actions || []).map(a => {
+            if (a.href) {
+                return `<a href="${a.href}" class="ws-mkt-link-btn" data-action-href="${a.href}"><i class="fas ${a.icon || 'fa-arrow-left'}"></i> ${a.label}</a>`;
+            }
+            return `<button type="button" class="ws-mkt-link-btn" data-action-tool="${a.tool}"><i class="fas ${a.icon || 'fa-arrow-left'}"></i> ${a.label}</button>`;
+        }).join('');
         container.innerHTML = `
             <div class="ws-tbx-result-live">
                 <div class="ws-tbx-result-hero ${heroClass}">
                     <span class="ws-tbx-result-hero-val">${data.hero.val}</span>
                     <span class="ws-tbx-result-hero-lbl">${data.hero.lbl}</span>
                 </div>
+                ${data.interpret ? `<p class="ws-tbx-result-interpret">${data.interpret}</p>` : ''}
+                ${confHtml}
                 ${bandHtml}
+                ${rateTableHtml}
+                ${compareTableHtml}
+                ${scenariosHtml}
+                ${budgetMatchHtml}
                 ${itemsHtml ? `<div class="ws-tbx-result-grid ws-tbx-result-grid--flex">${itemsHtml}</div>` : ''}
                 <div class="ws-tbx-result-actions">
-                    <button type="button" class="ws-tbx-copy-btn" data-copy="${data.copy}">
+                    ${actionsHtml}
+                    <button type="button" class="ws-tbx-copy-btn" data-copy="${data.copy || data.hero.val}">
                         <i class="fas fa-copy" aria-hidden="true"></i> کپی نتیجه
                     </button>
                 </div>
             </div>`;
-        bindCopy(container.querySelector('.ws-tbx-copy-btn'));
+        bindResultActions(container, data);
+    }
+
+    function renderHero(container, hero, copyText, extraClass, extra) {
+        renderResult(container, {
+            hero,
+            copy: copyText || hero.val,
+            verdictClass: extraClass,
+            interpret: extra?.interpret || '',
+            actions: extra?.actions || [],
+        });
+    }
+
+    function renderGrid(container, data) {
+        renderResult(container, data);
     }
 
     function renderEmpty(container, icon, text) {
@@ -469,7 +596,44 @@
             panel.classList.toggle('is-active', active);
             panel.hidden = !active;
         });
+        const groupKey = TOOL_GROUP_MAP[tool];
+        if (groupKey) openNavGroup(groupKey);
+        if (tool === 'nearby_access' && typeof window.wsNearbyAccessOnShow === 'function') {
+            window.wsNearbyAccessOnShow();
+        }
         try { history.replaceState(null, '', buildToolsUrl(tool)); } catch (e) {}
+    }
+
+    function openNavGroup(groupKey) {
+        document.querySelectorAll('.ws-tbx-nav-group[data-tool-group]').forEach(group => {
+            const isTarget = group.dataset.toolGroup === groupKey;
+            group.classList.toggle('is-open', isTarget);
+            const toggle = group.querySelector('.ws-tbx-nav-group-toggle');
+            const items = group.querySelector('.ws-tbx-nav-group-items');
+            if (toggle) toggle.setAttribute('aria-expanded', isTarget ? 'true' : 'false');
+            if (items) items.hidden = !isTarget;
+        });
+    }
+
+    function initNavAccordion() {
+        document.querySelectorAll('.ws-tbx-nav-group-toggle').forEach(toggle => {
+            toggle.addEventListener('click', () => {
+                const group = toggle.closest('.ws-tbx-nav-group');
+                const isOpen = group.classList.contains('is-open');
+                document.querySelectorAll('.ws-tbx-nav-group[data-tool-group]').forEach(g => {
+                    g.classList.remove('is-open');
+                    g.querySelector('.ws-tbx-nav-group-toggle')?.setAttribute('aria-expanded', 'false');
+                    const items = g.querySelector('.ws-tbx-nav-group-items');
+                    if (items) items.hidden = true;
+                });
+                if (!isOpen) {
+                    group.classList.add('is-open');
+                    toggle.setAttribute('aria-expanded', 'true');
+                    const items = group.querySelector('.ws-tbx-nav-group-items');
+                    if (items) items.hidden = false;
+                }
+            });
+        });
     }
 
     function truncateName(name, max) {
@@ -479,21 +643,25 @@
 
     function updateDatasetUI() {
         const snap = marketSnapshot;
-        const ratioEl = document.getElementById('tbxKpiRatio');
-        if (ratioEl) ratioEl.textContent = snap ? `${snap.ratio}:۱` : '۳۰:۱';
-
-        const listEl = document.getElementById('tbxKpiListings');
-        if (listEl) listEl.textContent = snap ? String(snap.row_count) : '۰';
-
         const meta = document.getElementById('wsTbxDatasetMeta');
         if (meta) {
             if (snap) {
                 meta.innerHTML = `
                     <span class="ws-tbx-dataset-chip">${snap.transaction_type || '—'}</span>
-                    <span class="ws-tbx-dataset-chip">${snap.row_count} آگهی تحلیل‌شده</span>`;
+                    <span class="ws-tbx-dataset-chip">${snap.row_count} آگهی تحلیل‌شده</span>
+                    <span class="ws-tbx-dataset-chip">نرخ ${snap.ratio || 30}:۱</span>`;
             } else {
                 meta.innerHTML = '';
             }
+        }
+
+        const ctxName = document.getElementById('tbxContextName');
+        const ctxMeta = document.getElementById('tbxContextMeta');
+        if (ctxName) ctxName.textContent = snap?.dataset_name || '—';
+        if (ctxMeta) {
+            ctxMeta.textContent = snap
+                ? `${snap.transaction_type || '—'} · ${snap.row_count} آگهی`
+                : '';
         }
 
         const analyzeUrl = snap?.analyze_url || '#';
@@ -547,6 +715,7 @@
 
     function selectDataset(id) {
         marketSnapshot = marketSnapshots[id] || null;
+        budgetMatchCache = null;
         updateDatasetUI();
         applyDefaultRates(true);
         updatePricing();
@@ -604,7 +773,21 @@
             renderEmpty(container, 'fa-calculator', 'مقدار را وارد کنید');
             return;
         }
-        renderHero(container, { val: formatToman(r.value), lbl: r.label }, formatToman(r.value));
+        const interpret = deposit
+            ? `${formatHumanMoney(deposit) || formatToman(deposit)} رهن کامل با نرخ ${rate.toLocaleString('fa-IR')}، معادل حدود ${formatHumanMoney(r.value) || formatToman(r.value)} اجاره ماهانه است.`
+            : `${formatHumanMoney(rent) || formatToman(rent)} اجاره با نرخ ${rate.toLocaleString('fa-IR')}، معادل حدود ${formatHumanMoney(r.value) || formatToman(r.value)} رهن کامل است.`;
+        renderHero(
+            container,
+            { val: formatToman(r.value), lbl: r.label },
+            `${r.label}: ${formatToman(r.value)}`,
+            '',
+            {
+                interpret,
+                actions: marketSnapshot?.supports_pricing
+                    ? [{ type: 'tool', tool: 'pricing', label: 'قیمت‌گذاری هوشمند', icon: 'fa-wand-magic-sparkles' }]
+                    : [],
+            },
+        );
     }
 
     function getCompareMode() {
@@ -690,7 +873,29 @@
         renderGrid(container, calcRentCommission(rent, tenant, landlord));
     }
 
-    function updateBudget() {
+    async function fetchBudgetMatch(budget) {
+        const dsId = document.getElementById('wsTbxDataset')?.value;
+        if (!dsId || !budget) return null;
+        try {
+            const res = await fetch(`/workspace/tools/api/${dsId}/evaluate/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Accept: 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value
+                        || (document.cookie.match(/csrftoken=([^;]+)/) || [])[1],
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                body: JSON.stringify({ action: 'budget_match', budget, tolerance_pct: 10 }),
+            });
+            if (!res.ok) return null;
+            return await res.json();
+        } catch (e) {
+            return null;
+        }
+    }
+
+    async function updateBudget() {
         const container = document.getElementById('tbxBudgetResult');
         if (!container) return;
         const budget = parseIntNum(document.getElementById('tbxBudget'));
@@ -708,6 +913,14 @@
         if (!r) {
             renderEmpty(container, 'fa-circle-exclamation', 'ورودی نامعتبر');
             return;
+        }
+        const match = await fetchBudgetMatch(budget);
+        if (match && match.count > 0) {
+            r.budgetMatch = match;
+            r.actions = [
+                { href: match.filter_url, label: 'مشاهده فایل‌های مناسب', icon: 'fa-folder-open' },
+                { type: 'tool', tool: 'opportunities', label: 'فرصت‌های زیر بازار', icon: 'fa-gem' },
+            ];
         }
         renderGrid(container, r);
     }
@@ -791,6 +1004,29 @@
 
         document.querySelectorAll('.ws-tbx-nav-item').forEach(btn => {
             btn.addEventListener('click', () => switchTool(btn.dataset.tool));
+        });
+
+        document.querySelectorAll('.ws-tbx-quick-btn[data-quick-tool]').forEach(btn => {
+            btn.addEventListener('click', () => switchTool(btn.dataset.quickTool));
+        });
+
+        initNavAccordion();
+        openNavGroup(TOOL_GROUP_MAP.mixed);
+
+        document.getElementById('tbxDepositSwap')?.addEventListener('click', () => {
+            const depEl = document.getElementById('tbxFullDeposit');
+            const rentEl = document.getElementById('tbxFullRent');
+            if (!depEl || !rentEl) return;
+            const dep = depEl.value;
+            const rent = rentEl.value;
+            if (dep && !rent) {
+                rentEl.value = dep;
+                depEl.value = '';
+            } else if (rent && !dep) {
+                depEl.value = rent;
+                rentEl.value = '';
+            }
+            updateDeposit();
         });
 
         const search = document.getElementById('wsTbxSearch');

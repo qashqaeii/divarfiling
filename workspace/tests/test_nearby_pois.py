@@ -13,14 +13,20 @@ from workspace.models import CRMAgency, CRMAgencyMember, CRMProperty
 from workspace.services.nearby_pois import (
     PAYLOAD_VERSION,
     NearbyPoiError,
+    TOOL_DEFAULT_RADIUS_M,
+    build_accessibility_customer_copy,
+    build_accessibility_report_copy,
     build_overpass_query,
     estimate_walk_label,
     fetch_and_save_nearby_pois,
+    fetch_nearby_accessibility_for_tools,
     format_distance_label,
     group_nearby_items,
     haversine_m,
+    resolve_nearby_catalog,
     resolve_nearby_items,
     stored_nearby_pois_valid,
+    validate_tool_radius_m,
 )
 
 User = get_user_model()
@@ -437,3 +443,112 @@ class CRMPropertyNearbyPoisViewTests(TestCase):
         resp = self.client.get(self.detail_url)
         self.assertContains(resp, 'crm-nearby-pois-initial')
         self.assertContains(resp, 'found_count')
+
+
+class NearbyAccessToolsTests(TestCase):
+    def test_validate_tool_radius_snaps(self):
+        self.assertEqual(validate_tool_radius_m(1000), 1000)
+        self.assertEqual(validate_tool_radius_m('1500'), 1000)
+        self.assertEqual(validate_tool_radius_m('bad'), TOOL_DEFAULT_RADIUS_M)
+
+    def test_resolve_nearby_catalog_counts_and_nearest(self):
+        categories, markers = resolve_nearby_catalog(
+            35.7575, 51.4100, _sample_elements(), radius_m=5000,
+        )
+        by_key = {c['key']: c for c in categories}
+        self.assertGreater(by_key['metro']['count'], 0)
+        self.assertTrue(by_key['metro']['nearest'])
+        self.assertGreater(by_key['park']['count'], 0)
+        self.assertTrue(markers)
+        self.assertEqual(markers[0]['key'], 'metro')
+
+    def test_build_copy_outputs_plain_text(self):
+        categories, markers = resolve_nearby_catalog(
+            35.7575, 51.4100, _sample_elements(), radius_m=1000,
+        )
+        from django.utils import timezone
+        from workspace.services.nearby_pois import _build_tool_payload
+
+        payload = _build_tool_payload(
+            35.7575, 51.4100, categories, markers,
+            radius_m=1000, fetched_at=timezone.now(),
+        )
+        report = build_accessibility_report_copy(payload)
+        customer = build_accessibility_customer_copy(payload)
+        self.assertIn('دسترسی‌های اطراف ملک', report)
+        self.assertNotIn('<', report)
+        self.assertIn('مترو', customer)
+
+    @patch('workspace.services.nearby_pois.fetch_overpass_elements')
+    def test_fetch_nearby_accessibility_for_tools_no_db(self, mock_fetch):
+        mock_fetch.return_value = _sample_elements()
+        user = User.objects.create_user(username='09128889999', phone='09128889999', password='x')
+        cache.clear()
+        result = fetch_nearby_accessibility_for_tools(user, 35.7575, 51.4100, 1000)
+        self.assertTrue(result['ok'])
+        self.assertGreater(result['categories_found'], 0)
+        self.assertIn('report_copy', result)
+        self.assertIn('customer_copy', result)
+        self.assertFalse(result['cached'])
+
+        result2 = fetch_nearby_accessibility_for_tools(user, 35.7575, 51.4100, 1000)
+        self.assertTrue(result2['cached'])
+        self.assertEqual(mock_fetch.call_count, 1)
+
+
+class ToolsNearbyAccessibilityViewTests(TestCase):
+    def setUp(self):
+        cache.clear()
+        self.user = User.objects.create_user(
+            username='09127778888', phone='09127778888', password='testpass123',
+        )
+        self.client = Client()
+        self.client.login(username='09127778888', password='testpass123')
+        self.url = reverse('workspace:tools_nearby_accessibility')
+        self._license_patcher = patch('workspace.mixins.has_active_bot_license', return_value=True)
+        self._license_patcher.start()
+
+    def tearDown(self):
+        self._license_patcher.stop()
+
+    @patch('workspace.services.nearby_pois.fetch_overpass_elements')
+    def test_post_success(self, mock_fetch):
+        mock_fetch.return_value = _sample_elements()
+        resp = self.client.post(
+            self.url,
+            data=json.dumps({
+                'latitude': 35.7575,
+                'longitude': 51.4100,
+                'radius_m': 1000,
+            }),
+            content_type='application/json',
+        )
+        self.assertEqual(resp.status_code, 200)
+        data = resp.json()
+        self.assertTrue(data['ok'])
+        self.assertGreater(len(data['categories']), 10)
+        self.assertIn('markers', data)
+
+    def test_post_invalid_coords(self):
+        resp = self.client.post(
+            self.url,
+            data=json.dumps({'latitude': 'x', 'longitude': 51.4}),
+            content_type='application/json',
+        )
+        self.assertEqual(resp.status_code, 400)
+
+    @patch('workspace.services.nearby_pois.fetch_overpass_elements')
+    def test_post_client_elements(self, mock_fetch):
+        resp = self.client.post(
+            self.url,
+            data=json.dumps({
+                'latitude': 35.7575,
+                'longitude': 51.4100,
+                'radius_m': 2000,
+                'elements': _sample_elements(),
+            }),
+            content_type='application/json',
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.assertTrue(resp.json()['ok'])
+        mock_fetch.assert_not_called()

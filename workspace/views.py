@@ -1706,6 +1706,13 @@ class ToolsView(LicenseRequiredMixin, TemplateView):
         ctx['market_snapshot'] = snapshots.get(str(selected.pk)) if selected else None
         ctx['market_snapshots_json'] = json.dumps(snapshots, ensure_ascii=False)
         ctx['market_snapshot_json'] = json.dumps(ctx['market_snapshot'], ensure_ascii=False)
+        from workspace.carto_basemap import get_carto_basemap_api_key
+        from django.urls import reverse
+        from workspace.services.nearby_pois import TOOL_RADIUS_OPTIONS_M
+
+        ctx['carto_basemap_key'] = get_carto_basemap_api_key()
+        ctx['nearby_access_url'] = reverse('workspace:tools_nearby_accessibility')
+        ctx['tool_radius_options'] = list(TOOL_RADIUS_OPTIONS_M)
         from workspace.academy.context_helpers import inject_academy_context
         from workspace.academy.services.contextual_service import mark_tools_visited
         from workspace.academy.services.progress_service import get_or_create_academy_settings
@@ -1742,6 +1749,20 @@ class ToolsEvaluateView(DatasetOwnerMixin, View):
         if action == 'search':
             items = search_listings(dataset, body.get('q', ''), limit=12)
             return JsonResponse({'items': items})
+        if action == 'budget_match':
+            from workspace.services.tools_market import count_budget_matches
+
+            budget = body.get('budget')
+            try:
+                budget = int(budget)
+            except (TypeError, ValueError):
+                return JsonResponse({'error': 'بودجه نامعتبر است.'}, status=400)
+            tol = body.get('tolerance_pct', 10)
+            try:
+                tol = float(tol)
+            except (TypeError, ValueError):
+                tol = 10.0
+            return JsonResponse(count_budget_matches(dataset, budget, tolerance_pct=tol))
 
         result = evaluate_listing_market(
             dataset,
@@ -1755,6 +1776,46 @@ class ToolsEvaluateView(DatasetOwnerMixin, View):
         if result.get('error'):
             return JsonResponse(result, status=400)
         return JsonResponse(result)
+
+
+class ToolsNearbyAccessibilityView(LicenseRequiredMixin, View):
+    """دسترسی‌های اطراف — ابزار نقشه (بدون ذخیره در DB)."""
+
+    def post(self, request):
+        from workspace.services.nearby_pois import (
+            NearbyPoiError,
+            fetch_nearby_accessibility_for_tools,
+        )
+
+        try:
+            body = json.loads(request.body.decode('utf-8') or '{}')
+        except json.JSONDecodeError:
+            return JsonResponse({'ok': False, 'error': 'درخواست نامعتبر است.'}, status=400)
+
+        lat = body.get('latitude')
+        lng = body.get('longitude')
+        radius_m = body.get('radius_m', 1000)
+        client_elements = body.get('elements') if 'elements' in body else None
+
+        try:
+            data = fetch_nearby_accessibility_for_tools(
+                request.user,
+                lat,
+                lng,
+                radius_m,
+                elements=client_elements,
+            )
+        except NearbyPoiError as exc:
+            resp_body = {
+                'ok': False,
+                'code': exc.code,
+                'error': exc.message,
+            }
+            fallback = (exc.extra or {}).get('fallback')
+            if fallback and lat is not None and lng is not None:
+                resp_body['fallback'] = fallback
+            return JsonResponse(resp_body, status=exc.status)
+        return JsonResponse(data)
 
 
 # ─── Compare ──────────────────────────────────────────────────────────────────

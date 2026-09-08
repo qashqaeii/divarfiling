@@ -48,6 +48,7 @@ urlpatterns = [
     path('tools/', views.ToolsView.as_view(), name='tools'),
     path('tools/api/<uuid:dataset_id>/toolkit/', views.ToolsMarketToolkitView.as_view(), name='tools_market_toolkit'),
     path('tools/api/<uuid:dataset_id>/evaluate/', views.ToolsEvaluateView.as_view(), name='tools_evaluate'),
+    path('tools/api/nearby-accessibility/', views.ToolsNearbyAccessibilityView.as_view(), name='tools_nearby_accessibility'),
     path('compare/', views.CompareView.as_view(), name='compare'),
 
     # CRM

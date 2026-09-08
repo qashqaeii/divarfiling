@@ -2,9 +2,13 @@
 {% load static workspace_tags %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/tools.css' %}?v=6">
-<link rel="stylesheet" href="{% static 'workspace/css/tools-market.css' %}?v=4">
-<link rel="stylesheet" href="{% static 'workspace/css/ws-tools-mobile.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'workspace/css/tools.css' %}?v=8">
+<link rel="stylesheet" href="{% static 'workspace/css/tools-market.css' %}?v=6">
+<link rel="stylesheet" href="{% static 'workspace/css/tools-nearby-access.css' %}?v=1">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
+<link rel="stylesheet" href="{% static 'workspace/css/ws-tools-mobile.css' %}?v=2">
 {% include 'workspace/academy/includes/academy_assets_css.html' %}
 {% endblock %}
 
@@ -26,7 +30,7 @@
                 <span>جعبه ابزار مشاور</span>
             </div>
             <h1 class="ws-tbx-hero-title">ابزارهای هوشمند</h1>
-            <p class="ws-tbx-hero-desc">محاسبات تخصصی املاک — سریع، دقیق و آماده استفاده در معاملات روزانه</p>
+            <p class="ws-tbx-hero-desc">میزکار تصمیم‌گیری مشاور — محاسبه، مقایسه و تحلیل بازار در یک جا</p>
         </div>
         <div class="ws-tbx-hero-badges" role="list">
             <span class="ws-tbx-badge" role="listitem">{% include 'includes/icon_slot.html' with decor='zap' size='inline' only %} نتیجه فوری</span>
@@ -36,13 +40,19 @@
     </header>
 
     {% if datasets %}
-    <section class="ws-tbx-dataset-bar" aria-label="انتخاب فایل بازار">
-        <div class="ws-tbx-dataset-bar-main">
-            <label class="ws-tbx-dataset-label" for="wsTbxDataset">
-                {% include 'includes/icon_slot.html' with decor='database' size='inline' only %}
-                فایل بازار
+    <section class="ws-tbx-dataset-bar ws-tbx-dataset-bar--active" aria-label="فایل بازار فعال">
+        <div class="ws-tbx-dataset-context" id="wsTbxDatasetContext">
+            <div class="ws-tbx-dataset-context-main">
+                <span class="ws-tbx-dataset-context-label">فایل بازار فعال</span>
+                <strong class="ws-tbx-dataset-context-name" id="tbxContextName">{% if selected_dataset %}{{ selected_dataset.name }}{% else %}—{% endif %}</strong>
+                <span class="ws-tbx-dataset-context-meta" id="tbxContextMeta">
+                    {% if market_snapshot %}{{ market_snapshot.transaction_type|default:"—" }} · {{ market_snapshot.row_count }} آگهی{% endif %}
+                </span>
+            </div>
+            <label class="ws-tbx-dataset-change" for="wsTbxDataset">
+                <i class="fas fa-exchange-alt" aria-hidden="true"></i> تغییر فایل
             </label>
-            <select id="wsTbxDataset" class="ws-tbx-dataset-select" aria-label="انتخاب فایل داده">
+            <select id="wsTbxDataset" class="ws-tbx-dataset-select ws-tbx-dataset-select--compact" aria-label="انتخاب فایل داده">
                 {% for ds in datasets %}
                 <option value="{{ ds.id }}" {% if selected_dataset and selected_dataset.id == ds.id %}selected{% endif %}>
                     {{ ds.name }} — {{ ds.listing_count }} آگهی{% if ds.transaction_type %} ({{ ds.transaction_type }}){% endif %}
@@ -71,39 +81,22 @@
     </section>
     {% endif %}
 
-    <section class="ws-tbx-kpis" aria-label="خلاصه ابزارها">
-        <article class="ws-tbx-kpi ws-tbx-kpi--purple">
-            <span class="ws-tbx-kpi-glow" aria-hidden="true"></span>
-            <span class="ws-tbx-kpi-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='calculator' size='metric' only %}</span>
-            <div class="ws-tbx-kpi-body">
-                <span class="ws-tbx-kpi-val">۱۲</span>
-                <span class="ws-tbx-kpi-lbl">ابزار فعال</span>
-            </div>
-        </article>
-        <article class="ws-tbx-kpi ws-tbx-kpi--blue">
-            <span class="ws-tbx-kpi-glow" aria-hidden="true"></span>
-            <span class="ws-tbx-kpi-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='rotate_ccw' size='metric' only %}</span>
-            <div class="ws-tbx-kpi-body">
-                <span class="ws-tbx-kpi-val" id="tbxKpiRatio">{% if market_snapshot %}{{ market_snapshot.ratio }}:۱{% else %}۳۰:۱{% endif %}</span>
-                <span class="ws-tbx-kpi-lbl">نرخ رهن{% if market_snapshot %} بازار{% endif %}</span>
-            </div>
-        </article>
-        <article class="ws-tbx-kpi ws-tbx-kpi--green">
-            <span class="ws-tbx-kpi-glow" aria-hidden="true"></span>
-            <span class="ws-tbx-kpi-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='percent' size='metric' only %}</span>
-            <div class="ws-tbx-kpi-body">
-                <span class="ws-tbx-kpi-val">۲</span>
-                <span class="ws-tbx-kpi-lbl">نوع کمیسیون</span>
-            </div>
-        </article>
-        <article class="ws-tbx-kpi ws-tbx-kpi--amber">
-            <span class="ws-tbx-kpi-glow" aria-hidden="true"></span>
-            <span class="ws-tbx-kpi-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='bar_chart' size='metric' only %}</span>
-            <div class="ws-tbx-kpi-body">
-                <span class="ws-tbx-kpi-val" id="tbxKpiListings">{% if selected_dataset %}{{ market_snapshot.row_count|default:0 }}{% else %}۰{% endif %}</span>
-                <span class="ws-tbx-kpi-lbl">آگهی فایل انتخابی</span>
-            </div>
-        </article>
+    <section class="ws-tbx-quick" aria-label="اقدام سریع">
+        <span class="ws-tbx-quick-label">امروز می‌خواهی چه کار کنی؟</span>
+        <div class="ws-tbx-quick-actions">
+            <button type="button" class="ws-tbx-quick-btn" data-quick-tool="pricing">
+                <i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i> قیمت‌گذاری ملک
+            </button>
+            <button type="button" class="ws-tbx-quick-btn" data-quick-tool="opportunities">
+                <i class="fas fa-gem" aria-hidden="true"></i> بررسی فرصت
+            </button>
+            <button type="button" class="ws-tbx-quick-btn" data-quick-tool="commission">
+                <i class="fas fa-handshake" aria-hidden="true"></i> محاسبه کمیسیون
+            </button>
+            <button type="button" class="ws-tbx-quick-btn" data-quick-tool="budget">
+                <i class="fas fa-wallet" aria-hidden="true"></i> بودجه مشتری
+            </button>
+        </div>
     </section>
 
     <div class="ws-tbx-workspace">
@@ -114,7 +107,7 @@
                 </div>
                 <div class="ws-tbx-rail-head-text">
                     <strong>جعبه ابزار</strong>
-                    <span>۱۲ ابزار · کلیدهای ۱ تا ۹</span>
+                    <span>۵ دسته · ۱۳ ابزار · کلید ۱–۹</span>
                 </div>
             </div>
 
@@ -125,11 +118,12 @@
             </div>
 
             <nav class="ws-tbx-nav" id="wsTbxNav" role="tablist">
-                <div class="ws-tbx-nav-group" data-nav-group="calc">
-                    <div class="ws-tbx-nav-group-head">
-                        <span class="ws-tbx-nav-group-title">محاسبات سریع</span>
-                        <span class="ws-tbx-nav-group-count">۹</span>
-                    </div>
+                <div class="ws-tbx-nav-group is-open" data-nav-group="price" data-tool-group="price">
+                    <button type="button" class="ws-tbx-nav-group-toggle" aria-expanded="true">
+                        <span class="ws-tbx-nav-group-title">💰 قیمت و معامله</span>
+                        <span class="ws-tbx-nav-group-count">۳</span>
+                        <i class="fas fa-chevron-down ws-tbx-nav-group-chevron" aria-hidden="true"></i>
+                    </button>
                     <div class="ws-tbx-nav-group-items">
                 <button type="button" class="ws-tbx-nav-item is-active" data-tool="mixed" data-accent="purple" role="tab" aria-selected="true" aria-controls="wsTbxPanelMixed">
                     <span class="ws-tbx-nav-key" aria-hidden="true">۱</span>
@@ -143,18 +137,22 @@
                     <span class="ws-tbx-nav-text"><strong>ودیعه ↔ اجاره</strong><em>تبدیل رهن کامل</em></span>
                     <span class="ws-tbx-nav-arrow" aria-hidden="true"><i class="fas fa-chevron-left"></i></span>
                 </button>
-                <button type="button" class="ws-tbx-nav-item" data-tool="compare" data-accent="cyan" role="tab" aria-selected="false" aria-controls="wsTbxPanelCompare">
-                    <span class="ws-tbx-nav-key" aria-hidden="true">۳</span>
-                    <span class="ws-tbx-nav-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='scale' size='inline' only %}</span>
-                    <span class="ws-tbx-nav-text"><strong>مقایسه دو آگهی</strong><em>کدام ارزان‌تر است؟</em></span>
-                    <span class="ws-tbx-nav-arrow" aria-hidden="true"><i class="fas fa-chevron-left"></i></span>
-                </button>
                 <button type="button" class="ws-tbx-nav-item" data-tool="area" data-accent="blue" role="tab" aria-selected="false" aria-controls="wsTbxPanelArea">
                     <span class="ws-tbx-nav-key" aria-hidden="true">۴</span>
                     <span class="ws-tbx-nav-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='ruler' size='inline' only %}</span>
                     <span class="ws-tbx-nav-text"><strong>متراژ و قیمت</strong><em>قیمت متر، متراژ یا کل</em></span>
                     <span class="ws-tbx-nav-arrow" aria-hidden="true"><i class="fas fa-chevron-left"></i></span>
                 </button>
+                    </div>
+                </div>
+
+                <div class="ws-tbx-nav-group" data-nav-group="negotiate" data-tool-group="negotiate">
+                    <button type="button" class="ws-tbx-nav-group-toggle" aria-expanded="false">
+                        <span class="ws-tbx-nav-group-title">🤝 مذاکره و هزینه</span>
+                        <span class="ws-tbx-nav-group-count">۳</span>
+                        <i class="fas fa-chevron-down ws-tbx-nav-group-chevron" aria-hidden="true"></i>
+                    </button>
+                    <div class="ws-tbx-nav-group-items" hidden>
                 <button type="button" class="ws-tbx-nav-item" data-tool="discount" data-accent="orange" role="tab" aria-selected="false" aria-controls="wsTbxPanelDiscount">
                     <span class="ws-tbx-nav-key" aria-hidden="true">۵</span>
                     <span class="ws-tbx-nav-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='percent' size='inline' only %}</span>
@@ -173,40 +171,76 @@
                     <span class="ws-tbx-nav-text"><strong>کمیسیون اجاره</strong><em>مستأجر و مالک</em></span>
                     <span class="ws-tbx-nav-arrow" aria-hidden="true"><i class="fas fa-chevron-left"></i></span>
                 </button>
+                    </div>
+                </div>
+
+                <div class="ws-tbx-nav-group" data-nav-group="client" data-tool-group="client">
+                    <button type="button" class="ws-tbx-nav-group-toggle" aria-expanded="false">
+                        <span class="ws-tbx-nav-group-title">👤 مشتری و مقایسه</span>
+                        <span class="ws-tbx-nav-group-count">۲</span>
+                        <i class="fas fa-chevron-down ws-tbx-nav-group-chevron" aria-hidden="true"></i>
+                    </button>
+                    <div class="ws-tbx-nav-group-items" hidden>
+                <button type="button" class="ws-tbx-nav-item" data-tool="compare" data-accent="cyan" role="tab" aria-selected="false" aria-controls="wsTbxPanelCompare">
+                    <span class="ws-tbx-nav-key" aria-hidden="true">۳</span>
+                    <span class="ws-tbx-nav-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='scale' size='inline' only %}</span>
+                    <span class="ws-tbx-nav-text"><strong>مقایسه دو آگهی</strong><em>کدام ارزان‌تر است؟</em></span>
+                    <span class="ws-tbx-nav-arrow" aria-hidden="true"><i class="fas fa-chevron-left"></i></span>
+                </button>
                 <button type="button" class="ws-tbx-nav-item" data-tool="budget" data-accent="indigo" role="tab" aria-selected="false" aria-controls="wsTbxPanelBudget">
                     <span class="ws-tbx-nav-key" aria-hidden="true">۸</span>
                     <span class="ws-tbx-nav-icon" aria-hidden="true"><i class="fas fa-wallet"></i></span>
                     <span class="ws-tbx-nav-text"><strong>بودجه مشتری</strong><em>توان خرید و متراژ</em></span>
                     <span class="ws-tbx-nav-arrow" aria-hidden="true"><i class="fas fa-chevron-left"></i></span>
                 </button>
-                <button type="button" class="ws-tbx-nav-item" data-tool="pricing" data-accent="amber" role="tab" aria-selected="false" aria-controls="wsTbxPanelPricing">
-                    <span class="ws-tbx-nav-key" aria-hidden="true">۹</span>
-                    <span class="ws-tbx-nav-icon" aria-hidden="true"><i class="fas fa-wand-magic-sparkles"></i></span>
-                    <span class="ws-tbx-nav-text"><strong>قیمت‌گذاری هوشمند</strong><em>باند P25–P75 بازار</em></span>
-                    <span class="ws-tbx-nav-arrow" aria-hidden="true"><i class="fas fa-chevron-left"></i></span>
-                </button>
                     </div>
                 </div>
 
-                <div class="ws-tbx-nav-group ws-tbx-nav-group--market" data-nav-group="market">
-                    <div class="ws-tbx-nav-group-head">
-                        <span class="ws-tbx-nav-group-title">ابزارهای بازار</span>
-                        <span class="ws-tbx-nav-group-badge">{% include 'includes/icon_slot.html' with decor='database' size='inline' only %} فایل</span>
-                    </div>
+                <div class="ws-tbx-nav-group ws-tbx-nav-group--market is-open" data-nav-group="market" data-tool-group="market">
+                    <button type="button" class="ws-tbx-nav-group-toggle" aria-expanded="true">
+                        <span class="ws-tbx-nav-group-title">📊 تحلیل بازار</span>
+                        <span class="ws-tbx-nav-group-badge">فایل</span>
+                        <i class="fas fa-chevron-down ws-tbx-nav-group-chevron" aria-hidden="true"></i>
+                    </button>
                     <div class="ws-tbx-nav-group-items">
+                <button type="button" class="ws-tbx-nav-item ws-tbx-nav-item--market" data-tool="pricing" data-accent="amber" role="tab" aria-selected="false" aria-controls="wsTbxPanelPricing">
+                    <span class="ws-tbx-nav-key" aria-hidden="true">۹</span>
+                    <span class="ws-tbx-nav-icon" aria-hidden="true"><i class="fas fa-wand-magic-sparkles"></i></span>
+                    <span class="ws-tbx-nav-text"><strong>قیمت‌گذاری هوشمند</strong><em>باند P25–P75 بازار</em></span>
+                    <span class="ws-tbx-nav-file-badge">فایل</span>
+                    <span class="ws-tbx-nav-arrow" aria-hidden="true"><i class="fas fa-chevron-left"></i></span>
+                </button>
                 <button type="button" class="ws-tbx-nav-item ws-tbx-nav-item--market" data-tool="evaluate" data-accent="rose" role="tab" aria-selected="false" aria-controls="wsTbxPanelEvaluate">
                     <span class="ws-tbx-nav-icon" aria-hidden="true"><i class="fas fa-crosshairs"></i></span>
                     <span class="ws-tbx-nav-text"><strong>ارزیابی آنی آگهی</strong><em>زیر یا بالای بازار؟</em></span>
+                    <span class="ws-tbx-nav-file-badge">فایل</span>
                     <span class="ws-tbx-nav-arrow" aria-hidden="true"><i class="fas fa-chevron-left"></i></span>
                 </button>
                 <button type="button" class="ws-tbx-nav-item ws-tbx-nav-item--market" data-tool="opportunities" data-accent="emerald" role="tab" aria-selected="false" aria-controls="wsTbxPanelOpportunities">
                     <span class="ws-tbx-nav-icon" aria-hidden="true"><i class="fas fa-gem"></i></span>
                     <span class="ws-tbx-nav-text"><strong>فرصت‌های زیر بازار</strong><em>بهترین آگهی‌های فایل</em></span>
+                    <span class="ws-tbx-nav-file-badge">فایل</span>
                     <span class="ws-tbx-nav-arrow" aria-hidden="true"><i class="fas fa-chevron-left"></i></span>
                 </button>
                 <button type="button" class="ws-tbx-nav-item ws-tbx-nav-item--market" data-tool="neighborhood" data-accent="sky" role="tab" aria-selected="false" aria-controls="wsTbxPanelNeighborhood">
                     <span class="ws-tbx-nav-icon" aria-hidden="true"><i class="fas fa-map-marker-alt"></i></span>
                     <span class="ws-tbx-nav-text"><strong>بازه قیمت محله</strong><em>P25 تا P75 هر محله</em></span>
+                    <span class="ws-tbx-nav-file-badge">فایل</span>
+                    <span class="ws-tbx-nav-arrow" aria-hidden="true"><i class="fas fa-chevron-left"></i></span>
+                </button>
+                    </div>
+                </div>
+
+                <div class="ws-tbx-nav-group" data-nav-group="location" data-tool-group="location">
+                    <button type="button" class="ws-tbx-nav-group-toggle" aria-expanded="false">
+                        <span class="ws-tbx-nav-group-title">📍 تحلیل موقعیت</span>
+                        <span class="ws-tbx-nav-group-count">۱</span>
+                        <i class="fas fa-chevron-down ws-tbx-nav-group-chevron" aria-hidden="true"></i>
+                    </button>
+                    <div class="ws-tbx-nav-group-items" hidden>
+                <button type="button" class="ws-tbx-nav-item" data-tool="nearby_access" data-accent="lime" role="tab" aria-selected="false" aria-controls="wsTbxPanelNearbyAccess">
+                    <span class="ws-tbx-nav-icon" aria-hidden="true"><i class="fas fa-location-crosshairs"></i></span>
+                    <span class="ws-tbx-nav-text"><strong>دسترسی‌های اطراف</strong><em>امکانات و نقاط مهم اطراف موقعیت</em></span>
                     <span class="ws-tbx-nav-arrow" aria-hidden="true"><i class="fas fa-chevron-left"></i></span>
                 </button>
                     </div>
@@ -295,6 +329,9 @@
                             <input type="text" inputmode="numeric" id="tbxFullDeposit" class="ws-input mk-filter-num" placeholder="۳۰۰,۰۰۰,۰۰۰">
                         </div>
                         <div class="ws-tbx-or"><span>یا</span></div>
+                        <button type="button" class="ws-tbx-swap-btn" id="tbxDepositSwap" title="جابه‌جایی تبدیل">
+                            <i class="fas fa-exchange-alt" aria-hidden="true"></i> ↔ جابه‌جایی تبدیل
+                        </button>
                         <div class="ws-field">
                             <label class="ws-label" for="tbxFullRent">اجاره ماهانه (تومان)</label>
                             <input type="text" inputmode="numeric" id="tbxFullRent" class="ws-input mk-filter-num" placeholder="۱۰,۰۰۰,۰۰۰">
@@ -450,7 +487,9 @@
                             <label class="ws-label" for="tbxDiscountPct">درصد تخفیف</label>
                             <div class="ws-tbx-presets" role="group">
                                 <button type="button" class="ws-tbx-preset" data-discount="2">۲٪</button>
+                                <button type="button" class="ws-tbx-preset" data-discount="3">۳٪</button>
                                 <button type="button" class="ws-tbx-preset" data-discount="5">۵٪</button>
+                                <button type="button" class="ws-tbx-preset" data-discount="7">۷٪</button>
                                 <button type="button" class="ws-tbx-preset" data-discount="10">۱۰٪</button>
                             </div>
                             <input type="text" inputmode="decimal" id="tbxDiscountPct" class="ws-input mk-filter-num" placeholder="۵">
@@ -688,7 +727,11 @@
                 <div class="ws-mkt-opps-wrap">
                     <div class="ws-mkt-opps-head">
                         <span class="ws-mkt-opps-count" id="tbxOppsCount">—</span>
-                        <span class="ws-mkt-opps-hint">کلیک روی هر آگهی → ارزیابی فوری</span>
+                        <select id="tbxOppsSort" class="ws-mkt-opps-sort" aria-label="مرتب‌سازی فرصت‌ها">
+                            <option value="score">بیشترین اختلاف با بازار</option>
+                            <option value="price">قیمت</option>
+                            <option value="area">متراژ</option>
+                        </select>
                     </div>
                     <div class="ws-mkt-opps-list" id="tbxOppsList">
                         <div class="ws-mkt-empty"><i class="fas fa-database" aria-hidden="true"></i><p>فایل بازار را انتخاب کنید</p></div>
@@ -719,6 +762,79 @@
                 </div>
             </section>
 
+            {# ۱۳ — دسترسی‌های اطراف #}
+            <section class="ws-tbx-panel" id="wsTbxPanelNearbyAccess" data-tool-panel="nearby_access" data-accent="lime" role="tabpanel" hidden>
+                <header class="ws-tbx-panel-head">
+                    <div class="ws-tbx-panel-head-icon" aria-hidden="true"><i class="fas fa-location-crosshairs"></i></div>
+                    <div>
+                        <h2>دسترسی‌های اطراف</h2>
+                        <p>امکانات و نقاط مهم اطراف یک موقعیت را روی نقشه پیدا و آماده کپی کن</p>
+                    </div>
+                </header>
+                <div class="ws-nearby-access" id="wsNearbyAccess"
+                     data-api-url="{{ nearby_access_url }}"
+                     data-default-radius="{{ tool_radius_options.1|default:1000 }}">
+                    <div class="ws-nearby-access__layout">
+                        <div class="ws-nearby-access__map-wrap">
+                            <div class="ws-nearby-access__map" id="wsNearbyAccessMap" role="application" aria-label="نقشه انتخاب موقعیت"></div>
+                            <div class="ws-nearby-access__map-foot">
+                                <span class="ws-nearby-access__coords-label">مختصات:</span>
+                                <span class="ws-nearby-access__coords" data-nearby-coords>روی نقشه کلیک کنید</span>
+                            </div>
+                        </div>
+                        <div class="ws-nearby-access__side">
+                            <div class="ws-nearby-access__controls">
+                                <fieldset class="ws-nearby-access__radius">
+                                    <legend class="ws-label">شعاع جستجو</legend>
+                                    <div class="ws-tbx-presets ws-nearby-access__radius-presets" role="group" aria-label="شعاع جستجو">
+                                        <button type="button" class="ws-tbx-preset" data-nearby-radius="500">۵۰۰ متر</button>
+                                        <button type="button" class="ws-tbx-preset is-active" data-nearby-radius="1000">۱ کیلومتر</button>
+                                        <button type="button" class="ws-tbx-preset" data-nearby-radius="2000">۲ کیلومتر</button>
+                                        <button type="button" class="ws-tbx-preset" data-nearby-radius="3000">۳ کیلومتر</button>
+                                    </div>
+                                </fieldset>
+                                <button type="button" class="ws-btn ws-btn-primary ws-nearby-access__fetch" data-nearby-fetch disabled>
+                                    <i class="fas fa-search-location" aria-hidden="true"></i>
+                                    <span data-nearby-fetch-label>بررسی دسترسی‌های اطراف</span>
+                                </button>
+                            </div>
+                            <div class="ws-nearby-access__result" data-nearby-result>
+                                <div class="ws-nearby-access__placeholder" data-nearby-placeholder>
+                                    <i class="fas fa-map-pin" aria-hidden="true"></i>
+                                    <p>موقعیت را روی نقشه انتخاب کنید، شعاع را تعیین کنید و دکمه بررسی را بزنید.</p>
+                                </div>
+                                <div class="ws-nearby-access__loading" data-nearby-loading hidden>
+                                    <div class="ws-nearby-access__skeleton"></div>
+                                    <p>در حال بررسی دسترسی‌های اطراف...</p>
+                                </div>
+                                <div class="ws-nearby-access__error" data-nearby-error hidden role="alert"></div>
+                                <div class="ws-nearby-access__body" data-nearby-body hidden>
+                                    <div class="ws-nearby-access__summary-head">
+                                        <h3>دسترسی‌های اطراف</h3>
+                                        <span class="ws-nearby-access__radius-badge" data-nearby-radius-label></span>
+                                    </div>
+                                    <div class="ws-nearby-access__filters" data-nearby-filters hidden></div>
+                                    <div class="ws-nearby-access__categories" data-nearby-categories></div>
+                                    <details class="ws-nearby-access__empty-cats" data-nearby-empty-wrap hidden>
+                                        <summary>دسته‌های بدون نتیجه</summary>
+                                        <div data-nearby-empty-cats></div>
+                                    </details>
+                                    <div class="ws-nearby-access__copy-actions">
+                                        <button type="button" class="ws-btn ws-btn-secondary ws-btn-sm" data-nearby-copy-report>
+                                            <i class="fas fa-copy" aria-hidden="true"></i> کپی گزارش
+                                        </button>
+                                        <button type="button" class="ws-btn ws-btn-secondary ws-btn-sm" data-nearby-copy-customer>
+                                            <i class="fas fa-comment-dots" aria-hidden="true"></i> کپی متن معرفی
+                                        </button>
+                                    </div>
+                                    <p class="ws-nearby-access__disclaimer" data-nearby-disclaimer></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
         </main>
     </div>
 </div>
@@ -728,7 +844,10 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'workspace/js/tools.js' %}?v=7"></script>
-<script src="{% static 'workspace/js/tools-market.js' %}?v=5"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+<script src="{% static 'workspace/js/tools.js' %}?v=9"></script>
+<script src="{% static 'workspace/js/tools-market.js' %}?v=6"></script>
+<script src="{% static 'workspace/js/tools-nearby-access.js' %}?v=1"></script>
 {% include 'workspace/academy/includes/academy_assets_js.html' %}
 {% endblock %}

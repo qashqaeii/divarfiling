@@ -4,7 +4,7 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/tools.css' %}?v=8">
 <link rel="stylesheet" href="{% static 'workspace/css/tools-market.css' %}?v=6">
-<link rel="stylesheet" href="{% static 'workspace/css/tools-nearby-access.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'workspace/css/tools-nearby-access.css' %}?v=2">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
@@ -84,6 +84,9 @@
     <section class="ws-tbx-quick" aria-label="اقدام سریع">
         <span class="ws-tbx-quick-label">امروز می‌خواهی چه کار کنی؟</span>
         <div class="ws-tbx-quick-actions">
+            <button type="button" class="ws-tbx-quick-btn ws-tbx-quick-btn--featured" data-quick-tool="nearby_access">
+                <i class="fas fa-location-crosshairs" aria-hidden="true"></i> دسترسی‌های اطراف
+            </button>
             <button type="button" class="ws-tbx-quick-btn" data-quick-tool="pricing">
                 <i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i> قیمت‌گذاری ملک
             </button>
@@ -113,11 +116,26 @@
 
             <div class="ws-tbx-search-wrap">
                 {% include 'includes/icon_slot.html' with decor='search' size='inline' only %}
-                <input type="search" id="wsTbxSearch" class="ws-tbx-search" placeholder="جستجوی ابزار..." autocomplete="off" aria-label="جستجوی ابزار">
+                <input type="text" role="searchbox" id="wsTbxSearch" class="ws-tbx-search" name="ws-tbx-tool-filter" placeholder="جستجوی ابزار..." autocomplete="off" autocorrect="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true" data-form-type="other" readonly aria-label="جستجوی ابزار">
                 <kbd class="ws-tbx-search-hint" aria-hidden="true">/</kbd>
             </div>
 
             <nav class="ws-tbx-nav" id="wsTbxNav" role="tablist">
+                <div class="ws-tbx-nav-group ws-tbx-nav-group--featured is-open" data-nav-group="location" data-tool-group="location">
+                    <button type="button" class="ws-tbx-nav-group-toggle" aria-expanded="true">
+                        <span class="ws-tbx-nav-group-title">📍 تحلیل موقعیت</span>
+                        <span class="ws-tbx-nav-group-badge ws-tbx-nav-group-badge--new">جدید</span>
+                        <i class="fas fa-chevron-down ws-tbx-nav-group-chevron" aria-hidden="true"></i>
+                    </button>
+                    <div class="ws-tbx-nav-group-items">
+                <button type="button" class="ws-tbx-nav-item ws-tbx-nav-item--featured" data-tool="nearby_access" data-accent="lime" role="tab" aria-selected="false" aria-controls="wsTbxPanelNearbyAccess">
+                    <span class="ws-tbx-nav-icon" aria-hidden="true"><i class="fas fa-location-crosshairs"></i></span>
+                    <span class="ws-tbx-nav-text"><strong>دسترسی‌های اطراف</strong><em>امکانات و نقاط مهم اطراف موقعیت</em></span>
+                    <span class="ws-tbx-nav-arrow" aria-hidden="true"><i class="fas fa-chevron-left"></i></span>
+                </button>
+                    </div>
+                </div>
+
                 <div class="ws-tbx-nav-group is-open" data-nav-group="price" data-tool-group="price">
                     <button type="button" class="ws-tbx-nav-group-toggle" aria-expanded="true">
                         <span class="ws-tbx-nav-group-title">💰 قیمت و معامله</span>
@@ -226,21 +244,6 @@
                     <span class="ws-tbx-nav-icon" aria-hidden="true"><i class="fas fa-map-marker-alt"></i></span>
                     <span class="ws-tbx-nav-text"><strong>بازه قیمت محله</strong><em>P25 تا P75 هر محله</em></span>
                     <span class="ws-tbx-nav-file-badge">فایل</span>
-                    <span class="ws-tbx-nav-arrow" aria-hidden="true"><i class="fas fa-chevron-left"></i></span>
-                </button>
-                    </div>
-                </div>
-
-                <div class="ws-tbx-nav-group" data-nav-group="location" data-tool-group="location">
-                    <button type="button" class="ws-tbx-nav-group-toggle" aria-expanded="false">
-                        <span class="ws-tbx-nav-group-title">📍 تحلیل موقعیت</span>
-                        <span class="ws-tbx-nav-group-count">۱</span>
-                        <i class="fas fa-chevron-down ws-tbx-nav-group-chevron" aria-hidden="true"></i>
-                    </button>
-                    <div class="ws-tbx-nav-group-items" hidden>
-                <button type="button" class="ws-tbx-nav-item" data-tool="nearby_access" data-accent="lime" role="tab" aria-selected="false" aria-controls="wsTbxPanelNearbyAccess">
-                    <span class="ws-tbx-nav-icon" aria-hidden="true"><i class="fas fa-location-crosshairs"></i></span>
-                    <span class="ws-tbx-nav-text"><strong>دسترسی‌های اطراف</strong><em>امکانات و نقاط مهم اطراف موقعیت</em></span>
                     <span class="ws-tbx-nav-arrow" aria-hidden="true"><i class="fas fa-chevron-left"></i></span>
                 </button>
                     </div>
@@ -763,73 +766,119 @@
             </section>
 
             {# ۱۳ — دسترسی‌های اطراف #}
-            <section class="ws-tbx-panel" id="wsTbxPanelNearbyAccess" data-tool-panel="nearby_access" data-accent="lime" role="tabpanel" hidden>
-                <header class="ws-tbx-panel-head">
+            <section class="ws-tbx-panel ws-tbx-panel--nearby" id="wsTbxPanelNearbyAccess" data-tool-panel="nearby_access" data-accent="lime" role="tabpanel" hidden>
+                <header class="ws-tbx-panel-head ws-nearby-access__head">
                     <div class="ws-tbx-panel-head-icon" aria-hidden="true"><i class="fas fa-location-crosshairs"></i></div>
-                    <div>
+                    <div class="ws-nearby-access__head-text">
                         <h2>دسترسی‌های اطراف</h2>
-                        <p>امکانات و نقاط مهم اطراف یک موقعیت را روی نقشه پیدا و آماده کپی کن</p>
+                        <p>موقعیت را روی نقشه مشخص کنید — امکانات اطراف را تحلیل و برای مشتری آماده کپی کنید</p>
+                    </div>
+                    <div class="ws-nearby-access__steps" aria-hidden="true">
+                        <span class="ws-nearby-access__step is-active"><i class="fas fa-crosshairs"></i> انتخاب</span>
+                        <span class="ws-nearby-access__step-line"></span>
+                        <span class="ws-nearby-access__step"><i class="fas fa-circle-dot"></i> شعاع</span>
+                        <span class="ws-nearby-access__step-line"></span>
+                        <span class="ws-nearby-access__step"><i class="fas fa-chart-pie"></i> نتیجه</span>
                     </div>
                 </header>
+
                 <div class="ws-nearby-access" id="wsNearbyAccess"
                      data-api-url="{{ nearby_access_url }}"
                      data-default-radius="{{ tool_radius_options.1|default:1000 }}">
-                    <div class="ws-nearby-access__layout">
-                        <div class="ws-nearby-access__map-wrap">
-                            <div class="ws-nearby-access__map" id="wsNearbyAccessMap" role="application" aria-label="نقشه انتخاب موقعیت"></div>
-                            <div class="ws-nearby-access__map-foot">
-                                <span class="ws-nearby-access__coords-label">مختصات:</span>
-                                <span class="ws-nearby-access__coords" data-nearby-coords>روی نقشه کلیک کنید</span>
+
+                    <div class="ws-nearby-access__map-stage">
+                        <div class="ws-nearby-access__map-shell" data-nearby-map-shell>
+                            <div class="ws-nearby-access__map ws-nearby-access__map--pick" id="wsNearbyAccessMap" role="application" aria-label="نقشه انتخاب موقعیت"></div>
+                            <div class="ws-nearby-access__map-hint" data-nearby-map-hint>
+                                <span class="ws-nearby-access__map-hint-icon" aria-hidden="true"><i class="fas fa-crosshairs"></i></span>
+                                <span class="ws-nearby-access__map-hint-text">روی نقشه کلیک کنید تا موقعیت را مشخص کنید</span>
+                            </div>
+                            <div class="ws-nearby-access__map-loading" data-nearby-map-loading hidden aria-live="polite" aria-busy="true">
+                                <div class="ws-nearby-access__spinner" aria-hidden="true"></div>
+                                <p class="ws-nearby-access__loading-title">در حال بررسی دسترسی‌های اطراف...</p>
+                                <span class="ws-nearby-access__loading-sub">دریافت داده از نقشه عمومی — لطفاً صبر کنید</span>
                             </div>
                         </div>
-                        <div class="ws-nearby-access__side">
-                            <div class="ws-nearby-access__controls">
-                                <fieldset class="ws-nearby-access__radius">
-                                    <legend class="ws-label">شعاع جستجو</legend>
-                                    <div class="ws-tbx-presets ws-nearby-access__radius-presets" role="group" aria-label="شعاع جستجو">
-                                        <button type="button" class="ws-tbx-preset" data-nearby-radius="500">۵۰۰ متر</button>
-                                        <button type="button" class="ws-tbx-preset is-active" data-nearby-radius="1000">۱ کیلومتر</button>
-                                        <button type="button" class="ws-tbx-preset" data-nearby-radius="2000">۲ کیلومتر</button>
-                                        <button type="button" class="ws-tbx-preset" data-nearby-radius="3000">۳ کیلومتر</button>
+                    </div>
+
+                    <div class="ws-nearby-access__toolbar">
+                        <div class="ws-nearby-access__toolbar-row">
+                            <div class="ws-nearby-access__coord-chip" data-nearby-coord-chip>
+                                <i class="fas fa-map-pin" aria-hidden="true"></i>
+                                <span class="ws-nearby-access__coord-label">مختصات</span>
+                                <span class="ws-nearby-access__coords" data-nearby-coords dir="ltr">—</span>
+                            </div>
+                            <fieldset class="ws-nearby-access__radius">
+                                <legend class="ws-nearby-access__radius-label">شعاع جستجو</legend>
+                                <div class="ws-nearby-access__radius-presets" role="group" aria-label="شعاع جستجو">
+                                    <button type="button" class="ws-nearby-access__radius-btn" data-nearby-radius="500">۵۰۰<small>متر</small></button>
+                                    <button type="button" class="ws-nearby-access__radius-btn is-active" data-nearby-radius="1000">۱<small>کیلومتر</small></button>
+                                    <button type="button" class="ws-nearby-access__radius-btn" data-nearby-radius="2000">۲<small>کیلومتر</small></button>
+                                    <button type="button" class="ws-nearby-access__radius-btn" data-nearby-radius="3000">۳<small>کیلومتر</small></button>
+                                </div>
+                            </fieldset>
+                        </div>
+                        <button type="button" class="ws-nearby-access__fetch" data-nearby-fetch disabled>
+                            <span class="ws-nearby-access__fetch-icon" data-nearby-fetch-icon aria-hidden="true"><i class="fas fa-search-location"></i></span>
+                            <span class="ws-nearby-access__fetch-spinner" data-nearby-fetch-spinner hidden aria-hidden="true"></span>
+                            <span data-nearby-fetch-label>بررسی دسترسی‌های اطراف</span>
+                        </button>
+                    </div>
+
+                    <div class="ws-nearby-access__deck" data-nearby-result>
+                        <div class="ws-nearby-access__placeholder" data-nearby-placeholder>
+                            <div class="ws-nearby-access__placeholder-icon" aria-hidden="true"><i class="fas fa-map-location-dot"></i></div>
+                            <h3>آماده تحلیل موقعیت</h3>
+                            <p>نقطه را روی نقشه انتخاب کنید، شعاع را تعیین کنید و دکمه بررسی را بزنید.</p>
+                        </div>
+
+                        <div class="ws-nearby-access__loading-panel" data-nearby-loading hidden>
+                            <div class="ws-nearby-access__loading-grid">
+                                <div class="ws-nearby-access__skel-card"></div>
+                                <div class="ws-nearby-access__skel-card"></div>
+                                <div class="ws-nearby-access__skel-card"></div>
+                                <div class="ws-nearby-access__skel-card"></div>
+                            </div>
+                            <p class="ws-nearby-access__loading-panel-text">در حال دسته‌بندی امکانات اطراف...</p>
+                        </div>
+
+                        <div class="ws-nearby-access__error" data-nearby-error hidden role="alert"></div>
+
+                        <div class="ws-nearby-access__body" data-nearby-body hidden>
+                            <div class="ws-nearby-access__summary">
+                                <div class="ws-nearby-access__summary-main">
+                                    <h3>خلاصه دسترسی‌ها</h3>
+                                    <span class="ws-nearby-access__radius-badge" data-nearby-radius-label></span>
+                                </div>
+                                <div class="ws-nearby-access__stats" data-nearby-stats hidden>
+                                    <div class="ws-nearby-access__stat">
+                                        <span class="ws-nearby-access__stat-val" data-nearby-stat-cats>—</span>
+                                        <span class="ws-nearby-access__stat-label">دسته فعال</span>
                                     </div>
-                                </fieldset>
-                                <button type="button" class="ws-btn ws-btn-primary ws-nearby-access__fetch" data-nearby-fetch disabled>
-                                    <i class="fas fa-search-location" aria-hidden="true"></i>
-                                    <span data-nearby-fetch-label>بررسی دسترسی‌های اطراف</span>
+                                    <div class="ws-nearby-access__stat">
+                                        <span class="ws-nearby-access__stat-val" data-nearby-stat-pois>—</span>
+                                        <span class="ws-nearby-access__stat-label">مورد در محدوده</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="ws-nearby-access__filters" data-nearby-filters hidden></div>
+                            <div class="ws-nearby-access__categories" data-nearby-categories></div>
+
+                            <details class="ws-nearby-access__empty-cats" data-nearby-empty-wrap hidden>
+                                <summary>دسته‌های بدون نتیجه</summary>
+                                <div data-nearby-empty-cats></div>
+                            </details>
+
+                            <div class="ws-nearby-access__copy-actions">
+                                <button type="button" class="ws-nearby-access__copy-btn" data-nearby-copy-report>
+                                    <i class="fas fa-copy" aria-hidden="true"></i> کپی گزارش
+                                </button>
+                                <button type="button" class="ws-nearby-access__copy-btn ws-nearby-access__copy-btn--accent" data-nearby-copy-customer>
+                                    <i class="fas fa-comment-dots" aria-hidden="true"></i> کپی متن معرفی
                                 </button>
                             </div>
-                            <div class="ws-nearby-access__result" data-nearby-result>
-                                <div class="ws-nearby-access__placeholder" data-nearby-placeholder>
-                                    <i class="fas fa-map-pin" aria-hidden="true"></i>
-                                    <p>موقعیت را روی نقشه انتخاب کنید، شعاع را تعیین کنید و دکمه بررسی را بزنید.</p>
-                                </div>
-                                <div class="ws-nearby-access__loading" data-nearby-loading hidden>
-                                    <div class="ws-nearby-access__skeleton"></div>
-                                    <p>در حال بررسی دسترسی‌های اطراف...</p>
-                                </div>
-                                <div class="ws-nearby-access__error" data-nearby-error hidden role="alert"></div>
-                                <div class="ws-nearby-access__body" data-nearby-body hidden>
-                                    <div class="ws-nearby-access__summary-head">
-                                        <h3>دسترسی‌های اطراف</h3>
-                                        <span class="ws-nearby-access__radius-badge" data-nearby-radius-label></span>
-                                    </div>
-                                    <div class="ws-nearby-access__filters" data-nearby-filters hidden></div>
-                                    <div class="ws-nearby-access__categories" data-nearby-categories></div>
-                                    <details class="ws-nearby-access__empty-cats" data-nearby-empty-wrap hidden>
-                                        <summary>دسته‌های بدون نتیجه</summary>
-                                        <div data-nearby-empty-cats></div>
-                                    </details>
-                                    <div class="ws-nearby-access__copy-actions">
-                                        <button type="button" class="ws-btn ws-btn-secondary ws-btn-sm" data-nearby-copy-report>
-                                            <i class="fas fa-copy" aria-hidden="true"></i> کپی گزارش
-                                        </button>
-                                        <button type="button" class="ws-btn ws-btn-secondary ws-btn-sm" data-nearby-copy-customer>
-                                            <i class="fas fa-comment-dots" aria-hidden="true"></i> کپی متن معرفی
-                                        </button>
-                                    </div>
-                                    <p class="ws-nearby-access__disclaimer" data-nearby-disclaimer></p>
-                                </div>
-                            </div>
+                            <p class="ws-nearby-access__disclaimer" data-nearby-disclaimer></p>
                         </div>
                     </div>
                 </div>
@@ -846,8 +895,8 @@
 {% block extra_js %}
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
-<script src="{% static 'workspace/js/tools.js' %}?v=9"></script>
+<script src="{% static 'workspace/js/tools.js' %}?v=10"></script>
 <script src="{% static 'workspace/js/tools-market.js' %}?v=6"></script>
-<script src="{% static 'workspace/js/tools-nearby-access.js' %}?v=1"></script>
+<script src="{% static 'workspace/js/tools-nearby-access.js' %}?v=2"></script>
 {% include 'workspace/academy/includes/academy_assets_js.html' %}
 {% endblock %}

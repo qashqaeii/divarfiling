@@ -69,8 +69,13 @@
 
         const apiUrl = root.dataset.apiUrl || '';
         const mapEl = document.getElementById('wsNearbyAccessMap');
+        const mapShell = root.querySelector('[data-nearby-map-shell]');
+        const mapHint = root.querySelector('[data-nearby-map-hint]');
+        const mapLoading = root.querySelector('[data-nearby-map-loading]');
         const coordsEl = root.querySelector('[data-nearby-coords]');
+        const coordChip = root.querySelector('[data-nearby-coord-chip]');
         const fetchBtn = root.querySelector('[data-nearby-fetch]');
+        const fetchSpinner = root.querySelector('[data-nearby-fetch-spinner]');
         const placeholder = root.querySelector('[data-nearby-placeholder]');
         const loading = root.querySelector('[data-nearby-loading]');
         const errorEl = root.querySelector('[data-nearby-error]');
@@ -80,10 +85,14 @@
         const emptyHost = root.querySelector('[data-nearby-empty-cats]');
         const filtersHost = root.querySelector('[data-nearby-filters]');
         const radiusLabelEl = root.querySelector('[data-nearby-radius-label]');
+        const statsHost = root.querySelector('[data-nearby-stats]');
+        const statCatsEl = root.querySelector('[data-nearby-stat-cats]');
+        const statPoisEl = root.querySelector('[data-nearby-stat-pois]');
         const disclaimerEl = root.querySelector('[data-nearby-disclaimer]');
         const copyReportBtn = root.querySelector('[data-nearby-copy-report]');
         const copyCustomerBtn = root.querySelector('[data-nearby-copy-customer]');
         const radiusBtns = root.querySelectorAll('[data-nearby-radius]');
+        const stepEls = root.closest('.ws-tbx-panel')?.querySelectorAll('.ws-nearby-access__step');
 
         let map = null;
         let marker = null;
@@ -98,16 +107,26 @@
         let activeFilter = 'all';
         let poiMarkers = [];
 
+        function setStepProgress(stage) {
+            if (!stepEls?.length) return;
+            stepEls.forEach((el, idx) => {
+                el.classList.toggle('is-active', idx <= stage);
+            });
+        }
+
         function setCoords(newLat, newLng) {
             lat = newLat;
             lng = newLng;
             const has = lat != null && lng != null;
             if (coordsEl) {
                 coordsEl.textContent = has
-                    ? `${faDigits(fmtCoord(lat))} ، ${faDigits(fmtCoord(lng))}`
-                    : 'روی نقشه کلیک کنید';
+                    ? `${fmtCoord(lat)} , ${fmtCoord(lng)}`
+                    : '—';
             }
+            if (coordChip) coordChip.classList.toggle('is-set', has);
+            if (mapShell) mapShell.classList.toggle('has-location', has);
             if (fetchBtn) fetchBtn.disabled = !has || busy;
+            if (has) setStepProgress(1);
             if (has && map && global.L) {
                 updateMarkerAndCircle();
             }
@@ -136,10 +155,10 @@
             if (radiusCircle) map.removeLayer(radiusCircle);
             radiusCircle = L.circle([lat, lng], {
                 radius: radiusM,
-                color: '#7c3aed',
+                color: '#059669',
                 weight: 2,
-                fillColor: '#7c3aed',
-                fillOpacity: 0.08,
+                fillColor: '#10b981',
+                fillOpacity: 0.1,
                 interactive: false,
             }).addTo(map);
         }
@@ -195,6 +214,7 @@
                 btn.classList.toggle('is-active', parseInt(btn.dataset.nearbyRadius, 10) === radiusM);
             });
             if (lat != null && lng != null) {
+                setStepProgress(1);
                 updateMarkerAndCircle();
                 fitToRadius();
             }
@@ -232,13 +252,25 @@
 
         function setLoading(active) {
             busy = active;
+            root.classList.toggle('is-busy', active);
+            if (mapLoading) mapLoading.hidden = !active;
             if (loading) loading.hidden = !active;
             if (placeholder) placeholder.hidden = active || !!lastPayload;
             if (fetchBtn) {
                 fetchBtn.disabled = active || lat == null || lng == null;
                 fetchBtn.classList.toggle('is-loading', active);
             }
+            if (fetchSpinner) fetchSpinner.hidden = !active;
             if (active && body) body.hidden = true;
+            if (active) {
+                setStepProgress(2);
+            } else if (lastPayload) {
+                setStepProgress(2);
+            } else if (lat != null) {
+                setStepProgress(1);
+            } else {
+                setStepProgress(0);
+            }
         }
 
         function setError(message) {
@@ -455,6 +487,13 @@
                 disclaimerEl.textContent = data.disclaimer ? `(${data.disclaimer})` : '';
             }
 
+            if (statsHost) {
+                const hasStats = (data.categories_found || 0) > 0 || (data.total_pois || 0) > 0;
+                statsHost.hidden = !hasStats;
+                if (statCatsEl) statCatsEl.textContent = faDigits(data.categories_found || 0);
+                if (statPoisEl) statPoisEl.textContent = faDigits(data.total_pois || 0);
+            }
+
             if (categoriesHost) {
                 categoriesHost.innerHTML = '';
                 if (!withResults.length) {
@@ -490,6 +529,8 @@
 
             if (body) body.hidden = false;
             if (placeholder) placeholder.hidden = true;
+            if (loading) loading.hidden = true;
+            setStepProgress(2);
             fitToRadius();
         }
 
@@ -556,6 +597,7 @@
         });
 
         setRadius(radiusM);
+        setStepProgress(0);
 
         global.wsNearbyAccessOnShow = ensureMap;
     }

@@ -581,6 +581,52 @@
         });
     }
 
+    function resetToolSearch(search) {
+        if (!search) return;
+        search.value = '';
+        filterNavItems('');
+    }
+
+    function initToolSearch(search) {
+        if (!search || search.dataset.tbxSearchBound === '1') return;
+        search.dataset.tbxSearchBound = '1';
+
+        let userEdited = false;
+
+        function markEdited() {
+            userEdited = true;
+        }
+
+        // مرورگرها گاهی بعد از paint مقدار (مثل شماره تماس) را autofill می‌کنند
+        function clearUnexpectedAutofill() {
+            if (!userEdited && search.value.trim()) {
+                resetToolSearch(search);
+            }
+        }
+
+        resetToolSearch(search);
+        requestAnimationFrame(clearUnexpectedAutofill);
+        setTimeout(clearUnexpectedAutofill, 120);
+        setTimeout(clearUnexpectedAutofill, 600);
+
+        search.addEventListener('focus', () => {
+            search.removeAttribute('readonly');
+        });
+
+        search.addEventListener('input', () => {
+            markEdited();
+            filterNavItems(search.value);
+        });
+
+        search.addEventListener('keydown', e => {
+            markEdited();
+            if (e.key === 'Escape') {
+                resetToolSearch(search);
+                search.blur();
+            }
+        });
+    }
+
     function switchTool(tool) {
         if (!TOOL_KEYS.includes(tool)) tool = TOOL_KEYS[0];
         document.querySelectorAll('.ws-tbx-nav-item').forEach(btn => {
@@ -1030,16 +1076,7 @@
         });
 
         const search = document.getElementById('wsTbxSearch');
-        if (search) {
-            search.addEventListener('input', () => filterNavItems(search.value));
-            search.addEventListener('keydown', e => {
-                if (e.key === 'Escape') {
-                    search.value = '';
-                    filterNavItems('');
-                    search.blur();
-                }
-            });
-        }
+        initToolSearch(search);
 
         document.querySelectorAll('.ws-tbx-preset[data-rate]').forEach(btn => {
             btn.addEventListener('click', () => {

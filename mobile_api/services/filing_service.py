@@ -113,12 +113,8 @@ def delete_dataset_disguised_consultants(user, dataset_id: str) -> Tuple[Optiona
 
 
 def _default_sort_for_dataset(ds: Optional[Dataset]) -> str:
-    if not ds:
-        return '-created_at'
-    tx = (ds.transaction_type or '').lower()
-    if 'rent' in tx or 'اجاره' in (ds.transaction_type or ''):
-        return '-deposit'
-    return '-price'
+    from workspace.services.filters import DEFAULT_LISTING_SORT
+    return DEFAULT_LISTING_SORT
 
 
 def _apply_unique_filter(qs):

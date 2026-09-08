@@ -953,37 +953,51 @@ function initMkDataTable(table) {
     let sortCol = null;
     let sortDir = 1;
 
+    const applySort = (th, col, dir) => {
+        const type = th.dataset.sortType || 'string';
+        sortCol = col;
+        sortDir = dir;
+        headers.forEach(h => h.classList.remove('mk-sorted-asc', 'mk-sorted-desc'));
+        th.classList.add(dir === 1 ? 'mk-sorted-asc' : 'mk-sorted-desc');
+
+        const idx = Array.from(th.parentNode.children).indexOf(th);
+        const rows = Array.from(tbody.querySelectorAll('tr'));
+
+        rows.sort((a, b) => {
+            const aCell = a.children[idx];
+            const bCell = b.children[idx];
+            let av = aCell?.dataset.sortValue ?? aCell?.textContent.trim();
+            let bv = bCell?.dataset.sortValue ?? bCell?.textContent.trim();
+
+            if (type === 'number' || type === 'date') {
+                av = parseFloat(av) || 0;
+                bv = parseFloat(bv) || 0;
+                return (av - bv) * sortDir;
+            }
+            return String(av).localeCompare(String(bv), 'fa') * sortDir;
+        });
+
+        rows.forEach(r => tbody.appendChild(r));
+    };
+
     headers.forEach(th => {
         th.classList.add('mk-sortable');
         th.addEventListener('click', () => {
             const col = th.dataset.sort;
-            const type = th.dataset.sortType || 'string';
             if (sortCol === col) sortDir *= -1;
             else { sortCol = col; sortDir = 1; }
-
-            headers.forEach(h => h.classList.remove('mk-sorted-asc', 'mk-sorted-desc'));
-            th.classList.add(sortDir === 1 ? 'mk-sorted-asc' : 'mk-sorted-desc');
-
-            const idx = Array.from(th.parentNode.children).indexOf(th);
-            const rows = Array.from(tbody.querySelectorAll('tr'));
-
-            rows.sort((a, b) => {
-                const aCell = a.children[idx];
-                const bCell = b.children[idx];
-                let av = aCell?.dataset.sortValue ?? aCell?.textContent.trim();
-                let bv = bCell?.dataset.sortValue ?? bCell?.textContent.trim();
-
-                if (type === 'number' || type === 'date') {
-                    av = parseFloat(av) || 0;
-                    bv = parseFloat(bv) || 0;
-                    return (av - bv) * sortDir;
-                }
-                return String(av).localeCompare(String(bv), 'fa') * sortDir;
-            });
-
-            rows.forEach(r => tbody.appendChild(r));
+            applySort(th, col, sortDir);
         });
     });
+
+    const defaultSort = table.dataset.defaultSort;
+    if (defaultSort) {
+        const th = table.querySelector(`th[data-sort="${defaultSort}"]`);
+        if (th) {
+            const dir = table.dataset.defaultSortDir === 'asc' ? 1 : -1;
+            applySort(th, defaultSort, dir);
+        }
+    }
 }
 
 function themeIconClass(theme) {

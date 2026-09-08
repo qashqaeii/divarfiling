@@ -1,0 +1,212 @@
+# ورود به پروژه
+cd /root/DivarFiling
+
+# فعال کردن محیط پایتون
+source venv/bin/activate
+
+
+# -------------------------
+# GIT
+# -------------------------
+
+# وضعیت فایل‌های تغییرکرده
+git status
+
+# نسخه خلاصه
+git status --short
+
+# گرفتن آخرین تغییرات
+git pull --ff-only origin main
+
+# فقط دریافت اطلاعات گیت بدون تغییر فایل‌ها
+git fetch origin
+
+# دیدن آخرین commit
+git log -1 --oneline
+
+# دیدن چند commit آخر
+git log --oneline -10
+
+# دیدن فایل‌هایی که تغییر کرده‌اند
+git diff --name-status
+
+
+# -------------------------
+# DJANGO
+# -------------------------
+
+# بررسی سلامت Django
+python manage.py check
+
+# بررسی اینکه Migration اجرا نشده داریم یا نه
+python manage.py migrate --check
+
+# اجرای Migrationها
+python manage.py migrate
+
+# مشاهده وضعیت Migrationها
+python manage.py showmigrations
+
+# جمع‌آوری فایل‌های Static
+python manage.py collectstatic --noinput
+
+
+# -------------------------
+# GUNICORN / DJANGO SERVICE
+# -------------------------
+
+# ری‌استارت سایت
+systemctl restart divar_shop
+
+# وضعیت سایت
+systemctl status divar_shop --no-pager
+
+# فقط active/inactive
+systemctl is-active divar_shop
+
+# Stop
+systemctl stop divar_shop
+
+# Start
+systemctl start divar_shop
+
+
+# -------------------------
+# ACQUISITION WORKER
+# -------------------------
+
+# وضعیت Worker
+systemctl status divar-acquisition-worker --no-pager
+
+# ری‌استارت Worker
+systemctl restart divar-acquisition-worker
+
+# بررسی ساده
+systemctl is-active divar-acquisition-worker
+
+
+# -------------------------
+# NGINX
+# -------------------------
+
+# تست کانفیگ قبل از هر reload
+nginx -t
+
+# اعمال تغییرات Nginx بدون قطع کامل
+systemctl reload nginx
+
+# ری‌استارت کامل
+systemctl restart nginx
+
+# وضعیت
+systemctl status nginx --no-pager
+
+
+# -------------------------
+# LOGS
+# -------------------------
+
+# لاگ زنده Django/Gunicorn
+journalctl -u divar_shop -f
+
+# 100 خط آخر
+journalctl -u divar_shop -n 100 --no-pager
+
+# لاگ Worker
+journalctl -u divar-acquisition-worker -f
+
+# خطاهای Nginx
+tail -f /var/log/nginx/error.log
+
+# Access log
+tail -f /var/log/nginx/access.log
+
+
+# -------------------------
+# DATABASE
+# -------------------------
+
+# وضعیت PostgreSQL
+systemctl status postgresql --no-pager
+
+# ورود به دیتابیس
+sudo -u postgres psql -d divarfilingdb
+
+# حجم دیتابیس
+sudo -u postgres psql -d divarfilingdb -c "
+SELECT pg_size_pretty(pg_database_size('divarfilingdb'));
+"
+
+# تعداد Connectionها
+sudo -u postgres psql -d divarfilingdb -c "
+SELECT state, COUNT(*)
+FROM pg_stat_activity
+WHERE datname='divarfilingdb'
+GROUP BY state;
+"
+
+
+# -------------------------
+# REDIS
+# -------------------------
+
+systemctl status redis-server --no-pager
+
+redis-cli ping
+
+# خروجی سالم:
+# PONG
+
+
+# -------------------------
+# CRON
+# -------------------------
+
+# مشاهده Cronهای Production
+crontab -l
+
+# ویرایش Cron
+crontab -e
+
+# وضعیت سرویس Cron
+systemctl status cron --no-pager
+
+
+# -------------------------
+# SSL / CERTBOT
+# -------------------------
+
+# مشاهده Certificateها
+certbot certificates
+
+# تست تمدید SSL
+certbot renew --dry-run
+
+# وضعیت Timer
+systemctl status certbot.timer --no-pager
+
+
+# -------------------------
+# SERVER RESOURCES
+# -------------------------
+
+# RAM
+free -h
+
+# فضای دیسک
+df -h
+
+# CPU / Load
+uptime
+
+# پردازش‌ها
+top
+
+# Gunicorn processes
+pgrep -af gunicorn
+
+# مصرف RAM سرویس Django
+systemctl show divar_shop \
+  -p MemoryCurrent \
+  -p MemoryPeak \
+  -p TasksCurrent

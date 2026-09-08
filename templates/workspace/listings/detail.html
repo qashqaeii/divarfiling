@@ -138,6 +138,12 @@
                         {% if meta.is_favorite %}<span class="crm-prop-badge crm-prop-badge--deal">علاقه‌مند</span>{% endif %}
                         {% if crm_property %}<span class="crm-prop-badge crm-prop-badge--personal" title="این فایل قبلاً به فایل‌های شخصی شما اضافه شده است.">به فایل‌های شخصی اضافه شده</span>{% endif %}
                         {% if listing.is_expired %}<span class="crm-prop-badge ws-ld-badge-expired">منقضی</span>{% endif %}
+                        {% if listing.published_at %}
+                        <span class="crm-prop-badge" title="تاریخ ایجاد آگهی در دیوار">
+                            <i class="fas fa-calendar-plus" aria-hidden="true"></i>
+                            ایجاد در دیوار: {{ listing.published_at|ws_jalali_datetime }}
+                        </span>
+                        {% endif %}
                         {% if feat.is_vacant %}
                         <span class="crm-prop-badge ws-ld-badge-vacant" title="ملک در حال حاضر تخلیه است">
                             <i class="fas fa-door-open" aria-hidden="true"></i> تخلیه
@@ -543,7 +549,7 @@
                     {% if listing.neighborhood %}<div><dt>محله</dt><dd>{{ listing.neighborhood }}</dd></div>{% endif %}
                     {% if listing.city %}<div><dt>شهر</dt><dd>{{ listing.city }}</dd></div>{% endif %}
                     <div><dt>فایلینگ</dt><dd>{{ dataset.name }}</dd></div>
-                    {% if listing.published_at %}<div><dt>انتشار</dt><dd>{{ listing.published_at|ws_jalali }}</dd></div>{% endif %}
+                    {% if listing.published_at %}<div><dt>تاریخ ایجاد در دیوار</dt><dd>{{ listing.published_at|ws_jalali_datetime }}</dd></div>{% endif %}
                     {% if listing.is_expired %}<div><dt>وضعیت</dt><dd>منقضی</dd></div>{% endif %}
                     {% if crm_property %}
                     <div><dt>فایل شخصی</dt><dd><a href="{% url 'workspace:crm_property_detail' crm_property.id %}">مشاهده فایل شخصی</a></dd></div>

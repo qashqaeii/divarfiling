@@ -85,6 +85,9 @@
     <td class="mk-col-publisher" data-label="آگهی‌دهنده">
         {% include 'workspace/includes/listing_advertiser_pill.html' %}
     </td>
+    <td class="mk-col-date mk-date" data-label="ایجاد در دیوار" data-sort-value="{% if listing.published_at %}{{ listing.published_at|date:'U' }}{% else %}0{% endif %}">
+        {% if listing.published_at %}{{ listing.published_at|ws_jalali }}{% else %}<span class="mk-muted">—</span>{% endif %}
+    </td>
     <td class="mk-col-nb" data-label="محله">
         <span class="mk-nb-cell" title="{{ listing.neighborhood }}">
             {% if listing.neighborhood %}<i class="fas fa-location-dot" aria-hidden="true"></i>{% endif %}
@@ -151,7 +154,7 @@
 </tr>
 {% endwith %}
 {% empty %}
-<tr><td colspan="{% if show_dataset_column %}13{% else %}12{% endif %}" class="mk-table-empty-cell">
+<tr><td colspan="{% if show_dataset_column %}14{% else %}13{% endif %}" class="mk-table-empty-cell">
     <div class="mk-table-empty">
         <span class="mk-empty-icon" aria-hidden="true"><i class="fas fa-inbox"></i></span>
         <p>آگهی‌ای با این فیلترها یافت نشد</p>

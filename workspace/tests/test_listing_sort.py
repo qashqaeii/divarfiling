@@ -1,9 +1,11 @@
 from django.contrib.auth import get_user_model
 from django.test import TestCase
+from django.utils import timezone
+from datetime import timedelta
 
 from workspace.models import Dataset, Listing
 from workspace.services.advertiser_signal import listing_advertiser_display
-from workspace.services.filters import sort_queryset
+from workspace.services.filters import default_listing_sort, sort_queryset
 
 
 class ListingAdvertiserSortTests(TestCase):
@@ -85,3 +87,25 @@ class ListingAdvertiserSortTests(TestCase):
         self.assertEqual(ordered, ['p1', 'g1', 'd1', 'stale', 'c1'])
         self.assertGreater(ordered.index('stale'), ordered.index('g1'))
         self.assertLess(ordered.index('stale'), ordered.index('c1'))
+
+    def test_default_listing_sort_is_published_at_desc(self):
+        self.assertEqual(default_listing_sort(), '-published_at')
+
+    def test_published_at_desc_puts_newest_first(self):
+        now = timezone.now()
+        Listing.objects.create(
+            dataset=self.dataset,
+            token='old',
+            title='قدیمی',
+            published_at=now - timedelta(days=10),
+        )
+        Listing.objects.create(
+            dataset=self.dataset,
+            token='new',
+            title='جدید',
+            published_at=now - timedelta(days=1),
+        )
+        qs = sort_queryset(self.dataset.listings.all(), '-published_at', '-published_at')
+        ordered = list(qs.values_list('token', flat=True))
+        self.assertEqual(ordered[0], 'new')
+        self.assertIn('old', ordered[1:])

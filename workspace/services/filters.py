@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional, Tuple
 
-from django.db.models import Case, Count, IntegerField, Q, QuerySet, Value, When
+from django.db.models import Case, Count, F, IntegerField, Q, QuerySet, Value, When
 
 from workspace.services.advertiser_signal import (
     ADVERTISER_SIGNAL_CONSULTANT,
@@ -16,6 +16,13 @@ from workspace.services.columns import consultant_q
 
 from workspace.models import ListingMeta
 from workspace.services.features import extract_listing_features, parse_build_year, parse_rooms_value
+
+DEFAULT_LISTING_SORT = '-published_at'
+
+
+def default_listing_sort() -> str:
+    """مرتب‌سازی پیش‌فرض لیست آگهی‌ها — جدیدترین تاریخ ایجاد در دیوار."""
+    return DEFAULT_LISTING_SORT
 
 
 def _normalize_numeric_str(val: str) -> str:
@@ -363,13 +370,18 @@ def sort_queryset(qs: QuerySet, sort: str, default: str) -> QuerySet:
         'price', '-price', 'deposit', '-deposit', 'rent', '-rent',
         'area', '-area', 'title', '-title', 'neighborhood', '-neighborhood',
         'rooms', '-rooms', 'business_type', '-business_type',
-        'created_at', '-created_at',
+        'created_at', '-created_at', 'published_at', '-published_at',
     }
     if sort not in allowed:
         sort = default
 
-    qs = qs.annotate(_advertiser_rank=_advertiser_rank_annotation())
     field = sort.lstrip('-')
+    if field == 'published_at':
+        if sort.startswith('-'):
+            return qs.order_by(F('published_at').desc(nulls_last=True), '-pk')
+        return qs.order_by(F('published_at').asc(nulls_first=True), 'pk')
+
+    qs = qs.annotate(_advertiser_rank=_advertiser_rank_annotation())
     if field == 'business_type':
         return _sort_queryset_by_advertiser_display(qs, sort, default)
     return qs.order_by('_advertiser_rank', sort)

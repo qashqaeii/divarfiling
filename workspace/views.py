@@ -78,7 +78,7 @@ from workspace.services.listing_edit import (
 from workspace.services.filters import (
     active_filter_count, advanced_filter_count, apply_advertiser_signal_filter,
     apply_amenity_filters, apply_listing_filters, apply_value_filter,
-    get_neighborhoods, needs_advertiser_signal_filter,
+    default_listing_sort, get_neighborhoods, needs_advertiser_signal_filter,
     get_neighborhoods_qs, parse_filter_params, sort_queryset,
 )
 from workspace.services.formatting import format_toman
@@ -573,7 +573,7 @@ class DatasetDetailView(DatasetOwnerMixin, TemplateView):
 
         filters = parse_filter_params(self.request)
         tx = transaction_profile(dataset.transaction_type)
-        default_sort = '-deposit' if tx['is_rent'] and not tx['is_mixed'] else '-price'
+        default_sort = default_listing_sort()
         sort = filters.get('sort') or default_sort
         filters['sort'] = sort
 
@@ -792,7 +792,7 @@ class MultiDatasetListingsView(LicenseRequiredMixin, TemplateView):
 
         filters = parse_filter_params(self.request)
         tx = _merged_transaction_profile(datasets)
-        default_sort = '-deposit' if tx['is_rent'] and not tx['is_mixed'] else '-price'
+        default_sort = default_listing_sort()
         sort = filters.get('sort') or default_sort
         filters['sort'] = sort
 

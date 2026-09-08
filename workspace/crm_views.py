@@ -1320,9 +1320,23 @@ class CRMPropertyListView(CRMContextMixin, LoginRequiredMixin, ListView):
             'advertiser_types': list(PROPERTY_ADVERTISER_TYPES),
         }
         ctx['open_modal'] = ctx.get('open_modal', self.request.GET.get('open', ''))
+        from workspace.services.crm_map import crm_map_filter_querystring
+        ctx['map_filter_qs'] = crm_map_filter_querystring(self.request.GET)
         if ctx['stats']['total'] == 0 and not ctx.get('has_filters'):
             from workspace.academy.context_helpers import inject_academy_context
             inject_academy_context(ctx, user, 'properties_empty')
+        return ctx
+
+
+class CRMPropertyMapView(LoginRequiredMixin, TemplateView):
+    """نقشه فایل‌های شخصی — همان Map Pro فایلینگ با منبع CRMProperty."""
+
+    template_name = 'workspace/map/index.html'
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        from workspace.services.crm_map import build_crm_properties_map_context
+        ctx.update(build_crm_properties_map_context(self.request))
         return ctx
 
 

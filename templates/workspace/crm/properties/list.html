@@ -44,6 +44,9 @@
                     <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}view=pipeline" class="crm-files-mob-toolbar-item" role="menuitem">
                         <i class="fas fa-table-columns" aria-hidden="true"></i><span>نمای کانبان</span>
                     </a>
+                    <a href="{% url 'workspace:crm_properties_map' %}{% if map_filter_qs %}?{{ map_filter_qs }}{% endif %}" class="crm-files-mob-toolbar-item" role="menuitem">
+                        <i class="fas fa-map-location-dot" aria-hidden="true"></i><span>نقشه</span>
+                    </a>
                 </div>
             </details>
             <button type="button" class="crm-files-mob-add-btn" data-drawer-open="drawer-property" title="ملک جدید" aria-label="ملک جدید">
@@ -58,6 +61,9 @@
             <p class="crm-dash-bar-sub is-visible">مدیریت فایل‌ها، قیمت و وضعیت معامله</p>
         </div>
         <div class="crm-dash-bar-actions" role="toolbar" aria-label="عملیات فایل‌ها">
+            <a href="{% url 'workspace:crm_properties_map' %}{% if map_filter_qs %}?{{ map_filter_qs }}{% endif %}" class="crm-dash-act crm-dash-act--icon" title="نقشه فایل‌های شخصی">
+                <i class="fas fa-map-location-dot" aria-hidden="true"></i>
+            </a>
             <button type="button" class="crm-dash-act crm-dash-act--icon" data-drawer-open="drawer-property-import" title="ورود گروهی فایل‌های شخصی">
                 <i class="fas fa-file-import" aria-hidden="true"></i>
             </button>
@@ -184,6 +190,7 @@
                     <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}view=grid" class="crm-files-view-btn {% if view_mode == 'grid' %}is-active{% endif %}" title="کارت" aria-label="کارت"><i class="fas fa-grip" aria-hidden="true"></i></a>
                     <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}view=table" class="crm-files-view-btn {% if view_mode == 'table' %}is-active{% endif %}" title="جدول" aria-label="جدول"><i class="fas fa-table" aria-hidden="true"></i></a>
                     <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}view=pipeline" class="crm-files-view-btn {% if view_mode == 'pipeline' %}is-active{% endif %}" title="کانبان" aria-label="کانبان"><i class="fas fa-table-columns" aria-hidden="true"></i></a>
+                    <a href="{% url 'workspace:crm_properties_map' %}{% if map_filter_qs %}?{{ map_filter_qs }}{% endif %}" class="crm-files-view-btn" title="نقشه" aria-label="نقشه"><i class="fas fa-map-location-dot" aria-hidden="true"></i></a>
                 </div>
             </div>
 

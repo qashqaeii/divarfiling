@@ -117,6 +117,7 @@ urlpatterns = [
     path('crm/deals/<int:deal_id>/timeline/', crm_views.CRMDealTimelineView.as_view(), name='crm_deal_timeline'),
     path('crm/deals/<int:deal_id>/finance/', crm_views.CRMDealFinanceUpdateView.as_view(), name='crm_deal_finance'),
     path('crm/properties/', crm_views.CRMPropertyListView.as_view(), name='crm_properties'),
+    path('crm/properties/map/', crm_views.CRMPropertyMapView.as_view(), name='crm_properties_map'),
     path('crm/properties/import/', crm_views.CRMPropertyImportView.as_view(), name='crm_properties_import'),
     path('crm/properties/import/template/', crm_views.CRMPropertyImportTemplateView.as_view(), name='crm_properties_import_template'),
     path('crm/properties/export/', crm_views.CRMPropertyExportView.as_view(), name='crm_properties_export'),  # خروجی Excel/CSV

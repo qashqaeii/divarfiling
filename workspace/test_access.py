@@ -58,6 +58,7 @@ class WorkspaceAccessTests(TestCase):
             'workspace:crm_dashboard',
             'workspace:crm_contacts',
             'workspace:crm_properties',
+            'workspace:crm_properties_map',
             'workspace:crm_reminders',
         ):
             with self.subTest(url=url_name):

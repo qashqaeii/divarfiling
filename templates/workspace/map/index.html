@@ -4,8 +4,8 @@
 
 
 
-{% block page_title %}نقشه — {{ map_title|default:dataset.name|truncatechars:30 }}{% endblock %}
-{% block mobile_bar_title %}{% if is_multi_map %}نقشه چند فایل{% else %}نقشه آگهی‌ها{% endif %}{% endblock %}
+{% block page_title %}نقشه — {% if map_title %}{{ map_title|truncatechars:30 }}{% else %}{{ dataset.name|truncatechars:30 }}{% endif %}{% endblock %}
+{% block mobile_bar_title %}{% if is_crm_map %}{{ map_kicker|default:'نقشه فایل‌های شخصی' }}{% elif is_multi_map %}نقشه چند فایل{% else %}نقشه آگهی‌ها{% endif %}{% endblock %}
 
 {% block content %}
 
@@ -24,7 +24,7 @@
 
             <div class="mk-map-head-main">
 
-                <a href="{% if map_back_url %}{{ map_back_url }}{% else %}{% url 'workspace:dataset_detail' dataset.id %}{% endif %}" class="mk-map-back" title="{% if is_multi_map %}بازگشت به آگهی‌های دیوار{% else %}بازگشت به پوشه استخراج{% endif %}">
+                <a href="{% if map_back_url %}{{ map_back_url }}{% else %}{% url 'workspace:dataset_detail' dataset.id %}{% endif %}" class="mk-map-back" title="{% if map_back_title %}{{ map_back_title }}{% elif is_multi_map %}بازگشت به آگهی‌های دیوار{% else %}بازگشت به پوشه استخراج{% endif %}">
 
                     <i class="fas fa-arrow-right" aria-hidden="true"></i>
 
@@ -40,11 +40,13 @@
                         <span>نقشه چند فایل</span>
                         <span class="mk-map-head-sep">·</span>
                         <span>{{ dataset_count }} لایه</span>
+                        {% elif is_crm_map %}
+                        <span>{{ map_kicker|default:'نقشه فایل‌های شخصی' }}</span>
                         {% else %}
                         <span>نقشه آگهی‌ها</span>
                         {% endif %}
 
-                        {% if map_config.datasetCity %}<span class="mk-map-head-sep">·</span><span>{{ map_config.datasetCity }}</span>{% elif not is_multi_map and dataset.city %}<span class="mk-map-head-sep">·</span><span>{{ dataset.city }}{% if dataset.district %} — {{ dataset.district }}{% endif %}</span>{% endif %}
+                        {% if map_config.datasetCity %}<span class="mk-map-head-sep">·</span><span>{{ map_config.datasetCity }}</span>{% elif not is_crm_map and not is_multi_map and dataset.city %}<span class="mk-map-head-sep">·</span><span>{{ dataset.city }}{% if dataset.district %} — {{ dataset.district }}{% endif %}</span>{% endif %}
 
                         {% if is_map_filtered %}<span class="mk-map-filter-pill">{{ filter_count }} فیلتر</span>{% endif %}
 
@@ -610,9 +612,9 @@
 
             <p class="ws-empty-title">مختصات جغرافیایی یافت نشد</p>
 
-            <p class="ws-empty-desc">آگهی‌های این فایل فیلد عرض/طول جغرافیایی ندارند.</p>
+            <p class="ws-empty-desc">{{ map_empty_desc|default:'آگهی‌های این فایل فیلد عرض/طول جغرافیایی ندارند.' }}</p>
 
-            <a href="{% url 'workspace:dataset_detail' dataset.id %}" class="ws-btn ws-btn-sm ws-btn-ghost">بازگشت به پوشه استخراج</a>
+            <a href="{% if map_back_url %}{{ map_back_url }}{% else %}{% url 'workspace:dataset_detail' dataset.id %}{% endif %}" class="ws-btn ws-btn-sm ws-btn-ghost">{{ map_empty_back_label|default:'بازگشت به پوشه استخراج' }}</a>
 
         </div>
 

@@ -1,0 +1,355 @@
+/* Dataset / multi listings table — compact desktop density.
+   Scoped to .mk-data-table-listings--compact so other tables are untouched.
+   Loads after workspace-polish.css via ws_surface_css. */
+
+.mk-listing-table-desk .mk-data-table-listings--compact {
+    table-layout: fixed;
+    width: 100%;
+    min-width: 1000px;
+    font-size: 0.78rem;
+}
+
+.mk-listing-table-desk .mk-data-table-listings--compact thead th {
+    padding: 0.4rem 0.45rem;
+    font-size: 0.64rem;
+    font-weight: 700;
+    letter-spacing: 0;
+    text-transform: none;
+    line-height: 1.2;
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+.mk-listing-table-desk .mk-data-table-listings--compact tbody td {
+    padding: 0.46rem 0.45rem;
+    line-height: 1.3;
+    vertical-align: middle;
+}
+
+/* Column widths: leftover space goes to title. */
+.mk-data-table-listings--compact .listing-col-title,
+.mk-data-table-listings--compact .mk-col-w-title {
+    width: auto;
+    min-width: 12rem;
+}
+
+.mk-data-table-listings--compact td.listing-col-title,
+.mk-data-table-listings--compact th.listing-col-title,
+.mk-data-table-listings--compact .mk-col-title {
+    min-width: 12rem;
+    max-width: none;
+}
+
+.mk-data-table-listings--compact td.listing-col-title {
+    overflow: hidden;
+}
+
+.mk-data-table-listings--compact .listing-col-dataset,
+.mk-data-table-listings--compact .mk-col-w-dataset {
+    width: 6.25rem;
+    min-width: 5.75rem;
+}
+
+.mk-data-table-listings--compact .listing-col-price,
+.mk-data-table-listings--compact .listing-col-deposit,
+.mk-data-table-listings--compact .listing-col-rent,
+.mk-data-table-listings--compact .mk-col-w-money {
+    width: 5.15rem;
+    min-width: 4.9rem;
+}
+
+.mk-data-table-listings--compact .listing-col-area,
+.mk-data-table-listings--compact .mk-col-w-area {
+    width: 3.45rem;
+    min-width: 3.25rem;
+}
+
+.mk-data-table-listings--compact .listing-col-specs,
+.mk-data-table-listings--compact .mk-col-w-specs {
+    width: 6.5rem;
+    min-width: 6.15rem;
+}
+
+.mk-data-table-listings--compact .listing-col-features,
+.mk-data-table-listings--compact .mk-col-w-amenity {
+    width: 4.55rem;
+    min-width: 4.3rem;
+}
+
+.mk-data-table-listings--compact .listing-col-owner,
+.mk-data-table-listings--compact .mk-col-w-pub {
+    width: 6.1rem;
+    min-width: 5.7rem;
+}
+
+.mk-data-table-listings--compact .listing-col-created,
+.mk-data-table-listings--compact .mk-col-w-date {
+    width: 5.1rem;
+    min-width: 4.85rem;
+}
+
+.mk-data-table-listings--compact .listing-col-neighborhood,
+.mk-data-table-listings--compact .mk-col-w-nb {
+    width: 5.6rem;
+    min-width: 5.1rem;
+}
+
+.mk-data-table-listings--compact .listing-col-value,
+.mk-data-table-listings--compact .mk-col-w-value {
+    width: 3.55rem;
+    min-width: 3.4rem;
+}
+
+.mk-data-table-listings--compact .listing-col-actions,
+.mk-data-table-listings--compact .mk-col-w-actions {
+    width: 4.45rem;
+    min-width: 4.3rem;
+}
+
+/* Numeric / short columns stay on one line and don't steal title space. */
+.mk-data-table-listings--compact .listing-col-price,
+.mk-data-table-listings--compact .listing-col-deposit,
+.mk-data-table-listings--compact .listing-col-rent,
+.mk-data-table-listings--compact .listing-col-area,
+.mk-data-table-listings--compact .listing-col-created,
+.mk-data-table-listings--compact .listing-col-value,
+.mk-data-table-listings--compact .listing-col-actions {
+    white-space: nowrap;
+}
+
+.mk-data-table-listings--compact .listing-col-price,
+.mk-data-table-listings--compact .listing-col-deposit,
+.mk-data-table-listings--compact .listing-col-rent {
+    text-align: left;
+    padding-inline: 0.35rem;
+}
+
+.mk-data-table-listings--compact .listing-col-area {
+    text-align: center;
+    padding-inline: 0.28rem;
+}
+
+.mk-data-table-listings--compact .listing-col-specs {
+    padding-inline: 0.32rem;
+    white-space: nowrap;
+    overflow: hidden;
+    max-width: none;
+}
+
+.mk-data-table-listings--compact .listing-col-features {
+    text-align: center;
+    padding-inline: 0.28rem;
+    overflow: visible;
+}
+
+.mk-data-table-listings--compact .listing-col-owner {
+    text-align: center;
+    padding-inline: 0.3rem;
+    white-space: nowrap;
+}
+
+.mk-data-table-listings--compact .listing-col-created {
+    text-align: center;
+    padding-inline: 0.28rem;
+    font-size: 0.72rem;
+    color: var(--ws-text-muted);
+}
+
+.mk-data-table-listings--compact .listing-col-neighborhood {
+    padding-inline: 0.32rem;
+}
+
+.mk-data-table-listings--compact .listing-col-value {
+    text-align: center;
+    padding-inline: 0.28rem;
+    inset-inline-end: 4.45rem;
+}
+
+.mk-data-table-listings--compact .listing-col-actions {
+    text-align: center;
+    padding-inline: 0.22rem;
+    overflow: visible;
+}
+
+.mk-data-table-listings--compact thead th.listing-col-value {
+    inset-inline-end: 4.45rem;
+}
+
+/* Title: one line + ellipsis; token/badge stay compact underneath. */
+.mk-data-table-listings--compact .listing-col-title .mk-listing-title {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.78rem;
+    font-weight: 700;
+    line-height: 1.3;
+    max-width: 100%;
+}
+
+.mk-data-table-listings--compact .listing-col-title .mk-listing-meta {
+    gap: 0.18rem;
+    margin-top: 0.12rem;
+}
+
+.mk-data-table-listings--compact .listing-col-title .mk-token {
+    font-size: 0.62rem;
+    padding: 0.08rem 0.3rem;
+    border-radius: 5px;
+}
+
+.mk-data-table-listings--compact .listing-col-title .mk-adv-tag--meta {
+    padding: 0.06rem 0.3rem;
+    font-size: 0.58rem;
+    gap: 0.16rem;
+}
+
+.mk-data-table-listings--compact .listing-col-title .mk-tag {
+    font-size: 0.58rem;
+    padding: 0.06rem 0.3rem;
+    gap: 0.14rem;
+}
+
+/* Prices / area never wrap. */
+.mk-data-table-listings--compact .listing-col-price .mk-money,
+.mk-data-table-listings--compact .listing-col-deposit .mk-money,
+.mk-data-table-listings--compact .listing-col-rent .mk-money {
+    display: inline-block;
+    white-space: nowrap;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.mk-data-table-listings--compact .listing-col-rent .mk-rent-tag {
+    padding: 0.1rem 0.32rem;
+    font-size: 0.62rem;
+    border-radius: 5px;
+}
+
+.mk-data-table-listings--compact .listing-col-area .mk-area-pill {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.06rem;
+    padding: 0.08rem 0.28rem;
+    border-radius: 6px;
+    font-size: 0.72rem;
+    white-space: nowrap;
+}
+
+.mk-data-table-listings--compact .listing-col-area .mk-area-pill small {
+    font-size: 0.56rem;
+}
+
+/* Spec chips */
+.mk-data-table-listings--compact .listing-col-specs .mk-specs-inline {
+    gap: 0.16rem;
+}
+
+.mk-data-table-listings--compact .listing-col-specs .mk-spec-chip {
+    padding: 0.08rem 0.26rem;
+    border-radius: 5px;
+    font-size: 0.62rem;
+    line-height: 1.2;
+}
+
+.mk-data-table-listings--compact .listing-col-specs .mk-spec-chip--year {
+    font-size: 0.6rem;
+}
+
+/* Amenity icons — keep tooltips */
+.mk-data-table-listings--compact .listing-col-features .ws-amenity-group {
+    gap: 0.12rem;
+}
+
+.mk-data-table-listings--compact .listing-col-features .ws-amenity {
+    width: 1.32rem;
+    height: 1.32rem;
+    font-size: 0.6rem;
+    border-radius: 6px;
+}
+
+/* Advertiser badges */
+.mk-data-table-listings--compact .listing-col-owner .mk-adv-tag {
+    padding: 0.12rem 0.38rem;
+    font-size: 0.62rem;
+    gap: 0.18rem;
+    line-height: 1.15;
+}
+
+.mk-data-table-listings--compact .listing-col-owner .mk-adv-dot {
+    width: 5px;
+    height: 5px;
+}
+
+.mk-data-table-listings--compact .listing-col-owner .mk-adv-label {
+    flex-shrink: 0;
+    overflow: visible;
+    text-overflow: unset;
+    max-width: none;
+}
+
+/* Value pills */
+.mk-data-table-listings--compact .listing-col-value .mk-value-pill {
+    min-width: 0;
+    gap: 0.18rem;
+    padding: 0.1rem 0.34rem;
+    font-size: 0.62rem;
+}
+
+.mk-data-table-listings--compact .listing-col-value .mk-value-dot {
+    width: 5px;
+    height: 5px;
+}
+
+.mk-data-table-listings--compact .listing-col-value .mk-value-empty {
+    min-width: 0;
+    font-size: 0.7rem;
+}
+
+.mk-data-table-listings--compact .listing-col-neighborhood .mk-nb-cell {
+    gap: 0.22rem;
+    font-size: 0.72rem;
+}
+
+/* Row actions */
+.mk-data-table-listings--compact .mk-row-actions-compact {
+    gap: 0.14rem;
+    justify-content: center;
+}
+
+.mk-data-table-listings--compact .mk-row-btn {
+    width: 1.75rem;
+    height: 1.75rem;
+    min-width: 1.75rem;
+    min-height: 1.75rem;
+    font-size: 0.72rem;
+    border-radius: 8px;
+}
+
+/* Wider desktops: title takes the extra room; compact columns stay tight. */
+@media (min-width: 1600px) {
+    .mk-listing-table-desk .mk-data-table-listings--compact {
+        min-width: 100%;
+    }
+
+    .mk-data-table-listings--compact .listing-col-title,
+    .mk-data-table-listings--compact .mk-col-w-title,
+    .mk-data-table-listings--compact td.listing-col-title,
+    .mk-data-table-listings--compact th.listing-col-title {
+        min-width: 14.5rem;
+    }
+}
+
+/* Below typical 1366 content width: keep columns intact, scroll the wrap. */
+@media (max-width: 1359px) {
+    .mk-listing-table-desk .mk-data-table-listings--compact {
+        min-width: 1020px;
+    }
+}
+
+/* Do not override the mobile card layout (table is already hidden). */
+@media (max-width: 768px) {
+    .mk-listing-table-desk .mk-data-table-listings--compact {
+        min-width: 0;
+    }
+}

@@ -4,7 +4,7 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/tools.css' %}?v=8">
 <link rel="stylesheet" href="{% static 'workspace/css/tools-market.css' %}?v=6">
-<link rel="stylesheet" href="{% static 'workspace/css/tools-nearby-access.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'workspace/css/tools-nearby-access.css' %}?v=3">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
@@ -793,7 +793,7 @@
                                 <span class="ws-nearby-access__map-hint-icon" aria-hidden="true"><i class="fas fa-crosshairs"></i></span>
                                 <span class="ws-nearby-access__map-hint-text">روی نقشه کلیک کنید تا موقعیت را مشخص کنید</span>
                             </div>
-                            <div class="ws-nearby-access__map-loading" data-nearby-map-loading hidden aria-live="polite" aria-busy="true">
+                            <div class="ws-nearby-access__map-loading" data-nearby-map-loading hidden aria-live="polite" aria-busy="false">
                                 <div class="ws-nearby-access__spinner" aria-hidden="true"></div>
                                 <p class="ws-nearby-access__loading-title">در حال بررسی دسترسی‌های اطراف...</p>
                                 <span class="ws-nearby-access__loading-sub">دریافت داده از نقشه عمومی — لطفاً صبر کنید</span>
@@ -897,6 +897,6 @@
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script src="{% static 'workspace/js/tools.js' %}?v=10"></script>
 <script src="{% static 'workspace/js/tools-market.js' %}?v=6"></script>
-<script src="{% static 'workspace/js/tools-nearby-access.js' %}?v=2"></script>
+<script src="{% static 'workspace/js/tools-nearby-access.js' %}?v=3"></script>
 {% include 'workspace/academy/includes/academy_assets_js.html' %}
 {% endblock %}

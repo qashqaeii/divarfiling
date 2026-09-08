@@ -2,6 +2,17 @@
    ابزار دسترسی‌های اطراف — UI حرفه‌ای
    ═══════════════════════════════════════════════════════════ */
 
+/* display:flex در کلاس‌ها attribute hidden را override می‌کند */
+.ws-nearby-access [hidden],
+.ws-nearby-access__map-loading[hidden],
+.ws-nearby-access__loading-panel[hidden],
+.ws-nearby-access__body[hidden],
+.ws-nearby-access__error[hidden],
+.ws-nearby-access__filters[hidden],
+.ws-nearby-access__fetch-spinner[hidden] {
+    display: none !important;
+}
+
 .ws-tbx-panel--nearby {
     font-family: inherit;
 }

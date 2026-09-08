@@ -253,7 +253,10 @@
         function setLoading(active) {
             busy = active;
             root.classList.toggle('is-busy', active);
-            if (mapLoading) mapLoading.hidden = !active;
+            if (mapLoading) {
+                mapLoading.hidden = !active;
+                mapLoading.setAttribute('aria-busy', active ? 'true' : 'false');
+            }
             if (loading) loading.hidden = !active;
             if (placeholder) placeholder.hidden = active || !!lastPayload;
             if (fetchBtn) {
@@ -598,6 +601,10 @@
 
         setRadius(radiusM);
         setStepProgress(0);
+        if (mapLoading) mapLoading.hidden = true;
+        if (loading) loading.hidden = true;
+        if (fetchSpinner) fetchSpinner.hidden = true;
+        root.classList.remove('is-busy');
 
         global.wsNearbyAccessOnShow = ensureMap;
     }

@@ -1,6 +1,6 @@
 {% load workspace_tags crm_tags %}
 {% for p in properties %}
-<article class="crm-files-card crm-files-mcard {% if p.deal_mode == 'فروش' %}crm-files-card--sale{% else %}crm-files-card--rent{% endif %}"
+<article class="crm-files-card crm-files-mcard crm-properties-card {% if p.deal_mode == 'فروش' %}crm-files-card--sale{% else %}crm-files-card--rent{% endif %}"
          style="--tx-accent: {{ p.transaction_status|crm_tx_status_dot }}; --deal-mode-accent: {% if p.deal_mode == 'فروش' %}#2563eb{% else %}#0f766e{% endif %};"
          aria-label="{{ p.title }}"
          data-property-id="{{ p.id }}"
@@ -12,11 +12,18 @@
     </label>
     {% endif %}
 
-    <div class="crm-files-card-body">
+    <div class="crm-files-card-body crm-properties-card__content">
     <a href="{% url 'workspace:crm_property_detail' p.id %}" class="crm-files-card-hit" aria-label="مشاهده {{ p.title }}"></a>
 
-    <header class="crm-files-card-head crm-files-mcard__top">
-        <div class="crm-files-mcard__head">
+    <header class="crm-files-card-head crm-files-mcard__top crm-properties-card__head">
+        {% with cover=p.images.0|default:'' %}
+        {% if cover %}
+        <div class="crm-properties-card__thumb" aria-hidden="true">
+            <img src="{{ cover }}" alt="" loading="lazy" decoding="async" onerror="var t=this.closest('.crm-properties-card__thumb'); if(t){ t.classList.add('is-broken'); t.remove(); }">
+        </div>
+        {% endif %}
+        {% endwith %}
+        <div class="crm-files-mcard__head crm-properties-card__head-text">
             <h3 class="crm-files-card-title">{{ p.title }}</h3>
             {% if p.neighborhood or p.city %}
             <p class="crm-files-card-loc">
@@ -27,7 +34,7 @@
         </div>
     </header>
 
-    <div class="crm-files-card-tags">
+    <div class="crm-files-card-tags crm-properties-card__meta">
         <span class="crm-files-pill crm-files-pill--deal">{{ p.deal_mode }}</span>
         <span class="crm-files-pill crm-files-pill--status">{{ p.transaction_status }}</span>
         {% if p.is_vacant %}

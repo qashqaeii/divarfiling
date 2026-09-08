@@ -11,6 +11,7 @@
 {% block crm_extra_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/crm-files-mobile.css' %}?v=18">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-zonkan.css' %}?v=6">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-properties-views.css' %}?v=1">
 {% endblock %}
 
 {% block ws_surface_css %}
@@ -19,7 +20,7 @@
 
 {% block crm_content %}
 {% include 'workspace/academy/includes/contextual_banner.html' %}
-<div class="crm-shell-page crm-files-pro crm-files-pro-v2 crm-page-chrome crm-files-mobile{% if view_mode == 'pipeline' %} crm-files-pro--pipeline{% elif view_mode == 'table' %} crm-files-pro--table{% endif %}">
+<div class="crm-shell-page crm-files-pro crm-files-pro-v2 crm-page-chrome crm-files-mobile crm-properties-page{% if view_mode == 'pipeline' %} crm-files-pro--pipeline{% elif view_mode == 'table' %} crm-files-pro--table{% endif %}">
 
     <header class="crm-files-mob-header">
         <div class="crm-files-mob-header-main">
@@ -361,23 +362,23 @@
             {% include 'workspace/crm/includes/property_pipeline.html' with pipeline_interactive=True tx_status_url_template=tx_status_url_template pipeline_reorder_url=pipeline_reorder_url %}
         </section>
         {% elif view_mode == 'table' %}
-        <div class="crm-ft-wrap"
+        <div class="crm-ft-wrap crm-properties-table-wrap"
              id="crm-files-list"
              data-view="table"
              data-has-next="{% if page_obj.has_next %}1{% else %}0{% endif %}"
              {% if page_obj.has_next %}data-next-page="{{ page_obj.next_page_number }}"{% endif %}>
-            <table class="crm-ft">
+            <table class="crm-ft crm-properties-table">
                 <thead>
                     <tr>
                         {% if property_folders %}<th class="crm-ft-th-check" aria-label="انتخاب"></th>{% endif %}
-                        <th class="crm-ft-th-prop">ملک</th>
-                        <th>معامله</th>
-                        <th>مرحله</th>
-                        <th>مشخصات</th>
-                        <th>قیمت</th>
-                        <th class="crm-ft-th-num">مخاطب</th>
-                        <th class="crm-ft-th-time">بروزرسانی</th>
-                        <th class="crm-ft-th-actions" aria-label="عملیات"></th>
+                        <th class="crm-ft-th-prop crm-properties-table__th--prop">ملک</th>
+                        <th class="crm-properties-table__th--deal">معامله</th>
+                        <th class="crm-properties-table__th--stage">مرحله</th>
+                        <th class="crm-properties-table__th--specs">مشخصات</th>
+                        <th class="crm-properties-table__th--price">قیمت</th>
+                        <th class="crm-ft-th-num crm-properties-table__th--contact">مخاطب</th>
+                        <th class="crm-ft-th-time crm-properties-table__th--time">بروزرسانی</th>
+                        <th class="crm-ft-th-actions crm-properties-table__th--actions" aria-label="عملیات"></th>
                     </tr>
                 </thead>
                 <tbody id="crm-files-list-body">
@@ -397,7 +398,7 @@
             </table>
         </div>
         {% else %}
-        <div class="crm-files-grid crm-files-grid-v2"
+        <div class="crm-files-grid crm-files-grid-v2 crm-properties-grid"
              id="crm-files-list"
              data-view="grid"
              data-has-next="{% if page_obj.has_next %}1{% else %}0{% endif %}"

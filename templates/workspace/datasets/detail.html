@@ -1,5 +1,5 @@
 {% extends 'workspace/base.html' %}
-{% load static humanize workspace_tags %}
+{% load static humanize workspace_tags persian_tags %}
 
 {% block page_title %}{{ dataset.name }}{% endblock %}
 {% block mobile_bar_title %}{{ dataset.name|truncatechars:26 }}{% endblock %}
@@ -233,7 +233,7 @@
 
     <div class="mk-notice mk-notice--info mk-notice--inline ws-filing-retention-policy" data-notice-kind="filing_retention_policy" data-notice-id="filing-retention-policy-v1">
         <div class="mk-notice__body">
-            <p class="mk-notice__text">فایل‌های بدون فعالیت، پس از ۶۲ روز وارد چرخه پاک‌سازی می‌شوند و در اولین روز ماه بعد حذف خواهند شد. فایل‌های مهم را به فایل شخصی منتقل کنید.</p>
+            <p class="mk-notice__text">فایل‌های بدون فعالیت، پس از {{ filing_listing_retention_days|to_persian_digits }} روز وارد چرخه پاک‌سازی می‌شوند و در اولین روز ماه بعد حذف خواهند شد. فایل‌های مهم را به فایل شخصی منتقل کنید.</p>
         </div>
         <button type="button" class="mk-notice__close" data-mk-notice-close aria-label="بستن"><i class="fas fa-times"></i></button>
     </div>

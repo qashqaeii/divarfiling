@@ -638,7 +638,7 @@ class RetentionCrossUserTests(TestCase):
         self.assertTrue(CustomerListing.objects.filter(token='cust-shared').exists())
 
 
-class Retention62DayThresholdTests(TestCase):
+class RetentionDayThresholdTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(username='09132220001', password='x')
         self.dataset = Dataset.objects.create(user=self.user, name='thresh', is_active=True)
@@ -653,7 +653,7 @@ class Retention62DayThresholdTests(TestCase):
         self.assertEqual(stats['deleted'], 0)
         self.assertTrue(Listing.objects.filter(pk=listing.pk).exists())
 
-    def test_listing_older_than_62_days_age_eligible(self):
+    def test_listing_older_than_retention_days_age_eligible(self):
         listing = Listing.objects.create(dataset=self.dataset, token='d67', title='x')
         age = timezone.now() - timezone.timedelta(days=STALE_LISTING_AGE_DAYS)
         Listing.objects.filter(pk=listing.pk).update(published_at=age, created_at=age)
@@ -663,7 +663,7 @@ class Retention62DayThresholdTests(TestCase):
         self.assertGreaterEqual(stats['deleted'], 1)
         self.assertFalse(Listing.objects.filter(pk=listing.pk).exists())
 
-    def test_exactly_62_day_cutoff_not_age_eligible(self):
+    def test_exactly_retention_day_cutoff_not_age_eligible(self):
         as_of = timezone.now()
         listing = Listing.objects.create(dataset=self.dataset, token='d62', title='x')
         cutoff = as_of - timezone.timedelta(days=RETENTION_DAYS)

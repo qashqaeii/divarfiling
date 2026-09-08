@@ -10,6 +10,7 @@ from workspace.services.access import (
     get_bot_product_buy_url,
 )
 from workspace.services.jalali_input import format_jalali_today_label
+from workspace.services.listing_retention_calendar import filing_listing_retention_days
 from workspace.services.support_tickets import get_user_ticket_stats
 from workspace.crm_views import _crm_nav_counts
 
@@ -51,6 +52,7 @@ def workspace_context(request):
     ctx = {
         'today_jalali': format_jalali_today_label(),
         'carto_basemap_key': get_carto_basemap_api_key(),
+        'filing_listing_retention_days': filing_listing_retention_days(),
     }
     user = getattr(request, 'user', None)
     if user is None or not user.is_authenticated:

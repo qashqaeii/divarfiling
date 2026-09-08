@@ -65,11 +65,36 @@
         }
     }
 
+    function looksLikeIranMobile(value) {
+        const digits = String(value || '').replace(/\D/g, '');
+        return /^09\d{9}$/.test(digits) || /^9\d{9}$/.test(digits) || /^989\d{9}$/.test(digits);
+    }
+
+    function guardHomeFilesSearchInput(input) {
+        input.setAttribute('autocomplete', 'off');
+        input.setAttribute('autocorrect', 'off');
+        input.setAttribute('spellcheck', 'false');
+        input.setAttribute('data-lpignore', 'true');
+        input.setAttribute('data-1p-ignore', 'true');
+        input.setAttribute('data-form-type', 'other');
+        if (!input.name) input.name = 'mk_home_files_filter';
+        input.setAttribute('readonly', 'readonly');
+        input.addEventListener('focus', () => input.removeAttribute('readonly'), { once: true });
+    }
+
+    function clearPhoneAutofill(input) {
+        const value = input.value.trim();
+        if (!value || !looksLikeIranMobile(value)) return false;
+        input.value = '';
+        return true;
+    }
+
     function initFileSearch() {
         const search = document.getElementById('homeFilesSearch');
         const table = document.getElementById('homeFilesTable');
         const empty = document.getElementById('homeFilesEmpty');
         if (!search || !table) return;
+        guardHomeFilesSearchInput(search);
         const rows = table.querySelectorAll('tbody tr');
         const wrap = table.closest('.mk-table-wrap');
 
@@ -85,7 +110,16 @@
             if (wrap) wrap.hidden = !!(q && visible === 0);
         };
 
+        const sweepAutofill = () => {
+            if (clearPhoneAutofill(search)) applyFilter();
+        };
+
         search.addEventListener('input', applyFilter);
+        sweepAutofill();
+        requestAnimationFrame(() => requestAnimationFrame(sweepAutofill));
+        window.setTimeout(sweepAutofill, 120);
+        window.setTimeout(sweepAutofill, 500);
+        applyFilter();
     }
 
     function initReveal() {

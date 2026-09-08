@@ -247,7 +247,7 @@
                     <div class="mk-table-toolbar">
                         <label class="mk-table-search">
                             {% include 'includes/icon_slot.html' with decor='search' size='inline' only %}
-                            <input type="search" id="homeFilesSearch" placeholder="جستجو..." autocomplete="off" aria-label="جستجو فایل‌ها">
+                            <input type="text" id="homeFilesSearch" name="mk_home_files_filter" placeholder="جستجو..." role="searchbox" inputmode="search" autocomplete="off" autocorrect="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true" data-form-type="other" aria-label="جستجو فایل‌ها">
                         </label>
                         {% if has_bot_license %}
                         <a href="{% url 'workspace:dataset_list' %}" class="ws-btn ws-btn-sm ws-btn-ghost">همه</a>
@@ -496,5 +496,5 @@
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script>window.wsCharts = {{ charts_json|safe }}; window.wsChartsHub = true;</script>
-<script src="{% static 'workspace/js/home.js' %}?v=2"></script>
+<script src="{% static 'workspace/js/home.js' %}?v=3"></script>
 {% endblock %}

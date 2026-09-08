@@ -1,7 +1,8 @@
 """تشخیص سیگنال آگهی‌دهنده — wrapper جنگو روی ماژول مشترک advertiser_signal."""
 from __future__ import annotations
 
-from typing import Dict
+from types import SimpleNamespace
+from typing import Dict, Iterator
 
 from workspace.services.advertiser_signal_loader import ensure_advertiser_signal_importable
 
@@ -186,6 +187,17 @@ def listing_advertiser_display(listing) -> Dict[str, str]:
     }
 
 
+_ADVERTISER_SIGNAL_FIELDS = (
+    'advertiser_signal', 'title', 'description', 'business_type', 'data',
+)
+
+
+def _iter_advertiser_signal_rows(qs) -> Iterator[SimpleNamespace]:
+    """ردیف‌های خام queryset — بدون deferred field تا حذف همزمان آگهی خطا ندهد."""
+    for row in qs.values(*_ADVERTISER_SIGNAL_FIELDS).iterator():
+        yield SimpleNamespace(**row)
+
+
 def count_listings_by_advertiser_display(qs) -> Dict[str, int]:
     counts = {
         ADVERTISER_SIGNAL_GENUINE_PERSONAL: 0,
@@ -193,9 +205,7 @@ def count_listings_by_advertiser_display(qs) -> Dict[str, int]:
         ADVERTISER_SIGNAL_CONSULTANT: 0,
         'personal_other': 0,
     }
-    for listing in qs.only(
-        'advertiser_signal', 'title', 'description', 'business_type', 'data',
-    ).iterator():
+    for listing in _iter_advertiser_signal_rows(qs):
         signal = listing_advertiser_signal(listing)
         if signal == ADVERTISER_SIGNAL_GENUINE_PERSONAL:
             counts[ADVERTISER_SIGNAL_GENUINE_PERSONAL] += 1
@@ -211,9 +221,8 @@ def count_listings_by_advertiser_display(qs) -> Dict[str, int]:
 def disguised_consultant_listing_ids(qs) -> list[int]:
     """شناسه آگهی‌های مشاور پنهان — هم‌راستا با count_listings_by_advertiser_display."""
     ids: list[int] = []
-    for listing in qs.only(
-        'id', 'advertiser_signal', 'title', 'description', 'business_type', 'data',
-    ).iterator():
+    for row in qs.values('id', *_ADVERTISER_SIGNAL_FIELDS).iterator():
+        listing = SimpleNamespace(**row)
         if listing_advertiser_signal(listing) == ADVERTISER_SIGNAL_DISGUISED:
-            ids.append(listing.id)
+            ids.append(row['id'])
     return ids

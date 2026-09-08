@@ -40,6 +40,7 @@ from contracts.services.lifecycle import (
 from contracts.services.invitations import resend_invitation, send_invitations
 from contracts.services.scope import contract_for_deal, contract_for_user, contracts_qs
 from contracts.services.audit import build_audit_timeline
+from contracts.services.wizard_parse import parse_wizard_step
 from workspace.crm_views import CRMContextMixin
 from workspace.services.crm_scope import deal_for_user
 

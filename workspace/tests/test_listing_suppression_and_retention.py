@@ -105,6 +105,22 @@ class ListingSuppressionTests(TestCase):
             1,
         )
 
+    def test_advertiser_counts_after_filing_delete(self):
+        from workspace.services.advertiser_signal import count_listings_by_advertiser_display
+
+        ds = Dataset.objects.create(
+            user=self.user, name='counts', original_filename='c.xlsx', file_format='xlsx',
+        )
+        Listing.objects.create(
+            dataset=ds, token='cnt-a', title='a', business_type='personal', description='مالک',
+        )
+        Listing.objects.create(
+            dataset=ds, token='cnt-b', title='b', business_type='personal', description='مالک',
+        )
+        delete_divar_listing_from_filing(self.user, 'cnt-a')
+        counts = count_listings_by_advertiser_display(ds.listings.all())
+        self.assertEqual(sum(counts.values()), 1)
+
     def test_other_user_still_receives_token(self):
         delete_divar_listing_from_filing(self.user, 'shared-tok')
         result = self._ingest(self.other, 'shared-tok', hint='other-file')

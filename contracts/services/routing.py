@@ -48,5 +48,22 @@ def contracts_dashboard_url(**query) -> str:
     return base
 
 
+def handover_public_pdf_url(contract, *, request=None) -> str:
+    """Inline PDF صورت‌جلسه — /c/view/<staff-token>/handover/pdf/"""
+    if contract.status != 'finalized':
+        return ''
+    if not contract.handovers.filter(status='finalized').exists():
+        return ''
+    from contracts.services.invitations import ensure_staff_public_view_url
+
+    version = contract.current_version
+    if not version:
+        return ''
+    base = ensure_staff_public_view_url(contract, version, request=request)
+    if not base:
+        return ''
+    return f'{base.rstrip("/")}/handover/pdf/'
+
+
 def deal_contracts_filter_url(deal_id: int) -> str:
     return contracts_dashboard_url(deal=deal_id)

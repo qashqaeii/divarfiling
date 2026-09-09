@@ -457,8 +457,9 @@ class ContractManageView(ContractAccessMixin, DetailView):
             'acceptance_progress': contract_acceptance_progress(contract),
             'contract_statuses': CONTRACT_STATUSES,
         })
-        from contracts.services.routing import contract_pdf_url
+        from contracts.services.routing import contract_pdf_url, handover_public_pdf_url
         ctx['contract_pdf_url'] = contract_pdf_url(contract)
+        ctx['handover_public_pdf_url'] = handover_public_pdf_url(contract, request=self.request)
         return ctx
 
     def post(self, request, contract_id, deal_id=None):

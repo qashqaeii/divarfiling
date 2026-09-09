@@ -119,8 +119,8 @@
                     <span>مشاهده قرارداد</span>
                 </a>
                 {% if deal %}
-                    {% if finalized_handover %}
-                    <a href="{% url 'workspace:handover_pdf' deal.pk contract.pk finalized_handover.pk %}" class="crm-dash-act ct-manage-handover-btn ct-manage-handover-btn--done">
+                    {% if finalized_handover and handover_public_pdf_url %}
+                    <a href="{{ handover_public_pdf_url }}" target="_blank" rel="noopener" class="crm-dash-act ct-manage-handover-btn ct-manage-handover-btn--done">
                         <i class="fas fa-file-contract" aria-hidden="true"></i>
                         <span>صورت‌جلسه تحویل</span>
                     </a>
@@ -217,9 +217,9 @@
 
                         <a href="{% url 'workspace:handover_wizard' deal.pk contract.pk handover.pk %}" role="menuitem">ادامه صورت‌جلسه</a>
 
-                        {% elif deal and finalized_handover %}
+                        {% elif deal and finalized_handover and handover_public_pdf_url %}
 
-                        <a href="{% url 'workspace:handover_pdf' deal.pk contract.pk finalized_handover.pk %}" role="menuitem">دانلود صورت‌جلسه</a>
+                        <a href="{{ handover_public_pdf_url }}" target="_blank" rel="noopener" role="menuitem">مشاهده صورت‌جلسه</a>
 
                         {% endif %}
 

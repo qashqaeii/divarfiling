@@ -109,20 +109,21 @@ def _article_box(title: str, content: List[Any], content_width: float, styles: D
     tbl.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#f8fafc')),
         ('BACKGROUND', (0, 1), (-1, -1), colors.white),
-        ('BOX', (0, 0), (-1, -1), 0.55, colors.HexColor(_C_BORDER)),
-        ('LINEBELOW', (0, 0), (-1, 0), 1.2, colors.HexColor(_C_PRIMARY)),
+        ('BOX', (0, 0), (-1, -1), 0.75, colors.HexColor('#cbd5e1')),
+        ('LINEBELOW', (0, 0), (-1, 0), 1.5, colors.HexColor(_C_PRIMARY)),
         ('LEFTPADDING', (0, 0), (-1, -1), 10),
         ('RIGHTPADDING', (0, 0), (-1, -1), 10),
         ('TOPPADDING', (0, 0), (-1, 0), 8),
         ('BOTTOMPADDING', (0, 0), (-1, 0), 6),
-        ('TOPPADDING', (0, 1), (-1, -1), 4),
-        ('BOTTOMPADDING', (0, 1), (-1, -1), 8),
+        ('TOPPADDING', (0, 1), (-1, -1), 6),
+        ('BOTTOMPADDING', (0, 1), (-1, -1), 10),
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
     ]))
     return [tbl, Spacer(1, 10)]
 
 
 def _kv_grid(pairs: List[Tuple[str, str]], content_width: float, styles: Dict):
+    from reportlab.lib import colors
     from reportlab.platypus import Paragraph, Table, TableStyle
 
     rows = []
@@ -130,70 +131,89 @@ def _kv_grid(pairs: List[Tuple[str, str]], content_width: float, styles: Dict):
     for i in range(0, len(pairs), 2):
         cells = []
         for label, value in pairs[i:i + 2]:
-            cells.append([
-                Paragraph(rtl_paragraph_html(label), styles['card_label']),
-                Paragraph(rtl_paragraph_html(value or '—', bold=True), styles['card_value']),
-            ])
+            cell = Table(
+                [[Paragraph(rtl_paragraph_html(label), styles['card_label'])],
+                 [Paragraph(rtl_paragraph_html(value or '—', bold=True), styles['card_value'])]],
+                colWidths=[col_w - 4],
+            )
+            cell.setStyle(TableStyle([
+                ('BOX', (0, 0), (-1, -1), 0.5, colors.HexColor('#e2e8f0')),
+                ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#fafbfc')),
+                ('LEFTPADDING', (0, 0), (-1, -1), 5),
+                ('RIGHTPADDING', (0, 0), (-1, -1), 5),
+                ('TOPPADDING', (0, 0), (-1, -1), 4),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+            ]))
+            cells.append(cell)
         while len(cells) < 2:
-            cells.append([Paragraph('', styles['meta']), Paragraph('', styles['meta'])])
+            cells.append('')
         rows.append(cells)
+
     tbl = Table(rows, colWidths=[col_w, col_w], hAlign='RIGHT')
     tbl.setStyle(TableStyle([
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-        ('LEFTPADDING', (0, 0), (-1, -1), 4),
-        ('RIGHTPADDING', (0, 0), (-1, -1), 4),
-        ('TOPPADDING', (0, 0), (-1, -1), 3),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+        ('LEFTPADDING', (0, 0), (-1, -1), 2),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 2),
     ]))
     return tbl
 
 
-def _party_card(party: Optional[dict], role_title: str, styles: Dict) -> List[Any]:
-    from reportlab.platypus import Paragraph, Spacer
+def _party_panel_table(party: Optional[dict], role_title: str, panel_width: float, styles: Dict):
+    from reportlab.lib import colors
+    from reportlab.platypus import Paragraph, Table, TableStyle
 
-    if not party:
-        return [Paragraph(rtl_paragraph_html('—'), styles['body'])]
-    name = f"{party.get('first_name') or ''} {party.get('last_name') or ''}".strip() or '—'
-    cell = [
-        Paragraph(rtl_paragraph_html(role_title, bold=True), styles['card_role']),
-        Spacer(1, 4),
-        Paragraph(rtl_paragraph_html('نام'), styles['card_label']),
-        Paragraph(rtl_paragraph_html(name, bold=True), styles['card_value']),
-        Spacer(1, 3),
-    ]
-    if party.get('mobile'):
-        cell.extend([
-            Paragraph(rtl_paragraph_html('موبایل'), styles['card_label']),
-            Paragraph(rtl_paragraph_html(party['mobile'], bold=True), styles['card_value']),
-            Spacer(1, 3),
+    name = '—'
+    if party:
+        name = f"{party.get('first_name') or ''} {party.get('last_name') or ''}".strip() or '—'
+
+    label_w = panel_width * 0.34
+    value_w = panel_width * 0.66
+    rows = [[Paragraph(rtl_paragraph_html(role_title, bold=True), styles['card_role']), '']]
+    field_rows = [('نام', name)]
+    if party and party.get('mobile'):
+        field_rows.append(('موبایل', party['mobile']))
+    if party and party.get('national_id'):
+        field_rows.append(('کد ملی', party['national_id']))
+    for label, value in field_rows:
+        rows.append([
+            Paragraph(rtl_paragraph_html(label), styles['card_label']),
+            Paragraph(rtl_paragraph_html(str(value), bold=True), styles['card_value']),
         ])
-    if party.get('national_id'):
-        cell.extend([
-            Paragraph(rtl_paragraph_html('کد ملی'), styles['card_label']),
-            Paragraph(rtl_paragraph_html(party['national_id'], bold=True), styles['card_value']),
-        ])
-    return cell
+
+    tbl = Table(rows, colWidths=[label_w, value_w])
+    tbl.setStyle(TableStyle([
+        ('SPAN', (0, 0), (1, 0)),
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#f5f3ff')),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#fafafa')),
+        ('BOX', (0, 0), (-1, -1), 0.65, colors.HexColor('#cbd5e1')),
+        ('INNERGRID', (0, 1), (-1, -1), 0.45, colors.HexColor('#e2e8f0')),
+        ('LINEABOVE', (0, 0), (-1, 0), 1, colors.HexColor(_C_PRIMARY)),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('LEFTPADDING', (0, 0), (-1, -1), 6),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 6),
+        ('TOPPADDING', (0, 0), (-1, -1), 5),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
+    ]))
+    return tbl
 
 
 def _parties_two_col(delivered, received, content_width: float, styles: Dict):
-    from reportlab.lib import colors
-    from reportlab.platypus import Spacer, Table, TableStyle
+    from reportlab.platypus import Table, TableStyle
 
-    half = (content_width - 8) / 2
+    gap = 8
+    half = (content_width - gap) / 2
     tbl = Table(
-        [[_party_card(delivered, 'تحویل‌دهنده', styles), _party_card(received, 'تحویل‌گیرنده', styles)]],
+        [[
+            _party_panel_table(delivered, 'تحویل‌دهنده', half - 4, styles),
+            _party_panel_table(received, 'تحویل‌گیرنده', half - 4, styles),
+        ]],
         colWidths=[half, half],
         hAlign='RIGHT',
     )
     tbl.setStyle(TableStyle([
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-        ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#fafafa')),
-        ('BOX', (0, 0), (-1, -1), 0.45, colors.HexColor(_C_BORDER)),
-        ('INNERGRID', (0, 0), (-1, -1), 0.35, colors.HexColor('#eef2f7')),
-        ('LEFTPADDING', (0, 0), (-1, -1), 8),
-        ('RIGHTPADDING', (0, 0), (-1, -1), 8),
-        ('TOPPADDING', (0, 0), (-1, -1), 8),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+        ('LEFTPADDING', (0, 0), (-1, -1), 0),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 0),
     ]))
     return tbl
 
@@ -213,10 +233,15 @@ def _simple_table(headers: List[str], rows: List[List[str]], font_name: str, fon
         ('ALIGN', (0, 0), (-1, -1), 'RIGHT'),
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#f5f3ff')),
-        ('GRID', (0, 0), (-1, -1), 0.35, colors.HexColor(_C_BORDER)),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.HexColor(_C_TEXT)),
+        ('BOX', (0, 0), (-1, -1), 0.65, colors.HexColor('#cbd5e1')),
+        ('LINEBELOW', (0, 0), (-1, 0), 1, colors.HexColor(_C_PRIMARY)),
+        ('GRID', (0, 0), (-1, -1), 0.45, colors.HexColor('#e2e8f0')),
         ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#fafafa')]),
-        ('TOPPADDING', (0, 0), (-1, -1), 5),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
+        ('LEFTPADDING', (0, 0), (-1, -1), 6),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 6),
+        ('TOPPADDING', (0, 0), (-1, -1), 6),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
     ]))
     return tbl
 
@@ -232,7 +257,7 @@ def render_handover_pdf_bytes(handover: ContractHandover, *, preview: bool = Fal
         return b''
 
     from contracts.services.handover_wizard import build_handover_wizard_context
-    from workspace.services.jalali_input import format_jalali_date
+    from workspace.services.jalali_input import format_jalali_date, format_jalali_datetime
 
     wizard = build_handover_wizard_context(handover, step='review')
     review = wizard.get('review') or {}
@@ -428,11 +453,11 @@ def render_handover_pdf_bytes(handover: ContractHandover, *, preview: bool = Fal
         sig_rows = []
         for acc in acceptances:
             side = 'تحویل‌دهنده' if acc.side == 'delivered_by' else 'تحویل‌گیرنده'
-            dt = timezone.localtime(acc.accepted_at).strftime('%Y/%m/%d %H:%M')
+            dt = format_jalali_datetime(acc.accepted_at)
             sig_rows.append([
                 side,
                 acc.mobile or '—',
-                dt,
+                dt or '—',
                 'تأیید OTP',
             ])
         story.extend(_article_box(

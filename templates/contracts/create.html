@@ -6,95 +6,84 @@
 <link rel="stylesheet" href="{% static 'contracts/css/contracts.css' %}?v=16">
 <link rel="stylesheet" href="{% static 'contracts/css/workspace.css' %}?v=4">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-ecosystem.css' %}?v=2">
-<link rel="stylesheet" href="{% static 'contracts/css/contracts-create.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'contracts/css/contracts-create.css' %}?v=2">
 {% endblock %}
 
 {% block crm_content %}
 <div class="ct-workspace ct-create crm-page-chrome crm-contract-create">
     <div class="ct-create-inner">
 
-        <div class="ct-create-topbar">
+        <header class="ct-create-head" aria-labelledby="ctCreateHeroTitle">
             <a href="{% url 'workspace:contracts_dashboard' %}" class="ct-create-back" aria-label="بازگشت به قراردادها">
                 <i class="fas fa-arrow-right" aria-hidden="true"></i>
             </a>
-        </div>
-
-        <header class="ct-create-hero" aria-labelledby="ctCreateHeroTitle">
-            <div class="ct-create-hero__grid">
-                <div class="ct-create-hero__main">
-                    <span class="ct-create-hero__kicker">
-                        <i class="fas fa-file-signature" aria-hidden="true"></i>
-                        ایجاد قرارداد
-                    </span>
-                    <h1 id="ctCreateHeroTitle" class="ct-create-hero__title">قرارداد حرفه‌ای، در چند دقیقه</h1>
-                    <p class="ct-create-hero__lead">نوع قرارداد را انتخاب کنید — با یا بدون اتصال به معامله — و ویزارد را شروع کنید.</p>
-                    <ul class="ct-create-hero__benefits">
-                        <li><i class="fas fa-layer-group" aria-hidden="true"></i> قالب‌های استاندارد ویژه املاک</li>
-                        <li><i class="fas fa-shield-check" aria-hidden="true"></i> امضا و تأیید دیجیتال</li>
-                        <li><i class="fas fa-paper-plane" aria-hidden="true"></i> ارسال لینک برای طرفین</li>
-                    </ul>
-                </div>
-                <div class="ct-create-hero__aside" aria-hidden="true">
-                    <div class="ct-create-hero__illus">
-                        <i class="fas fa-file-contract"></i>
-                    </div>
-                    <span class="ct-create-hero__aside-label">قرارداد جدید</span>
-                </div>
+            <div class="ct-create-head__text">
+                <p class="ct-create-head__kicker">ایجاد قرارداد</p>
+                <h1 id="ctCreateHeroTitle" class="ct-create-head__title">قرارداد جدید</h1>
             </div>
+            <ul class="ct-create-head__tags" aria-label="مزایا">
+                <li>قالب استاندارد</li>
+                <li>امضای دیجیتال</li>
+                <li>ارسال لینک</li>
+            </ul>
         </header>
 
         <form method="post" class="ct-create-form" id="ctCreateForm">
             {% csrf_token %}
 
             <section class="ct-create-panel" aria-labelledby="ctCreateTypeHeading">
-                <div class="ct-create-panel__head">
-                    <h2 id="ctCreateTypeHeading" class="ct-create-panel__title">۱. نوع قرارداد</h2>
-                    <p class="ct-create-panel__hint">نوع قرارداد را با توجه به معامله خود انتخاب کنید.</p>
-                </div>
+                <h2 id="ctCreateTypeHeading" class="ct-create-panel__title">۱. نوع قرارداد</h2>
                 <div class="ct-create-card-grid ct-create-card-grid--3">
                     <label class="ct-create-card">
                         <input type="radio" name="contract_type" value="lease" checked>
                         <span class="ct-create-card__radio" aria-hidden="true"></span>
                         <span class="ct-create-card__icon" aria-hidden="true"><i class="fas fa-key"></i></span>
-                        <span class="ct-create-card__title">رهن و اجاره</span>
-                        <span class="ct-create-card__desc">قرارداد اجاره مسکن یا تجاری</span>
+                        <span class="ct-create-card__body">
+                            <span class="ct-create-card__title">رهن و اجاره</span>
+                            <span class="ct-create-card__desc">اجاره مسکن یا تجاری</span>
+                        </span>
                     </label>
                     <label class="ct-create-card">
                         <input type="radio" name="contract_type" value="sale">
                         <span class="ct-create-card__radio" aria-hidden="true"></span>
                         <span class="ct-create-card__icon" aria-hidden="true"><i class="fas fa-handshake"></i></span>
-                        <span class="ct-create-card__title">فروش / مبایعه‌نامه</span>
-                        <span class="ct-create-card__desc">خرید و فروش ملک</span>
+                        <span class="ct-create-card__body">
+                            <span class="ct-create-card__title">فروش / مبایعه‌نامه</span>
+                            <span class="ct-create-card__desc">خرید و فروش ملک</span>
+                        </span>
                     </label>
                     <label class="ct-create-card">
                         <input type="radio" name="contract_type" value="jv">
                         <span class="ct-create-card__radio" aria-hidden="true"></span>
                         <span class="ct-create-card__icon" aria-hidden="true"><i class="fas fa-building"></i></span>
-                        <span class="ct-create-card__title">مشارکت در ساخت</span>
-                        <span class="ct-create-card__desc">قرارداد مشارکت مالک و سازنده</span>
+                        <span class="ct-create-card__body">
+                            <span class="ct-create-card__title">مشارکت در ساخت</span>
+                            <span class="ct-create-card__desc">مالک و سازنده</span>
+                        </span>
                     </label>
                 </div>
             </section>
 
             <section class="ct-create-panel" aria-labelledby="ctCreateDealHeading">
-                <div class="ct-create-panel__head">
-                    <h2 id="ctCreateDealHeading" class="ct-create-panel__title">۲. این قرارداد مربوط به کدام پرونده است؟</h2>
-                    <p class="ct-create-panel__hint">می‌توانید قرارداد را مستقل بسازید یا به یک معامله موجود متصل کنید.</p>
-                </div>
+                <h2 id="ctCreateDealHeading" class="ct-create-panel__title">۲. اتصال به پرونده</h2>
                 <div class="ct-create-card-grid ct-create-card-grid--2">
-                    <label class="ct-create-card ct-create-card--deal">
+                    <label class="ct-create-card">
                         <input type="radio" name="deal_mode" value="none"{% if not preselected_deal_id %} checked{% endif %}>
                         <span class="ct-create-card__radio" aria-hidden="true"></span>
                         <span class="ct-create-card__icon" aria-hidden="true"><i class="fas fa-file-lines"></i></span>
-                        <span class="ct-create-card__title">بدون معامله</span>
-                        <span class="ct-create-card__desc">اطلاعات را دستی در ویزارد وارد می‌کنم</span>
+                        <span class="ct-create-card__body">
+                            <span class="ct-create-card__title">بدون معامله</span>
+                            <span class="ct-create-card__desc">ورود دستی در ویزارد</span>
+                        </span>
                     </label>
-                    <label class="ct-create-card ct-create-card--deal">
+                    <label class="ct-create-card">
                         <input type="radio" name="deal_mode" value="existing"{% if preselected_deal_id %} checked{% endif %}>
                         <span class="ct-create-card__radio" aria-hidden="true"></span>
                         <span class="ct-create-card__icon" aria-hidden="true"><i class="fas fa-link"></i></span>
-                        <span class="ct-create-card__title">اتصال به معامله موجود</span>
-                        <span class="ct-create-card__desc">اطلاعات از معامله پیش‌پر می‌شود</span>
+                        <span class="ct-create-card__body">
+                            <span class="ct-create-card__title">اتصال به معامله</span>
+                            <span class="ct-create-card__desc">پیش‌پر از معامله موجود</span>
+                        </span>
                     </label>
                 </div>
 
@@ -110,17 +99,16 @@
             </section>
 
             <div class="ct-create-footer">
+                <p class="ct-create-footer__help">
+                    <a href="{% url 'workspace:academy_home' %}" target="_blank" rel="noopener">راهنمای انتخاب نوع قرارداد</a>
+                </p>
                 <div class="ct-create-footer__actions">
                     <a href="{% url 'workspace:contracts_dashboard' %}" class="ct-create-footer__btn ct-create-footer__btn--ghost">انصراف</a>
                     <button type="submit" class="ct-create-footer__btn ct-create-footer__btn--primary">
-                        <span>شروع قرارداد</span>
+                        شروع قرارداد
                         <i class="fas fa-arrow-left" aria-hidden="true"></i>
                     </button>
                 </div>
-                <p class="ct-create-footer__help">
-                    <i class="fas fa-lightbulb" aria-hidden="true"></i>
-                    <span>نمی‌دانید کدام نوع قرارداد مناسب است؟ <a href="{% url 'workspace:academy_home' %}" target="_blank" rel="noopener">راهنمای انتخاب قرارداد</a></span>
-                </p>
             </div>
         </form>
 

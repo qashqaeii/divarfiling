@@ -13,6 +13,7 @@ public_urlpatterns = [
     path('c/view/<str:token>/handover/pdf/', public_views.PublicHandoverPdfView.as_view(), name='public_handover_pdf'),
     path('c/view/<str:token>/attachment/<int:attachment_id>/', public_views.PublicContractAttachmentView.as_view(), name='public_view_attachment'),
     path('c/handover/<str:token>/', handover_public_views.PublicHandoverAcceptView.as_view(), name='public_handover_accept'),
+    path('c/handover/<str:token>/pdf/', handover_public_views.PublicHandoverInvitationPdfView.as_view(), name='public_handover_invitation_pdf'),
 ]
 
 # مسیرهای کاننیکال (بدون deal_id در URL)

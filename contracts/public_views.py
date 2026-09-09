@@ -332,18 +332,25 @@ class PublicContractAttachmentView(View):
 
 
 class PublicHandoverPdfView(View):
-    """PDF صورت‌جلسه تحویل — inline در مرورگر."""
+    """PDF صورت‌جلسه تحویل — inline در مرورگر (صفحه قرارداد نهایی)."""
 
     def get(self, request, token):
         import io
 
         tok = _require_final_view_access(request, token)
         handover = tok.contract.handovers.filter(status='finalized').order_by('-finalized_at').first()
-        if not handover or not handover.pdf_file:
+        if not handover:
             raise Http404
-        filename = handover.pdf_file.name.split('/')[-1]
+        from contracts.services.handover_pdf import render_handover_pdf_bytes
+
+        pdf_bytes = render_handover_pdf_bytes(handover, preview=False)
+        if not pdf_bytes and handover.pdf_file:
+            pdf_bytes = handover.pdf_file.read()
+        if not pdf_bytes:
+            raise Http404
+        filename = f'handover_{handover.contract.internal_number}_{handover.pk}.pdf'
         response = FileResponse(
-            handover.pdf_file.open('rb'),
+            io.BytesIO(pdf_bytes),
             as_attachment=False,
             filename=filename,
             content_type='application/pdf',

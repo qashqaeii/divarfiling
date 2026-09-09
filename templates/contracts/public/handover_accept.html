@@ -2,102 +2,159 @@
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
     <title>تأیید صورت‌جلسه تحویل — فایلینگ دیوار</title>
-    <link rel="stylesheet" href="/static/contracts/css/public.css?v=3">
-    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/contracts/css/public.css?v=4">
+    <link rel="stylesheet" href="/static/contracts/css/public-handover.css?v=1">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
-<body class="ct-public ct-public--handover">
-    <header class="ct-public__brand">
-        <div class="ct-public__logo" aria-hidden="true">DF</div>
-        <div class="ct-public__brand-text">
-            <strong>فایلینگ دیوار</strong>
-            <span>تأیید صورت‌جلسه تحویل ملک</span>
+<body class="ct-public ct-public--handover ho-public">
+    <header class="ho-public__top">
+        <div class="ho-public__brand">
+            <div class="ho-public__logo" aria-hidden="true">DF</div>
+            <div class="ho-public__brand-text">
+                <strong>فایلینگ دیوار</strong>
+                <span>تأیید دیجیتال صورت‌جلسه تحویل</span>
+            </div>
         </div>
+        {% if handover and not error %}
+        <div class="ho-public__meta-chips">
+            <span class="ho-chip">{{ contract_number }}</span>
+            {% if handover_date_jalali %}<span class="ho-chip ho-chip--date"><i class="fas fa-calendar-day" aria-hidden="true"></i> {{ handover_date_jalali }}</span>{% endif %}
+            {% if handover_time_display %}<span class="ho-chip" dir="ltr">{{ handover_time_display }}</span>{% endif %}
+        </div>
+        {% endif %}
     </header>
 
-    <main class="ct-public__card">
-        {% if error %}
-        <div class="ct-error" role="alert">{{ error }}</div>
-        {% endif %}
-
-        {% if handover %}
-        <header class="ct-public__head">
-            <span class="ct-public__kicker">صورت‌جلسه تحویل</span>
-            <h1>تأیید تحویل ملک</h1>
-            {% if invitation %}
-            <p class="ct-public__role">
-                {% if invitation.side == 'delivered_by' %}تحویل‌دهنده{% elif invitation.side == 'received_by' %}تحویل‌گیرنده{% else %}طرف قرارداد{% endif %}
-                {% if invitation.first_name or invitation.last_name %} · {{ invitation.first_name }} {{ invitation.last_name }}{% endif %}
-            </p>
-            {% endif %}
-        </header>
-
-        <dl class="ct-public-meta">
-            <div>
-                <dt>قرارداد</dt>
-                <dd>{{ handover.contract.internal_number }}</dd>
-            </div>
-            <div>
-                <dt>نوع تحویل</dt>
-                <dd>{{ handover.get_handover_type_display }}</dd>
-            </div>
-            {% if handover.handover_date %}
-            <div>
-                <dt>تاریخ تحویل</dt>
-                <dd>{{ handover.handover_date }}</dd>
-            </div>
-            {% endif %}
-        </dl>
-
-        <nav class="ct-public-steps" aria-label="مراحل تأیید">
-            <span class="ct-public-steps__item{% if not otp_sent %} is-active{% else %} is-done{% endif %}">۱. هویت</span>
-            <span class="ct-public-steps__item{% if otp_sent %} is-active{% endif %}">۲. تأیید</span>
-        </nav>
-
-        {% if not otp_sent %}
-        <p class="ct-muted">برای تأیید صورت‌جلسه، موبایل و کد ملی خود را وارد کنید.</p>
-        <form method="post" class="ct-public-form">
-            {% csrf_token %}
-            <input type="hidden" name="action" value="request_otp">
-            <label>
-                <span class="ct-public-form__label">شماره موبایل</span>
-                <input name="phone" type="tel" value="{{ phone|default:'' }}" required inputmode="tel" placeholder="09123456789" dir="ltr">
-            </label>
-            <label>
-                <span class="ct-public-form__label">کد ملی</span>
-                <input name="national_id" maxlength="10" required inputmode="numeric" placeholder="۱۰ رقم">
-            </label>
-            <button type="submit" class="ct-btn-primary">دریافت کد تأیید</button>
-        </form>
-        {% else %}
-        <p class="ct-muted">کد تأیید به موبایل <strong dir="ltr">{{ phone }}</strong> پیامک شد.</p>
-        <form method="post" class="ct-public-form">
-            {% csrf_token %}
-            <input type="hidden" name="action" value="accept">
-            <input type="hidden" name="phone" value="{{ phone }}">
-            <input type="hidden" name="national_id" value="{{ national_id|default:'' }}">
-            <label>
-                <span class="ct-public-form__label">کد تأیید</span>
-                <input name="otp_code" required inputmode="numeric" autocomplete="one-time-code" placeholder="کد ۶ رقمی" dir="ltr">
-            </label>
-            <fieldset class="ct-public-ack-list">
-                <legend>تأیید موارد زیر</legend>
-                {% for item in ack_items %}
-                <label class="ct-ack ct-ack--box">
-                    <input type="checkbox" name="ack" value="{{ item }}" required>
-                    <span>{{ item }}</span>
-                </label>
-                {% endfor %}
-            </fieldset>
-            <button type="submit" class="ct-btn-primary">تأیید صورت‌جلسه</button>
-        </form>
-        {% endif %}
-        {% endif %}
+    {% if error %}
+    <main class="ho-public__shell ho-public__shell--narrow">
+        <div class="ho-public__alert ho-public__alert--error" role="alert">{{ error }}</div>
     </main>
+    {% elif handover %}
+    <main class="ho-public__shell">
+        <div class="ho-public__layout">
+            <section class="ho-public__doc" aria-label="پیش‌نمایش صورت‌جلسه">
+                <div class="ho-public__doc-head">
+                    <div>
+                        <span class="ho-public__kicker">صورت‌جلسه تحویل ملک</span>
+                        <h1>{{ handover_type_label }}</h1>
+                        <p class="ho-public__doc-sub">قرارداد <strong>{{ contract_number }}</strong>{% if side_label %} · نقش شما: <strong>{{ side_label }}</strong>{% if role_label %} ({{ role_label }}){% endif %}{% endif %}</p>
+                    </div>
+                    <a href="{{ pdf_url }}" target="_blank" rel="noopener" class="ho-public__pdf-link">باز کردن PDF</a>
+                </div>
+                <div class="ho-public__pdf-frame">
+                    <iframe src="{{ pdf_url }}" title="PDF صورت‌جلسه تحویل" loading="lazy"></iframe>
+                </div>
 
-    <footer class="ct-public__foot">
+                <div class="ho-public__summary">
+                    {% if review.delivered or review.received %}
+                    <div class="ho-public__summary-grid">
+                        {% if review.delivered %}
+                        <article class="ho-party-summary">
+                            <span class="ho-party-summary__role">تحویل‌دهنده</span>
+                            <strong>{{ review.delivered.name }}</strong>
+                            {% if review.delivered.mobile %}<span dir="ltr">{{ review.delivered.mobile }}</span>{% endif %}
+                        </article>
+                        {% endif %}
+                        {% if review.received %}
+                        <article class="ho-party-summary">
+                            <span class="ho-party-summary__role">تحویل‌گیرنده</span>
+                            <strong>{{ review.received.name }}</strong>
+                            {% if review.received.mobile %}<span dir="ltr">{{ review.received.mobile }}</span>{% endif %}
+                        </article>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                    {% if property_data.address or property_data.property_type %}
+                    <p class="ho-public__property">
+                        <i class="fas fa-building" aria-hidden="true"></i>
+                        {% if property_data.property_type %}{{ property_data.property_type }}{% endif %}
+                        {% if property_data.address %} · {{ property_data.address|truncatechars:80 }}{% endif %}
+                    </p>
+                    {% endif %}
+                </div>
+            </section>
+
+            <section class="ho-public__flow" aria-label="مراحل تأیید">
+                <div class="ho-public__card">
+                    {% if error %}
+                    <div class="ho-public__alert ho-public__alert--error" role="alert">{{ error }}</div>
+                    {% endif %}
+
+                    <nav class="ho-steps" aria-label="پیشرفت تأیید">
+                        <div class="ho-steps__item{% if not otp_sent %} is-active{% else %} is-done{% endif %}">
+                            <span class="ho-steps__num">۱</span>
+                            <span class="ho-steps__label">احراز هویت</span>
+                        </div>
+                        <div class="ho-steps__line{% if otp_sent %} is-done{% endif %}" aria-hidden="true"></div>
+                        <div class="ho-steps__item{% if otp_sent %} is-active{% endif %}">
+                            <span class="ho-steps__num">۲</span>
+                            <span class="ho-steps__label">تأیید صورت‌جلسه</span>
+                        </div>
+                    </nav>
+
+                    {% if not otp_sent %}
+                    <header class="ho-flow-head">
+                        <h2>ورود با موبایل و کد ملی</h2>
+                        <p>برای مشاهده و تأیید صورت‌جلسه، اطلاعات ثبت‌شده در قرارداد را وارد کنید.</p>
+                    </header>
+                    <form method="post" class="ho-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="request_otp">
+                        <label class="ho-field">
+                            <span class="ho-field__label">شماره موبایل</span>
+                            <span class="ho-field__hint">همان شماره‌ای که در قرارداد ثبت شده</span>
+                            <input class="ho-input" name="phone" type="tel" value="{{ phone|default:'' }}" required inputmode="tel" autocomplete="tel" placeholder="09123456789" dir="ltr">
+                        </label>
+                        <label class="ho-field">
+                            <span class="ho-field__label">کد ملی</span>
+                            <input class="ho-input" name="national_id" maxlength="10" required inputmode="numeric" autocomplete="off" placeholder="کد ملی ۱۰ رقمی" value="{{ national_id|default:'' }}">
+                        </label>
+                        <button type="submit" class="ho-btn ho-btn--primary">دریافت کد تأیید</button>
+                    </form>
+                    {% else %}
+                    <header class="ho-flow-head">
+                        <h2>تأیید نهایی</h2>
+                        <p>کد ۶ رقمی به شماره <strong dir="ltr">{{ phone }}</strong> پیامک شد.</p>
+                    </header>
+                    <form method="post" class="ho-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="accept">
+                        <input type="hidden" name="phone" value="{{ phone }}">
+                        <input type="hidden" name="national_id" value="{{ national_id|default:'' }}">
+                        <label class="ho-field">
+                            <span class="ho-field__label">کد تأیید</span>
+                            <input class="ho-input ho-input--otp" name="otp_code" required inputmode="numeric" autocomplete="one-time-code" placeholder="• • • • • •" dir="ltr" maxlength="8">
+                        </label>
+                        <fieldset class="ho-ack-list">
+                            <legend>موارد زیر را تأیید کنید</legend>
+                            {% for item in ack_items %}
+                            <label class="ho-ack">
+                                <input type="checkbox" name="ack" value="{{ item }}" required>
+                                <span>{{ item }}</span>
+                            </label>
+                            {% endfor %}
+                        </fieldset>
+                        <button type="submit" class="ho-btn ho-btn--primary">تأیید صورت‌جلسه تحویل</button>
+                        <p class="ho-form-note">با تأیید، وضعیت ثبت‌شده ملک و اقلام تحویلی را می‌پذیرید.</p>
+                    </form>
+                    {% endif %}
+
+                    <div class="ho-disclaimer">
+                        <p>{{ legal_disclaimer }}</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+    {% endif %}
+
+    <footer class="ho-public__foot">
         <span>فایلینگ دیوار · divarfiling.ir</span>
+        {% if content_hash_short %}<span class="ho-public__hash">اثر انگشت: {{ content_hash_short }}</span>{% endif %}
     </footer>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous">
 </body>
 </html>

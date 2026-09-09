@@ -2,38 +2,58 @@
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>تأیید شد — فایلینگ دیوار</title>
-    <link rel="stylesheet" href="/static/contracts/css/public.css?v=3">
-    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/contracts/css/public.css?v=4">
+    <link rel="stylesheet" href="/static/contracts/css/public-handover.css?v=1">
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
-<body class="ct-public ct-public--handover ct-public--success-page">
-    <header class="ct-public__brand">
-        <div class="ct-public__logo" aria-hidden="true">DF</div>
-        <div class="ct-public__brand-text">
-            <strong>فایلینگ دیوار</strong>
-            <span>صورت‌جلسه تحویل</span>
+<body class="ct-public ct-public--handover ct-public--success-page ho-public">
+    <header class="ho-public__top ho-public__top--compact">
+        <div class="ho-public__brand">
+            <div class="ho-public__logo" aria-hidden="true">DF</div>
+            <div class="ho-public__brand-text">
+                <strong>فایلینگ دیوار</strong>
+                <span>صورت‌جلسه تحویل</span>
+            </div>
         </div>
     </header>
 
-    <main class="ct-public__card ct-public__card--success">
-        <div class="ct-success-icon" aria-hidden="true">✓</div>
-        <h1>صورت‌جلسه تحویل با موفقیت تأیید شد</h1>
-        <p class="ct-muted">ثبت شما در سامانه انجام شد و دیگر نیازی به اقدام دیگری نیست.</p>
-        <dl class="ct-public-meta ct-public-meta--center">
-            <div>
-                <dt>قرارداد</dt>
-                <dd>{{ handover.contract.internal_number }}</dd>
+    <main class="ho-public__shell ho-public__shell--narrow">
+        <div class="ho-public__card ho-public__card--success">
+            <div class="ho-success-icon" aria-hidden="true"><i class="fas fa-check"></i></div>
+            <h1>صورت‌جلسه تحویل با موفقیت تأیید شد</h1>
+            <p class="ho-muted">ثبت شما در سامانه انجام شد.{% if handover.status == 'finalized' %} سند نهایی شد و برای طرفین قابل مشاهده است.{% else %} پس از تأیید طرف مقابل، سند نهایی می‌شود.{% endif %}</p>
+
+            <dl class="ho-done-meta">
+                <div>
+                    <dt>قرارداد</dt>
+                    <dd>{{ contract_number }}</dd>
+                </div>
+                <div>
+                    <dt>وضعیت</dt>
+                    <dd>{{ handover.get_status_display }}</dd>
+                </div>
+                {% if handover_date_jalali %}
+                <div>
+                    <dt>تاریخ تحویل</dt>
+                    <dd>{{ handover_date_jalali }}{% if handover_time_display %} · {{ handover_time_display }}{% endif %}</dd>
+                </div>
+                {% endif %}
+            </dl>
+
+            {% if pdf_url %}
+            <div class="ho-public__pdf-frame ho-public__pdf-frame--done">
+                <iframe src="{{ pdf_url }}" title="PDF صورت‌جلسه تحویل" loading="lazy"></iframe>
             </div>
-            <div>
-                <dt>وضعیت</dt>
-                <dd>{{ handover.get_status_display }}</dd>
-            </div>
-        </dl>
+            <a href="{{ pdf_url }}" target="_blank" rel="noopener" class="ho-btn ho-btn--outline ho-btn--block">مشاهده PDF در تب جدید</a>
+            {% endif %}
+        </div>
     </main>
 
-    <footer class="ct-public__foot">
+    <footer class="ho-public__foot">
         <span>فایلینگ دیوار · divarfiling.ir</span>
     </footer>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous">
 </body>
 </html>

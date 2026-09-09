@@ -1,140 +1,360 @@
 {% extends 'workspace/crm/base_crm.html' %}
-{% load static workspace_tags contract_tags %}
+{% load static workspace_tags contract_tags persian_tags %}
 
 {% block page_title %}قراردادها{% endblock %}
 {% block mobile_bar_title %}قراردادها{% endblock %}
 {% block crm_extra_css %}
-<link rel="stylesheet" href="{% static 'contracts/css/contracts.css' %}?v=16">
+<link rel="stylesheet" href="{% static 'contracts/css/contracts.css' %}?v=17">
 <link rel="stylesheet" href="{% static 'contracts/css/workspace.css' %}?v=4">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-ecosystem.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'contracts/css/contracts-dashboard.css' %}?v=1">
 {% endblock %}
 
 {% block crm_content %}
-<div class="ct-workspace crm-page-chrome">
-    <header class="crm-dash-bar ct-workspace-header">
-        <div class="crm-dash-bar-main">
-            <span class="ct-workspace-kicker"><i class="fas fa-file-signature" aria-hidden="true"></i> میز قراردادها</span>
-            <h1 class="crm-dash-bar-title">قراردادها</h1>
-            <p class="crm-dash-bar-sub is-visible">ایجاد، ارسال، تأیید و مدیریت قراردادهای معاملات — مستقل یا متصل به قیف معاملات</p>
-        </div>
-        <div class="crm-dash-bar-actions">
-            <a href="{% url 'workspace:crm_deals' %}" class="crm-dash-act" title="قیف معاملات">
-                <i class="fas fa-filter" aria-hidden="true"></i><span>قیف معاملات</span>
-            </a>
-            <a href="{% url 'workspace:contract_create_standalone' %}" class="crm-dash-act crm-dash-act--primary">
-                <i class="fas fa-plus" aria-hidden="true"></i><span>قرارداد جدید</span>
-            </a>
-        </div>
-    </header>
+<div class="ct-workspace crm-contracts-dashboard crm-page-chrome">
+    <div class="ct-workspace-inner">
 
-    {% if filter_deal %}
-    <div class="ct-workspace-filter-banner">
-        <i class="fas fa-link" aria-hidden="true"></i>
-        <span>فیلتر فعال: معامله «{{ filter_deal.title }}»</span>
-        <a href="{% url 'workspace:contracts_dashboard' %}" class="crm-dash-act">حذف فیلتر</a>
-    </div>
-    {% endif %}
-
-    <section class="ct-workspace-kpis" aria-label="شاخص‌های قرارداد">
-        <a href="?status=draft{% if filter_deal %}&deal={{ filter_deal.pk }}{% endif %}" class="ct-kpi{% if request.GET.status == 'draft' %} is-active{% endif %}">
-            <strong>{{ stats.draft }}</strong><span>پیش‌نویس</span>
-        </a>
-        <a href="?status=sent{% if filter_deal %}&deal={{ filter_deal.pk }}{% endif %}" class="ct-kpi{% if request.GET.status == 'sent' %} is-active{% endif %}">
-            <strong>{{ stats.pending }}</strong><span>در انتظار تأیید</span>
-        </a>
-        <a href="?status=finalized{% if filter_deal %}&deal={{ filter_deal.pk }}{% endif %}" class="ct-kpi{% if request.GET.status == 'finalized' %} is-active{% endif %}">
-            <strong>{{ stats.finalized }}</strong><span>نهایی‌شده</span>
-        </a>
-        <a href="?{% if filter_deal %}deal={{ filter_deal.pk }}{% endif %}" class="ct-kpi ct-kpi--warn{% if not request.GET.status %} is-active{% endif %}">
-            <strong>{{ stats.needs_action }}</strong><span>نیازمند اقدام</span>
-        </a>
-    </section>
-
-    <form method="get" class="ct-workspace-toolbar">
-        {% if filter_deal %}<input type="hidden" name="deal" value="{{ filter_deal.pk }}">{% endif %}
-        <label class="visually-hidden" for="ctContractSearch">جستجو</label>
-        <input type="search" id="ctContractSearch" name="q" value="{{ request.GET.q }}" placeholder="جستجو شماره، معامله، مخاطب..." class="crm-input">
-        <select name="status" class="crm-select" aria-label="وضعیت">
-            <option value="">همه وضعیت‌ها</option>
-            {% for key, label in contract_statuses %}
-            <option value="{{ key }}"{% if request.GET.status == key %} selected{% endif %}>{{ label }}</option>
-            {% endfor %}
-        </select>
-        <select name="type" class="crm-select" aria-label="نوع قرارداد">
-            <option value="">همه انواع</option>
-            {% for key, label in contract_types %}
-            <option value="{{ key }}"{% if request.GET.type == key %} selected{% endif %}>{{ label }}</option>
-            {% endfor %}
-        </select>
-        <button type="submit" class="crm-dash-act crm-dash-act--primary">اعمال فیلتر</button>
-    </form>
-
-    <div class="ct-workspace-list ct-workspace-list--grid">
-        {% for c in contracts %}
-        <article class="ct-workspace-card">
-            <div class="ct-workspace-card__main">
-                <div class="ct-workspace-card__head">
-                    <span class="crm-contract-status crm-contract-status--{{ c.status }}">{{ c.get_status_display }}</span>
-                    <span class="ct-workspace-card__type">{{ c.get_contract_type_display }}</span>
+        <header class="crm-dash-bar ct-workspace-header">
+            <div class="crm-dash-bar-main">
+                <nav aria-label="مسیر صفحه">
+                    <ol class="ct-dash-breadcrumb">
+                        <li><a href="{% url 'workspace:crm_dashboard' %}">مدیریت مشتری</a></li>
+                        <li><span aria-current="page">قراردادها</span></li>
+                    </ol>
+                </nav>
+                <div class="ct-dash-title-row">
+                    <span class="ct-dash-title-icon" aria-hidden="true"><i class="fas fa-file-signature"></i></span>
+                    <div>
+                        <h1 class="crm-dash-bar-title">قراردادها</h1>
+                        <p class="crm-dash-bar-sub is-visible">ایجاد، ارسال، تأیید و مدیریت قراردادهای معاملات — مستقل یا متصل به قیف معاملات</p>
+                    </div>
                 </div>
-                <p class="ct-workspace-card__id">{{ c.internal_number }}</p>
-                <p class="ct-workspace-card__meta">
-                    {% if c.deal %}
-                    <a href="{% url 'workspace:crm_deal_detail' c.deal_id %}" class="ct-workspace-card__deal-link">
-                        <i class="fas fa-handshake" aria-hidden="true"></i>{{ c.deal.title|truncatechars:36 }}
+            </div>
+            <div class="crm-dash-bar-actions" role="toolbar" aria-label="عملیات قراردادها">
+                <a href="{% url 'workspace:crm_templates' %}" class="crm-dash-act" title="قالب‌های پیام">
+                    <i class="fas fa-layer-group" aria-hidden="true"></i><span>قالب‌ها</span>
+                </a>
+                <a href="{% url 'workspace:crm_deals' %}" class="crm-dash-act" title="قیف معاملات">
+                    <i class="fas fa-filter" aria-hidden="true"></i><span>قیف معاملات</span>
+                </a>
+                <a href="{% url 'workspace:contract_create_standalone' %}" class="crm-dash-act crm-dash-act--primary">
+                    <i class="fas fa-plus" aria-hidden="true"></i><span>قرارداد جدید</span>
+                </a>
+            </div>
+        </header>
+
+        <header class="ct-dash-mob-header">
+            <div class="ct-dash-mob-header__mesh" aria-hidden="true"></div>
+            <div class="ct-dash-mob-header__inner">
+                <div>
+                    <h1 class="ct-dash-mob-title">قراردادها</h1>
+                    <p class="ct-dash-mob-desc">مدیریت چرخه عمر قراردادها از پیش‌نویس تا نهایی‌سازی</p>
+                </div>
+                <a href="{% url 'workspace:contract_create_standalone' %}" class="ct-dash-mob-add" title="قرارداد جدید" aria-label="قرارداد جدید">
+                    <i class="fas fa-plus" aria-hidden="true"></i>
+                </a>
+            </div>
+        </header>
+
+        {% if filter_deal %}
+        <div class="ct-workspace-filter-banner">
+            <i class="fas fa-link" aria-hidden="true"></i>
+            <span>فیلتر فعال: معامله «{{ filter_deal.title }}»</span>
+            <a href="{% url 'workspace:contracts_dashboard' %}" class="crm-dash-act">حذف فیلتر</a>
+        </div>
+        {% endif %}
+
+        <section class="ct-dash-kpis" aria-label="شاخص‌های قرارداد">
+            <a href="?status=draft{% if filter_deal %}&deal={{ filter_deal.pk }}{% endif %}" class="ct-dash-kpi ct-dash-kpi--draft{% if request.GET.status == 'draft' %} is-active{% endif %}">
+                <span class="ct-dash-kpi__icon" aria-hidden="true"><i class="fas fa-file-pen"></i></span>
+                <span class="ct-dash-kpi__body">
+                    <span class="ct-dash-kpi__value">{{ stats.draft|to_persian_digits }}</span>
+                    <span class="ct-dash-kpi__label">پیش‌نویس</span>
+                    <span class="ct-dash-kpi__hint">در حال تکمیل اطلاعات</span>
+                </span>
+            </a>
+            <a href="?status=sent{% if filter_deal %}&deal={{ filter_deal.pk }}{% endif %}" class="ct-dash-kpi ct-dash-kpi--pending{% if request.GET.status == 'sent' %} is-active{% endif %}">
+                <span class="ct-dash-kpi__icon" aria-hidden="true"><i class="fas fa-clock"></i></span>
+                <span class="ct-dash-kpi__body">
+                    <span class="ct-dash-kpi__value">{{ stats.pending|to_persian_digits }}</span>
+                    <span class="ct-dash-kpi__label">در انتظار تأیید</span>
+                    <span class="ct-dash-kpi__hint">ارسال‌شده یا در حال بررسی</span>
+                </span>
+            </a>
+            <a href="?status=finalized{% if filter_deal %}&deal={{ filter_deal.pk }}{% endif %}" class="ct-dash-kpi ct-dash-kpi--finalized{% if request.GET.status == 'finalized' %} is-active{% endif %}">
+                <span class="ct-dash-kpi__icon" aria-hidden="true"><i class="fas fa-circle-check"></i></span>
+                <span class="ct-dash-kpi__body">
+                    <span class="ct-dash-kpi__value">{{ stats.finalized|to_persian_digits }}</span>
+                    <span class="ct-dash-kpi__label">نهایی‌شده</span>
+                    <span class="ct-dash-kpi__hint">آماده بایگانی و پیگیری</span>
+                </span>
+            </a>
+            <a href="?{% if filter_deal %}deal={{ filter_deal.pk }}{% endif %}" class="ct-dash-kpi ct-dash-kpi--action{% if not request.GET.status %} is-active{% endif %}">
+                <span class="ct-dash-kpi__icon" aria-hidden="true"><i class="fas fa-bell"></i></span>
+                <span class="ct-dash-kpi__body">
+                    <span class="ct-dash-kpi__value">{{ stats.needs_action|to_persian_digits }}</span>
+                    <span class="ct-dash-kpi__label">نیازمند اقدام</span>
+                    <span class="ct-dash-kpi__hint">منتظر پیگیری یا ارسال</span>
+                </span>
+            </a>
+        </section>
+
+        <nav class="ct-dash-quick" aria-label="فیلتر سریع وضعیت">
+            <a href="?{% if filter_deal %}deal={{ filter_deal.pk }}{% endif %}"
+               class="ct-dash-quick__tab{% if not request.GET.status and not request.GET.focus %} is-active{% endif %}">
+                همه
+                <span class="ct-dash-quick__badge">{{ stats.total|to_persian_digits }}</span>
+            </a>
+            <a href="?focus=active{% if filter_deal %}&deal={{ filter_deal.pk }}{% endif %}"
+               class="ct-dash-quick__tab{% if request.GET.focus == 'active' %} is-active{% endif %}">
+                فعال
+                <span class="ct-dash-quick__badge">{{ stats.pending|add:stats.draft|to_persian_digits }}</span>
+            </a>
+            <a href="?status=sent{% if filter_deal %}&deal={{ filter_deal.pk }}{% endif %}"
+               class="ct-dash-quick__tab{% if request.GET.status == 'sent' %} is-active{% endif %}">
+                در انتظار تأیید
+                <span class="ct-dash-quick__badge">{{ stats.pending|to_persian_digits }}</span>
+            </a>
+            <a href="?status=finalized{% if filter_deal %}&deal={{ filter_deal.pk }}{% endif %}"
+               class="ct-dash-quick__tab{% if request.GET.status == 'finalized' %} is-active{% endif %}">
+                نهایی‌شده
+                <span class="ct-dash-quick__badge">{{ stats.finalized|to_persian_digits }}</span>
+            </a>
+            <a href="?focus=needs{% if filter_deal %}&deal={{ filter_deal.pk }}{% endif %}"
+               class="ct-dash-quick__tab{% if request.GET.focus == 'needs' %} is-active{% endif %}">
+                نیازمند اقدام
+                <span class="ct-dash-quick__badge">{{ stats.needs_action|to_persian_digits }}</span>
+            </a>
+        </nav>
+
+        <section class="ct-dash-filter-card" aria-labelledby="ctDashFilterTitle">
+            <header class="ct-dash-filter-card__head">
+                <h2 class="ct-dash-filter-card__title" id="ctDashFilterTitle">
+                    <i class="fas fa-sliders" aria-hidden="true"></i>
+                    فیلتر و جستجو
+                </h2>
+            </header>
+            <form method="get" class="ct-dash-filter-card__body">
+                {% if filter_deal %}<input type="hidden" name="deal" value="{{ filter_deal.pk }}">{% endif %}
+                {% if request.GET.focus %}<input type="hidden" name="focus" value="{{ request.GET.focus }}">{% endif %}
+
+                <div class="ct-dash-filter-grid">
+                    <div class="ct-dash-field">
+                        <label class="ct-dash-field__label" for="ctContractSearch">جستجو</label>
+                        <div class="ct-dash-search">
+                            <i class="fas fa-search" aria-hidden="true"></i>
+                            <input type="search" id="ctContractSearch" name="q" value="{{ request.GET.q }}" placeholder="جستجو شماره، معامله، مخاطب..." class="crm-input" autocomplete="off">
+                        </div>
+                    </div>
+                    <div class="ct-dash-field">
+                        <label class="ct-dash-field__label" for="ctContractStatus">وضعیت</label>
+                        <select id="ctContractStatus" name="status" class="crm-select" aria-label="وضعیت">
+                            <option value="">همه وضعیت‌ها</option>
+                            {% for key, label in contract_statuses %}
+                            <option value="{{ key }}"{% if request.GET.status == key %} selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="ct-dash-field">
+                        <label class="ct-dash-field__label" for="ctContractType">نوع قرارداد</label>
+                        <select id="ctContractType" name="type" class="crm-select" aria-label="نوع قرارداد">
+                            <option value="">همه انواع</option>
+                            {% for key, label in contract_types %}
+                            <option value="{{ key }}"{% if request.GET.type == key %} selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="ct-dash-filter-actions">
+                    <button type="submit" class="crm-dash-act crm-dash-act--primary">
+                        <i class="fas fa-check" aria-hidden="true"></i>
+                        <span>اعمال فیلتر</span>
+                    </button>
+                    {% if request.GET.q or request.GET.status or request.GET.type or request.GET.focus %}
+                    <a href="{% url 'workspace:contracts_dashboard' %}{% if filter_deal %}?deal={{ filter_deal.pk }}{% endif %}" class="crm-dash-act crm-dash-act--ghost">
+                        <i class="fas fa-rotate-left" aria-hidden="true"></i>
+                        <span>پاک کردن</span>
                     </a>
-                    {% if c.deal.customer %}<span class="ct-muted"> · {{ c.deal.customer.name }}</span>{% endif %}
-                    {% else %}
-                    <span class="ct-muted"><i class="fas fa-file" aria-hidden="true"></i> قرارداد مستقل</span>
-                    {% endif %}
-                </p>
-                <div class="ct-workspace-card__progress" aria-label="پیشرفت">
-                    {% if c.status == 'draft' %}<i style="width:35%"></i>
-                    {% elif c.status == 'ready' %}<i style="width:50%"></i>
-                    {% elif c.status in 'sent,viewed,partially_accepted' %}<i style="width:65%"></i>
-                    {% elif c.status == 'finalized' %}<i style="width:100%"></i>
-                    {% else %}<i style="width:25%"></i>{% endif %}
-                </div>
-            </div>
-            <div class="ct-workspace-card__side">
-                <time class="ct-workspace-card__date" datetime="{{ c.updated_at|date:'c' }}">{{ c.updated_at|ws_jalali_datetime }}</time>
-                <div class="ct-workspace-card__actions">
-                    {% if c.status == 'draft' %}
-                    <a href="{% ct_wizard_url c %}" class="crm-dash-act crm-dash-act--primary">شروع قرارداد</a>
-                    {% elif c.status == 'ready' %}
-                    <a href="{% ct_manage_url c %}" class="crm-dash-act crm-dash-act--primary">ارسال</a>
-                    {% elif c.status in 'sent,viewed,partially_accepted' %}
-                    <a href="{% ct_manage_url c %}" class="crm-dash-act crm-dash-act--primary">پیگیری تأیید</a>
-                    {% elif c.status == 'finalized' %}
-                    <a href="{% ct_manage_url c %}" class="crm-dash-act crm-dash-act--primary">مشاهده</a>
-                    {% elif c.status == 'cancelled' %}
-                    <a href="{% ct_manage_url c %}" class="crm-dash-act">مشاهده</a>
-                    {% else %}
-                    <a href="{% ct_manage_url c %}" class="crm-dash-act">مدیریت</a>
                     {% endif %}
                 </div>
-            </div>
-        </article>
-        {% empty %}
-        <div class="ct-workspace-empty">
-            <i class="fas fa-file-circle-plus" aria-hidden="true"></i>
-            <strong>{% if request.GET.q or request.GET.status %}نتیجه‌ای یافت نشد{% else %}هنوز قراردادی ثبت نشده{% endif %}</strong>
-            <p>{% if request.GET.q or request.GET.status %}فیلتر را تغییر دهید یا جستجو را پاک کنید.{% else %}قرارداد را مستقیماً بسازید یا از داخل معامله در قیف معاملات ایجاد کنید.{% endif %}</p>
-            <a href="{% url 'workspace:contract_create_standalone' %}" class="crm-dash-act crm-dash-act--primary">+ قرارداد جدید</a>
-        </div>
-        {% endfor %}
-    </div>
+            </form>
+        </section>
 
-    {% if contracts_page.has_other_pages %}
-    <nav class="ct-workspace-pagination" aria-label="صفحه‌بندی">
-        {% if contracts_page.has_previous %}
-        <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}page={{ contracts_page.previous_page_number }}" class="crm-dash-act">قبلی</a>
+        {% if stats.needs_action %}
+        <div class="ct-dash-alert" role="status">
+            <span class="ct-dash-alert__icon" aria-hidden="true"><i class="fas fa-bell"></i></span>
+            <span class="ct-dash-alert__text">
+                <strong>{{ stats.needs_action|to_persian_digits }}</strong>
+                قرارداد نیازمند اقدام یا پیگیری است
+            </span>
+            <a href="?status=sent{% if filter_deal %}&deal={{ filter_deal.pk }}{% endif %}" class="crm-dash-act crm-dash-act--primary">
+                مشاهده موارد
+            </a>
+        </div>
         {% endif %}
-        <span>صفحه {{ contracts_page.number }} از {{ contracts_page.paginator.num_pages }}</span>
-        {% if contracts_page.has_next %}
-        <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}page={{ contracts_page.next_page_number }}" class="crm-dash-act">بعدی</a>
+
+        <section class="ct-dash-list-panel" aria-labelledby="ctDashListTitle">
+            <header class="ct-dash-list-head">
+                <div class="ct-dash-list-head__main">
+                    <h2 class="ct-dash-list-head__title" id="ctDashListTitle">لیست قراردادها</h2>
+                    <span class="ct-dash-list-head__meta">
+                        {% if contracts_page.paginator.count %}
+                        {{ contracts_page.paginator.count|to_persian_digits }} قرارداد
+                        {% if request.GET.q or request.GET.status or request.GET.type %} (فیلترشده){% endif %}
+                        {% else %}
+                        بدون نتیجه
+                        {% endif %}
+                    </span>
+                </div>
+                <span class="ct-dash-list-head__sort" title="مرتب‌سازی پیش‌فرض">
+                    <i class="fas fa-arrow-down-wide-short" aria-hidden="true"></i>
+                    مرتب‌سازی: جدیدترین
+                </span>
+            </header>
+
+            {% if contracts %}
+            <div class="ct-dash-table-wrap">
+                <table class="ct-dash-table">
+                    <thead>
+                        <tr>
+                            <th scope="col">قرارداد / معامله</th>
+                            <th scope="col">نوع</th>
+                            <th scope="col">مخاطب</th>
+                            <th scope="col">وضعیت</th>
+                            <th scope="col">تاریخ ایجاد</th>
+                            <th scope="col">عملیات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for c in contracts %}
+                        <tr>
+                            <td class="ct-dash-cell-deal" data-label="قرارداد">
+                                <strong>
+                                    {% if c.deal %}
+                                    <a href="{% url 'workspace:crm_deal_detail' c.deal_id %}">{{ c.deal.title|truncatechars:48 }}</a>
+                                    {% elif c.title %}
+                                    {{ c.title|truncatechars:48 }}
+                                    {% else %}
+                                    {{ c.get_contract_type_display }}
+                                    {% endif %}
+                                </strong>
+                                <em>{{ c.internal_number }}</em>
+                            </td>
+                            <td class="ct-dash-cell-type" data-label="نوع">{{ c.get_contract_type_display }}</td>
+                            <td data-label="مخاطب">
+                                {% if c.deal and c.deal.customer %}
+                                <div class="ct-dash-cell-contact">
+                                    <span class="ct-dash-cell-contact__avatar" aria-hidden="true"><i class="fas fa-user"></i></span>
+                                    <span>
+                                        <span class="ct-dash-cell-contact__name">{{ c.deal.customer.name }}</span>
+                                        {% if c.deal.customer.phone %}
+                                        <span class="ct-dash-cell-contact__phone">{{ c.deal.customer.phone|to_persian_digits }}</span>
+                                        {% endif %}
+                                    </span>
+                                </div>
+                                {% else %}
+                                <span class="ct-muted"><i class="fas fa-file" aria-hidden="true"></i> قرارداد مستقل</span>
+                                {% endif %}
+                            </td>
+                            <td data-label="وضعیت">
+                                <span class="crm-contract-status crm-contract-status--{{ c.status }}">{{ c.get_status_display }}</span>
+                            </td>
+                            <td class="ct-dash-cell-date" data-label="تاریخ">
+                                <time datetime="{{ c.created_at|date:'c' }}">{{ c.created_at|ws_jalali_datetime }}</time>
+                            </td>
+                            <td class="ct-dash-cell-actions" data-label="عملیات">
+                                {% if c.status == 'draft' %}
+                                <a href="{% ct_wizard_url c %}" class="crm-dash-act crm-dash-act--primary">شروع قرارداد</a>
+                                {% elif c.status == 'ready' %}
+                                <a href="{% ct_manage_url c %}" class="crm-dash-act crm-dash-act--primary">ارسال</a>
+                                {% elif c.status in 'sent,viewed,partially_accepted' %}
+                                <a href="{% ct_manage_url c %}" class="crm-dash-act crm-dash-act--primary">پیگیری تأیید</a>
+                                {% elif c.status == 'finalized' %}
+                                <a href="{% ct_manage_url c %}" class="crm-dash-act crm-dash-act--primary">مشاهده</a>
+                                {% elif c.status == 'cancelled' %}
+                                <a href="{% ct_manage_url c %}" class="crm-dash-act">مشاهده</a>
+                                {% else %}
+                                <a href="{% ct_manage_url c %}" class="crm-dash-act">مدیریت</a>
+                                {% endif %}
+
+                                {% if c.current_version and c.current_version.pdf_file %}
+                                <a href="{% ct_pdf_url c %}" class="crm-dash-act crm-dash-act--icon" title="دانلود PDF" aria-label="دانلود PDF">
+                                    <i class="fas fa-file-pdf" aria-hidden="true"></i>
+                                </a>
+                                {% endif %}
+
+                                <div class="ct-menu-wrap ct-dash-row-menu">
+                                    <button type="button" class="crm-dash-act crm-dash-act--icon ct-menu-btn" aria-label="عملیات بیشتر" aria-haspopup="true">
+                                        <i class="fas fa-ellipsis-vertical" aria-hidden="true"></i>
+                                    </button>
+                                    <div class="ct-menu-panel" role="menu">
+                                        <a href="{% ct_manage_url c %}" role="menuitem">مدیریت قرارداد</a>
+                                        {% if c.status == 'draft' %}
+                                        <a href="{% ct_wizard_url c %}" role="menuitem">ادامه ویزارد</a>
+                                        {% endif %}
+                                        {% if c.deal %}
+                                        <a href="{% url 'workspace:crm_deal_detail' c.deal_id %}" role="menuitem">مشاهده معامله</a>
+                                        {% endif %}
+                                        {% if c.current_version and c.current_version.pdf_file %}
+                                        <a href="{% ct_pdf_url c %}" role="menuitem">دانلود PDF</a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="ct-dash-empty">
+                <div class="ct-dash-empty__icon" aria-hidden="true"><i class="fas fa-file-circle-plus"></i></div>
+                <strong>{% if request.GET.q or request.GET.status or request.GET.type %}نتیجه‌ای یافت نشد{% else %}هنوز قراردادی ثبت نشده{% endif %}</strong>
+                <p>{% if request.GET.q or request.GET.status or request.GET.type %}فیلتر را تغییر دهید یا جستجو را پاک کنید.{% else %}قرارداد را مستقیماً بسازید یا از داخل معامله در قیف معاملات ایجاد کنید.{% endif %}</p>
+                <a href="{% url 'workspace:contract_create_standalone' %}" class="crm-dash-act crm-dash-act--primary">
+                    <i class="fas fa-plus" aria-hidden="true"></i>
+                    <span>قرارداد جدید</span>
+                </a>
+            </div>
+            {% endif %}
+        </section>
+
+        {% if contracts_page.has_other_pages %}
+        <nav class="ct-workspace-pagination" aria-label="صفحه‌بندی">
+            {% if contracts_page.has_previous %}
+            <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}page={{ contracts_page.previous_page_number }}" class="crm-dash-act">قبلی</a>
+            {% endif %}
+            <span>صفحه {{ contracts_page.number|to_persian_digits }} از {{ contracts_page.paginator.num_pages|to_persian_digits }}</span>
+            {% if contracts_page.has_next %}
+            <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}page={{ contracts_page.next_page_number }}" class="crm-dash-act">بعدی</a>
+            {% endif %}
+        </nav>
         {% endif %}
-    </nav>
-    {% endif %}
+
+    </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    document.querySelectorAll('.ct-dash-row-menu').forEach(function (wrap) {
+        var btn = wrap.querySelector('.ct-menu-btn');
+        if (!btn) return;
+        btn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            document.querySelectorAll('.ct-menu-wrap.is-open').forEach(function (w) {
+                if (w !== wrap) w.classList.remove('is-open');
+            });
+            wrap.classList.toggle('is-open');
+        });
+    });
+    document.addEventListener('click', function () {
+        document.querySelectorAll('.ct-menu-wrap.is-open').forEach(function (w) {
+            w.classList.remove('is-open');
+        });
+    });
+})();
+</script>
 {% endblock %}

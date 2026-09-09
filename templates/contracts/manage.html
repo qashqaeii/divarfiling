@@ -14,7 +14,7 @@
 
 <link rel="stylesheet" href="{% static 'workspace/css/crm-ecosystem.css' %}?v=2">
 
-<link rel="stylesheet" href="{% static 'contracts/css/contracts-manage.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'contracts/css/contracts-manage.css' %}?v=4">
 
 {% endblock %}
 
@@ -349,24 +349,27 @@
                 </header>
 
                 <div class="ct-party-card__body">
-                    <div class="ct-party-card__info">
-
-                        <p class="ct-party-card__name">{{ item.name }}</p>
-
-                        {% if item.mobile %}
-
-                        <p class="ct-party-card__mobile">
-
-                            <i class="fas fa-phone" aria-hidden="true"></i>
-
-                            {{ item.mobile }}
-
-                        </p>
-
+                    <dl class="ct-party-card__details">
+                        {% if item.first_name or item.last_name %}
+                        <div class="ct-party-card__field">
+                            <dt>نام</dt>
+                            <dd>{{ item.first_name|default:"—" }}</dd>
+                        </div>
+                        <div class="ct-party-card__field">
+                            <dt>نام خانوادگی</dt>
+                            <dd>{{ item.last_name|default:"—" }}</dd>
+                        </div>
+                        {% else %}
+                        <div class="ct-party-card__field ct-party-card__field--full">
+                            <dt>نام</dt>
+                            <dd>{{ item.name|default:"—" }}</dd>
+                        </div>
                         {% endif %}
-
-                    </div>
-
+                        <div class="ct-party-card__field ct-party-card__field--full">
+                            <dt>شماره تماس</dt>
+                            <dd class="ct-party-card__phone">{% if item.mobile %}{{ item.mobile }}{% else %}—{% endif %}</dd>
+                        </div>
+                    </dl>
                 </div>
 
                 {% if item.accepted and item.accepted_at %}

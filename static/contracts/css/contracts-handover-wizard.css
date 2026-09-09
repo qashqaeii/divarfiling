@@ -1,0 +1,1228 @@
+/**
+ * Handover Wizard — minimal SaaS shell (matches contract manage)
+ * Scoped to .ct-handover-wizard + .crm-contract-manage shell classes
+ */
+
+.ct-handover-wizard.crm-contract-manage .ct-manage-inner {
+    max-width: 1040px;
+}
+
+.ct-handover-wizard.ct-wizard--review .ct-manage-inner {
+    max-width: 1120px;
+}
+
+.ct-handover-wizard .ct-wizard-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ct-m-gap);
+    min-width: 0;
+}
+
+/* ── Stepper (match manage lifecycle) ── */
+.ct-handover-wizard .ct-ho-stepper.crm-deal-stepper {
+    margin: 0;
+    padding: 0.75rem 0.65rem;
+    border: 1px solid var(--ct-m-border);
+    border-radius: var(--ct-m-radius);
+    background: var(--ct-m-surface);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    position: relative;
+}
+
+.ct-handover-wizard .ct-ho-stepper::-webkit-scrollbar {
+    display: none;
+}
+
+.ct-handover-wizard .ct-ho-stepper .crm-deal-stepper-track {
+    display: none;
+}
+
+.ct-handover-wizard .ct-ho-stepper .crm-deal-stepper-steps {
+    display: flex;
+    align-items: flex-start;
+    gap: 0;
+    min-width: min(100%, 36rem);
+    padding: 0;
+}
+
+.ct-handover-wizard .ct-ho-stepper .crm-deal-step {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0;
+    text-decoration: none;
+    color: var(--ct-m-muted);
+    position: relative;
+    min-width: 4.5rem;
+    border: 0;
+    background: transparent;
+    font: inherit;
+    cursor: pointer;
+}
+
+.ct-handover-wizard .ct-ho-stepper .crm-deal-step:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    top: 0.825rem;
+    left: -50%;
+    width: 100%;
+    height: 1px;
+    background: var(--ct-m-border);
+    z-index: 0;
+}
+
+.ct-handover-wizard .ct-ho-stepper .crm-deal-step.is-done:not(:last-child)::after {
+    background: var(--ct-m-primary);
+}
+
+.ct-handover-wizard .ct-ho-stepper .crm-deal-step-dot {
+    position: relative;
+    z-index: 1;
+    width: 1.65rem;
+    height: 1.65rem;
+    margin: 0;
+    border-radius: 50%;
+    border: 1.5px solid var(--ct-m-border);
+    background: var(--ct-m-surface);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.55rem;
+    color: var(--ct-m-muted);
+    box-shadow: none;
+}
+
+.ct-handover-wizard .ct-ho-stepper .crm-deal-step.is-done .crm-deal-step-dot {
+    background: #faf5ff;
+    border-color: var(--ct-m-primary);
+    color: var(--ct-m-primary);
+}
+
+.ct-handover-wizard .ct-ho-stepper .crm-deal-step.is-active .crm-deal-step-dot {
+    background: var(--ct-m-primary);
+    border-color: var(--ct-m-primary);
+    color: #fff;
+}
+
+.ct-handover-wizard .ct-ho-stepper .crm-deal-step-label {
+    display: block;
+    font-size: 0.62rem;
+    font-weight: 600;
+    line-height: 1.25;
+    white-space: nowrap;
+    text-align: center;
+}
+
+.ct-handover-wizard .ct-ho-stepper .crm-deal-step.is-active .crm-deal-step-label {
+    color: var(--ct-m-text);
+    font-weight: 650;
+}
+
+.ct-handover-wizard .ct-ho-stepper .crm-deal-step.is-done .crm-deal-step-label {
+    color: var(--ct-m-text);
+}
+
+/* ── Status badges (handover) ── */
+.ct-handover-wizard .ct-manage-status-badge--finalized {
+    background: #ecfdf5;
+    color: var(--ct-m-success);
+}
+
+.ct-handover-wizard .ct-manage-status-badge--sent {
+    background: #fffbeb;
+    color: var(--ct-m-warn);
+}
+
+.ct-handover-wizard .ct-manage-status-badge--draft {
+    background: #f8fafc;
+    color: var(--ct-m-muted);
+}
+
+/* ── Wizard layout ── */
+.ct-handover-wizard .crm-contract-wizard-layout {
+    gap: 0.75rem;
+}
+
+.ct-handover-wizard .crm-deal-panel,
+.ct-handover-wizard .crm-deal-side-card {
+    border: 1px solid var(--ct-m-border);
+    border-radius: var(--ct-m-radius);
+    background: var(--ct-m-surface);
+    box-shadow: none;
+    overflow: hidden;
+}
+
+.ct-handover-wizard .crm-deal-panel-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.55rem;
+    padding: 0.65rem 0.75rem;
+    border-bottom: 1px solid var(--ct-m-border);
+}
+
+.ct-handover-wizard .crm-deal-panel-mark {
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 8px;
+    font-size: 0.72rem;
+    background: #f8fafc;
+    color: var(--ct-m-primary);
+    border: 1px solid var(--ct-m-border);
+    box-shadow: none;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+}
+
+.ct-handover-wizard .crm-deal-panel-head-text h2 {
+    font-size: 0.82rem;
+    font-weight: 650;
+    margin: 0;
+}
+
+.ct-handover-wizard .crm-deal-panel-head-text p,
+.ct-handover-wizard .crm-contract-panel-lead {
+    margin: 0.12rem 0 0;
+    font-size: 0.66rem;
+    color: var(--ct-m-muted);
+    line-height: 1.45;
+}
+
+.ct-handover-wizard .crm-deal-panel-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    padding: 0.75rem;
+}
+
+/* ── Property chip ── */
+.ct-handover-wizard .ho-property-chip {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+    padding: 0.65rem 0.75rem;
+    border-radius: var(--ct-m-radius);
+    border: 1px solid var(--ct-m-border);
+    background: #fafbfc;
+    box-shadow: none;
+}
+
+.ct-handover-wizard .ho-property-chip > i {
+    width: 1.75rem;
+    height: 1.75rem;
+    display: grid;
+    place-items: center;
+    border-radius: 8px;
+    background: var(--ct-m-surface);
+    border: 1px solid var(--ct-m-border);
+    color: var(--ct-m-primary);
+    flex-shrink: 0;
+    font-size: 0.72rem;
+}
+
+.ct-handover-wizard .ho-property-chip strong {
+    display: block;
+    font-size: 0.76rem;
+    font-weight: 650;
+    color: var(--ct-m-text);
+}
+
+.ct-handover-wizard .ho-property-chip span,
+.ct-handover-wizard .ho-property-chip em {
+    display: block;
+    font-size: 0.64rem;
+    font-style: normal;
+    color: var(--ct-m-muted);
+    line-height: 1.45;
+}
+
+/* ── Datetime ── */
+.ct-handover-wizard .ho-datetime-grid {
+    grid-template-columns: 1fr 1fr;
+}
+
+@media (min-width: 768px) {
+    .ct-handover-wizard .ho-datetime-grid {
+        max-width: 28rem;
+    }
+}
+
+/* ── Party selection ── */
+.ct-handover-wizard .ho-party-pair {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.65rem;
+}
+
+.ct-handover-wizard .ho-party-col {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.ct-handover-wizard .ho-party-col legend {
+    font-size: 0.72rem;
+    font-weight: 650;
+    padding: 0;
+    margin: 0 0 0.1rem;
+    color: var(--ct-m-text);
+}
+
+.ct-handover-wizard .ho-party-hint {
+    margin: 0 0 0.35rem;
+    font-size: 0.62rem;
+    color: var(--ct-m-muted);
+}
+
+.ct-handover-wizard .ho-party-card {
+    display: block;
+    cursor: pointer;
+}
+
+.ct-handover-wizard .ho-party-card input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.ct-handover-wizard .ho-party-card .ho-party-card__body {
+    display: block;
+    padding: 0.65rem 0.75rem;
+    border-radius: var(--ct-m-radius);
+    border: 1px solid var(--ct-m-border);
+    background: var(--ct-m-surface);
+    transition: border-color 0.12s, background 0.12s;
+}
+
+.ct-handover-wizard .ho-party-card:has(input:checked) .ho-party-card__body {
+    border-color: var(--ct-m-primary);
+    background: #faf5ff;
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--ct-m-primary) 25%, transparent);
+}
+
+.ct-handover-wizard .ho-party-card:focus-within .ho-party-card__body {
+    outline: 2px solid color-mix(in srgb, var(--ct-m-primary) 35%, transparent);
+    outline-offset: 1px;
+}
+
+.ct-handover-wizard .ho-party-card .crm-deal-stage-badge {
+    display: inline-block;
+    margin-bottom: 0.45rem;
+    font-size: 0.58rem;
+    padding: 0.1rem 0.4rem;
+}
+
+.ct-handover-wizard .ho-party-card .ho-party-card__body strong,
+.ct-handover-wizard .ho-party-card .ho-party-card__body > em {
+    display: none;
+}
+
+.ct-handover-wizard .ho-party-card .ct-party-card__details {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.4rem 0.55rem;
+    margin: 0;
+}
+
+.ct-handover-wizard .ho-party-card .ct-party-card__field dt {
+    font-size: 0.58rem;
+    color: var(--ct-m-muted);
+    font-weight: 500;
+}
+
+.ct-handover-wizard .ho-party-card .ct-party-card__field dd {
+    margin: 0.08rem 0 0;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--ct-m-text);
+}
+
+.ct-handover-wizard .ho-party-card .ct-party-card__field--full {
+    grid-column: 1 / -1;
+}
+
+.ct-handover-wizard .ho-party-card .ct-party-card__phone {
+    font-variant-numeric: tabular-nums;
+    direction: ltr;
+    text-align: right;
+}
+
+.ct-handover-wizard .ho-party-warn {
+    margin: 0;
+    padding: 0.45rem 0.6rem;
+    border-radius: 8px;
+    font-size: 0.66rem;
+    font-weight: 600;
+    color: #b45309;
+    background: #fffbeb;
+    border: 1px solid rgba(245, 158, 11, 0.25);
+}
+
+.ct-handover-wizard .ho-notes {
+    display: flex;
+    flex-direction: column;
+    gap: 0.28rem;
+}
+
+/* ── Form fields ── */
+.ct-handover-wizard .crm-input,
+.ct-handover-wizard .crm-select,
+.ct-handover-wizard textarea.crm-input {
+    border-radius: 8px;
+    border-color: var(--ct-m-border);
+    min-height: 2.35rem;
+}
+
+@media (max-width: 767px) {
+    .ct-handover-wizard .crm-input,
+    .ct-handover-wizard .crm-select {
+        font-size: 16px;
+    }
+}
+
+@media (min-width: 768px) {
+    .ct-handover-wizard .crm-input,
+    .ct-handover-wizard .crm-select {
+        font-size: 0.78rem;
+    }
+}
+
+.ct-handover-wizard textarea.crm-input {
+    min-height: 4rem;
+    resize: vertical;
+    font-size: 0.78rem;
+}
+
+.ct-handover-wizard .ct-field-label {
+    font-size: 0.66rem;
+    color: var(--ct-m-muted);
+    font-weight: 600;
+}
+
+.ct-handover-wizard .ct-field-label i {
+    margin-inline-end: 0.2rem;
+    opacity: 0.75;
+}
+
+/* ── Secondary actions ── */
+.ct-handover-wizard .crm-deal-panel-body > .crm-dash-act:not(.crm-dash-act--primary):not(.ho-photo-btn),
+.ct-handover-wizard .ho-add-row .crm-dash-act,
+.ct-handover-wizard .ho-bulk-bar .crm-dash-act {
+    min-height: 2.2rem;
+    padding: 0.38rem 0.65rem;
+    border-radius: 8px;
+    font-size: 0.68rem;
+    font-weight: 600;
+    border: 1px solid var(--ct-m-border);
+    background: var(--ct-m-surface);
+    color: var(--ct-m-text);
+    box-shadow: none;
+}
+
+.ct-handover-wizard .ho-bulk-bar .crm-dash-act:active,
+.ct-handover-wizard .ho-add-row .crm-dash-act:active {
+    background: #f8fafc;
+}
+
+/* ── Keys ── */
+.ct-handover-wizard .ho-key-list,
+.ct-handover-wizard .ho-eq-list,
+.ct-handover-wizard .ho-condition-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.ct-handover-wizard .ho-key-row,
+.ct-handover-wizard .ho-meter-card,
+.ct-handover-wizard .ho-condition-card,
+.ct-handover-wizard .ho-eq-card {
+    padding: 0.65rem 0.75rem;
+    border-radius: var(--ct-m-radius);
+    border: 1px solid var(--ct-m-border);
+    background: var(--ct-m-surface);
+    box-shadow: none;
+}
+
+.ct-handover-wizard .ho-key-row__main {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+}
+
+.ct-handover-wizard .ho-key-row__icon,
+.ct-handover-wizard .ho-meter-card__icon,
+.ct-handover-wizard .ho-condition-card__icon {
+    width: 2rem;
+    height: 2rem;
+    display: grid;
+    place-items: center;
+    border-radius: 8px;
+    font-size: 0.72rem;
+    flex-shrink: 0;
+    background: #f8fafc;
+    border: 1px solid var(--ct-m-border);
+    color: var(--ct-m-primary);
+}
+
+.ct-handover-wizard .ho-key-row__info {
+    flex: 1;
+    min-width: 0;
+}
+
+.ct-handover-wizard .ho-key-row__info strong {
+    font-size: 0.76rem;
+    font-weight: 650;
+}
+
+.ct-handover-wizard .ho-key-row__name {
+    min-height: 2.35rem;
+}
+
+.ct-handover-wizard .ho-key-row__note,
+.ct-handover-wizard .ho-condition-card__note {
+    display: block;
+    margin-top: 0.45rem;
+}
+
+.ct-handover-wizard .ho-key-row__note span,
+.ct-handover-wizard .ho-condition-card__note span {
+    display: block;
+    margin-bottom: 0.22rem;
+    font-size: 0.62rem;
+    color: var(--ct-m-muted);
+    font-weight: 600;
+}
+
+.ct-handover-wizard .ho-stepper {
+    display: inline-flex;
+    align-items: stretch;
+    border: 1px solid var(--ct-m-border);
+    border-radius: 8px;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.ct-handover-wizard .ho-stepper__btn {
+    width: 2rem;
+    border: 0;
+    background: #f8fafc;
+    color: var(--ct-m-text);
+    font-size: 0.9rem;
+    cursor: pointer;
+    padding: 0;
+}
+
+.ct-handover-wizard .ho-stepper__btn:active {
+    background: color-mix(in srgb, var(--ct-m-primary) 10%, #f8fafc);
+}
+
+.ct-handover-wizard .ho-stepper__input {
+    width: 2.5rem;
+    min-height: 2.2rem;
+    border: 0;
+    border-inline: 1px solid var(--ct-m-border);
+    border-radius: 0;
+    text-align: center;
+    padding: 0;
+    font-weight: 650;
+}
+
+.ct-handover-wizard .ho-add-row {
+    display: flex;
+    gap: 0.45rem;
+    align-items: stretch;
+}
+
+.ct-handover-wizard .ho-add-row .crm-input {
+    flex: 1;
+}
+
+/* ── Meters ── */
+.ct-handover-wizard .ho-meter-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+}
+
+.ct-handover-wizard .ho-meter-card header {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    margin-bottom: 0.55rem;
+}
+
+.ct-handover-wizard .ho-meter-card h3 {
+    margin: 0;
+    font-size: 0.78rem;
+    font-weight: 650;
+}
+
+.ct-handover-wizard .ho-meter-card header p {
+    margin: 0.08rem 0 0;
+    font-size: 0.6rem;
+    color: var(--ct-m-muted);
+}
+
+.ct-handover-wizard .ho-meter-card--electricity .ho-meter-card__icon {
+    color: #d97706;
+    background: rgba(245, 158, 11, 0.08);
+    border-color: rgba(245, 158, 11, 0.2);
+}
+
+.ct-handover-wizard .ho-meter-card--water .ho-meter-card__icon {
+    color: #0284c7;
+    background: rgba(14, 165, 233, 0.08);
+    border-color: rgba(14, 165, 233, 0.2);
+}
+
+.ct-handover-wizard .ho-meter-card--gas .ho-meter-card__icon {
+    color: #dc2626;
+    background: rgba(239, 68, 68, 0.08);
+    border-color: rgba(239, 68, 68, 0.2);
+}
+
+.ct-handover-wizard .ho-meter-card__reading {
+    font-size: 1rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+/* ── Conditions ── */
+.ct-handover-wizard .ho-bulk-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.5rem 0.6rem;
+    border: 1px solid var(--ct-m-border);
+    border-radius: var(--ct-m-radius);
+    background: #fafbfc;
+}
+
+.ct-handover-wizard .ho-bulk-bar__stat {
+    margin-inline-start: auto;
+    font-size: 0.62rem;
+    color: var(--ct-m-muted);
+    font-weight: 600;
+}
+
+.ct-handover-wizard .ho-condition-card__head {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.45rem;
+}
+
+.ct-handover-wizard .ho-condition-card__head strong {
+    font-size: 0.76rem;
+    font-weight: 650;
+}
+
+.ct-handover-wizard .ho-status-seg {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(3.2rem, 1fr));
+    gap: 0.3rem;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 0.05rem;
+}
+
+.ct-handover-wizard .ho-status-seg::-webkit-scrollbar {
+    display: none;
+}
+
+.ct-handover-wizard .ho-status-seg__opt {
+    position: relative;
+    min-width: 0;
+}
+
+.ct-handover-wizard .ho-status-seg__opt input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.ct-handover-wizard .ho-status-seg__opt span {
+    display: block;
+    padding: 0.32rem 0.25rem;
+    border-radius: 8px;
+    border: 1px solid var(--ct-m-border);
+    background: var(--ct-m-surface);
+    font-size: 0.58rem;
+    font-weight: 650;
+    text-align: center;
+    color: var(--ct-m-muted);
+    cursor: pointer;
+    transition: background 0.12s, border-color 0.12s, color 0.12s;
+    white-space: nowrap;
+}
+
+.ct-handover-wizard .ho-status-seg__opt:has(input:checked) span {
+    border-color: transparent;
+}
+
+.ct-handover-wizard .ho-status-seg__opt--ok:has(input:checked) span {
+    background: rgba(16, 185, 129, 0.12);
+    color: #047857;
+}
+
+.ct-handover-wizard .ho-status-seg__opt--minor:has(input:checked) span {
+    background: rgba(245, 158, 11, 0.12);
+    color: #b45309;
+}
+
+.ct-handover-wizard .ho-status-seg__opt--repair:has(input:checked) span {
+    background: rgba(249, 115, 22, 0.12);
+    color: #c2410c;
+}
+
+.ct-handover-wizard .ho-status-seg__opt--damaged:has(input:checked) span {
+    background: rgba(244, 63, 94, 0.1);
+    color: #be123c;
+}
+
+.ct-handover-wizard .ho-status-seg__opt--unchecked:has(input:checked) span {
+    background: #f8fafc;
+    color: var(--ct-m-muted);
+}
+
+/* ── Photos ── */
+.ct-handover-wizard .ho-photos h3 {
+    margin: 0 0 0.2rem;
+    font-size: 0.76rem;
+    font-weight: 650;
+}
+
+.ct-handover-wizard .ho-photos > .ct-muted {
+    margin: 0 0 0.5rem;
+    font-size: 0.64rem;
+}
+
+.ct-handover-wizard .ho-photo-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-bottom: 0.45rem;
+}
+
+.ct-handover-wizard .ho-photo-btn {
+    min-height: 2.2rem;
+    padding: 0.38rem 0.65rem;
+    border-radius: 8px;
+    font-size: 0.68rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px dashed color-mix(in srgb, var(--ct-m-primary) 35%, var(--ct-m-border));
+    background: #faf5ff;
+    color: var(--ct-m-primary);
+    box-shadow: none;
+}
+
+.ct-handover-wizard .ho-photo-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.45rem;
+    list-style: none;
+    margin: 0 0 0.55rem;
+    padding: 0;
+}
+
+.ct-handover-wizard .ho-photo-grid li {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.ct-handover-wizard .ho-photo-grid a {
+    display: block;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--ct-m-border);
+}
+
+.ct-handover-wizard .ho-photo-grid img {
+    display: block;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+}
+
+.ct-handover-wizard .ho-photo-grid span {
+    font-size: 0.58rem;
+    color: var(--ct-m-muted);
+}
+
+.ct-handover-wizard .ho-photo-preview {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.4rem;
+    margin-bottom: 0.45rem;
+}
+
+.ct-handover-wizard .ho-photo-preview img {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid var(--ct-m-border);
+}
+
+/* ── Equipment ── */
+.ct-handover-wizard .ho-eq-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-bottom: 0.15rem;
+}
+
+.ct-handover-wizard .ho-chip {
+    border: 1px solid var(--ct-m-border);
+    border-radius: 999px;
+    font-size: 0.66rem;
+    font-weight: 600;
+    padding: 0.32rem 0.6rem;
+    background: var(--ct-m-surface);
+    color: var(--ct-m-text);
+    cursor: pointer;
+    transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+
+.ct-handover-wizard .ho-chip.is-used,
+.ct-handover-wizard .ho-chip:active {
+    background: #faf5ff;
+    border-color: var(--ct-m-primary);
+    color: var(--ct-m-primary);
+}
+
+.ct-handover-wizard .ho-eq-card__grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.45rem;
+}
+
+.ct-handover-wizard .ho-eq-card__name,
+.ct-handover-wizard .ho-eq-card__notes {
+    grid-column: 1 / -1;
+}
+
+.ct-handover-wizard .ho-eq-card__remove {
+    margin-top: 0.4rem;
+    border: 0;
+    background: none;
+    color: #dc2626;
+    font: inherit;
+    font-size: 0.66rem;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0;
+}
+
+/* ── Wizard footer ── */
+.ct-handover-wizard .ct-wizard-footer,
+.ct-handover-wizard .crm-contract-wizard-nav {
+    display: flex;
+    gap: 0.45rem;
+    margin-top: 0.25rem;
+    padding: 0.65rem 0.75rem;
+    border: 1px solid var(--ct-m-border);
+    border-radius: var(--ct-m-radius);
+    background: var(--ct-m-surface);
+    box-shadow: none;
+    position: static;
+    bottom: auto;
+    z-index: auto;
+}
+
+.ct-handover-wizard .ct-wizard-footer .crm-dash-act,
+.ct-handover-wizard .crm-contract-wizard-nav .crm-dash-act {
+    flex: 1;
+    justify-content: center;
+    min-height: 2.45rem;
+    border-radius: 8px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    box-shadow: none;
+}
+
+.ct-handover-wizard .crm-contract-wizard-nav .crm-dash-act--primary {
+    flex: 1.4;
+    box-shadow: none;
+}
+
+/* ── Aside summary ── */
+.ct-handover-wizard .crm-contract-wizard-aside .crm-deal-side-head {
+    padding: 0.6rem 0.7rem;
+    border-bottom: 1px solid var(--ct-m-border);
+}
+
+.ct-handover-wizard .crm-contract-wizard-aside .crm-deal-side-icon {
+    width: 1.65rem;
+    height: 1.65rem;
+    border-radius: 8px;
+    font-size: 0.68rem;
+}
+
+.ct-handover-wizard .crm-contract-wizard-aside .crm-deal-side-head-text h3 {
+    font-size: 0.76rem;
+    font-weight: 650;
+    margin: 0;
+}
+
+.ct-handover-wizard .crm-contract-summary-dl {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.35rem 0.65rem;
+}
+
+.ct-handover-wizard .crm-contract-summary-dl dt {
+    font-size: 0.58rem;
+    color: var(--ct-m-muted);
+}
+
+.ct-handover-wizard .crm-contract-summary-dl dd {
+    margin: 0;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--ct-m-text);
+}
+
+/* ── Review step ── */
+.ct-handover-wizard.ct-wizard--review .ct-manage-hero__meta {
+    border-top: 0;
+    padding-top: 0.35rem;
+}
+
+.ct-handover-wizard.ct-wizard--review .crm-contract-review.ct-review {
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+    overflow: visible;
+}
+
+.ct-handover-wizard .ct-review-status {
+    border-radius: var(--ct-m-radius);
+    font-size: 0.72rem;
+}
+
+.ct-handover-wizard .ct-review-issue {
+    border-radius: 8px;
+    border-color: var(--ct-m-border);
+    background: var(--ct-m-surface);
+    font-size: 0.7rem;
+}
+
+.ct-handover-wizard .ct-edit-link {
+    font-size: 0.66rem;
+    color: var(--ct-m-primary);
+    font-weight: 600;
+}
+
+.ct-handover-wizard .ho-review-hero {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.45rem;
+    margin-bottom: 0.65rem;
+}
+
+.ct-handover-wizard .ho-review-hero > div {
+    padding: 0.65rem 0.75rem;
+    border-radius: var(--ct-m-radius);
+    border: 1px solid var(--ct-m-border);
+    background: #fafbfc;
+}
+
+.ct-handover-wizard .ho-review-hero span {
+    display: block;
+    font-size: 0.6rem;
+    color: var(--ct-m-muted);
+    font-weight: 600;
+}
+
+.ct-handover-wizard .ho-review-hero strong {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 650;
+    margin-top: 0.12rem;
+    color: var(--ct-m-text);
+}
+
+.ct-handover-wizard .ho-review-hero em {
+    display: block;
+    font-style: normal;
+    font-size: 0.62rem;
+    color: var(--ct-m-muted);
+    margin-top: 0.08rem;
+}
+
+.ct-handover-wizard .ct-doc-section {
+    margin-bottom: 0.55rem;
+    padding: 0.65rem 0.75rem;
+    border: 1px solid var(--ct-m-border);
+    border-radius: var(--ct-m-radius);
+    background: var(--ct-m-surface);
+}
+
+.ct-handover-wizard .ct-doc-section header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.45rem;
+    margin-bottom: 0.4rem;
+    padding-bottom: 0.35rem;
+    border-bottom: 1px solid var(--ct-m-border);
+}
+
+.ct-handover-wizard .ct-doc-section h3 {
+    margin: 0;
+    font-size: 0.74rem;
+    font-weight: 650;
+}
+
+.ct-handover-wizard .ct-doc-body {
+    font-size: 0.72rem;
+    line-height: 1.65;
+    color: var(--ct-m-text);
+}
+
+.ct-handover-wizard .ho-review-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.ct-handover-wizard .ho-review-list li {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 0.25rem 0.65rem;
+    font-size: 0.72rem;
+}
+
+.ct-handover-wizard .ho-review-list li span,
+.ct-handover-wizard .ho-review-list li em {
+    color: var(--ct-m-muted);
+    font-style: normal;
+    font-size: 0.68rem;
+}
+
+.ct-handover-wizard .ho-review-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    margin-bottom: 0.5rem;
+}
+
+.ct-handover-wizard .ho-pill {
+    font-size: 0.6rem;
+    font-weight: 700;
+    padding: 0.15rem 0.45rem;
+    border-radius: 999px;
+    background: #f8fafc;
+    color: var(--ct-m-muted);
+}
+
+.ct-handover-wizard .ho-pill--ok { background: rgba(16, 185, 129, 0.12); color: #047857; }
+.ct-handover-wizard .ho-pill--minor { background: rgba(245, 158, 11, 0.12); color: #b45309; }
+.ct-handover-wizard .ho-pill--repair { background: rgba(249, 115, 22, 0.12); color: #c2410c; }
+.ct-handover-wizard .ho-pill--damaged { background: rgba(244, 63, 94, 0.1); color: #be123c; }
+.ct-handover-wizard .ho-pill--unchecked { background: #f1f5f9; color: var(--ct-m-muted); }
+
+.ct-handover-wizard .ct-review-final {
+    margin-top: 0.65rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+}
+
+.ct-handover-wizard .ct-disclaimer-card {
+    border-radius: var(--ct-m-radius);
+    border: 1px solid var(--ct-m-border);
+    background: #fafbfc;
+    padding: 0.65rem 0.75rem;
+}
+
+.ct-handover-wizard .ct-disclaimer-card__head {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-bottom: 0.35rem;
+    color: var(--ct-m-primary);
+}
+
+.ct-handover-wizard .ct-disclaimer-card__head h3 {
+    margin: 0;
+    font-size: 0.74rem;
+    color: var(--ct-m-text);
+}
+
+.ct-handover-wizard .ct-disclaimer-card p {
+    margin: 0;
+    font-size: 0.68rem;
+    line-height: 1.65;
+    color: var(--ct-m-muted);
+}
+
+.ct-handover-wizard .ct-ack {
+    display: flex;
+    gap: 0.45rem;
+    align-items: flex-start;
+    font-size: 0.72rem;
+    line-height: 1.55;
+    margin: 0;
+    padding: 0.55rem 0.65rem;
+    border: 1px solid var(--ct-m-border);
+    border-radius: var(--ct-m-radius);
+    background: var(--ct-m-surface);
+}
+
+.ct-handover-wizard .ct-ack input {
+    accent-color: var(--ct-m-primary);
+    margin-top: 0.15rem;
+    flex-shrink: 0;
+}
+
+.ct-handover-wizard .ct-review-sidebar .crm-deal-side-card {
+    border-radius: var(--ct-m-radius);
+}
+
+.ct-handover-wizard .ct-review-completeness__item {
+    font-size: 0.68rem;
+    border-color: var(--ct-m-border);
+}
+
+.ct-handover-wizard .ct-review-sidebar-actions .crm-dash-act--primary {
+    min-height: 2.5rem;
+    border-radius: 8px;
+    font-size: 0.72rem;
+    box-shadow: none;
+}
+
+.ct-handover-wizard .ct-review-send-hint,
+.ct-handover-wizard .ct-review-send-reason,
+.ct-handover-wizard .ct-review-send-note {
+    font-size: 0.62rem;
+    color: var(--ct-m-muted);
+    margin: 0.35rem 0 0;
+    line-height: 1.45;
+}
+
+.ct-handover-wizard .ct-review-mobile-bar {
+    border-radius: var(--ct-m-radius);
+    border: 1px solid var(--ct-m-border);
+    background: var(--ct-m-surface);
+}
+
+.ct-handover-wizard .ct-review-mobile-summary {
+    border: 1px solid var(--ct-m-border);
+    border-radius: var(--ct-m-radius);
+    background: var(--ct-m-surface);
+}
+
+/* ── Responsive ── */
+@media (min-width: 640px) {
+    .ct-handover-wizard .ho-party-pair {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .ct-handover-wizard .ho-meter-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .ct-handover-wizard .ho-review-hero {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .ct-handover-wizard .ho-eq-card__grid {
+        grid-template-columns: minmax(0, 1.6fr) 5rem minmax(0, 1fr);
+    }
+
+    .ct-handover-wizard .ho-eq-card__name {
+        grid-column: auto;
+    }
+
+    .ct-handover-wizard .ho-eq-card__notes {
+        grid-column: 1 / -1;
+    }
+
+    .ct-handover-wizard .ho-photo-grid,
+    .ct-handover-wizard .ho-photo-preview {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 767px) {
+    .ct-handover-wizard .ct-ho-stepper .crm-deal-stepper-steps {
+        min-width: 34rem;
+    }
+
+    .ct-handover-wizard .ho-party-pair {
+        grid-template-columns: 1fr;
+    }
+
+    .ct-handover-wizard .ho-key-row__main {
+        flex-wrap: wrap;
+    }
+
+    .ct-handover-wizard .ho-stepper {
+        margin-inline-start: auto;
+    }
+
+    .ct-handover-wizard .ct-wizard-footer,
+    .ct-handover-wizard .crm-contract-wizard-nav {
+        position: sticky;
+        bottom: 0;
+        z-index: 20;
+        margin-inline: -0.05rem;
+        padding-bottom: calc(0.65rem + env(safe-area-inset-bottom, 0px));
+        background: color-mix(in srgb, var(--ct-m-surface) 94%, #f8fafc);
+        backdrop-filter: blur(6px);
+    }
+
+    .ct-handover-wizard .crm-contract-wizard-aside {
+        order: -1;
+    }
+
+    .ct-handover-wizard .crm-contract-wizard-nav .crm-dash-act {
+        min-height: 2.7rem;
+    }
+}
+
+@media (min-width: 768px) {
+    .ct-handover-wizard .ct-ho-stepper .crm-deal-stepper-steps {
+        min-width: 0;
+    }
+
+    .ct-handover-wizard .ct-manage-breadcrumb {
+        display: flex;
+    }
+
+    .ct-handover-wizard .ct-wizard-footer,
+    .ct-handover-wizard .crm-contract-wizard-nav {
+        justify-content: flex-end;
+        border-top: 1px solid var(--ct-m-border);
+    }
+
+    .ct-handover-wizard .crm-contract-wizard-nav .crm-dash-act {
+        flex: 0 0 auto;
+        min-width: 110px;
+    }
+
+    .ct-handover-wizard .crm-contract-wizard-nav .crm-dash-act--primary {
+        min-width: 150px;
+    }
+}
+

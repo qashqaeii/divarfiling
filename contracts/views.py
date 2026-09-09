@@ -379,6 +379,8 @@ class ContractManageView(ContractAccessMixin, DetailView):
             for party in parties:
                 progress.append({
                     'label': role_labels.get(party.role, party.role),
+                    'first_name': party.first_name or '',
+                    'last_name': party.last_name or '',
                     'name': party.display_name,
                     'mobile': party.mobile or '',
                     'accepted': party.pk in accepted_party_ids,
@@ -390,6 +392,8 @@ class ContractManageView(ContractAccessMixin, DetailView):
             for witness in witnesses:
                 progress.append({
                     'label': witness.witness_role or f'شاهد {witness.witness_number}',
+                    'first_name': witness.first_name or '',
+                    'last_name': witness.last_name or '',
                     'name': f'{witness.first_name} {witness.last_name}'.strip(),
                     'mobile': witness.mobile or '',
                     'accepted': witness.pk in accepted_witness_ids,
@@ -400,18 +404,26 @@ class ContractManageView(ContractAccessMixin, DetailView):
                 })
         else:
             for party in parties:
-                name = f"{party.get('first_name', '')} {party.get('last_name', '')}".strip()
+                first_name = party.get('first_name', '') or ''
+                last_name = party.get('last_name', '') or ''
+                name = f"{first_name} {last_name}".strip()
                 progress.append({
                     'label': role_labels.get(party.get('role', ''), party.get('role', '')),
+                    'first_name': first_name,
+                    'last_name': last_name,
                     'name': name or '—',
                     'mobile': party.get('mobile', ''),
                     'accepted': False,
                     'invitation': None,
                 })
             for witness in witnesses:
+                first_name = witness.get('first_name', '') or ''
+                last_name = witness.get('last_name', '') or ''
                 progress.append({
                     'label': witness.get('witness_role') or 'شاهد',
-                    'name': f"{witness.get('first_name', '')} {witness.get('last_name', '')}".strip(),
+                    'first_name': first_name,
+                    'last_name': last_name,
+                    'name': f"{first_name} {last_name}".strip(),
                     'mobile': witness.get('mobile', ''),
                     'accepted': False,
                     'invitation': None,

@@ -1,5 +1,5 @@
 {% extends 'workspace/crm/base_crm.html' %}
-{% load static workspace_tags contract_tags %}
+{% load static workspace_tags contract_tags persian_tags %}
 
 {% block page_title %}صورت‌جلسه تحویل ملک{% endblock %}
 {% block mobile_bar_title %}صورت‌جلسه تحویل{% endblock %}
@@ -7,51 +7,75 @@
 <link rel="stylesheet" href="{% static 'contracts/css/contracts.css' %}?v=16">
 <link rel="stylesheet" href="{% static 'contracts/css/workspace.css' %}?v=4">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-ecosystem.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'contracts/css/contracts-manage.css' %}?v=4">
+<link rel="stylesheet" href="{% static 'contracts/css/contracts-handover-wizard.css' %}?v=2">
 {% endblock %}
 
 {% block crm_content %}
-<div class="crm-page-chrome crm-contract-wizard ct-wizard ct-handover-wizard{% if handover_step == 'review' %} ct-wizard--review{% endif %}" data-current-step="{{ handover_step }}" data-next-key-index="{{ next_key_index }}">
+<div class="crm-page-chrome crm-contract-manage crm-contract-wizard ct-wizard ct-handover-wizard{% if handover_step == 'review' %} ct-wizard--review{% endif %}" data-current-step="{{ handover_step }}" data-next-key-index="{{ next_key_index }}">
+    <div class="ct-manage-inner">
 
-    <header class="crm-dash-bar{% if handover_step == 'review' %} ct-review-page-header{% endif %}">
-        <div class="crm-dash-bar-main">
-            <a href="{% url 'workspace:contract_manage' deal.pk contract.pk %}" class="crm-deal-back" aria-label="بازگشت به قرارداد"><i class="fas fa-arrow-right"></i></a>
-            <div>
-                {% if handover_step == 'review' %}
-                <h1 class="crm-dash-bar-title">صورت‌جلسه تحویل ملک</h1>
-                <p class="crm-dash-bar-sub is-visible">مرور نهایی پیش از ارسال برای تأیید طرفین</p>
-                <p class="ct-review-meta">
-                    <span>قرارداد {{ contract.internal_number }}</span>
-                    <span>{{ handover.get_handover_type_display }}</span>
-                    <span class="crm-contract-status crm-contract-status--{{ handover.status }}">{{ handover.get_status_display }}</span>
-                </p>
-                {% else %}
-                <h1 class="crm-dash-bar-title">صورت‌جلسه تحویل ملک</h1>
-                <p class="crm-dash-bar-sub is-visible">
-                    <span class="ct-wizard-progress">مرحله {{ step_number }} از {{ step_total }}</span>
-                    {% if next_step_label %}<span class="ct-wizard-next-hint">بعدی: {{ next_step_label }}</span>{% endif %}
-                </p>
-                {% endif %}
-            </div>
-        </div>
-    </header>
-
-    <nav class="crm-deal-stepper" aria-label="مراحل صورت‌جلسه">
-        <div class="crm-deal-stepper-track" aria-hidden="true">
-            <i style="width: {{ progress_pct }}%"></i>
-        </div>
-        <div class="crm-deal-stepper-steps">
-            {% for s, label in display_steps %}
-            <a href="?step={{ s }}"
-               class="crm-deal-step{% if s == handover_step %} is-active{% elif forloop.counter < step_number %} is-done{% endif %}"
-               {% if s == handover_step %}aria-current="step"{% endif %}>
-                <span class="crm-deal-step-dot" aria-hidden="true">
-                    {% if forloop.counter < step_number %}<i class="fas fa-check"></i>{% else %}<i class="fas fa-circle"></i>{% endif %}
-                </span>
-                <span class="crm-deal-step-label">{{ label }}</span>
+        <div class="ct-manage-topbar">
+            <nav aria-label="مسیر صفحه">
+                <ol class="ct-manage-breadcrumb">
+                    <li><a href="{% url 'workspace:crm_dashboard' %}"><i class="fas fa-house-chimney" aria-hidden="true"></i> میزکار</a></li>
+                    <li><a href="{% url 'workspace:crm_deals' %}">معاملات</a></li>
+                    <li><a href="{% url 'workspace:contract_manage' deal.pk contract.pk %}">{{ contract.internal_number }}</a></li>
+                    <li><span aria-current="page">صورت‌جلسه تحویل</span></li>
+                </ol>
+            </nav>
+            <a href="{% url 'workspace:contract_manage' deal.pk contract.pk %}" class="ct-manage-back" aria-label="بازگشت به قرارداد">
+                <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                <span>بازگشت</span>
             </a>
-            {% endfor %}
         </div>
-    </nav>
+
+        <header class="ct-manage-hero">
+            <div class="ct-manage-hero__main">
+                <div class="ct-manage-hero__title-row">
+                    <span class="ct-manage-hero__icon" aria-hidden="true"><i class="fas fa-clipboard-list"></i></span>
+                    <div class="ct-manage-hero__titles">
+                        <div class="ct-manage-hero__title-line">
+                            <h1>صورت‌جلسه تحویل ملک</h1>
+                            <span class="ct-manage-status-badge ct-manage-status-badge--{{ handover.status }}">
+                                {{ handover.get_status_display }}
+                            </span>
+                        </div>
+                        <p class="ct-manage-hero__number">
+                            قرارداد {{ contract.internal_number }}
+                            {% if handover_step == 'review' %} · مرور نهایی{% else %} · مرحله {{ step_number|to_persian_digits }} از {{ step_total|to_persian_digits }}{% endif %}
+                        </p>
+                    </div>
+                </div>
+                <ul class="ct-manage-hero__meta">
+                    <li>نوع تحویل: <strong>{{ handover.get_handover_type_display }}</strong></li>
+                    <li>معامله: <strong>{{ deal.title|truncatechars:40 }}</strong></li>
+                    {% if handover_step != 'review' and next_step_label %}
+                    <li>مرحله بعد: <strong>{{ next_step_label }}</strong></li>
+                    {% elif handover_step == 'review' %}
+                    <li>وضعیت: <strong>{{ review.readiness_message }}</strong></li>
+                    {% endif %}
+                </ul>
+            </div>
+        </header>
+
+        <nav class="ct-ho-stepper crm-deal-stepper" aria-label="مراحل صورت‌جلسه">
+            <div class="crm-deal-stepper-track" aria-hidden="true">
+                <i style="width: {{ progress_pct }}%"></i>
+            </div>
+            <div class="crm-deal-stepper-steps">
+                {% for s, label in display_steps %}
+                <a href="?step={{ s }}"
+                   class="crm-deal-step{% if s == handover_step %} is-active{% elif forloop.counter < step_number %} is-done{% endif %}"
+                   {% if s == handover_step %}aria-current="step"{% endif %}>
+                    <span class="crm-deal-step-dot" aria-hidden="true">
+                        {% if forloop.counter < step_number %}<i class="fas fa-check"></i>{% else %}<i class="fas fa-circle"></i>{% endif %}
+                    </span>
+                    <span class="crm-deal-step-label">{{ label }}</span>
+                </a>
+                {% endfor %}
+            </div>
+        </nav>
 
     <form method="post" enctype="multipart/form-data" class="ct-wizard-form" id="ct-handover-form">
         {% csrf_token %}
@@ -101,8 +125,27 @@
                             <input type="radio" name="delivered_by_idx" value="{{ p.index }}"{% if p.is_delivered %} checked{% endif %} required>
                             <span class="ho-party-card__body">
                                 <span class="crm-deal-stage-badge">{{ p.role_label|default:"طرف قرارداد" }}</span>
-                                <strong>{{ p.name }}</strong>
-                                <em>{% if p.mobile %}<span dir="ltr">{{ p.mobile }}</span>{% else %}موبایل ثبت نشده{% endif %}</em>
+                                <dl class="ct-party-card__details">
+                                    {% if p.first_name or p.last_name %}
+                                    <div class="ct-party-card__field">
+                                        <dt>نام</dt>
+                                        <dd>{{ p.first_name|default:"—" }}</dd>
+                                    </div>
+                                    <div class="ct-party-card__field">
+                                        <dt>نام خانوادگی</dt>
+                                        <dd>{{ p.last_name|default:"—" }}</dd>
+                                    </div>
+                                    {% else %}
+                                    <div class="ct-party-card__field ct-party-card__field--full">
+                                        <dt>نام</dt>
+                                        <dd>{{ p.name|default:"—" }}</dd>
+                                    </div>
+                                    {% endif %}
+                                    <div class="ct-party-card__field ct-party-card__field--full">
+                                        <dt>شماره تماس</dt>
+                                        <dd class="ct-party-card__phone">{% if p.mobile %}{{ p.mobile }}{% else %}—{% endif %}</dd>
+                                    </div>
+                                </dl>
                             </span>
                         </label>
                         {% empty %}
@@ -117,8 +160,27 @@
                             <input type="radio" name="received_by_idx" value="{{ p.index }}"{% if p.is_received %} checked{% endif %} required>
                             <span class="ho-party-card__body">
                                 <span class="crm-deal-stage-badge">{{ p.role_label|default:"طرف قرارداد" }}</span>
-                                <strong>{{ p.name }}</strong>
-                                <em>{% if p.mobile %}<span dir="ltr">{{ p.mobile }}</span>{% else %}موبایل ثبت نشده{% endif %}</em>
+                                <dl class="ct-party-card__details">
+                                    {% if p.first_name or p.last_name %}
+                                    <div class="ct-party-card__field">
+                                        <dt>نام</dt>
+                                        <dd>{{ p.first_name|default:"—" }}</dd>
+                                    </div>
+                                    <div class="ct-party-card__field">
+                                        <dt>نام خانوادگی</dt>
+                                        <dd>{{ p.last_name|default:"—" }}</dd>
+                                    </div>
+                                    {% else %}
+                                    <div class="ct-party-card__field ct-party-card__field--full">
+                                        <dt>نام</dt>
+                                        <dd>{{ p.name|default:"—" }}</dd>
+                                    </div>
+                                    {% endif %}
+                                    <div class="ct-party-card__field ct-party-card__field--full">
+                                        <dt>شماره تماس</dt>
+                                        <dd class="ct-party-card__phone">{% if p.mobile %}{{ p.mobile }}{% else %}—{% endif %}</dd>
+                                    </div>
+                                </dl>
                             </span>
                         </label>
                         {% empty %}
@@ -580,6 +642,8 @@
 
         </div>{# .crm-contract-wizard-layout #}
     </form>
+
+    </div>{# .ct-manage-inner #}
 </div>
 <template id="ho-eq-row-tpl">
     <article class="ho-eq-card" data-eq-row>

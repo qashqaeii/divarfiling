@@ -433,28 +433,48 @@
     display: none;
 }
 
-.crm-contract-manage .ct-party-card__name {
+.crm-contract-manage .ct-party-card__details {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.45rem 0.65rem;
     margin: 0;
-    font-size: 0.82rem;
+}
+
+.crm-contract-manage .ct-party-card__field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.12rem;
+    min-width: 0;
+}
+
+.crm-contract-manage .ct-party-card__field:last-child {
+    grid-column: 1 / -1;
+}
+
+.crm-contract-manage .ct-party-card__field--full {
+    grid-column: 1 / -1;
+}
+
+.crm-contract-manage .ct-party-card__field dt {
+    margin: 0;
+    font-size: 0.58rem;
+    font-weight: 600;
+    color: var(--ct-m-muted);
+}
+
+.crm-contract-manage .ct-party-card__field dd {
+    margin: 0;
+    font-size: 0.76rem;
     font-weight: 650;
+    color: var(--ct-m-text);
     line-height: 1.35;
 }
 
-.crm-contract-manage .ct-party-card__mobile {
-    display: flex;
-    align-items: center;
-    gap: 0.3rem;
-    margin: 0.18rem 0 0;
-    font-size: 0.68rem;
-    color: var(--ct-m-muted);
+.crm-contract-manage .ct-party-card__phone {
     direction: ltr;
     unicode-bidi: isolate;
-}
-
-.crm-contract-manage .ct-party-card__mobile i {
-    font-size: 0.58rem;
-    direction: rtl;
-    opacity: 0.55;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
 }
 
 .crm-contract-manage .ct-party-card__footer {

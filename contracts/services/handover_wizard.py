@@ -397,3 +397,40 @@ def _build_review(
         'time_display': time_display,
         'status_label': handover.get_status_display(),
     }
+
+
+def build_handover_public_display(handover) -> Optional[Dict[str, Any]]:
+    """Public read-only payload for finalized handover on contract view page."""
+    from contracts.constants import HANDOVER_STATUS_FINALIZED
+
+    if not handover or handover.status != HANDOVER_STATUS_FINALIZED:
+        return None
+
+    wizard_ctx = build_handover_wizard_context(handover, step='review')
+    review = wizard_ctx.get('review') or {}
+    acceptances = []
+    for acc in handover.acceptances.order_by('accepted_at', 'pk'):
+        side_label = 'تحویل‌دهنده' if acc.side == 'delivered_by' else 'تحویل‌گیرنده'
+        mobile = (acc.mobile or '').strip()
+        masked = mobile
+        if len(mobile) >= 8:
+            masked = f'{mobile[:4]}***{mobile[-4:]}'
+        acceptances.append({
+            'side': acc.side,
+            'side_label': side_label,
+            'mobile_masked': masked,
+            'accepted_at': acc.accepted_at,
+        })
+
+    return {
+        'id': handover.pk,
+        'handover_type_label': handover.get_handover_type_display(),
+        'status_label': handover.get_status_display(),
+        'finalized_at': handover.finalized_at,
+        'content_hash': handover.content_hash or '',
+        'content_hash_short': (handover.content_hash[:12] + '…') if handover.content_hash else '',
+        'has_pdf': bool(handover.pdf_file),
+        'review': review,
+        'acceptances': acceptances,
+        'notes': handover.notes or review.get('notes') or '',
+    }

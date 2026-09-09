@@ -10,6 +10,8 @@ public_urlpatterns = [
     path('contracts/verify/<str:token>/', public_views.PublicVerifyView.as_view(), name='public_verify'),
     path('c/view/<str:token>/', public_views.PublicFinalViewView.as_view(), name='public_view'),
     path('c/view/<str:token>/pdf/', public_views.PublicFinalPdfView.as_view(), name='public_view_pdf'),
+    path('c/view/<str:token>/handover/pdf/', public_views.PublicHandoverPdfView.as_view(), name='public_handover_pdf'),
+    path('c/view/<str:token>/attachment/<int:attachment_id>/', public_views.PublicContractAttachmentView.as_view(), name='public_view_attachment'),
     path('c/handover/<str:token>/', handover_public_views.PublicHandoverAcceptView.as_view(), name='public_handover_accept'),
 ]
 

@@ -6,6 +6,7 @@ from typing import Any, Dict, List, Optional
 from contracts.constants import LEGAL_DISCLAIMER_FULL
 from contracts.models import Contract, ContractAccessToken, ContractVersion
 from contracts.services.contract_display import build_contract_display
+from contracts.services.handover_wizard import build_handover_public_display
 
 PARTY_ROLE_LABELS = {
     'landlord': 'موجر',
@@ -121,6 +122,7 @@ def build_final_view_context(
 ) -> Dict[str, Any]:
     version = contract.current_version
     display = build_contract_display(contract, version) if version else {}
+    has_handover = contract.handovers.filter(status='finalized').exists()
 
     ctx: Dict[str, Any] = {
         'contract': contract,
@@ -128,6 +130,7 @@ def build_final_view_context(
         'verified': verified,
         'viewer_role': _viewer_role_label(access_token) if access_token else '',
         'legal_disclaimer': LEGAL_DISCLAIMER_FULL,
+        'has_handover': has_handover,
         'contract_meta': {
             'internal_number': contract.internal_number,
             'contract_type_label': contract.get_contract_type_display(),
@@ -139,6 +142,8 @@ def build_final_view_context(
     }
 
     if verified and version:
+        finalized_handover = contract.handovers.filter(status='finalized').order_by('-finalized_at').first()
+        handover_display = build_handover_public_display(finalized_handover) if finalized_handover else None
         ctx.update({
             'document_sections': display.get('document_sections', []),
             'parties': display.get('parties', []),
@@ -155,6 +160,7 @@ def build_final_view_context(
             'verify_qr_data_url': _qr_data_url(display.get('verify_url', '')),
             'content_hash': display.get('content_hash', ''),
             'has_pdf': bool(version.pdf_file),
+            'handover_display': handover_display,
         })
     else:
         ctx.update({
@@ -173,6 +179,7 @@ def build_final_view_context(
             'verify_qr_data_url': '',
             'content_hash': '',
             'has_pdf': False,
+            'handover_display': None,
         })
 
     return ctx

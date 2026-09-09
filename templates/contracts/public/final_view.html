@@ -5,13 +5,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
-    <title>مشاهده قرارداد — فایلینگ دیوار</title>
-    <link rel="stylesheet" href="{% static 'contracts/css/public.css' %}?v=5">
+    <title>{% if verified %}{{ contract_meta.contract_type_label }} — {{ contract_meta.internal_number }}{% else %}مشاهده قرارداد{% endif %} | فایلینگ دیوار</title>
+    <link rel="stylesheet" href="{% static 'contracts/css/public.css' %}?v=6">
+    <link rel="stylesheet" href="{% static 'contracts/css/public-final-doc.css' %}?v=1">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body class="ct-public ct-final-view{% if verified %} ct-final-view--open{% endif %}">
 
+    {% if not verified %}
     <header class="ct-final-hero">
         <div class="ct-final-hero__inner">
             <div class="ct-public__logo" aria-hidden="true">DF</div>
@@ -19,16 +21,8 @@
                 <strong>فایلینگ دیوار</strong>
                 <span>نسخه نهایی قرارداد دیجیتال</span>
             </div>
-            {% if verified %}
-            <span class="ct-final-badge ct-final-badge--success">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                {{ contract_meta.status_label|default:"نهایی‌شده" }}
-            </span>
-            {% endif %}
         </div>
     </header>
-
-    {% if not verified %}
     <main class="ct-final-gate">
         <div class="ct-public__card ct-final-gate__card">
             <div class="ct-final-gate__icon" aria-hidden="true">
@@ -43,7 +37,7 @@
             </ul>
             {% if error %}<p class="ct-error">{{ error }}</p>{% endif %}
             {% if not show_otp %}
-            <p class="ct-muted ct-final-gate__hint">برای مشاهده متن کامل قرارداد، امضاها و جزئیات مالی، کد تأیید به موبایل ثبت‌شده ارسال می‌شود.</p>
+            <p class="ct-muted ct-final-gate__hint">برای مشاهده متن کامل قرارداد، امضاها{% if has_handover %} و صورت‌جلسه تحویل{% endif %}، کد تأیید به موبایل ثبت‌شده ارسال می‌شود.</p>
             <form method="post" class="ct-public-form">
                 {% csrf_token %}
                 <input type="hidden" name="action" value="request_otp">
@@ -64,213 +58,370 @@
     </main>
 
     {% else %}
-    <main class="ct-final-main">
-        <div class="ct-final-toolbar">
-            <div class="ct-final-toolbar__meta">
-                <h1>{{ contract_meta.contract_type_label }}</h1>
-                <p>شناسه <strong>{{ contract_meta.internal_number }}</strong>{% if contract_meta.version_number %} · نسخه {{ contract_meta.version_number }}{% endif %}{% if contract_meta.finalized_at %} · {{ contract_meta.finalized_at|ws_jalali_datetime }}{% endif %}</p>
-                {% if viewer_role %}<p class="ct-final-toolbar__role">نقش شما: {{ viewer_role }}</p>{% endif %}
+    <div class="ct-doc-topbar">
+        <div class="ct-doc-topbar__inner">
+            <div class="ct-doc-brand">
+                <span class="ct-doc-brand__mark" aria-hidden="true">DF</span>
+                <div class="ct-doc-brand__text">
+                    <strong>فایلینگ دیوار</strong>
+                    <span>سند دیجیتال نهایی{% if viewer_role %} · {{ viewer_role }}{% endif %}</span>
+                </div>
             </div>
-            <div class="ct-final-toolbar__actions">
-                {% if has_pdf %}<a href="{% url 'public_view_pdf' token=view_token %}" class="ct-final-btn ct-final-btn--outline" target="_blank" rel="noopener"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M14 3h7v7M10 14L21 3M5 12V5a2 2 0 012-2h7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>مشاهده PDF</a>{% endif %}
+            <div class="ct-doc-actions">
+                {% if has_pdf %}
+                <a href="{% url 'public_view_pdf' token=view_token %}" class="ct-doc-btn ct-doc-btn--primary" target="_blank" rel="noopener">مشاهده PDF قرارداد</a>
+                {% endif %}
+                {% if handover_display.has_pdf %}
+                <a href="{% url 'public_handover_pdf' token=view_token %}" class="ct-doc-btn" target="_blank" rel="noopener">PDF صورت‌جلسه</a>
+                {% endif %}
             </div>
         </div>
+    </div>
 
-        {% if important_dates or financial_summary.kind %}
-        <section class="ct-final-summary" aria-label="خلاصه قرارداد">
-            {% if financial_summary.kind == 'sale' and financial_summary.toman %}
-            <div class="ct-final-summary__card ct-final-summary__card--accent">
-                <span class="ct-final-summary__label">مبلغ معامله</span>
-                <strong class="ct-final-summary__value" dir="ltr">{{ financial_summary.toman }}</strong>
-                {% if financial_summary.words %}<small>{{ financial_summary.words }}</small>{% endif %}
-            </div>
-            {% elif financial_summary.kind == 'lease' %}
-            {% if financial_summary.deposit.toman %}
-            <div class="ct-final-summary__card">
-                <span class="ct-final-summary__label">ودیعه</span>
-                <strong class="ct-final-summary__value" dir="ltr">{{ financial_summary.deposit.toman }}</strong>
-            </div>
-            {% endif %}
-            {% if financial_summary.monthly_rent.toman %}
-            <div class="ct-final-summary__card">
-                <span class="ct-final-summary__label">اجاره ماهانه</span>
-                <strong class="ct-final-summary__value" dir="ltr">{{ financial_summary.monthly_rent.toman }}</strong>
-            </div>
-            {% endif %}
-            {% endif %}
-            {% for d in important_dates %}
-            <div class="ct-final-summary__card">
-                <span class="ct-final-summary__label">{{ d.label }}</span>
-                <strong class="ct-final-summary__value" dir="ltr">{{ d.value }}</strong>
-            </div>
-            {% endfor %}
-        </section>
+    <div class="ct-doc-shell">
+        <input type="radio" name="ct-doc-tab" id="ct-tab-contract" checked hidden>
+        {% if has_handover %}<input type="radio" name="ct-doc-tab" id="ct-tab-handover" hidden>{% endif %}
+
+        {% if has_handover %}
+        <nav class="ct-doc-tabs" aria-label="بخش‌های سند">
+            <label for="ct-tab-contract">قرارداد</label>
+            <label for="ct-tab-handover">صورت‌جلسه تحویل</label>
+        </nav>
         {% endif %}
 
-        {% if parties %}
-        <section class="ct-final-block" aria-labelledby="ct-parties-title">
-            <header class="ct-final-block__head"><h2 id="ct-parties-title">طرفین قرارداد</h2></header>
-            <div class="ct-final-parties">
-                {% for p in parties %}
-                <article class="ct-final-party">
-                    <span class="ct-final-party__role">{{ p.role_label }}</span>
-                    <h3>{{ p.name }}</h3>
-                    <dl class="ct-final-dl">
-                        {% if p.father_name %}<div><dt>نام پدر</dt><dd>{{ p.father_name }}</dd></div>{% endif %}
-                        {% if p.national_id %}<div><dt>کد ملی</dt><dd dir="ltr">{{ p.national_id }}</dd></div>{% endif %}
-                        {% if p.mobile %}<div><dt>موبایل</dt><dd dir="ltr">{{ p.mobile }}</dd></div>{% endif %}
-                        {% if p.address %}<div><dt>نشانی</dt><dd>{{ p.address }}</dd></div>{% endif %}
-                        {% if p.postal_code %}<div><dt>کد پستی</dt><dd dir="ltr">{{ p.postal_code }}</dd></div>{% endif %}
-                        {% if p.ownership_share %}<div><dt>قدرالسهم</dt><dd>{{ p.ownership_share }}</dd></div>{% endif %}
-                    </dl>
-                </article>
-                {% endfor %}
-            </div>
-        </section>
-        {% endif %}
-
-        {% if property_info.has_data %}
-        <section class="ct-final-block" aria-labelledby="ct-prop-title">
-            <header class="ct-final-block__head"><h2 id="ct-prop-title">مشخصات ملک</h2></header>
-            <dl class="ct-final-dl ct-final-dl--grid">
-                {% if property_info.property_type %}<div><dt>نوع</dt><dd>{{ property_info.property_type }}</dd></div>{% endif %}
-                {% if property_info.city %}<div><dt>شهر</dt><dd>{{ property_info.city }}{% if property_info.district %} — {{ property_info.district }}{% endif %}</dd></div>{% endif %}
-                {% if property_info.address %}<div class="ct-final-dl--wide"><dt>آدرس</dt><dd>{{ property_info.address }}</dd></div>{% endif %}
-                {% if property_info.area %}<div><dt>متراژ</dt><dd>{{ property_info.area }} متر</dd></div>{% endif %}
-                {% if property_info.floor %}<div><dt>طبقه</dt><dd>{{ property_info.floor }}</dd></div>{% endif %}
-                {% if property_info.bedrooms %}<div><dt>اتاق</dt><dd>{{ property_info.bedrooms }}</dd></div>{% endif %}
-                {% if property_info.build_year %}<div><dt>سال ساخت</dt><dd dir="ltr">{{ property_info.build_year }}</dd></div>{% endif %}
-                {% if property_info.amenities %}<div class="ct-final-dl--wide"><dt>امکانات</dt><dd>{{ property_info.amenities|join:"، " }}</dd></div>{% endif %}
-            </dl>
-        </section>
-        {% endif %}
-
-        <article class="ct-final-document" id="ct-final-document">
-            <header class="ct-final-document__head"><h2>متن قرارداد</h2><p>مواد زیر همان نسخه نهایی تأییدشده توسط طرفین است.</p></header>
-            {% for sec in document_sections %}
-            <section class="ct-final-section" id="sec-{{ sec.section_id }}">
-                <header class="ct-final-section__head">
-                    <span class="ct-final-section__num">{{ forloop.counter }}</span>
-                    <h3>{{ sec.title }}</h3>
-                </header>
-                {% if sec.section_kind == 'payments' and payment_schedule.has_rows %}
-                <div class="ct-final-payments-wrap">
-                    <table class="ct-final-payments">
-                        <thead><tr><th>ردیف</th><th>عنوان</th><th>مبلغ</th><th>سررسید</th><th>روش</th></tr></thead>
-                        <tbody>
-                            {% for row in payment_schedule.rows %}
-                            <tr>
-                                <td data-label="ردیف">{{ row.index }}</td>
-                                <td data-label="عنوان">{{ row.label }}</td>
-                                <td data-label="مبلغ" dir="ltr">{{ row.amount_display }}</td>
-                                <td data-label="سررسید" dir="ltr">{{ row.due_date }}</td>
-                                <td data-label="روش">{{ row.method }}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                        {% if payment_schedule.total_display %}
-                        <tfoot><tr><td colspan="2">جمع</td><td dir="ltr">{{ payment_schedule.total_display }}</td><td colspan="2">{% if payment_schedule.contract_total_display %}کل: {{ payment_schedule.contract_total_display }}{% endif %}</td></tr></tfoot>
-                        {% endif %}
-                    </table>
-                    {% if payment_schedule.mismatch %}<p class="ct-final-warn">جمع اقساط با مبلغ کل معامله مطابقت ندارد.</p>{% endif %}
-                </div>
-                {% else %}
-                <div class="ct-final-section__body">{{ sec.body|linebreaksbr }}</div>
-                {% endif %}
-            </section>
-            {% empty %}
-            <p class="ct-muted">متن قرارداد در دسترس نیست.</p>
-            {% endfor %}
-        </article>
-
-        {% if penalty_summary or costs_summary %}
-        <section class="ct-final-block ct-final-block--split">
-            {% if penalty_summary %}
-            <div>
-                <header class="ct-final-block__head"><h2>وجه التزام‌ها</h2></header>
-                <ul class="ct-final-chip-list">
-                    {% for p in penalty_summary %}<li><strong>{{ p.label }}</strong><span dir="ltr">{{ p.amount_display }}</span><small>{{ p.unit }}</small></li>{% endfor %}
-                </ul>
-            </div>
-            {% endif %}
-            {% if costs_summary %}
-            <div>
-                <header class="ct-final-block__head"><h2>تقسیم هزینه‌ها</h2></header>
-                <ul class="ct-final-chip-list">
-                    {% for c in costs_summary %}<li><strong>{{ c.label }}</strong><span>{{ c.value }}</span></li>{% endfor %}
-                </ul>
-            </div>
-            {% endif %}
-        </section>
-        {% endif %}
-
-        {% if witnesses %}
-        <section class="ct-final-block" aria-labelledby="ct-witness-title">
-            <header class="ct-final-block__head"><h2 id="ct-witness-title">شاهدان</h2></header>
-            <ul class="ct-final-witnesses">
-                {% for w in witnesses %}<li><strong>{{ w.role }}</strong> — {{ w.name }}{% if w.mobile %} · <span dir="ltr">{{ w.mobile }}</span>{% endif %}</li>{% endfor %}
-            </ul>
-        </section>
-        {% endif %}
-
-        {% if custom_agreements %}
-        <section class="ct-final-block ct-final-block--custom" aria-labelledby="ct-custom-title">
-            <header class="ct-final-block__head"><h2 id="ct-custom-title">توافقات اختصاصی</h2></header>
-            {% for ag in custom_agreements %}
-            <article class="ct-final-custom">
-                <h3>{{ ag.title }}</h3>
-                <p>{{ ag.body|linebreaksbr }}</p>
-            </article>
-            {% endfor %}
-        </section>
-        {% endif %}
-
-        {% if signatories %}
-        <section class="ct-final-signatures" aria-labelledby="ct-sig-title">
-            <header class="ct-final-signatures__head">
-                <h2 id="ct-sig-title">امضا و تأیید طرفین</h2>
-                <p>هر طرف با تأیید OTP{% if signatories.0.signature_image_url %} و امضای دیجیتال{% endif %} این نسخه را پذیرفته است.</p>
-            </header>
-            <div class="ct-final-signatures__grid">
-                {% for sig in signatories %}
-                <article class="ct-sig-card{% if sig.hash_valid %} is-valid{% endif %}">
-                    <header class="ct-sig-card__head">
-                        <span class="ct-sig-card__role">{{ sig.role }}</span>
-                        {% if sig.hash_valid %}<span class="ct-sig-card__badge">تأیید شده</span>{% endif %}
+        <div id="ct-panel-contract" class="ct-doc-panel">
+            <article class="ct-legal-paper" aria-label="متن قرارداد">
+                <div class="ct-legal-paper__watermark" aria-hidden="true">فایلینگ دیوار</div>
+                <div class="ct-legal-paper__inner">
+                    <header class="ct-legal-letterhead">
+                        <p class="ct-legal-letterhead__kicker">سند قرارداد دیجیتال</p>
+                        <h1>{{ contract_meta.contract_type_label }}</h1>
+                        <div class="ct-legal-letterhead__meta">
+                            <span>شناسه: <strong>{{ contract_meta.internal_number }}</strong></span>
+                            <span>نسخه: <strong>{{ contract_meta.version_number }}</strong></span>
+                            {% if contract_meta.finalized_at %}
+                            <span>تاریخ نهایی‌سازی: <strong>{{ contract_meta.finalized_at|ws_jalali_datetime }}</strong></span>
+                            {% endif %}
+                            <span class="ct-legal-seal">{{ contract_meta.status_label|default:"نهایی‌شده" }}</span>
+                        </div>
                     </header>
-                    <p class="ct-sig-card__name">{{ sig.name }}</p>
-                    <p class="ct-sig-card__meta">موبایل: {{ sig.mobile_masked }}</p>
-                    <p class="ct-sig-card__meta">زمان تأیید: {{ sig.accepted_at|ws_jalali_datetime }}</p>
-                    <div class="ct-sig-card__pad" aria-label="امضای {{ sig.name }}">
-                        {% if sig.signature_image_url %}<img src="{{ sig.signature_image_url }}" alt="امضای {{ sig.name }}" loading="lazy">
-                        {% else %}
-                        <div class="ct-sig-card__otp">
-                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 12l2 2 4-4m5 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                            <span>تأیید با کد یکبارمصرف</span>
+
+                    {% if important_dates or financial_summary.kind %}
+                    <div class="ct-legal-summary">
+                        {% if financial_summary.kind == 'sale' and financial_summary.toman %}
+                        <div class="ct-legal-summary__item ct-legal-summary__item--hero">
+                            <span class="ct-legal-summary__label">مبلغ معامله</span>
+                            <span class="ct-legal-summary__value" dir="ltr">{{ financial_summary.toman }}</span>
+                            {% if financial_summary.words %}<small>{{ financial_summary.words }}</small>{% endif %}
+                        </div>
+                        {% elif financial_summary.kind == 'lease' %}
+                        {% if financial_summary.deposit.toman %}
+                        <div class="ct-legal-summary__item">
+                            <span class="ct-legal-summary__label">ودیعه</span>
+                            <span class="ct-legal-summary__value" dir="ltr">{{ financial_summary.deposit.toman }}</span>
+                        </div>
+                        {% endif %}
+                        {% if financial_summary.monthly_rent.toman %}
+                        <div class="ct-legal-summary__item">
+                            <span class="ct-legal-summary__label">اجاره ماهانه</span>
+                            <span class="ct-legal-summary__value" dir="ltr">{{ financial_summary.monthly_rent.toman }}</span>
+                        </div>
+                        {% endif %}
+                        {% endif %}
+                        {% for d in important_dates %}
+                        <div class="ct-legal-summary__item">
+                            <span class="ct-legal-summary__label">{{ d.label }}</span>
+                            <span class="ct-legal-summary__value" dir="ltr">{{ d.value }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    {% if parties %}
+                    <div class="ct-legal-parties">
+                        {% for p in parties %}
+                        <div class="ct-legal-party">
+                            <span class="ct-legal-party__role">{{ p.role_label }}</span>
+                            <h3>{{ p.name }}</h3>
+                            <dl class="ct-legal-dl">
+                                {% if p.father_name %}<div><dt>نام پدر</dt><dd>{{ p.father_name }}</dd></div>{% endif %}
+                                {% if p.national_id %}<div><dt>کد ملی</dt><dd dir="ltr">{{ p.national_id }}</dd></div>{% endif %}
+                                {% if p.mobile %}<div><dt>موبایل</dt><dd dir="ltr">{{ p.mobile }}</dd></div>{% endif %}
+                                {% if p.address %}<div><dt>نشانی</dt><dd>{{ p.address }}</dd></div>{% endif %}
+                                {% if p.postal_code %}<div><dt>کد پستی</dt><dd dir="ltr">{{ p.postal_code }}</dd></div>{% endif %}
+                            </dl>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    {% if property_info.has_data %}
+                    <div class="ct-ho-block">
+                        <h2 class="ct-ho-block__title"><span>◆</span> مشخصات ملک</h2>
+                        <dl class="ct-legal-dl">
+                            {% if property_info.property_type %}<div><dt>نوع</dt><dd>{{ property_info.property_type }}</dd></div>{% endif %}
+                            {% if property_info.city %}<div><dt>شهر</dt><dd>{{ property_info.city }}{% if property_info.district %} — {{ property_info.district }}{% endif %}</dd></div>{% endif %}
+                            {% if property_info.address %}<div><dt>آدرس</dt><dd>{{ property_info.address }}</dd></div>{% endif %}
+                            {% if property_info.area %}<div><dt>متراژ</dt><dd>{{ property_info.area }} متر</dd></div>{% endif %}
+                            {% if property_info.floor %}<div><dt>طبقه</dt><dd>{{ property_info.floor }}</dd></div>{% endif %}
+                            {% if property_info.build_year %}<div><dt>سال ساخت</dt><dd dir="ltr">{{ property_info.build_year }}</dd></div>{% endif %}
+                            {% if property_info.amenities %}<div><dt>امکانات</dt><dd>{{ property_info.amenities|join:"، " }}</dd></div>{% endif %}
+                        </dl>
+                    </div>
+                    {% endif %}
+
+                    <div class="ct-legal-articles">
+                        {% for sec in document_sections %}
+                        <section class="ct-legal-article" id="sec-{{ sec.section_id }}">
+                            <header class="ct-legal-article__head">
+                                <span class="ct-legal-article__num">{{ forloop.counter }}</span>
+                                <h3>{{ sec.title }}</h3>
+                            </header>
+                            {% if sec.section_kind == 'payments' and payment_schedule.has_rows %}
+                            <div class="ct-legal-table-wrap">
+                                <table class="ct-legal-table">
+                                    <thead><tr><th>ردیف</th><th>عنوان</th><th>مبلغ</th><th>سررسید</th><th>روش</th></tr></thead>
+                                    <tbody>
+                                        {% for row in payment_schedule.rows %}
+                                        <tr>
+                                            <td>{{ row.index }}</td>
+                                            <td>{{ row.label }}</td>
+                                            <td dir="ltr">{{ row.amount_display }}</td>
+                                            <td dir="ltr">{{ row.due_date }}</td>
+                                            <td>{{ row.method }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                    {% if payment_schedule.total_display %}
+                                    <tfoot><tr><td colspan="2">جمع</td><td dir="ltr">{{ payment_schedule.total_display }}</td><td colspan="2">{% if payment_schedule.contract_total_display %}کل: {{ payment_schedule.contract_total_display }}{% endif %}</td></tr></tfoot>
+                                    {% endif %}
+                                </table>
+                            </div>
+                            {% else %}
+                            <div class="ct-legal-article__body">{{ sec.body|linebreaksbr }}</div>
+                            {% endif %}
+                        </section>
+                        {% empty %}
+                        <p class="ct-muted">متن قرارداد در دسترس نیست.</p>
+                        {% endfor %}
+                    </div>
+
+                    {% if custom_agreements %}
+                    <div class="ct-ho-block">
+                        <h2 class="ct-ho-block__title"><span>+</span> توافقات اختصاصی طرفین</h2>
+                        {% for ag in custom_agreements %}
+                        <div class="ct-ho-notes" style="margin-bottom:.45rem">
+                            <strong>{{ ag.title }}</strong><br>{{ ag.body|linebreaksbr }}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    {% if signatories %}
+                    <section class="ct-legal-signatures" aria-labelledby="ct-sig-title">
+                        <h2 id="ct-sig-title" class="ct-legal-signatures__title">امضا و تأیید طرفین</h2>
+                        <div class="ct-legal-sig-grid">
+                            {% for sig in signatories %}
+                            <article class="ct-legal-sig{% if sig.hash_valid %} is-valid{% endif %}">
+                                <span class="ct-legal-sig__role">{{ sig.role }}</span>
+                                <p class="ct-legal-sig__name">{{ sig.name }}</p>
+                                <p class="ct-legal-sig__meta">موبایل: {{ sig.mobile_masked }}</p>
+                                <p class="ct-legal-sig__meta">زمان تأیید: {{ sig.accepted_at|ws_jalali_datetime }}</p>
+                                <div class="ct-legal-sig__pad">
+                                    {% if sig.signature_image_url %}
+                                    <img src="{{ sig.signature_image_url }}" alt="امضای {{ sig.name }}" loading="lazy">
+                                    {% else %}
+                                    <div class="ct-legal-sig__otp">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 12l2 2 4-4m5 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="1.8"/></svg>
+                                        <span>تأیید دیجیتال OTP</span>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </article>
+                            {% endfor %}
+                        </div>
+                    </section>
+                    {% endif %}
+                </div>
+            </article>
+
+            <footer class="ct-legal-footer">
+                {% if verify_url and verify_qr_data_url %}
+                <div class="ct-legal-verify">
+                    <h3>تأیید آنلاین اصالت سند</h3>
+                    <p class="ct-muted">با اسکن QR یا باز کردن لینک، صحت این قرارداد قابل بررسی است.</p>
+                    <div class="ct-final-verify__box">
+                        <img src="{{ verify_qr_data_url }}" width="120" height="120" alt="QR تأیید" loading="lazy">
+                        <a href="{{ verify_url }}" class="ct-final-verify__link" target="_blank" rel="noopener">{{ verify_url }}</a>
+                    </div>
+                </div>
+                {% endif %}
+                {% if content_hash %}<p class="ct-legal-hash">اثر انگشت سند: <code dir="ltr">{{ content_hash }}</code></p>{% endif %}
+                <div class="ct-disclaimer"><p>{{ legal_disclaimer }}</p></div>
+            </footer>
+        </div>
+
+        {% if has_handover and handover_display %}
+        {% with ho=handover_display review=handover_display.review %}
+        <div id="ct-panel-handover" class="ct-doc-panel">
+            <article class="ct-ho-doc" aria-label="صورت‌جلسه تحویل ملک">
+                <header class="ct-ho-doc__head">
+                    <h2>صورت‌جلسه تحویل ملک</h2>
+                    <p>
+                        {{ handover_display.handover_type_label }}
+                        {% if review.date_display %} · تاریخ تحویل: <strong>{{ review.date_display }}</strong>{% endif %}
+                        {% if review.time_display %} · ساعت: <strong dir="ltr">{{ review.time_display }}</strong>{% endif %}
+                        {% if handover_display.finalized_at %} · نهایی: {{ handover_display.finalized_at|ws_jalali_datetime }}{% endif %}
+                    </p>
+                </header>
+
+                {% if review.delivered or review.received %}
+                <section class="ct-ho-block">
+                    <h3 class="ct-ho-block__title"><span>۱</span> طرفین تحویل</h3>
+                    <div class="ct-ho-parties">
+                        {% if review.delivered %}
+                        <div class="ct-ho-party ct-ho-party--deliver">
+                            <span class="ct-ho-party__label">تحویل‌دهنده · {{ review.delivered.role_label }}</span>
+                            <strong>{{ review.delivered.name }}</strong>
+                            {% if review.delivered.mobile %}<span dir="ltr" style="display:block;font-size:.72rem;color:#64748b;margin-top:.15rem">{{ review.delivered.mobile }}</span>{% endif %}
+                        </div>
+                        {% endif %}
+                        {% if review.received %}
+                        <div class="ct-ho-party ct-ho-party--receive">
+                            <span class="ct-ho-party__label">تحویل‌گیرنده · {{ review.received.role_label }}</span>
+                            <strong>{{ review.received.name }}</strong>
+                            {% if review.received.mobile %}<span dir="ltr" style="display:block;font-size:.72rem;color:#64748b;margin-top:.15rem">{{ review.received.mobile }}</span>{% endif %}
                         </div>
                         {% endif %}
                     </div>
-                </article>
-                {% endfor %}
-            </div>
-        </section>
-        {% endif %}
+                </section>
+                {% endif %}
 
-        <footer class="ct-final-footer">
-            {% if verify_url and verify_qr_data_url %}
-            <section class="ct-final-verify" aria-label="تأیید آنلین">
-                <h2>تأیید آنلاین سند</h2>
-                <p class="ct-muted">با اسکن QR یا باز کردن لینک زیر می‌توانید اصالت این قرارداد را بررسی کنید.</p>
-                <div class="ct-final-verify__box">
-                    <img src="{{ verify_qr_data_url }}" width="140" height="140" alt="QR تأیید سند" loading="lazy">
-                    <a href="{{ verify_url }}" class="ct-final-verify__link" target="_blank" rel="noopener">{{ verify_url }}</a>
-                </div>
-            </section>
-            {% endif %}
-            {% if content_hash %}<p class="ct-final-hash">اثر انگشت سند: <code dir="ltr">{{ content_hash }}</code></p>{% endif %}
-            <div class="ct-disclaimer"><p>{{ legal_disclaimer }}</p></div>
-        </footer>
-    </main>
+                {% if review.property %}
+                <section class="ct-ho-block">
+                    <h3 class="ct-ho-block__title"><span>۲</span> مشخصات ملک</h3>
+                    <dl class="ct-legal-dl">
+                        {% if review.property.property_type %}<div><dt>نوع</dt><dd>{{ review.property.property_type }}</dd></div>{% endif %}
+                        {% if review.property.city %}<div><dt>شهر</dt><dd>{{ review.property.city }}{% if review.property.district %} — {{ review.property.district }}{% endif %}</dd></div>{% endif %}
+                        {% if review.property.address %}<div><dt>آدرس</dt><dd>{{ review.property.address }}</dd></div>{% endif %}
+                        {% if review.property.area %}<div><dt>متراژ</dt><dd>{{ review.property.area }} متر</dd></div>{% endif %}
+                    </dl>
+                </section>
+                {% endif %}
+
+                {% if review.keys %}
+                <section class="ct-ho-block">
+                    <h3 class="ct-ho-block__title"><span>۳</span> کلیدها و وسایل تحویلی</h3>
+                    <div class="ct-ho-keys">
+                        {% for key in review.keys %}
+                        <div class="ct-ho-key">
+                            <strong>{{ key.type }}</strong>
+                            تعداد: {{ key.count|default:"0" }}
+                            {% if key.notes %}<br><small>{{ key.notes }}</small>{% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </section>
+                {% endif %}
+
+                {% if review.meters %}
+                <section class="ct-ho-block">
+                    <h3 class="ct-ho-block__title"><span>۴</span> قرائت کنتورها</h3>
+                    <div class="ct-legal-table-wrap">
+                        <table class="ct-legal-table">
+                            <thead><tr><th>نوع</th><th>شماره کنتور</th><th>قرائت</th><th>یادداشت</th></tr></thead>
+                            <tbody>
+                                {% for m in review.meters %}
+                                <tr>
+                                    <td>{{ m.label }}</td>
+                                    <td dir="ltr">{{ m.meter_number|default:"—" }}</td>
+                                    <td dir="ltr">{{ m.reading|default:"—" }}{% if m.unit %} {{ m.unit }}{% endif %}</td>
+                                    <td>{{ m.notes|default:"—" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+                {% endif %}
+
+                {% if review.conditions %}
+                <section class="ct-ho-block">
+                    <h3 class="ct-ho-block__title"><span>۵</span> وضعیت فیزیکی ملک</h3>
+                    <div class="ct-ho-conditions">
+                        {% for c in review.conditions %}
+                        <div class="ct-ho-condition">
+                            <span>{{ c.item }}</span>
+                            <span class="ct-ho-status ct-ho-status--{{ c.status }}">{{ c.status_label }}</span>
+                        </div>
+                        {% if c.note %}<p class="ct-muted" style="font-size:.72rem;margin:-.15rem 0 .35rem .5rem">{{ c.note }}</p>{% endif %}
+                        {% endfor %}
+                    </div>
+                </section>
+                {% endif %}
+
+                {% if review.equipment %}
+                <section class="ct-ho-block">
+                    <h3 class="ct-ho-block__title"><span>۶</span> تجهیزات همراه</h3>
+                    <div class="ct-ho-keys">
+                        {% for eq in review.equipment %}
+                        {% if eq.name %}
+                        <div class="ct-ho-key">
+                            <strong>{{ eq.name }}</strong>
+                            تعداد: {{ eq.count }}
+                            <span class="ct-ho-status ct-ho-status--{{ eq.status }}" style="display:inline-block;margin-top:.2rem">{{ eq.status_label }}</span>
+                            {% if eq.notes %}<br><small>{{ eq.notes }}</small>{% endif %}
+                        </div>
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                </section>
+                {% endif %}
+
+                {% if review.photos %}
+                <section class="ct-ho-block">
+                    <h3 class="ct-ho-block__title"><span>۷</span> تصاویر مستند ({{ review.photos|length }})</h3>
+                    <div class="ct-ho-gallery">
+                        {% for photo in review.photos %}
+                        <a class="ct-ho-photo" href="{% url 'public_view_attachment' token=view_token attachment_id=photo.pk %}" target="_blank" rel="noopener">
+                            <img src="{% url 'public_view_attachment' token=view_token attachment_id=photo.pk %}" alt="{{ photo.title|default:'تصویر ملک' }}" loading="lazy">
+                            {% if photo.title %}<span>{{ photo.title }}</span>{% else %}<span>تصویر {{ forloop.counter }}</span>{% endif %}
+                        </a>
+                        {% endfor %}
+                    </div>
+                </section>
+                {% endif %}
+
+                {% if handover_display.notes %}
+                <section class="ct-ho-block">
+                    <h3 class="ct-ho-block__title"><span>۸</span> توضیحات تکمیلی</h3>
+                    <div class="ct-ho-notes">{{ handover_display.notes|linebreaksbr }}</div>
+                </section>
+                {% endif %}
+
+                {% if handover_display.acceptances %}
+                <section class="ct-ho-block">
+                    <h3 class="ct-ho-block__title"><span>✓</span> تأیید طرفین صورت‌جلسه</h3>
+                    <div class="ct-ho-acceptances">
+                        {% for acc in handover_display.acceptances %}
+                        <div class="ct-ho-acc">
+                            <strong>{{ acc.side_label }}</strong>
+                            <span>{{ acc.mobile_masked }}</span>
+                            <span>{{ acc.accepted_at|ws_jalali_datetime }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </section>
+                {% endif %}
+
+                {% if handover_display.content_hash %}
+                <p class="ct-legal-hash" style="text-align:center;margin-top:1rem">اثر انگشت صورت‌جلسه: <code dir="ltr">{{ handover_display.content_hash }}</code></p>
+                {% endif %}
+            </article>
+        </div>
+        {% endwith %}
+        {% endif %}
+    </div>
     {% endif %}
 </body>
 </html>

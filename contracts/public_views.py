@@ -301,3 +301,52 @@ class PublicFinalPdfView(View):
         )
         response['Content-Disposition'] = f'inline; filename="{filename}"'
         return response
+
+
+def _require_final_view_access(request, token: str):
+    tok = lookup_access_token(token)
+    if not tok:
+        raise Http404
+    session_key = f'final_verified_{tok.token_hash}'
+    if not request.session.get(session_key) and not is_staff_access_token(tok):
+        raise Http404
+    return tok
+
+
+class PublicContractAttachmentView(View):
+    """تصاویر ضمیمه صورت‌جلسه — فقط با دسترسی تأییدشده قرارداد."""
+
+    def get(self, request, token, attachment_id):
+        tok = _require_final_view_access(request, token)
+        from contracts.models import ContractAttachment
+        from contracts.services.attachments import build_attachment_response
+
+        att = ContractAttachment.objects.filter(
+            pk=attachment_id,
+            contract=tok.contract,
+            is_visible_to_parties=True,
+        ).first()
+        if not att:
+            raise Http404
+        return build_attachment_response(att, inline=True)
+
+
+class PublicHandoverPdfView(View):
+    """PDF صورت‌جلسه تحویل — inline در مرورگر."""
+
+    def get(self, request, token):
+        import io
+
+        tok = _require_final_view_access(request, token)
+        handover = tok.contract.handovers.filter(status='finalized').order_by('-finalized_at').first()
+        if not handover or not handover.pdf_file:
+            raise Http404
+        filename = handover.pdf_file.name.split('/')[-1]
+        response = FileResponse(
+            handover.pdf_file.open('rb'),
+            as_attachment=False,
+            filename=filename,
+            content_type='application/pdf',
+        )
+        response['Content-Disposition'] = f'inline; filename="{filename}"'
+        return response

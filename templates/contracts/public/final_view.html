@@ -72,7 +72,7 @@
                 {% if viewer_role %}<p class="ct-final-toolbar__role">نقش شما: {{ viewer_role }}</p>{% endif %}
             </div>
             <div class="ct-final-toolbar__actions">
-                {% if has_pdf %}<a href="{% url 'public_view_pdf' token=view_token %}" class="ct-final-btn ct-final-btn--outline" download><svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3v12m0 0l4-4m-4 4L8 11M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>دانلود PDF</a>{% endif %}
+                {% if has_pdf %}<a href="{% url 'public_view_pdf' token=view_token %}" class="ct-final-btn ct-final-btn--outline" target="_blank" rel="noopener"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M14 3h7v7M10 14L21 3M5 12V5a2 2 0 012-2h7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>مشاهده PDF</a>{% endif %}
             </div>
         </div>
 

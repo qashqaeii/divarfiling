@@ -78,6 +78,37 @@ def generate_contract_pdf(
     return version.pdf_file.name
 
 
+def render_contract_pdf_bytes(
+    version: ContractVersion,
+    *,
+    verify_raw_token: str = '',
+    request=None,
+    preview: bool = False,
+    refresh_stored: bool = False,
+) -> bytes:
+    """
+    Always generate a fresh PDF (same pipeline as workspace preview).
+    Optionally replace a stale stored file on finalized contracts.
+    """
+    pdf_bytes = generate_contract_pdf_bytes(
+        version,
+        verify_raw_token=verify_raw_token,
+        request=request,
+        preview=preview,
+    )
+    if not pdf_bytes:
+        return b''
+    if refresh_stored and not preview and version.contract.status == 'finalized':
+        contract = version.contract
+        filename = f'{contract.internal_number}_v{version.version_number}.pdf'
+        try:
+            version.pdf_file.save(filename, ContentFile(pdf_bytes), save=False)
+            version.save(update_fields=['pdf_file'])
+        except Exception as exc:
+            logger.warning('Could not refresh stored contract PDF: %s', exc)
+    return pdf_bytes
+
+
 def generate_contract_pdf_bytes(
     version: ContractVersion,
     *,
@@ -144,19 +175,20 @@ def generate_contract_pdf_bytes(
     )
 
     title_style = ParagraphStyle(
-        'title', fontName=font_bold, fontSize=15, alignment=TA_CENTER, leading=22,
+        'title', fontName=font_bold, fontSize=16, alignment=TA_CENTER, leading=24,
+        textColor=colors.HexColor('#0f172a'),
     )
     subtitle_style = ParagraphStyle(
         'subtitle', fontName=font_name, fontSize=10, alignment=TA_CENTER, leading=16,
         textColor=colors.HexColor('#475569'),
     )
     heading_style = ParagraphStyle(
-        'heading', fontName=font_bold, fontSize=11.5, alignment=TA_RIGHT, leading=18,
-        spaceBefore=6, spaceAfter=4,
+        'heading', fontName=font_bold, fontSize=12, alignment=TA_RIGHT, leading=19,
+        spaceBefore=8, spaceAfter=5, textColor=colors.HexColor('#0f172a'),
     )
     body_style = ParagraphStyle(
-        'body', fontName=font_name, fontSize=10, alignment=TA_RIGHT, leading=17,
-        spaceAfter=4,
+        'body', fontName=font_name, fontSize=10.5, alignment=TA_RIGHT, leading=18,
+        spaceAfter=5, textColor=colors.HexColor('#1e293b'),
     )
     meta_style = ParagraphStyle(
         'meta', fontName=font_name, fontSize=9, alignment=TA_RIGHT, leading=14,
@@ -320,42 +352,91 @@ def _payment_table_flow(pay: Dict, font_name: str, font_bold: str, meta_style):
 
 
 def _build_signature_pdf_block(version, font_name, font_bold, body_style, heading_style):
+    from reportlab.lib import colors
+    from reportlab.lib.styles import ParagraphStyle
     from reportlab.lib.units import cm
     from reportlab.lib.utils import ImageReader
-    from reportlab.platypus import Image as RLImage, Paragraph, Spacer
+    from reportlab.platypus import Image as RLImage, Paragraph, Spacer, Table, TableStyle
 
     from contracts.services.final_view_context import PARTY_ROLE_LABELS
 
-    acceptances = (
+    acceptances = list(
         version.acceptances
-        .select_related('party', 'witness', 'signature')
-        .order_by('accepted_at', 'pk')
+        .filter(party__isnull=False)
+        .select_related('party', 'signature')
+        .order_by('party__sort_order', 'accepted_at', 'pk')
     )
-    if not acceptances.exists():
+    if not acceptances:
         return []
 
-    items = []
-    items.append(Paragraph(rtl_paragraph_html('امضا و تأیید طرفین', bold=True), heading_style))
-    items.append(Spacer(1, 6))
+    sig_label_style = ParagraphStyle(
+        'sigLabel',
+        parent=body_style,
+        fontName=font_bold,
+        fontSize=10,
+        textColor=colors.HexColor('#0f172a'),
+    )
+    sig_meta_style = ParagraphStyle(
+        'sigMeta',
+        parent=body_style,
+        fontSize=9,
+        textColor=colors.HexColor('#64748b'),
+    )
 
-    for acc in acceptances:
-        if acc.party_id and acc.party:
-            role = PARTY_ROLE_LABELS.get(acc.party.role, acc.party.role)
-            name = acc.party.company_name or f'{acc.party.first_name} {acc.party.last_name}'.strip()
-        elif acc.witness_id and acc.witness:
-            w = acc.witness
-            role = w.witness_role or f'شاهد {w.witness_number}'
-            name = f'{w.first_name} {w.last_name}'.strip()
-        else:
-            continue
+    items = []
+    items.append(Paragraph(rtl_paragraph_html('امضا و تأیید طرفین قرارداد', bold=True), heading_style))
+    items.append(Spacer(1, 10))
+
+    def _signature_cell(acc):
+        party = acc.party
+        role = PARTY_ROLE_LABELS.get(party.role, party.role)
+        name = party.company_name or f'{party.first_name or ""} {party.last_name or ""}'.strip() or '—'
         dt = timezone.localtime(acc.accepted_at).strftime('%Y/%m/%d %H:%M')
-        items.append(Paragraph(rtl_paragraph_html(f'{role}: {name} — تأیید {dt}'), body_style))
+        cell = [
+            Paragraph(rtl_paragraph_html(role, bold=True), sig_label_style),
+            Paragraph(rtl_paragraph_html(name), body_style),
+            Paragraph(rtl_paragraph_html(f'موبایل: {acc.mobile or party.mobile or "—"}'), sig_meta_style),
+            Paragraph(rtl_paragraph_html(f'زمان تأیید: {dt}'), sig_meta_style),
+            Spacer(1, 6),
+        ]
         try:
             sig = acc.signature
             if sig and sig.image:
                 with sig.image.open('rb') as fh:
-                    items.append(RLImage(ImageReader(fh.read()), width=5 * cm, height=2 * cm))
+                    cell.append(RLImage(ImageReader(fh.read()), width=5.5 * cm, height=2.2 * cm))
+            else:
+                cell.append(Paragraph(rtl_paragraph_html('تأیید دیجیتال (OTP)'), sig_meta_style))
         except Exception:
-            pass
-        items.append(Spacer(1, 8))
+            cell.append(Paragraph(rtl_paragraph_html('تأیید دیجیتال'), sig_meta_style))
+        cell.append(Spacer(1, 4))
+        return cell
+
+    rows = []
+    row = []
+    for acc in acceptances:
+        row.append(_signature_cell(acc))
+        if len(row) == 2:
+            rows.append(row)
+            row = []
+    if row:
+        row.append([Spacer(1, 1)])
+        rows.append(row)
+
+    tbl = Table(rows, colWidths=[8.3 * cm, 8.3 * cm], hAlign='RIGHT')
+    tbl.setStyle(TableStyle([
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('LEFTPADDING', (0, 0), (-1, -1), 8),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 8),
+        ('TOPPADDING', (0, 0), (-1, -1), 10),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
+        ('BOX', (0, 0), (-1, -1), 0.6, colors.HexColor('#cbd5e1')),
+        ('INNERGRID', (0, 0), (-1, -1), 0.4, colors.HexColor('#e2e8f0')),
+        ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#f8fafc')),
+    ]))
+    items.append(tbl)
+    items.append(Spacer(1, 10))
+    items.append(Paragraph(
+        rtl_paragraph_html('امضای دیجیتال طرفین با تأیید OTP و ثبت در سامانه فایلینگ دیوار انجام شده است.'),
+        sig_meta_style,
+    ))
     return items

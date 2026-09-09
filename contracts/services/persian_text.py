@@ -25,7 +25,10 @@ def prepare_rtl_text(text: str) -> str:
         from bidi.algorithm import get_display
 
         reshaped = arabic_reshaper.reshape(raw)
-        return get_display(reshaped)
+        try:
+            return get_display(reshaped, base_dir='R')
+        except TypeError:
+            return get_display(reshaped)
     except Exception:
         return raw
 
@@ -50,9 +53,12 @@ def resolve_persian_font_paths() -> tuple[str, str]:
   Search bundled assets, then OS fonts.
     """
     base = Path(__file__).resolve().parent.parent / 'assets' / 'fonts'
+    blog_fonts = Path(__file__).resolve().parent.parent.parent / 'blog' / 'assets' / 'fonts'
     candidates_regular = [
         base / 'Vazirmatn-Regular.ttf',
         base / 'Vazirmatn-Medium.ttf',
+        blog_fonts / 'Vazirmatn-Regular.ttf',
+        blog_fonts / 'Vazirmatn-Medium.ttf',
         Path('C:/Windows/Fonts/tahoma.ttf'),
         Path('C:/Windows/Fonts/arial.ttf'),
         Path('C:/Windows/Fonts/B Nazanin.ttf'),
@@ -65,6 +71,8 @@ def resolve_persian_font_paths() -> tuple[str, str]:
     candidates_bold = [
         base / 'Vazirmatn-Bold.ttf',
         base / 'Vazirmatn-SemiBold.ttf',
+        blog_fonts / 'Vazirmatn-Bold.ttf',
+        blog_fonts / 'Vazirmatn-SemiBold.ttf',
         Path('C:/Windows/Fonts/tahomabd.ttf'),
         Path('C:/Windows/Fonts/arialbd.ttf'),
         Path('/usr/share/fonts/truetype/vazirmatn/Vazirmatn-Bold.ttf'),

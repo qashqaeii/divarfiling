@@ -268,9 +268,11 @@ class PublicFinalViewView(View):
 
 
 class PublicFinalPdfView(View):
-    """دانلود PDF قرارداد نهایی — فقط پس از تأیید OTP در همان نشست."""
+    """نمایش PDF قرارداد نهایی در مرورگر — همان موتور پیش‌نمایش میزکار."""
 
     def get(self, request, token):
+        import io
+
         tok = lookup_access_token(token)
         if not tok:
             raise Http404
@@ -279,12 +281,23 @@ class PublicFinalPdfView(View):
             raise Http404
         contract = tok.contract
         version = contract.current_version
-        if not version or not version.pdf_file:
+        if not version:
             raise Http404
-        filename = version.pdf_file.name.split('/')[-1]
-        return FileResponse(
-            version.pdf_file.open('rb'),
-            as_attachment=True,
+        from contracts.services.pdf import render_contract_pdf_bytes
+        pdf_bytes = render_contract_pdf_bytes(
+            version,
+            request=request,
+            preview=False,
+            refresh_stored=True,
+        )
+        if not pdf_bytes:
+            raise Http404
+        filename = f'{contract.internal_number}_v{version.version_number}.pdf'
+        response = FileResponse(
+            io.BytesIO(pdf_bytes),
+            as_attachment=False,
             filename=filename,
             content_type='application/pdf',
         )
+        response['Content-Disposition'] = f'inline; filename="{filename}"'
+        return response

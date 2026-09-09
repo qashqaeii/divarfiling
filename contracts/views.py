@@ -495,6 +495,8 @@ class ContractManageView(ContractAccessMixin, DetailView):
 
 class ContractPdfDownloadView(ContractAccessMixin, View):
     def get(self, request, contract_id, deal_id=None):
+        import io
+
         self.kwargs.setdefault('contract_id', contract_id)
         if deal_id is not None:
             self.kwargs['deal_id'] = deal_id
@@ -502,24 +504,38 @@ class ContractPdfDownloadView(ContractAccessMixin, View):
         version = contract.current_version
         if not version:
             raise Http404
-        if not version.pdf_file:
-            from contracts.services.pdf import generate_contract_pdf
-            try:
-                generate_contract_pdf(version)
-            except ValueError:
-                raise Http404
-        if not version.pdf_file:
+        from contracts.services.pdf import render_contract_pdf_bytes
+        preview = contract.status != 'finalized'
+        try:
+            pdf_bytes = render_contract_pdf_bytes(
+                version,
+                request=request,
+                preview=preview,
+                refresh_stored=not preview,
+            )
+        except ValueError:
             raise Http404
-        return FileResponse(
-            version.pdf_file.open('rb'), as_attachment=True,
-            filename=version.pdf_file.name.split('/')[-1],
+        if not pdf_bytes:
+            raise Http404
+        filename = f'{contract.internal_number}_v{version.version_number}.pdf'
+        inline = request.GET.get('inline') == '1' or contract.status == 'finalized'
+        response = FileResponse(
+            io.BytesIO(pdf_bytes),
+            as_attachment=not inline,
+            filename=filename,
+            content_type='application/pdf',
         )
+        if inline:
+            response['Content-Disposition'] = f'inline; filename="{filename}"'
+        return response
 
 
 class ContractPdfPreviewView(ContractAccessMixin, View):
     """پیش‌نمایش PDF پیش از ارسال — بدون ذخیره فایل."""
 
     def get(self, request, contract_id, deal_id=None):
+        import io
+
         self.kwargs.setdefault('contract_id', contract_id)
         if deal_id is not None:
             self.kwargs['deal_id'] = deal_id
@@ -527,20 +543,22 @@ class ContractPdfPreviewView(ContractAccessMixin, View):
         version = contract.current_version
         if not version:
             raise Http404
-        from contracts.services.pdf import generate_contract_pdf_bytes
+        from contracts.services.pdf import render_contract_pdf_bytes
         try:
-            pdf_bytes = generate_contract_pdf_bytes(version, preview=True)
+            pdf_bytes = render_contract_pdf_bytes(version, request=request, preview=True)
         except ValueError:
             raise Http404
         if not pdf_bytes:
             raise Http404
         filename = f'{contract.internal_number}_v{version.version_number}_preview.pdf'
-        return FileResponse(
+        response = FileResponse(
             io.BytesIO(pdf_bytes),
             as_attachment=False,
             filename=filename,
             content_type='application/pdf',
         )
+        response['Content-Disposition'] = f'inline; filename="{filename}"'
+        return response
 
 
 class ContractsDashboardView(LoginRequiredMixin, CRMContextMixin, TemplateView):

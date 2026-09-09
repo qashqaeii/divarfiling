@@ -1,0 +1,25 @@
+<section class="crm-deal-checklist crm-deal-block" id="crmDealChecklist"
+         data-checklist-url="{% url 'workspace:crm_deal_checklist' deal.id %}"
+         aria-label="چک‌لیست مدارک">
+    <header class="crm-deal-checklist-head">
+        <div class="crm-deal-checklist-title">
+            <span class="crm-deal-checklist-icon" aria-hidden="true"><i class="fas fa-clipboard-check"></i></span>
+            <div>
+                <h2>چک‌لیست مدارک</h2>
+                <p>{{ checklist_progress.required_done }}/{{ checklist_progress.required_total }} الزامی · {{ checklist_progress.pct }}٪</p>
+            </div>
+        </div>
+        <div class="crm-deal-checklist-ring" style="--pct: {{ checklist_progress.pct }}" aria-hidden="true"><span>{{ checklist_progress.pct }}%</span></div>
+    </header>
+    <ul class="crm-deal-checklist-list" role="list">
+        {% for item in checklist %}
+        <li class="crm-deal-checklist-item{% if item.done %} is-done{% endif %}{% if item.required %} is-required{% endif %}" data-item-id="{{ item.id }}">
+            <button type="button" class="crm-deal-checklist-toggle" aria-pressed="{% if item.done %}true{% else %}false{% endif %}">
+                <span class="crm-deal-checklist-box" aria-hidden="true">{% if item.done %}<i class="fas fa-check"></i>{% endif %}</span>
+                <span class="crm-deal-checklist-label">{{ item.label }}</span>
+                {% if item.required %}<em class="crm-deal-checklist-req">الزامی</em>{% endif %}
+            </button>
+        </li>
+        {% endfor %}
+    </ul>
+</section>

@@ -1,8 +1,8 @@
 {% extends 'workspace/crm/base_crm.html' %}
 {% load static workspace_tags crm_tags %}
 
-{% block page_title %}معاملات{% endblock %}
-{% block mobile_bar_title %}معاملات{% endblock %}
+{% block page_title %}قیف معاملات{% endblock %}
+{% block mobile_bar_title %}قیف معاملات{% endblock %}
 {% block crm_title %}{% endblock %}
 {% block crm_desc %}{% endblock %}
 {% block crm_search %}{% endblock %}
@@ -10,8 +10,9 @@
 
 {% block ws_surface_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/crm-deals-mobile.css' %}?v=10">
-<link rel="stylesheet" href="{% static 'workspace/css/crm-deals-list-ui.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-deals-list-ui.css' %}?v=3">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-stages-drawer.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-deal-journey.css' %}?v=4">
 {% endblock %}
 
 {% block crm_content %}
@@ -22,8 +23,9 @@
         <div class="crm-deals-mob-header-accent" aria-hidden="true"></div>
         <div class="crm-deals-mob-header-inner">
             <div class="crm-deals-mob-header-main">
-                <span class="crm-deals-mob-kicker"><i class="fas fa-handshake" aria-hidden="true"></i> قیف فروش</span>
-                <h1 class="crm-deals-mob-title">معاملات</h1>
+                <span class="crm-deals-mob-kicker"><i class="fas fa-filter" aria-hidden="true"></i> Pipeline</span>
+                <h1 class="crm-deals-mob-title">قیف معاملات</h1>
+                <p class="crm-deals-mob-desc">فرصت‌ها را مرحله‌به‌مرحله تا نهایی‌شدن معامله مدیریت کنید.</p>
                 <p class="crm-deals-mob-sub">
                     <span>{{ stats.active }} فعال</span>
                     {% if stats.win_rate %}<span class="crm-deals-mob-sub-chip is-win">نرخ بستن {{ stats.win_rate }}٪</span>{% endif %}
@@ -49,9 +51,10 @@
 
     <header class="crm-dash-bar crm-deals-desk-header">
         <div class="crm-dash-bar-main">
-            <h1 class="crm-dash-bar-title">معاملات</h1>
+            <h1 class="crm-dash-bar-title">قیف معاملات</h1>
+            <p class="crm-dash-bar-sub is-visible">فرصت‌ها را مرحله‌به‌مرحله تا نهایی‌شدن معامله مدیریت کنید.</p>
         </div>
-        <div class="crm-dash-bar-actions" role="toolbar" aria-label="عملیات معاملات">
+        <div class="crm-dash-bar-actions" role="toolbar" aria-label="عملیات قیف معاملات">
             <button type="button" class="crm-dash-act" data-drawer-open="drawer-deal-stages" title="تنظیم مراحل pipeline">
                 <i class="fas fa-sliders" aria-hidden="true"></i><span>مراحل</span>
             </button>
@@ -62,7 +65,7 @@
                 <i class="fas fa-users" aria-hidden="true"></i><span>مخاطبین</span>
             </a>
             <button type="button" class="crm-dash-act crm-dash-act--primary" data-drawer-open="drawer-deal">
-                <i class="fas fa-handshake" aria-hidden="true"></i><span>معامله</span>
+                <i class="fas fa-plus" aria-hidden="true"></i><span>معامله جدید</span>
             </button>
         </div>
     </header>
@@ -157,7 +160,7 @@
             <div class="crm-deals-filters-toolbar">
                 <label class="crm-deals-search">
                     {% include 'includes/icon_slot.html' with decor='search' size='inline' only %}
-                    <input type="search" name="q" value="{{ request.GET.q }}" placeholder="جستجو معامله، مخاطب..." autocomplete="off" aria-label="جستجو">
+                    <input type="search" name="q" value="{{ request.GET.q }}" placeholder="جستجوی معامله، مخاطب یا ملک..." autocomplete="off" aria-label="جستجو">
                 </label>
 
                 <details class="crm-deals-filter-expand{% if request.GET.stage or request.GET.sort %} is-active{% endif %}" id="crmDealsFilterDetails">
@@ -202,6 +205,18 @@
             </div>
         </form>
 
+        {% if request.GET.q or request.GET.stage or request.GET.bucket %}
+        <div class="crm-deals-active-filters" role="status">
+            <span>
+                {% if request.GET.q %}<em>جستجو</em>{% endif %}
+                {% if request.GET.stage %}<em>مرحله</em>{% endif %}
+                {% if request.GET.bucket %}<em>وضعیت</em>{% endif %}
+                — فیلتر فعال
+            </span>
+            <a href="{% url 'workspace:crm_deals' %}?view={{ view_mode }}" class="crm-dash-act">پاک کردن همه</a>
+        </div>
+        {% endif %}
+
         {% if view_mode == 'pipeline' %}
         <section class="crm-deals-pipeline-wrap crm-deal-pipeline-stage" aria-label="کانبان معاملات">
             {% include 'workspace/crm/includes/deal_pipeline.html' with pipeline_interactive=True deal_stage_url_template=deal_stage_url_template %}
@@ -218,8 +233,8 @@
                             <th class="crm-deals-col-next" scope="col">اقدام بعدی</th>
                             <th class="crm-deals-col-value" scope="col">ارزش</th>
                             <th class="crm-deals-col-prob" scope="col">احتمال</th>
-                            <th class="crm-deals-col-commission" scope="col">سهم مشاور</th>
-                            <th class="crm-deals-col-updated" scope="col">بروزرسانی</th>
+                            <th class="crm-deals-col-owner" scope="col">مسئول</th>
+                            <th class="crm-deals-col-updated" scope="col">آخرین فعالیت</th>
                             <th class="crm-deals-col-action" scope="col"><span class="visually-hidden">عملیات</span></th>
                         </tr>
                     </thead>
@@ -352,12 +367,9 @@
                                     <span class="crm-deals-prob-track" aria-hidden="true"><i style="width: {{ d.probability }}%"></i></span>
                                 </div>
                             </td>
-                            <td class="crm-deals-money crm-deals-col-commission crm-deals-col--desk" data-label="کمیسیون">
-                                {% if d.advisor_commission %}
-                                <span class="crm-deals-commission-amount">{{ d.advisor_commission|ws_money }}</span>
-                                {% if d.commission_amount %}<small class="crm-muted">کل {{ d.commission_amount|ws_money }}</small>{% endif %}
-                                {% elif d.commission_amount %}
-                                <span class="crm-deals-commission-amount">{{ d.commission_amount|ws_money }}</span>
+                            <td class="crm-deals-col-owner crm-deals-col--desk" data-label="مسئول">
+                                {% if d.assigned_to %}
+                                <span class="crm-deals-owner">{{ d.assigned_to.get_full_name|default:d.assigned_to.username }}</span>
                                 {% else %}
                                 <span class="crm-muted">—</span>
                                 {% endif %}
@@ -403,6 +415,9 @@
         <i class="fas fa-plus" aria-hidden="true"></i>
         <span>معامله</span>
     </button>
+
+    {% include 'workspace/crm/includes/deal_stage_transition_dialog.html' %}
+    {{ deal_stages|json_script:"crmDealStageNames" }}
 </div>
 {% endblock %}
 
@@ -511,6 +526,7 @@
 {% endblock %}
 
 {% block crm_js %}
+<script src="{% static 'workspace/js/crm-stage-transition.js' %}?v=1"></script>
 <script>
 window.crmDealStageUrlTemplate = "{{ deal_stage_url_template }}";
 window.crmDealStagesUrl = "{% url 'workspace:crm_deal_stages' %}";

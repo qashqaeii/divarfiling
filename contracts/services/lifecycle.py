@@ -40,6 +40,7 @@ from contracts.services.immutability import VersionImmutableError, assert_versio
 from contracts.services.numbering import generate_internal_number
 from contracts.services.party_sanitize import sanitize_party_payload, sanitize_witness_payload
 from contracts.services.prefill import (
+    empty_wizard_data,
     prefill_financial_from_deal,
     prefill_parties_from_deal,
     prefill_property_from_deal,
@@ -58,17 +59,32 @@ class ContractError(Exception):
 @transaction.atomic
 def create_contract(
     user,
-    deal_id: int,
     contract_type: str,
     *,
+    deal_id: int | None = None,
     request=None,
 ) -> Contract:
-    deal = deal_for_user(user, deal_id)
-    if not deal:
-        raise ContractError('معامله یافت نشد.')
+    deal = None
+    if deal_id:
+        deal = deal_for_user(user, deal_id)
+        if not deal:
+            raise ContractError('معامله یافت نشد.')
     agency = get_agency(user)
     internal_number = generate_internal_number(contract_type)
     _, verify_hash = generate_bearer_token()
+    if deal:
+        wizard_data = {
+            'parties': prefill_parties_from_deal(deal, contract_type),
+            'property': prefill_property_from_deal(deal),
+            'financial': prefill_financial_from_deal(deal, contract_type),
+            'jv': {} if contract_type == CONTRACT_TYPE_JV else None,
+            'witnesses': [],
+            'selected_clauses': [],
+            'clause_optional': [],
+            'custom_agreements': [],
+        }
+    else:
+        wizard_data = empty_wizard_data(contract_type)
     contract = Contract.objects.create(
         user=user,
         agency=agency,
@@ -78,16 +94,7 @@ def create_contract(
         title='',
         verification_token_hash=verify_hash,
         wizard_step='parties',
-        wizard_data={
-            'parties': prefill_parties_from_deal(deal, contract_type),
-            'property': prefill_property_from_deal(deal),
-            'financial': prefill_financial_from_deal(deal, contract_type),
-            'jv': {} if contract_type == CONTRACT_TYPE_JV else None,
-            'witnesses': [],
-            'selected_clauses': [],
-            'clause_optional': [],
-            'custom_agreements': [],
-        },
+        wizard_data=wizard_data,
     )
     version = _create_version(contract, user, version_number=1)
     contract.current_version = version
@@ -451,7 +458,9 @@ def cancel_contract(contract: Contract, reason: str = '', *, user=None, request=
 
 @transaction.atomic
 def copy_contract(contract: Contract, *, user=None, request=None) -> Contract:
-    new_contract = create_contract(user, contract.deal_id, contract.contract_type, request=request)
+    new_contract = create_contract(
+        user, contract.contract_type, deal_id=contract.deal_id, request=request,
+    )
     src = contract.wizard_data or {}
     new_contract.wizard_data = {
         k: copy.deepcopy(v) for k, v in src.items()

@@ -166,7 +166,7 @@ class SaleClauseBankTests(TestCase):
             self.assertNotIn('بند پیشنهادی', s.get('body', ''))
 
     def test_public_document_no_review_metadata(self):
-        c = create_contract(self.user, self.deal.pk, CONTRACT_TYPE_SALE)
+        c = create_contract(self.user, CONTRACT_TYPE_SALE, deal_id=self.deal.pk)
         save_wizard_step(c, 'parties', [
             {'role': 'seller', 'first_name': 'ع', 'last_name': 'الف', 'mobile': '09121111111', 'national_id': '1111111111'},
             {'role': 'buyer', 'first_name': 'ب', 'last_name': 'ب', 'mobile': '09122222222', 'national_id': '2222222222'},

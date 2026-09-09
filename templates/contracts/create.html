@@ -1,0 +1,180 @@
+{% extends 'workspace/crm/base_crm.html' %}
+{% load static %}
+
+{% block page_title %}قرارداد جدید{% endblock %}
+{% block crm_extra_css %}
+<link rel="stylesheet" href="{% static 'contracts/css/contracts.css' %}?v=14">
+<link rel="stylesheet" href="{% static 'contracts/css/workspace.css' %}?v=2">
+{% endblock %}
+
+{% block crm_content %}
+<div class="ct-workspace ct-create crm-page-chrome">
+    <header class="crm-dash-bar">
+        <div class="crm-dash-bar-main">
+            <a href="{% url 'workspace:contracts_dashboard' %}" class="crm-deal-back" aria-label="بازگشت"><i class="fas fa-arrow-right"></i></a>
+            <div>
+                <h1 class="crm-dash-bar-title">قرارداد جدید</h1>
+                <p class="crm-dash-bar-sub is-visible">چه قراردادی می‌خواهید ایجاد کنید؟</p>
+            </div>
+        </div>
+    </header>
+
+    <form method="post" class="ct-create-form" id="ctCreateForm">
+        {% csrf_token %}
+
+        <section class="ct-create-section" aria-labelledby="ctCreateTypeHeading">
+            <h2 id="ctCreateTypeHeading">۱. نوع قرارداد</h2>
+            <div class="ct-create-type-cards">
+                <label class="ct-type-card">
+                    <input type="radio" name="contract_type" value="lease" checked>
+                    <span class="ct-type-card__icon" aria-hidden="true"><i class="fas fa-key"></i></span>
+                    <span class="ct-type-card__title">رهن و اجاره</span>
+                    <span class="ct-type-card__desc">قرارداد اجاره مسکن یا تجاری</span>
+                </label>
+                <label class="ct-type-card">
+                    <input type="radio" name="contract_type" value="sale">
+                    <span class="ct-type-card__icon" aria-hidden="true"><i class="fas fa-handshake"></i></span>
+                    <span class="ct-type-card__title">فروش / مبایعه‌نامه</span>
+                    <span class="ct-type-card__desc">خرید و فروش ملک</span>
+                </label>
+                <label class="ct-type-card">
+                    <input type="radio" name="contract_type" value="jv">
+                    <span class="ct-type-card__icon" aria-hidden="true"><i class="fas fa-building"></i></span>
+                    <span class="ct-type-card__title">مشارکت در ساخت</span>
+                    <span class="ct-type-card__desc">قرارداد مشارکت مالک و سازنده</span>
+                </label>
+            </div>
+        </section>
+
+        <section class="ct-create-section" aria-labelledby="ctCreateDealHeading">
+            <h2 id="ctCreateDealHeading">۲. این قرارداد مربوط به کدام پرونده است؟</h2>
+            <div class="ct-create-deal-cards">
+                <label class="ct-deal-mode-card">
+                    <input type="radio" name="deal_mode" value="none"{% if not preselected_deal_id %} checked{% endif %}>
+                    <span class="ct-deal-mode-card__title">بدون معامله</span>
+                    <span class="ct-deal-mode-card__desc">اطلاعات را دستی در ویزارد وارد می‌کنم</span>
+                </label>
+                <label class="ct-deal-mode-card">
+                    <input type="radio" name="deal_mode" value="existing"{% if preselected_deal_id %} checked{% endif %}>
+                    <span class="ct-deal-mode-card__title">اتصال به معامله موجود</span>
+                    <span class="ct-deal-mode-card__desc">اطلاعات از معامله پیش‌پر می‌شود</span>
+                </label>
+            </div>
+
+            <div class="ct-deal-picker" id="ctDealPicker"{% if not preselected_deal_id %} hidden{% endif %}>
+                <label class="ct-deal-picker__search">
+                    <span class="visually-hidden">جستجوی معامله</span>
+                    <input type="search" id="ctDealSearch" class="crm-input" placeholder="جستجو عنوان، مخاطب، ملک..." autocomplete="off" aria-controls="ctDealResults">
+                </label>
+                <input type="hidden" name="deal_id" id="ctDealId" value="{{ preselected_deal_id|default:'' }}">
+                <ul class="ct-deal-results" id="ctDealResults" role="listbox" aria-label="نتایج معامله"></ul>
+                <p class="ct-deal-picker__selected" id="ctDealSelected"{% if not preselected_deal_id %} hidden{% endif %}></p>
+            </div>
+        </section>
+
+        <div class="ct-create-actions">
+            <a href="{% url 'workspace:contracts_dashboard' %}" class="crm-btn crm-btn-ghost">انصراف</a>
+            <button type="submit" class="crm-btn crm-btn-primary">شروع ویزارد قرارداد</button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  var modes = document.querySelectorAll('input[name="deal_mode"]');
+  var picker = document.getElementById('ctDealPicker');
+  var search = document.getElementById('ctDealSearch');
+  var results = document.getElementById('ctDealResults');
+  var dealId = document.getElementById('ctDealId');
+  var selected = document.getElementById('ctDealSelected');
+  var apiUrl = '{% url "workspace:contract_deal_search" %}';
+  var timer;
+
+  function syncMode() {
+    var val = document.querySelector('input[name="deal_mode"]:checked');
+    var show = val && val.value === 'existing';
+    picker.hidden = !show;
+    if (!show) {
+      dealId.value = '';
+      selected.hidden = true;
+      selected.textContent = '';
+    } else if (!dealId.value) {
+      runSearch('');
+    }
+  }
+  modes.forEach(function (m) { m.addEventListener('change', syncMode); });
+
+  function renderResults(items) {
+    results.innerHTML = '';
+    if (!items.length) {
+      results.innerHTML = '<li class="ct-deal-results__empty">معامله‌ای پیدا نشد</li>';
+      return;
+    }
+    items.forEach(function (d) {
+      var li = document.createElement('li');
+      li.className = 'ct-deal-result';
+      li.setAttribute('role', 'option');
+      li.tabIndex = 0;
+      li.dataset.id = d.id;
+      li.innerHTML = '<strong>' + escapeHtml(d.title) + '</strong>'
+        + '<span>' + escapeHtml(d.customer || 'بدون مخاطب') + '</span>'
+        + (d.property ? '<span class="ct-muted">' + escapeHtml(d.property) + '</span>' : '')
+        + '<em>' + escapeHtml(d.stage) + '</em>';
+      li.addEventListener('click', function () { pickDeal(d); });
+      li.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pickDeal(d); }
+      });
+      results.appendChild(li);
+    });
+  }
+
+  function escapeHtml(s) {
+    return String(s || '').replace(/[&<>"']/g, function (c) {
+      return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c];
+    });
+  }
+
+  function pickDeal(d) {
+    dealId.value = d.id;
+    selected.hidden = false;
+    selected.innerHTML = '<i class="fas fa-check-circle" aria-hidden="true"></i> انتخاب شد: <strong>' + escapeHtml(d.title) + '</strong>';
+    results.querySelectorAll('.ct-deal-result').forEach(function (el) {
+      el.classList.toggle('is-selected', el.dataset.id === String(d.id));
+    });
+  }
+
+  function runSearch(q) {
+    fetch(apiUrl + '?q=' + encodeURIComponent(q), { credentials: 'same-origin', headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+      .then(function (r) { return r.json(); })
+      .then(function (data) { renderResults(data.results || []); })
+      .catch(function () { results.innerHTML = '<li class="ct-deal-results__empty">خطا در بارگذاری</li>'; });
+  }
+
+  if (search) {
+    search.addEventListener('input', function () {
+      clearTimeout(timer);
+      timer = setTimeout(function () { runSearch(search.value.trim()); }, 250);
+    });
+  }
+
+  document.getElementById('ctCreateForm').addEventListener('submit', function (e) {
+    var mode = document.querySelector('input[name="deal_mode"]:checked');
+    if (mode && mode.value === 'existing' && !dealId.value) {
+      e.preventDefault();
+      alert('لطفاً یک معامله انتخاب کنید یا «بدون معامله» را برگزینید.');
+    }
+  });
+
+  syncMode();
+  {% if preselected_deal_id %}
+  runSearch('');
+  setTimeout(function () {
+    var el = results.querySelector('[data-id="{{ preselected_deal_id }}"]');
+    if (el) el.click();
+  }, 400);
+  {% endif %}
+})();
+</script>
+{% endblock %}

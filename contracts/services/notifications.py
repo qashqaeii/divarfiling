@@ -1,9 +1,8 @@
 """اعلان‌های پنل CRM برای رویدادهای قرارداد."""
 from __future__ import annotations
 
-from django.urls import reverse
-
 from contracts.models import Contract
+from contracts.services.routing import contract_manage_url
 from workspace.models import CRMAgencyPanelNotification
 from workspace.services.crm_scope import get_agency
 
@@ -20,10 +19,7 @@ def notify_contract_event(contract: Contract, event: str, *, user=None, party_na
         'finalized': 'قرارداد نهایی شد',
     }
     title = titles.get(event, 'به‌روزرسانی قرارداد')
-    link = reverse('workspace:contract_manage', kwargs={
-        'deal_id': contract.deal_id,
-        'contract_id': contract.pk,
-    })
+    link = contract_manage_url(contract)
     CRMAgencyPanelNotification.objects.create(
         agency=agency,
         user=contract.user,

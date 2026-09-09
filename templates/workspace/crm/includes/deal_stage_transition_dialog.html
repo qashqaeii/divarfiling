@@ -1,0 +1,79 @@
+{% load workspace_tags %}
+<dialog class="dj-transition" id="djStageTransition" aria-labelledby="djTransitionTitle">
+    <form method="dialog" class="dj-transition__inner" id="djTransitionForm">
+        <header class="dj-transition__head">
+            <h2 id="djTransitionTitle">انتقال مرحله</h2>
+            <button type="button" class="dj-transition__close" data-transition-cancel aria-label="بستن"><i class="fas fa-times"></i></button>
+        </header>
+        <p class="dj-transition__desc" id="djTransitionDesc"></p>
+
+        <div class="dj-transition__won" id="djTransitionWonWrap" hidden>
+            <p class="dj-transition__won-q">این معامله نهایی شده است؟</p>
+            <dl class="dj-transition__summary" id="djTransitionSummary">
+                <div><dt>مخاطب</dt><dd id="djTransCustomer">—</dd></div>
+                <div><dt>ملک</dt><dd id="djTransProperty">—</dd></div>
+                <div><dt>ارزش</dt><dd id="djTransValue">—</dd></div>
+                <div id="djTransContractRow" hidden><dt>قرارداد</dt><dd id="djTransContract">—</dd></div>
+            </dl>
+            <p class="dj-transition__warn" id="djTransitionWonWarn" hidden>
+                <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
+                قرارداد نهایی‌شده‌ای برای این معامله ثبت نشده است.
+            </p>
+            <label class="dj-transition__field">
+                <span>یادداشت نهایی (اختیاری)</span>
+                <textarea name="transition_note" rows="2" class="crm-textarea" placeholder="خلاصه پایان معامله..."></textarea>
+            </label>
+        </div>
+
+        <div class="dj-transition__lost" id="djTransitionLostWrap" hidden>
+            <p class="dj-transition__lost-label">دلیل از دست رفتن <span class="dj-required">*</span></p>
+            <div class="dj-lost-chips" role="group" aria-label="دلیل سریع">
+                {% for r in lost_reasons %}
+                <label class="dj-lost-chip">
+                    <input type="radio" name="lost_reason_choice" value="{{ r }}">
+                    <span>{{ r }}</span>
+                </label>
+                {% endfor %}
+            </div>
+            <label class="dj-transition__field" id="djTransitionLostOther" hidden>
+                <span>توضیح</span>
+                <textarea name="lost_reason_other" rows="2" class="crm-textarea" placeholder="دلیل را بنویسید..."></textarea>
+            </label>
+            <input type="hidden" name="lost_reason" id="djTransitionLostReason" value="">
+        </div>
+
+        <div class="dj-transition__contract" id="djTransitionContractWrap" hidden>
+            <p class="dj-transition__contract-msg">برای این معامله هنوز قراردادی ایجاد نشده است.</p>
+            <div class="dj-transition__contract-actions">
+                <a href="#" class="crm-btn crm-btn-primary" id="djTransitionCreateContract" target="_self">ایجاد قرارداد</a>
+                <button type="button" class="crm-btn crm-btn-ghost" data-transition-skip-contract>فعلاً فقط مرحله را تغییر بده</button>
+            </div>
+        </div>
+
+        <label class="dj-transition__field" id="djTransitionNoteWrap">
+            <span>یادداشت (اختیاری)</span>
+            <textarea name="transition_note_progress" rows="2" class="crm-textarea" placeholder="نتیجه مرحله قبلی..."></textarea>
+        </label>
+
+        <details class="dj-transition__next" id="djTransitionNextWrap">
+            <summary>تعیین اقدام بعدی (اختیاری)</summary>
+            <label>نوع
+                <select name="next_action_type" class="crm-select">
+                    <option value="">— بدون اقدام —</option>
+                    {% for key, label in deal_next_action_types %}<option value="{{ key }}">{{ label }}</option>{% endfor %}
+                </select>
+            </label>
+            <label>تاریخ
+                <input type="text" name="next_action_at" class="crm-input crm-jalali-datetime" data-jdp="" autocomplete="off" placeholder="۱۴۰۴/۰۶/۱۵ ۱۸:۰۰">
+            </label>
+            <label>یادداشت
+                <input type="text" name="next_action_note" class="crm-input">
+            </label>
+        </details>
+
+        <footer class="dj-transition__foot">
+            <button type="button" class="crm-btn crm-btn-ghost" data-transition-cancel>انصراف</button>
+            <button type="submit" class="crm-btn crm-btn-primary" id="djTransitionSubmit">تأیید انتقال</button>
+        </footer>
+    </form>
+</dialog>

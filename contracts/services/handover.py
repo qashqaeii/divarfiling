@@ -46,6 +46,8 @@ def create_handover(user, contract_id: int, *, request=None) -> ContractHandover
         raise HandoverError('قرارداد یافت نشد.')
     if contract.status != 'finalized':
         raise HandoverError('صورت‌جلسه تحویل فقط برای قرارداد نهایی‌شده امکان‌پذیر است.')
+    if not contract.deal_id:
+        raise HandoverError('صورت‌جلسه تحویل فقط برای قراردادهای متصل به معامله امکان‌پذیر است.')
     if contract.handovers.filter(status__in=(HANDOVER_STATUS_DRAFT, HANDOVER_STATUS_SENT)).exists():
         raise HandoverError('یک صورت‌جلسه تحویل فعال وجود دارد.')
 

@@ -1,0 +1,172 @@
+{% load workspace_tags crm_tags contract_tags %}
+<div class="dj-deal{% if deal.stage == 'بسته‌شده' %} dj-deal--won{% elif deal.stage == 'از دست رفته' %} dj-deal--lost{% endif %}"
+     style="--deal-accent: {{ deal.stage|crm_deal_stage_dot:deal_stage_meta }};"
+     data-deal-id="{{ deal.pk }}"
+     data-stage-url="{{ deal_stage_url }}"
+     data-lost-stage="از دست رفته"
+     data-customer="{% if deal.customer_id %}{{ deal.customer.name }}{% endif %}"
+     data-property="{% if deal.property_id %}{{ deal.property.title|truncatechars:40 }}{% endif %}"
+     data-value-label="{% if deal.value %}{{ deal.value|ws_money }}{% endif %}"
+     data-contract-count="{{ deal_contracts_count }}"
+     data-has-finalized="{% if deal_contract_summary.finalized %}1{% else %}0{% endif %}"
+     data-create-contract-url="{% url 'workspace:contract_create' deal.pk %}">
+
+    <header class="dj-deal__header">
+        <div class="dj-deal__header-top">
+            <a href="{% url 'workspace:crm_deals' %}" class="dj-deal__back" aria-label="بازگشت به قیف معاملات"><i class="fas fa-arrow-right"></i></a>
+            <nav class="dj-deal__crumb" aria-label="مسیر">
+                <a href="{% url 'workspace:crm_deals' %}">قیف معاملات</a>
+                <span aria-hidden="true">/</span>
+                <span>{{ deal.title|truncatechars:36 }}</span>
+            </nav>
+            <div class="dj-deal__header-actions" role="toolbar" aria-label="عملیات سریع">
+                {% if deal.customer_id and deal.customer.phone %}
+                <a href="{{ deal.customer.phone|phone_tel_href }}" class="dj-deal__action" title="تماس" aria-label="تماس"><i class="fas fa-phone"></i></a>
+                {% endif %}
+                <button type="button" class="dj-deal__action" data-drawer-open="drawer-followup" title="ثبت پیگیری" aria-label="ثبت پیگیری"><i class="fas fa-comment-dots"></i></button>
+                <button type="button" class="dj-deal__action" data-drawer-open="drawer-next-action" title="اقدام بعدی" aria-label="اقدام بعدی"><i class="fas fa-bolt"></i></button>
+                <button type="button" class="dj-deal__action" data-drawer-open="drawer-edit" title="ویرایش" aria-label="ویرایش"><i class="fas fa-pen"></i></button>
+                <div class="dj-deal__more-wrap">
+                    <button type="button" class="dj-deal__action" id="djDealMoreBtn" aria-haspopup="true" aria-expanded="false" aria-label="بیشتر"><i class="fas fa-ellipsis-h"></i></button>
+                    <div class="dj-deal__more-menu" id="djDealMoreMenu" role="menu" hidden>
+                        <button type="button" role="menuitem" data-drawer-open="drawer-finance">مالی و کمیسیون</button>
+                        {% if deal.customer_id %}<a href="{% url 'workspace:crm_detail' deal.customer_id %}" role="menuitem">مخاطب</a>{% endif %}
+                        {% if deal.property_id %}<a href="{% url 'workspace:crm_property_detail' deal.property_id %}" role="menuitem">ملک</a>{% endif %}
+                        <a href="{{ deal_contracts_url }}" role="menuitem">قراردادها</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="dj-deal__header-main">
+            <div class="dj-deal__title-row">
+                <h1 class="dj-deal__title">{{ deal.title }}</h1>
+                <span class="dj-deal__stage-pill" style="{% crm_deal_stage_style deal.stage %}">{{ deal.stage }}</span>
+            </div>
+            <div class="dj-deal__meta-row">
+                {% if deal.customer_id %}
+                <a href="{% url 'workspace:crm_detail' deal.customer_id %}" class="dj-deal__meta-item"><i class="fas fa-user"></i>{{ deal.customer.name }}</a>
+                {% endif %}
+                {% if deal.property_id %}
+                <a href="{% url 'workspace:crm_property_detail' deal.property_id %}" class="dj-deal__meta-item"><i class="fas fa-building"></i>{{ deal.property.title|truncatechars:28 }}</a>
+                {% endif %}
+                <span class="dj-deal__meta-item"><i class="fas fa-coins"></i>{% if deal.value %}{{ deal.value|ws_money }}{% else %}ارزش ثبت نشده{% endif %}</span>
+                <span class="dj-deal__meta-item"><i class="fas fa-chart-pie"></i>{{ deal.probability }}٪</span>
+                {% if deal.assigned_to %}
+                <span class="dj-deal__meta-item"><i class="fas fa-user-tie"></i>{{ deal.assigned_to.get_full_name|default:deal.assigned_to.username }}</span>
+                {% endif %}
+                {% if deal.expected_close_date %}
+                <span class="dj-deal__meta-item"><i class="fas fa-calendar"></i>{{ deal.expected_close_date|ws_jalali }}</span>
+                {% endif %}
+            </div>
+        </div>
+    </header>
+
+    <nav class="dj-stage-rail" aria-label="مسیر مراحل معامله">
+        <div class="dj-stage-rail__track" aria-hidden="true">
+            <span class="dj-stage-rail__fill" style="width: {% widthratio deal_stage_index|add:1 deal_stages|length 100 %}%"></span>
+        </div>
+        <ol class="dj-stage-rail__steps">
+            {% for s in deal_stages %}
+            <li class="dj-stage-rail__step{% if forloop.counter0 < deal_stage_index %} is-done{% elif deal.stage == s %} is-current{% endif %}{% if s == 'از دست رفته' %} is-lost{% elif s == 'بسته‌شده' %} is-won{% endif %}">
+                <button type="button"
+                    class="dj-stage-rail__btn"
+                    data-stage="{{ s }}"
+                    data-stage-transition
+                    {% if deal.stage == s %}aria-current="step"{% endif %}
+                    title="انتقال به {{ s }}">
+                    <span class="dj-stage-rail__dot" aria-hidden="true">
+                        {% if forloop.counter0 < deal_stage_index %}<i class="fas fa-check"></i>{% else %}{{ forloop.counter }}{% endif %}
+                    </span>
+                    <span class="dj-stage-rail__label">{{ s }}</span>
+                </button>
+            </li>
+            {% endfor %}
+        </ol>
+    </nav>
+
+    <div class="dj-deal__body">
+        <div class="dj-deal__main">
+            <section class="dj-hero{% if deal_journey.primary.kind == 'danger' %} dj-hero--danger{% elif deal_journey.primary.kind == 'success' %} dj-hero--success{% endif %}" aria-labelledby="djHeroTitle">
+                <div class="dj-hero__copy">
+                    <h2 id="djHeroTitle" class="dj-hero__title">{{ deal_journey.headline }}</h2>
+                    {% if deal_journey.subline %}<p class="dj-hero__sub">{{ deal_journey.subline }}</p>{% endif %}
+                    {% if next_action and not deal_journey.primary.action == 'complete_next_action' %}
+                    <p class="dj-hero__next-hint{% if next_action.is_overdue %} is-overdue{% endif %}">
+                        <i class="fas {{ next_action.icon }}" aria-hidden="true"></i>
+                        {{ next_action.label }}{% if next_action.schedule_label %} · {{ next_action.schedule_label }}{% endif %}
+                    </p>
+                    {% endif %}
+                </div>
+                <div class="dj-hero__actions">
+                    {% with p=deal_journey.primary %}
+                    {% if p.url %}
+                    <a href="{{ p.url }}" class="dj-hero__cta dj-hero__cta--{{ p.kind|default:'primary' }}"><i class="fas {{ p.icon }}"></i>{{ p.label }}</a>
+                    {% elif p.action == 'call' and deal.customer.phone %}
+                    <a href="{{ deal.customer.phone|phone_tel_href }}" class="dj-hero__cta dj-hero__cta--primary"><i class="fas {{ p.icon }}"></i>{{ p.label }}</a>
+                    {% elif p.action == 'create_contract' %}
+                    <form method="post" action="{{ deal_journey.create_contract_url }}" class="dj-hero__form">{% csrf_token %}
+                        <input type="hidden" name="contract_type" value="{% if deal.deal_kind == 'sale' %}sale{% else %}lease{% endif %}">
+                        <button type="submit" class="dj-hero__cta dj-hero__cta--primary"><i class="fas {{ p.icon }}"></i>{{ p.label }}</button>
+                    </form>
+                    {% elif p.action == 'complete_next_action' %}
+                    <button type="button" class="dj-hero__cta dj-hero__cta--{{ p.kind|default:'primary' }} crm-deal-next-complete" data-action="complete"><i class="fas {{ p.icon }}"></i>{{ p.label }}</button>
+                    {% elif p.action %}
+                    <button type="button" class="dj-hero__cta dj-hero__cta--{{ p.kind|default:'primary' }}" data-drawer-open="{{ p.action }}"><i class="fas {{ p.icon }}"></i>{{ p.label }}</button>
+                    {% endif %}
+                    {% endwith %}
+                    {% for s in deal_journey.secondary %}
+                    {% if s.url %}
+                    <a href="{{ s.url }}" class="dj-hero__secondary{% if s.warn %} is-warn{% endif %}"><i class="fas {{ s.icon }}"></i>{{ s.label }}</a>
+                    {% elif s.action %}
+                    <button type="button" class="dj-hero__secondary{% if s.warn %} is-warn{% endif %}" data-drawer-open="{{ s.action }}"><i class="fas {{ s.icon }}"></i>{{ s.label }}</button>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+            </section>
+
+            <nav class="dj-tabs" aria-label="بخش‌های معامله">
+                <a href="?tab=overview" class="dj-tabs__item{% if deal_journey_tab == 'overview' %} is-active{% endif %}">نمای کلی</a>
+                <a href="?tab=activity" class="dj-tabs__item{% if deal_journey_tab == 'activity' %} is-active{% endif %}">فعالیت‌ها</a>
+                <a href="?tab=finance" class="dj-tabs__item{% if deal_journey_tab == 'finance' %} is-active{% endif %}">مالی</a>
+                <a href="?tab=documents" class="dj-tabs__item{% if deal_journey_tab == 'documents' %} is-active{% endif %}">مدارک</a>
+                <a href="?tab=contracts" class="dj-tabs__item{% if deal_journey_tab == 'contracts' %} is-active{% endif %}">قراردادها{% if deal_contracts_count %}<em>{{ deal_contracts_count }}</em>{% endif %}</a>
+                <a href="?tab=history" class="dj-tabs__item{% if deal_journey_tab == 'history' %} is-active{% endif %}">تاریخچه</a>
+            </nav>
+
+            <div class="dj-tab-panels">
+                {% if deal_journey_tab == 'overview' %}
+                <div class="dj-panel is-active">
+                    {% include 'workspace/crm/includes/deal_timeline_section.html' %}
+                </div>
+                {% elif deal_journey_tab == 'activity' %}
+                <div class="dj-panel is-active">
+                    {% include 'workspace/crm/includes/deal_timeline_section.html' %}
+                    {% include 'workspace/crm/includes/deal_action_timeline.html' %}
+                </div>
+                {% elif deal_journey_tab == 'finance' %}
+                <div class="dj-panel is-active">
+                    {% include 'workspace/crm/includes/deal_journey_finance_panel.html' %}
+                </div>
+                {% elif deal_journey_tab == 'documents' %}
+                <div class="dj-panel is-active">
+                    {% include 'workspace/crm/includes/deal_journey_checklist.html' %}
+                </div>
+                {% elif deal_journey_tab == 'contracts' %}
+                <div class="dj-panel is-active">
+                    {% include 'workspace/crm/includes/deal_journey_contracts.html' %}
+                </div>
+                {% elif deal_journey_tab == 'history' %}
+                <div class="dj-panel is-active">
+                    {% include 'workspace/crm/includes/deal_timeline_section.html' %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <aside class="dj-deal__context" aria-label="اطلاعات مرتبط">
+            {% include 'workspace/crm/includes/deal_journey_context.html' %}
+        </aside>
+    </div>
+</div>
+
+{% include 'workspace/crm/includes/deal_stage_transition_dialog.html' %}

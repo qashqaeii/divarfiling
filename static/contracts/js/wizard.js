@@ -45,9 +45,17 @@
 
   /* ——— Autosave ——— */
   var timer;
+  var autosaveEl = document.getElementById('ct-wizard-autosave');
+  function setAutosaveState(state) {
+    if (!autosaveEl) return;
+    autosaveEl.className = 'ct-wizard-autosave ct-wizard-autosave--' + state;
+    var labels = { saving: 'در حال ذخیره…', saved: 'ذخیره شد', error: 'خطا در ذخیره' };
+    autosaveEl.textContent = labels[state] || '';
+  }
   form.addEventListener('input', function () {
     clearTimeout(timer);
     timer = setTimeout(function () {
+      setAutosaveState('saving');
       var fd = new FormData(form);
       fd.append('action', 'autosave');
       fetch(form.action || window.location.href, {
@@ -56,8 +64,19 @@
         headers: { 'X-Requested-With': 'XMLHttpRequest' },
         credentials: 'same-origin',
       }).then(function (r) {
-        if (r.ok) showSaveFlash();
-      }).catch(function () {});
+        if (r.ok) {
+          setAutosaveState('saved');
+          showSaveFlash();
+          setTimeout(function () {
+            if (autosaveEl && autosaveEl.classList.contains('ct-wizard-autosave--saved')) {
+              autosaveEl.textContent = '';
+              autosaveEl.className = 'ct-wizard-autosave';
+            }
+          }, 3000);
+        } else {
+          setAutosaveState('error');
+        }
+      }).catch(function () { setAutosaveState('error'); });
     }, 1500);
   });
 

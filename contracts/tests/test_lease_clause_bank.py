@@ -160,7 +160,7 @@ class LeaseClauseBankTests(TestCase):
         self.assertIn('2', body)
 
     def test_retained_deposit_missing_reference_validation_error(self):
-        c = create_contract(self.user, self.deal.pk, CONTRACT_TYPE_LEASE)
+        c = create_contract(self.user, CONTRACT_TYPE_LEASE, deal_id=self.deal.pk)
         version = c.current_version
         version.financial_data = {
             'monthly_rent': 10000000,
@@ -190,7 +190,7 @@ class LeaseClauseBankTests(TestCase):
         self.assertNotIn('—', body)
 
     def test_retained_deposit_in_review_document(self):
-        c = create_contract(self.user, self.deal.pk, CONTRACT_TYPE_LEASE)
+        c = create_contract(self.user, CONTRACT_TYPE_LEASE, deal_id=self.deal.pk)
         save_wizard_step(c, 'parties', [
             {'role': 'landlord', 'first_name': 'ع', 'last_name': 'الف', 'mobile': '09121111111', 'national_id': '1111111111'},
             {'role': 'tenant', 'first_name': 'ب', 'last_name': 'ب', 'mobile': '09122222222', 'national_id': '2222222222'},

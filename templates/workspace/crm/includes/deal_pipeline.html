@@ -34,21 +34,15 @@
 
                 <span class="crm-deal-pipeline-head-title">{{ col.stage }}</span>
 
+            </div>
+
+            <div class="crm-deal-pipeline-head-meta">
                 <span class="crm-deal-pipeline-head-count" data-count>{{ col.count }}</span>
-
+                <span class="crm-deal-pipeline-head-count-lbl">معامله</span>
+                {% if col.total_value %}
+                <span class="crm-deal-pipeline-head-value">{{ col.total_value|ws_money }}</span>
+                {% endif %}
             </div>
-
-            {% if col.total_value %}
-
-            <div class="crm-deal-pipeline-head-value">
-
-                <i class="fas fa-coins" aria-hidden="true"></i>
-
-                <span>{{ col.total_value|ws_money }}</span>
-
-            </div>
-
-            {% endif %}
 
         </header>
 
@@ -60,130 +54,52 @@
 
             {% if pipeline_interactive %}
 
-            <article class="crm-deal-pipeline-card crm-pipe-card--draggable{% if col.stage == 'بسته‌شده' %} crm-deal-pipeline-card--won{% elif col.stage == 'از دست رفته' %} crm-deal-pipeline-card--lost{% endif %}{% if d|crm_deal_is_stale:deal_stage_meta %} is-stale{% endif %}"
+            {% crm_deal_next_action d as pipe_na %}
+            <article class="crm-deal-pipeline-card crm-pipe-card--draggable dj-pipe-card{% if col.stage == 'بسته‌شده' %} crm-deal-pipeline-card--won{% elif col.stage == 'از دست رفته' %} crm-deal-pipeline-card--lost{% endif %}{% if d|crm_deal_is_stale:deal_stage_meta %} is-stale{% endif %}"
 
                      draggable="true"
 
                      data-deal-id="{{ d.id }}"
 
-                     data-stage="{{ d.stage }}">
+                     data-stage="{{ d.stage }}"
+                     data-customer="{{ d.customer.name|default:'' }}"
+                     data-property="{% if d.property %}{{ d.property.title|truncatechars:40 }}{% endif %}"
+                     data-value="{{ d.value|default:'' }}"
+                     data-value-label="{% if d.value %}{{ d.value|ws_money }}{% endif %}"
+                     data-contract-count="{{ d.pipeline_contract_count|default:0 }}"
+                     data-has-finalized="{% if d.pipeline_has_finalized %}1{% else %}0{% endif %}"
+                     data-create-contract-url="{% url 'workspace:contract_create' d.id %}">
 
+                <div class="dj-pipe-card__indicators" aria-hidden="true">
+                    {% if pipe_na and pipe_na.is_overdue %}<span class="dj-pipe-ind dj-pipe-ind--overdue" title="اقدام عقب‌افتاده"></span>{% endif %}
+                    {% if d|crm_deal_is_stale:deal_stage_meta %}<span class="dj-pipe-ind dj-pipe-ind--stale" title="نیاز به پیگیری"></span>{% endif %}
+                    {% if d.pipeline_contract_count %}<span class="dj-pipe-ind dj-pipe-ind--contract" title="قرارداد"></span>{% endif %}
+                    {% if not d.next_action_type %}<span class="dj-pipe-ind dj-pipe-ind--no-action" title="بدون اقدام بعدی"></span>{% endif %}
+                </div>
+                <div class="dj-pipe-card__hover dj-pipe-card__hover--desk">
+                    {% if d.customer.phone %}<a href="{{ d.customer.phone|phone_tel_href }}" onclick="event.stopPropagation()" aria-label="تماس"><i class="fas fa-phone"></i></a>{% endif %}
+                    <a href="{% url 'workspace:crm_deal_detail' d.id %}?drawer=followup" onclick="event.stopPropagation()" aria-label="پیگیری"><i class="fas fa-comment-dots"></i></a>
+                    <a href="{% url 'workspace:crm_deal_detail' d.id %}" aria-label="باز کردن"><i class="fas fa-arrow-left"></i></a>
+                </div>
+                <div class="dj-pipe-card__mob-actions">
+                    {% if d.customer.phone %}<a href="{{ d.customer.phone|phone_tel_href }}" aria-label="تماس"><i class="fas fa-phone"></i></a>{% endif %}
+                    <a href="{% url 'workspace:crm_deal_detail' d.id %}?drawer=followup" aria-label="پیگیری"><i class="fas fa-comment-dots"></i></a>
+                    <a href="{% url 'workspace:crm_deal_detail' d.id %}" aria-label="باز کردن"><i class="fas fa-arrow-left"></i></a>
+                </div>
                 <span class="crm-deal-pipeline-grip" aria-hidden="true"><i class="fas fa-grip-vertical"></i></span>
 
-
-
                 <div class="crm-deal-pipeline-body">
-
-                    <div class="crm-deal-pipeline-top">
-
-                        <span class="crm-deal-pipeline-avatar crm-deals-avatar crm-deals-avatar--hue-{{ d.customer.name|crm_avatar_hue }}">{{ d.customer.name|crm_initials }}</span>
-
-                        <span class="crm-deal-pipeline-prob" title="احتمال بستن">{{ d.probability }}%</span>
-
-                    </div>
-
-
-
                     <h3 class="crm-deal-pipeline-name">{{ d.title }}</h3>
-
-
-
-                    <p class="crm-deal-pipeline-contact">
-
-                        <i class="fas fa-user" aria-hidden="true"></i>
-
-                        <em>{{ d.customer.name }}</em>
-
-                    </p>
-
-
-
+                    <p class="crm-deal-pipeline-contact"><em>{{ d.customer.name }}</em></p>
                     {% if d.property %}
-
-                    <p class="crm-deal-pipeline-loc">
-
-                        <i class="fas fa-building" aria-hidden="true"></i>
-
-                        {{ d.property.title|truncatechars:42 }}
-
-                    </p>
-
+                    <p class="crm-deal-pipeline-loc">{{ d.property.title|truncatechars:36 }}</p>
                     {% endif %}
-
-
-
-                    <div class="crm-deal-pipeline-next">
-                        {% include 'workspace/crm/includes/deal_next_action_chip.html' with deal=d %}
-                    </div>
-
-
-
-                    {% if d.commission_amount or d.expected_close_date %}
-
-                    <div class="crm-deal-pipeline-chips">
-
-                        {% if d.commission_amount %}
-
-                        <span><i class="fas fa-coins"></i>کمیسیون {{ d.commission_amount|ws_money }}</span>
-
-                        {% endif %}
-
-                        {% if d.expected_close_date %}
-
-                        <span class="{% if d.expected_close_date < today %}crm-deal-pipeline-chip--warn{% endif %}">
-
-                            <i class="fas fa-calendar-day"></i>{{ d.expected_close_date|ws_jalali }}
-
-                        </span>
-
-                        {% endif %}
-
-                    </div>
-
-                    {% endif %}
-
+                    {% if d.value %}<p class="crm-deal-pipeline-value">{{ d.value|ws_money }}</p>{% endif %}
+                    <footer class="crm-deal-pipeline-foot">
+                        <span class="crm-deal-pipeline-prob" title="احتمال">{{ d.probability }}٪</span>
+                        <div class="crm-deal-pipeline-next">{% include 'workspace/crm/includes/deal_next_action_chip.html' with deal=d %}</div>
+                    </footer>
                 </div>
-
-
-
-                <footer class="crm-deal-pipeline-foot">
-
-                    <div class="crm-deal-pipeline-price">
-
-                        {% if d.value %}
-
-                        <strong>{{ d.value|ws_money }}</strong>
-
-                        <em>ارزش</em>
-
-                        {% else %}
-
-                        <span class="crm-deal-pipeline-muted">ارزش ثبت نشده</span>
-
-                        {% endif %}
-
-                    </div>
-
-                    <div class="crm-deal-pipeline-meta">
-
-                        <span class="crm-deals-prob-track" aria-hidden="true" title="احتمال {{ d.probability }}٪"><i style="width: {{ d.probability }}%"></i></span>
-
-                        <time>{{ d.updated_at|ws_jalali }}</time>
-
-                    </div>
-
-                </footer>
-
-
-
-                <a href="{% url 'workspace:crm_deal_detail' d.id %}" class="crm-deal-pipeline-open" title="جزئیات معامله">
-
-                    <i class="fas fa-arrow-left" aria-hidden="true"></i>
-
-                    <span>پرونده</span>
-
-                </a>
-
             </article>
 
             {% else %}

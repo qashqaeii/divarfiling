@@ -145,7 +145,7 @@ class ClauseUxTests(TestCase):
         self.assertTrue(any(c.get('is_custom') for c in out['selected_clauses']))
 
     def test_review_document_no_duplicate_main_clause_sections(self):
-        c = create_contract(self.user, self.deal.pk, CONTRACT_TYPE_LEASE)
+        c = create_contract(self.user, CONTRACT_TYPE_LEASE, deal_id=self.deal.pk)
         save_wizard_step(c, 'financial', {
             'monthly_rent': 5000000, 'deposit': 100000000,
             'lease_start': '1404/01/01', 'lease_end': '1405/01/01',
@@ -175,7 +175,7 @@ class ClauseUxTests(TestCase):
         self.assertTrue(ctx['old_deposit_retained'])
 
     def test_financial_step_preserves_clause_costs(self):
-        c = create_contract(self.user, self.deal.pk, CONTRACT_TYPE_SALE)
+        c = create_contract(self.user, CONTRACT_TYPE_SALE, deal_id=self.deal.pk)
         save_wizard_step(c, 'clauses', {
             'optional_clauses': [],
             'custom_agreements': [],

@@ -185,6 +185,12 @@ def _crm_nav_counts(user):
     if membership and is_agency_feature_enabled('announcements', membership.agency):
         team_announcements = unread_announcement_count(user)
     _items, today_stats = get_today_queue(user)
+    contracts_action = 0
+    try:
+        from contracts.services.dashboard import contract_dashboard_stats
+        contracts_action = contract_dashboard_stats(user).get('needs_action', 0)
+    except Exception:
+        contracts_action = 0
     return {
         'contacts': customers_qs(user).count(),
         'properties': properties_qs(user).count(),
@@ -195,6 +201,7 @@ def _crm_nav_counts(user):
         'deals': deals_qs(user).exclude(
             stage__in=['بسته‌شده', 'از دست رفته'],
         ).count(),
+        'contracts': contracts_action,
         'team_messages': team_messages,
         'team_announcements': team_announcements,
         'team_hub_unread': team_messages + team_announcements,
@@ -2403,12 +2410,14 @@ class CRMDealListView(CRMContextMixin, LoginRequiredMixin, ListView):
         ctx['deal_create_form'] = CRMDealCreateForm(user=self.request.user)
         ctx['deal_next_action_types'] = DEAL_NEXT_ACTION_TYPES
         ctx['deal_followup_types'] = DEAL_FOLLOWUP_TYPES
+        ctx['deal_next_action_types'] = DEAL_NEXT_ACTION_TYPES
         ctx['deal_stage_url_template'] = reverse(
             'workspace:crm_deal_stage', kwargs={'deal_id': 0},
         ).replace('/0/', '/{id}/')
         ctx['crm_section'] = 'deals'
         ctx['filter_qs'] = self.request.GET.urlencode()
         ctx['today'] = timezone.localdate()
+        ctx['lost_reasons'] = LOST_REASONS
         ctx['saved_filters'] = list_saved_filters(self.request.user, 'deals')
         ctx['saved_filter_scope'] = 'deals'
         ctx['saved_filter_base'] = reverse('workspace:crm_deals')
@@ -2474,9 +2483,36 @@ class CRMDealDetailView(CRMContextMixin, LoginRequiredMixin, DetailView):
         ctx['deal_timeline_total'] = timeline['total']
         if d.customer_id and d.customer.phone:
             ctx['deal_customer_phone'] = d.customer.phone
+        from contracts.services.routing import contracts_dashboard_url
         from contracts.services.scope import contract_for_deal
-        ctx['deal_contracts'] = list(contract_for_deal(self.request.user, d.pk)[:5])
-        ctx['deal_contracts_count'] = contract_for_deal(self.request.user, d.pk).count()
+        deal_contracts_qs = contract_for_deal(self.request.user, d.pk)
+        ctx['deal_contracts'] = list(deal_contracts_qs[:3])
+        ctx['deal_contracts_count'] = deal_contracts_qs.count()
+        ctx['deal_contracts_url'] = contracts_dashboard_url(deal=d.pk)
+        ctx['deal_contract_summary'] = {
+            'total': ctx['deal_contracts_count'],
+            'finalized': deal_contracts_qs.filter(status='finalized').count(),
+            'draft': deal_contracts_qs.filter(status='draft').count(),
+            'pending': deal_contracts_qs.filter(
+                status__in=('sent', 'viewed', 'partially_accepted', 'fully_accepted'),
+            ).count(),
+        }
+        ctx['show_contract_stage_cta'] = (
+            d.stage == 'قرارداد'
+            and not deal_contracts_qs.exists()
+            and d.stage not in ('بسته‌شده', 'از دست رفته')
+        )
+        ctx['deal_journey_tab'] = self.request.GET.get('tab', 'overview')
+        from workspace.services.deal_journey import build_deal_journey_context
+        ctx['deal_journey'] = build_deal_journey_context(
+            d,
+            user=self.request.user,
+            next_action=ctx['next_action'],
+            checklist_progress=ctx['checklist_progress'],
+            contracts=list(deal_contracts_qs[:5]),
+            contracts_count=ctx['deal_contracts_count'],
+        )
+        ctx['deal_stage_url'] = reverse('workspace:crm_deal_stage', kwargs={'deal_id': d.pk})
         return ctx
 
     def post(self, request, deal_id):

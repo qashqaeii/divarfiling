@@ -1035,6 +1035,20 @@ function initCRMDealPipeline() {
     const board = document.querySelector('.crm-pipeline--deals.crm-pipeline--interactive');
     if (!board) return;
 
+    if (window.CRMStageTransition) {
+        let stages = [];
+        const stagesEl = document.getElementById('crmDealStageNames');
+        if (stagesEl) {
+            try { stages = JSON.parse(stagesEl.textContent); } catch (e) { /* ignore */ }
+        }
+        window.CRMStageTransition.init({
+            lostStage: 'از دست رفته',
+            wonStage: 'بسته‌شده',
+            contractStage: 'قرارداد',
+            stages: stages,
+        });
+    }
+
     const urlTemplate = board.dataset.stageUrl || '';
     let dragged = null;
 
@@ -1042,6 +1056,32 @@ function initCRMDealPipeline() {
         const countEl = column?.querySelector('[data-count]');
         if (!countEl) return;
         countEl.textContent = Math.max(0, parseInt(countEl.textContent, 10) + delta);
+    }
+
+    function rollbackDealCard(card, zone, oldCol, newCol, oldStage) {
+        const oldZone = oldCol?.querySelector('[data-drop-zone]');
+        if (oldZone) oldZone.appendChild(card);
+        card.dataset.stage = oldStage;
+        if (oldCol && newCol && oldCol !== newCol) {
+            adjustPipelineCount(oldCol, 1);
+            adjustPipelineCount(newCol, -1);
+        }
+        syncDealPipelineZone(zone);
+        syncDealPipelineZone(oldCol?.querySelector('[data-drop-zone]'));
+    }
+
+    function optimisticMoveDealCard(card, zone, oldCol, newCol, newStage) {
+        zone.appendChild(card);
+        card.dataset.stage = newStage;
+        if (oldCol && oldCol !== newCol) {
+            adjustPipelineCount(oldCol, -1);
+            adjustPipelineCount(newCol, 1);
+        }
+        zone.querySelector('[data-empty]')?.remove();
+        syncDealPipelineZone(zone);
+        if (oldCol && oldCol !== newCol) {
+            syncDealPipelineZone(oldCol.querySelector('[data-drop-zone]'));
+        }
     }
 
     async function moveDealCard(card, zone) {
@@ -1054,42 +1094,42 @@ function initCRMDealPipeline() {
         const url = urlTemplate.replace('{id}', dealId);
         const oldCol = card.closest('[data-stage]');
         const newCol = col;
+        const ST = window.CRMStageTransition;
+        const meta = ST ? ST.extractMetaFromCard(card) : {};
 
-        zone.appendChild(card);
-        card.dataset.stage = newStage;
-        if (oldCol && oldCol !== newCol) {
-            adjustPipelineCount(oldCol, -1);
-            adjustPipelineCount(newCol, 1);
-        }
-        zone.querySelector('[data-empty]')?.remove();
-        syncDealPipelineZone(zone);
-        if (oldCol && oldCol !== newCol) {
-            syncDealPipelineZone(oldCol.querySelector('[data-drop-zone]'));
-        }
-
+        let payload = { stage: newStage };
         try {
-            const res = await fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCsrfToken(),
-                    'X-Requested-With': 'XMLHttpRequest',
-                },
-                body: JSON.stringify({ stage: newStage }),
-            });
-            const data = await res.json();
-            if (!data.ok) throw new Error(data.error || 'خطا');
-        } catch (err) {
-            const oldZone = oldCol?.querySelector('[data-drop-zone]');
-            if (oldZone) oldZone.appendChild(card);
-            card.dataset.stage = oldStage;
-            if (oldCol && oldCol !== newCol) {
-                adjustPipelineCount(oldCol, 1);
-                adjustPipelineCount(newCol, -1);
+            if (ST) {
+                const type = ST.getTransitionType(oldStage, newStage, meta);
+                if (type !== 'none') {
+                    const result = await ST.showDialog(oldStage, newStage, meta);
+                    if (!result) return;
+                    payload = result;
+                }
             }
-            syncDealPipelineZone(zone);
-            syncDealPipelineZone(oldCol?.querySelector('[data-drop-zone]'));
-            window.alert(err.message || 'تغییر مرحله انجام نشد.');
+            optimisticMoveDealCard(card, zone, oldCol, newCol, newStage);
+            if (ST) {
+                await ST.applyStageChange(url, payload);
+            } else {
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCsrfToken(),
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    body: JSON.stringify({ stage: newStage, lost_reason: payload.lost_reason || '' }),
+                });
+                const data = await res.json();
+                if (!data.ok) throw new Error(data.error || 'خطا');
+            }
+            if (ST) ST.showToast('مرحله معامله به‌روز شد.');
+        } catch (err) {
+            if (err && err.message === 'cancelled') return;
+            rollbackDealCard(card, zone, oldCol, newCol, oldStage);
+            const msg = (err && err.message) ? err.message : 'تغییر مرحله انجام نشد.';
+            if (ST) ST.showToast(msg, true);
+            else window.alert(msg);
         }
     }
 

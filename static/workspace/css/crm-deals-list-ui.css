@@ -75,6 +75,17 @@
     font-family: inherit;
 }
 
+.crm-deals-page .crm-deals-active-filters {
+    display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
+    padding: 0.5rem 0.75rem; margin-bottom: 0.75rem; border-radius: 10px;
+    background: #f5f3ff; font-size: 0.85rem;
+}
+.crm-deals-page .crm-deals-active-filters em { font-style: normal; font-weight: 600; color: var(--ws-primary, #7c3aed); }
+.crm-deals-page .crm-deals-owner { font-size: 0.85rem; }
+.crm-deals-page .crm-deals-row[data-href] { cursor: pointer; }
+.crm-deals-page .crm-deals-row[data-href]:hover { background: #f8fafc; }
+.crm-deals-page .crm-deals-row[data-href]:focus-within { outline: 2px solid var(--ws-primary, #7c3aed); outline-offset: -2px; }
+
 .crm-deals-page .crm-deals-view-toggle {
     display: inline-flex;
     align-items: center;

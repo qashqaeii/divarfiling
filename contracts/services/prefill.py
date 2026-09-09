@@ -121,6 +121,38 @@ def prefill_property_from_deal(deal: CRMDeal) -> Dict[str, Any]:
     }
 
 
+def _empty_financial(contract_type: str) -> Dict[str, Any]:
+    if contract_type == CONTRACT_TYPE_LEASE:
+        return {
+            'deposit': None,
+            'monthly_rent': None,
+            'rent_payment_day': 1,
+            'payment_method': 'transfer',
+        }
+    if contract_type == CONTRACT_TYPE_SALE:
+        return {
+            'total_price': None,
+            'down_payment': None,
+            'earnest_money': None,
+            'payments': [],
+        }
+    return {}
+
+
+def empty_wizard_data(contract_type: str) -> Dict[str, Any]:
+    """داده خالی ویزارد برای قرارداد بدون معامله."""
+    return {
+        'parties': [],
+        'property': {},
+        'financial': _empty_financial(contract_type),
+        'jv': {} if contract_type == CONTRACT_TYPE_JV else None,
+        'witnesses': [],
+        'selected_clauses': [],
+        'clause_optional': [],
+        'custom_agreements': [],
+    }
+
+
 def prefill_financial_from_deal(deal: CRMDeal, contract_type: str) -> Dict[str, Any]:
     prop = deal.property
     if contract_type == CONTRACT_TYPE_LEASE:

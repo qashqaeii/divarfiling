@@ -13,7 +13,35 @@ public_urlpatterns = [
     path('c/handover/<str:token>/', handover_public_views.PublicHandoverAcceptView.as_view(), name='public_handover_accept'),
 ]
 
-workspace_urlpatterns = [
+# مسیرهای کاننیکال (بدون deal_id در URL)
+standalone_urlpatterns = [
+    path('crm/contracts/', views.ContractsDashboardView.as_view(), name='contracts_dashboard'),
+    path('crm/contracts/api/deals/', views.DealSearchApiView.as_view(), name='contract_deal_search'),
+    path('crm/contracts/create/', views.ContractCreateStandaloneView.as_view(), name='contract_create_standalone'),
+    path(
+        'crm/contracts/<int:contract_id>/wizard/',
+        views.ContractWizardView.as_view(),
+        name='contract_wizard_standalone',
+    ),
+    path(
+        'crm/contracts/<int:contract_id>/',
+        views.ContractManageView.as_view(),
+        name='contract_manage_standalone',
+    ),
+    path(
+        'crm/contracts/<int:contract_id>/pdf/',
+        views.ContractPdfDownloadView.as_view(),
+        name='contract_pdf_standalone',
+    ),
+    path(
+        'crm/contracts/<int:contract_id>/pdf/preview/',
+        views.ContractPdfPreviewView.as_view(),
+        name='contract_pdf_preview_standalone',
+    ),
+]
+
+# مسیرهای سازگار با گذشته (deal در URL)
+legacy_deal_urlpatterns = [
     path(
         'crm/deals/<int:deal_id>/contracts/',
         views.DealContractsSectionView.as_view(),
@@ -69,7 +97,7 @@ workspace_urlpatterns = [
         handover_views.HandoverPdfDownloadView.as_view(),
         name='handover_pdf',
     ),
-    path('crm/contracts/', views.ContractsDashboardView.as_view(), name='contracts_dashboard'),
 ]
 
+workspace_urlpatterns = standalone_urlpatterns + legacy_deal_urlpatterns
 urlpatterns = public_urlpatterns + workspace_urlpatterns

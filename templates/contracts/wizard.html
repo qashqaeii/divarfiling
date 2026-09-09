@@ -3,15 +3,16 @@
 
 {% block page_title %}ویزارد قرارداد{% endblock %}
 {% block crm_extra_css %}
-<link rel="stylesheet" href="{% static 'contracts/css/contracts.css' %}?v=12">
+<link rel="stylesheet" href="{% static 'contracts/css/contracts.css' %}?v=14">
+<link rel="stylesheet" href="{% static 'contracts/css/workspace.css' %}?v=2">
 {% endblock %}
 
 {% block crm_content %}
-<div class="crm-page-chrome crm-contract-wizard ct-wizard{% if wizard_step == 'review' %} ct-wizard--review{% endif %}" data-contract-id="{{ contract.pk }}" data-deal-id="{{ deal.pk }}" data-contract-type="{{ contract.contract_type }}" data-current-step="{{ wizard_step }}">
+<div class="crm-page-chrome crm-contract-wizard ct-wizard{% if wizard_step == 'review' %} ct-wizard--review{% endif %}" data-contract-id="{{ contract.pk }}"{% if deal %} data-deal-id="{{ deal.pk }}"{% endif %} data-contract-type="{{ contract.contract_type }}" data-current-step="{{ wizard_step }}">
 
-    <header class="crm-dash-bar{% if wizard_step == 'review' %} ct-review-page-header{% endif %}">
+    <header class="crm-dash-bar ct-wizard-header{% if wizard_step == 'review' %} ct-review-page-header{% endif %}">
         <div class="crm-dash-bar-main">
-            <a href="{% url 'workspace:deal_contracts' deal.pk %}" class="crm-deal-back" aria-label="بازگشت"><i class="fas fa-arrow-right"></i></a>
+            <a href="{% if deal %}{% url 'workspace:deal_contracts' deal.pk %}{% else %}{% url 'workspace:contracts_dashboard' %}{% endif %}" class="crm-deal-back" aria-label="بازگشت"><i class="fas fa-arrow-right"></i></a>
             <div>
                 {% if wizard_step == 'review' %}
                 <h1 class="crm-dash-bar-title">{{ contract.get_contract_type_display }}</h1>
@@ -23,13 +24,16 @@
                 </p>
                 {% else %}
                 <h1 class="crm-dash-bar-title">{{ contract.get_contract_type_display }}</h1>
-                <p class="crm-dash-bar-sub is-visible"><span class="ct-wizard-progress">مرحله {{ step_number }} از {{ step_total }}</span>{% if next_step_label %}<span class="ct-wizard-next-hint">بعدی: {{ next_step_label }}</span>{% endif %}</p>
+                <p class="crm-dash-bar-sub is-visible">
+                    {% if contract.internal_number %}<span class="ct-wizard-meta">{{ contract.internal_number }}</span>{% endif %}
+                    <span class="ct-wizard-autosave" id="ct-wizard-autosave" aria-live="polite"></span>
+                </p>
                 {% endif %}
             </div>
         </div>
     </header>
 
-    <nav class="crm-deal-stepper" aria-label="مراحل قرارداد">
+    <nav class="crm-deal-stepper ct-wizard-stepper" aria-label="مراحل قرارداد">
         <div class="crm-deal-stepper-track" aria-hidden="true">
             <i style="width: {% widthratio step_number step_total 100 %}%"></i>
         </div>
@@ -65,7 +69,7 @@
             </header>
             <div class="crm-deal-panel-body">
             {% if prefill_parties %}
-            <div class="crm-contract-prefill crm-contract-prefill--info"><i class="fas fa-circle-info"></i> اطلاعات طرفین از CRM وارد شده — فقط بررسی و تأیید کنید.</div>
+            <div class="crm-contract-prefill crm-contract-prefill--info"><i class="fas fa-circle-info"></i>{% if deal %}<span class="ct-prefill-badge">از معامله</span>{% endif %} اطلاعات طرفین پیش‌پر شده — بررسی و در صورت نیاز اصلاح کنید.</div>
             {% endif %}
             <div class="crm-contract-parties" id="ct-party-rows">
                 {% for p in wizard_data.parties %}
@@ -379,7 +383,7 @@
             {% elif contract.contract_type == 'sale' %}
             <h2>مبلغ و پرداخت</h2>
             {% if prefill_financial %}
-            <div class="crm-contract-prefill"><i class="fas fa-check-circle"></i> مبلغ معامله از اطلاعات معامله پیشنهاد شده است.</div>
+            <div class="crm-contract-prefill"><i class="fas fa-check-circle"></i>{% if deal %}<span class="ct-prefill-badge">از معامله</span>{% endif %} مبلغ از اطلاعات معامله پیشنهاد شده — بررسی کنید.</div>
             {% endif %}
             <div class="crm-contract-money-grid">
                 <div class="crm-contract-money-card">
@@ -1030,5 +1034,5 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'contracts/js/wizard.js' %}?v=11"></script>
+<script src="{% static 'contracts/js/wizard.js' %}?v=12"></script>
 {% endblock %}

@@ -67,7 +67,7 @@ class SaleE2ETests(ContractTestBase):
     @patch('contracts.services.pdf.generate_contract_pdf')
     def test_sale_full_flow(self, mock_pdf, mock_sms):
         mock_sms.return_value = type('R', (), {'message_id': '1'})()
-        c = create_contract(self.user, self.deal.pk, CONTRACT_TYPE_SALE)
+        c = create_contract(self.user, CONTRACT_TYPE_SALE, deal_id=self.deal.pk)
         wd = _sale_wizard_data()
         for step in ('parties', 'property', 'financial', 'clauses'):
             save_wizard_step(c, step, wd.get(step) or wd['selected_clauses'], user=self.user)
@@ -92,7 +92,7 @@ class AttachmentSecurityTests(ContractTestBase):
             validate_upload_file(bad)
 
     def test_upload_and_idor(self):
-        c = create_contract(self.user, self.deal.pk, CONTRACT_TYPE_SALE)
+        c = create_contract(self.user, CONTRACT_TYPE_SALE, deal_id=self.deal.pk)
         v = c.current_version
         good = SimpleUploadedFile('doc.pdf', b'%PDF-1.4', content_type='application/pdf')
         att = save_contract_attachment(
@@ -129,7 +129,7 @@ class ConcurrencyFinalizeTests(TransactionTestCase):
         from contracts.tests.test_phase2 import _lease_wizard_data
 
         mock_sms.return_value = type('R', (), {'message_id': '1'})()
-        c = create_contract(self.user, self.deal.pk, CONTRACT_TYPE_LEASE)
+        c = create_contract(self.user, CONTRACT_TYPE_LEASE, deal_id=self.deal.pk)
         wd = _lease_wizard_data()
         for step in ('parties', 'property', 'financial', 'witnesses', 'clauses'):
             save_wizard_step(c, step, wd.get(step) or wd['selected_clauses'], user=self.user)
@@ -160,7 +160,7 @@ class HandoverTests(ContractTestBase):
         from contracts.constants import CONTRACT_TYPE_LEASE
         from contracts.tests.test_phase2 import _lease_wizard_data
         mock_sms.return_value = type('R', (), {'message_id': '1'})()
-        c = create_contract(self.user, self.deal.pk, CONTRACT_TYPE_LEASE)
+        c = create_contract(self.user, CONTRACT_TYPE_LEASE, deal_id=self.deal.pk)
         wd = _lease_wizard_data()
         for step in ('parties', 'property', 'financial', 'witnesses', 'clauses'):
             save_wizard_step(c, step, wd.get(step) or wd['selected_clauses'], user=self.user)
@@ -182,7 +182,7 @@ class HandoverTests(ContractTestBase):
             ms.return_value = type('R', (), {'message_id': '1'})()
             from contracts.constants import CONTRACT_TYPE_LEASE
             from contracts.tests.test_phase2 import _lease_wizard_data
-            c = create_contract(self.user, self.deal.pk, CONTRACT_TYPE_LEASE)
+            c = create_contract(self.user, CONTRACT_TYPE_LEASE, deal_id=self.deal.pk)
             wd = _lease_wizard_data()
             for step in ('parties', 'property', 'financial', 'witnesses', 'clauses'):
                 save_wizard_step(c, step, wd.get(step) or wd['selected_clauses'], user=self.user)
@@ -216,7 +216,7 @@ class HandoverTests(ContractTestBase):
         self.assertTrue(handover.is_locked)
 
     def test_handover_only_after_finalize(self):
-        c = create_contract(self.user, self.deal.pk, CONTRACT_TYPE_SALE)
+        c = create_contract(self.user, CONTRACT_TYPE_SALE, deal_id=self.deal.pk)
         from contracts.services.handover import HandoverError
         with self.assertRaises(HandoverError):
             create_handover(self.user, c.pk)
@@ -225,7 +225,7 @@ class HandoverTests(ContractTestBase):
         from django.http import QueryDict
         from contracts.services.handover_parse import parse_handover_step
 
-        c = create_contract(self.user, self.deal.pk, CONTRACT_TYPE_SALE)
+        c = create_contract(self.user, CONTRACT_TYPE_SALE, deal_id=self.deal.pk)
         c.status = 'finalized'
         c.save(update_fields=['status'])
         handover = create_handover(self.user, c.pk)
@@ -255,7 +255,7 @@ class HandoverTests(ContractTestBase):
     def test_wizard_renders_saved_values_and_mobile_nav(self):
         from contracts.services.handover_wizard import build_handover_wizard_context
 
-        c = create_contract(self.user, self.deal.pk, CONTRACT_TYPE_SALE)
+        c = create_contract(self.user, CONTRACT_TYPE_SALE, deal_id=self.deal.pk)
         c.status = 'finalized'
         c.save(update_fields=['status'])
         handover = create_handover(self.user, c.pk)

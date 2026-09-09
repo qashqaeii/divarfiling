@@ -36,7 +36,11 @@ def sync_contract_reminders(contract: Contract) -> None:
     deal = contract.deal
     fin = version.financial_data or {}
     user = contract.user
-    customer = deal.customer
+    customer = deal.customer if deal else None
+    if not customer and version:
+        party = version.parties.order_by('sort_order', 'pk').first()
+        if party and party.customer_id:
+            customer = party.customer
 
     Reminder.objects.filter(
         user=user,

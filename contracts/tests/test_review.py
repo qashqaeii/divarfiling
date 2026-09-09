@@ -34,7 +34,7 @@ class ReviewStepTests(TestCase):
         self.client.force_login(self.user)
 
     def _sale_contract(self):
-        c = create_contract(self.user, self.deal_sale.pk, CONTRACT_TYPE_SALE)
+        c = create_contract(self.user, CONTRACT_TYPE_SALE, deal_id=self.deal_sale.pk)
         save_wizard_step(c, 'parties', [
             {'role': 'seller', 'first_name': 'علی', 'last_name': 'فروشنده', 'mobile': '09121111111', 'national_id': '1111111111'},
             {'role': 'buyer', 'first_name': 'رضا', 'last_name': 'خریدار', 'mobile': '09122222222', 'national_id': '2222222222'},
@@ -76,7 +76,7 @@ class ReviewStepTests(TestCase):
         return c
 
     def _lease_contract(self):
-        c = create_contract(self.user, self.deal_rent.pk, CONTRACT_TYPE_LEASE)
+        c = create_contract(self.user, CONTRACT_TYPE_LEASE, deal_id=self.deal_rent.pk)
         save_wizard_step(c, 'parties', [
             {'role': 'landlord', 'first_name': 'موجر', 'last_name': 'الف', 'mobile': '09121111111'},
             {'role': 'tenant', 'first_name': 'مستأجر', 'last_name': 'ب', 'mobile': '09122222222'},

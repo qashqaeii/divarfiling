@@ -4,7 +4,9 @@ from __future__ import annotations
 from datetime import date
 from typing import Any, Dict, List, Optional
 
-from django.db.models import Count, Q, Sum
+from django.db.models import Count, Exists, OuterRef, Q, Sum
+
+from contracts.models import Contract
 from django.utils import timezone
 
 from workspace.constants import DEAL_STAGE_LOST, DEAL_STAGE_WON, DEFAULT_COMMISSION_RATE
@@ -147,8 +149,11 @@ def update_deal_stage(deal: CRMDeal, new_stage: str, *, lost_reason: str = '') -
         update_fields.append('stage_changed_at')
         deal.probability = probability_for_stage(deal.user, new_stage)
         update_fields.append('probability')
-    if is_lost_stage(new_stage) and lost_reason:
-        deal.lost_reason = lost_reason
+    if is_lost_stage(new_stage):
+        reason = (lost_reason or '').strip()
+        if not reason:
+            raise ValueError('دلیل از دست رفتن معامله الزامی است.')
+        deal.lost_reason = reason
         update_fields.append('lost_reason')
     if is_terminal_stage(new_stage) and not deal.closed_at:
         deal.closed_at = timezone.now()
@@ -172,7 +177,16 @@ def get_deal_pipeline(user, per_column: int = 20) -> List[Dict[str, Any]]:
     rows = []
     for stage_def in get_user_deal_stage_defs(user):
         stage = stage_def['name']
-        qs = deals_qs(user).filter(stage=stage).select_related('customer', 'property')
+        qs = (
+            deals_qs(user).filter(stage=stage)
+            .select_related('customer', 'property', 'assigned_to')
+            .annotate(
+                pipeline_contract_count=Count('digital_contracts', distinct=True),
+                pipeline_has_finalized=Exists(
+                    Contract.objects.filter(deal_id=OuterRef('pk'), status='finalized'),
+                ),
+            )
+        )
         deals = list(qs.order_by('-updated_at')[:per_column])
         stale_n = sum(1 for d in deals if is_deal_stale(d, stage_def))
         rows.append({
@@ -538,12 +552,13 @@ def create_deal_from_property(
 
 
 def filter_deals(user, params: dict):
-    qs = deals_qs(user).select_related('customer', 'property')
+    qs = deals_qs(user).select_related('customer', 'property', 'assigned_to')
     q = params.get('q', '').strip()
     if q:
         qs = qs.filter(
             Q(title__icontains=q) | Q(customer__name__icontains=q)
-            | Q(listing_token__icontains=q) | Q(property__title__icontains=q),
+            | Q(listing_token__icontains=q) | Q(property__title__icontains=q)
+            | Q(property__address__icontains=q),
         )
     stage = params.get('stage', '').strip()
     if stage:

@@ -83,3 +83,21 @@ def ct_cost_label(key: str) -> str:
 def ct_handover_status(status: str) -> str:
     from contracts.constants import HANDOVER_CONDITION_STATUSES
     return dict(HANDOVER_CONDITION_STATUSES).get(status or '', status or '')
+
+
+@register.simple_tag
+def ct_manage_url(contract):
+    from contracts.services.routing import contract_manage_url
+    return contract_manage_url(contract)
+
+
+@register.simple_tag
+def ct_wizard_url(contract):
+    from contracts.services.routing import contract_wizard_url
+    return contract_wizard_url(contract)
+
+
+@register.simple_tag
+def ct_pdf_url(contract):
+    from contracts.services.routing import contract_pdf_url
+    return contract_pdf_url(contract)

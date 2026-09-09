@@ -1,0 +1,62 @@
+{% load workspace_tags crm_tags %}
+<section class="dj-context-card">
+    <h3 class="dj-context-card__title">مخاطب</h3>
+    {% if deal.customer_id %}
+    <a href="{% url 'workspace:crm_detail' deal.customer_id %}" class="dj-context-link">
+        <span class="crm-deals-avatar crm-deals-avatar--hue-{{ deal.customer.name|crm_avatar_hue }}">{{ deal.customer.name|crm_initials }}</span>
+        <span><strong>{{ deal.customer.name }}</strong><em>{{ deal.customer.status }}{% if deal.customer.phone %} · {{ deal.customer.phone }}{% endif %}</em></span>
+    </a>
+    {% else %}<p class="dj-muted">ثبت نشده</p>{% endif %}
+</section>
+
+{% if deal.property_id %}
+<section class="dj-context-card">
+    <h3 class="dj-context-card__title">ملک</h3>
+    <a href="{% url 'workspace:crm_property_detail' deal.property_id %}" class="dj-context-link">
+        <i class="fas fa-building"></i>
+        <span><strong>{{ deal.property.title }}</strong><em>{{ deal.property.deal_mode }}{% if deal.property.area %} · {{ deal.property.area }} متر{% endif %}</em></span>
+    </a>
+</section>
+{% endif %}
+
+<section class="dj-context-card">
+    <h3 class="dj-context-card__title">خلاصه مالی</h3>
+    <dl class="dj-context-dl">
+        <div><dt>ارزش</dt><dd>{% if deal.value %}{{ deal.value|ws_money }}{% else %}—{% endif %}</dd></div>
+        <div><dt>احتمال</dt><dd>{{ deal.probability }}٪</dd></div>
+        {% if weighted_value %}<div><dt>پیش‌بینی وزنی</dt><dd>{{ weighted_value|ws_money }}</dd></div>{% endif %}
+        {% if finance.commission_amount %}<div><dt>کمیسیون</dt><dd>{{ finance.commission_amount|ws_money }}</dd></div>{% endif %}
+    </dl>
+    <button type="button" class="dj-context-btn" data-drawer-open="drawer-finance">تنظیمات مالی</button>
+</section>
+
+<section class="dj-context-card">
+    <h3 class="dj-context-card__title">مدارک</h3>
+    <p class="dj-context-stat">{{ checklist_progress.required_done }}/{{ checklist_progress.required_total }} الزامی · {{ checklist_progress.pct }}٪</p>
+    <a href="?tab=documents" class="dj-context-btn dj-context-btn--ghost">مشاهده چک‌لیست</a>
+</section>
+
+<section class="dj-context-card">
+    <h3 class="dj-context-card__title">قرارداد</h3>
+    {% if deal_contracts_count %}
+    <p class="dj-context-stat">{{ deal_contract_summary.finalized }} نهایی · {{ deal_contract_summary.draft }} پیش‌نویس</p>
+    <a href="{{ deal_contracts_url }}" class="dj-context-btn">مشاهده همه ({{ deal_contracts_count }})</a>
+    {% else %}
+    <p class="dj-muted">قراردادی ثبت نشده</p>
+    <form method="post" action="{% url 'workspace:contract_create' deal.pk %}">{% csrf_token %}
+        <input type="hidden" name="contract_type" value="{% if deal.deal_kind == 'sale' %}sale{% else %}lease{% endif %}">
+        <button type="submit" class="dj-context-btn dj-context-btn--primary">ایجاد قرارداد</button>
+    </form>
+    {% endif %}
+</section>
+
+{% if deal.stage != 'بسته‌شده' and deal.stage != 'از دست رفته' %}
+<section class="dj-context-card dj-context-card--actions">
+    <form method="post" class="dj-context-form">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="update_stage">
+        <input type="hidden" name="stage" value="بسته‌شده">
+        <button type="submit" class="dj-context-btn dj-context-btn--success"><i class="fas fa-trophy"></i> بستن معامله</button>
+    </form>
+</section>
+{% endif %}

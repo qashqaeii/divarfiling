@@ -42,7 +42,7 @@ class ContractModelTests(TestCase):
         )
 
     def test_create_contract_prefills_data(self):
-        c = create_contract(self.user, self.deal.pk, CONTRACT_TYPE_LEASE)
+        c = create_contract(self.user, CONTRACT_TYPE_LEASE, deal_id=self.deal.pk)
         self.assertTrue(c.internal_number.startswith('DF-RNT-'))
         self.assertEqual(c.deal_id, self.deal.pk)
         self.assertTrue(c.wizard_data.get('parties'))
@@ -61,19 +61,19 @@ class ContractModelTests(TestCase):
             user=self.user, customer=legal_customer, property=self.prop,
             title='معامله حقوقی', deal_kind='rent',
         )
-        c = create_contract(self.user, deal.pk, CONTRACT_TYPE_LEASE)
+        c = create_contract(self.user, CONTRACT_TYPE_LEASE, deal_id=deal.pk)
         party = c.current_version.parties.filter(role='tenant').first()
         self.assertIsNotNone(party)
         self.assertEqual(party.company_national_id, '10123456789')
         self.assertEqual(party.national_id, '')
 
     def test_permission_scope(self):
-        c = create_contract(self.user, self.deal.pk, CONTRACT_TYPE_LEASE)
+        c = create_contract(self.user, CONTRACT_TYPE_LEASE, deal_id=self.deal.pk)
         self.assertIsNotNone(contract_for_user(self.user, c.pk))
         self.assertIsNone(contract_for_user(self.other, c.pk))
 
     def test_content_hash_changes(self):
-        c = create_contract(self.user, self.deal.pk, CONTRACT_TYPE_LEASE)
+        c = create_contract(self.user, CONTRACT_TYPE_LEASE, deal_id=self.deal.pk)
         v = c.current_version
         h1 = compute_content_hash(v)
         save_wizard_step(c, 'financial', {'monthly_rent': 20000000, 'deposit': 500000000,
@@ -91,7 +91,7 @@ class ContractSecurityTests(TestCase):
         self.deal = CRMDeal.objects.create(user=self.user, customer=self.customer, title='دیل')
 
     def test_idor_manage_view(self):
-        c = create_contract(self.user, self.deal.pk, CONTRACT_TYPE_LEASE)
+        c = create_contract(self.user, CONTRACT_TYPE_LEASE, deal_id=self.deal.pk)
         client = Client()
         client.force_login(self.other)
         url = reverse('workspace:contract_manage', kwargs={'deal_id': self.deal.pk, 'contract_id': c.pk})
@@ -111,7 +111,7 @@ class ContractVersioningTests(TestCase):
         )
 
     def test_lease_validation_requires_witnesses(self):
-        c = create_contract(self.user, self.deal.pk, CONTRACT_TYPE_LEASE)
+        c = create_contract(self.user, CONTRACT_TYPE_LEASE, deal_id=self.deal.pk)
         wizard = dict(c.wizard_data)
         wizard['financial'] = {
             'monthly_rent': 10000000, 'deposit': 100000000,
@@ -194,7 +194,7 @@ class ContractWizardUXTests(TestCase):
         )
 
     def test_wizard_shows_full_phone_in_workspace(self):
-        c = create_contract(self.user, self.deal.pk, CONTRACT_TYPE_SALE)
+        c = create_contract(self.user, CONTRACT_TYPE_SALE, deal_id=self.deal.pk)
         self.client.force_login(self.user)
         url = reverse('workspace:contract_wizard', kwargs={'deal_id': self.deal.pk, 'contract_id': c.pk})
         resp = self.client.get(url + '?step=parties')
@@ -222,7 +222,7 @@ class ContractWizardUXTests(TestCase):
         self.assertTrue(words.endswith('تومان'))
 
     def test_wizard_property_select_parsing(self):
-        c = create_contract(self.user, self.deal.pk, CONTRACT_TYPE_SALE)
+        c = create_contract(self.user, CONTRACT_TYPE_SALE, deal_id=self.deal.pk)
         data = parse_wizard_step({
             'prop_unit_direction': 'شمالی',
             'prop_facade_type': 'سنگ',

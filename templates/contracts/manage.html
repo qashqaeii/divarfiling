@@ -3,35 +3,36 @@
 
 {% block page_title %}مدیریت قرارداد{% endblock %}
 {% block crm_extra_css %}
-<link rel="stylesheet" href="{% static 'contracts/css/contracts.css' %}?v=13">
+<link rel="stylesheet" href="{% static 'contracts/css/contracts.css' %}?v=14">
+<link rel="stylesheet" href="{% static 'contracts/css/workspace.css' %}?v=2">
 {% endblock %}
 
 {% block crm_content %}
-<div class="crm-page-chrome crm-contracts-page crm-contract-manage">
+<div class="crm-page-chrome crm-contracts-page crm-contract-manage ct-manage">
 
     <header class="crm-dash-bar ct-manage-header">
         <div class="crm-dash-bar-main">
-            <a href="{% url 'workspace:deal_contracts' deal.pk %}" class="crm-deal-back" aria-label="بازگشت"><i class="fas fa-arrow-right"></i></a>
+            <a href="{{ contracts_dashboard_url }}" class="crm-deal-back" aria-label="بازگشت"><i class="fas fa-arrow-right"></i></a>
             <div>
                 <h1 class="crm-dash-bar-title">{{ contract.get_contract_type_display }}</h1>
                 <p class="crm-dash-bar-sub is-visible">
-                    شناسه {{ contract.internal_number }}{% if version %} · نسخه {{ version.version_number }}{% endif %}
+                    {{ contract.internal_number }}{% if version %} · نسخه {{ version.version_number }}{% endif %}
                     · <span class="crm-contract-status crm-contract-status--{{ contract.status }}">{{ contract.get_status_display }}</span>
                 </p>
             </div>
         </div>
         <div class="crm-dash-bar-actions ct-manage-header-actions" role="toolbar" aria-label="عملیات قرارداد">
             {% if contract.status == 'finalized' %}
-            <a href="{% url 'workspace:contract_wizard' deal.pk contract.pk %}?step=review" class="crm-dash-act crm-dash-act--primary">مشاهده قرارداد</a>
-            <a href="{% url 'workspace:contract_pdf' deal.pk contract.pk %}" class="crm-dash-act">PDF</a>
+            <a href="{{ contract_wizard_url }}?step=review" class="crm-dash-act crm-dash-act--primary">مشاهده قرارداد</a>
+            <a href="{{ contract_pdf_url }}" class="crm-dash-act">PDF</a>
             {% elif contract.status == 'draft' or contract.is_editable %}
-            <a href="{% url 'workspace:contract_wizard' deal.pk contract.pk %}" class="crm-dash-act crm-dash-act--primary">ویرایش</a>
+            <a href="{{ contract_wizard_url }}" class="crm-dash-act crm-dash-act--primary">ویرایش</a>
             <form method="post" class="ct-manage-inline-form">{% csrf_token %}
                 <button type="submit" name="action" value="send" class="crm-dash-act">ارسال برای طرفین</button>
             </form>
             {% endif %}
             {% if contract.status != 'finalized' and version.pdf_file %}
-            <a href="{% url 'workspace:contract_pdf' deal.pk contract.pk %}" class="crm-dash-act">PDF</a>
+            <a href="{{ contract_pdf_url }}" class="crm-dash-act">PDF</a>
             {% endif %}
             <div class="ct-menu-wrap ct-manage-more-menu" id="ct-more-menu">
                 <button type="button" class="crm-dash-act crm-dash-act--icon" aria-label="عملیات بیشتر" aria-haspopup="true" aria-expanded="false">
@@ -52,19 +53,44 @@
                         <button type="submit" class="is-destructive" role="menuitem">لغو قرارداد</button>
                     </form>
                     {% endif %}
-                    {% if contract.status == 'finalized' and not finalized_handover and not handover %}
+                    {% if deal and contract.status == 'finalized' and not finalized_handover and not handover %}
                     <form method="post" action="{% url 'workspace:handover_create' deal.pk contract.pk %}">{% csrf_token %}
                         <button type="submit" role="menuitem">ثبت صورت‌جلسه تحویل</button>
                     </form>
-                    {% elif handover and handover.status != 'finalized' %}
+                    {% elif deal and handover and handover.status != 'finalized' %}
                     <a href="{% url 'workspace:handover_wizard' deal.pk contract.pk handover.pk %}" role="menuitem">ادامه صورت‌جلسه</a>
-                    {% elif finalized_handover %}
+                    {% elif deal and finalized_handover %}
                     <a href="{% url 'workspace:handover_pdf' deal.pk contract.pk finalized_handover.pk %}" role="menuitem">دانلود صورت‌جلسه</a>
                     {% endif %}
                 </div>
             </div>
         </div>
     </header>
+
+    <nav class="ct-lifecycle" aria-label="چرخه عمر قرارداد">
+        <ol class="ct-lifecycle__steps">
+            <li class="ct-lifecycle__step{% if contract.status != 'cancelled' %} is-done{% endif %}">
+                <span class="ct-lifecycle__dot" aria-hidden="true"><i class="fas fa-pen"></i></span>
+                <span>پیش‌نویس</span>
+            </li>
+            <li class="ct-lifecycle__step{% if contract.status in 'sent,viewed,partially_accepted,fully_accepted,finalized' %} is-done{% elif contract.status == 'draft' %} is-current{% endif %}">
+                <span class="ct-lifecycle__dot" aria-hidden="true"><i class="fas fa-paper-plane"></i></span>
+                <span>ارسال</span>
+            </li>
+            <li class="ct-lifecycle__step{% if contract.status in 'viewed,partially_accepted,fully_accepted,finalized' %} is-done{% elif contract.status in 'sent' %} is-current{% endif %}">
+                <span class="ct-lifecycle__dot" aria-hidden="true"><i class="fas fa-eye"></i></span>
+                <span>مشاهده</span>
+            </li>
+            <li class="ct-lifecycle__step{% if contract.status in 'partially_accepted,fully_accepted,finalized' %} is-done{% elif contract.status in 'viewed,partially_accepted' %} is-current{% endif %}">
+                <span class="ct-lifecycle__dot" aria-hidden="true"><i class="fas fa-check"></i></span>
+                <span>تأیید</span>
+            </li>
+            <li class="ct-lifecycle__step{% if contract.status == 'finalized' %} is-done is-final{% elif contract.status == 'fully_accepted' %} is-current{% endif %}">
+                <span class="ct-lifecycle__dot" aria-hidden="true"><i class="fas fa-file-circle-check"></i></span>
+                <span>نهایی</span>
+            </li>
+        </ol>
+    </nav>
 
     {% if contract.status == 'finalized' %}
     <div class="ct-manage-banner ct-manage-banner--success">
@@ -78,90 +104,64 @@
     </div>
     {% endif %}
 
-    <div class="crm-contract-manage-grid">
-        <section class="crm-deal-block crm-deal-panel ct-manage-panel">
-            <header class="crm-deal-panel-head">
-                <span class="crm-deal-panel-mark" aria-hidden="true"><i class="fas fa-users"></i></span>
-                <div class="crm-deal-panel-head-text"><h2>وضعیت طرفین</h2></div>
+    <section class="ct-party-grid" aria-labelledby="ctPartyHeading">
+        <h2 id="ctPartyHeading" class="visually-hidden">وضعیت طرفین</h2>
+        {% for item in party_progress %}
+        <article class="ct-party-card{% if item.accepted %} is-accepted{% else %} is-pending{% endif %}">
+            <header class="ct-party-card__head">
+                <span class="ct-party-card__role">{{ item.label }}</span>
+                <span class="ct-party-card__status" aria-label="{% if item.accepted %}تأیید شده{% else %}در انتظار{% endif %}">
+                    {% if item.accepted %}<i class="fas fa-check-circle" aria-hidden="true"></i> تأیید شده{% else %}<i class="far fa-circle" aria-hidden="true"></i> در انتظار{% endif %}
+                </span>
             </header>
-            <div class="crm-deal-panel-body crm-deal-panel-body--flush">
-                <ul class="crm-contract-party-progress">
-                    {% for item in party_progress %}
-                    <li>
-                        <span class="crm-contract-party-progress__label">{{ item.label }}</span>
-                        <span class="crm-contract-party-progress__name">{{ item.name }}</span>
-                        <span class="crm-contract-party-progress__state {% if item.accepted %}is-done{% else %}is-pending{% endif %}">
-                            {% if item.accepted %}<i class="fas fa-check-circle"></i> تأیید شده{% else %}<i class="far fa-circle"></i> در انتظار{% endif %}
-                        </span>
-                        {% if not item.accepted and item.invitation %}
-                        <form method="post" class="ct-manage-inline-form">{% csrf_token %}
-                            <input type="hidden" name="action" value="resend">
-                            <input type="hidden" name="invitation_id" value="{{ item.invitation.pk }}">
-                            <button type="submit" class="crm-dash-act ct-manage-resend-btn">ارسال مجدد</button>
-                        </form>
-                        {% endif %}
-                    </li>
-                    {% empty %}
-                    <li class="ct-manage-empty">{% if contract.status == 'draft' %}قرارداد هنوز ارسال نشده است.{% else %}اطلاعات طرفین در دسترس نیست.{% endif %}</li>
-                    {% endfor %}
-                </ul>
-            </div>
-        </section>
+            <p class="ct-party-card__name">{{ item.name }}</p>
+            {% if item.mobile %}<p class="ct-party-card__mobile">{{ item.mobile }}</p>{% endif %}
+            {% if item.accepted and item.accepted_at %}
+            <time class="ct-party-card__time" datetime="{{ item.accepted_at|date:'c' }}">{{ item.accepted_at|ws_jalali_datetime }}</time>
+            {% endif %}
+            {% if not item.accepted and item.invitation %}
+            <form method="post" class="ct-manage-inline-form">{% csrf_token %}
+                <input type="hidden" name="action" value="resend">
+                <input type="hidden" name="invitation_id" value="{{ item.invitation.pk }}">
+                <button type="submit" class="crm-dash-act ct-manage-resend-btn">ارسال مجدد</button>
+            </form>
+            {% endif %}
+        </article>
+        {% empty %}
+        <p class="ct-manage-empty ct-party-grid__empty">{% if contract.status == 'draft' %}قرارداد هنوز ارسال نشده است.{% else %}اطلاعات طرفین در دسترس نیست.{% endif %}</p>
+        {% endfor %}
+    </section>
 
-        <section class="crm-deal-block crm-deal-panel ct-manage-panel">
-            <header class="crm-deal-panel-head">
-                <span class="crm-deal-panel-mark" aria-hidden="true"><i class="fas fa-route"></i></span>
-                <div class="crm-deal-panel-head-text"><h2>فرآیند</h2></div>
-            </header>
-            <div class="crm-deal-panel-body">
-                <ol class="ct-manage-process">
-                    <li class="{% if contract.status == 'finalized' %}is-done{% endif %}">
-                        <span class="ct-manage-process__dot" aria-hidden="true"></span>
-                        <span>قرارداد</span>
-                    </li>
-                    <li class="{% if contract.status == 'finalized' %}is-done{% elif contract.status in 'partially_accepted,fully_accepted' %}is-active{% endif %}">
-                        <span class="ct-manage-process__dot" aria-hidden="true"></span>
-                        <span>تأیید طرفین</span>
-                    </li>
-                    <li class="{% if finalized_handover %}is-done{% endif %}">
-                        <span class="ct-manage-process__dot" aria-hidden="true"></span>
-                        <span>صورت‌جلسه تحویل</span>
-                    </li>
-                </ol>
+    <section class="crm-deal-block crm-deal-panel ct-manage-panel ct-manage-history">
+        <header class="crm-deal-panel-head">
+            <span class="crm-deal-panel-mark" aria-hidden="true"><i class="fas fa-clock-rotate-left"></i></span>
+            <div class="crm-deal-panel-head-text">
+                <h2>تاریخچه</h2>
+                {% if audit_total_count %}<p>{{ audit_total_count }} رویداد</p>{% endif %}
             </div>
-        </section>
-
-        <section class="crm-deal-block crm-deal-panel ct-manage-panel ct-manage-history">
-            <header class="crm-deal-panel-head">
-                <span class="crm-deal-panel-mark" aria-hidden="true"><i class="fas fa-clock-rotate-left"></i></span>
-                <div class="crm-deal-panel-head-text">
-                    <h2>تاریخچه</h2>
-                    {% if audit_total_count %}<p>{{ audit_total_count }} رویداد</p>{% endif %}
-                </div>
-            </header>
-            <div class="crm-deal-panel-body crm-deal-panel-body--flush">
-                <ul class="ct-audit-timeline" id="ct-audit-timeline">
-                    {% for ev in audit_timeline %}
-                    <li class="ct-audit-item{% if forloop.counter > 5 %} is-hidden{% endif %}" data-event-type="{{ ev.event_type }}">
-                        <div class="ct-audit-item__marker" aria-hidden="true"></div>
-                        <div class="ct-audit-item__body">
-                            <p class="ct-audit-item__label">{{ ev.label }}</p>
-                            {% if ev.detail %}<p class="ct-audit-item__detail">{{ ev.detail }}</p>{% endif %}
-                            <time class="ct-audit-item__time" datetime="{{ ev.created_at|date:'c' }}">{{ ev.created_at|ws_jalali_datetime }}</time>
-                        </div>
-                    </li>
-                    {% empty %}
-                    <li class="ct-manage-empty">هنوز رویدادی ثبت نشده است.</li>
-                    {% endfor %}
-                </ul>
-                {% if audit_timeline|length > 5 %}
-                <button type="button" class="ct-audit-more-btn" id="ct-audit-more">
-                    نمایش بیشتر ({{ audit_timeline|length|add:"-5" }} مورد)
-                </button>
-                {% endif %}
-            </div>
-        </section>
-    </div>
+        </header>
+        <div class="crm-deal-panel-body crm-deal-panel-body--flush">
+            <ul class="ct-audit-timeline" id="ct-audit-timeline">
+                {% for ev in audit_timeline %}
+                <li class="ct-audit-item{% if forloop.counter > 5 %} is-hidden{% endif %}" data-event-type="{{ ev.event_type }}">
+                    <div class="ct-audit-item__marker" aria-hidden="true"></div>
+                    <div class="ct-audit-item__body">
+                        <p class="ct-audit-item__label">{{ ev.label }}</p>
+                        {% if ev.detail %}<p class="ct-audit-item__detail">{{ ev.detail }}</p>{% endif %}
+                        <time class="ct-audit-item__time" datetime="{{ ev.created_at|date:'c' }}">{{ ev.created_at|ws_jalali_datetime }}</time>
+                    </div>
+                </li>
+                {% empty %}
+                <li class="ct-manage-empty">هنوز رویدادی ثبت نشده است.</li>
+                {% endfor %}
+            </ul>
+            {% if audit_timeline|length > 5 %}
+            <button type="button" class="ct-audit-more-btn" id="ct-audit-more">
+                نمایش بیشتر ({{ audit_timeline|length|add:"-5" }} مورد)
+            </button>
+            {% endif %}
+        </div>
+    </section>
 </div>
 {% endblock %}
 

@@ -157,7 +157,8 @@ class Contract(models.Model):
         null=True, blank=True, related_name='contracts', verbose_name='آژانس',
     )
     deal = models.ForeignKey(
-        'workspace.CRMDeal', on_delete=models.CASCADE,
+        'workspace.CRMDeal', on_delete=models.SET_NULL,
+        null=True, blank=True,
         related_name='digital_contracts', verbose_name='معامله',
     )
     contract_type = models.CharField(max_length=12, choices=CONTRACT_TYPES, verbose_name='نوع')

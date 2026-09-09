@@ -1,32 +1,128 @@
 {% extends 'workspace/crm/base_crm.html' %}
-{% load static %}
+{% load static workspace_tags contract_tags %}
 
-{% block page_title %}مرکز قراردادها{% endblock %}
+{% block page_title %}قراردادها{% endblock %}
+{% block mobile_bar_title %}قراردادها{% endblock %}
 {% block crm_extra_css %}
-<link rel="stylesheet" href="{% static 'contracts/css/contracts.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'contracts/css/contracts.css' %}?v=14">
+<link rel="stylesheet" href="{% static 'contracts/css/workspace.css' %}?v=2">
 {% endblock %}
 
 {% block crm_content %}
-<div class="ct-center">
-    <h1>مرکز قراردادهای دیجیتال</h1>
-    <form method="get" class="ct-filter">
-        <input type="search" name="q" value="{{ request.GET.q }}" placeholder="جستجو شناسه، معامله..." class="crm-input">
-        <select name="status" class="crm-input">
+<div class="ct-workspace crm-page-chrome">
+    <header class="crm-dash-bar ct-workspace-header">
+        <div class="crm-dash-bar-main">
+            <span class="ct-workspace-kicker"><i class="fas fa-file-signature" aria-hidden="true"></i> Workspace</span>
+            <h1 class="crm-dash-bar-title">قراردادها</h1>
+            <p class="crm-dash-bar-sub is-visible">ایجاد، ارسال، تأیید و مدیریت قراردادهای معاملات</p>
+        </div>
+        <div class="crm-dash-bar-actions">
+            <a href="{% url 'workspace:contract_create_standalone' %}" class="crm-dash-act crm-dash-act--primary">
+                <i class="fas fa-plus" aria-hidden="true"></i><span>قرارداد جدید</span>
+            </a>
+        </div>
+    </header>
+
+    {% if filter_deal %}
+    <div class="ct-workspace-filter-banner">
+        <i class="fas fa-link" aria-hidden="true"></i>
+        <span>فیلتر: معامله «{{ filter_deal.title }}»</span>
+        <a href="{% url 'workspace:contracts_dashboard' %}" class="crm-dash-act">حذف فیلتر</a>
+    </div>
+    {% endif %}
+
+    <section class="ct-workspace-kpis" aria-label="شاخص‌های قرارداد">
+        <a href="?status=draft" class="ct-kpi{% if request.GET.status == 'draft' %} is-active{% endif %}">
+            <strong>{{ stats.draft }}</strong><span>پیش‌نویس</span>
+        </a>
+        <a href="?status=sent" class="ct-kpi{% if request.GET.status == 'sent' %} is-active{% endif %}">
+            <strong>{{ stats.pending }}</strong><span>در انتظار تأیید</span>
+        </a>
+        <a href="?status=finalized" class="ct-kpi{% if request.GET.status == 'finalized' %} is-active{% endif %}">
+            <strong>{{ stats.finalized }}</strong><span>نهایی‌شده</span>
+        </a>
+        <a href="?" class="ct-kpi ct-kpi--warn{% if not request.GET.status %} is-active{% endif %}">
+            <strong>{{ stats.needs_action }}</strong><span>نیازمند اقدام</span>
+        </a>
+    </section>
+
+    <form method="get" class="ct-workspace-filters">
+        {% if filter_deal %}<input type="hidden" name="deal" value="{{ filter_deal.pk }}">{% endif %}
+        <input type="search" name="q" value="{{ request.GET.q }}" placeholder="جستجو شماره، معامله، مخاطب..." class="crm-input">
+        <select name="status" class="crm-select">
             <option value="">همه وضعیت‌ها</option>
-            <option value="draft">پیش‌نویس</option>
-            <option value="sent">ارسال‌شده</option>
-            <option value="finalized">نهایی</option>
+            {% for key, label in contract_statuses %}
+            <option value="{{ key }}"{% if request.GET.status == key %} selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+        <select name="type" class="crm-select">
+            <option value="">همه انواع</option>
+            {% for key, label in contract_types %}
+            <option value="{{ key }}"{% if request.GET.type == key %} selected{% endif %}>{{ label }}</option>
+            {% endfor %}
         </select>
         <button type="submit" class="crm-dash-act">فیلتر</button>
     </form>
-    {% for c in contracts %}
-    <article class="ct-card">
-        <h3>{{ c.internal_number }} — {{ c.get_contract_type_display }}</h3>
-        <p>{{ c.get_status_display }} · {{ c.deal.title }}</p>
-        <a href="{% url 'workspace:contract_manage' c.deal_id c.pk %}">مدیریت</a>
-    </article>
-    {% empty %}
-    <p class="ct-muted">قراردادی یافت نشد.</p>
-    {% endfor %}
+
+    <div class="ct-workspace-list">
+        {% for c in contracts %}
+        <article class="ct-workspace-card">
+            <div class="ct-workspace-card__main">
+                <div class="ct-workspace-card__head">
+                    <span class="crm-contract-status crm-contract-status--{{ c.status }}">{{ c.get_status_display }}</span>
+                    <strong>{{ c.get_contract_type_display }}</strong>
+                </div>
+                <p class="ct-workspace-card__id">{{ c.internal_number }}</p>
+                <p class="ct-workspace-card__meta">
+                    {% if c.deal %}
+                    <a href="{% url 'workspace:crm_deal_detail' c.deal_id %}">{{ c.deal.title|truncatechars:32 }}</a>
+                    {% if c.deal.customer %} · {{ c.deal.customer.name }}{% endif %}
+                    {% else %}
+                    <span class="ct-muted">بدون معامله مرتبط</span>
+                    {% endif %}
+                </p>
+            </div>
+            <div class="ct-workspace-card__side">
+                <span class="ct-workspace-card__date">{{ c.updated_at|ws_jalali_datetime }}</span>
+                {% if c.status == 'draft' %}
+                <div class="ct-workspace-card__progress" aria-hidden="true"><i style="width:35%"></i></div>
+                <a href="{% ct_wizard_url c %}" class="crm-dash-act crm-dash-act--primary">ادامه</a>
+                {% elif c.status == 'ready' %}
+                <div class="ct-workspace-card__progress" aria-hidden="true"><i style="width:50%"></i></div>
+                <a href="{% ct_manage_url c %}" class="crm-dash-act crm-dash-act--primary">ارسال</a>
+                {% elif c.status in 'sent,viewed,partially_accepted' %}
+                <div class="ct-workspace-card__progress" aria-hidden="true"><i style="width:65%"></i></div>
+                <a href="{% ct_manage_url c %}" class="crm-dash-act crm-dash-act--primary">پیگیری تأیید</a>
+                {% elif c.status == 'finalized' %}
+                <div class="ct-workspace-card__progress" aria-hidden="true"><i style="width:100%"></i></div>
+                <a href="{% ct_manage_url c %}" class="crm-dash-act crm-dash-act--primary">مشاهده</a>
+                {% elif c.status == 'cancelled' %}
+                <a href="{% ct_manage_url c %}" class="crm-dash-act">مشاهده</a>
+                {% else %}
+                <a href="{% ct_manage_url c %}" class="crm-dash-act">مدیریت</a>
+                {% endif %}
+            </div>
+        </article>
+        {% empty %}
+        <div class="ct-workspace-empty">
+            <i class="fas fa-file-circle-plus" aria-hidden="true"></i>
+            <strong>هنوز قراردادی ثبت نشده</strong>
+            <p>قرارداد را مستقیماً بسازید یا از داخل معامله ایجاد کنید.</p>
+            <a href="{% url 'workspace:contract_create_standalone' %}" class="crm-dash-act crm-dash-act--primary">+ قرارداد جدید</a>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if contracts_page.has_other_pages %}
+    <nav class="ct-workspace-pagination" aria-label="صفحه‌بندی">
+        {% if contracts_page.has_previous %}
+        <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}page={{ contracts_page.previous_page_number }}" class="crm-dash-act">قبلی</a>
+        {% endif %}
+        <span>صفحه {{ contracts_page.number }} از {{ contracts_page.paginator.num_pages }}</span>
+        {% if contracts_page.has_next %}
+        <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}page={{ contracts_page.next_page_number }}" class="crm-dash-act">بعدی</a>
+        {% endif %}
+    </nav>
+    {% endif %}
 </div>
 {% endblock %}

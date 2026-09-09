@@ -70,7 +70,7 @@ class ContractTestBase(TestCase):
 
 class HashingTests(ContractTestBase):
     def test_same_content_same_hash(self):
-        c = create_contract(self.user, self.deal.pk, CONTRACT_TYPE_LEASE)
+        c = create_contract(self.user, CONTRACT_TYPE_LEASE, deal_id=self.deal.pk)
         for k, v in _lease_wizard_data().items():
             save_wizard_step(c, k if k != 'selected_clauses' else 'clauses', v, user=self.user)
         v = c.current_version
@@ -79,7 +79,7 @@ class HashingTests(ContractTestBase):
         self.assertEqual(h1, h2)
 
     def test_price_change_changes_hash(self):
-        c = create_contract(self.user, self.deal.pk, CONTRACT_TYPE_LEASE)
+        c = create_contract(self.user, CONTRACT_TYPE_LEASE, deal_id=self.deal.pk)
         data = _lease_wizard_data()
         save_wizard_step(c, 'financial', data['financial'], user=self.user)
         h1 = compute_content_hash(c.current_version)
@@ -89,7 +89,7 @@ class HashingTests(ContractTestBase):
         self.assertNotEqual(h1, h2)
 
     def test_party_change_changes_hash(self):
-        c = create_contract(self.user, self.deal.pk, CONTRACT_TYPE_LEASE)
+        c = create_contract(self.user, CONTRACT_TYPE_LEASE, deal_id=self.deal.pk)
         save_wizard_step(c, 'parties', _lease_wizard_data()['parties'], user=self.user)
         h1 = compute_content_hash(c.current_version)
         parties = _lease_wizard_data()['parties']
@@ -100,7 +100,7 @@ class HashingTests(ContractTestBase):
 
 class VersionSnapshotTests(ContractTestBase):
     def test_v1_unchanged_after_v2(self):
-        c = create_contract(self.user, self.deal.pk, CONTRACT_TYPE_LEASE)
+        c = create_contract(self.user, CONTRACT_TYPE_LEASE, deal_id=self.deal.pk)
         wd = _lease_wizard_data()
         for step in ('parties', 'property', 'financial', 'witnesses'):
             save_wizard_step(c, step, wd[step], user=self.user)
@@ -123,7 +123,7 @@ class VersionSnapshotTests(ContractTestBase):
         self.assertEqual(len(v1.snapshot_json.get('parties', [])), len(snap_v1.get('parties', [])))
 
     def test_published_version_uses_snapshot_json(self):
-        c = create_contract(self.user, self.deal.pk, CONTRACT_TYPE_LEASE)
+        c = create_contract(self.user, CONTRACT_TYPE_LEASE, deal_id=self.deal.pk)
         wd = _lease_wizard_data()
         for step in ('parties', 'property', 'financial', 'witnesses', 'clauses'):
             save_wizard_step(c, step, wd.get(step) or wd['selected_clauses'], user=self.user)
@@ -137,12 +137,12 @@ class VersionSnapshotTests(ContractTestBase):
 
 class StateMachineTests(ContractTestBase):
     def test_invalid_transition_blocked(self):
-        c = create_contract(self.user, self.deal.pk, CONTRACT_TYPE_LEASE)
+        c = create_contract(self.user, CONTRACT_TYPE_LEASE, deal_id=self.deal.pk)
         with self.assertRaises(InvalidStateTransition):
             transition_contract(c, CONTRACT_STATUS_FINALIZED)
 
     def test_cancelled_cannot_send(self):
-        c = create_contract(self.user, self.deal.pk, CONTRACT_TYPE_LEASE)
+        c = create_contract(self.user, CONTRACT_TYPE_LEASE, deal_id=self.deal.pk)
         transition_contract(c, 'cancelled')
         with self.assertRaises(ContractError):
             prepare_for_send(c, user=self.user)
@@ -150,14 +150,14 @@ class StateMachineTests(ContractTestBase):
 
 class TokenSecurityTests(ContractTestBase):
     def test_token_stored_as_hash(self):
-        c = create_contract(self.user, self.deal.pk, CONTRACT_TYPE_LEASE)
+        c = create_contract(self.user, CONTRACT_TYPE_LEASE, deal_id=self.deal.pk)
         self.assertTrue(c.verification_token_hash)
         self.assertEqual(len(c.verification_token_hash), 64)
 
     def test_invitation_lookup_requires_raw(self):
         raw, th = generate_bearer_token()
         wd = _lease_wizard_data()
-        c = create_contract(self.user, self.deal.pk, CONTRACT_TYPE_LEASE)
+        c = create_contract(self.user, CONTRACT_TYPE_LEASE, deal_id=self.deal.pk)
         for step in ('parties', 'property', 'financial', 'witnesses', 'clauses'):
             save_wizard_step(c, step, wd.get(step) or wd['selected_clauses'], user=self.user)
         prepare_for_send(c, user=self.user)
@@ -186,7 +186,7 @@ class PendingClausesTests(ContractTestBase):
 
 class IDORTests(ContractTestBase):
     def test_other_user_cannot_access_wizard(self):
-        c = create_contract(self.user, self.deal.pk, CONTRACT_TYPE_LEASE)
+        c = create_contract(self.user, CONTRACT_TYPE_LEASE, deal_id=self.deal.pk)
         client = Client()
         client.force_login(self.other)
         url = reverse('workspace:contract_wizard', kwargs={'deal_id': self.deal.pk, 'contract_id': c.pk})
@@ -195,7 +195,7 @@ class IDORTests(ContractTestBase):
 
 class AcceptanceHashTests(ContractTestBase):
     def test_acceptance_stores_content_hash(self):
-        c = create_contract(self.user, self.deal.pk, CONTRACT_TYPE_LEASE)
+        c = create_contract(self.user, CONTRACT_TYPE_LEASE, deal_id=self.deal.pk)
         wd = _lease_wizard_data()
         for step in ('parties', 'property', 'financial', 'witnesses', 'clauses'):
             save_wizard_step(c, step, wd.get(step) or wd['selected_clauses'], user=self.user)
@@ -211,7 +211,7 @@ class AcceptanceHashTests(ContractTestBase):
 
 class ImmutableVersionTests(ContractTestBase):
     def test_cannot_edit_after_publish(self):
-        c = create_contract(self.user, self.deal.pk, CONTRACT_TYPE_LEASE)
+        c = create_contract(self.user, CONTRACT_TYPE_LEASE, deal_id=self.deal.pk)
         wd = _lease_wizard_data()
         for step in ('parties', 'property', 'financial', 'witnesses', 'clauses'):
             save_wizard_step(c, step, wd.get(step) or wd['selected_clauses'], user=self.user)
@@ -261,7 +261,7 @@ class LeaseE2ETests(ContractTestBase):
         from contracts.services.invitations import send_invitations
 
         mock_sms.return_value = type('R', (), {'message_id': '1'})()
-        c = create_contract(self.user, self.deal.pk, CONTRACT_TYPE_LEASE)
+        c = create_contract(self.user, CONTRACT_TYPE_LEASE, deal_id=self.deal.pk)
         wd = _lease_wizard_data()
         for step in ('parties', 'property', 'financial', 'witnesses', 'clauses'):
             save_wizard_step(c, step, wd.get(step) or wd['selected_clauses'], user=self.user)
@@ -291,7 +291,7 @@ class FinalizeIdempotencyTests(ContractTestBase):
 
         with patch('contracts.services.invitations.send_simple_sms'), \
              patch('contracts.services.pdf.generate_contract_pdf'):
-            c = create_contract(self.user, self.deal.pk, CONTRACT_TYPE_LEASE)
+            c = create_contract(self.user, CONTRACT_TYPE_LEASE, deal_id=self.deal.pk)
             wd = _lease_wizard_data()
             for step in ('parties', 'property', 'financial', 'witnesses', 'clauses'):
                 save_wizard_step(c, step, wd.get(step) or wd['selected_clauses'], user=self.user)
@@ -317,7 +317,7 @@ class FinalizeIdempotencyTests(ContractTestBase):
 
         with patch('contracts.services.invitations.send_simple_sms'), \
              patch('contracts.services.pdf.generate_contract_pdf'):
-            c = create_contract(self.user, self.deal.pk, CONTRACT_TYPE_LEASE)
+            c = create_contract(self.user, CONTRACT_TYPE_LEASE, deal_id=self.deal.pk)
             wd = _lease_wizard_data()
             for step in ('parties', 'property', 'financial', 'witnesses', 'clauses'):
                 save_wizard_step(c, step, wd.get(step) or wd['selected_clauses'], user=self.user)

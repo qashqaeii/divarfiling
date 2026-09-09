@@ -206,17 +206,6 @@
                         {% endfor %}
                     </div>
 
-                    {% if custom_agreements %}
-                    <div class="ct-ho-block">
-                        <h2 class="ct-ho-block__title"><span>+</span> توافقات اختصاصی طرفین</h2>
-                        {% for ag in custom_agreements %}
-                        <div class="ct-ho-notes" style="margin-bottom:.45rem">
-                            <strong>{{ ag.title }}</strong><br>{{ ag.body|linebreaksbr }}
-                        </div>
-                        {% endfor %}
-                    </div>
-                    {% endif %}
-
                     {% if signatories %}
                     <section class="ct-legal-signatures" aria-labelledby="ct-sig-title">
                         <h2 id="ct-sig-title" class="ct-legal-signatures__title">امضا و تأیید طرفین</h2>

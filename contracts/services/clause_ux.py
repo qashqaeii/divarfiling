@@ -333,10 +333,32 @@ def _resolve_sale_clauses(
             })
 
 
+def dedupe_custom_agreement_items(items: List[Dict[str, Any]]) -> List[Dict[str, str]]:
+    """
+    One display row per custom agreement title — keep the longest body.
+    Fixes autosave duplicates where partial text was stored multiple times.
+    """
+    buckets: Dict[str, str] = {}
+    order: List[str] = []
+    for item in items or []:
+        title = (item.get('title') or 'توافق اختصاصی').strip() or 'توافق اختصاصی'
+        body = (item.get('body') or item.get('body_text') or '').strip()
+        if not body:
+            continue
+        if title not in buckets:
+            order.append(title)
+            buckets[title] = body
+            continue
+        prev = buckets[title]
+        if len(body) > len(prev) or prev in body:
+            buckets[title] = body
+    return [{'title': title, 'body': buckets[title]} for title in order]
+
+
 def dedupe_custom_clause_entries(selected: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    """حذف بندهای اختصاصی تکراری — یک بند با یک متن فقط یک‌بار."""
+    """حذف بندهای اختصاصی تکراری — یک عنوان فقط یک‌بار با کامل‌ترین متن."""
     out: List[Dict[str, Any]] = []
-    seen_bodies: Set[str] = set()
+    customs: List[Dict[str, Any]] = []
     for item in selected:
         if not item.get('is_custom'):
             out.append(item)
@@ -344,17 +366,16 @@ def dedupe_custom_clause_entries(selected: List[Dict[str, Any]]) -> List[Dict[st
         body = (item.get('body_text') or item.get('body') or '').strip()
         if not body:
             continue
-        norm = ' '.join(body.split()).lower()
-        if norm in seen_bodies:
-            continue
-        if any(norm != existing and norm in existing for existing in seen_bodies):
-            continue
-        if any(existing != norm and existing in norm for existing in seen_bodies):
-            continue
-        seen_bodies.add(norm)
-        cleaned = dict(item)
-        cleaned['body_text'] = body
-        cleaned['title'] = (item.get('title') or 'توافق اختصاصی').strip() or 'توافق اختصاصی'
+        customs.append(dict(item, body_text=body))
+
+    for agreement in dedupe_custom_agreement_items(customs):
+        title = agreement['title']
+        matches = [c for c in customs if (c.get('title') or 'توافق اختصاصی').strip() == title]
+        source = max(matches, key=lambda c: len(c.get('body_text') or ''), default={})
+        cleaned = dict(source) if source else {'is_custom': True}
+        cleaned['body_text'] = agreement['body']
+        cleaned['title'] = title
+        cleaned['is_custom'] = True
         out.append(cleaned)
     return out
 
@@ -806,14 +827,24 @@ def render_clause_sections_for_review(
     grouped: Dict[str, List[str]] = {gid: [] for gid, _ in groups}
     custom_items: List[Tuple[str, str]] = []
 
+    raw_custom = [
+        {
+            'title': c.get('title', 'توافق اختصاصی'),
+            'body': (c.get('body_text') or '').strip(),
+        }
+        for c in clauses
+        if c.get('is_custom') and c.get('is_active', True) and (c.get('body_text') or '').strip()
+    ]
+    for agreement in dedupe_custom_agreement_items(raw_custom):
+        custom_items.append((agreement['title'], agreement['body']))
+
     for c in clauses:
         if not c.get('is_active', True):
             continue
+        if c.get('is_custom'):
+            continue
         body = (c.get('body_text') or '').strip()
         if not body:
-            continue
-        if c.get('is_custom'):
-            custom_items.append((c.get('title', 'توافق اختصاصی'), body))
             continue
         code = c.get('code', '')
         group = CLAUSE_REVIEW_GROUP.get(code, 'termination')

@@ -268,8 +268,10 @@ def _sync_version_from_wizard(contract: Contract, version: ContractVersion) -> N
 def sync_clauses_from_selection(contract: Contract, version: ContractVersion) -> None:
     assert_version_mutable(version)
     wizard = contract.wizard_data or {}
-    from contracts.services.clause_ux import dedupe_custom_clause_entries
-    selected = dedupe_custom_clause_entries(wizard.get('selected_clauses') or [])
+    from contracts.services.clause_ux import dedupe_custom_clause_entries, resolve_selected_clauses
+    selected = dedupe_custom_clause_entries(
+        resolve_selected_clauses(contract.contract_type, wizard, user=contract.user)
+    )
     version.clauses.all().delete()
     sort = 0
     for item in selected:

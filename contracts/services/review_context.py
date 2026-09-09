@@ -469,11 +469,14 @@ def _build_costs_summary(contract_type: str, fin: Dict) -> List[Dict[str, str]]:
 
 
 def _build_custom_agreements(clauses: List[Dict]) -> List[Dict[str, str]]:
-    return [
+    from contracts.services.clause_ux import dedupe_custom_agreement_items
+
+    raw = [
         {'title': c.get('title') or 'توافق اختصاصی', 'body': _clause_body_text(c)}
         for c in clauses
         if c.get('is_custom') and c.get('is_active', True) and _clause_body_text(c)
     ]
+    return dedupe_custom_agreement_items(raw)
 
 
 def _collect_issues(

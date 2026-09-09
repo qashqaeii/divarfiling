@@ -119,6 +119,27 @@ class ClauseUxTests(TestCase):
         self.assertIn('توافقات اختصاصی', custom[0]['title'])
         self.assertIn('متن اختصاصی', custom[0]['body'])
 
+    def test_dedupe_partial_autosave_custom_bodies(self):
+        from contracts.services.clause_ux import dedupe_custom_agreement_items
+
+        full = 'در صورت نارضایتی همسایگان قرارداد میتواند از طرف مالک موجر یک طرفه فسخ شود'
+        items = dedupe_custom_agreement_items([
+            {'title': 'آزار همسایگان', 'body': 'در صورت نارضایتی'},
+            {'title': 'آزار همسایگان', 'body': 'در صورت نارضایتی همسایگان'},
+            {'title': 'آزار همسایگان', 'body': full},
+        ])
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]['body'], full)
+
+        clauses = [
+            {'is_custom': True, 'title': 'آزار همسایگان', 'body_text': partial, 'is_active': True}
+            for partial in ('در صورت نارضایتی', 'در صورت نارضایتی همسایگان', full)
+        ]
+        sections = render_clause_sections_for_review(clauses, CONTRACT_TYPE_SALE)
+        custom = next(s for s in sections if s.get('is_custom_section'))
+        self.assertEqual(custom['body'].count('1. آزار همسایگان'), 1)
+        self.assertIn('فسخ', custom['body'])
+
     def test_main_articles_not_in_clause_selection(self):
         for code in MAIN_ARTICLE_CODES[CONTRACT_TYPE_LEASE]:
             self._reviewed_lease_clause(code)

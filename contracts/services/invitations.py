@@ -30,6 +30,51 @@ def _build_accept_url(request, raw_token: str) -> str:
     return f'{site.rstrip("/")}{path}'
 
 
+def _build_public_view_url(request, raw_token: str) -> str:
+    path = reverse('public_view', kwargs={'token': raw_token})
+    if request:
+        return request.build_absolute_uri(path)
+    site = getattr(settings, 'SITE_URL', '') or 'https://divarfiling.ir'
+    return f'{site.rstrip("/")}{path}'
+
+
+def is_staff_access_token(tok: ContractAccessToken) -> bool:
+    """Bearer link for contract creator — no party/witness OTP gate."""
+    return not tok.party_id and not tok.witness_id
+
+
+@transaction.atomic
+def ensure_staff_public_view_url(contract: Contract, version=None, *, request=None) -> str:
+    """Create or return the persisted /c/view/ link for the contract creator."""
+    version = version or contract.current_version
+    if not version or contract.status != 'finalized':
+        return ''
+
+    snap = dict(version.snapshot_json or {})
+    existing = (snap.get('staff_public_view_url') or '').strip()
+    if existing:
+        return existing
+
+    contract.access_tokens.filter(
+        party__isnull=True, witness__isnull=True, is_revoked=False,
+    ).update(is_revoked=True, revoked_at=timezone.now())
+
+    raw, token_hash = generate_bearer_token()
+    tok = ContractAccessToken.objects.create(
+        contract=contract,
+        token_hash=token_hash,
+    )
+    url = _build_public_view_url(request, raw)
+    snap['staff_public_view_url'] = url
+    version.snapshot_json = snap
+    version.save(update_fields=['snapshot_json'])
+    log_audit_event(
+        contract, 'ACCESS_LINK_CREATED', version=version,
+        metadata={'token_id': tok.pk, 'staff': True},
+    )
+    return url
+
+
 def _create_invitation(contract, version, *, party=None, witness=None, mobile: str):
     raw, token_hash = generate_bearer_token()
     expires = timezone.now() + timedelta(days=30)
@@ -150,16 +195,12 @@ def create_final_access_tokens(contract: Contract, *, request=None) -> list:
         )
         tokens.append((tok, raw))
         _send_final_sms(tok, contract, raw, request)
+    ensure_staff_public_view_url(contract, version, request=request)
     return [t for t, _ in tokens]
 
 
 def _send_final_sms(tok: ContractAccessToken, contract: Contract, raw_token: str, request=None) -> None:
-    path = reverse('public_view', kwargs={'token': raw_token})
-    if request:
-        url = request.build_absolute_uri(path)
-    else:
-        site = getattr(settings, 'SITE_URL', '') or 'https://divarfiling.ir'
-        url = f'{site.rstrip("/")}{path}'
+    url = _build_public_view_url(request, raw_token)
     mobile = tok.party.mobile if tok.party_id else (tok.witness.mobile if tok.witness_id else '')
     if not mobile:
         return

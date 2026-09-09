@@ -234,6 +234,39 @@ class ReviewStepTests(TestCase):
         resp = self.client.get(url + '?step=review')
         self.assertContains(resp, 'ct-wizard--review')
 
+    def test_finalized_review_includes_public_view_link(self):
+        from unittest.mock import patch
+
+        from contracts.constants import CONTRACT_STATUS_FINALIZED
+        from contracts.services.acceptance import accept_contract
+        from contracts.services.invitations import send_invitations
+        from contracts.services.lifecycle import prepare_for_send
+
+        c = self._lease_contract()
+        with patch('contracts.services.invitations.send_simple_sms'), \
+             patch('contracts.services.pdf.generate_contract_pdf'):
+            prepare_for_send(c, user=self.user)
+            send_invitations(c, user=self.user)
+            for inv in c.invitations.filter(is_revoked=False):
+                accept_contract(
+                    inv,
+                    phone=inv.mobile,
+                    national_id=inv.party.national_id if inv.party_id else inv.witness.national_id,
+                    ack_checkboxes=['not_official'],
+                    otp_already_verified=True,
+                )
+        c.refresh_from_db()
+        self.assertEqual(c.status, CONTRACT_STATUS_FINALIZED)
+
+        ctx = build_review_context(c, validation_errors=[])
+        self.assertTrue(ctx['public_final_view_url'])
+        self.assertIn('/c/view/', ctx['public_final_view_url'])
+
+        url = reverse('workspace:contract_wizard', kwargs={'deal_id': self.deal_rent.pk, 'contract_id': c.pk})
+        resp = self.client.get(url + '?step=review')
+        self.assertContains(resp, 'مشاهده نسخه رسمی قرارداد')
+        self.assertContains(resp, ctx['public_final_view_url'])
+
     def test_clauses_step_renders_custom_agreement_with_body_key(self):
         c = self._lease_contract()
         url = reverse('workspace:contract_wizard', kwargs={'deal_id': self.deal_rent.pk, 'contract_id': c.pk})

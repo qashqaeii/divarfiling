@@ -16,8 +16,9 @@ from contracts.services.audit import log_audit_event
 from contracts.services.notifications import notify_contract_event
 from contracts.services.otp_service import ContractOtpError, request_contract_otp
 from contracts.services.state_machine import transition_contract
-from contracts.services.tokens import lookup_access_token, lookup_contract_by_verify_token, lookup_invitation
 from contracts.services.final_view_context import PARTY_ROLE_LABELS, build_final_view_context
+from contracts.services.invitations import is_staff_access_token
+from contracts.services.tokens import lookup_access_token, lookup_contract_by_verify_token, lookup_invitation
 from contracts.services.version_copy import version_display_snapshot
 
 ROLE_LABELS_FA = PARTY_ROLE_LABELS
@@ -222,7 +223,7 @@ class PublicFinalViewView(View):
     def get(self, request, token):
         tok = self._get_token(token)
         session_key = f'final_verified_{tok.token_hash}'
-        verified = request.session.get(session_key, False)
+        verified = request.session.get(session_key, False) or is_staff_access_token(tok)
         ctx = self._base_ctx(tok, verified)
         ctx['show_otp'] = False
         ctx['view_token'] = token
@@ -230,6 +231,8 @@ class PublicFinalViewView(View):
 
     def post(self, request, token):
         tok = self._get_token(token)
+        if is_staff_access_token(tok):
+            return self.get(request, token)
         action = request.POST.get('action')
         session_key = f'final_verified_{tok.token_hash}'
         if action == 'request_otp':
@@ -272,7 +275,7 @@ class PublicFinalPdfView(View):
         if not tok:
             raise Http404
         session_key = f'final_verified_{tok.token_hash}'
-        if not request.session.get(session_key):
+        if not request.session.get(session_key) and not is_staff_access_token(tok):
             raise Http404
         contract = tok.contract
         version = contract.current_version

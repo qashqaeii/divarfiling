@@ -121,6 +121,11 @@ def build_review_context(
         from contracts.services.final_view_context import build_version_signatories
         signatures = build_version_signatories(version)
 
+    public_final_view_url = ''
+    if acceptance_state['is_finalized']:
+        from contracts.services.invitations import ensure_staff_public_view_url
+        public_final_view_url = ensure_staff_public_view_url(contract, version)
+
     return {
         'readiness': readiness,
         'readiness_message': readiness_message,
@@ -158,6 +163,7 @@ def build_review_context(
         'signatures': signatures,
         'all_parties_accepted': acceptance_state['all_parties_accepted'],
         'is_finalized': acceptance_state['is_finalized'],
+        'public_final_view_url': public_final_view_url,
     }
 
 
@@ -199,6 +205,7 @@ def _empty_review_context(contract: Contract) -> Dict[str, Any]:
         'signatures': [],
         'all_parties_accepted': False,
         'is_finalized': False,
+        'public_final_view_url': '',
     }
 
 

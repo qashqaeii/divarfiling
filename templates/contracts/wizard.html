@@ -940,6 +940,9 @@
                         <div class="ct-review-status ct-review-status--ready" role="status">
                             <span class="ct-review-status__title">قرارداد نهایی شد</span>
                             <span class="ct-review-status__detail">لینک مشاهده نسخه رسمی برای طرفین پیامک شده است.</span>
+                            {% if review_context.public_final_view_url %}
+                            <a href="{{ review_context.public_final_view_url }}" class="crm-dash-act crm-dash-act--primary ct-review-final-link" target="_blank" rel="noopener">مشاهده نسخه رسمی قرارداد</a>
+                            {% endif %}
                         </div>
                         {% elif review_context.invitations_sent and not review_context.show_send_actions %}
                         <div class="ct-review-acceptance-panel">
@@ -1029,7 +1032,10 @@
                             <p class="ct-review-send-note">پس از ارسال، برای تغییر مفاد قرارداد باید نسخه جدید ایجاد شود.</p>
                             {% endif %}
                             {% elif review_context.is_finalized %}
-                            <p class="ct-review-send-note">قرارداد نهایی شده و لینک مشاهده برای طرفین ارسال شده است.</p>
+                            {% if review_context.public_final_view_url %}
+                            <a href="{{ review_context.public_final_view_url }}" class="crm-dash-act crm-dash-act--primary ct-btn-block" target="_blank" rel="noopener">مشاهده نسخه رسمی قرارداد</a>
+                            {% endif %}
+                            <p class="ct-review-send-note">قرارداد نهایی شده است. با لینک بالا همان نسخه‌ای را می‌بینید که برای طرفین ارسال شده.</p>
                             {% elif review_context.invitations_sent %}
                             <p class="ct-review-send-note">دعوتنامه برای طرفین ارسال شده است. پس از تأیید هر دو طرف، قرارداد به‌صورت خودکار نهایی و لینک رسمی پیامک می‌شود.</p>
                             {% endif %}

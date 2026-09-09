@@ -91,7 +91,7 @@ class ContractWorkspaceArchitectureTests(TestCase):
     def test_create_page_has_type_cards(self):
         self.client.force_login(self.user)
         resp = self.client.get(reverse('workspace:contract_create_standalone'))
-        self.assertContains(resp, 'ct-type-card')
+        self.assertContains(resp, 'ct-create-card')
         self.assertContains(resp, 'رهن و اجاره')
 
     def test_manage_lifecycle_ui(self):

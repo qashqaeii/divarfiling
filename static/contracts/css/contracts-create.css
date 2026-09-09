@@ -1,0 +1,598 @@
+/**
+ * Contract Create — modern SaaS onboarding UI
+ * Scoped to .crm-contract-create
+ */
+
+.crm-contract-create {
+    --ct-c-primary: var(--ws-primary, #7c3aed);
+    --ct-c-primary-soft: #f5f3ff;
+    --ct-c-primary-border: #ddd6fe;
+    --ct-c-border: var(--ws-border, #e2e8f0);
+    --ct-c-surface: var(--ws-surface, #fff);
+    --ct-c-muted: var(--ws-text-muted, #64748b);
+    --ct-c-text: var(--ws-text, #0f172a);
+    --ct-c-radius: 16px;
+    --ct-c-radius-sm: 12px;
+    --ct-c-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+    --ct-c-shadow-md: 0 10px 32px rgba(15, 23, 42, 0.07);
+}
+
+.crm-contract-create .ct-create-inner {
+    max-width: 920px;
+    margin: 0 auto;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
+}
+
+/* ── Top bar ── */
+.crm-contract-create .ct-create-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.crm-contract-create .ct-create-back {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border: 1px solid var(--ct-c-border);
+    border-radius: 10px;
+    background: var(--ct-c-surface);
+    color: var(--ct-c-muted);
+    text-decoration: none;
+    transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+
+.crm-contract-create .ct-create-back:hover {
+    background: var(--ws-surface-2, #f8fafc);
+    border-color: var(--ct-c-primary-border);
+    color: var(--ct-c-primary);
+}
+
+/* ── Hero ── */
+.crm-contract-create .ct-create-hero {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid var(--ct-c-primary-border);
+    border-radius: var(--ct-c-radius);
+    background: linear-gradient(135deg, #faf5ff 0%, #f5f3ff 45%, #ede9fe 100%);
+    box-shadow: var(--ct-c-shadow-md);
+}
+
+.crm-contract-create .ct-create-hero__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 1rem;
+    padding: 1.15rem 1.25rem;
+    align-items: center;
+}
+
+.crm-contract-create .ct-create-hero__main {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    min-width: 0;
+}
+
+.crm-contract-create .ct-create-hero__kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    align-self: flex-start;
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.72);
+    border: 1px solid rgba(124, 58, 237, 0.15);
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--ct-c-primary);
+}
+
+.crm-contract-create .ct-create-hero__title {
+    margin: 0;
+    font-size: clamp(1.15rem, 2.4vw, 1.45rem);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.25;
+    color: var(--ct-c-text);
+}
+
+.crm-contract-create .ct-create-hero__lead {
+    margin: 0;
+    max-width: 34rem;
+    font-size: 0.84rem;
+    line-height: 1.6;
+    color: #475569;
+}
+
+.crm-contract-create .ct-create-hero__benefits {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem 0.85rem;
+    margin: 0.15rem 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.crm-contract-create .ct-create-hero__benefits li {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.74rem;
+    font-weight: 600;
+    color: #334155;
+}
+
+.crm-contract-create .ct-create-hero__benefits i {
+    width: 1.35rem;
+    height: 1.35rem;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.85);
+    color: var(--ct-c-primary);
+    font-size: 0.62rem;
+    flex-shrink: 0;
+}
+
+.crm-contract-create .ct-create-hero__aside {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.35rem;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.crm-contract-create .ct-create-hero__illus {
+    width: 5.5rem;
+    height: 5.5rem;
+    border-radius: 18px;
+    display: grid;
+    place-items: center;
+    background: rgba(255, 255, 255, 0.55);
+    border: 1px dashed rgba(124, 58, 237, 0.25);
+    color: var(--ct-c-primary);
+    font-size: 2rem;
+    position: relative;
+}
+
+.crm-contract-create .ct-create-hero__illus::after {
+    content: '\f304';
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    position: absolute;
+    bottom: 0.55rem;
+    left: 0.55rem;
+    width: 1.65rem;
+    height: 1.65rem;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-size: 0.62rem;
+    background: var(--ct-c-primary);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(124, 58, 237, 0.35);
+}
+
+.crm-contract-create .ct-create-hero__aside-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--ct-c-primary);
+}
+
+/* ── Form shell ── */
+.crm-contract-create .ct-create-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin: 0;
+}
+
+/* ── Section cards ── */
+.crm-contract-create .ct-create-panel {
+    border: 1px solid var(--ct-c-border);
+    border-radius: var(--ct-c-radius);
+    background: var(--ct-c-surface);
+    box-shadow: var(--ct-c-shadow);
+    padding: 1.1rem 1.15rem 1.15rem;
+}
+
+.crm-contract-create .ct-create-panel__head {
+    margin-bottom: 0.85rem;
+}
+
+.crm-contract-create .ct-create-panel__title {
+    margin: 0;
+    font-size: 0.98rem;
+    font-weight: 800;
+    color: var(--ct-c-text);
+    letter-spacing: -0.01em;
+}
+
+.crm-contract-create .ct-create-panel__hint {
+    margin: 0.3rem 0 0;
+    font-size: 0.78rem;
+    line-height: 1.55;
+    color: var(--ct-c-muted);
+}
+
+/* ── Selection cards ── */
+.crm-contract-create .ct-create-card-grid {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.crm-contract-create .ct-create-card-grid--3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.crm-contract-create .ct-create-card-grid--2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.crm-contract-create .ct-create-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.45rem;
+    padding: 1rem 0.85rem 0.95rem;
+    border: 1.5px solid var(--ct-c-border);
+    border-radius: var(--ct-c-radius-sm);
+    background: var(--ct-c-surface);
+    cursor: pointer;
+    transition: border-color 0.15s, box-shadow 0.15s, background 0.15s, transform 0.12s;
+    min-height: 100%;
+}
+
+.crm-contract-create .ct-create-card:hover {
+    border-color: var(--ct-c-primary-border);
+    box-shadow: 0 4px 16px rgba(124, 58, 237, 0.08);
+}
+
+.crm-contract-create .ct-create-card input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.crm-contract-create .ct-create-card__radio {
+    position: absolute;
+    top: 0.65rem;
+    left: 0.65rem;
+    width: 1.05rem;
+    height: 1.05rem;
+    border-radius: 50%;
+    border: 2px solid #cbd5e1;
+    background: #fff;
+    transition: border-color 0.12s, background 0.12s, box-shadow 0.12s;
+}
+
+.crm-contract-create .ct-create-card__radio::after {
+    content: '';
+    position: absolute;
+    inset: 0.18rem;
+    border-radius: 50%;
+    background: var(--ct-c-primary);
+    transform: scale(0);
+    transition: transform 0.12s;
+}
+
+.crm-contract-create .ct-create-card:has(input:checked) {
+    border-color: var(--ct-c-primary);
+    background: linear-gradient(180deg, #faf5ff 0%, #fff 100%);
+    box-shadow: 0 0 0 1px var(--ct-c-primary), 0 8px 24px rgba(124, 58, 237, 0.1);
+}
+
+.crm-contract-create .ct-create-card:has(input:checked) .ct-create-card__radio {
+    border-color: var(--ct-c-primary);
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.12);
+}
+
+.crm-contract-create .ct-create-card:has(input:checked) .ct-create-card__radio::after {
+    transform: scale(1);
+}
+
+.crm-contract-create .ct-create-card:has(input:checked) .ct-create-card__icon {
+    background: var(--ct-c-primary);
+    color: #fff;
+    border-color: transparent;
+}
+
+.crm-contract-create .ct-create-card:has(input:checked) .ct-create-card__title {
+    color: var(--ct-c-primary);
+}
+
+.crm-contract-create .ct-create-card__icon {
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--ct-c-primary-soft);
+    border: 1px solid var(--ct-c-primary-border);
+    color: var(--ct-c-primary);
+    font-size: 1.05rem;
+    margin-top: 0.15rem;
+    transition: background 0.12s, color 0.12s;
+}
+
+.crm-contract-create .ct-create-card__title {
+    display: block;
+    font-weight: 700;
+    font-size: 0.88rem;
+    line-height: 1.35;
+    color: var(--ct-c-text);
+}
+
+.crm-contract-create .ct-create-card__desc {
+    display: block;
+    font-size: 0.74rem;
+    line-height: 1.45;
+    color: var(--ct-c-muted);
+    max-width: 14rem;
+}
+
+.crm-contract-create .ct-create-card--deal {
+    align-items: flex-start;
+    text-align: right;
+    padding: 0.95rem 1rem;
+}
+
+.crm-contract-create .ct-create-card--deal .ct-create-card__icon {
+    margin-top: 0.35rem;
+}
+
+.crm-contract-create .ct-create-card--deal .ct-create-card__title,
+.crm-contract-create .ct-create-card--deal .ct-create-card__desc {
+    width: 100%;
+    max-width: none;
+}
+
+/* ── Deal picker ── */
+.crm-contract-create .ct-deal-picker {
+    margin-top: 0.85rem;
+    padding: 0.85rem;
+    border: 1px dashed var(--ct-c-primary-border);
+    border-radius: var(--ct-c-radius-sm);
+    background: #fafafa;
+}
+
+.crm-contract-create .ct-deal-picker__search {
+    display: block;
+    margin-bottom: 0.55rem;
+}
+
+.crm-contract-create .ct-deal-picker__search .crm-input {
+    width: 100%;
+    border-radius: 10px;
+    border-color: var(--ct-c-border);
+    font-size: 0.84rem;
+}
+
+.crm-contract-create .ct-deal-results {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    max-height: 240px;
+    overflow-y: auto;
+    border: 1px solid var(--ct-c-border);
+    border-radius: var(--ct-c-radius-sm);
+    background: var(--ct-c-surface);
+}
+
+.crm-contract-create .ct-deal-result {
+    padding: 0.75rem 0.9rem;
+    border-bottom: 1px solid var(--ct-c-border);
+    cursor: pointer;
+    display: grid;
+    gap: 0.12rem;
+    transition: background 0.1s;
+}
+
+.crm-contract-create .ct-deal-result:last-child {
+    border-bottom: none;
+}
+
+.crm-contract-create .ct-deal-result:hover,
+.crm-contract-create .ct-deal-result.is-selected {
+    background: var(--ct-c-primary-soft);
+}
+
+.crm-contract-create .ct-deal-result strong {
+    font-size: 0.88rem;
+}
+
+.crm-contract-create .ct-deal-result span {
+    font-size: 0.78rem;
+    color: var(--ct-c-muted);
+}
+
+.crm-contract-create .ct-deal-result em {
+    font-size: 0.7rem;
+    color: var(--ct-c-primary);
+    font-style: normal;
+    font-weight: 600;
+}
+
+.crm-contract-create .ct-deal-results__empty {
+    padding: 1rem;
+    text-align: center;
+    color: var(--ct-c-muted);
+    font-size: 0.84rem;
+}
+
+.crm-contract-create .ct-deal-picker__selected {
+    margin-top: 0.6rem;
+    font-size: 0.84rem;
+    color: #047857;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-weight: 600;
+}
+
+/* ── Footer bar ── */
+.crm-contract-create .ct-create-footer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.85rem;
+    padding: 1rem 1.1rem;
+    border: 1px solid var(--ct-c-border);
+    border-radius: var(--ct-c-radius);
+    background: var(--ct-c-surface);
+    box-shadow: var(--ct-c-shadow);
+}
+
+.crm-contract-create .ct-create-footer__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.55rem;
+}
+
+.crm-contract-create .ct-create-footer__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    min-height: 2.65rem;
+    padding: 0.55rem 1.15rem;
+    border-radius: 11px;
+    font-size: 0.86rem;
+    font-weight: 700;
+    text-decoration: none;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: background 0.12s, border-color 0.12s, box-shadow 0.12s, transform 0.1s;
+}
+
+.crm-contract-create .ct-create-footer__btn--primary {
+    background: var(--ct-c-primary);
+    color: #fff;
+    box-shadow: 0 6px 18px rgba(124, 58, 237, 0.28);
+}
+
+.crm-contract-create .ct-create-footer__btn--primary:hover {
+    background: #6d28d9;
+    box-shadow: 0 8px 22px rgba(124, 58, 237, 0.32);
+}
+
+.crm-contract-create .ct-create-footer__btn--ghost {
+    background: var(--ct-c-surface);
+    border-color: var(--ct-c-border);
+    color: var(--ct-c-muted);
+}
+
+.crm-contract-create .ct-create-footer__btn--ghost:hover {
+    background: var(--ws-surface-2, #f8fafc);
+    color: var(--ct-c-text);
+}
+
+.crm-contract-create .ct-create-footer__help {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    max-width: 18rem;
+    font-size: 0.74rem;
+    line-height: 1.5;
+    color: var(--ct-c-muted);
+}
+
+.crm-contract-create .ct-create-footer__help i {
+    width: 1.65rem;
+    height: 1.65rem;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #fffbeb;
+    color: #d97706;
+    flex-shrink: 0;
+    font-size: 0.72rem;
+}
+
+.crm-contract-create .ct-create-footer__help a {
+    color: var(--ct-c-primary);
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.crm-contract-create .ct-create-footer__help a:hover {
+    text-decoration: underline;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+    .crm-contract-create .ct-create-hero__grid {
+        grid-template-columns: 1fr;
+        padding: 1rem;
+    }
+
+    .crm-contract-create .ct-create-hero__aside {
+        flex-direction: row;
+        justify-content: flex-start;
+        text-align: right;
+        gap: 0.65rem;
+    }
+
+    .crm-contract-create .ct-create-hero__illus {
+        width: 3.5rem;
+        height: 3.5rem;
+        font-size: 1.35rem;
+        border-radius: 12px;
+    }
+
+    .crm-contract-create .ct-create-hero__illus::after {
+        width: 1.25rem;
+        height: 1.25rem;
+        font-size: 0.5rem;
+    }
+
+    .crm-contract-create .ct-create-card-grid--3,
+    .crm-contract-create .ct-create-card-grid--2 {
+        grid-template-columns: 1fr;
+    }
+
+    .crm-contract-create .ct-create-footer {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .crm-contract-create .ct-create-footer__actions {
+        flex-direction: column-reverse;
+        width: 100%;
+    }
+
+    .crm-contract-create .ct-create-footer__btn {
+        width: 100%;
+    }
+
+    .crm-contract-create .ct-create-footer__help {
+        max-width: none;
+        justify-content: flex-start;
+    }
+}
+
+@media (max-width: 480px) {
+    .crm-contract-create .ct-create-panel {
+        padding: 0.9rem;
+    }
+
+    .crm-contract-create .ct-create-hero__benefits {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.35rem;
+    }
+}

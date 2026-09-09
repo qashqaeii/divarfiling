@@ -19,10 +19,12 @@ def render_contract_document(contract: Contract, version: ContractVersion | None
     ctype = contract.contract_type
 
     sections.append(_section(
-        'طرفین قرارداد', _render_parties(snap.get('parties') or []), 'parties', nav_key='parties',
+        'طرفین قرارداد', _render_parties(snap.get('parties') or []), 'parties',
+        nav_key='parties', section_kind='parties',
     ))
     sections.append(_section(
-        'مشخصات مورد معامله', _render_property(snap.get('property') or {}), 'property', nav_key='property',
+        'مشخصات مورد معامله', _render_property(snap.get('property') or {}), 'property',
+        nav_key='property', section_kind='property',
     ))
 
     if ctype == CONTRACT_TYPE_LEASE:

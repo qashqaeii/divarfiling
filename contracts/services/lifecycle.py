@@ -85,6 +85,10 @@ def create_contract(
         }
     else:
         wizard_data = empty_wizard_data(contract_type)
+    from contracts.services.prefill import ensure_default_parties
+    wizard_data['parties'] = ensure_default_parties(
+        wizard_data.get('parties') or [], contract_type,
+    )
     contract = Contract.objects.create(
         user=user,
         agency=agency,
@@ -264,7 +268,8 @@ def _sync_version_from_wizard(contract: Contract, version: ContractVersion) -> N
 def sync_clauses_from_selection(contract: Contract, version: ContractVersion) -> None:
     assert_version_mutable(version)
     wizard = contract.wizard_data or {}
-    selected = wizard.get('selected_clauses') or []
+    from contracts.services.clause_ux import dedupe_custom_clause_entries
+    selected = dedupe_custom_clause_entries(wizard.get('selected_clauses') or [])
     version.clauses.all().delete()
     sort = 0
     for item in selected:

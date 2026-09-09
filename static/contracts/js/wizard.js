@@ -14,6 +14,16 @@
     buyer: 'خریدار', owner: 'مالک', builder: 'سازنده',
   };
 
+  var ROLES_BY_TYPE = {
+    lease: ['landlord', 'tenant'],
+    sale: ['seller', 'buyer'],
+    jv: ['owner', 'builder'],
+  };
+
+  function rolesForContractType() {
+    return ROLES_BY_TYPE[contractType] || Object.keys(ROLE_LABELS);
+  }
+
   var REQUIRED_ROLES = {
     lease: { landlord: 'حداقل یک موجر باید در قرارداد وجود داشته باشد.', tenant: 'حداقل یک مستأجر باید در قرارداد وجود داشته باشد.' },
     sale: { seller: 'حداقل یک فروشنده باید در قرارداد وجود داشته باشد.', buyer: 'حداقل یک خریدار باید در قرارداد وجود داشته باشد.' },
@@ -410,7 +420,7 @@
   }
 
   function buildPartyCardHtml(idx, defaultRole) {
-    var roleOptions = Object.keys(ROLE_LABELS).map(function (k) {
+    var roleOptions = rolesForContractType().map(function (k) {
       return '<option value="' + k + '"' + (k === defaultRole ? ' selected' : '') + '>' + ROLE_LABELS[k] + '</option>';
     }).join('');
 

@@ -333,6 +333,32 @@ def _resolve_sale_clauses(
             })
 
 
+def dedupe_custom_clause_entries(selected: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """حذف بندهای اختصاصی تکراری — یک بند با یک متن فقط یک‌بار."""
+    out: List[Dict[str, Any]] = []
+    seen_bodies: Set[str] = set()
+    for item in selected:
+        if not item.get('is_custom'):
+            out.append(item)
+            continue
+        body = (item.get('body_text') or item.get('body') or '').strip()
+        if not body:
+            continue
+        norm = ' '.join(body.split()).lower()
+        if norm in seen_bodies:
+            continue
+        if any(norm != existing and norm in existing for existing in seen_bodies):
+            continue
+        if any(existing != norm and existing in norm for existing in seen_bodies):
+            continue
+        seen_bodies.add(norm)
+        cleaned = dict(item)
+        cleaned['body_text'] = body
+        cleaned['title'] = (item.get('title') or 'توافق اختصاصی').strip() or 'توافق اختصاصی'
+        out.append(cleaned)
+    return out
+
+
 def resolve_selected_clauses(
     contract_type: str,
     wizard: Dict[str, Any],
@@ -376,7 +402,7 @@ def resolve_selected_clauses(
                 seen.add(item['code'])
                 selected.append(item)
 
-    return selected
+    return dedupe_custom_clause_entries(selected)
 
 
 def _clause_card(defn: Optional[ContractClauseDefinition], **extra) -> Dict[str, Any]:

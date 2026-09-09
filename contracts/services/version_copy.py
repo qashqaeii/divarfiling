@@ -106,9 +106,30 @@ def copy_version_entities(
             )
 
 
+def _dedupe_display_clauses(clauses: list) -> list:
+    """یک بند اختصاصی با متن یکسان فقط یک‌بار در UI عمومی نمایش داده شود."""
+    out = []
+    seen: set = set()
+    for clause in clauses or []:
+        body = (clause.get('body_text') or '').strip()
+        if not body:
+            continue
+        norm = ' '.join(body.split()).lower()
+        if norm in seen:
+            continue
+        seen.add(norm)
+        out.append(clause)
+    return out
+
+
 def version_display_snapshot(version: ContractVersion) -> dict:
     """داده نمایش — از snapshot_json برای نسخه published استفاده کن."""
     if version.is_published and version.snapshot_json:
-        return version.snapshot_json
-    from contracts.services.hashing import build_version_snapshot
-    return build_version_snapshot(version)
+        snap = dict(version.snapshot_json)
+    else:
+        from contracts.services.hashing import build_version_snapshot
+        snap = build_version_snapshot(version)
+    if snap.get('clauses'):
+        snap = dict(snap)
+        snap['clauses'] = _dedupe_display_clauses(snap['clauses'])
+    return snap

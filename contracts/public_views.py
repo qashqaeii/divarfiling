@@ -136,6 +136,19 @@ class PublicAcceptView(View):
         if action == 'accept':
             if not request.session.get(session_key):
                 raise Http404
+            from contracts.models import ContractAcceptance
+            already = ContractAcceptance.objects.filter(
+                version=inv.version,
+                party_id=inv.party_id,
+            ).first() if inv.party_id else ContractAcceptance.objects.filter(
+                version=inv.version,
+                witness_id=inv.witness_id,
+            ).first() if inv.witness_id else None
+            if already:
+                return render(request, 'contracts/public/accept_done.html', {
+                    'contract': inv.contract,
+                    'legal_disclaimer': LEGAL_DISCLAIMER_FULL,
+                })
             pending = request.session.get(pending_key, {})
             acks = request.POST.getlist('ack')
             sig_data = request.POST.get('signature_data', '')

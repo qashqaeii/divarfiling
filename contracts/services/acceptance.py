@@ -63,6 +63,16 @@ def accept_contract(
 
     content_hash = version.content_hash or compute_content_hash(version)
 
+    existing_qs = ContractAcceptance.objects.filter(version=version)
+    if invitation.party_id:
+        existing = existing_qs.filter(party_id=invitation.party_id).first()
+    elif invitation.witness_id:
+        existing = existing_qs.filter(witness_id=invitation.witness_id).first()
+    else:
+        existing = None
+    if existing:
+        return existing
+
     acceptance = ContractAcceptance.objects.create(
         contract=contract,
         version=version,

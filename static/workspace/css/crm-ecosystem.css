@@ -29,10 +29,25 @@
 }
 
 /* ── Wider workspace shells ── */
-.dj-deal { max-width: 1440px; padding: 0 1.25rem 2.75rem; }
-.ct-workspace { max-width: 1360px; padding: 0 1.25rem 2.5rem; }
-.ct-manage { max-width: 1280px; padding: 0 1.25rem 2.5rem; }
-.ct-create .ct-create-form { max-width: 880px; }
+.dj-deal { max-width: none; width: 100%; padding: 0 1.35rem 2.75rem; }
+.ct-workspace,
+.ct-manage,
+.ct-wizard,
+.ct-handover-wizard,
+.crm-contracts-page.ct-workspace {
+    max-width: none;
+    width: 100%;
+    padding: 0 1.35rem 2.5rem;
+    font-family: 'Vazirmatn', Tahoma, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+}
+.ct-create .ct-create-form { max-width: min(920px, 100%); }
+.ct-workspace-inner,
+.ct-manage-inner {
+    max-width: 1440px;
+    margin: 0 auto;
+    width: 100%;
+}
 
 /* ── Deal journey typography ── */
 .dj-deal__title { font-size: var(--ec-title-lg); font-weight: 750; letter-spacing: -0.02em; }
@@ -397,13 +412,28 @@
 .crm-deals-page .crm-shell-body,
 .crm-deals-page .crm-deals-kpis,
 .crm-deals-page .crm-deals-funnel,
-.crm-deals-page .crm-deals-stale-banner {
+.crm-deals-page .crm-deals-stale-banner,
+.ct-workspace > *,
+.ct-manage > *:not(.ct-workspace-inner):not(.ct-manage-inner),
+.crm-contract-wizard-layout {
     max-width: 1440px;
     margin-left: auto;
     margin-right: auto;
+    width: 100%;
 }
 .crm-deals-page .crm-deals-desk-header,
 .crm-deals-page .crm-deals-mob-header { max-width: 1440px; margin-inline: auto; }
+
+/* Contract wizard — full-width two-column layout on desktop */
+.crm-contract-wizard-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(260px, 320px);
+    gap: 1.25rem;
+    align-items: start;
+}
+@media (max-width: 960px) {
+    .crm-contract-wizard-layout { grid-template-columns: 1fr; }
+}
 
 /* ── Tab nav card style ── */
 .dj-tabs {

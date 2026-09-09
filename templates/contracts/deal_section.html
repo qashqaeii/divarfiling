@@ -3,9 +3,9 @@
 
 {% block page_title %}قراردادها — {{ deal.title }}{% endblock %}
 {% block crm_extra_css %}
-<link rel="stylesheet" href="{% static 'contracts/css/contracts.css' %}?v=15">
-<link rel="stylesheet" href="{% static 'contracts/css/workspace.css' %}?v=3">
-<link rel="stylesheet" href="{% static 'workspace/css/crm-ecosystem.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'contracts/css/contracts.css' %}?v=16">
+<link rel="stylesheet" href="{% static 'contracts/css/workspace.css' %}?v=4">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-ecosystem.css' %}?v=2">
 {% endblock %}
 
 {% block crm_content %}
@@ -105,7 +105,7 @@
                             <div class="ct-menu-panel">
                                 <a href="{% url 'workspace:contract_manage' deal.pk c.pk %}">مدیریت قرارداد</a>
                                 {% if c.status == 'draft' %}
-                                <a href="{% url 'workspace:contract_wizard' deal.pk c.pk %}">ادامه ویزارد</a>
+                                <a href="{% url 'workspace:contract_wizard' deal.pk c.pk %}">شروع قرارداد</a>
                                 {% endif %}
                                 {% if c.current_version.pdf_file %}
                                 <a href="{% url 'workspace:contract_pdf' deal.pk c.pk %}">دانلود PDF</a>

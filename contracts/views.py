@@ -201,7 +201,15 @@ class ContractWizardView(ContractAccessMixin, TemplateView):
         ctx = super().get_context_data(**kwargs)
         contract = self.get_contract(prefetch_review=True)
         deal = self.get_deal()
-        wizard = contract.wizard_data or {}
+        wizard = dict(contract.wizard_data or {})
+        from contracts.services.prefill import ensure_default_parties
+        ensured_parties = ensure_default_parties(
+            wizard.get('parties') or [], contract.contract_type,
+        )
+        if ensured_parties != (wizard.get('parties') or []):
+            wizard['parties'] = ensured_parties
+            contract.wizard_data = wizard
+            contract.save(update_fields=['wizard_data', 'updated_at'])
         step = self.request.GET.get('step') or contract.wizard_step or 'type'
         if step not in WIZARD_STEPS:
             step = 'type'

@@ -4,16 +4,16 @@
 {% block page_title %}قراردادها{% endblock %}
 {% block mobile_bar_title %}قراردادها{% endblock %}
 {% block crm_extra_css %}
-<link rel="stylesheet" href="{% static 'contracts/css/contracts.css' %}?v=15">
-<link rel="stylesheet" href="{% static 'contracts/css/workspace.css' %}?v=3">
-<link rel="stylesheet" href="{% static 'workspace/css/crm-ecosystem.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'contracts/css/contracts.css' %}?v=16">
+<link rel="stylesheet" href="{% static 'contracts/css/workspace.css' %}?v=4">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-ecosystem.css' %}?v=2">
 {% endblock %}
 
 {% block crm_content %}
 <div class="ct-workspace crm-page-chrome">
     <header class="crm-dash-bar ct-workspace-header">
         <div class="crm-dash-bar-main">
-            <span class="ct-workspace-kicker"><i class="fas fa-file-signature" aria-hidden="true"></i> Workspace قراردادها</span>
+            <span class="ct-workspace-kicker"><i class="fas fa-file-signature" aria-hidden="true"></i> میز قراردادها</span>
             <h1 class="crm-dash-bar-title">قراردادها</h1>
             <p class="crm-dash-bar-sub is-visible">ایجاد، ارسال، تأیید و مدیریت قراردادهای معاملات — مستقل یا متصل به قیف معاملات</p>
         </div>
@@ -100,7 +100,7 @@
                 <time class="ct-workspace-card__date" datetime="{{ c.updated_at|date:'c' }}">{{ c.updated_at|ws_jalali_datetime }}</time>
                 <div class="ct-workspace-card__actions">
                     {% if c.status == 'draft' %}
-                    <a href="{% ct_wizard_url c %}" class="crm-dash-act crm-dash-act--primary">ادامه ویزارد</a>
+                    <a href="{% ct_wizard_url c %}" class="crm-dash-act crm-dash-act--primary">شروع قرارداد</a>
                     {% elif c.status == 'ready' %}
                     <a href="{% ct_manage_url c %}" class="crm-dash-act crm-dash-act--primary">ارسال</a>
                     {% elif c.status in 'sent,viewed,partially_accepted' %}

@@ -3,9 +3,9 @@
 
 {% block page_title %}ویزارد قرارداد{% endblock %}
 {% block crm_extra_css %}
-<link rel="stylesheet" href="{% static 'contracts/css/contracts.css' %}?v=15">
-<link rel="stylesheet" href="{% static 'contracts/css/workspace.css' %}?v=3">
-<link rel="stylesheet" href="{% static 'workspace/css/crm-ecosystem.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'contracts/css/contracts.css' %}?v=16">
+<link rel="stylesheet" href="{% static 'contracts/css/workspace.css' %}?v=4">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-ecosystem.css' %}?v=2">
 {% endblock %}
 
 {% block crm_content %}
@@ -132,33 +132,7 @@
                     </div>
                 </article>
                 {% empty %}
-                <article class="crm-deal-side-card crm-deal-block crm-contract-party ct-party-card is-editing is-incomplete" data-index="0">
-                    <div class="crm-contract-party__row ct-party-card__summary">
-                        <div class="crm-contract-party__body ct-party-card__info">
-                            <span class="crm-deal-stage-badge ct-party-card__role">{% if contract.contract_type == 'lease' %}موجر{% elif contract.contract_type == 'sale' %}فروشنده{% else %}مالک{% endif %}</span>
-                            <span class="crm-contract-party__warn ct-party-card__badge"><i class="fas fa-exclamation-circle"></i> اطلاعات ناقص</span>
-                            <p class="crm-contract-party__name ct-party-card__name">نام وارد نشده</p>
-                            <p class="crm-contract-party__meta ct-party-card__meta">نام و اطلاعات این طرف هنوز تکمیل نشده است.</p>
-                        </div>
-                        <div class="crm-contract-party__acts ct-party-card__actions">
-                            <button type="button" class="crm-dash-act ct-party-card__complete">تکمیل</button>
-                            <div class="ct-menu-wrap ct-party-menu">
-                                <button type="button" class="crm-dash-act crm-dash-act--icon" aria-label="عملیات"><i class="fas fa-ellipsis-v"></i></button>
-                                <div class="ct-menu-panel">
-                                    <button type="button" class="ct-party-card__delete is-destructive">حذف از قرارداد</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="ct-party-card__body">
-                        <div class="crm-contract-form-grid">
-                            <label>نقش<input class="crm-input" name="party_0_role" value="{% if contract.contract_type == 'lease' %}landlord{% elif contract.contract_type == 'sale' %}seller{% else %}owner{% endif %}"></label>
-                            <label>نام<input class="crm-input" name="party_0_first_name"></label>
-                            <label>نام خانوادگی<input class="crm-input" name="party_0_last_name"></label>
-                            <label>موبایل<input class="crm-input" type="tel" name="party_0_mobile" inputmode="tel"></label>
-                        </div>
-                    </div>
-                </article>
+                <p class="ct-muted">در حال آماده‌سازی فرم طرفین… صفحه را یک‌بار تازه کنید.</p>
                 {% endfor %}
             </div>
             <div class="crm-contract-add-parties" id="ct-add-party-group">
@@ -1037,5 +1011,5 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'contracts/js/wizard.js' %}?v=12"></script>
+<script src="{% static 'contracts/js/wizard.js' %}?v=13"></script>
 {% endblock %}

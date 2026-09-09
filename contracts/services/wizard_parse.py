@@ -310,10 +310,14 @@ def parse_clauses(post: QueryDict, contract_type: str = '') -> Dict[str, Any]:
     custom_title = _get(post, 'custom_clause_title')
     custom_body = _get(post, 'custom_clause_body')
     if custom_body.strip():
-        custom_agreements.append({
-            'title': custom_title or 'توافق اختصاصی',
-            'body': custom_body.strip(),
-        })
+        legacy_body = custom_body.strip()
+        if not any(
+            (a.get('body') or '').strip() == legacy_body for a in custom_agreements
+        ):
+            custom_agreements.append({
+                'title': custom_title or 'توافق اختصاصی',
+                'body': legacy_body,
+            })
 
     result: Dict[str, Any] = {
         'optional_clauses': optional,

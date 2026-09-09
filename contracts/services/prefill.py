@@ -7,6 +7,7 @@ from contracts.constants import (
     CONTRACT_TYPE_JV,
     CONTRACT_TYPE_LEASE,
     CONTRACT_TYPE_SALE,
+    PARTY_ROLE_BUILDER,
     PARTY_ROLE_BUYER,
     PARTY_ROLE_LANDLORD,
     PARTY_ROLE_OWNER,
@@ -82,7 +83,7 @@ def prefill_parties_from_deal(deal: CRMDeal, contract_type: str) -> List[Dict[st
         if customer:
             parties.append(_customer_to_party_data(customer, PARTY_ROLE_OWNER))
 
-    return parties
+    return ensure_default_parties(parties, contract_type)
 
 
 def prefill_property_from_deal(deal: CRMDeal) -> Dict[str, Any]:
@@ -139,10 +140,51 @@ def _empty_financial(contract_type: str) -> Dict[str, Any]:
     return {}
 
 
+def _empty_party(role: str) -> Dict[str, Any]:
+    return sanitize_party_payload({
+        'role': role,
+        'person_type': PERSON_TYPE_NATURAL,
+        'first_name': '',
+        'last_name': '',
+        'father_name': '',
+        'national_id': '',
+        'mobile': '',
+        'address': '',
+        'postal_code': '',
+        'ownership_share': '',
+    })
+
+
+def default_parties_for_type(contract_type: str) -> List[Dict[str, Any]]:
+    """دو طرف خالی پیش‌فرض متناسب با نوع قرارداد."""
+    if contract_type == CONTRACT_TYPE_LEASE:
+        return [_empty_party(PARTY_ROLE_LANDLORD), _empty_party(PARTY_ROLE_TENANT)]
+    if contract_type == CONTRACT_TYPE_SALE:
+        return [_empty_party(PARTY_ROLE_SELLER), _empty_party(PARTY_ROLE_BUYER)]
+    if contract_type == CONTRACT_TYPE_JV:
+        return [_empty_party(PARTY_ROLE_OWNER), _empty_party(PARTY_ROLE_BUILDER)]
+    return []
+
+
+def ensure_default_parties(parties: List[Dict[str, Any]], contract_type: str) -> List[Dict[str, Any]]:
+    """نقش‌های الزامی را در صورت نبود، به‌صورت فرم خالی اضافه می‌کند."""
+    required = {
+        CONTRACT_TYPE_LEASE: (PARTY_ROLE_LANDLORD, PARTY_ROLE_TENANT),
+        CONTRACT_TYPE_SALE: (PARTY_ROLE_SELLER, PARTY_ROLE_BUYER),
+        CONTRACT_TYPE_JV: (PARTY_ROLE_OWNER, PARTY_ROLE_BUILDER),
+    }.get(contract_type, ())
+    result = list(parties or [])
+    existing = {p.get('role') for p in result}
+    for role in required:
+        if role not in existing:
+            result.append(_empty_party(role))
+    return result
+
+
 def empty_wizard_data(contract_type: str) -> Dict[str, Any]:
     """داده خالی ویزارد برای قرارداد بدون معامله."""
     return {
-        'parties': [],
+        'parties': default_parties_for_type(contract_type),
         'property': {},
         'financial': _empty_financial(contract_type),
         'jv': {} if contract_type == CONTRACT_TYPE_JV else None,

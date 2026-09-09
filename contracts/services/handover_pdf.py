@@ -16,6 +16,7 @@ from contracts.services.persian_text import (
     rtl_paragraph_html,
     rtl_plain,
 )
+from contracts.services.pdf_layout import article_box as _article_box
 
 logger = logging.getLogger(__name__)
 
@@ -72,6 +73,7 @@ def _pdf_styles(font_name: str, font_bold: str):
         'body': ParagraphStyle(
             'hoBody', fontName=font_name, fontSize=9.5, alignment=TA_RIGHT, leading=16,
             textColor=colors.HexColor('#1e293b'),
+            leftIndent=10, rightIndent=10, spaceBefore=4, spaceAfter=2,
         ),
         'meta': ParagraphStyle(
             'hoMeta', fontName=font_name, fontSize=8.5, alignment=TA_RIGHT, leading=13,
@@ -94,32 +96,6 @@ def _pdf_styles(font_name: str, font_bold: str):
             textColor=colors.HexColor(_C_TEXT),
         ),
     }
-
-
-def _article_box(title: str, content: List[Any], content_width: float, styles: Dict) -> List[Any]:
-    from reportlab.lib import colors
-    from reportlab.platypus import Paragraph, Spacer, Table, TableStyle
-
-    if not content:
-        return []
-    rows = [[Paragraph(rtl_paragraph_html(title, bold=True), styles['heading'])]]
-    for item in content:
-        rows.append([item])
-    tbl = Table(rows, colWidths=[content_width])
-    tbl.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#f8fafc')),
-        ('BACKGROUND', (0, 1), (-1, -1), colors.white),
-        ('BOX', (0, 0), (-1, -1), 0.75, colors.HexColor('#cbd5e1')),
-        ('LINEBELOW', (0, 0), (-1, 0), 1.5, colors.HexColor(_C_PRIMARY)),
-        ('LEFTPADDING', (0, 0), (-1, -1), 10),
-        ('RIGHTPADDING', (0, 0), (-1, -1), 10),
-        ('TOPPADDING', (0, 0), (-1, 0), 8),
-        ('BOTTOMPADDING', (0, 0), (-1, 0), 6),
-        ('TOPPADDING', (0, 1), (-1, -1), 6),
-        ('BOTTOMPADDING', (0, 1), (-1, -1), 10),
-        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-    ]))
-    return [tbl, Spacer(1, 10)]
 
 
 def _kv_grid(pairs: List[Tuple[str, str]], content_width: float, styles: Dict):
@@ -225,7 +201,7 @@ def _simple_table(headers: List[str], rows: List[List[str]], font_name: str, fon
     data = [[rtl_plain(h) for h in headers]]
     for row in rows:
         data.append([rtl_plain(c) for c in row])
-    tbl = Table(data, colWidths=col_widths, repeatRows=1, hAlign='RIGHT')
+    tbl = Table(data, colWidths=col_widths, repeatRows=1, hAlign='RIGHT', splitByRow=1)
     tbl.setStyle(TableStyle([
         ('FONTNAME', (0, 0), (-1, -1), font_name),
         ('FONTNAME', (0, 0), (-1, 0), font_bold),

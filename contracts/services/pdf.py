@@ -20,6 +20,8 @@ from contracts.services.persian_text import (
     rtl_paragraph_html,
     rtl_plain,
 )
+from contracts.services.pdf_layout import article_box as _article_box
+from contracts.services.pdf_layout import article_box as _article_box, padded_body_style
 
 logger = logging.getLogger(__name__)
 
@@ -139,6 +141,7 @@ def _pdf_styles(font_name: str, font_bold: str):
         'body': ParagraphStyle(
             'body', fontName=font_name, fontSize=10, alignment=TA_RIGHT, leading=17,
             textColor=colors.HexColor('#1e293b'),
+            leftIndent=10, rightIndent=10, spaceBefore=4, spaceAfter=2,
         ),
         'meta': ParagraphStyle(
             'meta', fontName=font_name, fontSize=8.5, alignment=TA_RIGHT, leading=13,
@@ -169,40 +172,6 @@ def _pdf_styles(font_name: str, font_bold: str):
             textColor=colors.HexColor(_C_MUTED),
         ),
     }
-
-
-def _article_box(
-    title: str,
-    content_flowables: List[Any],
-    content_width: float,
-    styles: Dict,
-) -> List[Any]:
-    """Wrap article title + content in a styled card."""
-    from reportlab.lib import colors
-    from reportlab.platypus import Paragraph, Spacer, Table, TableStyle
-
-    if not content_flowables:
-        return []
-
-    rows = [[Paragraph(rtl_paragraph_html(title, bold=True), styles['heading'])]]
-    for item in content_flowables:
-        rows.append([item])
-
-    tbl = Table(rows, colWidths=[content_width])
-    tbl.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#f8fafc')),
-        ('BACKGROUND', (0, 1), (-1, -1), colors.white),
-        ('BOX', (0, 0), (-1, -1), 0.55, colors.HexColor(_C_BORDER)),
-        ('LINEBELOW', (0, 0), (-1, 0), 1.2, colors.HexColor(_C_PRIMARY)),
-        ('LEFTPADDING', (0, 0), (-1, -1), 10),
-        ('RIGHTPADDING', (0, 0), (-1, -1), 10),
-        ('TOPPADDING', (0, 0), (-1, 0), 8),
-        ('BOTTOMPADDING', (0, 0), (-1, 0), 6),
-        ('TOPPADDING', (0, 1), (-1, -1), 4),
-        ('BOTTOMPADDING', (0, 1), (-1, -1), 8),
-        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-    ]))
-    return [tbl, Spacer(1, 10)]
 
 
 def _kv_grid_table(
@@ -243,41 +212,58 @@ def _kv_grid_table(
     return tbl
 
 
-def _party_card_cell(party: Dict, styles: Dict) -> List[Any]:
-    from reportlab.platypus import Paragraph, Spacer
+def _party_panel_table(party: Dict, panel_width: float, styles: Dict):
+    from reportlab.lib import colors
+    from reportlab.platypus import Paragraph, Table, TableStyle
 
     role = party.get('role_label') or party.get('role') or 'طرف قرارداد'
-    fields = []
+    label_w = panel_width * 0.34
+    value_w = panel_width * 0.66
+
+    field_rows: List[Tuple[str, str]] = []
     if party.get('first_name') or party.get('last_name'):
-        fields.extend([
+        field_rows.extend([
             ('نام', party.get('first_name') or '—'),
             ('نام خانوادگی', party.get('last_name') or '—'),
         ])
     else:
-        fields.append(('نام', party.get('name') or '—'))
+        field_rows.append(('نام', party.get('name') or '—'))
     if party.get('father_name'):
-        fields.append(('نام پدر', party['father_name']))
+        field_rows.append(('نام پدر', party['father_name']))
     if party.get('national_id'):
-        fields.append(('کد ملی', party['national_id']))
+        field_rows.append(('کد ملی', party['national_id']))
     if party.get('mobile'):
         verified = ' ✓' if party.get('mobile_verified') else ''
-        fields.append(('موبایل', f"{party['mobile']}{verified}"))
+        field_rows.append(('موبایل', f"{party['mobile']}{verified}"))
     if party.get('address'):
-        fields.append(('نشانی', party['address']))
+        field_rows.append(('نشانی', party['address']))
     if party.get('postal_code'):
-        fields.append(('کد پستی', party['postal_code']))
+        field_rows.append(('کد پستی', party['postal_code']))
     if party.get('ownership_share'):
-        fields.append(('قدرالسهم', party['ownership_share']))
+        field_rows.append(('قدرالسهم', party['ownership_share']))
 
-    cell = [
-        Paragraph(rtl_paragraph_html(role, bold=True), styles['card_role']),
-        Spacer(1, 4),
-    ]
-    for label, value in fields:
-        cell.append(Paragraph(rtl_paragraph_html(label), styles['card_label']))
-        cell.append(Paragraph(rtl_paragraph_html(str(value), bold=True), styles['card_value']))
-        cell.append(Spacer(1, 3))
-    return cell
+    rows = [[Paragraph(rtl_paragraph_html(role, bold=True), styles['card_role']), '']]
+    for label, value in field_rows:
+        rows.append([
+            Paragraph(rtl_paragraph_html(label), styles['card_label']),
+            Paragraph(rtl_paragraph_html(str(value), bold=True), styles['card_value']),
+        ])
+
+    tbl = Table(rows, colWidths=[label_w, value_w])
+    tbl.setStyle(TableStyle([
+        ('SPAN', (0, 0), (1, 0)),
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor(_C_PRIMARY_SOFT)),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#fafafa')),
+        ('BOX', (0, 0), (-1, -1), 0.65, colors.HexColor('#cbd5e1')),
+        ('INNERGRID', (0, 1), (-1, -1), 0.45, colors.HexColor('#e2e8f0')),
+        ('LINEABOVE', (0, 0), (-1, 0), 1, colors.HexColor(_C_PRIMARY)),
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('LEFTPADDING', (0, 0), (-1, -1), 6),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 6),
+        ('TOPPADDING', (0, 0), (-1, -1), 5),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
+    ]))
+    return tbl
 
 
 def _parties_two_column_flow(
@@ -285,34 +271,24 @@ def _parties_two_column_flow(
     content_width: float,
     styles: Dict,
 ) -> List[Any]:
-    from reportlab.lib import colors
-    from reportlab.platypus import Spacer, Table, TableStyle
+    from reportlab.platypus import Table, TableStyle
 
     if not parties:
         return []
 
-    half_w = (content_width - 8) / 2
-    rows = []
-    row = []
-    for party in parties:
-        row.append(_party_card_cell(party, styles))
-        if len(row) == 2:
-            rows.append(row)
-            row = []
-    if row:
-        row.append([Spacer(1, 1)])
-        rows.append(row)
+    gap = 8
+    half_w = (content_width - gap) / 2
+    cells = []
+    for party in parties[:2]:
+        cells.append(_party_panel_table(party, half_w - 4, styles))
+    while len(cells) < 2:
+        cells.append('')
 
-    tbl = Table(rows, colWidths=[half_w, half_w], hAlign='RIGHT')
+    tbl = Table([cells], colWidths=[half_w, half_w], hAlign='RIGHT')
     tbl.setStyle(TableStyle([
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-        ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#fafafa')),
-        ('BOX', (0, 0), (-1, -1), 0.45, colors.HexColor(_C_BORDER)),
-        ('INNERGRID', (0, 0), (-1, -1), 0.35, colors.HexColor('#eef2f7')),
-        ('LEFTPADDING', (0, 0), (-1, -1), 8),
-        ('RIGHTPADDING', (0, 0), (-1, -1), 8),
-        ('TOPPADDING', (0, 0), (-1, -1), 8),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+        ('LEFTPADDING', (0, 0), (-1, -1), 0),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 0),
     ]))
     return [tbl]
 
@@ -444,7 +420,6 @@ def generate_contract_pdf_bytes(
         from reportlab.lib.units import cm
         from reportlab.platypus import (
             Image as RLImage,
-            KeepTogether,
             PageBreak,
             Paragraph,
             SimpleDocTemplate,
@@ -645,7 +620,7 @@ def _payment_table_flow(pay: Dict, font_name: str, font_bold: str, meta_style):
     if pay.get('total_display'):
         rows.append(['', rtl_plain('جمع'), rtl_plain(pay['total_display']), '', ''])
     col_w = [1.1 * cm, 5.2 * cm, 3.8 * cm, 2.8 * cm, 3.1 * cm]
-    tbl = Table(rows, colWidths=col_w, repeatRows=1, hAlign='RIGHT')
+    tbl = Table(rows, colWidths=col_w, repeatRows=1, hAlign='RIGHT', splitByRow=1)
     tbl.setStyle(TableStyle([
         ('FONTNAME', (0, 0), (-1, -1), font_name),
         ('FONTNAME', (0, 0), (-1, 0), font_bold),

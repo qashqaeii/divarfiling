@@ -51,6 +51,21 @@ class ContractDisplayTests(TestCase):
         self.assertEqual(len(display['parties']), 1)
 
 
+class ArticleBoxLayoutTests(TestCase):
+    def test_article_box_keeps_body_outside_table(self):
+        from reportlab.platypus import Paragraph, Table
+
+        from contracts.services.pdf import _pdf_styles
+        from contracts.services.pdf_layout import article_box
+
+        styles = _pdf_styles('Helvetica', 'Helvetica-Bold')
+        body = Paragraph('متن آزمایشی', styles['body'])
+        flowables = article_box('ماده ۱', [body], 400, styles)
+        self.assertEqual(len(flowables), 3)
+        self.assertIsInstance(flowables[0], Table)
+        self.assertIs(flowables[1], body)
+
+
 class ContractPdfTests(TestCase):
     @patch('contracts.services.pdf.resolve_persian_font_paths')
     def test_generate_pdf_bytes_with_shaping(self, mock_fonts):
@@ -80,3 +95,48 @@ class ContractPdfTests(TestCase):
         if not data:
             self.skipTest('reportlab or font unavailable')
         self.assertTrue(data.startswith(b'%PDF'))
+
+    @patch('contracts.services.pdf.build_contract_display')
+    @patch('contracts.services.pdf.resolve_persian_font_paths')
+    def test_long_clause_body_not_truncated(self, mock_fonts, mock_display):
+        from contracts.models import Contract, ContractVersion
+
+        mock_fonts.return_value = ('C:/Windows/Fonts/tahoma.ttf', 'C:/Windows/Fonts/tahomabd.ttf')
+        marker = 'انتهای_بند_آزمایشی_یکتا'
+        long_body = ' '.join(['بند قرارداد'] * 120) + ' ' + marker
+        mock_display.return_value = {
+            'verify_url': '',
+            'content_hash': '',
+            'content_hash_short': '',
+            'parties': [],
+            'property': {},
+            'payment_schedule': {'has_rows': False},
+            'penalty_summary': [],
+            'costs_summary': [],
+            'document_sections': [
+                {'title': 'ماده ۱۰ - تعهدات خریدار', 'body': long_body, 'section_kind': 'clause'},
+            ],
+        }
+        user = User.objects.create_user(username='pdf2', phone='09124000003', password='x')
+        customer = Customer.objects.create(user=user, name='c', phone='09124000004')
+        deal = CRMDeal.objects.create(user=user, customer=customer, title='d')
+        contract = Contract.objects.create(
+            user=user, deal=deal, contract_type='sale', internal_number='DF-SAL-1405-000022',
+            verification_token_hash=hash_token('pdf-verify-2'),
+            status='finalized',
+            finalized_at=timezone.now(),
+        )
+        version = ContractVersion.objects.create(
+            contract=contract, version_number=1, is_published=True,
+            snapshot_json={'clauses': [], 'parties': [], 'payments': [], 'financial': {}},
+        )
+        try:
+            from contracts.services.pdf import generate_contract_pdf_bytes
+            data = generate_contract_pdf_bytes(version, preview=True)
+        except Exception as exc:
+            if 'tahoma' in str(exc).lower() or 'font' in str(exc).lower():
+                self.skipTest('Tahoma not available in test environment')
+            raise
+        if not data:
+            self.skipTest('reportlab or font unavailable')
+        self.assertIn(marker.encode('utf-8'), data)

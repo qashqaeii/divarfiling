@@ -14,7 +14,7 @@
 
 <link rel="stylesheet" href="{% static 'workspace/css/crm-ecosystem.css' %}?v=2">
 
-<link rel="stylesheet" href="{% static 'contracts/css/contracts-manage.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'contracts/css/contracts-manage.css' %}?v=3">
 
 {% endblock %}
 
@@ -75,25 +75,23 @@
                     <span class="ct-manage-hero__icon" aria-hidden="true"><i class="fas fa-file-signature"></i></span>
 
                     <div class="ct-manage-hero__titles">
-
-                        <h1>{{ contract.get_contract_type_display }}</h1>
-
+                        <div class="ct-manage-hero__title-line">
+                            <h1>{{ contract.get_contract_type_display }}</h1>
+                            <span class="ct-manage-status-badge ct-manage-status-badge--{{ contract.status }}">
+                                {% if contract.status == 'finalized' or contract.status == 'fully_accepted' %}
+                                <i class="fas fa-circle-check" aria-hidden="true"></i>
+                                {% elif contract.status == 'cancelled' or contract.status == 'expired' %}
+                                <i class="fas fa-circle-xmark" aria-hidden="true"></i>
+                                {% elif contract.status == 'draft' %}
+                                <i class="fas fa-pen" aria-hidden="true"></i>
+                                {% else %}
+                                <i class="fas fa-hourglass-half" aria-hidden="true"></i>
+                                {% endif %}
+                                {{ contract.get_status_display }}
+                            </span>
+                        </div>
                         <p class="ct-manage-hero__number">شماره قرارداد: {{ contract.internal_number }}</p>
-
                     </div>
-
-                    <span class="ct-manage-status-badge ct-manage-status-badge--{{ contract.status }}">
-                        {% if contract.status == 'finalized' or contract.status == 'fully_accepted' %}
-                        <i class="fas fa-circle-check" aria-hidden="true"></i>
-                        {% elif contract.status == 'cancelled' or contract.status == 'expired' %}
-                        <i class="fas fa-circle-xmark" aria-hidden="true"></i>
-                        {% elif contract.status == 'draft' %}
-                        <i class="fas fa-pen" aria-hidden="true"></i>
-                        {% else %}
-                        <i class="fas fa-hourglass-half" aria-hidden="true"></i>
-                        {% endif %}
-                        {{ contract.get_status_display }}
-                    </span>
 
                 </div>
 
@@ -116,45 +114,45 @@
             <div class="ct-manage-hero__actions" role="toolbar" aria-label="عملیات قرارداد">
 
                 {% if contract.status == 'finalized' %}
-
                 <a href="{{ contract_wizard_url }}?step=review" class="crm-dash-act crm-dash-act--primary">
-
                     <i class="fas fa-eye" aria-hidden="true"></i>
-
                     <span>مشاهده قرارداد</span>
-
                 </a>
-
+                {% if deal %}
+                    {% if finalized_handover %}
+                    <a href="{% url 'workspace:handover_pdf' deal.pk contract.pk finalized_handover.pk %}" class="crm-dash-act ct-manage-handover-btn ct-manage-handover-btn--done">
+                        <i class="fas fa-file-contract" aria-hidden="true"></i>
+                        <span>صورت‌جلسه تحویل</span>
+                    </a>
+                    {% elif handover %}
+                    <a href="{% url 'workspace:handover_wizard' deal.pk contract.pk handover.pk %}" class="crm-dash-act ct-manage-handover-btn">
+                        <i class="fas fa-clipboard-list" aria-hidden="true"></i>
+                        <span>ادامه صورت‌جلسه</span>
+                    </a>
+                    {% else %}
+                    <form method="post" action="{% url 'workspace:handover_create' deal.pk contract.pk %}" class="ct-manage-inline-form ct-manage-handover-form">{% csrf_token %}
+                        <button type="submit" class="crm-dash-act ct-manage-handover-btn">
+                            <i class="fas fa-clipboard-list" aria-hidden="true"></i>
+                            <span>صورت‌جلسه تحویل</span>
+                        </button>
+                    </form>
+                    {% endif %}
+                {% endif %}
                 <a href="{{ contract_pdf_url }}" class="crm-dash-act">
-
                     <i class="fas fa-file-pdf" aria-hidden="true"></i>
-
                     <span>PDF</span>
-
                 </a>
-
                 {% elif contract.status == 'draft' or contract.is_editable %}
-
                 <a href="{{ contract_wizard_url }}" class="crm-dash-act crm-dash-act--primary">
-
                     <i class="fas fa-pen-to-square" aria-hidden="true"></i>
-
                     <span>ویرایش</span>
-
                 </a>
-
                 <form method="post" class="ct-manage-inline-form">{% csrf_token %}
-
                     <button type="submit" name="action" value="send" class="crm-dash-act">
-
                         <i class="fas fa-paper-plane" aria-hidden="true"></i>
-
                         <span>ارسال برای طرفین</span>
-
                     </button>
-
                 </form>
-
                 {% endif %}
 
                 {% if contract.status != 'finalized' and version.pdf_file %}
@@ -242,40 +240,35 @@
                 <li class="ct-lifecycle__step{% if contract.status != 'cancelled' %} is-done{% endif %}">
 
                     <span class="ct-lifecycle__dot" aria-hidden="true"><i class="fas fa-pen"></i></span>
-
-                    <span>پیش‌نویس</span>
+                    <span class="ct-lifecycle__label">پیش‌نویس</span>
 
                 </li>
 
                 <li class="ct-lifecycle__step{% if contract.status in 'sent,viewed,partially_accepted,fully_accepted,finalized' %} is-done{% elif contract.status == 'draft' %} is-current{% endif %}">
 
                     <span class="ct-lifecycle__dot" aria-hidden="true"><i class="fas fa-paper-plane"></i></span>
-
-                    <span>ارسال</span>
+                    <span class="ct-lifecycle__label">ارسال</span>
 
                 </li>
 
                 <li class="ct-lifecycle__step{% if contract.status in 'viewed,partially_accepted,fully_accepted,finalized' %} is-done{% elif contract.status in 'sent' %} is-current{% endif %}">
 
                     <span class="ct-lifecycle__dot" aria-hidden="true"><i class="fas fa-eye"></i></span>
-
-                    <span>مشاهده</span>
+                    <span class="ct-lifecycle__label">مشاهده</span>
 
                 </li>
 
                 <li class="ct-lifecycle__step{% if contract.status in 'partially_accepted,fully_accepted,finalized' %} is-done{% elif contract.status in 'viewed,partially_accepted' %} is-current{% endif %}">
 
                     <span class="ct-lifecycle__dot" aria-hidden="true"><i class="fas fa-check"></i></span>
-
-                    <span>تأیید</span>
+                    <span class="ct-lifecycle__label">تأیید</span>
 
                 </li>
 
                 <li class="ct-lifecycle__step{% if contract.status == 'finalized' %} is-done is-final{% elif contract.status == 'fully_accepted' %} is-current{% endif %}">
 
                     <span class="ct-lifecycle__dot" aria-hidden="true"><i class="fas fa-flag-checkered"></i></span>
-
-                    <span>نهایی</span>
+                    <span class="ct-lifecycle__label">نهایی</span>
 
                 </li>
 
@@ -356,9 +349,6 @@
                 </header>
 
                 <div class="ct-party-card__body">
-
-                    <span class="ct-party-card__avatar" aria-hidden="true">{{ item.name|slice:":1"|default:"?" }}</span>
-
                     <div class="ct-party-card__info">
 
                         <p class="ct-party-card__name">{{ item.name }}</p>
@@ -519,9 +509,26 @@
             <div class="ct-manage-history__body">
                 <ul class="ct-audit-timeline" id="ct-audit-timeline">
                     {% for ev in audit_timeline %}
+                    {% ifchanged ev.created_at|ws_jalali_date %}
+                    <li class="ct-audit-date" aria-hidden="true">{{ ev.created_at|ws_jalali_date }}</li>
+                    {% endifchanged %}
                     <li class="ct-audit-item{% if forloop.counter > 5 %} is-hidden{% endif %}{% if forloop.first %} is-latest{% endif %}" data-event-type="{{ ev.event_type }}">
                         <div class="ct-audit-item__rail" aria-hidden="true">
-                            <span class="ct-audit-item__dot"></span>
+                            <span class="ct-audit-item__icon">
+                                {% if ev.event_type == 'CONTRACT_FINALIZED' or ev.event_type == 'CONTRACT_FULLY_ACCEPTED' %}
+                                <i class="fas fa-flag-checkered"></i>
+                                {% elif ev.event_type == 'PARTY_ACCEPTED' or ev.event_type == 'WITNESS_ACCEPTED' %}
+                                <i class="fas fa-check"></i>
+                                {% elif ev.event_type == 'CONTRACT_VIEWED' or ev.event_type == 'INVITATION_OPENED' %}
+                                <i class="fas fa-eye"></i>
+                                {% elif ev.event_type == 'SMS_SENT' or ev.event_type == 'VERSION_PUBLISHED' %}
+                                <i class="fas fa-paper-plane"></i>
+                                {% elif ev.event_type == 'PDF_GENERATED' %}
+                                <i class="fas fa-file-pdf"></i>
+                                {% else %}
+                                <i class="fas fa-circle"></i>
+                                {% endif %}
+                            </span>
                         </div>
                         <div class="ct-audit-item__panel">
                             <div class="ct-audit-item__head">

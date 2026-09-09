@@ -23,6 +23,7 @@
     flex-direction: column;
     gap: var(--ct-m-gap);
     padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px));
+    overflow: visible;
 }
 
 /* ── Top bar ── */
@@ -65,28 +66,39 @@
     border: 1px solid var(--ct-m-border);
     border-radius: var(--ct-m-radius);
     background: var(--ct-m-surface);
+    overflow: visible;
 }
 
 .crm-contract-manage .ct-manage-hero__title-row {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    grid-template-rows: auto auto;
-    gap: 0.5rem 0.65rem;
-    align-items: start;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
 }
 
 .crm-contract-manage .ct-manage-hero__icon {
-    grid-row: 1 / 3;
     width: 2.25rem;
     height: 2.25rem;
     border-radius: 8px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
     background: #f8fafc;
     color: var(--ct-m-primary);
     font-size: 0.85rem;
     border: 1px solid var(--ct-m-border);
+}
+
+.crm-contract-manage .ct-manage-hero__titles {
+    flex: 1;
+    min-width: 0;
+}
+
+.crm-contract-manage .ct-manage-hero__title-line {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem;
 }
 
 .crm-contract-manage .ct-manage-hero__titles h1 {
@@ -105,15 +117,15 @@
 }
 
 .crm-contract-manage .ct-manage-status-badge {
-    grid-column: 1 / -1;
     display: inline-flex;
     align-items: center;
     gap: 0.28rem;
-    width: fit-content;
-    padding: 0.15rem 0.5rem;
+    padding: 0.12rem 0.45rem;
     border-radius: 6px;
-    font-size: 0.62rem;
+    font-size: 0.6rem;
     font-weight: 650;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .crm-contract-manage .ct-manage-status-badge--finalized,
@@ -170,10 +182,32 @@
     grid-template-columns: 1fr 1fr auto;
     gap: 0.4rem;
     width: 100%;
+    overflow: visible;
 }
 
 .crm-contract-manage .ct-manage-hero__actions .crm-dash-act--primary {
     grid-column: 1 / -1;
+}
+
+.crm-contract-manage .ct-manage-hero__actions:has(.ct-manage-handover-btn) .crm-dash-act--primary,
+.crm-contract-manage .ct-manage-hero__actions:has(.ct-manage-handover-form) .crm-dash-act--primary {
+    grid-column: auto;
+}
+
+.crm-contract-manage .ct-manage-handover-form {
+    display: contents;
+}
+
+.crm-contract-manage .ct-manage-handover-btn {
+    border: 1px solid #ddd6fe;
+    background: #faf5ff;
+    color: var(--ct-m-primary);
+}
+
+.crm-contract-manage .ct-manage-handover-btn--done {
+    border-color: #bbf7d0;
+    background: #f0fdf4;
+    color: var(--ct-m-success);
 }
 
 .crm-contract-manage .ct-manage-hero__actions .crm-dash-act {
@@ -221,30 +255,46 @@
 
 .crm-contract-manage .ct-lifecycle__steps {
     min-width: 28rem;
+    align-items: flex-start;
 }
 
 .crm-contract-manage .ct-lifecycle__step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.35rem;
+    padding-top: 0;
     font-size: 0.62rem;
     font-weight: 600;
     color: var(--ct-m-muted);
 }
 
+.crm-contract-manage .ct-lifecycle__dot {
+    width: 1.65rem;
+    height: 1.65rem;
+    margin: 0;
+    font-size: 0.58rem;
+    border-width: 1.5px;
+    box-shadow: none;
+    flex-shrink: 0;
+}
+
+.crm-contract-manage .ct-lifecycle__label {
+    display: block;
+    font-size: 0.62rem;
+    font-weight: 600;
+    line-height: 1.25;
+    white-space: nowrap;
+}
+
 .crm-contract-manage .ct-lifecycle__step:not(:last-child)::after {
-    top: 0.85rem;
+    top: 0.825rem;
     height: 1px;
     background: var(--ct-m-border);
 }
 
 .crm-contract-manage .ct-lifecycle__step.is-done:not(:last-child)::after {
     background: var(--ct-m-primary);
-}
-
-.crm-contract-manage .ct-lifecycle__dot {
-    width: 1.65rem;
-    height: 1.65rem;
-    font-size: 0.58rem;
-    border-width: 1.5px;
-    box-shadow: none;
 }
 
 .crm-contract-manage .ct-lifecycle__step.is-done .ct-lifecycle__dot {
@@ -376,26 +426,11 @@
 }
 
 .crm-contract-manage .ct-party-card__body {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
     padding: 0 0.75rem 0.65rem;
 }
 
 .crm-contract-manage .ct-party-card__avatar {
-    width: 2.1rem;
-    height: 2.1rem;
-    border-radius: 50%;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    font-size: 0.78rem;
-    font-weight: 700;
-    color: var(--ct-m-primary);
-    background: #f8fafc;
-    border: 1px solid var(--ct-m-border);
-    box-shadow: none;
+    display: none;
 }
 
 .crm-contract-manage .ct-party-card__name {
@@ -607,19 +642,35 @@
     padding: 0;
     display: flex;
     flex-direction: column;
+    gap: 0;
+}
+
+.crm-contract-manage .ct-audit-date {
+    list-style: none;
+    margin: 0.15rem 0 0.35rem;
+    padding: 0.35rem 0 0.15rem;
+    font-size: 0.62rem;
+    font-weight: 650;
+    color: var(--ct-m-muted);
+    border-bottom: 1px solid var(--ct-m-border);
+}
+
+.crm-contract-manage .ct-audit-date:first-child {
+    margin-top: 0;
+    padding-top: 0;
 }
 
 .crm-contract-manage .ct-audit-item {
     display: grid;
-    grid-template-columns: 1.35rem minmax(0, 1fr);
+    grid-template-columns: 2rem minmax(0, 1fr);
     gap: 0.65rem;
     position: relative;
-    padding-bottom: 0.85rem;
+    padding-bottom: 0.65rem;
     border-bottom: 0;
 }
 
 .crm-contract-manage .ct-audit-item:last-child {
-    padding-bottom: 0.35rem;
+    padding-bottom: 0.15rem;
 }
 
 .crm-contract-manage .ct-audit-item.is-hidden {
@@ -630,14 +681,14 @@
     position: relative;
     display: flex;
     justify-content: center;
-    padding-top: 0.35rem;
+    padding-top: 0.15rem;
 }
 
 .crm-contract-manage .ct-audit-item__rail::after {
     content: '';
     position: absolute;
-    top: 1.15rem;
-    bottom: -0.85rem;
+    top: 2rem;
+    bottom: -0.65rem;
     width: 1px;
     background: var(--ct-m-border);
 }
@@ -646,49 +697,67 @@
     display: none;
 }
 
-.crm-contract-manage .ct-audit-item__dot {
+.crm-contract-manage .ct-audit-item__icon {
     position: relative;
     z-index: 1;
-    width: 0.55rem;
-    height: 0.55rem;
-    border-radius: 50%;
-    background: var(--ct-m-surface);
-    border: 2px solid #cbd5e1;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.6rem;
+    background: #f8fafc;
+    border: 1px solid var(--ct-m-border);
+    color: var(--ct-m-muted);
     flex-shrink: 0;
 }
 
-.crm-contract-manage .ct-audit-item.is-latest .ct-audit-item__dot {
-    width: 0.65rem;
-    height: 0.65rem;
-    border-color: var(--ct-m-primary);
-    background: var(--ct-m-primary);
-    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.12);
-}
-
-.crm-contract-manage .ct-audit-item[data-event-type="CONTRACT_FINALIZED"] .ct-audit-item__dot,
-.crm-contract-manage .ct-audit-item[data-event-type="CONTRACT_FULLY_ACCEPTED"] .ct-audit-item__dot {
-    border-color: var(--ct-m-success);
-    background: var(--ct-m-success);
-    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.12);
-}
-
-.crm-contract-manage .ct-audit-item[data-event-type="PARTY_ACCEPTED"] .ct-audit-item__dot,
-.crm-contract-manage .ct-audit-item[data-event-type="WITNESS_ACCEPTED"] .ct-audit-item__dot {
-    border-color: var(--ct-m-primary);
+.crm-contract-manage .ct-audit-item.is-latest .ct-audit-item__icon {
     background: #faf5ff;
+    border-color: #ddd6fe;
+    color: var(--ct-m-primary);
+}
+
+.crm-contract-manage .ct-audit-item[data-event-type="CONTRACT_FINALIZED"] .ct-audit-item__icon,
+.crm-contract-manage .ct-audit-item[data-event-type="CONTRACT_FULLY_ACCEPTED"] .ct-audit-item__icon {
+    background: #ecfdf5;
+    border-color: #bbf7d0;
+    color: var(--ct-m-success);
+}
+
+.crm-contract-manage .ct-audit-item[data-event-type="PARTY_ACCEPTED"] .ct-audit-item__icon,
+.crm-contract-manage .ct-audit-item[data-event-type="WITNESS_ACCEPTED"] .ct-audit-item__icon {
+    background: #faf5ff;
+    border-color: #ddd6fe;
+    color: var(--ct-m-primary);
+}
+
+.crm-contract-manage .ct-audit-item[data-event-type="CONTRACT_VIEWED"] .ct-audit-item__icon,
+.crm-contract-manage .ct-audit-item[data-event-type="INVITATION_OPENED"] .ct-audit-item__icon {
+    background: #eff6ff;
+    border-color: #bfdbfe;
+    color: #2563eb;
+}
+
+.crm-contract-manage .ct-audit-item[data-event-type="SMS_SENT"] .ct-audit-item__icon,
+.crm-contract-manage .ct-audit-item[data-event-type="VERSION_PUBLISHED"] .ct-audit-item__icon {
+    background: #fff7ed;
+    border-color: #fed7aa;
+    color: #ea580c;
 }
 
 .crm-contract-manage .ct-audit-item__panel {
     min-width: 0;
-    padding: 0.45rem 0.6rem;
-    border-radius: 8px;
-    border: 1px solid transparent;
+    padding: 0.15rem 0 0.15rem 0.15rem;
+    border-inline-start: 2px solid transparent;
+    border-radius: 0;
     background: transparent;
 }
 
 .crm-contract-manage .ct-audit-item.is-latest .ct-audit-item__panel {
-    background: #faf5ff;
-    border-color: #ede9fe;
+    border-inline-start-color: var(--ct-m-primary);
+    padding-inline-start: 0.55rem;
 }
 
 .crm-contract-manage .ct-audit-item__head {
@@ -708,16 +777,17 @@
 
 .crm-contract-manage .ct-audit-item__time {
     flex-shrink: 0;
-    font-size: 0.6rem;
+    font-size: 0.58rem;
     font-weight: 500;
     color: var(--ct-m-muted);
     direction: ltr;
     unicode-bidi: isolate;
     white-space: nowrap;
+    opacity: 0.85;
 }
 
 .crm-contract-manage .ct-audit-item__detail {
-    margin: 0.22rem 0 0;
+    margin: 0.18rem 0 0;
     font-size: 0.64rem;
     color: var(--ct-m-muted);
     line-height: 1.45;
@@ -758,10 +828,23 @@
     color: var(--ct-m-muted);
 }
 
+.crm-contract-manage .ct-manage-more-menu {
+    position: relative;
+}
+
 .crm-contract-manage .ct-manage-more-menu .ct-menu-panel {
+    position: absolute;
+    top: calc(100% + 0.3rem);
+    bottom: auto;
+    inset-inline-end: 0;
+    inset-inline-start: auto;
+    left: auto !important;
+    right: auto !important;
+    margin: 0;
     border-radius: 8px;
-    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.1);
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.12);
     min-width: 200px;
+    z-index: 60;
 }
 
 /* ── Tablet ── */
@@ -818,14 +901,11 @@
     }
 
     .crm-contract-manage .ct-manage-hero__title-row {
-        display: flex;
-        flex-wrap: wrap;
         align-items: flex-start;
-        gap: 0.6rem;
     }
 
     .crm-contract-manage .ct-manage-status-badge {
-        margin-inline-start: auto;
+        margin-inline-start: 0;
     }
 
     .crm-contract-manage .ct-manage-hero__meta {
@@ -883,10 +963,16 @@
         flex-wrap: wrap;
         width: auto;
         justify-content: flex-end;
+        align-items: center;
     }
 
-    .crm-contract-manage .ct-manage-hero__actions .crm-dash-act--primary {
+    .crm-contract-manage .ct-manage-hero__actions .crm-dash-act--primary,
+    .crm-contract-manage .ct-manage-hero__actions .ct-manage-handover-btn {
         grid-column: auto;
+    }
+
+    .crm-contract-manage .ct-manage-handover-form {
+        display: inline;
     }
 
     .crm-contract-manage .ct-manage-hero__titles h1 {
@@ -915,11 +1001,11 @@
     }
 
     .crm-contract-manage .ct-audit-item__panel {
-        padding: 0.35rem 0.55rem;
+        padding: 0.1rem 0 0.1rem 0.15rem;
     }
 
     .crm-contract-manage .ct-audit-item.is-latest .ct-audit-item__panel {
-        padding: 0.5rem 0.65rem;
+        padding-inline-start: 0.5rem;
     }
 }
 

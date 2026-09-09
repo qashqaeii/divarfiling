@@ -3,18 +3,20 @@
 
 {% block page_title %}قرارداد جدید{% endblock %}
 {% block crm_extra_css %}
-<link rel="stylesheet" href="{% static 'contracts/css/contracts.css' %}?v=14">
-<link rel="stylesheet" href="{% static 'contracts/css/workspace.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'contracts/css/contracts.css' %}?v=15">
+<link rel="stylesheet" href="{% static 'contracts/css/workspace.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-ecosystem.css' %}?v=1">
 {% endblock %}
 
 {% block crm_content %}
 <div class="ct-workspace ct-create crm-page-chrome">
-    <header class="crm-dash-bar">
+    <header class="crm-dash-bar ct-workspace-header">
         <div class="crm-dash-bar-main">
             <a href="{% url 'workspace:contracts_dashboard' %}" class="crm-deal-back" aria-label="بازگشت"><i class="fas fa-arrow-right"></i></a>
             <div>
+                <span class="ct-workspace-kicker"><i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i> ایجاد قرارداد</span>
                 <h1 class="crm-dash-bar-title">قرارداد جدید</h1>
-                <p class="crm-dash-bar-sub is-visible">چه قراردادی می‌خواهید ایجاد کنید؟</p>
+                <p class="crm-dash-bar-sub is-visible">نوع قرارداد را انتخاب کنید — با یا بدون اتصال به معامله</p>
             </div>
         </div>
     </header>

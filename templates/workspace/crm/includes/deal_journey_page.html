@@ -1,5 +1,5 @@
 {% load workspace_tags crm_tags contract_tags %}
-<div class="dj-deal{% if deal.stage == 'بسته‌شده' %} dj-deal--won{% elif deal.stage == 'از دست رفته' %} dj-deal--lost{% endif %}"
+<div class="dj-deal crm-deal-detail-pro crm-page-chrome{% if deal.stage == 'بسته‌شده' %} dj-deal--won{% elif deal.stage == 'از دست رفته' %} dj-deal--lost{% endif %}"
      style="--deal-accent: {{ deal.stage|crm_deal_stage_dot:deal_stage_meta }};"
      data-deal-id="{{ deal.pk }}"
      data-stage-url="{{ deal_stage_url }}"
@@ -136,6 +136,7 @@
             <div class="dj-tab-panels">
                 {% if deal_journey_tab == 'overview' %}
                 <div class="dj-panel is-active">
+                    {% include 'workspace/crm/includes/deal_journey_overview.html' %}
                     {% include 'workspace/crm/includes/deal_timeline_section.html' %}
                 </div>
                 {% elif deal_journey_tab == 'activity' %}

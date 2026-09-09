@@ -36,9 +36,18 @@
         {% if crm_nav_counts.properties %}<span class="ws-nav-badge ws-nav-badge--muted">{{ crm_nav_counts.properties }}</span>{% endif %}
     </a>
 
-    <a href="{% url 'workspace:crm_deals' %}" class="ws-nav-item ws-nav-item--sub {% if '/crm/deals' in path %}active{% endif %}" data-tour="nav-deals">
-        <span class="ws-nav-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='handshake' size='nav' only %}</span><span>معاملات</span>
+    <a href="{% url 'workspace:crm_deals' %}" class="ws-nav-item ws-nav-item--sub {% if '/crm/deals' in path and '/finance' not in path %}active{% endif %}" data-tour="nav-deals">
+        <span class="ws-nav-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='handshake' size='nav' only %}</span><span>قیف معاملات</span>
         {% if crm_nav_counts.deals %}<span class="ws-nav-badge">{{ crm_nav_counts.deals }}</span>{% endif %}
+    </a>
+
+    <a href="{% url 'workspace:contracts_dashboard' %}" class="ws-nav-item ws-nav-item--sub {% if '/contracts' in path or 'contract_' in url_name or 'handover_' in url_name %}active{% endif %}" data-tour="nav-contracts">
+        <span class="ws-nav-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='file_edit' size='nav' only %}</span><span>قراردادها</span>
+        {% if crm_nav_counts.contracts %}<span class="ws-nav-badge">{{ crm_nav_counts.contracts }}</span>{% endif %}
+    </a>
+
+    <a href="{% url 'workspace:crm_deals_finance' %}" class="ws-nav-item ws-nav-item--sub {% if '/crm/deals/finance' in path %}active{% endif %}" data-tour="nav-deals-finance">
+        <span class="ws-nav-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='coins' size='nav' only %}</span><span>مالی معاملات</span>
     </a>
 
     <a href="{% url 'workspace:crm_calendar' %}" class="ws-nav-item ws-nav-item--sub {% if url_name == 'crm_calendar' %}active{% endif %}" data-tour="nav-calendar">

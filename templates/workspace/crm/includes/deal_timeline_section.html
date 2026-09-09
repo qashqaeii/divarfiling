@@ -1,34 +1,57 @@
-<section class="crm-deal-timeline crm-deal-block" id="crmDealTimeline"
+<section class="dj-timeline crm-deal-timeline crm-deal-block" id="crmDealTimeline"
          data-timeline-url="{% url 'workspace:crm_deal_timeline' deal.id %}"
          aria-label="تاریخچه معامله">
-    <div class="crm-deal-block__mesh" aria-hidden="true"></div>
-    <span class="crm-deal-block__accent" aria-hidden="true"></span>
-    <header class="crm-deal-panel-head">
-        <span class="crm-deal-panel-mark" aria-hidden="true"><i class="fas fa-clock-rotate-left"></i></span>
-        <div class="crm-deal-panel-head-text">
-            <span class="crm-deal-block__kicker">آخرین اتفاقات</span>
-            <h2>تاریخچه معامله</h2>
-        </div>
-    </header>
-    <ol class="crm-deal-timeline-list" id="crmDealTimelineList">
-        {% for item in deal_timeline %}
-        <li class="crm-deal-timeline-item" data-kind="{{ item.kind }}">
-            <span class="crm-deal-timeline-dot" aria-hidden="true"><i class="fas {{ item.icon }}"></i></span>
-            <div class="crm-deal-timeline-copy">
-                <div class="crm-deal-timeline-meta">
-                    <strong>{{ item.title }}</strong>
-                    <time>{{ item.day_label }}{% if item.time_label %} · {{ item.time_label }}{% endif %}</time>
-                </div>
-                {% if item.body %}<p>{{ item.body }}</p>{% endif %}
+    <header class="dj-timeline__header">
+        <div class="dj-timeline__header-main">
+            <span class="dj-timeline__mark" aria-hidden="true"><i class="fas fa-clock-rotate-left"></i></span>
+            <div>
+                <span class="dj-timeline__kicker">مسیر معامله</span>
+                <h2>تاریخچه و رویدادها</h2>
             </div>
-        </li>
-        {% empty %}
-        <li class="crm-deal-timeline-empty">هنوز پیگیری ثبت نشده — اولین تماس یا بازدید را ثبت کنید.</li>
-        {% endfor %}
-    </ol>
+        </div>
+        {% if deal_timeline_total %}
+        <span class="dj-timeline__count">{{ deal_timeline_total }} رویداد</span>
+        {% endif %}
+    </header>
+
+    <div class="dj-timeline__body">
+        {% if deal_timeline %}
+        <ol class="dj-timeline__events" id="crmDealTimelineList">
+            {% for item in deal_timeline %}
+            {% ifchanged item.day_label %}
+            <li class="dj-timeline__day-marker" aria-hidden="true">
+                <time>{{ item.day_label }}</time>
+            </li>
+            {% endifchanged %}
+            <li class="dj-timeline__event dj-timeline__event--{{ item.kind|default:'default' }} crm-deal-timeline-item" data-kind="{{ item.kind }}">
+                <span class="dj-timeline__rail" aria-hidden="true">
+                    <span class="dj-timeline__dot"><i class="fas {{ item.icon }}"></i></span>
+                </span>
+                <div class="dj-timeline__card crm-deal-timeline-copy">
+                    {% if item.type_label %}<span class="dj-timeline__badge">{{ item.type_label }}</span>{% endif %}
+                    <div class="dj-timeline__meta crm-deal-timeline-meta">
+                        <strong class="dj-timeline__title">{{ item.title }}</strong>
+                        {% if item.time_label %}<time class="dj-timeline__time">{{ item.time_label }}</time>{% endif %}
+                    </div>
+                    {% if item.body %}<p class="dj-timeline__text">{{ item.body }}</p>{% endif %}
+                </div>
+            </li>
+            {% endfor %}
+        </ol>
+        {% else %}
+        <div class="dj-timeline__empty crm-deal-timeline-empty">
+            <i class="fas fa-route" aria-hidden="true"></i>
+            <strong>هنوز رویدادی ثبت نشده</strong>
+            <p>اولین تماس، بازدید یا پیگیری را ثبت کنید تا مسیر معامله اینجا دیده شود.</p>
+        </div>
+        {% endif %}
+    </div>
+
     {% if deal_timeline_has_more %}
-    <button type="button" class="crm-dash-act crm-dash-act--ghost crm-deal-timeline-more" id="crmDealTimelineMore">
-        نمایش بیشتر
-    </button>
+    <footer class="dj-timeline__footer">
+        <button type="button" class="crm-dash-act crm-dash-act--ghost crm-deal-timeline-more" id="crmDealTimelineMore">
+            <i class="fas fa-chevron-down" aria-hidden="true"></i> نمایش رویدادهای بیشتر
+        </button>
+    </footer>
     {% endif %}
 </section>

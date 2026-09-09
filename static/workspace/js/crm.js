@@ -4186,8 +4186,35 @@ function initCRMDealFinance() {
     render();
 }
 
+function renderCRMDealTimelineItem(item) {
+    const kind = item.kind || 'default';
+    const badge = item.type_label
+        ? `<span class="dj-timeline__badge">${item.type_label}</span>`
+        : '';
+    const time = item.time_label
+        ? `<time class="dj-timeline__time">${item.time_label}</time>`
+        : '';
+    const body = item.body
+        ? `<p class="dj-timeline__text">${item.body}</p>`
+        : '';
+    return `
+        <li class="dj-timeline__event dj-timeline__event--${kind} crm-deal-timeline-item" data-kind="${kind}">
+            <span class="dj-timeline__rail" aria-hidden="true">
+                <span class="dj-timeline__dot"><i class="fas ${item.icon || 'fa-circle'}"></i></span>
+            </span>
+            <div class="dj-timeline__card crm-deal-timeline-copy">
+                ${badge}
+                <div class="dj-timeline__meta crm-deal-timeline-meta">
+                    <strong class="dj-timeline__title">${item.title || ''}</strong>
+                    ${time}
+                </div>
+                ${body}
+            </div>
+        </li>`;
+}
+
 function initCRMDealActions() {
-    const root = document.querySelector('.crm-deal-detail-pro');
+    const root = document.querySelector('.crm-deal-detail-pro, .dj-deal');
     if (!root || root.dataset.dealActionsBound === '1') return;
     root.dataset.dealActionsBound = '1';
 
@@ -4196,17 +4223,15 @@ function initCRMDealActions() {
     const renderTimelineItems = (items) => {
         const list = document.getElementById('crmDealTimelineList');
         if (!list || !Array.isArray(items)) return;
-        list.innerHTML = items.map(item => `
-            <li class="crm-deal-timeline-item" data-kind="${item.kind || ''}">
-                <span class="crm-deal-timeline-dot" aria-hidden="true"><i class="fas ${item.icon || 'fa-circle'}"></i></span>
-                <div class="crm-deal-timeline-copy">
-                    <div class="crm-deal-timeline-meta">
-                        <strong>${item.title || ''}</strong>
-                        <time>${item.day_label || ''}${item.time_label ? ` · ${item.time_label}` : ''}</time>
-                    </div>
-                    ${item.body ? `<p>${item.body}</p>` : ''}
-                </div>
-            </li>`).join('');
+        let lastDay = '';
+        list.innerHTML = items.map(item => {
+            let dayMarker = '';
+            if (item.day_label && item.day_label !== lastDay) {
+                lastDay = item.day_label;
+                dayMarker = `<li class="dj-timeline__day-marker" aria-hidden="true"><time>${item.day_label}</time></li>`;
+            }
+            return dayMarker + renderCRMDealTimelineItem(item);
+        }).join('');
     };
 
     const followForm = document.getElementById('crmDealFollowUpForm');
@@ -4258,7 +4283,7 @@ function initCRMDealActions() {
         });
     }
 
-    root.querySelector('.crm-deal-next-complete')?.addEventListener('click', async () => {
+    root.querySelectorAll('.crm-deal-next-complete').forEach(btn => btn.addEventListener('click', async () => {
         const url = window.crmDealCompleteNextActionUrl;
         if (!url) return;
         const note = window.prompt('نتیجه کوتاه (اختیاری):', '') || '';
@@ -4270,7 +4295,7 @@ function initCRMDealActions() {
         const data = await res.json();
         if (!data.ok) { alert(data.error || 'خطا'); return; }
         window.location.reload();
-    });
+    }));
 
     const moreBtn = document.getElementById('crmDealTimelineMore');
     if (moreBtn) {
@@ -4285,20 +4310,20 @@ function initCRMDealActions() {
                 return;
             }
             const list = document.getElementById('crmDealTimelineList');
+            const lastMarker = list?.querySelector('.dj-timeline__day-marker:last-of-type time');
+            let lastDay = lastMarker ? (lastMarker.textContent || '') : '';
             data.items.forEach(item => {
-                const li = document.createElement('li');
-                li.className = 'crm-deal-timeline-item';
-                li.dataset.kind = item.kind || '';
-                li.innerHTML = `
-                    <span class="crm-deal-timeline-dot" aria-hidden="true"><i class="fas ${item.icon || 'fa-circle'}"></i></span>
-                    <div class="crm-deal-timeline-copy">
-                        <div class="crm-deal-timeline-meta">
-                            <strong>${item.title || ''}</strong>
-                            <time>${item.day_label || ''}${item.time_label ? ` · ${item.time_label}` : ''}</time>
-                        </div>
-                        ${item.body ? `<p>${item.body}</p>` : ''}
-                    </div>`;
-                list?.appendChild(li);
+                if (item.day_label && item.day_label !== lastDay) {
+                    lastDay = item.day_label;
+                    const dayLi = document.createElement('li');
+                    dayLi.className = 'dj-timeline__day-marker';
+                    dayLi.setAttribute('aria-hidden', 'true');
+                    dayLi.innerHTML = `<time>${item.day_label}</time>`;
+                    list?.appendChild(dayLi);
+                }
+                const wrap = document.createElement('div');
+                wrap.innerHTML = renderCRMDealTimelineItem(item);
+                if (wrap.firstElementChild) list?.appendChild(wrap.firstElementChild);
             });
             offset += data.items.length;
             if (!data.has_more) moreBtn.hidden = true;

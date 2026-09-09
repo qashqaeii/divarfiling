@@ -1,0 +1,422 @@
+/**
+ * CRM Ecosystem — unified polish for Deals, Contracts, Handover
+ * Typography, timeline, overview blocks, workspace layout, shared states
+ */
+
+/* ── Design tokens ── */
+.dj-deal,
+.ct-workspace,
+.ct-manage,
+.ct-wizard,
+.ct-handover-wizard {
+    --ec-text: var(--ws-text, #0f172a);
+    --ec-muted: var(--ws-muted, #64748b);
+    --ec-border: var(--ws-border, #e2e8f0);
+    --ec-surface: var(--ws-surface, #fff);
+    --ec-primary: var(--ws-primary, #7c3aed);
+    --ec-radius-sm: 8px;
+    --ec-radius-md: 12px;
+    --ec-radius-lg: 16px;
+    --ec-shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06);
+    --ec-shadow-md: 0 4px 16px rgba(15, 23, 42, 0.08);
+    --ec-title-lg: clamp(1.2rem, 2vw, 1.45rem);
+    --ec-title-md: 1.05rem;
+    --ec-title-sm: 0.88rem;
+    --ec-label: 0.75rem;
+    --ec-meta: 0.82rem;
+    --ec-body: 0.9rem;
+    font-feature-settings: "ss01";
+}
+
+/* ── Wider workspace shells ── */
+.dj-deal { max-width: 1440px; padding: 0 1.25rem 2.75rem; }
+.ct-workspace { max-width: 1360px; padding: 0 1.25rem 2.5rem; }
+.ct-manage { max-width: 1280px; padding: 0 1.25rem 2.5rem; }
+.ct-create .ct-create-form { max-width: 880px; }
+
+/* ── Deal journey typography ── */
+.dj-deal__title { font-size: var(--ec-title-lg); font-weight: 750; letter-spacing: -0.02em; }
+.dj-hero__title { font-size: var(--ec-title-md); font-weight: 700; }
+.dj-context-card__title { font-size: var(--ec-label); font-weight: 650; letter-spacing: 0.04em; }
+.dj-tabs__item { font-size: var(--ec-body); font-weight: 500; }
+.dj-tabs__item.is-active { font-weight: 650; }
+
+/* ── Overview snapshot grid (deal detail) ── */
+.dj-overview {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+}
+.dj-overview__card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    padding: 0.9rem 1rem;
+    border: 1px solid var(--ec-border);
+    border-radius: var(--ec-radius-md);
+    background: var(--ec-surface);
+    text-decoration: none;
+    color: inherit;
+    transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+}
+.dj-overview__card:hover {
+    border-color: color-mix(in srgb, var(--ec-primary) 35%, var(--ec-border));
+    box-shadow: var(--ec-shadow-sm);
+    transform: translateY(-1px);
+}
+.dj-overview__card.is-warn { border-color: #fcd34d; background: #fffbeb; }
+.dj-overview__card.is-success { border-color: #a7f3d0; background: #f0fdf4; }
+.dj-overview__card.is-danger { border-color: #fecaca; background: #fef2f2; }
+.dj-overview__kicker {
+    display: flex; align-items: center; gap: 0.35rem;
+    font-size: var(--ec-label); font-weight: 600; color: var(--ec-muted);
+    text-transform: uppercase; letter-spacing: 0.03em;
+}
+.dj-overview__kicker i { font-size: 0.7rem; opacity: 0.75; }
+.dj-overview__value { font-size: 0.95rem; font-weight: 650; line-height: 1.35; color: var(--ec-text); }
+.dj-overview__hint { font-size: 0.78rem; color: var(--ec-muted); margin: 0; }
+
+/* ── Professional timeline ── */
+.dj-timeline {
+    position: relative;
+    border: 1px solid var(--ec-border);
+    border-radius: var(--ec-radius-lg);
+    background: var(--ec-surface);
+    overflow: hidden;
+    box-shadow: var(--ec-shadow-sm);
+}
+.dj-timeline__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 1.15rem;
+    border-bottom: 1px solid var(--ec-border);
+    background: linear-gradient(180deg, #fafbfc 0%, var(--ec-surface) 100%);
+}
+.dj-timeline__header-main { display: flex; align-items: center; gap: 0.75rem; min-width: 0; }
+.dj-timeline__mark {
+    width: 2.25rem; height: 2.25rem; border-radius: 10px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: #f5f3ff; color: var(--ec-primary); flex-shrink: 0;
+}
+.dj-timeline__kicker {
+    display: block; font-size: var(--ec-label); font-weight: 600;
+    color: var(--ec-muted); text-transform: uppercase; letter-spacing: 0.03em;
+}
+.dj-timeline__header h2 {
+    margin: 0.1rem 0 0; font-size: var(--ec-title-md); font-weight: 700;
+}
+.dj-timeline__count {
+    font-size: var(--ec-meta); color: var(--ec-muted); white-space: nowrap;
+}
+.dj-timeline__body { padding: 0.5rem 0 0.75rem; }
+.dj-timeline__day-marker {
+    list-style: none;
+    position: sticky; top: 0; z-index: 2;
+    padding: 0.65rem 1.15rem 0.35rem;
+    margin: 0;
+    background: color-mix(in srgb, var(--ec-surface) 92%, #f1f5f9);
+    backdrop-filter: blur(6px);
+}
+.dj-timeline__day-marker time {
+    display: inline-flex; align-items: center; gap: 0.35rem;
+    font-size: var(--ec-label); font-weight: 650; color: var(--ec-muted);
+    letter-spacing: 0.02em;
+}
+.dj-timeline__day-marker time::before {
+    content: ''; width: 6px; height: 6px; border-radius: 50%;
+    background: var(--ec-primary); opacity: 0.55;
+}
+.dj-timeline__events {
+    list-style: none; margin: 0; padding: 0 1.15rem 0.5rem 0;
+}
+.dj-timeline__event {
+    display: grid;
+    grid-template-columns: 2.5rem 1fr;
+    gap: 0.65rem;
+    padding: 0.55rem 0;
+    position: relative;
+}
+.dj-timeline__event:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    top: 2.4rem; right: 1.15rem; bottom: -0.25rem;
+    width: 2px; background: var(--ec-border); border-radius: 999px;
+}
+.dj-timeline__rail { display: flex; justify-content: center; padding-top: 0.15rem; }
+.dj-timeline__dot {
+    position: relative; z-index: 1;
+    width: 2rem; height: 2rem; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: 2px solid var(--ec-border); background: var(--ec-surface);
+    font-size: 0.72rem; color: var(--ec-muted);
+    box-shadow: 0 0 0 3px var(--ec-surface);
+}
+.dj-timeline__card {
+    padding: 0.75rem 0.9rem;
+    border: 1px solid var(--ec-border);
+    border-radius: var(--ec-radius-md);
+    background: #fafbfc;
+    transition: border-color 0.15s, background 0.15s;
+}
+.dj-timeline__event:hover .dj-timeline__card {
+    border-color: color-mix(in srgb, var(--ec-primary) 25%, var(--ec-border));
+    background: var(--ec-surface);
+}
+.dj-timeline__badge {
+    display: inline-block;
+    font-size: 0.68rem; font-weight: 650;
+    padding: 0.12rem 0.45rem; border-radius: 999px;
+    margin-bottom: 0.35rem;
+    background: #f1f5f9; color: var(--ec-muted);
+}
+.dj-timeline__meta {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    gap: 0.75rem; flex-wrap: wrap;
+}
+.dj-timeline__title { font-size: var(--ec-body); font-weight: 650; color: var(--ec-text); }
+.dj-timeline__time { font-size: var(--ec-label); color: var(--ec-muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.dj-timeline__text { margin: 0.35rem 0 0; font-size: var(--ec-meta); color: var(--ec-muted); line-height: 1.5; }
+
+/* Event kind accents */
+.dj-timeline__event--deal_created .dj-timeline__dot { border-color: #c4b5fd; background: #f5f3ff; color: var(--ec-primary); }
+.dj-timeline__event--deal_created .dj-timeline__badge { background: #ede9fe; color: #6d28d9; }
+.dj-timeline__event--follow_up .dj-timeline__dot { border-color: #93c5fd; background: #eff6ff; color: #2563eb; }
+.dj-timeline__event--follow_up .dj-timeline__badge { background: #dbeafe; color: #1d4ed8; }
+.dj-timeline__event--contract .dj-timeline__dot { border-color: #a78bfa; background: #f5f3ff; color: #7c3aed; }
+.dj-timeline__event--contract .dj-timeline__badge { background: #ede9fe; color: #6d28d9; }
+.dj-timeline__event--deal_won .dj-timeline__dot { border-color: #6ee7b7; background: #ecfdf5; color: #059669; }
+.dj-timeline__event--deal_won .dj-timeline__badge { background: #d1fae5; color: #047857; }
+.dj-timeline__event--deal_lost .dj-timeline__dot { border-color: #fca5a5; background: #fef2f2; color: #dc2626; }
+.dj-timeline__event--deal_lost .dj-timeline__badge { background: #fee2e2; color: #b91c1c; }
+.dj-timeline__event--stage_change .dj-timeline__dot { border-color: #fcd34d; background: #fffbeb; color: #b45309; }
+.dj-timeline__event--stage_change .dj-timeline__badge { background: #fef3c7; color: #b45309; }
+.dj-timeline__event--finance .dj-timeline__dot { border-color: #86efac; background: #f0fdf4; color: #16a34a; }
+.dj-timeline__event--finance .dj-timeline__badge { background: #dcfce7; color: #15803d; }
+.dj-timeline__event--next_action .dj-timeline__dot { border-color: #fdba74; background: #fff7ed; color: #ea580c; }
+.dj-timeline__event--next_action .dj-timeline__badge { background: #ffedd5; color: #c2410c; }
+
+.dj-timeline__empty {
+    text-align: center; padding: 2.5rem 1.5rem; color: var(--ec-muted);
+}
+.dj-timeline__empty i {
+    display: block; font-size: 2rem; margin-bottom: 0.65rem;
+    color: var(--ec-primary); opacity: 0.45;
+}
+.dj-timeline__empty strong { display: block; font-size: var(--ec-body); color: var(--ec-text); margin-bottom: 0.35rem; }
+.dj-timeline__footer {
+    padding: 0.65rem 1.15rem 1rem;
+    border-top: 1px solid var(--ec-border);
+    display: flex; justify-content: center;
+}
+
+/* Legacy timeline inside dj-deal — map old classes */
+.dj-deal .crm-deal-timeline { border: none; box-shadow: none; background: transparent; padding: 0; }
+.dj-deal .crm-deal-block__mesh,
+.dj-deal .crm-deal-block__accent { display: none; }
+
+/* ── Hero & stage rail polish ── */
+.dj-hero {
+    border-radius: var(--ec-radius-lg);
+    box-shadow: var(--ec-shadow-sm);
+    padding: 1.25rem 1.35rem;
+}
+.dj-stage-rail {
+    padding: 1rem 1.15rem;
+    border: 1px solid var(--ec-border);
+    border-radius: var(--ec-radius-lg);
+    background: var(--ec-surface);
+    box-shadow: var(--ec-shadow-sm);
+}
+.dj-stage-rail__label { font-size: 0.72rem; font-weight: 550; }
+
+/* ── Context panel upgrade ── */
+.dj-context-card {
+    border-radius: var(--ec-radius-md);
+    box-shadow: var(--ec-shadow-sm);
+    transition: border-color 0.15s;
+}
+.dj-context-card:hover { border-color: color-mix(in srgb, var(--ec-primary) 20%, var(--ec-border)); }
+.dj-deal__body { grid-template-columns: 1fr minmax(260px, 300px); gap: 1.35rem; }
+
+/* ── Contracts workspace dashboard ── */
+.ct-workspace-header { margin-bottom: 0.25rem; }
+.ct-workspace-header .crm-dash-bar-title { font-size: var(--ec-title-lg); font-weight: 750; letter-spacing: -0.02em; }
+.ct-workspace-kpis { margin: 1.35rem 0 1.15rem; gap: 0.85rem; }
+.ct-kpi {
+    border-radius: var(--ec-radius-md);
+    box-shadow: var(--ec-shadow-sm);
+    padding: 1rem 1.1rem;
+}
+.ct-kpi strong { font-size: 1.5rem; font-weight: 750; letter-spacing: -0.02em; }
+.ct-kpi span { font-size: var(--ec-meta); font-weight: 500; }
+
+.ct-workspace-toolbar {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 0.65rem;
+    padding: 0.85rem 1rem;
+    margin-bottom: 1.15rem;
+    border: 1px solid var(--ec-border);
+    border-radius: var(--ec-radius-md);
+    background: #fafbfc;
+}
+.ct-workspace-toolbar .crm-input { flex: 1; min-width: 200px; }
+.ct-workspace-toolbar .crm-select { min-width: 150px; }
+
+.ct-workspace-list {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+}
+@media (min-width: 1100px) {
+    .ct-workspace-list--grid { grid-template-columns: repeat(2, 1fr); }
+}
+.ct-workspace-card {
+    border-radius: var(--ec-radius-md);
+    box-shadow: var(--ec-shadow-sm);
+    padding: 1.1rem 1.2rem;
+    transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+    align-items: stretch;
+}
+.ct-workspace-card:hover {
+    border-color: color-mix(in srgb, var(--ec-primary) 30%, var(--ec-border));
+    box-shadow: var(--ec-shadow-md);
+    transform: translateY(-1px);
+}
+.ct-workspace-card__head strong { font-size: var(--ec-body); font-weight: 650; }
+.ct-workspace-card__type {
+    font-size: var(--ec-label); font-weight: 600; color: var(--ec-muted);
+}
+.ct-workspace-card__deal-link {
+    display: inline-flex; align-items: center; gap: 0.3rem;
+    font-size: var(--ec-meta); color: var(--ec-primary); text-decoration: none;
+}
+.ct-workspace-card__deal-link:hover { text-decoration: underline; }
+.ct-workspace-card__actions {
+    display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;
+    margin-top: 0.65rem;
+}
+.ct-workspace-empty {
+    grid-column: 1 / -1;
+    border-radius: var(--ec-radius-lg);
+    padding: 3.5rem 2rem;
+    background: linear-gradient(180deg, #fafbfc 0%, var(--ec-surface) 100%);
+}
+.ct-workspace-empty strong { display: block; font-size: 1.05rem; margin: 0.5rem 0 0.35rem; }
+
+/* ── Contract manage lifecycle ── */
+.ct-lifecycle {
+    padding: 1rem 1.15rem;
+    border: 1px solid var(--ec-border);
+    border-radius: var(--ec-radius-lg);
+    background: var(--ec-surface);
+    box-shadow: var(--ec-shadow-sm);
+}
+.ct-manage-banner {
+    border-radius: var(--ec-radius-md);
+    padding: 0.85rem 1.1rem;
+    font-size: var(--ec-body); font-weight: 550;
+}
+.ct-party-card { border-radius: var(--ec-radius-md); box-shadow: var(--ec-shadow-sm); }
+.ct-manage-panel { border-radius: var(--ec-radius-lg); overflow: hidden; }
+
+/* ── Handover wizard polish ── */
+.ct-handover-wizard .crm-deal-stepper {
+    margin: 1rem 0 1.25rem;
+    padding: 0.85rem 1rem;
+    border: 1px solid var(--ec-border);
+    border-radius: var(--ec-radius-lg);
+    background: var(--ec-surface);
+    box-shadow: var(--ec-shadow-sm);
+}
+.ct-handover-wizard .crm-deal-panel {
+    border-radius: var(--ec-radius-lg);
+    box-shadow: var(--ec-shadow-sm);
+}
+.ho-party-card {
+    border-radius: var(--ec-radius-md);
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+.ho-party-card:has(input:checked) {
+    border-color: var(--ec-primary);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--ec-primary) 40%, transparent);
+    background: #faf5ff;
+}
+.ho-key-row {
+    border-radius: var(--ec-radius-md);
+    border: 1px solid var(--ec-border);
+    background: #fafbfc;
+}
+.ho-property-chip {
+    border-radius: var(--ec-radius-md);
+    border: 1px solid #ddd6fe;
+    background: linear-gradient(135deg, #faf5ff 0%, #fff 70%);
+}
+.ct-wizard-footer {
+    position: sticky; bottom: 0; z-index: 5;
+    margin-top: 1.25rem;
+    padding: 0.85rem 1rem;
+    border: 1px solid var(--ec-border);
+    border-radius: var(--ec-radius-md);
+    background: color-mix(in srgb, var(--ec-surface) 94%, #f8fafc);
+    backdrop-filter: blur(8px);
+    display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
+    box-shadow: 0 -4px 16px rgba(15, 23, 42, 0.06);
+}
+
+/* ── Shared status chips ── */
+.ec-chip {
+    display: inline-flex; align-items: center; gap: 0.3rem;
+    font-size: var(--ec-label); font-weight: 650;
+    padding: 0.18rem 0.55rem; border-radius: 999px;
+    border: 1px solid transparent;
+}
+.ec-chip--draft { background: #f1f5f9; color: #475569; border-color: #e2e8f0; }
+.ec-chip--active { background: #ede9fe; color: #6d28d9; border-color: #ddd6fe; }
+.ec-chip--warn { background: #fef3c7; color: #b45309; border-color: #fde68a; }
+.ec-chip--success { background: #d1fae5; color: #047857; border-color: #a7f3d0; }
+.ec-chip--danger { background: #fee2e2; color: #b91c1c; border-color: #fecaca; }
+
+/* ── Responsive ── */
+@media (max-width: 1024px) {
+    .dj-overview { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 960px) {
+    .dj-deal__body { grid-template-columns: 1fr; }
+    .ct-workspace-list--grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 560px) {
+    .dj-overview { grid-template-columns: 1fr; }
+    .dj-timeline__event { grid-template-columns: 2rem 1fr; gap: 0.5rem; }
+    .dj-timeline__dot { width: 1.65rem; height: 1.65rem; font-size: 0.65rem; }
+    .ct-workspace-toolbar { flex-direction: column; align-items: stretch; }
+}
+
+/* ── Deals funnel list width ── */
+.crm-deals-page .crm-shell-body,
+.crm-deals-page .crm-deals-kpis,
+.crm-deals-page .crm-deals-funnel,
+.crm-deals-page .crm-deals-stale-banner {
+    max-width: 1440px;
+    margin-left: auto;
+    margin-right: auto;
+}
+.crm-deals-page .crm-deals-desk-header,
+.crm-deals-page .crm-deals-mob-header { max-width: 1440px; margin-inline: auto; }
+
+/* ── Tab nav card style ── */
+.dj-tabs {
+    padding: 0.25rem 0.35rem 0;
+    border: 1px solid var(--ec-border);
+    border-radius: var(--ec-radius-md) var(--ec-radius-md) 0 0;
+    background: #fafbfc;
+}
+.dj-tab-panels {
+    border: 1px solid var(--ec-border);
+    border-top: none;
+    border-radius: 0 0 var(--ec-radius-md) var(--ec-radius-md);
+    padding: 1.15rem;
+    background: var(--ec-surface);
+    box-shadow: var(--ec-shadow-sm);
+}

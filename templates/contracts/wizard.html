@@ -3,8 +3,9 @@
 
 {% block page_title %}ویزارد قرارداد{% endblock %}
 {% block crm_extra_css %}
-<link rel="stylesheet" href="{% static 'contracts/css/contracts.css' %}?v=14">
-<link rel="stylesheet" href="{% static 'contracts/css/workspace.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'contracts/css/contracts.css' %}?v=15">
+<link rel="stylesheet" href="{% static 'contracts/css/workspace.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-ecosystem.css' %}?v=1">
 {% endblock %}
 
 {% block crm_content %}
@@ -980,16 +981,18 @@
         {% endif %}
 
         {% if wizard_step != 'review' %}
-        <div class="crm-contract-wizard-nav">
+        <footer class="crm-contract-wizard-nav ct-wizard-footer">
             {% if step_number > 1 %}
             {% for s, label in display_steps %}
             {% if forloop.counter == step_number|add:"-1" %}
             <a href="?step={{ s }}" class="crm-dash-act" id="ct-wizard-back">بازگشت</a>
             {% endif %}
             {% endfor %}
+            {% else %}
+            <span></span>
             {% endif %}
             <button type="submit" class="crm-dash-act crm-dash-act--primary" id="ct-wizard-next">تأیید و ادامه</button>
-        </div>
+        </footer>
         {% endif %}
 
         </div>{# .crm-contract-wizard-main #}

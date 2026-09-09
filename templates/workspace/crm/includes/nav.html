@@ -18,7 +18,7 @@
         {% if crm_nav_counts.deals %}<em class="crm-nav-count">{{ crm_nav_counts.deals }}</em>{% endif %}
     </a>
     <a href="{% url 'workspace:contracts_dashboard' %}" class="crm-nav-item {% if crm_section == 'contracts' %}active{% endif %}">
-        <span class="ws-nav-icon" aria-hidden="true"><i class="fas fa-file-signature"></i></span><span>قراردادها</span>
+        <span class="ws-nav-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='file_edit' size='nav' only %}</span><span>قراردادها</span>
         {% if crm_nav_counts.contracts %}<em class="crm-nav-count crm-nav-count-warn">{{ crm_nav_counts.contracts }}</em>{% endif %}
     </a>
     <a href="{% url 'workspace:crm_deals_finance' %}" class="crm-nav-item {% if crm_section == 'deals-finance' %}active{% endif %}">

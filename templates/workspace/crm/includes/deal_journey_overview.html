@@ -1,0 +1,36 @@
+{% load workspace_tags crm_tags %}
+<section class="dj-overview" aria-label="خلاصه وضعیت معامله">
+    <a href="?tab=activity" class="dj-overview__card{% if next_action.is_overdue %} is-warn{% endif %}">
+        <span class="dj-overview__kicker"><i class="fas fa-bolt"></i> اقدام بعدی</span>
+        {% if next_action %}
+        <span class="dj-overview__value">{{ next_action.label }}</span>
+        <p class="dj-overview__hint">{% if next_action.schedule_label %}{{ next_action.schedule_label }}{% else %}زمان‌بندی نشده{% endif %}</p>
+        {% else %}
+        <span class="dj-overview__value">تعیین نشده</span>
+        <p class="dj-overview__hint">یک اقدام بعدی مشخص کنید</p>
+        {% endif %}
+    </a>
+
+    <a href="?tab=finance" class="dj-overview__card">
+        <span class="dj-overview__kicker"><i class="fas fa-coins"></i> مالی</span>
+        <span class="dj-overview__value">{% if deal.value %}{{ deal.value|ws_money }}{% else %}ارزش ثبت نشده{% endif %}</span>
+        <p class="dj-overview__hint">{% if finance.commission_amount %}کمیسیون {{ finance.commission_amount|ws_money }}{% else %}کمیسیون تنظیم نشده{% endif %}</p>
+    </a>
+
+    <a href="?tab=documents" class="dj-overview__card{% if checklist_progress.required_done < checklist_progress.required_total %} is-warn{% else %} is-success{% endif %}">
+        <span class="dj-overview__kicker"><i class="fas fa-folder-open"></i> مدارک</span>
+        <span class="dj-overview__value">{{ checklist_progress.required_done }}/{{ checklist_progress.required_total }} الزامی</span>
+        <p class="dj-overview__hint">{{ checklist_progress.pct }}٪ تکمیل</p>
+    </a>
+
+    <a href="?tab=contracts" class="dj-overview__card{% if deal_contracts_count %} is-success{% endif %}">
+        <span class="dj-overview__kicker"><i class="fas fa-file-signature"></i> قرارداد</span>
+        {% if deal_contracts_count %}
+        <span class="dj-overview__value">{{ deal_contract_summary.finalized }} نهایی · {{ deal_contracts_count }} کل</span>
+        <p class="dj-overview__hint">{% if deal_contract_summary.draft %}{{ deal_contract_summary.draft }} پیش‌نویس{% else %}همه ارسال/نهایی{% endif %}</p>
+        {% else %}
+        <span class="dj-overview__value">بدون قرارداد</span>
+        <p class="dj-overview__hint">از مرحله قرارداد یا اینجا ایجاد کنید</p>
+        {% endif %}
+    </a>
+</section>

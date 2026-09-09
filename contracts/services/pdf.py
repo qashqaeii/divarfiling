@@ -21,7 +21,6 @@ from contracts.services.persian_text import (
     rtl_plain,
 )
 from contracts.services.pdf_layout import article_box as _article_box
-from contracts.services.pdf_layout import article_box as _article_box, padded_body_style
 
 logger = logging.getLogger(__name__)
 

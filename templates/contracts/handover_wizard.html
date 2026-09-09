@@ -120,7 +120,7 @@
                     <fieldset class="ho-party-col">
                         <legend>تحویل‌دهنده</legend>
                         <p class="ho-party-hint">معمولاً موجر یا فروشنده</p>
-                        {% for p in party_cards %}
+                        {% for p in deliverer_party_cards %}
                         <label class="ho-party-card">
                             <input type="radio" name="delivered_by_idx" value="{{ p.index }}"{% if p.is_delivered %} checked{% endif %} required>
                             <span class="ho-party-card__body">
@@ -149,13 +149,13 @@
                             </span>
                         </label>
                         {% empty %}
-                        <p class="ct-muted">طرفین قرارداد در دسترس نیست.</p>
+                        <p class="ct-muted">طرف تحویل‌دهنده در قرارداد یافت نشد.</p>
                         {% endfor %}
                     </fieldset>
                     <fieldset class="ho-party-col">
                         <legend>تحویل‌گیرنده</legend>
                         <p class="ho-party-hint">معمولاً مستأجر یا خریدار</p>
-                        {% for p in party_cards %}
+                        {% for p in receiver_party_cards %}
                         <label class="ho-party-card">
                             <input type="radio" name="received_by_idx" value="{{ p.index }}"{% if p.is_received %} checked{% endif %} required>
                             <span class="ho-party-card__body">
@@ -184,7 +184,7 @@
                             </span>
                         </label>
                         {% empty %}
-                        <p class="ct-muted">طرفین قرارداد در دسترس نیست.</p>
+                        <p class="ct-muted">طرف تحویل‌گیرنده در قرارداد یافت نشد.</p>
                         {% endfor %}
                     </fieldset>
                 </div>

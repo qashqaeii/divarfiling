@@ -141,6 +141,13 @@ def build_handover_wizard_context(handover, *, step: str) -> Dict[str, Any]:
             'is_received': idx == received_idx,
         })
 
+    deliverer_party_cards = [p for p in party_cards if p['role'] in HANDOVER_DELIVERER_ROLES]
+    receiver_party_cards = [p for p in party_cards if p['role'] in HANDOVER_RECEIVER_ROLES]
+    if not deliverer_party_cards:
+        deliverer_party_cards = list(party_cards)
+    if not receiver_party_cards:
+        receiver_party_cards = list(party_cards)
+
     saved_keys = {item.get('type'): item for item in (snap.get('keys') or []) if item.get('type')}
     key_rows = []
     used_types = set()
@@ -254,6 +261,8 @@ def build_handover_wizard_context(handover, *, step: str) -> Dict[str, Any]:
         'snapshot': snap,
         'property_data': property_data,
         'party_cards': party_cards,
+        'deliverer_party_cards': deliverer_party_cards,
+        'receiver_party_cards': receiver_party_cards,
         'delivered_idx': delivered_idx if delivered_idx is not None else '',
         'received_idx': received_idx if received_idx is not None else '',
         'key_rows': key_rows,

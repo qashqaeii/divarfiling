@@ -16,6 +16,7 @@ from contracts.services.lifecycle import (
     create_contract,
     prepare_for_send,
     save_wizard_step,
+    validate_contract_ready,
 )
 from contracts.services.masking import mask_phone
 from contracts.services.otp_service import CONTRACT_OTP_SMS_PURPOSE, request_contract_otp
@@ -110,7 +111,7 @@ class ContractVersioningTests(TestCase):
             user=self.user, customer=self.customer, property=self.prop, title='دیل', deal_kind='rent',
         )
 
-    def test_lease_validation_requires_witnesses(self):
+    def test_lease_send_without_witnesses(self):
         c = create_contract(self.user, CONTRACT_TYPE_LEASE, deal_id=self.deal.pk)
         wizard = dict(c.wizard_data)
         wizard['financial'] = {
@@ -120,8 +121,11 @@ class ContractVersioningTests(TestCase):
         wizard['witnesses'] = []
         c.wizard_data = wizard
         c.save()
-        with self.assertRaises(ContractError):
-            prepare_for_send(c, user=self.user)
+        save_wizard_step(c, 'parties', wizard['parties'], user=self.user)
+        save_wizard_step(c, 'property', wizard.get('property') or {}, user=self.user)
+        save_wizard_step(c, 'financial', wizard['financial'], user=self.user)
+        errors = validate_contract_ready(c, c.current_version)
+        self.assertNotIn('دو شاهد', ' '.join(errors))
 
 
 class ContractOTPTests(TestCase):

@@ -148,7 +148,11 @@ class ReviewStepTests(TestCase):
 
     def test_blocking_validation_disables_send(self):
         c = self._lease_contract()
-        save_wizard_step(c, 'witnesses', [], user=self.user)
+        parties = list(c.wizard_data.get('parties') or [])
+        if parties:
+            parties[0]['first_name'] = ''
+            parties[0]['last_name'] = ''
+        save_wizard_step(c, 'parties', parties, user=self.user)
         c.refresh_from_db()
         errors = validate_contract_ready(c, c.current_version)
         ctx = build_review_context(c, validation_errors=errors)

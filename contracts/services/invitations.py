@@ -95,8 +95,8 @@ def _send_invitation_sms(
     ctype = contract.get_contract_type_display()
     msg = (
         f'فایلینگ دیوار\n'
-        f'قرارداد {ctype} برای تأیید شما ارسال شد.\n'
-        f'{url}\n'
+        f'قرارداد {contract.internal_number} ({ctype}) برای تأیید شما ارسال شد.\n'
+        f'لینک تأیید:\n{url}\n'
         f'این پیام به معنی ثبت رسمی قرارداد نیست.'
     )
     now = timezone.now()
@@ -163,7 +163,11 @@ def _send_final_sms(tok: ContractAccessToken, contract: Contract, raw_token: str
     mobile = tok.party.mobile if tok.party_id else (tok.witness.mobile if tok.witness_id else '')
     if not mobile:
         return
-    msg = f'فایلینگ دیوار\nقرارداد شما نهایی شد.\nمشاهده: {url}'
+    msg = (
+        f'فایلینگ دیوار\n'
+        f'قرارداد {contract.internal_number} ({contract.get_contract_type_display()}) نهایی شد.\n'
+        f'مشاهده و دانلود نسخه رسمی:\n{url}'
+    )
     try:
         send_simple_sms(mobile, msg)
     except SmsError:

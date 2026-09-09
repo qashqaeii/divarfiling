@@ -382,8 +382,6 @@ def validate_contract_ready(contract: Contract, version: ContractVersion) -> Lis
                 errors.append(
                     'برای باقی‌ماندن ودیعه قرارداد قبلی، مبلغ ودیعه قبلی را وارد کنید.',
                 )
-        if version.witnesses.count() < 2:
-            errors.append('دو شاهد برای قرارداد اجاره الزامی است.')
     if contract.contract_type == CONTRACT_TYPE_SALE:
         fin = version.financial_data or {}
         total = fin.get('total_price')
@@ -484,17 +482,17 @@ def update_acceptance_status(contract: Contract) -> None:
     version = contract.current_version
     if not version or not version.is_published:
         return
-    required = version.parties.count() + version.witnesses.count()
-    accepted = version.acceptances.count()
-    if accepted == 0:
+    required_parties = version.parties.count()
+    accepted_parties = version.acceptances.filter(party__isnull=False).count()
+    if accepted_parties == 0:
         return
-    if accepted < required:
+    if required_parties and accepted_parties < required_parties:
         if contract.status in (CONTRACT_STATUS_SENT, CONTRACT_STATUS_VIEWED):
             try:
                 transition_contract(contract, CONTRACT_STATUS_PARTIALLY_ACCEPTED)
             except InvalidStateTransition:
                 pass
-    elif accepted >= required:
+    elif required_parties and accepted_parties >= required_parties:
         try:
             transition_contract(contract, CONTRACT_STATUS_FULLY_ACCEPTED)
         except InvalidStateTransition:
@@ -513,9 +511,10 @@ def finalize_contract(contract: Contract, *, request=None) -> Contract:
     if not version:
         raise ContractError('نسخه‌ای وجود ندارد.')
 
-    required = version.parties.count() + version.witnesses.count()
-    if version.acceptances.count() < required:
-        raise ContractError('همه طرفین و شاهدان تأیید نکرده‌اند.')
+    required_parties = version.parties.count()
+    accepted_parties = version.acceptances.filter(party__isnull=False).count()
+    if required_parties and accepted_parties < required_parties:
+        raise ContractError('همه طرفین قرارداد تأیید نکرده‌اند.')
 
     for acc in version.acceptances.all():
         if not acc.is_hash_valid():

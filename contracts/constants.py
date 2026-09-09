@@ -262,7 +262,7 @@ WIZARD_DISPLAY_STEPS = {
         ('property', 'ملک'),
         ('financial', 'مدت و مبلغ'),
         ('clauses', 'شرایط و بندها'),
-        ('witnesses', 'شاهدان'),
+        ('witnesses', 'شاهدان (اختیاری)'),
         ('review', 'مرور و ارسال'),
     ),
     CONTRACT_TYPE_SALE: (

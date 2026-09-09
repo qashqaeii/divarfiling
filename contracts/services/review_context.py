@@ -5,11 +5,18 @@ import re
 from typing import Any, Dict, List, Optional
 
 from contracts.constants import (
+    CONTRACT_STATUS_DRAFT,
+    CONTRACT_STATUS_FINALIZED,
+    CONTRACT_STATUS_FULLY_ACCEPTED,
+    CONTRACT_STATUS_PARTIALLY_ACCEPTED,
+    CONTRACT_STATUS_READY,
+    CONTRACT_STATUS_SENT,
+    CONTRACT_STATUS_VIEWED,
     CONTRACT_TYPE_JV,
     CONTRACT_TYPE_LEASE,
     CONTRACT_TYPE_SALE,
 )
-from contracts.models import Contract, ContractVersion
+from contracts.models import Contract, ContractInvitation, ContractVersion
 from contracts.services.clause_ux import clause_warnings, resolve_selected_clauses
 from contracts.services.clauses import get_applicable_clauses
 from contracts.services.contract_renderer import render_contract_document
@@ -101,11 +108,22 @@ def build_review_context(
         payment_schedule, clause_stats, custom_agreements, witnesses, issues,
     )
     nav_items = _build_nav_items(contract.contract_type, contract_sections, custom_agreements, witnesses)
+    acceptance_state = _build_acceptance_state(contract, version, parties)
+
+    if acceptance_state['invitations_sent']:
+        readiness = acceptance_state['readiness']
+    readiness_message = acceptance_state['readiness_message'] if acceptance_state['invitations_sent'] else _readiness_message(readiness)
+    readiness_detail = acceptance_state['readiness_detail'] if acceptance_state['invitations_sent'] else _readiness_detail(readiness)
+
+    signatures = []
+    if acceptance_state['invitations_sent']:
+        from contracts.services.final_view_context import build_version_signatories
+        signatures = build_version_signatories(version)
 
     return {
         'readiness': readiness,
-        'readiness_message': _readiness_message(readiness),
-        'readiness_detail': _readiness_detail(readiness),
+        'readiness_message': readiness_message,
+        'readiness_detail': readiness_detail,
         'issues': issues,
         'blocking_count': sum(1 for i in issues if i['severity'] == 'block'),
         'warning_count': sum(1 for i in issues if i['severity'] == 'warn'),
@@ -129,9 +147,16 @@ def build_review_context(
             'type_label': contract.get_contract_type_display(),
             'party_count': len(parties),
         },
-        'send_disabled': readiness == 'blocked',
+        'send_disabled': readiness == 'blocked' or not acceptance_state['show_send_actions'],
         'send_disabled_reason': _send_disabled_reason(issues),
         'version_locks_on_send': True,
+        'show_send_actions': acceptance_state['show_send_actions'],
+        'show_creator_ack': acceptance_state['show_send_actions'],
+        'invitations_sent': acceptance_state['invitations_sent'],
+        'acceptance_progress': acceptance_state['party_progress'],
+        'signatures': signatures,
+        'all_parties_accepted': acceptance_state['all_parties_accepted'],
+        'is_finalized': acceptance_state['is_finalized'],
     }
 
 
@@ -166,6 +191,13 @@ def _empty_review_context(contract: Contract) -> Dict[str, Any]:
         'send_disabled': True,
         'send_disabled_reason': 'نسخه قرارداد یافت نشد.',
         'version_locks_on_send': True,
+        'show_send_actions': False,
+        'show_creator_ack': False,
+        'invitations_sent': False,
+        'acceptance_progress': [],
+        'signatures': [],
+        'all_parties_accepted': False,
+        'is_finalized': False,
     }
 
 
@@ -472,13 +504,6 @@ def _collect_issues(
             })
 
     if contract.contract_type == CONTRACT_TYPE_LEASE and len(witnesses) < 2:
-        issues.append({
-            'message': 'دو شاهد برای قرارداد اجاره الزامی است',
-            'severity': 'block',
-            'edit_step': 'witnesses',
-            'edit_label': 'اصلاح',
-        })
-    elif contract.contract_type == CONTRACT_TYPE_LEASE and len(witnesses) < 2:
         pass
 
     if payment_schedule.get('mismatch'):
@@ -629,11 +654,10 @@ def _build_completeness(
         'value': f'{len(custom_agreements)} مورد' if custom_agreements else 'ندارد',
     })
     if contract.contract_type == CONTRACT_TYPE_LEASE:
-        w_status = 'ok' if len(witnesses) >= 2 else 'warn'
         items.append({
             'label': 'شاهدان',
-            'status': w_status,
-            'value': f'{len(witnesses)} نفر' if witnesses else 'ثبت نشده',
+            'status': 'ok' if witnesses else 'neutral',
+            'value': f'{len(witnesses)} نفر' if witnesses else 'اختیاری — ثبت نشده',
         })
     blocks = [i for i in issues if i['severity'] == 'block']
     items.append({
@@ -674,3 +698,92 @@ def _build_nav_items(
             )
         items.append({'key': key, 'label': label, 'target': target})
     return items
+
+
+def _build_acceptance_state(
+    contract: Contract,
+    version: ContractVersion,
+    parties: List[Dict],
+) -> Dict[str, Any]:
+    invitations_sent = bool(
+        version.is_published
+        and contract.status not in (CONTRACT_STATUS_DRAFT, CONTRACT_STATUS_READY, CONTRACT_STATUS_CANCELLED)
+    ) or ContractInvitation.objects.filter(
+        contract=contract, version=version, is_revoked=False,
+    ).exists()
+
+    show_send_actions = contract.status in (CONTRACT_STATUS_DRAFT, CONTRACT_STATUS_READY) and not version.is_published
+
+    party_progress: List[Dict[str, Any]] = []
+    accepted_count = 0
+    for party in version.parties.order_by('sort_order', 'pk'):
+        acc = version.acceptances.filter(party=party).first()
+        inv = ContractInvitation.objects.filter(
+            contract=contract, version=version, party=party, is_revoked=False,
+        ).order_by('-created_at').first()
+        accepted = acc is not None
+        if accepted:
+            accepted_count += 1
+        sms_sent = bool(inv and inv.sms_status in ('sent', 'delivered'))
+        party_progress.append({
+            'role_label': ROLE_LABELS.get(party.role, party.role),
+            'name': party.display_name if hasattr(party, 'display_name') else f'{party.first_name} {party.last_name}'.strip(),
+            'mobile': party.mobile or '',
+            'accepted': accepted,
+            'accepted_at': acc.accepted_at if acc else None,
+            'sms_sent': sms_sent,
+            'invitation_sent_at': inv.sms_sent_at if inv else None,
+            'required': True,
+        })
+
+    for witness in version.witnesses.order_by('witness_number', 'pk'):
+        acc = version.acceptances.filter(witness=witness).first()
+        inv = ContractInvitation.objects.filter(
+            contract=contract, version=version, witness=witness, is_revoked=False,
+        ).order_by('-created_at').first()
+        party_progress.append({
+            'role_label': witness.witness_role or f'شاهد {witness.witness_number}',
+            'name': f'{witness.first_name or ""} {witness.last_name or ""}'.strip() or '—',
+            'mobile': witness.mobile or '',
+            'accepted': acc is not None,
+            'accepted_at': acc.accepted_at if acc else None,
+            'sms_sent': bool(inv and inv.sms_status in ('sent', 'delivered')),
+            'invitation_sent_at': inv.sms_sent_at if inv else None,
+            'required': False,
+        })
+
+    required_parties = version.parties.count()
+    all_parties_accepted = required_parties > 0 and accepted_count >= required_parties
+    is_finalized = contract.status == CONTRACT_STATUS_FINALIZED
+
+    if is_finalized:
+        readiness = 'ready'
+        message = 'قرارداد نهایی شد'
+        detail = 'لینک مشاهده نسخه رسمی برای طرفین پیامک شده است.'
+    elif all_parties_accepted:
+        readiness = 'ready'
+        message = 'هر دو طرف قرارداد تأیید کردند'
+        detail = 'قرارداد در حال نهایی‌سازی یا نهایی شده است.'
+    elif invitations_sent:
+        pending = required_parties - accepted_count
+        readiness = 'warning' if accepted_count else 'pending'
+        message = f'در انتظار تأیید طرفین ({accepted_count} از {required_parties})'
+        detail = (
+            f'{pending} طرف هنوز تأیید نکرده است.'
+            if pending > 0 else 'پیامک تأیید برای طرفین ارسال شده است.'
+        )
+    else:
+        readiness = 'ready'
+        message = ''
+        detail = ''
+
+    return {
+        'invitations_sent': invitations_sent,
+        'show_send_actions': show_send_actions,
+        'party_progress': party_progress,
+        'all_parties_accepted': all_parties_accepted,
+        'is_finalized': is_finalized,
+        'readiness': readiness,
+        'readiness_message': message,
+        'readiness_detail': detail,
+    }

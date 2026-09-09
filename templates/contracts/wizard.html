@@ -8,7 +8,7 @@
 <link rel="stylesheet" href="{% static 'contracts/css/workspace.css' %}?v=4">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-ecosystem.css' %}?v=2">
 <link rel="stylesheet" href="{% static 'contracts/css/contracts-manage.css' %}?v=4">
-<link rel="stylesheet" href="{% static 'contracts/css/contracts-contract-wizard.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'contracts/css/contracts-contract-wizard.css' %}?v=2">
 {% endblock %}
 
 {% block crm_content %}
@@ -484,8 +484,14 @@
 
         {% elif wizard_step == 'witnesses' %}
         <section class="crm-deal-block crm-deal-panel">
-            <h2>شاهدان</h2>
-            <p class="crm-contract-panel-lead">لینک تأیید قرارداد برای شاهدان نیز پیامک می‌شود.</p>
+            <header class="crm-deal-panel-head">
+                <span class="crm-deal-panel-mark" aria-hidden="true"><i class="fas fa-user-check"></i></span>
+                <div class="crm-deal-panel-head-text">
+                    <h2>شاهدان (اختیاری)</h2>
+                    <p class="crm-contract-panel-lead">در صورت تمایل می‌توانید حداکثر دو شاهد ثبت کنید. تأیید شاهد برای نهایی‌شدن قرارداد الزامی نیست.</p>
+                </div>
+            </header>
+            <div class="crm-deal-panel-body">
             <div class="ct-witness-grid">
                 <div class="ct-witness-card">
                     <h3>شاهد موجر</h3>
@@ -512,7 +518,11 @@
                     </div>
                 </div>
             </div>
+            <p class="ct-witness-skip">
+                <a href="?step=review" class="crm-dash-act">رد کردن — بدون شاهد</a>
+            </p>
             <input type="hidden" name="next_step" value="review">
+            </div>
         </section>
 
         {% elif wizard_step == 'clauses' %}
@@ -892,7 +902,63 @@
                         {% endfor %}
                     </div>
 
+                    {% if review_context.signatures %}
+                    <section class="ct-review-signatures" id="ct-review-sec-signatures" aria-labelledby="ct-review-sig-title">
+                        <header class="ct-review-signatures__head">
+                            <h3 id="ct-review-sig-title">امضا و تأیید طرفین</h3>
+                        </header>
+                        <div class="ct-review-signatures__grid">
+                            {% for sig in review_context.signatures %}
+                            <article class="ct-review-sig-card{% if sig.hash_valid %} is-valid{% endif %}">
+                                <header class="ct-review-sig-card__head">
+                                    <span class="ct-review-sig-card__role">{{ sig.role }}</span>
+                                    {% if sig.hash_valid %}<span class="ct-review-sig-card__badge">تأیید شده</span>{% endif %}
+                                </header>
+                                <p class="ct-review-sig-card__name">{{ sig.name }}</p>
+                                <p class="ct-review-sig-card__meta">موبایل: {{ sig.mobile_masked }}</p>
+                                {% if sig.accepted_at %}
+                                <p class="ct-review-sig-card__meta">زمان تأیید: {{ sig.accepted_at|ws_jalali_datetime }}</p>
+                                {% endif %}
+                                <div class="ct-review-sig-card__pad" aria-label="امضای {{ sig.name }}">
+                                    {% if sig.signature_image_url %}
+                                    <img src="{{ sig.signature_image_url }}" alt="امضای {{ sig.name }}">
+                                    {% else %}
+                                    <div class="ct-review-sig-card__otp">
+                                        <i class="fas fa-shield-check" aria-hidden="true"></i>
+                                        <span>تأیید با OTP</span>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </article>
+                            {% endfor %}
+                        </div>
+                    </section>
+                    {% endif %}
+
                     <div id="ct-review-sec-final" class="ct-review-final">
+                        {% if review_context.is_finalized %}
+                        <div class="ct-review-status ct-review-status--ready" role="status">
+                            <span class="ct-review-status__title">قرارداد نهایی شد</span>
+                            <span class="ct-review-status__detail">لینک مشاهده نسخه رسمی برای طرفین پیامک شده است.</span>
+                        </div>
+                        {% elif review_context.invitations_sent and not review_context.show_send_actions %}
+                        <div class="ct-review-acceptance-panel">
+                            <h3>وضعیت تأیید طرفین</h3>
+                            <ul class="ct-review-acceptance-list">
+                                {% for p in review_context.acceptance_progress %}
+                                {% if p.required %}
+                                <li class="ct-review-acceptance-item ct-review-acceptance-item--{% if p.accepted %}ok{% elif p.sms_sent %}pending{% else %}neutral{% endif %}">
+                                    <span class="ct-review-acceptance-item__role">{{ p.role_label }}</span>
+                                    <span class="ct-review-acceptance-item__name">{{ p.name }}</span>
+                                    <span class="ct-review-acceptance-item__status">
+                                        {% if p.accepted %}تأیید شد{% elif p.sms_sent %}پیامک ارسال شد — در انتظار{% else %}—{% endif %}
+                                    </span>
+                                </li>
+                                {% endif %}
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% endif %}
                         <article class="ct-disclaimer-card">
                             <header class="ct-disclaimer-card__head">
                                 <i class="fas fa-circle-info" aria-hidden="true"></i>
@@ -900,10 +966,12 @@
                             </header>
                             <p>{{ legal_disclaimer }}</p>
                         </article>
+                        {% if review_context.show_creator_ack %}
                         <label class="ct-ack">
                             <input type="checkbox" name="creator_ack" id="ct-creator-ack" required>
                             <span>{{ creator_ack }}</span>
                         </label>
+                        {% endif %}
                     </div>
                 </div>
 
@@ -952,6 +1020,7 @@
 
                         <div class="ct-review-sidebar-actions">
                             <a href="{{ pdf_preview_url }}" class="crm-dash-act" target="_blank" rel="noopener">پیش‌نمایش PDF</a>
+                            {% if review_context.show_send_actions %}
                             <button type="submit" name="action" value="prepare_send" class="crm-dash-act crm-dash-act--primary ct-btn-block ct-review-send-btn"{% if review_context.send_disabled %} disabled{% endif %}>ارسال برای تأیید طرفین</button>
                             <p class="ct-review-send-hint" id="ct-review-ack-hint" hidden>برای ارسال، ابتدا تأیید مطالعه قرارداد را علامت بزنید.</p>
                             {% if review_context.send_disabled_reason %}
@@ -959,11 +1028,17 @@
                             {% elif review_context.version_locks_on_send %}
                             <p class="ct-review-send-note">پس از ارسال، برای تغییر مفاد قرارداد باید نسخه جدید ایجاد شود.</p>
                             {% endif %}
+                            {% elif review_context.is_finalized %}
+                            <p class="ct-review-send-note">قرارداد نهایی شده و لینک مشاهده برای طرفین ارسال شده است.</p>
+                            {% elif review_context.invitations_sent %}
+                            <p class="ct-review-send-note">دعوتنامه برای طرفین ارسال شده است. پس از تأیید هر دو طرف، قرارداد به‌صورت خودکار نهایی و لینک رسمی پیامک می‌شود.</p>
+                            {% endif %}
                         </div>
                     </div>
                 </aside>
             </div>
 
+            {% if review_context.show_send_actions %}
             <div class="ct-review-mobile-bar" aria-hidden="false">
                 <div class="ct-review-mobile-bar__status">
                     <span class="ct-review-status__title">{{ review_context.readiness_message }}</span>
@@ -971,6 +1046,7 @@
                 </div>
                 <button type="submit" name="action" value="prepare_send" class="crm-dash-act crm-dash-act--primary ct-review-send-btn"{% if review_context.send_disabled %} disabled{% endif %}>ارسال برای تأیید</button>
             </div>
+            {% endif %}
 
             <details class="ct-review-mobile-summary">
                 <summary>خلاصه قرارداد</summary>

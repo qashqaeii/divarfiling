@@ -33,6 +33,11 @@ def _viewer_role_label(tok: ContractAccessToken) -> str:
     return ''
 
 
+def build_version_signatories(version: ContractVersion) -> List[Dict[str, Any]]:
+    """Public helper — signatories with signature metadata for a published version."""
+    return _build_signatories(version)
+
+
 def _build_signatories(version: ContractVersion) -> List[Dict[str, Any]]:
     rows: List[Dict[str, Any]] = []
     acceptances = (

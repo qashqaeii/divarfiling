@@ -173,8 +173,7 @@
 
     /* Quick filter chips — horizontal scroll */
     .crm-deals-quick,
-    .crm-files-quick,
-    .crm-deals-funnel-stages {
+    .crm-files-quick {
         display: flex;
         flex-wrap: nowrap;
         overflow-x: auto;
@@ -184,11 +183,9 @@
         padding-bottom: 2px;
     }
     .crm-deals-quick::-webkit-scrollbar,
-    .crm-files-quick::-webkit-scrollbar,
-    .crm-deals-funnel-stages::-webkit-scrollbar { display: none; }
+    .crm-files-quick::-webkit-scrollbar { display: none; }
     .crm-deals-quick-btn,
-    .crm-files-quick-btn,
-    .crm-deals-funnel-chip {
+    .crm-files-quick-btn {
         flex-shrink: 0;
         min-height: 36px;
         white-space: nowrap;
@@ -729,9 +726,9 @@
         background: var(--ws-surface-2);
     }
 
-    .crm-deals-funnel {
-        padding: 0.5rem;
-        border-radius: 10px;
+    .crm-deal-path {
+        padding: 16px;
+        border-radius: 16px;
     }
 
     .crm-deal-pipeline-stage,

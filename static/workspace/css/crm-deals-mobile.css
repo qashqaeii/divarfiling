@@ -16,7 +16,7 @@
     .crm-deals-mobile.crm-page-chrome > .crm-dash-bar,
     .crm-deals-mobile.crm-page-chrome > .crm-deals-kpis,
     .crm-deals-mobile.crm-page-chrome > .crm-deals-stale-banner,
-    .crm-deals-mobile.crm-page-chrome > .crm-deals-funnel,
+    .crm-deals-mobile.crm-page-chrome > .crm-deal-path,
     .crm-deals-mobile.crm-page-chrome > .crm-shell-body {
         width: 100%;
         min-width: 0;
@@ -234,35 +234,10 @@
     .crm-deals-mob-kpi--comm .crm-deals-mob-kpi-val { color: #059669; }
     .crm-deals-mob-kpi--win .crm-deals-mob-kpi-val { color: #0d9488; }
 
-    /* ── Funnel ── */
-    .crm-deals-mobile .crm-deals-funnel {
+    /* ── Deal path (mobile card polish) ── */
+    .crm-deals-mobile .crm-deal-path {
         margin: 0.55rem 0.7rem 0;
-        padding: 0.65rem 0.7rem;
-        border-radius: 16px;
-        border: 1px solid color-mix(in srgb, var(--ws-border) 65%, transparent);
-        background: var(--ws-surface);
         box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
-        max-width: calc(100% - 1.4rem);
-        box-sizing: border-box;
-    }
-    .crm-deals-mobile .crm-deals-funnel-stages {
-        display: flex;
-        flex-wrap: nowrap;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: none;
-        gap: 0.35rem;
-        padding: 0.35rem 0 0.1rem;
-    }
-    .crm-deals-mobile .crm-deals-funnel-stages::-webkit-scrollbar { display: none; }
-    .crm-deals-mobile .crm-deals-funnel-chip {
-        flex: 0 0 auto;
-        min-height: 36px;
-        padding: 0.35rem 0.65rem;
-        border-radius: 999px;
-        font-size: 0.7rem;
-        font-weight: 700;
-        white-space: nowrap;
     }
 
     /* ── Quick chips ── */

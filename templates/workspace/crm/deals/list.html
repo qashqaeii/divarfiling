@@ -1,5 +1,5 @@
 {% extends 'workspace/crm/base_crm.html' %}
-{% load static workspace_tags crm_tags %}
+{% load static workspace_tags crm_tags persian_tags %}
 
 {% block page_title %}قیف معاملات{% endblock %}
 {% block mobile_bar_title %}قیف معاملات{% endblock %}
@@ -14,6 +14,7 @@
 <link rel="stylesheet" href="{% static 'workspace/css/crm-stages-drawer.css' %}?v=1">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-deal-journey.css' %}?v=5">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-ecosystem.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-deal-path.css' %}?v=1">
 {% endblock %}
 
 {% block crm_content %}
@@ -118,31 +119,33 @@
     </a>
     {% endif %}
 
-    {% if stats.total %}
-    <div class="crm-deals-funnel" aria-label="توزیع مراحل">
-        <div class="crm-deals-funnel-bar" aria-hidden="true">
+    {% if deal_stages %}
+    <section class="crm-deal-path" aria-labelledby="crmDealPathTitle">
+        <h2 class="crm-deal-path__head" id="crmDealPathTitle">
+            <span class="crm-deal-path__icon" aria-hidden="true"><i class="fas fa-route"></i></span>
+            <span>مسیر معاملات</span>
+        </h2>
+        <nav class="crm-deal-path__track" aria-label="فیلتر مرحله معامله">
             {% for s in deal_stages %}
             {% with cnt=stats.by_stage|dict_get:s|default:0 %}
-            {% if cnt %}
-            <span class="crm-deals-funnel-seg" style="flex: {{ cnt }}; background: {{ s|crm_deal_stage_dot:deal_stage_meta }};" title="{{ s }}: {{ cnt }}"></span>
-            {% endif %}
-            {% endwith %}
-            {% endfor %}
-        </div>
-        <nav class="crm-deals-funnel-stages">
-            {% for s in deal_stages %}
-            {% with cnt=stats.by_stage|dict_get:s|default:0 %}
-            <a href="?view={{ view_mode }}{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}&stage={{ s|urlencode }}"
-               class="crm-deals-funnel-chip{% if request.GET.stage == s %} is-active{% endif %}{% if not cnt %} is-empty{% endif %}"
-               style="--stage-accent: {{ s|crm_deal_stage_dot:deal_stage_meta }}">
-                <span class="crm-deals-funnel-dot" aria-hidden="true"></span>
-                <span class="crm-deals-funnel-name">{{ s }}</span>
-                <span class="crm-deals-funnel-count">{{ cnt }}</span>
+            <a href="?view={{ view_mode }}{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}{% if request.GET.bucket %}&bucket={{ request.GET.bucket|urlencode }}{% endif %}&stage={{ s|urlencode }}"
+               class="crm-deal-path__seg{% if forloop.first and forloop.last %} crm-deal-path__seg--solo{% elif forloop.first %} crm-deal-path__seg--first{% elif forloop.last %} crm-deal-path__seg--last{% else %} crm-deal-path__seg--mid{% endif %}{% if request.GET.stage == s %} is-active{% endif %}{% if not cnt %} is-empty{% endif %}"
+               style="--stage-accent: {{ s|crm_deal_stage_dot:deal_stage_meta }}"
+               {% if request.GET.stage == s %}aria-current="true"{% endif %}
+               title="{{ s }}: {{ cnt|to_persian_digits }}">
+                <span class="crm-deal-path__seg-shape" aria-hidden="true"></span>
+                <span class="crm-deal-path__seg-body">
+                    <span class="crm-deal-path__label">
+                        <span class="crm-deal-path__dot" aria-hidden="true"></span>
+                        <span class="crm-deal-path__name">{{ s }}</span>
+                    </span>
+                    <span class="crm-deal-path__count">{{ cnt|to_persian_digits }}</span>
+                </span>
             </a>
             {% endwith %}
             {% endfor %}
         </nav>
-    </div>
+    </section>
     {% endif %}
 
     <div class="crm-shell-body crm-deals-body">

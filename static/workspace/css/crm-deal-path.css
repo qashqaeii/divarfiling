@@ -1,0 +1,295 @@
+/* ═══════════════════════════════════════════════════════════
+   CRM Deals — «مسیر معاملات» chevron stage path
+   Scoped: .crm-deal-path
+   ═══════════════════════════════════════════════════════════ */
+
+.crm-deal-path {
+    --deal-path-card-bg: var(--ws-surface, #fff);
+    --deal-path-card-border: color-mix(in srgb, var(--ws-border, #e2e8f0) 72%, transparent);
+    --deal-path-seg-bg: #F1F4F9;
+    --deal-path-seg-text: #17233D;
+    --deal-path-seg-muted: color-mix(in srgb, var(--deal-path-seg-text) 62%, transparent);
+    --deal-path-active-bg: #F3EDFF;
+    --deal-path-active-border: var(--ds-purple, #7C3AED);
+    --deal-path-active-text: var(--ds-purple, #7C3AED);
+    --deal-path-tip: 14px;
+    --deal-path-gap: 2px;
+    --deal-path-clip-first: polygon(
+        var(--deal-path-tip) 0%,
+        100% 0%,
+        100% 100%,
+        var(--deal-path-tip) 100%,
+        0% 50%
+    );
+    --deal-path-clip-mid: polygon(
+        var(--deal-path-tip) 0%,
+        calc(100% - var(--deal-path-tip)) 0%,
+        100% 50%,
+        calc(100% - var(--deal-path-tip)) 100%,
+        var(--deal-path-tip) 100%,
+        0% 50%
+    );
+    --deal-path-clip-last: polygon(
+        0% 0%,
+        calc(100% - var(--deal-path-tip)) 0%,
+        100% 50%,
+        calc(100% - var(--deal-path-tip)) 100%,
+        0% 100%
+    );
+    --deal-path-clip-first-inner: polygon(
+        calc(var(--deal-path-tip) + 1.5px) 1.5px,
+        calc(100% - 1.5px) 1.5px,
+        calc(100% - 1.5px) calc(100% - 1.5px),
+        calc(var(--deal-path-tip) + 1.5px) calc(100% - 1.5px),
+        1.5px 50%
+    );
+    --deal-path-clip-mid-inner: polygon(
+        calc(var(--deal-path-tip) + 1.5px) 1.5px,
+        calc(100% - var(--deal-path-tip) - 1.5px) 1.5px,
+        calc(100% - 1.5px) 50%,
+        calc(100% - var(--deal-path-tip) - 1.5px) calc(100% - 1.5px),
+        calc(var(--deal-path-tip) + 1.5px) calc(100% - 1.5px),
+        1.5px 50%
+    );
+    --deal-path-clip-last-inner: polygon(
+        1.5px 1.5px,
+        calc(100% - var(--deal-path-tip) - 1.5px) 1.5px,
+        calc(100% - 1.5px) 50%,
+        calc(100% - var(--deal-path-tip) - 1.5px) calc(100% - 1.5px),
+        1.5px calc(100% - 1.5px)
+    );
+
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    padding: 20px;
+    background: var(--deal-path-card-bg);
+    border: 1px solid var(--deal-path-card-border);
+    border-radius: 16px;
+    flex-shrink: 0;
+    box-sizing: border-box;
+    min-width: 0;
+}
+
+.crm-deal-path__head {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0.45rem;
+    margin: 0;
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: var(--ws-text, #0f172a);
+    line-height: 1.3;
+}
+
+.crm-deal-path__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.35rem;
+    height: 1.35rem;
+    color: var(--deal-path-active-border);
+    font-size: 0.95rem;
+    flex-shrink: 0;
+}
+
+.crm-deal-path__track {
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    gap: var(--deal-path-gap);
+    min-width: 0;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding: 2px 0;
+}
+
+.crm-deal-path__track::-webkit-scrollbar {
+    display: none;
+}
+
+.crm-deal-path__seg {
+    position: relative;
+    flex: 1 1 0;
+    min-width: 0;
+    height: 68px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    color: var(--deal-path-seg-text);
+    border: none;
+    background: transparent;
+    padding: 0;
+    cursor: pointer;
+    isolation: isolate;
+    transition: color 0.14s ease;
+}
+
+.crm-deal-path__seg--first { --deal-path-clip: var(--deal-path-clip-first); --deal-path-clip-inner: var(--deal-path-clip-first-inner); }
+.crm-deal-path__seg--mid { --deal-path-clip: var(--deal-path-clip-mid); --deal-path-clip-inner: var(--deal-path-clip-mid-inner); }
+.crm-deal-path__seg--last { --deal-path-clip: var(--deal-path-clip-last); --deal-path-clip-inner: var(--deal-path-clip-last-inner); }
+.crm-deal-path__seg--solo {
+    --deal-path-clip: inset(0 round 10px);
+    --deal-path-clip-inner: inset(1.5px round 8px);
+}
+
+.crm-deal-path__seg-shape {
+    position: absolute;
+    inset: 0;
+    clip-path: var(--deal-path-clip);
+    background: var(--deal-path-seg-bg);
+    transition: background 0.14s ease, inset 0.14s ease;
+    z-index: 0;
+}
+
+.crm-deal-path__seg:hover:not(.is-active) .crm-deal-path__seg-shape {
+    background: color-mix(in srgb, var(--deal-path-seg-bg) 88%, var(--deal-path-active-border));
+}
+
+.crm-deal-path__seg.is-active .crm-deal-path__seg-shape {
+    inset: -1.5px;
+    background: var(--deal-path-active-border);
+}
+
+.crm-deal-path__seg.is-active .crm-deal-path__seg-shape::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    clip-path: var(--deal-path-clip-inner);
+    background: var(--deal-path-active-bg);
+}
+
+.crm-deal-path__seg:focus-visible {
+    outline: 2px solid var(--deal-path-active-border);
+    outline-offset: 2px;
+    z-index: 2;
+}
+
+.crm-deal-path__seg-body {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.2rem;
+    width: 100%;
+    min-width: 0;
+    padding: 0 0.35rem 0 calc(var(--deal-path-tip) * 0.45);
+    text-align: center;
+    pointer-events: none;
+}
+
+.crm-deal-path__seg--first .crm-deal-path__seg-body {
+    padding-inline: 0.35rem 0.2rem;
+}
+
+.crm-deal-path__seg--last .crm-deal-path__seg-body {
+    padding-inline: 0.2rem 0.35rem;
+}
+
+.crm-deal-path__label {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.28rem;
+    min-width: 0;
+    max-width: 100%;
+    font-size: 0.68rem;
+    font-weight: 600;
+    line-height: 1.25;
+    color: inherit;
+    white-space: nowrap;
+}
+
+.crm-deal-path__dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--stage-accent, #94a3b8);
+    flex-shrink: 0;
+}
+
+.crm-deal-path__name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.crm-deal-path__count {
+    font-size: 1.05rem;
+    font-weight: 800;
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+    color: var(--deal-path-seg-text);
+}
+
+.crm-deal-path__seg.is-active .crm-deal-path__label,
+.crm-deal-path__seg.is-active .crm-deal-path__count {
+    color: var(--deal-path-active-text);
+}
+
+.crm-deal-path__seg.is-empty .crm-deal-path__count {
+    color: var(--deal-path-seg-muted);
+}
+
+.crm-deal-path__seg.is-empty.is-active .crm-deal-path__count {
+    color: var(--deal-path-active-text);
+}
+
+/* ── Dark / cheerful theme ── */
+[data-theme="dark"] .crm-deal-path,
+html:not([data-theme="light"]):not([data-theme="cheerful"]) .crm-deal-path {
+    --deal-path-seg-bg: color-mix(in srgb, var(--ws-surface-2, #111827) 88%, #1e293b);
+    --deal-path-seg-text: var(--ws-text, #f8fafc);
+    --deal-path-seg-muted: var(--ws-text-muted, #94a3b8);
+    --deal-path-active-bg: color-mix(in srgb, var(--deal-path-active-border) 18%, var(--ws-surface, #0f172a));
+    --deal-path-card-border: color-mix(in srgb, var(--ws-border) 85%, transparent);
+}
+
+[data-theme="cheerful"] .crm-deal-path {
+    --deal-path-seg-bg: #FFF4EC;
+    --deal-path-active-bg: color-mix(in srgb, var(--ws-primary, #ff6b6b) 12%, #fff);
+    --deal-path-active-border: var(--ws-primary, #ff6b6b);
+    --deal-path-active-text: var(--ws-primary, #ff6b6b);
+}
+
+/* ── Desktop: equal-width row ── */
+@media (min-width: 769px) {
+    .crm-deal-path__track {
+        overflow-x: visible;
+    }
+
+    .crm-deal-path__seg {
+        flex: 1 1 0;
+        min-width: 0;
+    }
+}
+
+/* ── Mobile: horizontal scroll inside card ── */
+@media (max-width: 768px) {
+    .crm-deal-path {
+        margin-inline: 0.7rem;
+        max-width: calc(100% - 1.4rem);
+        padding: 16px;
+    }
+
+    .crm-deal-path__seg {
+        flex: 0 0 auto;
+        width: 96px;
+        min-width: 96px;
+    }
+
+    .crm-deal-path__label {
+        font-size: 0.64rem;
+    }
+
+    .crm-deal-path__count {
+        font-size: 0.98rem;
+    }
+}

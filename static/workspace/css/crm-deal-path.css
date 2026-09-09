@@ -1,6 +1,7 @@
 /* ═══════════════════════════════════════════════════════════
    CRM Deals — «مسیر معاملات» chevron stage path
    Scoped: .crm-deal-path
+   RTL flow: right → left (tip on LEFT, notch on RIGHT)
    ═══════════════════════════════════════════════════════════ */
 
 .crm-deal-path {
@@ -12,50 +13,53 @@
     --deal-path-active-bg: #F3EDFF;
     --deal-path-active-border: var(--ds-purple, #7C3AED);
     --deal-path-active-text: var(--ds-purple, #7C3AED);
-    --deal-path-tip: 14px;
+    --deal-path-tip: 18px;
     --deal-path-gap: 2px;
+    /* first = rightmost (flat RIGHT, tip LEFT) */
     --deal-path-clip-first: polygon(
-        var(--deal-path-tip) 0%,
-        100% 0%,
+        100% 0,
         100% 100%,
         var(--deal-path-tip) 100%,
-        0% 50%
+        0 50%,
+        var(--deal-path-tip) 0
     );
+    /* mid = tip LEFT + notch RIGHT */
     --deal-path-clip-mid: polygon(
-        var(--deal-path-tip) 0%,
-        calc(100% - var(--deal-path-tip)) 0%,
-        100% 50%,
-        calc(100% - var(--deal-path-tip)) 100%,
+        100% 0,
+        var(--deal-path-tip) 0,
+        0 50%,
         var(--deal-path-tip) 100%,
-        0% 50%
+        100% 100%,
+        calc(100% - var(--deal-path-tip)) 50%
     );
+    /* last = leftmost (flat LEFT, notch RIGHT) */
     --deal-path-clip-last: polygon(
-        0% 0%,
-        calc(100% - var(--deal-path-tip)) 0%,
-        100% 50%,
-        calc(100% - var(--deal-path-tip)) 100%,
-        0% 100%
+        0 0,
+        100% 0,
+        calc(100% - var(--deal-path-tip)) 50%,
+        100% 100%,
+        0 100%
     );
     --deal-path-clip-first-inner: polygon(
-        calc(var(--deal-path-tip) + 1.5px) 1.5px,
         calc(100% - 1.5px) 1.5px,
         calc(100% - 1.5px) calc(100% - 1.5px),
         calc(var(--deal-path-tip) + 1.5px) calc(100% - 1.5px),
-        1.5px 50%
+        1.5px 50%,
+        calc(var(--deal-path-tip) + 1.5px) 1.5px
     );
     --deal-path-clip-mid-inner: polygon(
+        calc(100% - 1.5px) 1.5px,
         calc(var(--deal-path-tip) + 1.5px) 1.5px,
-        calc(100% - var(--deal-path-tip) - 1.5px) 1.5px,
-        calc(100% - 1.5px) 50%,
-        calc(100% - var(--deal-path-tip) - 1.5px) calc(100% - 1.5px),
+        1.5px 50%,
         calc(var(--deal-path-tip) + 1.5px) calc(100% - 1.5px),
-        1.5px 50%
+        calc(100% - 1.5px) calc(100% - 1.5px),
+        calc(100% - var(--deal-path-tip) - 1.5px) 50%
     );
     --deal-path-clip-last-inner: polygon(
         1.5px 1.5px,
-        calc(100% - var(--deal-path-tip) - 1.5px) 1.5px,
-        calc(100% - 1.5px) 50%,
-        calc(100% - var(--deal-path-tip) - 1.5px) calc(100% - 1.5px),
+        calc(100% - 1.5px) 1.5px,
+        calc(100% - var(--deal-path-tip) - 1.5px) 50%,
+        calc(100% - 1.5px) calc(100% - 1.5px),
         1.5px calc(100% - 1.5px)
     );
 
@@ -94,6 +98,7 @@
     flex-shrink: 0;
 }
 
+/* flex-direction: row only — RTL placement comes from document dir=rtl */
 .crm-deal-path__track {
     display: flex;
     flex-direction: row;
@@ -180,17 +185,19 @@
     gap: 0.2rem;
     width: 100%;
     min-width: 0;
-    padding: 0 0.35rem 0 calc(var(--deal-path-tip) * 0.45);
+    padding-inline: calc(var(--deal-path-tip) * 0.45) calc(var(--deal-path-tip) * 0.45);
     text-align: center;
     pointer-events: none;
 }
 
+/* rightmost: flat right edge — less padding on inline-end (right in RTL) */
 .crm-deal-path__seg--first .crm-deal-path__seg-body {
-    padding-inline: 0.35rem 0.2rem;
+    padding-inline: calc(var(--deal-path-tip) * 0.55) 0.35rem;
 }
 
+/* leftmost: flat left edge — less padding on inline-start (left in RTL) */
 .crm-deal-path__seg--last .crm-deal-path__seg-body {
-    padding-inline: 0.2rem 0.35rem;
+    padding-inline: 0.35rem calc(var(--deal-path-tip) * 0.55);
 }
 
 .crm-deal-path__label {

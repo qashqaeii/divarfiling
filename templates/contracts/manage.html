@@ -14,7 +14,7 @@
 
 <link rel="stylesheet" href="{% static 'workspace/css/crm-ecosystem.css' %}?v=2">
 
-<link rel="stylesheet" href="{% static 'contracts/css/contracts-manage.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'contracts/css/contracts-manage.css' %}?v=2">
 
 {% endblock %}
 
@@ -502,93 +502,47 @@
 
 
         <section class="ct-manage-history" aria-labelledby="ctHistoryHeading">
-
             <header class="ct-manage-history__head">
-
                 <div class="ct-manage-history__head-main">
-
                     <span class="ct-manage-history__head-icon" aria-hidden="true"><i class="fas fa-clock-rotate-left"></i></span>
-
                     <div class="ct-manage-history__head-text">
-
                         <h2 id="ctHistoryHeading">تاریخچه</h2>
-
                         {% if audit_total_count %}<p>{{ audit_total_count|to_persian_digits }} رویداد</p>{% endif %}
-
                     </div>
-
                 </div>
-
                 {% if audit_timeline|length > 5 %}
-
-                <button type="button" class="ct-audit-more-btn" id="ct-audit-more">
-
-                    <i class="fas fa-list" aria-hidden="true"></i>
-
-                    نمایش همه رویدادها ({{ audit_timeline|length|add:"-5"|to_persian_digits }} مورد)
-
+                <button type="button" class="ct-audit-more-btn" id="ct-audit-more" aria-controls="ct-audit-timeline">
+                    نمایش همه
                 </button>
-
                 {% endif %}
-
             </header>
-
             <div class="ct-manage-history__body">
-
                 <ul class="ct-audit-timeline" id="ct-audit-timeline">
-
                     {% for ev in audit_timeline %}
-
-                    <li class="ct-audit-item{% if forloop.counter > 5 %} is-hidden{% endif %}" data-event-type="{{ ev.event_type }}">
-
-                        <div class="ct-audit-item__marker" aria-hidden="true">
-
-                            {% if ev.event_type == 'CONTRACT_FINALIZED' or ev.event_type == 'CONTRACT_FULLY_ACCEPTED' %}
-
-                            <i class="fas fa-flag-checkered"></i>
-
-                            {% elif ev.event_type == 'PARTY_ACCEPTED' or ev.event_type == 'WITNESS_ACCEPTED' or ev.event_type == 'OTP_VERIFIED' %}
-
-                            <i class="fas fa-check"></i>
-
-                            {% elif ev.event_type == 'CONTRACT_VIEWED' or ev.event_type == 'INVITATION_OPENED' %}
-
-                            <i class="fas fa-eye"></i>
-
-                            {% elif ev.event_type == 'SMS_SENT' or ev.event_type == 'VERSION_PUBLISHED' %}
-
-                            <i class="fas fa-paper-plane"></i>
-
-                            {% else %}
-
-                            <i class="fas fa-circle-dot"></i>
-
-                            {% endif %}
-
+                    <li class="ct-audit-item{% if forloop.counter > 5 %} is-hidden{% endif %}{% if forloop.first %} is-latest{% endif %}" data-event-type="{{ ev.event_type }}">
+                        <div class="ct-audit-item__rail" aria-hidden="true">
+                            <span class="ct-audit-item__dot"></span>
                         </div>
-
-                        <div class="ct-audit-item__body">
-
-                            <p class="ct-audit-item__label">{{ ev.label }}</p>
-
+                        <div class="ct-audit-item__panel">
+                            <div class="ct-audit-item__head">
+                                <p class="ct-audit-item__label">{{ ev.label }}</p>
+                                <time class="ct-audit-item__time" datetime="{{ ev.created_at|date:'c' }}">{{ ev.created_at|ws_jalali_datetime }}</time>
+                            </div>
                             {% if ev.detail %}<p class="ct-audit-item__detail">{{ ev.detail }}</p>{% endif %}
-
-                            <time class="ct-audit-item__time" datetime="{{ ev.created_at|date:'c' }}">{{ ev.created_at|ws_jalali_datetime }}</time>
-
                         </div>
-
                     </li>
-
                     {% empty %}
-
                     <li class="ct-manage-empty">هنوز رویدادی ثبت نشده است.</li>
-
                     {% endfor %}
-
                 </ul>
-
             </div>
-
+            {% if audit_timeline|length > 5 %}
+            <footer class="ct-manage-history__footer">
+                <button type="button" class="ct-audit-more-btn" id="ct-audit-more-mobile" aria-controls="ct-audit-timeline">
+                    نمایش همه رویدادها ({{ audit_timeline|length|add:"-5"|to_persian_digits }} مورد دیگر)
+                </button>
+            </footer>
+            {% endif %}
         </section>
 
 
@@ -641,23 +595,19 @@
 
 
 
-  var moreBtn = document.getElementById('ct-audit-more');
-
-  if (moreBtn) {
-
-    moreBtn.addEventListener('click', function () {
-
-      document.querySelectorAll('.ct-audit-item.is-hidden').forEach(function (el) {
-
-        el.classList.remove('is-hidden');
-
-      });
-
-      moreBtn.remove();
-
+  function expandAuditTimeline() {
+    document.querySelectorAll('.ct-audit-item.is-hidden').forEach(function (el) {
+      el.classList.remove('is-hidden');
     });
-
+    ['ct-audit-more', 'ct-audit-more-mobile'].forEach(function (id) {
+      var btn = document.getElementById(id);
+      if (btn) btn.remove();
+    });
   }
+  ['ct-audit-more', 'ct-audit-more-mobile'].forEach(function (id) {
+    var btn = document.getElementById(id);
+    if (btn) btn.addEventListener('click', expandAuditTimeline);
+  });
 
 })();
 

@@ -200,6 +200,8 @@ class HandoverTests(ContractTestBase):
         handover = create_handover(self.user, c.pk)
         parties = handover.snapshot_json['parties']
         save_handover_step(handover, 'basic', {
+            'handover_date': '1404/06/15',
+            'handover_time': '10:30',
             'delivered_by': parties[0],
             'received_by': parties[1],
             'notes': 'تحویل',

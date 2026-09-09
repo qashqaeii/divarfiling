@@ -109,6 +109,35 @@ def _normalize_step(step: str) -> str:
     return step if step in VALID_STEPS else 'basic'
 
 
+def sync_handover_delivery_parties(handover) -> bool:
+    """
+    Ensure delivered_by / received_by exist in snapshot.
+    UI may show defaults via GET stepper navigation without POSTing the basic step.
+    """
+    snap = dict(handover.snapshot_json or {})
+    parties = list(snap.get('parties') or [])
+    if not parties:
+        return False
+    changed = False
+    if not snap.get('delivered_by'):
+        idx = _first_role_idx(parties, HANDOVER_DELIVERER_ROLES)
+        if idx is not None:
+            snap['delivered_by'] = parties[idx]
+            changed = True
+    if not snap.get('received_by'):
+        delivered_idx = _find_party_idx(parties, snap.get('delivered_by'))
+        idx = _first_role_idx(parties, HANDOVER_RECEIVER_ROLES)
+        if idx is not None and idx == delivered_idx and len(parties) > 1:
+            idx = next((i for i in range(len(parties)) if i != delivered_idx), idx)
+        if idx is not None:
+            snap['received_by'] = parties[idx]
+            changed = True
+    if changed:
+        handover.snapshot_json = snap
+        handover.save(update_fields=['snapshot_json', 'updated_at'])
+    return changed
+
+
 def build_handover_wizard_context(handover, *, step: str) -> Dict[str, Any]:
     step = _normalize_step(step)
     snap = handover.snapshot_json or {}

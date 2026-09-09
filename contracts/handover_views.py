@@ -87,7 +87,7 @@ class HandoverWizardView(DealContractsMixin, TemplateView):
                 return redirect('workspace:contract_manage', deal_id=deal_id, contract_id=contract_id)
         except (HandoverError, ValidationError) as exc:
             messages.error(request, str(exc))
-            next_step = step
+            next_step = 'review' if request.POST.get('action') == 'publish' else step
         else:
             next_step = request.POST.get('next_step', step)
         if next_step not in VALID_STEPS:

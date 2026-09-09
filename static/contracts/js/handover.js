@@ -4,14 +4,34 @@
   var form = document.getElementById('ct-handover-form');
   if (!form) return;
 
-  var wizard = form.closest('.ct-handover-wizard');
+  var actionField = document.getElementById('ho-form-action');
   var nextBtn = document.getElementById('ct-wizard-next');
 
-  form.addEventListener('submit', function () {
-    var btn = form.querySelector('.ct-review-send-btn:not([disabled]), #ct-wizard-next');
-    if (btn) {
-      btn.classList.add('is-loading');
-      if (btn.tagName === 'BUTTON') btn.disabled = true;
+  function setFormAction(value) {
+    if (actionField) actionField.value = value || '';
+  }
+
+  form.querySelectorAll('[data-ho-action="publish"]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      if (btn.disabled) return;
+      setFormAction('publish');
+    });
+  });
+
+  form.addEventListener('submit', function (e) {
+    var submitter = e.submitter;
+    if (submitter && submitter.getAttribute('data-ho-action') === 'publish') {
+      setFormAction('publish');
+    } else if (!actionField || actionField.value !== 'publish') {
+      setFormAction('');
+    }
+
+    var loadingBtn = submitter;
+    if (!loadingBtn || loadingBtn.getAttribute('data-ho-action') !== 'publish') {
+      loadingBtn = form.querySelector('#ct-wizard-next:not([disabled])');
+    }
+    if (loadingBtn && loadingBtn.tagName === 'BUTTON') {
+      loadingBtn.classList.add('is-loading');
     }
   });
 
@@ -200,6 +220,7 @@
 
   if (nextBtn) {
     nextBtn.addEventListener('click', function () {
+      setFormAction('');
       nextBtn.classList.add('is-loading');
     });
   }

@@ -112,14 +112,22 @@ def save_handover_step(handover: ContractHandover, step: str, data: Dict[str, An
 def publish_handover(handover: ContractHandover, *, user=None, request=None) -> ContractHandover:
     if handover.is_locked:
         return handover
+    from contracts.services.handover_wizard import sync_handover_delivery_parties
+
+    sync_handover_delivery_parties(handover)
+    handover.refresh_from_db()
     snap = handover.snapshot_json or {}
     if not snap.get('delivered_by') or not snap.get('received_by'):
-        raise HandoverError('تحویل‌دهنده و تحویل‌گیرنده الزامی است.')
+        raise HandoverError('تحویل‌دهنده و تحویل‌گیرنده الزامی است. به مرحله «مشخصات» برگردید و طرفین را انتخاب کنید.')
+    if not handover.handover_date:
+        raise HandoverError('تاریخ تحویل ثبت نشده است. به مرحله «مشخصات» برگردید و تاریخ را وارد کنید.')
     handover.content_hash = compute_handover_hash(handover)
     handover.status = HANDOVER_STATUS_SENT
     handover.save(update_fields=['content_hash', 'status', 'updated_at'])
     from contracts.services.handover_invitations import send_handover_invitations
-    send_handover_invitations(handover, request=request)
+    invitations = send_handover_invitations(handover, request=request)
+    if not invitations:
+        raise HandoverError('شماره موبایل طرفین تحویل در قرارداد ثبت نشده است.')
     return handover
 
 

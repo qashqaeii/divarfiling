@@ -80,6 +80,7 @@
     <form method="post" enctype="multipart/form-data" class="ct-wizard-form" id="ct-handover-form">
         {% csrf_token %}
         <input type="hidden" name="step" value="{{ handover_step }}">
+        <input type="hidden" name="action" id="ho-form-action" value="">
 
         <div class="crm-contract-wizard-layout">
         <div class="crm-contract-wizard-main">
@@ -564,7 +565,7 @@
                             </div>
                         </article>
                         <div class="ct-review-sidebar-actions">
-                            <button type="submit" name="action" value="publish" class="crm-dash-act crm-dash-act--primary ct-btn-block ct-review-send-btn"{% if review.send_disabled %} disabled{% endif %}>ارسال برای تأیید طرفین</button>
+                            <button type="submit" class="crm-dash-act crm-dash-act--primary ct-btn-block ct-review-send-btn" data-ho-action="publish"{% if review.send_disabled %} disabled{% endif %}>ارسال برای تأیید طرفین</button>
                             <p class="ct-review-send-hint" id="ho-review-ack-hint" hidden>برای ارسال، ابتدا صحت اطلاعات را تأیید کنید.</p>
                             {% if review.send_disabled %}
                             <p class="ct-review-send-reason">تحویل‌دهنده و تحویل‌گیرنده الزامی است.</p>
@@ -581,7 +582,7 @@
                     <span class="ct-review-status__title">{{ review.readiness_message }}</span>
                     {% if review.blocking_count %}<span class="ct-review-mobile-bar__count">{{ review.blocking_count }} مورد</span>{% endif %}
                 </div>
-                <button type="submit" name="action" value="publish" class="crm-dash-act crm-dash-act--primary ct-review-send-btn"{% if review.send_disabled %} disabled{% endif %}>ارسال برای تأیید</button>
+                <button type="submit" class="crm-dash-act crm-dash-act--primary ct-review-send-btn" data-ho-action="publish"{% if review.send_disabled %} disabled{% endif %}>ارسال برای تأیید</button>
             </div>
             <details class="ct-review-mobile-summary">
                 <summary>خلاصه صورت‌جلسه</summary>
@@ -696,5 +697,5 @@
 {% endblock %}
 
 {% block crm_js %}
-<script src="{% static 'contracts/js/handover.js' %}?v=1"></script>
+<script src="{% static 'contracts/js/handover.js' %}?v=2"></script>
 {% endblock %}

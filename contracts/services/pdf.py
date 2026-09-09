@@ -20,7 +20,7 @@ from contracts.services.persian_text import (
     rtl_paragraph_html,
     rtl_plain,
 )
-from contracts.services.pdf_layout import article_box as _article_box
+from contracts.services.pdf_layout import article_box as _article_box, body_to_flowables
 
 logger = logging.getLogger(__name__)
 
@@ -524,7 +524,7 @@ def generate_contract_pdf_bytes(
 
         story.extend(_article_box(
             title,
-            [Paragraph(rtl_paragraph_html(body), styles['body'])],
+            body_to_flowables(body, styles['body']),
             content_width,
             styles,
         ))

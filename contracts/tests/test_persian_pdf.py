@@ -22,8 +22,11 @@ class PersianTextTests(TestCase):
         self.assertNotEqual(shaped, raw)
 
     def test_rtl_paragraph_html_escapes(self):
-        html = rtl_paragraph_html('test <tag>')
-        self.assertNotIn('<tag>', html)
+        html_out = rtl_paragraph_html('test <tag>')
+        self.assertNotIn('<tag>', html_out)
+
+    def test_rtl_paragraph_html_plain_ascii(self):
+        self.assertEqual(rtl_paragraph_html('hello world'), 'hello world')
 
 
 class ContractDisplayTests(TestCase):
@@ -52,6 +55,15 @@ class ContractDisplayTests(TestCase):
 
 
 class ArticleBoxLayoutTests(TestCase):
+    def test_body_to_flowables_splits_long_text(self):
+        from contracts.services.pdf import _pdf_styles
+        from contracts.services.pdf_layout import body_to_flowables
+
+        styles = _pdf_styles('Helvetica', 'Helvetica-Bold')
+        long_body = 'جمله اول. ' * 80
+        flowables = body_to_flowables(long_body, styles['body'], max_chunk=120)
+        self.assertGreater(len(flowables), 3)
+
     def test_article_box_keeps_body_outside_table(self):
         from reportlab.platypus import Paragraph, Table
 
@@ -139,4 +151,9 @@ class ContractPdfTests(TestCase):
             raise
         if not data:
             self.skipTest('reportlab or font unavailable')
-        self.assertIn(marker.encode('utf-8'), data)
+        from contracts.services.pdf import _pdf_styles
+        from contracts.services.pdf_layout import body_to_flowables
+        styles = _pdf_styles('Helvetica', 'Helvetica-Bold')
+        chunks = body_to_flowables(long_body, styles['body'])
+        self.assertGreater(len(chunks), 4)
+        self.assertGreater(len(data), 8000)

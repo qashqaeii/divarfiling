@@ -1,12 +1,69 @@
 """Shared ReportLab layout helpers — safe page breaks for Persian PDFs."""
 from __future__ import annotations
 
+import re
 from typing import Any, Dict, List
 
 from contracts.services.persian_text import rtl_paragraph_html
 
 _C_PRIMARY = '#7c3aed'
-_C_BORDER = '#e2e8f0'
+
+_SENTENCE_SPLIT = re.compile(r'(?<=[\.؛!\?؟])\s+')
+
+
+def body_to_flowables(body: str, style, *, max_chunk: int = 260) -> List[Any]:
+    """
+    Split legal clause text into multiple Paragraph flowables.
+
+    ReportLab cannot paginate a Paragraph inside a Table cell. Even outside
+    tables, pre-bidi text may fail to split — smaller chunks are safer.
+    """
+    from reportlab.platypus import Paragraph, Spacer
+
+    text = (body or '').strip()
+    if not text:
+        return []
+
+    chunks: List[str] = []
+    for block in re.split(r'\n\s*\n', text):
+        block = block.strip()
+        if not block:
+            continue
+        for line in block.split('\n'):
+            line = line.strip()
+            if not line:
+                continue
+            if len(line) <= max_chunk:
+                chunks.append(line)
+                continue
+            parts = [p.strip() for p in _SENTENCE_SPLIT.split(line) if p.strip()]
+            if len(parts) <= 1:
+                parts = [line]
+            buf = ''
+            for part in parts:
+                if len(part) > max_chunk:
+                    if buf:
+                        chunks.append(buf)
+                        buf = ''
+                    for i in range(0, len(part), max_chunk):
+                        chunks.append(part[i:i + max_chunk])
+                    continue
+                candidate = f'{buf} {part}'.strip() if buf else part
+                if len(candidate) <= max_chunk:
+                    buf = candidate
+                else:
+                    if buf:
+                        chunks.append(buf)
+                    buf = part
+            if buf:
+                chunks.append(buf)
+
+    flowables: List[Any] = []
+    for i, chunk in enumerate(chunks):
+        flowables.append(Paragraph(rtl_paragraph_html(chunk), style))
+        if i < len(chunks) - 1:
+            flowables.append(Spacer(1, 4))
+    return flowables
 
 
 def article_box(
@@ -20,11 +77,9 @@ def article_box(
     title_line_width: float = 1.2,
 ) -> List[Any]:
     """
-    Article section with styled title band + body flowables.
+    Article section: styled title band + body flowables in the story.
 
-    ReportLab cannot split a Paragraph that lives inside a single Table cell
-    across pages (content gets clipped). Body items are therefore appended
-    directly to the story so long clauses paginate correctly.
+    Body items are NOT wrapped in a Table so Paragraphs can paginate.
     """
     from reportlab.lib import colors
     from reportlab.platypus import Paragraph, Spacer, Table, TableStyle

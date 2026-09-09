@@ -28,6 +28,9 @@
 <link rel="stylesheet" href="{% static 'workspace/css/crm-deal-create-drawer.css' %}?v=1">
 
 {% block crm_extra_css %}{% endblock %}
+{% if crm_section == 'contracts' or '/contracts/' in request.path %}
+<link rel="stylesheet" href="{% static 'contracts/css/contracts-theme.css' %}?v=1">
+{% endif %}
 {% include 'workspace/academy/includes/academy_assets_css.html' %}
 
 {% endblock %}

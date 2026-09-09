@@ -33,10 +33,21 @@ def prepare_rtl_text(text: str) -> str:
         return raw
 
 
+def _reshape_line(line: str) -> str:
+    """Arabic/Persian glyph shaping only — no bidi reorder (ReportLab Paragraph wraps itself)."""
+    if not line or not contains_arabic_script(line):
+        return line or ''
+    try:
+        import arabic_reshaper
+        return arabic_reshaper.reshape(line)
+    except Exception:
+        return line
+
+
 def rtl_paragraph_html(text: str, *, bold: bool = False) -> str:
-    """Plain text → shaped + escaped HTML for ReportLab Paragraph."""
+    """Plain text → reshaped + escaped HTML for ReportLab Paragraph (TA_RIGHT)."""
     lines = (text or '').split('\n')
-    parts = [html.escape(prepare_rtl_text(line)) for line in lines]
+    parts = [html.escape(_reshape_line(line)) for line in lines]
     body = '<br/>'.join(parts)
     return f'<b>{body}</b>' if bold else body
 

@@ -5,8 +5,8 @@
 
 .crm-contract-create {
     --ct-c-primary: var(--ws-primary, #7c3aed);
-    --ct-c-primary-soft: #f5f3ff;
-    --ct-c-primary-border: #ddd6fe;
+    --ct-c-primary-soft: var(--ws-primary-soft, #f5f3ff);
+    --ct-c-primary-border: color-mix(in srgb, var(--ws-primary, #7c3aed) 28%, var(--ws-border, #e2e8f0));
     --ct-c-border: var(--ws-border, #e2e8f0);
     --ct-c-surface: var(--ws-surface, #fff);
     --ct-c-muted: var(--ws-text-muted, #64748b);
@@ -63,7 +63,12 @@
     overflow: hidden;
     border: 1px solid var(--ct-c-primary-border);
     border-radius: var(--ct-c-radius);
-    background: linear-gradient(135deg, #faf5ff 0%, #f5f3ff 50%, #ede9fe 100%);
+    background: linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--ws-primary) 8%, var(--ws-surface)) 0%,
+        var(--ws-primary-soft, #f5f3ff) 50%,
+        color-mix(in srgb, var(--ws-primary) 12%, var(--ws-surface)) 100%
+    );
     box-shadow: 0 4px 18px rgba(124, 58, 237, 0.07);
 }
 
@@ -273,7 +278,7 @@
     height: 0.95rem;
     border-radius: 50%;
     border: 2px solid #cbd5e1;
-    background: #fff;
+    background: var(--ws-surface, #fff);
     transition: border-color 0.12s, box-shadow 0.12s;
 }
 
@@ -289,7 +294,11 @@
 
 .crm-contract-create .ct-create-card:has(input:checked) {
     border-color: var(--ct-c-primary);
-    background: linear-gradient(180deg, #faf5ff 0%, #fff 100%);
+    background: linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--ws-primary) 10%, var(--ws-surface)) 0%,
+        var(--ws-surface) 100%
+    );
     box-shadow: 0 0 0 1px var(--ct-c-primary), 0 4px 14px rgba(124, 58, 237, 0.09);
 }
 
@@ -365,7 +374,7 @@
     padding: 0.6rem;
     border: 1px dashed var(--ct-c-primary-border);
     border-radius: var(--ct-c-radius-sm);
-    background: #fafafa;
+    background: var(--ws-surface-2, #fafafa);
 }
 
 .crm-contract-create .ct-deal-picker__search {

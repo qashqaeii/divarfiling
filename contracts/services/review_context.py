@@ -5,6 +5,7 @@ import re
 from typing import Any, Dict, List, Optional
 
 from contracts.constants import (
+    CONTRACT_STATUS_CANCELLED,
     CONTRACT_STATUS_DRAFT,
     CONTRACT_STATUS_FINALIZED,
     CONTRACT_STATUS_FULLY_ACCEPTED,

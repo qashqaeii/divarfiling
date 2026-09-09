@@ -2,57 +2,89 @@
 {% load static workspace_tags contract_tags %}
 
 {% block page_title %}ویزارد قرارداد{% endblock %}
+{% block mobile_bar_title %}ویزارد قرارداد{% endblock %}
 {% block crm_extra_css %}
 <link rel="stylesheet" href="{% static 'contracts/css/contracts.css' %}?v=16">
 <link rel="stylesheet" href="{% static 'contracts/css/workspace.css' %}?v=4">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-ecosystem.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'contracts/css/contracts-manage.css' %}?v=4">
+<link rel="stylesheet" href="{% static 'contracts/css/contracts-contract-wizard.css' %}?v=1">
 {% endblock %}
 
 {% block crm_content %}
-<div class="crm-page-chrome crm-contract-wizard ct-wizard{% if wizard_step == 'review' %} ct-wizard--review{% endif %}" data-contract-id="{{ contract.pk }}"{% if deal %} data-deal-id="{{ deal.pk }}"{% endif %} data-contract-type="{{ contract.contract_type }}" data-current-step="{{ wizard_step }}">
+<div class="crm-page-chrome crm-contract-manage crm-contract-wizard ct-wizard ct-contract-wizard{% if wizard_step == 'review' %} ct-wizard--review{% endif %}" data-contract-id="{{ contract.pk }}"{% if deal %} data-deal-id="{{ deal.pk }}"{% endif %} data-contract-type="{{ contract.contract_type }}" data-current-step="{{ wizard_step }}">
+    <div class="ct-manage-inner">
 
-    <header class="crm-dash-bar ct-wizard-header{% if wizard_step == 'review' %} ct-review-page-header{% endif %}">
-        <div class="crm-dash-bar-main">
-            <a href="{% if deal %}{% url 'workspace:deal_contracts' deal.pk %}{% else %}{% url 'workspace:contracts_dashboard' %}{% endif %}" class="crm-deal-back" aria-label="بازگشت"><i class="fas fa-arrow-right"></i></a>
-            <div>
-                {% if wizard_step == 'review' %}
-                <h1 class="crm-dash-bar-title">{{ contract.get_contract_type_display }}</h1>
-                <p class="crm-dash-bar-sub is-visible">مرور نهایی قرارداد پیش از ارسال برای تأیید طرفین</p>
-                <p class="ct-review-meta">
-                    <span>قرارداد {{ contract.internal_number }}</span>
-                    <span>نسخه {{ contract.current_version.version_number|default:"1" }}</span>
-                    <span class="crm-contract-status crm-contract-status--{{ contract.status }}">{{ review_context.contract_meta.status_label }}</span>
-                </p>
-                {% else %}
-                <h1 class="crm-dash-bar-title">{{ contract.get_contract_type_display }}</h1>
-                <p class="crm-dash-bar-sub is-visible">
-                    {% if contract.internal_number %}<span class="ct-wizard-meta">{{ contract.internal_number }}</span>{% endif %}
-                    <span class="ct-wizard-autosave" id="ct-wizard-autosave" aria-live="polite"></span>
-                </p>
-                {% endif %}
-            </div>
-        </div>
-    </header>
-
-    <nav class="crm-deal-stepper ct-wizard-stepper" aria-label="مراحل قرارداد">
-        <div class="crm-deal-stepper-track" aria-hidden="true">
-            <i style="width: {% widthratio step_number step_total 100 %}%"></i>
-        </div>
-        <div class="crm-deal-stepper-steps">
-            {% for s, label in display_steps %}
-            <a href="?step={{ s }}"
-               class="crm-deal-step{% if s == wizard_step %} is-active{% elif forloop.counter < step_number %} is-done{% endif %}"
-               {% if s == wizard_step %}aria-current="step"{% endif %}>
-                <span class="crm-deal-step-dot" aria-hidden="true">
-                    {% if forloop.counter < step_number %}<i class="fas fa-check"></i>{% else %}<i class="fas fa-circle"></i>{% endif %}
-                </span>
-                <span class="crm-deal-step-label">{{ label }}</span>
+        <div class="ct-manage-topbar">
+            <nav aria-label="مسیر صفحه">
+                <ol class="ct-manage-breadcrumb">
+                    <li><a href="{% url 'workspace:crm_dashboard' %}"><i class="fas fa-house-chimney" aria-hidden="true"></i> میزکار</a></li>
+                    {% if deal %}
+                    <li><a href="{% url 'workspace:crm_deals' %}">معاملات</a></li>
+                    <li><a href="{% url 'workspace:deal_contracts' deal.pk %}">قراردادها</a></li>
+                    {% else %}
+                    <li><a href="{% url 'workspace:contracts_dashboard' %}">قراردادها</a></li>
+                    {% endif %}
+                    <li><span aria-current="page">{{ contract.internal_number }}</span></li>
+                </ol>
+            </nav>
+            <a href="{% if deal %}{% url 'workspace:deal_contracts' deal.pk %}{% else %}{% url 'workspace:contracts_dashboard' %}{% endif %}" class="ct-manage-back" aria-label="بازگشت">
+                <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                <span>بازگشت</span>
             </a>
-            {% endfor %}
         </div>
-    </nav>
 
-    <form method="post" id="ct-wizard-form">
+        <header class="ct-manage-hero">
+            <div class="ct-manage-hero__main">
+                <div class="ct-manage-hero__title-row">
+                    <span class="ct-manage-hero__icon" aria-hidden="true"><i class="fas fa-file-signature"></i></span>
+                    <div class="ct-manage-hero__titles">
+                        <div class="ct-manage-hero__title-line">
+                            <h1>{{ contract.get_contract_type_display }}</h1>
+                            <span class="ct-manage-status-badge ct-manage-status-badge--{{ contract.status }}">
+                                {% if wizard_step == 'review' %}{{ review_context.contract_meta.status_label }}{% else %}{{ contract.get_status_display }}{% endif %}
+                            </span>
+                        </div>
+                        <p class="ct-manage-hero__number">
+                            {{ contract.internal_number }}
+                            {% if wizard_step == 'review' %} · مرور نهایی{% else %} · مرحله {{ step_number }} از {{ step_total }}{% endif %}
+                            <span class="ct-wizard-autosave" id="ct-wizard-autosave" aria-live="polite"></span>
+                        </p>
+                    </div>
+                </div>
+                <ul class="ct-manage-hero__meta">
+                    {% if deal %}
+                    <li>معامله: <strong>{{ deal.title|truncatechars:40 }}</strong></li>
+                    {% endif %}
+                    {% if wizard_step == 'review' %}
+                    <li>نسخه: <strong>{{ review_context.contract_meta.version_number }}</strong></li>
+                    <li>وضعیت: <strong>{{ review_context.readiness_message }}</strong></li>
+                    {% elif next_step_label %}
+                    <li>مرحله بعد: <strong>{{ next_step_label }}</strong></li>
+                    {% endif %}
+                </ul>
+            </div>
+        </header>
+
+        <nav class="ct-wz-stepper crm-deal-stepper" aria-label="مراحل قرارداد">
+            <div class="crm-deal-stepper-track" aria-hidden="true">
+                <i style="width: {% widthratio step_number step_total 100 %}%"></i>
+            </div>
+            <div class="crm-deal-stepper-steps">
+                {% for s, label in display_steps %}
+                <a href="?step={{ s }}"
+                   class="crm-deal-step{% if s == wizard_step %} is-active{% elif forloop.counter < step_number %} is-done{% endif %}"
+                   {% if s == wizard_step %}aria-current="step"{% endif %}>
+                    <span class="crm-deal-step-dot" aria-hidden="true">
+                        {% if forloop.counter < step_number %}<i class="fas fa-check"></i>{% else %}<i class="fas fa-circle"></i>{% endif %}
+                    </span>
+                    <span class="crm-deal-step-label">{{ label }}</span>
+                </a>
+                {% endfor %}
+            </div>
+        </nav>
+
+    <form method="post" class="ct-wizard-form" id="ct-wizard-form">
         {% csrf_token %}
         <input type="hidden" name="step" value="{{ wizard_step }}">
 
@@ -1007,6 +1039,8 @@
 
         </div>{# .crm-contract-wizard-layout #}
     </form>
+
+    </div>{# .ct-manage-inner #}
 </div>
 {% endblock %}
 

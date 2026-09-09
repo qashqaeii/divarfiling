@@ -4,14 +4,36 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>تأیید شد — فایلینگ دیوار</title>
-    <link rel="stylesheet" href="/static/contracts/css/public.css?v=2">
-    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/contracts/css/public.css?v=3">
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
-<body class="ct-public">
+<body class="ct-public ct-public--handover ct-public--success-page">
+    <header class="ct-public__brand">
+        <div class="ct-public__logo" aria-hidden="true">DF</div>
+        <div class="ct-public__brand-text">
+            <strong>فایلینگ دیوار</strong>
+            <span>صورت‌جلسه تحویل</span>
+        </div>
+    </header>
+
     <main class="ct-public__card ct-public__card--success">
-        <div class="ct-success-icon">✓</div>
-        <h1>صورت‌جلسه تحویل با موفقیت نهایی شد.</h1>
-        <p class="ct-muted">شناسه قرارداد: {{ contract.internal_number }}</p>
+        <div class="ct-success-icon" aria-hidden="true">✓</div>
+        <h1>صورت‌جلسه تحویل با موفقیت تأیید شد</h1>
+        <p class="ct-muted">ثبت شما در سامانه انجام شد و دیگر نیازی به اقدام دیگری نیست.</p>
+        <dl class="ct-public-meta ct-public-meta--center">
+            <div>
+                <dt>قرارداد</dt>
+                <dd>{{ handover.contract.internal_number }}</dd>
+            </div>
+            <div>
+                <dt>وضعیت</dt>
+                <dd>{{ handover.get_status_display }}</dd>
+            </div>
+        </dl>
     </main>
+
+    <footer class="ct-public__foot">
+        <span>فایلینگ دیوار · divarfiling.ir</span>
+    </footer>
 </body>
 </html>

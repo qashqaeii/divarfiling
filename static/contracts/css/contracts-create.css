@@ -32,22 +32,57 @@
     padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
-/* ── Top bar ── */
-.crm-contract-create .ct-create-topbar {
+/* ── Hero toolbar (breadcrumb + back) ── */
+.crm-contract-create .ct-create-hero__toolbar {
     display: flex;
     align-items: center;
+    justify-content: flex-start;
+    gap: 0.65rem;
+    padding: 0.5rem 0.85rem;
+    border-bottom: 1px solid color-mix(in srgb, var(--ct-c-primary-border) 65%, transparent);
+    background: color-mix(in srgb, var(--ws-surface) 55%, transparent);
+}
+
+.crm-contract-create .ct-create-breadcrumb {
+    display: none;
+}
+
+.crm-contract-create .ct-create-breadcrumb a {
+    color: var(--ct-c-muted);
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.12s;
+}
+
+.crm-contract-create .ct-create-breadcrumb a:hover {
+    color: var(--ct-c-primary);
+}
+
+.crm-contract-create .ct-create-breadcrumb [aria-current="page"] {
+    color: var(--ct-c-text);
+    font-weight: 700;
+}
+
+.crm-contract-create .ct-create-breadcrumb a + span::before {
+    content: '\2039';
+    margin-inline-end: 0.35rem;
+    opacity: 0.45;
 }
 
 .crm-contract-create .ct-create-back {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 2rem;
-    height: 2rem;
+    gap: 0.35rem;
+    flex-shrink: 0;
+    min-height: 2rem;
+    padding: 0.28rem 0.65rem;
     border: 1px solid var(--ct-c-border);
     border-radius: 9px;
     background: var(--ct-c-surface);
     color: var(--ct-c-muted);
+    font-size: 0.72rem;
+    font-weight: 700;
     text-decoration: none;
     transition: background 0.12s, border-color 0.12s, color 0.12s;
 }
@@ -56,6 +91,10 @@
     background: var(--ws-surface-2, #f8fafc);
     border-color: var(--ct-c-primary-border);
     color: var(--ct-c-primary);
+}
+
+.crm-contract-create .ct-create-back i {
+    font-size: 0.68rem;
 }
 
 /* ── Hero (Image B — tighter) ── */
@@ -543,6 +582,25 @@
 }
 
 /* ── Responsive ── */
+@media (min-width: 640px) {
+    .crm-contract-create .ct-create-hero__toolbar {
+        justify-content: space-between;
+    }
+
+    .crm-contract-create .ct-create-breadcrumb {
+        display: flex;
+        flex: 1;
+        min-width: 0;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+        margin: 0;
+        padding: 0;
+        font-size: 0.68rem;
+        color: var(--ct-c-muted);
+    }
+}
+
 @media (max-width: 768px) {
     .crm-contract-create .ct-create-hero__grid {
         grid-template-columns: 1fr;

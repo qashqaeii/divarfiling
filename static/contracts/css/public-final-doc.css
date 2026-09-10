@@ -15,6 +15,8 @@
     --ct-doc-radius: 4px;
     --ct-doc-shadow: 0 24px 64px rgba(12, 25, 41, 0.12), 0 2px 8px rgba(12, 25, 41, 0.06);
     background: linear-gradient(165deg, #e8eef5 0%, #f0f4f8 35%, #f8fafc 100%);
+    overflow-x: clip;
+    max-width: 100%;
 }
 
 /* ——— Sticky shell ——— */
@@ -22,17 +24,21 @@
     max-width: 920px;
     margin: 0 auto;
     padding: 0 1rem 3rem;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .ct-doc-topbar {
     position: sticky;
     top: 0;
     z-index: 40;
-    margin: 0 -1rem 1rem;
+    margin: 0 0 1rem;
     padding: 0.65rem 1rem;
     background: rgba(248, 250, 252, 0.92);
     backdrop-filter: blur(12px);
     border-bottom: 1px solid var(--ct-doc-border);
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .ct-doc-topbar__inner {
@@ -573,6 +579,8 @@
     margin: 0.35rem 0 0;
     font-size: 0.74rem;
     color: var(--ct-doc-muted);
+    line-height: 1.65;
+    word-break: break-word;
 }
 
 .ct-ho-block {
@@ -637,7 +645,7 @@
 
 .ct-ho-keys {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 118px), 1fr));
     gap: 0.45rem;
 }
 
@@ -688,7 +696,7 @@
 
 .ct-ho-gallery {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 118px), 1fr));
     gap: 0.55rem;
 }
 
@@ -789,6 +797,8 @@
     background: #f1f5f9;
     padding: 0.12rem 0.35rem;
     border-radius: 4px;
+    word-break: break-all;
+    overflow-wrap: anywhere;
 }
 
 /* ——— Gate screen polish ——— */

@@ -1159,9 +1159,11 @@ def product_rating_display_stats():
 
 # ضریب نمایش آمار صفحه اصلی (عدد واقعی دیتابیس × این مقدار)
 HOME_STATS_DISPLAY_MULTIPLIER = 3
-# ضریب اضافه فقط برای «لایسنس فعال» روی مقدار نمایشی (×2 = دو برابر عدد فعلی)
-HOME_STATS_LICENSES_EXTRA_MULTIPLIER = 2
-HOME_STATS_CACHE_KEY = 'shop:home_display_stats:v3'
+# ضریب اضافه فقط برای «خرید موفق» (×3 روی مقدار قبلی نمایشی)
+HOME_STATS_ORDERS_EXTRA_MULTIPLIER = 3
+# ضریب اضافه فقط برای «لایسنس فعال» روی مقدار نمایشی (×6 نسبت به raw؛ ×3 نسبت به نمایش قبلی)
+HOME_STATS_LICENSES_EXTRA_MULTIPLIER = 6
+HOME_STATS_CACHE_KEY = 'shop:home_display_stats:v4'
 HOME_STATS_CACHE_TTL = 60  # ثانیه — آمار لایو با کش کوتاه
 
 
@@ -1252,7 +1254,7 @@ def home_display_stats():
 
     stats = {
         'total_users': users_raw * mult,
-        'total_orders': orders_raw * mult,
+        'total_orders': orders_raw * mult * HOME_STATS_ORDERS_EXTRA_MULTIPLIER,
         'total_licenses': licenses_raw * mult * HOME_STATS_LICENSES_EXTRA_MULTIPLIER,
         'satisfaction_rate': _home_satisfaction_rate(),
         'is_live': True,

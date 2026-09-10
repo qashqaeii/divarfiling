@@ -7,6 +7,7 @@ from django.utils import timezone
 from shop.bot_catalog import (
     HOME_STATS_DISPLAY_MULTIPLIER,
     HOME_STATS_LICENSES_EXTRA_MULTIPLIER,
+    HOME_STATS_ORDERS_EXTRA_MULTIPLIER,
     home_display_stats,
 )
 from shop.models import LicensePlan, Order, Product
@@ -55,7 +56,10 @@ class HomeDisplayStatsTests(TestCase):
         self.assertTrue(stats['is_live'])
         self.assertEqual(stats['display_multiplier'], HOME_STATS_DISPLAY_MULTIPLIER)
         self.assertEqual(stats['raw']['total_orders'], 1)
-        self.assertEqual(stats['total_orders'], 1 * HOME_STATS_DISPLAY_MULTIPLIER)
+        self.assertEqual(
+            stats['total_orders'],
+            1 * HOME_STATS_DISPLAY_MULTIPLIER * HOME_STATS_ORDERS_EXTRA_MULTIPLIER,
+        )
         self.assertEqual(stats['raw']['total_licenses'], 1)
         self.assertEqual(
             stats['total_licenses'],

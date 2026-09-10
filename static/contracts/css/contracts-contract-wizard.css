@@ -602,22 +602,27 @@ body:has(.ct-contract-wizard) .ws-bottom-nav {
     margin-top: 0.75rem;
 }
 
-.ct-contract-wizard .ct-review-handover-actions {
+.ct-contract-wizard .ct-review-handover-actions,
+.ct-contract-wizard .ct-handover-actions {
     display: flex;
     flex-direction: column;
     gap: 0.45rem;
     width: 100%;
 }
 
-.ct-contract-wizard .ct-review-sidebar-actions .ct-review-handover-actions {
-    margin-top: 0.35rem;
+.ct-contract-wizard .ct-review-sidebar-actions .ct-review-handover-actions,
+.ct-contract-wizard .ct-review-sidebar-handover {
+    margin-top: 0;
+    margin-bottom: 0.35rem;
 }
 
+.ct-contract-wizard .ct-handover-form,
 .ct-contract-wizard .ct-review-handover-form {
     margin: 0;
     width: 100%;
 }
 
+.ct-contract-wizard .ct-handover-act,
 .ct-contract-wizard .ct-review-handover-btn {
     display: inline-flex;
     align-items: center;
@@ -626,6 +631,7 @@ body:has(.ct-contract-wizard) .ws-bottom-nav {
     width: 100%;
 }
 
+.ct-contract-wizard .ct-handover-act--done,
 .ct-contract-wizard .ct-review-handover-btn--done {
     background: rgba(16, 185, 129, 0.1);
     border-color: rgba(16, 185, 129, 0.35);

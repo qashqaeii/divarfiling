@@ -8,7 +8,7 @@
 <link rel="stylesheet" href="{% static 'contracts/css/workspace.css' %}?v=4">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-ecosystem.css' %}?v=2">
 <link rel="stylesheet" href="{% static 'contracts/css/contracts-manage.css' %}?v=4">
-<link rel="stylesheet" href="{% static 'contracts/css/contracts-contract-wizard.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'contracts/css/contracts-contract-wizard.css' %}?v=4">
 {% endblock %}
 
 {% block crm_content %}
@@ -941,10 +941,10 @@
                             <span class="ct-review-status__title">قرارداد نهایی شد</span>
                             <span class="ct-review-status__detail">لینک مشاهده نسخه رسمی برای طرفین پیامک شده است.</span>
                             <div class="ct-review-final-actions">
+                                {% include 'contracts/partials/handover_action.html' with handover_actions_class='ct-review-handover-actions' handover_primary=False %}
                                 {% if review_context.public_final_view_url %}
                                 <a href="{{ review_context.public_final_view_url }}" class="crm-dash-act crm-dash-act--primary ct-review-final-link" target="_blank" rel="noopener">مشاهده نسخه رسمی قرارداد</a>
                                 {% endif %}
-                                {% include 'contracts/partials/handover_action.html' %}
                             </div>
                         </div>
                         {% elif review_context.invitations_sent and not review_context.show_send_actions %}
@@ -1035,10 +1035,10 @@
                             <p class="ct-review-send-note">پس از ارسال، برای تغییر مفاد قرارداد باید نسخه جدید ایجاد شود.</p>
                             {% endif %}
                             {% elif review_context.is_finalized %}
+                            {% include 'contracts/partials/handover_action.html' with handover_actions_class='ct-review-handover-actions ct-review-sidebar-handover' handover_primary=True %}
                             {% if review_context.public_final_view_url %}
                             <a href="{{ review_context.public_final_view_url }}" class="crm-dash-act crm-dash-act--primary ct-btn-block" target="_blank" rel="noopener">مشاهده نسخه رسمی قرارداد</a>
                             {% endif %}
-                            {% include 'contracts/partials/handover_action.html' %}
                             <p class="ct-review-send-note">قرارداد نهایی شده است. با لینک بالا همان نسخه‌ای را می‌بینید که برای طرفین ارسال شده.</p>
                             {% elif review_context.invitations_sent %}
                             <p class="ct-review-send-note">دعوتنامه برای طرفین ارسال شده است. پس از تأیید هر دو طرف، قرارداد به‌صورت خودکار نهایی و لینک رسمی پیامک می‌شود.</p>

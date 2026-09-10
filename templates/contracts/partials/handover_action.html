@@ -1,22 +1,19 @@
-{% if deal and review_context.is_finalized %}
-<div class="ct-review-handover-actions">
+{% load contract_tags %}
+{% if contract.status == 'finalized' %}
+<div class="ct-handover-actions{% if handover_actions_class %} {{ handover_actions_class }}{% endif %}">
     {% if finalized_handover and handover_public_pdf_url %}
-    <a href="{{ handover_public_pdf_url }}" target="_blank" rel="noopener" class="crm-dash-act ct-review-handover-btn ct-review-handover-btn--done">
+    <a href="{{ handover_public_pdf_url }}" target="_blank" rel="noopener" class="crm-dash-act ct-handover-act ct-handover-act--done{% if handover_primary %} crm-dash-act--primary{% endif %}">
         <i class="fas fa-file-contract" aria-hidden="true"></i>
         <span>مشاهده صورت‌جلسه تحویل</span>
     </a>
-    <a href="{% url 'workspace:handover_wizard' deal.pk contract.pk finalized_handover.pk %}?step=review" class="crm-dash-act ct-review-handover-btn">
-        <i class="fas fa-clipboard-list" aria-hidden="true"></i>
-        <span>مدیریت صورت‌جلسه</span>
-    </a>
-    {% elif handover %}
-    <a href="{% url 'workspace:handover_wizard' deal.pk contract.pk handover.pk %}" class="crm-dash-act crm-dash-act--primary ct-review-handover-btn">
+    {% elif handover and handover.status != 'finalized' %}
+    <a href="{% ct_handover_wizard_url contract handover %}" class="crm-dash-act crm-dash-act--primary ct-handover-act">
         <i class="fas fa-clipboard-list" aria-hidden="true"></i>
         <span>ادامه صورت‌جلسه تحویل</span>
     </a>
     {% else %}
-    <form method="post" action="{% url 'workspace:handover_create' deal.pk contract.pk %}" class="ct-review-handover-form">{% csrf_token %}
-        <button type="submit" class="crm-dash-act crm-dash-act--primary ct-review-handover-btn">
+    <form method="post" action="{% ct_handover_create_url contract %}" class="ct-handover-form">{% csrf_token %}
+        <button type="submit" class="crm-dash-act crm-dash-act--primary ct-handover-act">
             <i class="fas fa-clipboard-list" aria-hidden="true"></i>
             <span>ثبت صورت‌جلسه تحویل ملک</span>
         </button>

@@ -693,6 +693,7 @@ class ContractHandover(models.Model):
     deal = models.ForeignKey(
         'workspace.CRMDeal', on_delete=models.CASCADE,
         related_name='contract_handovers', verbose_name='معامله',
+        null=True, blank=True,
     )
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE,

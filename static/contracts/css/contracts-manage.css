@@ -189,21 +189,23 @@
     grid-column: 1 / -1;
 }
 
-.crm-contract-manage .ct-manage-hero__actions:has(.ct-manage-handover-btn) .crm-dash-act--primary,
-.crm-contract-manage .ct-manage-hero__actions:has(.ct-manage-handover-form) .crm-dash-act--primary {
+.crm-contract-manage .ct-manage-hero__actions:has(.ct-handover-act) .crm-dash-act--primary,
+.crm-contract-manage .ct-manage-hero__actions:has(.ct-handover-form) .crm-dash-act--primary {
     grid-column: auto;
 }
 
-.crm-contract-manage .ct-manage-handover-form {
+.crm-contract-manage .ct-handover-form {
     display: contents;
 }
 
-.crm-contract-manage .ct-manage-handover-btn {
+.crm-contract-manage .ct-manage-handover-actions .ct-handover-act,
+.crm-contract-manage .ct-handover-act.ct-manage-handover-btn {
     border: 1px solid #ddd6fe;
     background: #faf5ff;
     color: var(--ct-m-primary);
 }
 
+.crm-contract-manage .ct-handover-act--done,
 .crm-contract-manage .ct-manage-handover-btn--done {
     border-color: #bbf7d0;
     background: #f0fdf4;
@@ -852,21 +854,33 @@
 
 .crm-contract-manage .ct-manage-more-menu {
     position: relative;
+    z-index: 8;
 }
 
 .crm-contract-manage .ct-manage-more-menu .ct-menu-panel {
     position: absolute;
     top: calc(100% + 0.3rem);
     bottom: auto;
-    inset-inline-end: 0;
-    inset-inline-start: auto;
+    inset-inline-start: 0;
+    inset-inline-end: auto;
     left: auto !important;
     right: auto !important;
     margin: 0;
     border-radius: 8px;
     box-shadow: 0 4px 16px rgba(15, 23, 42, 0.12);
-    min-width: 200px;
-    z-index: 60;
+    min-width: 210px;
+    max-width: min(240px, calc(100vw - 1.5rem));
+    z-index: 80;
+}
+
+.crm-contract-manage .ct-manage-more-menu.is-align-start .ct-menu-panel {
+    inset-inline-start: auto;
+    inset-inline-end: 0;
+}
+
+.crm-contract-manage .ct-manage-more-menu.is-drop-up .ct-menu-panel {
+    top: auto;
+    bottom: calc(100% + 0.3rem);
 }
 
 /* ── Tablet ── */
@@ -989,11 +1003,11 @@
     }
 
     .crm-contract-manage .ct-manage-hero__actions .crm-dash-act--primary,
-    .crm-contract-manage .ct-manage-hero__actions .ct-manage-handover-btn {
+    .crm-contract-manage .ct-manage-hero__actions .ct-handover-act {
         grid-column: auto;
     }
 
-    .crm-contract-manage .ct-manage-handover-form {
+    .crm-contract-manage .ct-handover-form {
         display: inline;
     }
 

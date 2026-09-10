@@ -19,12 +19,16 @@
             <nav aria-label="مسیر صفحه">
                 <ol class="ct-manage-breadcrumb">
                     <li><a href="{% url 'workspace:crm_dashboard' %}"><i class="fas fa-house-chimney" aria-hidden="true"></i> میزکار</a></li>
+                    {% if deal %}
                     <li><a href="{% url 'workspace:crm_deals' %}">معاملات</a></li>
-                    <li><a href="{% url 'workspace:contract_manage' deal.pk contract.pk %}">{{ contract.internal_number }}</a></li>
+                    {% else %}
+                    <li><a href="{% url 'workspace:contracts_dashboard' %}">قراردادها</a></li>
+                    {% endif %}
+                    <li><a href="{% ct_manage_url contract %}">{{ contract.internal_number }}</a></li>
                     <li><span aria-current="page">صورت‌جلسه تحویل</span></li>
                 </ol>
             </nav>
-            <a href="{% url 'workspace:contract_manage' deal.pk contract.pk %}" class="ct-manage-back" aria-label="بازگشت به قرارداد">
+            <a href="{% ct_manage_url contract %}" class="ct-manage-back" aria-label="بازگشت به قرارداد">
                 <i class="fas fa-arrow-right" aria-hidden="true"></i>
                 <span>بازگشت</span>
             </a>
@@ -49,7 +53,7 @@
                 </div>
                 <ul class="ct-manage-hero__meta">
                     <li>نوع تحویل: <strong>{{ handover.get_handover_type_display }}</strong></li>
-                    <li>معامله: <strong>{{ deal.title|truncatechars:40 }}</strong></li>
+                    {% if deal %}<li>معامله: <strong>{{ deal.title|truncatechars:40 }}</strong></li>{% endif %}
                     {% if handover_step != 'review' and next_step_label %}
                     <li>مرحله بعد: <strong>{{ next_step_label }}</strong></li>
                     {% elif handover_step == 'review' %}
@@ -625,11 +629,13 @@
                     <dl class="crm-contract-context-dl crm-contract-summary-dl">
                         <dt>قرارداد</dt>
                         <dd>{{ contract.internal_number }}</dd>
+                        {% if deal %}
                         <dt>معامله</dt>
                         <dd>{{ deal.title|truncatechars:36 }}</dd>
                         {% if deal.property %}
                         <dt>ملک</dt>
                         <dd>{{ deal.property.title|truncatechars:32 }}</dd>
+                        {% endif %}
                         {% endif %}
                         <dt>وضعیت</dt>
                         <dd>{{ handover.get_status_display }}</dd>

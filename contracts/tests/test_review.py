@@ -268,6 +268,33 @@ class ReviewStepTests(TestCase):
         self.assertContains(resp, ctx['public_final_view_url'])
         self.assertContains(resp, 'ثبت صورت‌جلسه تحویل ملک')
 
+    def test_finalized_standalone_review_shows_handover_button(self):
+        from unittest.mock import patch
+
+        from contracts.services.acceptance import accept_contract
+        from contracts.services.invitations import send_invitations
+        from contracts.services.lifecycle import prepare_for_send
+
+        c = self._lease_contract()
+        c.deal = None
+        c.save(update_fields=['deal'])
+        with patch('contracts.services.invitations.send_simple_sms'), \
+             patch('contracts.services.pdf.generate_contract_pdf'):
+            prepare_for_send(c, user=self.user)
+            send_invitations(c, user=self.user)
+            for inv in c.invitations.filter(is_revoked=False):
+                accept_contract(
+                    inv,
+                    phone=inv.mobile,
+                    national_id=inv.party.national_id if inv.party_id else inv.witness.national_id,
+                    ack_checkboxes=['not_official'],
+                    otp_already_verified=True,
+                )
+        c.refresh_from_db()
+        url = reverse('workspace:contract_wizard_standalone', kwargs={'contract_id': c.pk})
+        resp = self.client.get(url + '?step=review')
+        self.assertContains(resp, 'ثبت صورت‌جلسه تحویل ملک')
+
     def test_clauses_step_renders_custom_agreement_with_body_key(self):
         c = self._lease_contract()
         url = reverse('workspace:contract_wizard', kwargs={'deal_id': self.deal_rent.pk, 'contract_id': c.pk})

@@ -249,7 +249,7 @@ class ContractWizardView(ContractAccessMixin, TemplateView):
         handover = None
         finalized_handover = None
         handover_public_pdf_url = ''
-        if step == 'review' and contract.deal_id:
+        if step == 'review':
             handover = contract.handovers.order_by('-created_at').first()
             finalized_handover = contract.handovers.filter(status='finalized').first()
             if finalized_handover:

@@ -41,6 +41,21 @@ standalone_urlpatterns = [
         views.ContractPdfPreviewView.as_view(),
         name='contract_pdf_preview_standalone',
     ),
+    path(
+        'crm/contracts/<int:contract_id>/handover/create/',
+        handover_views.HandoverCreateView.as_view(),
+        name='handover_create_standalone',
+    ),
+    path(
+        'crm/contracts/<int:contract_id>/handover/<int:handover_id>/wizard/',
+        handover_views.HandoverWizardView.as_view(),
+        name='handover_wizard_standalone',
+    ),
+    path(
+        'crm/contracts/<int:contract_id>/handover/<int:handover_id>/pdf/',
+        handover_views.HandoverPdfDownloadView.as_view(),
+        name='handover_pdf_standalone',
+    ),
 ]
 
 # مسیرهای سازگار با گذشته (deal در URL)

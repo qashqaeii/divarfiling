@@ -65,5 +65,21 @@ def handover_public_pdf_url(contract, *, request=None) -> str:
     return f'{base.rstrip("/")}/handover/pdf/'
 
 
+def handover_create_url(contract) -> str:
+    if contract.deal_id:
+        return reverse('workspace:handover_create', kwargs=_deal_kw(contract))
+    return reverse('workspace:handover_create_standalone', kwargs={'contract_id': contract.pk})
+
+
+def handover_wizard_url(contract, handover, *, step: str = '') -> str:
+    kwargs = {'contract_id': contract.pk, 'handover_id': handover.pk}
+    if contract.deal_id:
+        kwargs['deal_id'] = contract.deal_id
+        url = reverse('workspace:handover_wizard', kwargs=kwargs)
+    else:
+        url = reverse('workspace:handover_wizard_standalone', kwargs=kwargs)
+    return f'{url}?step={step}' if step else url
+
+
 def deal_contracts_filter_url(deal_id: int) -> str:
     return contracts_dashboard_url(deal=deal_id)

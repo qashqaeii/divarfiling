@@ -101,3 +101,15 @@ def ct_wizard_url(contract):
 def ct_pdf_url(contract):
     from contracts.services.routing import contract_pdf_url
     return contract_pdf_url(contract)
+
+
+@register.simple_tag
+def ct_handover_create_url(contract):
+    from contracts.services.routing import handover_create_url
+    return handover_create_url(contract)
+
+
+@register.simple_tag
+def ct_handover_wizard_url(contract, handover, step=''):
+    from contracts.services.routing import handover_wizard_url
+    return handover_wizard_url(contract, handover, step=step)

@@ -14,7 +14,7 @@
 
 <link rel="stylesheet" href="{% static 'workspace/css/crm-ecosystem.css' %}?v=2">
 
-<link rel="stylesheet" href="{% static 'contracts/css/contracts-manage.css' %}?v=5">
+<link rel="stylesheet" href="{% static 'contracts/css/contracts-manage.css' %}?v=6">
 
 {% endblock %}
 
@@ -118,26 +118,7 @@
                     <i class="fas fa-eye" aria-hidden="true"></i>
                     <span>مشاهده قرارداد</span>
                 </a>
-                {% if deal %}
-                    {% if finalized_handover and handover_public_pdf_url %}
-                    <a href="{{ handover_public_pdf_url }}" target="_blank" rel="noopener" class="crm-dash-act ct-manage-handover-btn ct-manage-handover-btn--done">
-                        <i class="fas fa-file-contract" aria-hidden="true"></i>
-                        <span>صورت‌جلسه تحویل</span>
-                    </a>
-                    {% elif handover %}
-                    <a href="{% url 'workspace:handover_wizard' deal.pk contract.pk handover.pk %}" class="crm-dash-act ct-manage-handover-btn">
-                        <i class="fas fa-clipboard-list" aria-hidden="true"></i>
-                        <span>ادامه صورت‌جلسه</span>
-                    </a>
-                    {% else %}
-                    <form method="post" action="{% url 'workspace:handover_create' deal.pk contract.pk %}" class="ct-manage-inline-form ct-manage-handover-form">{% csrf_token %}
-                        <button type="submit" class="crm-dash-act ct-manage-handover-btn">
-                            <i class="fas fa-clipboard-list" aria-hidden="true"></i>
-                            <span>صورت‌جلسه تحویل</span>
-                        </button>
-                    </form>
-                    {% endif %}
-                {% endif %}
+                {% include 'contracts/partials/handover_action.html' with handover_actions_class='ct-manage-handover-actions' %}
                 <a href="{{ contract_pdf_url }}" class="crm-dash-act">
                     <i class="fas fa-file-pdf" aria-hidden="true"></i>
                     <span>PDF</span>
@@ -205,22 +186,16 @@
 
                         {% endif %}
 
-                        {% if deal and contract.status == 'finalized' and not finalized_handover and not handover %}
-
-                        <form method="post" action="{% url 'workspace:handover_create' deal.pk contract.pk %}">{% csrf_token %}
-
-                            <button type="submit" role="menuitem">ثبت صورت‌جلسه تحویل</button>
-
+                        {% if contract.status == 'finalized' %}
+                        {% if finalized_handover and handover_public_pdf_url %}
+                        <a href="{{ handover_public_pdf_url }}" target="_blank" rel="noopener" role="menuitem">مشاهده صورت‌جلسه تحویل</a>
+                        {% elif handover and handover.status != 'finalized' %}
+                        <a href="{% ct_handover_wizard_url contract handover %}" role="menuitem">ادامه صورت‌جلسه تحویل</a>
+                        {% elif not handover %}
+                        <form method="post" action="{% ct_handover_create_url contract %}">{% csrf_token %}
+                            <button type="submit" role="menuitem">ثبت صورت‌جلسه تحویل ملک</button>
                         </form>
-
-                        {% elif deal and handover and handover.status != 'finalized' %}
-
-                        <a href="{% url 'workspace:handover_wizard' deal.pk contract.pk handover.pk %}" role="menuitem">ادامه صورت‌جلسه</a>
-
-                        {% elif deal and finalized_handover and handover_public_pdf_url %}
-
-                        <a href="{{ handover_public_pdf_url }}" target="_blank" rel="noopener" role="menuitem">مشاهده صورت‌جلسه</a>
-
+                        {% endif %}
                         {% endif %}
 
                     </div>
@@ -581,15 +556,51 @@
 
       e.stopPropagation();
 
-      var open = menu.classList.toggle('is-open');
+      var willOpen = !menu.classList.contains('is-open');
 
-      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      menu.classList.toggle('is-open');
+
+      menu.classList.remove('is-drop-up');
+
+      if (willOpen) {
+
+        var panel = menu.querySelector('.ct-menu-panel');
+
+        if (panel) {
+
+          panel.style.display = 'block';
+
+          var rect = panel.getBoundingClientRect();
+
+          if (rect.bottom > window.innerHeight - 8) {
+
+            menu.classList.add('is-drop-up');
+
+          }
+
+          if (rect.left < 8) {
+
+            menu.classList.add('is-align-start');
+
+          } else {
+
+            menu.classList.remove('is-align-start');
+
+          }
+
+          panel.style.display = '';
+
+        }
+
+      }
+
+      btn.setAttribute('aria-expanded', menu.classList.contains('is-open') ? 'true' : 'false');
 
     });
 
     document.addEventListener('click', function () {
 
-      menu.classList.remove('is-open');
+      menu.classList.remove('is-open', 'is-drop-up', 'is-align-start');
 
       btn.setAttribute('aria-expanded', 'false');
 

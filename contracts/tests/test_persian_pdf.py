@@ -28,6 +28,14 @@ class PersianTextTests(TestCase):
     def test_rtl_paragraph_html_plain_ascii(self):
         self.assertEqual(rtl_paragraph_html('hello world'), 'hello world')
 
+    def test_rtl_paragraph_html_bidi_shapes_persian(self):
+        import html
+
+        text = 'ماده ۱۰ - تعهدات خریدار'
+        shaped = rtl_paragraph_html(text)
+        self.assertEqual(shaped, html.escape(prepare_rtl_text(text)))
+        self.assertNotEqual(shaped, text)
+
 
 class ContractDisplayTests(TestCase):
     def test_display_matches_sections(self):

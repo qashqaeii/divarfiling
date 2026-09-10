@@ -34,12 +34,18 @@ def prepare_rtl_text(text: str) -> str:
 
 
 def _reshape_line(line: str) -> str:
-    """Arabic/Persian glyph shaping only — no bidi reorder (ReportLab Paragraph wraps itself)."""
+    """Reshape + bidi reorder for ReportLab Paragraph (TA_RIGHT / TA_CENTER)."""
     if not line or not contains_arabic_script(line):
         return line or ''
     try:
         import arabic_reshaper
-        return arabic_reshaper.reshape(line)
+        from bidi.algorithm import get_display
+
+        reshaped = arabic_reshaper.reshape(line)
+        try:
+            return get_display(reshaped, base_dir='R')
+        except TypeError:
+            return get_display(reshaped)
     except Exception:
         return line
 

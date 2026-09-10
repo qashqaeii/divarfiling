@@ -58,7 +58,7 @@
                     <tr>
                         <td><strong>#{{ lic.sequence }}</strong></td>
                         <td><span class="agency-status agency-status--ok">فعال</span></td>
-                        <td>{{ lic.assigned_member.name|default:lic.assigned_member.phone }}</td>
+                        <td>{{ lic.assigned_member.name|default:lic.assigned_member.username }}</td>
                         <td><a href="{% url 'workspace:agency_hub_advisors' %}" class="crm-btn crm-btn-ghost crm-btn-sm">مدیریت</a></td>
                     </tr>
                     {% endfor %}

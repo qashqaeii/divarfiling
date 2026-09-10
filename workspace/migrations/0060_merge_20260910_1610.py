@@ -1,4 +1,4 @@
-# Merge parallel branches: production index rename (0057_rename) + agency/lost_reason (0059).
+# Generated on production — merges index-rename branch + agency/lost_reason branch.
 
 from django.db import migrations
 

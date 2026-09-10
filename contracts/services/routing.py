@@ -81,5 +81,15 @@ def handover_wizard_url(contract, handover, *, step: str = '') -> str:
     return f'{url}?step={step}' if step else url
 
 
+def contract_attachment_download_url(contract, attachment_id, *, inline: bool = False) -> str:
+    kwargs = {'contract_id': contract.pk, 'attachment_id': attachment_id}
+    if contract.deal_id:
+        kwargs['deal_id'] = contract.deal_id
+        url = reverse('workspace:contract_attachment_download', kwargs=kwargs)
+    else:
+        url = reverse('workspace:contract_attachment_download_standalone', kwargs=kwargs)
+    return f'{url}?inline=1' if inline else url
+
+
 def deal_contracts_filter_url(deal_id: int) -> str:
     return contracts_dashboard_url(deal=deal_id)

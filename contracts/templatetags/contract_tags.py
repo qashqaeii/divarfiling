@@ -113,3 +113,9 @@ def ct_handover_create_url(contract):
 def ct_handover_wizard_url(contract, handover, step=''):
     from contracts.services.routing import handover_wizard_url
     return handover_wizard_url(contract, handover, step=step)
+
+
+@register.simple_tag
+def ct_attachment_url(contract, attachment_id, inline=False):
+    from contracts.services.routing import contract_attachment_download_url
+    return contract_attachment_download_url(contract, attachment_id, inline=inline)

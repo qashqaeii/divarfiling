@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from django.contrib import messages
-from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import ValidationError
 from django.http import FileResponse, Http404
 from django.shortcuts import redirect
@@ -16,8 +15,7 @@ from contracts.services.handover import HandoverError, create_handover, publish_
 from contracts.services.handover_parse import parse_handover_step
 from contracts.services.handover_wizard import VALID_STEPS, build_handover_wizard_context
 from contracts.services.routing import contract_manage_url, handover_wizard_url
-from contracts.services.scope import contract_for_user
-from contracts.views import ContractAccessMixin, DealContractsMixin
+from contracts.views import ContractAccessMixin
 
 
 class HandoverCreateView(ContractAccessMixin, View):
@@ -101,11 +99,12 @@ class HandoverWizardView(ContractAccessMixin, TemplateView):
         return redirect(handover_wizard_url(contract, handover, step=next_step))
 
 
-class ContractAttachmentUploadView(DealContractsMixin, View):
-    def post(self, request, deal_id, contract_id):
-        contract = contract_for_user(request.user, contract_id)
-        if not contract or contract.deal_id != deal_id:
-            raise Http404
+class ContractAttachmentUploadView(ContractAccessMixin, View):
+    def post(self, request, contract_id, deal_id=None):
+        self.kwargs.setdefault('contract_id', contract_id)
+        if deal_id is not None:
+            self.kwargs['deal_id'] = deal_id
+        contract = self.get_contract()
         version = contract.current_version
         uploaded = request.FILES.get('file')
         if not uploaded:
@@ -126,10 +125,14 @@ class ContractAttachmentUploadView(DealContractsMixin, View):
         return redirect(request.META.get('HTTP_REFERER', contract_manage_url(contract)))
 
 
-class ContractAttachmentDownloadView(LoginRequiredMixin, View):
-    def get(self, request, deal_id, contract_id, attachment_id):
+class ContractAttachmentDownloadView(ContractAccessMixin, View):
+    def get(self, request, contract_id, attachment_id, deal_id=None):
+        self.kwargs.setdefault('contract_id', contract_id)
+        if deal_id is not None:
+            self.kwargs['deal_id'] = deal_id
+        contract = self.get_contract()
         att = attachment_for_user(request.user, attachment_id)
-        if not att or att.contract_id != contract_id or att.contract.deal_id != deal_id:
+        if not att or att.contract_id != contract.pk:
             raise Http404
         inline = request.GET.get('inline') == '1'
         return build_attachment_response(att, inline=inline)

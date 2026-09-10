@@ -331,8 +331,8 @@
                     <ul class="ho-photo-grid">
                         {% for photo in photos %}
                         <li>
-                            <a href="{% url 'workspace:contract_attachment_download' deal.pk contract.pk photo.pk %}?inline=1" target="_blank" rel="noopener">
-                                <img src="{% url 'workspace:contract_attachment_download' deal.pk contract.pk photo.pk %}?inline=1" alt="{{ photo.title|default:'تصویر ملک' }}">
+                            <a href="{% ct_attachment_url contract photo.pk True %}" target="_blank" rel="noopener">
+                                <img src="{% ct_attachment_url contract photo.pk True %}" alt="{{ photo.title|default:'تصویر ملک' }}">
                             </a>
                             {% if photo.title %}<span>{{ photo.title }}</span>{% endif %}
                         </li>
@@ -517,8 +517,8 @@
                         <ul class="ho-photo-grid ho-photo-grid--review">
                             {% for photo in review.photos %}
                             <li>
-                                <a href="{% url 'workspace:contract_attachment_download' deal.pk contract.pk photo.pk %}?inline=1" target="_blank" rel="noopener">
-                                    <img src="{% url 'workspace:contract_attachment_download' deal.pk contract.pk photo.pk %}?inline=1" alt="{{ photo.title|default:'تصویر ملک' }}">
+                                <a href="{% ct_attachment_url contract photo.pk True %}" target="_blank" rel="noopener">
+                                    <img src="{% ct_attachment_url contract photo.pk True %}" alt="{{ photo.title|default:'تصویر ملک' }}">
                                 </a>
                             </li>
                             {% endfor %}

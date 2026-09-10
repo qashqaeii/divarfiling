@@ -56,6 +56,16 @@ standalone_urlpatterns = [
         handover_views.HandoverPdfDownloadView.as_view(),
         name='handover_pdf_standalone',
     ),
+    path(
+        'crm/contracts/<int:contract_id>/attachments/<int:attachment_id>/',
+        handover_views.ContractAttachmentDownloadView.as_view(),
+        name='contract_attachment_download_standalone',
+    ),
+    path(
+        'crm/contracts/<int:contract_id>/attachments/upload/',
+        handover_views.ContractAttachmentUploadView.as_view(),
+        name='contract_attachment_upload_standalone',
+    ),
 ]
 
 # مسیرهای سازگار با گذشته (deal در URL)

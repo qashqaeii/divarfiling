@@ -305,3 +305,28 @@ class HandoverTests(ContractTestBase):
         self.assertContains(review, 'رضا خریدار')
         self.assertContains(review, 'خلاصه تحویل')
 
+    def test_standalone_handover_review_with_photos(self):
+        from contracts.constants import CONTRACT_TYPE_SALE
+
+        c = create_contract(self.user, CONTRACT_TYPE_SALE, deal_id=self.deal.pk)
+        c.deal = None
+        c.status = 'finalized'
+        c.save(update_fields=['deal', 'status'])
+        handover = create_handover(self.user, c.pk)
+        photo = SimpleUploadedFile('room.jpg', b'\xff\xd8\xff', content_type='image/jpeg')
+        save_contract_attachment(
+            contract=c,
+            version=c.current_version,
+            uploaded=photo,
+            attachment_type='property_photo',
+            user=self.user,
+            handover=handover,
+        )
+        self.client.force_login(self.user)
+        url = reverse('workspace:handover_wizard_standalone', kwargs={
+            'contract_id': c.pk, 'handover_id': handover.pk,
+        })
+        resp = self.client.get(url + '?step=review')
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, 'attachments/')
+

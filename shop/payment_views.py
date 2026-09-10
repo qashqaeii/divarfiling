@@ -126,6 +126,14 @@ def _redirect_after_gateway(order: Order):
     if is_mobile_checkout(order.id):
         return redirect('payment:app_return', order_id=order.id)
     if order.status == 'paid':
+        try:
+            from workspace.services.agency_entitlement import resolve_post_agency_payment_redirect
+            agency_url = resolve_post_agency_payment_redirect(order)
+            if agency_url:
+                return redirect(agency_url)
+        except Exception:
+            import logging
+            logging.getLogger(__name__).exception('agency post-payment redirect failed')
         return redirect('payment:success', order_id=order.id)
     return redirect('payment:failed')
 
@@ -474,6 +482,15 @@ class PaymentSuccessView(LoginRequiredMixin, View):
         )
         if order.status != 'paid':
             return redirect('dashboard')
+
+        try:
+            from workspace.services.agency_entitlement import resolve_post_agency_payment_redirect
+            agency_url = resolve_post_agency_payment_redirect(order)
+            if agency_url:
+                return redirect(agency_url)
+        except Exception:
+            import logging
+            logging.getLogger(__name__).exception('agency post-payment redirect failed')
 
         license_obj = License.objects.filter(order=order).first()
         if order.renewal_license_id:

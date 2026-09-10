@@ -85,6 +85,7 @@ def sync_agency_member_records(agency: CRMAgency) -> None:
 
 @transaction.atomic
 def invite_member_by_phone(actor, phone: str, role: str = AGENCY_ROLE_ADVISOR) -> CRMAgencyMembershipRequest:
+    """DEPRECATED — از create_agency_invitation (AgencyInvitation + SMS) استفاده کنید."""
     if not can_manage_team(actor):
         raise ValueError('دسترسی مدیریت تیم ندارید')
     m = get_membership(actor)

@@ -474,3 +474,10 @@ def crm_contact_areas_picker(form, field_name, label, wrapper_class='', dataset_
         'wrapper_class': wrapper_class,
         'dataset_neighborhoods': dataset_neighborhoods or [],
     }
+
+
+@register.filter
+def dict_get(mapping, key):
+    if not mapping:
+        return key
+    return mapping.get(key, key)

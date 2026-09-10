@@ -439,6 +439,19 @@ def ingest_mobile_extraction(user, payload: Dict[str, Any]) -> IngestResult:
         except Exception:
             logger.exception('failed to complete schedule run %s', run_id)
 
+    try:
+        from workspace.services.agency_activity import EVENT_EXTRACTION_COMPLETED, emit_for_user_record
+        emit_for_user_record(
+            user, EVENT_EXTRACTION_COMPLETED,
+            object_type='dataset',
+            metadata={
+                'dataset_id': str(dataset.pk),
+                'ingested_count': ingested_count,
+            },
+        )
+    except Exception:
+        pass
+
     return result
 
 

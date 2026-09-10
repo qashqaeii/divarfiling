@@ -1,0 +1,154 @@
+{% extends "workspace/crm/base_crm.html" %}
+{% load static humanize %}
+
+{% block crm_extra_css %}
+<link rel="stylesheet" href="{% static 'workspace/css/agency-phase2.css' %}">
+<link rel="stylesheet" href="{% static 'workspace/css/agency-phase3.css' %}">
+{% endblock %}
+
+{% block crm_content %}
+<div class="agency-advisor360" dir="rtl">
+    <header class="a360-header">
+        <div class="a360-header-main">
+            <div class="a360-avatar" aria-hidden="true">
+                <i class="fas fa-user-tie"></i>
+            </div>
+            <div class="a360-identity">
+                <h1>{{ user.get_full_name|default:user.phone|default:user.username }}</h1>
+                <p class="a360-sub">{{ user.phone|default:user.username }} · {{ member.get_role_display|default:member.role }}</p>
+                <div class="a360-badges">
+                    {% if member.is_active %}<span class="a360-badge a360-badge-ok">عضو فعال</span>{% else %}<span class="a360-badge">غیرفعال</span>{% endif %}
+                    {% if has_seat %}<span class="a360-badge a360-badge-ok">لایسنس فعال</span>{% else %}<span class="a360-badge a360-badge-warn">بدون لایسنس</span>{% endif %}
+                    {% if seat and seat.expires_at %}<span class="a360-badge">تا {{ seat.expires_at|date:"Y/m/d" }}</span>{% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="a360-actions">
+            <a href="{{ export_url }}?type=contacts&format=xlsx" class="crm-btn crm-btn-ghost"><i class="fas fa-download"></i> خروجی</a>
+            <a href="{{ team_url }}" class="crm-btn crm-btn-ghost"><i class="fas fa-arrow-right"></i> بازگشت</a>
+        </div>
+    </header>
+
+    <nav class="a360-tabs" aria-label="بخش‌های مشاور">
+        {% for key, label in tabs %}
+        <a href="?tab={{ key }}{% if key == 'overview' %}&period={{ period }}{% endif %}" class="a360-tab{% if tab == key %} is-active{% endif %}">{{ label }}</a>
+        {% endfor %}
+    </nav>
+
+    <div class="a360-body">
+        {% if tab == 'overview' %}
+        <div class="a360-period">
+            {% for d in periods %}
+            <a href="?tab=overview&period={{ d }}" class="a360-period-btn{% if period == d %} is-active{% endif %}">{{ d }} روز</a>
+            {% endfor %}
+        </div>
+        <div class="a360-kpi-grid">
+            <div class="a360-kpi"><span class="a360-kpi-label">مخاطبین</span><strong>{{ kpis.contacts.total }}</strong>{% if kpis.contacts.delta_pct is not None %}<small>{{ kpis.contacts.delta_pct }}٪</small>{% endif %}</div>
+            <div class="a360-kpi"><span class="a360-kpi-label">فایل‌های شخصی</span><strong>{{ kpis.properties.total }}</strong>{% if kpis.properties.delta_pct is not None %}<small>{{ kpis.properties.delta_pct }}٪</small>{% endif %}</div>
+            <div class="a360-kpi"><span class="a360-kpi-label">Dataset</span><strong>{{ kpis.datasets.total }}</strong></div>
+            <div class="a360-kpi"><span class="a360-kpi-label">معاملات فعال</span><strong>{{ kpis.deals_active }}</strong></div>
+            <div class="a360-kpi"><span class="a360-kpi-label">معاملات بسته</span><strong>{{ kpis.deals_closed }}</strong></div>
+            <div class="a360-kpi"><span class="a360-kpi-label">قراردادها</span><strong>{{ kpis.contracts }}</strong></div>
+            <div class="a360-kpi"><span class="a360-kpi-label">پیگیری باز</span><strong>{{ kpis.open_tasks }}</strong></div>
+            <div class="a360-kpi"><span class="a360-kpi-label">آخرین فعالیت</span><strong>{% if kpis.last_activity %}{{ kpis.last_activity|date:"Y/m/d H:i" }}{% else %}—{% endif %}</strong></div>
+        </div>
+        {% elif tab == 'contacts' or tab == 'properties' or tab == 'deals' %}
+        <form method="get" class="a360-filter">
+            <input type="hidden" name="tab" value="{{ tab }}">
+            <input type="search" name="q" value="{{ request.GET.q }}" placeholder="جستجو..." class="crm-input">
+            <button type="submit" class="crm-btn crm-btn-primary">جستجو</button>
+        </form>
+        <div class="a360-table-wrap">
+            <table class="a360-table">
+                <thead>
+                    {% if tab == 'contacts' %}
+                    <tr><th>نام</th><th>تلفن</th><th>وضعیت</th><th>پیگیری</th><th>ثبت</th></tr>
+                    {% elif tab == 'properties' %}
+                    <tr><th>عنوان</th><th>نوع</th><th>وضعیت</th><th>قیمت</th><th>بروزرسانی</th></tr>
+                    {% else %}
+                    <tr><th>عنوان</th><th>مخاطب</th><th>مرحله</th><th>ارزش</th><th>بروزرسانی</th></tr>
+                    {% endif %}
+                </thead>
+                <tbody>
+                    {% for row in page_obj %}
+                    {% if tab == 'contacts' %}
+                    <tr><td>{{ row.name }}</td><td dir="ltr">{{ row.phone }}</td><td>{{ row.status }}</td><td>{{ row.next_follow_up|date:"Y/m/d"|default:"—" }}</td><td>{{ row.created_at|date:"Y/m/d" }}</td></tr>
+                    {% elif tab == 'properties' %}
+                    <tr><td>{{ row.title }}</td><td>{{ row.property_type }}</td><td>{{ row.transaction_status }}</td><td>{{ row.sale_price|intcomma|default:"—" }}</td><td>{{ row.updated_at|date:"Y/m/d" }}</td></tr>
+                    {% else %}
+                    <tr><td>{{ row.title }}</td><td>{{ row.customer.name }}</td><td>{{ row.stage }}</td><td>{{ row.value|intcomma|default:"—" }}</td><td>{{ row.updated_at|date:"Y/m/d" }}</td></tr>
+                    {% endif %}
+                    {% empty %}
+                    <tr><td colspan="5" class="a360-empty">موردی نیست</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% if page_obj.has_other_pages %}
+        <nav class="a360-pager">
+            {% if page_obj.has_previous %}<a href="?tab={{ tab }}&page={{ page_obj.previous_page_number }}&q={{ request.GET.q }}">قبلی</a>{% endif %}
+            <span>{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+            {% if page_obj.has_next %}<a href="?tab={{ tab }}&page={{ page_obj.next_page_number }}&q={{ request.GET.q }}">بعدی</a>{% endif %}
+        </nav>
+        {% endif %}
+        {% elif tab == 'filing' %}
+        {% if dataset_id %}
+        <p><a href="?tab=filing">← همه Datasetها</a></p>
+        <div class="a360-table-wrap">
+            <table class="a360-table">
+                <thead><tr><th>شناسه</th><th>عنوان</th><th>قیمت</th><th>متراژ</th><th>محله</th></tr></thead>
+                <tbody>
+                    {% for l in listings_page %}<tr><td dir="ltr">{{ l.token }}</td><td>{{ l.title|truncatechars:40 }}</td><td>{{ l.price|intcomma|default:"—" }}</td><td>{{ l.area|default:"—" }}</td><td>{{ l.neighborhood }}</td></tr>{% empty %}<tr><td colspan="5" class="a360-empty">آگهی نیست</td></tr>{% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="a360-table-wrap">
+            <table class="a360-table">
+                <thead><tr><th>نام</th><th>آگهی</th><th>شهر</th><th>بروزرسانی</th><th></th></tr></thead>
+                <tbody>
+                    {% for ds in datasets_page %}
+                    <tr>
+                        <td>{{ ds.name }}</td>
+                        <td>{{ ds.listing_count|default:ds.row_count }}</td>
+                        <td>{{ ds.city|default:"—" }}</td>
+                        <td>{{ ds.updated_at|date:"Y/m/d" }}</td>
+                        <td><a href="?tab=filing&dataset={{ ds.pk }}">آگهی‌ها</a></td>
+                    </tr>
+                    {% empty %}<tr><td colspan="5" class="a360-empty">Dataset نیست</td></tr>{% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+        {% elif tab == 'contracts' %}
+        <div class="a360-table-wrap">
+            <table class="a360-table">
+                <thead><tr><th>شناسه</th><th>عنوان</th><th>وضعیت</th><th>بروزرسانی</th><th>PDF</th></tr></thead>
+                <tbody>
+                    {% for c in page_obj %}
+                    <tr>
+                        <td dir="ltr">{{ c.internal_number }}</td>
+                        <td>{{ c.title|default:"—" }}</td>
+                        <td>{{ c.get_status_display }}</td>
+                        <td>{{ c.updated_at|date:"Y/m/d" }}</td>
+                        <td><a href="{% url 'workspace:agency_advisor_contract_pdf' member.pk c.pk %}?inline=1" target="_blank" rel="noopener">مشاهده</a></td>
+                    </tr>
+                    {% empty %}<tr><td colspan="5" class="a360-empty">قراردادی نیست</td></tr>{% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% elif tab == 'activities' %}
+        <ul class="a360-activity-list">
+            {% for ev in activities %}
+            <li>
+                <time>{{ ev.at|date:"Y/m/d H:i" }}</time>
+                <strong>{{ ev.label }}</strong>
+                <span>{{ ev.title }}</span>
+                {% if ev.detail %}<p>{{ ev.detail }}</p>{% endif %}
+            </li>
+            {% empty %}<li class="a360-empty">فعالیتی ثبت نشده</li>{% endfor %}
+        </ul>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

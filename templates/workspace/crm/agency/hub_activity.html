@@ -1,0 +1,22 @@
+{% extends "workspace/crm/agency/hub_base.html" %}
+{% load crm_tags %}
+{% block agency_hub_content %}
+<form method="get" class="a360-filter agency-hub-filter">
+    <select name="advisor" class="crm-input">
+        <option value="">همه مشاوران</option>
+        {% for m in advisors %}<option value="{{ m.pk }}" {% if request.GET.advisor == m.pk|stringformat:"s" %}selected{% endif %}>{{ m.user.phone }}</option>{% endfor %}
+    </select>
+    <input type="text" name="event_type" value="{{ event_type_filter }}" placeholder="نوع رویداد" class="crm-input">
+    <button type="submit" class="crm-btn crm-btn-primary">فیلتر</button>
+</form>
+<ul class="a360-activity-list agency-hub-timeline">
+    {% for ev in events %}
+    <li>
+        <time>{{ ev.created_at|date:"Y/m/d H:i" }}</time>
+        <strong>{{ agency_event_labels|dict_get:ev.event_type }}</strong>
+        <span>{{ ev.actor.get_full_name|default:ev.actor.phone }}</span>
+        {% if ev.object_type %}<small>{{ ev.object_type }} #{{ ev.object_id }}</small>{% endif %}
+    </li>
+    {% empty %}<li class="a360-empty">رویدادی نیست</li>{% endfor %}
+</ul>
+{% endblock %}

@@ -1013,6 +1013,18 @@ class CRMAgency(models.Model):
         verbose_name='سیاست تخصیص سرنخ API',
     )
     round_robin_cursor = models.PositiveIntegerField(default=0, verbose_name='شاخص چرخش')
+    management_status = models.CharField(
+        max_length=20,
+        choices=[
+            ('active', 'فعال'),
+            ('locked', 'قفل — بدون اشتراک'),
+        ],
+        default='active',
+        verbose_name='وضعیت مدیریت',
+    )
+    onboarding_completed_at = models.DateTimeField(
+        null=True, blank=True, verbose_name='تکمیل onboarding',
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -1046,6 +1058,13 @@ class CRMAgencyMember(models.Model):
     title = models.CharField(max_length=100, blank=True, verbose_name='عنوان شغلی')
     is_active = models.BooleanField(default=True, verbose_name='فعال')
     joined_at = models.DateTimeField(auto_now_add=True)
+    data_visibility_consent_at = models.DateTimeField(
+        null=True, blank=True, verbose_name='زمان رضایت دید داده',
+    )
+    consent_version = models.CharField(
+        max_length=20, blank=True, default='',
+        verbose_name='نسخه متن رضایت',
+    )
 
     class Meta:
         verbose_name = 'عضو آژانس'
@@ -1860,6 +1879,182 @@ class CRMAgencyPanelNotification(models.Model):
         verbose_name = 'اعلان پنل آژانس'
         verbose_name_plural = 'اعلان‌های پنل آژانس'
         ordering = ['-created_at']
+
+
+class AgencySubscription(models.Model):
+    """حق مدیریت آژانس — مستقل از تخصیص Seat به اعضا."""
+    STATUS_ACTIVE = 'active'
+    STATUS_EXPIRED = 'expired'
+    STATUS_CANCELLED = 'cancelled'
+    STATUS_CHOICES = [
+        (STATUS_ACTIVE, 'فعال'),
+        (STATUS_EXPIRED, 'منقضی'),
+        (STATUS_CANCELLED, 'لغو شده'),
+    ]
+
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+        related_name='agency_subscriptions', verbose_name='مالک',
+    )
+    agency = models.ForeignKey(
+        'CRMAgency', on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='subscriptions', verbose_name='آژانس',
+    )
+    source_order = models.ForeignKey(
+        'shop.Order', on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='agency_subscriptions', verbose_name='سفارش مبدأ',
+    )
+    plan = models.ForeignKey(
+        'shop.LicensePlan', on_delete=models.PROTECT,
+        related_name='agency_subscriptions', verbose_name='پلن',
+    )
+    seat_count = models.PositiveSmallIntegerField(default=2, verbose_name='تعداد Seat')
+    starts_at = models.DateTimeField(verbose_name='شروع')
+    expires_at = models.DateTimeField(verbose_name='انقضا')
+    status = models.CharField(
+        max_length=12, choices=STATUS_CHOICES,
+        default=STATUS_ACTIVE, db_index=True, verbose_name='وضعیت',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'اشتراک آژانس'
+        verbose_name_plural = 'اشتراک‌های آژانس'
+        ordering = ['-starts_at']
+        indexes = [
+            models.Index(fields=['owner', 'status', '-expires_at']),
+        ]
+
+    def __str__(self):
+        return f'AgencySub #{self.pk} — {self.owner_id} ({self.seat_count} seats)'
+
+
+class AgencyInvitation(models.Model):
+    """دعوت امن مشاور به آژانس — با SMS و لینک عمومی."""
+    STATUS_PENDING = 'pending'
+    STATUS_ACCEPTED = 'accepted'
+    STATUS_DECLINED = 'declined'
+    STATUS_EXPIRED = 'expired'
+    STATUS_CANCELLED = 'cancelled'
+    STATUS_CHOICES = [
+        (STATUS_PENDING, 'در انتظار'),
+        (STATUS_ACCEPTED, 'پذیرفته‌شده'),
+        (STATUS_DECLINED, 'رد شده'),
+        (STATUS_EXPIRED, 'منقضی'),
+        (STATUS_CANCELLED, 'لغو شده'),
+    ]
+
+    agency = models.ForeignKey(
+        'CRMAgency', on_delete=models.CASCADE,
+        related_name='invitations', verbose_name='آژانس',
+    )
+    inviter = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+        related_name='agency_invitations_sent', verbose_name='دعوت‌کننده',
+    )
+    phone = models.CharField(max_length=20, db_index=True, verbose_name='شماره موبایل')
+    role = models.CharField(
+        max_length=20,
+        choices=[(k, v) for k, v in [
+            ('manager', 'مدیر'), ('advisor', 'مشاور'), ('secretary', 'منشی'),
+        ]],
+        default='advisor', verbose_name='نقش',
+    )
+    token_hash = models.CharField(max_length=128, unique=True, verbose_name='هش توکن')
+    status = models.CharField(
+        max_length=12, choices=STATUS_CHOICES,
+        default=STATUS_PENDING, db_index=True, verbose_name='وضعیت',
+    )
+    expires_at = models.DateTimeField(verbose_name='انقضای دعوت')
+    accepted_at = models.DateTimeField(null=True, blank=True)
+    declined_at = models.DateTimeField(null=True, blank=True)
+    accepted_user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='agency_invitations_accepted', verbose_name='کاربر پذیرنده',
+    )
+    sms_sent_at = models.DateTimeField(null=True, blank=True)
+    sms_resend_count = models.PositiveSmallIntegerField(default=0)
+    sms_metadata = models.JSONField(default=dict, blank=True, verbose_name='متادیتای SMS')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'دعوت آژانس'
+        verbose_name_plural = 'دعوت‌های آژانس'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['agency', 'status', '-created_at']),
+            models.Index(fields=['phone', 'status']),
+        ]
+
+
+class AgencyLicenseAssignmentLog(models.Model):
+    """تاریخچه تخصیص/لغو Seat — برای Audit و گزارش."""
+    ACTION_ASSIGN = 'assign'
+    ACTION_UNASSIGN = 'unassign'
+    ACTION_CHOICES = [
+        (ACTION_ASSIGN, 'تخصیص'),
+        (ACTION_UNASSIGN, 'لغو تخصیص'),
+    ]
+
+    agency = models.ForeignKey(
+        'CRMAgency', on_delete=models.CASCADE,
+        related_name='license_assignment_logs', verbose_name='آژانس',
+    )
+    subscription = models.ForeignKey(
+        AgencySubscription, on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='assignment_logs', verbose_name='اشتراک',
+    )
+    license = models.ForeignKey(
+        'licenses.License', on_delete=models.CASCADE,
+        related_name='agency_assignment_logs', verbose_name='لایسنس',
+    )
+    member_user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+        related_name='agency_license_assignment_logs', verbose_name='عضو',
+    )
+    action = models.CharField(max_length=12, choices=ACTION_CHOICES, verbose_name='عملیات')
+    actor = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='agency_license_assignments_performed', verbose_name='انجام‌دهنده',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'لاگ تخصیص لایسنس آژانس'
+        verbose_name_plural = 'لاگ‌های تخصیص لایسنس آژانس'
+        ordering = ['-created_at']
+
+
+class AgencyActivityEvent(models.Model):
+    """رویدادهای معنادار کسب‌وکار برای مانیتورینگ تیم."""
+    actor = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+        related_name='agency_activity_events', verbose_name='کاربر',
+    )
+    agency = models.ForeignKey(
+        'CRMAgency', on_delete=models.CASCADE,
+        related_name='activity_events', verbose_name='آژانس',
+    )
+    event_type = models.CharField(max_length=60, db_index=True, verbose_name='نوع رویداد')
+    object_type = models.CharField(max_length=40, blank=True, verbose_name='نوع شیء')
+    object_id = models.PositiveIntegerField(null=True, blank=True, verbose_name='شناسه شیء')
+    metadata = models.JSONField(default=dict, blank=True, verbose_name='متادیتا')
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        verbose_name = 'رویداد فعالیت آژانس'
+        verbose_name_plural = 'رویدادهای فعالیت آژانس'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['agency', 'event_type', '-created_at']),
+            models.Index(fields=['agency', 'actor', '-created_at']),
+        ]
 
 
 class WorkspaceSettings(models.Model):

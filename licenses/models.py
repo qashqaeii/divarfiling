@@ -45,7 +45,16 @@ class License(models.Model):
         verbose_name='تخصیص توسط',
     )
     assigned_at = models.DateTimeField(null=True, blank=True, verbose_name='تاریخ تخصیص کلید')
-    
+    agency_subscription = models.ForeignKey(
+        'workspace.AgencySubscription',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='seat_licenses',
+        verbose_name='اشتراک آژانس',
+        help_text='Seat متعلق به کدام اشتراک آژانس است.',
+    )
+
     class Meta:
         verbose_name = 'لایسنس'
         verbose_name_plural = 'لایسنس‌ها'

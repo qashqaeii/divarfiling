@@ -2,7 +2,18 @@
 from django.urls import include, path
 
 from contracts.urls import workspace_urlpatterns as contract_workspace_urls
-from workspace import crm_views, export_security_views, support_views, team_api_views, team_messages_api_views, views
+from workspace import (
+    agency_advisor_views,
+    agency_api_views,
+    agency_hub_views,
+    agency_views,
+    crm_views,
+    export_security_views,
+    support_views,
+    team_api_views,
+    team_messages_api_views,
+    views,
+)
 from workspace.academy import api_views as academy_api_views
 from workspace.academy import views as academy_views
 
@@ -53,6 +64,28 @@ urlpatterns = [
 
     # CRM
     path('crm/', crm_views.CRMDashboardView.as_view(), name='crm_dashboard'),
+    path('crm/agency/', agency_hub_views.AgencyHubRedirectView.as_view(), name='agency_hub'),
+    path('crm/agency/dashboard/', agency_hub_views.AgencyHubDashboardView.as_view(), name='agency_hub_dashboard'),
+    path('crm/agency/advisors/', agency_hub_views.AgencyHubAdvisorsView.as_view(), name='agency_hub_advisors'),
+    path('crm/agency/licenses/', agency_hub_views.AgencyHubLicensesView.as_view(), name='agency_hub_licenses'),
+    path('crm/agency/activity/', agency_hub_views.AgencyHubActivityView.as_view(), name='agency_hub_activity'),
+    path('crm/agency/settings/', agency_hub_views.AgencyHubSettingsView.as_view(), name='agency_hub_settings'),
+    path('crm/agency/locked/', agency_views.AgencyLockedView.as_view(), name='agency_locked'),
+    path('crm/agency/onboarding/', agency_views.AgencyOnboardingView.as_view(), name='agency_onboarding'),
+    path('agency/invite/<str:token>/', agency_views.AgencyInviteAcceptView.as_view(), name='agency_invite_accept'),
+    path('api/crm/agency/members/', agency_api_views.AgencyMembersDashboardAPIView.as_view(), name='api_agency_members'),
+    path('api/crm/agency/invitations/', agency_api_views.AgencyInvitationsAPIView.as_view(), name='api_agency_invitations'),
+    path('api/crm/agency/invitations/<int:invitation_id>/', agency_api_views.AgencyInvitationActionAPIView.as_view(), name='api_agency_invitation_action'),
+    path('api/crm/agency/seats/assign/', agency_api_views.AgencySeatAssignAPIView.as_view(), name='api_agency_seat_assign'),
+    path('api/crm/agency/seats/available/', agency_api_views.AgencyAvailableSeatsAPIView.as_view(), name='api_agency_seats_available'),
+    path('api/crm/agency/members/<int:member_id>/remove/', agency_api_views.AgencyMemberRemoveAPIView.as_view(), name='api_agency_member_remove'),
+    path('crm/agency/advisors/<int:member_id>/', agency_advisor_views.AgencyAdvisorDetailView.as_view(), name='agency_advisor_detail'),
+    path('crm/agency/advisors/<int:member_id>/export/', agency_advisor_views.AgencyAdvisorExportView.as_view(), name='agency_advisor_export'),
+    path('crm/agency/advisors/<int:member_id>/contracts/<int:contract_id>/pdf/', agency_advisor_views.AgencyAdvisorContractPdfView.as_view(), name='agency_advisor_contract_pdf'),
+    path('crm/agency/advisors/<int:member_id>/documents/<int:document_id>/', agency_advisor_views.AgencyAdvisorDocumentDownloadView.as_view(), name='agency_advisor_document'),
+    path('crm/agency/export/team/', agency_advisor_views.AgencyTeamExportView.as_view(), name='agency_team_export'),
+    path('crm/agency/member/', agency_advisor_views.AgencyAdvisorMemberView.as_view(), name='agency_advisor_member'),
+    path('api/crm/agency/advisors/<int:member_id>/', agency_advisor_views.AgencyAdvisorDetailAPIView.as_view(), name='api_agency_advisor_detail'),
     path('crm/team/tv/', crm_views.CRMTeamTVView.as_view(), name='crm_team_tv'),
     path('crm/team/', crm_views.CRMTeamView.as_view(), name='crm_team'),
     path('crm/team/api-key/regenerate/', crm_views.CRMTeamApiKeyRegenerateView.as_view(), name='crm_team_api_key_regenerate'),

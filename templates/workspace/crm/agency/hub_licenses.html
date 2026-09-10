@@ -1,0 +1,35 @@
+{% extends "workspace/crm/agency/hub_base.html" %}
+{% block agency_hub_content %}
+{% if hub_seats %}
+<div class="a360-kpi-grid agency-hub-kpis">
+    <div class="a360-kpi"><span class="a360-kpi-label">خریداری‌شده</span><strong>{{ hub_seats.total }}</strong></div>
+    <div class="a360-kpi"><span class="a360-kpi-label">تخصیص‌شده</span><strong>{{ hub_seats.assigned }}</strong></div>
+    <div class="a360-kpi"><span class="a360-kpi-label">آزاد</span><strong>{{ hub_seats.available }}</strong></div>
+    <div class="a360-kpi"><span class="a360-kpi-label">انقضا</span><strong>{{ hub_seats.expires_at|date:"Y/m/d" }}</strong></div>
+</div>
+{% endif %}
+{% if license_pool %}
+<div class="a360-table-wrap">
+    <table class="a360-table">
+        <thead><tr><th>Seat</th><th>وضعیت</th><th>مشاور</th><th>عملیات</th></tr></thead>
+        <tbody>
+            {% for lic in license_pool.available_licenses %}
+            <tr><td>#{{ lic.sequence }}</td><td>آزاد</td><td>—</td><td><a href="{% url 'workspace:agency_hub_advisors' %}">تخصیص</a></td></tr>
+            {% endfor %}
+            {% for uid, lic in license_pool.assigned_by_user.items %}
+            <tr>
+                <td>#{{ lic.sequence }}</td><td>فعال</td>
+                <td>{{ lic.assigned_member.name|default:lic.assigned_member.phone }}</td>
+                <td><a href="{% url 'workspace:agency_hub_advisors' %}">مدیریت</a></td>
+            </tr>
+            {% endfor %}
+            {% if not license_pool.available_licenses and not license_pool.assigned_by_user %}
+            <tr><td colspan="4" class="a360-empty">Seatی یافت نشد</td></tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<p class="a360-empty">اطلاعات لایسنس در دسترس نیست.</p>
+{% endif %}
+{% endblock %}

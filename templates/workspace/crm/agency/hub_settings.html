@@ -1,0 +1,15 @@
+{% extends "workspace/crm/agency/hub_base.html" %}
+{% block agency_hub_content %}
+<div class="agency-hub-section">
+    <h2>تنظیمات آژانس</h2>
+    <p><a href="{{ legacy_team_url }}">تنظیمات پروفایل و API آژانس</a></p>
+</div>
+<div class="agency-hub-section">
+    <h2>ابزارهای پیشرفته</h2>
+    <ul class="agency-hub-advanced-list">
+        {% for key, label, url in advanced_tabs %}
+        <li><a href="{{ url }}">{{ label }}</a></li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}

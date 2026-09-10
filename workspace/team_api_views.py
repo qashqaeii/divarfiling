@@ -9,7 +9,7 @@ from django.views import View
 
 from workspace.models import CRMAgencyMember, CRMAgencyTeamGoal, CRMAgencyWebhook
 from workspace.services.crm_agency import (
-    bulk_assign_leads, get_team_inbox, invite_member_by_phone,
+    bulk_assign_leads, get_team_inbox,
     regenerate_api_key, remove_member, update_agency_settings, update_member_role,
 )
 from workspace.services.crm_agency_analytics import (
@@ -27,6 +27,12 @@ from workspace.export_security import ExportSecurityMixin
 class _TeamAPIBase(LoginRequiredMixin, View):
     def _deny(self, msg='دسترسی مجاز نیست', code=403):
         return JsonResponse({'ok': False, 'error': msg}, status=code)
+
+    def dispatch(self, request, *args, **kwargs):
+        from workspace.services.agency_entitlement import can_access_agency_hub
+        if request.user.is_authenticated and not can_access_agency_hub(request.user):
+            return self._deny('بخش آژانس فقط برای مشترکین پلن آژانس در دسترس است')
+        return super().dispatch(request, *args, **kwargs)
 
     def _agency(self):
         m = get_membership(self.request.user)
@@ -51,11 +57,16 @@ class TeamMembersAPIView(_TeamAPIBase):
         return JsonResponse({'ok': True, 'members': members})
 
     def post(self, request):
-        if not can_manage_team(request.user):
+        from workspace.services.agency_entitlement import can_manage_agency
+        if not can_manage_agency(request.user):
             return self._deny()
         try:
             payload = json.loads(request.body.decode('utf-8') or '{}')
-            invite_member_by_phone(request.user, payload.get('phone', ''), payload.get('role', 'advisor'))
+            from workspace.services.agency_invitations import create_agency_invitation
+            create_agency_invitation(
+                request.user, payload.get('phone', ''),
+                payload.get('role', 'advisor'), request=request,
+            )
         except (json.JSONDecodeError, ValueError) as exc:
             return JsonResponse({'ok': False, 'error': str(exc)}, status=400)
         return JsonResponse({'ok': True})

@@ -1,0 +1,26 @@
+/* Agency Hub — Phase 5/6 polish */
+.agency-hub { max-width: 1180px; margin: 0 auto; padding: 0 1rem 2rem; }
+.agency-hub-top { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 1rem; margin-bottom: 1rem; }
+.agency-hub-title { margin: 0; font-size: 1.35rem; font-weight: 700; color: #1a1a2e; }
+.agency-hub-meta { margin: .35rem 0 0; font-size: .88rem; color: #666; }
+.agency-hub-badge { display: inline-block; padding: .15rem .5rem; border-radius: 999px; background: #ede9fe; color: #5b21b6; font-size: .75rem; margin-left: .35rem; }
+.agency-hub-nav { display: flex; flex-wrap: wrap; gap: .35rem; margin-bottom: 1.25rem; border-bottom: 1px solid rgba(0,0,0,.08); padding-bottom: .5rem; }
+.agency-hub-nav-item { padding: .45rem .9rem; border-radius: 10px; text-decoration: none; color: #555; font-size: .9rem; transition: background .15s; }
+.agency-hub-nav-item.is-active { background: #6b4ce6; color: #fff; }
+.agency-hub-nav-item:hover:not(.is-active) { background: #f3f0ff; color: #5b21b6; }
+.agency-hub-content { min-height: 200px; }
+.agency-hub-section { margin-top: 1.5rem; }
+.agency-hub-section h2 { font-size: 1rem; margin: 0 0 .75rem; color: #333; }
+.agency-hub-kpis { margin-bottom: 1rem; }
+.agency-export-form { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: .75rem; align-items: end; padding: 1rem; border: 1px solid rgba(0,0,0,.08); border-radius: 14px; background: #fafafa; }
+.agency-export-form label span { display: block; font-size: .78rem; color: #777; margin-bottom: .25rem; }
+.agency-export-all { grid-column: 1 / -1; font-size: .88rem; }
+.agency-hub-advanced-list { list-style: none; padding: 0; margin: 0; display: grid; gap: .5rem; }
+.agency-hub-advanced-list a { display: block; padding: .65rem .85rem; border: 1px solid rgba(0,0,0,.08); border-radius: 12px; text-decoration: none; color: #444; }
+.agency-hub-advanced-list a:hover { border-color: #6b4ce6; color: #5b21b6; }
+.agency-hub-timeline li { padding: .65rem 0; }
+.a360-empty { color: #999; padding: 1.5rem; text-align: center; }
+@media (max-width: 640px) {
+  .agency-hub-nav { overflow-x: auto; flex-wrap: nowrap; }
+  .agency-export-form { grid-template-columns: 1fr; }
+}

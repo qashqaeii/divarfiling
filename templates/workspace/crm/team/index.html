@@ -15,6 +15,7 @@
 <link rel="stylesheet" href="{% static 'workspace/css/crm-team-announcements.css' %}?v=5">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-team-audit.css' %}?v=1">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-team-mobile.css' %}?v=8">
+<link rel="stylesheet" href="{% static 'workspace/css/agency-phase2.css' %}?v=1">
 {% endblock %}
 
 {% block crm_content %}
@@ -398,6 +399,9 @@
 
     {# ── تب اعضا ── #}
     {% if tab == 'members' %}
+    {% if can_manage_agency and members_dashboard %}
+    {% include 'workspace/crm/includes/team_tab_members_manage.html' %}
+    {% else %}
 
     {% if can_manage_team and team_roster_summary %}
     <section class="crm-team-roster-kpis" aria-label="خلاصه ترکیب تیم">
@@ -674,6 +678,7 @@
             {% endfor %}
         </div>
     </section>
+    {% endif %}
     {% endif %}
 
     {# ── تب همگام‌سازی ── #}
@@ -1006,7 +1011,7 @@
         </header>
         <form method="post" action="{{ crm_team_url }}" class="crm-drawer-form">
             {% csrf_token %}
-            <input type="hidden" name="action" value="invite_member">
+            <input type="hidden" name="action" value="agency_invite">
             <input type="hidden" name="tab" value="members">
             <div class="crm-drawer-body">
                 <p class="crm-team-drawer-hint">کاربر باید از قبل با شماره موبایل در سیستم ثبت‌نام کرده باشد. پس از ارسال دعوت، کاربر باید آن را تأیید کند.</p>

@@ -1,0 +1,118 @@
+{% extends "workspace/base.html" %}
+{% load static %}
+{% block title %}راه‌اندازی آژانس{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'workspace/css/agency-phase2.css' %}?v=1">
+{% endblock %}
+{% block content %}
+<div class="agency-wizard" dir="rtl">
+    <div class="agency-wizard-card">
+        <header class="agency-wizard-header">
+            <h1>راه‌اندازی آژانس</h1>
+            {% if seats %}
+            <p class="agency-wizard-meta">{{ seats.assigned }} از {{ seats.total }} لایسنس تخصیص داده شده · {{ seats.available }} آزاد</p>
+            {% endif %}
+        </header>
+
+        <ol class="agency-wizard-steps">
+            <li class="{% if step == '1' %}active{% elif agency %}done{% endif %}">۱. مشخصات آژانس</li>
+            <li class="{% if step == '2' %}active{% elif step|add:'0' > 2 or step == '3' or step == '4' %}done{% endif %}">۲. دعوت مشاوران</li>
+            <li class="{% if step == '3' %}active{% elif step == '4' %}done{% endif %}">۳. تخصیص لایسنس</li>
+            <li class="{% if step == '4' %}active{% endif %}">۴. پایان</li>
+        </ol>
+
+        {% if step == '1' %}
+        <section>
+            <h2>نام آژانس</h2>
+            {% if agency %}
+            <p>آژانس «{{ agency.name }}» متصل است. می‌توانید به مرحله بعد بروید.</p>
+            <a href="?step=2" class="btn btn-primary">ادامه</a>
+            {% else %}
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="create_agency">
+                <input type="hidden" name="step" value="1">
+                <div class="mb-3">
+                    <label class="form-label">نام آژانس</label>
+                    <input type="text" name="name" class="form-control" required maxlength="200" placeholder="مثلاً املاک دیپلمات">
+                </div>
+                <button type="submit" class="btn btn-primary">ایجاد و ادامه</button>
+            </form>
+            {% endif %}
+        </section>
+        {% elif step == '2' %}
+        <section>
+            <h2>دعوت مشاوران</h2>
+            <p class="text-muted">هر شماره یک دعوت مستقل — می‌توانید بیش از {{ seats.available|default:0 }} دعوت بفرستید؛ تخصیص لایسنس بعد از پذیرش انجام می‌شود.</p>
+            <form method="post" class="mb-4">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="invite_phones">
+                <input type="hidden" name="step" value="2">
+                <label class="form-label">شماره موبایل‌ها (هر خط یک شماره)</label>
+                <textarea name="phones" class="form-control" rows="4" placeholder="0912xxxxxxx"></textarea>
+                <button type="submit" class="btn btn-primary mt-2">ارسال دعوت SMS</button>
+            </form>
+            {% if invitations %}
+            <h3>دعوت‌ها</h3>
+            <ul class="agency-invite-list">
+                {% for inv in invitations %}
+                <li><span dir="ltr">{{ inv.phone }}</span> — {{ inv.get_status_display }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+            <div class="agency-wizard-nav">
+                <a href="?step=3" class="btn btn-outline-primary">مرحله بعد</a>
+                <a href="?step=1" class="btn btn-link">بازگشت</a>
+            </div>
+        </section>
+        {% elif step == '3' %}
+        <section>
+            <h2>تخصیص لایسنس</h2>
+            <p class="text-muted">{{ seats.available }} Seat آزاد</p>
+            {% for m in members %}
+            <div class="agency-member-row">
+                <div>
+                    <strong>{{ m.user.get_full_name|default:m.user.phone }}</strong>
+                    <span dir="ltr" class="text-muted">{{ m.user.phone }}</span>
+                </div>
+                {% if m.data_visibility_consent_at %}
+                <form method="post" class="d-flex gap-2 align-items-center">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="assign_seat">
+                    <input type="hidden" name="member_user_id" value="{{ m.user_id }}">
+                    <select name="license_id" class="form-select form-select-sm" required>
+                        <option value="">Seat آزاد...</option>
+                        {% for seat in available_seats %}
+                        <option value="{{ seat.pk }}">Seat {{ seat.sequence }}</option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit" class="btn btn-sm btn-primary">تخصیص</button>
+                </form>
+                {% else %}
+                <span class="badge bg-secondary">در انتظار پذیرش دعوت</span>
+                {% endif %}
+            </div>
+            {% empty %}
+            <p>هنوز مشاوری دعوت را پذیرش نکرده است.</p>
+            {% endfor %}
+            <div class="agency-wizard-nav">
+                <form method="post" class="d-inline">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="finish">
+                    <button type="submit" class="btn btn-primary">پایان</button>
+                </form>
+                <a href="?step=2" class="btn btn-link">بازگشت</a>
+            </div>
+        </section>
+        {% else %}
+        <section class="text-center">
+            <h2>آژانس آماده است</h2>
+            {% if seats %}
+            <p>{{ seats.total }} Seat · {{ seats.assigned }} تخصیص · {{ seats.available }} آزاد · {{ pending_invite_count }} دعوت در انتظار</p>
+            {% endif %}
+            <a href="{% url 'workspace:crm_team' %}?tab=members" class="btn btn-primary btn-lg">ورود به پنل آژانس</a>
+        </section>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

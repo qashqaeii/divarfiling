@@ -111,6 +111,16 @@ def create_contract(
     _sync_version_from_wizard(contract, version)
     log_audit_event(contract, 'CONTRACT_CREATED', version=version, actor_user=user, request=request)
     log_audit_event(contract, 'VERSION_CREATED', version=version, actor_user=user, request=request)
+    if agency:
+        try:
+            from workspace.services.agency_activity import EVENT_CONTRACT_CREATED, emit_agency_activity
+            emit_agency_activity(
+                agency, user, EVENT_CONTRACT_CREATED,
+                object_type='contract', object_id=contract.pk,
+                metadata={'internal_number': contract.internal_number},
+            )
+        except Exception:
+            pass
     return contract
 
 

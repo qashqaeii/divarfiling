@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}دعوت به آژانس{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'workspace/css/agency-phase2.css' %}?v=1">
+{% endblock %}
+{% block content %}
+<div class="container py-5" dir="rtl">
+    <div class="agency-wizard-card mx-auto" style="max-width: 560px;">
+        {% if error %}
+        <h1 class="h5 text-danger">{{ error }}</h1>
+        {% elif declined %}
+        <h1 class="h5">دعوت رد شد</h1>
+        {% elif invitation %}
+        <h1 class="h4 mb-2">دعوت به آژانس</h1>
+        <p class="mb-1">آژانس <strong>{{ agency.name }}</strong> از شما دعوت کرده است.</p>
+        {% if inviter_name %}<p class="text-muted small">دعوت‌کننده: {{ inviter_name }}</p>{% endif %}
+        {% if masked_phone %}<p class="text-muted small">شماره دعوت: <span dir="ltr">{{ masked_phone }}</span></p>{% endif %}
+
+        <div class="alert alert-warning small mt-3">
+            با عضویت در این آژانس، مالک آژانس می‌تواند اطلاعات کاری شما در فایلینگ دیوار
+            از جمله مخاطبین، فایل‌های شخصی، فایلینگ، معاملات، قراردادها و فعالیت‌های کاری
+            را مشاهده و در صورت نیاز خروجی دریافت کند.
+            <br><br>
+            اطلاعات امنیتی حساب (رمز عبور، OTP، توکن‌ها) هرگز در اختیار مالک قرار نمی‌گیرد.
+        </div>
+
+        {% if user_authenticated and not user_phone_matches %}
+        <div class="alert alert-danger">این دعوت برای شماره دیگری است. با حساب متصل به {{ masked_phone }} وارد شوید.</div>
+        {% endif %}
+
+        {% if user_authenticated and user_phone_matches %}
+        <form method="post" class="d-flex gap-2 flex-wrap mt-3">
+            {% csrf_token %}
+            <input type="hidden" name="data_consent" value="1">
+            <button type="submit" name="action" value="accept" class="btn btn-primary">پذیرش دعوت</button>
+            <button type="submit" name="action" value="decline" class="btn btn-outline-secondary">رد دعوت</button>
+        </form>
+        {% elif not user_authenticated %}
+        <a href="{% url 'accounts:login' %}?next={{ request.path }}" class="btn btn-primary mt-3">ورود / ثبت‌نام برای پاسخ</a>
+        {% endif %}
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

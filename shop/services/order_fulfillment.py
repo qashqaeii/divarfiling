@@ -54,7 +54,20 @@ def fulfill_order_after_payment(
         import logging
         logging.getLogger(__name__).exception('lead acquisition purchase attribution failed')
 
-    return issue_license_for_paid_order(order_ref)
+    license_obj = issue_license_for_paid_order(order_ref)
+
+    try:
+        from workspace.services.agency_entitlement import (
+            is_agency_plan_order,
+            provision_subscription_from_paid_order,
+        )
+        if is_agency_plan_order(order_ref):
+            provision_subscription_from_paid_order(order_ref)
+    except Exception:
+        import logging
+        logging.getLogger(__name__).exception('agency subscription provisioning failed')
+
+    return license_obj
 
 
 def approve_card_transfer(submission, reviewer) -> License | None:

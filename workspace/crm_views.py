@@ -31,6 +31,7 @@ from workspace.services.property_images import (
     MAX_PROPERTY_IMAGES, parse_images_payload, store_property_image,
 )
 from workspace.export_security import ExportSecurityMixin
+from workspace.mixins_agency import AgencyHubAccessMixin
 from workspace.forms import (
     ActivityForm, CRMAutomationRuleForm, CRMDealCreateForm, CRMDealForm, CRMMessageTemplateForm,
     CRMPropertyForm, CRMPropertyImportForm, CRMReminderForm, ConvertLeadForm,
@@ -46,7 +47,7 @@ from workspace.models import (
 )
 from workspace.services.crm_agency import (
     assign_customer, assign_lead_to_member, bulk_assign_leads, cancel_membership_request,
-    create_agency, get_team_inbox, invite_member_by_phone,
+    create_agency, get_team_inbox,
     member_display, regenerate_api_key, remove_member, request_join_agency,
     respond_membership_request, role_label, set_commission_splits, sync_agency_member_records,
     transfer_customer, update_agency_settings, update_member_role,
@@ -3547,8 +3548,18 @@ class CRMTeamTVView(CRMContextMixin, LoginRequiredMixin, TemplateView):
         return ctx
 
 
-class CRMTeamView(CRMContextMixin, LoginRequiredMixin, TemplateView):
+class CRMTeamView(AgencyHubAccessMixin, CRMContextMixin, LoginRequiredMixin, TemplateView):
     template_name = 'workspace/crm/team/index.html'
+
+    def dispatch(self, request, *args, **kwargs):
+        from workspace.services.agency_entitlement import can_manage_agency, has_assigned_agency_seat
+        if (
+            request.user.is_authenticated
+            and has_assigned_agency_seat(request.user)
+            and not can_manage_agency(request.user)
+        ):
+            return redirect(reverse('workspace:agency_advisor_member'))
+        return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
@@ -3702,7 +3713,13 @@ class CRMTeamView(CRMContextMixin, LoginRequiredMixin, TemplateView):
             ).select_related('agency')
         tab = self.request.GET.get('tab')
         if not tab:
-            tab = 'command' if (agency and can_manage_team(user)) else 'overview'
+            from workspace.services.agency_entitlement import can_manage_agency as _can_manage_agency
+            if agency and _can_manage_agency(user):
+                tab = 'members'
+            elif agency and can_manage_team(user):
+                tab = 'command'
+            else:
+                tab = 'overview'
         manager_only = {'sync', 'webhooks', 'transfers', 'command', 'settings', 'audit'}
         if tab in manager_only and not can_manage_team(user):
             tab = 'overview'
@@ -3713,6 +3730,20 @@ class CRMTeamView(CRMContextMixin, LoginRequiredMixin, TemplateView):
         elif tab == 'announcements' and not (agency and is_agency_feature_enabled('announcements', agency)):
             tab = 'overview'
         ctx['tab'] = tab
+        from workspace.services.agency_entitlement import (
+            agency_hub_access_level,
+            can_manage_agency,
+        )
+        ctx['agency_hub_access_level'] = agency_hub_access_level(user)
+        ctx['can_manage_agency'] = can_manage_agency(user)
+        if agency and can_manage_agency(user):
+            from workspace.services.agency_members import build_members_dashboard
+            from workspace.services.agency_seats import list_available_seats
+            ctx['members_dashboard'] = build_members_dashboard(user, agency)
+            ctx['available_seats'] = list_available_seats(user, agency)
+        else:
+            ctx['members_dashboard'] = None
+            ctx['available_seats'] = []
         if agency and can_manage_team(user):
             from licenses.services.management import build_license_dashboard
             ctx['license_dashboard'] = build_license_dashboard(user)
@@ -3731,13 +3762,41 @@ class CRMTeamView(CRMContextMixin, LoginRequiredMixin, TemplateView):
             if action == 'create_agency':
                 create_agency(request.user, request.POST.get('name', ''))
                 messages.success(request, 'آژانس ایجاد شد و داده‌های شما متصل شد.')
-            elif action == 'invite_member':
-                invite_member_by_phone(
+            elif action in ('invite_member', 'agency_invite'):
+                from workspace.services.agency_invitations import create_agency_invitation
+                create_agency_invitation(
                     request.user,
                     request.POST.get('phone', ''),
                     request.POST.get('role', 'advisor'),
+                    request=request,
                 )
-                messages.success(request, 'دعوت ارسال شد — منتظر تأیید کاربر باشید.')
+                messages.success(request, 'دعوت SMS ارسال شد.')
+            elif action == 'agency_invite_resend':
+                from workspace.services.agency_invitations import resend_invitation_sms
+                resend_invitation_sms(
+                    request.user, int(request.POST.get('invitation_id', 0)), request=request,
+                )
+                messages.success(request, 'پیامک مجدداً ارسال شد.')
+            elif action == 'agency_invite_cancel':
+                from workspace.services.agency_invitations import cancel_agency_invitation
+                cancel_agency_invitation(request.user, int(request.POST.get('invitation_id', 0)))
+                messages.success(request, 'دعوت لغو شد.')
+            elif action == 'agency_assign_seat':
+                from workspace.services.agency_seats import assign_seat_to_member
+                assign_seat_to_member(
+                    request.user,
+                    int(request.POST.get('license_id', 0)),
+                    int(request.POST.get('member_user_id', 0)),
+                )
+                messages.success(request, 'لایسنس تخصیص داده شد.')
+            elif action == 'agency_unassign_seat':
+                from workspace.services.agency_seats import unassign_seat
+                unassign_seat(request.user, int(request.POST.get('license_id', 0)))
+                messages.success(request, 'تخصیص لایسنس لغو شد.')
+            elif action == 'agency_remove_member':
+                from workspace.services.agency_members import remove_agency_member
+                remove_agency_member(request.user, int(request.POST.get('member_id', 0)))
+                messages.success(request, 'عضو از آژانس حذف شد.')
             elif action == 'request_join':
                 request_join_agency(
                     request.user,

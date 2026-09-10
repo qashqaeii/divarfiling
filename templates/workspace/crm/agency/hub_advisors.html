@@ -1,0 +1,29 @@
+{% extends "workspace/crm/agency/hub_base.html" %}
+{% block agency_hub_content %}
+<div id="invite">
+{% if members_dashboard %}
+{% include "workspace/crm/includes/team_tab_members_manage.html" with members_dashboard=members_dashboard available_seats=available_seats crm_team_url=crm_team_url %}
+{% endif %}
+</div>
+<div class="agency-hub-section agency-hub-export-panel">
+    <h2>خروجی تیمی</h2>
+    <form method="post" action="{% url 'workspace:agency_team_export' %}" class="agency-export-form">
+        {% csrf_token %}
+        <label><span>نوع داده</span>
+            <select name="type" class="crm-input" required>
+                <option value="contacts">مخاطبین</option>
+                <option value="properties">فایل‌های شخصی</option>
+                <option value="filing">فایلینگ</option>
+                <option value="deals">معاملات</option>
+            </select>
+        </label>
+        <label><span>فرمت</span>
+            <select name="format" class="crm-input"><option value="xlsx">XLSX</option><option value="csv">CSV</option></select>
+        </label>
+        <label><span>از تاریخ</span><input type="date" name="date_from" class="crm-input"></label>
+        <label><span>تا تاریخ</span><input type="date" name="date_to" class="crm-input"></label>
+        <label class="agency-export-all"><input type="checkbox" name="all_members" value="1" checked> همه مشاوران</label>
+        <button type="submit" class="crm-btn crm-btn-primary">دریافت خروجی</button>
+    </form>
+</div>
+{% endblock %}

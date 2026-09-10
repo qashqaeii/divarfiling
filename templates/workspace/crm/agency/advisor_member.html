@@ -1,0 +1,45 @@
+{% extends "workspace/crm/base_crm.html" %}
+{% load static %}
+
+{% block crm_extra_css %}
+<link rel="stylesheet" href="{% static 'workspace/css/agency-phase2.css' %}">
+<link rel="stylesheet" href="{% static 'workspace/css/agency-phase3.css' %}">
+{% endblock %}
+
+{% block crm_content %}
+<div class="agency-member-view" dir="rtl">
+    <header class="a360-header a360-header-compact">
+        <div class="a360-identity">
+            <h1>{{ agency.name }}</h1>
+            <p class="a360-sub">عضویت شما در آژانس</p>
+        </div>
+    </header>
+    <div class="a360-member-cards">
+        <div class="a360-kpi">
+            <span class="a360-kpi-label">نقش</span>
+            <strong>{{ membership.get_role_display|default:membership.role }}</strong>
+        </div>
+        <div class="a360-kpi">
+            <span class="a360-kpi-label">وضعیت عضویت</span>
+            <strong>{% if membership.is_active %}فعال{% else %}غیرفعال{% endif %}</strong>
+        </div>
+        <div class="a360-kpi">
+            <span class="a360-kpi-label">لایسنس</span>
+            <strong>{% if license %}فعال{% else %}ندارد{% endif %}</strong>
+        </div>
+        {% if license and license.expires_at %}
+        <div class="a360-kpi">
+            <span class="a360-kpi-label">انقضای لایسنس</span>
+            <strong>{{ license.expires_at|date:"Y/m/d" }}</strong>
+        </div>
+        {% endif %}
+        {% if subscription %}
+        <div class="a360-kpi">
+            <span class="a360-kpi-label">اشتراک آژانس</span>
+            <strong>تا {{ subscription.expires_at|date:"Y/m/d" }}</strong>
+        </div>
+        {% endif %}
+    </div>
+    <p class="a360-member-note">این بخش اطلاعات عضویت شماست. برای مدیریت تیم با مالک آژانس تماس بگیرید.</p>
+</div>
+{% endblock %}

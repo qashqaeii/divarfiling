@@ -30,7 +30,7 @@ _WS_NAV_MORE_URL_NAMES = frozenset({
 })
 
 
-def _ws_nav_flags(request, has_agency_membership):
+def _ws_nav_flags(request, user, show_agency_nav: bool):
     match = getattr(request, 'resolver_match', None)
     url_name = getattr(match, 'url_name', '') or ''
     path = request.path or ''
@@ -40,10 +40,10 @@ def _ws_nav_flags(request, has_agency_membership):
         or path.startswith('/workspace/product')
         or path.startswith('/workspace/support')
         or path.startswith('/workspace/ai')
-        or (url_name == 'crm_team' and not has_agency_membership)
+        or (url_name == 'crm_team' and not show_agency_nav)
     )
     return {
-        'ws_show_agency_nav': has_agency_membership,
+        'ws_show_agency_nav': show_agency_nav,
         'ws_nav_more_open': more_open,
     }
 
@@ -71,11 +71,34 @@ def _build_workspace_context(request, user, ctx):
         product_hub_unread = product_hub_unread_count(user)
     except Exception:
         product_hub_unread = 0
+    from workspace.services.agency_entitlement import (
+        agency_hub_access_level,
+        can_manage_agency,
+        get_active_subscription_for_owner,
+        seat_usage_summary,
+    )
+    from workspace.services.agency_entitlement import can_access_agency_hub
+
+    agency_access = agency_hub_access_level(user)
+    agency_sub = get_active_subscription_for_owner(user) if agency_access in ('owner', 'owner_locked') else None
+    agency_onboarding_cta = None
+    if agency_sub and can_manage_agency(user):
+        from workspace.services.agency_onboarding import get_owner_agency
+        owner_agency = get_owner_agency(user)
+        if not owner_agency or not owner_agency.onboarding_completed_at:
+            from django.urls import reverse
+            agency_onboarding_cta = reverse('workspace:agency_onboarding')
+
     ctx.update({
         'ws_settings': settings_obj,
         'bot_license_display': get_bot_license_display(user),
         'bot_buy_url': get_bot_product_buy_url(),
         'crm_nav_counts': _crm_nav_counts(user),
+        'ws_agency_access_level': agency_access,
+        'ws_agency_subscription': agency_sub,
+        'ws_agency_seat_usage': seat_usage_summary(agency_sub) if agency_sub else None,
+        'ws_can_manage_agency': can_manage_agency(user),
+        'ws_agency_onboarding_cta': agency_onboarding_cta,
         'support_nav_counts': get_user_ticket_stats(user),
         'product_hub_unread': product_hub_unread,
         'ai_enabled': is_ai_enabled(),
@@ -102,11 +125,6 @@ def _build_workspace_context(request, user, ctx):
         })
         if access['has_bot_license']:
             ctx['ws_upload_form'] = DatasetUploadForm()
-        has_agency_membership = False
-        try:
-            from workspace.services.crm_scope import get_membership
-            has_agency_membership = get_membership(user) is not None
-        except Exception:
-            has_agency_membership = False
-        ctx.update(_ws_nav_flags(request, has_agency_membership))
+        show_agency_nav = can_access_agency_hub(user)
+        ctx.update(_ws_nav_flags(request, user, show_agency_nav))
     return ctx

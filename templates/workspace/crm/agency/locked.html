@@ -1,0 +1,17 @@
+{% extends "workspace/base.html" %}
+{% block title %}آژانس — اشتراک منقضی{% endblock %}
+{% block content %}
+<div class="container py-5 text-center" dir="rtl">
+    <div class="card shadow-sm mx-auto" style="max-width: 520px;">
+        <div class="card-body p-4">
+            <h1 class="h4 mb-3">مدیریت آژانس قفل شده</h1>
+            <p class="text-muted mb-4">
+                اشتراک پلن آژانس شما منقضی شده است. داده‌های تیم و اعضا حفظ شده‌اند؛
+                برای ادامه مدیریت، پلن آژانس را تمدید کنید.
+            </p>
+            <a href="{{ agency_buy_url }}" class="btn btn-primary">تمدید پلن آژانس</a>
+            <a href="{% url 'workspace:crm_dashboard' %}" class="btn btn-outline-secondary ms-2">بازگشت به CRM</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

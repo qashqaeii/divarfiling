@@ -41,10 +41,17 @@
         {% if crm_nav_counts.deals %}<span class="ws-nav-badge">{{ crm_nav_counts.deals }}</span>{% endif %}
     </a>
 
+    {% if has_bot_license %}
     <a href="{% url 'workspace:contracts_dashboard' %}" class="ws-nav-item ws-nav-item--sub {% if '/contracts' in path or 'contract_' in url_name or 'handover_' in url_name %}active{% endif %}" data-tour="nav-contracts">
         <span class="ws-nav-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='file_edit' size='nav' only %}</span><span>قراردادها</span>
         {% if crm_nav_counts.contracts %}<span class="ws-nav-badge">{{ crm_nav_counts.contracts }}</span>{% endif %}
     </a>
+    {% else %}
+    <a href="{% url 'workspace:contracts_dashboard' %}" class="ws-nav-item ws-nav-item--sub ws-nav-locked {% if '/contracts' in path or 'contract_' in url_name or 'handover_' in url_name %}active{% endif %}" data-tour="nav-contracts">
+        <span class="ws-nav-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='file_edit' size='nav' only %}</span><span>قراردادها</span>
+        <i class="fas fa-lock ws-nav-lock" title="نیاز به لایسنس فعال"></i>
+    </a>
+    {% endif %}
 
     <a href="{% url 'workspace:crm_deals_finance' %}" class="ws-nav-item ws-nav-item--sub {% if '/crm/deals/finance' in path %}active{% endif %}" data-tour="nav-deals-finance">
         <span class="ws-nav-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='coins' size='nav' only %}</span><span>مالی معاملات</span>

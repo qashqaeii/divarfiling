@@ -27,6 +27,9 @@ def _accept_url(request, raw_token: str) -> str:
 
 @transaction.atomic
 def send_handover_invitations(handover: ContractHandover, *, request=None) -> list:
+    from contracts.services.license_gate import assert_contract_license_for_contract
+
+    assert_contract_license_for_contract(handover.contract)
     snap = handover.snapshot_json or {}
     created = []
     for side in ('delivered_by', 'received_by'):

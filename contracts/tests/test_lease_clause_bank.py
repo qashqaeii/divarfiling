@@ -15,6 +15,7 @@ from contracts.services.lease_clause_bank import (
     render_costs_body,
     render_lease_clause_body,
 )
+from contracts.tests.helpers import grant_bot_license
 from workspace.models import CRMDeal, CRMProperty, Customer
 
 User = get_user_model()
@@ -32,6 +33,7 @@ class LeaseClauseBankTests(TestCase):
             title='اجاره', deal_kind='rent', value=10000000,
         )
         call_command('seed_contract_clauses')
+        grant_bot_license(self.user)
 
     def _reviewed(self, code):
         ContractClauseDefinition.objects.filter(code=code, version=1).update(

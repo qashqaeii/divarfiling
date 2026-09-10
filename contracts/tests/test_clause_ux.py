@@ -15,6 +15,7 @@ from contracts.services.clause_ux import (
 from contracts.services.clauses import get_applicable_clauses
 from contracts.services.lifecycle import create_contract, save_wizard_step
 from contracts.services.contract_renderer import render_contract_document
+from contracts.tests.helpers import grant_bot_license
 from workspace.models import CRMDeal, CRMProperty, Customer
 
 User = get_user_model()
@@ -32,6 +33,7 @@ class ClauseUxTests(TestCase):
             user=self.user, customer=self.customer, property=self.prop,
             title='معامله', deal_kind='rent',
         )
+        grant_bot_license(self.user)
 
     def _reviewed_lease_clause(self, code, **kwargs):
         return ContractClauseDefinition.objects.create(

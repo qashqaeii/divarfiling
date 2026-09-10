@@ -11,6 +11,7 @@ from contracts.constants import CONTRACT_TYPE_LEASE, CONTRACT_TYPE_SALE
 from accounts.services.otp import hash_otp_code
 from contracts.services.tokens import hash_token
 from contracts.services.hashing import compute_content_hash
+from contracts.tests.helpers import grant_bot_license
 from contracts.services.lifecycle import (
     ContractError,
     create_contract,
@@ -41,6 +42,7 @@ class ContractModelTests(TestCase):
             user=self.user, customer=self.customer, property=self.prop,
             title='معامله تست', deal_kind='rent',
         )
+        grant_bot_license(self.user)
 
     def test_create_contract_prefills_data(self):
         c = create_contract(self.user, CONTRACT_TYPE_LEASE, deal_id=self.deal.pk)
@@ -90,6 +92,7 @@ class ContractSecurityTests(TestCase):
         self.other = User.objects.create_user(username='u2', phone='09122222222', password='x')
         self.customer = Customer.objects.create(user=self.user, name='مشتری', phone='09124444444')
         self.deal = CRMDeal.objects.create(user=self.user, customer=self.customer, title='دیل')
+        grant_bot_license(self.user)
 
     def test_idor_manage_view(self):
         c = create_contract(self.user, CONTRACT_TYPE_LEASE, deal_id=self.deal.pk)
@@ -110,6 +113,7 @@ class ContractVersioningTests(TestCase):
         self.deal = CRMDeal.objects.create(
             user=self.user, customer=self.customer, property=self.prop, title='دیل', deal_kind='rent',
         )
+        grant_bot_license(self.user)
 
     def test_lease_send_without_witnesses(self):
         c = create_contract(self.user, CONTRACT_TYPE_LEASE, deal_id=self.deal.pk)
@@ -196,6 +200,7 @@ class ContractWizardUXTests(TestCase):
             user=self.user, customer=self.customer, property=self.prop,
             title='فروش ملک', deal_kind='sale',
         )
+        grant_bot_license(self.user)
 
     def test_wizard_shows_full_phone_in_workspace(self):
         c = create_contract(self.user, CONTRACT_TYPE_SALE, deal_id=self.deal.pk)

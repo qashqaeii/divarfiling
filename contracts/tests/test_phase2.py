@@ -29,6 +29,7 @@ from contracts.services.lifecycle import (
 from contracts.services.state_machine import InvalidStateTransition, transition_contract
 from contracts.services.tokens import generate_bearer_token, hash_token, lookup_invitation
 from contracts.services.version_copy import copy_version_entities, version_display_snapshot
+from contracts.tests.helpers import grant_bot_license
 from workspace.models import CRMDeal, CRMProperty, Customer
 
 User = get_user_model()
@@ -66,6 +67,7 @@ class ContractTestBase(TestCase):
             user=self.user, customer=self.customer, property=self.prop,
             title='معامله', deal_kind='rent',
         )
+        grant_bot_license(self.user)
 
 
 class HashingTests(ContractTestBase):

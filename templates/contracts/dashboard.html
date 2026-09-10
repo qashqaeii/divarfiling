@@ -37,9 +37,15 @@
                 <a href="{% url 'workspace:crm_deals' %}" class="crm-dash-act" title="قیف معاملات">
                     <i class="fas fa-filter" aria-hidden="true"></i><span>قیف معاملات</span>
                 </a>
+                {% if contracts_locked %}
+                <span class="crm-dash-act crm-dash-act--primary is-disabled" title="نیاز به لایسنس فعال" aria-disabled="true">
+                    <i class="fas fa-lock" aria-hidden="true"></i><span>قرارداد جدید</span>
+                </span>
+                {% else %}
                 <a href="{% url 'workspace:contract_create_standalone' %}" class="crm-dash-act crm-dash-act--primary">
                     <i class="fas fa-plus" aria-hidden="true"></i><span>قرارداد جدید</span>
                 </a>
+                {% endif %}
             </div>
         </header>
 
@@ -50,11 +56,31 @@
                     <h1 class="ct-dash-mob-title">قراردادها</h1>
                     <p class="ct-dash-mob-desc">مدیریت چرخه عمر قراردادها از پیش‌نویس تا نهایی‌سازی</p>
                 </div>
+                {% if contracts_locked %}
+                <span class="ct-dash-mob-add is-disabled" title="نیاز به لایسنس فعال" aria-disabled="true" aria-label="قرارداد جدید — قفل">
+                    <i class="fas fa-lock" aria-hidden="true"></i>
+                </span>
+                {% else %}
                 <a href="{% url 'workspace:contract_create_standalone' %}" class="ct-dash-mob-add" title="قرارداد جدید" aria-label="قرارداد جدید">
                     <i class="fas fa-plus" aria-hidden="true"></i>
                 </a>
+                {% endif %}
             </div>
         </header>
+
+        {% if contracts_locked %}
+        <section class="ct-dash-locked" aria-labelledby="ctDashLockedTitle">
+            <div class="ct-dash-locked__card">
+                <div class="ct-dash-locked__icon" aria-hidden="true"><i class="fas fa-file-signature"></i></div>
+                <h2 class="ct-dash-locked__title" id="ctDashLockedTitle">قراردادهای دیجیتال</h2>
+                <p class="ct-dash-locked__text">{{ contracts_license_required_msg }}</p>
+                <a href="{% url 'workspace:upgrade' %}?feature=contracts" class="crm-dash-act crm-dash-act--primary">
+                    <i class="fas fa-key" aria-hidden="true"></i>
+                    <span>فعال‌سازی لایسنس</span>
+                </a>
+            </div>
+        </section>
+        {% else %}
 
         {% if filter_deal %}
         <div class="ct-workspace-filter-banner">
@@ -330,6 +356,8 @@
             <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}page={{ contracts_page.next_page_number }}" class="crm-dash-act">بعدی</a>
             {% endif %}
         </nav>
+        {% endif %}
+
         {% endif %}
 
     </div>

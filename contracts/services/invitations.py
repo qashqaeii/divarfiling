@@ -92,6 +92,9 @@ def _create_invitation(contract, version, *, party=None, witness=None, mobile: s
 
 @transaction.atomic
 def send_invitations(contract: Contract, *, user=None, request=None) -> list:
+    from contracts.services.license_gate import assert_contract_license_for_contract
+
+    assert_contract_license_for_contract(contract, user)
     version = contract.current_version
     if not version or not version.is_published:
         raise ValueError('نسخه منتشر نشده است.')
@@ -136,6 +139,9 @@ def _send_invitation_sms(
     *,
     is_resend: bool = False,
 ) -> None:
+    from contracts.services.license_gate import assert_contract_license_for_contract
+
+    assert_contract_license_for_contract(contract)
     url = _build_accept_url(request, raw_token)
     ctype = contract.get_contract_type_display()
     msg = (
@@ -166,6 +172,9 @@ def _send_invitation_sms(
 
 @transaction.atomic
 def resend_invitation(invitation: ContractInvitation, *, request=None) -> tuple:
+    from contracts.services.license_gate import assert_contract_license_for_contract
+
+    assert_contract_license_for_contract(invitation.contract)
     if invitation.is_revoked:
         raise ValueError('دعوتنامه ابطال شده است.')
     raw, new_hash = generate_bearer_token()
@@ -177,6 +186,9 @@ def resend_invitation(invitation: ContractInvitation, *, request=None) -> tuple:
 
 @transaction.atomic
 def create_final_access_tokens(contract: Contract, *, request=None) -> list:
+    from contracts.services.license_gate import assert_contract_license_for_contract
+
+    assert_contract_license_for_contract(contract)
     version = contract.current_version
     tokens = []
     for party in version.parties.all():

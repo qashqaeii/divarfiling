@@ -8,6 +8,7 @@ from contracts.constants import CONTRACT_TYPE_LEASE, CONTRACT_TYPE_SALE
 from contracts.services.contract_renderer import render_contract_document
 from contracts.services.lifecycle import create_contract, save_wizard_step, sync_clauses_from_selection, validate_contract_ready
 from contracts.services.review_context import build_review_context
+from contracts.tests.helpers import grant_bot_license
 from workspace.models import CRMDeal, CRMProperty, Customer
 
 User = get_user_model()
@@ -30,6 +31,7 @@ class ReviewStepTests(TestCase):
             title='فروش', deal_kind='sale', value=44000000000,
         )
         call_command('seed_contract_clauses')
+        grant_bot_license(self.user)
         self.client = Client()
         self.client.force_login(self.user)
 

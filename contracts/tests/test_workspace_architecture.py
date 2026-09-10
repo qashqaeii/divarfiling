@@ -6,6 +6,7 @@ from django.urls import reverse
 from contracts.constants import CONTRACT_TYPE_LEASE
 from contracts.models import Contract
 from contracts.services.lifecycle import create_contract
+from contracts.tests.helpers import grant_bot_license
 from contracts.services.scope import contracts_qs
 from workspace.models import CRMDeal, Customer
 
@@ -19,6 +20,7 @@ class ContractWorkspaceArchitectureTests(TestCase):
         self.deal = CRMDeal.objects.create(
             user=self.user, customer=self.customer, title='معامله تست', stage='مذاکره',
         )
+        grant_bot_license(self.user)
 
     def test_standalone_contract_without_deal(self):
         c = create_contract(self.user, CONTRACT_TYPE_LEASE, deal_id=None)

@@ -257,4 +257,11 @@ BOT_LOCKED_FEATURES = {
         'decor_icon': 'sparkles',
         'accent': 'violet',
     },
+    'contracts': {
+        'title': 'قراردادهای دیجیتال',
+        'desc': 'ایجاد، ارسال، تأیید و مدیریت قراردادهای معاملات',
+        'icon': 'fa-file-signature',
+        'decor_icon': 'file_edit',
+        'accent': 'indigo',
+    },
 }

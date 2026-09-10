@@ -17,6 +17,7 @@ from contracts.services.sale_clause_bank import (
     SALE_PHASE1_DEFINITIONS,
     render_sale_clause_body,
 )
+from contracts.tests.helpers import grant_bot_license
 from workspace.models import CRMDeal, CRMProperty, Customer
 
 User = get_user_model()
@@ -34,6 +35,7 @@ class SaleClauseBankTests(TestCase):
             title='فروش', deal_kind='sale', value=5000000000,
         )
         call_command('seed_contract_clauses')
+        grant_bot_license(self.user)
 
     def test_all_phase1_sale_clauses_pending_after_seed(self):
         codes = {d['code'] for d in SALE_PHASE1_DEFINITIONS}

@@ -64,6 +64,9 @@ def create_contract(
     deal_id: int | None = None,
     request=None,
 ) -> Contract:
+    from contracts.services.license_gate import assert_contract_license
+
+    assert_contract_license(user)
     deal = None
     if deal_id:
         deal = deal_for_user(user, deal_id)

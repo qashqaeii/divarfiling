@@ -2497,10 +2497,13 @@ class CRMDealDetailView(CRMContextMixin, LoginRequiredMixin, DetailView):
                 status__in=('sent', 'viewed', 'partially_accepted', 'fully_accepted'),
             ).count(),
         }
+        from workspace.services.access import has_active_bot_license
+        ctx['contracts_locked'] = not has_active_bot_license(self.request.user)
         ctx['show_contract_stage_cta'] = (
             d.stage == 'قرارداد'
             and not deal_contracts_qs.exists()
             and d.stage not in ('بسته‌شده', 'از دست رفته')
+            and has_active_bot_license(self.request.user)
         )
         ctx['deal_journey_tab'] = self.request.GET.get('tab', 'overview')
         from workspace.services.deal_journey import build_deal_journey_context

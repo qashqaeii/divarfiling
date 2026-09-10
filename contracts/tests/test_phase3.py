@@ -22,6 +22,7 @@ from contracts.services.lifecycle import (
 from contracts.services.invitations import send_invitations
 from contracts.services.acceptance import accept_contract
 from contracts.models import ContractInvitation
+from contracts.tests.helpers import grant_bot_license
 from workspace.models import CRMDeal, CRMProperty, Customer
 
 User = get_user_model()
@@ -60,6 +61,7 @@ class ContractTestBase(TestCase):
             user=self.user, customer=self.customer, property=self.prop,
             title='فروش', deal_kind='sale', value=5000000000,
         )
+        grant_bot_license(self.user)
 
 
 class SaleE2ETests(ContractTestBase):
@@ -121,6 +123,7 @@ class ConcurrencyFinalizeTests(TransactionTestCase):
         )
         self.deal.property = self.prop
         self.deal.save()
+        grant_bot_license(self.user)
 
     @patch('contracts.services.pdf.generate_contract_pdf')
     @patch('contracts.services.invitations.send_simple_sms')

@@ -54,13 +54,14 @@ from contracts.services.routing import (
     contracts_dashboard_url,
     deal_contracts_filter_url,
 )
+from contracts.mixins import ContractLicenseContextMixin, ContractLicenseRequiredMixin
 from contracts.services.scope import contract_for_deal, contract_for_user, contracts_qs
 from contracts.services.wizard_parse import parse_wizard_step
 from workspace.crm_views import CRMContextMixin
 from workspace.services.crm_scope import deal_for_user, deals_qs
 
 
-class DealContractsMixin(LoginRequiredMixin, CRMContextMixin):
+class DealContractsMixin(ContractLicenseRequiredMixin, CRMContextMixin):
     deal_id_kwarg = 'deal_id'
 
     def get_deal(self):
@@ -70,7 +71,7 @@ class DealContractsMixin(LoginRequiredMixin, CRMContextMixin):
         return deal
 
 
-class ContractAccessMixin(LoginRequiredMixin, CRMContextMixin):
+class ContractAccessMixin(ContractLicenseRequiredMixin, CRMContextMixin):
     """دسترسی قرارداد — URL با یا بدون deal_id."""
 
     def _url_deal_id(self):
@@ -124,7 +125,7 @@ class ContractCreateView(DealContractsMixin, View):
         return redirect(contract_wizard_url(contract))
 
 
-class DealSearchApiView(LoginRequiredMixin, View):
+class DealSearchApiView(ContractLicenseRequiredMixin, View):
     """جستجوی معامله برای اتصال قرارداد."""
 
     def get(self, request):
@@ -153,7 +154,7 @@ class DealSearchApiView(LoginRequiredMixin, View):
         return JsonResponse({'results': results})
 
 
-class ContractCreateStandaloneView(LoginRequiredMixin, CRMContextMixin, TemplateView):
+class ContractCreateStandaloneView(ContractLicenseRequiredMixin, CRMContextMixin, TemplateView):
     """ایجاد قرارداد مستقل از workspace قراردادها."""
     template_name = 'contracts/create.html'
 
@@ -575,11 +576,33 @@ class ContractPdfPreviewView(ContractAccessMixin, View):
         return response
 
 
-class ContractsDashboardView(LoginRequiredMixin, CRMContextMixin, TemplateView):
+class ContractsDashboardView(
+    LoginRequiredMixin, ContractLicenseContextMixin, CRMContextMixin, TemplateView,
+):
     template_name = 'contracts/dashboard.html'
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
+        ctx.update(self.get_contract_license_context())
+        if ctx['contracts_locked']:
+            empty_page = Paginator([], 25).get_page(1)
+            ctx.update({
+                'contracts_page': empty_page,
+                'contracts': [],
+                'contract_types': CONTRACT_TYPES,
+                'contract_statuses': CONTRACT_STATUSES,
+                'stats': {
+                    'total': 0,
+                    'draft': 0,
+                    'pending': 0,
+                    'finalized': 0,
+                    'needs_action': 0,
+                },
+                'crm_section': 'contracts',
+                'filter_deal': None,
+                'filter_qs': '',
+            })
+            return ctx
         qs = filter_contracts(self.request.user, self.request.GET)
         paginator = Paginator(qs, 25)
         page = paginator.get_page(self.request.GET.get('page'))

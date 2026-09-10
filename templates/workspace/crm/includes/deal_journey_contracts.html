@@ -2,9 +2,17 @@
 <section class="dj-contracts-panel">
     <header class="dj-contracts-panel__head">
         <h2>قراردادهای این معامله</h2>
+        {% if not contracts_locked %}
         <a href="{{ deal_contracts_url }}" class="crm-dash-act">میز قراردادها</a>
+        {% endif %}
     </header>
-    {% if deal_contracts %}
+    {% if contracts_locked %}
+    <div class="dj-contracts-locked">
+        <i class="fas fa-lock" aria-hidden="true"></i>
+        <p>برای استفاده از قراردادهای دیجیتال، نیاز به لایسنس فعال دارید.</p>
+        <a href="{% url 'workspace:upgrade' %}?feature=contracts" class="crm-dash-act crm-dash-act--primary">فعال‌سازی لایسنس</a>
+    </div>
+    {% elif deal_contracts %}
     <ul class="dj-contracts-list">
         {% for c in deal_contracts %}
         <li class="dj-contracts-item">

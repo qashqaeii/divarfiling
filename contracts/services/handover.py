@@ -41,6 +41,9 @@ def compute_handover_hash(handover: ContractHandover) -> str:
 
 @transaction.atomic
 def create_handover(user, contract_id: int, *, request=None) -> ContractHandover:
+    from contracts.services.license_gate import assert_contract_license
+
+    assert_contract_license(user)
     contract = contract_for_user(user, contract_id)
     if not contract:
         raise HandoverError('قرارداد یافت نشد.')
@@ -108,6 +111,9 @@ def save_handover_step(handover: ContractHandover, step: str, data: Dict[str, An
 
 @transaction.atomic
 def publish_handover(handover: ContractHandover, *, user=None, request=None) -> ContractHandover:
+    from contracts.services.license_gate import assert_contract_license
+
+    assert_contract_license(user or handover.user)
     if handover.is_locked:
         return handover
     from contracts.services.handover_wizard import sync_handover_delivery_parties

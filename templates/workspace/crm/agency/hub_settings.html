@@ -1,15 +1,76 @@
 {% extends "workspace/crm/agency/hub_base.html" %}
 {% block agency_hub_content %}
-<div class="agency-hub-section">
-    <h2>تنظیمات آژانس</h2>
-    <p><a href="{{ legacy_team_url }}">تنظیمات پروفایل و API آژانس</a></p>
+<div class="agency-page-head">
+    <div>
+        <h2 class="agency-page-head__title">تنظیمات آژانس</h2>
+        <p class="agency-page-head__sub">اطلاعات، اشتراک و ابزارهای مدیریتی</p>
+    </div>
 </div>
-<div class="agency-hub-section">
-    <h2>ابزارهای پیشرفته</h2>
-    <ul class="agency-hub-advanced-list">
-        {% for key, label, url in advanced_tabs %}
-        <li><a href="{{ url }}">{{ label }}</a></li>
-        {% endfor %}
-    </ul>
+
+<div class="agency-settings-grid">
+    <section class="agency-settings-card">
+        <h3 class="agency-settings-card__title">اطلاعات آژانس</h3>
+        <p class="agency-settings-card__desc">نام، پروفایل و تنظیمات API</p>
+        <dl class="agency-settings-kv">
+            <div>
+                <dt>نام آژانس</dt>
+                <dd>{{ hub_agency.name|default:"—" }}</dd>
+            </div>
+        </dl>
+        <a href="{{ legacy_team_url }}" class="crm-btn crm-btn-ghost crm-btn-sm" style="margin-top:0.75rem;">
+            <i class="fas fa-pen" aria-hidden="true"></i>
+            ویرایش پروفایل و API
+        </a>
+    </section>
+
+    <section class="agency-settings-card">
+        <h3 class="agency-settings-card__title">وضعیت اشتراک</h3>
+        <p class="agency-settings-card__desc">پلن فعال و تاریخ انقضا</p>
+        {% if hub_subscription %}
+        <dl class="agency-settings-kv">
+            <div>
+                <dt>پلن</dt>
+                <dd><span class="agency-status agency-status--ok">پلن آژانس</span></dd>
+            </div>
+            <div>
+                <dt>انقضا</dt>
+                <dd>{{ hub_subscription.expires_at|date:"Y/m/d H:i" }}</dd>
+            </div>
+        </dl>
+        {% else %}
+        <p class="agency-settings-card__desc">اشتراک فعالی یافت نشد.</p>
+        {% endif %}
+    </section>
+
+    {% if hub_seats %}
+    <section class="agency-settings-card">
+        <h3 class="agency-settings-card__title">خلاصه Seat</h3>
+        <p class="agency-settings-card__desc">مصرف صندلی‌های لایسنس</p>
+        <dl class="agency-settings-kv">
+            <div>
+                <dt>کل / تخصیص / آزاد</dt>
+                <dd>{{ hub_seats.total }} / {{ hub_seats.assigned }} / {{ hub_seats.available }}</dd>
+            </div>
+        </dl>
+        <a href="{% url 'workspace:agency_hub_licenses' %}" class="crm-btn crm-btn-ghost crm-btn-sm" style="margin-top:0.75rem;">
+            مدیریت لایسنس‌ها
+        </a>
+    </section>
+    {% endif %}
+
+    <section class="agency-settings-card" style="grid-column: 1 / -1;">
+        <h3 class="agency-settings-card__title">ابزارهای پیشرفته</h3>
+        <p class="agency-settings-card__desc">امکانات تکمیلی برای تیم‌های بزرگ‌تر</p>
+        <ul class="agency-settings-list">
+            {% for key, label, url in advanced_tabs %}
+            <li>
+                <a href="{{ url }}">
+                    <span>{{ label }}</span>
+                    <i class="fas fa-arrow-left" aria-hidden="true"></i>
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+    </section>
 </div>
 {% endblock %}

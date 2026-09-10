@@ -1,0 +1,42 @@
+{% load static %}
+<header class="agency-hub-header">
+    <div class="agency-hub-header__main">
+        <div class="agency-hub-header__title-row">
+            <span class="agency-hub-header__eyebrow">مدیریت آژانس</span>
+            <h1 class="agency-hub-header__title">{{ hub_agency.name|default:"آژانس" }}</h1>
+        </div>
+        {% if hub_subscription %}
+        <div class="agency-hub-header__meta">
+            <span class="agency-hub-chip agency-hub-chip--plan">
+                <i class="fas fa-crown" aria-hidden="true"></i>
+                پلن آژانس
+            </span>
+            <span class="agency-hub-chip">
+                <i class="fas fa-calendar-check" aria-hidden="true"></i>
+                انقضا {{ hub_subscription.expires_at|date:"Y/m/d" }}
+            </span>
+            {% if hub_seats %}
+            <span class="agency-hub-chip{% if hub_seats.available == 0 %} agency-hub-chip--warn{% endif %}">
+                <i class="fas fa-chair" aria-hidden="true"></i>
+                {{ hub_seats.assigned }}/{{ hub_seats.total }} Seat
+                {% if hub_seats.available %}<em>({{ hub_seats.available }} آزاد)</em>{% endif %}
+            </span>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+    <div class="agency-hub-header__actions">
+        {% if ws_agency_onboarding_cta %}
+        <a href="{{ ws_agency_onboarding_cta }}" class="crm-btn crm-btn-ghost crm-btn-sm agency-hub-header__onboard">
+            <i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i>
+            تکمیل راه‌اندازی
+        </a>
+        {% endif %}
+        {% if hub_section != 'advisors' %}
+        <button type="button" class="crm-btn crm-btn-primary crm-btn-sm" data-bs-toggle="modal" data-bs-target="#agencyInviteModal">
+            <i class="fas fa-user-plus" aria-hidden="true"></i>
+            دعوت مشاور
+        </button>
+        {% endif %}
+    </div>
+</header>

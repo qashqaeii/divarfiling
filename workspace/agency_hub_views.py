@@ -34,6 +34,7 @@ class _AgencyHubBase(AgencyOwnerRequiredMixin, LoginRequiredMixin, TemplateView)
             ('activity', 'فعالیت تیم', reverse('workspace:agency_hub_activity')),
             ('settings', 'تنظیمات', reverse('workspace:agency_hub_settings')),
         ]
+        ctx['crm_team_url'] = reverse('workspace:crm_team')
         return ctx
 
 

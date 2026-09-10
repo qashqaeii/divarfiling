@@ -1,0 +1,15 @@
+<nav class="agency-hub-nav" aria-label="بخش‌های آژانس">
+    <div class="agency-hub-nav__track">
+        {% for key, label, url in hub_nav %}
+        <a href="{{ url }}" class="agency-hub-nav__item{% if hub_section == key %} is-active{% endif %}">
+            {% if key == 'dashboard' %}<i class="fas fa-gauge-high" aria-hidden="true"></i>
+            {% elif key == 'advisors' %}<i class="fas fa-users" aria-hidden="true"></i>
+            {% elif key == 'licenses' %}<i class="fas fa-id-card" aria-hidden="true"></i>
+            {% elif key == 'activity' %}<i class="fas fa-clock-rotate-left" aria-hidden="true"></i>
+            {% elif key == 'settings' %}<i class="fas fa-gear" aria-hidden="true"></i>
+            {% endif %}
+            <span>{{ label }}</span>
+        </a>
+        {% endfor %}
+    </div>
+</nav>

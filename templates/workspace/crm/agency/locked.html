@@ -1,16 +1,24 @@
 {% extends "workspace/base.html" %}
+{% load static %}
 {% block title %}آژانس — اشتراک منقضی{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'workspace/css/crm.css' %}">
+<link rel="stylesheet" href="{% static 'workspace/css/agency-hub.css' %}?v=2">
+{% endblock %}
 {% block content %}
-<div class="container py-5 text-center" dir="rtl">
-    <div class="card shadow-sm mx-auto" style="max-width: 520px;">
-        <div class="card-body p-4">
-            <h1 class="h4 mb-3">مدیریت آژانس قفل شده</h1>
-            <p class="text-muted mb-4">
+<div class="agency-onboarding" dir="rtl">
+    <div class="agency-onboarding__shell" style="max-width:480px;">
+        <div class="agency-onboarding__panel agency-onboarding__complete">
+            <span class="agency-empty__icon" aria-hidden="true"><i class="fas fa-lock"></i></span>
+            <h1 class="agency-onboarding__panel-title">مدیریت آژانس قفل شده</h1>
+            <p class="agency-onboarding__panel-desc">
                 اشتراک پلن آژانس شما منقضی شده است. داده‌های تیم و اعضا حفظ شده‌اند؛
                 برای ادامه مدیریت، پلن آژانس را تمدید کنید.
             </p>
-            <a href="{{ agency_buy_url }}" class="btn btn-primary">تمدید پلن آژانس</a>
-            <a href="{% url 'workspace:crm_dashboard' %}" class="btn btn-outline-secondary ms-2">بازگشت به CRM</a>
+            <div class="agency-onboarding__actions" style="justify-content:center;">
+                <a href="{{ agency_buy_url }}" class="crm-btn crm-btn-primary">تمدید پلن آژانس</a>
+                <a href="{% url 'workspace:crm_dashboard' %}" class="crm-btn crm-btn-ghost">بازگشت به CRM</a>
+            </div>
         </div>
     </div>
 </div>

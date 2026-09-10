@@ -1,0 +1,26 @@
+<div class="modal fade agency-modal" id="agencyInviteModal" tabindex="-1" aria-labelledby="agencyInviteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <form method="post" action="{{ crm_team_url }}" class="modal-content">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="agency_invite">
+            <input type="hidden" name="tab" value="members">
+            <div class="modal-header">
+                <h5 class="modal-title" id="agencyInviteModalLabel">دعوت مشاور جدید</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="بستن"></button>
+            </div>
+            <div class="modal-body">
+                <p class="agency-modal__hint">شماره موبایل مشاور را وارد کنید. دعوت از طریق SMS ارسال می‌شود.</p>
+                <label class="agency-form-label" for="agencyInvitePhone">شماره موبایل</label>
+                <input type="tel" id="agencyInvitePhone" name="phone" class="crm-input" required dir="ltr" placeholder="09123456789" autocomplete="tel">
+                <input type="hidden" name="role" value="advisor">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="crm-btn crm-btn-ghost" data-bs-dismiss="modal">انصراف</button>
+                <button type="submit" class="crm-btn crm-btn-primary">
+                    <i class="fas fa-paper-plane" aria-hidden="true"></i>
+                    ارسال دعوت SMS
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

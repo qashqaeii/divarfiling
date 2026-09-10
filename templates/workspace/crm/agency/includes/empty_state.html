@@ -1,0 +1,8 @@
+<div class="agency-empty{% if compact %} agency-empty--compact{% endif %}">
+    {% if icon %}<span class="agency-empty__icon" aria-hidden="true"><i class="fas fa-{{ icon }}"></i></span>{% endif %}
+    <h3 class="agency-empty__title">{{ title }}</h3>
+    {% if description %}<p class="agency-empty__desc">{{ description }}</p>{% endif %}
+    {% if action_url and action_label %}
+    <a href="{{ action_url }}" class="crm-btn crm-btn-primary crm-btn-sm">{{ action_label }}</a>
+    {% endif %}
+</div>

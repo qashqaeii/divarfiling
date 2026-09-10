@@ -1,11 +1,13 @@
-/* Advisor 360 — Phase 3 */
+/* Advisor 360 — Production polish */
+
 .agency-advisor360,
 .agency-member-view {
   --a360-purple: #6b4ce6;
   --a360-border: rgba(0, 0, 0, 0.08);
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 1rem 1.25rem 2rem;
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+  padding: 0 0 2rem;
 }
 
 .a360-header {
@@ -13,19 +15,20 @@
   flex-wrap: wrap;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 1rem;
-  padding: 1.25rem;
-  background: #fff;
+  gap: 1rem 1.5rem;
+  padding: 1.15rem 1.25rem;
+  background: var(--ws-surface, #fff);
   border: 1px solid var(--a360-border);
-  border-radius: 16px;
-  box-shadow: 0 2px 12px rgba(107, 76, 230, 0.06);
+  border-radius: 12px;
+  box-shadow: var(--ws-shadow-sm, 0 1px 3px rgba(0, 0, 0, 0.04));
   margin-bottom: 1rem;
 }
 
 .a360-header-main {
   display: flex;
   gap: 1rem;
-  align-items: center;
+  align-items: flex-start;
+  min-width: 0;
 }
 
 .a360-avatar {
@@ -37,45 +40,46 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.4rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+  flex-shrink: 0;
 }
+
+.a360-identity { min-width: 0; }
 
 .a360-identity h1 {
   margin: 0 0 0.25rem;
   font-size: 1.25rem;
   font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
 }
 
 .a360-sub {
   margin: 0;
-  color: #666;
-  font-size: 0.9rem;
+  color: var(--ws-text-muted, #64748b);
+  font-size: 0.8125rem;
+  line-height: 1.45;
 }
 
 .a360-badges {
   display: flex;
   flex-wrap: wrap;
   gap: 0.35rem;
-  margin-top: 0.5rem;
+  margin-top: 0.55rem;
 }
 
 .a360-badge {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
+  font-weight: 600;
   padding: 0.2rem 0.55rem;
   border-radius: 999px;
-  background: #f0f0f5;
-  color: #444;
+  background: #f1f5f9;
+  color: #475569;
 }
 
-.a360-badge-ok {
-  background: #e8f5e9;
-  color: #2e7d32;
-}
-
-.a360-badge-warn {
-  background: #fff3e0;
-  color: #e65100;
-}
+.a360-badge-ok { background: #ecfdf5; color: #047857; }
+.a360-badge-warn { background: #fff7ed; color: #c2410c; }
 
 .a360-actions {
   display: flex;
@@ -85,83 +89,107 @@
 
 .a360-tabs {
   display: flex;
-  flex-wrap: wrap;
   gap: 0.35rem;
   margin-bottom: 1rem;
-  border-bottom: 1px solid var(--a360-border);
-  padding-bottom: 0.5rem;
+  padding: 0.35rem;
+  background: var(--ws-surface, #fff);
+  border: 1px solid var(--a360-border);
+  border-radius: 12px;
+  overflow-x: auto;
+  scrollbar-width: none;
 }
+
+.a360-tabs::-webkit-scrollbar { display: none; }
 
 .a360-tab {
-  padding: 0.45rem 0.85rem;
-  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.55rem 0.95rem;
+  border-radius: 8px;
   text-decoration: none;
-  color: #555;
-  font-size: 0.88rem;
+  color: var(--ws-text-muted, #64748b);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background 0.15s, color 0.15s;
 }
 
+.a360-tab:hover { background: #f8fafc; color: #1e293b; }
+
 .a360-tab.is-active {
-  background: var(--a360-purple);
-  color: #fff;
+  background: #f5f3ff;
+  color: #6b4ce6;
+  font-weight: 600;
 }
 
 .a360-body {
-  background: #fff;
+  background: var(--ws-surface, #fff);
   border: 1px solid var(--a360-border);
-  border-radius: 16px;
-  padding: 1rem;
+  border-radius: 12px;
+  padding: 1rem 1.15rem;
+  min-width: 0;
 }
 
 .a360-period {
-  display: flex;
-  gap: 0.5rem;
+  display: inline-flex;
+  gap: 0.35rem;
+  padding: 0.25rem;
+  background: #f8fafc;
+  border: 1px solid var(--a360-border);
+  border-radius: 8px;
   margin-bottom: 1rem;
 }
 
 .a360-period-btn {
-  padding: 0.35rem 0.75rem;
-  border-radius: 8px;
-  border: 1px solid var(--a360-border);
+  padding: 0.4rem 0.85rem;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
   text-decoration: none;
-  color: #444;
-  font-size: 0.85rem;
+  color: #64748b;
+  font-size: 0.8125rem;
+  font-weight: 500;
 }
 
 .a360-period-btn.is-active {
-  border-color: var(--a360-purple);
-  color: var(--a360-purple);
+  background: #fff;
+  color: #6b4ce6;
   font-weight: 600;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
 }
 
 .a360-kpi-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 130px), 1fr));
+  gap: 0.65rem;
 }
 
 .a360-kpi {
-  padding: 0.75rem;
+  padding: 0.85rem 1rem;
   border: 1px solid var(--a360-border);
-  border-radius: 12px;
+  border-radius: 8px;
   background: #fafafa;
 }
 
 .a360-kpi-label {
   display: block;
-  font-size: 0.78rem;
-  color: #777;
+  font-size: 0.7rem;
+  color: #64748b;
   margin-bottom: 0.25rem;
 }
 
 .a360-kpi strong {
-  font-size: 1.15rem;
-  color: #222;
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #1a1a2e;
 }
 
 .a360-kpi small {
   display: block;
-  font-size: 0.75rem;
-  color: #2e7d32;
+  font-size: 0.72rem;
+  color: #047857;
   margin-top: 0.15rem;
 }
 
@@ -170,35 +198,48 @@
   gap: 0.5rem;
   margin-bottom: 1rem;
   flex-wrap: wrap;
+  padding: 0.75rem;
+  background: #f8fafc;
+  border: 1px solid var(--a360-border);
+  border-radius: 8px;
 }
 
 .a360-table-wrap {
   overflow-x: auto;
+  border: 1px solid var(--a360-border);
+  border-radius: 8px;
 }
 
 .a360-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.88rem;
+  font-size: 0.8125rem;
+  min-width: 560px;
 }
 
 .a360-table th,
 .a360-table td {
-  padding: 0.55rem 0.65rem;
+  padding: 0.65rem 0.85rem;
   border-bottom: 1px solid var(--a360-border);
   text-align: right;
+  vertical-align: middle;
 }
 
 .a360-table th {
   font-weight: 600;
-  color: #555;
-  background: #f8f8fc;
+  font-size: 0.75rem;
+  color: #64748b;
+  background: #f8fafc;
 }
+
+.a360-table tbody tr:last-child td { border-bottom: none; }
+.a360-table tbody tr:hover td { background: rgba(107, 76, 230, 0.03); }
 
 .a360-empty {
   text-align: center;
-  color: #999;
-  padding: 2rem !important;
+  color: #94a3b8;
+  padding: 2rem 1rem !important;
+  font-size: 0.875rem;
 }
 
 .a360-pager {
@@ -207,7 +248,13 @@
   align-items: center;
   gap: 1rem;
   margin-top: 1rem;
-  font-size: 0.88rem;
+  font-size: 0.8125rem;
+}
+
+.a360-pager a {
+  color: #6b4ce6;
+  text-decoration: none;
+  font-weight: 500;
 }
 
 .a360-activity-list {
@@ -217,52 +264,47 @@
 }
 
 .a360-activity-list li {
-  padding: 0.75rem 0;
+  padding: 0.85rem 0;
   border-bottom: 1px solid var(--a360-border);
 }
 
+.a360-activity-list li:last-child { border-bottom: none; }
+
 .a360-activity-list time {
-  font-size: 0.78rem;
-  color: #888;
+  font-size: 0.72rem;
+  color: #94a3b8;
   display: block;
+  margin-bottom: 0.15rem;
+}
+
+.a360-activity-list strong {
+  font-size: 0.875rem;
+  color: #1e293b;
 }
 
 .a360-member-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 160px), 1fr));
+  gap: 0.65rem;
   margin: 1rem 0;
 }
 
 .a360-member-note {
-  color: #666;
-  font-size: 0.9rem;
+  color: #64748b;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  padding: 0.75rem 1rem;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid var(--a360-border);
 }
 
-.ws-agency-onboarding-cta {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  margin-bottom: 1rem;
-  padding: 0.85rem 1rem;
-  border-radius: 14px;
-  border: 1px solid rgba(107, 76, 230, 0.25);
-  background: linear-gradient(135deg, rgba(107, 76, 230, 0.08), rgba(107, 76, 230, 0.02));
-}
+.a360-header-compact { padding: 1rem; }
 
-.ws-agency-onboarding-cta p {
-  margin: 0;
-  font-size: 0.9rem;
-  color: #444;
-}
-
-@media (max-width: 640px) {
-  .a360-header {
-    flex-direction: column;
-  }
-  .a360-table {
-    font-size: 0.8rem;
-  }
+@media (max-width: 768px) {
+  .a360-header { flex-direction: column; }
+  .a360-actions { width: 100%; }
+  .a360-actions .crm-btn { flex: 1; justify-content: center; }
+  .a360-kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .a360-kpi strong { font-size: 1.05rem; }
 }

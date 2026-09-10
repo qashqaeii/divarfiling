@@ -2,57 +2,130 @@
 {% load humanize crm_tags %}
 {% block agency_hub_content %}
 {% if summary %}
-<div class="agency-hub-period">
-    {% for d in "7,30,90"|make_list %}{% endfor %}
-    <a href="?days=7" class="a360-period-btn{% if summary.period_days == 7 %} is-active{% endif %}">۷ روز</a>
-    <a href="?days=30" class="a360-period-btn{% if summary.period_days == 30 %} is-active{% endif %}">۳۰ روز</a>
-    <a href="?days=90" class="a360-period-btn{% if summary.period_days == 90 %} is-active{% endif %}">۹۰ روز</a>
+<div class="agency-period" role="group" aria-label="بازه زمانی">
+    <a href="?days=7" class="agency-period__btn{% if summary.period_days == 7 %} is-active{% endif %}">۷ روز</a>
+    <a href="?days=30" class="agency-period__btn{% if summary.period_days == 30 %} is-active{% endif %}">۳۰ روز</a>
+    <a href="?days=90" class="agency-period__btn{% if summary.period_days == 90 %} is-active{% endif %}">۹۰ روز</a>
 </div>
-<div class="a360-kpi-grid agency-hub-kpis">
-    <div class="a360-kpi"><span class="a360-kpi-label">مشاور فعال</span><strong>{{ summary.active_advisors }}</strong></div>
-    <div class="a360-kpi"><span class="a360-kpi-label">Seat آزاد</span><strong>{{ summary.available_seats }}</strong></div>
-    <div class="a360-kpi"><span class="a360-kpi-label">مخاطب جدید</span><strong>{{ summary.contacts_new }}</strong></div>
-    <div class="a360-kpi"><span class="a360-kpi-label">فایل شخصی جدید</span><strong>{{ summary.properties_new }}</strong></div>
-    <div class="a360-kpi"><span class="a360-kpi-label">معامله فعال</span><strong>{{ summary.deals_active }}</strong></div>
-    <div class="a360-kpi"><span class="a360-kpi-label">قرارداد</span><strong>{{ summary.contracts }}</strong></div>
+
+<div class="agency-kpi-strip" aria-label="شاخص‌های کلیدی">
+    <article class="agency-kpi agency-kpi--accent">
+        <span class="agency-kpi__label">مشاور فعال</span>
+        <strong class="agency-kpi__value">{{ summary.active_advisors }}</strong>
+    </article>
+    <article class="agency-kpi">
+        <span class="agency-kpi__label">Seat آزاد</span>
+        <strong class="agency-kpi__value">{{ summary.available_seats }}</strong>
+    </article>
+    <article class="agency-kpi">
+        <span class="agency-kpi__label">مخاطب جدید</span>
+        <strong class="agency-kpi__value">{{ summary.contacts_new }}</strong>
+    </article>
+    <article class="agency-kpi">
+        <span class="agency-kpi__label">فایل جدید</span>
+        <strong class="agency-kpi__value">{{ summary.properties_new }}</strong>
+    </article>
+    <article class="agency-kpi">
+        <span class="agency-kpi__label">معامله فعال</span>
+        <strong class="agency-kpi__value">{{ summary.deals_active }}</strong>
+    </article>
+    <article class="agency-kpi">
+        <span class="agency-kpi__label">قرارداد</span>
+        <strong class="agency-kpi__value">{{ summary.contracts }}</strong>
+    </article>
 </div>
-<div class="agency-hub-section">
-    <h2>عملکرد مشاوران</h2>
-    <div class="a360-table-wrap">
-        <table class="a360-table">
-            <thead>
-                <tr>
-                    <th>مشاور</th><th>لایسنس</th><th>مخاطب</th><th>فایل</th><th>معامله</th><th>قرارداد</th><th></th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for row in performance_rows %}
-                <tr>
-                    <td>{{ row.member.user.get_full_name|default:row.member.user.phone }}</td>
-                    <td>{% if row.has_seat %}<span class="text-success">فعال</span>{% else %}—{% endif %}</td>
-                    <td>{{ row.contacts }}</td>
-                    <td>{{ row.properties }}</td>
-                    <td>{{ row.deals }}</td>
-                    <td>{{ row.contracts }}</td>
-                    <td><a href="{% url 'workspace:agency_advisor_detail' row.member.pk %}">مشاهده</a></td>
-                </tr>
-                {% empty %}
-                <tr><td colspan="7" class="a360-empty">مشاوری ثبت نشده — دعوت کنید.</td></tr>
-                {% endfor %}
-            </tbody>
-        </table>
+
+<section class="agency-section">
+    <div class="agency-section__head">
+        <h2 class="agency-section__title">عملکرد مشاوران</h2>
     </div>
-</div>
-<div class="agency-hub-section">
-    <h2>فعالیت اخیر</h2>
-    <ul class="a360-activity-list">
-        {% for ev in recent_events %}
-        <li><time>{{ ev.created_at|date:"Y/m/d H:i" }}</time><strong>{{ agency_event_labels|dict_get:ev.event_type }}</strong> — {{ ev.actor.phone|default:ev.actor.username }}</li>
-        {% empty %}<li class="a360-empty">رویدادی ثبت نشده</li>{% endfor %}
-    </ul>
-    <a href="{% url 'workspace:agency_hub_activity' %}">همه فعالیت‌ها</a>
-</div>
+    <div class="agency-panel agency-panel--flush">
+        {% if performance_rows %}
+        <div class="agency-table-wrap">
+            <table class="agency-table">
+                <thead>
+                    <tr>
+                        <th>مشاور</th>
+                        <th>لایسنس</th>
+                        <th>آخرین فعالیت</th>
+                        <th>مخاطب</th>
+                        <th>فایل</th>
+                        <th>معامله</th>
+                        <th>قرارداد</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in performance_rows %}
+                    <tr>
+                        <td>
+                            <div class="agency-table__user">
+                                <span class="agency-table__avatar">{{ row.member.user.get_full_name|default:row.member.user.phone|slice:":1" }}</span>
+                                <div>
+                                    <span class="agency-table__name">{{ row.member.user.get_full_name|default:row.member.user.phone }}</span>
+                                    <span class="agency-table__sub" dir="ltr">{{ row.member.user.phone }}</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            {% if row.has_seat %}
+                            <span class="agency-status agency-status--ok">فعال</span>
+                            {% else %}
+                            <span class="agency-status agency-status--warn">بدون لایسنس</span>
+                            {% endif %}
+                        </td>
+                        <td>{% if row.last_activity %}{{ row.last_activity|date:"Y/m/d" }}{% else %}<span class="agency-status agency-status--muted">—</span>{% endif %}</td>
+                        <td>{{ row.contacts }}</td>
+                        <td>{{ row.properties }}</td>
+                        <td>{{ row.deals }}</td>
+                        <td>{{ row.contracts }}</td>
+                        <td>
+                            <a href="{% url 'workspace:agency_advisor_detail' row.member.pk %}" class="crm-btn crm-btn-ghost crm-btn-sm">مشاهده</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="agency-empty">
+            <span class="agency-empty__icon" aria-hidden="true"><i class="fas fa-users"></i></span>
+            <h3 class="agency-empty__title">هنوز مشاوری ندارید</h3>
+            <p class="agency-empty__desc">اولین مشاور تیم را دعوت کنید تا عملکردشان اینجا نمایش داده شود.</p>
+            <button type="button" class="crm-btn crm-btn-primary crm-btn-sm" data-bs-toggle="modal" data-bs-target="#agencyInviteModal">دعوت مشاور</button>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+<section class="agency-section">
+    <div class="agency-section__head">
+        <h2 class="agency-section__title">فعالیت اخیر تیم</h2>
+        <a href="{% url 'workspace:agency_hub_activity' %}" class="agency-section__link">مشاهده همه</a>
+    </div>
+    <div class="agency-panel">
+        {% if recent_events %}
+        <ul class="agency-timeline">
+            {% for ev in recent_events|slice:":8" %}
+            <li class="agency-timeline__item">
+                <span class="agency-timeline__icon"><i class="fas fa-bolt" aria-hidden="true"></i></span>
+                <div class="agency-timeline__body">
+                    <div class="agency-timeline__action">{{ agency_event_labels|dict_get:ev.event_type }}</div>
+                    <div class="agency-timeline__meta">{{ ev.actor.get_full_name|default:ev.actor.phone|default:ev.actor.username }}{% if ev.object_type %} · {{ ev.object_type }} #{{ ev.object_id }}{% endif %}</div>
+                </div>
+                <time class="agency-timeline__time">{{ ev.created_at|date:"Y/m/d H:i" }}</time>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        {% include "workspace/crm/agency/includes/empty_state.html" with icon="clock-rotate-left" title="فعالیتی ثبت نشده" description="با شروع کار تیم، رویدادها اینجا نمایش داده می‌شوند." compact=True %}
+        {% endif %}
+    </div>
+</section>
+
 {% else %}
-<p class="a360-empty">اشتراک آژانس فعال نیست.</p>
+<div class="agency-panel">
+    {% include "workspace/crm/agency/includes/empty_state.html" with icon="lock" title="اشتراک آژانس فعال نیست" description="برای مشاهده داشبورد، اشتراک پلن آژانس باید فعال باشد." %}
+</div>
 {% endif %}
 {% endblock %}

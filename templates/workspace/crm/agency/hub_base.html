@@ -1,34 +1,17 @@
 {% extends "workspace/crm/base_crm.html" %}
 {% load static %}
 {% block crm_extra_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/agency-phase2.css' %}">
-<link rel="stylesheet" href="{% static 'workspace/css/agency-phase3.css' %}">
-<link rel="stylesheet" href="{% static 'workspace/css/agency-hub.css' %}">
+<link rel="stylesheet" href="{% static 'workspace/css/agency-phase2.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'workspace/css/agency-phase3.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'workspace/css/agency-hub.css' %}?v=2">
 {% endblock %}
 {% block crm_content %}
-<div class="agency-hub" dir="rtl">
-    <header class="agency-hub-top">
-        <div>
-            <h1 class="agency-hub-title">{{ hub_agency.name|default:"آژانس" }}</h1>
-            {% if hub_subscription %}
-            <p class="agency-hub-meta">
-                <span class="agency-hub-badge">پلن آژانس</span>
-                انقضا: {{ hub_subscription.expires_at|date:"Y/m/d" }}
-                {% if hub_seats %}· {{ hub_seats.assigned }}/{{ hub_seats.total }} Seat{% endif %}
-            </p>
-            {% endif %}
-        </div>
-        <a href="{% url 'workspace:agency_hub_advisors' %}#invite" class="crm-btn crm-btn-primary crm-btn-sm">
-            <i class="fas fa-user-plus"></i> دعوت مشاور
-        </a>
-    </header>
-    <nav class="agency-hub-nav" aria-label="بخش آژانس">
-        {% for key, label, url in hub_nav %}
-        <a href="{{ url }}" class="agency-hub-nav-item{% if hub_section == key %} is-active{% endif %}">{{ label }}</a>
-        {% endfor %}
-    </nav>
-    <div class="agency-hub-content">
+<div class="agency-hub crm-page-chrome" dir="rtl">
+    {% include "workspace/crm/agency/includes/hub_header.html" %}
+    {% include "workspace/crm/agency/includes/hub_nav.html" %}
+    <div class="agency-hub-body">
         {% block agency_hub_content %}{% endblock %}
     </div>
 </div>
+{% include "workspace/crm/agency/includes/hub_invite_modal.html" %}
 {% endblock %}

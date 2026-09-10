@@ -1,35 +1,80 @@
 {% extends "workspace/crm/agency/hub_base.html" %}
 {% block agency_hub_content %}
+<div class="agency-page-head">
+    <div>
+        <h2 class="agency-page-head__title">مدیریت Seat و لایسنس</h2>
+        <p class="agency-page-head__sub">تخصیص، پیگیری وضعیت و انقضای صندلی‌های آژانس</p>
+    </div>
+    <a href="{% url 'workspace:agency_hub_advisors' %}#invite" class="crm-btn crm-btn-primary crm-btn-sm">
+        <i class="fas fa-chair" aria-hidden="true"></i>
+        تخصیص لایسنس
+    </a>
+</div>
+
 {% if hub_seats %}
-<div class="a360-kpi-grid agency-hub-kpis">
-    <div class="a360-kpi"><span class="a360-kpi-label">خریداری‌شده</span><strong>{{ hub_seats.total }}</strong></div>
-    <div class="a360-kpi"><span class="a360-kpi-label">تخصیص‌شده</span><strong>{{ hub_seats.assigned }}</strong></div>
-    <div class="a360-kpi"><span class="a360-kpi-label">آزاد</span><strong>{{ hub_seats.available }}</strong></div>
-    <div class="a360-kpi"><span class="a360-kpi-label">انقضا</span><strong>{{ hub_seats.expires_at|date:"Y/m/d" }}</strong></div>
+<div class="agency-kpi-strip" style="grid-template-columns: repeat(4, minmax(0, 1fr));">
+    <article class="agency-kpi">
+        <span class="agency-kpi__label">کل Seat</span>
+        <strong class="agency-kpi__value">{{ hub_seats.total }}</strong>
+    </article>
+    <article class="agency-kpi agency-kpi--accent">
+        <span class="agency-kpi__label">تخصیص‌شده</span>
+        <strong class="agency-kpi__value">{{ hub_seats.assigned }}</strong>
+    </article>
+    <article class="agency-kpi">
+        <span class="agency-kpi__label">آزاد</span>
+        <strong class="agency-kpi__value">{{ hub_seats.available }}</strong>
+    </article>
+    <article class="agency-kpi">
+        <span class="agency-kpi__label">انقضای اشتراک</span>
+        <strong class="agency-kpi__value" style="font-size:1rem;">{{ hub_seats.expires_at|date:"Y/m/d" }}</strong>
+    </article>
 </div>
 {% endif %}
-{% if license_pool %}
-<div class="a360-table-wrap">
-    <table class="a360-table">
-        <thead><tr><th>Seat</th><th>وضعیت</th><th>مشاور</th><th>عملیات</th></tr></thead>
-        <tbody>
-            {% for lic in license_pool.available_licenses %}
-            <tr><td>#{{ lic.sequence }}</td><td>آزاد</td><td>—</td><td><a href="{% url 'workspace:agency_hub_advisors' %}">تخصیص</a></td></tr>
-            {% endfor %}
-            {% for uid, lic in license_pool.assigned_by_user.items %}
-            <tr>
-                <td>#{{ lic.sequence }}</td><td>فعال</td>
-                <td>{{ lic.assigned_member.name|default:lic.assigned_member.phone }}</td>
-                <td><a href="{% url 'workspace:agency_hub_advisors' %}">مدیریت</a></td>
-            </tr>
-            {% endfor %}
-            {% if not license_pool.available_licenses and not license_pool.assigned_by_user %}
-            <tr><td colspan="4" class="a360-empty">Seatی یافت نشد</td></tr>
-            {% endif %}
-        </tbody>
-    </table>
-</div>
-{% else %}
-<p class="a360-empty">اطلاعات لایسنس در دسترس نیست.</p>
-{% endif %}
+
+<section class="agency-section">
+    <div class="agency-panel agency-panel--flush">
+        {% if license_pool %}
+        <div class="agency-table-wrap">
+            <table class="agency-table">
+                <thead>
+                    <tr>
+                        <th>Seat</th>
+                        <th>وضعیت</th>
+                        <th>مشاور</th>
+                        <th>عملیات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for lic in license_pool.available_licenses %}
+                    <tr>
+                        <td><strong>#{{ lic.sequence }}</strong></td>
+                        <td><span class="agency-status agency-status--ok">آزاد</span></td>
+                        <td><span class="agency-status agency-status--muted">—</span></td>
+                        <td><a href="{% url 'workspace:agency_hub_advisors' %}#invite" class="crm-btn crm-btn-primary crm-btn-sm">تخصیص</a></td>
+                    </tr>
+                    {% endfor %}
+                    {% for uid, lic in license_pool.assigned_by_user.items %}
+                    <tr>
+                        <td><strong>#{{ lic.sequence }}</strong></td>
+                        <td><span class="agency-status agency-status--ok">فعال</span></td>
+                        <td>{{ lic.assigned_member.name|default:lic.assigned_member.phone }}</td>
+                        <td><a href="{% url 'workspace:agency_hub_advisors' %}" class="crm-btn crm-btn-ghost crm-btn-sm">مدیریت</a></td>
+                    </tr>
+                    {% endfor %}
+                    {% if not license_pool.available_licenses and not license_pool.assigned_by_user %}
+                    <tr>
+                        <td colspan="4">
+                            {% include "workspace/crm/agency/includes/empty_state.html" with icon="id-card" title="Seatی یافت نشد" description="Seat جدید با تمدید یا ارتقای پلن آژانس اضافه می‌شود." compact=True %}
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        {% include "workspace/crm/agency/includes/empty_state.html" with icon="id-card" title="اطلاعات لایسنس در دسترس نیست" description="اشتراک آژانس را بررسی کنید." %}
+        {% endif %}
+    </div>
+</section>
 {% endblock %}

@@ -595,6 +595,69 @@ body:has(.ct-contract-wizard) .ws-bottom-nav {
     margin-top: 0.75rem;
 }
 
+.ct-contract-wizard .ct-review-final-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+}
+
+.ct-contract-wizard .ct-review-handover-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    width: 100%;
+}
+
+.ct-contract-wizard .ct-review-sidebar-actions .ct-review-handover-actions {
+    margin-top: 0.35rem;
+}
+
+.ct-contract-wizard .ct-review-handover-form {
+    margin: 0;
+    width: 100%;
+}
+
+.ct-contract-wizard .ct-review-handover-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    width: 100%;
+}
+
+.ct-contract-wizard .ct-review-handover-btn--done {
+    background: rgba(16, 185, 129, 0.1);
+    border-color: rgba(16, 185, 129, 0.35);
+    color: #047857;
+}
+
+.ct-contract-wizard .ct-review-final-actions .ct-review-final-link {
+    margin-top: 0;
+}
+
+.ct-contract-wizard .ct-review-final-actions .ct-review-handover-actions {
+    width: auto;
+    flex: 1 1 100%;
+}
+
+@media (min-width: 640px) {
+    .ct-contract-wizard .ct-review-final-actions {
+        align-items: center;
+    }
+
+    .ct-contract-wizard .ct-review-final-actions .ct-review-handover-actions {
+        flex-direction: row;
+        flex-wrap: wrap;
+        flex: 1 1 auto;
+        width: auto;
+    }
+
+    .ct-contract-wizard .ct-review-handover-btn {
+        width: auto;
+    }
+}
+
 .ct-contract-wizard .ct-review-issue {
     border-radius: 8px;
     border-color: var(--ct-m-border);

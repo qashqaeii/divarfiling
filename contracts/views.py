@@ -246,6 +246,16 @@ class ContractWizardView(ContractAccessMixin, TemplateView):
             CHOICES_KITCHEN,
         )
 
+        handover = None
+        finalized_handover = None
+        handover_public_pdf_url = ''
+        if step == 'review' and contract.deal_id:
+            handover = contract.handovers.order_by('-created_at').first()
+            finalized_handover = contract.handovers.filter(status='finalized').first()
+            if finalized_handover:
+                from contracts.services.routing import handover_public_pdf_url as _handover_pdf_url
+                handover_public_pdf_url = _handover_pdf_url(contract, request=self.request)
+
         ctx.update({
             'deal': deal,
             'contract': contract,
@@ -292,6 +302,9 @@ class ContractWizardView(ContractAccessMixin, TemplateView):
             'crm_section': 'contracts',
             'contract_manage_url': contract_manage_url(contract),
             'contracts_dashboard_url': contracts_dashboard_url(),
+            'handover': handover,
+            'finalized_handover': finalized_handover,
+            'handover_public_pdf_url': handover_public_pdf_url,
         })
         return ctx
 

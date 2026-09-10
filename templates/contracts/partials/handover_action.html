@@ -1,0 +1,26 @@
+{% if deal and review_context.is_finalized %}
+<div class="ct-review-handover-actions">
+    {% if finalized_handover and handover_public_pdf_url %}
+    <a href="{{ handover_public_pdf_url }}" target="_blank" rel="noopener" class="crm-dash-act ct-review-handover-btn ct-review-handover-btn--done">
+        <i class="fas fa-file-contract" aria-hidden="true"></i>
+        <span>مشاهده صورت‌جلسه تحویل</span>
+    </a>
+    <a href="{% url 'workspace:handover_wizard' deal.pk contract.pk finalized_handover.pk %}?step=review" class="crm-dash-act ct-review-handover-btn">
+        <i class="fas fa-clipboard-list" aria-hidden="true"></i>
+        <span>مدیریت صورت‌جلسه</span>
+    </a>
+    {% elif handover %}
+    <a href="{% url 'workspace:handover_wizard' deal.pk contract.pk handover.pk %}" class="crm-dash-act crm-dash-act--primary ct-review-handover-btn">
+        <i class="fas fa-clipboard-list" aria-hidden="true"></i>
+        <span>ادامه صورت‌جلسه تحویل</span>
+    </a>
+    {% else %}
+    <form method="post" action="{% url 'workspace:handover_create' deal.pk contract.pk %}" class="ct-review-handover-form">{% csrf_token %}
+        <button type="submit" class="crm-dash-act crm-dash-act--primary ct-review-handover-btn">
+            <i class="fas fa-clipboard-list" aria-hidden="true"></i>
+            <span>ثبت صورت‌جلسه تحویل ملک</span>
+        </button>
+    </form>
+    {% endif %}
+</div>
+{% endif %}

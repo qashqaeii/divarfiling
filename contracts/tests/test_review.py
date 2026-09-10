@@ -266,6 +266,7 @@ class ReviewStepTests(TestCase):
         resp = self.client.get(url + '?step=review')
         self.assertContains(resp, 'مشاهده نسخه رسمی قرارداد')
         self.assertContains(resp, ctx['public_final_view_url'])
+        self.assertContains(resp, 'ثبت صورت‌جلسه تحویل ملک')
 
     def test_clauses_step_renders_custom_agreement_with_body_key(self):
         c = self._lease_contract()

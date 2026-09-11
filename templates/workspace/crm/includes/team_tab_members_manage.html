@@ -11,27 +11,11 @@
         </button>
     </header>
 
-    <div class="agency-kpi-strip agency-kpi-strip--4">
-        <article class="agency-kpi agency-kpi--accent agency-kpi--icon">
-            <span class="agency-kpi__icon" aria-hidden="true"><i class="fas fa-users"></i></span>
-            <span class="agency-kpi__label">عضو فعال</span>
-            <strong class="agency-kpi__value">{{ members_dashboard.active_count }}</strong>
-        </article>
-        <article class="agency-kpi agency-kpi--icon">
-            <span class="agency-kpi__icon" aria-hidden="true"><i class="fas fa-triangle-exclamation"></i></span>
-            <span class="agency-kpi__label">بدون لایسنس</span>
-            <strong class="agency-kpi__value">{{ members_dashboard.without_seat }}</strong>
-        </article>
-        <article class="agency-kpi agency-kpi--icon">
-            <span class="agency-kpi__icon" aria-hidden="true"><i class="fas fa-hourglass-half"></i></span>
-            <span class="agency-kpi__label">دعوت در انتظار</span>
-            <strong class="agency-kpi__value">{{ members_dashboard.pending_invites }}</strong>
-        </article>
-        <article class="agency-kpi agency-kpi--icon">
-            <span class="agency-kpi__icon" aria-hidden="true"><i class="fas fa-chair"></i></span>
-            <span class="agency-kpi__label">Seat آزاد</span>
-            <strong class="agency-kpi__value">{{ members_dashboard.seats.available|default:0 }}</strong>
-        </article>
+    <div class="agency-kpi-strip agency-kpi-strip--ref agency-kpi-strip--4">
+        {% include "workspace/crm/agency/includes/kpi_card.html" with label="عضو فعال" value=members_dashboard.active_count icon="users" tone="purple" %}
+        {% include "workspace/crm/agency/includes/kpi_card.html" with label="بدون لایسنس" value=members_dashboard.without_seat icon="triangle-exclamation" tone="orange" %}
+        {% include "workspace/crm/agency/includes/kpi_card.html" with label="دعوت در انتظار" value=members_dashboard.pending_invites icon="hourglass-half" tone="blue" %}
+        {% include "workspace/crm/agency/includes/kpi_card.html" with label="Seat آزاد" value=members_dashboard.seats.available|default:0 icon="chair" tone="green" %}
     </div>
 
     <div class="agency-toolbar agency-toolbar--filters" id="agencyMembersToolbar">

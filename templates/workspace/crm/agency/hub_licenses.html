@@ -12,19 +12,17 @@
 </div>
 
 {% if hub_seats %}
-<div class="agency-kpi-strip agency-kpi-strip--4">
-    {% include "workspace/crm/agency/includes/kpi_card.html" with label="کل Seat" value=hub_seats.total icon="layer-group" %}
-    {% include "workspace/crm/agency/includes/kpi_card.html" with label="تخصیص‌شده" value=hub_seats.assigned icon="user-check" accent=True %}
-    {% include "workspace/crm/agency/includes/kpi_card.html" with label="آزاد" value=hub_seats.available icon="chair" %}
-    {% include "workspace/crm/agency/includes/kpi_card.html" with label="انقضای اشتراک" value=hub_seats.expires_at|date:"Y/m/d" icon="calendar" %}
+<div class="agency-kpi-strip agency-kpi-strip--ref agency-kpi-strip--4">
+    {% include "workspace/crm/agency/includes/kpi_card.html" with label="کل Seat" value=hub_seats.total icon="layer-group" tone="purple" %}
+    {% include "workspace/crm/agency/includes/kpi_card.html" with label="تخصیص‌شده" value=hub_seats.assigned icon="user-check" tone="green" %}
+    {% include "workspace/crm/agency/includes/kpi_card.html" with label="آزاد" value=hub_seats.available icon="chair" tone="blue" %}
+    {% include "workspace/crm/agency/includes/kpi_card.html" with label="انقضای اشتراک" value=hub_seats.expires_at|date:"Y/m/d" icon="calendar" tone="teal" %}
 </div>
 {% include "workspace/crm/agency/includes/seat_summary.html" with seats=hub_seats %}
 {% endif %}
 
 <section class="agency-section">
-    <div class="agency-section__head">
-        <h2 class="agency-section__title">لیست Seatها</h2>
-    </div>
+    {% include "workspace/crm/agency/includes/section_head.html" with title="لیست Seatها" icon="id-card" %}
     <div class="agency-panel agency-panel--flush">
         {% if license_pool %}
         <div class="agency-table-wrap">

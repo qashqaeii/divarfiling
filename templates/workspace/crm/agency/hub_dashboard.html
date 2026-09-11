@@ -1,10 +1,12 @@
 {% extends "workspace/crm/agency/hub_base.html" %}
 {% load humanize crm_tags %}
 {% block agency_hub_content %}
+{% url 'workspace:agency_hub_advisors' as advisors_url %}
+{% url 'workspace:agency_hub_activity' as activity_url %}
 {% if summary %}
 <div class="agency-dash">
-    <div class="agency-page-head">
-        <div>
+    <div class="agency-dash-toolbar">
+        <div class="agency-dash-toolbar__copy">
             <h2 class="agency-page-head__title">داشبورد آژانس</h2>
             <p class="agency-page-head__sub">نمای کلی عملکرد تیم در بازه انتخابی</p>
         </div>
@@ -15,28 +17,31 @@
         </div>
     </div>
 
-    <div class="agency-kpi-strip" aria-label="شاخص‌های کلیدی">
-        {% include "workspace/crm/agency/includes/kpi_card.html" with label="مشاور فعال" value=summary.active_advisors icon="users" accent=True %}
-        {% include "workspace/crm/agency/includes/kpi_card.html" with label="Seat آزاد" value=summary.available_seats icon="chair" %}
-        {% include "workspace/crm/agency/includes/kpi_card.html" with label="مخاطب جدید" value=summary.contacts_new icon="address-book" %}
-        {% include "workspace/crm/agency/includes/kpi_card.html" with label="فایل جدید" value=summary.properties_new icon="building" %}
-        {% include "workspace/crm/agency/includes/kpi_card.html" with label="معامله فعال" value=summary.deals_active icon="handshake" %}
-        {% include "workspace/crm/agency/includes/kpi_card.html" with label="قرارداد" value=summary.contracts icon="file-signature" %}
+    <div class="agency-kpi-strip agency-kpi-strip--ref" aria-label="شاخص‌های کلیدی">
+        {% include "workspace/crm/agency/includes/kpi_card.html" with label="مشاور فعال" value=summary.active_advisors icon="users" tone="purple" %}
+        {% if hub_seats %}
+        {% include "workspace/crm/agency/includes/kpi_card.html" with label="Seat آزاد" value=summary.available_seats icon="chair" tone="blue" seat_total=hub_seats.total %}
+        {% else %}
+        {% include "workspace/crm/agency/includes/kpi_card.html" with label="Seat آزاد" value=summary.available_seats icon="chair" tone="blue" %}
+        {% endif %}
+        {% include "workspace/crm/agency/includes/kpi_card.html" with label="مخاطب جدید" value=summary.contacts_new icon="address-book" tone="blue" %}
+        {% include "workspace/crm/agency/includes/kpi_card.html" with label="فایل جدید" value=summary.properties_new icon="building" tone="orange" %}
+        {% include "workspace/crm/agency/includes/kpi_card.html" with label="معامله فعال" value=summary.deals_active icon="handshake" tone="green" %}
+        {% include "workspace/crm/agency/includes/kpi_card.html" with label="قرارداد" value=summary.contracts icon="file-signature" tone="teal" %}
     </div>
 
-    <div class="agency-dash-grid">
+    <div class="agency-dash-grid agency-dash-grid--ref">
         <section class="agency-section agency-dash-grid__main">
-            <div class="agency-section__head">
-                <h2 class="agency-section__title">عملکرد مشاوران</h2>
-            </div>
-            <div class="agency-panel agency-panel--flush">
+            {% include "workspace/crm/agency/includes/section_head.html" with title="عملکرد مشاوران" icon="chart-column" link_url=advisors_url link_label="مشاهده همه" %}
+            <div class="agency-panel agency-panel--flush agency-panel--table">
                 {% if performance_rows %}
                 <div class="agency-table-wrap">
-                    <table class="agency-table">
+                    <table class="agency-table agency-table--perf">
                         <thead>
                             <tr>
                                 <th>مشاور</th>
                                 <th>لایسنس</th>
+                                <th>وضعیت</th>
                                 <th>آخرین فعالیت</th>
                                 <th>مخاطب</th>
                                 <th>فایل</th>
@@ -53,10 +58,11 @@
                                         <span class="agency-table__avatar">{{ row.member.user.get_full_name|default:row.member.user.phone|slice:":1" }}</span>
                                         <div>
                                             <span class="agency-table__name">{{ row.member.user.get_full_name|default:row.member.user.phone }}</span>
-                                            <span class="agency-table__sub" dir="ltr">{{ row.member.user.phone }}</span>
+                                            <span class="agency-table__sub">{{ row.member.get_role_display }}</span>
                                         </div>
                                     </div>
                                 </td>
+                                <td dir="ltr">{{ row.member.user.phone }}</td>
                                 <td>
                                     {% if row.has_seat %}
                                     {% include "workspace/crm/agency/includes/status_badge.html" with status="ok" label="فعال" %}
@@ -64,13 +70,13 @@
                                     {% include "workspace/crm/agency/includes/status_badge.html" with status="unlicensed" label="بدون لایسنس" %}
                                     {% endif %}
                                 </td>
-                                <td>{% if row.last_activity %}{{ row.last_activity|date:"Y/m/d" }}{% else %}<span class="agency-status agency-status--muted">—</span>{% endif %}</td>
-                                <td>{{ row.contacts }}</td>
-                                <td>{{ row.properties }}</td>
-                                <td>{{ row.deals }}</td>
-                                <td>{{ row.contracts }}</td>
+                                <td class="agency-table__mono">{% if row.last_activity %}{{ row.last_activity|date:"Y/m/d H:i" }}{% else %}<span class="agency-status agency-status--muted">—</span>{% endif %}</td>
+                                <td><strong>{{ row.contacts }}</strong></td>
+                                <td><strong>{{ row.properties }}</strong></td>
+                                <td><strong>{{ row.deals }}</strong></td>
+                                <td><strong>{{ row.contracts }}</strong></td>
                                 <td>
-                                    <a href="{% url 'workspace:agency_advisor_detail' row.member.pk %}" class="crm-btn crm-btn-ghost crm-btn-sm">مشاهده</a>
+                                    <a href="{% url 'workspace:agency_advisor_detail' row.member.pk %}" class="agency-table__more" aria-label="مشاهده"><i class="fas fa-ellipsis-vertical"></i></a>
                                 </td>
                             </tr>
                             {% endfor %}
@@ -84,22 +90,26 @@
                             <span class="agency-table__avatar">{{ row.member.user.get_full_name|default:row.member.user.phone|slice:":1" }}</span>
                             <div>
                                 <strong>{{ row.member.user.get_full_name|default:row.member.user.phone }}</strong>
-                                <span class="agency-table__sub" dir="ltr">{{ row.member.user.phone }}</span>
+                                <span class="agency-table__sub">{{ row.member.get_role_display }}</span>
                             </div>
                         </div>
                         <div class="agency-member-card__meta">
                             {% if row.has_seat %}
-                            {% include "workspace/crm/agency/includes/status_badge.html" with status="ok" label="لایسنس فعال" %}
+                            {% include "workspace/crm/agency/includes/status_badge.html" with status="ok" label="فعال" %}
                             {% else %}
                             {% include "workspace/crm/agency/includes/status_badge.html" with status="unlicensed" label="بدون لایسنس" %}
                             {% endif %}
-                            <span class="agency-status agency-status--muted">مخاطب {{ row.contacts }} · فایل {{ row.properties }}</span>
+                            <span class="agency-status agency-status--muted">م {{ row.contacts }} · ف {{ row.properties }} · مع {{ row.deals }}</span>
                         </div>
                         <div class="agency-member-card__actions">
                             <a href="{% url 'workspace:agency_advisor_detail' row.member.pk %}" class="crm-btn crm-btn-ghost crm-btn-sm">مشاهده ۳۶۰</a>
                         </div>
                     </article>
                     {% endfor %}
+                </div>
+                <div class="agency-dash-tip">
+                    <span class="agency-dash-tip__icon" aria-hidden="true"><i class="fas fa-lightbulb"></i></span>
+                    <p>برای تحلیل دقیق‌تر عملکرد هر مشاور، از صفحه <a href="{% url 'workspace:agency_hub_advisors' %}">مدیریت مشاوران</a> و Advisor 360 استفاده کنید.</p>
                 </div>
                 {% else %}
                 {% include "workspace/crm/agency/includes/empty_state.html" with icon="users" title="هنوز مشاوری ندارید" description="اولین مشاور تیم را دعوت کنید تا عملکردشان اینجا نمایش داده شود." action_modal="دعوت مشاور" %}
@@ -108,21 +118,19 @@
         </section>
 
         <section class="agency-section agency-dash-grid__aside">
-            <div class="agency-section__head">
-                <h2 class="agency-section__title">فعالیت اخیر</h2>
-                <a href="{% url 'workspace:agency_hub_activity' %}" class="agency-section__link">همه</a>
-            </div>
-            <div class="agency-panel agency-panel--activity">
+            {% include "workspace/crm/agency/includes/section_head.html" with title="فعالیت اخیر" icon="clock-rotate-left" link_url=activity_url link_label="مشاهده همه" %}
+            <div class="agency-panel agency-panel--activity agency-panel--timeline">
                 {% if recent_events %}
-                <ul class="agency-timeline agency-timeline--compact">
+                <ul class="agency-timeline agency-timeline--ref">
                     {% for ev in recent_events|slice:":8" %}
                     <li class="agency-timeline__item">
-                        <span class="agency-timeline__icon"><i class="fas fa-bolt" aria-hidden="true"></i></span>
+                        <span class="agency-timeline__rail" aria-hidden="true"></span>
+                        <span class="agency-timeline__icon agency-timeline__icon--soft"><i class="fas fa-bolt" aria-hidden="true"></i></span>
                         <div class="agency-timeline__body">
                             <div class="agency-timeline__action">{{ agency_event_labels|dict_get:ev.event_type }}</div>
-                            <div class="agency-timeline__meta">{{ ev.actor.get_full_name|default:ev.actor.phone|default:ev.actor.username }}{% if ev.object_type %} · {{ ev.object_type }} #{{ ev.object_id }}{% endif %}</div>
+                            <div class="agency-timeline__meta">{{ ev.actor.get_full_name|default:ev.actor.phone|default:ev.actor.username }}</div>
                         </div>
-                        <time class="agency-timeline__time">{{ ev.created_at|date:"m/d H:i" }}</time>
+                        <time class="agency-timeline__time">{{ ev.created_at|naturaltime }}</time>
                     </li>
                     {% endfor %}
                 </ul>

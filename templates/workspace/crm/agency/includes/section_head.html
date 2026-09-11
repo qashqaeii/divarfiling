@@ -1,0 +1,17 @@
+{% comment %}
+Usage: {% include with title="..." icon="chart-bar" link_url="..." link_label="مشاهده همه" %}
+{% endcomment %}
+<div class="agency-section__head">
+    <div class="agency-section__title-wrap">
+        {% if icon %}
+        <span class="agency-section__icon" aria-hidden="true"><i class="fas fa-{{ icon }}"></i></span>
+        {% endif %}
+        <div>
+            <h2 class="agency-section__title">{{ title }}</h2>
+            {% if subtitle %}<p class="agency-section__sub">{{ subtitle }}</p>{% endif %}
+        </div>
+    </div>
+    {% if link_url %}
+    <a href="{{ link_url }}" class="agency-section__link">{{ link_label|default:"مشاهده همه" }} <i class="fas fa-arrow-left" aria-hidden="true"></i></a>
+    {% endif %}
+</div>

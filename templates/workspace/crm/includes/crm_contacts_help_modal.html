@@ -1,0 +1,171 @@
+<div class="ws-modal fl-help-modal" id="modal-crm-contacts-help" role="dialog" aria-modal="true" aria-labelledby="crmContactsHelpTitle" data-fl-help-default="start">
+    <div class="ws-modal-overlay" data-modal-close></div>
+    <div class="ws-modal-panel fl-help-modal__panel">
+        <div class="fl-help-modal__glow" aria-hidden="true"></div>
+        <div class="fl-help-modal__sheet-top" aria-hidden="true"><span class="fl-help-modal__grip"></span></div>
+
+        <header class="fl-help-modal__hero">
+            <div class="fl-help-modal__hero-mesh" aria-hidden="true"></div>
+            <div class="fl-help-modal__hero-shine" aria-hidden="true"></div>
+            <button type="button" class="fl-help-modal__close ws-modal-close" data-modal-close aria-label="بستن راهنما">
+                <i class="fas fa-times" aria-hidden="true"></i>
+            </button>
+            <span class="fl-help-modal__kicker">
+                <span class="fl-header__help-bulb fl-header__help-bulb--xs" aria-hidden="true">
+                    <i class="fas fa-lightbulb"></i>
+                    <span class="fl-header__help-bulb-glow"></span>
+                </span>
+                راهنمای CRM مخاطبین
+            </span>
+            <div class="fl-help-modal__hero-icon fl-help-modal__hero-icon--bulb" aria-hidden="true">
+                <span class="fl-header__help-bulb fl-header__help-bulb--hero">
+                    <i class="fas fa-lightbulb"></i>
+                    <span class="fl-header__help-bulb-glow"></span>
+                </span>
+            </div>
+            <h2 id="crmContactsHelpTitle" class="fl-help-modal__title">بانک مخاطبین</h2>
+        </header>
+
+        <nav class="fl-help-modal__nav" aria-label="بخش‌های راهنما" role="tablist">
+            <button type="button" class="fl-help-modal__nav-btn is-active" data-fl-help-tab="start" role="tab" aria-selected="true">
+                <span class="ws-nav-icon">{% include 'includes/icon_slot.html' with decor='users' size='nav' only %}</span><span>شروع</span>
+            </button>
+            <button type="button" class="fl-help-modal__nav-btn" data-fl-help-tab="find" role="tab" aria-selected="false">
+                <span class="ws-nav-icon">{% include 'includes/icon_slot.html' with decor='search' size='nav' only %}</span><span>جستجو</span>
+            </button>
+            <button type="button" class="fl-help-modal__nav-btn" data-fl-help-tab="power" role="tab" aria-selected="false">
+                <span class="ws-nav-icon">{% include 'includes/icon_slot.html' with decor='zap' size='nav' only %}</span><span>حرفه‌ای</span>
+            </button>
+            <span class="fl-help-modal__nav-indicator" aria-hidden="true"></span>
+        </nav>
+
+        <div class="fl-help-modal__scroll-track" aria-hidden="true">
+            <span class="fl-help-modal__scroll-progress"></span>
+        </div>
+
+        <div class="ws-modal-body fl-help-modal__body">
+            <section class="fl-help-pane is-active" data-fl-help-pane="start">
+                <article class="fl-help-card fl-help-card--lux fl-help-card--featured">
+                    <span class="fl-help-card__step">۰۱</span>
+                    <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='users' size='metric' boxed=True accent='violet' only %}</span>
+                    <div class="fl-help-card__body">
+                        <div class="fl-help-card__head">
+                            <h3>قلب CRM شما</h3>
+                            <span class="fl-help-card__tag">پایه کار مشاور</span>
+                        </div>
+                        <p><strong>مخاطبین</strong> مرکز ثبت سرنخ، خریدار، مالک و مستاجر است — نام، تماس، وضعیت قیف، اولویت و تاریخ پیگیری بعدی. هر چیزی که بعداً در «کارهای امروز» می‌بینی، از همین‌جا تغذیه می‌شود.</p>
+                    </div>
+                </article>
+                <article class="fl-help-card fl-help-card--lux">
+                    <span class="fl-help-card__step">۰۲</span>
+                    <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='bar_chart' size='metric' boxed=True accent='emerald' only %}</span>
+                    <div class="fl-help-card__body">
+                        <div class="fl-help-card__head"><h3>اعداد بالای لیست</h3></div>
+                        <p>کارت‌های KPI وضعیت لحظه‌ای را نشان می‌دهند: <strong>کل</strong>، <strong>جدید</strong>، <strong>در پیگیری</strong> و <strong>امروز</strong>. با یک نگاه می‌فهمی کجا باید تمرکز کنی.</p>
+                    </div>
+                </article>
+                <article class="fl-help-card fl-help-card--lux">
+                    <span class="fl-help-card__step">۰۳</span>
+                    <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='user' size='metric' boxed=True accent='sky' only %}</span>
+                    <div class="fl-help-card__body">
+                        <div class="fl-help-card__head"><h3>ثبت مخاطب جدید</h3></div>
+                        <p>با <strong>مخاطب</strong> (یا دکمه + موبایل) فرم کامل باز می‌شود. برای تماس تلفنی سریع، <strong>مخاطب سریع</strong> کافی است — بعداً از پروفایل تکمیلش کن.</p>
+                    </div>
+                </article>
+                <article class="fl-help-card fl-help-card--lux">
+                    <span class="fl-help-card__step">۰۴</span>
+                    <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='phone' size='metric' boxed=True accent='rose' only %}</span>
+                    <div class="fl-help-card__body">
+                        <div class="fl-help-card__head"><h3>تماس مستقیم از لیست</h3></div>
+                        <p>روی هر ردیف دکمه‌های <strong>تماس</strong> و <strong>پیام</strong> (واتساپ/پیامک) هست — بدون ورود به پروفایل، سریع اقدام کن و بعد در جزئیات مخاطب «پیگیری بعدی» بگذار.</p>
+                    </div>
+                </article>
+            </section>
+
+            <section class="fl-help-pane" data-fl-help-pane="find" hidden>
+                <article class="fl-help-card fl-help-card--lux">
+                    <span class="fl-help-card__step">۰۱</span>
+                    <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='search' size='metric' boxed=True accent='indigo' only %}</span>
+                    <div class="fl-help-card__body">
+                        <div class="fl-help-card__head"><h3>جستجوی سریع</h3></div>
+                        <p>نام، موبایل یا یادداشت را در نوار جستجو بنویس — لیست همان لحظه فیلتر می‌شود. برای پیدا کردن مشتری حین مکالمه، سریع‌ترین راه همین است.</p>
+                    </div>
+                </article>
+                <article class="fl-help-card fl-help-card--lux fl-help-card--featured">
+                    <span class="fl-help-card__step">۰۲</span>
+                    <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='filter' size='metric' boxed=True accent='amber' only %}</span>
+                    <div class="fl-help-card__body">
+                        <div class="fl-help-card__head"><h3>فیلتر و چیپ‌های سریع</h3><span class="fl-help-card__tag">موبایل</span></div>
+                        <p>چیپ‌های <strong>جدید</strong>، <strong>پیگیری</strong>، <strong>خریدار</strong> و <strong>امروز</strong> برای دسترسی یک‌کلیکی‌اند. فیلتر پیشرفته (نوع، وضعیت، اولویت، سررسید) از آیکون sliders باز می‌شود.</p>
+                    </div>
+                </article>
+                <article class="fl-help-card fl-help-card--lux">
+                    <span class="fl-help-card__step">۰۳</span>
+                    <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='layout_grid' size='metric' boxed=True accent='cyan' only %}</span>
+                    <div class="fl-help-card__body">
+                        <div class="fl-help-card__head"><h3>جدول یا کانبان</h3></div>
+                        <p><strong>جدول</strong> برای لیست مرتب و عملیات گروهی. <strong>کانبان</strong> برای دیدن قیف فروش ستونی و کشیدن مخاطب بین وضعیت‌ها — مثل برد فیزیکی روی میز.</p>
+                    </div>
+                </article>
+                <article class="fl-help-card fl-help-card--lux">
+                    <span class="fl-help-card__step">۰۴</span>
+                    <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='sticky_note' size='metric' boxed=True accent='violet' only %}</span>
+                    <div class="fl-help-card__body">
+                        <div class="fl-help-card__head"><h3>فیلترهای ذخیره‌شده</h3></div>
+                        <p>ترکیب فیلتر پرکاربردت را ذخیره کن — مثلاً «خریداران پاسداران با پیگیری امروز». دفعه بعد با یک کلیک همان نما را باز کن.</p>
+                    </div>
+                </article>
+            </section>
+
+            <section class="fl-help-pane" data-fl-help-pane="power" hidden>
+                <article class="fl-help-card fl-help-card--lux">
+                    <span class="fl-help-card__step">۰۱</span>
+                    <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='clipboard_list' size='metric' boxed=True accent='indigo' only %}</span>
+                    <div class="fl-help-card__body">
+                        <div class="fl-help-card__head"><h3>عملیات گروهی</h3></div>
+                        <p>چند مخاطب را تیک بزن — نوار پایین باز می‌شود. می‌توانی <strong>وضعیت</strong> را یکجا عوض کنی، <strong>برچسب</strong> بزنی، <strong>بایگانی</strong> یا حذف کنی.</p>
+                    </div>
+                </article>
+                <article class="fl-help-card fl-help-card--lux">
+                    <span class="fl-help-card__step">۰۲</span>
+                    <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='sparkles' size='metric' boxed=True accent='emerald' only %}</span>
+                    <div class="fl-help-card__body">
+                        <div class="fl-help-card__head"><h3>فایل‌های پیشنهادی</h3></div>
+                        <p>برای خریدار و مستاجر، آیکون جادویی یعنی سیستم ملک‌های مناسب از فایلینگ را پیدا کرده — از لیست یا پروفایل مخاطب وارد شو و فایل را برای مشتری بفرست.</p>
+                    </div>
+                </article>
+                <article class="fl-help-card fl-help-card--lux">
+                    <span class="fl-help-card__step">۰۳</span>
+                    <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='upload' size='metric' boxed=True accent='sky' only %}</span>
+                    <div class="fl-help-card__body">
+                        <div class="fl-help-card__head"><h3>ورود و خروجی Excel</h3></div>
+                        <p>لیست قدیمی Excel داری؟ با <strong>ورود فایل</strong> یکجا import کن. برای گزارش یا پشتیبان، <strong>خروجی Excel</strong> همان فیلتر فعلی را export می‌کند.</p>
+                    </div>
+                </article>
+                <article class="fl-help-card fl-help-card--lux">
+                    <span class="fl-help-card__step">۰۴</span>
+                    <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='layers' size='metric' boxed=True accent='rose' only %}</span>
+                    <div class="fl-help-card__body">
+                        <div class="fl-help-card__head"><h3>ادغام تکراری‌ها</h3></div>
+                        <p>اگر کارت زرد «گروه تکراری» دیدی، یعنی چند مخاطب با یک شماره ثبت شده — با <strong>ادغام</strong> یکی را نگه دار و بقیه را تمیز کن تا CRM گیج‌کننده نشود.</p>
+                    </div>
+                </article>
+                <div class="fl-help-tip fl-help-tip--lux">
+                    <span class="fl-help-tip__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='list_todo' size='metric' boxed=True accent='violet' only %}</span>
+                    <div>
+                        <strong>اتصال به کارهای امروز</strong>
+                        <p>هر مخاطبی که «پیگیری بعدی» دارد، در صف <strong>کارهای امروز</strong> ظاهر می‌شود — پس بعد از هر تماس، تاریخ بعدی را حتماً ثبت کن.</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <footer class="ws-modal-foot fl-help-modal__foot">
+            <p class="fl-help-modal__foot-note">سؤالی موند؟ تیم پشتیبانی کنارته — با خیال راحت بپرس.</p>
+            <button type="button" class="ws-btn ws-btn-primary fl-help-modal__cta" data-modal-close>
+                <span class="ws-nav-icon">{% include 'includes/icon_slot.html' with decor='users' size='inline' only %}</span>
+                متوجه شدم، بریم سراغ مخاطبین
+            </button>
+        </footer>
+    </div>
+</div>

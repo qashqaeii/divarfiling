@@ -1,5 +1,5 @@
 {% extends 'workspace/crm/base_crm.html' %}
-{% load workspace_tags crm_tags %}
+{% load static workspace_tags crm_tags %}
 
 {% block page_title %}مخاطبین{% endblock %}
 {% block mobile_bar_title %}مخاطبین{% endblock %}
@@ -9,9 +9,13 @@
 {% block crm_search %}{% endblock %}
 {% block status_bar %}{% endblock %}
 
+{% block crm_extra_css %}
+<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-datasets.css' %}?v=17">
+{% endblock %}
+
 {% block crm_content %}
 {% include 'workspace/academy/includes/contextual_banner.html' %}
-<div class="crm-contacts-pro crm-page-chrome crm-contacts-mobile">
+<div class="crm-contacts-pro crm-page-chrome crm-contacts-mobile mk-filing-datasets">
 
     <header class="crm-contacts-mob-header">
         <div class="crm-contacts-mob-header-main">
@@ -27,6 +31,12 @@
             </p>
         </div>
         <div class="crm-contacts-mob-header-actions" role="toolbar" aria-label="عملیات مخاطبین">
+            <button type="button" class="crm-contacts-mob-icon-btn crm-contacts-mob-help-btn" title="راهنمای مخاطبین" aria-label="راهنمای مخاطبین" data-modal-open="modal-crm-contacts-help">
+                <span class="fl-header__help-bulb" aria-hidden="true">
+                    <i class="fas fa-lightbulb"></i>
+                    <span class="fl-header__help-bulb-glow"></span>
+                </span>
+            </button>
             <details class="crm-contacts-mob-toolbar-menu">
                 <summary class="crm-contacts-mob-icon-btn crm-contacts-mob-icon-btn--ghost" aria-label="ابزارهای بیشتر">
                     <i class="fas fa-ellipsis-vertical" aria-hidden="true"></i>
@@ -60,6 +70,14 @@
             {% endif %}
         </div>
         <div class="crm-dash-bar-actions" role="toolbar" aria-label="عملیات مخاطبین">
+            <button type="button" class="fl-header__help crm-contacts-help" title="راهنمای مخاطبین" aria-label="راهنمای مخاطبین" data-modal-open="modal-crm-contacts-help">
+                <span class="fl-header__help-ring" aria-hidden="true"></span>
+                <span class="fl-header__help-bulb" aria-hidden="true">
+                    <i class="fas fa-lightbulb"></i>
+                    <span class="fl-header__help-bulb-glow"></span>
+                </span>
+                <span class="fl-header__help-label">راهنما</span>
+            </button>
             <button type="button" class="crm-dash-act" data-drawer-open="drawer-import" title="ورود گروهی مخاطبین">
                 <i class="fas fa-file-import" aria-hidden="true"></i><span>ورود فایل</span>
             </button>
@@ -429,6 +447,8 @@
     <button type="button" class="crm-contacts-fab" data-drawer-open="drawer-contact" aria-label="مخاطب جدید" title="مخاطب جدید">
         <i class="fas fa-user-plus" aria-hidden="true"></i>
     </button>
+
+    {% include 'workspace/crm/includes/crm_contacts_help_modal.html' %}
 </div>
 {% endblock %}
 
@@ -493,6 +513,7 @@
 {% endblock %}
 
 {% block crm_js %}
+<script src="{% static 'workspace/js/filing-help-modal.js' %}?v=1"></script>
 <script>
 window.crmTypeProfiles = {{ type_profiles_json|safe }};
 window.crmLeaseDeadlineTypes = {{ lease_deadline_types_json|safe }};

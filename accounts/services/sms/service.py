@@ -119,7 +119,7 @@ def send_pattern_sms(
     return result
 
 
-def send_simple_sms(phone: str, text: str) -> SmsResult:
+def send_simple_sms(phone: str, text: str, *, purpose: str = '') -> SmsResult:
     """ارسال پیامک متنی ساده (اعلان‌های سیستمی بدون الگو)."""
     if not getattr(settings, 'SMS_ENABLED', True):
         raise SmsSendError('ارسال پیامک غیرفعال است.', code='sms_disabled')
@@ -129,7 +129,7 @@ def send_simple_sms(phone: str, text: str) -> SmsResult:
         result = _backend().send_simple(
             phone=normalized,
             text=text,
-            line_number=_default_line_number(),
+            line_number=resolve_sms_line_number(purpose=purpose),
         )
     except SmsError:
         raise
@@ -138,9 +138,10 @@ def send_simple_sms(phone: str, text: str) -> SmsResult:
         raise SmsSendError('خطای غیرمنتظره در ارسال پیامک.', code='sms_unexpected') from exc
 
     logger.info(
-        'SMS simple sent provider=%s phone=%s**** message_id=%s',
+        'SMS simple sent provider=%s phone=%s**** purpose=%s message_id=%s',
         result.provider,
         normalized[:4],
+        purpose or '-',
         result.message_id or '-',
     )
     return result

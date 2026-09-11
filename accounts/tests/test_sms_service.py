@@ -23,6 +23,10 @@ class ConsoleSmsServiceTests(SimpleTestCase):
         self.assertTrue(result.success)
         self.assertEqual(result.provider, 'console')
 
+    def test_send_simple_with_purpose(self):
+        result = send_simple_sms('09123456789', 'دعوت آژانس', purpose='agency_invite')
+        self.assertTrue(result.success)
+
     def test_invalid_phone(self):
         with self.assertRaises(SmsSendError) as ctx:
             send_pattern_sms('123', purpose='login', attributes={'code': '1'})

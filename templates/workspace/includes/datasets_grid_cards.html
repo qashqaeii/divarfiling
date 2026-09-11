@@ -1,72 +1,82 @@
 {% load humanize workspace_tags %}
-<div class="mk-ds-grid">
+<div class="mk-ds-grid fl-gcard-grid">
     {% for ds in datasets %}
     {% with tx=ds.transaction_type|ws_tx_profile %}
-    <article class="mk-ds-card mk-ds-card-native mk-ds-card--{{ tx.mode|default:'other' }}{% if ds.cover_image %} mk-ds-card--has-cover{% endif %}" data-id="{{ ds.id }}">
-        <label class="mk-ds-card-check" title="انتخاب">
+    <article class="fl-gcard mk-ds-card{% if ds.cover_image %} fl-gcard--cover{% endif %} fl-gcard--{{ tx.mode|default:'other' }}" data-id="{{ ds.id }}">
+        <label class="fl-gcard__check mk-ds-card-check" title="انتخاب">
             <input type="checkbox" class="mk-checkbox mk-ds-check" value="{{ ds.id }}" aria-label="انتخاب {{ ds.name }}">
         </label>
-        <div class="mk-ds-card-glass">
-            <a href="{% url 'workspace:dataset_detail' ds.id %}" class="mk-ds-card-main">
-                <div class="mk-ds-card-cover">
+        <div class="fl-gcard__shell">
+            <a href="{% url 'workspace:dataset_detail' ds.id %}" class="fl-gcard__media-link">
+                <div class="fl-gcard__media">
                     {% if ds.cover_image %}
-                    <img class="mk-ds-card-cover-img" src="{{ ds.cover_image }}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">
+                    <img class="fl-gcard__img" src="{{ ds.cover_image }}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">
                     {% else %}
-                    <div class="mk-ds-card-cover-empty" aria-hidden="true">
-                        <span class="mk-ds-card-cover-orb"></span>
-                        <span class="mk-ds-card-cover-fmt mk-file-icon mk-file-icon-{{ ds.file_format }}">
-                            {% if ds.file_format == 'xlsx' %}XLS{% elif ds.file_format == 'csv' %}CSV{% else %}JSON{% endif %}
+                    <div class="fl-gcard__placeholder" aria-hidden="true">
+                        <span class="fl-gcard__placeholder-icon">
+                            <i class="fas fa-folder-open"></i>
                         </span>
                     </div>
                     {% endif %}
-                    <span class="mk-ds-card-cover-shade" aria-hidden="true"></span>
-                    <div class="mk-ds-card-cover-top">
-                        {% if ds.transaction_type %}
-                        <span class="mk-tx-badge mk-tx-{{ tx.mode }}">{{ tx.badge }}</span>
-                        {% endif %}
-                        <span class="mk-ds-card-count">
+                    <span class="fl-gcard__shade" aria-hidden="true"></span>
+                    <div class="fl-gcard__badges">
+                        <span class="fl-gcard__count">
                             <strong>{{ ds.listing_count|default:ds.row_count|intcomma }}</strong>
-                            <em>آگهی دیوار</em>
+                            <em>آگهی</em>
                         </span>
+                        {% if ds.transaction_type %}
+                        {% include 'workspace/includes/filing/filing_status_badge.html' with kind='tx' mode=tx.mode label=tx.badge %}
+                        {% endif %}
                     </div>
-                    <span class="mk-ds-card-cover-fmt-pill" aria-hidden="true">{{ ds.file_format|upper }}</span>
+                    {% include 'workspace/includes/filing/filing_status_badge.html' with kind='format' format=ds.file_format %}
                 </div>
-                <div class="mk-ds-card-body">
-                    <h3 class="mk-ds-card-title">{{ ds.name }}</h3>
-                    <p class="mk-ds-card-sub" title="{{ ds.original_filename }}">{{ ds.original_filename }}</p>
-                    <div class="mk-ds-card-chips">
+                <div class="fl-gcard__body">
+                    <h3 class="fl-gcard__title" title="{{ ds.name }}">{{ ds.name }}</h3>
+                    <div class="fl-gcard__meta">
                         {% if ds.city or ds.district %}
-                        <span class="mk-ds-chip mk-ds-chip--loc">
-                            <i class="fas fa-location-dot" aria-hidden="true"></i>
-                            <span>{% if ds.city %}{{ ds.city }}{% endif %}{% if ds.city and ds.district %} · {% endif %}{% if ds.district %}{{ ds.district }}{% endif %}</span>
+                        <span class="fl-gcard__meta-item fl-gcard__meta-item--loc">
+                            <i class="fas fa-map-marker-alt" aria-hidden="true"></i>
+                            {% if ds.city %}{{ ds.city }}{% endif %}{% if ds.city and ds.district %}، {% endif %}{% if ds.district %}{{ ds.district }}{% endif %}
                         </span>
                         {% endif %}
                         {% if ds.subcategory %}
-                        <span class="mk-ds-chip">{{ ds.subcategory|ws_subcategory_short }}</span>
+                        <span class="fl-gcard__meta-item">{{ ds.subcategory|ws_subcategory_short }}</span>
                         {% endif %}
-                        <span class="mk-ds-chip mk-ds-chip--dim">{{ ds.file_size|filesizeformat }}</span>
                     </div>
                 </div>
             </a>
-            <footer class="mk-ds-card-foot">
-                <time class="mk-ds-card-date" datetime="{{ ds.updated_at|date:'c' }}" title="آخرین بروزرسانی">
+            <footer class="fl-gcard__foot">
+                <time class="fl-gcard__date" datetime="{{ ds.updated_at|date:'c' }}">
                     <i class="fas fa-clock" aria-hidden="true"></i>
                     {{ ds.updated_at|ws_jalali_datetime }}
                 </time>
-                <nav class="mk-ds-card-acts" role="toolbar" aria-label="عملیات فایل">
-                    <a href="{% url 'workspace:dataset_detail' ds.id %}" class="mk-ds-card-act mk-ds-card-act--open" title="باز کردن فایل">
-                        <i class="fas fa-arrow-left" aria-hidden="true"></i><span>باز کردن فایل</span>
+                <nav class="fl-gcard__acts" role="toolbar" aria-label="عملیات">
+                    <a href="{% url 'workspace:dataset_detail' ds.id %}" class="fl-gcard__act fl-gcard__act--primary" title="مشاهده" aria-label="مشاهده">
+                        <i class="fas fa-eye" aria-hidden="true"></i>
                     </a>
-                    <a href="{% url 'workspace:dataset_analyze' ds.id %}" class="mk-ds-card-act" title="تحلیل"><i class="fas fa-chart-line" aria-hidden="true"></i></a>
-                    <a href="{% url 'workspace:dataset_map' ds.id %}" class="mk-ds-card-act" title="نقشه"><i class="fas fa-map-location-dot" aria-hidden="true"></i></a>
-                    <a href="{% url 'workspace:dataset_export' ds.id %}?format=csv" class="mk-ds-card-act js-secure-export" data-export-label="خروجی CSV" title="دانلود"><i class="fas fa-download" aria-hidden="true"></i></a>
-                    <button type="button" class="mk-ds-card-act mk-ds-card-act--danger" title="حذف"
-                        data-confirm
-                        data-confirm-title="حذف فایل"
-                        data-confirm-message="فایل «{{ ds.name }}» و آگهی‌های فایلینگ آن حذف می‌شوند. استخراج بعدی یک دیتاست جدید از آگهی‌های فعلی ایجاد می‌کند. فایل‌های شخصی/CRM شما حذف نمی‌شوند."
-                        data-confirm-url="{% url 'workspace:dataset_delete' ds.id %}">
-                        <i class="fas fa-trash" aria-hidden="true"></i>
-                    </button>
+                    <a href="{% url 'workspace:dataset_analyze' ds.id %}" class="fl-gcard__act" title="تحلیل" aria-label="تحلیل">
+                        <i class="fas fa-chart-bar" aria-hidden="true"></i>
+                    </a>
+                    <a href="{% url 'workspace:dataset_export' ds.id %}?format=csv" class="fl-gcard__act js-secure-export" data-export-label="خروجی CSV" title="دانلود" aria-label="دانلود">
+                        <i class="fas fa-download" aria-hidden="true"></i>
+                    </a>
+                    <details class="fl-gcard__menu">
+                        <summary class="fl-gcard__act fl-gcard__act--more" title="بیشتر" aria-label="عملیات بیشتر">
+                            <i class="fas fa-ellipsis" aria-hidden="true"></i>
+                        </summary>
+                        <div class="fl-gcard__menu-panel" role="menu">
+                            <a href="{% url 'workspace:dataset_map' ds.id %}" class="fl-gcard__menu-item" role="menuitem">
+                                <i class="fas fa-map" aria-hidden="true"></i> نقشه
+                            </a>
+                            <button type="button" class="fl-gcard__menu-item fl-gcard__menu-item--danger" role="menuitem"
+                                data-confirm
+                                data-confirm-title="حذف فایل"
+                                data-confirm-message="فایل «{{ ds.name }}» و آگهی‌های فایلینگ آن حذف می‌شوند. استخراج بعدی یک دیتاست جدید از آگهی‌های فعلی ایجاد می‌کند. فایل‌های شخصی/CRM شما حذف نمی‌شوند."
+                                data-confirm-url="{% url 'workspace:dataset_delete' ds.id %}">
+                                <i class="fas fa-trash" aria-hidden="true"></i> حذف
+                            </button>
+                        </div>
+                    </details>
                 </nav>
             </footer>
         </div>

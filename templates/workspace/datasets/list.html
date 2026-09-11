@@ -5,7 +5,7 @@
 {% block mobile_bar_title %}فایلینگ{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-datasets.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-datasets.css' %}?v=3">
 <link rel="stylesheet" href="{% static 'workspace/css/mk-filing-mobile.css' %}?v=6">
 {% include 'workspace/academy/includes/academy_assets_css.html' %}
 {% endblock %}
@@ -249,10 +249,10 @@
         });
     }
 
-    document.querySelectorAll('.fl-row-menu').forEach(function (menu) {
+    document.querySelectorAll('.fl-row-menu, .fl-gcard__menu').forEach(function (menu) {
         menu.addEventListener('toggle', function () {
             if (!menu.open) return;
-            document.querySelectorAll('.fl-row-menu[open]').forEach(function (other) {
+            document.querySelectorAll('.fl-row-menu[open], .fl-gcard__menu[open]').forEach(function (other) {
                 if (other !== menu) other.removeAttribute('open');
             });
         });

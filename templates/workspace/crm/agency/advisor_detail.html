@@ -2,9 +2,9 @@
 {% load static humanize %}
 
 {% block crm_extra_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/agency-phase2.css' %}?v=2">
-<link rel="stylesheet" href="{% static 'workspace/css/agency-phase3.css' %}?v=2">
-<link rel="stylesheet" href="{% static 'workspace/css/agency-hub.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'workspace/css/agency-phase2.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'workspace/css/agency-phase3.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'workspace/css/agency-hub.css' %}?v=3">
 {% endblock %}
 
 {% block crm_content %}
@@ -13,11 +13,20 @@
         <div class="a360-header-main">
             <div class="a360-avatar" aria-hidden="true">{{ user.get_full_name|default:user.phone|slice:":1" }}</div>
             <div class="a360-identity">
+                <span class="agency-hub-header__eyebrow">مشاور ۳۶۰ · فقط مشاهده</span>
                 <h1>{{ user.get_full_name|default:user.phone|default:user.username }}</h1>
-                <p class="a360-sub">{{ user.phone|default:user.username }} · {{ member.get_role_display|default:member.role }}</p>
+                <p class="a360-sub" dir="ltr">{{ user.phone|default:user.username }} · {{ member.get_role_display|default:member.role }}</p>
                 <div class="a360-badges">
-                    {% if member.is_active %}<span class="a360-badge a360-badge-ok">عضو فعال</span>{% else %}<span class="a360-badge">غیرفعال</span>{% endif %}
-                    {% if has_seat %}<span class="a360-badge a360-badge-ok">لایسنس فعال</span>{% else %}<span class="a360-badge a360-badge-warn">بدون لایسنس</span>{% endif %}
+                    {% if member.is_active %}
+                    {% include "workspace/crm/agency/includes/status_badge.html" with status="ok" label="عضو فعال" %}
+                    {% else %}
+                    {% include "workspace/crm/agency/includes/status_badge.html" with status="muted" label="غیرفعال" %}
+                    {% endif %}
+                    {% if has_seat %}
+                    {% include "workspace/crm/agency/includes/status_badge.html" with status="ok" label="لایسنس فعال" %}
+                    {% else %}
+                    {% include "workspace/crm/agency/includes/status_badge.html" with status="unlicensed" label="بدون لایسنس" %}
+                    {% endif %}
                     {% if seat and seat.expires_at %}<span class="a360-badge">انقضا {{ seat.expires_at|date:"Y/m/d" }}</span>{% endif %}
                     {% if kpis.last_activity %}<span class="a360-badge">آخرین فعالیت {{ kpis.last_activity|date:"Y/m/d" }}</span>{% endif %}
                 </div>
@@ -31,7 +40,20 @@
 
     <nav class="a360-tabs" aria-label="بخش‌های مشاور">
         {% for key, label in tabs %}
-        <a href="?tab={{ key }}{% if key == 'overview' %}&period={{ period }}{% endif %}" class="a360-tab{% if tab == key %} is-active{% endif %}">{{ label }}</a>
+        <a href="?tab={{ key }}{% if key == 'overview' %}&period={{ period }}{% endif %}" class="a360-tab{% if tab == key %} is-active{% endif %}">
+            <span class="a360-tab__icon" aria-hidden="true">
+                {% if key == 'overview' %}<i class="fas fa-gauge-high"></i>
+                {% elif key == 'contacts' %}<i class="fas fa-address-book"></i>
+                {% elif key == 'properties' %}<i class="fas fa-building"></i>
+                {% elif key == 'deals' %}<i class="fas fa-handshake"></i>
+                {% elif key == 'filing' %}<i class="fas fa-database"></i>
+                {% elif key == 'contracts' %}<i class="fas fa-file-signature"></i>
+                {% elif key == 'activities' %}<i class="fas fa-clock-rotate-left"></i>
+                {% else %}<i class="fas fa-circle"></i>
+                {% endif %}
+            </span>
+            <span>{{ label }}</span>
+        </a>
         {% endfor %}
     </nav>
 
@@ -156,4 +178,7 @@
         {% endif %}
     </div>
 </div>
+{% endblock %}
+{% block crm_js %}
+<script src="{% static 'workspace/js/agency-ui.js' %}?v=1" defer></script>
 {% endblock %}

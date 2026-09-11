@@ -17,11 +17,16 @@
   align-items: flex-start;
   gap: 1rem 1.5rem;
   padding: 1.15rem 1.25rem;
-  background: var(--ws-surface, #fff);
+  background: linear-gradient(135deg, #fff 0%, #faf8ff 100%);
   border: 1px solid var(--a360-border);
   border-radius: 12px;
   box-shadow: var(--ws-shadow-sm, 0 1px 3px rgba(0, 0, 0, 0.04));
   margin-bottom: 1rem;
+}
+
+.a360-identity .agency-hub-header__eyebrow {
+  display: block;
+  margin-bottom: 0.2rem;
 }
 
 .a360-header-main {
@@ -104,6 +109,7 @@
 .a360-tab {
   display: inline-flex;
   align-items: center;
+  gap: 0.45rem;
   padding: 0.55rem 0.95rem;
   border-radius: 8px;
   text-decoration: none;
@@ -112,7 +118,18 @@
   font-weight: 500;
   white-space: nowrap;
   flex-shrink: 0;
-  transition: background 0.15s, color 0.15s;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  border: 1px solid transparent;
+}
+
+.a360-tab__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  font-size: 0.78rem;
 }
 
 .a360-tab:hover { background: #f8fafc; color: #1e293b; }
@@ -121,6 +138,12 @@
   background: #f5f3ff;
   color: #6b4ce6;
   font-weight: 600;
+  border-color: rgba(107, 76, 230, 0.18);
+  box-shadow: inset 0 -2px 0 #6b4ce6;
+}
+
+.a360-tab.is-active .a360-tab__icon {
+  background: rgba(107, 76, 230, 0.12);
 }
 
 .a360-body {

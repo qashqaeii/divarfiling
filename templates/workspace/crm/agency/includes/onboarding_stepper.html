@@ -1,0 +1,41 @@
+<nav class="agency-stepper" aria-label="مراحل راه‌اندازی">
+    <ol class="agency-stepper__list">
+        <li class="agency-stepper__step{% if step == '1' %} is-active{% elif agency %} is-done{% endif %}">
+            <span class="agency-stepper__marker">
+                {% if agency and step != '1' %}<i class="fas fa-check" aria-hidden="true"></i>{% else %}<span>۱</span>{% endif %}
+            </span>
+            <span class="agency-stepper__content">
+                <strong class="agency-stepper__label">مشخصات آژانس</strong>
+                <span class="agency-stepper__hint">نام و پروفایل</span>
+            </span>
+        </li>
+        <li class="agency-stepper__step{% if step == '2' %} is-active{% elif step|add:'0' > 2 or step == '3' or step == '4' %} is-done{% endif %}">
+            <span class="agency-stepper__marker">
+                {% if step|add:'0' > 2 or step == '3' or step == '4' %}<i class="fas fa-check" aria-hidden="true"></i>{% else %}<span>۲</span>{% endif %}
+            </span>
+            <span class="agency-stepper__content">
+                <strong class="agency-stepper__label">دعوت مشاوران</strong>
+                <span class="agency-stepper__hint">ارسال SMS</span>
+            </span>
+        </li>
+        <li class="agency-stepper__step{% if step == '3' %} is-active{% elif step == '4' %} is-done{% endif %}">
+            <span class="agency-stepper__marker">
+                {% if step == '4' %}<i class="fas fa-check" aria-hidden="true"></i>{% else %}<span>۳</span>{% endif %}
+            </span>
+            <span class="agency-stepper__content">
+                <strong class="agency-stepper__label">تخصیص لایسنس</strong>
+                <span class="agency-stepper__hint">Seat به اعضا</span>
+            </span>
+        </li>
+        <li class="agency-stepper__step{% if step == '4' %} is-active{% endif %}">
+            <span class="agency-stepper__marker"><span>۴</span></span>
+            <span class="agency-stepper__content">
+                <strong class="agency-stepper__label">پایان</strong>
+                <span class="agency-stepper__hint">آماده کار</span>
+            </span>
+        </li>
+    </ol>
+    <div class="agency-stepper__progress" aria-hidden="true">
+        <span class="agency-stepper__progress-fill" style="width: {% if step == '1' %}25{% elif step == '2' %}50{% elif step == '3' %}75{% else %}100{% endif %}%;"></span>
+    </div>
+</nav>

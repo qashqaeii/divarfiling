@@ -1,30 +1,33 @@
 {% load static %}
 <header class="agency-hub-header">
-    <div class="agency-hub-header__main">
-        <div class="agency-hub-header__title-row">
-            <span class="agency-hub-header__eyebrow">مدیریت آژانس</span>
-            <h1 class="agency-hub-header__title">{{ hub_agency.name|default:"آژانس" }}</h1>
-        </div>
-        {% if hub_subscription %}
-        <div class="agency-hub-header__meta">
-            <span class="agency-hub-chip agency-hub-chip--plan">
-                <i class="fas fa-crown" aria-hidden="true"></i>
-                پلن آژانس
-            </span>
-            <span class="agency-hub-chip">
-                <i class="fas fa-calendar-check" aria-hidden="true"></i>
-                انقضا {{ hub_subscription.expires_at|date:"Y/m/d" }}
-            </span>
-            {% if hub_seats %}
-            <span class="agency-hub-chip{% if hub_seats.available == 0 %} agency-hub-chip--warn{% endif %}">
-                <i class="fas fa-chair" aria-hidden="true"></i>
-                {{ hub_seats.assigned }}/{{ hub_seats.total }} Seat
-                {% if hub_seats.available %}<em>({{ hub_seats.available }} آزاد)</em>{% endif %}
-            </span>
+    <div class="agency-hub-header__brand">
+        <span class="agency-hub-header__logo" aria-hidden="true"><i class="fas fa-building-columns"></i></span>
+        <div class="agency-hub-header__main">
+            <div class="agency-hub-header__title-row">
+                <span class="agency-hub-header__eyebrow">مدیریت آژانس</span>
+                <h1 class="agency-hub-header__title">{{ hub_agency.name|default:"آژانس" }}</h1>
+            </div>
+            {% if hub_subscription %}
+            <div class="agency-hub-header__meta">
+                <span class="agency-hub-chip agency-hub-chip--plan">
+                    <i class="fas fa-crown" aria-hidden="true"></i>
+                    پلن آژانس
+                </span>
+                <span class="agency-hub-chip">
+                    <i class="fas fa-calendar-check" aria-hidden="true"></i>
+                    انقضا {{ hub_subscription.expires_at|date:"Y/m/d" }}
+                </span>
+            </div>
             {% endif %}
         </div>
-        {% endif %}
     </div>
+
+    {% if hub_seats %}
+    <div class="agency-hub-header__seats">
+        {% include "workspace/crm/agency/includes/seat_summary.html" with seats=hub_seats compact=True %}
+    </div>
+    {% endif %}
+
     <div class="agency-hub-header__actions">
         {% if ws_agency_onboarding_cta %}
         <a href="{{ ws_agency_onboarding_cta }}" class="crm-btn crm-btn-ghost crm-btn-sm agency-hub-header__onboard">

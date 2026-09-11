@@ -4,17 +4,26 @@
             {% csrf_token %}
             <input type="hidden" name="action" value="agency_invite">
             <input type="hidden" name="tab" value="members">
-            <div class="modal-header">
-                <h5 class="modal-title" id="agencyInviteModalLabel">دعوت مشاور جدید</h5>
+            <div class="modal-header agency-modal__header">
+                <div>
+                    <h5 class="modal-title" id="agencyInviteModalLabel">دعوت مشاور جدید</h5>
+                    <p class="agency-modal__subtitle">دعوت از طریق SMS ارسال می‌شود</p>
+                </div>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="بستن"></button>
             </div>
             <div class="modal-body">
-                <p class="agency-modal__hint">شماره موبایل مشاور را وارد کنید. دعوت از طریق SMS ارسال می‌شود.</p>
-                <label class="agency-form-label" for="agencyInvitePhone">شماره موبایل</label>
-                <input type="tel" id="agencyInvitePhone" name="phone" class="crm-input" required dir="ltr" placeholder="09123456789" autocomplete="tel">
+                <div class="agency-modal__info">
+                    <i class="fas fa-paper-plane" aria-hidden="true"></i>
+                    <span>پس از پذیرش دعوت، می‌توانید Seat لایسنس را به مشاور تخصیص دهید.</span>
+                </div>
+                <div class="agency-field">
+                    <label class="agency-form-label" for="agencyInvitePhone">شماره موبایل</label>
+                    <input type="tel" id="agencyInvitePhone" name="phone" class="crm-input agency-modal__input" required dir="ltr" placeholder="09123456789" autocomplete="tel" inputmode="tel">
+                    <p class="agency-form-helper" id="agencyModalPhoneHint" hidden></p>
+                </div>
                 <input type="hidden" name="role" value="advisor">
             </div>
-            <div class="modal-footer">
+            <div class="modal-footer agency-modal__footer">
                 <button type="button" class="crm-btn crm-btn-ghost" data-bs-dismiss="modal">انصراف</button>
                 <button type="submit" class="crm-btn crm-btn-primary">
                     <i class="fas fa-paper-plane" aria-hidden="true"></i>

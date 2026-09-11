@@ -3,158 +3,173 @@
 {% block title %}راه‌اندازی آژانس{% endblock %}
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/crm.css' %}">
-<link rel="stylesheet" href="{% static 'workspace/css/agency-phase2.css' %}?v=2">
-<link rel="stylesheet" href="{% static 'workspace/css/agency-hub.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'workspace/css/agency-phase2.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'workspace/css/agency-hub.css' %}?v=3">
 {% endblock %}
 {% block content %}
 <div class="agency-onboarding" dir="rtl">
     <div class="agency-onboarding__shell">
         <header class="agency-onboarding__header">
-            <span class="agency-hub-header__eyebrow">فایلینگ دیوار</span>
+            <span class="agency-hub-header__eyebrow">فایلینگ دیوار · CRM</span>
             <h1 class="agency-onboarding__title">راه‌اندازی آژانس</h1>
             <p class="agency-onboarding__lead">در چند قدم ساده، تیم مشاوران خود را آماده کار کنید.</p>
             {% if seats %}
-            <div class="agency-onboarding__seats">
-                <span class="agency-hub-chip"><i class="fas fa-chair" aria-hidden="true"></i> {{ seats.assigned }}/{{ seats.total }} تخصیص</span>
-                <span class="agency-hub-chip{% if seats.available == 0 %} agency-hub-chip--warn{% endif %}"><i class="fas fa-check" aria-hidden="true"></i> {{ seats.available }} Seat آزاد</span>
-            </div>
+            {% include "workspace/crm/agency/includes/seat_summary.html" with seats=seats %}
             {% endif %}
         </header>
 
-        <ol class="agency-onboarding__steps" aria-label="مراحل راه‌اندازی">
-            <li class="agency-onboarding__step{% if step == '1' %} is-active{% elif agency %} is-done{% endif %}">
-                <span class="agency-onboarding__step-num">۱</span>
-                <span class="agency-onboarding__step-label">مشخصات آژانس</span>
-            </li>
-            <li class="agency-onboarding__step{% if step == '2' %} is-active{% elif step|add:'0' > 2 or step == '3' or step == '4' %} is-done{% endif %}">
-                <span class="agency-onboarding__step-num">۲</span>
-                <span class="agency-onboarding__step-label">دعوت مشاوران</span>
-            </li>
-            <li class="agency-onboarding__step{% if step == '3' %} is-active{% elif step == '4' %} is-done{% endif %}">
-                <span class="agency-onboarding__step-num">۳</span>
-                <span class="agency-onboarding__step-label">تخصیص لایسنس</span>
-            </li>
-            <li class="agency-onboarding__step{% if step == '4' %} is-active{% endif %}">
-                <span class="agency-onboarding__step-num">۴</span>
-                <span class="agency-onboarding__step-label">پایان</span>
-            </li>
-        </ol>
+        {% include "workspace/crm/agency/includes/onboarding_stepper.html" %}
 
         <div class="agency-onboarding__panel">
             {% if step == '1' %}
-            <section>
-                <h2 class="agency-onboarding__panel-title">نام آژانس</h2>
-                <p class="agency-onboarding__panel-desc">نام رسمی آژانس که در پنل و گزارش‌ها نمایش داده می‌شود.</p>
+            <section class="agency-onboarding-step">
+                <header class="agency-step-head">
+                    <span class="agency-step-head__icon" aria-hidden="true"><i class="fas fa-building"></i></span>
+                    <div>
+                        <h2 class="agency-step-head__title">مشخصات آژانس</h2>
+                        <p class="agency-step-head__desc">نام رسمی آژانس که در پنل، گزارش‌ها و دعوت‌ها نمایش داده می‌شود.</p>
+                    </div>
+                </header>
                 {% if agency %}
-                <div class="agency-onboarding__success">
+                <div class="agency-alert agency-alert--success">
                     <i class="fas fa-circle-check" aria-hidden="true"></i>
-                    آژانس «{{ agency.name }}» متصل است.
+                    <div>
+                        <strong>آژانس «{{ agency.name }}» متصل است</strong>
+                        <span>می‌توانید به دعوت مشاوران بروید.</span>
+                    </div>
                 </div>
-                <div class="agency-onboarding__actions">
+                <footer class="agency-step-footer agency-step-footer--sticky">
                     <a href="?step=2" class="crm-btn crm-btn-primary">ادامه به دعوت مشاوران</a>
-                </div>
+                </footer>
                 {% else %}
                 <form method="post" class="agency-onboarding__form">
                     {% csrf_token %}
                     <input type="hidden" name="action" value="create_agency">
                     <input type="hidden" name="step" value="1">
-                    <label class="agency-form-label" for="agencyName">نام آژانس</label>
-                    <input type="text" id="agencyName" name="name" class="crm-input" required maxlength="200" placeholder="مثلاً املاک دیپلمات">
-                    <div class="agency-onboarding__actions">
-                        <button type="submit" class="crm-btn crm-btn-primary">ایجاد و ادامه</button>
+                    <div class="agency-field">
+                        <label class="agency-form-label" for="agencyName">نام آژانس</label>
+                        <input type="text" id="agencyName" name="name" class="crm-input" required maxlength="200" placeholder="مثلاً املاک دیپلمات" autofocus>
+                        <p class="agency-form-helper">نام تجاری آژانس — بعداً قابل ویرایش است.</p>
                     </div>
+                    <footer class="agency-step-footer agency-step-footer--sticky">
+                        <button type="submit" class="crm-btn crm-btn-primary">ایجاد و ادامه</button>
+                    </footer>
                 </form>
                 {% endif %}
             </section>
 
             {% elif step == '2' %}
-            <section>
-                <h2 class="agency-onboarding__panel-title">دعوت مشاوران</h2>
-                <p class="agency-onboarding__panel-desc">هر شماره یک دعوت مستقل — می‌توانید بیش از {{ seats.available|default:0 }} دعوت بفرستید؛ تخصیص لایسنس بعد از پذیرش انجام می‌شود.</p>
-                <form method="post" class="agency-onboarding__form">
-                    {% csrf_token %}
-                    <input type="hidden" name="action" value="invite_phones">
-                    <input type="hidden" name="step" value="2">
-                    <label class="agency-form-label" for="invitePhones">شماره موبایل‌ها</label>
-                    <textarea id="invitePhones" name="phones" class="crm-input agency-onboarding__textarea" rows="6" placeholder="09123456789&#10;09121234567"></textarea>
-                    <p class="agency-onboarding__helper">هر خط یک شماره موبایل — با ۰۹ شروع شود.</p>
-                    <div class="agency-onboarding__actions">
-                        <button type="submit" class="crm-btn crm-btn-primary">
-                            <i class="fas fa-paper-plane" aria-hidden="true"></i>
-                            ارسال دعوت SMS
-                        </button>
-                    </div>
-                </form>
-                {% if invitations %}
-                <div class="agency-invites" style="margin-top:1.25rem;">
-                    <div class="agency-invites__head">
-                        <h3 class="agency-invites__title">دعوت‌های ارسال‌شده</h3>
-                        <span class="agency-invites__count">{{ invitations|length }}</span>
-                    </div>
-                    <ul class="agency-onboarding__invite-list">
-                        {% for inv in invitations %}
-                        <li><span dir="ltr">{{ inv.phone }}</span> <span class="agency-status agency-status--pending">{{ inv.get_status_display }}</span></li>
-                        {% endfor %}
-                    </ul>
-                </div>
-                {% endif %}
-                <div class="agency-onboarding__actions agency-onboarding__actions--split">
-                    <a href="?step=3" class="crm-btn crm-btn-primary">مرحله بعد</a>
-                    <a href="?step=1" class="crm-btn crm-btn-ghost">بازگشت</a>
-                </div>
-            </section>
+            {% include "workspace/crm/agency/includes/invite_form.html" with show_skip=True %}
 
             {% elif step == '3' %}
-            <section>
-                <h2 class="agency-onboarding__panel-title">تخصیص لایسنس</h2>
-                <p class="agency-onboarding__panel-desc">{{ seats.available }} Seat آزاد برای تخصیص به مشاوران پذیرفته‌شده.</p>
-                {% for m in members %}
-                <div class="agency-onboarding__member-row">
-                    <div class="agency-onboarding__member-info">
-                        <strong>{{ m.user.get_full_name|default:m.user.phone }}</strong>
-                        <span dir="ltr" class="agency-table__sub">{{ m.user.phone }}</span>
+            <section class="agency-onboarding-step">
+                <header class="agency-step-head">
+                    <span class="agency-step-head__icon" aria-hidden="true"><i class="fas fa-id-card"></i></span>
+                    <div>
+                        <h2 class="agency-step-head__title">تخصیص لایسنس</h2>
+                        <p class="agency-step-head__desc">{{ seats.available|default:0 }} Seat آزاد برای مشاوران پذیرفته‌شده.</p>
                     </div>
-                    {% if m.data_visibility_consent_at %}
-                    <form method="post" class="agency-onboarding__assign-form">
-                        {% csrf_token %}
-                        <input type="hidden" name="action" value="assign_seat">
-                        <input type="hidden" name="member_user_id" value="{{ m.user_id }}">
-                        <select name="license_id" class="crm-input" required>
-                            <option value="">Seat آزاد...</option>
-                            {% for seat in available_seats %}
-                            <option value="{{ seat.pk }}">Seat {{ seat.sequence }}</option>
-                            {% endfor %}
-                        </select>
-                        <button type="submit" class="crm-btn crm-btn-primary crm-btn-sm">تخصیص</button>
-                    </form>
-                    {% else %}
-                    <span class="agency-status agency-status--pending">در انتظار پذیرش دعوت</span>
-                    {% endif %}
+                </header>
+
+                {% if seats %}
+                {% include "workspace/crm/agency/includes/seat_summary.html" with seats=seats compact=True %}
+                {% endif %}
+
+                {% if members %}
+                <div class="agency-license-assign">
+                    <div class="agency-table-wrap">
+                        <table class="agency-table agency-table--assign">
+                            <thead>
+                                <tr>
+                                    <th>مشاور</th>
+                                    <th>موبایل</th>
+                                    <th>وضعیت</th>
+                                    <th>تخصیص Seat</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for m in members %}
+                                <tr>
+                                    <td>
+                                        <div class="agency-table__user">
+                                            <span class="agency-table__avatar">{{ m.user.get_full_name|default:m.user.phone|slice:":1" }}</span>
+                                            <span class="agency-table__name">{{ m.user.get_full_name|default:m.user.phone }}</span>
+                                        </div>
+                                    </td>
+                                    <td dir="ltr">{{ m.user.phone }}</td>
+                                    <td>
+                                        {% if m.data_visibility_consent_at %}
+                                        {% include "workspace/crm/agency/includes/status_badge.html" with status="accepted" label="پذیرفته‌شده" %}
+                                        {% else %}
+                                        {% include "workspace/crm/agency/includes/status_badge.html" with status="pending" label="در انتظار پذیرش" %}
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if m.data_visibility_consent_at %}
+                                        {% if available_seats %}
+                                        <form method="post" class="agency-assign-inline">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="action" value="assign_seat">
+                                            <input type="hidden" name="member_user_id" value="{{ m.user_id }}">
+                                            <select name="license_id" class="crm-input crm-select" required>
+                                                <option value="">Seat آزاد...</option>
+                                                {% for seat in available_seats %}
+                                                <option value="{{ seat.pk }}">Seat {{ seat.sequence }}</option>
+                                                {% endfor %}
+                                            </select>
+                                            <button type="submit" class="crm-btn crm-btn-primary crm-btn-sm">تخصیص</button>
+                                        </form>
+                                        {% else %}
+                                        {% include "workspace/crm/agency/includes/status_badge.html" with status="locked" label="Seat آزاد نیست" %}
+                                        {% endif %}
+                                        {% else %}
+                                        <span class="agency-status agency-status--muted">منتظر پذیرش دعوت</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-                {% empty %}
-                {% include "workspace/crm/agency/includes/empty_state.html" with icon="users" title="هنوز مشاوری پذیرش نکرده" description="پس از پذیرش دعوت، اینجا برای تخصیص Seat ظاهر می‌شوند." compact=True %}
-                {% endfor %}
-                <div class="agency-onboarding__actions agency-onboarding__actions--split">
-                    <form method="post" class="d-inline">
+                {% else %}
+                {% include "workspace/crm/agency/includes/empty_state.html" with icon="users" title="هنوز مشاوری پذیرش نکرده" description="پس از پذیرش دعوت، اینجا برای تخصیص Seat ظاهر می‌شوند." compact=True variant="inline" %}
+                {% endif %}
+
+                <footer class="agency-step-footer agency-step-footer--sticky">
+                    <form method="post" class="agency-step-footer__primary">
                         {% csrf_token %}
                         <input type="hidden" name="action" value="finish">
                         <button type="submit" class="crm-btn crm-btn-primary">پایان راه‌اندازی</button>
                     </form>
-                    <a href="?step=2" class="crm-btn crm-btn-ghost">بازگشت</a>
-                </div>
+                    <div class="agency-step-footer__secondary">
+                        <a href="?step=2" class="crm-btn crm-btn-ghost">مرحله قبل</a>
+                    </div>
+                </footer>
             </section>
 
             {% else %}
             <section class="agency-onboarding__complete">
-                <span class="agency-empty__icon" aria-hidden="true"><i class="fas fa-party-horn"></i></span>
+                <span class="agency-empty__icon agency-empty__icon--success" aria-hidden="true"><i class="fas fa-circle-check"></i></span>
                 <h2 class="agency-onboarding__panel-title">آژانس آماده است</h2>
+                <p class="agency-onboarding__panel-desc">تیم شما آماده شروع کار در CRM است.</p>
                 {% if seats %}
-                <p class="agency-onboarding__panel-desc">{{ seats.total }} Seat · {{ seats.assigned }} تخصیص · {{ seats.available }} آزاد · {{ pending_invite_count }} دعوت در انتظار</p>
+                <div class="agency-complete-stats">
+                    <span><strong>{{ seats.total }}</strong> Seat</span>
+                    <span><strong>{{ seats.assigned }}</strong> تخصیص</span>
+                    <span><strong>{{ seats.available }}</strong> آزاد</span>
+                    {% if pending_invite_count %}<span><strong>{{ pending_invite_count }}</strong> دعوت در انتظار</span>{% endif %}
+                </div>
                 {% endif %}
-                <a href="{% url 'workspace:agency_hub_dashboard' %}" class="crm-btn crm-btn-primary">ورود به پنل آژانس</a>
+                <footer class="agency-step-footer" style="justify-content:center;border:none;padding-top:0.5rem;">
+                    <a href="{% url 'workspace:agency_hub_dashboard' %}" class="crm-btn crm-btn-primary">ورود به پنل آژانس</a>
+                </footer>
             </section>
             {% endif %}
         </div>
     </div>
 </div>
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'workspace/js/agency-ui.js' %}?v=1" defer></script>
 {% endblock %}

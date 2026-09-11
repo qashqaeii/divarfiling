@@ -11,41 +11,62 @@
         </button>
     </header>
 
-    <div class="agency-kpi-strip" style="grid-template-columns: repeat(4, minmax(0, 1fr));">
-        <article class="agency-kpi agency-kpi--accent">
+    <div class="agency-kpi-strip agency-kpi-strip--4">
+        <article class="agency-kpi agency-kpi--accent agency-kpi--icon">
+            <span class="agency-kpi__icon" aria-hidden="true"><i class="fas fa-users"></i></span>
             <span class="agency-kpi__label">عضو فعال</span>
             <strong class="agency-kpi__value">{{ members_dashboard.active_count }}</strong>
         </article>
-        <article class="agency-kpi">
+        <article class="agency-kpi agency-kpi--icon">
+            <span class="agency-kpi__icon" aria-hidden="true"><i class="fas fa-triangle-exclamation"></i></span>
             <span class="agency-kpi__label">بدون لایسنس</span>
             <strong class="agency-kpi__value">{{ members_dashboard.without_seat }}</strong>
         </article>
-        <article class="agency-kpi">
+        <article class="agency-kpi agency-kpi--icon">
+            <span class="agency-kpi__icon" aria-hidden="true"><i class="fas fa-hourglass-half"></i></span>
             <span class="agency-kpi__label">دعوت در انتظار</span>
             <strong class="agency-kpi__value">{{ members_dashboard.pending_invites }}</strong>
         </article>
-        <article class="agency-kpi">
+        <article class="agency-kpi agency-kpi--icon">
+            <span class="agency-kpi__icon" aria-hidden="true"><i class="fas fa-chair"></i></span>
             <span class="agency-kpi__label">Seat آزاد</span>
             <strong class="agency-kpi__value">{{ members_dashboard.seats.available|default:0 }}</strong>
         </article>
     </div>
 
-    <div class="agency-toolbar" id="agencyMembersToolbar">
-        <input type="search" class="crm-input agency-toolbar__search" id="agencyMemberSearch" placeholder="جستجو نام یا موبایل..." aria-label="جستجو مشاور">
-        <select class="crm-input" id="agencyMemberStatusFilter" aria-label="فیلتر وضعیت">
-            <option value="">همه وضعیت‌ها</option>
-            <option value="active">عضو فعال</option>
-            <option value="pending">در انتظار پذیرش</option>
-        </select>
-        <select class="crm-input" id="agencyMemberLicenseFilter" aria-label="فیلتر لایسنس">
-            <option value="">همه لایسنس‌ها</option>
-            <option value="licensed">دارای لایسنس</option>
-            <option value="unlicensed">بدون لایسنس</option>
-        </select>
-        <select class="crm-input" id="agencyMemberSort" aria-label="مرتب‌سازی">
-            <option value="name">مرتب‌سازی: نام</option>
-            <option value="recent">مرتب‌سازی: جدیدترین</option>
-        </select>
+    <div class="agency-toolbar agency-toolbar--filters" id="agencyMembersToolbar">
+        <div class="agency-toolbar__group agency-toolbar__group--search">
+            <label class="agency-toolbar__label" for="agencyMemberSearch">جستجو</label>
+            <input type="search" class="crm-input agency-toolbar__search" id="agencyMemberSearch" placeholder="نام یا موبایل..." aria-label="جستجو مشاور">
+        </div>
+        <div class="agency-toolbar__group">
+            <label class="agency-toolbar__label" for="agencyMemberStatusFilter">وضعیت</label>
+            <select class="crm-input" id="agencyMemberStatusFilter" aria-label="فیلتر وضعیت">
+                <option value="">همه</option>
+                <option value="active">عضو فعال</option>
+                <option value="pending">در انتظار پذیرش</option>
+            </select>
+        </div>
+        <div class="agency-toolbar__group">
+            <label class="agency-toolbar__label" for="agencyMemberLicenseFilter">لایسنس</label>
+            <select class="crm-input" id="agencyMemberLicenseFilter" aria-label="فیلتر لایسنس">
+                <option value="">همه</option>
+                <option value="licensed">دارای لایسنس</option>
+                <option value="unlicensed">بدون لایسنس</option>
+            </select>
+        </div>
+        <div class="agency-toolbar__group">
+            <label class="agency-toolbar__label" for="agencyMemberSort">مرتب‌سازی</label>
+            <select class="crm-input" id="agencyMemberSort" aria-label="مرتب‌سازی">
+                <option value="name">نام</option>
+                <option value="recent">جدیدترین</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="agency-alert agency-alert--info" id="agencyMembersFilterEmpty" hidden>
+        <i class="fas fa-search" aria-hidden="true"></i>
+        <span>نتیجه‌ای با فیلتر فعلی یافت نشد.</span>
     </div>
 
     <div class="agency-panel agency-panel--flush">
@@ -79,16 +100,16 @@
                         <td>{{ m.get_role_display }}</td>
                         <td>
                             {% if m.data_visibility_consent_at %}
-                            <span class="agency-status agency-status--ok">فعال</span>
+                            {% include "workspace/crm/agency/includes/status_badge.html" with status="ok" label="فعال" %}
                             {% else %}
-                            <span class="agency-status agency-status--pending">در انتظار</span>
+                            {% include "workspace/crm/agency/includes/status_badge.html" with status="pending" label="در انتظار" %}
                             {% endif %}
                         </td>
                         <td>
                             {% if row.has_seat %}
-                            <span class="agency-status agency-status--ok">فعال</span>
+                            {% include "workspace/crm/agency/includes/status_badge.html" with status="ok" label="فعال" %}
                             {% else %}
-                            <span class="agency-status agency-status--warn">بدون لایسنس</span>
+                            {% include "workspace/crm/agency/includes/status_badge.html" with status="unlicensed" label="بدون لایسنس" %}
                             {% endif %}
                         </td>
                         <td>{% if seat and seat.expires_at %}{{ seat.expires_at|date:"Y/m/d" }}{% else %}—{% endif %}</td>
@@ -202,46 +223,40 @@
     </div>
 
     {% if members_dashboard.invitations %}
-    <div class="agency-invites">
+    <div class="agency-invites agency-invites--panel">
         <div class="agency-invites__head">
-            <h3 class="agency-invites__title">دعوت‌های در انتظار</h3>
+            <div>
+                <h3 class="agency-invites__title">دعوت‌های در انتظار</h3>
+                <p class="agency-invites__sub">مدیریت دعوت‌های ارسال‌شده</p>
+            </div>
             <span class="agency-invites__count">{{ members_dashboard.invitations|length }}</span>
         </div>
-        <div class="agency-table-wrap" style="border:none;border-radius:0;">
-            <table class="agency-table">
-                <thead>
-                    <tr><th>موبایل</th><th>وضعیت</th><th>عملیات</th></tr>
-                </thead>
-                <tbody>
-                    {% for inv in members_dashboard.invitations %}
-                    <tr>
-                        <td dir="ltr">{{ inv.phone }}</td>
-                        <td><span class="agency-status agency-status--pending">{{ inv.get_status_display }}</span></td>
-                        <td>
-                            <div class="agency-table__actions">
-                                {% if inv.status == 'pending' %}
-                                <form method="post" action="{{ crm_team_url }}">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="action" value="agency_invite_resend">
-                                    <input type="hidden" name="invitation_id" value="{{ inv.pk }}">
-                                    <input type="hidden" name="tab" value="members">
-                                    <button type="submit" class="crm-btn crm-btn-ghost crm-btn-sm">ارسال مجدد</button>
-                                </form>
-                                <form method="post" action="{{ crm_team_url }}">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="action" value="agency_invite_cancel">
-                                    <input type="hidden" name="invitation_id" value="{{ inv.pk }}">
-                                    <input type="hidden" name="tab" value="members">
-                                    <button type="submit" class="crm-btn crm-btn-ghost crm-btn-sm">لغو</button>
-                                </form>
-                                {% endif %}
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+        <ul class="agency-invite-rows">
+            {% for inv in members_dashboard.invitations %}
+            <li class="agency-invite-row">
+                <span class="agency-invite-row__phone" dir="ltr"><i class="fas fa-mobile-screen" aria-hidden="true"></i>{{ inv.phone }}</span>
+                {% include "workspace/crm/agency/includes/status_badge.html" with status=inv.status label=inv.get_status_display %}
+                <div class="agency-invite-row__actions">
+                    {% if inv.status == 'pending' %}
+                    <form method="post" action="{{ crm_team_url }}">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="agency_invite_resend">
+                        <input type="hidden" name="invitation_id" value="{{ inv.pk }}">
+                        <input type="hidden" name="tab" value="members">
+                        <button type="submit" class="crm-btn crm-btn-ghost crm-btn-sm">ارسال مجدد</button>
+                    </form>
+                    <form method="post" action="{{ crm_team_url }}">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="agency_invite_cancel">
+                        <input type="hidden" name="invitation_id" value="{{ inv.pk }}">
+                        <input type="hidden" name="tab" value="members">
+                        <button type="submit" class="crm-btn crm-btn-ghost crm-btn-sm">لغو</button>
+                    </form>
+                    {% endif %}
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
     </div>
     {% endif %}
 </section>

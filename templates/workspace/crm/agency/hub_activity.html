@@ -8,26 +8,37 @@
     </div>
 </div>
 
-<form method="get" class="agency-toolbar">
-    <select name="advisor" class="crm-input" aria-label="فیلتر مشاور">
-        <option value="">همه مشاوران</option>
-        {% for m in advisors %}
-        <option value="{{ m.pk }}" {% if request.GET.advisor == m.pk|stringformat:"s" %}selected{% endif %}>{{ m.user.get_full_name|default:m.user.phone }}</option>
-        {% endfor %}
-    </select>
-    <input type="text" name="event_type" value="{{ event_type_filter }}" placeholder="نوع رویداد..." class="crm-input" aria-label="نوع رویداد">
-    <button type="submit" class="crm-btn crm-btn-primary crm-btn-sm">
-        <i class="fas fa-filter" aria-hidden="true"></i>
-        اعمال فیلتر
-    </button>
+<form method="get" class="agency-toolbar agency-toolbar--filters">
+    <div class="agency-toolbar__group">
+        <label class="agency-toolbar__label" for="activityAdvisor">مشاور</label>
+        <select name="advisor" id="activityAdvisor" class="crm-input">
+            <option value="">همه مشاوران</option>
+            {% for m in advisors %}
+            <option value="{{ m.pk }}" {% if request.GET.advisor == m.pk|stringformat:"s" %}selected{% endif %}>{{ m.user.get_full_name|default:m.user.phone }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="agency-toolbar__group">
+        <label class="agency-toolbar__label" for="activityEventType">نوع رویداد</label>
+        <input type="text" name="event_type" id="activityEventType" value="{{ event_type_filter }}" placeholder="مثلاً contact_created" class="crm-input">
+    </div>
+    <div class="agency-toolbar__actions">
+        <button type="submit" class="crm-btn crm-btn-primary crm-btn-sm">
+            <i class="fas fa-filter" aria-hidden="true"></i>
+            اعمال فیلتر
+        </button>
+        {% if request.GET.advisor or event_type_filter %}
+        <a href="{% url 'workspace:agency_hub_activity' %}" class="crm-btn crm-btn-ghost crm-btn-sm">پاک کردن</a>
+        {% endif %}
+    </div>
 </form>
 
-<div class="agency-panel">
+<div class="agency-panel agency-panel--activity">
     {% if events %}
     <ul class="agency-timeline">
         {% for ev in events %}
         <li class="agency-timeline__item">
-            <span class="agency-timeline__icon"><i class="fas fa-circle-dot" aria-hidden="true"></i></span>
+            <span class="agency-timeline__icon agency-timeline__icon--{{ ev.event_type|default:'default'|slice:':12' }}"><i class="fas fa-circle-dot" aria-hidden="true"></i></span>
             <div class="agency-timeline__body">
                 <div class="agency-timeline__action">{{ agency_event_labels|dict_get:ev.event_type }}</div>
                 <div class="agency-timeline__meta">

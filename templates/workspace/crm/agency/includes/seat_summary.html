@@ -1,0 +1,29 @@
+{% comment %}
+Compact seat usage bar. Requires: seats dict with total, assigned, available
+Optional: compact=True for inline chip-style
+{% endcomment %}
+{% if seats %}
+<div class="agency-seat-summary{% if compact %} agency-seat-summary--compact{% endif %}" aria-label="وضعیت Seat">
+    <div class="agency-seat-summary__stats">
+        <span class="agency-seat-summary__stat">
+            <strong>{{ seats.assigned }}</strong>
+            <em>تخصیص</em>
+        </span>
+        <span class="agency-seat-summary__divider" aria-hidden="true"></span>
+        <span class="agency-seat-summary__stat">
+            <strong>{{ seats.available }}</strong>
+            <em>آزاد</em>
+        </span>
+        <span class="agency-seat-summary__divider" aria-hidden="true"></span>
+        <span class="agency-seat-summary__stat">
+            <strong>{{ seats.total }}</strong>
+            <em>کل</em>
+        </span>
+    </div>
+    {% if seats.total %}
+    <div class="agency-seat-summary__meter" role="progressbar" aria-valuenow="{{ seats.assigned }}" aria-valuemin="0" aria-valuemax="{{ seats.total }}" aria-label="مصرف Seat">
+        <span class="agency-seat-summary__fill{% if seats.available == 0 %} agency-seat-summary__fill--full{% endif %}" style="width: {% widthratio seats.assigned seats.total 100 %}%;"></span>
+    </div>
+    {% endif %}
+</div>
+{% endif %}

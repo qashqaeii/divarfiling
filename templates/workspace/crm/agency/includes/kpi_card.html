@@ -1,0 +1,11 @@
+{% comment %}
+Usage: {% include with label="..." value="..." icon="users" accent=False %}
+{% endcomment %}
+<article class="agency-kpi{% if accent %} agency-kpi--accent{% endif %}{% if icon %} agency-kpi--icon{% endif %}">
+    {% if icon %}
+    <span class="agency-kpi__icon" aria-hidden="true"><i class="fas fa-{{ icon }}"></i></span>
+    {% endif %}
+    <span class="agency-kpi__label">{{ label }}</span>
+    <strong class="agency-kpi__value">{{ value }}</strong>
+    {% if sub %}<span class="agency-kpi__sub">{{ sub }}</span>{% endif %}
+</article>

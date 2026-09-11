@@ -1,0 +1,80 @@
+{% comment %}
+Invite advisors form — onboarding step 2 or standalone panel.
+Requires: form_action (optional, default post), show_skip=False
+{% endcomment %}
+<div class="agency-invite-panel">
+    <header class="agency-step-head">
+        <span class="agency-step-head__icon" aria-hidden="true"><i class="fas fa-user-plus"></i></span>
+        <div>
+            <h2 class="agency-step-head__title">دعوت مشاوران</h2>
+            <p class="agency-step-head__desc">شماره موبایل هر مشاور را وارد کنید. دعوت از طریق SMS ارسال می‌شود و تخصیص لایسنس پس از پذیرش انجام می‌شود.</p>
+        </div>
+    </header>
+
+    {% if seats %}
+    {% include "workspace/crm/agency/includes/seat_summary.html" with seats=seats compact=True %}
+    {% endif %}
+
+    <form method="post" class="agency-invite-form" id="agencyInviteForm">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="invite_phones">
+        <input type="hidden" name="step" value="2">
+
+        <div class="agency-field">
+            <label class="agency-form-label" for="invitePhones">
+                شماره موبایل‌ها
+                <span class="agency-form-label__hint">هر خط یک شماره</span>
+            </label>
+            <textarea id="invitePhones" name="phones" class="crm-input agency-invite-form__textarea" rows="5" placeholder="09123456789&#10;09121234567&#10;09131112233" dir="ltr" spellcheck="false" autocomplete="off"></textarea>
+            <p class="agency-form-helper"><i class="fas fa-info-circle" aria-hidden="true"></i> شماره‌ها با ۰۹ شروع شوند — می‌توانید با Enter، کاما یا خط جدید جدا کنید.</p>
+        </div>
+
+        <div class="agency-phone-preview" id="agencyPhonePreview" hidden>
+            <span class="agency-phone-preview__label">پیش‌نمایش (<span id="agencyPhoneCount">0</span> شماره)</span>
+            <ul class="agency-phone-preview__list" id="agencyPhoneList" aria-live="polite"></ul>
+            <p class="agency-phone-preview__errors" id="agencyPhoneErrors" hidden></p>
+        </div>
+
+        <div class="agency-invite-form__actions">
+            <button type="submit" class="crm-btn crm-btn-primary" id="agencyInviteSubmit">
+                <i class="fas fa-paper-plane" aria-hidden="true"></i>
+                ارسال دعوت SMS
+            </button>
+        </div>
+    </form>
+
+    {% if invitations %}
+    <div class="agency-invites agency-invites--panel">
+        <div class="agency-invites__head">
+            <div>
+                <h3 class="agency-invites__title">دعوت‌های ارسال‌شده</h3>
+                <p class="agency-invites__sub">وضعیت هر دعوت را اینجا پیگیری کنید</p>
+            </div>
+            <span class="agency-invites__count">{{ invitations|length }}</span>
+        </div>
+        <ul class="agency-invite-rows">
+            {% for inv in invitations %}
+            <li class="agency-invite-row">
+                <span class="agency-invite-row__phone" dir="ltr"><i class="fas fa-mobile-screen" aria-hidden="true"></i>{{ inv.phone }}</span>
+                {% include "workspace/crm/agency/includes/status_badge.html" with status=inv.status label=inv.get_status_display %}
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% else %}
+    <div class="agency-invite-empty">
+        <i class="fas fa-inbox" aria-hidden="true"></i>
+        <span>هنوز دعوتی ارسال نشده — شماره‌ها را وارد و ارسال کنید.</span>
+    </div>
+    {% endif %}
+
+    <footer class="agency-step-footer">
+        <a href="?step=3" class="crm-btn crm-btn-primary">مرحله بعد</a>
+        <div class="agency-step-footer__secondary">
+            <a href="?step=1" class="crm-btn crm-btn-ghost">مرحله قبل</a>
+            {% if show_skip %}
+            <a href="?step=3" class="crm-btn crm-btn-ghost">رد کردن</a>
+            {% endif %}
+        </div>
+    </footer>
+</div>

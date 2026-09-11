@@ -1,4 +1,4 @@
-{% load crm_tags %}
+{% load crm_tags workspace_tags %}
 <section class="agency-members-manage" aria-label="مدیریت مشاوران">
     <header class="agency-page-head">
         <div>
@@ -88,7 +88,7 @@
                             {% include "workspace/crm/agency/includes/status_badge.html" with status="unlicensed" label="بدون لایسنس" %}
                             {% endif %}
                         </td>
-                        <td>{% if seat and seat.expires_at %}{{ seat.expires_at|date:"Y/m/d" }}{% else %}—{% endif %}</td>
+                        <td>{% if seat and seat.expires_at %}{{ seat.expires_at|ws_jalali_date }}{% else %}—{% endif %}</td>
                         <td>
                             <div class="agency-table__actions">
                                 {% if m.data_visibility_consent_at %}

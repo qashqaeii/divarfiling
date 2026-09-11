@@ -1,5 +1,5 @@
 {% extends "workspace/crm/base_crm.html" %}
-{% load static humanize %}
+{% load static humanize workspace_tags %}
 
 {% block crm_extra_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/agency-phase2.css' %}?v=4">
@@ -27,8 +27,8 @@
                     {% else %}
                     {% include "workspace/crm/agency/includes/status_badge.html" with status="unlicensed" label="بدون لایسنس" %}
                     {% endif %}
-                    {% if seat and seat.expires_at %}<span class="a360-badge">انقضا {{ seat.expires_at|date:"Y/m/d" }}</span>{% endif %}
-                    {% if kpis.last_activity %}<span class="a360-badge">آخرین فعالیت {{ kpis.last_activity|date:"Y/m/d" }}</span>{% endif %}
+                    {% if seat and seat.expires_at %}<span class="a360-badge">انقضا {{ seat.expires_at|ws_jalali_date }}</span>{% endif %}
+                    {% if kpis.last_activity %}<span class="a360-badge">آخرین فعالیت {{ kpis.last_activity|ws_jalali_date }}</span>{% endif %}
                 </div>
             </div>
         </div>
@@ -72,7 +72,7 @@
             <div class="a360-kpi"><span class="a360-kpi-label">معاملات بسته</span><strong>{{ kpis.deals_closed }}</strong></div>
             <div class="a360-kpi"><span class="a360-kpi-label">قراردادها</span><strong>{{ kpis.contracts }}</strong></div>
             <div class="a360-kpi"><span class="a360-kpi-label">پیگیری باز</span><strong>{{ kpis.open_tasks }}</strong></div>
-            <div class="a360-kpi"><span class="a360-kpi-label">آخرین فعالیت</span><strong style="font-size:0.95rem;">{% if kpis.last_activity %}{{ kpis.last_activity|date:"Y/m/d H:i" }}{% else %}—{% endif %}</strong></div>
+            <div class="a360-kpi"><span class="a360-kpi-label">آخرین فعالیت</span><strong style="font-size:0.95rem;">{% if kpis.last_activity %}{{ kpis.last_activity|ws_jalali_datetime }}{% else %}—{% endif %}</strong></div>
         </div>
 
         {% elif tab == 'contacts' or tab == 'properties' or tab == 'deals' %}
@@ -96,11 +96,11 @@
                 <tbody>
                     {% for row in page_obj %}
                     {% if tab == 'contacts' %}
-                    <tr><td>{{ row.name }}</td><td dir="ltr">{{ row.phone }}</td><td>{{ row.status }}</td><td>{{ row.next_follow_up|date:"Y/m/d"|default:"—" }}</td><td>{{ row.created_at|date:"Y/m/d" }}</td></tr>
+                    <tr><td>{{ row.name }}</td><td dir="ltr">{{ row.phone }}</td><td>{{ row.status }}</td><td>{{ row.next_follow_up|ws_jalali_date }}</td><td>{{ row.created_at|ws_jalali_date }}</td></tr>
                     {% elif tab == 'properties' %}
-                    <tr><td>{{ row.title }}</td><td>{{ row.property_type }}</td><td>{{ row.transaction_status }}</td><td>{{ row.sale_price|intcomma|default:"—" }}</td><td>{{ row.updated_at|date:"Y/m/d" }}</td></tr>
+                    <tr><td>{{ row.title }}</td><td>{{ row.property_type }}</td><td>{{ row.transaction_status }}</td><td>{{ row.sale_price|intcomma|default:"—" }}</td><td>{{ row.updated_at|ws_jalali_date }}</td></tr>
                     {% else %}
-                    <tr><td>{{ row.title }}</td><td>{{ row.customer.name }}</td><td>{{ row.stage }}</td><td>{{ row.value|intcomma|default:"—" }}</td><td>{{ row.updated_at|date:"Y/m/d" }}</td></tr>
+                    <tr><td>{{ row.title }}</td><td>{{ row.customer.name }}</td><td>{{ row.stage }}</td><td>{{ row.value|intcomma|default:"—" }}</td><td>{{ row.updated_at|ws_jalali_date }}</td></tr>
                     {% endif %}
                     {% empty %}
                     <tr><td colspan="5" class="a360-empty">{% if tab == 'contacts' %}مخاطبی نیست{% elif tab == 'properties' %}فایلی نیست{% else %}معامله‌ای نیست{% endif %}</td></tr>
@@ -137,7 +137,7 @@
                         <td>{{ ds.name }}</td>
                         <td>{{ ds.listing_count|default:ds.row_count }}</td>
                         <td>{{ ds.city|default:"—" }}</td>
-                        <td>{{ ds.updated_at|date:"Y/m/d" }}</td>
+                        <td>{{ ds.updated_at|ws_jalali_date }}</td>
                         <td><a href="?tab=filing&dataset={{ ds.pk }}" class="crm-btn crm-btn-ghost crm-btn-sm">آگهی‌ها</a></td>
                     </tr>
                     {% empty %}<tr><td colspan="5" class="a360-empty">Dataset نیست</td></tr>{% endfor %}
@@ -156,7 +156,7 @@
                         <td dir="ltr">{{ c.internal_number }}</td>
                         <td>{{ c.title|default:"—" }}</td>
                         <td>{{ c.get_status_display }}</td>
-                        <td>{{ c.updated_at|date:"Y/m/d" }}</td>
+                        <td>{{ c.updated_at|ws_jalali_date }}</td>
                         <td><a href="{% url 'workspace:agency_advisor_contract_pdf' member.pk c.pk %}?inline=1" target="_blank" rel="noopener" class="crm-btn crm-btn-ghost crm-btn-sm">مشاهده</a></td>
                     </tr>
                     {% empty %}<tr><td colspan="5" class="a360-empty">قراردادی نیست</td></tr>{% endfor %}
@@ -168,7 +168,7 @@
         <ul class="a360-activity-list">
             {% for ev in activities %}
             <li>
-                <time>{{ ev.at|date:"Y/m/d H:i" }}</time>
+                <time>{{ ev.at|ws_jalali_datetime }}</time>
                 <strong>{{ ev.label }}</strong>
                 <span>{{ ev.title }}</span>
                 {% if ev.detail %}<p style="margin:0.25rem 0 0;font-size:0.8125rem;color:#64748b;">{{ ev.detail }}</p>{% endif %}

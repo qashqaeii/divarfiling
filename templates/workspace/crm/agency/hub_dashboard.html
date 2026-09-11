@@ -1,5 +1,5 @@
 {% extends "workspace/crm/agency/hub_base.html" %}
-{% load humanize crm_tags %}
+{% load humanize crm_tags workspace_tags %}
 {% block agency_hub_content %}
 {% url 'workspace:agency_hub_advisors' as advisors_url %}
 {% url 'workspace:agency_hub_activity' as activity_url %}
@@ -65,7 +65,7 @@
                                     {% include "workspace/crm/agency/includes/status_badge.html" with status="unlicensed" label="بدون لایسنس" %}
                                     {% endif %}
                                 </td>
-                                <td class="agency-table__mono">{% if row.last_activity %}{{ row.last_activity|date:"m/d H:i" }}{% else %}<span class="agency-status agency-status--muted">—</span>{% endif %}</td>
+                                <td class="agency-table__mono">{% if row.last_activity %}{{ row.last_activity|ws_jalali_datetime }}{% else %}<span class="agency-status agency-status--muted">—</span>{% endif %}</td>
                                 <td>
                                     <div class="agency-stat-pills">
                                         <span class="agency-stat-pill" title="مخاطب"><i class="fas fa-address-book" aria-hidden="true"></i>{{ row.contacts }}</span>

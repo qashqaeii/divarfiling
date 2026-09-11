@@ -1,5 +1,5 @@
 {% extends "workspace/crm/base_crm.html" %}
-{% load static %}
+{% load static workspace_tags %}
 
 {% block crm_extra_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/agency-phase2.css' %}?v=3">
@@ -34,13 +34,13 @@
         {% if license and license.expires_at %}
         <div class="a360-kpi">
             <span class="a360-kpi-label">انقضای لایسنس</span>
-            <strong style="font-size:0.95rem;">{{ license.expires_at|date:"Y/m/d" }}</strong>
+            <strong style="font-size:0.95rem;">{{ license.expires_at|ws_jalali_date }}</strong>
         </div>
         {% endif %}
         {% if subscription %}
         <div class="a360-kpi">
             <span class="a360-kpi-label">اشتراک آژانس</span>
-            <strong style="font-size:0.95rem;">تا {{ subscription.expires_at|date:"Y/m/d" }}</strong>
+            <strong style="font-size:0.95rem;">تا {{ subscription.expires_at|ws_jalali_date }}</strong>
         </div>
         {% endif %}
     </div>

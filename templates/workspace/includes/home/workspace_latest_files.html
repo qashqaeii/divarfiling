@@ -1,0 +1,149 @@
+{% load humanize workspace_tags %}
+<section class="wsh-card wsh-files{% if not has_bot_license %} wsh-files--locked{% endif %}" data-help-tour="workspace-files" aria-label="آخرین فایل‌ها">
+    {% if not has_bot_license %}<div class="wsh-files__locked-inner">{% endif %}
+    <header class="wsh-card__head">
+        <div class="wsh-card__title">
+            <span class="wsh-card__icon" aria-hidden="true"><i class="fas fa-folder-open"></i></span>
+            <div>
+                <h2>آخرین فایل‌ها</h2>
+                <span class="wsh-card__sub">{% if has_bot_license %}فایلینگ دیوار{% else %}نیاز به لایسنس{% endif %}</span>
+            </div>
+        </div>
+        {% if has_bot_license %}
+        <a href="{% url 'workspace:dataset_list' %}" class="wsh-card__link">مشاهده همه</a>
+        {% else %}
+        <a href="{% url 'workspace:upgrade' %}?feature=datasets" class="wsh-card__link"><i class="fas fa-lock" aria-hidden="true"></i> فعال‌سازی</a>
+        {% endif %}
+    </header>
+
+    <div class="wsh-files__toolbar">
+        <label class="wsh-files__search">
+            <i class="fas fa-search" aria-hidden="true"></i>
+            <input type="text" id="homeFilesSearch" name="mk_home_files_filter" placeholder="جستجو در فایل‌ها..." role="searchbox" inputmode="search" autocomplete="off" autocorrect="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true" data-form-type="other" aria-label="جستجو فایل‌ها">
+        </label>
+        <div class="wsh-files__filters">
+            <select class="wsh-files__select" id="homeFilesFilterTx" aria-label="فیلتر نوع معامله">
+                <option value="">همه معاملات</option>
+                <option value="sale">فروش</option>
+                <option value="rent">اجاره</option>
+                <option value="deposit">ودیعه</option>
+                <option value="mixed">ترکیبی</option>
+            </select>
+            <select class="wsh-files__select" id="homeFilesFilterLoc" aria-label="فیلتر مکان">
+                <option value="">همه مکان‌ها</option>
+                {% for ds in recent_datasets %}
+                {% if ds.city %}
+                <option value="{{ ds.city|lower }}">{{ ds.city }}</option>
+                {% endif %}
+                {% endfor %}
+            </select>
+            <select class="wsh-files__select" id="homeFilesFilterFmt" aria-label="فیلتر فرمت">
+                <option value="">همه فرمت‌ها</option>
+                <option value="xlsx">XLSX</option>
+                <option value="csv">CSV</option>
+                <option value="json">JSON</option>
+            </select>
+        </div>
+    </div>
+
+    {% if recent_datasets %}
+    <div class="wsh-files__table-wrap mk-table-wrap">
+        <table class="mk-data-table mk-home-files-table wsh-files__table" id="homeFilesTable" data-mk-table>
+            <thead>
+                <tr>
+                    <th data-sort="name" class="mk-col-file">فایل</th>
+                    <th data-sort="location" class="mk-col-location">مکان</th>
+                    <th data-sort="subject" class="mk-col-subject">موضوع</th>
+                    <th data-sort="tx" class="mk-col-tx">معامله</th>
+                    <th data-sort="count" data-sort-type="number" class="mk-col-num">آگهی</th>
+                    <th data-sort="date" data-sort-type="date" class="mk-col-date">بروزرسانی</th>
+                    <th class="mk-col-actions" aria-label="عملیات"></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ds in recent_datasets %}
+                {% with tx=ds.transaction_type|ws_tx_profile %}
+                {% with loc=ds.city|default:"" %}
+                <tr class="mk-home-file-row mk-home-file-row--{{ tx.mode|default:'other' }}{% if ds.cover_image %} mk-home-file-row--cover{% endif %}"
+                    data-search="{{ ds.name }} {{ ds.original_filename }} {{ ds.subcategory }} {{ ds.city }} {{ ds.district }} {{ ds.transaction_type }}"
+                    data-tx="{{ tx.mode|default:'other' }}"
+                    data-loc="{{ loc|lower }}"
+                    data-fmt="{{ ds.file_format|lower }}">
+                    <td class="mk-col-file" data-sort-value="{{ ds.name|lower }}">
+                        <div class="mk-file-cell">
+                            <div class="mk-home-file-thumb" aria-hidden="true">
+                                {% if ds.cover_image %}
+                                <img class="mk-home-file-cover" src="{{ ds.cover_image }}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">
+                                {% else %}
+                                <span class="mk-file-icon mk-file-icon-{{ ds.file_format }}">
+                                    {% if ds.file_format == 'xlsx' %}XLS{% elif ds.file_format == 'csv' %}CSV{% else %}JSON{% endif %}
+                                </span>
+                                {% endif %}
+                            </div>
+                            <div class="mk-file-text">
+                                <a href="{% url 'workspace:dataset_detail' ds.id %}" class="mk-file-name">{{ ds.name }}</a>
+                                <span class="mk-file-sub">{{ ds.original_filename|truncatechars:36 }}</span>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="mk-col-location" data-sort-value="{{ loc|lower }} {{ ds.district|default:''|lower }}">
+                        {% if ds.city or ds.district %}
+                        <div class="mk-location">
+                            {% if ds.city %}<span class="mk-location-city"><i class="fas fa-location-dot" aria-hidden="true"></i> {{ ds.city }}</span>{% endif %}
+                            {% if ds.district %}<span class="mk-location-district">{{ ds.district }}</span>{% endif %}
+                        </div>
+                        {% else %}<span class="mk-muted">—</span>{% endif %}
+                    </td>
+                    <td class="mk-col-subject" data-sort-value="{{ ds.subcategory|default:''|lower }}">
+                        {% if ds.subcategory %}<span class="mk-subject" title="{{ ds.subcategory }}">{{ ds.subcategory|ws_subcategory_short }}</span>{% else %}<span class="mk-muted">—</span>{% endif %}
+                    </td>
+                    <td class="mk-col-tx" data-sort-value="{{ tx.mode }}">
+                        {% if ds.transaction_type %}<span class="mk-tx-badge mk-tx-{{ tx.mode }}">{{ tx.badge }}</span>{% else %}<span class="mk-muted">—</span>{% endif %}
+                    </td>
+                    <td class="mk-col-num mk-num" data-sort-value="{{ ds.listing_count|default:ds.row_count }}">{{ ds.listing_count|default:ds.row_count|intcomma }}</td>
+                    <td class="mk-col-date mk-date" data-sort-value="{{ ds.updated_at|date:'U' }}">{{ ds.updated_at|ws_jalali_datetime }}</td>
+                    <td class="mk-col-actions">
+                        <div class="wsh-files__row-acts">
+                            <a href="{% url 'workspace:dataset_detail' ds.id %}" class="wsh-files__act wsh-files__act--primary" title="باز کردن"><i class="fas fa-arrow-left" aria-hidden="true"></i><span>باز کردن</span></a>
+                            <a href="{% url 'workspace:dataset_detail' ds.id %}" class="wsh-files__act wsh-files__act--icon" title="مشاهده"><i class="fas fa-eye" aria-hidden="true"></i></a>
+                            <details class="wsh-files__menu mk-action-menu">
+                                <summary class="wsh-files__act wsh-files__act--icon" aria-label="عملیات بیشتر"><i class="fas fa-ellipsis-vertical" aria-hidden="true"></i></summary>
+                                <div class="mk-action-menu-panel" role="menu">
+                                    <a href="{% url 'workspace:dataset_analyze' ds.id %}" class="mk-action-menu-item" role="menuitem"><i class="fas fa-chart-bar" aria-hidden="true"></i> تحلیل</a>
+                                    <a href="{% url 'workspace:dataset_map' ds.id %}" class="mk-action-menu-item" role="menuitem"><i class="fas fa-map" aria-hidden="true"></i> نقشه</a>
+                                    <a href="{% url 'workspace:dataset_export' ds.id %}?format=csv" class="mk-action-menu-item js-secure-export" data-export-label="خروجی CSV" role="menuitem"><i class="fas fa-download" aria-hidden="true"></i> دانلود</a>
+                                </div>
+                            </details>
+                        </div>
+                    </td>
+                </tr>
+                {% endwith %}
+                {% endwith %}
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="wsh-files__empty" id="homeFilesEmpty" hidden>
+        <p>نتیجه‌ای برای فیلتر پیدا نشد</p>
+    </div>
+    {% else %}
+    <div class="wsh-empty">
+        <span class="wsh-empty__icon" aria-hidden="true"><i class="fas fa-folder-open"></i></span>
+        <p class="wsh-empty__title">{% if has_bot_license %}فایلی آپلود نشده{% else %}فایلینگ دیوار قفل است{% endif %}</p>
+        {% if has_bot_license %}
+        <button type="button" class="wsh-btn wsh-btn--primary" data-modal-open="modal-upload">آپلود فایل</button>
+        {% else %}
+        <a href="{% url 'workspace:upgrade' %}?feature=upload" class="wsh-btn wsh-btn--primary"><i class="fas fa-lock" aria-hidden="true"></i> خرید ربات</a>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% if not has_bot_license %}
+    </div>
+    <div class="wsh-files__overlay">
+        <i class="fas fa-database" aria-hidden="true"></i>
+        <p>آپلود و مدیریت فایل‌های استخراج‌شده نیاز به لایسنس فعال دارد.</p>
+        <a href="{{ bot_buy_url }}" class="wsh-btn wsh-btn--primary"><i class="fas fa-shopping-cart" aria-hidden="true"></i> خرید ربات</a>
+    </div>
+    {% endif %}
+</section>

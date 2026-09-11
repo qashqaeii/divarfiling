@@ -1,0 +1,29 @@
+{% load crm_tags %}
+<section class="wsh-card wsh-pipeline" data-help-tour="workspace-pipeline" aria-label="قیف وضعیت">
+    <header class="wsh-card__head">
+        <div class="wsh-card__title">
+            <span class="wsh-card__icon" aria-hidden="true"><i class="fas fa-filter"></i></span>
+            <h2>قیف وضعیت</h2>
+        </div>
+        <a href="{% url 'workspace:crm_contacts' %}?view=pipeline" class="wsh-card__link">کانبان</a>
+    </header>
+    <ul class="wsh-pipeline__list">
+        {% for col in pipeline %}
+        <li>
+            <a href="{% url 'workspace:crm_contacts' %}?status={{ col.status|urlencode }}" class="wsh-pipeline__row">
+                <span class="wsh-pipeline__dot" style="background:{{ col.status|crm_status_dot }}"></span>
+                <span class="wsh-pipeline__name">{{ col.status }}</span>
+                <span class="wsh-pipeline__bar" aria-hidden="true"><i style="width:{% if crm_stats.total_contacts %}{% widthratio col.count crm_stats.total_contacts 100 %}{% else %}0{% endif %}%"></i></span>
+                <span class="wsh-pipeline__meta">
+                    <strong>{{ col.count }}</strong>
+                    {% if crm_stats.total_contacts %}<em>{% widthratio col.count crm_stats.total_contacts 100 %}٪</em>{% endif %}
+                </span>
+            </a>
+        </li>
+        {% empty %}
+        <li class="wsh-empty wsh-empty--inline">
+            <p>داده‌ای ثبت نشده</p>
+        </li>
+        {% endfor %}
+    </ul>
+</section>

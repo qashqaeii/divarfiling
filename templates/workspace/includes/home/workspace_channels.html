@@ -1,0 +1,28 @@
+{% load humanize %}
+<section class="wsh-card wsh-channels" data-help-tour="workspace-channels" aria-label="کانال ارتباط">
+    <header class="wsh-card__head">
+        <div class="wsh-card__title">
+            <span class="wsh-card__icon" aria-hidden="true"><i class="fas fa-comments"></i></span>
+            <h2>کانال ارتباط</h2>
+        </div>
+    </header>
+    <ul class="wsh-channels__list">
+        {% for ch in communication_stats %}
+        <li class="wsh-channels__row" data-channel="{{ ch.key }}">
+            <span class="wsh-channels__icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor=ch.decor size='xs' only %}</span>
+            <div class="wsh-channels__body">
+                <div class="wsh-channels__top">
+                    <span class="wsh-channels__name">{{ ch.label }}</span>
+                    <span class="wsh-channels__pct">{{ ch.pct }}٪</span>
+                </div>
+                <span class="wsh-channels__track" aria-hidden="true"><i style="width:{{ ch.pct }}%"></i></span>
+            </div>
+            <span class="wsh-channels__val">{{ ch.count|intcomma }}</span>
+        </li>
+        {% empty %}
+        <li class="wsh-empty wsh-empty--inline">
+            <p>داده‌ای ثبت نشده</p>
+        </li>
+        {% endfor %}
+    </ul>
+</section>

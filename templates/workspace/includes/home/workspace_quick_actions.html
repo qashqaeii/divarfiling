@@ -1,0 +1,33 @@
+<section class="wsh-actions" aria-label="اقدام‌های سریع" data-help-tour="workspace-actions">
+    {% if has_bot_license %}
+    <a href="{% url 'workspace:multi_listings' %}" class="wsh-action wsh-action--primary">
+        <span class="wsh-action__icon" aria-hidden="true"><i class="fas fa-magnifying-glass"></i></span>
+        <span class="wsh-action__body">
+            <strong>پیدا کردن فایل</strong>
+            <em>جستجوی پیشرفته فایل‌ها</em>
+        </span>
+    </a>
+    {% else %}
+    <a href="{% url 'workspace:crm_properties' %}" class="wsh-action wsh-action--primary">
+        <span class="wsh-action__icon" aria-hidden="true"><i class="fas fa-folder-open"></i></span>
+        <span class="wsh-action__body">
+            <strong>کار با فایل‌های شخصی</strong>
+            <em>ثبت و مدیریت ملک‌های خودتان</em>
+        </span>
+    </a>
+    {% endif %}
+    <a href="{% url 'workspace:crm_properties' %}?open=drawer-property" class="wsh-action">
+        <span class="wsh-action__icon" aria-hidden="true"><i class="fas fa-building"></i></span>
+        <span class="wsh-action__body">
+            <strong>فایل شخصی جدید</strong>
+            <em>ثبت ملک در CRM</em>
+        </span>
+    </a>
+    <a href="{% url 'workspace:crm_contacts' %}?open=drawer-contact" class="wsh-action">
+        <span class="wsh-action__icon" aria-hidden="true"><i class="fas fa-user-plus"></i></span>
+        <span class="wsh-action__body">
+            <strong>مخاطب جدید</strong>
+            <em>ثبت مشتری و نیاز</em>
+        </span>
+    </a>
+</section>

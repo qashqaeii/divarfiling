@@ -1,0 +1,44 @@
+<header class="wsh-hero" data-help-tour="workspace-hero" aria-label="خلاصه میزکار">
+    <div class="wsh-hero__main">
+        <div class="wsh-hero__copy">
+            <h1 class="wsh-hero__title">
+                <span id="wsHomeGreeting">سلام</span>، {{ request.user.get_full_name|default:request.user.username }}
+            </h1>
+            <p class="wsh-hero__meta">
+                <span class="wsh-hero__date"><i class="fas fa-calendar-day" aria-hidden="true"></i> {{ today_jalali }}</span>
+                {% if bot_license_display.active %}
+                <span class="wsh-hero__pill wsh-hero__pill--ok{% if bot_license_display.expiring_soon %} is-warn{% endif %}" title="وضعیت لایسنس">
+                    <i class="fas fa-key" aria-hidden="true"></i> {{ bot_license_display.label }}
+                </span>
+                {% elif bot_license_display.pending %}
+                <a href="{% url 'license_guide' %}" class="wsh-hero__pill wsh-hero__pill--warn" title="فعال‌سازی لایسنس">
+                    <i class="fas fa-key" aria-hidden="true"></i> {{ bot_license_display.label }}
+                </a>
+                {% else %}
+                <a href="{% url 'workspace:upgrade' %}" class="wsh-hero__pill" title="خرید لایسنس">
+                    <i class="fas fa-lock" aria-hidden="true"></i> {{ bot_license_display.label }}
+                </a>
+                {% endif %}
+            </p>
+            <p class="wsh-hero__sub">
+                {% if home_nba and not home_is_empty %}
+                امروز {{ home_nba|length }} مورد نیاز به توجه دارد — از میانبرها سریع اقدام کنید.
+                {% elif home_is_empty %}
+                برای شروع، یکی از گزینه‌های زیر را انتخاب کنید.
+                {% else %}
+                هر روز، یک قدم نزدیک‌تر به معاملات بزرگ‌تر.
+                {% endif %}
+            </p>
+        </div>
+        <div class="wsh-hero__illus" aria-hidden="true">
+            <span class="wsh-hero__illus-scene">
+                <i class="fas fa-house-chimney"></i>
+                <i class="fas fa-tree"></i>
+            </span>
+            <span class="wsh-hero__illus-quote">مدیریت حرفه‌ای املاک در یک میزکار</span>
+        </div>
+    </div>
+    <div class="wsh-hero__search">
+        {% include 'workspace/includes/home/workspace_search.html' %}
+    </div>
+</header>

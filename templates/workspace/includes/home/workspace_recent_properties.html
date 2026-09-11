@@ -1,0 +1,37 @@
+{% load workspace_tags %}
+<section class="wsh-card wsh-props" data-help-tour="workspace-properties" aria-label="املاک اخیر">
+    <header class="wsh-card__head">
+        <div class="wsh-card__title">
+            <span class="wsh-card__icon" aria-hidden="true"><i class="fas fa-building"></i></span>
+            <h2>املاک اخیر</h2>
+        </div>
+        <a href="{% url 'workspace:crm_properties' %}" class="wsh-card__link">همه</a>
+    </header>
+    <ul class="wsh-props__list">
+        {% for p in recent_properties %}
+        <li>
+            <a href="{% url 'workspace:crm_property_detail' p.id %}" class="wsh-props__row">
+                <span class="wsh-props__thumb" aria-hidden="true">
+                    {% if p.images %}
+                    <img src="{{ p.images.0 }}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">
+                    {% else %}
+                    <i class="fas fa-home"></i>
+                    {% endif %}
+                </span>
+                <span class="wsh-props__body">
+                    <strong>{{ p.title|default:p.address|truncatechars:34 }}</strong>
+                    <em>{{ p.deal_mode|default:"—" }}{% if p.sale_price %} · {{ p.sale_price|ws_money_compact }}{% elif p.monthly_rent %} · {{ p.monthly_rent|ws_money_compact }}{% endif %}</em>
+                    <span class="wsh-props__loc">{% if p.city %}{{ p.city }}{% if p.district %}، {{ p.district }}{% endif %}{% else %}—{% endif %}</span>
+                </span>
+                <span class="wsh-props__cta" aria-hidden="true"><i class="fas fa-chevron-left"></i></span>
+            </a>
+        </li>
+        {% empty %}
+        <li class="wsh-empty wsh-empty--inline">
+            <i class="fas fa-building" aria-hidden="true"></i>
+            <p>ملکی ثبت نشده</p>
+            <a href="{% url 'workspace:crm_properties' %}?open=drawer-property" class="wsh-card__link">ثبت ملک</a>
+        </li>
+        {% endfor %}
+    </ul>
+</section>

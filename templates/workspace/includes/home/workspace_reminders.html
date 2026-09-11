@@ -1,0 +1,50 @@
+{% load workspace_tags %}
+<section class="wsh-card wsh-reminders" data-help-tour="workspace-reminders" aria-label="یادآورها و پیگیری‌ها" id="wshReminders">
+    <header class="wsh-card__head">
+        <div class="wsh-card__title">
+            <span class="wsh-card__icon" aria-hidden="true"><i class="fas fa-bell"></i></span>
+            <h2>یادآورها و پیگیری‌ها</h2>
+        </div>
+        <a href="{% url 'workspace:crm_reminders' %}" class="wsh-card__link">مشاهده همه</a>
+    </header>
+    <div class="wsh-tabs" role="tablist" aria-label="فیلتر یادآورها">
+        <button type="button" class="wsh-tabs__btn is-active" role="tab" aria-selected="true" data-wsh-reminder-tab="all">همه</button>
+        <button type="button" class="wsh-tabs__btn" role="tab" aria-selected="false" data-wsh-reminder-tab="today">امروز</button>
+        <button type="button" class="wsh-tabs__btn" role="tab" aria-selected="false" data-wsh-reminder-tab="tomorrow">فردا</button>
+        <button type="button" class="wsh-tabs__btn" role="tab" aria-selected="false" data-wsh-reminder-tab="week">هفته آینده</button>
+    </div>
+    <ul class="wsh-reminders__list" id="wshRemindersList">
+        {% for c in due_contacts %}
+        <li class="wsh-reminders__item" data-wsh-reminder-scope="today followup">
+            <a href="{% url 'workspace:crm_detail' c.id %}" class="wsh-reminders__main">
+                <span class="wsh-reminders__time">امروز</span>
+                <span class="wsh-reminders__body">
+                    <strong>پیگیری — {{ c.name }}</strong>
+                    <em>{{ c.phone|default:"—" }}</em>
+                </span>
+            </a>
+            <span class="wsh-reminders__act" aria-hidden="true"><i class="fas fa-phone"></i></span>
+        </li>
+        {% endfor %}
+        {% for r in upcoming_reminders %}
+        <li class="wsh-reminders__item" data-wsh-reminder-date="{{ r.due_at|date:'Y-m-d' }}">
+            <div class="wsh-reminders__main">
+                <span class="wsh-reminders__time">{{ r.due_at|ws_time }}</span>
+                <span class="wsh-reminders__body">
+                    <strong>{{ r.title }}</strong>
+                    {% if r.customer %}<em>{{ r.customer.name }}</em>{% endif %}
+                </span>
+            </div>
+            <span class="wsh-reminders__act" aria-hidden="true"><i class="fas fa-bell"></i></span>
+        </li>
+        {% endfor %}
+        <li class="wsh-reminders__empty" id="wshRemindersEmpty"{% if due_contacts or upcoming_reminders %} hidden{% endif %}>
+            <i class="fas fa-check-circle" aria-hidden="true"></i>
+            <p>یادآور یا پیگیری فعالی نیست</p>
+        </li>
+        <li class="wsh-reminders__empty" id="wshRemindersTabEmpty" hidden>
+            <i class="fas fa-calendar-check" aria-hidden="true"></i>
+            <p>موردی در این بازه نیست</p>
+        </li>
+    </ul>
+</section>

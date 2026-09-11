@@ -1,0 +1,29 @@
+{% load humanize crm_tags workspace_tags %}
+<section class="wsh-card wsh-contacts" data-help-tour="workspace-contacts" aria-label="وضعیت مخاطبین">
+    <header class="wsh-card__head">
+        <div class="wsh-card__title">
+            <span class="wsh-card__icon" aria-hidden="true"><i class="fas fa-chart-pie"></i></span>
+            <h2>وضعیت مخاطبین</h2>
+        </div>
+    </header>
+    <div class="wsh-contacts__layout">
+        <div class="wsh-contacts__chart">
+            <canvas id="chart-status" height="160" aria-label="نمودار وضعیت مخاطبین"></canvas>
+            <div class="wsh-contacts__center">
+                <strong>{{ crm_stats.total_contacts|intcomma }}</strong>
+                <span>مخاطب</span>
+            </div>
+        </div>
+        <ul class="wsh-contacts__legend">
+            {% for status in crm_statuses %}
+            {% with count=crm_stats.by_status|dict_get:status|default:0 %}
+            <li>
+                <span class="wsh-contacts__dot" style="background:{{ status|crm_status_dot }}"></span>
+                <span class="wsh-contacts__name">{{ status }}</span>
+                <span class="wsh-contacts__count">{{ count|intcomma }}</span>
+            </li>
+            {% endwith %}
+            {% endfor %}
+        </ul>
+    </div>
+</section>

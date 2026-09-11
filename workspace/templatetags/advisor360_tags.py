@@ -230,3 +230,21 @@ def a360_display_name(user):
     if phone:
         return phone
     return (getattr(user, 'username', None) or '').strip() or 'مشاور'
+
+
+@register.simple_tag
+def amh_greeting(user):
+    """Time-aware Persian greeting for member hub hero."""
+    from django.utils import timezone
+
+    hour = timezone.localtime().hour
+    if 5 <= hour < 12:
+        prefix = 'صبح بخیر'
+    elif 12 <= hour < 17:
+        prefix = 'ظهر بخیر'
+    elif 17 <= hour < 21:
+        prefix = 'عصر بخیر'
+    else:
+        prefix = 'شب بخیر'
+    name = a360_display_name(user)
+    return f'{prefix}، {name}'

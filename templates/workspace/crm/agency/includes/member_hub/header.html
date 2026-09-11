@@ -1,48 +1,115 @@
-{% load workspace_tags %}
-<header class="amh-hero">
-    <div class="amh-hero__bg" aria-hidden="true">
-        <div class="amh-hero__glow"></div>
+{% load workspace_tags advisor360_tags %}
+<header class="amh-hero" aria-label="خلاصه عضویت آژانس">
+    <div class="amh-hero__backdrop" aria-hidden="true">
+        <div class="amh-hero__mesh"></div>
         <div class="amh-hero__grid"></div>
+        <div class="amh-hero__orb amh-hero__orb--1"></div>
+        <div class="amh-hero__orb amh-hero__orb--2"></div>
     </div>
-    <div class="amh-hero__inner">
-        <div class="amh-hero__brand">
-            <div class="amh-hero__logo" aria-hidden="true">
-                {% if agency_logo_url %}
-                <img src="{{ agency_logo_url }}" alt="" width="56" height="56" loading="eager" decoding="async">
-                {% else %}
-                {% include 'includes/icon_slot.html' with decor='building' size='md' only %}
-                {% endif %}
-            </div>
-            <div class="amh-hero__copy">
-                <h1 class="amh-hero__title">{{ agency.name }}</h1>
-                <p class="amh-hero__meta">
-                    <span>{{ membership.get_role_display|default:membership.role }}</span>
-                    <span class="amh-hero__dot" aria-hidden="true">·</span>
-                    {% if membership.is_active %}
-                    <span class="amh-hero__pill amh-hero__pill--ok">عضویت فعال</span>
+
+    <div class="amh-hero__shell">
+        <div class="amh-hero__primary">
+            <div class="amh-hero__identity">
+                <div class="amh-hero__avatar{% if agency_logo_url %} amh-hero__avatar--logo{% endif %}">
+                    {% if agency_logo_url %}
+                    <img src="{{ agency_logo_url }}" alt="" width="72" height="72" loading="eager" decoding="async">
                     {% else %}
-                    <span class="amh-hero__pill">عضویت غیرفعال</span>
-                    {% endif %}
-                    {% if license %}
-                    <span class="amh-hero__dot" aria-hidden="true">·</span>
-                    <span class="amh-hero__pill amh-hero__pill--ok">
-                        لایسنس فعال{% if license.expires_at %} تا {{ license.expires_at|ws_jalali_date }}{% endif %}
+                    <span class="amh-hero__avatar-fallback" aria-hidden="true">
+                        {% include 'includes/icon_slot.html' with decor='building' size='lg' only %}
                     </span>
                     {% endif %}
-                </p>
+                    <span class="amh-hero__avatar-ring" aria-hidden="true"></span>
+                    {% if membership.is_active and license %}
+                    <span class="amh-hero__status-dot" title="عضویت و لایسنس فعال"></span>
+                    {% endif %}
+                </div>
+
+                <div class="amh-hero__intro">
+                    <span class="amh-hero__eyebrow">
+                        <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='team' size='xs' only %}</span>
+                        پنل عضویت آژانس
+                    </span>
+                    <h1 class="amh-hero__title">{% amh_greeting user %}</h1>
+                    <p class="amh-hero__subtitle">
+                        عضو تیم <strong class="amh-hero__agency">{{ agency.name }}</strong>
+                        <span class="amh-hero__role">{{ membership.get_role_display|default:membership.role }}</span>
+                    </p>
+                </div>
             </div>
+
+            <ul class="amh-hero__chips" aria-label="وضعیت عضویت">
+                <li class="amh-hero__chip{% if membership.is_active %} is-ok{% else %} is-warn{% endif %}">
+                    <span class="amh-hero__chip-icon" aria-hidden="true">
+                        {% if membership.is_active %}{% include 'includes/icon_slot.html' with decor='circle_check' size='xs' only %}
+                        {% else %}{% include 'includes/icon_slot.html' with decor='warning' size='xs' only %}{% endif %}
+                    </span>
+                    <span class="amh-hero__chip-text">
+                        <span class="amh-hero__chip-label">عضویت</span>
+                        <strong>{% if membership.is_active %}فعال{% else %}غیرفعال{% endif %}</strong>
+                    </span>
+                </li>
+                <li class="amh-hero__chip{% if license %} is-ok{% else %} is-warn{% endif %}">
+                    <span class="amh-hero__chip-icon" aria-hidden="true">
+                        {% include 'includes/icon_slot.html' with decor='seat' size='xs' only %}
+                    </span>
+                    <span class="amh-hero__chip-text">
+                        <span class="amh-hero__chip-label">صندلی</span>
+                        <strong>{% if license %}فعال{% else %}ندارد{% endif %}</strong>
+                    </span>
+                </li>
+                {% if license and license.expires_at %}
+                <li class="amh-hero__chip is-muted">
+                    <span class="amh-hero__chip-icon" aria-hidden="true">
+                        {% include 'includes/icon_slot.html' with decor='calendar' size='xs' only %}
+                    </span>
+                    <span class="amh-hero__chip-text">
+                        <span class="amh-hero__chip-label">انقضای لایسنس</span>
+                        <strong>{{ license.expires_at|ws_jalali_date }}</strong>
+                    </span>
+                </li>
+                {% endif %}
+            </ul>
         </div>
-        <div class="amh-hero__aside">
+
+        <aside class="amh-hero__insights" aria-label="خلاصه سریع">
+            <a href="{{ quick_links.today }}" class="amh-hero__insight amh-hero__insight--link">
+                <span class="amh-hero__insight-icon" aria-hidden="true">
+                    {% include 'includes/icon_slot.html' with decor='list_todo' size='sm' only %}
+                </span>
+                <span class="amh-hero__insight-body">
+                    <span class="amh-hero__insight-value">{{ hub_kpis.today_tasks|default:0 }}</span>
+                    <span class="amh-hero__insight-label">کار امروز</span>
+                </span>
+            </a>
+            <a href="{{ quick_links.today }}" class="amh-hero__insight amh-hero__insight--link">
+                <span class="amh-hero__insight-icon" aria-hidden="true">
+                    {% include 'includes/icon_slot.html' with decor='bell' size='sm' only %}
+                </span>
+                <span class="amh-hero__insight-body">
+                    <span class="amh-hero__insight-value">{{ hub_kpis.open_tasks|default:0 }}</span>
+                    <span class="amh-hero__insight-label">پیگیری باز</span>
+                </span>
+            </a>
             {% if agency_leader_name %}
-            <div class="amh-hero__manager">
-                <span class="amh-hero__manager-label">مدیر آژانس</span>
-                <strong>{{ agency_leader_name }}</strong>
+            <div class="amh-hero__insight">
+                <span class="amh-hero__insight-icon" aria-hidden="true">
+                    {% include 'includes/icon_slot.html' with decor='user' size='sm' only %}
+                </span>
+                <span class="amh-hero__insight-body">
+                    <span class="amh-hero__insight-value amh-hero__insight-value--text">{{ agency_leader_name }}</span>
+                    <span class="amh-hero__insight-label">مدیر آژانس</span>
+                </span>
             </div>
             {% endif %}
-            <div class="amh-hero__seat">
-                <span class="amh-hero__manager-label">صندلی</span>
-                <strong>{% if license %}فعال{% else %}غیرفعال{% endif %}</strong>
+            <div class="amh-hero__insight">
+                <span class="amh-hero__insight-icon" aria-hidden="true">
+                    {% include 'includes/icon_slot.html' with decor='handshake' size='sm' only %}
+                </span>
+                <span class="amh-hero__insight-body">
+                    <span class="amh-hero__insight-value">{{ hub_kpis.active_deals|default:0 }}</span>
+                    <span class="amh-hero__insight-label">معامله فعال</span>
+                </span>
             </div>
-        </div>
+        </aside>
     </div>
 </header>

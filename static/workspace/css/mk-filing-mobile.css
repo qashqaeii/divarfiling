@@ -240,8 +240,9 @@
         box-shadow: 0 4px 12px rgba(37, 99, 235, 0.28);
     }
 
-    /* ── Filters ── */
-    .mk-filing-mobile .mk-filing-toolbar {
+    /* ── Filters (mobile) ── */
+    .mk-filing-mobile .mk-filing-toolbar,
+    .mk-filing-mobile .fl-toolbar {
         margin: 0 0.7rem;
         padding: 0;
         position: static;
@@ -249,6 +250,36 @@
         background: transparent;
         box-shadow: none;
         backdrop-filter: none;
+    }
+    .mk-filing-mobile .fl-toolbar__form {
+        width: 100%;
+    }
+    .mk-filing-mobile .fl-toolbar__row {
+        display: flex;
+        flex-direction: column;
+        gap: 0.55rem;
+    }
+    .mk-filing-mobile .fl-toolbar__search {
+        width: 100%;
+        height: 2.75rem;
+        border-radius: 14px;
+        padding: 0 0.85rem;
+        background: var(--ws-surface);
+        border: 1px solid color-mix(in srgb, var(--ws-border) 55%, transparent);
+        box-shadow: 0 2px 12px rgba(15, 23, 42, 0.04);
+    }
+    .mk-filing-mobile .fl-toolbar__search input {
+        font-size: 0.86rem;
+    }
+    .mk-filing-mobile .fl-toolbar__mob-toggle {
+        display: inline-flex !important;
+        width: 100%;
+        height: 2.75rem;
+        border-radius: 14px;
+        font-size: 0.82rem;
+        font-weight: 800;
+        background: var(--ws-surface);
+        box-shadow: 0 2px 12px rgba(15, 23, 42, 0.04);
     }
     .mk-filing-mob-filter-bar {
         display: flex;
@@ -467,15 +498,58 @@
         align-items: stretch;
         flex: 1;
         min-width: 0;
+        text-decoration: none;
+        color: inherit;
+    }
+    .mk-filing-mobile .mk-ds-card-title {
+        font-family: 'Vazirmatn', inherit;
+        font-size: 0.95rem;
+        font-weight: 900;
+        letter-spacing: -0.03em;
+        line-height: 1.3;
+        overflow-wrap: anywhere;
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
+        overflow: hidden;
+        margin: 0;
     }
     .mk-filing-mobile .mk-ds-card-cover {
         aspect-ratio: auto !important;
         min-height: 8.25rem;
         height: 100%;
         border-radius: 0;
+        overflow: hidden;
+        position: relative;
+    }
+    .mk-filing-mobile .mk-ds-card-cover-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+    .mk-filing-mobile .mk-ds-card-cover-shade {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background:
+            linear-gradient(180deg, rgba(15, 23, 42, 0.42) 0%, transparent 48%),
+            linear-gradient(0deg, rgba(15, 23, 42, 0.22) 0%, transparent 32%);
+    }
+    .mk-filing-mobile .mk-ds-card-cover-top .fl-badge {
+        font-size: 0.58rem;
+        padding: 0.16rem 0.42rem;
+        border-radius: 999px;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        box-shadow: 0 2px 8px rgba(15, 23, 42, 0.14);
     }
     .mk-filing-mobile .mk-ds-card-cover-empty {
         position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         background:
             radial-gradient(80% 70% at 30% 20%, color-mix(in srgb, var(--ws-primary) 18%, transparent), transparent 60%),
             linear-gradient(
@@ -504,11 +578,15 @@
         box-shadow: 0 6px 16px color-mix(in srgb, var(--ws-primary) 18%, transparent);
     }
     .mk-filing-mobile .mk-ds-card-cover-top {
+        position: absolute;
+        inset-block-start: 0.45rem;
+        inset-inline: 0.45rem;
+        z-index: 3;
+        display: flex;
         flex-direction: column;
         align-items: flex-start;
         justify-content: flex-start;
         gap: 0.3rem;
-        inset-inline-end: auto;
         width: auto;
         max-width: calc(100% - 0.4rem);
         pointer-events: none;
@@ -534,6 +612,8 @@
         color: var(--ws-text-muted);
     }
     .mk-filing-mobile .mk-ds-card-cover-fmt-pill {
+        position: absolute;
+        z-index: 3;
         inset-inline-end: 0.4rem;
         bottom: 0.4rem;
         font-size: 0.52rem;
@@ -552,16 +632,6 @@
         padding-inline-end: 2.65rem;
         gap: 0.3rem;
         min-width: 0;
-    }
-    .mk-filing-mobile .mk-ds-card-title {
-        font-family: 'Vazirmatn', inherit;
-        font-size: 0.95rem;
-        font-weight: 900;
-        letter-spacing: -0.03em;
-        line-height: 1.3;
-        overflow-wrap: anywhere;
-        -webkit-line-clamp: 2;
-        margin: 0;
     }
     .mk-filing-mobile .mk-ds-card-sub {
         font-size: 0.66rem;
@@ -657,6 +727,31 @@
         width: 1.1rem;
         height: 1.1rem;
         margin: 0;
+    }
+
+    .mk-filing-mobile .mk-ds-card-menu {
+        position: relative;
+    }
+    .mk-filing-mobile .mk-ds-card-menu > summary {
+        list-style: none;
+        cursor: pointer;
+    }
+    .mk-filing-mobile .mk-ds-card-menu > summary::-webkit-details-marker {
+        display: none;
+    }
+    .mk-filing-mobile .mk-ds-card-menu .fl-row-menu__panel {
+        inset-inline-end: 0;
+        inset-block-start: calc(100% + 0.35rem);
+        min-width: 9.5rem;
+        z-index: 20;
+    }
+
+    .mk-filing-mobile .fl-mob-cards.mk-ds-grid,
+    .mk-filing-mobile .mk-filing-mob-cards.mk-ds-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        padding: 0.7rem;
     }
 
     .mk-filing-mobile .mk-filing-empty {

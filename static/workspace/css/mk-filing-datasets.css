@@ -500,23 +500,56 @@
     border-color: color-mix(in srgb, #ef4444 30%, var(--ws-border));
 }
 
-/* Desktop toolbar layout */
+/* Desktop toolbar layout — search row + filters row */
 @media (min-width: 769px) {
+    .mk-filing-datasets .fl-toolbar {
+        --fl-toolbar-gap: 0.65rem;
+        --fl-toolbar-pad: 0.85rem 1rem;
+    }
+
     .mk-filing-datasets .fl-toolbar__row {
-        align-items: center;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 0.75rem;
+        align-items: stretch;
     }
 
     .mk-filing-datasets .fl-toolbar__search {
-        flex: 1 1 18rem;
-        max-width: 22rem;
+        flex: none;
+        max-width: none;
+        width: 100%;
     }
 
     .mk-filing-datasets .fl-toolbar__panel {
-        flex: 3 1 auto;
+        flex: none;
+        width: 100%;
+        min-width: 0;
     }
 
     .mk-filing-datasets .fl-toolbar__panel-inner {
         display: flex !important;
+        align-items: center;
+        gap: 0.75rem;
+        flex-wrap: nowrap;
+    }
+
+    .mk-filing-datasets .fl-toolbar__filters {
+        flex: 1 1 auto;
+        gap: 0.65rem;
+        min-width: 0;
+    }
+
+    .mk-filing-datasets .fl-toolbar__field {
+        flex: 1 1 0;
+        min-width: 8.5rem;
+        max-width: none;
+    }
+
+    .mk-filing-datasets .fl-toolbar__actions {
+        flex-shrink: 0;
+        gap: 0.5rem;
+        padding-inline-start: 0.85rem;
+        margin-inline-start: 0.35rem;
     }
 
     .mk-filing-datasets .fl-toolbar__view-label {
@@ -529,12 +562,32 @@
 }
 
 @media (min-width: 1100px) {
-    .mk-filing-datasets .fl-toolbar__search {
-        max-width: 24rem;
+    .mk-filing-datasets .fl-toolbar__panel-inner {
+        gap: 0.85rem;
     }
 
     .mk-filing-datasets .fl-toolbar__field {
-        max-width: 11.5rem;
+        min-width: 9.5rem;
+    }
+}
+
+@media (min-width: 769px) and (max-width: 960px) {
+    .mk-filing-datasets .fl-toolbar__panel-inner {
+        flex-wrap: wrap;
+    }
+
+    .mk-filing-datasets .fl-toolbar__filters {
+        flex: 1 1 100%;
+    }
+
+    .mk-filing-datasets .fl-toolbar__actions {
+        flex: 1 1 100%;
+        justify-content: flex-end;
+        padding-inline-start: 0;
+        margin-inline-start: 0;
+        border-inline-start: none;
+        padding-top: 0.15rem;
+        border-top: 1px solid color-mix(in srgb, var(--ws-border) 55%, transparent);
     }
 }
 
@@ -1368,6 +1421,7 @@
     }
 
     .mk-filing-datasets .fl-toolbar__row {
+        display: flex;
         flex-direction: column;
         align-items: stretch;
         gap: 0.55rem;
@@ -1377,6 +1431,9 @@
         flex: none;
         width: 100%;
         max-width: none;
+        min-height: 2.75rem;
+        height: auto;
+        border-radius: 14px;
     }
 
     .mk-filing-datasets .fl-toolbar__mob-toggle {
@@ -1384,18 +1441,21 @@
         align-items: center;
         justify-content: center;
         gap: 0.35rem;
-        height: var(--fl-toolbar-h);
-        padding: 0 0.75rem;
+        width: 100%;
+        min-height: 2.75rem;
+        height: auto;
+        padding: 0 0.85rem;
         border: 1px solid color-mix(in srgb, var(--ws-border) 85%, transparent);
-        border-radius: 10px;
+        border-radius: 14px;
         background: var(--ws-surface);
-        font-size: 0.72rem;
-        font-weight: 700;
+        font-size: 0.82rem;
+        font-weight: 800;
         color: var(--ws-text-secondary);
         cursor: pointer;
         font-family: inherit;
         position: relative;
         flex-shrink: 0;
+        box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
     }
 
     .mk-filing-datasets .fl-toolbar__mob-badge {
@@ -1411,13 +1471,8 @@
 
     .mk-filing-datasets .fl-toolbar__row > .fl-toolbar__search,
     .mk-filing-datasets .fl-toolbar__row > .fl-toolbar__mob-toggle {
-        display: inline-flex;
-    }
-
-    .mk-filing-datasets .fl-toolbar__row {
-        display: grid;
-        grid-template-columns: 1fr auto;
-        align-items: center;
+        display: flex;
+        width: 100%;
     }
 
     .mk-filing-datasets .fl-toolbar__panel {
@@ -1482,14 +1537,26 @@
     .mk-filing-datasets .fl-panel { margin: 0 0.65rem; border-radius: 16px; }
     .mk-filing-datasets .fl-panel__sort { display: none; }
     .mk-filing-datasets .fl-ds-layout-table { display: none !important; }
-    .mk-filing-datasets .fl-mob-cards { display: flex; flex-direction: column; gap: 0.55rem; padding: 0.65rem; }
-    .mk-filing-datasets .fl-mob-card { display: block; padding: 0.7rem; border: 1px solid var(--ws-border); border-radius: 14px; background: var(--ws-surface); position: relative; }
-    .mk-filing-datasets .fl-mob-card__check { position: absolute; top: 0.55rem; inset-inline-end: 0.55rem; }
-    .mk-filing-datasets .fl-mob-card__body { padding-inline-end: 1.75rem; min-width: 0; }
-    .mk-filing-datasets .fl-mob-card__title { font-size: 0.82rem; font-weight: 800; color: var(--ws-text); text-decoration: none; }
-    .mk-filing-datasets .fl-mob-card__meta { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.35rem; align-items: center; }
-    .mk-filing-datasets .fl-mob-card__foot { display: flex; justify-content: space-between; margin-top: 0.45rem; padding-top: 0.45rem; border-top: 1px solid color-mix(in srgb, var(--ws-border) 50%, transparent); }
-    .mk-filing-datasets .fl-mob-card__actions { display: flex; gap: 0.25rem; margin-top: 0.45rem; }
+    .mk-filing-datasets .fl-mob-cards {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        padding: 0.7rem;
+    }
+    .mk-filing-datasets .fl-mob-card {
+        position: relative;
+        min-width: 0;
+    }
+    .mk-filing-datasets .fl-mob-card .mk-ds-card-glass {
+        display: flex;
+        flex-direction: column;
+    }
+    .mk-filing-datasets .fl-mob-card .mk-ds-card-menu > summary {
+        list-style: none;
+    }
+    .mk-filing-datasets .fl-mob-card .mk-ds-card-menu > summary::-webkit-details-marker {
+        display: none;
+    }
 
     .mk-filing-datasets.mk-filing-pro[data-view-mode="grid"] .fl-mob-cards { display: none !important; }
     .mk-filing-datasets.mk-filing-pro[data-view-mode="grid"] .fl-gcard-grid {

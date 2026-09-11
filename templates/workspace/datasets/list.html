@@ -5,8 +5,8 @@
 {% block mobile_bar_title %}فایلینگ{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-datasets.css' %}?v=5">
-<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-mobile.css' %}?v=6">
+<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-datasets.css' %}?v=6">
+<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-mobile.css' %}?v=7">
 {% include 'workspace/academy/includes/academy_assets_css.html' %}
 {% endblock %}
 
@@ -42,7 +42,7 @@
         {% if datasets %}
         <div class="mk-ds-layout fl-ds-layout{% if view_mode == 'auto' %} mk-ds-layout--auto{% elif view_mode == 'grid' %} mk-ds-layout--grid-only{% else %} mk-ds-layout--table-only{% endif %}">
             <div class="mk-ds-layout-grid fl-ds-layout-grid" aria-label="نمای کارت">
-                <div class="fl-mob-cards mk-filing-mob-cards">
+                <div class="fl-mob-cards mk-filing-mob-cards mk-ds-grid">
                     {% include 'workspace/includes/filing/filing_mobile_card.html' with datasets=datasets %}
                 </div>
                 {% if view_mode == 'grid' %}

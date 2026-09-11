@@ -1,17 +1,27 @@
 (function () {
     'use strict';
 
-    function greetingForHour(h) {
-        if (h >= 5 && h < 12) return 'صبح بخیر';
-        if (h >= 12 && h < 17) return 'ظهر بخیر';
-        if (h >= 17 && h < 21) return 'عصر بخیر';
-        return 'شب بخیر';
+    function greetingMeta(h) {
+        if (h >= 5 && h < 12) {
+            return { text: 'صبح بخیر', icon: 'fa-sun', tone: 'morning' };
+        }
+        if (h >= 12 && h < 17) {
+            return { text: 'ظهر بخیر', icon: 'fa-sun', tone: 'noon' };
+        }
+        if (h >= 17 && h < 21) {
+            return { text: 'عصر بخیر', icon: 'fa-cloud-sun', tone: 'evening' };
+        }
+        return { text: 'شب بخیر', icon: 'fa-moon', tone: 'night' };
     }
 
     function initGreeting() {
-        const el = document.getElementById('wsHomeGreeting');
-        if (!el) return;
-        el.textContent = greetingForHour(new Date().getHours());
+        const textEl = document.getElementById('wsHomeGreeting');
+        const iconEl = document.getElementById('wsHomeGreetingIcon');
+        const meta = greetingMeta(new Date().getHours());
+        if (textEl) textEl.textContent = meta.text;
+        if (iconEl) {
+            iconEl.className = `wsh-hero__greeting-icon fas ${meta.icon} is-${meta.tone}`;
+        }
     }
 
     function initHomeCharts() {

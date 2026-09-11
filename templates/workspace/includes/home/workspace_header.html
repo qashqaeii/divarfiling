@@ -3,7 +3,10 @@
     <div class="wsh-hero__main">
         <div class="wsh-hero__copy">
             <h1 class="wsh-hero__title">
-                <span id="wsHomeGreeting">سلام</span>، {{ request.user.get_full_name|default:request.user.username }}
+                <span class="wsh-hero__greeting-line">
+                    <i class="wsh-hero__greeting-icon fas fa-sun is-noon" id="wsHomeGreetingIcon" aria-hidden="true"></i>
+                    <span id="wsHomeGreeting">سلام</span>، {{ request.user.get_full_name|default:request.user.username }}
+                </span>
             </h1>
             <p class="wsh-hero__meta">
                 <span class="wsh-hero__date"><i class="fas fa-calendar-day" aria-hidden="true"></i> {{ today_jalali }}</span>

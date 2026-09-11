@@ -7,7 +7,7 @@
 {% endblock %}
 
 {% block ws_surface_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/mk-workspace-home.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'workspace/css/mk-workspace-home.css' %}?v=5">
 {% endblock %}
 
 {% block page_title %}{% endblock %}
@@ -110,5 +110,5 @@
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script>window.wsCharts = {{ charts_json|safe }}; window.wsChartsHub = true;</script>
-<script src="{% static 'workspace/js/home.js' %}?v=4"></script>
+<script src="{% static 'workspace/js/home.js' %}?v=5"></script>
 {% endblock %}

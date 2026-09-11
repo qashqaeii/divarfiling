@@ -4,7 +4,7 @@
 {% if members_dashboard %}
 {% include "workspace/crm/includes/team_tab_members_manage.html" with members_dashboard=members_dashboard available_seats=available_seats crm_team_url=crm_team_url agency_hub_mode=True %}
 {% else %}
-{% include "workspace/crm/agency/includes/empty_state.html" with icon="users" title="اطلاعات مشاوران در دسترس نیست" description="اشتراک آژانس را بررسی کنید یا دوباره تلاش کنید." %}
+{% include "workspace/crm/agency/includes/empty_state.html" with decor="users" title="اطلاعات مشاوران در دسترس نیست" description="اشتراک آژانس را بررسی کنید یا دوباره تلاش کنید." %}
 {% endif %}
 </div>
 
@@ -38,7 +38,7 @@
                 <span class="agency-export-form__dates-label">بازه زمانی (اختیاری)</span>
                 <div class="agency-export-form__date-range">
                     <label class="agency-export-date-field">
-                        <span class="agency-export-date-lbl"><i class="fas fa-calendar-day" aria-hidden="true"></i> از تاریخ</span>
+                        <span class="agency-export-date-lbl"><span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='calendar' size='xs' only %}</span> از تاریخ</span>
                         <input type="text"
                                name="date_from"
                                class="crm-input crm-jalali-date"
@@ -51,7 +51,7 @@
                                aria-label="از تاریخ">
                     </label>
                     <label class="agency-export-date-field">
-                        <span class="agency-export-date-lbl"><i class="fas fa-calendar-check" aria-hidden="true"></i> تا تاریخ</span>
+                        <span class="agency-export-date-lbl"><span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='calendar' size='xs' only %}</span> تا تاریخ</span>
                         <input type="text"
                                name="date_to"
                                class="crm-input crm-jalali-date"
@@ -71,7 +71,7 @@
                 خروجی از همه مشاوران
             </label>
             <button type="submit" class="crm-btn crm-btn-primary">
-                <i class="fas fa-download" aria-hidden="true"></i>
+                <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='download' size='inline' only %}</span>
                 دریافت خروجی
             </button>
         </form>

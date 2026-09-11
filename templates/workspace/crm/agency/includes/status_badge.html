@@ -2,21 +2,21 @@
 Usage: {% include "..." with status=inv.status label=inv.get_status_display %}
 {% endcomment %}
 {% if status == 'pending' %}
-<span class="agency-status agency-status--pending"><i class="fas fa-hourglass-half" aria-hidden="true"></i>{{ label }}</span>
+<span class="agency-status agency-status--pending"><span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='hourglass' size='xs' only %}</span>{{ label }}</span>
 {% elif status == 'accepted' %}
-<span class="agency-status agency-status--ok"><i class="fas fa-circle-check" aria-hidden="true"></i>{{ label }}</span>
+<span class="agency-status agency-status--ok"><span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='circle_check' size='xs' only %}</span>{{ label }}</span>
 {% elif status == 'declined' %}
-<span class="agency-status agency-status--muted"><i class="fas fa-ban" aria-hidden="true"></i>{{ label }}</span>
+<span class="agency-status agency-status--muted"><span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='ban' size='xs' only %}</span>{{ label }}</span>
 {% elif status == 'expired' %}
-<span class="agency-status agency-status--warn"><i class="fas fa-clock" aria-hidden="true"></i>{{ label }}</span>
+<span class="agency-status agency-status--warn"><span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='timer' size='xs' only %}</span>{{ label }}</span>
 {% elif status == 'cancelled' %}
-<span class="agency-status agency-status--muted"><i class="fas fa-xmark" aria-hidden="true"></i>{{ label }}</span>
+<span class="agency-status agency-status--muted"><span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='close' size='xs' only %}</span>{{ label }}</span>
 {% elif status == 'active' or status == 'ok' %}
-<span class="agency-status agency-status--ok"><i class="fas fa-circle-check" aria-hidden="true"></i>{{ label|default:"فعال" }}</span>
+<span class="agency-status agency-status--ok"><span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='circle_check' size='xs' only %}</span>{{ label|default:"فعال" }}</span>
 {% elif status == 'unlicensed' or status == 'warn' %}
-<span class="agency-status agency-status--warn"><i class="fas fa-triangle-exclamation" aria-hidden="true"></i>{{ label }}</span>
+<span class="agency-status agency-status--warn"><span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='warning' size='xs' only %}</span>{{ label }}</span>
 {% elif status == 'locked' %}
-<span class="agency-status agency-status--locked"><i class="fas fa-lock" aria-hidden="true"></i>{{ label }}</span>
+<span class="agency-status agency-status--locked"><span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='lock' size='xs' only %}</span>{{ label }}</span>
 {% elif status == 'muted' %}
 <span class="agency-status agency-status--muted">{{ label }}</span>
 {% else %}

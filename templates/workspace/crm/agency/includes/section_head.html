@@ -1,10 +1,10 @@
 {% comment %}
-Usage: {% include with title="..." icon="chart-bar" link_url="..." link_label="مشاهده همه" %}
+Usage: {% include with title="..." decor="bar_chart" link_url="..." link_label="مشاهده همه" %}
 {% endcomment %}
 <div class="agency-section__head">
     <div class="agency-section__title-wrap">
-        {% if icon %}
-        <span class="agency-section__icon" aria-hidden="true"><i class="fas fa-{{ icon }}"></i></span>
+        {% if decor %}
+        <span class="agency-section__icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor=decor size='sm' only %}</span>
         {% endif %}
         <div>
             <h2 class="agency-section__title">{{ title }}</h2>
@@ -12,6 +12,6 @@ Usage: {% include with title="..." icon="chart-bar" link_url="..." link_label="�
         </div>
     </div>
     {% if link_url %}
-    <a href="{{ link_url }}" class="agency-section__link">{{ link_label|default:"مشاهده همه" }} <i class="fas fa-arrow-left" aria-hidden="true"></i></a>
+    <a href="{{ link_url }}" class="agency-section__link">{{ link_label|default:"مشاهده همه" }} <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='chevron_left' size='xs' only %}</span></a>
     {% endif %}
 </div>

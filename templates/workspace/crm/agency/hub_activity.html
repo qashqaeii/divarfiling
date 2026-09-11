@@ -17,7 +17,7 @@
     </select>
     <input type="text" name="event_type" id="activityEventType" value="{{ event_type_filter }}" placeholder="نوع رویداد..." class="agency-filter-bar__select" aria-label="نوع رویداد" style="flex:1;">
     <button type="submit" class="crm-btn crm-btn-primary crm-btn-sm">
-        <i class="fas fa-filter" aria-hidden="true"></i>
+        <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='filter' size='inline' only %}</span>
         اعمال
     </button>
     {% if request.GET.advisor or event_type_filter %}
@@ -31,7 +31,7 @@
         {% for ev in events %}
         <li class="agency-timeline__item">
             <span class="agency-timeline__rail" aria-hidden="true"></span>
-            <span class="agency-timeline__icon agency-timeline__icon--soft"><i class="fas fa-circle-dot" aria-hidden="true"></i></span>
+            <span class="agency-timeline__icon agency-timeline__icon--soft"><span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='dot' size='xs' only %}</span></span>
             <div class="agency-timeline__body">
                 <div class="agency-timeline__action">{{ agency_event_labels|dict_get:ev.event_type }}</div>
                 <div class="agency-timeline__meta">
@@ -44,7 +44,7 @@
         {% endfor %}
     </ul>
     {% else %}
-    {% include "workspace/crm/agency/includes/empty_state.html" with icon="clock-rotate-left" title="رویدادی یافت نشد" description="فیلترها را تغییر دهید یا بعداً دوباره بررسی کنید." %}
+    {% include "workspace/crm/agency/includes/empty_state.html" with decor="history" title="رویدادی یافت نشد" description="فیلترها را تغییر دهید یا بعداً دوباره بررسی کنید." %}
     {% endif %}
 </div>
 {% endblock %}

@@ -1,5 +1,5 @@
 <section class="amh-panel amh-panel--goals">
-    <h3 class="amh-section-title"><i class="fas fa-bullseye" aria-hidden="true"></i> هدف‌های من</h3>
+    <h3 class="amh-section-title"><span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='target' size='sm' only %}</span> هدف‌های من</h3>
     {% if my_goals %}
     <ul class="amh-goals">
         {% for g in my_goals %}
@@ -17,7 +17,7 @@
     </ul>
     {% else %}
     <div class="amh-inline-empty">
-        <i class="fas fa-bullseye" aria-hidden="true"></i>
+        <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='target' size='sm' only %}</span>
         <p>هنوز هدفی برای شما تعیین نشده.</p>
     </div>
     {% endif %}

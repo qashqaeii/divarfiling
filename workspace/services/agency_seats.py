@@ -23,7 +23,7 @@ def _validate_subscription_seat(license_obj: License, subscription) -> None:
     if not subscription:
         raise ValidationError('اشتراک آژانس فعال نیست.')
     if license_obj.agency_subscription_id != subscription.pk:
-        raise ValidationError('این Seat متعلق به اشتراک آژانس شما نیست.')
+        raise ValidationError('این صندلی متعلق به اشتراک آژانس شما نیست.')
 
 
 def list_available_seats(actor, agency) -> list[License]:
@@ -65,11 +65,11 @@ def assign_seat_to_member(actor, license_id: int, member_user_id: int) -> Licens
             pk=license_id, order__status='paid',
         )
     except License.DoesNotExist as exc:
-        raise ValidationError('Seat یافت نشد.') from exc
+        raise ValidationError('صندلی یافت نشد.') from exc
 
     _validate_subscription_seat(license_obj, sub)
     if license_obj.assigned_user_id:
-        raise ValidationError('این Seat قبلاً تخصیص داده شده است.')
+        raise ValidationError('این صندلی قبلاً تخصیص داده شده است.')
 
     try:
         assignee = User.objects.get(pk=member_user_id)
@@ -78,7 +78,7 @@ def assign_seat_to_member(actor, license_id: int, member_user_id: int) -> Licens
 
     member = agency.members.filter(user=assignee, is_active=True).first()
     if not member or member.role == 'owner':
-        raise ValidationError('فقط اعضای پذیرفته‌شده قابل تخصیص Seat هستند.')
+        raise ValidationError('فقط اعضای پذیرفته‌شده قابل تخصیص صندلی هستند.')
 
     if not member.data_visibility_consent_at:
         raise ValidationError('عضو هنوز دعوت را پذیرش نکرده است.')
@@ -88,7 +88,7 @@ def assign_seat_to_member(actor, license_id: int, member_user_id: int) -> Licens
         agency_subscription=sub,
     ).exclude(status__in=['suspended', 'expired']).exclude(pk=license_obj.pk).exists()
     if existing:
-        raise ValidationError('این عضو از قبل یک Seat فعال دارد.')
+        raise ValidationError('این عضو از قبل یک صندلی فعال دارد.')
 
     license_obj.assigned_user = assignee
     license_obj.assigned_by = actor
@@ -127,7 +127,7 @@ def unassign_seat(actor, license_id: int) -> License:
     try:
         license_obj = License.objects.get(pk=license_id, agency_subscription=sub)
     except License.DoesNotExist as exc:
-        raise ValidationError('Seat یافت نشد.') from exc
+        raise ValidationError('صندلی یافت نشد.') from exc
 
     if not license_obj.assigned_user_id:
         return license_obj

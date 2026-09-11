@@ -2,7 +2,7 @@
     <input type="hidden" name="tab" value="{{ tab }}">
     {% if period %}<input type="hidden" name="period" value="{{ period }}">{% endif %}
     <div class="agency-filter-bar__search">
-        <i class="fas fa-search agency-filter-bar__search-icon" aria-hidden="true"></i>
+        <span class="agency-filter-bar__search-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='search' size='inline' only %}</span>
         <input type="search"
                name="q"
                value="{{ request.GET.q }}"
@@ -41,13 +41,13 @@
     </select>
     {% endif %}
     <button type="submit" class="crm-btn crm-btn-primary crm-btn-sm a360-toolbar__submit">
-        <i class="fas fa-search" aria-hidden="true"></i>
+        <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='search' size='inline' only %}</span>
         جستجو
     </button>
     {% if export_type %}
     <details class="a360-export a360-export--inline">
         <summary class="crm-btn crm-btn-ghost crm-btn-sm">
-            <i class="fas fa-download" aria-hidden="true"></i>
+            <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='download' size='inline' only %}</span>
             دانلود خروجی
         </summary>
         <div class="a360-export__menu" role="menu">

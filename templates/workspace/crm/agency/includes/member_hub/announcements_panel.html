@@ -1,7 +1,7 @@
 {% load workspace_tags %}
 <section class="amh-panel amh-panel--announcements">
     <div class="amh-panel__head">
-        <h3 class="amh-section-title"><i class="fas fa-bullhorn" aria-hidden="true"></i> اطلاعیه‌های آژانس</h3>
+        <h3 class="amh-section-title"><span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='megaphone' size='sm' only %}</span> اطلاعیه‌های آژانس</h3>
         {% if agency_feature_announcements %}
         <a href="?tab=announcements" class="amh-panel__link">مشاهده همه</a>
         {% endif %}
@@ -17,7 +17,7 @@
     </ul>
     {% else %}
     <div class="amh-inline-empty">
-        <i class="fas fa-bullhorn" aria-hidden="true"></i>
+        <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='megaphone' size='sm' only %}</span>
         <p>اطلاعیه جدیدی ندارید.</p>
     </div>
     {% endif %}

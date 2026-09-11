@@ -5,7 +5,7 @@
         <div class="a360-identity">
             <div class="a360-identity__top">
                 <span class="a360-readonly-badge" title="نمای مدیریتی بدون امکان ویرایش">
-                    <i class="fas fa-lock" aria-hidden="true"></i>
+                    <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='lock' size='xs' only %}</span>
                     نمای مدیریتی · فقط مشاهده
                 </span>
             </div>
@@ -31,28 +31,28 @@
                 {% include "workspace/crm/agency/includes/status_badge.html" with status="unlicensed" label="بدون لایسنس" %}
                 {% endif %}
                 {% if seat and seat.expires_at %}
-                <span class="a360-meta-chip"><i class="fas fa-calendar" aria-hidden="true"></i> انقضا {{ seat.expires_at|ws_jalali_date }}</span>
+                <span class="a360-meta-chip"><span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='calendar' size='xs' only %}</span> انقضا {{ seat.expires_at|ws_jalali_date }}</span>
                 {% endif %}
                 {% if last_activity %}
-                <span class="a360-meta-chip"><i class="fas fa-clock" aria-hidden="true"></i> آخرین فعالیت {{ last_activity|ws_jalali_datetime }}</span>
+                <span class="a360-meta-chip"><span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='timer' size='xs' only %}</span> آخرین فعالیت {{ last_activity|ws_jalali_datetime }}</span>
                 {% endif %}
             </div>
         </div>
     </div>
     <div class="a360-header__actions">
         <a href="{{ team_url }}" class="crm-btn crm-btn-ghost crm-btn-sm">
-            <i class="fas fa-arrow-right" aria-hidden="true"></i>
+            <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='chevron_right' size='inline' only %}</span>
             بازگشت به مشاوران
         </a>
         {% if licenses_url %}
         <a href="{{ licenses_url }}" class="crm-btn crm-btn-ghost crm-btn-sm">
-            <i class="fas fa-key" aria-hidden="true"></i>
+            <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='key' size='inline' only %}</span>
             مدیریت لایسنس
         </a>
         {% endif %}
         <details class="a360-export">
             <summary class="crm-btn crm-btn-ghost crm-btn-sm">
-                <i class="fas fa-download" aria-hidden="true"></i>
+                <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='download' size='inline' only %}</span>
                 دانلود خروجی
             </summary>
             <div class="a360-export__menu" role="menu">

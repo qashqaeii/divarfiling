@@ -3,7 +3,8 @@
 {% block title %}راه‌اندازی آژانس{% endblock %}
 {% block crm_extra_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/agency-phase2.css' %}?v=7">
-<link rel="stylesheet" href="{% static 'workspace/css/agency-hub.css' %}?v=8">
+<link rel="stylesheet" href="{% static 'workspace/css/agency-hub.css' %}?v=9">
+<link rel="stylesheet" href="{% static 'workspace/css/agency-decor-icons.css' %}?v=1">
 {% endblock %}
 {% block crm_content %}
 <div class="agency-hub crm-page-chrome agency-onboarding-page" dir="rtl">
@@ -17,18 +18,18 @@
                     <p class="agency-page-head__sub">در چند قدم ساده، تیم مشاوران خود را آماده کار کنید.</p>
                     {% if hub_subscription %}
                     <div class="agency-onboarding__meta">
-                        <span class="agency-hub-chip agency-hub-chip--plan"><i class="fas fa-crown" aria-hidden="true"></i> پلن آژانس</span>
-                        <span class="agency-hub-chip"><i class="fas fa-circle-check" aria-hidden="true"></i> اشتراک فعال</span>
+                        <span class="agency-hub-chip agency-hub-chip--plan"><span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='crown' size='xs' only %}</span> پلن آژانس</span>
+                        <span class="agency-hub-chip"><span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='circle_check' size='xs' only %}</span> اشتراک فعال</span>
                     </div>
                     {% endif %}
                 </div>
             </div>
 
             {% if seats %}
-            <div class="agency-kpi-strip agency-kpi-strip--ref" aria-label="ظرفیت Seat">
-                {% include "workspace/crm/agency/includes/kpi_card.html" with label="کل صندلی" value=seats.total icon="chair" tone="purple" %}
-                {% include "workspace/crm/agency/includes/kpi_card.html" with label="تخصیص" value=seats.assigned icon="id-card" tone="blue" %}
-                {% include "workspace/crm/agency/includes/kpi_card.html" with label="آزاد" value=seats.available icon="user-plus" tone="green" %}
+            <div class="agency-kpi-strip agency-kpi-strip--ref" aria-label="ظرفیت صندلی">
+                {% include "workspace/crm/agency/includes/kpi_card.html" with label="کل صندلی" value=seats.total decor="seat" tone="purple" %}
+                {% include "workspace/crm/agency/includes/kpi_card.html" with label="تخصیص" value=seats.assigned decor="team" tone="blue" %}
+                {% include "workspace/crm/agency/includes/kpi_card.html" with label="آزاد" value=seats.available decor="user_plus" tone="green" %}
             </div>
             {% endif %}
 
@@ -38,11 +39,11 @@
             {% include "workspace/crm/agency/includes/invite_form.html" with show_skip=True %}
             {% elif step == '1' %}
             <section class="agency-section">
-                {% include "workspace/crm/agency/includes/section_head.html" with title="مشخصات آژانس" subtitle="نام رسمی آژانس در پنل و دعوت‌ها" icon="building" %}
+                {% include "workspace/crm/agency/includes/section_head.html" with title="مشخصات آژانس" subtitle="نام رسمی آژانس در پنل و دعوت‌ها" decor="building" %}
                 <div class="agency-panel">
                     {% if agency %}
                     <div class="agency-alert agency-alert--success">
-                        <i class="fas fa-circle-check" aria-hidden="true"></i>
+                        <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='circle_check' size='inline' only %}</span>
                         <div>
                             <strong>آژانس «{{ agency.name }}» متصل است</strong>
                             <span>می‌توانید به دعوت مشاوران بروید.</span>
@@ -67,13 +68,13 @@
             </section>
             {% if agency %}
             <div class="agency-onboard-footer agency-onboard-footer--sticky">
-                <a href="?step=2" class="crm-btn crm-btn-primary">ادامه به دعوت مشاوران <i class="fas fa-chevron-left" aria-hidden="true"></i></a>
+                <a href="?step=2" class="crm-btn crm-btn-primary">ادامه به دعوت مشاوران <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='chevron_left' size='inline' only %}</span></a>
             </div>
             {% endif %}
 
             {% elif step == '3' %}
             <section class="agency-section">
-                {% include "workspace/crm/agency/includes/section_head.html" with title="تخصیص لایسنس" subtitle="Seat را به مشاوران پذیرفته‌شده اختصاص دهید" icon="id-card" %}
+                {% include "workspace/crm/agency/includes/section_head.html" with title="تخصیص لایسنس" subtitle="صندلی را به مشاوران پذیرفته‌شده اختصاص دهید" decor="team" %}
                 <div class="agency-panel agency-panel--flush agency-panel--table">
                     {% if members %}
                     <div class="agency-table-wrap agency-table-wrap--fit">
@@ -106,7 +107,7 @@
                                     </td>
                                     <td>
                                         {% if m.data_visibility_consent_at and available_seats %}
-                                        <span class="agency-status agency-status--ok"><i class="fas fa-chair" aria-hidden="true"></i>آماده تخصیص</span>
+                                        <span class="agency-status agency-status--ok"><span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='seat' size='xs' only %}</span>آماده تخصیص</span>
                                         {% elif m.data_visibility_consent_at %}
                                         <span class="agency-status agency-status--muted">صندلی آزاد نیست</span>
                                         {% else %}
@@ -177,7 +178,7 @@
                         {% endfor %}
                     </ul>
                     {% else %}
-                    {% include "workspace/crm/agency/includes/empty_state.html" with icon="users" title="هنوز مشاوری پذیرش نکرده" description="پس از پذیرش دعوت، اینجا برای تخصیص Seat ظاهر می‌شوند." compact=True variant="inline" %}
+                    {% include "workspace/crm/agency/includes/empty_state.html" with decor="users" title="هنوز مشاوری پذیرش نکرده" description="پس از پذیرش دعوت، اینجا برای تخصیص صندلی ظاهر می‌شوند." compact=True variant="inline" %}
                     {% endif %}
                 </div>
             </section>
@@ -185,7 +186,7 @@
                 <form method="post" class="agency-onboard-footer__primary">
                     {% csrf_token %}
                     <input type="hidden" name="action" value="finish">
-                    <button type="submit" class="crm-btn crm-btn-primary">پایان راه‌اندازی <i class="fas fa-chevron-left" aria-hidden="true"></i></button>
+                    <button type="submit" class="crm-btn crm-btn-primary">پایان راه‌اندازی <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='chevron_left' size='inline' only %}</span></button>
                 </form>
                 <div class="agency-onboard-footer__secondary">
                     <a href="?step=2" class="crm-btn crm-btn-ghost">مرحله قبل</a>
@@ -195,7 +196,7 @@
             {% else %}
             <section class="agency-section">
                 <div class="agency-panel agency-onboarding__complete">
-                    <span class="agency-empty__icon agency-empty__icon--success" aria-hidden="true"><i class="fas fa-circle-check"></i></span>
+                    <span class="agency-empty__icon agency-empty__icon--success" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='circle_check' size='lg' only %}</span>
                     <h2 class="agency-page-head__title">آژانس آماده است</h2>
                     <p class="agency-page-head__sub">تیم شما آماده شروع کار در CRM است.</p>
                     <div class="agency-onboard-footer agency-onboard-footer--inline">

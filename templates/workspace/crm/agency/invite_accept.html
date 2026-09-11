@@ -4,6 +4,7 @@
 {% block body_class %}mk-page-agency-invite{% endblock %}
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/agency-invite-public.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'workspace/css/agency-decor-icons.css' %}?v=1">
 {% endblock %}
 {% block content %}
 <section class="agency-invite" dir="rtl" aria-labelledby="agency-invite-title">
@@ -13,7 +14,7 @@
         {% if error %}
         <div class="agency-invite__card agency-invite__card--state">
             <span class="agency-invite__state-icon agency-invite__state-icon--error" aria-hidden="true">
-                <i class="fas fa-triangle-exclamation"></i>
+                {% include 'includes/icon_slot.html' with decor='warning' size='lg' only %}
             </span>
             <h1 id="agency-invite-title" class="agency-invite__state-title">دعوت نامعتبر</h1>
             <p class="agency-invite__state-desc">{{ error }}</p>
@@ -23,7 +24,7 @@
         {% elif declined %}
         <div class="agency-invite__card agency-invite__card--state">
             <span class="agency-invite__state-icon agency-invite__state-icon--muted" aria-hidden="true">
-                <i class="fas fa-ban"></i>
+                {% include 'includes/icon_slot.html' with decor='ban' size='lg' only %}
             </span>
             <h1 id="agency-invite-title" class="agency-invite__state-title">دعوت رد شد</h1>
             <p class="agency-invite__state-desc">پاسخ شما ثبت شد. می‌توانید این صفحه را ببندید.</p>
@@ -34,11 +35,11 @@
         <div class="agency-invite__card">
             <header class="agency-invite__head">
                 <span class="agency-invite__badge">
-                    <i class="fas fa-building" aria-hidden="true"></i>
+                    <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='building' size='xs' only %}</span>
                     دعوت همکاری آژانس
                 </span>
                 <div class="agency-invite__icon-wrap" aria-hidden="true">
-                    <i class="fas fa-envelope-open-text"></i>
+                    {% include 'includes/icon_slot.html' with decor='mail_open' size='lg' only %}
                 </div>
                 <h1 id="agency-invite-title" class="agency-invite__title">دعوت به آژانس</h1>
                 <p class="agency-invite__lead">
@@ -51,7 +52,7 @@
                 <div class="agency-invite__meta-item">
                     <span class="agency-invite__meta-label">دعوت‌کننده</span>
                     <span class="agency-invite__meta-value">
-                        <i class="fas fa-user-tie" aria-hidden="true"></i>
+                        <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='user' size='xs' only %}</span>
                         {{ inviter_name }}
                     </span>
                 </div>
@@ -60,7 +61,7 @@
                 <div class="agency-invite__meta-item">
                     <span class="agency-invite__meta-label">شماره دعوت</span>
                     <span class="agency-invite__meta-value agency-invite__meta-value--ltr">
-                        <i class="fas fa-mobile-screen" aria-hidden="true"></i>
+                        <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='phone' size='xs' only %}</span>
                         {{ masked_phone }}
                     </span>
                 </div>
@@ -69,7 +70,7 @@
 
             <div class="agency-invite__consent" role="note">
                 <span class="agency-invite__consent-icon" aria-hidden="true">
-                    <i class="fas fa-shield-halved"></i>
+                    {% include 'includes/icon_slot.html' with decor='shield' size='sm' only %}
                 </span>
                 <div>
                     <strong>رضایت‌نامه دسترسی داده</strong>
@@ -79,7 +80,7 @@
 
             {% if user_authenticated and not user_phone_matches %}
             <div class="agency-invite__mismatch" role="alert">
-                <i class="fas fa-circle-exclamation" aria-hidden="true"></i>
+                <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='warning' size='inline' only %}</span>
                 <div>
                     <strong>حساب فعلی با این دعوت مطابقت ندارد</strong>
                     <span>این دعوت برای شماره {{ masked_phone }} است. برای پذیرش، با همان شماره وارد شوید.</span>
@@ -93,7 +94,7 @@
                     {% csrf_token %}
                     <input type="hidden" name="data_consent" value="1">
                     <button type="submit" name="action" value="accept" class="agency-invite__btn agency-invite__btn--primary">
-                        <i class="fas fa-circle-check" aria-hidden="true"></i>
+                        <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='circle_check' size='inline' only %}</span>
                         پذیرش دعوت
                     </button>
                 </form>
@@ -108,11 +109,11 @@
             {% elif user_authenticated and not user_phone_matches %}
             <div class="agency-invite__actions">
                 <a href="{% url 'logout' %}" class="agency-invite__btn agency-invite__btn--primary">
-                    <i class="fas fa-right-from-bracket" aria-hidden="true"></i>
+                    <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='exit' size='inline' only %}</span>
                     خروج و ورود با شماره صحیح
                 </a>
                 <p class="agency-invite__footnote">
-                    <i class="fas fa-info-circle" aria-hidden="true"></i>
+                    <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='info' size='xs' only %}</span>
                     پس از خروج، همین لینک دعوت را دوباره باز کنید.
                 </p>
             </div>
@@ -120,24 +121,24 @@
             {% else %}
             <div class="agency-invite__actions">
                 <a href="{% url 'login' %}?next={{ request.path|urlencode }}" class="agency-invite__btn agency-invite__btn--primary">
-                    <i class="fas fa-arrow-left" aria-hidden="true"></i>
+                    <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='chevron_left' size='inline' only %}</span>
                     ورود برای پاسخ به دعوت
                 </a>
                 <a href="{% url 'register' %}?next={{ request.path|urlencode }}" class="agency-invite__btn agency-invite__btn--ghost">
-                    <i class="fas fa-user-plus" aria-hidden="true"></i>
+                    <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='user_plus' size='inline' only %}</span>
                     ثبت‌نام با شماره {{ masked_phone }}
                 </a>
             </div>
             <div class="agency-invite__steps" aria-label="مراحل پذیرش دعوت">
-                <span><i class="fas fa-1" aria-hidden="true"></i> ورود با شماره دعوت‌شده</span>
-                <span><i class="fas fa-2" aria-hidden="true"></i> تأیید رضایت‌نامه</span>
-                <span><i class="fas fa-3" aria-hidden="true"></i> پیوستن به تیم آژانس</span>
+                <span><strong aria-hidden="true">۱</strong> ورود با شماره دعوت‌شده</span>
+                <span><strong aria-hidden="true">۲</strong> تأیید رضایت‌نامه</span>
+                <span><strong aria-hidden="true">۳</strong> پیوستن به تیم آژانس</span>
             </div>
             {% endif %}
         </div>
 
         <p class="agency-invite__footnote">
-            <i class="fas fa-lock" aria-hidden="true"></i>
+            <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='lock' size='xs' only %}</span>
             لینک دعوت شخصی است — آن را با دیگران به اشتراک نگذارید.
         </p>
         {% endif %}

@@ -10,7 +10,7 @@
                 {% if agency_logo_url %}
                 <img src="{{ agency_logo_url }}" alt="" width="56" height="56" loading="eager" decoding="async">
                 {% else %}
-                <i class="fas fa-building"></i>
+                {% include 'includes/icon_slot.html' with decor='building' size='md' only %}
                 {% endif %}
             </div>
             <div class="amh-hero__copy">
@@ -40,7 +40,7 @@
             </div>
             {% endif %}
             <div class="amh-hero__seat">
-                <span class="amh-hero__manager-label">Seat</span>
+                <span class="amh-hero__manager-label">صندلی</span>
                 <strong>{% if license %}فعال{% else %}غیرفعال{% endif %}</strong>
             </div>
         </div>

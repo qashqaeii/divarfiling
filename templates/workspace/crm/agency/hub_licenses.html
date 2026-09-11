@@ -3,34 +3,34 @@
 {% block agency_hub_content %}
 <div class="agency-page-head">
     <div>
-        <h2 class="agency-page-head__title">مدیریت Seat و لایسنس</h2>
+        <h2 class="agency-page-head__title">مدیریت صندلی و لایسنس</h2>
         <p class="agency-page-head__sub">تخصیص، پیگیری وضعیت و انقضای صندلی‌های آژانس</p>
     </div>
     <a href="{% url 'workspace:agency_hub_advisors' %}#invite" class="crm-btn crm-btn-primary crm-btn-sm">
-        <i class="fas fa-chair" aria-hidden="true"></i>
+        <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='seat' size='inline' only %}</span>
         تخصیص لایسنس
     </a>
 </div>
 
 {% if hub_seats %}
 <div class="agency-kpi-strip agency-kpi-strip--ref agency-kpi-strip--4">
-    {% include "workspace/crm/agency/includes/kpi_card.html" with label="کل Seat" value=hub_seats.total icon="layer-group" tone="purple" %}
-    {% include "workspace/crm/agency/includes/kpi_card.html" with label="تخصیص‌شده" value=hub_seats.assigned icon="user-check" tone="green" %}
-    {% include "workspace/crm/agency/includes/kpi_card.html" with label="آزاد" value=hub_seats.available icon="chair" tone="blue" %}
-    {% include "workspace/crm/agency/includes/kpi_card.html" with label="انقضای اشتراک" value=hub_seats.expires_at|ws_jalali_date icon="calendar" tone="teal" %}
+    {% include "workspace/crm/agency/includes/kpi_card.html" with label="کل صندلی" value=hub_seats.total decor="layers" tone="purple" %}
+    {% include "workspace/crm/agency/includes/kpi_card.html" with label="تخصیص‌شده" value=hub_seats.assigned decor="user" tone="green" %}
+    {% include "workspace/crm/agency/includes/kpi_card.html" with label="آزاد" value=hub_seats.available decor="seat" tone="blue" %}
+    {% include "workspace/crm/agency/includes/kpi_card.html" with label="انقضای اشتراک" value=hub_seats.expires_at|ws_jalali_date decor="calendar" tone="teal" %}
 </div>
 {% include "workspace/crm/agency/includes/seat_summary.html" with seats=hub_seats %}
 {% endif %}
 
 <section class="agency-section">
-    {% include "workspace/crm/agency/includes/section_head.html" with title="لیست Seatها" icon="id-card" %}
+    {% include "workspace/crm/agency/includes/section_head.html" with title="لیست صندلی‌ها" decor="team" %}
     <div class="agency-panel agency-panel--flush">
         {% if license_pool %}
         <div class="agency-table-wrap">
             <table class="agency-table">
                 <thead>
                     <tr>
-                        <th>Seat</th>
+                        <th>صندلی</th>
                         <th>وضعیت</th>
                         <th>مشاور</th>
                         <th>عملیات</th>
@@ -61,7 +61,7 @@
                     {% if not license_pool.available_licenses and not license_pool.assigned_by_user %}
                     <tr>
                         <td colspan="4">
-                            {% include "workspace/crm/agency/includes/empty_state.html" with icon="id-card" title="Seatی یافت نشد" description="Seat جدید با تمدید یا ارتقای پلن آژانس اضافه می‌شود." compact=True variant="inline" %}
+                            {% include "workspace/crm/agency/includes/empty_state.html" with decor="team" title="صندلی‌ای یافت نشد" description="صندلی جدید با تمدید یا ارتقای پلن آژانس اضافه می‌شود." compact=True variant="inline" %}
                         </td>
                     </tr>
                     {% endif %}
@@ -70,12 +70,12 @@
         </div>
         {% if hub_seats and hub_seats.available == 0 and hub_seats.total > 0 %}
         <div class="agency-alert agency-alert--warn" style="margin:1rem;">
-            <i class="fas fa-triangle-exclamation" aria-hidden="true"></i>
-            <span>همه Seatها تخصیص شده‌اند. برای افزودن مشاور جدید، پلن را ارتقا دهید یا لایسنس یک عضو را آزاد کنید.</span>
+            <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='warning' size='inline' only %}</span>
+            <span>همه صندلی‌ها تخصیص شده‌اند. برای افزودن مشاور جدید، پلن را ارتقا دهید یا لایسنس یک عضو را آزاد کنید.</span>
         </div>
         {% endif %}
         {% else %}
-        {% include "workspace/crm/agency/includes/empty_state.html" with icon="id-card" title="اطلاعات لایسنس در دسترس نیست" description="اشتراک آژانس را بررسی کنید." variant="locked" %}
+        {% include "workspace/crm/agency/includes/empty_state.html" with decor="team" title="اطلاعات لایسنس در دسترس نیست" description="اشتراک آژانس را بررسی کنید." variant="locked" %}
         {% endif %}
     </div>
 </section>

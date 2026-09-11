@@ -247,18 +247,42 @@
     });
   }
 
-  function guardMemberSearchInput(input) {
+  var SEARCH_GUARD_SELECTOR = [
+    '#agencyMemberSearch',
+    '.a360-search-input',
+    '[data-msg-search]',
+    '[data-ann-search]',
+    '[data-audit-search]',
+    '.crm-msg-search input',
+    '.crm-ann-search input',
+    '.crm-audit-search input',
+  ].join(',');
+
+  function guardSearchInput(input) {
+    if (!input || input.dataset.searchAutofillGuard === '1') return;
+    input.dataset.searchAutofillGuard = '1';
     input.setAttribute('autocomplete', 'off');
     input.setAttribute('autocorrect', 'off');
+    input.setAttribute('autocapitalize', 'off');
     input.setAttribute('spellcheck', 'false');
     input.setAttribute('data-lpignore', 'true');
     input.setAttribute('data-1p-ignore', 'true');
     input.setAttribute('data-form-type', 'other');
     if (!input.getAttribute('role')) input.setAttribute('role', 'searchbox');
+    if (!input.name || input.name === 'phone' || input.name === 'tel' || input.name === 'mobile') {
+      if (input.hasAttribute('data-msg-search')) input.name = 'mk_team_msg_filter_q';
+      else if (input.hasAttribute('data-ann-search')) input.name = 'mk_team_ann_filter_q';
+      else if (input.hasAttribute('data-audit-search')) input.name = 'mk_team_audit_filter_q';
+      else input.name = 'mk_filter_q';
+    }
     input.setAttribute('readonly', 'readonly');
     input.addEventListener('focus', function () {
       input.removeAttribute('readonly');
     }, { once: true });
+  }
+
+  function guardMemberSearchInput(input) {
+    guardSearchInput(input);
   }
 
   function clearPhoneAutofill(input) {
@@ -266,6 +290,33 @@
     if (!value || !IR_MOBILE.test(normalizePhone(value))) return false;
     input.value = '';
     return true;
+  }
+
+  function sweepSearchAutofill(input, userEdited) {
+    if (!input || (userEdited && userEdited.current)) return false;
+    if (!clearPhoneAutofill(input)) return false;
+    try {
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+    } catch (e) { /* ignore */ }
+    return true;
+  }
+
+  function bindSearchAutofillGuard(input) {
+    if (!input) return;
+    guardSearchInput(input);
+    var userEdited = { current: !!input.value.trim() };
+    input.addEventListener('input', function () { userEdited.current = true; });
+    function sweep() { sweepSearchAutofill(input, userEdited); }
+    sweep();
+    requestAnimationFrame(function () { requestAnimationFrame(sweep); });
+    window.setTimeout(sweep, 120);
+    window.setTimeout(sweep, 500);
+    window.setTimeout(sweep, 1000);
+    window.setTimeout(sweep, 2000);
+  }
+
+  function initSearchAutofillGuards() {
+    document.querySelectorAll(SEARCH_GUARD_SELECTOR).forEach(bindSearchAutofillGuard);
   }
 
   function initMemberFilters() {
@@ -349,18 +400,7 @@
   }
 
   function initAdvisor360Search() {
-    document.querySelectorAll('.a360-search-input').forEach(function (input) {
-      guardMemberSearchInput(input);
-      var userEdited = !!input.value.trim();
-      input.addEventListener('input', function () { userEdited = true; });
-      function sweep() {
-        if (userEdited) return;
-        if (clearPhoneAutofill(input)) input.value = '';
-      }
-      requestAnimationFrame(function () { requestAnimationFrame(sweep); });
-      window.setTimeout(sweep, 200);
-      window.setTimeout(sweep, 800);
-    });
+    initSearchAutofillGuards();
   }
 
   function initAdvisor360ActivityFilters() {
@@ -425,7 +465,7 @@
     initStickyStepFooter();
     initNavScrollHint();
     initMemberFilters();
-    initAdvisor360Search();
+    initSearchAutofillGuards();
     initAdvisor360ActivityFilters();
     initAdvisor360ExportMenus();
   });

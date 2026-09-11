@@ -6,11 +6,11 @@
        class="amh-tab{% if tab == key %} is-active{% endif %}"
        {% if tab == key %}aria-current="page"{% endif %}>
         <span class="amh-tab__icon" aria-hidden="true">
-            {% if key == 'overview' %}<i class="fas fa-gauge-high"></i>
-            {% elif key == 'performance' %}<i class="fas fa-chart-line"></i>
-            {% elif key == 'messages' %}<i class="fas fa-message"></i>
-            {% elif key == 'announcements' %}<i class="fas fa-bullhorn"></i>
-            {% elif key == 'membership' %}<i class="fas fa-id-card"></i>
+            {% if key == 'overview' %}{% include 'includes/icon_slot.html' with decor='house' size='nav' only %}
+            {% elif key == 'performance' %}{% include 'includes/icon_slot.html' with decor='trending_up' size='nav' only %}
+            {% elif key == 'messages' %}{% include 'includes/icon_slot.html' with decor='messages' size='nav' only %}
+            {% elif key == 'announcements' %}{% include 'includes/icon_slot.html' with decor='megaphone' size='nav' only %}
+            {% elif key == 'membership' %}{% include 'includes/icon_slot.html' with decor='team' size='nav' only %}
             {% endif %}
         </span>
         <span>{{ label }}</span>

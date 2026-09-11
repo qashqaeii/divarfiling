@@ -1,6 +1,6 @@
 <section class="amh-panel amh-panel--performance">
     <div class="amh-panel__head">
-        <h3 class="amh-section-title"><i class="fas fa-chart-column" aria-hidden="true"></i> عملکرد من در {{ period }} روز اخیر</h3>
+        <h3 class="amh-section-title"><span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='bar_chart' size='sm' only %}</span> عملکرد من در {{ period }} روز اخیر</h3>
         <div class="agency-period amh-period" role="group" aria-label="بازه زمانی">
             {% for d in periods %}
             <a href="?tab={{ tab }}&period={{ d }}" class="agency-period__btn{% if period == d %} is-active{% endif %}">{{ d }} روز</a>

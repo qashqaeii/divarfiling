@@ -38,41 +38,41 @@ _EVENT_KEY_LABELS = {
 }
 
 _ACTIVITY_ICONS = {
-    'تماس': 'fa-phone',
-    'پیامک': 'fa-sms',
-    'واتساپ': 'fab fa-whatsapp',
-    'پیام': 'fa-comment',
-    'بازدید': 'fa-door-open',
-    'پیگیری': 'fa-calendar-check',
-    'جلسه': 'fa-handshake',
-    'یادداشت': 'fa-sticky-note',
-    'وظیفه': 'fa-list-check',
-    'یادآور': 'fa-bell',
-    'تغییر وضعیت': 'fa-arrows-rotate',
-    'املاک': 'fa-house',
-    'ایمیل': 'fa-envelope',
+    'تماس': 'phone',
+    'پیامک': 'sms',
+    'واتساپ': 'whatsapp',
+    'پیام': 'messages',
+    'بازدید': 'building',
+    'پیگیری': 'calendar',
+    'جلسه': 'handshake',
+    'یادداشت': 'sticky_note',
+    'وظیفه': 'list_todo',
+    'یادآور': 'bell',
+    'تغییر وضعیت': 'rotate_ccw',
+    'املاک': 'house',
+    'ایمیل': 'email',
 }
 
 _EVENT_ICONS = {
-    'contact_created': 'fa-user-plus',
-    'personal_property_created': 'fa-building',
-    'property_created': 'fa-building',
-    'dataset_created': 'fa-database',
-    'extraction_completed': 'fa-check-circle',
-    'deal_created': 'fa-handshake',
-    'deal_stage_changed': 'fa-route',
-    'contract_created': 'fa-file-signature',
-    'follow_up': 'fa-calendar-check',
-    'call': 'fa-phone',
-    'call_created': 'fa-phone',
-    'visit': 'fa-door-open',
-    'visit_created': 'fa-door-open',
-    'license_assigned': 'fa-key',
-    'license_unassigned': 'fa-key',
-    'advisor_data_export': 'fa-download',
-    'deal_followup': 'fa-clipboard-list',
-    'property_visit': 'fa-door-open',
-    'customer_activity': 'fa-user-clock',
+    'contact_created': 'user_plus',
+    'personal_property_created': 'building',
+    'property_created': 'building',
+    'dataset_created': 'database',
+    'extraction_completed': 'circle_check',
+    'deal_created': 'handshake',
+    'deal_stage_changed': 'trending_up',
+    'contract_created': 'file_edit',
+    'follow_up': 'calendar',
+    'call': 'phone',
+    'call_created': 'phone',
+    'visit': 'building',
+    'visit_created': 'building',
+    'license_assigned': 'key',
+    'license_unassigned': 'key',
+    'advisor_data_export': 'download',
+    'deal_followup': 'clipboard_list',
+    'property_visit': 'building',
+    'customer_activity': 'history',
 }
 
 
@@ -112,20 +112,21 @@ def a360_activity_label(event):
 
 @register.filter
 def a360_activity_icon(event):
+    """Decor icon key for activity timeline (Lucide via icon_slot)."""
     if not event:
-        return 'fa-circle'
+        return 'dot'
     ev_type = event.get('type', '')
     label = (event.get('label') or '').strip()
 
     if ev_type == 'agency_event':
-        return _EVENT_ICONS.get(label, 'fa-bolt')
+        return _EVENT_ICONS.get(label, 'zap')
     if ev_type == 'deal_followup':
         return _EVENT_ICONS.get(label, _EVENT_ICONS['deal_followup'])
     if ev_type == 'property_visit':
         return _EVENT_ICONS['property_visit']
     if ev_type == 'customer_activity':
-        return _ACTIVITY_ICONS.get(label, 'fa-user-clock').replace('fas ', '').replace('fab ', '')
-    return 'fa-circle'
+        return _ACTIVITY_ICONS.get(label, 'history')
+    return 'dot'
 
 
 @register.filter

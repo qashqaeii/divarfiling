@@ -1,10 +1,12 @@
 {% comment %}
-Usage: {% include with label="..." value="..." icon="users" tone="purple" seat_total=3 %}
+Usage: {% include with label="..." value="..." decor="users" tone="purple" seat_total=3 %}
 {% endcomment %}
 <article class="agency-kpi-v2 agency-kpi-v2--{{ tone|default:'purple' }}">
     <div class="agency-kpi-v2__top">
         <span class="agency-kpi-v2__label">{{ label }}</span>
-        <span class="agency-kpi-v2__icon" aria-hidden="true"><i class="fas fa-{{ icon }}"></i></span>
+        {% if decor %}
+        <span class="agency-kpi-v2__icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor=decor size='metric' only %}</span>
+        {% endif %}
     </div>
     <strong class="agency-kpi-v2__value">{{ value }}</strong>
     {% if seat_total %}

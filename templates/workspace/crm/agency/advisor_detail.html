@@ -4,7 +4,8 @@
 {% block crm_extra_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/agency-phase2.css' %}?v=8">
 <link rel="stylesheet" href="{% static 'workspace/css/agency-phase3.css' %}?v=9">
-<link rel="stylesheet" href="{% static 'workspace/css/agency-hub.css' %}?v=8">
+<link rel="stylesheet" href="{% static 'workspace/css/agency-hub.css' %}?v=9">
+<link rel="stylesheet" href="{% static 'workspace/css/agency-decor-icons.css' %}?v=1">
 {% endblock %}
 
 {% block crm_content %}
@@ -63,7 +64,7 @@
         </div>
         {% include "workspace/crm/agency/includes/advisor360/pagination.html" %}
         {% else %}
-        {% include "workspace/crm/agency/includes/empty_state.html" with icon="address-book" title="مخاطبی ثبت نشده" description="مخاطبین این مشاور پس از ثبت در این بخش نمایش داده می‌شوند." compact=True %}
+        {% include "workspace/crm/agency/includes/empty_state.html" with decor="users" title="مخاطبی ثبت نشده" description="مخاطبین این مشاور پس از ثبت در این بخش نمایش داده می‌شوند." compact=True %}
         {% endif %}
 
         {% elif tab == 'properties' %}
@@ -112,14 +113,14 @@
         </div>
         {% include "workspace/crm/agency/includes/advisor360/pagination.html" %}
         {% else %}
-        {% include "workspace/crm/agency/includes/empty_state.html" with icon="building" title="فایل شخصی وجود ندارد" description="فایل‌های شخصی این مشاور پس از ثبت در این بخش نمایش داده می‌شوند." compact=True %}
+        {% include "workspace/crm/agency/includes/empty_state.html" with decor="building" title="فایل شخصی وجود ندارد" description="فایل‌های شخصی این مشاور پس از ثبت در این بخش نمایش داده می‌شوند." compact=True %}
         {% endif %}
 
         {% elif tab == 'filing' %}
         {% if dataset_id %}
         <div class="a360-filing-back">
             <a href="?tab=filing" class="crm-btn crm-btn-ghost crm-btn-sm">
-                <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='chevron_right' size='inline' only %}</span>
                 بازگشت به استخراج‌ها
             </a>
         </div>
@@ -169,7 +170,7 @@
         {% include "workspace/crm/agency/includes/advisor360/pagination.html" %}
         {% endwith %}
         {% else %}
-        {% include "workspace/crm/agency/includes/empty_state.html" with icon="list" title="آگهی‌ای یافت نشد" description="در این استخراج هنوز آگهی ثبت نشده است." compact=True %}
+        {% include "workspace/crm/agency/includes/empty_state.html" with decor="clipboard_list" title="آگهی‌ای یافت نشد" description="در این استخراج هنوز آگهی ثبت نشده است." compact=True %}
         {% endif %}
         {% else %}
         {% if datasets_page.paginator.count %}
@@ -190,7 +191,7 @@
                         <tr>
                             <td><span class="a360-table__primary">{{ ds.name|default:"—" }}</span></td>
                             <td>{{ ds.city|default:"—" }}</td>
-                            <td><span class="agency-stat-pill"><i class="fas fa-list" aria-hidden="true"></i> {{ ds.listing_count|default:ds.row_count|default:0 }} آگهی</span></td>
+                            <td><span class="agency-stat-pill"><span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='clipboard_list' size='xs' only %}</span> {{ ds.listing_count|default:ds.row_count|default:0 }} آگهی</span></td>
                             <td class="a360-table__mono">{{ ds.updated_at|ws_jalali_date }}</td>
                             <td class="a360-table__actions-col">
                                 <a href="?tab=filing&dataset={{ ds.pk }}" class="crm-btn crm-btn-ghost crm-btn-sm">مشاهده آگهی‌ها</a>
@@ -222,7 +223,7 @@
         {% include "workspace/crm/agency/includes/advisor360/pagination.html" %}
         {% endwith %}
         {% else %}
-        {% include "workspace/crm/agency/includes/empty_state.html" with icon="database" title="استخراجی انجام نشده" description="استخراج‌های فایلینگ این مشاور پس از انجام در این بخش نمایش داده می‌شوند." compact=True %}
+        {% include "workspace/crm/agency/includes/empty_state.html" with decor="database" title="استخراجی انجام نشده" description="استخراج‌های فایلینگ این مشاور پس از انجام در این بخش نمایش داده می‌شوند." compact=True %}
         {% endif %}
         {% endif %}
 
@@ -279,7 +280,7 @@
         </div>
         {% include "workspace/crm/agency/includes/advisor360/pagination.html" %}
         {% else %}
-        {% include "workspace/crm/agency/includes/empty_state.html" with icon="handshake" title="معامله‌ای ثبت نشده" description="این مشاور هنوز معامله‌ای ثبت نکرده است." compact=True %}
+        {% include "workspace/crm/agency/includes/empty_state.html" with decor="handshake" title="معامله‌ای ثبت نشده" description="این مشاور هنوز معامله‌ای ثبت نکرده است." compact=True %}
         {% endif %}
 
         {% elif tab == 'contracts' %}
@@ -305,7 +306,7 @@
                             <td class="a360-table__mono">{{ c.updated_at|ws_jalali_date }}</td>
                             <td class="a360-table__actions-col">
                                 <a href="{% url 'workspace:agency_advisor_contract_pdf' member.pk c.pk %}?inline=1" target="_blank" rel="noopener" class="crm-btn crm-btn-ghost crm-btn-sm">
-                                    <i class="fas fa-file-pdf" aria-hidden="true"></i>
+                                    <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='file_text' size='inline' only %}</span>
                                     مشاهده PDF
                                 </a>
                             </td>
@@ -327,7 +328,7 @@
                     </dl>
                     <div class="a360-data-card__actions">
                         <a href="{% url 'workspace:agency_advisor_contract_pdf' member.pk c.pk %}?inline=1" target="_blank" rel="noopener" class="crm-btn crm-btn-ghost crm-btn-sm">
-                            <i class="fas fa-file-pdf" aria-hidden="true"></i>
+                            <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='file_text' size='inline' only %}</span>
                             مشاهده PDF
                         </a>
                     </div>
@@ -337,7 +338,7 @@
         </div>
         {% include "workspace/crm/agency/includes/advisor360/pagination.html" %}
         {% else %}
-        {% include "workspace/crm/agency/includes/empty_state.html" with icon="file-signature" title="هنوز قراردادی ثبت نشده" description="قراردادهای این مشاور پس از ایجاد در این بخش نمایش داده می‌شوند." compact=True %}
+        {% include "workspace/crm/agency/includes/empty_state.html" with decor="file_edit" title="هنوز قراردادی ثبت نشده" description="قراردادهای این مشاور پس از ایجاد در این بخش نمایش داده می‌شوند." compact=True %}
         {% endif %}
 
         {% elif tab == 'activities' %}
@@ -348,5 +349,5 @@
 {% endblock %}
 
 {% block crm_js %}
-<script src="{% static 'workspace/js/agency-ui.js' %}?v=2" defer></script>
+<script src="{% static 'workspace/js/agency-ui.js' %}?v=5" defer></script>
 {% endblock %}

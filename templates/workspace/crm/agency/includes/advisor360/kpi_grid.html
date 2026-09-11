@@ -8,7 +8,7 @@
     <article class="a360-kpi a360-kpi--contacts">
         <div class="a360-kpi__head">
             <span class="a360-kpi__label">مخاطبین</span>
-            <span class="a360-kpi__icon" aria-hidden="true"><i class="fas fa-address-book"></i></span>
+            <span class="a360-kpi__icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='users' size='metric' only %}</span>
         </div>
         <strong class="a360-kpi__value">{{ kpis.contacts.total }}</strong>
         {% if kpis.contacts.delta_pct is not None %}
@@ -18,7 +18,7 @@
     <article class="a360-kpi a360-kpi--properties">
         <div class="a360-kpi__head">
             <span class="a360-kpi__label">فایل‌های شخصی</span>
-            <span class="a360-kpi__icon" aria-hidden="true"><i class="fas fa-building"></i></span>
+            <span class="a360-kpi__icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='building' size='metric' only %}</span>
         </div>
         <strong class="a360-kpi__value">{{ kpis.properties.total }}</strong>
         {% if kpis.properties.delta_pct is not None %}
@@ -28,7 +28,7 @@
     <article class="a360-kpi a360-kpi--datasets">
         <div class="a360-kpi__head">
             <span class="a360-kpi__label">استخراج</span>
-            <span class="a360-kpi__icon" aria-hidden="true"><i class="fas fa-database"></i></span>
+            <span class="a360-kpi__icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='database' size='metric' only %}</span>
         </div>
         <strong class="a360-kpi__value">{{ kpis.datasets.total }}</strong>
         {% if kpis.datasets.delta_pct is not None %}
@@ -38,35 +38,35 @@
     <article class="a360-kpi a360-kpi--deals-active">
         <div class="a360-kpi__head">
             <span class="a360-kpi__label">معاملات فعال</span>
-            <span class="a360-kpi__icon" aria-hidden="true"><i class="fas fa-bolt"></i></span>
+            <span class="a360-kpi__icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='zap' size='metric' only %}</span>
         </div>
         <strong class="a360-kpi__value">{{ kpis.deals_active }}</strong>
     </article>
     <article class="a360-kpi a360-kpi--deals-closed">
         <div class="a360-kpi__head">
             <span class="a360-kpi__label">معاملات بسته</span>
-            <span class="a360-kpi__icon" aria-hidden="true"><i class="fas fa-check-double"></i></span>
+            <span class="a360-kpi__icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='circle_check' size='metric' only %}</span>
         </div>
         <strong class="a360-kpi__value">{{ kpis.deals_closed }}</strong>
     </article>
     <article class="a360-kpi a360-kpi--contracts">
         <div class="a360-kpi__head">
             <span class="a360-kpi__label">قراردادها</span>
-            <span class="a360-kpi__icon" aria-hidden="true"><i class="fas fa-file-signature"></i></span>
+            <span class="a360-kpi__icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='file_edit' size='metric' only %}</span>
         </div>
         <strong class="a360-kpi__value">{{ kpis.contracts }}</strong>
     </article>
     <article class="a360-kpi a360-kpi--tasks">
         <div class="a360-kpi__head">
             <span class="a360-kpi__label">پیگیری باز</span>
-            <span class="a360-kpi__icon" aria-hidden="true"><i class="fas fa-list-check"></i></span>
+            <span class="a360-kpi__icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='list_todo' size='metric' only %}</span>
         </div>
         <strong class="a360-kpi__value">{{ kpis.open_tasks }}</strong>
     </article>
     <article class="a360-kpi a360-kpi--activity">
         <div class="a360-kpi__head">
             <span class="a360-kpi__label">آخرین فعالیت</span>
-            <span class="a360-kpi__icon" aria-hidden="true"><i class="fas fa-clock"></i></span>
+            <span class="a360-kpi__icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='timer' size='metric' only %}</span>
         </div>
         <strong class="a360-kpi__value a360-kpi__value--sm">{% if kpis.last_activity %}{{ kpis.last_activity|ws_jalali_datetime }}{% else %}—{% endif %}</strong>
     </article>

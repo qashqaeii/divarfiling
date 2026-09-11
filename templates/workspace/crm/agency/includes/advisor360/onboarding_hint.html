@@ -1,6 +1,6 @@
 {% if ws_agency_onboarding_cta %}
 <div class="a360-onboard-hint" role="status">
-    <i class="fas fa-circle-info" aria-hidden="true"></i>
+    <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='info' size='inline' only %}</span>
     <span>راه‌اندازی آژانس ناقص است.</span>
     <a href="{{ ws_agency_onboarding_cta }}" class="a360-onboard-hint__link">تکمیل راه‌اندازی</a>
 </div>

@@ -1,32 +1,32 @@
 <div class="amh-kpi-strip" aria-label="شاخص‌های عملکرد">
     <a href="{{ quick_links.contacts }}" class="amh-kpi amh-kpi--purple">
-        <span class="amh-kpi__icon" aria-hidden="true"><i class="fas fa-address-book"></i></span>
+        <span class="amh-kpi__icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='users' size='metric' only %}</span>
         <strong class="amh-kpi__value">{{ hub_kpis.contacts }}</strong>
         <span class="amh-kpi__label">مخاطب</span>
     </a>
     <a href="{{ quick_links.properties }}" class="amh-kpi amh-kpi--blue">
-        <span class="amh-kpi__icon" aria-hidden="true"><i class="fas fa-building"></i></span>
+        <span class="amh-kpi__icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='building' size='metric' only %}</span>
         <strong class="amh-kpi__value">{{ hub_kpis.properties }}</strong>
         <span class="amh-kpi__label">فایل شخصی</span>
     </a>
     <a href="{{ quick_links.today }}" class="amh-kpi amh-kpi--green">
-        <span class="amh-kpi__icon" aria-hidden="true"><i class="fas fa-list-check"></i></span>
+        <span class="amh-kpi__icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='list_todo' size='metric' only %}</span>
         <strong class="amh-kpi__value">{{ hub_kpis.open_tasks }}</strong>
         <span class="amh-kpi__label">پیگیری باز</span>
     </a>
     <a href="{{ quick_links.deals }}" class="amh-kpi amh-kpi--orange">
-        <span class="amh-kpi__icon" aria-hidden="true"><i class="fas fa-handshake"></i></span>
+        <span class="amh-kpi__icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='handshake' size='metric' only %}</span>
         <strong class="amh-kpi__value">{{ hub_kpis.active_deals }}</strong>
         <span class="amh-kpi__label">معامله فعال</span>
     </a>
     <a href="{{ quick_links.contracts }}" class="amh-kpi amh-kpi--teal">
-        <span class="amh-kpi__icon" aria-hidden="true"><i class="fas fa-file-signature"></i></span>
+        <span class="amh-kpi__icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='file_edit' size='metric' only %}</span>
         <strong class="amh-kpi__value">{{ hub_kpis.contracts }}</strong>
         <span class="amh-kpi__label">قرارداد</span>
     </a>
     {% if hub_kpis.today_tasks %}
     <a href="{{ quick_links.today }}" class="amh-kpi amh-kpi--violet">
-        <span class="amh-kpi__icon" aria-hidden="true"><i class="fas fa-calendar-day"></i></span>
+        <span class="amh-kpi__icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='calendar' size='metric' only %}</span>
         <strong class="amh-kpi__value">{{ hub_kpis.today_tasks }}</strong>
         <span class="amh-kpi__label">کار امروز</span>
     </a>

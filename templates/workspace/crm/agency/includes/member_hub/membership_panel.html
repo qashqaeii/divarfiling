@@ -1,6 +1,6 @@
 {% load workspace_tags %}
 <section class="amh-panel amh-panel--membership">
-    <h3 class="amh-section-title"><i class="fas fa-id-card" aria-hidden="true"></i> اطلاعات عضویت</h3>
+    <h3 class="amh-section-title"><span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='team' size='sm' only %}</span> اطلاعات عضویت</h3>
     <dl class="amh-membership">
         <div><dt>آژانس</dt><dd>{{ agency.name }}</dd></div>
         {% if agency_leader_name %}
@@ -16,10 +16,10 @@
         {% if subscription and subscription.expires_at %}
         <div><dt>اشتراک آژانس</dt><dd>تا {{ subscription.expires_at|ws_jalali_date }}</dd></div>
         {% endif %}
-        <div><dt>Seat</dt><dd>{% if license %}تخصیص‌یافته و فعال{% else %}بدون صندلی{% endif %}</dd></div>
+        <div><dt>صندلی</dt><dd>{% if license %}تخصیص‌یافته و فعال{% else %}بدون صندلی{% endif %}</dd></div>
     </dl>
     <p class="amh-membership__note">
-        <i class="fas fa-circle-info" aria-hidden="true"></i>
+        <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='info' size='xs' only %}</span>
         برای مدیریت تیم یا تغییرات ساختاری با مدیر آژانس تماس بگیرید.
     </p>
 </section>

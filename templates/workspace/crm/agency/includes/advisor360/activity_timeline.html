@@ -30,7 +30,7 @@
         data-ts="{{ ev.at|date:'U' }}">
         <span class="agency-timeline__rail" aria-hidden="true"></span>
         <span class="agency-timeline__icon agency-timeline__icon--soft" aria-hidden="true">
-            <i class="fas {{ ev|a360_activity_icon }}"></i>
+            {% with icon_decor=ev|a360_activity_icon %}{% include 'includes/icon_slot.html' with decor=icon_decor size='xs' only %}{% endwith %}
         </span>
         <div class="agency-timeline__body">
             <div class="agency-timeline__action">{{ ev|a360_activity_label }}</div>
@@ -46,12 +46,12 @@
     {% endfor %}
 </ul>
 <div class="agency-empty agency-empty--compact a360-activity-empty" id="a360ActivityEmpty" hidden>
-    <span class="agency-empty__icon" aria-hidden="true"><i class="fas fa-filter"></i></span>
+    <span class="agency-empty__icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='filter' size='lg' only %}</span>
     <div class="agency-empty__body">
         <h3 class="agency-empty__title">فعالیتی در این بازه ثبت نشده</h3>
         <p class="agency-empty__desc">فیلتر را تغییر دهید یا بازه زمانی دیگری انتخاب کنید.</p>
     </div>
 </div>
 {% else %}
-{% include "workspace/crm/agency/includes/empty_state.html" with icon="clock-rotate-left" title="فعالیتی ثبت نشده" description="فعالیت‌های این مشاور پس از انجام کار در این بخش نمایش داده می‌شوند." compact=True %}
+{% include "workspace/crm/agency/includes/empty_state.html" with decor="history" title="فعالیتی ثبت نشده" description="فعالیت‌های این مشاور پس از انجام کار در این بخش نمایش داده می‌شوند." compact=True %}
 {% endif %}

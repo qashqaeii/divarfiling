@@ -2,7 +2,7 @@
     <ol class="agency-stepper__list">
         <li class="agency-stepper__step{% if step == '1' %} is-active{% elif agency %} is-done{% endif %}">
             <span class="agency-stepper__marker">
-                {% if agency and step != '1' %}<i class="fas fa-check" aria-hidden="true"></i>{% else %}<span>۱</span>{% endif %}
+                {% if agency and step != '1' %}<span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='check' size='xs' only %}</span>{% else %}<span>۱</span>{% endif %}
             </span>
             <span class="agency-stepper__content">
                 <strong class="agency-stepper__label">مشخصات آژانس</strong>
@@ -11,7 +11,7 @@
         </li>
         <li class="agency-stepper__step{% if step == '2' %} is-active{% elif step|add:'0' > 2 or step == '3' or step == '4' %} is-done{% endif %}">
             <span class="agency-stepper__marker">
-                {% if step|add:'0' > 2 or step == '3' or step == '4' %}<i class="fas fa-check" aria-hidden="true"></i>{% else %}<span>۲</span>{% endif %}
+                {% if step|add:'0' > 2 or step == '3' or step == '4' %}<span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='check' size='xs' only %}</span>{% else %}<span>۲</span>{% endif %}
             </span>
             <span class="agency-stepper__content">
                 <strong class="agency-stepper__label">دعوت مشاوران</strong>
@@ -20,11 +20,11 @@
         </li>
         <li class="agency-stepper__step{% if step == '3' %} is-active{% elif step == '4' %} is-done{% endif %}">
             <span class="agency-stepper__marker">
-                {% if step == '4' %}<i class="fas fa-check" aria-hidden="true"></i>{% else %}<span>۳</span>{% endif %}
+                {% if step == '4' %}<span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='check' size='xs' only %}</span>{% else %}<span>۳</span>{% endif %}
             </span>
             <span class="agency-stepper__content">
                 <strong class="agency-stepper__label">تخصیص لایسنس</strong>
-                <span class="agency-stepper__hint">Seat به اعضا</span>
+                <span class="agency-stepper__hint">صندلی به اعضا</span>
             </span>
         </li>
         <li class="agency-stepper__step{% if step == '4' %} is-active{% endif %}">

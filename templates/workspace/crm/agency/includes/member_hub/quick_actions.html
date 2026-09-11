@@ -1,28 +1,28 @@
 <div class="amh-quick">
-    <h3 class="amh-section-title"><i class="fas fa-bolt" aria-hidden="true"></i> اقدامات سریع</h3>
+    <h3 class="amh-section-title"><span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='zap' size='sm' only %}</span> اقدامات سریع</h3>
     <div class="amh-quick__grid">
         <a href="{{ quick_links.contacts }}" class="amh-quick__btn amh-quick__btn--purple">
-            <i class="fas fa-address-book" aria-hidden="true"></i>
+            <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='users' size='sm' only %}</span>
             <span>مخاطبین من</span>
         </a>
         <a href="{{ quick_links.properties }}" class="amh-quick__btn amh-quick__btn--blue">
-            <i class="fas fa-building" aria-hidden="true"></i>
+            <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='building' size='sm' only %}</span>
             <span>فایل‌های من</span>
         </a>
         <a href="{{ quick_links.deals }}" class="amh-quick__btn amh-quick__btn--orange">
-            <i class="fas fa-handshake" aria-hidden="true"></i>
+            <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='handshake' size='sm' only %}</span>
             <span>معاملات من</span>
         </a>
         <a href="{{ quick_links.contracts }}" class="amh-quick__btn amh-quick__btn--teal">
-            <i class="fas fa-file-signature" aria-hidden="true"></i>
+            <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='file_edit' size='sm' only %}</span>
             <span>قراردادهای من</span>
         </a>
         <a href="{{ quick_links.calendar }}" class="amh-quick__btn amh-quick__btn--green">
-            <i class="fas fa-calendar" aria-hidden="true"></i>
+            <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='calendar' size='sm' only %}</span>
             <span>تقویم</span>
         </a>
         <a href="{{ quick_links.filing }}" class="amh-quick__btn amh-quick__btn--violet">
-            <i class="fas fa-database" aria-hidden="true"></i>
+            <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='database' size='sm' only %}</span>
             <span>فایلینگ</span>
         </a>
     </div>

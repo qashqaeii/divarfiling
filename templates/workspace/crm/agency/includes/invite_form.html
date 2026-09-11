@@ -1,7 +1,7 @@
 {% load workspace_tags %}
 <div class="agency-onboard-grid">
     <section class="agency-section agency-onboard-grid__main">
-        {% include "workspace/crm/agency/includes/section_head.html" with title="دعوت مشاوران" subtitle="شماره موبایل مشاور را وارد کنید. لینک دعوت از طریق SMS ارسال می‌شود." icon="user-plus" %}
+        {% include "workspace/crm/agency/includes/section_head.html" with title="دعوت مشاوران" subtitle="شماره موبایل مشاور را وارد کنید. لینک دعوت از طریق SMS ارسال می‌شود." decor="user_plus" %}
 
         <div class="agency-panel">
             <form method="post" class="agency-invite-form" id="agencyInviteForm"
@@ -14,7 +14,7 @@
 
                 {% if invite_capacity and invite_capacity.invite_available == 0 %}
                 <div class="agency-alert agency-alert--warn">
-                    <i class="fas fa-circle-exclamation" aria-hidden="true"></i>
+                    <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='warning' size='inline' only %}</span>
                     <div>
                         <strong>ظرفیت تکمیل شده</strong>
                         <span>تمام {{ invite_capacity.total }} لایسنس استفاده یا رزرو شده‌اند.</span>
@@ -52,7 +52,7 @@
                     <div class="agency-tag-queue__head">
                         <p class="agency-tag-queue__label">آماده ارسال</p>
                         <button type="button" class="crm-btn crm-btn-ghost crm-btn-sm" id="agencyInviteClear" disabled>
-                            <i class="fas fa-trash-can" aria-hidden="true"></i>
+                            <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='trash' size='inline' only %}</span>
                             پاک کردن
                         </button>
                     </div>
@@ -62,7 +62,7 @@
 
                 <div class="agency-invite-form__actions">
                     <button type="submit" class="crm-btn crm-btn-primary" id="agencyInviteSubmit" disabled>
-                        <i class="fas fa-paper-plane" aria-hidden="true"></i>
+                        <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='send' size='inline' only %}</span>
                         ارسال دعوت SMS
                     </button>
                 </div>
@@ -82,8 +82,8 @@
             {% endif %}
             {% if seats %}
             <dl class="agency-onboard-aside__kv agency-onboard-aside__kv--seats">
-                <div><dt>Seat تخصیص</dt><dd>{{ seats.assigned }}</dd></div>
-                <div><dt>Seat آزاد</dt><dd>{{ seats.available }}</dd></div>
+                <div><dt>صندلی تخصیص</dt><dd>{{ seats.assigned }}</dd></div>
+                <div><dt>صندلی آزاد</dt><dd>{{ seats.available }}</dd></div>
             </dl>
             {% endif %}
             <p class="agency-form-helper">دعوت‌های در انتظار نیز در ظرفیت لحاظ می‌شوند.</p>
@@ -92,7 +92,7 @@
 </div>
 
 <section class="agency-section agency-onboard-sent">
-    {% include "workspace/crm/agency/includes/section_head.html" with title="دعوت‌های ارسال‌شده" subtitle="وضعیت دعوت‌های اخیر" icon="clock-rotate-left" %}
+    {% include "workspace/crm/agency/includes/section_head.html" with title="دعوت‌های ارسال‌شده" subtitle="وضعیت دعوت‌های اخیر" decor="history" %}
     <div class="agency-panel{% if invitations %} agency-panel--flush agency-panel--table{% endif %}">
         {% if invitations %}
         <div class="agency-table-wrap agency-table-wrap--fit">
@@ -111,7 +111,7 @@
                         <td dir="ltr" class="agency-invites-table__phone">{{ inv.phone }}</td>
                         <td>
                             {% if inv.status == 'pending' and inv.sms_sent_at %}
-                            <span class="agency-status agency-status--info"><i class="fas fa-paper-plane" aria-hidden="true"></i>ارسال شد</span>
+                            <span class="agency-status agency-status--info"><span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='send' size='xs' only %}</span>ارسال شد</span>
                             {% else %}
                             {% include "workspace/crm/agency/includes/status_badge.html" with status=inv.status label=inv.get_status_display %}
                             {% endif %}
@@ -180,13 +180,13 @@
             {% endfor %}
         </ul>
         {% else %}
-        {% include "workspace/crm/agency/includes/empty_state.html" with icon="inbox" title="هنوز دعوتی ارسال نشده" description="شماره‌ها را اضافه کنید و SMS بفرستید." compact=True variant="inline" %}
+        {% include "workspace/crm/agency/includes/empty_state.html" with decor="inbox" title="هنوز دعوتی ارسال نشده" description="شماره‌ها را اضافه کنید و SMS بفرستید." compact=True variant="inline" %}
         {% endif %}
     </div>
 </section>
 
 <div class="agency-onboard-footer agency-onboard-footer--sticky">
-    <a href="?step=3" class="crm-btn crm-btn-primary">مرحله بعد <i class="fas fa-chevron-left" aria-hidden="true"></i></a>
+    <a href="?step=3" class="crm-btn crm-btn-primary">مرحله بعد <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='chevron_left' size='inline' only %}</span></a>
     <div class="agency-onboard-footer__secondary">
         <a href="?step=1" class="crm-btn crm-btn-ghost">مرحله قبل</a>
         {% if show_skip %}

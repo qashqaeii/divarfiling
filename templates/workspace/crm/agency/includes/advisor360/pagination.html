@@ -2,7 +2,7 @@
 <nav class="a360-pager" aria-label="صفحه‌بندی">
     {% if page_obj.has_previous %}
     <a href="?tab={{ tab }}&page={{ page_obj.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status|urlencode }}{% endif %}{% if request.GET.stage %}&stage={{ request.GET.stage|urlencode }}{% endif %}{% if request.GET.type %}&type={{ request.GET.type|urlencode }}{% endif %}{% if dataset_id %}&dataset={{ dataset_id }}{% endif %}" class="a360-pager__btn">
-        <i class="fas fa-chevron-right" aria-hidden="true"></i>
+        <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='chevron_right' size='inline' only %}</span>
         قبلی
     </a>
     {% else %}
@@ -12,7 +12,7 @@
     {% if page_obj.has_next %}
     <a href="?tab={{ tab }}&page={{ page_obj.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status|urlencode }}{% endif %}{% if request.GET.stage %}&stage={{ request.GET.stage|urlencode }}{% endif %}{% if request.GET.type %}&type={{ request.GET.type|urlencode }}{% endif %}{% if dataset_id %}&dataset={{ dataset_id }}{% endif %}" class="a360-pager__btn">
         بعدی
-        <i class="fas fa-chevron-left" aria-hidden="true"></i>
+        <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='chevron_left' size='inline' only %}</span>
     </a>
     {% else %}
     <span class="a360-pager__btn is-disabled">بعدی</span>

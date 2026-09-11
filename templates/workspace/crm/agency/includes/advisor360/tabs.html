@@ -4,14 +4,14 @@
        class="a360-tab{% if tab == key %} is-active{% endif %}"
        {% if tab == key %}aria-current="page"{% endif %}>
         <span class="a360-tab__icon" aria-hidden="true">
-            {% if key == 'overview' %}<i class="fas fa-gauge-high"></i>
-            {% elif key == 'contacts' %}<i class="fas fa-address-book"></i>
-            {% elif key == 'properties' %}<i class="fas fa-building"></i>
-            {% elif key == 'deals' %}<i class="fas fa-handshake"></i>
-            {% elif key == 'filing' %}<i class="fas fa-database"></i>
-            {% elif key == 'contracts' %}<i class="fas fa-file-signature"></i>
-            {% elif key == 'activities' %}<i class="fas fa-clock-rotate-left"></i>
-            {% else %}<i class="fas fa-circle"></i>
+            {% if key == 'overview' %}{% include 'includes/icon_slot.html' with decor='house' size='nav' only %}
+            {% elif key == 'contacts' %}{% include 'includes/icon_slot.html' with decor='users' size='nav' only %}
+            {% elif key == 'properties' %}{% include 'includes/icon_slot.html' with decor='building' size='nav' only %}
+            {% elif key == 'deals' %}{% include 'includes/icon_slot.html' with decor='handshake' size='nav' only %}
+            {% elif key == 'filing' %}{% include 'includes/icon_slot.html' with decor='database' size='nav' only %}
+            {% elif key == 'contracts' %}{% include 'includes/icon_slot.html' with decor='file_edit' size='nav' only %}
+            {% elif key == 'activities' %}{% include 'includes/icon_slot.html' with decor='history' size='nav' only %}
+            {% else %}{% include 'includes/icon_slot.html' with decor='dot' size='nav' only %}
             {% endif %}
         </span>
         <span class="a360-tab__label">{{ label }}</span>

@@ -13,8 +13,8 @@
             </div>
             <div class="modal-body">
                 <div class="agency-modal__info">
-                    <i class="fas fa-paper-plane" aria-hidden="true"></i>
-                    <span>پس از پذیرش دعوت، می‌توانید Seat لایسنس را به مشاور تخصیص دهید.</span>
+                    <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='send' size='inline' only %}</span>
+                    <span>پس از پذیرش دعوت، می‌توانید صندلی لایسنس را به مشاور تخصیص دهید.</span>
                 </div>
                 <div class="agency-field">
                     <label class="agency-form-label" for="agencyInvitePhone">شماره موبایل</label>
@@ -26,7 +26,7 @@
             <div class="modal-footer agency-modal__footer">
                 <button type="button" class="crm-btn crm-btn-ghost" data-bs-dismiss="modal">انصراف</button>
                 <button type="submit" class="crm-btn crm-btn-primary">
-                    <i class="fas fa-paper-plane" aria-hidden="true"></i>
+                    <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='send' size='inline' only %}</span>
                     ارسال دعوت SMS
                 </button>
             </div>

@@ -7,9 +7,9 @@
             {% else %}
             <div class="agency-hero__orb" aria-hidden="true"></div>
             <div class="agency-hero__building-art" aria-hidden="true">
-                <i class="fas fa-city"></i>
+                {% include 'includes/icon_slot.html' with decor='building' size='lg' only %}
             </div>
-            <span class="agency-hero__mark" aria-hidden="true"><i class="fas fa-building"></i></span>
+            <span class="agency-hero__mark" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='building' size='sm' only %}</span>
             {% endif %}
         </div>
         <div class="agency-hero__copy">
@@ -19,12 +19,12 @@
             {% if hub_subscription %}
             <div class="agency-hero__badges">
                 <span class="agency-hub-chip agency-hub-chip--plan">
-                    <i class="fas fa-crown" aria-hidden="true"></i>
+                    <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='crown' size='xs' only %}</span>
                     پلن آژانس
                 </span>
                 <span class="agency-hub-chip">
-                    <i class="fas fa-calendar-check" aria-hidden="true"></i>
-                    انقضا {{ hub_subscription.expires_at|ws_jalali_date }}
+                    <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='circle_check' size='xs' only %}</span>
+                    اشتراک فعال
                 </span>
             </div>
             {% endif %}
@@ -43,7 +43,7 @@
             <div class="agency-hero__seat-dots" aria-hidden="true">
                 {% for i in "12345678901234567890"|make_list %}
                 {% if forloop.counter <= hub_seats.total %}
-                <span class="agency-hero__seat-dot{% if forloop.counter <= hub_seats.assigned %} is-filled{% endif %}"><i class="fas fa-user"></i></span>
+                <span class="agency-hero__seat-dot{% if forloop.counter <= hub_seats.assigned %} is-filled{% endif %}"><span>{% include 'includes/icon_slot.html' with decor='user' size='xs' only %}</span></span>
                 {% endif %}
                 {% endfor %}
             </div>
@@ -53,13 +53,13 @@
         <div class="agency-hero__actions">
             {% if hub_section != 'advisors' %}
             <button type="button" class="crm-btn crm-btn-primary agency-hero__cta" data-bs-toggle="modal" data-bs-target="#agencyInviteModal">
-                <i class="fas fa-user-plus" aria-hidden="true"></i>
+                <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='user_plus' size='inline' only %}</span>
                 دعوت مشاور
             </button>
             {% endif %}
             {% if ws_agency_onboarding_cta %}
             <a href="{{ ws_agency_onboarding_cta }}" class="crm-btn crm-btn-ghost agency-hero__cta-secondary">
-                <i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i>
+                <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='ai_wand' size='inline' only %}</span>
                 تکمیل راه‌اندازی
             </a>
             {% endif %}

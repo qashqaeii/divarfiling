@@ -4,6 +4,7 @@
 {% block body_class %}mk-page-agency-invite{% endblock %}
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/agency-invite-public.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'workspace/css/agency-decor-icons.css' %}?v=1">
 {% endblock %}
 {% block content %}
 <section class="agency-invite" dir="rtl" aria-labelledby="agency-locked-title">
@@ -11,7 +12,7 @@
     <div class="agency-invite__container">
         <div class="agency-invite__card agency-invite__card--state">
             <span class="agency-invite__state-icon agency-invite__state-icon--error" aria-hidden="true">
-                <i class="fas fa-lock"></i>
+                {% include 'includes/icon_slot.html' with decor='lock' size='lg' only %}
             </span>
             <h1 id="agency-locked-title" class="agency-invite__state-title">مدیریت آژانس قفل شده</h1>
             <p class="agency-invite__state-desc">
@@ -20,7 +21,7 @@
             </p>
             <div class="agency-invite__actions">
                 <a href="{{ agency_buy_url }}" class="agency-invite__btn agency-invite__btn--primary">
-                    <i class="fas fa-crown" aria-hidden="true"></i>
+                    <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='crown' size='inline' only %}</span>
                     تمدید پلن آژانس
                 </a>
                 <a href="{% url 'workspace:crm_dashboard' %}" class="agency-invite__btn agency-invite__btn--ghost">

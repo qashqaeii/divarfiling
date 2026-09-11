@@ -80,11 +80,11 @@ class AgencyInviteAcceptView(View):
         invitation = get_invitation_by_token(token)
         if not invitation:
             messages.error(request, 'لینک دعوت نامعتبر است.')
-            return redirect('accounts:login')
+            return redirect('login')
 
         if not request.user.is_authenticated:
             messages.info(request, 'برای پاسخ به دعوت ابتدا وارد شوید یا ثبت‌نام کنید.')
-            return redirect(f"{reverse('accounts:login')}?next={request.path}")
+            return redirect(f"{reverse('login')}?next={request.path}")
 
         action = request.POST.get('action', '')
         if action == 'decline':

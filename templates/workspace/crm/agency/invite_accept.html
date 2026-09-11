@@ -61,7 +61,7 @@
             </footer>
             {% elif not user_authenticated %}
             <footer class="agency-step-footer" style="border:none;padding-top:1rem;justify-content:center;">
-                <a href="{% url 'accounts:login' %}?next={{ request.path }}" class="crm-btn crm-btn-primary">ورود / ثبت‌نام برای پاسخ</a>
+                <a href="{% url 'login' %}?next={{ request.path }}" class="crm-btn crm-btn-primary">ورود / ثبت‌نام برای پاسخ</a>
             </footer>
             {% endif %}
             {% endif %}

@@ -1,4 +1,5 @@
-<header class="wsh-hero" data-help-tour="workspace-hero" aria-label="خلاصه میزکار">
+{% load static %}
+<header class="wsh-hero" data-help-tour="workspace-hero" aria-label="خلاصه میزکار" style="--wsh-hero-bg-image: url('{% static 'images/workspace-header.png' %}')">
     <div class="wsh-hero__main">
         <div class="wsh-hero__copy">
             <h1 class="wsh-hero__title">
@@ -29,13 +30,6 @@
                 هر روز، یک قدم نزدیک‌تر به معاملات بزرگ‌تر.
                 {% endif %}
             </p>
-        </div>
-        <div class="wsh-hero__illus" aria-hidden="true">
-            <span class="wsh-hero__illus-scene">
-                <i class="fas fa-house-chimney"></i>
-                <i class="fas fa-tree"></i>
-            </span>
-            <span class="wsh-hero__illus-quote">مدیریت حرفه‌ای املاک در یک میزکار</span>
         </div>
     </div>
     <div class="wsh-hero__search">

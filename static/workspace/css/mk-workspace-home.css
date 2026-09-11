@@ -15,6 +15,7 @@
 
 /* ─── Hero ─── */
 .wsh-hero {
+    position: relative;
     display: flex;
     flex-direction: column;
     gap: 0.65rem;
@@ -22,12 +23,21 @@
     border-radius: var(--wsh-card-radius);
     border: 1px solid color-mix(in srgb, var(--ws-border) 72%, transparent);
     background:
-        radial-gradient(90% 120% at 100% 0%, color-mix(in srgb, var(--ws-primary) 8%, transparent), transparent 55%),
-        linear-gradient(180deg, color-mix(in srgb, var(--ws-primary) 3%, var(--ws-surface)), var(--ws-surface));
+        linear-gradient(
+            105deg,
+            color-mix(in srgb, var(--ws-surface) 92%, transparent) 0%,
+            color-mix(in srgb, var(--ws-surface) 78%, transparent) 42%,
+            color-mix(in srgb, var(--ws-surface) 58%, transparent) 100%
+        ),
+        var(--wsh-hero-bg-image, none) center / cover no-repeat;
     box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+    overflow: hidden;
+    isolation: isolate;
 }
 
 .wsh-hero__main {
+    position: relative;
+    z-index: 1;
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
@@ -86,32 +96,9 @@
     line-height: 1.45;
 }
 
-.wsh-hero__illus {
-    display: none;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.25rem;
-    text-align: center;
-    flex-shrink: 0;
-}
-
-.wsh-hero__illus-scene {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    padding: 0.45rem 0.65rem;
-    border-radius: 12px;
-    background: color-mix(in srgb, var(--ws-primary) 8%, var(--ws-surface-2));
-    color: var(--ws-primary);
-    font-size: 1.1rem;
-}
-
-.wsh-hero__illus-quote {
-    max-width: 9rem;
-    font-size: 0.58rem;
-    font-weight: 600;
-    color: var(--ws-text-muted);
-    line-height: 1.35;
+.wsh-hero__search {
+    position: relative;
+    z-index: 1;
 }
 
 .wsh-hero__search .crm-global-search { margin-bottom: 0; }
@@ -120,7 +107,10 @@
 .wsh-search__kbd { font-size: 0.58rem; opacity: 0.7; }
 
 @media (min-width: 900px) {
-    .wsh-hero__illus { display: flex; }
+    .wsh-hero {
+        min-height: 7.5rem;
+        background-position: center;
+    }
 }
 
 /* ─── Quick actions ─── */
@@ -1171,8 +1161,13 @@
 /* ─── Dark theme ─── */
 [data-theme="dark"] .wsh-hero {
     background:
-        radial-gradient(90% 120% at 100% 0%, color-mix(in srgb, var(--ws-primary) 14%, transparent), transparent 55%),
-        var(--ws-surface);
+        linear-gradient(
+            105deg,
+            color-mix(in srgb, var(--ws-surface) 94%, transparent) 0%,
+            color-mix(in srgb, var(--ws-surface) 82%, transparent) 45%,
+            color-mix(in srgb, var(--ws-surface) 68%, transparent) 100%
+        ),
+        var(--wsh-hero-bg-image, none) center / cover no-repeat;
 }
 
 [data-theme="dark"] .wsh-card,

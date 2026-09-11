@@ -159,6 +159,53 @@
     initInvitePhoneTags();
   }
 
+  function initAgencyInviteModal() {
+    var modal = document.getElementById('agencyInviteModal');
+    if (!modal) return;
+
+    var phoneInput = document.getElementById('agencyInvitePhone');
+    var bodyLockClass = 'agency-modal-open';
+
+    function openModal() {
+      modal.classList.add('show');
+      modal.setAttribute('aria-hidden', 'false');
+      document.body.classList.add(bodyLockClass);
+      if (phoneInput) {
+        window.setTimeout(function () {
+          phoneInput.focus();
+        }, 50);
+      }
+    }
+
+    function closeModal() {
+      modal.classList.remove('show');
+      modal.setAttribute('aria-hidden', 'true');
+      document.body.classList.remove(bodyLockClass);
+    }
+
+    document.querySelectorAll('[data-bs-target="#agencyInviteModal"]').forEach(function (btn) {
+      btn.addEventListener('click', function (e) {
+        e.preventDefault();
+        openModal();
+      });
+    });
+
+    modal.querySelectorAll('[data-bs-dismiss="modal"]').forEach(function (btn) {
+      btn.addEventListener('click', function (e) {
+        e.preventDefault();
+        closeModal();
+      });
+    });
+
+    modal.addEventListener('click', function (e) {
+      if (e.target === modal) closeModal();
+    });
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && modal.classList.contains('show')) closeModal();
+    });
+  }
+
   function initModalInvitePreview() {
     var input = document.getElementById('agencyInvitePhone');
     var hint = document.getElementById('agencyModalPhoneHint');
@@ -302,6 +349,7 @@
   }
 
   document.addEventListener('DOMContentLoaded', function () {
+    initAgencyInviteModal();
     initInvitePhonePreview();
     initModalInvitePreview();
     initStickyStepFooter();

@@ -15,6 +15,8 @@
 
 /* ─── Hero ─── */
 .wsh-hero {
+    --wsh-hero-bg-size: 100% auto;
+    --wsh-hero-bg-position: center center;
     position: relative;
     display: flex;
     flex-direction: column;
@@ -22,17 +24,36 @@
     padding: 0.85rem 1rem;
     border-radius: var(--wsh-card-radius);
     border: 1px solid color-mix(in srgb, var(--ws-border) 72%, transparent);
-    background:
-        linear-gradient(
-            105deg,
-            color-mix(in srgb, var(--ws-surface) 92%, transparent) 0%,
-            color-mix(in srgb, var(--ws-surface) 78%, transparent) 42%,
-            color-mix(in srgb, var(--ws-surface) 58%, transparent) 100%
-        ),
-        var(--wsh-hero-bg-image, none) center / cover no-repeat;
+    background: var(--ws-surface);
     box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
     overflow: hidden;
     isolation: isolate;
+}
+
+.wsh-hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background-image: var(--wsh-hero-bg-image);
+    background-repeat: no-repeat;
+    background-position: var(--wsh-hero-bg-position);
+    background-size: var(--wsh-hero-bg-size);
+    pointer-events: none;
+}
+
+.wsh-hero::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background: linear-gradient(
+        105deg,
+        color-mix(in srgb, var(--ws-surface) 78%, transparent) 0%,
+        color-mix(in srgb, var(--ws-surface) 52%, transparent) 46%,
+        color-mix(in srgb, var(--ws-surface) 28%, transparent) 100%
+    );
+    pointer-events: none;
 }
 
 .wsh-hero__main {
@@ -108,8 +129,13 @@
 
 @media (min-width: 900px) {
     .wsh-hero {
-        min-height: 7.5rem;
-        background-position: center;
+        min-height: 9.5rem;
+    }
+}
+
+@media (max-width: 899px) {
+    .wsh-hero {
+        min-height: 8.5rem;
     }
 }
 
@@ -1159,15 +1185,13 @@
 }
 
 /* ─── Dark theme ─── */
-[data-theme="dark"] .wsh-hero {
-    background:
-        linear-gradient(
-            105deg,
-            color-mix(in srgb, var(--ws-surface) 94%, transparent) 0%,
-            color-mix(in srgb, var(--ws-surface) 82%, transparent) 45%,
-            color-mix(in srgb, var(--ws-surface) 68%, transparent) 100%
-        ),
-        var(--wsh-hero-bg-image, none) center / cover no-repeat;
+[data-theme="dark"] .wsh-hero::after {
+    background: linear-gradient(
+        105deg,
+        color-mix(in srgb, var(--ws-surface) 86%, transparent) 0%,
+        color-mix(in srgb, var(--ws-surface) 62%, transparent) 48%,
+        color-mix(in srgb, var(--ws-surface) 38%, transparent) 100%
+    );
 }
 
 [data-theme="dark"] .wsh-card,

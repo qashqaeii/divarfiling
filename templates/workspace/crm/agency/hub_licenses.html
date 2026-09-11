@@ -1,4 +1,5 @@
 {% extends "workspace/crm/agency/hub_base.html" %}
+{% load workspace_tags %}
 {% block agency_hub_content %}
 <div class="agency-page-head">
     <div>
@@ -16,7 +17,7 @@
     {% include "workspace/crm/agency/includes/kpi_card.html" with label="کل Seat" value=hub_seats.total icon="layer-group" tone="purple" %}
     {% include "workspace/crm/agency/includes/kpi_card.html" with label="تخصیص‌شده" value=hub_seats.assigned icon="user-check" tone="green" %}
     {% include "workspace/crm/agency/includes/kpi_card.html" with label="آزاد" value=hub_seats.available icon="chair" tone="blue" %}
-    {% include "workspace/crm/agency/includes/kpi_card.html" with label="انقضای اشتراک" value=hub_seats.expires_at|date:"Y/m/d" icon="calendar" tone="teal" %}
+    {% include "workspace/crm/agency/includes/kpi_card.html" with label="انقضای اشتراک" value=hub_seats.expires_at|ws_jalali_date icon="calendar" tone="teal" %}
 </div>
 {% include "workspace/crm/agency/includes/seat_summary.html" with seats=hub_seats %}
 {% endif %}

@@ -15,13 +15,13 @@
         {% include "workspace/crm/agency/includes/kpi_card.html" with label="عضو فعال" value=members_dashboard.active_count icon="users" tone="purple" %}
         {% include "workspace/crm/agency/includes/kpi_card.html" with label="بدون لایسنس" value=members_dashboard.without_seat icon="triangle-exclamation" tone="orange" %}
         {% include "workspace/crm/agency/includes/kpi_card.html" with label="دعوت در انتظار" value=members_dashboard.pending_invites icon="hourglass-half" tone="blue" %}
-        {% include "workspace/crm/agency/includes/kpi_card.html" with label="Seat آزاد" value=members_dashboard.seats.available|default:0 icon="chair" tone="green" %}
+        {% include "workspace/crm/agency/includes/kpi_card.html" with label="صندلی آزاد" value=members_dashboard.seats.available|default:0 icon="chair" tone="green" %}
     </div>
 
     <div class="agency-filter-bar" id="agencyMembersToolbar">
         <div class="agency-filter-bar__search">
             <i class="fas fa-search agency-filter-bar__search-icon" aria-hidden="true"></i>
-            <input type="search" class="agency-filter-bar__input" id="agencyMemberSearch" name="agency_member_q" placeholder="جستجو نام یا موبایل..." aria-label="جستجو مشاور" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" value="">
+            <input type="text" role="searchbox" class="agency-filter-bar__input" id="agencyMemberSearch" name="agency_member_q" placeholder="جستجو نام یا موبایل..." aria-label="جستجو مشاور" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true" data-form-type="other" readonly value="">
         </div>
         <select class="agency-filter-bar__select" id="agencyMemberStatusFilter" aria-label="فیلتر وضعیت">
             <option value="">همه وضعیت‌ها</option>

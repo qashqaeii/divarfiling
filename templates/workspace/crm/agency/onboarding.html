@@ -67,7 +67,7 @@
                     <span class="agency-step-head__icon" aria-hidden="true"><i class="fas fa-id-card"></i></span>
                     <div>
                         <h2 class="agency-step-head__title">تخصیص لایسنس</h2>
-                        <p class="agency-step-head__desc">{{ seats.available|default:0 }} Seat آزاد برای مشاوران پذیرفته‌شده.</p>
+                        <p class="agency-step-head__desc">{{ seats.available|default:0 }} صندلی آزاد برای مشاوران پذیرفته‌شده.</p>
                     </div>
                 </header>
 
@@ -112,7 +112,7 @@
                                             <input type="hidden" name="action" value="assign_seat">
                                             <input type="hidden" name="member_user_id" value="{{ m.user_id }}">
                                             <select name="license_id" class="crm-input crm-select" required>
-                                                <option value="">Seat آزاد...</option>
+                                                <option value="">صندلی آزاد...</option>
                                                 {% for seat in available_seats %}
                                                 <option value="{{ seat.pk }}">Seat {{ seat.sequence }}</option>
                                                 {% endfor %}
@@ -120,7 +120,7 @@
                                             <button type="submit" class="crm-btn crm-btn-primary crm-btn-sm">تخصیص</button>
                                         </form>
                                         {% else %}
-                                        {% include "workspace/crm/agency/includes/status_badge.html" with status="locked" label="Seat آزاد نیست" %}
+                                        {% include "workspace/crm/agency/includes/status_badge.html" with status="locked" label="صندلی آزاد نیست" %}
                                         {% endif %}
                                         {% else %}
                                         <span class="agency-status agency-status--muted">منتظر پذیرش دعوت</span>

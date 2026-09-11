@@ -20,9 +20,9 @@
     <div class="agency-kpi-strip agency-kpi-strip--ref" aria-label="شاخص‌های کلیدی">
         {% include "workspace/crm/agency/includes/kpi_card.html" with label="مشاور فعال" value=summary.active_advisors icon="users" tone="purple" %}
         {% if hub_seats %}
-        {% include "workspace/crm/agency/includes/kpi_card.html" with label="Seat آزاد" value=summary.available_seats icon="chair" tone="blue" seat_total=hub_seats.total %}
+        {% include "workspace/crm/agency/includes/kpi_card.html" with label="صندلی آزاد" value=summary.available_seats icon="chair" tone="blue" seat_total=hub_seats.total %}
         {% else %}
-        {% include "workspace/crm/agency/includes/kpi_card.html" with label="Seat آزاد" value=summary.available_seats icon="chair" tone="blue" %}
+        {% include "workspace/crm/agency/includes/kpi_card.html" with label="صندلی آزاد" value=summary.available_seats icon="chair" tone="blue" %}
         {% endif %}
         {% include "workspace/crm/agency/includes/kpi_card.html" with label="مخاطب جدید" value=summary.contacts_new icon="address-book" tone="blue" %}
         {% include "workspace/crm/agency/includes/kpi_card.html" with label="فایل جدید" value=summary.properties_new icon="building" tone="orange" %}

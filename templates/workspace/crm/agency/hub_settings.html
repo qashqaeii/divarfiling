@@ -1,102 +1,205 @@
 {% extends "workspace/crm/agency/hub_base.html" %}
+{% load workspace_tags %}
+
 {% block agency_hub_content %}
+
 <div class="agency-page-head">
+
     <div>
+
         <h2 class="agency-page-head__title">تنظیمات آژانس</h2>
+
         <p class="agency-page-head__sub">اطلاعات، اشتراک و ابزارهای مدیریتی</p>
+
     </div>
+
 </div>
+
+
 
 <div class="agency-settings-grid">
-    <section class="agency-settings-card">
-        <div class="agency-settings-card__head">
-            <span class="agency-settings-card__icon" aria-hidden="true"><i class="fas fa-building"></i></span>
-            <div>
-                <h3 class="agency-settings-card__title">اطلاعات آژانس</h3>
-                <p class="agency-settings-card__desc">نام، پروفایل و تنظیمات API</p>
-            </div>
-        </div>
-        <dl class="agency-settings-kv">
-            <div>
-                <dt>نام آژانس</dt>
-                <dd>{{ hub_agency.name|default:"—" }}</dd>
-            </div>
-        </dl>
-        <a href="{{ legacy_team_url }}" class="crm-btn crm-btn-ghost crm-btn-sm agency-settings-card__cta">
-            <i class="fas fa-pen" aria-hidden="true"></i>
-            ویرایش پروفایل و API
-        </a>
-    </section>
 
     <section class="agency-settings-card">
+
         <div class="agency-settings-card__head">
-            <span class="agency-settings-card__icon" aria-hidden="true"><i class="fas fa-crown"></i></span>
+
+            <span class="agency-settings-card__icon" aria-hidden="true"><i class="fas fa-building"></i></span>
+
             <div>
-                <h3 class="agency-settings-card__title">وضعیت اشتراک</h3>
-                <p class="agency-settings-card__desc">پلن فعال و تاریخ انقضا</p>
+
+                <h3 class="agency-settings-card__title">اطلاعات آژانس</h3>
+
+                <p class="agency-settings-card__desc">نام، پروفایل و تنظیمات API</p>
+
             </div>
+
         </div>
-        {% if hub_subscription %}
+
         <dl class="agency-settings-kv">
+
             <div>
-                <dt>پلن</dt>
-                <dd>{% include "workspace/crm/agency/includes/status_badge.html" with status="ok" label="پلن آژانس" %}</dd>
+
+                <dt>نام آژانس</dt>
+
+                <dd>{{ hub_agency.name|default:"—" }}</dd>
+
             </div>
-            <div>
-                <dt>انقضا</dt>
-                <dd>{{ hub_subscription.expires_at|date:"Y/m/d H:i" }}</dd>
-            </div>
+
         </dl>
-        {% else %}
-        {% include "workspace/crm/agency/includes/empty_state.html" with icon="lock" title="اشتراک فعالی یافت نشد" compact=True variant="inline" %}
-        {% endif %}
+
+        <a href="{{ legacy_team_url }}" class="crm-btn crm-btn-ghost crm-btn-sm agency-settings-card__cta">
+
+            <i class="fas fa-pen" aria-hidden="true"></i>
+
+            ویرایش پروفایل و API
+
+        </a>
+
     </section>
+
+
+
+    <section class="agency-settings-card">
+
+        <div class="agency-settings-card__head">
+
+            <span class="agency-settings-card__icon" aria-hidden="true"><i class="fas fa-crown"></i></span>
+
+            <div>
+
+                <h3 class="agency-settings-card__title">وضعیت اشتراک</h3>
+
+                <p class="agency-settings-card__desc">پلن فعال و تاریخ انقضا</p>
+
+            </div>
+
+        </div>
+
+        {% if hub_subscription %}
+
+        <dl class="agency-settings-kv">
+
+            <div>
+
+                <dt>پلن</dt>
+
+                <dd>{% include "workspace/crm/agency/includes/status_badge.html" with status="ok" label="پلن آژانس" %}</dd>
+
+            </div>
+
+            <div>
+
+                <dt>انقضا</dt>
+
+                <dd>{{ hub_subscription.expires_at|ws_jalali_datetime }}</dd>
+
+            </div>
+
+        </dl>
+
+        {% else %}
+
+        {% include "workspace/crm/agency/includes/empty_state.html" with icon="lock" title="اشتراک فعالی یافت نشد" compact=True variant="inline" %}
+
+        {% endif %}
+
+    </section>
+
+
 
     {% if hub_seats %}
+
     <section class="agency-settings-card">
+
         <div class="agency-settings-card__head">
+
             <span class="agency-settings-card__icon" aria-hidden="true"><i class="fas fa-chair"></i></span>
+
             <div>
+
                 <h3 class="agency-settings-card__title">خلاصه Seat</h3>
+
                 <p class="agency-settings-card__desc">مصرف صندلی‌های لایسنس</p>
+
             </div>
+
         </div>
+
         {% include "workspace/crm/agency/includes/seat_summary.html" with seats=hub_seats compact=True %}
+
         <a href="{% url 'workspace:agency_hub_licenses' %}" class="crm-btn crm-btn-ghost crm-btn-sm agency-settings-card__cta">
+
             مدیریت لایسنس‌ها
+
         </a>
+
     </section>
+
     {% endif %}
 
+
+
     <section class="agency-settings-card agency-settings-card--wide">
+
         <div class="agency-settings-card__head">
+
             <span class="agency-settings-card__icon" aria-hidden="true"><i class="fas fa-screwdriver-wrench"></i></span>
+
             <div>
+
                 <h3 class="agency-settings-card__title">ابزارهای پیشرفته</h3>
+
                 <p class="agency-settings-card__desc">امکانات تکمیلی برای تیم‌های بزرگ‌تر</p>
+
             </div>
+
         </div>
+
         <ul class="agency-settings-list agency-settings-list--grid">
+
             {% for key, label, url in advanced_tabs %}
+
             <li>
+
                 <a href="{{ url }}">
+
                     <span class="agency-settings-list__icon" aria-hidden="true">
+
                         {% if key == 'webhooks' %}<i class="fas fa-plug"></i>
+
                         {% elif key == 'sync' %}<i class="fas fa-rotate"></i>
+
                         {% elif key == 'transfers' %}<i class="fas fa-right-left"></i>
+
                         {% elif key == 'audit' %}<i class="fas fa-shield-halved"></i>
+
                         {% elif key == 'messages' %}<i class="fas fa-envelope"></i>
+
                         {% elif key == 'announcements' %}<i class="fas fa-bullhorn"></i>
+
                         {% elif key == 'tv' %}<i class="fas fa-tv"></i>
+
                         {% else %}<i class="fas fa-gear"></i>
+
                         {% endif %}
+
                     </span>
+
                     <span class="agency-settings-list__label">{{ label }}</span>
+
                     <i class="fas fa-arrow-left agency-settings-list__arrow" aria-hidden="true"></i>
+
                 </a>
+
             </li>
+
             {% endfor %}
+
         </ul>
+
     </section>
+
 </div>
+
 {% endblock %}
+

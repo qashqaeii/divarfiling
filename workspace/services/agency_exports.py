@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import csv
 import io
-from datetime import datetime
+from datetime import datetime, time, timedelta
 from typing import Any, Iterable, Optional
 
 from django.http import HttpResponse
@@ -25,29 +25,46 @@ from workspace.services.agency_data_scope import (
 )
 from workspace.services.agency_entitlement import resolve_managed_agency
 from workspace.services.crm import customers_to_export_rows
+from workspace.services.jalali_input import parse_jalali_date_string
 
 EXPORT_DATA_TYPES = ('contacts', 'properties', 'filing', 'deals', 'contracts')
 EXPORT_FORMATS = ('csv', 'xlsx')
 
 
+def _parse_date_filter_value(raw, *, end_of_day: bool = False):
+    if not raw or not isinstance(raw, str):
+        return None
+    raw = raw.strip()
+    if not raw:
+        return None
+
+    parsed_date = parse_jalali_date_string(raw)
+    if not parsed_date:
+        parsed_dt = parse_datetime(raw)
+        if parsed_dt:
+            parsed_date = parsed_dt.date() if isinstance(parsed_dt, datetime) else parsed_dt
+        else:
+            parsed_date = parse_date(raw)
+    if not parsed_date:
+        return None
+    if isinstance(parsed_date, datetime):
+        parsed_date = parsed_date.date()
+
+    if end_of_day:
+        dt = datetime.combine(parsed_date, time(23, 59, 59, 999999))
+    else:
+        dt = datetime.combine(parsed_date, time.min)
+    if timezone.is_naive(dt):
+        dt = timezone.make_aware(dt)
+    return dt
+
+
 def _parse_filter_dates(filters: dict) -> tuple:
-    date_from = filters.get('date_from') or filters.get('from')
-    date_to = filters.get('date_to') or filters.get('to')
-    if isinstance(date_from, str) and date_from:
-        parsed = parse_datetime(date_from) or parse_date(date_from)
-        if parsed and timezone.is_naive(parsed):
-            parsed = timezone.make_aware(parsed)
-        date_from = parsed
-    if isinstance(date_to, str) and date_to:
-        parsed = parse_datetime(date_to) or parse_date(date_to)
-        if parsed:
-            if timezone.is_naive(parsed):
-                parsed = timezone.make_aware(parsed)
-            if hasattr(parsed, 'hour') and parsed.hour == 0:
-                from datetime import timedelta
-                date_to = parsed + timedelta(days=1) - timedelta(microseconds=1)
-            else:
-                date_to = parsed
+    date_from = _parse_date_filter_value(filters.get('date_from') or filters.get('from'))
+    date_to = _parse_date_filter_value(
+        filters.get('date_to') or filters.get('to'),
+        end_of_day=True,
+    )
     return date_from, date_to
 
 

@@ -122,6 +122,27 @@
     });
   }
 
+  function guardMemberSearchInput(input) {
+    input.setAttribute('autocomplete', 'off');
+    input.setAttribute('autocorrect', 'off');
+    input.setAttribute('spellcheck', 'false');
+    input.setAttribute('data-lpignore', 'true');
+    input.setAttribute('data-1p-ignore', 'true');
+    input.setAttribute('data-form-type', 'other');
+    if (!input.getAttribute('role')) input.setAttribute('role', 'searchbox');
+    input.setAttribute('readonly', 'readonly');
+    input.addEventListener('focus', function () {
+      input.removeAttribute('readonly');
+    }, { once: true });
+  }
+
+  function clearPhoneAutofill(input) {
+    var value = (input.value || '').trim();
+    if (!value || !IR_MOBILE.test(normalizePhone(value))) return false;
+    input.value = '';
+    return true;
+  }
+
   function initMemberFilters() {
     var search = document.getElementById('agencyMemberSearch');
     var statusF = document.getElementById('agencyMemberStatusFilter');
@@ -130,9 +151,9 @@
     var empty = document.getElementById('agencyMembersFilterEmpty');
     if (!search) return;
 
-    // Prevent browser autofill from polluting initial search state
-    search.value = '';
-    search.setAttribute('autocomplete', 'off');
+    guardMemberSearchInput(search);
+
+    var userEdited = false;
 
     function hasActiveFilters() {
       return !!(search.value.trim() || (statusF && statusF.value) || (licenseF && licenseF.value));
@@ -168,6 +189,7 @@
     }
 
     function resetFilters() {
+      userEdited = false;
       search.value = '';
       if (statusF) statusF.value = '';
       if (licenseF) licenseF.value = '';
@@ -175,20 +197,30 @@
       search.focus();
     }
 
-    search.addEventListener('input', filterMembers);
+    function sweepAutofill() {
+      if (userEdited) return;
+      if (clearPhoneAutofill(search) || search.value.trim()) {
+        search.value = '';
+        filterMembers();
+      }
+    }
+
+    search.addEventListener('input', function () {
+      userEdited = true;
+      filterMembers();
+    });
     if (statusF) statusF.addEventListener('change', filterMembers);
     if (licenseF) licenseF.addEventListener('change', filterMembers);
     if (clearBtn) clearBtn.addEventListener('click', resetFilters);
 
-    // Delayed clear for stubborn browser autofill
-    window.setTimeout(function () {
-      if (search.value && !search.dataset.userTyped) search.value = '';
-    }, 120);
-    search.addEventListener('input', function () {
-      search.dataset.userTyped = '1';
-    });
-
+    search.value = '';
     filterMembers();
+    requestAnimationFrame(function () {
+      requestAnimationFrame(sweepAutofill);
+    });
+    window.setTimeout(sweepAutofill, 120);
+    window.setTimeout(sweepAutofill, 500);
+    window.setTimeout(sweepAutofill, 1000);
   }
 
   document.addEventListener('DOMContentLoaded', function () {

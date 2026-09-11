@@ -564,6 +564,49 @@
 
 .agency-export-form__full { grid-column: 1 / -1; font-size: 0.8125rem; }
 
+.agency-export-form__dates-label {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--ah-muted);
+  margin-bottom: 0.35rem;
+}
+
+.agency-export-form__date-range {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.agency-export-date-field { display: block; }
+
+.agency-export-date-lbl {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.6875rem;
+  color: var(--ah-muted);
+  margin-bottom: 0.3rem;
+}
+
+.agency-export-date-lbl i {
+  font-size: 0.75rem;
+  opacity: 0.85;
+}
+
+.agency-export-form__date-hint {
+  display: block;
+  margin-top: 0.4rem;
+  font-size: 0.6875rem;
+  color: var(--ah-muted);
+  line-height: 1.5;
+}
+
+.agency-export-form .crm-jalali-date {
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
 /* ── Mobile cards (table fallback) ── */
 .agency-card-list { display: none; gap: 0.65rem; }
 
@@ -692,6 +735,7 @@
   }
 
   .agency-export-form { grid-template-columns: 1fr; }
+  .agency-export-form__date-range { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 480px) {
@@ -1255,6 +1299,21 @@ body.agency-has-sticky-footer { padding-bottom: 72px; }
   width: 118px;
   height: 118px;
   flex-shrink: 0;
+}
+
+.agency-hero__visual--logo {
+  border-radius: 20px;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid rgba(124, 58, 237, 0.14);
+  box-shadow: 0 10px 28px rgba(91, 33, 182, 0.14);
+}
+
+.agency-hero__logo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .agency-hero__orb {

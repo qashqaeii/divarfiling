@@ -34,14 +34,38 @@
                     <option value="csv">CSV</option>
                 </select>
             </label>
-            <label>
-                <span>از تاریخ</span>
-                <input type="date" name="date_from" class="crm-input">
-            </label>
-            <label>
-                <span>تا تاریخ</span>
-                <input type="date" name="date_to" class="crm-input">
-            </label>
+            <div class="agency-export-form__dates agency-export-form__full">
+                <span class="agency-export-form__dates-label">بازه زمانی (اختیاری)</span>
+                <div class="agency-export-form__date-range">
+                    <label class="agency-export-date-field">
+                        <span class="agency-export-date-lbl"><i class="fas fa-calendar-day" aria-hidden="true"></i> از تاریخ</span>
+                        <input type="text"
+                               name="date_from"
+                               class="crm-input crm-jalali-date"
+                               data-jdp=""
+                               data-jdp-only-date=""
+                               placeholder="۱۴۰۴/۰۱/۰۱"
+                               autocomplete="off"
+                               dir="ltr"
+                               inputmode="numeric"
+                               aria-label="از تاریخ">
+                    </label>
+                    <label class="agency-export-date-field">
+                        <span class="agency-export-date-lbl"><i class="fas fa-calendar-check" aria-hidden="true"></i> تا تاریخ</span>
+                        <input type="text"
+                               name="date_to"
+                               class="crm-input crm-jalali-date"
+                               data-jdp=""
+                               data-jdp-only-date=""
+                               placeholder="۱۴۰۴/۱۲/۲۹"
+                               autocomplete="off"
+                               dir="ltr"
+                               inputmode="numeric"
+                               aria-label="تا تاریخ">
+                    </label>
+                </div>
+                <small class="agency-export-form__date-hint">تقویم شمسی — با کلیک روی فیلد، تاریخ را از تقویم انتخاب کنید.</small>
+            </div>
             <label class="agency-export-form__full">
                 <input type="checkbox" name="all_members" value="1" checked>
                 خروجی از همه مشاوران

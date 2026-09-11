@@ -16,6 +16,7 @@ from workspace.services.agency_entitlement import (
 )
 from workspace.services.agency_members import build_members_dashboard
 from workspace.services.agency_seats import get_member_seat
+from workspace.services.crm_agency_tv import _agency_logo_url
 
 
 def hub_base_context(user) -> dict[str, Any]:
@@ -25,6 +26,7 @@ def hub_base_context(user) -> dict[str, Any]:
         'hub_agency': agency,
         'hub_subscription': sub,
         'hub_seats': seats,
+        'hub_agency_logo_url': _agency_logo_url(agency) if agency else None,
     }
 
 

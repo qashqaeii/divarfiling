@@ -4,12 +4,34 @@
 
     var tabs = modal.querySelectorAll('[data-fl-help-tab]');
     var panes = modal.querySelectorAll('[data-fl-help-pane]');
+    var body = document.getElementById('flHelpScrollBody');
+    var progress = document.getElementById('flHelpScrollProgress');
+    var nav = modal.querySelector('.fl-help-modal__nav');
+    var indicator = modal.querySelector('.fl-help-modal__nav-indicator');
+
+    function moveIndicator(activeBtn) {
+        if (!nav || !indicator || !activeBtn) return;
+        var navRect = nav.getBoundingClientRect();
+        var btnRect = activeBtn.getBoundingClientRect();
+        indicator.style.width = btnRect.width + 'px';
+        indicator.style.insetInlineStart = (btnRect.left - navRect.left + nav.scrollLeft) + 'px';
+        indicator.style.transform = 'none';
+    }
+
+    function updateScrollProgress() {
+        if (!body || !progress) return;
+        var max = body.scrollHeight - body.clientHeight;
+        var ratio = max > 0 ? body.scrollTop / max : 0;
+        progress.style.transform = 'scaleX(' + Math.min(1, Math.max(0, ratio)) + ')';
+    }
 
     function activateTab(id) {
+        var activeBtn = null;
         tabs.forEach(function (btn) {
             var on = btn.getAttribute('data-fl-help-tab') === id;
             btn.classList.toggle('is-active', on);
             btn.setAttribute('aria-selected', on ? 'true' : 'false');
+            if (on) activeBtn = btn;
         });
         panes.forEach(function (pane) {
             var on = pane.getAttribute('data-fl-help-pane') === id;
@@ -20,13 +42,12 @@
                 pane.setAttribute('hidden', '');
             }
         });
-        var body = modal.querySelector('.fl-help-modal__body');
         if (body) body.scrollTop = 0;
+        updateScrollProgress();
+        requestAnimationFrame(function () { moveIndicator(activeBtn); });
     }
 
     tabs.forEach(function (btn) {
-        btn.setAttribute('role', 'tab');
-        btn.setAttribute('type', 'button');
         btn.addEventListener('click', function () {
             activateTab(btn.getAttribute('data-fl-help-tab'));
         });
@@ -38,9 +59,23 @@
         });
     });
 
+    if (body) {
+        body.addEventListener('scroll', updateScrollProgress, { passive: true });
+    }
+
+    window.addEventListener('resize', function () {
+        var active = modal.querySelector('.fl-help-modal__nav-btn.is-active');
+        moveIndicator(active);
+    });
+
     modal.addEventListener('click', function (e) {
-        if (e.target.closest('[data-modal-close]') && typeof WSModal !== 'undefined') {
+        if (e.target.closest('[data-modal-close]')) {
             setTimeout(function () { activateTab('start'); }, 280);
         }
+    });
+
+    requestAnimationFrame(function () {
+        moveIndicator(modal.querySelector('.fl-help-modal__nav-btn.is-active'));
+        updateScrollProgress();
     });
 })();

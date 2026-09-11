@@ -37,6 +37,7 @@ from workspace.services.agency_entitlement import (
     has_assigned_agency_seat,
 )
 from workspace.services.agency_exports import export_member_data, export_team_data
+from workspace.services.agency_member_hub import build_member_hub_context
 
 TAB_CHOICES = (
     'overview', 'contacts', 'properties', 'filing', 'deals', 'contracts', 'activities',
@@ -224,6 +225,19 @@ class AgencyAdvisorMemberView(AgencyHubAccessMixin, LoginRequiredMixin, Template
             raise PermissionDenied
         ctx.update(seat_ctx)
         ctx['access_level'] = agency_hub_access_level(self.request.user)
+
+        tab = self.request.GET.get('tab', 'overview')
+        period = int(self.request.GET.get('period', '30') or 30)
+        hub_ctx = build_member_hub_context(
+            self.request,
+            membership=seat_ctx['membership'],
+            agency=seat_ctx['agency'],
+            subscription=seat_ctx['subscription'],
+            license_obj=seat_ctx['license'],
+            tab=tab,
+            period=period,
+        )
+        ctx.update(hub_ctx)
         return ctx
 
 

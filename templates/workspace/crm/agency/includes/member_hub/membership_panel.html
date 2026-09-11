@@ -1,0 +1,25 @@
+{% load workspace_tags %}
+<section class="amh-panel amh-panel--membership">
+    <h3 class="amh-section-title"><i class="fas fa-id-card" aria-hidden="true"></i> اطلاعات عضویت</h3>
+    <dl class="amh-membership">
+        <div><dt>آژانس</dt><dd>{{ agency.name }}</dd></div>
+        {% if agency_leader_name %}
+        <div><dt>مدیر آژانس</dt><dd>{{ agency_leader_name }}</dd></div>
+        {% endif %}
+        <div><dt>نقش</dt><dd>{{ membership.get_role_display|default:membership.role }}</dd></div>
+        <div><dt>تاریخ عضویت</dt><dd>{{ membership.joined_at|ws_jalali_date }}</dd></div>
+        <div><dt>وضعیت عضویت</dt><dd>{% if membership.is_active %}فعال{% else %}غیرفعال{% endif %}</dd></div>
+        <div><dt>لایسنس</dt><dd>{% if license %}فعال{% else %}ندارد{% endif %}</dd></div>
+        {% if license and license.expires_at %}
+        <div><dt>انقضای لایسنس</dt><dd>{{ license.expires_at|ws_jalali_date }}</dd></div>
+        {% endif %}
+        {% if subscription and subscription.expires_at %}
+        <div><dt>اشتراک آژانس</dt><dd>تا {{ subscription.expires_at|ws_jalali_date }}</dd></div>
+        {% endif %}
+        <div><dt>Seat</dt><dd>{% if license %}تخصیص‌یافته و فعال{% else %}بدون صندلی{% endif %}</dd></div>
+    </dl>
+    <p class="amh-membership__note">
+        <i class="fas fa-circle-info" aria-hidden="true"></i>
+        برای مدیریت تیم یا تغییرات ساختاری با مدیر آژانس تماس بگیرید.
+    </p>
+</section>

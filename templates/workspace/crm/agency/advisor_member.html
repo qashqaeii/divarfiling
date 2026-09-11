@@ -2,48 +2,72 @@
 {% load static workspace_tags %}
 
 {% block crm_extra_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/agency-phase2.css' %}?v=3">
-<link rel="stylesheet" href="{% static 'workspace/css/agency-phase3.css' %}?v=3">
-<link rel="stylesheet" href="{% static 'workspace/css/agency-hub.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'workspace/css/agency-phase2.css' %}?v=8">
+<link rel="stylesheet" href="{% static 'workspace/css/agency-phase3.css' %}?v=9">
+<link rel="stylesheet" href="{% static 'workspace/css/agency-hub.css' %}?v=8">
+<link rel="stylesheet" href="{% static 'workspace/css/agency-member-hub.css' %}?v=1">
+{% if tab == 'messages' %}
+<link rel="stylesheet" href="{% static 'workspace/css/crm-team-messages.css' %}?v=15">
+{% elif tab == 'announcements' %}
+<link rel="stylesheet" href="{% static 'workspace/css/crm-team-announcements.css' %}?v=5">
+{% endif %}
 {% endblock %}
 
 {% block crm_content %}
-<div class="agency-member-view" dir="rtl">
-    <header class="a360-header a360-header-compact">
-        <div class="a360-header-main">
-            <div class="a360-avatar" aria-hidden="true"><i class="fas fa-building"></i></div>
-            <div class="a360-identity">
-                <h1>{{ agency.name }}</h1>
-                <p class="a360-sub">عضویت شما در آژانس</p>
+<div class="agency-member-hub" dir="rtl">
+    {% include "workspace/crm/agency/includes/member_hub/header.html" %}
+    {% include "workspace/crm/agency/includes/member_hub/tabs.html" %}
+
+    <div class="amh-body">
+        {% if tab == 'overview' %}
+        {% include "workspace/crm/agency/includes/member_hub/kpi_strip.html" %}
+        <div class="amh-grid amh-grid--overview">
+            <div class="amh-grid__main">
+                {% include "workspace/crm/agency/includes/member_hub/performance_panel.html" %}
+                <div class="amh-grid amh-grid--split">
+                    {% include "workspace/crm/agency/includes/member_hub/activity_panel.html" %}
+                    {% if agency_feature_announcements %}
+                    {% include "workspace/crm/agency/includes/member_hub/announcements_panel.html" %}
+                    {% endif %}
+                </div>
             </div>
+            <aside class="amh-grid__aside">
+                {% include "workspace/crm/agency/includes/member_hub/goals_panel.html" %}
+                {% include "workspace/crm/agency/includes/member_hub/quick_actions.html" %}
+            </aside>
         </div>
-    </header>
-    <div class="a360-member-cards">
-        <div class="a360-kpi">
-            <span class="a360-kpi-label">نقش</span>
-            <strong>{{ membership.get_role_display|default:membership.role }}</strong>
+        {% include "workspace/crm/agency/includes/member_hub/membership_panel.html" %}
+
+        {% elif tab == 'performance' %}
+        {% include "workspace/crm/agency/includes/member_hub/kpi_strip.html" %}
+        {% include "workspace/crm/agency/includes/member_hub/performance_panel.html" %}
+        <div class="amh-grid amh-grid--split">
+            {% include "workspace/crm/agency/includes/member_hub/goals_panel.html" %}
+            {% include "workspace/crm/agency/includes/member_hub/activity_panel.html" %}
         </div>
-        <div class="a360-kpi">
-            <span class="a360-kpi-label">وضعیت عضویت</span>
-            <strong>{% if membership.is_active %}فعال{% else %}غیرفعال{% endif %}</strong>
-        </div>
-        <div class="a360-kpi">
-            <span class="a360-kpi-label">لایسنس</span>
-            <strong>{% if license %}فعال{% else %}ندارد{% endif %}</strong>
-        </div>
-        {% if license and license.expires_at %}
-        <div class="a360-kpi">
-            <span class="a360-kpi-label">انقضای لایسنس</span>
-            <strong style="font-size:0.95rem;">{{ license.expires_at|ws_jalali_date }}</strong>
-        </div>
-        {% endif %}
-        {% if subscription %}
-        <div class="a360-kpi">
-            <span class="a360-kpi-label">اشتراک آژانس</span>
-            <strong style="font-size:0.95rem;">تا {{ subscription.expires_at|ws_jalali_date }}</strong>
-        </div>
+
+        {% elif tab == 'messages' and agency_feature_messages %}
+        {% include "workspace/crm/includes/team_tab_messages.html" %}
+
+        {% elif tab == 'announcements' and agency_feature_announcements %}
+        {% include "workspace/crm/includes/team_tab_announcements.html" %}
+
+        {% elif tab == 'membership' %}
+        {% include "workspace/crm/agency/includes/member_hub/membership_panel.html" %}
+        {% include "workspace/crm/agency/includes/member_hub/quick_actions.html" %}
+
+        {% else %}
+        {% include "workspace/crm/agency/includes/empty_state.html" with icon="lock" title="این بخش در دسترس نیست" description="برای مشاهده این بخش با مدیر آژانس تماس بگیرید." compact=True %}
         {% endif %}
     </div>
-    <p class="a360-member-note">این بخش اطلاعات عضویت شماست. برای مدیریت تیم با مالک آژانس تماس بگیرید.</p>
 </div>
+{% endblock %}
+
+{% block crm_js %}
+<script src="{% static 'workspace/js/agency-ui.js' %}?v=2" defer></script>
+{% if tab == 'messages' and agency_feature_messages %}
+<script src="{% static 'workspace/js/crm-team-messages.js' %}?v=1" defer></script>
+{% elif tab == 'announcements' and agency_feature_announcements %}
+<script src="{% static 'workspace/js/crm-team-announcements.js' %}?v=1" defer></script>
+{% endif %}
 {% endblock %}

@@ -1,0 +1,26 @@
+<nav class="amh-tabs" aria-label="بخش‌های عضویت آژانس">
+    {% for key, label in member_hub_tabs %}
+    {% if key != 'messages' or agency_feature_messages %}
+    {% if key != 'announcements' or agency_feature_announcements %}
+    <a href="?tab={{ key }}{% if key == 'overview' or key == 'performance' %}&period={{ period }}{% endif %}"
+       class="amh-tab{% if tab == key %} is-active{% endif %}"
+       {% if tab == key %}aria-current="page"{% endif %}>
+        <span class="amh-tab__icon" aria-hidden="true">
+            {% if key == 'overview' %}<i class="fas fa-gauge-high"></i>
+            {% elif key == 'performance' %}<i class="fas fa-chart-line"></i>
+            {% elif key == 'messages' %}<i class="fas fa-message"></i>
+            {% elif key == 'announcements' %}<i class="fas fa-bullhorn"></i>
+            {% elif key == 'membership' %}<i class="fas fa-id-card"></i>
+            {% endif %}
+        </span>
+        <span>{{ label }}</span>
+        {% if key == 'messages' and messages_unread_count %}
+        <span class="amh-tab__badge">{{ messages_unread_count }}</span>
+        {% elif key == 'announcements' and announcements_unread_count %}
+        <span class="amh-tab__badge">{{ announcements_unread_count }}</span>
+        {% endif %}
+    </a>
+    {% endif %}
+    {% endif %}
+    {% endfor %}
+</nav>

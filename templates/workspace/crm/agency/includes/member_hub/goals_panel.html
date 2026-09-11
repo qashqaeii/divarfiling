@@ -1,0 +1,24 @@
+<section class="amh-panel amh-panel--goals">
+    <h3 class="amh-section-title"><i class="fas fa-bullseye" aria-hidden="true"></i> هدف‌های من</h3>
+    {% if my_goals %}
+    <ul class="amh-goals">
+        {% for g in my_goals %}
+        <li class="amh-goal">
+            <div class="amh-goal__head">
+                <span class="amh-goal__label">{{ g.metric_label }}</span>
+                <span class="amh-goal__nums">{{ g.actual }} / {{ g.target }}</span>
+            </div>
+            <div class="amh-goal__bar" role="progressbar" aria-valuenow="{{ g.pct }}" aria-valuemin="0" aria-valuemax="100">
+                <span class="amh-goal__fill" style="width: {{ g.pct }}%;"></span>
+            </div>
+            <span class="amh-goal__pct">{{ g.pct }}٪</span>
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <div class="amh-inline-empty">
+        <i class="fas fa-bullseye" aria-hidden="true"></i>
+        <p>هنوز هدفی برای شما تعیین نشده.</p>
+    </div>
+    {% endif %}
+</section>

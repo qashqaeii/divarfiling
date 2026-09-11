@@ -235,7 +235,7 @@
   }
 
   function initNavScrollHint() {
-    document.querySelectorAll('.agency-hub-nav__track, .a360-tabs').forEach(function (track) {
+    document.querySelectorAll('.agency-hub-nav__track, .a360-tabs, .amh-tabs').forEach(function (track) {
       function update() {
         var atEnd = track.scrollWidth - track.clientWidth - track.scrollLeft < 8;
         var atStart = track.scrollLeft < 8;

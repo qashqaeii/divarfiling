@@ -1,0 +1,36 @@
+<section class="amh-panel amh-panel--performance">
+    <div class="amh-panel__head">
+        <h3 class="amh-section-title"><i class="fas fa-chart-column" aria-hidden="true"></i> عملکرد من در {{ period }} روز اخیر</h3>
+        <div class="agency-period amh-period" role="group" aria-label="بازه زمانی">
+            {% for d in periods %}
+            <a href="?tab={{ tab }}&period={{ d }}" class="agency-period__btn{% if period == d %} is-active{% endif %}">{{ d }} روز</a>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="amh-perf-grid">
+        <div class="amh-perf-stat">
+            <span class="amh-perf-stat__label">مخاطب جدید</span>
+            <strong>{{ period_stats.contacts_new }}</strong>
+        </div>
+        <div class="amh-perf-stat">
+            <span class="amh-perf-stat__label">فایل شخصی جدید</span>
+            <strong>{{ period_stats.properties_new }}</strong>
+        </div>
+        <div class="amh-perf-stat">
+            <span class="amh-perf-stat__label">تماس</span>
+            <strong>{{ period_stats.calls }}</strong>
+        </div>
+        <div class="amh-perf-stat">
+            <span class="amh-perf-stat__label">بازدید</span>
+            <strong>{{ period_stats.visits }}</strong>
+        </div>
+        <div class="amh-perf-stat">
+            <span class="amh-perf-stat__label">معامله بسته</span>
+            <strong>{{ period_stats.deals_closed }}</strong>
+        </div>
+        <div class="amh-perf-stat">
+            <span class="amh-perf-stat__label">معامله فعال</span>
+            <strong>{{ period_stats.active_deals }}</strong>
+        </div>
+    </div>
+</section>

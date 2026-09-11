@@ -1,0 +1,26 @@
+{% load advisor360_tags workspace_tags %}
+<section class="amh-panel amh-panel--activity">
+    <h3 class="amh-section-title"><i class="fas fa-clock-rotate-left" aria-hidden="true"></i> فعالیت اخیر من</h3>
+    {% if recent_activities %}
+    <ul class="agency-timeline agency-timeline--ref amh-timeline">
+        {% for ev in recent_activities|slice:":6" %}
+        <li class="agency-timeline__item">
+            <span class="agency-timeline__rail" aria-hidden="true"></span>
+            <span class="agency-timeline__icon agency-timeline__icon--soft" aria-hidden="true">
+                <i class="fas {{ ev|a360_activity_icon }}"></i>
+            </span>
+            <div class="agency-timeline__body">
+                <div class="agency-timeline__action">{{ ev|a360_activity_label }}</div>
+                {% if ev.title %}<div class="agency-timeline__meta">«{{ ev.title }}»</div>{% endif %}
+            </div>
+            <time class="agency-timeline__time">{{ ev.at|ws_jalali_datetime }}</time>
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <div class="amh-inline-empty">
+        <i class="fas fa-clock-rotate-left" aria-hidden="true"></i>
+        <p>فعالیتی در این بازه ثبت نشده.</p>
+    </div>
+    {% endif %}
+</section>

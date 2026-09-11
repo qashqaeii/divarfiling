@@ -1,0 +1,24 @@
+{% load workspace_tags %}
+<section class="amh-panel amh-panel--announcements">
+    <div class="amh-panel__head">
+        <h3 class="amh-section-title"><i class="fas fa-bullhorn" aria-hidden="true"></i> اطلاعیه‌های آژانس</h3>
+        {% if agency_feature_announcements %}
+        <a href="?tab=announcements" class="amh-panel__link">مشاهده همه</a>
+        {% endif %}
+    </div>
+    {% if recent_announcements %}
+    <ul class="amh-ann-list">
+        {% for ann in recent_announcements %}
+        <li class="amh-ann-item{% if not ann.is_read %} is-unread{% endif %}">
+            <div class="amh-ann-item__title">{{ ann.title }}</div>
+            <time class="amh-ann-item__time">{{ ann.published_dt|ws_jalali_datetime }}</time>
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <div class="amh-inline-empty">
+        <i class="fas fa-bullhorn" aria-hidden="true"></i>
+        <p>اطلاعیه جدیدی ندارید.</p>
+    </div>
+    {% endif %}
+</section>

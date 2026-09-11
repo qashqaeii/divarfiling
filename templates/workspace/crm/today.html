@@ -10,12 +10,13 @@
 {% block status_bar %}{% endblock %}
 
 {% block crm_extra_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/crm-today.css' %}?v=5">
+<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-datasets.css' %}?v=17">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-today.css' %}?v=6">
 {% endblock %}
 
 {% block crm_content %}
 {% include 'workspace/academy/includes/contextual_banner.html' %}
-<div class="crm-queue-app crm-page-chrome crm-today-pro" id="crmTodayPro">
+<div class="crm-queue-app crm-page-chrome crm-today-pro mk-filing-datasets" id="crmTodayPro">
 
     <header class="crm-dash-bar">
         <div class="crm-dash-bar-main">
@@ -31,6 +32,14 @@
             </p>
         </div>
         <div class="crm-dash-bar-actions" role="toolbar" aria-label="عملیات کارهای امروز">
+            <button type="button" class="fl-header__help crm-today-help" title="راهنمای کارهای امروز" aria-label="راهنمای کارهای امروز" data-modal-open="modal-crm-today-help">
+                <span class="fl-header__help-ring" aria-hidden="true"></span>
+                <span class="fl-header__help-bulb" aria-hidden="true">
+                    <i class="fas fa-lightbulb"></i>
+                    <span class="fl-header__help-bulb-glow"></span>
+                </span>
+                <span class="fl-header__help-label">راهنما</span>
+            </button>
             <button type="button" class="crm-dash-act crm-dash-act--primary" data-drawer-open="drawer-quick-lead">
                 <i class="fas fa-bolt" aria-hidden="true"></i><span>مخاطب سریع</span>
             </button>
@@ -126,6 +135,8 @@
         <i class="fas fa-bolt" aria-hidden="true"></i>
         <span>مخاطب</span>
     </button>
+
+    {% include 'workspace/crm/includes/crm_today_help_modal.html' %}
 </div>
 {% endblock %}
 
@@ -139,4 +150,5 @@ window.crmQuickLeadUrl = "{% url 'workspace:crm_quick_lead' %}";
 window.crmTodayUrl = "{% url 'workspace:crm_today' %}";
 </script>
 <script src="{% static 'workspace/js/crm-today.js' %}?v=1"></script>
+<script src="{% static 'workspace/js/filing-help-modal.js' %}?v=1"></script>
 {% endblock %}

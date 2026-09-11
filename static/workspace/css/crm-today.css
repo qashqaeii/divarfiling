@@ -67,6 +67,15 @@
     transform: scale(0.97);
 }
 
+/* ─── Help button (filing parity) ─── */
+.crm-today-pro .crm-dash-bar-actions {
+    align-items: center;
+}
+
+.crm-today-pro .crm-today-help {
+    flex-shrink: 0;
+}
+
 .crm-today-pro .crm-dash-act:focus-visible,
 .crm-today-pro .crm-dash-kpi:focus-visible,
 .crm-today-pro .crm-today-tab:focus-visible,
@@ -644,6 +653,29 @@ a.crm-today-pro .crm-queue-card-name:hover,
         gap: 0.4rem;
         scrollbar-width: none;
         justify-content: flex-start;
+        align-items: center;
+    }
+
+    .crm-today-pro .crm-today-help {
+        flex: 0 0 auto;
+        scroll-snap-align: start;
+        min-height: 2.75rem;
+        height: 2.75rem;
+        padding: 0 0.65rem;
+    }
+
+    .crm-today-pro .crm-today-help .fl-header__help-label {
+        display: none;
+    }
+
+    .crm-today-pro .crm-today-help .fl-header__help-bulb i {
+        font-size: 0.92rem;
+    }
+
+    .crm-today-pro .crm-today-help {
+        box-shadow:
+            0 2px 10px rgba(245, 158, 11, 0.22),
+            0 0 0 3px rgba(251, 191, 36, 0.12);
     }
 
     .crm-today-pro .crm-dash-bar-actions::-webkit-scrollbar { display: none; }

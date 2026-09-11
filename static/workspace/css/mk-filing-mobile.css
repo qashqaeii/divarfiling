@@ -26,8 +26,9 @@
     .mk-filing-mobile .mk-filing-mob-filter-details > summary {
         display: none !important;
     }
-    .mk-filing-mobile .mk-filing-mob-filter-details > .mk-filing-filters-sheet,
-    .mk-filing-mobile .mk-filing-mob-filter-details:not([open]) > .mk-filing-filters-sheet {
+    /* fl-toolbar redesign owns desktop layout — see mk-filing-datasets.css */
+    .mk-filing-mobile .mk-filing-mob-filter-details:not(.fl-toolbar__panel) > .mk-filing-filters-sheet,
+    .mk-filing-mobile .mk-filing-mob-filter-details:not(.fl-toolbar__panel):not([open]) > .mk-filing-filters-sheet {
         display: grid !important;
         grid-template-columns: minmax(0, 1.45fr) repeat(3, minmax(0, 0.9fr)) auto;
         gap: 0.45rem;
@@ -38,6 +39,7 @@
         height: auto !important;
         overflow: visible !important;
     }
+    /* Desktop fl-toolbar layout: mk-filing-datasets.css */
     .mk-filing-mobile .mk-filing-filter,
     .mk-filing-mobile #dsFilterForm {
         display: block !important;

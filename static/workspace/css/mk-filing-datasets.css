@@ -527,29 +527,37 @@
     }
 
     .mk-filing-datasets .fl-toolbar__panel-inner {
-        display: flex !important;
-        align-items: center;
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) auto;
         gap: 0.75rem;
-        flex-wrap: nowrap;
+        align-items: center;
+        min-width: 0;
     }
 
     .mk-filing-datasets .fl-toolbar__filters {
-        flex: 1 1 auto;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 0.65rem;
         min-width: 0;
     }
 
     .mk-filing-datasets .fl-toolbar__field {
-        flex: 1 1 0;
-        min-width: 8.5rem;
+        flex: none;
+        min-width: 0;
         max-width: none;
+        width: 100%;
     }
 
     .mk-filing-datasets .fl-toolbar__actions {
-        flex-shrink: 0;
+        display: flex;
+        align-items: center;
         gap: 0.5rem;
-        padding-inline-start: 0.85rem;
-        margin-inline-start: 0.35rem;
+        flex-shrink: 0;
+        flex-wrap: nowrap;
+        white-space: nowrap;
+        padding-inline-start: 0.75rem;
+        margin-inline-start: 0;
+        border-inline-start: 1px solid color-mix(in srgb, var(--ws-border) 65%, transparent);
     }
 
     .mk-filing-datasets .fl-toolbar__view-label {
@@ -571,23 +579,32 @@
     }
 }
 
-@media (min-width: 769px) and (max-width: 960px) {
+@media (min-width: 769px) and (max-width: 1024px) {
     .mk-filing-datasets .fl-toolbar__panel-inner {
-        flex-wrap: wrap;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 0.65rem;
     }
 
     .mk-filing-datasets .fl-toolbar__filters {
-        flex: 1 1 100%;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 
     .mk-filing-datasets .fl-toolbar__actions {
-        flex: 1 1 100%;
         justify-content: flex-end;
         padding-inline-start: 0;
-        margin-inline-start: 0;
         border-inline-start: none;
         padding-top: 0.15rem;
         border-top: 1px solid color-mix(in srgb, var(--ws-border) 55%, transparent);
+    }
+
+    .mk-filing-datasets .fl-toolbar__apply span {
+        display: none;
+    }
+
+    .mk-filing-datasets .fl-toolbar__apply {
+        width: var(--fl-toolbar-h);
+        padding: 0;
+        justify-content: center;
     }
 }
 

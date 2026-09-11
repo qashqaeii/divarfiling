@@ -22,21 +22,21 @@
             <span>{% if ds.city %}{{ ds.city }}{% endif %}{% if ds.city and ds.district %}، {% endif %}{% if ds.district %}{{ ds.district }}{% endif %}</span>
         </span>
         {% else %}
-        <span class="mk-muted">—</span>
+        <span class="fl-table-empty">—</span>
         {% endif %}
     </td>
     <td class="mk-col-subject fl-col-subject mk-filing-desk-only" data-label="موضوع" data-sort-value="{{ ds.subcategory|default:''|lower }}">
         {% if ds.subcategory %}
         <span class="fl-subject-cell" title="{{ ds.subcategory }}">{{ ds.subcategory|ws_subcategory_short }}</span>
         {% else %}
-        <span class="mk-muted">—</span>
+        <span class="fl-table-empty">—</span>
         {% endif %}
     </td>
     <td class="mk-col-tx fl-col-tx mk-filing-desk-only" data-label="معامله" data-sort-value="{{ tx.mode }}">
         {% if ds.transaction_type %}
         {% include 'workspace/includes/filing/filing_status_badge.html' with kind='tx' mode=tx.mode label=tx.badge %}
         {% else %}
-        <span class="mk-muted">—</span>
+        <span class="fl-table-empty">—</span>
         {% endif %}
     </td>
     <td class="mk-col-num fl-col-count mk-num" data-label="آگهی" data-sort-value="{{ ds.listing_count|default:ds.row_count }}">
@@ -50,13 +50,15 @@
     </td>
     <td class="mk-col-actions fl-col-actions" data-label="">
         <div class="fl-row-actions mk-row-actions">
-            <a href="{% url 'workspace:dataset_detail' ds.id %}" class="fl-row-btn mk-row-btn" title="مشاهده" aria-label="مشاهده"><i class="fas fa-eye" aria-hidden="true"></i></a>
-            <a href="{% url 'workspace:dataset_export' ds.id %}?format=csv" class="fl-row-btn mk-row-btn js-secure-export" data-export-label="خروجی CSV" title="دانلود" aria-label="دانلود"><i class="fas fa-download" aria-hidden="true"></i></a>
-            <a href="{% url 'workspace:dataset_analyze' ds.id %}" class="fl-row-btn mk-row-btn mk-filing-desk-only" title="تحلیل" aria-label="تحلیل"><i class="fas fa-chart-bar" aria-hidden="true"></i></a>
-            <details class="fl-row-menu mk-filing-desk-only">
-                <summary class="fl-row-btn mk-row-btn fl-row-btn--more" title="بیشتر" aria-label="عملیات بیشتر"><i class="fas fa-ellipsis-vertical" aria-hidden="true"></i></summary>
+            <a href="{% url 'workspace:dataset_detail' ds.id %}" class="fl-row-btn fl-row-btn--primary mk-row-btn" title="مشاهده" aria-label="مشاهده"><i class="fas fa-eye" aria-hidden="true"></i></a>
+            <a href="{% url 'workspace:dataset_analyze' ds.id %}" class="fl-row-btn mk-row-btn" title="تحلیل" aria-label="تحلیل"><i class="fas fa-chart-bar" aria-hidden="true"></i></a>
+            <a href="{% url 'workspace:dataset_map' ds.id %}" class="fl-row-btn mk-row-btn" title="نقشه" aria-label="نقشه"><i class="fas fa-map" aria-hidden="true"></i></a>
+            <details class="fl-row-menu">
+                <summary class="fl-row-btn mk-row-btn fl-row-btn--more" title="بیشتر" aria-label="عملیات بیشتر"><i class="fas fa-ellipsis" aria-hidden="true"></i></summary>
                 <div class="fl-row-menu__panel" role="menu">
-                    <a href="{% url 'workspace:dataset_map' ds.id %}" class="fl-row-menu__item" role="menuitem"><i class="fas fa-map" aria-hidden="true"></i> نقشه</a>
+                    <a href="{% url 'workspace:dataset_export' ds.id %}?format=csv" class="fl-row-menu__item js-secure-export" data-export-label="خروجی CSV" role="menuitem">
+                        <i class="fas fa-download" aria-hidden="true"></i> دانلود
+                    </a>
                     <button type="button" class="fl-row-menu__item fl-row-menu__item--danger" role="menuitem"
                         data-confirm
                         data-confirm-title="حذف فایل"
@@ -66,13 +68,6 @@
                     </button>
                 </div>
             </details>
-            <button type="button" class="fl-row-btn mk-row-btn mk-row-btn-danger fl-row-btn--mob-del" title="حذف" aria-label="حذف"
-                data-confirm
-                data-confirm-title="حذف فایل"
-                data-confirm-message="فایل «{{ ds.name }}» و آگهی‌های فایلینگ آن حذف می‌شوند. استخراج بعدی یک دیتاست جدید از آگهی‌های فعلی ایجاد می‌کند. فایل‌های شخصی/CRM شما حذف نمی‌شوند."
-                data-confirm-url="{% url 'workspace:dataset_delete' ds.id %}">
-                <i class="fas fa-trash" aria-hidden="true"></i>
-            </button>
         </div>
     </td>
 </tr>

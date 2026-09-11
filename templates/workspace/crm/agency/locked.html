@@ -1,26 +1,33 @@
 {% extends "workspace/base.html" %}
 {% load static %}
 {% block title %}آژانس — اشتراک منقضی{% endblock %}
+{% block body_class %}mk-page-agency-invite{% endblock %}
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/crm.css' %}">
-<link rel="stylesheet" href="{% static 'workspace/css/agency-phase2.css' %}?v=3">
-<link rel="stylesheet" href="{% static 'workspace/css/agency-hub.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'workspace/css/agency-invite-public.css' %}?v=1">
 {% endblock %}
 {% block content %}
-<div class="agency-onboarding" dir="rtl">
-    <div class="agency-onboarding__shell agency-onboarding__shell--narrow">
-        <div class="agency-onboarding__panel agency-onboarding__complete agency-empty--locked">
-            <span class="agency-empty__icon" aria-hidden="true"><i class="fas fa-lock"></i></span>
-            <h1 class="agency-onboarding__panel-title">مدیریت آژانس قفل شده</h1>
-            <p class="agency-onboarding__panel-desc">
+<section class="agency-invite" dir="rtl" aria-labelledby="agency-locked-title">
+    <div class="agency-invite__bg" aria-hidden="true"></div>
+    <div class="agency-invite__container">
+        <div class="agency-invite__card agency-invite__card--state">
+            <span class="agency-invite__state-icon agency-invite__state-icon--error" aria-hidden="true">
+                <i class="fas fa-lock"></i>
+            </span>
+            <h1 id="agency-locked-title" class="agency-invite__state-title">مدیریت آژانس قفل شده</h1>
+            <p class="agency-invite__state-desc">
                 اشتراک پلن آژانس شما منقضی شده است. داده‌های تیم و اعضا حفظ شده‌اند؛
                 برای ادامه مدیریت، پلن آژانس را تمدید کنید.
             </p>
-            <footer class="agency-step-footer" style="justify-content:center;border:none;">
-                <a href="{{ agency_buy_url }}" class="crm-btn crm-btn-primary">تمدید پلن آژانس</a>
-                <a href="{% url 'workspace:crm_dashboard' %}" class="crm-btn crm-btn-ghost">بازگشت به CRM</a>
-            </footer>
+            <div class="agency-invite__actions">
+                <a href="{{ agency_buy_url }}" class="agency-invite__btn agency-invite__btn--primary">
+                    <i class="fas fa-crown" aria-hidden="true"></i>
+                    تمدید پلن آژانس
+                </a>
+                <a href="{% url 'workspace:crm_dashboard' %}" class="agency-invite__btn agency-invite__btn--ghost">
+                    بازگشت به CRM
+                </a>
+            </div>
         </div>
     </div>
-</div>
+</section>
 {% endblock %}

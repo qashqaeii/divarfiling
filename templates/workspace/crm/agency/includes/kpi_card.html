@@ -1,11 +1,13 @@
 {% comment %}
-Usage: {% include with label="..." value="..." icon="users" tone="purple|blue|orange|green|teal" sub="..." %}
+Usage: {% include with label="..." value="..." icon="users" tone="purple" seat_total=3 %}
 {% endcomment %}
 <article class="agency-kpi-v2 agency-kpi-v2--{{ tone|default:'purple' }}">
-    <span class="agency-kpi-v2__icon" aria-hidden="true"><i class="fas fa-{{ icon }}"></i></span>
-    <span class="agency-kpi-v2__label">{{ label }}</span>
+    <div class="agency-kpi-v2__top">
+        <span class="agency-kpi-v2__label">{{ label }}</span>
+        <span class="agency-kpi-v2__icon" aria-hidden="true"><i class="fas fa-{{ icon }}"></i></span>
+    </div>
     <strong class="agency-kpi-v2__value">{{ value }}</strong>
     {% if seat_total %}
-    <span class="agency-kpi-v2__sub">{{ value }} از {{ seat_total }} صندلی</span>
+    <span class="agency-kpi-v2__sub"><span class="agency-kpi-v2__sub-num">{{ value }}</span> از {{ seat_total }} صندلی</span>
     {% elif sub %}<span class="agency-kpi-v2__sub">{{ sub }}</span>{% endif %}
 </article>

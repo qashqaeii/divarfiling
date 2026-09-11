@@ -18,34 +18,26 @@
         {% include "workspace/crm/agency/includes/kpi_card.html" with label="Seat آزاد" value=members_dashboard.seats.available|default:0 icon="chair" tone="green" %}
     </div>
 
-    <div class="agency-toolbar agency-toolbar--filters" id="agencyMembersToolbar">
-        <div class="agency-toolbar__group agency-toolbar__group--search">
-            <label class="agency-toolbar__label" for="agencyMemberSearch">جستجو</label>
-            <input type="search" class="crm-input agency-toolbar__search" id="agencyMemberSearch" placeholder="نام یا موبایل..." aria-label="جستجو مشاور">
+    <div class="agency-filter-bar" id="agencyMembersToolbar">
+        <div class="agency-filter-bar__search">
+            <i class="fas fa-search agency-filter-bar__search-icon" aria-hidden="true"></i>
+            <input type="search" class="agency-filter-bar__input" id="agencyMemberSearch" name="agency_member_q" placeholder="جستجو نام یا موبایل..." aria-label="جستجو مشاور" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" value="">
         </div>
-        <div class="agency-toolbar__group">
-            <label class="agency-toolbar__label" for="agencyMemberStatusFilter">وضعیت</label>
-            <select class="crm-input" id="agencyMemberStatusFilter" aria-label="فیلتر وضعیت">
-                <option value="">همه</option>
-                <option value="active">عضو فعال</option>
-                <option value="pending">در انتظار پذیرش</option>
-            </select>
-        </div>
-        <div class="agency-toolbar__group">
-            <label class="agency-toolbar__label" for="agencyMemberLicenseFilter">لایسنس</label>
-            <select class="crm-input" id="agencyMemberLicenseFilter" aria-label="فیلتر لایسنس">
-                <option value="">همه</option>
-                <option value="licensed">دارای لایسنس</option>
-                <option value="unlicensed">بدون لایسنس</option>
-            </select>
-        </div>
-        <div class="agency-toolbar__group">
-            <label class="agency-toolbar__label" for="agencyMemberSort">مرتب‌سازی</label>
-            <select class="crm-input" id="agencyMemberSort" aria-label="مرتب‌سازی">
-                <option value="name">نام</option>
-                <option value="recent">جدیدترین</option>
-            </select>
-        </div>
+        <select class="agency-filter-bar__select" id="agencyMemberStatusFilter" aria-label="فیلتر وضعیت">
+            <option value="">همه وضعیت‌ها</option>
+            <option value="active">عضو فعال</option>
+            <option value="pending">در انتظار پذیرش</option>
+        </select>
+        <select class="agency-filter-bar__select" id="agencyMemberLicenseFilter" aria-label="فیلتر لایسنس">
+            <option value="">همه لایسنس‌ها</option>
+            <option value="licensed">دارای لایسنس</option>
+            <option value="unlicensed">بدون لایسنس</option>
+        </select>
+        <select class="agency-filter-bar__select" id="agencyMemberSort" aria-label="مرتب‌سازی">
+            <option value="name">مرتب‌سازی: نام</option>
+            <option value="recent">مرتب‌سازی: جدیدترین</option>
+        </select>
+        <button type="button" class="crm-btn crm-btn-ghost crm-btn-sm agency-filter-bar__clear" id="agencyMemberFilterClear" hidden>پاک کردن</button>
     </div>
 
     <div class="agency-alert agency-alert--info" id="agencyMembersFilterEmpty" hidden>
@@ -268,30 +260,3 @@
     </div>
 </div>
 {% endif %}
-
-<script>
-(function () {
-    var search = document.getElementById('agencyMemberSearch');
-    var statusF = document.getElementById('agencyMemberStatusFilter');
-    var licenseF = document.getElementById('agencyMemberLicenseFilter');
-    if (!search) return;
-
-    function filterMembers() {
-        var q = (search.value || '').trim().toLowerCase();
-        var st = statusF ? statusF.value : '';
-        var lic = licenseF ? licenseF.value : '';
-        document.querySelectorAll('#agencyMembersTable tbody tr[data-name], .agency-member-card[data-name]').forEach(function (el) {
-            var name = el.getAttribute('data-name') || '';
-            var phone = el.getAttribute('data-phone') || '';
-            var matchQ = !q || name.indexOf(q) !== -1 || phone.indexOf(q) !== -1;
-            var matchS = !st || el.getAttribute('data-status') === st;
-            var matchL = !lic || el.getAttribute('data-license') === lic;
-            el.style.display = matchQ && matchS && matchL ? '' : 'none';
-        });
-    }
-
-    search.addEventListener('input', filterMembers);
-    if (statusF) statusF.addEventListener('change', filterMembers);
-    if (licenseF) licenseF.addEventListener('change', filterMembers);
-})();
-</script>

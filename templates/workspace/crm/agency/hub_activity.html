@@ -8,29 +8,21 @@
     </div>
 </div>
 
-<form method="get" class="agency-toolbar agency-toolbar--filters">
-    <div class="agency-toolbar__group">
-        <label class="agency-toolbar__label" for="activityAdvisor">مشاور</label>
-        <select name="advisor" id="activityAdvisor" class="crm-input">
-            <option value="">همه مشاوران</option>
-            {% for m in advisors %}
-            <option value="{{ m.pk }}" {% if request.GET.advisor == m.pk|stringformat:"s" %}selected{% endif %}>{{ m.user.get_full_name|default:m.user.phone }}</option>
-            {% endfor %}
-        </select>
-    </div>
-    <div class="agency-toolbar__group">
-        <label class="agency-toolbar__label" for="activityEventType">نوع رویداد</label>
-        <input type="text" name="event_type" id="activityEventType" value="{{ event_type_filter }}" placeholder="مثلاً contact_created" class="crm-input">
-    </div>
-    <div class="agency-toolbar__actions">
-        <button type="submit" class="crm-btn crm-btn-primary crm-btn-sm">
-            <i class="fas fa-filter" aria-hidden="true"></i>
-            اعمال فیلتر
-        </button>
-        {% if request.GET.advisor or event_type_filter %}
-        <a href="{% url 'workspace:agency_hub_activity' %}" class="crm-btn crm-btn-ghost crm-btn-sm">پاک کردن</a>
-        {% endif %}
-    </div>
+<form method="get" class="agency-filter-bar">
+    <select name="advisor" id="activityAdvisor" class="agency-filter-bar__select" aria-label="فیلتر مشاور">
+        <option value="">همه مشاوران</option>
+        {% for m in advisors %}
+        <option value="{{ m.pk }}" {% if request.GET.advisor == m.pk|stringformat:"s" %}selected{% endif %}>{{ m.user.get_full_name|default:m.user.phone }}</option>
+        {% endfor %}
+    </select>
+    <input type="text" name="event_type" id="activityEventType" value="{{ event_type_filter }}" placeholder="نوع رویداد..." class="agency-filter-bar__select" aria-label="نوع رویداد" style="flex:1;">
+    <button type="submit" class="crm-btn crm-btn-primary crm-btn-sm">
+        <i class="fas fa-filter" aria-hidden="true"></i>
+        اعمال
+    </button>
+    {% if request.GET.advisor or event_type_filter %}
+    <a href="{% url 'workspace:agency_hub_activity' %}" class="crm-btn crm-btn-ghost crm-btn-sm">پاک کردن</a>
+    {% endif %}
 </form>
 
 <div class="agency-panel agency-panel--activity agency-panel--timeline">

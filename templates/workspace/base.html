@@ -143,7 +143,7 @@
                 {% include 'workspace/includes/bot_upgrade_banner.html' %}
                 {% endif %}
 
-                {% if ws_agency_onboarding_cta %}
+                {% if ws_agency_onboarding_cta and crm_section != 'agency' %}
                 <link rel="stylesheet" href="{% static 'workspace/css/agency-phase2.css' %}">
                 <div class="ws-agency-onboarding-cta" role="status">
                     <p>اشتراک آژانس شما فعال است — راه‌اندازی را تکمیل کنید.</p>

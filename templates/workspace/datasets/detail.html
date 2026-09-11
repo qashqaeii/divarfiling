@@ -10,10 +10,11 @@
 
 {% block ws_surface_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/listing-table-compact.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-listings.css' %}?v=1">
 {% endblock %}
 
 {% block content %}
-<div class="mk-page mk-filing-page mk-listing-page ws-ds-mobile">
+<div class="mk-page mk-filing-page mk-listing-page mk-filing-listings-pro ws-ds-mobile">
 
     <section class="mk-ds-command mk-ds-command--{{ tx.mode|default:'other' }}" aria-label="خلاصه فایل">
         <div class="ws-ds-mob-stage" aria-hidden="true">

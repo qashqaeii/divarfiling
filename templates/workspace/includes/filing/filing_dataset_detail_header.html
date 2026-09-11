@@ -79,7 +79,7 @@
     </div>
 </header>
 
-<header class="fl-dd-mob-header mk-filing-mob-header">
+<header class="fl-dd-mob-header fl-mob-header">
     <div class="fl-dd-mob-header__mesh" aria-hidden="true"></div>
     <div class="fl-dd-mob-header__inner">
         <div class="fl-dd-mob-header__main">
@@ -135,5 +135,25 @@
         <a href="{% url 'workspace:dataset_export' dataset.id %}?format=csv" class="fl-dd-mob-quick__chip js-secure-export" data-export-label="خروجی CSV مجموعه">
             <i class="fas fa-download" aria-hidden="true"></i> خروجی
         </a>
+    </div>
+    <div class="fl-dd-mob-stats" aria-label="آمار سریع پوشه">
+        <div class="fl-dd-mob-stats__grid">
+            <div class="fl-dd-mob-stat">
+                <strong>{{ filtered_count|intcomma }}</strong>
+                <span>در نمایش</span>
+            </div>
+            <div class="fl-dd-mob-stat">
+                <strong>{{ consultant_count|intcomma }}</strong>
+                <span>مشاور</span>
+            </div>
+            <div class="fl-dd-mob-stat">
+                <strong>{{ personal_count|intcomma }}</strong>
+                <span>شخصی</span>
+            </div>
+            <div class="fl-dd-mob-stat">
+                <strong>{{ total_count|intcomma }}</strong>
+                <span>کل آگهی</span>
+            </div>
+        </div>
     </div>
 </header>

@@ -10,13 +10,15 @@
 <link rel="stylesheet" href="{% static 'workspace/css/crm-prop-detail-mobile.css' %}?v=2">
 <link rel="stylesheet" href="{% static 'workspace/css/ws-ld-mobile.css' %}?v=1">
 <link rel="stylesheet" href="{% static 'workspace/css/advertiser-analysis.css' %}?v=5">
+<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-datasets.css' %}?v=17">
+<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-listing-detail.css' %}?v=1">
 {% if listing.latitude and listing.longitude %}
 <link rel="stylesheet" href="{% static 'workspace/css/listing-map.css' %}?v=4">
 {% endif %}
 {% endblock %}
 
 {% block content %}
-<div class="crm-prop-detail-v2 crm-prop-detail-mobile crm-page-chrome ws-ld-detail ws-ld-mobile{% if tx.is_sale %} ws-ld-detail--sale{% elif tx.is_rent %} ws-ld-detail--rent{% elif tx.show_deposit %} ws-ld-detail--deposit{% endif %}">
+<div class="crm-prop-detail-v2 crm-prop-detail-mobile crm-page-chrome ws-ld-detail ws-ld-mobile mk-filing-datasets{% if tx.is_sale %} ws-ld-detail--sale{% elif tx.is_rent %} ws-ld-detail--rent{% elif tx.show_deposit %} ws-ld-detail--deposit{% endif %}">
 
     {% if listing_retention.status == 'warning' %}
     <div class="mk-notice mk-notice--warning mk-notice--banner ws-retention-warning" role="status">
@@ -56,6 +58,14 @@
                     <span>آگهی</span>
                 </nav>
                 <div class="crm-prop-hero-actions" role="toolbar" aria-label="عملیات آگهی">
+                    <button type="button" class="fl-header__help" title="راهنمای پرونده آگهی" aria-label="راهنمای پرونده آگهی" data-modal-open="modal-listing-detail-help">
+                        <span class="fl-header__help-ring" aria-hidden="true"></span>
+                        <span class="fl-header__help-bulb" aria-hidden="true">
+                            <i class="fas fa-lightbulb"></i>
+                            <span class="fl-header__help-bulb-glow"></span>
+                        </span>
+                        <span class="fl-header__help-label">راهنما</span>
+                    </button>
                     <button type="button" class="crm-prop-hero-act crm-prop-hero-act--primary" data-open-listing-edit="{{ listing.id }}" data-id="{{ listing.id }}" data-dataset-id="{{ dataset.id }}" title="ویرایش کامل آگهی">
                         <i class="fas fa-pen" aria-hidden="true"></i><span>ویرایش</span>
                     </button>
@@ -692,6 +702,10 @@
             <div class="ws-ld-mob-more__handle" aria-hidden="true"></div>
             <h2 class="ws-ld-mob-more__title" id="wsLdMobMoreTitle">عملیات آگهی</h2>
             <div class="ws-ld-mob-more__grid">
+                <button type="button" class="ws-ld-mob-more__act ws-ld-mob-more__act--help" data-modal-open="modal-listing-detail-help" data-ld-more-close>
+                    <i class="fas fa-lightbulb" aria-hidden="true"></i>
+                    <span>راهنما</span>
+                </button>
                 {% if owner_phone %}
                 <a href="{{ owner_phone|phone_wa_href }}" target="_blank" rel="noopener" class="ws-ld-mob-more__act">
                     <i class="fab fa-whatsapp" aria-hidden="true"></i>
@@ -747,6 +761,8 @@
             </div>
         </div>
     </div>
+
+    {% include 'workspace/includes/filing/filing_listing_detail_help_modal.html' %}
 </div>
 {% endblock %}
 
@@ -775,6 +791,7 @@
 
 {% block extra_js %}
 <script src="{% static 'workspace/js/listing-edit.js' %}?v=6"></script>
+<script src="{% static 'workspace/js/filing-help-modal.js' %}?v=1"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     initListingEdit({

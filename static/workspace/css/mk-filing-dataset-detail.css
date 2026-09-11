@@ -445,6 +445,217 @@
     }
     .mk-filing-dataset-detail .fl-dd-mob-dock__btn.has-active { color: var(--ws-primary); }
     .mk-filing-dataset-detail .ws-ds-mob-dock { display: none !important; }
+
+    /* ── Shell: single dock, no double padding ── */
+    body.ws-body:has(.mk-filing-dataset-detail) .ws-content {
+        padding: 0 !important;
+        padding-bottom: calc(5.75rem + env(safe-area-inset-bottom, 0px)) !important;
+    }
+
+    body.ws-body:has(.mk-filing-dataset-detail .fl-dd-mob-dock) .ws-bottom-nav {
+        display: none !important;
+    }
+
+    body.ws-body:has(.mk-filing-dataset-detail) .ws-mobile-topbar {
+        min-height: 2.5rem;
+        max-height: 2.5rem;
+        padding: max(0.2rem, env(safe-area-inset-top, 0px)) 0.65rem 0.15rem;
+        border-bottom: none;
+        background: color-mix(in srgb, var(--ws-surface) 92%, transparent);
+        box-shadow: none;
+    }
+
+    body.ws-body:has(.mk-filing-dataset-detail) .ws-mobile-topbar-title {
+        display: none;
+    }
+
+    body.ws-body:has(.mk-filing-dataset-detail) .ws-mobile-menu {
+        width: 2.25rem;
+        height: 2.25rem;
+        min-width: 2.25rem;
+        min-height: 2.25rem;
+        border-radius: 10px;
+    }
+
+    .mk-filing-dataset-detail.mk-page {
+        padding-bottom: 0 !important;
+        gap: 0.5rem;
+    }
+
+    /* Ensure custom mobile header is visible (not caught by filing-list hide rule) */
+    .mk-filing-dataset-detail .fl-dd-mob-header {
+        display: block !important;
+    }
+
+    /* ── Mobile stats strip ── */
+    .mk-filing-dataset-detail .fl-dd-mob-stats {
+        position: relative;
+        z-index: 1;
+        padding: 0 0.85rem 0.7rem;
+    }
+
+    .mk-filing-dataset-detail .fl-dd-mob-stats__grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 0.35rem;
+        padding: 0.45rem;
+        border-radius: 14px;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 50%, transparent);
+        background: color-mix(in srgb, var(--ws-surface-2) 35%, var(--ws-surface));
+    }
+
+    .mk-filing-dataset-detail .fl-dd-mob-stat {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.1rem;
+        min-width: 0;
+        text-align: center;
+    }
+
+    .mk-filing-dataset-detail .fl-dd-mob-stat strong {
+        font-size: 0.78rem;
+        font-weight: 900;
+        letter-spacing: -0.02em;
+        color: var(--ws-text);
+        font-variant-numeric: tabular-nums;
+    }
+
+    .mk-filing-dataset-detail .fl-dd-mob-stat span {
+        font-size: 0.58rem;
+        font-weight: 700;
+        color: var(--ws-text-muted);
+        white-space: nowrap;
+    }
+
+    /* ── Help bulb (parity with filing list) ── */
+    .mk-filing-dataset-detail .fl-mob-header__icon--help {
+        position: relative;
+        overflow: visible;
+        border-color: color-mix(in srgb, #fbbf24 45%, var(--ws-border));
+        background: linear-gradient(145deg, #fef9c3, #fde68a);
+        color: #b45309;
+        box-shadow:
+            0 2px 10px rgba(245, 158, 11, 0.22),
+            0 0 0 3px rgba(251, 191, 36, 0.12);
+    }
+
+    .mk-filing-dataset-detail .fl-mob-header__icon--help .fl-header__help-bulb i {
+        font-size: 0.92rem;
+        color: #b45309;
+    }
+
+    .mk-filing-dataset-detail .fl-mob-header__help-pulse {
+        position: absolute;
+        inset: -3px;
+        border-radius: 13px;
+        border: 1px solid rgba(251, 191, 36, 0.35);
+        animation: flHelpPulse 2.4s ease-out infinite;
+        pointer-events: none;
+    }
+
+    /* ── Sticky filter bar ── */
+    .mk-filing-dataset-detail .mk-filter-primary__fields,
+    .mk-filing-dataset-detail .mk-filter-actions--desk {
+        display: none !important;
+    }
+
+    .mk-filing-dataset-detail .mk-filter-primary {
+        display: block !important;
+    }
+
+    .mk-filing-dataset-detail .mk-filter-bar-listing {
+        padding: 0 !important;
+        gap: 0 !important;
+    }
+
+    .mk-filing-dataset-detail .fl-dd-filter {
+        position: sticky;
+        top: calc(2.5rem + env(safe-area-inset-top, 0px));
+        z-index: 28;
+        margin-inline: 0.65rem;
+        padding: 0.55rem 0.65rem;
+        border-radius: 16px;
+        border-color: color-mix(in srgb, var(--ws-border) 65%, transparent);
+        background: color-mix(in srgb, var(--ws-surface) 92%, transparent);
+        backdrop-filter: blur(14px) saturate(1.1);
+        -webkit-backdrop-filter: blur(14px) saturate(1.1);
+        box-shadow: 0 4px 18px rgba(15, 23, 42, 0.06);
+    }
+
+    .mk-filing-dataset-detail .mk-notice--inline {
+        margin-inline: 0.65rem;
+        padding: 0.55rem 0.65rem;
+        border-radius: 14px;
+        font-size: 0.68rem;
+    }
+
+    .mk-filing-dataset-detail .mk-notice--inline .mk-notice__text {
+        line-height: 1.45;
+    }
+
+    /* ── Listings panel — hide redundant header on mobile ── */
+    .mk-filing-dataset-detail .fl-dd-panel .fl-panel__head {
+        display: none;
+    }
+
+    .mk-filing-dataset-detail .fl-dd-panel {
+        margin-inline: 0.65rem;
+        border-radius: 16px;
+        overflow: hidden;
+    }
+
+    .mk-filing-dataset-detail .mk-listing-cards-shell {
+        padding: 0.65rem 0.75rem 0.85rem !important;
+        gap: 10px !important;
+    }
+
+    .mk-filing-dataset-detail .mk-listing-panel .mk-pagination {
+        padding: 0.55rem 0.65rem 0.75rem;
+    }
+
+    /* ── Bottom dock — replaces ws-bottom-nav ── */
+    .mk-filing-dataset-detail .fl-dd-mob-dock {
+        z-index: 150;
+        padding: 6px 0.55rem calc(6px + env(safe-area-inset-bottom, 0px));
+        pointer-events: none;
+    }
+
+    .mk-filing-dataset-detail .fl-dd-mob-dock__inner {
+        pointer-events: auto;
+        border-radius: 22px;
+        border-color: color-mix(in srgb, var(--ws-primary) 14%, var(--ws-border));
+        backdrop-filter: blur(22px) saturate(1.15);
+        -webkit-backdrop-filter: blur(22px) saturate(1.15);
+        box-shadow:
+            0 10px 32px rgba(15, 23, 42, 0.14),
+            0 0 0 1px color-mix(in srgb, var(--ws-primary) 6%, transparent);
+    }
+
+    .mk-filing-dataset-detail .fl-dd-mob-dock__btn {
+        min-height: 50px;
+        border-radius: 14px;
+        font-size: 0.56rem;
+    }
+
+    .mk-filing-dataset-detail .fl-dd-mob-dock__btn i {
+        font-size: 1.05rem;
+    }
+
+    .mk-filing-dataset-detail .fl-dd-mob-dock__btn:active {
+        transform: scale(0.93);
+        background: var(--ws-surface-2);
+    }
+}
+
+@media (max-width: 360px) {
+    .mk-filing-dataset-detail .fl-dd-mob-stats__grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .mk-filing-dataset-detail .fl-dd-mob-dock__btn span {
+        font-size: 0.5rem;
+    }
 }
 
 @media (min-width: 769px) {

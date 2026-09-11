@@ -1,0 +1,21 @@
+/* Listing detail — filing help button + modal parity */
+.ws-ld-detail.mk-filing-datasets .crm-prop-hero-actions {
+    flex-wrap: wrap;
+    gap: 0.35rem;
+}
+.ws-ld-detail.mk-filing-datasets .fl-header__help {
+    flex-shrink: 0;
+}
+@media (max-width: 768px) {
+    .ws-ld-detail.mk-filing-datasets .fl-header__help {
+        display: none;
+    }
+    .ws-ld-detail.mk-filing-datasets .ws-ld-mob-more__act--help i {
+        color: #d97706;
+    }
+    .ws-ld-detail.mk-filing-datasets .ws-ld-mob-more__act--help {
+        border: 1px solid color-mix(in srgb, #fbbf24 35%, var(--ws-border));
+        background: linear-gradient(145deg, #fef9c3, #fde68a);
+        color: #92400e;
+    }
+}

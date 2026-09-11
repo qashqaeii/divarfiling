@@ -182,7 +182,7 @@
   }
 
   function initStickyStepFooter() {
-    var footers = document.querySelectorAll('.agency-step-footer--sticky');
+    var footers = document.querySelectorAll('.agency-onboard-footer--sticky');
     if (!footers.length || window.matchMedia('(min-width: 769px)').matches) return;
     document.body.classList.add('agency-has-sticky-footer');
   }

@@ -116,8 +116,20 @@ class AgencyOnboardingView(AgencyOwnerRequiredMixin, LoginRequiredMixin, Templat
         step = self.request.GET.get('step')
         if not step:
             step = str(ob['step'])
+        from workspace.services.agency_hub import hub_base_context
         from workspace.services.agency_seats import list_available_seats
+
         ctx.update(ob)
+        ctx.update(hub_base_context(self.request.user))
+        ctx['crm_section'] = 'agency'
+        ctx['hub_section'] = 'onboarding'
+        ctx['hub_nav'] = [
+            ('dashboard', 'داشبورد', reverse('workspace:agency_hub_dashboard')),
+            ('advisors', 'مشاوران', reverse('workspace:agency_hub_advisors')),
+            ('licenses', 'لایسنس‌ها', reverse('workspace:agency_hub_licenses')),
+            ('activity', 'فعالیت تیم', reverse('workspace:agency_hub_activity')),
+            ('settings', 'تنظیمات', reverse('workspace:agency_hub_settings')),
+        ]
         ctx['step'] = step
         ctx['team_url'] = reverse('workspace:crm_team')
         agency = ob.get('agency')

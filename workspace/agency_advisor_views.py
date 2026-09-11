@@ -28,6 +28,8 @@ from workspace.services.agency_data_scope import (
     get_member_properties_qs,
     resolve_visible_agency_member,
 )
+from workspace.constants import CRM_STATUSES, DEAL_STAGES, PROPERTY_TX_STATUSES
+from workspace.services.agency_activity import EVENT_TYPE_LABELS
 from workspace.services.agency_entitlement import (
     agency_hub_access_level,
     can_manage_agency,
@@ -62,6 +64,12 @@ class AgencyAdvisorDetailView(AgencyOwnerRequiredMixin, LoginRequiredMixin, Temp
 
         header = get_advisor_member_header(self.request.user, member)
         ctx.update(header)
+        ctx['crm_section'] = 'agency'
+        ctx['agency_event_labels'] = EVENT_TYPE_LABELS
+        ctx['contact_statuses'] = CRM_STATUSES
+        ctx['deal_stages'] = DEAL_STAGES
+        ctx['property_statuses'] = PROPERTY_TX_STATUSES
+        ctx['licenses_url'] = reverse('workspace:agency_hub_licenses')
         ctx['tabs'] = (
             ('overview', 'نمای کلی'),
             ('contacts', 'مخاطبین'),
@@ -77,8 +85,12 @@ class AgencyAdvisorDetailView(AgencyOwnerRequiredMixin, LoginRequiredMixin, Temp
         ctx['team_url'] = reverse('workspace:agency_hub_advisors')
         ctx['export_url'] = reverse('workspace:agency_advisor_export', kwargs={'member_id': member_id})
 
+        overview_kpis = get_member_overview_kpis(
+            self.request.user, member, days=period if tab == 'overview' else 30,
+        )
+        ctx['last_activity'] = overview_kpis['last_activity']
         if tab == 'overview':
-            ctx['kpis'] = get_member_overview_kpis(self.request.user, member, days=period)
+            ctx['kpis'] = overview_kpis
         elif tab == 'contacts':
             qs = get_member_contacts_qs(
                 self.request.user, member,
@@ -90,6 +102,7 @@ class AgencyAdvisorDetailView(AgencyOwnerRequiredMixin, LoginRequiredMixin, Temp
             qs = get_member_properties_qs(
                 self.request.user, member,
                 search=self.request.GET.get('q', ''),
+                transaction_status=self.request.GET.get('status', ''),
             )
             ctx['page_obj'] = Paginator(qs, PAGE_SIZE).get_page(self.request.GET.get('page'))
         elif tab == 'filing':

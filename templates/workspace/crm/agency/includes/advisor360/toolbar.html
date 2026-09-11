@@ -1,0 +1,59 @@
+<form method="get" class="agency-filter-bar a360-toolbar" id="a360Toolbar">
+    <input type="hidden" name="tab" value="{{ tab }}">
+    {% if period %}<input type="hidden" name="period" value="{{ period }}">{% endif %}
+    <div class="agency-filter-bar__search">
+        <i class="fas fa-search agency-filter-bar__search-icon" aria-hidden="true"></i>
+        <input type="search"
+               name="q"
+               value="{{ request.GET.q }}"
+               placeholder="{{ search_placeholder|default:'جستجو...' }}"
+               class="agency-filter-bar__input a360-search-input"
+               aria-label="{{ search_placeholder|default:'جستجو' }}"
+               autocomplete="off"
+               autocorrect="off"
+               spellcheck="false"
+               data-lpignore="true"
+               data-1p-ignore="true"
+               data-form-type="other">
+    </div>
+    {% if status_choices %}
+    <select name="status" class="agency-filter-bar__select" aria-label="فیلتر وضعیت" onchange="this.form.submit()">
+        <option value="">همه وضعیت‌ها</option>
+        {% for s in status_choices %}
+        <option value="{{ s }}" {% if request.GET.status == s %}selected{% endif %}>{{ s }}</option>
+        {% endfor %}
+    </select>
+    {% endif %}
+    {% if stage_choices %}
+    <select name="stage" class="agency-filter-bar__select" aria-label="فیلتر مرحله" onchange="this.form.submit()">
+        <option value="">همه مراحل</option>
+        {% for s in stage_choices %}
+        <option value="{{ s }}" {% if request.GET.stage == s %}selected{% endif %}>{{ s }}</option>
+        {% endfor %}
+    </select>
+    {% endif %}
+    {% if type_choices %}
+    <select name="type" class="agency-filter-bar__select" aria-label="فیلتر نوع" onchange="this.form.submit()">
+        <option value="">همه نوع‌ها</option>
+        {% for t in type_choices %}
+        <option value="{{ t }}" {% if request.GET.type == t %}selected{% endif %}>{{ t }}</option>
+        {% endfor %}
+    </select>
+    {% endif %}
+    <button type="submit" class="crm-btn crm-btn-primary crm-btn-sm a360-toolbar__submit">
+        <i class="fas fa-search" aria-hidden="true"></i>
+        جستجو
+    </button>
+    {% if export_type %}
+    <details class="a360-export a360-export--inline">
+        <summary class="crm-btn crm-btn-ghost crm-btn-sm">
+            <i class="fas fa-download" aria-hidden="true"></i>
+            دانلود خروجی
+        </summary>
+        <div class="a360-export__menu" role="menu">
+            <a href="{{ export_url }}?type={{ export_type }}&format=xlsx&q={{ request.GET.q|urlencode }}&status={{ request.GET.status|urlencode }}&stage={{ request.GET.stage|urlencode }}" role="menuitem">XLSX</a>
+            <a href="{{ export_url }}?type={{ export_type }}&format=csv&q={{ request.GET.q|urlencode }}&status={{ request.GET.status|urlencode }}&stage={{ request.GET.stage|urlencode }}" role="menuitem">CSV</a>
+        </div>
+    </details>
+    {% endif %}
+</form>

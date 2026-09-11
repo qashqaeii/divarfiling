@@ -1,0 +1,231 @@
+"""Template helpers for Advisor 360 presentation layer."""
+from __future__ import annotations
+
+from django import template
+
+from workspace.constants import ACTIVITY_TYPES
+from workspace.services.agency_activity import EVENT_TYPE_LABELS
+
+register = template.Library()
+
+_FOLLOWUP_LABELS = {
+    'call': 'تماس',
+    'visit': 'بازدید',
+    'meeting': 'جلسه',
+    'follow_up': 'پیگیری',
+    'note': 'یادداشت',
+    'whatsapp': 'واتساپ',
+    'sms': 'پیامک',
+    'email': 'ایمیل',
+}
+
+_EVENT_KEY_LABELS = {
+    'follow_up': 'پیگیری مشتری',
+    'customer_created': 'مخاطب جدید',
+    'contact_created': 'مخاطب جدید',
+    'property_created': 'فایل شخصی اضافه شد',
+    'personal_property_created': 'فایل شخصی اضافه شد',
+    'deal_created': 'معامله جدید',
+    'deal_stage_changed': 'مرحله معامله تغییر کرد',
+    'contract_created': 'قرارداد ایجاد شد',
+    'dataset_created': 'استخراج جدید',
+    'extraction_completed': 'استخراج تکمیل شد',
+    'visit_created': 'بازدید ثبت شد',
+    'call_created': 'تماس ثبت شد',
+    'customer_activity': 'فعالیت مشتری',
+    'deal_followup': 'پیگیری معامله',
+    'property_visit': 'بازدید ملک',
+}
+
+_ACTIVITY_ICONS = {
+    'تماس': 'fa-phone',
+    'پیامک': 'fa-sms',
+    'واتساپ': 'fab fa-whatsapp',
+    'پیام': 'fa-comment',
+    'بازدید': 'fa-door-open',
+    'پیگیری': 'fa-calendar-check',
+    'جلسه': 'fa-handshake',
+    'یادداشت': 'fa-sticky-note',
+    'وظیفه': 'fa-list-check',
+    'یادآور': 'fa-bell',
+    'تغییر وضعیت': 'fa-arrows-rotate',
+    'املاک': 'fa-house',
+    'ایمیل': 'fa-envelope',
+}
+
+_EVENT_ICONS = {
+    'contact_created': 'fa-user-plus',
+    'personal_property_created': 'fa-building',
+    'property_created': 'fa-building',
+    'dataset_created': 'fa-database',
+    'extraction_completed': 'fa-check-circle',
+    'deal_created': 'fa-handshake',
+    'deal_stage_changed': 'fa-route',
+    'contract_created': 'fa-file-signature',
+    'follow_up': 'fa-calendar-check',
+    'call': 'fa-phone',
+    'call_created': 'fa-phone',
+    'visit': 'fa-door-open',
+    'visit_created': 'fa-door-open',
+    'license_assigned': 'fa-key',
+    'license_unassigned': 'fa-key',
+    'advisor_data_export': 'fa-download',
+    'deal_followup': 'fa-clipboard-list',
+    'property_visit': 'fa-door-open',
+    'customer_activity': 'fa-user-clock',
+}
+
+
+def _humanize_key(value: str) -> str:
+    text = (value or '').strip().replace('_', ' ')
+    if not text:
+        return 'فعالیت'
+    return _EVENT_KEY_LABELS.get(value, text)
+
+
+@register.filter
+def a360_activity_label(event):
+    if not event:
+        return ''
+    ev_type = event.get('type', '')
+    label = (event.get('label') or '').strip()
+
+    if ev_type == 'agency_event':
+        return EVENT_TYPE_LABELS.get(label, _humanize_key(label))
+    if ev_type == 'deal_followup':
+        mapped = _FOLLOWUP_LABELS.get(label, label)
+        return f'پیگیری معامله — {mapped}' if mapped else 'پیگیری معامله'
+    if ev_type == 'property_visit':
+        return 'بازدید ثبت شد'
+    if ev_type == 'customer_activity':
+        if label in ACTIVITY_TYPES:
+            if label == 'پیگیری':
+                return 'پیگیری مشتری'
+            if label == 'تماس':
+                return 'تماس با مشتری'
+            if label == 'بازدید':
+                return 'بازدید مشتری'
+            return f'{label} با مشتری'
+        return _humanize_key(label)
+    return _humanize_key(label)
+
+
+@register.filter
+def a360_activity_icon(event):
+    if not event:
+        return 'fa-circle'
+    ev_type = event.get('type', '')
+    label = (event.get('label') or '').strip()
+
+    if ev_type == 'agency_event':
+        return _EVENT_ICONS.get(label, 'fa-bolt')
+    if ev_type == 'deal_followup':
+        return _EVENT_ICONS.get(label, _EVENT_ICONS['deal_followup'])
+    if ev_type == 'property_visit':
+        return _EVENT_ICONS['property_visit']
+    if ev_type == 'customer_activity':
+        return _ACTIVITY_ICONS.get(label, 'fa-user-clock').replace('fas ', '').replace('fab ', '')
+    return 'fa-circle'
+
+
+@register.filter
+def a360_activity_kind(event):
+    """Normalized filter key for client-side activity filtering."""
+    if not event:
+        return ''
+    ev_type = event.get('type', '')
+    label = (event.get('label') or '').strip()
+    if ev_type == 'agency_event':
+        return label or 'agency_event'
+    if ev_type == 'deal_followup':
+        return 'follow_up'
+    if ev_type == 'property_visit':
+        return 'visit'
+    if ev_type == 'customer_activity':
+        if label == 'تماس':
+            return 'call'
+        if label == 'بازدید':
+            return 'visit'
+        if label == 'پیگیری':
+            return 'follow_up'
+        return 'customer_activity'
+    return ev_type or 'other'
+
+
+@register.filter
+def a360_deal_stage_status(stage):
+    stage = (stage or '').strip()
+    if stage in ('بسته‌شده',):
+        return 'ok'
+    if stage in ('از دست رفته',):
+        return 'muted'
+    if stage in ('قرارداد', 'پیش‌قرارداد'):
+        return 'pending'
+    return 'warn'
+
+
+@register.filter
+def a360_contact_status_status(status):
+    status = (status or '').strip()
+    if status in ('قرارداد',):
+        return 'ok'
+    if status in ('بایگانی',):
+        return 'muted'
+    if status in ('در حال پیگیری', 'بازدید انجام شد'):
+        return 'pending'
+    return 'warn'
+
+
+@register.filter
+def a360_property_status_status(status):
+    status = (status or '').strip()
+    if status in ('فعال',):
+        return 'ok'
+    if status in ('بایگانی', 'فروخته‌شده', 'اجاره‌رفته'):
+        return 'muted'
+    if status in ('در مذاکره', 'قرارداد'):
+        return 'pending'
+    return 'warn'
+
+
+@register.filter
+def a360_trend_text(delta_pct):
+    if delta_pct is None:
+        return ''
+    try:
+        value = float(delta_pct)
+    except (TypeError, ValueError):
+        return ''
+    arrow = '↑' if value > 0 else '↓' if value < 0 else '→'
+    abs_val = abs(value)
+    if abs_val == int(abs_val):
+        pct = str(int(abs_val))
+    else:
+        pct = f'{abs_val:g}'
+    return f'{arrow} {pct}٪ نسبت به دوره قبل'
+
+
+@register.filter
+def a360_trend_tone(delta_pct):
+    if delta_pct is None:
+        return ''
+    try:
+        value = float(delta_pct)
+    except (TypeError, ValueError):
+        return ''
+    if value > 0:
+        return 'up'
+    if value < 0:
+        return 'down'
+    return 'flat'
+
+
+@register.simple_tag
+def a360_display_name(user):
+    full = (user.get_full_name() or '').strip()
+    if full:
+        return full
+    phone = (getattr(user, 'phone', None) or '').strip()
+    if phone:
+        return phone
+    return (getattr(user, 'username', None) or '').strip() or 'مشاور'

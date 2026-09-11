@@ -1,184 +1,352 @@
 {% extends "workspace/crm/base_crm.html" %}
-{% load static humanize workspace_tags %}
+{% load static humanize workspace_tags advisor360_tags %}
 
 {% block crm_extra_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/agency-phase2.css' %}?v=4">
-<link rel="stylesheet" href="{% static 'workspace/css/agency-phase3.css' %}?v=4">
-<link rel="stylesheet" href="{% static 'workspace/css/agency-hub.css' %}?v=4">
+<link rel="stylesheet" href="{% static 'workspace/css/agency-phase2.css' %}?v=8">
+<link rel="stylesheet" href="{% static 'workspace/css/agency-phase3.css' %}?v=9">
+<link rel="stylesheet" href="{% static 'workspace/css/agency-hub.css' %}?v=8">
 {% endblock %}
 
 {% block crm_content %}
 <div class="agency-advisor360" dir="rtl">
-    <header class="a360-header">
-        <div class="a360-header-main">
-            <div class="a360-avatar" aria-hidden="true">{{ user.get_full_name|default:user.phone|slice:":1" }}</div>
-            <div class="a360-identity">
-                <span class="agency-hub-header__eyebrow">مشاور ۳۶۰ · فقط مشاهده</span>
-                <h1>{{ user.get_full_name|default:user.phone|default:user.username }}</h1>
-                <p class="a360-sub" dir="ltr">{{ user.phone|default:user.username }} · {{ member.get_role_display|default:member.role }}</p>
-                <div class="a360-badges">
-                    {% if member.is_active %}
-                    {% include "workspace/crm/agency/includes/status_badge.html" with status="ok" label="عضو فعال" %}
-                    {% else %}
-                    {% include "workspace/crm/agency/includes/status_badge.html" with status="muted" label="غیرفعال" %}
-                    {% endif %}
-                    {% if has_seat %}
-                    {% include "workspace/crm/agency/includes/status_badge.html" with status="ok" label="لایسنس فعال" %}
-                    {% else %}
-                    {% include "workspace/crm/agency/includes/status_badge.html" with status="unlicensed" label="بدون لایسنس" %}
-                    {% endif %}
-                    {% if seat and seat.expires_at %}<span class="a360-badge">انقضا {{ seat.expires_at|ws_jalali_date }}</span>{% endif %}
-                    {% if kpis.last_activity %}<span class="a360-badge">آخرین فعالیت {{ kpis.last_activity|ws_jalali_date }}</span>{% endif %}
-                </div>
-            </div>
-        </div>
-        <div class="a360-actions">
-            <a href="{{ export_url }}?type=contacts&format=xlsx" class="crm-btn crm-btn-ghost crm-btn-sm"><i class="fas fa-download" aria-hidden="true"></i> خروجی</a>
-            <a href="{{ team_url }}" class="crm-btn crm-btn-ghost crm-btn-sm"><i class="fas fa-arrow-right" aria-hidden="true"></i> بازگشت</a>
-        </div>
-    </header>
-
-    <nav class="a360-tabs" aria-label="بخش‌های مشاور">
-        {% for key, label in tabs %}
-        <a href="?tab={{ key }}{% if key == 'overview' %}&period={{ period }}{% endif %}" class="a360-tab{% if tab == key %} is-active{% endif %}">
-            <span class="a360-tab__icon" aria-hidden="true">
-                {% if key == 'overview' %}<i class="fas fa-gauge-high"></i>
-                {% elif key == 'contacts' %}<i class="fas fa-address-book"></i>
-                {% elif key == 'properties' %}<i class="fas fa-building"></i>
-                {% elif key == 'deals' %}<i class="fas fa-handshake"></i>
-                {% elif key == 'filing' %}<i class="fas fa-database"></i>
-                {% elif key == 'contracts' %}<i class="fas fa-file-signature"></i>
-                {% elif key == 'activities' %}<i class="fas fa-clock-rotate-left"></i>
-                {% else %}<i class="fas fa-circle"></i>
-                {% endif %}
-            </span>
-            <span>{{ label }}</span>
-        </a>
-        {% endfor %}
-    </nav>
+    {% include "workspace/crm/agency/includes/advisor360/onboarding_hint.html" %}
+    {% include "workspace/crm/agency/includes/advisor360/header.html" %}
+    {% include "workspace/crm/agency/includes/advisor360/tabs.html" %}
 
     <div class="a360-body">
         {% if tab == 'overview' %}
-        <div class="a360-period" role="group" aria-label="بازه زمانی">
-            {% for d in periods %}
-            <a href="?tab=overview&period={{ d }}" class="a360-period-btn{% if period == d %} is-active{% endif %}">{{ d }} روز</a>
-            {% endfor %}
-        </div>
-        <div class="a360-kpi-grid">
-            <div class="a360-kpi"><span class="a360-kpi-label">مخاطبین</span><strong>{{ kpis.contacts.total }}</strong>{% if kpis.contacts.delta_pct is not None %}<small>{{ kpis.contacts.delta_pct }}٪</small>{% endif %}</div>
-            <div class="a360-kpi"><span class="a360-kpi-label">فایل‌های شخصی</span><strong>{{ kpis.properties.total }}</strong>{% if kpis.properties.delta_pct is not None %}<small>{{ kpis.properties.delta_pct }}٪</small>{% endif %}</div>
-            <div class="a360-kpi"><span class="a360-kpi-label">Dataset</span><strong>{{ kpis.datasets.total }}</strong></div>
-            <div class="a360-kpi"><span class="a360-kpi-label">معاملات فعال</span><strong>{{ kpis.deals_active }}</strong></div>
-            <div class="a360-kpi"><span class="a360-kpi-label">معاملات بسته</span><strong>{{ kpis.deals_closed }}</strong></div>
-            <div class="a360-kpi"><span class="a360-kpi-label">قراردادها</span><strong>{{ kpis.contracts }}</strong></div>
-            <div class="a360-kpi"><span class="a360-kpi-label">پیگیری باز</span><strong>{{ kpis.open_tasks }}</strong></div>
-            <div class="a360-kpi"><span class="a360-kpi-label">آخرین فعالیت</span><strong style="font-size:0.95rem;">{% if kpis.last_activity %}{{ kpis.last_activity|ws_jalali_datetime }}{% else %}—{% endif %}</strong></div>
-        </div>
+        {% include "workspace/crm/agency/includes/advisor360/kpi_grid.html" %}
 
-        {% elif tab == 'contacts' or tab == 'properties' or tab == 'deals' %}
-        <form method="get" class="a360-filter">
-            <input type="hidden" name="tab" value="{{ tab }}">
-            <input type="search" name="q" value="{{ request.GET.q }}" placeholder="جستجو..." class="crm-input" style="flex:1;min-width:180px;">
-            <button type="submit" class="crm-btn crm-btn-primary crm-btn-sm"><i class="fas fa-search" aria-hidden="true"></i> جستجو</button>
-            <a href="{{ export_url }}?type={{ tab }}&format=xlsx" class="crm-btn crm-btn-ghost crm-btn-sm"><i class="fas fa-download" aria-hidden="true"></i> خروجی</a>
-        </form>
-        <div class="a360-table-wrap">
-            <table class="a360-table">
-                <thead>
-                    {% if tab == 'contacts' %}
-                    <tr><th>نام</th><th>تلفن</th><th>وضعیت</th><th>پیگیری</th><th>ثبت</th></tr>
-                    {% elif tab == 'properties' %}
-                    <tr><th>عنوان</th><th>نوع</th><th>وضعیت</th><th>قیمت</th><th>بروزرسانی</th></tr>
-                    {% else %}
-                    <tr><th>عنوان</th><th>مخاطب</th><th>مرحله</th><th>ارزش</th><th>بروزرسانی</th></tr>
-                    {% endif %}
-                </thead>
-                <tbody>
-                    {% for row in page_obj %}
-                    {% if tab == 'contacts' %}
-                    <tr><td>{{ row.name }}</td><td dir="ltr">{{ row.phone }}</td><td>{{ row.status }}</td><td>{{ row.next_follow_up|ws_jalali_date }}</td><td>{{ row.created_at|ws_jalali_date }}</td></tr>
-                    {% elif tab == 'properties' %}
-                    <tr><td>{{ row.title }}</td><td>{{ row.property_type }}</td><td>{{ row.transaction_status }}</td><td>{{ row.sale_price|intcomma|default:"—" }}</td><td>{{ row.updated_at|ws_jalali_date }}</td></tr>
-                    {% else %}
-                    <tr><td>{{ row.title }}</td><td>{{ row.customer.name }}</td><td>{{ row.stage }}</td><td>{{ row.value|intcomma|default:"—" }}</td><td>{{ row.updated_at|ws_jalali_date }}</td></tr>
-                    {% endif %}
-                    {% empty %}
-                    <tr><td colspan="5" class="a360-empty">{% if tab == 'contacts' %}مخاطبی نیست{% elif tab == 'properties' %}فایلی نیست{% else %}معامله‌ای نیست{% endif %}</td></tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        {% elif tab == 'contacts' %}
+        {% include "workspace/crm/agency/includes/advisor360/toolbar.html" with search_placeholder="جستجو در مخاطبین..." status_choices=contact_statuses export_type="contacts" %}
+        {% if page_obj.paginator.count %}
+        <div class="a360-data-view">
+            <div class="agency-table-wrap agency-table-wrap--fit a360-table-wrap">
+                <table class="agency-table agency-table--perf a360-table">
+                    <thead>
+                        <tr>
+                            <th>نام</th>
+                            <th>تلفن</th>
+                            <th>وضعیت</th>
+                            <th>آخرین پیگیری</th>
+                            <th>تاریخ ثبت</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in page_obj %}
+                        <tr>
+                            <td><span class="a360-table__primary">{{ row.name|default:"—" }}</span></td>
+                            <td dir="ltr" class="a360-table__mono">{% if row.phone %}{{ row.phone }}{% else %}—{% endif %}</td>
+                            <td>{% include "workspace/crm/agency/includes/status_badge.html" with status=row.status|a360_contact_status_status label=row.status %}</td>
+                            <td class="a360-table__mono">{% if row.next_follow_up %}{{ row.next_follow_up|ws_jalali_date }}{% else %}—{% endif %}</td>
+                            <td class="a360-table__mono">{{ row.created_at|ws_jalali_date }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="a360-card-list">
+                {% for row in page_obj %}
+                <article class="a360-data-card">
+                    <div class="a360-data-card__head">
+                        <strong>{{ row.name|default:"—" }}</strong>
+                        {% include "workspace/crm/agency/includes/status_badge.html" with status=row.status|a360_contact_status_status label=row.status %}
+                    </div>
+                    <dl class="a360-data-card__meta">
+                        <div><dt>تلفن</dt><dd dir="ltr">{% if row.phone %}{{ row.phone }}{% else %}—{% endif %}</dd></div>
+                        <div><dt>آخرین پیگیری</dt><dd>{% if row.next_follow_up %}{{ row.next_follow_up|ws_jalali_date }}{% else %}—{% endif %}</dd></div>
+                        <div><dt>تاریخ ثبت</dt><dd>{{ row.created_at|ws_jalali_date }}</dd></div>
+                    </dl>
+                </article>
+                {% endfor %}
+            </div>
         </div>
-        {% if page_obj.has_other_pages %}
-        <nav class="a360-pager" aria-label="صفحه‌بندی">
-            {% if page_obj.has_previous %}<a href="?tab={{ tab }}&page={{ page_obj.previous_page_number }}&q={{ request.GET.q }}">قبلی</a>{% endif %}
-            <span>{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
-            {% if page_obj.has_next %}<a href="?tab={{ tab }}&page={{ page_obj.next_page_number }}&q={{ request.GET.q }}">بعدی</a>{% endif %}
-        </nav>
+        {% include "workspace/crm/agency/includes/advisor360/pagination.html" %}
+        {% else %}
+        {% include "workspace/crm/agency/includes/empty_state.html" with icon="address-book" title="مخاطبی ثبت نشده" description="مخاطبین این مشاور پس از ثبت در این بخش نمایش داده می‌شوند." compact=True %}
+        {% endif %}
+
+        {% elif tab == 'properties' %}
+        {% include "workspace/crm/agency/includes/advisor360/toolbar.html" with search_placeholder="جستجو در فایل‌های شخصی..." status_choices=property_statuses export_type="properties" %}
+        {% if page_obj.paginator.count %}
+        <div class="a360-data-view">
+            <div class="agency-table-wrap agency-table-wrap--fit a360-table-wrap">
+                <table class="agency-table agency-table--perf a360-table">
+                    <thead>
+                        <tr>
+                            <th>عنوان</th>
+                            <th>نوع</th>
+                            <th>وضعیت</th>
+                            <th>قیمت</th>
+                            <th>آخرین بروزرسانی</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in page_obj %}
+                        <tr>
+                            <td><span class="a360-table__primary">{{ row.title|default:"—" }}</span></td>
+                            <td>{{ row.property_type|default:"—" }}</td>
+                            <td>{% include "workspace/crm/agency/includes/status_badge.html" with status=row.transaction_status|a360_property_status_status label=row.transaction_status %}</td>
+                            <td class="a360-table__mono">{{ row.sale_price|ws_money }}</td>
+                            <td class="a360-table__mono">{{ row.updated_at|ws_jalali_date }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="a360-card-list">
+                {% for row in page_obj %}
+                <article class="a360-data-card">
+                    <div class="a360-data-card__head">
+                        <strong>{{ row.title|default:"—" }}</strong>
+                        {% include "workspace/crm/agency/includes/status_badge.html" with status=row.transaction_status|a360_property_status_status label=row.transaction_status %}
+                    </div>
+                    <dl class="a360-data-card__meta">
+                        <div><dt>نوع</dt><dd>{{ row.property_type|default:"—" }}</dd></div>
+                        <div><dt>قیمت</dt><dd>{{ row.sale_price|ws_money }}</dd></div>
+                        <div><dt>بروزرسانی</dt><dd>{{ row.updated_at|ws_jalali_date }}</dd></div>
+                    </dl>
+                </article>
+                {% endfor %}
+            </div>
+        </div>
+        {% include "workspace/crm/agency/includes/advisor360/pagination.html" %}
+        {% else %}
+        {% include "workspace/crm/agency/includes/empty_state.html" with icon="building" title="فایل شخصی وجود ندارد" description="فایل‌های شخصی این مشاور پس از ثبت در این بخش نمایش داده می‌شوند." compact=True %}
         {% endif %}
 
         {% elif tab == 'filing' %}
         {% if dataset_id %}
-        <p style="margin:0 0 1rem;"><a href="?tab=filing" class="agency-section__link"><i class="fas fa-arrow-right" aria-hidden="true"></i> همه Datasetها</a></p>
-        <div class="a360-table-wrap">
-            <table class="a360-table">
-                <thead><tr><th>شناسه</th><th>عنوان</th><th>قیمت</th><th>متراژ</th><th>محله</th></tr></thead>
-                <tbody>
-                    {% for l in listings_page %}<tr><td dir="ltr">{{ l.token }}</td><td>{{ l.title|truncatechars:40 }}</td><td>{{ l.price|intcomma|default:"—" }}</td><td>{{ l.area|default:"—" }}</td><td>{{ l.neighborhood }}</td></tr>{% empty %}<tr><td colspan="5" class="a360-empty">آگهی نیست</td></tr>{% endfor %}
-                </tbody>
-            </table>
+        <div class="a360-filing-back">
+            <a href="?tab=filing" class="crm-btn crm-btn-ghost crm-btn-sm">
+                <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                بازگشت به استخراج‌ها
+            </a>
         </div>
+        {% if listings_page.paginator.count %}
+        <div class="a360-data-view">
+            <div class="agency-table-wrap agency-table-wrap--fit a360-table-wrap">
+                <table class="agency-table agency-table--perf a360-table">
+                    <thead>
+                        <tr>
+                            <th>شناسه</th>
+                            <th>عنوان</th>
+                            <th>قیمت</th>
+                            <th>متراژ</th>
+                            <th>محله</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for l in listings_page %}
+                        <tr>
+                            <td dir="ltr" class="a360-table__mono">{{ l.token|default:"—" }}</td>
+                            <td><span class="a360-table__primary">{{ l.title|truncatechars:48|default:"—" }}</span></td>
+                            <td class="a360-table__mono">{{ l.price|ws_money }}</td>
+                            <td>{% if l.area %}{{ l.area|floatformat:0 }} متر{% else %}—{% endif %}</td>
+                            <td>{{ l.neighborhood|default:"—" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="a360-card-list">
+                {% for l in listings_page %}
+                <article class="a360-data-card">
+                    <div class="a360-data-card__head">
+                        <strong>{{ l.title|truncatechars:56|default:"—" }}</strong>
+                        <span class="agency-stat-pill">{{ l.price|ws_money }}</span>
+                    </div>
+                    <dl class="a360-data-card__meta">
+                        <div><dt>شناسه</dt><dd dir="ltr">{{ l.token|default:"—" }}</dd></div>
+                        <div><dt>متراژ</dt><dd>{% if l.area %}{{ l.area|floatformat:0 }} متر{% else %}—{% endif %}</dd></div>
+                        <div><dt>محله</dt><dd>{{ l.neighborhood|default:"—" }}</dd></div>
+                    </dl>
+                </article>
+                {% endfor %}
+            </div>
+        </div>
+        {% with page_obj=listings_page %}
+        {% include "workspace/crm/agency/includes/advisor360/pagination.html" %}
+        {% endwith %}
         {% else %}
-        <div class="a360-table-wrap">
-            <table class="a360-table">
-                <thead><tr><th>نام</th><th>آگهی</th><th>شهر</th><th>بروزرسانی</th><th></th></tr></thead>
-                <tbody>
-                    {% for ds in datasets_page %}
-                    <tr>
-                        <td>{{ ds.name }}</td>
-                        <td>{{ ds.listing_count|default:ds.row_count }}</td>
-                        <td>{{ ds.city|default:"—" }}</td>
-                        <td>{{ ds.updated_at|ws_jalali_date }}</td>
-                        <td><a href="?tab=filing&dataset={{ ds.pk }}" class="crm-btn crm-btn-ghost crm-btn-sm">آگهی‌ها</a></td>
-                    </tr>
-                    {% empty %}<tr><td colspan="5" class="a360-empty">Dataset نیست</td></tr>{% endfor %}
-                </tbody>
-            </table>
+        {% include "workspace/crm/agency/includes/empty_state.html" with icon="list" title="آگهی‌ای یافت نشد" description="در این استخراج هنوز آگهی ثبت نشده است." compact=True %}
+        {% endif %}
+        {% else %}
+        {% if datasets_page.paginator.count %}
+        <div class="a360-data-view">
+            <div class="agency-table-wrap agency-table-wrap--fit a360-table-wrap">
+                <table class="agency-table agency-table--perf a360-table">
+                    <thead>
+                        <tr>
+                            <th>نام استخراج</th>
+                            <th>شهر</th>
+                            <th>تعداد آگهی</th>
+                            <th>آخرین بروزرسانی</th>
+                            <th class="a360-table__actions-col">عملیات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ds in datasets_page %}
+                        <tr>
+                            <td><span class="a360-table__primary">{{ ds.name|default:"—" }}</span></td>
+                            <td>{{ ds.city|default:"—" }}</td>
+                            <td><span class="agency-stat-pill"><i class="fas fa-list" aria-hidden="true"></i> {{ ds.listing_count|default:ds.row_count|default:0 }} آگهی</span></td>
+                            <td class="a360-table__mono">{{ ds.updated_at|ws_jalali_date }}</td>
+                            <td class="a360-table__actions-col">
+                                <a href="?tab=filing&dataset={{ ds.pk }}" class="crm-btn crm-btn-ghost crm-btn-sm">مشاهده آگهی‌ها</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="a360-card-list">
+                {% for ds in datasets_page %}
+                <article class="a360-data-card">
+                    <div class="a360-data-card__head">
+                        <strong>{{ ds.name|default:"—" }}</strong>
+                        <span class="agency-stat-pill">{{ ds.listing_count|default:ds.row_count|default:0 }} آگهی</span>
+                    </div>
+                    <dl class="a360-data-card__meta">
+                        <div><dt>شهر</dt><dd>{{ ds.city|default:"—" }}</dd></div>
+                        <div><dt>بروزرسانی</dt><dd>{{ ds.updated_at|ws_jalali_date }}</dd></div>
+                    </dl>
+                    <div class="a360-data-card__actions">
+                        <a href="?tab=filing&dataset={{ ds.pk }}" class="crm-btn crm-btn-ghost crm-btn-sm">مشاهده آگهی‌ها</a>
+                    </div>
+                </article>
+                {% endfor %}
+            </div>
         </div>
+        {% with page_obj=datasets_page %}
+        {% include "workspace/crm/agency/includes/advisor360/pagination.html" %}
+        {% endwith %}
+        {% else %}
+        {% include "workspace/crm/agency/includes/empty_state.html" with icon="database" title="استخراجی انجام نشده" description="استخراج‌های فایلینگ این مشاور پس از انجام در این بخش نمایش داده می‌شوند." compact=True %}
+        {% endif %}
+        {% endif %}
+
+        {% elif tab == 'deals' %}
+        {% include "workspace/crm/agency/includes/advisor360/toolbar.html" with search_placeholder="جستجو در معاملات..." stage_choices=deal_stages export_type="deals" %}
+        {% if page_obj.paginator.count %}
+        <div class="a360-data-view">
+            <div class="agency-table-wrap agency-table-wrap--fit a360-table-wrap">
+                <table class="agency-table agency-table--perf a360-table a360-table--deals">
+                    <thead>
+                        <tr>
+                            <th>عنوان</th>
+                            <th>مشتری</th>
+                            <th>مرحله</th>
+                            <th>ارزش</th>
+                            <th>اقدام بعدی</th>
+                            <th>بروزرسانی</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in page_obj %}
+                        <tr>
+                            <td><span class="a360-table__primary">{{ row.title|default:"—" }}</span></td>
+                            <td>{% if row.customer %}{{ row.customer.name }}{% else %}—{% endif %}</td>
+                            <td>{% include "workspace/crm/agency/includes/status_badge.html" with status=row.stage|a360_deal_stage_status label=row.stage %}</td>
+                            <td class="a360-table__mono">{{ row.value|ws_money }}</td>
+                            <td class="a360-table__mono">
+                                {% if row.next_action_type %}
+                                {{ row.next_action_type }}{% if row.next_action_at %} · {{ row.next_action_at|ws_jalali_date }}{% endif %}
+                                {% else %}—{% endif %}
+                            </td>
+                            <td class="a360-table__mono">{{ row.updated_at|ws_jalali_date }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="a360-card-list">
+                {% for row in page_obj %}
+                <article class="a360-data-card">
+                    <div class="a360-data-card__head">
+                        <strong>{{ row.title|default:"—" }}</strong>
+                        {% include "workspace/crm/agency/includes/status_badge.html" with status=row.stage|a360_deal_stage_status label=row.stage %}
+                    </div>
+                    <dl class="a360-data-card__meta">
+                        <div><dt>مشتری</dt><dd>{% if row.customer %}{{ row.customer.name }}{% else %}—{% endif %}</dd></div>
+                        <div><dt>ارزش</dt><dd>{{ row.value|ws_money }}</dd></div>
+                        <div><dt>اقدام بعدی</dt><dd>{% if row.next_action_type %}{{ row.next_action_type }}{% else %}—{% endif %}</dd></div>
+                        <div><dt>بروزرسانی</dt><dd>{{ row.updated_at|ws_jalali_date }}</dd></div>
+                    </dl>
+                </article>
+                {% endfor %}
+            </div>
+        </div>
+        {% include "workspace/crm/agency/includes/advisor360/pagination.html" %}
+        {% else %}
+        {% include "workspace/crm/agency/includes/empty_state.html" with icon="handshake" title="معامله‌ای ثبت نشده" description="این مشاور هنوز معامله‌ای ثبت نکرده است." compact=True %}
         {% endif %}
 
         {% elif tab == 'contracts' %}
-        <div class="a360-table-wrap">
-            <table class="a360-table">
-                <thead><tr><th>شناسه</th><th>عنوان</th><th>وضعیت</th><th>بروزرسانی</th><th>PDF</th></tr></thead>
-                <tbody>
-                    {% for c in page_obj %}
-                    <tr>
-                        <td dir="ltr">{{ c.internal_number }}</td>
-                        <td>{{ c.title|default:"—" }}</td>
-                        <td>{{ c.get_status_display }}</td>
-                        <td>{{ c.updated_at|ws_jalali_date }}</td>
-                        <td><a href="{% url 'workspace:agency_advisor_contract_pdf' member.pk c.pk %}?inline=1" target="_blank" rel="noopener" class="crm-btn crm-btn-ghost crm-btn-sm">مشاهده</a></td>
-                    </tr>
-                    {% empty %}<tr><td colspan="5" class="a360-empty">قراردادی نیست</td></tr>{% endfor %}
-                </tbody>
-            </table>
+        {% if page_obj.paginator.count %}
+        <div class="a360-data-view">
+            <div class="agency-table-wrap agency-table-wrap--fit a360-table-wrap">
+                <table class="agency-table agency-table--perf a360-table">
+                    <thead>
+                        <tr>
+                            <th>شناسه</th>
+                            <th>عنوان</th>
+                            <th>وضعیت</th>
+                            <th>آخرین بروزرسانی</th>
+                            <th class="a360-table__actions-col">PDF</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for c in page_obj %}
+                        <tr>
+                            <td dir="ltr" class="a360-table__mono">{{ c.internal_number|default:"—" }}</td>
+                            <td><span class="a360-table__primary">{{ c.title|default:"—" }}</span></td>
+                            <td>{% include "workspace/crm/agency/includes/status_badge.html" with status="pending" label=c.get_status_display %}</td>
+                            <td class="a360-table__mono">{{ c.updated_at|ws_jalali_date }}</td>
+                            <td class="a360-table__actions-col">
+                                <a href="{% url 'workspace:agency_advisor_contract_pdf' member.pk c.pk %}?inline=1" target="_blank" rel="noopener" class="crm-btn crm-btn-ghost crm-btn-sm">
+                                    <i class="fas fa-file-pdf" aria-hidden="true"></i>
+                                    مشاهده PDF
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="a360-card-list">
+                {% for c in page_obj %}
+                <article class="a360-data-card">
+                    <div class="a360-data-card__head">
+                        <strong>{{ c.title|default:c.internal_number|default:"—" }}</strong>
+                        {% include "workspace/crm/agency/includes/status_badge.html" with status="pending" label=c.get_status_display %}
+                    </div>
+                    <dl class="a360-data-card__meta">
+                        <div><dt>شناسه</dt><dd dir="ltr">{{ c.internal_number|default:"—" }}</dd></div>
+                        <div><dt>بروزرسانی</dt><dd>{{ c.updated_at|ws_jalali_date }}</dd></div>
+                    </dl>
+                    <div class="a360-data-card__actions">
+                        <a href="{% url 'workspace:agency_advisor_contract_pdf' member.pk c.pk %}?inline=1" target="_blank" rel="noopener" class="crm-btn crm-btn-ghost crm-btn-sm">
+                            <i class="fas fa-file-pdf" aria-hidden="true"></i>
+                            مشاهده PDF
+                        </a>
+                    </div>
+                </article>
+                {% endfor %}
+            </div>
         </div>
+        {% include "workspace/crm/agency/includes/advisor360/pagination.html" %}
+        {% else %}
+        {% include "workspace/crm/agency/includes/empty_state.html" with icon="file-signature" title="هنوز قراردادی ثبت نشده" description="قراردادهای این مشاور پس از ایجاد در این بخش نمایش داده می‌شوند." compact=True %}
+        {% endif %}
 
         {% elif tab == 'activities' %}
-        <ul class="a360-activity-list">
-            {% for ev in activities %}
-            <li>
-                <time>{{ ev.at|ws_jalali_datetime }}</time>
-                <strong>{{ ev.label }}</strong>
-                <span>{{ ev.title }}</span>
-                {% if ev.detail %}<p style="margin:0.25rem 0 0;font-size:0.8125rem;color:#64748b;">{{ ev.detail }}</p>{% endif %}
-            </li>
-            {% empty %}<li class="a360-empty">فعالیتی ثبت نشده</li>{% endfor %}
-        </ul>
+        {% include "workspace/crm/agency/includes/advisor360/activity_timeline.html" %}
         {% endif %}
     </div>
 </div>
 {% endblock %}
+
 {% block crm_js %}
-<script src="{% static 'workspace/js/agency-ui.js' %}?v=1" defer></script>
+<script src="{% static 'workspace/js/agency-ui.js' %}?v=2" defer></script>
 {% endblock %}

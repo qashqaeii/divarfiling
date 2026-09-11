@@ -348,6 +348,76 @@
     window.setTimeout(sweepAutofill, 1000);
   }
 
+  function initAdvisor360Search() {
+    document.querySelectorAll('.a360-search-input').forEach(function (input) {
+      guardMemberSearchInput(input);
+      var userEdited = !!input.value.trim();
+      input.addEventListener('input', function () { userEdited = true; });
+      function sweep() {
+        if (userEdited) return;
+        if (clearPhoneAutofill(input)) input.value = '';
+      }
+      requestAnimationFrame(function () { requestAnimationFrame(sweep); });
+      window.setTimeout(sweep, 200);
+      window.setTimeout(sweep, 800);
+    });
+  }
+
+  function initAdvisor360ActivityFilters() {
+    var list = document.getElementById('a360ActivityList');
+    var typeF = document.getElementById('a360ActivityType');
+    var rangeF = document.getElementById('a360ActivityRange');
+    var clearBtn = document.getElementById('a360ActivityClear');
+    var empty = document.getElementById('a360ActivityEmpty');
+    if (!list || !typeF || !rangeF) return;
+
+    function apply() {
+      var kind = typeF.value;
+      var days = parseInt(rangeF.value || '0', 10);
+      var cutoff = days > 0 ? (Date.now() / 1000) - (days * 86400) : 0;
+      var visible = 0;
+      list.querySelectorAll('.a360-timeline__item').forEach(function (item) {
+        var matchKind = !kind || item.getAttribute('data-kind') === kind;
+        var ts = parseInt(item.getAttribute('data-ts') || '0', 10);
+        var matchRange = !cutoff || ts >= cutoff;
+        var show = matchKind && matchRange;
+        item.style.display = show ? '' : 'none';
+        if (show) visible++;
+      });
+      if (empty) empty.hidden = visible > 0;
+      list.hidden = visible === 0;
+      if (clearBtn) clearBtn.hidden = !kind && !days;
+    }
+
+    function reset() {
+      typeF.value = '';
+      rangeF.value = '';
+      apply();
+    }
+
+    typeF.addEventListener('change', apply);
+    rangeF.addEventListener('change', apply);
+    if (clearBtn) clearBtn.addEventListener('click', reset);
+    apply();
+  }
+
+  function initAdvisor360ExportMenus() {
+    document.querySelectorAll('.a360-export').forEach(function (wrap) {
+      wrap.addEventListener('toggle', function () {
+        if (!wrap.open) return;
+        document.querySelectorAll('.a360-export[open]').forEach(function (other) {
+          if (other !== wrap) other.open = false;
+        });
+      });
+    });
+    document.addEventListener('click', function (e) {
+      if (e.target.closest('.a360-export')) return;
+      document.querySelectorAll('.a360-export[open]').forEach(function (el) {
+        el.open = false;
+      });
+    });
+  }
+
   document.addEventListener('DOMContentLoaded', function () {
     initAgencyInviteModal();
     initInvitePhonePreview();
@@ -355,5 +425,8 @@
     initStickyStepFooter();
     initNavScrollHint();
     initMemberFilters();
+    initAdvisor360Search();
+    initAdvisor360ActivityFilters();
+    initAdvisor360ExportMenus();
   });
 })();

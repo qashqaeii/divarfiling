@@ -1,0 +1,65 @@
+{% load advisor360_tags %}
+<header class="a360-header">
+    <div class="a360-header__main">
+        <div class="a360-avatar" aria-hidden="true">{% a360_display_name user as dn %}{{ dn|slice:":1" }}</div>
+        <div class="a360-identity">
+            <div class="a360-identity__top">
+                <span class="a360-readonly-badge" title="نمای مدیریتی بدون امکان ویرایش">
+                    <i class="fas fa-lock" aria-hidden="true"></i>
+                    نمای مدیریتی · فقط مشاهده
+                </span>
+            </div>
+            <h1 class="a360-identity__name">{% a360_display_name user as advisor_name %}{{ advisor_name }}</h1>
+            <p class="a360-identity__meta">
+                {% if user.get_full_name and user.phone %}
+                <span class="a360-identity__phone" dir="ltr">{{ user.phone }}</span>
+                <span class="a360-identity__sep" aria-hidden="true">·</span>
+                {% endif %}
+                <span>{{ member.get_role_display|default:member.role }}</span>
+                <span class="a360-identity__sep" aria-hidden="true">·</span>
+                <span>عضویت {{ member.joined_at|ws_jalali_date }}</span>
+            </p>
+            <div class="a360-badges">
+                {% if member.is_active %}
+                {% include "workspace/crm/agency/includes/status_badge.html" with status="ok" label="عضو فعال" %}
+                {% else %}
+                {% include "workspace/crm/agency/includes/status_badge.html" with status="muted" label="غیرفعال" %}
+                {% endif %}
+                {% if has_seat %}
+                {% include "workspace/crm/agency/includes/status_badge.html" with status="ok" label="لایسنس فعال" %}
+                {% else %}
+                {% include "workspace/crm/agency/includes/status_badge.html" with status="unlicensed" label="بدون لایسنس" %}
+                {% endif %}
+                {% if seat and seat.expires_at %}
+                <span class="a360-meta-chip"><i class="fas fa-calendar" aria-hidden="true"></i> انقضا {{ seat.expires_at|ws_jalali_date }}</span>
+                {% endif %}
+                {% if last_activity %}
+                <span class="a360-meta-chip"><i class="fas fa-clock" aria-hidden="true"></i> آخرین فعالیت {{ last_activity|ws_jalali_datetime }}</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="a360-header__actions">
+        <a href="{{ team_url }}" class="crm-btn crm-btn-ghost crm-btn-sm">
+            <i class="fas fa-arrow-right" aria-hidden="true"></i>
+            بازگشت به مشاوران
+        </a>
+        {% if licenses_url %}
+        <a href="{{ licenses_url }}" class="crm-btn crm-btn-ghost crm-btn-sm">
+            <i class="fas fa-key" aria-hidden="true"></i>
+            مدیریت لایسنس
+        </a>
+        {% endif %}
+        <details class="a360-export">
+            <summary class="crm-btn crm-btn-ghost crm-btn-sm">
+                <i class="fas fa-download" aria-hidden="true"></i>
+                دانلود خروجی
+            </summary>
+            <div class="a360-export__menu" role="menu">
+                <a href="{{ export_url }}?type=contacts&format=xlsx" role="menuitem">مخاطبین (XLSX)</a>
+                <a href="{{ export_url }}?type=properties&format=xlsx" role="menuitem">فایل‌های شخصی (XLSX)</a>
+                <a href="{{ export_url }}?type=deals&format=xlsx" role="menuitem">معاملات (XLSX)</a>
+            </div>
+        </details>
+    </div>
+</header>

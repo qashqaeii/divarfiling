@@ -1,0 +1,41 @@
+<header class="fl-header mk-filing-desk-header" data-help-tour="filing-datasets">
+    <div class="fl-header__main">
+        <span class="fl-header__icon" aria-hidden="true"><i class="fas fa-folder-open"></i></span>
+        <div class="fl-header__text">
+            <h1 class="fl-header__title">فایلینگ</h1>
+            <p class="fl-header__sub">مدیریت، فیلتر و تحلیل پوشه‌های استخراج و آگهی‌های دیوار</p>
+        </div>
+    </div>
+    <div class="fl-header__actions" role="toolbar" aria-label="عملیات فایلینگ">
+        <button type="button" class="fl-header__help" title="راهنمای این صفحه" aria-label="راهنمای این صفحه" data-help-tour="filing-datasets">
+            <i class="fas fa-circle-question" aria-hidden="true"></i>
+        </button>
+        <a href="{% url 'workspace:tools' %}" class="fl-header__btn fl-header__btn--ghost" title="ابزارهای هوشمند">
+            {% include 'includes/icon_slot.html' with decor='calculator' size='inline' only %}<span>ابزارها</span>
+        </a>
+        <button type="button" class="fl-header__btn fl-header__btn--primary" data-modal-open="modal-upload">
+            {% include 'includes/icon_slot.html' with decor='upload' size='inline' only %}<span>آپلود فایل / پوشه</span>
+        </button>
+    </div>
+</header>
+
+<header class="fl-mob-header mk-filing-mob-header">
+    <div class="fl-mob-header__inner">
+        <div class="fl-mob-header__main">
+            <span class="fl-mob-header__kicker"><i class="fas fa-folder-open" aria-hidden="true"></i> فایلینگ</span>
+            <h1 class="fl-mob-header__title">فایلینگ</h1>
+            <p class="fl-mob-header__sub">مدیریت پوشه‌های استخراج دیوار</p>
+        </div>
+        <div class="fl-mob-header__actions" role="toolbar" aria-label="عملیات">
+            <button type="button" class="fl-mob-header__icon" title="راهنما" aria-label="راهنمای این صفحه" data-help-tour="filing-datasets">
+                <i class="fas fa-circle-question" aria-hidden="true"></i>
+            </button>
+            <a href="{% url 'workspace:tools' %}" class="fl-mob-header__icon" title="ابزارها" aria-label="ابزارها">
+                <i class="fas fa-calculator" aria-hidden="true"></i>
+            </a>
+            <button type="button" class="fl-mob-header__icon fl-mob-header__icon--primary" data-modal-open="modal-upload" title="آپلود" aria-label="آپلود فایل">
+                <i class="fas fa-cloud-arrow-up" aria-hidden="true"></i>
+            </button>
+        </div>
+    </div>
+</header>

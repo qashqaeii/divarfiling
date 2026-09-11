@@ -2,84 +2,71 @@
 {% for ds in datasets %}
 {% with tx=ds.transaction_type|ws_tx_profile %}
 {% with loc=ds.city|default:"" %}
-<tr class="mk-filing-row" data-search="{{ ds.name }} {{ ds.original_filename }} {{ ds.subcategory }} {{ ds.city }} {{ ds.district }} {{ ds.transaction_type }}" data-id="{{ ds.id }}">
-    <td class="mk-col-check" data-label="">
+<tr class="fl-table-row mk-filing-row" data-search="{{ ds.name }} {{ ds.original_filename }} {{ ds.subcategory }} {{ ds.city }} {{ ds.district }} {{ ds.transaction_type }}" data-id="{{ ds.id }}">
+    <td class="mk-col-check fl-col-check" data-label="">
         <input type="checkbox" class="mk-checkbox mk-ds-check" value="{{ ds.id }}" aria-label="انتخاب {{ ds.name }}">
     </td>
-    <td class="mk-col-file" data-label="" data-sort-value="{{ ds.name|lower }}">
-        <div class="mk-file-cell">
-            <span class="mk-file-icon mk-file-icon-{{ ds.file_format }}" aria-hidden="true">
-                {% if ds.file_format == 'xlsx' %}XLS{% elif ds.file_format == 'csv' %}CSV{% else %}JSON{% endif %}
-            </span>
-            <div class="mk-file-text">
-                <div class="mk-file-title-row">
-                    <a href="{% url 'workspace:dataset_detail' ds.id %}" class="mk-file-name">{{ ds.name }}</a>
-                    {% if ds.transaction_type %}
-                    <span class="mk-tx-badge mk-tx-{{ tx.mode }} mk-filing-row-tx-inline">{{ tx.badge }}</span>
-                    {% endif %}
-                </div>
-                <span class="mk-file-sub">{{ ds.original_filename }}</span>
-                <div class="mk-filing-row-meta" aria-hidden="true">
-                    {% if ds.city or ds.district %}
-                    <span class="mk-ds-chip mk-ds-chip--loc">
-                        <i class="fas fa-location-dot" aria-hidden="true"></i>
-                        <span>{% if ds.city %}{{ ds.city }}{% endif %}{% if ds.city and ds.district %} · {% endif %}{% if ds.district %}{{ ds.district }}{% endif %}</span>
-                    </span>
-                    {% endif %}
-                    {% if ds.subcategory %}
-                    <span class="mk-ds-chip">{{ ds.subcategory|ws_subcategory_short }}</span>
-                    {% endif %}
-                    <span class="mk-ds-chip mk-ds-chip--dim">
-                        <i class="fas fa-clock" aria-hidden="true"></i>
-                        {{ ds.updated_at|ws_jalali_datetime }}
-                    </span>
-                </div>
+    <td class="mk-col-file fl-col-name" data-label="" data-sort-value="{{ ds.name|lower }}">
+        <div class="fl-name-cell">
+            <div class="fl-name-cell__main">
+                <a href="{% url 'workspace:dataset_detail' ds.id %}" class="fl-name-cell__title">{{ ds.name }}</a>
+                {% include 'workspace/includes/filing/filing_status_badge.html' with kind='format' format=ds.file_format %}
             </div>
+            <span class="fl-name-cell__sub" title="{{ ds.original_filename }}">{{ ds.original_filename }}</span>
         </div>
     </td>
-    <td class="mk-col-location mk-filing-desk-only" data-label="مکان" data-sort-value="{{ loc|lower }} {{ ds.district|default:''|lower }}">
+    <td class="mk-col-location fl-col-loc mk-filing-desk-only" data-label="مکان" data-sort-value="{{ loc|lower }} {{ ds.district|default:''|lower }}">
         {% if ds.city or ds.district %}
-        <div class="mk-location">
-            {% if ds.city %}<span class="mk-location-city"><i class="fas fa-map-marker-alt" aria-hidden="true"></i> {{ ds.city }}</span>{% endif %}
-            {% if ds.district %}<span class="mk-location-district">{{ ds.district }}</span>{% endif %}
-        </div>
-        {% else %}
-        <span class="mk-muted">—</span>
-        {% endif %}
-    </td>
-    <td class="mk-col-subject mk-filing-desk-only" data-label="موضوع" data-sort-value="{{ ds.subcategory|default:''|lower }}">
-        {% if ds.subcategory %}
-        <span class="mk-subject" title="{{ ds.subcategory }}">{{ ds.subcategory|ws_subcategory_short }}</span>
-        {% else %}
-        <span class="mk-muted">—</span>
-        {% endif %}
-    </td>
-    <td class="mk-col-tx mk-filing-desk-only" data-label="معامله" data-sort-value="{{ tx.mode }}">
-        {% if ds.transaction_type %}
-        <span class="mk-tx-badge mk-tx-{{ tx.mode }}">{{ tx.badge }}</span>
-        {% else %}
-        <span class="mk-muted">—</span>
-        {% endif %}
-    </td>
-    <td class="mk-col-num mk-num" data-label="آگهی" data-sort-value="{{ ds.listing_count|default:ds.row_count }}">
-        <span class="mk-filing-count-pill">
-            <strong>{{ ds.listing_count|default:ds.row_count|intcomma }}</strong>
-            <em>آگهی</em>
+        <span class="fl-loc-cell">
+            <i class="fas fa-map-marker-alt" aria-hidden="true"></i>
+            <span>{% if ds.city %}{{ ds.city }}{% endif %}{% if ds.city and ds.district %}، {% endif %}{% if ds.district %}{{ ds.district }}{% endif %}</span>
         </span>
+        {% else %}
+        <span class="mk-muted">—</span>
+        {% endif %}
     </td>
-    <td class="mk-col-date mk-date mk-filing-desk-only" data-label="بروزرسانی" data-sort-value="{{ ds.updated_at|date:'U' }}">
-        <div class="mk-date-compact">
-            <span class="mk-date-compact__d">{{ ds.updated_at|ws_jalali_date }}</span>
-            <span class="mk-date-compact__t">{{ ds.updated_at|ws_time }}</span>
+    <td class="mk-col-subject fl-col-subject mk-filing-desk-only" data-label="موضوع" data-sort-value="{{ ds.subcategory|default:''|lower }}">
+        {% if ds.subcategory %}
+        <span class="fl-subject-cell" title="{{ ds.subcategory }}">{{ ds.subcategory|ws_subcategory_short }}</span>
+        {% else %}
+        <span class="mk-muted">—</span>
+        {% endif %}
+    </td>
+    <td class="mk-col-tx fl-col-tx mk-filing-desk-only" data-label="معامله" data-sort-value="{{ tx.mode }}">
+        {% if ds.transaction_type %}
+        {% include 'workspace/includes/filing/filing_status_badge.html' with kind='tx' mode=tx.mode label=tx.badge %}
+        {% else %}
+        <span class="mk-muted">—</span>
+        {% endif %}
+    </td>
+    <td class="mk-col-num fl-col-count mk-num" data-label="آگهی" data-sort-value="{{ ds.listing_count|default:ds.row_count }}">
+        <span class="fl-count-cell">{{ ds.listing_count|default:ds.row_count|intcomma }}</span>
+    </td>
+    <td class="mk-col-date fl-col-date mk-filing-desk-only" data-label="بروزرسانی" data-sort-value="{{ ds.updated_at|date:'U' }}">
+        <div class="fl-date-cell">
+            <i class="fas fa-calendar" aria-hidden="true"></i>
+            <span class="fl-date-cell__text">{{ ds.updated_at|ws_jalali_datetime }}</span>
         </div>
     </td>
-    <td class="mk-col-actions" data-label="">
-        <div class="mk-row-actions">
-            <a href="{% url 'workspace:dataset_detail' ds.id %}" class="mk-row-btn mk-row-btn--open" title="باز کردن"><i class="fas fa-arrow-left" aria-hidden="true"></i></a>
-            <a href="{% url 'workspace:dataset_analyze' ds.id %}" class="mk-row-btn" title="تحلیل"><i class="fas fa-chart-bar" aria-hidden="true"></i></a>
-            <a href="{% url 'workspace:dataset_map' ds.id %}" class="mk-row-btn" title="نقشه"><i class="fas fa-map" aria-hidden="true"></i></a>
-            <a href="{% url 'workspace:dataset_export' ds.id %}?format=csv" class="mk-row-btn js-secure-export" data-export-label="خروجی CSV" title="دانلود"><i class="fas fa-download" aria-hidden="true"></i></a>
-            <button type="button" class="mk-row-btn mk-row-btn-danger" title="حذف"
+    <td class="mk-col-actions fl-col-actions" data-label="">
+        <div class="fl-row-actions mk-row-actions">
+            <a href="{% url 'workspace:dataset_detail' ds.id %}" class="fl-row-btn mk-row-btn" title="مشاهده" aria-label="مشاهده"><i class="fas fa-eye" aria-hidden="true"></i></a>
+            <a href="{% url 'workspace:dataset_export' ds.id %}?format=csv" class="fl-row-btn mk-row-btn js-secure-export" data-export-label="خروجی CSV" title="دانلود" aria-label="دانلود"><i class="fas fa-download" aria-hidden="true"></i></a>
+            <a href="{% url 'workspace:dataset_analyze' ds.id %}" class="fl-row-btn mk-row-btn mk-filing-desk-only" title="تحلیل" aria-label="تحلیل"><i class="fas fa-chart-bar" aria-hidden="true"></i></a>
+            <details class="fl-row-menu mk-filing-desk-only">
+                <summary class="fl-row-btn mk-row-btn fl-row-btn--more" title="بیشتر" aria-label="عملیات بیشتر"><i class="fas fa-ellipsis-vertical" aria-hidden="true"></i></summary>
+                <div class="fl-row-menu__panel" role="menu">
+                    <a href="{% url 'workspace:dataset_map' ds.id %}" class="fl-row-menu__item" role="menuitem"><i class="fas fa-map" aria-hidden="true"></i> نقشه</a>
+                    <button type="button" class="fl-row-menu__item fl-row-menu__item--danger" role="menuitem"
+                        data-confirm
+                        data-confirm-title="حذف فایل"
+                        data-confirm-message="فایل «{{ ds.name }}» و آگهی‌های فایلینگ آن حذف می‌شوند. استخراج بعدی یک دیتاست جدید از آگهی‌های فعلی ایجاد می‌کند. فایل‌های شخصی/CRM شما حذف نمی‌شوند."
+                        data-confirm-url="{% url 'workspace:dataset_delete' ds.id %}">
+                        <i class="fas fa-trash" aria-hidden="true"></i> حذف
+                    </button>
+                </div>
+            </details>
+            <button type="button" class="fl-row-btn mk-row-btn mk-row-btn-danger fl-row-btn--mob-del" title="حذف" aria-label="حذف"
                 data-confirm
                 data-confirm-title="حذف فایل"
                 data-confirm-message="فایل «{{ ds.name }}» و آگهی‌های فایلینگ آن حذف می‌شوند. استخراج بعدی یک دیتاست جدید از آگهی‌های فعلی ایجاد می‌کند. فایل‌های شخصی/CRM شما حذف نمی‌شوند."

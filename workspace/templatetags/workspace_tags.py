@@ -188,9 +188,8 @@ def amenity_icons(features):
     return {'feat': features or {}}
 
 
-@register.inclusion_tag('workspace/includes/pagination.html')
-def mk_pagination(page_obj, query_params=None, aria_label='صفحه‌بندی'):
-    """صفحه‌بندی با شماره صفحات و لینک‌های تمیز."""
+def _pagination_context(page_obj, query_params=None, aria_label='صفحه‌بندی'):
+    """Shared pagination context for workspace list pages."""
     base = {
         k: v for k, v in (query_params or {}).items()
         if v not in ('', None) and k != 'page'
@@ -227,6 +226,18 @@ def mk_pagination(page_obj, query_params=None, aria_label='صفحه‌بندی')
         'total_count': paginator.count,
         'aria_label': aria_label,
     }
+
+
+@register.inclusion_tag('workspace/includes/pagination.html')
+def mk_pagination(page_obj, query_params=None, aria_label='صفحه‌بندی'):
+    """صفحه‌بندی با شماره صفحات و لینک‌های تمیز."""
+    return _pagination_context(page_obj, query_params, aria_label)
+
+
+@register.inclusion_tag('workspace/includes/filing/filing_pagination.html')
+def fl_pagination(page_obj, query_params=None, aria_label='صفحه‌بندی پوشه‌های استخراج'):
+    """Filing datasets pagination with always-visible range meta."""
+    return _pagination_context(page_obj, query_params, aria_label)
 
 
 @register.filter

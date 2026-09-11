@@ -1,0 +1,16 @@
+<div class="fl-empty{% if variant %} fl-empty--{{ variant }}{% endif %}">
+    <span class="fl-empty__icon" aria-hidden="true">
+        {% if variant == 'filter' %}
+        <i class="fas fa-search"></i>
+        {% else %}
+        <i class="fas fa-folder-open"></i>
+        {% endif %}
+    </span>
+    <h3 class="fl-empty__title">{{ title }}</h3>
+    {% if description %}<p class="fl-empty__desc">{{ description }}</p>{% endif %}
+    {% if action_url %}
+    <a href="{{ action_url }}" class="fl-empty__cta ws-btn ws-btn-sm ws-btn-ghost">{{ action_label }}</a>
+    {% elif action_modal %}
+    <button type="button" class="fl-empty__cta ws-btn ws-btn-sm ws-btn-primary" data-modal-open="{{ action_modal }}">{{ action_label }}</button>
+    {% endif %}
+</div>

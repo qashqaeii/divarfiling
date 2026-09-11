@@ -762,3 +762,20 @@
         transform: none !important;
     }
 }
+
+/* ─── Compatibility with mk-filing-datasets redesign ─── */
+.mk-filing-datasets .mk-filing-mob-header:not(.fl-mob-header) { display: none !important; }
+.mk-filing-datasets.mk-filing-mobile {
+    padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
+}
+@media (max-width: 768px) {
+    .mk-filing-datasets.mk-filing-mobile.mk-page {
+        padding: 0 0 calc(5.5rem + env(safe-area-inset-bottom, 0px));
+        gap: 0.55rem;
+        overflow-x: clip;
+    }
+    .mk-filing-datasets .mk-filing-fab,
+    .mk-filing-datasets .fl-fab {
+        display: inline-flex !important;
+    }
+}

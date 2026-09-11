@@ -1,0 +1,49 @@
+{% load humanize workspace_tags %}
+{% for ds in datasets %}
+{% with tx=ds.transaction_type|ws_tx_profile %}
+<article class="fl-mob-card mk-ds-card" data-id="{{ ds.id }}" data-search="{{ ds.name }} {{ ds.original_filename }} {{ ds.subcategory }} {{ ds.city }} {{ ds.district }} {{ ds.transaction_type }}">
+    <label class="fl-mob-card__check" title="انتخاب">
+        <input type="checkbox" class="mk-checkbox mk-ds-check" value="{{ ds.id }}" aria-label="انتخاب {{ ds.name }}">
+    </label>
+    <div class="fl-mob-card__body">
+        <div class="fl-mob-card__head">
+            <a href="{% url 'workspace:dataset_detail' ds.id %}" class="fl-mob-card__title">{{ ds.name }}</a>
+            {% include 'workspace/includes/filing/filing_status_badge.html' with kind='format' format=ds.file_format %}
+        </div>
+        <div class="fl-mob-card__meta">
+            {% if ds.city %}
+            <span class="fl-mob-card__loc"><i class="fas fa-map-marker-alt" aria-hidden="true"></i> {{ ds.city }}{% if ds.district %}، {{ ds.district }}{% endif %}</span>
+            {% endif %}
+            {% if ds.transaction_type %}
+            {% include 'workspace/includes/filing/filing_status_badge.html' with kind='tx' mode=tx.mode label=tx.badge %}
+            {% endif %}
+            {% if ds.subcategory %}
+            <span class="fl-mob-card__subject">{{ ds.subcategory|ws_subcategory_short }}</span>
+            {% endif %}
+        </div>
+        <div class="fl-mob-card__foot">
+            <span class="fl-mob-card__count"><strong>{{ ds.listing_count|default:ds.row_count|intcomma }}</strong> آگهی</span>
+            <time class="fl-mob-card__date" datetime="{{ ds.updated_at|date:'c' }}">{{ ds.updated_at|ws_jalali_datetime }}</time>
+        </div>
+    </div>
+    <div class="fl-mob-card__actions">
+        <a href="{% url 'workspace:dataset_detail' ds.id %}" class="fl-row-btn" title="مشاهده" aria-label="مشاهده"><i class="fas fa-eye" aria-hidden="true"></i></a>
+        <a href="{% url 'workspace:dataset_export' ds.id %}?format=csv" class="fl-row-btn js-secure-export" data-export-label="خروجی CSV" title="دانلود" aria-label="دانلود"><i class="fas fa-download" aria-hidden="true"></i></a>
+        <details class="fl-row-menu">
+            <summary class="fl-row-btn fl-row-btn--more" title="بیشتر" aria-label="عملیات بیشتر"><i class="fas fa-ellipsis-vertical" aria-hidden="true"></i></summary>
+            <div class="fl-row-menu__panel" role="menu">
+                <a href="{% url 'workspace:dataset_analyze' ds.id %}" class="fl-row-menu__item" role="menuitem"><i class="fas fa-chart-bar" aria-hidden="true"></i> تحلیل</a>
+                <a href="{% url 'workspace:dataset_map' ds.id %}" class="fl-row-menu__item" role="menuitem"><i class="fas fa-map" aria-hidden="true"></i> نقشه</a>
+                <button type="button" class="fl-row-menu__item fl-row-menu__item--danger" role="menuitem"
+                    data-confirm
+                    data-confirm-title="حذف فایل"
+                    data-confirm-message="فایل «{{ ds.name }}» و آگهی‌های فایلینگ آن حذف می‌شوند. استخراج بعدی یک دیتاست جدید از آگهی‌های فعلی ایجاد می‌کند. فایل‌های شخصی/CRM شما حذف نمی‌شوند."
+                    data-confirm-url="{% url 'workspace:dataset_delete' ds.id %}">
+                    <i class="fas fa-trash" aria-hidden="true"></i> حذف
+                </button>
+            </div>
+        </details>
+    </div>
+</article>
+{% endwith %}
+{% endfor %}

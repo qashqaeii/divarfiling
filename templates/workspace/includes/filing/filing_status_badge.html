@@ -1,0 +1,10 @@
+{% comment %}
+Usage:
+  {% include 'workspace/includes/filing/filing_status_badge.html' with kind='tx' mode='sale' label='فروش' %}
+  {% include 'workspace/includes/filing/filing_status_badge.html' with kind='format' format='json' %}
+{% endcomment %}
+{% if kind == 'format' %}
+<span class="fl-badge fl-badge--format fl-badge--{{ format|default:'json' }}">{{ format|default:'json'|upper }}</span>
+{% else %}
+<span class="fl-badge fl-badge--tx fl-badge--{{ mode|default:'other' }}">{{ label|default:'—' }}</span>
+{% endif %}

@@ -1,0 +1,43 @@
+{% load humanize %}
+{% if page_obj.paginator.count %}
+<nav class="fl-pagination mk-pagination" aria-label="{{ aria_label|default:'صفحه‌بندی پوشه‌های استخراج' }}">
+    <div class="fl-pagination__meta mk-pagination-meta">
+        <span>نمایش <strong>{{ start_index|intcomma }}</strong> تا <strong>{{ end_index|intcomma }}</strong> از <strong>{{ total_count|intcomma }}</strong> پوشه</span>
+    </div>
+    {% if page_obj.has_other_pages %}
+    <div class="fl-pagination__nav mk-pagination-nav">
+        {% if prev_url %}
+        <a href="{{ prev_url }}" class="mk-page-btn mk-page-btn-nav" aria-label="صفحه قبل" title="قبلی">
+            <i class="fas fa-chevron-right" aria-hidden="true"></i>
+        </a>
+        {% else %}
+        <span class="mk-page-btn mk-page-btn-nav is-disabled" aria-hidden="true">
+            <i class="fas fa-chevron-right" aria-hidden="true"></i>
+        </span>
+        {% endif %}
+
+        <div class="mk-page-list" role="group" aria-label="شماره صفحات">
+            {% for p in pages %}
+            {% if p.type == 'ellipsis' %}
+            <span class="mk-page-ellipsis" aria-hidden="true">…</span>
+            {% elif p.active %}
+            <span class="mk-page-num is-active" aria-current="page">{{ p.num }}</span>
+            {% else %}
+            <a href="{{ p.url }}" class="mk-page-num">{{ p.num }}</a>
+            {% endif %}
+            {% endfor %}
+        </div>
+
+        {% if next_url %}
+        <a href="{{ next_url }}" class="mk-page-btn mk-page-btn-nav" aria-label="صفحه بعد" title="بعدی">
+            <i class="fas fa-chevron-left" aria-hidden="true"></i>
+        </a>
+        {% else %}
+        <span class="mk-page-btn mk-page-btn-nav is-disabled" aria-hidden="true">
+            <i class="fas fa-chevron-left" aria-hidden="true"></i>
+        </span>
+        {% endif %}
+    </div>
+    {% endif %}
+</nav>
+{% endif %}

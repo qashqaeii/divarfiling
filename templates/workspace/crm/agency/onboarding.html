@@ -3,21 +3,23 @@
 {% block title %}راه‌اندازی آژانس{% endblock %}
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/crm.css' %}">
-<link rel="stylesheet" href="{% static 'workspace/css/agency-phase2.css' %}?v=5">
-<link rel="stylesheet" href="{% static 'workspace/css/agency-hub.css' %}?v=5">
+<link rel="stylesheet" href="{% static 'workspace/css/agency-phase2.css' %}?v=6">
+<link rel="stylesheet" href="{% static 'workspace/css/agency-hub.css' %}?v=6">
 {% endblock %}
 {% block content %}
 <div class="agency-onboarding" dir="rtl">
     <div class="agency-onboarding__shell">
         <header class="agency-onboarding__hero">
-            <div class="agency-onboarding__hero-copy">
-                {% if subscription %}
-                <span class="agency-onboarding__badge">
-                    <i class="fas fa-circle-check" aria-hidden="true"></i>
-                    اشتراک آژانس شما فعال است
-                </span>
-                {% endif %}
-                <span class="agency-hub-header__eyebrow">فایلینگ دیوار · CRM</span>
+            <div class="agency-onboarding__hero-main">
+                <div class="agency-onboarding__hero-top">
+                    <span class="agency-hub-header__eyebrow">فایلینگ دیوار · CRM</span>
+                    {% if subscription %}
+                    <span class="agency-onboarding__badge">
+                        <i class="fas fa-circle-check" aria-hidden="true"></i>
+                        اشتراک فعال
+                    </span>
+                    {% endif %}
+                </div>
                 <h1 class="agency-onboarding__title">راه‌اندازی آژانس</h1>
                 <p class="agency-onboarding__lead">در چند قدم ساده، تیم مشاوران خود را آماده کار کنید.</p>
                 {% if seats %}
@@ -29,7 +31,6 @@
             <div class="agency-onboarding__hero-art" aria-hidden="true">
                 <div class="agency-onboarding__hero-orb"></div>
                 <i class="fas fa-paper-plane agency-onboarding__hero-plane"></i>
-                <span class="agency-onboarding__hero-users"><i class="fas fa-user"></i><i class="fas fa-user"></i><i class="fas fa-user-plus"></i></span>
             </div>
         </header>
 
@@ -178,7 +179,7 @@
                     {% if pending_invite_count %}<span><strong>{{ pending_invite_count }}</strong> دعوت در انتظار</span>{% endif %}
                 </div>
                 {% endif %}
-                <footer class="agency-step-footer" style="justify-content:center;border:none;padding-top:0.5rem;">
+                <footer class="agency-step-footer agency-step-footer--inline">
                     <a href="{% url 'workspace:agency_hub_dashboard' %}" class="crm-btn crm-btn-primary">ورود به پنل آژانس</a>
                 </footer>
             </section>

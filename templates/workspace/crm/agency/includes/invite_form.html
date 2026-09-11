@@ -1,23 +1,13 @@
 {% load workspace_tags %}
-{% comment %}
-Invite advisors — onboarding step 2. Requires invite_capacity, seats, invitations.
-{% endcomment %}
 <section class="agency-invite-panel">
     <header class="agency-invite-panel__head">
         <div class="agency-step-head agency-step-head--flush">
             <span class="agency-step-head__icon" aria-hidden="true"><i class="fas fa-user-plus"></i></span>
             <div>
                 <h2 class="agency-step-head__title">دعوت مشاوران</h2>
-                <p class="agency-step-head__desc">شماره موبایل هر مشاور را وارد کنید. دعوت از طریق SMS ارسال می‌شود و تخصیص لایسنس پس از پذیرش انجام می‌شود.</p>
+                <p class="agency-step-head__desc">شماره موبایل هر مشاور را وارد کنید. دعوت از طریق SMS ارسال می‌شود.</p>
             </div>
         </div>
-        {% if seats %}
-        <div class="agency-invite-panel__capacity-mini" aria-label="خلاصه ظرفیت">
-            <span><strong>{{ seats.total }}</strong> کل</span>
-            <span><strong>{{ seats.assigned }}</strong> تخصیص</span>
-            <span><strong>{{ seats.available }}</strong> آزاد</span>
-        </div>
-        {% endif %}
     </header>
 
     <form method="post" class="agency-invite-form" id="agencyInviteForm"
@@ -32,51 +22,51 @@ Invite advisors — onboarding step 2. Requires invite_capacity, seats, invitati
         <div class="agency-alert agency-alert--warn agency-invite-capacity-alert">
             <i class="fas fa-circle-exclamation" aria-hidden="true"></i>
             <div>
-                <strong>ظرفیت تکمیل شده است</strong>
-                <span>تمام {{ invite_capacity.total }} لایسنس این آژانس استفاده یا رزرو شده‌اند.</span>
+                <strong>ظرفیت تکمیل شده</strong>
+                <span>تمام {{ invite_capacity.total }} لایسنس استفاده یا رزرو شده‌اند.</span>
             </div>
         </div>
         {% endif %}
 
         <div class="agency-invite-counter" id="agencyInviteCounter" aria-live="polite">
             <span class="agency-invite-counter__main">
-                <strong id="agencyInviteCounterUsed">0</strong>
-                <span>/</span>
-                <span id="agencyInviteCounterTotal">{{ invite_capacity.invite_available|default:0 }}</span>
-                مشاور اضافه شده
+                <strong id="agencyInviteCounterUsed">0</strong><span class="agency-invite-counter__sep">/</span><span id="agencyInviteCounterTotal">{{ invite_capacity.invite_available|default:0 }}</span>
+                <span class="agency-invite-counter__label">مشاور</span>
             </span>
             <span class="agency-invite-counter__remain" id="agencyInviteCounterRemain">
-                {% if invite_capacity %}{{ invite_capacity.invite_available }} ظرفیت باقی مانده{% endif %}
+                {% if invite_capacity %}{{ invite_capacity.invite_available }} ظرفیت باقی‌مانده{% endif %}
             </span>
         </div>
 
-        <div class="agency-field">
+        <div class="agency-field agency-field--compact">
             <label class="agency-form-label" for="invitePhoneInput">شماره موبایل مشاور</label>
             <div class="agency-tag-input-row">
                 <input type="tel" id="invitePhoneInput" class="crm-input agency-tag-input-row__field"
                        inputmode="numeric" autocomplete="off" spellcheck="false" dir="ltr"
-                       placeholder="مثلاً 09123456789"
+                       placeholder="09123456789"
                        {% if invite_capacity and invite_capacity.invite_available == 0 %}disabled{% endif %}>
                 <button type="button" class="crm-btn crm-btn-ghost agency-tag-input-row__add" id="invitePhoneAdd"
                         {% if invite_capacity and invite_capacity.invite_available == 0 %}disabled{% endif %}>
                     افزودن
                 </button>
             </div>
-            <p class="agency-form-helper">شماره را وارد کنید و Enter بزنید.</p>
+            <p class="agency-form-helper">Enter یا دکمه افزودن — شماره با ۰۹ شروع شود.</p>
             <p class="agency-form-helper agency-form-helper--bad agency-tag-input__error" id="agencyTagInputError" hidden role="alert"></p>
         </div>
 
         <div class="agency-tag-queue">
-            <p class="agency-tag-queue__label">مشاوران آماده ارسال</p>
+            <div class="agency-tag-queue__head">
+                <p class="agency-tag-queue__label">آماده ارسال</p>
+                <button type="button" class="crm-btn crm-btn-ghost crm-btn-sm agency-invite-form__clear" id="agencyInviteClear" disabled>
+                    <i class="fas fa-trash-can" aria-hidden="true"></i>
+                    پاک کردن
+                </button>
+            </div>
             <div class="agency-tag-list" id="agencyTagList" aria-live="polite"></div>
-            <p class="agency-tag-queue__empty" id="agencyTagEmpty">هنوز شماره‌ای اضافه نشده است.</p>
+            <p class="agency-tag-queue__empty" id="agencyTagEmpty">هنوز شماره‌ای اضافه نشده</p>
         </div>
 
         <div class="agency-invite-form__actions">
-            <button type="button" class="crm-btn crm-btn-ghost agency-invite-form__clear" id="agencyInviteClear" disabled>
-                <i class="fas fa-trash-can" aria-hidden="true"></i>
-                پاک کردن
-            </button>
             <button type="submit" class="crm-btn crm-btn-primary" id="agencyInviteSubmit" disabled>
                 <i class="fas fa-paper-plane" aria-hidden="true"></i>
                 ارسال دعوت SMS
@@ -86,11 +76,11 @@ Invite advisors — onboarding step 2. Requires invite_capacity, seats, invitati
 </section>
 
 {% if invitations %}
-<section class="agency-invites agency-invites--panel agency-invites--onboarding">
+<section class="agency-card agency-invites--onboarding">
     <div class="agency-invites__head">
         <div>
-            <h3 class="agency-invites__title"><i class="fas fa-clock-rotate-left" aria-hidden="true"></i> دعوت‌های ارسال‌شده</h3>
-            <p class="agency-invites__sub">وضعیت دعوت‌های اخیر شما</p>
+            <h3 class="agency-invites__title">دعوت‌های ارسال‌شده</h3>
+            <p class="agency-invites__sub">وضعیت دعوت‌های اخیر</p>
         </div>
         <span class="agency-invites__count">{{ invitations|length }}</span>
     </div>
@@ -99,21 +89,19 @@ Invite advisors — onboarding step 2. Requires invite_capacity, seats, invitati
         <table class="agency-table agency-invites-table">
             <thead>
                 <tr>
-                    <th>شماره موبایل</th>
-                    <th>زمان ارسال</th>
+                    <th>شماره</th>
+                    <th>زمان</th>
                     <th>وضعیت</th>
-                    <th>عملیات</th>
+                    <th></th>
                 </tr>
             </thead>
             <tbody>
                 {% for inv in invitations %}
-                <tr class="agency-invites-table__row">
+                <tr>
                     <td dir="ltr" class="agency-invites-table__phone">{{ inv.phone }}</td>
                     <td class="agency-invites-table__time">
-                        {% if inv.sms_sent_at %}
-                        {{ inv.sms_sent_at|ws_jalali_datetime }}
-                        {% elif inv.created_at %}
-                        {{ inv.created_at|ws_jalali_datetime }}
+                        {% if inv.sms_sent_at %}{{ inv.sms_sent_at|ws_jalali_datetime }}
+                        {% elif inv.created_at %}{{ inv.created_at|ws_jalali_datetime }}
                         {% else %}—{% endif %}
                     </td>
                     <td>
@@ -124,13 +112,13 @@ Invite advisors — onboarding step 2. Requires invite_capacity, seats, invitati
                         {% endif %}
                     </td>
                     <td>
+                        {% if inv.status == 'pending' %}
                         <div class="agency-invite-row__actions">
-                            {% if inv.status == 'pending' %}
                             <form method="post" class="agency-invite-action-form">
                                 {% csrf_token %}
                                 <input type="hidden" name="action" value="invite_resend">
                                 <input type="hidden" name="invitation_id" value="{{ inv.pk }}">
-                                <button type="submit" class="crm-btn crm-btn-ghost crm-btn-sm">ارسال مجدد</button>
+                                <button type="submit" class="crm-btn crm-btn-ghost crm-btn-sm">مجدد</button>
                             </form>
                             <form method="post" class="agency-invite-action-form">
                                 {% csrf_token %}
@@ -138,10 +126,10 @@ Invite advisors — onboarding step 2. Requires invite_capacity, seats, invitati
                                 <input type="hidden" name="invitation_id" value="{{ inv.pk }}">
                                 <button type="submit" class="crm-btn crm-btn-ghost crm-btn-sm">لغو</button>
                             </form>
-                            {% else %}
-                            <span class="agency-status agency-status--muted">—</span>
-                            {% endif %}
                         </div>
+                        {% else %}
+                        <span class="agency-status agency-status--muted">—</span>
+                        {% endif %}
                     </td>
                 </tr>
                 {% endfor %}
@@ -153,7 +141,7 @@ Invite advisors — onboarding step 2. Requires invite_capacity, seats, invitati
         {% for inv in invitations %}
         <li class="agency-invite-card">
             <div class="agency-invite-card__main">
-                <span class="agency-invite-row__phone" dir="ltr"><i class="fas fa-mobile-screen" aria-hidden="true"></i>{{ inv.phone }}</span>
+                <span class="agency-invite-row__phone" dir="ltr">{{ inv.phone }}</span>
                 <span class="agency-invite-card__time">
                     {% if inv.sms_sent_at %}{{ inv.sms_sent_at|ws_jalali_datetime }}{% elif inv.created_at %}{{ inv.created_at|ws_jalali_datetime }}{% endif %}
                 </span>
@@ -170,7 +158,7 @@ Invite advisors — onboarding step 2. Requires invite_capacity, seats, invitati
                         {% csrf_token %}
                         <input type="hidden" name="action" value="invite_resend">
                         <input type="hidden" name="invitation_id" value="{{ inv.pk }}">
-                        <button type="submit" class="crm-btn crm-btn-ghost crm-btn-sm">ارسال مجدد</button>
+                        <button type="submit" class="crm-btn crm-btn-ghost crm-btn-sm">مجدد</button>
                     </form>
                     <form method="post" class="agency-invite-action-form">
                         {% csrf_token %}
@@ -186,11 +174,11 @@ Invite advisors — onboarding step 2. Requires invite_capacity, seats, invitati
     </ul>
 </section>
 {% else %}
-<div class="agency-invite-empty agency-invite-empty--panel">
+<div class="agency-card agency-empty-compact">
     <i class="fas fa-inbox" aria-hidden="true"></i>
     <div>
         <strong>دعوت‌های ارسال‌شده</strong>
-        <span>هنوز دعوتی ارسال نشده — شماره‌ها را اضافه و SMS بفرستید.</span>
+        <span>هنوز دعوتی ارسال نشده</span>
     </div>
 </div>
 {% endif %}

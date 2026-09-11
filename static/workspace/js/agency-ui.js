@@ -59,8 +59,8 @@
       var remain = Math.max(0, maxCapacity - tags.length);
       if (counterRemain) {
         counterRemain.textContent = remain > 0
-          ? remain + ' ظرفیت باقی مانده'
-          : 'ظرفیت پلن شما تکمیل شده است.';
+          ? remain + ' ظرفیت باقی‌مانده'
+          : 'ظرفیت تکمیل شده';
       }
       var atLimit = tags.length >= maxCapacity;
       input.disabled = atLimit || maxCapacity === 0;
@@ -108,7 +108,7 @@
         return false;
       }
       if (tags.length >= maxCapacity) {
-        showError('ظرفیت پلن شما تکمیل شده است.');
+        showError('ظرفیت تکمیل شده است.');
         return false;
       }
       tags.push(phone);

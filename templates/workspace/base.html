@@ -143,11 +143,14 @@
                 {% include 'workspace/includes/bot_upgrade_banner.html' %}
                 {% endif %}
 
-                {% if ws_agency_onboarding_cta and crm_section != 'agency' %}
-                <link rel="stylesheet" href="{% static 'workspace/css/agency-phase2.css' %}">
+                {% if ws_agency_onboarding_cta and crm_section != 'agency' and request.resolver_match.url_name != 'agency_onboarding' %}
+                <link rel="stylesheet" href="{% static 'workspace/css/agency-phase2.css' %}?v=6">
                 <div class="ws-agency-onboarding-cta" role="status">
-                    <p>اشتراک آژانس شما فعال است — راه‌اندازی را تکمیل کنید.</p>
-                    <a href="{{ ws_agency_onboarding_cta }}" class="crm-btn crm-btn-primary crm-btn-sm">تکمیل راه‌اندازی آژانس</a>
+                    <div class="ws-agency-onboarding-cta__copy">
+                        <i class="fas fa-circle-check" aria-hidden="true"></i>
+                        <p>اشتراک آژانس شما فعال است — راه‌اندازی را تکمیل کنید.</p>
+                    </div>
+                    <a href="{{ ws_agency_onboarding_cta }}" class="crm-btn crm-btn-primary crm-btn-sm">تکمیل راه‌اندازی</a>
                 </div>
                 {% endif %}
 

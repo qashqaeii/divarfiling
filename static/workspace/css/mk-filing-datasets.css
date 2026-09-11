@@ -624,8 +624,153 @@
 .mk-filing-datasets .fl-mob-cards { display: none; }
 .mk-filing-datasets .mk-ds-layout-grid > .mk-ds-grid { display: none; }
 .mk-filing-datasets.mk-filing-pro[data-view-mode="grid"] .fl-ds-layout-table { display: none !important; }
-.mk-filing-datasets.mk-filing-pro[data-view-mode="grid"] .mk-ds-layout-grid > .mk-ds-grid { display: block !important; }
 .mk-filing-datasets.mk-filing-pro[data-view-mode="grid"] .fl-mob-cards { display: none !important; }
+
+/* ─── Desktop grid view — 4-column professional cards ─── */
+@media (min-width: 769px) {
+    .mk-filing-datasets.mk-filing-pro[data-view-mode="grid"] .mk-ds-layout-grid > .mk-ds-grid {
+        display: grid !important;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 0.75rem;
+        padding: 0.85rem 1rem 1rem;
+        width: 100%;
+        min-width: 0;
+    }
+
+    .mk-filing-datasets.mk-filing-pro[data-view-mode="grid"] .mk-ds-card {
+        min-width: 0;
+        width: 100%;
+    }
+
+    .mk-filing-datasets.mk-filing-pro[data-view-mode="grid"] .mk-ds-card-glass {
+        display: flex !important;
+        flex-direction: column !important;
+        height: 100%;
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .mk-filing-datasets.mk-filing-pro[data-view-mode="grid"] .mk-ds-card-main {
+        display: flex !important;
+        flex-direction: column !important;
+        grid-template-columns: unset !important;
+        grid-template-rows: unset !important;
+        flex: 1;
+        min-height: 0;
+    }
+
+    .mk-filing-datasets.mk-filing-pro[data-view-mode="grid"] .mk-ds-card-cover {
+        aspect-ratio: 16 / 10;
+        min-height: 0 !important;
+        max-height: none;
+        width: 100%;
+        border-radius: 0;
+    }
+
+    .mk-filing-datasets.mk-filing-pro[data-view-mode="grid"] .mk-ds-card-cover-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .mk-filing-datasets.mk-filing-pro[data-view-mode="grid"] .mk-ds-card-body {
+        padding: 0.65rem 0.7rem 0.55rem !important;
+        padding-inline-end: 0.7rem !important;
+        flex: 1;
+        min-width: 0;
+    }
+
+    .mk-filing-datasets.mk-filing-pro[data-view-mode="grid"] .mk-ds-card-title {
+        font-size: 0.78rem !important;
+        font-weight: 800;
+        line-height: 1.35;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .mk-filing-datasets.mk-filing-pro[data-view-mode="grid"] .mk-ds-card-sub {
+        font-size: 0.58rem;
+        margin-top: 0.15rem;
+        -webkit-line-clamp: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .mk-filing-datasets.mk-filing-pro[data-view-mode="grid"] .mk-ds-card-chips {
+        gap: 0.25rem;
+        margin-top: 0.35rem;
+        flex-wrap: wrap;
+    }
+
+    .mk-filing-datasets.mk-filing-pro[data-view-mode="grid"] .mk-ds-chip {
+        font-size: 0.58rem;
+        padding: 0.12rem 0.4rem;
+        min-height: auto;
+    }
+
+    .mk-filing-datasets.mk-filing-pro[data-view-mode="grid"] .mk-ds-card-foot {
+        padding: 0.45rem 0.5rem 0.5rem;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+    }
+
+    .mk-filing-datasets.mk-filing-pro[data-view-mode="grid"] .mk-ds-card-date {
+        font-size: 0.58rem;
+        width: 100%;
+    }
+
+    .mk-filing-datasets.mk-filing-pro[data-view-mode="grid"] .mk-ds-card-acts {
+        width: 100%;
+        justify-content: flex-start;
+        gap: 0.15rem;
+    }
+
+    .mk-filing-datasets.mk-filing-pro[data-view-mode="grid"] .mk-ds-card-act {
+        min-width: 1.85rem !important;
+        width: 1.85rem !important;
+        height: 1.85rem !important;
+        padding: 0 !important;
+        border-radius: 8px;
+    }
+
+    .mk-filing-datasets.mk-filing-pro[data-view-mode="grid"] .mk-ds-card-act--open {
+        width: auto !important;
+        min-width: auto !important;
+        padding: 0 0.5rem !important;
+        font-size: 0.62rem !important;
+    }
+
+    .mk-filing-datasets.mk-filing-pro[data-view-mode="grid"] .mk-ds-card-act--open span {
+        display: none;
+    }
+
+    .mk-filing-datasets.mk-filing-pro[data-view-mode="grid"] .mk-ds-card-check {
+        top: 0.45rem;
+        inset-inline-end: 0.45rem;
+        opacity: 0;
+        transition: opacity 0.12s;
+    }
+
+    .mk-filing-datasets.mk-filing-pro[data-view-mode="grid"] .mk-ds-card:hover .mk-ds-card-check,
+    .mk-filing-datasets.mk-filing-pro[data-view-mode="grid"] .mk-ds-card.is-selected .mk-ds-card-check {
+        opacity: 1;
+    }
+}
+
+@media (min-width: 769px) and (max-width: 1023px) {
+    .mk-filing-datasets.mk-filing-pro[data-view-mode="grid"] .mk-ds-layout-grid > .mk-ds-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (min-width: 1024px) and (max-width: 1279px) {
+    .mk-filing-datasets.mk-filing-pro[data-view-mode="grid"] .mk-ds-layout-grid > .mk-ds-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
 
 @media (max-width: 1024px) {
     .mk-filing-datasets .fl-kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -664,7 +809,9 @@
 
     .mk-filing-datasets.mk-filing-pro[data-view-mode="grid"] .fl-mob-cards { display: none !important; }
     .mk-filing-datasets.mk-filing-pro[data-view-mode="grid"] .mk-ds-layout-grid > .mk-ds-grid {
-        display: block !important;
+        display: grid !important;
+        grid-template-columns: 1fr;
+        gap: 0.55rem;
         padding: 0.65rem;
     }
 }

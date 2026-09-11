@@ -7,14 +7,18 @@
 {% block crm_desc %}{{ customer.customer_type }} · {{ customer.status }}{% endblock %}
 {% block crm_search %}{% endblock %}
 
+{% block crm_extra_css %}
+<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-datasets.css' %}?v=17">
+{% endblock %}
+
 {% block crm_actions %}{% endblock %}
 
 {% block ws_surface_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/crm-contact-detail-mobile-premium.css' %}?v=6">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-contact-detail-mobile-premium.css' %}?v=7">
 {% endblock %}
 
 {% block crm_content %}
-    <div class="crm-contact-detail-pro crm-page-chrome crm-contact-mobile">
+    <div class="crm-contact-detail-pro crm-page-chrome crm-contact-mobile mk-filing-datasets">
     <header class="crm-contact-workspace__header">
     <section class="crm-contact-hero crm-contact-hero--compact" aria-label="پروفایل مخاطب">
         <div class="crm-contact-hero__top">
@@ -29,11 +33,23 @@
                         <span>{{ customer.name|truncatechars:28 }}</span>
                     </nav>
                 </div>
+                <div class="crm-contact-hero__toolbar-end">
+                    <button type="button" class="fl-header__help crm-contact-detail-help" title="راهنمای پرونده مخاطب" aria-label="راهنمای پرونده مخاطب" data-modal-open="modal-crm-contact-detail-help">
+                        <span class="fl-header__help-ring" aria-hidden="true"></span>
+                        <span class="fl-header__help-bulb" aria-hidden="true">
+                            <i class="fas fa-lightbulb"></i>
+                            <span class="fl-header__help-bulb-glow"></span>
+                        </span>
+                        <span class="fl-header__help-label">راهنما</span>
+                    </button>
                 <details class="crm-contact-mob-menu">
                     <summary class="crm-contact-mob-menu-trigger" aria-label="گزینه‌های بیشتر">
                         <i class="fas fa-ellipsis-vertical" aria-hidden="true"></i>
                     </summary>
                     <div class="crm-contact-mob-menu-panel" role="menu">
+                        <button type="button" class="crm-contact-mob-menu-item" role="menuitem" data-modal-open="modal-crm-contact-detail-help">
+                            <i class="fas fa-lightbulb" aria-hidden="true"></i><span>راهنمای پرونده</span>
+                        </button>
                         {% if not customer_is_shared %}
                         <button type="button" class="crm-contact-mob-menu-item" role="menuitem" data-drawer-open="drawer-edit">
                             <i class="fas fa-pen" aria-hidden="true"></i><span>ویرایش مخاطب</span>
@@ -65,6 +81,7 @@
                 </details>
                 <div class="crm-contact-hero__actions-desk">
                     {% include 'workspace/crm/includes/contact_detail_actions.html' with compact=True %}
+                </div>
                 </div>
             </header>
             <div class="crm-contact-hero__stage">
@@ -891,6 +908,9 @@
                     <span>بیشتر</span>
                 </summary>
                 <div class="crm-contact-dock-more-panel" role="menu">
+                    <button type="button" class="crm-contact-dock-more-item" role="menuitem" data-modal-open="modal-crm-contact-detail-help">
+                        <i class="fas fa-lightbulb" aria-hidden="true"></i><span>راهنما</span>
+                    </button>
                     <button type="button" class="crm-contact-dock-more-item" role="menuitem" data-drawer-open="drawer-followup">
                         <i class="fas fa-calendar-plus" aria-hidden="true"></i><span>ثبت پیگیری</span>
                     </button>
@@ -910,6 +930,8 @@
             {% endif %}
         </div>
     </nav>
+
+    {% include 'workspace/crm/includes/crm_contact_detail_help_modal.html' %}
     </div>
 {% endblock %}
 
@@ -1273,6 +1295,7 @@
 {% endblock %}
 
 {% block crm_js %}
+<script src="{% static 'workspace/js/filing-help-modal.js' %}?v=1"></script>
 <script src="{% static 'workspace/js/ai.js' %}?v=6"></script>
 <script>window.crmTypeProfiles = {{ type_profiles_json|safe }};</script>
 <script>window.crmLeaseDeadlineTypes = {{ lease_deadline_types_json|safe }};</script>

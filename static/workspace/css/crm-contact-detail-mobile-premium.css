@@ -825,3 +825,51 @@
         min-height: 2.4rem;
     }
 }
+
+/* ═══════════════════════════════════════════════════════════
+   Contact detail — Help button (filing parity)
+   Scoped: .crm-contact-detail-pro.mk-filing-datasets
+   ═══════════════════════════════════════════════════════════ */
+
+.crm-contact-detail-pro.mk-filing-datasets .crm-contact-hero__toolbar-end {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    flex-shrink: 0;
+}
+
+.crm-contact-detail-pro.mk-filing-datasets .crm-contact-detail-help {
+    flex-shrink: 0;
+}
+
+.crm-contact-detail-pro.mk-filing-datasets .crm-contact-mob-menu-item .fa-lightbulb {
+    color: #d97706;
+}
+
+@media (max-width: 768px) {
+    .crm-contact-detail-pro.mk-filing-datasets .crm-contact-detail-help {
+        width: 40px;
+        height: 40px;
+        min-width: 40px;
+        padding: 0;
+        justify-content: center;
+        border-radius: 12px;
+        box-shadow:
+            0 2px 10px rgba(245, 158, 11, 0.22),
+            0 0 0 3px rgba(251, 191, 36, 0.12);
+    }
+
+    .crm-contact-detail-pro.mk-filing-datasets .crm-contact-detail-help .fl-header__help-label {
+        display: none;
+    }
+
+    .crm-contact-detail-pro.mk-filing-datasets .crm-contact-detail-help .fl-header__help-bulb i {
+        font-size: 0.92rem;
+    }
+}
+
+@media (min-width: 769px) {
+    .crm-contact-detail-pro.mk-filing-datasets .crm-contact-hero__toolbar-end {
+        margin-inline-start: auto;
+    }
+}

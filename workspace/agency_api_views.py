@@ -76,6 +76,15 @@ class AgencyInvitationsAPIView(_AgencyOwnerAPIBase):
             role=payload.get('role', 'advisor'),
             request=request,
         )
+        if result.get('capacity_error'):
+            err = result['errors'][0] if result['errors'] else {}
+            return JsonResponse({
+                'ok': False,
+                'error': err.get('error', 'ظرفیت دعوت تکمیل شده است.'),
+                'code': err.get('code', 'agency_seat_capacity_reached'),
+            }, status=409)
+        if result['errors'] and not result['created']:
+            return JsonResponse({'ok': False, 'errors': result['errors']}, status=400)
         return JsonResponse({
             'ok': True,
             'created': [_serialize_invitation(i) for i in result['created']],

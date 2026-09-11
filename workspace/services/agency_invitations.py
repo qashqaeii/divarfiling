@@ -12,13 +12,14 @@ from django.utils import timezone
 
 from accounts.phone_utils import find_user_by_phone, is_valid_iran_mobile, normalize_phone
 from accounts.services.sms import SmsError, send_simple_sms
-from workspace.models import AgencyInvitation, CRMAgencyMember
+from workspace.models import AgencyInvitation, AgencySubscription, CRMAgencyMember
 from workspace.services.agency_entitlement import (
     CONSENT_VERSION_CURRENT,
     can_manage_agency,
     get_subscription_for_agency,
     link_agency_to_subscription,
     resolve_managed_agency,
+    seat_usage_summary,
 )
 from workspace.services.crm_agency import _attach_user_records, sync_agency_member_records
 from workspace.services.crm_audit import log_agency_audit
@@ -29,6 +30,76 @@ User = get_user_model()
 INVITE_TTL_DAYS = 7
 SMS_RESEND_COOLDOWN_SECONDS = 120
 SMS_RESEND_MAX_PER_INVITE = 5
+
+
+class AgencyInviteCapacityError(ValueError):
+    """ظرفیت دعوت آژانس تکمیل شده — invite_available == 0 یا درخواست بیش از ظرفیت."""
+
+    code = 'agency_seat_capacity_reached'
+
+    def __init__(self, message: str = '', *, available: int = 0, requested: int = 1):
+        self.available = available
+        self.requested = requested
+        super().__init__(message or 'ظرفیت دعوت تکمیل شده است.')
+
+
+def _count_pending_invitations(agency) -> int:
+    return AgencyInvitation.objects.filter(
+        agency=agency,
+        status=AgencyInvitation.STATUS_PENDING,
+        expires_at__gt=timezone.now(),
+    ).count()
+
+
+def _count_members_without_seat(agency, subscription) -> int:
+    from licenses.models import License
+
+    assigned_user_ids = License.objects.filter(
+        agency_subscription=subscription,
+        assigned_user__isnull=False,
+    ).values_list('assigned_user_id', flat=True)
+    return (
+        CRMAgencyMember.objects.filter(agency=agency, is_active=True)
+        .exclude(role='owner')
+        .exclude(user_id__in=assigned_user_ids)
+        .count()
+    )
+
+
+def get_agency_invite_capacity(agency, subscription) -> dict:
+    """ظرفیت باقی‌مانده برای دعوت — pending + اعضای بدون seat + seat تخصیص‌یافته."""
+    seats = seat_usage_summary(subscription)
+    pending = _count_pending_invitations(agency)
+    without_seat = _count_members_without_seat(agency, subscription)
+    consumed = seats['assigned'] + pending + without_seat
+    invite_available = max(0, seats['total'] - consumed)
+    return {
+        'total': seats['total'],
+        'assigned': seats['assigned'],
+        'available_seats': seats['available'],
+        'pending_invitations': pending,
+        'members_without_seat': without_seat,
+        'consumed': consumed,
+        'invite_available': invite_available,
+    }
+
+
+def can_create_agency_invitation(agency, subscription, *, count: int = 1) -> tuple[bool, str]:
+    cap = get_agency_invite_capacity(agency, subscription)
+    if count <= cap['invite_available']:
+        return True, ''
+    avail = cap['invite_available']
+    if avail == 0:
+        return False, f'تمام {cap["total"]} لایسنس این آژانس استفاده یا رزرو شده‌اند.'
+    return False, f'فقط {avail} ظرفیت برای دعوت باقی مانده است.'
+
+
+def _assert_invite_capacity(agency, subscription, *, count: int = 1) -> None:
+    ok, msg = can_create_agency_invitation(agency, subscription, count=count)
+    if ok:
+        return
+    cap = get_agency_invite_capacity(agency, subscription)
+    raise AgencyInviteCapacityError(msg, available=cap['invite_available'], requested=count)
 
 
 def _generate_invite_token() -> tuple[str, str]:
@@ -85,6 +156,42 @@ def list_agency_invitations(agency) -> list[AgencyInvitation]:
     )
 
 
+def _validate_invite_phone(agency, phone: str) -> str:
+    phone = normalize_phone(phone or '')
+    if not is_valid_iran_mobile(phone):
+        raise ValueError('شماره موبایل معتبر نیست.')
+    pending = AgencyInvitation.objects.filter(
+        agency=agency,
+        phone=phone,
+        status=AgencyInvitation.STATUS_PENDING,
+        expires_at__gt=timezone.now(),
+    ).exists()
+    if pending:
+        raise ValueError('دعوت در انتظار برای این شماره از قبل وجود دارد')
+    if CRMAgencyMember.objects.filter(agency=agency, is_active=True).filter(
+        user__phone=phone,
+    ).exists():
+        raise ValueError('این شماره از قبل عضو آژانس است')
+    return phone
+
+
+def _create_invitation_record(actor, agency, phone: str, role: str) -> tuple[AgencyInvitation, str]:
+    raw, token_hash = _generate_invite_token()
+    invitation = AgencyInvitation.objects.create(
+        agency=agency,
+        inviter=actor,
+        phone=phone,
+        role=role,
+        token_hash=token_hash,
+        expires_at=timezone.now() + timedelta(days=INVITE_TTL_DAYS),
+    )
+    log_agency_audit(
+        agency, actor, 'agency_invite_created',
+        {'phone': _mask_phone(phone), 'role': role, 'invitation_id': invitation.pk},
+    )
+    return invitation, raw
+
+
 def create_agency_invitation(
     actor,
     phone: str,
@@ -98,53 +205,75 @@ def create_agency_invitation(
     if not sub:
         raise ValueError('اشتراک آژانس در حال حاضر فعال نیست.')
 
-    phone = normalize_phone(phone or '')
-    if not is_valid_iran_mobile(phone):
-        raise ValueError('شماره موبایل معتبر نیست')
+    phone = _validate_invite_phone(agency, phone)
 
-    pending = AgencyInvitation.objects.filter(
-        agency=agency,
-        phone=phone,
-        status=AgencyInvitation.STATUS_PENDING,
-        expires_at__gt=timezone.now(),
-    ).exists()
-    if pending:
-        raise ValueError('دعوت در انتظار برای این شماره از قبل وجود دارد')
-
-    if CRMAgencyMember.objects.filter(agency=agency, is_active=True).filter(
-        user__phone=phone,
-    ).exists():
-        raise ValueError('این شماره از قبل عضو آژانس است')
-
-    raw, token_hash = _generate_invite_token()
     with transaction.atomic():
-        invitation = AgencyInvitation.objects.create(
-            agency=agency,
-            inviter=actor,
-            phone=phone,
-            role=role,
-            token_hash=token_hash,
-            expires_at=timezone.now() + timedelta(days=INVITE_TTL_DAYS),
-        )
-        log_agency_audit(
-            agency, actor, 'agency_invite_created',
-            {'phone': _mask_phone(phone), 'role': role, 'invitation_id': invitation.pk},
-        )
+        locked_sub = AgencySubscription.objects.select_for_update().get(pk=sub.pk)
+        _assert_invite_capacity(agency, locked_sub, count=1)
+        invitation, raw = _create_invitation_record(actor, agency, phone, role)
 
     invite_url = _build_invite_url(request, raw)
     _send_invite_sms(invitation, invite_url)
     return invitation
 
 
-def create_bulk_agency_invitations(actor, phones: list[str], role: str = 'advisor', *, request=None) -> list:
-    created = []
-    errors = []
+def create_bulk_agency_invitations(actor, phones: list[str], role: str = 'advisor', *, request=None) -> dict:
+    agency, sub = resolve_managed_agency(actor)
+    if not agency or not can_manage_agency(actor, agency):
+        return {'created': [], 'errors': [{'phone': '', 'error': 'دسترسی مدیریت آژانس ندارید'}]}
+    if not sub:
+        return {'created': [], 'errors': [{'phone': '', 'error': 'اشتراک آژانس در حال حاضر فعال نیست.'}]}
+
+    normalized: list[str] = []
+    errors: list[dict] = []
+    seen: set[str] = set()
     for phone in phones:
+        raw = (phone or '').strip()
+        if not raw:
+            continue
         try:
-            created.append(create_agency_invitation(actor, phone, role, request=request))
+            normalized_phone = _validate_invite_phone(agency, raw)
         except ValueError as exc:
-            errors.append({'phone': phone, 'error': str(exc)})
-    return {'created': created, 'errors': errors}
+            errors.append({'phone': raw, 'error': str(exc)})
+            continue
+        if normalized_phone in seen:
+            errors.append({'phone': raw, 'error': 'این شماره قبلاً اضافه شده است.'})
+            continue
+        seen.add(normalized_phone)
+        normalized.append(normalized_phone)
+
+    if errors:
+        return {'created': [], 'errors': errors}
+
+    if not normalized:
+        return {'created': [], 'errors': []}
+
+    created: list[AgencyInvitation] = []
+    pending_sms: list[tuple[AgencyInvitation, str]] = []
+    try:
+        with transaction.atomic():
+            locked_sub = AgencySubscription.objects.select_for_update().get(pk=sub.pk)
+            _assert_invite_capacity(agency, locked_sub, count=len(normalized))
+            for phone in normalized:
+                invitation, raw = _create_invitation_record(actor, agency, phone, role)
+                created.append(invitation)
+                pending_sms.append((invitation, raw))
+    except AgencyInviteCapacityError as exc:
+        return {
+            'created': [],
+            'errors': [{
+                'phone': '',
+                'error': str(exc),
+                'code': exc.code,
+            }],
+            'capacity_error': True,
+        }
+
+    for invitation, raw in pending_sms:
+        invite_url = _build_invite_url(request, raw)
+        _send_invite_sms(invitation, invite_url)
+
+    return {'created': created, 'errors': []}
 
 
 def get_invitation_by_token(raw_token: str) -> AgencyInvitation | None:

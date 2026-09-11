@@ -50,6 +50,10 @@ def onboarding_context(user) -> dict[str, Any]:
     sub = get_active_subscription_for_owner(user)
     agency = get_owner_agency(user)
     seats = seat_usage_summary(sub) if sub else None
+    invite_capacity = None
+    if agency and sub:
+        from workspace.services.agency_invitations import get_agency_invite_capacity
+        invite_capacity = get_agency_invite_capacity(agency, sub)
     invitations = list_agency_invitations(agency) if agency else []
     pending_invites = [i for i in invitations if i.status == AgencyInvitation.STATUS_PENDING]
     members = []
@@ -63,6 +67,7 @@ def onboarding_context(user) -> dict[str, Any]:
         'subscription': sub,
         'agency': agency,
         'seats': seats,
+        'invite_capacity': invite_capacity,
         'step': resolve_onboarding_step(user),
         'invitations': invitations,
         'pending_invite_count': len(pending_invites),

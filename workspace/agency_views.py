@@ -144,10 +144,34 @@ class AgencyOnboardingView(AgencyOwnerRequiredMixin, LoginRequiredMixin, Templat
             phones = [p.strip() for p in phones_raw.replace(',', '\n').splitlines() if p.strip()]
             from workspace.services.agency_invitations import create_bulk_agency_invitations
             result = create_bulk_agency_invitations(request.user, phones, request=request)
-            if result['created']:
-                messages.success(request, f'{len(result["created"])} دعوت ارسال شد.')
+            if result.get('capacity_error'):
+                err = result['errors'][0] if result['errors'] else {}
+                messages.error(request, err.get('error', 'ظرفیت دعوت تکمیل شده است.'))
+            elif result['created']:
+                messages.success(request, f'دعوت برای {len(result["created"])} مشاور ارسال شد.')
             for err in result['errors']:
-                messages.warning(request, f'{err["phone"]}: {err["error"]}')
+                if err.get('phone'):
+                    messages.warning(request, f'{err["phone"]}: {err["error"]}')
+                elif not result.get('capacity_error'):
+                    messages.warning(request, err['error'])
+            return redirect(f"{reverse('workspace:agency_onboarding')}?step=2")
+
+        if action == 'invite_resend':
+            try:
+                from workspace.services.agency_invitations import resend_invitation_sms
+                resend_invitation_sms(request.user, int(request.POST.get('invitation_id', 0)), request=request)
+                messages.success(request, 'پیامک دعوت مجدداً ارسال شد.')
+            except (ValueError, TypeError) as exc:
+                messages.error(request, str(exc))
+            return redirect(f"{reverse('workspace:agency_onboarding')}?step=2")
+
+        if action == 'invite_cancel':
+            try:
+                from workspace.services.agency_invitations import cancel_agency_invitation
+                cancel_agency_invitation(request.user, int(request.POST.get('invitation_id', 0)))
+                messages.success(request, 'دعوت لغو شد.')
+            except (ValueError, TypeError) as exc:
+                messages.error(request, str(exc))
             return redirect(f"{reverse('workspace:agency_onboarding')}?step=2")
 
         if action == 'assign_seat':

@@ -20,65 +20,143 @@
       .filter(Boolean);
   }
 
-  function initInvitePhonePreview() {
-    var textarea = document.getElementById('invitePhones');
-    var preview = document.getElementById('agencyPhonePreview');
-    var list = document.getElementById('agencyPhoneList');
-    var countEl = document.getElementById('agencyPhoneCount');
-    var errorsEl = document.getElementById('agencyPhoneErrors');
+  function initInvitePhoneTags() {
+    var form = document.getElementById('agencyInviteForm');
+    var input = document.getElementById('invitePhoneInput');
+    var addBtn = document.getElementById('invitePhoneAdd');
+    var tagList = document.getElementById('agencyTagList');
+    var hidden = document.getElementById('invitePhonesHidden');
+    var errorEl = document.getElementById('agencyTagInputError');
     var submitBtn = document.getElementById('agencyInviteSubmit');
-    if (!textarea || !preview || !list) return;
+    var clearBtn = document.getElementById('agencyInviteClear');
+    var counterUsed = document.getElementById('agencyInviteCounterUsed');
+    var counterTotal = document.getElementById('agencyInviteCounterTotal');
+    var counterRemain = document.getElementById('agencyInviteCounterRemain');
+    if (!form || !input || !tagList || !hidden) return;
 
-    function render() {
-      var phones = parsePhones(textarea.value);
-      var unique = [];
-      var seen = {};
-      var invalid = [];
+    var maxCapacity = parseInt(form.getAttribute('data-invite-capacity') || '0', 10);
+    if (isNaN(maxCapacity) || maxCapacity < 0) maxCapacity = 0;
+    var tags = [];
 
-      phones.forEach(function (p) {
-        if (seen[p]) return;
-        seen[p] = true;
-        if (IR_MOBILE.test(p)) unique.push(p);
-        else invalid.push(p);
-      });
-
-      list.innerHTML = '';
-      unique.forEach(function (p) {
-        var li = document.createElement('li');
-        li.className = 'agency-phone-chip agency-phone-chip--ok';
-        li.textContent = p;
-        list.appendChild(li);
-      });
-      invalid.forEach(function (p) {
-        var li = document.createElement('li');
-        li.className = 'agency-phone-chip agency-phone-chip--bad';
-        li.textContent = p;
-        li.title = 'فرمت نامعتبر — باید ۱۱ رقم و با ۰۹ شروع شود';
-        list.appendChild(li);
-      });
-
-      var total = unique.length + invalid.length;
-      preview.hidden = total === 0;
-      if (countEl) countEl.textContent = String(unique.length);
-
-      if (errorsEl) {
-        if (invalid.length) {
-          errorsEl.hidden = false;
-          errorsEl.textContent = invalid.length + ' شماره نامعتبر — قبل از ارسال اصلاح کنید.';
-        } else {
-          errorsEl.hidden = true;
-          errorsEl.textContent = '';
-        }
-      }
-
-      if (submitBtn) {
-        submitBtn.disabled = total > 0 && unique.length === 0;
+    function showError(msg) {
+      if (!errorEl) return;
+      if (msg) {
+        errorEl.hidden = false;
+        errorEl.textContent = msg;
+      } else {
+        errorEl.hidden = true;
+        errorEl.textContent = '';
       }
     }
 
-    textarea.addEventListener('input', render);
-    textarea.addEventListener('blur', render);
-    render();
+    function syncHidden() {
+      hidden.value = tags.join('\n');
+    }
+
+    function updateUI() {
+      if (counterUsed) counterUsed.textContent = String(tags.length);
+      if (counterTotal) counterTotal.textContent = String(maxCapacity);
+      var remain = Math.max(0, maxCapacity - tags.length);
+      if (counterRemain) {
+        counterRemain.textContent = remain > 0
+          ? remain + ' ظرفیت باقی مانده'
+          : 'ظرفیت پلن شما تکمیل شده است.';
+      }
+      var atLimit = tags.length >= maxCapacity;
+      input.disabled = atLimit || maxCapacity === 0;
+      if (addBtn) addBtn.disabled = atLimit || maxCapacity === 0;
+      if (submitBtn) submitBtn.disabled = tags.length === 0;
+      if (clearBtn) clearBtn.disabled = tags.length === 0;
+      syncHidden();
+    }
+
+    function renderTags() {
+      tagList.innerHTML = '';
+      tags.forEach(function (phone, index) {
+        var chip = document.createElement('span');
+        chip.className = 'agency-phone-tag';
+        chip.textContent = phone;
+
+        var remove = document.createElement('button');
+        remove.type = 'button';
+        remove.className = 'agency-phone-tag__remove';
+        remove.setAttribute('aria-label', 'حذف ' + phone);
+        remove.innerHTML = '&times;';
+        remove.addEventListener('click', function () {
+          tags.splice(index, 1);
+          renderTags();
+          updateUI();
+          showError('');
+        });
+
+        chip.appendChild(remove);
+        tagList.appendChild(chip);
+      });
+      updateUI();
+    }
+
+    function tryAddPhone(raw) {
+      showError('');
+      var phone = normalizePhone(raw);
+      if (!phone) return false;
+      if (!IR_MOBILE.test(phone)) {
+        showError('شماره موبایل معتبر نیست.');
+        return false;
+      }
+      if (tags.indexOf(phone) !== -1) {
+        showError('این شماره قبلاً اضافه شده است.');
+        return false;
+      }
+      if (tags.length >= maxCapacity) {
+        showError('ظرفیت پلن شما تکمیل شده است.');
+        return false;
+      }
+      tags.push(phone);
+      input.value = '';
+      renderTags();
+      input.focus();
+      return true;
+    }
+
+    function onAddClick() {
+      tryAddPhone(input.value);
+    }
+
+    input.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        tryAddPhone(input.value);
+      } else if (e.key === ',') {
+        e.preventDefault();
+        tryAddPhone(input.value);
+      }
+    });
+
+    if (addBtn) addBtn.addEventListener('click', onAddClick);
+
+    if (clearBtn) {
+      clearBtn.addEventListener('click', function () {
+        tags = [];
+        renderTags();
+        showError('');
+        input.focus();
+      });
+    }
+
+    form.addEventListener('submit', function (e) {
+      if (tags.length === 0) {
+        e.preventDefault();
+        showError('حداقل یک شماره معتبر اضافه کنید.');
+        return;
+      }
+      syncHidden();
+    });
+
+    renderTags();
+  }
+
+  function initInvitePhonePreview() {
+    initInvitePhoneTags();
   }
 
   function initModalInvitePreview() {
@@ -104,8 +182,8 @@
   }
 
   function initStickyStepFooter() {
-    var footer = document.querySelector('.agency-step-footer--sticky');
-    if (!footer || window.matchMedia('(min-width: 769px)').matches) return;
+    var footers = document.querySelectorAll('.agency-step-footer--sticky');
+    if (!footers.length || window.matchMedia('(min-width: 769px)').matches) return;
     document.body.classList.add('agency-has-sticky-footer');
   }
 

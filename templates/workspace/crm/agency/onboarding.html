@@ -3,23 +3,43 @@
 {% block title %}راه‌اندازی آژانس{% endblock %}
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/crm.css' %}">
-<link rel="stylesheet" href="{% static 'workspace/css/agency-phase2.css' %}?v=4">
-<link rel="stylesheet" href="{% static 'workspace/css/agency-hub.css' %}?v=4">
+<link rel="stylesheet" href="{% static 'workspace/css/agency-phase2.css' %}?v=5">
+<link rel="stylesheet" href="{% static 'workspace/css/agency-hub.css' %}?v=5">
 {% endblock %}
 {% block content %}
 <div class="agency-onboarding" dir="rtl">
     <div class="agency-onboarding__shell">
-        <header class="agency-onboarding__header">
-            <span class="agency-hub-header__eyebrow">فایلینگ دیوار · CRM</span>
-            <h1 class="agency-onboarding__title">راه‌اندازی آژانس</h1>
-            <p class="agency-onboarding__lead">در چند قدم ساده، تیم مشاوران خود را آماده کار کنید.</p>
-            {% if seats %}
-            {% include "workspace/crm/agency/includes/seat_summary.html" with seats=seats %}
-            {% endif %}
+        <header class="agency-onboarding__hero">
+            <div class="agency-onboarding__hero-copy">
+                {% if subscription %}
+                <span class="agency-onboarding__badge">
+                    <i class="fas fa-circle-check" aria-hidden="true"></i>
+                    اشتراک آژانس شما فعال است
+                </span>
+                {% endif %}
+                <span class="agency-hub-header__eyebrow">فایلینگ دیوار · CRM</span>
+                <h1 class="agency-onboarding__title">راه‌اندازی آژانس</h1>
+                <p class="agency-onboarding__lead">در چند قدم ساده، تیم مشاوران خود را آماده کار کنید.</p>
+                {% if seats %}
+                <div class="agency-onboarding__hero-seats">
+                    {% include "workspace/crm/agency/includes/seat_summary.html" with seats=seats show_caption=True %}
+                </div>
+                {% endif %}
+            </div>
+            <div class="agency-onboarding__hero-art" aria-hidden="true">
+                <div class="agency-onboarding__hero-orb"></div>
+                <i class="fas fa-paper-plane agency-onboarding__hero-plane"></i>
+                <span class="agency-onboarding__hero-users"><i class="fas fa-user"></i><i class="fas fa-user"></i><i class="fas fa-user-plus"></i></span>
+            </div>
         </header>
 
         {% include "workspace/crm/agency/includes/onboarding_stepper.html" %}
 
+        {% if step == '2' %}
+        <div class="agency-onboarding__step-stack">
+            {% include "workspace/crm/agency/includes/invite_form.html" with show_skip=True %}
+        </div>
+        {% else %}
         <div class="agency-onboarding__panel">
             {% if step == '1' %}
             <section class="agency-onboarding-step">
@@ -57,9 +77,6 @@
                 </form>
                 {% endif %}
             </section>
-
-            {% elif step == '2' %}
-            {% include "workspace/crm/agency/includes/invite_form.html" with show_skip=True %}
 
             {% elif step == '3' %}
             <section class="agency-onboarding-step">
@@ -167,9 +184,10 @@
             </section>
             {% endif %}
         </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}
 {% block extra_js %}
-<script src="{% static 'workspace/js/agency-ui.js' %}?v=1" defer></script>
+<script src="{% static 'workspace/js/agency-ui.js' %}?v=2" defer></script>
 {% endblock %}

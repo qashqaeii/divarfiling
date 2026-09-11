@@ -62,7 +62,7 @@
     </a>
 
     {% if ws_show_agency_nav %}
-    <a href="{% if ws_can_manage_agency %}{% url 'workspace:agency_hub_dashboard' %}{% else %}{% url 'workspace:crm_team' %}{% endif %}" class="ws-nav-item {% if '/crm/agency' in path or '/crm/team' in path %}active{% endif %}" data-tour="nav-team" data-nav-team-badge>
+    <a href="{% url 'workspace:agency_hub_dashboard' %}" class="ws-nav-item {% if '/crm/agency' in path %}active{% endif %}" data-tour="nav-team" data-nav-team-badge>
         <span class="ws-nav-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='team' size='nav' only %}</span><span>آژانس</span>
         <span class="ws-nav-badge" data-nav-team-hub-badge {% if not crm_nav_counts.team_hub_unread %}hidden{% endif %}>{{ crm_nav_counts.team_hub_unread|nav_badge_count }}</span>
     </a>
@@ -88,7 +88,7 @@
                 <span class="ws-nav-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='automation' size='nav' only %}</span><span>اتوماسیون</span>
             </a>
             {% if not ws_show_agency_nav %}
-            <a href="{% url 'workspace:crm_team' %}" class="ws-nav-item ws-nav-item--sub {% if '/crm/team' in path %}active{% endif %}" data-tour="nav-team" data-nav-team-badge>
+            <a href="{% url 'workspace:agency_hub_dashboard' %}" class="ws-nav-item ws-nav-item--sub {% if '/crm/agency' in path %}active{% endif %}" data-tour="nav-team" data-nav-team-badge>
                 <span class="ws-nav-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='team' size='nav' only %}</span><span>آژانس</span>
             </a>
             {% endif %}

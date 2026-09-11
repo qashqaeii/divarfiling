@@ -296,7 +296,7 @@ def education_hub_content():
                         'num': '۴',
                         'title': 'تیم آژانس و پیام خودکار',
                         'desc': 'مشتری را بین مشاوران تقسیم کنید و پیام پیگیری را خودکار بفرستید.',
-                        'url_name': 'workspace:crm_team',
+                        'url_name': 'workspace:agency_hub_dashboard',
                         'requires_auth': True,
                         'icon': 'fa-users-gear',
                     },

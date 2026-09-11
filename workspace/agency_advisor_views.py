@@ -156,7 +156,7 @@ class AgencyTeamExportView(AgencyOwnerRequiredMixin, LoginRequiredMixin, View):
             )
         except (AgencyDataScopeError, PermissionError, ValueError) as exc:
             messages.error(request, str(exc))
-            return redirect(reverse('workspace:crm_team') + '?tab=members')
+            return redirect('workspace:agency_hub_advisors')
 
 
 class AgencyAdvisorContractPdfView(AgencyOwnerRequiredMixin, LoginRequiredMixin, View):
@@ -198,7 +198,7 @@ class AgencyAdvisorMemberView(AgencyHubAccessMixin, LoginRequiredMixin, Template
 
     def dispatch(self, request, *args, **kwargs):
         if request.user.is_authenticated and can_manage_agency(request.user):
-            return redirect(reverse('workspace:crm_team') + '?tab=members')
+            return redirect('workspace:agency_hub_advisors')
         if not has_assigned_agency_seat(request.user):
             messages.error(request, 'دسترسی بخش آژانس برای شما فعال نیست.')
             return redirect(reverse('workspace:crm_dashboard'))

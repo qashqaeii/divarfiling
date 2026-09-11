@@ -100,7 +100,7 @@ class AgencyInviteAcceptView(View):
             try:
                 accept_agency_invitation(invitation, request.user, consent_acknowledged=consent)
                 messages.success(request, f'به آژانس {invitation.agency.name} پیوستید.')
-                return redirect('workspace:crm_team')
+                return redirect('workspace:agency_hub_advisors')
             except ValueError as exc:
                 messages.error(request, str(exc))
 
@@ -131,7 +131,7 @@ class AgencyOnboardingView(AgencyOwnerRequiredMixin, LoginRequiredMixin, Templat
             ('settings', 'تنظیمات', reverse('workspace:agency_hub_settings')),
         ]
         ctx['step'] = step
-        ctx['team_url'] = reverse('workspace:crm_team')
+        ctx['team_url'] = reverse('workspace:agency_hub_advisors')
         agency = ob.get('agency')
         ctx['available_seats'] = list_available_seats(self.request.user, agency) if agency else []
         return ctx
@@ -208,6 +208,6 @@ class AgencyOnboardingView(AgencyOwnerRequiredMixin, LoginRequiredMixin, Templat
             ob = onboarding_context(request.user)
             if ob.get('agency'):
                 mark_agency_onboarding_complete(ob['agency'])
-            return redirect(f"{reverse('workspace:crm_team')}?tab=members")
+            return redirect('workspace:agency_hub_advisors')
 
         return redirect(f"{reverse('workspace:agency_onboarding')}?step={step}")

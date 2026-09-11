@@ -127,7 +127,7 @@ class CRMAgencyMessagesTests(TestCase):
     def test_team_messages_tab_renders(self):
         client = Client()
         client.force_login(self.owner)
-        resp = client.get(reverse('workspace:crm_team'), {'tab': 'messages'})
+        resp = client.get(reverse('workspace:agency_hub_messages'))
         self.assertEqual(resp.status_code, 200)
         self.assertContains(resp, 'مرکز پیام تیم')
 

@@ -9,8 +9,10 @@ from workspace.services.agency_entitlement import (
     agency_hub_access_level,
     can_manage_agency,
     get_active_subscription_for_owner,
+    get_subscription_for_agency,
     is_expired_agency_owner,
 )
+from workspace.services.crm_scope import can_manage_team, get_membership
 
 
 class AgencyHubAccessMixin:
@@ -30,6 +32,47 @@ class AgencyHubAccessMixin:
     def _deny(self, request, message: str):
         messages.error(request, message)
         return HttpResponseRedirect(reverse('workspace:crm_dashboard'))
+
+
+class AgencyTeamHubRequiredMixin(AgencyHubAccessMixin):
+    """Owner، مدیر تیم با اشتراک فعال — مشاور بدون نقش مدیریتی به member view."""
+
+    def dispatch(self, request, *args, **kwargs):
+        from workspace.services.agency_entitlement import has_assigned_agency_seat
+
+        user = request.user
+        if not user.is_authenticated:
+            return self.handle_no_permission()
+
+        if (
+            has_assigned_agency_seat(user)
+            and not can_manage_agency(user)
+            and not can_manage_team(user)
+        ):
+            return HttpResponseRedirect(reverse('workspace:agency_advisor_member'))
+
+        level = agency_hub_access_level(user)
+        if level == 'owner_locked':
+            return HttpResponseRedirect(reverse('workspace:agency_locked'))
+        if level == 'owner':
+            return super(AgencyHubAccessMixin, self).dispatch(request, *args, **kwargs)
+        if level == 'advisor':
+            if can_manage_team(user):
+                return super(AgencyHubAccessMixin, self).dispatch(request, *args, **kwargs)
+            return HttpResponseRedirect(reverse('workspace:agency_advisor_member'))
+
+        membership = get_membership(user)
+        if (
+            membership
+            and membership.is_active
+            and can_manage_team(user)
+            and get_subscription_for_agency(membership.agency)
+        ):
+            return super(AgencyHubAccessMixin, self).dispatch(request, *args, **kwargs)
+
+        if level == 'none':
+            return self._deny(request, 'بخش آژانس فقط برای مشترکین پلن آژانس در دسترس است.')
+        return super(AgencyHubAccessMixin, self).dispatch(request, *args, **kwargs)
 
 
 class AgencyOwnerRequiredMixin:

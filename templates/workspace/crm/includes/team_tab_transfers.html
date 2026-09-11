@@ -1,0 +1,51 @@
+{% load workspace_tags crm_tags %}
+    <header class="crm-xfer-intro">
+        <span class="crm-xfer-intro-kicker"><i class="fas fa-right-left" aria-hidden="true"></i> جابه‌جایی پرونده</span>
+        <h2 class="crm-xfer-intro-title">تاریخچه انتقال</h2>
+        <p class="crm-xfer-intro-text">{{ transfer_count }} انتقال ثبت‌شده — شفافیت کامل برای مدیر آژانس.</p>
+    </header>
+    <section class="crm-team-panel-v2 crm-xfer-panel">
+        <header class="crm-team-panel-head-v2 crm-xfer-panel-head">
+            <div>
+                <h2>رویدادهای انتقال</h2>
+                <p>از مشاور به مشاور</p>
+            </div>
+        </header>
+        {% if recent_transfers %}
+        <div class="crm-team-timeline crm-xfer-timeline">
+            {% for t in recent_transfers %}
+            <article class="crm-team-timeline-item crm-xfer-card">
+                <div class="crm-team-timeline-rail" aria-hidden="true"><span></span></div>
+                <div class="crm-team-timeline-body">
+                    <header class="crm-xfer-card-head">
+                        <a href="{% url 'workspace:crm_detail' t.customer_id %}" class="crm-team-timeline-customer">{{ t.customer.name }}</a>
+                        <time>{{ t.created_at|ws_jalali }}</time>
+                    </header>
+                    <div class="crm-team-timeline-transfer crm-xfer-flow">
+                        <span class="crm-team-timeline-user crm-xfer-user">
+                            <i class="crm-team-avatar crm-team-avatar--xs" style="--hue: {{ t.from_user.username|default:'x'|crm_avatar_hue }}">{{ t.from_user.get_full_name|default:t.from_user.username|default:"—"|crm_initials }}</i>
+                            <span>{{ t.from_user.get_full_name|default:t.from_user.username|default:"سیستم" }}</span>
+                        </span>
+                        <span class="crm-xfer-arrow" aria-hidden="true"><i class="fas fa-arrow-left"></i></span>
+                        <span class="crm-team-timeline-user crm-xfer-user">
+                            <i class="crm-team-avatar crm-team-avatar--xs" style="--hue: {{ t.to_user.username|crm_avatar_hue }}">{{ t.to_user.get_full_name|default:t.to_user.username|crm_initials }}</i>
+                            <span>{{ t.to_user.get_full_name|default:t.to_user.username }}</span>
+                        </span>
+                    </div>
+                    {% if t.note %}<p class="crm-team-timeline-note crm-xfer-note">{{ t.note }}</p>{% endif %}
+                    <footer class="crm-xfer-foot">
+                        <span><i class="fas fa-user-check"></i> توسط {{ t.transferred_by.get_full_name|default:t.transferred_by.username }}</span>
+                    </footer>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="crm-team-empty-v2 crm-team-empty-v2--illustrated">
+            <span class="crm-team-empty-icon"><i class="fas fa-right-left"></i></span>
+            <strong>انتقالی ثبت نشده</strong>
+            <p>از صفحه جزئیات مخاطب می‌توانید پرونده را به مشاور دیگر منتقل کنید.</p>
+            <a href="{% url 'workspace:crm_contacts' %}" class="crm-dash-act"><i class="fas fa-users"></i><span>رفتن به مخاطبین</span></a>
+        </div>
+        {% endif %}
+    </section>

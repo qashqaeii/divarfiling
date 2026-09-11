@@ -8,6 +8,7 @@ from workspace.models import CRMAgencyMember, CRMProperty, Customer
 from workspace.services.crm_agency import apply_lead_routing, create_agency, regenerate_api_key
 from workspace.services.crm_sharing import share_property
 from workspace.services.crm_webhooks import create_lead_from_api
+from workspace.tests.agency_test_utils import ensure_agency_subscription
 
 User = get_user_model()
 
@@ -16,6 +17,7 @@ class CRMTeamProTests(TestCase):
     def setUp(self):
         self.owner = User.objects.create_user(username='owner1', password='pass12345')
         self.agency = create_agency(self.owner, 'آژانس تست')
+        ensure_agency_subscription(self.owner, self.agency)
 
     def test_regenerate_api_key(self):
         old = self.agency.api_key
@@ -43,37 +45,39 @@ class CRMTeamProTests(TestCase):
         client.force_login(self.owner)
         resp = client.get('/workspace/crm/team/undefined/')
         self.assertEqual(resp.status_code, 302)
-        self.assertIn('tab=sync', resp.url)
+        self.assertEqual(resp.url, reverse('workspace:agency_hub_settings_sync'))
 
     def test_bad_path_redirects_without_trailing_slash(self):
         client = Client()
         client.force_login(self.owner)
         resp = client.get('/workspace/crm/team/undefined')
         self.assertEqual(resp.status_code, 302)
-        self.assertIn('tab=sync', resp.url)
+        self.assertEqual(resp.url, reverse('workspace:agency_hub_settings_sync'))
 
-    def test_team_page_renders_inbox_tab(self):
+    def test_team_inbox_legacy_redirects(self):
         client = Client()
         client.force_login(self.owner)
         resp = client.get(reverse('workspace:crm_team'), {'tab': 'inbox'})
+        self.assertRedirects(resp, reverse('workspace:agency_hub_inbox'), fetch_redirect_response=False)
+
+    def test_agency_inbox_renders(self):
+        client = Client()
+        client.force_login(self.owner)
+        resp = client.get(reverse('workspace:agency_hub_inbox'))
         self.assertEqual(resp.status_code, 200)
         self.assertContains(resp, 'صندوق سرنخ')
 
-    def test_team_page_renders_command_tab(self):
+    def test_team_command_legacy_redirects(self):
         client = Client()
         client.force_login(self.owner)
         resp = client.get(reverse('workspace:crm_team'), {'tab': 'command'})
-        self.assertEqual(resp.status_code, 200)
-        self.assertContains(resp, 'داشبورد مدیریت')
-        self.assertContains(resp, 'سرنخ بدون تخصیص')
-        self.assertNotContains(resp, 'مقایسه بصری اعضا')
+        self.assertRedirects(resp, reverse('workspace:agency_hub_dashboard'), fetch_redirect_response=False)
 
-    def test_manager_default_tab_is_command(self):
+    def test_owner_default_team_redirects_to_advisors(self):
         client = Client()
         client.force_login(self.owner)
         resp = client.get(reverse('workspace:crm_team'))
-        self.assertEqual(resp.status_code, 200)
-        self.assertContains(resp, 'داشبورد مدیریت')
+        self.assertRedirects(resp, reverse('workspace:agency_hub_advisors'), fetch_redirect_response=False)
 
     def test_regenerate_api_json_endpoint(self):
         client = Client()
@@ -105,7 +109,7 @@ class CRMTeamProTests(TestCase):
     def test_set_team_goal_jalali_dates(self):
         client = Client()
         client.force_login(self.owner)
-        resp = client.post(reverse('workspace:crm_team'), {
+        resp = client.post(reverse('workspace:agency_team_action'), {
             'action': 'set_team_goal',
             'tab': 'settings',
             'metric': 'calls',

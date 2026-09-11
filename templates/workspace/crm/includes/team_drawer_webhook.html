@@ -1,0 +1,35 @@
+<aside class="crm-drawer" id="drawer-webhook">
+    <div class="crm-drawer-overlay" data-drawer-close></div>
+    <div class="crm-drawer-panel crm-drawer-panel-lg crm-team-drawer">
+        <header class="crm-drawer-head">
+            <h2><i class="fas fa-plug"></i> وب‌هوک جدید</h2>
+            <button type="button" class="crm-drawer-close" data-drawer-close aria-label="بستن"><i class="fas fa-times"></i></button>
+        </header>
+        <form method="post" action="{{ crm_team_url }}" class="crm-drawer-form">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="add_webhook">
+            <input type="hidden" name="tab" value="webhooks">
+            <div class="crm-drawer-body">
+                <label class="crm-field"><span>نام</span><input type="text" name="name" class="crm-input" placeholder="مثلاً Zapier / n8n"></label>
+                <label class="crm-field"><span>URL مقصد</span><input type="url" name="url" class="crm-input" dir="ltr" required placeholder="https://"></label>
+                <label class="crm-field"><span>رمز امضا (اختیاری)</span><input type="text" name="secret" class="crm-input" dir="ltr" autocomplete="off"></label>
+                <fieldset class="crm-field crm-team-webhook-fieldset">
+                    <legend>رویدادها</legend>
+                    <div class="crm-team-webhook-checks">
+                        {% for ev in webhook_events %}
+                        <label class="crm-check-row-v2">
+                            <input type="checkbox" name="events" value="{{ ev }}" checked>
+                            <span>{{ webhook_event_labels|dict_get:ev|default:ev }}</span>
+                            <code dir="ltr">{{ ev }}</code>
+                        </label>
+                        {% endfor %}
+                    </div>
+                </fieldset>
+            </div>
+            <footer class="crm-drawer-foot">
+                <button type="button" class="crm-btn crm-btn-ghost" data-drawer-close>انصراف</button>
+                <button type="submit" class="crm-btn crm-btn-primary">ثبت وب‌هوک</button>
+            </footer>
+        </form>
+    </div>
+</aside>

@@ -1,0 +1,86 @@
+{% load workspace_tags crm_tags %}
+    <header class="crm-hook-intro">
+        <span class="crm-hook-intro-kicker"><i class="fas fa-plug" aria-hidden="true"></i> اتصال بیرونی</span>
+        <h2 class="crm-hook-intro-title">وب‌هوک‌های خروجی</h2>
+        <p class="crm-hook-intro-text">رویدادهای CRM را به‌صورت خودکار به Zapier، n8n یا سرور خودتان بفرستید.</p>
+    </header>
+    <section class="crm-team-webhook-events crm-hook-events" aria-label="رویدادهای پشتیبانی‌شده">
+        {% for ev in webhook_events %}
+        <span class="crm-team-event-chip">{{ webhook_event_labels|dict_get:ev|default:ev }}</span>
+        {% endfor %}
+    </section>
+
+    <section class="crm-team-panel-v2 crm-hook-panel">
+        <header class="crm-team-panel-head-v2">
+            <div>
+                <h2>مقصدهای فعال</h2>
+                <p>ارسال خودکار رویداد CRM به سیستم‌های شما</p>
+            </div>
+            {% if webhooks %}
+            <button type="button" class="crm-dash-act crm-dash-act--primary" data-drawer-open="drawer-webhook">
+                <i class="fas fa-plus"></i><span>وب‌هوک جدید</span>
+            </button>
+            {% endif %}
+        </header>
+        {% if webhooks %}
+        <div class="crm-team-webhook-grid">
+            {% for w in webhooks %}
+            <article class="crm-team-webhook-card {% if w.is_active %}is-active{% endif %}">
+                <header>
+                    <span class="crm-team-webhook-status" title="{% if w.is_active %}فعال{% else %}غیرفعال{% endif %}"></span>
+                    <strong>{{ w.name }}</strong>
+                    <form method="post" action="{{ crm_team_url }}" class="crm-team-inline-form" data-confirm="وب‌هوک حذف شود؟">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="delete_webhook">
+                        <input type="hidden" name="tab" value="webhooks">
+                        <input type="hidden" name="webhook_id" value="{{ w.pk }}">
+                        <button type="submit" class="crm-team-icon-btn-v2" title="حذف"><i class="fas fa-trash"></i></button>
+                    </form>
+                </header>
+                <code class="crm-team-webhook-url-v2" dir="ltr">{{ w.url }}</code>
+                <div class="crm-team-webhook-chips">
+                    {% for e in w.events %}
+                    <span>{{ webhook_event_labels|dict_get:e|default:e }}</span>
+                    {% empty %}
+                    <span class="crm-muted">بدون رویداد</span>
+                    {% endfor %}
+                </div>
+                <footer>
+                    <time>{{ w.created_at|ws_jalali }}</time>
+                    {% if w.secret %}<span class="crm-team-webhook-secret"><i class="fas fa-lock"></i> امضا فعال</span>{% endif %}
+                    <form method="post" action="{{ crm_team_url }}" class="crm-team-inline-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="toggle_webhook">
+                        <input type="hidden" name="tab" value="webhooks">
+                        <input type="hidden" name="webhook_id" value="{{ w.pk }}">
+                        <button type="submit" class="crm-btn crm-btn-sm crm-btn-ghost">{% if w.is_active %}غیرفعال{% else %}فعال{% endif %}</button>
+                    </form>
+                    <form method="post" action="{{ crm_team_url }}" class="crm-team-inline-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="test_webhook">
+                        <input type="hidden" name="tab" value="webhooks">
+                        <input type="hidden" name="webhook_id" value="{{ w.pk }}">
+                        <button type="submit" class="crm-btn crm-btn-sm crm-btn-primary">تست</button>
+                    </form>
+                </footer>
+            </article>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="crm-team-empty-v2 crm-team-empty-v2--illustrated">
+            <span class="crm-team-empty-icon"><i class="fas fa-plug-circle-bolt"></i></span>
+            <strong>هنوز وب‌هوکی ثبت نشده</strong>
+            <p>با وب‌هوک، هر بار مخاطب جدید ثبت شود یا معامله بسته شود، داده به URL شما POST می‌شود.</p>
+            <button type="button" class="crm-dash-act crm-dash-act--primary" data-drawer-open="drawer-webhook">
+                <i class="fas fa-plus"></i><span>اولین وب‌هوک</span>
+            </button>
+        </div>
+        {% endif %}
+    </section>
+    {% else %}
+    <div class="crm-team-empty-v2 crm-team-empty-v2--illustrated">
+        <span class="crm-team-empty-icon"><i class="fas fa-shield-halved"></i></span>
+        <strong>دسترسی محدود</strong>
+        <p>مدیریت وب‌هوک فقط برای مالک و مدیر آژانس امکان‌پذیر است.</p>
+    </div>
+    {% endif %}

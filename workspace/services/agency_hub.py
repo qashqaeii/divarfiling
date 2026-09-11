@@ -21,6 +21,13 @@ from workspace.services.crm_agency_tv import _agency_logo_url
 
 def hub_base_context(user) -> dict[str, Any]:
     agency, sub = resolve_managed_agency(user)
+    if not agency:
+        from workspace.services.crm_scope import can_manage_team, get_membership
+
+        membership = get_membership(user)
+        if membership and membership.is_active and can_manage_team(user):
+            agency = membership.agency
+            sub = get_subscription_for_agency(agency) if agency else None
     seats = seat_usage_summary(sub) if sub else None
     return {
         'hub_agency': agency,

@@ -280,7 +280,7 @@ def agency_product_line_content() -> dict[str, Any]:
             'secondary_label': 'مشاهده محصولات (اختیاری)',
             'secondary_url_name': 'product_list',
             'auth_primary_label': 'ورود به صفحه تیم',
-            'auth_primary_url_name': 'workspace:crm_team',
+            'auth_primary_url_name': 'workspace:agency_hub_dashboard',
         },
         'workflow': {
             'title': 'مسیر کار از ساخت آژانس تا هماهنگی روزانه',
@@ -522,7 +522,7 @@ def agency_product_line_content() -> dict[str, Any]:
                         'لایسنس ربات فقط وقتی به فایلینگ نیاز دارید.'
                     ),
                     'url_name': 'register',
-                    'auth_url_name': 'workspace:crm_team',
+                    'auth_url_name': 'workspace:agency_hub_dashboard',
                     'url_kwargs': {},
                     'cta': 'ثبت‌نام رایگان',
                     'auth_title': 'ورود به صفحه تیم',

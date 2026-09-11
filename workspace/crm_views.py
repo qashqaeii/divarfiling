@@ -31,7 +31,7 @@ from workspace.services.property_images import (
     MAX_PROPERTY_IMAGES, parse_images_payload, store_property_image,
 )
 from workspace.export_security import ExportSecurityMixin
-from workspace.mixins_agency import AgencyHubAccessMixin
+from workspace.mixins_agency import AgencyHubAccessMixin, AgencyTeamHubRequiredMixin
 from workspace.forms import (
     ActivityForm, CRMAutomationRuleForm, CRMDealCreateForm, CRMDealForm, CRMMessageTemplateForm,
     CRMPropertyForm, CRMPropertyImportForm, CRMReminderForm, ConvertLeadForm,
@@ -3489,13 +3489,13 @@ class CRMSavedFilterCreateView(LoginRequiredMixin, View):
 # ── فاز ۴: تیم آژانس ─────────────────────────────────────────────────────────
 
 class CRMTeamBadPathRedirectView(LoginRequiredMixin, View):
-    """هدایت مسیرهای اشتباه مثل /crm/team/undefined به صفحه اصلی تیم."""
+    """هدایت مسیرهای اشتباه مثل /crm/team/undefined به Agency Hub."""
 
     def get(self, request, bad_path=''):
-        return redirect(f"{reverse('workspace:crm_team')}?tab=sync")
+        return redirect('workspace:agency_hub_settings_sync')
 
     def post(self, request, bad_path=''):
-        return redirect(f"{reverse('workspace:crm_team')}?tab=sync")
+        return redirect('workspace:agency_hub_settings_sync')
 
 
 class CRMTeamApiKeyRegenerateView(LoginRequiredMixin, View):
@@ -3523,48 +3523,36 @@ class CRMTeamReportCSVView(ExportSecurityMixin, LoginRequiredMixin, View):
 
 
 class CRMTeamTVView(CRMContextMixin, LoginRequiredMixin, TemplateView):
-    """داشبورد تمام‌صفحه TV — فقط خواندنی."""
-    template_name = 'workspace/crm/team/tv.html'
+    """Legacy route — redirects to Agency Hub TV."""
 
-    def dispatch(self, request, *args, **kwargs):
-        membership = get_membership(request.user)
-        agency = membership.agency if membership else None
-        if not agency:
-            messages.error(request, 'ابتدا به یک آژانس بپیوندید.')
-            return redirect('workspace:crm_team')
-        if not is_agency_feature_enabled('tv_mode', agency):
-            messages.error(request, 'حالت TV برای این آژانس فعال نیست.')
-            return redirect('workspace:crm_team')
-        return super().dispatch(request, *args, **kwargs)
-
-    def get_context_data(self, **kwargs):
-        ctx = super().get_context_data(**kwargs)
-        ctx['crm_section'] = 'team-tv'
-        ctx['tv_payload'] = get_tv_dashboard_payload(self.request.user, use_cache=False)
-        optional = ('chart', 'goals', 'activity', 'schedule', 'announcements', 'alerts')
-        ctx['tv_widgets'] = [w for w in ctx['tv_payload'].get('allowed_widgets', []) if w in optional]
-        ctx['api_crm_team_tv_url'] = reverse('workspace:api_crm_team_tv')
-        ctx['crm_team_url'] = reverse('workspace:crm_team')
-        return ctx
+    def get(self, request, *args, **kwargs):
+        return redirect('workspace:agency_hub_tv')
 
 
-class CRMTeamView(AgencyHubAccessMixin, CRMContextMixin, LoginRequiredMixin, TemplateView):
+class CRMTeamView(AgencyTeamHubRequiredMixin, CRMContextMixin, LoginRequiredMixin, TemplateView):
+    """Legacy compatibility — GET redirects; context/post reused by Agency Hub."""
     template_name = 'workspace/crm/team/index.html'
 
     def dispatch(self, request, *args, **kwargs):
         from workspace.services.agency_entitlement import can_manage_agency, has_assigned_agency_seat
+        from workspace.services.crm_scope import can_manage_team
         if (
             request.user.is_authenticated
             and has_assigned_agency_seat(request.user)
             and not can_manage_agency(request.user)
+            and not can_manage_team(request.user)
         ):
             return redirect(reverse('workspace:agency_advisor_member'))
         return super().dispatch(request, *args, **kwargs)
 
+    def get(self, request, *args, **kwargs):
+        from workspace.services.agency_team_routes import redirect_legacy_team_tab
+        return redirect_legacy_team_tab(request)
+
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx['crm_section'] = 'team'
-        ctx['crm_team_url'] = reverse('workspace:crm_team')
+        ctx['crm_team_url'] = reverse('workspace:agency_team_action')
         ctx['crm_api_key_reveal_url'] = reverse('workspace:docs_api_crm_key')
         ctx['crm_api_key_regenerate_url'] = reverse('workspace:crm_team_api_key_regenerate')
         ctx['crm_team_report_csv_url'] = reverse('workspace:crm_team_report_csv')
@@ -3584,7 +3572,7 @@ class CRMTeamView(AgencyHubAccessMixin, CRMContextMixin, LoginRequiredMixin, Tem
         ctx['agency_feature_messages'] = is_agency_feature_enabled('messages', agency) if agency else False
         ctx['agency_feature_announcements'] = is_agency_feature_enabled('announcements', agency) if agency else False
         ctx['agency_feature_tv'] = is_agency_feature_enabled('tv_mode', agency) if agency else False
-        ctx['crm_team_tv_url'] = reverse('workspace:crm_team_tv')
+        ctx['crm_team_tv_url'] = reverse('workspace:agency_hub_tv')
         goal_start_jalali, goal_end_jalali = jalali_month_bounds_display()
         quarter_start_jalali, quarter_end_jalali = jalali_quarter_ahead_display()
         ctx['goal_period_start_default'] = to_persian_digits(goal_start_jalali)
@@ -3921,7 +3909,8 @@ class CRMTeamView(AgencyHubAccessMixin, CRMContextMixin, LoginRequiredMixin, Tem
                 messages.success(request, 'کلید API بازتولید شد.')
         except ValueError as exc:
             messages.error(request, str(exc))
-        return redirect(f"{reverse('workspace:crm_team')}?tab={tab}")
+        from workspace.services.agency_team_routes import redirect_after_team_action
+        return redirect_after_team_action(tab)
 
 
 class CRMTeamAssignView(LoginRequiredMixin, View):

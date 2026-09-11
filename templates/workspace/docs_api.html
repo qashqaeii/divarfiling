@@ -115,10 +115,10 @@
                                 </button>
                             </div>
                             <p class="apidoc-key-hint">کلید پس از ۶۰ ثانیه خودکار مخفی می‌شود.</p>
-                            <a href="{% url 'workspace:crm_team' %}" class="apidoc-link">مدیریت در صفحه تیم CRM</a>
+                            <a href="{% url 'workspace:agency_hub_settings_sync' %}" class="apidoc-link">مدیریت در تنظیمات آژانس</a>
                             {% elif can_manage_crm_api %}
                             <p class="apidoc-muted">ابتدا آژانس CRM بسازید تا کلید API دریافت کنید.</p>
-                            <a href="{% url 'workspace:crm_team' %}" class="apidoc-link">رفتن به تیم CRM</a>
+                            <a href="{% url 'workspace:agency_hub_dashboard' %}" class="apidoc-link">رفتن به آژانس</a>
                             {% else %}
                             <p class="apidoc-muted">فقط مدیر/مالک آژانس می‌تواند کلید API را ببیند.</p>
                             {% endif %}

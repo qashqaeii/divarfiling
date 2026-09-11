@@ -40,7 +40,7 @@ def _ws_nav_flags(request, user, show_agency_nav: bool):
         or path.startswith('/workspace/product')
         or path.startswith('/workspace/support')
         or path.startswith('/workspace/ai')
-        or (url_name == 'crm_team' and not show_agency_nav)
+        or path.startswith('/workspace/crm/agency')
     )
     return {
         'ws_show_agency_nav': show_agency_nav,

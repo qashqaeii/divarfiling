@@ -422,7 +422,7 @@ def _agency_journey(content_key: str) -> list[dict[str, Any]]:
             'label': 'شروع',
             'hint': 'ثبت‌نام رایگان',
             'url_name': 'register',
-            'auth_url_name': 'workspace:crm_team',
+            'auth_url_name': 'workspace:agency_hub_dashboard',
             'kwargs': {},
         },
     ]

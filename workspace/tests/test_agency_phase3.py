@@ -265,7 +265,7 @@ class AdvisorMemberViewTests(AgencyPhase3Base):
         resp = self.client.get(reverse('workspace:crm_team'))
         self.assertRedirects(resp, reverse('workspace:agency_advisor_member'), fetch_redirect_response=False)
 
-    def test_owner_gets_team(self):
+    def test_owner_legacy_team_members_redirects(self):
         self.client.force_login(self.owner_a)
         resp = self.client.get(reverse('workspace:crm_team') + '?tab=members')
-        self.assertEqual(resp.status_code, 200)
+        self.assertRedirects(resp, reverse('workspace:agency_hub_advisors'), fetch_redirect_response=False)

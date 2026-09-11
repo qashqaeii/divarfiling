@@ -120,7 +120,8 @@ class AgencyEntitlementTests(TestCase):
         sub.save()
         self.client.force_login(self.owner)
         resp = self.client.get(reverse('workspace:crm_team'))
-        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.status_code, 302)
+        self.assertEqual(resp.url, reverse('workspace:agency_hub_advisors'))
 
     def test_expired_subscription_locked(self):
         order = self._paid_agency_order()

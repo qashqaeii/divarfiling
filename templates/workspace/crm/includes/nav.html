@@ -28,7 +28,7 @@
         <span class="ws-nav-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='calendar' size='nav' only %}</span><span>تقویم</span>
     </a>
     {% if ws_show_agency_nav %}
-    <a href="{% url 'workspace:crm_team' %}" class="crm-nav-item {% if crm_section == 'team' %}active{% endif %}">
+    <a href="{% url 'workspace:agency_hub_dashboard' %}" class="crm-nav-item {% if crm_section == 'agency' %}active{% endif %}">
         <span class="ws-nav-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='team' size='nav' only %}</span><span>آژانس</span>
         {% if crm_nav_counts.team_hub_unread %}<em class="crm-nav-count crm-nav-count-warn">{{ crm_nav_counts.team_hub_unread|nav_badge_count }}</em>{% endif %}
     </a>

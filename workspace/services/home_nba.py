@@ -114,7 +114,7 @@ def build_home_nba(
                 count=inbox_count,
                 desc='صندوق آژانس مخاطب تخصیص‌نیافته دارد',
                 cta='مشاهده صندوق آژانس',
-                url_name='workspace:crm_team',
+                url_name='workspace:agency_hub_dashboard',
                 query='tab=inbox',
                 tone='info',
             ))

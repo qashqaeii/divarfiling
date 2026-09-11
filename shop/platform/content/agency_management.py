@@ -461,7 +461,7 @@ def agency_management_content() -> dict[str, Any]:
             'secondary_label': 'مشاهده محصولات و لایسنس',
             'secondary_url_name': 'product_list',
             'auth_primary_label': 'ورود به صفحه تیم',
-            'auth_primary_url_name': 'workspace:crm_team',
+            'auth_primary_url_name': 'workspace:agency_hub_dashboard',
         },
         'tools': {
             'title': 'ارتباط با خط محصول و راه‌حل مکمل',
@@ -671,12 +671,12 @@ def agency_management_content() -> dict[str, Any]:
                         'لایسنس ربات فقط برای فایلینگ و تحلیل دیوار است.'
                     ),
                     'url_name': 'register',
-                    'auth_url_name': 'workspace:crm_team',
+                    'auth_url_name': 'workspace:agency_hub_dashboard',
                     'url_kwargs': {},
                     'cta': 'ثبت‌نام و ایجاد تیم',
                     'auth_title': 'ورود به صفحه تیم',
                     'auth_desc': 'حساب دارید — مستقیم به میزکار تیم بروید.',
-                    'auth_cta': 'ورود به /workspace/crm/team/',
+                    'auth_cta': 'ورود به میزکار آژانس',
                     'convert': True,
                 },
             ],

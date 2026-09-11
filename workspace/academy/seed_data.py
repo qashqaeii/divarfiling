@@ -188,14 +188,14 @@ VIDEOS = [
     ('agency', 1, 'agency-team-intro', 'آژانس در فایلینگ دیوار: برای مدیران',
      'معرفی Team Hub',
      'agency_01_team_intro.mp4', 'academy/agency', 240, False, False,
-     '/workspace/crm/team/', 'مدیریت آژانس', None, ''),
+     '/workspace/crm/agency/dashboard/', 'مدیریت آژانس', None, ''),
     ('agency', 2, 'agency-lead-assignment', 'تخصیص Lead و انتقال فایل',
      'مدیریت Lead تیم',
      'agency_02_lead_assignment.mp4', 'academy/agency', 420, False, False, '', '', None, ''),
     ('agency', 3, 'agency-team-tv', 'TV آژانس: عملکرد تیم روی دیوار',
      'داشبورد TV',
      'agency_03_team_tv.mp4', 'academy/agency', 300, False, False,
-     '/workspace/crm/team/tv/', 'TV آژانس', None, ''),
+     '/workspace/crm/agency/tv/', 'TV آژانس', None, ''),
 ]
 
 MISSION_STEPS = [

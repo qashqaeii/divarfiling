@@ -2,6 +2,7 @@
     <div class="ws-modal-overlay" data-modal-close></div>
     <div class="ws-modal-panel fl-help-modal__panel">
         <div class="fl-help-modal__glow" aria-hidden="true"></div>
+        <div class="fl-help-modal__sheet-top" aria-hidden="true"><span class="fl-help-modal__grip"></span></div>
 
         <header class="fl-help-modal__hero">
             <div class="fl-help-modal__hero-mesh" aria-hidden="true"></div>
@@ -10,11 +11,11 @@
                 <i class="fas fa-times" aria-hidden="true"></i>
             </button>
             <span class="fl-help-modal__kicker">
-                <span class="ws-nav-icon">{% include 'includes/icon_slot.html' with decor='sparkles' size='inline' only %}</span>
+                <span class="ws-nav-icon">{% include 'includes/icon_slot.html' with decor='lightbulb' size='inline' only %}</span>
                 راهنمای هوشمند فایلینگ
             </span>
-            <div class="fl-help-modal__hero-icon" aria-hidden="true">
-                {% include 'includes/icon_slot.html' with decor='folder' size='lg' boxed=True accent='violet' only %}
+            <div class="fl-help-modal__hero-icon fl-help-modal__hero-icon--bulb" aria-hidden="true">
+                {% include 'includes/icon_slot.html' with decor='lightbulb' size='lg' boxed=True accent='amber' only %}
             </div>
             <h2 id="flHelpTitle" class="fl-help-modal__title">میزکار فایل‌های استخراج</h2>
             <p class="fl-help-modal__lead">یه مرور کوتاه و دوستانه — از استخراج خودکار تا تحلیل بازار، همه‌چیز همین‌جا جمع شده.</p>

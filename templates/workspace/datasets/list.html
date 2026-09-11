@@ -5,7 +5,7 @@
 {% block mobile_bar_title %}فایلینگ{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-datasets.css' %}?v=9">
+<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-datasets.css' %}?v=11">
 <link rel="stylesheet" href="{% static 'workspace/css/mk-filing-mobile.css' %}?v=8">
 {% include 'workspace/academy/includes/academy_assets_css.html' %}
 {% endblock %}
@@ -261,7 +261,7 @@
     });
 })();
 </script>
-<script src="{% static 'workspace/js/filing-help.js' %}?v=2"></script>
+<script src="{% static 'workspace/js/filing-help.js' %}?v=3"></script>
 {% if ai_enabled and has_bot_license %}
 <script src="{% static 'workspace/js/ai.js' %}?v=6"></script>
 {% endif %}

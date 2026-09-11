@@ -74,6 +74,19 @@
         }
     });
 
+    if (typeof WSModal !== 'undefined') {
+        var origOpen = WSModal.open.bind(WSModal);
+        WSModal.open = function (id) {
+            origOpen(id);
+            if (id === 'modal-filing-help') {
+                requestAnimationFrame(function () {
+                    moveIndicator(modal.querySelector('.fl-help-modal__nav-btn.is-active'));
+                    updateScrollProgress();
+                });
+            }
+        };
+    }
+
     requestAnimationFrame(function () {
         moveIndicator(modal.querySelector('.fl-help-modal__nav-btn.is-active'));
         updateScrollProgress();

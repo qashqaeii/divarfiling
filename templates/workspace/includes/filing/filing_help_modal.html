@@ -9,9 +9,12 @@
             <button type="button" class="fl-help-modal__close ws-modal-close" data-modal-close aria-label="بستن راهنما">
                 <i class="fas fa-times" aria-hidden="true"></i>
             </button>
-            <span class="fl-help-modal__kicker"><i class="fas fa-sparkles" aria-hidden="true"></i> راهنمای هوشمند فایلینگ</span>
+            <span class="fl-help-modal__kicker">
+                <span class="ws-nav-icon">{% include 'includes/icon_slot.html' with decor='sparkles' size='inline' only %}</span>
+                راهنمای هوشمند فایلینگ
+            </span>
             <div class="fl-help-modal__hero-icon" aria-hidden="true">
-                <i class="fas fa-folder-open"></i>
+                {% include 'includes/icon_slot.html' with decor='folder' size='lg' boxed=True accent='violet' only %}
             </div>
             <h2 id="flHelpTitle" class="fl-help-modal__title">میزکار فایل‌های استخراج</h2>
             <p class="fl-help-modal__lead">یه مرور کوتاه و دوستانه — از استخراج خودکار تا تحلیل بازار، همه‌چیز همین‌جا جمع شده.</p>
@@ -19,13 +22,13 @@
 
         <nav class="fl-help-modal__nav" aria-label="بخش‌های راهنما" role="tablist">
             <button type="button" class="fl-help-modal__nav-btn is-active" data-fl-help-tab="start" role="tab" aria-selected="true">
-                <i class="fas fa-play" aria-hidden="true"></i><span>شروع</span>
+                <span class="ws-nav-icon">{% include 'includes/icon_slot.html' with decor='folder' size='nav' only %}</span><span>شروع</span>
             </button>
             <button type="button" class="fl-help-modal__nav-btn" data-fl-help-tab="manage" role="tab" aria-selected="false">
-                <i class="fas fa-sliders" aria-hidden="true"></i><span>مدیریت</span>
+                <span class="ws-nav-icon">{% include 'includes/icon_slot.html' with decor='filter' size='nav' only %}</span><span>مدیریت</span>
             </button>
             <button type="button" class="fl-help-modal__nav-btn" data-fl-help-tab="power" role="tab" aria-selected="false">
-                <i class="fas fa-bolt" aria-hidden="true"></i><span>قابلیت‌ها</span>
+                <span class="ws-nav-icon">{% include 'includes/icon_slot.html' with decor='zap' size='nav' only %}</span><span>قابلیت‌ها</span>
             </button>
             <span class="fl-help-modal__nav-indicator" aria-hidden="true"></span>
         </nav>
@@ -38,7 +41,9 @@
             <section class="fl-help-pane is-active" data-fl-help-pane="start">
                 <article class="fl-help-card fl-help-card--lux">
                     <span class="fl-help-card__step">۰۱</span>
-                    <span class="fl-help-card__icon" data-tone="purple"><i class="fas fa-database" aria-hidden="true"></i></span>
+                    <span class="fl-help-card__icon ws-nav-icon">
+                        {% include 'includes/icon_slot.html' with decor='folder' size='metric' boxed=True accent='violet' only %}
+                    </span>
                     <div class="fl-help-card__body">
                         <div class="fl-help-card__head">
                             <h3>فایلینگ یعنی چی؟</h3>
@@ -51,17 +56,27 @@
                     <p class="fl-help-flow__label">مسیر پیشنهادی — کاملاً خودکار</p>
                     <ol class="fl-help-flow__steps">
                         <li>
-                            <span class="fl-help-flow__dot"><i class="fas fa-robot" aria-hidden="true"></i></span>
+                            <span class="fl-help-flow__dot">
+                                {% include 'includes/icon_slot.html' with decor='automation' size='sm' boxed=True accent='indigo' only %}
+                            </span>
                             <span class="fl-help-flow__text">اجرای ربات استخراج</span>
                         </li>
-                        <li class="fl-help-flow__arrow" aria-hidden="true"><i class="fas fa-chevron-left"></i></li>
+                        <li class="fl-help-flow__arrow" aria-hidden="true">
+                            {% include 'includes/icon_slot.html' with decor='chevron_left' size='inline' only %}
+                        </li>
                         <li>
-                            <span class="fl-help-flow__dot"><i class="fas fa-arrows-rotate" aria-hidden="true"></i></span>
+                            <span class="fl-help-flow__dot">
+                                {% include 'includes/icon_slot.html' with decor='rotate_ccw' size='sm' boxed=True accent='cyan' only %}
+                            </span>
                             <span class="fl-help-flow__text">همگام‌سازی هوشمند</span>
                         </li>
-                        <li class="fl-help-flow__arrow" aria-hidden="true"><i class="fas fa-chevron-left"></i></li>
+                        <li class="fl-help-flow__arrow" aria-hidden="true">
+                            {% include 'includes/icon_slot.html' with decor='chevron_left' size='inline' only %}
+                        </li>
                         <li>
-                            <span class="fl-help-flow__dot is-target"><i class="fas fa-folder-open" aria-hidden="true"></i></span>
+                            <span class="fl-help-flow__dot is-target">
+                                {% include 'includes/icon_slot.html' with decor='folder' size='sm' boxed=True accent='violet' only %}
+                            </span>
                             <span class="fl-help-flow__text">نشستن در فایلینگ</span>
                         </li>
                     </ol>
@@ -69,7 +84,9 @@
 
                 <article class="fl-help-card fl-help-card--lux fl-help-card--featured">
                     <span class="fl-help-card__step">۰۲</span>
-                    <span class="fl-help-card__icon" data-tone="blue"><i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i></span>
+                    <span class="fl-help-card__icon ws-nav-icon">
+                        {% include 'includes/icon_slot.html' with decor='automation' size='metric' boxed=True accent='indigo' only %}
+                    </span>
                     <div class="fl-help-card__body">
                         <div class="fl-help-card__head">
                             <h3>بعد از استخراج، خودکار اینجاست</h3>
@@ -82,7 +99,9 @@
 
                 <article class="fl-help-card fl-help-card--lux">
                     <span class="fl-help-card__step">۰۳</span>
-                    <span class="fl-help-card__icon" data-tone="sky"><i class="fas fa-cloud-arrow-up" aria-hidden="true"></i></span>
+                    <span class="fl-help-card__icon ws-nav-icon">
+                        {% include 'includes/icon_slot.html' with decor='upload' size='metric' boxed=True accent='sky' only %}
+                    </span>
                     <div class="fl-help-card__body">
                         <div class="fl-help-card__head">
                             <h3>آپلود دستی (اختیاری)</h3>
@@ -94,7 +113,9 @@
 
                 <article class="fl-help-card fl-help-card--lux">
                     <span class="fl-help-card__step">۰۴</span>
-                    <span class="fl-help-card__icon" data-tone="green"><i class="fas fa-chart-pie" aria-hidden="true"></i></span>
+                    <span class="fl-help-card__icon ws-nav-icon">
+                        {% include 'includes/icon_slot.html' with decor='bar_chart' size='metric' boxed=True accent='emerald' only %}
+                    </span>
                     <div class="fl-help-card__body">
                         <div class="fl-help-card__head">
                             <h3>اعداد بالای صفحه</h3>
@@ -107,7 +128,9 @@
             <section class="fl-help-pane" data-fl-help-pane="manage" hidden>
                 <article class="fl-help-card fl-help-card--lux">
                     <span class="fl-help-card__step">۰۱</span>
-                    <span class="fl-help-card__icon" data-tone="indigo"><i class="fas fa-magnifying-glass" aria-hidden="true"></i></span>
+                    <span class="fl-help-card__icon ws-nav-icon">
+                        {% include 'includes/icon_slot.html' with decor='search' size='metric' boxed=True accent='indigo' only %}
+                    </span>
                     <div class="fl-help-card__body">
                         <div class="fl-help-card__head"><h3>جستجو و فیلتر</h3></div>
                         <p>اسم پوشه، شهر یا محله رو بنویس. فیلتر معامله، شهر و فرمت رو ترکیب کن — مثلاً «اجاره‌های پونک با JSON». فیلتر فعال؟ برچسبش پایین نوار می‌مونه.</p>
@@ -115,7 +138,9 @@
                 </article>
                 <article class="fl-help-card fl-help-card--lux">
                     <span class="fl-help-card__step">۰۲</span>
-                    <span class="fl-help-card__icon" data-tone="teal"><i class="fas fa-table-columns" aria-hidden="true"></i></span>
+                    <span class="fl-help-card__icon ws-nav-icon">
+                        {% include 'includes/icon_slot.html' with decor='layout_grid' size='metric' boxed=True accent='cyan' only %}
+                    </span>
                     <div class="fl-help-card__body">
                         <div class="fl-help-card__head"><h3>جدول یا کارت</h3></div>
                         <p><strong>جدول</strong> برای مقایسه سریع و مرتب‌سازی حرفه‌ای. <strong>کارت</strong> برای نمای بصری و مرور راحت‌تر. هر لحظه از سوئیچ نما عوضش کن.</p>
@@ -123,7 +148,9 @@
                 </article>
                 <article class="fl-help-card fl-help-card--lux">
                     <span class="fl-help-card__step">۰۳</span>
-                    <span class="fl-help-card__icon" data-tone="amber"><i class="fas fa-check-double" aria-hidden="true"></i></span>
+                    <span class="fl-help-card__icon ws-nav-icon">
+                        {% include 'includes/icon_slot.html' with decor='clipboard_list' size='metric' boxed=True accent='amber' only %}
+                    </span>
                     <div class="fl-help-card__body">
                         <div class="fl-help-card__head"><h3>انتخاب چندتایی</h3></div>
                         <p>چند پوشه رو تیک بزن — نوار عملیات پایین باز می‌شه. مشاهده یکجا، مرور آگهی‌ها یا حذف دسته‌ای؛ مخصوص وقتی حجم کارت بالاست.</p>
@@ -134,7 +161,9 @@
             <section class="fl-help-pane" data-fl-help-pane="power" hidden>
                 <article class="fl-help-card fl-help-card--lux">
                     <span class="fl-help-card__step">۰۱</span>
-                    <span class="fl-help-card__icon" data-tone="violet"><i class="fas fa-eye" aria-hidden="true"></i></span>
+                    <span class="fl-help-card__icon ws-nav-icon">
+                        {% include 'includes/icon_slot.html' with decor='file_text' size='metric' boxed=True accent='violet' only %}
+                    </span>
                     <div class="fl-help-card__body">
                         <div class="fl-help-card__head"><h3>داخل هر پوشه</h3></div>
                         <p>کلیک روی نام پوشه → لیست آگهی‌ها. از همون صفحه به <strong>تحلیل بازار</strong>، <strong>نقشه</strong> و <strong>خروجی CSV</strong> هم می‌رسی. هر پوشه، یک بازار کوچک برای تصمیم‌گیری.</p>
@@ -142,7 +171,9 @@
                 </article>
                 <article class="fl-help-card fl-help-card--lux">
                     <span class="fl-help-card__step">۰۲</span>
-                    <span class="fl-help-card__icon" data-tone="rose"><i class="fas fa-chart-line" aria-hidden="true"></i></span>
+                    <span class="fl-help-card__icon ws-nav-icon">
+                        {% include 'includes/icon_slot.html' with decor='bar_chart' size='metric' boxed=True accent='rose' only %}
+                    </span>
                     <div class="fl-help-card__body">
                         <div class="fl-help-card__head"><h3>تحلیل و نقشه</h3></div>
                         <p>نمودار = آمار و روند قیمت. نقشه = پخش جغرافیایی آگهی‌ها. برای جلسه با مشتری، قیمت‌گذاری یا ارائه حرفه‌ای عالی جواب می‌ده.</p>
@@ -150,14 +181,18 @@
                 </article>
                 <article class="fl-help-card fl-help-card--lux">
                     <span class="fl-help-card__step">۰۳</span>
-                    <span class="fl-help-card__icon" data-tone="sky"><i class="fas fa-calculator" aria-hidden="true"></i></span>
+                    <span class="fl-help-card__icon ws-nav-icon">
+                        {% include 'includes/icon_slot.html' with decor='calculator' size='metric' boxed=True accent='sky' only %}
+                    </span>
                     <div class="fl-help-card__body">
                         <div class="fl-help-card__head"><h3>ابزارهای هوشمند</h3></div>
                         <p>دکمه <strong>ابزارها</strong> کنار آپلود، ماشین‌حساب‌ها و ابزارهای تکمیلی فایلینگ رو باز می‌کنه — مکمل همین صفحه، نه جایگزینش.</p>
                     </div>
                 </article>
                 <div class="fl-help-tip fl-help-tip--lux">
-                    <span class="fl-help-tip__icon"><i class="fas fa-link" aria-hidden="true"></i></span>
+                    <span class="fl-help-tip__icon ws-nav-icon">
+                        {% include 'includes/icon_slot.html' with decor='users' size='metric' boxed=True accent='violet' only %}
+                    </span>
                     <div>
                         <strong>یکپارچه با میزکار</strong>
                         <p>فایلینگ با CRM و یادآورها وصله — فایل مناسب رو پیدا کردی، همون لحظه پیگیری مشتری رو هم بذار.</p>
@@ -169,7 +204,7 @@
         <footer class="ws-modal-foot fl-help-modal__foot">
             <p class="fl-help-modal__foot-note">سؤالی موند؟ از بخش راهنما یا پشتیبانی بپرس — کنارتیم.</p>
             <button type="button" class="ws-btn ws-btn-primary fl-help-modal__cta" data-modal-close>
-                <i class="fas fa-arrow-left" aria-hidden="true"></i>
+                <span class="ws-nav-icon">{% include 'includes/icon_slot.html' with decor='folder' size='inline' only %}</span>
                 متوجه شدم، بریم سراغ فایلینگ
             </button>
         </footer>

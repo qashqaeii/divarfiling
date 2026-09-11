@@ -9,7 +9,7 @@
     <div class="fl-header__actions" role="toolbar" aria-label="عملیات فایلینگ">
         <button type="button" class="fl-header__help" title="راهنمای فایلینگ" aria-label="راهنمای فایلینگ" data-modal-open="modal-filing-help">
             <span class="fl-header__help-ring" aria-hidden="true"></span>
-            <i class="fas fa-lightbulb" aria-hidden="true"></i>
+            <span class="ws-nav-icon">{% include 'includes/icon_slot.html' with decor='help_center' size='inline' only %}</span>
             <span class="fl-header__help-label">راهنما</span>
         </button>
         <a href="{% url 'workspace:tools' %}" class="fl-header__btn fl-header__btn--ghost" title="ابزارهای هوشمند">
@@ -31,7 +31,7 @@
         <div class="fl-mob-header__actions" role="toolbar" aria-label="عملیات">
             <button type="button" class="fl-mob-header__icon fl-mob-header__icon--help" title="راهنمای فایلینگ" aria-label="راهنمای فایلینگ" data-modal-open="modal-filing-help">
                 <span class="fl-mob-header__help-pulse" aria-hidden="true"></span>
-                <i class="fas fa-lightbulb" aria-hidden="true"></i>
+                <span class="ws-nav-icon">{% include 'includes/icon_slot.html' with decor='help_center' size='nav' only %}</span>
             </button>
             <a href="{% url 'workspace:tools' %}" class="fl-mob-header__icon" title="ابزارها" aria-label="ابزارها">
                 <i class="fas fa-calculator" aria-hidden="true"></i>

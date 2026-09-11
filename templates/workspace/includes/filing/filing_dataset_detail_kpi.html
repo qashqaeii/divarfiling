@@ -1,0 +1,52 @@
+{% load humanize %}
+<section class="fl-dd-kpi fl-kpi-grid" aria-label="آمار پوشه">
+    <article class="fl-kpi-card fl-kpi-card--purple">
+        <span class="fl-kpi-card__icon" aria-hidden="true"><i class="fas fa-table-list"></i></span>
+        <div class="fl-kpi-card__body">
+            <strong class="fl-kpi-card__value">{{ filtered_count|intcomma }}</strong>
+            <span class="fl-kpi-card__label">در نمایش</span>
+            <span class="fl-kpi-card__sub">از {{ total_count|intcomma }} آگهی کل</span>
+        </div>
+    </article>
+    <article class="fl-kpi-card fl-kpi-card--blue">
+        <span class="fl-kpi-card__icon" aria-hidden="true"><i class="fas fa-user-tie"></i></span>
+        <div class="fl-kpi-card__body">
+            <strong class="fl-kpi-card__value">{{ consultant_count|intcomma }}</strong>
+            <span class="fl-kpi-card__label">مشاور</span>
+            <span class="fl-kpi-card__sub">{{ consultant_pct }}٪ از کل آگهی‌ها</span>
+        </div>
+    </article>
+    <article class="fl-kpi-card fl-kpi-card--green">
+        <span class="fl-kpi-card__icon" aria-hidden="true"><i class="fas fa-user"></i></span>
+        <div class="fl-kpi-card__body">
+            <strong class="fl-kpi-card__value">{{ personal_count|intcomma }}</strong>
+            <span class="fl-kpi-card__label">شخصی</span>
+            <span class="fl-kpi-card__sub">{{ personal_pct }}٪ از کل آگهی‌ها</span>
+        </div>
+    </article>
+    <article class="fl-kpi-card fl-kpi-card--cyan">
+        <span class="fl-kpi-card__icon" aria-hidden="true"><i class="fas fa-chart-pie"></i></span>
+        <div class="fl-kpi-card__body">
+            <strong class="fl-kpi-card__value">{% if genuine_personal_count %}{{ genuine_personal_count|intcomma }}{% else %}—{% endif %}</strong>
+            <span class="fl-kpi-card__label">مالک واقعی</span>
+            <span class="fl-kpi-card__sub">{% if disguised_consultant_count %}{{ disguised_consultant_count|intcomma }} مشاور پنهان{% else %}ترکیب آگهی‌دهنده{% endif %}</span>
+        </div>
+    </article>
+</section>
+
+{% if total_count %}
+<div class="fl-dd-mix" aria-label="ترکیب آگهی‌دهنده">
+    <div class="mk-ds-mix-track" role="presentation" style="grid-template-columns: {% if genuine_personal_count %}{{ genuine_personal_count }}fr {% endif %}{% if disguised_consultant_count %}{{ disguised_consultant_count }}fr {% endif %}{% if personal_other_count %}{{ personal_other_count }}fr {% endif %}{% if consultant_count %}{{ consultant_count }}fr{% endif %};">
+        {% if genuine_personal_count %}<span class="mk-ds-mix-seg mk-ds-mix-seg-genuine" title="مالک واقعی {{ genuine_personal_count|intcomma }}"></span>{% endif %}
+        {% if disguised_consultant_count %}<span class="mk-ds-mix-seg mk-ds-mix-seg-disguised" title="مشاور پنهان {{ disguised_consultant_count|intcomma }}"></span>{% endif %}
+        {% if personal_other_count %}<span class="mk-ds-mix-seg mk-ds-mix-seg-personal" title="شخصی {{ personal_other_count|intcomma }}"></span>{% endif %}
+        {% if consultant_count %}<span class="mk-ds-mix-seg mk-ds-mix-seg-consultant" title="مشاور {{ consultant_count|intcomma }}"></span>{% endif %}
+    </div>
+    <div class="mk-ds-mix-legend">
+        {% if genuine_personal_count %}<span><i class="mk-ds-mix-dot mk-ds-mix-dot-genuine" aria-hidden="true"></i>مالک</span>{% endif %}
+        {% if disguised_consultant_count %}<span><i class="mk-ds-mix-dot mk-ds-mix-dot-disguised" aria-hidden="true"></i>پنهان</span>{% endif %}
+        <span><i class="mk-ds-mix-dot mk-ds-mix-dot-consultant" aria-hidden="true"></i>مشاور</span>
+        {% if personal_other_count %}<span><i class="mk-ds-mix-dot mk-ds-mix-dot-personal" aria-hidden="true"></i>شخصی</span>{% endif %}
+    </div>
+</div>
+{% endif %}

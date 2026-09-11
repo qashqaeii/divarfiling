@@ -123,7 +123,7 @@
                                             <select name="license_id" class="crm-input crm-select" required>
                                                 <option value="">صندلی...</option>
                                                 {% for seat in available_seats %}
-                                                <option value="{{ seat.pk }}">Seat {{ seat.sequence }}</option>
+                                                <option value="{{ seat.pk }}">صندلی {{ seat.sequence }}</option>
                                                 {% endfor %}
                                             </select>
                                             <button type="submit" class="crm-btn crm-btn-primary crm-btn-sm">تخصیص لایسنس</button>
@@ -165,7 +165,7 @@
                                 <select name="license_id" class="crm-input crm-select" required>
                                     <option value="">صندلی...</option>
                                     {% for seat in available_seats %}
-                                    <option value="{{ seat.pk }}">Seat {{ seat.sequence }}</option>
+                                    <option value="{{ seat.pk }}">صندلی {{ seat.sequence }}</option>
                                     {% endfor %}
                                 </select>
                                 <button type="submit" class="crm-btn crm-btn-primary crm-btn-sm">تخصیص لایسنس</button>

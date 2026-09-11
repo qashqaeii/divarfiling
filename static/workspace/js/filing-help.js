@@ -11,10 +11,13 @@
 
     function moveIndicator(activeBtn) {
         if (!nav || !indicator || !activeBtn) return;
-        var navRect = nav.getBoundingClientRect();
-        var btnRect = activeBtn.getBoundingClientRect();
-        indicator.style.width = btnRect.width + 'px';
-        indicator.style.insetInlineStart = (btnRect.left - navRect.left + nav.scrollLeft) + 'px';
+        if (window.matchMedia('(max-width: 768px)').matches) return;
+        var rtl = window.getComputedStyle(nav).direction === 'rtl';
+        var offset = rtl
+            ? nav.clientWidth - activeBtn.offsetLeft - activeBtn.offsetWidth
+            : activeBtn.offsetLeft;
+        indicator.style.width = activeBtn.offsetWidth + 'px';
+        indicator.style.insetInlineStart = offset + 'px';
         indicator.style.transform = 'none';
     }
 

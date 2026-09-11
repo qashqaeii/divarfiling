@@ -117,6 +117,23 @@
     transition: opacity 0.32s ease, transform 0.32s ease;
     pointer-events: none;
 }
+.mk-filing-datasets .fl-header__help-bulb--xs {
+    width: 0.85rem;
+    height: 0.85rem;
+}
+.mk-filing-datasets .fl-header__help-bulb--xs i {
+    font-size: 0.72rem;
+}
+.mk-filing-datasets .fl-header__help-bulb--xs .fl-header__help-bulb-glow {
+    display: none;
+}
+.mk-filing-datasets .fl-header__help-bulb--hero {
+    width: 2.35rem;
+    height: 2.35rem;
+}
+.mk-filing-datasets .fl-header__help-bulb--hero i {
+    font-size: 1.75rem;
+}
 .mk-filing-datasets .fl-header__help-label {
     position: relative;
     z-index: 1;
@@ -1808,13 +1825,8 @@
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
 }
-.fl-help-modal__kicker .ws-nav-icon {
-    width: 0.95rem;
-    height: 0.95rem;
-}
-.fl-help-modal__kicker .df-decor-icon {
+.fl-help-modal__kicker .fl-header__help-bulb i {
     color: #d97706;
-    opacity: 1;
 }
 .fl-help-modal__close {
     position: absolute;
@@ -1832,45 +1844,22 @@
     justify-content: center;
     width: auto;
     height: auto;
-    margin: 0 auto 0.55rem;
-    background: none;
-    box-shadow: none;
-    border-radius: 0;
-    font-size: inherit;
+    margin: 0 auto 0.45rem;
 }
-.fl-help-modal__hero-icon .df-decor-icon {
-    --df-decor-size: 1.85rem;
-    --mk-icon-stroke: 1.75;
-    width: 1.85rem;
-    height: 1.85rem;
-    color: #d97706;
-    background: transparent !important;
-    border-radius: 0;
-    box-shadow: none !important;
-    opacity: 1;
+.fl-help-modal__hero-icon--bulb .fl-header__help-bulb i {
+    color: #fbbf24;
+    filter:
+        drop-shadow(0 0 2px rgba(255, 255, 255, 0.85))
+        drop-shadow(0 0 8px rgba(251, 191, 36, 0.9))
+        drop-shadow(0 0 16px rgba(245, 158, 11, 0.55));
+    text-shadow:
+        0 0 8px rgba(255, 255, 255, 0.85),
+        0 0 14px rgba(251, 191, 36, 0.75);
 }
-.fl-help-modal__hero-icon .df-decor-icon--boxed {
-    width: 1.85rem;
-    height: 1.85rem;
-    background: transparent !important;
-    box-shadow: none !important;
-}
-.fl-help-modal__hero-icon--bulb .df-decor-icon {
-    color: #d97706;
-}
-.fl-help-modal__hero-icon--bulb::after {
-    content: '';
-    position: absolute;
-    inset: -0.5rem;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(251, 191, 36, 0.22), transparent 68%);
-    pointer-events: none;
-    z-index: -1;
-}
-.fl-help-modal__kicker .df-decor-icon {
-    background: transparent !important;
-    box-shadow: none !important;
-    border-radius: 0;
+.fl-help-modal__hero-icon--bulb .fl-header__help-bulb-glow {
+    opacity: 0.88;
+    transform: scale(1);
+    animation: flHelpBulbGlow 2s ease-in-out infinite;
 }
 .fl-help-modal .df-decor-icon--boxed {
     width: var(--df-decor-size, 1.75rem);
@@ -2402,10 +2391,12 @@
         margin: 0;
         align-self: center;
     }
-    .fl-help-modal__hero-icon .df-decor-icon {
-        --df-decor-size: 1.65rem;
-        width: 1.65rem;
-        height: 1.65rem;
+    .fl-help-modal__hero-icon .fl-header__help-bulb--hero {
+        width: 2rem;
+        height: 2rem;
+    }
+    .fl-help-modal__hero-icon .fl-header__help-bulb--hero i {
+        font-size: 1.55rem;
     }
     .fl-help-modal__title {
         grid-column: 2;
@@ -2420,16 +2411,33 @@
         padding: 0.28rem;
         border-radius: 16px;
         min-height: 3rem;
-        -webkit-overflow-scrolling: touch;
-        scroll-snap-type: x proximity;
+        overflow: hidden;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0.25rem;
+    }
+    .fl-help-modal__nav-indicator {
+        display: none;
     }
     .fl-help-modal__nav-btn {
-        flex: 0 0 auto;
-        min-width: 6.1rem;
+        flex: none;
+        min-width: 0;
+        width: 100%;
         min-height: 2.5rem;
-        padding-inline: 0.65rem;
-        font-size: 0.69rem;
-        scroll-snap-align: center;
+        padding-inline: 0.35rem;
+        font-size: 0.66rem;
+        gap: 0.28rem;
+    }
+    .fl-help-modal__nav-btn .ws-nav-icon {
+        width: 0.95rem;
+        height: 0.95rem;
+    }
+    .fl-help-modal__nav-btn.is-active {
+        background: color-mix(in srgb, var(--ws-surface) 92%, transparent);
+        border: 1px solid color-mix(in srgb, var(--ws-primary) 18%, var(--ws-border));
+        box-shadow:
+            0 4px 14px rgba(15, 23, 42, 0.07),
+            0 0 0 1px rgba(255, 255, 255, 0.55) inset;
     }
     .fl-help-modal__scroll-track {
         margin: 0.45rem 0.75rem 0;
@@ -2441,52 +2449,6 @@
     }
     .fl-help-pane {
         gap: 0.62rem;
-    }
-    .fl-help-flow {
-        padding: 0.75rem 0.85rem;
-        border-radius: 16px;
-    }
-    .fl-help-flow__label {
-        margin-bottom: 0.55rem;
-        font-size: 0.62rem;
-    }
-    .fl-help-flow__steps {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 0;
-    }
-    .fl-help-flow__arrow {
-        display: flex;
-        justify-content: center;
-        padding: 0.12rem 0;
-        transform: rotate(90deg);
-    }
-    .fl-help-flow__arrow .df-decor-icon {
-        --df-decor-size: 0.75rem;
-        opacity: 0.55;
-    }
-    .fl-help-flow__steps > li:not(.fl-help-flow__arrow) {
-        flex: none;
-        flex-direction: row;
-        align-items: center;
-        gap: 0.65rem;
-        width: 100%;
-        padding: 0.48rem 0.55rem;
-        border-radius: 12px;
-        background: color-mix(in srgb, var(--ws-surface) 55%, transparent);
-        border: 1px solid color-mix(in srgb, var(--ws-border) 38%, rgba(255, 255, 255, 0.28));
-    }
-    .fl-help-flow__steps > li:not(.fl-help-flow__arrow):last-of-type {
-        border-color: color-mix(in srgb, var(--ws-primary) 22%, rgba(255, 255, 255, 0.28));
-        background:
-            radial-gradient(100% 120% at 100% 0%, color-mix(in srgb, var(--ws-primary) 10%, transparent), transparent 55%),
-            color-mix(in srgb, var(--ws-surface) 62%, transparent);
-    }
-    .fl-help-flow__text {
-        font-size: 0.68rem;
-        font-weight: 800;
-        text-align: start;
-        color: var(--ws-text-secondary);
     }
     .fl-help-card--lux {
         grid-template-columns: auto minmax(0, 1fr);
@@ -2553,12 +2515,12 @@
 
 @media (max-width: 420px) {
     .fl-help-modal__nav-btn {
-        min-width: 5.35rem;
-        font-size: 0.66rem;
+        font-size: 0.62rem;
+        padding-inline: 0.2rem;
     }
-    .fl-help-modal__nav-btn .ws-nav-icon {
-        width: 0.95rem;
-        height: 0.95rem;
+    .fl-help-modal__nav-btn span:last-child {
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
     .fl-help-modal__hero {
         grid-template-columns: 3rem minmax(0, 1fr);
@@ -2628,6 +2590,13 @@
 [data-theme="dark"] .fl-help-tip--lux {
     background: color-mix(in srgb, var(--ws-surface) 68%, transparent);
     border-color: color-mix(in srgb, var(--ws-border) 55%, rgba(255, 255, 255, 0.06));
+}
+[data-theme="dark"] .fl-help-modal__hero-icon--bulb .fl-header__help-bulb i {
+    color: #fde68a;
+    filter:
+        drop-shadow(0 0 3px rgba(255, 255, 255, 0.45))
+        drop-shadow(0 0 10px rgba(251, 191, 36, 0.85))
+        drop-shadow(0 0 18px rgba(245, 158, 11, 0.45));
 }
 [data-theme="dark"] .fl-help-modal__body {
     scrollbar-color: color-mix(in srgb, var(--ws-primary) 55%, #4c1d95) transparent;

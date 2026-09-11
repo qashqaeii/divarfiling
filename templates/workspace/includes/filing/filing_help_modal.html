@@ -11,11 +11,17 @@
                 <i class="fas fa-times" aria-hidden="true"></i>
             </button>
             <span class="fl-help-modal__kicker">
-                <span class="ws-nav-icon">{% include 'includes/icon_slot.html' with decor='lightbulb' size='inline' only %}</span>
+                <span class="fl-header__help-bulb fl-header__help-bulb--xs" aria-hidden="true">
+                    <i class="fas fa-lightbulb"></i>
+                    <span class="fl-header__help-bulb-glow"></span>
+                </span>
                 راهنمای هوشمند فایلینگ
             </span>
             <div class="fl-help-modal__hero-icon fl-help-modal__hero-icon--bulb" aria-hidden="true">
-                {% include 'includes/icon_slot.html' with decor='lightbulb' size='lg' only %}
+                <span class="fl-header__help-bulb fl-header__help-bulb--hero">
+                    <i class="fas fa-lightbulb"></i>
+                    <span class="fl-header__help-bulb-glow"></span>
+                </span>
             </div>
             <h2 id="flHelpTitle" class="fl-help-modal__title">میزکار فایل‌های استخراج</h2>
         </header>
@@ -51,36 +57,6 @@
                         <p>اینجا <strong>بانک زنده پوشه‌های دیوار</strong> توئه — هر استخراج، یک ردیف مرتب با شهر، محله، نوع ملک و تعداد آگهی. دیگه بین فایل‌های پراکنده گم نمی‌شی.</p>
                     </div>
                 </article>
-
-                <div class="fl-help-flow" aria-label="مسیر ورود خودکار به فایلینگ">
-                    <p class="fl-help-flow__label">مسیر پیشنهادی — کاملاً خودکار</p>
-                    <ol class="fl-help-flow__steps">
-                        <li>
-                            <span class="fl-help-flow__dot">
-                                {% include 'includes/icon_slot.html' with decor='automation' size='sm' boxed=True accent='indigo' only %}
-                            </span>
-                            <span class="fl-help-flow__text">اجرای ربات استخراج</span>
-                        </li>
-                        <li class="fl-help-flow__arrow" aria-hidden="true">
-                            {% include 'includes/icon_slot.html' with decor='chevron_left' size='inline' only %}
-                        </li>
-                        <li>
-                            <span class="fl-help-flow__dot">
-                                {% include 'includes/icon_slot.html' with decor='rotate_ccw' size='sm' boxed=True accent='cyan' only %}
-                            </span>
-                            <span class="fl-help-flow__text">همگام‌سازی هوشمند</span>
-                        </li>
-                        <li class="fl-help-flow__arrow" aria-hidden="true">
-                            {% include 'includes/icon_slot.html' with decor='chevron_left' size='inline' only %}
-                        </li>
-                        <li>
-                            <span class="fl-help-flow__dot is-target">
-                                {% include 'includes/icon_slot.html' with decor='folder' size='sm' boxed=True accent='violet' only %}
-                            </span>
-                            <span class="fl-help-flow__text">نشستن در فایلینگ</span>
-                        </li>
-                    </ol>
-                </div>
 
                 <article class="fl-help-card fl-help-card--lux fl-help-card--featured">
                     <span class="fl-help-card__step">۰۲</span>

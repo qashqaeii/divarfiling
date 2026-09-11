@@ -2609,3 +2609,54 @@
     );
     background-clip: padding-box;
 }
+
+/* ── CRM help triggers (shared across sections) ── */
+.mk-filing-datasets .crm-help-mob-btn,
+.mk-filing-datasets button.crm-help-mob-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.35rem;
+    height: 2.35rem;
+    padding: 0;
+    border: 1px solid color-mix(in srgb, var(--ws-border) 80%, transparent);
+    border-radius: 0.75rem;
+    background: color-mix(in srgb, var(--ws-surface) 92%, var(--ws-primary) 8%);
+    cursor: pointer;
+    flex-shrink: 0;
+}
+.mk-filing-datasets .crm-help-mob-btn:hover {
+    border-color: color-mix(in srgb, var(--ws-primary) 35%, var(--ws-border));
+}
+.mk-filing-datasets .ct-dash-mob-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+}
+.mk-filing-datasets .agency-hero__help {
+    width: auto;
+    min-height: 2.5rem;
+    padding-inline: 0.85rem;
+}
+.mk-filing-datasets .ws-tbx-hero-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 0.65rem;
+}
+.mk-filing-datasets .ws-tbx-hero-help {
+    width: auto;
+    min-height: 2.45rem;
+    padding-inline: 0.85rem;
+}
+@media (max-width: 768px) {
+    .mk-filing-datasets .ws-tbx-hero-actions {
+        justify-content: flex-start;
+    }
+    .mk-filing-datasets .ws-tbx-hero-help .fl-header__help-label {
+        display: none;
+    }
+    .mk-filing-datasets .ws-tbx-hero-help {
+        width: 2.45rem;
+        padding-inline: 0;
+    }
+}

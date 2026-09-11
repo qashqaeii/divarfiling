@@ -18,7 +18,7 @@
 {% endblock %}
 
 {% block crm_content %}
-<div class="crm-shell-page crm-deals-page crm-deals-pro crm-deals-mobile crm-page-chrome{% if view_mode == 'pipeline' %} crm-deals-pro--pipeline{% endif %}">
+<div class="crm-shell-page crm-deals-page crm-deals-pro crm-deals-mobile crm-page-chrome mk-filing-datasets{% if view_mode == 'pipeline' %} crm-deals-pro--pipeline{% endif %}">
 
     <header class="crm-deals-mob-header">
         <div class="crm-deals-mob-header-mesh" aria-hidden="true"></div>
@@ -35,6 +35,7 @@
                 </p>
             </div>
             <div class="crm-deals-mob-header-actions" role="toolbar" aria-label="عملیات معاملات">
+                {% include 'workspace/crm/includes/help/crm_help_mob_btn.html' with help_modal_id='modal-crm-deals-help' help_title='راهنمای قیف معاملات' help_mob_class='crm-deals-mob-icon-btn' %}
                 <button type="button" class="crm-deals-mob-icon-btn" data-drawer-open="drawer-deal-stages" title="مراحل" aria-label="تنظیم مراحل">
                     <i class="fas fa-sliders" aria-hidden="true"></i>
                 </button>
@@ -57,6 +58,7 @@
             <p class="crm-dash-bar-sub is-visible">فرصت‌ها را مرحله‌به‌مرحله تا نهایی‌شدن معامله مدیریت کنید.</p>
         </div>
         <div class="crm-dash-bar-actions" role="toolbar" aria-label="عملیات قیف معاملات">
+            {% include 'workspace/crm/includes/help/crm_help_desk_btn.html' with help_modal_id='modal-crm-deals-help' help_title='راهنمای قیف معاملات' %}
             <button type="button" class="crm-dash-act" data-drawer-open="drawer-deal-stages" title="تنظیم مراحل pipeline">
                 <i class="fas fa-sliders" aria-hidden="true"></i><span>مراحل</span>
             </button>
@@ -425,6 +427,7 @@
 
     {% include 'workspace/crm/includes/deal_stage_transition_dialog.html' %}
     {{ deal_stages|json_script:"crmDealStageNames" }}
+    {% include 'workspace/crm/includes/help/crm_deals_help_modal.html' %}
 </div>
 {% endblock %}
 

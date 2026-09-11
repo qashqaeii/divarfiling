@@ -13,7 +13,7 @@
 {% endblock %}
 
 {% block crm_content %}
-<div class="crm-shell-page crm-automation-pro crm-automation-pro-v2 crm-auto-mobile crm-page-chrome">
+<div class="crm-shell-page crm-automation-pro crm-automation-pro-v2 crm-auto-mobile crm-page-chrome mk-filing-datasets">
 
     <header class="crm-auto-mob-header">
         <div class="crm-auto-mob-header-mesh" aria-hidden="true"></div>
@@ -32,6 +32,7 @@
                 </p>
             </div>
             <div class="crm-auto-mob-header-actions" role="toolbar" aria-label="عملیات اتوماسیون">
+                {% include 'workspace/crm/includes/help/crm_help_mob_btn.html' with help_modal_id='modal-crm-automation-help' help_title='راهنمای اتوماسیون' help_mob_class='crm-auto-mob-icon-btn' %}
                 <form method="post" class="crm-auto-mob-run-form">
                     {% csrf_token %}
                     <input type="hidden" name="action" value="run">
@@ -51,6 +52,7 @@
             <h1 class="crm-dash-bar-title">اتوماسیون</h1>
         </div>
         <div class="crm-dash-bar-actions" role="toolbar" aria-label="عملیات اتوماسیون">
+            {% include 'workspace/crm/includes/help/crm_help_desk_btn.html' with help_modal_id='modal-crm-automation-help' help_title='راهنمای اتوماسیون' %}
             <form method="post" class="crm-auto-run-all-form">
                 {% csrf_token %}
                 <input type="hidden" name="action" value="run">
@@ -274,6 +276,7 @@
         <i class="fas fa-plus" aria-hidden="true"></i>
         <span>قانون</span>
     </button>
+    {% include 'workspace/crm/includes/help/crm_automation_help_modal.html' %}
 </div>
 {% endblock %}
 

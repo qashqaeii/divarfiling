@@ -1,0 +1,86 @@
+<div class="ws-modal fl-help-modal" id="modal-crm-automation-help" role="dialog" aria-modal="true" aria-labelledby="crmAutomationHelpTitle" data-fl-help-default="rules">
+    <div class="ws-modal-overlay" data-modal-close></div>
+    <div class="ws-modal-panel fl-help-modal__panel">
+        <div class="fl-help-modal__glow" aria-hidden="true"></div>
+        <div class="fl-help-modal__sheet-top" aria-hidden="true"><span class="fl-help-modal__grip"></span></div>
+        <header class="fl-help-modal__hero">
+            <div class="fl-help-modal__hero-mesh" aria-hidden="true"></div>
+            <div class="fl-help-modal__hero-shine" aria-hidden="true"></div>
+            <button type="button" class="fl-help-modal__close ws-modal-close" data-modal-close aria-label="بستن راهنما"><i class="fas fa-times" aria-hidden="true"></i></button>
+            <span class="fl-help-modal__kicker"><span class="fl-header__help-bulb fl-header__help-bulb--xs" aria-hidden="true"><i class="fas fa-lightbulb"></i><span class="fl-header__help-bulb-glow"></span></span>راهنمای اتوماسیون</span>
+            <div class="fl-help-modal__hero-icon fl-help-modal__hero-icon--bulb" aria-hidden="true"><span class="fl-header__help-bulb fl-header__help-bulb--hero"><i class="fas fa-lightbulb"></i><span class="fl-header__help-bulb-glow"></span></span></div>
+            <h2 id="crmAutomationHelpTitle" class="fl-help-modal__title">پیگیری خودکار</h2>
+        </header>
+        <nav class="fl-help-modal__nav" aria-label="بخش‌های راهنما" role="tablist">
+            <button type="button" class="fl-help-modal__nav-btn is-active" data-fl-help-tab="rules" role="tab" aria-selected="true"><span class="ws-nav-icon">{% include 'includes/icon_slot.html' with decor='automation' size='nav' only %}</span><span>قانون</span></button>
+            <button type="button" class="fl-help-modal__nav-btn" data-fl-help-tab="run" role="tab" aria-selected="false"><span class="ws-nav-icon">{% include 'includes/icon_slot.html' with decor='zap' size='nav' only %}</span><span>اجرا</span></button>
+            <button type="button" class="fl-help-modal__nav-btn" data-fl-help-tab="beta" role="tab" aria-selected="false"><span class="ws-nav-icon">{% include 'includes/icon_slot.html' with decor='sparkles' size='nav' only %}</span><span>BETA</span></button>
+            <span class="fl-help-modal__nav-indicator" aria-hidden="true"></span>
+        </nav>
+        <div class="fl-help-modal__scroll-track" aria-hidden="true"><span class="fl-help-modal__scroll-progress"></span></div>
+        <div class="ws-modal-body fl-help-modal__body">
+            <section class="fl-help-pane is-active" data-fl-help-pane="rules">
+                <article class="fl-help-card fl-help-card--lux fl-help-card--featured">
+                    <span class="fl-help-card__step">۰۱</span>
+                    <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='automation' size='metric' boxed=True accent='violet' only %}</span>
+                    <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>قانون اتوماسیون</h3><span class="fl-help-card__tag">BETA</span></div>
+                    <p>«اگر <strong>شرط</strong> برقرار شد، <strong>اقدام</strong> انجام بده» — مثلاً اگر مخاطب ۳ روز بدون پیگیری ماند، یادآور بساز یا قالب بفرست.</p></div>
+                </article>
+                <article class="fl-help-card fl-help-card--lux">
+                    <span class="fl-help-card__step">۰۲</span>
+                    <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='filter' size='metric' boxed=True accent='emerald' only %}</span>
+                    <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>شرط (Trigger)</h3></div>
+                    <p>رویداد شروع: تغییر وضعیت مخاطب، مرحله معامله، سررسید اجاره و … — فقط موارد matching اجرا می‌شوند.</p></div>
+                </article>
+                <article class="fl-help-card fl-help-card--lux">
+                    <span class="fl-help-card__step">۰۳</span>
+                    <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='bell' size='metric' boxed=True accent='sky' only %}</span>
+                    <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>اقدام (Action)</h3></div>
+                    <p>یادآور، تغییر وضعیت، ارسال قالب پیام یا tag — می‌توانی چند اقدام پشت سر هم تعریف کنی.</p></div>
+                </article>
+            </section>
+            <section class="fl-help-pane" data-fl-help-pane="run" hidden>
+                <article class="fl-help-card fl-help-card--lux fl-help-card--featured">
+                    <span class="fl-help-card__step">۰۱</span>
+                    <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='zap' size='metric' boxed=True accent='indigo' only %}</span>
+                    <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>فعال / غیرفعال</h3></div>
+                    <p>هر قانون switch دارد — قبل از تست روی کل CRM، اول غیرفعال بساز و بعد روشن کن.</p></div>
+                </article>
+                <article class="fl-help-card fl-help-card--lux">
+                    <span class="fl-help-card__step">۰۲</span>
+                    <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='timer' size='metric' boxed=True accent='amber' only %}</span>
+                    <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>اجرای الان</h3></div>
+                    <p>دکمه play همه قوانین فعال را فوری چک می‌کند — برای صف انتظار یا تست بعد از ساخت قانون.</p></div>
+                </article>
+                <article class="fl-help-card fl-help-card--lux">
+                    <span class="fl-help-card__step">۰۳</span>
+                    <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='clipboard_list' size='metric' boxed=True accent='rose' only %}</span>
+                    <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>صف و لاگ</h3></div>
+                    <p>KPI «در صف» یعنی اقدامات pending — اگر گیر کرد، اجرای دستی یا غیرفعال کردن موقت قانون.</p></div>
+                </article>
+            </section>
+            <section class="fl-help-pane" data-fl-help-pane="beta" hidden>
+                <article class="fl-help-card fl-help-card--lux">
+                    <span class="fl-help-card__step">۰۱</span>
+                    <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='sparkles' size='metric' boxed=True accent='violet' only %}</span>
+                    <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>نسخه BETA</h3></div>
+                    <p>قابلیت در حال تکمیل است — با قوانین ساده شروع کن و feedback بده.</p></div>
+                </article>
+                <article class="fl-help-card fl-help-card--lux">
+                    <span class="fl-help-card__step">۰۲</span>
+                    <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='message_template' size='metric' boxed=True accent='emerald' only %}</span>
+                    <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>+ قالب پیام</h3></div>
+                    <p>قبل از اتوماسیون، قالب‌های واتساپ/پیامک را در «قالب پیام» آماده کن — اتوماسیون از همان‌ها استفاده می‌کند.</p></div>
+                </article>
+                <div class="fl-help-tip fl-help-tip--lux">
+                    <span class="fl-help-tip__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='list_todo' size='metric' boxed=True accent='sky' only %}</span>
+                    <div><strong>شروع پیشنهادی</strong><p>یک قانون: «مخاطب جدید → یادآور تماس ۲۴ ساعت بعد» — ساده و پرتکرار.</p></div>
+                </div>
+            </section>
+        </div>
+        <footer class="ws-modal-foot fl-help-modal__foot">
+            <p class="fl-help-modal__foot-note">اتوماسیون = وقت بیشتر برای مذاکره.</p>
+            <button type="button" class="ws-btn ws-btn-primary fl-help-modal__cta" data-modal-close><span class="ws-nav-icon">{% include 'includes/icon_slot.html' with decor='automation' size='inline' only %}</span>متوجه شدم</button>
+        </footer>
+    </div>
+</div>

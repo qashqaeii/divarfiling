@@ -18,6 +18,7 @@
 
 {% block crm_content %}
 {% include 'workspace/crm/includes/deal_journey_page.html' %}
+{% include 'workspace/crm/includes/help/crm_deal_detail_help_modal.html' %}
 {{ deal_stages|json_script:"crmDealStagesListData" }}
 {% endblock %}
 

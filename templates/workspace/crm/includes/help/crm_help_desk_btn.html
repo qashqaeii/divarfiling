@@ -1,0 +1,8 @@
+<button type="button" class="fl-header__help{% if help_btn_class %} {{ help_btn_class }}{% endif %}" title="{{ help_title|default:'راهنما' }}" aria-label="{{ help_title|default:'راهنما' }}" data-modal-open="{{ help_modal_id }}">
+    <span class="fl-header__help-ring" aria-hidden="true"></span>
+    <span class="fl-header__help-bulb" aria-hidden="true">
+        <i class="fas fa-lightbulb"></i>
+        <span class="fl-header__help-bulb-glow"></span>
+    </span>
+    <span class="fl-header__help-label">راهنما</span>
+</button>

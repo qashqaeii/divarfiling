@@ -1,0 +1,6 @@
+<button type="button" class="{% if help_mob_class %}{{ help_mob_class }}{% else %}crm-help-mob-btn{% endif %}" title="{{ help_title|default:'راهنما' }}" aria-label="{{ help_title|default:'راهنما' }}" data-modal-open="{{ help_modal_id }}">
+    <span class="fl-header__help-bulb" aria-hidden="true">
+        <i class="fas fa-lightbulb"></i>
+        <span class="fl-header__help-bulb-glow"></span>
+    </span>
+</button>

@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="{% static 'workspace/css/agency-decor-icons.css' %}?v=1">
 {% endblock %}
 {% block crm_content %}
-<div class="agency-hub crm-page-chrome" dir="rtl">
+<div class="agency-hub crm-page-chrome mk-filing-datasets" dir="rtl">
     {% include "workspace/crm/agency/includes/hub_header.html" %}
     {% include "workspace/crm/agency/includes/hub_nav.html" %}
     <div class="agency-hub-body">
@@ -15,6 +15,7 @@
     </div>
 </div>
 {% include "workspace/crm/agency/includes/hub_invite_modal.html" %}
+{% include 'workspace/crm/includes/help/crm_agency_help_modal.html' %}
 {% endblock %}
 {% block crm_js %}
 <script src="{% static 'workspace/js/agency-ui.js' %}?v=5" defer></script>

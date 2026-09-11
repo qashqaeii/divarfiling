@@ -14,7 +14,7 @@
 
 {% block crm_content %}
 {% crm_placeholder_meta as ph_meta %}
-<div class="crm-shell-page crm-tpl-pro crm-tpl-pro-v2 crm-tpl-mobile crm-page-chrome">
+<div class="crm-shell-page crm-tpl-pro crm-tpl-pro-v2 crm-tpl-mobile crm-page-chrome mk-filing-datasets">
 
     <header class="crm-tpl-mob-header">
         <div class="crm-tpl-mob-header-mesh" aria-hidden="true"></div>
@@ -30,6 +30,7 @@
                 </p>
             </div>
             <div class="crm-tpl-mob-header-actions" role="toolbar" aria-label="عملیات قالب‌ها">
+                {% include 'workspace/crm/includes/help/crm_help_mob_btn.html' with help_modal_id='modal-crm-templates-help' help_title='راهنمای قالب پیام' help_mob_class='crm-tpl-mob-icon-btn' %}
                 <button type="button" class="crm-tpl-mob-icon-btn crm-tpl-mob-icon-btn--primary" data-drawer-open="drawer-template" title="قالب جدید" aria-label="قالب جدید">
                     <i class="fas fa-plus" aria-hidden="true"></i>
                 </button>
@@ -42,6 +43,7 @@
             <h1 class="crm-dash-bar-title">قالب پیام</h1>
         </div>
         <div class="crm-dash-bar-actions" role="toolbar" aria-label="عملیات قالب‌ها">
+            {% include 'workspace/crm/includes/help/crm_help_desk_btn.html' with help_modal_id='modal-crm-templates-help' help_title='راهنمای قالب پیام' %}
             <button type="button" class="crm-dash-act crm-dash-act--primary" data-drawer-open="drawer-template">
                 <i class="fas fa-plus" aria-hidden="true"></i><span>قالب</span>
             </button>
@@ -229,6 +231,7 @@
         <i class="fas fa-plus" aria-hidden="true"></i>
         <span>قالب</span>
     </button>
+    {% include 'workspace/crm/includes/help/crm_templates_help_modal.html' %}
 </div>
 {% endblock %}
 

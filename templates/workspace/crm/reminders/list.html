@@ -13,7 +13,7 @@
 {% endblock %}
 
 {% block crm_content %}
-<div class="crm-shell-page crm-reminders-pro crm-reminders-pro-v2 crm-reminders-mobile crm-page-chrome">
+<div class="crm-shell-page crm-reminders-pro crm-reminders-pro-v2 crm-reminders-mobile crm-page-chrome mk-filing-datasets">
 
     <header class="crm-rm-mob-header">
         <div class="crm-rm-mob-header-mesh" aria-hidden="true"></div>
@@ -29,6 +29,7 @@
                 </p>
             </div>
             <div class="crm-rm-mob-header-actions" role="toolbar" aria-label="عملیات یادآورها">
+                {% include 'workspace/crm/includes/help/crm_help_mob_btn.html' with help_modal_id='modal-crm-reminders-help' help_title='راهنمای یادآورها' help_mob_class='crm-rm-mob-icon-btn' %}
                 <a href="{% url 'workspace:crm_today' %}" class="crm-rm-mob-icon-btn" title="کارهای امروز" aria-label="کارهای امروز">
                     <i class="fas fa-list-check" aria-hidden="true"></i>
                 </a>
@@ -45,6 +46,7 @@
             <p class="crm-dash-bar-sub">برای تکمیل هر مورد، دکمهٔ «انجام شد» را بزنید</p>
         </div>
         <div class="crm-dash-bar-actions" role="toolbar" aria-label="عملیات یادآورها">
+            {% include 'workspace/crm/includes/help/crm_help_desk_btn.html' with help_modal_id='modal-crm-reminders-help' help_title='راهنمای یادآورها' %}
             <button type="button" class="crm-dash-act crm-dash-act--primary" data-drawer-open="drawer-reminder">
                 <i class="fas fa-plus" aria-hidden="true"></i><span>یادآور</span>
             </button>
@@ -152,6 +154,7 @@
         <i class="fas fa-plus" aria-hidden="true"></i>
         <span>یادآور</span>
     </button>
+    {% include 'workspace/crm/includes/help/crm_reminders_help_modal.html' %}
 </div>
 {% endblock %}
 

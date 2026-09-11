@@ -15,7 +15,7 @@
 
 {% block crm_content %}
 {% with k=finance.kpis s=finance.split %}
-<div class="crm-shell-page crm-deals-mobile crm-page-chrome crm-fin-page">
+<div class="crm-shell-page crm-deals-mobile crm-page-chrome crm-fin-page mk-filing-datasets">
     <header class="crm-deals-mob-header crm-fin-header">
         <div class="crm-deals-mob-header-mesh" aria-hidden="true"></div>
         <div class="crm-deals-mob-header-accent" aria-hidden="true"></div>
@@ -30,6 +30,7 @@
                 </p>
             </div>
             <div class="crm-deals-mob-header-actions" role="toolbar" aria-label="عملیات مالی">
+                {% include 'workspace/crm/includes/help/crm_help_mob_btn.html' with help_modal_id='modal-crm-deals-finance-help' help_title='راهنمای مالی معاملات' help_mob_class='crm-deals-mob-icon-btn' %}
                 <a href="{% url 'workspace:crm_deals' %}" class="crm-deals-mob-icon-btn" title="بازگشت به معاملات" aria-label="معاملات">
                     <i class="fas fa-handshake" aria-hidden="true"></i>
                 </a>
@@ -46,6 +47,7 @@
             <p class="crm-fin-desk-sub">{{ finance.period_label }} · درآمد مشاور، سهم املاک و وصول کمیسیون</p>
         </div>
         <div class="crm-dash-bar-actions" role="toolbar" aria-label="عملیات مالی">
+            {% include 'workspace/crm/includes/help/crm_help_desk_btn.html' with help_modal_id='modal-crm-deals-finance-help' help_title='راهنمای مالی معاملات' %}
             <a href="{% url 'workspace:crm_deals' %}" class="crm-dash-act" title="معاملات">
                 <i class="fas fa-handshake" aria-hidden="true"></i><span>معاملات</span>
             </a>
@@ -230,6 +232,7 @@
         </div>
         {% endif %}
     </section>
+    {% include 'workspace/crm/includes/help/crm_deals_finance_help_modal.html' %}
 </div>
 {% endwith %}
 {% endblock %}

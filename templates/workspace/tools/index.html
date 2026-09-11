@@ -9,6 +9,7 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
 <link rel="stylesheet" href="{% static 'workspace/css/ws-tools-mobile.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-datasets.css' %}?v=18">
 {% include 'workspace/academy/includes/academy_assets_css.html' %}
 {% endblock %}
 
@@ -17,7 +18,7 @@
 
 {% block content %}
 {% include 'workspace/academy/includes/contextual_banner.html' %}
-<div class="mk-page ws-toolbox-pro ws-toolbox-mobile" id="wsToolbox"{% if selected_dataset %} data-dataset-id="{{ selected_dataset.id }}"{% endif %}>
+<div class="mk-page ws-toolbox-pro ws-toolbox-mobile mk-filing-datasets" id="wsToolbox"{% if selected_dataset %} data-dataset-id="{{ selected_dataset.id }}"{% endif %}>
 
     <header class="ws-tbx-hero">
         <div class="ws-tbx-mob-stage" aria-hidden="true">
@@ -36,6 +37,9 @@
             <span class="ws-tbx-badge" role="listitem">{% include 'includes/icon_slot.html' with decor='zap' size='inline' only %} نتیجه فوری</span>
             <span class="ws-tbx-badge" role="listitem"><i class="fas fa-shield-halved" aria-hidden="true"></i> بدون ذخیره داده</span>
             <span class="ws-tbx-badge" role="listitem"><i class="fas fa-keyboard" aria-hidden="true"></i> میانبر ۱–۹</span>
+        </div>
+        <div class="ws-tbx-hero-actions">
+            {% include 'workspace/crm/includes/help/crm_help_desk_btn.html' with help_modal_id='modal-crm-tools-help' help_title='راهنمای ابزارهای هوشمند' help_btn_class='ws-tbx-hero-help' %}
         </div>
     </header>
 
@@ -890,6 +894,7 @@
 
 <script id="wsTbxMarket" type="application/json">{{ market_snapshot_json|safe }}</script>
 <script id="wsTbxMarkets" type="application/json">{{ market_snapshots_json|safe }}</script>
+{% include 'workspace/crm/includes/help/crm_tools_help_modal.html' %}
 {% endblock %}
 
 {% block extra_js %}
@@ -898,5 +903,6 @@
 <script src="{% static 'workspace/js/tools.js' %}?v=10"></script>
 <script src="{% static 'workspace/js/tools-market.js' %}?v=6"></script>
 <script src="{% static 'workspace/js/tools-nearby-access.js' %}?v=3"></script>
+<script src="{% static 'workspace/js/filing-help-modal.js' %}?v=1" defer></script>
 {% include 'workspace/academy/includes/academy_assets_js.html' %}
 {% endblock %}

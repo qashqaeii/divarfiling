@@ -14,7 +14,7 @@
 {% block crm_actions %}{% endblock %}
 
 {% block ws_surface_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/crm-contact-detail-mobile-premium.css' %}?v=7">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-contact-detail-mobile-premium.css' %}?v=8">
 {% endblock %}
 
 {% block crm_content %}
@@ -34,7 +34,7 @@
                     </nav>
                 </div>
                 <div class="crm-contact-hero__toolbar-end">
-                    <button type="button" class="fl-header__help crm-contact-detail-help" title="راهنمای پرونده مخاطب" aria-label="راهنمای پرونده مخاطب" data-modal-open="modal-crm-contact-detail-help">
+                    <button type="button" class="fl-header__help crm-contact-detail-help crm-contact-detail-help--mob" title="راهنمای پرونده مخاطب" aria-label="راهنمای پرونده مخاطب" data-modal-open="modal-crm-contact-detail-help">
                         <span class="fl-header__help-ring" aria-hidden="true"></span>
                         <span class="fl-header__help-bulb" aria-hidden="true">
                             <i class="fas fa-lightbulb"></i>
@@ -121,8 +121,16 @@
                     </div>
                 </div>
             </div>
-            {% if not customer_is_shared %}
             <div class="crm-contact-hero__actions-col crm-contact-hero__actions-col--desk" role="group" aria-label="اقدامات اصلی">
+                <button type="button" class="fl-header__help crm-contact-detail-help crm-contact-detail-help--desk" title="راهنمای پرونده مخاطب" aria-label="راهنمای پرونده مخاطب" data-modal-open="modal-crm-contact-detail-help">
+                    <span class="fl-header__help-ring" aria-hidden="true"></span>
+                    <span class="fl-header__help-bulb" aria-hidden="true">
+                        <i class="fas fa-lightbulb"></i>
+                        <span class="fl-header__help-bulb-glow"></span>
+                    </span>
+                    <span class="fl-header__help-label">راهنما</span>
+                </button>
+            {% if not customer_is_shared %}
                 {% if customer.phone %}
                 <a href="{{ customer.phone|phone_tel_href }}" class="crm-contact-hero__action crm-contact-hero__action--primary">
                     <i class="fas fa-phone" aria-hidden="true"></i><span>تماس</span>
@@ -136,6 +144,9 @@
                         <i class="fas fa-ellipsis" aria-hidden="true"></i><span>بیشتر</span>
                     </summary>
                     <div class="crm-contact-hero__more-panel" role="menu">
+                        <button type="button" class="crm-contact-hero__more-item" role="menuitem" data-modal-open="modal-crm-contact-detail-help">
+                            <i class="fas fa-lightbulb" aria-hidden="true"></i><span>راهنمای پرونده</span>
+                        </button>
                         <button type="button" class="crm-contact-hero__more-item" role="menuitem" data-drawer-open="drawer-edit">
                             <i class="fas fa-pen" aria-hidden="true"></i><span>ویرایش</span>
                         </button>
@@ -199,8 +210,8 @@
                         {% endif %}
                     </div>
                 </details>
-            </div>
             {% endif %}
+            </div>
             </div>
             {% if not customer_is_shared %}
             <div class="crm-contact-mob-primary" role="group" aria-label="اقدامات اصلی">

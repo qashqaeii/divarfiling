@@ -20,7 +20,7 @@
 
 {% block crm_content %}
 {% include 'workspace/academy/includes/contextual_banner.html' %}
-<div class="crm-shell-page crm-files-pro crm-files-pro-v2 crm-page-chrome crm-files-mobile crm-properties-page{% if view_mode == 'pipeline' %} crm-files-pro--pipeline{% elif view_mode == 'table' %} crm-files-pro--table{% endif %}">
+<div class="crm-shell-page crm-files-pro crm-files-pro-v2 crm-page-chrome crm-files-mobile crm-properties-page mk-filing-datasets{% if view_mode == 'pipeline' %} crm-files-pro--pipeline{% elif view_mode == 'table' %} crm-files-pro--table{% endif %}">
 
     <header class="crm-files-mob-header">
         <div class="crm-files-mob-header-main">
@@ -30,6 +30,7 @@
             </p>
         </div>
         <div class="crm-files-mob-header-actions" role="toolbar" aria-label="عملیات فایل‌ها">
+            {% include 'workspace/crm/includes/help/crm_help_mob_btn.html' with help_modal_id='modal-crm-properties-help' help_title='راهنمای فایل‌های شخصی' help_mob_class='crm-files-mob-icon-btn' %}
             <details class="crm-files-mob-toolbar-menu">
                 <summary class="crm-files-mob-icon-btn crm-files-mob-icon-btn--ghost" aria-label="ابزارهای بیشتر">
                     <i class="fas fa-ellipsis-vertical" aria-hidden="true"></i>
@@ -61,6 +62,7 @@
             <p class="crm-dash-bar-sub is-visible">مدیریت فایل‌ها، قیمت و وضعیت معامله</p>
         </div>
         <div class="crm-dash-bar-actions crm-files-desk-actions" role="toolbar" aria-label="عملیات فایل‌ها">
+            {% include 'workspace/crm/includes/help/crm_help_desk_btn.html' with help_modal_id='modal-crm-properties-help' help_title='راهنمای فایل‌های شخصی' %}
             <details class="crm-files-export">
                 <summary class="crm-dash-act" title="خروجی فایل‌های {% if has_filters %}{{ filtered_count }} فیلترشده{% else %}{{ stats.total }}{% endif %}">
                     <i class="fas fa-file-export" aria-hidden="true"></i>
@@ -473,6 +475,7 @@
     {% include 'workspace/crm/includes/property_folder_assign_dialog.html' %}
     {% endif %}
     {% endif %}
+    {% include 'workspace/crm/includes/help/crm_properties_help_modal.html' %}
 </div>
 {% endblock %}
 

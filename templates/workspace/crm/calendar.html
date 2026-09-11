@@ -13,7 +13,7 @@
 {% endblock %}
 
 {% block crm_content %}
-<div class="crm-shell-page crm-cal-page crm-cal-mobile crm-page-chrome">
+<div class="crm-shell-page crm-cal-page crm-cal-mobile crm-page-chrome mk-filing-datasets">
 
     <header class="crm-cal-mob-header">
         <div class="crm-cal-mob-header-mesh" aria-hidden="true"></div>
@@ -28,6 +28,7 @@
                 </p>
             </div>
             <div class="crm-cal-mob-header-actions" role="toolbar" aria-label="عملیات تقویم">
+                {% include 'workspace/crm/includes/help/crm_help_mob_btn.html' with help_modal_id='modal-crm-calendar-help' help_title='راهنمای تقویم' help_mob_class='crm-cal-mob-icon-btn' %}
                 <a href="{% url 'workspace:crm_reminders' %}" class="crm-cal-mob-icon-btn" title="یادآورها" aria-label="یادآورها">
                     <i class="fas fa-bell" aria-hidden="true"></i>
                 </a>
@@ -43,6 +44,7 @@
             <h1 class="crm-dash-bar-title">تقویم</h1>
         </div>
         <div class="crm-dash-bar-actions" role="toolbar" aria-label="عملیات تقویم">
+            {% include 'workspace/crm/includes/help/crm_help_desk_btn.html' with help_modal_id='modal-crm-calendar-help' help_title='راهنمای تقویم' %}
             <a href="{% url 'workspace:crm_today' %}" class="crm-dash-act">
                 <i class="fas fa-list-check" aria-hidden="true"></i><span>کارهای امروز</span>
             </a>
@@ -180,5 +182,6 @@
         </aside>
     </div>
     </div>
+    {% include 'workspace/crm/includes/help/crm_calendar_help_modal.html' %}
 </div>
 {% endblock %}

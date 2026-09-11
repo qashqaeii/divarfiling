@@ -1,0 +1,86 @@
+<div class="ws-modal fl-help-modal" id="modal-crm-property-detail-help" role="dialog" aria-modal="true" aria-labelledby="crmPropDetailHelpTitle" data-fl-help-default="browse">
+    <div class="ws-modal-overlay" data-modal-close></div>
+    <div class="ws-modal-panel fl-help-modal__panel">
+        <div class="fl-help-modal__glow" aria-hidden="true"></div>
+        <div class="fl-help-modal__sheet-top" aria-hidden="true"><span class="fl-help-modal__grip"></span></div>
+        <header class="fl-help-modal__hero">
+            <div class="fl-help-modal__hero-mesh" aria-hidden="true"></div>
+            <div class="fl-help-modal__hero-shine" aria-hidden="true"></div>
+            <button type="button" class="fl-help-modal__close ws-modal-close" data-modal-close aria-label="بستن راهنما"><i class="fas fa-times" aria-hidden="true"></i></button>
+            <span class="fl-help-modal__kicker"><span class="fl-header__help-bulb fl-header__help-bulb--xs" aria-hidden="true"><i class="fas fa-lightbulb"></i><span class="fl-header__help-bulb-glow"></span></span>راهنمای جزئیات فایل</span>
+            <div class="fl-help-modal__hero-icon fl-help-modal__hero-icon--bulb" aria-hidden="true"><span class="fl-header__help-bulb fl-header__help-bulb--hero"><i class="fas fa-lightbulb"></i><span class="fl-header__help-bulb-glow"></span></span></div>
+            <h2 id="crmPropDetailHelpTitle" class="fl-help-modal__title">پرونده یک ملک</h2>
+        </header>
+        <nav class="fl-help-modal__nav" aria-label="بخش‌های راهنما" role="tablist">
+            <button type="button" class="fl-help-modal__nav-btn is-active" data-fl-help-tab="browse" role="tab" aria-selected="true"><span class="ws-nav-icon">{% include 'includes/icon_slot.html' with decor='file_text' size='nav' only %}</span><span>مرور</span></button>
+            <button type="button" class="fl-help-modal__nav-btn" data-fl-help-tab="act" role="tab" aria-selected="false"><span class="ws-nav-icon">{% include 'includes/icon_slot.html' with decor='handshake' size='nav' only %}</span><span>اقدام</span></button>
+            <button type="button" class="fl-help-modal__nav-btn" data-fl-help-tab="share" role="tab" aria-selected="false"><span class="ws-nav-icon">{% include 'includes/icon_slot.html' with decor='share_2' size='nav' only %}</span><span>اشتراک</span></button>
+            <span class="fl-help-modal__nav-indicator" aria-hidden="true"></span>
+        </nav>
+        <div class="fl-help-modal__scroll-track" aria-hidden="true"><span class="fl-help-modal__scroll-progress"></span></div>
+        <div class="ws-modal-body fl-help-modal__body">
+            <section class="fl-help-pane is-active" data-fl-help-pane="browse">
+                <article class="fl-help-card fl-help-card--lux fl-help-card--featured">
+                    <span class="fl-help-card__step">۰۱</span>
+                    <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='building' size='metric' boxed=True accent='violet' only %}</span>
+                    <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>خلاصه بالای صفحه</h3></div>
+                    <p>عکس، قیمت، نوع معامله و وضعیت فایل در <strong>hero</strong> دیده می‌شود. رنگ نوار بالا نوع معامله (فروش/رهن/اجاره) را نشان می‌دهد.</p></div>
+                </article>
+                <article class="fl-help-card fl-help-card--lux">
+                    <span class="fl-help-card__step">۰۲</span>
+                    <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='clipboard_list' size='metric' boxed=True accent='emerald' only %}</span>
+                    <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>تب‌های اطلاعات</h3></div>
+                    <p><strong>پرونده کامل</strong> همه فیلدها، <strong>فعالیت‌ها</strong> تاریخچه تماس، <strong>یادداشت</strong> برای نکات داخلی. بین تب‌ها جابه‌جا شو بدون از دست دادن context.</p></div>
+                </article>
+                <article class="fl-help-card fl-help-card--lux">
+                    <span class="fl-help-card__step">۰۳</span>
+                    <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='map_pin' size='metric' boxed=True accent='sky' only %}</span>
+                    <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>نقشه و اطراف</h3></div>
+                    <p>اگر لوکیشن ثبت شده، نقشه و دسترسی‌های اطراف (مدرسه، مترو…) نمایش داده می‌شود — برای ارائه به خریدار عالی است.</p></div>
+                </article>
+            </section>
+            <section class="fl-help-pane" data-fl-help-pane="act" hidden>
+                <article class="fl-help-card fl-help-card--lux fl-help-card--featured">
+                    <span class="fl-help-card__step">۰۱</span>
+                    <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='handshake' size='metric' boxed=True accent='indigo' only %}</span>
+                    <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>ثبت معامله</h3></div>
+                    <p>با <strong>ثبت معامله</strong> فرصت جدید در قیف ساخته می‌شود — ملک از قبل پر شده و فقط مخاطب را انتخاب کن.</p></div>
+                </article>
+                <article class="fl-help-card fl-help-card--lux">
+                    <span class="fl-help-card__step">۰۲</span>
+                    <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='file_edit' size='metric' boxed=True accent='amber' only %}</span>
+                    <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>ویرایش و کپی</h3></div>
+                    <p><strong>ویرایش</strong> قیمت و تصاویر را به‌روز می‌کند. <strong>کپی فایل</strong> برای ملک مشابه در همان ساختمان — وقت ثبت را کم می‌کند.</p></div>
+                </article>
+                <article class="fl-help-card fl-help-card--lux">
+                    <span class="fl-help-card__step">۰۳</span>
+                    <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='upload' size='metric' boxed=True accent='rose' only %}</span>
+                    <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>مدارک</h3></div>
+                    <p>سند، تصویر کادastr یا قرارداد اولیه را با <strong>مدرک</strong> ضمیمه کن — در مسیر قرارداد دیجیتال هم استفاده می‌شود.</p></div>
+                </article>
+            </section>
+            <section class="fl-help-pane" data-fl-help-pane="share" hidden>
+                <article class="fl-help-card fl-help-card--lux">
+                    <span class="fl-help-card__step">۰۱</span>
+                    <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='user' size='metric' boxed=True accent='violet' only %}</span>
+                    <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>اشتراک محرمانه</h3></div>
+                    <p>نام مالک و لوکیشن دقیق مخفی می‌ماند — فقط اطلاعات معرفی برای مشتری. مناسب اولین تماس.</p></div>
+                </article>
+                <article class="fl-help-card fl-help-card--lux">
+                    <span class="fl-help-card__step">۰۲</span>
+                    <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='team' size='metric' boxed=True accent='emerald' only %}</span>
+                    <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>اشتراک کامل</h3></div>
+                    <p>برای همکار یا مشاور دیگر — دسترسی ویرایش مشترک. بنر بالای صفحه نوع اشتراک را نشان می‌دهد.</p></div>
+                </article>
+                <div class="fl-help-tip fl-help-tip--lux">
+                    <span class="fl-help-tip__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='external_link' size='metric' boxed=True accent='sky' only %}</span>
+                    <div><strong>لینک دیوار</strong><p>اگر فایل از دیوار آمده، دکمه <strong>دیوار</strong> آگهی اصلی را باز می‌کند — برای مقایسه قیمت بازار.</p></div>
+                </div>
+            </section>
+        </div>
+        <footer class="ws-modal-foot fl-help-modal__foot">
+            <p class="fl-help-modal__foot-note">هر فایل = یک فرصت فروش. اطلاعات را به‌روز نگه دار.</p>
+            <button type="button" class="ws-btn ws-btn-primary fl-help-modal__cta" data-modal-close><span class="ws-nav-icon">{% include 'includes/icon_slot.html' with decor='building' size='inline' only %}</span>متوجه شدم</button>
+        </footer>
+    </div>
+</div>

@@ -56,7 +56,7 @@
     </section>
 </div>
 {% else %}
-<div class="crm-prop-detail-v2 crm-prop-detail-mobile crm-page-chrome{% if is_confidential_share %} crm-prop-detail-v2--confidential{% elif is_collaborative_share %} crm-prop-detail-v2--collaborative{% endif %}">
+<div class="crm-prop-detail-v2 crm-prop-detail-mobile crm-page-chrome mk-filing-datasets{% if is_confidential_share %} crm-prop-detail-v2--confidential{% elif is_collaborative_share %} crm-prop-detail-v2--collaborative{% endif %}">
 
     {% if property_share %}
     <section class="crm-prop-share-banner crm-prop-share-banner--{{ share_mode }}" aria-label="وضعیت اشتراک">
@@ -107,6 +107,10 @@
                     <span>{{ property.property_type }}</span>
                 </nav>
                 <div class="crm-prop-hero-actions" role="toolbar" aria-label="عملیات فایل">
+                    <button type="button" class="crm-prop-hero-act" title="راهنمای فایل شخصی" aria-label="راهنمای فایل شخصی" data-modal-open="modal-crm-property-detail-help">
+                        <span class="fl-header__help-bulb fl-header__help-bulb--xs" aria-hidden="true"><i class="fas fa-lightbulb"></i><span class="fl-header__help-bulb-glow"></span></span>
+                        <span>راهنما</span>
+                    </button>
                     {% if not mask_sensitive %}
                     {% if source_listing and source_listing.link %}
                     <a href="{{ source_listing.link }}" target="_blank" rel="noopener" class="crm-prop-hero-act" title="مشاهده در دیوار">
@@ -895,6 +899,10 @@
             </button>
             {% endif %}
             {% if is_property_owner and not property_is_deleted %}
+            <button type="button" class="crm-prop-dock-btn" data-modal-open="modal-crm-property-detail-help" title="راهنما" aria-label="راهنما">
+                <span class="fl-header__help-bulb fl-header__help-bulb--xs" aria-hidden="true"><i class="fas fa-lightbulb"></i><span class="fl-header__help-bulb-glow"></span></span>
+                <span>راهنما</span>
+            </button>
             <button type="button" class="crm-prop-dock-btn crm-prop-dock-btn--share" data-modal-open="modal-property-share" title="اشتراک با مشتری">
                 <i class="fas fa-share-alt" aria-hidden="true"></i>
                 <span>اشتراک</span>
@@ -903,6 +911,7 @@
         </div>
     </nav>
     {% endif %}
+    {% include 'workspace/crm/includes/help/crm_property_detail_help_modal.html' %}
 </div>
 {% endif %}
 {% endblock %}

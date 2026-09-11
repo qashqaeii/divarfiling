@@ -842,12 +842,31 @@
     flex-shrink: 0;
 }
 
+.crm-contact-detail-pro.mk-filing-datasets .crm-contact-detail-help--desk {
+    display: none;
+}
+
+.crm-contact-detail-pro.mk-filing-datasets .crm-contact-detail-help--mob {
+    display: inline-flex;
+}
+
+.crm-contact-detail-pro.mk-filing-datasets .crm-contact-hero__actions-col--desk {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+}
+
 .crm-contact-detail-pro.mk-filing-datasets .crm-contact-mob-menu-item .fa-lightbulb {
     color: #d97706;
 }
 
 @media (max-width: 768px) {
-    .crm-contact-detail-pro.mk-filing-datasets .crm-contact-detail-help {
+    .crm-contact-detail-pro.mk-filing-datasets .crm-contact-detail-help--desk {
+        display: none !important;
+    }
+
+    .crm-contact-detail-pro.mk-filing-datasets .crm-contact-detail-help--mob {
         width: 40px;
         height: 40px;
         min-width: 40px;
@@ -871,5 +890,17 @@
 @media (min-width: 769px) {
     .crm-contact-detail-pro.mk-filing-datasets .crm-contact-hero__toolbar-end {
         margin-inline-start: auto;
+    }
+
+    .crm-contact-detail-pro.mk-filing-datasets .crm-contact-detail-help--mob {
+        display: none !important;
+    }
+
+    .crm-contact-detail-pro.mk-filing-datasets .crm-contact-detail-help--desk {
+        display: inline-flex !important;
+    }
+
+    .crm-contact-detail-pro.mk-filing-datasets .crm-contact-hero__actions-col--desk .crm-contact-detail-help--desk {
+        margin-inline-end: 0.15rem;
     }
 }

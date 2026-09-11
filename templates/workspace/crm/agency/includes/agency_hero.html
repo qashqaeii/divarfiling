@@ -51,6 +51,14 @@
         {% endif %}
 
         <div class="agency-hero__actions">
+            <button type="button" class="fl-header__help agency-hero__help" title="راهنمای آژانس" aria-label="راهنمای آژانس" data-modal-open="modal-crm-agency-help">
+                <span class="fl-header__help-ring" aria-hidden="true"></span>
+                <span class="fl-header__help-bulb" aria-hidden="true">
+                    <i class="fas fa-lightbulb"></i>
+                    <span class="fl-header__help-bulb-glow"></span>
+                </span>
+                <span class="fl-header__help-label">راهنما</span>
+            </button>
             {% if hub_section != 'advisors' %}
             <button type="button" class="crm-btn crm-btn-primary agency-hero__cta" data-bs-toggle="modal" data-bs-target="#agencyInviteModal">
                 <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='user_plus' size='inline' only %}</span>

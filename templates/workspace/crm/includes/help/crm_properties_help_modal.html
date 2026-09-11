@@ -1,0 +1,98 @@
+<div class="ws-modal fl-help-modal" id="modal-crm-properties-help" role="dialog" aria-modal="true" aria-labelledby="crmPropertiesHelpTitle" data-fl-help-default="start">
+    <div class="ws-modal-overlay" data-modal-close></div>
+    <div class="ws-modal-panel fl-help-modal__panel">
+        <div class="fl-help-modal__glow" aria-hidden="true"></div>
+        <div class="fl-help-modal__sheet-top" aria-hidden="true"><span class="fl-help-modal__grip"></span></div>
+        <header class="fl-help-modal__hero">
+            <div class="fl-help-modal__hero-mesh" aria-hidden="true"></div>
+            <div class="fl-help-modal__hero-shine" aria-hidden="true"></div>
+            <button type="button" class="fl-help-modal__close ws-modal-close" data-modal-close aria-label="بستن راهنما"><i class="fas fa-times" aria-hidden="true"></i></button>
+            <span class="fl-help-modal__kicker"><span class="fl-header__help-bulb fl-header__help-bulb--xs" aria-hidden="true"><i class="fas fa-lightbulb"></i><span class="fl-header__help-bulb-glow"></span></span>راهنمای فایل‌های شخصی</span>
+            <div class="fl-help-modal__hero-icon fl-help-modal__hero-icon--bulb" aria-hidden="true"><span class="fl-header__help-bulb fl-header__help-bulb--hero"><i class="fas fa-lightbulb"></i><span class="fl-header__help-bulb-glow"></span></span></div>
+            <h2 id="crmPropertiesHelpTitle" class="fl-help-modal__title">بانک فایل‌های شما</h2>
+        </header>
+        <nav class="fl-help-modal__nav" aria-label="بخش‌های راهنما" role="tablist">
+            <button type="button" class="fl-help-modal__nav-btn is-active" data-fl-help-tab="start" role="tab" aria-selected="true"><span class="ws-nav-icon">{% include 'includes/icon_slot.html' with decor='building' size='nav' only %}</span><span>شروع</span></button>
+            <button type="button" class="fl-help-modal__nav-btn" data-fl-help-tab="manage" role="tab" aria-selected="false"><span class="ws-nav-icon">{% include 'includes/icon_slot.html' with decor='filter' size='nav' only %}</span><span>مدیریت</span></button>
+            <button type="button" class="fl-help-modal__nav-btn" data-fl-help-tab="power" role="tab" aria-selected="false"><span class="ws-nav-icon">{% include 'includes/icon_slot.html' with decor='zap' size='nav' only %}</span><span>حرفه‌ای</span></button>
+            <span class="fl-help-modal__nav-indicator" aria-hidden="true"></span>
+        </nav>
+        <div class="fl-help-modal__scroll-track" aria-hidden="true"><span class="fl-help-modal__scroll-progress"></span></div>
+        <div class="ws-modal-body fl-help-modal__body">
+            <section class="fl-help-pane is-active" data-fl-help-pane="start">
+                <article class="fl-help-card fl-help-card--lux fl-help-card--featured">
+                    <span class="fl-help-card__step">۰۱</span>
+                    <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='properties' size='metric' boxed=True accent='violet' only %}</span>
+                    <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>فایل شخصی چیست؟</h3><span class="fl-help-card__tag">قلب معاملات</span></div>
+                    <p><strong>فایل‌های شخصی</strong> ملک‌هایی‌اند که خودت ثبت کرده‌ای یا از فایلینگ به CRM منتقل کرده‌ای — با قیمت، وضعیت، تصاویر و یادداشت. هر معامله و پیشنهاد به یک فایل وصل می‌شود.</p></div>
+                </article>
+                <article class="fl-help-card fl-help-card--lux">
+                    <span class="fl-help-card__step">۰۲</span>
+                    <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='file_edit' size='metric' boxed=True accent='emerald' only %}</span>
+                    <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>ثبت فایل جدید</h3></div>
+                    <p>با <strong>فایل جدید</strong> فرم کامل باز می‌شود: نوع معامله، متراژ، محله، قیمت و تصاویر. برای سرعت، بعداً از جزئیات فایل تکمیلش کن.</p></div>
+                </article>
+                <article class="fl-help-card fl-help-card--lux">
+                    <span class="fl-help-card__step">۰۳</span>
+                    <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='bar_chart' size='metric' boxed=True accent='sky' only %}</span>
+                    <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>شاخص‌های بالای صفحه</h3></div>
+                    <p>کارت‌های KPI تعداد فایل‌ها، وضعیت فروش/اجاره و فایل‌های نیازمند پیگیری را نشان می‌دهند — نقطه شروع روز کاری‌ات همین‌جاست.</p></div>
+                </article>
+            </section>
+            <section class="fl-help-pane" data-fl-help-pane="manage" hidden>
+                <article class="fl-help-card fl-help-card--lux fl-help-card--featured">
+                    <span class="fl-help-card__step">۰۱</span>
+                    <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='search' size='metric' boxed=True accent='indigo' only %}</span>
+                    <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>جستجو و فیلتر</h3></div>
+                    <p>محله، قیمت، نوع ملک و وضعیت را فیلتر کن. چیپ‌های سریع برای «فعال»، «فروش» یا «نیاز پیگیری» دسترسی یک‌کلیکی می‌دهند.</p></div>
+                </article>
+                <article class="fl-help-card fl-help-card--lux">
+                    <span class="fl-help-card__step">۰۲</span>
+                    <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='layout_grid' size='metric' boxed=True accent='amber' only %}</span>
+                    <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>جدول، کانبان و نقشه</h3></div>
+                    <p><strong>جدول</strong> برای لیست مرتب، <strong>کانبان</strong> برای دیدن وضعیت ستونی، <strong>نقشه</strong> برای پخش جغرافیایی فایل‌ها در محله.</p></div>
+                </article>
+                <article class="fl-help-card fl-help-card--lux">
+                    <span class="fl-help-card__step">۰۳</span>
+                    <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='folder' size='metric' boxed=True accent='cyan' only %}</span>
+                    <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>زونکن و کابینت</h3></div>
+                    <p>فایل‌ها را در <strong>زونکن</strong> دسته‌بندی کن یا با <strong>کابینت</strong> برای نمایش مشتری مرتب‌شان کن — مثل پوشه فیزیکی روی میز.</p></div>
+                </article>
+                <article class="fl-help-card fl-help-card--lux">
+                    <span class="fl-help-card__step">۰۴</span>
+                    <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='upload' size='metric' boxed=True accent='rose' only %}</span>
+                    <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>ورود و خروجی</h3></div>
+                    <p>لیست Excel قدیمی داری؟ <strong>ورود گروهی</strong> یکجا import می‌کند. <strong>خروجی</strong> همان فیلتر فعلی را Excel یا CSV می‌دهد.</p></div>
+                </article>
+            </section>
+            <section class="fl-help-pane" data-fl-help-pane="power" hidden>
+                <article class="fl-help-card fl-help-card--lux">
+                    <span class="fl-help-card__step">۰۱</span>
+                    <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='share_2' size='metric' boxed=True accent='violet' only %}</span>
+                    <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>اشتراک با مشتری</h3></div>
+                    <p>از جزئیات فایل، <strong>اشتراک محرمانه</strong> (بدون مالک) یا <strong>اشتراک کامل</strong> (همکاری) بفرست — لینک مستقیم برای واتساپ.</p></div>
+                </article>
+                <article class="fl-help-card fl-help-card--lux">
+                    <span class="fl-help-card__step">۰۲</span>
+                    <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='handshake' size='metric' boxed=True accent='emerald' only %}</span>
+                    <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>ثبت معامله از فایل</h3></div>
+                    <p>وقتی خریدار جدی پیدا شد، از همان فایل <strong>ثبت معامله</strong> بزن — ملک و مخاطب خودکار وصل می‌شوند و وارد قیف می‌شوی.</p></div>
+                </article>
+                <article class="fl-help-card fl-help-card--lux">
+                    <span class="fl-help-card__step">۰۳</span>
+                    <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='sparkles' size='metric' boxed=True accent='sky' only %}</span>
+                    <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>پیشنهاد به مخاطب</h3></div>
+                    <p>سیستم فایل‌های مناسب را برای خریداران پیشنهاد می‌دهد — از لیست مخاطبین یا جزئیات فایل، match هوشمند را ببین.</p></div>
+                </article>
+                <div class="fl-help-tip fl-help-tip--lux">
+                    <span class="fl-help-tip__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='map_pin' size='metric' boxed=True accent='amber' only %}</span>
+                    <div><strong>نقشه و POI</strong><p>در جزئیات فایل، نقشه و اطراف ملک (مدرسه، مترو…) به مذاکره کمک می‌کند — حتماً لوکیشن را دقیق ثبت کن.</p></div>
+                </div>
+            </section>
+        </div>
+        <footer class="ws-modal-foot fl-help-modal__foot">
+            <p class="fl-help-modal__foot-note">سؤالی موند؟ تیم پشتیبانی کنارته.</p>
+            <button type="button" class="ws-btn ws-btn-primary fl-help-modal__cta" data-modal-close><span class="ws-nav-icon">{% include 'includes/icon_slot.html' with decor='building' size='inline' only %}</span>متوجه شدم، بریم سراغ فایل‌ها</button>
+        </footer>
+    </div>
+</div>

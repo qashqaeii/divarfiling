@@ -1,0 +1,86 @@
+<div class="ws-modal fl-help-modal" id="modal-crm-deal-detail-help" role="dialog" aria-modal="true" aria-labelledby="crmDealDetailHelpTitle" data-fl-help-default="path">
+    <div class="ws-modal-overlay" data-modal-close></div>
+    <div class="ws-modal-panel fl-help-modal__panel">
+        <div class="fl-help-modal__glow" aria-hidden="true"></div>
+        <div class="fl-help-modal__sheet-top" aria-hidden="true"><span class="fl-help-modal__grip"></span></div>
+        <header class="fl-help-modal__hero">
+            <div class="fl-help-modal__hero-mesh" aria-hidden="true"></div>
+            <div class="fl-help-modal__hero-shine" aria-hidden="true"></div>
+            <button type="button" class="fl-help-modal__close ws-modal-close" data-modal-close aria-label="بستن راهنما"><i class="fas fa-times" aria-hidden="true"></i></button>
+            <span class="fl-help-modal__kicker"><span class="fl-header__help-bulb fl-header__help-bulb--xs" aria-hidden="true"><i class="fas fa-lightbulb"></i><span class="fl-header__help-bulb-glow"></span></span>راهنمای جزئیات معامله</span>
+            <div class="fl-help-modal__hero-icon fl-help-modal__hero-icon--bulb" aria-hidden="true"><span class="fl-header__help-bulb fl-header__help-bulb--hero"><i class="fas fa-lightbulb"></i><span class="fl-header__help-bulb-glow"></span></span></div>
+            <h2 id="crmDealDetailHelpTitle" class="fl-help-modal__title">سفر یک معامله</h2>
+        </header>
+        <nav class="fl-help-modal__nav" aria-label="بخش‌های راهنما" role="tablist">
+            <button type="button" class="fl-help-modal__nav-btn is-active" data-fl-help-tab="path" role="tab" aria-selected="true"><span class="ws-nav-icon">{% include 'includes/icon_slot.html' with decor='rocket' size='nav' only %}</span><span>مسیر</span></button>
+            <button type="button" class="fl-help-modal__nav-btn" data-fl-help-tab="tabs" role="tab" aria-selected="false"><span class="ws-nav-icon">{% include 'includes/icon_slot.html' with decor='layers' size='nav' only %}</span><span>تب‌ها</span></button>
+            <button type="button" class="fl-help-modal__nav-btn" data-fl-help-tab="finance" role="tab" aria-selected="false"><span class="ws-nav-icon">{% include 'includes/icon_slot.html' with decor='coins' size='nav' only %}</span><span>مالی</span></button>
+            <span class="fl-help-modal__nav-indicator" aria-hidden="true"></span>
+        </nav>
+        <div class="fl-help-modal__scroll-track" aria-hidden="true"><span class="fl-help-modal__scroll-progress"></span></div>
+        <div class="ws-modal-body fl-help-modal__body">
+            <section class="fl-help-pane is-active" data-fl-help-pane="path">
+                <article class="fl-help-card fl-help-card--lux fl-help-card--featured">
+                    <span class="fl-help-card__step">۰۱</span>
+                    <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='handshake' size='metric' boxed=True accent='violet' only %}</span>
+                    <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>نوار مراحل</h3></div>
+                    <p>بالای صفحه <strong>stage rail</strong> مسیر معامله را نشان می‌دهد — روی هر مرحله کلیک کن تا وضعیت عوض شود. مراحل گذشته تیک می‌خورند.</p></div>
+                </article>
+                <article class="fl-help-card fl-help-card--lux">
+                    <span class="fl-help-card__step">۰۲</span>
+                    <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='zap' size='metric' boxed=True accent='emerald' only %}</span>
+                    <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>کارت اقدام بعدی</h3><span class="fl-help-card__tag">مهم</span></div>
+                    <p>باکس رنگی وسط صفحه می‌گوید الان چه کار کنی — تماس، بازدید، قرارداد یا بستن. دکمه اصلی همانجاست.</p></div>
+                </article>
+                <article class="fl-help-card fl-help-card--lux">
+                    <span class="fl-help-card__step">۰۳</span>
+                    <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='phone' size='metric' boxed=True accent='sky' only %}</span>
+                    <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>عملیات سریع</h3></div>
+                    <p>تماس، ثبت پیگیری، اقدام بعدی و ویرایش از نوار بالا — بدون جستجو در منو.</p></div>
+                </article>
+            </section>
+            <section class="fl-help-pane" data-fl-help-pane="tabs" hidden>
+                <article class="fl-help-card fl-help-card--lux">
+                    <span class="fl-help-card__step">۰۱</span>
+                    <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='bar_chart' size='metric' boxed=True accent='indigo' only %}</span>
+                    <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>نمای کلی</h3></div>
+                    <p>خلاصه مخاطب، ملک، ارزش، احتمال و تاریخ بستن — همه در یک نگاه.</p></div>
+                </article>
+                <article class="fl-help-card fl-help-card--lux">
+                    <span class="fl-help-card__step">۰۲</span>
+                    <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='clipboard_list' size='metric' boxed=True accent='amber' only %}</span>
+                    <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>فعالیت و مدارک</h3></div>
+                    <p>تب <strong>فعالیت‌ها</strong> تاریخچه تماس‌ها. <strong>مدارک</strong> چک‌لیست مدارک لازم قبل از قرارداد.</p></div>
+                </article>
+                <article class="fl-help-card fl-help-card--lux fl-help-card--featured">
+                    <span class="fl-help-card__step">۰۳</span>
+                    <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='file_edit' size='metric' boxed=True accent='rose' only %}</span>
+                    <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>قراردادها</h3></div>
+                    <p>تب قراردادها همه نسخه‌ها را نشان می‌دهد — پیش‌نویس، ارسال‌شده و نهایی. از hero هم می‌توانی قرارداد بسازی.</p></div>
+                </article>
+            </section>
+            <section class="fl-help-pane" data-fl-help-pane="finance" hidden>
+                <article class="fl-help-card fl-help-card--lux fl-help-card--featured">
+                    <span class="fl-help-card__step">۰۱</span>
+                    <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='coins' size='metric' boxed=True accent='violet' only %}</span>
+                    <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>تب مالی</h3></div>
+                    <p>کمیسیون خریدار/فروشنده، سهم مشاور و املاک، هزینه‌ها و وضعیت وصول — بعد از بستن معامله پر کن.</p></div>
+                </article>
+                <article class="fl-help-card fl-help-card--lux">
+                    <span class="fl-help-card__step">۰۲</span>
+                    <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='settings' size='metric' boxed=True accent='emerald' only %}</span>
+                    <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>دراور مالی</h3></div>
+                    <p>از منوی «بیشتر» یا تب مالی، <strong>تنظیمات مالی معامله</strong> را باز کن — پیش‌فرض‌ها از داشبورد مالی می‌آیند.</p></div>
+                </article>
+                <div class="fl-help-tip fl-help-tip--lux">
+                    <span class="fl-help-tip__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='trending_up' size='metric' boxed=True accent='sky' only %}</span>
+                    <div><strong>بستن معامله</strong><p>وقتی قرارداد نهایی شد، مرحله را «بسته‌شده» بزن — KPI و درآمد به‌روز می‌شود.</p></div>
+                </div>
+            </section>
+        </div>
+        <footer class="ws-modal-foot fl-help-modal__foot">
+            <p class="fl-help-modal__foot-note">هر معامله یک داستان — مرحله‌ها را جدی بگیر.</p>
+            <button type="button" class="ws-btn ws-btn-primary fl-help-modal__cta" data-modal-close><span class="ws-nav-icon">{% include 'includes/icon_slot.html' with decor='handshake' size='inline' only %}</span>متوجه شدم</button>
+        </footer>
+    </div>
+</div>

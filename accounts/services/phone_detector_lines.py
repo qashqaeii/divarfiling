@@ -12,6 +12,7 @@ from django.conf import settings
 
 _engine_lock = threading.Lock()
 _engine = None
+OTP_PENDING_TTL_SECONDS = 300
 
 
 class PhoneDetectorLineError(Exception):
@@ -82,6 +83,152 @@ def _get_engine():
                 output_dir=pd_path / 'output',
             )
         return _engine
+
+
+def _import_pd_main():
+    pd_path = _ensure_pd_path()
+    if str(pd_path) not in sys.path:
+        sys.path.insert(0, str(pd_path))
+    from main import normalize_phone, set_cookie
+
+    return normalize_phone, set_cookie
+
+
+def _otp_pending_dir() -> Path:
+    root = sessions_root() / '_otp_pending'
+    root.mkdir(parents=True, exist_ok=True)
+    return root
+
+
+def _otp_pending_path(phone: str) -> Path:
+    normalize_phone, _ = _import_pd_main()
+    return _otp_pending_dir() / f'{normalize_phone(phone)}.json'
+
+
+def _export_otp_pending(engine) -> dict[str, Any]:
+    normalize_phone, _ = _import_pd_main()
+    st = engine.state
+    phone = normalize_phone(st.phone or engine.auth.get_session_phone() or '')
+    cookies: list[dict[str, str]] = []
+    for cookie in engine.session.cookies:
+        cookies.append({
+            'name': cookie.name,
+            'value': cookie.value,
+            'domain': cookie.domain or 'divar.ir',
+            'path': cookie.path or '/',
+        })
+    return {
+        'saved_at': datetime.now(timezone.utc).isoformat(),
+        'phone': phone,
+        'pre_auth_session_id': st.pre_auth_session_id,
+        'device_id': st.device_id,
+        'player_id': st.player_id,
+        'did': st.did,
+        'cdid': st.cdid,
+        'city_slug': st.city_slug,
+        'cookies': cookies,
+    }
+
+
+def _save_otp_pending(engine, phone: str) -> None:
+    payload = _export_otp_pending(engine)
+    normalize_phone, _ = _import_pd_main()
+    payload['phone'] = normalize_phone(phone or payload.get('phone') or '')
+    if not payload.get('pre_auth_session_id'):
+        return
+    path = _otp_pending_path(payload['phone'])
+    tmp = path.with_suffix('.tmp')
+    tmp.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
+    tmp.replace(path)
+
+
+def _load_otp_pending(phone: str) -> Optional[dict[str, Any]]:
+    normalize_phone, _ = _import_pd_main()
+    key = normalize_phone(phone or '')
+    if not key:
+        return None
+    path = _otp_pending_path(key)
+    if not path.is_file():
+        return None
+    try:
+        data = json.loads(path.read_text(encoding='utf-8'))
+    except (OSError, json.JSONDecodeError):
+        return None
+    if not isinstance(data, dict):
+        return None
+    saved_at = data.get('saved_at')
+    if saved_at:
+        try:
+            saved = datetime.fromisoformat(str(saved_at).replace('Z', '+00:00'))
+            age = (datetime.now(timezone.utc) - saved).total_seconds()
+            if age > OTP_PENDING_TTL_SECONDS:
+                path.unlink(missing_ok=True)
+                return None
+        except (TypeError, ValueError):
+            pass
+    if not data.get('pre_auth_session_id'):
+        return None
+    return data
+
+
+def _clear_otp_pending(phone: str) -> None:
+    normalize_phone, _ = _import_pd_main()
+    key = normalize_phone(phone or '')
+    if not key:
+        return
+    _otp_pending_path(key).unlink(missing_ok=True)
+
+
+def _restore_otp_pending(engine, payload: dict[str, Any]) -> None:
+    normalize_phone, set_cookie = _import_pd_main()
+    phone = normalize_phone(payload.get('phone') or '')
+    pending = engine._make_slot(phone, blank=True)
+    pending.phone = phone
+    pending.state.pre_auth_session_id = payload.get('pre_auth_session_id')
+    if payload.get('device_id'):
+        pending.state.device_id = str(payload['device_id'])
+    if payload.get('player_id'):
+        pending.state.player_id = str(payload['player_id'])
+    if payload.get('did'):
+        pending.state.did = str(payload['did'])
+    if payload.get('cdid'):
+        pending.state.cdid = str(payload['cdid'])
+    if payload.get('city_slug'):
+        pending.state.city_slug = str(payload['city_slug'])
+    pending.state.phone = phone
+    pending.session.cookies.clear()
+    for raw in payload.get('cookies') or []:
+        if not isinstance(raw, dict):
+            continue
+        name = raw.get('name')
+        value = raw.get('value')
+        if not name or value is None:
+            continue
+        set_cookie(
+            pending.session,
+            str(name),
+            str(value),
+            domain=str(raw.get('domain') or 'divar.ir'),
+            path=str(raw.get('path') or '/'),
+        )
+    engine._bind_slot(pending)
+
+
+def _ensure_otp_pending_loaded(engine, phone: str) -> None:
+    normalize_phone, _ = _import_pd_main()
+    key = normalize_phone(phone or '')
+    current_phone = normalize_phone(engine.state.phone or engine.auth.get_session_phone() or '')
+    if engine.state.pre_auth_session_id and current_phone == key:
+        return
+    payload = _load_otp_pending(key)
+    if payload:
+        _restore_otp_pending(engine, payload)
+        return
+    if not engine.state.pre_auth_session_id:
+        raise PhoneDetectorLineError(
+            'نشست OTP منقضی یا از بین رفته — دوباره «ارسال کد» را بزنید.',
+            code='otp_session_missing',
+        )
 
 
 def _cookie_value(session_data: dict, name: str) -> str:
@@ -308,7 +455,9 @@ def send_line_otp(phone: str) -> dict[str, Any]:
         raise PhoneDetectorLineError('شماره موبایل الزامی است.', code='missing_phone')
     engine = _get_engine()
     try:
-        return engine.send_otp(phone)
+        result = engine.send_otp(phone)
+        _save_otp_pending(engine, result.get('phone') or phone)
+        return result
     except Exception as exc:
         raise PhoneDetectorLineError(str(exc), code='otp_send_failed') from exc
 
@@ -317,11 +466,18 @@ def verify_line_otp(*, otp: str, phone: str = '') -> dict[str, Any]:
     otp = (otp or '').strip()
     if not otp:
         raise PhoneDetectorLineError('کد تأیید الزامی است.', code='missing_otp')
+    phone = (phone or '').strip()
+    if not phone:
+        raise PhoneDetectorLineError('شماره موبایل الزامی است.', code='missing_phone')
     engine = _get_engine()
     try:
-        result = engine.verify_otp(otp, phone=phone or None)
-        result['lines'] = list_lines(probe=False)['lines']
-        return result
+        _ensure_otp_pending_loaded(engine, phone)
+        result = engine.verify_otp(otp, phone=phone)
+        _clear_otp_pending(result.get('phone') or phone)
+        payload = list_lines(probe=False)
+        return {**result, **payload}
+    except PhoneDetectorLineError:
+        raise
     except Exception as exc:
         raise PhoneDetectorLineError(str(exc), code='otp_verify_failed') from exc
 

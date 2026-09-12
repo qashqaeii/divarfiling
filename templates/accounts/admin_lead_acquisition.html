@@ -2392,13 +2392,13 @@
 
     function openLinesModal(title, presetPhone) {
       if (!modal) return;
-      pendingPhone = presetPhone || '';
+      pendingPhone = '';
       if (modalTitle) modalTitle.textContent = title || 'افزودن خط جدید';
       if (phoneInput) phoneInput.value = presetPhone || '';
       if (otpInput) otpInput.value = '';
-      if (pendingPhoneEl) pendingPhoneEl.textContent = pendingPhone || '—';
-      if (stepPhone) stepPhone.hidden = !!pendingPhone;
-      if (stepOtp) stepOtp.hidden = !pendingPhone;
+      if (pendingPhoneEl) pendingPhoneEl.textContent = '—';
+      if (stepPhone) stepPhone.hidden = false;
+      if (stepOtp) stepOtp.hidden = true;
       showModalError('');
       if (typeof modal.showModal === 'function') modal.showModal();
     }

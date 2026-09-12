@@ -97,6 +97,7 @@ urlpatterns = [
     path('register/with-password/', views.RegisterView.as_view(), name='register_password'),
     path('dashboard/', views.DashboardView.as_view(), name='dashboard'),
     path('dashboard/<slug:tab>/', views.DashboardView.as_view(), name='dashboard_tab'),
+    path('dashboard/orders/<uuid:order_id>/detail.json', views.OrderDetailJsonView.as_view(), name='dashboard_order_detail'),
     path('dashboard/claim-license/', views.ClaimLicenseView.as_view(), name='claim_license'),
     path('dashboard/licenses/register-device/', views.RegisterDeviceSlotView.as_view(), name='license_register_device'),
     path('dashboard/licenses/update-device/', views.UpdateDeviceSlotView.as_view(), name='license_update_device'),

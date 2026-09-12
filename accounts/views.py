@@ -582,3 +582,36 @@ class ClaimLicenseView(LoginRequiredMixin, View):
 
         return redirect(f"{reverse('dashboard_tab', kwargs={'tab': 'licenses'})}#licenses")
 
+
+class OrderDetailJsonView(LoginRequiredMixin, View):
+    """جزئیات سفارش برای مودال داشبورد."""
+
+    def get(self, request, order_id):
+        from shop.models import Order
+        from shop.services.app_downloads import build_app_download_context
+
+        order = (
+            Order.objects.filter(user=request.user, id=order_id)
+            .select_related(
+                'product',
+                'plan',
+                'discount_code',
+                'renewal_license',
+                'renewal_license__plan',
+            )
+            .select_related('transaction', 'card_transfer')
+            .first()
+        )
+        if not order:
+            return JsonResponse({'ok': False, 'error': 'سفارش پیدا نشد.'}, status=404)
+
+        from accounts.services.order_detail import serialize_order_detail
+
+        android_available = bool(
+            build_app_download_context(request).get('android', {}).get('available')
+        )
+        return JsonResponse({
+            'ok': True,
+            'order': serialize_order_detail(order, android_available=android_available),
+        })
+

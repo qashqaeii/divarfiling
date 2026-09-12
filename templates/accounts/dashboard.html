@@ -16,6 +16,7 @@
 <link rel="stylesheet" href="{% static 'css/mizkar-dashboard-profile.css' %}?v=2">
 <link rel="stylesheet" href="{% static 'css/mizkar-dashboard-premium.css' %}?v=1">
 <link rel="stylesheet" href="{% static 'css/mizkar-account-shell.css' %}?v=9">
+<link rel="stylesheet" href="{% static 'css/mizkar-dashboard-orders.css' %}?v=1">
 <link rel="stylesheet" href="{% static 'css/mizkar-app-download.css' %}?v=4">
 <link rel="stylesheet" href="{% static 'workspace/css/modals.css' %}?v=34">
 {% endblock %}
@@ -40,152 +41,8 @@
             {% include 'accounts/partials/account_breadcrumb.html' %}
             <div class="mk-acc-tab-body">
 
-        <!-- Tab: Orders -->
-        <div id="tab-orders" class="mk-acc-tab-panel tab-content dash-tab-panel"{% if active_tab != 'orders' %} hidden{% endif %}>
-            <header class="mk-account-page-head mk-account-page-head--row">
-        <div>
-                    <h1 class="mk-account-page-head__title">سفارش‌های من</h1>
-                    <p class="mk-account-page-head__sub">پیگیری پرداخت، دریافت لایسنس و دانلود ربات</p>
-        </div>
-                {% if pending_orders_count %}
-                <a href="{{ dashboard_tab_urls.orders }}?order_status=pending" class="mk-acc-head-badge mk-acc-head-badge--warn">
-                    <i class="fas fa-clock" aria-hidden="true"></i>
-                    {{ pending_orders_count }} در انتظار
-                </a>
-    {% endif %}
-            </header>
+        {% include 'accounts/partials/account_orders_panel.html' %}
 
-            <div class="mk-acc-kpi-strip" aria-label="خلاصه سفارش‌ها">
-                <article class="mk-acc-kpi"><span class="mk-acc-kpi__val">{{ total_orders }}</span><span class="mk-acc-kpi__lbl">کل سفارش</span></article>
-                <article class="mk-acc-kpi mk-acc-kpi--green"><span class="mk-acc-kpi__val">{{ paid_orders }}</span><span class="mk-acc-kpi__lbl">پرداخت‌شده</span></article>
-                <article class="mk-acc-kpi mk-acc-kpi--amber"><span class="mk-acc-kpi__val">{{ pending_orders_count }}</span><span class="mk-acc-kpi__lbl">در انتظار</span></article>
-                <article class="mk-acc-kpi mk-acc-kpi--violet"><span class="mk-acc-kpi__val">{{ total_spent|currency }}</span><span class="mk-acc-kpi__lbl">تومان خرید</span></article>
-                </div>
-                
-            <div class="mk-acc-panel mk-acc-panel--filter">
-                <details class="mk-acc-filter" open>
-                    <summary class="mk-acc-filter__trigger">
-                        <i class="fas fa-sliders-h" aria-hidden="true"></i>
-                        <span>فیلتر و جستجو</span>
-                        {% if order_status_filter or order_search %}<em class="mk-acc-filter__badge">فعال</em>{% endif %}
-                    </summary>
-                <div class="mk-acc-filter__body">
-                    <form method="get" class="mk-acc-filter-form">
-                        <input type="hidden" name="order_status" value="{{ order_status_filter }}">
-                        <div class="mk-acc-filter-form__row">
-                            <div class="mk-acc-filter-form__group">
-                                <label>جستجو</label>
-                                <input type="text" name="order_search" value="{{ order_search }}" 
-                                       placeholder="جستجوی سفارش..." class="mk-acc-input">
-                            </div>
-                            <div class="mk-acc-filter-form__group">
-                                <label>وضعیت</label>
-                                <select name="order_status" class="mk-acc-input" onchange="this.form.submit()">
-                                    <option value="">همه وضعیت‌ها</option>
-                                    <option value="pending" {% if order_status_filter == 'pending' %}selected{% endif %}>در انتظار پرداخت</option>
-                                    <option value="pending_verification" {% if order_status_filter == 'pending_verification' %}selected{% endif %}>در انتظار تایید پرداخت</option>
-                                    <option value="paid" {% if order_status_filter == 'paid' %}selected{% endif %}>پرداخت شده</option>
-                                    <option value="failed" {% if order_status_filter == 'failed' %}selected{% endif %}>ناموفق</option>
-                                    <option value="cancelled" {% if order_status_filter == 'cancelled' %}selected{% endif %}>لغو شده</option>
-                                </select>
-                            </div>
-                            <div class="mk-acc-filter-form__actions">
-                                <button type="submit" class="mk-acc-btn mk-acc-btn--primary">
-                                    <i class="fas fa-search" aria-hidden="true"></i> جستجو
-                                </button>
-                                {% if order_status_filter or order_search %}
-                                    <a href="{{ dashboard_tab_urls.orders }}" class="mk-acc-btn mk-acc-btn--ghost">
-                                        <i class="fas fa-times" aria-hidden="true"></i> پاک کردن
-                                    </a>
-                                {% endif %}
-                            </div>
-                        </div>
-                    </form>
-                </div>
-                </details>
-            </div>
-            
-            {% if orders %}
-            <div class="mk-acc-panel mk-acc-panel--table">
-                <div class="mk-acc-table-wrap">
-                    <table class="mk-acc-table dash-orders-table">
-                        <thead>
-                            <tr>
-                                <th scope="col">شماره سفارش</th>
-                                <th scope="col">محصول</th>
-                                <th scope="col">پلن</th>
-                                <th scope="col">مبلغ</th>
-                                <th scope="col">تاریخ</th>
-                                <th scope="col">وضعیت</th>
-                                <th scope="col" class="dash-orders-th-actions">عملیات</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for order in orders %}
-                                <tr>
-                                    <td data-label="شماره سفارش">
-                                        <code class="dash-order-id" title="{{ order.id }}">{{ order.id|slice:":8" }}…</code>
-                                    </td>
-                                    <td data-label="محصول">
-                                        <span class="dash-order-product" title="{{ order.product.title }}">{{ order.product.title }}</span>
-                                    </td>
-                                    <td data-label="پلن">
-                                        <span class="dash-order-plan">{{ order.plan.name }}</span>
-                                    </td>
-                                    <td data-label="مبلغ">
-                                        <span class="dash-order-amount">{{ order.amount|currency }} <small>تومان</small></span>
-                                    </td>
-                                    <td data-label="تاریخ">
-                                        <span class="dash-order-date">{{ order.created_at|to_jalali_date:"%Y/%m/%d" }}</span>
-                                        <span class="dash-order-time">{{ order.created_at|to_jalali_date:"%H:%M" }}</span>
-                                    </td>
-                                    <td data-label="وضعیت">
-                                        <span class="mk-acc-status-pill mk-acc-status-pill--{{ order.status }}">{{ order.get_status_display }}</span>
-                                    </td>
-                                    <td data-label="عملیات">
-                                        <div class="mk-acc-row-actions dash-orders-actions">
-                                            <button type="button" class="mk-acc-icon-btn" onclick="showOrderDetails('{{ order.id }}')" title="جزئیات">
-                                                <i class="fas fa-eye" aria-hidden="true"></i>
-                                            </button>
-                                            {% if order.status == 'paid' %}
-                                                <a href="{% url 'payment:success' order.id %}" class="mk-acc-icon-btn" title="لایسنس و جزئیات">
-                                                    <i class="fas fa-key" aria-hidden="true"></i>
-                                                </a>
-                                                <a href="{% url 'payment:download' order.id %}" class="mk-acc-icon-btn mk-acc-icon-btn--accent" title="دانلود ربات ویندوز">
-                                                    <i class="fas fa-download" aria-hidden="true"></i>
-                                                </a>
-                                                {% if app_downloads.android.available %}
-                                                <a href="{% url 'android_app_download' %}" class="mk-acc-icon-btn mk-acc-icon-btn--accent" title="دانلود اپ اندروید">
-                                                    <i class="fab fa-android" aria-hidden="true"></i>
-                                                </a>
-                                                {% endif %}
-                                            {% elif order.status == 'pending_verification' %}
-                                                <a href="{% url 'payment:card_pending' order.id %}" class="mk-acc-icon-btn mk-acc-icon-btn--amber" title="پیگیری پرداخت">
-                                                    <i class="fas fa-hourglass-half" aria-hidden="true"></i>
-                                                </a>
-                                            {% elif order.status == 'pending' and order.payment_method == 'card_transfer' %}
-                                                <a href="{% url 'payment:card_transfer' order.id %}" class="mk-acc-icon-btn mk-acc-icon-btn--accent" title="تکمیل پرداخت">
-                                                    <i class="fas fa-credit-card" aria-hidden="true"></i>
-                                                </a>
-                                            {% endif %}
-                                        </div>
-                                    </td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-                </div>
-            {% else %}
-                <div class="mk-acc-empty-state">
-                    <span class="mk-acc-empty-state__icon"><i class="fas fa-shopping-bag" aria-hidden="true"></i></span>
-                    <p class="mk-acc-empty-state__title">هنوز سفارشی ثبت نکرده‌اید</p>
-                    <p class="mk-acc-empty-state__text">پس از خرید، وضعیت پرداخت و لینک دانلود اینجا نمایش داده می‌شود.</p>
-                    <a href="{% url 'product_list' %}" class="mk-acc-btn mk-acc-btn--primary">مشاهده محصولات</a>
-                </div>
-            {% endif %}
-        </div>
-        
         <!-- Tab: Licenses -->
         <div id="tab-licenses" class="mk-acc-tab-panel tab-content dash-tab-panel"{% if active_tab != 'licenses' %} hidden{% endif %} data-license-mgmt>
             <header class="mk-account-page-head mk-account-page-head--row">
@@ -1075,11 +932,23 @@
     </div>
 </div>
 
-<!-- Modal برای جزئیات سفارش -->
-<div id="orderModal" class="modal" onclick="closeModal(event)">
-    <div class="modal-content" onclick="event.stopPropagation()">
-        <span class="modal-close" onclick="closeModal()">&times;</span>
-        <div id="orderModalBody"></div>
+<!-- Order detail modal -->
+<div id="mkOrderDetailModal" class="mk-order-modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="mkOrderDetailTitle"
+     data-detail-url="{% url 'dashboard_order_detail' '00000000-0000-0000-0000-000000000000' %}">
+    <div class="mk-order-modal__overlay" data-order-modal-close></div>
+    <div class="mk-order-modal__panel" role="document">
+        <div class="mk-order-modal__accent" aria-hidden="true"></div>
+        <header class="mk-order-modal__head">
+            <div>
+                <h2 id="mkOrderDetailTitle" class="mk-order-modal__title">جزئیات سفارش</h2>
+                <p id="mkOrderDetailSub" class="mk-order-modal__sub"></p>
+            </div>
+            <button type="button" class="mk-order-modal__close" data-order-modal-close aria-label="بستن">
+                <i class="fas fa-xmark" aria-hidden="true"></i>
+            </button>
+        </header>
+        <div id="mkOrderDetailBody" class="mk-order-modal__body"></div>
+        <footer id="mkOrderDetailFoot" class="mk-order-modal__foot"></footer>
     </div>
 </div>
 
@@ -1456,18 +1325,6 @@ function copyLicenseKey(elementId) {
     });
 }
 
-function showOrderDetails(orderId) {
-    // TODO: بارگذاری جزئیات سفارش با AJAX
-    document.getElementById('orderModal').style.display = 'block';
-    document.getElementById('orderModalBody').innerHTML = '<p>در حال بارگذاری...</p>';
-}
-
-function closeModal(event) {
-    if (!event || event.target.classList.contains('modal') || event.target.classList.contains('modal-close')) {
-        document.getElementById('orderModal').style.display = 'none';
-    }
-}
-
 // showToast provided by mk-notices.js
 
 // Countdown برای لایسنس‌ها
@@ -1742,6 +1599,7 @@ function copyAffiliateLinkOverview() {
 
 {% block extra_js %}
 <script src="{% static 'js/mizkar-account-shell.js' %}?v=2"></script>
+<script src="{% static 'js/mk-order-detail-modal.js' %}?v=1"></script>
 <script>
 (function initDashboardFooterAccordion() {
     if (!document.body.classList.contains('mk-account-dashboard')) return;

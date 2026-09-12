@@ -1,0 +1,122 @@
+{% load persian_tags %}
+{% load currency_tags %}
+
+<div id="tab-orders" class="mk-acc-tab-panel tab-content dash-tab-panel mk-orders-tab"{% if active_tab != 'orders' %} hidden{% endif %} data-orders-tab>
+    <header class="mk-account-page-head mk-account-page-head--row">
+        <div>
+            <h1 class="mk-account-page-head__title">سفارش‌های من</h1>
+            <p class="mk-account-page-head__sub">پیگیری پرداخت، دریافت لایسنس و دانلود ربات — همه در یک نگاه</p>
+        </div>
+        {% if pending_orders_count %}
+        <a href="{{ dashboard_tab_urls.orders }}?order_status=pending" class="mk-acc-head-badge mk-acc-head-badge--warn">
+            <i class="fas fa-clock" aria-hidden="true"></i>
+            {{ pending_orders_count }} در انتظار
+        </a>
+        {% endif %}
+    </header>
+
+    <div class="mk-orders-kpi" aria-label="خلاصه سفارش‌ها">
+        <article class="mk-orders-kpi-card">
+            <span class="mk-orders-kpi-card__icon"><i class="fas fa-receipt" aria-hidden="true"></i></span>
+            <span class="mk-orders-kpi-card__val">{{ total_orders }}</span>
+            <span class="mk-orders-kpi-card__lbl">کل سفارش</span>
+        </article>
+        <article class="mk-orders-kpi-card mk-orders-kpi-card--green">
+            <span class="mk-orders-kpi-card__icon"><i class="fas fa-check-circle" aria-hidden="true"></i></span>
+            <span class="mk-orders-kpi-card__val">{{ paid_orders }}</span>
+            <span class="mk-orders-kpi-card__lbl">پرداخت‌شده</span>
+        </article>
+        <article class="mk-orders-kpi-card mk-orders-kpi-card--amber">
+            <span class="mk-orders-kpi-card__icon"><i class="fas fa-hourglass-half" aria-hidden="true"></i></span>
+            <span class="mk-orders-kpi-card__val">{{ pending_orders_count }}</span>
+            <span class="mk-orders-kpi-card__lbl">در انتظار</span>
+        </article>
+        <article class="mk-orders-kpi-card mk-orders-kpi-card--violet">
+            <span class="mk-orders-kpi-card__icon"><i class="fas fa-wallet" aria-hidden="true"></i></span>
+            <span class="mk-orders-kpi-card__val">{{ total_spent|currency }}</span>
+            <span class="mk-orders-kpi-card__lbl">تومان خرید</span>
+        </article>
+    </div>
+
+    <div class="mk-orders-toolbar">
+        <form method="get" class="mk-orders-search" role="search">
+            <i class="fas fa-search mk-orders-search__icon" aria-hidden="true"></i>
+            <input type="search" name="order_search" value="{{ order_search }}" placeholder="جستجو در شماره سفارش یا محصول..." class="mk-acc-input mk-orders-search__input" autocomplete="off">
+            {% if order_status_filter %}<input type="hidden" name="order_status" value="{{ order_status_filter }}">{% endif %}
+        </form>
+        <nav class="mk-orders-filters" aria-label="فیلتر وضعیت">
+            <a href="{{ dashboard_tab_urls.orders }}{% if order_search %}?order_search={{ order_search|urlencode }}{% endif %}" class="mk-orders-filter{% if not order_status_filter %} is-active{% endif %}">همه</a>
+            <a href="{{ dashboard_tab_urls.orders }}?order_status=pending{% if order_search %}&order_search={{ order_search|urlencode }}{% endif %}" class="mk-orders-filter{% if order_status_filter == 'pending' %} is-active{% endif %}">در انتظار</a>
+            <a href="{{ dashboard_tab_urls.orders }}?order_status=pending_verification{% if order_search %}&order_search={{ order_search|urlencode }}{% endif %}" class="mk-orders-filter{% if order_status_filter == 'pending_verification' %} is-active{% endif %}">بررسی</a>
+            <a href="{{ dashboard_tab_urls.orders }}?order_status=paid{% if order_search %}&order_search={{ order_search|urlencode }}{% endif %}" class="mk-orders-filter{% if order_status_filter == 'paid' %} is-active{% endif %}">پرداخت‌شده</a>
+            <a href="{{ dashboard_tab_urls.orders }}?order_status=failed{% if order_search %}&order_search={{ order_search|urlencode }}{% endif %}" class="mk-orders-filter{% if order_status_filter == 'failed' %} is-active{% endif %}">ناموفق</a>
+        </nav>
+    </div>
+
+    {% if orders %}
+    <div class="mk-orders-list" role="list">
+        {% for order in orders %}
+        <article class="mk-order-card mk-order-card--{{ order.status }}" role="listitem" data-order-id="{{ order.id }}">
+            <div class="mk-order-card__main">
+                <div class="mk-order-card__head">
+                    <div class="mk-order-card__product">
+                        <span class="mk-order-card__product-icon" aria-hidden="true"><i class="fas fa-robot"></i></span>
+                        <div class="mk-order-card__product-copy">
+                            <h3 class="mk-order-card__title">{{ order.product.title }}</h3>
+                            <p class="mk-order-card__plan">{{ order.plan.name }}{% if order.quantity > 1 %} · {{ order.quantity }} لایسنس{% endif %}</p>
+                        </div>
+                    </div>
+                    <span class="mk-orders-status mk-orders-status--{{ order.status }}">{{ order.get_status_display }}</span>
+                </div>
+                <div class="mk-order-card__meta">
+                    <span class="mk-order-card__meta-item" title="{{ order.id }}">
+                        <i class="fas fa-hashtag" aria-hidden="true"></i>
+                        <code>{{ order.id|slice:":8" }}…</code>
+                    </span>
+                    <span class="mk-order-card__meta-item">
+                        <i class="fas fa-calendar" aria-hidden="true"></i>
+                        {{ order.created_at|to_jalali_date:"%Y/%m/%d" }}
+                        <span class="mk-order-card__time">{{ order.created_at|to_jalali_date:"%H:%M" }}</span>
+                    </span>
+                    <span class="mk-order-card__meta-item mk-order-card__amount">
+                        <i class="fas fa-coins" aria-hidden="true"></i>
+                        {{ order.amount|currency }} <small>تومان</small>
+                    </span>
+                </div>
+            </div>
+            <div class="mk-order-card__actions">
+                <button type="button" class="mk-acc-btn mk-acc-btn--primary mk-order-card__detail-btn" data-order-detail="{{ order.id }}">
+                    <i class="fas fa-receipt" aria-hidden="true"></i>
+                    جزئیات پرداخت
+                </button>
+                {% if order.status == 'paid' %}
+                <a href="{% url 'payment:success' order.id %}" class="mk-acc-btn mk-acc-btn--ghost" title="لایسنس">
+                    <i class="fas fa-key" aria-hidden="true"></i>
+                </a>
+                {% elif order.status == 'pending' and order.payment_method == 'card_transfer' %}
+                <a href="{% url 'payment:card_transfer' order.id %}" class="mk-acc-btn mk-acc-btn--ghost" title="تکمیل پرداخت">
+                    <i class="fas fa-credit-card" aria-hidden="true"></i>
+                </a>
+                {% elif order.status == 'pending' %}
+                <a href="{% url 'payment:checkout' order.id %}" class="mk-acc-btn mk-acc-btn--ghost" title="پرداخت">
+                    <i class="fas fa-credit-card" aria-hidden="true"></i>
+                </a>
+                {% endif %}
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+
+    {% else %}
+    <div class="mk-acc-empty-state mk-orders-empty">
+        <span class="mk-acc-empty-state__icon"><i class="fas fa-shopping-bag" aria-hidden="true"></i></span>
+        <p class="mk-acc-empty-state__title">{% if order_status_filter or order_search %}سفارشی با این فیلتر پیدا نشد{% else %}هنوز سفارشی ثبت نکرده‌اید{% endif %}</p>
+        <p class="mk-acc-empty-state__text">پس از خرید، وضعیت پرداخت و لینک دانلود اینجا نمایش داده می‌شود.</p>
+        {% if order_status_filter or order_search %}
+        <a href="{{ dashboard_tab_urls.orders }}" class="mk-acc-btn mk-acc-btn--ghost">حذف فیلتر</a>
+        {% else %}
+        <a href="{% url 'product_list' %}" class="mk-acc-btn mk-acc-btn--primary">مشاهده محصولات</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>

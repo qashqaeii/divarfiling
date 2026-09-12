@@ -1,0 +1,257 @@
+{% load persian_tags %}
+{% load static %}
+
+<div id="tab-profile" class="mk-acc-tab-panel mk-acc-tab-shell mk-profile-tab tab-content dash-tab-panel prof-tab"{% if active_tab != 'profile' %} hidden{% endif %}>
+    <header class="mk-account-page-head">
+        <h1 class="mk-account-page-head__title">پروفایل</h1>
+        <p class="mk-account-page-head__sub">حساب کاربری و برند عمومی برای اشتراک با مشتری</p>
+    </header>
+
+    <div class="prof-hero" aria-label="پروفایل کاربر">
+        <div class="prof-hero__avatar">
+            {% if user.profile and user.profile.avatar %}
+            <img src="{{ user.profile.avatar.url }}" alt="">
+            {% else %}
+            <span class="prof-hero__avatar-ph" aria-hidden="true">{{ user.username|slice:":1"|upper }}</span>
+            {% endif %}
+        </div>
+        <div class="prof-hero__copy">
+            <h2 class="prof-hero__name">{{ user.get_full_name|default:user.username }}</h2>
+            <p class="prof-hero__username">@{{ user.username }}</p>
+            <p class="prof-hero__meta">
+                <i class="fas fa-calendar" aria-hidden="true"></i>
+                عضو از {{ user.date_joined|to_jalali_date:'%Y/%m/%d' }}
+            </p>
+        </div>
+        <div class="prof-hero__actions">
+            <button type="button" class="prof-edit-btn" onclick="openUserInfoModal()">
+                <i class="fas fa-pen" aria-hidden="true"></i> ویرایش حساب
+            </button>
+            <button type="button" class="prof-edit-btn" onclick="openProfileModal()">
+                <i class="fas fa-user-cog" aria-hidden="true"></i> پروفایل تکمیلی
+            </button>
+        </div>
+    </div>
+
+    <div class="prof-grid mk-acc-profile-grid">
+        <section class="prof-card mk-acc-panel">
+            <header class="prof-card-head">
+                <h3 class="prof-card-title">حساب کاربری</h3>
+                <button type="button" class="prof-edit-btn" onclick="openUserInfoModal()">
+                    <i class="fas fa-pen" aria-hidden="true"></i> ویرایش
+                </button>
+            </header>
+            <dl class="prof-fields">
+                <div class="prof-field">
+                    <dt>نام کاربری</dt>
+                    <dd>{{ user.username }}</dd>
+                </div>
+                <div class="prof-field">
+                    <dt>ایمیل</dt>
+                    <dd dir="ltr">{{ user.email|default:"—" }}</dd>
+                </div>
+                <div class="prof-field">
+                    <dt>موبایل</dt>
+                    <dd>{{ user.phone|default:"—" }}</dd>
+                </div>
+                <div class="prof-field">
+                    <dt>عضویت</dt>
+                    <dd>{{ user.date_joined|to_jalali_date:'%Y/%m/%d' }}</dd>
+                </div>
+            </dl>
+        </section>
+
+        <section class="prof-card mk-acc-panel">
+            <header class="prof-card-head">
+                <div class="prof-card-head-main">
+                    {% if user.profile and user.profile.avatar %}
+                    <img src="{{ user.profile.avatar.url }}" alt="" class="prof-avatar-thumb">
+                    {% endif %}
+                    <h3 class="prof-card-title">پروفایل تکمیلی</h3>
+                </div>
+                <button type="button" class="prof-edit-btn" onclick="openProfileModal()">
+                    <i class="fas fa-pen" aria-hidden="true"></i> ویرایش
+                </button>
+            </header>
+            {% if user.profile %}
+            <dl class="prof-fields">
+                <div class="prof-field prof-field--full">
+                    <dt>درباره من</dt>
+                    <dd>{{ user.profile.bio|default:"—" }}</dd>
+                </div>
+                <div class="prof-field">
+                    <dt>شهر</dt>
+                    <dd>{{ user.profile.city|default:"—" }}</dd>
+                </div>
+                <div class="prof-field">
+                    <dt>کد پستی</dt>
+                    <dd>{{ user.profile.postal_code|default:"—" }}</dd>
+                </div>
+                <div class="prof-field prof-field--full">
+                    <dt>آدرس</dt>
+                    <dd>{{ user.profile.address|default:"—" }}</dd>
+                </div>
+            </dl>
+            {% else %}
+            <p class="prof-empty">اطلاعات تکمیلی ثبت نشده — از دکمه ویرایش شروع کنید.</p>
+            {% endif %}
+        </section>
+    </div>
+
+    <section class="prof-card prof-card--public" id="consultantPublicProfile">
+        <header class="prof-card-head prof-card-head--public">
+            <div>
+                <h3 class="prof-card-title">پروفایل عمومی مشاور</h3>
+                <p class="prof-card-desc">در لینک اشتراک مشتری و صفحه عمومی نمایش داده می‌شود</p>
+            </div>
+            {% if consultant_socials_active %}
+            <span class="prof-live-chip">{{ consultant_socials_active|length }} شبکه فعال</span>
+            {% endif %}
+        </header>
+
+        <form id="consultantProfileForm" class="prof-form" enctype="multipart/form-data" onsubmit="submitConsultantProfileForm(event)">
+            {% csrf_token %}
+
+            <details class="prof-fold" open>
+                <summary>برند و پیام</summary>
+                <div class="prof-fold-body">
+                    <label class="prof-label" for="consultantAgencyName">نام آژانس / برند</label>
+                    <input type="text" name="agency_name" id="consultantAgencyName" class="prof-input"
+                           value="{{ consultant_agency_name }}" placeholder="مثلاً آژانس املاک آسمان">
+                    <label class="prof-label" for="consultantWelcome">پیام خوش‌آمد</label>
+                    <textarea name="default_welcome_message" id="consultantWelcome" class="prof-input prof-input--area" rows="2"
+                              placeholder="برای هماهنگی بازدید با من تماس بگیرید…">{{ consultant_welcome_plain }}</textarea>
+                </div>
+            </details>
+
+            <details class="prof-fold">
+                <summary>مشاور و شبکه‌های شخصی</summary>
+                <div class="prof-fold-body">
+                    <div class="prof-upload-row">
+                        <div class="prof-photo">
+                            {% if consultant_photo_url %}
+                            <img src="{{ consultant_photo_url }}" alt="" id="consultantPhotoPreview" width="64" height="64">
+                            {% else %}
+                            <img src="" alt="" id="consultantPhotoPreview" width="64" height="64" style="display:none">
+                            <span class="prof-photo-ph" id="consultantPhotoPlaceholder"><i class="fas fa-user"></i></span>
+                            {% endif %}
+                        </div>
+                        <div class="prof-upload-field">
+                            <label class="prof-label" for="consultantPhotoInput">عکس مشاور</label>
+                            <input type="file" name="consultant_photo" id="consultantPhotoInput" class="prof-input prof-input--file"
+                                   accept="image/*" onchange="previewConsultantImage(event, 'consultantPhotoPreview', 'consultantPhotoPlaceholder')">
+                            {% if consultant_photo_url %}
+                            <label class="prof-check"><input type="checkbox" name="clear_consultant_photo" value="1"> حذف عکس</label>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="prof-social-list">
+                        {% for net in consultant_social_networks %}
+                        <div class="prof-social-row" style="--prof-social: {{ net.color }}">
+                            <label class="prof-social-label" for="dash-social-{{ net.key }}">
+                                {% if net.icon_file %}
+                                <img src="{% static net.icon_file %}?v=2" alt="" width="20" height="20">
+                                {% else %}
+                                <i class="fas fa-link" aria-hidden="true"></i>
+                                {% endif %}
+                                <span>{{ net.label }}</span>
+                            </label>
+                            <input type="text" class="prof-input prof-input--social" id="dash-social-{{ net.key }}"
+                                   name="social_{{ net.key }}" value="{{ net.url }}" placeholder="{{ net.placeholder }}"
+                                   dir="ltr" autocomplete="off">
+                        </div>
+                        {% empty %}
+                        <p class="prof-empty">شبکه‌ای تعریف نشده.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </details>
+
+            <details class="prof-fold">
+                <summary>دفتر املاک</summary>
+                <div class="prof-fold-body">
+                    <label class="prof-label" for="consultantAgencyAddress">آدرس</label>
+                    <textarea name="agency_address" id="consultantAgencyAddress" class="prof-input prof-input--area" rows="2"
+                              placeholder="خیابان، پلاک…">{{ consultant_agency_address }}</textarea>
+                    <div class="prof-field-grid">
+                        <div>
+                            <label class="prof-label" for="consultantAgencyCity">شهر</label>
+                            <input type="text" name="agency_city" id="consultantAgencyCity" class="prof-input"
+                                   value="{{ consultant_agency_city }}" placeholder="تهران">
+                        </div>
+                        <div>
+                            <label class="prof-label" for="consultantAgencyWebsite">وبسایت</label>
+                            <input type="url" name="agency_website" id="consultantAgencyWebsite" class="prof-input"
+                                   value="{{ consultant_agency_website }}" placeholder="https://…" dir="ltr">
+                        </div>
+                        <div>
+                            <label class="prof-label" for="consultantAgencyLandline">تلفن ثابت</label>
+                            <input type="text" name="agency_landline" id="consultantAgencyLandline" class="prof-input"
+                                   value="{{ consultant_agency_landline }}" placeholder="۰۲۱…" dir="ltr">
+                        </div>
+                        <div>
+                            <label class="prof-label" for="consultantAgencyLandlineAlt">تلفن دوم</label>
+                            <input type="text" name="agency_landline_alt" id="consultantAgencyLandlineAlt" class="prof-input"
+                                   value="{{ consultant_agency_landline_alt }}" placeholder="اختیاری" dir="ltr">
+                        </div>
+                        <div>
+                            <label class="prof-label" for="consultantAgencyLat">عرض</label>
+                            <input type="text" name="agency_latitude" id="consultantAgencyLat" class="prof-input"
+                                   value="{{ consultant_agency_latitude }}" placeholder="35.6892" dir="ltr" inputmode="decimal">
+                        </div>
+                        <div>
+                            <label class="prof-label" for="consultantAgencyLng">طول</label>
+                            <input type="text" name="agency_longitude" id="consultantAgencyLng" class="prof-input"
+                                   value="{{ consultant_agency_longitude }}" placeholder="51.3890" dir="ltr" inputmode="decimal">
+                        </div>
+                    </div>
+                    <div class="prof-upload-row prof-upload-row--card">
+                        <div class="prof-photo prof-photo--card">
+                            {% if consultant_business_card_url %}
+                            <img src="{{ consultant_business_card_url }}" alt="" id="businessCardPreview" width="96" height="58">
+                            {% else %}
+                            <img src="" alt="" id="businessCardPreview" width="96" height="58" style="display:none">
+                            <span class="prof-photo-ph" id="businessCardPlaceholder"><i class="fas fa-id-card"></i></span>
+                            {% endif %}
+                        </div>
+                        <div class="prof-upload-field">
+                            <label class="prof-label" for="businessCardInput">کارت ویزیت</label>
+                            <input type="file" name="business_card_image" id="businessCardInput" class="prof-input prof-input--file"
+                                   accept="image/*" onchange="previewConsultantImage(event, 'businessCardPreview', 'businessCardPlaceholder')">
+                            {% if consultant_business_card_url %}
+                            <label class="prof-check"><input type="checkbox" name="clear_business_card_image" value="1"> حذف کارت</label>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <p class="prof-fold-kicker">شبکه‌های دفتر</p>
+                    <div class="prof-social-list">
+                        {% for net in agency_social_networks %}
+                        <div class="prof-social-row" style="--prof-social: {{ net.color }}">
+                            <label class="prof-social-label" for="dash-agency-social-{{ net.key }}">
+                                {% if net.icon_file %}
+                                <img src="{% static net.icon_file %}?v=2" alt="" width="20" height="20">
+                                {% else %}
+                                <i class="fas fa-link" aria-hidden="true"></i>
+                                {% endif %}
+                                <span>{{ net.label }}</span>
+                            </label>
+                            <input type="text" class="prof-input prof-input--social" id="dash-agency-social-{{ net.key }}"
+                                   name="agency_social_{{ net.key }}" value="{{ net.url }}" placeholder="{{ net.placeholder }}"
+                                   dir="ltr" autocomplete="off">
+                        </div>
+                        {% empty %}
+                        <p class="prof-empty">شبکه دفتر تعریف نشده.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </details>
+
+            <div id="consultantProfileError" class="alert alert-danger modal-error prof-form-error" style="display: none;"></div>
+            <footer class="prof-form-foot">
+                <button type="submit" id="consultantProfileSubmitBtn" class="prof-save-btn">
+                    <i class="fas fa-check" aria-hidden="true"></i> ذخیره پروفایل عمومی
+                </button>
+            </footer>
+        </form>
+    </section>
+</div>

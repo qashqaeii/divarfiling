@@ -1,0 +1,74 @@
+{% load persian_tags %}
+{% load currency_tags %}
+
+<div id="tab-transactions" class="mk-acc-tab-panel mk-acc-tab-shell mk-transactions-tab tab-content dash-tab-panel"{% if active_tab != 'transactions' %} hidden{% endif %}>
+    <header class="mk-account-page-head mk-account-page-head--row">
+        <div>
+            <h1 class="mk-account-page-head__title">تراکنش‌های من</h1>
+            <p class="mk-account-page-head__sub">تاریخچه پرداخت‌های آنلاین، کد پیگیری و وضعیت درگاه</p>
+        </div>
+    </header>
+
+    {% if transactions %}
+    <div class="mk-acc-kpi-grid" aria-label="خلاصه تراکنش‌ها">
+        <article class="mk-acc-kpi-card">
+            <span class="mk-acc-kpi-card__icon"><i class="fas fa-right-left" aria-hidden="true"></i></span>
+            <span class="mk-acc-kpi-card__val">{{ txn_stats.total }}</span>
+            <span class="mk-acc-kpi-card__lbl">کل تراکنش</span>
+        </article>
+        <article class="mk-acc-kpi-card mk-acc-kpi-card--green">
+            <span class="mk-acc-kpi-card__icon"><i class="fas fa-check-circle" aria-hidden="true"></i></span>
+            <span class="mk-acc-kpi-card__val">{{ txn_stats.paid }}</span>
+            <span class="mk-acc-kpi-card__lbl">موفق</span>
+        </article>
+        <article class="mk-acc-kpi-card mk-acc-kpi-card--amber">
+            <span class="mk-acc-kpi-card__icon"><i class="fas fa-clock" aria-hidden="true"></i></span>
+            <span class="mk-acc-kpi-card__val">{{ txn_stats.pending }}</span>
+            <span class="mk-acc-kpi-card__lbl">در انتظار</span>
+        </article>
+        <article class="mk-acc-kpi-card mk-acc-kpi-card--red">
+            <span class="mk-acc-kpi-card__icon"><i class="fas fa-circle-xmark" aria-hidden="true"></i></span>
+            <span class="mk-acc-kpi-card__val">{{ txn_stats.failed }}</span>
+            <span class="mk-acc-kpi-card__lbl">ناموفق</span>
+        </article>
+    </div>
+
+    <div class="mk-acc-card-list" role="list">
+        {% for transaction in transactions %}
+        <article class="mk-txn-card" role="listitem">
+            <div class="mk-txn-card__head">
+                <div class="mk-txn-card__track-wrap">
+                    <span class="mk-txn-card__track-label">کد پیگیری</span>
+                    <code class="mk-txn-card__track" dir="ltr">{{ transaction.zibal_track_id }}</code>
+                </div>
+                <span class="mk-orders-status mk-orders-status--{{ transaction.status|transaction_status_tone }}">
+                    {{ transaction.status|transaction_status_fa }}
+                </span>
+            </div>
+            <div class="mk-txn-card__body">
+                <h3 class="mk-txn-card__product">{{ transaction.order.product.title }}</h3>
+                {% if transaction.order.plan %}
+                <p class="mk-txn-card__plan">{{ transaction.order.plan.name }}</p>
+                {% endif %}
+            </div>
+            <div class="mk-txn-card__foot">
+                <span class="mk-txn-card__amount">{{ transaction.amount|currency }} <small>تومان</small></span>
+                <time class="mk-txn-card__date">{{ transaction.created_at|to_jalali_date:"%Y/%m/%d" }} · {{ transaction.created_at|to_jalali_date:"%H:%M" }}</time>
+            </div>
+            {% if transaction.zibal_ref_number %}
+            <div class="mk-txn-card__meta">
+                <span><i class="fas fa-receipt" aria-hidden="true"></i> مرجع: <code dir="ltr">{{ transaction.zibal_ref_number }}</code></span>
+            </div>
+            {% endif %}
+        </article>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="mk-acc-empty-state">
+        <span class="mk-acc-empty-state__icon"><i class="fas fa-exchange-alt" aria-hidden="true"></i></span>
+        <p class="mk-acc-empty-state__title">تراکنشی ثبت نشده</p>
+        <p class="mk-acc-empty-state__text">پس از پرداخت موفق، جزئیات تراکنش اینجا نمایش داده می‌شود.</p>
+        <a href="{{ dashboard_tab_urls.orders }}" class="mk-acc-btn mk-acc-btn--primary">رفتن به سفارش‌ها</a>
+    </div>
+    {% endif %}
+</div>

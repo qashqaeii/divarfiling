@@ -1,7 +1,7 @@
 {% load persian_tags %}
 {% load currency_tags %}
 
-<div id="tab-orders" class="mk-acc-tab-panel tab-content dash-tab-panel mk-orders-tab"{% if active_tab != 'orders' %} hidden{% endif %} data-orders-tab>
+<div id="tab-orders" class="mk-acc-tab-panel mk-acc-tab-shell mk-orders-tab tab-content dash-tab-panel"{% if active_tab != 'orders' %} hidden{% endif %} data-orders-tab>
     <header class="mk-account-page-head mk-account-page-head--row">
         <div>
             <h1 class="mk-account-page-head__title">سفارش‌های من</h1>
@@ -15,26 +15,26 @@
         {% endif %}
     </header>
 
-    <div class="mk-orders-kpi" aria-label="خلاصه سفارش‌ها">
-        <article class="mk-orders-kpi-card">
-            <span class="mk-orders-kpi-card__icon"><i class="fas fa-receipt" aria-hidden="true"></i></span>
-            <span class="mk-orders-kpi-card__val">{{ total_orders }}</span>
-            <span class="mk-orders-kpi-card__lbl">کل سفارش</span>
+    <div class="mk-acc-kpi-grid" aria-label="خلاصه سفارش‌ها">
+        <article class="mk-acc-kpi-card">
+            <span class="mk-acc-kpi-card__icon"><i class="fas fa-receipt" aria-hidden="true"></i></span>
+            <span class="mk-acc-kpi-card__val">{{ total_orders }}</span>
+            <span class="mk-acc-kpi-card__lbl">کل سفارش</span>
         </article>
-        <article class="mk-orders-kpi-card mk-orders-kpi-card--green">
-            <span class="mk-orders-kpi-card__icon"><i class="fas fa-check-circle" aria-hidden="true"></i></span>
-            <span class="mk-orders-kpi-card__val">{{ paid_orders }}</span>
-            <span class="mk-orders-kpi-card__lbl">پرداخت‌شده</span>
+        <article class="mk-acc-kpi-card mk-acc-kpi-card--green">
+            <span class="mk-acc-kpi-card__icon"><i class="fas fa-check-circle" aria-hidden="true"></i></span>
+            <span class="mk-acc-kpi-card__val">{{ paid_orders }}</span>
+            <span class="mk-acc-kpi-card__lbl">پرداخت‌شده</span>
         </article>
-        <article class="mk-orders-kpi-card mk-orders-kpi-card--amber">
-            <span class="mk-orders-kpi-card__icon"><i class="fas fa-hourglass-half" aria-hidden="true"></i></span>
-            <span class="mk-orders-kpi-card__val">{{ pending_orders_count }}</span>
-            <span class="mk-orders-kpi-card__lbl">در انتظار</span>
+        <article class="mk-acc-kpi-card mk-acc-kpi-card--amber">
+            <span class="mk-acc-kpi-card__icon"><i class="fas fa-hourglass-half" aria-hidden="true"></i></span>
+            <span class="mk-acc-kpi-card__val">{{ pending_orders_count }}</span>
+            <span class="mk-acc-kpi-card__lbl">در انتظار</span>
         </article>
-        <article class="mk-orders-kpi-card mk-orders-kpi-card--violet">
-            <span class="mk-orders-kpi-card__icon"><i class="fas fa-wallet" aria-hidden="true"></i></span>
-            <span class="mk-orders-kpi-card__val">{{ total_spent|currency }}</span>
-            <span class="mk-orders-kpi-card__lbl">تومان خرید</span>
+        <article class="mk-acc-kpi-card mk-acc-kpi-card--violet">
+            <span class="mk-acc-kpi-card__icon"><i class="fas fa-wallet" aria-hidden="true"></i></span>
+            <span class="mk-acc-kpi-card__val">{{ total_spent|currency }}</span>
+            <span class="mk-acc-kpi-card__lbl">تومان خرید</span>
         </article>
     </div>
 

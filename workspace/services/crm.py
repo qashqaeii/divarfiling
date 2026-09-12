@@ -1061,7 +1061,12 @@ def add_listing_to_personal_files(user, listing) -> tuple[CRMProperty, bool]:
     """
     from django.db import IntegrityError, transaction
 
-    from workspace.services.listing_edit import owner_name_from_listing, owner_phone_from_listing
+    from workspace.services.listing_edit import (
+        owner_name_from_listing,
+        owner_phone_from_listing,
+        tenant_name_from_listing,
+        tenant_phone_from_listing,
+    )
     from workspace.services.listing_personal_status import (
         DIVAR_SOURCE_PLATFORM,
         get_crm_property_by_source,
@@ -1071,68 +1076,49 @@ def add_listing_to_personal_files(user, listing) -> tuple[CRMProperty, bool]:
     def _schedule(prop: CRMProperty) -> None:
         schedule_property_accessibilities(prop.pk, user.pk)
 
-    token = str(getattr(listing, 'token', '') or '').strip()
-    existing = get_crm_property_by_source(user, DIVAR_SOURCE_PLATFORM, token) if token else None
-    if existing:
-        phone = owner_phone_from_listing(listing) or existing.phone
-        name = owner_name_from_listing(listing) or existing.owner_name
+    def _sync_contacts(prop: CRMProperty) -> None:
+        phone = owner_phone_from_listing(listing) or prop.phone
+        name = owner_name_from_listing(listing) or prop.owner_name
         if normalize_phone(phone):
             upsert_property_owner(
                 user,
                 phone=phone,
                 name=name,
-                crm_property=existing,
+                crm_property=prop,
                 source='دیوار',
             )
-        finalize_listing_moved_to_personal(user, listing, existing)
-        _schedule(existing)
-        return existing, False
-
-    try:
-        with transaction.atomic():
-            prop = property_from_listing(user, listing)
-            phone = owner_phone_from_listing(listing) or prop.phone
-            name = owner_name_from_listing(listing) or prop.owner_name
-            if normalize_phone(phone):
-                upsert_property_owner(
+        if not prop.is_vacant:
+            t_phone = tenant_phone_from_listing(listing) or prop.tenant_phone
+            t_name = tenant_name_from_listing(listing) or prop.tenant_name
+            if normalize_phone(t_phone) or (t_name or '').strip():
+                upsert_property_tenant(
                     user,
-                    phone=phone,
-                    name=name,
+                    phone=t_phone,
+                    name=t_name,
                     crm_property=prop,
                     source='دیوار',
                 )
-            if not prop.is_vacant:
-                from workspace.services.listing_edit import tenant_name_from_listing, tenant_phone_from_listing
-                t_phone = tenant_phone_from_listing(listing) or prop.tenant_phone
-                t_name = tenant_name_from_listing(listing) or prop.tenant_name
-                if normalize_phone(t_phone) or (t_name or '').strip():
-                    upsert_property_tenant(
-                        user,
-                        phone=t_phone,
-                        name=t_name,
-                        crm_property=prop,
-                        source='دیوار',
-                    )
-            finalize_listing_moved_to_personal(user, listing, prop)
-            _schedule(prop)
-            return prop, True
-    except IntegrityError:
-        existing = get_crm_property_by_source(user, DIVAR_SOURCE_PLATFORM, token)
-        if not existing:
-            raise
-        phone = owner_phone_from_listing(listing) or existing.phone
-        name = owner_name_from_listing(listing) or existing.owner_name
-        if normalize_phone(phone):
-            upsert_property_owner(
-                user,
-                phone=phone,
-                name=name,
-                crm_property=existing,
-                source='دیوار',
-            )
-        finalize_listing_moved_to_personal(user, listing, existing)
-        _schedule(existing)
-        return existing, False
+
+    token = str(getattr(listing, 'token', '') or '').strip()
+    created = False
+    prop: Optional[CRMProperty] = None
+
+    with transaction.atomic():
+        prop = get_crm_property_by_source(user, DIVAR_SOURCE_PLATFORM, token) if token else None
+        if prop is None:
+            try:
+                prop = property_from_listing(user, listing)
+                created = True
+            except IntegrityError:
+                prop = get_crm_property_by_source(user, DIVAR_SOURCE_PLATFORM, token)
+                if prop is None:
+                    raise
+
+        _sync_contacts(prop)
+        finalize_listing_moved_to_personal(user, listing, prop)
+
+    _schedule(prop)
+    return prop, created
 
 
 def resolve_listing_for_property(user, prop) -> Optional[Listing]:

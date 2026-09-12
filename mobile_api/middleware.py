@@ -6,6 +6,20 @@ import uuid
 
 logger = logging.getLogger('mobile_api.auth')
 
+_QUIET_AUTH_FAILURES = frozenset({'', 'missing', 'unauthenticated'})
+
+
+def _mobile_auth_failure_reason(request) -> str:
+    reason = getattr(request, 'mobile_auth_failure', None)
+    if reason:
+        return str(reason)
+    underlying = getattr(request, '_request', None)
+    if underlying is not None:
+        reason = getattr(underlying, 'mobile_auth_failure', None)
+        if reason:
+            return str(reason)
+    return 'unauthenticated'
+
 
 class MobileAuthLoggingMiddleware:
     """لاگ ساختاریافته برای 401 بدون ذخیره token خام."""
@@ -28,21 +42,30 @@ class MobileAuthLoggingMiddleware:
         if response.status_code != 401:
             return response
 
-        auth_reason = getattr(request, 'mobile_auth_failure', None)
-        if not auth_reason:
-            auth_reason = 'unauthenticated'
+        auth_reason = _mobile_auth_failure_reason(request)
         user_id = ''
         if getattr(request, 'user', None) and request.user.is_authenticated:
             user_id = str(request.user.pk)
 
-        logger.warning(
-            'mobile_auth_denied request_id=%s endpoint=%s device_id=%s user_id=%s '
-            'client_version=%s auth_reason=%s',
-            request_id,
-            request.path,
-            (request.META.get('HTTP_X_DEVICE_ID') or '').strip(),
-            user_id or '-',
-            (request.META.get('HTTP_X_APP_VERSION') or request.META.get('HTTP_X_CLIENT_VERSION') or '').strip(),
-            auth_reason,
+        log_kwargs = {
+            'request_id': request_id,
+            'endpoint': request.path,
+            'device_id': (request.META.get('HTTP_X_DEVICE_ID') or '').strip(),
+            'user_id': user_id or '-',
+            'client_version': (
+                request.META.get('HTTP_X_APP_VERSION')
+                or request.META.get('HTTP_X_CLIENT_VERSION')
+                or ''
+            ).strip(),
+            'auth_reason': auth_reason,
+        }
+        message = (
+            'mobile_auth_denied request_id=%(request_id)s endpoint=%(endpoint)s '
+            'device_id=%(device_id)s user_id=%(user_id)s client_version=%(client_version)s '
+            'auth_reason=%(auth_reason)s'
         )
+        if auth_reason in _QUIET_AUTH_FAILURES:
+            logger.debug(message, log_kwargs)
+        else:
+            logger.warning(message, log_kwargs)
         return response

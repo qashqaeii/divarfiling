@@ -1,0 +1,110 @@
+{% load persian_tags %}
+{% load currency_tags %}
+
+{% if has_paid_orders %}
+<div id="tab-affiliate" class="mk-acc-tab-panel mk-acc-tab-shell mk-affiliate-tab tab-content dash-tab-panel"{% if active_tab != 'affiliate' %} hidden{% endif %}>
+    <header class="mk-account-page-head mk-account-page-head--row">
+        <div>
+            <h1 class="mk-account-page-head__title">همکاری در فروش</h1>
+            <p class="mk-account-page-head__sub">لینک معرف، کمیسیون، زیرمجموعه و برداشت درآمد</p>
+        </div>
+        {% if affiliate %}
+        <a href="{% url 'affiliate_dashboard' %}" class="mk-acc-btn mk-acc-btn--ghost" target="_blank" rel="noopener">
+            <i class="fas fa-external-link-alt" aria-hidden="true"></i>
+            داشبورد کامل
+        </a>
+        {% endif %}
+    </header>
+
+    {% if affiliate %}
+    <div class="mk-acc-kpi-grid" aria-label="آمار همکاری">
+        <article class="mk-acc-kpi-card mk-acc-kpi-card--violet">
+            <span class="mk-acc-kpi-card__icon"><i class="fas fa-chart-column" aria-hidden="true"></i></span>
+            <span class="mk-acc-kpi-card__val">{{ affiliate_stats.total_sales_count }}</span>
+            <span class="mk-acc-kpi-card__lbl">فروش</span>
+        </article>
+        <article class="mk-acc-kpi-card mk-acc-kpi-card--green">
+            <span class="mk-acc-kpi-card__icon"><i class="fas fa-coins" aria-hidden="true"></i></span>
+            <span class="mk-acc-kpi-card__val">{{ affiliate_stats.total_commission|currency }}</span>
+            <span class="mk-acc-kpi-card__lbl">کل کمیسیون</span>
+        </article>
+        <article class="mk-acc-kpi-card">
+            <span class="mk-acc-kpi-card__icon"><i class="fas fa-wallet" aria-hidden="true"></i></span>
+            <span class="mk-acc-kpi-card__val">{{ affiliate_wallet.balance|currency }}</span>
+            <span class="mk-acc-kpi-card__lbl">موجودی</span>
+        </article>
+        <article class="mk-acc-kpi-card mk-acc-kpi-card--amber">
+            <span class="mk-acc-kpi-card__icon"><i class="fas fa-users" aria-hidden="true"></i></span>
+            <span class="mk-acc-kpi-card__val">{{ affiliate_stats.referred_users_count|default:0 }}</span>
+            <span class="mk-acc-kpi-card__lbl">زیرمجموعه</span>
+        </article>
+    </div>
+
+    <section class="mk-aff-wallet-hero">
+        <div class="mk-aff-wallet-hero__copy">
+            <span class="mk-aff-wallet-hero__label"><i class="fas fa-wallet" aria-hidden="true"></i> موجودی قابل برداشت</span>
+            <p class="mk-aff-wallet-hero__amount">{{ affiliate_wallet.balance|currency }} <small>تومان</small></p>
+            <span class="mk-aff-wallet-hero__hint">حداقل برداشت: {{ affiliate_stats.min_withdrawal|currency }} تومان</span>
+        </div>
+        <div class="mk-aff-wallet-hero__actions">
+            <a href="{% url 'affiliate_withdrawal' %}" class="mk-acc-btn mk-acc-btn--primary">
+                <i class="fas fa-money-bill-wave" aria-hidden="true"></i> درخواست برداشت
+            </a>
+            <a href="{% url 'affiliate_transactions' %}" class="mk-acc-btn mk-acc-btn--ghost">
+                <i class="fas fa-list" aria-hidden="true"></i> تراکنش‌ها
+            </a>
+        </div>
+    </section>
+
+    <section class="mk-acc-panel mk-aff-link-card">
+        <h3 class="mk-acc-panel__title"><i class="fas fa-link" aria-hidden="true"></i> لینک معرف شما</h3>
+        <div class="mk-acc-affiliate__link-row">
+            <input type="text" value="{{ affiliate_stats.referral_url }}" readonly class="mk-acc-affiliate__link-input" id="affiliateReferralLink" dir="ltr">
+            <button type="button" class="mk-acc-affiliate__copy-btn" data-copy-target="affiliateReferralLink" aria-label="کپی لینک معرف">
+                <i class="fas fa-copy" aria-hidden="true"></i>
+                <span class="mk-acc-affiliate__copy-text">کپی</span>
+            </button>
+        </div>
+        <p class="mk-acc-affiliate__code">کد معرف: <strong dir="ltr">{{ affiliate.code }}</strong></p>
+    </section>
+
+    {% with referred_users=affiliate_stats.referred_users referred_users_count=affiliate_stats.referred_users_count referred_users_with_orders=affiliate_stats.referred_users_with_orders referred_users_without_orders=affiliate_stats.referred_users_without_orders referred_users_has_more=affiliate_stats.referred_users_has_more %}
+    <div class="mk-acc-panel mk-affiliate-dashboard-embed">
+        {% include 'includes/affiliate_referred_users.html' %}
+    </div>
+    {% endwith %}
+
+    <section class="mk-acc-panel">
+        <div class="mk-acc-panel__head">
+            <h3 class="mk-acc-panel__title"><i class="fas fa-shopping-bag" aria-hidden="true"></i> فروش‌های اخیر</h3>
+            <a href="{% url 'affiliate_dashboard' %}" class="mk-acc-panel__link" target="_blank" rel="noopener">مشاهده همه</a>
+        </div>
+        {% if affiliate_stats.recent_sales %}
+        <div class="mk-acc-card-list">
+            {% for sale in affiliate_stats.recent_sales %}
+            <article class="mk-aff-sale-card">
+                <div class="mk-aff-sale-card__main">
+                    <strong>{{ sale.order.product.title }}</strong>
+                    <span>کمیسیون {{ sale.commission_amount|currency }} تومان · {{ sale.commission_rate }}%</span>
+                    <time>{{ sale.created_at|to_jalali }}</time>
+                </div>
+                <div class="mk-aff-sale-card__side">
+                    <span class="mk-aff-sale-card__amount">{{ sale.order.amount|currency }} <small>تومان</small></span>
+                    <span class="mk-orders-status mk-orders-status--paid">{{ sale.get_status_display }}</span>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="mk-acc-empty">هنوز فروشی ثبت نشده است. لینک معرف را به اشتراک بگذارید.</p>
+        {% endif %}
+    </section>
+    {% else %}
+    <div class="mk-acc-empty-state">
+        <span class="mk-acc-empty-state__icon"><i class="fas fa-hourglass" aria-hidden="true"></i></span>
+        <p class="mk-acc-empty-state__title">در حال ایجاد حساب افیلیت</p>
+        <p class="mk-acc-empty-state__text">لطفاً چند لحظه صبر کنید و صفحه را رفرش کنید.</p>
+    </div>
+    {% endif %}
+</div>
+{% endif %}

@@ -196,9 +196,16 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             licenses = licenses.filter(status=license_status_filter)
         
         # تراکنش‌ها
-        transactions = Transaction.objects.filter(order__user=user).select_related(
+        txn_qs = Transaction.objects.filter(order__user=user)
+        transactions = txn_qs.select_related(
             'order', 'order__product', 'order__plan',
         ).order_by('-created_at')
+        txn_stats = {
+            'total': txn_qs.count(),
+            'paid': txn_qs.filter(status='paid').count(),
+            'pending': txn_qs.filter(status='pending').count(),
+            'failed': txn_qs.filter(status='failed').count(),
+        }
         
         # محصولات فعال برای خرید لایسنس جدید
         from shop.models import Product
@@ -282,6 +289,7 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             'license_dashboard': license_dashboard,
             'orders_pending_claim': orders_pending_claim,
             'transactions': transactions[:50],
+            'txn_stats': txn_stats,
             'products': products,  # محصولات برای خرید لایسنس جدید
             
             # فیلترها

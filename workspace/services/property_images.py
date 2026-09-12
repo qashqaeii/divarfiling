@@ -8,6 +8,7 @@ import uuid
 from typing import List, Optional
 
 import requests
+from requests import HTTPError
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
 
@@ -83,6 +84,64 @@ def download_and_store_remote_image(user, prop, url: str, *, timeout: int = 25) 
     return store_property_image(user, prop, uploaded)
 
 
+def divar_image_download_candidates(urls: List[str]) -> List[List[str]]:
+    """برای هر عکس، URLهای قابل‌تلاش به ترتیب کیفیت (webp_post قبل از thumbnail)."""
+    by_file: dict[str, list[tuple[int, int, str]]] = {}
+    passthrough: list[tuple[int, str]] = []
+
+    for idx, raw in enumerate(urls):
+        url = normalize_external_image_url(str(raw or ''))
+        if not url:
+            continue
+        file_id = divar_image_file_id(url)
+        if file_id and 'divar' in url.lower():
+            score = divar_image_quality_score(url)
+            by_file.setdefault(file_id, []).append((score, idx, url))
+        else:
+            passthrough.append((idx, url))
+
+    out: List[List[str]] = []
+    seen_files: set[str] = set()
+    seen_passthrough: set[str] = set()
+
+    for idx, raw in enumerate(urls):
+        url = normalize_external_image_url(str(raw or ''))
+        if not url:
+            continue
+        file_id = divar_image_file_id(url)
+        if file_id and 'divar' in url.lower():
+            if file_id in seen_files:
+                continue
+            seen_files.add(file_id)
+            candidates = [item[2] for item in sorted(by_file[file_id], key=lambda row: (row[0], row[1]))]
+            out.append(candidates)
+            continue
+        if url in seen_passthrough:
+            continue
+        seen_passthrough.add(url)
+        out.append([url])
+
+    return out
+
+
+def _log_mirror_failure(prop, url: str, exc: BaseException) -> None:
+    prop_id = getattr(prop, 'pk', None)
+    if isinstance(exc, HTTPError) and exc.response is not None and exc.response.status_code == 404:
+        logger.debug(
+            'Divar image not found (404) for prop=%s url=%s',
+            prop_id,
+            url,
+        )
+        return
+    logger.warning(
+        'Failed to mirror property image for prop=%s url=%s: %s',
+        prop_id,
+        url,
+        exc,
+        exc_info=exc,
+    )
+
+
 def mirror_remote_images_to_property(
     user,
     prop,
@@ -93,22 +152,39 @@ def mirror_remote_images_to_property(
     اگر دانلود شکست بخورد، همان URL اصلی به‌عنوان fallback نگه داشته می‌شود.
     """
     raw = list(urls if urls is not None else (prop.images or []))
-    sources = deduplicate_divar_image_urls(raw)[:MAX_PROPERTY_IMAGES]
+    candidate_groups = divar_image_download_candidates(raw)[:MAX_PROPERTY_IMAGES]
     out: List[str] = []
-    for url in sources:
-        if str(url).startswith('/media/'):
-            out.append(url)
+    for candidates in candidate_groups:
+        primary = candidates[0]
+        if str(primary).startswith('/media/'):
+            out.append(primary)
             continue
-        try:
-            out.append(download_and_store_remote_image(user, prop, url))
-        except Exception:
-            logger.warning(
-                'Failed to mirror property image for prop=%s url=%s',
-                getattr(prop, 'pk', None),
-                url,
-                exc_info=True,
-            )
-            out.append(url)
+
+        stored: Optional[str] = None
+        last_exc: Optional[BaseException] = None
+        for url in candidates:
+            try:
+                stored = download_and_store_remote_image(user, prop, url)
+                break
+            except HTTPError as exc:
+                last_exc = exc
+                if exc.response is not None and exc.response.status_code == 404:
+                    continue
+                _log_mirror_failure(prop, url, exc)
+                break
+            except Exception as exc:
+                last_exc = exc
+                _log_mirror_failure(prop, url, exc)
+                break
+
+        if stored:
+            out.append(stored)
+            continue
+
+        if last_exc is not None and isinstance(last_exc, HTTPError):
+            if last_exc.response is not None and last_exc.response.status_code == 404:
+                _log_mirror_failure(prop, primary, last_exc)
+        out.append(primary)
     return out
 
 

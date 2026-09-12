@@ -1,0 +1,77 @@
+<aside class="mk-account-sidebar" id="accountSidebar" aria-label="منوی حساب کاربری">
+    <button type="button" class="mk-account-sidebar__close" data-account-sidebar-close aria-label="بستن منو">
+        <i class="fas fa-times" aria-hidden="true"></i>
+    </button>
+
+    <div class="mk-account-sidebar__head">
+        <i class="fas fa-user" aria-hidden="true"></i>
+        <span>حساب کاربری</span>
+    </div>
+
+    <nav class="mk-account-sidebar__nav" aria-label="بخش‌های حساب">
+        <a href="{{ dashboard_tab_urls.overview }}"
+           class="mk-account-sidebar__link{% if active_tab == 'overview' %} is-active{% endif %}">
+            <i class="fas fa-grip" aria-hidden="true"></i>
+            <span>نمای کلی</span>
+        </a>
+        <a href="{{ dashboard_tab_urls.orders }}"
+           class="mk-account-sidebar__link{% if active_tab == 'orders' %} is-active{% endif %}">
+            <i class="fas fa-shopping-bag" aria-hidden="true"></i>
+            <span>سفارش‌ها</span>
+        </a>
+        <a href="{{ dashboard_tab_urls.licenses }}"
+           class="mk-account-sidebar__link{% if active_tab == 'licenses' %} is-active{% endif %}">
+            <i class="fas fa-key" aria-hidden="true"></i>
+            <span>لایسنس‌ها</span>
+        </a>
+        <a href="{{ dashboard_tab_urls.downloads }}"
+           class="mk-account-sidebar__link{% if active_tab == 'downloads' %} is-active{% endif %}">
+            <i class="fas fa-download" aria-hidden="true"></i>
+            <span>دانلود اپ‌ها</span>
+        </a>
+        <a href="{{ dashboard_tab_urls.transactions }}"
+           class="mk-account-sidebar__link{% if active_tab == 'transactions' %} is-active{% endif %}">
+            <i class="fas fa-right-left" aria-hidden="true"></i>
+            <span>تراکنش‌ها</span>
+        </a>
+        {% if has_paid_orders %}
+        <a href="{{ dashboard_tab_urls.affiliate }}"
+           class="mk-account-sidebar__link{% if active_tab == 'affiliate' %} is-active{% endif %}">
+            <i class="fas fa-handshake" aria-hidden="true"></i>
+            <span>همکاری در فروش</span>
+        </a>
+        {% endif %}
+        <a href="{{ dashboard_tab_urls.profile }}"
+           class="mk-account-sidebar__link{% if active_tab == 'profile' %} is-active{% endif %}">
+            <i class="fas fa-user-pen" aria-hidden="true"></i>
+            <span>پروفایل</span>
+        </a>
+    </nav>
+
+    <div class="mk-account-sidebar__foot">
+        <a href="{% url 'home' %}" class="mk-account-sidebar__foot-link">
+            <i class="fas fa-arrow-up-right-from-square" aria-hidden="true"></i>
+            <span>بازگشت به سایت</span>
+        </a>
+        <a href="{% url 'logout' %}" class="mk-account-sidebar__foot-link">
+            <i class="fas fa-arrow-right-from-bracket" aria-hidden="true"></i>
+            <span>خروج از حساب</span>
+        </a>
+    </div>
+
+    <div class="mk-account-sidebar__decor" aria-hidden="true">
+        <svg viewBox="0 0 220 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M8 58 L8 34 L22 34 L22 58 Z" stroke="rgba(196,181,253,0.7)" stroke-width="1.2"/>
+            <path d="M28 58 L28 22 L44 22 L44 58 Z" stroke="rgba(196,181,253,0.55)" stroke-width="1.2"/>
+            <path d="M50 58 L50 30 L62 30 L62 58 Z" stroke="rgba(196,181,253,0.45)" stroke-width="1.2"/>
+            <path d="M68 58 L68 18 L88 18 L88 58 Z" stroke="rgba(196,181,253,0.65)" stroke-width="1.2"/>
+            <path d="M94 58 L94 26 L108 26 L108 58 Z" stroke="rgba(196,181,253,0.5)" stroke-width="1.2"/>
+            <path d="M114 58 L114 12 L138 12 L138 58 Z" stroke="rgba(196,181,253,0.75)" stroke-width="1.2"/>
+            <path d="M144 58 L144 28 L158 28 L158 58 Z" stroke="rgba(196,181,253,0.45)" stroke-width="1.2"/>
+            <path d="M164 58 L164 20 L182 20 L182 58 Z" stroke="rgba(196,181,253,0.6)" stroke-width="1.2"/>
+            <path d="M188 58 L188 32 L204 32 L204 58 Z" stroke="rgba(196,181,253,0.4)" stroke-width="1.2"/>
+            <line x1="4" y1="58" x2="216" y2="58" stroke="rgba(196,181,253,0.35)" stroke-width="1"/>
+        </svg>
+        <span class="mk-account-sidebar__tagline">داده‌ها فرصت می‌سازند</span>
+    </div>
+</aside>

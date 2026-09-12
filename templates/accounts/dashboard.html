@@ -13,350 +13,44 @@
 <link rel="stylesheet" href="{% static 'css/mizkar-dashboard-licenses.css' %}?v=2">
 <link rel="stylesheet" href="{% static 'css/mizkar-dashboard-profile.css' %}?v=2">
 <link rel="stylesheet" href="{% static 'css/mizkar-dashboard-premium.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'css/mizkar-account-shell.css' %}?v=1">
 <link rel="stylesheet" href="{% static 'css/mizkar-app-download.css' %}?v=4">
 <link rel="stylesheet" href="{% static 'workspace/css/modals.css' %}?v=34">
 {% endblock %}
 
 {% block content %}
 <div class="container mk-dashboard-page">
-    <header class="dash-head">
-        <div class="dash-head-accent" aria-hidden="true">
-            <span class="dash-head-accent-glow{% if active_licenses %} is-live{% endif %}"></span>
+<div class="mk-account-shell" data-account-shell>
+    <div class="mk-account-shell__backdrop" data-account-backdrop hidden></div>
+    {% include 'accounts/partials/account_dashboard_sidebar.html' %}
+
+    <div class="mk-account-main">
+        <div class="mk-account-main__toolbar">
+            <button type="button" class="mk-account-mobile-toggle" data-account-sidebar-open aria-label="باز کردن منوی حساب">
+                <i class="fas fa-bars" aria-hidden="true"></i>
+            </button>
         </div>
 
-        <div class="dash-head-main">
-            <div class="dash-head-identity">
-                <div class="dash-head-avatar">
-                    {% if user.profile and user.profile.avatar %}
-                    <img src="{{ user.profile.avatar.url }}" alt="" class="dash-hero-avatar-img">
-                    {% else %}
-                    <span class="dash-hero-avatar" aria-hidden="true">{{ user.username|slice:":1"|upper }}</span>
-                    {% endif %}
-                    <span class="dash-hero-status{% if active_licenses %} is-active{% endif %}" title="{% if active_licenses %}لایسنس فعال{% else %}بدون لایسنس{% endif %}"></span>
-                </div>
-                <div class="dash-head-copy">
-                    <h1 class="dash-head-name">{{ user.get_full_name|default:user.username }}</h1>
-                    <p class="dash-head-sub">
-                        <span>@{{ user.username }}</span>
-                        <span class="dash-head-dot" aria-hidden="true">·</span>
-                        <span>عضو {{ user.date_joined|to_jalali_date:"%Y/%m/%d" }}</span>
-                        {% if user.phone %}
-                        <span class="dash-head-dot" aria-hidden="true">·</span>
-                        <span dir="ltr">{{ user.phone }}</span>
-                        {% endif %}
-                    </p>
-                </div>
-            </div>
-
-            <div class="dash-head-tags">
-                <span class="dash-head-pill{% if active_licenses %} dash-head-pill--live{% endif %}">
-                    <i class="fas fa-key" aria-hidden="true"></i>
-                    {% if active_licenses %}{{ active_licenses }} لایسنس{% else %}بدون لایسنس{% endif %}
+        {% if active_tab == 'overview' %}
+            {% include 'accounts/partials/account_overview_panel.html' %}
+        {% else %}
+            <nav class="mk-account-breadcrumb" aria-label="مسیر">
+                <a href="{% url 'home' %}"><i class="fas fa-house" aria-hidden="true"></i></a>
+                <span class="mk-account-breadcrumb__sep" aria-hidden="true">/</span>
+                <a href="{{ dashboard_tab_urls.overview }}">حساب کاربری</a>
+                <span class="mk-account-breadcrumb__sep" aria-hidden="true">/</span>
+                <span class="mk-account-breadcrumb__current">
+                    {% if active_tab == 'orders' %}سفارش‌ها
+                    {% elif active_tab == 'licenses' %}لایسنس‌ها
+                    {% elif active_tab == 'downloads' %}دانلود اپ‌ها
+                    {% elif active_tab == 'transactions' %}تراکنش‌ها
+                    {% elif active_tab == 'affiliate' %}همکاری در فروش
+                    {% elif active_tab == 'profile' %}پروفایل
+                    {% else %}حساب کاربری{% endif %}
                 </span>
-                <span class="dash-head-pill">
-                    <i class="fas fa-receipt" aria-hidden="true"></i>
-                    {{ paid_orders }} سفارش
-                </span>
-                {% if consultant_agency_name %}
-                <span class="dash-head-pill dash-head-pill--agency">
-                    <i class="fas fa-building" aria-hidden="true"></i>
-                    {{ consultant_agency_name }}
-                </span>
-                {% endif %}
-                {% if consultant_socials_active %}
-                <div class="dash-head-socials" aria-label="شبکه‌های اجتماعی">
-                    {% for net in consultant_socials_active %}
-                    <a href="{{ net.url }}" class="dash-hero-social" target="_blank" rel="noopener noreferrer" title="{{ net.label }}" style="--dash-social: {{ net.color }}">
-                        {% if net.icon_file %}
-                        <img src="{% static net.icon_file %}?v=2" alt="{{ net.label }}" width="16" height="16">
-                        {% else %}
-                        <i class="{{ net.icon }}" aria-hidden="true"></i>
-                        {% endif %}
-                    </a>
-                    {% endfor %}
-                </div>
-                {% endif %}
-            </div>
-
-            <nav class="dash-head-actions" aria-label="میانبرها">
-                <a href="{% url 'workspace:home' %}" class="dash-head-btn dash-head-btn--primary">
-                    <i class="fas fa-layer-group" aria-hidden="true"></i>
-                    <span>میزکار</span>
-                </a>
-                <a href="{{ dashboard_tab_urls.profile }}" class="dash-head-btn dash-head-btn--ghost" title="ویرایش پروفایل">
-                    <i class="fas fa-user-pen" aria-hidden="true"></i>
-                </a>
-                {% if pending_orders_count > 0 %}
-                <a href="{{ dashboard_tab_urls.orders }}?order_status=pending" class="dash-head-btn dash-head-btn--warn" title="سفارش پرداخت‌نشده">
-                    <i class="fas fa-clock" aria-hidden="true"></i>
-                    <span>{{ pending_orders_count }}</span>
-                </a>
-                {% endif %}
-                {% if active_licenses == 0 %}
-                <a href="{% url 'product_list' %}" class="dash-head-btn dash-head-btn--buy" title="خرید لایسنس">
-                    <i class="fas fa-plus" aria-hidden="true"></i>
-                </a>
-                {% endif %}
-            </nav>
-        </div>
-
-        <div class="dash-head-metrics" aria-label="آمار حساب">
-            <div class="dash-head-metric" data-accent="violet">
-                <span class="dash-head-metric-val">{{ total_orders }}</span>
-                <span class="dash-head-metric-lbl">سفارش</span>
-            </div>
-            <div class="dash-head-metric" data-accent="emerald">
-                <span class="dash-head-metric-val">{{ paid_orders }}</span>
-                <span class="dash-head-metric-lbl">پرداخت‌شده</span>
-            </div>
-            <div class="dash-head-metric" data-accent="sky">
-                <span class="dash-head-metric-val">{{ active_licenses }}</span>
-                <span class="dash-head-metric-lbl">لایسنس</span>
-            </div>
-            <div class="dash-head-metric" data-accent="amber">
-                <span class="dash-head-metric-val">{{ total_spent|floatformat:0 }}</span>
-                <span class="dash-head-metric-lbl">تومان</span>
-            </div>
-        </div>
-    </header>
-
-    {% if active_licenses == 0 %}
-    <aside class="mk-workspace-cta mk-workspace-cta-free mb-4">
-        <div>
-            <h2><i class="fas fa-chart-network" aria-hidden="true"></i> میز کار</h2>
-            <p class="mk-workspace-cta-desc">CRM رایگان برای شما فعال است. برای آپلود و تحلیل داده‌های دیوار، ربات استخراج را تهیه کنید.</p>
-        </div>
-        <div class="mk-workspace-cta-actions">
-            <a href="{% url 'workspace:upgrade' %}" class="btn mk-workspace-cta-btn">
-                <i class="fas fa-robot" aria-hidden="true"></i> امکانات ربات
-            </a>
-            <a href="{% url 'product_list' %}" class="btn btn-outline mk-workspace-cta-btn-secondary">
-                <i class="fas fa-shopping-cart" aria-hidden="true"></i> خرید لایسنس
-            </a>
-        </div>
-    </aside>
-    {% endif %}
-    
-    <div class="dash-shell dashboard-main-card dash-shell-pro">
-        <div class="dash-tabs-shell">
-        <div class="dash-tabs-scroll">
-            <nav class="dash-tabs dash-tabs--chips dashboard-tabs-modern" aria-label="بخش‌های پروفایل">
-                <a href="{{ dashboard_tab_urls.overview }}" class="tab-btn-modern{% if active_tab == 'overview' %} active{% endif %}" data-tab="overview">
-                    <span class="tab-icon"><i class="fas fa-chart-line" aria-hidden="true"></i></span>
-                    <span class="tab-text">نمای کلی</span>
-                </a>
-                <a href="{{ dashboard_tab_urls.orders }}" class="tab-btn-modern{% if active_tab == 'orders' %} active{% endif %}" data-tab="orders">
-                    <span class="tab-icon"><i class="fas fa-shopping-bag" aria-hidden="true"></i></span>
-                    <span class="tab-text">سفارش‌ها</span>
-                </a>
-                <a href="{{ dashboard_tab_urls.licenses }}" class="tab-btn-modern{% if active_tab == 'licenses' %} active{% endif %}" data-tab="licenses">
-                    <span class="tab-icon"><i class="fas fa-key" aria-hidden="true"></i></span>
-                    <span class="tab-text">لایسنس‌ها</span>
-                </a>
-                <a href="{{ dashboard_tab_urls.downloads }}" class="tab-btn-modern{% if active_tab == 'downloads' %} active{% endif %}" data-tab="downloads">
-                    <span class="tab-icon"><i class="fas fa-download" aria-hidden="true"></i></span>
-                    <span class="tab-text">دانلود اپ‌ها</span>
-                </a>
-                <a href="{{ dashboard_tab_urls.transactions }}" class="tab-btn-modern{% if active_tab == 'transactions' %} active{% endif %}" data-tab="transactions">
-                    <span class="tab-icon"><i class="fas fa-exchange-alt" aria-hidden="true"></i></span>
-                    <span class="tab-text">تراکنش‌ها</span>
-                </a>
-                {% if has_paid_orders %}
-                <a href="{{ dashboard_tab_urls.affiliate }}" class="tab-btn-modern{% if active_tab == 'affiliate' %} active{% endif %}" data-tab="affiliate">
-                    <span class="tab-icon"><i class="fas fa-handshake" aria-hidden="true"></i></span>
-                    <span class="tab-text">همکاری در فروش</span>
-                </a>
-                {% endif %}
-                <a href="{{ dashboard_tab_urls.profile }}" class="tab-btn-modern{% if active_tab == 'profile' %} active{% endif %}" data-tab="profile">
-                    <span class="tab-icon"><i class="fas fa-user" aria-hidden="true"></i></span>
-                    <span class="tab-text">پروفایل</span>
-                </a>
-            </nav>
-        </div>
-        </div>
-        
-        <!-- Tab: Overview -->
-        <div id="tab-overview" class="tab-content dash-tab-panel"{% if active_tab != 'overview' %} style="display: none;"{% endif %}>
-            <header class="dash-tab-head">
-                <div class="dash-tab-head-copy">
-                    <h2 class="dash-tab-head-title">نمای کلی</h2>
-                    <p class="dash-tab-head-sub">خلاصه حساب، سفارش‌ها و لایسنس‌های فعال</p>
-                </div>
-            </header>
-
-            <nav class="dash-ov-quick" aria-label="میانبرهای سریع">
-                <a href="{% url 'workspace:home' %}" class="dash-ov-quick-item" data-tone="violet">
-                    <span class="dash-ov-quick-ico"><i class="fas fa-layer-group" aria-hidden="true"></i></span>
-                    <span class="dash-ov-quick-lbl">میزکار</span>
-                </a>
-                <a href="{{ dashboard_tab_urls.orders }}" class="dash-ov-quick-item" data-tone="blue">
-                    <span class="dash-ov-quick-ico"><i class="fas fa-shopping-bag" aria-hidden="true"></i></span>
-                    <span class="dash-ov-quick-lbl">سفارش‌ها</span>
-                </a>
-                <a href="{{ dashboard_tab_urls.licenses }}" class="dash-ov-quick-item" data-tone="emerald">
-                    <span class="dash-ov-quick-ico"><i class="fas fa-key" aria-hidden="true"></i></span>
-                    <span class="dash-ov-quick-lbl">لایسنس</span>
-                </a>
-                <a href="{{ dashboard_tab_urls.downloads }}" class="dash-ov-quick-item" data-tone="cyan">
-                    <span class="dash-ov-quick-ico"><i class="fas fa-download" aria-hidden="true"></i></span>
-                    <span class="dash-ov-quick-lbl">دانلود</span>
-                </a>
             </nav>
 
-            <div class="overview-grid">
-                <!-- آخرین سفارش‌ها -->
-                <div class="section-card overview-card">
-                    <div class="section-card-head">
-                        <h3 class="section-title">
-                            <i class="fas fa-shopping-bag" aria-hidden="true"></i> آخرین سفارش‌های پرداخت شده
-                        </h3>
-                    </div>
-                    {% if paid_orders_for_overview %}
-                        <div class="dash-preview-list">
-                            {% for order in paid_orders_for_overview %}
-                                <article class="dash-preview-card">
-                                    <div class="dash-preview-card-main">
-                                        <strong class="dash-preview-card-title">{{ order.product.title }}</strong>
-                                        <div class="dash-preview-card-meta">
-                                            <span><i class="fas fa-calendar" aria-hidden="true"></i> {{ order.created_at|to_jalali_date:"%Y/%m/%d" }}</span>
-                                            <span><i class="fas fa-coins" aria-hidden="true"></i> {{ order.amount|currency }} تومان</span>
-                                        </div>
-                                    </div>
-                                    <span class="badge badge-success">{{ order.get_status_display }}</span>
-                                </article>
-                            {% endfor %}
-                        </div>
-                        <a href="{{ dashboard_tab_urls.orders }}" class="view-all-link view-all-link--compact">
-                            مشاهده همه <i class="fas fa-arrow-left" aria-hidden="true"></i>
-                        </a>
-                    {% else %}
-                        <p class="empty-text">هنوز سفارش پرداخت‌شده‌ای ندارید.</p>
-                    {% endif %}
-                </div>
-                
-                <!-- لایسنس‌های فعال -->
-                <div class="section-card overview-card">
-                    <div class="section-card-head">
-                        <h3 class="section-title">
-                            <i class="fas fa-key" aria-hidden="true"></i> لایسنس‌های فعال
-                        </h3>
-                    </div>
-                    {% if licenses %}
-                        <div class="dash-preview-list">
-                            {% for license in licenses|slice:":5" %}
-                                <article class="dash-preview-card{% if license.status == 'expired' %} dash-preview-card--expired{% endif %}">
-                                    <div class="dash-preview-card-main">
-                                        <strong class="dash-preview-card-title">{{ license.order.product.title }}</strong>
-                                        <div class="dash-preview-card-meta">
-                                            {% if license.expires_at %}
-                                                <span class="dash-preview-expiry{% if license.status == 'expired' %} dash-preview-expiry--expired{% endif %}">
-                                                    <i class="fas fa-clock" aria-hidden="true"></i>
-                                                    {{ license.expires_at|to_jalali_date:"%Y/%m/%d" }}
-                                                </span>
-                                            {% else %}
-                                                <span><i class="fas fa-infinity" aria-hidden="true"></i> نامحدود</span>
-                                            {% endif %}
-                                        </div>
-                                    </div>
-                                    <span class="badge {% if license.status == 'active' %}badge-active{% elif license.status == 'expired' %}badge-expired{% else %}badge-muted{% endif %}">{{ license.get_status_display }}</span>
-                                </article>
-                            {% endfor %}
-                        </div>
-                        <a href="{{ dashboard_tab_urls.licenses }}" class="view-all-link view-all-link--compact">
-                            مشاهده همه <i class="fas fa-arrow-left" aria-hidden="true"></i>
-                        </a>
-                    {% else %}
-                        <p class="empty-text">لایسنس فعالی ندارید. <a href="{% url 'product_list' %}" class="view-all-link">خرید ربات استخراج</a></p>
-                    {% endif %}
-                </div>
-            </div>
-            
-            <!-- بخش افیلیت (اگر کاربر خرید کرده باشد) -->
-            {% if has_paid_orders and affiliate %}
-            <div class="affiliate-modern-card">
-                <div class="affiliate-modern-header">
-                    <div class="affiliate-modern-title">
-                        <i class="fas fa-handshake" aria-hidden="true"></i>
-                        <h3>همکاری در فروش</h3>
-                    </div>
-                </div>
-                
-                <div class="affiliate-modern-stats">
-                    <div class="affiliate-modern-stat-card">
-                        <div class="affiliate-modern-stat-icon sales">
-                            <i class="fas fa-shopping-bag" aria-hidden="true"></i>
-                        </div>
-                        <div class="affiliate-modern-stat-info">
-                            <span class="affiliate-modern-stat-label">تعداد فروش</span>
-                            <span class="affiliate-modern-stat-value">{{ affiliate_stats.total_sales_count }}</span>
-                        </div>
-                    </div>
-                    
-                    <div class="affiliate-modern-stat-card">
-                        <div class="affiliate-modern-stat-icon commission">
-                            <i class="fas fa-money-bill-wave" aria-hidden="true"></i>
-                        </div>
-                        <div class="affiliate-modern-stat-info">
-                            <span class="affiliate-modern-stat-label">کل کمیسیون</span>
-                            <span class="affiliate-modern-stat-value">{{ affiliate_stats.total_commission|currency }} <span class="affiliate-modern-stat-unit">تومان</span></span>
-                        </div>
-                    </div>
-                    
-                    <div class="affiliate-modern-stat-card">
-                        <div class="affiliate-modern-stat-icon wallet">
-                            <i class="fas fa-wallet" aria-hidden="true"></i>
-                        </div>
-                        <div class="affiliate-modern-stat-info">
-                            <span class="affiliate-modern-stat-label">موجودی کیف پول</span>
-                            <span class="affiliate-modern-stat-value success">{{ affiliate_wallet.balance|currency }} <span class="affiliate-modern-stat-unit">تومان</span></span>
-                        </div>
-                    </div>
-
-                    <div class="affiliate-modern-stat-card">
-                        <div class="affiliate-modern-stat-icon sales">
-                            <i class="fas fa-users" aria-hidden="true"></i>
-                        </div>
-                        <div class="affiliate-modern-stat-info">
-                            <span class="affiliate-modern-stat-label">زیرمجموعه</span>
-                            <span class="affiliate-modern-stat-value">{{ affiliate_stats.referred_users_count|default:0 }}</span>
-                            <span class="affiliate-modern-stat-sub">{{ affiliate_stats.referred_users_without_orders|default:0 }} در انتظار خرید</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="affiliate-modern-link-section">
-                    <label class="affiliate-modern-link-label">
-                        <i class="fas fa-link" aria-hidden="true"></i>
-                        لینک معرف شما
-                    </label>
-                    <div class="affiliate-modern-link-input-group">
-                        <input type="text" value="{{ affiliate_stats.referral_url }}" readonly class="affiliate-modern-link-input" id="affiliateReferralLinkOverview">
-                        <button type="button" class="affiliate-modern-link-btn" onclick="copyAffiliateLinkOverview()" aria-label="کپی لینک معرف">
-                            <i class="fas fa-copy" aria-hidden="true"></i>
-                            <span class="affiliate-copy-text">کپی</span>
-                        </button>
-                    </div>
-                    <div class="affiliate-modern-code">
-                        <span>کد معرف:</span>
-                        <strong>{{ affiliate.code }}</strong>
-                    </div>
-                </div>
-                
-                <div class="affiliate-modern-actions">
-                    <a href="{{ dashboard_tab_urls.affiliate }}" class="affiliate-modern-action-btn outline">
-                        <i class="fas fa-chart-line" aria-hidden="true"></i>
-                        <span>مشاهده جزئیات</span>
-                    </a>
-                    {% if affiliate_wallet.balance >= affiliate_stats.min_withdrawal %}
-                    <a href="{% url 'affiliate_withdrawal' %}" class="affiliate-modern-action-btn primary">
-                        <i class="fas fa-money-bill-wave" aria-hidden="true"></i>
-                        <span>درخواست برداشت</span>
-                    </a>
-                    {% endif %}
-                </div>
-            </div>
-            {% endif %}
-        </div>
+            <div class="dash-shell dashboard-main-card dash-shell-pro">
         
         <!-- Tab: Orders -->
         <div id="tab-orders" class="tab-content dash-tab-panel"{% if active_tab != 'orders' %} style="display: none;"{% endif %}>
@@ -607,7 +301,7 @@
             <div class="lic-grid" role="list">
                 {% for item in license_dashboard.portfolios %}
                 {% with lic=item.license expiry=item.expiry %}
-                <article class="lic-tile lic-tile--{{ expiry.tone }}" role="listitem" data-license-id="{{ lic.id }}" data-lic-tone="{{ expiry.tone }}"{% if lic.expires_at %} data-lic-expires="{{ lic.expires_at|date:'c' }}"{% endif %} style="--lic-health: {{ expiry.health_pct }}%;">
+                <article class="lic-tile lic-tile--{{ expiry.tone }}" id="license-{{ lic.id }}" role="listitem" data-license-id="{{ lic.id }}" data-lic-tone="{{ expiry.tone }}"{% if lic.expires_at %} data-lic-expires="{{ lic.expires_at|date:'c' }}"{% endif %} style="--lic-health: {{ expiry.health_pct }}%;">
                     <div class="lic-tile-glow" aria-hidden="true"></div>
                     <div class="lic-tile-life" aria-hidden="true"><span class="lic-tile-life-fill"></span></div>
 
@@ -1277,7 +971,10 @@
                 </form>
             </section>
         </div>
+            </div>
+        {% endif %}
     </div>
+</div>
 </div>
 
 <!-- Modal برای ویرایش اطلاعات کاربری -->
@@ -1761,10 +1458,6 @@ function previewAvatar(event) {
 
 // اسکرول به anchor در hash (مثلاً #licenses)
 document.addEventListener('DOMContentLoaded', function() {
-    const activeTabBtn = document.querySelector('.tab-btn-modern.active');
-    if (activeTabBtn && activeTabBtn.scrollIntoView) {
-        activeTabBtn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-    }
     const hash = window.location.hash.replace('#', '');
     const downloadAnchors = new Set(['download-apps', 'mk-dl-android-notes', 'mk-dl-windows-notes']);
     if (!hash) return;
@@ -2077,6 +1770,7 @@ function copyAffiliateLinkOverview() {
 {% endblock %}
 
 {% block extra_js %}
+<script src="{% static 'js/mizkar-account-shell.js' %}?v=1"></script>
 <script>
 (function initDashboardFooterAccordion() {
     if (!document.body.classList.contains('mk-account-dashboard')) return;

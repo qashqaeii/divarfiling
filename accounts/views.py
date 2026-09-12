@@ -244,6 +244,18 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             user=user, 
             status='paid'
         ).select_related('product', 'plan').order_by('-created_at')[:5]
+
+        overview_licenses = []
+        for lic in licenses.select_related('order', 'order__product')[:20]:
+            lic.sync_expiration_status(save=False)
+            is_active = (
+                lic.status == 'active'
+                and (lic.expires_at is None or lic.expires_at > timezone.now())
+            )
+            lic.overview_is_active = is_active
+            overview_licenses.append(lic)
+        overview_licenses.sort(key=lambda lic: (0 if lic.overview_is_active else 1, -lic.created_at.timestamp()))
+        overview_licenses = overview_licenses[:5]
         
         context.update({
             # آمار
@@ -265,6 +277,7 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             # داده‌ها
             'orders': orders[:50],  # محدود به 50 مورد
             'paid_orders_for_overview': paid_orders_for_overview,  # فقط برای نمای کلی
+            'overview_licenses': overview_licenses,
             'licenses': licenses,
             'license_dashboard': license_dashboard,
             'orders_pending_claim': orders_pending_claim,

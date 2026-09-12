@@ -373,76 +373,39 @@ html.mk-public .footer.mk-footer-pro.mk-footer-v2.footer::before {
     transform: translateX(-2px);
 }
 
-/* Trust badge */
+/* Trust badge — single enamad link, no outer card */
 .mk-footer-v2 .mk-ft-trust {
-    min-width: 8.5rem;
-    text-align: center;
-}
-
-.mk-footer-v2 .mk-ft-trust-card {
-    padding: 1rem 0.85rem 0.85rem;
-    border-radius: 14px;
-    background: var(--mk-ft-trust-bg);
-    border: 1px solid var(--mk-ft-border);
-    box-shadow: 0 8px 24px -16px rgba(15, 23, 42, 0.18);
-    text-align: center;
-}
-
-.mk-footer-v2 .mk-ft-trust-card__icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 2rem;
-    height: 2rem;
-    margin-bottom: 0.35rem;
-    font-size: 1rem;
-    color: #38bdf8;
-}
-
-.mk-footer-v2 .mk-ft-trust-card__title {
-    margin: 0 0 0.65rem;
-    font-size: 0.68rem;
-    font-weight: 700;
-    line-height: 1.45;
-    color: var(--mk-ft-muted) !important;
-}
-
-.mk-footer-v2 .mk-ft-trust-slot--enamad {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0.35rem;
-    border-radius: 10px;
-    background: var(--mk-ft-trust-slot-bg) !important;
-    border: 1px solid var(--mk-ft-border);
-}
-
-.mk-footer-v2 .mk-ft-trust-view {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.35rem;
+    min-width: 5.5rem;
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    text-align: center;
+}
+
+.mk-footer-v2 .mk-ft-trust-slot--enamad {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent !important;
+    box-shadow: none !important;
     text-decoration: none;
+    line-height: 0;
 }
 
-.mk-footer-v2 .mk-ft-trust-view img {
+.mk-footer-v2 .mk-ft-trust-slot--enamad img {
     display: block;
-    width: 72px;
-    height: 72px;
-    max-width: 72px;
-    max-height: 72px;
+    width: 80px;
+    height: 80px;
+    max-width: 80px;
+    max-height: 80px;
     object-fit: contain;
-}
-
-.mk-footer-v2 .mk-ft-trust-view span {
-    display: inline-block;
-    padding: 0.28rem 0.75rem;
-    border-radius: 999px;
-    font-size: 0.62rem;
-    font-weight: 700;
-    color: var(--mk-ft-accent-strong) !important;
-    background: color-mix(in srgb, var(--mk-ft-accent) 14%, transparent);
-    border: 1px solid color-mix(in srgb, var(--mk-ft-accent) 28%, transparent);
 }
 
 .mk-footer-v2 .mk-ft-trust-note {

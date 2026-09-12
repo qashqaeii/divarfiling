@@ -42,7 +42,7 @@
     <link rel="stylesheet" href="{% static 'workspace/css/design-system.css' %}?v=1">
     <link rel="stylesheet" href="{% static 'css/main.css' %}?v=4.8.2">
     <link rel="stylesheet" href="{% static 'css/mizkar-public.css' %}?v=27">
-    <link rel="stylesheet" href="{% static 'css/mizkar-footer.css' %}?v=6">
+    <link rel="stylesheet" href="{% static 'css/mizkar-footer.css' %}?v=7">
     <link rel="stylesheet" href="{% static 'css/mizkar-platform.css' %}?v=9">
     <link rel="stylesheet" href="{% static 'css/mizkar-pages.css' %}?v=6">
     <link rel="stylesheet" href="{% static 'css/decor-icons.css' %}?v=4">
@@ -213,18 +213,9 @@
                     </nav>
 
                     <aside class="mk-ft-trust mk-ft-reveal" style="--ft-delay: 6" aria-label="نماد اعتماد">
-                        <div class="mk-ft-trust-card">
-                            <div class="mk-ft-trust-card__icon" aria-hidden="true">
-                                <i class="fas fa-shield-halved"></i>
-                            </div>
-                            <p class="mk-ft-trust-card__title">نماد اعتماد الکترونیکی</p>
-                            <div class="mk-ft-trust-slot mk-ft-trust-slot--enamad enamad-logo">
-                                <a referrerpolicy="origin" target="_blank" rel="noopener noreferrer" href="https://trustseal.enamad.ir/?id=746754&amp;Code=8femkhlueBhLRldp4DJ05PjsypJeuS0h" class="mk-ft-trust-view">
-                                    <img referrerpolicy="origin" src="https://trustseal.enamad.ir/logo.aspx?id=746754&amp;Code=8femkhlueBhLRldp4DJ05PjsypJeuS0h" alt="نماد اعتماد الکترونیکی" width="80" height="80">
-                                    <span>مشاهده نماد</span>
-                                </a>
-                            </div>
-                        </div>
+                        <a referrerpolicy="origin" target="_blank" rel="noopener noreferrer" href="https://trustseal.enamad.ir/?id=746754&amp;Code=8femkhlueBhLRldp4DJ05PjsypJeuS0h" class="mk-ft-trust-slot mk-ft-trust-slot--enamad enamad-logo">
+                            <img referrerpolicy="origin" src="https://trustseal.enamad.ir/logo.aspx?id=746754&amp;Code=8femkhlueBhLRldp4DJ05PjsypJeuS0h" alt="نماد اعتماد الکترونیکی" width="80" height="80">
+                        </a>
                         <p class="mk-ft-trust-note">{{ footer_content.trust_note }}</p>
                     </aside>
                 </div>

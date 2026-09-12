@@ -118,141 +118,14 @@
     </main>
 
     <!-- Footer -->
-    <footer class="footer mk-footer mk-footer-pro mk-footer-v2">
-        <div class="container">
-            <div class="mk-ft-shell">
-                <section class="mk-ft-cta mk-ft-reveal" style="--ft-delay: 0" aria-label="شروع سریع">
-                    <div class="mk-ft-cta__copy">
-                        <h2 class="mk-ft-cta__title">هوشمندتر کار کن، سریع‌تر معامله ببند.</h2>
-                        <p class="mk-ft-cta__sub">همه ابزارهای مشاور املاک، در یک میزکار</p>
-                    </div>
-                    <div class="mk-ft-cta__actions">
-                        {% if user.is_authenticated %}
-                        <a href="{% url 'workspace:home' %}" class="mk-ft-btn mk-ft-btn--primary">
-                            <span>ورود به میزکار</span>
-                            <i class="fas fa-arrow-left" aria-hidden="true"></i>
-                        </a>
-                        {% else %}
-                        <a href="{% url 'login' %}?next={% url 'workspace:home' %}" class="mk-ft-btn mk-ft-btn--primary">
-                            <span>ورود به میزکار</span>
-                            <i class="fas fa-arrow-left" aria-hidden="true"></i>
-                        </a>
-                        {% endif %}
-                        <a href="{% url 'license_guide' %}#download-apps" class="mk-ft-btn mk-ft-btn--ghost">
-                            <i class="fas fa-download" aria-hidden="true"></i>
-                            <span>دانلود اپ و ربات</span>
-                        </a>
-                    </div>
-                </section>
-
-                <div class="mk-ft-main">
-                    <div class="mk-ft-brand mk-ft-reveal" style="--ft-delay: 1">
-                        <a href="{% url 'home' %}" class="mk-ft-logo">
-                            <span class="mk-ft-logo-mark" aria-hidden="true">
-                                <img src="{% static 'logo.png' %}" alt="" class="mk-ft-logo-img" width="44" height="44">
-                            </span>
-                            <span class="mk-ft-logo-text">فایلینگ دیوار</span>
-                        </a>
-                        <p class="mk-ft-tagline">{{ footer_content.tagline }}</p>
-                        <div class="mk-ft-social">
-                            {% for s in footer_content.social %}
-                            <a href="{{ s.href }}" class="mk-ft-social-link" aria-label="{{ s.label }}"{% if s.href|slice:':4' == 'http' %} target="_blank" rel="noopener noreferrer"{% endif %}>
-                                <i class="{{ s.icon }}" aria-hidden="true"></i>
-                            </a>
-                            {% endfor %}
-                        </div>
-                    </div>
-
-                    <nav class="mk-ft-links" aria-label="لینک‌های پاورقی">
-                        <div class="mk-ft-col mk-ft-reveal" style="--ft-delay: 2">
-                            <h3 class="mk-ft-col-title">محصول</h3>
-                            <ul>
-                                <li><a href="{% url 'platform_features_hub' %}">امکانات پلتفرم</a></li>
-                                <li><a href="{% url 'platform_solutions_hub' %}">راه‌حل‌ها</a></li>
-                                <li><a href="{% url 'product_list' %}">ربات استخراج</a></li>
-                                {% if bot_product %}
-                                <li><a href="{% url 'product_detail' bot_product.slug %}">مشاهده و خرید</a></li>
-                                {% endif %}
-                            </ul>
-                        </div>
-                        <div class="mk-ft-col mk-ft-reveal" style="--ft-delay: 3">
-                            <h3 class="mk-ft-col-title">آموزش و دانلود</h3>
-                            <ul>
-                                <li><a href="{% url 'education' %}">مرکز آموزش</a></li>
-                                <li><a href="{% url 'public_academy_playlist' %}">آکادمی ویدیویی</a></li>
-                                <li><a href="{% url 'android_tutorial' %}">آموزش اپ اندروید</a></li>
-                                <li><a href="{% url 'license_guide' %}">راهنمای نصب</a></li>
-                                <li><a href="{% url 'license_guide' %}#download-apps">دانلود اپ و ربات</a></li>
-                            </ul>
-                        </div>
-                        <div class="mk-ft-col mk-ft-reveal" style="--ft-delay: 4">
-                            <h3 class="mk-ft-col-title">میزکار و راهنماها</h3>
-                            <ul>
-                                {% if user.is_authenticated %}
-                                <li><a href="{% url 'workspace:home' %}">ورود به میزکار</a></li>
-                                <li><a href="{% url 'dashboard' %}">پروفایل و لایسنس</a></li>
-                                {% else %}
-                                <li><a href="{% url 'register' %}">ثبت‌نام رایگان</a></li>
-                                <li><a href="{% url 'login' %}">ورود</a></li>
-                                {% endif %}
-                                <li><a href="{% url 'seo_landing_real_estate_crm' %}">CRM مشاور املاک</a></li>
-                                <li><a href="{% url 'seo_landing_real_estate_software' %}">نرم‌افزار مشاور املاک</a></li>
-                                <li><a href="{% url 'seo_landing_real_estate_market_analysis' %}">تحلیل بازار املاک</a></li>
-                                <li><a href="{% url 'seo_landing_robot_divar' %}">ربات دیوار</a></li>
-                            </ul>
-                        </div>
-                        <div class="mk-ft-col mk-ft-reveal" style="--ft-delay: 5">
-                            <h3 class="mk-ft-col-title">شرکت</h3>
-                            <ul>
-                                <li><a href="{% url 'about' %}">درباره ما</a></li>
-                                <li><a href="{% url 'contact' %}">تماس</a></li>
-                                <li><a href="{% url 'terms' %}">قوانین</a></li>
-                                <li><a href="{% url 'blog:post_list' %}">مقالات</a></li>
-                            </ul>
-                        </div>
-                    </nav>
-
-                    <aside class="mk-ft-trust mk-ft-reveal" style="--ft-delay: 6" aria-label="نماد اعتماد">
-                        <a referrerpolicy="origin" target="_blank" rel="noopener noreferrer" href="https://trustseal.enamad.ir/?id=746754&amp;Code=8femkhlueBhLRldp4DJ05PjsypJeuS0h" class="mk-ft-trust-slot mk-ft-trust-slot--enamad enamad-logo">
-                            <img referrerpolicy="origin" src="https://trustseal.enamad.ir/logo.aspx?id=746754&amp;Code=8femkhlueBhLRldp4DJ05PjsypJeuS0h" alt="نماد اعتماد الکترونیکی" width="80" height="80">
-                        </a>
-                        <p class="mk-ft-trust-note">{{ footer_content.trust_note }}</p>
-                    </aside>
-                </div>
-
-                <div class="mk-ft-bar mk-ft-reveal" style="--ft-delay: 7">
-                    <div class="mk-ft-bar-copy">
-                        <p class="mk-ft-copy">&copy; ۱۴۰۳ {{ site_brand.site_display_name }} — {{ footer_content.legal }}</p>
-                        <p class="mk-ft-copy mk-ft-creator">
-                            {{ footer_content.creator_line }}
-                            · <a href="{% url 'author_hossein_qashqaeii' %}">درباره نویسنده</a>
-                        </p>
-                    </div>
-                    <div class="mk-ft-bar-end">
-                        <nav class="mk-ft-bar-nav" aria-label="لینک‌های حقوقی">
-                            <a href="{% url 'terms' %}">قوانین</a>
-                            <span class="mk-ft-bar-dot" aria-hidden="true"></span>
-                            <a href="{% url 'contact' %}">تماس</a>
-                            <span class="mk-ft-bar-dot" aria-hidden="true"></span>
-                            <a href="{% url 'education' %}">آموزش</a>
-                            <span class="mk-ft-bar-dot" aria-hidden="true"></span>
-                            <a href="{% url 'license_guide' %}">راهنما</a>
-                        </nav>
-                        <button type="button" class="mk-ft-scroll-top" data-ft-scroll-top aria-label="بازگشت به بالا">
-                            <i class="fas fa-arrow-up" aria-hidden="true"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </footer>
+    {% block site_footer %}{% include 'includes/site_footer.html' %}{% endblock %}
 
     {% block page_overlays %}{% endblock %}
 
     <!-- Scripts -->
     <script src="{% static 'js/mk-notices.js' %}?v=2"></script>
     <script src="{% static 'js/main.js' %}?v=4"></script>
-    <script src="{% static 'js/mk-footer.js' %}?v=2" defer></script>
+    <script src="{% static 'js/mk-footer.js' %}?v=3" defer></script>
     <script src="{% static 'js/mk-platform-nav.js' %}?v=8" defer></script>
     {% if show_goftino %}
     {% include 'includes/goftino.html' %}

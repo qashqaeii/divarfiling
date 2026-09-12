@@ -41,6 +41,11 @@
         if (!btn) return;
 
         btn.addEventListener('click', function () {
+            var scrollRoot = btn.closest('.mk-account-content-scroll');
+            if (scrollRoot) {
+                scrollRoot.scrollTo({ top: 0, behavior: 'smooth' });
+                return;
+            }
             window.scrollTo({ top: 0, behavior: 'smooth' });
         });
     }

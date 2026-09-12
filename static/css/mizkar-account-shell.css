@@ -234,6 +234,18 @@ body.mk-account-dashboard .mk-footer-pro {
     cursor: pointer;
 }
 
+/* ─── Content scroll column (main + footer) ─── */
+.mk-account-content-scroll {
+    min-width: 0;
+    min-height: 0;
+}
+
+.mk-account-content-scroll > .mk-footer-pro {
+    position: static;
+    width: 100%;
+    flex-shrink: 0;
+}
+
 /* ─── Main area ─── */
 .mk-account-main {
     min-width: 0;
@@ -1357,7 +1369,7 @@ body.mk-account-dashboard .mk-footer-pro {
     box-shadow: none;
 }
 
-/* ─── Desktop: viewport shell — body بدون اسکرول، فقط main اسکرول می‌شود ─── */
+/* ─── Desktop: viewport shell — sidebar ثابت، اسکرول در content-scroll (main + footer) ─── */
 @media (min-width: 961px) {
     html.mk-public:has(body.mk-account-dashboard) {
         height: 100%;
@@ -1380,17 +1392,13 @@ body.mk-account-dashboard .mk-footer-pro {
     }
 
     body.mk-account-dashboard .mk-site-header {
-        flex-shrink: 0;
+        flex: 0 0 auto;
     }
 
     body.mk-account-dashboard .main-content {
         flex: 1 1 auto;
         min-height: 0;
         overflow: hidden;
-    }
-
-    body.mk-account-dashboard .mk-footer-pro {
-        flex-shrink: 0;
     }
 
     body.mk-account-dashboard .container.mk-dashboard-page,
@@ -1410,7 +1418,7 @@ body.mk-account-dashboard .mk-footer-pro {
         overflow: hidden;
     }
 
-    .mk-account-main {
+    .mk-account-content-scroll {
         height: 100%;
         max-height: 100%;
         min-height: 0;
@@ -1419,6 +1427,11 @@ body.mk-account-dashboard .mk-footer-pro {
         overscroll-behavior: contain;
         -webkit-overflow-scrolling: touch;
         scrollbar-gutter: stable;
+    }
+
+    .mk-account-main {
+        overflow: visible;
+        width: 100%;
     }
 
     .mk-account-main > .mk-acc-tab-body {

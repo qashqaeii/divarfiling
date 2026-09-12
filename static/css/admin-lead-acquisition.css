@@ -2698,6 +2698,62 @@ html.mk-public:not([data-theme="light"]) .adm-lac-bulk-bar {
     margin-top: 0.55rem;
 }
 
+.adm-lac-auto-edit-modal {
+    width: min(760px, calc(100vw - 2rem));
+}
+
+.adm-lac-auto-edit-modal .adm-lac-modal__body {
+    padding: 1rem 1.1rem 1.15rem;
+}
+
+.adm-lac-auto-edit-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.55rem 0.85rem;
+    margin-bottom: 0.85rem;
+    padding: 0.65rem 0.75rem;
+    border-radius: 12px;
+    border: 1px solid var(--lac-line);
+    background: var(--lac-soft, rgba(13, 148, 136, 0.06));
+}
+
+.adm-lac-auto-edit-district-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 0.35rem;
+}
+
+.adm-lac-auto-edit-checks {
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px dashed var(--lac-line);
+}
+
+.adm-lac-check--warn {
+    color: #b45309;
+}
+
+.adm-lac-auto-edit-modal .adm-lac-field input,
+.adm-lac-auto-edit-modal .adm-lac-field select,
+.adm-lac-auto-edit-modal .adm-lac-field textarea {
+    width: 100%;
+    font: inherit;
+    padding: 0.5rem 0.6rem;
+    border-radius: 10px;
+    border: 1px solid var(--lac-line);
+    background: inherit;
+    color: inherit;
+}
+
+.adm-lac-auto-edit-modal .adm-lac-field label {
+    display: block;
+    margin-bottom: 0.35rem;
+    font-size: 0.84rem;
+    font-weight: 700;
+}
+
 .adm-lac-lines-modal {
     width: min(440px, calc(100vw - 2rem));
 }

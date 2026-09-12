@@ -8,7 +8,7 @@
 
 {% block admin_panel_extra_css %}
 <link rel="stylesheet" href="{% static 'css/admin-marketing.css' %}?v=3">
-<link rel="stylesheet" href="{% static 'css/admin-lead-acquisition.css' %}?v=15">
+<link rel="stylesheet" href="{% static 'css/admin-lead-acquisition.css' %}?v=16">
 {% endblock %}
 
 {% block admin_panel_content %}
@@ -1000,24 +1000,9 @@
                                             {% if c.is_active %}<i class="fas fa-pause"></i> توقف{% else %}<i class="fas fa-play"></i> فعال{% endif %}
                                         </button>
                                     </form>
-                                    <details class="adm-lac-inline-edit">
-                                        <summary class="adm-lac-btn adm-lac-btn--ghost adm-lac-btn--sm"><i class="fas fa-pen"></i> ویرایش</summary>
-                                        <form method="post" class="adm-lac-inline-edit__body">
-                                            {% csrf_token %}
-                                            <input type="hidden" name="action" value="update_automation_campaign">
-                                            <input type="hidden" name="campaign_id" value="{{ c.pk }}">
-                                            <input name="name" value="{{ c.name }}" placeholder="نام">
-                                            <textarea name="districts" rows="4">{% for d in c.districts %}{{ d }}{% if not forloop.last %}
-{% endif %}{% endfor %}</textarea>
-                                            <input type="number" name="limit_per_run" value="{{ c.limit_per_run }}" min="5" max="40">
-                                            <input type="number" name="min_phones_per_district" value="{{ c.min_phones_per_district }}" min="5" max="40" title="هدف حداقل شماره">
-                                            <input type="number" name="interval_hours" value="{{ c.interval_hours }}" min="1" max="168">
-                                            <label class="adm-lac-check"><input type="checkbox" name="reset_district_rotation" value="1"> از اولین منطقه شروع کن</label>
-                                            <label class="adm-lac-check"><input type="checkbox" name="auto_create_campaign" value="1" {% if c.auto_create_campaign %}checked{% endif %}> auto campaign</label>
-                                            <label class="adm-lac-check"><input type="checkbox" name="auto_enroll_pilot" value="1" {% if c.auto_enroll_pilot %}checked{% endif %}> auto pilot</label>
-                                            <button type="submit" class="adm-lac-btn adm-lac-btn--primary adm-lac-btn--sm">ذخیره</button>
-                                        </form>
-                                    </details>
+                                    <button type="button" class="adm-lac-btn adm-lac-btn--ghost adm-lac-btn--sm" data-lac-auto-edit="{{ c.pk }}">
+                                        <i class="fas fa-pen"></i> ویرایش
+                                    </button>
                                 </div>
                             </td>
                         </tr>
@@ -1393,6 +1378,96 @@
     </dialog>
     <script type="application/json" id="lac-factory-templates">{{ factory_templates_json|safe }}</script>
 
+    <dialog class="adm-lac-modal adm-lac-auto-edit-modal" id="lac-auto-edit-modal">
+        <form method="post" class="adm-lac-modal__inner" id="lac-auto-edit-form">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="update_automation_campaign">
+            <input type="hidden" name="campaign_id" id="lac-auto-edit-id" value="">
+            <header class="adm-lac-modal__head">
+                <div>
+                    <p class="adm-lac-tpl-kicker"><i class="fas fa-robot" aria-hidden="true"></i> کمپین جمع‌آوری خودکار</p>
+                    <h3 id="lac-auto-edit-title">ویرایش کمپین</h3>
+                    <p class="adm-lac-kpi-sub" id="lac-auto-edit-sub">—</p>
+                </div>
+                <button type="button" class="adm-lac-modal__close" data-lac-auto-edit-close aria-label="بستن">&times;</button>
+            </header>
+            <div class="adm-lac-modal__body">
+                <div class="adm-lac-auto-edit-meta" id="lac-auto-edit-meta" hidden>
+                    <span class="adm-lac-chip adm-lac-chip--live" id="lac-auto-edit-status">فعال</span>
+                    <span class="adm-lac-kpi-sub" id="lac-auto-edit-rotation">—</span>
+                </div>
+                <div class="adm-lac-form-row adm-lac-form-row--2col">
+                    <div class="adm-lac-field">
+                        <label for="lac-auto-edit-name">نام کمپین</label>
+                        <input name="name" id="lac-auto-edit-name" required placeholder="مثلاً تهران · ونک · فروش">
+                    </div>
+                    <div class="adm-lac-field">
+                        <label for="lac-auto-edit-city">شهر</label>
+                        <select name="city" id="lac-auto-edit-city" required>
+                            {% for c in automation_cities %}
+                            <option value="{{ c.name }}">{{ c.name }}</option>
+                            {% empty %}
+                            <option value="تهران">تهران</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="adm-lac-field adm-lac-field--full">
+                        <label for="lac-auto-edit-districts">منطقه‌ها <span class="adm-lac-kpi-sub">(هر خط یک منطقه — ترتیب = ترتیب اجرا)</span></label>
+                        <div class="adm-lac-field-actions adm-lac-auto-edit-district-actions">
+                            <button type="button" class="adm-lac-btn adm-lac-btn--ghost adm-lac-btn--sm" id="lac-auto-edit-load-all">
+                                <i class="fas fa-list"></i> بارگذاری همه مناطق شهر
+                            </button>
+                        </div>
+                        <textarea name="districts" id="lac-auto-edit-districts" rows="8" required placeholder="ونک&#10;آشتیانی&#10;…"></textarea>
+                        <div class="adm-lac-district-picker" id="lac-auto-edit-district-picker" hidden>
+                            <p class="adm-lac-kpi-sub">کلیک برای افزودن به لیست:</p>
+                            <div class="adm-lac-district-chips" id="lac-auto-edit-district-chips"></div>
+                        </div>
+                    </div>
+                    <div class="adm-lac-field">
+                        <label for="lac-auto-edit-category">نوع آگهی</label>
+                        <select name="category" id="lac-auto-edit-category">
+                            {% for val, label in automation_category_choices %}
+                            <option value="{{ val }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="adm-lac-field">
+                        <label for="lac-auto-edit-limit">سقف هر اجرا</label>
+                        <input type="number" name="limit_per_run" id="lac-auto-edit-limit" min="5" max="40">
+                    </div>
+                    <div class="adm-lac-field">
+                        <label for="lac-auto-edit-min-phones">هدف حداقل شماره</label>
+                        <input type="number" name="min_phones_per_district" id="lac-auto-edit-min-phones" min="5" max="40">
+                    </div>
+                    <div class="adm-lac-field">
+                        <label for="lac-auto-edit-interval">فاصله اجرا (ساعت)</label>
+                        <input type="number" name="interval_hours" id="lac-auto-edit-interval" min="1" max="168">
+                    </div>
+                    <div class="adm-lac-field">
+                        <label for="lac-auto-edit-landing">صفحه فرود SMS</label>
+                        <input name="landing_url" id="lac-auto-edit-landing" dir="ltr">
+                    </div>
+                </div>
+                <div class="adm-lac-form-checks adm-lac-auto-edit-checks">
+                    <input type="hidden" name="is_active" value="0">
+                    <label class="adm-lac-check"><input type="checkbox" name="is_active" id="lac-auto-edit-active" value="1"> فعال</label>
+                    <input type="hidden" name="auto_create_campaign" value="0">
+                    <label class="adm-lac-check"><input type="checkbox" name="auto_create_campaign" id="lac-auto-edit-auto-campaign" value="1"> ساخت LeadCampaign پس از import</label>
+                    <input type="hidden" name="auto_enroll_pilot" value="0">
+                    <label class="adm-lac-check"><input type="checkbox" name="auto_enroll_pilot" id="lac-auto-edit-auto-pilot" value="1"> enroll پایلوت A/B</label>
+                    <label class="adm-lac-check adm-lac-check--warn"><input type="checkbox" name="reset_district_rotation" id="lac-auto-edit-reset-rotation" value="1"> از اولین منطقه شروع کن</label>
+                </div>
+            </div>
+            <footer class="adm-lac-modal__foot">
+                <button type="button" class="adm-lac-btn adm-lac-btn--ghost" data-lac-auto-edit-close>انصراف</button>
+                <button type="submit" class="adm-lac-btn adm-lac-btn--primary">
+                    <i class="fas fa-save"></i> ذخیره تغییرات
+                </button>
+            </footer>
+        </form>
+    </dialog>
+
     <dialog class="adm-lac-modal adm-lac-lines-modal" id="lac-lines-modal">
         <div class="adm-lac-modal__inner">
             <header class="adm-lac-modal__head">
@@ -1468,6 +1543,7 @@
 
 {% block admin_panel_extra_js %}
 <script type="application/json" id="lac-charts-data">{{ lac_charts_json|safe }}</script>
+<script type="application/json" id="lac-auto-campaign-edit-data">{{ automation_campaign_edit_json|safe }}</script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="{% static 'js/admin-lead-acquisition-charts.js' %}?v=3"></script>
 <script>
@@ -1554,6 +1630,138 @@
     autoCity.addEventListener('change', function () { loadDistricts(autoCity.value); });
     loadDistricts(autoCity.value);
   }
+
+  (function initAutoCampaignEditModal() {
+    var editDataEl = document.getElementById('lac-auto-campaign-edit-data');
+    var autoEditModal = document.getElementById('lac-auto-edit-modal');
+    if (!editDataEl || !autoEditModal) return;
+
+    var autoCampaignEdit = {};
+    try { autoCampaignEdit = JSON.parse(editDataEl.textContent || '{}'); } catch (_) {}
+
+    var editCity = document.getElementById('lac-auto-edit-city');
+    var editDistricts = document.getElementById('lac-auto-edit-districts');
+    var editPicker = document.getElementById('lac-auto-edit-district-picker');
+    var editChips = document.getElementById('lac-auto-edit-district-chips');
+    var editResetRotation = document.getElementById('lac-auto-edit-reset-rotation');
+
+    function appendEditDistrict(name) {
+      if (!editDistricts || !name) return;
+      var lines = editDistricts.value.split('\n').map(function (s) { return s.trim(); }).filter(Boolean);
+      if (lines.indexOf(name) !== -1) return;
+      lines.push(name);
+      editDistricts.value = lines.join('\n');
+    }
+
+    function loadEditDistricts(city) {
+      if (!editChips || !placesUrl) return;
+      editChips.innerHTML = '';
+      fetch(placesUrl + '?city=' + encodeURIComponent(city || 'تهران'), { credentials: 'same-origin' })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          if (!data.ok || !data.districts || !data.districts.length) {
+            if (editPicker) editPicker.hidden = true;
+            return;
+          }
+          if (editPicker) editPicker.hidden = false;
+          data.districts.forEach(function (d) {
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'adm-lac-district-chip';
+            btn.textContent = d;
+            btn.addEventListener('click', function () { appendEditDistrict(d); });
+            editChips.appendChild(btn);
+          });
+        })
+        .catch(function () {
+          if (editPicker) editPicker.hidden = true;
+        });
+    }
+
+    function loadAllEditDistricts(city) {
+      if (!editDistricts || !placesUrl) return;
+      fetch(placesUrl + '?city=' + encodeURIComponent(city || 'تهران'), { credentials: 'same-origin' })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          if (data.ok && data.districts && data.districts.length) {
+            editDistricts.value = data.districts.join('\n');
+          }
+        })
+        .catch(function () {});
+    }
+
+    function closeAutoEditModal() {
+      if (autoEditModal.close) autoEditModal.close();
+      else autoEditModal.removeAttribute('open');
+    }
+
+    function openAutoEditModal(id) {
+      var data = autoCampaignEdit[String(id)];
+      if (!data) return;
+
+      document.getElementById('lac-auto-edit-id').value = id;
+      document.getElementById('lac-auto-edit-title').textContent = data.name || 'ویرایش کمپین';
+      document.getElementById('lac-auto-edit-name').value = data.name || '';
+      if (editCity) editCity.value = data.city || 'تهران';
+      if (editDistricts) editDistricts.value = data.districts || '';
+      document.getElementById('lac-auto-edit-category').value = data.category || 'apartment-sell';
+      document.getElementById('lac-auto-edit-limit').value = data.limit_per_run || 20;
+      document.getElementById('lac-auto-edit-min-phones').value = data.min_phones_per_district || 20;
+      document.getElementById('lac-auto-edit-interval').value = data.interval_hours || 6;
+      document.getElementById('lac-auto-edit-landing').value = data.landing_url || 'https://divarfiling.ir/';
+      document.getElementById('lac-auto-edit-active').checked = !!data.is_active;
+      document.getElementById('lac-auto-edit-auto-campaign').checked = !!data.auto_create_campaign;
+      document.getElementById('lac-auto-edit-auto-pilot').checked = !!data.auto_enroll_pilot;
+      if (editResetRotation) editResetRotation.checked = false;
+
+      var rot = data.rotation || {};
+      var sub = document.getElementById('lac-auto-edit-sub');
+      if (sub) {
+        sub.textContent = 'شهر ' + (data.city || '—') + ' · ' + (data.districts_count || 0) + ' منطقه · #' + id;
+      }
+      var meta = document.getElementById('lac-auto-edit-meta');
+      var statusEl = document.getElementById('lac-auto-edit-status');
+      var rotEl = document.getElementById('lac-auto-edit-rotation');
+      if (meta) meta.hidden = false;
+      if (statusEl) {
+        statusEl.textContent = data.is_active ? 'فعال' : 'غیرفعال';
+        statusEl.className = 'adm-lac-chip ' + (data.is_active ? 'adm-lac-chip--live' : '');
+      }
+      if (rotEl && rot.total) {
+        rotEl.textContent = 'منطقه فعلی: ' + (rot.current || '—') + ' (' + (rot.progress_label || '—') + ') · بعدی: ' + (rot.next || '—');
+      } else if (rotEl) {
+        rotEl.textContent = '';
+      }
+
+      loadEditDistricts(data.city || 'تهران');
+      if (autoEditModal.showModal) autoEditModal.showModal();
+      else autoEditModal.setAttribute('open', 'open');
+    }
+
+    document.querySelectorAll('[data-lac-auto-edit]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        openAutoEditModal(btn.getAttribute('data-lac-auto-edit'));
+      });
+    });
+    document.querySelectorAll('[data-lac-auto-edit-close]').forEach(function (btn) {
+      btn.addEventListener('click', closeAutoEditModal);
+    });
+    autoEditModal.addEventListener('click', function (e) {
+      if (e.target === autoEditModal) closeAutoEditModal();
+    });
+    autoEditModal.addEventListener('cancel', function (e) {
+      e.preventDefault();
+      closeAutoEditModal();
+    });
+
+    var loadAllEditBtn = document.getElementById('lac-auto-edit-load-all');
+    if (loadAllEditBtn && editCity) {
+      loadAllEditBtn.addEventListener('click', function () { loadAllEditDistricts(editCity.value); });
+    }
+    if (editCity) {
+      editCity.addEventListener('change', function () { loadEditDistricts(editCity.value); });
+    }
+  })();
 
   const drop = document.getElementById('lac-dropzone');
   const file = document.getElementById('lac-file');

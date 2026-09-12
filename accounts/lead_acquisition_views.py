@@ -251,7 +251,30 @@ class AdminLeadAcquisitionView(StaffRequiredMixin, TemplateView):
             'send_progress_tick_url': reverse('admin_panel_lead_send_progress_tick'),
             'bulk_templates_url': reverse('admin_panel_lead_bulk_templates'),
             'automation_stats': automation_overview_stats(),
-            'automation_campaigns': automation_campaigns_for_ui(limit=30),
+            'automation_campaigns': (
+                _auto_campaigns_ui := automation_campaigns_for_ui(limit=30)
+            ),
+            'automation_campaign_edit_json': json.dumps(
+                {
+                    str(row['campaign'].pk): {
+                        'name': row['campaign'].name,
+                        'city': row['campaign'].city,
+                        'districts': '\n'.join(row['campaign'].districts or []),
+                        'category': row['campaign'].category,
+                        'limit_per_run': row['campaign'].limit_per_run,
+                        'min_phones_per_district': row['campaign'].min_phones_per_district,
+                        'interval_hours': row['campaign'].interval_hours,
+                        'landing_url': row['campaign'].landing_url or '',
+                        'is_active': row['campaign'].is_active,
+                        'auto_create_campaign': row['campaign'].auto_create_campaign,
+                        'auto_enroll_pilot': row['campaign'].auto_enroll_pilot,
+                        'rotation': row['rotation'],
+                        'districts_count': row['districts_count'],
+                    }
+                    for row in _auto_campaigns_ui
+                },
+                ensure_ascii=False,
+            ),
             'automation_runs': automation_runs_for_ui(limit=25),
             'automation_cities': list_automation_cities(),
             'automation_category_choices': CATEGORY_CHOICES,

@@ -205,7 +205,7 @@ def _restore_otp_pending(engine, payload: dict[str, Any]) -> None:
         if not name or value is None:
             continue
         set_cookie(
-            pending.session,
+            pending.session.cookies,
             str(name),
             str(value),
             domain=str(raw.get('domain') or 'divar.ir'),

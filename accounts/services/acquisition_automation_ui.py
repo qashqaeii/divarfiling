@@ -110,6 +110,10 @@ def list_districts_for_city(city_name: str, *, limit: int = 400) -> list[str]:
     return ordered[:limit]
 
 
+def _form_bool(value) -> bool:
+    return str(value or '').lower() in ('1', 'true', 'on', 'yes')
+
+
 def parse_districts_input(raw: str) -> list[str]:
     text = (raw or '').replace('\r', '\n').strip()
     if not text:
@@ -275,11 +279,11 @@ def update_automation_campaign_from_form(campaign_id: int, data: dict) -> Acquis
     except (TypeError, ValueError):
         pass
     if 'is_active' in data:
-        campaign.is_active = bool(data.get('is_active'))
+        campaign.is_active = _form_bool(data.get('is_active'))
     if 'auto_create_campaign' in data:
-        campaign.auto_create_campaign = bool(data.get('auto_create_campaign'))
+        campaign.auto_create_campaign = _form_bool(data.get('auto_create_campaign'))
     if 'auto_enroll_pilot' in data:
-        campaign.auto_enroll_pilot = bool(data.get('auto_enroll_pilot'))
+        campaign.auto_enroll_pilot = _form_bool(data.get('auto_enroll_pilot'))
     if data.get('landing_url'):
         campaign.landing_url = str(data.get('landing_url')).strip()
     campaign.save()

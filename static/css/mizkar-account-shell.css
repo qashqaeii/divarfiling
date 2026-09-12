@@ -4,7 +4,7 @@
    ═══════════════════════════════════════════════════════════ */
 
 body.mk-account-dashboard {
-    --acc-sidebar-bg: #1e1b36;
+    --acc-sidebar-bg: #000000;
     --acc-sidebar-text: rgba(255, 255, 255, 0.72);
     --acc-sidebar-text-strong: #ffffff;
     --acc-sidebar-active: #7c3aed;
@@ -78,10 +78,35 @@ body.mk-account-dashboard .mk-footer-pro {
     min-height: calc(100vh - 3.65rem);
     max-height: calc(100vh - 3.65rem);
     padding: 1.15rem 0.85rem 1rem;
-    background: var(--acc-sidebar-bg);
+    background-color: #000;
+    background-image: url('../images/bgofsidebar.webp');
+    background-repeat: no-repeat;
+    background-position: center bottom;
+    background-size: 100% auto;
     color: var(--acc-sidebar-text);
-    border-inline-start: 1px solid rgba(255, 255, 255, 0.04);
+    border-inline-start: 1px solid rgba(255, 255, 255, 0.06);
     overflow: hidden;
+    isolation: isolate;
+}
+
+.mk-account-sidebar::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background: linear-gradient(
+        180deg,
+        rgba(0, 0, 0, 0.92) 0%,
+        rgba(0, 0, 0, 0.78) 42%,
+        rgba(0, 0, 0, 0.35) 72%,
+        rgba(0, 0, 0, 0.08) 100%
+    );
+}
+
+.mk-account-sidebar > * {
+    position: relative;
+    z-index: 1;
 }
 
 .mk-account-sidebar__head {
@@ -173,33 +198,6 @@ body.mk-account-dashboard .mk-footer-pro {
 .mk-account-sidebar__foot-link:hover {
     color: #fff;
     background: rgba(255, 255, 255, 0.05);
-}
-
-.mk-account-sidebar__decor {
-    position: relative;
-    margin-top: 0.75rem;
-    padding-top: 0.5rem;
-    min-height: 4.5rem;
-    pointer-events: none;
-    opacity: 0.35;
-}
-
-.mk-account-sidebar__decor svg {
-    width: 100%;
-    height: auto;
-    display: block;
-}
-
-.mk-account-sidebar__tagline {
-    position: absolute;
-    inset-inline-end: 0.2rem;
-    bottom: 0.15rem;
-    writing-mode: vertical-rl;
-    transform: rotate(180deg);
-    font-size: 0.58rem;
-    letter-spacing: 0.04em;
-    color: rgba(255, 255, 255, 0.55);
-    font-weight: 600;
 }
 
 .mk-account-sidebar__close {

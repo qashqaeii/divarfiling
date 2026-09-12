@@ -611,6 +611,70 @@ class CRMProperty(models.Model):
         return self.title or f'ملک #{self.pk}'
 
 
+class PropertyAccessibilityJob(models.Model):
+    """Background job for generating nearby POI accessibilities on a CRM property."""
+
+    STATUS_QUEUED = 'queued'
+    STATUS_RUNNING = 'running'
+    STATUS_DONE = 'done'
+    STATUS_FAILED = 'failed'
+    STATUS_CANCELLED = 'cancelled'
+    STATUS_CHOICES = (
+        (STATUS_QUEUED, 'در صف'),
+        (STATUS_RUNNING, 'در حال اجرا'),
+        (STATUS_DONE, 'انجام شد'),
+        (STATUS_FAILED, 'ناموفق'),
+        (STATUS_CANCELLED, 'لغو شده'),
+    )
+
+    property = models.ForeignKey(
+        CRMProperty,
+        on_delete=models.CASCADE,
+        related_name='accessibility_jobs',
+        verbose_name='ملک',
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='property_accessibility_jobs',
+        verbose_name='کاربر',
+    )
+    generation_id = models.CharField(max_length=36, db_index=True, verbose_name='شناسه نسل')
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default=STATUS_QUEUED,
+        db_index=True,
+        verbose_name='وضعیت',
+    )
+    attempts = models.PositiveSmallIntegerField(default=0, verbose_name='تلاش')
+    max_attempts = models.PositiveSmallIntegerField(default=3, verbose_name='حداکثر تلاش')
+    run_after = models.DateTimeField(default=timezone.now, db_index=True, verbose_name='اجرای بعد از')
+    locked_at = models.DateTimeField(null=True, blank=True, verbose_name='زمان قفل')
+    finished_at = models.DateTimeField(null=True, blank=True, verbose_name='زمان پایان')
+    last_error = models.CharField(max_length=500, blank=True, verbose_name='آخرین خطا')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'کار دسترسی ملک'
+        verbose_name_plural = 'کارهای دسترسی ملک'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['property', 'generation_id'],
+                name='uniq_property_accessibility_generation',
+            ),
+        ]
+        indexes = [
+            models.Index(fields=['status', 'run_after']),
+        ]
+
+    def __str__(self):
+        return f'accessibility job #{self.pk} property={self.property_id}'
+
+
 class PropertyContact(models.Model):
     """پیوند چند-به-چند مخاطب ↔ ملک."""
     customer = models.ForeignKey(

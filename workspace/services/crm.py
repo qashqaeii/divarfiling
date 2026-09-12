@@ -927,8 +927,11 @@ def property_from_listing(user, listing) -> CRMProperty:
         except (AttributeError, ValueError, TypeError):
             pass
     from workspace.services.listing_personal_status import DIVAR_SOURCE_PLATFORM
+    from workspace.services.nearby_pois import listing_location_metadata
 
     platform, external_id = DIVAR_SOURCE_PLATFORM, str(listing.token or '').strip()
+    feature_data = extract_feature_data_from_listing_data(merged_data)
+    feature_data.update(listing_location_metadata(listing))
     return CRMProperty.objects.create(
         user=user,
         agency=get_agency(user),
@@ -956,7 +959,7 @@ def property_from_listing(user, listing) -> CRMProperty:
         deposit=listing.deposit,
         monthly_rent=listing.rent,
         amenities='\n'.join(amenity_lines[:40]),
-        feature_data=extract_feature_data_from_listing_data(merged_data),
+        feature_data=feature_data,
         images=listing.images or [],
         token=listing.token,
         source_platform=platform if external_id else '',
@@ -1063,6 +1066,10 @@ def add_listing_to_personal_files(user, listing) -> tuple[CRMProperty, bool]:
         DIVAR_SOURCE_PLATFORM,
         get_crm_property_by_source,
     )
+    from workspace.services.nearby_pois import schedule_property_accessibilities
+
+    def _schedule(prop: CRMProperty) -> None:
+        schedule_property_accessibilities(prop.pk, user.pk)
 
     token = str(getattr(listing, 'token', '') or '').strip()
     existing = get_crm_property_by_source(user, DIVAR_SOURCE_PLATFORM, token) if token else None
@@ -1078,6 +1085,7 @@ def add_listing_to_personal_files(user, listing) -> tuple[CRMProperty, bool]:
                 source='دیوار',
             )
         finalize_listing_moved_to_personal(user, listing, existing)
+        _schedule(existing)
         return existing, False
 
     try:
@@ -1106,6 +1114,7 @@ def add_listing_to_personal_files(user, listing) -> tuple[CRMProperty, bool]:
                         source='دیوار',
                     )
             finalize_listing_moved_to_personal(user, listing, prop)
+            _schedule(prop)
             return prop, True
     except IntegrityError:
         existing = get_crm_property_by_source(user, DIVAR_SOURCE_PLATFORM, token)
@@ -1122,6 +1131,7 @@ def add_listing_to_personal_files(user, listing) -> tuple[CRMProperty, bool]:
                 source='دیوار',
             )
         finalize_listing_moved_to_personal(user, listing, existing)
+        _schedule(existing)
         return existing, False
 
 

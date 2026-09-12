@@ -1506,6 +1506,9 @@ class CRMPropertyCreateView(LoginRequiredMixin, CreateView):
             crm_property=self.object,
             source='سایر',
         )
+        from workspace.services.nearby_pois import schedule_property_accessibilities
+
+        schedule_property_accessibilities(self.object.pk, self.request.user.pk)
         messages.success(self.request, 'ملک ثبت شد.')
         return redirect('workspace:crm_property_detail', property_id=self.object.pk)
 
@@ -2062,6 +2065,8 @@ class CRMPropertyUpdateView(LoginRequiredMixin, UpdateView):
         )
 
     def form_valid(self, form):
+        old_lat = self.object.latitude
+        old_lng = self.object.longitude
         self.object = form.save()
         raw_images = self.request.POST.get('property_images_json')
         if raw_images is not None:
@@ -2084,6 +2089,18 @@ class CRMPropertyUpdateView(LoginRequiredMixin, UpdateView):
             crm_property=self.object,
             source='سایر',
         )
+        if (old_lat, old_lng) != (self.object.latitude, self.object.longitude):
+            from workspace.services.nearby_pois import (
+                mark_property_manual_location,
+                schedule_property_accessibilities,
+            )
+
+            mark_property_manual_location(self.object)
+            schedule_property_accessibilities(
+                self.object.pk,
+                self.request.user.pk,
+                force=True,
+            )
         messages.success(self.request, 'ملک به‌روز شد.')
         return redirect('workspace:crm_property_detail', property_id=self.object.pk)
 
@@ -2140,29 +2157,59 @@ class CRMPropertyLocationUpdateView(LoginRequiredMixin, View):
         if error:
             return JsonResponse({'ok': False, 'error': error}, status=400)
 
+        old_lat, old_lng = prop.latitude, prop.longitude
         prop.latitude = lat
         prop.longitude = lng
-        update_fields = ['latitude', 'longitude', 'updated_at']
-        if prop.nearby_pois:
-            prop.nearby_pois = {}
-            update_fields.append('nearby_pois')
-        prop.save(update_fields=update_fields)
+        from workspace.services.nearby_pois import mark_property_manual_location
+
+        mark_property_manual_location(prop)
+        prop.save(update_fields=['latitude', 'longitude', 'updated_at'])
+
+        location_changed = (old_lat, old_lng) != (lat, lng)
+        accessibility_status = ''
+        if location_changed:
+            from workspace.services.nearby_pois import (
+                get_property_accessibility_status,
+                schedule_property_accessibilities,
+            )
+
+            schedule_property_accessibilities(prop.pk, request.user.pk, force=True)
+            prop.refresh_from_db()
+            accessibility_status = get_property_accessibility_status(prop)
+
         return JsonResponse({
             'ok': True,
             'latitude': lat,
             'longitude': lng,
             'map_navigation': build_map_navigation(lat, lng),
+            'accessibility_status': accessibility_status,
         })
 
 
 class CRMPropertyNearbyPoisView(LoginRequiredMixin, View):
     """دریافت و ذخیره امکانات اطراف فایل شخصی — on-demand."""
 
+    def get(self, request, property_id):
+        from workspace.services.nearby_pois import property_accessibility_status_payload
+
+        prop = property_for_user(request.user, property_id)
+        if not prop:
+            return JsonResponse({'ok': False, 'error': 'ملک یافت نشد.'}, status=404)
+
+        share_ctx = build_property_share_context(request.user, prop)
+        if share_ctx.mask_sensitive:
+            return JsonResponse({'ok': False, 'error': 'دسترسی ندارید.'}, status=403)
+
+        return JsonResponse(property_accessibility_status_payload(prop))
+
     def post(self, request, property_id):
         from workspace.services.nearby_pois import (
             NearbyPoiError,
-            fetch_and_save_nearby_pois,
-            overpass_client_fallback,
+            api_response_payload,
+            get_stored_nearby_pois_payload,
+            property_accessibility_status_payload,
+            refresh_property_accessibilities,
+            schedule_property_accessibilities,
         )
 
         prop = property_for_user(request.user, property_id)
@@ -2184,24 +2231,39 @@ class CRMPropertyNearbyPoisView(LoginRequiredMixin, View):
             if 'elements' in payload:
                 client_elements = payload.get('elements')
 
+        if client_elements is not None:
+            try:
+                data = refresh_property_accessibilities(
+                    prop,
+                    request.user,
+                    force_refresh=True,
+                    elements=client_elements,
+                )
+            except NearbyPoiError as exc:
+                body = {
+                    'ok': False,
+                    'code': exc.code,
+                    'error': exc.message,
+                }
+                return JsonResponse(body, status=exc.status)
+            return JsonResponse(data)
+
+        if not force_refresh:
+            cached = get_stored_nearby_pois_payload(prop)
+            if cached:
+                return JsonResponse(api_response_payload(cached, cached=True))
+
         try:
-            data = fetch_and_save_nearby_pois(
-                prop,
-                request.user,
-                force_refresh=force_refresh,
-                elements=client_elements,
+            schedule_property_accessibilities(
+                prop.pk,
+                request.user.pk,
+                force=force_refresh,
             )
-        except NearbyPoiError as exc:
-            body = {
-                'ok': False,
-                'code': exc.code,
-                'error': exc.message,
-            }
-            fallback = (exc.extra or {}).get('fallback')
-            if fallback:
-                body['fallback'] = fallback
-            return JsonResponse(body, status=exc.status)
-        return JsonResponse(data)
+        except Exception:
+            return JsonResponse({'ok': False, 'error': 'زمان‌بندی محاسبه ناموفق بود.'}, status=500)
+
+        prop.refresh_from_db()
+        return JsonResponse(property_accessibility_status_payload(prop))
 
 
 class CRMPropertyDuplicateView(LoginRequiredMixin, View):

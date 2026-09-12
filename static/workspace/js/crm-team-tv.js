@@ -14,13 +14,15 @@
     var ALWAYS = ['kpis', 'leaderboard'];
 
     var CHART_THEME = {
-        text: '#94a3b8',
+        text: '#a8b5c8',
         textBright: '#f8fafc',
-        grid: 'rgba(148, 163, 184, 0.08)',
-        tooltipBg: '#0f172a',
-        tooltipBorder: '#475569',
+        grid: 'rgba(90, 150, 220, 0.07)',
+        tooltipBg: '#0d1b30',
+        tooltipBorder: 'rgba(90, 150, 220, 0.22)',
         tooltipText: '#f8fafc'
     };
+
+    var KPI_SPARK_HEIGHTS = [35, 55, 42, 70, 48, 85];
 
     var state = {
         lastData: null,
@@ -381,7 +383,10 @@
                     '<span class="lcc-kpi__icon"><i class="fas"></i></span>' +
                     '<span class="lcc-kpi__label"></span>' +
                     '<span class="lcc-kpi__value" data-val data-animate-key="kpi-' + key + '">۰</span>' +
-                    '<span class="lcc-kpi__delta" data-delta></span>';
+                    '<span class="lcc-kpi__delta" data-delta></span>' +
+                    '<span class="lcc-kpi__spark" aria-hidden="true">' +
+                    KPI_SPARK_HEIGHTS.map(function () { return '<i></i>'; }).join('') +
+                    '</span>';
                 row.appendChild(card);
             }
             card.hidden = false;
@@ -443,14 +448,16 @@
         if (!list) return;
         var rows = (data.leaderboard || []).slice(0, maxLeaderboardRows());
         if (!rows.length) {
-            if (!list.querySelector('.lcc-empty--inline')) {
+            if (!list.querySelector('.lcc-panel-empty')) {
                 list.innerHTML =
-                    '<li class="lcc-empty lcc-empty--inline">' +
-                    '<i class="fas fa-ranking-star"></i><p>هنوز فعالیتی ثبت نشده</p></li>';
+                    '<li class="lcc-panel-empty">' +
+                    '<i class="fas fa-crown"></i>' +
+                    '<strong>هنوز رتبه‌بندی ثبت نشده</strong>' +
+                    '<p>با فعالیت تیم، رتبه‌بندی مشاوران نمایش داده می‌شود</p></li>';
             }
             return;
         }
-        var empty = list.querySelector('.lcc-empty--inline');
+        var empty = list.querySelector('.lcc-panel-empty');
         if (empty) empty.remove();
 
         rows.forEach(function (r) {
@@ -461,28 +468,35 @@
                 li.className = 'lcc-lb__row';
                 li.setAttribute('data-rank', key);
                 li.innerHTML =
-                    '<span class="lcc-lb__rank"></span>' +
-                    '<span class="lcc-lb__avatar"></span>' +
+                    '<span class="lcc-lb__score" data-animate-key="score-' + key + '"></span>' +
                     '<div class="lcc-lb__body">' +
                     '<div class="lcc-lb__name"></div>' +
                     '<div class="lcc-lb__role"></div>' +
-                    '<div class="lcc-lb__bar"><span></span></div>' +
                     '</div>' +
-                    '<span class="lcc-lb__score" data-animate-key="score-' + key + '"></span>';
+                    '<div class="lcc-lb__bar"><span></span></div>' +
+                    '<span class="lcc-lb__medal"></span>' +
+                    '<span class="lcc-lb__rank"></span>' +
+                    '<span class="lcc-lb__avatar"></span>';
                 list.appendChild(li);
             }
 
             li.className = 'lcc-lb__row' + (r.rank === 1 ? ' lcc-lb__row--top' : '');
 
             var rankEl = li.querySelector('.lcc-lb__rank');
-            rankEl.textContent = rankDisplay(r.rank);
-            rankEl.className = 'lcc-lb__rank ' + rankBadgeClass(r.rank);
+            if (rankEl) {
+                rankEl.textContent = toFa(r.rank);
+                rankEl.className = 'lcc-lb__rank';
+            }
+
+            var medalEl = li.querySelector('.lcc-lb__medal');
+            if (medalEl) medalEl.textContent = rankDisplay(r.rank);
 
             setLbAvatar(li.querySelector('.lcc-lb__avatar'), r);
             li.querySelector('.lcc-lb__name').textContent = r.name;
             li.querySelector('.lcc-lb__role').textContent = r.role;
 
-            li.querySelector('.lcc-lb__bar span').style.width = (r.score_pct || 0) + '%';
+            var bar = li.querySelector('.lcc-lb__bar span');
+            if (bar) bar.style.width = (r.score_pct || 0) + '%';
             animateCount(li.querySelector('.lcc-lb__score'), Number(r.score) || 0);
         });
 
@@ -716,7 +730,7 @@
                 pointRadius: 4,
                 pointHoverRadius: 6,
                 pointBackgroundColor: s.color,
-                pointBorderColor: '#0b0f1a',
+                pointBorderColor: '#07111f',
                 pointBorderWidth: 2,
                 tension: 0.42,
                 fill: true,
@@ -845,14 +859,18 @@
         if (!el) return;
         var goals = (data.goals || []).slice(0, 3);
         if (!goals.length) {
-            if (!el.querySelector('.lcc-empty--inline')) {
+            if (!el.querySelector('.lcc-panel-empty')) {
                 el.innerHTML =
-                    '<div class="lcc-empty lcc-empty--inline">' +
-                    '<i class="fas fa-bullseye"></i><p>هدفی ثبت نشده</p></div>';
+                    '<div class="lcc-panel-empty">' +
+                    '<i class="fas fa-bullseye"></i>' +
+                    '<strong>هدفی ثبت نشده است</strong>' +
+                    '<p>برای تیم خود هدف تعیین کنید</p>' +
+                    '<a class="lcc-panel-empty__cta" href="' + esc(cfg.teamUrl || '#') + '">+ ثبت هدف جدید</a>' +
+                    '</div>';
             }
             return;
         }
-        var empty = el.querySelector('.lcc-empty--inline');
+        var empty = el.querySelector('.lcc-panel-empty');
         if (empty) empty.remove();
 
         var footNote = null;
@@ -922,14 +940,16 @@
         if (!list) return;
         var items = (data.activity || []).slice(0, 5);
         if (!items.length) {
-            if (!list.querySelector('.lcc-empty--inline')) {
+            if (!list.querySelector('.lcc-panel-empty')) {
                 list.innerHTML =
-                    '<li class="lcc-empty lcc-empty--inline">' +
-                    '<i class="fas fa-bolt"></i><p>رویدادی نیست</p></li>';
+                    '<li class="lcc-panel-empty">' +
+                    '<i class="fas fa-bolt"></i>' +
+                    '<strong>فعالیتی ثبت نشده</strong>' +
+                    '<p>رویدادهای تیم اینجا نمایش داده می‌شوند</p></li>';
             }
             return;
         }
-        var empty = list.querySelector('.lcc-empty--inline');
+        var empty = list.querySelector('.lcc-panel-empty');
         if (empty) empty.remove();
 
         items.forEach(function (a) {
@@ -940,15 +960,20 @@
                 li.className = 'lcc-feed__item';
                 li.setAttribute('data-act-key', a.key);
                 li.innerHTML =
-                    '<span class="lcc-feed__text" data-txt></span>' +
-                    '<span class="lcc-feed__time" data-time></span>' +
-                    '<span class="lcc-feed__ico"><i class="fas"></i></span>';
+                    '<span class="lcc-feed__ico"><i class="fas"></i></span>' +
+                    '<div class="lcc-feed__body">' +
+                    '<div class="lcc-feed__text" data-txt></div>' +
+                    '<div class="lcc-feed__sub" data-sub></div>' +
+                    '</div>' +
+                    '<span class="lcc-feed__time" data-time></span>';
                 list.appendChild(li);
             }
             var ico = li.querySelector('.lcc-feed__ico');
             ico.className = 'lcc-feed__ico lcc-feed__ico--' + tone;
             ico.querySelector('i').className = 'fas ' + activityIcon(a.key);
             li.querySelector('[data-txt]').textContent = a.text;
+            var subEl = li.querySelector('[data-sub]');
+            if (subEl) subEl.textContent = a.detail || a.subtitle || '';
             li.querySelector('[data-time]').textContent = relativeTimeFromClock(a.time) || a.time || '';
         });
 
@@ -987,8 +1012,12 @@
                     '</div></div>';
             } else {
                 el.innerHTML =
-                    '<div class="lcc-empty lcc-empty--inline">' +
-                    '<i class="fas fa-calendar-day"></i><p>برنامه‌ای برای امروز ثبت نشده</p></div>';
+                    '<div class="lcc-panel-empty">' +
+                    '<i class="fas fa-calendar-day"></i>' +
+                    '<strong>برنامه‌ای برای امروز ثبت نشده است</strong>' +
+                    '<p>روز خود را با برنامه‌ریزی بهتر بسازید</p>' +
+                    '<a class="lcc-panel-empty__cta" href="' + esc(cfg.teamUrl || '#') + '">+ افزودن برنامه جدید</a>' +
+                    '</div>';
             }
             return;
         }
@@ -1013,8 +1042,10 @@
         var items = (data.announcements || []).slice(0, 3);
         if (!items.length) {
             el.innerHTML =
-                '<div class="lcc-empty lcc-empty--inline">' +
-                '<i class="fas fa-bullhorn"></i><p>اعلانی ثبت نشده</p></div>';
+                '<div class="lcc-panel-empty">' +
+                '<i class="fas fa-bell"></i>' +
+                '<strong>اعلانی وجود ندارد</strong>' +
+                '<p>در حال حاضر هیچ اعلان جدیدی ندارید</p></div>';
             return;
         }
 
@@ -1052,28 +1083,10 @@
     }
 
     function renderTicker(data) {
-        var track = root.querySelector('[data-tv-ticker-track]');
-        if (!track) return;
-        var items = data.announcements || [];
-        var deals = data.recent_deals || {};
-        var extras = [];
-        if (deals.closed_today_count) {
-            extras.push('امروز ' + toFa(deals.closed_today_count) + ' قرارداد بسته شد');
+        var footerAgency = root.querySelector('[data-tv-footer-agency]');
+        if (footerAgency && data.agency && data.agency.name) {
+            footerAgency.textContent = data.agency.name;
         }
-        if (!items.length && !extras.length) {
-            track.className = 'lcc-ticker__track lcc-ticker__track--static';
-            track.textContent = 'اطلاعیه فعالی نیست';
-            return;
-        }
-        var parts = items.map(function (a) {
-            var pin = a.is_pinned ? '📌 ' : '';
-            var imp = a.importance === 'urgent' ? '⚠ ' : (a.importance === 'high' ? '● ' : '');
-            return pin + imp + a.title + (a.preview ? ' — ' + a.preview : '');
-        }).concat(extras);
-        var text = '🏆  ' + parts.join('    •    ');
-        track.className = 'lcc-ticker__track' + (parts.length < 2 ? ' lcc-ticker__track--static' : '');
-        if (parts.length >= 2) text = text + '    •    ' + text;
-        track.textContent = text;
     }
 
     function renderMeta(data) {
@@ -1208,11 +1221,6 @@
             }
             if (document.fullscreenElement) hideFsOverlay();
             resizeCharts();
-        });
-
-        var theme = root.querySelector('[data-tv-theme]');
-        if (theme) theme.addEventListener('click', function () {
-            root.classList.toggle('lcc--bright');
         });
 
         var drawer = root.querySelector('[data-tv-widget-drawer]');

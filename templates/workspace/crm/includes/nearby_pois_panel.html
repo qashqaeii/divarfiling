@@ -2,7 +2,9 @@
          data-nearby-pois-root
          data-fetch-url="{{ nearby_pois_url }}"
          data-has-coords="{% if nearby_pois_ctx.has_coords %}1{% else %}0{% endif %}"
-         data-has-stored="{% if nearby_pois_ctx.has_stored %}1{% else %}0{% endif %}">
+         data-has-stored="{% if nearby_pois_ctx.has_stored %}1{% else %}0{% endif %}"
+         data-status="{{ nearby_pois_ctx.status|default:'' }}"
+         data-location-precision="{{ nearby_pois_ctx.location_precision|default:'none' }}">
     <div class="crm-nearby-pois__inner">
         <header class="crm-nearby-pois__header">
             <div class="crm-nearby-pois__lead">
@@ -11,8 +13,22 @@
                 </span>
                 <div class="crm-nearby-pois__titles">
                     <h2 class="crm-nearby-pois__title">امکانات و دسترسی‌ها</h2>
-                    <p class="crm-nearby-pois__sub">
-                        دسترسی محلی · {{ nearby_pois_ctx.category_count|default:22 }} مورد · شعاع ۳ کیلومتر
+                    <p class="crm-nearby-pois__sub" data-nearby-header-sub>
+                        {% if nearby_pois_ctx.pending %}
+                            <span class="crm-nearby-pois__sub-pending">⏳ در حال بررسی موقعیت‌های اطراف ملک…</span>
+                        {% elif nearby_pois_ctx.failed %}
+                            محاسبه دسترسی‌ها انجام نشد
+                        {% elif not nearby_pois_ctx.has_coords %}
+                            برای محاسبه دسترسی‌ها، موقعیت ملک را روی نقشه مشخص کنید
+                        {% elif nearby_pois_ctx.has_stored %}
+                            <span data-nearby-header-ready hidden></span>
+                        {% else %}
+                            {{ nearby_pois_ctx.radius_label|default:"شعاع ۳ کیلومتر" }} · {{ nearby_pois_ctx.category_count|default:22 }} دسته
+                        {% endif %}
+                    </p>
+                    <p class="crm-nearby-pois__approx-note" data-nearby-approx-note
+                       {% if nearby_pois_ctx.location_precision != 'approximate' or not nearby_pois_ctx.has_stored %}hidden{% endif %}>
+                        بر اساس موقعیت تقریبی
                     </p>
                 </div>
             </div>
@@ -31,7 +47,7 @@
             </button>
         </header>
 
-        <div class="crm-nearby-pois__meta" data-nearby-stats hidden>
+        <div class="crm-nearby-pois__meta" data-nearby-stats {% if not nearby_pois_ctx.has_stored %}hidden{% endif %}>
             <span class="crm-nearby-pois__meta-item crm-nearby-pois__meta-item--accent" data-nearby-found-count></span>
             <span class="crm-nearby-pois__meta-sep" aria-hidden="true">·</span>
             <span class="crm-nearby-pois__meta-item" data-nearby-radius></span>
@@ -39,12 +55,19 @@
             <span class="crm-nearby-pois__meta-item" data-nearby-updated></span>
         </div>
 
-        <div class="crm-nearby-pois__alert" data-nearby-error hidden role="alert"></div>
+        <div class="crm-nearby-pois__alert" data-nearby-error
+             {% if not nearby_pois_ctx.failed %}hidden{% endif %} role="alert">
+            {% if nearby_pois_ctx.failed %}
+            <i class="fas fa-circle-exclamation" aria-hidden="true"></i>
+            <span>محاسبه دسترسی‌ها انجام نشد. دوباره «بروزرسانی» را بزنید.</span>
+            {% endif %}
+        </div>
 
         {% if not nearby_pois_ctx.has_coords %}
         <p class="crm-nearby-pois__hint" data-nearby-empty-coords>
             <i class="fas fa-map-pin" aria-hidden="true"></i>
             ابتدا موقعیت ملک را روی نقشه بالا مشخص کنید.
+            <button type="button" class="crm-nearby-pois__hint-link" data-open-property-map>تعیین موقعیت</button>
         </p>
         {% else %}
         <div class="crm-nearby-pois__body" data-nearby-body {% if not nearby_pois_ctx.has_stored %}hidden{% endif %}>
@@ -57,16 +80,19 @@
             <div class="crm-nearby-pois__missing" data-nearby-missing hidden></div>
         </div>
 
-        <p class="crm-nearby-pois__hint" data-nearby-placeholder {% if nearby_pois_ctx.has_stored %}hidden{% endif %}>
+        <p class="crm-nearby-pois__hint" data-nearby-placeholder
+           {% if nearby_pois_ctx.has_stored or nearby_pois_ctx.pending %}hidden{% endif %}>
             <i class="fas fa-circle-info" aria-hidden="true"></i>
-            فاصله خط مستقیم تا نزدیک‌ترین مکان‌ها — با «محاسبه» ذخیره می‌شود.
+            فاصله خط مستقیم تا نزدیک‌ترین مکان‌ها — پس از ساخت فایل به‌صورت خودکار محاسبه می‌شود.
         </p>
 
-        <div class="crm-nearby-pois__loading" data-nearby-loading hidden aria-live="polite" aria-busy="true">
+        <div class="crm-nearby-pois__loading" data-nearby-loading
+             {% if not nearby_pois_ctx.pending %}hidden{% endif %}
+             aria-live="polite" aria-busy="true">
             <span class="crm-nearby-pois__loading-dot" aria-hidden="true"></span>
             <span class="crm-nearby-pois__loading-dot" aria-hidden="true"></span>
             <span class="crm-nearby-pois__loading-dot" aria-hidden="true"></span>
-            <span>در حال جستجو…</span>
+            <span>در حال محاسبه امکانات و دسترسی‌های اطراف…</span>
         </div>
         {% endif %}
     </div>

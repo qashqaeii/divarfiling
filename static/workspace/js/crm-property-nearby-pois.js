@@ -1,6 +1,10 @@
 (function (global) {
     'use strict';
 
+    const STATUS_PENDING = 'pending';
+    const STATUS_READY = 'ready';
+    const STATUS_FAILED = 'failed';
+
     function getCsrfToken() {
         const input = document.querySelector('input[name="csrfmiddlewaretoken"]');
         if (input?.value) return input.value;
@@ -124,9 +128,15 @@
         const radiusEl = root.querySelector('[data-nearby-radius]');
         const updatedEl = root.querySelector('[data-nearby-updated]');
         const errorEl = root.querySelector('[data-nearby-error]');
+        const headerSub = root.querySelector('[data-nearby-header-sub]');
+        const approxNote = root.querySelector('[data-nearby-approx-note]');
+        const openMapBtn = root.querySelector('[data-open-property-map]');
 
         let hasStored = root.dataset.hasStored === '1';
+        let status = root.dataset.status || '';
+        let locationPrecision = root.dataset.locationPrecision || 'none';
         let busy = false;
+        let pollTimer = null;
 
         function setError(message) {
             if (!errorEl) return;
@@ -153,6 +163,41 @@
 
         function updateButtonLabel() {
             if (btnLabel) btnLabel.textContent = hasStored ? 'بروزرسانی' : 'محاسبه';
+        }
+
+        function updateHeaderState(data) {
+            const nextStatus = data?.status || status;
+            const nextPrecision = data?.location_precision || locationPrecision;
+            status = nextStatus;
+            locationPrecision = nextPrecision;
+            root.dataset.status = status;
+            root.dataset.locationPrecision = locationPrecision;
+
+            if (headerSub) {
+                if (status === STATUS_PENDING) {
+                    headerSub.innerHTML = '<span class="crm-nearby-pois__sub-pending">⏳ در حال بررسی موقعیت‌های اطراف ملک…</span>';
+                } else if (status === STATUS_FAILED) {
+                    headerSub.textContent = 'محاسبه دسترسی‌ها انجام نشد';
+                } else if (hasStored && data) {
+                    const found = data.found_count != null
+                        ? data.found_count
+                        : (data.items || []).filter((i) => i.found).length;
+                    const radius = data.radius_m || 3000;
+                    const radiusLabel = radius >= 1000
+                        ? `شعاع ${faDigits(Math.round(radius / 1000))} کیلومتر`
+                        : `شعاع ${faDigits(radius)} متر`;
+                    const updated = data.fetched_at_label ? ` · به‌روزرسانی ${data.fetched_at_label}` : '';
+                    headerSub.innerHTML = `<strong>${faDigits(found)} مکان نزدیک</strong> · ${radiusLabel}${updated}`;
+                }
+            }
+
+            if (approxNote) {
+                approxNote.hidden = !(hasStored && locationPrecision === 'approximate');
+            }
+
+            if (loading) {
+                loading.hidden = status !== STATUS_PENDING;
+            }
         }
 
         function renderPayload(data) {
@@ -222,6 +267,31 @@
             if (loading) loading.hidden = true;
             hasStored = true;
             root.dataset.hasStored = '1';
+            status = data.status || STATUS_READY;
+            updateButtonLabel();
+            updateHeaderState(data);
+            setError('');
+            stopPolling();
+        }
+
+        function stopPolling() {
+            if (pollTimer) {
+                window.clearInterval(pollTimer);
+                pollTimer = null;
+            }
+        }
+
+        function showPendingState() {
+            status = STATUS_PENDING;
+            hasStored = false;
+            root.dataset.hasStored = '0';
+            root.dataset.status = STATUS_PENDING;
+            updateHeaderState({ status: STATUS_PENDING });
+            setError('');
+            if (body) body.hidden = true;
+            if (stats) stats.hidden = true;
+            if (placeholder) placeholder.hidden = true;
+            if (loading) loading.hidden = false;
             updateButtonLabel();
         }
 
@@ -231,6 +301,22 @@
             missingHost.hidden = !open;
             toggleMissing.classList.toggle('is-open', open);
         });
+
+        openMapBtn?.addEventListener('click', (e) => {
+            e.preventDefault();
+            const mapRoot = document.querySelector('[data-crm-property-map]');
+            mapRoot?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+
+        async function getStatus() {
+            const resp = await fetch(fetchUrl, {
+                method: 'GET',
+                headers: { Accept: 'application/json' },
+                credentials: 'same-origin',
+            });
+            const data = await resp.json().catch(() => ({}));
+            return { resp, data };
+        }
 
         async function postNearby(body) {
             const resp = await fetch(fetchUrl, {
@@ -287,12 +373,52 @@
             );
         }
 
+        async function pollUntilReady() {
+            if (!fetchUrl || !hasCoords) return;
+            stopPolling();
+            pollTimer = window.setInterval(async () => {
+                try {
+                    const { resp, data } = await getStatus();
+                    if (!resp.ok || !data.ok) return;
+                    if (data.status === STATUS_READY && Array.isArray(data.items) && data.items.length) {
+                        renderPayload(data);
+                    } else if (data.status === STATUS_FAILED) {
+                        if (data.fallback) {
+                            try {
+                                const elements = await fetchOverpassFromBrowser(data.fallback);
+                                const posted = await postNearby({ refresh: true, elements });
+                                if (posted.resp.ok && posted.data.ok && posted.data.status !== STATUS_PENDING) {
+                                    renderPayload(posted.data);
+                                    return;
+                                }
+                            } catch (_) {
+                                /* fall through to error UI */
+                            }
+                        }
+                        stopPolling();
+                        status = STATUS_FAILED;
+                        updateHeaderState(data);
+                        setError(data.error_message || 'محاسبه دسترسی‌ها انجام نشد.');
+                        if (loading) loading.hidden = true;
+                        if (fetchBtn) fetchBtn.disabled = !hasCoords;
+                    }
+                } catch (_) {
+                    /* ignore transient poll errors */
+                }
+            }, 2500);
+        }
+
         async function fetchNearby(refresh) {
             if (!fetchUrl || !hasCoords || busy) return;
             setError('');
             setLoading(true);
             try {
                 let { resp, data } = await postNearby({ refresh: !!refresh });
+                if (resp.ok && data.ok && data.status === STATUS_PENDING) {
+                    showPendingState();
+                    pollUntilReady();
+                    return;
+                }
                 if ((!resp.ok || !data.ok) && data.fallback) {
                     const elements = await fetchOverpassFromBrowser(data.fallback);
                     ({ resp, data } = await postNearby({
@@ -301,7 +427,12 @@
                     }));
                 }
                 if (!resp.ok || !data.ok) {
-                    throw new Error(data.error || 'دریافت امکانات و دسترسی‌ها ناموفق بود.');
+                    throw new Error(data.error || data.error_message || 'دریافت امکانات و دسترسی‌ها ناموفق بود.');
+                }
+                if (data.status === STATUS_PENDING) {
+                    showPendingState();
+                    pollUntilReady();
+                    return;
                 }
                 renderPayload(data);
                 if (typeof global.showToast === 'function' && !data.cached) {
@@ -313,6 +444,7 @@
                     global.showToast(err.message || 'خطا در دریافت امکانات و دسترسی‌ها', 'error');
                 }
                 if (!hasStored && placeholder) placeholder.hidden = false;
+                updateHeaderState({ status: STATUS_FAILED });
             } finally {
                 setLoading(false);
             }
@@ -323,14 +455,13 @@
             fetchNearby(hasStored);
         });
 
-        root.addEventListener('crm-property-location-saved', () => {
+        root.addEventListener('crm-property-location-saved', (event) => {
             hasCoords = true;
             root.dataset.hasCoords = '1';
             hasStored = false;
             root.dataset.hasStored = '0';
             if (fetchBtn) fetchBtn.disabled = false;
             if (body) body.hidden = true;
-            if (placeholder) placeholder.hidden = false;
             if (stats) stats.hidden = true;
             if (groupsHost) groupsHost.innerHTML = '';
             if (highlightsHost) {
@@ -341,6 +472,10 @@
             if (toggleMissing) toggleMissing.hidden = true;
             updateButtonLabel();
             setError('');
+            if (event.detail?.accessibility_status === STATUS_PENDING || !event.detail?.accessibility_status) {
+                showPendingState();
+                pollUntilReady();
+            }
         });
 
         const initialEl = document.getElementById('crm-nearby-pois-initial');
@@ -350,10 +485,15 @@
             } catch (_) {
                 /* ignore */
             }
+        } else if (status === STATUS_PENDING) {
+            showPendingState();
+            pollUntilReady();
+        } else {
+            updateHeaderState({ status, location_precision: locationPrecision });
         }
 
         updateButtonLabel();
-        return { refresh: () => fetchNearby(true) };
+        return { refresh: () => fetchNearby(true), pollUntilReady };
     }
 
     function bootNearbyPois() {

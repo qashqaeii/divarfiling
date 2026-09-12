@@ -127,7 +127,11 @@
                 }
                 root.dispatchEvent(new CustomEvent('crm-property-location-saved', {
                     bubbles: true,
-                    detail: { latitude: data.latitude, longitude: data.longitude },
+                    detail: {
+                        latitude: data.latitude,
+                        longitude: data.longitude,
+                        accessibility_status: data.accessibility_status || '',
+                    },
                 }));
             } catch (err) {
                 if (typeof global.showToast === 'function') {

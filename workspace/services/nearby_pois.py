@@ -5,13 +5,16 @@ import logging
 import math
 import socket
 import threading
+import time
+import uuid
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, datetime
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 import requests
 from django.conf import settings
 from django.core.cache import cache
+from django.db import transaction
 from django.utils import timezone
 
 from workspace.services.jalali_input import format_jalali_datetime, to_persian_digits
@@ -20,6 +23,13 @@ from workspace.services.listing_map import parse_map_coordinates
 logger = logging.getLogger(__name__)
 
 PAYLOAD_VERSION = 4
+
+ACCESSIBILITY_STATUS_PENDING = 'pending'
+ACCESSIBILITY_STATUS_READY = 'ready'
+ACCESSIBILITY_STATUS_FAILED = 'failed'
+ACCESSIBILITY_STATUS_UNAVAILABLE = 'unavailable'
+
+PROPERTY_ACCESSIBILITY_RADIUS_KM = 3
 
 DEFAULT_OVERPASS_URLS = (
     'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
@@ -307,6 +317,370 @@ class NearbyPoiItem:
 
 def _search_radius_m() -> int:
     return int(getattr(settings, 'NEARBY_POI_SEARCH_RADIUS_M', 3000))
+
+
+def property_accessibility_radius_m() -> int:
+    """شعاع جستجوی POI — منبع واحد (پیش‌فرض ۳ کیلومتر)."""
+    return _search_radius_m()
+
+
+def property_accessibility_radius_km() -> int:
+    return max(1, property_accessibility_radius_m() // 1000)
+
+
+def accessibility_radius_label_fa(*, radius_m: Optional[int] = None) -> str:
+    radius = radius_m or property_accessibility_radius_m()
+    if radius >= 1000:
+        km = radius // 1000
+        return f'شعاع {to_persian_digits(km)} کیلومتر'
+    return f'شعاع {to_persian_digits(radius)} متر'
+
+
+def _accessibility_status(data: Optional[Dict[str, Any]]) -> str:
+    if not isinstance(data, dict):
+        return ''
+    status = str(data.get('status') or '').strip()
+    if status:
+        return status
+    if data.get('items'):
+        return ACCESSIBILITY_STATUS_READY
+    return ''
+
+
+def resolve_property_location(prop) -> Dict[str, Any]:
+    """Resolve usable map coordinates and precision metadata for a CRM property."""
+    lat, lng, error = parse_map_coordinates(prop.latitude, prop.longitude)
+    if error:
+        return {
+            'lat': None,
+            'lng': None,
+            'precision': 'none',
+            'source': 'none',
+            'usable': False,
+        }
+
+    precision, source = _resolve_location_precision_and_source(prop)
+    return {
+        'lat': lat,
+        'lng': lng,
+        'precision': precision,
+        'source': source,
+        'usable': True,
+    }
+
+
+def _resolve_location_precision_and_source(prop) -> Tuple[str, str]:
+    feature_data = getattr(prop, 'feature_data', None) or {}
+    stored_precision = str(
+        feature_data.get('_location_precision') or feature_data.get('location_precision') or '',
+    ).strip()
+    stored_source = str(
+        feature_data.get('_location_source') or feature_data.get('location_source') or '',
+    ).strip()
+
+    if stored_precision in ('exact', 'approximate'):
+        return stored_precision, stored_source or 'listing_coordinates'
+
+    from workspace.services.display import location_accuracy_for_map
+
+    loc_acc = location_accuracy_for_map(feature_data)
+    if loc_acc.get('kind') == 'exact':
+        return 'exact', 'listing_coordinates'
+    if loc_acc.get('kind') == 'approx':
+        return 'approximate', 'listing_coordinates'
+
+    source_external_id = str(getattr(prop, 'source_external_id', '') or '').strip()
+    if source_external_id:
+        return 'approximate', 'listing_coordinates'
+
+    return 'exact', 'manual_pin'
+
+
+def listing_location_metadata(listing) -> Dict[str, str]:
+    """Metadata persisted on CRMProperty when created from a filing listing."""
+    from workspace.services.display import location_accuracy_for_map
+
+    loc_acc = location_accuracy_for_map(getattr(listing, 'data', None) or {})
+    if loc_acc.get('kind') == 'exact':
+        precision = 'exact'
+    elif loc_acc.get('kind') == 'approx':
+        precision = 'approximate'
+    elif getattr(listing, 'latitude', None) is not None and getattr(listing, 'longitude', None) is not None:
+        precision = 'approximate'
+    else:
+        precision = 'none'
+    return {
+        '_location_precision': precision,
+        '_location_source': 'listing_coordinates',
+    }
+
+
+def get_property_accessibility_status(prop) -> str:
+    location = resolve_property_location(prop)
+    if not location['usable']:
+        return ACCESSIBILITY_STATUS_UNAVAILABLE
+    data = getattr(prop, 'nearby_pois', None) or {}
+    status = _accessibility_status(data)
+    if status:
+        return status
+    if stored_nearby_pois_valid(prop):
+        return ACCESSIBILITY_STATUS_READY
+    return ''
+
+
+def _new_generation_id() -> str:
+    return str(uuid.uuid4())
+
+
+def _parse_iso_datetime(value: Any) -> Optional[datetime]:
+    if not value:
+        return None
+    if isinstance(value, datetime):
+        dt = value
+    else:
+        try:
+            dt = datetime.fromisoformat(str(value).replace('Z', '+00:00'))
+        except (TypeError, ValueError):
+            return None
+    if timezone.is_naive(dt):
+        return timezone.make_aware(dt, timezone.get_current_timezone())
+    return dt
+
+
+def mark_property_manual_location(prop) -> None:
+    """User moved pin on map — treat coordinates as exact manual placement."""
+    feature_data = dict(getattr(prop, 'feature_data', None) or {})
+    feature_data['_location_precision'] = 'exact'
+    feature_data['_location_source'] = 'manual_pin'
+    prop.feature_data = feature_data
+    prop.save(update_fields=['feature_data', 'updated_at'])
+
+
+def mark_property_accessibilities_pending(
+    prop,
+    *,
+    location: Optional[Dict[str, Any]] = None,
+    generation_id: Optional[str] = None,
+) -> str:
+    location = location or resolve_property_location(prop)
+    generation_id = generation_id or _new_generation_id()
+    now = timezone.now()
+    prop.nearby_pois = {
+        'version': PAYLOAD_VERSION,
+        'status': ACCESSIBILITY_STATUS_PENDING,
+        'generation_id': generation_id,
+        'location_precision': location.get('precision') or 'none',
+        'location_source': location.get('source') or 'none',
+        'radius_m': property_accessibility_radius_m(),
+        'scheduled_at': now.isoformat(),
+        'scheduled_at_label': format_jalali_datetime(now),
+    }
+    prop.save(update_fields=['nearby_pois', 'updated_at'])
+    return generation_id
+
+
+def mark_property_accessibilities_unavailable(prop) -> None:
+    prop.nearby_pois = {
+        'version': PAYLOAD_VERSION,
+        'status': ACCESSIBILITY_STATUS_UNAVAILABLE,
+        'radius_m': property_accessibility_radius_m(),
+    }
+    prop.save(update_fields=['nearby_pois', 'updated_at'])
+
+
+def mark_property_accessibilities_failed(
+    prop,
+    *,
+    error_code: str,
+    error_message: str,
+    location: Optional[Dict[str, Any]] = None,
+    generation_id: Optional[str] = None,
+) -> None:
+    if generation_id and not _generation_matches(prop, generation_id):
+        return
+    location = location or resolve_property_location(prop)
+    now = timezone.now()
+    prop.nearby_pois = {
+        'version': PAYLOAD_VERSION,
+        'status': ACCESSIBILITY_STATUS_FAILED,
+        'generation_id': generation_id or (prop.nearby_pois or {}).get('generation_id'),
+        'error_code': error_code,
+        'error_message': error_message,
+        'location_precision': location.get('precision') or 'none',
+        'location_source': location.get('source') or 'none',
+        'radius_m': property_accessibility_radius_m(),
+        'failed_at': now.isoformat(),
+        'failed_at_label': format_jalali_datetime(now),
+    }
+    prop.save(update_fields=['nearby_pois', 'updated_at'])
+
+
+def _generation_matches(prop, generation_id: Optional[str]) -> bool:
+    if not generation_id:
+        return True
+    current = getattr(prop, 'nearby_pois', None) or {}
+    return str(current.get('generation_id') or '') == str(generation_id)
+
+
+def _save_accessibility_payload(prop, payload: Dict[str, Any], *, generation_id: Optional[str] = None) -> bool:
+    prop.refresh_from_db()
+    if generation_id and not _generation_matches(prop, generation_id):
+        return False
+    prop.nearby_pois = payload
+    prop.save(update_fields=['nearby_pois', 'updated_at'])
+    return True
+
+
+def schedule_property_accessibilities(
+    property_id: int,
+    user_id: Optional[int] = None,
+    *,
+    force: bool = False,
+) -> Optional[str]:
+    """Mark pending synchronously; enqueue durable DB job after transaction commit."""
+    from workspace.models import CRMProperty
+    from workspace.services.property_accessibility_jobs import (
+        enqueue_property_accessibility_job,
+        is_property_accessibility_pending_stale,
+    )
+
+    prop = CRMProperty.objects.filter(pk=property_id).first()
+    if not prop:
+        return None
+    location = resolve_property_location(prop)
+    if not location['usable']:
+        mark_property_accessibilities_unavailable(prop)
+        return None
+    if not force and stored_nearby_pois_valid(prop):
+        return None
+    current_status = _accessibility_status(prop.nearby_pois)
+    if not force and current_status == ACCESSIBILITY_STATUS_PENDING:
+        if not is_property_accessibility_pending_stale(prop):
+            return (prop.nearby_pois or {}).get('generation_id')
+    generation_id = mark_property_accessibilities_pending(prop, location=location)
+
+    def _after_commit() -> None:
+        enqueue_property_accessibility_job(property_id, user_id, generation_id)
+
+    transaction.on_commit(_after_commit)
+    return generation_id
+
+
+def refresh_property_accessibilities(
+    prop,
+    user,
+    *,
+    force_refresh: bool = False,
+    elements: Optional[Sequence[Dict[str, Any]]] = None,
+    generation_id: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Single source of truth for generating and persisting property accessibilities."""
+    location = resolve_property_location(prop)
+    if not location['usable']:
+        mark_property_accessibilities_unavailable(prop)
+        raise NearbyPoiError(
+            'no_coords',
+            'برای این ملک هنوز موقعیت روی نقشه ثبت نشده است.',
+            status=400,
+        )
+
+    if generation_id and not _generation_matches(prop, generation_id):
+        cached = get_stored_nearby_pois_payload(prop)
+        if cached:
+            return api_response_payload(cached, cached=True)
+        raise NearbyPoiError(
+            'superseded',
+            'محاسبه جدیدتری در حال انجام است.',
+            status=409,
+        )
+
+    if not force_refresh and elements is None:
+        cached = get_stored_nearby_pois_payload(prop)
+        if cached:
+            return api_response_payload(cached, cached=True)
+
+    if force_refresh and elements is None and not generation_id:
+        generation_id = mark_property_accessibilities_pending(prop, location=location)
+
+    lat = location['lat']
+    lng = location['lng']
+    radius_m = property_accessibility_radius_m()
+
+    try:
+        check_rate_limits(user)
+        if elements is not None:
+            cleaned = sanitize_overpass_elements(elements)
+            items = resolve_nearby_items(lat, lng, cleaned, radius_m=radius_m)
+            payload = _build_payload(
+                lat,
+                lng,
+                items,
+                fetched_at=timezone.now(),
+                radius_m=radius_m,
+                status=ACCESSIBILITY_STATUS_READY,
+                location_precision=location['precision'],
+                location_source=location['source'],
+                generation_id=generation_id,
+            )
+        else:
+            overpass_elements = fetch_overpass_elements_with_retry(lat, lng, radius_m=radius_m)
+            items = resolve_nearby_items(lat, lng, overpass_elements, radius_m=radius_m)
+            payload = _build_payload(
+                lat,
+                lng,
+                items,
+                fetched_at=timezone.now(),
+                radius_m=radius_m,
+                status=ACCESSIBILITY_STATUS_READY,
+                location_precision=location['precision'],
+                location_source=location['source'],
+                generation_id=generation_id,
+            )
+        increment_rate_limits(user)
+    except NearbyPoiError as exc:
+        mark_property_accessibilities_failed(
+            prop,
+            error_code=exc.code,
+            error_message=exc.message,
+            location=location,
+            generation_id=generation_id,
+        )
+        raise
+
+    if not _save_accessibility_payload(prop, payload, generation_id=generation_id):
+        cached = get_stored_nearby_pois_payload(prop)
+        if cached:
+            return api_response_payload(cached, cached=True)
+        raise NearbyPoiError(
+            'superseded',
+            'محاسبه جدیدتری در حال انجام است.',
+            status=409,
+        )
+    return api_response_payload(payload, cached=False)
+
+
+def property_accessibility_status_payload(prop) -> Dict[str, Any]:
+    """Lightweight status for polling — never calls external providers."""
+    status = get_property_accessibility_status(prop)
+    data = getattr(prop, 'nearby_pois', None) or {}
+    stored = get_stored_nearby_pois_payload(prop)
+    if stored:
+        return api_response_payload(stored, cached=True)
+    location = resolve_property_location(prop)
+    body: Dict[str, Any] = {
+        'ok': True,
+        'status': status or ACCESSIBILITY_STATUS_UNAVAILABLE,
+        'location_precision': location.get('precision') or 'none',
+        'radius_m': property_accessibility_radius_m(),
+    }
+    if status == ACCESSIBILITY_STATUS_FAILED:
+        body['error_code'] = data.get('error_code') or 'failed'
+        body['error_message'] = data.get('error_message') or 'محاسبه دسترسی‌ها انجام نشد.'
+        if body['error_code'] in ('service_unavailable', 'service_busy') and location.get('usable'):
+            body['fallback'] = overpass_client_fallback(location['lat'], location['lng'])
+    if status == ACCESSIBILITY_STATUS_PENDING:
+        body['message'] = 'در حال محاسبه امکانات و دسترسی‌ها…'
+    return body
 
 
 def _street_type_radius_m() -> int:
@@ -642,6 +1016,34 @@ def fetch_overpass_elements(lat: float, lng: float, *, radius_m: Optional[int] =
     )
 
 
+_OVERPASS_RETRIABLE_CODES = frozenset({'service_busy', 'service_unavailable'})
+
+
+def fetch_overpass_elements_with_retry(
+    lat: float,
+    lng: float,
+    *,
+    radius_m: Optional[int] = None,
+) -> List[Dict[str, Any]]:
+    """Overpass fetch with bounded retries and backoff — avoids blocking workers indefinitely."""
+    retries = int(getattr(settings, 'PROPERTY_ACCESSIBILITY_OVERPASS_RETRIES', 2))
+    backoff_s = int(getattr(settings, 'PROPERTY_ACCESSIBILITY_OVERPASS_RETRY_BACKOFF_S', 2))
+    last_error: Optional[NearbyPoiError] = None
+    for attempt in range(retries + 1):
+        try:
+            return fetch_overpass_elements(lat, lng, radius_m=radius_m)
+        except NearbyPoiError as exc:
+            last_error = exc
+            if exc.code not in _OVERPASS_RETRIABLE_CODES or attempt >= retries:
+                raise
+            delay = backoff_s * (attempt + 1)
+            logger.info('Overpass retry %s/%s after %ss (%s)', attempt + 1, retries, delay, exc.code)
+            time.sleep(delay)
+    if last_error:
+        raise last_error
+    raise NearbyPoiError('service_unavailable', 'سرویس نقشه در دسترس نیست.', status=503)
+
+
 def sanitize_overpass_elements(raw: Any) -> List[Dict[str, Any]]:
     if not isinstance(raw, list):
         raise NearbyPoiError('invalid_elements', 'داده نقشه نامعتبر است.', status=400)
@@ -785,12 +1187,19 @@ def _build_payload(
     *,
     fetched_at,
     radius_m: int,
+    status: str = ACCESSIBILITY_STATUS_READY,
+    location_precision: str = 'exact',
+    location_source: str = 'manual_pin',
+    generation_id: Optional[str] = None,
 ) -> Dict[str, Any]:
     lat_key, lng_key = _coords_key(lat, lng)
     item_dicts = [item.as_dict() for item in items]
     found_count = sum(1 for item in items if item.found)
-    return {
+    payload = {
         'version': PAYLOAD_VERSION,
+        'status': status,
+        'location_precision': location_precision,
+        'location_source': location_source,
         'fetched_at': fetched_at.isoformat(),
         'fetched_at_label': format_jalali_datetime(fetched_at),
         'coords': {'lat': lat_key, 'lng': lng_key},
@@ -802,11 +1211,17 @@ def _build_payload(
         'total_count': len(item_dicts),
         'missing_count': len(item_dicts) - found_count,
     }
+    if generation_id:
+        payload['generation_id'] = generation_id
+    return payload
 
 
 def stored_nearby_pois_valid(prop, *, radius_m: Optional[int] = None) -> bool:
     data = getattr(prop, 'nearby_pois', None) or {}
     if not isinstance(data, dict) or not data.get('items'):
+        return False
+    status = _accessibility_status(data)
+    if status and status != ACCESSIBILITY_STATUS_READY:
         return False
     if int(data.get('version') or 1) < PAYLOAD_VERSION:
         return False
@@ -886,9 +1301,15 @@ def increment_rate_limits(user) -> None:
 
 def api_response_payload(data: Dict[str, Any], *, cached: bool) -> Dict[str, Any]:
     items = data.get('items') or []
+    precision = data.get('location_precision') or 'exact'
     return {
         'ok': True,
         'cached': cached,
+        'status': data.get('status') or ACCESSIBILITY_STATUS_READY,
+        'location_precision': precision,
+        'approximate_note': (
+            'بر اساس موقعیت تقریبی' if precision == 'approximate' else ''
+        ),
         'fetched_at': data.get('fetched_at'),
         'fetched_at_label': data.get('fetched_at_label'),
         'radius_m': data.get('radius_m'),
@@ -908,32 +1329,12 @@ def fetch_and_save_nearby_pois(
     force_refresh: bool = False,
     elements: Optional[Sequence[Dict[str, Any]]] = None,
 ) -> Dict[str, Any]:
-    lat, lng, error = parse_map_coordinates(prop.latitude, prop.longitude)
-    if error:
-        raise NearbyPoiError(
-            'no_coords',
-            'برای این ملک هنوز موقعیت روی نقشه ثبت نشده است.',
-            status=400,
-        )
-
-    if not force_refresh and elements is None:
-        cached = get_stored_nearby_pois_payload(prop)
-        if cached:
-            return api_response_payload(cached, cached=True)
-
-    check_rate_limits(user)
-    if elements is not None:
-        cleaned = sanitize_overpass_elements(elements)
-        items = resolve_nearby_items(lat, lng, cleaned)
-        payload = _build_payload(
-            lat, lng, items, fetched_at=timezone.now(), radius_m=_search_radius_m(),
-        )
-    else:
-        payload = resolve_nearby_pois(lat, lng)
-    increment_rate_limits(user)
-    prop.nearby_pois = payload
-    prop.save(update_fields=['nearby_pois', 'updated_at'])
-    return api_response_payload(payload, cached=False)
+    return refresh_property_accessibilities(
+        prop,
+        user,
+        force_refresh=force_refresh,
+        elements=elements,
+    )
 
 
 def clear_nearby_pois(prop) -> None:
@@ -944,12 +1345,22 @@ def clear_nearby_pois(prop) -> None:
 
 def nearby_pois_page_context(prop) -> Dict[str, Any]:
     has_coords = prop.latitude is not None and prop.longitude is not None
+    status = get_property_accessibility_status(prop)
     stored = get_stored_nearby_pois_payload(prop) if has_coords else None
+    location = resolve_property_location(prop)
+    radius_m = property_accessibility_radius_m()
     return {
         'has_coords': has_coords,
         'has_stored': bool(stored),
+        'status': status,
+        'pending': status == ACCESSIBILITY_STATUS_PENDING,
+        'failed': status == ACCESSIBILITY_STATUS_FAILED,
+        'unavailable': status == ACCESSIBILITY_STATUS_UNAVAILABLE,
+        'location_precision': location.get('precision') or 'none',
         'initial_payload': stored,
         'category_count': len(POI_CATEGORIES),
+        'radius_m': radius_m,
+        'radius_label': accessibility_radius_label_fa(radius_m=radius_m),
     }
 
 
@@ -975,7 +1386,10 @@ def validate_share_show_nearby_pois(prop, *, enable: bool) -> Optional[str]:
     if prop.latitude is None or prop.longitude is None:
         return 'برای نمایش امکانات و دسترسی‌ها، ابتدا موقعیت ملک را روی نقشه ثبت کنید.'
     if not property_has_nearby_pois_data(prop):
-        return 'ابتدا در جزئیات فایل، دکمه «محاسبه» امکانات و دسترسی‌ها را بزنید تا داده ذخیره شود.'
+        status = get_property_accessibility_status(prop)
+        if status == ACCESSIBILITY_STATUS_PENDING:
+            return 'امکانات و دسترسی‌ها در حال محاسبه است. پس از تکمیل می‌توانید در صفحه عمومی نمایش دهید.'
+        return 'ابتدا امکانات و دسترسی‌های ملک باید محاسبه شود. اگر موقعیت دارید، چند لحظه صبر کنید یا دکمه «بروزرسانی» را بزنید.'
     return None
 
 

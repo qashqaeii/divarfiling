@@ -11,6 +11,10 @@ from django.urls import reverse
 
 from workspace.models import CRMAgency, CRMAgencyMember, CRMProperty
 from workspace.services.nearby_pois import (
+    ACCESSIBILITY_STATUS_FAILED,
+    ACCESSIBILITY_STATUS_PENDING,
+    ACCESSIBILITY_STATUS_READY,
+    ACCESSIBILITY_STATUS_UNAVAILABLE,
     PAYLOAD_VERSION,
     NearbyPoiError,
     TOOL_DEFAULT_RADIUS_M,
@@ -21,15 +25,29 @@ from workspace.services.nearby_pois import (
     fetch_and_save_nearby_pois,
     fetch_nearby_accessibility_for_tools,
     format_distance_label,
+    get_property_accessibility_status,
     group_nearby_items,
     haversine_m,
+    listing_location_metadata,
+    property_accessibility_radius_km,
+    refresh_property_accessibilities,
     resolve_nearby_catalog,
     resolve_nearby_items,
+    resolve_property_location,
+    schedule_property_accessibilities,
     stored_nearby_pois_valid,
     validate_tool_radius_m,
 )
+from workspace.services.property_accessibility_jobs import (
+    process_property_accessibility_jobs,
+    reconcile_stale_pending_accessibilities,
+)
 
 User = get_user_model()
+
+
+def _drain_accessibility_jobs():
+    process_property_accessibility_jobs(limit=50)
 
 
 def _sample_elements():
@@ -324,71 +342,79 @@ class CRMPropertyNearbyPoisViewTests(TestCase):
     @patch('workspace.services.nearby_pois.fetch_overpass_elements')
     def test_post_fetch_success(self, mock_fetch):
         mock_fetch.return_value = _sample_elements()
-        resp = self.client.post(
-            self.url,
-            data=json.dumps({'refresh': False}),
-            content_type='application/json',
-        )
+        with self.captureOnCommitCallbacks(execute=True):
+            resp = self.client.post(
+                self.url,
+                data=json.dumps({'refresh': False}),
+                content_type='application/json',
+            )
         self.assertEqual(resp.status_code, 200)
         data = resp.json()
         self.assertTrue(data['ok'])
-        self.assertGreater(len(data['items']), 10)
-        self.assertTrue(data['groups'])
+        self.assertEqual(data.get('status'), ACCESSIBILITY_STATUS_PENDING)
+        _drain_accessibility_jobs()
         self.prop.refresh_from_db()
         self.assertTrue(self.prop.nearby_pois.get('items'))
+        self.assertEqual(get_property_accessibility_status(self.prop), ACCESSIBILITY_STATUS_READY)
 
     @patch('workspace.services.nearby_pois.fetch_overpass_elements')
     def test_post_cached_second_call(self, mock_fetch):
         mock_fetch.return_value = _sample_elements()
-        self.client.post(self.url, data='{}', content_type='application/json')
+        with self.captureOnCommitCallbacks(execute=True):
+            self.client.post(self.url, data='{}', content_type='application/json')
+        _drain_accessibility_jobs()
         resp = self.client.post(self.url, data='{}', content_type='application/json')
         self.assertEqual(resp.status_code, 200)
         self.assertTrue(resp.json()['cached'])
-        self.assertEqual(mock_fetch.call_count, 1)
+        mock_fetch.assert_called_once()
 
     def test_post_without_coords(self):
         self.prop.latitude = None
         self.prop.longitude = None
         self.prop.save(update_fields=['latitude', 'longitude'])
-        resp = self.client.post(self.url, data='{}', content_type='application/json')
-        self.assertEqual(resp.status_code, 400)
-        self.assertEqual(resp.json()['code'], 'no_coords')
+        with self.captureOnCommitCallbacks(execute=True):
+            resp = self.client.post(self.url, data='{}', content_type='application/json')
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.json().get('status'), ACCESSIBILITY_STATUS_UNAVAILABLE)
 
     @patch('workspace.services.nearby_pois.fetch_overpass_elements')
-    def test_service_busy_message(self, mock_fetch):
+    def test_service_busy_marks_failed_after_job(self, mock_fetch):
         mock_fetch.side_effect = NearbyPoiError(
             'service_busy',
             'سرویس نقشه الان شلوغ است. لطفاً چند دقیقه بعد دوباره تلاش کنید.',
             status=503,
         )
-        resp = self.client.post(
-            self.url,
-            data=json.dumps({'refresh': True}),
-            content_type='application/json',
-        )
-        self.assertEqual(resp.status_code, 503)
-        self.assertEqual(resp.json()['code'], 'service_busy')
+        with self.captureOnCommitCallbacks(execute=True):
+            resp = self.client.post(
+                self.url,
+                data=json.dumps({'refresh': True}),
+                content_type='application/json',
+            )
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.json().get('status'), ACCESSIBILITY_STATUS_PENDING)
+        _drain_accessibility_jobs()
+        self.prop.refresh_from_db()
+        self.assertEqual(get_property_accessibility_status(self.prop), ACCESSIBILITY_STATUS_FAILED)
 
     @patch('workspace.services.nearby_pois.fetch_overpass_elements')
     def test_service_unavailable_includes_browser_fallback(self, mock_fetch):
-        from workspace.services.nearby_pois import overpass_client_fallback
-        fallback = overpass_client_fallback(35.7575, 51.4100)
         mock_fetch.side_effect = NearbyPoiError(
             'service_unavailable',
-            'سرویس نقشه از سمت سرور در دسترس نیست. در حال تلاش از مرورگر شما…',
+            'سرویس نقشه از سمت سرور در دسترس نیست.',
             status=503,
-            extra={'fallback': fallback},
         )
-        resp = self.client.post(
-            self.url,
-            data=json.dumps({'refresh': True}),
-            content_type='application/json',
-        )
-        self.assertEqual(resp.status_code, 503)
+        with self.captureOnCommitCallbacks(execute=True):
+            self.client.post(
+                self.url,
+                data=json.dumps({'refresh': True}),
+                content_type='application/json',
+            )
+        _drain_accessibility_jobs()
+        resp = self.client.get(self.url)
         data = resp.json()
-        self.assertEqual(data['code'], 'service_unavailable')
+        self.assertEqual(data.get('status'), ACCESSIBILITY_STATUS_FAILED)
+        self.assertIn('fallback', data)
         self.assertIn('query', data['fallback'])
-        self.assertTrue(data['fallback']['urls'])
 
     def test_post_client_elements_saves_payload(self):
         resp = self.client.post(
@@ -419,27 +445,33 @@ class CRMPropertyNearbyPoisViewTests(TestCase):
         self.assertContains(resp, 'امکانات و دسترسی‌ها')
         self.assertContains(resp, 'crm-property-nearby-pois.js')
 
-    def test_location_update_clears_nearby_pois(self):
+    def test_location_update_schedules_regeneration(self):
         self.prop.nearby_pois = {
             'version': PAYLOAD_VERSION,
+            'status': ACCESSIBILITY_STATUS_READY,
             'coords': {'lat': 35.7575, 'lng': 51.4100},
-            'items': [{'key': 'metro', 'found': True}],
+            'radius_m': 3000,
+            'items': [{'key': 'metro', 'found': True, 'label': 'مترو', 'group': 'transport'}],
         }
         self.prop.save(update_fields=['nearby_pois'])
         loc_url = reverse('workspace:crm_property_location', kwargs={'property_id': self.prop.pk})
-        resp = self.client.post(
-            loc_url,
-            data=json.dumps({'latitude': 35.7600, 'longitude': 51.4200}),
-            content_type='application/json',
-        )
+        with self.captureOnCommitCallbacks(execute=True):
+            resp = self.client.post(
+                loc_url,
+                data=json.dumps({'latitude': 35.7600, 'longitude': 51.4200}),
+                content_type='application/json',
+            )
         self.assertEqual(resp.status_code, 200)
         self.prop.refresh_from_db()
-        self.assertEqual(self.prop.nearby_pois, {})
+        self.assertEqual(self.prop.nearby_pois.get('status'), ACCESSIBILITY_STATUS_PENDING)
+        self.assertNotEqual(self.prop.nearby_pois.get('coords'), {'lat': 35.7575, 'lng': 51.4100})
 
     @patch('workspace.services.nearby_pois.fetch_overpass_elements')
     def test_stored_data_shown_on_detail(self, mock_fetch):
         mock_fetch.return_value = _sample_elements()
-        self.client.post(self.url, data='{}', content_type='application/json')
+        with self.captureOnCommitCallbacks(execute=True):
+            self.client.post(self.url, data='{}', content_type='application/json')
+        _drain_accessibility_jobs()
         resp = self.client.get(self.detail_url)
         self.assertContains(resp, 'crm-nearby-pois-initial')
         self.assertContains(resp, 'found_count')
@@ -552,3 +584,343 @@ class ToolsNearbyAccessibilityViewTests(TestCase):
         self.assertEqual(resp.status_code, 200)
         self.assertTrue(resp.json()['ok'])
         mock_fetch.assert_not_called()
+
+
+class PropertyAccessibilitiesAutomationTests(TestCase):
+    def setUp(self):
+        cache.clear()
+        self.user = User.objects.create_user(
+            username='09129990001', phone='09129990001', password='testpass123',
+        )
+        self.other = User.objects.create_user(
+            username='09129990002', phone='09129990002', password='testpass123',
+        )
+        self.client = Client()
+        self.client.login(username='09129990001', password='testpass123')
+
+    def _run_scheduled(self):
+        _drain_accessibility_jobs()
+
+    @patch('workspace.services.nearby_pois.fetch_overpass_elements')
+    def test_manual_create_with_exact_location_schedules_generation(self, mock_fetch):
+        mock_fetch.return_value = _sample_elements()
+        prop = CRMProperty.objects.create(
+            user=self.user,
+            title='ملک دستی',
+            latitude=35.7575,
+            longitude=51.4100,
+        )
+        with self.captureOnCommitCallbacks(execute=True):
+            schedule_property_accessibilities(prop.pk, self.user.pk)
+        self._run_scheduled()
+        prop.refresh_from_db()
+        self.assertEqual(get_property_accessibility_status(prop), ACCESSIBILITY_STATUS_READY)
+        self.assertTrue(stored_nearby_pois_valid(prop))
+        mock_fetch.assert_called_once()
+
+    @patch('workspace.services.nearby_pois.fetch_overpass_elements')
+    def test_manual_create_with_approximate_location(self, mock_fetch):
+        mock_fetch.return_value = _sample_elements()
+        prop = CRMProperty.objects.create(
+            user=self.user,
+            title='تقریبی',
+            latitude=35.7575,
+            longitude=51.4100,
+            feature_data={'_location_precision': 'approximate', '_location_source': 'listing_coordinates'},
+        )
+        with self.captureOnCommitCallbacks(execute=True):
+            schedule_property_accessibilities(prop.pk, self.user.pk)
+        self._run_scheduled()
+        prop.refresh_from_db()
+        self.assertEqual(prop.nearby_pois.get('location_precision'), 'approximate')
+        self.assertEqual(get_property_accessibility_status(prop), ACCESSIBILITY_STATUS_READY)
+
+    def test_manual_create_without_location_skips_external_generation(self):
+        with self.captureOnCommitCallbacks(execute=True):
+            schedule_property_accessibilities(
+                CRMProperty.objects.create(user=self.user, title='بدون موقعیت').pk,
+                self.user.pk,
+            )
+        prop = CRMProperty.objects.get(title='بدون موقعیت')
+        self.assertEqual(get_property_accessibility_status(prop), ACCESSIBILITY_STATUS_UNAVAILABLE)
+
+    @patch('workspace.services.nearby_pois.fetch_overpass_elements')
+    def test_listing_personalize_auto_generation(self, mock_fetch):
+        from workspace.models import Dataset, Listing
+        from workspace.services.crm import add_listing_to_personal_files
+
+        mock_fetch.return_value = _sample_elements()
+        dataset = Dataset.objects.create(user=self.user, name='ds', is_active=True)
+        listing = Listing.objects.create(
+            dataset=dataset,
+            token='tok-auto-poi',
+            title='آگهی',
+            latitude=35.7575,
+            longitude=51.4100,
+            data={'نوع مختصات': 'FUZZY', 'در شعاع (متر)': 400},
+        )
+        with self.captureOnCommitCallbacks(execute=True):
+            prop, created = add_listing_to_personal_files(self.user, listing)
+        self._run_scheduled()
+        self.assertTrue(created)
+        prop.refresh_from_db()
+        self.assertEqual(get_property_accessibility_status(prop), ACCESSIBILITY_STATUS_READY)
+        self.assertEqual(prop.feature_data.get('_location_precision'), 'approximate')
+
+    @patch('workspace.services.nearby_pois.fetch_overpass_elements')
+    def test_provider_failure_keeps_property_and_marks_failed(self, mock_fetch):
+        mock_fetch.side_effect = NearbyPoiError('service_busy', 'شلوغ', status=503)
+        prop = CRMProperty.objects.create(
+            user=self.user,
+            title='خطا',
+            latitude=35.7575,
+            longitude=51.4100,
+        )
+        with self.captureOnCommitCallbacks(execute=True):
+            schedule_property_accessibilities(prop.pk, self.user.pk, force=True)
+        self._run_scheduled()
+        prop.refresh_from_db()
+        self.assertEqual(get_property_accessibility_status(prop), ACCESSIBILITY_STATUS_FAILED)
+        self.assertTrue(CRMProperty.objects.filter(pk=prop.pk).exists())
+
+    @patch('workspace.services.nearby_pois.fetch_overpass_elements')
+    def test_location_change_regenerates(self, mock_fetch):
+        mock_fetch.return_value = _sample_elements()
+        prop = CRMProperty.objects.create(
+            user=self.user,
+            title='جابجایی',
+            latitude=35.7575,
+            longitude=51.4100,
+            nearby_pois={
+                'version': PAYLOAD_VERSION,
+                'status': ACCESSIBILITY_STATUS_READY,
+                'coords': {'lat': 35.7575, 'lng': 51.4100},
+                'radius_m': 3000,
+                'items': [{'key': 'metro', 'found': True, 'label': 'مترو', 'group': 'transport'}],
+            },
+        )
+        loc_url = reverse('workspace:crm_property_location', kwargs={'property_id': prop.pk})
+        with self.captureOnCommitCallbacks(execute=True):
+            self.client.post(
+                loc_url,
+                data=json.dumps({'latitude': 35.7600, 'longitude': 51.4200}),
+                content_type='application/json',
+            )
+        self._run_scheduled()
+        prop.refresh_from_db()
+        self.assertEqual(get_property_accessibility_status(prop), ACCESSIBILITY_STATUS_READY)
+        self.assertEqual(mock_fetch.call_count, 1)
+        self.assertEqual(prop.feature_data.get('_location_precision'), 'exact')
+
+    @patch('workspace.services.nearby_pois.fetch_overpass_elements')
+    def test_price_change_does_not_regenerate(self, mock_fetch):
+        prop = CRMProperty.objects.create(
+            user=self.user,
+            title='قیمت',
+            latitude=35.7575,
+            longitude=51.4100,
+            sale_price=1000,
+            nearby_pois={
+                'version': PAYLOAD_VERSION,
+                'status': ACCESSIBILITY_STATUS_READY,
+                'coords': {'lat': 35.7575, 'lng': 51.4100},
+                'radius_m': 3000,
+                'items': [{'key': 'metro', 'found': True, 'label': 'مترو', 'group': 'transport'}],
+            },
+        )
+        prop.sale_price = 2000
+        prop.save(update_fields=['sale_price', 'updated_at'])
+        mock_fetch.assert_not_called()
+
+    @patch('workspace.services.nearby_pois.fetch_overpass_elements')
+    def test_manual_refresh_uses_same_service(self, mock_fetch):
+        mock_fetch.return_value = _sample_elements()
+        prop = CRMProperty.objects.create(
+            user=self.user,
+            title='رفرش',
+            latitude=35.7575,
+            longitude=51.4100,
+        )
+        url = reverse('workspace:crm_property_nearby_pois', kwargs={'property_id': prop.pk})
+        with self.captureOnCommitCallbacks(execute=True):
+            resp = self.client.post(url, data=json.dumps({'refresh': True}), content_type='application/json')
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.json().get('status'), ACCESSIBILITY_STATUS_PENDING)
+        self._run_scheduled()
+        prop.refresh_from_db()
+        self.assertEqual(get_property_accessibility_status(prop), ACCESSIBILITY_STATUS_READY)
+        mock_fetch.assert_called_once()
+
+    @patch('workspace.services.nearby_pois.fetch_overpass_elements')
+    def test_double_trigger_no_duplicate_records(self, mock_fetch):
+        mock_fetch.return_value = _sample_elements()
+        prop = CRMProperty.objects.create(
+            user=self.user,
+            title='دوبار',
+            latitude=35.7575,
+            longitude=51.4100,
+        )
+        with self.captureOnCommitCallbacks(execute=True):
+            schedule_property_accessibilities(prop.pk, self.user.pk)
+            schedule_property_accessibilities(prop.pk, self.user.pk)
+        self._run_scheduled()
+        prop.refresh_from_db()
+        self.assertEqual(get_property_accessibility_status(prop), ACCESSIBILITY_STATUS_READY)
+        self.assertEqual(mock_fetch.call_count, 1)
+        self.assertGreater(len(prop.nearby_pois.get('items') or []), 0)
+
+    @patch('workspace.services.nearby_pois.fetch_overpass_elements')
+    def test_detail_get_does_not_call_external_provider(self, mock_fetch):
+        prop = CRMProperty.objects.create(
+            user=self.user,
+            title='GET',
+            latitude=35.7575,
+            longitude=51.4100,
+        )
+        detail_url = reverse('workspace:crm_property_detail', kwargs={'property_id': prop.pk})
+        resp = self.client.get(detail_url)
+        self.assertEqual(resp.status_code, 200)
+        mock_fetch.assert_not_called()
+
+    def test_other_user_cannot_refresh_property(self):
+        prop = CRMProperty.objects.create(
+            user=self.user,
+            title='IDOR',
+            latitude=35.7575,
+            longitude=51.4100,
+        )
+        other_client = Client()
+        other_client.login(username='09129990002', password='testpass123')
+        url = reverse('workspace:crm_property_nearby_pois', kwargs={'property_id': prop.pk})
+        resp = other_client.post(url, data='{}', content_type='application/json')
+        self.assertIn(resp.status_code, (403, 404))
+
+    def test_existing_saved_accessibility_data_renders(self):
+        prop = CRMProperty.objects.create(
+            user=self.user,
+            title='ذخیره‌شده',
+            latitude=35.7575,
+            longitude=51.4100,
+            nearby_pois={
+                'version': PAYLOAD_VERSION,
+                'status': ACCESSIBILITY_STATUS_READY,
+                'coords': {'lat': 35.7575, 'lng': 51.4100},
+                'radius_m': 3000,
+                'found_count': 2,
+                'items': [
+                    {'key': 'metro', 'found': True, 'label': 'مترو', 'group': 'transport', 'distance_label': '۱۰۰ متر'},
+                ],
+                'groups': [],
+                'highlights': [],
+            },
+        )
+        detail_url = reverse('workspace:crm_property_detail', kwargs={'property_id': prop.pk})
+        resp = self.client.get(detail_url)
+        self.assertContains(resp, 'crm-nearby-pois-initial')
+
+    def test_resolve_property_location_exact_manual(self):
+        prop = CRMProperty(latitude=35.7575, longitude=51.4100)
+        loc = resolve_property_location(prop)
+        self.assertTrue(loc['usable'])
+        self.assertEqual(loc['precision'], 'exact')
+        self.assertEqual(loc['source'], 'manual_pin')
+
+    def test_property_accessibility_radius_km_default(self):
+        self.assertEqual(property_accessibility_radius_km(), 3)
+
+    def test_listing_location_metadata_exact(self):
+        from workspace.models import Dataset, Listing
+
+        listing = Listing(
+            dataset=Dataset(user=self.user, name='x'),
+            latitude=35.7,
+            longitude=51.4,
+            data={'نوع مختصات': 'دقیق'},
+        )
+        meta = listing_location_metadata(listing)
+        self.assertEqual(meta['_location_precision'], 'exact')
+
+    @patch('workspace.services.nearby_pois.fetch_overpass_elements')
+    def test_stale_pending_becomes_retryable(self, mock_fetch):
+        from datetime import timedelta
+
+        from django.utils import timezone
+
+        from workspace.models import PropertyAccessibilityJob
+
+        mock_fetch.return_value = _sample_elements()
+        old_time = timezone.now() - timedelta(minutes=20)
+        prop = CRMProperty.objects.create(
+            user=self.user,
+            title='stale',
+            latitude=35.7575,
+            longitude=51.4100,
+            nearby_pois={
+                'version': PAYLOAD_VERSION,
+                'status': ACCESSIBILITY_STATUS_PENDING,
+                'generation_id': 'stale-gen',
+                'scheduled_at': old_time.isoformat(),
+                'radius_m': 3000,
+            },
+        )
+        PropertyAccessibilityJob.objects.create(
+            property=prop,
+            user=self.user,
+            generation_id='stale-gen',
+            status='running',
+            attempts=1,
+            locked_at=old_time,
+        )
+        reconcile_stale_pending_accessibilities(timeout_minutes=15)
+        prop.refresh_from_db()
+        self.assertEqual(get_property_accessibility_status(prop), ACCESSIBILITY_STATUS_FAILED)
+        with self.captureOnCommitCallbacks(execute=True):
+            schedule_property_accessibilities(prop.pk, self.user.pk, force=True)
+        self._run_scheduled()
+        prop.refresh_from_db()
+        self.assertEqual(get_property_accessibility_status(prop), ACCESSIBILITY_STATUS_READY)
+
+    @patch('workspace.services.nearby_pois.fetch_overpass_elements')
+    def test_superseded_generation_cannot_overwrite(self, mock_fetch):
+        from django.utils import timezone
+
+        from workspace.models import PropertyAccessibilityJob
+        from workspace.services.nearby_pois import (
+            _build_payload,
+            _save_accessibility_payload,
+            mark_property_accessibilities_pending,
+        )
+
+        mock_fetch.return_value = _sample_elements()
+        prop = CRMProperty.objects.create(
+            user=self.user,
+            title='supersede',
+            latitude=35.7575,
+            longitude=51.4100,
+        )
+        location = resolve_property_location(prop)
+        old_gen = mark_property_accessibilities_pending(prop, location=location)
+        new_gen = mark_property_accessibilities_pending(prop, location=location)
+        self.assertNotEqual(old_gen, new_gen)
+
+        items = resolve_nearby_items(35.7575, 51.4100, _sample_elements())
+        stale_payload = _build_payload(
+            35.7575,
+            51.4100,
+            items,
+            fetched_at=timezone.now(),
+            radius_m=3000,
+            generation_id=old_gen,
+        )
+        self.assertFalse(_save_accessibility_payload(prop, stale_payload, generation_id=old_gen))
+
+        PropertyAccessibilityJob.objects.create(
+            property=prop,
+            user=self.user,
+            generation_id=new_gen,
+            status='queued',
+        )
+        self._run_scheduled()
+        prop.refresh_from_db()
+        self.assertEqual(get_property_accessibility_status(prop), ACCESSIBILITY_STATUS_READY)
+        self.assertEqual(prop.nearby_pois.get('generation_id'), new_gen)

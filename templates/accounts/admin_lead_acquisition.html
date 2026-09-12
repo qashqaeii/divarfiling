@@ -8,7 +8,7 @@
 
 {% block admin_panel_extra_css %}
 <link rel="stylesheet" href="{% static 'css/admin-marketing.css' %}?v=3">
-<link rel="stylesheet" href="{% static 'css/admin-lead-acquisition.css' %}?v=14">
+<link rel="stylesheet" href="{% static 'css/admin-lead-acquisition.css' %}?v=15">
 {% endblock %}
 
 {% block admin_panel_content %}
@@ -921,35 +921,6 @@
             </div>
             <p class="adm-lac-kpi-sub adm-lac-lines-hint" id="lac-lines-hint"></p>
             {% endif %}
-
-            <dialog class="adm-lac-modal adm-lac-lines-modal" id="lac-lines-modal">
-                <header class="adm-lac-modal__head">
-                    <h3 id="lac-lines-modal-title">افزودن خط جدید</h3>
-                    <button type="button" class="adm-lac-modal__close" id="lac-lines-modal-close" aria-label="بستن">&times;</button>
-                </header>
-                <div class="adm-lac-modal__body">
-                    <div class="adm-lac-lines-step" id="lac-lines-step-phone">
-                        <div class="adm-lac-field">
-                            <label for="lac-lines-phone">شماره موبایل دیوار</label>
-                            <input type="tel" id="lac-lines-phone" inputmode="numeric" placeholder="09xxxxxxxxx" autocomplete="tel">
-                        </div>
-                        <p class="adm-lac-kpi-sub">کد OTP به همین شماره ارسال می‌شود — سشن پس از تأیید در <code>sessions/</code> ذخیره می‌شود.</p>
-                        <button type="button" class="adm-lac-btn adm-lac-btn--primary" id="lac-lines-send-otp">ارسال کد</button>
-                    </div>
-                    <div class="adm-lac-lines-step" id="lac-lines-step-otp" hidden>
-                        <div class="adm-lac-field">
-                            <label for="lac-lines-otp">کد تأیید</label>
-                            <input type="text" id="lac-lines-otp" inputmode="numeric" maxlength="8" placeholder="کد پیامک">
-                        </div>
-                        <p class="adm-lac-kpi-sub">شماره: <strong id="lac-lines-pending-phone">—</strong></p>
-                        <div class="adm-lac-lines-modal-actions">
-                            <button type="button" class="adm-lac-btn adm-lac-btn--ghost" id="lac-lines-back-phone">تغییر شماره</button>
-                            <button type="button" class="adm-lac-btn adm-lac-btn--primary" id="lac-lines-verify-otp">تأیید و ذخیره سشن</button>
-                        </div>
-                    </div>
-                    <p class="adm-lac-kpi-sub adm-lac-kpi-sub--error" id="lac-lines-modal-error" hidden></p>
-                </div>
-            </dialog>
         </div>
 
         <div class="adm-lac-panel" style="padding:0;overflow:hidden;margin-top:1rem">
@@ -1421,6 +1392,43 @@
         </form>
     </dialog>
     <script type="application/json" id="lac-factory-templates">{{ factory_templates_json|safe }}</script>
+
+    <dialog class="adm-lac-modal adm-lac-lines-modal" id="lac-lines-modal">
+        <div class="adm-lac-modal__inner">
+            <header class="adm-lac-modal__head">
+                <div>
+                    <h3 id="lac-lines-modal-title">افزودن خط جدید</h3>
+                    <p class="adm-lac-kpi-sub">لاگین OTP دیوار — سشن در phone-detector ذخیره می‌شود</p>
+                </div>
+                <button type="button" class="adm-lac-modal__close" id="lac-lines-modal-close" aria-label="بستن">&times;</button>
+            </header>
+            <div class="adm-lac-modal__body">
+                <div class="adm-lac-lines-step" id="lac-lines-step-phone">
+                    <div class="adm-lac-field">
+                        <label for="lac-lines-phone">شماره موبایل دیوار</label>
+                        <input type="tel" id="lac-lines-phone" inputmode="numeric" placeholder="09xxxxxxxxx" autocomplete="tel">
+                    </div>
+                    <p class="adm-lac-kpi-sub">کد OTP به همین شماره ارسال می‌شود — سشن پس از تأیید در <code>sessions/</code> ذخیره می‌شود.</p>
+                    <button type="button" class="adm-lac-btn adm-lac-btn--primary" id="lac-lines-send-otp">ارسال کد</button>
+                </div>
+                <div class="adm-lac-lines-step" id="lac-lines-step-otp" hidden>
+                    <div class="adm-lac-field">
+                        <label for="lac-lines-otp">کد تأیید</label>
+                        <input type="text" id="lac-lines-otp" inputmode="numeric" maxlength="8" placeholder="کد پیامک" autocomplete="one-time-code">
+                    </div>
+                    <p class="adm-lac-kpi-sub">شماره: <strong id="lac-lines-pending-phone" dir="ltr">—</strong></p>
+                    <div class="adm-lac-lines-modal-actions">
+                        <button type="button" class="adm-lac-btn adm-lac-btn--ghost" id="lac-lines-back-phone">تغییر شماره</button>
+                        <button type="button" class="adm-lac-btn adm-lac-btn--primary" id="lac-lines-verify-otp">تأیید و ذخیره سشن</button>
+                    </div>
+                </div>
+                <p class="adm-lac-kpi-sub adm-lac-kpi-sub--error" id="lac-lines-modal-error" hidden></p>
+            </div>
+            <footer class="adm-lac-modal__foot">
+                <button type="button" class="adm-lac-btn adm-lac-btn--ghost" id="lac-lines-modal-cancel">انصراف</button>
+            </footer>
+        </div>
+    </dialog>
 
     <dialog class="adm-lac-modal adm-lac-send-modal" id="lac-send-progress-modal">
         <div class="adm-lac-modal__inner">
@@ -2482,6 +2490,17 @@
 
     var modalClose = document.getElementById('lac-lines-modal-close');
     if (modalClose) modalClose.addEventListener('click', closeLinesModal);
+    var modalCancel = document.getElementById('lac-lines-modal-cancel');
+    if (modalCancel) modalCancel.addEventListener('click', closeLinesModal);
+    if (modal) {
+      modal.addEventListener('click', function (e) {
+        if (e.target === modal) closeLinesModal();
+      });
+      modal.addEventListener('cancel', function (e) {
+        e.preventDefault();
+        closeLinesModal();
+      });
+    }
 
     if (location.hash === '#lac-automation' || location.pathname.indexOf('/automation') !== -1) {
       loadLines(true);

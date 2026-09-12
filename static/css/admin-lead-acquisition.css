@@ -2699,8 +2699,28 @@ html.mk-public:not([data-theme="light"]) .adm-lac-bulk-bar {
 }
 
 .adm-lac-lines-modal {
-    max-width: 420px;
-    width: calc(100% - 2rem);
+    width: min(440px, calc(100vw - 2rem));
+}
+
+.adm-lac-lines-modal .adm-lac-modal__inner {
+    grid-template-rows: auto minmax(0, 1fr) auto;
+}
+
+.adm-lac-lines-modal .adm-lac-field input {
+    width: 100%;
+    font: inherit;
+    padding: 0.55rem 0.65rem;
+    border-radius: 10px;
+    border: 1px solid var(--lac-line);
+    direction: ltr;
+    text-align: left;
+}
+
+.adm-lac-lines-modal .adm-lac-field label {
+    display: block;
+    margin-bottom: 0.35rem;
+    font-size: 0.84rem;
+    font-weight: 700;
 }
 
 .adm-lac-lines-modal-actions {

@@ -79,6 +79,7 @@ from .lead_acquisition_views import (
     AdminLeadSendProgressStartView,
     AdminLeadSendProgressTickView,
     AdminAutomationPlacesJsonView,
+    AdminAutomationLinesJsonView,
     LeadClickRedirectView,
 )
 
@@ -208,6 +209,11 @@ urlpatterns = [
         'admin-panel/marketing/leads/automation/places.json',
         AdminAutomationPlacesJsonView.as_view(),
         name='admin_panel_lead_automation_places_json',
+    ),
+    path(
+        'admin-panel/marketing/leads/automation/lines.json',
+        AdminAutomationLinesJsonView.as_view(),
+        name='admin_panel_lead_automation_lines_json',
     ),
     path(
         'admin-panel/marketing/lead-campaigns/<int:pk>/',

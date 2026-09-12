@@ -2605,6 +2605,115 @@ html.mk-public:not([data-theme="light"]) .adm-lac-bulk-bar {
     max-width: 140px;
 }
 
+.adm-lac-panel--lines {
+    padding: 1rem 1.1rem 1.1rem;
+}
+
+.adm-lac-lines-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem 0.75rem;
+    align-items: center;
+}
+
+.adm-lac-lines-rotate {
+    margin: 0;
+    font-size: 0.82rem;
+}
+
+.adm-lac-lines-alert {
+    display: flex;
+    gap: 0.65rem;
+    align-items: flex-start;
+    padding: 0.75rem 0.85rem;
+    border-radius: 12px;
+    border: 1px dashed rgba(217, 119, 6, 0.45);
+    background: rgba(217, 119, 6, 0.08);
+    color: #92400e;
+    font-size: 0.88rem;
+}
+
+.adm-lac-lines-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.65rem 1.25rem;
+    margin-bottom: 0.75rem;
+    font-size: 0.84rem;
+    color: var(--lac-muted, #64748b);
+}
+
+.adm-lac-lines-summary strong {
+    color: var(--lac-teal-deep, #0f766e);
+}
+
+.adm-lac-lines-table-wrap {
+    border: 1px solid var(--lac-line);
+    border-radius: 12px;
+    overflow: auto;
+}
+
+.adm-lac-line-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    font-size: 0.76rem;
+    font-weight: 700;
+}
+
+.adm-lac-line-status--active {
+    background: rgba(13, 148, 136, 0.15);
+    color: #047857;
+}
+
+.adm-lac-line-status--expired,
+.adm-lac-line-status--empty,
+.adm-lac-line-status--missing,
+.adm-lac-line-status--corrupt {
+    background: rgba(217, 119, 6, 0.15);
+    color: #b45309;
+}
+
+.adm-lac-line-status--rate_limited {
+    background: rgba(225, 29, 72, 0.12);
+    color: #be123c;
+}
+
+.adm-lac-line-primary {
+    display: inline-block;
+    margin-inline-start: 0.35rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #0e7490;
+}
+
+.adm-lac-lines-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+}
+
+.adm-lac-lines-hint {
+    margin-top: 0.55rem;
+}
+
+.adm-lac-lines-modal {
+    max-width: 420px;
+    width: calc(100% - 2rem);
+}
+
+.adm-lac-lines-modal-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+}
+
+.adm-lac-lines-step .adm-lac-btn {
+    margin-top: 0.65rem;
+}
+
 @media (max-width: 900px) {
     .adm-lac-automation-grid {
         grid-template-columns: 1fr;

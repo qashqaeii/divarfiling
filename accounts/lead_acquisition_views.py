@@ -39,6 +39,12 @@ from accounts.services.acquisition_automation_ui import (
     toggle_automation_campaign,
     update_automation_campaign_from_form,
 )
+from accounts.services.phone_detector_lines import (
+    PhoneDetectorLineError,
+    handle_line_action,
+    list_lines,
+    phone_detector_available,
+)
 from accounts.services.lead_attribution import record_touchpoint
 from accounts.services.lead_campaign_send import (
     DEFAULT_STEP1_A,
@@ -251,6 +257,8 @@ class AdminLeadAcquisitionView(StaffRequiredMixin, TemplateView):
             'automation_category_choices': CATEGORY_CHOICES,
             'automation_places_url': reverse('admin_panel_lead_automation_places_json'),
             'automation_places_ok': places_config_available(),
+            'automation_lines_url': reverse('admin_panel_lead_automation_lines_json'),
+            'automation_lines_ok': phone_detector_available(),
         })
         return ctx
 
@@ -972,3 +980,30 @@ class AdminAutomationPlacesJsonView(StaffRequiredMixin, View):
             'count': len(districts),
             'places_available': places_config_available(),
         }, json_dumps_params={'ensure_ascii': False})
+
+
+class AdminAutomationLinesJsonView(StaffRequiredMixin, View):
+    """مدیریت خطوط phone-detector — لیست سشن‌ها و لاگین OTP."""
+
+    def get(self, request):
+        probe = (request.GET.get('probe') or '').lower() in ('1', 'true', 'yes')
+        payload = list_lines(probe=probe)
+        status = 200 if payload.get('ok') or not payload.get('configured') else 503
+        return JsonResponse(payload, status=status, json_dumps_params={'ensure_ascii': False})
+
+    def post(self, request):
+        try:
+            if request.content_type and 'application/json' in request.content_type:
+                body = json.loads(request.body.decode('utf-8') or '{}')
+            else:
+                body = request.POST.dict()
+            action = body.get('action') or request.POST.get('action') or ''
+            result = handle_line_action(action, body)
+            return JsonResponse({'ok': True, **result}, json_dumps_params={'ensure_ascii': False})
+        except PhoneDetectorLineError as exc:
+            return JsonResponse({'ok': False, 'error': exc.message, 'code': exc.code}, status=400)
+        except json.JSONDecodeError:
+            return JsonResponse({'ok': False, 'error': 'JSON نامعتبر'}, status=400)
+        except Exception as exc:  # noqa: BLE001
+            logger.exception('automation lines action failed')
+            return JsonResponse({'ok': False, 'error': str(exc)}, status=500)

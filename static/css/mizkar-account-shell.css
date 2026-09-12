@@ -5,6 +5,13 @@
 
 body.mk-account-dashboard {
     --acc-sidebar-bg: #000000;
+    --acc-sidebar-overlay: linear-gradient(
+        180deg,
+        rgba(0, 0, 0, 0.92) 0%,
+        rgba(0, 0, 0, 0.78) 42%,
+        rgba(0, 0, 0, 0.35) 72%,
+        rgba(0, 0, 0, 0.08) 100%
+    );
     --acc-sidebar-text: rgba(255, 255, 255, 0.72);
     --acc-sidebar-text-strong: #ffffff;
     --acc-sidebar-active: #7c3aed;
@@ -13,6 +20,11 @@ body.mk-account-dashboard {
     --acc-main-bg: #f8f9fd;
     --acc-card-bg: #ffffff;
     --acc-card-border: #e8ecf4;
+    --acc-surface-muted: #f8fafc;
+    --acc-input-bg: #fbfcfe;
+    --acc-table-row-border: #f1f5f9;
+    --acc-lic-expired-bg: #fafbfd;
+    --acc-stat-border: #eef2f7;
     --acc-text: #0f172a;
     --acc-text-muted: #64748b;
     --acc-purple: #7c3aed;
@@ -78,7 +90,7 @@ body.mk-account-dashboard .mk-footer-pro {
     min-height: calc(100vh - 3.65rem);
     max-height: calc(100vh - 3.65rem);
     padding: 1.15rem 0.85rem 1rem;
-    background-color: #000;
+    background-color: var(--acc-sidebar-bg);
     background-image: url('../images/bgofsidebar.webp');
     background-repeat: no-repeat;
     background-position: center bottom;
@@ -95,13 +107,7 @@ body.mk-account-dashboard .mk-footer-pro {
     inset: 0;
     z-index: 0;
     pointer-events: none;
-    background: linear-gradient(
-        180deg,
-        rgba(0, 0, 0, 0.92) 0%,
-        rgba(0, 0, 0, 0.78) 42%,
-        rgba(0, 0, 0, 0.35) 72%,
-        rgba(0, 0, 0, 0.08) 100%
-    );
+    background: var(--acc-sidebar-overlay);
 }
 
 .mk-account-sidebar > * {
@@ -423,7 +429,7 @@ body.mk-account-dashboard .mk-footer-pro {
 }
 
 .mk-acc-lic-card.is-expired {
-    background: #fafbfd;
+    background: var(--acc-lic-expired-bg);
 }
 
 .mk-acc-lic-card__badge {
@@ -516,7 +522,7 @@ body.mk-account-dashboard .mk-footer-pro {
 }
 
 .mk-acc-lic-card.is-expired .mk-acc-lic-card__btn {
-    background: #fff;
+    background: var(--acc-card-bg);
     color: var(--acc-text-muted);
     border-color: var(--acc-card-border);
 }
@@ -553,7 +559,7 @@ body.mk-account-dashboard .mk-footer-pro {
 
 .mk-acc-orders-table td {
     padding: 0.62rem 0.45rem;
-    border-bottom: 1px solid #f1f5f9;
+    border-bottom: 1px solid var(--acc-table-row-border);
     color: var(--acc-text);
     vertical-align: middle;
 }
@@ -626,9 +632,9 @@ body.mk-account-dashboard .mk-footer-pro {
     align-items: flex-start;
     gap: 0.55rem;
     padding: 0.65rem 0.7rem;
-    border: 1px solid #eef2f7;
+    border: 1px solid var(--acc-stat-border);
     border-radius: var(--acc-radius-sm);
-    background: #fbfcfe;
+    background: var(--acc-input-bg);
 }
 
 .mk-acc-affiliate-stat__icon {
@@ -680,7 +686,7 @@ body.mk-account-dashboard .mk-footer-pro {
     border: 1px solid var(--acc-card-border);
     border-radius: 11px;
     overflow: hidden;
-    background: #f8fafc;
+    background: var(--acc-surface-muted);
 }
 
 .mk-acc-affiliate__link-input {
@@ -935,7 +941,7 @@ body.mk-account-dashboard .mk-footer-pro {
 
 .mk-acc-filter__body {
     padding: 0 1rem 1rem;
-    border-top: 1px solid #f1f5f9;
+    border-top: 1px solid var(--acc-table-row-border);
 }
 
 .mk-acc-filter-form__row {
@@ -958,7 +964,7 @@ body.mk-account-dashboard .mk-footer-pro {
     padding: 0.55rem 0.7rem;
     border: 1px solid var(--acc-card-border);
     border-radius: 9px;
-    background: #fbfcfe;
+    background: var(--acc-input-bg);
     font-size: 0.74rem;
     color: var(--acc-text);
 }
@@ -997,7 +1003,7 @@ body.mk-account-dashboard .mk-footer-pro {
 }
 
 .mk-acc-btn--ghost {
-    background: #fff;
+    background: var(--acc-card-bg);
     color: var(--acc-text-muted);
     border-color: var(--acc-card-border);
 }
@@ -1009,7 +1015,7 @@ body.mk-account-dashboard .mk-footer-pro {
     place-items: center;
     border-radius: 8px;
     border: 1px solid var(--acc-card-border);
-    background: #fff;
+    background: var(--acc-card-bg);
     color: var(--acc-text-muted);
     text-decoration: none;
     cursor: pointer;
@@ -1053,12 +1059,12 @@ body.mk-account-dashboard .mk-footer-pro {
     color: var(--acc-text-muted);
     border-bottom: 1px solid var(--acc-card-border);
     white-space: nowrap;
-    background: #fbfcfe;
+    background: var(--acc-input-bg);
 }
 
 .mk-account-shell .mk-acc-table tbody td {
     padding: 0.7rem 0.55rem;
-    border-bottom: 1px solid #f1f5f9;
+    border-bottom: 1px solid var(--acc-table-row-border);
     vertical-align: middle;
     color: var(--acc-text);
 }
@@ -1151,7 +1157,7 @@ body.mk-account-dashboard .mk-footer-pro {
     margin-bottom: 0.85rem;
     border-radius: var(--acc-radius-sm);
     border: 1px solid var(--acc-card-border);
-    background: #fbfcfe;
+    background: var(--acc-input-bg);
 }
 
 .mk-account-shell .lic-grid {
@@ -1177,7 +1183,7 @@ body.mk-account-dashboard .mk-footer-pro {
 
 .mk-account-shell .lic-tile--expired {
     opacity: 0.92;
-    background: #fafbfd;
+    background: var(--acc-lic-expired-bg);
 }
 
 .mk-account-shell .lic-team-guide {
@@ -1242,8 +1248,8 @@ body.mk-account-dashboard .mk-footer-pro {
     gap: 0.65rem;
     padding: 0.7rem 0.75rem;
     border-radius: var(--acc-radius-sm);
-    border: 1px solid #eef2f7;
-    background: #fbfcfe;
+    border: 1px solid var(--acc-stat-border);
+    background: var(--acc-input-bg);
 }
 
 .mk-acc-list-item__main {
@@ -1279,8 +1285,8 @@ body.mk-account-dashboard .mk-footer-pro {
 
 .mk-account-shell .prof-card-head {
     padding: 0.85rem 1rem;
-    border-bottom: 1px solid #f1f5f9;
-    background: #fbfcfe;
+    border-bottom: 1px solid var(--acc-table-row-border);
+    background: var(--acc-input-bg);
 }
 
 .mk-account-shell .prof-card-title {
@@ -1396,7 +1402,7 @@ body.mk-account-dashboard .mk-footer-pro {
 
     .mk-acc-orders-table tr {
         padding: 0.65rem 0;
-        border-bottom: 1px solid #f1f5f9;
+        border-bottom: 1px solid var(--acc-table-row-border);
     }
 
     .mk-acc-orders-table tr:last-child {
@@ -1468,7 +1474,7 @@ body.mk-account-dashboard .mk-footer-pro {
         border: 1px solid var(--acc-card-border);
         border-radius: var(--acc-radius-sm);
         padding: 0.75rem;
-        background: #fbfcfe;
+        background: var(--acc-input-bg);
     }
 
     .mk-account-shell .mk-acc-table thead {
@@ -1478,7 +1484,7 @@ body.mk-account-dashboard .mk-footer-pro {
     .mk-account-shell .mk-acc-table tbody tr {
         display: block;
         padding: 0.65rem 0.55rem;
-        border-bottom: 1px solid #f1f5f9;
+        border-bottom: 1px solid var(--acc-table-row-border);
     }
 
     .mk-account-shell .mk-acc-table tbody td {
@@ -1495,4 +1501,33 @@ body.mk-account-dashboard .mk-footer-pro {
         font-weight: 700;
         color: var(--acc-text-muted);
     }
+}
+
+/* ─── Dark theme (public site) ─── */
+html.mk-public:not([data-theme="light"]) body.mk-account-dashboard {
+    --acc-main-bg: #090e1a;
+    --acc-card-bg: #111827;
+    --acc-card-border: rgba(148, 163, 184, 0.14);
+    --acc-surface-muted: #0f172a;
+    --acc-input-bg: #0c1220;
+    --acc-table-row-border: rgba(148, 163, 184, 0.1);
+    --acc-lic-expired-bg: #0f172a;
+    --acc-stat-border: rgba(148, 163, 184, 0.12);
+    --acc-text: #f1f5f9;
+    --acc-text-muted: #94a3b8;
+    --acc-shadow: 0 4px 20px rgba(0, 0, 0, 0.28);
+    --acc-purple-soft: rgba(124, 58, 237, 0.14);
+    --acc-sidebar-border: rgba(124, 58, 237, 0.22);
+}
+
+html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .mk-account-sidebar {
+    box-shadow: inset -1px 0 0 rgba(124, 58, 237, 0.12);
+}
+
+html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .mk-account-shell .mk-acc-table tbody tr:hover {
+    background: rgba(124, 58, 237, 0.06);
+}
+
+html.mk-public:not([data-theme="light"]) body.mk-account-dashboard .mk-acc-empty-state {
+    background: rgba(15, 23, 42, 0.35);
 }

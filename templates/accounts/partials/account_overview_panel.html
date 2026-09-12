@@ -1,12 +1,6 @@
 {% load persian_tags %}
 {% load currency_tags %}
-<nav class="mk-account-breadcrumb" aria-label="مسیر">
-    <a href="{% url 'home' %}"><i class="fas fa-house" aria-hidden="true"></i></a>
-    <span class="mk-account-breadcrumb__sep" aria-hidden="true">/</span>
-    <span>حساب کاربری</span>
-    <span class="mk-account-breadcrumb__sep" aria-hidden="true">/</span>
-    <span class="mk-account-breadcrumb__current">نمای کلی</span>
-</nav>
+{% include 'accounts/partials/account_breadcrumb.html' %}
 
 <header class="mk-account-page-head">
     <h1 class="mk-account-page-head__title">نمای کلی حساب</h1>

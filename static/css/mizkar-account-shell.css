@@ -764,6 +764,578 @@ body.mk-account-dashboard .mk-footer-pro {
     display: none !important;
 }
 
+.mk-acc-tab-panel[hidden] {
+    display: none !important;
+}
+
+.mk-acc-tab-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+}
+
+/* ─── Sidebar user card ─── */
+.mk-account-sidebar__user {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0 0.35rem 1rem;
+    margin-bottom: 0.35rem;
+    border-bottom: 1px solid var(--acc-sidebar-border);
+}
+
+.mk-account-sidebar__avatar {
+    width: 2.35rem;
+    height: 2.35rem;
+    border-radius: 11px;
+    overflow: hidden;
+    flex-shrink: 0;
+    background: linear-gradient(135deg, #7c3aed, #5b21b6);
+    display: grid;
+    place-items: center;
+    color: #fff;
+    font-size: 0.82rem;
+    font-weight: 800;
+}
+
+.mk-account-sidebar__avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.mk-account-sidebar__user-copy {
+    min-width: 0;
+}
+
+.mk-account-sidebar__user-name {
+    display: block;
+    font-size: 0.78rem;
+    font-weight: 800;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mk-account-sidebar__user-meta {
+    display: block;
+    font-size: 0.64rem;
+    color: rgba(255, 255, 255, 0.55);
+    line-height: 1.35;
+}
+
+/* ─── Page head variants ─── */
+.mk-account-page-head--row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.mk-acc-head-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.38rem 0.72rem;
+    border-radius: 999px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    background: var(--acc-purple-soft);
+    color: var(--acc-purple);
+    text-decoration: none;
+    border: 1px solid rgba(124, 58, 237, 0.15);
+}
+
+.mk-acc-head-badge--warn {
+    background: rgba(245, 158, 11, 0.12);
+    color: #b45309;
+    border-color: rgba(245, 158, 11, 0.2);
+}
+
+/* ─── KPI strip ─── */
+.mk-acc-kpi-strip {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.65rem;
+    margin-bottom: 0.15rem;
+}
+
+.mk-acc-kpi {
+    padding: 0.72rem 0.85rem;
+    border-radius: var(--acc-radius-sm);
+    border: 1px solid var(--acc-card-border);
+    background: var(--acc-card-bg);
+    box-shadow: var(--acc-shadow);
+}
+
+.mk-acc-kpi__val {
+    display: block;
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--acc-text);
+    letter-spacing: -0.02em;
+}
+
+.mk-acc-kpi__lbl {
+    display: block;
+    margin-top: 0.12rem;
+    font-size: 0.64rem;
+    color: var(--acc-text-muted);
+    font-weight: 600;
+}
+
+.mk-acc-kpi--green .mk-acc-kpi__val { color: #059669; }
+.mk-acc-kpi--amber .mk-acc-kpi__val { color: #d97706; }
+.mk-acc-kpi--violet .mk-acc-kpi__val { color: var(--acc-purple); }
+
+/* ─── Panel variants ─── */
+.mk-acc-panel--filter {
+    padding: 0;
+    overflow: hidden;
+}
+
+.mk-acc-panel--table {
+    padding: 0.35rem 0.15rem 0.15rem;
+}
+
+.mk-acc-panel--downloads {
+    padding: 1rem;
+}
+
+.mk-acc-panel__hint {
+    margin: 0.65rem 0 0;
+    font-size: 0.68rem;
+    color: var(--acc-text-muted);
+    line-height: 1.55;
+}
+
+/* ─── Filters ─── */
+.mk-acc-filter__trigger {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: var(--acc-text);
+    list-style: none;
+}
+
+.mk-acc-filter__trigger::-webkit-details-marker { display: none; }
+
+.mk-acc-filter__badge {
+    font-style: normal;
+    font-size: 0.6rem;
+    padding: 0.12rem 0.4rem;
+    border-radius: 999px;
+    background: var(--acc-purple-soft);
+    color: var(--acc-purple);
+}
+
+.mk-acc-filter__body {
+    padding: 0 1rem 1rem;
+    border-top: 1px solid #f1f5f9;
+}
+
+.mk-acc-filter-form__row {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) auto;
+    gap: 0.65rem;
+    align-items: end;
+}
+
+.mk-acc-filter-form__group label {
+    display: block;
+    margin-bottom: 0.28rem;
+    font-size: 0.66rem;
+    font-weight: 700;
+    color: var(--acc-text-muted);
+}
+
+.mk-acc-input {
+    width: 100%;
+    padding: 0.55rem 0.7rem;
+    border: 1px solid var(--acc-card-border);
+    border-radius: 9px;
+    background: #fbfcfe;
+    font-size: 0.74rem;
+    color: var(--acc-text);
+}
+
+.mk-acc-input:focus {
+    outline: none;
+    border-color: rgba(124, 58, 237, 0.35);
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+}
+
+.mk-acc-filter-form__actions {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+}
+
+/* ─── Buttons ─── */
+.mk-acc-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.52rem 0.85rem;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-decoration: none;
+    border: 1px solid transparent;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.mk-acc-btn--primary {
+    background: linear-gradient(135deg, #7c3aed, #6d28d9);
+    color: #fff;
+    box-shadow: 0 8px 20px -10px rgba(109, 40, 217, 0.55);
+}
+
+.mk-acc-btn--ghost {
+    background: #fff;
+    color: var(--acc-text-muted);
+    border-color: var(--acc-card-border);
+}
+
+.mk-acc-icon-btn {
+    width: 2rem;
+    height: 2rem;
+    display: inline-grid;
+    place-items: center;
+    border-radius: 8px;
+    border: 1px solid var(--acc-card-border);
+    background: #fff;
+    color: var(--acc-text-muted);
+    text-decoration: none;
+    cursor: pointer;
+    font-size: 0.78rem;
+}
+
+.mk-acc-icon-btn--accent {
+    color: var(--acc-purple);
+    border-color: rgba(124, 58, 237, 0.2);
+    background: var(--acc-purple-soft);
+}
+
+.mk-acc-icon-btn--amber {
+    color: #b45309;
+    border-color: rgba(245, 158, 11, 0.25);
+    background: rgba(245, 158, 11, 0.1);
+}
+
+.mk-acc-row-actions {
+    display: flex;
+    gap: 0.3rem;
+    flex-wrap: wrap;
+}
+
+/* ─── Tables (shared) ─── */
+.mk-acc-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.mk-account-shell .mk-acc-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.72rem;
+}
+
+.mk-account-shell .mk-acc-table thead th {
+    padding: 0.65rem 0.55rem;
+    text-align: right;
+    font-weight: 700;
+    color: var(--acc-text-muted);
+    border-bottom: 1px solid var(--acc-card-border);
+    white-space: nowrap;
+    background: #fbfcfe;
+}
+
+.mk-account-shell .mk-acc-table tbody td {
+    padding: 0.7rem 0.55rem;
+    border-bottom: 1px solid #f1f5f9;
+    vertical-align: middle;
+    color: var(--acc-text);
+}
+
+.mk-account-shell .mk-acc-table tbody tr:hover {
+    background: rgba(124, 58, 237, 0.02);
+}
+
+.mk-acc-status-pill--paid,
+.mk-acc-status-pill--pending_verification,
+.mk-acc-status-pill--pending {
+    background: var(--acc-green-soft);
+    color: #059669;
+}
+
+.mk-acc-status-pill--failed,
+.mk-acc-status-pill--cancelled {
+    background: var(--acc-red-soft);
+    color: var(--acc-red);
+}
+
+/* ─── Empty state ─── */
+.mk-acc-empty-state {
+    padding: 2rem 1rem;
+    text-align: center;
+    border: 1px dashed var(--acc-card-border);
+    border-radius: var(--acc-radius);
+    background: var(--acc-card-bg);
+}
+
+.mk-acc-empty-state__icon {
+    display: inline-grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 12px;
+    background: var(--acc-purple-soft);
+    color: var(--acc-purple);
+    font-size: 1rem;
+    margin-bottom: 0.75rem;
+}
+
+.mk-acc-empty-state__title {
+    margin: 0 0 0.35rem;
+    font-size: 0.88rem;
+    font-weight: 800;
+    color: var(--acc-text);
+}
+
+.mk-acc-empty-state__text {
+    margin: 0 0 1rem;
+    font-size: 0.72rem;
+    color: var(--acc-text-muted);
+    line-height: 1.55;
+}
+
+/* ─── Licenses tab inside shell ─── */
+.mk-account-shell .lic-pool-strip {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.55rem;
+    margin-bottom: 0.65rem;
+    padding: 0;
+    border: 0;
+    background: transparent;
+}
+
+.mk-account-shell .lic-pool-item {
+    padding: 0.65rem 0.75rem;
+    border-radius: var(--acc-radius-sm);
+    border: 1px solid var(--acc-card-border);
+    background: var(--acc-card-bg);
+    box-shadow: var(--acc-shadow);
+    text-align: center;
+}
+
+.mk-account-shell .lic-pool-item strong {
+    display: block;
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: var(--acc-text);
+}
+
+.mk-account-shell .lic-pool-item span {
+    font-size: 0.62rem;
+    color: var(--acc-text-muted);
+}
+
+.mk-account-shell .lic-spectrum-legend {
+    margin-bottom: 0.85rem;
+    border-radius: var(--acc-radius-sm);
+    border: 1px solid var(--acc-card-border);
+    background: #fbfcfe;
+}
+
+.mk-account-shell .lic-grid {
+    gap: 0.75rem;
+}
+
+.mk-account-shell .lic-tile {
+    border-radius: var(--acc-radius);
+    border: 1px solid var(--acc-card-border);
+    box-shadow: var(--acc-shadow);
+    background: var(--acc-card-bg);
+}
+
+.mk-account-shell .lic-tile--healthy,
+.mk-account-shell .lic-tile--stable {
+    border-color: rgba(16, 185, 129, 0.2);
+}
+
+.mk-account-shell .lic-tile--warning,
+.mk-account-shell .lic-tile--critical {
+    border-color: rgba(245, 158, 11, 0.25);
+}
+
+.mk-account-shell .lic-tile--expired {
+    opacity: 0.92;
+    background: #fafbfd;
+}
+
+.mk-account-shell .lic-team-guide {
+    border-radius: var(--acc-radius-sm);
+    border: 1px solid var(--acc-card-border);
+    background: var(--acc-purple-soft);
+}
+
+/* ─── Transactions mobile cards ─── */
+.mk-account-shell .mk-acc-txn-cards {
+    display: none;
+}
+
+.mk-account-shell .dash-txn-wrap {
+    display: block;
+}
+
+/* ─── Affiliate page ─── */
+.mk-acc-affiliate__stats--page {
+    margin-bottom: 0.85rem;
+}
+
+.mk-acc-wallet-card {
+    margin-bottom: 0.85rem;
+    border-radius: var(--acc-radius);
+    border: 1px solid var(--acc-card-border);
+    background: linear-gradient(135deg, rgba(124, 58, 237, 0.06), rgba(109, 40, 217, 0.02));
+    box-shadow: var(--acc-shadow);
+    overflow: hidden;
+}
+
+.mk-account-shell .wallet-minimal-content {
+    padding: 1rem;
+}
+
+.mk-account-shell .wallet-minimal-balance .wallet-amount {
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: var(--acc-purple);
+}
+
+.mk-account-shell .wallet-minimal-btn {
+    border-radius: 999px;
+    font-size: 0.68rem;
+    font-weight: 700;
+}
+
+.mk-account-shell .wallet-minimal-btn.primary {
+    background: linear-gradient(135deg, #7c3aed, #6d28d9);
+}
+
+.mk-acc-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+}
+
+.mk-acc-list-item {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.65rem;
+    padding: 0.7rem 0.75rem;
+    border-radius: var(--acc-radius-sm);
+    border: 1px solid #eef2f7;
+    background: #fbfcfe;
+}
+
+.mk-acc-list-item__main {
+    min-width: 0;
+}
+
+.mk-acc-list-item__main strong {
+    display: block;
+    font-size: 0.78rem;
+    margin-bottom: 0.2rem;
+}
+
+.mk-acc-list-item__main span {
+    display: block;
+    font-size: 0.66rem;
+    color: var(--acc-text-muted);
+    line-height: 1.45;
+}
+
+/* ─── Profile tab ─── */
+.mk-acc-profile-grid {
+    gap: 0.85rem;
+}
+
+.mk-account-shell .prof-card.mk-acc-panel {
+    border: 1px solid var(--acc-card-border);
+    border-radius: var(--acc-radius);
+    box-shadow: var(--acc-shadow);
+    background: var(--acc-card-bg);
+    padding: 0;
+    overflow: hidden;
+}
+
+.mk-account-shell .prof-card-head {
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid #f1f5f9;
+    background: #fbfcfe;
+}
+
+.mk-account-shell .prof-card-title {
+    font-size: 0.82rem;
+    font-weight: 800;
+}
+
+.mk-account-shell .prof-edit-btn {
+    border-radius: 999px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 0.35rem 0.65rem;
+    border: 1px solid rgba(124, 58, 237, 0.2);
+    background: var(--acc-purple-soft);
+    color: var(--acc-purple);
+}
+
+.mk-account-shell .prof-fields {
+    padding: 0.85rem 1rem 1rem;
+}
+
+.mk-account-shell .prof-field dt {
+    font-size: 0.64rem;
+    color: var(--acc-text-muted);
+}
+
+.mk-account-shell .prof-field dd {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--acc-text);
+}
+
+.mk-account-shell .prof-fold {
+    border: 1px solid var(--acc-card-border);
+    border-radius: var(--acc-radius-sm);
+    margin-bottom: 0.65rem;
+    overflow: hidden;
+}
+
+.mk-account-shell .prof-save-btn {
+    border-radius: 999px;
+    background: linear-gradient(135deg, #7c3aed, #6d28d9);
+    font-weight: 700;
+}
+
+/* ─── Downloads hub ─── */
+.mk-account-shell .dash-downloads-hub .mk-dl-card,
+.mk-account-shell .dash-downloads-hub .mk-app-dl-card {
+    border-radius: var(--acc-radius-sm);
+    border: 1px solid var(--acc-card-border);
+    box-shadow: none;
+}
+
 /* ─── Mobile ─── */
 @media (max-width: 960px) {
     .mk-account-shell {
@@ -868,5 +1440,61 @@ body.mk-account-dashboard .mk-footer-pro {
 @media (max-width: 480px) {
     .mk-acc-affiliate__stats {
         grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 960px) {
+    .mk-acc-kpi-strip {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .mk-acc-filter-form__row {
+        grid-template-columns: 1fr;
+    }
+
+    .mk-account-shell .lic-pool-strip {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .mk-account-shell .mk-acc-txn-cards {
+        display: grid;
+        gap: 0.65rem;
+        padding: 0.65rem;
+    }
+
+    .mk-account-shell .dash-txn-wrap {
+        display: none;
+    }
+
+    .mk-account-shell .dash-txn-card {
+        border: 1px solid var(--acc-card-border);
+        border-radius: var(--acc-radius-sm);
+        padding: 0.75rem;
+        background: #fbfcfe;
+    }
+
+    .mk-account-shell .mk-acc-table thead {
+        display: none;
+    }
+
+    .mk-account-shell .mk-acc-table tbody tr {
+        display: block;
+        padding: 0.65rem 0.55rem;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .mk-account-shell .mk-acc-table tbody td {
+        display: flex;
+        justify-content: space-between;
+        gap: 0.75rem;
+        padding: 0.25rem 0;
+        border: 0;
+    }
+
+    .mk-account-shell .mk-acc-table tbody td::before {
+        content: attr(data-label);
+        font-size: 0.64rem;
+        font-weight: 700;
+        color: var(--acc-text-muted);
     }
 }

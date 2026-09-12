@@ -13,7 +13,7 @@
 <link rel="stylesheet" href="{% static 'css/mizkar-dashboard-licenses.css' %}?v=2">
 <link rel="stylesheet" href="{% static 'css/mizkar-dashboard-profile.css' %}?v=2">
 <link rel="stylesheet" href="{% static 'css/mizkar-dashboard-premium.css' %}?v=1">
-<link rel="stylesheet" href="{% static 'css/mizkar-account-shell.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'css/mizkar-account-shell.css' %}?v=2">
 <link rel="stylesheet" href="{% static 'css/mizkar-app-download.css' %}?v=4">
 <link rel="stylesheet" href="{% static 'workspace/css/modals.css' %}?v=34">
 {% endblock %}
@@ -34,53 +34,50 @@
         {% if active_tab == 'overview' %}
             {% include 'accounts/partials/account_overview_panel.html' %}
         {% else %}
-            <nav class="mk-account-breadcrumb" aria-label="مسیر">
-                <a href="{% url 'home' %}"><i class="fas fa-house" aria-hidden="true"></i></a>
-                <span class="mk-account-breadcrumb__sep" aria-hidden="true">/</span>
-                <a href="{{ dashboard_tab_urls.overview }}">حساب کاربری</a>
-                <span class="mk-account-breadcrumb__sep" aria-hidden="true">/</span>
-                <span class="mk-account-breadcrumb__current">
-                    {% if active_tab == 'orders' %}سفارش‌ها
-                    {% elif active_tab == 'licenses' %}لایسنس‌ها
-                    {% elif active_tab == 'downloads' %}دانلود اپ‌ها
-                    {% elif active_tab == 'transactions' %}تراکنش‌ها
-                    {% elif active_tab == 'affiliate' %}همکاری در فروش
-                    {% elif active_tab == 'profile' %}پروفایل
-                    {% else %}حساب کاربری{% endif %}
-                </span>
-            </nav>
+            {% include 'accounts/partials/account_breadcrumb.html' %}
+            <div class="mk-acc-tab-body">
 
-            <div class="dash-shell dashboard-main-card dash-shell-pro">
-        
         <!-- Tab: Orders -->
-        <div id="tab-orders" class="tab-content dash-tab-panel"{% if active_tab != 'orders' %} style="display: none;"{% endif %}>
-            <header class="dash-tab-head dash-tab-head--row">
-                <div class="dash-tab-head-copy">
-                    <h2 class="dash-tab-head-title">سفارش‌های من</h2>
-                    <p class="dash-tab-head-sub">پیگیری پرداخت، لایسنس و دانلود ربات</p>
+        <div id="tab-orders" class="mk-acc-tab-panel tab-content dash-tab-panel"{% if active_tab != 'orders' %} hidden{% endif %}>
+            <header class="mk-account-page-head mk-account-page-head--row">
+                <div>
+                    <h1 class="mk-account-page-head__title">سفارش‌های من</h1>
+                    <p class="mk-account-page-head__sub">پیگیری پرداخت، دریافت لایسنس و دانلود ربات</p>
                 </div>
+                {% if pending_orders_count %}
+                <a href="{{ dashboard_tab_urls.orders }}?order_status=pending" class="mk-acc-head-badge mk-acc-head-badge--warn">
+                    <i class="fas fa-clock" aria-hidden="true"></i>
+                    {{ pending_orders_count }} در انتظار
+                </a>
+                {% endif %}
             </header>
-            <div class="tab-header">
-                
-                <!-- فیلتر و جستجو -->
-                <details class="dash-filter-fold" open>
-                    <summary class="dash-filter-fold-trigger">
+
+            <div class="mk-acc-kpi-strip" aria-label="خلاصه سفارش‌ها">
+                <article class="mk-acc-kpi"><span class="mk-acc-kpi__val">{{ total_orders }}</span><span class="mk-acc-kpi__lbl">کل سفارش</span></article>
+                <article class="mk-acc-kpi mk-acc-kpi--green"><span class="mk-acc-kpi__val">{{ paid_orders }}</span><span class="mk-acc-kpi__lbl">پرداخت‌شده</span></article>
+                <article class="mk-acc-kpi mk-acc-kpi--amber"><span class="mk-acc-kpi__val">{{ pending_orders_count }}</span><span class="mk-acc-kpi__lbl">در انتظار</span></article>
+                <article class="mk-acc-kpi mk-acc-kpi--violet"><span class="mk-acc-kpi__val">{{ total_spent|currency }}</span><span class="mk-acc-kpi__lbl">تومان خرید</span></article>
+            </div>
+
+            <div class="mk-acc-panel mk-acc-panel--filter">
+                <details class="mk-acc-filter" open>
+                    <summary class="mk-acc-filter__trigger">
                         <i class="fas fa-sliders-h" aria-hidden="true"></i>
                         <span>فیلتر و جستجو</span>
-                        {% if order_status_filter or order_search %}<em class="dash-filter-fold-badge">فعال</em>{% endif %}
+                        {% if order_status_filter or order_search %}<em class="mk-acc-filter__badge">فعال</em>{% endif %}
                     </summary>
-                <div class="filter-section">
-                    <form method="get" class="filter-form">
+                <div class="mk-acc-filter__body">
+                    <form method="get" class="mk-acc-filter-form">
                         <input type="hidden" name="order_status" value="{{ order_status_filter }}">
-                        <div class="filter-row">
-                            <div class="filter-group">
+                        <div class="mk-acc-filter-form__row">
+                            <div class="mk-acc-filter-form__group">
                                 <label>جستجو</label>
                                 <input type="text" name="order_search" value="{{ order_search }}" 
-                                       placeholder="جستجوی سفارش..." class="form-control">
+                                       placeholder="جستجوی سفارش..." class="mk-acc-input">
                             </div>
-                            <div class="filter-group">
+                            <div class="mk-acc-filter-form__group">
                                 <label>وضعیت</label>
-                                <select name="order_status" class="form-control" onchange="this.form.submit()">
+                                <select name="order_status" class="mk-acc-input" onchange="this.form.submit()">
                                     <option value="">همه وضعیت‌ها</option>
                                     <option value="pending" {% if order_status_filter == 'pending' %}selected{% endif %}>در انتظار پرداخت</option>
                                     <option value="pending_verification" {% if order_status_filter == 'pending_verification' %}selected{% endif %}>در انتظار تایید پرداخت</option>
@@ -89,12 +86,12 @@
                                     <option value="cancelled" {% if order_status_filter == 'cancelled' %}selected{% endif %}>لغو شده</option>
                                 </select>
                             </div>
-                            <div class="filter-actions">
-                                <button type="submit" class="btn btn-primary">
+                            <div class="mk-acc-filter-form__actions">
+                                <button type="submit" class="mk-acc-btn mk-acc-btn--primary">
                                     <i class="fas fa-search" aria-hidden="true"></i> جستجو
                                 </button>
                                 {% if order_status_filter or order_search %}
-                                    <a href="{% url 'dashboard' %}" class="btn btn-outline">
+                                    <a href="{{ dashboard_tab_urls.orders }}" class="mk-acc-btn mk-acc-btn--ghost">
                                         <i class="fas fa-times" aria-hidden="true"></i> پاک کردن
                                     </a>
                                 {% endif %}
@@ -106,8 +103,9 @@
             </div>
             
             {% if orders %}
-                <div class="dash-orders-wrap">
-                    <table class="dash-orders-table">
+            <div class="mk-acc-panel mk-acc-panel--table">
+                <div class="mk-acc-table-wrap">
+                    <table class="mk-acc-table dash-orders-table">
                         <thead>
                             <tr>
                                 <th scope="col">شماره سفارش</th>
@@ -139,31 +137,31 @@
                                         <span class="dash-order-time">{{ order.created_at|to_jalali_date:"%H:%M" }}</span>
                                     </td>
                                     <td data-label="وضعیت">
-                                        <span class="badge badge-{{ order.status }}">{{ order.get_status_display }}</span>
+                                        <span class="mk-acc-status-pill mk-acc-status-pill--{{ order.status }}">{{ order.get_status_display }}</span>
                                     </td>
                                     <td data-label="عملیات">
-                                        <div class="dash-orders-actions">
-                                            <button type="button" class="btn-icon" onclick="showOrderDetails('{{ order.id }}')" title="جزئیات">
+                                        <div class="mk-acc-row-actions dash-orders-actions">
+                                            <button type="button" class="mk-acc-icon-btn" onclick="showOrderDetails('{{ order.id }}')" title="جزئیات">
                                                 <i class="fas fa-eye" aria-hidden="true"></i>
                                             </button>
                                             {% if order.status == 'paid' %}
-                                                <a href="{% url 'payment:success' order.id %}" class="btn-icon" title="لایسنس و جزئیات">
+                                                <a href="{% url 'payment:success' order.id %}" class="mk-acc-icon-btn" title="لایسنس و جزئیات">
                                                     <i class="fas fa-key" aria-hidden="true"></i>
                                                 </a>
-                                                <a href="{% url 'payment:download' order.id %}" class="btn-icon btn-icon--accent" title="دانلود ربات ویندوز">
+                                                <a href="{% url 'payment:download' order.id %}" class="mk-acc-icon-btn mk-acc-icon-btn--accent" title="دانلود ربات ویندوز">
                                                     <i class="fas fa-download" aria-hidden="true"></i>
                                                 </a>
                                                 {% if app_downloads.android.available %}
-                                                <a href="{% url 'android_app_download' %}" class="btn-icon btn-icon--accent" title="دانلود اپ اندروید">
+                                                <a href="{% url 'android_app_download' %}" class="mk-acc-icon-btn mk-acc-icon-btn--accent" title="دانلود اپ اندروید">
                                                     <i class="fab fa-android" aria-hidden="true"></i>
                                                 </a>
                                                 {% endif %}
                                             {% elif order.status == 'pending_verification' %}
-                                                <a href="{% url 'payment:card_pending' order.id %}" class="btn-icon btn-icon--amber" title="پیگیری پرداخت">
+                                                <a href="{% url 'payment:card_pending' order.id %}" class="mk-acc-icon-btn mk-acc-icon-btn--amber" title="پیگیری پرداخت">
                                                     <i class="fas fa-hourglass-half" aria-hidden="true"></i>
                                                 </a>
                                             {% elif order.status == 'pending' and order.payment_method == 'card_transfer' %}
-                                                <a href="{% url 'payment:card_transfer' order.id %}" class="btn-icon btn-icon--accent" title="تکمیل پرداخت">
+                                                <a href="{% url 'payment:card_transfer' order.id %}" class="mk-acc-icon-btn mk-acc-icon-btn--accent" title="تکمیل پرداخت">
                                                     <i class="fas fa-credit-card" aria-hidden="true"></i>
                                                 </a>
                                             {% endif %}
@@ -174,28 +172,40 @@
                         </tbody>
                     </table>
                 </div>
+            </div>
             {% else %}
-                <div class="empty-state">
-                    <i class="fas fa-shopping-bag" aria-hidden="true"></i>
-                    <p>شما هنوز سفارشی ثبت نکرده‌اید.</p>
+                <div class="mk-acc-empty-state">
+                    <span class="mk-acc-empty-state__icon"><i class="fas fa-shopping-bag" aria-hidden="true"></i></span>
+                    <p class="mk-acc-empty-state__title">هنوز سفارشی ثبت نکرده‌اید</p>
+                    <p class="mk-acc-empty-state__text">پس از خرید، وضعیت پرداخت و لینک دانلود اینجا نمایش داده می‌شود.</p>
+                    <a href="{% url 'product_list' %}" class="mk-acc-btn mk-acc-btn--primary">مشاهده محصولات</a>
                 </div>
             {% endif %}
         </div>
         
         <!-- Tab: Licenses -->
-        <div id="tab-licenses" class="tab-content dash-tab-panel"{% if active_tab != 'licenses' %} style="display: none;"{% endif %} data-license-mgmt>
-            <header class="lic-page-head">
-                <div class="lic-page-head-copy">
-                    <h2 class="lic-page-title">لایسنس‌ها</h2>
-                    <p class="lic-page-sub">کلید، دستگاه‌ها و تخصیص تیم</p>
+        <div id="tab-licenses" class="mk-acc-tab-panel tab-content dash-tab-panel"{% if active_tab != 'licenses' %} hidden{% endif %} data-license-mgmt>
+            <header class="mk-account-page-head mk-account-page-head--row">
+                <div>
+                    <h1 class="mk-account-page-head__title">لایسنس‌های من</h1>
+                    <p class="mk-account-page-head__sub">مدیریت کلید، دستگاه‌ها، تمدید و تخصیص تیم</p>
                 </div>
                 {% if products %}
-                <a href="{% url 'product_list' %}" class="lic-page-cta" title="خرید لایسنس">
+                <a href="{% url 'product_list' %}" class="mk-acc-btn mk-acc-btn--primary" title="خرید لایسنس">
                     <i class="fas fa-plus" aria-hidden="true"></i>
-                    <span>خرید</span>
+                    <span>خرید لایسنس</span>
                 </a>
                 {% endif %}
             </header>
+
+            <div class="mk-acc-kpi-strip" aria-label="خلاصه لایسنس">
+                <article class="mk-acc-kpi mk-acc-kpi--violet"><span class="mk-acc-kpi__val">{{ total_licenses }}</span><span class="mk-acc-kpi__lbl">کل کلیدها</span></article>
+                <article class="mk-acc-kpi mk-acc-kpi--green"><span class="mk-acc-kpi__val">{{ active_licenses }}</span><span class="mk-acc-kpi__lbl">فعال</span></article>
+                {% if license_dashboard.pool %}
+                <article class="mk-acc-kpi"><span class="mk-acc-kpi__val">{{ license_dashboard.pool.available }}</span><span class="mk-acc-kpi__lbl">آماده تخصیص</span></article>
+                <article class="mk-acc-kpi"><span class="mk-acc-kpi__val">{{ license_dashboard.pool.assigned }}</span><span class="mk-acc-kpi__lbl">تخصیص تیم</span></article>
+                {% endif %}
+            </div>
 
             {% if license_dashboard.portfolios %}
             <div class="lic-pool-strip" aria-label="خلاصه استخر لایسنس">
@@ -471,12 +481,12 @@
             </div>
 
             {% elif not orders_pending_claim %}
-            <div class="licenses-empty-state licenses-empty-state--compact">
-                <div class="licenses-empty-icon"><i class="fas fa-key" aria-hidden="true"></i></div>
-                <h3 class="licenses-empty-title">لایسنس فعالی ندارید</h3>
-                <p class="licenses-empty-text">برای ربات استخراج و تحلیل بازار، یک لایسنس خریداری کنید.</p>
+            <div class="mk-acc-empty-state">
+                <span class="mk-acc-empty-state__icon"><i class="fas fa-key" aria-hidden="true"></i></span>
+                <p class="mk-acc-empty-state__title">لایسنس فعالی ندارید</p>
+                <p class="mk-acc-empty-state__text">برای ربات استخراج و تحلیل بازار، یک لایسنس خریداری کنید.</p>
                 {% if products %}
-                <a href="{% url 'product_list' %}" class="btn btn-primary btn-buy-license-empty">
+                <a href="{% url 'product_list' %}" class="mk-acc-btn mk-acc-btn--primary">
                     <i class="fas fa-shopping-cart" aria-hidden="true"></i>
                     خرید ربات
                 </a>
@@ -486,30 +496,33 @@
         </div>
 
         <!-- Tab: Downloads -->
-        <div id="tab-downloads" class="tab-content dash-tab-panel dl-tab"{% if active_tab != 'downloads' %} style="display: none;"{% endif %}>
-            <header class="dl-tab-head">
-                <h2 class="dl-tab-title">دانلود اپ‌ها</h2>
-                <p class="dl-tab-sub">ربات ویندوز توصیه‌شده برای استخراج — اپ اندروید برای CRM و موبایل</p>
+        <div id="tab-downloads" class="mk-acc-tab-panel tab-content dash-tab-panel dl-tab"{% if active_tab != 'downloads' %} hidden{% endif %}>
+            <header class="mk-account-page-head">
+                <h1 class="mk-account-page-head__title">دانلود اپ‌ها</h1>
+                <p class="mk-account-page-head__sub">ربات ویندوز برای استخراج — اپ اندروید برای CRM و موبایل</p>
             </header>
-            <div class="dash-downloads-hub">
-                {% include 'includes/app_download_hub.html' with compact=1 show_install_guide=1 %}
+            <div class="mk-acc-panel mk-acc-panel--downloads">
+                <div class="dash-downloads-hub">
+                    {% include 'includes/app_download_hub.html' with compact=1 show_install_guide=1 %}
+                </div>
             </div>
         </div>
         
         <!-- Tab: Transactions -->
-        <div id="tab-transactions" class="tab-content dash-tab-panel"{% if active_tab != 'transactions' %} style="display: none;"{% endif %}>
-            <div class="tab-header dash-txn-head">
+        <div id="tab-transactions" class="mk-acc-tab-panel tab-content dash-tab-panel"{% if active_tab != 'transactions' %} hidden{% endif %}>
+            <header class="mk-account-page-head mk-account-page-head--row">
                 <div>
-                    <h2 class="tab-content-title">تراکنش‌های من</h2>
-                    <p class="dash-txn-subtitle">تاریخچه پرداخت‌های آنلاین و کد پیگیری درگاه زیبال</p>
+                    <h1 class="mk-account-page-head__title">تراکنش‌های من</h1>
+                    <p class="mk-account-page-head__sub">تاریخچه پرداخت‌های آنلاین و کد پیگیری درگاه زیبال</p>
                 </div>
                 {% if transactions %}
-                <span class="dash-txn-count">{{ transactions|length }} تراکنش</span>
+                <span class="mk-acc-head-badge">{{ transactions|length }} تراکنش</span>
                 {% endif %}
-            </div>
+            </header>
 
             {% if transactions %}
-                <div class="dash-txn-cards" aria-label="لیست تراکنش‌ها">
+            <div class="mk-acc-panel mk-acc-panel--table">
+                <div class="dash-txn-cards mk-acc-txn-cards" aria-label="لیست تراکنش‌ها">
                     {% for transaction in transactions %}
                         <article class="dash-txn-card">
                             <div class="dash-txn-card-top">
@@ -530,8 +543,8 @@
                         </article>
                     {% endfor %}
                 </div>
-                <div class="dash-txn-wrap transactions-table-container">
-                    <table class="dash-txn-table">
+                <div class="mk-acc-table-wrap dash-txn-wrap transactions-table-container">
+                    <table class="mk-acc-table dash-txn-table">
                         <thead>
                             <tr>
                                 <th scope="col">کد پیگیری</th>
@@ -574,89 +587,64 @@
                         </tbody>
                     </table>
                 </div>
+            </div>
             {% else %}
-                <div class="empty-state">
-                    <i class="fas fa-exchange-alt" aria-hidden="true"></i>
-                    <p>شما تراکنشی ندارید.</p>
+                <div class="mk-acc-empty-state">
+                    <span class="mk-acc-empty-state__icon"><i class="fas fa-exchange-alt" aria-hidden="true"></i></span>
+                    <p class="mk-acc-empty-state__title">تراکنشی ثبت نشده</p>
+                    <p class="mk-acc-empty-state__text">پس از پرداخت موفق، جزئیات تراکنش اینجا نمایش داده می‌شود.</p>
                 </div>
             {% endif %}
         </div>
         
         <!-- Tab: Affiliate -->
         {% if has_paid_orders %}
-        <div id="tab-affiliate" class="tab-content dash-tab-panel"{% if active_tab != 'affiliate' %} style="display: none;"{% endif %}>
-            <h2 class="tab-content-title mb-4">همکاری در فروش</h2>
+        <div id="tab-affiliate" class="mk-acc-tab-panel tab-content dash-tab-panel"{% if active_tab != 'affiliate' %} hidden{% endif %}>
+            <header class="mk-account-page-head">
+                <h1 class="mk-account-page-head__title">همکاری در فروش</h1>
+                <p class="mk-account-page-head__sub">لینک معرف، کمیسیون، زیرمجموعه و برداشت درآمد</p>
+            </header>
             
             {% if affiliate %}
-                <!-- آمار افیلیت -->
-                <div class="dash-stats-grid dash-stats-grid--affiliate mb-4" aria-label="آمار همکاری در فروش">
-                    <article class="dash-stat-card" data-accent="emerald">
-                        <span class="dash-stat-icon"><i class="fas fa-shopping-bag" aria-hidden="true"></i></span>
-                        <span class="dash-stat-body">
-                            <span class="dash-stat-lbl">فروش</span>
-                            <span class="dash-stat-val">{{ affiliate_stats.total_sales_count }}</span>
-                        </span>
+                <div class="mk-acc-affiliate__stats mk-acc-affiliate__stats--page" aria-label="آمار همکاری در فروش">
+                    <article class="mk-acc-affiliate-stat">
+                        <span class="mk-acc-affiliate-stat__icon"><i class="fas fa-chart-column" aria-hidden="true"></i></span>
+                        <div><span class="mk-acc-affiliate-stat__label">تعداد فروش</span><span class="mk-acc-affiliate-stat__value">{{ affiliate_stats.total_sales_count }}</span></div>
                     </article>
-                    <article class="dash-stat-card" data-accent="violet">
-                        <span class="dash-stat-icon"><i class="fas fa-money-bill-wave" aria-hidden="true"></i></span>
-                        <span class="dash-stat-body">
-                            <span class="dash-stat-lbl">کمیسیون</span>
-                            <span class="dash-stat-val">{{ affiliate_stats.total_commission|floatformat:0 }}<small>ت</small></span>
-                        </span>
+                    <article class="mk-acc-affiliate-stat">
+                        <span class="mk-acc-affiliate-stat__icon"><i class="fas fa-coins" aria-hidden="true"></i></span>
+                        <div><span class="mk-acc-affiliate-stat__label">کل کمیسیون</span><span class="mk-acc-affiliate-stat__value">{{ affiliate_stats.total_commission|currency }} <span class="mk-acc-affiliate-stat__sub">تومان</span></span></div>
                     </article>
-                    <article class="dash-stat-card" data-accent="emerald">
-                        <span class="dash-stat-icon"><i class="fas fa-wallet" aria-hidden="true"></i></span>
-                        <span class="dash-stat-body">
-                            <span class="dash-stat-lbl">موجودی</span>
-                            <span class="dash-stat-val">{{ affiliate_wallet.balance|floatformat:0 }}<small>ت</small></span>
-                        </span>
+                    <article class="mk-acc-affiliate-stat">
+                        <span class="mk-acc-affiliate-stat__icon"><i class="fas fa-wallet" aria-hidden="true"></i></span>
+                        <div><span class="mk-acc-affiliate-stat__label">موجودی کیف پول</span><span class="mk-acc-affiliate-stat__value">{{ affiliate_wallet.balance|currency }} <span class="mk-acc-affiliate-stat__sub">تومان</span></span></div>
                     </article>
-                    <article class="dash-stat-card" data-accent="sky">
-                        <span class="dash-stat-icon"><i class="fas fa-chart-line" aria-hidden="true"></i></span>
-                        <span class="dash-stat-body">
-                            <span class="dash-stat-lbl">درآمد</span>
-                            <span class="dash-stat-val">{{ affiliate_wallet.total_earned|floatformat:0 }}<small>ت</small></span>
-                        </span>
-                    </article>
-                    <article class="dash-stat-card" data-accent="amber">
-                        <span class="dash-stat-icon"><i class="fas fa-users" aria-hidden="true"></i></span>
-                        <span class="dash-stat-body">
-                            <span class="dash-stat-lbl">زیرمجموعه</span>
-                            <span class="dash-stat-val">{{ affiliate_stats.referred_users_count|default:0 }}<small>{{ affiliate_stats.referred_users_without_orders|default:0 }} بدون خرید</small></span>
-                        </span>
+                    <article class="mk-acc-affiliate-stat">
+                        <span class="mk-acc-affiliate-stat__icon"><i class="fas fa-users" aria-hidden="true"></i></span>
+                        <div><span class="mk-acc-affiliate-stat__label">زیرمجموعه</span><span class="mk-acc-affiliate-stat__value">{{ affiliate_stats.referred_users_count|default:0 }}</span><span class="mk-acc-affiliate-stat__sub">{{ affiliate_stats.referred_users_without_orders|default:0 }} در انتظار خرید</span></div>
                     </article>
                 </div>
                 
-                <!-- زیرمجموعه‌ها -->
                 {% with referred_users=affiliate_stats.referred_users referred_users_count=affiliate_stats.referred_users_count referred_users_with_orders=affiliate_stats.referred_users_with_orders referred_users_without_orders=affiliate_stats.referred_users_without_orders referred_users_has_more=affiliate_stats.referred_users_has_more %}
-                <div class="section-card mb-4 mk-affiliate-dashboard-embed">
+                <div class="mk-acc-panel mk-affiliate-dashboard-embed">
                     {% include 'includes/affiliate_referred_users.html' %}
                 </div>
                 {% endwith %}
                 
-                <!-- لینک معرف -->
-                <div class="section-card mb-4">
-                    <h3 class="section-title">
-                        <i class="fas fa-link" aria-hidden="true"></i> لینک معرف شما
-                    </h3>
-                    <div class="affiliate-modern-link-input-group">
-                        <input type="text" value="{{ affiliate_stats.referral_url }}" readonly class="affiliate-modern-link-input" id="affiliateReferralLink">
-                        <button type="button" class="affiliate-modern-link-btn" onclick="copyAffiliateLink()" aria-label="کپی لینک معرف">
+                <div class="mk-acc-panel">
+                    <h3 class="mk-acc-panel__title"><i class="fas fa-link" aria-hidden="true"></i> لینک معرف شما</h3>
+                    <div class="mk-acc-affiliate__link-row">
+                        <input type="text" value="{{ affiliate_stats.referral_url }}" readonly class="mk-acc-affiliate__link-input" id="affiliateReferralLink" dir="ltr">
+                        <button type="button" class="mk-acc-affiliate__copy-btn" data-copy-target="affiliateReferralLink" aria-label="کپی لینک معرف">
                             <i class="fas fa-copy" aria-hidden="true"></i>
-                            <span class="affiliate-copy-text">کپی</span>
+                            <span class="mk-acc-affiliate__copy-text">کپی</span>
                         </button>
                     </div>
-                    <p class="affiliate-modern-code mt-2">
-                        کد معرف: <strong>{{ affiliate.code }}</strong>
-                    </p>
-                    <p class="empty-text mt-2">
-                        <i class="fas fa-info-circle" aria-hidden="true"></i>
-                        با اشتراک‌گذاری لینک، کاربران دعوت‌شده تخفیف می‌گیرند و شما کمیسیون دریافت می‌کنید.
-                    </p>
+                    <p class="mk-acc-affiliate__code">کد معرف: <strong dir="ltr">{{ affiliate.code }}</strong></p>
+                    <p class="mk-acc-panel__hint"><i class="fas fa-info-circle" aria-hidden="true"></i> با اشتراک‌گذاری لینک، کاربران دعوت‌شده تخفیف می‌گیرند و شما کمیسیون دریافت می‌کنید.</p>
                 </div>
                 
-                <!-- کیف پول و اقدامات -->
-                <div class="wallet-minimal-card">
+                <div class="mk-acc-wallet-card wallet-minimal-card">
                     <div class="wallet-minimal-content">
                         <div class="wallet-minimal-info">
                             <div class="wallet-minimal-label">
@@ -688,69 +676,47 @@
                     </div>
                 </div>
                 
-                <!-- فروش‌های اخیر -->
-                <div class="section-card mb-4">
-                    <h3 class="section-title mb-3">
-                        <i class="fas fa-shopping-bag" aria-hidden="true"></i> فروش‌های اخیر
-                    </h3>
+                <div class="mk-acc-panel">
+                    <div class="mk-acc-panel__head">
+                        <h3 class="mk-acc-panel__title"><i class="fas fa-shopping-bag" aria-hidden="true"></i> فروش‌های اخیر</h3>
+                        <a href="{% url 'affiliate_dashboard' %}" class="mk-acc-panel__link" target="_blank">مشاهده همه</a>
+                    </div>
                     {% if affiliate_stats.recent_sales %}
-                        <div class="sales-list">
+                        <div class="mk-acc-list">
                             {% for sale in affiliate_stats.recent_sales %}
-                                <div class="preview-item">
-                                    <div class="preview-info">
+                                <article class="mk-acc-list-item">
+                                    <div class="mk-acc-list-item__main">
                                         <strong>{{ sale.order.product.title }}</strong>
-                                        <span class="preview-meta">
-                                            مبلغ سفارش: {{ sale.order.amount|floatformat:0 }} تومان
-                                        </span>
-                                        <span class="preview-meta">
-                                            کمیسیون: <span style="color: var(--color-success); font-weight: 700;">{{ sale.commission_amount|floatformat:0 }} تومان</span> ({{ sale.commission_rate }}%)
-                                        </span>
-                                        <span class="preview-meta">
-                                            تاریخ: {{ sale.created_at|to_jalali }}
-                                        </span>
+                                        <span>مبلغ: {{ sale.order.amount|currency }} تومان · کمیسیون: {{ sale.commission_amount|currency }} تومان ({{ sale.commission_rate }}%)</span>
+                                        <span>{{ sale.created_at|to_jalali }}</span>
                                     </div>
-                                    <div>
-                                        <span class="badge badge-success">{{ sale.get_status_display }}</span>
-                                    </div>
-                                </div>
+                                    <span class="mk-acc-status-pill mk-acc-status-pill--paid">{{ sale.get_status_display }}</span>
+                                </article>
                             {% endfor %}
                         </div>
-                        <div class="text-center mt-3">
-                            <a href="{% url 'affiliate_dashboard' %}" class="btn btn-outline" target="_blank">
-                                مشاهده همه فروش‌ها
-                                <i class="fas fa-arrow-left" aria-hidden="true"></i>
-                            </a>
-                        </div>
                     {% else %}
-                        <div class="empty-state">
-                            <i class="fas fa-shopping-bag" aria-hidden="true"></i>
-                            <p>هنوز فروشی ثبت نشده است.</p>
-                        </div>
+                        <p class="mk-acc-empty">هنوز فروشی ثبت نشده است.</p>
                     {% endif %}
                 </div>
             {% else %}
-                <div class="section-card">
-                    <div class="empty-state">
-                        <i class="fas fa-hourglass" aria-hidden="true"></i>
-                        <p>در حال ایجاد حساب افیلیت شما...</p>
-                        <p style="font-size: var(--font-size-sm); margin-top: var(--spacing-sm);">
-                            لطفاً چند لحظه صبر کنید و صفحه را رفرش کنید.
-                        </p>
-                    </div>
+                <div class="mk-acc-empty-state">
+                    <span class="mk-acc-empty-state__icon"><i class="fas fa-hourglass" aria-hidden="true"></i></span>
+                    <p class="mk-acc-empty-state__title">در حال ایجاد حساب افیلیت</p>
+                    <p class="mk-acc-empty-state__text">لطفاً چند لحظه صبر کنید و صفحه را رفرش کنید.</p>
                 </div>
             {% endif %}
         </div>
         {% endif %}
         
         <!-- Tab: Profile -->
-        <div id="tab-profile" class="tab-content dash-tab-panel prof-tab"{% if active_tab != 'profile' %} style="display: none;"{% endif %}>
-            <header class="prof-head">
-                <h2 class="prof-head-title">پروفایل</h2>
-                <p class="prof-head-sub">حساب کاربری و برند عمومی برای اشتراک با مشتری</p>
+        <div id="tab-profile" class="mk-acc-tab-panel tab-content dash-tab-panel prof-tab"{% if active_tab != 'profile' %} hidden{% endif %}>
+            <header class="mk-account-page-head">
+                <h1 class="mk-account-page-head__title">پروفایل</h1>
+                <p class="mk-account-page-head__sub">حساب کاربری و برند عمومی برای اشتراک با مشتری</p>
             </header>
 
-            <div class="prof-grid">
-                <section class="prof-card">
+            <div class="prof-grid mk-acc-profile-grid">
+                <section class="prof-card mk-acc-panel">
                     <header class="prof-card-head">
                         <h3 class="prof-card-title">حساب کاربری</h3>
                         <button type="button" class="prof-edit-btn" onclick="openUserInfoModal()">
@@ -777,7 +743,7 @@
                     </dl>
                 </section>
 
-                <section class="prof-card">
+                <section class="prof-card mk-acc-panel">
                     <header class="prof-card-head">
                         <div class="prof-card-head-main">
                             {% if user.profile and user.profile.avatar %}
@@ -1770,7 +1736,7 @@ function copyAffiliateLinkOverview() {
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'js/mizkar-account-shell.js' %}?v=1"></script>
+<script src="{% static 'js/mizkar-account-shell.js' %}?v=2"></script>
 <script>
 (function initDashboardFooterAccordion() {
     if (!document.body.classList.contains('mk-account-dashboard')) return;

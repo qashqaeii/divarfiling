@@ -1,0 +1,16 @@
+<nav class="mk-account-breadcrumb" aria-label="مسیر">
+    <a href="{% url 'home' %}"><i class="fas fa-house" aria-hidden="true"></i></a>
+    <span class="mk-account-breadcrumb__sep" aria-hidden="true">/</span>
+    <a href="{{ dashboard_tab_urls.overview }}">حساب کاربری</a>
+    <span class="mk-account-breadcrumb__sep" aria-hidden="true">/</span>
+    <span class="mk-account-breadcrumb__current">
+        {% if active_tab == 'overview' %}نمای کلی
+        {% elif active_tab == 'orders' %}سفارش‌ها
+        {% elif active_tab == 'licenses' %}لایسنس‌ها
+        {% elif active_tab == 'downloads' %}دانلود اپ‌ها
+        {% elif active_tab == 'transactions' %}تراکنش‌ها
+        {% elif active_tab == 'affiliate' %}همکاری در فروش
+        {% elif active_tab == 'profile' %}پروفایل
+        {% else %}حساب کاربری{% endif %}
+    </span>
+</nav>

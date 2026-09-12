@@ -38,13 +38,9 @@ def get_membership(user) -> Optional[CRMAgencyMember]:
         return cached
 
     membership = (
-
         CRMAgencyMember.objects
-
         .filter(user=user, is_active=True)
-
         .select_related('agency', 'user')
-
         .annotate(
             role_rank=Case(
                 When(role='owner', then=Value(0)),
@@ -55,13 +51,12 @@ def get_membership(user) -> Optional[CRMAgencyMember]:
                 output_field=IntegerField(),
             ),
         )
-
         .order_by('role_rank', 'joined_at')
-
         .first()
-
     )
-    setattr(user, '_cached_crm_membership', membership)
+    # فقط عضویت مثبت cache شود — cache کردن None بعد از create_agency عضویت را stale می‌کند.
+    if membership is not None:
+        setattr(user, '_cached_crm_membership', membership)
     return membership
 
 

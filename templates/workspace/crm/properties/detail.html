@@ -376,7 +376,7 @@
             </div>
             {% endif %}
 
-            {% if crm_agency and is_property_owner %}
+            {% if can_share_team_resources and is_property_owner %}
             <div class="crm-prop-hero-share-block" data-crm-property-team data-property-id="{{ property.pk }}">
             <div class="crm-prop-share-bar">
                 <span class="crm-prop-share-bar-label" title="فایل خصوصی شما — فقط با ارسال صریح در اختیار هم‌تیمی قرار می‌گیرد">
@@ -997,7 +997,7 @@
 {% if can_create_deal %}
 <script src="{% static 'workspace/js/crm-property-deal-create.js' %}?v=6"></script>
 {% endif %}
-{% if crm_agency and is_property_owner %}
+{% if can_share_team_resources and is_property_owner %}
 <script>
 window.crmPropShareUrl = "{% url 'workspace:crm_property_share' property.id %}";
 window.crmShareRevokeUrlTemplate = "{% url 'workspace:crm_share_revoke' share_id=0 %}".replace('/0/', '/{id}/');

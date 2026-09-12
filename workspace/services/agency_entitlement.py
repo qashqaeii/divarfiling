@@ -159,6 +159,15 @@ def can_access_agency_hub(user) -> bool:
     return has_assigned_agency_seat(user)
 
 
+def can_share_team_resources(user) -> bool:
+    """اشتراک CRM با هم‌تیمی — فقط عضو آژانس با دسترسی فعال (مالک اشتراک یا مشاور با لایسنس)."""
+    if not user or not user.is_authenticated:
+        return False
+    if not _get_membership(user):
+        return False
+    return can_access_agency_hub(user)
+
+
 def can_manage_agency(user, agency: Optional[CRMAgency] = None) -> bool:
     if not user or not user.is_authenticated:
         return False

@@ -231,7 +231,7 @@
             </div>
             {% endif %}
         </div>
-        {% if crm_agency %}
+        {% if can_share_team_resources %}
         <div class="crm-contact-hero__team crm-contact-team-bar crm-contact-team-bar--compact" data-crm-contact-team data-customer-id="{{ customer.pk }}">
                 {% if customer_is_shared %}
                 {% include 'workspace/crm/includes/shared_view_badge.html' with share=customer_share %}
@@ -1311,7 +1311,7 @@
 <script>window.crmTypeProfiles = {{ type_profiles_json|safe }};</script>
 <script>window.crmLeaseDeadlineTypes = {{ lease_deadline_types_json|safe }};</script>
 <script>window.crmContactStatusUrl = "{% url 'workspace:crm_contact_status' customer.id %}";</script>
-{% if crm_agency and is_customer_owner %}
+{% if can_share_team_resources and is_customer_owner %}
 <script>
 window.crmTeamShareUrl = "{% url 'workspace:crm_team_assign' customer.id %}";
 window.crmTeamTransferUrl = "{% url 'workspace:crm_team_transfer' customer.id %}";

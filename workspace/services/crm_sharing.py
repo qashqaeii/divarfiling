@@ -7,6 +7,7 @@ from django.db import transaction
 
 from workspace.models import CRMAgencyMember, CRMDeal, CRMProperty, CRMResourceShare, Customer
 from workspace.services.crm import log_activity
+from workspace.services.agency_entitlement import can_share_team_resources
 from workspace.services.crm_scope import get_membership
 
 
@@ -18,6 +19,8 @@ def _agency_member(agency, user_id: int) -> CRMAgencyMember:
 def share_customer(actor, customer: Customer, to_member_id: int, *, note: str = '') -> CRMResourceShare:
     if customer.user_id != actor.id:
         raise ValueError('فقط مالک مخاطب می‌تواند آن را به اشتراک بگذارد')
+    if not can_share_team_resources(actor):
+        raise ValueError('اشتراک با هم‌تیمی فقط برای اعضای آژانس با لایسنس فعال است')
     m = get_membership(actor)
     if not m or customer.agency_id != m.agency_id:
         raise ValueError('مخاطب در آژانس شما نیست')
@@ -56,6 +59,8 @@ def share_property(
 ) -> CRMResourceShare:
     if prop.user_id != actor.id:
         raise ValueError('فقط مالک ملک می‌تواند آن را به اشتراک بگذارد')
+    if not can_share_team_resources(actor):
+        raise ValueError('اشتراک با هم‌تیمی فقط برای اعضای آژانس با لایسنس فعال است')
     m = get_membership(actor)
     if not m:
         raise ValueError('عضویت آژانس یافت نشد')

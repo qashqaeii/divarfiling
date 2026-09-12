@@ -235,7 +235,10 @@ class CRMContextMixin:
         ctx['can_manage_team'] = can_manage_team(user)
         ctx['can_view_team_performance'] = can_view_team_performance(user)
         ctx['can_assign_contacts'] = can_manage_team(user)
-        ctx['can_share_resources'] = bool(get_membership(user))
+        from workspace.services.agency_entitlement import can_share_team_resources
+
+        ctx['can_share_team_resources'] = can_share_team_resources(user)
+        ctx['can_share_resources'] = ctx['can_share_team_resources']
         if membership:
             ctx['agency_members'] = list(agency_members(membership.agency))
         else:
@@ -3982,6 +3985,12 @@ class CRMTeamAssignView(LoginRequiredMixin, View):
             return JsonResponse({'ok': False, 'error': 'مخاطب یافت نشد'}, status=404)
         if not is_customer_owner(request.user, customer):
             return JsonResponse({'ok': False, 'error': 'فقط مالک می‌تواند به اشتراک بگذارد'}, status=403)
+        from workspace.services.agency_entitlement import can_share_team_resources
+        if not can_share_team_resources(request.user):
+            return JsonResponse(
+                {'ok': False, 'error': 'اشتراک با هم‌تیمی فقط برای اعضای آژانس با لایسنس فعال است'},
+                status=403,
+            )
         try:
             assign_customer(request.user, customer, int(request.POST.get('member_id', 0)))
         except ValueError as exc:
@@ -4014,6 +4023,12 @@ class CRMPropertyShareView(LoginRequiredMixin, View):
             return JsonResponse({'ok': False, 'error': 'ملک یافت نشد'}, status=404)
         if not is_property_owner(request.user, prop):
             return JsonResponse({'ok': False, 'error': 'فقط مالک می‌تواند به اشتراک بگذارد'}, status=403)
+        from workspace.services.agency_entitlement import can_share_team_resources
+        if not can_share_team_resources(request.user):
+            return JsonResponse(
+                {'ok': False, 'error': 'اشتراک با هم‌تیمی فقط برای اعضای آژانس با لایسنس فعال است'},
+                status=403,
+            )
         try:
             share_property(
                 request.user,

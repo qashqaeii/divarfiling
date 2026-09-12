@@ -227,7 +227,7 @@ class AgencyHubTVView(CRMContextMixin, AgencyTeamHubRequiredMixin, LoginRequired
 
     def dispatch(self, request, *args, **kwargs):
         from django.contrib import messages
-        from workspace.services.agency_entitlement import is_agency_feature_enabled
+        from workspace.services.crm_agency_features import is_agency_feature_enabled
         from workspace.services.crm_scope import get_membership
 
         membership = get_membership(request.user)

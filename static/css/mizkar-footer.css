@@ -4,13 +4,15 @@
 
 .mk-footer-v2 {
     --mk-ft-ease: cubic-bezier(0.16, 1, 0.3, 1);
-    --mk-ft-bg-top: #0a1020;
-    --mk-ft-bg-bottom: #060912;
-    --mk-ft-bg-gradient:
-        radial-gradient(ellipse 70% 55% at 15% 0%, rgba(124, 58, 237, 0.16), transparent 58%),
-        radial-gradient(ellipse 55% 45% at 88% 20%, rgba(14, 165, 233, 0.1), transparent 55%),
-        linear-gradient(180deg, var(--mk-ft-bg-top) 0%, var(--mk-ft-bg-bottom) 100%);
-    --mk-ft-wave-fill: var(--mk-ft-bg-top);
+    --mk-ft-bg-top: #000000;
+    --mk-ft-bg-bottom: #000000;
+    --mk-ft-bg-image: url('../images/footer-bg.webp');
+    --mk-ft-bg-overlay:
+        linear-gradient(180deg, rgba(0, 0, 0, 0.88) 0%, rgba(0, 0, 0, 0.62) 48%, rgba(0, 0, 0, 0.28) 100%),
+        radial-gradient(ellipse 70% 55% at 15% 0%, rgba(124, 58, 237, 0.14), transparent 58%),
+        radial-gradient(ellipse 55% 45% at 88% 20%, rgba(14, 165, 233, 0.08), transparent 55%);
+    --mk-ft-bg-gradient: var(--mk-ft-bg-overlay), var(--mk-ft-bg-image);
+    --mk-ft-wave-fill: #000000;
     --mk-ft-surface: rgba(255, 255, 255, 0.05);
     --mk-ft-surface-hover: rgba(255, 255, 255, 0.08);
     --mk-ft-border: rgba(148, 163, 184, 0.14);
@@ -32,7 +34,11 @@
 
 /* Beat global .footer / .mk-footer-pro rules from mizkar-public.css */
 html.mk-public .footer.mk-footer-pro.mk-footer-v2 {
-    background: var(--mk-ft-bg-gradient) !important;
+    background-color: #000 !important;
+    background-image: var(--mk-ft-bg-gradient) !important;
+    background-repeat: no-repeat;
+    background-position: center bottom;
+    background-size: cover;
     border-top: none !important;
     color: var(--mk-ft-text) !important;
 }
@@ -47,25 +53,26 @@ html.mk-public .footer.mk-footer-pro.mk-footer-v2.footer::before {
 }
 
 html.mk-public[data-theme="light"] .mk-footer-v2 {
-    --mk-ft-bg-top: #f8fafc;
-    --mk-ft-bg-bottom: #eef2ff;
-    --mk-ft-bg-gradient:
-        radial-gradient(ellipse 75% 60% at 12% 0%, rgba(124, 58, 237, 0.07), transparent 58%),
-        radial-gradient(ellipse 60% 50% at 92% 15%, rgba(14, 165, 233, 0.06), transparent 55%),
-        linear-gradient(180deg, var(--mk-ft-bg-top) 0%, var(--mk-ft-bg-bottom) 100%);
-    --mk-ft-wave-fill: #f1f5f9;
-    --mk-ft-surface: rgba(255, 255, 255, 0.92);
-    --mk-ft-surface-hover: #ffffff;
-    --mk-ft-border: rgba(124, 58, 237, 0.1);
-    --mk-ft-text: #0f172a;
-    --mk-ft-muted: #64748b;
-    --mk-ft-accent: #6d28d9;
-    --mk-ft-accent-strong: #7c3aed;
-    --mk-ft-link-hover: #5b21b6;
-    --mk-ft-glow-a: rgba(124, 58, 237, 0.1);
-    --mk-ft-glow-b: rgba(14, 165, 233, 0.08);
-    --mk-ft-card-shadow: 0 14px 36px -22px rgba(15, 23, 42, 0.14);
-    --mk-ft-logo-bg: #ffffff;
+    --mk-ft-bg-top: #000000;
+    --mk-ft-bg-bottom: #000000;
+    --mk-ft-bg-overlay:
+        linear-gradient(180deg, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.68) 50%, rgba(0, 0, 0, 0.32) 100%),
+        radial-gradient(ellipse 75% 60% at 12% 0%, rgba(124, 58, 237, 0.12), transparent 58%),
+        radial-gradient(ellipse 60% 50% at 92% 15%, rgba(14, 165, 233, 0.08), transparent 55%);
+    --mk-ft-bg-gradient: var(--mk-ft-bg-overlay), var(--mk-ft-bg-image);
+    --mk-ft-wave-fill: #000000;
+    --mk-ft-surface: rgba(255, 255, 255, 0.06);
+    --mk-ft-surface-hover: rgba(255, 255, 255, 0.1);
+    --mk-ft-border: rgba(148, 163, 184, 0.16);
+    --mk-ft-text: #f1f5f9;
+    --mk-ft-muted: #94a3b8;
+    --mk-ft-accent: #c4b5fd;
+    --mk-ft-accent-strong: #a78bfa;
+    --mk-ft-link-hover: #ffffff;
+    --mk-ft-glow-a: rgba(124, 58, 237, 0.18);
+    --mk-ft-glow-b: rgba(56, 189, 248, 0.1);
+    --mk-ft-card-shadow: 0 16px 40px -24px rgba(0, 0, 0, 0.45);
+    --mk-ft-logo-bg: rgba(255, 255, 255, 0.94);
 }
 
 .mk-footer-v2.footer::before {

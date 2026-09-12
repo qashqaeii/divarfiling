@@ -1,0 +1,51 @@
+<div class="ecc-ct-modal" id="card-transfer-approve-modal" hidden aria-hidden="true">
+    <div class="ecc-ct-modal-backdrop" data-close-modal></div>
+    <div class="ecc-ct-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="card-approve-title">
+        <header class="ecc-ct-modal-head">
+            <h3 id="card-approve-title">تأیید پرداخت کارت‌به‌کارت</h3>
+            <button type="button" class="ecc-ct-modal-close" data-close-modal aria-label="بستن"><i class="fas fa-times"></i></button>
+        </header>
+        <div class="ecc-ct-modal-body">
+            <p>با تأیید، سفارش پرداخت‌شده ثبت می‌شود و لایسنس کاربر به‌صورت خودکار فعال خواهد شد.</p>
+            <ul class="ecc-ct-modal-summary">
+                <li><span>کاربر</span><strong id="card-approve-user">—</strong></li>
+                <li><span>پلن</span><strong id="card-approve-plan">—</strong></li>
+                <li><span>مبلغ</span><strong id="card-approve-amount">—</strong></li>
+                <li><span>تعداد</span><strong id="card-approve-quantity">—</strong></li>
+            </ul>
+        </div>
+        <footer class="ecc-ct-modal-foot">
+            <button type="button" class="ecc-btn ecc-btn--ghost" data-close-modal>انصراف</button>
+            <form method="post" id="card-approve-form" action="">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                <button type="submit" class="ecc-btn ecc-btn--primary">تأیید و فعال‌سازی لایسنس</button>
+            </form>
+        </footer>
+    </div>
+</div>
+
+<div class="ecc-ct-modal" id="card-transfer-reject-modal" hidden aria-hidden="true">
+    <div class="ecc-ct-modal-backdrop" data-close-modal></div>
+    <div class="ecc-ct-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="card-reject-title">
+        <header class="ecc-ct-modal-head">
+            <h3 id="card-reject-title">رد پرداخت</h3>
+            <button type="button" class="ecc-ct-modal-close" data-close-modal aria-label="بستن"><i class="fas fa-times"></i></button>
+        </header>
+        <div class="ecc-ct-modal-body">
+            <p id="card-reject-text">آیا از رد این پرداخت مطمئن هستید؟</p>
+            <form method="post" id="card-reject-form" action="">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                <label class="ecc-ct-field">
+                    <span>یادداشت مدیر (اختیاری)</span>
+                    <textarea name="admin_note" rows="3" placeholder="دلیل رد برای ثبت داخلی"></textarea>
+                </label>
+                <footer class="ecc-ct-modal-foot ecc-ct-modal-foot--inline">
+                    <button type="button" class="ecc-btn ecc-btn--ghost" data-close-modal>انصراف</button>
+                    <button type="submit" class="ecc-btn ecc-btn--ghost ecc-btn--danger">رد پرداخت</button>
+                </footer>
+            </form>
+        </div>
+    </div>
+</div>

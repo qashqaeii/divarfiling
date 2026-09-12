@@ -129,3 +129,145 @@ def notify_marketing(
         log.mark_failed(str(exc))
         logger.warning('marketing SMS failed phone=%s**** err=%s', phone[:4], exc.code)
         return False, log
+
+
+def _send_templated_or_simple_sms(
+    phone: str,
+    *,
+    purpose: str,
+    text: str,
+    attributes: dict | None = None,
+) -> bool:
+    """ارسال پیامک با الگو یا متن ساده — لاگ در SmsMessageLog."""
+    phone = normalize_phone(phone)
+    if not phone:
+        return False
+    pattern = (getattr(settings, 'FARAZSMS_PATTERNS', {}) or {}).get(purpose) or ''
+    log = SmsMessageLog.objects.create(
+        phone=phone,
+        purpose=purpose,
+        channel=SmsMessageLog.Channel.PATTERN if pattern else SmsMessageLog.Channel.SIMPLE,
+        provider=getattr(settings, 'SMS_PROVIDER', 'console'),
+        pattern_code=pattern,
+        status=SmsMessageLog.Status.PENDING,
+    )
+    try:
+        if pattern:
+            result = send_pattern_sms(phone, purpose=purpose, attributes=attributes or {})
+        else:
+            result = send_simple_sms(phone, text)
+        log.mark_sent(
+            provider=result.provider,
+            message_id=result.message_id,
+            status=SmsMessageLog.Status.FAKE if result.is_fake else SmsMessageLog.Status.SENT,
+        )
+        return True
+    except SmsError as exc:
+        log.mark_failed(str(exc))
+        logger.warning('%s SMS failed phone=%s**** err=%s', purpose, phone[:4], exc.code)
+        return False
+
+
+def notify_card_transfer_admin_review(submission) -> bool:
+    """اطلاع‌رسانی به مدیر — پرداخت کارت‌به‌کارت جدید."""
+    from shop.services.card_transfer_workflow import (
+        admin_sms_already_sent,
+        get_admin_notification_phones,
+        mark_admin_sms_sent,
+    )
+
+    if admin_sms_already_sent(submission):
+        return True
+
+    order = submission.order
+    user = order.user
+    amount = int(order.amount or 0)
+    order_ref = str(order.pk)[:8]
+    user_label = user.get_full_name() or user.username or 'کاربر'
+    plan_name = order.plan.name if order.plan_id else order.product.title
+
+    text = (
+        'پرداخت کارت‌به‌کارت جدید ثبت شد.\n'
+        f'مبلغ: {amount:,} تومان\n'
+        f'سفارش: {order_ref}\n'
+        f'کاربر: {user_label}\n'
+        f'پلن: {plan_name}\n'
+        'برای بررسی وارد پنل مدیریت شوید.'
+    )
+    attrs = {
+        'amount': str(amount),
+        'order': order_ref,
+        'user': user_label[:40],
+        'plan': (plan_name or '')[:40],
+    }
+
+    phones = get_admin_notification_phones()
+    if not phones:
+        logger.warning('no admin phones for card transfer submission_id=%s', submission.pk)
+        return False
+
+    sent_any = False
+    for phone in phones:
+        if _send_templated_or_simple_sms(
+            phone,
+            purpose='card_transfer_admin_review',
+            text=text,
+            attributes=attrs,
+        ):
+            sent_any = True
+
+    if sent_any:
+        mark_admin_sms_sent(submission.pk)
+    return sent_any
+
+
+def notify_card_transfer_approved(submission) -> bool:
+    """پیامک تأیید پرداخت و فعال‌سازی لایسنس برای کاربر."""
+    order = submission.order
+    user = order.user
+    phone = normalize_phone(getattr(user, 'phone', '') or '')
+    if not phone:
+        return False
+
+    from workspace.services.agency_entitlement import is_agency_plan_order
+
+    if is_agency_plan_order(order):
+        text = (
+            'پرداخت شما تأیید شد ✅\n'
+            'پلن آژانس فعال شد.\n'
+            'اکنون می‌توانید آژانس خود را راه‌اندازی و مشاوران را دعوت کنید.'
+        )
+        plan_label = 'پلن آژانس'
+    else:
+        text = (
+            'پرداخت شما تأیید شد ✅\n'
+            'لایسنس فایلینگ دیوار فعال شد.\n'
+            'برای استفاده وارد میزکار شوید.'
+        )
+        plan_label = order.plan.name if order.plan_id else 'لایسنس'
+
+    return _send_templated_or_simple_sms(
+        phone,
+        purpose='card_transfer_license_activated',
+        text=text,
+        attributes={'plan': plan_label[:40]},
+    )
+
+
+def notify_card_transfer_rejected(submission) -> bool:
+    """پیامک رد پرداخت کارت‌به‌کارت برای کاربر."""
+    order = submission.order
+    user = order.user
+    phone = normalize_phone(getattr(user, 'phone', '') or '')
+    if not phone:
+        return False
+
+    text = (
+        'پرداخت کارت‌به‌کارت شما تأیید نشد.\n'
+        'برای بررسی بیشتر با پشتیبانی تماس بگیرید.'
+    )
+    return _send_templated_or_simple_sms(
+        phone,
+        purpose='card_transfer_rejected',
+        text=text,
+    )

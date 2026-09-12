@@ -402,7 +402,7 @@ def build_support_action_items(snapshot: Dict[str, int]) -> List[Dict[str, Any]]
             'icon': 'fa-money-check',
             'accent': 'amber',
             'cta': 'بررسی',
-            'href': '#support-table-card',
+            'href': reverse('admin_panel_sales') + '#sales-card-transfers',
         })
 
     withdrawals_pending = snapshot.get('pending_withdrawals', 0)
@@ -447,20 +447,9 @@ def _serialize_tickets(tickets) -> List[Dict[str, Any]]:
 
 
 def _serialize_card_transfers(items) -> List[Dict[str, Any]]:
-    rows = []
-    for ct in items:
-        rows.append({
-            'id': ct.pk,
-            'order_id': str(ct.order_id)[:8],
-            'user_display': ct.order.user.get_full_name() or ct.order.user.username,
-            'reference_number': ct.reference_number,
-            'payer_name': ct.payer_name or '—',
-            'amount': int(ct.order.amount or 0),
-            'status_label': ct.get_status_display(),
-            'created_at': ct.created_at,
-            'admin_url': _admin_card_url(ct.pk),
-        })
-    return rows
+    from shop.services.card_transfer_workflow import serialize_card_transfer_row
+
+    return [serialize_card_transfer_row(ct) for ct in items]
 
 
 def _serialize_withdrawals(items) -> List[Dict[str, Any]]:

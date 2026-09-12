@@ -33,6 +33,7 @@ from accounts.services.admin_dashboard import (
 )
 from accounts.services.pending_orders import PENDING_ORDER_STATUSES
 from shop.models import CardTransferSubmission, LicensePlan, Order
+from shop.services.card_transfer_workflow import serialize_pending_card_transfers
 
 SALES_EXPORT_KEYS = (
     'paid_orders',
@@ -349,8 +350,8 @@ def build_sales_action_items() -> List[Dict[str, Any]]:
             'detail': f'{card_pending} واریز در انتظار تأیید',
             'icon': 'fa-money-check',
             'accent': 'cyan',
-            'cta': 'بررسی',
-            'href': reverse('admin_panel_export', args=['card_transfers_pending']) + '?format=xlsx',
+            'cta': 'بررسی پرداخت‌ها',
+            'href': '#sales-card-transfers',
         })
     return items
 
@@ -434,6 +435,8 @@ def get_sales_center_context(*, days: int = 30, compare: bool = False) -> Dict[s
         'failed_orders': get_failed_orders_recent(limit=TABLE_PREVIEW_ROWS),
         'pending_orders': get_pending_orders(limit=TABLE_PREVIEW_ROWS),
         'pending_card_transfers': get_pending_card_transfers(limit=TABLE_PREVIEW_ROWS),
+        'card_transfer_rows': serialize_pending_card_transfers(limit=TABLE_PREVIEW_ROWS),
+        'card_transfer_pending_count': CardTransferSubmission.objects.filter(status='pending').count(),
         'export_links': get_sales_export_links(days),
         'recovery_center_url': reverse('admin_panel_recovery_center') + f'?days={days}',
         'table_fetch_limit': TABLE_FETCH_LIMIT,

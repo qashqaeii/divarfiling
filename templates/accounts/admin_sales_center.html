@@ -19,7 +19,13 @@
 </a>
 {% endblock %}
 
+{% block admin_panel_extra_css %}
+<link rel="stylesheet" href="{% static 'css/mizkar-admin-card-transfer.css' %}?v=1">
+{% endblock %}
+
 {% block admin_panel_content %}
+
+{% include 'accounts/partials/admin_card_transfer_review.html' %}
 
 <section class="ecc-section ecc-cmd-kpi" aria-label="شاخص‌های فروش">
     <div class="ecc-kpi-grid ecc-kpi-grid--cmd">
@@ -304,4 +310,5 @@ window.admCharts = {{ charts_json|safe }};
 window.admChartDays = {{ chart_days }};
 </script>
 <script src="{% static 'js/mizkar-admin-dashboard.js' %}?v=13"></script>
+<script src="{% static 'js/mizkar-admin-card-transfer.js' %}?v=1"></script>
 {% endblock %}

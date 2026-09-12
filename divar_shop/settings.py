@@ -401,7 +401,12 @@ FARAZSMS_PATTERNS = {
     'system': config('FARAZSMS_PATTERN_SYSTEM', default=''),
     'marketing': config('FARAZSMS_PATTERN_MARKETING', default=''),
     'contract_otp': config('FARAZSMS_PATTERN_CONTRACT_OTP', default=''),
+    'card_transfer_admin_review': config('FARAZSMS_PATTERN_CARD_TRANSFER_ADMIN', default=''),
+    'card_transfer_license_activated': config('FARAZSMS_PATTERN_CARD_TRANSFER_ACTIVATED', default=''),
+    'card_transfer_rejected': config('FARAZSMS_PATTERN_CARD_TRANSFER_REJECTED', default=''),
 }
+# شماره‌های مدیر برای اعلان کارت‌به‌کارت (جدا با کاما) — در صورت خالی، staff فعال
+CARD_TRANSFER_ADMIN_PHONES = config('CARD_TRANSFER_ADMIN_PHONES', default='')
 # اگر الگوی جداگانه ندارید، یک الگو برای همه OTPها:
 _FARAZSMS_PATTERN_OTP = config('FARAZSMS_PATTERN_OTP', default='')
 if _FARAZSMS_PATTERN_OTP:

@@ -769,6 +769,21 @@ class CardTransferSubmission(models.Model):
         verbose_name='بررسی‌کننده',
     )
     reviewed_at = models.DateTimeField(null=True, blank=True, verbose_name='زمان بررسی')
+    admin_sms_sent_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name='زمان پیامک اطلاع‌رسانی به مدیر',
+    )
+    customer_sms_sent_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name='زمان پیامک تأیید به کاربر',
+    )
+    customer_rejection_sms_sent_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name='زمان پیامک رد به کاربر',
+    )
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='تاریخ ثبت')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='آخرین به‌روزرسانی')
 

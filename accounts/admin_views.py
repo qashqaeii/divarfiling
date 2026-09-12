@@ -7,7 +7,7 @@ from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.core.serializers.json import DjangoJSONEncoder
 from django.http import HttpResponseNotFound, JsonResponse, StreamingHttpResponse
-from django.shortcuts import redirect
+from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.utils import timezone
 from django.views import View
@@ -773,6 +773,70 @@ class AdminSalesCenterView(StaffRequiredMixin, TemplateView):
         ctx['admin_panel_range_key'] = range_key
         ctx['charts_json'] = json.dumps(data['charts'], ensure_ascii=False)
         return ctx
+
+
+def _card_transfer_redirect(request):
+    next_url = (request.POST.get('next') or '').strip()
+    if next_url.startswith('/'):
+        return redirect(next_url)
+    return redirect(reverse('admin_panel_sales') + '#sales-card-transfers')
+
+
+class AdminCardTransferApproveView(StaffRequiredMixin, View):
+    """تأیید پرداخت کارت‌به‌کارت از پنل مدیریت — POST only."""
+
+    http_method_names = ['post']
+
+    def post(self, request, pk):
+        from shop.models import CardTransferSubmission
+        from shop.services.card_transfer_workflow import CardTransferWorkflowError
+        from shop.services.order_fulfillment import approve_card_transfer
+
+        submission = get_object_or_404(
+            CardTransferSubmission.objects.select_related('order'),
+            pk=pk,
+        )
+        try:
+            approve_card_transfer(submission, request.user)
+            messages.success(
+                request,
+                'پرداخت تأیید شد و لایسنس کاربر به‌صورت خودکار فعال شد.',
+            )
+        except CardTransferWorkflowError as exc:
+            messages.error(request, exc.message)
+        except Exception:
+            logger.exception('card transfer approve failed submission_id=%s', pk)
+            messages.error(
+                request,
+                'فعال‌سازی انجام نشد؛ تغییری ثبت نشد. دوباره تلاش کنید یا لاگ را بررسی کنید.',
+            )
+        return _card_transfer_redirect(request)
+
+
+class AdminCardTransferRejectView(StaffRequiredMixin, View):
+    """رد پرداخت کارت‌به‌کارت از پنل مدیریت — POST only."""
+
+    http_method_names = ['post']
+
+    def post(self, request, pk):
+        from shop.models import CardTransferSubmission
+        from shop.services.card_transfer_workflow import CardTransferWorkflowError
+        from shop.services.order_fulfillment import reject_card_transfer
+
+        submission = get_object_or_404(
+            CardTransferSubmission.objects.select_related('order'),
+            pk=pk,
+        )
+        admin_note = (request.POST.get('admin_note') or '').strip()
+        try:
+            reject_card_transfer(submission, request.user, admin_note)
+            messages.warning(request, 'پرداخت کارت‌به‌کارت رد شد.')
+        except CardTransferWorkflowError as exc:
+            messages.error(request, exc.message)
+        except Exception:
+            logger.exception('card transfer reject failed submission_id=%s', pk)
+            messages.error(request, 'رد پرداخت انجام نشد. دوباره تلاش کنید.')
+        return _card_transfer_redirect(request)
 
 
 class AdminUsersCenterView(StaffRequiredMixin, TemplateView):

@@ -1734,7 +1734,7 @@ def collect_activity_events(
                 'amount': int(ct.order.amount or 0),
                 'at': ct.created_at,
                 'status_label': ct.get_status_display(),
-                'href': '#ecc-sales',
+                'href': '#sales-card-transfers',
             })
 
     events.sort(key=lambda e: e['at'], reverse=True)

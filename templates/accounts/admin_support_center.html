@@ -7,6 +7,10 @@
 
 {% block admin_panel_title %}پشتیبانی{% endblock %}
 
+{% block admin_panel_extra_css %}
+<link rel="stylesheet" href="{% static 'css/mizkar-admin-card-transfer.css' %}?v=1">
+{% endblock %}
+
 {% block admin_panel_header_actions %}
 <a href="{{ export_urls.open_tickets }}" class="ecc-btn ecc-btn--primary" title="خروجی تیکت‌ها">
     <i class="fas fa-file-excel"></i>
@@ -157,7 +161,7 @@
                     <th>مبلغ</th>
                     <th>وضعیت</th>
                     <th>ثبت</th>
-                    <th></th>
+                    <th>عملیات</th>
                 </tr>
             </thead>
             <tbody>
@@ -168,7 +172,27 @@
                     <td>{{ row.amount|currency }}</td>
                     <td>{{ row.status_label }}</td>
                     <td>{{ row.created_at|to_jalali_fa }}</td>
-                    <td><a href="{{ row.admin_url }}" class="ecc-btn ecc-btn--ghost ecc-btn--sm" target="_blank" rel="noopener">بررسی</a></td>
+                    <td class="adm-table-actions">
+                        <a href="{% url 'admin_panel_sales' %}#sales-card-transfers" class="ecc-btn ecc-btn--ghost ecc-btn--sm">پنل فروش</a>
+                        {% if row.receipt_url %}
+                        <a href="{{ row.receipt_url }}" class="ecc-btn ecc-btn--ghost ecc-btn--sm" target="_blank" rel="noopener">رسید</a>
+                        {% endif %}
+                        <button type="button"
+                                class="ecc-btn ecc-btn--primary ecc-btn--sm js-card-approve"
+                                data-action-url="{{ row.approve_url }}"
+                                data-user="{{ row.user_display }}"
+                                data-plan="{{ row.plan_name }}"
+                                data-amount="{{ row.amount }}"
+                                data-quantity="{{ row.quantity }}">
+                            تأیید
+                        </button>
+                        <button type="button"
+                                class="ecc-btn ecc-btn--ghost ecc-btn--sm js-card-reject"
+                                data-action-url="{{ row.reject_url }}"
+                                data-user="{{ row.user_display }}">
+                            رد
+                        </button>
+                    </td>
                 </tr>
                 {% empty %}
                 <tr><td colspan="6">مورد معلقی نیست</td></tr>
@@ -265,6 +289,8 @@
 
 <section id="ecc-support" aria-hidden="true"></section>
 
+{% include 'accounts/partials/admin_card_transfer_modals.html' %}
+
 {% endblock %}
 
 {% block admin_panel_extra_js %}
@@ -276,4 +302,5 @@ window.admChartDays = {{ chart_days }};
 </script>
 {% endif %}
 <script src="{% static 'js/mizkar-admin-dashboard.js' %}?v=17"></script>
+<script src="{% static 'js/mizkar-admin-card-transfer.js' %}?v=1"></script>
 {% endblock %}

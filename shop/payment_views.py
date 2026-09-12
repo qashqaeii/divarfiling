@@ -325,6 +325,12 @@ class CardTransferView(LoginRequiredMixin, View):
         order.status = 'pending_verification'
         order.save(update_fields=['payment_method', 'status'])
 
+        try:
+            from shop.services.card_transfer_workflow import on_card_transfer_submitted
+            on_card_transfer_submitted(submission)
+        except Exception:
+            logger.exception('card transfer submission notification failed order_id=%s', order.id)
+
         messages.success(
             request,
             'درخواست شما ثبت شد. پس از بررسی توسط پشتیبانی، لایسنس فعال می‌شود.',

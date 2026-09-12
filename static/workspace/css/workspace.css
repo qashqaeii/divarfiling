@@ -37,6 +37,15 @@ html {
     --ws-shadow: var(--ds-shadow-card, 0 4px 24px rgba(0, 0, 0, 0.35));
     --ws-shadow-lg: var(--ds-shadow-modal, 0 24px 48px rgba(0, 0, 0, 0.45));
     --ws-sidebar-w: var(--ds-sidebar-w, 220px);
+    --ws-sidebar-bg-image: url('../../images/bgofsidebar.webp');
+    --ws-sidebar-bg-overlay:
+        linear-gradient(
+            180deg,
+            rgba(10, 15, 30, 0.985) 0%,
+            rgba(10, 15, 30, 0.97) 42%,
+            rgba(10, 15, 30, 0.94) 68%,
+            rgba(10, 15, 30, 0.88) 100%
+        );
     --ws-ease: var(--ds-ease, cubic-bezier(0.4, 0, 0.2, 1));
     --ws-modal-z: 1000;
 }
@@ -67,6 +76,15 @@ html {
     --ws-shadow-sm: var(--ds-shadow-card, 0 1px 2px rgba(15, 23, 42, 0.04));
     --ws-shadow: var(--ds-shadow-card, 0 1px 2px rgba(15, 23, 42, 0.04));
     --ws-shadow-lg: var(--ds-shadow-modal, 0 20px 48px rgba(15, 23, 42, 0.12));
+    --ws-sidebar-bg-overlay:
+        linear-gradient(
+            180deg,
+            rgba(255, 255, 255, 0.992) 0%,
+            rgba(255, 255, 255, 0.988) 38%,
+            rgba(255, 255, 255, 0.975) 62%,
+            rgba(255, 255, 255, 0.94) 85%,
+            rgba(255, 255, 255, 0.9) 100%
+        );
 }
 
 [data-theme="dark"] {
@@ -105,6 +123,14 @@ html {
     --ws-shadow-sm: 0 1px 3px rgba(255, 107, 107, 0.06);
     --ws-shadow: 0 4px 24px rgba(255, 107, 107, 0.08);
     --ws-shadow-lg: 0 24px 48px rgba(255, 107, 107, 0.12);
+    --ws-sidebar-bg-overlay:
+        linear-gradient(
+            180deg,
+            rgba(255, 255, 255, 0.99) 0%,
+            rgba(255, 249, 245, 0.98) 42%,
+            rgba(255, 249, 245, 0.96) 68%,
+            rgba(255, 249, 245, 0.92) 100%
+        );
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -151,12 +177,32 @@ body.ws-body::before {
 /* ─── Sidebar (minimal, no scrollbar) ─── */
 .ws-sidebar {
     width: var(--ws-sidebar-w);
-    background: var(--ws-sidebar);
+    background-color: var(--ws-sidebar);
+    background-image: var(--ws-sidebar-bg-image);
+    background-repeat: no-repeat;
+    background-position: center bottom;
+    background-size: 100% auto;
     position: fixed; top: 0; right: 0; bottom: 0;
     z-index: 200;
     display: flex; flex-direction: column;
     border-left: 1px solid var(--ws-sidebar-border);
-    transition: background 0.22s ease, border-color 0.22s ease;
+    isolation: isolate;
+    overflow: hidden;
+    transition: background-color 0.22s ease, border-color 0.22s ease;
+}
+
+.ws-sidebar::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background: var(--ws-sidebar-bg-overlay);
+}
+
+.ws-sidebar > * {
+    position: relative;
+    z-index: 1;
 }
 
 .ws-sidebar-top {

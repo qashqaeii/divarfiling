@@ -150,7 +150,9 @@ body.mk-account-dashboard .mk-footer-pro {
     display: flex;
     flex-direction: column;
     gap: 0.2rem;
-    flex: 1;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-x: hidden;
     overflow-y: auto;
     padding: 0 0.1rem;
 }
@@ -191,6 +193,7 @@ body.mk-account-dashboard .mk-footer-pro {
 }
 
 .mk-account-sidebar__foot {
+    flex-shrink: 0;
     margin-top: auto;
     padding-top: 0.85rem;
     border-top: 1px solid var(--acc-sidebar-border);
@@ -233,7 +236,8 @@ body.mk-account-dashboard .mk-footer-pro {
 /* ─── Main area ─── */
 .mk-account-main {
     min-width: 0;
-    padding: clamp(1rem, 2.2vw, 1.5rem) clamp(1rem, 2.5vw, 1.75rem) 2.5rem;
+    min-height: 0;
+    padding: clamp(1rem, 2.2vw, 1.5rem) clamp(1rem, 2.5vw, 1.75rem) 1rem;
 }
 
 .mk-account-main__toolbar {
@@ -786,6 +790,7 @@ body.mk-account-dashboard .mk-footer-pro {
     display: flex;
     flex-direction: column;
     gap: 0.85rem;
+    min-height: 0;
 }
 
 /* ─── Sidebar user card ─── */
@@ -793,6 +798,7 @@ body.mk-account-dashboard .mk-footer-pro {
     display: flex;
     align-items: center;
     gap: 0.65rem;
+    flex-shrink: 0;
     padding: 0 0.35rem 1rem;
     margin-bottom: 0.35rem;
     border-bottom: 1px solid var(--acc-sidebar-border);
@@ -1350,15 +1356,70 @@ body.mk-account-dashboard .mk-footer-pro {
     box-shadow: none;
 }
 
-/* ─── Desktop: sidebar flush header → footer ─── */
+/* ─── Desktop: fixed shell — sidebar ثابت، اسکرول فقط در محتوا ─── */
 @media (min-width: 961px) {
+    html.mk-public:has(body.mk-account-dashboard) {
+        height: 100%;
+        overflow: hidden;
+    }
+
+    body.mk-account-dashboard {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        overflow: hidden;
+    }
+
+    body.mk-account-dashboard .mk-site-header {
+        flex-shrink: 0;
+    }
+
+    body.mk-account-dashboard .main-content {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow: hidden;
+    }
+
+    body.mk-account-dashboard .mk-footer-pro {
+        flex-shrink: 0;
+    }
+
+    body.mk-account-dashboard .container.mk-dashboard-page,
+    .mk-account-shell {
+        height: 100%;
+        min-height: 0;
+    }
+
     .mk-account-sidebar {
-        position: sticky;
-        top: var(--acc-header-h);
+        position: relative;
+        top: auto;
         align-self: stretch;
         height: 100%;
-        min-height: calc(100vh - var(--acc-header-h));
+        min-height: 0;
         max-height: none;
+    }
+
+    .mk-account-main {
+        height: 100%;
+        min-height: 0;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .mk-account-main > .mk-account-breadcrumb,
+    .mk-account-main > .mk-account-page-head {
+        flex-shrink: 0;
+    }
+
+    .mk-account-main > .mk-acc-tab-body {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow-x: hidden;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-gutter: stable;
     }
 }
 

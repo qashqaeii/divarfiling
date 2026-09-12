@@ -36,9 +36,23 @@
         });
     }
 
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initFooterReveal);
-    } else {
+    function initScrollTop() {
+        var btn = document.querySelector('[data-ft-scroll-top]');
+        if (!btn) return;
+
+        btn.addEventListener('click', function () {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    }
+
+    function initFooter() {
         initFooterReveal();
+        initScrollTop();
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initFooter);
+    } else {
+        initFooter();
     }
 })();

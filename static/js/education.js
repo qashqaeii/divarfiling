@@ -1,9 +1,49 @@
 (function () {
     'use strict';
 
+    initReveal();
     initPathTabs();
     initGalleryFilters();
     initLightbox();
+
+    function initReveal() {
+        var wrap = document.querySelector('.edu-wrap');
+        if (!wrap) return;
+
+        var items = wrap.querySelectorAll('.edu-reveal');
+        if (!items.length) return;
+
+        var prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        function activate(el) {
+            el.classList.add('is-inview');
+        }
+
+        if (prefersReduced || !('IntersectionObserver' in window)) {
+            items.forEach(activate);
+            return;
+        }
+
+        var observer = new IntersectionObserver(function (entries) {
+            entries.forEach(function (entry) {
+                if (entry.isIntersecting) {
+                    activate(entry.target);
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, {
+            threshold: 0.1,
+            rootMargin: '0px 0px -6% 0px',
+        });
+
+        items.forEach(function (el) {
+            if (el.getBoundingClientRect().top < window.innerHeight * 0.92) {
+                activate(el);
+            } else {
+                observer.observe(el);
+            }
+        });
+    }
 
     function initPathTabs() {
         var tabs = document.querySelectorAll('.edu-path-tab');

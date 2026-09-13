@@ -4,13 +4,17 @@
 {% block title %}آموزش مشاوران — فایلینگ دیوار{% endblock %}
 {% block body_class %}mk-pub-page edu-page{% endblock %}
 
+{% block extra_head %}
+<script>document.documentElement.classList.add('mk-education-page');</script>
+{% endblock %}
+
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/mizkar-video-player.css' %}?v=2">
-<link rel="stylesheet" href="{% static 'css/mizkar-education.css' %}?v=6">
+<link rel="stylesheet" href="{% static 'css/mizkar-video-player.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'css/education-page.css' %}?v=1">
 {% endblock %}
 
 {% block content %}
-<div class="mk-pub-wrap">
+<div class="mk-pub-wrap edu-wrap">
 
     <header class="edu-hero edu-hero--cinema" aria-labelledby="edu-hero-title">
         <div class="edu-hero-bg" aria-hidden="true">
@@ -24,7 +28,7 @@
 
         <div class="container edu-hero-shell">
             <div class="edu-hero-grid">
-                <div class="edu-hero-copy">
+                <div class="edu-hero-copy edu-reveal">
                     <div class="edu-hero-kicker edu-hero-kicker--academy">
                         {% decor_icon 'rocket' size='xs' boxed=True accent='emerald' %}
                         <span>{{ edu.hero.eyebrow }}</span>
@@ -97,7 +101,7 @@
                     </div>
                 </div>
 
-                <div class="edu-hero-stage">
+                <div class="edu-hero-stage edu-reveal" style="--edu-delay: 1">
                     <div class="edu-hero-stage-aura" aria-hidden="true"></div>
                     <div class="edu-hero-stage-ring" aria-hidden="true"></div>
 
@@ -154,10 +158,10 @@
     </header>
 
     {% if install_video.available %}
-    <section class="edu-video-band" aria-labelledby="edu-install-video-title">
+    <section class="edu-video-band edu-reveal" aria-labelledby="edu-install-video-title">
         <div class="container edu-video-shell">
             <div class="edu-video-copy">
-                <span class="edu-eyebrow">ویدیوی نصب ربات</span>
+                <span class="edu-kicker">ویدیوی نصب ربات</span>
                 <h2 id="edu-install-video-title">{{ install_video.title }}</h2>
                 <p>{{ install_video.subtitle }}</p>
                 <div class="edu-video-chips">
@@ -182,10 +186,10 @@
     {% endif %}
 
     {% if filing_video.available %}
-    <section class="edu-video-band edu-video-band--filing" aria-labelledby="edu-filing-video-title">
+    <section class="edu-video-band edu-video-band--filing edu-reveal" aria-labelledby="edu-filing-video-title">
         <div class="container edu-video-shell">
             <div class="edu-video-copy">
-                <span class="edu-eyebrow">ویدیوی فایلینگ میزکار</span>
+                <span class="edu-kicker">ویدیوی فایلینگ میزکار</span>
                 <h2 id="edu-filing-video-title">{{ filing_video.title }}</h2>
                 <p>{{ filing_video.subtitle }}</p>
                 <div class="edu-video-chips">
@@ -211,10 +215,10 @@
     {% endif %}
 
     {% if crm_video.available %}
-    <section class="edu-video-band edu-video-band--crm" aria-labelledby="edu-crm-video-title">
+    <section class="edu-video-band edu-video-band--crm edu-reveal" aria-labelledby="edu-crm-video-title">
         <div class="container edu-video-shell">
             <div class="edu-video-copy">
-                <span class="edu-eyebrow">ویدیوی CRM میزکار</span>
+                <span class="edu-kicker">ویدیوی CRM میزکار</span>
                 <h2 id="edu-crm-video-title">{{ crm_video.title }}</h2>
                 <p>{{ crm_video.subtitle }}</p>
                 <div class="edu-video-chips">
@@ -241,12 +245,13 @@
 
     <section class="edu-section edu-paths-band" aria-labelledby="edu-paths-title">
         <div class="container">
-            <header class="edu-section-head">
+            <header class="edu-section-head edu-reveal">
+                <span class="edu-kicker">مسیر یادگیری</span>
                 <h2 id="edu-paths-title">{{ edu.sections.paths.title }}</h2>
                 <p>{{ edu.sections.paths.subtitle }}</p>
             </header>
 
-            <div class="edu-path-tabs" role="tablist">
+            <div class="edu-path-tabs edu-reveal" style="--edu-delay: 1" role="tablist">
                 {% for path in edu.paths %}
                 <button type="button"
                         class="edu-path-tab{% if forloop.first %} is-active{% endif %}"
@@ -320,14 +325,15 @@
 
     <section class="edu-section edu-section--alt" aria-labelledby="edu-modules-title">
         <div class="container">
-            <header class="edu-section-head">
+            <header class="edu-section-head edu-reveal">
+                <span class="edu-kicker">آموزش بخش‌به‌بخش</span>
                 <h2 id="edu-modules-title">{{ edu.sections.modules.title }}</h2>
                 <p>{{ edu.sections.modules.subtitle }}</p>
             </header>
 
             <div class="edu-modules">
                 {% for mod in edu.modules %}
-                <article class="edu-module" id="module-{{ mod.id }}">
+                <article class="edu-module edu-reveal" id="module-{{ mod.id }}" style="--edu-delay: {{ forloop.counter0 }}">
                     {% if mod.cover_image %}
                     <button type="button" class="edu-module-cover" data-edu-lightbox
                             data-src="{% static 'images/' %}{{ mod.cover_image }}"
@@ -385,12 +391,13 @@
 
     <section class="edu-section edu-gallery-band" aria-labelledby="edu-gallery-title">
         <div class="container">
-            <header class="edu-section-head">
+            <header class="edu-section-head edu-reveal">
+                <span class="edu-kicker">گالری میزکار</span>
                 <h2 id="edu-gallery-title">{{ edu.gallery.title }}</h2>
                 <p>{{ edu.gallery.subtitle }}</p>
             </header>
 
-            <div class="edu-gallery-filters" role="tablist">
+            <div class="edu-gallery-filters edu-reveal" style="--edu-delay: 1" role="tablist">
                 {% for cat in edu.gallery.categories %}
                 <button type="button"
                         class="edu-gallery-filter{% if forloop.first %} is-active{% endif %}"
@@ -404,7 +411,7 @@
 
             <div class="edu-gallery-grid">
                 {% for item in edu.gallery.items %}
-                <article class="edu-gallery-card" data-gallery-cat="{{ item.category }}">
+                <article class="edu-gallery-card edu-reveal" data-gallery-cat="{{ item.category }}" style="--edu-delay: {{ forloop.counter0 }}">
                     <button type="button" class="edu-gallery-shot" data-edu-lightbox
                             data-src="{% static 'images/' %}{{ item.image }}"
                             data-caption="{{ item.caption }}"
@@ -420,13 +427,14 @@
 
     <section class="edu-section edu-section--alt">
         <div class="container">
-            <header class="edu-section-head">
+            <header class="edu-section-head edu-reveal">
+                <span class="edu-kicker">منابع ضروری</span>
                 <h2>{{ edu.sections.featured.title }}</h2>
                 <p>{{ edu.sections.featured.subtitle }}</p>
             </header>
             <div class="edu-featured-grid">
                 {% for item in edu.featured %}
-                <article class="edu-featured-card{% if item.url_name == 'public_academy_playlist' %} edu-featured-card--academy{% endif %}">
+                <article class="edu-featured-card edu-reveal{% if item.url_name == 'public_academy_playlist' %} edu-featured-card--academy{% endif %}" style="--edu-delay: {{ forloop.counter0 }}">
                     {% if item.url_name == 'public_academy_playlist' %}
                     <span class="edu-featured-ribbon"><i class="fas fa-star" aria-hidden="true"></i> پیشنهاد اصلی</span>
                     {% endif %}
@@ -459,12 +467,13 @@
 
     <section class="edu-section">
         <div class="container edu-faq-wrap">
-            <header class="edu-section-head">
+            <header class="edu-section-head edu-reveal">
+                <span class="edu-kicker">پرسش‌های متداول</span>
                 <h2>{{ edu.sections.faq.title }}</h2>
             </header>
             <div class="edu-faq">
                 {% for item in edu.faq %}
-                <details class="edu-faq-item"{% if forloop.first %} open{% endif %}>
+                <details class="edu-faq-item edu-reveal"{% if forloop.first %} open{% endif %} style="--edu-delay: {{ forloop.counter0 }}">
                     <summary>{{ item.q }}</summary>
                     <p>{{ item.a }}</p>
                 </details>
@@ -473,7 +482,7 @@
         </div>
     </section>
 
-    <footer class="edu-cta">
+    <footer class="edu-cta edu-reveal">
         <div class="container edu-cta-inner">
             <h2>{{ edu.sections.cta.title }}</h2>
             <p>{{ edu.sections.cta.subtitle }}</p>
@@ -504,5 +513,5 @@
 {% if install_video.available or filing_video.available or crm_video.available or academy_hero.player.available %}
 <script src="{% static 'js/bot-install-video.js' %}?v=1" defer></script>
 {% endif %}
-<script src="{% static 'js/education.js' %}?v=4" defer></script>
+<script src="{% static 'js/education.js' %}?v=5" defer></script>
 {% endblock %}

@@ -553,6 +553,7 @@ class AboutView(TemplateView):
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context['stats'] = home_display_stats()
         # SEO Meta Tags
         context['meta_title'] = 'درباره ما - فروشگاه ربات دیوار'
         context['meta_description'] = 'درباره فروشگاه ربات دیوار. ما با سال‌ها تجربه در زمینه توسعه نرم‌افزار و تحلیل داده، محصولاتی با کیفیت ارائه می‌دهیم.'

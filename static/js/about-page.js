@@ -9,14 +9,8 @@
         });
     }
 
-    function formatCount(value, el) {
-        var prefix = el.getAttribute('data-abt-prefix') || '';
-        var suffix = el.getAttribute('data-abt-suffix') || '';
-        var raw = prefix + value + suffix;
-        if (el.getAttribute('data-abt-persian') !== '0') {
-            return toPersian(raw);
-        }
-        return raw;
+    function formatCount(value) {
+        return toPersian(value.toLocaleString('en-US'));
     }
 
     function animateCount(el) {
@@ -34,7 +28,7 @@
             var progress = Math.min((now - start) / duration, 1);
             var eased = 1 - Math.pow(1 - progress, 3);
             var current = Math.round(target * eased);
-            strong.textContent = formatCount(current, el);
+            strong.textContent = formatCount(current);
             if (progress < 1) {
                 requestAnimationFrame(tick);
             }

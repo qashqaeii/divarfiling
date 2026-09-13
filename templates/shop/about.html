@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load static %}
+{% load static humanize %}
 
 {% block title %}درباره ما — فایلینگ دیوار{% endblock %}
 {% block body_class %}mk-pub-page{% endblock %}
@@ -9,7 +9,7 @@
 {% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/about-page.css' %}?v=6">
+<link rel="stylesheet" href="{% static 'css/about-page.css' %}?v=7">
 {% endblock %}
 
 {% block content %}
@@ -63,12 +63,24 @@
         </div>
     </section>
 
-    <section class="abt-band abt-band--muted">
+    <section class="abt-band abt-band--muted" aria-label="آمار زنده پلتفرم">
         <div class="container abt-stats">
-            <div class="abt-stat abt-reveal" style="--abt-delay: 0" data-abt-count="230" data-abt-prefix="+"><strong>+۰</strong><span>کاربر فعال</span></div>
-            <div class="abt-stat abt-reveal" style="--abt-delay: 1" data-abt-count="360" data-abt-prefix="+"><strong>+۰</strong><span>دیتاست</span></div>
-            <div class="abt-stat abt-reveal" style="--abt-delay: 2" data-abt-count="430" data-abt-prefix="+"><strong>+۰</strong><span>مخاطب CRM</span></div>
-            <div class="abt-stat abt-reveal" style="--abt-delay: 3" data-abt-count="20" data-abt-prefix="+" data-abt-suffix="M"><strong>+۰M</strong><span>درآمد ثبت‌شده</span></div>
+            <div class="abt-stat abt-reveal" style="--abt-delay: 0" data-abt-count="{{ stats.total_users }}">
+                <strong>{{ stats.total_users|intcomma }}</strong>
+                <span>کاربر فعال</span>
+            </div>
+            <div class="abt-stat abt-reveal" style="--abt-delay: 1" data-abt-count="{{ stats.total_orders }}">
+                <strong>{{ stats.total_orders|intcomma }}</strong>
+                <span>خرید موفق</span>
+            </div>
+            <div class="abt-stat abt-reveal" style="--abt-delay: 2" data-abt-count="{{ stats.total_licenses }}">
+                <strong>{{ stats.total_licenses|intcomma }}</strong>
+                <span>لایسنس فعال</span>
+            </div>
+            <div class="abt-stat abt-reveal" style="--abt-delay: 3">
+                <strong>{{ stats.satisfaction_rate }}%</strong>
+                <span>رضایت کاربران</span>
+            </div>
         </div>
     </section>
 
@@ -100,5 +112,5 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'js/about-page.js' %}?v=1" defer></script>
+<script src="{% static 'js/about-page.js' %}?v=2" defer></script>
 {% endblock %}

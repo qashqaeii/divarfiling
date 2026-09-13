@@ -169,6 +169,9 @@ html.mk-public[data-theme="dark"] .abt-band--muted {
     overflow: hidden;
     border-top: none;
     background: transparent;
+    min-height: clamp(220px, 34vw, 340px);
+    display: flex;
+    align-items: center;
 }
 
 .abt-band--mission::before {
@@ -176,16 +179,10 @@ html.mk-public[data-theme="dark"] .abt-band--muted {
     position: absolute;
     inset: 0;
     background-image: var(--abt-mission-bg, url('../images/bg-about.webp'));
-    background-size: cover;
-    background-position: center bottom;
+    background-size: 100% auto;
+    background-position: center center;
     background-repeat: no-repeat;
     z-index: 0;
-    transform: scale(1);
-    transition: transform 8s var(--abt-ease);
-}
-
-.abt-band--mission.is-inview::before {
-    transform: scale(1.04);
 }
 
 .abt-band--mission::after {
@@ -513,9 +510,6 @@ html.mk-public[data-theme="dark"] .abt-pillars li.is-inview:hover {
         animation: none !important;
     }
 
-    .abt-band--mission::before {
-        transition: none;
-    }
 
     .abt-btn,
     .abt-pillars li,

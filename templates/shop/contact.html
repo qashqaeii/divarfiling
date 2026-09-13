@@ -2,14 +2,18 @@
 {% load static %}
 
 {% block title %}تماس با ما — فایلینگ دیوار{% endblock %}
-{% block body_class %}mk-pub-page mk-contact-page{% endblock %}
+{% block body_class %}mk-pub-page{% endblock %}
+
+{% block extra_head %}
+<script>document.documentElement.classList.add('mk-contact-page');</script>
+{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/contact-page.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'css/contact-page.css' %}?v=2">
 {% endblock %}
 
 {% block content %}
-<div class="mk-pub-wrap mk-contact-wrap">
+<div class="mk-pub-wrap mk-contact-wrap" style="--mk-contact-bg: url('{% static 'images/contact-bg.webp' %}');">
 
     <header class="mk-contact-hero">
         <div class="container mk-contact-hero__grid">
@@ -46,7 +50,44 @@
             </div>
             <div class="mk-contact-hero__visual" aria-hidden="true">
                 <div class="mk-contact-hero__bubble">سوال دارید؟ با ما صحبت کنید!</div>
-                <img src="{% static 'images/contact-hero.svg' %}" alt="" class="mk-contact-hero__illustration" width="340" height="320" loading="lazy">
+                <svg class="mk-contact-hero__illustration" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 320" fill="none" role="img" aria-label="پشتیبانی">
+                    <defs>
+                        <linearGradient id="ct-g1" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#c4b5fd"/>
+                            <stop offset="100%" stop-color="#7c3aed"/>
+                        </linearGradient>
+                        <linearGradient id="ct-g2" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#ddd6fe"/>
+                            <stop offset="100%" stop-color="#8b5cf6"/>
+                        </linearGradient>
+                        <filter id="ct-shadow" x="-20%" y="-20%" width="140%" height="140%">
+                            <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#7c3aed" flood-opacity="0.18"/>
+                        </filter>
+                    </defs>
+                    <ellipse cx="180" cy="290" rx="120" ry="16" fill="#7c3aed" opacity="0.12"/>
+                    <g filter="url(#ct-shadow)">
+                        <path d="M88 168c0-44 36-80 92-80s92 36 92 80v52c0 18-14 32-32 32h-8l-24 28-24-28h-4c-18 0-32-14-32-32v-52z" fill="url(#ct-g1)"/>
+                        <path d="M88 168c0-44 36-80 92-80s92 36 92 80" stroke="#fff" stroke-width="6" opacity="0.35"/>
+                        <rect x="132" y="188" width="96" height="18" rx="9" fill="#fff" opacity="0.35"/>
+                        <circle cx="152" cy="197" r="5" fill="#fff" opacity="0.7"/>
+                        <circle cx="180" cy="197" r="5" fill="#fff" opacity="0.7"/>
+                        <circle cx="208" cy="197" r="5" fill="#fff" opacity="0.7"/>
+                    </g>
+                    <g transform="translate(248 52)">
+                        <rect x="0" y="0" width="88" height="64" rx="18" fill="url(#ct-g2)"/>
+                        <circle cx="28" cy="32" r="6" fill="#fff" opacity="0.85"/>
+                        <circle cx="44" cy="32" r="6" fill="#fff" opacity="0.85"/>
+                        <circle cx="60" cy="32" r="6" fill="#fff" opacity="0.85"/>
+                        <path d="M44 64 L28 78 L60 78 Z" fill="url(#ct-g2)"/>
+                    </g>
+                    <g transform="translate(36 72) rotate(-18)">
+                        <path d="M0 36 L72 0 L56 56 L0 72 Z" fill="#a78bfa" opacity="0.85"/>
+                        <path d="M72 0 L88 20 L56 56 Z" fill="#7c3aed"/>
+                    </g>
+                    <circle cx="300" cy="220" r="14" fill="#c4b5fd" opacity="0.7"/>
+                    <circle cx="52" cy="230" r="10" fill="#ddd6fe" opacity="0.8"/>
+                    <circle cx="310" cy="120" r="8" fill="#ede9fe"/>
+                </svg>
             </div>
         </div>
     </header>

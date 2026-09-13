@@ -1,13 +1,19 @@
 /* ─── Contact Page — فایلینگ دیوار ─── */
 
-.mk-contact-page .mk-contact-wrap {
+html.mk-public.mk-contact-page,
+html.mk-public.mk-contact-page body.mk-pub-page,
+html.mk-public.mk-contact-page .main-content {
+    background: transparent !important;
+}
+
+html.mk-public .mk-contact-page .mk-contact-wrap {
     --mk-contact-card: rgba(255, 255, 255, 0.92);
     --mk-contact-card-border: rgba(226, 232, 240, 0.95);
     --mk-contact-shadow: 0 4px 24px rgba(15, 23, 42, 0.06), 0 1px 3px rgba(15, 23, 42, 0.04);
     --mk-contact-shadow-lg: 0 12px 40px rgba(124, 58, 237, 0.08), 0 4px 16px rgba(15, 23, 42, 0.06);
     background:
-        url('../images/contact-bg.webp') no-repeat center top / cover,
-        linear-gradient(180deg, #f8f7ff 0%, #f1f5f9 100%);
+        var(--mk-contact-bg, url('../images/contact-bg.webp')) no-repeat center top / cover,
+        linear-gradient(180deg, #f8f7ff 0%, #f1f5f9 100%) !important;
     min-height: calc(100vh - 4rem);
     padding-bottom: clamp(2.5rem, 5vw, 4rem);
 }
@@ -18,8 +24,8 @@ html.mk-public[data-theme="dark"] .mk-contact-page .mk-contact-wrap {
     --mk-contact-shadow: 0 4px 24px rgba(0, 0, 0, 0.25);
     --mk-contact-shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.35);
     background:
-        url('../images/contact-bg.webp') no-repeat center top / cover,
-        linear-gradient(180deg, #0f172a 0%, #070b14 100%);
+        var(--mk-contact-bg, url('../images/contact-bg.webp')) no-repeat center top / cover,
+        linear-gradient(180deg, #0f172a 0%, #070b14 100%) !important;
     background-blend-mode: overlay, normal;
 }
 
@@ -157,8 +163,10 @@ html.mk-public[data-theme="dark"] .mk-contact-page .mk-contact-wrap {
 }
 
 .mk-contact-hero__illustration {
+    display: block;
     width: min(100%, 340px);
     height: auto;
+    max-height: 320px;
     filter: drop-shadow(0 20px 40px rgba(124, 58, 237, 0.15));
     animation: mk-contact-float 5s ease-in-out infinite;
 }

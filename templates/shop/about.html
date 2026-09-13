@@ -9,11 +9,11 @@
 {% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/about-page.css' %}?v=4">
+<link rel="stylesheet" href="{% static 'css/about-page.css' %}?v=5">
 {% endblock %}
 
 {% block content %}
-<div class="mk-pub-wrap abt-wrap" style="--abt-band-bg: url('{% static 'images/bg-about.webp' %}');">
+<div class="mk-pub-wrap abt-wrap">
 
     <header class="abt-hero">
         <div class="container abt-hero__inner">
@@ -71,7 +71,7 @@
         </div>
     </section>
 
-    <section class="abt-band">
+    <section class="abt-band abt-band--mission" style="--abt-mission-bg: url('{% static 'images/bg-about.webp' %}');">
         <div class="container abt-mission">
             <div class="abt-mission__text">
                 <span class="abt-kicker">مأموریت ما</span>
@@ -83,10 +83,6 @@
                     <li>پیگیری هوشمند مشتریان</li>
                 </ul>
             </div>
-            <figure class="abt-mission__media">
-                <img src="{% static 'images/footer-bg.webp' %}" alt="نمای شهر" width="480" height="300" loading="lazy">
-                <figcaption>جایی که فرصت‌ها به معامله تبدیل می‌شوند</figcaption>
-            </figure>
         </div>
     </section>
 

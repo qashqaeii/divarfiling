@@ -76,49 +76,63 @@ html.mk-public[data-theme="dark"].mk-about-page .main-content {
 
 /* ─── Sections ─── */
 .abt-band {
-    position: relative;
-    isolation: isolate;
     padding: clamp(2rem, 4vw, 2.75rem) 0;
-    border-top: none;
-    background:
-        linear-gradient(rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.88)),
-        var(--abt-band-bg, url('../images/bg-about.webp')) center / cover no-repeat;
-}
-
-.abt-band > .container {
-    position: relative;
-    z-index: 1;
+    border-top: 1px solid #eef2f6;
 }
 
 html.mk-public[data-theme="dark"] .abt-band {
-    background:
-        linear-gradient(rgba(7, 11, 20, 0.82), rgba(7, 11, 20, 0.82)),
-        var(--abt-band-bg, url('../images/bg-about.webp')) center / cover no-repeat;
+    border-color: rgba(148, 163, 184, 0.1);
 }
 
 .abt-band--muted {
-    background:
-        linear-gradient(rgba(248, 250, 252, 0.9), rgba(248, 250, 252, 0.9)),
-        var(--abt-band-bg, url('../images/bg-about.webp')) center / cover no-repeat;
+    background: #f1f5f9;
+    border-top: none;
 }
 
 html.mk-public[data-theme="dark"] .abt-band--muted {
-    background:
-        linear-gradient(rgba(10, 14, 26, 0.86), rgba(10, 14, 26, 0.86)),
-        var(--abt-band-bg, url('../images/bg-about.webp')) center / cover no-repeat;
+    background: rgba(15, 23, 42, 0.5);
 }
 
 .abt-band--cta {
+    border-top: none;
     padding-bottom: clamp(2.5rem, 5vw, 3.5rem);
-    background:
-        linear-gradient(rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.92)),
-        var(--abt-band-bg, url('../images/bg-about.webp')) center / cover no-repeat;
 }
 
-html.mk-public[data-theme="dark"] .abt-band--cta {
-    background:
-        linear-gradient(rgba(7, 11, 20, 0.88), rgba(7, 11, 20, 0.88)),
-        var(--abt-band-bg, url('../images/bg-about.webp')) center / cover no-repeat;
+/* Mission band — bg-about.webp فقط این بخش */
+.abt-band--mission {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    border-top: none;
+    background: transparent;
+}
+
+.abt-band--mission::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: var(--abt-mission-bg, url('../images/bg-about.webp'));
+    background-size: cover;
+    background-position: center bottom;
+    background-repeat: no-repeat;
+    z-index: 0;
+}
+
+.abt-band--mission::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.78);
+    z-index: 0;
+}
+
+html.mk-public[data-theme="dark"] .abt-band--mission::after {
+    background: rgba(7, 11, 20, 0.8);
+}
+
+.abt-band--mission > .container {
+    position: relative;
+    z-index: 1;
 }
 
 /* ─── Hero ─── */
@@ -230,10 +244,7 @@ html.mk-public[data-theme="dark"] .abt-hero {
 
 /* ─── Mission ─── */
 .abt-mission {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: clamp(2rem, 5vw, 3.5rem);
-    align-items: center;
+    max-width: 36rem;
 }
 
 .abt-mission__text h2 {
@@ -279,39 +290,6 @@ html.mk-public[data-theme="dark"] .abt-hero {
     background: #7c3aed;
 }
 
-.abt-mission__media {
-    margin: 0;
-    border-radius: 12px;
-    overflow: hidden;
-    border: 1px solid #e2e8f0;
-}
-
-html.mk-public[data-theme="dark"] .abt-mission__media {
-    border-color: rgba(148, 163, 184, 0.14);
-}
-
-.abt-mission__media img {
-    display: block;
-    width: 100%;
-    height: auto;
-    max-height: 240px;
-    object-fit: cover;
-    object-position: center bottom;
-}
-
-.abt-mission__media figcaption {
-    padding: 0.65rem 0.85rem;
-    font-size: 0.76rem;
-    font-weight: 600;
-    color: var(--mk-text-secondary, #64748b);
-    background: #fff;
-    text-align: center;
-}
-
-html.mk-public[data-theme="dark"] .abt-mission__media figcaption {
-    background: rgba(15, 23, 42, 0.8);
-}
-
 /* ─── CTA ─── */
 .abt-cta {
     display: flex;
@@ -342,9 +320,6 @@ html.mk-public[data-theme="dark"] .abt-mission__media figcaption {
         gap: 1.5rem;
     }
 
-    .abt-mission {
-        grid-template-columns: 1fr;
-    }
 }
 
 @media (max-width: 520px) {

@@ -2,121 +2,129 @@
 {% load static seo_tags persian_tags %}
 
 {% block title %}{{ author.meta_title }}{% endblock %}
-{% block body_class %}mk-pub-page author-page{% endblock %}
+{% block body_class %}mk-pub-page{% endblock %}
+
+{% block extra_head %}
+<script>document.documentElement.classList.add('mk-author-page');</script>
+{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/mizkar-seo-landing.css' %}?v=3">
-<link rel="stylesheet" href="{% static 'css/mizkar-author.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'css/author-page.css' %}?v=1">
 {% endblock %}
 
 {% block content %}
 {% schema_author author %}
-<div class="mk-pub-wrap author-page-wrap">
+<div class="mk-pub-wrap ath-wrap">
 
-    {# ── Hero ── #}
-    <header class="author-hero">
-        <div class="author-hero-mesh" aria-hidden="true"></div>
-        <div class="author-hero-grid" aria-hidden="true"></div>
-        <div class="container author-hero-stage">
-            <div class="author-hero-copy mk-reveal">
-                <span class="author-kicker">
-                    <span class="mk-icon mk-icon--xs mk-icon--violet"><i class="fas fa-user-pen"></i></span>
+    <header class="ath-hero">
+        <div class="ath-hero__glow" aria-hidden="true"></div>
+        <div class="container ath-hero__stage">
+            <div class="ath-hero__copy">
+                <span class="ath-kicker ath-reveal" style="--ath-delay: 0">
+                    <i class="fas fa-user-pen" aria-hidden="true"></i>
                     {{ author.role }}
                 </span>
-                <h1>{{ author.name_fa }}</h1>
-                <p class="author-name-en" lang="en" dir="ltr">{{ author.name }}</p>
-                <p class="author-tagline">{{ author.tagline }}</p>
-                <p class="author-bio">{{ author.bio }}</p>
+                <h1 class="ath-reveal" style="--ath-delay: 1">{{ author.name_fa }}</h1>
+                <p class="ath-name-en ath-reveal" style="--ath-delay: 1" lang="en" dir="ltr">{{ author.name }}</p>
+                <p class="ath-tagline ath-reveal" style="--ath-delay: 2">{{ author.tagline }}</p>
+                <p class="ath-bio ath-reveal" style="--ath-delay: 3">{{ author.bio }}</p>
 
-                <div class="author-expertise" aria-label="تخصص‌ها">
+                <div class="ath-skills ath-reveal" style="--ath-delay: 4" aria-label="تخصص‌ها">
                     {% for skill in author.expertise_fa %}
-                    <span class="author-skill-chip">{{ skill }}</span>
+                    <span class="ath-skill">{{ skill }}</span>
                     {% endfor %}
                 </div>
 
-                <div class="author-hero-actions">
-                    <a href="#author-product" class="seo-btn seo-btn--primary">
-                        <i class="fas fa-layer-group"></i> مشاهده پروژه‌ها
+                <div class="ath-actions ath-reveal" style="--ath-delay: 5">
+                    <a href="#ath-product" class="ath-btn ath-btn--primary">
+                        <i class="fas fa-layer-group" aria-hidden="true"></i> مشاهده پروژه‌ها
                     </a>
-                    <a href="{% url 'blog:post_list' %}" class="seo-btn seo-btn--ghost">
-                        <i class="fas fa-newspaper"></i> مقالات تخصصی
+                    <a href="{% url 'blog:post_list' %}" class="ath-btn ath-btn--ghost">
+                        <i class="fas fa-newspaper" aria-hidden="true"></i> مقالات تخصصی
                     </a>
-                    <a href="{{ site_brand.creator_telegram_url }}" class="seo-btn seo-btn--ghost" target="_blank" rel="noopener">
-                        <i class="fab fa-telegram"></i> ارتباط مستقیم
+                    <a href="{{ site_brand.creator_telegram_url }}" class="ath-btn ath-btn--ghost" target="_blank" rel="noopener">
+                        <i class="fab fa-telegram" aria-hidden="true"></i> ارتباط مستقیم
                     </a>
                 </div>
             </div>
 
-            <div class="author-hero-visual mk-reveal">
-                <div class="author-identity-card">
-                    <div class="author-avatar-ring" aria-hidden="true">
-                        <span class="author-avatar-lg">{{ author.name_fa|slice:":1" }}</span>
+            <aside class="ath-hero__aside ath-reveal" style="--ath-delay: 2">
+                <div class="ath-profile-card">
+                    <div class="ath-avatar-ring" aria-hidden="true">
+                        <span class="ath-avatar">{{ author.name_fa|slice:":1" }}</span>
                     </div>
-                    <div class="author-identity-meta">
+                    <div class="ath-profile-meta">
                         <strong>{{ author.name_fa }}</strong>
                         <span>{{ author.role }}</span>
-                        <span class="author-identity-site"><i class="fas fa-globe"></i> divarfiling.ir</span>
+                        <span class="ath-profile-site"><i class="fas fa-globe" aria-hidden="true"></i> divarfiling.ir</span>
                     </div>
                 </div>
 
                 {% if author.visuals.hero_shots %}
-                <div class="author-hero-shots" aria-label="نمایی از محصولات">
+                <div class="ath-shots" aria-label="نمایی از محصولات">
                     {% for shot in author.visuals.hero_shots %}
-                    <button type="button" class="author-shot-thumb author-shot-thumb--{{ shot.accent }}"
-                        data-seo-lightbox
+                    <button type="button" class="ath-shot ath-shot--{{ shot.accent }}"
+                        data-ath-lightbox
                         data-src="{% static shot.image %}"
                         data-caption="{{ shot.caption }}"
                         aria-label="بزرگنمایی: {{ shot.caption }}">
                         <img src="{% static shot.image %}" alt="" loading="lazy" decoding="async">
-                        <span class="author-shot-thumb-label">{{ shot.caption }}</span>
+                        <span class="ath-shot__label">{{ shot.caption }}</span>
                     </button>
                     {% endfor %}
                 </div>
                 {% endif %}
-            </div>
+            </aside>
         </div>
     </header>
 
-    {# ── Stats ── #}
-    <section class="author-stats-band" aria-label="خلاصه فعالیت">
+    <section class="ath-band ath-band--muted" aria-label="خلاصه فعالیت">
         <div class="container">
-            <div class="author-stats mk-reveal">
-                <article class="author-stat">
-                    <span class="author-stat-icon mk-icon mk-icon--sm mk-icon--violet"><i class="fas fa-newspaper"></i></span>
-                    <span class="author-stat-val">{{ author_post_count }}</span>
-                    <span class="author-stat-lbl">{{ author.stats_labels.articles }}</span>
-                </article>
-                <span class="author-stat-sep" aria-hidden="true"></span>
-                <article class="author-stat">
-                    <span class="author-stat-icon mk-icon mk-icon--sm mk-icon--emerald"><i class="fas fa-compass"></i></span>
-                    <span class="author-stat-val">۳</span>
-                    <span class="author-stat-lbl">{{ author.stats_labels.landings }}</span>
-                </article>
-                <span class="author-stat-sep" aria-hidden="true"></span>
-                <article class="author-stat">
-                    <span class="author-stat-icon mk-icon mk-icon--sm mk-icon--indigo"><i class="fas fa-cubes"></i></span>
-                    <span class="author-stat-val">۱</span>
-                    <span class="author-stat-lbl">{{ author.stats_labels.product }}</span>
-                </article>
+            <div class="ath-stats-panel ath-reveal">
+                <header class="ath-stats-head">
+                    <div class="ath-stats-live">
+                        <span class="ath-stats-live-dot" aria-hidden="true"></span>
+                        <span>فعالیت در پلتفرم</span>
+                    </div>
+                </header>
+                <div class="ath-stats-grid">
+                    <article class="ath-stat">
+                        <span class="ath-stat-icon"><i class="fas fa-newspaper" aria-hidden="true"></i></span>
+                        <span class="ath-stat-body">
+                            <strong class="ath-stat-val" data-ath-count="{{ author_post_count }}">{{ author_post_count|to_persian_digits }}</strong>
+                            <span class="ath-stat-lbl">{{ author.stats_labels.articles }}</span>
+                        </span>
+                    </article>
+                    <article class="ath-stat">
+                        <span class="ath-stat-icon"><i class="fas fa-compass" aria-hidden="true"></i></span>
+                        <span class="ath-stat-body">
+                            <strong class="ath-stat-val">۳</strong>
+                            <span class="ath-stat-lbl">{{ author.stats_labels.landings }}</span>
+                        </span>
+                    </article>
+                    <article class="ath-stat">
+                        <span class="ath-stat-icon"><i class="fas fa-cubes" aria-hidden="true"></i></span>
+                        <span class="ath-stat-body">
+                            <strong class="ath-stat-val">۱</strong>
+                            <span class="ath-stat-lbl">{{ author.stats_labels.product }}</span>
+                        </span>
+                    </article>
+                </div>
             </div>
         </div>
     </section>
 
-    {# ── Expertise / Highlights ── #}
-    <section class="author-section" aria-labelledby="author-highlights-title">
+    <section class="ath-band" aria-labelledby="ath-highlights-title">
         <div class="container">
-            <header class="author-section-head mk-reveal">
-                <span class="author-section-kicker"><i class="fas fa-star"></i> {{ author.highlights_section.kicker }}</span>
-                <h2 id="author-highlights-title" class="author-section-title">{{ author.highlights_section.title }}</h2>
-                <p class="author-section-desc">{{ author.highlights_section.desc }}</p>
+            <header class="ath-section-head ath-reveal">
+                <span class="ath-kicker">{{ author.highlights_section.kicker }}</span>
+                <h2 id="ath-highlights-title">{{ author.highlights_section.title }}</h2>
+                <p class="ath-section-lead">{{ author.highlights_section.desc }}</p>
             </header>
-            <div class="author-highlight-grid mk-reveal mk-reveal-stagger">
+            <div class="ath-highlight-grid">
                 {% for h in author.highlights %}
-                <article class="author-highlight-card author-highlight-card--{{ h.accent }}">
-                    <span class="author-highlight-glow" aria-hidden="true"></span>
-                    <span class="mk-icon mk-icon--md mk-icon--{{ h.accent }}">
-                        <i class="fas {{ h.icon }}"></i>
-                    </span>
+                <article class="ath-highlight ath-reveal ath-highlight--{{ h.accent }}" style="--ath-delay: {{ forloop.counter0 }}">
+                    <span class="ath-highlight-icon"><i class="fas {{ h.icon }}" aria-hidden="true"></i></span>
                     <h3>{{ h.title }}</h3>
                     <p>{{ h.text }}</p>
                 </article>
@@ -125,30 +133,29 @@
         </div>
     </section>
 
-    {# ── Product showcase ── #}
     {% if author.product_cards %}
-    <section id="author-product" class="author-section author-section--muted" aria-labelledby="author-showcase-title">
+    <section id="ath-product" class="ath-band ath-band--muted" aria-labelledby="ath-showcase-title">
         <div class="container">
-            <header class="author-section-head mk-reveal">
-                <span class="author-section-kicker"><i class="fas fa-cube"></i> {{ author.product_section.kicker }}</span>
-                <h2 id="author-showcase-title" class="author-section-title">{{ author.product_section.title }}</h2>
-                <p class="author-section-desc author-section-desc--lead">{{ author.product_section.subtitle }}</p>
-                <p class="author-section-intro">{{ author.product_section.intro }}</p>
+            <header class="ath-section-head ath-reveal">
+                <span class="ath-kicker">{{ author.product_section.kicker }}</span>
+                <h2 id="ath-showcase-title">{{ author.product_section.title }}</h2>
+                <p class="ath-section-lead ath-section-lead--bold">{{ author.product_section.subtitle }}</p>
+                <p class="ath-section-intro">{{ author.product_section.intro }}</p>
             </header>
-            <div class="author-showcase mk-reveal mk-reveal-stagger">
+            <div class="ath-showcase">
                 {% for card in author.product_cards %}
-                <figure class="author-showcase-card author-showcase-card--{{ card.accent }}">
-                    <button type="button" class="author-showcase-open" data-seo-lightbox
+                <figure class="ath-showcase-card ath-reveal ath-showcase-card--{{ card.accent }}" style="--ath-delay: {{ forloop.counter0 }}">
+                    <button type="button" class="ath-showcase-open"
+                        data-ath-lightbox
                         data-src="{% static card.image %}"
                         data-caption="{{ card.caption }}"
                         aria-label="بزرگنمایی: {{ card.caption }}">
                         <img src="{% static card.image %}" alt="{{ card.caption }}" loading="lazy" decoding="async">
-                        <span class="author-showcase-shine" aria-hidden="true"></span>
-                        <span class="author-showcase-zoom"><i class="fas fa-search-plus"></i></span>
+                        <span class="ath-showcase-zoom" aria-hidden="true"><i class="fas fa-search-plus"></i></span>
                         <figcaption>{{ card.caption }}</figcaption>
                     </button>
                     {% if card.desc %}
-                    <p class="author-showcase-desc">{{ card.desc }}</p>
+                    <p class="ath-showcase-desc">{{ card.desc }}</p>
                     {% endif %}
                 </figure>
                 {% endfor %}
@@ -157,17 +164,16 @@
     </section>
     {% endif %}
 
-    {# ── Pillars ── #}
-    <section class="author-section" aria-labelledby="author-pillars-title">
+    <section class="ath-band" aria-labelledby="ath-pillars-title">
         <div class="container">
-            <header class="author-section-head mk-reveal">
-                <span class="author-section-kicker"><i class="fas fa-link"></i> {{ author.pillars_section.kicker }}</span>
-                <h2 id="author-pillars-title" class="author-section-title">{{ author.pillars_section.title }}</h2>
+            <header class="ath-section-head ath-reveal">
+                <span class="ath-kicker">{{ author.pillars_section.kicker }}</span>
+                <h2 id="ath-pillars-title">{{ author.pillars_section.title }}</h2>
             </header>
-            <div class="author-pillar-grid mk-reveal mk-reveal-stagger">
+            <div class="ath-pillar-grid">
                 {% for link in author.pillar_links %}
-                <a href="{% url link.landing_url_name %}" class="author-pillar-card{% if link.accent %} author-pillar-card--accent{% endif %}">
-                    <span class="author-pillar-icon" aria-hidden="true"><i class="fas fa-arrow-left"></i></span>
+                <a href="{% url link.landing_url_name %}" class="ath-pillar ath-reveal{% if link.accent %} ath-pillar--accent{% endif %}" style="--ath-delay: {{ forloop.counter0 }}">
+                    <span class="ath-pillar-icon" aria-hidden="true"><i class="fas fa-arrow-left"></i></span>
                     <strong>{{ link.label }}</strong>
                     <span>{{ link.desc }}</span>
                 </a>
@@ -176,56 +182,55 @@
         </div>
     </section>
 
-    {# ── Articles ── #}
     {% if author_posts %}
-    <section class="author-section author-section--muted" aria-labelledby="author-posts-title">
+    <section class="ath-band ath-band--muted" aria-labelledby="ath-posts-title">
         <div class="container">
-            <header class="author-section-head mk-reveal">
-                <span class="author-section-kicker"><i class="fas fa-pen-nib"></i> {{ author.articles_section.kicker }}</span>
-                <h2 id="author-posts-title" class="author-section-title">{{ author.articles_section.title }}</h2>
-                <p class="author-section-desc">{{ author.articles_section.desc }}</p>
+            <header class="ath-section-head ath-reveal">
+                <span class="ath-kicker">{{ author.articles_section.kicker }}</span>
+                <h2 id="ath-posts-title">{{ author.articles_section.title }}</h2>
+                <p class="ath-section-lead">{{ author.articles_section.desc }}</p>
             </header>
-            <div class="author-post-grid mk-reveal mk-reveal-stagger">
+            <div class="ath-post-grid">
                 {% for post in author_posts %}
-                <article class="author-post-card">
-                    <a href="{{ post.get_absolute_url }}" class="author-post-card-link">
+                <article class="ath-post ath-reveal" style="--ath-delay: {{ forloop.counter0 }}">
+                    <a href="{{ post.get_absolute_url }}" class="ath-post-link">
                         {% if post.category %}
-                        <span class="author-post-cat">{{ post.category.name }}</span>
+                        <span class="ath-post-cat">{{ post.category.name }}</span>
                         {% endif %}
                         <h3>{{ post.title }}</h3>
                         {% if post.excerpt %}
                         <p>{{ post.excerpt|truncatewords:18 }}</p>
                         {% endif %}
-                        <footer class="author-post-foot">
+                        <footer class="ath-post-foot">
                             <time datetime="{{ post.published_at|date:'c' }}">{{ post.published_at|to_jalali_date:"%Y/%m/%d" }}</time>
-                            <span class="author-post-more">مطالعه <i class="fas fa-arrow-left"></i></span>
+                            <span class="ath-post-more">مطالعه <i class="fas fa-arrow-left" aria-hidden="true"></i></span>
                         </footer>
                     </a>
                 </article>
                 {% endfor %}
             </div>
-            <p class="author-post-all mk-reveal">
-                <a href="{% url 'blog:post_list' %}" class="seo-btn seo-btn--outline">
-                    <i class="fas fa-th-large"></i> همه مقالات
+            <p class="ath-post-all ath-reveal">
+                <a href="{% url 'blog:post_list' %}" class="ath-btn ath-btn--ghost">
+                    <i class="fas fa-th-large" aria-hidden="true"></i> همه مقالات
                 </a>
             </p>
         </div>
     </section>
     {% endif %}
 
-    {# ── CTA ── #}
-    <section class="author-cta-band" aria-label="تماس">
-        <div class="author-cta-mesh" aria-hidden="true"></div>
-        <div class="container author-cta-inner mk-reveal">
-            <h2>{{ author.cta.title }}</h2>
-            <p class="author-cta-sub">{{ author.cta.subtitle }}</p>
-            <div class="author-hero-actions author-hero-actions--center">
-                <a href="{% url author.cta.primary_url_name %}" class="seo-btn seo-btn--primary seo-btn--lg">
-                    <i class="fas fa-comments"></i> {{ author.cta.primary_label }}
-                </a>
-                <a href="{{ site_brand.creator_telegram_url }}" class="seo-btn seo-btn--ghost seo-btn--lg" target="_blank" rel="noopener">
-                    <i class="fab fa-telegram"></i> {{ author.cta.secondary_label }}
-                </a>
+    <section class="ath-band ath-band--cta" aria-label="تماس">
+        <div class="container">
+            <div class="ath-cta ath-reveal">
+                <h2>{{ author.cta.title }}</h2>
+                <p>{{ author.cta.subtitle }}</p>
+                <div class="ath-actions ath-actions--center">
+                    <a href="{% url author.cta.primary_url_name %}" class="ath-btn ath-btn--white">
+                        <i class="fas fa-comments" aria-hidden="true"></i> {{ author.cta.primary_label }}
+                    </a>
+                    <a href="{{ site_brand.creator_telegram_url }}" class="ath-btn ath-btn--ghost-light" target="_blank" rel="noopener">
+                        <i class="fab fa-telegram" aria-hidden="true"></i> {{ author.cta.secondary_label }}
+                    </a>
+                </div>
             </div>
         </div>
     </section>
@@ -234,5 +239,5 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'js/mizkar-seo-landing.js' %}?v=2" defer></script>
+<script src="{% static 'js/author-page.js' %}?v=1" defer></script>
 {% endblock %}

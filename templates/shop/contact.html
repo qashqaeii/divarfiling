@@ -9,101 +9,42 @@
 {% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/contact-page.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'css/contact-page.css' %}?v=3">
 {% endblock %}
 
 {% block content %}
-<div class="mk-pub-wrap mk-contact-wrap" style="--mk-contact-bg: url('{% static 'images/contact-bg.webp' %}');">
+<div class="mk-pub-wrap mk-contact-wrap">
+    <div class="mk-contact-bg" style="background-image: url('{% static 'images/contact-bg.webp' %}');" aria-hidden="true"></div>
 
-    <header class="mk-contact-hero">
-        <div class="container mk-contact-hero__grid">
-            <div class="mk-contact-hero__copy">
-                <span class="mk-contact-kicker">
-                    <i class="fas fa-headset" aria-hidden="true"></i>
-                    پشتیبانی و ارتباط با ما
-                </span>
-                <h1>در دسترس هستیم</h1>
-                <p class="mk-contact-lead">برای خرید لایسنس، راه‌اندازی ربات، خطای فنی یا پیشنهاد بهبود — پیام بفرستید یا مستقیم تماس بگیرید. معمولاً در همان روز کاری پاسخ می‌دهیم.</p>
-                <div class="mk-contact-quick-cards">
-                    <a href="tel:{{ site_brand.creator_phone_tel }}" class="mk-contact-quick-card">
-                        <span class="mk-contact-quick-card__icon mk-contact-quick-card__icon--phone"><i class="fas fa-phone-alt"></i></span>
-                        <span class="mk-contact-quick-card__text">
-                            <strong>تماس مستقیم</strong>
-                            <span>{{ site_brand.creator_phone_display }}</span>
-                        </span>
-                    </a>
-                    <a href="{{ site_brand.creator_telegram_url }}" class="mk-contact-quick-card" target="_blank" rel="noopener">
-                        <span class="mk-contact-quick-card__icon mk-contact-quick-card__icon--telegram"><i class="fab fa-telegram"></i></span>
-                        <span class="mk-contact-quick-card__text">
-                            <strong>تلگرام</strong>
-                            <span>{{ site_brand.creator_telegram }}</span>
-                        </span>
-                    </a>
-                    <a href="mailto:{{ site_brand.support_email }}" class="mk-contact-quick-card">
-                        <span class="mk-contact-quick-card__icon mk-contact-quick-card__icon--email"><i class="fas fa-envelope"></i></span>
-                        <span class="mk-contact-quick-card__text">
-                            <strong>ایمیل</strong>
-                            <span>{{ site_brand.support_email }}</span>
-                        </span>
-                    </a>
-                </div>
+    <div class="container mk-contact-shell">
+        <header class="mk-contact-top">
+            <span class="mk-contact-kicker">
+                <i class="fas fa-headset" aria-hidden="true"></i>
+                پشتیبانی و ارتباط با ما
+            </span>
+            <h1>در دسترس هستیم</h1>
+            <p class="mk-contact-lead">برای خرید لایسنس، راه‌اندازی ربات یا پشتیبانی فنی — پیام بفرستید یا مستقیم تماس بگیرید.</p>
+            <div class="mk-contact-quick">
+                <a href="tel:{{ site_brand.creator_phone_tel }}" class="mk-contact-quick__item">
+                    <i class="fas fa-phone-alt"></i>
+                    <span>{{ site_brand.creator_phone_display }}</span>
+                </a>
+                <a href="{{ site_brand.creator_telegram_url }}" class="mk-contact-quick__item" target="_blank" rel="noopener">
+                    <i class="fab fa-telegram"></i>
+                    <span>{{ site_brand.creator_telegram }}</span>
+                </a>
+                <a href="mailto:{{ site_brand.support_email }}" class="mk-contact-quick__item">
+                    <i class="fas fa-envelope"></i>
+                    <span>{{ site_brand.support_email }}</span>
+                </a>
             </div>
-            <div class="mk-contact-hero__visual" aria-hidden="true">
-                <div class="mk-contact-hero__bubble">سوال دارید؟ با ما صحبت کنید!</div>
-                <svg class="mk-contact-hero__illustration" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 320" fill="none" role="img" aria-label="پشتیبانی">
-                    <defs>
-                        <linearGradient id="ct-g1" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" stop-color="#c4b5fd"/>
-                            <stop offset="100%" stop-color="#7c3aed"/>
-                        </linearGradient>
-                        <linearGradient id="ct-g2" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" stop-color="#ddd6fe"/>
-                            <stop offset="100%" stop-color="#8b5cf6"/>
-                        </linearGradient>
-                        <filter id="ct-shadow" x="-20%" y="-20%" width="140%" height="140%">
-                            <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#7c3aed" flood-opacity="0.18"/>
-                        </filter>
-                    </defs>
-                    <ellipse cx="180" cy="290" rx="120" ry="16" fill="#7c3aed" opacity="0.12"/>
-                    <g filter="url(#ct-shadow)">
-                        <path d="M88 168c0-44 36-80 92-80s92 36 92 80v52c0 18-14 32-32 32h-8l-24 28-24-28h-4c-18 0-32-14-32-32v-52z" fill="url(#ct-g1)"/>
-                        <path d="M88 168c0-44 36-80 92-80s92 36 92 80" stroke="#fff" stroke-width="6" opacity="0.35"/>
-                        <rect x="132" y="188" width="96" height="18" rx="9" fill="#fff" opacity="0.35"/>
-                        <circle cx="152" cy="197" r="5" fill="#fff" opacity="0.7"/>
-                        <circle cx="180" cy="197" r="5" fill="#fff" opacity="0.7"/>
-                        <circle cx="208" cy="197" r="5" fill="#fff" opacity="0.7"/>
-                    </g>
-                    <g transform="translate(248 52)">
-                        <rect x="0" y="0" width="88" height="64" rx="18" fill="url(#ct-g2)"/>
-                        <circle cx="28" cy="32" r="6" fill="#fff" opacity="0.85"/>
-                        <circle cx="44" cy="32" r="6" fill="#fff" opacity="0.85"/>
-                        <circle cx="60" cy="32" r="6" fill="#fff" opacity="0.85"/>
-                        <path d="M44 64 L28 78 L60 78 Z" fill="url(#ct-g2)"/>
-                    </g>
-                    <g transform="translate(36 72) rotate(-18)">
-                        <path d="M0 36 L72 0 L56 56 L0 72 Z" fill="#a78bfa" opacity="0.85"/>
-                        <path d="M72 0 L88 20 L56 56 Z" fill="#7c3aed"/>
-                    </g>
-                    <circle cx="300" cy="220" r="14" fill="#c4b5fd" opacity="0.7"/>
-                    <circle cx="52" cy="230" r="10" fill="#ddd6fe" opacity="0.8"/>
-                    <circle cx="310" cy="120" r="8" fill="#ede9fe"/>
-                </svg>
-            </div>
-        </div>
-    </header>
+        </header>
 
-    <section class="mk-contact-main">
-        <div class="container mk-contact-layout">
-            <div class="mk-contact-form-card">
+        <div class="mk-contact-layout">
+            <section class="mk-contact-form-card">
                 <header class="mk-contact-form-head">
-                    <div class="mk-contact-form-head__top">
-                        <span class="mk-contact-form-eyebrow">
-                            <i class="fas fa-pen" aria-hidden="true"></i>
-                            فرم تماس
-                        </span>
-                    </div>
+                    <span class="mk-contact-form-eyebrow"><i class="fas fa-pen" aria-hidden="true"></i> فرم تماس</span>
                     <h2>ارسال پیام</h2>
-                    <p>معمولاً در چند ساعت کاری پاسخ می‌دهیم.</p>
                 </header>
                 <form method="post" class="mk-contact-form contact-form">
                     {% csrf_token %}
@@ -144,41 +85,68 @@
                     </button>
                     <p class="mk-contact-privacy">
                         <i class="fas fa-lock" aria-hidden="true"></i>
-                        اطلاعات شما نزد ما محرمانه باقی می‌ماند
+                        اطلاعات شما محرمانه باقی می‌ماند
                     </p>
                 </form>
-            </div>
+            </section>
 
             <aside class="mk-contact-aside">
                 <div class="mk-contact-info-card">
-                    <h3 class="mk-contact-info-card__title">
-                        <i class="fas fa-address-book" aria-hidden="true"></i>
-                        اطلاعات تماس و پشتیبانی
-                    </h3>
-                    {% include 'includes/creator_info.html' with compact=True panel_class='mk-creator-panel--contact' %}
+                    <div class="mk-contact-profile">
+                        <div class="mk-contact-profile__avatar" aria-hidden="true">{{ site_brand.creator_name|slice:":1" }}</div>
+                        <div>
+                            <strong>{{ site_brand.creator_name }}</strong>
+                            <span>سازنده و پشتیبانی</span>
+                        </div>
+                    </div>
+                    <ul class="mk-contact-channels">
+                        <li>
+                            <a href="tel:{{ site_brand.creator_phone_tel }}">
+                                <i class="fas fa-phone-alt"></i>
+                                <span>{{ site_brand.creator_phone_display }}</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ site_brand.creator_telegram_url }}" target="_blank" rel="noopener">
+                                <i class="fab fa-telegram"></i>
+                                <span>{{ site_brand.creator_telegram }}</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="mailto:{{ site_brand.support_email }}">
+                                <i class="fas fa-envelope"></i>
+                                <span>{{ site_brand.support_email }}</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ site_brand.site_url }}" target="_blank" rel="noopener">
+                                <i class="fas fa-globe"></i>
+                                <span>{{ site_brand.site_url_display }}</span>
+                            </a>
+                        </li>
+                    </ul>
+                    <p class="mk-contact-hours"><i class="fas fa-clock" aria-hidden="true"></i> شنبه تا پنجشنبه · ۹ تا ۱۸</p>
                 </div>
 
-                <div class="mk-contact-faq-card">
-                    <h3>
-                        <i class="fas fa-circle-question" aria-hidden="true"></i>
-                        سوالات متداول
-                    </h3>
-                    <details class="mk-contact-faq-item">
-                        <summary>چگونه لایسنس بخرم؟</summary>
-                        <p>از صفحه <a href="{% url 'product_detail' slug='divar-extraction-bot' %}">ربات استخراج</a> پلن را انتخاب کنید و مراحل پرداخت را طی کنید.</p>
-                    </details>
-                    <details class="mk-contact-faq-item">
-                        <summary>فعال‌سازی چقدر طول می‌کشد؟</summary>
-                        <p>پس از پرداخت، کلید لایسنس در داشبورد شما فعال می‌شود و می‌توانید همان لحظه استفاده کنید.</p>
-                    </details>
-                    <details class="mk-contact-faq-item">
-                        <summary>پشتیبانی فنی چگونه است؟</summary>
-                        <p>مستقیم با {{ site_brand.creator_name }} از طریق تلفن، تلگرام یا همین فرم تماس.</p>
-                    </details>
-                </div>
+                <details class="mk-contact-faq">
+                    <summary><i class="fas fa-circle-question" aria-hidden="true"></i> سوالات متداول</summary>
+                    <div class="mk-contact-faq__body">
+                        <details class="mk-contact-faq-item">
+                            <summary>چگونه لایسنس بخرم؟</summary>
+                            <p>از صفحه <a href="{% url 'product_detail' slug='divar-extraction-bot' %}">ربات استخراج</a> پلن را انتخاب کنید.</p>
+                        </details>
+                        <details class="mk-contact-faq-item">
+                            <summary>فعال‌سازی چقدر طول می‌کشد؟</summary>
+                            <p>پس از پرداخت، لایسنس همان لحظه در داشبورد فعال می‌شود.</p>
+                        </details>
+                        <details class="mk-contact-faq-item">
+                            <summary>پشتیبانی فنی چگونه است؟</summary>
+                            <p>مستقیم با {{ site_brand.creator_name }} از طریق تلفن، تلگرام یا فرم.</p>
+                        </details>
+                    </div>
+                </details>
             </aside>
         </div>
-    </section>
-
+    </div>
 </div>
 {% endblock %}

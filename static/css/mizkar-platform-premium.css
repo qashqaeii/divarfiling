@@ -467,3 +467,309 @@ html.mk-public .mk-mobile-sub-link--alt {
         transform: none !important;
     }
 }
+
+/* ═══════════════════════════════════════════════════════════
+   Premium v5 — Compact Pro (dense rhythm + section craft)
+   ═══════════════════════════════════════════════════════════ */
+
+body.mk-platform-premium .plat-page--feel > .plat-nav-bar-wrap {
+    padding-top: 0.15rem;
+    padding-bottom: 0;
+}
+
+body.mk-platform-premium .plat-nav-bar {
+    margin-top: 0.35rem;
+    padding: 0.65rem 0.85rem;
+}
+
+/* Hero — tighter, content-first */
+body.mk-platform-premium [class*="-hero"],
+body.mk-platform-premium .plat-crm-hero {
+    padding-block: clamp(1.35rem, 2.8vw, 2rem) clamp(1.5rem, 3vw, 2.25rem) !important;
+}
+
+body.mk-platform-premium [class*="-hero__lead"],
+body.mk-platform-premium [class*="-hero__bullets"],
+body.mk-platform-premium .plat-crm-hero__lead {
+    margin-bottom: 0.65rem !important;
+}
+
+body.mk-platform-premium [class*="-hero__grid"],
+body.mk-platform-premium [class*="-hero__inner"],
+body.mk-platform-premium .plat-crm-hero__inner {
+    gap: clamp(1rem, 2.5vw, 1.65rem) !important;
+}
+
+/* Section prose — less air, sharper type */
+body.mk-platform-premium [class*="-prose"] h2 {
+    margin-bottom: 0.55rem !important;
+    font-size: clamp(1.15rem, 2.2vw, 1.45rem) !important;
+    line-height: 1.35 !important;
+    letter-spacing: -0.025em;
+    position: relative;
+    padding-inline-start: 0.85rem;
+}
+
+body.mk-platform-premium [class*="-prose"] h2::before {
+    content: '';
+    position: absolute;
+    inset-inline-start: 0;
+    top: 0.15em;
+    bottom: 0.15em;
+    width: 3px;
+    border-radius: 999px;
+    background: linear-gradient(180deg, var(--plat-accent, #8b5cf6), color-mix(in srgb, var(--plat-accent, #8b5cf6) 35%, transparent));
+}
+
+body.mk-platform-premium [class*="-prose--center"] h2 {
+    padding-inline-start: 0;
+}
+
+body.mk-platform-premium [class*="-prose--center"] h2::before {
+    display: none;
+}
+
+body.mk-platform-premium [class*="-prose"] p,
+body.mk-platform-premium [class*="-prose__lead"] {
+    margin-bottom: 0.65rem !important;
+    line-height: 1.72 !important;
+    font-size: 0.92rem !important;
+}
+
+body.mk-platform-premium [class*="-eyebrow"] {
+    margin-bottom: 0.35rem !important;
+    font-size: 0.68rem !important;
+}
+
+/* Section head component (pro) */
+body.mk-platform-premium .plat-section-head--pro {
+    margin-bottom: 1.25rem;
+}
+
+body.mk-platform-premium .plat-section-head--pro .plat-section-head__main {
+    display: grid;
+    gap: 0.35rem;
+}
+
+@media (min-width: 768px) {
+    body.mk-platform-premium .plat-section-head--pro:not(.plat-section-head--center) {
+        display: grid;
+        grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+        gap: 1rem 1.75rem;
+        align-items: end;
+    }
+
+    body.mk-platform-premium .plat-section-head--pro:not(.plat-section-head--center) .plat-section-head__eyebrow {
+        grid-column: 1 / -1;
+    }
+
+    body.mk-platform-premium .plat-section-head--pro:not(.plat-section-head--center) .plat-section-head__lead {
+        margin: 0;
+        opacity: 0.82;
+        font-size: 0.88rem;
+        line-height: 1.65;
+    }
+}
+
+body.mk-platform-premium .plat-section-head--pro .plat-section-head__title {
+    margin: 0;
+    font-size: clamp(1.12rem, 2.1vw, 1.4rem);
+    letter-spacing: -0.025em;
+    padding-inline-start: 0.75rem;
+    border-inline-start: 3px solid var(--plat-accent, #8b5cf6);
+}
+
+body.mk-platform-premium .plat-section-head--center .plat-section-head__title {
+    padding-inline-start: 0;
+    border-inline-start: none;
+}
+
+/* Grids — denser */
+body.mk-platform-premium [class*="-outcomes__grid"],
+body.mk-platform-premium [class*="-next__grid"],
+body.mk-platform-premium [class*="-audience"],
+body.mk-platform-premium [class*="-caps"],
+body.mk-platform-premium [class*="-framework"],
+body.mk-platform-premium [class*="-workflow"] {
+    margin-top: 1.35rem !important;
+    gap: 0.65rem !important;
+}
+
+body.mk-platform-premium [class*="-outcomes__item"],
+body.mk-platform-premium [class*="-next__card"],
+body.mk-platform-premium [class*="-audience__card"] {
+    padding: 0.85rem 0.9rem !important;
+    border-radius: 12px !important;
+}
+
+body.mk-platform-premium [class*="-outcomes__after"] {
+    font-size: 0.88rem !important;
+    line-height: 1.45 !important;
+}
+
+/* Soft CTA — inline band, not giant gutter */
+body.mk-platform-premium [class*="-soft-cta"] {
+    padding-block: clamp(1.15rem, 2.5vw, 1.65rem) !important;
+}
+
+body.mk-platform-premium [class*="-soft-cta__inner"] {
+    padding: 0.85rem 1rem !important;
+    gap: 0.85rem !important;
+}
+
+body.mk-platform-premium [class*="-soft-cta__copy"] p {
+    font-size: 0.84rem !important;
+    line-height: 1.55 !important;
+}
+
+/* FAQ — compact accordion */
+body.mk-platform-premium .plat-faq__item {
+    padding: 0.65rem 0.85rem !important;
+}
+
+body.mk-platform-premium .plat-faq__item summary {
+    font-size: 0.88rem !important;
+    line-height: 1.5 !important;
+}
+
+body.mk-platform-premium .plat-faq__answer p {
+    font-size: 0.86rem !important;
+    line-height: 1.65 !important;
+    margin: 0 !important;
+}
+
+/* Final CTA — tighter */
+body.mk-platform-premium [class*="-final-cta"] {
+    padding-block: clamp(1.75rem, 3.5vw, 2.5rem) !important;
+}
+
+body.mk-platform-premium [class*="-final-cta"]__inner {
+    padding: clamp(1.35rem, 3vw, 1.85rem) clamp(1rem, 3vw, 1.35rem) !important;
+}
+
+body.mk-platform-premium [class*="-final-cta"]__inner p {
+    font-size: 0.9rem !important;
+    margin-bottom: 0.85rem !important;
+}
+
+/* Icon wells — slightly smaller, sharper */
+body.mk-platform-premium [class*="-ico--lg"] {
+    --fhub-ico-size: 2.35rem;
+    --crm-ico-size: 2.35rem;
+    --fil-ico-size: 2.35rem;
+    --ex-ico-size: 2.35rem;
+    --rem-ico-size: 2.35rem;
+    --sol-ico-size: 2.35rem;
+    --shub-ico-size: 2.35rem;
+    width: 2.35rem !important;
+    height: 2.35rem !important;
+}
+
+/* Pillars / bento — tighter featured card */
+body.mk-platform-premium .fhub-pillars {
+    margin-top: 1.35rem !important;
+    gap: 0.65rem !important;
+}
+
+body.mk-platform-premium .fhub-pillar__card {
+    padding: 0.95rem !important;
+}
+
+body.mk-platform-premium .fhub-pillar__body p {
+    font-size: 0.84rem !important;
+    line-height: 1.55 !important;
+}
+
+body.mk-platform-premium .fhub-lifecycle {
+    margin-top: 1.35rem !important;
+    gap: 0.65rem !important;
+}
+
+body.mk-platform-premium .fhub-lifecycle__step {
+    padding: 0.85rem !important;
+}
+
+body.mk-platform-premium .fhub-lifecycle__step p {
+    font-size: 0.84rem !important;
+}
+
+/* CRM modules / story beats — denser */
+body.mk-platform-premium .crm-story__beats {
+    margin-top: 1.15rem !important;
+    gap: 0.55rem !important;
+}
+
+body.mk-platform-premium .crm-story__beat {
+    padding: 0.75rem 0.85rem !important;
+}
+
+body.mk-platform-premium .crm-cap,
+body.mk-platform-premium .fil-cap,
+body.mk-platform-premium .ex-cap {
+    padding: 0.85rem !important;
+}
+
+body.mk-platform-premium .crm-module,
+body.mk-platform-premium .fil-module {
+    gap: 1.35rem !important;
+}
+
+@media (min-width: 960px) {
+    body.mk-platform-premium .crm-module,
+    body.mk-platform-premium .fil-module {
+        gap: 1.65rem !important;
+    }
+}
+
+/* Screenshot gallery — tighter row */
+body.mk-platform-premium .fhub-shots,
+body.mk-platform-premium .crm-shots,
+body.mk-platform-premium .fil-shots,
+body.mk-platform-premium .sol-shots {
+    margin-top: 1.25rem !important;
+    gap: 0.75rem !important;
+}
+
+/* Sticky CTA — slimmer */
+body.mk-platform-premium .plat-sticky-cta {
+    padding: 0.55rem 0.85rem !important;
+}
+
+body.mk-platform-premium .plat-sticky-cta__label {
+    font-size: 0.78rem !important;
+}
+
+/* Section separators instead of huge soft bands */
+body.mk-platform-premium [class*="-sec"] + [class*="-sec"]:not([class*="-soft-cta"]) {
+    border-top: 1px solid color-mix(in srgb, var(--plat-accent, #8b5cf6) 8%, transparent);
+}
+
+body.mk-platform-premium [class*="-sec--soft"] {
+    border-top: none;
+}
+
+/* Buttons — slightly tighter */
+body.mk-platform-premium .plat-btn {
+    padding: 0.62rem 1.05rem !important;
+    font-size: 0.86rem !important;
+}
+
+/* Related posts row */
+body.mk-platform-premium [class*="-related"] {
+    margin-top: 1rem !important;
+    gap: 0.65rem !important;
+}
+
+body.mk-platform-premium [class*="-related__card"] {
+    padding: 0.85rem !important;
+}
+
+@media (max-width: 767px) {
+    body.mk-platform-premium [class*="-prose"] h2 {
+        padding-inline-start: 0.65rem;
+    }
+
+    body.mk-platform-premium .plat-section-head--pro:not(.plat-section-head--center) {
+        display: block;
+    }
+}

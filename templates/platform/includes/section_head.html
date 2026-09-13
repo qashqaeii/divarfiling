@@ -1,5 +1,7 @@
-<header class="plat-section-head{% if centered %} plat-section-head--center{% endif %}">
+<header class="plat-section-head plat-section-head--pro{% if centered %} plat-section-head--center{% endif %}">
     {% if eyebrow %}<p class="plat-section-head__eyebrow">{{ eyebrow }}</p>{% endif %}
-    <h2 class="plat-section-head__title"{% if id %} id="{{ id }}"{% endif %}>{{ title }}</h2>
-    {% if lead %}<p class="plat-section-head__lead">{{ lead }}</p>{% endif %}
+    <div class="plat-section-head__main">
+        <h2 class="plat-section-head__title"{% if id %} id="{{ id }}"{% endif %}>{{ title }}</h2>
+        {% if lead %}<p class="plat-section-head__lead">{{ lead }}</p>{% endif %}
+    </div>
 </header>

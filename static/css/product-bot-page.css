@@ -569,13 +569,26 @@ html.mk-public.mk-product-bot-premium .main-content {
     display: grid;
     gap: 1rem;
     align-items: center;
+    min-width: 0;
 }
 
 @media (min-width: 768px) {
-    .pbp-platform { grid-template-columns: 1fr 1fr; }
+    .pbp-platform { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
 }
 
-.pbp-platform__copy { direction: rtl; }
+.pbp-platform__copy {
+    direction: rtl;
+    min-width: 0;
+}
+
+.pbp-platform__visual {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+}
 
 .pbp-platform__tag {
     margin: 0 0 0.65rem;
@@ -613,15 +626,60 @@ html.mk-public.mk-product-bot-premium .main-content {
     position: relative;
     border: none;
     padding: 0;
+    margin: 0;
+    max-width: 100%;
+    cursor: zoom-in;
+    font: inherit;
+    background: none;
+}
+
+.pbp-platform__shot--desktop {
+    width: 100%;
     border-radius: 14px;
     overflow: hidden;
-    cursor: zoom-in;
     background: #fff;
     border: 1px solid var(--pbp-border);
     box-shadow: var(--pbp-shadow);
 }
 
-.pbp-platform__shot img { display: block; width: 100%; height: auto; }
+.pbp-platform__shot--desktop img {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-height: clamp(11rem, 26vw, 16rem);
+    object-fit: cover;
+    object-position: top center;
+}
+
+.pbp-platform__shot--phone {
+    width: min(100%, 10.5rem);
+    padding: 0.45rem;
+    border-radius: 22px;
+    overflow: hidden;
+    background: linear-gradient(165deg, #475569 0%, #1e293b 55%, #0f172a 100%);
+    border: 1px solid rgba(15, 23, 42, 0.2);
+    box-shadow: var(--pbp-shadow-lg);
+}
+
+.pbp-platform__shot--phone img {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-height: clamp(14rem, 34vw, 20rem);
+    object-fit: contain;
+    object-position: top center;
+    border-radius: 16px;
+}
+
+@media (min-width: 768px) {
+    .pbp-platform--phone {
+        grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+    }
+
+    .pbp-platform--phone .pbp-platform__visual {
+        justify-content: center;
+    }
+}
 
 .pbp-platform__zoom {
     position: absolute;

@@ -10,7 +10,7 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/mizkar-video-player.css' %}?v=3">
-<link rel="stylesheet" href="{% static 'css/education-page.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'css/education-page.css' %}?v=5">
 {% endblock %}
 
 {% block content %}
@@ -124,15 +124,37 @@
         </div>
     </header>
 
-    <section class="edu-section edu-paths-band" aria-labelledby="edu-paths-title">
+    <nav class="edu-sticky-nav" aria-label="ناوبری سریع صفحه آموزش">
+        <div class="container edu-sticky-nav__track">
+            <a href="#edu-paths-title" class="edu-sticky-nav__link is-active" data-edu-nav="paths">
+                <i class="fas fa-route" aria-hidden="true"></i> مسیرها
+            </a>
+            {% if install_video.available or filing_video.available or crm_video.available %}
+            <a href="#edu-videos-title" class="edu-sticky-nav__link" data-edu-nav="videos">
+                <i class="fas fa-circle-play" aria-hidden="true"></i> ویدیو
+            </a>
+            {% endif %}
+            <a href="#edu-modules-title" class="edu-sticky-nav__link" data-edu-nav="modules">
+                <i class="fas fa-layer-group" aria-hidden="true"></i> ماژول‌ها
+            </a>
+            <a href="#edu-gallery-title" class="edu-sticky-nav__link" data-edu-nav="gallery">
+                <i class="fas fa-images" aria-hidden="true"></i> گالری
+            </a>
+        </div>
+    </nav>
+
+    <section class="edu-section edu-paths-band" id="edu-paths" aria-labelledby="edu-paths-title">
         <div class="container">
             <header class="edu-section-head edu-reveal">
+                <span class="edu-section__num" aria-hidden="true">۰۱</span>
                 <span class="edu-kicker"><i class="fas fa-route edu-gicon edu-gicon--violet edu-gicon--xs" aria-hidden="true"></i> مسیر یادگیری</span>
                 <h2 id="edu-paths-title">{{ edu.sections.paths.title }}</h2>
+                <p class="edu-section__desc">{{ edu.sections.paths.subtitle }}</p>
             </header>
 
             <div class="edu-path-shell edu-reveal">
-            <div class="edu-path-tabs" role="tablist">
+            <div class="edu-path-tabs" role="tablist" data-tab-track="path">
+                <span class="edu-tab-indicator" aria-hidden="true"></span>
                 {% for path in edu.paths %}
                 <button type="button"
                         class="edu-path-tab{% if forloop.first %} is-active{% endif %}"
@@ -175,7 +197,10 @@
                             {% elif step.requires_bot and not has_bot_license %}
                             <a href="{% url 'product_list' %}" class="edu-link">مشاهده ربات <i class="fas fa-arrow-left"></i></a>
                             {% else %}
-                            <a href="{% url step.url_name %}{% if step.anchor %}#{{ step.anchor }}{% endif %}" class="edu-link">شروع <i class="fas fa-arrow-left"></i></a>
+                            <a href="{% url step.url_name %}{% if step.anchor %}#{{ step.anchor }}{% endif %}" class="edu-step-link">
+                                <span>شروع</span>
+                                <i class="fas fa-arrow-left" aria-hidden="true"></i>
+                            </a>
                             {% endif %}
                         </div>
                     </li>
@@ -188,14 +213,16 @@
     </section>
 
     {% if install_video.available or filing_video.available or crm_video.available %}
-    <section class="edu-section edu-videos-hub" aria-labelledby="edu-videos-title">
+    <section class="edu-section edu-videos-hub" id="edu-videos" aria-labelledby="edu-videos-title">
         <div class="container">
             <header class="edu-section-head edu-reveal">
-                <span class="edu-kicker">ویدیوهای تخصصی</span>
+                <span class="edu-section__num" aria-hidden="true">۰۲</span>
+                <span class="edu-kicker"><i class="fas fa-circle-play edu-gicon edu-gicon--violet edu-gicon--xs" aria-hidden="true"></i> ویدیوهای تخصصی</span>
                 <h2 id="edu-videos-title">آموزش تصویری گام‌به‌گام</h2>
             </header>
 
-            <div class="edu-vtabs edu-reveal" role="tablist">
+            <div class="edu-vtabs edu-reveal" role="tablist" data-tab-track="video">
+                <span class="edu-tab-indicator edu-tab-indicator--video" aria-hidden="true"></span>
                 {% if install_video.available %}
                 <button type="button" class="edu-vtab is-active" role="tab" data-vtab="install" aria-selected="true">
                     <i class="fas fa-download edu-gicon edu-gicon--violet" aria-hidden="true"></i>
@@ -273,14 +300,16 @@
     </section>
     {% endif %}
 
-    <section class="edu-section edu-section--alt" aria-labelledby="edu-modules-title">
+    <section class="edu-section edu-section--alt" id="edu-modules" aria-labelledby="edu-modules-title">
         <div class="container">
             <header class="edu-section-head edu-reveal">
-                <span class="edu-kicker">آموزش ماژول‌ها</span>
+                <span class="edu-section__num" aria-hidden="true">۰۳</span>
+                <span class="edu-kicker"><i class="fas fa-cubes edu-gicon edu-gicon--sky edu-gicon--xs" aria-hidden="true"></i> آموزش ماژول‌ها</span>
                 <h2 id="edu-modules-title">{{ edu.sections.modules.title }}</h2>
+                <p class="edu-section__desc">{{ edu.sections.modules.subtitle }}</p>
             </header>
 
-            <div class="edu-accordions">
+            <div class="edu-accordions edu-accordions--grid">
                 {% for mod in edu.modules %}
                 <details class="edu-acc edu-reveal" id="module-{{ mod.id }}"{% if forloop.first %} open{% endif %} style="--edu-delay: {{ forloop.counter0 }}">
                     <summary class="edu-acc__head">
@@ -321,11 +350,13 @@
         </div>
     </section>
 
-    <section class="edu-section edu-gallery-band" aria-labelledby="edu-gallery-title">
+    <section class="edu-section edu-gallery-band" id="edu-gallery" aria-labelledby="edu-gallery-title">
         <div class="container">
             <header class="edu-section-head edu-reveal">
-                <span class="edu-kicker">پیش‌نمایش میزکار</span>
+                <span class="edu-section__num" aria-hidden="true">۰۴</span>
+                <span class="edu-kicker"><i class="fas fa-desktop edu-gicon edu-gicon--emerald edu-gicon--xs" aria-hidden="true"></i> پیش‌نمایش میزکار</span>
                 <h2 id="edu-gallery-title">{{ edu.gallery.title }}</h2>
+                <p class="edu-section__desc">{{ edu.gallery.subtitle }}</p>
             </header>
 
             <div class="edu-gallery-filters edu-reveal" role="tablist">
@@ -343,7 +374,7 @@
 
             <div class="edu-gallery-grid" data-gallery-grid>
                 {% for item in edu.gallery.items %}
-                <article class="edu-gallery-card edu-reveal{% if forloop.counter > 8 %} edu-gallery-card--more{% endif %}" data-gallery-cat="{{ item.category }}">
+                <article class="edu-gallery-card edu-reveal{% if forloop.first %} edu-gallery-card--lead{% endif %}{% if forloop.counter > 8 %} edu-gallery-card--more{% endif %}" data-gallery-cat="{{ item.category }}">
                     <button type="button" class="edu-gallery-shot" data-edu-lightbox
                             data-src="{% static 'images/' %}{{ item.image }}"
                             data-caption="{{ item.caption }}"
@@ -366,37 +397,42 @@
         </div>
     </section>
 
-    <section class="edu-section edu-section--compact">
-        <div class="container">
-            <div class="edu-resources edu-reveal">
-                {% for item in edu.featured %}
-                <a href="{% if item.requires_auth and not user.is_authenticated %}{% url item.guest_url_name %}{% else %}{% url item.url_name %}{% endif %}"
-                   class="edu-res-card{% if item.url_name == 'public_academy_playlist' %} edu-res-card--featured{% endif %}">
-                    <i class="fas {{ item.icon }} edu-gicon edu-gicon--{{ item.accent }}" aria-hidden="true"></i>
-                    <span class="edu-res-card__body">
-                        <strong>{{ item.title }}</strong>
-                        <span>{{ item.duration }}</span>
-                    </span>
-                    <i class="fas fa-arrow-left edu-res-card__arrow" aria-hidden="true"></i>
-                </a>
-                {% endfor %}
+    <section class="edu-section edu-bottom" id="edu-support">
+        <div class="container edu-bottom__shell edu-reveal">
+            <div class="edu-bottom__col">
+                <header class="edu-bottom__head">
+                    <span class="edu-section__num" aria-hidden="true">۰۵</span>
+                    <h2>منابع و راهنما</h2>
+                </header>
+                <div class="edu-resources">
+                    {% for item in edu.featured %}
+                    <a href="{% if item.requires_auth and not user.is_authenticated %}{% url item.guest_url_name %}{% else %}{% url item.url_name %}{% endif %}"
+                       class="edu-res-card{% if item.url_name == 'public_academy_playlist' %} edu-res-card--featured{% endif %}">
+                        <span class="edu-res-card__icon-wrap">
+                            <i class="fas {{ item.icon }} edu-gicon edu-gicon--{{ item.accent }}" aria-hidden="true"></i>
+                        </span>
+                        <span class="edu-res-card__body">
+                            <strong>{{ item.title }}</strong>
+                            <span>{{ item.duration }}</span>
+                        </span>
+                        <i class="fas fa-arrow-left edu-res-card__arrow" aria-hidden="true"></i>
+                    </a>
+                    {% endfor %}
+                </div>
             </div>
-        </div>
-    </section>
-
-    <section class="edu-section edu-section--compact">
-        <div class="container edu-faq-wrap">
-            <header class="edu-section-head edu-reveal">
-                <span class="edu-kicker">سوالات متداول</span>
-                <h2>{{ edu.sections.faq.title }}</h2>
-            </header>
-            <div class="edu-faq edu-faq--grid edu-reveal">
-                {% for item in edu.faq %}
-                <details class="edu-faq-item">
-                    <summary>{{ item.q }}</summary>
-                    <p>{{ item.a }}</p>
-                </details>
-                {% endfor %}
+            <div class="edu-bottom__col">
+                <header class="edu-bottom__head">
+                    <span class="edu-kicker">سوالات متداول</span>
+                    <h2>{{ edu.sections.faq.title }}</h2>
+                </header>
+                <div class="edu-faq">
+                    {% for item in edu.faq %}
+                    <details class="edu-faq-item">
+                        <summary>{{ item.q }}</summary>
+                        <p>{{ item.a }}</p>
+                    </details>
+                    {% endfor %}
+                </div>
             </div>
         </div>
     </section>
@@ -424,5 +460,5 @@
 {% if install_video.available or filing_video.available or crm_video.available or academy_hero.player.available %}
 <script src="{% static 'js/bot-install-video.js' %}?v=1" defer></script>
 {% endif %}
-<script src="{% static 'js/education.js' %}?v=7" defer></script>
+<script src="{% static 'js/education.js' %}?v=8" defer></script>
 {% endblock %}

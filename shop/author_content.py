@@ -9,7 +9,6 @@ def author_page_content() -> dict:
         'slug': AUTHOR_SLUG,
         'name': 'Hossein Qashqaeii',
         'name_fa': 'حسین قشقایی',
-        'badge_en': 'Founder • Product Architect • PropTech',
         'role': 'بنیان‌گذار و معمار محصول فایلینگ دیوار',
         'subtitle_fa': 'بنیان‌گذار فایلینگ دیوار | معمار محصول و سیستم‌های هوشمند',
         'tagline': (
@@ -81,7 +80,7 @@ def author_page_content() -> dict:
         ],
         'visuals': {
             'portrait': 'images/author-portrait.webp',
-            'about_image': 'images/help-map-view.webp',
+            'about_image': 'images/about-qashqaeii.webp',
         },
         'social_links': [
             {
@@ -124,55 +123,66 @@ def author_page_content() -> dict:
             {
                 'title_en': 'Product Architecture & SaaS Platforms',
                 'title_fa': 'معماری محصول و پلتفرم‌های SaaS',
-                'icon': 'fa-layer-group',
+                'icon': 'fa-diagram-project',
+                'accent': 'violet',
             },
             {
                 'title_en': 'PropTech & Real Estate Technology',
                 'title_fa': 'فناوری و محصولات هوشمند بازار املاک',
-                'icon': 'fa-building',
+                'icon': 'fa-city',
+                'accent': 'indigo',
             },
             {
                 'title_en': 'AI-Powered Automation',
                 'title_fa': 'اتوماسیون فرآیندها با هوش مصنوعی',
-                'icon': 'fa-robot',
+                'icon': 'fa-wand-magic-sparkles',
+                'accent': 'fuchsia',
             },
             {
                 'title_en': 'Data Engineering & Analytics',
                 'title_fa': 'مهندسی داده، پردازش و تحلیل اطلاعات',
-                'icon': 'fa-chart-pie',
+                'icon': 'fa-chart-line',
+                'accent': 'cyan',
             },
             {
                 'title_en': 'CRM & Business Automation',
                 'title_fa': 'طراحی CRM و اتوماسیون فرآیندهای فروش',
-                'icon': 'fa-users',
+                'icon': 'fa-handshake',
+                'accent': 'emerald',
             },
             {
                 'title_en': 'ERP & Custom Business Systems',
                 'title_fa': 'طراحی سیستم‌های اختصاصی برای کسب‌وکارها',
-                'icon': 'fa-sitemap',
+                'icon': 'fa-network-wired',
+                'accent': 'sky',
             },
             {
                 'title_en': 'Decision Intelligence',
                 'title_fa': 'تبدیل داده خام به ابزارهای تصمیم‌گیری',
-                'icon': 'fa-brain',
+                'icon': 'fa-lightbulb',
+                'accent': 'amber',
             },
             {
                 'title_en': 'API & System Integration',
                 'title_fa': 'یکپارچه‌سازی سرویس‌ها، APIها و زیرساخت‌ها',
-                'icon': 'fa-plug',
+                'icon': 'fa-code-branch',
+                'accent': 'rose',
             },
             {
                 'title_en': 'Product Strategy & UX',
                 'title_fa': 'استراتژی محصول و طراحی تجربه کاربری',
-                'icon': 'fa-compass',
+                'icon': 'fa-pen-ruler',
+                'accent': 'orange',
             },
             {
                 'title_en': 'Scalable Backend Architecture',
                 'title_fa': 'معماری Backend مقیاس‌پذیر و قابل توسعه',
-                'icon': 'fa-server',
+                'icon': 'fa-microchip',
+                'accent': 'teal',
             },
         ],
         'highlights_section': {
+            'kicker': 'رویکرد من',
             'title': 'از مسئله واقعی کسب‌وکار تا محصولی که واقعاً کار می‌کند',
             'desc': 'محصول خوب از تکنولوژی شروع نمی‌شود؛ از شناخت مسئله شروع می‌شود.',
             'intro': (
@@ -183,7 +193,8 @@ def author_page_content() -> dict:
         },
         'highlights': [
             {
-                'icon': 'fa-cubes',
+                'step': '۰۱',
+                'icon': 'fa-layer-group',
                 'accent': 'violet',
                 'title': 'معماری محصول و سیستم‌های SaaS',
                 'text': (
@@ -192,7 +203,8 @@ def author_page_content() -> dict:
                 ),
             },
             {
-                'icon': 'fa-chart-line',
+                'step': '۰۲',
+                'icon': 'fa-brain',
                 'accent': 'indigo',
                 'title': 'داده، تحلیل و هوش تصمیم‌گیری',
                 'text': (
@@ -201,7 +213,8 @@ def author_page_content() -> dict:
                 ),
             },
             {
-                'icon': 'fa-gears',
+                'step': '۰۳',
+                'icon': 'fa-wand-magic-sparkles',
                 'accent': 'emerald',
                 'title': 'اتوماسیون و هوش مصنوعی',
                 'text': (
@@ -233,16 +246,22 @@ def author_page_content() -> dict:
             {
                 'image': 'images/help-bot-extract-tab.png',
                 'caption': 'استخراج و سازمان‌دهی داده',
+                'tag': 'استخراج',
+                'icon': 'fa-database',
                 'accent': 'indigo',
             },
             {
                 'image': 'images/help-crm-dashboard.png',
                 'caption': 'CRM و مدیریت معاملات',
+                'tag': 'CRM',
+                'icon': 'fa-handshake',
                 'accent': 'violet',
             },
             {
                 'image': 'images/help-workspace-home.png',
                 'caption': 'تحلیل و تصمیم‌گیری',
+                'tag': 'تحلیل',
+                'icon': 'fa-chart-line',
                 'accent': 'emerald',
             },
         ],

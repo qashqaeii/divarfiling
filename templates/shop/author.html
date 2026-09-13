@@ -12,7 +12,7 @@
 {% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/author-page.css' %}?v=6">
+<link rel="stylesheet" href="{% static 'css/author-page.css' %}?v=10">
 {% endblock %}
 
 {% block content %}
@@ -24,7 +24,6 @@
         <div class="ath-hero__overlay" aria-hidden="true"></div>
         <div class="container ath-hero__stage">
             <div class="ath-hero__copy">
-                <span class="ath-badge ath-badge--en ath-reveal" style="--ath-delay: 0" lang="en" dir="ltr">{{ author.badge_en }}</span>
                 <span class="ath-badge ath-reveal" style="--ath-delay: 0">{{ author.role }}</span>
                 <h1 class="ath-reveal" style="--ath-delay: 1">{{ author.name_fa }}</h1>
                 <p class="ath-subtitle ath-reveal" style="--ath-delay: 1">{{ author.subtitle_fa }}</p>
@@ -100,9 +99,11 @@
             <h2 id="ath-skills-title" class="ath-section-title ath-reveal">{{ author.expertise_section.title }}</h2>
             <div class="ath-skills__grid">
                 {% for skill in author.expertise_skills %}
-                <article class="ath-skill-card ath-reveal" style="--ath-delay: {{ forloop.counter0 }}">
-                    <span class="ath-skill-card__icon"><i class="fas {{ skill.icon }}" aria-hidden="true"></i></span>
-                    <div>
+                <article class="ath-skill-card ath-skill-card--{{ skill.accent }} ath-reveal" style="--ath-delay: {{ forloop.counter0 }}">
+                    <span class="ath-skill-card__icon" aria-hidden="true">
+                        <i class="fas {{ skill.icon }}"></i>
+                    </span>
+                    <div class="ath-skill-card__body">
                         <strong lang="en" dir="ltr">{{ skill.title_en }}</strong>
                         <span>{{ skill.title_fa }}</span>
                     </div>
@@ -115,18 +116,32 @@
     <section class="ath-highlights" aria-labelledby="ath-highlights-title">
         <div class="container">
             <header class="ath-section-head ath-reveal">
+                <span class="ath-kicker">{{ author.highlights_section.kicker }}</span>
                 <h2 id="ath-highlights-title">{{ author.highlights_section.title }}</h2>
                 <p class="ath-section-lead ath-section-lead--bold">{{ author.highlights_section.desc }}</p>
                 <p class="ath-section-intro">{{ author.highlights_section.intro }}</p>
             </header>
-            <div class="ath-highlight-grid">
-                {% for h in author.highlights %}
-                <article class="ath-highlight ath-reveal ath-highlight--{{ h.accent }}" style="--ath-delay: {{ forloop.counter0 }}">
-                    <span class="ath-highlight-icon"><i class="fas {{ h.icon }}" aria-hidden="true"></i></span>
-                    <h3>{{ h.title }}</h3>
-                    <p>{{ h.text }}</p>
-                </article>
-                {% endfor %}
+            <div class="ath-highlights__stage ath-reveal" style="--ath-delay: 1">
+                <div class="ath-highlights__flow" aria-hidden="true">
+                    <span class="ath-highlights__flow-line"></span>
+                    <span class="ath-highlights__flow-dot ath-highlights__flow-dot--1"></span>
+                    <span class="ath-highlights__flow-dot ath-highlights__flow-dot--2"></span>
+                    <span class="ath-highlights__flow-dot ath-highlights__flow-dot--3"></span>
+                </div>
+                <div class="ath-highlight-grid">
+                    {% for h in author.highlights %}
+                    <article class="ath-highlight-card ath-highlight-card--{{ h.accent }} ath-reveal" style="--ath-delay: {{ forloop.counter0 }}">
+                        <div class="ath-highlight-card__top">
+                            <span class="ath-highlight-card__step" aria-hidden="true">{{ h.step }}</span>
+                            <span class="ath-highlight-card__icon" aria-hidden="true">
+                                <i class="fas {{ h.icon }}"></i>
+                            </span>
+                        </div>
+                        <h3 class="ath-highlight-card__title">{{ h.title }}</h3>
+                        <p class="ath-highlight-card__text">{{ h.text }}</p>
+                    </article>
+                    {% endfor %}
+                </div>
             </div>
         </div>
     </section>
@@ -138,25 +153,56 @@
                 <h2 id="ath-product-title">{{ author.product_section.title }}</h2>
                 <p class="ath-section-lead ath-section-lead--bold">{{ author.product_section.subtitle }}</p>
             </header>
-            <div class="ath-product__body ath-reveal">
-                <p>{{ author.product_section.intro }}</p>
-                <p>{{ author.product_section.body }}</p>
-                <p>{{ author.product_section.outcome }} <strong>{{ author.product_section.outcome_highlight }}</strong></p>
-            </div>
-            <div class="ath-showcase">
-                {% for card in author.product_cards %}
-                <figure class="ath-showcase-card ath-reveal ath-showcase-card--{{ card.accent }}" style="--ath-delay: {{ forloop.counter0 }}">
-                    <button type="button" class="ath-showcase-open"
-                        data-ath-lightbox
-                        data-src="{% static card.image %}"
-                        data-caption="{{ card.caption }}"
-                        aria-label="بزرگنمایی: {{ card.caption }}">
-                        <img src="{% static card.image %}" alt="{{ card.caption }}" loading="lazy" decoding="async">
-                        <span class="ath-showcase-zoom" aria-hidden="true"><i class="fas fa-search-plus"></i></span>
-                        <figcaption>{{ card.caption }}</figcaption>
-                    </button>
-                </figure>
-                {% endfor %}
+            <div class="ath-product__layout">
+                <div class="ath-product__content ath-reveal">
+                    <p class="ath-product__intro">{{ author.product_section.intro }}</p>
+                    <p class="ath-product__body-text">{{ author.product_section.body }}</p>
+                    <div class="ath-product__outcome">
+                        <span class="ath-product__outcome-icon" aria-hidden="true">
+                            <i class="fas fa-bullseye"></i>
+                        </span>
+                        <p>
+                            {{ author.product_section.outcome }}
+                            <strong>{{ author.product_section.outcome_highlight }}</strong>
+                        </p>
+                    </div>
+                </div>
+                <div class="ath-product__gallery">
+                    {% for card in author.product_cards %}
+                    <figure class="ath-showcase-card ath-reveal ath-showcase-card--{{ card.accent }}{% if forloop.first %} ath-showcase-card--featured{% endif %}" style="--ath-delay: {{ forloop.counter0 }}">
+                        <div class="ath-showcase-frame">
+                            <div class="ath-showcase-chrome" aria-hidden="true">
+                                <span class="ath-showcase-chrome__dot ath-showcase-chrome__dot--close"></span>
+                                <span class="ath-showcase-chrome__dot"></span>
+                                <span class="ath-showcase-chrome__dot"></span>
+                                <span class="ath-showcase-chrome__bar"></span>
+                            </div>
+                            <button type="button" class="ath-showcase-open"
+                                data-ath-lightbox
+                                data-src="{% static card.image %}"
+                                data-caption="{{ card.caption }}"
+                                aria-label="بزرگنمایی: {{ card.caption }}">
+                                <div class="ath-showcase-media">
+                                    <img src="{% static card.image %}" alt="{{ card.caption }}" loading="lazy" decoding="async">
+                                </div>
+                                <span class="ath-showcase-overlay" aria-hidden="true">
+                                    <span class="ath-showcase-zoom">
+                                        <i class="fas fa-expand"></i>
+                                        <span>بزرگنمایی</span>
+                                    </span>
+                                </span>
+                            </button>
+                        </div>
+                        <figcaption class="ath-showcase-caption">
+                            <span class="ath-showcase-tag">
+                                <i class="fas {{ card.icon }}" aria-hidden="true"></i>
+                                {{ card.tag }}
+                            </span>
+                            <span class="ath-showcase-label">{{ card.caption }}</span>
+                        </figcaption>
+                    </figure>
+                    {% endfor %}
+                </div>
             </div>
         </div>
     </section>

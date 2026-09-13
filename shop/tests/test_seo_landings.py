@@ -94,7 +94,7 @@ class SeoLandingPageTests(TestCase):
         self.assertContains(resp, 'ath-hero')
         self.assertContains(resp, 'ath-skills')
         self.assertContains(resp, 'فایلینگ دیوار در یک نگاه')
-        self.assertContains(resp, 'PropTech')
+        self.assertContains(resp, 'about-qashqaeii.webp')
 
     def test_footer_seo_guides(self):
         resp = self.client.get('/')

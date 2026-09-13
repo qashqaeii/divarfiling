@@ -115,7 +115,7 @@ def _enrich_education_content(content):
         'title': 'تصاویر واقعی از میزکار',
         'subtitle': 'هر اسکرین‌شات دقیقاً همان چیزی است که در کار روزانه می‌بینید — کلیک کنید تا بزرگ شود',
         'categories': [
-            {'id': 'all', 'label': 'همه', 'icon': 'fa-grid-2'},
+            {'id': 'all', 'label': 'همه', 'icon': 'fa-table-cells-large'},
             {'id': 'crm', 'label': 'مشتری و معامله', 'icon': 'fa-handshake'},
             {'id': 'bot', 'label': 'استخراج دیوار', 'icon': 'fa-robot'},
             {'id': 'filing', 'label': 'فایلینگ', 'icon': 'fa-folder-open'},
@@ -139,11 +139,8 @@ def education_hub_content():
     content = {
         'hero': {
             'eyebrow': 'آکادمی ویدیویی · آموزش مشاوران',
-            'title': 'از اولین ویدیو تا اولین معامله — مسیر کامل مشاور',
-            'lead': (
-                'با پلی‌لیست آکادمی، در چند دقیقه فایلینگ دیوار را بفهمید؛ '
-                'بعد مشتری ثبت کنید، آگهی محله را تحلیل کنید و معامله را تا قرارداد پیگیری کنید.'
-            ),
+            'title': 'از اولین ویدیو تا اولین معامله',
+            'lead': 'آکادمی ویدیویی رایگان + مسیرهای گام‌به‌گام برای CRM، ربات، فایلینگ و تحلیل بازار.',
             'academy': {
                 'badge': 'آکادمی ویدیویی',
                 'title': 'ورود به پلی‌لیست آموزش',
@@ -159,17 +156,17 @@ def education_hub_content():
             {'num': '۶', 'label': 'بخش تخصصی'},
         ],
         'sections': {
-            'paths': {'title': 'از کجا شروع کنم؟', 'subtitle': 'مسیر مناسب سطح کار شما — هر کدام با تصویر و لینک مستقیم'},
-            'modules': {'title': 'آموزش بخش‌به‌بخش', 'subtitle': 'هر ماژول با اسکرین‌شات واقعی — دقیقاً همان صفحه‌ای که در میزکار می‌بینید'},
-            'gallery': {'title': 'گالری تصاویر', 'subtitle': 'مرور سریع همه بخش‌ها قبل از شروع کار'},
-            'featured': {'title': 'آکادمی و راهنماهای ضروری', 'subtitle': 'اول پلی‌لیست ویدیویی — بعد راهنمای ربات و میزکار'},
+            'paths': {'title': 'از کجا شروع کنم؟', 'subtitle': 'مسیر مناسب سطح کار شما'},
+            'modules': {'title': 'آموزش بخش‌به‌بخش', 'subtitle': 'هر ماژول با لینک مستقیم به میزکار'},
+            'gallery': {'title': 'پیش‌نمایش میزکار', 'subtitle': 'اسکرین‌شات واقعی — کلیک برای بزرگنمایی'},
+            'featured': {'title': 'منابع ضروری', 'subtitle': None},
             'faq': {'title': 'سؤالات رایج مشاوران', 'subtitle': None},
             'cta': {'title': 'همین امروز شروع کنید', 'subtitle': 'ثبت‌نام رایگان — مدیریت مشتری بدون محدودیت. برای تحلیل بازار، ربات استخراج نیاز است.'},
         },
         'paths': [
             {
                 'id': 'starter',
-                'icon': 'fa-seedling',
+                'icon': 'fa-user-check',
                 'decor_icon': 'layers',
                 'accent': 'emerald',
                 'badge': 'رایگان',
@@ -212,7 +209,7 @@ def education_hub_content():
             },
             {
                 'id': 'bot',
-                'icon': 'fa-robot',
+                'icon': 'fa-cloud-arrow-down',
                 'decor_icon': 'rocket',
                 'accent': 'violet',
                 'badge': 'ربات',
@@ -258,7 +255,7 @@ def education_hub_content():
             },
             {
                 'id': 'pro',
-                'icon': 'fa-chart-line',
+                'icon': 'fa-chart-pie',
                 'decor_icon': 'sparkles',
                 'accent': 'sky',
                 'badge': 'پیشرفته',
@@ -306,7 +303,7 @@ def education_hub_content():
         'modules': [
             {
                 'id': 'crm-basics',
-                'icon': 'fa-gift',
+                'icon': 'fa-address-book',
                 'accent': 'emerald',
                 'badge': 'رایگان',
                 'title': 'مدیریت مشتری',
@@ -558,7 +555,7 @@ def education_hub_content():
             },
             {
                 'id': 'resources',
-                'icon': 'fa-compass',
+                'icon': 'fa-circle-question',
                 'accent': 'violet',
                 'badge': 'منابع',
                 'title': 'راهنما و پشتیبانی',
@@ -602,8 +599,8 @@ def education_hub_content():
         ],
         'featured': [
             {
-                'icon': 'fa-play-circle',
-                'accent': 'sky',
+                'icon': 'fa-clapperboard',
+                'accent': 'violet',
                 'title': 'پلی‌لیست آکادمی ویدیویی',
                 'desc': 'تمام ویدیوهای آشنایی مشاور املاک در یک پلی‌لیست — مثل یوتوب و آپارات، با URL جدا برای هر درس.',
                 'duration': '۱۵+ دقیقه',
@@ -611,8 +608,8 @@ def education_hub_content():
                 'cta': 'مشاهده پلی‌لیست',
             },
             {
-                'icon': 'fa-book-open',
-                'accent': 'emerald',
+                'icon': 'fa-download',
+                'accent': 'sky',
                 'title': 'راهنمای فعال‌سازی ربات',
                 'desc': 'ویدیوی نصب گام‌به‌گام + راهنمای متنی از خرید تا اولین فایل اکسل در میزکار.',
                 'duration': '۱۰ دقیقه',

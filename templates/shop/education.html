@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load static decor_icons %}
+{% load static %}
 
 {% block title %}آموزش مشاوران — فایلینگ دیوار{% endblock %}
 {% block body_class %}mk-pub-page edu-page{% endblock %}
@@ -10,101 +10,64 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/mizkar-video-player.css' %}?v=3">
-<link rel="stylesheet" href="{% static 'css/education-page.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'css/education-page.css' %}?v=2">
 {% endblock %}
 
 {% block content %}
 <div class="mk-pub-wrap edu-wrap">
 
-    <header class="edu-hero edu-hero--cinema" aria-labelledby="edu-hero-title">
-        <div class="edu-hero-bg" aria-hidden="true">
-            <span class="edu-hero-mesh edu-hero-mesh--violet"></span>
-            <span class="edu-hero-mesh edu-hero-mesh--emerald"></span>
-            <span class="edu-hero-mesh edu-hero-mesh--sky"></span>
-            <span class="edu-hero-beam"></span>
-            <span class="edu-hero-gridlines"></span>
-            <span class="edu-hero-noise"></span>
-        </div>
-
+    <header class="edu-hero" aria-labelledby="edu-hero-title">
+        <div class="edu-hero-bg" aria-hidden="true"></div>
         <div class="container edu-hero-shell">
             <div class="edu-hero-grid">
                 <div class="edu-hero-copy edu-reveal">
-                    <div class="edu-hero-kicker edu-hero-kicker--academy">
-                        {% decor_icon 'rocket' size='xs' boxed=True accent='emerald' %}
-                        <span>{{ edu.hero.eyebrow }}</span>
-                    </div>
-
-                    <p class="edu-hero-brand">فایلینگ دیوار</p>
+                    <span class="edu-kicker"><i class="fas fa-circle-play" aria-hidden="true"></i> {{ edu.hero.eyebrow }}</span>
                     <h1 id="edu-hero-title" class="edu-hero-title">{{ edu.hero.title }}</h1>
                     <p class="edu-lead">{{ edu.hero.lead }}</p>
 
-                    <a href="{{ academy_hero.playlist_url }}" class="edu-academy-cta" data-edu-academy-cta>
-                        <span class="edu-academy-cta-glow" aria-hidden="true"></span>
-                        <span class="edu-academy-cta-icon" aria-hidden="true">
-                            <i class="fas fa-play"></i>
-                        </span>
-                        <span class="edu-academy-cta-body">
-                            <strong>{{ edu.hero.academy.cta }}</strong>
-                            <small>
-                                {% if academy_hero.stats.video_count %}
-                                {{ academy_hero.stats.video_count }} ویدیو · ~{{ academy_hero.stats.total_minutes }} دقیقه · رایگان
-                                {% else %}
-                                {{ edu.hero.academy.subtitle }}
-                                {% endif %}
-                            </small>
-                        </span>
-                        <span class="edu-academy-cta-arrow" aria-hidden="true">
-                            <i class="fas fa-arrow-left"></i>
-                        </span>
-                    </a>
-
-                    <div class="edu-hero-actions">
+                    <div class="edu-hero-cta-row">
+                        <a href="{{ academy_hero.playlist_url }}" class="edu-btn edu-btn--primary edu-btn--lg">
+                            <i class="fas fa-play" aria-hidden="true"></i>
+                            {{ edu.hero.academy.cta }}
+                            {% if academy_hero.stats.video_count %}
+                            <span class="edu-btn-meta">{{ academy_hero.stats.video_count }} ویدیو · رایگان</span>
+                            {% endif %}
+                        </a>
                         {% if user.is_authenticated %}
-                        <a href="{% url 'workspace:home' %}" class="edu-btn edu-btn--ghost edu-btn--hero">
-                            <span class="edu-btn-body">
-                                <strong>ورود به میزکار</strong>
-                                <small>ادامه از جایی که بودید</small>
-                            </span>
-                            <i class="fas fa-layer-group" aria-hidden="true"></i>
+                        <a href="{% url 'workspace:home' %}" class="edu-btn edu-btn--ghost edu-btn--lg">
+                            <i class="fas fa-gauge-high" aria-hidden="true"></i> میزکار
                         </a>
                         {% else %}
-                        <a href="{% url 'register' %}" class="edu-btn edu-btn--ghost edu-btn--hero">
-                            <span class="edu-btn-body">
-                                <strong>ثبت‌نام رایگان</strong>
-                                <small>CRM و مدیریت مشتری بدون محدودیت</small>
-                            </span>
-                            <i class="fas fa-user-plus" aria-hidden="true"></i>
+                        <a href="{% url 'register' %}" class="edu-btn edu-btn--ghost edu-btn--lg">
+                            <i class="fas fa-user-plus" aria-hidden="true"></i> ثبت‌نام رایگان
                         </a>
                         {% endif %}
-
-                        <div class="edu-hero-quick" role="group" aria-label="دسترسی سریع">
-                            {% if user.is_authenticated %}
-                            <a href="{% url 'workspace:help' %}" class="edu-quick-link">
-                                <span class="edu-quick-icon" data-accent="violet"><i class="fas fa-book-open" aria-hidden="true"></i></span>
-                                <span>راهنمای تصویری</span>
-                            </a>
-                            {% else %}
-                            <a href="{% url 'license_guide' %}" class="edu-quick-link">
-                                <span class="edu-quick-icon" data-accent="violet"><i class="fas fa-robot" aria-hidden="true"></i></span>
-                                <span>راهنمای ربات</span>
-                            </a>
-                            {% endif %}
-                            <a href="{% url 'public_academy' %}" class="edu-quick-link">
-                                <span class="edu-quick-icon" data-accent="emerald"><i class="fas fa-graduation-cap" aria-hidden="true"></i></span>
-                                <span>درباره آکادمی</span>
-                            </a>
-                            <a href="{% url 'android_tutorial' %}" class="edu-quick-link">
-                                <span class="edu-quick-icon" data-accent="sky"><i class="fab fa-android" aria-hidden="true"></i></span>
-                                <span>اپ اندروید</span>
-                            </a>
-                        </div>
                     </div>
+
+                    <nav class="edu-chip-nav" aria-label="دسترسی سریع">
+                        <a href="{% url 'public_academy_playlist' %}" class="edu-chip-nav__item">
+                            <i class="fas fa-clapperboard edu-gicon edu-gicon--violet" aria-hidden="true"></i>
+                            <span>پلی‌لیست</span>
+                        </a>
+                        {% if user.is_authenticated %}
+                        <a href="{% url 'workspace:help' %}" class="edu-chip-nav__item">
+                            <i class="fas fa-book-open edu-gicon edu-gicon--sky" aria-hidden="true"></i>
+                            <span>راهنما</span>
+                        </a>
+                        {% else %}
+                        <a href="{% url 'license_guide' %}" class="edu-chip-nav__item">
+                            <i class="fas fa-download edu-gicon edu-gicon--violet" aria-hidden="true"></i>
+                            <span>نصب ربات</span>
+                        </a>
+                        {% endif %}
+                        <a href="{% url 'android_tutorial' %}" class="edu-chip-nav__item">
+                            <i class="fab fa-android edu-gicon edu-gicon--emerald" aria-hidden="true"></i>
+                            <span>اپ اندروید</span>
+                        </a>
+                    </nav>
                 </div>
 
                 <div class="edu-hero-stage edu-reveal" style="--edu-delay: 1">
-                    <div class="edu-hero-stage-aura" aria-hidden="true"></div>
-                    <div class="edu-hero-stage-ring" aria-hidden="true"></div>
-
                     <div class="edu-hero-theater">
                         <div class="edu-hero-theater-bar">
                             <span class="edu-hero-theater-live">
@@ -117,16 +80,12 @@
                             </span>
                             {% endif %}
                         </div>
-
                         <div class="edu-hero-theater-screen">
                             {% if academy_hero.player.available %}
                             {% include 'includes/mk_video_player.html' with video=academy_hero.player variant='hero' show_heading=False show_meta=False extra_class='edu-hero-vid' %}
                             {% else %}
                             <a href="{{ academy_hero.playlist_url }}" class="edu-hero-poster" aria-label="{{ edu.hero.academy.cta }}">
-                                <span class="edu-hero-poster-bg" aria-hidden="true"></span>
-                                <span class="edu-hero-poster-play" aria-hidden="true">
-                                    <i class="fas fa-play"></i>
-                                </span>
+                                <span class="edu-hero-poster-play" aria-hidden="true"><i class="fas fa-play"></i></span>
                                 <span class="edu-hero-poster-copy">
                                     <strong>{{ edu.hero.academy.title }}</strong>
                                     <small>{{ edu.hero.academy.cta_hint }}</small>
@@ -134,124 +93,30 @@
                             </a>
                             {% endif %}
                         </div>
-
+                        {% if academy_hero.player.available %}
                         <div class="edu-hero-theater-foot">
-                            {% if academy_hero.player.available %}
                             <div class="edu-hero-now">
-                                <span class="edu-hero-now-label">در حال پخش پیشنهادی</span>
                                 <strong>{{ academy_hero.player.title }}</strong>
                                 {% if academy_hero.player.duration %}
                                 <span class="edu-hero-now-dur">{{ academy_hero.player.duration }}</span>
                                 {% endif %}
                             </div>
-                            {% endif %}
-                            <a href="{{ academy_hero.playlist_url }}" class="edu-hero-playlist-link">
-                                <i class="fas fa-list-ul" aria-hidden="true"></i>
-                                مشاهده همه ویدیوهای آکادمی
-                                <i class="fas fa-arrow-left" aria-hidden="true"></i>
-                            </a>
                         </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
         </div>
     </header>
 
-    {% if install_video.available %}
-    <section class="edu-video-band edu-reveal" aria-labelledby="edu-install-video-title">
-        <div class="container edu-video-shell">
-            <div class="edu-video-copy">
-                <span class="edu-kicker">ویدیوی نصب ربات</span>
-                <h2 id="edu-install-video-title">{{ install_video.title }}</h2>
-                <p>{{ install_video.subtitle }}</p>
-                <div class="edu-video-chips">
-                    <span class="edu-video-chip"><i class="fas fa-clock"></i> {{ install_video.duration }}</span>
-                    <span class="edu-video-chip"><i class="fab fa-windows"></i> ویندوز</span>
-                    <span class="edu-video-chip"><i class="fas fa-closed-captioning"></i> فارسی</span>
-                </div>
-                <div class="edu-video-actions">
-                    <a href="{% url 'license_guide' %}" class="edu-btn edu-btn--ghost">
-                        <i class="fas fa-book-open"></i> راهنمای متنی
-                    </a>
-                    <a href="{{ bot_buy_url }}" class="edu-btn edu-btn--primary">
-                        <i class="fas fa-shopping-cart"></i> خرید ربات
-                    </a>
-                </div>
-            </div>
-            <div>
-                {% include 'includes/bot_install_video.html' with variant='edu' show_heading=False guide_link=False %}
-            </div>
-        </div>
-    </section>
-    {% endif %}
-
-    {% if filing_video.available %}
-    <section class="edu-video-band edu-video-band--filing edu-reveal" aria-labelledby="edu-filing-video-title">
-        <div class="container edu-video-shell">
-            <div class="edu-video-copy">
-                <span class="edu-kicker">ویدیوی فایلینگ میزکار</span>
-                <h2 id="edu-filing-video-title">{{ filing_video.title }}</h2>
-                <p>{{ filing_video.subtitle }}</p>
-                <div class="edu-video-chips">
-                    <span class="edu-video-chip"><i class="fas fa-clock"></i> {{ filing_video.duration }}</span>
-                    <span class="edu-video-chip"><i class="fas fa-folder-open"></i> فایلینگ</span>
-                    <span class="edu-video-chip"><i class="fas fa-map-location-dot"></i> نقشه</span>
-                    <span class="edu-video-chip"><i class="fas fa-chart-line"></i> تحلیل</span>
-                </div>
-                <div class="edu-video-actions">
-                    <a href="{% url 'workspace:dataset_list' %}" class="edu-btn edu-btn--primary">
-                        <i class="fas fa-database"></i> رفتن به فایلینگ
-                    </a>
-                    <a href="{% url 'workspace:help' %}" class="edu-btn edu-btn--ghost">
-                        <i class="fas fa-book-open"></i> راهنمای میزکار
-                    </a>
-                </div>
-            </div>
-            <div>
-                {% include 'includes/mk_video_player.html' with video=filing_video variant='filing' show_heading=False show_meta=True %}
-            </div>
-        </div>
-    </section>
-    {% endif %}
-
-    {% if crm_video.available %}
-    <section class="edu-video-band edu-video-band--crm edu-reveal" aria-labelledby="edu-crm-video-title">
-        <div class="container edu-video-shell">
-            <div class="edu-video-copy">
-                <span class="edu-kicker">ویدیوی CRM میزکار</span>
-                <h2 id="edu-crm-video-title">{{ crm_video.title }}</h2>
-                <p>{{ crm_video.subtitle }}</p>
-                <div class="edu-video-chips">
-                    <span class="edu-video-chip"><i class="fas fa-clock"></i> {{ crm_video.duration }}</span>
-                    <span class="edu-video-chip"><i class="fas fa-address-book"></i> مخاطبین</span>
-                    <span class="edu-video-chip"><i class="fas fa-handshake"></i> معاملات</span>
-                    <span class="edu-video-chip"><i class="fas fa-gift"></i> رایگان</span>
-                </div>
-                <div class="edu-video-actions">
-                    <a href="{% url 'workspace:crm_dashboard' %}?open=video#crm-video" class="edu-btn edu-btn--primary">
-                        <i class="fas fa-gauge-high"></i> رفتن به CRM
-                    </a>
-                    <a href="{% url 'workspace:help' %}#crm-overview" class="edu-btn edu-btn--ghost">
-                        <i class="fas fa-book-open"></i> راهنمای متنی CRM
-                    </a>
-                </div>
-            </div>
-            <div>
-                {% include 'includes/mk_video_player.html' with video=crm_video variant='crm' show_heading=False show_meta=True %}
-            </div>
-        </div>
-    </section>
-    {% endif %}
-
     <section class="edu-section edu-paths-band" aria-labelledby="edu-paths-title">
         <div class="container">
             <header class="edu-section-head edu-reveal">
                 <span class="edu-kicker">مسیر یادگیری</span>
                 <h2 id="edu-paths-title">{{ edu.sections.paths.title }}</h2>
-                <p>{{ edu.sections.paths.subtitle }}</p>
             </header>
 
-            <div class="edu-path-tabs edu-reveal" style="--edu-delay: 1" role="tablist">
+            <div class="edu-path-tabs edu-reveal" role="tablist">
                 {% for path in edu.paths %}
                 <button type="button"
                         class="edu-path-tab{% if forloop.first %} is-active{% endif %}"
@@ -260,9 +125,7 @@
                         aria-selected="{% if forloop.first %}true{% else %}false{% endif %}"
                         aria-controls="edu-panel-{{ path.id }}"
                         data-path="{{ path.id }}">
-                    <span class="edu-path-tab-icon edu-path-tab-icon--{{ path.accent }}">
-                        {% include 'includes/icon_slot.html' with decor=path.decor_icon fa=path.icon only %}
-                    </span>
+                    <i class="fas {{ path.icon }} edu-gicon edu-gicon--{{ path.accent }}" aria-hidden="true"></i>
                     <span class="edu-path-tab-text">
                         <strong>{{ path.title }}</strong>
                         <span>{{ path.subtitle }}</span>
@@ -276,114 +139,157 @@
             <div class="edu-path-panel{% if forloop.first %} is-active{% endif %}"
                  id="edu-panel-{{ path.id }}"
                  role="tabpanel"
-                 aria-labelledby="edu-tab-{{ path.id }}"
                  data-path-panel="{{ path.id }}"
                  {% if not forloop.first %}hidden{% endif %}>
-                <div class="edu-path-layout">
-                    {% if path.cover_image %}
-                    <figure class="edu-path-cover">
-                        <button type="button" class="edu-path-cover-btn" data-edu-lightbox
-                                data-src="{% static 'images/' %}{{ path.cover_image }}"
-                                data-caption="{{ path.cover_caption }}">
-                            <img src="{% static 'images/' %}{{ path.cover_image }}" alt="{{ path.cover_caption }}" loading="lazy">
-                            <span class="edu-shot-zoom"><i class="fas fa-expand"></i></span>
-                        </button>
-                        <figcaption>{{ path.cover_caption }}</figcaption>
-                    </figure>
-                    {% endif %}
-                    <div class="edu-path-body">
-                        <p class="edu-path-intro">{{ path.desc }}</p>
-                        <ol class="edu-path-steps">
-                            {% for step in path.steps %}
-                            <li class="edu-path-step">
-                                <span class="edu-path-step-num">{{ step.num }}</span>
-                                <div class="edu-path-step-content">
-                                    <div class="edu-path-step-head">
-                                        <strong>{{ step.title }}</strong>
-                                        {% if step.requires_bot and not has_bot_license %}
-                                        <span class="edu-lock" title="نیاز به لایسنس ربات"><i class="fas fa-lock"></i></span>
-                                        {% endif %}
-                                    </div>
-                                    <p>{{ step.desc }}</p>
-                                    {% if step.requires_auth and not user.is_authenticated %}
-                                    <a href="{% url 'login' %}?next={% url step.url_name %}" class="edu-link">ورود و ادامه <i class="fas fa-arrow-left"></i></a>
-                                    {% elif step.requires_bot and not has_bot_license %}
-                                    <a href="{% url 'product_list' %}" class="edu-link">مشاهده ربات <i class="fas fa-arrow-left"></i></a>
-                                    {% else %}
-                                    <a href="{% url step.url_name %}{% if step.anchor %}#{{ step.anchor }}{% endif %}" class="edu-link">رفتن به این بخش <i class="fas fa-arrow-left"></i></a>
-                                    {% endif %}
-                                </div>
-                            </li>
-                            {% endfor %}
-                        </ol>
-                    </div>
-                </div>
+                <p class="edu-path-intro">{{ path.desc }}</p>
+                <ol class="edu-path-steps">
+                    {% for step in path.steps %}
+                    <li class="edu-path-step">
+                        <span class="edu-path-step-num">{{ step.num }}</span>
+                        <div class="edu-path-step-content">
+                            <div class="edu-path-step-head">
+                                {% if step.icon %}<i class="fas {{ step.icon }} edu-gicon edu-gicon--{{ path.accent }} edu-gicon--sm" aria-hidden="true"></i>{% endif %}
+                                <strong>{{ step.title }}</strong>
+                                {% if step.requires_bot and not has_bot_license %}
+                                <span class="edu-lock" title="نیاز به لایسنس ربات"><i class="fas fa-lock"></i></span>
+                                {% endif %}
+                            </div>
+                            {% if step.requires_auth and not user.is_authenticated %}
+                            <a href="{% url 'login' %}?next={% url step.url_name %}" class="edu-link">ورود و ادامه <i class="fas fa-arrow-left"></i></a>
+                            {% elif step.requires_bot and not has_bot_license %}
+                            <a href="{% url 'product_list' %}" class="edu-link">مشاهده ربات <i class="fas fa-arrow-left"></i></a>
+                            {% else %}
+                            <a href="{% url step.url_name %}{% if step.anchor %}#{{ step.anchor }}{% endif %}" class="edu-link">شروع <i class="fas fa-arrow-left"></i></a>
+                            {% endif %}
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ol>
             </div>
             {% endfor %}
         </div>
     </section>
 
+    {% if install_video.available or filing_video.available or crm_video.available %}
+    <section class="edu-section edu-videos-hub" aria-labelledby="edu-videos-title">
+        <div class="container">
+            <header class="edu-section-head edu-reveal">
+                <span class="edu-kicker">ویدیوهای تخصصی</span>
+                <h2 id="edu-videos-title">آموزش تصویری گام‌به‌گام</h2>
+            </header>
+
+            <div class="edu-vtabs edu-reveal" role="tablist">
+                {% if install_video.available %}
+                <button type="button" class="edu-vtab is-active" role="tab" data-vtab="install" aria-selected="true">
+                    <i class="fas fa-download edu-gicon edu-gicon--violet" aria-hidden="true"></i>
+                    <span>نصب ربات</span>
+                </button>
+                {% endif %}
+                {% if filing_video.available %}
+                <button type="button" class="edu-vtab{% if not install_video.available %} is-active{% endif %}" role="tab" data-vtab="filing" aria-selected="{% if not install_video.available %}true{% else %}false{% endif %}">
+                    <i class="fas fa-database edu-gicon edu-gicon--sky" aria-hidden="true"></i>
+                    <span>فایلینگ</span>
+                </button>
+                {% endif %}
+                {% if crm_video.available %}
+                <button type="button" class="edu-vtab{% if not install_video.available and not filing_video.available %} is-active{% endif %}" role="tab" data-vtab="crm" aria-selected="{% if not install_video.available and not filing_video.available %}true{% else %}false{% endif %}">
+                    <i class="fas fa-handshake edu-gicon edu-gicon--emerald" aria-hidden="true"></i>
+                    <span>CRM</span>
+                </button>
+                {% endif %}
+            </div>
+
+            {% if install_video.available %}
+            <div class="edu-vpanel is-active" data-vpanel="install" role="tabpanel">
+                <div class="edu-vpanel__grid">
+                    <div class="edu-vpanel__copy">
+                        <h3>{{ install_video.title }}</h3>
+                        <p>{{ install_video.subtitle }}</p>
+                        <div class="edu-vpanel__actions">
+                            <a href="{% url 'license_guide' %}" class="edu-btn edu-btn--ghost edu-btn--sm">راهنمای متنی</a>
+                            <a href="{{ bot_buy_url }}" class="edu-btn edu-btn--primary edu-btn--sm">خرید ربات</a>
+                        </div>
+                    </div>
+                    <div>{% include 'includes/bot_install_video.html' with variant='edu' show_heading=False guide_link=False %}</div>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if filing_video.available %}
+            <div class="edu-vpanel{% if not install_video.available %} is-active{% endif %}" data-vpanel="filing" role="tabpanel" {% if install_video.available %}hidden{% endif %}>
+                <div class="edu-vpanel__grid">
+                    <div class="edu-vpanel__copy">
+                        <h3>{{ filing_video.title }}</h3>
+                        <p>{{ filing_video.subtitle }}</p>
+                        <div class="edu-vpanel__actions">
+                            <a href="{% url 'workspace:dataset_list' %}" class="edu-btn edu-btn--primary edu-btn--sm">فایلینگ</a>
+                            <a href="{% url 'workspace:help' %}" class="edu-btn edu-btn--ghost edu-btn--sm">راهنما</a>
+                        </div>
+                    </div>
+                    <div>{% include 'includes/mk_video_player.html' with video=filing_video variant='filing' show_heading=False show_meta=False %}</div>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if crm_video.available %}
+            <div class="edu-vpanel{% if not install_video.available and not filing_video.available %} is-active{% endif %}" data-vpanel="crm" role="tabpanel" {% if install_video.available or filing_video.available %}hidden{% endif %}>
+                <div class="edu-vpanel__grid">
+                    <div class="edu-vpanel__copy">
+                        <h3>{{ crm_video.title }}</h3>
+                        <p>{{ crm_video.subtitle }}</p>
+                        <div class="edu-vpanel__actions">
+                            <a href="{% url 'workspace:crm_dashboard' %}?open=video#crm-video" class="edu-btn edu-btn--primary edu-btn--sm">CRM</a>
+                            <a href="{% url 'workspace:help' %}#crm-overview" class="edu-btn edu-btn--ghost edu-btn--sm">راهنما</a>
+                        </div>
+                    </div>
+                    <div>{% include 'includes/mk_video_player.html' with video=crm_video variant='crm' show_heading=False show_meta=False %}</div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </section>
+    {% endif %}
+
     <section class="edu-section edu-section--alt" aria-labelledby="edu-modules-title">
         <div class="container">
             <header class="edu-section-head edu-reveal">
-                <span class="edu-kicker">آموزش بخش‌به‌بخش</span>
+                <span class="edu-kicker">آموزش ماژول‌ها</span>
                 <h2 id="edu-modules-title">{{ edu.sections.modules.title }}</h2>
-                <p>{{ edu.sections.modules.subtitle }}</p>
             </header>
 
-            <div class="edu-modules">
+            <div class="edu-accordions">
                 {% for mod in edu.modules %}
-                <article class="edu-module edu-reveal" id="module-{{ mod.id }}" style="--edu-delay: {{ forloop.counter0 }}">
-                    {% if mod.cover_image %}
-                    <button type="button" class="edu-module-cover" data-edu-lightbox
-                            data-src="{% static 'images/' %}{{ mod.cover_image }}"
-                            data-caption="{{ mod.cover_caption }}"
-                            aria-label="بزرگ‌نمایی: {{ mod.cover_caption }}">
-                        <img src="{% static 'images/' %}{{ mod.cover_image }}" alt="{{ mod.cover_caption }}" loading="lazy">
-                        <span class="edu-module-cover-label">{{ mod.cover_caption }}</span>
-                        <span class="edu-shot-zoom"><i class="fas fa-expand"></i></span>
-                    </button>
-                    {% endif %}
-                    <header class="edu-module-head">
-                        <div class="edu-module-head-icon edu-module-head-icon--{{ mod.accent }}">
-                            <i class="fas {{ mod.icon }}"></i>
-                        </div>
-                        <div class="edu-module-head-copy">
+                <details class="edu-acc edu-reveal" id="module-{{ mod.id }}"{% if forloop.first %} open{% endif %} style="--edu-delay: {{ forloop.counter0 }}">
+                    <summary class="edu-acc__head">
+                        <i class="fas {{ mod.icon }} edu-gicon edu-gicon--{{ mod.accent }}" aria-hidden="true"></i>
+                        <span class="edu-acc__copy">
+                            <strong>{{ mod.title }}</strong>
+                            <span>{{ mod.desc }}</span>
+                        </span>
+                        <span class="edu-acc__meta">
                             <span class="edu-module-badge edu-module-badge--{{ mod.accent }}">{{ mod.badge }}</span>
-                            <h3>{{ mod.title }}</h3>
-                            <p>{{ mod.desc }}</p>
-                        </div>
-                        <span class="edu-module-count">{{ mod.lessons|length }} درس</span>
-                    </header>
-                    <ul class="edu-lessons">
+                            <span class="edu-acc__count">{{ mod.lessons|length }} درس</span>
+                        </span>
+                    </summary>
+                    <ul class="edu-acc__lessons">
                         {% for lesson in mod.lessons %}
-                        <li class="edu-lesson">
-                            {% if lesson.image %}
-                            <button type="button" class="edu-lesson-thumb" data-edu-lightbox
-                                    data-src="{% static 'images/' %}{{ lesson.image }}"
-                                    data-caption="{{ lesson.image_caption }}"
-                                    aria-label="بزرگ‌نمایی: {{ lesson.image_caption }}">
-                                <img src="{% static 'images/' %}{{ lesson.image }}" alt="" loading="lazy">
-                            </button>
-                            {% endif %}
-                            <div class="edu-lesson-body">
+                        <li class="edu-acc__lesson">
+                            {% if lesson.icon %}<i class="fas {{ lesson.icon }} edu-gicon edu-gicon--{{ mod.accent }} edu-gicon--sm" aria-hidden="true"></i>{% endif %}
+                            <div class="edu-acc__lesson-body">
                                 <strong>{{ lesson.title }}</strong>
-                                <span>{{ lesson.desc }}</span>
+                                <span>{{ lesson.duration }}</span>
                             </div>
-                            <div class="edu-lesson-meta">
-                                <span class="edu-lesson-time">{{ lesson.duration }}</span>
-                                {% if lesson.requires_auth and not user.is_authenticated %}
-                                <a href="{% url 'login' %}?next={% url lesson.url_name %}{% if lesson.anchor %}#{{ lesson.anchor }}{% endif %}" class="edu-lesson-go" title="ورود"><i class="fas fa-lock"></i></a>
-                                {% elif lesson.requires_bot and not has_bot_license %}
-                                <a href="{% url 'product_list' %}" class="edu-lesson-go" title="نیاز به ربات"><i class="fas fa-lock"></i></a>
-                                {% else %}
-                                <a href="{% url lesson.url_name %}{% if lesson.anchor %}#{{ lesson.anchor }}{% endif %}" class="edu-lesson-go" title="مشاهده"><i class="fas fa-arrow-left"></i></a>
-                                {% endif %}
-                            </div>
+                            {% if lesson.requires_auth and not user.is_authenticated %}
+                            <a href="{% url 'login' %}?next={% url lesson.url_name %}{% if lesson.anchor %}#{{ lesson.anchor }}{% endif %}" class="edu-lesson-go" title="ورود"><i class="fas fa-lock"></i></a>
+                            {% elif lesson.requires_bot and not has_bot_license %}
+                            <a href="{% url 'product_list' %}" class="edu-lesson-go" title="نیاز به ربات"><i class="fas fa-lock"></i></a>
+                            {% else %}
+                            <a href="{% url lesson.url_name %}{% if lesson.anchor %}#{{ lesson.anchor }}{% endif %}" class="edu-lesson-go" title="مشاهده"><i class="fas fa-arrow-left"></i></a>
+                            {% endif %}
                         </li>
                         {% endfor %}
                     </ul>
-                </article>
+                </details>
                 {% endfor %}
             </div>
         </div>
@@ -392,88 +298,74 @@
     <section class="edu-section edu-gallery-band" aria-labelledby="edu-gallery-title">
         <div class="container">
             <header class="edu-section-head edu-reveal">
-                <span class="edu-kicker">گالری میزکار</span>
+                <span class="edu-kicker">پیش‌نمایش میزکار</span>
                 <h2 id="edu-gallery-title">{{ edu.gallery.title }}</h2>
-                <p>{{ edu.gallery.subtitle }}</p>
             </header>
 
-            <div class="edu-gallery-filters edu-reveal" style="--edu-delay: 1" role="tablist">
+            <div class="edu-gallery-filters edu-reveal" role="tablist">
                 {% for cat in edu.gallery.categories %}
                 <button type="button"
                         class="edu-gallery-filter{% if forloop.first %} is-active{% endif %}"
                         role="tab"
                         data-gallery-filter="{{ cat.id }}"
                         aria-selected="{% if forloop.first %}true{% else %}false{% endif %}">
-                    <i class="fas {{ cat.icon }}"></i> {{ cat.label }}
+                    <i class="fas {{ cat.icon }} edu-gicon edu-gicon--violet edu-gicon--xs" aria-hidden="true"></i>
+                    {{ cat.label }}
                 </button>
                 {% endfor %}
             </div>
 
-            <div class="edu-gallery-grid">
+            <div class="edu-gallery-grid" data-gallery-grid>
                 {% for item in edu.gallery.items %}
-                <article class="edu-gallery-card edu-reveal" data-gallery-cat="{{ item.category }}" style="--edu-delay: {{ forloop.counter0 }}">
+                <article class="edu-gallery-card edu-reveal{% if forloop.counter > 8 %} edu-gallery-card--more{% endif %}" data-gallery-cat="{{ item.category }}">
                     <button type="button" class="edu-gallery-shot" data-edu-lightbox
                             data-src="{% static 'images/' %}{{ item.image }}"
                             data-caption="{{ item.caption }}"
-                            aria-label="بزرگ‌نمایی: {{ item.caption }}">
+                            aria-label="بزرگنمایی: {{ item.caption }}">
                         <img src="{% static 'images/' %}{{ item.image }}" alt="{{ item.caption }}" loading="lazy">
                         <span class="edu-gallery-caption">{{ item.caption }}</span>
                     </button>
                 </article>
                 {% endfor %}
             </div>
+            {% if edu.gallery.items|length > 8 %}
+            <div class="edu-gallery-more-wrap edu-reveal">
+                <button type="button" class="edu-btn edu-btn--ghost" data-gallery-more>
+                    <i class="fas fa-images" aria-hidden="true"></i>
+                    نمایش همه تصاویر ({{ edu.gallery.items|length }})
+                </button>
+            </div>
+            {% endif %}
         </div>
     </section>
 
-    <section class="edu-section edu-section--alt">
+    <section class="edu-section edu-section--compact">
         <div class="container">
-            <header class="edu-section-head edu-reveal">
-                <span class="edu-kicker">منابع ضروری</span>
-                <h2>{{ edu.sections.featured.title }}</h2>
-                <p>{{ edu.sections.featured.subtitle }}</p>
-            </header>
-            <div class="edu-featured-grid">
+            <div class="edu-resources edu-reveal">
                 {% for item in edu.featured %}
-                <article class="edu-featured-card edu-reveal{% if item.url_name == 'public_academy_playlist' %} edu-featured-card--academy{% endif %}" style="--edu-delay: {{ forloop.counter0 }}">
-                    {% if item.url_name == 'public_academy_playlist' %}
-                    <span class="edu-featured-ribbon"><i class="fas fa-star" aria-hidden="true"></i> پیشنهاد اصلی</span>
-                    {% endif %}
-                    {% if item.image %}
-                    <button type="button" class="edu-featured-visual" data-edu-lightbox
-                            data-src="{% static 'images/' %}{{ item.image }}"
-                            data-caption="{{ item.image_caption }}">
-                        <img src="{% static 'images/' %}{{ item.image }}" alt="{{ item.image_caption }}" loading="lazy">
-                        <span class="edu-shot-zoom"><i class="fas fa-expand"></i></span>
-                    </button>
-                    {% endif %}
-                    <div class="edu-featured-body">
-                        <div class="edu-featured-meta">
-                            <span class="edu-featured-icon edu-featured-icon--{{ item.accent }}"><i class="fas {{ item.icon }}"></i></span>
-                            <span class="edu-featured-time"><i class="fas fa-clock"></i> {{ item.duration }}</span>
-                        </div>
-                        <h3>{{ item.title }}</h3>
-                        <p>{{ item.desc }}</p>
-                        {% if item.requires_auth and not user.is_authenticated %}
-                        <a href="{% url item.guest_url_name %}" class="edu-btn edu-btn--primary edu-btn--sm">{{ item.cta_guest }}</a>
-                        {% else %}
-                        <a href="{% url item.url_name %}" class="edu-btn {% if item.url_name == 'public_academy_playlist' %}edu-btn--academy{% else %}edu-btn--primary{% endif %} edu-btn--sm">{{ item.cta }}</a>
-                        {% endif %}
-                    </div>
-                </article>
+                <a href="{% if item.requires_auth and not user.is_authenticated %}{% url item.guest_url_name %}{% else %}{% url item.url_name %}{% endif %}"
+                   class="edu-res-card{% if item.url_name == 'public_academy_playlist' %} edu-res-card--featured{% endif %}">
+                    <i class="fas {{ item.icon }} edu-gicon edu-gicon--{{ item.accent }}" aria-hidden="true"></i>
+                    <span class="edu-res-card__body">
+                        <strong>{{ item.title }}</strong>
+                        <span>{{ item.duration }}</span>
+                    </span>
+                    <i class="fas fa-arrow-left edu-res-card__arrow" aria-hidden="true"></i>
+                </a>
                 {% endfor %}
             </div>
         </div>
     </section>
 
-    <section class="edu-section">
+    <section class="edu-section edu-section--compact">
         <div class="container edu-faq-wrap">
             <header class="edu-section-head edu-reveal">
-                <span class="edu-kicker">پرسش‌های متداول</span>
+                <span class="edu-kicker">سوالات متداول</span>
                 <h2>{{ edu.sections.faq.title }}</h2>
             </header>
-            <div class="edu-faq">
+            <div class="edu-faq edu-faq--grid edu-reveal">
                 {% for item in edu.faq %}
-                <details class="edu-faq-item edu-reveal"{% if forloop.first %} open{% endif %} style="--edu-delay: {{ forloop.counter0 }}">
+                <details class="edu-faq-item">
                     <summary>{{ item.q }}</summary>
                     <p>{{ item.a }}</p>
                 </details>
@@ -486,21 +378,13 @@
         <div class="container edu-cta-inner">
             <h2>{{ edu.sections.cta.title }}</h2>
             <p>{{ edu.sections.cta.subtitle }}</p>
-            <div class="edu-hero-actions">
+            <div class="edu-cta-actions">
                 {% if user.is_authenticated %}
-                <a href="{% url 'workspace:home' %}" class="edu-btn edu-btn--primary">
-                    <i class="fas fa-layer-group"></i> میزکار من
-                </a>
-                <a href="{{ bot_buy_url }}" class="edu-btn edu-btn--ghost">
-                    <i class="fas fa-robot"></i> خرید ربات
-                </a>
+                <a href="{% url 'workspace:home' %}" class="edu-btn edu-btn--primary">میزکار من</a>
+                <a href="{{ bot_buy_url }}" class="edu-btn edu-btn--ghost">خرید ربات</a>
                 {% else %}
-                <a href="{% url 'register' %}" class="edu-btn edu-btn--primary">
-                    <i class="fas fa-user-plus"></i> ثبت‌نام رایگان
-                </a>
-                <a href="{{ bot_buy_url }}" class="edu-btn edu-btn--ghost">
-                    <i class="fas fa-robot"></i> خرید ربات
-                </a>
+                <a href="{% url 'register' %}" class="edu-btn edu-btn--primary">ثبت‌نام رایگان</a>
+                <a href="{{ bot_buy_url }}" class="edu-btn edu-btn--ghost">خرید ربات</a>
                 {% endif %}
             </div>
         </div>
@@ -513,5 +397,5 @@
 {% if install_video.available or filing_video.available or crm_video.available or academy_hero.player.available %}
 <script src="{% static 'js/bot-install-video.js' %}?v=1" defer></script>
 {% endif %}
-<script src="{% static 'js/education.js' %}?v=5" defer></script>
+<script src="{% static 'js/education.js' %}?v=6" defer></script>
 {% endblock %}

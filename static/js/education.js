@@ -3,7 +3,9 @@
 
     initReveal();
     initPathTabs();
+    initVideoTabs();
     initGalleryFilters();
+    initGalleryMore();
     initLightbox();
 
     function initReveal() {
@@ -32,8 +34,8 @@
                 }
             });
         }, {
-            threshold: 0.1,
-            rootMargin: '0px 0px -6% 0px',
+            threshold: 0.08,
+            rootMargin: '0px 0px -5% 0px',
         });
 
         items.forEach(function (el) {
@@ -71,6 +73,32 @@
         });
     }
 
+    function initVideoTabs() {
+        var tabs = document.querySelectorAll('.edu-vtab');
+        var panels = document.querySelectorAll('.edu-vpanel');
+        if (!tabs.length || !panels.length) return;
+
+        function activateVideo(id) {
+            tabs.forEach(function (tab) {
+                var isActive = tab.dataset.vtab === id;
+                tab.classList.toggle('is-active', isActive);
+                tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
+            });
+            panels.forEach(function (panel) {
+                var isActive = panel.dataset.vpanel === id;
+                panel.classList.toggle('is-active', isActive);
+                if (isActive) panel.removeAttribute('hidden');
+                else panel.setAttribute('hidden', '');
+            });
+        }
+
+        tabs.forEach(function (tab) {
+            tab.addEventListener('click', function () {
+                activateVideo(tab.dataset.vtab);
+            });
+        });
+    }
+
     function initGalleryFilters() {
         var filters = document.querySelectorAll('.edu-gallery-filter');
         var cards = document.querySelectorAll('.edu-gallery-card');
@@ -89,6 +117,17 @@
                     card.classList.toggle('is-hidden', !show);
                 });
             });
+        });
+    }
+
+    function initGalleryMore() {
+        var btn = document.querySelector('[data-gallery-more]');
+        var grid = document.querySelector('[data-gallery-grid]');
+        if (!btn || !grid) return;
+
+        btn.addEventListener('click', function () {
+            grid.classList.add('is-expanded');
+            btn.closest('.edu-gallery-more-wrap').hidden = true;
         });
     }
 

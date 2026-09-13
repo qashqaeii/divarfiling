@@ -9,145 +9,95 @@
 {% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/about-page.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'css/about-page.css' %}?v=3">
 {% endblock %}
 
 {% block content %}
 <div class="mk-pub-wrap abt-wrap">
-    <div class="abt-bg" style="background-image: url('{% static 'images/contact-bg.webp' %}');" aria-hidden="true"></div>
 
-    {# ── Hero ── #}
     <header class="abt-hero">
-        <div class="container abt-hero__grid">
-            <div class="abt-hero__copy">
-                <span class="abt-kicker">
-                    <i class="fas fa-star" aria-hidden="true"></i>
-                    درباره ما
-                </span>
-                <h1>ما اینجاییم تا کار مشاوران املاک را <span class="abt-hero__accent">ساده‌تر</span> کنیم.</h1>
-                <p class="abt-hero__lead">فایلینگ دیوار یک پلتفرم ایرانی برای استخراج، تحلیل و مدیریت فرصت‌های ملکی است — تا مشاوران و آژانس‌ها بتوانند روی معامله تمرکز کنند، نه جمع‌آوری دستی اطلاعات.</p>
-                <div class="abt-hero__actions">
-                    <a href="{% url 'register' %}" class="abt-btn abt-btn--primary">
-                        <i class="fas fa-rocket" aria-hidden="true"></i>
-                        شروع رایگان
-                    </a>
-                    <a href="{% url 'contact' %}" class="abt-btn abt-btn--ghost">
-                        <i class="fas fa-envelope" aria-hidden="true"></i>
-                        تماس با ما
-                    </a>
-                </div>
-            </div>
-            <div class="abt-hero__visual">
-                <div class="abt-hero__photo-wrap">
-                    <img src="{% static 'images/story-customer-office-rahkar.webp' %}" alt="مشاور املاک در حال کار با فایلینگ دیوار" class="abt-hero__photo" width="520" height="400" loading="eager">
-                    <div class="abt-hero__scribble" aria-hidden="true">هوشمندتر کار کن،<br>سریع‌تر معامله ببند.</div>
-                </div>
+        <div class="container abt-hero__inner">
+            <span class="abt-kicker">درباره ما</span>
+            <h1>کار مشاوران املاک را <span class="abt-accent">ساده‌تر</span> می‌کنیم</h1>
+            <p class="abt-lead">فایلینگ دیوار پلتفرم ایرانی استخراج، تحلیل و مدیریت آگهی‌های دیوار — برای مشاوران و آژانس‌هایی که می‌خواهند روی معامله تمرکز کنند.</p>
+            <div class="abt-actions">
+                <a href="{% url 'register' %}" class="abt-btn abt-btn--primary">شروع رایگان</a>
+                <a href="{% url 'contact' %}" class="abt-btn abt-btn--ghost">تماس با ما</a>
             </div>
         </div>
     </header>
 
-    {# ── Values ── #}
-    <section class="abt-section abt-values-section">
+    <section class="abt-band">
         <div class="container">
-            <div class="abt-values">
-                <article class="abt-value-card">
-                    <span class="abt-value-card__icon"><i class="fas fa-rocket" aria-hidden="true"></i></span>
-                    <h3>تمرکز روی نتیجه</h3>
-                    <p>هر قابلیت با هدف صرفه‌جویی در زمان و افزایش نرخ معامله طراحی شده است.</p>
-                </article>
-                <article class="abt-value-card">
-                    <span class="abt-value-card__icon"><i class="fas fa-shield-halved" aria-hidden="true"></i></span>
-                    <h3>اعتماد و شفافیت</h3>
-                    <p>داده دقیق، پشتیبانی واقعی و ارتباط مستقیم با تیم سازنده.</p>
-                </article>
-                <article class="abt-value-card">
-                    <span class="abt-value-card__icon"><i class="fas fa-users" aria-hidden="true"></i></span>
-                    <h3>درک نیاز مشاوران</h3>
-                    <p>محصول بر اساس تجربه واقعی بازار املاک ایران ساخته شده، نه ایده‌های تئوریک.</p>
-                </article>
-                <article class="abt-value-card">
-                    <span class="abt-value-card__icon"><i class="fas fa-lightbulb" aria-hidden="true"></i></span>
-                    <h3>نوآوری مستمر</h3>
-                    <p>به‌روزرسانی مداوم با تغییرات دیوار و نیازهای روز مشاوران و آژانس‌ها.</p>
-                </article>
-            </div>
+            <ul class="abt-pillars">
+                <li>
+                    <i class="fas fa-bullseye" aria-hidden="true"></i>
+                    <div>
+                        <strong>تمرکز روی نتیجه</strong>
+                        <span>ابزارهایی که وقت شما را ذخیره می‌کنند</span>
+                    </div>
+                </li>
+                <li>
+                    <i class="fas fa-shield-halved" aria-hidden="true"></i>
+                    <div>
+                        <strong>اعتماد و شفافیت</strong>
+                        <span>داده دقیق و پشتیبانی مستقیم</span>
+                    </div>
+                </li>
+                <li>
+                    <i class="fas fa-users" aria-hidden="true"></i>
+                    <div>
+                        <strong>درک نیاز مشاوران</strong>
+                        <span>ساخته‌شده از تجربه بازار ایران</span>
+                    </div>
+                </li>
+                <li>
+                    <i class="fas fa-lightbulb" aria-hidden="true"></i>
+                    <div>
+                        <strong>نوآوری مستمر</strong>
+                        <span>به‌روز با تغییرات دیوار</span>
+                    </div>
+                </li>
+            </ul>
         </div>
     </section>
 
-    {# ── Stats ── #}
-    <section class="abt-section abt-stats-section">
-        <div class="container">
-            <div class="abt-stats">
-                <header class="abt-stats__head">
-                    <h2>باهم در حال رشد</h2>
-                    <p>اعداد واقعی از جامعه کاربران فایلینگ دیوار</p>
-                </header>
-                <div class="abt-stats__grid">
-                    <article class="abt-stat">
-                        <span class="abt-stat__icon"><i class="fas fa-user-check" aria-hidden="true"></i></span>
-                        <strong class="abt-stat__num">+۲۳۰</strong>
-                        <span class="abt-stat__label">کاربران فعال</span>
-                    </article>
-                    <article class="abt-stat">
-                        <span class="abt-stat__icon"><i class="fas fa-database" aria-hidden="true"></i></span>
-                        <strong class="abt-stat__num">+۳۶۰</strong>
-                        <span class="abt-stat__label">دیتاست استخراج‌شده</span>
-                    </article>
-                    <article class="abt-stat">
-                        <span class="abt-stat__icon"><i class="fas fa-address-book" aria-hidden="true"></i></span>
-                        <strong class="abt-stat__num">+۴۳۰</strong>
-                        <span class="abt-stat__label">مخاطب CRM</span>
-                    </article>
-                    <article class="abt-stat">
-                        <span class="abt-stat__icon"><i class="fas fa-chart-line" aria-hidden="true"></i></span>
-                        <strong class="abt-stat__num">+۲۰M</strong>
-                        <span class="abt-stat__label">درآمد ثبت‌شده</span>
-                    </article>
-                </div>
-            </div>
+    <section class="abt-band abt-band--muted">
+        <div class="container abt-stats">
+            <div class="abt-stat"><strong>+۲۳۰</strong><span>کاربر فعال</span></div>
+            <div class="abt-stat"><strong>+۳۶۰</strong><span>دیتاست</span></div>
+            <div class="abt-stat"><strong>+۴۳۰</strong><span>مخاطب CRM</span></div>
+            <div class="abt-stat"><strong>+۲۰M</strong><span>درآمد ثبت‌شده</span></div>
         </div>
     </section>
 
-    {# ── Mission ── #}
-    <section class="abt-section abt-mission-section">
+    <section class="abt-band">
         <div class="container abt-mission">
-            <div class="abt-mission__copy">
-                <span class="abt-kicker abt-kicker--soft">مأموریت ما</span>
+            <div class="abt-mission__text">
+                <span class="abt-kicker">مأموریت ما</span>
                 <h2>بازار املاک هوشمندتر برای همه مشاوران</h2>
-                <p>هدف ما ارائه ابزارهای هوشمند استخراج، تحلیل و مدیریت فایلینگ است — تا هر مشاور، چه مستقل و چه در آژانس، بتواند سریع‌تر تصمیم بگیرد و معامله ببندد.</p>
-                <ul class="abt-checklist">
-                    <li><i class="fas fa-check" aria-hidden="true"></i> صرفه‌جویی در زمان جمع‌آوری اطلاعات</li>
-                    <li><i class="fas fa-check" aria-hidden="true"></i> تصمیم‌گیری دقیق‌تر با داده ساختارمند</li>
-                    <li><i class="fas fa-check" aria-hidden="true"></i> افزایش نرخ معامله با پیگیری هوشمند</li>
+                <p>استخراج، تحلیل و مدیریت فایلینگ در یک میزکار — تا سریع‌تر تصمیم بگیرید و معامله ببندید.</p>
+                <ul class="abt-checks">
+                    <li>صرفه‌جویی در زمان جمع‌آوری</li>
+                    <li>تصمیم‌گیری با داده ساختارمند</li>
+                    <li>پیگیری هوشمند مشتریان</li>
                 </ul>
             </div>
-            <div class="abt-mission__visual">
-                <div class="abt-mission__photo-wrap">
-                    <img src="{% static 'images/footer-bg.webp' %}" alt="نمای شهر تهران" class="abt-mission__photo" width="560" height="380" loading="lazy">
-                    <blockquote class="abt-mission__quote">
-                        <p>جایی که فرصت‌ها به معامله تبدیل می‌شوند.</p>
-                        <cite>فایلینگ دیوار</cite>
-                    </blockquote>
-                </div>
+            <figure class="abt-mission__media">
+                <img src="{% static 'images/footer-bg.webp' %}" alt="نمای شهر" width="480" height="300" loading="lazy">
+                <figcaption>جایی که فرصت‌ها به معامله تبدیل می‌شوند</figcaption>
+            </figure>
+        </div>
+    </section>
+
+    <section class="abt-band abt-band--cta">
+        <div class="container">
+            <div class="abt-cta">
+                <p>آماده‌اید یک قدم جلوتر از بازار باشید؟</p>
+                <a href="{% url 'register' %}" class="abt-btn abt-btn--white">شروع رایگان</a>
             </div>
         </div>
     </section>
 
-    {# ── CTA ── #}
-    <section class="abt-section abt-cta-section">
-        <div class="container">
-            <div class="abt-cta">
-                <div class="abt-cta__copy">
-                    <h2>شما هم بخشی از این مسیر باشید</h2>
-                    <p>با فایلینگ دیوار یک قدم جلوتر از بازار حرکت کنید.</p>
-                </div>
-                <a href="{% url 'register' %}" class="abt-btn abt-btn--white">
-                    شروع رایگان
-                    <i class="fas fa-arrow-left" aria-hidden="true"></i>
-                </a>
-                <div class="abt-cta__deco" aria-hidden="true"></div>
-            </div>
-        </div>
-    </section>
 </div>
 {% endblock %}

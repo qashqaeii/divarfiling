@@ -10,49 +10,52 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/mizkar-blog.css' %}?v=5">
-<link rel="stylesheet" href="{% static 'css/blog-page.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'css/blog-page.css' %}?v=2">
 {% endblock %}
 
 {% block content %}
 <div class="mk-pub-wrap mk-blog-hub">
 
-    <header class="mk-blog-hub-hero" aria-labelledby="blg-hero-title">
-        <div class="mk-blog-hero-photo" style="background-image: url('{% static 'images/Blog-header.webp' %}');" aria-hidden="true"></div>
-        <div class="mk-blog-hero-scrim" aria-hidden="true"></div>
-        <div class="mk-blog-hero-dots" aria-hidden="true"></div>
-        <div class="container mk-blog-hub-hero-inner">
-            <div class="mk-blog-hub-hero-grid">
-                <div class="mk-blog-hub-hero-copy mk-blog-reveal">
-                    <span class="mk-blog-kicker mk-blog-kicker--glow">
-                        <i class="fas fa-book-open blg-gicon blg-gicon--xs" aria-hidden="true"></i>
-                        مرکز دانش مشاوران
-                    </span>
-                    <h1 id="blg-hero-title">مقالات تخصصی <span>املاک و فایلینگ</span></h1>
-                    <p class="mk-blog-hero-lead">
-                        راهنماهای عملی CRM، تحلیل بازار دیوار، استخراج هوشمند و گردش کار حرفه‌ای —
-                        برای مشاوران و آژانس‌هایی که با داده تصمیم می‌گیرند.
-                    </p>
-                    <div class="mk-blog-hub-stats">
-                        <div class="mk-blog-stat">
-                            <strong>{{ total_posts }}</strong>
-                            <span>مقاله منتشرشده</span>
-                        </div>
-                        <div class="mk-blog-stat">
-                            <strong>{{ categories|length }}</strong>
-                            <span>دسته موضوعی</span>
-                        </div>
-                        <div class="mk-blog-stat">
-                            <strong><i class="fas fa-bolt blg-gicon blg-gicon--xs" aria-hidden="true"></i></strong>
-                            <span>به‌روزرسانی مستمر</span>
-                        </div>
+    <header class="blg-hero" aria-labelledby="blg-hero-title">
+        <div class="blg-hero__media" style="--blg-hero-bg: url('{% static 'images/Blog-header.webp' %}');" aria-hidden="true"></div>
+        <div class="blg-hero__fade" aria-hidden="true"></div>
+        <div class="container blg-hero__shell">
+            <div class="blg-hero__content mk-blog-reveal">
+                <p class="blg-hero__eyebrow">
+                    <i class="fas fa-book-open blg-gicon blg-gicon--xs" aria-hidden="true"></i>
+                    <span>مرکز دانش مشاوران</span>
+                </p>
+                <h1 id="blg-hero-title" class="blg-hero__title">
+                    <span class="blg-hero__title-main">مقالات تخصصی</span>
+                    <span class="blg-hero__title-accent">املاک و فایلینگ</span>
+                </h1>
+                <p class="blg-hero__lead">
+                    راهنماهای عملی CRM، تحلیل بازار دیوار، استخراج هوشمند و گردش کار حرفه‌ای —
+                    برای مشاوران و آژانس‌هایی که با داده تصمیم می‌گیرند.
+                </p>
+                <dl class="blg-hero__metrics" aria-label="خلاصه بلاگ">
+                    <div class="blg-hero__metric">
+                        <dt>مقاله منتشرشده</dt>
+                        <dd>{{ total_posts }}</dd>
                     </div>
-                    <div class="mk-blog-hero-chips" aria-label="موضوعات پرتکرار">
-                        <span class="mk-blog-hero-chip"><i class="fas fa-users" aria-hidden="true"></i> CRM</span>
-                        <span class="mk-blog-hero-chip"><i class="fas fa-chart-line" aria-hidden="true"></i> تحلیل بازار</span>
-                        <span class="mk-blog-hero-chip"><i class="fas fa-robot" aria-hidden="true"></i> ربات دیوار</span>
-                        <span class="mk-blog-hero-chip"><i class="fas fa-folder-tree" aria-hidden="true"></i> فایلینگ</span>
+                    <div class="blg-hero__metric">
+                        <dt>دسته موضوعی</dt>
+                        <dd>{{ categories|length }}</dd>
                     </div>
-                </div>
+                    <div class="blg-hero__metric">
+                        <dt>به‌روزرسانی</dt>
+                        <dd>مستمر</dd>
+                    </div>
+                </dl>
+                <p class="blg-hero__topics" aria-label="موضوعات پرتکرار">
+                    <span><i class="fas fa-users blg-gicon blg-gicon--xs" aria-hidden="true"></i> CRM</span>
+                    <span class="blg-hero__topics-sep" aria-hidden="true"></span>
+                    <span><i class="fas fa-chart-line blg-gicon blg-gicon--xs" aria-hidden="true"></i> تحلیل بازار</span>
+                    <span class="blg-hero__topics-sep" aria-hidden="true"></span>
+                    <span><i class="fas fa-robot blg-gicon blg-gicon--xs" aria-hidden="true"></i> ربات دیوار</span>
+                    <span class="blg-hero__topics-sep" aria-hidden="true"></span>
+                    <span><i class="fas fa-folder-tree blg-gicon blg-gicon--xs" aria-hidden="true"></i> فایلینگ</span>
+                </p>
             </div>
         </div>
     </header>

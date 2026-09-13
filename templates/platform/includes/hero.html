@@ -1,6 +1,7 @@
 {% load static %}
 {% with layout=platform_content.hero.layout|default:'split' %}
 <header class="plat-hero plat-hero--{{ platform_page.accent }} plat-hero--{{ layout }}">
+    {% include 'platform/includes/hero_mesh.html' %}
     <div class="plat-hero__mesh" aria-hidden="true"></div>
     <div class="plat-hero__glow" aria-hidden="true"></div>
     <div class="container plat-hero__inner">

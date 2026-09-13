@@ -1,0 +1,469 @@
+/* ═══════════════════════════════════════════════════════════
+   Platform Premium v4 — unified UI/UX elevation
+   Applies to all /features/ and /solutions/ pages + mega menu
+   ═══════════════════════════════════════════════════════════ */
+
+body.mk-platform-premium .plat-page--feel {
+    --plat-premium-ease: cubic-bezier(0.16, 1, 0.3, 1);
+    --plat-premium-mesh: color-mix(in srgb, var(--plat-accent, #8b5cf6) 7%, transparent);
+    --plat-premium-card: color-mix(in srgb, var(--mk-card, #0f172a) 92%, #fff);
+    --plat-premium-border: color-mix(in srgb, var(--plat-accent, #8b5cf6) 14%, transparent);
+    --plat-premium-shadow: 0 14px 36px -18px color-mix(in srgb, #0f172a 22%, transparent);
+    --plat-premium-shadow-accent: 0 20px 48px -20px color-mix(in srgb, var(--plat-accent, #8b5cf6) 28%, transparent);
+}
+
+html.mk-public[data-theme="light"] body.mk-platform-premium .plat-page--feel {
+    --plat-premium-card: #fff;
+    --plat-premium-shadow: 0 14px 36px -18px rgba(15, 23, 42, 0.1);
+}
+
+/* ── Page canvas ── */
+body.mk-platform-premium .plat-page--feel {
+    background:
+        radial-gradient(ellipse 80% 45% at 50% -5%, var(--plat-premium-mesh), transparent 55%),
+        linear-gradient(180deg, color-mix(in srgb, var(--mk-bg, #070b17) 98%, var(--plat-accent, #8b5cf6)), var(--mk-bg, #070b17));
+}
+
+html.mk-public[data-theme="light"] body.mk-platform-premium .plat-page--feel {
+    background:
+        radial-gradient(ellipse 70% 40% at 50% -8%, var(--plat-premium-mesh), transparent 60%),
+        linear-gradient(180deg, #fafbff 0%, #f4f6fb 100%);
+}
+
+/* ── Hero mesh backdrop ── */
+body.mk-platform-premium .plat-hero-mesh {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background:
+        radial-gradient(ellipse 55% 45% at 92% 8%, var(--plat-premium-mesh), transparent 58%),
+        radial-gradient(ellipse 35% 30% at 6% 92%, color-mix(in srgb, var(--plat-accent, #8b5cf6) 4%, transparent), transparent 52%),
+        radial-gradient(color-mix(in srgb, var(--plat-accent, #8b5cf6) 5%, transparent) 1px, transparent 1px);
+    background-size: auto, auto, 24px 24px;
+    mask-image: linear-gradient(180deg, #000 0%, #000 75%, transparent 100%);
+    opacity: 0.95;
+}
+
+body.mk-platform-premium [class*="-hero"] {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+}
+
+body.mk-platform-premium [class*="-hero__grid"],
+body.mk-platform-premium [class*="-hero__inner"],
+body.mk-platform-premium .plat-crm-hero__inner {
+    position: relative;
+    z-index: 1;
+}
+
+/* ── Gradient H1 (accent-aware) ── */
+body.mk-platform-premium [class*="-hero"] h1,
+body.mk-platform-premium .plat-crm-hero h1 {
+    font-weight: 800;
+    letter-spacing: -0.035em;
+    line-height: 1.22;
+    background: linear-gradient(
+        118deg,
+        color-mix(in srgb, var(--plat-accent, #8b5cf6) 15%, #0f172a) 0%,
+        color-mix(in srgb, var(--plat-accent, #8b5cf6) 85%, #6d28d9) 48%,
+        color-mix(in srgb, var(--plat-accent, #8b5cf6) 55%, #059669) 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+html.mk-public[data-theme="dark"] body.mk-platform-premium [class*="-hero"] h1,
+html.mk-public[data-theme="dark"] body.mk-platform-premium .plat-crm-hero h1 {
+    background: linear-gradient(
+        118deg,
+        #f8fafc 0%,
+        color-mix(in srgb, var(--plat-accent, #8b5cf6) 70%, #e2e8f0) 55%,
+        color-mix(in srgb, var(--plat-accent, #8b5cf6) 45%, #a7f3d0) 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* ── Eyebrow accent line ── */
+body.mk-platform-premium [class*="-eyebrow"],
+body.mk-platform-premium [class*="-hero__eyebrow"],
+body.mk-platform-premium .plat-crm-hero__eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+}
+
+body.mk-platform-premium [class*="-eyebrow"]::after,
+body.mk-platform-premium [class*="-hero__eyebrow"]::after,
+body.mk-platform-premium .plat-crm-hero__eyebrow::after {
+    content: '';
+    width: 1.75rem;
+    height: 2px;
+    border-radius: 999px;
+    background: linear-gradient(to left, var(--plat-accent, #8b5cf6), transparent);
+    flex-shrink: 0;
+}
+
+body.mk-platform-premium .shub-prose--center .shub-eyebrow::after,
+body.mk-platform-premium .fhub-prose--center .fhub-eyebrow::after {
+    display: none;
+}
+
+/* ── Icon wells — gradient tint ── */
+body.mk-platform-premium [class*="-ico--solid"] {
+    background: linear-gradient(
+        145deg,
+        var(--plat-accent, #8b5cf6),
+        color-mix(in srgb, var(--plat-accent, #8b5cf6) 65%, #fff)
+    ) !important;
+    color: #fff !important;
+    box-shadow: 0 10px 24px color-mix(in srgb, var(--plat-accent, #8b5cf6) 32%, transparent) !important;
+}
+
+/* ── Glass cards — outcomes, pillars, caps, next ── */
+body.mk-platform-premium [class*="-outcomes__item"],
+body.mk-platform-premium [class*="-pillar__card"],
+body.mk-platform-premium [class*="-cap"],
+body.mk-platform-premium [class*="-audience__card"],
+body.mk-platform-premium [class*="-lifecycle__step"],
+body.mk-platform-premium [class*="-next__card"],
+body.mk-platform-premium [class*="-bridge__card"],
+body.mk-platform-premium [class*="-tier"],
+body.mk-platform-premium [class*="-trust__item"],
+body.mk-platform-premium [class*="-flow-h__step"],
+body.mk-platform-premium [class*="-solution-card"],
+body.mk-platform-premium [class*="-choose__card"],
+body.mk-platform-premium [class*="-problem__card"],
+body.mk-platform-premium [class*="-framework__item"],
+body.mk-platform-premium [class*="-workflow__step"],
+body.mk-platform-premium [class*="-privacy__item"],
+body.mk-platform-premium [class*="-related__card"] {
+    background: var(--plat-premium-card) !important;
+    border-color: var(--plat-premium-border) !important;
+    box-shadow: var(--plat-premium-shadow);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    transition:
+        transform 0.22s var(--plat-premium-ease),
+        box-shadow 0.22s var(--plat-premium-ease),
+        border-color 0.22s var(--plat-premium-ease);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    body.mk-platform-premium [class*="-outcomes__item"]:hover,
+    body.mk-platform-premium [class*="-pillar"]:hover .fhub-pillar__card,
+    body.mk-platform-premium [class*="-cap"]:hover,
+    body.mk-platform-premium [class*="-audience__card"]:hover,
+    body.mk-platform-premium [class*="-lifecycle__step"]:hover,
+    body.mk-platform-premium [class*="-next__card"]:hover,
+    body.mk-platform-premium [class*="-bridge__card"]:hover,
+    body.mk-platform-premium [class*="-choose__card"]:hover,
+    body.mk-platform-premium [class*="-solution-card"]:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--plat-premium-shadow-accent);
+        border-color: color-mix(in srgb, var(--plat-accent, #8b5cf6) 32%, transparent) !important;
+    }
+}
+
+/* ── Soft sections with subtle mesh ── */
+body.mk-platform-premium [class*="-sec--soft"],
+body.mk-platform-premium [class*="-sec--spotlight"],
+body.mk-platform-premium [class*="-sec--bridge"] {
+    position: relative;
+}
+
+body.mk-platform-premium [class*="-sec--soft"]::before,
+body.mk-platform-premium [class*="-sec--spotlight"]::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(ellipse 60% 50% at 50% 0%, var(--plat-premium-mesh), transparent 70%);
+    opacity: 0.6;
+}
+
+/* ── Soft CTA bands ── */
+body.mk-platform-premium [class*="-soft-cta"] {
+    position: relative;
+    background:
+        linear-gradient(
+            90deg,
+            color-mix(in srgb, var(--plat-accent, #8b5cf6) 6%, transparent),
+            transparent 55%,
+            color-mix(in srgb, var(--plat-accent, #8b5cf6) 4%, transparent)
+        ) !important;
+}
+
+body.mk-platform-premium [class*="-soft-cta__inner"] {
+    border-radius: var(--plat-radius, 16px);
+    border: 1px solid var(--plat-premium-border);
+    padding: clamp(1rem, 3vw, 1.35rem) clamp(1rem, 3vw, 1.5rem);
+    background: var(--plat-premium-card);
+    box-shadow: var(--plat-premium-shadow);
+}
+
+/* ── FAQ premium accordion ── */
+body.mk-platform-premium .plat-faq__item {
+    border-radius: var(--plat-radius-sm, 12px) !important;
+    border: 1px solid var(--plat-premium-border) !important;
+    background: var(--plat-premium-card) !important;
+    box-shadow: var(--plat-premium-shadow);
+    overflow: hidden;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+body.mk-platform-premium .plat-faq__item[open] {
+    border-color: color-mix(in srgb, var(--plat-accent, #8b5cf6) 35%, transparent) !important;
+    box-shadow: var(--plat-premium-shadow-accent);
+}
+
+body.mk-platform-premium .plat-faq__item summary {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.65rem;
+    padding: 0.15rem 0;
+    list-style: none;
+}
+
+body.mk-platform-premium .plat-faq__answer {
+    padding-top: 0.5rem;
+    border-top: 1px dashed color-mix(in srgb, var(--plat-accent, #8b5cf6) 18%, transparent);
+    margin-top: 0.65rem;
+}
+
+/* ── Final CTA ── */
+body.mk-platform-premium [class*="-final-cta"] {
+    padding-block: clamp(3rem, 6vw, 4.5rem) !important;
+}
+
+body.mk-platform-premium [class*="-final-cta"]__inner {
+    text-align: center;
+    padding: clamp(2rem, 5vw, 2.75rem) clamp(1.25rem, 4vw, 2rem) !important;
+    border-radius: var(--plat-radius, 16px) !important;
+    border: 1px solid var(--plat-premium-border) !important;
+    background:
+        linear-gradient(
+            145deg,
+            color-mix(in srgb, var(--plat-accent, #8b5cf6) 12%, transparent),
+            transparent 58%
+        ),
+        var(--plat-premium-card) !important;
+    box-shadow: var(--plat-premium-shadow-accent) !important;
+}
+
+/* ── Next path convert card ── */
+body.mk-platform-premium [class*="-next__card--convert"] {
+    background:
+        linear-gradient(
+            135deg,
+            color-mix(in srgb, var(--plat-accent, #8b5cf6) 14%, transparent),
+            color-mix(in srgb, var(--plat-accent, #8b5cf6) 4%, transparent)
+        ) !important;
+    border-color: color-mix(in srgb, var(--plat-accent, #8b5cf6) 42%, transparent) !important;
+}
+
+/* ── Product screenshot frames ── */
+body.mk-platform-premium .plat-shot-story__frame,
+body.mk-platform-premium .plat-product-frame,
+body.mk-platform-premium .plat-device {
+    box-shadow: var(--plat-premium-shadow-accent) !important;
+    border-color: var(--plat-premium-border) !important;
+}
+
+/* ── Context / nav bar ── */
+body.mk-platform-premium .plat-nav-bar {
+    background:
+        linear-gradient(
+            135deg,
+            color-mix(in srgb, var(--plat-accent, #8b5cf6) 8%, transparent),
+            transparent 60%
+        ),
+        var(--plat-premium-card) !important;
+    box-shadow: var(--plat-premium-shadow);
+}
+
+body.mk-platform-premium .plat-affiliate {
+    box-shadow: 0 4px 14px color-mix(in srgb, var(--plat-accent, #8b5cf6) 12%, transparent);
+}
+
+/* ── Sticky CTA ── */
+body.mk-platform-premium .plat-sticky-cta {
+    background: color-mix(in srgb, var(--mk-card, #0f172a) 88%, transparent) !important;
+    backdrop-filter: blur(14px) saturate(1.2);
+    -webkit-backdrop-filter: blur(14px) saturate(1.2);
+    box-shadow: 0 -8px 32px color-mix(in srgb, #0f172a 12%, transparent);
+}
+
+html.mk-public[data-theme="light"] body.mk-platform-premium .plat-sticky-cta {
+    background: color-mix(in srgb, #fff 92%, transparent) !important;
+}
+
+/* ── Mega menu v4 accents ── */
+html.mk-public .mk-mega-card--sky .mk-mega-card__icon {
+    background: rgba(14, 165, 233, 0.15);
+    color: var(--plat-accent-sky);
+}
+
+html.mk-public .mk-mega-card--sky:hover {
+    background: rgba(14, 165, 233, 0.08);
+    border-color: rgba(14, 165, 233, 0.28);
+}
+
+html.mk-public .mk-mega-card--orange .mk-mega-card__icon {
+    background: rgba(234, 88, 12, 0.15);
+    color: var(--plat-accent-orange);
+}
+
+html.mk-public .mk-mega-card--orange:hover {
+    background: rgba(234, 88, 12, 0.08);
+    border-color: rgba(234, 88, 12, 0.28);
+}
+
+html.mk-public .mk-mega-panel__section-label {
+    display: block;
+    margin: 0.35rem 0 0.45rem;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    opacity: 0.55;
+}
+
+html.mk-public .mk-mega-panel__brand strong {
+    display: block;
+    font-size: 0.88rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+}
+
+html.mk-public .mk-mobile-sub-link--product {
+    display: flex !important;
+    align-items: center;
+    gap: 0.65rem;
+    border: 1px solid color-mix(in srgb, currentColor 8%, transparent);
+    background: color-mix(in srgb, currentColor 3%, transparent);
+}
+
+html.mk-public .mk-mobile-sub-link__icon {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 8px;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    font-size: 0.82rem;
+}
+
+html.mk-public .mk-mobile-sub-link--rose .mk-mobile-sub-link__icon {
+    background: rgba(244, 63, 94, 0.12);
+    color: var(--plat-accent-rose);
+}
+
+html.mk-public .mk-mobile-sub-link--sky .mk-mobile-sub-link__icon {
+    background: rgba(14, 165, 233, 0.12);
+    color: var(--plat-accent-sky);
+}
+
+html.mk-public .mk-mobile-sub-link--amber .mk-mobile-sub-link__icon {
+    background: rgba(245, 158, 11, 0.12);
+    color: var(--plat-accent-amber);
+}
+
+html.mk-public .mk-mobile-sub-link--violet .mk-mobile-sub-link__icon {
+    background: rgba(139, 92, 246, 0.12);
+    color: var(--plat-accent-violet);
+}
+
+html.mk-public .mk-mobile-sub-link--orange .mk-mobile-sub-link__icon {
+    background: rgba(234, 88, 12, 0.12);
+    color: var(--plat-accent-orange);
+}
+
+html.mk-public .mk-mobile-featured {
+    display: block;
+    padding: 0.75rem;
+    margin: 0.35rem 0;
+    border-radius: 12px;
+    border: 1px solid rgba(244, 63, 94, 0.22);
+    background: linear-gradient(135deg, rgba(244, 63, 94, 0.08), rgba(139, 92, 246, 0.04));
+    text-decoration: none;
+    color: inherit;
+}
+
+html.mk-public .mk-mobile-featured__badge {
+    display: inline-block;
+    font-size: 0.62rem;
+    font-weight: 700;
+    padding: 0.1rem 0.4rem;
+    border-radius: 999px;
+    background: rgba(16, 185, 129, 0.15);
+    color: var(--plat-accent-emerald);
+    margin-bottom: 0.25rem;
+}
+
+html.mk-public .mk-mobile-solution {
+    display: block;
+    padding: 0.65rem 0.75rem;
+    margin: 0.35rem 0;
+    border-radius: 10px;
+    border: 1px solid rgba(244, 63, 94, 0.2);
+    background: rgba(244, 63, 94, 0.05);
+    text-decoration: none;
+    color: inherit;
+}
+
+html.mk-public .mk-mobile-solution__label {
+    display: block;
+    font-size: 0.62rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--plat-accent-rose);
+    margin-bottom: 0.15rem;
+}
+
+html.mk-public .mk-mobile-accordion__badge {
+    font-size: 0.62rem;
+    font-weight: 700;
+    padding: 0.1rem 0.4rem;
+    border-radius: 999px;
+    background: rgba(139, 92, 246, 0.12);
+    color: var(--plat-accent-violet);
+    margin-inline-start: 0.35rem;
+}
+
+html.mk-public .mk-mobile-accordion__hubs {
+    display: flex;
+    gap: 0.4rem;
+    margin-bottom: 0.5rem;
+}
+
+html.mk-public .mk-mobile-sub-link--hub {
+    flex: 1;
+    text-align: center;
+    font-weight: 700 !important;
+    border-radius: 999px !important;
+    padding: 0.45rem 0.65rem !important;
+}
+
+html.mk-public .mk-mobile-sub-link--alt {
+    color: var(--plat-accent-emerald) !important;
+    background: rgba(16, 185, 129, 0.08) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    body.mk-platform-premium [class*="-outcomes__item"],
+    body.mk-platform-premium [class*="-next__card"],
+    body.mk-platform-premium [class*="-cap"] {
+        transition: none !important;
+    }
+
+    body.mk-platform-premium [class*="-outcomes__item"]:hover,
+    body.mk-platform-premium [class*="-next__card"]:hover {
+        transform: none !important;
+    }
+}

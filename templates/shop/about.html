@@ -9,7 +9,7 @@
 {% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/about-page.css' %}?v=7">
+<link rel="stylesheet" href="{% static 'css/about-page.css' %}?v=8">
 {% endblock %}
 
 {% block content %}
@@ -64,22 +64,49 @@
     </section>
 
     <section class="abt-band abt-band--muted" aria-label="آمار زنده پلتفرم">
-        <div class="container abt-stats">
-            <div class="abt-stat abt-reveal" style="--abt-delay: 0" data-abt-count="{{ stats.total_users }}">
-                <strong>{{ stats.total_users|intcomma }}</strong>
-                <span>کاربر فعال</span>
-            </div>
-            <div class="abt-stat abt-reveal" style="--abt-delay: 1" data-abt-count="{{ stats.total_orders }}">
-                <strong>{{ stats.total_orders|intcomma }}</strong>
-                <span>خرید موفق</span>
-            </div>
-            <div class="abt-stat abt-reveal" style="--abt-delay: 2" data-abt-count="{{ stats.total_licenses }}">
-                <strong>{{ stats.total_licenses|intcomma }}</strong>
-                <span>لایسنس فعال</span>
-            </div>
-            <div class="abt-stat abt-reveal" style="--abt-delay: 3">
-                <strong>{{ stats.satisfaction_rate }}%</strong>
-                <span>رضایت کاربران</span>
+        <div class="container">
+            <div class="abt-stats-panel abt-reveal">
+                <header class="abt-stats-head">
+                    <div class="abt-stats-live">
+                        <span class="abt-stats-live-dot" aria-hidden="true"></span>
+                        <span>آمار زنده از پلتفرم</span>
+                    </div>
+                    {% if stats.uptime_label %}
+                    <span class="abt-stats-uptime">
+                        <i class="fas fa-clock" aria-hidden="true"></i> {{ stats.uptime_label }}
+                    </span>
+                    {% endif %}
+                </header>
+                <div class="abt-stats-grid">
+                    <article class="abt-stat abt-reveal" style="--abt-delay: 0" data-abt-count="{{ stats.total_users }}">
+                        <span class="abt-stat-icon"><i class="fas fa-users" aria-hidden="true"></i></span>
+                        <span class="abt-stat-body">
+                            <strong class="abt-stat-val">{{ stats.total_users|intcomma }}</strong>
+                            <span class="abt-stat-lbl">کاربر فعال</span>
+                        </span>
+                    </article>
+                    <article class="abt-stat abt-reveal" style="--abt-delay: 1" data-abt-count="{{ stats.total_orders }}">
+                        <span class="abt-stat-icon"><i class="fas fa-shopping-bag" aria-hidden="true"></i></span>
+                        <span class="abt-stat-body">
+                            <strong class="abt-stat-val">{{ stats.total_orders|intcomma }}</strong>
+                            <span class="abt-stat-lbl">خرید موفق</span>
+                        </span>
+                    </article>
+                    <article class="abt-stat abt-reveal" style="--abt-delay: 2" data-abt-count="{{ stats.total_licenses }}">
+                        <span class="abt-stat-icon"><i class="fas fa-key" aria-hidden="true"></i></span>
+                        <span class="abt-stat-body">
+                            <strong class="abt-stat-val">{{ stats.total_licenses|intcomma }}</strong>
+                            <span class="abt-stat-lbl">لایسنس فعال</span>
+                        </span>
+                    </article>
+                    <article class="abt-stat abt-reveal" style="--abt-delay: 3">
+                        <span class="abt-stat-icon"><i class="fas fa-heart" aria-hidden="true"></i></span>
+                        <span class="abt-stat-body">
+                            <strong class="abt-stat-val">{{ stats.satisfaction_rate }}<small>%</small></strong>
+                            <span class="abt-stat-lbl">رضایت کاربران</span>
+                        </span>
+                    </article>
+                </div>
             </div>
         </div>
     </section>

@@ -326,40 +326,135 @@ html.mk-public[data-theme="dark"] .abt-pillars li.is-inview:hover {
     color: var(--mk-text-secondary, #64748b);
 }
 
-/* ─── Stats ─── */
-.abt-stats {
+/* ─── Live stats panel ─── */
+.abt-stats-panel {
+    position: relative;
+    padding: clamp(1rem, 2.5vw, 1.35rem) clamp(1rem, 3vw, 1.5rem);
+    border-radius: 18px;
+    border: 1px solid rgba(124, 58, 237, 0.14);
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.96), rgba(248, 250, 252, 0.9));
+    box-shadow: 0 24px 60px -40px rgba(15, 23, 42, 0.35);
+    overflow: hidden;
+}
+
+html.mk-public[data-theme="dark"] .abt-stats-panel {
+    background: linear-gradient(145deg, rgba(15, 23, 42, 0.88), rgba(30, 27, 75, 0.55));
+    border-color: rgba(167, 139, 250, 0.18);
+}
+
+.abt-stats-panel::before {
+    content: '';
+    position: absolute;
+    inset-inline-end: -20%;
+    top: -40%;
+    width: 45%;
+    height: 140%;
+    background: radial-gradient(circle, rgba(124, 58, 237, 0.08), transparent 70%);
+    pointer-events: none;
+}
+
+.abt-stats-head {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem 1rem;
+    margin-bottom: 1rem;
+}
+
+.abt-stats-live {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #7c3aed;
+}
+
+.abt-stats-live-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #34d399;
+    box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.5);
+    animation: abt-live-pulse 2s ease infinite;
+}
+
+@keyframes abt-live-pulse {
+    70% { box-shadow: 0 0 0 8px rgba(52, 211, 153, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0); }
+}
+
+.abt-stats-uptime {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #64748b;
+}
+
+.abt-stats-grid {
+    position: relative;
+    z-index: 1;
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 1rem;
-    text-align: center;
+    gap: 0.65rem;
 }
 
 .abt-stat {
-    padding: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.65rem 0.75rem;
     border-radius: 12px;
-    transition: transform 0.28s var(--abt-ease);
+    background: rgba(148, 163, 184, 0.06);
+    border: 1px solid rgba(148, 163, 184, 0.1);
+    min-width: 0;
+    transition: transform 0.28s var(--abt-ease), border-color 0.28s var(--abt-ease), box-shadow 0.28s var(--abt-ease);
 }
 
 .abt-stat.is-inview:hover {
-    transform: translateY(-3px) scale(1.02);
+    transform: translateY(-2px);
+    border-color: rgba(124, 58, 237, 0.18);
+    box-shadow: 0 8px 22px rgba(124, 58, 237, 0.08);
 }
 
-.abt-stat strong {
-    display: block;
-    font-size: clamp(1.4rem, 3vw, 1.85rem);
-    font-weight: 800;
+.abt-stat-icon {
+    flex-shrink: 0;
+    width: 2rem;
+    height: 2rem;
+    display: grid;
+    place-items: center;
+    border-radius: 10px;
+    font-size: 0.82rem;
     color: #7c3aed;
-    letter-spacing: -0.02em;
-    line-height: 1.2;
+    background: rgba(124, 58, 237, 0.08);
+}
+
+.abt-stat-body {
+    min-width: 0;
+}
+
+.abt-stat-val {
+    display: block;
+    font-size: clamp(1rem, 2.2vw, 1.2rem);
+    font-weight: 800;
+    line-height: 1.15;
+    color: var(--mk-text, #0f172a);
     font-variant-numeric: tabular-nums;
 }
 
-.abt-stat span {
+.abt-stat-val small {
+    font-size: 0.72em;
+    font-weight: 700;
+}
+
+.abt-stat-lbl {
     display: block;
-    margin-top: 0.2rem;
-    font-size: 0.76rem;
-    font-weight: 500;
-    color: var(--mk-text-secondary, #64748b);
+    margin-top: 0.1rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #64748b;
 }
 
 /* ─── Mission ─── */
@@ -467,16 +562,15 @@ html.mk-public[data-theme="dark"] .abt-pillars li.is-inview:hover {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
-    .abt-stats {
+    .abt-stats-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 1.5rem;
     }
 
 }
 
 @media (max-width: 520px) {
     .abt-pillars,
-    .abt-stats {
+    .abt-stats-grid {
         grid-template-columns: 1fr;
     }
 
@@ -506,7 +600,8 @@ html.mk-public[data-theme="dark"] .abt-pillars li.is-inview:hover {
 
     .abt-accent,
     .abt-hero__glow,
-    .abt-cta::after {
+    .abt-cta::after,
+    .abt-stats-live-dot {
         animation: none !important;
     }
 

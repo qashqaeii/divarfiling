@@ -17,7 +17,7 @@
         var target = parseInt(el.getAttribute('data-abt-count'), 10);
         if (!target || el.dataset.abtCounted === '1') return;
 
-        var strong = el.querySelector('strong');
+        var strong = el.querySelector('.abt-stat-val, strong');
         if (!strong) return;
 
         el.dataset.abtCounted = '1';

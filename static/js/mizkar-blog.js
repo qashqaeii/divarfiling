@@ -1,6 +1,24 @@
 (function () {
     'use strict';
 
+    function moveFilterIndicator(track) {
+        if (!track) return;
+        var indicator = track.querySelector('.mk-blog-filter-indicator');
+        var active = track.querySelector('.mk-blog-filter-pill.is-active');
+        if (!indicator || !active) return;
+
+        indicator.style.width = active.offsetWidth + 'px';
+        indicator.style.transform = 'translateX(' + active.offsetLeft + 'px)';
+    }
+
+    function initFilterIndicator() {
+        var track = document.querySelector('[data-filter-track]');
+        if (!track) return;
+
+        moveFilterIndicator(track);
+        window.addEventListener('resize', function () { moveFilterIndicator(track); });
+    }
+
     /* ─── Sticky filter bar (list hub) ─── */
     function initBlogFilterBar() {
         var bar = document.querySelector('.mk-blog-filter-bar');
@@ -185,6 +203,7 @@
     }
 
     initBlogFilterBar();
+    initFilterIndicator();
     initBlogInfiniteScroll();
 
     var prose = document.getElementById('blog-content');

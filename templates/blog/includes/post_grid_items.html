@@ -7,7 +7,7 @@
             <img src="{{ post.featured_image.url }}" alt="{{ post.title }}" class="mk-blog-card-img" loading="lazy">
             {% else %}
             <div class="mk-blog-card-placeholder">
-                <i class="fas {{ post.category.slug|default:'article'|category_icon }}"></i>
+                <i class="fas {{ post.category.slug|default:'article'|category_icon }} blg-gicon"></i>
             </div>
             {% endif %}
             <span class="mk-blog-card-readtime">
@@ -16,9 +16,14 @@
             </span>
         </div>
         <div class="mk-blog-card-body">
-            {% if post.category %}
-            <span class="mk-blog-tag">{{ post.category.name }}</span>
-            {% endif %}
+            <div class="mk-blog-card-top">
+                {% if post.category %}
+                <span class="mk-blog-tag">{{ post.category.name }}</span>
+                {% else %}
+                <span></span>
+                {% endif %}
+                <span class="mk-blog-card-index" aria-hidden="true">{{ forloop.counter|stringformat:"02d" }}</span>
+            </div>
             <h2 class="mk-blog-card-title">{{ post.title }}</h2>
             <p class="mk-blog-card-excerpt">{{ post.excerpt|default:post.content|striptags|truncatewords:22 }}</p>
             <div class="mk-blog-card-foot">

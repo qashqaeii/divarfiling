@@ -9,18 +9,19 @@
 {% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/about-page.css' %}?v=5">
+<link rel="stylesheet" href="{% static 'css/about-page.css' %}?v=6">
 {% endblock %}
 
 {% block content %}
 <div class="mk-pub-wrap abt-wrap">
 
     <header class="abt-hero">
+        <div class="abt-hero__glow" aria-hidden="true"></div>
         <div class="container abt-hero__inner">
-            <span class="abt-kicker">درباره ما</span>
-            <h1>کار مشاوران املاک را <span class="abt-accent">ساده‌تر</span> می‌کنیم</h1>
-            <p class="abt-lead">فایلینگ دیوار پلتفرم ایرانی استخراج، تحلیل و مدیریت آگهی‌های دیوار — برای مشاوران و آژانس‌هایی که می‌خواهند روی معامله تمرکز کنند.</p>
-            <div class="abt-actions">
+            <span class="abt-kicker abt-reveal" style="--abt-delay: 0">درباره ما</span>
+            <h1 class="abt-reveal" style="--abt-delay: 1">کار مشاوران املاک را <span class="abt-accent">ساده‌تر</span> می‌کنیم</h1>
+            <p class="abt-lead abt-reveal" style="--abt-delay: 2">فایلینگ دیوار پلتفرم ایرانی استخراج، تحلیل و مدیریت آگهی‌های دیوار — برای مشاوران و آژانس‌هایی که می‌خواهند روی معامله تمرکز کنند.</p>
+            <div class="abt-actions abt-reveal" style="--abt-delay: 3">
                 <a href="{% url 'register' %}" class="abt-btn abt-btn--primary">شروع رایگان</a>
                 <a href="{% url 'contact' %}" class="abt-btn abt-btn--ghost">تماس با ما</a>
             </div>
@@ -30,28 +31,28 @@
     <section class="abt-band">
         <div class="container">
             <ul class="abt-pillars">
-                <li>
+                <li class="abt-reveal" style="--abt-delay: 0">
                     <i class="fas fa-bullseye" aria-hidden="true"></i>
                     <div>
                         <strong>تمرکز روی نتیجه</strong>
                         <span>ابزارهایی که وقت شما را ذخیره می‌کنند</span>
                     </div>
                 </li>
-                <li>
+                <li class="abt-reveal" style="--abt-delay: 1">
                     <i class="fas fa-shield-halved" aria-hidden="true"></i>
                     <div>
                         <strong>اعتماد و شفافیت</strong>
                         <span>داده دقیق و پشتیبانی مستقیم</span>
                     </div>
                 </li>
-                <li>
+                <li class="abt-reveal" style="--abt-delay: 2">
                     <i class="fas fa-users" aria-hidden="true"></i>
                     <div>
                         <strong>درک نیاز مشاوران</strong>
                         <span>ساخته‌شده از تجربه بازار ایران</span>
                     </div>
                 </li>
-                <li>
+                <li class="abt-reveal" style="--abt-delay: 3">
                     <i class="fas fa-lightbulb" aria-hidden="true"></i>
                     <div>
                         <strong>نوآوری مستمر</strong>
@@ -64,23 +65,23 @@
 
     <section class="abt-band abt-band--muted">
         <div class="container abt-stats">
-            <div class="abt-stat"><strong>+۲۳۰</strong><span>کاربر فعال</span></div>
-            <div class="abt-stat"><strong>+۳۶۰</strong><span>دیتاست</span></div>
-            <div class="abt-stat"><strong>+۴۳۰</strong><span>مخاطب CRM</span></div>
-            <div class="abt-stat"><strong>+۲۰M</strong><span>درآمد ثبت‌شده</span></div>
+            <div class="abt-stat abt-reveal" style="--abt-delay: 0" data-abt-count="230" data-abt-prefix="+"><strong>+۰</strong><span>کاربر فعال</span></div>
+            <div class="abt-stat abt-reveal" style="--abt-delay: 1" data-abt-count="360" data-abt-prefix="+"><strong>+۰</strong><span>دیتاست</span></div>
+            <div class="abt-stat abt-reveal" style="--abt-delay: 2" data-abt-count="430" data-abt-prefix="+"><strong>+۰</strong><span>مخاطب CRM</span></div>
+            <div class="abt-stat abt-reveal" style="--abt-delay: 3" data-abt-count="20" data-abt-prefix="+" data-abt-suffix="M"><strong>+۰M</strong><span>درآمد ثبت‌شده</span></div>
         </div>
     </section>
 
-    <section class="abt-band abt-band--mission" style="--abt-mission-bg: url('{% static 'images/bg-about.webp' %}');">
+    <section class="abt-band abt-band--mission abt-reveal" style="--abt-mission-bg: url('{% static 'images/bg-about.webp' %}');">
         <div class="container abt-mission">
-            <div class="abt-mission__text">
+            <div class="abt-mission__text abt-reveal" style="--abt-delay: 0">
                 <span class="abt-kicker">مأموریت ما</span>
                 <h2>بازار املاک هوشمندتر برای همه مشاوران</h2>
                 <p>استخراج، تحلیل و مدیریت فایلینگ در یک میزکار — تا سریع‌تر تصمیم بگیرید و معامله ببندید.</p>
                 <ul class="abt-checks">
-                    <li>صرفه‌جویی در زمان جمع‌آوری</li>
-                    <li>تصمیم‌گیری با داده ساختارمند</li>
-                    <li>پیگیری هوشمند مشتریان</li>
+                    <li class="abt-reveal" style="--abt-delay: 1">صرفه‌جویی در زمان جمع‌آوری</li>
+                    <li class="abt-reveal" style="--abt-delay: 2">تصمیم‌گیری با داده ساختارمند</li>
+                    <li class="abt-reveal" style="--abt-delay: 3">پیگیری هوشمند مشتریان</li>
                 </ul>
             </div>
         </div>
@@ -88,7 +89,7 @@
 
     <section class="abt-band abt-band--cta">
         <div class="container">
-            <div class="abt-cta">
+            <div class="abt-cta abt-reveal" style="--abt-delay: 0">
                 <p>آماده‌اید یک قدم جلوتر از بازار باشید؟</p>
                 <a href="{% url 'register' %}" class="abt-btn abt-btn--white">شروع رایگان</a>
             </div>
@@ -96,4 +97,8 @@
     </section>
 
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/about-page.js' %}?v=1" defer></script>
 {% endblock %}

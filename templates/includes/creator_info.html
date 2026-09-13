@@ -1,6 +1,6 @@
 {# بلوک واحد اطلاعات سازنده — compact برای سایدبار تماس، full برای درباره #}
 {% if compact %}
-<aside class="mk-creator-panel mk-creator-panel--compact" aria-label="اطلاعات سازنده">
+<aside class="mk-creator-panel mk-creator-panel--compact{% if panel_class %} {{ panel_class }}{% endif %}" aria-label="اطلاعات سازنده">
     <div class="mk-creator-panel__head">
         <div class="mk-creator-panel__avatar" aria-hidden="true">{{ site_brand.creator_name|slice:":1" }}</div>
         <div>

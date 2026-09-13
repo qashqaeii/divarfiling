@@ -95,13 +95,49 @@ class BuyForm(forms.ModelForm):
 
 
 class ContactForm(forms.Form):
-    name = forms.CharField(max_length=100, label='نام', widget=forms.TextInput(attrs={'class': 'form-control'}))
-    email = forms.EmailField(label='ایمیل', widget=forms.EmailInput(attrs={'class': 'form-control'}))
-    subject = forms.CharField(max_length=200, label='موضوع', widget=forms.TextInput(attrs={'class': 'form-control'}))
-    message = forms.CharField(
-        label='پیام',
-        widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 5})
+    SUBJECT_CHOICES = [
+        ('', 'لطفاً موضوع را انتخاب کنید'),
+        ('license', 'خرید لایسنس'),
+        ('setup', 'راه‌اندازی ربات'),
+        ('technical', 'مشکل فنی'),
+        ('suggestion', 'پیشنهاد بهبود'),
+        ('other', 'سایر'),
+    ]
+
+    name = forms.CharField(
+        max_length=100,
+        label='نام و نام خانوادگی',
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'مثلاً علی محمدی',
+        }),
     )
+    email = forms.EmailField(
+        label='ایمیل',
+        widget=forms.EmailInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'ali@example.com',
+        }),
+    )
+    subject = forms.ChoiceField(
+        choices=SUBJECT_CHOICES,
+        label='موضوع',
+        widget=forms.Select(attrs={'class': 'form-control'}),
+    )
+    message = forms.CharField(
+        label='پیام شما',
+        widget=forms.Textarea(attrs={
+            'class': 'form-control',
+            'rows': 5,
+            'placeholder': 'پیام خود را اینجا بنویسید...',
+        }),
+    )
+
+    def clean_subject(self):
+        subject = self.cleaned_data.get('subject')
+        if not subject:
+            raise forms.ValidationError('لطفاً موضوع را انتخاب کنید.')
+        return subject
 
 
 class RatingForm(forms.ModelForm):

@@ -2,88 +2,135 @@
 {% load static %}
 
 {% block title %}تماس با ما — فایلینگ دیوار{% endblock %}
-{% block body_class %}mk-pub-page{% endblock %}
+{% block body_class %}mk-pub-page mk-contact-page{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/contact-page.css' %}?v=1">
+{% endblock %}
 
 {% block content %}
-<div class="mk-pub-wrap">
+<div class="mk-pub-wrap mk-contact-wrap">
 
-    <header class="mk-pub-hero mk-pub-hero--contact">
-        <div class="container">
-            <span class="mk-pub-kicker">
-                <span class="mk-icon mk-icon--xs mk-icon--sky"><i class="fas fa-headset"></i></span>
-                پشتیبانی
-            </span>
-            <h1>در دسترس هستیم</h1>
-            <p class="mk-pub-lead">برای خرید لایسنس، راه‌اندازی ربات، خطای فنی یا پیشنهاد بهبود — پیام بفرستید یا مستقیم تماس بگیرید.</p>
-            <div class="mk-pub-hero-actions mk-contact-quick">
-                <a href="tel:{{ site_brand.creator_phone_tel }}" class="mk-contact-quick__btn">
-                    <i class="fas fa-phone-alt"></i>
-                    {{ site_brand.creator_phone_display }}
-                </a>
-                <a href="{{ site_brand.creator_telegram_url }}" class="mk-contact-quick__btn" target="_blank" rel="noopener">
-                    <i class="fab fa-telegram"></i>
-                    {{ site_brand.creator_telegram }}
-                </a>
-                <a href="mailto:{{ site_brand.support_email }}" class="mk-contact-quick__btn">
-                    <i class="fas fa-envelope"></i>
-                    {{ site_brand.support_email }}
-                </a>
+    <header class="mk-contact-hero">
+        <div class="container mk-contact-hero__grid">
+            <div class="mk-contact-hero__copy">
+                <span class="mk-contact-kicker">
+                    <i class="fas fa-headset" aria-hidden="true"></i>
+                    پشتیبانی و ارتباط با ما
+                </span>
+                <h1>در دسترس هستیم</h1>
+                <p class="mk-contact-lead">برای خرید لایسنس، راه‌اندازی ربات، خطای فنی یا پیشنهاد بهبود — پیام بفرستید یا مستقیم تماس بگیرید. معمولاً در همان روز کاری پاسخ می‌دهیم.</p>
+                <div class="mk-contact-quick-cards">
+                    <a href="tel:{{ site_brand.creator_phone_tel }}" class="mk-contact-quick-card">
+                        <span class="mk-contact-quick-card__icon mk-contact-quick-card__icon--phone"><i class="fas fa-phone-alt"></i></span>
+                        <span class="mk-contact-quick-card__text">
+                            <strong>تماس مستقیم</strong>
+                            <span>{{ site_brand.creator_phone_display }}</span>
+                        </span>
+                    </a>
+                    <a href="{{ site_brand.creator_telegram_url }}" class="mk-contact-quick-card" target="_blank" rel="noopener">
+                        <span class="mk-contact-quick-card__icon mk-contact-quick-card__icon--telegram"><i class="fab fa-telegram"></i></span>
+                        <span class="mk-contact-quick-card__text">
+                            <strong>تلگرام</strong>
+                            <span>{{ site_brand.creator_telegram }}</span>
+                        </span>
+                    </a>
+                    <a href="mailto:{{ site_brand.support_email }}" class="mk-contact-quick-card">
+                        <span class="mk-contact-quick-card__icon mk-contact-quick-card__icon--email"><i class="fas fa-envelope"></i></span>
+                        <span class="mk-contact-quick-card__text">
+                            <strong>ایمیل</strong>
+                            <span>{{ site_brand.support_email }}</span>
+                        </span>
+                    </a>
+                </div>
+            </div>
+            <div class="mk-contact-hero__visual" aria-hidden="true">
+                <div class="mk-contact-hero__bubble">سوال دارید؟ با ما صحبت کنید!</div>
+                <img src="{% static 'images/contact-hero.svg' %}" alt="" class="mk-contact-hero__illustration" width="340" height="320" loading="lazy">
             </div>
         </div>
     </header>
 
-    <section class="mk-pub-band mk-pub-band--alt">
-        <div class="container mk-pub-contact-layout">
-            <div class="mk-pub-form-wrap">
-                <header class="mk-pub-form-head">
-                    <span class="mk-about-eyebrow">فرم تماس</span>
+    <section class="mk-contact-main">
+        <div class="container mk-contact-layout">
+            <div class="mk-contact-form-card">
+                <header class="mk-contact-form-head">
+                    <div class="mk-contact-form-head__top">
+                        <span class="mk-contact-form-eyebrow">
+                            <i class="fas fa-pen" aria-hidden="true"></i>
+                            فرم تماس
+                        </span>
+                    </div>
                     <h2>ارسال پیام</h2>
-                    <p>معمولاً در همان روز کاری پاسخ می‌دهیم.</p>
+                    <p>معمولاً در چند ساعت کاری پاسخ می‌دهیم.</p>
                 </header>
-                <form method="post" class="mk-pub-form contact-form">
+                <form method="post" class="mk-contact-form contact-form">
                     {% csrf_token %}
                     <div class="form-row">
                         <div class="form-group">
-                            <label class="form-label"><i class="fas fa-user"></i> {{ form.name.label }}</label>
-                            {{ form.name }}
+                            <label class="form-label" for="{{ form.name.id_for_label }}"><span class="req">*</span> {{ form.name.label }}</label>
+                            <div class="mk-contact-input-wrap">
+                                {{ form.name }}
+                                <i class="fas fa-user" aria-hidden="true"></i>
+                            </div>
                             {% if form.name.errors %}<div class="form-error">{{ form.name.errors.0 }}</div>{% endif %}
                         </div>
                         <div class="form-group">
-                            <label class="form-label"><i class="fas fa-envelope"></i> {{ form.email.label }}</label>
-                            {{ form.email }}
+                            <label class="form-label" for="{{ form.email.id_for_label }}"><span class="req">*</span> {{ form.email.label }}</label>
+                            <div class="mk-contact-input-wrap">
+                                {{ form.email }}
+                                <i class="fas fa-envelope" aria-hidden="true"></i>
+                            </div>
                             {% if form.email.errors %}<div class="form-error">{{ form.email.errors.0 }}</div>{% endif %}
                         </div>
                     </div>
                     <div class="form-group">
-                        <label class="form-label"><i class="fas fa-tag"></i> {{ form.subject.label }}</label>
+                        <label class="form-label" for="{{ form.subject.id_for_label }}"><span class="req">*</span> {{ form.subject.label }}</label>
                         {{ form.subject }}
                         {% if form.subject.errors %}<div class="form-error">{{ form.subject.errors.0 }}</div>{% endif %}
                     </div>
                     <div class="form-group">
-                        <label class="form-label"><i class="fas fa-comment-alt"></i> {{ form.message.label }}</label>
-                        {{ form.message }}
+                        <label class="form-label" for="{{ form.message.id_for_label }}"><span class="req">*</span> {{ form.message.label }}</label>
+                        <div class="mk-contact-input-wrap mk-contact-input-wrap--textarea">
+                            {{ form.message }}
+                            <i class="fas fa-comment-alt" aria-hidden="true"></i>
+                        </div>
                         {% if form.message.errors %}<div class="form-error">{{ form.message.errors.0 }}</div>{% endif %}
                     </div>
                     <button type="submit" class="btn btn-primary btn-submit">
-                        <i class="fas fa-paper-plane"></i> ارسال پیام
+                        <i class="fas fa-paper-plane" aria-hidden="true"></i>
+                        ارسال پیام
                     </button>
+                    <p class="mk-contact-privacy">
+                        <i class="fas fa-lock" aria-hidden="true"></i>
+                        اطلاعات شما نزد ما محرمانه باقی می‌ماند
+                    </p>
                 </form>
             </div>
 
             <aside class="mk-contact-aside">
-                {% include 'includes/creator_info.html' with compact=True %}
+                <div class="mk-contact-info-card">
+                    <h3 class="mk-contact-info-card__title">
+                        <i class="fas fa-address-book" aria-hidden="true"></i>
+                        اطلاعات تماس و پشتیبانی
+                    </h3>
+                    {% include 'includes/creator_info.html' with compact=True panel_class='mk-creator-panel--contact' %}
+                </div>
 
-                <div class="mk-pub-side-card">
-                    <h3>سوالات متداول</h3>
-                    <details class="mk-pub-faq-item">
+                <div class="mk-contact-faq-card">
+                    <h3>
+                        <i class="fas fa-circle-question" aria-hidden="true"></i>
+                        سوالات متداول
+                    </h3>
+                    <details class="mk-contact-faq-item">
                         <summary>چگونه لایسنس بخرم؟</summary>
-                        <p>از صفحه <a href="{% url 'product_detail' slug='divar-extraction-bot' %}" class="mk-pub-link">ربات استخراج</a> پلن را انتخاب کنید و مراحل پرداخت را طی کنید.</p>
+                        <p>از صفحه <a href="{% url 'product_detail' slug='divar-extraction-bot' %}">ربات استخراج</a> پلن را انتخاب کنید و مراحل پرداخت را طی کنید.</p>
                     </details>
-                    <details class="mk-pub-faq-item">
+                    <details class="mk-contact-faq-item">
                         <summary>فعال‌سازی چقدر طول می‌کشد؟</summary>
                         <p>پس از پرداخت، کلید لایسنس در داشبورد شما فعال می‌شود و می‌توانید همان لحظه استفاده کنید.</p>
                     </details>
-                    <details class="mk-pub-faq-item">
+                    <details class="mk-contact-faq-item">
                         <summary>پشتیبانی فنی چگونه است؟</summary>
                         <p>مستقیم با {{ site_brand.creator_name }} از طریق تلفن، تلگرام یا همین فرم تماس.</p>
                     </details>

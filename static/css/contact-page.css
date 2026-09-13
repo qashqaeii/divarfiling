@@ -1,27 +1,8 @@
 /* ─── Contact Page — minimal & modern ─── */
 
-/* Sticky footer: فوتر همیشه به کف viewport می‌چسبد */
-html.mk-public.mk-contact-page body {
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-    min-height: 100dvh;
-}
-
-html.mk-public.mk-contact-page .mk-site-header,
-html.mk-public.mk-contact-page .footer {
-    flex-shrink: 0;
-}
-
-html.mk-public.mk-contact-page .main-content {
-    flex: 1 0 auto;
-    display: flex;
-    flex-direction: column;
-    background: transparent !important;
-}
-
 html.mk-public.mk-contact-page,
-html.mk-public.mk-contact-page body.mk-pub-page {
+html.mk-public.mk-contact-page body.mk-pub-page,
+html.mk-public.mk-contact-page .main-content {
     background: transparent !important;
 }
 
@@ -29,9 +10,6 @@ html.mk-public.mk-contact-page .mk-contact-wrap {
     position: relative;
     isolation: isolate;
     overflow: hidden;
-    flex: 1;
-    display: flex;
-    flex-direction: column;
     padding: clamp(1.25rem, 3vw, 2rem) 0 clamp(1.5rem, 3vw, 2rem);
     background: #f4f6fb !important;
 }
@@ -58,7 +36,6 @@ html.mk-public[data-theme="dark"] .mk-contact-bg {
 .mk-contact-shell {
     position: relative;
     z-index: 1;
-    flex: 1;
     width: 100%;
 }
 

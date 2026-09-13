@@ -2,6 +2,36 @@
    Footer v2 — mockup-aligned, premium RTL
    ═══════════════════════════════════════════════════════════ */
 
+/* Sticky footer — فوتر به کف سایت می‌چسبد، بدون فضای خالی پایین */
+html.mk-public {
+    height: 100%;
+}
+
+html.mk-public body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    min-height: 100dvh;
+    margin: 0;
+    padding-bottom: 0;
+}
+
+html.mk-public .mk-site-header,
+html.mk-public .mk-mobile-panel,
+html.mk-public .main-content,
+html.mk-public .footer.mk-footer-v2 {
+    flex-shrink: 0;
+}
+
+html.mk-public .main-content {
+    flex: 1 0 auto;
+}
+
+html.mk-public .footer.mk-footer-v2 {
+    margin-top: auto !important;
+    margin-bottom: 0 !important;
+}
+
 .mk-footer-v2 {
     --mk-ft-ease: cubic-bezier(0.16, 1, 0.3, 1);
     --mk-ft-bg-image: url('../images/footer-bg.webp');
@@ -22,7 +52,8 @@
     --mk-ft-purple-hover: #6d28d9;
     position: relative;
     margin-top: 0;
-    padding: 0 0 clamp(1.25rem, 3vw, 1.75rem);
+    padding: 0;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
     overflow: hidden;
     color: var(--mk-ft-text);
 }
@@ -33,6 +64,10 @@ html.mk-public .footer.mk-footer-pro.mk-footer-v2 {
     border-top: none !important;
     color: var(--mk-ft-text) !important;
     isolation: isolate;
+    padding-top: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    padding-bottom: max(0.5rem, env(safe-area-inset-bottom, 0px)) !important;
 }
 
 html.mk-public .footer.mk-footer-pro.mk-footer-v2 a {
@@ -132,6 +167,7 @@ html.mk-public .footer.mk-footer-pro.mk-footer-v2.footer::before {
 
 .mk-footer-v2 .mk-ft-shell {
     padding-top: clamp(1.75rem, 4vw, 2.75rem);
+    padding-bottom: clamp(0.75rem, 2vw, 1rem);
 }
 
 /* Reveal */

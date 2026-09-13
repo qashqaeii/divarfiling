@@ -156,21 +156,26 @@ html.mk-public.mk-product-bot-premium .main-content {
 
 /* Devices */
 .pbp-hero__stage {
-    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1.32fr) minmax(0, 0.68fr);
+    gap: clamp(0.55rem, 2vw, 0.85rem);
+    align-items: center;
     min-height: clamp(14rem, 28vw, 18rem);
+    min-width: 0;
 }
 
 .pbp-device {
     border: none;
     padding: 0;
+    margin: 0;
     background: none;
     cursor: zoom-in;
     font: inherit;
+    min-width: 0;
 }
 
 .pbp-device--win {
     position: relative;
-    z-index: 1;
     width: 100%;
     border-radius: 14px;
     overflow: hidden;
@@ -207,16 +212,18 @@ html.mk-public.mk-product-bot-premium .main-content {
     display: block;
     width: 100%;
     height: auto;
+    max-height: clamp(11rem, 22vw, 15.5rem);
+    object-fit: cover;
+    object-position: top center;
 }
 
 .pbp-device--phone {
-    position: absolute;
-    inset-inline-end: -0.25rem;
-    bottom: -0.5rem;
-    width: 28%;
-    max-width: 7rem;
+    position: relative;
+    width: 100%;
+    max-width: 8.25rem;
+    margin-inline: auto;
     border-radius: 18px;
-    padding: 0.35rem;
+    padding: 0.4rem;
     background: linear-gradient(165deg, #475569, #0f172a);
     box-shadow: var(--pbp-shadow-lg);
     transition: transform 0.5s var(--pbp-ease);
@@ -226,7 +233,23 @@ html.mk-public.mk-product-bot-premium .main-content {
 .pbp-device--phone img {
     display: block;
     width: 100%;
+    height: auto;
+    max-height: clamp(12rem, 26vw, 16.5rem);
+    object-fit: contain;
+    object-position: top center;
     border-radius: 14px;
+}
+
+@media (max-width: 959px) {
+    .pbp-hero__stage {
+        grid-template-columns: 1fr;
+        max-width: 22rem;
+        margin-inline: auto;
+    }
+
+    .pbp-device--phone {
+        max-width: 7rem;
+    }
 }
 
 @keyframes pbp-phone-float {

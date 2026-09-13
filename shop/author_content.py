@@ -9,171 +9,92 @@ def author_page_content() -> dict:
         'slug': AUTHOR_SLUG,
         'name': 'Hossein Qashqaeii',
         'name_fa': 'حسین قشقایی',
-        'role': 'معمار نرم‌افزار و سازنده فایلینگ دیوار',
+        'role': 'نویسنده و بنیان‌گذار فایلینگ دیوار',
         'tagline': (
-            'متخصص طراحی و توسعه پلتفرم‌های تحلیلی، CRM و ERP سفارشی برای کسب‌وکارها'
+            'توسعه‌دهنده، تحلیل‌گر داده و علاقه‌مند به ساخت ابزارهای کاربردی برای مشاوران املاک'
         ),
+        'handquote': 'فناوری باید کار را ساده‌تر کند نه پیچیده‌تر...',
+        'hero_quote': 'با داده‌های درست، فرصت‌های بهتری دیده می‌شوند.',
         'bio': (
-            'تمرکز من روی طراحی و توسعه سیستم‌هایی است که فرآیندهای واقعی یک کسب‌وکار را '
-            'به نرم‌افزارهای یکپارچه، قابل‌اندازه‌گیری و قابل‌اتکا تبدیل می‌کنند؛ از CRM و ERP '
-            'اختصاصی گرفته تا پلتفرم‌های تحلیلی، اتوماسیون فرآیندها، زیرساخت داده و ابزارهای '
-            'تصمیم‌یار. فایلینگ دیوار یکی از محصولاتی است که با همین رویکرد، از استخراج داده '
-            'تا مدیریت مشتری، تحلیل بازار و اتوماسیون عملیات را در یک اکوسیستم یکپارچه کنار هم '
-            'قرار داده است.'
+            'من حسین قشقایی هستم؛ توسعه‌دهنده و معمار نرم‌افزار با تمرکز بر ساخت سیستم‌های '
+            'کاربردی برای بازار املاک. فایلینگ دیوار از دل نیاز واقعی مشاوران شکل گرفت؛ '
+            'پلتفرمی که استخراج داده، فایلینگ، CRM و تحلیل بازار را در یک میزکار یکپارچه '
+            'کنار هم قرار می‌دهد.'
         ),
-        'expertise': [
-            'Custom CRM & ERP Systems',
-            'Analytical Platforms',
-            'SaaS Architecture',
-            'Business Process Automation',
-            'Data Engineering',
-            'Python & Django',
-            'API Integration',
-        ],
-        'expertise_fa': [
-            'CRM و ERP اختصاصی',
-            'پلتفرم‌های تحلیلی',
-            'معماری SaaS',
-            'اتوماسیون فرآیندها',
-            'مهندسی و پردازش داده',
-            'Python & Django',
-            'API و یکپارچه‌سازی سیستم‌ها',
-        ],
-        'highlights_section': {
-            'kicker': 'تخصص',
-            'title': 'از فرآیند کسب‌وکار تا یک سیستم واقعی',
-            'desc': (
-                'طراحی نرم‌افزارهایی که فقط مجموعه‌ای از قابلیت‌ها نیستند؛ بلکه دقیقاً براساس '
-                'مدل کاری، داده‌ها و نیازهای واقعی کسب‌وکار ساخته می‌شوند.'
+        'about_title': 'درباره حسین قشقایی',
+        'about_paragraphs': [
+            (
+                'بیش از پنج سال در حوزه املاک و داده فعالیت کرده‌ام و همواره تلاش کرده‌ام فناوری را '
+                'به ابزاری تبدیل کنم که کار روزمره مشاوران را ساده‌تر کند. از طراحی CRM و ERP '
+                'سفارشی گرفته تا پلتفرم‌های تحلیلی و اتوماسیون فرآیندها، تمرکز من روی تبدیل '
+                'فرآیندهای واقعی کسب‌وکار به نرم‌افزارهای قابل‌اتکا و قابل‌اندازه‌گیری است.'
             ),
-        },
-        'highlights': [
-            {
-                'icon': 'fa-sitemap',
-                'accent': 'violet',
-                'title': 'CRM و ERP سفارشی',
-                'text': (
-                    'طراحی سیستم‌های یکپارچه مدیریت مشتری، فروش، عملیات، منابع و فرآیندهای '
-                    'داخلی متناسب با ساختار هر کسب‌وکار.'
-                ),
-            },
-            {
-                'icon': 'fa-chart-pie',
-                'accent': 'indigo',
-                'title': 'پلتفرم‌های تحلیلی و تصمیم‌یار',
-                'text': (
-                    'تبدیل داده‌های خام به داشبورد، شاخص، گزارش و تحلیل‌هایی که مدیر بتواند '
-                    'براساس آن‌ها تصمیم بگیرد.'
-                ),
-            },
-            {
-                'icon': 'fa-gears',
-                'accent': 'emerald',
-                'title': 'اتوماسیون و زیرساخت داده',
-                'text': (
-                    'طراحی گردش‌کارهای خودکار، استخراج و پردازش داده، یکپارچه‌سازی APIها '
-                    'و حذف فرآیندهای تکراری و دستی.'
-                ),
-            },
-        ],
-        'product_section': {
-            'kicker': 'نمونه محصول',
-            'title': 'فایلینگ دیوار؛ یک سیستم، نه فقط یک ابزار',
-            'subtitle': (
-                'نمونه‌ای واقعی از ترکیب مهندسی داده، CRM، اتوماسیون و تحلیل در یک پلتفرم عملیاتی.'
+            (
+                'فایلینگ دیوار نتیجه همین رویکرد است؛ اکوسیستمی که داده را از مرحله استخراج تا '
+                'تصمیم‌گیری در اختیار مشاور قرار می‌دهد و به او کمک می‌کند یک قدم جلوتر از بازار '
+                'باشد.'
             ),
-            'intro': (
-                'فایلینگ دیوار را به‌عنوان یک اکوسیستم نرم‌افزاری برای بازار املاک توسعه داده‌ام؛ '
-                'سیستمی که داده را از مرحله استخراج و پردازش وارد چرخه فایلینگ می‌کند، آن را به '
-                'CRM متصل می‌کند و در نهایت ابزارهای تحلیل، پیگیری و تصمیم‌گیری را در اختیار '
-                'کاربر قرار می‌دهد.'
-            ),
-        },
-        'product_cards': [
-            {
-                'image': 'images/help-bot-extract-tab.png',
-                'caption': 'استخراج و پردازش داده',
-                'desc': 'جمع‌آوری، ساختارسازی، پالایش و تبدیل داده‌های آگهی به اطلاعات قابل استفاده.',
-                'accent': 'indigo',
-            },
-            {
-                'image': 'images/help-crm-dashboard.png',
-                'caption': 'CRM و مدیریت عملیات',
-                'desc': 'مدیریت مشتری، فایل، معامله، پیگیری، یادآوری و گردش کار در یک محیط یکپارچه.',
-                'accent': 'violet',
-            },
-            {
-                'image': 'images/help-workspace-home.png',
-                'caption': 'تحلیل و تصمیم‌گیری',
-                'desc': 'تحلیل قیمت، روند بازار، مقایسه داده‌ها و تبدیل اطلاعات خام به بینش قابل اقدام.',
-                'accent': 'emerald',
-            },
         ],
         'visuals': {
-            'hero_shots': [
-                {
-                    'image': 'images/help-bot-extract-tab.png',
-                    'caption': 'استخراج و پردازش داده',
-                    'accent': 'indigo',
-                },
-                {
-                    'image': 'images/help-crm-dashboard.png',
-                    'caption': 'CRM و مدیریت عملیات',
-                    'accent': 'violet',
-                },
-                {
-                    'image': 'images/help-workspace-home.png',
-                    'caption': 'تحلیل و تصمیم‌گیری',
-                    'accent': 'emerald',
-                },
-            ],
+            'portrait': 'images/author-portrait.webp',
+            'hero_bg': 'images/author-hero-bg.webp',
+            'about_image': 'images/help-map-view.webp',
         },
-        'stats_labels': {
-            'articles': 'مقاله تخصصی',
-            'landings': 'راهنمای محصول',
-            'product': 'محصول نرم‌افزاری',
-        },
-        'pillars_section': {
-            'kicker': 'مطالعه بیشتر',
-            'title': 'محصولات، تجربه‌ها و یادداشت‌های فنی',
-        },
-        'pillar_links': [
+        'social_links': [
             {
-                'label': 'فایلینگ دیوار',
-                'desc': 'پلتفرم یکپارچه فایلینگ، CRM، تحلیل و اتوماسیون بازار املاک',
-                'landing_url_name': 'home',
+                'label': 'LinkedIn',
+                'url': 'https://www.linkedin.com/in/hosseinqashqaeii',
+                'icon': 'fab fa-linkedin-in',
             },
             {
-                'label': 'CRM املاک',
-                'desc': 'طراحی و تجربه ساخت سیستم مدیریت ارتباط با مشتری برای فرآیند واقعی فروش املاک',
-                'landing_url_name': 'seo_landing_real_estate_crm',
+                'label': 'YouTube',
+                'url': 'https://www.youtube.com/@hosseinQashqaeii',
+                'icon': 'fab fa-youtube',
             },
             {
-                'label': 'اتوماسیون و استخراج داده',
-                'desc': 'معماری ربات‌ها، پردازش داده و تبدیل عملیات دستی به فرآیندهای خودکار',
-                'landing_url_name': 'seo_landing_robot_divar',
+                'label': 'Telegram',
+                'url': 'https://t.me/hosseinQashqaeii',
+                'icon': 'fab fa-telegram',
             },
             {
-                'label': 'مقالات تخصصی',
-                'desc': 'یادداشت‌هایی درباره معماری نرم‌افزار، SaaS، CRM، تحلیل داده و توسعه محصول',
-                'landing_url_name': 'blog:post_list',
-                'accent': True,
+                'label': 'Instagram',
+                'url': 'https://www.instagram.com/hosseinQashqaeii',
+                'icon': 'fab fa-instagram',
             },
         ],
+        'expertise': [
+            'Custom CRM & ERP Systems',
+            'Real Estate Market Analysis',
+            'Customer Relationship Management',
+            'Data Engineering & Automation',
+            'SaaS Growth & Marketing',
+        ],
+        'expertise_section': {
+            'title': 'حوزه‌های تخصصی',
+        },
+        'expertise_areas': [
+            {'icon': 'fa-code', 'label': 'فناوری و محصول'},
+            {'icon': 'fa-chart-bar', 'label': 'تحلیل بازار املاک'},
+            {'icon': 'fa-users', 'label': 'CRM و مدیریت مشتری'},
+            {'icon': 'fa-database', 'label': 'داده و اتوماسیون'},
+            {'icon': 'fa-chart-line', 'label': 'رشد SaaS و مارکتینگ'},
+        ],
+        'stats_meta': {
+            'years_experience': 5,
+            'articles_label': 'مقاله تخصصی',
+            'users_label': 'هزار کاربر فعال',
+            'data_label': 'داده استخراج شده',
+            'years_label': 'سال تجربه در حوزه املاک و داده',
+        },
         'articles_section': {
-            'kicker': 'محتوا',
-            'title': 'مقالات',
-            'desc': 'یادداشت‌های فنی درباره معماری نرم‌افزار، SaaS، CRM و توسعه محصول',
+            'title': 'مقالات اخیر',
+            'all_label': 'مشاهده همه مقالات',
         },
         'cta': {
-            'title': 'یک فرآیند پیچیده در کسب‌وکارتان دارید که باید تبدیل به سیستم شود؟',
-            'subtitle': (
-                'برای طراحی CRM، ERP، پلتفرم تحلیلی، اتوماسیون یا یک نرم‌افزار اختصاصی می‌توانیم '
-                'درباره مسئله واقعی کسب‌وکارتان صحبت کنیم.'
-            ),
-            'primary_label': 'گفت‌وگو درباره پروژه',
-            'primary_url_name': 'contact',
-            'secondary_label': 'ارتباط مستقیم',
+            'title': 'همین امروز هوشمندتر کار کنید.',
+            'subtitle': 'با فایلینگ دیوار، یک قدم جلوتر از بازار باشید.',
+            'primary_label': 'شروع رایگان',
+            'primary_url_name': 'register',
         },
         'meta_title': (
             'حسین قشقایی | معمار نرم‌افزار — CRM، ERP و پلتفرم‌های تحلیلی سفارشی'

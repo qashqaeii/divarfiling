@@ -667,6 +667,7 @@ class AuthorPageView(TemplateView):
         ctx['meta_title'] = author['meta_title']
         ctx['meta_description'] = author['meta_description']
         ctx['meta_keywords'] = author['meta_keywords']
+        ctx['stats'] = home_display_stats()
         from blog.models import Post
         from django.contrib.auth import get_user_model
         User = get_user_model()
@@ -679,12 +680,25 @@ class AuthorPageView(TemplateView):
                 .select_related('category')
                 .order_by('-published_at')
             )
-            ctx['author_posts'] = posts_qs[:12]
+            ctx['author_posts'] = posts_qs[:4]
             ctx['author_post_count'] = posts_qs.count()
         else:
             posts_qs = Post.objects.filter(is_published=True).select_related('category').order_by('-published_at')
-            ctx['author_posts'] = posts_qs[:6]
+            ctx['author_posts'] = posts_qs[:4]
             ctx['author_post_count'] = posts_qs.count()
+
+        platform_stats = ctx['stats']
+        users_k = max(1, platform_stats['total_users'] // 1000)
+        data_m = max(
+            1,
+            (platform_stats['total_licenses'] * platform_stats['display_multiplier'] * 120) // 1_000_000,
+        )
+        ctx['author_stats'] = {
+            'articles': ctx['author_post_count'],
+            'users_k': users_k,
+            'data_m': data_m,
+            'years': author['stats_meta']['years_experience'],
+        }
         return ctx
 
 

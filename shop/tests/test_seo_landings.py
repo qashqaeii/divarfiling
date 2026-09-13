@@ -92,8 +92,8 @@ class SeoLandingPageTests(TestCase):
         self.assertContains(resp, 'application/ld+json')
         self.assertContains(resp, '"@type": "Person"')
         self.assertContains(resp, 'ath-hero')
-        self.assertContains(resp, 'help-workspace-home.png')
-        self.assertContains(resp, 'ath-highlight')
+        self.assertContains(resp, 'ath-expertise')
+        self.assertContains(resp, 'آمار زنده از پلتفرم')
 
     def test_footer_seo_guides(self):
         resp = self.client.get('/')

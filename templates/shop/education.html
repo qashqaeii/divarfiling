@@ -10,20 +10,32 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/mizkar-video-player.css' %}?v=3">
-<link rel="stylesheet" href="{% static 'css/education-page.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'css/education-page.css' %}?v=3">
 {% endblock %}
 
 {% block content %}
 <div class="mk-pub-wrap edu-wrap">
 
     <header class="edu-hero" aria-labelledby="edu-hero-title">
-        <div class="edu-hero-bg" aria-hidden="true"></div>
+        <div class="edu-hero-bg" aria-hidden="true">
+            <span class="edu-hero-orb edu-hero-orb--violet"></span>
+            <span class="edu-hero-orb edu-hero-orb--emerald"></span>
+        </div>
         <div class="container edu-hero-shell">
             <div class="edu-hero-grid">
                 <div class="edu-hero-copy edu-reveal">
-                    <span class="edu-kicker"><i class="fas fa-circle-play" aria-hidden="true"></i> {{ edu.hero.eyebrow }}</span>
-                    <h1 id="edu-hero-title" class="edu-hero-title">{{ edu.hero.title }}</h1>
+                    <span class="edu-kicker"><i class="fas fa-graduation-cap edu-gicon edu-gicon--violet edu-gicon--xs" aria-hidden="true"></i> {{ edu.hero.eyebrow }}</span>
+                    <h1 id="edu-hero-title" class="edu-hero-title">{{ edu.hero.title }} <span>{{ edu.hero.title_highlight }}</span></h1>
                     <p class="edu-lead">{{ edu.hero.lead }}</p>
+
+                    <ul class="edu-hero-stats" aria-label="خلاصه آموزش">
+                        {% for stat in edu.stats %}
+                        <li class="edu-hero-stat">
+                            <strong>{{ stat.num }}</strong>
+                            <span>{{ stat.label }}</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
 
                     <div class="edu-hero-cta-row">
                         <a href="{{ academy_hero.playlist_url }}" class="edu-btn edu-btn--primary edu-btn--lg">
@@ -70,8 +82,11 @@
                 <div class="edu-hero-stage edu-reveal" style="--edu-delay: 1">
                     <div class="edu-hero-theater">
                         <div class="edu-hero-theater-bar">
+                            <span class="edu-hero-chrome" aria-hidden="true">
+                                <span></span><span></span><span></span>
+                            </span>
                             <span class="edu-hero-theater-live">
-                                <i class="fas fa-circle-play" aria-hidden="true"></i>
+                                <span class="edu-live-dot" aria-hidden="true"></span>
                                 {{ edu.hero.academy.badge }}
                             </span>
                             {% if academy_hero.stats.video_count %}
@@ -112,11 +127,12 @@
     <section class="edu-section edu-paths-band" aria-labelledby="edu-paths-title">
         <div class="container">
             <header class="edu-section-head edu-reveal">
-                <span class="edu-kicker">مسیر یادگیری</span>
+                <span class="edu-kicker"><i class="fas fa-route edu-gicon edu-gicon--violet edu-gicon--xs" aria-hidden="true"></i> مسیر یادگیری</span>
                 <h2 id="edu-paths-title">{{ edu.sections.paths.title }}</h2>
             </header>
 
-            <div class="edu-path-tabs edu-reveal" role="tablist">
+            <div class="edu-path-shell edu-reveal">
+            <div class="edu-path-tabs" role="tablist">
                 {% for path in edu.paths %}
                 <button type="button"
                         class="edu-path-tab{% if forloop.first %} is-active{% endif %}"
@@ -142,9 +158,9 @@
                  data-path-panel="{{ path.id }}"
                  {% if not forloop.first %}hidden{% endif %}>
                 <p class="edu-path-intro">{{ path.desc }}</p>
-                <ol class="edu-path-steps">
+                <ol class="edu-path-steps edu-path-steps--timeline">
                     {% for step in path.steps %}
-                    <li class="edu-path-step">
+                    <li class="edu-path-step edu-path-step--{{ path.accent }}">
                         <span class="edu-path-step-num">{{ step.num }}</span>
                         <div class="edu-path-step-content">
                             <div class="edu-path-step-head">
@@ -167,6 +183,7 @@
                 </ol>
             </div>
             {% endfor %}
+            </div>
         </div>
     </section>
 
@@ -201,6 +218,7 @@
 
             {% if install_video.available %}
             <div class="edu-vpanel is-active" data-vpanel="install" role="tabpanel">
+                <div class="edu-vpanel__card edu-vpanel__card--violet">
                 <div class="edu-vpanel__grid">
                     <div class="edu-vpanel__copy">
                         <h3>{{ install_video.title }}</h3>
@@ -212,11 +230,13 @@
                     </div>
                     <div>{% include 'includes/bot_install_video.html' with variant='edu' show_heading=False guide_link=False %}</div>
                 </div>
+                </div>
             </div>
             {% endif %}
 
             {% if filing_video.available %}
             <div class="edu-vpanel{% if not install_video.available %} is-active{% endif %}" data-vpanel="filing" role="tabpanel" {% if install_video.available %}hidden{% endif %}>
+                <div class="edu-vpanel__card edu-vpanel__card--sky">
                 <div class="edu-vpanel__grid">
                     <div class="edu-vpanel__copy">
                         <h3>{{ filing_video.title }}</h3>
@@ -228,11 +248,13 @@
                     </div>
                     <div>{% include 'includes/mk_video_player.html' with video=filing_video variant='filing' show_heading=False show_meta=False %}</div>
                 </div>
+                </div>
             </div>
             {% endif %}
 
             {% if crm_video.available %}
             <div class="edu-vpanel{% if not install_video.available and not filing_video.available %} is-active{% endif %}" data-vpanel="crm" role="tabpanel" {% if install_video.available or filing_video.available %}hidden{% endif %}>
+                <div class="edu-vpanel__card edu-vpanel__card--emerald">
                 <div class="edu-vpanel__grid">
                     <div class="edu-vpanel__copy">
                         <h3>{{ crm_video.title }}</h3>
@@ -243,6 +265,7 @@
                         </div>
                     </div>
                     <div>{% include 'includes/mk_video_player.html' with video=crm_video variant='crm' show_heading=False show_meta=False %}</div>
+                </div>
                 </div>
             </div>
             {% endif %}
@@ -261,7 +284,9 @@
                 {% for mod in edu.modules %}
                 <details class="edu-acc edu-reveal" id="module-{{ mod.id }}"{% if forloop.first %} open{% endif %} style="--edu-delay: {{ forloop.counter0 }}">
                     <summary class="edu-acc__head">
-                        <i class="fas {{ mod.icon }} edu-gicon edu-gicon--{{ mod.accent }}" aria-hidden="true"></i>
+                        <span class="edu-acc__icon-wrap" aria-hidden="true">
+                            <i class="fas {{ mod.icon }} edu-gicon edu-gicon--{{ mod.accent }}"></i>
+                        </span>
                         <span class="edu-acc__copy">
                             <strong>{{ mod.title }}</strong>
                             <span>{{ mod.desc }}</span>
@@ -270,6 +295,7 @@
                             <span class="edu-module-badge edu-module-badge--{{ mod.accent }}">{{ mod.badge }}</span>
                             <span class="edu-acc__count">{{ mod.lessons|length }} درس</span>
                         </span>
+                        <span class="edu-acc__chevron" aria-hidden="true"><i class="fas fa-chevron-down"></i></span>
                     </summary>
                     <ul class="edu-acc__lessons">
                         {% for lesson in mod.lessons %}
@@ -323,6 +349,7 @@
                             data-caption="{{ item.caption }}"
                             aria-label="بزرگنمایی: {{ item.caption }}">
                         <img src="{% static 'images/' %}{{ item.image }}" alt="{{ item.caption }}" loading="lazy">
+                        <span class="edu-gallery-zoom" aria-hidden="true"><i class="fas fa-expand"></i></span>
                         <span class="edu-gallery-caption">{{ item.caption }}</span>
                     </button>
                 </article>
@@ -397,5 +424,5 @@
 {% if install_video.available or filing_video.available or crm_video.available or academy_hero.player.available %}
 <script src="{% static 'js/bot-install-video.js' %}?v=1" defer></script>
 {% endif %}
-<script src="{% static 'js/education.js' %}?v=6" defer></script>
+<script src="{% static 'js/education.js' %}?v=7" defer></script>
 {% endblock %}

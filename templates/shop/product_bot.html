@@ -5,21 +5,26 @@
 
 {% block body_class %}mk-product-bot-page{% endblock %}
 
+{% block extra_head %}
+<script>document.documentElement.classList.add('mk-product-bot-premium');</script>
+{% endblock %}
+
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/mizkar-video-player.css' %}?v=2">
 <link rel="stylesheet" href="{% static 'css/mizkar-product-bot.css' %}?v=37">
+<link rel="stylesheet" href="{% static 'css/product-bot-page.css' %}?v=1">
 {% endblock %}
 
 {% block content %}
 <div class="pb-page">
 
     {# ─── Hero ─── #}
-    <section class="pb-hero">
+    <section class="pb-hero pb-hero--premium">
         <div class="container pb-hero-wrap">
             <div class="pb-hero-grid">
-                <div class="pb-hero-content">
+                <div class="pb-hero-content pbp-reveal">
                     <span class="pb-kicker">
-                        <span class="pb-icon pb-icon--xs pb-icon--violet"><i class="fas fa-robot"></i></span>
+                        <i class="fas fa-robot pbp-gicon pbp-gicon--xs" aria-hidden="true"></i>
                         {{ bot_page.tagline }}
                     </span>
                     <h1 class="pb-title">
@@ -87,7 +92,7 @@
                     {% endif %}
                 </div>
 
-                <div class="pb-hero-media">
+                <div class="pb-hero-media pbp-reveal" style="--pbp-delay: 2">
                     <div class="pb-hero-devices" aria-label="پیش‌نمایش ویندوز و اندروید">
                         <button type="button" class="pb-hero-preview pb-app-shot" data-pb-lightbox-open aria-label="بزرگنمایی ربات ویندوز">
                             <div class="pb-hero-window">
@@ -140,8 +145,45 @@
         </div>
     </section>
 
+    <nav class="pbp-sticky-nav" aria-label="ناوبری صفحه محصول">
+        <div class="container pbp-sticky-nav__track">
+            <a href="#platforms" class="pbp-sticky-nav__link is-active" data-pbp-nav="platforms">
+                <i class="fas fa-desktop" aria-hidden="true"></i> پلتفرم‌ها
+            </a>
+            {% if install_video.available %}
+            <a href="#install-video" class="pbp-sticky-nav__link" data-pbp-nav="install">
+                <i class="fas fa-circle-play" aria-hidden="true"></i> نصب
+            </a>
+            {% endif %}
+            <a href="#pbp-value" class="pbp-sticky-nav__link" data-pbp-nav="value">
+                <i class="fas fa-gem" aria-hidden="true"></i> ارزش
+            </a>
+            <a href="#pbp-workflow" class="pbp-sticky-nav__link" data-pbp-nav="workflow">
+                <i class="fas fa-route" aria-hidden="true"></i> مسیر کار
+            </a>
+            <a href="#pbp-extract" class="pbp-sticky-nav__link" data-pbp-nav="extract">
+                <i class="fas fa-filter" aria-hidden="true"></i> امکانات
+            </a>
+            <a href="#pbp-workspace" class="pbp-sticky-nav__link" data-pbp-nav="workspace">
+                <i class="fas fa-layer-group" aria-hidden="true"></i> میزکار
+            </a>
+            <a href="#pbp-faq" class="pbp-sticky-nav__link" data-pbp-nav="faq">
+                <i class="fas fa-circle-question" aria-hidden="true"></i> سوالات
+            </a>
+            {% if buyable_plans %}
+            <a href="{% url 'buy' product.slug %}?plan={{ buyable_plans.0.id }}" class="pbp-sticky-nav__link pbp-sticky-nav__cta">
+                <i class="fas fa-shopping-cart" aria-hidden="true"></i> خرید لایسنس
+            </a>
+            {% elif plans.first %}
+            <a href="{% url 'buy' product.slug %}?plan={{ plans.first.id }}" class="pbp-sticky-nav__link pbp-sticky-nav__cta">
+                <i class="fas fa-shopping-cart" aria-hidden="true"></i> خرید لایسنس
+            </a>
+            {% endif %}
+        </div>
+    </nav>
+
     {% if install_video.available %}
-    <section class="pb-band pb-install-video-band" id="install-video" aria-labelledby="pb-install-video-title">
+    <section class="pb-band pb-install-video-band pbp-reveal" id="install-video" aria-labelledby="pb-install-video-title">
         <div class="container">
             <div class="pb-install-video-shell">
                 <div class="pb-install-video-main">
@@ -173,9 +215,10 @@
     {% include 'shop/includes/excel_sample_preview.html' %}
 
     {# ─── Platforms: Windows + Android ─── #}
-    <section class="pb-band pb-platform-band" id="platforms" aria-labelledby="pb-platform-title">
+    <section class="pb-band pb-platform-band pbp-reveal" id="platforms" aria-labelledby="pb-platform-title">
         <div class="container">
             <header class="pb-head">
+                <span class="pbp-section-num" aria-hidden="true">۰۱</span>
                 <span class="pb-head-kicker">{{ bot_page.platforms.eyebrow }}</span>
                 <h2 id="pb-platform-title">{{ bot_page.platforms.title }}</h2>
                 <p>{{ bot_page.platforms.subtitle }}</p>
@@ -274,11 +317,12 @@
     </section>
 
     {# ─── Value props ─── #}
-    <section class="pb-band pb-value-band">
+    <section class="pb-band pb-value-band pbp-reveal" id="pbp-value">
         <div class="container">
             <div class="pb-value-shell">
                 <header class="pb-value-head">
                     <div class="pb-value-head-copy">
+                        <span class="pbp-section-num" aria-hidden="true">۰۲</span>
                         <span class="pb-head-kicker">ارزش پیشنهادی</span>
                         <h2>ویندوز + اندروید چه می‌کنند؟</h2>
                         <p>جایگزین کار دستی — استخراج خودکار، CRM موبایل و فایلینگ حرفه‌ای در یک اکوسیستم</p>
@@ -313,11 +357,12 @@
     </section>
 
     {# ─── Workflow ─── #}
-    <section class="pb-band pb-band--alt pb-flow-band">
+    <section class="pb-band pb-band--alt pb-flow-band pbp-reveal" id="pbp-workflow">
         <div class="container">
             <div class="pb-flow-shell">
                 <header class="pb-flow-head">
                     <div class="pb-flow-head-copy">
+                        <span class="pbp-section-num" aria-hidden="true">۰۳</span>
                         <span class="pb-head-kicker">مسیر کار</span>
                         <h2>از خرید تا تحلیل</h2>
                         <p>۶ گام ساده — از خرید لایسنس تا تحلیل و CRM در میزکار</p>
@@ -382,11 +427,12 @@
     </section>
 
     {# ─── Features + tags ─── #}
-    <section class="pb-band pb-band--alt pb-extract-band">
+    <section class="pb-band pb-band--alt pb-extract-band pbp-reveal" id="pbp-extract">
         <div class="container">
             <div class="pb-extract-shell">
                 <header class="pb-extract-head">
                     <div class="pb-extract-head-copy">
+                        <span class="pbp-section-num" aria-hidden="true">۰۴</span>
                         <span class="pb-head-kicker">امکانات</span>
                         <h2>بخش استخراج</h2>
                         <p>جمع‌آوری دقیق و سریع آگهی‌های دیوار — <a href="#extraction-tree" class="pb-inline-link">ساختار درختی استخراج</a></p>
@@ -448,9 +494,10 @@
     {% include 'shop/includes/extraction_tree.html' %}
 
     {# ─── Workspace ─── #}
-    <section class="pb-band pb-band--alt pb-ws-band">
+    <section class="pb-band pb-band--alt pb-ws-band pbp-reveal" id="pbp-workspace">
         <div class="container">
             <header class="pb-head">
+                <span class="pbp-section-num" aria-hidden="true">۰۵</span>
                 <span class="pb-head-kicker">میزکار</span>
                 <h2>پس از آپلود</h2>
                 <p>CRM رایگان است؛ تحلیل و فایلینگ با لایسنس فعال باز می‌شود</p>
@@ -551,11 +598,12 @@
     </section>
 
     {# ─── FAQ ─── #}
-    <section class="pb-band pb-faq-band">
+    <section class="pb-band pb-faq-band pbp-reveal" id="pbp-faq">
         <div class="container">
             <div class="pb-faq-shell">
                 <header class="pb-faq-head">
                     <div class="pb-faq-head-copy">
+                        <span class="pbp-section-num" aria-hidden="true">۰۶</span>
                         <span class="pb-head-kicker">پشتیبانی</span>
                         <h2>سوالات متداول</h2>
                         <p>پاسخ سریع درباره لایسنس، ویندوز، اندروید و میزکار</p>
@@ -594,7 +642,7 @@
     </section>
 
     {# ─── CTA ─── #}
-    <section class="pb-cta">
+    <section class="pb-cta pbp-reveal">
         <div class="container">
             <article class="pb-cta-card">
                 <div>
@@ -636,6 +684,7 @@
 {% if install_video.available %}
 <script src="{% static 'js/bot-install-video.js' %}?v=1" defer></script>
 {% endif %}
+<script src="{% static 'js/product-bot-page.js' %}?v=1" defer></script>
 <script>
 (function () {
     var panel = document.querySelector('[data-pb-faq]');

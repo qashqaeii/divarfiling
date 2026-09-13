@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load static seo_tags persian_tags blog_tags %}
+{% load static seo_tags persian_tags blog_tags humanize %}
 
 {% block title %}{{ author.meta_title }}{% endblock %}
 {% block body_class %}mk-pub-page{% endblock %}
@@ -12,26 +12,24 @@
 {% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/author-page.css' %}?v=4">
+<link rel="stylesheet" href="{% static 'css/author-page.css' %}?v=6">
 {% endblock %}
 
 {% block content %}
 {% schema_author author %}
 <div class="mk-pub-wrap ath-wrap">
 
-    {# ── Hero ── #}
     <header class="ath-hero" style="--ath-hero-bg: url('{% static author.visuals.portrait %}');">
         <div class="ath-hero__bg" aria-hidden="true"></div>
         <div class="ath-hero__overlay" aria-hidden="true"></div>
         <div class="container ath-hero__stage">
             <div class="ath-hero__copy">
-                <span class="ath-badge ath-reveal" style="--ath-delay: 0">
-                    <i class="fas fa-star" aria-hidden="true"></i>
-                    {{ author.role }}
-                </span>
+                <span class="ath-badge ath-badge--en ath-reveal" style="--ath-delay: 0" lang="en" dir="ltr">{{ author.badge_en }}</span>
+                <span class="ath-badge ath-reveal" style="--ath-delay: 0">{{ author.role }}</span>
                 <h1 class="ath-reveal" style="--ath-delay: 1">{{ author.name_fa }}</h1>
+                <p class="ath-subtitle ath-reveal" style="--ath-delay: 1">{{ author.subtitle_fa }}</p>
                 <p class="ath-tagline ath-reveal" style="--ath-delay: 2">{{ author.tagline }}</p>
-                <p class="ath-handquote ath-reveal" style="--ath-delay: 3">{{ author.handquote }}</p>
+                <p class="ath-focus ath-reveal" style="--ath-delay: 3">{{ author.focus_line }}</p>
                 <div class="ath-socials ath-reveal" style="--ath-delay: 4" aria-label="شبکه‌های اجتماعی">
                     {% for social in author.social_links %}
                     <a href="{{ social.url }}" class="ath-social" target="_blank" rel="noopener" aria-label="{{ social.label }}">
@@ -43,46 +41,42 @@
 
             <div class="ath-hero__visual ath-reveal" style="--ath-delay: 2">
                 <blockquote class="ath-quote-bubble">
-                    <p>{{ author.hero_quote }}</p>
+                    <p class="ath-quote-bubble__lead">{{ author.hero_quote.lead }}</p>
+                    <p>{{ author.hero_quote.body }}</p>
                     <cite>— {{ author.name_fa }}</cite>
                 </blockquote>
             </div>
         </div>
     </header>
 
-    {# ── Live stats ── #}
-    <section class="ath-stats-section" aria-label="آمار زنده از پلتفرم">
+    <section class="ath-stats-section" aria-labelledby="ath-stats-title">
         <div class="container">
-            <div class="ath-stats-live-label ath-reveal">
-                <span class="ath-stats-live-dot" aria-hidden="true"></span>
-                <span>آمار زنده از پلتفرم</span>
-            </div>
+            <h2 id="ath-stats-title" class="ath-stats-title ath-reveal">{{ author.stats_section.title }}</h2>
             <div class="ath-stats-row">
                 <article class="ath-stat-card ath-reveal" style="--ath-delay: 0">
                     <span class="ath-stat-card__icon"><i class="fas fa-file-lines" aria-hidden="true"></i></span>
-                    <strong class="ath-stat-card__val" data-ath-count="{{ author_stats.articles }}">+{{ author_stats.articles|to_persian_digits }}</strong>
+                    <strong class="ath-stat-card__val" data-ath-count="{{ author_stats.articles }}">+{{ author_stats.articles|intcomma|to_persian_digits }}</strong>
                     <span class="ath-stat-card__lbl">{{ author.stats_meta.articles_label }}</span>
                 </article>
                 <article class="ath-stat-card ath-reveal" style="--ath-delay: 1">
                     <span class="ath-stat-card__icon"><i class="fas fa-users" aria-hidden="true"></i></span>
-                    <strong class="ath-stat-card__val" data-ath-count="{{ author_stats.users_display }}">+{{ author_stats.users_display|to_persian_digits }}</strong>
-                    <span class="ath-stat-card__lbl">{% if author_stats.users_in_thousands %}{{ author.stats_meta.users_label_thousands }}{% else %}{{ author.stats_meta.users_label }}{% endif %}</span>
+                    <strong class="ath-stat-card__val" data-ath-count="{{ author_stats.users_display }}">+{{ author_stats.users_display|intcomma|to_persian_digits }}</strong>
+                    <span class="ath-stat-card__lbl">{{ author.stats_meta.users_label }}</span>
                 </article>
                 <article class="ath-stat-card ath-reveal" style="--ath-delay: 2">
                     <span class="ath-stat-card__icon"><i class="fas fa-database" aria-hidden="true"></i></span>
-                    <strong class="ath-stat-card__val" data-ath-count="{{ author_stats.data_display }}"{% if author_stats.data_in_millions %} data-ath-suffix="M"{% endif %}>+{{ author_stats.data_display|to_persian_digits }}{% if author_stats.data_in_millions %}M{% endif %}</strong>
+                    <strong class="ath-stat-card__val" data-ath-count="{{ author_stats.data_display }}"{% if author_stats.data_in_millions %} data-ath-suffix="M"{% endif %}>+{{ author_stats.data_display|intcomma|to_persian_digits }}{% if author_stats.data_in_millions %}M{% endif %}</strong>
                     <span class="ath-stat-card__lbl">{{ author.stats_meta.data_label }}</span>
                 </article>
                 <article class="ath-stat-card ath-reveal" style="--ath-delay: 3">
                     <span class="ath-stat-card__icon"><i class="fas fa-calendar-check" aria-hidden="true"></i></span>
-                    <strong class="ath-stat-card__val">{{ author_stats.years|to_persian_digits }}+</strong>
+                    <strong class="ath-stat-card__val">{{ author_stats.years|to_persian_digits }}+ <small>{{ author.stats_meta.years_value_label }}</small></strong>
                     <span class="ath-stat-card__lbl">{{ author.stats_meta.years_label }}</span>
                 </article>
             </div>
         </div>
     </section>
 
-    {# ── About ── #}
     <section class="ath-about" aria-labelledby="ath-about-title">
         <div class="container ath-about__grid">
             <figure class="ath-about__media ath-reveal">
@@ -90,29 +84,101 @@
             </figure>
             <div class="ath-about__text ath-reveal" style="--ath-delay: 1">
                 <h2 id="ath-about-title">{{ author.about_title }}</h2>
-                {% for paragraph in author.about_paragraphs %}
-                <p>{{ paragraph }}</p>
+                {% for block in author.about_blocks %}
+                {% if block.type == 'emphasis' %}
+                <p class="ath-about__emphasis">{{ block.text }}</p>
+                {% else %}
+                <p>{{ block.text }}</p>
+                {% endif %}
                 {% endfor %}
             </div>
         </div>
     </section>
 
-    {# ── Expertise ── #}
-    <section class="ath-expertise" aria-labelledby="ath-expertise-title">
+    <section class="ath-skills" aria-labelledby="ath-skills-title">
         <div class="container">
-            <h2 id="ath-expertise-title" class="ath-expertise__title ath-reveal">{{ author.expertise_section.title }}</h2>
-            <div class="ath-expertise__grid">
-                {% for area in author.expertise_areas %}
-                <article class="ath-expertise__item ath-reveal" style="--ath-delay: {{ forloop.counter0 }}">
-                    <span class="ath-expertise__icon"><i class="fas {{ area.icon }}" aria-hidden="true"></i></span>
-                    <span class="ath-expertise__label">{{ area.label }}</span>
+            <h2 id="ath-skills-title" class="ath-section-title ath-reveal">{{ author.expertise_section.title }}</h2>
+            <div class="ath-skills__grid">
+                {% for skill in author.expertise_skills %}
+                <article class="ath-skill-card ath-reveal" style="--ath-delay: {{ forloop.counter0 }}">
+                    <span class="ath-skill-card__icon"><i class="fas {{ skill.icon }}" aria-hidden="true"></i></span>
+                    <div>
+                        <strong lang="en" dir="ltr">{{ skill.title_en }}</strong>
+                        <span>{{ skill.title_fa }}</span>
+                    </div>
                 </article>
                 {% endfor %}
             </div>
         </div>
     </section>
 
-    {# ── Articles ── #}
+    <section class="ath-highlights" aria-labelledby="ath-highlights-title">
+        <div class="container">
+            <header class="ath-section-head ath-reveal">
+                <h2 id="ath-highlights-title">{{ author.highlights_section.title }}</h2>
+                <p class="ath-section-lead ath-section-lead--bold">{{ author.highlights_section.desc }}</p>
+                <p class="ath-section-intro">{{ author.highlights_section.intro }}</p>
+            </header>
+            <div class="ath-highlight-grid">
+                {% for h in author.highlights %}
+                <article class="ath-highlight ath-reveal ath-highlight--{{ h.accent }}" style="--ath-delay: {{ forloop.counter0 }}">
+                    <span class="ath-highlight-icon"><i class="fas {{ h.icon }}" aria-hidden="true"></i></span>
+                    <h3>{{ h.title }}</h3>
+                    <p>{{ h.text }}</p>
+                </article>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <section class="ath-product" aria-labelledby="ath-product-title">
+        <div class="container">
+            <header class="ath-section-head ath-reveal">
+                <span class="ath-kicker">{{ author.product_section.kicker }}</span>
+                <h2 id="ath-product-title">{{ author.product_section.title }}</h2>
+                <p class="ath-section-lead ath-section-lead--bold">{{ author.product_section.subtitle }}</p>
+            </header>
+            <div class="ath-product__body ath-reveal">
+                <p>{{ author.product_section.intro }}</p>
+                <p>{{ author.product_section.body }}</p>
+                <p>{{ author.product_section.outcome }} <strong>{{ author.product_section.outcome_highlight }}</strong></p>
+            </div>
+            <div class="ath-showcase">
+                {% for card in author.product_cards %}
+                <figure class="ath-showcase-card ath-reveal ath-showcase-card--{{ card.accent }}" style="--ath-delay: {{ forloop.counter0 }}">
+                    <button type="button" class="ath-showcase-open"
+                        data-ath-lightbox
+                        data-src="{% static card.image %}"
+                        data-caption="{{ card.caption }}"
+                        aria-label="بزرگنمایی: {{ card.caption }}">
+                        <img src="{% static card.image %}" alt="{{ card.caption }}" loading="lazy" decoding="async">
+                        <span class="ath-showcase-zoom" aria-hidden="true"><i class="fas fa-search-plus"></i></span>
+                        <figcaption>{{ card.caption }}</figcaption>
+                    </button>
+                </figure>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <section class="ath-pillars" aria-labelledby="ath-pillars-title">
+        <div class="container">
+            <header class="ath-section-head ath-reveal">
+                <h2 id="ath-pillars-title">{{ author.pillars_section.title }}</h2>
+                <p class="ath-section-lead">{{ author.pillars_section.desc }}</p>
+            </header>
+            <div class="ath-pillar-grid">
+                {% for link in author.pillar_links %}
+                <a href="{% url link.landing_url_name %}" class="ath-pillar ath-reveal{% if link.accent %} ath-pillar--accent{% endif %}" style="--ath-delay: {{ forloop.counter0 }}">
+                    <span class="ath-pillar-icon" aria-hidden="true"><i class="fas fa-arrow-left"></i></span>
+                    <strong>{{ link.label }}</strong>
+                    <span>{{ link.desc }}</span>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
     {% if author_posts %}
     <section class="ath-articles" aria-labelledby="ath-articles-title">
         <div class="container">
@@ -156,9 +222,29 @@
     </section>
     {% endif %}
 
+    <section class="ath-cta-band" aria-label="تماس">
+        <div class="ath-cta-band__bg" aria-hidden="true"></div>
+        <div class="container ath-cta-band__inner ath-reveal">
+            <div class="ath-cta-band__copy">
+                <h2>{{ author.cta.title }}</h2>
+                <p>{{ author.cta.subtitle }}</p>
+            </div>
+            <div class="ath-cta-band__actions">
+                <a href="{% url author.cta.primary_url_name %}" class="ath-cta-band__btn ath-cta-band__btn--primary">
+                    <i class="fas fa-comments" aria-hidden="true"></i>
+                    {{ author.cta.primary_label }}
+                </a>
+                <a href="{{ site_brand.creator_telegram_url }}" class="ath-cta-band__btn ath-cta-band__btn--ghost" target="_blank" rel="noopener">
+                    <i class="fab fa-telegram" aria-hidden="true"></i>
+                    {{ author.cta.secondary_label }}
+                </a>
+            </div>
+        </div>
+    </section>
+
 </div>
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'js/author-page.js' %}?v=3" defer></script>
+<script src="{% static 'js/author-page.js' %}?v=4" defer></script>
 {% endblock %}

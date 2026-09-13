@@ -687,9 +687,7 @@ class AuthorPageView(TemplateView):
         )
         ctx['author_stats'] = {
             'articles': ctx['author_post_count'],
-            'total_users': total_users,
-            'users_in_thousands': total_users >= 1000,
-            'users_display': total_users // 1000 if total_users >= 1000 else total_users,
+            'users_display': total_users,
             'data_extracted': data_extracted,
             'data_in_millions': data_extracted >= 1_000_000,
             'data_display': (

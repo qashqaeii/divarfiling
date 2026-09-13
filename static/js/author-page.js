@@ -76,9 +76,63 @@
         });
     }
 
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initReveal);
-    } else {
+    function initLightbox() {
+        var triggers = document.querySelectorAll('[data-ath-lightbox]');
+        if (!triggers.length) return;
+
+        var lightbox = document.createElement('div');
+        lightbox.className = 'ath-lightbox';
+        lightbox.hidden = true;
+        lightbox.innerHTML = [
+            '<button type="button" class="ath-lightbox-backdrop" data-ath-lightbox-close aria-label="بستن"></button>',
+            '<figure class="ath-lightbox-panel">',
+            '  <button type="button" class="ath-lightbox-close" data-ath-lightbox-close aria-label="بستن"><i class="fas fa-times"></i></button>',
+            '  <img class="ath-lightbox-img" alt="">',
+            '  <figcaption class="ath-lightbox-caption"></figcaption>',
+            '</figure>',
+        ].join('');
+        document.body.appendChild(lightbox);
+
+        var img = lightbox.querySelector('.ath-lightbox-img');
+        var caption = lightbox.querySelector('.ath-lightbox-caption');
+
+        function open(src, cap) {
+            img.src = src;
+            img.alt = cap || '';
+            caption.textContent = cap || '';
+            lightbox.hidden = false;
+            document.body.classList.add('ath-lightbox-open');
+        }
+
+        function close() {
+            lightbox.hidden = true;
+            document.body.classList.remove('ath-lightbox-open');
+            img.removeAttribute('src');
+        }
+
+        triggers.forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                open(btn.getAttribute('data-src'), btn.getAttribute('data-caption'));
+            });
+        });
+
+        lightbox.querySelectorAll('[data-ath-lightbox-close]').forEach(function (el) {
+            el.addEventListener('click', close);
+        });
+
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && !lightbox.hidden) close();
+        });
+    }
+
+    function init() {
         initReveal();
+        initLightbox();
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
     }
 })();

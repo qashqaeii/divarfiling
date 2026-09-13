@@ -669,34 +669,34 @@ class AuthorPageView(TemplateView):
         ctx['meta_keywords'] = author['meta_keywords']
         ctx['stats'] = home_display_stats()
         from blog.models import Post
-        from django.contrib.auth import get_user_model
-        User = get_user_model()
-        author_user = User.objects.filter(
-            models.Q(username__icontains='hossein') | models.Q(first_name__icontains='حسین')
-        ).first()
-        if author_user:
-            posts_qs = (
-                Post.objects.filter(is_published=True, author=author_user)
-                .select_related('category')
-                .order_by('-published_at')
-            )
-            ctx['author_posts'] = posts_qs[:4]
-            ctx['author_post_count'] = posts_qs.count()
-        else:
-            posts_qs = Post.objects.filter(is_published=True).select_related('category').order_by('-published_at')
-            ctx['author_posts'] = posts_qs[:4]
-            ctx['author_post_count'] = posts_qs.count()
+
+        posts_qs = (
+            Post.objects.filter(is_published=True)
+            .select_related('category')
+            .order_by('-published_at')
+        )
+        ctx['author_posts'] = posts_qs[:4]
+        ctx['author_post_count'] = posts_qs.count()
 
         platform_stats = ctx['stats']
-        users_k = max(1, platform_stats['total_users'] // 1000)
-        data_m = max(
-            1,
-            (platform_stats['total_licenses'] * platform_stats['display_multiplier'] * 120) // 1_000_000,
+        total_users = platform_stats['total_users']
+        data_extracted = (
+            platform_stats['total_licenses']
+            * platform_stats['display_multiplier']
+            * 15000
         )
         ctx['author_stats'] = {
             'articles': ctx['author_post_count'],
-            'users_k': users_k,
-            'data_m': data_m,
+            'total_users': total_users,
+            'users_in_thousands': total_users >= 1000,
+            'users_display': total_users // 1000 if total_users >= 1000 else total_users,
+            'data_extracted': data_extracted,
+            'data_in_millions': data_extracted >= 1_000_000,
+            'data_display': (
+                data_extracted // 1_000_000
+                if data_extracted >= 1_000_000
+                else data_extracted
+            ),
             'years': author['stats_meta']['years_experience'],
         }
         return ctx

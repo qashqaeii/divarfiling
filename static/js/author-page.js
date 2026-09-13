@@ -16,7 +16,7 @@
 
     function animateCount(el) {
         var target = parseInt(el.getAttribute('data-ath-count'), 10);
-        if (!target || el.dataset.athCounted === '1') return;
+        if (Number.isNaN(target) || el.dataset.athCounted === '1') return;
 
         el.dataset.athCounted = '1';
         var suffix = el.getAttribute('data-ath-suffix') || '';

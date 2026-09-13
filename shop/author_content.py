@@ -37,7 +37,6 @@ def author_page_content() -> dict:
         ],
         'visuals': {
             'portrait': 'images/author-portrait.webp',
-            'hero_bg': 'images/author-hero-bg.webp',
             'about_image': 'images/help-map-view.webp',
         },
         'social_links': [
@@ -82,19 +81,14 @@ def author_page_content() -> dict:
         'stats_meta': {
             'years_experience': 5,
             'articles_label': 'مقاله تخصصی',
-            'users_label': 'هزار کاربر فعال',
+            'users_label': 'کاربر فعال',
+            'users_label_thousands': 'هزار کاربر فعال',
             'data_label': 'داده استخراج شده',
             'years_label': 'سال تجربه در حوزه املاک و داده',
         },
         'articles_section': {
             'title': 'مقالات اخیر',
             'all_label': 'مشاهده همه مقالات',
-        },
-        'cta': {
-            'title': 'همین امروز هوشمندتر کار کنید.',
-            'subtitle': 'با فایلینگ دیوار، یک قدم جلوتر از بازار باشید.',
-            'primary_label': 'شروع رایگان',
-            'primary_url_name': 'register',
         },
         'meta_title': (
             'حسین قشقایی | معمار نرم‌افزار — CRM، ERP و پلتفرم‌های تحلیلی سفارشی'

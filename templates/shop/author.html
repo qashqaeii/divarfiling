@@ -12,7 +12,7 @@
 {% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/author-page.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'css/author-page.css' %}?v=4">
 {% endblock %}
 
 {% block content %}
@@ -20,8 +20,8 @@
 <div class="mk-pub-wrap ath-wrap">
 
     {# ── Hero ── #}
-    <header class="ath-hero">
-        <div class="ath-hero__bg" style="background-image: url('{% static author.visuals.hero_bg %}');" aria-hidden="true"></div>
+    <header class="ath-hero" style="--ath-hero-bg: url('{% static author.visuals.portrait %}');">
+        <div class="ath-hero__bg" aria-hidden="true"></div>
         <div class="ath-hero__overlay" aria-hidden="true"></div>
         <div class="container ath-hero__stage">
             <div class="ath-hero__copy">
@@ -42,13 +42,10 @@
             </div>
 
             <div class="ath-hero__visual ath-reveal" style="--ath-delay: 2">
-                <figure class="ath-portrait-wrap">
-                    <img src="{% static author.visuals.portrait %}" alt="{{ author.name_fa }}" class="ath-portrait" loading="eager" decoding="async">
-                    <blockquote class="ath-quote-bubble">
-                        <p>{{ author.hero_quote }}</p>
-                        <cite>— {{ author.name_fa }}</cite>
-                    </blockquote>
-                </figure>
+                <blockquote class="ath-quote-bubble">
+                    <p>{{ author.hero_quote }}</p>
+                    <cite>— {{ author.name_fa }}</cite>
+                </blockquote>
             </div>
         </div>
     </header>
@@ -68,12 +65,12 @@
                 </article>
                 <article class="ath-stat-card ath-reveal" style="--ath-delay: 1">
                     <span class="ath-stat-card__icon"><i class="fas fa-users" aria-hidden="true"></i></span>
-                    <strong class="ath-stat-card__val" data-ath-count="{{ author_stats.users_k }}">+{{ author_stats.users_k|to_persian_digits }}</strong>
-                    <span class="ath-stat-card__lbl">{{ author.stats_meta.users_label }}</span>
+                    <strong class="ath-stat-card__val" data-ath-count="{{ author_stats.users_display }}">+{{ author_stats.users_display|to_persian_digits }}</strong>
+                    <span class="ath-stat-card__lbl">{% if author_stats.users_in_thousands %}{{ author.stats_meta.users_label_thousands }}{% else %}{{ author.stats_meta.users_label }}{% endif %}</span>
                 </article>
                 <article class="ath-stat-card ath-reveal" style="--ath-delay: 2">
                     <span class="ath-stat-card__icon"><i class="fas fa-database" aria-hidden="true"></i></span>
-                    <strong class="ath-stat-card__val" data-ath-count="{{ author_stats.data_m }}" data-ath-suffix="M">+{{ author_stats.data_m|to_persian_digits }}M</strong>
+                    <strong class="ath-stat-card__val" data-ath-count="{{ author_stats.data_display }}"{% if author_stats.data_in_millions %} data-ath-suffix="M"{% endif %}>+{{ author_stats.data_display|to_persian_digits }}{% if author_stats.data_in_millions %}M{% endif %}</strong>
                     <span class="ath-stat-card__lbl">{{ author.stats_meta.data_label }}</span>
                 </article>
                 <article class="ath-stat-card ath-reveal" style="--ath-delay: 3">
@@ -159,24 +156,9 @@
     </section>
     {% endif %}
 
-    {# ── CTA ── #}
-    <section class="ath-cta-band" aria-label="شروع رایگان">
-        <div class="ath-cta-band__bg" aria-hidden="true"></div>
-        <div class="container ath-cta-band__inner ath-reveal">
-            <div class="ath-cta-band__copy">
-                <h2>{{ author.cta.title }}</h2>
-                <p>{{ author.cta.subtitle }}</p>
-            </div>
-            <a href="{% url author.cta.primary_url_name %}" class="ath-cta-band__btn">
-                <i class="fas fa-rocket" aria-hidden="true"></i>
-                {{ author.cta.primary_label }}
-            </a>
-        </div>
-    </section>
-
 </div>
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'js/author-page.js' %}?v=2" defer></script>
+<script src="{% static 'js/author-page.js' %}?v=3" defer></script>
 {% endblock %}

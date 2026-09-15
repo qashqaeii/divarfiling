@@ -702,83 +702,260 @@
 .dj-deal .dj-tab-panels {
     border: none;
     border-radius: 0;
-    padding: 1.15rem;
-    background: var(--ws-surface, #fff);
+    padding: 1rem;
+    background: linear-gradient(180deg, var(--ws-surface-2, #f8fafc) 0%, var(--ws-surface, #fff) 100%);
     box-shadow: none;
 }
 
-.dj-deal .dj-panel.is-active { display: flex; flex-direction: column; gap: 1rem; }
+/* ── Active tab panel ── */
+.dj-deal .dj-panel[hidden] {
+    display: none !important;
+}
 
-/* ── Overview snapshot cards ── */
+.dj-deal .dj-panel.is-active {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    animation: djPanelIn 0.32s ease;
+}
+
+@keyframes djPanelIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.dj-panel__zone {
+    border: 1px solid var(--ws-border, #e2e8f0);
+    border-radius: 16px;
+    background: var(--ws-surface, #fff);
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+    overflow: hidden;
+}
+
+.dj-panel__zone--metrics {
+    position: relative;
+    background:
+        radial-gradient(circle at 100% 0%, rgba(124, 58, 237, 0.06), transparent 42%),
+        radial-gradient(circle at 0% 100%, rgba(37, 99, 235, 0.05), transparent 38%),
+        var(--ws-surface, #fff);
+}
+
+.dj-panel__zone--metrics::before {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    top: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--deal-accent, #7c3aed), color-mix(in srgb, var(--deal-accent, #7c3aed) 50%, #6366f1));
+}
+
+.dj-panel__zone--feed {
+    padding: 0;
+    background: var(--ws-surface, #fff);
+}
+
+.dj-panel__zone--feed .dj-timeline {
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+}
+
+.dj-panel__zone-head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 0.85rem;
+    flex-wrap: wrap;
+    padding: 1rem 1.1rem 0.85rem;
+    border-bottom: 1px solid color-mix(in srgb, var(--ws-border, #e2e8f0) 85%, transparent);
+}
+
+.dj-panel__zone-kicker {
+    display: block;
+    font-size: 0.64rem;
+    font-weight: 700;
+    color: var(--ws-text-muted, #64748b);
+    letter-spacing: 0.03em;
+    margin-bottom: 0.12rem;
+}
+
+.dj-panel__zone-title {
+    margin: 0;
+    font-size: 0.98rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--ws-text, #0f172a);
+}
+
+.dj-panel__zone-desc {
+    margin: 0;
+    max-width: 18rem;
+    font-size: 0.74rem;
+    line-height: 1.45;
+    color: var(--ws-muted, #64748b);
+    text-align: left;
+}
+
+/* ── Overview bento KPI cards ── */
 .dj-deal .dj-overview {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0.75rem;
-    margin-bottom: 0;
+    padding: 0.85rem 1rem 1rem;
+    margin: 0;
 }
 
 .dj-deal .dj-overview__card {
     position: relative;
-    display: grid;
-    grid-template-columns: auto 1fr auto;
-    gap: 0.65rem;
-    align-items: center;
-    padding: 0.9rem 0.95rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    min-height: 9.25rem;
+    padding: 0.95rem 1rem 1rem;
     border: 1px solid var(--ws-border, #e2e8f0);
     border-radius: 14px;
-    background: var(--ws-surface, #fff);
+    background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(4px);
     text-decoration: none;
     color: inherit;
-    transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+    overflow: hidden;
+    transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s, background 0.15s;
 }
+
+.dj-deal .dj-overview__card::after {
+    content: '';
+    position: absolute;
+    inset-inline-start: 0;
+    top: 0;
+    width: 3px;
+    height: 100%;
+    border-radius: 0 4px 4px 0;
+    background: var(--ws-primary, #7c3aed);
+    opacity: 0.55;
+    transition: opacity 0.15s, width 0.15s;
+}
+
+.dj-deal .dj-overview__card--finance::after { background: #d97706; }
+.dj-deal .dj-overview__card--docs::after { background: #2563eb; }
+.dj-deal .dj-overview__card--contract::after { background: #6d28d9; }
+
 .dj-deal .dj-overview__card:hover {
     border-color: color-mix(in srgb, var(--ws-primary, #7c3aed) 35%, var(--ws-border));
-    box-shadow: 0 8px 20px rgba(124, 58, 237, 0.08);
-    transform: translateY(-2px);
+    box-shadow: 0 10px 28px rgba(124, 58, 237, 0.1);
+    transform: translateY(-3px);
+    background: #fff;
 }
-.dj-deal .dj-overview__card.is-warn { border-color: #fcd34d; background: linear-gradient(135deg, #fffbeb 0%, #fff 70%); }
-.dj-deal .dj-overview__card.is-success { border-color: #a7f3d0; background: linear-gradient(135deg, #f0fdf4 0%, #fff 70%); }
+.dj-deal .dj-overview__card:hover::after { opacity: 1; width: 4px; }
+
+.dj-deal .dj-overview__card.is-warn {
+    border-color: #fcd34d;
+    background: linear-gradient(160deg, #fffbeb 0%, #fff 72%);
+}
+.dj-deal .dj-overview__card.is-success {
+    border-color: #a7f3d0;
+    background: linear-gradient(160deg, #f0fdf4 0%, #fff 72%);
+}
+
+.dj-overview__card-head {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    min-height: 2.35rem;
+}
 
 .dj-overview__icon {
-    width: 2.35rem;
-    height: 2.35rem;
-    border-radius: 11px;
+    width: 2.4rem;
+    height: 2.4rem;
+    border-radius: 12px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background: rgba(124, 58, 237, 0.1);
+    background: rgba(124, 58, 237, 0.11);
     color: var(--ws-primary, #7c3aed);
-    font-size: 0.85rem;
+    font-size: 0.88rem;
     flex-shrink: 0;
+    box-shadow: inset 0 0 0 1px rgba(124, 58, 237, 0.08);
 }
-.dj-overview__card--finance .dj-overview__icon { background: #fef3c7; color: #b45309; }
-.dj-overview__card--docs .dj-overview__icon { background: #dbeafe; color: #2563eb; }
-.dj-overview__card--contract .dj-overview__icon { background: #ede9fe; color: #6d28d9; }
+.dj-overview__card--finance .dj-overview__icon { background: #fef3c7; color: #b45309; box-shadow: inset 0 0 0 1px rgba(217, 119, 6, 0.12); }
+.dj-overview__card--docs .dj-overview__icon { background: #dbeafe; color: #2563eb; box-shadow: inset 0 0 0 1px rgba(37, 99, 235, 0.12); }
+.dj-overview__card--contract .dj-overview__icon { background: #ede9fe; color: #6d28d9; box-shadow: inset 0 0 0 1px rgba(109, 40, 217, 0.12); }
 .dj-overview__card.is-warn .dj-overview__icon { background: #fef3c7; color: #b45309; }
 .dj-overview__card.is-success .dj-overview__icon { background: #d1fae5; color: #059669; }
 
-.dj-overview__body { min-width: 0; }
+.dj-overview__status {
+    margin-inline-start: auto;
+    margin-inline-end: 0.15rem;
+    font-size: 0.62rem;
+    font-weight: 800;
+    padding: 0.16rem 0.45rem;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    white-space: nowrap;
+}
+.dj-overview__status.is-live { background: #ede9fe; color: #6d28d9; border-color: #ddd6fe; }
+.dj-overview__status.is-warn { background: #fef3c7; color: #b45309; border-color: #fde68a; }
+.dj-overview__status.is-success { background: #d1fae5; color: #047857; border-color: #a7f3d0; }
+.dj-overview__status.is-muted { background: #f1f5f9; color: #64748b; border-color: #e2e8f0; }
+
+.dj-overview__go {
+    margin-inline-start: auto;
+    width: 1.65rem;
+    height: 1.65rem;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--ws-text-muted, #94a3b8);
+    background: var(--ws-surface-2, #f8fafc);
+    border: 1px solid var(--ws-border, #e2e8f0);
+    font-size: 0.58rem;
+    flex-shrink: 0;
+    transition: transform 0.12s, color 0.12s, background 0.12s, border-color 0.12s;
+}
+
+.dj-overview__card-head:has(.dj-overview__status) .dj-overview__go {
+    margin-inline-start: 0;
+}
+
+.dj-overview__body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.12rem;
+}
+
 .dj-overview__kicker {
     display: block;
     font-size: 0.68rem;
     font-weight: 700;
     color: var(--ws-text-muted, #64748b);
-    margin-bottom: 0.1rem;
 }
+
 .dj-overview__value {
     display: block;
-    font-size: 0.92rem;
-    font-weight: 750;
+    font-size: clamp(0.88rem, 1.6vw, 1rem);
+    font-weight: 800;
     line-height: 1.35;
+    letter-spacing: -0.02em;
     color: var(--ws-text, #0f172a);
 }
-.dj-overview__hint { font-size: 0.74rem; color: var(--ws-muted, #64748b); margin: 0.15rem 0 0; }
+
+.dj-overview__card--action .dj-overview__value { font-size: clamp(0.95rem, 1.8vw, 1.08rem); }
+
+.dj-overview__hint {
+    font-size: 0.74rem;
+    color: var(--ws-muted, #64748b);
+    margin: 0.1rem 0 0;
+    line-height: 1.45;
+}
+
 .dj-overview__bar {
     display: block;
-    height: 4px;
-    margin-top: 0.45rem;
+    height: 5px;
+    margin-top: auto;
     border-radius: 999px;
-    background: color-mix(in srgb, var(--ws-border, #e2e8f0) 80%, transparent);
+    background: color-mix(in srgb, var(--ws-border, #e2e8f0) 75%, transparent);
     overflow: hidden;
 }
 .dj-overview__bar i {
@@ -787,12 +964,71 @@
     border-radius: inherit;
     background: linear-gradient(90deg, #2563eb, #7c3aed);
 }
-.dj-overview__go {
-    color: var(--ws-text-muted, #94a3b8);
-    font-size: 0.68rem;
-    transition: transform 0.12s, color 0.12s;
+
+.dj-deal .dj-overview__card:hover .dj-overview__go {
+    color: #fff;
+    background: var(--ws-primary, #7c3aed);
+    border-color: var(--ws-primary, #7c3aed);
+    transform: translateX(-2px);
 }
-.dj-overview__card:hover .dj-overview__go { color: var(--ws-primary, #7c3aed); transform: translateX(-2px); }
+
+/* Featured action card spans wider on desktop */
+@media (min-width: 900px) {
+    .dj-deal .dj-overview {
+        grid-template-columns: repeat(12, minmax(0, 1fr));
+    }
+    .dj-overview__card--action { grid-column: span 5; min-height: 10rem; }
+    .dj-overview__card--finance { grid-column: span 3; }
+    .dj-overview__card--docs { grid-column: span 4; }
+    .dj-overview__card--contract { grid-column: span 12; min-height: auto; flex-direction: row; align-items: center; gap: 1rem; padding-block: 0.85rem; }
+    .dj-overview__card--contract .dj-overview__body { flex-direction: row; align-items: center; flex-wrap: wrap; gap: 0.35rem 0.85rem; }
+    .dj-overview__card--contract .dj-overview__kicker { width: 100%; }
+    .dj-overview__card--contract .dj-overview__value,
+    .dj-overview__card--contract .dj-overview__hint { margin: 0; }
+}
+
+@media (min-width: 1200px) {
+    .dj-deal .dj-overview {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+    .dj-overview__card--action,
+    .dj-overview__card--finance,
+    .dj-overview__card--docs,
+    .dj-overview__card--contract {
+        grid-column: span 1;
+        flex-direction: column;
+        align-items: stretch;
+        min-height: 9.25rem;
+    }
+    .dj-overview__card--contract .dj-overview__body {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.12rem;
+    }
+}
+
+/* Timeline inside overview panel */
+.dj-panel--overview .dj-timeline__header {
+    background: linear-gradient(180deg, var(--ws-surface-2, #f8fafc) 0%, var(--ws-surface, #fff) 100%);
+}
+
+.dj-panel--overview .dj-timeline__count {
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
+    background: rgba(124, 58, 237, 0.1);
+    color: var(--ws-primary, #7c3aed);
+    font-weight: 700;
+    font-size: 0.72rem;
+}
+
+.dj-panel.is-active > .dj-panel-card,
+.dj-panel.is-active > .dj-finance-panel,
+.dj-panel.is-active > .dj-contracts-panel,
+.dj-panel.is-active > .dj-checklist-panel {
+    border: none;
+    box-shadow: none;
+}
+
 
 /* ── Context sidebar ── */
 .dj-deal__context { position: sticky; top: 1rem; }
@@ -1262,10 +1498,6 @@
     font-size: 0.88rem; z-index: 9999; box-shadow: 0 8px 24px rgba(0,0,0,0.2);
 }
 
-@media (min-width: 1100px) {
-    .dj-deal .dj-overview { grid-template-columns: repeat(4, 1fr); }
-}
-
 @media (max-width: 960px) {
     .dj-deal__body { grid-template-columns: 1fr; }
     .dj-deal__context { position: static; order: -1; }
@@ -1283,6 +1515,7 @@
 
 @media (max-width: 640px) {
     .dj-deal .dj-overview { grid-template-columns: 1fr; }
+    .dj-panel__zone-desc { max-width: none; text-align: right; }
     .dj-context-stack { grid-template-columns: 1fr; }
     .dj-finance-grid { grid-template-columns: 1fr; }
     .dj-contracts-item { grid-template-columns: auto 1fr; }

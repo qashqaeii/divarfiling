@@ -9,7 +9,8 @@
      data-value-label="{% if deal.value %}{{ deal.value|ws_money }}{% endif %}"
      data-contract-count="{{ deal_contracts_count }}"
      data-has-finalized="{% if deal_contract_summary.finalized %}1{% else %}0{% endif %}"
-     data-create-contract-url="{% url 'workspace:contract_create' deal.pk %}">
+     data-create-contract-url="{% url 'workspace:contract_create' deal.pk %}"
+     data-default-tab="{{ deal_journey_tab|default:'overview' }}">
 
     <div class="dj-deal__masthead">
         <header class="dj-deal__header">
@@ -152,43 +153,43 @@
             </section>
 
             <div class="dj-workspace">
-            <nav class="dj-tabs dj-tabs--pro" aria-label="بخش‌های معامله">
-                <a href="?tab=overview" class="dj-tabs__item{% if deal_journey_tab == 'overview' %} is-active{% endif %}"><i class="fas fa-th-large" aria-hidden="true"></i><span>نمای کلی</span></a>
-                <a href="?tab=activity" class="dj-tabs__item{% if deal_journey_tab == 'activity' %} is-active{% endif %}"><i class="fas fa-stream" aria-hidden="true"></i><span>فعالیت‌ها</span></a>
-                <a href="?tab=finance" class="dj-tabs__item{% if deal_journey_tab == 'finance' %} is-active{% endif %}"><i class="fas fa-coins" aria-hidden="true"></i><span>مالی</span></a>
-                <a href="?tab=documents" class="dj-tabs__item{% if deal_journey_tab == 'documents' %} is-active{% endif %}"><i class="fas fa-folder-open" aria-hidden="true"></i><span>مدارک</span></a>
-                <a href="?tab=contracts" class="dj-tabs__item{% if deal_journey_tab == 'contracts' %} is-active{% endif %}"><i class="fas fa-file-signature" aria-hidden="true"></i><span>قراردادها</span>{% if deal_contracts_count %}<em>{{ deal_contracts_count|to_persian_digits }}</em>{% endif %}</a>
-                <a href="?tab=history" class="dj-tabs__item{% if deal_journey_tab == 'history' %} is-active{% endif %}"><i class="fas fa-history" aria-hidden="true"></i><span>تاریخچه</span></a>
+            <nav class="dj-tabs dj-tabs--pro" aria-label="بخش‌های معامله" data-dj-tabs role="tablist">
+                <a href="?tab=overview" role="tab" data-dj-tab="overview" class="dj-tabs__item{% if deal_journey_tab == 'overview' %} is-active{% endif %}" aria-selected="{% if deal_journey_tab == 'overview' %}true{% else %}false{% endif %}"><i class="fas fa-th-large" aria-hidden="true"></i><span>نمای کلی</span></a>
+                <a href="?tab=activity" role="tab" data-dj-tab="activity" class="dj-tabs__item{% if deal_journey_tab == 'activity' %} is-active{% endif %}" aria-selected="{% if deal_journey_tab == 'activity' %}true{% else %}false{% endif %}"><i class="fas fa-stream" aria-hidden="true"></i><span>فعالیت‌ها</span></a>
+                <a href="?tab=finance" role="tab" data-dj-tab="finance" class="dj-tabs__item{% if deal_journey_tab == 'finance' %} is-active{% endif %}" aria-selected="{% if deal_journey_tab == 'finance' %}true{% else %}false{% endif %}"><i class="fas fa-coins" aria-hidden="true"></i><span>مالی</span></a>
+                <a href="?tab=documents" role="tab" data-dj-tab="documents" class="dj-tabs__item{% if deal_journey_tab == 'documents' %} is-active{% endif %}" aria-selected="{% if deal_journey_tab == 'documents' %}true{% else %}false{% endif %}"><i class="fas fa-folder-open" aria-hidden="true"></i><span>مدارک</span></a>
+                <a href="?tab=contracts" role="tab" data-dj-tab="contracts" class="dj-tabs__item{% if deal_journey_tab == 'contracts' %} is-active{% endif %}" aria-selected="{% if deal_journey_tab == 'contracts' %}true{% else %}false{% endif %}"><i class="fas fa-file-signature" aria-hidden="true"></i><span>قراردادها</span>{% if deal_contracts_count %}<em>{{ deal_contracts_count|to_persian_digits }}</em>{% endif %}</a>
+                <a href="?tab=history" role="tab" data-dj-tab="history" class="dj-tabs__item{% if deal_journey_tab == 'history' %} is-active{% endif %}" aria-selected="{% if deal_journey_tab == 'history' %}true{% else %}false{% endif %}"><i class="fas fa-history" aria-hidden="true"></i><span>تاریخچه</span></a>
             </nav>
 
-            <div class="dj-tab-panels">
-                {% if deal_journey_tab == 'overview' %}
-                <div class="dj-panel is-active">
+            <div class="dj-tab-panels" data-dj-tab-panels>
+                <div class="dj-panel dj-panel--overview{% if deal_journey_tab == 'overview' %} is-active{% endif %}" data-dj-panel="overview" role="tabpanel"{% if deal_journey_tab != 'overview' %} hidden{% endif %}>
                     {% include 'workspace/crm/includes/deal_journey_overview.html' %}
-                    {% include 'workspace/crm/includes/deal_timeline_section.html' %}
+                    <div class="dj-panel__zone dj-panel__zone--feed">
+                        {% include 'workspace/crm/includes/deal_timeline_section.html' %}
+                    </div>
                 </div>
-                {% elif deal_journey_tab == 'activity' %}
-                <div class="dj-panel is-active">
+
+                <div class="dj-panel dj-panel--activity{% if deal_journey_tab == 'activity' %} is-active{% endif %}" data-dj-panel="activity" role="tabpanel"{% if deal_journey_tab != 'activity' %} hidden{% endif %}>
                     {% include 'workspace/crm/includes/deal_timeline_section.html' %}
                     {% include 'workspace/crm/includes/deal_action_timeline.html' %}
                 </div>
-                {% elif deal_journey_tab == 'finance' %}
-                <div class="dj-panel is-active">
+
+                <div class="dj-panel dj-panel--finance{% if deal_journey_tab == 'finance' %} is-active{% endif %}" data-dj-panel="finance" role="tabpanel"{% if deal_journey_tab != 'finance' %} hidden{% endif %}>
                     {% include 'workspace/crm/includes/deal_journey_finance_panel.html' %}
                 </div>
-                {% elif deal_journey_tab == 'documents' %}
-                <div class="dj-panel is-active">
+
+                <div class="dj-panel dj-panel--documents{% if deal_journey_tab == 'documents' %} is-active{% endif %}" data-dj-panel="documents" role="tabpanel"{% if deal_journey_tab != 'documents' %} hidden{% endif %}>
                     {% include 'workspace/crm/includes/deal_journey_checklist.html' %}
                 </div>
-                {% elif deal_journey_tab == 'contracts' %}
-                <div class="dj-panel is-active">
+
+                <div class="dj-panel dj-panel--contracts{% if deal_journey_tab == 'contracts' %} is-active{% endif %}" data-dj-panel="contracts" role="tabpanel"{% if deal_journey_tab != 'contracts' %} hidden{% endif %}>
                     {% include 'workspace/crm/includes/deal_journey_contracts.html' %}
                 </div>
-                {% elif deal_journey_tab == 'history' %}
-                <div class="dj-panel is-active">
+
+                <div class="dj-panel dj-panel--history{% if deal_journey_tab == 'history' %} is-active{% endif %}" data-dj-panel="history" role="tabpanel"{% if deal_journey_tab != 'history' %} hidden{% endif %}>
                     {% include 'workspace/crm/includes/deal_timeline_section.html' %}
                 </div>
-                {% endif %}
             </div>
             </div>
         </div>

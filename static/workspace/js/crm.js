@@ -4297,11 +4297,15 @@ function initCRMDealActions() {
         window.location.reload();
     }));
 
-    const moreBtn = document.getElementById('crmDealTimelineMore');
-    if (moreBtn) {
-        let offset = document.querySelectorAll('#crmDealTimelineList .crm-deal-timeline-item').length;
-        moreBtn.addEventListener('click', async () => {
-            const url = window.crmDealTimelineUrl;
+    root.querySelectorAll('.crm-deal-timeline-more, [data-timeline-more]').forEach(function (moreBtn) {
+        if (moreBtn.dataset.timelineMoreBound === '1') return;
+        moreBtn.dataset.timelineMoreBound = '1';
+        var section = moreBtn.closest('.dj-timeline, .crm-deal-timeline');
+        var list = section ? section.querySelector('.crm-deal-timeline-list, .dj-timeline__events') : null;
+        if (!list) return;
+        var offset = list.querySelectorAll('.crm-deal-timeline-item').length;
+        moreBtn.addEventListener('click', async function () {
+            const url = section.dataset.timelineUrl || window.crmDealTimelineUrl;
             if (!url) return;
             const res = await fetch(`${url}?limit=20&offset=${offset}`);
             const data = await res.json();
@@ -4309,8 +4313,7 @@ function initCRMDealActions() {
                 moreBtn.hidden = true;
                 return;
             }
-            const list = document.getElementById('crmDealTimelineList');
-            const lastMarker = list?.querySelector('.dj-timeline__day-marker:last-of-type time');
+            const lastMarker = list.querySelector('.dj-timeline__day-marker:last-of-type time');
             let lastDay = lastMarker ? (lastMarker.textContent || '') : '';
             data.items.forEach(item => {
                 if (item.day_label && item.day_label !== lastDay) {
@@ -4319,16 +4322,16 @@ function initCRMDealActions() {
                     dayLi.className = 'dj-timeline__day-marker';
                     dayLi.setAttribute('aria-hidden', 'true');
                     dayLi.innerHTML = `<time>${item.day_label}</time>`;
-                    list?.appendChild(dayLi);
+                    list.appendChild(dayLi);
                 }
                 const wrap = document.createElement('div');
                 wrap.innerHTML = renderCRMDealTimelineItem(item);
-                if (wrap.firstElementChild) list?.appendChild(wrap.firstElementChild);
+                if (wrap.firstElementChild) list.appendChild(wrap.firstElementChild);
             });
             offset += data.items.length;
             if (!data.has_more) moreBtn.hidden = true;
         });
-    }
+    });
 }
 
 function initCRMDealsPage() {

@@ -11,7 +11,7 @@
 {% block crm_extra_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/crm-deal-detail-mobile.css' %}?v=8">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-deal-finance.css' %}?v=1">
-<link rel="stylesheet" href="{% static 'workspace/css/crm-deal-journey.css' %}?v=7">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-deal-journey.css' %}?v=9">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-ecosystem.css' %}?v=3">
 <link rel="stylesheet" href="{% static 'contracts/css/contracts.css' %}?v=15">
 {% endblock %}
@@ -192,7 +192,7 @@
 
 {% block crm_js %}
 <script src="{% static 'workspace/js/crm-stage-transition.js' %}?v=1"></script>
-<script src="{% static 'workspace/js/crm-deal-journey.js' %}?v=4"></script>
+<script src="{% static 'workspace/js/crm-deal-journey.js' %}?v=5"></script>
 <script>
 window.crmDealChecklistUrl = "{% url 'workspace:crm_deal_checklist' deal.id %}";
 window.crmDealCommissionUrl = "{% url 'workspace:crm_deal_commission' deal.id %}";

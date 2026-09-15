@@ -1,9 +1,9 @@
-<section class="dj-timeline crm-deal-timeline crm-deal-block" id="crmDealTimeline"
+<section class="dj-timeline crm-deal-timeline crm-deal-block"
          data-timeline-url="{% url 'workspace:crm_deal_timeline' deal.id %}"
          aria-label="تاریخچه معامله">
     <header class="dj-timeline__header">
         <div class="dj-timeline__header-main">
-            <span class="dj-timeline__mark" aria-hidden="true"><i class="fas fa-clock-rotate-left"></i></span>
+            <span class="dj-timeline__mark" aria-hidden="true"><i class="fas fa-history"></i></span>
             <div>
                 <span class="dj-timeline__kicker">مسیر معامله</span>
                 <h2>تاریخچه و رویدادها</h2>
@@ -16,7 +16,7 @@
 
     <div class="dj-timeline__body">
         {% if deal_timeline %}
-        <ol class="dj-timeline__events" id="crmDealTimelineList">
+        <ol class="dj-timeline__events crm-deal-timeline-list">
             {% for item in deal_timeline %}
             {% ifchanged item.day_label %}
             <li class="dj-timeline__day-marker" aria-hidden="true">
@@ -49,7 +49,7 @@
 
     {% if deal_timeline_has_more %}
     <footer class="dj-timeline__footer">
-        <button type="button" class="crm-dash-act crm-dash-act--ghost crm-deal-timeline-more" id="crmDealTimelineMore">
+        <button type="button" class="crm-dash-act crm-dash-act--ghost crm-deal-timeline-more" data-timeline-more>
             <i class="fas fa-chevron-down" aria-hidden="true"></i> نمایش رویدادهای بیشتر
         </button>
     </footer>

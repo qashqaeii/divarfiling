@@ -12,6 +12,7 @@
 <link rel="stylesheet" href="{% static 'css/mizkar-video-player.css' %}?v=2">
 <link rel="stylesheet" href="{% static 'css/mizkar-product-bot.css' %}?v=37">
 <link rel="stylesheet" href="{% static 'css/product-bot-page.css' %}?v=4">
+<link rel="stylesheet" href="{% static 'css/product-bot-mobile.css' %}?v=1">
 {% endblock %}
 
 {% block content %}
@@ -330,6 +331,22 @@
     </section>
 
 </div>
+
+{% if buyable_plans or plans.first %}
+<aside class="pbp-sticky-cta" data-pbp-sticky-cta aria-label="خرید سریع" hidden>
+    {% if buyable_plans %}
+    <a href="{% url 'buy' product.slug %}?plan={{ buyable_plans.0.id }}" class="pbp-sticky-cta__btn">
+        <i class="fas fa-shopping-cart" aria-hidden="true"></i>
+        <span>خرید لایسنس</span>
+    </a>
+    {% elif plans.first %}
+    <a href="{% url 'buy' product.slug %}?plan={{ plans.first.id }}" class="pbp-sticky-cta__btn">
+        <i class="fas fa-shopping-cart" aria-hidden="true"></i>
+        <span>خرید لایسنس</span>
+    </a>
+    {% endif %}
+</aside>
+{% endif %}
 {% endblock %}
 
 {% block page_overlays %}
@@ -349,5 +366,5 @@
 {% if install_video.available %}
 <script src="{% static 'js/bot-install-video.js' %}?v=1" defer></script>
 {% endif %}
-<script src="{% static 'js/product-bot-page.js' %}?v=2" defer></script>
+<script src="{% static 'js/product-bot-page.js' %}?v=3" defer></script>
 {% endblock %}

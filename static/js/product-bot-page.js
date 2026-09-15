@@ -182,6 +182,58 @@
         );
     }
 
+    function initStickyBuyCta() {
+        if (!document.body.classList.contains('mk-product-bot-page')) return;
+
+        var bar = document.querySelector('[data-pbp-sticky-cta]');
+        var hero = document.querySelector('.pbp-hero');
+        var bottomCta = document.querySelector('.pbp-cta');
+        var mobileMq = window.matchMedia('(max-width: 767px)');
+
+        if (!bar) return;
+
+        function setVisible(show) {
+            bar.classList.toggle('is-visible', show);
+            bar.hidden = !show;
+        }
+
+        function bindObservers() {
+            if (!mobileMq.matches || !('IntersectionObserver' in window)) {
+                setVisible(false);
+                return;
+            }
+
+            var heroVisible = true;
+            var ctaVisible = false;
+
+            function update() {
+                setVisible(!heroVisible && !ctaVisible);
+            }
+
+            var heroObserver = new IntersectionObserver(function (entries) {
+                heroVisible = entries.some(function (entry) { return entry.isIntersecting; });
+                update();
+            }, { threshold: 0.06 });
+
+            var ctaObserver = new IntersectionObserver(function (entries) {
+                ctaVisible = entries.some(function (entry) { return entry.isIntersecting; });
+                update();
+            }, { threshold: 0.15 });
+
+            if (hero) heroObserver.observe(hero);
+            if (bottomCta) ctaObserver.observe(bottomCta);
+            update();
+        }
+
+        if (typeof mobileMq.addEventListener === 'function') {
+            mobileMq.addEventListener('change', bindObservers);
+        } else if (typeof mobileMq.addListener === 'function') {
+            mobileMq.addListener(bindObservers);
+        }
+
+        bindObservers();
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
         updateStickyTop();
         window.addEventListener('resize', updateStickyTop, { passive: true });
@@ -191,5 +243,6 @@
         initJourney();
         initFaq();
         initLightbox();
+        initStickyBuyCta();
     });
 })();

@@ -267,7 +267,7 @@
     grid-template-columns: minmax(0, 1fr) minmax(280px, 320px) !important;
     grid-template-rows: auto !important;
     gap: var(--cal-gap);
-    align-items: stretch;
+    align-items: start;
     overflow: visible !important;
     min-height: 0;
     flex: none !important;
@@ -287,17 +287,23 @@
     grid-column: 2;
     grid-row: 1;
     min-width: 0;
+    display: block !important;
     height: auto !important;
     max-height: none !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+    padding: 0 !important;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    align-self: start;
+    position: sticky;
+    top: 0.75rem;
 }
 
 @media (min-width: 1024px) {
-    .crm-cal-pro-v2 .crm-cal-layout {
-        min-height: clamp(480px, 62vh, 760px);
-    }
-
     .crm-cal-pro-v2 .crm-cal-board {
-        min-height: 100%;
+        min-height: clamp(480px, 62vh, 760px);
     }
 }
 
@@ -775,22 +781,43 @@
 }
 
 /* ── Agenda sidebar ── */
-.crm-cal-pro-v2 .crm-cal-agenda {
-    background: transparent;
-    border: none;
-    box-shadow: none;
-    padding: 0;
-    overflow: visible;
+.crm-cal-agenda-panel {
+    background: var(--ws-surface);
+    border: 1px solid var(--ws-border);
+    border-radius: var(--cal-radius);
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+    overflow: hidden;
     display: flex;
     flex-direction: column;
-    gap: 0.85rem;
-    align-self: stretch;
 }
 
 .crm-cal-agenda-head {
-    padding: 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.65rem;
+    padding: 1rem 1rem 0.85rem;
     margin: 0;
     border: none;
+    border-bottom: 1px solid var(--ws-border);
+    background: linear-gradient(180deg, color-mix(in srgb, var(--cal-purple-soft) 35%, var(--ws-surface)) 0%, var(--ws-surface) 100%);
+}
+
+.crm-cal-agenda-head-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    background: var(--cal-purple-soft);
+    color: var(--cal-purple);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+}
+
+.crm-cal-agenda-head-copy {
+    min-width: 0;
+    flex: 1;
 }
 
 .crm-cal-agenda-head-row {
@@ -802,13 +829,14 @@
 
 .crm-cal-agenda-head h2 {
     margin: 0;
-    font-size: 0.95rem;
+    font-size: 0.92rem;
     font-weight: 800;
     color: var(--ws-text);
+    letter-spacing: -0.02em;
 }
 
 .crm-cal-agenda-head p {
-    margin: 0.2rem 0 0;
+    margin: 0.18rem 0 0;
     font-size: 0.68rem;
     color: var(--ws-text-muted);
     font-weight: 600;
@@ -822,13 +850,77 @@
     border-radius: 999px;
     font-size: 0.62rem;
     font-weight: 800;
-    background: var(--cal-purple-soft);
-    color: var(--cal-purple);
+    background: var(--cal-purple);
+    color: #fff;
 }
 
-.crm-cal-agenda-scroll {
-    overflow: visible;
-    padding: 0;
+.crm-cal-agenda-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    flex: none !important;
+    min-height: 0;
+    padding: 0.75rem 0.85rem 0.65rem;
+}
+
+.crm-cal-pro-v2 .crm-cal-agenda-scroll {
+    flex: none !important;
+    overflow: visible !important;
+    min-height: 0 !important;
+}
+
+.crm-cal-agenda-block {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+}
+
+.crm-cal-agenda-block-head {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-bottom: 0.15rem;
+}
+
+.crm-cal-agenda-block-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 8px;
+    background: rgba(245, 158, 11, 0.14);
+    color: #d97706;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.62rem;
+    flex-shrink: 0;
+}
+
+.crm-cal-agenda-block-head h3 {
+    margin: 0;
+    flex: 1;
+    font-size: 0.76rem;
+    font-weight: 800;
+    color: var(--ws-text);
+}
+
+.crm-cal-agenda-block-count {
+    min-width: 1.25rem;
+    height: 1.25rem;
+    padding: 0 0.35rem;
+    border-radius: 999px;
+    background: rgba(245, 158, 11, 0.14);
+    color: #b45309;
+    font-size: 0.6rem;
+    font-weight: 800;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.crm-cal-agenda-split {
+    height: 1px;
+    margin: 0.7rem 0 0.65rem;
+    background: linear-gradient(90deg, transparent, var(--ws-border), transparent);
 }
 
 .crm-cal-agenda-list {
@@ -960,43 +1052,51 @@
     color: var(--cal-purple);
 }
 
+.crm-cal-agenda-foot {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    padding: 0.65rem 0.85rem 0.85rem;
+    border-top: 1px solid var(--ws-border);
+    background: var(--ws-surface-2, #f8fafc);
+}
+
 .crm-cal-agenda-link {
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: space-between;
     gap: 0.35rem;
-    margin-top: 0.65rem;
-    padding: 0.55rem;
+    padding: 0.55rem 0.65rem;
     border-radius: 10px;
     font-size: 0.72rem;
     font-weight: 700;
     color: var(--cal-purple);
     text-decoration: none;
-    border: 1px dashed color-mix(in srgb, var(--cal-purple) 25%, var(--ws-border));
-    transition: background 0.12s, border-color 0.12s;
+    background: var(--ws-surface);
+    border: 1px solid color-mix(in srgb, var(--cal-purple) 18%, var(--ws-border));
+    transition: background 0.12s, border-color 0.12s, transform 0.12s;
 }
 
 .crm-cal-agenda-link:hover {
     background: var(--cal-purple-soft);
     border-color: var(--cal-purple);
+    transform: translateY(-1px);
 }
 
-/* ── Near reminders card ── */
-.crm-cal-near {
-    padding: 0.85rem;
+.crm-cal-agenda-link--muted {
+    color: var(--ws-text-secondary);
+    border-color: var(--ws-border);
+    background: transparent;
+    font-weight: 650;
+}
+
+.crm-cal-agenda-link--muted:hover {
+    color: var(--cal-purple);
     background: var(--ws-surface);
-    border: 1px solid var(--ws-border);
-    border-radius: 14px;
-    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+    border-color: color-mix(in srgb, var(--cal-purple) 25%, var(--ws-border));
 }
 
-.crm-cal-near-title {
-    margin: 0 0 0.55rem;
-    font-size: 0.78rem;
-    font-weight: 800;
-    color: var(--ws-text);
-}
-
+/* ── Near reminders (inside panel) ── */
 .crm-cal-near-list {
     list-style: none;
     margin: 0;
@@ -1007,39 +1107,83 @@
 }
 
 .crm-cal-near-item {
-    display: flex;
-    flex-direction: column;
-    gap: 0.08rem;
-    padding: 0.5rem 0.55rem;
-    border-radius: 9px;
+    display: grid;
+    grid-template-columns: 38px 1fr auto;
+    gap: 0.5rem;
+    align-items: center;
+    padding: 0.55rem 0.6rem;
+    border-radius: 11px;
     text-decoration: none;
     color: inherit;
-    border: 1px solid transparent;
-    transition: background 0.12s, border-color 0.12s;
+    border: 1px solid var(--ws-border);
+    background: color-mix(in srgb, var(--ws-surface-2) 40%, var(--ws-surface));
+    border-inline-start: 3px solid var(--cal-amber);
+    transition: background 0.12s, border-color 0.12s, box-shadow 0.12s;
 }
 
 .crm-cal-near-item:hover {
-    background: var(--ws-surface-2, #f8fafc);
-    border-color: var(--ws-border);
+    background: rgba(245, 158, 11, 0.06);
+    border-color: color-mix(in srgb, var(--cal-amber) 35%, var(--ws-border));
+    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.08);
+}
+
+.crm-cal-near-item-time {
+    font-size: 0.68rem;
+    font-weight: 800;
+    color: var(--ws-text-secondary);
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+}
+
+.crm-cal-near-item-main {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.08rem;
 }
 
 .crm-cal-near-date {
-    font-size: 0.62rem;
+    font-size: 0.6rem;
     font-weight: 700;
-    color: var(--cal-amber);
+    color: #d97706;
 }
 
-.crm-cal-near-item strong {
+.crm-cal-near-item-main strong {
     font-size: 0.72rem;
-    font-weight: 700;
+    font-weight: 750;
     color: var(--ws-text);
     line-height: 1.35;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
-.crm-cal-near-item time {
+.crm-cal-near-item-main em {
     font-size: 0.62rem;
     color: var(--ws-text-muted);
+    font-style: normal;
     font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.crm-cal-near-item-go {
+    font-size: 0.58rem;
+    color: var(--ws-text-muted);
+    opacity: 0.55;
+}
+
+.crm-cal-near-empty {
+    margin: 0;
+    padding: 0.55rem 0.65rem;
+    border-radius: 10px;
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: var(--ws-text-muted);
+    background: var(--ws-surface-2, #f8fafc);
+    border: 1px dashed var(--ws-border);
+    text-align: center;
 }
 
 /* ── Empty states ── */
@@ -1049,6 +1193,32 @@
     background: var(--ws-surface);
     border: 1px dashed var(--ws-border);
     border-radius: 14px;
+}
+
+.crm-cal-empty--compact {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    text-align: start;
+    padding: 0.75rem 0.8rem;
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--cal-purple-soft) 25%, var(--ws-surface));
+    border: 1px solid color-mix(in srgb, var(--cal-purple) 12%, var(--ws-border));
+}
+
+.crm-cal-empty-copy strong {
+    display: block;
+    font-size: 0.76rem;
+    font-weight: 800;
+    color: var(--ws-text);
+    margin-bottom: 0.12rem;
+}
+
+.crm-cal-empty-copy p {
+    margin: 0;
+    font-size: 0.68rem;
+    color: var(--ws-text-muted);
+    line-height: 1.45;
 }
 
 .crm-cal-empty-icon {
@@ -1062,6 +1232,15 @@
     align-items: center;
     justify-content: center;
     font-size: 1rem;
+}
+
+.crm-cal-empty-icon--sm {
+    width: 36px;
+    height: 36px;
+    margin: 0;
+    border-radius: 11px;
+    font-size: 0.85rem;
+    flex-shrink: 0;
 }
 
 .crm-cal-empty p {
@@ -1111,8 +1290,18 @@
     grid-template-rows: auto !important;
 }
 
+.crm-cal-pro-v2 .crm-cal-agenda-scroll {
+    flex: none !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+}
+
 @media (max-width: 1023px) {
     .crm-cal-pro-v2.crm-cal-page .crm-cal-layout {
         overflow-y: visible !important;
+    }
+
+    .crm-cal-pro-v2 .crm-cal-agenda {
+        position: static;
     }
 }

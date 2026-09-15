@@ -9,8 +9,8 @@
 {% block crm_actions %}{% endblock %}
 
 {% block crm_extra_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/crm-calendar.css' %}?v=3">
-<link rel="stylesheet" href="{% static 'workspace/css/crm-calendar-mobile.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-calendar.css' %}?v=4">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-calendar-mobile.css' %}?v=4">
 {% endblock %}
 
 {% block crm_content %}
@@ -91,77 +91,105 @@
         <div class="crm-cal-layout">
 
             <aside class="crm-cal-agenda" aria-label="برنامه امروز">
-                <header class="crm-cal-agenda-head">
-                    <div>
-                        <div class="crm-cal-agenda-head-row">
-                            <h2>برنامه امروز</h2>
-                            {% if calendar.today_agenda_count %}
-                            <span class="crm-cal-agenda-badge">{{ calendar.today_agenda_count_label }} کار</span>
-                            {% endif %}
-                        </div>
-                        <p>{{ calendar.today_weekday }} · {{ calendar.today_full_label }}</p>
-                    </div>
-                </header>
-
-                <div class="crm-cal-agenda-scroll">
-                    {% if calendar.today_agenda %}
-                    <ol class="crm-cal-agenda-list">
-                        {% for ev in calendar.today_agenda %}
-                        <li class="crm-cal-task crm-cal-task--{{ ev.type }}">
-                            <time class="crm-cal-task-time">{% if ev.time %}{{ ev.time|to_persian_digits }}{% else %}—{% endif %}</time>
-                            <div class="crm-cal-task-body">
-                                <span class="crm-cal-task-badge">{{ ev.type|crm_cal_event_type_label }}</span>
-                                <strong class="crm-cal-task-title">{{ ev.short_label|default:ev.label }}</strong>
-                                {% if ev.customer_name %}<span class="crm-cal-task-meta">{{ ev.customer_name }}</span>{% endif %}
-                                {% if ev.location %}
-                                <span class="crm-cal-task-loc"><i class="fas fa-location-dot" aria-hidden="true"></i>{{ ev.location }}</span>
+                <div class="crm-cal-agenda-panel">
+                    <header class="crm-cal-agenda-head">
+                        <div class="crm-cal-agenda-head-icon" aria-hidden="true"><i class="fas fa-sun"></i></div>
+                        <div class="crm-cal-agenda-head-copy">
+                            <div class="crm-cal-agenda-head-row">
+                                <h2>برنامه امروز</h2>
+                                {% if calendar.today_agenda_count %}
+                                <span class="crm-cal-agenda-badge">{{ calendar.today_agenda_count_label }} کار</span>
                                 {% endif %}
                             </div>
-                            <div class="crm-cal-task-menu">
-                                <button type="button" class="crm-cal-task-menu-btn" aria-label="عملیات" aria-expanded="false" data-cal-menu-toggle>
-                                    <i class="fas fa-ellipsis-vertical" aria-hidden="true"></i>
-                                </button>
-                                <div class="crm-cal-task-menu-panel" hidden>
-                                    <a href="{{ ev.href }}">مشاهده جزئیات</a>
-                                    {% if ev.type == 'reminder' %}
-                                    <a href="{% url 'workspace:crm_reminders' %}">مدیریت یادآور</a>
-                                    {% elif ev.type == 'followup' and ev.customer_name %}
-                                    <a href="{{ ev.href }}">پروفایل مخاطب</a>
-                                    {% endif %}
+                            <p>{{ calendar.today_weekday }} · {{ calendar.today_full_label }}</p>
+                        </div>
+                    </header>
+
+                    <div class="crm-cal-agenda-body">
+                        <section class="crm-cal-agenda-block" aria-label="کارهای امروز">
+                            {% if calendar.today_agenda %}
+                            <ol class="crm-cal-agenda-list">
+                                {% for ev in calendar.today_agenda %}
+                                <li class="crm-cal-task crm-cal-task--{{ ev.type }}">
+                                    <time class="crm-cal-task-time">{% if ev.time %}{{ ev.time|to_persian_digits }}{% else %}—{% endif %}</time>
+                                    <div class="crm-cal-task-body">
+                                        <span class="crm-cal-task-badge">{{ ev.type|crm_cal_event_type_label }}</span>
+                                        <strong class="crm-cal-task-title">{{ ev.short_label|default:ev.label }}</strong>
+                                        {% if ev.customer_name %}<span class="crm-cal-task-meta">{{ ev.customer_name }}</span>{% endif %}
+                                        {% if ev.location %}
+                                        <span class="crm-cal-task-loc"><i class="fas fa-location-dot" aria-hidden="true"></i>{{ ev.location }}</span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="crm-cal-task-menu">
+                                        <button type="button" class="crm-cal-task-menu-btn" aria-label="عملیات" aria-expanded="false" data-cal-menu-toggle>
+                                            <i class="fas fa-ellipsis-vertical" aria-hidden="true"></i>
+                                        </button>
+                                        <div class="crm-cal-task-menu-panel" hidden>
+                                            <a href="{{ ev.href }}">مشاهده جزئیات</a>
+                                            {% if ev.type == 'reminder' %}
+                                            <a href="{% url 'workspace:crm_reminders' %}">مدیریت یادآور</a>
+                                            {% elif ev.type == 'followup' and ev.customer_name %}
+                                            <a href="{{ ev.href }}">پروفایل مخاطب</a>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </li>
+                                {% endfor %}
+                            </ol>
+                            {% else %}
+                            <div class="crm-cal-empty crm-cal-empty--compact">
+                                <span class="crm-cal-empty-icon crm-cal-empty-icon--sm" aria-hidden="true"><i class="fas fa-mug-hot"></i></span>
+                                <div class="crm-cal-empty-copy">
+                                    <strong>امروز آزاد است</strong>
+                                    <p>کار برنامه‌ریزی‌شده‌ای برای امروز ندارید</p>
                                 </div>
                             </div>
-                        </li>
-                        {% endfor %}
-                    </ol>
-                    <a href="{% url 'workspace:crm_today' %}" class="crm-cal-agenda-link">
-                        مشاهده همه کارهای امروز
-                        <i class="fas fa-chevron-left" aria-hidden="true"></i>
-                    </a>
-                    {% else %}
-                    <div class="crm-cal-empty crm-cal-empty--agenda">
-                        <div class="crm-cal-empty-icon" aria-hidden="true"><i class="fas fa-mug-hot"></i></div>
-                        <p>کار برنامه‌ریزی‌شده‌ای برای امروز ندارید</p>
-                        <a href="{% url 'workspace:crm_today' %}" class="crm-cal-btn crm-cal-btn--ghost crm-cal-btn--sm">کارهای امروز</a>
-                    </div>
-                    {% endif %}
-                </div>
+                            {% endif %}
+                        </section>
 
-                {% if calendar.near_reminders %}
-                <section class="crm-cal-near" aria-label="یادآورهای نزدیک">
-                    <h3 class="crm-cal-near-title">یادآورهای نزدیک</h3>
-                    <ul class="crm-cal-near-list">
-                        {% for ev in calendar.near_reminders|slice:":3" %}
-                        <li>
-                            <a href="{{ ev.href }}" class="crm-cal-near-item">
-                                <span class="crm-cal-near-date">{{ ev.date_label }}</span>
-                                <strong>{{ ev.short_label|default:ev.label|truncatechars:36 }}</strong>
-                                {% if ev.time %}<time>{{ ev.time|to_persian_digits }}</time>{% endif %}
-                            </a>
-                        </li>
-                        {% endfor %}
-                    </ul>
-                </section>
-                {% endif %}
+                        <div class="crm-cal-agenda-split" aria-hidden="true"></div>
+
+                        <section class="crm-cal-agenda-block crm-cal-agenda-block--near" aria-label="یادآورهای نزدیک">
+                            <header class="crm-cal-agenda-block-head">
+                                <span class="crm-cal-agenda-block-icon" aria-hidden="true"><i class="fas fa-bell"></i></span>
+                                <h3>یادآورهای نزدیک</h3>
+                                {% if calendar.near_reminders %}
+                                <span class="crm-cal-agenda-block-count">{{ calendar.near_reminders|length|to_persian_digits }}</span>
+                                {% endif %}
+                            </header>
+                            {% if calendar.near_reminders %}
+                            <ul class="crm-cal-near-list">
+                                {% for ev in calendar.near_reminders|slice:":3" %}
+                                <li>
+                                    <a href="{{ ev.href }}" class="crm-cal-near-item">
+                                        <span class="crm-cal-near-item-time">{% if ev.time %}{{ ev.time|to_persian_digits }}{% else %}—{% endif %}</span>
+                                        <span class="crm-cal-near-item-main">
+                                            <span class="crm-cal-near-date">{{ ev.date_label }}</span>
+                                            <strong>{{ ev.short_label|default:ev.label|truncatechars:40 }}</strong>
+                                            {% if ev.customer_name %}<em>{{ ev.customer_name }}</em>{% endif %}
+                                        </span>
+                                        <i class="fas fa-chevron-left crm-cal-near-item-go" aria-hidden="true"></i>
+                                    </a>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                            {% else %}
+                            <p class="crm-cal-near-empty">یادآور نزدیکی ثبت نشده</p>
+                            {% endif %}
+                        </section>
+                    </div>
+
+                    <footer class="crm-cal-agenda-foot">
+                        <a href="{% url 'workspace:crm_today' %}" class="crm-cal-agenda-link">
+                            مشاهده همه کارهای امروز
+                            <i class="fas fa-chevron-left" aria-hidden="true"></i>
+                        </a>
+                        <a href="{% url 'workspace:crm_reminders' %}" class="crm-cal-agenda-link crm-cal-agenda-link--muted">
+                            مدیریت یادآورها
+                            <i class="fas fa-chevron-left" aria-hidden="true"></i>
+                        </a>
+                    </footer>
+                </div>
             </aside>
 
             <section class="crm-cal-board" aria-label="تقویم {{ calendar.title }}">

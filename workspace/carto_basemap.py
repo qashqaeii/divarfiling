@@ -14,8 +14,10 @@ _CARTO_STYLE_PATHS = {
     'dark': 'dark_all',
 }
 
-OSM_TILE_TEMPLATE = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
-OSM_TILE_SUBDOMAINS = 'abc'
+# tile.openstreetmap.org blocks high-traffic / commercial apps (403). Use Wikimedia OSM tiles.
+OSM_FALLBACK_TILE_TEMPLATE = 'https://maps.wikimedia.org/osm-intl/{z}/{x}/{y}.png'
+OSM_TILE_TEMPLATE = OSM_FALLBACK_TILE_TEMPLATE
+OSM_TILE_SUBDOMAINS = ''
 
 
 def get_carto_basemap_api_key() -> str:
@@ -29,6 +31,10 @@ def carto_tile_template(style: str) -> str | None:
     if not key or not path:
         return None
     return f'https://{{s}}.basemaps.cartocdn.com/{path}/{{z}}/{{x}}/{{y}}.png?key={key}'
+
+
+def osm_fallback_tile_url(*, z: int, x: int, y: int) -> str:
+    return OSM_FALLBACK_TILE_TEMPLATE.format(z=z, x=x, y=y)
 
 
 def carto_tile_url(
@@ -49,6 +55,6 @@ def warn_if_carto_key_missing() -> None:
     if get_carto_basemap_api_key():
         return
     logger.warning(
-        'CARTO_BASEMAP_API_KEY is empty — CARTO raster basemaps fall back to OpenStreetMap '
+        'CARTO_BASEMAP_API_KEY is empty — CARTO raster basemaps fall back to Wikimedia OSM tiles '
         'in the browser and in server-side article map renders.'
     )

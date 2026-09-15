@@ -4,6 +4,7 @@ from workspace.carto_basemap import (
     carto_tile_template,
     carto_tile_url,
     get_carto_basemap_api_key,
+    osm_fallback_tile_url,
 )
 
 
@@ -41,9 +42,13 @@ class MarketArticleTileUrlTests(SimpleTestCase):
         self.assertIn('?key=article-test-key', url)
         self.assertIn('rastertiles/voyager', url)
 
-    def test_missing_key_falls_back_to_osm(self):
+    def test_missing_key_falls_back_to_wikimedia_osm(self):
         from blog.services.market_article_assets import _tile_url
 
         with override_settings(CARTO_BASEMAP_API_KEY=''):
             url = _tile_url('light', 10, 1, 2)
-        self.assertIn('tile.openstreetmap.org', url)
+        self.assertIn('maps.wikimedia.org/osm-intl', url)
+
+    def test_osm_fallback_tile_url(self):
+        url = osm_fallback_tile_url(z=10, x=1, y=2)
+        self.assertEqual(url, 'https://maps.wikimedia.org/osm-intl/10/1/2.png')

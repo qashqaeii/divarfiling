@@ -17,7 +17,7 @@ from django.conf import settings
 from django.core.files.base import ContentFile
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
-from workspace.carto_basemap import OSM_TILE_SUBDOMAINS, OSM_TILE_TEMPLATE, carto_tile_template
+from workspace.carto_basemap import carto_tile_template, osm_fallback_tile_url
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +33,6 @@ TILE_TEMPLATES = {
     'satellite': 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
 }
 STREET_SUBS = 'abcd'
-OSM_SUBS = OSM_TILE_SUBDOMAINS
 _CARTO_STYLES = frozenset({'street', 'light', 'dark'})
 
 # ترکیب‌های متنوع basemap × لایه — فقط هاله/شبکه (بدون نقطه)
@@ -570,14 +569,12 @@ def _tile_url(style: str, z: int, x: int, y: int) -> str:
         if tmpl:
             sub = random.choice(list(STREET_SUBS))
             return tmpl.format(s=sub, z=z, x=x, y=y)
-        sub = random.choice(list(OSM_SUBS))
-        return OSM_TILE_TEMPLATE.format(s=sub, z=z, x=x, y=y)
+        return osm_fallback_tile_url(z=z, x=x, y=y)
     tmpl = carto_tile_template('street')
     if tmpl:
         sub = random.choice(list(STREET_SUBS))
         return tmpl.format(s=sub, z=z, x=x, y=y)
-    sub = random.choice(list(OSM_SUBS))
-    return OSM_TILE_TEMPLATE.format(s=sub, z=z, x=x, y=y)
+    return osm_fallback_tile_url(z=z, x=x, y=y)
 
 
 def _build_basemap(

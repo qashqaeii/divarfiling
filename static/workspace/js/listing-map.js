@@ -11,12 +11,12 @@
         if (global.CartoBasemap) {
             return global.CartoBasemap.createOsmStandardLayer(L, options);
         }
-        return L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: options?.attribution || '&copy; OpenStreetMap',
-            maxZoom: options?.maxZoom || 19,
-            subdomains: 'abc',
-            crossOrigin: true,
-        });
+        return global.CartoBasemap?.createOsmStandardLayer(L, options)
+            || L.tileLayer('https://maps.wikimedia.org/osm-intl/{z}/{x}/{y}.png', {
+                attribution: options?.attribution || '&copy; OpenStreetMap &copy; Wikimedia',
+                maxZoom: options?.maxZoom || 19,
+                crossOrigin: true,
+            });
     }
 
     const MAP_BASEMAPS = {
@@ -38,10 +38,8 @@
             hint: 'OpenStreetMap کلاسیک',
             preview: 'standard',
             create() {
-                return L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    attribution: '&copy; OpenStreetMap',
+                return global.CartoBasemap.createOsmStandardLayer(L, {
                     maxZoom: 19,
-                    subdomains: 'abc',
                     crossOrigin: true,
                 });
             },

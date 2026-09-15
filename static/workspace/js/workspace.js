@@ -2386,12 +2386,12 @@ function createCartoBasemapLayer(styleId, options, layerOpts = {}) {
     if (window.CartoBasemap) {
         return window.CartoBasemap.createOsmStandardLayer(L, options);
     }
-    return L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: options?.attribution || '&copy; OpenStreetMap',
-        maxZoom: options?.maxZoom || 19,
-        subdomains: 'abc',
-        crossOrigin: true,
-    });
+    return window.CartoBasemap?.createOsmStandardLayer(L, options)
+        || L.tileLayer('https://maps.wikimedia.org/osm-intl/{z}/{x}/{y}.png', {
+            attribution: options?.attribution || '&copy; OpenStreetMap &copy; Wikimedia',
+            maxZoom: options?.maxZoom || 19,
+            crossOrigin: true,
+        });
 }
 
 const MAP_BASEMAP_STORAGE_KEY = 'ws-map-basemap';
@@ -2417,10 +2417,8 @@ const MAP_BASEMAPS = {
         preview: 'standard',
         exportSafe: false,
         create() {
-            return L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+            return window.CartoBasemap.createOsmStandardLayer(L, {
                 maxZoom: 19,
-                subdomains: 'abc',
                 crossOrigin: true,
             });
         },

@@ -2387,9 +2387,10 @@ function createCartoBasemapLayer(styleId, options, layerOpts = {}) {
         return window.CartoBasemap.createOsmStandardLayer(L, options);
     }
     return window.CartoBasemap?.createOsmStandardLayer(L, options)
-        || L.tileLayer('https://maps.wikimedia.org/osm-intl/{z}/{x}/{y}.png', {
-            attribution: options?.attribution || '&copy; OpenStreetMap &copy; Wikimedia',
+        || L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {
+            attribution: options?.attribution || '&copy; OpenStreetMap &copy; OSM France',
             maxZoom: options?.maxZoom || 19,
+            subdomains: 'abc',
             crossOrigin: true,
         });
 }

@@ -45,17 +45,18 @@
             + encodeURIComponent(cartoBasemapKey);
     }
 
-    // tile.openstreetmap.org returns 403 for production apps — use Wikimedia OSM mirror instead.
-    var STANDARD_BASEMAP_TILE_URL = 'https://maps.wikimedia.org/osm-intl/{z}/{x}/{y}.png';
+    // Wikimedia and tile.openstreetmap.org return 403 for third-party sites.
+    var STANDARD_BASEMAP_TILE_URL = 'https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png';
     var STANDARD_BASEMAP_ATTRIBUTION =
         '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> '
-        + '&copy; <a href="https://foundation.wikimedia.org/wiki/Policy:Maps_Terms_of_Use">Wikimedia</a>';
+        + '&copy; <a href="https://openstreetmap.fr/">OpenStreetMap France</a>';
 
     function createOsmStandardLayer(L, options) {
         var opts = options || {};
         return L.tileLayer(STANDARD_BASEMAP_TILE_URL, {
             attribution: opts.attribution || STANDARD_BASEMAP_ATTRIBUTION,
             maxZoom: opts.maxZoom != null ? opts.maxZoom : 19,
+            subdomains: opts.subdomains || 'abc',
             crossOrigin: opts.crossOrigin !== false,
         });
     }

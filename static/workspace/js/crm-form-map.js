@@ -166,8 +166,9 @@
                 }, { retina: true })
                 : (global.CartoBasemap
                     ? global.CartoBasemap.createOsmStandardLayer(L, { maxZoom: 19 })
-                    : L.tileLayer('https://maps.wikimedia.org/osm-intl/{z}/{x}/{y}.png', {
-                        attribution: '&copy; OSM &copy; Wikimedia',
+                    : L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {
+                        attribution: '&copy; OSM &copy; OSM France',
+                        subdomains: 'abc',
                         maxZoom: 19,
                     }));
             tileLayer.addTo(map);

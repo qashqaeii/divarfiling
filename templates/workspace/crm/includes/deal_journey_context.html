@@ -1,51 +1,78 @@
 {% load workspace_tags crm_tags %}
-<section class="dj-context-card">
-    <h3 class="dj-context-card__title">مخاطب</h3>
+<div class="dj-context-stack">
+<section class="dj-context-card dj-context-card--contact">
+    <header class="dj-context-card__head">
+        <span class="dj-context-card__icon" aria-hidden="true"><i class="fas fa-user"></i></span>
+        <h3 class="dj-context-card__title">مخاطب</h3>
+    </header>
     {% if deal.customer_id %}
     <a href="{% url 'workspace:crm_detail' deal.customer_id %}" class="dj-context-link">
         <span class="crm-deals-avatar crm-deals-avatar--hue-{{ deal.customer.name|crm_avatar_hue }}">{{ deal.customer.name|crm_initials }}</span>
-        <span><strong>{{ deal.customer.name }}</strong><em>{{ deal.customer.status }}{% if deal.customer.phone %} · {{ deal.customer.phone }}{% endif %}</em></span>
+        <span class="dj-context-link__copy">
+            <strong>{{ deal.customer.name }}</strong>
+            <em>{{ deal.customer.status }}{% if deal.customer.phone %} · {{ deal.customer.phone }}{% endif %}</em>
+        </span>
+        <i class="fas fa-chevron-left dj-context-link__go" aria-hidden="true"></i>
     </a>
     {% else %}<p class="dj-muted">ثبت نشده</p>{% endif %}
 </section>
 
 {% if deal.property_id %}
-<section class="dj-context-card">
-    <h3 class="dj-context-card__title">ملک</h3>
+<section class="dj-context-card dj-context-card--property">
+    <header class="dj-context-card__head">
+        <span class="dj-context-card__icon" aria-hidden="true"><i class="fas fa-building"></i></span>
+        <h3 class="dj-context-card__title">ملک</h3>
+    </header>
     <a href="{% url 'workspace:crm_property_detail' deal.property_id %}" class="dj-context-link">
-        <i class="fas fa-building"></i>
-        <span><strong>{{ deal.property.title }}</strong><em>{{ deal.property.deal_mode }}{% if deal.property.area %} · {{ deal.property.area }} متر{% endif %}</em></span>
+        <span class="dj-context-card__icon dj-context-card__icon--sm" aria-hidden="true"><i class="fas fa-building"></i></span>
+        <span class="dj-context-link__copy">
+            <strong>{{ deal.property.title }}</strong>
+            <em>{{ deal.property.deal_mode }}{% if deal.property.area %} · {{ deal.property.area|to_persian_digits }} متر{% endif %}</em>
+        </span>
+        <i class="fas fa-chevron-left dj-context-link__go" aria-hidden="true"></i>
     </a>
 </section>
 {% endif %}
 
-<section class="dj-context-card">
-    <h3 class="dj-context-card__title">خلاصه مالی</h3>
+<section class="dj-context-card dj-context-card--finance">
+    <header class="dj-context-card__head">
+        <span class="dj-context-card__icon" aria-hidden="true"><i class="fas fa-chart-line"></i></span>
+        <h3 class="dj-context-card__title">خلاصه مالی</h3>
+    </header>
     <dl class="dj-context-dl">
         <div><dt>ارزش</dt><dd>{% if deal.value %}{{ deal.value|ws_money }}{% else %}—{% endif %}</dd></div>
-        <div><dt>احتمال</dt><dd>{{ deal.probability }}٪</dd></div>
+        <div><dt>احتمال</dt><dd>{{ deal.probability|to_persian_digits }}٪</dd></div>
         {% if weighted_value %}<div><dt>پیش‌بینی وزنی</dt><dd>{{ weighted_value|ws_money }}</dd></div>{% endif %}
         {% if finance.commission_amount %}<div><dt>کمیسیون</dt><dd>{{ finance.commission_amount|ws_money }}</dd></div>{% endif %}
     </dl>
-    <button type="button" class="dj-context-btn" data-drawer-open="drawer-finance">تنظیمات مالی</button>
+    <button type="button" class="dj-context-btn" data-drawer-open="drawer-finance"><i class="fas fa-sliders" aria-hidden="true"></i> تنظیمات مالی</button>
 </section>
 
-<section class="dj-context-card">
-    <h3 class="dj-context-card__title">مدارک</h3>
-    <p class="dj-context-stat">{{ checklist_progress.required_done }}/{{ checklist_progress.required_total }} الزامی · {{ checklist_progress.pct }}٪</p>
-    <a href="?tab=documents" class="dj-context-btn dj-context-btn--ghost">مشاهده چک‌لیست</a>
+<section class="dj-context-card dj-context-card--docs">
+    <header class="dj-context-card__head">
+        <span class="dj-context-card__icon" aria-hidden="true"><i class="fas fa-folder-open"></i></span>
+        <h3 class="dj-context-card__title">مدارک</h3>
+    </header>
+    <div class="dj-context-progress">
+        <span class="dj-context-progress__ring" style="--pct: {{ checklist_progress.pct }}" aria-hidden="true">{{ checklist_progress.pct|to_persian_digits }}٪</span>
+        <p class="dj-context-stat">{{ checklist_progress.required_done|to_persian_digits }}/{{ checklist_progress.required_total|to_persian_digits }} الزامی تکمیل شده</p>
+    </div>
+    <a href="?tab=documents" class="dj-context-btn dj-context-btn--ghost"><i class="fas fa-list-check" aria-hidden="true"></i> مشاهده چک‌لیست</a>
 </section>
 
-<section class="dj-context-card">
-    <h3 class="dj-context-card__title">قرارداد</h3>
+<section class="dj-context-card dj-context-card--contract">
+    <header class="dj-context-card__head">
+        <span class="dj-context-card__icon" aria-hidden="true"><i class="fas fa-file-signature"></i></span>
+        <h3 class="dj-context-card__title">قرارداد</h3>
+    </header>
     {% if deal_contracts_count %}
-    <p class="dj-context-stat">{{ deal_contract_summary.finalized }} نهایی · {{ deal_contract_summary.draft }} پیش‌نویس</p>
-    <a href="{{ deal_contracts_url }}" class="dj-context-btn">مشاهده همه ({{ deal_contracts_count }})</a>
+    <p class="dj-context-stat">{{ deal_contract_summary.finalized|to_persian_digits }} نهایی · {{ deal_contract_summary.draft|to_persian_digits }} پیش‌نویس</p>
+    <a href="{{ deal_contracts_url }}" class="dj-context-btn"><i class="fas fa-arrow-up-right-from-square" aria-hidden="true"></i> مشاهده همه ({{ deal_contracts_count|to_persian_digits }})</a>
     {% else %}
     <p class="dj-muted">قراردادی ثبت نشده</p>
     <form method="post" action="{% url 'workspace:contract_create' deal.pk %}">{% csrf_token %}
         <input type="hidden" name="contract_type" value="{% if deal.deal_kind == 'sale' %}sale{% else %}lease{% endif %}">
-        <button type="submit" class="dj-context-btn dj-context-btn--primary">ایجاد قرارداد</button>
+        <button type="submit" class="dj-context-btn dj-context-btn--primary"><i class="fas fa-plus" aria-hidden="true"></i> ایجاد قرارداد</button>
     </form>
     {% endif %}
 </section>
@@ -56,7 +83,8 @@
         {% csrf_token %}
         <input type="hidden" name="action" value="update_stage">
         <input type="hidden" name="stage" value="بسته‌شده">
-        <button type="submit" class="dj-context-btn dj-context-btn--success"><i class="fas fa-trophy"></i> بستن معامله</button>
+        <button type="submit" class="dj-context-btn dj-context-btn--success"><i class="fas fa-trophy" aria-hidden="true"></i> بستن معامله</button>
     </form>
 </section>
 {% endif %}
+</div>

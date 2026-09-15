@@ -56,8 +56,8 @@
 .dj-tabs__item { font-size: var(--ec-body); font-weight: 500; }
 .dj-tabs__item.is-active { font-weight: 650; }
 
-/* ── Overview snapshot grid (deal detail) ── */
-.dj-overview {
+/* ── Overview snapshot grid (deal detail) — enhanced in crm-deal-journey.css for .dj-deal ── */
+.dj-overview:not(.dj-deal .dj-overview) {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 0.75rem;
@@ -445,18 +445,25 @@
     .crm-contract-wizard-layout { grid-template-columns: 1fr; }
 }
 
-/* ── Tab nav card style ── */
-.dj-tabs {
+/* ── Tab nav — legacy pages; deal detail uses .dj-workspace in journey css ── */
+.dj-tabs:not(.dj-tabs--pro) {
     padding: 0.25rem 0.35rem 0;
     border: 1px solid var(--ec-border);
     border-radius: var(--ec-radius-md) var(--ec-radius-md) 0 0;
     background: #fafbfc;
 }
-.dj-tab-panels {
+.dj-deal .dj-workspace .dj-tab-panels,
+.dj-tab-panels:not(.dj-deal .dj-tab-panels) {
     border: 1px solid var(--ec-border);
     border-top: none;
     border-radius: 0 0 var(--ec-radius-md) var(--ec-radius-md);
     padding: 1.15rem;
     background: var(--ec-surface);
     box-shadow: var(--ec-shadow-sm);
+}
+.dj-deal .dj-workspace .dj-tab-panels {
+    border: none;
+    border-radius: 0;
+    padding: 1.15rem;
+    box-shadow: none;
 }

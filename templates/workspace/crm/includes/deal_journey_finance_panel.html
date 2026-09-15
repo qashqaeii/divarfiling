@@ -1,19 +1,28 @@
-<section class="dj-finance-panel">
-    <header class="dj-finance-panel__head">
-        <h2>مالی و کمیسیون</h2>
-        <button type="button" class="crm-dash-act crm-dash-act--primary" data-drawer-open="drawer-finance">ویرایش مالی</button>
+{% load workspace_tags %}
+<section class="dj-panel-card dj-finance-panel">
+    <header class="dj-panel-card__head">
+        <div class="dj-panel-card__head-main">
+            <span class="dj-panel-card__mark" aria-hidden="true"><i class="fas fa-coins"></i></span>
+            <div>
+                <span class="dj-panel-card__kicker">مالی معامله</span>
+                <h2>مالی و کمیسیون</h2>
+            </div>
+        </div>
+        <button type="button" class="dj-panel-card__act" data-drawer-open="drawer-finance"><i class="fas fa-pen" aria-hidden="true"></i> ویرایش</button>
     </header>
     <div class="dj-finance-grid">
         <div class="dj-finance-stat"><em>کمیسیون کل</em><strong>{% if finance.commission_amount %}{{ finance.commission_amount|ws_money }}{% else %}—{% endif %}</strong></div>
         <div class="dj-finance-stat"><em>سهم مشاور</em><strong>{% if finance.advisor_commission %}{{ finance.advisor_commission|ws_money }}{% else %}—{% endif %}</strong></div>
         <div class="dj-finance-stat"><em>سهم املاک</em><strong>{% if finance.agency_commission %}{{ finance.agency_commission|ws_money }}{% else %}—{% endif %}</strong></div>
-        <div class="dj-finance-stat"><em>وضعیت وصول</em><strong>{{ finance.payout_status_label }}</strong></div>
+        <div class="dj-finance-stat dj-finance-stat--status"><em>وضعیت وصول</em><strong>{{ finance.payout_status_label }}</strong></div>
     </div>
     {% if deal.contract_number %}
     <div class="dj-finance-contract-ref">
-        <h3>خلاصه قرارداد ثبت‌شده</h3>
+        <h3><i class="fas fa-file-contract" aria-hidden="true"></i> خلاصه قرارداد ثبت‌شده</h3>
         <p>{{ deal.contract_number }} · {% if deal.contract_amount %}{{ deal.contract_amount|ws_money }}{% endif %}{% if deal.contract_date %} · {{ deal.contract_date|ws_jalali }}{% endif %}</p>
     </div>
     {% endif %}
-    <a href="{% url 'workspace:crm_deals_finance' %}" class="crm-dash-act">داشبورد مالی معاملات</a>
+    <footer class="dj-panel-card__foot">
+        <a href="{% url 'workspace:crm_deals_finance' %}" class="dj-panel-card__link"><i class="fas fa-chart-pie" aria-hidden="true"></i> داشبورد مالی معاملات</a>
+    </footer>
 </section>

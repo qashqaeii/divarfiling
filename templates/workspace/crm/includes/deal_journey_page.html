@@ -108,17 +108,22 @@
     <div class="dj-deal__body">
         <div class="dj-deal__main">
             <section class="dj-hero{% if deal_journey.primary.kind == 'danger' %} dj-hero--danger{% elif deal_journey.primary.kind == 'success' %} dj-hero--success{% endif %}" aria-labelledby="djHeroTitle">
-                <div class="dj-hero__copy">
-                    <h2 id="djHeroTitle" class="dj-hero__title">{{ deal_journey.headline }}</h2>
-                    {% if deal_journey.subline %}<p class="dj-hero__sub">{{ deal_journey.subline }}</p>{% endif %}
-                    {% if next_action and not deal_journey.primary.action == 'complete_next_action' %}
-                    <p class="dj-hero__next-hint{% if next_action.is_overdue %} is-overdue{% endif %}">
-                        <i class="fas {{ next_action.icon }}" aria-hidden="true"></i>
-                        {{ next_action.label }}{% if next_action.schedule_label %} · {{ next_action.schedule_label }}{% endif %}
-                    </p>
-                    {% endif %}
-                </div>
-                <div class="dj-hero__actions">
+                <div class="dj-hero__inner">
+                    <div class="dj-hero__lead">
+                        <span class="dj-hero__mark" aria-hidden="true"><i class="fas fa-compass"></i></span>
+                        <div class="dj-hero__copy">
+                            <span class="dj-hero__kicker">اقدام پیشنهادی</span>
+                            <h2 id="djHeroTitle" class="dj-hero__title">{{ deal_journey.headline }}</h2>
+                            {% if deal_journey.subline %}<p class="dj-hero__sub">{{ deal_journey.subline }}</p>{% endif %}
+                            {% if next_action and not deal_journey.primary.action == 'complete_next_action' %}
+                            <p class="dj-hero__next-hint{% if next_action.is_overdue %} is-overdue{% endif %}">
+                                <i class="fas {{ next_action.icon }}" aria-hidden="true"></i>
+                                {{ next_action.label }}{% if next_action.schedule_label %} · {{ next_action.schedule_label }}{% endif %}
+                            </p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="dj-hero__actions">
                     {% with p=deal_journey.primary %}
                     {% if p.url %}
                     <a href="{{ p.url }}" class="dj-hero__cta dj-hero__cta--{{ p.kind|default:'primary' }}"><i class="fas {{ p.icon }}"></i>{{ p.label }}</a>
@@ -142,16 +147,18 @@
                     <button type="button" class="dj-hero__secondary{% if s.warn %} is-warn{% endif %}" data-drawer-open="{{ s.action }}"><i class="fas {{ s.icon }}"></i>{{ s.label }}</button>
                     {% endif %}
                     {% endfor %}
+                    </div>
                 </div>
             </section>
 
-            <nav class="dj-tabs" aria-label="بخش‌های معامله">
-                <a href="?tab=overview" class="dj-tabs__item{% if deal_journey_tab == 'overview' %} is-active{% endif %}">نمای کلی</a>
-                <a href="?tab=activity" class="dj-tabs__item{% if deal_journey_tab == 'activity' %} is-active{% endif %}">فعالیت‌ها</a>
-                <a href="?tab=finance" class="dj-tabs__item{% if deal_journey_tab == 'finance' %} is-active{% endif %}">مالی</a>
-                <a href="?tab=documents" class="dj-tabs__item{% if deal_journey_tab == 'documents' %} is-active{% endif %}">مدارک</a>
-                <a href="?tab=contracts" class="dj-tabs__item{% if deal_journey_tab == 'contracts' %} is-active{% endif %}">قراردادها{% if deal_contracts_count %}<em>{{ deal_contracts_count }}</em>{% endif %}</a>
-                <a href="?tab=history" class="dj-tabs__item{% if deal_journey_tab == 'history' %} is-active{% endif %}">تاریخچه</a>
+            <div class="dj-workspace">
+            <nav class="dj-tabs dj-tabs--pro" aria-label="بخش‌های معامله">
+                <a href="?tab=overview" class="dj-tabs__item{% if deal_journey_tab == 'overview' %} is-active{% endif %}"><i class="fas fa-th-large" aria-hidden="true"></i><span>نمای کلی</span></a>
+                <a href="?tab=activity" class="dj-tabs__item{% if deal_journey_tab == 'activity' %} is-active{% endif %}"><i class="fas fa-stream" aria-hidden="true"></i><span>فعالیت‌ها</span></a>
+                <a href="?tab=finance" class="dj-tabs__item{% if deal_journey_tab == 'finance' %} is-active{% endif %}"><i class="fas fa-coins" aria-hidden="true"></i><span>مالی</span></a>
+                <a href="?tab=documents" class="dj-tabs__item{% if deal_journey_tab == 'documents' %} is-active{% endif %}"><i class="fas fa-folder-open" aria-hidden="true"></i><span>مدارک</span></a>
+                <a href="?tab=contracts" class="dj-tabs__item{% if deal_journey_tab == 'contracts' %} is-active{% endif %}"><i class="fas fa-file-signature" aria-hidden="true"></i><span>قراردادها</span>{% if deal_contracts_count %}<em>{{ deal_contracts_count|to_persian_digits }}</em>{% endif %}</a>
+                <a href="?tab=history" class="dj-tabs__item{% if deal_journey_tab == 'history' %} is-active{% endif %}"><i class="fas fa-history" aria-hidden="true"></i><span>تاریخچه</span></a>
             </nav>
 
             <div class="dj-tab-panels">
@@ -182,6 +189,7 @@
                     {% include 'workspace/crm/includes/deal_timeline_section.html' %}
                 </div>
                 {% endif %}
+            </div>
             </div>
         </div>
 

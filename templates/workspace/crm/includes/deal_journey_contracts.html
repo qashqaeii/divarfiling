@@ -1,40 +1,51 @@
-{% load contract_tags %}
-<section class="dj-contracts-panel">
-    <header class="dj-contracts-panel__head">
-        <h2>قراردادهای این معامله</h2>
+{% load contract_tags crm_tags %}
+<section class="dj-panel-card dj-contracts-panel">
+    <header class="dj-panel-card__head">
+        <div class="dj-panel-card__head-main">
+            <span class="dj-panel-card__mark" aria-hidden="true"><i class="fas fa-file-signature"></i></span>
+            <div>
+                <span class="dj-panel-card__kicker">قراردادهای معامله</span>
+                <h2>قراردادهای این معامله</h2>
+            </div>
+        </div>
         {% if not contracts_locked %}
-        <a href="{{ deal_contracts_url }}" class="crm-dash-act">میز قراردادها</a>
+        <a href="{{ deal_contracts_url }}" class="dj-panel-card__act"><i class="fas fa-table-columns" aria-hidden="true"></i> میز قراردادها</a>
         {% endif %}
     </header>
     {% if contracts_locked %}
-    <div class="dj-contracts-locked">
-        <i class="fas fa-lock" aria-hidden="true"></i>
+    <div class="dj-empty dj-empty--lock">
+        <span class="dj-empty__icon" aria-hidden="true"><i class="fas fa-lock"></i></span>
+        <strong>قرارداد دیجیتال قفل است</strong>
         <p>برای استفاده از قراردادهای دیجیتال، نیاز به لایسنس فعال دارید.</p>
-        <a href="{% url 'workspace:upgrade' %}?feature=contracts" class="crm-dash-act crm-dash-act--primary">فعال‌سازی لایسنس</a>
+        <a href="{% url 'workspace:upgrade' %}?feature=contracts" class="dj-panel-card__act dj-panel-card__act--primary">فعال‌سازی لایسنس</a>
     </div>
     {% elif deal_contracts %}
     <ul class="dj-contracts-list">
         {% for c in deal_contracts %}
         <li class="dj-contracts-item">
+            <span class="dj-contracts-item__icon" aria-hidden="true"><i class="fas fa-file-lines"></i></span>
             <div class="dj-contracts-item__main">
                 <strong>{{ c.get_contract_type_display }}</strong>
                 <span>{{ c.internal_number }}</span>
             </div>
             <span class="crm-contract-status crm-contract-status--{{ c.status }}">{{ c.get_status_display }}</span>
-            <a href="{% ct_manage_url c %}" class="crm-dash-act">مدیریت</a>
+            <a href="{% ct_manage_url c %}" class="dj-contracts-item__btn">مدیریت</a>
         </li>
         {% endfor %}
     </ul>
     {% if deal_contracts_count > 3 %}
-    <p class="dj-muted"><a href="{{ deal_contracts_url }}">مشاهده همه {{ deal_contracts_count }} قرارداد</a></p>
+    <footer class="dj-panel-card__foot">
+        <a href="{{ deal_contracts_url }}" class="dj-panel-card__link">مشاهده همه {{ deal_contracts_count|to_persian_digits }} قرارداد</a>
+    </footer>
     {% endif %}
     {% else %}
     <div class="dj-empty">
-        <i class="fas fa-file-circle-plus"></i>
-        <p>هنوز قراردادی ثبت نشده.</p>
+        <span class="dj-empty__icon" aria-hidden="true"><i class="fas fa-file-circle-plus"></i></span>
+        <strong>هنوز قراردادی ثبت نشده</strong>
+        <p>از مرحله قرارداد یا دکمه زیر، اولین قرارداد را بسازید.</p>
         <form method="post" action="{% url 'workspace:contract_create' deal.pk %}">{% csrf_token %}
             <input type="hidden" name="contract_type" value="{% if deal.deal_kind == 'sale' %}sale{% else %}lease{% endif %}">
-            <button type="submit" class="crm-dash-act crm-dash-act--primary">ایجاد قرارداد</button>
+            <button type="submit" class="dj-panel-card__act dj-panel-card__act--primary"><i class="fas fa-plus" aria-hidden="true"></i> ایجاد قرارداد</button>
         </form>
     </div>
     {% endif %}

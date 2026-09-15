@@ -11,81 +11,99 @@
      data-has-finalized="{% if deal_contract_summary.finalized %}1{% else %}0{% endif %}"
      data-create-contract-url="{% url 'workspace:contract_create' deal.pk %}">
 
-    <header class="dj-deal__header">
-        <div class="dj-deal__header-top">
-            <a href="{% url 'workspace:crm_deals' %}" class="dj-deal__back" aria-label="بازگشت به قیف معاملات"><i class="fas fa-arrow-right"></i></a>
-            <nav class="dj-deal__crumb" aria-label="مسیر">
-                <a href="{% url 'workspace:crm_deals' %}">قیف معاملات</a>
-                <span aria-hidden="true">/</span>
-                <span>{{ deal.title|truncatechars:36 }}</span>
-            </nav>
-            <div class="dj-deal__header-actions" role="toolbar" aria-label="عملیات سریع">
-                <button type="button" class="dj-deal__action" title="راهنمای معامله" aria-label="راهنمای معامله" data-modal-open="modal-crm-deal-detail-help">
-                    <span class="fl-header__help-bulb fl-header__help-bulb--xs" aria-hidden="true"><i class="fas fa-lightbulb"></i><span class="fl-header__help-bulb-glow"></span></span>
-                </button>
-                {% if deal.customer_id and deal.customer.phone %}
-                <a href="{{ deal.customer.phone|phone_tel_href }}" class="dj-deal__action" title="تماس" aria-label="تماس"><i class="fas fa-phone"></i></a>
-                {% endif %}
-                <button type="button" class="dj-deal__action" data-drawer-open="drawer-followup" title="ثبت پیگیری" aria-label="ثبت پیگیری"><i class="fas fa-comment-dots"></i></button>
-                <button type="button" class="dj-deal__action" data-drawer-open="drawer-next-action" title="اقدام بعدی" aria-label="اقدام بعدی"><i class="fas fa-bolt"></i></button>
-                <button type="button" class="dj-deal__action" data-drawer-open="drawer-edit" title="ویرایش" aria-label="ویرایش"><i class="fas fa-pen"></i></button>
-                <div class="dj-deal__more-wrap">
-                    <button type="button" class="dj-deal__action" id="djDealMoreBtn" aria-haspopup="true" aria-expanded="false" aria-label="بیشتر"><i class="fas fa-ellipsis-h"></i></button>
-                    <div class="dj-deal__more-menu" id="djDealMoreMenu" role="menu" hidden>
-                        <button type="button" role="menuitem" data-drawer-open="drawer-finance">مالی و کمیسیون</button>
-                        {% if deal.customer_id %}<a href="{% url 'workspace:crm_detail' deal.customer_id %}" role="menuitem">مخاطب</a>{% endif %}
-                        {% if deal.property_id %}<a href="{% url 'workspace:crm_property_detail' deal.property_id %}" role="menuitem">ملک</a>{% endif %}
-                        <a href="{{ deal_contracts_url }}" role="menuitem">قراردادها</a>
+    <div class="dj-deal__masthead">
+        <header class="dj-deal__header">
+            <div class="dj-deal__header-top">
+                <div class="dj-deal__header-nav">
+                    <a href="{% url 'workspace:crm_deals' %}" class="dj-deal__back" aria-label="بازگشت به قیف معاملات"><i class="fas fa-arrow-right"></i></a>
+                    <nav class="dj-deal__crumb" aria-label="مسیر">
+                        <a href="{% url 'workspace:crm_deals' %}">قیف معاملات</a>
+                        <span aria-hidden="true">/</span>
+                        <span>{{ deal.title|truncatechars:36 }}</span>
+                    </nav>
+                </div>
+                <div class="dj-deal__header-actions" role="toolbar" aria-label="عملیات سریع">
+                    <button type="button" class="dj-deal__act dj-deal__act--primary" data-drawer-open="drawer-followup" title="ثبت پیگیری">
+                        <i class="fas fa-comment-dots" aria-hidden="true"></i><span>پیگیری</span>
+                    </button>
+                    <button type="button" class="dj-deal__act" data-drawer-open="drawer-next-action" title="اقدام بعدی">
+                        <i class="fas fa-bolt" aria-hidden="true"></i><span class="dj-deal__act-label">اقدام</span>
+                    </button>
+                    {% if deal.customer_id and deal.customer.phone %}
+                    <a href="{{ deal.customer.phone|phone_tel_href }}" class="dj-deal__act" title="تماس" aria-label="تماس"><i class="fas fa-phone"></i></a>
+                    {% endif %}
+                    <button type="button" class="dj-deal__act" data-drawer-open="drawer-edit" title="ویرایش" aria-label="ویرایش"><i class="fas fa-pen"></i></button>
+                    <button type="button" class="dj-deal__act dj-deal__act--help" title="راهنمای معامله" aria-label="راهنمای معامله" data-modal-open="modal-crm-deal-detail-help">
+                        <span class="fl-header__help-bulb fl-header__help-bulb--xs" aria-hidden="true"><i class="fas fa-lightbulb"></i><span class="fl-header__help-bulb-glow"></span></span>
+                    </button>
+                    <div class="dj-deal__more-wrap">
+                        <button type="button" class="dj-deal__act" id="djDealMoreBtn" aria-haspopup="true" aria-expanded="false" aria-label="بیشتر"><i class="fas fa-ellipsis-h"></i></button>
+                        <div class="dj-deal__more-menu" id="djDealMoreMenu" role="menu" hidden>
+                            <button type="button" role="menuitem" data-drawer-open="drawer-finance">مالی و کمیسیون</button>
+                            {% if deal.customer_id %}<a href="{% url 'workspace:crm_detail' deal.customer_id %}" role="menuitem">مخاطب</a>{% endif %}
+                            {% if deal.property_id %}<a href="{% url 'workspace:crm_property_detail' deal.property_id %}" role="menuitem">ملک</a>{% endif %}
+                            <a href="{{ deal_contracts_url }}" role="menuitem">قراردادها</a>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-        <div class="dj-deal__header-main">
-            <div class="dj-deal__title-row">
-                <h1 class="dj-deal__title">{{ deal.title }}</h1>
-                <span class="dj-deal__stage-pill" style="{% crm_deal_stage_style deal.stage %}">{{ deal.stage }}</span>
-            </div>
-            <div class="dj-deal__meta-row">
-                {% if deal.customer_id %}
-                <a href="{% url 'workspace:crm_detail' deal.customer_id %}" class="dj-deal__meta-item"><i class="fas fa-user"></i>{{ deal.customer.name }}</a>
-                {% endif %}
-                {% if deal.property_id %}
-                <a href="{% url 'workspace:crm_property_detail' deal.property_id %}" class="dj-deal__meta-item"><i class="fas fa-building"></i>{{ deal.property.title|truncatechars:28 }}</a>
-                {% endif %}
-                <span class="dj-deal__meta-item"><i class="fas fa-coins"></i>{% if deal.value %}{{ deal.value|ws_money }}{% else %}ارزش ثبت نشده{% endif %}</span>
-                <span class="dj-deal__meta-item"><i class="fas fa-chart-pie"></i>{{ deal.probability }}٪</span>
-                {% if deal.assigned_to %}
-                <span class="dj-deal__meta-item"><i class="fas fa-user-tie"></i>{{ deal.assigned_to.get_full_name|default:deal.assigned_to.username }}</span>
-                {% endif %}
-                {% if deal.expected_close_date %}
-                <span class="dj-deal__meta-item"><i class="fas fa-calendar"></i>{{ deal.expected_close_date|ws_jalali }}</span>
-                {% endif %}
-            </div>
-        </div>
-    </header>
 
-    <nav class="dj-stage-rail" aria-label="مسیر مراحل معامله">
-        <div class="dj-stage-rail__track" aria-hidden="true">
-            <span class="dj-stage-rail__fill" style="width: {% widthratio deal_stage_index|add:1 deal_stages|length 100 %}%"></span>
-        </div>
-        <ol class="dj-stage-rail__steps">
-            {% for s in deal_stages %}
-            <li class="dj-stage-rail__step{% if forloop.counter0 < deal_stage_index %} is-done{% elif deal.stage == s %} is-current{% endif %}{% if s == 'از دست رفته' %} is-lost{% elif s == 'بسته‌شده' %} is-won{% endif %}">
-                <button type="button"
-                    class="dj-stage-rail__btn"
-                    data-stage="{{ s }}"
-                    data-stage-transition
-                    {% if deal.stage == s %}aria-current="step"{% endif %}
-                    title="انتقال به {{ s }}">
-                    <span class="dj-stage-rail__dot" aria-hidden="true">
-                        {% if forloop.counter0 < deal_stage_index %}<i class="fas fa-check"></i>{% else %}{{ forloop.counter }}{% endif %}
-                    </span>
-                    <span class="dj-stage-rail__label">{{ s }}</span>
-                </button>
-            </li>
-            {% endfor %}
-        </ol>
-    </nav>
+            <div class="dj-deal__header-main">
+                <div class="dj-deal__title-row">
+                    <h1 class="dj-deal__title">{{ deal.title }}</h1>
+                    <span class="dj-deal__stage-pill" style="{% crm_deal_stage_style deal.stage %}">{{ deal.stage }}</span>
+                </div>
+                <div class="dj-deal__meta-chips">
+                    {% if deal.customer_id %}
+                    <a href="{% url 'workspace:crm_detail' deal.customer_id %}" class="dj-deal__chip"><i class="fas fa-user" aria-hidden="true"></i>{{ deal.customer.name }}</a>
+                    {% endif %}
+                    {% if deal.property_id %}
+                    <a href="{% url 'workspace:crm_property_detail' deal.property_id %}" class="dj-deal__chip"><i class="fas fa-building" aria-hidden="true"></i>{{ deal.property.title|truncatechars:28 }}</a>
+                    {% endif %}
+                    <span class="dj-deal__chip dj-deal__chip--value"><i class="fas fa-coins" aria-hidden="true"></i>{% if deal.value %}{{ deal.value|ws_money }}{% else %}ارزش ثبت نشده{% endif %}</span>
+                    <span class="dj-deal__chip"><i class="fas fa-chart-pie" aria-hidden="true"></i>{{ deal.probability|to_persian_digits }}٪</span>
+                    {% if deal.assigned_to %}
+                    <span class="dj-deal__chip"><i class="fas fa-user-tie" aria-hidden="true"></i>{{ deal.assigned_to.get_full_name|default:deal.assigned_to.username }}</span>
+                    {% endif %}
+                    {% if deal.expected_close_date %}
+                    <span class="dj-deal__chip"><i class="fas fa-calendar" aria-hidden="true"></i>{{ deal.expected_close_date|ws_jalali }}</span>
+                    {% endif %}
+                </div>
+            </div>
+        </header>
+
+        <nav class="dj-stage-rail" aria-label="مسیر مراحل معامله">
+            <div class="dj-stage-rail__head">
+                <div class="dj-stage-rail__head-copy">
+                    <span class="dj-stage-rail__kicker">مسیر معامله</span>
+                    <strong>{{ deal.stage }}</strong>
+                </div>
+                <span class="dj-stage-rail__progress-badge">{{ deal_stage_index|add:1|to_persian_digits }} از {{ deal_stages|length|to_persian_digits }}</span>
+            </div>
+            <div class="dj-stage-rail__track-wrap" aria-hidden="true">
+                <div class="dj-stage-rail__track">
+                    <span class="dj-stage-rail__fill" style="width: {% widthratio deal_stage_index|add:1 deal_stages|length 100 %}%"></span>
+                </div>
+            </div>
+            <ol class="dj-stage-rail__steps">
+                {% for s in deal_stages %}
+                <li class="dj-stage-rail__step{% if forloop.counter0 < deal_stage_index %} is-done{% elif deal.stage == s %} is-current{% endif %}{% if s == 'از دست رفته' %} is-lost{% elif s == 'بسته‌شده' %} is-won{% endif %}">
+                    <button type="button"
+                        class="dj-stage-rail__btn"
+                        data-stage="{{ s }}"
+                        data-stage-transition
+                        {% if deal.stage == s %}aria-current="step"{% endif %}
+                        title="انتقال به {{ s }}">
+                        <span class="dj-stage-rail__dot" aria-hidden="true">
+                            {% if forloop.counter0 < deal_stage_index %}<i class="fas fa-check"></i>{% else %}{{ forloop.counter|to_persian_digits }}{% endif %}
+                        </span>
+                        <span class="dj-stage-rail__label">{{ s }}</span>
+                    </button>
+                </li>
+                {% endfor %}
+            </ol>
+        </nav>
+    </div>
 
     <div class="dj-deal__body">
         <div class="dj-deal__main">

@@ -54,6 +54,11 @@
             stages: stages,
         });
 
+        var currentStep = root.querySelector('.dj-stage-rail__step.is-current');
+        if (currentStep && typeof currentStep.scrollIntoView === 'function') {
+            currentStep.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        }
+
         root.querySelectorAll('[data-stage-transition]').forEach(function (btn) {
             btn.addEventListener('click', function () {
                 var to = btn.dataset.stage;

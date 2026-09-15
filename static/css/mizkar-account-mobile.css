@@ -1,10 +1,29 @@
-/* Account dashboard / پروفایل — mobile & tablet (sidebar pinned ≥961px unchanged) */
+/* Account dashboard — premium mobile UX (sidebar pinned ≥961px unchanged) */
 @media (max-width: 1024px) {
     body.mk-account-dashboard {
         --acc-m-pad: clamp(0.9rem, 4vw, 1.25rem);
         --acc-m-touch: 2.75rem;
         --acc-m-body: clamp(0.875rem, 3.6vw, 0.9375rem);
         --acc-m-caption: clamp(0.75rem, 3.2vw, 0.8125rem);
+        --acc-m-radius: 16px;
+        --acc-m-radius-sm: 12px;
+        --acc-m-shadow: 0 14px 36px -24px rgba(15, 23, 42, 0.16);
+        --acc-m-shadow-lg: 0 20px 48px -28px rgba(124, 58, 237, 0.22);
+    }
+
+    /* No hamburger — tab rail is primary nav */
+    body.mk-account-dashboard .mk-account-main__toolbar,
+    body.mk-account-dashboard .mk-account-mobile-toggle {
+        display: none !important;
+    }
+
+    body.mk-account-dashboard .mk-account-sidebar,
+    body.mk-account-dashboard .mk-account-shell__backdrop {
+        display: none !important;
+    }
+
+    body.mk-account-dashboard .mk-account-shell {
+        grid-template-columns: minmax(0, 1fr);
     }
 
     body.mk-account-dashboard .mk-account-content-scroll,
@@ -15,50 +34,133 @@
     }
 
     body.mk-account-dashboard .mk-account-main {
-        padding-inline: var(--acc-m-pad);
-        padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+        padding: 0;
+        padding-bottom: calc(1.25rem + env(safe-area-inset-bottom, 0px));
     }
 
-    body.mk-account-dashboard .mk-account-mobile-toggle {
-        width: var(--acc-m-touch);
-        height: var(--acc-m-touch);
-        border-radius: 12px;
-        -webkit-tap-highlight-color: transparent;
+    /* Hide redundant breadcrumb — tabs show current section */
+    body.mk-account-dashboard .mk-account-breadcrumb {
+        display: none;
     }
 
-    body.mk-account-dashboard .mk-account-sidebar__link,
-    body.mk-account-dashboard .mk-account-sidebar__foot-link {
-        min-height: var(--acc-m-touch);
-        padding-block: 0.55rem;
-        font-size: var(--acc-m-body);
-        -webkit-tap-highlight-color: transparent;
-    }
-
-    body.mk-account-dashboard .mk-account-sidebar__close {
-        width: var(--acc-m-touch);
-        height: var(--acc-m-touch);
-    }
-
-    /* Mobile tab rail */
-    body.mk-account-dashboard .mk-account-tab-rail {
-        display: block;
+    /* ─── Mobile nav shell ─── */
+    body.mk-account-dashboard .mk-account-mob-shell {
         position: sticky;
-        top: 0;
-        z-index: 820;
-        margin: 0 calc(-1 * var(--acc-m-pad)) 0.85rem;
-        padding: 0.4rem var(--acc-m-pad);
-        background: color-mix(in srgb, var(--acc-main-bg) 92%, transparent);
-        backdrop-filter: blur(12px);
-        border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+        top: var(--mk-site-header-h, 3.35rem);
+        z-index: 850;
+        margin-bottom: 0.85rem;
+        background: color-mix(in srgb, var(--acc-main-bg) 94%, transparent);
+        backdrop-filter: blur(14px);
+        border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+        box-shadow: 0 10px 28px -24px rgba(15, 23, 42, 0.12);
+    }
+
+    body.mk-account-dashboard .mk-account-mob-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.65rem;
+        padding: 0.7rem var(--acc-m-pad) 0.55rem;
+    }
+
+    body.mk-account-dashboard .mk-account-mob-top__user {
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+        min-width: 0;
+        flex: 1;
+    }
+
+    body.mk-account-dashboard .mk-account-mob-top__avatar {
+        flex-shrink: 0;
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: 13px;
+        overflow: hidden;
+        display: grid;
+        place-items: center;
+        background: linear-gradient(135deg, #7c3aed, #5b21b6);
+        color: #fff;
+        font-size: 0.9rem;
+        font-weight: 800;
+        box-shadow: 0 8px 20px -10px rgba(124, 58, 237, 0.55);
+    }
+
+    body.mk-account-dashboard .mk-account-mob-top__avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    body.mk-account-dashboard .mk-account-mob-top__copy {
+        min-width: 0;
+    }
+
+    body.mk-account-dashboard .mk-account-mob-top__copy strong {
+        display: block;
+        font-size: var(--acc-m-body);
+        font-weight: 800;
+        color: var(--acc-text);
+        line-height: 1.3;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    body.mk-account-dashboard .mk-account-mob-top__copy span {
+        display: block;
+        margin-top: 0.1rem;
+        font-size: var(--acc-m-caption);
+        color: var(--acc-text-muted);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    body.mk-account-dashboard .mk-account-mob-top__actions {
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+        flex-shrink: 0;
+    }
+
+    body.mk-account-dashboard .mk-account-mob-icon-btn {
+        display: inline-grid;
+        place-items: center;
+        width: 2.35rem;
+        height: 2.35rem;
+        border-radius: 11px;
+        border: 1px solid var(--acc-card-border);
+        background: var(--acc-card-bg);
+        color: var(--acc-purple);
+        text-decoration: none;
+        font-size: 0.82rem;
+        box-shadow: var(--acc-m-shadow);
+        -webkit-tap-highlight-color: transparent;
+        transition: border-color 0.18s, background 0.18s, transform 0.15s;
+    }
+
+    body.mk-account-dashboard .mk-account-mob-icon-btn--muted {
+        color: var(--acc-text-muted);
+    }
+
+    body.mk-account-dashboard .mk-account-mob-icon-btn:active {
+        transform: scale(0.96);
+    }
+
+    /* Tab rail — horizontal pills */
+    body.mk-account-dashboard .mk-account-tab-rail {
+        padding: 0 0 0.55rem;
     }
 
     body.mk-account-dashboard .mk-account-tab-rail__track {
         display: flex;
-        gap: 0.35rem;
+        gap: 0.4rem;
         overflow-x: auto;
         scrollbar-width: none;
         -webkit-overflow-scrolling: touch;
-        padding-bottom: 0.15rem;
+        scroll-snap-type: x proximity;
+        padding: 0.15rem var(--acc-m-pad) 0.25rem;
     }
 
     body.mk-account-dashboard .mk-account-tab-rail__track::-webkit-scrollbar {
@@ -67,66 +169,80 @@
 
     body.mk-account-dashboard .mk-account-tab-rail__item {
         display: inline-flex;
-        flex-direction: column;
+        flex-direction: row;
         align-items: center;
         justify-content: center;
-        gap: 0.2rem;
+        gap: 0.38rem;
         flex: 0 0 auto;
-        min-width: 4.35rem;
-        min-height: var(--acc-m-touch);
-        padding: 0.4rem 0.55rem;
-        border-radius: 12px;
+        scroll-snap-align: center;
+        min-height: 2.35rem;
+        padding: 0.48rem 0.85rem;
+        border-radius: 999px;
         border: 1px solid var(--acc-card-border);
         background: var(--acc-card-bg);
         color: var(--acc-text-muted);
         text-decoration: none;
-        font-size: 0.62rem;
+        font-size: var(--acc-m-caption);
         font-weight: 700;
         line-height: 1.2;
         white-space: nowrap;
+        box-shadow: 0 6px 18px -16px rgba(15, 23, 42, 0.18);
         -webkit-tap-highlight-color: transparent;
-        transition: border-color 0.18s, color 0.18s, background 0.18s;
+        transition: border-color 0.18s, color 0.18s, background 0.18s, box-shadow 0.18s, transform 0.15s;
     }
 
     body.mk-account-dashboard .mk-account-tab-rail__item i {
-        font-size: 0.82rem;
+        font-size: 0.78rem;
+        opacity: 0.9;
     }
 
     body.mk-account-dashboard .mk-account-tab-rail__item.is-active {
+        color: #fff;
+        border-color: transparent;
+        background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 55%, #5b21b6 100%);
+        box-shadow: var(--acc-m-shadow-lg);
+    }
+
+    body.mk-account-dashboard .mk-account-tab-rail__item.is-active i {
+        opacity: 1;
+    }
+
+    body.mk-account-dashboard .mk-account-tab-rail__item:active:not(.is-active) {
+        transform: scale(0.98);
+        border-color: rgba(124, 58, 237, 0.22);
         color: var(--acc-purple);
-        border-color: rgba(124, 58, 237, 0.28);
-        background: var(--acc-purple-soft);
-        box-shadow: 0 8px 20px -14px rgba(124, 58, 237, 0.45);
     }
 
-    /* Shared page chrome */
-    body.mk-account-dashboard .mk-account-breadcrumb {
-        flex-wrap: nowrap;
-        overflow-x: auto;
-        scrollbar-width: none;
-        -webkit-overflow-scrolling: touch;
-        font-size: var(--acc-m-caption);
-        margin-bottom: 0.65rem;
+    /* Tab content area */
+    body.mk-account-dashboard .mk-acc-tab-shell,
+    body.mk-account-dashboard .mk-acc-tab-body,
+    body.mk-account-dashboard .mk-overview-tab {
+        padding-inline: var(--acc-m-pad);
     }
 
-    body.mk-account-dashboard .mk-account-breadcrumb::-webkit-scrollbar {
-        display: none;
-    }
-
-    body.mk-account-dashboard .mk-account-breadcrumb__current {
-        flex-shrink: 0;
-        max-width: none;
+    body.mk-account-dashboard .mk-account-page-head {
+        margin-bottom: 1rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid rgba(148, 163, 184, 0.12);
     }
 
     body.mk-account-dashboard .mk-account-page-head__title {
-        font-size: clamp(1.15rem, 5vw, 1.35rem);
+        font-size: clamp(1.2rem, 5.2vw, 1.4rem);
         line-height: 1.32;
+        letter-spacing: -0.03em;
     }
 
     body.mk-account-dashboard .mk-account-page-head__sub {
         font-size: var(--acc-m-body);
         line-height: 1.65;
         max-width: none;
+        margin-top: 0.35rem;
+    }
+
+    body.mk-account-dashboard .mk-account-page-head--row {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.55rem;
     }
 
     body.mk-account-dashboard .mk-account-page-head--row .mk-acc-btn,
@@ -136,42 +252,66 @@
         min-height: var(--acc-m-touch);
     }
 
+    /* KPI strip */
     body.mk-account-dashboard .mk-acc-kpi-grid {
         gap: 0.5rem;
-        margin-bottom: 0.85rem;
+        margin-bottom: 0.9rem;
     }
 
     body.mk-account-dashboard .mk-acc-kpi-card {
-        padding: 0.7rem 0.65rem;
-        border-radius: 14px;
+        padding: 0.75rem 0.7rem;
+        border-radius: var(--acc-m-radius-sm);
+        border: 1px solid var(--acc-card-border);
+        box-shadow: var(--acc-m-shadow);
+    }
+
+    body.mk-account-dashboard .mk-acc-kpi-card__val {
+        font-size: clamp(0.95rem, 4.2vw, 1.05rem);
+        font-weight: 800;
     }
 
     body.mk-account-dashboard .mk-acc-kpi-card__lbl {
         font-size: var(--acc-m-caption);
+        line-height: 1.4;
     }
 
+    /* Buttons & panels */
     body.mk-account-dashboard .mk-acc-btn {
         min-height: var(--acc-m-touch);
         font-size: var(--acc-m-body);
-        border-radius: 12px;
+        font-weight: 700;
+        border-radius: var(--acc-m-radius-sm);
         -webkit-tap-highlight-color: transparent;
+    }
+
+    body.mk-account-dashboard .mk-acc-panel {
+        border-radius: var(--acc-m-radius);
+        box-shadow: var(--acc-m-shadow);
+        padding: 0.95rem;
+    }
+
+    body.mk-account-dashboard .mk-acc-panel__title {
+        font-size: var(--acc-m-body);
+    }
+
+    body.mk-account-dashboard .mk-acc-empty-state {
+        padding: 1.5rem 1rem;
+        border-radius: var(--acc-m-radius);
+        text-align: center;
     }
 
     body.mk-account-dashboard .mk-acc-empty-state .mk-acc-btn {
         width: 100%;
         justify-content: center;
-    }
-
-    body.mk-account-dashboard .mk-acc-panel {
-        border-radius: 16px;
+        margin-top: 0.35rem;
     }
 
     /* Modals */
     body.mk-account-dashboard .modal-professional .modal-content-professional {
-        width: min(100%, calc(100vw - 1.5rem));
+        width: min(100%, calc(100vw - 1.25rem));
         max-height: min(92dvh, 40rem);
-        margin: 0.75rem;
-        border-radius: 16px;
+        margin: 0.65rem;
+        border-radius: var(--acc-m-radius);
     }
 
     body.mk-account-dashboard .modal-body-professional .form-control,
@@ -180,33 +320,53 @@
     body.mk-account-dashboard .modal-body-professional textarea {
         min-height: var(--acc-m-touch);
         font-size: var(--acc-m-body);
-        border-radius: 12px;
+        border-radius: var(--acc-m-radius-sm);
+    }
+
+    body.mk-account-dashboard .modal-footer-professional {
+        flex-direction: column;
+        gap: 0.45rem;
     }
 
     body.mk-account-dashboard .modal-footer-professional .btn {
         min-height: var(--acc-m-touch);
-        flex: 1;
+        width: 100%;
         justify-content: center;
     }
 }
 
 @media (min-width: 961px) {
-    body.mk-account-dashboard .mk-account-tab-rail {
+    body.mk-account-dashboard .mk-account-mob-shell {
         display: none;
     }
 }
 
 @media (max-width: 767px) {
     /* ─── Overview ─── */
+    body.mk-account-dashboard .mk-acc-quick-grid {
+        grid-template-columns: 1fr;
+        gap: 0.55rem;
+        margin-bottom: 1rem;
+    }
+
     body.mk-account-dashboard .mk-acc-quick-card {
         min-height: var(--acc-m-touch);
-        padding: 0.85rem 0.9rem;
-        border-radius: 14px;
+        padding: 0.9rem;
+        border-radius: var(--acc-m-radius-sm);
+        box-shadow: var(--acc-m-shadow);
         -webkit-tap-highlight-color: transparent;
+    }
+
+    body.mk-account-dashboard .mk-acc-quick-card__icon {
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: 12px;
+        font-size: 1rem;
     }
 
     body.mk-account-dashboard .mk-acc-quick-card__title {
         font-size: var(--acc-m-body);
+        font-weight: 800;
     }
 
     body.mk-account-dashboard .mk-acc-quick-card__desc {
@@ -214,47 +374,61 @@
         line-height: 1.55;
     }
 
+    body.mk-account-dashboard .mk-acc-overview-grid {
+        gap: 0.65rem;
+    }
+
     body.mk-account-dashboard .mk-acc-lic-card {
-        border-radius: 14px;
+        border-radius: var(--acc-m-radius-sm);
+        padding: 0.85rem;
     }
 
     body.mk-account-dashboard .mk-acc-lic-card__btn {
         min-height: var(--acc-m-touch);
         justify-content: center;
+        width: 100%;
+    }
+
+    body.mk-account-dashboard .mk-acc-affiliate {
+        border-radius: var(--acc-m-radius);
+        overflow: hidden;
     }
 
     body.mk-account-dashboard .mk-acc-affiliate__stats {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.45rem;
     }
 
     /* ─── Orders ─── */
     body.mk-account-dashboard .mk-orders-toolbar {
         flex-direction: column;
         align-items: stretch;
-        gap: 0.55rem;
-        padding: 0.85rem;
-        border-radius: 14px;
+        gap: 0.6rem;
+        padding: 0.9rem;
+        border-radius: var(--acc-m-radius);
+        box-shadow: var(--acc-m-shadow);
+        margin-bottom: 0.75rem;
     }
 
     body.mk-account-dashboard .mk-orders-search {
-        flex: 1 1 auto;
         width: 100%;
     }
 
     body.mk-account-dashboard .mk-orders-search__input {
         min-height: var(--acc-m-touch);
         font-size: var(--acc-m-body);
-        border-radius: 12px;
+        border-radius: var(--acc-m-radius-sm);
+        background: var(--acc-input-bg);
     }
 
     body.mk-account-dashboard .mk-orders-filters {
+        display: flex;
         flex-wrap: nowrap;
         overflow-x: auto;
         scrollbar-width: none;
+        gap: 0.35rem;
+        padding-bottom: 0.1rem;
         -webkit-overflow-scrolling: touch;
-        padding-bottom: 0.15rem;
-        margin: 0 -0.15rem;
-        padding-inline: 0.15rem;
     }
 
     body.mk-account-dashboard .mk-orders-filters::-webkit-scrollbar {
@@ -264,28 +438,58 @@
     body.mk-account-dashboard .mk-orders-filter {
         flex-shrink: 0;
         min-height: 2.15rem;
-        padding: 0.45rem 0.8rem;
+        padding: 0.45rem 0.85rem;
         font-size: var(--acc-m-caption);
         -webkit-tap-highlight-color: transparent;
     }
 
+    body.mk-account-dashboard .mk-orders-list {
+        gap: 0.6rem;
+    }
+
     body.mk-account-dashboard .mk-order-card {
         flex-direction: column;
-        padding: 0.9rem;
-        border-radius: 14px;
+        padding: 0;
+        border-radius: var(--acc-m-radius);
+        overflow: hidden;
+        box-shadow: var(--acc-m-shadow);
+    }
+
+    body.mk-account-dashboard .mk-order-card__main {
+        padding: 0.9rem 0.95rem 0.75rem;
     }
 
     body.mk-account-dashboard .mk-order-card__head {
         flex-direction: column;
         align-items: flex-start;
-        gap: 0.45rem;
+        gap: 0.5rem;
+    }
+
+    body.mk-account-dashboard .mk-order-card__product-icon {
+        width: 2.35rem;
+        height: 2.35rem;
+        border-radius: 11px;
+    }
+
+    body.mk-account-dashboard .mk-order-card__title {
+        font-size: var(--acc-m-body);
+        line-height: 1.45;
+    }
+
+    body.mk-account-dashboard .mk-order-card__meta {
+        flex-wrap: wrap;
+        gap: 0.35rem 0.65rem;
+        margin-top: 0.55rem;
     }
 
     body.mk-account-dashboard .mk-order-card__actions {
         flex-direction: column;
         align-items: stretch;
         width: 100%;
-        gap: 0.4rem;
+        gap: 0;
+        padding: 0.65rem 0.95rem 0.85rem;
+        border-top: 1px solid var(--acc-table-row-border);
+        background: color-mix(in srgb, var(--acc-surface-muted) 65%, transparent);
     }
 
     body.mk-account-dashboard .mk-order-card__detail-btn,
@@ -303,13 +507,17 @@
     body.mk-account-dashboard .mk-order-modal__panel {
         width: 100%;
         max-height: min(92dvh, 44rem);
-        border-radius: 18px 18px 0 0;
-        margin: 0;
+        border-radius: 20px 20px 0 0;
     }
 
     body.mk-account-dashboard .mk-order-modal__close {
         width: var(--acc-m-touch);
         height: var(--acc-m-touch);
+    }
+
+    body.mk-account-dashboard .mk-order-modal__foot {
+        flex-direction: column;
+        gap: 0.45rem;
     }
 
     body.mk-account-dashboard .mk-order-modal__foot .mk-acc-btn {
@@ -321,6 +529,12 @@
     body.mk-account-dashboard .lic-pool-strip {
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 0.45rem;
+        margin-bottom: 0.65rem;
+    }
+
+    body.mk-account-dashboard .lic-pool-item {
+        border-radius: var(--acc-m-radius-sm);
+        padding: 0.7rem 0.65rem;
     }
 
     body.mk-account-dashboard .lic-spectrum-legend {
@@ -329,7 +543,8 @@
         overflow-x: auto;
         scrollbar-width: none;
         gap: 0.45rem;
-        padding-bottom: 0.2rem;
+        padding-bottom: 0.25rem;
+        margin-bottom: 0.75rem;
         -webkit-overflow-scrolling: touch;
     }
 
@@ -340,10 +555,17 @@
     body.mk-account-dashboard .lic-spectrum-item {
         flex-shrink: 0;
         font-size: var(--acc-m-caption);
+        padding: 0.28rem 0.55rem;
+        border-radius: 999px;
+        background: var(--acc-card-bg);
+        border: 1px solid var(--acc-card-border);
     }
 
-    body.mk-account-dashboard .lic-tile {
-        border-radius: 14px;
+    body.mk-account-dashboard .lic-tile,
+    body.mk-account-dashboard .lic-seat-shared {
+        border-radius: var(--acc-m-radius);
+        box-shadow: var(--acc-m-shadow);
+        margin-bottom: 0.65rem;
     }
 
     body.mk-account-dashboard .lic-alloc-row,
@@ -364,21 +586,26 @@
     body.mk-account-dashboard .lic-seats-table-wrap {
         margin-inline: calc(-1 * var(--acc-m-pad));
         padding-inline: var(--acc-m-pad);
+        border-radius: 0;
     }
 
     /* ─── Downloads ─── */
     body.mk-account-dashboard .mk-dl-tab-intro {
-        padding: 0.9rem;
-        border-radius: 14px;
+        padding: 0.95rem;
+        border-radius: var(--acc-m-radius);
+        box-shadow: var(--acc-m-shadow);
+        margin-bottom: 0.75rem;
     }
 
-    body.mk-account-dashboard .mk-dl-tab-intro__title {
-        font-size: var(--acc-m-body);
+    body.mk-account-dashboard .mk-dl-tab-intro__icon {
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: 12px;
     }
 
-    body.mk-account-dashboard .mk-dl-tab-intro__text {
-        font-size: var(--acc-m-caption);
-        line-height: 1.65;
+    body.mk-account-dashboard .mk-dl-tab-panel {
+        border-radius: var(--acc-m-radius);
+        overflow: hidden;
     }
 
     body.mk-account-dashboard .dash-downloads-hub .mk-dl-btn,
@@ -389,9 +616,15 @@
     }
 
     /* ─── Transactions ─── */
+    body.mk-account-dashboard .mk-acc-card-list {
+        gap: 0.6rem;
+    }
+
     body.mk-account-dashboard .mk-txn-card {
-        border-radius: 14px;
-        padding: 0.9rem;
+        border-radius: var(--acc-m-radius);
+        padding: 0.95rem;
+        box-shadow: var(--acc-m-shadow);
+        border: 1px solid var(--acc-card-border);
     }
 
     body.mk-account-dashboard .mk-txn-card__head {
@@ -400,24 +633,45 @@
         gap: 0.45rem;
     }
 
+    body.mk-account-dashboard .mk-txn-card__product {
+        font-size: var(--acc-m-body);
+        line-height: 1.45;
+    }
+
     body.mk-account-dashboard .mk-txn-card__track {
         font-size: var(--acc-m-caption);
         overflow-wrap: anywhere;
     }
 
+    body.mk-account-dashboard .mk-txn-card__foot {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.35rem;
+        margin-top: 0.55rem;
+        padding-top: 0.55rem;
+        border-top: 1px solid var(--acc-table-row-border);
+    }
+
     /* ─── Affiliate ─── */
     body.mk-account-dashboard .mk-aff-wallet-hero {
-        padding: 0.95rem;
-        border-radius: 14px;
+        padding: 1rem;
+        border-radius: var(--acc-m-radius);
+        box-shadow: var(--acc-m-shadow-lg);
+        margin-bottom: 0.75rem;
     }
 
     body.mk-account-dashboard .mk-aff-wallet-hero__amount {
-        font-size: clamp(1.15rem, 5vw, 1.35rem);
+        font-size: clamp(1.2rem, 5.5vw, 1.45rem);
+    }
+
+    body.mk-account-dashboard .mk-aff-wallet-hero__actions {
+        width: 100%;
     }
 
     body.mk-account-dashboard .mk-aff-sale-card {
-        border-radius: 14px;
+        border-radius: var(--acc-m-radius-sm);
         padding: 0.9rem;
+        box-shadow: var(--acc-m-shadow);
     }
 
     body.mk-account-dashboard .mk-acc-affiliate__copy-btn {
@@ -430,19 +684,30 @@
         flex-direction: column;
         align-items: center;
         text-align: center;
-        padding: 1.1rem 0.95rem;
-        border-radius: 16px;
+        padding: 1.15rem 1rem;
+        border-radius: var(--acc-m-radius);
+        box-shadow: var(--acc-m-shadow-lg);
+        margin-bottom: 0.75rem;
+        background:
+            radial-gradient(ellipse 80% 60% at 50% 0%, rgba(124, 58, 237, 0.08), transparent 70%),
+            var(--acc-card-bg);
     }
 
     body.mk-account-dashboard .prof-hero__avatar {
-        width: 4rem;
-        height: 4rem;
+        width: 4.25rem;
+        height: 4.25rem;
+        border-radius: 16px;
+    }
+
+    body.mk-account-dashboard .prof-hero__name {
+        font-size: 1rem;
     }
 
     body.mk-account-dashboard .prof-hero__actions {
         width: 100%;
         flex-direction: column;
         margin-inline-start: 0;
+        gap: 0.45rem;
     }
 
     body.mk-account-dashboard .prof-hero__actions .prof-edit-btn {
@@ -451,17 +716,23 @@
         justify-content: center;
         font-size: var(--acc-m-caption);
         padding: 0.55rem 0.85rem;
-        border-radius: 12px;
+        border-radius: var(--acc-m-radius-sm);
         -webkit-tap-highlight-color: transparent;
     }
 
+    body.mk-account-dashboard .prof-grid.mk-acc-profile-grid {
+        gap: 0.65rem;
+    }
+
     body.mk-account-dashboard .prof-card {
-        border-radius: 14px;
+        border-radius: var(--acc-m-radius);
+        box-shadow: var(--acc-m-shadow);
     }
 
     body.mk-account-dashboard .prof-card-head {
         flex-wrap: wrap;
         gap: 0.5rem;
+        padding: 0.75rem 0.85rem;
     }
 
     body.mk-account-dashboard .prof-card-head .prof-edit-btn {
@@ -470,11 +741,35 @@
         font-size: var(--acc-m-caption);
     }
 
+    body.mk-account-dashboard .prof-fields {
+        padding: 0 0.85rem 0.85rem;
+    }
+
+    body.mk-account-dashboard .prof-field {
+        padding: 0.55rem 0;
+        border-bottom: 1px solid var(--acc-table-row-border);
+    }
+
+    body.mk-account-dashboard .prof-field:last-child {
+        border-bottom: 0;
+    }
+
+    body.mk-account-dashboard .prof-fold {
+        border-radius: var(--acc-m-radius-sm);
+        margin-bottom: 0.45rem;
+        overflow: hidden;
+    }
+
     body.mk-account-dashboard .prof-fold summary {
         min-height: var(--acc-m-touch);
-        padding: 0.8rem 0.85rem;
+        padding: 0.85rem 0.9rem;
         font-size: var(--acc-m-body);
+        font-weight: 700;
         -webkit-tap-highlight-color: transparent;
+    }
+
+    body.mk-account-dashboard .prof-fold-body {
+        padding: 0 0.9rem 0.9rem;
     }
 
     body.mk-account-dashboard .prof-input,
@@ -482,7 +777,7 @@
     body.mk-account-dashboard .prof-input--file {
         min-height: var(--acc-m-touch);
         font-size: var(--acc-m-body);
-        border-radius: 12px;
+        border-radius: var(--acc-m-radius-sm);
     }
 
     body.mk-account-dashboard .prof-input--area {
@@ -493,24 +788,22 @@
     body.mk-account-dashboard .prof-upload-row {
         flex-direction: column;
         align-items: stretch;
+        gap: 0.65rem;
     }
 
     body.mk-account-dashboard .prof-save-btn {
         width: 100%;
         min-height: var(--acc-m-touch);
         justify-content: center;
-        border-radius: 12px;
+        border-radius: var(--acc-m-radius-sm);
         font-size: var(--acc-m-body);
+        margin-top: 0.35rem;
     }
 }
 
 @media (max-width: 480px) {
     body.mk-account-dashboard .mk-acc-kpi-grid {
         grid-template-columns: 1fr 1fr;
-    }
-
-    body.mk-account-dashboard .mk-acc-kpi-card__val {
-        font-size: clamp(0.9rem, 4vw, 1rem);
     }
 
     body.mk-account-dashboard .lic-pool-strip {
@@ -525,5 +818,9 @@
 @media (min-width: 768px) and (max-width: 1024px) {
     body.mk-account-dashboard .mk-acc-kpi-grid {
         grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    body.mk-account-dashboard .mk-acc-quick-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }

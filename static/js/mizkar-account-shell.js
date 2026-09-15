@@ -91,4 +91,14 @@
             if (typeof showNotification === 'function') showNotification('کد معرف کپی شد!', 'success');
         });
     });
+
+    var tabTrack = shell.querySelector('[data-account-tab-track]');
+    if (tabTrack) {
+        var activeTab = tabTrack.querySelector('.mk-account-tab-rail__item.is-active');
+        if (activeTab) {
+            window.requestAnimationFrame(function () {
+                activeTab.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
+            });
+        }
+    }
 })();

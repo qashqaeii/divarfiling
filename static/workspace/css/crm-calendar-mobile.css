@@ -123,9 +123,12 @@
     }
 
     .crm-cal-mobile .crm-cal-layout {
-        display: flex;
-        flex-direction: column;
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        grid-template-rows: auto !important;
         gap: 0.75rem;
+        overflow: visible !important;
+        flex: none !important;
     }
 
     .crm-cal-mobile .crm-cal-agenda {

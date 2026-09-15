@@ -1,0 +1,529 @@
+/* Account dashboard / پروفایل — mobile & tablet (sidebar pinned ≥961px unchanged) */
+@media (max-width: 1024px) {
+    body.mk-account-dashboard {
+        --acc-m-pad: clamp(0.9rem, 4vw, 1.25rem);
+        --acc-m-touch: 2.75rem;
+        --acc-m-body: clamp(0.875rem, 3.6vw, 0.9375rem);
+        --acc-m-caption: clamp(0.75rem, 3.2vw, 0.8125rem);
+    }
+
+    body.mk-account-dashboard .mk-account-content-scroll,
+    body.mk-account-dashboard .mk-account-main,
+    body.mk-account-dashboard .mk-acc-tab-body {
+        overflow-x: clip;
+        max-width: 100%;
+    }
+
+    body.mk-account-dashboard .mk-account-main {
+        padding-inline: var(--acc-m-pad);
+        padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+    }
+
+    body.mk-account-dashboard .mk-account-mobile-toggle {
+        width: var(--acc-m-touch);
+        height: var(--acc-m-touch);
+        border-radius: 12px;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    body.mk-account-dashboard .mk-account-sidebar__link,
+    body.mk-account-dashboard .mk-account-sidebar__foot-link {
+        min-height: var(--acc-m-touch);
+        padding-block: 0.55rem;
+        font-size: var(--acc-m-body);
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    body.mk-account-dashboard .mk-account-sidebar__close {
+        width: var(--acc-m-touch);
+        height: var(--acc-m-touch);
+    }
+
+    /* Mobile tab rail */
+    body.mk-account-dashboard .mk-account-tab-rail {
+        display: block;
+        position: sticky;
+        top: 0;
+        z-index: 820;
+        margin: 0 calc(-1 * var(--acc-m-pad)) 0.85rem;
+        padding: 0.4rem var(--acc-m-pad);
+        background: color-mix(in srgb, var(--acc-main-bg) 92%, transparent);
+        backdrop-filter: blur(12px);
+        border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+    }
+
+    body.mk-account-dashboard .mk-account-tab-rail__track {
+        display: flex;
+        gap: 0.35rem;
+        overflow-x: auto;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 0.15rem;
+    }
+
+    body.mk-account-dashboard .mk-account-tab-rail__track::-webkit-scrollbar {
+        display: none;
+    }
+
+    body.mk-account-dashboard .mk-account-tab-rail__item {
+        display: inline-flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.2rem;
+        flex: 0 0 auto;
+        min-width: 4.35rem;
+        min-height: var(--acc-m-touch);
+        padding: 0.4rem 0.55rem;
+        border-radius: 12px;
+        border: 1px solid var(--acc-card-border);
+        background: var(--acc-card-bg);
+        color: var(--acc-text-muted);
+        text-decoration: none;
+        font-size: 0.62rem;
+        font-weight: 700;
+        line-height: 1.2;
+        white-space: nowrap;
+        -webkit-tap-highlight-color: transparent;
+        transition: border-color 0.18s, color 0.18s, background 0.18s;
+    }
+
+    body.mk-account-dashboard .mk-account-tab-rail__item i {
+        font-size: 0.82rem;
+    }
+
+    body.mk-account-dashboard .mk-account-tab-rail__item.is-active {
+        color: var(--acc-purple);
+        border-color: rgba(124, 58, 237, 0.28);
+        background: var(--acc-purple-soft);
+        box-shadow: 0 8px 20px -14px rgba(124, 58, 237, 0.45);
+    }
+
+    /* Shared page chrome */
+    body.mk-account-dashboard .mk-account-breadcrumb {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+        font-size: var(--acc-m-caption);
+        margin-bottom: 0.65rem;
+    }
+
+    body.mk-account-dashboard .mk-account-breadcrumb::-webkit-scrollbar {
+        display: none;
+    }
+
+    body.mk-account-dashboard .mk-account-breadcrumb__current {
+        flex-shrink: 0;
+        max-width: none;
+    }
+
+    body.mk-account-dashboard .mk-account-page-head__title {
+        font-size: clamp(1.15rem, 5vw, 1.35rem);
+        line-height: 1.32;
+    }
+
+    body.mk-account-dashboard .mk-account-page-head__sub {
+        font-size: var(--acc-m-body);
+        line-height: 1.65;
+        max-width: none;
+    }
+
+    body.mk-account-dashboard .mk-account-page-head--row .mk-acc-btn,
+    body.mk-account-dashboard .mk-account-page-head--row .mk-acc-head-badge {
+        width: 100%;
+        justify-content: center;
+        min-height: var(--acc-m-touch);
+    }
+
+    body.mk-account-dashboard .mk-acc-kpi-grid {
+        gap: 0.5rem;
+        margin-bottom: 0.85rem;
+    }
+
+    body.mk-account-dashboard .mk-acc-kpi-card {
+        padding: 0.7rem 0.65rem;
+        border-radius: 14px;
+    }
+
+    body.mk-account-dashboard .mk-acc-kpi-card__lbl {
+        font-size: var(--acc-m-caption);
+    }
+
+    body.mk-account-dashboard .mk-acc-btn {
+        min-height: var(--acc-m-touch);
+        font-size: var(--acc-m-body);
+        border-radius: 12px;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    body.mk-account-dashboard .mk-acc-empty-state .mk-acc-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    body.mk-account-dashboard .mk-acc-panel {
+        border-radius: 16px;
+    }
+
+    /* Modals */
+    body.mk-account-dashboard .modal-professional .modal-content-professional {
+        width: min(100%, calc(100vw - 1.5rem));
+        max-height: min(92dvh, 40rem);
+        margin: 0.75rem;
+        border-radius: 16px;
+    }
+
+    body.mk-account-dashboard .modal-body-professional .form-control,
+    body.mk-account-dashboard .modal-body-professional input,
+    body.mk-account-dashboard .modal-body-professional select,
+    body.mk-account-dashboard .modal-body-professional textarea {
+        min-height: var(--acc-m-touch);
+        font-size: var(--acc-m-body);
+        border-radius: 12px;
+    }
+
+    body.mk-account-dashboard .modal-footer-professional .btn {
+        min-height: var(--acc-m-touch);
+        flex: 1;
+        justify-content: center;
+    }
+}
+
+@media (min-width: 961px) {
+    body.mk-account-dashboard .mk-account-tab-rail {
+        display: none;
+    }
+}
+
+@media (max-width: 767px) {
+    /* ─── Overview ─── */
+    body.mk-account-dashboard .mk-acc-quick-card {
+        min-height: var(--acc-m-touch);
+        padding: 0.85rem 0.9rem;
+        border-radius: 14px;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    body.mk-account-dashboard .mk-acc-quick-card__title {
+        font-size: var(--acc-m-body);
+    }
+
+    body.mk-account-dashboard .mk-acc-quick-card__desc {
+        font-size: var(--acc-m-caption);
+        line-height: 1.55;
+    }
+
+    body.mk-account-dashboard .mk-acc-lic-card {
+        border-radius: 14px;
+    }
+
+    body.mk-account-dashboard .mk-acc-lic-card__btn {
+        min-height: var(--acc-m-touch);
+        justify-content: center;
+    }
+
+    body.mk-account-dashboard .mk-acc-affiliate__stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    /* ─── Orders ─── */
+    body.mk-account-dashboard .mk-orders-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.55rem;
+        padding: 0.85rem;
+        border-radius: 14px;
+    }
+
+    body.mk-account-dashboard .mk-orders-search {
+        flex: 1 1 auto;
+        width: 100%;
+    }
+
+    body.mk-account-dashboard .mk-orders-search__input {
+        min-height: var(--acc-m-touch);
+        font-size: var(--acc-m-body);
+        border-radius: 12px;
+    }
+
+    body.mk-account-dashboard .mk-orders-filters {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 0.15rem;
+        margin: 0 -0.15rem;
+        padding-inline: 0.15rem;
+    }
+
+    body.mk-account-dashboard .mk-orders-filters::-webkit-scrollbar {
+        display: none;
+    }
+
+    body.mk-account-dashboard .mk-orders-filter {
+        flex-shrink: 0;
+        min-height: 2.15rem;
+        padding: 0.45rem 0.8rem;
+        font-size: var(--acc-m-caption);
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    body.mk-account-dashboard .mk-order-card {
+        flex-direction: column;
+        padding: 0.9rem;
+        border-radius: 14px;
+    }
+
+    body.mk-account-dashboard .mk-order-card__head {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.45rem;
+    }
+
+    body.mk-account-dashboard .mk-order-card__actions {
+        flex-direction: column;
+        align-items: stretch;
+        width: 100%;
+        gap: 0.4rem;
+    }
+
+    body.mk-account-dashboard .mk-order-card__detail-btn,
+    body.mk-account-dashboard .mk-order-card__actions .mk-acc-btn {
+        width: 100%;
+        justify-content: center;
+        min-height: var(--acc-m-touch);
+    }
+
+    body.mk-account-dashboard .mk-order-modal {
+        align-items: flex-end;
+        padding: 0;
+    }
+
+    body.mk-account-dashboard .mk-order-modal__panel {
+        width: 100%;
+        max-height: min(92dvh, 44rem);
+        border-radius: 18px 18px 0 0;
+        margin: 0;
+    }
+
+    body.mk-account-dashboard .mk-order-modal__close {
+        width: var(--acc-m-touch);
+        height: var(--acc-m-touch);
+    }
+
+    body.mk-account-dashboard .mk-order-modal__foot .mk-acc-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    /* ─── Licenses ─── */
+    body.mk-account-dashboard .lic-pool-strip {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.45rem;
+    }
+
+    body.mk-account-dashboard .lic-spectrum-legend {
+        display: flex;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        scrollbar-width: none;
+        gap: 0.45rem;
+        padding-bottom: 0.2rem;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    body.mk-account-dashboard .lic-spectrum-legend::-webkit-scrollbar {
+        display: none;
+    }
+
+    body.mk-account-dashboard .lic-spectrum-item {
+        flex-shrink: 0;
+        font-size: var(--acc-m-caption);
+    }
+
+    body.mk-account-dashboard .lic-tile {
+        border-radius: 14px;
+    }
+
+    body.mk-account-dashboard .lic-alloc-row,
+    body.mk-account-dashboard .lic-alloc-row--actions {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.4rem;
+    }
+
+    body.mk-account-dashboard .lic-alloc-btn,
+    body.mk-account-dashboard .lic-alloc-row .mk-acc-btn,
+    body.mk-account-dashboard .lic-alloc-btn--primary {
+        width: 100%;
+        justify-content: center;
+        min-height: var(--acc-m-touch);
+    }
+
+    body.mk-account-dashboard .lic-seats-table-wrap {
+        margin-inline: calc(-1 * var(--acc-m-pad));
+        padding-inline: var(--acc-m-pad);
+    }
+
+    /* ─── Downloads ─── */
+    body.mk-account-dashboard .mk-dl-tab-intro {
+        padding: 0.9rem;
+        border-radius: 14px;
+    }
+
+    body.mk-account-dashboard .mk-dl-tab-intro__title {
+        font-size: var(--acc-m-body);
+    }
+
+    body.mk-account-dashboard .mk-dl-tab-intro__text {
+        font-size: var(--acc-m-caption);
+        line-height: 1.65;
+    }
+
+    body.mk-account-dashboard .dash-downloads-hub .mk-dl-btn,
+    body.mk-account-dashboard .dash-downloads-hub .mk-dl-card-actions .btn {
+        min-height: var(--acc-m-touch);
+        width: 100%;
+        justify-content: center;
+    }
+
+    /* ─── Transactions ─── */
+    body.mk-account-dashboard .mk-txn-card {
+        border-radius: 14px;
+        padding: 0.9rem;
+    }
+
+    body.mk-account-dashboard .mk-txn-card__head {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.45rem;
+    }
+
+    body.mk-account-dashboard .mk-txn-card__track {
+        font-size: var(--acc-m-caption);
+        overflow-wrap: anywhere;
+    }
+
+    /* ─── Affiliate ─── */
+    body.mk-account-dashboard .mk-aff-wallet-hero {
+        padding: 0.95rem;
+        border-radius: 14px;
+    }
+
+    body.mk-account-dashboard .mk-aff-wallet-hero__amount {
+        font-size: clamp(1.15rem, 5vw, 1.35rem);
+    }
+
+    body.mk-account-dashboard .mk-aff-sale-card {
+        border-radius: 14px;
+        padding: 0.9rem;
+    }
+
+    body.mk-account-dashboard .mk-acc-affiliate__copy-btn {
+        min-height: var(--acc-m-touch);
+        width: 100%;
+    }
+
+    /* ─── Profile ─── */
+    body.mk-account-dashboard .prof-hero {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        padding: 1.1rem 0.95rem;
+        border-radius: 16px;
+    }
+
+    body.mk-account-dashboard .prof-hero__avatar {
+        width: 4rem;
+        height: 4rem;
+    }
+
+    body.mk-account-dashboard .prof-hero__actions {
+        width: 100%;
+        flex-direction: column;
+        margin-inline-start: 0;
+    }
+
+    body.mk-account-dashboard .prof-hero__actions .prof-edit-btn {
+        width: 100%;
+        min-height: var(--acc-m-touch);
+        justify-content: center;
+        font-size: var(--acc-m-caption);
+        padding: 0.55rem 0.85rem;
+        border-radius: 12px;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    body.mk-account-dashboard .prof-card {
+        border-radius: 14px;
+    }
+
+    body.mk-account-dashboard .prof-card-head {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    body.mk-account-dashboard .prof-card-head .prof-edit-btn {
+        min-height: var(--acc-m-touch);
+        padding: 0.45rem 0.75rem;
+        font-size: var(--acc-m-caption);
+    }
+
+    body.mk-account-dashboard .prof-fold summary {
+        min-height: var(--acc-m-touch);
+        padding: 0.8rem 0.85rem;
+        font-size: var(--acc-m-body);
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    body.mk-account-dashboard .prof-input,
+    body.mk-account-dashboard .prof-input--area,
+    body.mk-account-dashboard .prof-input--file {
+        min-height: var(--acc-m-touch);
+        font-size: var(--acc-m-body);
+        border-radius: 12px;
+    }
+
+    body.mk-account-dashboard .prof-input--area {
+        min-height: 5.5rem;
+        padding-top: 0.75rem;
+    }
+
+    body.mk-account-dashboard .prof-upload-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    body.mk-account-dashboard .prof-save-btn {
+        width: 100%;
+        min-height: var(--acc-m-touch);
+        justify-content: center;
+        border-radius: 12px;
+        font-size: var(--acc-m-body);
+    }
+}
+
+@media (max-width: 480px) {
+    body.mk-account-dashboard .mk-acc-kpi-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    body.mk-account-dashboard .mk-acc-kpi-card__val {
+        font-size: clamp(0.9rem, 4vw, 1rem);
+    }
+
+    body.mk-account-dashboard .lic-pool-strip {
+        grid-template-columns: 1fr;
+    }
+
+    body.mk-account-dashboard .mk-acc-affiliate__stats {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 1024px) {
+    body.mk-account-dashboard .mk-acc-kpi-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+}

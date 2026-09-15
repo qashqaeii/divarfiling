@@ -1,0 +1,185 @@
+/* About / درباره ما — mobile & tablet (desktop ≥1025px unchanged) */
+@media (max-width: 1024px) {
+    html.mk-about-page {
+        --abt-m-pad: clamp(1rem, 4.2vw, 1.35rem);
+        --abt-m-touch: 2.75rem;
+        --abt-m-body: clamp(0.875rem, 3.6vw, 0.9375rem);
+        --abt-m-title: clamp(1.25rem, 5vw, 1.5rem);
+        --abt-m-caption: clamp(0.75rem, 3.2vw, 0.8125rem);
+    }
+
+    html.mk-about-page .abt-wrap,
+    html.mk-about-page .main-content {
+        overflow-x: clip;
+        max-width: 100%;
+    }
+
+    html.mk-about-page .abt-wrap .container {
+        padding-inline: var(--abt-m-pad);
+        min-width: 0;
+    }
+}
+
+@media (max-width: 767px) {
+    html.mk-about-page .abt-hero {
+        padding: clamp(1.75rem, 6vw, 2.5rem) 0 clamp(1.5rem, 4vw, 2rem);
+    }
+
+    html.mk-about-page .abt-hero h1 {
+        font-size: var(--abt-m-title);
+        line-height: 1.32;
+        text-wrap: balance;
+    }
+
+    html.mk-about-page .abt-lead {
+        font-size: var(--abt-m-body);
+        line-height: 1.8;
+        max-width: none;
+    }
+
+    html.mk-about-page .abt-actions {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.5rem;
+    }
+
+    html.mk-about-page .abt-btn {
+        width: 100%;
+        min-height: var(--abt-m-touch);
+        justify-content: center;
+        font-size: var(--abt-m-body);
+        border-radius: 12px;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    html.mk-about-page .abt-band {
+        padding-block: clamp(1.5rem, 5vw, 2.25rem);
+    }
+
+    html.mk-about-page .abt-pillars {
+        grid-template-columns: 1fr;
+        gap: 0.55rem;
+    }
+
+    html.mk-about-page .abt-pillars li {
+        padding: 0.85rem 0.95rem;
+        border-radius: 14px;
+        border: 1px solid rgba(148, 163, 184, 0.12);
+        background: rgba(255, 255, 255, 0.72);
+        min-height: var(--abt-m-touch);
+    }
+
+    html.mk-about-page[data-theme="dark"] .abt-pillars li,
+    html.mk-public[data-theme="dark"].mk-about-page .abt-pillars li {
+        background: rgba(15, 23, 42, 0.55);
+        border-color: rgba(148, 163, 184, 0.1);
+    }
+
+    html.mk-about-page .abt-pillars strong {
+        font-size: var(--abt-m-body);
+    }
+
+    html.mk-about-page .abt-pillars span {
+        font-size: var(--abt-m-caption);
+        line-height: 1.65;
+    }
+
+    html.mk-about-page .abt-pillars i {
+        width: 2.25rem;
+        height: 2.25rem;
+        font-size: 0.85rem;
+    }
+
+    html.mk-about-page .abt-stats-panel {
+        padding: 0.9rem 0.85rem 1rem;
+        border-radius: 16px;
+    }
+
+    html.mk-about-page .abt-stats-head {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.45rem;
+    }
+
+    html.mk-about-page .abt-stats-uptime {
+        font-size: var(--abt-m-caption);
+        line-height: 1.5;
+        overflow-wrap: anywhere;
+    }
+
+    html.mk-about-page .abt-stats-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.5rem;
+    }
+
+    html.mk-about-page .abt-stat {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.35rem;
+        min-height: var(--abt-m-touch);
+        padding: 0.7rem 0.75rem;
+    }
+
+    html.mk-about-page .abt-stat-val {
+        font-size: clamp(1.05rem, 4.5vw, 1.15rem);
+    }
+
+    html.mk-about-page .abt-stat-lbl {
+        font-size: var(--abt-m-caption);
+    }
+
+    html.mk-about-page .abt-band--mission {
+        min-height: clamp(180px, 50vw, 240px);
+    }
+
+    html.mk-about-page .abt-mission__text h2 {
+        font-size: var(--abt-m-title);
+        line-height: 1.35;
+    }
+
+    html.mk-about-page .abt-mission__text > p {
+        font-size: var(--abt-m-body);
+        line-height: 1.75;
+    }
+
+    html.mk-about-page .abt-checks li {
+        font-size: var(--abt-m-body);
+        line-height: 1.65;
+        padding-right: 1.25rem;
+    }
+
+    html.mk-about-page .abt-cta {
+        flex-direction: column;
+        align-items: stretch;
+        text-align: center;
+        padding: 1.1rem 1rem;
+        border-radius: 14px;
+        margin-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px));
+    }
+
+    html.mk-about-page .abt-cta p {
+        font-size: var(--abt-m-body);
+        line-height: 1.55;
+    }
+
+    html.mk-about-page .abt-btn--white {
+        width: 100%;
+        min-height: var(--abt-m-touch);
+    }
+}
+
+@media (max-width: 360px) {
+    html.mk-about-page .abt-stats-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 1024px) {
+    html.mk-about-page .abt-pillars {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    html.mk-about-page .abt-stats-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+}

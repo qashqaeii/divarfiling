@@ -1,0 +1,177 @@
+/* Contact / تماس — mobile & tablet (desktop ≥1025px unchanged) */
+@media (max-width: 1024px) {
+    html.mk-contact-page {
+        --ctc-m-pad: clamp(1rem, 4.2vw, 1.35rem);
+        --ctc-m-touch: 2.75rem;
+        --ctc-m-body: clamp(0.875rem, 3.6vw, 0.9375rem);
+        --ctc-m-caption: clamp(0.75rem, 3.2vw, 0.8125rem);
+    }
+
+    html.mk-contact-page .mk-contact-wrap,
+    html.mk-contact-page .main-content {
+        overflow-x: clip;
+        max-width: 100%;
+    }
+
+    html.mk-contact-page .mk-contact-shell {
+        padding-inline: var(--ctc-m-pad);
+        min-width: 0;
+    }
+}
+
+@media (max-width: 767px) {
+    html.mk-contact-page .mk-contact-wrap {
+        padding-block: 1.25rem calc(1.5rem + env(safe-area-inset-bottom, 0px));
+    }
+
+    html.mk-contact-page .mk-contact-bg {
+        opacity: 0.45;
+        background-position: center 15%;
+    }
+
+    html.mk-contact-page .mk-contact-top h1 {
+        font-size: clamp(1.35rem, 6vw, 1.65rem);
+        line-height: 1.3;
+    }
+
+    html.mk-contact-page .mk-contact-lead {
+        font-size: var(--ctc-m-body);
+        line-height: 1.75;
+        max-width: none;
+        padding-inline: 0.15rem;
+    }
+
+    html.mk-contact-page .mk-contact-quick {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 0.45rem;
+        width: 100%;
+    }
+
+    html.mk-contact-page .mk-contact-quick__item {
+        justify-content: center;
+        min-height: var(--ctc-m-touch);
+        padding: 0.6rem 0.95rem;
+        font-size: var(--ctc-m-body);
+        border-radius: 12px;
+        -webkit-tap-highlight-color: transparent;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+        text-align: center;
+    }
+
+    html.mk-contact-page .mk-contact-layout {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    html.mk-contact-page .mk-contact-profile {
+        justify-content: center;
+        text-align: center;
+    }
+
+    /* Form first on mobile */
+    html.mk-contact-page .mk-contact-form-card {
+        order: 1;
+        padding: 1rem 0.95rem;
+        border-radius: 16px;
+    }
+
+    html.mk-contact-page .mk-contact-aside {
+        order: 2;
+    }
+
+    html.mk-contact-page .mk-contact-form-head h2 {
+        font-size: var(--ctc-m-body);
+    }
+
+    html.mk-contact-page .mk-contact-form .form-label {
+        font-size: var(--ctc-m-caption);
+        margin-bottom: 0.4rem;
+    }
+
+    html.mk-contact-page .mk-contact-form input,
+    html.mk-contact-page .mk-contact-form textarea,
+    html.mk-contact-page .mk-contact-form select,
+    html.mk-contact-page .mk-contact-form .form-control {
+        min-height: var(--ctc-m-touch);
+        padding: 0.7rem 2.35rem 0.7rem 0.85rem;
+        font-size: var(--ctc-m-body);
+        border-radius: 12px;
+    }
+
+    html.mk-contact-page .mk-contact-form textarea,
+    html.mk-contact-page .mk-contact-form .form-control[name="message"] {
+        min-height: 8rem;
+        padding-top: 0.85rem;
+    }
+
+    html.mk-contact-page .mk-contact-form .form-error {
+        font-size: var(--ctc-m-caption);
+        margin-top: 0.35rem;
+    }
+
+    html.mk-contact-page .mk-contact-form .btn-submit {
+        min-height: var(--ctc-m-touch);
+        font-size: var(--ctc-m-body);
+        font-weight: 800;
+        border-radius: 12px;
+        margin-top: 0.35rem;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    html.mk-contact-page .mk-contact-privacy {
+        font-size: var(--ctc-m-caption);
+        line-height: 1.6;
+    }
+
+    html.mk-contact-page .mk-contact-info-card {
+        padding: 0.95rem 1rem;
+        border-radius: 14px;
+    }
+
+    html.mk-contact-page .mk-contact-channels a {
+        min-height: var(--ctc-m-touch);
+        padding: 0.55rem 0.65rem;
+        font-size: var(--ctc-m-body);
+        border-radius: 10px;
+    }
+
+    html.mk-contact-page .mk-contact-hours {
+        font-size: var(--ctc-m-caption);
+        line-height: 1.6;
+    }
+
+    html.mk-contact-page .mk-contact-faq > summary {
+        min-height: var(--ctc-m-touch);
+        padding: 0.85rem 1rem;
+        font-size: var(--ctc-m-body);
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    html.mk-contact-page .mk-contact-faq-item summary {
+        min-height: var(--ctc-m-touch);
+        padding: 0.75rem 0.85rem;
+        font-size: var(--ctc-m-body);
+        line-height: 1.55;
+    }
+
+    html.mk-contact-page .mk-contact-faq-item p {
+        font-size: var(--ctc-m-body);
+        line-height: 1.75;
+        padding: 0 0.85rem 0.85rem;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 1024px) {
+    html.mk-contact-page .mk-contact-quick {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    html.mk-contact-page .mk-contact-quick__item {
+        flex: 1 1 auto;
+    }
+}

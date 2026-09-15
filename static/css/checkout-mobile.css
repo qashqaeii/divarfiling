@@ -1,0 +1,183 @@
+/* Checkout / تعرفه — mobile & tablet (desktop ≥1025px unchanged) */
+@media (max-width: 1024px) {
+    .mk-checkout-page {
+        --ck-m-pad: clamp(1rem, 4.2vw, 1.35rem);
+        --ck-m-touch: 2.75rem;
+        --ck-m-body: clamp(0.875rem, 3.6vw, 0.9375rem);
+        --ck-m-caption: clamp(0.75rem, 3.2vw, 0.8125rem);
+    }
+
+    .mk-checkout-page .ck-page .container,
+    .mk-checkout-page .ck-page--full {
+        padding-inline: var(--ck-m-pad);
+        min-width: 0;
+    }
+
+    .mk-checkout-page .ck-flow,
+    .mk-checkout-page .main-content {
+        overflow-x: clip;
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 767px) {
+    .mk-checkout-page .ck-page-head-row {
+        flex-wrap: wrap;
+        gap: 0.55rem;
+    }
+
+    .mk-checkout-page .ck-pay-rail--inline {
+        order: 3;
+        width: 100%;
+        justify-content: center;
+        padding: 0.45rem 0.35rem;
+        border-radius: 12px;
+        background: rgba(148, 163, 184, 0.08);
+    }
+
+    .mk-checkout-page .ck-pay-rail-item {
+        font-size: var(--ck-m-caption);
+    }
+
+    .mk-checkout-page .ck-page-title {
+        font-size: clamp(1.2rem, 5.5vw, 1.45rem);
+        line-height: 1.3;
+    }
+
+    .mk-checkout-page .ck-page-sub {
+        font-size: var(--ck-m-body);
+        line-height: 1.7;
+    }
+
+    .mk-checkout-page .ck-back {
+        min-height: var(--ck-m-touch);
+        padding: 0.45rem 0.75rem;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .mk-checkout-page .ck-plan-mode-tabs {
+        width: 100%;
+        max-width: none;
+    }
+
+    .mk-checkout-page .ck-plan-mode-tab {
+        flex: 1;
+        min-height: var(--ck-m-touch);
+        font-size: var(--ck-m-body);
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .mk-checkout-page .ck-plans {
+        grid-template-columns: 1fr;
+        gap: 0.65rem;
+    }
+
+    .mk-checkout-page .ck-agency-section {
+        gap: 0.65rem;
+    }
+
+    .mk-checkout-page .ck-agency-duration {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 0.45rem;
+    }
+
+    .mk-checkout-page .ck-plan.ck-plan--card {
+        border-radius: 14px;
+        padding: 1rem 0.95rem;
+        min-height: var(--ck-m-touch);
+    }
+
+    .mk-checkout-page .ck-plan-name {
+        font-size: var(--ck-m-body);
+    }
+
+    .mk-checkout-page .ck-plan-amount {
+        font-size: clamp(1.15rem, 5vw, 1.35rem);
+    }
+
+    .mk-checkout-page .ck-plan-feats li {
+        font-size: var(--ck-m-caption);
+        line-height: 1.6;
+        padding: 0.28rem 0;
+    }
+
+    .mk-checkout-page .ck-plan-foot {
+        min-height: var(--ck-m-touch);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: var(--ck-m-body);
+    }
+
+    .mk-checkout-page .ck-pay-btn,
+    .mk-checkout-page .ck-promo-btn {
+        min-height: var(--ck-m-touch);
+        font-size: var(--ck-m-body);
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .mk-checkout-page .ck-agency-duration-btn,
+    .mk-checkout-page .ck-agency-seat-btn {
+        min-height: var(--ck-m-touch);
+        min-width: var(--ck-m-touch);
+    }
+
+    .mk-checkout-page .ck-pay-method {
+        min-height: var(--ck-m-touch);
+        padding: 0.75rem 0.9rem;
+    }
+
+    .mk-checkout-page .ck-promo-input {
+        min-height: var(--ck-m-touch);
+        font-size: var(--ck-m-body);
+    }
+
+    .mk-checkout-page .ck-order-inner {
+        border-radius: 14px;
+    }
+
+    .mk-checkout-page .ck-renewal-banner {
+        flex-direction: column;
+        gap: 0.65rem;
+        padding: 0.85rem;
+        border-radius: 12px;
+    }
+
+    .mk-checkout-page .ck-renewal-banner p {
+        font-size: var(--ck-m-caption);
+        line-height: 1.65;
+        overflow-wrap: anywhere;
+    }
+
+    .mk-checkout-page .ck-mobile-bar .ck-pay-btn--compact {
+        min-height: var(--ck-m-touch);
+        min-width: 7.5rem;
+        font-size: var(--ck-m-body);
+        font-weight: 800;
+    }
+
+    .mk-checkout-page .ck-mobile-total strong {
+        font-size: clamp(1rem, 4.5vw, 1.15rem);
+    }
+
+    .mk-checkout-page .ck-form-foot {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.45rem;
+        text-align: center;
+    }
+
+    .mk-checkout-page .ck-foot-link {
+        min-height: var(--ck-m-touch);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 360px) {
+    .mk-checkout-page {
+        --ck-m-pad: 0.9rem;
+    }
+}

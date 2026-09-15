@@ -1,0 +1,160 @@
+/* ═══════════════════════════════════════════════════════════
+   Workspace Compare — Mobile Pass 09 (Surfaces #98–99)
+   Scoped: max-width 767px only — extends ws-compare-mobile.css
+   ═══════════════════════════════════════════════════════════ */
+
+@media (max-width: 767px) {
+    /* ── Compare page (#98) ── */
+    .ws-compare-mobile.mk-page {
+        padding-bottom: calc(0.85rem + env(safe-area-inset-bottom, 0px));
+    }
+
+    .ws-compare-mobile .mk-page-hero,
+    .ws-compare-mobile .ws-cmp-hero {
+        border-radius: 0 0 20px 20px;
+        padding: 0.85rem 0.75rem 0.8rem;
+    }
+
+    .ws-compare-mobile .mk-page-hero-title,
+    .ws-compare-mobile .ws-cmp-hero-title {
+        font-size: 1.2rem;
+        line-height: 1.28;
+    }
+
+    .ws-compare-mobile .mk-hero-btn,
+    .ws-compare-mobile .ws-cmp-cta {
+        min-height: 2.85rem;
+        border-radius: 13px;
+        font-size: 0.85rem;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .ws-compare-mobile .mk-stat-strip,
+    .ws-compare-mobile .ws-cmp-strip {
+        margin-inline: 0.65rem !important;
+        gap: 0.4rem;
+    }
+
+    .ws-compare-mobile .mk-stat,
+    .ws-compare-mobile .ws-cmp-file {
+        padding: 0.8rem 0.85rem;
+        border-radius: 15px;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .ws-compare-mobile .mk-panel,
+    .ws-compare-mobile .ws-cmp-panel {
+        margin-inline: 0.65rem;
+        border-radius: 16px;
+    }
+
+    .ws-compare-mobile .ws-delta,
+    .ws-compare-mobile .ws-cmp-delta {
+        min-height: 4.25rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        border-radius: 14px;
+    }
+
+    .ws-compare-mobile .ws-delta-val,
+    .ws-compare-mobile .ws-cmp-delta-val {
+        font-size: 1.42rem;
+    }
+
+    .ws-compare-mobile .ws-empty .ws-btn {
+        min-height: 2.85rem;
+        width: 100%;
+        max-width: 16rem;
+        border-radius: 13px;
+        font-weight: 850;
+    }
+
+    /* ── Compare picker modal → bottom sheet (#99) ── */
+    #modal-compare.is-open {
+        align-items: flex-end;
+        justify-content: flex-end;
+    }
+
+    #modal-compare.is-open .ws-modal-overlay {
+        background: rgba(15, 23, 42, 0.45);
+        backdrop-filter: blur(3px);
+        -webkit-backdrop-filter: blur(3px);
+    }
+
+    #modal-compare.is-open .ws-modal-panel {
+        width: 100%;
+        max-width: none;
+        max-height: min(88dvh, 680px);
+        margin: 0;
+        border-radius: 20px 20px 0 0;
+        border-bottom: none;
+        display: flex;
+        flex-direction: column;
+        animation: wsCmpModalSlide 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    @keyframes wsCmpModalSlide {
+        from { transform: translateY(100%); }
+        to { transform: translateY(0); }
+    }
+
+    #modal-compare.is-open .ws-modal-head {
+        flex-shrink: 0;
+        padding: 0.75rem 0.85rem 0.65rem;
+        border-bottom: 1px solid color-mix(in srgb, var(--ws-border) 55%, transparent);
+    }
+
+    #modal-compare.is-open .ws-modal-head::before {
+        content: "";
+        display: block;
+        width: 2.5rem;
+        height: 0.28rem;
+        margin: 0 auto 0.5rem;
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--ws-border) 70%, transparent);
+    }
+
+    #modal-compare.is-open .ws-modal-body {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+        padding: 0.75rem 0.85rem;
+    }
+
+    #modal-compare.is-open .ws-modal-body .ws-field select,
+    #modal-compare.is-open .ws-modal-body .ws-field input {
+        min-height: 2.75rem;
+        font-size: 1rem;
+        border-radius: 12px;
+    }
+
+    #modal-compare.is-open .ws-modal-foot {
+        flex-shrink: 0;
+        padding: 0.65rem 0.85rem calc(0.75rem + env(safe-area-inset-bottom, 0px));
+        border-top: 1px solid color-mix(in srgb, var(--ws-border) 55%, transparent);
+        gap: 0.45rem;
+    }
+
+    #modal-compare.is-open .ws-modal-foot .ws-btn {
+        flex: 1;
+        min-height: 2.85rem;
+        border-radius: 13px;
+        font-weight: 850;
+    }
+
+    #modal-compare.is-open .ws-modal-close {
+        width: 2.75rem;
+        height: 2.75rem;
+        border-radius: 12px;
+    }
+}
+
+@media (max-width: 767px) and (prefers-reduced-motion: reduce) {
+    #modal-compare.is-open .ws-modal-panel {
+        animation: none;
+    }
+}

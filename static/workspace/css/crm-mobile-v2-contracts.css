@@ -1,0 +1,370 @@
+/* ═══════════════════════════════════════════════════════════
+   CRM Contracts — Mobile Pass 13 (#218–228)
+   Scoped: max-width 767px only — Desktop unchanged
+   ═══════════════════════════════════════════════════════════ */
+
+@media (max-width: 767px) {
+    /* Dashboard (#218) */
+    .crm-contracts-dashboard.ct-workspace,
+    .crm-contracts-page.ct-workspace {
+        overflow-x: clip;
+        padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
+    }
+
+    .crm-contracts-dashboard .ct-workspace-header .crm-dash-bar-actions,
+    .crm-contracts-page .crm-dash-bar-actions {
+        flex-wrap: wrap;
+        gap: 0.45rem;
+        width: 100%;
+    }
+
+    .crm-contracts-dashboard .crm-dash-bar-actions .crm-dash-act,
+    .crm-contracts-page .crm-dash-bar-actions .crm-dash-act {
+        flex: 1 1 calc(50% - 0.25rem);
+        min-height: 2.75rem;
+        justify-content: center;
+    }
+
+    .crm-contracts-dashboard .ct-dash-kpi-row,
+    .crm-contracts-dashboard .ct-dash-filters {
+        grid-template-columns: 1fr !important;
+        gap: 0.5rem;
+    }
+
+    .crm-contracts-dashboard .ct-dash-filter-bar {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        flex-wrap: nowrap;
+        padding-bottom: 0.15rem;
+    }
+
+    .crm-contracts-dashboard .ct-dash-filter-bar::-webkit-scrollbar {
+        display: none;
+    }
+
+    .crm-contracts-dashboard .ct-dash-filter-chip {
+        flex: 0 0 auto;
+        min-height: 2.5rem;
+        white-space: nowrap;
+    }
+
+    .crm-contracts-dashboard .ct-contracts-table-wrap {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        margin-inline: -0.35rem;
+        padding-inline: 0.35rem;
+    }
+
+    .crm-contracts-dashboard .ct-contracts-table {
+        min-width: 36rem;
+    }
+
+    .crm-contracts-dashboard .ct-contract-row-actions {
+        gap: 0.35rem;
+    }
+
+    .crm-contracts-dashboard .crm-dash-act--icon {
+        min-width: 2.75rem;
+        min-height: 2.75rem;
+    }
+
+    /* Create (#219) */
+    .crm-contract-create.ct-create .ct-create-grid,
+    .crm-contract-create .ct-create-form-grid {
+        grid-template-columns: 1fr !important;
+        gap: 0.65rem;
+    }
+
+    .crm-contract-create .ct-create-type-cards {
+        grid-template-columns: 1fr !important;
+    }
+
+    .crm-contract-create .ct-create-type-card {
+        min-height: 3.25rem;
+        padding: 0.85rem;
+    }
+
+    .crm-contract-create .ct-create-footer .crm-dash-act {
+        width: 100%;
+        min-height: 2.75rem;
+    }
+
+    /* Wizard stepper + sticky nav (#220, #225) */
+    .ct-contract-wizard,
+    .ct-handover-wizard {
+        padding-bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
+    }
+
+    .ct-contract-wizard .ct-manage-topbar,
+    .ct-handover-wizard .ct-manage-topbar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.45rem;
+    }
+
+    .ct-contract-wizard .ct-manage-breadcrumb,
+    .ct-handover-wizard .ct-manage-breadcrumb {
+        font-size: 0.68rem;
+        overflow-x: auto;
+        white-space: nowrap;
+        scrollbar-width: none;
+    }
+
+    .ct-contract-wizard .ct-wz-stepper.crm-deal-stepper,
+    .ct-handover-wizard .ct-wz-stepper.crm-deal-stepper {
+        margin-inline: -0.35rem;
+        padding-inline: 0.35rem;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scroll-snap-type: x proximity;
+        scrollbar-width: none;
+    }
+
+    .ct-contract-wizard .ct-wz-stepper::-webkit-scrollbar,
+    .ct-handover-wizard .ct-wz-stepper::-webkit-scrollbar {
+        display: none;
+    }
+
+    .ct-contract-wizard .ct-wz-stepper .crm-deal-stepper-steps,
+    .ct-handover-wizard .ct-wz-stepper .crm-deal-stepper-steps {
+        min-width: max(100%, 34rem);
+        scroll-snap-align: start;
+    }
+
+    .ct-contract-wizard .ct-wz-stepper .crm-deal-step,
+    .ct-handover-wizard .ct-wz-stepper .crm-deal-step {
+        scroll-snap-align: center;
+        min-height: 2.75rem;
+    }
+
+    .ct-contract-wizard .ct-wz-stepper .crm-deal-step-label,
+    .ct-handover-wizard .ct-wz-stepper .crm-deal-step-label {
+        font-size: 0.68rem;
+        max-width: 5.5rem;
+        text-align: center;
+        line-height: 1.25;
+    }
+
+    .ct-contract-wizard .ct-wizard-body,
+    .ct-handover-wizard .ct-wizard-body {
+        gap: 0.65rem;
+    }
+
+    .ct-contract-wizard .ct-toggle-grid,
+    .ct-handover-wizard .ct-toggle-grid,
+    .ct-contract-wizard .ct-clause-grid,
+    .ct-handover-wizard .ct-clause-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    .ct-contract-wizard .ct-clause-card,
+    .ct-handover-wizard .ct-clause-card {
+        border-radius: 14px;
+    }
+
+    .ct-contract-wizard .ct-clause-preview-toggle,
+    .ct-handover-wizard .ct-clause-preview-toggle {
+        min-height: 2.5rem;
+        width: 100%;
+        text-align: center;
+    }
+
+    .ct-contract-wizard .ct-wizard-footer,
+    .ct-contract-wizard .crm-contract-wizard-nav,
+    .ct-handover-wizard .ct-wizard-footer,
+    .ct-handover-wizard .crm-contract-wizard-nav {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 40;
+        display: flex;
+        gap: 0.5rem;
+        margin: 0;
+        padding: 0.65rem 0.75rem calc(0.65rem + env(safe-area-inset-bottom, 0px));
+        background: color-mix(in srgb, var(--ct-m-surface, #fff) 94%, #f8fafc);
+        border-top: 1px solid var(--ct-m-border, #e2e8f0);
+        box-shadow: 0 -8px 24px rgba(15, 23, 42, 0.08);
+        backdrop-filter: blur(8px);
+    }
+
+    .ct-contract-wizard .crm-contract-wizard-nav .crm-dash-act,
+    .ct-handover-wizard .crm-contract-wizard-nav .crm-dash-act {
+        flex: 1;
+        min-height: 2.85rem;
+        justify-content: center;
+    }
+
+    .ct-contract-wizard .crm-contract-wizard-nav .crm-dash-act--primary,
+    .ct-handover-wizard .crm-contract-wizard-nav .crm-dash-act--primary {
+        flex: 1.35;
+    }
+
+    /* Manage (#221) */
+    .crm-contract-manage:not(.ct-contract-wizard):not(.ct-handover-wizard) .ct-manage-layout {
+        grid-template-columns: 1fr !important;
+    }
+
+    .crm-contract-manage .ct-manage-hero__meta {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.35rem;
+    }
+
+    .crm-contract-manage .ct-manage-actions {
+        flex-wrap: wrap;
+        width: 100%;
+    }
+
+    .crm-contract-manage .ct-manage-actions .crm-dash-act {
+        flex: 1 1 calc(50% - 0.25rem);
+        min-height: 2.75rem;
+        justify-content: center;
+    }
+
+    .crm-contract-manage .ct-manage-timeline {
+        padding-inline: 0;
+    }
+
+    /* Deal section (#222) */
+    .crm-contracts-page .ct-deal-contracts-list {
+        gap: 0.55rem;
+    }
+
+    .crm-contracts-page .ct-deal-contract-card {
+        border-radius: 14px;
+        padding: 0.85rem;
+    }
+
+    .crm-contracts-page .ct-deal-contract-card__actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .crm-contracts-page .ct-deal-contract-card__actions .crm-dash-act {
+        width: 100%;
+        min-height: 2.75rem;
+        justify-content: center;
+    }
+
+    /* PDF preview / download (#223, #224) */
+    .ct-contract-wizard .ct-review-sidebar-actions .crm-dash-act,
+    .ct-contract-wizard .ct-review-mobile-bar .crm-dash-act {
+        width: 100%;
+        min-height: 2.85rem;
+        justify-content: center;
+    }
+
+    .ct-contract-wizard .ct-review-mobile-bar {
+        position: sticky;
+        bottom: calc(4.25rem + env(safe-area-inset-bottom, 0px));
+        z-index: 25;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.65rem 0.75rem;
+        margin-top: 0.65rem;
+    }
+
+    .ct-contract-wizard .ct-review-mobile-bar__status {
+        flex: 1 1 100%;
+    }
+
+    .ct-contract-wizard .ct-review-nav {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        flex-wrap: nowrap;
+        gap: 0.35rem;
+        padding-bottom: 0.15rem;
+    }
+
+    .ct-contract-wizard .ct-review-nav::-webkit-scrollbar {
+        display: none;
+    }
+
+    .ct-contract-wizard .ct-review-nav__chip {
+        flex: 0 0 auto;
+        min-height: 2.5rem;
+        white-space: nowrap;
+    }
+
+    .ct-contract-wizard .ct-review-payments-table {
+        display: block;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .ct-contract-wizard .ct-review-layout {
+        grid-template-columns: 1fr !important;
+    }
+
+    .ct-contract-wizard .crm-contract-wizard-aside {
+        order: -1;
+    }
+
+    /* Handover photo upload (#226) */
+    .ct-handover-wizard .ho-photo-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+
+    .ct-handover-wizard .ho-upload-zone {
+        min-height: 5.5rem;
+        padding: 0.85rem;
+    }
+
+    /* Public contract PDF frames */
+    .ho-public__pdf-frame,
+    .ho-public__pdf-frame--done {
+        height: min(58vh, 480px) !important;
+        min-height: 260px !important;
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .ho-public__pdf-frame iframe {
+        width: 100%;
+        height: 100%;
+        border: 0;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .ct-public__card .ct-doc-btn {
+        width: 100%;
+        min-height: 2.85rem;
+        justify-content: center;
+    }
+
+    /* Help modal (#228) */
+    #modal-crm-contracts-help.fl-help-modal .ws-modal-panel {
+        width: 100%;
+        max-width: 100%;
+        max-height: 92dvh;
+        border-radius: 18px 18px 0 0;
+        margin-top: auto;
+    }
+
+    #modal-crm-contracts-help .fl-help-modal__nav {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        flex-wrap: nowrap;
+    }
+
+    #modal-crm-contracts-help .fl-help-modal__nav::-webkit-scrollbar {
+        display: none;
+    }
+
+    #modal-crm-contracts-help .fl-help-modal__nav-btn {
+        flex: 0 0 auto;
+        min-height: 2.65rem;
+    }
+
+    #modal-crm-contracts-help .fl-help-modal__body {
+        max-height: calc(92dvh - 12rem);
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+}

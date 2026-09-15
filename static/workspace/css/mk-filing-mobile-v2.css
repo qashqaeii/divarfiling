@@ -1,0 +1,134 @@
+/* ═══════════════════════════════════════════════════════════
+   Filing — Dataset List Mobile Pass 03 (#28–40)
+   Scoped: max-width 767px
+   ═══════════════════════════════════════════════════════════ */
+
+@media (max-width: 767px) {
+    .mk-filing-mobile.mk-page {
+        padding-bottom: calc(5.75rem + env(safe-area-inset-bottom, 0px));
+    }
+
+    /* Hide desktop table on mobile — cards are primary (#33) */
+    .mk-filing-mobile .mk-ds-layout-table,
+    .mk-filing-mobile .mk-filing-table-wrap {
+        display: none !important;
+    }
+
+    .mk-filing-mobile .mk-ds-layout-grid {
+        display: block !important;
+    }
+
+    .mk-filing-mobile .fl-mob-cards,
+    .mk-filing-mobile .mk-filing-mob-cards {
+        display: flex;
+        flex-direction: column;
+        gap: 0.55rem;
+    }
+
+    /* Dataset mobile cards (#34) */
+    .mk-filing-mobile .fl-mob-card,
+    .mk-filing-mobile .mk-filing-mob-card {
+        border-radius: 16px;
+        min-height: 4.5rem;
+        padding: 0.75rem 0.8rem;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .mk-filing-mobile .fl-mob-card:active {
+        transform: scale(0.992);
+    }
+
+    .mk-filing-mobile .fl-mob-card__title {
+        font-size: 1rem;
+        font-weight: 800;
+        line-height: 1.35;
+    }
+
+    .mk-filing-mobile .fl-mob-card__meta {
+        font-size: 0.8125rem;
+    }
+
+    /* FAB (#36) */
+    .mk-filing-mobile .mk-filing-fab,
+    .mk-filing-mobile .fl-fab {
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+        gap: 0.35rem;
+        min-height: 2.75rem;
+        min-width: 2.75rem;
+        padding: 0 1rem;
+        bottom: calc(5.25rem + env(safe-area-inset-bottom, 0px)) !important;
+        inset-inline-end: 0.85rem;
+        border-radius: 999px;
+        z-index: 175;
+        box-shadow: 0 8px 28px color-mix(in srgb, var(--ws-primary) 35%, transparent);
+    }
+
+    /* Bulk bar above bottom nav (#39) */
+    .mk-filing-mobile .fl-bulk-bar,
+    .mk-filing-mobile .mk-bulk-bar {
+        position: fixed;
+        inset-inline: 0.65rem;
+        bottom: calc(5.15rem + env(safe-area-inset-bottom, 0px));
+        z-index: 174;
+        border-radius: 16px;
+        padding: 0.65rem 0.75rem;
+        box-shadow: 0 12px 36px rgba(15, 23, 42, 0.14);
+    }
+
+    .mk-filing-mobile .mk-bulk-btn {
+        min-height: 2.5rem;
+        font-size: 0.8125rem;
+    }
+
+    /* Toolbar filter trigger (#30, #44 integration) */
+    .mk-filing-mobile .fl-toolbar__filter-btn,
+    .mk-filing-mobile .mk-filing-mob-filter-summary {
+        min-height: 2.75rem;
+        border-radius: 12px;
+        font-size: 0.875rem;
+    }
+
+    /* Empty state (#35) */
+    .mk-filing-mobile .fl-empty,
+    .mk-filing-mobile .fl-panel__empty .fl-empty {
+        padding: 1.25rem 1rem;
+        text-align: center;
+    }
+
+    .mk-filing-mobile .fl-empty .ws-btn {
+        min-height: 2.75rem;
+        width: 100%;
+        max-width: 280px;
+        margin-inline: auto;
+    }
+
+    /* Panel head compact (#28) */
+    .mk-filing-mobile .fl-panel__head {
+        flex-wrap: wrap;
+        gap: 0.45rem;
+    }
+
+    .mk-filing-mobile .fl-panel__title h2 {
+        font-size: 1.0625rem;
+    }
+
+    .mk-filing-mobile .fl-panel__sort-select {
+        min-height: 2.5rem;
+        font-size: 0.875rem;
+    }
+
+    /* Batch result modal (#38) — bottom sheet on mobile */
+    #modal-batch-result.is-open .ws-modal-panel {
+        width: 100%;
+        max-width: 100%;
+        max-height: 92dvh;
+        border-radius: 20px 20px 0 0;
+        margin: 0;
+    }
+
+    #modal-batch-result.is-open .ws-modal-foot {
+        padding-bottom: max(0.85rem, env(safe-area-inset-bottom, 0px));
+    }
+}

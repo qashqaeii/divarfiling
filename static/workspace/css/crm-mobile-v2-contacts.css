@@ -1,0 +1,680 @@
+/* ═══════════════════════════════════════════════════════════
+   CRM Core + Contacts — Mobile Pass 10 (Surfaces #101–142)
+   Scoped: max-width 767px only — extends crm-contacts-mobile-premium.css
+   Desktop unchanged
+   ═══════════════════════════════════════════════════════════ */
+
+@media (max-width: 767px) {
+    /* ── CRM layout shell (#101) ── */
+    .crm-app,
+    .crm-app .crm-main {
+        min-width: 0;
+        max-width: 100%;
+        overflow-x: clip;
+    }
+
+    .ws-content:has(.crm-app) {
+        padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px)) !important;
+    }
+
+    .crm-app .crm-page-chrome {
+        padding-inline: 0;
+        gap: 0.55rem;
+    }
+
+    .crm-app .crm-main {
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+    }
+
+    .crm-app input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+    .crm-app select,
+    .crm-app textarea,
+    .crm-app .crm-btn,
+    .crm-app .crm-dash-act {
+        min-height: 2.75rem;
+        font-size: max(16px, 0.875rem);
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    /* ── Today page (#102–103) ── */
+    .crm-app--today-full .crm-today-pro {
+        padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
+    }
+
+    .crm-today-pro .crm-dash-bar {
+        margin-inline: 0;
+        border-radius: 0 0 20px 20px;
+        padding: 0.85rem 0.85rem 0.75rem;
+        padding-top: max(0.85rem, env(safe-area-inset-top, 0.85rem));
+        border: none;
+        box-shadow: 0 8px 28px rgba(15, 23, 42, 0.06);
+    }
+
+    .crm-today-pro .crm-dash-bar-title {
+        font-size: 1.2rem;
+        line-height: 1.28;
+        letter-spacing: -0.03em;
+    }
+
+    .crm-today-pro .crm-today-tabs {
+        display: flex;
+        gap: 0.35rem;
+        margin-inline: 0.75rem;
+        padding: 0.25rem;
+        border-radius: 14px;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 70%, transparent);
+        background: var(--ws-surface);
+    }
+
+    .crm-today-pro .crm-today-tab {
+        flex: 1;
+        min-height: 2.75rem;
+        border-radius: 11px;
+        font-weight: 800;
+        font-size: 0.78rem;
+    }
+
+    .crm-today-pro .crm-today-board {
+        padding-inline: 0.75rem;
+        gap: 0.55rem;
+    }
+
+    .crm-today-pro .crm-queue-col {
+        border-radius: 16px;
+        border: none;
+        box-shadow: 0 6px 20px rgba(15, 23, 42, 0.05);
+    }
+
+    .crm-today-pro .crm-queue-task,
+    .crm-today-pro .crm-today-task-card {
+        border-radius: 14px;
+        padding: 0.75rem 0.8rem;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .crm-today-pro .crm-queue-act {
+        min-height: 2.75rem;
+        border-radius: 12px;
+        font-weight: 800;
+    }
+
+    .crm-today-pro .crm-today-fab {
+        z-index: 150;
+        bottom: calc(4.85rem + env(safe-area-inset-bottom, 0px));
+        min-height: 3rem;
+        border-radius: 999px;
+        box-shadow: 0 8px 24px -6px color-mix(in srgb, var(--ws-primary) 55%, transparent);
+    }
+
+    /* ── CRM dashboard (#106) ── */
+    .crm-app-dashboard .crm-dash--pro {
+        gap: 0.65rem;
+    }
+
+    .crm-app-dashboard .crm-dash--pro .crm-dash-bar {
+        margin-inline: 0;
+        border-radius: 0 0 20px 20px;
+        padding: 0.85rem 0.8rem 0.7rem;
+        border: none;
+        box-shadow: 0 8px 28px rgba(15, 23, 42, 0.06);
+    }
+
+    .crm-app-dashboard .crm-dash--pro .crm-dash-bar-title {
+        font-size: 1.15rem;
+        letter-spacing: -0.03em;
+    }
+
+    .crm-app-dashboard .crm-dash--pro .crm-dash-bar-actions {
+        border-radius: 14px !important;
+        padding: 0.35rem !important;
+    }
+
+    .crm-app-dashboard .crm-dash--pro .crm-dash-act {
+        min-width: 2.75rem;
+        min-height: 2.75rem;
+        border-radius: 12px;
+    }
+
+    .crm-app-dashboard .acd-mission-card,
+    .crm-app-dashboard .crm-dash-bento .crm-cell,
+    .crm-app-dashboard .crm-feed-v2-item,
+    .crm-app-dashboard .crm-dash-alert-card {
+        margin-inline: 0.75rem;
+        border-radius: 16px;
+    }
+
+    .crm-app-dashboard .crm-dash-bento {
+        padding-inline: 0.75rem;
+        gap: 0.5rem;
+    }
+
+    /* ── CRM global search (#107) ── */
+    .crm-app .crm-global-search,
+    .crm-app .mk-global-search {
+        position: relative;
+        z-index: 30;
+    }
+
+    .crm-app .crm-search-input-wrap {
+        min-height: 2.75rem;
+        border-radius: 14px;
+        padding-inline: 0.75rem;
+    }
+
+    .crm-app .crm-search-input {
+        font-size: 1rem;
+    }
+
+    .crm-app .crm-search-kbd {
+        display: none;
+    }
+
+    .crm-app .crm-search-results {
+        position: fixed;
+        inset-inline: 0.65rem;
+        top: calc(var(--ws-mob-topbar-h, 3.25rem) + 0.35rem);
+        z-index: 240;
+        max-height: min(62dvh, 480px);
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+        border-radius: 16px;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 70%, transparent);
+        box-shadow: 0 16px 48px rgba(15, 23, 42, 0.14);
+        padding: 0.35rem;
+    }
+
+    .crm-app .crm-search-item {
+        min-height: 2.85rem;
+        padding: 0.55rem 0.7rem;
+        border-radius: 12px;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    /* ── Notifications due (#108) ── */
+    .crm-app ~ #mkToastStack.mk-notices--toast,
+    body.ws-body:has(.crm-app) #mkToastStack.mk-notices--toast {
+        bottom: calc(5.25rem + env(safe-area-inset-bottom, 0px)) !important;
+        z-index: 195;
+    }
+
+    /* ── Contacts list shell (#109) ── */
+    .crm-contacts-mobile.crm-page-chrome {
+        padding: 0 0 calc(5rem + env(safe-area-inset-bottom, 0px));
+        gap: 0;
+        background: var(--ws-bg, #f4f6fb);
+    }
+
+    .crm-contacts-mobile .crm-contacts-mob-header {
+        border-radius: 0 0 20px 20px;
+        box-shadow: 0 8px 28px rgba(15, 23, 42, 0.06);
+    }
+
+    /* ── Mobile toolbar (#110) ── */
+    .crm-contacts-mob-toolbar-menu-trigger,
+    .crm-contacts-mob-icon-btn,
+    .crm-contacts-mob-add-btn {
+        min-width: 2.75rem;
+        min-height: 2.75rem;
+        border-radius: 12px;
+    }
+
+    .crm-contacts-mob-toolbar-panel {
+        min-width: 12.5rem;
+        border-radius: 16px;
+    }
+
+    .crm-contacts-mob-toolbar-item {
+        min-height: 2.85rem;
+        border-radius: 11px;
+    }
+
+    /* ── Filter sheet (#111–112) ── */
+    .crm-contacts-mob-filter-sheet .crm-contacts-mob-filter-panel {
+        max-height: min(88dvh, 720px);
+        border-radius: 20px 20px 0 0;
+    }
+
+    .crm-contacts-mob-filter-head {
+        padding-top: 0.55rem;
+    }
+
+    .crm-contacts-mob-filter-head::before {
+        content: "";
+        display: block;
+        width: 2.5rem;
+        height: 0.28rem;
+        margin: 0 auto 0.55rem;
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--ws-border) 70%, transparent);
+    }
+
+    .crm-contacts-mob-filter-close {
+        width: 2.75rem;
+        height: 2.75rem;
+        border-radius: 12px;
+    }
+
+    .crm-contacts-mob-filter-foot .crm-btn {
+        flex: 1;
+        min-height: 2.85rem;
+        border-radius: 13px;
+        font-weight: 850;
+    }
+
+    .crm-contacts-mob-filter-saved .crm-saved-filters-btn {
+        min-height: 2.75rem;
+    }
+
+    /* ── Contact cards + FAB (#109, #119) ── */
+    .crm-contacts-mobile .crm-contacts-table tbody tr.crm-row-selectable {
+        border-radius: 18px;
+        box-shadow: 0 6px 20px rgba(15, 23, 42, 0.05);
+    }
+
+    .crm-contacts-mobile .crm-contacts-fab {
+        z-index: 150;
+        bottom: calc(4.85rem + env(safe-area-inset-bottom, 0px));
+        width: 3rem;
+        height: 3rem;
+    }
+
+    .crm-contacts-mob-act {
+        min-height: 2.75rem;
+        border-radius: 12px;
+    }
+
+    /* ── Bulk actions dock (#117) ── */
+    .crm-contacts-mobile .crm-bulk-dock {
+        inset-inline: 0.65rem;
+        bottom: calc(4.75rem + env(safe-area-inset-bottom, 0px));
+        z-index: 160;
+    }
+
+    .crm-contacts-mobile .crm-bulk-dock-inner {
+        border-radius: 16px;
+        padding: 0.65rem 0.75rem;
+        box-shadow: 0 12px 36px rgba(15, 23, 42, 0.14);
+        border: 1px solid color-mix(in srgb, var(--ws-border) 70%, transparent);
+    }
+
+    .crm-contacts-mobile .crm-bulk-dock-select,
+    .crm-contacts-mobile .crm-bulk-dock-input,
+    .crm-contacts-mobile .crm-bulk-dock-apply {
+        min-height: 2.75rem;
+        border-radius: 12px;
+    }
+
+    /* ── All CRM drawers → bottom sheets (#104, #113–115, #125–133) ── */
+    .crm-app .crm-drawer {
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+    }
+
+    .crm-app .crm-drawer-overlay {
+        background: rgba(15, 23, 42, 0.45);
+        backdrop-filter: blur(3px);
+        -webkit-backdrop-filter: blur(3px);
+    }
+
+    .crm-app .crm-drawer-panel,
+    .crm-app .crm-drawer-panel-lg {
+        position: relative;
+        top: auto;
+        left: auto;
+        right: auto;
+        bottom: auto;
+        width: 100%;
+        max-width: 100%;
+        height: auto;
+        max-height: min(92dvh, 820px);
+        border: none;
+        border-right: none;
+        border-radius: 20px 20px 0 0;
+        box-shadow: 0 -16px 48px rgba(15, 23, 42, 0.18);
+        transform: translateY(105%);
+        transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .crm-app .crm-drawer.is-open .crm-drawer-panel {
+        transform: translateY(0);
+    }
+
+    .crm-app .crm-drawer-head {
+        padding: 0.55rem 0.95rem 0.75rem;
+        padding-top: max(0.55rem, env(safe-area-inset-top, 0.55rem));
+        border-bottom: 1px solid color-mix(in srgb, var(--ws-border) 60%, transparent);
+    }
+
+    .crm-app .crm-drawer-head::before {
+        content: "";
+        display: block;
+        width: 2.5rem;
+        height: 0.28rem;
+        margin: 0 auto 0.55rem;
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--ws-border) 70%, transparent);
+    }
+
+    .crm-app .crm-drawer-head h2 {
+        font-size: 1rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+    }
+
+    .crm-app .crm-drawer-close {
+        width: 2.75rem;
+        height: 2.75rem;
+        border-radius: 12px;
+    }
+
+    .crm-app .crm-drawer-body {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+        padding: 0.75rem 0.9rem 1rem;
+    }
+
+    .crm-app .crm-drawer-foot {
+        flex-shrink: 0;
+        padding: 0.65rem 0.9rem calc(0.75rem + env(safe-area-inset-bottom, 0px));
+        gap: 0.45rem;
+        border-top: 1px solid color-mix(in srgb, var(--ws-border) 60%, transparent);
+        background: color-mix(in srgb, var(--ws-surface) 92%, transparent);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+    }
+
+    .crm-app .crm-drawer-foot .crm-btn {
+        flex: 1;
+        min-height: 2.85rem;
+        border-radius: 13px;
+        font-weight: 850;
+        justify-content: center;
+    }
+
+    .crm-app #drawer-quick-lead .crm-drawer-panel {
+        max-height: min(78dvh, 620px);
+    }
+
+    .crm-app #drawer-import .crm-drawer-panel,
+    .crm-app #drawer-merge .crm-drawer-panel {
+        max-height: min(85dvh, 680px);
+    }
+
+    /* ── Contact detail hero + pipeline (#120–121) ── */
+    body.ws-body:has(.crm-contact-detail-pro) .ws-mobile-topbar {
+        display: none !important;
+    }
+
+    .crm-contact-detail-pro.crm-contact-mobile {
+        padding-bottom: calc(5.25rem + env(safe-area-inset-bottom, 0px)) !important;
+    }
+
+    .crm-contact-detail-pro .crm-contact-hero {
+        border-radius: 0 0 24px 24px !important;
+    }
+
+    .crm-contact-detail-pro .crm-contact-hero__back,
+    .crm-contact-mob-menu-trigger,
+    .crm-contact-detail-pro .crm-contact-detail-help--mob {
+        min-width: 2.75rem;
+        min-height: 2.75rem;
+        border-radius: 12px;
+    }
+
+    .crm-contact-detail-pro .crm-contact-hero__status-select {
+        min-height: 2rem;
+        font-size: 0.72rem;
+    }
+
+    .crm-contact-mob-primary__btn {
+        min-height: 2.75rem;
+        border-radius: 12px;
+    }
+
+    /* ── Action center + dock + more menu (#122–124) ── */
+    .crm-contact-detail-pro .crm-contact-nba__cta,
+    .crm-contact-detail-pro .crm-contact-panel-head .crm-dash-act {
+        min-height: 2.75rem;
+        border-radius: 12px;
+    }
+
+    body.ws-body:has(.crm-contact-mobile-dock) .crm-contact-detail-pro .crm-contact-mobile-dock {
+        z-index: 175 !important;
+    }
+
+    body.ws-body:has(.crm-contact-mobile-dock) .crm-contact-detail-pro .crm-contact-mobile-dock__inner {
+        border-radius: 18px;
+    }
+
+    body.ws-body:has(.crm-contact-mobile-dock) .crm-contact-detail-pro .crm-contact-dock-btn {
+        min-height: 2.85rem;
+    }
+
+    .crm-contact-dock-more-panel,
+    .crm-contact-mob-menu-panel {
+        padding-bottom: calc(4.75rem + env(safe-area-inset-bottom, 0px));
+        border-radius: 20px 20px 0 0;
+    }
+
+    .crm-contact-dock-more-item,
+    .crm-contact-mob-menu-item {
+        min-height: 2.85rem;
+        border-radius: 12px;
+    }
+
+    /* ── Matches + tolerance (#134–136) ── */
+    .crm-contact-detail-pro .crm-matches-grid,
+    .crm-contact-mobile .crm-matches-grid {
+        gap: 0.55rem;
+    }
+
+    .crm-contact-detail-pro .crm-match-card,
+    .crm-contact-detail-pro .crm-match-card-v3 {
+        border-radius: 14px;
+        padding: 0.7rem 0.75rem;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .crm-contact-detail-pro .crm-contact-pref-tolerance-range {
+        min-height: 2.75rem;
+    }
+
+    .crm-contact-detail-pro .crm-contact-pref-tolerance-value {
+        min-width: 2.75rem;
+        min-height: 2.75rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 11px;
+        background: color-mix(in srgb, var(--ws-primary) 8%, var(--ws-surface));
+    }
+
+    /* ── Side panel fetch (#137) ── */
+    .crm-contacts-mobile .crm-side-panel,
+    .crm-contacts-layout .crm-side-panel {
+        position: fixed;
+        inset-inline: 0;
+        bottom: 0;
+        top: auto;
+        z-index: 230;
+        max-height: min(88dvh, 720px);
+        border-radius: 20px 20px 0 0;
+        box-shadow: 0 -16px 48px rgba(15, 23, 42, 0.18);
+        animation: crmMobSideSlide 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    @keyframes crmMobSideSlide {
+        from { transform: translateY(100%); }
+        to { transform: translateY(0); }
+    }
+
+    .crm-contacts-mobile .crm-side-head {
+        max-height: min(88dvh, 720px);
+        padding-top: 0.55rem;
+    }
+
+    .crm-contacts-mobile .crm-side-head::before {
+        content: "";
+        display: block;
+        width: 2.5rem;
+        height: 0.28rem;
+        margin: 0 auto 0.55rem;
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--ws-border) 70%, transparent);
+    }
+
+    .crm-contacts-mobile .crm-side-close {
+        width: 2.75rem;
+        height: 2.75rem;
+        border-radius: 12px;
+    }
+
+    /* ── Message preview + share (#138–139) ── */
+    .crm-contact-detail-pro .crm-template-picker select,
+    .crm-contact-detail-pro .crm-template-preview {
+        width: 100%;
+        min-height: 2.75rem;
+        border-radius: 12px;
+        font-size: 0.875rem;
+    }
+
+    .crm-contact-detail-pro .crm-template-preview {
+        min-height: 7rem;
+        line-height: 1.6;
+    }
+
+    .crm-contact-detail-pro .crm-template-picker-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.45rem;
+    }
+
+    .crm-contact-detail-pro .crm-template-picker-actions .crm-btn {
+        min-height: 2.75rem;
+        border-radius: 12px;
+        justify-content: center;
+    }
+
+    .crm-contact-detail-pro .crm-suggest-bar,
+    .crm-contact-detail-pro .crm-share-preview {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.5rem;
+        padding: 0.75rem;
+        border-radius: 14px;
+    }
+
+    /* ── Status pipeline + delete (#141–142) ── */
+    .crm-contact-detail-pro .crm-contact-hero__status-select {
+        min-height: 2.25rem;
+        padding-inline: 0.65rem;
+    }
+
+    .crm-contact-detail-pro .crm-contact-delete-form .crm-btn {
+        min-height: 2.85rem;
+        border-radius: 13px;
+        font-weight: 800;
+    }
+
+    .crm-contact-detail-pro .crm-merge-inline {
+        flex-wrap: wrap;
+        gap: 0.45rem;
+    }
+
+    .crm-contact-detail-pro .crm-merge-inline .crm-btn {
+        min-height: 2.75rem;
+    }
+
+    /* ── Help modals → bottom sheets (#105, #116, #140) ── */
+    #modal-crm-today-help.is-open,
+    #modal-crm-contacts-help.is-open,
+    #modal-crm-contact-detail-help.is-open {
+        align-items: flex-end;
+        justify-content: flex-end;
+    }
+
+    #modal-crm-today-help.is-open .ws-modal-overlay,
+    #modal-crm-contacts-help.is-open .ws-modal-overlay,
+    #modal-crm-contact-detail-help.is-open .ws-modal-overlay {
+        background: rgba(15, 23, 42, 0.45);
+        backdrop-filter: blur(3px);
+        -webkit-backdrop-filter: blur(3px);
+    }
+
+    #modal-crm-today-help.is-open .ws-modal-panel,
+    #modal-crm-today-help.is-open .fl-help-modal__panel,
+    #modal-crm-contacts-help.is-open .ws-modal-panel,
+    #modal-crm-contacts-help.is-open .fl-help-modal__panel,
+    #modal-crm-contact-detail-help.is-open .ws-modal-panel,
+    #modal-crm-contact-detail-help.is-open .fl-help-modal__panel {
+        width: 100%;
+        max-width: none;
+        max-height: min(92dvh, 820px);
+        margin: 0;
+        border-radius: 20px 20px 0 0;
+        border-bottom: none;
+        display: flex;
+        flex-direction: column;
+        animation: crmMobHelpSlide 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    @keyframes crmMobHelpSlide {
+        from { transform: translateY(100%); }
+        to { transform: translateY(0); }
+    }
+
+    #modal-crm-today-help.is-open .ws-modal-body,
+    #modal-crm-today-help.is-open .fl-help-modal__body,
+    #modal-crm-contacts-help.is-open .ws-modal-body,
+    #modal-crm-contacts-help.is-open .fl-help-modal__body,
+    #modal-crm-contact-detail-help.is-open .ws-modal-body,
+    #modal-crm-contact-detail-help.is-open .fl-help-modal__body {
+        flex: 1;
+        min-height: 0;
+        max-height: none;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    #modal-crm-today-help.is-open .fl-help-modal__nav,
+    #modal-crm-contacts-help.is-open .fl-help-modal__nav,
+    #modal-crm-contact-detail-help.is-open .fl-help-modal__nav {
+        overflow-x: auto;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    #modal-crm-today-help.is-open .fl-help-modal__nav-btn,
+    #modal-crm-contacts-help.is-open .fl-help-modal__nav-btn,
+    #modal-crm-contact-detail-help.is-open .fl-help-modal__nav-btn {
+        min-height: 2.75rem;
+        flex-shrink: 0;
+    }
+
+    #modal-crm-today-help.is-open .fl-help-modal__close,
+    #modal-crm-contacts-help.is-open .fl-help-modal__close,
+    #modal-crm-contact-detail-help.is-open .fl-help-modal__close {
+        width: 2.75rem;
+        height: 2.75rem;
+        border-radius: 12px;
+    }
+}
+
+@media (max-width: 767px) and (prefers-reduced-motion: reduce) {
+    .crm-app .crm-drawer-panel,
+    .crm-contacts-mobile .crm-side-panel,
+    #modal-crm-today-help.is-open .ws-modal-panel,
+    #modal-crm-contacts-help.is-open .ws-modal-panel,
+    #modal-crm-contact-detail-help.is-open .ws-modal-panel {
+        animation: none;
+        transition: none;
+    }
+}

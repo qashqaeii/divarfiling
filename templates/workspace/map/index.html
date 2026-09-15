@@ -10,11 +10,15 @@
 {% block content %}
 
 <link rel="stylesheet" href="{% static 'workspace/css/map-pro.css' %}?v=25">
+<link rel="stylesheet" href="{% static 'workspace/css/ws-map-mobile-v2.css' %}?v=1">
+{% if is_crm_map %}
+<link rel="stylesheet" href="{% static 'workspace/css/crm-mobile-v2-properties.css' %}?v=1">
+{% endif %}
 {% if is_multi_map %}
 <link rel="stylesheet" href="{% static 'workspace/css/multi-listings.css' %}?v=1">
 {% endif %}
 
-<div class="mk-page mk-map-pro ws-map-mobile{% if is_multi_map %} mk-map-pro--multi{% endif %}">
+<div class="mk-page mk-map-pro ws-map-mobile{% if is_multi_map %} mk-map-pro--multi{% endif %}{% if is_crm_map %} crm-properties-map{% endif %}">
 
 
 

@@ -35,6 +35,23 @@ const WSModal = {
         const modal = document.getElementById(id);
         if (!modal) return;
         if (this.active) this.close(this.active);
+        const sidebar = document.getElementById('wsSidebar');
+        if (sidebar?.classList.contains('open')) {
+            sidebar.classList.remove('open');
+            document.body.classList.remove('ws-sidebar-open');
+            const backdrop = document.getElementById('wsShellBackdrop');
+            if (backdrop) {
+                backdrop.hidden = true;
+                backdrop.setAttribute('aria-hidden', 'true');
+            }
+            const toggle = document.getElementById('sidebarToggle');
+            if (toggle) {
+                toggle.setAttribute('aria-expanded', 'false');
+                toggle.setAttribute('aria-label', 'باز کردن منو');
+                const icon = toggle.querySelector('i');
+                if (icon) icon.className = 'fas fa-bars';
+            }
+        }
         modal.classList.add('is-open');
         document.body.classList.add('ws-modal-open');
         this.active = modal;
@@ -226,6 +243,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function setSidebarOpen(open) {
         if (!sidebar) return;
+        if (open && document.body.classList.contains('ws-modal-open')) {
+            WSModal.closeAll();
+        }
         sidebar.classList.toggle('open', open);
         document.body.classList.toggle('ws-sidebar-open', open);
         const backdrop = document.getElementById('wsShellBackdrop');

@@ -1,0 +1,167 @@
+/* ═══════════════════════════════════════════════════════════
+   Product Hub — Mobile Pass 15 (#269–275)
+   Scoped: max-width 767px only — Desktop unchanged
+   Loads after ws-product-hub-mobile.css
+   ═══════════════════════════════════════════════════════════ */
+
+@media (max-width: 767px) {
+    /* Hub (#269–270) */
+    .ph-page-mobile.mk-page {
+        overflow-x: clip;
+        padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+    }
+
+    .ph-page-mobile .ph-mob-header {
+        border-radius: 0 0 20px 20px;
+    }
+
+    .ph-page-mobile .ph-mob-header-inner {
+        padding: 0.8rem 0.75rem 0.7rem;
+    }
+
+    .ph-page-mobile .ph-mob-title {
+        font-size: 1.18rem;
+        line-height: 1.28;
+    }
+
+    .ph-page-mobile .ph-tabbar {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        flex-wrap: nowrap;
+        gap: 0.35rem;
+        padding-bottom: 0.15rem;
+        margin-inline: -0.15rem;
+        padding-inline: 0.15rem;
+    }
+
+    .ph-page-mobile .ph-tabbar::-webkit-scrollbar {
+        display: none;
+    }
+
+    .ph-page-mobile .ph-tab {
+        flex: 0 0 auto;
+        min-height: 2.6rem;
+        white-space: nowrap;
+        scroll-snap-align: center;
+    }
+
+    .ph-page-mobile .ph-compose-cta {
+        margin-inline: 0.65rem;
+        border-radius: 16px;
+    }
+
+    .ph-page-mobile .ph-compose-cta .ws-btn {
+        min-height: 2.75rem;
+        flex-shrink: 0;
+    }
+
+    .ph-page-mobile .ph-feat-grid,
+    .ph-page-mobile .ph-bug-grid,
+    .ph-page-mobile .ph-release-grid {
+        grid-template-columns: 1fr !important;
+        gap: 0.55rem;
+    }
+
+    .ph-page-mobile .ph-card {
+        border-radius: 14px;
+        padding: 0.85rem;
+    }
+
+    .ph-page-mobile .ph-fab {
+        bottom: calc(5.75rem + env(safe-area-inset-bottom, 0px));
+        min-width: 3.25rem;
+        min-height: 3.25rem;
+    }
+
+    .ph-page-mobile .ph-feat-mob-bar {
+        position: sticky;
+        bottom: calc(0.65rem + env(safe-area-inset-bottom, 0px));
+        z-index: 18;
+        margin-inline: 0.65rem;
+        border-radius: 14px;
+        padding: 0.55rem 0.65rem;
+        background: color-mix(in srgb, var(--ws-surface, #fff) 94%, #f8fafc);
+        border: 1px solid var(--ws-border, #e2e8f0);
+        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+    }
+
+    /* Feature request modal (#271) */
+    #modal-ph-request .ws-modal-panel {
+        width: 100%;
+        max-width: 100%;
+        max-height: 92dvh;
+        border-radius: 18px 18px 0 0;
+        margin-top: auto;
+    }
+
+    #modal-ph-request .ws-modal-body {
+        max-height: calc(92dvh - 10rem);
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Bug report modal (#272) */
+    #modal-ph-bug .ws-modal-panel {
+        width: 100%;
+        max-width: 100%;
+        max-height: 92dvh;
+        border-radius: 18px 18px 0 0;
+        margin-top: auto;
+    }
+
+    /* Feature filter modal (#273) */
+    #modal-ph-feat-filter .ws-modal-panel {
+        width: 100%;
+        max-width: 100%;
+        max-height: 88dvh;
+        border-radius: 18px 18px 0 0;
+        margin-top: auto;
+    }
+
+    /* Notifications (#274) */
+    .ph-notif-page .ph-notif-list {
+        gap: 0.5rem;
+        padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+    }
+
+    .ph-notif-page .ph-notif-item {
+        border-radius: 14px;
+        padding: 0.85rem;
+        min-height: 3rem;
+    }
+
+    /* Manage dashboard (#275) */
+    .ph-manage-page .ph-manage-kpi-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 0.5rem;
+    }
+
+    .ph-manage-page .ph-manage-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.45rem;
+    }
+
+    .ph-manage-page .ph-manage-toolbar .ws-btn {
+        width: 100%;
+        min-height: 2.75rem;
+    }
+
+    .ph-manage-page .ph-manage-table-wrap {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        margin-inline: -0.35rem;
+        padding-inline: 0.35rem;
+    }
+
+    .ph-modal .ws-modal-foot {
+        flex-direction: column-reverse;
+        gap: 0.45rem;
+    }
+
+    .ph-modal .ws-modal-foot .ws-btn {
+        width: 100%;
+        min-height: 2.85rem;
+    }
+}

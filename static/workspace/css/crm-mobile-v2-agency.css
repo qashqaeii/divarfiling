@@ -1,0 +1,426 @@
+/* ═══════════════════════════════════════════════════════════
+   Agency Hub — Mobile Pass 14 (#229–256)
+   Scoped: max-width 767px only — Desktop unchanged
+   ═══════════════════════════════════════════════════════════ */
+
+@media (max-width: 767px) {
+    /* Hub shell (#229–230) */
+    .agency-hub {
+        overflow-x: clip;
+        padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
+    }
+
+    .agency-hub-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.65rem;
+        padding: 0.85rem 0.75rem;
+        border-radius: 0 0 18px 18px;
+    }
+
+    .agency-hub-header__brand {
+        flex-wrap: wrap;
+        gap: 0.55rem;
+    }
+
+    .agency-hub-header__title {
+        font-size: 1.15rem;
+        line-height: 1.3;
+    }
+
+    .agency-hub-header__meta {
+        flex-wrap: wrap;
+        gap: 0.35rem;
+    }
+
+    .agency-hub-header__actions {
+        width: 100%;
+        flex-wrap: wrap;
+        gap: 0.45rem;
+    }
+
+    .agency-hub-header__actions .crm-btn {
+        flex: 1 1 calc(50% - 0.25rem);
+        min-height: 2.75rem;
+        justify-content: center;
+    }
+
+    .agency-hub-nav {
+        position: sticky;
+        top: 0;
+        z-index: 18;
+        margin-inline: -0.35rem;
+        padding-inline: 0.35rem;
+        background: color-mix(in srgb, var(--ws-bg, #f8fafc) 92%, transparent);
+        backdrop-filter: blur(6px);
+    }
+
+    .agency-hub-nav__track {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scroll-snap-type: x proximity;
+        scrollbar-width: none;
+        flex-wrap: nowrap;
+        gap: 0.35rem;
+        padding-bottom: 0.2rem;
+    }
+
+    .agency-hub-nav__track::-webkit-scrollbar {
+        display: none;
+    }
+
+    .agency-hub-nav__item {
+        flex: 0 0 auto;
+        scroll-snap-align: center;
+        min-height: 2.65rem;
+        padding: 0.5rem 0.8rem;
+        white-space: nowrap;
+    }
+
+    /* Dashboard KPIs (#230) */
+    .agency-dash-kpi-grid,
+    .agency-kpi-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 0.5rem;
+    }
+
+    .agency-dash-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.5rem;
+    }
+
+    .agency-dash-toolbar .crm-btn {
+        width: 100%;
+        min-height: 2.75rem;
+    }
+
+    .agency-dash-chart-row {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* Advisors list (#231) */
+    .agency-advisors-grid,
+    .agency-advisor-cards {
+        grid-template-columns: 1fr !important;
+    }
+
+    .agency-advisor-card {
+        border-radius: 14px;
+        padding: 0.85rem;
+    }
+
+    .agency-advisor-card__actions {
+        flex-wrap: wrap;
+        gap: 0.4rem;
+    }
+
+    .agency-advisor-card__actions .crm-btn {
+        flex: 1 1 calc(50% - 0.2rem);
+        min-height: 2.65rem;
+    }
+
+    /* Advisor 360 (#232) */
+    .agency-advisor360 .advisor360-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.65rem;
+    }
+
+    .agency-advisor360 .advisor360-tabs {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        flex-wrap: nowrap;
+    }
+
+    .agency-advisor360 .advisor360-tabs::-webkit-scrollbar {
+        display: none;
+    }
+
+    .agency-advisor360 .advisor360-tab {
+        flex: 0 0 auto;
+        min-height: 2.6rem;
+        white-space: nowrap;
+    }
+
+    .agency-advisor360 .advisor360-kpi-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+
+    .agency-advisor360 .advisor360-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    /* Licenses & activity (#233–234) */
+    .agency-licenses-grid,
+    .agency-activity-list {
+        gap: 0.55rem;
+    }
+
+    .agency-license-card,
+    .agency-activity-item {
+        border-radius: 14px;
+        padding: 0.85rem;
+    }
+
+    /* Team tabs: inbox, messages, announcements (#235–237) */
+    .agency-team-tab .crm-team-tab-v2-row,
+    .agency-team-tab .crm-team-subnav {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        flex-wrap: nowrap;
+    }
+
+    .agency-team-tab .crm-team-tab-v2-row::-webkit-scrollbar,
+    .agency-team-tab .crm-team-subnav::-webkit-scrollbar {
+        display: none;
+    }
+
+    .agency-team-tab .crm-team-tab-v2,
+    .agency-team-tab .crm-team-subnav a {
+        flex: 0 0 auto;
+        min-height: 2.6rem;
+        white-space: nowrap;
+    }
+
+    .agency-team-tab .crm-team-msg-compose,
+    .agency-team-tab .crm-team-ann-compose {
+        width: 100%;
+        min-height: 2.85rem;
+    }
+
+    .agency-team-tab .crm-team-msg-list,
+    .agency-team-tab .crm-team-ann-list {
+        gap: 0.55rem;
+    }
+
+    .agency-team-tab .crm-team-msg-card,
+    .agency-team-tab .crm-team-ann-card {
+        border-radius: 14px;
+        padding: 0.85rem;
+    }
+
+    /* TV wallboard (#238) */
+    .agency-tv.lcc {
+        overflow-x: clip;
+        padding: 0.5rem;
+    }
+
+    .agency-tv .lcc-head {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.5rem;
+        padding: 0.65rem 0.75rem;
+    }
+
+    .agency-tv .lcc-head__actions {
+        justify-content: flex-start;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+    }
+
+    .agency-tv .lcc-icon-btn {
+        min-width: 2.75rem;
+        min-height: 2.75rem;
+    }
+
+    .agency-tv .lcc-grid {
+        grid-template-columns: 1fr !important;
+        gap: 0.55rem;
+    }
+
+    .agency-tv .lcc-widget {
+        border-radius: 14px;
+        min-height: auto;
+    }
+
+    .agency-tv .lcc-kpi-strip {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 0.45rem;
+    }
+
+    /* Settings (#239–244) */
+    .agency-settings-grid {
+        grid-template-columns: 1fr !important;
+        gap: 0.65rem;
+    }
+
+    .agency-settings-card {
+        border-radius: 14px;
+        padding: 0.85rem;
+    }
+
+    .agency-settings-card--wide {
+        grid-column: auto;
+    }
+
+    .agency-settings-list--grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    .agency-settings-list a {
+        min-height: 2.85rem;
+        padding: 0.7rem 0.85rem;
+    }
+
+    .agency-page-head {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.45rem;
+    }
+
+    .agency-team-tab .crm-team-settings-grid,
+    .agency-team-tab .crm-webhook-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* Invite modal (#245) */
+    #modal-agency-invite .ws-modal-panel,
+    #modal-hub-invite .ws-modal-panel {
+        width: 100%;
+        max-width: 100%;
+        max-height: 92dvh;
+        border-radius: 18px 18px 0 0;
+        margin-top: auto;
+    }
+
+    /* Member hub (#246) */
+    .agency-member-hub .member-hub-tabs {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        flex-wrap: nowrap;
+    }
+
+    .agency-member-hub .member-hub-tabs::-webkit-scrollbar {
+        display: none;
+    }
+
+    .agency-member-hub .member-hub-tab {
+        flex: 0 0 auto;
+        min-height: 2.6rem;
+        white-space: nowrap;
+    }
+
+    .agency-member-hub .member-hub-kpi-strip {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+
+    .agency-member-hub .member-hub-quick-actions {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 0.45rem;
+    }
+
+    .agency-member-hub .member-hub-quick-actions .crm-btn {
+        min-height: 2.75rem;
+    }
+
+    /* Onboarding (#247) */
+    .agency-onboarding-page .agency-onboarding__toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .agency-onboarding .agency-onboarding-stepper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    }
+
+    .agency-onboarding .agency-onboarding-stepper::-webkit-scrollbar {
+        display: none;
+    }
+
+    .agency-onboarding .agency-onboarding-form-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    .agency-onboarding .agency-onboarding-footer {
+        position: sticky;
+        bottom: 0;
+        z-index: 20;
+        display: flex;
+        gap: 0.5rem;
+        padding: 0.65rem 0 calc(0.65rem + env(safe-area-inset-bottom, 0px));
+        background: color-mix(in srgb, var(--ws-surface, #fff) 94%, #f8fafc);
+        border-top: 1px solid var(--ws-border, #e2e8f0);
+    }
+
+    .agency-onboarding .agency-onboarding-footer .crm-btn {
+        flex: 1;
+        min-height: 2.85rem;
+    }
+
+    /* Locked & invite accept (#248–249) */
+    .agency-invite__container {
+        padding: 1rem 0.85rem calc(1rem + env(safe-area-inset-bottom, 0px));
+    }
+
+    .agency-invite__card {
+        border-radius: 16px;
+        padding: 1rem 0.9rem;
+    }
+
+    .agency-invite__actions {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .agency-invite__actions .crm-btn,
+    .agency-invite__actions .ws-btn {
+        width: 100%;
+        min-height: 2.85rem;
+    }
+
+    /* Messages / announcements modals & drawers (#250–255) */
+    #modal-msg-compose .ws-modal-panel,
+    #modal-ann-compose .ws-modal-panel,
+    #modal-msg-confirm .ws-modal-panel,
+    #modal-ann-confirm .ws-modal-panel {
+        width: 100%;
+        max-width: 100%;
+        max-height: 92dvh;
+        border-radius: 18px 18px 0 0;
+        margin-top: auto;
+    }
+
+    #drawer-msg-notifications,
+    #drawer-webhook {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .crm-team-drawer__panel {
+        border-radius: 18px 18px 0 0;
+        max-height: 88dvh;
+    }
+
+    /* Help modal (#256) */
+    #modal-crm-agency-help.fl-help-modal .ws-modal-panel {
+        width: 100%;
+        max-width: 100%;
+        max-height: 92dvh;
+        border-radius: 18px 18px 0 0;
+        margin-top: auto;
+    }
+
+    #modal-crm-agency-help .fl-help-modal__nav {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        flex-wrap: nowrap;
+    }
+
+    #modal-crm-agency-help .fl-help-modal__nav::-webkit-scrollbar {
+        display: none;
+    }
+
+    #modal-crm-agency-help .fl-help-modal__body {
+        max-height: calc(92dvh - 12rem);
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+}

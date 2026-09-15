@@ -1,0 +1,1001 @@
+/* ═══════════════════════════════════════════════════════════
+   CRM Personal Properties — Mobile Pass 11 (#143–180)
+   Scoped: max-width 767px only — Desktop unchanged
+   Loads after crm-files-mobile.css / crm-prop-detail-mobile.css
+   ═══════════════════════════════════════════════════════════ */
+
+@media (max-width: 767px) {
+    /* ── #143 List page shell ── */
+    .crm-files-mobile.crm-properties-page.crm-page-chrome {
+        padding-bottom: calc(5.85rem + env(safe-area-inset-bottom, 0px));
+        gap: 0;
+    }
+
+    .crm-files-mobile .crm-shell-body {
+        padding-inline: 0.65rem;
+        gap: 0.5rem;
+    }
+
+    .crm-files-mobile .crm-files-mob-kpis {
+        margin-inline: -0.65rem;
+        padding-inline: 0.65rem;
+        scroll-padding-inline: 0.65rem;
+    }
+
+    .crm-files-mobile .crm-files-mob-kpi {
+        min-height: 2.75rem;
+        min-width: 3.35rem;
+        border-radius: 12px;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .crm-files-mobile .crm-files-filter-primary {
+        gap: 0.4rem;
+        padding-top: 0.25rem;
+    }
+
+    .crm-files-mobile .crm-files-search {
+        flex: 1 1 100%;
+        min-height: 2.75rem;
+        border-radius: 12px;
+    }
+
+    .crm-files-mobile .crm-files-search input {
+        font-size: max(16px, 0.875rem);
+    }
+
+    .crm-files-mobile .crm-files-mob-filter-trigger {
+        min-height: 2.75rem;
+        min-width: 2.75rem;
+        border-radius: 12px;
+        font-size: 0.8125rem;
+        font-weight: 750;
+    }
+
+    .crm-files-mobile .crm-files-result-bar {
+        font-size: 0.8125rem;
+        gap: 0.45rem;
+    }
+
+    .crm-files-mobile .crm-files-select-mode {
+        min-height: 2.5rem;
+        padding-inline: 0.75rem;
+    }
+
+    /* ── #144–146 Filing nav → compact chip rails ── */
+    .crm-files-mobile .crm-shell-body > .crm-filing-nav {
+        margin: 0.35rem 0 0.25rem;
+        padding: 0.55rem 0.6rem 0.65rem;
+        border-radius: 16px;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 62%, transparent);
+        background: color-mix(in srgb, var(--ws-surface) 92%, var(--ws-surface-2));
+        box-shadow: 0 3px 14px rgba(15, 23, 42, 0.04);
+    }
+
+    .crm-files-mobile .crm-filing-nav__head {
+        margin-bottom: 0.4rem;
+    }
+
+    .crm-files-mobile .crm-filing-nav__title {
+        font-size: 0.8125rem;
+    }
+
+    .crm-files-mobile .crm-filing-nav__hint {
+        display: none;
+    }
+
+    .crm-files-mobile .crm-filing-nav__tier {
+        padding-top: 0.35rem;
+    }
+
+    .crm-files-mobile .crm-filing-nav__tier + .crm-filing-nav__tier {
+        margin-top: 0.3rem;
+        padding-top: 0.45rem;
+    }
+
+    .crm-files-mobile .crm-filing-nav__tier-bar {
+        margin-bottom: 0.28rem;
+    }
+
+    .crm-files-mobile .crm-filing-nav__tier-label {
+        font-size: 0.6875rem;
+    }
+
+    .crm-files-mobile .crm-filing-nav__act {
+        width: 2rem;
+        height: 2rem;
+        min-width: 2rem;
+        min-height: 2rem;
+        border-radius: 10px;
+    }
+
+    .crm-files-mobile .crm-filing-nav__rail,
+    .crm-files-mobile .crm-filing-nav .crm-zonkan__rail {
+        display: flex;
+        flex-wrap: nowrap;
+        gap: 0.38rem;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scroll-snap-type: x proximity;
+        scrollbar-width: none;
+        padding-bottom: 0.2rem;
+        margin-inline: -0.15rem;
+        padding-inline: 0.15rem;
+    }
+
+    .crm-files-mobile .crm-filing-nav__rail::-webkit-scrollbar,
+    .crm-files-mobile .crm-filing-nav .crm-zonkan__rail::-webkit-scrollbar {
+        display: none;
+    }
+
+    .crm-files-mobile .crm-filing-nav .crm-zonkan-card--compact {
+        flex: 0 0 auto;
+        scroll-snap-align: start;
+        min-width: 7.25rem;
+        max-width: 9.5rem;
+        min-height: 2.75rem;
+        padding: 0.48rem 0.55rem;
+        border-radius: 12px;
+    }
+
+    .crm-files-mobile .crm-filing-nav .crm-zonkan-card--compact.is-active {
+        box-shadow: 0 0 0 2px color-mix(in srgb, var(--zonkan-color, var(--ws-primary)) 55%, transparent);
+    }
+
+    .crm-files-mobile .crm-filing-nav .crm-zonkan-card--compact .crm-zonkan-card__body strong {
+        font-size: 0.72rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .crm-files-mobile .crm-filing-nav .crm-zonkan-card--compact .crm-zonkan-card__body em {
+        font-size: 0.6rem;
+    }
+
+    .crm-files-mobile .crm-zonkan-card-wrap .crm-zonkan-card__menu {
+        opacity: 1;
+        width: 1.65rem;
+        height: 1.65rem;
+        min-width: 1.65rem;
+        min-height: 1.65rem;
+    }
+
+    /* Detail page folder picker chips (#154) */
+    .crm-prop-detail-mobile .crm-zonkan-picker--detail .crm-zonkan-picker__grid {
+        display: flex;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        gap: 0.38rem;
+        padding-bottom: 0.15rem;
+    }
+
+    .crm-prop-detail-mobile .crm-zonkan-picker--detail .crm-zonkan-picker__grid::-webkit-scrollbar {
+        display: none;
+    }
+
+    .crm-prop-detail-mobile .crm-zonkan-picker--detail .crm-zonkan-picker__card {
+        flex: 0 0 auto;
+        min-width: 7.5rem;
+        scroll-snap-align: start;
+    }
+
+    /* ── #147–148 Property cards & table rows ── */
+    .crm-files-mobile .crm-properties-grid,
+    .crm-files-mobile .crm-files-grid-v2 {
+        gap: 0.5rem;
+    }
+
+    .crm-files-mobile .crm-files-mcard {
+        border-radius: 18px;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .crm-files-mobile .crm-files-mcard:active {
+        transform: scale(0.992);
+    }
+
+    .crm-files-mobile .crm-files-card-title {
+        font-size: 1rem !important;
+    }
+
+    .crm-files-mobile .crm-files-mcard__go {
+        width: 2.75rem;
+        height: 2.75rem;
+        min-width: 2.75rem;
+        min-height: 2.75rem;
+    }
+
+    .crm-files-mobile .crm-files-card-act {
+        min-height: 2.25rem;
+        padding-inline: 0.65rem;
+    }
+
+    .crm-files-mobile .crm-files-folder-badge {
+        max-width: 9rem;
+    }
+
+    .crm-files-mobile.crm-files-pro--table .crm-ft tbody tr.crm-ft-row {
+        border-radius: 18px;
+        padding: 0.85rem;
+    }
+
+    /* ── #149–150, #168–173 Drawers (property / import / edit / deal / contacts / docs / followup) ── */
+    .crm-files-mobile ~ .crm-drawer .crm-drawer-panel,
+    .crm-prop-detail-mobile ~ .crm-drawer .crm-drawer-panel,
+    body:has(.crm-files-mobile) .crm-drawer-panel,
+    body:has(.crm-prop-detail-mobile) .crm-drawer-panel {
+        width: 100% !important;
+        max-width: 100% !important;
+        max-height: min(94dvh, calc(100dvh - env(safe-area-inset-top, 0px))) !important;
+        border-radius: 20px 20px 0 0 !important;
+        margin: 0 !important;
+    }
+
+    body:has(.crm-files-mobile) .crm-drawer-panel-lg,
+    body:has(.crm-prop-detail-mobile) .crm-drawer-panel-lg {
+        max-height: min(96dvh, calc(100dvh - env(safe-area-inset-top, 0px))) !important;
+    }
+
+    body:has(.crm-files-mobile) .crm-drawer-head,
+    body:has(.crm-prop-detail-mobile) .crm-drawer-head {
+        padding: 0.85rem 1rem;
+        padding-top: max(0.85rem, env(safe-area-inset-top, 0.85rem));
+    }
+
+    body:has(.crm-files-mobile) .crm-drawer-body,
+    body:has(.crm-prop-detail-mobile) .crm-drawer-body {
+        padding-inline: 1rem;
+        overscroll-behavior: contain;
+    }
+
+    body:has(.crm-files-mobile) .crm-drawer-foot,
+    body:has(.crm-prop-detail-mobile) .crm-drawer-foot {
+        padding: 0.75rem 1rem;
+        padding-bottom: max(0.85rem, env(safe-area-inset-bottom, 0.85rem));
+        gap: 0.45rem;
+    }
+
+    body:has(.crm-files-mobile) .crm-drawer-foot .crm-btn,
+    body:has(.crm-prop-detail-mobile) .crm-drawer-foot .crm-btn {
+        min-height: 2.75rem;
+        flex: 1 1 calc(50% - 0.25rem);
+    }
+
+    body:has(.crm-prop-detail-mobile) .crm-prop-deal-create-form .crm-fields,
+    body:has(.crm-prop-detail-mobile) .crm-deal-create-drawer .crm-form-panel .crm-fields {
+        grid-template-columns: 1fr !important;
+        gap: 0.65rem;
+    }
+
+    /* ── #151–152 Zonkan / Kabinet modals → bottom sheets ── */
+    .crm-zonkan-modal,
+    .crm-zonkan-manage,
+    .crm-kabinet-modal,
+    .crm-kabinet-manage {
+        max-width: 100%;
+        width: 100%;
+        height: auto;
+        max-height: 100%;
+        margin: 0;
+        padding: 0;
+        align-self: flex-end;
+    }
+
+    .crm-zonkan-modal[open],
+    .crm-zonkan-manage[open],
+    .crm-kabinet-modal[open],
+    .crm-kabinet-manage[open] {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        margin: 0;
+    }
+
+    .crm-zonkan-modal__box,
+    .crm-zonkan-manage__box,
+    .crm-kabinet-modal__box,
+    .crm-kabinet-manage__box {
+        width: 100%;
+        max-width: 100%;
+        max-height: min(92dvh, calc(100dvh - env(safe-area-inset-top, 0px)));
+        margin: 0;
+        border-radius: 20px 20px 0 0;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .crm-zonkan-manage__list,
+    .crm-kabinet-manage__list {
+        flex: 1 1 auto;
+        min-height: 0;
+        max-height: min(58dvh, 24rem);
+        overflow-y: auto;
+        overscroll-behavior: contain;
+    }
+
+    .crm-zonkan-modal__foot,
+    .crm-zonkan-manage__foot,
+    .crm-kabinet-modal__foot,
+    .crm-kabinet-manage__foot {
+        padding-bottom: max(0.85rem, env(safe-area-inset-bottom, 0.85rem));
+        flex-wrap: wrap;
+    }
+
+    .crm-zonkan-modal__foot .crm-dash-act,
+    .crm-kabinet-modal__foot .crm-dash-act {
+        min-height: 2.75rem;
+        flex: 1 1 auto;
+        justify-content: center;
+    }
+
+    .crm-zonkan-pop,
+    .crm-kabinet-pop {
+        min-width: 10.5rem;
+        border-radius: 14px;
+    }
+
+    .crm-zonkan-pop button,
+    .crm-kabinet-pop button {
+        min-height: 2.75rem;
+        padding-inline: 0.85rem;
+    }
+
+    /* ── #153 Folder assign dialog ── */
+    .crm-zonkan-assign {
+        max-width: 100%;
+        width: 100%;
+        margin: 0;
+        align-self: flex-end;
+    }
+
+    .crm-zonkan-assign[open] {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+    }
+
+    .crm-zonkan-assign__box {
+        width: 100%;
+        max-width: 100%;
+        max-height: min(88dvh, calc(100dvh - env(safe-area-inset-top, 0px)));
+        border-radius: 20px 20px 0 0;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .crm-zonkan-assign__list {
+        max-height: min(55dvh, 22rem);
+        overscroll-behavior: contain;
+    }
+
+    .crm-zonkan-assign__item {
+        min-height: 2.75rem;
+        padding: 0.7rem 0.75rem;
+    }
+
+    .crm-zonkan-assign__foot {
+        padding-bottom: max(0.85rem, env(safe-area-inset-bottom, 0.85rem));
+    }
+
+    /* ── #155 Duplicate property modal ── */
+    .crm-prop-duplicate-modal[open] {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+    }
+
+    .crm-prop-duplicate-modal .crm-zonkan-modal__box {
+        border-radius: 20px 20px 0 0;
+    }
+
+    .crm-prop-duplicate-modal .crm-zonkan-modal__foot .crm-dash-act {
+        min-height: 2.75rem;
+        flex: 1 1 calc(50% - 0.25rem);
+        justify-content: center;
+    }
+
+    /* ── #156 Bulk delete dock ── */
+    .crm-files-mobile .crm-prop-folder-bulk.crm-bulk-dock {
+        inset-inline: 0.55rem;
+        bottom: calc(5.2rem + env(safe-area-inset-bottom, 0px));
+        border-radius: 18px;
+        z-index: 175;
+    }
+
+    .crm-files-mobile .crm-bulk-dock-inner {
+        gap: 0.45rem;
+    }
+
+    .crm-files-mobile .crm-bulk-dock-apply,
+    .crm-files-mobile .crm-bulk-dock-delete,
+    .crm-files-mobile .crm-bulk-dock-destroy,
+    .crm-files-mobile .crm-bulk-dock-cancel {
+        min-height: 2.75rem;
+        border-radius: 12px;
+    }
+
+    /* ── #157 Export (toolbar menu targets) ── */
+    .crm-files-mobile .crm-files-mob-toolbar-item {
+        min-height: 2.75rem;
+    }
+
+    .crm-files-mobile .crm-files-mob-toolbar-panel {
+        min-width: 12.5rem;
+        border-radius: 16px;
+    }
+
+    /* ── #160 Pipeline kanban on list ── */
+    .crm-files-mobile.crm-files-pro--pipeline .crm-prop-pipeline-stage {
+        margin-inline: -0.65rem;
+        padding-inline: 0.65rem;
+    }
+
+    .crm-files-mobile .crm-prop-pipeline-col {
+        flex: 0 0 min(78vw, 280px);
+        min-width: min(78vw, 280px);
+        border-radius: 16px;
+    }
+
+    .crm-files-mobile .crm-prop-pipeline-card {
+        border-radius: 14px;
+        min-height: 2.75rem;
+    }
+
+    .crm-files-mobile .crm-prop-pipeline-open {
+        min-height: 2.5rem;
+    }
+
+    /* ── Filter bottom sheet polish (#143) ── */
+    .crm-files-mobile .crm-files-mob-filter-panel {
+        border-radius: 20px 20px 0 0;
+        max-height: min(92dvh, calc(100dvh - env(safe-area-inset-top, 0px)));
+    }
+
+    .crm-files-mobile .crm-files-mob-filter-foot {
+        padding-bottom: max(0.85rem, env(safe-area-inset-bottom, 0.85rem));
+    }
+
+    .crm-files-mobile .crm-files-mob-filter-apply,
+    .crm-files-mobile .crm-files-mob-filter-clear {
+        min-height: 2.75rem;
+    }
+
+    .crm-files-mobile .crm-files-fab {
+        bottom: calc(5.15rem + env(safe-area-inset-bottom, 0px));
+        width: 3rem;
+        height: 3rem;
+        min-width: 3rem;
+        min-height: 3rem;
+        z-index: 170;
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       Property Detail (#159–180)
+       ═══════════════════════════════════════════════════════ */
+
+    /* ── #159 Detail page shell ── */
+    .crm-prop-detail-mobile.crm-page-chrome {
+        padding-bottom: calc(6.25rem + env(safe-area-inset-bottom, 0px));
+    }
+
+    /* ── #159–160 Hero ── */
+    .crm-prop-detail-mobile .crm-prop-hero {
+        border-radius: 0 0 20px 20px;
+    }
+
+    .crm-prop-detail-mobile .crm-prop-hero-nav {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        grid-template-areas:
+            "back crumb"
+            "acts acts";
+        gap: 0.4rem;
+        padding: 0.5rem 0.65rem;
+    }
+
+    .crm-prop-detail-mobile .crm-prop-hero-back {
+        grid-area: back;
+        width: 2.75rem;
+        height: 2.75rem;
+        min-width: 2.75rem;
+        min-height: 2.75rem;
+    }
+
+    .crm-prop-detail-mobile .crm-prop-hero-crumb {
+        grid-area: crumb;
+        align-self: center;
+    }
+
+    .crm-prop-detail-mobile .crm-prop-hero-actions {
+        grid-area: acts;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .crm-prop-detail-mobile .crm-prop-hero-act {
+        min-height: 2.75rem;
+        height: auto;
+    }
+
+    .crm-prop-detail-mobile .crm-prop-hero-cover,
+    .crm-prop-detail-mobile .crm-prop-hero-cover img {
+        aspect-ratio: 16 / 10;
+        min-height: 0;
+        max-height: none;
+        object-fit: cover;
+    }
+
+    .crm-prop-detail-mobile .crm-prop-hero-title {
+        font-size: 1.0625rem;
+        line-height: 1.34;
+    }
+
+    .crm-prop-detail-mobile .crm-prop-hero-chips {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        gap: 0.35rem;
+        padding-bottom: 0.1rem;
+    }
+
+    .crm-prop-detail-mobile .crm-prop-hero-chips::-webkit-scrollbar {
+        display: none;
+    }
+
+    .crm-prop-detail-mobile .crm-prop-hero-chip {
+        flex: 0 0 auto;
+        max-width: 14rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .crm-prop-detail-mobile .crm-prop-hero-pricezone {
+        display: flex;
+        flex-direction: column;
+        gap: 0.38rem;
+    }
+
+    .crm-prop-detail-mobile .crm-prop-hero-pricecard {
+        padding: 0.65rem 0.7rem;
+        border-radius: 14px;
+    }
+
+    .crm-prop-detail-mobile .crm-prop-hero-kpis {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.35rem;
+    }
+
+    .crm-prop-detail-mobile .crm-prop-hero-gallery {
+        scroll-snap-type: x mandatory;
+        gap: 0.45rem;
+        padding-inline: 0.65rem;
+    }
+
+    .crm-prop-detail-mobile .crm-prop-gallery-item {
+        flex: 0 0 5.25rem;
+        width: 5.25rem;
+        height: 5.25rem;
+        min-width: 5.25rem;
+        min-height: 5.25rem;
+        scroll-snap-align: start;
+        border-radius: 14px;
+    }
+
+    /* ── #161 Action center ── */
+    .crm-prop-detail-mobile .crm-detail-action-center--property {
+        margin: 0 0.65rem;
+        border-radius: 18px;
+        overflow: hidden;
+    }
+
+    .crm-prop-detail-mobile .crm-detail-action-center--property .crm-detail-action-center__grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 0.4rem;
+    }
+
+    .crm-prop-detail-mobile .crm-detail-intel-card {
+        min-height: 4.5rem;
+        border-radius: 14px;
+        padding: 0.65rem 0.7rem;
+    }
+
+    .crm-prop-detail-mobile .crm-detail-intel-card__link {
+        min-height: 2.5rem;
+    }
+
+    /* ── Detail grid: main + aside stacked (#163–164) ── */
+    .crm-prop-detail-mobile .crm-prop-detail-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 0.55rem;
+        padding-inline: 0.65rem;
+    }
+
+    .crm-prop-detail-mobile .crm-prop-aside {
+        display: contents;
+    }
+
+    .crm-prop-detail-mobile .crm-prop-main {
+        order: 1;
+        min-width: 0;
+    }
+
+    .crm-prop-detail-mobile .crm-prop-side-card--deals {
+        order: 2;
+    }
+
+    .crm-prop-detail-mobile .crm-prop-side-card:has(.crm-followup-v2) {
+        order: 3;
+    }
+
+    .crm-prop-detail-mobile .crm-owner-box,
+    .crm-prop-detail-mobile .crm-prop-side-card--share {
+        order: 4;
+    }
+
+    .crm-prop-detail-mobile .crm-prop-side-card:not(.crm-prop-side-card--deals):not(:has(.crm-followup-v2)):not(.crm-prop-side-card--share) {
+        order: 5;
+    }
+
+    .crm-prop-detail-mobile .crm-prop-delete-form {
+        order: 6;
+    }
+
+    .crm-prop-detail-mobile .crm-prop-segrail {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        margin: 0 -0.65rem 0.35rem;
+        padding: 0.35rem 0.65rem;
+        background: color-mix(in srgb, var(--ws-bg, #f8fafc) 88%, transparent);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+    }
+
+    .crm-prop-detail-mobile .crm-prop-tabs.crm-tabs-pro {
+        display: grid !important;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 0.32rem !important;
+        overflow: visible !important;
+        padding: 0.35rem !important;
+        border-radius: 16px !important;
+    }
+
+    .crm-prop-detail-mobile .crm-prop-tabs .crm-tab-pro {
+        min-height: 3.65rem !important;
+        border-radius: 12px !important;
+    }
+
+    /* ── #162 Dossier grid ── */
+    .crm-prop-detail-mobile .crm-prop-dossier-full {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .crm-prop-detail-mobile .crm-prop-dossier-group {
+        border-radius: 14px;
+        padding: 0.65rem 0.7rem;
+    }
+
+    .crm-prop-detail-mobile .crm-prop-dossier-dl > div {
+        grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+        gap: 0.4rem;
+        padding: 0.35rem 0;
+    }
+
+    /* ── #163 Deals sidebar (stacked card) ── */
+    .crm-prop-detail-mobile .crm-prop-side-card--deals,
+    .crm-prop-detail-mobile .crm-prop-side-card--pro {
+        margin: 0;
+        border-radius: 18px;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .crm-prop-detail-mobile .crm-prop-deals-list {
+        gap: 0.4rem;
+    }
+
+    .crm-prop-detail-mobile .crm-prop-deals-item,
+    .crm-prop-detail-mobile .crm-prop-deals-link {
+        min-height: 2.75rem;
+        border-radius: 12px;
+    }
+
+    .crm-prop-detail-mobile .crm-prop-side-deal-add {
+        width: 2.75rem;
+        height: 2.75rem;
+        min-width: 2.75rem;
+        min-height: 2.75rem;
+    }
+
+    .crm-prop-detail-mobile .crm-prop-deals-all {
+        min-height: 2.5rem;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    /* ── #164 Follow-up sidebar ── */
+    .crm-prop-detail-mobile .crm-followup-v2-quick button {
+        min-height: 2.75rem;
+        border-radius: 11px;
+    }
+
+    .crm-prop-detail-mobile .crm-followup-v2-form .crm-btn,
+    .crm-prop-detail-mobile .crm-followup-v2-form input,
+    .crm-prop-detail-mobile .crm-followup-v2-form select {
+        min-height: 2.75rem;
+    }
+
+    /* ── #165 Nearby POIs ── */
+    .crm-prop-detail-mobile .crm-nearby-pois {
+        margin: 0 0.65rem 0.65rem;
+        border-radius: 18px;
+    }
+
+    .crm-prop-detail-mobile .crm-nearby-pois__header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.55rem;
+    }
+
+    .crm-prop-detail-mobile .crm-nearby-pois__cta {
+        width: 100%;
+        min-height: 2.75rem;
+        justify-content: center;
+        border-radius: 12px;
+    }
+
+    .crm-prop-detail-mobile .crm-nearby-pois__highlights {
+        display: flex;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        gap: 0.35rem;
+        padding-bottom: 0.15rem;
+    }
+
+    .crm-prop-detail-mobile .crm-nearby-pois__highlights::-webkit-scrollbar {
+        display: none;
+    }
+
+    .crm-prop-detail-mobile .crm-nearby-pois__row {
+        min-height: 2.75rem;
+        border-radius: 12px;
+    }
+
+    .crm-prop-detail-mobile .crm-nearby-pois__toggle-missing {
+        width: 100%;
+        min-height: 2.75rem;
+        justify-content: center;
+        border-radius: 12px;
+    }
+
+    .crm-prop-detail-mobile .crm-nearby-pois__hint-link {
+        min-height: 2.5rem;
+        padding-inline: 0.65rem;
+    }
+
+    /* ── #166 Map location on detail ── */
+    .crm-prop-detail-mobile .crm-prop-map-finale {
+        margin: 0 0.65rem 0.65rem;
+        border-radius: 18px;
+        overflow: hidden;
+    }
+
+    .crm-prop-detail-mobile .crm-prop-map-finale-intro {
+        padding: 0.75rem 0.8rem;
+    }
+
+    .crm-prop-detail-mobile .crm-prop-map-finale-canvas {
+        min-height: 220px;
+    }
+
+    .crm-prop-detail-mobile .crm-prop-map-finale-canvas .ws-map,
+    .crm-prop-detail-mobile .crm-prop-map-finale-canvas .listing-map-stage {
+        min-height: 220px !important;
+        height: 220px !important;
+    }
+
+    .crm-prop-detail-mobile .crm-prop-map-finale-actions {
+        grid-template-columns: 1fr;
+        gap: 0.38rem;
+    }
+
+    .crm-prop-detail-mobile .crm-prop-map-finale-btn {
+        min-height: 2.75rem;
+        width: 100%;
+        justify-content: center;
+        border-radius: 12px;
+    }
+
+    .crm-prop-detail-mobile .crm-prop-map-edit-dock {
+        inset-inline: 0.45rem;
+        bottom: 0.45rem;
+        border-radius: 16px;
+        padding: 0.65rem;
+    }
+
+    .crm-prop-detail-mobile .crm-prop-map-edit-btn {
+        min-height: 2.75rem;
+        flex: 1 1 auto;
+        justify-content: center;
+    }
+
+    /* ── #175 AI summary card ── */
+    .crm-prop-detail-mobile .ws-ai-card--listing {
+        margin: 0 0.65rem 0.65rem;
+        border-radius: 18px;
+    }
+
+    .crm-prop-detail-mobile .ws-ai-card--listing .ws-ai-card__cta,
+    .crm-prop-detail-mobile .ws-ai-card--listing button {
+        min-height: 2.75rem;
+    }
+
+    /* ── #176 Rental reminder dialog ── */
+    .rrd-backdrop {
+        align-items: flex-end;
+        padding: 0;
+    }
+
+    .rrd-card {
+        width: 100%;
+        max-width: 100%;
+        border-radius: 20px 20px 0 0;
+        padding-bottom: max(1.5rem, env(safe-area-inset-bottom, 1.5rem));
+        animation: none;
+    }
+
+    .rrd-btn {
+        min-height: 2.75rem;
+    }
+
+    /* ── #177 Status menus ── */
+    .crm-prop-detail-mobile .crm-prop-status-menu {
+        min-width: 10rem;
+        border-radius: 14px;
+        max-height: min(50dvh, 16rem);
+        overflow-y: auto;
+    }
+
+    .crm-prop-detail-mobile .crm-prop-status-option {
+        min-height: 2.75rem;
+        display: flex;
+        align-items: center;
+    }
+
+    /* ── #178–179 Help modals ── */
+    body:has(.crm-files-mobile) .ws-modal-panel,
+    body:has(.crm-prop-detail-mobile) .ws-modal-panel,
+    body:has(.crm-files-mobile) .crm-help-modal__panel,
+    body:has(.crm-prop-detail-mobile) .crm-help-modal__panel {
+        width: 100% !important;
+        max-width: 100% !important;
+        max-height: min(92dvh, calc(100dvh - env(safe-area-inset-top, 0px))) !important;
+        margin: 0 !important;
+        border-radius: 20px 20px 0 0 !important;
+    }
+
+    body:has(.crm-files-mobile) .ws-modal.is-open,
+    body:has(.crm-prop-detail-mobile) .ws-modal.is-open {
+        align-items: flex-end;
+    }
+
+    body:has(.crm-files-mobile) .ws-modal-foot,
+    body:has(.crm-prop-detail-mobile) .ws-modal-foot {
+        padding-bottom: max(0.85rem, env(safe-area-inset-bottom, 0.85rem));
+    }
+
+    /* ── #174 Public share modal ── */
+    body:has(.crm-prop-detail-mobile) #modal-property-share .ws-modal-panel,
+    body:has(.crm-prop-detail-mobile) #modal-property-share .public-share-panel {
+        border-radius: 20px 20px 0 0;
+    }
+
+    body:has(.crm-prop-detail-mobile) .public-share-actions .crm-btn,
+    body:has(.crm-prop-detail-mobile) .public-share-actions .crm-dash-act {
+        min-height: 2.75rem;
+    }
+
+    /* ── #180 Contact matches panel ── */
+    .crm-prop-detail-mobile .crm-matches-layout {
+        flex-direction: column;
+        gap: 0.55rem;
+    }
+
+    .crm-prop-detail-mobile .crm-matches-col {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .crm-prop-detail-mobile .crm-match-card {
+        border-radius: 14px;
+        padding: 0.7rem 0.75rem;
+    }
+
+    .crm-prop-detail-mobile .crm-match-card .crm-btn,
+    .crm-prop-detail-mobile .crm-match-card .crm-dash-act {
+        min-height: 2.5rem;
+    }
+
+    .crm-prop-detail-mobile .crm-suggest-actions .crm-btn {
+        min-height: 2.5rem;
+    }
+
+    /* ── Bottom dock spacing (#159) ── */
+    .crm-prop-detail-mobile .crm-prop-mobile-dock {
+        inset-inline: 0.5rem;
+        bottom: calc(4.1rem + env(safe-area-inset-bottom, 0px));
+    }
+
+    .crm-prop-detail-mobile .crm-prop-dock-btn {
+        min-height: 52px;
+    }
+
+    /* ── Contact tiles / timeline ── */
+    .crm-prop-detail-mobile .crm-prop-contact-tile {
+        min-height: 2.75rem;
+    }
+
+    .crm-prop-detail-mobile .crm-prop-contact-acts .crm-contact-quick-act {
+        width: 2.75rem;
+        height: 2.75rem;
+        min-width: 2.75rem;
+        min-height: 2.75rem;
+    }
+
+    .crm-prop-detail-mobile .crm-timeline-pro .crm-timeline-item {
+        border-radius: 14px;
+    }
+}
+
+/* ── #158 CRM Properties map page (loads via map/index when is_crm_map) ── */
+@media (max-width: 767px) {
+    body.ws-body:has(.mk-map-pro.ws-map-mobile.crm-properties-map) .ws-mobile-topbar {
+        display: none;
+    }
+
+    .mk-map-pro.ws-map-mobile.crm-properties-map {
+        --map-mob-dock: calc(4.85rem + env(safe-area-inset-bottom, 0px));
+    }
+
+    .mk-map-pro.ws-map-mobile.crm-properties-map .mk-map-head-title {
+        font-size: 0.95rem;
+    }
+
+    .mk-map-pro.ws-map-mobile.crm-properties-map .mk-map-filter,
+    .mk-map-pro.ws-map-mobile.crm-properties-map .mk-map-mode,
+    .mk-map-pro.ws-map-mobile.crm-properties-map .mk-map-basemap-chip {
+        min-height: 2.75rem;
+        border-radius: 11px;
+    }
+
+    .mk-map-pro.ws-map-mobile.crm-properties-map .mk-map-hud-btn {
+        min-width: 2.75rem;
+        min-height: 2.75rem;
+    }
+
+    .mk-map-pro.ws-map-mobile.crm-properties-map .leaflet-popup-pane .leaflet-popup {
+        bottom: calc(var(--map-mob-dock) + 0.35rem) !important;
+    }
+
+    .mk-map-pro.ws-map-mobile.crm-properties-map .mk-map-popup-shell .leaflet-popup-content-wrapper {
+        border-radius: 18px 18px 16px 16px;
+    }
+}
+
+@media (max-width: 767px) and (prefers-reduced-motion: reduce) {
+    .crm-files-mobile .crm-files-mcard:active,
+    .crm-prop-detail-mobile .crm-prop-tabs .crm-tab-pro:active,
+    .crm-prop-detail-mobile .crm-prop-dock-btn:active {
+        transform: none;
+    }
+}

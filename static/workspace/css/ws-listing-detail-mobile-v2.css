@@ -1,0 +1,846 @@
+/* ═══════════════════════════════════════════════════════════
+   Listing Detail — Mobile Pass 06 (Surfaces #56–84)
+   Scoped: .ws-ld-detail.ws-ld-mobile @ max-width 767px
+   Desktop untouched — loads after ws-ld-mobile.css
+   ═══════════════════════════════════════════════════════════ */
+
+.ws-ld-mob-hero-bar,
+.ws-ld-mob-hero-more {
+    display: none;
+}
+
+@media (max-width: 767px) {
+    /* ── Page shell (#56) ── */
+    .ws-ld-detail.ws-ld-mobile.crm-page-chrome {
+        padding-bottom: calc(6.5rem + env(safe-area-inset-bottom, 0px));
+        gap: 0.5rem;
+        min-width: 0;
+        overflow-x: clip;
+    }
+
+    /* ── Retention warning (#71) ── */
+    .ws-ld-detail .ws-retention-warning.mk-notice--banner {
+        margin: 0.5rem 0.65rem 0;
+        padding: 0.7rem 0.75rem;
+        border-radius: 14px;
+        gap: 0.55rem;
+        line-height: 1.5;
+        font-size: 0.8125rem;
+    }
+
+    .ws-ld-detail .ws-retention-warning .mk-notice__title {
+        font-size: 0.875rem;
+        line-height: 1.35;
+    }
+
+    .ws-ld-detail .ws-retention-warning .mk-notice__text,
+    .ws-ld-detail .ws-retention-warning .mk-notice__hint {
+        font-size: 0.75rem;
+        line-height: 1.5;
+        margin: 0.2rem 0 0;
+    }
+
+    /* ── Hero compact: back + title + more (#57) ── */
+    .ws-ld-detail .crm-prop-hero-nav {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        grid-template-areas: "back title more";
+        align-items: center;
+        gap: 0.45rem;
+        padding: 0.55rem 0.7rem 0.4rem;
+    }
+
+    .ws-ld-detail .crm-prop-hero-back {
+        grid-area: back;
+        width: 2.75rem;
+        height: 2.75rem;
+        min-width: 2.75rem;
+        min-height: 2.75rem;
+        border-radius: 12px;
+    }
+
+    .ws-ld-mob-hero-bar {
+        display: block;
+        grid-area: title;
+        min-width: 0;
+    }
+
+    .ws-ld-mob-hero-title {
+        display: block;
+        font-size: 0.92rem;
+        font-weight: 800;
+        line-height: 1.32;
+        letter-spacing: -0.02em;
+        color: var(--ws-text);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .ws-ld-mob-hero-more {
+        display: inline-flex;
+        grid-area: more;
+        align-items: center;
+        justify-content: center;
+        width: 2.75rem;
+        height: 2.75rem;
+        min-width: 2.75rem;
+        min-height: 2.75rem;
+        padding: 0;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 60%, transparent);
+        border-radius: 12px;
+        background: color-mix(in srgb, var(--ws-surface) 90%, transparent);
+        color: var(--ws-text-secondary);
+        font-family: inherit;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
+    }
+
+    .ws-ld-mob-hero-more i {
+        font-size: 1rem;
+        line-height: 1;
+    }
+
+    .ws-ld-mob-hero-more:active {
+        transform: scale(0.96);
+        background: var(--ws-surface-2);
+    }
+
+    .ws-ld-detail .crm-prop-hero-crumb {
+        display: none;
+    }
+
+    .ws-ld-detail .crm-prop-hero-visual {
+        margin-inline: 0;
+        border-bottom: none;
+    }
+
+    /* ── Gallery hero: full-width + counter (#58) ── */
+    .ws-ld-detail .crm-prop-hero-cover,
+    .ws-ld-detail .crm-prop-hero-cover img {
+        width: 100%;
+        min-height: 0;
+        max-height: none;
+        aspect-ratio: 16 / 10;
+        object-fit: cover;
+        border-radius: 0;
+    }
+
+    .ws-ld-detail .crm-prop-hero-img-badge {
+        bottom: 0.65rem;
+        inset-inline-start: 0.65rem;
+        inset-inline-end: auto;
+        min-height: 1.75rem;
+        padding: 0.28rem 0.6rem;
+        font-size: 0.72rem;
+        font-weight: 750;
+        background: rgba(15, 23, 42, 0.62);
+        color: #fff;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+    }
+
+    .ws-ld-detail .crm-prop-hero-deal-pill {
+        top: 0.65rem;
+        inset-inline-end: 0.65rem;
+    }
+
+    .ws-ld-detail .crm-prop-hero-title {
+        font-size: 1.125rem;
+        line-height: 1.34;
+    }
+
+    /* ── Price / meta hierarchy (#63) ── */
+    .ws-ld-detail .crm-prop-hero-board {
+        gap: 0.5rem;
+    }
+
+    .ws-ld-detail .crm-prop-hero-pricezone {
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+    }
+
+    .ws-ld-detail .crm-prop-hero-pricecard {
+        padding: 0.7rem 0.75rem;
+        border-radius: 14px;
+    }
+
+    .ws-ld-detail .crm-prop-hero-pricecard-lbl {
+        font-size: 0.6875rem;
+        font-weight: 700;
+        text-transform: none;
+        letter-spacing: 0;
+    }
+
+    .ws-ld-detail .crm-prop-hero-pricecard strong {
+        font-size: 1.05rem;
+        font-weight: 850;
+        color: var(--ws-primary);
+    }
+
+    .ws-ld-detail .crm-prop-hero-kpis {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.38rem;
+    }
+
+    .ws-ld-detail .crm-prop-hero-kpi {
+        padding: 0.55rem 0.6rem;
+        border-radius: 12px;
+    }
+
+    .ws-ld-detail .crm-prop-hero-kpi-body em {
+        font-size: 0.625rem;
+    }
+
+    .ws-ld-detail .crm-prop-hero-kpi-body strong {
+        font-size: 0.84rem;
+    }
+
+    /* Benchmark strip (#082) */
+    .ws-ld-detail .ws-ld-hero-bench {
+        display: flex;
+        flex-wrap: nowrap;
+        gap: 0.35rem;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        padding-bottom: 0.15rem;
+        margin-inline: -0.1rem;
+        padding-inline: 0.1rem;
+    }
+
+    .ws-ld-detail .ws-ld-hero-bench::-webkit-scrollbar {
+        display: none;
+    }
+
+    .ws-ld-detail .ws-ld-hero-bench .crm-prop-tag {
+        flex: 0 0 auto;
+        white-space: nowrap;
+        font-size: 0.68rem;
+        padding: 0.3rem 0.55rem;
+    }
+
+    /* ── Mobile gallery strip: swipe + 44px targets (#58–59) ── */
+    .ws-ld-detail .ws-ld-mobile-gallery {
+        margin: 0 0.65rem;
+        padding: 0.75rem 0.7rem;
+        border-radius: 18px;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 65%, transparent);
+        background: var(--ws-surface);
+        box-shadow: 0 3px 14px rgba(15, 23, 42, 0.04);
+    }
+
+    .ws-ld-detail .ws-ld-mobile-gallery__title {
+        margin: 0 0 0.65rem;
+        font-size: 0.9rem;
+        font-weight: 800;
+    }
+
+    .ws-ld-detail .ws-ld-mobile-gallery .crm-prop-hero-gallery {
+        display: flex;
+        gap: 0.5rem;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        margin: 0 -0.15rem;
+        padding: 0.15rem 0.15rem 0.25rem;
+    }
+
+    .ws-ld-detail .ws-ld-mobile-gallery .crm-prop-hero-gallery::-webkit-scrollbar {
+        display: none;
+    }
+
+    .ws-ld-detail .ws-ld-mobile-gallery .crm-prop-gallery-item {
+        flex: 0 0 5.5rem;
+        width: 5.5rem;
+        height: 5.5rem;
+        min-width: 5.5rem;
+        min-height: 5.5rem;
+        border-radius: 14px;
+        scroll-snap-align: start;
+        padding: 0;
+        border: 2px solid transparent;
+        background: var(--ws-surface-2);
+    }
+
+    .ws-ld-detail .ws-ld-mobile-gallery .crm-prop-gallery-item.is-active {
+        border-color: var(--ws-primary);
+        box-shadow: 0 0 0 2px color-mix(in srgb, var(--ws-primary) 22%, transparent);
+    }
+
+    /* ── Property fields: stacked cards (#60) ── */
+    .ws-ld-detail .ws-ld-dossier-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 0.55rem;
+    }
+
+    .ws-ld-detail .ws-ld-dossier-section {
+        margin: 0;
+        padding: 0.65rem 0.7rem;
+        border-radius: 14px;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 60%, transparent);
+        background: color-mix(in srgb, var(--ws-surface-2) 35%, var(--ws-surface));
+    }
+
+    .ws-ld-detail .ws-ld-dossier-section + .ws-ld-dossier-section,
+    .ws-ld-detail .ws-ld-dossier-section--full {
+        margin-top: 0;
+        padding-top: 0.65rem;
+        border-top: none;
+    }
+
+    .ws-ld-detail .ws-ld-dossier-section-title {
+        margin-bottom: 0.45rem;
+        padding: 0.3rem 0.5rem;
+        border-radius: 10px;
+        font-size: 0.78rem;
+    }
+
+    .ws-ld-detail .ws-field-row {
+        display: flex;
+        flex-direction: column;
+        gap: 0.2rem;
+        padding: 0.55rem 0;
+        border-bottom: 1px solid color-mix(in srgb, var(--ws-border) 45%, transparent);
+    }
+
+    .ws-ld-detail .ws-field-key {
+        font-size: 0.6875rem;
+        font-weight: 700;
+        color: var(--ws-text-muted);
+        line-height: 1.35;
+    }
+
+    .ws-ld-detail .ws-field-val {
+        font-size: 0.8125rem;
+        line-height: 1.55;
+        overflow-wrap: anywhere;
+    }
+
+    /* Description prose (#64) */
+    .ws-ld-detail .ws-fv-prose {
+        font-size: 0.8125rem;
+        line-height: 1.65;
+    }
+
+    .ws-ld-detail .ws-fv-prose-more {
+        min-height: 2.75rem;
+        padding: 0.35rem 0.5rem;
+        font-size: 0.8125rem;
+        font-weight: 700;
+        color: var(--ws-primary);
+    }
+
+    /* Supplementary fields (#61) */
+    .ws-ld-detail .ws-extra-groups {
+        display: flex;
+        flex-direction: column;
+        gap: 0.55rem;
+    }
+
+    .ws-ld-detail .ws-extra-group {
+        padding: 0.65rem 0.7rem;
+        border-radius: 14px;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 60%, transparent);
+        background: color-mix(in srgb, var(--ws-surface-2) 30%, var(--ws-surface));
+    }
+
+    .ws-ld-detail .ws-extra-group-title {
+        margin: 0 0 0.45rem;
+        font-size: 0.78rem;
+        font-weight: 800;
+    }
+
+    .ws-ld-detail .ws-extra-grid > div {
+        display: flex;
+        flex-direction: column;
+        gap: 0.15rem;
+        padding: 0.45rem 0;
+        border-bottom: 1px solid color-mix(in srgb, var(--ws-border) 40%, transparent);
+    }
+
+    .ws-ld-detail .ws-extra-grid > div:last-child {
+        border-bottom: none;
+    }
+
+    .ws-ld-detail .ws-extra-item dt {
+        font-size: 0.6875rem;
+        font-weight: 700;
+        color: var(--ws-text-muted);
+    }
+
+    .ws-ld-detail .ws-extra-item dd {
+        margin: 0;
+        font-size: 0.8125rem;
+        line-height: 1.5;
+        overflow-wrap: anywhere;
+    }
+
+    /* Features panel (#62) */
+    .ws-ld-detail .ws-ld-features {
+        padding: 0;
+        border: none;
+        background: transparent;
+    }
+
+    .ws-ld-detail .ws-ld-feat-core-card {
+        border-radius: 12px;
+        padding: 0.55rem 0.6rem;
+        min-height: 2.75rem;
+    }
+
+    .ws-ld-detail .ws-ld-feat-group {
+        border-radius: 14px;
+        overflow: hidden;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 55%, transparent);
+    }
+
+    .ws-ld-detail .ws-ld-feat-group-grid {
+        grid-template-columns: 1fr;
+        gap: 0.35rem;
+        padding: 0.55rem;
+    }
+
+    .ws-ld-detail .ws-ld-feat-item {
+        border-radius: 11px;
+        padding: 0.5rem 0.55rem;
+    }
+
+    .ws-ld-detail .ws-ld-feat-chip {
+        font-size: 0.7rem;
+        padding: 0.22rem 0.45rem;
+    }
+
+    /* ── Owner contact — restore aside + touch targets (#069) ── */
+    .ws-ld-detail .crm-prop-aside {
+        display: flex !important;
+        flex-direction: column;
+        gap: 0.55rem;
+        width: 100%;
+        order: 1;
+    }
+
+    .ws-ld-detail .crm-prop-aside .crm-prop-side-card {
+        display: none;
+    }
+
+    .ws-ld-detail .crm-prop-main {
+        order: 2;
+    }
+
+    .ws-ld-detail .mk-owner-box {
+        padding: 0.75rem 0.8rem;
+        border-radius: 16px;
+        border: 1px solid color-mix(in srgb, var(--ws-primary) 14%, var(--ws-border));
+        box-shadow: 0 3px 14px rgba(15, 23, 42, 0.04);
+    }
+
+    .ws-ld-detail .mk-owner-box__input,
+    .ws-ld-detail .mk-owner-box__submit {
+        min-height: 2.75rem;
+        font-size: 1rem;
+    }
+
+    .ws-ld-detail .mk-owner-box__submit {
+        width: 100%;
+        justify-content: center;
+        border-radius: 12px;
+    }
+
+    .ws-ld-detail .mk-contact-act,
+    .ws-ld-detail .mk-contact-act-form button {
+        width: 2.75rem;
+        height: 2.75rem;
+        min-width: 2.75rem;
+        min-height: 2.75rem;
+        border-radius: 12px;
+        font-size: 0.9rem;
+    }
+
+    /* Contact quick actions in contacts tab (#083) */
+    .ws-ld-detail .crm-prop-contact-acts .mk-contact-act,
+    .ws-ld-detail .crm-prop-contact-acts .mk-contact-act-form button {
+        width: 2.75rem;
+        height: 2.75rem;
+        min-width: 2.75rem;
+        min-height: 2.75rem;
+    }
+
+    .ws-ld-detail .crm-prop-contact-tile {
+        padding: 0.75rem;
+    }
+
+    /* ── Map finale (#065) ── */
+    .ws-ld-detail .crm-prop-map-finale {
+        margin: 0 0.65rem;
+        border-radius: 18px;
+    }
+
+    .ws-ld-detail .crm-prop-map-finale-intro {
+        padding: 0.75rem 0.8rem;
+    }
+
+    .ws-ld-detail .crm-prop-map-finale-title {
+        font-size: 1rem;
+    }
+
+    .ws-ld-detail .crm-prop-map-finale-actions a {
+        min-height: 2.75rem;
+        font-size: 0.8125rem;
+    }
+
+    .ws-ld-detail .crm-prop-map-finale .ws-ld-location-map {
+        min-height: 220px;
+        max-height: 280px;
+        height: 240px;
+    }
+
+    .ws-ld-detail .crm-prop-map-finale .ws-ld-location-map-tool {
+        width: 2.75rem;
+        height: 2.75rem;
+        min-width: 2.75rem;
+        min-height: 2.75rem;
+    }
+
+    /* ── AI summary card (#070) ── */
+    .ws-ld-detail .ws-ai-card--listing {
+        margin: 0 0.65rem;
+        border-radius: 18px;
+        overflow: hidden;
+    }
+
+    .ws-ld-detail .ws-ai-card__header {
+        flex-wrap: wrap;
+        gap: 0.55rem;
+    }
+
+    .ws-ld-detail .ws-ai-card__cta {
+        min-height: 2.75rem;
+        padding-inline: 0.85rem;
+        border-radius: 12px;
+        font-size: 0.8125rem;
+    }
+
+    .ws-ld-detail .ws-ai-quota__pill {
+        font-size: 0.68rem;
+    }
+
+    /* ── Advertiser analysis polish (#067–068) ── */
+    .ws-ld-detail .ws-adv-analysis__badge {
+        min-height: 1.75rem;
+        padding: 0.28rem 0.55rem;
+        font-size: 0.7rem;
+    }
+
+    .ws-ld-detail .ws-adv-analysis__modal {
+        max-height: min(85dvh, 560px);
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: calc(0.85rem + env(safe-area-inset-bottom, 0px));
+    }
+
+    .ws-ld-detail .ws-adv-analysis__close {
+        width: 2.75rem;
+        height: 2.75rem;
+        min-width: 2.75rem;
+        min-height: 2.75rem;
+        border-radius: 12px;
+    }
+
+    .ws-ld-detail .ws-adv-analysis__feedback-btn,
+    .ws-ld-detail .ws-adv-analysis__correction-submit {
+        min-height: 2.75rem;
+        font-size: 0.8125rem;
+    }
+
+    .ws-ld-detail .ws-adv-analysis__correction-opt {
+        min-height: 2.5rem;
+        padding: 0.4rem 0.25rem;
+    }
+
+    /* ── Sticky dock: 3 primary + more (#072, #074–076) ── */
+    .ws-ld-detail .crm-prop-mobile-dock {
+        bottom: calc(4.2rem + env(safe-area-inset-bottom, 0px));
+        inset-inline: 0.55rem;
+    }
+
+    .ws-ld-detail .crm-prop-mobile-dock__inner {
+        gap: 0.15rem;
+        padding: 0.38rem 0.4rem;
+        border-radius: 20px;
+    }
+
+    .ws-ld-detail .crm-prop-dock-btn {
+        min-height: 2.75rem;
+        padding: 0.3rem 0.15rem;
+        border-radius: 13px;
+        font-size: 0.56rem;
+    }
+
+    .ws-ld-detail .crm-prop-dock-btn i {
+        font-size: 1.05rem;
+    }
+
+    /* Fav moved to more menu — keep dock to 3 + more */
+    .ws-ld-detail .crm-prop-dock-btn--fav,
+    .ws-ld-detail .ws-ld-dock-form {
+        display: none !important;
+    }
+
+    /* ── More menu sheet (#073) ── */
+    .ws-ld-detail .ws-ld-mob-more__panel {
+        max-height: min(78dvh, 560px);
+        padding-bottom: calc(0.85rem + env(safe-area-inset-bottom, 0px));
+    }
+
+    .ws-ld-detail .ws-ld-mob-more__act {
+        min-height: 4.25rem;
+        border-radius: 14px;
+        font-size: 0.72rem;
+    }
+
+    .ws-ld-detail .ws-ld-mob-more__act--share i {
+        color: #0f766e;
+    }
+
+    .ws-ld-detail .ws-ld-mob-more__act--fav.is-on {
+        color: #d97706;
+        border-color: rgba(245, 158, 11, 0.35);
+        background: rgba(245, 158, 11, 0.08);
+    }
+
+    .ws-ld-detail .ws-ld-mob-more__act--fav.is-on i {
+        color: #f59e0b;
+    }
+
+    .ws-ld-detail .ws-ld-mob-more__act--primary {
+        border-color: color-mix(in srgb, var(--ws-primary) 25%, var(--ws-border));
+        background: color-mix(in srgb, var(--ws-primary) 6%, var(--ws-surface));
+    }
+
+    .ws-ld-detail .ws-ld-mob-more__notice {
+        grid-column: 1 / -1;
+        font-size: 0.72rem;
+        padding: 0.45rem 0.55rem;
+        border-radius: 10px;
+        background: color-mix(in srgb, #10b981 8%, var(--ws-surface));
+    }
+
+    /* ── Similar listings / horizontal cards (#084) ── */
+    .ws-ld-detail .ws-ld-similar,
+    .ws-ld-detail .ws-ld-similar-listings {
+        margin: 0 0.65rem;
+        padding: 0.75rem 0.7rem;
+        border-radius: 18px;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 65%, transparent);
+        background: var(--ws-surface);
+    }
+
+    .ws-ld-detail .ws-ld-similar__scroll,
+    .ws-ld-detail .ws-ld-similar-listings__track {
+        display: flex;
+        gap: 0.5rem;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        padding-bottom: 0.2rem;
+    }
+
+    .ws-ld-detail .ws-ld-similar__scroll::-webkit-scrollbar,
+    .ws-ld-detail .ws-ld-similar-listings__track::-webkit-scrollbar {
+        display: none;
+    }
+
+    .ws-ld-detail .ws-ld-similar__scroll > *,
+    .ws-ld-detail .ws-ld-similar-listings__track > .mk-lcard,
+    .ws-ld-detail .ws-ld-similar-listings__track > article {
+        flex: 0 0 min(82vw, 280px);
+        scroll-snap-align: start;
+        min-width: 0;
+    }
+
+    /* ── Listing detail modals (#077–081) ── */
+    #modal-meta.is-open,
+    #modal-share.is-open,
+    #modal-delete-listing.is-open,
+    #modal-listing-detail-help.is-open {
+        align-items: flex-end;
+        padding: 0;
+    }
+
+    #modal-meta.is-open .ws-modal-panel,
+    #modal-share.is-open .ws-modal-panel,
+    #modal-delete-listing.is-open .ws-modal-panel {
+        width: 100%;
+        max-width: 100%;
+        margin: 0;
+        border-radius: 20px 20px 0 0;
+        max-height: min(88dvh, 560px);
+        display: flex;
+        flex-direction: column;
+    }
+
+    #modal-meta.is-open .ws-modal-body,
+    #modal-share.is-open .ws-modal-body,
+    #modal-delete-listing.is-open .ws-modal-body {
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior: contain;
+    }
+
+    #modal-meta.is-open .ws-modal-foot,
+    #modal-share.is-open .ws-modal-foot,
+    #modal-delete-listing.is-open .ws-modal-foot {
+        flex-shrink: 0;
+        padding-bottom: max(0.85rem, env(safe-area-inset-bottom, 0px));
+        gap: 0.5rem;
+    }
+
+    #modal-meta.is-open .ws-modal-foot .ws-btn,
+    #modal-share.is-open .ws-modal-foot .ws-btn,
+    #modal-delete-listing.is-open .ws-modal-foot .ws-btn {
+        min-height: 2.75rem;
+        font-size: 0.9375rem;
+        flex: 1;
+    }
+
+    #modal-meta.is-open .ws-input,
+    #modal-meta.is-open .ws-select,
+    #modal-meta.is-open textarea,
+    #modal-share.is-open .ws-input {
+        min-height: 2.75rem;
+        font-size: 1rem;
+    }
+
+    /* Edit listing → full-screen sheet (#079) */
+    #modal-edit-listing.is-open {
+        align-items: stretch;
+        padding: 0;
+    }
+
+    #modal-edit-listing.is-open .ws-modal-panel,
+    #modal-edit-listing.is-open .mk-edit-modal-panel {
+        width: 100%;
+        max-width: 100%;
+        height: 100dvh;
+        height: 100vh;
+        max-height: 100dvh;
+        margin: 0;
+        border-radius: 0;
+        display: flex;
+        flex-direction: column;
+    }
+
+    #modal-edit-listing.is-open .mk-edit-nav {
+        flex-shrink: 0;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        gap: 0.35rem;
+        padding: 0.45rem 0.65rem;
+    }
+
+    #modal-edit-listing.is-open .mk-edit-nav::-webkit-scrollbar {
+        display: none;
+    }
+
+    #modal-edit-listing.is-open .mk-edit-nav-btn {
+        flex: 0 0 auto;
+        min-height: 2.75rem;
+        padding: 0.4rem 0.65rem;
+        font-size: 0.75rem;
+    }
+
+    #modal-edit-listing.is-open .mk-edit-form.ws-modal-body {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior: contain;
+    }
+
+    #modal-edit-listing.is-open .ws-modal-head,
+    #modal-edit-listing.is-open .mk-edit-modal-head {
+        flex-shrink: 0;
+        padding-top: max(0.65rem, env(safe-area-inset-top, 0px));
+    }
+
+    #modal-edit-listing.is-open .mk-edit-modal-foot,
+    #modal-edit-listing.is-open .ws-modal-foot {
+        flex-shrink: 0;
+        padding-bottom: max(0.85rem, env(safe-area-inset-bottom, 0px));
+        border-top: 1px solid var(--ws-border);
+        background: var(--ws-surface);
+    }
+
+    #modal-edit-listing.is-open .mk-edit-modal-foot .ws-btn {
+        min-height: 2.75rem;
+        flex: 1;
+    }
+
+    /* Help modal bottom sheet (#081) */
+    #modal-listing-detail-help.is-open .ws-modal-panel,
+    #modal-listing-detail-help.is-open .fl-help-modal__panel {
+        width: 100%;
+        max-width: 100%;
+        max-height: 92dvh;
+        margin: 0;
+        border-radius: 20px 20px 0 0;
+        display: flex;
+        flex-direction: column;
+    }
+
+    #modal-listing-detail-help.is-open .fl-help-modal__body {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    #modal-listing-detail-help.is-open .fl-help-modal__close,
+    #modal-listing-detail-help.is-open .ws-modal-close {
+        width: 2.75rem;
+        height: 2.75rem;
+        min-width: 2.75rem;
+        min-height: 2.75rem;
+    }
+
+    /* Lightbox controls 44px (#058) */
+    .ws-lightbox-btn {
+        width: 2.75rem;
+        height: 2.75rem;
+        min-width: 2.75rem;
+        min-height: 2.75rem;
+    }
+}
+
+@media (max-width: 430px) {
+    .ws-ld-mob-hero-title {
+        font-size: 0.86rem;
+    }
+
+    .ws-ld-detail .crm-prop-hero-title {
+        font-size: 1.05rem;
+    }
+
+    .ws-ld-detail .crm-prop-hero-cover,
+    .ws-ld-detail .crm-prop-hero-cover img {
+        aspect-ratio: 16 / 11;
+    }
+
+    .ws-ld-detail .ws-ld-mob-more__grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 360px) {
+    .ws-ld-detail .crm-prop-dock-btn span {
+        font-size: 0.5rem;
+    }
+}

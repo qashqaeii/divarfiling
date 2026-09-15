@@ -1,0 +1,158 @@
+/* ═══════════════════════════════════════════════════════════
+   Workspace Home — Mobile Pass 02 (Surfaces #16–23)
+   Scoped: max-width 767px — Desktop unchanged
+   ═══════════════════════════════════════════════════════════ */
+
+@media (max-width: 767px) {
+    .wsh-dashboard,
+    .ws-home.ws-home-pro {
+        gap: 0.55rem;
+        min-width: 0;
+        overflow-x: clip;
+    }
+
+    /* Hero / header (#17) */
+    .wsh-hero {
+        padding: 0.8rem 0.85rem;
+        border-radius: 16px;
+    }
+
+    .wsh-hero__title {
+        font-size: 1.25rem; /* 20px */
+        line-height: 1.3;
+    }
+
+    .wsh-hero__meta,
+    .wsh-hero__sub {
+        font-size: 0.8125rem;
+        line-height: 1.45;
+    }
+
+    /* KPI strip */
+    .wsh-kpi__grid {
+        gap: 0.45rem;
+    }
+
+    .wsh-kpi__card {
+        min-height: 3.5rem;
+        padding: 0.65rem 0.7rem;
+        border-radius: 14px;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .wsh-kpi__value {
+        font-size: 1rem;
+        font-weight: 800;
+    }
+
+    .wsh-kpi__label {
+        font-size: 0.6875rem;
+    }
+
+    /* Global search (#18) */
+    .wsh-search {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .wsh-search__wrap,
+    .wsh-search .crm-search-input-wrap {
+        min-height: 2.75rem;
+        border-radius: 14px;
+        padding-inline: 0.75rem;
+    }
+
+    .wsh-search__input,
+    .wsh-search .crm-search-input {
+        font-size: 1rem; /* prevent iOS zoom */
+        min-height: 2.75rem;
+    }
+
+    .wsh-search__kbd,
+    .wsh-search .crm-search-kbd {
+        display: none !important;
+    }
+
+    .wsh-search__results,
+    .wsh-search .crm-search-results {
+        position: fixed;
+        inset-inline: 0.65rem;
+        top: calc(3.35rem + env(safe-area-inset-top, 0px) + 0.35rem);
+        max-height: min(62dvh, 420px);
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        border-radius: 16px;
+        z-index: 185;
+        box-shadow: 0 16px 48px rgba(15, 23, 42, 0.16);
+    }
+
+    /* Quick actions / shortcuts (#19) */
+    .wsh-actions,
+    .wsh-shortcuts__grid {
+        gap: 0.45rem;
+    }
+
+    .wsh-action,
+    .wsh-shortcuts__item,
+    .wsh-start__card {
+        min-height: 3.25rem;
+        padding: 0.7rem 0.75rem;
+        border-radius: 14px;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .wsh-action:active,
+    .wsh-shortcuts__item:active,
+    .wsh-start__card:active {
+        transform: scale(0.985);
+    }
+
+    .wsh-start__grid {
+        gap: 0.45rem;
+    }
+
+    .wsh-start__title {
+        font-size: 0.9375rem;
+        font-weight: 750;
+        margin-bottom: 0.35rem;
+    }
+
+    /* Widget cards (#20–23) */
+    .wsh-card {
+        border-radius: 16px;
+        padding: 0.75rem 0.8rem;
+        min-width: 0;
+    }
+
+    .wsh-card__title {
+        font-size: 0.9375rem;
+        font-weight: 750;
+    }
+
+    .wsh-reminders__item,
+    .wsh-props__row,
+    .wsh-contacts__row {
+        min-height: 2.75rem;
+        padding-block: 0.55rem;
+    }
+
+    .wsh-mid-grid,
+    .wsh-lower-grid {
+        gap: 0.55rem;
+    }
+
+    /* NBA alerts — full-width CTA already in home.css */
+    .wsh-nba {
+        gap: 0.45rem;
+    }
+
+    .ws-home-alert__cta {
+        min-height: 2.75rem !important;
+    }
+
+    /* Footer status on home */
+    .wsh-footer {
+        font-size: 0.6875rem;
+        padding-block: 0.35rem;
+    }
+}

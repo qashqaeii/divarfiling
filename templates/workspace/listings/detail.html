@@ -12,6 +12,7 @@
 <link rel="stylesheet" href="{% static 'workspace/css/advertiser-analysis.css' %}?v=5">
 <link rel="stylesheet" href="{% static 'workspace/css/mk-filing-datasets.css' %}?v=19">
 <link rel="stylesheet" href="{% static 'workspace/css/mk-filing-listing-detail.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'workspace/css/ws-listing-detail-mobile-v2.css' %}?v=1">
 {% if listing.latitude and listing.longitude %}
 <link rel="stylesheet" href="{% static 'workspace/css/listing-map.css' %}?v=4">
 {% endif %}
@@ -52,6 +53,12 @@
                 <a href="{% url 'workspace:dataset_detail' dataset.id %}" class="crm-prop-hero-back" title="بازگشت به جدول">
                     <i class="fas fa-arrow-right" aria-hidden="true"></i>
                 </a>
+                <div class="ws-ld-mob-hero-bar">
+                    <span class="ws-ld-mob-hero-title">{{ listing.title|truncatechars:34 }}</span>
+                </div>
+                <button type="button" class="ws-ld-mob-hero-more" data-ld-more-open aria-label="منوی بیشتر" title="بیشتر">
+                    <i class="fas fa-ellipsis-vertical" aria-hidden="true"></i>
+                </button>
                 <nav class="crm-prop-hero-crumb" aria-label="مسیر">
                     <a href="{% url 'workspace:dataset_detail' dataset.id %}">{{ dataset.name|truncatechars:28 }}</a>
                     <i class="fas fa-chevron-left" aria-hidden="true"></i>
@@ -706,6 +713,26 @@
                     <i class="fas fa-lightbulb" aria-hidden="true"></i>
                     <span>راهنما</span>
                 </button>
+                <button type="button" class="ws-ld-mob-more__act" data-modal-open="modal-meta" data-ld-more-close>
+                    <i class="fas fa-sliders" aria-hidden="true"></i>
+                    <span>متادیتا</span>
+                </button>
+                <button type="button" class="ws-ld-mob-more__act ws-ld-mob-more__act--primary" data-open-listing-edit="{{ listing.id }}" data-id="{{ listing.id }}" data-dataset-id="{{ dataset.id }}" data-ld-more-close>
+                    <i class="fas fa-pen" aria-hidden="true"></i>
+                    <span>ویرایش</span>
+                </button>
+                <button type="button" class="ws-ld-mob-more__act ws-ld-mob-more__act--share" data-modal-open="modal-share" data-ld-more-close>
+                    <i class="fas fa-share-alt" aria-hidden="true"></i>
+                    <span>اشتراک</span>
+                </button>
+                <form method="post" action="{% url 'workspace:listing_favorite_toggle' dataset.id listing.id %}" class="ws-ld-mob-more__form">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                    <button type="submit" class="ws-ld-mob-more__act ws-ld-mob-more__act--fav{% if meta.is_favorite %} is-on{% endif %}">
+                        <i class="{% if meta.is_favorite %}fas fa-star{% else %}far fa-star{% endif %}" aria-hidden="true"></i>
+                        <span>{% if meta.is_favorite %}حذف علاقه{% else %}علاقه‌مندی{% endif %}</span>
+                    </button>
+                </form>
                 {% if owner_phone %}
                 <a href="{{ owner_phone|phone_wa_href }}" target="_blank" rel="noopener" class="ws-ld-mob-more__act">
                     <i class="fab fa-whatsapp" aria-hidden="true"></i>
@@ -715,10 +742,6 @@
                 <button type="button" class="ws-ld-mob-more__act" data-copy="{{ whatsapp_text }}" data-ld-more-close>
                     <i class="fas fa-comment-dots" aria-hidden="true"></i>
                     <span>کپی واتساپ</span>
-                </button>
-                <button type="button" class="ws-ld-mob-more__act" data-modal-open="modal-meta" data-ld-more-close>
-                    <i class="fas fa-sliders" aria-hidden="true"></i>
-                    <span>متادیتا</span>
                 </button>
                 {% if crm_property %}
                 <a href="{% url 'workspace:crm_property_detail' crm_property.id %}" class="ws-ld-mob-more__act">

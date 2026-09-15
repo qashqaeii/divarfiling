@@ -1,6 +1,10 @@
 {% extends 'workspace/crm/team/tv_base.html' %}
 {% load static crm_tags %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'workspace/css/crm-mobile-v2-agency.css' %}?v=1">
+{% endblock %}
+
 {% block title %}مرکز فرمان — {{ crm_agency.name|default:'آژانس' }}{% endblock %}
 
 {% block content %}

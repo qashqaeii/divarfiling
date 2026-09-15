@@ -1,7 +1,11 @@
 {% extends 'workspace/base.html' %}
-{% load workspace_tags %}
+{% load static workspace_tags %}
 
 {% block page_title %}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'workspace/css/crm-mobile-v2-deals.css' %}?v=1">
+{% endblock %}
 
 {% block content %}
 <div class="mk-page">

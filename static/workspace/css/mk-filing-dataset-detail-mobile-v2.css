@@ -1,0 +1,417 @@
+/* ═══════════════════════════════════════════════════════════
+   Dataset Detail — Mobile Pass 04 (#41–55)
+   Scoped: .mk-filing-dataset-detail @ max-width 767px
+   Desktop untouched — loads after mk-filing-dataset-detail.css
+   ═══════════════════════════════════════════════════════════ */
+
+@media (max-width: 767px) {
+    /* ── Cards-only: hide table, force card shell (#45–46) ── */
+    .mk-filing-dataset-detail .mk-listing-table-desk,
+    .mk-filing-dataset-detail .mk-listing-panel[data-list-view="auto"] .mk-listing-table-desk,
+    .mk-filing-dataset-detail .mk-listing-panel[data-list-view="table"] .mk-listing-table-desk,
+    .mk-filing-dataset-detail .mk-listing-panel[data-list-view="grid"] .mk-listing-table-desk {
+        display: none !important;
+    }
+
+    .mk-filing-dataset-detail .mk-listing-cards-shell,
+    .mk-filing-dataset-detail .mk-listing-panel[data-list-view="auto"] .mk-listing-cards-shell,
+    .mk-filing-dataset-detail .mk-listing-panel[data-list-view="table"] .mk-listing-cards-shell,
+    .mk-filing-dataset-detail .mk-listing-panel[data-list-view="grid"] .mk-listing-cards-shell {
+        display: flex !important;
+        flex-direction: column;
+        gap: 0.65rem;
+        padding: 0.65rem 0.75rem 0.85rem !important;
+        min-width: 0;
+    }
+
+    /* View toggle hidden on mobile (#47) */
+    .mk-filing-dataset-detail .mk-listing-view-toggle,
+    .mk-filing-dataset-detail .mk-filing-view-toggle {
+        display: none !important;
+    }
+
+    /* ── Compact mobile header (#42) ── */
+    .mk-filing-dataset-detail .fl-dd-mob-header {
+        border-radius: 0 0 18px 18px;
+    }
+
+    .mk-filing-dataset-detail .fl-dd-mob-header__inner {
+        padding: 0.6rem 0.75rem 0.35rem;
+        gap: 0.4rem;
+    }
+
+    .mk-filing-dataset-detail .fl-dd-mob-back,
+    .mk-filing-dataset-detail .fl-dd-mob-header__icon,
+    .mk-filing-dataset-detail .fl-mob-header__icon {
+        width: 2.75rem;
+        height: 2.75rem;
+        min-width: 2.75rem;
+        min-height: 2.75rem;
+        border-radius: 12px;
+    }
+
+    .mk-filing-dataset-detail .fl-dd-mob-header__title {
+        font-size: 0.92rem;
+        line-height: 1.28;
+    }
+
+    .mk-filing-dataset-detail .fl-dd-mob-header__sub {
+        font-size: 0.7rem;
+        line-height: 1.35;
+    }
+
+    .mk-filing-dataset-detail .fl-dd-mob-quick {
+        padding: 0 0.75rem 0.5rem;
+        gap: 0.3rem;
+    }
+
+    .mk-filing-dataset-detail .fl-dd-mob-quick__chip {
+        min-height: 2.75rem;
+        padding: 0 0.6rem;
+        font-size: 0.7rem;
+    }
+
+    .mk-filing-dataset-detail .fl-dd-mob-stats {
+        padding: 0 0.75rem 0.55rem;
+    }
+
+    .mk-filing-dataset-detail .fl-dd-mob-stats__grid {
+        gap: 0.3rem;
+        padding: 0.4rem;
+        border-radius: 12px;
+    }
+
+    .mk-filing-dataset-detail .fl-dd-mob-stat strong {
+        font-size: 0.74rem;
+    }
+
+    .mk-filing-dataset-detail .fl-dd-mob-stat span {
+        font-size: 0.56rem;
+    }
+
+    /* KPI strip hidden on mobile — stats in header (#43) */
+    .mk-filing-dataset-detail .fl-dd-kpi {
+        display: none !important;
+    }
+
+    /* ── Filter bar: search row + bottom sheet (#44) ── */
+    .mk-filing-dataset-detail .fl-dd-filter {
+        position: sticky;
+        top: calc(2.5rem + env(safe-area-inset-top, 0px));
+        z-index: 28;
+        margin-inline: 0.65rem;
+        padding: 0.5rem 0.6rem;
+        border-radius: 16px;
+    }
+
+    .mk-filing-dataset-detail .mk-filter-primary__fields,
+    .mk-filing-dataset-detail .mk-filter-actions--desk {
+        display: none !important;
+    }
+
+    .mk-filing-dataset-detail .ws-mob-search-bar__btn {
+        min-width: 2.75rem;
+        min-height: 2.75rem;
+        height: 2.75rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+    }
+
+    .mk-filing-dataset-detail .ws-mob-search-bar__search {
+        min-height: 2.75rem !important;
+        height: 2.75rem !important;
+        border-radius: 12px !important;
+    }
+
+    .mk-filing-dataset-detail .ws-mob-search-bar__search input {
+        font-size: 0.875rem !important;
+    }
+
+    .mk-filing-dataset-detail .mk-filter-active {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        scrollbar-width: none;
+        gap: 0.35rem;
+        padding-bottom: 0.15rem;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .mk-filing-dataset-detail .mk-filter-active::-webkit-scrollbar {
+        display: none;
+    }
+
+    .mk-filing-dataset-detail .mk-filter-chip {
+        flex: 0 0 auto;
+        min-height: 2rem;
+        display: inline-flex;
+        align-items: center;
+        font-size: 0.7rem;
+        padding: 0.2rem 0.55rem;
+    }
+
+    /* Bottom sheet overlay when advanced filters open */
+    .mk-filing-dataset-detail .fl-dd-filter.mk-filter-shell-open::before,
+    .mk-filing-dataset-detail .fl-dd-filter.fl-dd-filter-open::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        z-index: 190;
+        background: rgba(15, 23, 42, 0.45);
+        backdrop-filter: blur(3px);
+        -webkit-backdrop-filter: blur(3px);
+        animation: flDdFilterFade 0.2s ease;
+    }
+
+    @keyframes flDdFilterFade {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    .mk-filing-dataset-detail .fl-dd-filter.mk-filter-shell-open .mk-filter-advanced.is-open,
+    .mk-filing-dataset-detail .fl-dd-filter.fl-dd-filter-open .mk-filter-advanced.is-open {
+        position: fixed;
+        inset-inline: 0;
+        bottom: 0;
+        z-index: 200;
+        display: flex !important;
+        flex-direction: column;
+        max-height: min(88dvh, 720px);
+        margin: 0;
+        padding: 0;
+        border: none;
+        border-radius: 20px 20px 0 0;
+        background: var(--ws-surface);
+        box-shadow: 0 -16px 48px rgba(15, 23, 42, 0.18);
+        overflow: hidden;
+        animation: flDdFilterSlide 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    @keyframes flDdFilterSlide {
+        from { transform: translateY(100%); }
+        to { transform: translateY(0); }
+    }
+
+    .mk-filing-dataset-detail .fl-dd-filter.mk-filter-shell-open .mk-filter-advanced.is-open::before,
+    .mk-filing-dataset-detail .fl-dd-filter.fl-dd-filter-open .mk-filter-advanced.is-open::before {
+        content: "";
+        display: block;
+        width: 2.5rem;
+        height: 0.28rem;
+        margin: 0.55rem auto 0.35rem;
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--ws-border) 70%, transparent);
+        flex-shrink: 0;
+    }
+
+    .mk-filing-dataset-detail .fl-dd-filter.mk-filter-shell-open .mk-filter-adv-deck,
+    .mk-filing-dataset-detail .fl-dd-filter.fl-dd-filter-open .mk-filter-adv-deck {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+        padding: 0.35rem 0.85rem 0.5rem;
+    }
+
+    .mk-filing-dataset-detail .fl-dd-filter.mk-filter-shell-open .mk-filter-adv-foot,
+    .mk-filing-dataset-detail .fl-dd-filter.fl-dd-filter-open .mk-filter-adv-foot {
+        flex-shrink: 0;
+        padding: 0.65rem 0.85rem calc(0.75rem + env(safe-area-inset-bottom, 0px));
+        border-top: 1px solid color-mix(in srgb, var(--ws-border) 55%, transparent);
+        background: var(--ws-surface);
+    }
+
+    .mk-filing-dataset-detail .fl-dd-filter.mk-filter-shell-open .mk-filter-apply--foot,
+    .mk-filing-dataset-detail .fl-dd-filter.fl-dd-filter-open .mk-filter-apply--foot {
+        min-height: 2.75rem;
+        width: 100%;
+        font-size: 0.875rem;
+        border-radius: 12px;
+    }
+
+    .mk-filing-dataset-detail .mk-filter-seg__btn,
+    .mk-filing-dataset-detail .mk-filter-check {
+        min-height: 2.75rem;
+    }
+
+    .mk-filing-dataset-detail .mk-filter-inp,
+    .mk-filing-dataset-detail .mk-filter-num,
+    .mk-filing-dataset-detail .mk-filter-select {
+        min-height: 2.75rem;
+        font-size: 0.875rem;
+    }
+
+    /* ── Retention notice readable (#48) ── */
+    .mk-filing-dataset-detail .ws-filing-retention-policy.mk-notice--inline {
+        margin-inline: 0.65rem;
+        padding: 0.65rem 0.75rem;
+        border-radius: 14px;
+        font-size: 0.75rem;
+        line-height: 1.5;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+
+    .mk-filing-dataset-detail .ws-filing-retention-policy .mk-notice__text {
+        line-height: 1.5;
+        font-size: 0.75rem;
+    }
+
+    .mk-filing-dataset-detail .ws-filing-retention-policy .mk-notice__close {
+        width: 2.75rem;
+        height: 2.75rem;
+        min-width: 2.75rem;
+        min-height: 2.75rem;
+        flex-shrink: 0;
+        border-radius: 10px;
+    }
+
+    /* ── Pagination touch-friendly (#55) ── */
+    .mk-filing-dataset-detail .mk-listing-panel .mk-pagination {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.55rem;
+        padding: 0.65rem 0.75rem calc(0.85rem + env(safe-area-inset-bottom, 0px));
+        margin: 0;
+        border-top: 1px solid color-mix(in srgb, var(--ws-border) 50%, transparent);
+    }
+
+    .mk-filing-dataset-detail .mk-pagination-meta {
+        text-align: center;
+        font-size: 0.75rem;
+        justify-content: center;
+    }
+
+    .mk-filing-dataset-detail .mk-pagination-nav {
+        justify-content: center;
+        margin-inline-start: 0;
+        gap: 0.45rem;
+    }
+
+    .mk-filing-dataset-detail .mk-page-btn,
+    .mk-filing-dataset-detail .mk-page-btn.mk-page-btn-nav {
+        width: 2.75rem;
+        height: 2.75rem;
+        min-width: 2.75rem;
+        min-height: 2.75rem;
+        border-radius: 12px;
+        font-size: 0.8rem;
+    }
+
+    .mk-filing-dataset-detail .mk-page-num {
+        min-width: 2.75rem;
+        height: 2.75rem;
+        padding: 0 0.5rem;
+        border-radius: 12px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+    .mk-filing-dataset-detail .mk-page-list {
+        gap: 0.25rem;
+        padding: 0.25rem;
+        border-radius: 14px;
+    }
+
+    /* ── Modals → bottom sheets (#49–51) ── */
+    #modal-rename.is-open,
+    #modal-delete-consultants.is-open,
+    #modal-delete-disguised.is-open {
+        align-items: flex-end;
+        padding: 0;
+    }
+
+    #modal-rename.is-open .ws-modal-overlay,
+    #modal-delete-consultants.is-open .ws-modal-overlay,
+    #modal-delete-disguised.is-open .ws-modal-overlay {
+        background: rgba(15, 23, 42, 0.52);
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+    }
+
+    #modal-rename.is-open .ws-modal-panel,
+    #modal-delete-consultants.is-open .ws-modal-panel,
+    #modal-delete-disguised.is-open .ws-modal-panel {
+        width: 100%;
+        max-width: 100%;
+        margin: 0;
+        border-radius: 20px 20px 0 0;
+        max-height: min(88dvh, 520px);
+        display: flex;
+        flex-direction: column;
+    }
+
+    #modal-rename.is-open .ws-modal-body,
+    #modal-delete-consultants.is-open .ws-modal-body,
+    #modal-delete-disguised.is-open .ws-modal-body {
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    #modal-rename.is-open .ws-modal-foot,
+    #modal-delete-consultants.is-open .ws-modal-foot,
+    #modal-delete-disguised.is-open .ws-modal-foot {
+        flex-shrink: 0;
+        padding-bottom: max(0.85rem, env(safe-area-inset-bottom, 0px));
+        gap: 0.5rem;
+    }
+
+    #modal-rename.is-open .ws-modal-foot .ws-btn,
+    #modal-delete-consultants.is-open .ws-modal-foot .ws-btn,
+    #modal-delete-disguised.is-open .ws-modal-foot .ws-btn {
+        min-height: 2.75rem;
+        font-size: 0.9375rem;
+        flex: 1;
+    }
+
+    #modal-rename.is-open .ws-modal-close,
+    #modal-delete-consultants.is-open .ws-modal-close,
+    #modal-delete-disguised.is-open .ws-modal-close {
+        width: 2.75rem;
+        height: 2.75rem;
+        min-width: 2.75rem;
+        min-height: 2.75rem;
+    }
+
+    #modal-rename.is-open .ws-input {
+        min-height: 2.75rem;
+        font-size: 1rem;
+    }
+
+    /* Help modal bottom sheet (#52) */
+    #modal-dataset-detail-help.is-open {
+        align-items: flex-end;
+        padding: 0;
+    }
+
+    #modal-dataset-detail-help.is-open .ws-modal-panel,
+    #modal-dataset-detail-help.is-open .fl-help-modal__panel {
+        width: 100%;
+        max-width: 100%;
+        max-height: 92dvh;
+        margin: 0;
+        border-radius: 20px 20px 0 0;
+    }
+
+    /* Export/delete actions via more menu — touch targets (#53–54) */
+    .mk-filing-dataset-detail .fl-dd-mob-more-item {
+        min-height: 2.75rem;
+        font-size: 0.8125rem;
+    }
+
+    .mk-filing-dataset-detail .fl-dd-mob-dock__btn {
+        min-height: 2.75rem;
+    }
+
+    /* Empty state */
+    .mk-filing-dataset-detail .mk-lcard-empty-state {
+        padding: 1.5rem 1rem;
+        border-radius: 16px;
+        text-align: center;
+    }
+
+    .mk-filing-dataset-detail .mk-lcard-empty-state .ws-btn {
+        min-height: 2.75rem;
+        margin-top: 0.5rem;
+    }
+}

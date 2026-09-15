@@ -806,6 +806,58 @@
         sync();
     }
 
+    function initStickyCta() {
+        if (!document.body.classList.contains('mk-home-page')) return;
+
+        var bar = document.querySelector('[data-hm-sticky-cta]');
+        var hero = document.querySelector('.home-hero__mobile');
+        var finalCta = document.querySelector('.h-final-cta');
+        var mobileMq = window.matchMedia('(max-width: 767px)');
+
+        if (!bar) return;
+
+        function setVisible(show) {
+            bar.classList.toggle('is-visible', show);
+            bar.hidden = !show;
+        }
+
+        function bindObservers() {
+            if (!mobileMq.matches || !('IntersectionObserver' in window)) {
+                setVisible(false);
+                return;
+            }
+
+            var heroVisible = true;
+            var finalVisible = false;
+
+            function update() {
+                setVisible(!heroVisible && !finalVisible);
+            }
+
+            var heroObserver = new IntersectionObserver(function (entries) {
+                heroVisible = entries.some(function (entry) { return entry.isIntersecting; });
+                update();
+            }, { threshold: 0.08 });
+
+            var finalObserver = new IntersectionObserver(function (entries) {
+                finalVisible = entries.some(function (entry) { return entry.isIntersecting; });
+                update();
+            }, { threshold: 0.2 });
+
+            if (hero) heroObserver.observe(hero);
+            if (finalCta) finalObserver.observe(finalCta);
+            update();
+        }
+
+        if (typeof mobileMq.addEventListener === 'function') {
+            mobileMq.addEventListener('change', bindObservers);
+        } else if (typeof mobileMq.addListener === 'function') {
+            mobileMq.addListener(bindObservers);
+        }
+
+        bindObservers();
+    }
+
     /* ─── Interactive story (problem → product film) ─── */
     function initStoryScenes() {
         var root = document.querySelector('[data-mk-story]');
@@ -872,6 +924,7 @@
         initHeroMagnifier();
         initHeroDeck();
         initHomeMobileHeader();
+        initStickyCta();
         initStoryScenes();
     });
 })();

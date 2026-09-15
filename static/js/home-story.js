@@ -194,6 +194,10 @@
         var popupText = wrap.querySelector('[data-h-flow-popup-text]');
         var popupIcon = wrap.querySelector('[data-h-flow-popup-icon]');
         var popupClose = wrap.querySelector('[data-h-flow-popup-close]');
+        var mobileDetail = wrap.querySelector('[data-h-flow-mobile-detail]');
+        var mobileStep = wrap.querySelector('[data-h-flow-mobile-step]');
+        var mobileTitle = wrap.querySelector('[data-h-flow-mobile-title]');
+        var mobileText = wrap.querySelector('[data-h-flow-mobile-text]');
         var openIndex = -1;
         if (!track || !nodes.length) return;
 
@@ -224,6 +228,31 @@
                     btn.setAttribute('aria-expanded', 'false');
                 }
             });
+        }
+
+        function showMobileDetail(index, btn) {
+            if (!mobileDetail || !btn || desktopMq.matches) return;
+
+            if (mobileStep) {
+                mobileStep.textContent = 'مرحله ' + (btn.getAttribute('data-flow-step') || '');
+            }
+            if (mobileTitle) {
+                mobileTitle.textContent = btn.getAttribute('data-flow-title') || '';
+            }
+            if (mobileText) {
+                mobileText.textContent = btn.getAttribute('data-flow-detail') || '';
+            }
+
+            mobileDetail.removeAttribute('hidden');
+            requestAnimationFrame(function () {
+                mobileDetail.classList.add('is-visible');
+            });
+        }
+
+        function hideMobileDetail() {
+            if (!mobileDetail) return;
+            mobileDetail.classList.remove('is-visible');
+            mobileDetail.setAttribute('hidden', '');
         }
 
         function positionPopup(node) {
@@ -282,19 +311,11 @@
                 var index = parseInt(btn.getAttribute('data-h-flow-btn'), 10);
                 setActive(index);
                 if (desktopMq.matches) {
+                    hideMobileDetail();
                     showPopup(index, btn);
                 } else {
                     closePopup();
-                    if (track.scrollTo) {
-                        var node = nodes[index];
-                        if (node) {
-                            var offset = node.offsetLeft - (track.clientWidth - node.offsetWidth) / 2;
-                            track.scrollTo({
-                                left: offset,
-                                behavior: prefersReduced ? 'auto' : 'smooth',
-                            });
-                        }
-                    }
+                    showMobileDetail(index, btn);
                 }
             });
         });
@@ -319,6 +340,8 @@
         function onFlowModeChange() {
             if (!desktopMq.matches) {
                 closePopup();
+            } else {
+                hideMobileDetail();
             }
         }
 
@@ -336,6 +359,10 @@
 
         setActive(0);
 
+        if (!desktopMq.matches && buttons.length) {
+            showMobileDetail(0, buttons[0]);
+        }
+
         if (prefersReduced || !('IntersectionObserver' in window) || desktopMq.matches) {
             return;
         }
@@ -343,7 +370,12 @@
         var observer = new IntersectionObserver(function (entries) {
             entries.forEach(function (entry) {
                 if (entry.isIntersecting) {
-                    setActive(parseInt(entry.target.getAttribute('data-h-flow-step'), 10));
+                    var idx = parseInt(entry.target.getAttribute('data-h-flow-step'), 10);
+                    setActive(idx);
+                    var activeBtn = buttons[idx];
+                    if (activeBtn) {
+                        showMobileDetail(idx, activeBtn);
+                    }
                 }
             });
         }, {

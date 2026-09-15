@@ -10,6 +10,7 @@
             <span class="fl-help-modal__kicker"><span class="fl-header__help-bulb fl-header__help-bulb--xs" aria-hidden="true"><i class="fas fa-lightbulb"></i><span class="fl-header__help-bulb-glow"></span></span>راهنمای یادآورها</span>
             <div class="fl-help-modal__hero-icon fl-help-modal__hero-icon--bulb" aria-hidden="true"><span class="fl-header__help-bulb fl-header__help-bulb--hero"><i class="fas fa-lightbulb"></i><span class="fl-header__help-bulb-glow"></span></span></div>
             <h2 id="crmRemindersHelpTitle" class="fl-help-modal__title">پیگیری هوشمند</h2>
+            <p class="fl-help-modal__lead">کارهایی که باید یادت بمونه — تماس با مالک، پیگیری چک، یادآوری بازدید. با تاریخ و ساعت، تا فراموش نکنی.</p>
         </header>
         <nav class="fl-help-modal__nav" aria-label="بخش‌های راهنما" role="tablist">
             <button type="button" class="fl-help-modal__nav-btn is-active" data-fl-help-tab="start" role="tab" aria-selected="true"><span class="ws-nav-icon">{% include 'includes/icon_slot.html' with decor='bell' size='nav' only %}</span><span>پایه</span></button>
@@ -23,20 +24,20 @@
                 <article class="fl-help-card fl-help-card--lux fl-help-card--featured">
                     <span class="fl-help-card__step">۰۱</span>
                     <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='bell' size='metric' boxed=True accent='violet' only %}</span>
-                    <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>یادآور چیست؟</h3></div>
-                    <p>کارهای مستقل با تاریخ و ساعت — تماس با مالک، پیگیری چک، یادآوری بازدید. جدا از «پیگیری بعدی» مخاطب، ولی در تقویم یکی دیده می‌شوند.</p></div>
+                    <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>یادآور چیه؟</h3></div>
+                    <p>کار مستقل با تاریخ و ساعت — تماس با مالک، پیگیری چک، یادآوری بازدید. جدا از «پیگیری بعدی» مخاطبه، ولی تو تقویم یکی دیده می‌شن.</p></div>
                 </article>
                 <article class="fl-help-card fl-help-card--lux">
                     <span class="fl-help-card__step">۰۲</span>
                     <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='user' size='metric' boxed=True accent='emerald' only %}</span>
                     <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>ثبت یادآور</h3></div>
-                    <p>با <strong>یادآور</strong> عنوان، تاریخ و (اختیاری) لینک به مخاطب/معامله را بزن — در تقویم و کارهای امروز ظاهر می‌شود.</p></div>
+                    <p>با <strong>یادآور</strong> عنوان، تاریخ و (در صورت نیاز) لینک به مخاطب یا معامله رو بزن — تو تقویم و کارهای امروز ظاهر می‌شه.</p></div>
                 </article>
                 <article class="fl-help-card fl-help-card--lux">
                     <span class="fl-help-card__step">۰۳</span>
                     <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='list_todo' size='metric' boxed=True accent='sky' only %}</span>
                     <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>انجام شد</h3></div>
-                    <p>بعد از انجام کار، <strong>انجام شد</strong> بزن — از لیست فعال خارج می‌شود و KPI «انجام‌شده» بالا می‌رود.</p></div>
+                    <p>بعد از انجام کار، <strong>انجام شد</strong> بزن — از لیست فعال خارج می‌شه و شاخص «انجام‌شده» بالا می‌ره.</p></div>
                 </article>
             </section>
             <section class="fl-help-pane" data-fl-help-pane="priority" hidden>
@@ -44,13 +45,13 @@
                     <span class="fl-help-card__step">۰۱</span>
                     <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='timer' size='metric' boxed=True accent='rose' only %}</span>
                     <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>معوق و امروز</h3><span class="fl-help-card__tag">فوری</span></div>
-                    <p>کارت‌های KPI: <strong>معوق</strong> (گذشته از موعد) و <strong>امروز</strong> — اول صبح همین دو را خالی کن.</p></div>
+                    <p>کارت‌های بالا: <strong>معوق</strong> (گذشته از موعد) و <strong>امروز</strong> — اول صبح همین دو رو خالی کن.</p></div>
                 </article>
                 <article class="fl-help-card fl-help-card--lux">
                     <span class="fl-help-card__step">۰۲</span>
                     <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='filter' size='metric' boxed=True accent='amber' only %}</span>
-                    <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>فعال / انجام‌شده</h3></div>
-                    <p>با KPI یا فیلتر بین یادآورهای باز و آرشیو انجام‌شده جابه‌جا شو — برای audit هفته قبل.</p></div>
+                    <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>فعال و انجام‌شده</h3></div>
+                    <p>با شاخص‌ها یا فیلتر بین یادآورهای باز و آرشیو انجام‌شده جابه‌جا شو — برای مرور هفته قبل.</p></div>
                 </article>
             </section>
             <section class="fl-help-pane" data-fl-help-pane="habit" hidden>
@@ -58,22 +59,22 @@
                     <span class="fl-help-card__step">۰۱</span>
                     <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='today' size='metric' boxed=True accent='violet' only %}</span>
                     <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>کارهای امروز</h3></div>
-                    <p>یادآورهای امروز در «کارهای امروز» هم هست — یک صف واحد برای کل روز کاری.</p></div>
+                    <p>یادآورهای امروز تو «کارهای امروز» هم هستن — یک صف واحد برای کل روز کاری.</p></div>
                 </article>
                 <article class="fl-help-card fl-help-card--lux">
                     <span class="fl-help-card__step">۰۲</span>
                     <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='calendar' size='metric' boxed=True accent='emerald' only %}</span>
                     <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>تقویم</h3></div>
-                    <p>برای دیدن بار کاری هفته آینده تقویم را باز کن — قبل از قول دادن وقت به مشتری.</p></div>
+                    <p>برای دیدن بار کاری هفته آینده تقویم رو باز کن — قبل از قول دادن وقت به مشتری.</p></div>
                 </article>
                 <div class="fl-help-tip fl-help-tip--lux">
                     <span class="fl-help-tip__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='automation' size='metric' boxed=True accent='sky' only %}</span>
-                    <div><strong>اتوماسیون</strong><p>برای پیگیری تکراری، قانون اتوماسیون بساز — یادآور دستی کمتر، consistency بیشتر.</p></div>
+                    <div><strong>اتوماسیون</strong><p>برای پیگیری تکراری، قانون اتوماسیون بساز — یادآور دستی کمتر، پیگیری یکنواخت‌تر.</p></div>
                 </div>
             </section>
         </div>
         <footer class="ws-modal-foot fl-help-modal__foot">
-            <p class="fl-help-modal__foot-note">یادآور = تعهدت به مشتری.</p>
+            <p class="fl-help-modal__foot-note">یادآور = تعهدت به مشتری — فراموش نکن.</p>
             <button type="button" class="ws-btn ws-btn-primary fl-help-modal__cta" data-modal-close><span class="ws-nav-icon">{% include 'includes/icon_slot.html' with decor='bell' size='inline' only %}</span>متوجه شدم</button>
         </footer>
     </div>

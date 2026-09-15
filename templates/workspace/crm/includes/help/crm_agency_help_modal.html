@@ -10,6 +10,7 @@
             <span class="fl-help-modal__kicker"><span class="fl-header__help-bulb fl-header__help-bulb--xs" aria-hidden="true"><i class="fas fa-lightbulb"></i><span class="fl-header__help-bulb-glow"></span></span>راهنمای آژانس</span>
             <div class="fl-help-modal__hero-icon fl-help-modal__hero-icon--bulb" aria-hidden="true"><span class="fl-header__help-bulb fl-header__help-bulb--hero"><i class="fas fa-lightbulb"></i><span class="fl-header__help-bulb-glow"></span></span></div>
             <h2 id="crmAgencyHelpTitle" class="fl-help-modal__title">مدیریت تیم</h2>
+            <p class="fl-help-modal__lead">برای مدیر و مالک آژانس — ببین تیمت چقدر فعاله، چه کسی چه فایل و معامله‌ای ساخته و کجا باید دست به کار بشی.</p>
         </header>
         <nav class="fl-help-modal__nav" aria-label="بخش‌های راهنما" role="tablist">
             <button type="button" class="fl-help-modal__nav-btn is-active" data-fl-help-tab="dash" role="tab" aria-selected="true"><span class="ws-nav-icon">{% include 'includes/icon_slot.html' with decor='bar_chart' size='nav' only %}</span><span>داشبورد</span></button>
@@ -20,23 +21,28 @@
         <div class="fl-help-modal__scroll-track" aria-hidden="true"><span class="fl-help-modal__scroll-progress"></span></div>
         <div class="ws-modal-body fl-help-modal__body">
             <section class="fl-help-pane is-active" data-fl-help-pane="dash">
+                <ul class="fl-help-pills" aria-label="امکانات داشبورد">
+                    <li>نمای ۷، ۳۰ و ۹۰ روزه</li>
+                    <li>شاخص فایل و معامله جدید</li>
+                    <li>وضعیت صندلی‌های تیم</li>
+                </ul>
                 <article class="fl-help-card fl-help-card--lux fl-help-card--featured">
                     <span class="fl-help-card__step">۰۱</span>
                     <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='building' size='metric' boxed=True accent='violet' only %}</span>
                     <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>هاب آژانس</h3><span class="fl-help-card__tag">مدیر / مالک</span></div>
-                    <p>اینجا نمای کلی <strong>عملکرد تیم</strong> است — مشاوران فعال، فایل و معامله جدید، قراردادها در بازه ۷/۳۰/۹۰ روز.</p></div>
+                    <p>اینجا نمای کلی <strong>عملکرد تیم</strong>ه — مشاوران فعال، فایل و معامله جدید، قراردادها در بازه ۷، ۳۰ یا ۹۰ روز اخیر.</p></div>
                 </article>
                 <article class="fl-help-card fl-help-card--lux">
                     <span class="fl-help-card__step">۰۲</span>
                     <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='calendar' size='metric' boxed=True accent='emerald' only %}</span>
                     <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>بازه زمانی</h3></div>
-                    <p>با دکمه‌های ۷، ۳۰ و ۹۰ روز KPIها و جدول عملکرد عوض می‌شوند — برای جلسه هفتگی ۷ روز، برای ماهانه ۳۰.</p></div>
+                    <p>با دکمه‌های ۷، ۳۰ و ۹۰ روز شاخص‌ها و جدول عملکرد عوض می‌شن — جلسه هفتگی ۷ روز، گزارش ماهانه ۳۰ روز.</p></div>
                 </article>
                 <article class="fl-help-card fl-help-card--lux">
                     <span class="fl-help-card__step">۰۳</span>
                     <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='bar_chart' size='metric' boxed=True accent='sky' only %}</span>
-                    <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>نوار KPI</h3></div>
-                    <p>مشاور فعال، صندلی آزاد، مخاطب/فایل/معامله جدید و قرارداد — سلامت کسب‌وکار در یک ردیف.</p></div>
+                    <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>نوار شاخص‌ها</h3></div>
+                    <p>مشاور فعال، صندلی خالی، مخاطب/فایل/معامله جدید و قرارداد — سلامت کسب‌وکارت در یک ردیف.</p></div>
                 </article>
             </section>
             <section class="fl-help-pane" data-fl-help-pane="team" hidden>
@@ -44,19 +50,19 @@
                     <span class="fl-help-card__step">۰۱</span>
                     <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='users' size='metric' boxed=True accent='indigo' only %}</span>
                     <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>دعوت مشاور</h3></div>
-                    <p>با <strong>دعوت مشاور</strong> لینک دعوت بفرست — هر عضو یک صندلی مصرف می‌کند. صندلی‌های پر/خالی در hero دیده می‌شود.</p></div>
+                    <p>با <strong>دعوت مشاور</strong> لینک دعوت بفرست — هر عضو یک صندلی مصرف می‌کنه. صندلی‌های پر و خالی بالای صفحه دیده می‌شن.</p></div>
                 </article>
                 <article class="fl-help-card fl-help-card--lux">
                     <span class="fl-help-card__step">۰۲</span>
                     <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='team' size='metric' boxed=True accent='amber' only %}</span>
                     <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>صفحه مشاوران</h3></div>
-                    <p>از منو «مشاوران» نقش، وضعیت و آخرین فعالیت هر نفر را ببین — برای coaching فردی.</p></div>
+                    <p>از منو «مشاوران» نقش، وضعیت و آخرین فعالیت هر نفر رو ببین — برای راهنمایی فردی و جلسه یک‌به‌یک عالیه.</p></div>
                 </article>
                 <article class="fl-help-card fl-help-card--lux">
                     <span class="fl-help-card__step">۰۳</span>
                     <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='settings' size='metric' boxed=True accent='rose' only %}</span>
                     <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>تنظیمات هاب</h3></div>
-                    <p>لوگو، نام آژانس و تنظیمات اشتراک از بخش settings — برند یکپارچه برای کل تیم.</p></div>
+                    <p>لوگو، نام آژانس و تنظیمات اشتراک از بخش تنظیمات — برند یکدست برای کل تیم.</p></div>
                 </article>
             </section>
             <section class="fl-help-pane" data-fl-help-pane="metrics" hidden>
@@ -64,22 +70,22 @@
                     <span class="fl-help-card__step">۰۱</span>
                     <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='handshake' size='metric' boxed=True accent='violet' only %}</span>
                     <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>جدول عملکرد</h3></div>
-                    <p>هر ردیف = یک مشاور با شاخص مخاطب، فایل، معامله و آخرین login — رتبه‌بندی informal برای انگیزه.</p></div>
+                    <p>هر ردیف یک مشاوره با شاخص مخاطب، فایل، معامله و آخرین ورود — برای مقایسه و انگیزه تیم بدون حساب‌کشی دستی.</p></div>
                 </article>
                 <article class="fl-help-card fl-help-card--lux">
                     <span class="fl-help-card__step">۰۲</span>
                     <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='clipboard_list' size='metric' boxed=True accent='emerald' only %}</span>
                     <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>فعالیت تیم</h3></div>
-                    <p>صفحه activity لاگ اقدامات اخیر — چه کسی چه فایل یا معامله‌ای ساخته.</p></div>
+                    <p>صفحه فعالیت لاگ اقدامات اخیر رو نشون می‌ده — چه کسی چه فایل یا معامله‌ای ساخته.</p></div>
                 </article>
                 <div class="fl-help-tip fl-help-tip--lux">
                     <span class="fl-help-tip__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='coins' size='metric' boxed=True accent='sky' only %}</span>
-                    <div><strong>مالی تیم</strong><p>درآمد هر مشاور در «مالی معاملات» خودش است — مدیر از KPI داشبورد pulse می‌گیرد.</p></div>
+                    <div><strong>مالی تیم</strong><p>درآمد هر مشاور تو «مالی معاملات» خودشه — مدیر از شاخص‌های داشبورد نبض تیم رو می‌گیره.</p></div>
                 </div>
             </section>
         </div>
         <footer class="ws-modal-foot fl-help-modal__foot">
-            <p class="fl-help-modal__foot-note">تیم قوی = آژانس برنده.</p>
+            <p class="fl-help-modal__foot-note">تیم منظم = آژانس قوی و مشتری راضی.</p>
             <button type="button" class="ws-btn ws-btn-primary fl-help-modal__cta" data-modal-close><span class="ws-nav-icon">{% include 'includes/icon_slot.html' with decor='building' size='inline' only %}</span>متوجه شدم</button>
         </footer>
     </div>

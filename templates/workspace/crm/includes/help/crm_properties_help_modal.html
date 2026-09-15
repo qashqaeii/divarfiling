@@ -10,6 +10,7 @@
             <span class="fl-help-modal__kicker"><span class="fl-header__help-bulb fl-header__help-bulb--xs" aria-hidden="true"><i class="fas fa-lightbulb"></i><span class="fl-header__help-bulb-glow"></span></span>راهنمای فایل‌های شخصی</span>
             <div class="fl-help-modal__hero-icon fl-help-modal__hero-icon--bulb" aria-hidden="true"><span class="fl-header__help-bulb fl-header__help-bulb--hero"><i class="fas fa-lightbulb"></i><span class="fl-header__help-bulb-glow"></span></span></div>
             <h2 id="crmPropertiesHelpTitle" class="fl-help-modal__title">بانک فایل‌های شما</h2>
+            <p class="fl-help-modal__lead">همه ملک‌هایی که خودت ثبت کردی یا از فایلینگ آوردی — با قیمت، عکس، وضعیت و یادداشت. قلب هر معامله همین‌جاست.</p>
         </header>
         <nav class="fl-help-modal__nav" aria-label="بخش‌های راهنما" role="tablist">
             <button type="button" class="fl-help-modal__nav-btn is-active" data-fl-help-tab="start" role="tab" aria-selected="true"><span class="ws-nav-icon">{% include 'includes/icon_slot.html' with decor='building' size='nav' only %}</span><span>شروع</span></button>
@@ -20,11 +21,16 @@
         <div class="fl-help-modal__scroll-track" aria-hidden="true"><span class="fl-help-modal__scroll-progress"></span></div>
         <div class="ws-modal-body fl-help-modal__body">
             <section class="fl-help-pane is-active" data-fl-help-pane="start">
+                <ul class="fl-help-pills" aria-label="امکانات کلیدی">
+                    <li>ثبت فایل با عکس و قیمت</li>
+                    <li>نمای جدول، ستونی و نقشه</li>
+                    <li>اشتراک با مشتری</li>
+                </ul>
                 <article class="fl-help-card fl-help-card--lux fl-help-card--featured">
                     <span class="fl-help-card__step">۰۱</span>
                     <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='properties' size='metric' boxed=True accent='violet' only %}</span>
                     <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>فایل شخصی چیست؟</h3><span class="fl-help-card__tag">قلب معاملات</span></div>
-                    <p><strong>فایل‌های شخصی</strong> ملک‌هایی‌اند که خودت ثبت کرده‌ای یا از فایلینگ به CRM منتقل کرده‌ای — با قیمت، وضعیت، تصاویر و یادداشت. هر معامله و پیشنهاد به یک فایل وصل می‌شود.</p></div>
+                    <p><strong>فایل‌های شخصی</strong> ملک‌هایی‌ان که خودت ثبت کردی یا از فایلینگ به میزکار منتقل کردی — با قیمت، وضعیت، تصاویر و یادداشت. هر معامله و پیشنهاد به یک فایل وصل می‌شه.</p></div>
                 </article>
                 <article class="fl-help-card fl-help-card--lux">
                     <span class="fl-help-card__step">۰۲</span>
@@ -36,7 +42,7 @@
                     <span class="fl-help-card__step">۰۳</span>
                     <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='bar_chart' size='metric' boxed=True accent='sky' only %}</span>
                     <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>شاخص‌های بالای صفحه</h3></div>
-                    <p>کارت‌های KPI تعداد فایل‌ها، وضعیت فروش/اجاره و فایل‌های نیازمند پیگیری را نشان می‌دهند — نقطه شروع روز کاری‌ات همین‌جاست.</p></div>
+                    <p>کارت‌های بالای صفحه تعداد فایل‌ها، وضعیت فروش/اجاره و فایل‌های نیازمند پیگیری رو نشون می‌دن — نقطه شروع روز کاری‌ات همین‌جاست.</p></div>
                 </article>
             </section>
             <section class="fl-help-pane" data-fl-help-pane="manage" hidden>
@@ -50,7 +56,7 @@
                     <span class="fl-help-card__step">۰۲</span>
                     <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='layout_grid' size='metric' boxed=True accent='amber' only %}</span>
                     <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>جدول، کانبان و نقشه</h3></div>
-                    <p><strong>جدول</strong> برای لیست مرتب، <strong>کانبان</strong> برای دیدن وضعیت ستونی، <strong>نقشه</strong> برای پخش جغرافیایی فایل‌ها در محله.</p></div>
+                    <p><strong>جدول</strong> برای لیست مرتب، <strong>نمای ستونی</strong> برای دیدن وضعیت‌ها، <strong>نقشه</strong> برای پخش جغرافیایی فایل‌ها در محله.</p></div>
                 </article>
                 <article class="fl-help-card fl-help-card--lux">
                     <span class="fl-help-card__step">۰۳</span>
@@ -62,7 +68,7 @@
                     <span class="fl-help-card__step">۰۴</span>
                     <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='upload' size='metric' boxed=True accent='rose' only %}</span>
                     <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>ورود و خروجی</h3></div>
-                    <p>لیست Excel قدیمی داری؟ <strong>ورود گروهی</strong> یکجا import می‌کند. <strong>خروجی</strong> همان فیلتر فعلی را Excel یا CSV می‌دهد.</p></div>
+                    <p>لیست اکسل قدیمی داری؟ <strong>ورود گروهی</strong> یکجا وارد می‌کنه. <strong>خروجی</strong> همون فیلتر فعلی رو به صورت فایل می‌ده.</p></div>
                 </article>
             </section>
             <section class="fl-help-pane" data-fl-help-pane="power" hidden>
@@ -82,11 +88,11 @@
                     <span class="fl-help-card__step">۰۳</span>
                     <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='sparkles' size='metric' boxed=True accent='sky' only %}</span>
                     <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>پیشنهاد به مخاطب</h3></div>
-                    <p>سیستم فایل‌های مناسب را برای خریداران پیشنهاد می‌دهد — از لیست مخاطبین یا جزئیات فایل، match هوشمند را ببین.</p></div>
+                    <p>سیستم فایل‌های مناسب رو برای خریداران پیشنهاد می‌ده — از لیست مخاطبین یا جزئیات فایل، <strong>تطبیق هوشمند</strong> رو ببین.</p></div>
                 </article>
                 <div class="fl-help-tip fl-help-tip--lux">
                     <span class="fl-help-tip__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='map_pin' size='metric' boxed=True accent='amber' only %}</span>
-                    <div><strong>نقشه و POI</strong><p>در جزئیات فایل، نقشه و اطراف ملک (مدرسه، مترو…) به مذاکره کمک می‌کند — حتماً لوکیشن را دقیق ثبت کن.</p></div>
+                    <div><strong>نقشه و اطراف ملک</strong><p>تو جزئیات فایل، نقشه و دسترسی‌ها (مدرسه، مترو…) به مذاکره کمک می‌کنه — حتماً موقعیت رو دقیق ثبت کن.</p></div>
                 </div>
             </section>
         </div>

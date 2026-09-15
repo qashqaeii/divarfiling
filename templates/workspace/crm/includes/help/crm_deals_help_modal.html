@@ -9,7 +9,8 @@
             <button type="button" class="fl-help-modal__close ws-modal-close" data-modal-close aria-label="بستن راهنما"><i class="fas fa-times" aria-hidden="true"></i></button>
             <span class="fl-help-modal__kicker"><span class="fl-header__help-bulb fl-header__help-bulb--xs" aria-hidden="true"><i class="fas fa-lightbulb"></i><span class="fl-header__help-bulb-glow"></span></span>راهنمای قیف معاملات</span>
             <div class="fl-help-modal__hero-icon fl-help-modal__hero-icon--bulb" aria-hidden="true"><span class="fl-header__help-bulb fl-header__help-bulb--hero"><i class="fas fa-lightbulb"></i><span class="fl-header__help-bulb-glow"></span></span></div>
-            <h2 id="crmDealsHelpTitle" class="fl-help-modal__title">Pipeline فروش</h2>
+            <h2 id="crmDealsHelpTitle" class="fl-help-modal__title">مسیر بستن معامله</h2>
+            <p class="fl-help-modal__lead">از اولین تماس تا امضای قرارداد، هر فرصت فروش یا اجاره اینجا جلو می‌ره — با عدد، مرحله و کار بعدی که باید انجام بدی.</p>
         </header>
         <nav class="fl-help-modal__nav" aria-label="بخش‌های راهنما" role="tablist">
             <button type="button" class="fl-help-modal__nav-btn is-active" data-fl-help-tab="start" role="tab" aria-selected="true"><span class="ws-nav-icon">{% include 'includes/icon_slot.html' with decor='deals' size='nav' only %}</span><span>شروع</span></button>
@@ -20,43 +21,53 @@
         <div class="fl-help-modal__scroll-track" aria-hidden="true"><span class="fl-help-modal__scroll-progress"></span></div>
         <div class="ws-modal-body fl-help-modal__body">
             <section class="fl-help-pane is-active" data-fl-help-pane="start">
+                <ul class="fl-help-pills" aria-label="امکانات کلیدی">
+                    <li>ثبت معامله از مخاطب یا فایل</li>
+                    <li>شاخص‌های لحظه‌ای بالای صفحه</li>
+                    <li>پیگیری تا بستن یا از دست رفتن</li>
+                </ul>
                 <article class="fl-help-card fl-help-card--lux fl-help-card--featured">
                     <span class="fl-help-card__step">۰۱</span>
                     <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='handshake' size='metric' boxed=True accent='violet' only %}</span>
-                    <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>قیف معاملات چیست؟</h3><span class="fl-help-card__tag">مسیر بستن</span></div>
-                    <p>هر <strong>معامله</strong> یک فرصت فروش/اجاره است — با مخاطب، ملک، ارزش و مرحله. از اولین تماس تا «بسته‌شده» یا «از دست رفته» اینجا دنبال می‌شود.</p></div>
+                    <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>قیف معامله یعنی چی؟</h3><span class="fl-help-card__tag">قلب درآمد</span></div>
+                    <p>هر <strong>معامله</strong> یک فرصت واقعیه — مشتری، ملک، مبلغ تقریبی و مرحله‌ای که الان توش هستی. از «تماس اول» تا «قرارداد شد» یا «از دست رفت»، همه‌چیز یکجا دنبال می‌شه.</p></div>
                 </article>
                 <article class="fl-help-card fl-help-card--lux">
                     <span class="fl-help-card__step">۰۲</span>
                     <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='bar_chart' size='metric' boxed=True accent='emerald' only %}</span>
-                    <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>شاخص‌های KPI</h3></div>
-                    <p><strong>فعال</strong>، <strong>ارزش pipeline</strong>، <strong>پیش‌بینی وزنی</strong> و <strong>نرخ بستن</strong> — با یک نگاه بفهم کجای ماه هستی.</p></div>
+                    <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>اعداد بالای صفحه</h3></div>
+                    <p>با یک نگاه می‌فهمی چند معامله <strong>فعال</strong> داری، ارزش کلی قیف چقدره، <strong>پیش‌بینی درآمد</strong> با احتمال بستن چطوره و <strong>نرخ موفقیت</strong>ت در این ماه چند درصده.</p></div>
                 </article>
                 <article class="fl-help-card fl-help-card--lux">
                     <span class="fl-help-card__step">۰۳</span>
                     <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='user' size='metric' boxed=True accent='sky' only %}</span>
                     <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>معامله جدید</h3></div>
-                    <p>از دکمه <strong>معامله جدید</strong> یا از فایل/مخاطب — عنوان، ارزش، احتمال بستن و تاریخ پیش‌بینی را ثبت کن.</p></div>
+                    <p>از دکمه <strong>معامله جدید</strong> یا مستقیم از پرونده فایل/مخاطب شروع کن — عنوان، ارزش، احتمال بستن و تاریخ پیش‌بینی رو بزن تا قیف از همون لحظه مرتب بمونه.</p></div>
                 </article>
             </section>
             <section class="fl-help-pane" data-fl-help-pane="pipeline" hidden>
+                <ul class="fl-help-pills" aria-label="امکانات قیف">
+                    <li>نمای ستونی با کشیدن و رها کردن</li>
+                    <li>مراحل قابل شخصی‌سازی</li>
+                    <li>فیلتر فعال، برنده و باخته</li>
+                </ul>
                 <article class="fl-help-card fl-help-card--lux fl-help-card--featured">
                     <span class="fl-help-card__step">۰۱</span>
                     <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='layout_grid' size='metric' boxed=True accent='indigo' only %}</span>
-                    <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>نمای کانبان</h3></div>
-                    <p>معاملات را ستون‌به‌ستون ببین — بکش و رها کن تا مرحله عوض شود. مثل برد فیزیکی روی دیوار دفتر.</p></div>
+                    <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>نمای ستونی</h3></div>
+                    <p>معاملات رو ستون‌به‌ستون ببین — بکش و رها کن تا مرحله عوض شه. مثل تابلوی روی دیوار دفتر، فقط اینجا خودش عدد و تاریخ رو هم به‌روز می‌کنه.</p></div>
                 </article>
                 <article class="fl-help-card fl-help-card--lux">
                     <span class="fl-help-card__step">۰۲</span>
                     <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='settings' size='metric' boxed=True accent='amber' only %}</span>
                     <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>تنظیم مراحل</h3></div>
-                    <p>با <strong>مراحل</strong> نام و ترتیب pipeline را شخصی‌سازی کن. «بسته‌شده» و «از دست رفته» ثابت می‌مانند.</p></div>
+                    <p>با <strong>مراحل</strong> اسم و ترتیب قیف خودت رو بساز — «بازدید»، «مذاکره»، «قرارداد» هرطور که کار می‌کنی. فقط «بسته‌شده» و «از دست رفته» ثابت می‌مونن.</p></div>
                 </article>
                 <article class="fl-help-card fl-help-card--lux">
                     <span class="fl-help-card__step">۰۳</span>
                     <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='filter' size='metric' boxed=True accent='cyan' only %}</span>
-                    <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>فیلتر bucket</h3></div>
-                    <p>چیپ‌های <strong>فعال</strong>، <strong>برنده</strong> و <strong>باخته</strong> لیست را محدود می‌کنند — برای گزارش هفتگی عالی‌اند.</p></div>
+                    <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>فیلتر سریع</h3></div>
+                    <p>چیپ‌های <strong>فعال</strong>، <strong>برنده</strong> و <strong>باخته</strong> لیست رو محدود می‌کنن — برای گزارش هفتگی به مدیر یا مرور آخر هفته عالیه.</p></div>
                 </article>
             </section>
             <section class="fl-help-pane" data-fl-help-pane="power" hidden>
@@ -64,28 +75,28 @@
                     <span class="fl-help-card__step">۰۱</span>
                     <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='coins' size='metric' boxed=True accent='violet' only %}</span>
                     <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>اتصال مالی</h3></div>
-                    <p>از <strong>مالی</strong> داشبورد درآمد، کمیسیون و وصول را ببین — هر معامله بسته‌شده جزئیات مالی خودش را دارد.</p></div>
+                    <p>از <strong>مالی معاملات</strong> درآمد، کمیسیون و وصول رو ببین — هر معامله بسته‌شده جزئیات مالی خودش رو داره و با قیف هماهنگه.</p></div>
                 </article>
                 <article class="fl-help-card fl-help-card--lux">
                     <span class="fl-help-card__step">۰۲</span>
                     <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='file_edit' size='metric' boxed=True accent='emerald' only %}</span>
                     <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>قرارداد دیجیتال</h3></div>
-                    <p>از جزئیات معامله قرارداد بساز — پیش‌نویس، ارسال لینک تأیید و نهایی‌سازی بدون کاغذ.</p></div>
+                    <p>از جزئیات معامله قرارداد بساز — پیش‌نویس، ارسال لینک تأیید و نهایی‌سازی بدون کاغذ و پرینت اضافه.</p></div>
                 </article>
                 <article class="fl-help-card fl-help-card--lux">
                     <span class="fl-help-card__step">۰۳</span>
                     <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='trending_up' size='metric' boxed=True accent='sky' only %}</span>
                     <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>احتمال و پیش‌بینی</h3></div>
-                    <p>با هر مرحله، <strong>احتمال بستن</strong> خودکار تنظیم می‌شود — پیش‌بینی درآمد = ارزش × احتمال.</p></div>
+                    <p>با هر مرحله، <strong>احتمال بستن</strong> خودکار تنظیم می‌شه — پیش‌بینی درآمد = ارزش معامله × احتمال. پس قیف تمیز = درآمد قابل پیش‌بینی.</p></div>
                 </article>
                 <div class="fl-help-tip fl-help-tip--lux">
                     <span class="fl-help-tip__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='list_todo' size='metric' boxed=True accent='rose' only %}</span>
-                    <div><strong>اقدام بعدی</strong><p>در جزئیات هر معامله «اقدام بعدی» بگذار — در کارهای امروز و تقویم ظاهر می‌شود.</p></div>
+                    <div><strong>کار بعدی</strong><p>در جزئیات هر معامله «اقدام بعدی» بذار — همین فردا تو <strong>کارهای امروز</strong> و تقویم ظاهر می‌شه و هیچ بازدیدی جا نمی‌مونه.</p></div>
                 </div>
             </section>
         </div>
         <footer class="ws-modal-foot fl-help-modal__foot">
-            <p class="fl-help-modal__foot-note">قیف تمیز = درآمد قابل پیش‌بینی.</p>
+            <p class="fl-help-modal__foot-note">قیف مرتب = مشتری گم نمی‌شه و درآمدت قابل حسابه.</p>
             <button type="button" class="ws-btn ws-btn-primary fl-help-modal__cta" data-modal-close><span class="ws-nav-icon">{% include 'includes/icon_slot.html' with decor='handshake' size='inline' only %}</span>متوجه شدم، بریم سراغ معاملات</button>
         </footer>
     </div>

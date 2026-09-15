@@ -15,7 +15,7 @@
                     <i class="fas fa-lightbulb"></i>
                     <span class="fl-header__help-bulb-glow"></span>
                 </span>
-                راهنمای CRM مخاطبین
+                راهنمای مخاطبین
             </span>
             <div class="fl-help-modal__hero-icon fl-help-modal__hero-icon--bulb" aria-hidden="true">
                 <span class="fl-header__help-bulb fl-header__help-bulb--hero">
@@ -24,6 +24,7 @@
                 </span>
             </div>
             <h2 id="crmContactsHelpTitle" class="fl-help-modal__title">بانک مخاطبین</h2>
+            <p class="fl-help-modal__lead">سرنخ، خریدار، مالک و مستاجر — هر کسی که باهاش کار می‌کنی اینجاست. از همین‌جا پیگیری بعدی می‌ذاری و فردا تو کارهای امروز میاد.</p>
         </header>
 
         <nav class="fl-help-modal__nav" aria-label="بخش‌های راهنما" role="tablist">
@@ -45,12 +46,17 @@
 
         <div class="ws-modal-body fl-help-modal__body">
             <section class="fl-help-pane is-active" data-fl-help-pane="start">
+                <ul class="fl-help-pills" aria-label="امکانات کلیدی">
+                    <li>تماس مستقیم از لیست</li>
+                    <li>فیلتر خریدار و پیگیری امروز</li>
+                    <li>پیشنهاد فایل هوشمند</li>
+                </ul>
                 <article class="fl-help-card fl-help-card--lux fl-help-card--featured">
                     <span class="fl-help-card__step">۰۱</span>
                     <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='users' size='metric' boxed=True accent='violet' only %}</span>
                     <div class="fl-help-card__body">
                         <div class="fl-help-card__head">
-                            <h3>قلب CRM شما</h3>
+                            <h3>قلب میزکار شما</h3>
                             <span class="fl-help-card__tag">پایه کار مشاور</span>
                         </div>
                         <p><strong>مخاطبین</strong> مرکز ثبت سرنخ، خریدار، مالک و مستاجر است — نام، تماس، وضعیت قیف، اولویت و تاریخ پیگیری بعدی. هر چیزی که بعداً در «کارهای امروز» می‌بینی، از همین‌جا تغذیه می‌شود.</p>
@@ -61,7 +67,7 @@
                     <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='bar_chart' size='metric' boxed=True accent='emerald' only %}</span>
                     <div class="fl-help-card__body">
                         <div class="fl-help-card__head"><h3>اعداد بالای لیست</h3></div>
-                        <p>کارت‌های KPI وضعیت لحظه‌ای را نشان می‌دهند: <strong>کل</strong>، <strong>جدید</strong>، <strong>در پیگیری</strong> و <strong>امروز</strong>. با یک نگاه می‌فهمی کجا باید تمرکز کنی.</p>
+                        <p>کارت‌های بالای لیست وضعیت لحظه‌ای رو نشون می‌دن: <strong>کل</strong>، <strong>جدید</strong>، <strong>در پیگیری</strong> و <strong>امروز</strong>. با یک نگاه می‌فهمی کجا باید تمرکز کنی.</p>
                     </div>
                 </article>
                 <article class="fl-help-card fl-help-card--lux">
@@ -96,15 +102,15 @@
                     <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='filter' size='metric' boxed=True accent='amber' only %}</span>
                     <div class="fl-help-card__body">
                         <div class="fl-help-card__head"><h3>فیلتر و چیپ‌های سریع</h3><span class="fl-help-card__tag">موبایل</span></div>
-                        <p>چیپ‌های <strong>جدید</strong>، <strong>پیگیری</strong>، <strong>خریدار</strong> و <strong>امروز</strong> برای دسترسی یک‌کلیکی‌اند. فیلتر پیشرفته (نوع، وضعیت، اولویت، سررسید) از آیکون sliders باز می‌شود.</p>
+                        <p>چیپ‌های <strong>جدید</strong>، <strong>پیگیری</strong>، <strong>خریدار</strong> و <strong>امروز</strong> برای دسترسی یک‌کلیکی‌اند. فیلتر پیشرفته (نوع، وضعیت، اولویت، سررسید) از آیکون تنظیمات فیلتر باز می‌شه.</p>
                     </div>
                 </article>
                 <article class="fl-help-card fl-help-card--lux">
                     <span class="fl-help-card__step">۰۳</span>
                     <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='layout_grid' size='metric' boxed=True accent='cyan' only %}</span>
                     <div class="fl-help-card__body">
-                        <div class="fl-help-card__head"><h3>جدول یا کانبان</h3></div>
-                        <p><strong>جدول</strong> برای لیست مرتب و عملیات گروهی. <strong>کانبان</strong> برای دیدن قیف فروش ستونی و کشیدن مخاطب بین وضعیت‌ها — مثل برد فیزیکی روی میز.</p>
+                        <div class="fl-help-card__head"><h3>جدول یا نمای ستونی</h3></div>
+                        <p><strong>جدول</strong> برای لیست مرتب و عملیات گروهی. <strong>نمای ستونی</strong> برای دیدن قیف فروش و کشیدن مخاطب بین وضعیت‌ها — مثل برد روی میز.</p>
                     </div>
                 </article>
                 <article class="fl-help-card fl-help-card--lux">
@@ -138,8 +144,8 @@
                     <span class="fl-help-card__step">۰۳</span>
                     <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='upload' size='metric' boxed=True accent='sky' only %}</span>
                     <div class="fl-help-card__body">
-                        <div class="fl-help-card__head"><h3>ورود و خروجی Excel</h3></div>
-                        <p>لیست قدیمی Excel داری؟ با <strong>ورود فایل</strong> یکجا import کن. برای گزارش یا پشتیبان، <strong>خروجی Excel</strong> همان فیلتر فعلی را export می‌کند.</p>
+                        <div class="fl-help-card__head"><h3>ورود و خروجی اکسل</h3></div>
+                        <p>لیست قدیمی اکسل داری؟ با <strong>ورود فایل</strong> یکجا وارد کن. برای گزارش یا پشتیبان، <strong>خروجی اکسل</strong> همون فیلتر فعلی رو می‌ده.</p>
                     </div>
                 </article>
                 <article class="fl-help-card fl-help-card--lux">
@@ -147,7 +153,7 @@
                     <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='layers' size='metric' boxed=True accent='rose' only %}</span>
                     <div class="fl-help-card__body">
                         <div class="fl-help-card__head"><h3>ادغام تکراری‌ها</h3></div>
-                        <p>اگر کارت زرد «گروه تکراری» دیدی، یعنی چند مخاطب با یک شماره ثبت شده — با <strong>ادغام</strong> یکی را نگه دار و بقیه را تمیز کن تا CRM گیج‌کننده نشود.</p>
+                        <p>اگر کارت زرد «گروه تکراری» دیدی، یعنی چند مخاطب با یک شماره ثبت شده — با <strong>ادغام</strong> یکی رو نگه دار و بقیه رو تمیز کن تا لیست گیج‌کننده نشه.</p>
                     </div>
                 </article>
                 <div class="fl-help-tip fl-help-tip--lux">

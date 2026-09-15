@@ -10,6 +10,7 @@
             <span class="fl-help-modal__kicker"><span class="fl-header__help-bulb fl-header__help-bulb--xs" aria-hidden="true"><i class="fas fa-lightbulb"></i><span class="fl-header__help-bulb-glow"></span></span>راهنمای جزئیات معامله</span>
             <div class="fl-help-modal__hero-icon fl-help-modal__hero-icon--bulb" aria-hidden="true"><span class="fl-header__help-bulb fl-header__help-bulb--hero"><i class="fas fa-lightbulb"></i><span class="fl-header__help-bulb-glow"></span></span></div>
             <h2 id="crmDealDetailHelpTitle" class="fl-help-modal__title">سفر یک معامله</h2>
+            <p class="fl-help-modal__lead">اینجا پرونده کامل یک فرصت فروش یا اجاره‌ست — از مرحله فعلی تا قرارداد، مالی و مدارک، همه‌چیز دور همین معامله جمع شده.</p>
         </header>
         <nav class="fl-help-modal__nav" aria-label="بخش‌های راهنما" role="tablist">
             <button type="button" class="fl-help-modal__nav-btn is-active" data-fl-help-tab="path" role="tab" aria-selected="true"><span class="ws-nav-icon">{% include 'includes/icon_slot.html' with decor='rocket' size='nav' only %}</span><span>مسیر</span></button>
@@ -20,23 +21,28 @@
         <div class="fl-help-modal__scroll-track" aria-hidden="true"><span class="fl-help-modal__scroll-progress"></span></div>
         <div class="ws-modal-body fl-help-modal__body">
             <section class="fl-help-pane is-active" data-fl-help-pane="path">
+                <ul class="fl-help-pills" aria-label="امکانات مسیر">
+                    <li>نوار مراحل بالای صفحه</li>
+                    <li>کارت «الان چه کار کنم»</li>
+                    <li>تماس و پیگیری سریع</li>
+                </ul>
                 <article class="fl-help-card fl-help-card--lux fl-help-card--featured">
                     <span class="fl-help-card__step">۰۱</span>
                     <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='handshake' size='metric' boxed=True accent='violet' only %}</span>
                     <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>نوار مراحل</h3></div>
-                    <p>بالای صفحه <strong>stage rail</strong> مسیر معامله را نشان می‌دهد — روی هر مرحله کلیک کن تا وضعیت عوض شود. مراحل گذشته تیک می‌خورند.</p></div>
+                    <p>بالای صفحه <strong>نوار مراحل</strong> مسیر معامله رو نشون می‌ده — روی هر مرحله بزن تا وضعیت عوض شه. مراحل گذشته تیک می‌خورن و می‌فهمی کجای مذاکره‌ای.</p></div>
                 </article>
                 <article class="fl-help-card fl-help-card--lux">
                     <span class="fl-help-card__step">۰۲</span>
                     <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='zap' size='metric' boxed=True accent='emerald' only %}</span>
                     <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>کارت اقدام بعدی</h3><span class="fl-help-card__tag">مهم</span></div>
-                    <p>باکس رنگی وسط صفحه می‌گوید الان چه کار کنی — تماس، بازدید، قرارداد یا بستن. دکمه اصلی همانجاست.</p></div>
+                    <p>باکس رنگی وسط صفحه می‌گه الان چه کار کنی — تماس، بازدید، قرارداد یا بستن. دکمه اصلی همونجاست؛ لازم نیست توی منو بگردی.</p></div>
                 </article>
                 <article class="fl-help-card fl-help-card--lux">
                     <span class="fl-help-card__step">۰۳</span>
                     <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='phone' size='metric' boxed=True accent='sky' only %}</span>
                     <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>عملیات سریع</h3></div>
-                    <p>تماس، ثبت پیگیری، اقدام بعدی و ویرایش از نوار بالا — بدون جستجو در منو.</p></div>
+                    <p>تماس، ثبت پیگیری، اقدام بعدی و ویرایش از نوار بالا — بدون جستجو توی منو، مخصوص وقتی مشتری پشت خطه.</p></div>
                 </article>
             </section>
             <section class="fl-help-pane" data-fl-help-pane="tabs" hidden>
@@ -44,19 +50,19 @@
                     <span class="fl-help-card__step">۰۱</span>
                     <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='bar_chart' size='metric' boxed=True accent='indigo' only %}</span>
                     <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>نمای کلی</h3></div>
-                    <p>خلاصه مخاطب، ملک، ارزش، احتمال و تاریخ بستن — همه در یک نگاه.</p></div>
+                    <p>خلاصه مخاطب، ملک، ارزش، احتمال بستن و تاریخ پیش‌بینی — همه در یک نگاه، برای قبل از جلسه با مالک یا خریدار.</p></div>
                 </article>
                 <article class="fl-help-card fl-help-card--lux">
                     <span class="fl-help-card__step">۰۲</span>
                     <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='clipboard_list' size='metric' boxed=True accent='amber' only %}</span>
                     <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>فعالیت و مدارک</h3></div>
-                    <p>تب <strong>فعالیت‌ها</strong> تاریخچه تماس‌ها. <strong>مدارک</strong> چک‌لیست مدارک لازم قبل از قرارداد.</p></div>
+                    <p>تب <strong>فعالیت‌ها</strong> تاریخچه تماس‌ها و بازدیدهاست. <strong>مدارک</strong> چک‌لیست کاغذهای لازم قبل از قرارداد — سند، کارت ملی، چک و…</p></div>
                 </article>
                 <article class="fl-help-card fl-help-card--lux fl-help-card--featured">
                     <span class="fl-help-card__step">۰۳</span>
                     <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='file_edit' size='metric' boxed=True accent='rose' only %}</span>
                     <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>قراردادها</h3></div>
-                    <p>تب قراردادها همه نسخه‌ها را نشان می‌دهد — پیش‌نویس، ارسال‌شده و نهایی. از hero هم می‌توانی قرارداد بسازی.</p></div>
+                    <p>تب قراردادها همه نسخه‌ها رو نشون می‌ده — پیش‌نویس، ارسال‌شده و نهایی. از بالای صفحه هم می‌تونی مستقیم قرارداد بسازی.</p></div>
                 </article>
             </section>
             <section class="fl-help-pane" data-fl-help-pane="finance" hidden>
@@ -64,22 +70,22 @@
                     <span class="fl-help-card__step">۰۱</span>
                     <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='coins' size='metric' boxed=True accent='violet' only %}</span>
                     <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>تب مالی</h3></div>
-                    <p>کمیسیون خریدار/فروشنده، سهم مشاور و املاک، هزینه‌ها و وضعیت وصول — بعد از بستن معامله پر کن.</p></div>
+                    <p>کمیسیون خریدار و فروشنده، سهم مشاور و دفتر، هزینه‌ها و وضعیت وصول — بعد از بستن معامله پرش کن تا درآمد واقعی ثبت بشه.</p></div>
                 </article>
                 <article class="fl-help-card fl-help-card--lux">
                     <span class="fl-help-card__step">۰۲</span>
                     <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='settings' size='metric' boxed=True accent='emerald' only %}</span>
-                    <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>دراور مالی</h3></div>
-                    <p>از منوی «بیشتر» یا تب مالی، <strong>تنظیمات مالی معامله</strong> را باز کن — پیش‌فرض‌ها از داشبورد مالی می‌آیند.</p></div>
+                    <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>تنظیمات مالی</h3></div>
+                    <p>از منوی «بیشتر» یا تب مالی، <strong>تنظیمات مالی معامله</strong> رو باز کن — پیش‌فرض‌ها از داشبورد مالی می‌آد و برای هر ملک می‌تونی استثنا بذاری.</p></div>
                 </article>
                 <div class="fl-help-tip fl-help-tip--lux">
                     <span class="fl-help-tip__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='trending_up' size='metric' boxed=True accent='sky' only %}</span>
-                    <div><strong>بستن معامله</strong><p>وقتی قرارداد نهایی شد، مرحله را «بسته‌شده» بزن — KPI و درآمد به‌روز می‌شود.</p></div>
+                    <div><strong>بستن معامله</strong><p>وقتی قرارداد نهایی شد، مرحله رو «بسته‌شده» بزن — شاخص‌ها و درآمدت همون لحظه به‌روز می‌شن.</p></div>
                 </div>
             </section>
         </div>
         <footer class="ws-modal-foot fl-help-modal__foot">
-            <p class="fl-help-modal__foot-note">هر معامله یک داستان — مرحله‌ها را جدی بگیر.</p>
+            <p class="fl-help-modal__foot-note">هر معامله یک داستانه — مرحله‌ها رو جدی بگیر تا آخرش گم نشه.</p>
             <button type="button" class="ws-btn ws-btn-primary fl-help-modal__cta" data-modal-close><span class="ws-nav-icon">{% include 'includes/icon_slot.html' with decor='handshake' size='inline' only %}</span>متوجه شدم</button>
         </footer>
     </div>

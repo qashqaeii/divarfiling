@@ -30,8 +30,16 @@
             progress.style.transform = 'scaleX(' + Math.min(1, Math.max(0, ratio)) + ')';
         }
 
+        function replayPaneMotion(pane) {
+            if (!pane) return;
+            pane.classList.remove('is-active');
+            void pane.offsetWidth;
+            pane.classList.add('is-active');
+        }
+
         function activateTab(id) {
             var activeBtn = null;
+            var activePane = null;
             tabs.forEach(function (btn) {
                 var on = btn.getAttribute('data-fl-help-tab') === id;
                 btn.classList.toggle('is-active', on);
@@ -41,17 +49,40 @@
             panes.forEach(function (pane) {
                 var on = pane.getAttribute('data-fl-help-pane') === id;
                 pane.classList.toggle('is-active', on);
-                if (on) pane.removeAttribute('hidden');
-                else pane.setAttribute('hidden', '');
+                if (on) {
+                    activePane = pane;
+                    pane.removeAttribute('hidden');
+                    replayPaneMotion(pane);
+                } else {
+                    pane.setAttribute('hidden', '');
+                }
             });
             if (body) body.scrollTop = 0;
             updateScrollProgress();
             requestAnimationFrame(function () { moveIndicator(activeBtn); });
         }
 
-        tabs.forEach(function (btn) {
+        function switchTab(id) {
+            modal.classList.add('is-switching');
+            activateTab(id);
+            window.setTimeout(function () {
+                modal.classList.remove('is-switching');
+            }, 360);
+        }
+
+        tabs.forEach(function (btn, index) {
             btn.addEventListener('click', function () {
-                activateTab(btn.getAttribute('data-fl-help-tab'));
+                switchTab(btn.getAttribute('data-fl-help-tab'));
+            });
+            btn.addEventListener('keydown', function (e) {
+                if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+                e.preventDefault();
+                var dir = e.key === 'ArrowRight' ? 1 : -1;
+                var rtl = nav && window.getComputedStyle(nav).direction === 'rtl';
+                if (rtl) dir *= -1;
+                var next = (index + dir + tabs.length) % tabs.length;
+                tabs[next].focus();
+                switchTab(tabs[next].getAttribute('data-fl-help-tab'));
             });
         });
 
@@ -102,7 +133,6 @@
                     var body = modal.querySelector('.fl-help-modal__body');
                     var progress = modal.querySelector('.fl-help-modal__scroll-progress');
                     if (body && progress) {
-                        var max = body.scrollHeight - body.clientHeight;
                         progress.style.transform = 'scaleX(0)';
                     }
                 });

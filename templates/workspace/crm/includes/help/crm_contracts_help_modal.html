@@ -10,6 +10,7 @@
             <span class="fl-help-modal__kicker"><span class="fl-header__help-bulb fl-header__help-bulb--xs" aria-hidden="true"><i class="fas fa-lightbulb"></i><span class="fl-header__help-bulb-glow"></span></span>راهنمای قراردادها</span>
             <div class="fl-help-modal__hero-icon fl-help-modal__hero-icon--bulb" aria-hidden="true"><span class="fl-header__help-bulb fl-header__help-bulb--hero"><i class="fas fa-lightbulb"></i><span class="fl-header__help-bulb-glow"></span></span></div>
             <h2 id="crmContractsHelpTitle" class="fl-help-modal__title">قرارداد دیجیتال</h2>
+            <p class="fl-help-modal__lead">از پیش‌نویس تا امضای طرفین — بدون کاغذبازی، با لینک تأیید برای خریدار و فروشنده.</p>
         </header>
         <nav class="fl-help-modal__nav" aria-label="بخش‌های راهنما" role="tablist">
             <button type="button" class="fl-help-modal__nav-btn is-active" data-fl-help-tab="cycle" role="tab" aria-selected="true"><span class="ws-nav-icon">{% include 'includes/icon_slot.html' with decor='file_edit' size='nav' only %}</span><span>چرخه</span></button>
@@ -24,19 +25,19 @@
                     <span class="fl-help-card__step">۰۱</span>
                     <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='file_text' size='metric' boxed=True accent='violet' only %}</span>
                     <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>چرخه عمر قرارداد</h3><span class="fl-help-card__tag">از پیش‌نویس تا نهایی</span></div>
-                    <p>هر قرارداد مسیر مشخص دارد: <strong>پیش‌نویس</strong> → <strong>ارسال برای تأیید</strong> → <strong>امضای طرفین</strong> → <strong>نهایی</strong>. وضعیت در لیست و KPI دیده می‌شود.</p></div>
+                    <p>هر قرارداد مسیر مشخص داره: <strong>پیش‌نویس</strong> → <strong>ارسال برای تأیید</strong> → <strong>امضای طرفین</strong> → <strong>نهایی</strong>. وضعیت تو لیست و شاخص‌های بالا دیده می‌شه.</p></div>
                 </article>
                 <article class="fl-help-card fl-help-card--lux">
                     <span class="fl-help-card__step">۰۲</span>
                     <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='handshake' size='metric' boxed=True accent='emerald' only %}</span>
                     <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>اتصال به معامله</h3></div>
-                    <p>قرارداد می‌تواند به <strong>قیف معاملات</strong> وصل باشد یا مستقل ساخته شود — داده مخاطب و ملک خودکار پر می‌شود.</p></div>
+                    <p>قرارداد می‌تونه به <strong>قیف معاملات</strong> وصل باشه یا مستقل ساخته بشه — اطلاعات مخاطب و ملک خودکار پر می‌شن.</p></div>
                 </article>
                 <article class="fl-help-card fl-help-card--lux">
                     <span class="fl-help-card__step">۰۳</span>
                     <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='bar_chart' size='metric' boxed=True accent='sky' only %}</span>
-                    <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>داشبورد KPI</h3></div>
-                    <p>کارت‌های بالا تعداد پیش‌نویس، در انتظار تأیید، نهایی‌شده و منقضی را نشان می‌دهند.</p></div>
+                    <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>شاخص‌های داشبورد</h3></div>
+                    <p>کارت‌های بالا تعداد پیش‌نویس، در انتظار تأیید، نهایی‌شده و منقضی رو نشون می‌دن.</p></div>
                 </article>
             </section>
             <section class="fl-help-pane" data-fl-help-pane="create" hidden>
@@ -44,19 +45,19 @@
                     <span class="fl-help-card__step">۰۱</span>
                     <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='file_edit' size='metric' boxed=True accent='indigo' only %}</span>
                     <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>قرارداد جدید</h3></div>
-                    <p>از <strong>قرارداد جدید</strong> نوع (مبایعه، اجاره، …) را انتخاب کن. wizard مرحله‌به‌مرحله فیلدها را پر می‌کند.</p></div>
+                    <p>از <strong>قرارداد جدید</strong> نوع (مبایعه، اجاره، …) رو انتخاب کن. فرم مرحله‌به‌مرحله فیلدها رو پر می‌کنه.</p></div>
                 </article>
                 <article class="fl-help-card fl-help-card--lux">
                     <span class="fl-help-card__step">۰۲</span>
                     <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='users' size='metric' boxed=True accent='amber' only %}</span>
                     <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>طرفین قرارداد</h3></div>
-                    <p>خریدار، فروشنده یا مستاجر را از مخاطبین انتخاب کن — شماره موبایل برای لینک تأیید لازم است.</p></div>
+                    <p>خریدار، فروشنده یا مستاجر رو از مخاطبین انتخاب کن — شماره موبایل برای لینک تأیید لازمه.</p></div>
                 </article>
                 <article class="fl-help-card fl-help-card--lux">
                     <span class="fl-help-card__step">۰۳</span>
                     <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='share_2' size='metric' boxed=True accent='rose' only %}</span>
                     <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>ارسال لینک</h3></div>
-                    <p>بعد از تکمیل، لینک عمومی برای طرف مقابل ارسال می‌شود — واتساپ یا پیامک. طرف بدون ورود به سیستم تأیید می‌کند.</p></div>
+                    <p>بعد از تکمیل، لینک عمومی برای طرف مقابل ارسال می‌شه — واتساپ یا پیامک. طرف بدون ورود به سیستم تأیید می‌کنه.</p></div>
                 </article>
             </section>
             <section class="fl-help-pane" data-fl-help-pane="track" hidden>
@@ -64,17 +65,17 @@
                     <span class="fl-help-card__step">۰۱</span>
                     <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='filter' size='metric' boxed=True accent='violet' only %}</span>
                     <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>فیلتر وضعیت</h3></div>
-                    <p>چیپ‌های وضعیت لیست را محدود می‌کنند — «منتظر طرف مقابل» را هر صبح چک کن.</p></div>
+                    <p>چیپ‌های وضعیت لیست رو محدود می‌کنن — «منتظر طرف مقابل» رو هر صبح چک کن.</p></div>
                 </article>
                 <article class="fl-help-card fl-help-card--lux">
                     <span class="fl-help-card__step">۰۲</span>
                     <span class="fl-help-card__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='timer' size='metric' boxed=True accent='emerald' only %}</span>
                     <div class="fl-help-card__body"><div class="fl-help-card__head"><h3>یادآوری و پیگیری</h3></div>
-                    <p>قرارداد گیر کرده؟ از مخاطب تماس بگیر یا یادآور بگذار — در تقویم و کارهای امروز می‌آید.</p></div>
+                    <p>قرارداد گیر کرده؟ از مخاطب تماس بگیر یا یادآور بذار — تو تقویم و کارهای امروز میاد.</p></div>
                 </article>
                 <div class="fl-help-tip fl-help-tip--lux">
                     <span class="fl-help-tip__icon ws-nav-icon">{% include 'includes/icon_slot.html' with decor='handshake' size='metric' boxed=True accent='sky' only %}</span>
-                    <div><strong>تحویل ملک</strong><p>برای برخی قراردادها wizard <strong>تحویل</strong> هم فعال است — از منوی قرارداد دنبال کن.</p></div>
+                    <div><strong>تحویل ملک</strong><p>برای بعضی قراردادها فرم <strong>تحویل</strong> هم فعاله — از منوی قرارداد دنبالش کن.</p></div>
                 </div>
             </section>
         </div>

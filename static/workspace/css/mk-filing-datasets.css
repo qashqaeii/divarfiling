@@ -2300,6 +2300,118 @@
     box-shadow: 0 8px 22px color-mix(in srgb, var(--ws-primary) 28%, transparent);
 }
 
+/* ─── Help modal v2: richer content & motion ─── */
+.fl-help-modal .fl-help-modal__panel {
+    max-width: 36rem;
+}
+.fl-help-modal__hero {
+    padding-bottom: 0.85rem;
+}
+.fl-help-modal__lead {
+    position: relative;
+    z-index: 1;
+    margin: 0.45rem auto 0;
+    padding: 0.55rem 0.75rem;
+    max-width: 30rem;
+    font-size: 0.76rem;
+    font-weight: 650;
+    line-height: 1.72;
+    color: var(--ws-text-secondary);
+    border-radius: 14px;
+    background: color-mix(in srgb, var(--ws-surface) 55%, rgba(255, 255, 255, 0.35));
+    border: 1px solid color-mix(in srgb, var(--ws-border) 40%, rgba(255, 255, 255, 0.4));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+.fl-help-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin: 0 0 0.15rem;
+    padding: 0;
+    list-style: none;
+}
+.fl-help-pills li {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.28rem;
+    min-height: 1.55rem;
+    padding: 0.18rem 0.55rem;
+    border-radius: 999px;
+    font-size: 0.6rem;
+    font-weight: 800;
+    color: color-mix(in srgb, var(--ws-primary) 82%, #1e293b);
+    background: color-mix(in srgb, var(--ws-primary) 9%, var(--ws-surface));
+    border: 1px solid color-mix(in srgb, var(--ws-primary) 16%, transparent);
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+}
+.fl-help-pills li::before {
+    content: '';
+    width: 0.35rem;
+    height: 0.35rem;
+    border-radius: 50%;
+    background: var(--ws-primary);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--ws-primary) 18%, transparent);
+    flex-shrink: 0;
+}
+.fl-help-card__bullets {
+    margin: 0.5rem 0 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 0.35rem;
+}
+.fl-help-card__bullets li {
+    position: relative;
+    padding-inline-start: 1rem;
+    font-size: 0.7rem;
+    font-weight: 650;
+    line-height: 1.62;
+    color: var(--ws-text-secondary);
+}
+.fl-help-card__bullets li::before {
+    content: '';
+    position: absolute;
+    inset-inline-start: 0;
+    top: 0.55em;
+    width: 0.38rem;
+    height: 0.38rem;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--ws-primary) 70%, #6366f1);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--ws-primary) 12%, transparent);
+}
+.fl-help-pane {
+    animation: flHelpPaneIn 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.fl-help-modal.is-switching .fl-help-pane {
+    animation: none;
+}
+.fl-help-card--lux {
+    opacity: 0;
+    transform: translateY(8px);
+    animation: flHelpCardIn 0.38s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.fl-help-pane.is-active .fl-help-card--lux:nth-child(1) { animation-delay: 0.04s; }
+.fl-help-pane.is-active .fl-help-card--lux:nth-child(2) { animation-delay: 0.09s; }
+.fl-help-pane.is-active .fl-help-card--lux:nth-child(3) { animation-delay: 0.14s; }
+.fl-help-pane.is-active .fl-help-card--lux:nth-child(4) { animation-delay: 0.19s; }
+.fl-help-pane.is-active .fl-help-tip--lux { animation: flHelpCardIn 0.38s cubic-bezier(0.22, 1, 0.36, 1) 0.22s forwards; opacity: 0; }
+.fl-help-pane.is-active .fl-help-pills { animation: flHelpCardIn 0.32s cubic-bezier(0.22, 1, 0.36, 1) 0.02s forwards; opacity: 0; }
+@keyframes flHelpPaneIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+@keyframes flHelpCardIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.fl-help-tip--lux {
+    border-inline-start: 3px solid color-mix(in srgb, var(--ws-primary) 55%, #6366f1);
+}
+.fl-help-modal__nav-btn:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--ws-primary) 45%, transparent);
+    outline-offset: 2px;
+}
+
 @media (min-width: 769px) {
     .fl-help-modal .fl-help-modal__panel {
         transform: scale(0.96) translateY(14px);
@@ -2405,6 +2517,19 @@
         line-height: 1.35;
         padding-inline-end: 2rem;
         margin: 0;
+    }
+    .fl-help-modal__lead {
+        grid-column: 1 / -1;
+        margin: 0.35rem 0 0;
+        padding: 0.5rem 0.65rem;
+        font-size: 0.7rem;
+        text-align: start;
+    }
+    .fl-help-pills {
+        gap: 0.3rem;
+    }
+    .fl-help-pills li {
+        font-size: 0.58rem;
     }
     .fl-help-modal__nav {
         margin: 0.4rem 0.75rem 0;

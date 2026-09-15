@@ -233,7 +233,7 @@
 
 .crm-cal-kpi--total .crm-cal-kpi-ctx { color: var(--cal-green); }
 
-/* ── Layout ── */
+/* ── Layout (RTL: col 1 = right/main, col 2 = left/sidebar) ── */
 .crm-cal-pro-v2 .crm-cal-layout {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(260px, 300px);
@@ -243,9 +243,22 @@
     min-height: 0;
 }
 
+.crm-cal-pro-v2 .crm-cal-board {
+    grid-column: 1;
+}
+
+.crm-cal-pro-v2 .crm-cal-agenda {
+    grid-column: 2;
+}
+
 @media (max-width: 1023px) {
     .crm-cal-pro-v2 .crm-cal-layout {
         grid-template-columns: 1fr;
+    }
+
+    .crm-cal-pro-v2 .crm-cal-board,
+    .crm-cal-pro-v2 .crm-cal-agenda {
+        grid-column: 1;
     }
 }
 

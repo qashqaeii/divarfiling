@@ -262,11 +262,26 @@
     var progressBar = document.getElementById('blog-read-progress');
     var copyBtns = document.querySelectorAll('#blog-copy-link, #blog-copy-link-footer');
     var tocToggle = document.getElementById('blog-toc-toggle');
+    var tocBackdrop = document.getElementById('blog-toc-backdrop');
+
+    function setTocOpen(open) {
+        if (!tocCard || !tocToggle) return;
+        tocCard.classList.toggle('is-mobile-open', open);
+        tocToggle.classList.toggle('is-active', open);
+        tocToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+        document.body.classList.toggle('mk-blog-toc-open', open);
+        if (tocBackdrop) {
+            tocBackdrop.classList.toggle('is-visible', open);
+            tocBackdrop.hidden = !open;
+            tocBackdrop.setAttribute('aria-hidden', open ? 'false' : 'true');
+        }
+    }
 
     if (tocList && tocCard) {
         var headings = prose.querySelectorAll('h2, h3');
         if (!headings.length) {
             tocCard.classList.add('is-empty');
+            if (tocToggle) tocToggle.hidden = true;
         } else {
             headings.forEach(function (heading, index) {
                 if (!heading.id) {
@@ -303,17 +318,26 @@
     /* ─── Mobile TOC toggle ─── */
     if (tocToggle && tocCard) {
         tocToggle.addEventListener('click', function () {
-            var open = tocCard.classList.toggle('is-mobile-open');
-            tocToggle.classList.toggle('is-active', open);
-            tocToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+            setTocOpen(!tocCard.classList.contains('is-mobile-open'));
         });
+        if (tocBackdrop) {
+            tocBackdrop.addEventListener('click', function () {
+                setTocOpen(false);
+            });
+        }
         document.addEventListener('click', function (e) {
             if (!tocCard.classList.contains('is-mobile-open')) return;
             if (tocCard.contains(e.target) || tocToggle.contains(e.target)) return;
-            tocCard.classList.remove('is-mobile-open');
-            tocToggle.classList.remove('is-active');
-            tocToggle.setAttribute('aria-expanded', 'false');
+            if (tocBackdrop && tocBackdrop.contains(e.target)) return;
+            setTocOpen(false);
         });
+        if (tocList) {
+            tocList.addEventListener('click', function (e) {
+                if (e.target.closest('a') && window.matchMedia('(max-width: 1024px)').matches) {
+                    setTocOpen(false);
+                }
+            });
+        }
     }
 
     /* ─── نوار پیشرفت مطالعه ─── */

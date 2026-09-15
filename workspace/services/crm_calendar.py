@@ -265,6 +265,7 @@ def get_calendar_month(user, jyear: int, jmonth: int) -> Dict[str, Any]:
 
     event_total = sum(len(v) for v in events_by_jkey.values())
     prev_y, prev_m = _prev_jmonth(jyear, jmonth)
+    next_y, next_m = _next_jmonth(jyear, jmonth)
     prev_total = _count_month_events(user, prev_y, prev_m)
     pct_change = _percent_change(event_total, prev_total)
 

@@ -308,8 +308,28 @@ def crm_cal_event_icon(event_type):
         'followup': 'fa-phone',
         'reminder': 'fa-bell',
         'visit': 'fa-door-open',
+        'contract': 'fa-file-signature',
     }
     return icons.get(event_type, 'fa-calendar-day')
+
+
+@register.filter
+def crm_cal_event_type_label(event_type):
+    labels = {
+        'followup': 'پیگیری',
+        'reminder': 'یادآور',
+        'visit': 'بازدید',
+        'contract': 'قرارداد',
+    }
+    return labels.get(event_type, 'رویداد')
+
+
+@register.filter
+def to_persian_digits(value):
+    from workspace.services.jalali_input import to_persian_digits as _to_pd
+    if value is None:
+        return ''
+    return _to_pd(value)
 
 
 @register.filter

@@ -3207,6 +3207,8 @@ class CRMCalendarView(CRMContextMixin, LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         import jdatetime
 
+        from workspace.services.crm_scope import customers_qs
+
         ctx = super().get_context_data(**kwargs)
         today_j = jdatetime.date.today()
         try:
@@ -3215,8 +3217,37 @@ class CRMCalendarView(CRMContextMixin, LoginRequiredMixin, TemplateView):
         except (TypeError, ValueError):
             jyear, jmonth = today_j.year, today_j.month
         ctx['calendar'] = get_calendar_month(self.request.user, jyear, jmonth)
+        ctx['reminder_form'] = CRMReminderForm()
+        ctx['crm_customers'] = customers_qs(self.request.user).order_by('name')[:200]
+        ctx['open_drawer'] = self.request.GET.get('drawer', '')
         ctx['crm_section'] = 'calendar'
         return ctx
+
+    def post(self, request):
+        form = CRMReminderForm(request.POST)
+        if form.is_valid():
+            reminder = form.save(commit=False)
+            reminder.user = request.user
+            customer_id = request.POST.get('customer_id')
+            if customer_id:
+                linked = customer_for_user(request.user, int(customer_id))
+                if not linked or not can_edit_customer(request.user, linked):
+                    messages.error(request, 'مخاطب انتخاب‌شده یافت نشد.')
+                    ctx = self.get_context_data()
+                    ctx['reminder_form'] = form
+                    ctx['open_drawer'] = 'reminder'
+                    return render(request, self.template_name, ctx)
+                reminder.customer = linked
+            reminder.save()
+            messages.success(request, 'یادآور ثبت شد.')
+            return redirect('workspace:crm_calendar')
+        ctx = self.get_context_data()
+        ctx['reminder_form'] = form
+        ctx['open_drawer'] = 'reminder'
+        for errors in form.errors.values():
+            for err in errors:
+                messages.error(request, str(err))
+        return render(request, self.template_name, ctx)
 
 
 class CRMNotificationsView(LoginRequiredMixin, View):

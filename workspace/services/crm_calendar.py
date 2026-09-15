@@ -1,16 +1,21 @@
-"""تقویم CRM — شمسی (جلالی) با رویدادهای پیگیری، یادآور و بازدید."""
+"""تقویم CRM — شمسی (جلالی) با رویدادهای پیگیری، یادآور، بازدید و قرارداد."""
 from __future__ import annotations
 
 from datetime import date, datetime, timedelta
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import jdatetime
 from django.urls import reverse
 from django.utils import timezone
 
 from workspace.models import Customer, PropertyVisit
-from workspace.services.crm_scope import customers_qs, reminders_qs
-from workspace.services.jalali_input import PERSIAN_MONTHS, PERSIAN_WEEKDAYS, to_persian_digits
+from workspace.services.crm_scope import customers_qs, deals_qs, reminders_qs
+from workspace.services.jalali_input import (
+    PERSIAN_MONTHS,
+    PERSIAN_WEEKDAYS,
+    format_jalali_date,
+    to_persian_digits,
+)
 
 
 def _jkey(jd: jdatetime.date) -> str:
@@ -48,9 +53,46 @@ def _jdays_in_month(jyear: int, jmonth: int) -> int:
     return _J_MONTH_LENGTHS[jmonth - 1]
 
 
+def _location_for_property(prop) -> str:
+    if not prop:
+        return ''
+    parts = [p for p in (prop.neighborhood, prop.district) if p]
+    return ' · '.join(parts)
+
+
+def _location_for_customer(customer: Customer) -> str:
+    return customer.district or ''
+
+
+def _short_label(event: Dict[str, Any]) -> str:
+    label = event.get('label', '')
+    if ': ' in label:
+        return label.split(': ', 1)[1]
+    return label
+
+
+def _event_time(event: Dict[str, Any]) -> str:
+    return event.get('time') or ''
+
+
+def _percent_change(current: int, previous: int) -> Optional[int]:
+    if previous <= 0:
+        return None if current <= 0 else 100
+    return round(((current - previous) / previous) * 100)
+
+
+def _week_range_gregorian(today_g: date) -> Tuple[date, date]:
+    """شنبه تا جمعه هفته جاری."""
+    weekday = (today_g.weekday() + 2) % 7  # Mon=0 → Sat=0
+    start = today_g - timedelta(days=weekday)
+    return start, start + timedelta(days=6)
+
+
 def get_calendar_month(user, jyear: int, jmonth: int) -> Dict[str, Any]:
     """تقویم ماه شمسی با گرید شنبه‌محور."""
     today_j = jdatetime.date.today()
+    today_g = today_j.togregorian()
+    today_key = _jkey(today_j)
     jyear = max(1300, min(jyear, 1500))
     jmonth = max(1, min(jmonth, 12))
 
@@ -59,6 +101,7 @@ def get_calendar_month(user, jyear: int, jmonth: int) -> Dict[str, Any]:
     last_j = jdatetime.date(jyear, jmonth, days_in_month)
     start_g = first_j.togregorian()
     end_g = last_j.togregorian()
+    week_start_g, week_end_g = _week_range_gregorian(today_g)
 
     events_by_jkey: Dict[str, List[Dict[str, Any]]] = {}
 
@@ -66,14 +109,18 @@ def get_calendar_month(user, jyear: int, jmonth: int) -> Dict[str, Any]:
         jd = jdatetime.date.fromgregorian(date=gday)
         if jd.year != jyear or jd.month != jmonth:
             return
+        event.setdefault('short_label', _short_label(event))
         events_by_jkey.setdefault(_jkey(jd), []).append(event)
 
     for c in customers_qs(user).filter(
         next_follow_up__gte=start_g, next_follow_up__lte=end_g,
-    ).only('id', 'name', 'next_follow_up', 'status'):
+    ).only('id', 'name', 'next_follow_up', 'status', 'district'):
         add_gregorian(c.next_follow_up, {
             'type': 'followup',
             'label': f'پیگیری: {c.name}',
+            'customer_name': c.name,
+            'location': _location_for_customer(c),
+            'time': '',
             'href': reverse('workspace:crm_detail', kwargs={'customer_id': c.id}),
         })
 
@@ -81,11 +128,15 @@ def get_calendar_month(user, jyear: int, jmonth: int) -> Dict[str, Any]:
         is_done=False,
         due_at__date__gte=start_g, due_at__date__lte=end_g,
     ).select_related('customer'):
+        local_due = timezone.localtime(r.due_at)
         add_gregorian(r.due_at.date(), {
             'type': 'reminder',
             'label': r.title,
-            'time': r.due_at.strftime('%H:%M'),
+            'customer_name': r.customer.name if r.customer else '',
+            'location': _location_for_customer(r.customer) if r.customer else '',
+            'time': local_due.strftime('%H:%M'),
             'href': reverse('workspace:crm_reminders'),
+            'reminder_id': r.id,
         })
 
     for v in PropertyVisit.objects.filter(
@@ -95,8 +146,36 @@ def get_calendar_month(user, jyear: int, jmonth: int) -> Dict[str, Any]:
         add_gregorian(v.visit_date, {
             'type': 'visit',
             'label': f'بازدید: {title}',
-            'outcome': v.outcome,
+            'customer_name': v.customer.name if v.customer else '',
+            'location': _location_for_property(v.property) or _location_for_customer(v.customer),
+            'time': '',
             'href': reverse('workspace:crm_detail', kwargs={'customer_id': v.customer_id}) + '?tab=visits',
+        })
+
+    for d in deals_qs(user).filter(
+        contract_date__gte=start_g, contract_date__lte=end_g,
+    ).select_related('customer', 'property'):
+        add_gregorian(d.contract_date, {
+            'type': 'contract',
+            'label': f'قرارداد: {d.title}',
+            'customer_name': d.customer.name if d.customer else '',
+            'location': _location_for_property(d.property) or (
+                _location_for_customer(d.customer) if d.customer else ''
+            ),
+            'time': '',
+            'href': reverse('workspace:crm_deal_detail', kwargs={'deal_id': d.id}),
+        })
+
+    for c in customers_qs(user).filter(
+        lease_deadline__gte=start_g, lease_deadline__lte=end_g,
+    ).only('id', 'name', 'lease_deadline', 'district'):
+        add_gregorian(c.lease_deadline, {
+            'type': 'contract',
+            'label': f'مهلت اجاره: {c.name}',
+            'customer_name': c.name,
+            'location': _location_for_customer(c),
+            'time': '',
+            'href': reverse('workspace:crm_detail', kwargs={'customer_id': c.id}),
         })
 
     offset = _saturday_offset(first_j)
@@ -127,23 +206,98 @@ def get_calendar_month(user, jyear: int, jmonth: int) -> Dict[str, Any]:
             cursor_j = _add_jday(cursor_j, 1)
         weeks.append(week)
 
-    stats = {'followup': 0, 'reminder': 0, 'visit': 0}
+    stats = {'followup': 0, 'reminder': 0, 'visit': 0, 'contract': 0}
     upcoming: List[Dict[str, Any]] = []
+    today_agenda: List[Dict[str, Any]] = []
+    near_reminders: List[Dict[str, Any]] = []
+    events_flat: List[Dict[str, Any]] = []
+
+    followups_this_week = 0
+    visits_today = 0
+    reminders_today = 0
+
     for jkey, evs in events_by_jkey.items():
         jy, jm, jd = [int(x) for x in jkey.split('-')]
+        jd_obj = jdatetime.date(jy, jm, jd)
+        gday = jd_obj.togregorian()
         for ev in evs:
             stats[ev['type']] = stats.get(ev['type'], 0) + 1
-            upcoming.append({
+            item = {
                 'jkey': jkey,
-                'sort_key': (jy, jm, jd),
+                'sort_key': (jy, jm, jd, _event_time(ev)),
                 'date_label': f'{to_persian_digits(jd)} {PERSIAN_MONTHS[jm - 1]}',
-                'weekday': PERSIAN_WEEKDAYS[_saturday_offset(jdatetime.date(jy, jm, jd))],
+                'weekday': PERSIAN_WEEKDAYS[_saturday_offset(jd_obj)],
                 **ev,
+            }
+            upcoming.append(item)
+            events_flat.append({
+                'jkey': jkey,
+                'jyear': jy,
+                'jmonth': jm,
+                'jday': jd,
+                'day_label': to_persian_digits(jd),
+                'weekday': item['weekday'],
+                'type': ev['type'],
+                'label': ev['label'],
+                'short_label': ev.get('short_label', ''),
+                'customer_name': ev.get('customer_name', ''),
+                'location': ev.get('location', ''),
+                'time': ev.get('time', ''),
+                'href': ev.get('href', ''),
             })
-    upcoming.sort(key=lambda x: x['sort_key'])
 
+            if jkey == today_key:
+                today_agenda.append(item)
+                if ev['type'] == 'visit':
+                    visits_today += 1
+                elif ev['type'] == 'reminder':
+                    reminders_today += 1
+
+            if ev['type'] == 'followup' and week_start_g <= gday <= week_end_g and gday >= today_g:
+                followups_this_week += 1
+
+            if ev['type'] == 'reminder' and gday > today_g:
+                near_reminders.append(item)
+
+    upcoming.sort(key=lambda x: x['sort_key'])
+    today_agenda.sort(key=lambda x: (x.get('time') or '99:99', x.get('label', '')))
+    near_reminders.sort(key=lambda x: x['sort_key'])
+
+    event_total = sum(len(v) for v in events_by_jkey.values())
     prev_y, prev_m = _prev_jmonth(jyear, jmonth)
-    next_y, next_m = _next_jmonth(jyear, jmonth)
+    prev_total = _count_month_events(user, prev_y, prev_m)
+    pct_change = _percent_change(event_total, prev_total)
+
+    kpis = {
+        'total': {
+            'value': event_total,
+            'value_label': to_persian_digits(event_total),
+            'context': (
+                f'+{to_persian_digits(abs(pct_change))}٪ نسبت به ماه قبل'
+                if pct_change is not None and pct_change > 0
+                else (
+                    f'{to_persian_digits(abs(pct_change))}٪ کمتر از ماه قبل'
+                    if pct_change is not None and pct_change < 0
+                    else 'بدون تغییر نسبت به ماه قبل'
+                )
+            ),
+        },
+        'followups': {
+            'value': stats.get('followup', 0),
+            'value_label': to_persian_digits(stats.get('followup', 0)),
+            'context': f'{to_persian_digits(followups_this_week)} مورد این هفته',
+        },
+        'visits': {
+            'value': stats.get('visit', 0),
+            'value_label': to_persian_digits(stats.get('visit', 0)),
+            'context': f'{to_persian_digits(visits_today)} مورد امروز',
+        },
+        'reminders': {
+            'value': stats.get('reminder', 0),
+            'value_label': to_persian_digits(stats.get('reminder', 0)),
+            'context': f'{to_persian_digits(reminders_today)} مورد امروز',
+        },
+    }
 
     month_strip = [
         {
@@ -154,6 +308,9 @@ def get_calendar_month(user, jyear: int, jmonth: int) -> Dict[str, Any]:
         for m in range(1, 13)
     ]
 
+    today_full_label = format_jalali_date(today_g)
+    today_weekday = PERSIAN_WEEKDAYS[_saturday_offset(today_j)]
+
     return {
         'jyear': jyear,
         'jmonth': jmonth,
@@ -162,17 +319,55 @@ def get_calendar_month(user, jyear: int, jmonth: int) -> Dict[str, Any]:
         'title': f'{PERSIAN_MONTHS[jmonth - 1]} {to_persian_digits(jyear)}',
         'weeks': weeks,
         'month_strip': month_strip,
-        'event_total': sum(len(v) for v in events_by_jkey.values()),
-        'event_total_label': to_persian_digits(sum(len(v) for v in events_by_jkey.values())),
+        'event_total': event_total,
+        'event_total_label': to_persian_digits(event_total),
         'stats': stats,
         'stats_labels': {k: to_persian_digits(v) for k, v in stats.items()},
+        'kpis': kpis,
         'upcoming': upcoming[:10],
+        'today_agenda': today_agenda,
+        'today_agenda_count': len(today_agenda),
+        'today_agenda_count_label': to_persian_digits(len(today_agenda)),
+        'today_full_label': today_full_label,
+        'today_weekday': today_weekday,
+        'near_reminders': near_reminders[:5],
+        'events_flat': events_flat,
+        'today_jkey': today_key,
         'prev': {'jyear': prev_y, 'jmonth': prev_m},
         'next': {'jyear': next_y, 'jmonth': next_m},
         'today': {'jyear': today_j.year, 'jmonth': today_j.month, 'jday': today_j.day},
         'days_in_month': days_in_month,
         'days_in_month_label': to_persian_digits(days_in_month),
     }
+
+
+def _count_month_events(user, jyear: int, jmonth: int) -> int:
+    """تعداد رویدادهای ماه — بدون ساخت گرید کامل."""
+    jyear = max(1300, min(jyear, 1500))
+    jmonth = max(1, min(jmonth, 12))
+    days_in_month = _jdays_in_month(jyear, jmonth)
+    first_j = jdatetime.date(jyear, jmonth, 1)
+    last_j = jdatetime.date(jyear, jmonth, days_in_month)
+    start_g = first_j.togregorian()
+    end_g = last_j.togregorian()
+    total = 0
+    total += customers_qs(user).filter(
+        next_follow_up__gte=start_g, next_follow_up__lte=end_g,
+    ).count()
+    total += reminders_qs(user).filter(
+        is_done=False,
+        due_at__date__gte=start_g, due_at__date__lte=end_g,
+    ).count()
+    total += PropertyVisit.objects.filter(
+        user=user, visit_date__gte=start_g, visit_date__lte=end_g,
+    ).count()
+    total += deals_qs(user).filter(
+        contract_date__gte=start_g, contract_date__lte=end_g,
+    ).count()
+    total += customers_qs(user).filter(
+        lease_deadline__gte=start_g, lease_deadline__lte=end_g,
+    ).count()
+    return total
 
 
 def get_due_notifications(user, *, within_minutes: int = 30) -> List[Dict[str, Any]]:

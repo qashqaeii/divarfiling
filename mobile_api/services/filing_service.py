@@ -50,6 +50,26 @@ def get_dataset(user, dataset_id: str) -> Dataset | None:
     return _datasets_qs(user).filter(pk=dataset_id).first()
 
 
+def resolve_dataset_ids_filter(user, filters: Dict[str, Any]) -> Optional[List]:
+    """None = all datasets; [] = invalid selection; list = restrict."""
+    raw_ids = (filters.get('dataset_ids') or '').strip()
+    if raw_ids:
+        resolved: List = []
+        for part in raw_ids.split(','):
+            part = part.strip()
+            if not part:
+                continue
+            ds = get_dataset(user, part)
+            if ds:
+                resolved.append(ds.pk)
+        return resolved
+    single = (filters.get('dataset_id') or '').strip()
+    if single:
+        ds = get_dataset(user, single)
+        return [ds.pk] if ds else []
+    return None
+
+
 def delete_dataset(user, dataset_id: str) -> bool:
     """حذف نرم فایل و آگهی‌های وابسته."""
     ds = get_dataset(user, dataset_id)
@@ -579,10 +599,18 @@ def search_listings(
     filters = filters or {}
     qs = Listing.objects.filter(dataset__user=user, dataset__is_active=True).select_related('dataset')
     dataset = None
-    dataset_id = filters.get('dataset_id')
-    if dataset_id:
-        qs = qs.filter(dataset_id=dataset_id)
-        dataset = get_dataset(user, str(dataset_id))
+    selected_ids = resolve_dataset_ids_filter(user, filters)
+    if selected_ids is not None:
+        if not selected_ids:
+            return [], {'page': page, 'page_size': page_size, 'total': 0, 'sort': filters.get('sort') or '-created_at'}
+        qs = qs.filter(dataset_id__in=selected_ids)
+        if len(selected_ids) == 1:
+            dataset = get_dataset(user, str(selected_ids[0]))
+    else:
+        dataset_id = filters.get('dataset_id')
+        if dataset_id:
+            qs = qs.filter(dataset_id=dataset_id)
+            dataset = get_dataset(user, str(dataset_id))
 
     default_sort = _default_sort_for_dataset(dataset) if dataset else '-created_at'
     qs = filter_listings_queryset(
@@ -621,4 +649,79 @@ def search_listings(
         'page_size': page_size,
         'total': paginator.count,
         'sort': filters.get('sort') or default_sort,
+    }
+
+
+def multi_dataset_listings_map_payload(user, params, *, marker_limit: int = 500) -> Dict[str, Any]:
+    """Viewport map for cross-dataset listing search (Epic 03)."""
+    from mobile_api.serializers import normalize_external_image_url
+    from mobile_api.services.crm_map_mobile import _parse_bounds
+    from workspace.services.charts import map_markers
+    from workspace.services.display import transaction_profile
+    from workspace.services.filters import parse_filter_params_from_mapping
+
+    if not has_active_bot_license(user):
+        return {'markers': [], 'geo_count': 0, 'markers_shown': 0, 'config': {}}
+
+    filters = parse_filter_params_from_mapping(params)
+    get = params.get if hasattr(params, 'get') else dict(params).get
+    try:
+        limit = int(get('limit') or marker_limit)
+    except (TypeError, ValueError):
+        limit = marker_limit
+    limit = max(1, min(limit, 2500))
+
+    qs = Listing.objects.filter(dataset__user=user, dataset__is_active=True).select_related('dataset')
+    selected_ids = resolve_dataset_ids_filter(user, filters)
+    if selected_ids is not None:
+        if not selected_ids:
+            return {'markers': [], 'geo_count': 0, 'markers_shown': 0, 'config': {}}
+        qs = qs.filter(dataset_id__in=selected_ids)
+
+    qs = filter_listings_queryset(user, qs, filters, dataset=None, default_sort='-created_at')
+    qs = qs.exclude(latitude__isnull=True).exclude(longitude__isnull=True)
+
+    bounds = _parse_bounds(params)
+    if bounds:
+        north, south, east, west = bounds
+        qs = qs.filter(
+            latitude__gte=south,
+            latitude__lte=north,
+            longitude__gte=west,
+            longitude__lte=east,
+        )
+
+    geo_count = qs.count()
+    sampled = list(qs[:limit])
+    tx_types = {(lst.dataset.transaction_type or '') for lst in sampled if lst.dataset}
+    if len(tx_types) == 1:
+        transaction_type = next(iter(tx_types))
+    elif {'فروش', 'اجاره'} <= tx_types:
+        transaction_type = 'ترکیبی'
+    elif tx_types == {'اجاره'}:
+        transaction_type = 'اجاره'
+    else:
+        transaction_type = 'فروش'
+
+    markers = map_markers(sampled, transaction_type=transaction_type)
+    for marker, lst in zip(markers, sampled):
+        if lst.dataset_id:
+            marker['dataset_id'] = str(lst.dataset_id)
+            marker['dataset_name'] = lst.dataset.name if lst.dataset else ''
+        thumb = marker.get('thumb')
+        if thumb:
+            marker['thumb'] = normalize_external_image_url(str(thumb))
+
+    tx = transaction_profile(transaction_type)
+    return {
+        'markers': markers,
+        'geo_count': geo_count,
+        'markers_shown': len(markers),
+        'markers_truncated': geo_count > limit,
+        'config': {
+            'dataset_name': 'همه آگهی‌ها',
+            'is_rent': bool(tx['is_rent'] and not tx['is_sale']),
+            'filter_value_label': 'رهن کامل' if (tx['is_rent'] and not tx['is_sale']) else 'قیمت',
+            'map_cluster': True,
+        },
     }

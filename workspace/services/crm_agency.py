@@ -424,3 +424,45 @@ def bulk_assign_leads(actor, customer_ids: List[int], member_id: int) -> int:
         })
     return count
 
+
+@transaction.atomic
+def transfer_agency_lead(
+    actor,
+    customer: Customer,
+    to_member_id: int,
+    *,
+    note: str = '',
+) -> Customer:
+    """انتقال سرنخ/مخاطب — مالک پرونده یا مدیر آژانس (با لاگ انتقال)."""
+    if customer.user_id == actor.id:
+        return transfer_customer(actor, customer, to_member_id, note=note)
+    if not can_manage_team(actor):
+        raise ValueError('فقط مالک پرونده یا مدیر می‌تواند منتقل کند')
+    m = get_membership(actor)
+    if not m or customer.agency_id != m.agency_id:
+        raise ValueError('مخاطب در آژانس شما نیست')
+    to_member = CRMAgencyMember.objects.get(pk=to_member_id, agency=m.agency, is_active=True)
+    from_user = customer.assigned_to or customer.user
+    customer.assigned_to = to_member.user
+    customer.user = to_member.user
+    customer.save(update_fields=['assigned_to', 'user', 'updated_at'])
+    customer.shares.all().delete()
+    CustomerTransferLog.objects.create(
+        agency=m.agency,
+        customer=customer,
+        from_user=from_user,
+        to_user=to_member.user,
+        transferred_by=actor,
+        note=(note or '').strip()[:300],
+    )
+    log_activity(
+        customer, 'یادداشت',
+        title='انتقال پرونده',
+        content=f'به {member_display(to_member)}',
+    )
+    log_agency_audit(m.agency, actor, 'lead.transferred', {
+        'customer_id': customer.pk,
+        'member_id': to_member.pk,
+    })
+    return customer
+

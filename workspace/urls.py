@@ -17,10 +17,12 @@ from workspace import (
 )
 from workspace.academy import api_views as academy_api_views
 from workspace.academy import views as academy_views
+from workspace.app_bridge_views import WorkspaceAppBridgeView
 
 app_name = 'workspace'
 
 urlpatterns = [
+    path('app-bridge/<str:token>/', WorkspaceAppBridgeView.as_view(), name='app_bridge'),
     path('', views.WorkspaceHomeView.as_view(), name='home'),
     path('api/onboarding/complete/', views.OnboardingCompleteView.as_view(), name='onboarding_complete'),
     path('api/export-security/verify-password/', export_security_views.ExportSecurityVerifyPasswordView.as_view(), name='export_security_verify_password'),

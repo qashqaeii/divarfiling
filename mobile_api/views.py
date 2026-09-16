@@ -1434,6 +1434,116 @@ class DealTimelineView(APIView):
         return api_ok(payload)
 
 
+class DealDuplicateCheckView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        from mobile_api.services.deal_duplicate_mobile import duplicate_deal_payload
+
+        try:
+            property_id = int(request.GET.get('property_id') or 0)
+            customer_id = int(request.GET.get('customer_id') or 0)
+        except (TypeError, ValueError):
+            return api_error('پارامتر نامعتبر است.', code='VALIDATION_ERROR')
+        if not property_id or not customer_id:
+            return api_error('ملک و مخاطب الزامی است.', code='VALIDATION_ERROR')
+        try:
+            payload = duplicate_deal_payload(
+                request.user,
+                property_id=property_id,
+                customer_id=customer_id,
+            )
+        except ValueError as exc:
+            return api_error(str(exc), code='VALIDATION_ERROR')
+        return api_ok(payload)
+
+
+class DealJourneyView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, deal_id):
+        from mobile_api.services.deal_journey_mobile import deal_journey_payload
+
+        payload = deal_journey_payload(request.user, deal_id)
+        if not payload:
+            return api_error('معامله یافت نشد.', code='NOT_FOUND', status=404)
+        return api_ok(payload)
+
+
+class DealContractsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, deal_id):
+        from mobile_api.services.deal_contracts_mobile import deal_contracts_payload
+
+        payload = deal_contracts_payload(request.user, deal_id)
+        if not payload:
+            return api_error('معامله یافت نشد.', code='NOT_FOUND', status=404)
+        return api_ok(payload)
+
+    def post(self, request, deal_id):
+        from mobile_api.services.deal_contracts_mobile import create_deal_contract
+
+        data = _parse_body(request)
+        contract_type = (data.get('contract_type') or '').strip()
+        try:
+            payload = create_deal_contract(
+                request.user,
+                deal_id,
+                contract_type=contract_type,
+            )
+        except ValueError as exc:
+            return api_error(str(exc), code='VALIDATION_ERROR')
+        return api_ok(payload, status=201)
+
+
+class DealCommissionSplitsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, deal_id):
+        from mobile_api.services.deal_commission_mobile import commission_splits_payload
+
+        payload = commission_splits_payload(request.user, deal_id)
+        if not payload:
+            return api_error('معامله یافت نشد.', code='NOT_FOUND', status=404)
+        return api_ok(payload)
+
+    def post(self, request, deal_id):
+        from mobile_api.services.deal_commission_mobile import save_commission_splits
+
+        data = _parse_body(request)
+        splits = data.get('splits') or []
+        if not isinstance(splits, list):
+            return api_error('فرمت نامعتبر است.', code='VALIDATION_ERROR')
+        try:
+            payload = save_commission_splits(request.user, deal_id, splits)
+        except ValueError as exc:
+            return api_error(str(exc), code='VALIDATION_ERROR')
+        return api_ok(payload)
+
+
+class WorkspaceBridgeView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        from mobile_api.services.workspace_bridge import (
+            build_bridge_consume_url,
+            create_bridge_token,
+        )
+
+        data = _parse_body(request)
+        path = (data.get('path') or data.get('redirect_path') or '').strip()
+        try:
+            token, normalized = create_bridge_token(request.user.pk, path)
+        except ValueError as exc:
+            return api_error(str(exc), code='VALIDATION_ERROR')
+        return api_ok({
+            'bridge_url': build_bridge_consume_url(token, request=request),
+            'path': normalized,
+            'expires_in': 300,
+        })
+
+
 class PropertiesListView(APIView):
     permission_classes = [IsAuthenticated]
 

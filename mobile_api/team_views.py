@@ -286,7 +286,7 @@ class TeamLeadInboxView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        from mobile_api.services.team_mobile import serialize_inbox_leads
+        from mobile_api.services.agency_mobile import serialize_inbox_leads_enriched
         from workspace.services.crm_scope import can_operate_team_leads
 
         membership, err = _require_membership(request.user)
@@ -294,8 +294,11 @@ class TeamLeadInboxView(APIView):
             return err
         if not can_operate_team_leads(request.user):
             return api_error('دسترسی به صندوق سرنخ ندارید.', code='FORBIDDEN', status=403)
-        leads = serialize_inbox_leads(membership.agency)
-        return api_ok({'leads': leads, 'count': len(leads)})
+        filter_key = (request.query_params.get('filter') or 'all').strip()
+        if filter_key not in ('all', 'fresh', 'stale'):
+            filter_key = 'all'
+        leads = serialize_inbox_leads_enriched(membership.agency, filter_key=filter_key)
+        return api_ok({'leads': leads, 'count': len(leads), 'filter': filter_key})
 
     def post(self, request):
         from workspace.services.crm_agency import bulk_assign_leads

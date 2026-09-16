@@ -1,7 +1,7 @@
 """URLهای API موبایل — /api/mobile/v1/"""
 from django.urls import path
 
-from mobile_api import commerce_views, export_security_views, team_views, views
+from mobile_api import agency_views, commerce_views, contracts_views, epic03_views, export_security_views, team_views, views
 
 app_name = 'mobile_api'
 
@@ -83,6 +83,23 @@ urlpatterns = [
     path('crm/deals/<int:deal_id>/next-action', views.DealNextActionView.as_view(), name='deal_next_action'),
     path('crm/deals/<int:deal_id>/next-action/complete', views.DealCompleteNextActionView.as_view(), name='deal_complete_next_action'),
     path('crm/deals/<int:deal_id>/timeline', views.DealTimelineView.as_view(), name='deal_timeline'),
+    path('crm/deals/duplicate-check', views.DealDuplicateCheckView.as_view(), name='deal_duplicate_check'),
+    path('crm/deals/<int:deal_id>/journey', views.DealJourneyView.as_view(), name='deal_journey'),
+    path('crm/deals/<int:deal_id>/contracts', views.DealContractsView.as_view(), name='deal_contracts'),
+    path('crm/deals/<int:deal_id>/commission-splits', views.DealCommissionSplitsView.as_view(), name='deal_commission_splits'),
+    path('workspace/bridge', views.WorkspaceBridgeView.as_view(), name='workspace_bridge'),
+
+    path('contracts', contracts_views.ContractsListCreateView.as_view(), name='contracts'),
+    path('contracts/<int:contract_id>', contracts_views.ContractDetailView.as_view(), name='contract_detail'),
+    path('contracts/<int:contract_id>/timeline', contracts_views.ContractTimelineView.as_view(), name='contract_timeline'),
+    path('contracts/<int:contract_id>/attachments', contracts_views.ContractAttachmentsView.as_view(), name='contract_attachments'),
+    path(
+        'contracts/<int:contract_id>/attachments/<int:attachment_id>',
+        contracts_views.ContractAttachmentDownloadView.as_view(),
+        name='contract_attachment_download',
+    ),
+    path('contracts/<int:contract_id>/pdf', contracts_views.ContractPdfView.as_view(), name='contract_pdf'),
+    path('contracts/<int:contract_id>/handover', contracts_views.ContractHandoverView.as_view(), name='contract_handover'),
     path('crm/properties', views.PropertiesListView.as_view(), name='properties'),
     path('crm/properties/export', views.PropertiesExportView.as_view(), name='properties_export'),
     path('crm/properties/<int:property_id>', views.PropertyDetailView.as_view(), name='property_detail'),
@@ -113,7 +130,14 @@ urlpatterns = [
     path('crm/properties/<int:property_id>/documents', views.PropertyDocumentsView.as_view(), name='property_documents'),
     path('crm/properties/<int:property_id>/documents/<int:document_id>', views.PropertyDocumentDetailView.as_view(), name='property_document_detail'),
     path('crm/properties/<int:property_id>/images', views.PropertyImagesView.as_view(), name='property_images'),
+    path('crm/properties/map', epic03_views.CrmPropertyMapView.as_view(), name='crm_properties_map'),
+    path(
+        'crm/properties/<int:property_id>/team-shares',
+        epic03_views.PropertyTeamSharesView.as_view(),
+        name='property_team_shares',
+    ),
 
+    path('search/global', epic03_views.GlobalSearchView.as_view(), name='global_search'),
     path('filing/datasets', views.DatasetsListView.as_view(), name='datasets'),
     path('filing/datasets/<uuid:dataset_id>', views.DatasetDetailView.as_view(), name='dataset_detail'),
     path('filing/datasets/<uuid:dataset_id>/delete-consultants', views.DatasetDeleteConsultantsView.as_view(), name='dataset_delete_consultants'),
@@ -123,7 +147,9 @@ urlpatterns = [
     path('filing/datasets/<uuid:dataset_id>/insights', views.DatasetInsightsView.as_view(), name='dataset_insights'),
     path('filing/datasets/<uuid:dataset_id>/map', views.DatasetMapView.as_view(), name='dataset_map'),
     path('filing/search', views.FilingSearchView.as_view(), name='filing_search'),
+    path('filing/listings/map', epic03_views.FilingListingsMapView.as_view(), name='filing_listings_map'),
     path('filing/listings/<str:token>', views.ListingDetailView.as_view(), name='listing_detail'),
+    path('filing/listings/<str:token>/benchmark', epic03_views.ListingBenchmarkView.as_view(), name='listing_benchmark'),
     path('filing/listings/<str:token>/meta', views.ListingMetaView.as_view(), name='listing_meta'),
     path('filing/listings/<str:token>/favorite', views.ListingFavoriteView.as_view(), name='listing_favorite'),
     path('filing/listings/<str:token>/contacts/<int:link_id>', views.ListingLinkedContactDeleteView.as_view(), name='listing_linked_contact_delete'),
@@ -141,6 +167,15 @@ urlpatterns = [
     path('ai/summarize-listing', views.AISummarizeListingView.as_view(), name='ai_summarize_listing'),
     path('ai/summarize-property', views.AISummarizePropertyView.as_view(), name='ai_summarize_property'),
 
+    path('agency/home', agency_views.AgencyHomeView.as_view(), name='agency_home'),
+    path('agency/advisors', agency_views.AgencyAdvisorsView.as_view(), name='agency_advisors'),
+    path('agency/advisors/<int:member_id>', agency_views.AgencyAdvisorDetailView.as_view(), name='agency_advisor_detail'),
+    path('agency/advisors/<int:member_id>/actions', agency_views.AgencyAdvisorActionView.as_view(), name='agency_advisor_action'),
+    path('agency/invitations', agency_views.AgencyInvitationsView.as_view(), name='agency_invitations'),
+    path('agency/invitations/<int:invitation_id>', agency_views.AgencyInvitationActionView.as_view(), name='agency_invitation_action'),
+    path('agency/seats', agency_views.AgencySeatsView.as_view(), name='agency_seats'),
+    path('agency/performance', agency_views.AgencyPerformanceView.as_view(), name='agency_performance'),
+
     path('crm/team/overview', team_views.TeamOverviewView.as_view(), name='team_overview'),
     path('crm/team/members', team_views.TeamMembersView.as_view(), name='team_members'),
     path('crm/team/unread', team_views.TeamUnreadView.as_view(), name='team_unread'),
@@ -150,6 +185,8 @@ urlpatterns = [
     path('crm/team/announcements/<int:announcement_id>', team_views.TeamAnnouncementDetailView.as_view(), name='team_announcement_detail'),
     path('crm/team/notifications', team_views.TeamPanelNotificationsView.as_view(), name='team_notifications'),
     path('crm/team/inbox', team_views.TeamLeadInboxView.as_view(), name='team_inbox'),
+    path('crm/team/leads/<int:customer_id>/assign', agency_views.AgencyLeadAssignView.as_view(), name='team_lead_assign'),
+    path('crm/team/leads/<int:customer_id>/transfer', agency_views.AgencyLeadTransferView.as_view(), name='team_lead_transfer'),
     path('crm/contacts/<int:contact_id>/assign', team_views.ContactAssignView.as_view(), name='contact_assign'),
     path('crm/contacts/<int:contact_id>/transfer', team_views.ContactTransferView.as_view(), name='contact_transfer'),
 

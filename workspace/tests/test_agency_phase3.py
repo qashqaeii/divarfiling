@@ -169,6 +169,41 @@ class DealsScopeTests(AgencyPhase3Base):
 
 
 class ContractsScopeTests(AgencyPhase3Base):
+    def _make_contract(self, **kwargs):
+        from contracts.services.tokens import generate_bearer_token
+        _, th = generate_bearer_token()
+        defaults = {
+            'contract_type': 'lease',
+            'internal_number': f'C-{uuid.uuid4().hex[:8]}',
+            'verification_token_hash': th,
+            'title': 'Test Contract',
+        }
+        defaults.update(kwargs)
+        return Contract.objects.create(**defaults)
+
+    def test_dashboard_contracts_qs_excludes_colleague_standalone(self):
+        """داشبورد قراردادها — قرارداد مستقل هم‌تیمی در لیست من نیاید."""
+        from contracts.services.scope import contracts_qs
+
+        colleague = self._make_contract(
+            user=self.advisor_a,
+            agency=self.agency_a,
+            deal=None,
+        )
+        self.assertIn(colleague, list(contracts_qs(self.advisor_a)))
+        self.assertNotIn(colleague, list(contracts_qs(self.owner_a)))
+
+    def test_dashboard_contracts_qs_excludes_colleague_deal_contract(self):
+        from contracts.services.scope import contracts_qs
+
+        colleague = self._make_contract(
+            user=self.advisor_a,
+            agency=self.agency_a,
+            deal=self.deal_a,
+        )
+        self.assertIn(colleague, list(contracts_qs(self.advisor_a)))
+        self.assertNotIn(colleague, list(contracts_qs(self.owner_a)))
+
     def test_owner_without_seat_can_read_advisor_contract(self):
         from contracts.services.tokens import generate_bearer_token
         raw, th = generate_bearer_token()

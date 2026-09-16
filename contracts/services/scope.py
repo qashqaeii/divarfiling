@@ -4,18 +4,24 @@ from __future__ import annotations
 from django.db.models import Prefetch, Q, QuerySet
 
 from contracts.models import Contract, ContractParty, ContractVersion, ContractWitness
-from workspace.services.crm_scope import deals_qs, get_agency, get_membership
+from workspace.services.crm_scope import deals_qs, get_membership
 
 
 def contracts_qs(user) -> QuerySet:
-    """قراردادهای قابل مشاهده کاربر."""
+    """قراردادهای قابل مشاهده کاربر — هم‌راستا با deals_qs و مالکیت ایجادکننده.
+
+    داشبورد «قراردادها» فقط برای کاربر جاری است:
+    - قراردادهای معاملاتی که معامله‌شان در deals_qs کاربر باشد (خود + اشتراک)
+    - قراردادهای مستقل (بدون معامله) که خود کاربر ایجاد کرده باشد
+
+    مشاهدهٔ قراردادهای دیگر اعضای آژانس از مسیر Agency Hub / get_member_contracts_qs است.
+    """
     if not user or not user.is_authenticated:
         return Contract.objects.none()
     deal_ids = deals_qs(user).values_list('pk', flat=True)
-    agency = get_agency(user)
     scope = Q(deal_id__in=deal_ids)
-    if agency:
-        scope |= Q(agency=agency)
+    if get_membership(user):
+        scope |= Q(user=user, deal__isnull=True)
     else:
         scope |= Q(user=user, agency__isnull=True)
     version_qs = ContractVersion.objects.select_related('property_snapshot').prefetch_related(

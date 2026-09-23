@@ -8,11 +8,10 @@ from typing import Any, Dict, List, Optional, Set, Tuple
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 
-from accounts.phone_utils import is_valid_iran_mobile
+from accounts.phone_utils import resolve_contact_phones
 from ai_workspace.services.nl_command.contact_areas import map_area_names, parse_areas_input
 from ai_workspace.services.nl_command.datetime_parser import _local_now, _resolve_relative_date
 from workspace.constants import CRM_PRIORITIES, CRM_PROPERTIES, CRM_SOURCES, CRM_STATUSES, CRM_TYPES
-from workspace.services.crm import normalize_phone
 from workspace.services.filters import get_user_dataset_neighborhoods
 
 # مقادیر پیش‌فرض CRM — اگر LLM آن‌ها را پر کند، در preview explicit نیستند.
@@ -270,6 +269,7 @@ def validate_contact_parse(
     user=None,
     tz_name: str = 'Asia/Tehran',
     prior_explicit: Optional[List[str]] = None,
+    user_text: str = '',
 ) -> Tuple[Dict[str, Any], List[str], List[str], Optional[str]]:
     ambiguous = list(llm_ambiguous or [])
     error_message: Optional[str] = None
@@ -287,22 +287,22 @@ def validate_contact_parse(
     name = _clean_name(flat_in.get('name'))
 
     phone_raw = flat_in.get('phone')
-    phone = ''
-    if phone_raw:
-        phone = normalize_phone(str(phone_raw))
-        if not is_valid_iran_mobile(phone):
-            ambiguous = _merge_missing(ambiguous, ['phone'])
-            error_message = error_message or 'شماره تماس واردشده معتبر نیست.'
-            phone_was_invalid = True
-            phone = ''
-
-    phone_alt = ''
-    if flat_in.get('phone_alt'):
-        phone_alt = normalize_phone(str(flat_in.get('phone_alt')))
-        if phone_alt and not is_valid_iran_mobile(phone_alt):
-            ambiguous = _merge_missing(ambiguous, ['phone_alt'])
-            error_message = error_message or 'شماره دوم نامعتبر است.'
-            phone_alt = ''
+    phone, phone_alt, phone_was_invalid, phone_ambiguous = resolve_contact_phones(
+        phone_raw,
+        flat_in.get('phone_alt'),
+        user_text=user_text,
+    )
+    if phone_ambiguous:
+        ambiguous = _merge_missing(ambiguous, ['phone'])
+        error_message = error_message or 'شماره تماس واردشده معتبر نیست.'
+        phone = ''
+        phone_alt = ''
+        phone_was_invalid = True
+    elif phone_was_invalid:
+        ambiguous = _merge_missing(ambiguous, ['phone'])
+        error_message = error_message or 'شماره تماس واردشده معتبر نیست.'
+        phone = ''
+        phone_alt = ''
 
     email = (flat_in.get('email') or '').strip()
     if email:

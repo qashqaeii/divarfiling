@@ -25,15 +25,9 @@ from workspace.services.crm_scope import (
 
 def normalize_phone(phone: str) -> str:
     """نرمال‌سازی شماره — ارقام فارسی/عربی و پیش‌شماره ایران."""
-    if not phone:
-        return ''
-    s = str(phone).strip().translate(str.maketrans('۰۱۲۳۴۵۶۷۸۹٠١٢٣٤٥٦٧٨٩', '01234567890123456789'))
-    s = re.sub(r'\D', '', s)
-    if s.startswith('98') and len(s) >= 12:
-        s = '0' + s[2:]
-    elif s.startswith('9') and len(s) == 10:
-        s = '0' + s
-    return s
+    from accounts.phone_utils import normalize_phone as _normalize_phone
+
+    return _normalize_phone(phone)
 
 
 def find_customer_by_phone(user, phone: str) -> Optional[Customer]:

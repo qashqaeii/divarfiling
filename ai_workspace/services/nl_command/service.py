@@ -204,6 +204,7 @@ def _parse_create_contact(
         llm_ambiguous=ambiguous_fields,
         user=user,
         tz_name=tz_name,
+        user_text=user_text,
     )
 
     if prior_state and prior_state.get('intent') == NL_COMMAND_INTENT_CREATE_CONTACT:
@@ -215,6 +216,7 @@ def _parse_create_contact(
             user=user,
             tz_name=tz_name,
             prior_explicit=list(merged.get('_explicit_fields') or []),
+            user_text=user_text,
         )
         if (merged.get('name') and merged.get('phone')
                 and (not validated.get('name') or not validated.get('phone'))):
@@ -313,6 +315,7 @@ def _parse_create_personal_property(
         inner,
         llm_missing=missing_fields,
         llm_ambiguous=ambiguous_fields,
+        user_text=user_text,
     )
 
     if prior_state and prior_state.get('intent') == NL_COMMAND_INTENT_CREATE_PERSONAL_PROPERTY:
@@ -322,6 +325,7 @@ def _parse_create_personal_property(
             llm_missing=missing_fields,
             llm_ambiguous=ambiguous_fields,
             prior_explicit=validated.get('_explicit_fields'),
+            user_text=user_text,
         )
 
     can_confirm = (

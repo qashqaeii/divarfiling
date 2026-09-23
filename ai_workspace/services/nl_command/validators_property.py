@@ -3,14 +3,13 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional, Set, Tuple
 
-from accounts.phone_utils import is_valid_iran_mobile
+from accounts.phone_utils import normalize_phone_field
 from workspace.constants import (
     CRM_PROPERTIES,
     PROPERTY_DEAL_MODES,
     PROPERTY_PUBLISH_STATUSES,
     PROPERTY_TX_STATUSES,
 )
-from workspace.services.crm import normalize_phone
 from workspace.services.jalali_input import to_persian_digits
 from workspace.services.property_public_share import (
     property_amenity_checkbox_labels,
@@ -390,6 +389,7 @@ def validate_property_parse(
     llm_missing: List[str],
     llm_ambiguous: List[str],
     prior_explicit: Optional[List[str]] = None,
+    user_text: str = '',
 ) -> Tuple[Dict[str, Any], List[str], List[str], Optional[str]]:
     ambiguous = list(llm_ambiguous or [])
     error_message: Optional[str] = None
@@ -512,8 +512,12 @@ def validate_property_parse(
 
     phone = ''
     if flat.get('phone'):
-        phone = normalize_phone(str(flat.get('phone')))
-        if not is_valid_iran_mobile(phone):
+        phone, phone_was_invalid, phone_ambiguous = normalize_phone_field(
+            flat.get('phone'),
+            user_text=user_text,
+            allow_text_fallback=False,
+        )
+        if phone_ambiguous or phone_was_invalid or not phone:
             ambiguous = _merge_missing(ambiguous, ['phone'])
             error_message = error_message or 'شماره تماس مالک نامعتبر است.'
             phone = ''

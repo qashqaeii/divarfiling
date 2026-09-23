@@ -14,7 +14,8 @@ from ai_workspace.providers.base import ProviderResult
 from ai_workspace.services.nl_command.errors import NLCommandError
 from ai_workspace.services.nl_command.service import confirm_command, parse_command
 from ai_workspace.services.nl_command.state import load_state
-from ai_workspace.services.nl_command.validators_property import validate_property_parse
+from ai_workspace.services.nl_command.preview import build_property_preview
+from ai_workspace.services.nl_command.validators_property import build_nl_property_title, validate_property_parse
 from workspace.models import CRMProperty, Customer, Reminder
 
 User = get_user_model()
@@ -251,3 +252,114 @@ class NLCommandPropertyTests(TestCase):
             )
         self.assertEqual(second['command_id'], cid)
         self.assertTrue(second['can_confirm'])
+
+    def test_build_year_short_form(self):
+        validated, missing, ambiguous, _ = validate_property_parse(
+            {
+                'specs': {'build_year': 98},
+                'area': 100,
+                'deal_mode': 'فروش',
+            },
+            llm_missing=[],
+            llm_ambiguous=[],
+        )
+        self.assertEqual(validated['build_year'], 1398)
+        self.assertFalse(ambiguous)
+
+    def test_default_apartment_not_explicit_preview(self):
+        validated, _, _, _ = validate_property_parse(
+            {
+                'property_type': 'آپارتمان',
+                'deal_mode': 'فروش',
+                'location': {'neighborhood': 'پونک'},
+                'area': 120,
+                'financial': {'sale_price': 1_000_000_000},
+            },
+            llm_missing=[],
+            llm_ambiguous=[],
+        )
+        self.assertNotIn('property_type', validated.get('_explicit_fields') or [])
+
+    def test_sale_rent_conflict(self):
+        validated, missing, ambiguous, _ = validate_property_parse(
+            {
+                'area': 100,
+                'financial': {'sale_price': 1_000_000_000, 'deposit': 100_000_000},
+            },
+            llm_missing=[],
+            llm_ambiguous=[],
+        )
+        self.assertIn('deal_mode', ambiguous)
+        self.assertFalse(validated.get('deal_mode'))
+
+    def test_title_auto_without_hallucinated_type(self):
+        validated = {
+            'area': 120.0,
+            'neighborhood': 'پونک',
+            'property_type': '',
+            '_explicit_fields': ['area', 'neighborhood'],
+        }
+        title = build_nl_property_title(validated)
+        self.assertIn('متری', title)
+        self.assertIn('پونک', title)
+        self.assertNotIn('آپارتمان', title)
+
+    @_patch_chain_json(_property_json(area=120))
+    def test_correction_override_area(self, _chain):
+        first = parse_command(self.user, text='۱۲۰ متر فروش')
+        cid = first['command_id']
+        with _patch_chain_json(_property_json(area=130, deal_mode='فروش', sale_price=12_000_000_000)):
+            second = parse_command(self.user, text='نه ۱۳۰ متر', command_id=cid)
+        state = load_state(self.user.pk, cid)
+        self.assertEqual(state['validated']['area'], 130)
+
+    def test_owner_phone_explicit(self):
+        validated, missing, ambiguous, _ = validate_property_parse(
+            {
+                'area': 90,
+                'deal_mode': 'فروش',
+                'owner': {'phone': '09121234567', 'owner_name': 'رضایی'},
+            },
+            llm_missing=[],
+            llm_ambiguous=[],
+        )
+        self.assertEqual(validated['phone'], '09121234567')
+        self.assertIn('phone', validated['_explicit_fields'])
+        self.assertFalse(missing)
+        preview = build_property_preview(validated)
+        owner_sec = next((s for s in preview['sections'] if 'مالک' in (s.get('title') or '')), None)
+        self.assertIsNotNone(owner_sec)
+        joined = ' '.join(owner_sec['lines'])
+        self.assertIn('نام مالک:', joined)
+        self.assertIn('شماره مالک:', joined)
+        self.assertNotIn('مخاطب', joined)
+
+    def test_crm_source_ignored_not_in_preview(self):
+        validated, _, ambiguous, _ = validate_property_parse(
+            {
+                'area': 100,
+                'deal_mode': 'فروش',
+                'crm': {'source': 'معرف'},
+            },
+            llm_missing=[],
+            llm_ambiguous=[],
+        )
+        self.assertFalse(ambiguous)
+        self.assertNotIn('source', validated)
+        preview = build_property_preview(validated)
+        blob = str(preview.get('sections'))
+        self.assertNotIn('منبع', blob)
+        self.assertNotIn('معرف', blob)
+
+    def test_notes_for_unstructured_descriptor(self):
+        validated, _, ambiguous, _ = validate_property_parse(
+            {
+                'area': 100,
+                'deal_mode': 'فروش',
+                'notes': 'خیلی خوش‌نقشه و نورگیر',
+            },
+            llm_missing=[],
+            llm_ambiguous=[],
+        )
+        self.assertIn('خوش', validated['notes'])
+        self.assertFalse(ambiguous)

@@ -245,21 +245,92 @@ def _normalize_property_location(inner: Dict[str, Any]) -> Dict[str, Any]:
 
 def _normalize_property_data(inner: Dict[str, Any]) -> Dict[str, Any]:
     loc = _normalize_property_location(inner)
+    specs = inner.get('specs') if isinstance(inner.get('specs'), dict) else {}
+    features = inner.get('features') if isinstance(inner.get('features'), dict) else {}
+    financial = inner.get('financial') if isinstance(inner.get('financial'), dict) else {}
+    crm = inner.get('crm') if isinstance(inner.get('crm'), dict) else {}
+    owner = inner.get('owner') if isinstance(inner.get('owner'), dict) else {}
+
     amenities = inner.get('amenities')
+    if amenities is None:
+        amenities = features.get('amenity_labels')
     if isinstance(amenities, list):
         amenities_norm = [str(x).strip() for x in amenities if str(x).strip()]
     else:
         amenities_norm = amenities
+
+    def _pick(*keys):
+        for key in keys:
+            if key[0] is not None and key[0].get(key[1]) is not None:
+                return key[0].get(key[1])
+            if key[2] is not None:
+                return key[2]
+        return None
+
     return {
         'title': _nullable_str(inner.get('title')),
         'property_type': _nullable_str(inner.get('property_type')),
         'deal_mode': _nullable_str(inner.get('deal_mode')),
         'location': loc,
-        'area': _nullable_float(inner.get('area')),
-        'rooms': _nullable_str(inner.get('rooms')) if inner.get('rooms') is not None else None,
-        'floor': _nullable_int(inner.get('floor')),
-        'total_floors': _nullable_int(inner.get('total_floors')),
-        'build_year': _nullable_int(inner.get('build_year')),
+        'specs': {
+            'area': _nullable_float(_pick((specs, 'area', inner.get('area')))),
+            'rooms': _nullable_str(_pick((specs, 'rooms', inner.get('rooms')))),
+            'floor': _nullable_int(_pick((specs, 'floor', inner.get('floor')))),
+            'total_floors': _nullable_int(_pick((specs, 'total_floors', inner.get('total_floors')))),
+            'build_year': _nullable_int(_pick((specs, 'build_year', inner.get('build_year')))),
+        },
+        'features': {
+            'has_parking': _nullable_bool(
+                features.get('has_parking') if features.get('has_parking') is not None else inner.get('has_parking')
+            ),
+            'has_storage': _nullable_bool(
+                features.get('has_storage') if features.get('has_storage') is not None else inner.get('has_storage')
+            ),
+            'has_elevator': _nullable_bool(
+                features.get('has_elevator') if features.get('has_elevator') is not None else inner.get('has_elevator')
+            ),
+            'is_vacant': _nullable_bool(
+                features.get('is_vacant') if features.get('is_vacant') is not None else inner.get('is_vacant')
+            ),
+            'amenity_labels': amenities_norm if isinstance(amenities_norm, list) else None,
+        },
+        'financial': {
+            'sale_price': _nullable_int(
+                financial.get('sale_price') if financial.get('sale_price') is not None else inner.get('sale_price')
+            ),
+            'deposit': _nullable_int(
+                financial.get('deposit') if financial.get('deposit') is not None else inner.get('deposit')
+            ),
+            'monthly_rent': _nullable_int(
+                financial.get('monthly_rent') if financial.get('monthly_rent') is not None else inner.get('monthly_rent')
+            ),
+        },
+        'crm': {
+            'transaction_status': _nullable_str(
+                crm.get('transaction_status') if crm.get('transaction_status') is not None else inner.get('transaction_status')
+            ),
+            'publish_status': _nullable_str(
+                crm.get('publish_status') if crm.get('publish_status') is not None else inner.get('publish_status')
+            ),
+            'business_type': _nullable_str(
+                crm.get('business_type') if crm.get('business_type') is not None else inner.get('business_type')
+            ),
+        },
+        'owner': {
+            'phone': _nullable_str(owner.get('phone') if owner.get('phone') is not None else inner.get('phone')),
+            'owner_name': _nullable_str(
+                owner.get('owner_name') if owner.get('owner_name') is not None else inner.get('owner_name')
+            ),
+        },
+        'area': _nullable_float(inner.get('area') if inner.get('area') is not None else specs.get('area')),
+        'rooms': _nullable_str(inner.get('rooms')) if inner.get('rooms') is not None else _nullable_str(specs.get('rooms')),
+        'floor': _nullable_int(inner.get('floor') if inner.get('floor') is not None else specs.get('floor')),
+        'total_floors': _nullable_int(
+            inner.get('total_floors') if inner.get('total_floors') is not None else specs.get('total_floors')
+        ),
+        'build_year': _nullable_int(
+            inner.get('build_year') if inner.get('build_year') is not None else specs.get('build_year')
+        ),
         'has_parking': _nullable_bool(inner.get('has_parking')),
         'has_storage': _nullable_bool(inner.get('has_storage')),
         'has_elevator': _nullable_bool(inner.get('has_elevator')),

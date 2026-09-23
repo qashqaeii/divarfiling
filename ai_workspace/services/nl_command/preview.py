@@ -224,65 +224,132 @@ def _fa_area(area: Optional[float]) -> str:
 
 
 def build_property_preview(validated: Dict[str, Any]) -> Dict[str, Any]:
-    deal = validated.get('deal_mode') or ''
-    ptype = validated.get('property_type') or ''
-    type_deal = ' · '.join(x for x in (ptype, deal) if x)
+    explicit_fields = set(validated.get('_explicit_fields') or [])
 
-    loc = (
-        validated.get('neighborhood')
-        or validated.get('district')
-        or validated.get('city')
-        or validated.get('address')
-        or ''
-    )
+    def _ex(field: str) -> bool:
+        return field in explicit_fields
+
+    header_parts: List[str] = []
+    if _ex('property_type') and validated.get('property_type'):
+        header_parts.append(validated['property_type'])
+    if _ex('deal_mode') and validated.get('deal_mode'):
+        header_parts.append(validated['deal_mode'])
+    type_deal = ' · '.join(header_parts)
+
+    sections: List[Dict[str, Any]] = []
+    if type_deal:
+        sections.append({'title': '', 'lines': [type_deal]})
+
+    loc_lines: List[str] = []
+    if _ex('neighborhood') and validated.get('neighborhood'):
+        loc_lines.append(validated['neighborhood'])
+    if _ex('district') and validated.get('district'):
+        loc_lines.append(validated['district'])
+    if _ex('city') and validated.get('city'):
+        loc_lines.append(validated['city'])
+    if _ex('address') and validated.get('address'):
+        loc_lines.append(validated['address'])
+    if loc_lines:
+        sections.append({'title': 'موقعیت', 'lines': loc_lines})
 
     specs: List[str] = []
-    area_s = _fa_area(validated.get('area'))
+    area_s = _fa_area(validated.get('area')) if validated.get('area') else ''
     if area_s:
         specs.append(f'{area_s} متر')
-    rooms = (validated.get('rooms') or '').strip()
-    if rooms:
-        specs.append(f'{to_persian_digits(rooms)} خواب')
+    if _ex('rooms') and (validated.get('rooms') or '').strip():
+        specs.append(f'{to_persian_digits(validated["rooms"])} خواب')
     floor = validated.get('floor')
-    if floor is not None:
-        specs.append(f'طبقه {to_persian_digits(str(floor))}')
+    total_floors = validated.get('total_floors')
+    if _ex('floor') and floor is not None:
+        if _ex('total_floors') and total_floors is not None:
+            specs.append(f'طبقه {to_persian_digits(str(floor))} از {to_persian_digits(str(total_floors))}')
+        else:
+            specs.append(f'طبقه {to_persian_digits(str(floor))}')
+    elif _ex('total_floors') and total_floors is not None:
+        specs.append(f'{to_persian_digits(str(total_floors))} طبقه')
+    if _ex('build_year') and validated.get('build_year'):
+        specs.append(f'ساخت {to_persian_digits(str(validated["build_year"]))}')
+    if specs:
+        sections.append({'title': 'مشخصات', 'lines': specs})
 
     features_positive: List[str] = []
     features_negative: List[str] = []
-    if validated.get('has_parking') is True:
-        features_positive.append('پارکینگ')
-    elif validated.get('has_parking') is False:
-        features_negative.append('بدون پارکینگ')
-    if validated.get('has_elevator') is True:
-        features_positive.append('آسانسور')
-    elif validated.get('has_elevator') is False:
-        features_negative.append('بدون آسانسور')
-    if validated.get('has_storage') is True:
-        features_positive.append('انباری')
-    elif validated.get('has_storage') is False:
-        features_negative.append('بدون انباری')
+    if _ex('has_parking'):
+        if validated.get('has_parking') is True:
+            features_positive.append('پارکینگ')
+        elif validated.get('has_parking') is False:
+            features_negative.append('بدون پارکینگ')
+    if _ex('has_elevator'):
+        if validated.get('has_elevator') is True:
+            features_positive.append('آسانسور')
+        elif validated.get('has_elevator') is False:
+            features_negative.append('بدون آسانسور')
+    if _ex('has_storage'):
+        if validated.get('has_storage') is True:
+            features_positive.append('انباری')
+        elif validated.get('has_storage') is False:
+            features_negative.append('بدون انباری')
+    if _ex('is_vacant') and validated.get('is_vacant') is True:
+        features_positive.append('تخلیه')
+    feat_lines = list(features_positive) + list(features_negative)
+    if _ex('amenities') and validated.get('amenities'):
+        for part in str(validated['amenities']).replace('\n', '،').split('،'):
+            label = part.strip()
+            if label:
+                feat_lines.append(label)
+    if feat_lines:
+        sections.append({'title': 'امکانات', 'lines': feat_lines})
 
-    sale_line = ''
-    deposit_line = ''
-    rent_line = ''
-    if validated.get('sale_price') is not None:
-        sale_line = format_toman(validated.get('sale_price'))
-    if validated.get('deposit') is not None:
-        deposit_line = format_toman(validated.get('deposit'))
-    if validated.get('monthly_rent') is not None:
-        rent_line = format_toman(validated.get('monthly_rent'))
+    fin_lines: List[str] = []
+    if _ex('sale_price') and validated.get('sale_price') is not None:
+        fin_lines.append(format_toman(validated.get('sale_price')))
+    if _ex('deposit') and validated.get('deposit') is not None:
+        fin_lines.append(f'ودیعه: {format_toman(validated.get("deposit"))}')
+    if _ex('monthly_rent') and validated.get('monthly_rent') is not None:
+        fin_lines.append(f'اجاره: {format_toman(validated.get("monthly_rent"))}')
+    if fin_lines:
+        sections.append({'title': 'مالی', 'lines': fin_lines})
+
+    crm_lines: List[str] = []
+    if _ex('transaction_status') and validated.get('transaction_status'):
+        crm_lines.append(f'وضعیت معامله: {validated["transaction_status"]}')
+    if _ex('publish_status') and validated.get('publish_status'):
+        crm_lines.append(f'انتشار: {validated["publish_status"]}')
+    if _ex('business_type') and validated.get('business_type'):
+        crm_lines.append(f'آگهی‌دهنده: {validated["business_type"]}')
+    if crm_lines:
+        sections.append({'title': 'سایر', 'lines': crm_lines})
+
+    owner_lines: List[str] = []
+    if _ex('owner_name') and validated.get('owner_name'):
+        owner_lines.append(f'نام مالک: {validated["owner_name"]}')
+    if _ex('phone') and validated.get('phone'):
+        owner_lines.append(f'شماره مالک: {mask_phone_display(validated["phone"])}')
+    if owner_lines:
+        sections.append({'title': 'اطلاعات مالک (ذخیره روی فایل)', 'lines': owner_lines})
+
+    notes = (validated.get('notes') or '').strip()
+    if _ex('notes') and notes:
+        sections.append({'title': 'یادداشت', 'lines': [notes]})
+
+    loc_display = loc_lines[0] if loc_lines else ''
+    specs_display = ' · '.join(specs)
+    sale_line = format_toman(validated.get('sale_price')) if _ex('sale_price') and validated.get('sale_price') is not None else ''
+    deposit_line = format_toman(validated.get('deposit')) if _ex('deposit') and validated.get('deposit') is not None else ''
+    rent_line = format_toman(validated.get('monthly_rent')) if _ex('monthly_rent') and validated.get('monthly_rent') is not None else ''
 
     return {
+        'sections': sections,
         'title': build_nl_property_title(validated),
         'type_deal_display': type_deal,
-        'location_display': loc,
-        'specs_display': ' · '.join(specs),
+        'location_display': loc_display,
+        'specs_display': specs_display,
         'features_positive': features_positive,
         'features_negative': features_negative,
         'sale_price_display': sale_line,
         'deposit_display': deposit_line,
         'rent_display': rent_line,
-        'notes': validated.get('notes') or '',
+        'notes': notes if _ex('notes') else '',
     }
 
 

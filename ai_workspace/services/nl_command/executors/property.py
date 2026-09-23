@@ -9,8 +9,8 @@ from ai_workspace.services.nl_command.errors import NLCommandError
 from ai_workspace.services.nl_command.state import save_state
 from ai_workspace.services.nl_command.validators_property import (
     build_nl_property_title,
+    inner_from_validated,
     validate_property_parse,
-    validated_as_llm_shape,
 )
 from mobile_api.services.crm_service import create_property_from_nl
 
@@ -29,10 +29,12 @@ def confirm_create_personal_property(user, command_id: str, state: Dict[str, Any
         }
 
     validated = dict(state.get('validated') or {})
+    prior_explicit = list(validated.get('_explicit_fields') or [])
     revalidated, missing, ambiguous, _err = validate_property_parse(
-        validated_as_llm_shape(validated),
+        inner_from_validated(validated),
         llm_missing=[],
         llm_ambiguous=[],
+        prior_explicit=prior_explicit,
     )
     if missing or ambiguous or not revalidated.get('area') or not revalidated.get('deal_mode'):
         raise NLCommandError('اطلاعات فایل کامل یا معتبر نیست.', code='invalid_property')

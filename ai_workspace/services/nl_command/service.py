@@ -39,6 +39,7 @@ from ai_workspace.services.nl_command.validators import (
 )
 from ai_workspace.services.nl_command.validators_property import (
     hint_for_incomplete_property,
+    inner_from_validated,
     validate_property_parse,
     validated_as_llm_shape,
 )
@@ -133,10 +134,21 @@ def _build_llm_context(user_text: str, tz_name: str) -> Dict[str, Any]:
 
 def _merge_property_validated(existing: Dict[str, Any], new: Dict[str, Any]) -> Dict[str, Any]:
     merged = dict(existing)
+    explicit = set(existing.get('_explicit_fields') or [])
+    explicit.update(new.get('_explicit_fields') or [])
+    tri_state = frozenset({'has_parking', 'has_storage', 'has_elevator', 'is_vacant'})
+    new_explicit = set(new.get('_explicit_fields') or [])
     for key, value in new.items():
+        if key == '_explicit_fields':
+            continue
+        if key in tri_state:
+            if key in new_explicit:
+                merged[key] = value
+            continue
         if value is None or value == '':
             continue
         merged[key] = value
+    merged['_explicit_fields'] = sorted(explicit)
     return merged
 
 
@@ -290,9 +302,10 @@ def _parse_create_personal_property(
     if prior_state and prior_state.get('intent') == NL_COMMAND_INTENT_CREATE_PERSONAL_PROPERTY:
         validated = _merge_property_validated(prior_state.get('validated') or {}, validated)
         validated, missing_fields, ambiguous_fields, field_error = validate_property_parse(
-            validated_as_llm_shape(validated),
+            inner_from_validated(validated),
             llm_missing=missing_fields,
             llm_ambiguous=ambiguous_fields,
+            prior_explicit=validated.get('_explicit_fields'),
         )
 
     can_confirm = (

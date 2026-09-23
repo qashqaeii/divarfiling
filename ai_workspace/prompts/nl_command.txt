@@ -113,7 +113,7 @@ Schema create_contact:
   "requires_confirmation": true
 }
 
-Schema create_personal_property:
+Schema create_personal_property (ساختار nested؛ فیلدهای flat قدیمی هم پذیرفته می‌شوند):
 {
   "intent": "create_personal_property",
   "confidence": 0.0,
@@ -127,17 +127,34 @@ Schema create_personal_property:
       "neighborhood": null,
       "address": null
     },
-    "area": null,
-    "rooms": null,
-    "floor": null,
-    "total_floors": null,
-    "build_year": null,
-    "has_parking": null,
-    "has_storage": null,
-    "has_elevator": null,
-    "sale_price": null,
-    "deposit": null,
-    "monthly_rent": null,
+    "specs": {
+      "area": null,
+      "rooms": null,
+      "floor": null,
+      "total_floors": null,
+      "build_year": null
+    },
+    "features": {
+      "has_parking": null,
+      "has_storage": null,
+      "has_elevator": null,
+      "is_vacant": null,
+      "amenity_labels": []
+    },
+    "financial": {
+      "sale_price": null,
+      "deposit": null,
+      "monthly_rent": null
+    },
+    "crm": {
+      "transaction_status": null,
+      "publish_status": null,
+      "business_type": null
+    },
+    "owner": {
+      "phone": null,
+      "owner_name": null
+    },
     "amenities": [],
     "notes": null
   },
@@ -145,6 +162,12 @@ Schema create_personal_property:
   "ambiguous_fields": [],
   "requires_confirmation": true
 }
+
+- property_type/deal_mode/transaction_status/publish_status را فقط اگر کاربر صریح گفت پر کن؛ default مدل (آپارتمان/فروش/فعال/پیش‌نویس) را حدس نزن.
+- امکانات checkbox فرم (بالکن، بازسازی شده، …) → amenity_labels فقط برچسب‌های واقعی فرم
+- feature_data تفصیلی (جنس کف، گرمایش، …) → notes اگر field رسمی ندارد
+- owner.phone / owner.owner_name: فقط روی فیلدهای phone و owner_name ملک — مخاطب CRM ساخته یا لینک نمی‌شود
+- source برای فایل شخصی پشتیبانی نمی‌شود؛ استخراج نکن
 
 زمان فعلی کاربر (فقط برای درک «فردا»): {now_local_display}
 منطقه زمانی: {timezone}

@@ -380,6 +380,35 @@
 
         function fillPropertyPreview(p) {
             if (!previewPropertyBody || !p) return;
+            const sectionsHost = previewPropertyBody.querySelector('[data-sc="property-sections"]');
+            if (sectionsHost && p.sections && p.sections.length) {
+                sectionsHost.innerHTML = '';
+                normalizeContactSections(p).forEach((sec) => {
+                    const block = document.createElement('div');
+                    block.className = 'crm-nl-command__contact-block';
+                    if (sec.title) {
+                        const titleEl = document.createElement('p');
+                        titleEl.className = 'crm-nl-command__contact-block-title';
+                        titleEl.textContent = sec.title;
+                        block.appendChild(titleEl);
+                    }
+                    sec.lines.forEach((line) => {
+                        const lineEl = document.createElement('p');
+                        lineEl.className = 'crm-nl-command__contact-block-line';
+                        lineEl.textContent = line;
+                        block.appendChild(lineEl);
+                    });
+                    sectionsHost.appendChild(block);
+                });
+                const legacySheet = previewPropertyBody.querySelector('.crm-nl-command__sheet');
+                if (legacySheet) legacySheet.hidden = true;
+                sectionsHost.hidden = false;
+                fillPreviewSummary(p, 'create_personal_property');
+                return;
+            }
+            const legacySheet = previewPropertyBody.querySelector('.crm-nl-command__sheet');
+            if (legacySheet) legacySheet.hidden = false;
+            if (sectionsHost) sectionsHost.hidden = true;
             const setRow = (selector, val, rowEl) => {
                 const el = previewPropertyBody.querySelector('[data-field="' + selector + '"]');
                 const text = (val || '').trim();

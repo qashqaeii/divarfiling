@@ -346,48 +346,79 @@ def create_customer_from_nl(user, data: Dict[str, Any]) -> Customer:
     return customer
 
 
-def create_property_from_nl(user, data: Dict[str, Any]) -> CRMProperty:
-    """ثبت فایل شخصی از فرمان هوشمند — بدون مالک/تصویر/ژوکان."""
-    from workspace.constants import CRM_PROPERTIES, PROPERTY_DEAL_MODES
+_NL_PROPERTY_ALLOWED = frozenset({
+    'title', 'property_type', 'deal_mode', 'transaction_status', 'publish_status',
+    'business_type', 'city', 'district', 'neighborhood', 'address',
+    'area', 'rooms', 'floor', 'total_floors', 'build_year',
+    'has_parking', 'has_storage', 'has_elevator', 'is_vacant',
+    'sale_price', 'deposit', 'monthly_rent', 'amenities', 'phone', 'owner_name', 'notes',
+})
 
-    title = (data.get('title') or '').strip()
+
+def create_property_from_nl(user, data: Dict[str, Any]) -> CRMProperty:
+    """ثبت فایل شخصی از فرمان هوشمند — فقط فیلدهای explicit + عنوان."""
+    from workspace.constants import CRM_PROPERTIES, PROPERTY_DEAL_MODES, PROPERTY_PUBLISH_STATUSES, PROPERTY_TX_STATUSES
+
+    explicit = set(data.get('_explicit_fields') or [])
+    payload = {k: v for k, v in (data or {}).items() if k in _NL_PROPERTY_ALLOWED}
+
+    title = (payload.get('title') or '').strip()
     if not title:
         raise ValueError('عنوان ملک الزامی است.')
 
-    property_type = (data.get('property_type') or 'آپارتمان').strip()
-    if property_type not in CRM_PROPERTIES:
-        property_type = 'آپارتمان'
-
-    deal_mode = (data.get('deal_mode') or 'فروش').strip()
+    deal_mode = (payload.get('deal_mode') or '').strip()
     if deal_mode not in PROPERTY_DEAL_MODES:
-        deal_mode = 'فروش'
+        raise ValueError('نوع معامله نامعتبر است.')
 
     prop = CRMProperty(
         user=user,
         agency=get_agency(user),
         title=title[:300],
-        property_type=property_type,
         deal_mode=deal_mode,
-        transaction_status='فعال',
-        publish_status='پیش‌نویس',
-        city=(data.get('city') or '')[:100],
-        district=(data.get('district') or '')[:100],
-        neighborhood=(data.get('neighborhood') or '')[:200],
-        address=(data.get('address') or ''),
-        area=data.get('area'),
-        rooms=(data.get('rooms') or '')[:20],
-        floor=data.get('floor'),
-        total_floors=data.get('total_floors'),
-        build_year=data.get('build_year'),
-        sale_price=data.get('sale_price'),
-        deposit=data.get('deposit'),
-        monthly_rent=data.get('monthly_rent'),
-        amenities=(data.get('amenities') or ''),
-        notes=(data.get('notes') or ''),
+        area=payload.get('area'),
     )
-    for bool_field in ('has_parking', 'has_storage', 'has_elevator'):
-        if data.get(bool_field) is not None:
-            setattr(prop, bool_field, bool(data[bool_field]))
+
+    if 'property_type' in explicit:
+        property_type = (payload.get('property_type') or '').strip()
+        if property_type in CRM_PROPERTIES:
+            prop.property_type = property_type
+
+    if 'transaction_status' in explicit:
+        tx = (payload.get('transaction_status') or '').strip()
+        if tx in PROPERTY_TX_STATUSES:
+            prop.transaction_status = tx
+
+    if 'publish_status' in explicit:
+        pub = (payload.get('publish_status') or '').strip()
+        if pub in PROPERTY_PUBLISH_STATUSES:
+            prop.publish_status = pub
+
+    str_fields = (
+        'city', 'district', 'neighborhood', 'address', 'rooms',
+        'amenities', 'notes', 'owner_name', 'business_type',
+    )
+    max_len = {
+        'city': 100, 'district': 100, 'neighborhood': 200, 'rooms': 20,
+        'owner_name': 200, 'business_type': 50,
+    }
+    for field in str_fields:
+        if field in explicit and payload.get(field) is not None:
+            val = (payload.get(field) or '')
+            if field in max_len:
+                val = val[: max_len[field]]
+            setattr(prop, field, val)
+
+    if 'phone' in explicit:
+        prop.phone = (payload.get('phone') or '')[:20]
+
+    for int_field in ('floor', 'total_floors', 'build_year', 'sale_price', 'deposit', 'monthly_rent'):
+        if int_field in explicit and payload.get(int_field) is not None:
+            setattr(prop, int_field, payload.get(int_field))
+
+    for bool_field in ('has_parking', 'has_storage', 'has_elevator', 'is_vacant'):
+        if bool_field in explicit and payload.get(bool_field) is not None:
+            setattr(prop, bool_field, bool(payload[bool_field]))
+
     prop.save()
     return prop
 

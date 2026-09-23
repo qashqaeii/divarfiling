@@ -197,15 +197,20 @@ def _parse_create_contact(
     )
 
     if prior_state and prior_state.get('intent') == NL_COMMAND_INTENT_CREATE_CONTACT:
-        validated = _merge_contact_validated(prior_state.get('validated') or {}, validated)
+        merged = _merge_contact_validated(prior_state.get('validated') or {}, validated)
         validated, missing_fields, ambiguous_fields, field_error = validate_contact_parse(
-            inner_from_validated(validated),
-            llm_missing=missing_fields,
-            llm_ambiguous=ambiguous_fields,
+            inner_from_validated(merged),
+            llm_missing=[],
+            llm_ambiguous=[],
             user=user,
             tz_name=tz_name,
-            prior_explicit=validated.get('_explicit_fields'),
+            prior_explicit=list(merged.get('_explicit_fields') or []),
         )
+        if (merged.get('name') and merged.get('phone')
+                and (not validated.get('name') or not validated.get('phone'))):
+            validated['name'] = merged.get('name')
+            validated['phone'] = merged.get('phone')
+            missing_fields = [f for f in missing_fields if f not in ('name', 'phone')]
 
     duplicate_contact = False
     existing_contact = None
@@ -243,6 +248,7 @@ def _parse_create_contact(
         'preview': preview,
         'missing_fields': missing_fields,
         'ambiguous_fields': ambiguous_fields,
+        'can_confirm': can_confirm,
         'duplicate_contact': duplicate_contact,
         'existing_contact': existing_contact,
         'name_warning': name_warning,
@@ -326,6 +332,7 @@ def _parse_create_personal_property(
         'preview': preview,
         'missing_fields': missing_fields,
         'ambiguous_fields': ambiguous_fields,
+        'can_confirm': can_confirm,
         'input_hash': text_hash(user_text),
         'locale': locale,
         'timezone': tz_name,
@@ -452,6 +459,25 @@ def _parse_create_reminder(
     return response
 
 
+def _should_merge_prior_state(
+    prior_state: Optional[Dict[str, Any]],
+    *,
+    resume_correction: bool = False,
+) -> bool:
+    """ادامه همان flow برای ناقص، مبهم، یا correction صریح."""
+    if not prior_state:
+        return False
+    if resume_correction:
+        return True
+    missing = prior_state.get('missing_fields') or []
+    ambiguous = prior_state.get('ambiguous_fields') or []
+    if missing or ambiguous:
+        return True
+    if prior_state.get('can_confirm') is False:
+        return True
+    return False
+
+
 def parse_command(
     user,
     *,
@@ -459,6 +485,7 @@ def parse_command(
     locale: str = 'fa-IR',
     tz_name: str = 'Asia/Tehran',
     command_id: Optional[str] = None,
+    resume_correction: bool = False,
 ) -> Dict[str, Any]:
     user_text = (text or '').strip()
     if not user_text:
@@ -474,6 +501,9 @@ def parse_command(
         if not prior_state:
             command_id = None
         elif prior_state.get('intent') not in merge_intents:
+            prior_state = None
+            command_id = None
+        elif not _should_merge_prior_state(prior_state, resume_correction=resume_correction):
             prior_state = None
             command_id = None
 

@@ -151,6 +151,8 @@
         let pendingContactId = null;
         let successTimer = null;
         let lastParseText = '';
+        /** @type {'idle'|'incomplete'|'preview'|'editing'} */
+        let commandSessionMode = 'idle';
 
         function setAiModel(ai) {
             const label = (ai && ai.model_label) || aiDefault;
@@ -249,6 +251,7 @@
 
         function resetAll() {
             clearPreview();
+            commandSessionMode = 'idle';
             setAiModel(null);
             highlightChips(false);
             setStatus('');
@@ -274,6 +277,15 @@
             if (confirmBtn) confirmBtn.disabled = true;
             input?.focus();
         }
+
+        const editLink = root.querySelector('[data-sc="edit-link"]');
+        editLink?.addEventListener('click', (ev) => {
+            if (commandSessionMode === 'preview' && commandId) {
+                ev.preventDefault();
+                commandSessionMode = 'editing';
+                focusCommand();
+            }
+        });
 
         let currentIntent = null;
 
@@ -711,6 +723,7 @@
                 commandId = data.command_id;
                 if (isIncompleteProperty(data)) {
                     currentIntent = 'create_personal_property';
+                    commandSessionMode = 'incomplete';
                     hidePreviewPanel();
                     const fb = incompletePropertyFeedback(data);
                     setStatus(fb.main, 'is-info', {
@@ -723,6 +736,7 @@
                 fillPreview(data.preview, 'create_personal_property');
                 if (confirmBtn) confirmBtn.disabled = !data.can_confirm;
                 showReadyPreview('create_personal_property');
+                commandSessionMode = data.can_confirm ? 'preview' : 'incomplete';
                 if (data.can_confirm) {
                     setStatus('');
                 } else if (data.hint) {
@@ -735,6 +749,7 @@
                 commandId = data.command_id;
                 if (isDuplicateContact(data)) {
                     commandId = null;
+                    commandSessionMode = 'idle';
                     hidePreviewPanel();
                     const ex = data.existing_contact;
                     setStatus(data.message || 'این شماره قبلاً ثبت شده است.', 'is-warn', {
@@ -747,6 +762,7 @@
                 }
                 if (isIncompleteContact(data)) {
                     currentIntent = 'create_contact';
+                    commandSessionMode = 'incomplete';
                     hidePreviewPanel();
                     const fb = incompleteContactFeedback(data);
                     setStatus(fb.main, 'is-info', {
@@ -759,6 +775,7 @@
                 fillPreview(data.preview, 'create_contact');
                 if (confirmBtn) confirmBtn.disabled = !data.can_confirm;
                 showReadyPreview('create_contact');
+                commandSessionMode = data.can_confirm ? 'preview' : 'incomplete';
                 if (data.warning) {
                     setStatus(data.warning, 'is-warn');
                 } else if (data.can_confirm) {
@@ -834,23 +851,32 @@
             }
             lastParseText = text;
             const mergeIntents = ['create_contact', 'create_personal_property'];
-            const resumeIntent = currentIntent;
-            const canMerge = allowedIntent && mergeIntents.indexOf(allowedIntent) !== -1
-                && resumeIntent === allowedIntent;
-            const resumeCommandId = commandId && canMerge ? commandId : null;
+            const shouldResume = (commandSessionMode === 'incomplete' || commandSessionMode === 'editing')
+                && commandId
+                && allowedIntent
+                && mergeIntents.indexOf(allowedIntent) !== -1;
+            const resumeCommandId = shouldResume ? commandId : null;
+            const resumeIntent = shouldResume ? currentIntent : null;
+            const resumeMode = shouldResume ? commandSessionMode : null;
+            const resumeCorrection = commandSessionMode === 'editing';
             setLoading(true);
             setStatus('');
             clearPreview();
             if (resumeCommandId) {
                 commandId = resumeCommandId;
                 currentIntent = resumeIntent;
+                commandSessionMode = resumeMode;
+            } else {
+                commandSessionMode = 'idle';
             }
             root.classList.remove('is-success-mode');
             if (successEl) successEl.hidden = true;
             const parseBody = { text, locale: 'fa-IR', timezone: 'Asia/Tehran' };
-            if (commandId && allowedIntent && currentIntent === allowedIntent
-                && mergeIntents.indexOf(allowedIntent) !== -1) {
-                parseBody.command_id = commandId;
+            if (resumeCommandId) {
+                parseBody.command_id = resumeCommandId;
+                if (resumeCorrection) {
+                    parseBody.resume_correction = true;
+                }
             }
             postJson(parseUrl, parseBody)
                 .then((res) => {
@@ -913,6 +939,7 @@
             if (preview && !preview.hidden) {
                 hidePreviewPanel();
                 commandId = null;
+                commandSessionMode = 'idle';
                 if (confirmBtn) confirmBtn.disabled = true;
             }
         });

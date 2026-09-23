@@ -309,9 +309,77 @@ class NLCommandPropertyTests(TestCase):
         first = parse_command(self.user, text='۱۲۰ متر فروش')
         cid = first['command_id']
         with _patch_chain_json(_property_json(area=130, deal_mode='فروش', sale_price=12_000_000_000)):
-            second = parse_command(self.user, text='نه ۱۳۰ متر', command_id=cid)
+            second = parse_command(
+                self.user,
+                text='نه ۱۳۰ متر',
+                command_id=cid,
+                resume_correction=True,
+            )
+        self.assertEqual(second['command_id'], cid)
         state = load_state(self.user.pk, cid)
         self.assertEqual(state['validated']['area'], 130)
+
+    @_patch_chain_json(_property_json(rooms=2, notes='معرف گفت سریع بفروشیم'))
+    def test_complete_then_new_command_clears_stale_state(self, _chain):
+        first = parse_command(
+            self.user,
+            text='یه فایل پونک ثبت کن، ۱۲۰ متر، دو خواب، فروش ۱۲ میلیارد، معرف گفت سریع بفروشیم',
+        )
+        self.assertTrue(first['can_confirm'])
+        cid1 = first['command_id']
+        second_payload = _property_json(
+            rooms=None,
+            floor=None,
+            has_parking=None,
+            notes=None,
+            owner={'owner_name': 'آقای رضایی', 'phone': '09121234567'},
+        )
+        with _patch_chain_json(second_payload):
+            second = parse_command(
+                self.user,
+                text='یه فایل ۱۲۰ متری پونک ثبت کن، مالک آقای رضایی شماره 09121234567، فروش ۱۲ میلیارد',
+                command_id=cid1,
+            )
+        self.assertNotEqual(second['command_id'], cid1)
+        state = load_state(self.user.pk, second['command_id'])
+        v = state['validated']
+        self.assertFalse((v.get('rooms') or '').strip())
+        self.assertFalse((v.get('notes') or '').strip())
+        self.assertEqual(v.get('owner_name'), 'آقای رضایی')
+        self.assertEqual(v.get('phone'), '09121234567')
+
+    @_patch_chain_json(_property_json())
+    def test_complete_then_different_property_no_inherit(self, _chain):
+        first = parse_command(self.user, text='پونک ۱۲۰ متر دو خواب فروش ۱۲ میلیارد')
+        self.assertTrue(first['can_confirm'])
+        rent_payload = _property_json(
+            location={
+                'city': None,
+                'district': None,
+                'neighborhood': 'صادقیه',
+                'address': None,
+            },
+            deal_mode='اجاره',
+            sale_price=None,
+            deposit=500_000_000,
+            monthly_rent=25_000_000,
+            neighborhood='صادقیه',
+            area=80,
+            rooms=2,
+            floor=None,
+            has_parking=None,
+            notes=None,
+        )
+        with _patch_chain_json(rent_payload):
+            second = parse_command(
+                self.user,
+                text='صادقیه ۸۰ متر ۵۰۰ میلیون ودیعه ۲۵ میلیون اجاره',
+            )
+        v = load_state(self.user.pk, second['command_id'])['validated']
+        self.assertEqual(v.get('neighborhood'), 'صادقیه')
+        self.assertEqual(v.get('area'), 80)
+        self.assertNotEqual(v.get('neighborhood'), 'پونک')
+        self.assertEqual(v.get('sale_price'), None)
 
     def test_owner_phone_explicit(self):
         validated, missing, ambiguous, _ = validate_property_parse(

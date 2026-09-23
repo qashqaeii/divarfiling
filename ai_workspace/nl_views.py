@@ -29,6 +29,7 @@ class NLCommandParseView(_NLJsonMixin, View):
         locale = body.get('locale') or 'fa-IR'
         tz_name = body.get('timezone') or 'Asia/Tehran'
         command_id = (body.get('command_id') or '').strip() or None
+        resume_correction = bool(body.get('resume_correction'))
         try:
             payload = parse_command(
                 request.user,
@@ -36,6 +37,7 @@ class NLCommandParseView(_NLJsonMixin, View):
                 locale=locale,
                 tz_name=tz_name,
                 command_id=command_id,
+                resume_correction=resume_correction,
             )
             return JsonResponse(payload)
         except NLCommandError as exc:

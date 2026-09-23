@@ -172,6 +172,11 @@ class NLCommandContactTests(TestCase):
         self.assertIsNotNone(log)
         self.assertNotIn('09121234567', log.entity_id or '')
 
+    @_patch_chain_json(_contact_json(name='حسینی', phone='09125556677'))
+    def test_single_shot_contact_can_confirm(self, _chain):
+        parsed = parse_command(self.user, text='حسینی 09125556677')
+        self.assertTrue(parsed['can_confirm'])
+
     @_patch_chain_json(_contact_json(name='حسینی', phone=None))
     def test_correction_merge_command_id(self, _chain):
         first = parse_command(self.user, text='حسینی رو ذخیره کن')
@@ -188,3 +193,20 @@ class NLCommandContactTests(TestCase):
         self.assertTrue(second['can_confirm'])
         state = load_state(self.user.pk, cid)
         self.assertEqual(state['validated']['phone'], '09125556677')
+
+    @_patch_chain_json(_contact_json(name='حسینی', phone='09121234567', areas='پونک'))
+    def test_complete_then_new_contact_no_inherit(self, _chain):
+        first = parse_command(self.user, text='حسینی پونک 09121234567')
+        self.assertTrue(first['can_confirm'])
+        cid1 = first['command_id']
+        with _patch_chain_json(_contact_json(name='رضایی', phone='09128887766', areas='صادقیه')):
+            second = parse_command(
+                self.user,
+                text='رضایی صادقیه 09128887766',
+                command_id=cid1,
+            )
+        self.assertNotEqual(second['command_id'], cid1)
+        v = load_state(self.user.pk, second['command_id'])['validated']
+        self.assertEqual(v.get('name'), 'رضایی')
+        self.assertEqual(v.get('areas'), 'صادقیه')
+        self.assertNotEqual(v.get('name'), 'حسینی')

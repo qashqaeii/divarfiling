@@ -38,6 +38,40 @@
         return !!(data.contact_candidates && data.contact_candidates.length);
     }
 
+    function isIncompleteReminder(data) {
+        if (!data || data.intent !== 'create_reminder' || data.can_confirm) return false;
+        if (isContactNotFound(data) || hasAmbiguousContacts(data)) return false;
+        const missing = data.missing_fields || [];
+        const ambiguous = data.ambiguous_fields || [];
+        if (missing.length > 0) return true;
+        return ambiguous.indexOf('due_at') !== -1;
+    }
+
+    function incompleteReminderFeedback(data) {
+        const missing = data.missing_fields || [];
+        const ambiguous = data.ambiguous_fields || [];
+        const example = 'مثلاً: فردا ساعت ۱۰ به احمدی زنگ بزنم.';
+        if (ambiguous.indexOf('due_at') !== -1) {
+            return {
+                main: data.hint || data.message || 'زمان یادآوری در گذشته است یا نامعتبر است.',
+                hint: example,
+            };
+        }
+        if (missing.indexOf('date_text') !== -1 || missing.indexOf('time_text') !== -1) {
+            return {
+                main: data.hint || data.message || 'زمان یادآوری را مشخص کنید.',
+                hint: example,
+            };
+        }
+        if (data.hint && data.hint.indexOf('کامل') !== -1) {
+            return { main: 'چی رو یادت بندازم؟', hint: example };
+        }
+        if (data.hint || data.message) {
+            return { main: data.hint || data.message, hint: example };
+        }
+        return { main: 'چی رو یادت بندازم؟', hint: example };
+    }
+
     function faCount(n) {
         return Number(n).toLocaleString('fa-IR');
     }
@@ -391,6 +425,18 @@
 
             if (hasAmbiguousContacts(data)) {
                 showAmbiguousPanel(data);
+                return;
+            }
+
+            if (isIncompleteReminder(data)) {
+                hidePreviewPanel();
+                commandId = null;
+                const fb = incompleteReminderFeedback(data);
+                setStatus(fb.main, 'is-info', {
+                    hint: fb.hint,
+                    actionLabel: 'ویرایش فرمان',
+                    onAction: focusCommand,
+                });
                 return;
             }
 

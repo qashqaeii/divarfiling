@@ -1,4 +1,7 @@
-"""OpenRouter — Backup فقط بعد از خطای Gemini."""
+"""OpenRouter — LEGACY_INACTIVE (free :free models). Not used in production HTTP chain.
+
+Kept for optional manual/rollback experiments only. Production backup is Arvan AIaaS.
+"""
 from __future__ import annotations
 
 import time

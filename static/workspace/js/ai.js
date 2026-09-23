@@ -110,7 +110,7 @@
         if (provider === 'rule_based') {
             return '<span class="ws-ai-badge ws-ai-badge--fallback">مدل داخلی سیستم</span>';
         }
-        if (provider === 'openrouter') {
+        if (provider === 'openrouter' || provider === 'arvan') {
             return '<span class="ws-ai-badge ws-ai-badge--backup">هوش مصنوعی (پشتیبان)</span>';
         }
         if (provider === 'gemini' && data.is_fallback) {

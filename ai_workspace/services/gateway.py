@@ -10,7 +10,7 @@ from django.core.cache import cache as django_cache
 
 from ai_workspace.constants import FEATURE_CRM_MESSAGE, FEATURE_LISTING_SUMMARY, feature_uses_json, is_feature_enabled
 from ai_workspace.models import AIUsageLog
-from ai_workspace.providers.registry import HTTP_PROVIDER_CHAIN, RULE_BASED
+from ai_workspace.providers.registry import get_http_provider_chain, RULE_BASED
 from ai_workspace.providers.base import ProviderError
 from ai_workspace.services import cache as ai_cache
 from ai_workspace.services.crm_text import sanitize_message_text
@@ -209,7 +209,7 @@ def run(
         last_code = validation.reason
         provider_attempt = 0
     elif not use_rule_only:
-        for attempt_idx, provider in enumerate(HTTP_PROVIDER_CHAIN, start=1):
+        for attempt_idx, provider in enumerate(get_http_provider_chain(), start=1):
             try:
                 provider_result = provider.complete(
                     system=system,

@@ -22,3 +22,9 @@ class ResolveModelLabelTests(SimpleTestCase):
             resolve_model_label(provider='gemini', model='gemini-2.0-flash'),
             'gemini-2.0-flash',
         )
+
+    def test_arvan_provider(self):
+        self.assertEqual(
+            resolve_model_label(provider='arvan', model='Gemini-2.5-Flash-lite'),
+            'Gemini-2.5-Flash-lite',
+        )

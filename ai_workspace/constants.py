@@ -130,6 +130,8 @@ def resolve_model_label(
         return model
     if provider == 'openrouter':
         return 'مدل پشتیبان'
+    if provider == 'arvan':
+        return model or 'Arvan AI'
     if provider == 'gemini':
         return 'Gemini'
     if is_fallback:

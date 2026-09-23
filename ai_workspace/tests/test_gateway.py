@@ -23,10 +23,10 @@ _MOCK_SUMMARY_JSON = (
 )
 
 
-def _make_chain_mock(*, primary_ok=True, secondary_ok=False, openrouter_ok=False):
+def _make_chain_mock(*, primary_ok=True, secondary_ok=False, arvan_ok=False):
     primary = MagicMock()
     lite = MagicMock()
-    openrouter = MagicMock()
+    arvan = MagicMock()
 
     if primary_ok:
         primary.complete.return_value = ProviderResult(
@@ -53,23 +53,27 @@ def _make_chain_mock(*, primary_ok=True, secondary_ok=False, openrouter_ok=False
     else:
         lite.complete.side_effect = ProviderError('429', retryable=True, code='429')
 
-    if openrouter_ok:
-        openrouter.complete.return_value = ProviderResult(
-            text='{"summary":"خلاصه پشتیبان openrouter برای آگهی نمونه","highlights":[],"negotiation_tip":"","advertiser_note":""}',
-            provider='openrouter',
-            model='openai/gpt-oss-20b:free',
+    if arvan_ok:
+        arvan.complete.return_value = ProviderResult(
+            text='{"summary":"خلاصه پشتیبان arvan برای آگهی نمونه","highlights":[],"negotiation_tip":"","advertiser_note":""}',
+            provider='arvan',
+            model='Gemini-2.5-Flash-lite',
             input_tokens=10,
             output_tokens=5,
             latency_ms=200,
             is_fallback=True,
         )
     else:
-        openrouter.complete.side_effect = ProviderError('429', retryable=True, code='429')
+        arvan.complete.side_effect = ProviderError('429', retryable=True, code='rate_limited')
 
-    return [primary, lite, openrouter]
+    return [primary, lite, arvan]
 
 
-@override_settings(AI_ENABLED=True, GEMINI_API_KEY='test', OPENROUTER_API_KEY='')
+def _patch_chain(chain):
+    return patch('ai_workspace.services.gateway.get_http_provider_chain', return_value=chain)
+
+
+@override_settings(AI_ENABLED=True, GEMINI_API_KEY='test')
 class GatewayTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(
@@ -78,7 +82,7 @@ class GatewayTests(TestCase):
 
     def test_gemini_success_skips_fallbacks(self):
         chain = _make_chain_mock(primary_ok=True)
-        with patch('ai_workspace.services.gateway.HTTP_PROVIDER_CHAIN', chain):
+        with _patch_chain(chain):
             result = run(
                 'listing_summary',
                 self.user,
@@ -90,9 +94,9 @@ class GatewayTests(TestCase):
             chain[2].complete.assert_not_called()
         self.assertEqual(result.provider, 'gemini')
 
-    def test_gemini_fail_uses_openrouter(self):
-        chain = _make_chain_mock(primary_ok=False, secondary_ok=False, openrouter_ok=True)
-        with patch('ai_workspace.services.gateway.HTTP_PROVIDER_CHAIN', chain):
+    def test_gemini_fail_uses_arvan(self):
+        chain = _make_chain_mock(primary_ok=False, secondary_ok=False, arvan_ok=True)
+        with _patch_chain(chain):
             result = run(
                 'listing_summary',
                 self.user,
@@ -100,11 +104,11 @@ class GatewayTests(TestCase):
                 entity_type='listing',
                 entity_id='2',
             )
-        self.assertEqual(result.provider, 'openrouter')
+        self.assertEqual(result.provider, 'arvan')
 
     def test_all_fail_uses_rule_based(self):
-        chain = _make_chain_mock(primary_ok=False, secondary_ok=False, openrouter_ok=False)
-        with patch('ai_workspace.services.gateway.HTTP_PROVIDER_CHAIN', chain):
+        chain = _make_chain_mock(primary_ok=False, secondary_ok=False, arvan_ok=False)
+        with _patch_chain(chain):
             result = run(
                 'listing_summary',
                 self.user,
@@ -120,8 +124,8 @@ class GatewayTests(TestCase):
         self.assertTrue(result.is_fallback)
 
     def test_primary_fail_lite_succeeds(self):
-        chain = _make_chain_mock(primary_ok=False, secondary_ok=True, openrouter_ok=False)
-        with patch('ai_workspace.services.gateway.HTTP_PROVIDER_CHAIN', chain):
+        chain = _make_chain_mock(primary_ok=False, secondary_ok=True, arvan_ok=False)
+        with _patch_chain(chain):
             result = run(
                 'listing_summary',
                 self.user,
@@ -132,23 +136,23 @@ class GatewayTests(TestCase):
         self.assertEqual(result.model, 'gemini-2.5-flash-lite')
         chain[2].complete.assert_not_called()
 
-    def test_primary_403_still_tries_openrouter(self):
+    def test_primary_403_still_tries_arvan(self):
         primary = MagicMock()
         lite = MagicMock()
-        openrouter = MagicMock()
+        arvan = MagicMock()
         primary.complete.side_effect = ProviderError('403', retryable=False, code='403')
         lite.complete.side_effect = ProviderError('403', retryable=False, code='403')
-        openrouter.complete.return_value = ProviderResult(
-            text='{"summary":"خلاصه openrouter بعد از خطای gemini","highlights":[],"negotiation_tip":"","advertiser_note":""}',
-            provider='openrouter',
-            model='openai/gpt-oss-20b:free',
+        arvan.complete.return_value = ProviderResult(
+            text='{"summary":"خلاصه arvan بعد از خطای gemini","highlights":[],"negotiation_tip":"","advertiser_note":""}',
+            provider='arvan',
+            model='Gemini-2.5-Flash-lite',
             input_tokens=10,
             output_tokens=5,
             latency_ms=200,
             is_fallback=True,
         )
-        chain = [primary, lite, openrouter]
-        with patch('ai_workspace.services.gateway.HTTP_PROVIDER_CHAIN', chain):
+        chain = [primary, lite, arvan]
+        with _patch_chain(chain):
             result = run(
                 'listing_summary',
                 self.user,
@@ -156,22 +160,22 @@ class GatewayTests(TestCase):
                 entity_type='listing',
                 entity_id='6',
             )
-        self.assertEqual(result.provider, 'openrouter')
+        self.assertEqual(result.provider, 'arvan')
         lite.complete.assert_called_once()
-        openrouter.complete.assert_called_once()
+        arvan.complete.assert_called_once()
 
     def test_malformed_llm_json_uses_rule_based(self):
-        chain = _make_chain_mock(primary_ok=False, secondary_ok=False, openrouter_ok=True)
+        chain = _make_chain_mock(primary_ok=False, secondary_ok=False, arvan_ok=True)
         chain[2].complete.return_value = ProviderResult(
             text='not-json',
-            provider='openrouter',
-            model='openai/gpt-oss-20b:free',
+            provider='arvan',
+            model='Gemini-2.5-Flash-lite',
             input_tokens=10,
             output_tokens=5,
             latency_ms=200,
             is_fallback=True,
         )
-        with patch('ai_workspace.services.gateway.HTTP_PROVIDER_CHAIN', chain):
+        with _patch_chain(chain):
             result = run(
                 'listing_summary',
                 self.user,
@@ -188,7 +192,7 @@ class GatewayTests(TestCase):
 
     def test_validation_skip_never_calls_providers(self):
         chain = _make_chain_mock(primary_ok=True)
-        with patch('ai_workspace.services.gateway.HTTP_PROVIDER_CHAIN', chain):
+        with _patch_chain(chain):
             result = run(
                 'listing_summary',
                 self.user,

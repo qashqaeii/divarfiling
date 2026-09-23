@@ -297,12 +297,25 @@ DESKTOP_ACCOUNT_LOGIN_ENABLED = config('DESKTOP_ACCOUNT_LOGIN_ENABLED', default=
 # میزکار — فقط با سفارش paid و لایسنس active (بدون bypass خودکار staff)
 WORKSPACE_LICENSE_STAFF_BYPASS = config('WORKSPACE_LICENSE_STAFF_BYPASS', default=False, cast=bool)
 
-# AI Workspace — فاز صفر (Gemini + OpenRouter backup)
+# AI Workspace — Gemini primary + Arvan AIaaS backup + rule-based fallback
 AI_ENABLED = config('AI_ENABLED', default=False, cast=bool)
 GEMINI_API_KEY = config('GEMINI_API_KEY', default='')
 GEMINI_MODEL = config('GEMINI_MODEL', default='gemini-3.1-flash-lite')
 GEMINI_FALLBACK_MODEL = config('GEMINI_FALLBACK_MODEL', default='gemini-2.5-flash-lite')
 GEMINI_TIMEOUT_SECONDS = config('GEMINI_TIMEOUT_SECONDS', default=10, cast=int)
+
+# ArvanCloud AIaaS (production backup — OpenAI-compatible chat/completions)
+ARVAN_AI_ENABLED = config('ARVAN_AI_ENABLED', default=False, cast=bool)
+ARVAN_AI_BASE_URL = config('ARVAN_AI_BASE_URL', default='')
+ARVAN_AI_API_KEY = config('ARVAN_AI_API_KEY', default='')
+ARVAN_AI_MODEL = config('ARVAN_AI_MODEL', default='Gemini-2.5-Flash-lite')
+ARVAN_AI_FALLBACK_MODEL = config('ARVAN_AI_FALLBACK_MODEL', default='')
+ARVAN_AI_TIMEOUT_SECONDS = config('ARVAN_AI_TIMEOUT_SECONDS', default=10, cast=int)
+ARVAN_AI_MAX_RETRIES = config('ARVAN_AI_MAX_RETRIES', default=1, cast=int)
+ARVAN_AI_TEMPERATURE = config('ARVAN_AI_TEMPERATURE', default=0.4, cast=float)
+ARVAN_AI_MAX_TOKENS = config('ARVAN_AI_MAX_TOKENS', default=1200, cast=int)
+
+# LEGACY_INACTIVE — OpenRouter free tier (not in HTTP provider chain)
 OPENROUTER_API_KEY = config('OPENROUTER_API_KEY', default='')
 OPENROUTER_BASE_URL = config('OPENROUTER_BASE_URL', default='https://openrouter.ai/api/v1')
 OPENROUTER_FREE_MODELS = config(

@@ -11,6 +11,7 @@ from ai_workspace.constants import (
     FEATURE_UPLOAD_BRIEF,
     NL_COMMAND_ALLOWED_INTENTS,
     NL_COMMAND_INTENT_CREATE_CONTACT,
+    NL_COMMAND_INTENT_CREATE_PERSONAL_PROPERTY,
     NL_COMMAND_INTENT_CREATE_REMINDER,
 )
 from ai_workspace.services.parse import parse_json_text, salvage_listing_json
@@ -165,6 +166,15 @@ def _nullable_int(value: Any) -> Optional[int]:
         return None
 
 
+def _nullable_float(value: Any) -> Optional[float]:
+    if value is None or value == '':
+        return None
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
 def _normalize_contact_preferences(inner: Dict[str, Any]) -> Dict[str, Any]:
     prefs = inner.get('preferences') if isinstance(inner.get('preferences'), dict) else {}
     areas_raw = prefs.get('areas') if prefs.get('areas') is not None else inner.get('areas')
@@ -201,6 +211,54 @@ def _normalize_reminder_data(inner: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
+def _nullable_bool(value: Any) -> Any:
+    if value is None:
+        return None
+    if isinstance(value, bool):
+        return value
+    return value
+
+
+def _normalize_property_location(inner: Dict[str, Any]) -> Dict[str, Any]:
+    loc = inner.get('location') if isinstance(inner.get('location'), dict) else {}
+    return {
+        'city': _nullable_str(loc.get('city') if loc.get('city') is not None else inner.get('city')),
+        'district': _nullable_str(loc.get('district') if loc.get('district') is not None else inner.get('district')),
+        'neighborhood': _nullable_str(
+            loc.get('neighborhood') if loc.get('neighborhood') is not None else inner.get('neighborhood')
+        ),
+        'address': _nullable_str(loc.get('address') if loc.get('address') is not None else inner.get('address')),
+    }
+
+
+def _normalize_property_data(inner: Dict[str, Any]) -> Dict[str, Any]:
+    loc = _normalize_property_location(inner)
+    amenities = inner.get('amenities')
+    if isinstance(amenities, list):
+        amenities_norm = [str(x).strip() for x in amenities if str(x).strip()]
+    else:
+        amenities_norm = amenities
+    return {
+        'title': _nullable_str(inner.get('title')),
+        'property_type': _nullable_str(inner.get('property_type')),
+        'deal_mode': _nullable_str(inner.get('deal_mode')),
+        'location': loc,
+        'area': _nullable_float(inner.get('area')),
+        'rooms': _nullable_str(inner.get('rooms')) if inner.get('rooms') is not None else None,
+        'floor': _nullable_int(inner.get('floor')),
+        'total_floors': _nullable_int(inner.get('total_floors')),
+        'build_year': _nullable_int(inner.get('build_year')),
+        'has_parking': _nullable_bool(inner.get('has_parking')),
+        'has_storage': _nullable_bool(inner.get('has_storage')),
+        'has_elevator': _nullable_bool(inner.get('has_elevator')),
+        'sale_price': _nullable_int(inner.get('sale_price')),
+        'deposit': _nullable_int(inner.get('deposit')),
+        'monthly_rent': _nullable_int(inner.get('monthly_rent')),
+        'amenities': amenities_norm,
+        'notes': _nullable_str(inner.get('notes')),
+    }
+
+
 def _normalize_contact_data(inner: Dict[str, Any]) -> Dict[str, Any]:
     prefs = _normalize_contact_preferences(inner)
     return {
@@ -225,6 +283,8 @@ def normalize_nl_command_payload(data: Optional[Dict[str, Any]], raw_text: str =
     inner = payload.get('data') if isinstance(payload.get('data'), dict) else {}
     if intent == NL_COMMAND_INTENT_CREATE_CONTACT:
         normalized_data = _normalize_contact_data(inner)
+    elif intent == NL_COMMAND_INTENT_CREATE_PERSONAL_PROPERTY:
+        normalized_data = _normalize_property_data(inner)
     else:
         normalized_data = _normalize_reminder_data(inner)
     missing = payload.get('missing_fields')

@@ -11,6 +11,7 @@ from ai_workspace.constants import (
     FEATURE_NL_COMMAND,
     NL_COMMAND_EXAMPLE_PHRASES,
     NL_COMMAND_INTENT_CREATE_CONTACT,
+    NL_COMMAND_INTENT_CREATE_PERSONAL_PROPERTY,
     NL_COMMAND_INTENT_CREATE_REMINDER,
     NL_COMMAND_INTENT_UNKNOWN,
     NL_COMMAND_PARSE_FAILED_MESSAGE,
@@ -23,10 +24,20 @@ from ai_workspace.services.nl_command.contacts import resolve_contact_by_name
 from ai_workspace.services.nl_command.datetime_parser import format_due_display, parse_due_datetime
 from ai_workspace.services.nl_command.errors import NLCommandError
 from ai_workspace.services.nl_command.executors.contact import check_phone_duplicate, confirm_create_contact
+from ai_workspace.services.nl_command.executors.property import confirm_create_personal_property
 from ai_workspace.services.nl_command.executors.reminder import confirm_create_reminder
-from ai_workspace.services.nl_command.preview import build_contact_preview, existing_contact_payload
+from ai_workspace.services.nl_command.preview import (
+    build_contact_preview,
+    build_property_preview,
+    existing_contact_payload,
+)
 from ai_workspace.services.nl_command.state import load_state, new_command_id, save_state, text_hash
 from ai_workspace.services.nl_command.validators import hint_for_incomplete_contact, validate_contact_parse
+from ai_workspace.services.nl_command.validators_property import (
+    hint_for_incomplete_property,
+    validate_property_parse,
+    validated_as_llm_shape,
+)
 from ai_workspace.services.payload import is_valid_payload
 from ai_workspace.services.quota import QuotaExceededError
 from workspace.services.crm_scope import customer_for_user
@@ -112,8 +123,17 @@ def _build_llm_context(user_text: str, tz_name: str) -> Dict[str, Any]:
         'user_text': user_text.strip()[:500],
         'timezone': tz_name,
         'now_local_display': format_jalali_today_label() + ' ' + now_local.strftime('%H:%M'),
-        'content_version': 'v2',
+        'content_version': 'v3',
     }
+
+
+def _merge_property_validated(existing: Dict[str, Any], new: Dict[str, Any]) -> Dict[str, Any]:
+    merged = dict(existing)
+    for key, value in new.items():
+        if value is None or value == '':
+            continue
+        merged[key] = value
+    return merged
 
 
 def _merge_contact_validated(existing: Dict[str, Any], new: Dict[str, Any]) -> Dict[str, Any]:
@@ -253,6 +273,83 @@ def _inner_from_validated(validated: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
+def _parse_create_personal_property(
+    user,
+    *,
+    data: Dict[str, Any],
+    ai_meta: Dict[str, Any],
+    user_text: str,
+    locale: str,
+    tz_name: str,
+    prior_state: Optional[Dict[str, Any]] = None,
+    command_id: Optional[str] = None,
+) -> Dict[str, Any]:
+    inner = data.get('data') or {}
+    missing_fields = list(data.get('missing_fields') or [])
+    ambiguous_fields = list(data.get('ambiguous_fields') or [])
+
+    validated, missing_fields, ambiguous_fields, field_error = validate_property_parse(
+        inner,
+        llm_missing=missing_fields,
+        llm_ambiguous=ambiguous_fields,
+    )
+
+    if prior_state and prior_state.get('intent') == NL_COMMAND_INTENT_CREATE_PERSONAL_PROPERTY:
+        validated = _merge_property_validated(prior_state.get('validated') or {}, validated)
+        validated, missing_fields, ambiguous_fields, field_error = validate_property_parse(
+            validated_as_llm_shape(validated),
+            llm_missing=missing_fields,
+            llm_ambiguous=ambiguous_fields,
+        )
+
+    can_confirm = (
+        bool(validated.get('area'))
+        and bool(validated.get('deal_mode'))
+        and not missing_fields
+        and not ambiguous_fields
+        and not field_error
+    )
+
+    if not command_id:
+        command_id = new_command_id()
+    preview = build_property_preview(validated)
+
+    state = {
+        'intent': NL_COMMAND_INTENT_CREATE_PERSONAL_PROPERTY,
+        'validated': validated,
+        'preview': preview,
+        'missing_fields': missing_fields,
+        'ambiguous_fields': ambiguous_fields,
+        'input_hash': text_hash(user_text),
+        'locale': locale,
+        'timezone': tz_name,
+        'created_property_id': prior_state.get('created_property_id') if prior_state else None,
+    }
+    save_state(user.pk, command_id, state)
+
+    response: Dict[str, Any] = {
+        'ok': True,
+        'command_id': command_id,
+        'intent': NL_COMMAND_INTENT_CREATE_PERSONAL_PROPERTY,
+        'preview': preview,
+        'missing_fields': missing_fields,
+        'ambiguous_fields': ambiguous_fields,
+        'can_confirm': can_confirm,
+        'ai': ai_meta,
+    }
+    if not can_confirm:
+        hint = field_error or hint_for_incomplete_property(
+            missing_fields=missing_fields,
+            ambiguous_fields=ambiguous_fields,
+        )
+        if missing_fields == ['area', 'deal_mode'] or set(missing_fields) >= {'area', 'deal_mode'}:
+            hint = 'برای ثبت فایل، حداقل متراژ و نوع معامله را مشخص کنید.'
+        response['hint'] = hint
+        if 'area' in missing_fields or 'deal_mode' in missing_fields:
+            response['hint_example'] = 'مثلاً: آپارتمان ۱۲۰ متری پونک برای فروش، ۱۲ میلیارد.'
+    return response
+
+
 def _parse_create_reminder(
     user,
     *,
@@ -362,11 +459,15 @@ def parse_command(
         raise NLCommandError('متن فرمان خالی است.', code='empty_text')
 
     prior_state = None
+    merge_intents = frozenset({
+        NL_COMMAND_INTENT_CREATE_CONTACT,
+        NL_COMMAND_INTENT_CREATE_PERSONAL_PROPERTY,
+    })
     if command_id:
         prior_state = load_state(user.pk, command_id)
         if not prior_state:
             command_id = None
-        elif prior_state.get('intent') != NL_COMMAND_INTENT_CREATE_CONTACT:
+        elif prior_state.get('intent') not in merge_intents:
             prior_state = None
             command_id = None
 
@@ -406,6 +507,18 @@ def parse_command(
 
     if intent == NL_COMMAND_INTENT_CREATE_CONTACT:
         return _parse_create_contact(
+            user,
+            data=data,
+            ai_meta=ai_meta,
+            user_text=user_text,
+            locale=locale,
+            tz_name=tz_name,
+            prior_state=prior_state,
+            command_id=command_id,
+        )
+
+    if intent == NL_COMMAND_INTENT_CREATE_PERSONAL_PROPERTY:
+        return _parse_create_personal_property(
             user,
             data=data,
             ai_meta=ai_meta,
@@ -475,6 +588,8 @@ def confirm_command(user, command_id: str) -> Dict[str, Any]:
     intent = state.get('intent')
     if intent == NL_COMMAND_INTENT_CREATE_CONTACT:
         return confirm_create_contact(user, command_id, state)
+    if intent == NL_COMMAND_INTENT_CREATE_PERSONAL_PROPERTY:
+        return confirm_create_personal_property(user, command_id, state)
     if intent == NL_COMMAND_INTENT_CREATE_REMINDER:
         return confirm_create_reminder(user, command_id, state)
     raise NLCommandError('نوع فرمان پشتیبانی نمی‌شود.', code='invalid_intent')

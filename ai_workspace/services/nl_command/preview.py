@@ -1,8 +1,10 @@
-"""پیش‌نمایش فرمان create_contact."""
+"""پیش‌نمایش فرمان‌های nl_command."""
 from __future__ import annotations
 
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
+from ai_workspace.services.nl_command.validators_property import build_nl_property_title
+from workspace.services.formatting import format_toman
 from workspace.services.jalali_input import to_persian_digits
 
 
@@ -56,6 +58,77 @@ def build_contact_preview(validated: Dict[str, Any]) -> Dict[str, Any]:
         'rooms_display': to_persian_digits(str(validated.get('rooms'))) if validated.get('rooms') else '',
         'property_type': validated.get('property_type') or '',
         'source': validated.get('source') or '',
+        'notes': validated.get('notes') or '',
+    }
+
+
+def _fa_area(area: Optional[float]) -> str:
+    if area is None:
+        return ''
+    if float(area) == int(area):
+        return to_persian_digits(str(int(area)))
+    return to_persian_digits(str(area))
+
+
+def build_property_preview(validated: Dict[str, Any]) -> Dict[str, Any]:
+    deal = validated.get('deal_mode') or ''
+    ptype = validated.get('property_type') or ''
+    type_deal = ' · '.join(x for x in (ptype, deal) if x)
+
+    loc = (
+        validated.get('neighborhood')
+        or validated.get('district')
+        or validated.get('city')
+        or validated.get('address')
+        or ''
+    )
+
+    specs: List[str] = []
+    area_s = _fa_area(validated.get('area'))
+    if area_s:
+        specs.append(f'{area_s} متر')
+    rooms = (validated.get('rooms') or '').strip()
+    if rooms:
+        specs.append(f'{to_persian_digits(rooms)} خواب')
+    floor = validated.get('floor')
+    if floor is not None:
+        specs.append(f'طبقه {to_persian_digits(str(floor))}')
+
+    features_positive: List[str] = []
+    features_negative: List[str] = []
+    if validated.get('has_parking') is True:
+        features_positive.append('پارکینگ')
+    elif validated.get('has_parking') is False:
+        features_negative.append('بدون پارکینگ')
+    if validated.get('has_elevator') is True:
+        features_positive.append('آسانسور')
+    elif validated.get('has_elevator') is False:
+        features_negative.append('بدون آسانسور')
+    if validated.get('has_storage') is True:
+        features_positive.append('انباری')
+    elif validated.get('has_storage') is False:
+        features_negative.append('بدون انباری')
+
+    sale_line = ''
+    deposit_line = ''
+    rent_line = ''
+    if validated.get('sale_price') is not None:
+        sale_line = format_toman(validated.get('sale_price'))
+    if validated.get('deposit') is not None:
+        deposit_line = format_toman(validated.get('deposit'))
+    if validated.get('monthly_rent') is not None:
+        rent_line = format_toman(validated.get('monthly_rent'))
+
+    return {
+        'title': build_nl_property_title(validated),
+        'type_deal_display': type_deal,
+        'location_display': loc,
+        'specs_display': ' · '.join(specs),
+        'features_positive': features_positive,
+        'features_negative': features_negative,
+        'sale_price_display': sale_line,
+        'deposit_display': deposit_line,
+        'rent_display': rent_line,
         'notes': validated.get('notes') or '',
     }
 

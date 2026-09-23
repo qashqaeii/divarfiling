@@ -100,6 +100,8 @@
         {% include 'workspace/includes/kpi_item.html' with variant='compact' extra_class='crm-dash-kpi' warn=stats.due_today value=stats.due_today label='امروز' %}
     </section>
 
+    {% include 'workspace/crm/includes/crm_smart_command.html' %}
+
     {% if duplicate_groups %}
     <section class="crm-contacts-alert-rail" aria-label="اقدامات فوری">
         <button type="button" class="crm-contacts-alert-card" data-drawer-open="drawer-merge">

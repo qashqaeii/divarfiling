@@ -296,6 +296,52 @@ def create_customer_from_nl(user, data: Dict[str, Any]) -> Customer:
     return customer
 
 
+def create_property_from_nl(user, data: Dict[str, Any]) -> CRMProperty:
+    """ثبت فایل شخصی از فرمان هوشمند — بدون مالک/تصویر/ژوکان."""
+    from workspace.constants import CRM_PROPERTIES, PROPERTY_DEAL_MODES
+
+    title = (data.get('title') or '').strip()
+    if not title:
+        raise ValueError('عنوان ملک الزامی است.')
+
+    property_type = (data.get('property_type') or 'آپارتمان').strip()
+    if property_type not in CRM_PROPERTIES:
+        property_type = 'آپارتمان'
+
+    deal_mode = (data.get('deal_mode') or 'فروش').strip()
+    if deal_mode not in PROPERTY_DEAL_MODES:
+        deal_mode = 'فروش'
+
+    prop = CRMProperty(
+        user=user,
+        agency=get_agency(user),
+        title=title[:300],
+        property_type=property_type,
+        deal_mode=deal_mode,
+        transaction_status='فعال',
+        publish_status='پیش‌نویس',
+        city=(data.get('city') or '')[:100],
+        district=(data.get('district') or '')[:100],
+        neighborhood=(data.get('neighborhood') or '')[:200],
+        address=(data.get('address') or ''),
+        area=data.get('area'),
+        rooms=(data.get('rooms') or '')[:20],
+        floor=data.get('floor'),
+        total_floors=data.get('total_floors'),
+        build_year=data.get('build_year'),
+        sale_price=data.get('sale_price'),
+        deposit=data.get('deposit'),
+        monthly_rent=data.get('monthly_rent'),
+        amenities=(data.get('amenities') or ''),
+        notes=(data.get('notes') or ''),
+    )
+    for bool_field in ('has_parking', 'has_storage', 'has_elevator'):
+        if data.get(bool_field) is not None:
+            setattr(prop, bool_field, bool(data[bool_field]))
+    prop.save()
+    return prop
+
+
 def create_activity(user, contact_id: int, data: Dict[str, Any]) -> CustomerActivity:
     c = get_contact(user, contact_id)
     if not c:

@@ -295,23 +295,9 @@ class CRMTodayView(CRMContextMixin, LoginRequiredMixin, TemplateView):
         ctx['crm_section'] = 'today'
         ctx['quick_lead_form'] = QuickLeadForm()
         ctx['crm_sources'] = CRM_SOURCES
-        from ai_workspace.constants import FEATURE_NL_COMMAND, is_ai_enabled, is_feature_enabled
-        from ai_workspace.services.quota import feature_quota_dict
+        from workspace.services.crm_smart_command import inject_smart_command_context
 
-        user = self.request.user
-        ctx['nl_command_enabled'] = is_ai_enabled() and is_feature_enabled(FEATURE_NL_COMMAND, user)
-        if ctx['nl_command_enabled']:
-            ctx['nl_command_quota'] = feature_quota_dict(user, FEATURE_NL_COMMAND)
-            ctx['nl_command_urls'] = {
-                'parse': reverse('workspace:ai_workspace:nl_parse'),
-                'confirm': reverse('workspace:ai_workspace:nl_confirm'),
-                'resolve_contact': reverse('workspace:ai_workspace:nl_resolve_contact'),
-            }
-            ctx['reminder_create_url'] = reverse('workspace:reminder_create')
-            from django.conf import settings
-
-            primary_model = (getattr(settings, 'ARVAN_AI_MODEL', '') or '').strip()
-            ctx['nl_command_ai_default'] = primary_model or 'Arvan AI'
+        inject_smart_command_context(ctx, self.request, 'today')
         if not items and stats.get('total', 0) == 0:
             from workspace.academy.context_helpers import inject_academy_context
             inject_academy_context(ctx, self.request.user, 'today_empty')
@@ -416,6 +402,9 @@ class CustomerListView(CRMContextMixin, LoginRequiredMixin, ListView):
         ctx['match_eligible_types'] = MATCH_TYPES | LEAD_TYPES
         ctx['today'] = today
         ctx.update(_contact_areas_context(user))
+        from workspace.services.crm_smart_command import inject_smart_command_context
+
+        inject_smart_command_context(ctx, self.request, 'contacts')
         if ctx['stats']['total'] == 0:
             from workspace.academy.context_helpers import inject_academy_context
             inject_academy_context(ctx, user, 'contacts_empty')
@@ -1353,6 +1342,9 @@ class CRMPropertyListView(CRMContextMixin, LoginRequiredMixin, ListView):
         if ctx['stats']['total'] == 0 and not ctx.get('has_filters'):
             from workspace.academy.context_helpers import inject_academy_context
             inject_academy_context(ctx, user, 'properties_empty')
+        from workspace.services.crm_smart_command import inject_smart_command_context
+
+        inject_smart_command_context(ctx, self.request, 'properties')
         return ctx
 
 

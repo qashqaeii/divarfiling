@@ -129,6 +129,8 @@
         {% include 'workspace/includes/kpi_item.html' with variant='compact' extra_class='crm-dash-kpi' value=stats.published label='منتشر' %}
     </section>
 
+    {% include 'workspace/crm/includes/crm_smart_command.html' %}
+
     <div class="crm-shell-body">
         {% include 'workspace/crm/includes/property_filing_nav.html' %}
         <form method="get" class="crm-files-filters crm-page-filters" id="crmPropertyFilters">

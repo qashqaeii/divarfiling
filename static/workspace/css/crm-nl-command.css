@@ -628,3 +628,68 @@
         animation: none;
     }
 }
+
+/* —— Contextual compact bar (Contacts / Properties) —— */
+.crm-contacts-pro .crm-smart-command--compact,
+.crm-files-pro .crm-smart-command--compact,
+.crm-properties-page .crm-smart-command--compact {
+    --nl-font: 'Vazirmatn', 'Vazir', system-ui, sans-serif;
+    position: relative;
+    margin: 0 0 0.85rem;
+    padding: 0.85rem 1rem;
+    border-radius: 14px;
+    font-family: var(--nl-font);
+    background: var(--ws-surface, #fff);
+    border: 1px solid var(--ws-border, #e8ecf1);
+    box-shadow: 0 8px 24px -22px rgba(15, 23, 42, 0.14);
+}
+
+.crm-contacts-pro .crm-smart-command--compact .crm-nl-command__head,
+.crm-files-pro .crm-smart-command--compact .crm-nl-command__head,
+.crm-properties-page .crm-smart-command--compact .crm-nl-command__head {
+    margin-bottom: 0.65rem;
+}
+
+.crm-contacts-pro .crm-smart-command--compact .crm-nl-command__title,
+.crm-files-pro .crm-smart-command--compact .crm-nl-command__title,
+.crm-properties-page .crm-smart-command--compact .crm-nl-command__title {
+    font-size: 0.88rem;
+}
+
+.crm-contacts-pro .crm-smart-command--compact .crm-nl-command__spark,
+.crm-files-pro .crm-smart-command--compact .crm-nl-command__spark,
+.crm-properties-page .crm-smart-command--compact .crm-nl-command__spark {
+    width: 1.55rem;
+    height: 1.55rem;
+    font-size: 0.72rem;
+    border-radius: 9px;
+}
+
+.crm-contacts-pro .crm-smart-command--compact .crm-nl-command__chips,
+.crm-files-pro .crm-smart-command--compact .crm-nl-command__chips,
+.crm-properties-page .crm-smart-command--compact .crm-nl-command__chips {
+    flex-wrap: wrap;
+    gap: 0.35rem;
+}
+
+.crm-contacts-pro .crm-smart-command--compact .crm-nl-command__chip,
+.crm-files-pro .crm-smart-command--compact .crm-nl-command__chip,
+.crm-properties-page .crm-smart-command--compact .crm-nl-command__chip {
+    font-size: 0.68rem;
+    padding: 0.28rem 0.55rem;
+}
+
+@media (max-width: 640px) {
+    .crm-contacts-pro .crm-smart-command--compact.is-sheet-open .crm-nl-command__panel,
+    .crm-files-pro .crm-smart-command--compact.is-sheet-open .crm-nl-command__panel,
+    .crm-properties-page .crm-smart-command--compact.is-sheet-open .crm-nl-command__panel {
+        position: fixed;
+        inset: auto 0 0 0;
+        z-index: 1200;
+        max-height: 78vh;
+        overflow: auto;
+        border-radius: 16px 16px 0 0;
+        box-shadow: 0 -12px 40px rgba(15, 23, 42, 0.12);
+        animation: crm-nl-sheet 0.28s ease;
+    }
+}

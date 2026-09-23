@@ -11,6 +11,7 @@ from workspace.services.crm import add_listing_to_personal_files
 from workspace.services.crm_property_duplicate import duplicate_property
 from workspace.services.listing_personal_status import (
     DIVAR_SOURCE_PLATFORM,
+    get_crm_property_by_source_identity,
     personal_property_ids_by_tokens,
 )
 
@@ -186,3 +187,71 @@ class ListingPersonalDuplicateTests(TestCase):
         self.assertTrue(
             Listing.objects.filter(dataset__user=self.user, token=reextracted.token).exists(),
         )
+
+    def test_integrity_error_recovery_after_inner_savepoint(self):
+        existing = CRMProperty.objects.create(
+            user=self.user,
+            title='موجود',
+            property_type='آپارتمان',
+            deal_mode='فروش',
+            source_platform=DIVAR_SOURCE_PLATFORM,
+            source_external_id='divar-abc-123',
+            token='divar-abc-123',
+        )
+
+        def _raise_unique(*_args, **_kwargs):
+            raise IntegrityError(
+                'duplicate key value violates unique constraint '
+                '"uniq_crmproperty_user_source_listing"',
+            )
+
+        with patch('workspace.services.crm.property_from_listing', side_effect=_raise_unique):
+            prop, created = add_listing_to_personal_files(self.user, self.listing)
+
+        self.assertFalse(created)
+        self.assertEqual(prop.pk, existing.pk)
+        self.assertEqual(CRMProperty.objects.filter(user=self.user).count(), 1)
+
+    def test_identity_lookup_finds_property_outside_scoped_qs(self):
+        existing = CRMProperty.objects.create(
+            user=self.user,
+            title='scoped hidden',
+            property_type='آپارتمان',
+            deal_mode='فروش',
+            source_platform=DIVAR_SOURCE_PLATFORM,
+            source_external_id='divar-abc-123',
+            token='divar-abc-123',
+        )
+        found = get_crm_property_by_source_identity(
+            self.user, DIVAR_SOURCE_PLATFORM, 'divar-abc-123',
+        )
+        self.assertEqual(found.pk, existing.pk)
+
+    def test_stale_personal_post_is_idempotent(self):
+        from django.test import Client
+        from django.urls import reverse
+
+        prop, created = add_listing_to_personal_files(self.user, self.listing)
+        self.assertTrue(created)
+        reextracted = self._reextract_listing()
+        url = reverse(
+            'workspace:listing_add_personal',
+            kwargs={'dataset_id': reextracted.dataset_id, 'listing_id': reextracted.pk},
+        )
+        client = Client()
+        client.force_login(self.user)
+        resp = client.post(url, {'next': '/workspace/'})
+        self.assertEqual(resp.status_code, 302)
+        self.assertEqual(CRMProperty.objects.filter(user=self.user).count(), 1)
+        self.assertEqual(
+            CRMProperty.objects.filter(user=self.user).first().pk,
+            prop.pk,
+        )
+
+    def test_unrelated_integrity_error_is_not_swallowed(self):
+        def _raise_other(*_args, **_kwargs):
+            raise IntegrityError('some_other_constraint')
+
+        with patch('workspace.services.crm.property_from_listing', side_effect=_raise_other):
+            with self.assertRaises(IntegrityError):
+                add_listing_to_personal_files(self.user, self.listing)

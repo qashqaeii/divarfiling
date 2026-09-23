@@ -53,10 +53,11 @@
                     placeholder="{{ smart_command.placeholder }}"
                     autocomplete="off" spellcheck="false"></textarea>
                 <button type="button" class="crm-nl-command__voice" data-sc="voice-btn"
-                    aria-label="فرمان صوتی"
+                    aria-label="شروع فرمان صوتی"
                     aria-pressed="false"
                     title="فرمان صوتی">
-                    <i class="fas fa-microphone crm-nl-command__voice-icon" aria-hidden="true"></i>
+                    <i class="fas fa-microphone crm-nl-command__voice-icon" data-sc="voice-icon-mic" aria-hidden="true"></i>
+                    <i class="fas fa-stop crm-nl-command__voice-icon crm-nl-command__voice-icon--stop" data-sc="voice-icon-stop" aria-hidden="true" hidden></i>
                     <span class="visually-hidden" data-sc="voice-privacy">صدا برای تبدیل به متن توسط سرویس تشخیص گفتار مرورگر پردازش می‌شود.</span>
                 </button>
             </div>
@@ -150,6 +151,6 @@
     <div class="crm-nl-command__backdrop" data-sc="backdrop" hidden aria-hidden="true"></div>
 </section>
 </div>
-<script src="{% static 'workspace/js/crm-smart-command-voice.js' %}?v=3"></script>
+<script src="{% static 'workspace/js/crm-smart-command-voice.js' %}?v=4"></script>
 <script src="{% static 'workspace/js/crm-smart-command.js' %}?v=4"></script>
 {% endif %}

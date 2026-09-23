@@ -21,8 +21,12 @@
     const PRIVACY_NOTE =
         'صدا برای تبدیل به متن توسط سرویس تشخیص گفتار مرورگر پردازش می‌شود.';
     const MIC_TOOLTIP = 'فرمان صوتی';
+    const MIC_TOOLTIP_STOP = 'توقف ضبط';
+    const MIC_ARIA_START = 'شروع فرمان صوتی';
+    const MIC_ARIA_STOP = 'توقف فرمان صوتی';
 
     /** @typedef {'idle'|'listening'|'processing'|'error'} VoiceState */
+    /** @typedef {'idle'|'listening'} VoiceButtonState */
 
     function normalizeWhitespace(text) {
         return (text || '').replace(/\s+/g, ' ').trim();
@@ -292,8 +296,36 @@
         let cycleInterimTranscript = '';
 
         const privacyTitle = MIC_TOOLTIP + ' — ' + PRIVACY_NOTE;
-        micBtn.setAttribute('aria-label', MIC_TOOLTIP);
-        micBtn.title = supported ? privacyTitle : MSG_UNSUPPORTED;
+        const queryMicBtn =
+            typeof micBtn.querySelector === 'function' ? micBtn.querySelector.bind(micBtn) : null;
+        const micIconEl = queryMicBtn
+            ? queryMicBtn('[data-sc="voice-icon-mic"]') || queryMicBtn('.fa-microphone')
+            : null;
+        const stopIconEl = queryMicBtn ? queryMicBtn('[data-sc="voice-icon-stop"]') : null;
+
+        /**
+         * @param {VoiceButtonState} mode
+         */
+        function setVoiceButtonState(mode) {
+            const listening = mode === 'listening';
+            micBtn.classList.toggle('is-listening', listening);
+            micBtn.setAttribute('aria-pressed', listening ? 'true' : 'false');
+            micBtn.setAttribute('aria-label', listening ? MIC_ARIA_STOP : MIC_ARIA_START);
+            if (supported) {
+                micBtn.title = listening ? MIC_TOOLTIP_STOP : privacyTitle;
+            }
+            if (micIconEl) {
+                micIconEl.hidden = listening;
+            }
+            if (stopIconEl) {
+                stopIconEl.hidden = !listening;
+            }
+        }
+
+        setVoiceButtonState('idle');
+        if (!supported) {
+            micBtn.title = MSG_UNSUPPORTED;
+        }
 
         if (!supported) {
             micBtn.classList.add('is-unsupported');
@@ -341,9 +373,8 @@
         function setVoiceState(next, statusMessage) {
             voiceState = next;
             root.classList.toggle('is-voice-listening', next === 'listening');
-            micBtn.classList.toggle('is-listening', next === 'listening');
             micBtn.classList.toggle('is-processing', next === 'processing');
-            micBtn.setAttribute('aria-pressed', next === 'listening' ? 'true' : 'false');
+            setVoiceButtonState(next === 'listening' ? 'listening' : 'idle');
             setVoiceStatusEl(voiceStatusEl, next, statusMessage);
         }
 
@@ -378,7 +409,7 @@
             }
             const interim = normalizeWhitespace(cycleInterimTranscript);
             if (interim) {
-                sessionTranscript = appendTranscriptSegmentSafe(sessionTranscript, interim);
+                sessionTranscript = appendTranscriptSegmentSafe(sessionTranscript, cycleInterimTranscript);
             }
             resetCycleBuffers();
         }
@@ -624,6 +655,7 @@
 
             resetSilenceTimer();
             syncLiveInput();
+            setVoiceState('listening');
 
             if (!startRecognitionNow()) {
                 safeStartRecognition();
@@ -738,6 +770,9 @@
         MSG_DONE,
         PRIVACY_NOTE,
         MIC_TOOLTIP,
+        MIC_TOOLTIP_STOP,
+        MIC_ARIA_START,
+        MIC_ARIA_STOP,
         appendTranscriptSegment,
         appendTranscriptSegmentSafe,
         combineSessionVoiceDisplay,

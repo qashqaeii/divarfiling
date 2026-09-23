@@ -133,7 +133,6 @@
         const aiDefault = root.dataset.aiDefault || '';
         const voiceBtn = root.querySelector('[data-sc="voice-btn"]');
         const voiceStatusEl = root.querySelector('[data-sc="voice-status"]');
-        const voicePrivacyEl = root.querySelector('[data-sc="voice-privacy"]');
         /** @type {{ stop?: function(): void }|null} */
         let voiceAdapter = null;
 
@@ -1110,8 +1109,6 @@
         setAiModel(null);
 
         if (voiceBtn && window.CrmSmartCommandVoice && typeof window.CrmSmartCommandVoice.createVoiceInputAdapter === 'function') {
-            const privacy = (voicePrivacyEl && voicePrivacyEl.textContent) || window.CrmSmartCommandVoice.PRIVACY_NOTE;
-            voiceBtn.title = window.CrmSmartCommandVoice.MIC_TOOLTIP + ' — ' + privacy.trim();
             voiceAdapter = window.CrmSmartCommandVoice.createVoiceInputAdapter(root, {
                 input,
                 micBtn: voiceBtn,

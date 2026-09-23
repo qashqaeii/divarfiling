@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from typing import Dict, Iterable, List, Optional, Tuple
 
+from django.db import IntegrityError
 from django.db.models import OuterRef, Subquery
 
 from workspace.models import CRMProperty
@@ -14,6 +15,54 @@ DIVAR_SOURCE_PLATFORM = 'divar'
 def divar_source_identity(token: str) -> Tuple[str, str]:
     """platform + external_id برای آگهی دیوار."""
     return DIVAR_SOURCE_PLATFORM, str(token or '').strip()
+
+
+def get_crm_property_by_source_identity(
+    user,
+    platform: str,
+    external_id: str,
+) -> Optional[CRMProperty]:
+    """
+    Lookup مطابق unique constraint (user, source_platform, source_external_id).
+    بدون فیلتر agency/membership — برای idempotency و recovery پس از IntegrityError.
+    """
+    platform = str(platform or '').strip()
+    external_id = str(external_id or '').strip()
+    if not platform or not external_id or user is None:
+        return None
+    prop = CRMProperty.objects.filter(
+        user=user,
+        source_platform=platform,
+        source_external_id=external_id,
+    ).first()
+    if prop:
+        return prop
+    if platform == DIVAR_SOURCE_PLATFORM:
+        return CRMProperty.objects.filter(
+            user=user,
+            token=external_id,
+            source_external_id='',
+        ).first()
+    return None
+
+
+def is_user_source_listing_integrity_error(exc: BaseException) -> bool:
+    """True if IntegrityError matches uniq_crmproperty_user_source_listing."""
+    if not isinstance(exc, IntegrityError):
+        return False
+    chain = exc
+    parts = []
+    while chain is not None:
+        parts.append(str(chain))
+        chain = getattr(chain, '__cause__', None)
+    blob = ' '.join(parts).lower()
+    if 'uniq_crmproperty_user_source_listing' in blob:
+        return True
+    return (
+        'source_external_id' in blob
+        and 'source_platform' in blob
+        and ('user_id' in blob or 'key (user_id' in blob)
+    )
 
 
 def get_crm_property_by_source(

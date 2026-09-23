@@ -240,8 +240,8 @@
 .crm-smart-command .crm-nl-command__voice.is-listening {
     color: #fff;
     background: linear-gradient(165deg, #ef4444 0%, #dc2626 100%);
-    box-shadow: 0 0 0 3px color-mix(in srgb, #ef4444 25%, transparent);
-    animation: crm-nl-voice-pulse 1.2s ease-in-out infinite;
+    box-shadow: 0 0 0 3px color-mix(in srgb, #ef4444 22%, transparent);
+    animation: crm-nl-voice-pulse-soft 2.4s ease-in-out infinite;
 }
 
 .crm-smart-command .crm-nl-command__voice.is-processing {
@@ -255,6 +255,10 @@
 
 .crm-smart-command .crm-nl-command__voice-icon {
     font-size: 0.95rem;
+}
+
+.crm-smart-command .crm-nl-command__voice-icon--stop {
+    font-size: 0.72rem;
 }
 
 .crm-smart-command .crm-nl-command__voice-status {
@@ -273,9 +277,9 @@
     border-color: color-mix(in srgb, #ef4444 35%, var(--ws-border));
 }
 
-@keyframes crm-nl-voice-pulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.04); }
+@keyframes crm-nl-voice-pulse-soft {
+    0%, 100% { box-shadow: 0 0 0 3px color-mix(in srgb, #ef4444 18%, transparent); }
+    50% { box-shadow: 0 0 0 5px color-mix(in srgb, #ef4444 28%, transparent); }
 }
 
 .crm-smart-command .crm-nl-command__input {

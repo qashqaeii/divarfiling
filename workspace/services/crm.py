@@ -1,6 +1,7 @@
 """سرویس CRM — منطق کسب‌وکار."""
 from __future__ import annotations
 
+import logging
 import re
 from collections import Counter
 from datetime import date, datetime, timedelta
@@ -1064,8 +1065,12 @@ def add_listing_to_personal_files(user, listing) -> tuple[CRMProperty, bool]:
     from workspace.services.listing_personal_status import (
         DIVAR_SOURCE_PLATFORM,
         get_crm_property_by_source,
+        get_crm_property_by_source_identity,
+        is_user_source_listing_integrity_error,
     )
     from workspace.services.nearby_pois import schedule_property_accessibilities
+
+    logger = logging.getLogger(__name__)
 
     def _schedule(prop: CRMProperty) -> None:
         schedule_property_accessibilities(prop.pk, user.pk)
@@ -1098,15 +1103,34 @@ def add_listing_to_personal_files(user, listing) -> tuple[CRMProperty, bool]:
     prop: Optional[CRMProperty] = None
 
     with transaction.atomic():
-        prop = get_crm_property_by_source(user, DIVAR_SOURCE_PLATFORM, token) if token else None
+        if token:
+            prop = get_crm_property_by_source_identity(
+                user, DIVAR_SOURCE_PLATFORM, token,
+            )
+            if prop is None:
+                prop = get_crm_property_by_source(user, DIVAR_SOURCE_PLATFORM, token)
+
         if prop is None:
             try:
-                prop = property_from_listing(user, listing)
+                with transaction.atomic():
+                    prop = property_from_listing(user, listing)
                 created = True
-            except IntegrityError:
-                prop = get_crm_property_by_source(user, DIVAR_SOURCE_PLATFORM, token)
+            except IntegrityError as exc:
+                if not is_user_source_listing_integrity_error(exc):
+                    raise
+                prop = get_crm_property_by_source_identity(
+                    user, DIVAR_SOURCE_PLATFORM, token,
+                )
+                if prop is None:
+                    prop = get_crm_property_by_source(user, DIVAR_SOURCE_PLATFORM, token)
                 if prop is None:
                     raise
+                logger.info(
+                    'personal_property_duplicate_recovered user_id=%s listing_id=%s source_token=%s',
+                    user.pk,
+                    getattr(listing, 'pk', None),
+                    token[:12] if token else '',
+                )
 
         _sync_contacts(prop)
         finalize_listing_moved_to_personal(user, listing, prop)

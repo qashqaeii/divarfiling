@@ -9,6 +9,8 @@ from django.core.cache import cache
 from django.test import TestCase, override_settings
 
 from ai_workspace.providers.base import ProviderResult
+from ai_workspace.services.nl_command.preview import build_contact_preview
+from ai_workspace.services.nl_command.contact_validators import validate_contact_parse
 from ai_workspace.services.nl_command.service import confirm_command, parse_command
 from ai_workspace.services.nl_command.state import load_state
 from workspace.models import Customer
@@ -124,6 +126,38 @@ class NLCommandContactRequiredTests(TestCase):
         parsed = parse_command(self.user, text='سارا 09121112233')
         self.assertTrue(parsed['can_confirm'])
         self.assertEqual(parsed['missing_fields'], [])
+
+    def test_preview_no_implicit_crm_defaults(self):
+        v, _, _, _ = validate_contact_parse(
+            {
+                'name': 'سارا',
+                'contact': {'phone': '09121234000'},
+                'crm': {
+                    'status': 'جدید',
+                    'priority': 'بالا',
+                    'source': 'اینستاگرام',
+                },
+            },
+            llm_missing=[],
+            llm_ambiguous=[],
+        )
+        preview = build_contact_preview(v)
+        blob = str(preview.get('sections'))
+        self.assertNotIn('وضعیت', blob)
+        self.assertIn('بالا', blob)
+        self.assertIn('اینستاگرام', blob)
+
+    def test_preview_name_phone_only_no_status_priority(self):
+        v, _, _, _ = validate_contact_parse(
+            {'name': 'علی', 'contact': {'phone': '09121234567'}},
+            llm_missing=[],
+            llm_ambiguous=[],
+        )
+        preview = build_contact_preview(v)
+        blob = str(preview.get('sections'))
+        self.assertNotIn('وضعیت', blob)
+        self.assertNotIn('اولویت', blob)
+        self.assertNotIn('جدید', blob)
 
     @_patch_chain_json(_payload({'name': None, 'phone': '09125556677'}))
     def test_merge_phone_then_name(self, _chain):

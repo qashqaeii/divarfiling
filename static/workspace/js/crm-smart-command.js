@@ -271,7 +271,6 @@
 
         function focusCommand() {
             hidePreviewPanel();
-            commandId = null;
             if (confirmBtn) confirmBtn.disabled = true;
             input?.focus();
         }
@@ -682,6 +681,7 @@
             if (data.intent === 'create_personal_property') {
                 commandId = data.command_id;
                 if (isIncompleteProperty(data)) {
+                    currentIntent = 'create_personal_property';
                     hidePreviewPanel();
                     const fb = incompletePropertyFeedback(data);
                     setStatus(fb.main, 'is-info', {
@@ -717,6 +717,7 @@
                     return;
                 }
                 if (isIncompleteContact(data)) {
+                    currentIntent = 'create_contact';
                     hidePreviewPanel();
                     const fb = incompleteContactFeedback(data);
                     setStatus(fb.main, 'is-info', {

@@ -15,6 +15,13 @@ from workspace.constants import CRM_PRIORITIES, CRM_PROPERTIES, CRM_SOURCES, CRM
 from workspace.services.crm import normalize_phone
 from workspace.services.filters import get_user_dataset_neighborhoods
 
+# مقادیر پیش‌فرض CRM — اگر LLM آن‌ها را پر کند، در preview explicit نیستند.
+_IMPLICIT_DEFAULT_VALUES = {
+    'status': frozenset({'جدید'}),
+    'priority': frozenset({'متوسط'}),
+    'customer_type': frozenset({'خریدار'}),
+}
+
 _CRM_TYPE_SET = frozenset(CRM_TYPES)
 _CRM_SOURCE_SET = frozenset(CRM_SOURCES)
 _CRM_PROPERTY_SET = frozenset(CRM_PROPERTIES)
@@ -52,6 +59,32 @@ def _merge_missing(base: List[str], extra: List[str]) -> List[str]:
 
 def _subdict(d: Any) -> Dict[str, Any]:
     return dict(d) if isinstance(d, dict) else {}
+
+
+def _finalize_implicit_crm_defaults(
+    explicit_model: Set[str],
+    *,
+    status: str,
+    priority: str,
+    customer_type: str,
+) -> Tuple[Set[str], str, str, str]:
+    """حذف defaultهای LLM از explicit و validated — preview فقط گفتار واقعی کاربر."""
+    model = set(explicit_model)
+    pairs = (
+        ('status', status),
+        ('priority', priority),
+        ('customer_type', customer_type),
+    )
+    for field, value in pairs:
+        if field in model and (value or '') in _IMPLICIT_DEFAULT_VALUES.get(field, frozenset()):
+            model.discard(field)
+    if 'status' not in model:
+        status = ''
+    if 'priority' not in model:
+        priority = ''
+    if 'customer_type' not in model:
+        customer_type = ''
+    return model, status, priority, customer_type
 
 
 def _collect_explicit_paths(data: Dict[str, Any], prefix: str = '') -> Set[str]:
@@ -429,6 +462,13 @@ def validate_contact_parse(
         rooms_display = str(rooms_min)
     elif rooms_max is not None:
         rooms_display = str(rooms_max)
+
+    explicit_model, status, priority, customer_type = _finalize_implicit_crm_defaults(
+        explicit_model,
+        status=status,
+        priority=priority,
+        customer_type=customer_type,
+    )
 
     validated = {
         'name': name,

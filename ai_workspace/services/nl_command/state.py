@@ -33,3 +33,20 @@ def load_state(user_id: int, command_id: str) -> Optional[Dict[str, Any]]:
 
 def delete_state(user_id: int, command_id: str) -> None:
     cache.delete(_cache_key(user_id, command_id))
+
+
+_CONFIRM_LOCK_PREFIX = 'nl_command:confirm_lock'
+_CONFIRM_LOCK_SECONDS = 60
+
+
+def _confirm_lock_key(user_id: int, command_id: str) -> str:
+    return f'{_CONFIRM_LOCK_PREFIX}:{user_id}:{command_id}'
+
+
+def try_acquire_confirm_lock(user_id: int, command_id: str) -> bool:
+    """یک confirm همزمان per command — cache.add اتمیک است."""
+    return cache.add(_confirm_lock_key(user_id, command_id), 1, _CONFIRM_LOCK_SECONDS)
+
+
+def release_confirm_lock(user_id: int, command_id: str) -> None:
+    cache.delete(_confirm_lock_key(user_id, command_id))

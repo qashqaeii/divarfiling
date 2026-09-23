@@ -301,6 +301,8 @@ class NLCommandViewTests(TestCase):
         self.assertFalse(data.get('ok'))
         self.assertEqual(resp.status_code, 503)
         self.assertEqual(data.get('code'), 'parse_failed')
+        self.assertEqual(data.get('error_code'), 'provider_unavailable')
+        self.assertTrue(data.get('retryable'))
 
 
 @override_settings(AI_ENABLED=True)

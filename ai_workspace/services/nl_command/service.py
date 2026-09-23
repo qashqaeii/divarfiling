@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import hashlib
 import logging
+import time
 from typing import Any, Dict, Optional
 
 from django.urls import reverse
@@ -31,7 +32,14 @@ from ai_workspace.services.nl_command.preview import (
     build_property_preview,
     existing_contact_payload,
 )
-from ai_workspace.services.nl_command.state import load_state, new_command_id, save_state, text_hash
+from ai_workspace.services.nl_command.state import (
+    load_state,
+    new_command_id,
+    release_confirm_lock,
+    save_state,
+    text_hash,
+    try_acquire_confirm_lock,
+)
 from ai_workspace.services.nl_command.validators import (
     hint_for_incomplete_contact,
     inner_from_validated,
@@ -363,6 +371,56 @@ def _parse_create_personal_property(
     return response
 
 
+def _log_parse_timing(
+    user_id: int,
+    intent: str,
+    *,
+    total_request_ms: int,
+    provider_ms: int,
+    validation_ms: int,
+    resolver_ms: int,
+    state_ms: int,
+) -> None:
+    logger.info(
+        'nl_command_parse_timing user_id=%s intent=%s total_request_ms=%s provider_ms=%s '
+        'validation_ms=%s resolver_ms=%s state_ms=%s',
+        user_id,
+        intent or '',
+        total_request_ms,
+        provider_ms,
+        validation_ms,
+        resolver_ms,
+        state_ms,
+    )
+
+
+def _merge_reminder_inner(
+    prior_state: Dict[str, Any],
+    inner: Dict[str, Any],
+    *,
+    resume_correction: bool = False,
+) -> Dict[str, Any]:
+    prior_v = prior_state.get('validated') or {}
+    prior_p = prior_state.get('preview') or {}
+    merged = {
+        'contact_name': prior_v.get('contact_name'),
+        'title': (prior_v.get('title') or '').strip(),
+        'note': (prior_v.get('note') or '').strip(),
+        'date_text': (prior_p.get('date_text') or '').strip(),
+        'time_text': (prior_p.get('time_text') or '').strip(),
+    }
+    for key in ('contact_name', 'title', 'note', 'date_text', 'time_text'):
+        new_val = inner.get(key)
+        if new_val is None:
+            continue
+        if isinstance(new_val, str):
+            new_val = new_val.strip()
+        if new_val == '' and not resume_correction:
+            continue
+        merged[key] = new_val
+    return merged
+
+
 def _parse_create_reminder(
     user,
     *,
@@ -371,8 +429,18 @@ def _parse_create_reminder(
     user_text: str,
     locale: str,
     tz_name: str,
+    prior_state: Optional[Dict[str, Any]] = None,
+    command_id: Optional[str] = None,
+    resume_correction: bool = False,
+    timing: Optional[Dict[str, int]] = None,
 ) -> Dict[str, Any]:
-    inner = data.get('data') or {}
+    inner = dict(data.get('data') or {})
+    if prior_state and prior_state.get('intent') == NL_COMMAND_INTENT_CREATE_REMINDER:
+        inner = _merge_reminder_inner(
+            prior_state,
+            inner,
+            resume_correction=resume_correction,
+        )
     contact_name = inner.get('contact_name')
     title = (inner.get('title') or '').strip() or _default_title(contact_name, inner.get('note'))
     note = (inner.get('note') or '').strip()
@@ -394,7 +462,10 @@ def _parse_create_reminder(
     elif dt_error == 'past_datetime':
         ambiguous_fields.append('due_at')
 
+    t_resolver = time.perf_counter()
     contact_id, candidates, amb = resolve_contact_by_name(user, contact_name)
+    if timing is not None:
+        timing['resolver_ms'] = int((time.perf_counter() - t_resolver) * 1000)
     if amb == 'multiple':
         ambiguous_fields.append('contact_name')
     elif amb == 'none' and contact_name:
@@ -407,7 +478,8 @@ def _parse_create_reminder(
         and amb != 'multiple'
     )
 
-    command_id = new_command_id()
+    if not command_id:
+        command_id = new_command_id()
     preview = {
         'contact_name': contact_name or '',
         'title': title,
@@ -432,10 +504,14 @@ def _parse_create_reminder(
         'input_hash': text_hash(user_text),
         'locale': locale,
         'timezone': tz_name,
-        'created_reminder_id': None,
+        'created_reminder_id': prior_state.get('created_reminder_id') if prior_state else None,
     }
+    t_state = time.perf_counter()
     save_state(user.pk, command_id, state)
+    if timing is not None:
+        timing['state_ms'] = int((time.perf_counter() - t_state) * 1000)
 
+    contact_not_found = bool(contact_name and amb == 'none')
     response: Dict[str, Any] = {
         'ok': True,
         'command_id': command_id,
@@ -448,7 +524,8 @@ def _parse_create_reminder(
     }
     if candidates and amb == 'multiple':
         response['contact_candidates'] = candidates
-    if amb == 'none' and contact_name:
+    if contact_not_found:
+        response['contact_not_found'] = True
         response['message'] = nl_command_contact_not_found_message(contact_name)
     elif not can_confirm:
         response['hint'] = _hint_for_incomplete_reminder(
@@ -487,14 +564,16 @@ def parse_command(
     command_id: Optional[str] = None,
     resume_correction: bool = False,
 ) -> Dict[str, Any]:
+    t_request = time.perf_counter()
     user_text = (text or '').strip()
     if not user_text:
-        raise NLCommandError('متن فرمان خالی است.', code='empty_text')
+        raise NLCommandError('یک فرمان کوتاه بنویسید.', code='empty_text')
 
     prior_state = None
     merge_intents = frozenset({
         NL_COMMAND_INTENT_CREATE_CONTACT,
         NL_COMMAND_INTENT_CREATE_PERSONAL_PROPERTY,
+        NL_COMMAND_INTENT_CREATE_REMINDER,
     })
     if command_id:
         prior_state = load_state(user.pk, command_id)
@@ -537,24 +616,68 @@ def parse_command(
 
     intent = data.get('intent')
     ai_meta = _ai_response_meta(result)
+    t_after_provider = time.perf_counter()
+    provider_ms = int(result.latency_ms or 0)
+    timing: Dict[str, int] = {
+        'provider_ms': provider_ms,
+        'validation_ms': 0,
+        'resolver_ms': 0,
+        'state_ms': 0,
+    }
+
+    def _finish(response: Dict[str, Any]) -> Dict[str, Any]:
+        timing['validation_ms'] = max(
+            0,
+            int((time.perf_counter() - t_after_provider) * 1000) - timing['resolver_ms'] - timing['state_ms'],
+        )
+        total_request_ms = int((time.perf_counter() - t_request) * 1000)
+        _log_parse_timing(
+            user.pk,
+            str(response.get('intent') or intent or ''),
+            total_request_ms=total_request_ms,
+            provider_ms=timing['provider_ms'],
+            validation_ms=timing['validation_ms'],
+            resolver_ms=timing['resolver_ms'],
+            state_ms=timing['state_ms'],
+        )
+        return response
 
     if intent == NL_COMMAND_INTENT_UNKNOWN:
-        return _unknown_parse_response(ai_meta, entity_id=entity_id, user_id=user.pk)
+        return _finish(_unknown_parse_response(ai_meta, entity_id=entity_id, user_id=user.pk))
 
     if intent == NL_COMMAND_INTENT_CREATE_CONTACT:
-        return _parse_create_contact(
-            user,
-            data=data,
-            ai_meta=ai_meta,
-            user_text=user_text,
-            locale=locale,
-            tz_name=tz_name,
-            prior_state=prior_state,
-            command_id=command_id,
+        return _finish(
+            _parse_create_contact(
+                user,
+                data=data,
+                ai_meta=ai_meta,
+                user_text=user_text,
+                locale=locale,
+                tz_name=tz_name,
+                prior_state=prior_state,
+                command_id=command_id,
+            )
         )
 
     if intent == NL_COMMAND_INTENT_CREATE_PERSONAL_PROPERTY:
-        return _parse_create_personal_property(
+        return _finish(
+            _parse_create_personal_property(
+                user,
+                data=data,
+                ai_meta=ai_meta,
+                user_text=user_text,
+                locale=locale,
+                tz_name=tz_name,
+                prior_state=prior_state,
+                command_id=command_id,
+            )
+        )
+
+    if intent != NL_COMMAND_INTENT_CREATE_REMINDER:
+        return _finish(_unknown_parse_response(ai_meta, entity_id=entity_id, user_id=user.pk))
+
+    return _finish(
+        _parse_create_reminder(
             user,
             data=data,
             ai_meta=ai_meta,
@@ -563,25 +686,20 @@ def parse_command(
             tz_name=tz_name,
             prior_state=prior_state,
             command_id=command_id,
+            resume_correction=resume_correction,
+            timing=timing,
         )
-
-    if intent != NL_COMMAND_INTENT_CREATE_REMINDER:
-        return _unknown_parse_response(ai_meta, entity_id=entity_id, user_id=user.pk)
-
-    return _parse_create_reminder(
-        user,
-        data=data,
-        ai_meta=ai_meta,
-        user_text=user_text,
-        locale=locale,
-        tz_name=tz_name,
     )
 
 
 def resolve_contact(user, command_id: str, contact_id: int) -> Dict[str, Any]:
     state = load_state(user.pk, command_id)
     if not state:
-        raise NLCommandError('فرمان منقضی شده یا یافت نشد.', code='expired', status=404)
+        raise NLCommandError(
+            'این فرمان منقضی شده. دوباره بررسی‌اش کنید.',
+            code='expired',
+            status=404,
+        )
     if state.get('intent') != NL_COMMAND_INTENT_CREATE_REMINDER:
         raise NLCommandError('این فرمان انتخاب مخاطب ندارد.', code='invalid_intent')
 
@@ -617,15 +735,40 @@ def resolve_contact(user, command_id: str, contact_id: int) -> Dict[str, Any]:
 
 
 def confirm_command(user, command_id: str) -> Dict[str, Any]:
-    state = load_state(user.pk, command_id)
-    if not state:
-        raise NLCommandError('فرمان منقضی شده یا یافت نشد.', code='expired', status=404)
+    if not try_acquire_confirm_lock(user.pk, command_id):
+        raise NLCommandError(
+            'فرمان در حال ثبت است. لحظه‌ای صبر کنید.',
+            code='confirm_conflict',
+            status=409,
+        )
+    t_confirm = time.perf_counter()
+    intent = ''
+    result: Dict[str, Any]
+    try:
+        state = load_state(user.pk, command_id)
+        if not state:
+            raise NLCommandError(
+                'این فرمان منقضی شده. دوباره بررسی‌اش کنید.',
+                code='expired',
+                status=404,
+            )
 
-    intent = state.get('intent')
-    if intent == NL_COMMAND_INTENT_CREATE_CONTACT:
-        return confirm_create_contact(user, command_id, state)
-    if intent == NL_COMMAND_INTENT_CREATE_PERSONAL_PROPERTY:
-        return confirm_create_personal_property(user, command_id, state)
-    if intent == NL_COMMAND_INTENT_CREATE_REMINDER:
-        return confirm_create_reminder(user, command_id, state)
-    raise NLCommandError('نوع فرمان پشتیبانی نمی‌شود.', code='invalid_intent')
+        intent = str(state.get('intent') or '')
+        if intent == NL_COMMAND_INTENT_CREATE_CONTACT:
+            result = confirm_create_contact(user, command_id, state)
+        elif intent == NL_COMMAND_INTENT_CREATE_PERSONAL_PROPERTY:
+            result = confirm_create_personal_property(user, command_id, state)
+        elif intent == NL_COMMAND_INTENT_CREATE_REMINDER:
+            result = confirm_create_reminder(user, command_id, state)
+        else:
+            raise NLCommandError('نوع فرمان پشتیبانی نمی‌شود.', code='invalid_intent')
+        return result
+    finally:
+        confirm_ms = int((time.perf_counter() - t_confirm) * 1000)
+        logger.info(
+            'nl_command_confirm_timing user_id=%s intent=%s confirm_ms=%s',
+            user.pk,
+            intent,
+            confirm_ms,
+        )
+        release_confirm_lock(user.pk, command_id)

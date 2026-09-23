@@ -1,9 +1,15 @@
 (function () {
     'use strict';
 
+    /** @type {Record<string, function(string, object): void>} */
+    const submitByContext = {};
+
     const PARSE_LABEL_IDLE = 'بررسی';
-    const PARSE_LABEL_LOADING = 'در حال بررسی…';
+    const PARSE_LABEL_LOADING = 'در حال بررسی فرمان…';
+    const PARSE_LABEL_LOADING_SLOW = 'دارم اطلاعات را استخراج می‌کنم…';
     const SUCCESS_RESET_MS = 4500;
+    const LOADING_SLOW_MS = 2000;
+    const MERGE_INTENTS = ['create_contact', 'create_personal_property', 'create_reminder'];
 
     function csrfToken() {
         const match = document.cookie.match(/csrftoken=([^;]+)/);
@@ -28,10 +34,8 @@
     }
 
     function isContactNotFound(data) {
-        if (!data || data.intent !== 'create_reminder') return false;
-        if (data.can_confirm) return false;
-        const msg = (data.message || '').trim();
-        return msg.indexOf('پیدا نشد') !== -1;
+        if (!data || data.intent !== 'create_reminder' || data.can_confirm) return false;
+        return !!data.contact_not_found;
     }
 
     function hasAmbiguousContacts(data) {
@@ -151,8 +155,11 @@
         let pendingContactId = null;
         let successTimer = null;
         let lastParseText = '';
-        /** @type {'idle'|'incomplete'|'preview'|'editing'} */
-        let commandSessionMode = 'idle';
+        let parseInFlight = false;
+        let confirmInFlight = false;
+        let loadingSlowTimer = null;
+        /** @type {'idle'|'loading'|'incomplete'|'ambiguous'|'preview'|'editing'|'confirming'|'success'|'error'} */
+        let sessionState = 'idle';
 
         function setAiModel(ai) {
             const label = (ai && ai.model_label) || aiDefault;
@@ -184,7 +191,31 @@
         function setLoading(on) {
             root.classList.toggle('is-loading', !!on);
             if (parseBtn) parseBtn.disabled = !!on;
-            if (parseLabel) parseLabel.textContent = on ? PARSE_LABEL_LOADING : PARSE_LABEL_IDLE;
+            if (input) input.disabled = !!on;
+            if (on) {
+                if (parseLabel) parseLabel.textContent = PARSE_LABEL_LOADING;
+                if (loadingSlowTimer) window.clearTimeout(loadingSlowTimer);
+                loadingSlowTimer = window.setTimeout(() => {
+                    if (sessionState === 'loading' && parseLabel) {
+                        parseLabel.textContent = PARSE_LABEL_LOADING_SLOW;
+                    }
+                }, LOADING_SLOW_MS);
+            } else {
+                if (loadingSlowTimer) {
+                    window.clearTimeout(loadingSlowTimer);
+                    loadingSlowTimer = null;
+                }
+                if (parseLabel) parseLabel.textContent = PARSE_LABEL_IDLE;
+            }
+        }
+
+        function setSessionState(next) {
+            sessionState = next;
+        }
+
+        function apiErrorCode(res) {
+            const data = res.data || {};
+            return data.error_code || data.code || '';
         }
 
         function clearStatusActions() {
@@ -251,7 +282,7 @@
 
         function resetAll() {
             clearPreview();
-            commandSessionMode = 'idle';
+            setSessionState('idle');
             setAiModel(null);
             highlightChips(false);
             setStatus('');
@@ -280,9 +311,9 @@
 
         const editLink = root.querySelector('[data-sc="edit-link"]');
         editLink?.addEventListener('click', (ev) => {
-            if (commandSessionMode === 'preview' && commandId) {
+            if (sessionState === 'preview' && commandId) {
                 ev.preventDefault();
-                commandSessionMode = 'editing';
+                setSessionState('editing');
                 focusCommand();
             }
         });
@@ -661,38 +692,46 @@
                 });
         }
 
+        function handleExpiredCommand() {
+            setSessionState('error');
+            commandId = null;
+            hidePreviewPanel();
+            setStatus('این فرمان منقضی شده. دوباره بررسی‌اش کنید.', 'is-warn', {
+                actionLabel: 'بررسی دوباره',
+                onAction: () => {
+                    setSessionState('idle');
+                    submitCommandText((input?.value || '').trim(), { forceNew: true });
+                },
+            });
+        }
+
         function handleHttpError(res) {
             const data = res.data || {};
-            const code = data.code || '';
-            if (res.status === 429 || code === 'quota_exceeded' || code === 'feature_limit' || code === 'daily_limit') {
-                setStatus(data.error || 'سهمیه امروز شما تمام شده است.', 'is-warn');
+            const errorCode = apiErrorCode(res);
+            setSessionState('error');
+            if (errorCode === 'command_expired') {
+                handleExpiredCommand();
                 return;
             }
-            if (code === 'parse_failed') {
-                setStatus(data.error || 'فرمان قابل تشخیص نبود. دوباره ساده‌تر بنویسید.', 'is-error');
+            if (res.status === 429 || errorCode === 'quota_exceeded') {
+                setStatus(data.message || data.error || 'سهمیه فرمان هوشمند امروز شما تمام شده است.', 'is-warn');
                 return;
             }
-            if (res.status === 503 || code === 'provider_unavailable') {
-                setStatus(data.error || 'سرویس هوشمند موقتاً در دسترس نیست.', 'is-error', {
+            if (errorCode === 'provider_unavailable' || errorCode === 'provider_timeout') {
+                setStatus(data.message || data.error || 'سرویس هوشمند موقتاً در دسترس نیست.', 'is-error', {
                     actionLabel: 'تلاش دوباره',
-                    onAction: () => {
-                        if (lastParseText) {
-                            if (input) input.value = lastParseText;
-                            autoGrowInput();
-                        }
-                        runParse();
-                    },
+                    onAction: () => submitCommandText(lastParseText, {}),
                 });
                 return;
             }
-            if (res.status >= 500) {
+            if (errorCode === 'internal_error' || res.status >= 500) {
                 setStatus('سرویس هوشمند موقتاً در دسترس نیست.', 'is-error', {
                     actionLabel: 'تلاش دوباره',
-                    onAction: runParse,
+                    onAction: () => submitCommandText(lastParseText, {}),
                 });
                 return;
             }
-            setStatus(data.error || 'خطا در بررسی فرمان.', 'is-error');
+            setStatus(data.message || data.error || 'خطا در بررسی فرمان.', 'is-error');
         }
 
         function handleParseSuccess(data) {
@@ -723,7 +762,7 @@
                 commandId = data.command_id;
                 if (isIncompleteProperty(data)) {
                     currentIntent = 'create_personal_property';
-                    commandSessionMode = 'incomplete';
+                    setSessionState('incomplete');
                     hidePreviewPanel();
                     const fb = incompletePropertyFeedback(data);
                     setStatus(fb.main, 'is-info', {
@@ -736,7 +775,7 @@
                 fillPreview(data.preview, 'create_personal_property');
                 if (confirmBtn) confirmBtn.disabled = !data.can_confirm;
                 showReadyPreview('create_personal_property');
-                commandSessionMode = data.can_confirm ? 'preview' : 'incomplete';
+                setSessionState(data.can_confirm ? 'preview' : 'incomplete');
                 if (data.can_confirm) {
                     setStatus('');
                 } else if (data.hint) {
@@ -749,7 +788,7 @@
                 commandId = data.command_id;
                 if (isDuplicateContact(data)) {
                     commandId = null;
-                    commandSessionMode = 'idle';
+                    setSessionState('idle');
                     hidePreviewPanel();
                     const ex = data.existing_contact;
                     setStatus(data.message || 'این شماره قبلاً ثبت شده است.', 'is-warn', {
@@ -762,7 +801,7 @@
                 }
                 if (isIncompleteContact(data)) {
                     currentIntent = 'create_contact';
-                    commandSessionMode = 'incomplete';
+                    setSessionState('incomplete');
                     hidePreviewPanel();
                     const fb = incompleteContactFeedback(data);
                     setStatus(fb.main, 'is-info', {
@@ -775,7 +814,7 @@
                 fillPreview(data.preview, 'create_contact');
                 if (confirmBtn) confirmBtn.disabled = !data.can_confirm;
                 showReadyPreview('create_contact');
-                commandSessionMode = data.can_confirm ? 'preview' : 'incomplete';
+                setSessionState(data.can_confirm ? 'preview' : 'incomplete');
                 if (data.warning) {
                     setStatus(data.warning, 'is-warn');
                 } else if (data.can_confirm) {
@@ -796,8 +835,10 @@
             highlightChips(false);
 
             if (isContactNotFound(data)) {
-                hidePreviewPanel();
                 commandId = data.command_id;
+                currentIntent = 'create_reminder';
+                setSessionState('incomplete');
+                hidePreviewPanel();
                 setStatus(data.message, 'is-warn', {
                     actionLabel: 'ویرایش فرمان',
                     onAction: focusCommand,
@@ -806,13 +847,16 @@
             }
 
             if (enableContactResolve && hasAmbiguousContacts(data)) {
+                setSessionState('ambiguous');
                 showAmbiguousPanel(data);
                 return;
             }
 
             if (isIncompleteReminder(data)) {
+                commandId = data.command_id;
+                currentIntent = 'create_reminder';
+                setSessionState('incomplete');
                 hidePreviewPanel();
-                commandId = null;
                 const fb = incompleteReminderFeedback(data);
                 setStatus(fb.main, 'is-info', {
                     hint: fb.hint,
@@ -825,6 +869,7 @@
             fillPreview(data.preview, 'create_reminder');
             if (confirmBtn) confirmBtn.disabled = !data.can_confirm;
             showReadyPreview('create_reminder');
+            setSessionState(data.can_confirm ? 'preview' : 'incomplete');
 
             if (data.can_confirm) {
                 setStatus('');
@@ -837,41 +882,49 @@
             }
         }
 
-        function runParse() {
+        function submitCommandText(text, options) {
+            if (parseInFlight) return;
+            const opts = options || {};
             const quotaRem = parseInt(root.dataset.quotaRemaining || '', 10);
             if (!Number.isNaN(quotaRem) && quotaRem <= 0) {
-                setStatus('سهمیه بررسی امروز تمام شده است.', 'is-error');
+                setStatus('سهمیه فرمان هوشمند امروز شما تمام شده است.', 'is-error');
                 return;
             }
-            const text = (input?.value || '').trim();
-            if (!text) {
-                setStatus('یک جمله بنویسید.', 'is-error');
+            const trimmed = (text || '').trim();
+            if (!trimmed) {
+                setStatus('یک فرمان کوتاه بنویسید.', 'is-error');
                 input?.focus();
                 return;
             }
-            lastParseText = text;
-            const mergeIntents = ['create_contact', 'create_personal_property'];
-            const shouldResume = (commandSessionMode === 'incomplete' || commandSessionMode === 'editing')
+            lastParseText = trimmed;
+            const forceNew = !!opts.forceNew;
+            const shouldResume = !forceNew
+                && (sessionState === 'incomplete' || sessionState === 'editing' || sessionState === 'ambiguous')
                 && commandId
                 && allowedIntent
-                && mergeIntents.indexOf(allowedIntent) !== -1;
+                && MERGE_INTENTS.indexOf(allowedIntent) !== -1;
             const resumeCommandId = shouldResume ? commandId : null;
             const resumeIntent = shouldResume ? currentIntent : null;
-            const resumeMode = shouldResume ? commandSessionMode : null;
-            const resumeCorrection = commandSessionMode === 'editing';
+            const resumeState = shouldResume ? sessionState : null;
+            const resumeCorrection = sessionState === 'editing' || !!opts.resumeCorrection;
+
+            parseInFlight = true;
+            setSessionState('loading');
             setLoading(true);
             setStatus('');
             clearPreview();
             if (resumeCommandId) {
                 commandId = resumeCommandId;
                 currentIntent = resumeIntent;
-                commandSessionMode = resumeMode;
-            } else {
-                commandSessionMode = 'idle';
+                if (resumeState === 'ambiguous') {
+                    setSessionState('ambiguous');
+                } else {
+                    setSessionState(resumeState === 'editing' ? 'editing' : 'incomplete');
+                }
             }
             root.classList.remove('is-success-mode');
             if (successEl) successEl.hidden = true;
-            const parseBody = { text, locale: 'fa-IR', timezone: 'Asia/Tehran' };
+            const parseBody = { text: trimmed, locale: 'fa-IR', timezone: 'Asia/Tehran' };
             if (resumeCommandId) {
                 parseBody.command_id = resumeCommandId;
                 if (resumeCorrection) {
@@ -881,7 +934,11 @@
             postJson(parseUrl, parseBody)
                 .then((res) => {
                     if (!res.ok || !res.data.ok) {
-                        clearPreview();
+                        if (resumeCommandId) {
+                            commandId = resumeCommandId;
+                        } else {
+                            clearPreview();
+                        }
                         handleHttpError(res);
                         return;
                     }
@@ -889,14 +946,23 @@
                 })
                 .catch(() => {
                     clearPreview();
+                    setSessionState('error');
                     setStatus('سرویس هوشمند موقتاً در دسترس نیست.', 'is-error', {
                         actionLabel: 'تلاش دوباره',
-                        onAction: runParse,
+                        onAction: () => submitCommandText(lastParseText, {}),
                     });
                 })
                 .finally(() => {
+                    parseInFlight = false;
                     setLoading(false);
+                    if (sessionState === 'loading') {
+                        setSessionState(commandId ? 'incomplete' : 'idle');
+                    }
                 });
+        }
+
+        function runParse() {
+            submitCommandText(input?.value || '', {});
         }
 
         parseBtn?.addEventListener('click', runParse);
@@ -913,7 +979,7 @@
         input?.addEventListener('keydown', (ev) => {
             if ((ev.ctrlKey || ev.metaKey) && ev.key === 'Enter') {
                 ev.preventDefault();
-                runParse();
+                if (!parseInFlight) runParse();
             }
         });
 
@@ -939,21 +1005,33 @@
             if (preview && !preview.hidden) {
                 hidePreviewPanel();
                 commandId = null;
-                commandSessionMode = 'idle';
+                setSessionState('idle');
                 if (confirmBtn) confirmBtn.disabled = true;
             }
         });
 
         confirmBtn?.addEventListener('click', () => {
-            if (!commandId) return;
+            if (!commandId || confirmInFlight) return;
+            confirmInFlight = true;
+            setSessionState('confirming');
             confirmBtn.disabled = true;
+            if (cancelBtn) cancelBtn.disabled = true;
             setStatus('در حال ثبت…', 'is-info');
             postJson(confirmUrl, { command_id: commandId })
                 .then((res) => {
                     const data = res.data;
                     if (!res.ok || !data.ok) {
-                        setStatus(data.error || 'ثبت نشد', 'is-error');
+                        const errorCode = apiErrorCode(res);
+                        if (errorCode === 'command_expired') {
+                            handleExpiredCommand();
+                        } else if (errorCode === 'confirm_conflict') {
+                            setStatus('فرمان در حال ثبت است. لحظه‌ای صبر کنید.', 'is-warn');
+                        } else {
+                            setStatus(data.message || data.error || 'ثبت نشد', 'is-error');
+                        }
+                        setSessionState('preview');
                         confirmBtn.disabled = false;
+                        if (cancelBtn) cancelBtn.disabled = false;
                         return;
                     }
                     let meta = '';
@@ -981,6 +1059,8 @@
                         successLink.hidden = true;
                     }
                     hidePreviewPanel();
+                    commandId = null;
+                    setSessionState('success');
                     setStatus('');
                     root.classList.add('is-success-mode');
                     if (successEl) successEl.hidden = false;
@@ -996,8 +1076,13 @@
                     }
                 })
                 .catch(() => {
+                    setSessionState('error');
                     setStatus('خطا در ثبت.', 'is-error');
                     confirmBtn.disabled = false;
+                    if (cancelBtn) cancelBtn.disabled = false;
+                })
+                .finally(() => {
+                    confirmInFlight = false;
                 });
         });
 
@@ -1015,15 +1100,30 @@
         autoGrowInput();
         syncInputState();
         setAiModel(null);
+
+        const ctxKey = (root.dataset.context || '').trim();
+        if (ctxKey) {
+            submitByContext[ctxKey] = submitCommandText;
+        }
     }
 
     function initAll() {
         document.querySelectorAll('[data-crm-smart-command]').forEach(initSmartCommand);
     }
 
+    function submitCommandTextGlobal(text, options) {
+        const opts = options || {};
+        const ctx = (opts.context || '').trim();
+        const fn = (ctx && submitByContext[ctx]) || submitByContext[Object.keys(submitByContext)[0]];
+        if (typeof fn === 'function') {
+            fn(text, opts);
+        }
+    }
+
     window.CrmSmartCommand = {
         init: initSmartCommand,
         initAll,
+        submitCommandText: submitCommandTextGlobal,
     };
 
     if (document.readyState === 'loading') {

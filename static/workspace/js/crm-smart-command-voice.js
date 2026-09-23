@@ -7,6 +7,7 @@
     const DEFAULT_SILENCE_TIMEOUT_MS = 4000;
     const DEFAULT_RESTART_DELAY_MS = 200;
     const INITIAL_NO_SPEECH_TIMEOUT_MS = 12000;
+    const MAX_NL_COMMAND_CHARS = 1500;
 
     const MSG_UNSUPPORTED =
         'ضبط صوت در این مرورگر پشتیبانی نمی‌شود. می‌توانید فرمان را تایپ کنید.';
@@ -23,28 +24,93 @@
 
     /** @typedef {'idle'|'listening'|'processing'|'error'} VoiceState */
 
+    function normalizeWhitespace(text) {
+        return (text || '').replace(/\s+/g, ' ').trim();
+    }
+
     /**
      * @param {string} base
      * @param {string} segment
      */
     function appendTranscriptSegment(base, segment) {
-        const piece = (segment || '').trim();
-        if (!piece) return (base || '').trim();
-        const prev = (base || '').trim();
+        const piece = normalizeWhitespace(segment);
+        if (!piece) return normalizeWhitespace(base);
+        const prev = normalizeWhitespace(base);
         if (!prev) return piece;
         return prev + ' ' + piece;
     }
 
     /**
-     * @param {string} finalTranscript
-     * @param {string} interimTranscript
+     * @param {string} base
+     * @param {string} segment
      */
-    function combineListeningDisplay(finalTranscript, interimTranscript) {
-        const fin = (finalTranscript || '').trim();
-        const interim = (interimTranscript || '').trim();
-        if (!interim) return fin;
-        if (!fin) return interim;
-        return fin + ' ' + interim;
+    function appendTranscriptSegmentSafe(base, segment) {
+        const piece = normalizeWhitespace(segment);
+        if (!piece) return normalizeWhitespace(base);
+        const prev = normalizeWhitespace(base);
+        if (!prev) return piece;
+        if (prev === piece || prev.endsWith(' ' + piece) || prev.endsWith(piece)) {
+            return prev;
+        }
+        if (piece.startsWith(prev)) {
+            return piece;
+        }
+
+        const maxOverlap = Math.min(prev.length, piece.length, 120);
+        for (let len = maxOverlap; len >= 3; len -= 1) {
+            if (prev.slice(-len) === piece.slice(0, len)) {
+                const merged = prev + piece.slice(len);
+                return normalizeWhitespace(merged);
+            }
+        }
+
+        const prevWords = prev.split(' ');
+        const pieceWords = piece.split(' ');
+        for (let n = Math.min(6, prevWords.length, pieceWords.length); n >= 1; n -= 1) {
+            const suffix = prevWords.slice(-n).join(' ');
+            const prefix = pieceWords.slice(0, n).join(' ');
+            if (suffix && suffix === prefix) {
+                const rest = pieceWords.slice(n).join(' ');
+                return rest ? appendTranscriptSegment(prev, rest) : prev;
+            }
+        }
+
+        return appendTranscriptSegment(prev, piece);
+    }
+
+    /**
+     * @param {string} sessionTranscript
+     * @param {string} cycleFinalTranscript
+     * @param {string} cycleInterimTranscript
+     */
+    function combineSessionVoiceDisplay(sessionTranscript, cycleFinalTranscript, cycleInterimTranscript) {
+        let out = normalizeWhitespace(sessionTranscript);
+        out = appendTranscriptSegmentSafe(out, cycleFinalTranscript);
+        const interim = normalizeWhitespace(cycleInterimTranscript);
+        if (!interim) return out;
+        if (!out) return interim;
+        if (out.endsWith(interim) || out.endsWith(' ' + interim)) return out;
+        return out + ' ' + interim;
+    }
+
+    /**
+     * @param {string} baseInputText
+     * @param {string} sessionTranscript
+     * @param {string} cycleFinalTranscript
+     * @param {string} cycleInterimTranscript
+     */
+    function buildLiveTextareaValue(
+        baseInputText,
+        sessionTranscript,
+        cycleFinalTranscript,
+        cycleInterimTranscript,
+    ) {
+        const voicePart = combineSessionVoiceDisplay(
+            sessionTranscript,
+            cycleFinalTranscript,
+            cycleInterimTranscript,
+        );
+        return appendTranscriptSegmentSafe(baseInputText, voicePart);
     }
 
     /**
@@ -54,37 +120,45 @@
      */
     function finalizeVoiceTranscript(finalTranscript, interimTranscript, options) {
         const opts = options || {};
-        let out = (finalTranscript || '').trim();
-        const interim = (interimTranscript || '').trim();
+        let out = normalizeWhitespace(finalTranscript);
+        const interim = normalizeWhitespace(interimTranscript);
         if (opts.flushInterim && interim) {
-            out = appendTranscriptSegment(out, interim);
+            out = appendTranscriptSegmentSafe(out, interim);
         }
-        return out.replace(/\s+/g, ' ').trim();
+        return out;
     }
 
     /**
-     * Process Web Speech onresult slice (from resultIndex).
-     * @param {string} priorFinal
+     * @param {string} priorCycleFinal
      * @param {{ resultIndex: number, results: Array<{ isFinal: boolean, 0?: { transcript?: string } }> }} event
-     * @returns {{ finalTranscript: string, interimTranscript: string }}
      */
-    function applyResultEvent(priorFinal, event) {
-        let finalTranscript = priorFinal || '';
-        let interimTranscript = '';
+    function applyResultEvent(priorCycleFinal, event) {
+        let cycleFinalTranscript = priorCycleFinal || '';
+        let cycleInterimTranscript = '';
         const results = event.results || [];
         for (let i = event.resultIndex; i < results.length; i += 1) {
             const result = results[i];
             const piece = (result[0] && result[0].transcript) || '';
             if (result.isFinal) {
-                finalTranscript = appendTranscriptSegment(finalTranscript, piece);
+                cycleFinalTranscript = appendTranscriptSegmentSafe(cycleFinalTranscript, piece);
             }
         }
         for (let j = 0; j < results.length; j += 1) {
             if (!results[j].isFinal) {
-                interimTranscript += (results[j][0] && results[j][0].transcript) || '';
+                cycleInterimTranscript += (results[j][0] && results[j][0].transcript) || '';
             }
         }
-        return { finalTranscript, interimTranscript };
+        return {
+            cycleFinalTranscript,
+            cycleInterimTranscript,
+            finalTranscript: cycleFinalTranscript,
+            interimTranscript: cycleInterimTranscript,
+        };
+    }
+
+    /** @deprecated use combineSessionVoiceDisplay */
+    function combineListeningDisplay(finalTranscript, interimTranscript) {
+        return combineSessionVoiceDisplay('', finalTranscript, interimTranscript);
     }
 
     /**
@@ -106,7 +180,7 @@
     /**
      * @param {string} code
      * @param {{ userCancelled?: boolean }} [options]
-     * @returns {string|null} null = no user-visible message
+     * @returns {string|null}
      */
     function mapSpeechError(code, options) {
         const opts = options || {};
@@ -207,11 +281,15 @@
         let manualStop = false;
         let userCancelled = false;
         let suspendDueToBackground = false;
+        let sessionFinalized = false;
         let recognitionActive = false;
         let recognitionStarting = false;
         let gotAnySpeech = false;
-        let finalTranscript = '';
-        let interimTranscript = '';
+
+        let baseInputText = '';
+        let sessionTranscript = '';
+        let cycleFinalTranscript = '';
+        let cycleInterimTranscript = '';
 
         const privacyTitle = MIC_TOOLTIP + ' — ' + PRIVACY_NOTE;
         micBtn.setAttribute('aria-label', MIC_TOOLTIP);
@@ -249,6 +327,17 @@
             clearRestartTimer();
         }
 
+        function resetCycleBuffers() {
+            cycleFinalTranscript = '';
+            cycleInterimTranscript = '';
+        }
+
+        function resetSessionBuffers() {
+            baseInputText = '';
+            sessionTranscript = '';
+            resetCycleBuffers();
+        }
+
         function setVoiceState(next, statusMessage) {
             voiceState = next;
             root.classList.toggle('is-voice-listening', next === 'listening');
@@ -259,15 +348,20 @@
         }
 
         function syncLiveInput() {
-            const display = combineListeningDisplay(finalTranscript, interimTranscript);
+            const display = buildLiveTextareaValue(
+                baseInputText,
+                sessionTranscript,
+                cycleFinalTranscript,
+                cycleInterimTranscript,
+            );
             setInputValue(display);
         }
 
         function resetSilenceTimer() {
             clearSilenceTimer();
-            if (!userStartedListening || manualStop) return;
+            if (!userStartedListening || manualStop || sessionFinalized) return;
             silenceTimer = win.setTimeout(function () {
-                if (!userStartedListening || manualStop) return;
+                if (!userStartedListening || manualStop || sessionFinalized) return;
                 endListeningDueToSilence();
             }, silenceTimeoutMs);
         }
@@ -276,6 +370,26 @@
             gotAnySpeech = true;
             clearInitialNoSpeechTimer();
             resetSilenceTimer();
+        }
+
+        function commitCycleToSession() {
+            if (cycleFinalTranscript) {
+                sessionTranscript = appendTranscriptSegmentSafe(sessionTranscript, cycleFinalTranscript);
+            }
+            const interim = normalizeWhitespace(cycleInterimTranscript);
+            if (interim) {
+                sessionTranscript = appendTranscriptSegmentSafe(sessionTranscript, interim);
+            }
+            resetCycleBuffers();
+        }
+
+        function buildFinalSessionText(flushRemainingInterim) {
+            let voiceText = normalizeWhitespace(sessionTranscript);
+            voiceText = appendTranscriptSegmentSafe(voiceText, cycleFinalTranscript);
+            if (flushRemainingInterim) {
+                voiceText = appendTranscriptSegmentSafe(voiceText, cycleInterimTranscript);
+            }
+            return appendTranscriptSegmentSafe(baseInputText, voiceText);
         }
 
         function detachRecognitionHandlers(rec) {
@@ -297,7 +411,6 @@
         }
 
         function teardownRecognition(skipStop) {
-            clearAllTimers();
             if (recognition) {
                 detachRecognitionHandlers(recognition);
                 if (!skipStop) {
@@ -313,28 +426,31 @@
             recognitionStarting = false;
         }
 
-        function finishSession(options) {
+        function finalizeSession(options) {
+            if (sessionFinalized) return;
             const opts = options || {};
-            const flushInterim = !!opts.flushInterim;
-            const statusMessage = opts.statusMessage || (gotAnySpeech ? MSG_DONE : MSG_NO_SPEECH);
-            const isError = !!opts.isError;
-
+            sessionFinalized = true;
             userStartedListening = false;
-            manualStop = false;
-            suspendDueToBackground = false;
-            interimTranscript = '';
-            const committed = finalizeVoiceTranscript(finalTranscript, opts.pendingInterim || '', {
-                flushInterim,
-            });
-            if (committed) {
-                setInputValue(committed);
-                finalTranscript = committed;
+
+            commitCycleToSession();
+            const finalText = normalizeWhitespace(
+                buildFinalSessionText(!!opts.flushInterim),
+            );
+            if (finalText) {
+                setInputValue(finalText);
             }
             if (input) {
                 input.focus();
             }
+
+            resetSessionBuffers();
+            manualStop = false;
+            suspendDueToBackground = false;
+            clearAllTimers();
             teardownRecognition(true);
-            if (isError) {
+
+            const statusMessage = opts.statusMessage || (gotAnySpeech ? MSG_DONE : MSG_NO_SPEECH);
+            if (opts.isError) {
                 setVoiceState('error', statusMessage);
             } else if (statusMessage) {
                 setVoiceState('idle', statusMessage);
@@ -345,11 +461,9 @@
 
         function endListeningDueToSilence() {
             manualStop = true;
-            userStartedListening = false;
             stopRecognitionInstance();
-            finishSession({
+            finalizeSession({
                 flushInterim: true,
-                pendingInterim: interimTranscript,
                 statusMessage: gotAnySpeech ? MSG_DONE : MSG_NO_SPEECH,
                 isError: !gotAnySpeech,
             });
@@ -357,14 +471,11 @@
 
         function endManualStop() {
             manualStop = true;
-            userStartedListening = false;
             userCancelled = true;
-            clearAllTimers();
             stopRecognitionInstance();
-            finishSession({
+            finalizeSession({
                 flushInterim: true,
-                pendingInterim: interimTranscript,
-                statusMessage: gotAnySpeech ? MSG_DONE : MSG_DONE,
+                statusMessage: MSG_DONE,
             });
         }
 
@@ -373,7 +484,6 @@
                 recognitionActive = true;
                 recognitionStarting = false;
                 setVoiceState('listening');
-                resetSilenceTimer();
             };
 
             rec.onspeechstart = function () {
@@ -382,9 +492,9 @@
 
             rec.onresult = function (event) {
                 markSpeechActivity();
-                const applied = applyResultEvent(finalTranscript, event);
-                finalTranscript = applied.finalTranscript;
-                interimTranscript = applied.interimTranscript;
+                const applied = applyResultEvent(cycleFinalTranscript, event);
+                cycleFinalTranscript = applied.cycleFinalTranscript;
+                cycleInterimTranscript = applied.cycleInterimTranscript;
                 syncLiveInput();
                 setVoiceState('listening');
             };
@@ -397,26 +507,26 @@
                 if (code === 'aborted' && (userCancelled || manualStop || suspendDueToBackground)) {
                     return;
                 }
-                clearAllTimers();
-                const msg = mapSpeechError(code, { userCancelled: userCancelled && code === 'aborted' });
-                userStartedListening = false;
                 manualStop = true;
+                const msg = mapSpeechError(code, { userCancelled: userCancelled && code === 'aborted' });
                 if (msg && !gotAnySpeech) {
-                    finishSession({ isError: true, statusMessage: msg });
+                    finalizeSession({ isError: true, statusMessage: msg });
                 } else if (msg) {
-                    finishSession({ flushInterim: true, pendingInterim: interimTranscript, statusMessage: msg, isError: true });
+                    finalizeSession({ flushInterim: true, statusMessage: msg, isError: true });
                 } else {
-                    finishSession({ flushInterim: true, pendingInterim: interimTranscript });
+                    finalizeSession({ flushInterim: true });
                 }
             };
 
             rec.onend = function () {
                 recognitionActive = false;
                 recognition = null;
+                if (sessionFinalized) {
+                    return;
+                }
                 if (suspendDueToBackground) {
-                    finishSession({
+                    finalizeSession({
                         flushInterim: true,
-                        pendingInterim: interimTranscript,
                         statusMessage: gotAnySpeech ? MSG_DONE : '',
                     });
                     return;
@@ -424,6 +534,8 @@
                 if (manualStop || !userStartedListening) {
                     return;
                 }
+                commitCycleToSession();
+                syncLiveInput();
                 scheduleRecognitionRestart();
             };
         }
@@ -440,7 +552,9 @@
 
         function startRecognitionNow() {
             if (!supported || !SpeechRecognitionCtor) return false;
-            if (!userStartedListening || manualStop || suspendDueToBackground) return false;
+            if (!userStartedListening || manualStop || suspendDueToBackground || sessionFinalized) {
+                return false;
+            }
             if (recognitionStarting || recognitionActive) return false;
             recognitionStarting = true;
             try {
@@ -456,13 +570,15 @@
 
         function safeStartRecognition() {
             if (!supported || !SpeechRecognitionCtor) return;
-            if (!userStartedListening || manualStop || suspendDueToBackground) return;
+            if (!userStartedListening || manualStop || suspendDueToBackground || sessionFinalized) {
+                return;
+            }
             if (recognitionStarting || recognitionActive) return;
             if (restartTimer) return;
             restartTimer = win.setTimeout(function () {
                 restartTimer = null;
                 if (!startRecognitionNow()) {
-                    if (userStartedListening && !manualStop && !suspendDueToBackground) {
+                    if (userStartedListening && !manualStop && !suspendDueToBackground && !sessionFinalized) {
                         safeStartRecognition();
                     }
                 }
@@ -484,23 +600,30 @@
             }
 
             teardownRecognition(true);
+            clearAllTimers();
+
             userStartedListening = true;
             manualStop = false;
             userCancelled = false;
             suspendDueToBackground = false;
+            sessionFinalized = false;
             gotAnySpeech = false;
-            interimTranscript = '';
-            finalTranscript = (input && (input.value || '').trim()) || '';
+
+            baseInputText = (input && (input.value || '').trim()) || '';
+            sessionTranscript = '';
+            resetCycleBuffers();
 
             clearInitialNoSpeechTimer();
             initialNoSpeechTimer = win.setTimeout(function () {
-                if (userStartedListening && !gotAnySpeech && !manualStop) {
+                if (userStartedListening && !gotAnySpeech && !manualStop && !sessionFinalized) {
                     manualStop = true;
-                    userStartedListening = false;
                     stopRecognitionInstance();
-                    finishSession({ isError: true, statusMessage: MSG_NO_SPEECH });
+                    finalizeSession({ isError: true, statusMessage: MSG_NO_SPEECH });
                 }
             }, INITIAL_NO_SPEECH_TIMEOUT_MS);
+
+            resetSilenceTimer();
+            syncLiveInput();
 
             if (!startRecognitionNow()) {
                 safeStartRecognition();
@@ -510,10 +633,6 @@
         function onMicClick() {
             if (!supported) {
                 setVoiceState('error', MSG_UNSUPPORTED);
-                return;
-            }
-            if (userStartedListening && voiceState === 'listening') {
-                endManualStop();
                 return;
             }
             if (userStartedListening) {
@@ -532,10 +651,9 @@
 
         function onVisibilityChange() {
             if (!doc || doc.visibilityState !== 'hidden') return;
-            if (!userStartedListening || manualStop) return;
+            if (!userStartedListening || manualStop || sessionFinalized) return;
             suspendDueToBackground = true;
             manualStop = true;
-            userStartedListening = false;
             stopRecognitionInstance();
         }
 
@@ -554,6 +672,7 @@
             destroy: function () {
                 externalStop();
                 teardownRecognition(true);
+                clearAllTimers();
                 micBtn.removeEventListener('click', onMicClick);
                 micBtn.removeEventListener('keydown', onMicKeydown);
                 if (doc && typeof doc.removeEventListener === 'function') {
@@ -564,24 +683,48 @@
                 return voiceState;
             },
             stop: externalStop,
-            /** @internal test hooks */
             _test: {
-                getFinalTranscript: function () {
-                    return finalTranscript;
+                getSessionTranscript: function () {
+                    return sessionTranscript;
                 },
-                getInterimTranscript: function () {
-                    return interimTranscript;
+                getCycleFinalTranscript: function () {
+                    return cycleFinalTranscript;
+                },
+                getCycleInterimTranscript: function () {
+                    return cycleInterimTranscript;
+                },
+                getBaseInputText: function () {
+                    return baseInputText;
+                },
+                getLiveText: function () {
+                    return buildLiveTextareaValue(
+                        baseInputText,
+                        sessionTranscript,
+                        cycleFinalTranscript,
+                        cycleInterimTranscript,
+                    );
+                },
+                /** @deprecated */
+                getFinalTranscript: function () {
+                    return buildFinalSessionText(true);
                 },
                 isUserListening: function () {
-                    return userStartedListening;
+                    return userStartedListening && !sessionFinalized;
                 },
+                commitCycleToSession: commitCycleToSession,
                 triggerSilenceTimeout: endListeningDueToSilence,
+                simulateOnEnd: function () {
+                    commitCycleToSession();
+                    syncLiveInput();
+                    scheduleRecognitionRestart();
+                },
             },
         };
     }
 
     const api = {
         VOICE_LANG,
+        MAX_NL_COMMAND_CHARS,
         NO_SPEECH_TIMEOUT_MS,
         DEFAULT_SILENCE_TIMEOUT_MS,
         DEFAULT_RESTART_DELAY_MS,
@@ -596,6 +739,9 @@
         PRIVACY_NOTE,
         MIC_TOOLTIP,
         appendTranscriptSegment,
+        appendTranscriptSegmentSafe,
+        combineSessionVoiceDisplay,
+        buildLiveTextareaValue,
         combineListeningDisplay,
         finalizeVoiceTranscript,
         applyResultEvent,

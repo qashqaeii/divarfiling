@@ -3,19 +3,17 @@ from __future__ import annotations
 
 import json
 import logging
-import uuid
 
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.views import View
 
-from ai_workspace.constants import is_ai_enabled, normalize_crm_tone
+from ai_workspace.constants import FEATURE_UPLOAD_BRIEF, is_ai_enabled, is_feature_enabled, normalize_crm_tone
 from ai_workspace.services.crm_message import generate_message, result_to_dict as crm_result_to_dict
 from ai_workspace.services.gateway import FeatureDisabledError
 from ai_workspace.services.listing_summary import generate_summary, result_to_dict as listing_result_to_dict
 from ai_workspace.services.property_summary import generate_summary_for_user
 from ai_workspace.services.quota import QuotaExceededError, get_status, status_to_dict
-from ai_workspace.services.upload_brief import generate_brief, result_to_dict as upload_result_to_dict
 from workspace.mixins import LicenseRequiredMixin
 from workspace.models import Dataset, Listing
 from workspace.services.crm_scope import customer_for_user
@@ -91,34 +89,19 @@ class CRMMessageView(AIEnabledMixin, View):
 
 
 class UploadBriefView(AIEnabledMixin, View):
+    """Legacy endpoint — upload AI brief غیرفعال است؛ هیچ LLM/provider صدا زده نمی‌شود."""
+
     def post(self, request):
-        upload_batch = request.session.get('upload_batch')
-        if not upload_batch:
+        if not is_feature_enabled(FEATURE_UPLOAD_BRIEF, request.user):
             return JsonResponse(
-                {'ok': False, 'error': 'اطلاعات آپلود اخیر یافت نشد. ابتدا فایل آپلود کنید.'},
-                status=400,
+                {
+                    'ok': False,
+                    'error': 'تحلیل هوشمند آپلود فعلاً غیرفعال است.',
+                    'code': 'feature_disabled',
+                },
+                status=403,
             )
-        dataset = None
-        try:
-            body = json.loads(request.body.decode('utf-8') or '{}')
-        except json.JSONDecodeError:
-            body = {}
-        ds_id = body.get('dataset_id')
-        if ds_id:
-            try:
-                dataset = Dataset.objects.filter(user=request.user, pk=uuid.UUID(str(ds_id))).first()
-            except (ValueError, TypeError):
-                dataset = None
-        if not dataset:
-            imported = upload_batch.get('imported') or []
-            if imported:
-                first_ds = imported[0].get('id') or imported[0].get('dataset_id')
-                if first_ds:
-                    dataset = Dataset.objects.filter(user=request.user, pk=first_ds).first()
-        try:
-            result = generate_brief(request.user, upload_batch, dataset)
-            return JsonResponse(upload_result_to_dict(result))
-        except FeatureDisabledError as exc:
-            return JsonResponse({'ok': False, 'error': str(exc)}, status=403)
-        except QuotaExceededError as exc:
-            return JsonResponse({'ok': False, 'error': str(exc), 'code': exc.code}, status=429)
+        return JsonResponse(
+            {'ok': False, 'error': 'تحلیل هوشمند آپلود فعلاً غیرفعال است.', 'code': 'feature_disabled'},
+            status=403,
+        )

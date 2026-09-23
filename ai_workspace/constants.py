@@ -12,13 +12,13 @@ FEATURE_UPLOAD_BRIEF = 'upload_brief'
 AI_FEATURES = {
     FEATURE_LISTING_SUMMARY: True,
     FEATURE_CRM_MESSAGE: True,
-    FEATURE_UPLOAD_BRIEF: True,
+    # غیرفعال محصولی — endpoint فقط پاسخ کنترل‌شده می‌دهد؛ LLM صدا زده نمی‌شود.
+    FEATURE_UPLOAD_BRIEF: False,
 }
 
 FEATURE_DAILY_LIMITS = {
     FEATURE_LISTING_SUMMARY: 10,
     FEATURE_CRM_MESSAGE: 8,
-    FEATURE_UPLOAD_BRIEF: 2,
 }
 
 DEFAULT_DAILY_LIMIT = 10
@@ -63,7 +63,7 @@ CRM_MESSAGE_TONE_CHOICES = tuple(
     (key, meta['label']) for key, meta in CRM_MESSAGE_TONES.items()
 )
 
-JSON_FEATURES = frozenset({FEATURE_LISTING_SUMMARY, FEATURE_UPLOAD_BRIEF})
+JSON_FEATURES = frozenset({FEATURE_LISTING_SUMMARY})
 
 # نسخه دستی prompt — فقط وقتی محتوا عوض شد افزایش دهید (نه mtime)
 PROMPT_VERSIONS = {

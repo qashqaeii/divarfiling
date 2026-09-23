@@ -83,7 +83,7 @@ Guardrails are **not** configured from application code in this integration.
 
 ## Knowledge Base / RAG
 
-Out of scope. Future use: Academy, FAQ, support docs — not for `listing_summary` / `crm_message` / `upload_brief` (context builders remain source of truth).
+Out of scope. Future use: Academy, FAQ, support docs — not for `listing_summary` / `crm_message` (context builders remain source of truth). `upload_brief` is product-disabled (no LLM).
 
 ## References
 

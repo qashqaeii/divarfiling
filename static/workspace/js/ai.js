@@ -135,26 +135,6 @@
         return html || `<p>${escapeHtml(d.summary || data.text || '')}</p>`;
     }
 
-    function renderUploadBrief(data) {
-        const d = data.data || {};
-        let html = renderBadge(data);
-        if (d.executive_summary) html += `<p class="ws-ai-summary">${escapeHtml(d.executive_summary)}</p>`;
-        const lists = [
-            ['فرصت‌ها', d.opportunities],
-            ['اقدام پیشنهادی', d.action_items],
-        ];
-        lists.forEach(([title, items]) => {
-            if (items && items.length) {
-                html += `<p class="ws-ai-subtitle">${escapeHtml(title)}</p><ul class="ws-ai-highlights">`;
-                items.forEach(item => { html += `<li>${escapeHtml(item)}</li>`; });
-                html += '</ul>';
-            }
-        });
-        if (d.outliers_note) html += `<p class="ws-ai-note">${escapeHtml(d.outliers_note)}</p>`;
-        if (d.duplicates_note) html += `<p class="ws-ai-note">${escapeHtml(d.duplicates_note)}</p>`;
-        return html;
-    }
-
     async function postJson(url, body) {
         const res = await fetch(url, {
             method: 'POST',
@@ -202,23 +182,6 @@
             const data = await postJson(btn.dataset.aiUrl);
             showResult(result, renderListingSummary(data));
             if (card && data.quota) updateCardQuota(card, data.quota);
-        } catch (e) {
-            showResult(result, `<p class="ws-ai-error">${escapeHtml(e.message)}</p>`);
-        } finally {
-            setLoading(btn, false);
-        }
-    }
-
-    async function handleUploadBrief(btn) {
-        const result = document.getElementById('wsAiUploadBrief') || btn.parentElement.querySelector('.ws-ai-result');
-        setLoading(btn, true);
-        if (result) {
-            result.innerHTML = '<p class="ws-ai-loading-text">در حال تحلیل آپلود…</p>';
-            result.hidden = false;
-        }
-        try {
-            const data = await postJson(btn.dataset.aiUrl);
-            showResult(result, renderUploadBrief(data));
         } catch (e) {
             showResult(result, `<p class="ws-ai-error">${escapeHtml(e.message)}</p>`);
         } finally {
@@ -305,11 +268,7 @@
 
     document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.ws-ai-trigger[data-ai-url]').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const feature = btn.dataset.aiFeature;
-                if (feature === 'upload_brief') handleUploadBrief(btn);
-                else handleListingSummary(btn);
-            });
+            btn.addEventListener('click', () => handleListingSummary(btn));
         });
 
         document.querySelectorAll('.ws-ai-trigger[data-ai-compose]').forEach(btn => {

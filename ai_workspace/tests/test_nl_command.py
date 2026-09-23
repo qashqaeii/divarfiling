@@ -195,7 +195,8 @@ class NLCommandParseTests(TestCase):
         with _patch_chain_json(payload):
             result = parse_command(self.user, text='یه مشتری دارم حسینی دنبال پونکه')
         self.assertEqual(result['intent'], 'create_contact')
-        self.assertTrue(result['can_confirm'])
+        self.assertFalse(result['can_confirm'])
+        self.assertEqual(result['missing_fields'], ['phone'])
 
     def test_contact_single_match(self):
         with _patch_chain_ok():

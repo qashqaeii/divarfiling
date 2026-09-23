@@ -89,10 +89,12 @@ class NLCommandContactTests(TestCase):
         self.assertEqual(c.phone, '09121234567')
 
     @_patch_chain_json(_contact_json(name='حسینی', phone=None, areas='پونک'))
-    def test_b_preferences_without_phone_can_confirm(self, _chain):
+    def test_b_preferences_without_phone_blocks_confirm(self, _chain):
         parsed = parse_command(self.user, text='یه مشتری دارم حسینی دنبال پونکه')
         self.assertEqual(parsed['intent'], 'create_contact')
-        self.assertTrue(parsed['can_confirm'])
+        self.assertFalse(parsed['can_confirm'])
+        self.assertEqual(parsed['missing_fields'], ['phone'])
+        self.assertEqual(parsed['hint'], 'شماره تماس مخاطب را هم وارد کنید.')
         self.assertFalse(parsed.get('duplicate_contact'))
 
     @_patch_chain_json(_contact_json(
@@ -108,7 +110,8 @@ class NLCommandContactTests(TestCase):
             self.user,
             text='علی مرادی دنبال مرزداران و پونکه، ۹۰ تا ۱۱۰ متر، بودجه تا ۱۳ میلیارد',
         )
-        self.assertTrue(parsed['can_confirm'])
+        self.assertFalse(parsed['can_confirm'])
+        self.assertEqual(parsed['missing_fields'], ['phone'])
         state = load_state(self.user.pk, parsed['command_id'])
         v = state['validated']
         self.assertEqual(v['min_area'], 90)
@@ -129,6 +132,7 @@ class NLCommandContactTests(TestCase):
     @_patch_chain_json(_contact_json())
     def test_e_double_confirm_idempotent(self, _chain):
         parsed = parse_command(self.user, text='ذخیره احمدی')
+        self.assertTrue(parsed['can_confirm'])
         first = confirm_command(self.user, parsed['command_id'])
         second = confirm_command(self.user, parsed['command_id'])
         self.assertEqual(first['entity_id'], second['entity_id'])
@@ -146,6 +150,7 @@ class NLCommandContactTests(TestCase):
         parsed = parse_command(self.user, text='شماره بد')
         self.assertFalse(parsed['can_confirm'])
         self.assertIn('phone', parsed['ambiguous_fields'])
+        self.assertEqual(parsed['hint'], 'شماره تماس واردشده معتبر نیست.')
 
     @_patch_chain_json(_contact_json(budget_min=20_000_000_000, budget_max=10_000_000_000))
     def test_h_invalid_budget_range(self, _chain):
@@ -170,6 +175,8 @@ class NLCommandContactTests(TestCase):
     @_patch_chain_json(_contact_json(name='حسینی', phone=None))
     def test_correction_merge_command_id(self, _chain):
         first = parse_command(self.user, text='حسینی رو ذخیره کن')
+        self.assertFalse(first['can_confirm'])
+        self.assertEqual(first['missing_fields'], ['phone'])
         cid = first['command_id']
         with _patch_chain_json(_contact_json(name='حسینی', phone='09125556677')):
             second = parse_command(

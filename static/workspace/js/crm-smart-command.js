@@ -500,14 +500,11 @@
         }
 
         function incompleteContactFeedback(data) {
-            const name = (data.preview && data.preview.name) || '';
-            if ((data.missing_fields || []).indexOf('phone') !== -1 && name) {
-                return { main: 'شماره تماس ' + name + ' را وارد کنید.', hint: 'مثلاً: ۰۹۱۲۱۲۳۴۵۶۷' };
-            }
-            return {
-                main: data.hint || data.message || 'اطلاعات مخاطب کامل نیست.',
-                hint: 'می‌توانید همان فرمان را با جزئیات بیشتر دوباره بنویسید.',
-            };
+            const main = data.hint || data.message || 'اطلاعات مخاطب کامل نیست.';
+            const phoneHint = (data.missing_fields || []).indexOf('phone') !== -1
+                ? 'مثلاً: ۰۹۱۲۱۲۳۴۵۶۷'
+                : 'می‌توانید همان فرمان را با جزئیات بیشتر دوباره بنویسید.';
+            return { main, hint: phoneHint };
         }
 
         function showReadyPreview(intent) {

@@ -214,6 +214,7 @@ def _parse_create_contact(
 
     can_confirm = (
         bool(validated.get('name'))
+        and bool(validated.get('phone'))
         and not missing_fields
         and not ambiguous_fields
         and not duplicate_contact
@@ -257,14 +258,11 @@ def _parse_create_contact(
     elif name_warning:
         response['warning'] = name_warning
     if not can_confirm and not duplicate_contact:
-        hint = field_error or hint_for_incomplete_contact(
+        response['hint'] = field_error or hint_for_incomplete_contact(
             missing_fields=missing_fields,
             ambiguous_fields=ambiguous_fields,
             duplicate=False,
         )
-        if validated.get('name') and 'phone' in missing_fields:
-            hint = f'شماره تماس {validated.get("name")} را وارد کنید.'
-        response['hint'] = hint
     return response
 
 

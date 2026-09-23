@@ -238,9 +238,9 @@ def validate_contact_parse(
     tz_name: str = 'Asia/Tehran',
     prior_explicit: Optional[List[str]] = None,
 ) -> Tuple[Dict[str, Any], List[str], List[str], Optional[str]]:
-    missing = list(llm_missing or [])
     ambiguous = list(llm_ambiguous or [])
     error_message: Optional[str] = None
+    phone_was_invalid = False
 
     explicit_paths = _collect_explicit_paths(data)
     if prior_explicit:
@@ -252,8 +252,6 @@ def validate_contact_parse(
     flat_in = flatten_contact_llm_data(data)
 
     name = _clean_name(flat_in.get('name'))
-    if not name:
-        missing = _merge_missing(missing, ['name'])
 
     phone_raw = flat_in.get('phone')
     phone = ''
@@ -261,7 +259,8 @@ def validate_contact_parse(
         phone = normalize_phone(str(phone_raw))
         if not is_valid_iran_mobile(phone):
             ambiguous = _merge_missing(ambiguous, ['phone'])
-            error_message = error_message or 'شماره تماس نامعتبر است.'
+            error_message = error_message or 'شماره تماس واردشده معتبر نیست.'
+            phone_was_invalid = True
             phone = ''
 
     phone_alt = ''
@@ -471,8 +470,13 @@ def validate_contact_parse(
         '_explicit_fields': sorted(explicit_model),
     }
 
-    ambiguous = list(dict.fromkeys(ambiguous))
-    missing = list(dict.fromkeys(missing))
+    ambiguous = [f for f in dict.fromkeys(ambiguous) if f not in ('name',)]
+    required_missing: List[str] = []
+    if not name:
+        required_missing.append('name')
+    if not phone and not phone_was_invalid:
+        required_missing.append('phone')
+    missing = required_missing
     return validated, missing, ambiguous, error_message
 
 
@@ -485,13 +489,15 @@ def hint_for_incomplete_contact(
     if duplicate:
         return 'این شماره قبلاً ثبت شده است.'
     if 'phone' in ambiguous_fields:
-        return 'شماره تماس را بررسی کنید.'
-    if 'name' in missing_fields:
-        return 'نام مخاطب را مشخص کنید.'
-    if missing_fields:
-        field = missing_fields[0]
-        if field == 'phone':
-            return 'شماره تماس را وارد کنید.'
+        return 'شماره تماس واردشده معتبر نیست.'
+    name_missing = 'name' in missing_fields
+    phone_missing = 'phone' in missing_fields
+    if name_missing and phone_missing:
+        return 'نام و شماره تماس مخاطب را وارد کنید.'
+    if name_missing:
+        return 'نام مخاطب را هم وارد کنید.'
+    if phone_missing:
+        return 'شماره تماس مخاطب را هم وارد کنید.'
     if ambiguous_fields:
         return 'برخی فیلدها نامعتبر یا مبهم هستند.'
     return 'برای ثبت، اطلاعات را کامل‌تر بنویسید.'

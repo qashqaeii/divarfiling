@@ -215,7 +215,7 @@ class NLCommandPropertyTests(TestCase):
         'confidence': 0.9,
         'data': {
             'name': 'حسینی',
-            'phone': None,
+            'phone': '09121234567',
             'customer_type': 'خریدار',
             'source': None,
             'preferences': {'areas': 'پونک'},

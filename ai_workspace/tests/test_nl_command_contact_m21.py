@@ -98,7 +98,7 @@ class ContactValidatorTests(TestCase):
             llm_ambiguous=[],
         )
         self.assertEqual(v['name'], 'علی')
-        self.assertFalse(missing)
+        self.assertEqual(missing, ['phone'])
         self.assertEqual(v['customer_type'], '')
 
     def test_invalid_budget_range(self):
@@ -176,6 +176,7 @@ class ContactM21IntegrationTests(TestCase):
 
     @_patch_chain_json(_nested_contact_payload(
         name='احمدی',
+        contact__phone='09121234000',
         customer_type='خریدار',
         preferences__property_type='آپارتمان',
         preferences__areas=['سعادت آباد', 'شهرک غرب'],
@@ -198,7 +199,8 @@ class ContactM21IntegrationTests(TestCase):
     @_patch_chain_json(_nested_contact_payload(name='حسینی', preferences__areas='پونک'))
     def test_backward_compat_areas_string(self, _chain):
         parsed = parse_command(self.user, text='حسینی پونک')
-        self.assertTrue(parsed['can_confirm'])
+        self.assertFalse(parsed['can_confirm'])
+        self.assertEqual(parsed['missing_fields'], ['phone'])
         state = load_state(self.user.pk, parsed['command_id'])
         self.assertIn('پونک', state['validated']['areas'])
 

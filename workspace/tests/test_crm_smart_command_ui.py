@@ -68,7 +68,7 @@ class SmartCommandTemplateTests(TestCase):
         self.assertIn('crm-smart-command-voice.js', html)
         self.assertIn('data-sc="voice-btn"', html)
         self.assertIn('aria-label="شروع فرمان صوتی"', html)
-        self.assertIn('data-sc="voice-icon-stop"', html)
+        self.assertIn('data-sc="voice-icon"', html)
 
     def test_properties_page_has_property_composer(self):
         res = self._render_properties()

@@ -298,10 +298,9 @@
         const privacyTitle = MIC_TOOLTIP + ' — ' + PRIVACY_NOTE;
         const queryMicBtn =
             typeof micBtn.querySelector === 'function' ? micBtn.querySelector.bind(micBtn) : null;
-        const micIconEl = queryMicBtn
-            ? queryMicBtn('[data-sc="voice-icon-mic"]') || queryMicBtn('.fa-microphone')
+        const voiceIconEl = queryMicBtn
+            ? queryMicBtn('[data-sc="voice-icon"]') || queryMicBtn('.crm-nl-command__voice-icon')
             : null;
-        const stopIconEl = queryMicBtn ? queryMicBtn('[data-sc="voice-icon-stop"]') : null;
 
         /**
          * @param {VoiceButtonState} mode
@@ -314,11 +313,10 @@
             if (supported) {
                 micBtn.title = listening ? MIC_TOOLTIP_STOP : privacyTitle;
             }
-            if (micIconEl) {
-                micIconEl.hidden = listening;
-            }
-            if (stopIconEl) {
-                stopIconEl.hidden = !listening;
+            if (voiceIconEl && voiceIconEl.classList) {
+                voiceIconEl.classList.toggle('fa-microphone', !listening);
+                voiceIconEl.classList.toggle('fa-stop', listening);
+                voiceIconEl.classList.toggle('crm-nl-command__voice-icon--stop', listening);
             }
         }
 

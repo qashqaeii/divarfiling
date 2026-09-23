@@ -92,7 +92,20 @@ NL_COMMAND_ALLOWED_INTENTS = frozenset({
 })
 
 NL_COMMAND_UNKNOWN_MESSAGE = (
-    'فعلاً فقط ثبت یادآوری با فرمان هوشمند پشتیبانی می‌شود.'
+    'فعلاً فرمان هوشمند فقط برای ثبت یادآوری فعال است.'
+)
+
+NL_COMMAND_PARSE_FAILED_MESSAGE = (
+    'فرمان قابل تشخیص نبود. دوباره ساده‌تر بنویسید.'
+)
+
+NL_COMMAND_PROVIDER_UNAVAILABLE_MESSAGE = (
+    'سرویس هوشمند موقتاً در دسترس نیست. دوباره تلاش کنید.'
+)
+
+NL_COMMAND_EXAMPLE_PHRASES = (
+    'فردا ساعت ۱۰ یادم بنداز به احمدی زنگ بزنم',
+    'پس‌فردا عصر یادم بنداز فایل‌های پونک رو بررسی کنم',
 )
 
 

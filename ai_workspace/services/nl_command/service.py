@@ -11,8 +11,10 @@ from django.utils import timezone
 
 from ai_workspace.constants import (
     FEATURE_NL_COMMAND,
+    NL_COMMAND_EXAMPLE_PHRASES,
     NL_COMMAND_INTENT_CREATE_REMINDER,
     NL_COMMAND_INTENT_UNKNOWN,
+    NL_COMMAND_PARSE_FAILED_MESSAGE,
     NL_COMMAND_UNKNOWN_MESSAGE,
     nl_command_contact_not_found_message,
     resolve_model_label,
@@ -55,6 +57,45 @@ def _ai_response_meta(result: GatewayResult) -> Dict[str, Any]:
         'provider': result.provider,
         'cached': False,
     }
+
+
+def _unknown_parse_response(ai_meta: Dict[str, Any], *, entity_id: str, user_id: int) -> Dict[str, Any]:
+    logger.info(
+        'nl_command_unsupported user_id=%s intent=unknown status=unsupported entity_id=%s',
+        user_id,
+        entity_id,
+    )
+    return {
+        'ok': True,
+        'intent': NL_COMMAND_INTENT_UNKNOWN,
+        'can_confirm': False,
+        'command_id': None,
+        'preview': None,
+        'missing_fields': [],
+        'ambiguous_fields': [],
+        'message': NL_COMMAND_UNKNOWN_MESSAGE,
+        'examples': list(NL_COMMAND_EXAMPLE_PHRASES),
+        'ai': ai_meta,
+    }
+
+
+def _hint_for_incomplete(
+    *,
+    missing_fields: list,
+    ambiguous_fields: list,
+    contact_ambiguity: str,
+) -> str:
+    if 'due_at' in ambiguous_fields:
+        return 'زمان یادآوری در گذشته است یا نامعتبر است.'
+    if contact_ambiguity == 'multiple' or 'contact_name' in ambiguous_fields:
+        return 'چند مخاطب با این نام پیدا شد؛ یکی را انتخاب کنید.'
+    if 'date_text' in missing_fields or 'time_text' in missing_fields:
+        return 'زمان یادآوری را مشخص کنید (مثلاً فردا ساعت ۱۰).'
+    if contact_ambiguity == 'none':
+        return 'مخاطب پیدا نشد؛ نام را اصلاح کنید یا بدون مخاطب بنویسید.'
+    if missing_fields:
+        return 'برخی اطلاعات یادآوری کامل نیست.'
+    return 'برای ثبت، اطلاعات را کامل‌تر بنویسید.'
 
 
 def _default_title(contact_name: Optional[str], note: Optional[str]) -> str:
@@ -109,7 +150,7 @@ def parse_command(
             result.status,
         )
         raise NLCommandError(
-            'درک فرمان ممکن نشد. لطفاً دوباره یا با فرم یادآور ثبت کنید.',
+            NL_COMMAND_PARSE_FAILED_MESSAGE,
             code='parse_failed',
             status=503,
         )
@@ -118,22 +159,10 @@ def parse_command(
     ai_meta = _ai_response_meta(result)
 
     if intent == NL_COMMAND_INTENT_UNKNOWN:
-        return {
-            'ok': True,
-            'intent': NL_COMMAND_INTENT_UNKNOWN,
-            'can_confirm': False,
-            'message': NL_COMMAND_UNKNOWN_MESSAGE,
-            'ai': ai_meta,
-        }
+        return _unknown_parse_response(ai_meta, entity_id=entity_id, user_id=user.pk)
 
     if intent != NL_COMMAND_INTENT_CREATE_REMINDER:
-        return {
-            'ok': True,
-            'intent': NL_COMMAND_INTENT_UNKNOWN,
-            'can_confirm': False,
-            'message': NL_COMMAND_UNKNOWN_MESSAGE,
-            'ai': ai_meta,
-        }
+        return _unknown_parse_response(ai_meta, entity_id=entity_id, user_id=user.pk)
 
     inner = data.get('data') or {}
     contact_name = inner.get('contact_name')
@@ -213,6 +242,12 @@ def parse_command(
         response['contact_candidates'] = candidates
     if amb == 'none' and contact_name:
         response['message'] = nl_command_contact_not_found_message(contact_name)
+    elif not can_confirm:
+        response['hint'] = _hint_for_incomplete(
+            missing_fields=missing_fields,
+            ambiguous_fields=ambiguous_fields,
+            contact_ambiguity=amb,
+        )
     return response
 
 

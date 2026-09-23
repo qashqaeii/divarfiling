@@ -151,6 +151,16 @@
     align-items: center;
     gap: 0.3rem;
     min-width: 0;
+    transition: opacity 0.2s;
+}
+
+.crm-today-pro .crm-nl-command__samples.is-suggested {
+    opacity: 1;
+}
+
+.crm-today-pro .crm-nl-command__samples.is-suggested .crm-nl-command__sample {
+    border-color: color-mix(in srgb, var(--ws-primary) 45%, transparent);
+    background: var(--tq-today-soft);
 }
 
 .crm-today-pro .crm-nl-command__samples-label {

@@ -51,7 +51,7 @@ class ArvanProviderTests(SimpleTestCase):
         self.assertEqual(result.provider, 'arvan')
         self.assertEqual(result.input_tokens, 11)
         self.assertEqual(result.output_tokens, 7)
-        self.assertTrue(result.is_fallback)
+        self.assertFalse(result.is_fallback)
 
     def test_correct_endpoint_url(self):
         provider = ArvanAIProvider()

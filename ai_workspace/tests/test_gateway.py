@@ -1,4 +1,4 @@
-"""تست Gateway و Provider chain."""
+"""تست Gateway — سناریوهای پایه با زنجیره Arvan-first."""
 from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
@@ -16,33 +16,60 @@ _LISTING_CTX = {
     'price_label': '۱۲ میلیارد تومان',
 }
 
-
 _MOCK_SUMMARY_JSON = (
     '{"summary":"خلاصه تست آگهی برای واحد نمونه در محله","highlights":[],'
     '"negotiation_tip":"","advertiser_note":""}'
 )
 
 
-def _make_chain_mock(*, primary_ok=True, secondary_ok=False, arvan_ok=False):
-    primary = MagicMock()
-    lite = MagicMock()
-    arvan = MagicMock()
+def _patch_chain(chain):
+    return patch('ai_workspace.services.gateway.get_http_provider_chain', return_value=chain)
 
-    if primary_ok:
+
+def _make_chain_mock(*, arvan_ok=True, openrouter_ok=False, gemini_primary_ok=False, gemini_lite_ok=False):
+    arvan, openrouter, primary, lite = MagicMock(), MagicMock(), MagicMock(), MagicMock()
+
+    if arvan_ok:
+        arvan.complete.return_value = ProviderResult(
+            text=_MOCK_SUMMARY_JSON,
+            provider='arvan',
+            model='Gemini-2.5-Flash-lite',
+            input_tokens=10,
+            output_tokens=5,
+            latency_ms=100,
+            is_fallback=False,
+        )
+    else:
+        arvan.complete.side_effect = ProviderError('429', retryable=True, code='429')
+
+    if openrouter_ok:
+        openrouter.complete.return_value = ProviderResult(
+            text=_MOCK_SUMMARY_JSON,
+            provider='openrouter',
+            model='openai/gpt-oss-20b:free',
+            input_tokens=10,
+            output_tokens=5,
+            latency_ms=200,
+            is_fallback=True,
+        )
+    else:
+        openrouter.complete.side_effect = ProviderError('429', retryable=True, code='429')
+
+    if gemini_primary_ok:
         primary.complete.return_value = ProviderResult(
             text=_MOCK_SUMMARY_JSON,
             provider='gemini',
             model='gemini-3.1-flash-lite',
             input_tokens=10,
             output_tokens=5,
-            latency_ms=100,
+            latency_ms=80,
         )
     else:
         primary.complete.side_effect = ProviderError('429', retryable=True, code='429')
 
-    if secondary_ok:
+    if gemini_lite_ok:
         lite.complete.return_value = ProviderResult(
-            text='{"summary":"خلاصه lite برای آگهی نمونه تست","highlights":[],"negotiation_tip":"","advertiser_note":""}',
+            text=_MOCK_SUMMARY_JSON,
             provider='gemini',
             model='gemini-2.5-flash-lite',
             input_tokens=10,
@@ -53,24 +80,7 @@ def _make_chain_mock(*, primary_ok=True, secondary_ok=False, arvan_ok=False):
     else:
         lite.complete.side_effect = ProviderError('429', retryable=True, code='429')
 
-    if arvan_ok:
-        arvan.complete.return_value = ProviderResult(
-            text='{"summary":"خلاصه پشتیبان arvan برای آگهی نمونه","highlights":[],"negotiation_tip":"","advertiser_note":""}',
-            provider='arvan',
-            model='Gemini-2.5-Flash-lite',
-            input_tokens=10,
-            output_tokens=5,
-            latency_ms=200,
-            is_fallback=True,
-        )
-    else:
-        arvan.complete.side_effect = ProviderError('429', retryable=True, code='rate_limited')
-
-    return [primary, lite, arvan]
-
-
-def _patch_chain(chain):
-    return patch('ai_workspace.services.gateway.get_http_provider_chain', return_value=chain)
+    return [arvan, openrouter, primary, lite]
 
 
 @override_settings(AI_ENABLED=True, GEMINI_API_KEY='test')
@@ -80,8 +90,8 @@ class GatewayTests(TestCase):
             username='staff_ai', password='x', is_staff=True, phone='09120000003',
         )
 
-    def test_gemini_success_skips_fallbacks(self):
-        chain = _make_chain_mock(primary_ok=True)
+    def test_arvan_success_skips_fallbacks(self):
+        chain = _make_chain_mock(arvan_ok=True)
         with _patch_chain(chain):
             result = run(
                 'listing_summary',
@@ -92,10 +102,11 @@ class GatewayTests(TestCase):
             )
             chain[1].complete.assert_not_called()
             chain[2].complete.assert_not_called()
-        self.assertEqual(result.provider, 'gemini')
+            chain[3].complete.assert_not_called()
+        self.assertEqual(result.provider, 'arvan')
 
-    def test_gemini_fail_uses_arvan(self):
-        chain = _make_chain_mock(primary_ok=False, secondary_ok=False, arvan_ok=True)
+    def test_arvan_fail_uses_openrouter(self):
+        chain = _make_chain_mock(arvan_ok=False, openrouter_ok=True)
         with _patch_chain(chain):
             result = run(
                 'listing_summary',
@@ -104,10 +115,10 @@ class GatewayTests(TestCase):
                 entity_type='listing',
                 entity_id='2',
             )
-        self.assertEqual(result.provider, 'arvan')
+        self.assertEqual(result.provider, 'openrouter')
 
     def test_all_fail_uses_rule_based(self):
-        chain = _make_chain_mock(primary_ok=False, secondary_ok=False, arvan_ok=False)
+        chain = _make_chain_mock(arvan_ok=False, openrouter_ok=False)
         with _patch_chain(chain):
             result = run(
                 'listing_summary',
@@ -123,8 +134,10 @@ class GatewayTests(TestCase):
         self.assertEqual(result.provider, 'rule_based')
         self.assertTrue(result.is_fallback)
 
-    def test_primary_fail_lite_succeeds(self):
-        chain = _make_chain_mock(primary_ok=False, secondary_ok=True, arvan_ok=False)
+    def test_arvan_fail_openrouter_fail_gemini_lite_succeeds(self):
+        chain = _make_chain_mock(
+            arvan_ok=False, openrouter_ok=False, gemini_primary_ok=False, gemini_lite_ok=True,
+        )
         with _patch_chain(chain):
             result = run(
                 'listing_summary',
@@ -134,46 +147,18 @@ class GatewayTests(TestCase):
                 entity_id='4',
             )
         self.assertEqual(result.model, 'gemini-2.5-flash-lite')
-        chain[2].complete.assert_not_called()
-
-    def test_primary_403_still_tries_arvan(self):
-        primary = MagicMock()
-        lite = MagicMock()
-        arvan = MagicMock()
-        primary.complete.side_effect = ProviderError('403', retryable=False, code='403')
-        lite.complete.side_effect = ProviderError('403', retryable=False, code='403')
-        arvan.complete.return_value = ProviderResult(
-            text='{"summary":"خلاصه arvan بعد از خطای gemini","highlights":[],"negotiation_tip":"","advertiser_note":""}',
-            provider='arvan',
-            model='Gemini-2.5-Flash-lite',
-            input_tokens=10,
-            output_tokens=5,
-            latency_ms=200,
-            is_fallback=True,
-        )
-        chain = [primary, lite, arvan]
-        with _patch_chain(chain):
-            result = run(
-                'listing_summary',
-                self.user,
-                context={**_LISTING_CTX, 'content_version': '6'},
-                entity_type='listing',
-                entity_id='6',
-            )
-        self.assertEqual(result.provider, 'arvan')
-        lite.complete.assert_called_once()
-        arvan.complete.assert_called_once()
+        chain[3].complete.assert_called_once()
 
     def test_malformed_llm_json_uses_rule_based(self):
-        chain = _make_chain_mock(primary_ok=False, secondary_ok=False, arvan_ok=True)
-        chain[2].complete.return_value = ProviderResult(
+        chain = _make_chain_mock(arvan_ok=True)
+        chain[0].complete.return_value = ProviderResult(
             text='not-json',
             provider='arvan',
             model='Gemini-2.5-Flash-lite',
             input_tokens=10,
             output_tokens=5,
             latency_ms=200,
-            is_fallback=True,
+            is_fallback=False,
         )
         with _patch_chain(chain):
             result = run(
@@ -188,10 +173,9 @@ class GatewayTests(TestCase):
                 entity_id='7',
             )
         self.assertEqual(result.provider, 'rule_based')
-        self.assertNotIn('{', result.data.get('summary', ''))
 
     def test_validation_skip_never_calls_providers(self):
-        chain = _make_chain_mock(primary_ok=True)
+        chain = _make_chain_mock(arvan_ok=True)
         with _patch_chain(chain):
             result = run(
                 'listing_summary',

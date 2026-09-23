@@ -315,7 +315,7 @@ ARVAN_AI_MAX_RETRIES = config('ARVAN_AI_MAX_RETRIES', default=1, cast=int)
 ARVAN_AI_TEMPERATURE = config('ARVAN_AI_TEMPERATURE', default=0.4, cast=float)
 ARVAN_AI_MAX_TOKENS = config('ARVAN_AI_MAX_TOKENS', default=1200, cast=int)
 
-# LEGACY_INACTIVE — OpenRouter free tier (not in HTTP provider chain)
+# OpenRouter — backup after Arvan (:free models only)
 OPENROUTER_API_KEY = config('OPENROUTER_API_KEY', default='')
 OPENROUTER_BASE_URL = config('OPENROUTER_BASE_URL', default='https://openrouter.ai/api/v1')
 OPENROUTER_FREE_MODELS = config(
@@ -325,6 +325,8 @@ OPENROUTER_FREE_MODELS = config(
 OPENROUTER_TIMEOUT_SECONDS = config('OPENROUTER_TIMEOUT_SECONDS', default=8, cast=int)
 AI_GLOBAL_DAILY_CAP = config('AI_GLOBAL_DAILY_CAP', default=350, cast=int)
 AI_DAILY_TOKEN_LIMIT = config('AI_DAILY_TOKEN_LIMIT', default=30000, cast=int)
+# bump هنگام تغییر provider chain تا پاسخ‌های cache شدهٔ provider قبلی reuse نشوند
+AI_CACHE_VERSION = config('AI_CACHE_VERSION', default='v2')
 
 # CARTO raster basemaps (Leaflet tile layers) — free tier with API key
 CARTO_BASEMAP_API_KEY = config('CARTO_BASEMAP_API_KEY', default='')

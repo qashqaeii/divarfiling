@@ -24,9 +24,15 @@ from ai_workspace.services.prompts import prompt_hash, prompt_version, render
 from ai_workspace.services.quota import QuotaExceededError, check_quota, consume_quota
 from ai_workspace.services.validation import prepare_context
 
-RULE_BASED_ATTEMPT = 4
-
 logger = logging.getLogger(__name__)
+
+
+def _http_provider_count() -> int:
+    return len(get_http_provider_chain())
+
+
+def _rule_based_attempt() -> int:
+    return _http_provider_count() + 1
 
 
 class FeatureDisabledError(Exception):
@@ -102,12 +108,13 @@ def _global_cap_reached() -> bool:
         from django.utils import timezone
 
         today = timezone.localdate()
+        max_attempt = _http_provider_count()
         count = AIUsageLog.objects.filter(
             created_at__date=today,
             cache_hit=False,
             status__in=(AIUsageLog.STATUS_OK, AIUsageLog.STATUS_FALLBACK),
             provider_attempt__gte=1,
-            provider_attempt__lte=3,
+            provider_attempt__lte=max_attempt,
         ).count()
         django_cache.set(key, count, 300)
     return int(count) >= cap
@@ -209,7 +216,9 @@ def run(
         last_code = validation.reason
         provider_attempt = 0
     elif not use_rule_only:
-        for attempt_idx, provider in enumerate(get_http_provider_chain(), start=1):
+        http_chain = get_http_provider_chain()
+        rule_based_attempt = len(http_chain) + 1
+        for attempt_idx, provider in enumerate(http_chain, start=1):
             try:
                 provider_result = provider.complete(
                     system=system,
@@ -225,11 +234,11 @@ def run(
 
     if provider_result is None:
         provider_result, rule_payload = RULE_BASED.complete_for_feature(feature, context)
-        provider_attempt = RULE_BASED_ATTEMPT
+        provider_attempt = _rule_based_attempt()
 
     if validation.skip_llm:
         status = AIUsageLog.STATUS_FALLBACK
-    elif provider_attempt == RULE_BASED_ATTEMPT:
+    elif provider_attempt == _rule_based_attempt():
         status = AIUsageLog.STATUS_FALLBACK
     else:
         status = AIUsageLog.STATUS_OK if not provider_result.is_fallback else AIUsageLog.STATUS_FALLBACK
@@ -240,7 +249,7 @@ def run(
         data = normalize_payload(feature, rule_payload['data'], rule_payload.get('raw_text', ''))
         text_out = dumps_payload(data)
         status = AIUsageLog.STATUS_FALLBACK
-        provider_attempt = RULE_BASED_ATTEMPT
+        provider_attempt = _rule_based_attempt()
     else:
         text_out = provider_result.text
         if feature_uses_json(feature) and data:
@@ -251,7 +260,7 @@ def run(
         data = {'text': text_out}
 
     consume_quota(user, feature, provider_result.input_tokens, provider_result.output_tokens)
-    if 1 <= provider_attempt <= 3:
+    if 1 <= provider_attempt <= _http_provider_count():
         _bump_global_counter()
 
     if not feature_uses_json(feature) or is_valid_payload(feature, data):

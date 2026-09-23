@@ -6,9 +6,14 @@ import json
 from datetime import timedelta
 from typing import Any, Dict, Optional
 
+from django.conf import settings
 from django.utils import timezone
 
 from ai_workspace.models import AICache
+
+
+def cache_namespace() -> str:
+    return (getattr(settings, 'AI_CACHE_VERSION', 'v2') or 'v2').strip()
 
 
 def _cache_key(
@@ -17,8 +22,8 @@ def _cache_key(
     content_version: str,
     prompt_hash: str,
 ) -> str:
-    """کلید کش — فقط feature/entity/version/prompt (نه provider/model)."""
-    raw = f'{feature}:{entity_id}:{content_version}:{prompt_hash}'
+    """کلید کش — namespace rollout + feature/entity/version/prompt."""
+    raw = f'{cache_namespace()}:{feature}:{entity_id}:{content_version}:{prompt_hash}'
     return hashlib.sha256(raw.encode('utf-8')).hexdigest()
 
 

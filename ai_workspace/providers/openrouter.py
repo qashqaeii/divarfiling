@@ -1,7 +1,4 @@
-"""OpenRouter — LEGACY_INACTIVE (free :free models). Not used in production HTTP chain.
-
-Kept for optional manual/rollback experiments only. Production backup is Arvan AIaaS.
-"""
+"""OpenRouter — Backup HTTP provider (:free models only) after Arvan in production chain."""
 from __future__ import annotations
 
 import time

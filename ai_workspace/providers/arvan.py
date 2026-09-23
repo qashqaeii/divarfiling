@@ -211,7 +211,7 @@ class ArvanAIProvider:
                     input_tokens=inp,
                     output_tokens=out,
                     latency_ms=latency_ms,
-                    is_fallback=True,
+                    is_fallback=False,
                 )
 
         if last_error:

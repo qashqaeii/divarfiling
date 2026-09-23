@@ -4,13 +4,15 @@
 
 ```
 Feature → context builder → prompt → gateway.run()
-  → cache / quota / validation
-  → HTTP providers (in order):
-       1. Gemini Primary (GEMINI_MODEL)
-       2. Gemini Lite (GEMINI_FALLBACK_MODEL)
-       3. Arvan AIaaS (if ARVAN_AI_ENABLED + configured)
+  → cache (AI_CACHE_VERSION) / quota / validation
+  → HTTP providers (provider_attempt index):
+       1. Arvan AIaaS (if configured)
+            → internal: ARVAN_AI_MODEL then ARVAN_AI_FALLBACK_MODEL
+       2. OpenRouter (:free only, if OPENROUTER_API_KEY)
+       3. Gemini Primary (GEMINI_MODEL)
+       4. Gemini Lite (GEMINI_FALLBACK_MODEL)
   → parse / salvage
-  → on total HTTP failure: RuleBasedProvider
+  → on total HTTP failure: RuleBasedProvider (attempt = len(chain)+1)
 ```
 
 Views and mobile API **only** call `gateway.run()` — never Arvan directly.
@@ -41,20 +43,20 @@ POST URL: `{BASE}/chat/completions` (see `arvan_http.build_chat_completions_url`
 
 ## Rollback
 
-- Set `ARVAN_AI_ENABLED=false` — Arvan is omitted from the chain; Gemini → Lite → RuleBased.
-- No code deploy required for emergency disable.
+- Set `ARVAN_AI_ENABLED=false` — chain becomes: OpenRouter (:free) → Gemini Primary → Lite → RuleBased.
+- No code deploy required for emergency disable of Arvan.
 
-## OpenRouter status
+## OpenRouter
 
 | Component | Status |
 |-----------|--------|
-| `OpenRouterProvider` | **LEGACY_INACTIVE** (code retained) |
-| `HTTP_PROVIDER_CHAIN` | **No OpenRouter** |
-| `:free` models | **Not used in production** |
+| `OpenRouterProvider` | Active **after Arvan** when `OPENROUTER_API_KEY` is set |
+| Model routing | Only `:free` / `openrouter/free` via `openrouter_models.py` |
+| Paid models | **Never** selected by discovery filter |
 
 ## Quota & cache
 
-Unchanged: per-user limits, per-feature caps, `AI_GLOBAL_DAILY_CAP`, `AI_DAILY_TOKEN_LIMIT`, cache key `feature + entity_id + content_version + prompt_hash`. Cache hits do not consume quota.
+Unchanged: per-user limits, per-feature caps, `AI_GLOBAL_DAILY_CAP`, `AI_DAILY_TOKEN_LIMIT`. Cache key includes `AI_CACHE_VERSION` (default `v2`) + feature + entity + content_version + prompt_hash. Cache hits do not consume quota.
 
 ## Timeout / retry
 

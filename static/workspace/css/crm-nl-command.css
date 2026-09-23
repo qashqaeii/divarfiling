@@ -203,6 +203,81 @@
     box-shadow: 0 0 0 3px var(--sc-accent-12);
 }
 
+.crm-smart-command .crm-nl-command__input-wrap {
+    display: flex;
+    flex: 1;
+    align-items: stretch;
+    min-width: 0;
+    gap: 0.15rem;
+}
+
+.crm-smart-command .crm-nl-command__voice {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    align-self: center;
+    width: 2.35rem;
+    height: 2.35rem;
+    padding: 0;
+    border: none;
+    border-radius: 10px;
+    color: var(--sc-accent);
+    background: color-mix(in srgb, var(--sc-accent) 10%, transparent);
+    cursor: pointer;
+    transition: background 0.12s, color 0.12s, box-shadow 0.12s, transform 0.12s;
+}
+
+.crm-smart-command .crm-nl-command__voice:hover:not(:disabled):not(.is-unsupported) {
+    background: color-mix(in srgb, var(--sc-accent) 18%, transparent);
+}
+
+.crm-smart-command .crm-nl-command__voice:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--sc-accent) 55%, transparent);
+    outline-offset: 2px;
+}
+
+.crm-smart-command .crm-nl-command__voice.is-listening {
+    color: #fff;
+    background: linear-gradient(165deg, #ef4444 0%, #dc2626 100%);
+    box-shadow: 0 0 0 3px color-mix(in srgb, #ef4444 25%, transparent);
+    animation: crm-nl-voice-pulse 1.2s ease-in-out infinite;
+}
+
+.crm-smart-command .crm-nl-command__voice.is-processing {
+    opacity: 0.85;
+}
+
+.crm-smart-command .crm-nl-command__voice.is-unsupported {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.crm-smart-command .crm-nl-command__voice-icon {
+    font-size: 0.95rem;
+}
+
+.crm-smart-command .crm-nl-command__voice-status {
+    margin: 0.35rem 0 0;
+    font-size: 0.74rem;
+    font-weight: 600;
+    color: var(--ws-text-secondary);
+    line-height: 1.45;
+}
+
+.crm-smart-command .crm-nl-command__voice-status.is-error {
+    color: #b91c1c;
+}
+
+.crm-smart-command.is-voice-listening .crm-nl-command__row {
+    border-color: color-mix(in srgb, #ef4444 35%, var(--ws-border));
+}
+
+@keyframes crm-nl-voice-pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.04); }
+}
+
 .crm-smart-command .crm-nl-command__input {
     flex: 1;
     min-width: 0;
@@ -770,6 +845,10 @@
         gap: 0.45rem;
     }
 
+    .crm-smart-command .crm-nl-command__input-wrap {
+        width: 100%;
+    }
+
     .crm-smart-command .crm-nl-command__parse {
         width: 100%;
         min-height: 2.5rem;
@@ -833,7 +912,8 @@
     .crm-smart-command .crm-nl-command__parse-spinner,
     .crm-smart-command .crm-nl-command__panel,
     .crm-smart-command .crm-nl-command__success,
-    .crm-smart-command.is-sheet-open .crm-nl-command__panel {
+    .crm-smart-command.is-sheet-open .crm-nl-command__panel,
+    .crm-smart-command .crm-nl-command__voice.is-listening {
         animation: none;
     }
 }

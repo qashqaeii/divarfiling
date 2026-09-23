@@ -1,6 +1,6 @@
 {% load static %}
 {% if smart_command.enabled %}
-<link rel="stylesheet" href="{% static 'workspace/css/crm-nl-command.css' %}?v=6">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-nl-command.css' %}?v=7">
 <div class="crm-smart-command-wrap">
 <section class="crm-nl-command crm-smart-command crm-smart-command--ctx-{{ smart_command.context }}"
     data-crm-smart-command
@@ -48,9 +48,18 @@
     <div class="crm-nl-command__composer" data-sc="composer">
         <label class="visually-hidden" for="crmSmartCmdInput-{{ smart_command.context }}">متن فرمان</label>
         <div class="crm-nl-command__row">
-            <textarea id="crmSmartCmdInput-{{ smart_command.context }}" class="crm-nl-command__input" data-sc="input" rows="1"
-                placeholder="{{ smart_command.placeholder }}"
-                autocomplete="off" spellcheck="false"></textarea>
+            <div class="crm-nl-command__input-wrap">
+                <textarea id="crmSmartCmdInput-{{ smart_command.context }}" class="crm-nl-command__input" data-sc="input" rows="1"
+                    placeholder="{{ smart_command.placeholder }}"
+                    autocomplete="off" spellcheck="false"></textarea>
+                <button type="button" class="crm-nl-command__voice" data-sc="voice-btn"
+                    aria-label="فرمان صوتی"
+                    aria-pressed="false"
+                    title="فرمان صوتی">
+                    <i class="fas fa-microphone crm-nl-command__voice-icon" aria-hidden="true"></i>
+                    <span class="visually-hidden" data-sc="voice-privacy">صدا برای تبدیل به متن توسط سرویس تشخیص گفتار مرورگر پردازش می‌شود.</span>
+                </button>
+            </div>
             <button type="button" class="crm-nl-command__parse" data-sc="parse-btn">
                 <span class="crm-nl-command__parse-spinner" aria-hidden="true"></span>
                 <span class="crm-nl-command__parse-label">بررسی</span>
@@ -71,6 +80,7 @@
             <kbd class="crm-nl-command__kbd">Ctrl</kbd><span>+</span><kbd class="crm-nl-command__kbd">Enter</kbd>
             <span class="crm-nl-command__composer-hint-text">برای بررسی سریع</span>
         </p>
+        <p class="crm-nl-command__voice-status" data-sc="voice-status" role="status" aria-live="polite" hidden></p>
         <div class="crm-nl-command__feedback" data-sc="status" role="status" aria-live="polite" hidden></div>
     </div>
 
@@ -140,5 +150,6 @@
     <div class="crm-nl-command__backdrop" data-sc="backdrop" hidden aria-hidden="true"></div>
 </section>
 </div>
-<script src="{% static 'workspace/js/crm-smart-command.js' %}?v=3"></script>
+<script src="{% static 'workspace/js/crm-smart-command-voice.js' %}?v=1"></script>
+<script src="{% static 'workspace/js/crm-smart-command.js' %}?v=4"></script>
 {% endif %}

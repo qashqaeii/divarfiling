@@ -65,6 +65,9 @@ class SmartCommandTemplateTests(TestCase):
         self.assertIn('data-allowed-intent="create_contact"', html)
         self.assertIn('ثبت سریع مخاطب', html)
         self.assertIn('crm-smart-command.js', html)
+        self.assertIn('crm-smart-command-voice.js', html)
+        self.assertIn('data-sc="voice-btn"', html)
+        self.assertIn('aria-label="فرمان صوتی"', html)
 
     def test_properties_page_has_property_composer(self):
         res = self._render_properties()

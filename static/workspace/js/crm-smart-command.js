@@ -131,6 +131,11 @@
         const previewSummaryLine = readyStep?.querySelector('[data-sc="preview-summary-line"]');
         const previewSummarySub = readyStep?.querySelector('[data-sc="preview-summary-sub"]');
         const aiDefault = root.dataset.aiDefault || '';
+        const voiceBtn = root.querySelector('[data-sc="voice-btn"]');
+        const voiceStatusEl = root.querySelector('[data-sc="voice-status"]');
+        const voicePrivacyEl = root.querySelector('[data-sc="voice-privacy"]');
+        /** @type {{ stop?: function(): void }|null} */
+        let voiceAdapter = null;
 
         function isWrongIntent(data) {
             if (!allowedIntent || !data || !data.intent) return false;
@@ -192,6 +197,9 @@
             root.classList.toggle('is-loading', !!on);
             if (parseBtn) parseBtn.disabled = !!on;
             if (input) input.disabled = !!on;
+            if (on && voiceAdapter && typeof voiceAdapter.stop === 'function') {
+                voiceAdapter.stop();
+            }
             if (on) {
                 if (parseLabel) parseLabel.textContent = PARSE_LABEL_LOADING;
                 if (loadingSlowTimer) window.clearTimeout(loadingSlowTimer);
@@ -1100,6 +1108,25 @@
         autoGrowInput();
         syncInputState();
         setAiModel(null);
+
+        if (voiceBtn && window.CrmSmartCommandVoice && typeof window.CrmSmartCommandVoice.createVoiceInputAdapter === 'function') {
+            const privacy = (voicePrivacyEl && voicePrivacyEl.textContent) || window.CrmSmartCommandVoice.PRIVACY_NOTE;
+            voiceBtn.title = window.CrmSmartCommandVoice.MIC_TOOLTIP + ' — ' + privacy.trim();
+            voiceAdapter = window.CrmSmartCommandVoice.createVoiceInputAdapter(root, {
+                input,
+                micBtn: voiceBtn,
+                voiceStatusEl,
+                setInputValue(text) {
+                    if (!input) return;
+                    input.value = text;
+                    autoGrowInput();
+                    syncInputState();
+                },
+                isInputDisabled() {
+                    return !!(input && input.disabled);
+                },
+            });
+        }
 
         const ctxKey = (root.dataset.context || '').trim();
         if (ctxKey) {

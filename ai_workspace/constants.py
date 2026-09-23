@@ -27,7 +27,7 @@ FEATURE_DAILY_LIMITS = {
 FEATURE_GENERATION = {
     FEATURE_NL_COMMAND: {
         'temperature': 0.1,
-        'max_tokens': 400,
+        'max_tokens': 700,
     },
 }
 
@@ -81,18 +81,20 @@ PROMPT_VERSIONS = {
     FEATURE_LISTING_SUMMARY: 'listing_summary_v5',
     FEATURE_CRM_MESSAGE: 'crm_message_v5',
     FEATURE_UPLOAD_BRIEF: 'upload_brief_v1',
-    FEATURE_NL_COMMAND: 'nl_command_v1',
+    FEATURE_NL_COMMAND: 'nl_command_v2',
 }
 
 NL_COMMAND_INTENT_CREATE_REMINDER = 'create_reminder'
+NL_COMMAND_INTENT_CREATE_CONTACT = 'create_contact'
 NL_COMMAND_INTENT_UNKNOWN = 'unknown'
 NL_COMMAND_ALLOWED_INTENTS = frozenset({
     NL_COMMAND_INTENT_CREATE_REMINDER,
+    NL_COMMAND_INTENT_CREATE_CONTACT,
     NL_COMMAND_INTENT_UNKNOWN,
 })
 
 NL_COMMAND_UNKNOWN_MESSAGE = (
-    'فعلاً فرمان هوشمند فقط برای ثبت یادآوری فعال است.'
+    'فعلاً فرمان هوشمند برای ثبت یادآوری و مخاطب جدید فعال است.'
 )
 
 NL_COMMAND_PARSE_FAILED_MESSAGE = (
@@ -105,7 +107,8 @@ NL_COMMAND_PROVIDER_UNAVAILABLE_MESSAGE = (
 
 NL_COMMAND_EXAMPLE_PHRASES = (
     'فردا ساعت ۱۰ یادم بنداز به احمدی زنگ بزنم',
-    'پس‌فردا عصر یادم بنداز فایل‌های پونک رو بررسی کنم',
+    'خانم احمدی رو با شماره ۰۹۱۲۱۲۳۴۵۶۷ ذخیره کن',
+    'یه مشتری دارم حسینی دنبال پونکه',
 )
 
 

@@ -92,7 +92,14 @@
         const ambigLede = document.getElementById('crmNlAmbigLede');
         const previewSheet = document.getElementById('crmNlPreviewSheet');
         const previewActions = document.getElementById('crmNlPreviewActions');
+        const successEl = document.getElementById('crmNlSuccess');
+        const successMeta = document.getElementById('crmNlSuccessMeta');
+        const successLink = document.getElementById('crmNlSuccessLink');
         const panelTitleText = readyStep?.querySelector('[data-panel-title-text]');
+        const successTitleText = successEl?.querySelector('[data-success-title-text]');
+        const reminderRows = readyStep?.querySelectorAll('.crm-nl-command__sheet-reminder');
+        const contactRows = readyStep?.querySelectorAll('.crm-nl-command__sheet-contact');
+        const contactNoteRow = readyStep?.querySelector('[data-contact-note-row]');
         const statusEl = document.getElementById('crmNlCommandStatus');
         const confirmBtn = document.getElementById('crmNlCommandConfirmBtn');
         const cancelBtn = document.getElementById('crmNlCommandCancelBtn');
@@ -103,9 +110,6 @@
         const modelInfoBtn = document.getElementById('crmNlModelInfo');
         const chipsWrap = root.querySelector('.crm-nl-command__chips');
         const composer = document.getElementById('crmNlComposer');
-        const successEl = document.getElementById('crmNlSuccess');
-        const successMeta = document.getElementById('crmNlSuccessMeta');
-        const successLink = document.getElementById('crmNlSuccessLink');
         const backdrop = document.getElementById('crmNlSheetBackdrop');
         const aiDefault = root.dataset.aiDefault || '';
 
@@ -204,6 +208,7 @@
 
         function clearPreview() {
             commandId = null;
+            currentIntent = null;
             hidePreviewPanel();
             if (confirmBtn) confirmBtn.disabled = true;
         }
@@ -233,8 +238,50 @@
             input?.focus();
         }
 
-        function fillPreview(p) {
+        let currentIntent = null;
+
+        function setPreviewMode(intent) {
+            currentIntent = intent;
+            const isContact = intent === 'create_contact';
+            reminderRows?.forEach((row) => {
+                row.hidden = isContact;
+            });
+            contactRows?.forEach((row) => {
+                row.hidden = !isContact;
+            });
+            if (panelTitleText) {
+                panelTitleText.textContent = isContact ? 'مخاطب آماده ثبت است' : 'یادآوری آماده است';
+            }
+            if (successTitleText) {
+                successTitleText.textContent = isContact ? 'مخاطب ثبت شد' : 'یادآوری ثبت شد';
+            }
+            if (successLink) {
+                successLink.textContent = isContact ? 'مشاهده مخاطب' : 'مشاهده یادآوری';
+            }
+        }
+
+        function fillPreview(p, intent) {
             if (!readyStep || !p) return;
+            setPreviewMode(intent || currentIntent || 'create_reminder');
+            if (intent === 'create_contact' || currentIntent === 'create_contact') {
+                const contactFields = [
+                    'name', 'phone_display', 'customer_type', 'areas_display',
+                    'area_range_display', 'budget_display', 'rooms_display', 'notes',
+                ];
+                contactFields.forEach((key) => {
+                    const el = readyStep.querySelector('[data-field="' + key + '"]');
+                    if (!el) return;
+                    const val = (p[key] || '').trim();
+                    const row = el.closest('.crm-nl-command__sheet-contact');
+                    if (row && !row.hasAttribute('data-contact-note-row')) {
+                        row.hidden = !val;
+                    }
+                    el.textContent = val || '—';
+                });
+                const notesText = (p.notes || '').trim();
+                if (contactNoteRow) contactNoteRow.hidden = !notesText;
+                return;
+            }
             ['contact_name', 'due_at_display', 'title', 'note'].forEach((key) => {
                 const el = readyStep.querySelector('[data-field="' + key + '"]');
                 if (el) el.textContent = displayValue(p[key]);
@@ -243,11 +290,34 @@
             if (noteRow) noteRow.hidden = !noteText;
         }
 
-        function showReadyPreview() {
+        function isDuplicateContact(data) {
+            return !!(data && data.duplicate_contact && data.existing_contact);
+        }
+
+        function isIncompleteContact(data) {
+            if (!data || data.intent !== 'create_contact' || data.can_confirm) return false;
+            if (isDuplicateContact(data)) return false;
+            const missing = data.missing_fields || [];
+            const ambiguous = data.ambiguous_fields || [];
+            return missing.length > 0 || ambiguous.length > 0;
+        }
+
+        function incompleteContactFeedback(data) {
+            const name = (data.preview && data.preview.name) || '';
+            if ((data.missing_fields || []).indexOf('phone') !== -1 && name) {
+                return { main: 'شماره تماس ' + name + ' را وارد کنید.', hint: 'مثلاً: ۰۹۱۲۱۲۳۴۵۶۷' };
+            }
+            return {
+                main: data.hint || data.message || 'اطلاعات مخاطب کامل نیست.',
+                hint: 'می‌توانید همان فرمان را با جزئیات بیشتر دوباره بنویسید.',
+            };
+        }
+
+        function showReadyPreview(intent) {
             if (!preview) return;
             if (ambigStep) ambigStep.hidden = true;
             if (readyStep) readyStep.hidden = false;
-            if (panelTitleText) panelTitleText.textContent = 'یادآوری آماده است';
+            setPreviewMode(intent || currentIntent);
             if (candidatesEl) candidatesEl.innerHTML = '';
             if (continueBtn) continueBtn.disabled = true;
             preview.hidden = false;
@@ -323,7 +393,7 @@
             if (readyStep) readyStep.hidden = true;
             if (ambigStep) ambigStep.hidden = false;
             if (confirmBtn) confirmBtn.disabled = true;
-            fillPreview(data.preview);
+            fillPreview(data.preview, 'create_reminder');
             const searchName = (data.preview && data.preview.contact_name) || '';
             renderCandidates(data.contact_candidates, searchName);
             preview.hidden = false;
@@ -342,9 +412,9 @@
                         if (continueBtn) continueBtn.disabled = false;
                         return;
                     }
-                    fillPreview(res.data.preview);
+                    fillPreview(res.data.preview, 'create_reminder');
                     if (confirmBtn) confirmBtn.disabled = !res.data.can_confirm;
-                    showReadyPreview();
+                    showReadyPreview('create_reminder');
                     if (res.data.can_confirm) {
                         setStatus('');
                     } else {
@@ -397,10 +467,47 @@
             if (data.intent === 'unknown') {
                 clearPreview();
                 if (data.examples) applyExamplePhrases(data.examples);
-                setStatus(data.message || 'فعلاً فرمان هوشمند فقط برای ثبت یادآوری فعال است.', 'is-info', {
-                    hint: 'مثلاً بنویس: فردا ساعت ۱۰ یادم بنداز به احمدی زنگ بزنم',
+                setStatus(data.message || 'فرمان پشتیبانی نمی‌شود.', 'is-info', {
+                    hint: 'مثلاً: فردا ساعت ۱۰ یادم بنداز به احمدی زنگ بزنم یا حسینی رو ذخیره کن',
                 });
                 highlightChips(true);
+                return;
+            }
+
+            if (data.intent === 'create_contact') {
+                commandId = data.command_id;
+                if (isDuplicateContact(data)) {
+                    commandId = null;
+                    hidePreviewPanel();
+                    const ex = data.existing_contact;
+                    setStatus(data.message || 'این شماره قبلاً ثبت شده است.', 'is-warn', {
+                        actionLabel: 'مشاهده مخاطب',
+                        onAction: () => {
+                            if (ex && ex.url) window.location.href = ex.url;
+                        },
+                    });
+                    return;
+                }
+                if (isIncompleteContact(data)) {
+                    hidePreviewPanel();
+                    const fb = incompleteContactFeedback(data);
+                    setStatus(fb.main, 'is-info', {
+                        hint: fb.hint,
+                        actionLabel: 'ویرایش فرمان',
+                        onAction: focusCommand,
+                    });
+                    return;
+                }
+                fillPreview(data.preview, 'create_contact');
+                if (confirmBtn) confirmBtn.disabled = !data.can_confirm;
+                showReadyPreview('create_contact');
+                if (data.warning) {
+                    setStatus(data.warning, 'is-warn');
+                } else if (data.can_confirm) {
+                    setStatus('');
+                } else if (data.hint) {
+                    setStatus(data.hint, 'is-warn');
+                }
                 return;
             }
 
@@ -440,9 +547,9 @@
                 return;
             }
 
-            fillPreview(data.preview);
+            fillPreview(data.preview, 'create_reminder');
             if (confirmBtn) confirmBtn.disabled = !data.can_confirm;
-            showReadyPreview();
+            showReadyPreview('create_reminder');
 
             if (data.can_confirm) {
                 setStatus('');
@@ -463,12 +570,21 @@
                 return;
             }
             lastParseText = text;
+            const resumeCommandId = commandId && currentIntent === 'create_contact' ? commandId : null;
             setLoading(true);
             setStatus('');
             clearPreview();
+            if (resumeCommandId) {
+                commandId = resumeCommandId;
+                currentIntent = 'create_contact';
+            }
             root.classList.remove('is-success-mode');
             if (successEl) successEl.hidden = true;
-            postJson(parseUrl, { text, locale: 'fa-IR', timezone: 'Asia/Tehran' })
+            const parseBody = { text, locale: 'fa-IR', timezone: 'Asia/Tehran' };
+            if (commandId && currentIntent === 'create_contact') {
+                parseBody.command_id = commandId;
+            }
+            postJson(parseUrl, parseBody)
                 .then((res) => {
                     if (!res.ok || !res.data.ok) {
                         clearPreview();
@@ -533,12 +649,19 @@
                         confirmBtn.disabled = false;
                         return;
                     }
-                    const dueEl = readyStep?.querySelector('[data-field="due_at_display"]');
-                    const titleEl = readyStep?.querySelector('[data-field="title"]');
-                    const meta = [dueEl?.textContent, titleEl?.textContent]
-                        .map((s) => (s || '').trim())
-                        .filter((s) => s && s !== '—')
-                        .join(' — ');
+                    let meta = '';
+                    if (data.entity_type === 'contact') {
+                        const nameEl = readyStep?.querySelector('[data-field="name"]');
+                        meta = (nameEl?.textContent || '').trim();
+                        if (meta === '—') meta = '';
+                    } else {
+                        const dueEl = readyStep?.querySelector('[data-field="due_at_display"]');
+                        const titleEl = readyStep?.querySelector('[data-field="title"]');
+                        meta = [dueEl?.textContent, titleEl?.textContent]
+                            .map((s) => (s || '').trim())
+                            .filter((s) => s && s !== '—')
+                            .join(' — ');
+                    }
                     if (successMeta) successMeta.textContent = meta || '';
                     if (successLink && data.url) {
                         successLink.href = data.url;

@@ -247,6 +247,55 @@ def create_quick_lead(user, data: Dict[str, Any]) -> Customer:
     return customer
 
 
+def create_customer_from_nl(user, data: Dict[str, Any]) -> Customer:
+    """ثبت مخاطب از فرمان هوشمند — فیلدهای CRM موجود."""
+    from workspace.constants import CRM_PROPERTIES, CRM_SOURCES, CRM_TYPES
+
+    name = (data.get('name') or '').strip()
+    if not name:
+        raise ValueError('نام الزامی است.')
+    phone = normalize_phone(data.get('phone') or '')
+
+    customer_type = (data.get('customer_type') or 'خریدار').strip()
+    if customer_type not in CRM_TYPES:
+        customer_type = 'خریدار'
+
+    source = (data.get('source') or '').strip()[:30]
+    valid_sources = set(CRM_SOURCES)
+    if source and source not in valid_sources:
+        source = ''
+
+    property_type = (data.get('property_type') or '').strip()
+    if property_type and property_type not in CRM_PROPERTIES:
+        property_type = ''
+
+    customer = Customer(
+        user=user,
+        agency=get_agency(user),
+        name=name,
+        phone=phone,
+        customer_type=customer_type,
+        status=(data.get('status') or 'جدید').strip() or 'جدید',
+        priority=(data.get('priority') or 'متوسط').strip() or 'متوسط',
+        source=source,
+        property_type=property_type,
+        areas=(data.get('areas') or '').strip(),
+        min_area=data.get('min_area'),
+        max_area=data.get('max_area'),
+        budget_min=data.get('budget_min'),
+        budget_max=data.get('budget_max'),
+        deposit_min=data.get('deposit_min'),
+        deposit_max=data.get('deposit_max'),
+        rent_min=data.get('rent_min'),
+        rent_max=data.get('rent_max'),
+        rooms=(data.get('rooms') or '').strip(),
+        notes=(data.get('notes') or '').strip(),
+    )
+    customer.save()
+    log_activity(customer, 'یادداشت', content='ثبت از فرمان هوشمند', title='ثبت مخاطب')
+    return customer
+
+
 def create_activity(user, contact_id: int, data: Dict[str, Any]) -> CustomerActivity:
     c = get_contact(user, contact_id)
     if not c:

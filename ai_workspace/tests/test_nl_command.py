@@ -123,7 +123,7 @@ class NLCommandGenerationTests(TestCase):
     def test_feature_generation_overrides(self):
         nl = get_feature_generation(FEATURE_NL_COMMAND)
         self.assertAlmostEqual(nl['temperature'], 0.1)
-        self.assertEqual(nl['max_tokens'], 400)
+        self.assertEqual(nl['max_tokens'], 700)
         listing = get_feature_generation(FEATURE_LISTING_SUMMARY)
         self.assertAlmostEqual(listing['temperature'], 0.4)
         crm = get_feature_generation(FEATURE_CRM_MESSAGE)
@@ -176,11 +176,26 @@ class NLCommandParseTests(TestCase):
         self.assertIn('ai', result)
         self.assertTrue(result['ai'].get('model_label'))
 
-    @_patch_chain_unknown()
-    def test_parse_unknown_save_contact(self, _chain):
-        result = parse_command(self.user, text='احمدی رو ذخیره کن')
-        self.assertEqual(result['intent'], 'unknown')
-        self.assertFalse(result['can_confirm'])
+    def test_parse_save_contact_without_phone(self):
+        payload = json.dumps({
+            'intent': 'create_contact',
+            'confidence': 0.9,
+            'data': {
+                'name': 'حسینی',
+                'phone': None,
+                'customer_type': 'خریدار',
+                'source': None,
+                'preferences': {'areas': 'پونک'},
+                'notes': None,
+            },
+            'missing_fields': [],
+            'ambiguous_fields': [],
+            'requires_confirmation': True,
+        }, ensure_ascii=False)
+        with _patch_chain_json(payload):
+            result = parse_command(self.user, text='یه مشتری دارم حسینی دنبال پونکه')
+        self.assertEqual(result['intent'], 'create_contact')
+        self.assertTrue(result['can_confirm'])
 
     def test_contact_single_match(self):
         with _patch_chain_ok():

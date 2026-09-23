@@ -7,7 +7,8 @@ import logging
 from django.http import JsonResponse
 from django.views import View
 
-from ai_workspace.services.nl_command.service import NLCommandError, confirm_command, parse_command, resolve_contact
+from ai_workspace.services.nl_command.errors import NLCommandError
+from ai_workspace.services.nl_command.service import confirm_command, parse_command, resolve_contact
 from ai_workspace.views import AIEnabledMixin
 
 logger = logging.getLogger(__name__)
@@ -27,12 +28,14 @@ class NLCommandParseView(_NLJsonMixin, View):
         text = body.get('text') or ''
         locale = body.get('locale') or 'fa-IR'
         tz_name = body.get('timezone') or 'Asia/Tehran'
+        command_id = (body.get('command_id') or '').strip() or None
         try:
             payload = parse_command(
                 request.user,
                 text=text,
                 locale=locale,
                 tz_name=tz_name,
+                command_id=command_id,
             )
             return JsonResponse(payload)
         except NLCommandError as exc:
@@ -59,7 +62,7 @@ class NLCommandConfirmView(_NLJsonMixin, View):
         except Exception:
             logger.exception('nl_command_confirm_failed user_id=%s', request.user.pk)
             return JsonResponse(
-                {'ok': False, 'error': 'خطا در ثبت یادآوری.', 'code': 'server_error'},
+                {'ok': False, 'error': 'خطا در ثبت فرمان.', 'code': 'server_error'},
                 status=500,
             )
 

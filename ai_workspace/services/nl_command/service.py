@@ -3,15 +3,14 @@ from __future__ import annotations
 
 import hashlib
 import logging
-from datetime import datetime
 from typing import Any, Dict, Optional
 
 from django.urls import reverse
-from django.utils import timezone
 
 from ai_workspace.constants import (
     FEATURE_NL_COMMAND,
     NL_COMMAND_EXAMPLE_PHRASES,
+    NL_COMMAND_INTENT_CREATE_CONTACT,
     NL_COMMAND_INTENT_CREATE_REMINDER,
     NL_COMMAND_INTENT_UNKNOWN,
     NL_COMMAND_PARSE_FAILED_MESSAGE,
@@ -22,21 +21,22 @@ from ai_workspace.constants import (
 from ai_workspace.services.gateway import FeatureDisabledError, GatewayResult, run as gateway_run
 from ai_workspace.services.nl_command.contacts import resolve_contact_by_name
 from ai_workspace.services.nl_command.datetime_parser import format_due_display, parse_due_datetime
-from ai_workspace.services.nl_command.state import delete_state, load_state, new_command_id, save_state, text_hash
+from ai_workspace.services.nl_command.errors import NLCommandError
+from ai_workspace.services.nl_command.executors.contact import check_phone_duplicate, confirm_create_contact
+from ai_workspace.services.nl_command.executors.reminder import confirm_create_reminder
+from ai_workspace.services.nl_command.preview import build_contact_preview, existing_contact_payload
+from ai_workspace.services.nl_command.state import load_state, new_command_id, save_state, text_hash
+from ai_workspace.services.nl_command.validators import hint_for_incomplete_contact, validate_contact_parse
 from ai_workspace.services.payload import is_valid_payload
 from ai_workspace.services.quota import QuotaExceededError
-from mobile_api.services.crm_service import create_reminder, create_standalone_reminder
 from workspace.services.crm_scope import customer_for_user
 from workspace.services.jalali_input import format_jalali_today_label
+from django.utils import timezone
 
 logger = logging.getLogger(__name__)
 
-
-class NLCommandError(Exception):
-    def __init__(self, message: str, code: str = 'error', status: int = 400):
-        super().__init__(message)
-        self.code = code
-        self.status = status
+# re-export for backward-compatible imports
+__all__ = ['NLCommandError', 'parse_command', 'confirm_command', 'resolve_contact']
 
 
 def _ai_response_meta(result: GatewayResult) -> Dict[str, Any]:
@@ -79,7 +79,7 @@ def _unknown_parse_response(ai_meta: Dict[str, Any], *, entity_id: str, user_id:
     }
 
 
-def _hint_for_incomplete(
+def _hint_for_incomplete_reminder(
     *,
     missing_fields: list,
     ambiguous_fields: list,
@@ -112,58 +112,156 @@ def _build_llm_context(user_text: str, tz_name: str) -> Dict[str, Any]:
         'user_text': user_text.strip()[:500],
         'timezone': tz_name,
         'now_local_display': format_jalali_today_label() + ' ' + now_local.strftime('%H:%M'),
-        'content_version': 'v1',
+        'content_version': 'v2',
     }
 
 
-def parse_command(
+def _merge_contact_validated(existing: Dict[str, Any], new: Dict[str, Any]) -> Dict[str, Any]:
+    merged = dict(existing)
+    for key, value in new.items():
+        if value is None or value == '':
+            continue
+        if key in ('min_area', 'max_area', 'budget_min', 'budget_max', 'deposit_min', 'deposit_max',
+                   'rent_min', 'rent_max') and merged.get(key) is not None:
+            continue
+        merged[key] = value
+    return merged
+
+
+def _parse_create_contact(
     user,
     *,
-    text: str,
-    locale: str = 'fa-IR',
-    tz_name: str = 'Asia/Tehran',
+    data: Dict[str, Any],
+    ai_meta: Dict[str, Any],
+    user_text: str,
+    locale: str,
+    tz_name: str,
+    prior_state: Optional[Dict[str, Any]] = None,
+    command_id: Optional[str] = None,
 ) -> Dict[str, Any]:
-    user_text = (text or '').strip()
-    if not user_text:
-        raise NLCommandError('متن فرمان خالی است.', code='empty_text')
+    inner = data.get('data') or {}
+    missing_fields = list(data.get('missing_fields') or [])
+    ambiguous_fields = list(data.get('ambiguous_fields') or [])
 
-    entity_id = hashlib.sha256(user_text.encode('utf-8')).hexdigest()[:32]
-    try:
-        result = gateway_run(
-            FEATURE_NL_COMMAND,
-            user,
-            context=_build_llm_context(user_text, tz_name),
-            entity_type='nl_parse',
-            entity_id=entity_id,
-        )
-    except FeatureDisabledError as exc:
-        raise NLCommandError(str(exc), code='feature_disabled', status=403) from exc
-    except QuotaExceededError as exc:
-        raise NLCommandError(str(exc), code=exc.code, status=429) from exc
+    validated, missing_fields, ambiguous_fields, field_error = validate_contact_parse(
+        inner,
+        llm_missing=missing_fields,
+        llm_ambiguous=ambiguous_fields,
+    )
 
-    data = result.data
-    if not is_valid_payload(FEATURE_NL_COMMAND, data):
-        logger.warning(
-            'nl_command_parse_invalid user_id=%s entity_id=%s status=%s',
-            user.pk,
-            entity_id,
-            result.status,
-        )
-        raise NLCommandError(
-            NL_COMMAND_PARSE_FAILED_MESSAGE,
-            code='parse_failed',
-            status=503,
+    if prior_state and prior_state.get('intent') == NL_COMMAND_INTENT_CREATE_CONTACT:
+        validated = _merge_contact_validated(prior_state.get('validated') or {}, validated)
+        validated, missing_fields, ambiguous_fields, field_error = validate_contact_parse(
+            _inner_from_validated(validated),
+            llm_missing=missing_fields,
+            llm_ambiguous=ambiguous_fields,
         )
 
-    intent = data.get('intent')
-    ai_meta = _ai_response_meta(result)
+    duplicate_contact = False
+    existing_contact = None
+    duplicate_message = ''
+    phone = validated.get('phone') or ''
+    if phone:
+        dup = check_phone_duplicate(user, phone)
+        if dup:
+            duplicate_contact = True
+            existing_contact = existing_contact_payload(dup)
+            duplicate_message = f'این شماره قبلاً برای {dup.name} ثبت شده است.'
 
-    if intent == NL_COMMAND_INTENT_UNKNOWN:
-        return _unknown_parse_response(ai_meta, entity_id=entity_id, user_id=user.pk)
+    name_warning = None
+    if validated.get('name') and not duplicate_contact:
+        _cid, _cands, amb = resolve_contact_by_name(user, validated.get('name'), limit=3)
+        if amb == 'multiple' or (amb == '' and _cid):
+            name_warning = 'مخاطبی با نام مشابه در CRM وجود دارد.'
 
-    if intent != NL_COMMAND_INTENT_CREATE_REMINDER:
-        return _unknown_parse_response(ai_meta, entity_id=entity_id, user_id=user.pk)
+    can_confirm = (
+        bool(validated.get('name'))
+        and not missing_fields
+        and not ambiguous_fields
+        and not duplicate_contact
+        and not field_error
+    )
 
+    if not command_id:
+        command_id = new_command_id()
+    preview = build_contact_preview(validated)
+
+    state = {
+        'intent': NL_COMMAND_INTENT_CREATE_CONTACT,
+        'validated': validated,
+        'preview': preview,
+        'missing_fields': missing_fields,
+        'ambiguous_fields': ambiguous_fields,
+        'duplicate_contact': duplicate_contact,
+        'existing_contact': existing_contact,
+        'name_warning': name_warning,
+        'input_hash': text_hash(user_text),
+        'locale': locale,
+        'timezone': tz_name,
+        'created_contact_id': prior_state.get('created_contact_id') if prior_state else None,
+    }
+    save_state(user.pk, command_id, state)
+
+    response: Dict[str, Any] = {
+        'ok': True,
+        'command_id': command_id,
+        'intent': NL_COMMAND_INTENT_CREATE_CONTACT,
+        'preview': preview,
+        'missing_fields': missing_fields,
+        'ambiguous_fields': ambiguous_fields,
+        'can_confirm': can_confirm,
+        'duplicate_contact': duplicate_contact,
+        'ai': ai_meta,
+    }
+    if existing_contact:
+        response['existing_contact'] = existing_contact
+        response['message'] = duplicate_message
+    elif name_warning:
+        response['warning'] = name_warning
+    if not can_confirm and not duplicate_contact:
+        hint = field_error or hint_for_incomplete_contact(
+            missing_fields=missing_fields,
+            ambiguous_fields=ambiguous_fields,
+            duplicate=False,
+        )
+        if validated.get('name') and 'phone' in missing_fields:
+            hint = f'شماره تماس {validated.get("name")} را وارد کنید.'
+        response['hint'] = hint
+    return response
+
+
+def _inner_from_validated(validated: Dict[str, Any]) -> Dict[str, Any]:
+    return {
+        'name': validated.get('name'),
+        'phone': validated.get('phone'),
+        'customer_type': validated.get('customer_type'),
+        'source': validated.get('source'),
+        'notes': validated.get('notes'),
+        'preferences': {
+            'areas': validated.get('areas'),
+            'property_type': validated.get('property_type'),
+            'min_area': validated.get('min_area'),
+            'max_area': validated.get('max_area'),
+            'budget_min': validated.get('budget_min'),
+            'budget_max': validated.get('budget_max'),
+            'deposit_min': validated.get('deposit_min'),
+            'deposit_max': validated.get('deposit_max'),
+            'rent_min': validated.get('rent_min'),
+            'rent_max': validated.get('rent_max'),
+            'rooms': validated.get('rooms'),
+        },
+    }
+
+
+def _parse_create_reminder(
+    user,
+    *,
+    data: Dict[str, Any],
+    ai_meta: Dict[str, Any],
+    user_text: str,
+    locale: str,
+    tz_name: str,
+) -> Dict[str, Any]:
     inner = data.get('data') or {}
     contact_name = inner.get('contact_name')
     title = (inner.get('title') or '').strip() or _default_title(contact_name, inner.get('note'))
@@ -243,7 +341,7 @@ def parse_command(
     if amb == 'none' and contact_name:
         response['message'] = nl_command_contact_not_found_message(contact_name)
     elif not can_confirm:
-        response['hint'] = _hint_for_incomplete(
+        response['hint'] = _hint_for_incomplete_reminder(
             missing_fields=missing_fields,
             ambiguous_fields=ambiguous_fields,
             contact_ambiguity=amb,
@@ -251,10 +349,92 @@ def parse_command(
     return response
 
 
+def parse_command(
+    user,
+    *,
+    text: str,
+    locale: str = 'fa-IR',
+    tz_name: str = 'Asia/Tehran',
+    command_id: Optional[str] = None,
+) -> Dict[str, Any]:
+    user_text = (text or '').strip()
+    if not user_text:
+        raise NLCommandError('متن فرمان خالی است.', code='empty_text')
+
+    prior_state = None
+    if command_id:
+        prior_state = load_state(user.pk, command_id)
+        if not prior_state:
+            command_id = None
+        elif prior_state.get('intent') != NL_COMMAND_INTENT_CREATE_CONTACT:
+            prior_state = None
+            command_id = None
+
+    entity_id = hashlib.sha256(user_text.encode('utf-8')).hexdigest()[:32]
+    try:
+        result = gateway_run(
+            FEATURE_NL_COMMAND,
+            user,
+            context=_build_llm_context(user_text, tz_name),
+            entity_type='nl_parse',
+            entity_id=entity_id,
+        )
+    except FeatureDisabledError as exc:
+        raise NLCommandError(str(exc), code='feature_disabled', status=403) from exc
+    except QuotaExceededError as exc:
+        raise NLCommandError(str(exc), code=exc.code, status=429) from exc
+
+    data = result.data
+    if not is_valid_payload(FEATURE_NL_COMMAND, data):
+        logger.warning(
+            'nl_command_parse_invalid user_id=%s entity_id=%s status=%s',
+            user.pk,
+            entity_id,
+            result.status,
+        )
+        raise NLCommandError(
+            NL_COMMAND_PARSE_FAILED_MESSAGE,
+            code='parse_failed',
+            status=503,
+        )
+
+    intent = data.get('intent')
+    ai_meta = _ai_response_meta(result)
+
+    if intent == NL_COMMAND_INTENT_UNKNOWN:
+        return _unknown_parse_response(ai_meta, entity_id=entity_id, user_id=user.pk)
+
+    if intent == NL_COMMAND_INTENT_CREATE_CONTACT:
+        return _parse_create_contact(
+            user,
+            data=data,
+            ai_meta=ai_meta,
+            user_text=user_text,
+            locale=locale,
+            tz_name=tz_name,
+            prior_state=prior_state,
+            command_id=command_id,
+        )
+
+    if intent != NL_COMMAND_INTENT_CREATE_REMINDER:
+        return _unknown_parse_response(ai_meta, entity_id=entity_id, user_id=user.pk)
+
+    return _parse_create_reminder(
+        user,
+        data=data,
+        ai_meta=ai_meta,
+        user_text=user_text,
+        locale=locale,
+        tz_name=tz_name,
+    )
+
+
 def resolve_contact(user, command_id: str, contact_id: int) -> Dict[str, Any]:
     state = load_state(user.pk, command_id)
     if not state:
         raise NLCommandError('فرمان منقضی شده یا یافت نشد.', code='expired', status=404)
+    if state.get('intent') != NL_COMMAND_INTENT_CREATE_REMINDER:
+        raise NLCommandError('این فرمان انتخاب مخاطب ندارد.', code='invalid_intent')
 
     customer = customer_for_user(user, int(contact_id))
     if not customer:
@@ -292,57 +472,9 @@ def confirm_command(user, command_id: str) -> Dict[str, Any]:
     if not state:
         raise NLCommandError('فرمان منقضی شده یا یافت نشد.', code='expired', status=404)
 
-    existing_id = state.get('created_reminder_id')
-    if existing_id:
-        url = reverse('workspace:crm_reminders')
-        return {
-            'ok': True,
-            'entity_type': 'reminder',
-            'entity_id': existing_id,
-            'url': url,
-            'duplicate': True,
-        }
-
-    validated = state.get('validated') or {}
-    due_raw = validated.get('due_at')
-    if not due_raw:
-        raise NLCommandError('زمان یادآوری مشخص نیست.', code='missing_due_at')
-    due_at = datetime.fromisoformat(due_raw)
-    if timezone.is_naive(due_at):
-        due_at = timezone.make_aware(due_at, timezone.get_current_timezone())
-    now = timezone.now()
-    if due_at <= now:
-        raise NLCommandError('زمان یادآوری در گذشته است.', code='past_datetime')
-
-    contact_name_requested = (validated.get('contact_name') or '').strip()
-    contact_id = validated.get('contact_id')
-
-    if contact_name_requested and not contact_id:
-        raise NLCommandError(
-            nl_command_contact_not_found_message(contact_name_requested),
-            code='contact_not_found',
-        )
-
-    payload = {
-        'title': validated.get('title') or 'یادآوری',
-        'note': validated.get('note') or '',
-        'due_at': due_at.isoformat(),
-    }
-
-    if contact_id:
-        customer = customer_for_user(user, int(contact_id))
-        if not customer:
-            raise NLCommandError('مخاطب در دسترس نیست.', code='contact_scope')
-        reminder = create_reminder(user, int(contact_id), payload)
-    else:
-        reminder = create_standalone_reminder(user, payload)
-    state['created_reminder_id'] = reminder.pk
-    save_state(user.pk, command_id, state)
-
-    url = reverse('workspace:crm_reminders')
-    return {
-        'ok': True,
-        'entity_type': 'reminder',
-        'entity_id': reminder.pk,
-        'url': url,
-    }
+    intent = state.get('intent')
+    if intent == NL_COMMAND_INTENT_CREATE_CONTACT:
+        return confirm_create_contact(user, command_id, state)
+    if intent == NL_COMMAND_INTENT_CREATE_REMINDER:
+        return confirm_create_reminder(user, command_id, state)
+    raise NLCommandError('نوع فرمان پشتیبانی نمی‌شود.', code='invalid_intent')

@@ -78,7 +78,7 @@ class NLCommandUnknownBackendTests(TestCase):
 
     @_patch_unknown_chain()
     def test_unknown_no_reminder_mutation(self, _chain):
-        parse_command(self.user, text='احمدی رو ذخیره کن')
+        parse_command(self.user, text='امروز چند شنبه است؟')
         self.assertEqual(Reminder.objects.filter(user=self.user).count(), 0)
 
     @_patch_unknown_chain()
@@ -86,7 +86,6 @@ class NLCommandUnknownBackendTests(TestCase):
         for text in (
             'امروز چند شنبه است؟',
             'یه جوک تعریف کن',
-            'احمدی رو ذخیره کن',
             'یه فایل تو پونک ثبت کن',
             'قیمت دلار چنده؟',
         ):

@@ -10,6 +10,8 @@ from ai_workspace.constants import (
     FEATURE_NL_COMMAND,
     FEATURE_UPLOAD_BRIEF,
     NL_COMMAND_ALLOWED_INTENTS,
+    NL_COMMAND_INTENT_CREATE_CONTACT,
+    NL_COMMAND_INTENT_CREATE_REMINDER,
 )
 from ai_workspace.services.parse import parse_json_text, salvage_listing_json
 
@@ -154,6 +156,63 @@ def _nullable_str(value: Any) -> Optional[str]:
     return text or None
 
 
+def _nullable_int(value: Any) -> Optional[int]:
+    if value is None or value == '':
+        return None
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _normalize_contact_preferences(inner: Dict[str, Any]) -> Dict[str, Any]:
+    prefs = inner.get('preferences') if isinstance(inner.get('preferences'), dict) else {}
+    areas_raw = prefs.get('areas') if prefs.get('areas') is not None else inner.get('areas')
+    if isinstance(areas_raw, list):
+        areas = ', '.join(str(x).strip() for x in areas_raw if str(x).strip()) or None
+    else:
+        areas = _nullable_str(areas_raw)
+    rooms_raw = prefs.get('rooms') if prefs.get('rooms') is not None else inner.get('rooms')
+    rooms = _nullable_str(rooms_raw) if rooms_raw is not None else None
+    if rooms is None and prefs.get('rooms') is not None:
+        rooms = str(prefs.get('rooms')).strip() or None
+    return {
+        'areas': areas,
+        'property_type': _nullable_str(prefs.get('property_type')),
+        'min_area': _nullable_int(prefs.get('min_area')),
+        'max_area': _nullable_int(prefs.get('max_area')),
+        'budget_min': _nullable_int(prefs.get('budget_min')),
+        'budget_max': _nullable_int(prefs.get('budget_max')),
+        'deposit_min': _nullable_int(prefs.get('deposit_min')),
+        'deposit_max': _nullable_int(prefs.get('deposit_max')),
+        'rent_min': _nullable_int(prefs.get('rent_min')),
+        'rent_max': _nullable_int(prefs.get('rent_max')),
+        'rooms': rooms,
+    }
+
+
+def _normalize_reminder_data(inner: Dict[str, Any]) -> Dict[str, Any]:
+    return {
+        'contact_name': _nullable_str(inner.get('contact_name')),
+        'title': _nullable_str(inner.get('title')),
+        'note': _nullable_str(inner.get('note')),
+        'date_text': _nullable_str(inner.get('date_text')),
+        'time_text': _nullable_str(inner.get('time_text')),
+    }
+
+
+def _normalize_contact_data(inner: Dict[str, Any]) -> Dict[str, Any]:
+    prefs = _normalize_contact_preferences(inner)
+    return {
+        'name': _nullable_str(inner.get('name')),
+        'phone': _nullable_str(inner.get('phone')),
+        'customer_type': _nullable_str(inner.get('customer_type')),
+        'source': _nullable_str(inner.get('source')),
+        'preferences': prefs,
+        'notes': _nullable_str(inner.get('notes')),
+    }
+
+
 def normalize_nl_command_payload(data: Optional[Dict[str, Any]], raw_text: str = '') -> Dict[str, Any]:
     payload = dict(data or {})
     if not payload and raw_text:
@@ -164,13 +223,10 @@ def normalize_nl_command_payload(data: Optional[Dict[str, Any]], raw_text: str =
     if intent not in NL_COMMAND_ALLOWED_INTENTS:
         intent = 'unknown'
     inner = payload.get('data') if isinstance(payload.get('data'), dict) else {}
-    normalized_data = {
-        'contact_name': _nullable_str(inner.get('contact_name')),
-        'title': _nullable_str(inner.get('title')),
-        'note': _nullable_str(inner.get('note')),
-        'date_text': _nullable_str(inner.get('date_text')),
-        'time_text': _nullable_str(inner.get('time_text')),
-    }
+    if intent == NL_COMMAND_INTENT_CREATE_CONTACT:
+        normalized_data = _normalize_contact_data(inner)
+    else:
+        normalized_data = _normalize_reminder_data(inner)
     missing = payload.get('missing_fields')
     ambiguous = payload.get('ambiguous_fields')
     return {

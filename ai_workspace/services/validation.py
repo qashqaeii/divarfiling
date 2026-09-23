@@ -9,6 +9,7 @@ from ai_workspace.constants import (
     FEATURE_LISTING_SUMMARY,
     FEATURE_NL_COMMAND,
     FEATURE_UPLOAD_BRIEF,
+    MAX_NL_COMMAND_CHARS,
 )
 from ai_workspace.context_builders.base import truncate
 
@@ -46,10 +47,18 @@ def _trim_text_fields(feature: str, context: Dict[str, Any]) -> Dict[str, Any]:
     ctx = dict(context)
     for key in _TEXT_FIELDS_BY_FEATURE.get(feature, ()):
         val = ctx.get(key)
-        if isinstance(val, str) and len(val) > MAX_DESCRIPTION_LEN:
-            ctx[key] = truncate(val, MAX_DESCRIPTION_LEN)
+        if not isinstance(val, str):
+            continue
+        if feature == FEATURE_NL_COMMAND and key == 'user_text':
+            limit = MAX_NL_COMMAND_CHARS
+        else:
+            limit = MAX_DESCRIPTION_LEN
+        if len(val) > limit:
+            ctx[key] = truncate(val, limit)
     for key, val in list(ctx.items()):
         if key.startswith('_') or key == 'content_version':
+            continue
+        if feature == FEATURE_NL_COMMAND and key == 'user_text':
             continue
         if isinstance(val, str) and len(val) > MAX_GENERIC_TEXT_LEN:
             ctx[key] = truncate(val, MAX_GENERIC_TEXT_LEN)

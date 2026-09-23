@@ -7,6 +7,7 @@ from typing import Optional
 # نگاشت code داخلی → error_code استاندارد API
 _CODE_TO_ERROR: dict[str, str] = {
     'empty_text': 'invalid_input',
+    'input_too_long': 'input_too_long',
     'missing_command_id': 'invalid_input',
     'missing_fields': 'missing_fields',
     'missing_due_at': 'missing_fields',

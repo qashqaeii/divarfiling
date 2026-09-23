@@ -15,8 +15,10 @@ from ai_workspace.constants import (
     NL_COMMAND_INTENT_CREATE_PERSONAL_PROPERTY,
     NL_COMMAND_INTENT_CREATE_REMINDER,
     NL_COMMAND_INTENT_UNKNOWN,
+    NL_COMMAND_INPUT_TOO_LONG_MESSAGE,
     NL_COMMAND_PARSE_FAILED_MESSAGE,
     NL_COMMAND_UNKNOWN_MESSAGE,
+    MAX_NL_COMMAND_CHARS,
     nl_command_contact_not_found_message,
     resolve_model_label,
 )
@@ -133,7 +135,7 @@ def _default_title(contact_name: Optional[str], note: Optional[str]) -> str:
 def _build_llm_context(user_text: str, tz_name: str) -> Dict[str, Any]:
     now_local = timezone.localtime(timezone.now())
     return {
-        'user_text': user_text.strip()[:500],
+        'user_text': user_text.strip(),
         'timezone': tz_name,
         'now_local_display': format_jalali_today_label() + ' ' + now_local.strftime('%H:%M'),
         'content_version': 'v3',
@@ -568,6 +570,18 @@ def parse_command(
     user_text = (text or '').strip()
     if not user_text:
         raise NLCommandError('یک فرمان کوتاه بنویسید.', code='empty_text')
+    if len(user_text) > MAX_NL_COMMAND_CHARS:
+        logger.info(
+            'nl_command_input_too_long user_id=%s char_count=%s',
+            user.pk,
+            len(user_text),
+        )
+        raise NLCommandError(
+            NL_COMMAND_INPUT_TOO_LONG_MESSAGE,
+            code='input_too_long',
+            error_code='input_too_long',
+            retryable=False,
+        )
 
     prior_state = None
     merge_intents = frozenset({

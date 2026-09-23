@@ -113,6 +113,12 @@ NL_COMMAND_EXAMPLE_PHRASES = (
     'یه آپارتمان ۱۲۰ متری پونک برای فروش، ۱۲ میلیارد',
 )
 
+MAX_NL_COMMAND_CHARS = 1500
+
+NL_COMMAND_INPUT_TOO_LONG_MESSAGE = (
+    'فرمان خیلی طولانی است. لطفاً کوتاه‌تر بگویید یا بنویسید.'
+)
+
 
 def nl_command_contact_not_found_message(contact_name: str) -> str:
     name = (contact_name or '').strip() or 'موردنظر'

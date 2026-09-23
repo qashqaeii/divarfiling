@@ -1,6 +1,6 @@
 {% load static %}
 {% if smart_command.enabled %}
-<link rel="stylesheet" href="{% static 'workspace/css/crm-nl-command.css' %}?v=7">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-nl-command.css' %}?v=8">
 <div class="crm-smart-command-wrap">
 <section class="crm-nl-command crm-smart-command crm-smart-command--ctx-{{ smart_command.context }}"
     data-crm-smart-command
@@ -23,7 +23,7 @@
         <div class="crm-nl-command__brand">
             <span class="crm-nl-command__spark" aria-hidden="true"><i class="fas {{ smart_command.spark_icon }}"></i></span>
             <div class="crm-nl-command__titles">
-                <span class="crm-nl-command__kicker">فرمان هوشمند</span>
+                <span class="crm-nl-command__kicker">دستیار هوشمند</span>
                 <h2 class="crm-nl-command__title">{{ smart_command.title }}</h2>
                 {% if smart_command.subtitle %}
                 <p class="crm-nl-command__sub">{{ smart_command.subtitle }}</p>
@@ -47,6 +47,7 @@
 
     <div class="crm-nl-command__composer" data-sc="composer">
         <label class="visually-hidden" for="crmSmartCmdInput-{{ smart_command.context }}">متن فرمان</label>
+        <div class="crm-nl-command__composer-surface">
         <div class="crm-nl-command__row">
             <div class="crm-nl-command__input-wrap">
                 <textarea id="crmSmartCmdInput-{{ smart_command.context }}" class="crm-nl-command__input" data-sc="input" rows="1"
@@ -62,13 +63,14 @@
             </div>
             <button type="button" class="crm-nl-command__parse" data-sc="parse-btn">
                 <span class="crm-nl-command__parse-spinner" aria-hidden="true"></span>
-                <span class="crm-nl-command__parse-label">بررسی</span>
+                <span class="crm-nl-command__parse-label">بررسی فرمان</span>
                 <i class="crm-nl-command__parse-icon fas fa-arrow-left" aria-hidden="true"></i>
             </button>
         </div>
+        </div>
         {% if smart_command.examples %}
         <div class="crm-nl-command__chips-head">
-            <span class="crm-nl-command__chips-label">نمونه</span>
+            <span class="crm-nl-command__chips-label">مثال</span>
             <div class="crm-nl-command__chips" role="group" aria-label="پیشنهاد نمونه">
                 {% for ex in smart_command.examples %}
                 <button type="button" class="crm-nl-command__chip" data-nl-sample="{{ ex.text }}">{{ ex.label }}</button>
@@ -76,10 +78,16 @@
             </div>
         </div>
         {% endif %}
-        <p class="crm-nl-command__composer-hint" aria-hidden="true">
-            <kbd class="crm-nl-command__kbd">Ctrl</kbd><span>+</span><kbd class="crm-nl-command__kbd">Enter</kbd>
-            <span class="crm-nl-command__composer-hint-text">برای بررسی سریع</span>
-        </p>
+        <div class="crm-nl-command__composer-foot">
+            <p class="crm-nl-command__composer-hint" data-sc="composer-hint" aria-hidden="true">
+                <kbd class="crm-nl-command__kbd">Ctrl</kbd><span>+</span><kbd class="crm-nl-command__kbd">Enter</kbd>
+                <span class="crm-nl-command__composer-hint-text">بررسی سریع</span>
+            </p>
+            <p class="crm-nl-command__loading-hint" data-sc="loading-hint" role="status" aria-live="polite" hidden>
+                <span class="crm-nl-command__loading-hint-dot" aria-hidden="true"></span>
+                <span class="crm-nl-command__loading-hint-text">در حال بررسی فرمان…</span>
+            </p>
+        </div>
         <p class="crm-nl-command__voice-status" data-sc="voice-status" role="status" aria-live="polite" hidden></p>
         <div class="crm-nl-command__feedback" data-sc="status" role="status" aria-live="polite" hidden></div>
     </div>
@@ -95,8 +103,8 @@
         </div>
         <div class="crm-nl-command__ready-step" data-sc="ready-step" hidden>
             <p class="crm-nl-command__panel-title">
-                <i class="fas fa-check crm-nl-command__panel-check" aria-hidden="true"></i>
-                <span data-sc="panel-title-text">آماده ثبت</span>
+                <span class="crm-nl-command__panel-badge" aria-hidden="true"><i class="fas fa-check"></i></span>
+                <span data-sc="panel-title-text">آمادهٔ ثبت</span>
             </p>
             <div class="crm-nl-command__preview-summary" data-sc="preview-summary" hidden>
                 <p class="crm-nl-command__preview-summary-line" data-sc="preview-summary-line"></p>
@@ -140,8 +148,8 @@
 
     <div class="crm-nl-command__success" data-sc="success" hidden>
         <p class="crm-nl-command__success-title">
-            <i class="fas fa-check" aria-hidden="true"></i>
-            <span data-sc="success-title-text">ثبت شد</span>
+            <span class="crm-nl-command__success-badge" aria-hidden="true"><i class="fas fa-check"></i></span>
+            <span data-sc="success-title-text">با موفقیت ثبت شد</span>
         </p>
         <p class="crm-nl-command__success-meta" data-sc="success-meta"></p>
         <a href="#" class="crm-nl-command__success-link" data-sc="success-link">مشاهده</a>
@@ -151,5 +159,5 @@
 </section>
 </div>
 <script src="{% static 'workspace/js/crm-smart-command-voice.js' %}?v=5"></script>
-<script src="{% static 'workspace/js/crm-smart-command.js' %}?v=4"></script>
+<script src="{% static 'workspace/js/crm-smart-command.js' %}?v=5"></script>
 {% endif %}

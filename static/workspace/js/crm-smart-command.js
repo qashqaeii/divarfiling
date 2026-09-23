@@ -4,9 +4,9 @@
     /** @type {Record<string, function(string, object): void>} */
     const submitByContext = {};
 
-    const PARSE_LABEL_IDLE = 'بررسی';
-    const PARSE_LABEL_LOADING = 'در حال بررسی فرمان…';
-    const PARSE_LABEL_LOADING_SLOW = 'دارم اطلاعات را استخراج می‌کنم…';
+    const PARSE_LABEL_IDLE = 'بررسی فرمان';
+    const PARSE_LABEL_LOADING = 'در حال بررسی…';
+    const PARSE_LABEL_LOADING_SLOW = 'استخراج جزئیات…';
     const SUCCESS_RESET_MS = 4500;
     const LOADING_SLOW_MS = 2000;
     const MERGE_INTENTS = ['create_contact', 'create_personal_property', 'create_reminder'];
@@ -97,6 +97,9 @@
         const input = root.querySelector('[data-sc="input"]');
         const parseBtn = root.querySelector('[data-sc="parse-btn"]');
         const parseLabel = parseBtn?.querySelector('.crm-nl-command__parse-label');
+        const composerHintEl = root.querySelector('[data-sc="composer-hint"]');
+        const loadingHintEl = root.querySelector('[data-sc="loading-hint"]');
+        const loadingHintTextEl = loadingHintEl?.querySelector('.crm-nl-command__loading-hint-text');
         const preview = root.querySelector('[data-sc="preview"]');
         const ambigStep = root.querySelector('[data-sc="ambig-step"]');
         const readyStep = root.querySelector('[data-sc="ready-step"]');
@@ -192,19 +195,30 @@
             if (backdrop) backdrop.hidden = !sheet;
         }
 
+        function syncLoadingHint(text) {
+            if (loadingHintTextEl && text) {
+                loadingHintTextEl.textContent = text;
+            }
+        }
+
         function setLoading(on) {
             root.classList.toggle('is-loading', !!on);
+            root.setAttribute('aria-busy', on ? 'true' : 'false');
             if (parseBtn) parseBtn.disabled = !!on;
             if (input) input.disabled = !!on;
+            if (composerHintEl) composerHintEl.hidden = !!on;
+            if (loadingHintEl) loadingHintEl.hidden = !on;
             if (on && voiceAdapter && typeof voiceAdapter.stop === 'function') {
                 voiceAdapter.stop();
             }
             if (on) {
                 if (parseLabel) parseLabel.textContent = PARSE_LABEL_LOADING;
+                syncLoadingHint(PARSE_LABEL_LOADING);
                 if (loadingSlowTimer) window.clearTimeout(loadingSlowTimer);
                 loadingSlowTimer = window.setTimeout(() => {
                     if (sessionState === 'loading' && parseLabel) {
                         parseLabel.textContent = PARSE_LABEL_LOADING_SLOW;
+                        syncLoadingHint(PARSE_LABEL_LOADING_SLOW);
                     }
                 }, LOADING_SLOW_MS);
             } else {

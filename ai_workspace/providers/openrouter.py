@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import time
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 import requests
 from django.conf import settings
@@ -36,7 +36,14 @@ def _extract_message_text(message: Dict[str, Any]) -> str:
 class OpenRouterProvider:
     name = 'openrouter'
 
-    def complete(self, *, system: str, user: str, json_mode: bool = False) -> ProviderResult:
+    def complete(
+        self,
+        *,
+        system: str,
+        user: str,
+        json_mode: bool = False,
+        generation: Optional[Dict[str, Any]] = None,
+    ) -> ProviderResult:
         api_key = getattr(settings, 'OPENROUTER_API_KEY', '') or ''
         if not api_key:
             raise ProviderError('OPENROUTER_API_KEY not configured', retryable=False, code='no_key')
@@ -54,13 +61,17 @@ class OpenRouterProvider:
             messages.append({'role': 'system', 'content': system})
         messages.append({'role': 'user', 'content': user})
 
+        gen = generation or {}
+        max_tokens = int(gen.get('max_tokens', 1200))
+        temperature = float(gen.get('temperature', 0.4))
+
         last_error: ProviderError | None = None
         for model in models:
             body: Dict[str, Any] = {
                 'model': model,
                 'messages': messages,
-                'max_tokens': 1200,
-                'temperature': 0.4,
+                'max_tokens': max_tokens,
+                'temperature': temperature,
             }
             if json_mode:
                 body['response_format'] = {'type': 'json_object'}

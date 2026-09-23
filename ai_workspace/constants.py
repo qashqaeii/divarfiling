@@ -8,17 +8,27 @@ from workspace.services.access import has_active_bot_license
 FEATURE_LISTING_SUMMARY = 'listing_summary'
 FEATURE_CRM_MESSAGE = 'crm_message'
 FEATURE_UPLOAD_BRIEF = 'upload_brief'
+FEATURE_NL_COMMAND = 'nl_command'
 
 AI_FEATURES = {
     FEATURE_LISTING_SUMMARY: True,
     FEATURE_CRM_MESSAGE: True,
     # غیرفعال محصولی — endpoint فقط پاسخ کنترل‌شده می‌دهد؛ LLM صدا زده نمی‌شود.
     FEATURE_UPLOAD_BRIEF: False,
+    FEATURE_NL_COMMAND: True,
 }
 
 FEATURE_DAILY_LIMITS = {
     FEATURE_LISTING_SUMMARY: 10,
     FEATURE_CRM_MESSAGE: 8,
+    FEATURE_NL_COMMAND: 10,
+}
+
+FEATURE_GENERATION = {
+    FEATURE_NL_COMMAND: {
+        'temperature': 0.1,
+        'max_tokens': 400,
+    },
 }
 
 DEFAULT_DAILY_LIMIT = 10
@@ -27,6 +37,7 @@ FEATURE_LABELS = {
     FEATURE_LISTING_SUMMARY: 'خلاصه آگهی',
     FEATURE_CRM_MESSAGE: 'پیام CRM',
     FEATURE_UPLOAD_BRIEF: 'تحلیل آپلود',
+    FEATURE_NL_COMMAND: 'فرمان هوشمند',
 }
 
 DEFAULT_CRM_TONE = 'رسمی'
@@ -63,14 +74,31 @@ CRM_MESSAGE_TONE_CHOICES = tuple(
     (key, meta['label']) for key, meta in CRM_MESSAGE_TONES.items()
 )
 
-JSON_FEATURES = frozenset({FEATURE_LISTING_SUMMARY})
+JSON_FEATURES = frozenset({FEATURE_LISTING_SUMMARY, FEATURE_NL_COMMAND})
 
 # نسخه دستی prompt — فقط وقتی محتوا عوض شد افزایش دهید (نه mtime)
 PROMPT_VERSIONS = {
-    FEATURE_LISTING_SUMMARY: 'listing_summary_v4',
-    FEATURE_CRM_MESSAGE: 'crm_message_v4',
+    FEATURE_LISTING_SUMMARY: 'listing_summary_v5',
+    FEATURE_CRM_MESSAGE: 'crm_message_v5',
     FEATURE_UPLOAD_BRIEF: 'upload_brief_v1',
+    FEATURE_NL_COMMAND: 'nl_command_v1',
 }
+
+NL_COMMAND_INTENT_CREATE_REMINDER = 'create_reminder'
+NL_COMMAND_INTENT_UNKNOWN = 'unknown'
+NL_COMMAND_ALLOWED_INTENTS = frozenset({
+    NL_COMMAND_INTENT_CREATE_REMINDER,
+    NL_COMMAND_INTENT_UNKNOWN,
+})
+
+NL_COMMAND_UNKNOWN_MESSAGE = (
+    'فعلاً فقط ثبت یادآوری با فرمان هوشمند پشتیبانی می‌شود.'
+)
+
+
+def nl_command_contact_not_found_message(contact_name: str) -> str:
+    name = (contact_name or '').strip() or 'موردنظر'
+    return f'مخاطبی با نام {name} پیدا نشد.'
 
 
 def is_ai_enabled() -> bool:

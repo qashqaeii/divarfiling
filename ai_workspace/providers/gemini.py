@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import time
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 import requests
 from django.conf import settings
@@ -23,7 +23,14 @@ class GeminiProvider:
             settings, 'GEMINI_MODEL', 'gemini-2.5-flash-lite',
         )
 
-    def complete(self, *, system: str, user: str, json_mode: bool = False) -> ProviderResult:
+    def complete(
+        self,
+        *,
+        system: str,
+        user: str,
+        json_mode: bool = False,
+        generation: Optional[Dict[str, Any]] = None,
+    ) -> ProviderResult:
         api_key = getattr(settings, 'GEMINI_API_KEY', '') or ''
         if not api_key:
             raise ProviderError('GEMINI_API_KEY not configured', retryable=False, code='no_key')
@@ -41,6 +48,7 @@ class GeminiProvider:
                     user=user,
                     json_mode=json_mode,
                     timeout=timeout,
+                    generation=generation,
                 )
             except ProviderError as exc:
                 last_error = exc
@@ -59,7 +67,11 @@ class GeminiProvider:
         user: str,
         json_mode: bool,
         timeout: int,
+        generation: Optional[Dict[str, Any]] = None,
     ) -> ProviderResult:
+        gen = generation or {}
+        temperature = float(gen.get('temperature', 0.4))
+        max_output = int(gen.get('max_tokens', 1024))
         url = (
             f'https://generativelanguage.googleapis.com/v1beta/models/'
             f'{model}:generateContent?key={api_key}'
@@ -67,8 +79,8 @@ class GeminiProvider:
         body: Dict[str, Any] = {
             'contents': [{'parts': [{'text': user}]}],
             'generationConfig': {
-                'temperature': 0.4,
-                'maxOutputTokens': 1024,
+                'temperature': temperature,
+                'maxOutputTokens': max_output,
             },
         }
         if system:

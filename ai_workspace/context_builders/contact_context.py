@@ -12,7 +12,9 @@ from workspace.services.listing_public_share import get_or_create_listing_share
 from workspace.services.property_public_share import get_or_create_property_share
 from workspace.services.public_share_common import absolute_public_share_url
 
-from ai_workspace.context_builders.base import mask_phone, truncate
+from django.utils import timezone
+
+from ai_workspace.context_builders.base import truncate
 
 
 def _budget_range(customer: Customer) -> str:
@@ -96,6 +98,29 @@ def _format_match_line(index: int, match: Dict[str, Any]) -> str:
     return line
 
 
+def _activity_when_label(created_at) -> str:
+    if not created_at:
+        return 'نامشخص'
+    now = timezone.localtime(timezone.now())
+    act_dt = timezone.localtime(created_at)
+    days = (now.date() - act_dt.date()).days
+    if days <= 0:
+        return 'امروز'
+    if days == 1:
+        return 'دیروز'
+    return f'{days} روز پیش'
+
+
+def _recent_activity_summaries(activities, limit: int = 2) -> str:
+    """فقط نوع فعالیت + زمان — بدون متن خام (PII)."""
+    lines = []
+    for act in activities[:limit]:
+        when = _activity_when_label(act.created_at)
+        kind = (act.activity_type or 'فعالیت').strip()
+        lines.append(f'{kind}: {when}')
+    return '\n'.join(lines) if lines else '—'
+
+
 def _top_matches_text(matches: List[Dict[str, Any]], limit: int = 2) -> str:
     lines = [_format_match_line(i, m) for i, m in enumerate(matches[:limit], start=1)]
     return '\n'.join(lines)
@@ -113,13 +138,8 @@ def build(
         CustomerActivity.objects.filter(customer=customer)
         .order_by('-created_at')[:2]
     )
-    activity_lines = []
-    for act in activities:
-        activity_lines.append(
-            f'{act.activity_type}: {truncate(mask_phone(act.content or act.title or ""), 120)}'
-        )
+    recent_activities = _recent_activity_summaries(activities)
 
-    top_matches: List[Dict[str, Any]] = []
     top_matches_text = ''
     if include_matches:
         try:
@@ -128,10 +148,9 @@ def build(
             for key in ('crm_matches', 'divar_matches'):
                 combined.extend((match_data.get(key) or [])[:2])
             combined = sorted(combined, key=lambda m: m.get('score', 0), reverse=True)[:2]
-            top_matches = _enrich_matches(user, combined)
-            top_matches_text = _top_matches_text(top_matches)
+            enriched = _enrich_matches(user, combined)
+            top_matches_text = _top_matches_text(enriched)
         except Exception:
-            top_matches = []
             top_matches_text = ''
 
     tone_key = normalize_crm_tone(tone)
@@ -148,8 +167,7 @@ def build(
         'tone': tone_key,
         'tone_guide': tone_info['guide'],
         'emoji_rule': 'بدون ایموجی بنویسید.',
-        'recent_activities': '\n'.join(activity_lines) if activity_lines else '—',
-        'top_matches': top_matches,
+        'recent_activities': recent_activities,
         'top_matches_text': top_matches_text,
         'content_version': f'{customer.id}:{customer.updated_at.isoformat() if customer.updated_at else ""}',
         '_customer': customer,

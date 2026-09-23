@@ -180,6 +180,12 @@
         }
         try {
             const data = await postJson(btn.dataset.aiUrl);
+            if (data.skipped) {
+                const hint = data.message || 'برای تولید خلاصه هوشمند، اطلاعات بیشتری از ملک ثبت کنید.';
+                showResult(result, `<p class="ws-ai-note">${escapeHtml(hint)}</p>`);
+                if (card && data.quota) updateCardQuota(card, data.quota);
+                return;
+            }
             showResult(result, renderListingSummary(data));
             if (card && data.quota) updateCardQuota(card, data.quota);
         } catch (e) {

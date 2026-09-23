@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import logging
 import time
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 import requests
 from django.conf import settings
@@ -65,7 +65,14 @@ def _sleep_retry_after(resp: requests.Response | None) -> None:
 class ArvanAIProvider:
     name = 'arvan'
 
-    def complete(self, *, system: str, user: str, json_mode: bool = False) -> ProviderResult:
+    def complete(
+        self,
+        *,
+        system: str,
+        user: str,
+        json_mode: bool = False,
+        generation: Optional[Dict[str, Any]] = None,
+    ) -> ProviderResult:
         if not is_arvan_configured():
             raise ProviderError(
                 'Arvan AI not configured',
@@ -81,8 +88,9 @@ class ArvanAIProvider:
         auth = build_authorization_header(api_key)
         timeout = int(getattr(settings, 'ARVAN_AI_TIMEOUT_SECONDS', 10))
         max_retries = max(0, int(getattr(settings, 'ARVAN_AI_MAX_RETRIES', 1)))
-        temperature = float(getattr(settings, 'ARVAN_AI_TEMPERATURE', 0.4))
-        max_tokens = int(getattr(settings, 'ARVAN_AI_MAX_TOKENS', 1200))
+        gen = generation or {}
+        temperature = float(gen.get('temperature', getattr(settings, 'ARVAN_AI_TEMPERATURE', 0.4)))
+        max_tokens = int(gen.get('max_tokens', getattr(settings, 'ARVAN_AI_MAX_TOKENS', 1200)))
 
         models = _models_to_try()
         if not models:

@@ -7,6 +7,7 @@ from typing import Any, Dict, Tuple
 from ai_workspace.constants import (
     FEATURE_CRM_MESSAGE,
     FEATURE_LISTING_SUMMARY,
+    FEATURE_NL_COMMAND,
     FEATURE_UPLOAD_BRIEF,
 )
 from ai_workspace.context_builders.base import truncate
@@ -30,6 +31,7 @@ _TEXT_FIELDS_BY_FEATURE = {
         'top_matches_text',
     ),
     FEATURE_UPLOAD_BRIEF: (),
+    FEATURE_NL_COMMAND: ('user_text',),
 }
 
 
@@ -76,6 +78,12 @@ def _should_skip_crm(ctx: Dict[str, Any]) -> str:
     return ''
 
 
+def _should_skip_nl_command(ctx: Dict[str, Any]) -> str:
+    if not str(ctx.get('user_text') or '').strip():
+        return 'empty_text'
+    return ''
+
+
 def prepare_context(feature: str, context: Dict[str, Any]) -> ValidationResult:
     """Trim متن‌های بلند؛ در صورت داده ناکافی LLM صدا زده نشود."""
     ctx = _trim_text_fields(feature, context)
@@ -86,4 +94,6 @@ def prepare_context(feature: str, context: Dict[str, Any]) -> ValidationResult:
         reason = _should_skip_upload(ctx)
     elif feature == FEATURE_CRM_MESSAGE:
         reason = _should_skip_crm(ctx)
+    elif feature == FEATURE_NL_COMMAND:
+        reason = _should_skip_nl_command(ctx)
     return ValidationResult(context=ctx, skip_llm=bool(reason), reason=reason)

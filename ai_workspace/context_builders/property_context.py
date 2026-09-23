@@ -6,7 +6,7 @@ from typing import Any, Dict, List
 from workspace.models import CRMProperty
 from workspace.services.formatting import format_area, format_pct, format_toman
 
-from ai_workspace.context_builders.base import truncate
+from ai_workspace.context_builders.base import redact_pii_text, truncate
 from ai_workspace.context_builders.listing_context import _benchmark_block, _feature_lines
 
 
@@ -63,7 +63,7 @@ def _property_fields(prop: CRMProperty) -> Dict[str, str]:
     return fields
 
 
-def _location_fields(prop: CRMProperty) -> Dict[str, str]:
+def _location_fields(prop: CRMProperty, *, include_address: bool = False) -> Dict[str, str]:
     fields: Dict[str, str] = {}
     if prop.city:
         fields['شهر'] = prop.city
@@ -71,7 +71,7 @@ def _location_fields(prop: CRMProperty) -> Dict[str, str]:
         fields['منطقه'] = prop.district
     if prop.neighborhood:
         fields['محله'] = prop.neighborhood
-    if prop.address:
+    if include_address and prop.address:
         fields['آدرس'] = prop.address
     return fields
 
@@ -124,12 +124,12 @@ def build(
 
     tab_financial = _join_fields(_financial_fields(prop))
     tab_property = _join_fields(_property_fields(prop))
-    tab_location = _join_fields(_location_fields(prop))
+    tab_location = _join_fields(_location_fields(prop, include_address=False))
     tab_features = _feature_lines(feature_profile) if feature_profile.get('has_details') else ''
     if not tab_features:
         tab_features = tab_property
-    tab_text = truncate((prop.notes or '').strip(), 1200)
-    tab_extra = _extra_lines(prop)
+    tab_text = truncate(redact_pii_text((prop.notes or '').strip()), 1200)
+    tab_extra = redact_pii_text(_extra_lines(prop))
 
     bench = _benchmark_block(benchmark)
     description = tab_text or tab_extra

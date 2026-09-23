@@ -13,6 +13,10 @@ from ai_workspace.services.crm_message import generate_message, result_to_dict a
 from ai_workspace.services.gateway import FeatureDisabledError
 from ai_workspace.services.listing_summary import generate_summary, result_to_dict as listing_result_to_dict
 from ai_workspace.services.property_summary import generate_summary_for_user
+from ai_workspace.services.property_summary_skip import (
+    PropertySummaryInsufficientContext,
+    property_summary_skipped_dict,
+)
 from ai_workspace.services.quota import QuotaExceededError, get_status, status_to_dict
 from workspace.mixins import LicenseRequiredMixin
 from workspace.models import Dataset, Listing
@@ -52,6 +56,14 @@ class PropertySummaryView(AIEnabledMixin, View):
         try:
             result = generate_summary_for_user(request.user, property_id)
             return JsonResponse(listing_result_to_dict(result, user=request.user))
+        except PropertySummaryInsufficientContext as exc:
+            return JsonResponse(
+                property_summary_skipped_dict(
+                    request.user,
+                    reason=exc.reason,
+                    message=exc.message,
+                )
+            )
         except LookupError:
             return JsonResponse({'ok': False, 'error': 'فایل شخصی یافت نشد'}, status=404)
         except FeatureDisabledError as exc:

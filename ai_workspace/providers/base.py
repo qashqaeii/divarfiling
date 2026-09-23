@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Optional, Protocol
+from typing import Any, Dict, Optional, Protocol
 
 
 @dataclass
@@ -25,6 +25,7 @@ class AIProvider(Protocol):
         system: str,
         user: str,
         json_mode: bool = False,
+        generation: Optional[Dict[str, Any]] = None,
     ) -> ProviderResult: ...
 
 

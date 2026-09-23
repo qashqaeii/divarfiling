@@ -5,7 +5,12 @@ import json
 import re
 from typing import Any, Dict, List, Optional
 
-from ai_workspace.constants import FEATURE_LISTING_SUMMARY, FEATURE_UPLOAD_BRIEF
+from ai_workspace.constants import (
+    FEATURE_LISTING_SUMMARY,
+    FEATURE_NL_COMMAND,
+    FEATURE_UPLOAD_BRIEF,
+    NL_COMMAND_ALLOWED_INTENTS,
+)
 from ai_workspace.services.parse import parse_json_text, salvage_listing_json
 
 _STRING_FIELD_RE = re.compile(r'"(summary|negotiation_tip|advertiser_note|executive_summary|outliers_note|duplicates_note)"\s*:\s*"((?:[^"\\]|\\.)*)"', re.DOTALL)
@@ -142,11 +147,60 @@ def is_valid_upload_brief_payload(data: Optional[Dict[str, Any]]) -> bool:
     return len(summary) >= 20
 
 
+def _nullable_str(value: Any) -> Optional[str]:
+    if value is None:
+        return None
+    text = str(value).strip()
+    return text or None
+
+
+def normalize_nl_command_payload(data: Optional[Dict[str, Any]], raw_text: str = '') -> Dict[str, Any]:
+    payload = dict(data or {})
+    if not payload and raw_text:
+        parsed = parse_json_text(raw_text)
+        if parsed:
+            payload = dict(parsed)
+    intent = str(payload.get('intent') or '').strip()
+    if intent not in NL_COMMAND_ALLOWED_INTENTS:
+        intent = 'unknown'
+    inner = payload.get('data') if isinstance(payload.get('data'), dict) else {}
+    normalized_data = {
+        'contact_name': _nullable_str(inner.get('contact_name')),
+        'title': _nullable_str(inner.get('title')),
+        'note': _nullable_str(inner.get('note')),
+        'date_text': _nullable_str(inner.get('date_text')),
+        'time_text': _nullable_str(inner.get('time_text')),
+    }
+    missing = payload.get('missing_fields')
+    ambiguous = payload.get('ambiguous_fields')
+    return {
+        'intent': intent,
+        'confidence': float(payload.get('confidence') or 0.0),
+        'data': normalized_data,
+        'missing_fields': _coerce_str_list(missing),
+        'ambiguous_fields': _coerce_str_list(ambiguous),
+        'requires_confirmation': bool(payload.get('requires_confirmation', True)),
+    }
+
+
+def is_valid_nl_command_payload(data: Optional[Dict[str, Any]]) -> bool:
+    if not data or not isinstance(data, dict):
+        return False
+    intent = data.get('intent')
+    if intent not in NL_COMMAND_ALLOWED_INTENTS:
+        return False
+    if not isinstance(data.get('data'), dict):
+        return False
+    return True
+
+
 def normalize_payload(feature: str, data: Optional[Dict[str, Any]], raw_text: str = '') -> Dict[str, Any]:
     if feature == FEATURE_LISTING_SUMMARY:
         return normalize_listing_payload(data, raw_text)
     if feature == FEATURE_UPLOAD_BRIEF:
         return normalize_upload_brief_payload(data, raw_text)
+    if feature == FEATURE_NL_COMMAND:
+        return normalize_nl_command_payload(data, raw_text)
     return dict(data or {})
 
 
@@ -155,6 +209,8 @@ def is_valid_payload(feature: str, data: Optional[Dict[str, Any]]) -> bool:
         return is_valid_listing_payload(data)
     if feature == FEATURE_UPLOAD_BRIEF:
         return is_valid_upload_brief_payload(data)
+    if feature == FEATURE_NL_COMMAND:
+        return is_valid_nl_command_payload(data)
     return bool(data)
 
 

@@ -8,7 +8,14 @@ from typing import Any, Dict, Optional
 from django.conf import settings
 from django.core.cache import cache as django_cache
 
-from ai_workspace.constants import FEATURE_CRM_MESSAGE, FEATURE_LISTING_SUMMARY, feature_uses_json, is_feature_enabled
+from ai_workspace.constants import (
+    FEATURE_CRM_MESSAGE,
+    FEATURE_LISTING_SUMMARY,
+    FEATURE_NL_COMMAND,
+    feature_uses_json,
+    is_feature_enabled,
+)
+from ai_workspace.services.generation import get_feature_generation
 from ai_workspace.models import AIUsageLog
 from ai_workspace.providers.registry import get_http_provider_chain, RULE_BASED
 from ai_workspace.providers.base import ProviderError
@@ -161,7 +168,10 @@ def run(
     p_hash = prompt_hash(system, user_prompt)
     p_ver = prompt_version(feature)
 
-    cached = ai_cache.get(feature, entity_id, content_version, p_hash)
+    generation = get_feature_generation(feature)
+    skip_response_cache = feature == FEATURE_NL_COMMAND
+
+    cached = None if skip_response_cache else ai_cache.get(feature, entity_id, content_version, p_hash)
     if cached:
         data = normalize_payload(
             feature,
@@ -224,6 +234,7 @@ def run(
                     system=system,
                     user=user_prompt,
                     json_mode=json_mode,
+                    generation=generation,
                 )
                 provider_attempt = attempt_idx
                 break
@@ -244,7 +255,11 @@ def run(
         status = AIUsageLog.STATUS_OK if not provider_result.is_fallback else AIUsageLog.STATUS_FALLBACK
 
     data = _finalize_payload(feature, provider_result.text, rule_payload)
-    if feature_uses_json(feature) and not is_valid_payload(feature, data):
+    if (
+        feature_uses_json(feature)
+        and not is_valid_payload(feature, data)
+        and feature != FEATURE_NL_COMMAND
+    ):
         provider_result, rule_payload = RULE_BASED.complete_for_feature(feature, context)
         data = normalize_payload(feature, rule_payload['data'], rule_payload.get('raw_text', ''))
         text_out = dumps_payload(data)
@@ -259,11 +274,18 @@ def run(
         text_out = sanitize_message_text(text_out)
         data = {'text': text_out}
 
-    consume_quota(user, feature, provider_result.input_tokens, provider_result.output_tokens)
+    should_consume = True
+    if feature == FEATURE_NL_COMMAND and not is_valid_payload(feature, data):
+        should_consume = False
+    if should_consume:
+        consume_quota(user, feature, provider_result.input_tokens, provider_result.output_tokens)
     if 1 <= provider_attempt <= _http_provider_count():
         _bump_global_counter()
 
-    if not feature_uses_json(feature) or is_valid_payload(feature, data):
+    if (
+        not skip_response_cache
+        and (not feature_uses_json(feature) or is_valid_payload(feature, data))
+    ):
         try:
             ai_cache.store(
                 feature, entity_id, content_version, p_hash,

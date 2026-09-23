@@ -24,6 +24,7 @@ class AIQuota(models.Model):
     listing_summary_used = models.PositiveSmallIntegerField(default=0, verbose_name='خلاصه آگهی')
     crm_message_used = models.PositiveSmallIntegerField(default=0, verbose_name='پیام CRM')
     upload_brief_used = models.PositiveSmallIntegerField(default=0, verbose_name='تحلیل آپلود')
+    nl_command_used = models.PositiveSmallIntegerField(default=0, verbose_name='فرمان هوشمند')
     is_unlimited = models.BooleanField(default=False, verbose_name='نامحدود')
 
     class Meta:

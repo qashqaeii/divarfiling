@@ -1,7 +1,7 @@
 """URLهای AI workspace."""
 from django.urls import path
 
-from ai_workspace import views
+from ai_workspace import nl_views, views
 
 app_name = 'ai_workspace'
 
@@ -23,4 +23,7 @@ urlpatterns = [
         name='crm_message',
     ),
     path('datasets/upload-brief/', views.UploadBriefView.as_view(), name='upload_brief'),
+    path('nl/parse/', nl_views.NLCommandParseView.as_view(), name='nl_parse'),
+    path('nl/confirm/', nl_views.NLCommandConfirmView.as_view(), name='nl_confirm'),
+    path('nl/resolve-contact/', nl_views.NLCommandResolveContactView.as_view(), name='nl_resolve_contact'),
 ]

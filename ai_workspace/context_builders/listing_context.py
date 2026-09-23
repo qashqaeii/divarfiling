@@ -13,7 +13,7 @@ from workspace.services.display import (
 )
 from workspace.services.listing_features import build_listing_feature_profile
 
-from ai_workspace.context_builders.base import truncate
+from ai_workspace.context_builders.base import redact_pii_text, truncate
 
 
 def _join_fields(fields: Dict[str, str]) -> str:
@@ -108,12 +108,15 @@ def build(listing, dataset, benchmark: Dict[str, Any] | None = None) -> Dict[str
             break
     if not description:
         description = desc
+    description = redact_pii_text(description)
 
     bench = _benchmark_block(benchmark)
     tab_financial = _join_fields(sections.get('مالی') or {})
     tab_property = _join_fields(sections.get('ملک') or {})
     tab_location = _join_fields(sections.get('مکان') or {})
-    tab_text = _join_fields({k: v for k, v in text_tab.items() if k not in ('توضیحات', 'description')})
+    tab_text = redact_pii_text(
+        _join_fields({k: v for k, v in text_tab.items() if k not in ('توضیحات', 'description')})
+    )
     if description and not tab_text:
         tab_text = description
     tab_features = _feature_lines(feature_profile)

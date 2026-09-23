@@ -11,7 +11,7 @@
 
 {% block crm_extra_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/mk-filing-datasets.css' %}?v=19">
-<link rel="stylesheet" href="{% static 'workspace/css/crm-today.css' %}?v=6">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-today.css' %}?v=7">
 {% endblock %}
 
 {% block crm_content %}
@@ -64,6 +64,45 @@
         {% include 'workspace/includes/kpi_item.html' with variant='compact' extra_class='crm-dash-kpi' value=queue_stats.followups label='پیگیری' %}
         {% include 'workspace/includes/kpi_item.html' with variant='compact' extra_class='crm-dash-kpi' value=queue_stats.reminders label='یادآور' %}
     </section>
+
+    {% if nl_command_enabled %}
+    <section class="crm-nl-command" id="crmNlCommand" aria-label="فرمان هوشمند یادآوری"
+        data-parse-url="{{ nl_command_urls.parse }}"
+        data-confirm-url="{{ nl_command_urls.confirm }}"
+        data-resolve-url="{{ nl_command_urls.resolve_contact }}"
+        data-reminder-form-url="{{ reminder_create_url }}">
+        <div class="crm-nl-command__head">
+            <h2 class="crm-nl-command__title"><i class="fas fa-magic" aria-hidden="true"></i> فرمان هوشمند</h2>
+            {% if nl_command_quota %}
+            <span class="crm-nl-command__quota" title="سهمیه روزانه parse">
+                {{ nl_command_quota.feature_remaining }}/{{ nl_command_quota.feature_limit }}
+            </span>
+            {% endif %}
+        </div>
+        <label class="crm-nl-command__label" for="crmNlCommandInput">چی می‌خوای ثبت کنی؟</label>
+        <div class="crm-nl-command__row">
+            <textarea id="crmNlCommandInput" class="crm-nl-command__input" rows="2"
+                placeholder="مثلاً: فردا ساعت ۱۰ یادم بنداز به احمدی زنگ بزنم"></textarea>
+            <button type="button" class="crm-dash-act crm-dash-act--primary" id="crmNlCommandParseBtn">بررسی</button>
+        </div>
+        <div class="crm-nl-command__status" id="crmNlCommandStatus" hidden></div>
+        <div class="crm-nl-command__preview" id="crmNlCommandPreview" hidden>
+            <h3>یادآوری جدید</h3>
+            <dl class="crm-nl-command__dl">
+                <dt>مخاطب</dt><dd data-field="contact_name">—</dd>
+                <dt>زمان</dt><dd data-field="due_at_display">—</dd>
+                <dt>عنوان</dt><dd data-field="title">—</dd>
+                <dt>یادداشت</dt><dd data-field="note">—</dd>
+            </dl>
+            <div class="crm-nl-command__candidates" id="crmNlCommandCandidates" hidden></div>
+            <div class="crm-nl-command__actions">
+                <button type="button" class="crm-dash-act crm-dash-act--primary" id="crmNlCommandConfirmBtn" disabled>تأیید و ثبت</button>
+                <a href="{{ reminder_create_url }}" class="crm-dash-act" id="crmNlCommandEditLink">ویرایش</a>
+                <button type="button" class="crm-dash-act" id="crmNlCommandCancelBtn">لغو</button>
+            </div>
+        </div>
+    </section>
+    {% endif %}
 
     {% if queue_items %}
     <div class="crm-today-tabs" role="tablist" aria-label="ستون‌های کارهای امروز">
@@ -150,5 +189,6 @@ window.crmQuickLeadUrl = "{% url 'workspace:crm_quick_lead' %}";
 window.crmTodayUrl = "{% url 'workspace:crm_today' %}";
 </script>
 <script src="{% static 'workspace/js/crm-today.js' %}?v=1"></script>
+{% if nl_command_enabled %}<script src="{% static 'workspace/js/crm-nl-command.js' %}?v=1"></script>{% endif %}
 <script src="{% static 'workspace/js/filing-help-modal.js' %}?v=2"></script>
 {% endblock %}

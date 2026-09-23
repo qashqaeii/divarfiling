@@ -2448,6 +2448,11 @@ class AISummarizePropertyView(APIView):
 
         if is_ai_enabled():
             try:
+                from ai_workspace.services.property_summary_skip import (
+                    PropertySummaryInsufficientContext,
+                    property_summary_skipped_dict,
+                )
+
                 result = generate_summary_for_user(request.user, property_id)
                 payload = listing_result_to_dict(result)
                 summary_data = payload.get('data') or {}
@@ -2466,6 +2471,20 @@ class AISummarizePropertyView(APIView):
                             model=payload.get('model') or getattr(result, 'model', ''),
                         )
                     )
+            except PropertySummaryInsufficientContext as exc:
+                skipped = property_summary_skipped_dict(
+                    request.user,
+                    reason=exc.reason,
+                    message=exc.message,
+                )
+                return api_ok({
+                    'skipped': True,
+                    'skip_reason': skipped['skip_reason'],
+                    'message': skipped['message'],
+                    'text': '',
+                    'quota_remaining': int(get_status(request.user).remaining),
+                    'summary': {},
+                })
             except LookupError:
                 return api_error('فایل شخصی یافت نشد.', code='NOT_FOUND', status=404)
             except QuotaExceededError as exc:

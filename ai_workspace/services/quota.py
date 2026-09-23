@@ -58,11 +58,12 @@ def get_or_create_quota(user) -> AIQuota:
         quota.listing_summary_used = 0
         quota.crm_message_used = 0
         quota.upload_brief_used = 0
+        quota.nl_command_used = 0
         quota.reset_date = today
         quota.save(
             update_fields=[
                 'used_today', 'tokens_used_today', 'listing_summary_used',
-                'crm_message_used', 'upload_brief_used', 'reset_date',
+                'crm_message_used', 'upload_brief_used', 'nl_command_used', 'reset_date',
             ]
         )
     return quota

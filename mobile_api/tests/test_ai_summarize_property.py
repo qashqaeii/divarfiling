@@ -121,3 +121,22 @@ class AISummarizePropertyTests(TestCase):
         self.assertEqual(data.get('text'), 'خلاصه تست')
         self.assertEqual(data.get('model'), 'gemini-2.0-flash')
         self.assertEqual(data.get('model_label'), 'gemini-2.0-flash')
+
+    @patch('ai_workspace.constants.is_ai_enabled', return_value=True)
+    def test_summarize_property_insufficient_context_skipped(self, _mock_ai):
+        sparse = CRMProperty.objects.create(
+            user=self.user,
+            title='فقط عنوان',
+            deal_mode='فروش',
+        )
+        resp = self.client.post(
+            '/api/mobile/v1/ai/summarize-property',
+            {'property_id': sparse.id},
+            format='json',
+        )
+        self.assertEqual(resp.status_code, 200)
+        data = resp.data.get('data') or {}
+        self.assertTrue(data.get('skipped'))
+        self.assertEqual(data.get('skip_reason'), 'insufficient_context')
+        self.assertIn('اطلاعات بیشتری', data.get('message', ''))
+        self.assertEqual(data.get('text'), '')

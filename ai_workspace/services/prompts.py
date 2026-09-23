@@ -21,8 +21,23 @@ def prompt_hash(system: str, user: str) -> str:
     return hashlib.sha256(raw.encode('utf-8')).hexdigest()
 
 
+# کلیدهایی که فقط برای کش/داخلی هستند یا حجم/PII اضافی دارند — در JSON user به LLM نمی‌روند.
+_LLM_CONTEXT_EXCLUDE = frozenset({
+    'top_matches',
+    'benchmark',
+})
+
+
+def public_context_for_llm(context: Dict[str, Any]) -> Dict[str, Any]:
+    return {
+        k: v
+        for k, v in context.items()
+        if not k.startswith('_') and k not in _LLM_CONTEXT_EXCLUDE and k != 'content_version'
+    }
+
+
 def _public_context(context: Dict[str, Any]) -> Dict[str, Any]:
-    return {k: v for k, v in context.items() if not k.startswith('_') and k != 'content_version'}
+    return public_context_for_llm(context)
 
 
 def render(feature: str, context: Dict[str, Any]) -> Tuple[str, str]:

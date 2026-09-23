@@ -16,6 +16,8 @@ from ai_workspace.constants import FEATURE_LISTING_SUMMARY
 from ai_workspace.context_builders import property_context
 from ai_workspace.services.gateway import GatewayResult, run
 from ai_workspace.services.listing_summary import generate_summary
+from ai_workspace.services.property_context_gate import assess_property_context
+from ai_workspace.services.property_summary_skip import PropertySummaryInsufficientContext
 
 
 def _transaction_type_for_property(prop: CRMProperty) -> str:
@@ -157,6 +159,10 @@ def generate_property_summary(
         return generate_summary(user, source.dataset, source)
 
     profile = feature_profile if feature_profile is not None else _feature_profile_for_property(user, prop)
+    assessment = assess_property_context(prop, feature_profile=profile)
+    if not assessment.meaningful:
+        raise PropertySummaryInsufficientContext(reason=assessment.reason)
+
     benchmark = benchmark_crm_property(user, prop)
     context = property_context.build(prop, benchmark, feature_profile=profile)
     return run(

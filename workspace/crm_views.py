@@ -295,6 +295,19 @@ class CRMTodayView(CRMContextMixin, LoginRequiredMixin, TemplateView):
         ctx['crm_section'] = 'today'
         ctx['quick_lead_form'] = QuickLeadForm()
         ctx['crm_sources'] = CRM_SOURCES
+        from ai_workspace.constants import FEATURE_NL_COMMAND, is_ai_enabled, is_feature_enabled
+        from ai_workspace.services.quota import feature_quota_dict
+
+        user = self.request.user
+        ctx['nl_command_enabled'] = is_ai_enabled() and is_feature_enabled(FEATURE_NL_COMMAND, user)
+        if ctx['nl_command_enabled']:
+            ctx['nl_command_quota'] = feature_quota_dict(user, FEATURE_NL_COMMAND)
+            ctx['nl_command_urls'] = {
+                'parse': reverse('workspace:ai_workspace:nl_parse'),
+                'confirm': reverse('workspace:ai_workspace:nl_confirm'),
+                'resolve_contact': reverse('workspace:ai_workspace:nl_resolve_contact'),
+            }
+            ctx['reminder_create_url'] = reverse('workspace:reminder_create')
         if not items and stats.get('total', 0) == 0:
             from workspace.academy.context_helpers import inject_academy_context
             inject_academy_context(ctx, self.request.user, 'today_empty')

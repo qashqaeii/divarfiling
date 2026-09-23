@@ -6,15 +6,55 @@
 
 .crm-smart-command {
     --nl-font: 'Vazirmatn', 'Vazir', system-ui, sans-serif;
+    --sc-accent: var(--ws-primary);
+    --sc-accent-12: color-mix(in srgb, var(--sc-accent) 12%, transparent);
+    --sc-accent-18: color-mix(in srgb, var(--sc-accent) 18%, transparent);
+    --sc-accent-8: color-mix(in srgb, var(--sc-accent) 8%, var(--ws-surface, #fff));
     position: relative;
     margin: 0;
-    padding: 1rem 1rem 1.05rem;
+    padding: 1rem 1.05rem 1.1rem;
     border-radius: 16px;
     font-family: var(--nl-font);
-    background: var(--ws-surface, #fff);
-    border: 1px solid var(--ws-border, #e8ecf1);
-    box-shadow: 0 12px 32px -28px rgba(15, 23, 42, 0.18);
+    background:
+        linear-gradient(168deg, var(--ws-surface, #fff) 0%, color-mix(in srgb, var(--sc-accent) 4%, #fff) 100%);
+    border: 1px solid color-mix(in srgb, var(--ws-border, #e8ecf1) 88%, var(--sc-accent) 12%);
+    box-shadow:
+        0 1px 0 color-mix(in srgb, #fff 80%, transparent) inset,
+        0 14px 36px -30px rgba(15, 23, 42, 0.22);
     text-align: start;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.crm-smart-command--ctx-today {
+    --sc-accent: color-mix(in srgb, var(--ws-primary) 88%, #d97706 12%);
+}
+
+.crm-smart-command--ctx-contacts {
+    --sc-accent: color-mix(in srgb, var(--ws-primary) 82%, #6366f1 18%);
+}
+
+.crm-smart-command--ctx-properties {
+    --sc-accent: color-mix(in srgb, var(--ws-primary) 78%, #0d9488 22%);
+}
+
+.crm-smart-command.is-has-input .crm-nl-command__row {
+    border-color: color-mix(in srgb, var(--sc-accent) 32%, var(--ws-border));
+}
+
+.crm-smart-command.is-quota-low .crm-nl-command__quota {
+    border-color: color-mix(in srgb, #d97706 45%, var(--ws-border));
+    color: #b45309;
+    background: color-mix(in srgb, #fef3c7 40%, var(--ws-surface));
+}
+
+.crm-smart-command.is-quota-low .crm-nl-command__quota-dot {
+    background: #f59e0b;
+    box-shadow: 0 0 0 3px color-mix(in srgb, #f59e0b 25%, transparent);
+}
+
+.crm-smart-command.is-quota-empty .crm-nl-command__parse {
+    opacity: 0.55;
+    cursor: not-allowed;
 }
 
 .crm-smart-command::before {
@@ -54,13 +94,24 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 1.75rem;
-    height: 1.75rem;
-    border-radius: 10px;
-    font-size: 0.8rem;
-    color: var(--ws-primary);
-    background: color-mix(in srgb, var(--ws-primary) 8%, var(--ws-surface));
+    width: 2rem;
+    height: 2rem;
+    border-radius: 11px;
+    font-size: 0.82rem;
+    color: var(--sc-accent);
+    background: var(--sc-accent-8);
+    box-shadow: 0 0 0 1px var(--sc-accent-12);
     flex-shrink: 0;
+}
+
+.crm-smart-command .crm-nl-command__kicker {
+    display: block;
+    margin-bottom: 0.12rem;
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: color-mix(in srgb, var(--sc-accent) 55%, var(--ws-text-muted));
 }
 
 .crm-smart-command .crm-nl-command__title {
@@ -108,14 +159,26 @@
 }
 
 .crm-smart-command .crm-nl-command__quota {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
     font-size: 0.68rem;
     font-weight: 700;
     font-variant-numeric: tabular-nums;
     color: var(--ws-text-muted);
-    padding: 0.2rem 0.45rem;
+    padding: 0.22rem 0.5rem;
     border-radius: 999px;
     border: 1px solid var(--ws-border, #e8ecf1);
     background: var(--ws-surface);
+    transition: border-color 0.15s, background 0.15s;
+}
+
+.crm-smart-command .crm-nl-command__quota-dot {
+    width: 0.35rem;
+    height: 0.35rem;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--sc-accent) 70%, #22c55e);
+    flex-shrink: 0;
 }
 
 .crm-smart-command .crm-nl-command__quota-sep {
@@ -136,8 +199,8 @@
 }
 
 .crm-smart-command .crm-nl-command__row:focus-within {
-    border-color: color-mix(in srgb, var(--ws-primary) 45%, var(--ws-border));
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--ws-primary) 12%, transparent);
+    border-color: color-mix(in srgb, var(--sc-accent) 45%, var(--ws-border));
+    box-shadow: 0 0 0 3px var(--sc-accent-12);
 }
 
 .crm-smart-command .crm-nl-command__input {
@@ -185,8 +248,18 @@
     font-weight: 800;
     color: #fff;
     cursor: pointer;
-    background: var(--ws-primary);
-    transition: opacity 0.12s;
+    background: linear-gradient(165deg, color-mix(in srgb, var(--sc-accent) 92%, #fff) 0%, var(--sc-accent) 100%);
+    box-shadow: 0 6px 16px -8px color-mix(in srgb, var(--sc-accent) 55%, transparent);
+    transition: opacity 0.12s, transform 0.12s, box-shadow 0.12s;
+}
+
+.crm-smart-command .crm-nl-command__parse:not(:disabled):hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 20px -8px color-mix(in srgb, var(--sc-accent) 50%, transparent);
+}
+
+.crm-smart-command .crm-nl-command__parse:not(:disabled):active {
+    transform: translateY(0);
 }
 
 .crm-smart-command .crm-nl-command__parse:disabled {
@@ -221,14 +294,32 @@
     to { transform: rotate(360deg); }
 }
 
+.crm-smart-command .crm-nl-command__chips-head {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.6rem;
+    min-width: 0;
+}
+
+.crm-smart-command .crm-nl-command__chips-label {
+    flex-shrink: 0;
+    font-size: 0.62rem;
+    font-weight: 700;
+    color: var(--ws-text-muted);
+    opacity: 0.85;
+}
+
 .crm-smart-command .crm-nl-command__chips {
     display: flex;
     flex-wrap: nowrap;
     gap: 0.35rem;
-    margin-top: 0.55rem;
+    flex: 1;
+    min-width: 0;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
+    padding-bottom: 0.05rem;
 }
 
 .crm-smart-command .crm-nl-command__chips::-webkit-scrollbar {
@@ -250,8 +341,40 @@
 }
 
 .crm-smart-command .crm-nl-command__chip:hover {
-    border-color: color-mix(in srgb, var(--ws-primary) 25%, var(--ws-border));
-    background: color-mix(in srgb, var(--ws-primary) 5%, var(--ws-surface));
+    border-color: color-mix(in srgb, var(--sc-accent) 28%, var(--ws-border));
+    background: var(--sc-accent-8);
+}
+
+.crm-smart-command .crm-nl-command__chip.is-active {
+    border-color: color-mix(in srgb, var(--sc-accent) 45%, var(--ws-border));
+    background: var(--sc-accent-12);
+    color: color-mix(in srgb, var(--sc-accent) 75%, var(--ws-text));
+}
+
+.crm-smart-command .crm-nl-command__composer-hint {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    margin: 0.45rem 0 0;
+    font-size: 0.62rem;
+    color: var(--ws-text-muted);
+    opacity: 0.75;
+}
+
+.crm-smart-command .crm-nl-command__composer-hint-text {
+    margin-inline-start: 0.15rem;
+}
+
+.crm-smart-command .crm-nl-command__kbd {
+    display: inline-block;
+    padding: 0.05rem 0.35rem;
+    border-radius: 4px;
+    border: 1px solid var(--ws-border, #e2e8f0);
+    background: color-mix(in srgb, var(--ws-surface) 92%, var(--ws-border));
+    font-family: inherit;
+    font-size: 0.58rem;
+    font-weight: 700;
+    line-height: 1.35;
 }
 
 .crm-smart-command .crm-nl-command__chips.is-suggested .crm-nl-command__chip {
@@ -294,10 +417,39 @@
 .crm-smart-command .crm-nl-command__panel {
     margin-top: 0.75rem;
     padding: 0.85rem 0.9rem;
-    border-radius: 12px;
-    border: 1px solid var(--ws-border, #e8ecf1);
-    background: color-mix(in srgb, var(--ws-surface) 98%, var(--ws-border) 2%);
+    border-radius: 14px;
+    border: 1px solid color-mix(in srgb, var(--ws-border, #e8ecf1) 90%, var(--sc-accent) 10%);
+    background: color-mix(in srgb, var(--ws-surface) 97%, var(--sc-accent) 3%);
     animation: crm-nl-in 0.22s ease-out;
+}
+
+.crm-smart-command .crm-nl-command__preview-summary {
+    margin: 0 0 0.65rem;
+    padding: 0.65rem 0.75rem;
+    border-radius: 11px;
+    background: var(--sc-accent-8);
+    border: 1px solid var(--sc-accent-12);
+}
+
+.crm-smart-command .crm-nl-command__preview-summary-line {
+    margin: 0;
+    font-size: 0.88rem;
+    font-weight: 800;
+    line-height: 1.4;
+    color: var(--ws-text);
+}
+
+.crm-smart-command .crm-nl-command__preview-summary-sub {
+    margin: 0.25rem 0 0;
+    font-size: 0.74rem;
+    font-weight: 600;
+    line-height: 1.45;
+    color: var(--ws-text-secondary, var(--ws-text-muted));
+}
+
+.crm-smart-command .crm-nl-command__sheet--details {
+    padding-top: 0.15rem;
+    border-top: 1px dashed color-mix(in srgb, var(--ws-border) 85%, transparent);
 }
 
 @keyframes crm-nl-in {
@@ -504,8 +656,8 @@
 }
 
 .crm-smart-command .crm-nl-command__btn--primary {
-    border-color: var(--ws-primary);
-    background: var(--ws-primary);
+    border-color: var(--sc-accent);
+    background: var(--sc-accent);
     color: #fff;
 }
 
@@ -622,6 +774,23 @@
         overflow-y: auto;
         box-shadow: 0 -12px 40px -16px rgba(15, 23, 42, 0.35);
         animation: crm-nl-sheet 0.25s ease-out;
+        padding-top: 1.1rem;
+    }
+
+    .crm-smart-command.is-sheet-open .crm-nl-command__panel::before {
+        content: '';
+        position: absolute;
+        top: 0.45rem;
+        left: 50%;
+        width: 2.25rem;
+        height: 0.22rem;
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--ws-text-muted) 35%, var(--ws-border));
+        transform: translateX(-50%);
+    }
+
+    .crm-smart-command .crm-nl-command__composer-hint {
+        display: none;
     }
 
     @keyframes crm-nl-sheet {

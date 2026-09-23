@@ -122,6 +122,9 @@
         const chipsWrap = root.querySelector('.crm-nl-command__chips');
         const composer = root.querySelector('[data-sc="composer"]');
         const backdrop = root.querySelector('[data-sc="backdrop"]');
+        const previewSummary = readyStep?.querySelector('[data-sc="preview-summary"]');
+        const previewSummaryLine = readyStep?.querySelector('[data-sc="preview-summary-line"]');
+        const previewSummarySub = readyStep?.querySelector('[data-sc="preview-summary-sub"]');
         const aiDefault = root.dataset.aiDefault || '';
 
         function isWrongIntent(data) {
@@ -255,6 +258,10 @@
                 input.value = '';
                 autoGrowInput();
             }
+            root.querySelectorAll('.crm-nl-command__chip').forEach((c) => {
+                c.classList.remove('is-active');
+            });
+            syncInputState();
             if (successTimer) {
                 window.clearTimeout(successTimer);
                 successTimer = null;
@@ -312,6 +319,55 @@
             }
         }
 
+        function joinPreviewParts(parts) {
+            return parts
+                .map((s) => (s || '').trim())
+                .filter((s) => s && s !== '—')
+                .join(' · ');
+        }
+
+        function fillPreviewSummary(p, intent) {
+            if (!previewSummary || !previewSummaryLine || !p) return;
+            const effective = intent || currentIntent || 'create_reminder';
+            let line = '';
+            let sub = '';
+            if (effective === 'create_personal_property') {
+                line = (p.type_deal_display || '').trim();
+                sub = joinPreviewParts([
+                    p.location_display,
+                    p.specs_display,
+                    p.sale_price_display,
+                    p.deposit_display,
+                    p.rent_display,
+                ]);
+            } else if (effective === 'create_contact') {
+                line = (p.name || '').trim();
+                sub = joinPreviewParts([
+                    p.phone_display,
+                    p.customer_type,
+                    p.areas_display,
+                    p.budget_display,
+                ]);
+            } else {
+                line = (p.due_at_display || p.title || '').trim();
+                const titleExtra = (p.title || '').trim();
+                sub = joinPreviewParts([
+                    p.contact_name,
+                    titleExtra && titleExtra !== line ? titleExtra : '',
+                ]);
+            }
+            if (!line) {
+                previewSummary.hidden = true;
+                return;
+            }
+            previewSummary.hidden = false;
+            previewSummaryLine.textContent = line;
+            if (previewSummarySub) {
+                previewSummarySub.textContent = sub;
+                previewSummarySub.hidden = !sub;
+            }
+        }
+
         function fillPropertyPreview(p) {
             if (!readyStep || !p) return;
             const setRow = (selector, val) => {
@@ -348,6 +404,7 @@
             const notesText = (p.notes || '').trim();
             setRow('property_notes', notesText);
             if (propertyNoteRow) propertyNoteRow.hidden = !notesText;
+            fillPreviewSummary(p, 'create_personal_property');
         }
 
         function isIncompleteProperty(data) {
@@ -388,6 +445,7 @@
                 });
                 const notesText = (p.notes || '').trim();
                 if (contactNoteRow) contactNoteRow.hidden = !notesText;
+                fillPreviewSummary(p, 'create_contact');
                 return;
             }
             ['contact_name', 'due_at_display', 'title', 'note'].forEach((key) => {
@@ -396,6 +454,7 @@
             });
             const noteText = (p.note || '').trim();
             if (noteRow) noteRow.hidden = !noteText;
+            fillPreviewSummary(p, 'create_reminder');
         }
 
         function isDuplicateContact(data) {
@@ -705,6 +764,11 @@
         }
 
         function runParse() {
+            const quotaRem = parseInt(root.dataset.quotaRemaining || '', 10);
+            if (!Number.isNaN(quotaRem) && quotaRem <= 0) {
+                setStatus('سهمیه بررسی امروز تمام شده است.', 'is-error');
+                return;
+            }
             const text = (input?.value || '').trim();
             if (!text) {
                 setStatus('یک جمله بنویسید.', 'is-error');
@@ -754,7 +818,15 @@
 
         parseBtn?.addEventListener('click', runParse);
 
-        input?.addEventListener('input', autoGrowInput);
+        function syncInputState() {
+            const has = !!(input && (input.value || '').trim());
+            root.classList.toggle('is-has-input', has);
+        }
+
+        input?.addEventListener('input', () => {
+            autoGrowInput();
+            syncInputState();
+        });
         input?.addEventListener('keydown', (ev) => {
             if ((ev.ctrlKey || ev.metaKey) && ev.key === 'Enter') {
                 ev.preventDefault();
@@ -768,8 +840,12 @@
                 if (input) {
                     input.value = sample;
                     autoGrowInput();
+                    syncInputState();
                     input.focus();
                 }
+                root.querySelectorAll('.crm-nl-command__chip').forEach((c) => {
+                    c.classList.toggle('is-active', c === chip);
+                });
                 highlightChips(false);
             });
         });
@@ -843,7 +919,17 @@
 
         cancelBtn?.addEventListener('click', resetAll);
 
+        const qRem = parseInt(root.dataset.quotaRemaining || '', 10);
+        if (!Number.isNaN(qRem) && qRem <= 2) {
+            root.classList.add('is-quota-low');
+        }
+        if (!Number.isNaN(qRem) && qRem <= 0) {
+            root.classList.add('is-quota-empty');
+            if (parseBtn) parseBtn.disabled = true;
+        }
+
         autoGrowInput();
+        syncInputState();
         setAiModel(null);
     }
 

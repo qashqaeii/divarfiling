@@ -16,7 +16,8 @@ SMART_COMMAND_PROFILES: Dict[str, Dict[str, Any]] = {
         'allowed_intent': 'create_reminder',
         'context': 'today',
         'title': 'ثبت سریع یادآوری',
-        'subtitle': '',
+        'subtitle': 'زمان و مخاطب را با یک جمله بگو',
+        'spark_icon': 'fa-bell',
         'placeholder': 'مثلاً: فردا ساعت ۱۰ یادم بنداز به احمدی زنگ بزنم',
         'wrong_intent_message': 'این بخش برای ثبت یادآوری است.',
         'enable_contact_resolve': True,
@@ -33,6 +34,7 @@ SMART_COMMAND_PROFILES: Dict[str, Dict[str, Any]] = {
         'placeholder': 'مثلاً: احمدی، 0912...، خریدار پونک با بودجه تا ۱۲ میلیارد',
         'wrong_intent_message': 'این بخش برای ثبت مخاطب است.',
         'enable_contact_resolve': False,
+        'spark_icon': 'fa-user-plus',
         'examples': _examples([
             ('ذخیره با شماره', 'احمدی رو با شماره ۰۹۱۲۱۲۳۴۵۶۷ ذخیره کن'),
             ('سرنخ محله', 'یه مشتری دارم حسینی دنبال پونکه'),
@@ -47,6 +49,7 @@ SMART_COMMAND_PROFILES: Dict[str, Dict[str, Any]] = {
         'placeholder': 'مثلاً: پونک، ۱۲۰ متر، دو خواب، فروش ۱۲ میلیارد',
         'wrong_intent_message': 'این بخش برای ثبت فایل شخصی است.',
         'enable_contact_resolve': False,
+        'spark_icon': 'fa-building',
         'examples': _examples([
             ('فروش', 'پونک ۱۲۰ متر دو خواب فروش ۱۲ میلیارد'),
             ('اجاره', 'صادقیه ۸۰ متر، ۵۰۰ میلیون ودیعه و ۲۵ میلیون اجاره'),
@@ -69,6 +72,7 @@ def inject_smart_command_context(ctx: Dict[str, Any], request, profile: str) -> 
     spec = dict(SMART_COMMAND_PROFILES.get(profile) or {})
     if not spec:
         return
+    spec.setdefault('spark_icon', 'fa-sparkles')
 
     primary_model = (getattr(settings, 'ARVAN_AI_MODEL', '') or '').strip()
     spec.update({

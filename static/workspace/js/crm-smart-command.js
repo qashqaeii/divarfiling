@@ -106,6 +106,7 @@
         const contactRows = readyStep?.querySelectorAll('.crm-nl-command__sheet-contact');
         const propertyRows = readyStep?.querySelectorAll('.crm-nl-command__sheet-property');
         const contactNoteRow = readyStep?.querySelector('[data-contact-note-row]');
+        const contactSectionsEl = readyStep?.querySelector('[data-sc="contact-sections"]');
         const propertyNoteRow = readyStep?.querySelector('[data-property-note-row]');
         const propertyFeaturesRow = readyStep?.querySelector('[data-property-features-row]');
         const propertySaleRow = readyStep?.querySelector('[data-property-sale-row]');
@@ -429,22 +430,54 @@
                 return;
             }
             if (intent === 'create_contact' || currentIntent === 'create_contact') {
-                const contactFields = [
-                    'name', 'phone_display', 'customer_type', 'areas_display',
-                    'area_range_display', 'budget_display', 'rooms_display', 'notes',
-                ];
-                contactFields.forEach((key) => {
-                    const el = readyStep.querySelector('[data-field="' + key + '"]');
-                    if (!el) return;
-                    const val = (p[key] || '').trim();
-                    const row = el.closest('.crm-nl-command__sheet-contact');
-                    if (row && !row.hasAttribute('data-contact-note-row')) {
-                        row.hidden = !val;
+                const sections = p.sections || [];
+                if (contactSectionsEl && sections.length) {
+                    contactSectionsEl.hidden = false;
+                    contactSectionsEl.innerHTML = '';
+                    contactRows?.forEach((row) => {
+                        row.hidden = true;
+                    });
+                    if (contactNoteRow) contactNoteRow.hidden = true;
+                    sections.forEach((sec) => {
+                        const block = document.createElement('div');
+                        block.className = 'crm-nl-command__contact-block';
+                        const title = (sec.title || '').trim();
+                        if (title) {
+                            const titleEl = document.createElement('p');
+                            titleEl.className = 'crm-nl-command__contact-block-title';
+                            titleEl.textContent = title;
+                            block.appendChild(titleEl);
+                        }
+                        (sec.lines || []).forEach((line) => {
+                            const lineEl = document.createElement('p');
+                            lineEl.className = 'crm-nl-command__contact-block-line';
+                            lineEl.textContent = line;
+                            block.appendChild(lineEl);
+                        });
+                        contactSectionsEl.appendChild(block);
+                    });
+                } else {
+                    if (contactSectionsEl) {
+                        contactSectionsEl.hidden = true;
+                        contactSectionsEl.innerHTML = '';
                     }
-                    el.textContent = val || '—';
-                });
-                const notesText = (p.notes || '').trim();
-                if (contactNoteRow) contactNoteRow.hidden = !notesText;
+                    const contactFields = [
+                        'name', 'phone_display', 'customer_type', 'areas_display',
+                        'area_range_display', 'budget_display', 'rooms_display', 'notes',
+                    ];
+                    contactFields.forEach((key) => {
+                        const el = readyStep.querySelector('[data-field="' + key + '"]');
+                        if (!el) return;
+                        const val = (p[key] || '').trim();
+                        const row = el.closest('.crm-nl-command__sheet-contact');
+                        if (row && !row.hasAttribute('data-contact-note-row')) {
+                            row.hidden = !val;
+                        }
+                        if (val) el.textContent = val;
+                    });
+                    const notesText = (p.notes || '').trim();
+                    if (contactNoteRow) contactNoteRow.hidden = !notesText;
+                }
                 fillPreviewSummary(p, 'create_contact');
                 return;
             }

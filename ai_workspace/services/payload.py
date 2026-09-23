@@ -177,20 +177,31 @@ def _nullable_float(value: Any) -> Optional[float]:
 
 def _normalize_contact_preferences(inner: Dict[str, Any]) -> Dict[str, Any]:
     prefs = inner.get('preferences') if isinstance(inner.get('preferences'), dict) else {}
-    areas_raw = prefs.get('areas') if prefs.get('areas') is not None else inner.get('areas')
+    areas_raw = prefs.get('areas')
+    if areas_raw is None:
+        areas_raw = inner.get('areas')
     if isinstance(areas_raw, list):
-        areas = ', '.join(str(x).strip() for x in areas_raw if str(x).strip()) or None
+        areas = [str(x).strip() for x in areas_raw if str(x).strip()] or None
     else:
         areas = _nullable_str(areas_raw)
-    rooms_raw = prefs.get('rooms') if prefs.get('rooms') is not None else inner.get('rooms')
+    amenities = prefs.get('required_amenities')
+    if isinstance(amenities, list):
+        amenities_norm = [str(x).strip() for x in amenities if str(x).strip()] or None
+    else:
+        amenities_norm = amenities
+    rooms_raw = prefs.get('rooms')
     rooms = _nullable_str(rooms_raw) if rooms_raw is not None else None
-    if rooms is None and prefs.get('rooms') is not None:
-        rooms = str(prefs.get('rooms')).strip() or None
     return {
         'areas': areas,
         'property_type': _nullable_str(prefs.get('property_type')),
-        'min_area': _nullable_int(prefs.get('min_area')),
-        'max_area': _nullable_int(prefs.get('max_area')),
+        'min_area': _nullable_int(prefs.get('min_area') if prefs.get('min_area') is not None else prefs.get('area_min')),
+        'max_area': _nullable_int(prefs.get('max_area') if prefs.get('max_area') is not None else prefs.get('area_max')),
+        'rooms_min': _nullable_int(prefs.get('rooms_min')),
+        'rooms_max': _nullable_int(prefs.get('rooms_max')),
+        'year_min': _nullable_int(prefs.get('year_min') if prefs.get('year_min') is not None else prefs.get('build_year_min')),
+        'year_max': _nullable_int(prefs.get('year_max') if prefs.get('year_max') is not None else prefs.get('build_year_max')),
+        'floor_min': _nullable_int(prefs.get('floor_min')),
+        'floor_max': _nullable_int(prefs.get('floor_max')),
         'budget_min': _nullable_int(prefs.get('budget_min')),
         'budget_max': _nullable_int(prefs.get('budget_max')),
         'deposit_min': _nullable_int(prefs.get('deposit_min')),
@@ -198,6 +209,7 @@ def _normalize_contact_preferences(inner: Dict[str, Any]) -> Dict[str, Any]:
         'rent_min': _nullable_int(prefs.get('rent_min')),
         'rent_max': _nullable_int(prefs.get('rent_max')),
         'rooms': rooms,
+        'required_amenities': amenities_norm,
     }
 
 
@@ -259,14 +271,72 @@ def _normalize_property_data(inner: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
+def _normalize_contact_subgroup(inner: Dict[str, Any], key: str) -> Dict[str, Any]:
+    block = inner.get(key)
+    return dict(block) if isinstance(block, dict) else {}
+
+
 def _normalize_contact_data(inner: Dict[str, Any]) -> Dict[str, Any]:
+    contact = _normalize_contact_subgroup(inner, 'contact')
+    location = _normalize_contact_subgroup(inner, 'location')
+    profile = _normalize_contact_subgroup(inner, 'profile')
+    financial = _normalize_contact_subgroup(inner, 'financial')
+    crm = _normalize_contact_subgroup(inner, 'crm')
     prefs = _normalize_contact_preferences(inner)
+
+    phone = _nullable_str(inner.get('phone'))
+    if phone is None:
+        phone = _nullable_str(contact.get('phone'))
+
+    source = _nullable_str(inner.get('source'))
+    if source is None:
+        source = _nullable_str(crm.get('source'))
+
+    tags = crm.get('tags')
+    if isinstance(tags, list):
+        tags_norm = [str(x).strip() for x in tags if str(x).strip()] or None
+    else:
+        tags_norm = _nullable_str(tags)
+
     return {
         'name': _nullable_str(inner.get('name')),
-        'phone': _nullable_str(inner.get('phone')),
+        'phone': phone,
         'customer_type': _nullable_str(inner.get('customer_type')),
-        'source': _nullable_str(inner.get('source')),
+        'source': source,
+        'contact': {
+            'phone': phone,
+            'phone_alt': _nullable_str(contact.get('phone_alt')),
+            'email': _nullable_str(contact.get('email')),
+        },
+        'location': {
+            'city': _nullable_str(location.get('city')),
+            'district': _nullable_str(location.get('district')),
+        },
+        'profile': {
+            'job': _nullable_str(profile.get('job')),
+            'is_legal_entity': _nullable_bool(profile.get('is_legal_entity')),
+            'company_name': _nullable_str(profile.get('company_name')),
+        },
+        'financial': {
+            'budget_min': _nullable_int(financial.get('budget_min')),
+            'budget_max': _nullable_int(financial.get('budget_max')),
+            'deposit_min': _nullable_int(financial.get('deposit_min')),
+            'deposit_max': _nullable_int(financial.get('deposit_max')),
+            'rent_min': _nullable_int(financial.get('rent_min')),
+            'rent_max': _nullable_int(financial.get('rent_max')),
+        },
         'preferences': prefs,
+        'crm': {
+            'status': _nullable_str(crm.get('status')),
+            'priority': _nullable_str(crm.get('priority')),
+            'source': source,
+            'next_followup_date_text': _nullable_str(
+                crm.get('next_followup_date_text')
+                if crm.get('next_followup_date_text') is not None
+                else crm.get('next_followup')
+            ),
+            'tags': tags_norm,
+        },
         'notes': _nullable_str(inner.get('notes')),
     }
 

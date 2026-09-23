@@ -247,49 +247,99 @@ def create_quick_lead(user, data: Dict[str, Any]) -> Customer:
     return customer
 
 
-def create_customer_from_nl(user, data: Dict[str, Any]) -> Customer:
-    """ثبت مخاطب از فرمان هوشمند — فیلدهای CRM موجود."""
-    from workspace.constants import CRM_PROPERTIES, CRM_SOURCES, CRM_TYPES
+_NL_CUSTOMER_ALLOWED = frozenset({
+    'name', 'phone', 'phone_alt', 'email', 'city', 'district', 'job',
+    'is_legal_entity', 'company_name',
+    'customer_type', 'status', 'priority', 'source', 'property_type',
+    'budget_min', 'budget_max', 'deposit_min', 'deposit_max', 'rent_min', 'rent_max',
+    'min_area', 'max_area', 'rooms_min', 'rooms_max', 'year_min', 'year_max',
+    'floor_min', 'floor_max', 'areas', 'rooms',
+    'want_parking', 'want_storage', 'want_elevator',
+    'tags', 'notes', 'next_follow_up',
+})
 
-    name = (data.get('name') or '').strip()
+
+def create_customer_from_nl(user, data: Dict[str, Any]) -> Customer:
+    """ثبت مخاطب از فرمان هوشمند — فیلدهای CRM موجود (whitelist)."""
+    from workspace.constants import CRM_PRIORITIES, CRM_PROPERTIES, CRM_SOURCES, CRM_STATUSES, CRM_TYPES
+
+    payload = {k: v for k, v in (data or {}).items() if k in _NL_CUSTOMER_ALLOWED}
+
+    name = (payload.get('name') or '').strip()
     if not name:
         raise ValueError('نام الزامی است.')
-    phone = normalize_phone(data.get('phone') or '')
+    phone = normalize_phone(payload.get('phone') or '')
+    phone_alt = normalize_phone(payload.get('phone_alt') or '')
 
-    customer_type = (data.get('customer_type') or 'خریدار').strip()
+    customer_type = (payload.get('customer_type') or 'خریدار').strip()
     if customer_type not in CRM_TYPES:
         customer_type = 'خریدار'
 
-    source = (data.get('source') or '').strip()[:30]
+    status = (payload.get('status') or 'جدید').strip() or 'جدید'
+    if status not in CRM_STATUSES:
+        status = 'جدید'
+
+    priority = (payload.get('priority') or 'متوسط').strip() or 'متوسط'
+    if priority not in CRM_PRIORITIES:
+        priority = 'متوسط'
+
+    source = (payload.get('source') or '').strip()[:30]
     valid_sources = set(CRM_SOURCES)
     if source and source not in valid_sources:
         source = ''
 
-    property_type = (data.get('property_type') or '').strip()
+    property_type = (payload.get('property_type') or '').strip()
     if property_type and property_type not in CRM_PROPERTIES:
         property_type = ''
+
+    rooms = (payload.get('rooms') or '').strip()
+    rmin, rmax = payload.get('rooms_min'), payload.get('rooms_max')
+    if rmin is not None and rmax is not None:
+        rooms = f'{rmin}-{rmax}' if rmin != rmax else str(rmin)
+    elif rmin is not None:
+        rooms = str(rmin)
+    elif rmax is not None:
+        rooms = str(rmax)
 
     customer = Customer(
         user=user,
         agency=get_agency(user),
         name=name,
         phone=phone,
+        phone_alt=phone_alt,
+        email=(payload.get('email') or '').strip(),
+        city=(payload.get('city') or '').strip()[:100],
+        district=(payload.get('district') or '').strip()[:100],
+        job=(payload.get('job') or '').strip()[:120],
+        is_legal_entity=bool(payload.get('is_legal_entity')) if payload.get('is_legal_entity') is not None else False,
+        company_name=(payload.get('company_name') or '').strip()[:200],
         customer_type=customer_type,
-        status=(data.get('status') or 'جدید').strip() or 'جدید',
-        priority=(data.get('priority') or 'متوسط').strip() or 'متوسط',
+        status=status,
+        priority=priority,
         source=source,
         property_type=property_type,
-        areas=(data.get('areas') or '').strip(),
-        min_area=data.get('min_area'),
-        max_area=data.get('max_area'),
-        budget_min=data.get('budget_min'),
-        budget_max=data.get('budget_max'),
-        deposit_min=data.get('deposit_min'),
-        deposit_max=data.get('deposit_max'),
-        rent_min=data.get('rent_min'),
-        rent_max=data.get('rent_max'),
-        rooms=(data.get('rooms') or '').strip(),
-        notes=(data.get('notes') or '').strip(),
+        areas=(payload.get('areas') or '').strip(),
+        min_area=payload.get('min_area'),
+        max_area=payload.get('max_area'),
+        budget_min=payload.get('budget_min'),
+        budget_max=payload.get('budget_max'),
+        deposit_min=payload.get('deposit_min'),
+        deposit_max=payload.get('deposit_max'),
+        rent_min=payload.get('rent_min'),
+        rent_max=payload.get('rent_max'),
+        rooms_min=rmin,
+        rooms_max=rmax,
+        rooms=rooms,
+        year_min=payload.get('year_min'),
+        year_max=payload.get('year_max'),
+        floor_min=payload.get('floor_min'),
+        floor_max=payload.get('floor_max'),
+        want_parking=bool(payload.get('want_parking')),
+        want_storage=bool(payload.get('want_storage')),
+        want_elevator=bool(payload.get('want_elevator')),
+        tags=(payload.get('tags') or '').strip()[:500],
+        notes=(payload.get('notes') or '').strip(),
+        next_follow_up=payload.get('next_follow_up'),
     )
     customer.save()
     log_activity(customer, 'یادداشت', content='ثبت از فرمان هوشمند', title='ثبت مخاطب')

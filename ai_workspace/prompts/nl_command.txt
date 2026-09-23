@@ -15,11 +15,18 @@ create_reminder — وقتی کاربر یادآوری/تماس/پیگیری د�
 
 create_contact — وقتی کاربر مخاطب/مشتری/سرنخ جدید می‌خواهد ثبت یا ذخیره کند:
 - مثال: «یه مشتری دارم حسینی دنبال پونکه»، «خانم احمدی رو با شماره ۰۹۱۲… ذخیره کن»
+- فقط آنچه در متن است را پر کن؛ status/priority/property_type/budget/rooms/امکانات را حدس نزن.
 - customer_type مجاز: خریدار، فروشنده، سازنده، مالک، مستاجر، موجر، سرمایه‌گذار، سرنخ، متقاضی خرید، متقاضی اجاره، فروشنده ملک، اشخاص حقوقی
+- status مجاز: جدید، در حال پیگیری، بازدید انجام شد، قرارداد، بایگانی — فقط اگر کاربر صریح گفت
+- priority مجاز: بالا، متوسط، پایین — فقط اگر کاربر صریح گفت
 - source مجاز: دیوار، معرف، ورود به املاک، تماس ورودی، اینستاگرام، سایت، تلگرام، موبایل، سایر
 - property_type مجاز: آپارتمان، ویلا، کلنگی، اداری، مغازه، زمین، سایر
-- areas: نام محله‌ها (رشته یا لیست کوتاه)
-- اگر شماره در متن نیست phone=null (missing_fields را خودت پر نکن مگر در schema خالی بماند)
+- areas / محله: لیست نام محله‌ها (مثلاً ["سعادت آباد","پونک"])
+- required_amenities: فقط اگر الزام قطعی است — parking، storage، elevator (یا پارکینگ، انباری، آسانسور)
+- «اگه آسانسور داشت بهتره» → required_amenities نه
+- national_id و شبکه‌های اجتماعی را استخراج نکن
+- next_followup_date_text: عبارت خام تاریخ فارسی (مثلاً «پس‌فردا») فقط اگر کاربر پیگیری بعدی خواست
+- اگر شماره در متن نیست phone=null
 
 create_personal_property — وقتی کاربر فایل شخصی / ملک CRM خودش را می‌خواهد ثبت کند:
 - مثال: «یه آپارتمان ۱۲۰ متری پونک برای فروش ۱۲ میلیارد»، «صادقیه ۸۰ متر ۵۰۰ میلیون ودیعه ۲۵ میلیون اجاره»
@@ -56,21 +63,48 @@ Schema create_contact:
   "confidence": 0.0,
   "data": {
     "name": null,
-    "phone": null,
     "customer_type": null,
-    "source": null,
-    "preferences": {
-      "areas": null,
-      "property_type": null,
-      "min_area": null,
-      "max_area": null,
+    "contact": {
+      "phone": null,
+      "phone_alt": null,
+      "email": null
+    },
+    "location": {
+      "city": null,
+      "district": null
+    },
+    "profile": {
+      "job": null,
+      "is_legal_entity": null,
+      "company_name": null
+    },
+    "financial": {
       "budget_min": null,
       "budget_max": null,
       "deposit_min": null,
       "deposit_max": null,
       "rent_min": null,
-      "rent_max": null,
-      "rooms": null
+      "rent_max": null
+    },
+    "preferences": {
+      "property_type": null,
+      "rooms_min": null,
+      "rooms_max": null,
+      "min_area": null,
+      "max_area": null,
+      "year_min": null,
+      "year_max": null,
+      "floor_min": null,
+      "floor_max": null,
+      "areas": null,
+      "required_amenities": null
+    },
+    "crm": {
+      "status": null,
+      "priority": null,
+      "source": null,
+      "next_followup_date_text": null,
+      "tags": null
     },
     "notes": null
   },

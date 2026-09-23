@@ -7,7 +7,7 @@ from django.urls import reverse
 
 from ai_workspace.services.nl_command.errors import NLCommandError
 from ai_workspace.services.nl_command.state import save_state
-from ai_workspace.services.nl_command.validators import validate_contact_parse
+from ai_workspace.services.nl_command.validators import validate_contact_parse, validated_as_llm_shape
 from mobile_api.services.crm_service import create_customer_from_nl
 from workspace.services.crm import find_customer_by_phone
 
@@ -30,10 +30,13 @@ def confirm_create_contact(user, command_id: str, state: Dict[str, Any]) -> Dict
         }
 
     validated = dict(state.get('validated') or {})
+    prior_explicit = list(validated.get('_explicit_fields') or [])
     revalidated, missing, ambiguous, _err = validate_contact_parse(
-        _validated_as_llm_shape(validated),
+        validated_as_llm_shape(validated),
         llm_missing=[],
         llm_ambiguous=[],
+        user=user,
+        prior_explicit=prior_explicit,
     )
     if missing or ambiguous or not revalidated.get('name'):
         raise NLCommandError('اطلاعات مخاطب کامل یا معتبر نیست.', code='invalid_contact')
@@ -65,27 +68,3 @@ def check_phone_duplicate(user, phone: str):
     if not phone:
         return None
     return find_customer_by_phone(user, phone)
-
-
-def _validated_as_llm_shape(validated: Dict[str, Any]) -> Dict[str, Any]:
-    prefs = {
-        'areas': validated.get('areas'),
-        'property_type': validated.get('property_type'),
-        'min_area': validated.get('min_area'),
-        'max_area': validated.get('max_area'),
-        'budget_min': validated.get('budget_min'),
-        'budget_max': validated.get('budget_max'),
-        'deposit_min': validated.get('deposit_min'),
-        'deposit_max': validated.get('deposit_max'),
-        'rent_min': validated.get('rent_min'),
-        'rent_max': validated.get('rent_max'),
-        'rooms': validated.get('rooms'),
-    }
-    return {
-        'name': validated.get('name'),
-        'phone': validated.get('phone'),
-        'customer_type': validated.get('customer_type'),
-        'source': validated.get('source'),
-        'notes': validated.get('notes'),
-        'preferences': prefs,
-    }

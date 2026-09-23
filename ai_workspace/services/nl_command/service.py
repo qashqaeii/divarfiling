@@ -32,7 +32,11 @@ from ai_workspace.services.nl_command.preview import (
     existing_contact_payload,
 )
 from ai_workspace.services.nl_command.state import load_state, new_command_id, save_state, text_hash
-from ai_workspace.services.nl_command.validators import hint_for_incomplete_contact, validate_contact_parse
+from ai_workspace.services.nl_command.validators import (
+    hint_for_incomplete_contact,
+    inner_from_validated,
+    validate_contact_parse,
+)
 from ai_workspace.services.nl_command.validators_property import (
     hint_for_incomplete_property,
     validate_property_parse,
@@ -138,13 +142,22 @@ def _merge_property_validated(existing: Dict[str, Any], new: Dict[str, Any]) -> 
 
 def _merge_contact_validated(existing: Dict[str, Any], new: Dict[str, Any]) -> Dict[str, Any]:
     merged = dict(existing)
+    explicit = set(existing.get('_explicit_fields') or [])
+    explicit.update(new.get('_explicit_fields') or [])
+    range_keys = (
+        'min_area', 'max_area', 'budget_min', 'budget_max', 'deposit_min', 'deposit_max',
+        'rent_min', 'rent_max', 'rooms_min', 'rooms_max', 'year_min', 'year_max',
+        'floor_min', 'floor_max',
+    )
     for key, value in new.items():
+        if key == '_explicit_fields':
+            continue
         if value is None or value == '':
             continue
-        if key in ('min_area', 'max_area', 'budget_min', 'budget_max', 'deposit_min', 'deposit_max',
-                   'rent_min', 'rent_max') and merged.get(key) is not None:
+        if key in range_keys and merged.get(key) is not None:
             continue
         merged[key] = value
+    merged['_explicit_fields'] = sorted(explicit)
     return merged
 
 
@@ -167,14 +180,19 @@ def _parse_create_contact(
         inner,
         llm_missing=missing_fields,
         llm_ambiguous=ambiguous_fields,
+        user=user,
+        tz_name=tz_name,
     )
 
     if prior_state and prior_state.get('intent') == NL_COMMAND_INTENT_CREATE_CONTACT:
         validated = _merge_contact_validated(prior_state.get('validated') or {}, validated)
         validated, missing_fields, ambiguous_fields, field_error = validate_contact_parse(
-            _inner_from_validated(validated),
+            inner_from_validated(validated),
             llm_missing=missing_fields,
             llm_ambiguous=ambiguous_fields,
+            user=user,
+            tz_name=tz_name,
+            prior_explicit=validated.get('_explicit_fields'),
         )
 
     duplicate_contact = False
@@ -248,29 +266,6 @@ def _parse_create_contact(
             hint = f'شماره تماس {validated.get("name")} را وارد کنید.'
         response['hint'] = hint
     return response
-
-
-def _inner_from_validated(validated: Dict[str, Any]) -> Dict[str, Any]:
-    return {
-        'name': validated.get('name'),
-        'phone': validated.get('phone'),
-        'customer_type': validated.get('customer_type'),
-        'source': validated.get('source'),
-        'notes': validated.get('notes'),
-        'preferences': {
-            'areas': validated.get('areas'),
-            'property_type': validated.get('property_type'),
-            'min_area': validated.get('min_area'),
-            'max_area': validated.get('max_area'),
-            'budget_min': validated.get('budget_min'),
-            'budget_max': validated.get('budget_max'),
-            'deposit_min': validated.get('deposit_min'),
-            'deposit_max': validated.get('deposit_max'),
-            'rent_min': validated.get('rent_min'),
-            'rent_max': validated.get('rent_max'),
-            'rooms': validated.get('rooms'),
-        },
-    }
 
 
 def _parse_create_personal_property(

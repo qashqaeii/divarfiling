@@ -1,17 +1,41 @@
-/* CRM Today — Smart command bar (scoped under .crm-today-pro) */
-.crm-today-pro .crm-nl-command {
+/* Smart command — shared (Today, Contacts, Properties) */
+.crm-smart-command-wrap {
+    width: 100%;
+    margin: 0 0 1rem;
+}
+
+.crm-smart-command {
     --nl-font: 'Vazirmatn', 'Vazir', system-ui, sans-serif;
     position: relative;
-    margin: 0.35rem 0 1rem;
+    margin: 0;
     padding: 1rem 1rem 1.05rem;
-    border-radius: 15px;
+    border-radius: 16px;
     font-family: var(--nl-font);
     background: var(--ws-surface, #fff);
     border: 1px solid var(--ws-border, #e8ecf1);
     box-shadow: 0 12px 32px -28px rgba(15, 23, 42, 0.18);
+    text-align: start;
 }
 
-.crm-today-pro .crm-nl-command__head {
+.crm-smart-command::before {
+    content: '';
+    position: absolute;
+    inset-inline: 1.25rem;
+    top: 0;
+    height: 2px;
+    border-radius: 0 0 3px 3px;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        color-mix(in srgb, var(--ws-primary) 42%, transparent) 45%,
+        color-mix(in srgb, var(--ws-primary) 42%, transparent) 55%,
+        transparent
+    );
+    pointer-events: none;
+    opacity: 0.85;
+}
+
+.crm-smart-command .crm-nl-command__head {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
@@ -19,14 +43,14 @@
     margin-bottom: 0.85rem;
 }
 
-.crm-today-pro .crm-nl-command__brand {
+.crm-smart-command .crm-nl-command__brand {
     display: flex;
     align-items: flex-start;
     gap: 0.55rem;
     min-width: 0;
 }
 
-.crm-today-pro .crm-nl-command__spark {
+.crm-smart-command .crm-nl-command__spark {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -39,7 +63,7 @@
     flex-shrink: 0;
 }
 
-.crm-today-pro .crm-nl-command__title {
+.crm-smart-command .crm-nl-command__title {
     margin: 0;
     font-size: 0.95rem;
     font-weight: 800;
@@ -48,7 +72,7 @@
     color: var(--ws-text);
 }
 
-.crm-today-pro .crm-nl-command__sub {
+.crm-smart-command .crm-nl-command__sub {
     margin: 0.2rem 0 0;
     font-size: 0.72rem;
     font-weight: 500;
@@ -56,14 +80,14 @@
     line-height: 1.4;
 }
 
-.crm-today-pro .crm-nl-command__head-meta {
+.crm-smart-command .crm-nl-command__head-meta {
     display: flex;
     align-items: center;
     gap: 0.35rem;
     flex-shrink: 0;
 }
 
-.crm-today-pro .crm-nl-command__info {
+.crm-smart-command .crm-nl-command__info {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -78,12 +102,12 @@
     font-size: 0.85rem;
 }
 
-.crm-today-pro .crm-nl-command__info:hover {
+.crm-smart-command .crm-nl-command__info:hover {
     color: var(--ws-primary);
     background: color-mix(in srgb, var(--ws-primary) 6%, transparent);
 }
 
-.crm-today-pro .crm-nl-command__quota {
+.crm-smart-command .crm-nl-command__quota {
     font-size: 0.68rem;
     font-weight: 700;
     font-variant-numeric: tabular-nums;
@@ -94,12 +118,12 @@
     background: var(--ws-surface);
 }
 
-.crm-today-pro .crm-nl-command__quota-sep {
+.crm-smart-command .crm-nl-command__quota-sep {
     opacity: 0.4;
     margin-inline: 0.1rem;
 }
 
-.crm-today-pro .crm-nl-command__row {
+.crm-smart-command .crm-nl-command__row {
     display: flex;
     align-items: stretch;
     gap: 0;
@@ -111,14 +135,15 @@
     transition: border-color 0.15s, box-shadow 0.15s;
 }
 
-.crm-today-pro .crm-nl-command__row:focus-within {
+.crm-smart-command .crm-nl-command__row:focus-within {
     border-color: color-mix(in srgb, var(--ws-primary) 45%, var(--ws-border));
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--ws-primary) 12%, transparent);
 }
 
-.crm-today-pro .crm-nl-command__input {
+.crm-smart-command .crm-nl-command__input {
     flex: 1;
     min-width: 0;
+    width: 100%;
     min-height: 2.5rem;
     max-height: 4.75rem;
     padding: 0.45rem 0.35rem;
@@ -129,20 +154,22 @@
     font-weight: 500;
     line-height: 1.55;
     color: var(--ws-text);
+    text-align: start;
     resize: none;
     overflow-y: auto;
+    box-shadow: none;
 }
 
-.crm-today-pro .crm-nl-command__input:focus {
+.crm-smart-command .crm-nl-command__input:focus {
     outline: none;
 }
 
-.crm-today-pro .crm-nl-command__input::placeholder {
+.crm-smart-command .crm-nl-command__input::placeholder {
     color: color-mix(in srgb, var(--ws-text-muted) 80%, transparent);
     font-weight: 400;
 }
 
-.crm-today-pro .crm-nl-command__parse {
+.crm-smart-command .crm-nl-command__parse {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -162,12 +189,12 @@
     transition: opacity 0.12s;
 }
 
-.crm-today-pro .crm-nl-command__parse:disabled {
+.crm-smart-command .crm-nl-command__parse:disabled {
     opacity: 0.72;
     cursor: wait;
 }
 
-.crm-today-pro .crm-nl-command__parse-spinner {
+.crm-smart-command .crm-nl-command__parse-spinner {
     display: none;
     width: 0.85rem;
     height: 0.85rem;
@@ -177,15 +204,15 @@
     animation: crm-nl-spin 0.65s linear infinite;
 }
 
-.crm-today-pro .crm-nl-command.is-loading .crm-nl-command__parse-spinner {
+.crm-smart-command.is-loading .crm-nl-command__parse-spinner {
     display: block;
 }
 
-.crm-today-pro .crm-nl-command.is-loading .crm-nl-command__parse-icon {
+.crm-smart-command.is-loading .crm-nl-command__parse-icon {
     display: none;
 }
 
-.crm-today-pro .crm-nl-command__parse-icon {
+.crm-smart-command .crm-nl-command__parse-icon {
     font-size: 0.65rem;
     opacity: 0.9;
 }
@@ -194,7 +221,7 @@
     to { transform: rotate(360deg); }
 }
 
-.crm-today-pro .crm-nl-command__chips {
+.crm-smart-command .crm-nl-command__chips {
     display: flex;
     flex-wrap: nowrap;
     gap: 0.35rem;
@@ -204,11 +231,11 @@
     scrollbar-width: none;
 }
 
-.crm-today-pro .crm-nl-command__chips::-webkit-scrollbar {
+.crm-smart-command .crm-nl-command__chips::-webkit-scrollbar {
     display: none;
 }
 
-.crm-today-pro .crm-nl-command__chip {
+.crm-smart-command .crm-nl-command__chip {
     flex-shrink: 0;
     border: 1px solid var(--ws-border, #e2e8f0);
     background: transparent;
@@ -222,34 +249,34 @@
     transition: background 0.12s, border-color 0.12s;
 }
 
-.crm-today-pro .crm-nl-command__chip:hover {
+.crm-smart-command .crm-nl-command__chip:hover {
     border-color: color-mix(in srgb, var(--ws-primary) 25%, var(--ws-border));
     background: color-mix(in srgb, var(--ws-primary) 5%, var(--ws-surface));
 }
 
-.crm-today-pro .crm-nl-command__chips.is-suggested .crm-nl-command__chip {
+.crm-smart-command .crm-nl-command__chips.is-suggested .crm-nl-command__chip {
     border-color: color-mix(in srgb, var(--ws-primary) 30%, var(--ws-border));
 }
 
-.crm-today-pro .crm-nl-command__feedback {
+.crm-smart-command .crm-nl-command__feedback {
     margin-top: 0.55rem;
     font-size: 0.74rem;
     line-height: 1.55;
     color: var(--ws-text-secondary);
 }
 
-.crm-today-pro .crm-nl-command__feedback.is-error { color: #b91c1c; }
-.crm-today-pro .crm-nl-command__feedback.is-warn { color: #b45309; }
-.crm-today-pro .crm-nl-command__feedback.is-success { color: #047857; }
-.crm-today-pro .crm-nl-command__feedback.is-info { color: var(--ws-text-secondary); }
+.crm-smart-command .crm-nl-command__feedback.is-error { color: #b91c1c; }
+.crm-smart-command .crm-nl-command__feedback.is-warn { color: #b45309; }
+.crm-smart-command .crm-nl-command__feedback.is-success { color: #047857; }
+.crm-smart-command .crm-nl-command__feedback.is-info { color: var(--ws-text-secondary); }
 
-.crm-today-pro .crm-nl-command__feedback-hint {
+.crm-smart-command .crm-nl-command__feedback-hint {
     margin: 0.35rem 0 0;
     font-size: 0.72rem;
     color: var(--ws-text-muted);
 }
 
-.crm-today-pro .crm-nl-command__feedback-action {
+.crm-smart-command .crm-nl-command__feedback-action {
     display: inline-flex;
     margin-top: 0.45rem;
     padding: 0;
@@ -264,7 +291,7 @@
     text-underline-offset: 3px;
 }
 
-.crm-today-pro .crm-nl-command__panel {
+.crm-smart-command .crm-nl-command__panel {
     margin-top: 0.75rem;
     padding: 0.85rem 0.9rem;
     border-radius: 12px;
@@ -278,7 +305,7 @@
     to { opacity: 1; transform: translateY(0); }
 }
 
-.crm-today-pro .crm-nl-command__panel-title {
+.crm-smart-command .crm-nl-command__panel-title {
     display: flex;
     align-items: center;
     gap: 0.4rem;
@@ -288,12 +315,12 @@
     color: var(--ws-text);
 }
 
-.crm-today-pro .crm-nl-command__panel-check {
+.crm-smart-command .crm-nl-command__panel-check {
     color: #047857;
     font-size: 0.75rem;
 }
 
-.crm-today-pro .crm-nl-command__ambig-title {
+.crm-smart-command .crm-nl-command__ambig-title {
     margin: 0 0 0.35rem;
     font-size: 0.82rem;
     font-weight: 800;
@@ -301,7 +328,7 @@
     line-height: 1.35;
 }
 
-.crm-today-pro .crm-nl-command__ambig-lede {
+.crm-smart-command .crm-nl-command__ambig-lede {
     margin: 0 0 0.65rem;
     font-size: 0.72rem;
     font-weight: 500;
@@ -309,14 +336,14 @@
     line-height: 1.45;
 }
 
-.crm-today-pro .crm-nl-command__ambig-foot {
+.crm-smart-command .crm-nl-command__ambig-foot {
     display: flex;
     justify-content: flex-end;
     margin-top: 0.75rem;
     padding-top: 0.15rem;
 }
 
-.crm-today-pro .crm-nl-command__sheet {
+.crm-smart-command .crm-nl-command__sheet {
     margin: 0;
     display: grid;
     grid-template-columns: minmax(4.5rem, auto) 1fr;
@@ -324,22 +351,22 @@
     align-items: baseline;
 }
 
-.crm-today-pro .crm-nl-command__sheet > div {
+.crm-smart-command .crm-nl-command__sheet > div {
     display: contents;
 }
 
-.crm-today-pro .crm-nl-command__sheet-wide {
+.crm-smart-command .crm-nl-command__sheet-wide {
     display: contents;
 }
 
-.crm-today-pro .crm-nl-command__sheet dt {
+.crm-smart-command .crm-nl-command__sheet dt {
     margin: 0;
     font-size: 0.7rem;
     font-weight: 600;
     color: var(--ws-text-muted);
 }
 
-.crm-today-pro .crm-nl-command__sheet dd {
+.crm-smart-command .crm-nl-command__sheet dd {
     margin: 0;
     font-size: 0.82rem;
     font-weight: 700;
@@ -348,17 +375,17 @@
     min-width: 0;
 }
 
-.crm-today-pro .crm-nl-command__sheet.is-hidden {
+.crm-smart-command .crm-nl-command__sheet.is-hidden {
     display: none;
 }
 
-.crm-today-pro .crm-nl-command__candidate-list {
+.crm-smart-command .crm-nl-command__candidate-list {
     display: flex;
     flex-direction: column;
     gap: 0.45rem;
 }
 
-.crm-today-pro .crm-nl-command__candidate-card {
+.crm-smart-command .crm-nl-command__candidate-card {
     display: flex;
     align-items: flex-start;
     gap: 0.55rem;
@@ -374,17 +401,17 @@
     transition: border-color 0.14s, background 0.14s, box-shadow 0.14s;
 }
 
-.crm-today-pro .crm-nl-command__candidate-card:hover {
+.crm-smart-command .crm-nl-command__candidate-card:hover {
     border-color: color-mix(in srgb, var(--ws-primary) 28%, var(--ws-border));
 }
 
-.crm-today-pro .crm-nl-command__candidate-card.is-selected {
+.crm-smart-command .crm-nl-command__candidate-card.is-selected {
     border-color: var(--ws-primary);
     background: color-mix(in srgb, var(--ws-primary) 7%, var(--ws-surface));
     box-shadow: 0 0 0 1px color-mix(in srgb, var(--ws-primary) 18%, transparent);
 }
 
-.crm-today-pro .crm-nl-command__candidate-mark {
+.crm-smart-command .crm-nl-command__candidate-mark {
     flex-shrink: 0;
     width: 1rem;
     height: 1rem;
@@ -396,32 +423,32 @@
     transition: border-color 0.12s, background 0.12s;
 }
 
-.crm-today-pro .crm-nl-command__candidate-card.is-selected .crm-nl-command__candidate-mark {
+.crm-smart-command .crm-nl-command__candidate-card.is-selected .crm-nl-command__candidate-mark {
     border-color: var(--ws-primary);
     background: radial-gradient(circle at center, var(--ws-primary) 42%, transparent 44%);
 }
 
-.crm-today-pro .crm-nl-command__candidate-body {
+.crm-smart-command .crm-nl-command__candidate-body {
     display: flex;
     flex-direction: column;
     gap: 0.12rem;
     min-width: 0;
 }
 
-.crm-today-pro .crm-nl-command__candidate-name {
+.crm-smart-command .crm-nl-command__candidate-name {
     font-size: 0.82rem;
     font-weight: 800;
     color: var(--ws-text);
     line-height: 1.35;
 }
 
-.crm-today-pro .crm-nl-command__candidate-meta {
+.crm-smart-command .crm-nl-command__candidate-meta {
     font-size: 0.68rem;
     font-weight: 500;
     color: var(--ws-text-muted);
 }
 
-.crm-today-pro .crm-nl-command__continue {
+.crm-smart-command .crm-nl-command__continue {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -439,18 +466,18 @@
     transition: background 0.12s, color 0.12s, border-color 0.12s;
 }
 
-.crm-today-pro .crm-nl-command__continue:not(:disabled) {
+.crm-smart-command .crm-nl-command__continue:not(:disabled) {
     border-color: var(--ws-primary);
     background: var(--ws-primary);
     color: #fff;
     cursor: pointer;
 }
 
-.crm-today-pro .crm-nl-command__continue:not(:disabled):hover {
+.crm-smart-command .crm-nl-command__continue:not(:disabled):hover {
     filter: brightness(1.03);
 }
 
-.crm-today-pro .crm-nl-command__actions {
+.crm-smart-command .crm-nl-command__actions {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -459,7 +486,7 @@
     margin-top: 0.75rem;
 }
 
-.crm-today-pro .crm-nl-command__btn {
+.crm-smart-command .crm-nl-command__btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -476,29 +503,29 @@
     cursor: pointer;
 }
 
-.crm-today-pro .crm-nl-command__btn--primary {
+.crm-smart-command .crm-nl-command__btn--primary {
     border-color: var(--ws-primary);
     background: var(--ws-primary);
     color: #fff;
 }
 
-.crm-today-pro .crm-nl-command__btn--primary:disabled {
+.crm-smart-command .crm-nl-command__btn--primary:disabled {
     opacity: 0.4;
     cursor: not-allowed;
 }
 
-.crm-today-pro .crm-nl-command__btn--secondary {
+.crm-smart-command .crm-nl-command__btn--secondary {
     background: var(--ws-surface);
 }
 
-.crm-today-pro .crm-nl-command__btn--quiet {
+.crm-smart-command .crm-nl-command__btn--quiet {
     border-color: transparent;
     background: transparent;
     color: var(--ws-text-muted);
     font-weight: 600;
 }
 
-.crm-today-pro .crm-nl-command__success {
+.crm-smart-command .crm-nl-command__success {
     margin-top: 0.75rem;
     padding: 0.85rem 0.9rem;
     border-radius: 12px;
@@ -507,7 +534,7 @@
     animation: crm-nl-in 0.22s ease-out;
 }
 
-.crm-today-pro .crm-nl-command__success-title {
+.crm-smart-command .crm-nl-command__success-title {
     margin: 0;
     font-size: 0.82rem;
     font-weight: 800;
@@ -517,14 +544,14 @@
     gap: 0.4rem;
 }
 
-.crm-today-pro .crm-nl-command__success-meta {
+.crm-smart-command .crm-nl-command__success-meta {
     margin: 0.35rem 0 0;
     font-size: 0.78rem;
     font-weight: 600;
     color: var(--ws-text);
 }
 
-.crm-today-pro .crm-nl-command__success-link {
+.crm-smart-command .crm-nl-command__success-link {
     display: inline-block;
     margin-top: 0.5rem;
     font-size: 0.72rem;
@@ -533,15 +560,15 @@
     text-decoration: none;
 }
 
-.crm-today-pro .crm-nl-command__success-link:hover {
+.crm-smart-command .crm-nl-command__success-link:hover {
     text-decoration: underline;
 }
 
-.crm-today-pro .crm-nl-command__backdrop {
+.crm-smart-command .crm-nl-command__backdrop {
     display: none;
 }
 
-.crm-today-pro .crm-nl-command.is-sheet-open .crm-nl-command__backdrop {
+.crm-smart-command.is-sheet-open .crm-nl-command__backdrop {
     display: block;
     position: fixed;
     inset: 0;
@@ -549,7 +576,7 @@
     background: rgba(15, 23, 42, 0.35);
 }
 
-.crm-today-pro .visually-hidden {
+.crm-smart-command .visually-hidden {
     position: absolute;
     width: 1px;
     height: 1px;
@@ -561,29 +588,29 @@
     border: 0;
 }
 
-.crm-today-pro .crm-nl-command.is-success-mode .crm-nl-command__composer,
-.crm-today-pro .crm-nl-command.is-success-mode .crm-nl-command__panel {
+.crm-smart-command.is-success-mode .crm-nl-command__composer,
+.crm-smart-command.is-success-mode .crm-nl-command__panel {
     display: none;
 }
 
 @media (max-width: 640px) {
-    .crm-today-pro .crm-nl-command {
+    .crm-smart-command {
         padding: 1rem;
     }
 
-    .crm-today-pro .crm-nl-command__row {
+    .crm-smart-command .crm-nl-command__row {
         flex-direction: column;
         align-items: stretch;
         padding: 0.5rem;
         gap: 0.45rem;
     }
 
-    .crm-today-pro .crm-nl-command__parse {
+    .crm-smart-command .crm-nl-command__parse {
         width: 100%;
         min-height: 2.5rem;
     }
 
-    .crm-today-pro .crm-nl-command.is-sheet-open .crm-nl-command__panel {
+    .crm-smart-command.is-sheet-open .crm-nl-command__panel {
         position: fixed;
         z-index: 1050;
         left: 0;
@@ -602,94 +629,36 @@
         to { transform: translateY(0); }
     }
 
-    .crm-today-pro .crm-nl-command__actions {
+    .crm-smart-command .crm-nl-command__actions {
         flex-direction: column-reverse;
         align-items: stretch;
     }
 
-    .crm-today-pro .crm-nl-command__btn {
+    .crm-smart-command .crm-nl-command__btn {
         width: 100%;
     }
 
-    .crm-today-pro .crm-nl-command__ambig-foot {
+    .crm-smart-command .crm-nl-command__ambig-foot {
         justify-content: stretch;
     }
 
-    .crm-today-pro .crm-nl-command__continue {
+    .crm-smart-command .crm-nl-command__continue {
         width: 100%;
     }
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .crm-today-pro .crm-nl-command__parse-spinner,
-    .crm-today-pro .crm-nl-command__panel,
-    .crm-today-pro .crm-nl-command__success,
-    .crm-today-pro .crm-nl-command.is-sheet-open .crm-nl-command__panel {
+    .crm-smart-command .crm-nl-command__parse-spinner,
+    .crm-smart-command .crm-nl-command__panel,
+    .crm-smart-command .crm-nl-command__success,
+    .crm-smart-command.is-sheet-open .crm-nl-command__panel {
         animation: none;
     }
 }
 
-/* —— Contextual compact bar (Contacts / Properties) —— */
-.crm-contacts-pro .crm-smart-command--compact,
-.crm-files-pro .crm-smart-command--compact,
-.crm-properties-page .crm-smart-command--compact {
-    --nl-font: 'Vazirmatn', 'Vazir', system-ui, sans-serif;
-    position: relative;
-    margin: 0 0 0.85rem;
-    padding: 0.85rem 1rem;
-    border-radius: 14px;
-    font-family: var(--nl-font);
-    background: var(--ws-surface, #fff);
-    border: 1px solid var(--ws-border, #e8ecf1);
-    box-shadow: 0 8px 24px -22px rgba(15, 23, 42, 0.14);
-}
-
-.crm-contacts-pro .crm-smart-command--compact .crm-nl-command__head,
-.crm-files-pro .crm-smart-command--compact .crm-nl-command__head,
-.crm-properties-page .crm-smart-command--compact .crm-nl-command__head {
-    margin-bottom: 0.65rem;
-}
-
-.crm-contacts-pro .crm-smart-command--compact .crm-nl-command__title,
-.crm-files-pro .crm-smart-command--compact .crm-nl-command__title,
-.crm-properties-page .crm-smart-command--compact .crm-nl-command__title {
-    font-size: 0.88rem;
-}
-
-.crm-contacts-pro .crm-smart-command--compact .crm-nl-command__spark,
-.crm-files-pro .crm-smart-command--compact .crm-nl-command__spark,
-.crm-properties-page .crm-smart-command--compact .crm-nl-command__spark {
-    width: 1.55rem;
-    height: 1.55rem;
-    font-size: 0.72rem;
-    border-radius: 9px;
-}
-
-.crm-contacts-pro .crm-smart-command--compact .crm-nl-command__chips,
-.crm-files-pro .crm-smart-command--compact .crm-nl-command__chips,
-.crm-properties-page .crm-smart-command--compact .crm-nl-command__chips {
-    flex-wrap: wrap;
-    gap: 0.35rem;
-}
-
-.crm-contacts-pro .crm-smart-command--compact .crm-nl-command__chip,
-.crm-files-pro .crm-smart-command--compact .crm-nl-command__chip,
-.crm-properties-page .crm-smart-command--compact .crm-nl-command__chip {
-    font-size: 0.68rem;
-    padding: 0.28rem 0.55rem;
-}
-
 @media (max-width: 640px) {
-    .crm-contacts-pro .crm-smart-command--compact.is-sheet-open .crm-nl-command__panel,
-    .crm-files-pro .crm-smart-command--compact.is-sheet-open .crm-nl-command__panel,
-    .crm-properties-page .crm-smart-command--compact.is-sheet-open .crm-nl-command__panel {
-        position: fixed;
-        inset: auto 0 0 0;
-        z-index: 1200;
-        max-height: 78vh;
-        overflow: auto;
-        border-radius: 16px 16px 0 0;
-        box-shadow: 0 -12px 40px rgba(15, 23, 42, 0.12);
-        animation: crm-nl-sheet 0.28s ease;
+    .crm-contacts-pro .crm-smart-command-wrap,
+    .crm-files-pro .crm-smart-command-wrap {
+        margin-inline: 0;
     }
 }

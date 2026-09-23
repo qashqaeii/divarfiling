@@ -1,7 +1,8 @@
 {% load static %}
 {% if smart_command.enabled %}
-<link rel="stylesheet" href="{% static 'workspace/css/crm-nl-command.css' %}?v=4">
-<section class="crm-nl-command crm-smart-command{% if smart_command.variant == 'compact' %} crm-smart-command--compact{% endif %}{% if smart_command.variant == 'today' %} crm-smart-command--today{% endif %}"
+<link rel="stylesheet" href="{% static 'workspace/css/crm-nl-command.css' %}?v=5">
+<div class="crm-smart-command-wrap">
+<section class="crm-nl-command crm-smart-command"
     data-crm-smart-command
     aria-label="{{ smart_command.title }}"
     data-allowed-intent="{{ smart_command.allowed_intent }}"
@@ -120,5 +121,6 @@
 
     <div class="crm-nl-command__backdrop" data-sc="backdrop" hidden aria-hidden="true"></div>
 </section>
-<script src="{% static 'workspace/js/crm-smart-command.js' %}?v=1"></script>
+</div>
+<script src="{% static 'workspace/js/crm-smart-command.js' %}?v=2"></script>
 {% endif %}

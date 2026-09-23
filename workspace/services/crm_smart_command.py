@@ -19,7 +19,6 @@ SMART_COMMAND_PROFILES: Dict[str, Dict[str, Any]] = {
         'subtitle': '',
         'placeholder': 'مثلاً: فردا ساعت ۱۰ یادم بنداز به احمدی زنگ بزنم',
         'wrong_intent_message': 'این بخش برای ثبت یادآوری است.',
-        'variant': 'today',
         'enable_contact_resolve': True,
         'examples': _examples([
             ('تماس با مخاطب', 'فردا ساعت ۱۰ یادم بنداز به احمدی زنگ بزنم'),
@@ -33,7 +32,6 @@ SMART_COMMAND_PROFILES: Dict[str, Dict[str, Any]] = {
         'subtitle': 'اطلاعات مشتری را با یک جمله ثبت کن',
         'placeholder': 'مثلاً: احمدی، 0912...، خریدار پونک با بودجه تا ۱۲ میلیارد',
         'wrong_intent_message': 'این بخش برای ثبت مخاطب است.',
-        'variant': 'compact',
         'enable_contact_resolve': False,
         'examples': _examples([
             ('ذخیره با شماره', 'احمدی رو با شماره ۰۹۱۲۱۲۳۴۵۶۷ ذخیره کن'),
@@ -48,7 +46,6 @@ SMART_COMMAND_PROFILES: Dict[str, Dict[str, Any]] = {
         'subtitle': 'مشخصات ملک را با یک جمله وارد کن',
         'placeholder': 'مثلاً: پونک، ۱۲۰ متر، دو خواب، فروش ۱۲ میلیارد',
         'wrong_intent_message': 'این بخش برای ثبت فایل شخصی است.',
-        'variant': 'compact',
         'enable_contact_resolve': False,
         'examples': _examples([
             ('فروش', 'پونک ۱۲۰ متر دو خواب فروش ۱۲ میلیارد'),

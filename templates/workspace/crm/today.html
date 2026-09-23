@@ -11,7 +11,7 @@
 
 {% block crm_extra_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/mk-filing-datasets.css' %}?v=19">
-<link rel="stylesheet" href="{% static 'workspace/css/crm-today.css' %}?v=7">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-today.css' %}?v=8">
 {% endblock %}
 
 {% block crm_content %}
@@ -71,34 +71,93 @@
         data-confirm-url="{{ nl_command_urls.confirm }}"
         data-resolve-url="{{ nl_command_urls.resolve_contact }}"
         data-reminder-form-url="{{ reminder_create_url }}">
-        <div class="crm-nl-command__head">
-            <h2 class="crm-nl-command__title"><i class="fas fa-magic" aria-hidden="true"></i> فرمان هوشمند</h2>
+        <div class="crm-nl-command__glow" aria-hidden="true"></div>
+        <header class="crm-nl-command__head">
+            <div class="crm-nl-command__brand">
+                <span class="crm-nl-command__icon" aria-hidden="true"><i class="fas fa-sparkles"></i></span>
+                <div>
+                    <h2 class="crm-nl-command__title">فرمان هوشمند</h2>
+                    <p class="crm-nl-command__subtitle">با یک جمله فارسی، یادآوری را پیش‌نمایش و تأیید کنید</p>
+                </div>
+            </div>
             {% if nl_command_quota %}
-            <span class="crm-nl-command__quota" title="سهمیه روزانه parse">
-                {{ nl_command_quota.feature_remaining }}/{{ nl_command_quota.feature_limit }}
-            </span>
+            <div class="crm-nl-command__quota" title="سهمیه بررسی روزانه">
+                <span class="crm-nl-command__quota-label">سهمیه امروز</span>
+                <span class="crm-nl-command__quota-val">
+                    <strong>{{ nl_command_quota.feature_remaining }}</strong>
+                    <span>/ {{ nl_command_quota.feature_limit }}</span>
+                </span>
+            </div>
             {% endif %}
+        </header>
+
+        <div class="crm-nl-command__composer">
+            <label class="crm-nl-command__label" for="crmNlCommandInput">چی می‌خوای ثبت کنی؟</label>
+            <div class="crm-nl-command__field">
+                <textarea id="crmNlCommandInput" class="crm-nl-command__input" rows="2"
+                    placeholder="مثلاً: فردا ساعت ۱۰ یادم بنداز به احمدی زنگ بزنم"
+                    autocomplete="off" spellcheck="false"></textarea>
+                <button type="button" class="crm-nl-command__parse" id="crmNlCommandParseBtn">
+                    <span class="crm-nl-command__parse-label">بررسی</span>
+                    <span class="crm-nl-command__parse-spinner" aria-hidden="true"></span>
+                </button>
+            </div>
+            <p class="crm-nl-command__hint">
+                <kbd>Ctrl</kbd> + <kbd>Enter</kbd> برای بررسی سریع
+            </p>
+            <div class="crm-nl-command__chips" role="group" aria-label="نمونه فرمان">
+                <button type="button" class="crm-nl-command__chip" data-nl-sample="فردا ساعت ۱۰ یادم بنداز به احمدی زنگ بزنم">تماس با مخاطب</button>
+                <button type="button" class="crm-nl-command__chip" data-nl-sample="پس‌فردا ظهر پیگیری فایل پونک">پیگیری فایل</button>
+                <button type="button" class="crm-nl-command__chip" data-nl-sample="شنبه عصر یادآوری بازدید ملک">یادآوری بازدید</button>
+            </div>
         </div>
-        <label class="crm-nl-command__label" for="crmNlCommandInput">چی می‌خوای ثبت کنی؟</label>
-        <div class="crm-nl-command__row">
-            <textarea id="crmNlCommandInput" class="crm-nl-command__input" rows="2"
-                placeholder="مثلاً: فردا ساعت ۱۰ یادم بنداز به احمدی زنگ بزنم"></textarea>
-            <button type="button" class="crm-dash-act crm-dash-act--primary" id="crmNlCommandParseBtn">بررسی</button>
-        </div>
-        <div class="crm-nl-command__status" id="crmNlCommandStatus" hidden></div>
+
+        <div class="crm-nl-command__status" id="crmNlCommandStatus" role="status" aria-live="polite" hidden></div>
+
         <div class="crm-nl-command__preview" id="crmNlCommandPreview" hidden>
-            <h3>یادآوری جدید</h3>
-            <dl class="crm-nl-command__dl">
-                <dt>مخاطب</dt><dd data-field="contact_name">—</dd>
-                <dt>زمان</dt><dd data-field="due_at_display">—</dd>
-                <dt>عنوان</dt><dd data-field="title">—</dd>
-                <dt>یادداشت</dt><dd data-field="note">—</dd>
-            </dl>
+            <div class="crm-nl-command__preview-head">
+                <span class="crm-nl-command__preview-badge"><i class="fas fa-bell" aria-hidden="true"></i> یادآوری جدید</span>
+                <span class="crm-nl-command__preview-step">مرحله ۲ از ۲ — تأیید نهایی</span>
+            </div>
+            <ul class="crm-nl-command__facts">
+                <li>
+                    <span class="crm-nl-command__fact-icon"><i class="fas fa-user" aria-hidden="true"></i></span>
+                    <span class="crm-nl-command__fact-body">
+                        <span class="crm-nl-command__fact-label">مخاطب</span>
+                        <span class="crm-nl-command__fact-value" data-field="contact_name">—</span>
+                    </span>
+                </li>
+                <li>
+                    <span class="crm-nl-command__fact-icon is-time"><i class="fas fa-clock" aria-hidden="true"></i></span>
+                    <span class="crm-nl-command__fact-body">
+                        <span class="crm-nl-command__fact-label">زمان</span>
+                        <span class="crm-nl-command__fact-value" data-field="due_at_display">—</span>
+                    </span>
+                </li>
+                <li>
+                    <span class="crm-nl-command__fact-icon"><i class="fas fa-heading" aria-hidden="true"></i></span>
+                    <span class="crm-nl-command__fact-body">
+                        <span class="crm-nl-command__fact-label">عنوان</span>
+                        <span class="crm-nl-command__fact-value" data-field="title">—</span>
+                    </span>
+                </li>
+                <li class="crm-nl-command__fact--note" data-note-row hidden>
+                    <span class="crm-nl-command__fact-icon"><i class="fas fa-align-right" aria-hidden="true"></i></span>
+                    <span class="crm-nl-command__fact-body">
+                        <span class="crm-nl-command__fact-label">یادداشت</span>
+                        <span class="crm-nl-command__fact-value" data-field="note">—</span>
+                    </span>
+                </li>
+            </ul>
             <div class="crm-nl-command__candidates" id="crmNlCommandCandidates" hidden></div>
             <div class="crm-nl-command__actions">
-                <button type="button" class="crm-dash-act crm-dash-act--primary" id="crmNlCommandConfirmBtn" disabled>تأیید و ثبت</button>
-                <a href="{{ reminder_create_url }}" class="crm-dash-act" id="crmNlCommandEditLink">ویرایش</a>
-                <button type="button" class="crm-dash-act" id="crmNlCommandCancelBtn">لغو</button>
+                <button type="button" class="crm-nl-command__btn crm-nl-command__btn--primary" id="crmNlCommandConfirmBtn" disabled>
+                    <i class="fas fa-check" aria-hidden="true"></i> تأیید و ثبت
+                </button>
+                <a href="{{ reminder_create_url }}" class="crm-nl-command__btn crm-nl-command__btn--ghost" id="crmNlCommandEditLink">
+                    <i class="fas fa-pen" aria-hidden="true"></i> ویرایش در فرم
+                </a>
+                <button type="button" class="crm-nl-command__btn crm-nl-command__btn--ghost" id="crmNlCommandCancelBtn">لغو</button>
             </div>
         </div>
     </section>
@@ -189,6 +248,6 @@ window.crmQuickLeadUrl = "{% url 'workspace:crm_quick_lead' %}";
 window.crmTodayUrl = "{% url 'workspace:crm_today' %}";
 </script>
 <script src="{% static 'workspace/js/crm-today.js' %}?v=1"></script>
-{% if nl_command_enabled %}<script src="{% static 'workspace/js/crm-nl-command.js' %}?v=1"></script>{% endif %}
+{% if nl_command_enabled %}<script src="{% static 'workspace/js/crm-nl-command.js' %}?v=2"></script>{% endif %}
 <script src="{% static 'workspace/js/filing-help-modal.js' %}?v=2"></script>
 {% endblock %}

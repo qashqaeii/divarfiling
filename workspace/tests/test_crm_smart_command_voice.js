@@ -298,3 +298,169 @@ test('long transcript is not truncated in textarea', () => {
 test('mapSpeechError maps known codes', () => {
     assert.equal(voice.mapSpeechError('not-allowed'), voice.MSG_MIC_DENIED);
 });
+
+test('getMobileRestartDelayMs uses progressive backoff', () => {
+    assert.equal(voice.getMobileRestartDelayMs(0), 1000);
+    assert.equal(voice.getMobileRestartDelayMs(1), 1800);
+});
+
+test('desktop repeated onend still restarts with short delay', () => {
+    const { root, micBtn, statusEl, input } = makeDom();
+    class MockRecognition {
+        start() {
+            this.onstart && this.onstart();
+        }
+        stop() {
+            this.onend && this.onend();
+        }
+    }
+    const win = makeTimerWin(MockRecognition);
+    const adapter = voice.createVoiceInputAdapter(root, {
+        input,
+        micBtn,
+        voiceStatusEl: statusEl,
+        restartDelayMs: 200,
+        forceMobileVoice: false,
+        setInputValue(v) {
+            input.value = v;
+        },
+        win,
+    });
+    micBtn.click();
+    emitFinal(win.instances[0], 'بخش اول');
+    win.instances[0].onend && win.instances[0].onend();
+    win.runTimers(200);
+    assert.equal(win.instances.length, 2);
+    assert.equal(adapter._test.isUserListening(), true);
+    adapter.destroy();
+});
+
+test('duplicate onend within debounce window is ignored', () => {
+    const { root, micBtn, statusEl, input } = makeDom();
+    class MockRecognition {
+        start() {
+            this.onstart && this.onstart();
+        }
+        stop() {}
+    }
+    const win = makeTimerWin(MockRecognition);
+    const adapter = voice.createVoiceInputAdapter(root, {
+        input,
+        micBtn,
+        voiceStatusEl: statusEl,
+        restartDelayMs: 200,
+        setInputValue(v) {
+            input.value = v;
+        },
+        win,
+    });
+    micBtn.click();
+    emitFinal(win.instances[0], 'یک');
+    const onend = win.instances[0].onend;
+    onend && onend();
+    onend && onend();
+    win.runTimers(200);
+    assert.equal(win.instances.length, 2);
+    adapter.destroy();
+});
+
+test('mobile onend schedules at most two auto restarts then stops', () => {
+    const { root, micBtn, statusEl, input } = makeDom();
+    class MockRecognition {
+        start() {
+            this.onstart && this.onstart();
+        }
+        stop() {}
+    }
+    const win = makeTimerWin(MockRecognition);
+    let t = 10000;
+    const adapter = voice.createVoiceInputAdapter(root, {
+        input,
+        micBtn,
+        voiceStatusEl: statusEl,
+        forceMobileVoice: true,
+        setInputValue(v) {
+            input.value = v;
+        },
+        win,
+    });
+    adapter._test.setNowMs(() => {
+        t += 6000;
+        return t;
+    });
+
+    micBtn.click();
+    emitFinal(win.instances[0], 'جمله موبایل');
+    win.instances[0].onend && win.instances[0].onend();
+    win.runTimers(1000);
+    assert.equal(win.instances.length, 2);
+
+    emitFinal(win.instances[1], 'ادامه');
+    win.instances[1].onend && win.instances[1].onend();
+    win.runTimers(1800);
+    assert.equal(win.instances.length, 3);
+    assert.equal(adapter._test.getAutoRestartCount(), 2);
+
+    win.instances[2].onend && win.instances[2].onend();
+    assert.equal(adapter._test.isUserListening(), false);
+    assert.ok(statusEl.textContent.includes('دوباره روی میکروفن'));
+    assert.ok(input.value.includes('جمله موبایل'));
+    adapter.destroy();
+});
+
+test('no-speech error blocks auto restart on mobile', () => {
+    const { root, micBtn, statusEl, input } = makeDom();
+    class MockRecognition {
+        start() {
+            this.onstart && this.onstart();
+        }
+        stop() {}
+    }
+    const win = makeTimerWin(MockRecognition);
+    const adapter = voice.createVoiceInputAdapter(root, {
+        input,
+        micBtn,
+        voiceStatusEl: statusEl,
+        forceMobileVoice: true,
+        setInputValue(v) {
+            input.value = v;
+        },
+        win,
+    });
+    micBtn.click();
+    emitFinal(win.instances[0], 'بخش');
+    win.instances[0].onerror && win.instances[0].onerror({ error: 'no-speech' });
+    win.instances[0].onend && win.instances[0].onend();
+    win.runTimers(1000);
+    assert.equal(win.instances.length, 1);
+    adapter.destroy();
+});
+
+test('manual stop does not auto restart', () => {
+    const { root, micBtn, statusEl, input } = makeDom();
+    class MockRecognition {
+        start() {
+            this.onstart && this.onstart();
+        }
+        stop() {
+            this.onend && this.onend();
+        }
+    }
+    const win = makeTimerWin(MockRecognition);
+    const adapter = voice.createVoiceInputAdapter(root, {
+        input,
+        micBtn,
+        voiceStatusEl: statusEl,
+        forceMobileVoice: true,
+        setInputValue(v) {
+            input.value = v;
+        },
+        win,
+    });
+    micBtn.click();
+    emitFinal(win.instances[0], 'متن');
+    micBtn.click();
+    win.runTimers(1000);
+    assert.equal(win.instances.length, 1);
+    adapter.destroy();
+});

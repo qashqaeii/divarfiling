@@ -8,6 +8,17 @@
     const DEFAULT_RESTART_DELAY_MS = 200;
     const INITIAL_NO_SPEECH_TIMEOUT_MS = 12000;
     const MAX_NL_COMMAND_CHARS = 1500;
+    const MAX_AUTO_RESTARTS_MOBILE = 2;
+    const MOBILE_RESTART_DELAYS_MS = [1000, 1800];
+    const MOBILE_RESTART_COOLDOWN_MS = 5000;
+    const ONEND_DEBOUNCE_MS = 500;
+    const NO_AUTO_RESTART_ERRORS = new Set([
+        'no-speech',
+        'audio-capture',
+        'not-allowed',
+        'service-not-allowed',
+        'aborted',
+    ]);
 
     const MSG_UNSUPPORTED =
         'ضبط صوت در این مرورگر پشتیبانی نمی‌شود. می‌توانید فرمان را تایپ کنید.';
@@ -18,6 +29,8 @@
     const MSG_NETWORK = 'سرویس تشخیص صدا در دسترس نیست';
     const MSG_LISTENING = 'در حال گوش دادن… می‌توانید بین جمله‌ها مکث کنید.';
     const MSG_DONE = 'گفتار ثبت شد. متن را بررسی کنید.';
+    const MSG_MOBILE_AUTO_STOP =
+        'ضبط صوت متوقف شد. برای ادامه دوباره روی میکروفن بزنید.';
     const PRIVACY_NOTE =
         'صدا برای تبدیل به متن توسط سرویس تشخیص گفتار مرورگر پردازش می‌شود.';
     const MIC_TOOLTIP = 'فرمان صوتی';
@@ -182,6 +195,40 @@
     }
 
     /**
+     * @param {Window|typeof globalThis} win
+     */
+    function isMobileVoiceWeb(win) {
+        const w = win || global;
+        const nav = w.navigator;
+        if (!nav) return false;
+        const ua = (nav.userAgent || '').toLowerCase();
+        if (/android|iphone|ipad|ipod|mobile|webos|blackberry/i.test(ua)) {
+            return true;
+        }
+        if (typeof w.matchMedia === 'function') {
+            const coarse = w.matchMedia('(pointer: coarse)').matches;
+            const narrow = w.matchMedia('(max-width: 768px)').matches;
+            if (coarse && narrow) return true;
+        }
+        return false;
+    }
+
+    /**
+     * @param {string} code
+     */
+    function shouldBlockAutoRestartAfterError(code) {
+        return NO_AUTO_RESTART_ERRORS.has((code || '').trim());
+    }
+
+    /**
+     * @param {number} restartIndex 0-based index of the next restart
+     */
+    function getMobileRestartDelayMs(restartIndex) {
+        const idx = Math.max(0, Math.min(restartIndex, MOBILE_RESTART_DELAYS_MS.length - 1));
+        return MOBILE_RESTART_DELAYS_MS[idx];
+    }
+
+    /**
      * @param {string} code
      * @param {{ userCancelled?: boolean }} [options]
      * @returns {string|null}
@@ -253,6 +300,7 @@
      *   isInputDisabled?: function(): boolean,
      *   silenceTimeoutMs?: number,
      *   restartDelayMs?: number,
+     *   forceMobileVoice?: boolean,
      *   win?: Window,
      *   doc?: Document,
      * }} config
@@ -260,6 +308,7 @@
     function createVoiceInputAdapter(root, config) {
         const win = config.win || global;
         const doc = config.doc || (win && win.document) || null;
+        const forceMobileVoice = !!config.forceMobileVoice;
         const input = config.input;
         const micBtn = config.micBtn;
         const voiceStatusEl = config.voiceStatusEl || null;
@@ -288,7 +337,19 @@
         let sessionFinalized = false;
         let recognitionActive = false;
         let recognitionStarting = false;
+        let recognitionStopping = false;
         let gotAnySpeech = false;
+        let blockAutoRestart = false;
+        let autoRestartCount = 0;
+        let lastRestartAt = 0;
+        let lastOnEndHandledAt = 0;
+        let nowMs = function () {
+            return Date.now();
+        };
+
+        function isMobileClient() {
+            return forceMobileVoice || isMobileVoiceWeb(win);
+        }
 
         let baseInputText = '';
         let sessionTranscript = '';
@@ -433,10 +494,18 @@
         function stopRecognitionInstance() {
             if (!recognition) return;
             try {
+                recognitionStopping = true;
                 recognition.stop();
             } catch (_e) {
-                /* ignore */
+                recognitionStopping = false;
             }
+        }
+
+        function getRecognitionLifecycleState() {
+            if (recognitionStopping) return 'stopping';
+            if (recognitionStarting) return 'starting';
+            if (recognitionActive) return 'listening';
+            return 'idle';
         }
 
         function teardownRecognition(skipStop) {
@@ -444,15 +513,25 @@
                 detachRecognitionHandlers(recognition);
                 if (!skipStop) {
                     try {
+                        recognitionStopping = true;
                         recognition.stop();
                     } catch (_e) {
-                        /* ignore */
+                        recognitionStopping = false;
                     }
                 }
                 recognition = null;
             }
             recognitionActive = false;
             recognitionStarting = false;
+            recognitionStopping = false;
+        }
+
+        function finalizeMobileAutoStop() {
+            manualStop = true;
+            finalizeSession({
+                flushInterim: true,
+                statusMessage: MSG_MOBILE_AUTO_STOP,
+            });
         }
 
         function finalizeSession(options) {
@@ -512,6 +591,8 @@
             rec.onstart = function () {
                 recognitionActive = true;
                 recognitionStarting = false;
+                recognitionStopping = false;
+                lastOnEndHandledAt = 0;
                 setVoiceState('listening');
             };
 
@@ -530,6 +611,9 @@
 
             rec.onerror = function (event) {
                 const code = (event && event.error) || '';
+                if (shouldBlockAutoRestartAfterError(code)) {
+                    blockAutoRestart = true;
+                }
                 if (code === 'no-speech' && userStartedListening && !manualStop && gotAnySpeech) {
                     return;
                 }
@@ -548,7 +632,15 @@
             };
 
             rec.onend = function () {
+                const endedAt = nowMs();
+                if (endedAt - lastOnEndHandledAt < ONEND_DEBOUNCE_MS) {
+                    return;
+                }
+                lastOnEndHandledAt = endedAt;
+
                 recognitionActive = false;
+                recognitionStarting = false;
+                recognitionStopping = false;
                 recognition = null;
                 if (sessionFinalized) {
                     return;
@@ -565,6 +657,9 @@
                 }
                 commitCycleToSession();
                 syncLiveInput();
+                if (blockAutoRestart) {
+                    return;
+                }
                 scheduleRecognitionRestart();
             };
         }
@@ -584,7 +679,7 @@
             if (!userStartedListening || manualStop || suspendDueToBackground || sessionFinalized) {
                 return false;
             }
-            if (recognitionStarting || recognitionActive) return false;
+            if (getRecognitionLifecycleState() !== 'idle') return false;
             recognitionStarting = true;
             try {
                 recognition = createRecognitionInstance();
@@ -602,20 +697,62 @@
             if (!userStartedListening || manualStop || suspendDueToBackground || sessionFinalized) {
                 return;
             }
-            if (recognitionStarting || recognitionActive) return;
+            if (blockAutoRestart) return;
+            if (getRecognitionLifecycleState() !== 'idle') return;
             if (restartTimer) return;
+            const delay = isMobileClient()
+                ? getMobileRestartDelayMs(autoRestartCount)
+                : restartDelayMs;
             restartTimer = win.setTimeout(function () {
                 restartTimer = null;
+                if (!userStartedListening || manualStop || suspendDueToBackground || sessionFinalized) {
+                    return;
+                }
+                if (blockAutoRestart) return;
+                if (getRecognitionLifecycleState() !== 'idle') return;
+                if (isMobileClient()) {
+                    if (autoRestartCount >= MAX_AUTO_RESTARTS_MOBILE) {
+                        finalizeMobileAutoStop();
+                        return;
+                    }
+                    const sinceRestart = nowMs() - lastRestartAt;
+                    if (lastRestartAt > 0 && sinceRestart < MOBILE_RESTART_COOLDOWN_MS) {
+                        finalizeMobileAutoStop();
+                        return;
+                    }
+                    autoRestartCount += 1;
+                    lastRestartAt = nowMs();
+                }
                 if (!startRecognitionNow()) {
-                    if (userStartedListening && !manualStop && !suspendDueToBackground && !sessionFinalized) {
+                    if (
+                        !isMobileClient() &&
+                        userStartedListening &&
+                        !manualStop &&
+                        !suspendDueToBackground &&
+                        !sessionFinalized
+                    ) {
                         safeStartRecognition();
+                    } else if (isMobileClient()) {
+                        finalizeMobileAutoStop();
                     }
                 }
-            }, restartDelayMs);
+            }, delay);
         }
 
         function scheduleRecognitionRestart() {
             clearRestartTimer();
+            if (blockAutoRestart) return;
+            if (isMobileClient()) {
+                if (autoRestartCount >= MAX_AUTO_RESTARTS_MOBILE) {
+                    finalizeMobileAutoStop();
+                    return;
+                }
+                const sinceRestart = nowMs() - lastRestartAt;
+                if (lastRestartAt > 0 && sinceRestart < MOBILE_RESTART_COOLDOWN_MS) {
+                    finalizeMobileAutoStop();
+                    return;
+                }
+            }
             safeStartRecognition();
         }
 
@@ -637,6 +774,10 @@
             suspendDueToBackground = false;
             sessionFinalized = false;
             gotAnySpeech = false;
+            blockAutoRestart = false;
+            autoRestartCount = 0;
+            lastRestartAt = 0;
+            lastOnEndHandledAt = 0;
 
             baseInputText = (input && (input.value || '').trim()) || '';
             sessionTranscript = '';
@@ -748,6 +889,14 @@
                     syncLiveInput();
                     scheduleRecognitionRestart();
                 },
+                getAutoRestartCount: function () {
+                    return autoRestartCount;
+                },
+                getRecognitionLifecycleState: getRecognitionLifecycleState,
+                isMobileClient: isMobileClient,
+                setNowMs: function (fn) {
+                    nowMs = typeof fn === 'function' ? fn : function () { return Date.now(); };
+                },
             },
         };
     }
@@ -766,6 +915,11 @@
         MSG_NETWORK,
         MSG_LISTENING,
         MSG_DONE,
+        MSG_MOBILE_AUTO_STOP,
+        MAX_AUTO_RESTARTS_MOBILE,
+        MOBILE_RESTART_DELAYS_MS,
+        MOBILE_RESTART_COOLDOWN_MS,
+        ONEND_DEBOUNCE_MS,
         PRIVACY_NOTE,
         MIC_TOOLTIP,
         MIC_TOOLTIP_STOP,
@@ -780,6 +934,9 @@
         applyResultEvent,
         getSpeechRecognitionConstructor,
         isSpeechRecognitionSupported,
+        isMobileVoiceWeb,
+        shouldBlockAutoRestartAfterError,
+        getMobileRestartDelayMs,
         mapSpeechError,
         createVoiceInputAdapter,
     };

@@ -15,8 +15,9 @@ from ai_workspace.constants import (
     NL_COMMAND_INTENT_UNKNOWN,
     NL_COMMAND_UNKNOWN_MESSAGE,
     nl_command_contact_not_found_message,
+    resolve_model_label,
 )
-from ai_workspace.services.gateway import FeatureDisabledError, run as gateway_run
+from ai_workspace.services.gateway import FeatureDisabledError, GatewayResult, run as gateway_run
 from ai_workspace.services.nl_command.contacts import resolve_contact_by_name
 from ai_workspace.services.nl_command.datetime_parser import format_due_display, parse_due_datetime
 from ai_workspace.services.nl_command.state import delete_state, load_state, new_command_id, save_state, text_hash
@@ -34,6 +35,26 @@ class NLCommandError(Exception):
         super().__init__(message)
         self.code = code
         self.status = status
+
+
+def _ai_response_meta(result: GatewayResult) -> Dict[str, Any]:
+    if result.from_cache or result.provider == 'cache':
+        return {
+            'model_label': 'پاسخ از کش',
+            'provider': 'cache',
+            'cached': True,
+        }
+    label = resolve_model_label(
+        provider=result.provider,
+        model=result.model,
+        is_fallback=result.is_fallback,
+        source='fallback' if result.is_fallback or result.provider == 'rule_based' else 'ai',
+    )
+    return {
+        'model_label': label or (result.model or '').strip() or 'مدل ابری',
+        'provider': result.provider,
+        'cached': False,
+    }
 
 
 def _default_title(contact_name: Optional[str], note: Optional[str]) -> str:
@@ -94,12 +115,15 @@ def parse_command(
         )
 
     intent = data.get('intent')
+    ai_meta = _ai_response_meta(result)
+
     if intent == NL_COMMAND_INTENT_UNKNOWN:
         return {
             'ok': True,
             'intent': NL_COMMAND_INTENT_UNKNOWN,
             'can_confirm': False,
             'message': NL_COMMAND_UNKNOWN_MESSAGE,
+            'ai': ai_meta,
         }
 
     if intent != NL_COMMAND_INTENT_CREATE_REMINDER:
@@ -108,6 +132,7 @@ def parse_command(
             'intent': NL_COMMAND_INTENT_UNKNOWN,
             'can_confirm': False,
             'message': NL_COMMAND_UNKNOWN_MESSAGE,
+            'ai': ai_meta,
         }
 
     inner = data.get('data') or {}
@@ -182,6 +207,7 @@ def parse_command(
         'missing_fields': missing_fields,
         'ambiguous_fields': ambiguous_fields,
         'can_confirm': can_confirm,
+        'ai': ai_meta,
     }
     if candidates and amb == 'multiple':
         response['contact_candidates'] = candidates

@@ -38,8 +38,21 @@
         const cancelBtn = document.getElementById('crmNlCommandCancelBtn');
         const candidatesEl = document.getElementById('crmNlCommandCandidates');
         const noteRow = preview?.querySelector('[data-note-row]');
+        const aiLabelEl = document.querySelector('[data-ai-label]');
+        const aiDefault = root.dataset.aiDefault || '';
 
         let commandId = null;
+
+        function setAiModel(ai) {
+            if (!aiLabelEl) return;
+            const label = (ai && ai.model_label) || aiDefault;
+            aiLabelEl.textContent = label;
+            if (ai && ai.cached) {
+                aiLabelEl.setAttribute('title', 'نتیجه از کش');
+            } else {
+                aiLabelEl.removeAttribute('title');
+            }
+        }
 
         function setLoading(on) {
             root.classList.toggle('is-loading', !!on);
@@ -56,15 +69,12 @@
 
         function fillPreview(p) {
             if (!preview || !p) return;
-            const contact = preview.querySelector('[data-field="contact_name"]');
-            const due = preview.querySelector('[data-field="due_at_display"]');
-            const title = preview.querySelector('[data-field="title"]');
-            const note = preview.querySelector('[data-field="note"]');
-            if (contact) contact.textContent = displayValue(p.contact_name);
-            if (due) due.textContent = displayValue(p.due_at_display);
-            if (title) title.textContent = displayValue(p.title);
+            const fields = ['contact_name', 'due_at_display', 'title', 'note'];
+            fields.forEach((key) => {
+                const el = preview.querySelector('[data-field="' + key + '"]');
+                if (el) el.textContent = displayValue(p[key]);
+            });
             const noteText = (p.note || '').trim();
-            if (note) note.textContent = displayValue(noteText);
             if (noteRow) noteRow.hidden = !noteText;
             preview.hidden = false;
         }
@@ -72,6 +82,7 @@
         function reset() {
             commandId = null;
             setLoading(false);
+            setAiModel(null);
             if (preview) preview.hidden = true;
             if (candidatesEl) {
                 candidatesEl.hidden = true;
@@ -83,7 +94,7 @@
 
         function renderCandidates(candidates) {
             if (!candidatesEl || !candidates || !candidates.length) return;
-            candidatesEl.innerHTML = '<p class="crm-nl-command__candidates-title">کدام مخاطب مدنظر شماست؟</p>';
+            candidatesEl.innerHTML = '<p class="crm-nl-command__candidates-title">کدام مخاطب؟</p>';
             candidates.forEach((c) => {
                 const btn = document.createElement('button');
                 btn.type = 'button';
@@ -102,7 +113,7 @@
                         }
                         fillPreview(res.data.preview);
                         if (confirmBtn) confirmBtn.disabled = !res.data.can_confirm;
-                        setStatus(res.data.can_confirm ? 'مخاطب انتخاب شد. آماده ثبت.' : 'هنوز اطلاعات ناقص است.', res.data.can_confirm ? 'is-success' : 'is-warn');
+                        setStatus(res.data.can_confirm ? 'مخاطب انتخاب شد.' : 'اطلاعات هنوز ناقص است.', res.data.can_confirm ? 'is-success' : 'is-warn');
                     });
                 });
                 candidatesEl.appendChild(btn);
@@ -113,24 +124,26 @@
         function runParse() {
             const text = (input?.value || '').trim();
             if (!text) {
-                setStatus('متن فرمان را وارد کنید.', 'is-error');
+                setStatus('یک جمله بنویسید.', 'is-error');
                 input?.focus();
                 return;
             }
             setLoading(true);
-            setStatus('در حال تحلیل فرمان…');
+            setStatus('در حال تحلیل…');
             postJson(parseUrl, { text, locale: 'fa-IR', timezone: 'Asia/Tehran' })
                 .then((res) => {
                     setLoading(false);
                     const data = res.data;
                     if (!data.ok) {
-                        setStatus(data.error || 'خطا در بررسی فرمان', 'is-error');
+                        setStatus(data.error || 'خطا در بررسی', 'is-error');
                         reset();
                         return;
                     }
+                    if (data.ai) setAiModel(data.ai);
                     if (data.intent === 'unknown') {
-                        setStatus(data.message || 'این نوع فرمان هنوز پشتیبانی نمی‌شود.', 'is-warn');
+                        setStatus(data.message || 'این فرمان پشتیبانی نمی‌شود.', 'is-warn');
                         reset();
+                        if (data.ai) setAiModel(data.ai);
                         return;
                     }
                     commandId = data.command_id;
@@ -140,14 +153,14 @@
                     if (data.message && !data.can_confirm) {
                         setStatus(data.message, 'is-warn');
                     } else if (data.can_confirm) {
-                        setStatus('پیش‌نمایش آماده است. در صورت نیاز ویرایش کنید یا تأیید بزنید.', 'is-success');
+                        setStatus('پیش‌نمایش آماده است.', 'is-success');
                     } else {
-                        setStatus('برای ثبت، ابتدا مخاطب یا زمان را مشخص کنید.', 'is-warn');
+                        setStatus('برای ثبت، زمان یا مخاطب را مشخص کنید.', 'is-warn');
                     }
                 })
                 .catch(() => {
                     setLoading(false);
-                    setStatus('خطای ارتباط با سرور. دوباره تلاش کنید.', 'is-error');
+                    setStatus('خطای ارتباط.', 'is-error');
                 });
         }
 
@@ -173,19 +186,19 @@
         confirmBtn?.addEventListener('click', () => {
             if (!commandId) return;
             confirmBtn.disabled = true;
-            setStatus('در حال ثبت یادآوری…');
+            setStatus('در حال ثبت…');
             postJson(confirmUrl, { command_id: commandId }).then((res) => {
                 const data = res.data;
                 if (!data.ok) {
-                    setStatus(data.error || 'ثبت انجام نشد', 'is-error');
+                    setStatus(data.error || 'ثبت نشد', 'is-error');
                     confirmBtn.disabled = false;
                     return;
                 }
-                setStatus('یادآوری با موفقیت ثبت شد.', 'is-success');
+                setStatus('ثبت شد.', 'is-success');
                 if (data.url) {
                     window.setTimeout(() => {
                         window.location.href = data.url;
-                    }, 450);
+                    }, 400);
                 }
             });
         });

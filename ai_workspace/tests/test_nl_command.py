@@ -173,6 +173,8 @@ class NLCommandParseTests(TestCase):
         self.assertTrue(result['ok'])
         self.assertEqual(result['intent'], 'create_reminder')
         self.assertIn('command_id', result)
+        self.assertIn('ai', result)
+        self.assertTrue(result['ai'].get('model_label'))
 
     @_patch_chain_unknown()
     def test_parse_unknown_save_contact(self, _chain):

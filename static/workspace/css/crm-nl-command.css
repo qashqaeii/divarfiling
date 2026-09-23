@@ -1,0 +1,394 @@
+/* Smart command — minimal / artistic (scoped via import in crm-today) */
+.crm-today-pro .crm-nl-command {
+    --nl-font: 'Vazirmatn', 'Vazir', system-ui, sans-serif;
+    --nl-mono: 'Vazirmatn', ui-monospace, monospace;
+    margin: 0.2rem 0 0.9rem;
+    padding: 1.15rem 1.2rem 1.25rem;
+    border-radius: var(--tq-radius);
+    font-family: var(--nl-font);
+    background: color-mix(in srgb, var(--ws-surface) 92%, var(--ws-primary) 8%);
+    border: 1px solid color-mix(in srgb, var(--ws-primary) 14%, var(--ws-border, #e8ecf1));
+    box-shadow: 0 24px 48px -44px color-mix(in srgb, var(--ws-primary) 55%, transparent);
+}
+
+.crm-today-pro .crm-nl-command__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 0.75rem 1rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.85rem;
+    border-bottom: 1px solid color-mix(in srgb, var(--ws-primary) 10%, var(--ws-border, #e8ecf1));
+}
+
+.crm-today-pro .crm-nl-command__title {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.2;
+    background: linear-gradient(120deg, var(--ws-text) 20%, var(--ws-primary) 120%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.crm-today-pro .crm-nl-command__lede {
+    margin: 0.35rem 0 0;
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: var(--ws-text-muted);
+    letter-spacing: 0.01em;
+}
+
+.crm-today-pro .crm-nl-command__meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.crm-today-pro .crm-nl-command__ai {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.28rem 0.55rem 0.28rem 0.45rem;
+    border-radius: 999px;
+    background: var(--ws-surface);
+    border: 1px solid color-mix(in srgb, var(--ws-primary) 16%, var(--ws-border, #e2e8f0));
+}
+
+.crm-today-pro .crm-nl-command__ai-dot {
+    width: 0.45rem;
+    height: 0.45rem;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #a78bfa, var(--ws-primary));
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--ws-primary) 18%, transparent);
+    animation: crm-nl-pulse 2.4s ease-in-out infinite;
+}
+
+.crm-today-pro .crm-nl-command.is-loading .crm-nl-command__ai-dot {
+    animation: crm-nl-pulse 0.9s ease-in-out infinite;
+}
+
+@keyframes crm-nl-pulse {
+    0%, 100% { opacity: 0.55; transform: scale(0.92); }
+    50% { opacity: 1; transform: scale(1); }
+}
+
+.crm-today-pro .crm-nl-command__ai-prefix {
+    font-size: 0.62rem;
+    font-weight: 600;
+    color: var(--ws-text-muted);
+}
+
+.crm-today-pro .crm-nl-command__ai-name {
+    font-size: 0.68rem;
+    font-weight: 800;
+    font-family: var(--nl-mono);
+    letter-spacing: -0.02em;
+    color: var(--ws-primary);
+    max-width: 11rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.crm-today-pro .crm-nl-command__quota {
+    font-size: 0.72rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--ws-text-muted);
+    padding: 0.25rem 0.5rem;
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--ws-primary) 6%, transparent);
+}
+
+.crm-today-pro .crm-nl-command__quota-sep {
+    opacity: 0.45;
+    margin-inline: 0.12rem;
+}
+
+.crm-today-pro .crm-nl-command__input {
+    width: 100%;
+    min-height: 3.25rem;
+    padding: 0.65rem 0.15rem;
+    border: none;
+    border-bottom: 1.5px solid color-mix(in srgb, var(--ws-primary) 22%, var(--ws-border, #d1d5db));
+    background: transparent;
+    font-family: var(--nl-font);
+    font-size: 0.92rem;
+    font-weight: 500;
+    line-height: 1.65;
+    color: var(--ws-text);
+    resize: none;
+    transition: border-color 0.2s;
+}
+
+.crm-today-pro .crm-nl-command__input:focus {
+    outline: none;
+    border-bottom-color: var(--ws-primary);
+}
+
+.crm-today-pro .crm-nl-command__input::placeholder {
+    color: color-mix(in srgb, var(--ws-text-muted) 75%, transparent);
+    font-weight: 400;
+}
+
+.crm-today-pro .crm-nl-command__bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.55rem;
+    margin-top: 0.65rem;
+}
+
+.crm-today-pro .crm-nl-command__samples {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.3rem;
+    min-width: 0;
+}
+
+.crm-today-pro .crm-nl-command__samples-label {
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: var(--ws-text-muted);
+    margin-inline-end: 0.15rem;
+}
+
+.crm-today-pro .crm-nl-command__sample {
+    border: none;
+    background: transparent;
+    color: var(--ws-primary);
+    font-family: var(--nl-font);
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 0.15rem 0.35rem;
+    border-radius: 6px;
+    cursor: pointer;
+    text-decoration: underline;
+    text-decoration-color: color-mix(in srgb, var(--ws-primary) 35%, transparent);
+    text-underline-offset: 3px;
+}
+
+.crm-today-pro .crm-nl-command__sample:hover {
+    background: var(--tq-today-soft);
+}
+
+.crm-today-pro .crm-nl-command__parse {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    min-height: 2.35rem;
+    padding: 0 1.15rem;
+    border: none;
+    border-radius: 999px;
+    font-family: var(--nl-font);
+    font-size: 0.78rem;
+    font-weight: 800;
+    color: #fff;
+    cursor: pointer;
+    background: var(--ws-primary);
+    box-shadow: 0 10px 22px -14px color-mix(in srgb, var(--ws-primary) 80%, #000);
+    transition: transform 0.12s, opacity 0.12s;
+}
+
+.crm-today-pro .crm-nl-command__parse:disabled {
+    opacity: 0.65;
+    cursor: wait;
+}
+
+.crm-today-pro .crm-nl-command__parse-spinner {
+    display: none;
+    width: 0.9rem;
+    height: 0.9rem;
+    border: 2px solid color-mix(in srgb, #fff 35%, transparent);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: crm-nl-spin 0.65s linear infinite;
+}
+
+.crm-today-pro .crm-nl-command.is-loading .crm-nl-command__parse-spinner {
+    display: block;
+}
+
+@keyframes crm-nl-spin {
+    to { transform: rotate(360deg); }
+}
+
+.crm-today-pro .crm-nl-command__status {
+    margin-top: 0.75rem;
+    font-size: 0.74rem;
+    line-height: 1.5;
+    color: var(--ws-text-secondary);
+}
+
+.crm-today-pro .crm-nl-command__status.is-error { color: #b91c1c; }
+.crm-today-pro .crm-nl-command__status.is-warn { color: #b45309; }
+.crm-today-pro .crm-nl-command__status.is-success { color: #047857; }
+
+.crm-today-pro .crm-nl-command__preview {
+    margin-top: 1rem;
+    padding-top: 0.85rem;
+    border-top: 1px solid color-mix(in srgb, var(--ws-primary) 12%, var(--ws-border, #e8ecf1));
+    animation: crm-nl-in 0.35s ease-out;
+}
+
+@keyframes crm-nl-in {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.crm-today-pro .crm-nl-command__preview-kicker {
+    margin: 0 0 0.65rem;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ws-text-muted);
+}
+
+.crm-today-pro .crm-nl-command__sheet {
+    margin: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.55rem 1rem;
+}
+
+.crm-today-pro .crm-nl-command__sheet > div {
+    min-width: 0;
+}
+
+.crm-today-pro .crm-nl-command__sheet-wide {
+    grid-column: 1 / -1;
+}
+
+.crm-today-pro .crm-nl-command__sheet dt {
+    margin: 0;
+    font-size: 0.64rem;
+    font-weight: 600;
+    color: var(--ws-text-muted);
+}
+
+.crm-today-pro .crm-nl-command__sheet dd {
+    margin: 0.15rem 0 0;
+    font-size: 0.84rem;
+    font-weight: 700;
+    color: var(--ws-text);
+    line-height: 1.45;
+}
+
+.crm-today-pro .crm-nl-command__candidates {
+    margin-top: 0.75rem;
+    padding: 0.65rem 0;
+    border-top: 1px dashed color-mix(in srgb, var(--tq-overdue) 35%, var(--ws-border, #e2e8f0));
+}
+
+.crm-today-pro .crm-nl-command__candidates-title {
+    margin: 0 0 0.4rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #b45309;
+}
+
+.crm-today-pro .crm-nl-command__candidate {
+    display: block;
+    width: 100%;
+    margin-top: 0.35rem;
+    padding: 0.45rem 0;
+    border: none;
+    border-bottom: 1px solid var(--ws-border, #e8ecf1);
+    background: transparent;
+    text-align: right;
+    font-family: var(--nl-font);
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--ws-text);
+    cursor: pointer;
+}
+
+.crm-today-pro .crm-nl-command__candidate.is-selected {
+    color: var(--ws-primary);
+}
+
+.crm-today-pro .crm-nl-command__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    margin-top: 0.85rem;
+}
+
+.crm-today-pro .crm-nl-command__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.35rem;
+    padding: 0 0.9rem;
+    border-radius: 999px;
+    font-family: var(--nl-font);
+    font-size: 0.76rem;
+    font-weight: 800;
+    text-decoration: none;
+    border: 1px solid var(--ws-border, #e2e8f0);
+    background: var(--ws-surface);
+    color: var(--ws-text);
+    cursor: pointer;
+}
+
+.crm-today-pro .crm-nl-command__btn--primary {
+    border-color: var(--ws-primary);
+    background: var(--ws-primary);
+    color: #fff;
+}
+
+.crm-today-pro .crm-nl-command__btn--primary:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.crm-today-pro .crm-nl-command__btn--quiet {
+    border-color: transparent;
+    background: transparent;
+    color: var(--ws-text-muted);
+    font-weight: 600;
+}
+
+.crm-today-pro .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+@media (max-width: 520px) {
+    .crm-today-pro .crm-nl-command__sheet {
+        grid-template-columns: 1fr;
+    }
+
+    .crm-today-pro .crm-nl-command__bar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .crm-today-pro .crm-nl-command__parse {
+        width: 100%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .crm-today-pro .crm-nl-command__ai-dot,
+    .crm-today-pro .crm-nl-command__parse-spinner,
+    .crm-today-pro .crm-nl-command__preview {
+        animation: none;
+    }
+}

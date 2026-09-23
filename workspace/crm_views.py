@@ -308,6 +308,10 @@ class CRMTodayView(CRMContextMixin, LoginRequiredMixin, TemplateView):
                 'resolve_contact': reverse('workspace:ai_workspace:nl_resolve_contact'),
             }
             ctx['reminder_create_url'] = reverse('workspace:reminder_create')
+            from django.conf import settings
+
+            primary_model = (getattr(settings, 'ARVAN_AI_MODEL', '') or '').strip()
+            ctx['nl_command_ai_default'] = primary_model or 'Arvan AI'
         if not items and stats.get('total', 0) == 0:
             from workspace.academy.context_helpers import inject_academy_context
             inject_academy_context(ctx, self.request.user, 'today_empty')

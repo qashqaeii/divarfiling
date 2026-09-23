@@ -80,3 +80,14 @@ class SmartCommandTemplateTests(TestCase):
         self.assertIn('data-allowed-intent="create_reminder"', html)
         self.assertIn('ثبت سریع یادآوری', html)
         self.assertNotIn('data-allowed-intent="create_contact"', html)
+
+    def test_preview_markup_split_by_intent(self):
+        res = self._render_contacts()
+        html = res.content.decode()
+        self.assertIn('data-sc="preview-contact"', html)
+        self.assertIn('data-sc="contact-sections"', html)
+        self.assertIn('data-sc="preview-reminder"', html)
+        self.assertIn('data-sc="preview-property"', html)
+        self.assertNotIn('crm-nl-command__sheet-reminder', html)
+        self.assertNotIn('crm-nl-command__sheet-contact', html)
+        self.assertNotIn('data-field="contact_name">—', html)

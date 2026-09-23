@@ -448,7 +448,6 @@
 }
 
 .crm-smart-command .crm-nl-command__sheet--details {
-    padding-top: 0.15rem;
     border-top: 1px dashed color-mix(in srgb, var(--ws-border) 85%, transparent);
 }
 
@@ -495,20 +494,34 @@
     padding-top: 0.15rem;
 }
 
+.crm-smart-command .crm-nl-command__preview-bodies {
+    padding-top: 0.15rem;
+}
+
+.crm-smart-command .crm-nl-command__preview-body[hidden] {
+    display: none !important;
+}
+
 .crm-smart-command .crm-nl-command__sheet {
     margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+}
+
+.crm-smart-command .crm-nl-command__sheet-row {
     display: grid;
     grid-template-columns: minmax(4.5rem, auto) 1fr;
-    gap: 0.4rem 0.85rem;
+    gap: 0.15rem 0.85rem;
     align-items: baseline;
 }
 
-.crm-smart-command .crm-nl-command__sheet > div {
-    display: contents;
+.crm-smart-command .crm-nl-command__sheet-row[hidden] {
+    display: none !important;
 }
 
-.crm-smart-command .crm-nl-command__sheet-wide {
-    display: contents;
+.crm-smart-command .crm-nl-command__sheet-row--wide dd {
+    grid-column: 1 / -1;
 }
 
 .crm-smart-command .crm-nl-command__sheet dt {
@@ -836,7 +849,10 @@
     display: flex;
     flex-direction: column;
     gap: 0.65rem;
-    margin-bottom: 0.35rem;
+}
+
+.crm-smart-command .crm-nl-command__contact-sections:empty {
+    display: none;
 }
 
 .crm-smart-command .crm-nl-command__contact-block-title {

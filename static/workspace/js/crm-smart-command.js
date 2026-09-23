@@ -102,22 +102,22 @@
         const successLink = root.querySelector('[data-sc="success-link"]');
         const panelTitleText = readyStep?.querySelector('[data-sc="panel-title-text"]');
         const successTitleText = successEl?.querySelector('[data-sc="success-title-text"]');
-        const reminderRows = readyStep?.querySelectorAll('.crm-nl-command__sheet-reminder');
-        const contactRows = readyStep?.querySelectorAll('.crm-nl-command__sheet-contact');
-        const propertyRows = readyStep?.querySelectorAll('.crm-nl-command__sheet-property');
-        const contactNoteRow = readyStep?.querySelector('[data-contact-note-row]');
-        const contactSectionsEl = readyStep?.querySelector('[data-sc="contact-sections"]');
-        const propertyNoteRow = readyStep?.querySelector('[data-property-note-row]');
-        const propertyFeaturesRow = readyStep?.querySelector('[data-property-features-row]');
-        const propertySaleRow = readyStep?.querySelector('[data-property-sale-row]');
-        const propertyDepositRow = readyStep?.querySelector('[data-property-deposit-row]');
-        const propertyRentRow = readyStep?.querySelector('[data-property-rent-row]');
+        const previewReminderBody = readyStep?.querySelector('[data-sc="preview-reminder"]');
+        const previewContactBody = readyStep?.querySelector('[data-sc="preview-contact"]');
+        const previewPropertyBody = readyStep?.querySelector('[data-sc="preview-property"]');
+        const contactSectionsEl = previewContactBody?.querySelector('[data-sc="contact-sections"]');
+        const propertyRows = previewPropertyBody?.querySelectorAll('[data-property-row]');
+        const propertyNoteRow = previewPropertyBody?.querySelector('[data-property-note-row]');
+        const propertyFeaturesRow = previewPropertyBody?.querySelector('[data-property-features-row]');
+        const propertySaleRow = previewPropertyBody?.querySelector('[data-property-sale-row]');
+        const propertyDepositRow = previewPropertyBody?.querySelector('[data-property-deposit-row]');
+        const propertyRentRow = previewPropertyBody?.querySelector('[data-property-rent-row]');
         const statusEl = root.querySelector('[data-sc="status"]');
         const confirmBtn = root.querySelector('[data-sc="confirm-btn"]');
         const cancelBtn = root.querySelector('[data-sc="cancel-btn"]');
         const candidatesEl = root.querySelector('[data-sc="candidates"]');
         const continueBtn = root.querySelector('[data-sc="continue-btn"]');
-        const noteRow = readyStep?.querySelector('[data-note-row]');
+        const noteRow = previewReminderBody?.querySelector('[data-note-row]');
         const aiLabelEl = root.querySelector('[data-sc="ai-label"]');
         const modelInfoBtn = root.querySelector('[data-sc="model-info"]');
         const chipsWrap = root.querySelector('.crm-nl-command__chips');
@@ -282,15 +282,10 @@
             currentIntent = intent;
             const isContact = intent === 'create_contact';
             const isProperty = intent === 'create_personal_property';
-            reminderRows?.forEach((row) => {
-                row.hidden = isContact || isProperty;
-            });
-            contactRows?.forEach((row) => {
-                row.hidden = !isContact;
-            });
-            propertyRows?.forEach((row) => {
-                row.hidden = !isProperty;
-            });
+            const isReminder = !isContact && !isProperty;
+            if (previewReminderBody) previewReminderBody.hidden = !isReminder;
+            if (previewContactBody) previewContactBody.hidden = !isContact;
+            if (previewPropertyBody) previewPropertyBody.hidden = !isProperty;
             if (panelTitleText) {
                 if (isContact) {
                     panelTitleText.textContent = 'مخاطب آماده ثبت است';
@@ -327,6 +322,22 @@
                 .join(' · ');
         }
 
+        function contactSummaryPhone(p) {
+            const direct = (p.phone_display || '').trim();
+            if (direct) return direct;
+            const contactSec = (p.sections || []).find((s) => (s.title || '').trim() === 'تماس');
+            const line = contactSec && contactSec.lines && contactSec.lines[0];
+            return (line || '').trim();
+        }
+
+        function contactSummaryType(p) {
+            const direct = (p.customer_type || '').trim();
+            if (direct) return direct;
+            const head = (p.sections || [])[0];
+            const line = head && head.lines && head.lines[1];
+            return (line || '').trim();
+        }
+
         function fillPreviewSummary(p, intent) {
             if (!previewSummary || !previewSummaryLine || !p) return;
             const effective = intent || currentIntent || 'create_reminder';
@@ -343,12 +354,11 @@
                 ]);
             } else if (effective === 'create_contact') {
                 line = (p.name || '').trim();
-                sub = joinPreviewParts([
-                    p.phone_display,
-                    p.customer_type,
-                    p.areas_display,
-                    p.budget_display,
-                ]);
+                if (!line && p.sections && p.sections.length) {
+                    const head = p.sections[0];
+                    line = ((head.lines && head.lines[0]) || '').trim();
+                }
+                sub = joinPreviewParts([contactSummaryPhone(p), contactSummaryType(p)]);
             } else {
                 line = (p.due_at_display || p.title || '').trim();
                 const titleExtra = (p.title || '').trim();
@@ -370,42 +380,67 @@
         }
 
         function fillPropertyPreview(p) {
-            if (!readyStep || !p) return;
-            const setRow = (selector, val) => {
-                const el = readyStep.querySelector('[data-field="' + selector + '"]');
-                if (el) el.textContent = val || '—';
+            if (!previewPropertyBody || !p) return;
+            const setRow = (selector, val, rowEl) => {
+                const el = previewPropertyBody.querySelector('[data-field="' + selector + '"]');
+                const text = (val || '').trim();
+                if (el) el.textContent = text;
+                if (rowEl) rowEl.hidden = !text;
             };
-            setRow('type_deal_display', (p.type_deal_display || '').trim());
-            setRow('location_display', (p.location_display || '').trim());
-            setRow('specs_display', (p.specs_display || '').trim());
-            const pos = (p.features_positive || []).join(' · ');
-            const neg = (p.features_negative || []).join(' · ');
-            const feat = [pos, neg].filter(Boolean).join(' · ');
-            setRow('features_display', feat);
-            if (propertyFeaturesRow) propertyFeaturesRow.hidden = !feat;
-            const sale = (p.sale_price_display || '').trim();
-            const deposit = (p.deposit_display || '').trim();
-            const rent = (p.rent_display || '').trim();
-            setRow('sale_price_display', sale);
-            setRow('deposit_display', deposit);
-            setRow('rent_display', rent);
-            if (propertySaleRow) propertySaleRow.hidden = !sale;
-            if (propertyDepositRow) propertyDepositRow.hidden = !deposit;
-            if (propertyRentRow) propertyRentRow.hidden = !rent;
             propertyRows?.forEach((row) => {
-                if (row === propertyFeaturesRow || row === propertySaleRow
-                    || row === propertyDepositRow || row === propertyRentRow
-                    || row === propertyNoteRow) {
+                const dd = row.querySelector('dd');
+                const field = dd?.getAttribute('data-field');
+                if (!field) return;
+                if (field === 'features_display') {
+                    const pos = (p.features_positive || []).join(' · ');
+                    const neg = (p.features_negative || []).join(' · ');
+                    const feat = [pos, neg].filter(Boolean).join(' · ');
+                    setRow(field, feat, row);
                     return;
                 }
-                const dd = row.querySelector('dd');
-                const t = (dd?.textContent || '').trim();
-                row.hidden = !t || t === '—';
+                if (field === 'property_notes') {
+                    setRow(field, p.notes, row);
+                    return;
+                }
+                setRow(field, p[field], row);
             });
-            const notesText = (p.notes || '').trim();
-            setRow('property_notes', notesText);
-            if (propertyNoteRow) propertyNoteRow.hidden = !notesText;
             fillPreviewSummary(p, 'create_personal_property');
+        }
+
+        function normalizeContactSections(p) {
+            const raw = (p && p.sections) || [];
+            return raw
+                .map((sec) => {
+                    const title = (sec.title || '').trim();
+                    const lines = (sec.lines || [])
+                        .map((line) => (line || '').trim())
+                        .filter((line) => line && line !== '—');
+                    return { title, lines };
+                })
+                .filter((sec) => sec.lines.length > 0);
+        }
+
+        function fillContactPreview(p) {
+            if (!contactSectionsEl || !p) return;
+            contactSectionsEl.innerHTML = '';
+            const sections = normalizeContactSections(p);
+            sections.forEach((sec) => {
+                const block = document.createElement('div');
+                block.className = 'crm-nl-command__contact-block';
+                if (sec.title) {
+                    const titleEl = document.createElement('p');
+                    titleEl.className = 'crm-nl-command__contact-block-title';
+                    titleEl.textContent = sec.title;
+                    block.appendChild(titleEl);
+                }
+                sec.lines.forEach((line) => {
+                    const lineEl = document.createElement('p');
+                    lineEl.className = 'crm-nl-command__contact-block-line';
+                    lineEl.textContent = line;
+                    block.appendChild(lineEl);
+                });
+                contactSectionsEl.appendChild(block);
+            });
         }
 
         function isIncompleteProperty(data) {
@@ -430,63 +465,25 @@
                 return;
             }
             if (intent === 'create_contact' || currentIntent === 'create_contact') {
-                const sections = p.sections || [];
-                if (contactSectionsEl && sections.length) {
-                    contactSectionsEl.hidden = false;
-                    contactSectionsEl.innerHTML = '';
-                    contactRows?.forEach((row) => {
-                        row.hidden = true;
-                    });
-                    if (contactNoteRow) contactNoteRow.hidden = true;
-                    sections.forEach((sec) => {
-                        const block = document.createElement('div');
-                        block.className = 'crm-nl-command__contact-block';
-                        const title = (sec.title || '').trim();
-                        if (title) {
-                            const titleEl = document.createElement('p');
-                            titleEl.className = 'crm-nl-command__contact-block-title';
-                            titleEl.textContent = title;
-                            block.appendChild(titleEl);
-                        }
-                        (sec.lines || []).forEach((line) => {
-                            const lineEl = document.createElement('p');
-                            lineEl.className = 'crm-nl-command__contact-block-line';
-                            lineEl.textContent = line;
-                            block.appendChild(lineEl);
-                        });
-                        contactSectionsEl.appendChild(block);
-                    });
-                } else {
-                    if (contactSectionsEl) {
-                        contactSectionsEl.hidden = true;
-                        contactSectionsEl.innerHTML = '';
-                    }
-                    const contactFields = [
-                        'name', 'phone_display', 'customer_type', 'areas_display',
-                        'area_range_display', 'budget_display', 'rooms_display', 'notes',
-                    ];
-                    contactFields.forEach((key) => {
-                        const el = readyStep.querySelector('[data-field="' + key + '"]');
-                        if (!el) return;
-                        const val = (p[key] || '').trim();
-                        const row = el.closest('.crm-nl-command__sheet-contact');
-                        if (row && !row.hasAttribute('data-contact-note-row')) {
-                            row.hidden = !val;
-                        }
-                        if (val) el.textContent = val;
-                    });
-                    const notesText = (p.notes || '').trim();
-                    if (contactNoteRow) contactNoteRow.hidden = !notesText;
-                }
+                fillContactPreview(p);
                 fillPreviewSummary(p, 'create_contact');
                 return;
             }
-            ['contact_name', 'due_at_display', 'title', 'note'].forEach((key) => {
-                const el = readyStep.querySelector('[data-field="' + key + '"]');
-                if (el) el.textContent = displayValue(p[key]);
-            });
+            if (previewReminderBody) {
+                ['contact_name', 'due_at_display', 'title', 'note'].forEach((key) => {
+                    const el = previewReminderBody.querySelector('[data-field="' + key + '"]');
+                    const row = el?.closest('[data-reminder-row]');
+                    const text = (p[key] || '').trim();
+                    if (el) el.textContent = text;
+                    if (row && row !== noteRow) row.hidden = !text;
+                });
+            }
             const noteText = (p.note || '').trim();
             if (noteRow) noteRow.hidden = !noteText;
+            if (noteRow) {
+                const noteEl = noteRow.querySelector('[data-field="note"]');
+                if (noteEl) noteEl.textContent = noteText;
+            }
             fillPreviewSummary(p, 'create_reminder');
         }
 

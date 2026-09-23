@@ -92,29 +92,31 @@
                 <p class="crm-nl-command__preview-summary-line" data-sc="preview-summary-line"></p>
                 <p class="crm-nl-command__preview-summary-sub" data-sc="preview-summary-sub"></p>
             </div>
-            <dl class="crm-nl-command__sheet crm-nl-command__sheet--details">
-                <div class="crm-nl-command__sheet-reminder"><dt>مخاطب</dt><dd data-field="contact_name">—</dd></div>
-                <div class="crm-nl-command__sheet-reminder"><dt>زمان</dt><dd data-field="due_at_display">—</dd></div>
-                <div class="crm-nl-command__sheet-reminder crm-nl-command__sheet-wide"><dt>عنوان</dt><dd data-field="title">—</dd></div>
-                <div class="crm-nl-command__sheet-reminder crm-nl-command__sheet-wide crm-nl-command__sheet-note" data-note-row hidden><dt>یادداشت</dt><dd data-field="note">—</dd></div>
-                <div class="crm-nl-command__contact-sections" data-sc="contact-sections" hidden></div>
-                <div class="crm-nl-command__sheet-contact" hidden><dt>نام</dt><dd data-field="name">—</dd></div>
-                <div class="crm-nl-command__sheet-contact" hidden><dt>شماره</dt><dd data-field="phone_display">—</dd></div>
-                <div class="crm-nl-command__sheet-contact" hidden><dt>نوع</dt><dd data-field="customer_type">—</dd></div>
-                <div class="crm-nl-command__sheet-contact" hidden><dt>محله</dt><dd data-field="areas_display">—</dd></div>
-                <div class="crm-nl-command__sheet-contact" hidden><dt>متراژ</dt><dd data-field="area_range_display">—</dd></div>
-                <div class="crm-nl-command__sheet-contact" hidden><dt>بودجه</dt><dd data-field="budget_display">—</dd></div>
-                <div class="crm-nl-command__sheet-contact" hidden><dt>اتاق</dt><dd data-field="rooms_display">—</dd></div>
-                <div class="crm-nl-command__sheet-contact crm-nl-command__sheet-wide crm-nl-command__sheet-note" data-contact-note-row hidden><dt>یادداشت</dt><dd data-field="notes">—</dd></div>
-                <div class="crm-nl-command__sheet-property crm-nl-command__sheet-wide" hidden><dt>فایل</dt><dd data-field="type_deal_display">—</dd></div>
-                <div class="crm-nl-command__sheet-property" hidden><dt>محله</dt><dd data-field="location_display">—</dd></div>
-                <div class="crm-nl-command__sheet-property crm-nl-command__sheet-wide" hidden><dt>مشخصات</dt><dd data-field="specs_display">—</dd></div>
-                <div class="crm-nl-command__sheet-property crm-nl-command__sheet-wide" hidden data-property-features-row><dt>امکانات</dt><dd data-field="features_display">—</dd></div>
-                <div class="crm-nl-command__sheet-property" hidden data-property-sale-row><dt>قیمت</dt><dd data-field="sale_price_display">—</dd></div>
-                <div class="crm-nl-command__sheet-property" hidden data-property-deposit-row><dt>ودیعه</dt><dd data-field="deposit_display">—</dd></div>
-                <div class="crm-nl-command__sheet-property" hidden data-property-rent-row><dt>اجاره</dt><dd data-field="rent_display">—</dd></div>
-                <div class="crm-nl-command__sheet-property crm-nl-command__sheet-wide crm-nl-command__sheet-note" data-property-note-row hidden><dt>یادداشت</dt><dd data-field="property_notes">—</dd></div>
-            </dl>
+            <div class="crm-nl-command__preview-bodies crm-nl-command__sheet--details">
+                <div class="crm-nl-command__preview-body" data-sc="preview-reminder" hidden>
+                    <dl class="crm-nl-command__sheet">
+                        <div class="crm-nl-command__sheet-row" data-reminder-row><dt>مخاطب</dt><dd data-field="contact_name"></dd></div>
+                        <div class="crm-nl-command__sheet-row" data-reminder-row><dt>زمان</dt><dd data-field="due_at_display"></dd></div>
+                        <div class="crm-nl-command__sheet-row crm-nl-command__sheet-row--wide" data-reminder-row><dt>عنوان</dt><dd data-field="title"></dd></div>
+                        <div class="crm-nl-command__sheet-row crm-nl-command__sheet-row--wide" data-reminder-row data-note-row hidden><dt>یادداشت</dt><dd data-field="note"></dd></div>
+                    </dl>
+                </div>
+                <div class="crm-nl-command__preview-body" data-sc="preview-contact" hidden>
+                    <div class="crm-nl-command__contact-sections" data-sc="contact-sections"></div>
+                </div>
+                <div class="crm-nl-command__preview-body" data-sc="preview-property" hidden>
+                    <dl class="crm-nl-command__sheet">
+                        <div class="crm-nl-command__sheet-row crm-nl-command__sheet-row--wide" data-property-row><dt>فایل</dt><dd data-field="type_deal_display"></dd></div>
+                        <div class="crm-nl-command__sheet-row" data-property-row><dt>محله</dt><dd data-field="location_display"></dd></div>
+                        <div class="crm-nl-command__sheet-row crm-nl-command__sheet-row--wide" data-property-row><dt>مشخصات</dt><dd data-field="specs_display"></dd></div>
+                        <div class="crm-nl-command__sheet-row crm-nl-command__sheet-row--wide" data-property-row data-property-features-row hidden><dt>امکانات</dt><dd data-field="features_display"></dd></div>
+                        <div class="crm-nl-command__sheet-row" data-property-row data-property-sale-row hidden><dt>قیمت</dt><dd data-field="sale_price_display"></dd></div>
+                        <div class="crm-nl-command__sheet-row" data-property-row data-property-deposit-row hidden><dt>ودیعه</dt><dd data-field="deposit_display"></dd></div>
+                        <div class="crm-nl-command__sheet-row" data-property-row data-property-rent-row hidden><dt>اجاره</dt><dd data-field="rent_display"></dd></div>
+                        <div class="crm-nl-command__sheet-row crm-nl-command__sheet-row--wide" data-property-row data-property-note-row hidden><dt>یادداشت</dt><dd data-field="property_notes"></dd></div>
+                    </dl>
+                </div>
+            </div>
             <div class="crm-nl-command__actions">
                 <button type="button" class="crm-nl-command__btn crm-nl-command__btn--quiet" data-sc="cancel-btn">لغو</button>
                 {% if smart_command.edit_url %}

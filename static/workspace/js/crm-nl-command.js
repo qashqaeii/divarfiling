@@ -38,6 +38,10 @@
         return !!(data.contact_candidates && data.contact_candidates.length);
     }
 
+    function faCount(n) {
+        return Number(n).toLocaleString('fa-IR');
+    }
+
     function init() {
         const root = document.getElementById('crmNlCommand');
         if (!root) return;
@@ -49,15 +53,18 @@
         const parseBtn = document.getElementById('crmNlCommandParseBtn');
         const parseLabel = parseBtn?.querySelector('.crm-nl-command__parse-label');
         const preview = document.getElementById('crmNlCommandPreview');
+        const ambigStep = document.getElementById('crmNlAmbigStep');
+        const readyStep = document.getElementById('crmNlReadyStep');
+        const ambigLede = document.getElementById('crmNlAmbigLede');
         const previewSheet = document.getElementById('crmNlPreviewSheet');
         const previewActions = document.getElementById('crmNlPreviewActions');
-        const panelTitleText = preview?.querySelector('[data-panel-title-text]');
+        const panelTitleText = readyStep?.querySelector('[data-panel-title-text]');
         const statusEl = document.getElementById('crmNlCommandStatus');
         const confirmBtn = document.getElementById('crmNlCommandConfirmBtn');
         const cancelBtn = document.getElementById('crmNlCommandCancelBtn');
         const candidatesEl = document.getElementById('crmNlCommandCandidates');
         const continueBtn = document.getElementById('crmNlContinueBtn');
-        const noteRow = preview?.querySelector('[data-note-row]');
+        const noteRow = readyStep?.querySelector('[data-note-row]');
         const aiLabelEl = root.querySelector('[data-ai-label]');
         const modelInfoBtn = document.getElementById('crmNlModelInfo');
         const chipsWrap = root.querySelector('.crm-nl-command__chips');
@@ -153,14 +160,11 @@
         function hidePreviewPanel() {
             if (preview) preview.hidden = true;
             setSheetOpen(false);
-            preview?.classList.remove('is-ambiguous');
-            if (previewSheet) previewSheet.classList.remove('is-hidden');
-            if (previewActions) previewActions.hidden = false;
-            if (continueBtn) continueBtn.hidden = true;
-            if (candidatesEl) {
-                candidatesEl.hidden = true;
-                candidatesEl.innerHTML = '';
-            }
+            if (ambigStep) ambigStep.hidden = true;
+            if (readyStep) readyStep.hidden = true;
+            if (continueBtn) continueBtn.disabled = true;
+            if (candidatesEl) candidatesEl.innerHTML = '';
+            if (ambigLede) ambigLede.textContent = '';
             pendingContactId = null;
         }
 
@@ -196,9 +200,9 @@
         }
 
         function fillPreview(p) {
-            if (!preview || !p) return;
+            if (!readyStep || !p) return;
             ['contact_name', 'due_at_display', 'title', 'note'].forEach((key) => {
-                const el = preview.querySelector('[data-field="' + key + '"]');
+                const el = readyStep.querySelector('[data-field="' + key + '"]');
                 if (el) el.textContent = displayValue(p[key]);
             });
             const noteText = (p.note || '').trim();
@@ -207,11 +211,11 @@
 
         function showReadyPreview() {
             if (!preview) return;
+            if (ambigStep) ambigStep.hidden = true;
+            if (readyStep) readyStep.hidden = false;
             if (panelTitleText) panelTitleText.textContent = 'یادآوری آماده است';
-            preview.classList.remove('is-ambiguous');
-            if (previewSheet) previewSheet.classList.remove('is-hidden');
-            if (previewActions) previewActions.hidden = false;
-            if (continueBtn) continueBtn.hidden = true;
+            if (candidatesEl) candidatesEl.innerHTML = '';
+            if (continueBtn) continueBtn.disabled = true;
             preview.hidden = false;
             setSheetOpen(true);
         }
@@ -226,56 +230,68 @@
             });
         }
 
-        function renderCandidates(candidates) {
+        function selectCandidateCard(card) {
+            if (!candidatesEl || !card) return;
+            pendingContactId = parseInt(card.dataset.contactId, 10);
+            candidatesEl.querySelectorAll('.crm-nl-command__candidate-card').forEach((el) => {
+                const on = el === card;
+                el.classList.toggle('is-selected', on);
+                el.setAttribute('aria-checked', on ? 'true' : 'false');
+            });
+            if (continueBtn) continueBtn.disabled = !pendingContactId;
+        }
+
+        function renderCandidates(candidates, searchName) {
             if (!candidatesEl || !candidates || !candidates.length) return;
             candidatesEl.innerHTML = '';
-            const title = document.createElement('p');
-            title.className = 'crm-nl-command__candidates-title';
-            title.textContent = 'کدام مخاطب؟';
-            candidatesEl.appendChild(title);
-
-            const list = document.createElement('ul');
-            list.className = 'crm-nl-command__candidate-list';
-            candidates.forEach((c) => {
-                const li = document.createElement('li');
-                li.className = 'crm-nl-command__candidate-item';
-                const radio = document.createElement('input');
-                radio.type = 'radio';
-                radio.name = 'crmNlContactPick';
-                radio.value = String(c.id);
-                const label = document.createElement('span');
-                label.textContent = c.name;
-                li.appendChild(radio);
-                li.appendChild(label);
-                li.addEventListener('click', () => {
-                    radio.checked = true;
-                    pendingContactId = c.id;
-                    list.querySelectorAll('.crm-nl-command__candidate-item').forEach((el) => {
-                        el.classList.toggle('is-selected', el === li);
-                    });
-                    if (continueBtn) continueBtn.disabled = false;
-                });
-                list.appendChild(li);
-            });
-            candidatesEl.appendChild(list);
-            candidatesEl.hidden = false;
-            pendingContactId = null;
-            if (continueBtn) {
-                continueBtn.hidden = false;
-                continueBtn.disabled = true;
+            const name = (searchName || '').trim() || 'موردنظر';
+            if (ambigLede) {
+                ambigLede.textContent =
+                    faCount(candidates.length) + ' مخاطب با نام «' + name + '» پیدا شد.';
             }
+            candidates.forEach((c) => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'crm-nl-command__candidate-card';
+                btn.setAttribute('role', 'radio');
+                btn.setAttribute('aria-checked', 'false');
+                btn.dataset.contactId = String(c.id);
+
+                const mark = document.createElement('span');
+                mark.className = 'crm-nl-command__candidate-mark';
+                mark.setAttribute('aria-hidden', 'true');
+
+                const body = document.createElement('span');
+                body.className = 'crm-nl-command__candidate-body';
+
+                const nameEl = document.createElement('span');
+                nameEl.className = 'crm-nl-command__candidate-name';
+                nameEl.textContent = c.name;
+
+                const meta = document.createElement('span');
+                meta.className = 'crm-nl-command__candidate-meta';
+                meta.textContent = 'مخاطب CRM';
+
+                body.appendChild(nameEl);
+                body.appendChild(meta);
+                btn.appendChild(mark);
+                btn.appendChild(body);
+                btn.addEventListener('click', () => selectCandidateCard(btn));
+                candidatesEl.appendChild(btn);
+            });
+            pendingContactId = null;
+            if (continueBtn) continueBtn.disabled = true;
         }
 
         function showAmbiguousPanel(data) {
             if (!preview) return;
             commandId = data.command_id;
-            if (panelTitleText) panelTitleText.textContent = 'کدام مخاطب؟';
-            preview.classList.add('is-ambiguous');
-            if (previewSheet) previewSheet.classList.add('is-hidden');
-            if (previewActions) previewActions.hidden = true;
+            if (readyStep) readyStep.hidden = true;
+            if (ambigStep) ambigStep.hidden = false;
             if (confirmBtn) confirmBtn.disabled = true;
             fillPreview(data.preview);
-            renderCandidates(data.contact_candidates);
+            const searchName = (data.preview && data.preview.contact_name) || '';
+            renderCandidates(data.contact_candidates, searchName);
             preview.hidden = false;
             setSheetOpen(true);
             setStatus('');
@@ -294,10 +310,6 @@
                     }
                     fillPreview(res.data.preview);
                     if (confirmBtn) confirmBtn.disabled = !res.data.can_confirm;
-                    if (candidatesEl) {
-                        candidatesEl.hidden = true;
-                        candidatesEl.innerHTML = '';
-                    }
                     showReadyPreview();
                     if (res.data.can_confirm) {
                         setStatus('');
@@ -475,8 +487,8 @@
                         confirmBtn.disabled = false;
                         return;
                     }
-                    const dueEl = preview?.querySelector('[data-field="due_at_display"]');
-                    const titleEl = preview?.querySelector('[data-field="title"]');
+                    const dueEl = readyStep?.querySelector('[data-field="due_at_display"]');
+                    const titleEl = readyStep?.querySelector('[data-field="title"]');
                     const meta = [dueEl?.textContent, titleEl?.textContent]
                         .map((s) => (s || '').trim())
                         .filter((s) => s && s !== '—')

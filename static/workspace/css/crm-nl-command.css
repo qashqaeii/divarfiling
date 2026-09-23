@@ -293,8 +293,27 @@
     font-size: 0.75rem;
 }
 
-.crm-today-pro .crm-nl-command__panel.is-ambiguous .crm-nl-command__panel-check {
-    display: none;
+.crm-today-pro .crm-nl-command__ambig-title {
+    margin: 0 0 0.35rem;
+    font-size: 0.82rem;
+    font-weight: 800;
+    color: var(--ws-text);
+    line-height: 1.35;
+}
+
+.crm-today-pro .crm-nl-command__ambig-lede {
+    margin: 0 0 0.65rem;
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: var(--ws-text-muted);
+    line-height: 1.45;
+}
+
+.crm-today-pro .crm-nl-command__ambig-foot {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 0.75rem;
+    padding-top: 0.15rem;
 }
 
 .crm-today-pro .crm-nl-command__sheet {
@@ -333,71 +352,102 @@
     display: none;
 }
 
-.crm-today-pro .crm-nl-command__candidates {
-    margin-top: 0.15rem;
-}
-
-.crm-today-pro .crm-nl-command__candidates-title {
-    margin: 0 0 0.45rem;
-    font-size: 0.76rem;
-    font-weight: 800;
-    color: var(--ws-text);
-}
-
 .crm-today-pro .crm-nl-command__candidate-list {
-    margin: 0;
-    padding: 0;
-    list-style: none;
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
+    gap: 0.45rem;
 }
 
-.crm-today-pro .crm-nl-command__candidate-item {
+.crm-today-pro .crm-nl-command__candidate-card {
     display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.45rem 0.55rem;
-    border-radius: 10px;
+    align-items: flex-start;
+    gap: 0.55rem;
+    width: 100%;
+    margin: 0;
+    padding: 0.6rem 0.7rem;
+    border-radius: 11px;
     border: 1px solid var(--ws-border, #e8ecf1);
+    background: var(--ws-surface, #fff);
+    text-align: right;
     cursor: pointer;
-    font-size: 0.8rem;
-    font-weight: 600;
+    font-family: var(--nl-font);
+    transition: border-color 0.14s, background 0.14s, box-shadow 0.14s;
+}
+
+.crm-today-pro .crm-nl-command__candidate-card:hover {
+    border-color: color-mix(in srgb, var(--ws-primary) 28%, var(--ws-border));
+}
+
+.crm-today-pro .crm-nl-command__candidate-card.is-selected {
+    border-color: var(--ws-primary);
+    background: color-mix(in srgb, var(--ws-primary) 7%, var(--ws-surface));
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--ws-primary) 18%, transparent);
+}
+
+.crm-today-pro .crm-nl-command__candidate-mark {
+    flex-shrink: 0;
+    width: 1rem;
+    height: 1rem;
+    margin-top: 0.15rem;
+    border-radius: 50%;
+    border: 2px solid color-mix(in srgb, var(--ws-text-muted) 55%, var(--ws-border));
+    background: var(--ws-surface);
+    box-sizing: border-box;
     transition: border-color 0.12s, background 0.12s;
 }
 
-.crm-today-pro .crm-nl-command__candidate-item:hover {
-    border-color: color-mix(in srgb, var(--ws-primary) 25%, var(--ws-border));
-}
-
-.crm-today-pro .crm-nl-command__candidate-item.is-selected {
+.crm-today-pro .crm-nl-command__candidate-card.is-selected .crm-nl-command__candidate-mark {
     border-color: var(--ws-primary);
-    background: color-mix(in srgb, var(--ws-primary) 6%, var(--ws-surface));
+    background: radial-gradient(circle at center, var(--ws-primary) 42%, transparent 44%);
 }
 
-.crm-today-pro .crm-nl-command__candidate-item input {
-    accent-color: var(--ws-primary);
-    flex-shrink: 0;
+.crm-today-pro .crm-nl-command__candidate-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.12rem;
+    min-width: 0;
+}
+
+.crm-today-pro .crm-nl-command__candidate-name {
+    font-size: 0.82rem;
+    font-weight: 800;
+    color: var(--ws-text);
+    line-height: 1.35;
+}
+
+.crm-today-pro .crm-nl-command__candidate-meta {
+    font-size: 0.68rem;
+    font-weight: 500;
+    color: var(--ws-text-muted);
 }
 
 .crm-today-pro .crm-nl-command__continue {
-    display: block;
-    width: 100%;
-    margin-top: 0.55rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 6.5rem;
     min-height: 2.35rem;
-    border: 1px solid var(--ws-primary);
+    padding: 0 1.15rem;
+    border: 1px solid color-mix(in srgb, var(--ws-primary) 35%, var(--ws-border));
     border-radius: 10px;
-    background: var(--ws-surface);
-    color: var(--ws-primary);
+    background: color-mix(in srgb, var(--ws-primary) 6%, var(--ws-surface));
+    color: color-mix(in srgb, var(--ws-primary) 70%, var(--ws-text-muted));
     font-family: var(--nl-font);
     font-size: 0.76rem;
     font-weight: 800;
+    cursor: not-allowed;
+    transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+
+.crm-today-pro .crm-nl-command__continue:not(:disabled) {
+    border-color: var(--ws-primary);
+    background: var(--ws-primary);
+    color: #fff;
     cursor: pointer;
 }
 
-.crm-today-pro .crm-nl-command__continue:disabled {
-    opacity: 0.45;
-    cursor: not-allowed;
+.crm-today-pro .crm-nl-command__continue:not(:disabled):hover {
+    filter: brightness(1.03);
 }
 
 .crm-today-pro .crm-nl-command__actions {
@@ -558,6 +608,14 @@
     }
 
     .crm-today-pro .crm-nl-command__btn {
+        width: 100%;
+    }
+
+    .crm-today-pro .crm-nl-command__ambig-foot {
+        justify-content: stretch;
+    }
+
+    .crm-today-pro .crm-nl-command__continue {
         width: 100%;
     }
 }

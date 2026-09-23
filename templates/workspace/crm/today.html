@@ -12,7 +12,7 @@
 {% block crm_extra_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/mk-filing-datasets.css' %}?v=19">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-today.css' %}?v=9">
-<link rel="stylesheet" href="{% static 'workspace/css/crm-nl-command.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-nl-command.css' %}?v=3">
 {% endblock %}
 
 {% block crm_content %}
@@ -118,22 +118,30 @@
         </div>
 
         <div class="crm-nl-command__panel" id="crmNlCommandPreview" hidden>
-            <p class="crm-nl-command__panel-title" id="crmNlPanelTitle">
-                <i class="fas fa-check crm-nl-command__panel-check" aria-hidden="true"></i>
-                <span data-panel-title-text>یادآوری آماده است</span>
-            </p>
-            <dl class="crm-nl-command__sheet" id="crmNlPreviewSheet">
-                <div><dt>مخاطب</dt><dd data-field="contact_name">—</dd></div>
-                <div><dt>زمان</dt><dd data-field="due_at_display">—</dd></div>
-                <div class="crm-nl-command__sheet-wide"><dt>عنوان</dt><dd data-field="title">—</dd></div>
-                <div class="crm-nl-command__sheet-wide crm-nl-command__sheet-note" data-note-row hidden><dt>یادداشت</dt><dd data-field="note">—</dd></div>
-            </dl>
-            <div class="crm-nl-command__candidates" id="crmNlCommandCandidates" hidden></div>
-            <button type="button" class="crm-nl-command__continue" id="crmNlContinueBtn" hidden>ادامه</button>
-            <div class="crm-nl-command__actions" id="crmNlPreviewActions">
-                <button type="button" class="crm-nl-command__btn crm-nl-command__btn--quiet" id="crmNlCommandCancelBtn">لغو</button>
-                <a href="{{ reminder_create_url }}" class="crm-nl-command__btn crm-nl-command__btn--secondary" id="crmNlCommandEditLink">ویرایش</a>
-                <button type="button" class="crm-nl-command__btn crm-nl-command__btn--primary" id="crmNlCommandConfirmBtn" disabled>تأیید و ثبت</button>
+            <div class="crm-nl-command__ambig-step" id="crmNlAmbigStep" hidden>
+                <h3 class="crm-nl-command__ambig-title">کدام مخاطب منظورت بود؟</h3>
+                <p class="crm-nl-command__ambig-lede" id="crmNlAmbigLede"></p>
+                <div class="crm-nl-command__candidate-list" id="crmNlCommandCandidates" role="radiogroup" aria-label="انتخاب مخاطب"></div>
+                <div class="crm-nl-command__ambig-foot">
+                    <button type="button" class="crm-nl-command__continue" id="crmNlContinueBtn" disabled>ادامه</button>
+                </div>
+            </div>
+            <div class="crm-nl-command__ready-step" id="crmNlReadyStep" hidden>
+                <p class="crm-nl-command__panel-title" id="crmNlPanelTitle">
+                    <i class="fas fa-check crm-nl-command__panel-check" aria-hidden="true"></i>
+                    <span data-panel-title-text>یادآوری آماده است</span>
+                </p>
+                <dl class="crm-nl-command__sheet" id="crmNlPreviewSheet">
+                    <div><dt>مخاطب</dt><dd data-field="contact_name">—</dd></div>
+                    <div><dt>زمان</dt><dd data-field="due_at_display">—</dd></div>
+                    <div class="crm-nl-command__sheet-wide"><dt>عنوان</dt><dd data-field="title">—</dd></div>
+                    <div class="crm-nl-command__sheet-wide crm-nl-command__sheet-note" data-note-row hidden><dt>یادداشت</dt><dd data-field="note">—</dd></div>
+                </dl>
+                <div class="crm-nl-command__actions" id="crmNlPreviewActions">
+                    <button type="button" class="crm-nl-command__btn crm-nl-command__btn--quiet" id="crmNlCommandCancelBtn">لغو</button>
+                    <a href="{{ reminder_create_url }}" class="crm-nl-command__btn crm-nl-command__btn--secondary" id="crmNlCommandEditLink">ویرایش</a>
+                    <button type="button" class="crm-nl-command__btn crm-nl-command__btn--primary" id="crmNlCommandConfirmBtn" disabled>تأیید و ثبت</button>
+                </div>
             </div>
         </div>
 
@@ -235,6 +243,6 @@ window.crmQuickLeadUrl = "{% url 'workspace:crm_quick_lead' %}";
 window.crmTodayUrl = "{% url 'workspace:crm_today' %}";
 </script>
 <script src="{% static 'workspace/js/crm-today.js' %}?v=1"></script>
-{% if nl_command_enabled %}<script src="{% static 'workspace/js/crm-nl-command.js' %}?v=5"></script>{% endif %}
+{% if nl_command_enabled %}<script src="{% static 'workspace/js/crm-nl-command.js' %}?v=6"></script>{% endif %}
 <script src="{% static 'workspace/js/filing-help-modal.js' %}?v=2"></script>
 {% endblock %}

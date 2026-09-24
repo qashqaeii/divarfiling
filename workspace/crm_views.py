@@ -791,6 +791,10 @@ class CustomerDetailView(CRMContextMixin, LoginRequiredMixin, DetailView):
         )
         if ctx['after_call_prompt'] and self.request.session.get('crm_after_call_id') == c.pk:
             self.request.session.pop('crm_after_call_id', None)
+        from workspace.services.agency_space_ui_context import apply_agency_space_crm_context
+        from workspace.services.agency_space_provenance import provenance_for_customer
+        apply_agency_space_crm_context(ctx, self.request.user, customer=c)
+        ctx['agency_space_copy_provenance'] = provenance_for_customer(c, self.request.user)
         return ctx
 
     def post(self, request, customer_id):
@@ -1741,6 +1745,10 @@ class CRMPropertyDetailView(CRMContextMixin, LoginRequiredMixin, DetailView):
             ctx['ai_listing_summary_quota'] = feature_quota_dict(
                 self.request.user, FEATURE_LISTING_SUMMARY,
             )
+        from workspace.services.agency_space_ui_context import apply_agency_space_crm_context
+        from workspace.services.agency_space_provenance import provenance_for_property
+        apply_agency_space_crm_context(ctx, self.request.user, property=p)
+        ctx['agency_space_copy_provenance'] = provenance_for_property(p, self.request.user)
         if not ctx.get('property_is_deleted') and not ctx.get('mask_sensitive'):
             can_deal = can_create_property_deal(self.request.user, p)
             ctx['can_create_deal'] = can_deal

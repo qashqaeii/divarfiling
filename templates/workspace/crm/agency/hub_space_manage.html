@@ -1,0 +1,217 @@
+{% extends "workspace/crm/agency/hub_base.html" %}
+
+{% load static humanize %}
+
+{% block crm_extra_css %}
+
+{{ block.super }}
+
+<link rel="stylesheet" href="{% static 'workspace/css/agency-space.css' %}?v=2">
+
+{% endblock %}
+
+{% block agency_hub_content %}
+
+<div class="agency-space agency-space-manage">
+
+    <header class="agency-page-head">
+
+        <h1 class="agency-page-head__title">مدیریت فضای آژانس</h1>
+
+        <p class="agency-page-head__sub">نظارت بر انتشارهای تیم — بدون دسترسی به محتوای محرمانه غیرمجاز.</p>
+
+        <a href="{{ space_back_url }}" class="crm-btn crm-btn-ghost crm-btn-sm">بازگشت به فضا</a>
+
+    </header>
+
+
+
+    {% if can_view_analytics and space_analytics %}
+
+    <section class="agency-space-analytics" aria-label="آمار فضا">
+
+        <ul class="agency-space-kpis">
+
+            <li><span class="agency-space-kpis__val">{{ space_analytics.active_properties|intcomma }}</span><span class="agency-space-kpis__lbl">فایل فعال</span></li>
+
+            <li><span class="agency-space-kpis__val">{{ space_analytics.active_contacts|intcomma }}</span><span class="agency-space-kpis__lbl">مخاطب فعال</span></li>
+
+            <li><span class="agency-space-kpis__val">{{ space_analytics.active_publishers|intcomma }}</span><span class="agency-space-kpis__lbl">ناشر فعال</span></li>
+
+            <li><span class="agency-space-kpis__val">{{ space_analytics.total_copies|intcomma }}</span><span class="agency-space-kpis__lbl">کل کپی‌ها</span></li>
+
+            <li><span class="agency-space-kpis__val">{{ space_analytics.copies_last_7_days|intcomma }}</span><span class="agency-space-kpis__lbl">کپی ۷ روز</span></li>
+
+            <li><span class="agency-space-kpis__val">{{ space_analytics.publications_last_7_days|intcomma }}</span><span class="agency-space-kpis__lbl">انتشار ۷ روز</span></li>
+
+        </ul>
+
+    </section>
+
+    {% endif %}
+
+
+
+    <nav class="agency-space-subfilters">
+
+        <a href="?status=" class="crm-btn crm-btn-ghost crm-btn-sm{% if not manage_status %} is-active{% endif %}">همه (غیربایگانی)</a>
+
+        <a href="?status=active" class="crm-btn crm-btn-ghost crm-btn-sm{% if manage_status == 'active' %} is-active{% endif %}">فعال</a>
+
+        <a href="?status=hidden" class="crm-btn crm-btn-ghost crm-btn-sm{% if manage_status == 'hidden' %} is-active{% endif %}">مخفی مدیریتی</a>
+
+        <a href="?status=archived" class="crm-btn crm-btn-ghost crm-btn-sm{% if manage_status == 'archived' %} is-active{% endif %}">بایگانی</a>
+
+    </nav>
+
+
+
+    <div class="agency-space-manage-table-wrap">
+
+        <table class="agency-space-manage-table">
+
+            <thead>
+
+                <tr>
+
+                    <th>شناسه</th>
+
+                    <th>نوع</th>
+
+                    <th>ناشر</th>
+
+                    <th>دسترسی</th>
+
+                    <th>وضعیت</th>
+
+                    <th>انتشار</th>
+
+                    <th></th>
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                {% for row in manage_rows %}
+
+                <tr>
+
+                    <td data-label="شناسه">#{{ row.id }}</td>
+
+                    <td data-label="نوع">{% if row.source_kind == 'property' %}فایل{% else %}مخاطب{% endif %}</td>
+
+                    <td data-label="ناشر">{{ row.publisher.name }}</td>
+
+                    <td data-label="دسترسی">{{ row.visibility_label }}</td>
+
+                    <td data-label="وضعیت">{{ row.status_label|default:row.status }}</td>
+
+                    <td data-label="انتشار">{{ row.published_at|slice:":10" }}</td>
+
+                    <td data-label="">
+
+                        {% if row.view_mode == 'full' %}
+
+                        <a href="{% url 'workspace:agency_hub_space_item' row.id %}" class="crm-btn crm-btn-ghost crm-btn-sm">مشاهده</a>
+
+                        {% else %}
+
+                        <span class="crm-muted" title="دسترسی به جزئیات محرمانه ندارید">خلاصه محرمانه</span>
+
+                        {% endif %}
+
+                    </td>
+
+                </tr>
+
+                {% empty %}
+
+                <tr><td colspan="7">
+
+                    {% include "workspace/crm/agency/includes/empty_state.html" with decor="clipboard_list" title="موردی برای نمایش نیست" description="با تغییر فیلتر وضعیت یا منتظر انتشارهای جدید تیم باشید." compact=True variant="inline" %}
+
+                </td></tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+
+
+    {% if contributor_metrics %}
+
+    <section class="agency-space-contributors" aria-labelledby="contrib-heading">
+
+        <h2 id="contrib-heading" class="agency-space-detail__h">همکاری مشاوران</h2>
+
+        <table class="agency-space-manage-table">
+
+            <thead>
+
+                <tr>
+
+                    <th>مشاور</th>
+
+                    <th>فایل منتشرشده</th>
+
+                    <th>مخاطب منتشرشده</th>
+
+                    <th>دفعات کپی شدن</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                {% for c in contributor_metrics %}
+
+                <tr>
+
+                    <td data-label="مشاور">{{ c.name|default:c.user_id }}</td>
+
+                    <td data-label="فایل منتشرشده">{{ c.properties_published }}</td>
+
+                    <td data-label="مخاطب منتشرشده">{{ c.contacts_published }}</td>
+
+                    <td data-label="دفعات کپی">{{ c.times_copied }}</td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </section>
+
+    {% endif %}
+
+
+
+    {% if manage_page.has_other_pages %}
+
+    <nav class="agency-space-pager">
+
+        {% if manage_page.has_previous %}<a href="?status={{ manage_status }}&page={{ manage_page.previous_page_number }}">قبلی</a>{% endif %}
+
+        <span>{{ manage_page.number }} / {{ manage_page.paginator.num_pages }}</span>
+
+        {% if manage_page.has_next %}<a href="?status={{ manage_status }}&page={{ manage_page.next_page_number }}">بعدی</a>{% endif %}
+
+    </nav>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}
+
+

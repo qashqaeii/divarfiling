@@ -20,6 +20,7 @@ EVENT_CONTRACT_CREATED = 'contract_created'
 EVENT_LICENSE_ASSIGNED = 'license_assigned'
 EVENT_LICENSE_UNASSIGNED = 'license_unassigned'
 EVENT_ADVISOR_DATA_EXPORT = 'advisor_data_export'
+EVENT_SPACE_ITEM_PUBLISHED = 'space_item_published'
 
 EVENT_TYPE_LABELS = {
     EVENT_CONTACT_CREATED: 'مخاطب جدید',
@@ -35,6 +36,7 @@ EVENT_TYPE_LABELS = {
     EVENT_LICENSE_ASSIGNED: 'تخصیص لایسنس',
     EVENT_LICENSE_UNASSIGNED: 'لغو لایسنس',
     EVENT_ADVISOR_DATA_EXPORT: 'خروجی داده مشاور',
+    EVENT_SPACE_ITEM_PUBLISHED: 'انتشار در فضای آژانس',
 }
 
 

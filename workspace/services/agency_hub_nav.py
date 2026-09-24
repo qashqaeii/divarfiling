@@ -4,6 +4,7 @@ from __future__ import annotations
 from django.urls import reverse
 
 from workspace.services.agency_entitlement import can_manage_agency, resolve_managed_agency
+from workspace.services.agency_space_access import can_access_agency_space
 from workspace.services.crm_agency_features import is_agency_feature_enabled
 from workspace.services.crm_scope import can_manage_team, can_view_team_inbox, get_membership
 
@@ -21,6 +22,8 @@ def build_hub_nav(user) -> list[tuple[str, str, str]]:
     if can_manage_agency(user):
         nav.append(('licenses', 'لایسنس‌ها', reverse('workspace:agency_hub_licenses')))
     nav.append(('activity', 'فعالیت تیم', reverse('workspace:agency_hub_activity')))
+    if agency and is_agency_feature_enabled('agency_space', agency) and can_access_agency_space(user, agency):
+        nav.append(('space', 'فضای آژانس', reverse('workspace:agency_hub_space')))
     if can_view_team_inbox(user):
         nav.append(('inbox', 'صندوق', reverse('workspace:agency_hub_inbox')))
     if agency and is_agency_feature_enabled('messages', agency):

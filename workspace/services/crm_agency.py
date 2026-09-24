@@ -212,6 +212,13 @@ def remove_member(actor, member_id: int) -> None:
         raise ValueError('مالک قابل حذف نیست')
     member.is_active = False
     member.save(update_fields=['is_active'])
+    from workspace.models import AgencySpaceItem
+    from workspace.services.agency_space_lifecycle import archive_publications_for_member_user
+
+    archive_publications_for_member_user(
+        m.agency_id, member.user_id,
+        reason=AgencySpaceItem.ARCHIVE_MEMBER_DEACTIVATED,
+    )
 
 
 def assign_customer(actor, customer: Customer, advisor_id: int) -> Customer:

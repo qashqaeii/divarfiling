@@ -2121,6 +2121,210 @@ class AgencyActivityEvent(models.Model):
         ]
 
 
+class AgencySpaceItem(models.Model):
+    """انتشار فایل/مخاطب در فضای مشترک آژانس — Publish ≠ Transfer."""
+
+    VISIBILITY_AGENCY_PUBLIC = 'agency_public'
+    VISIBILITY_SELECTED_MEMBERS = 'selected_members'
+    VISIBILITY_CHOICES = [
+        (VISIBILITY_AGENCY_PUBLIC, 'عمومی آژانس'),
+        (VISIBILITY_SELECTED_MEMBERS, 'اعضای منتخب'),
+    ]
+
+    STATUS_ACTIVE = 'active'
+    STATUS_ARCHIVED = 'archived'
+    STATUS_MODERATION_HIDDEN = 'moderation_hidden'
+    STATUS_CHOICES = [
+        (STATUS_ACTIVE, 'فعال'),
+        (STATUS_ARCHIVED, 'بایگانی'),
+        (STATUS_MODERATION_HIDDEN, 'مخفی‌شده توسط مدیریت'),
+    ]
+
+    CONTACT_SUMMARY = 'summary'
+    CONTACT_FULL = 'full'
+    CONTACT_SHARE_LEVEL_CHOICES = [
+        (CONTACT_SUMMARY, 'خلاصه بدون تماس'),
+        (CONTACT_FULL, 'شامل اطلاعات تماس'),
+    ]
+
+    ARCHIVE_USER_UNPUBLISH = 'user_unpublish'
+    ARCHIVE_MEMBER_LEFT = 'member_left'
+    ARCHIVE_MEMBER_DEACTIVATED = 'member_deactivated'
+    ARCHIVE_SOURCE_DELETED = 'source_deleted'
+    ARCHIVE_MODERATION = 'moderation'
+    ARCHIVED_REASON_CHOICES = [
+        (ARCHIVE_USER_UNPUBLISH, 'لغو انتشار'),
+        (ARCHIVE_MEMBER_LEFT, 'خروج عضو'),
+        (ARCHIVE_MEMBER_DEACTIVATED, 'غیرفعال شدن عضو'),
+        (ARCHIVE_SOURCE_DELETED, 'حذف منبع'),
+        (ARCHIVE_MODERATION, 'مدیریت'),
+    ]
+
+    agency = models.ForeignKey(
+        'CRMAgency', on_delete=models.CASCADE,
+        related_name='space_items', verbose_name='آژانس',
+    )
+    publisher = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+        related_name='agency_space_publications', verbose_name='ناشر',
+    )
+    property = models.ForeignKey(
+        'CRMProperty', on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='agency_space_items', verbose_name='ملک',
+    )
+    customer = models.ForeignKey(
+        'Customer', on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='agency_space_items', verbose_name='مخاطب',
+    )
+    visibility = models.CharField(
+        max_length=24, choices=VISIBILITY_CHOICES,
+        default=VISIBILITY_AGENCY_PUBLIC, verbose_name='دسترسی',
+    )
+    status = models.CharField(
+        max_length=20, choices=STATUS_CHOICES,
+        default=STATUS_ACTIVE, db_index=True, verbose_name='وضعیت',
+    )
+    contact_share_level = models.CharField(
+        max_length=12, choices=CONTACT_SHARE_LEVEL_CHOICES,
+        default=CONTACT_SUMMARY, blank=True, verbose_name='سطح اشتراک مخاطب',
+    )
+    note = models.CharField(max_length=300, blank=True, verbose_name='یادداشت')
+    published_at = models.DateTimeField(auto_now_add=True, verbose_name='زمان انتشار')
+    updated_at = models.DateTimeField(auto_now=True)
+    archived_at = models.DateTimeField(null=True, blank=True, verbose_name='زمان بایگانی')
+    archived_reason = models.CharField(
+        max_length=24, choices=ARCHIVED_REASON_CHOICES,
+        blank=True, default='', verbose_name='دلیل بایگانی',
+    )
+
+    class Meta:
+        verbose_name = 'آیتم فضای آژانس'
+        verbose_name_plural = 'آیتم‌های فضای آژانس'
+        ordering = ['-published_at']
+        constraints = [
+            models.CheckConstraint(
+                check=(
+                    models.Q(property__isnull=False, customer__isnull=True)
+                    | models.Q(property__isnull=True, customer__isnull=False)
+                ),
+                name='agency_space_item_one_source',
+            ),
+            models.UniqueConstraint(
+                fields=['agency', 'publisher', 'property'],
+                condition=models.Q(
+                    status='active', property__isnull=False,
+                ),
+                name='uniq_active_space_property_pub',
+            ),
+            models.UniqueConstraint(
+                fields=['agency', 'publisher', 'customer'],
+                condition=models.Q(
+                    status='active', customer__isnull=False,
+                ),
+                name='uniq_active_space_customer_pub',
+            ),
+        ]
+        indexes = [
+            models.Index(fields=['agency', 'status', '-published_at']),
+            models.Index(fields=['agency', 'publisher', 'status']),
+        ]
+
+    def content_kind(self) -> str:
+        if self.property_id:
+            return 'property'
+        if self.customer_id:
+            return 'customer'
+        return 'unknown'
+
+    def __str__(self):
+        return f'SpaceItem #{self.pk} ({self.content_kind()})'
+
+
+class AgencySpaceItemMember(models.Model):
+    """مخاطب انتشار محرمانه — audience صریح."""
+
+    item = models.ForeignKey(
+        AgencySpaceItem, on_delete=models.CASCADE,
+        related_name='audience_members', verbose_name='آیتم',
+    )
+    member = models.ForeignKey(
+        'CRMAgencyMember', on_delete=models.CASCADE,
+        related_name='space_audience_items', verbose_name='عضو',
+    )
+
+    class Meta:
+        verbose_name = 'مخاطب audience فضای آژانس'
+        verbose_name_plural = 'مخاطبان audience فضای آژانس'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['item', 'member'],
+                name='uniq_agency_space_item_member',
+            ),
+        ]
+
+
+class AgencySpaceCopy(models.Model):
+    """Provenance کپی شخصی از فضای آژانس — snapshot مستقل از source."""
+
+    TARGET_PROPERTY = 'property'
+    TARGET_CUSTOMER = 'customer'
+    TARGET_KIND_CHOICES = [
+        (TARGET_PROPERTY, 'ملک'),
+        (TARGET_CUSTOMER, 'مخاطب'),
+    ]
+
+    item = models.ForeignKey(
+        AgencySpaceItem, on_delete=models.PROTECT,
+        related_name='space_copies', verbose_name='آیتم فضا',
+    )
+    copied_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, related_name='agency_space_copies', verbose_name='کپی‌کننده',
+    )
+    target_kind = models.CharField(
+        max_length=12, choices=TARGET_KIND_CHOICES,
+        verbose_name='نوع نسخه شخصی',
+    )
+    target_id_snapshot = models.PositiveIntegerField(
+        null=True, blank=True,
+        verbose_name='شناسه نسخه شخصی (تاریخی)',
+        help_text='پس از حذف نسخه شخصی برای provenance و شمارش تاریخی',
+    )
+    copied_property = models.ForeignKey(
+        'CRMProperty', on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='agency_space_copy_origin',
+        verbose_name='ملک کپی‌شده',
+    )
+    copied_customer = models.ForeignKey(
+        'Customer', on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='agency_space_copy_origin',
+        verbose_name='مخاطب کپی‌شده',
+    )
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='زمان کپی')
+
+    class Meta:
+        verbose_name = 'کپی فضای آژانس'
+        verbose_name_plural = 'کپی‌های فضای آژانس'
+        ordering = ['-created_at']
+        constraints = [
+            models.CheckConstraint(
+                check=(
+                    models.Q(target_kind='property', copied_customer__isnull=True)
+                    | models.Q(target_kind='customer', copied_property__isnull=True)
+                ),
+                name='agency_space_copy_kind_shape',
+            ),
+            models.UniqueConstraint(
+                fields=['item', 'copied_by'],
+                name='uniq_agency_space_copy_per_user',
+            ),
+        ]
+        indexes = [
+            models.Index(fields=['item', 'copied_by']),
+            models.Index(fields=['copied_by', '-created_at']),
+        ]
+
+
 class WorkspaceSettings(models.Model):
     """تنظیمات workspace کاربر."""
     THEME_CHOICES = [('light', 'روشن'), ('cheerful', 'شاد'), ('dark', 'تیره')]

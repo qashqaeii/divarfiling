@@ -1,0 +1,16 @@
+{% if agency_space_copy_provenance %}
+
+<p class="agency-space-provenance crm-muted">
+
+    منبع: {{ agency_space_copy_provenance.label }}
+
+    {% if agency_space_copy_provenance.publisher_name %}
+    · منتشرشده توسط: {{ agency_space_copy_provenance.publisher_name }}
+    {% endif %}
+    {% if agency_space_copy_provenance.space_item_url %}
+    · <a href="{{ agency_space_copy_provenance.space_item_url }}">مشاهده در فضای آژانس</a>
+    {% endif %}
+</p>
+
+{% endif %}
+

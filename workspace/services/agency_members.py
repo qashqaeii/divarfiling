@@ -63,6 +63,14 @@ def remove_agency_member(actor, member_id: int) -> CRMAgencyMember:
     member.is_active = False
     member.save(update_fields=['is_active'])
 
+    from workspace.models import AgencySpaceItem
+    from workspace.services.agency_space_lifecycle import archive_publications_for_member_user
+
+    archive_publications_for_member_user(
+        agency.pk, member.user_id,
+        reason=AgencySpaceItem.ARCHIVE_MEMBER_LEFT,
+    )
+
     log_agency_audit(
         agency, actor, 'agency_member_removed',
         {'member_id': member.pk, 'user_id': member.user_id},

@@ -93,6 +93,7 @@
                 <div class="crm-contact-hero__identity">
                     <div class="crm-contact-hero__headline">
                         <h1 class="crm-contact-hero__title">{{ customer.name }}</h1>
+                        {% include 'workspace/crm/agency/includes/agency_space_copy_provenance.html' %}
                         {% if customer.company_name %}<p class="crm-contact-hero__company">{{ customer.company_name }}</p>{% endif %}
                         <div class="crm-contact-hero__badges">
                             <span class="crm-contact-hero__type" style="{% crm_role_style customer.customer_type %}">{{ customer.customer_type }}</span>
@@ -237,6 +238,16 @@
                 {% include 'workspace/crm/includes/shared_view_badge.html' with share=customer_share %}
                 {% elif is_customer_owner %}
                 <div class="crm-contact-team-actions" data-crm-team-share>
+                    {% if agency_space_enabled %}
+                    <div class="crm-contact-space-actions" style="margin-bottom:0.5rem">
+                        {% if agency_space_item %}
+                        <span class="agency-space-badge agency-space-badge--active">در فضای آژانس</span>
+                        <a href="{{ agency_space_manage_url }}" class="crm-btn crm-btn-ghost crm-btn-sm">مدیریت انتشار در فضای آژانس</a>
+                        {% elif agency_space_can_publish %}
+                        <button type="button" class="crm-btn crm-btn-ghost crm-btn-sm" data-modal-open="modal-agency-space-publish">انتشار در فضای آژانس</button>
+                        {% endif %}
+                    </div>
+                    {% endif %}
                     <div class="crm-contact-team-actions--grouped">
                         <select class="crm-select crm-select-sm" id="crm-share-select" aria-label="ارسال به هم‌تیمی">
                             <option value="">ارسال به هم‌تیمی…</option>
@@ -1303,9 +1314,22 @@
     </div>
 </aside>
 {% endif %}
+{% if agency_space_enabled and agency_space_can_publish %}
+{% include 'workspace/crm/agency/includes/agency_space_publish_modal.html' %}
+{% endif %}
 {% endblock %}
 
 {% block crm_js %}
+{% if agency_space_enabled %}
+<script>
+window.AGENCY_SPACE_API = {
+  publishProperty: "{% url 'workspace:api_agency_space_publish_property' %}",
+  publishContact: "{% url 'workspace:api_agency_space_publish_contact' %}",
+  itemUrl: "{% url 'workspace:api_agency_space_item' item_id=0 %}".replace('/0/', '/'),
+};
+</script>
+<script src="{% static 'workspace/js/agency-space.js' %}?v=1" defer></script>
+{% endif %}
 <script src="{% static 'workspace/js/filing-help-modal.js' %}?v=2"></script>
 <script src="{% static 'workspace/js/ai.js' %}?v=6"></script>
 <script>window.crmTypeProfiles = {{ type_profiles_json|safe }};</script>

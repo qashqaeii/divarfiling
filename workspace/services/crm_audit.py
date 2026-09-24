@@ -17,6 +17,7 @@ AUDIT_CATEGORIES: Dict[str, Dict[str, str]] = {
     'settings': {'label': 'تنظیمات', 'icon': 'fa-gear'},
     'webhooks': {'label': 'وب‌هوک', 'icon': 'fa-plug'},
     'sync': {'label': 'همگام‌سازی', 'icon': 'fa-arrows-rotate'},
+    'space': {'label': 'فضای آژانس', 'icon': 'fa-building-user'},
 }
 
 _EVENT_META: Dict[str, Dict[str, str]] = {
@@ -124,6 +125,55 @@ _EVENT_META: Dict[str, Dict[str, str]] = {
         'icon': 'fa-file-export',
         'title': 'خروج داده به فایل',
         'verb': 'خروج',
+    },
+    'space.published': {
+        'category': 'space',
+        'tone': 'create',
+        'icon': 'fa-share-nodes',
+        'title': 'انتشار در فضای آژانس',
+        'verb': 'انتشار',
+    },
+    'space.unpublished': {
+        'category': 'space',
+        'tone': 'delete',
+        'icon': 'fa-eye-slash',
+        'title': 'لغو انتشار فضای آژانس',
+        'verb': 'لغو انتشار',
+    },
+    'space.visibility_changed': {
+        'category': 'space',
+        'tone': 'update',
+        'icon': 'fa-lock-open',
+        'title': 'تغییر سطح دسترسی فضای آژانس',
+        'verb': 'تغییر دسترسی',
+    },
+    'space.audience_changed': {
+        'category': 'space',
+        'tone': 'update',
+        'icon': 'fa-user-group',
+        'title': 'تغییر مخاطبان انتشار محرمانه',
+        'verb': 'تغییر مخاطبین',
+    },
+    'space.moderation_hidden': {
+        'category': 'space',
+        'tone': 'warn',
+        'icon': 'fa-shield-halved',
+        'title': 'مخفی‌سازی انتشار عمومی',
+        'verb': 'مخفی‌سازی',
+    },
+    'space.moderation_restored': {
+        'category': 'space',
+        'tone': 'update',
+        'icon': 'fa-shield-check',
+        'title': 'بازگردانی انتشار عمومی',
+        'verb': 'بازگردانی',
+    },
+    'space.item_copied': {
+        'category': 'space',
+        'tone': 'create',
+        'icon': 'fa-copy',
+        'title': 'کپی از فضای آژانس به CRM شخصی',
+        'verb': 'کپی به CRM',
     },
 }
 

@@ -1,0 +1,121 @@
+<article class="agency-space-card" data-space-kind="{{ item.source_kind }}" data-item-id="{{ item.id }}">
+
+    {% if item.is_publisher %}
+
+    <span class="agency-space-card__ribbon">منتشرشده توسط من</span>
+
+    {% endif %}
+
+
+
+    {% if item.source_kind == 'property' and item.property %}
+
+    <a href="{% url 'workspace:agency_hub_space_item' item.id %}" class="agency-space-card__media-link">
+
+        <div class="agency-space-card__media">
+
+            {% if item.property.thumbnail_url %}
+
+            <img src="{{ item.property.thumbnail_url }}" alt="" loading="lazy" width="320" height="200">
+
+            {% else %}
+
+            <span class="agency-space-card__media-fallback" aria-hidden="true">🏠</span>
+
+            {% endif %}
+
+        </div>
+
+    </a>
+
+    <h3 class="agency-space-card__title"><a href="{% url 'workspace:agency_hub_space_item' item.id %}">{{ item.property.title }}</a></h3>
+
+    <p class="agency-space-card__meta">
+
+        {{ item.property.property_type }} · {{ item.property.deal_mode }}
+
+        {% if item.property.region %} · {{ item.property.region }}{% endif %}
+
+        {% if item.property.area %} · {{ item.property.area }} متر{% endif %}
+
+    </p>
+
+    {% if item.property.price_label %}<p class="agency-space-card__price">{{ item.property.price_label }}</p>{% endif %}
+
+
+
+    {% elif item.source_kind == 'customer' and item.customer %}
+
+    <div class="agency-space-card__avatar" aria-hidden="true">👤</div>
+
+    <h3 class="agency-space-card__title"><a href="{% url 'workspace:agency_hub_space_item' item.id %}">{{ item.customer.name }}</a></h3>
+
+    <p class="agency-space-card__meta">
+
+        {{ item.customer.customer_type }}
+
+        {% if item.customer.need_summary %} · {{ item.customer.need_summary|truncatechars:80 }}{% endif %}
+
+        {% if item.customer.region %} · {{ item.customer.region }}{% endif %}
+
+    </p>
+
+    {% if item.customer.budget_label %}<p class="agency-space-card__price">{{ item.customer.budget_label }}</p>{% endif %}
+
+    {% endif %}
+
+
+
+    <footer class="agency-space-card__foot">
+
+        <p class="agency-space-card__publisher">{{ item.publisher.name }}</p>
+
+        {% if item.published_at %}<time class="agency-space-card__time" datetime="{{ item.published_at }}">{{ item.published_at|slice:":10" }}</time>{% endif %}
+
+        <div class="agency-space-card__badges">
+
+            <span class="agency-space-badge agency-space-badge--{{ item.visibility }}">{{ item.visibility_label }}</span>
+
+            {% if item.status != 'active' %}
+
+            <span class="agency-space-badge agency-space-badge--status">{{ item.status_label }}</span>
+
+            {% endif %}
+
+            {% if item.is_publisher and item.copy_count != None %}
+
+            <span class="agency-space-badge">{{ item.copy_count }} کپی</span>
+
+            {% endif %}
+
+        </div>
+
+    </footer>
+
+
+
+    <div class="agency-space-card__actions">
+
+        {% if item.already_copied and item.copy_target_url %}
+
+        <span class="agency-space-card__badge-done">{% if item.source_kind == 'property' %}در فایل‌های من{% else %}در مخاطبین من{% endif %}</span>
+
+        <a href="{{ item.copy_target_url }}" class="crm-btn crm-btn-ghost crm-btn-sm">مشاهده نسخه من</a>
+
+        {% elif item.can_copy %}
+
+        <button type="button" class="crm-btn crm-btn-primary crm-btn-sm" data-space-copy data-item-id="{{ item.id }}">
+
+            {% if item.source_kind == 'property' %}افزودن به فایل‌های من{% else %}افزودن به مخاطبین من{% endif %}
+
+        </button>
+
+        {% endif %}
+
+        <a href="{% url 'workspace:agency_hub_space_item' item.id %}" class="crm-btn crm-btn-ghost crm-btn-sm">{% if item.is_publisher %}مدیریت انتشار{% else %}جزئیات{% endif %}</a>
+
+    </div>
+
+</article>
+
+

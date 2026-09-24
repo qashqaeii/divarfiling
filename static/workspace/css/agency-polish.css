@@ -1,0 +1,66 @@
+/* Agency Hub + Space — release polish layer (RTL, low-risk overrides) */
+
+.agency-hub .agency-page-head__title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.agency-hub .agency-kpi {
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.agency-hub .agency-kpi:hover {
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+}
+
+.agency-hub .agency-table-wrap {
+  border-radius: var(--ah-radius, 12px);
+}
+
+.agency-hub .agency-table tbody tr:hover {
+  background: color-mix(in srgb, var(--ah-purple, #7c3aed) 4%, transparent);
+}
+
+.agency-hub .crm-btn:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--ah-purple, #7c3aed) 55%, #fff);
+  outline-offset: 2px;
+}
+
+.agency-settings-card {
+  transition: box-shadow 0.15s ease;
+}
+
+.agency-settings-card:hover {
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.06);
+}
+
+.agency-dash-toolbar {
+  align-items: flex-end;
+}
+
+@media (max-width: 900px) {
+  .agency-kpi-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 480px) {
+  .agency-kpi-strip {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+  }
+
+  .agency-kpi__value {
+    font-size: 1.15rem;
+  }
+
+  .agency-hub-header {
+    grid-template-columns: 1fr;
+  }
+
+  .agency-hub-header__actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}

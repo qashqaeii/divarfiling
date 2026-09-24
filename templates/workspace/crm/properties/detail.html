@@ -208,6 +208,7 @@
                     </div>
 
                     <h1 class="crm-prop-hero-title">{{ property.title }}</h1>
+                    {% include 'workspace/crm/agency/includes/agency_space_copy_provenance.html' %}
 
                     <div class="crm-prop-hero-chips">
                         {% if property_location_display and property_location_display != "—" %}
@@ -380,6 +381,17 @@
             {% if can_share_team_resources and is_property_owner %}
             <div class="crm-prop-hero-share-block" data-crm-property-team data-property-id="{{ property.pk }}">
             <div class="crm-prop-share-bar">
+                {% if agency_space_enabled and is_property_owner %}
+                <div class="crm-prop-space-bar" style="margin-bottom:0.75rem">
+                    {% if agency_space_item %}
+                    <span class="agency-space-badge agency-space-badge--active">در فضای آژانس</span>
+                    <a href="{{ agency_space_manage_url }}" class="crm-btn crm-btn-ghost crm-btn-sm">مدیریت انتشار در فضای آژانس</a>
+                    {% elif agency_space_can_publish %}
+                    <button type="button" class="crm-btn crm-btn-ghost crm-btn-sm" data-modal-open="modal-agency-space-publish">انتشار در فضای آژانس</button>
+                    {% endif %}
+                    <span class="crm-prop-share-bar-hint" style="display:block;font-size:0.85rem;color:var(--crm-muted,#64748b)">مستقل از «اشتراک مستقیم با هم‌تیمی»</span>
+                </div>
+                {% endif %}
                 <span class="crm-prop-share-bar-label" title="فایل خصوصی شما — فقط با ارسال صریح در اختیار هم‌تیمی قرار می‌گیرد">
                     <i class="fas fa-lock" aria-hidden="true"></i>
                     <span>فایل خصوصی</span>
@@ -992,9 +1004,22 @@
 {% url 'workspace:crm_property_public_share' property.id as property_share_action %}
 {% include 'workspace/includes/public_share_modal.html' with modal_id='modal-property-share' form_id='form-property-share' form_action=property_share_action share_url=public_property_share_url share=public_property_share item_title=property.title id_prefix='property-share' subtitle='لینک عمومی — مشتری بدون ورود، جزئیات فایل و اطلاعات شما را می‌بیند' is_personal_file=True share_profile=share_profile nearby_pois_meta=public_share_nearby_meta %}
 {% endif %}
+{% if agency_space_enabled and agency_space_can_publish %}
+{% include 'workspace/crm/agency/includes/agency_space_publish_modal.html' %}
+{% endif %}
 {% endblock %}
 
 {% block crm_js %}
+{% if agency_space_enabled %}
+<script>
+window.AGENCY_SPACE_API = {
+  publishProperty: "{% url 'workspace:api_agency_space_publish_property' %}",
+  publishContact: "{% url 'workspace:api_agency_space_publish_contact' %}",
+  itemUrl: "{% url 'workspace:api_agency_space_item' item_id=0 %}".replace('/0/', '/'),
+};
+</script>
+<script src="{% static 'workspace/js/agency-space.js' %}?v=1" defer></script>
+{% endif %}
 {% if can_create_deal %}
 <script src="{% static 'workspace/js/crm-property-deal-create.js' %}?v=6"></script>
 {% endif %}

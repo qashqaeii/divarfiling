@@ -3,7 +3,7 @@
 
 {% block crm_extra_css %}
 {{ block.super }}
-<link rel="stylesheet" href="{% static 'workspace/css/agency-space.css' %}?v=7">
+<link rel="stylesheet" href="{% static 'workspace/css/agency-space.css' %}?v=8">
 {% endblock %}
 
 {% block agency_hub_content %}
@@ -27,79 +27,78 @@
             {% if space_payload.source_kind == 'property' and space_payload.property %}
             {% with prop=space_payload.property %}
             <header class="agency-space-detail__hero agency-space-detail__hero--property">
-                <div class="agency-space-detail__chips">
-                    <span class="agency-space-badge agency-space-badge--{{ space_payload.visibility }}">{{ space_payload.visibility_label }}</span>
-                    {% if space_payload.status != 'active' %}
-                    <span class="agency-space-badge agency-space-badge--status">{{ space_payload.status_label }}</span>
-                    {% endif %}
-                    {% if space_payload.is_publisher %}
-                    <span class="agency-space-badge agency-space-badge--mine">منتشرشده توسط من</span>
-                    {% endif %}
-                    <span class="agency-space-badge agency-space-badge--kind"><i class="fas fa-building" aria-hidden="true"></i> فایل</span>
-                </div>
+                <div class="agency-space-detail__hero-split">
+                    <div class="agency-space-detail__media" data-space-gallery>
+                        {% if prop.images %}
+                        <div class="agency-space-detail__media-main">
+                            <img src="{{ prop.images.0 }}" alt="" loading="lazy" class="agency-space-detail__media-img" data-space-gallery-main>
+                        </div>
+                        {% if prop.images|length > 1 %}
+                        <div class="agency-space-detail__media-thumbs" role="list" aria-label="تصاویر ملک">
+                            {% for img in prop.images %}
+                            <button type="button" class="agency-space-detail__media-thumb{% if forloop.first %} is-active{% endif %}" role="listitem" data-space-gallery-thumb data-src="{{ img }}" aria-label="تصویر {{ forloop.counter }}">
+                                <img src="{{ img }}" alt="" loading="lazy">
+                            </button>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        {% elif prop.thumbnail_url %}
+                        <div class="agency-space-detail__media-main">
+                            <img src="{{ prop.thumbnail_url }}" alt="" loading="lazy" class="agency-space-detail__media-img">
+                        </div>
+                        {% else %}
+                        <div class="agency-space-detail__media-empty" aria-hidden="true">
+                            <i class="fas fa-image"></i>
+                            <span>بدون تصویر</span>
+                        </div>
+                        {% endif %}
+                    </div>
 
-                {% if prop.images %}
-                <div class="agency-space-detail__gallery" data-space-gallery>
-                    <div class="agency-space-detail__gallery-main">
-                        <img src="{{ prop.images.0 }}" alt="" loading="lazy" class="agency-space-detail__gallery-img" data-space-gallery-main>
+                    <div class="agency-space-detail__hero-content">
+                        <div class="agency-space-detail__chips">
+                            <span class="agency-space-badge agency-space-badge--{{ space_payload.visibility }}">{{ space_payload.visibility_label }}</span>
+                            {% if space_payload.status != 'active' %}
+                            <span class="agency-space-badge agency-space-badge--status">{{ space_payload.status_label }}</span>
+                            {% endif %}
+                            {% if space_payload.is_publisher %}
+                            <span class="agency-space-badge agency-space-badge--mine">منتشرشده توسط من</span>
+                            {% endif %}
+                            <span class="agency-space-badge agency-space-badge--kind"><i class="fas fa-building" aria-hidden="true"></i> فایل</span>
+                        </div>
+                        <h1 class="agency-space-detail__hero-title">{{ prop.title }}</h1>
+                        <p class="agency-space-detail__hero-meta">
+                            {{ prop.property_type }} · {{ prop.deal_mode }}
+                            {% if prop.transaction_status %} · {{ prop.transaction_status }}{% endif %}
+                        </p>
+                        {% if prop.region %}
+                        <p class="agency-space-detail__hero-loc"><i class="fas fa-location-dot" aria-hidden="true"></i> {{ prop.region }}</p>
+                        {% endif %}
+                        {% if prop.price_label %}
+                        <p class="agency-space-card__price agency-space-detail__hero-price">{{ prop.price_label }}</p>
+                        {% endif %}
+                        <dl class="agency-space-detail__hero-stats" aria-label="خلاصه فایل">
+                            <div>
+                                <dt>متراژ</dt>
+                                <dd>{% if prop.area_label %}{{ prop.area_label }}{% elif prop.area %}{{ prop.area }} متر{% else %}—{% endif %}</dd>
+                            </div>
+                            <div>
+                                <dt>دسترسی</dt>
+                                <dd>{{ space_payload.visibility_label }}</dd>
+                            </div>
+                            <div>
+                                <dt>وضعیت</dt>
+                                <dd>{{ space_payload.status_label }}</dd>
+                            </div>
+                            <div>
+                                <dt>{% if space_payload.is_publisher %}کپی CRM{% else %}انتشار{% endif %}</dt>
+                                <dd>
+                                    {% if space_payload.is_publisher and space_payload.copy_count != None %}{{ space_payload.copy_count }}{% elif space_payload.published_at_display %}{{ space_payload.published_at_display }}{% else %}—{% endif %}
+                                </dd>
+                            </div>
+                        </dl>
                     </div>
-                    {% if prop.images|length > 1 %}
-                    <div class="agency-space-detail__gallery-thumbs" role="list">
-                        {% for img in prop.images %}
-                        <button type="button" class="agency-space-detail__gallery-thumb{% if forloop.first %} is-active{% endif %}" role="listitem" data-space-gallery-thumb data-src="{{ img }}" aria-label="تصویر {{ forloop.counter }}">
-                            <img src="{{ img }}" alt="" loading="lazy">
-                        </button>
-                        {% endfor %}
-                    </div>
-                    {% endif %}
-                </div>
-                {% elif prop.thumbnail_url %}
-                <div class="agency-space-detail__gallery agency-space-detail__gallery--single">
-                    <div class="agency-space-detail__gallery-main">
-                        <img src="{{ prop.thumbnail_url }}" alt="" loading="lazy" class="agency-space-detail__gallery-img">
-                    </div>
-                </div>
-                {% else %}
-                <div class="agency-space-detail__gallery-placeholder" aria-hidden="true">
-                    <i class="fas fa-image"></i>
-                </div>
-                {% endif %}
-
-                <div class="agency-space-detail__hero-body">
-                    <h1 class="agency-space-detail__hero-title">{{ prop.title }}</h1>
-                    <p class="agency-space-detail__hero-meta">
-                        {{ prop.property_type }} · {{ prop.deal_mode }}
-                        {% if prop.transaction_status %} · {{ prop.transaction_status }}{% endif %}
-                    </p>
-                    {% if prop.region %}
-                    <p class="agency-space-detail__hero-loc"><i class="fas fa-location-dot" aria-hidden="true"></i> {{ prop.region }}</p>
-                    {% endif %}
-                    {% if prop.price_label %}
-                    <p class="agency-space-card__price agency-space-detail__hero-price">{{ prop.price_label }}</p>
-                    {% endif %}
                 </div>
             </header>
-
-            <div class="agency-space-detail__kpis" aria-label="خلاصه فایل">
-                <div class="agency-space-detail__kpi">
-                    <span class="agency-space-detail__kpi-label">متراژ</span>
-                    <span class="agency-space-detail__kpi-value">{% if prop.area_label %}{{ prop.area_label }}{% elif prop.area %}{{ prop.area }} متر{% else %}—{% endif %}</span>
-                </div>
-                <div class="agency-space-detail__kpi">
-                    <span class="agency-space-detail__kpi-label">دسترسی</span>
-                    <span class="agency-space-detail__kpi-value">{{ space_payload.visibility_label }}</span>
-                </div>
-                <div class="agency-space-detail__kpi">
-                    <span class="agency-space-detail__kpi-label">وضعیت</span>
-                    <span class="agency-space-detail__kpi-value">{{ space_payload.status_label }}</span>
-                </div>
-                <div class="agency-space-detail__kpi">
-                    <span class="agency-space-detail__kpi-label">{% if space_payload.is_publisher %}کپی به CRM{% else %}انتشار{% endif %}</span>
-                    <span class="agency-space-detail__kpi-value">
-                        {% if space_payload.is_publisher and space_payload.copy_count != None %}{{ space_payload.copy_count }}{% elif space_payload.published_at_display %}{{ space_payload.published_at_display }}{% else %}—{% endif %}
-                    </span>
-                </div>
-            </div>
 
             <section class="agency-space-detail__section agency-space-detail__section--specs" aria-labelledby="space-specs-heading">
                 <h2 id="space-specs-heading" class="agency-space-detail__h"><i class="fas fa-list-ul" aria-hidden="true"></i> مشخصات</h2>
@@ -111,7 +110,9 @@
                     {% if prop.phone %}<div><dt>تماس</dt><dd dir="ltr">{{ prop.phone }}</dd></div>{% endif %}
                 </dl>
                 {% if prop.amenities %}
-                <p class="agency-space-detail__amenities">{{ prop.amenities }}</p>
+                <div class="agency-space-detail__amenities-wrap">
+                    <p class="agency-space-detail__amenities">{{ prop.amenities }}</p>
+                </div>
                 {% endif %}
                 {% if prop.notes %}
                 <div class="agency-space-detail__notes-block">

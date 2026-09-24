@@ -714,15 +714,37 @@
 .agency-space-detail__hero {
   margin: 0;
   padding: 0;
-  border: 1px solid var(--as-border);
-  border-radius: var(--as-radius);
-  background: linear-gradient(135deg, #fff 0%, #faf8ff 100%);
-  box-shadow: var(--as-shadow);
+  border: 1px solid color-mix(in srgb, var(--as-purple) 10%, var(--as-border));
+  border-radius: 14px;
+  background: var(--ws-surface, #fff);
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 8px 24px rgba(15, 23, 42, 0.06);
   overflow: hidden;
 }
 
-.agency-space-detail__hero-body {
-  padding: 1rem 1.1rem 1.1rem;
+.agency-space-detail__hero--property {
+  padding: 0.85rem 1rem 1rem;
+}
+
+.agency-space-detail__hero-split {
+  display: grid;
+  gap: 0.85rem 1rem;
+  align-items: start;
+}
+
+@media (min-width: 720px) {
+  .agency-space-detail__hero-split {
+    grid-template-columns: minmax(10.5rem, 13.5rem) minmax(0, 1fr);
+  }
+}
+
+.agency-space-detail__hero-content {
+  min-width: 0;
+}
+
+.agency-space-detail__hero-content .agency-space-detail__chips {
+  margin-bottom: 0.45rem;
 }
 
 .agency-space-detail__hero--contact {
@@ -733,67 +755,124 @@
   margin-bottom: 0.65rem;
 }
 
-.agency-space-detail__gallery {
-  display: grid;
-  gap: 0.5rem;
-  background: #0f172a;
-}
-
-.agency-space-detail__gallery-main {
-  aspect-ratio: 16 / 10;
-  max-height: 22rem;
+/* Compact media — no horizontal thumb scroller */
+.agency-space-detail__media {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
+  flex-direction: column;
+  gap: 0.4rem;
+  width: 100%;
+  max-width: 13.5rem;
 }
 
-.agency-space-detail__gallery-img {
+.agency-space-detail__media-main {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  max-height: 9.5rem;
+  border-radius: 12px;
+  overflow: hidden;
+  background: linear-gradient(145deg, #f1f5f9 0%, #e2e8f0 100%);
+  border: 1px solid var(--as-border);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+}
+
+.agency-space-detail__media-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block;
 }
 
-.agency-space-detail__gallery-thumbs {
-  display: flex;
-  gap: 0.35rem;
-  padding: 0.5rem 0.65rem 0.65rem;
-  overflow-x: auto;
-  background: rgba(15, 23, 42, 0.92);
+.agency-space-detail__media-thumbs {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.3rem;
+  overflow: hidden;
+  max-width: 100%;
 }
 
-.agency-space-detail__gallery-thumb {
-  flex: 0 0 4rem;
-  height: 3rem;
+.agency-space-detail__media-thumb {
+  aspect-ratio: 1;
   padding: 0;
   border: 2px solid transparent;
   border-radius: 8px;
   overflow: hidden;
   cursor: pointer;
-  opacity: 0.72;
-  background: #1e293b;
+  background: #f1f5f9;
+  opacity: 0.85;
+  transition: border-color 0.15s ease, opacity 0.15s ease, transform 0.15s ease;
 }
 
-.agency-space-detail__gallery-thumb.is-active,
-.agency-space-detail__gallery-thumb:hover {
+.agency-space-detail__media-thumb.is-active,
+.agency-space-detail__media-thumb:hover {
   opacity: 1;
-  border-color: #a78bfa;
+  border-color: var(--as-purple);
+  transform: translateY(-1px);
 }
 
-.agency-space-detail__gallery-thumb img {
+.agency-space-detail__media-thumb img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block;
 }
 
-.agency-space-detail__gallery-placeholder {
+.agency-space-detail__media-empty {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 10rem;
+  gap: 0.25rem;
+  aspect-ratio: 4 / 3;
+  max-height: 9.5rem;
+  border-radius: 12px;
+  border: 1px dashed var(--as-border);
+  background: var(--ws-surface-2, #f8fafc);
   color: var(--as-muted);
-  font-size: 2rem;
-  background: var(--ws-surface-2, #f1f5f9);
+  font-size: 0.75rem;
+}
+
+.agency-space-detail__media-empty i {
+  font-size: 1.25rem;
+  opacity: 0.65;
+}
+
+.agency-space-detail__hero-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.45rem;
+  margin: 0.75rem 0 0;
+  padding: 0;
+}
+
+@media (min-width: 900px) {
+  .agency-space-detail__hero-stats {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.agency-space-detail__hero-stats div {
+  margin: 0;
+  padding: 0.45rem 0.55rem;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--as-purple) 5%, #f8fafc);
+  border: 1px solid color-mix(in srgb, var(--as-purple) 8%, var(--as-border));
+}
+
+.agency-space-detail__hero-stats dt {
+  margin: 0;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--as-muted);
+}
+
+.agency-space-detail__hero-stats dd {
+  margin: 0.12rem 0 0;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--ws-text, #1e293b);
+  line-height: 1.3;
 }
 
 .agency-space-detail__kpis {
@@ -910,8 +989,19 @@
   color: var(--ws-text, #1e293b);
 }
 
+.agency-space-detail__amenities-wrap {
+  margin-top: 0.75rem;
+  max-height: 6.5rem;
+  overflow-y: auto;
+  padding: 0.55rem 0.65rem;
+  border-radius: 10px;
+  background: var(--ws-surface-2, #f8fafc);
+  border: 1px solid var(--as-border);
+  scrollbar-width: thin;
+}
+
 .agency-space-detail__amenities {
-  margin: 0.75rem 0 0;
+  margin: 0;
   font-size: 0.8125rem;
   line-height: 1.55;
   color: var(--ws-text, #475569);
@@ -1031,15 +1121,17 @@
 }
 
 .agency-space-detail__hero-title {
-  margin: 0.35rem 0 0.25rem;
-  font-size: 1.15rem;
-  font-weight: 700;
+  margin: 0.2rem 0 0.25rem;
+  font-size: 1.05rem;
+  font-weight: 800;
   line-height: 1.35;
+  letter-spacing: -0.01em;
 }
 
 .agency-space-detail__hero-price {
-  margin: 0.5rem 0 0;
-  font-size: 1.05rem;
+  margin: 0.45rem 0 0;
+  font-size: 1rem;
+  font-weight: 800;
 }
 
 .agency-space-detail__hero-meta {
@@ -1068,11 +1160,11 @@
 
 .agency-space-detail__section {
   margin: 0;
-  padding: 0.9rem 1rem;
+  padding: 0.85rem 0.95rem;
   border: 1px solid var(--as-border);
-  border-radius: var(--as-radius);
+  border-radius: 12px;
   background: var(--ws-surface, #fff);
-  box-shadow: var(--as-shadow);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
 }
 
 .agency-space-detail__section--accent {

@@ -22,7 +22,7 @@
     {% include 'includes/announcements.html' with notice_layout='inline' %}
 
     {% if home_is_empty %}
-    <section class="wsh-start" aria-label="شروع کار" data-help-tour="workspace-actions">
+    <section class="wsh-start" aria-label="شروع کار" data-help-tour="workspace-actions" data-tour="workspace-start">
         <p class="wsh-start__title">می‌خواهید از کجا شروع کنید؟</p>
         <div class="wsh-start__grid">
             <a href="{% url 'workspace:crm_contacts' %}?open=drawer-contact" class="wsh-start__card">
@@ -48,7 +48,7 @@
     </section>
     {% else %}
         {% if home_nba %}
-        <section class="wsh-nba" aria-label="اقدام‌های پیشنهادی">
+        <section class="wsh-nba" aria-label="اقدام‌های پیشنهادی" data-tour="workspace-nba">
             {% for action in home_nba %}
             <a href="{{ action.url }}" class="ws-home-alert{% if action.tone != 'warn' %} ws-home-alert--info{% endif %}" role="status">
                 {% if action.tone == 'warn' %}<span class="ws-home-alert__pulse" aria-hidden="true"></span>{% endif %}
@@ -86,18 +86,18 @@
     {% include 'workspace/includes/home/workspace_shortcuts.html' %}
     {% include 'workspace/includes/home/workspace_kpi.html' %}
 
-    <div class="wsh-mid-grid">
+    <div class="wsh-mid-grid" data-tour="workspace-panels-mid">
         {% include 'workspace/includes/home/workspace_reminders.html' %}
         {% include 'workspace/includes/home/workspace_latest_files.html' %}
     </div>
 
-    <div class="wsh-lower-grid">
+    <div class="wsh-lower-grid" data-tour="workspace-insights">
         {% include 'workspace/includes/home/workspace_pipeline.html' %}
         {% include 'workspace/includes/home/workspace_contact_status.html' %}
         {% include 'workspace/includes/home/workspace_trend.html' %}
     </div>
 
-    <div class="wsh-lower-grid wsh-lower-grid--2">
+    <div class="wsh-lower-grid wsh-lower-grid--2" data-tour="workspace-panels-lower">
         {% include 'workspace/includes/home/workspace_recent_properties.html' %}
         {% include 'workspace/includes/home/workspace_channels.html' %}
     </div>

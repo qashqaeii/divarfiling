@@ -1,6 +1,6 @@
 {% load static %}
 {% if show_onboarding %}
-<link rel="stylesheet" href="{% static 'workspace/css/onboarding-tour.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'workspace/css/onboarding-tour.css' %}?v=4">
 <script>
 window.wsOnboardingConfig = {
     completeUrl: "/workspace/api/onboarding/complete/",
@@ -11,204 +11,421 @@ window.wsOnboardingConfig = {
         {
             type: "welcome",
             title: "به میزکار فایلینگ دیوار خوش آمدید{% if request.user.get_full_name %}, {{ request.user.get_full_name|escapejs }}{% endif %}",
-            desc: "مرکز فرمان حرفه‌ای شما برای مدیریت مشتری، فایلینگ دیوار و تحلیل بازار املاک. در این تور، تک‌تک بخش‌های منو را با هم مرور می‌کنیم."
+            desc: "مرکز فرمان شما برای CRM، فایلینگ دیوار، قراردادها و تحلیل بازار. در این تور کوتاه، منوی جدید سایدبار و صفحهٔ میزکار را قدم‌به‌قدم می‌بینیم."
         },
         {
             target: "[data-tour='sidebar-intro']",
+            section: "ناوبری",
             icon: "fa-bars-staggered",
             accent: "#7C3AED",
             placement: "left",
             openSidebar: true,
-            scrollSidebar: true,
-            title: "منوی کناری میزکار",
-            desc: "ناوبری اصلی: میزکار، فایلینگ، مدیریت مشتری (CRM) و آژانس. قابلیت‌های کم‌کاربرد مثل یادآور، قالب، ابزار و پشتیبانی در «بیشتر» هستند."
+            title: "ساختار منوی کناری",
+            desc: "سه لایه دارید: بخش «اصلی» (میزکار و فایلینگ)، «مدیریت مشتری» با آیتم‌های روزمره، و «بیشتر» برای ابزارهای پیشرفته و پشتیبانی.",
+            tip: "روی موبایل منو را از آیکن بالا باز کنید؛ در تور، منو خودکار باز می‌شود."
         },
         {
             target: "[data-tour='nav-overview']",
-            icon: "fa-home",
+            section: "اصلی",
+            icon: "fa-house",
             accent: "#7C3AED",
             placement: "left",
             openSidebar: true,
             scrollSidebar: true,
             title: "میزکار",
-            desc: "صفحهٔ اصلی میزکار — اول اقدام‌های پیشنهادی امروز، بعد میانبر شروع کار، و سپس شاخص‌های پشتیبان."
+            desc: "صفحهٔ خانگی شما: اقدام‌های پیشنهادی امروز، میانبرها، شاخص‌ها و کارت‌های پیگیری — همه در یک نگاه.",
+            tip: "هر روز از همین صفحه شروع کنید تا کارهای عقب‌مانده را ببینید."
         },
         {
             target: "[data-tour='nav-filing']",
+            section: "اصلی",
             icon: "fa-database",
             accent: "#2563EB",
             placement: "left",
             openSidebar: true,
             scrollSidebar: true,
-            title: "فایلینگ",
-            desc: "{% if has_bot_license %}مدیریت پوشه‌های استخراج و آگهی‌های دیوار — جستجو، فیلتر، خروجی و تحلیل.{% else %}با خرید ربات استخراج، آگهی‌های دیوار را جمع‌آوری و در فایلینگ مدیریت کنید. آیکون قفل یعنی نیاز به ارتقا دارید.{% endif %}"
-        },
-        {
-            target: "[data-tour='nav-crm']",
-            icon: "fa-chart-pie",
-            accent: "#6366F1",
-            placement: "left",
-            openSidebar: true,
-            scrollSidebar: true,
-            title: "نمای مدیریت مشتری",
-            desc: "نمای یکپارچهٔ قیف فروش و شاخص‌های مخاطبین — از بخش بیشتر در دسترس است. کار روزانه از «کارهای امروز» و «مخاطبین» شروع می‌شود."
+            title: "فایلینگ دیوار",
+            desc: "{% if has_bot_license %}بانک آگهی‌های استخراج‌شده — جستجو، فیلتر، نقشه، تحلیل و خروجی Excel.{% else %}با لایسنس ربات استخراج، آگهی‌های دیوار را جمع و در فایلینگ مدیریت کنید. آیکون قفل یعنی نیاز به ارتقا.{% endif %}",
+            tip: "{% if has_bot_license %}از میانبر «آپلود» در میزکار می‌توانید Dataset جدید اضافه کنید.{% else %}CRM کامل رایگان است؛ فایلینگ با خرید ربات فعال می‌شود.{% endif %}"
         },
         {
             target: "[data-tour='nav-today']",
+            section: "CRM",
             icon: "fa-list-check",
             accent: "#0EA5E9",
             placement: "left",
             openSidebar: true,
             scrollSidebar: true,
             title: "کارهای امروز",
-            desc: "لیست اولویت‌دار پیگیری‌ها، تماس‌ها و یادآورها — هر روز از همین‌جا شروع کنید تا هیچ مخاطبی از قلم نیفتد."
+            desc: "صف اولویت روز: تماس‌های معوق، پیگیری‌ها و یادآورها. شمارندهٔ قرمز روی منو، کارهای باز را نشان می‌دهد.",
+            tip: "دستیار هوشمند در صفحات CRM و امروز برای ثبت سریع مخاطب و یادآور در دسترس است."
         },
         {
             target: "[data-tour='nav-contacts']",
+            section: "CRM",
             icon: "fa-users",
             accent: "#8B5CF6",
             placement: "left",
             openSidebar: true,
             scrollSidebar: true,
             title: "مخاطبین",
-            desc: "ثبت، دسته‌بندی و پیگیری مشتریان و سرنخ‌ها — با برچسب، وضعیت، یادداشت و تاریخچهٔ تماس کامل."
-        },
-        {
-            target: "[data-tour='nav-deals']",
-            icon: "fa-handshake",
-            accent: "#10B981",
-            placement: "left",
-            openSidebar: true,
-            scrollSidebar: true,
-            title: "معاملات",
-            desc: "مدیریت قیف فروش از مذاکره اولیه تا قرارداد — هر معامله با مرحله، ارزش و پیگیری‌های مرتبط."
+            desc: "ثبت مشتری و سرنخ با برچسب، وضعیت، نیاز ملک، یادداشت و تاریخچهٔ تماس — قلب CRM شما.",
+            tip: "دکمهٔ «مخاطب جدید» در میزکار مستقیم فرم ثبت را باز می‌کند."
         },
         {
             target: "[data-tour='nav-properties']",
-            icon: "fa-folder-open",
+            section: "CRM",
+            icon: "fa-building",
             accent: "#F59E0B",
             placement: "left",
             openSidebar: true,
             scrollSidebar: true,
             title: "فایل‌های شخصی",
-            desc: "آرشیو ملک‌های شما مستقل از دیوار — هر رکورد یک ملک است، با جزئیات، تصاویر و وضعیت انتشار."
+            desc: "ملک‌های خودتان، مستقل از آگهی دیوار — با جزئیات، تصاویر، وضعیت انتشار و اتصال به معامله.",
+            tip: "هر فایل شخصی می‌تواند به یک یا چند مخاطب و معامله لینک شود."
         },
         {
-            target: "[data-tour='nav-reminders']",
-            icon: "fa-bell",
-            accent: "#EF4444",
+            target: "[data-tour='nav-deals']",
+            section: "CRM",
+            icon: "fa-handshake",
+            accent: "#10B981",
             placement: "left",
             openSidebar: true,
             scrollSidebar: true,
-            title: "یادآورها",
-            desc: "تنظیم یادآور برای تماس، بازدید و پیگیری — با اعلان در زمان مناسب، تعهداتتان را فراموش نکنید."
+            title: "قیف معاملات",
+            desc: "پیگیری معامله از سرنخ تا قرارداد — مرحله، ارزش، احتمال بسته‌شدن و فعالیت‌های مرتبط.",
+            tip: "نام منو به «قیف معاملات» تغییر کرد تا با نمای قیف در میزکار یکی باشد."
+        },
+        {
+            target: "[data-tour='nav-contracts']",
+            section: "CRM",
+            icon: "fa-file-signature",
+            accent: "#6366F1",
+            placement: "left",
+            openSidebar: true,
+            scrollSidebar: true,
+            title: "قراردادها",
+            desc: "{% if has_bot_license %}مدیریت قرارداد، مهلت‌ها و تحویل — از معامله تا امضا و پیگیری مدارک.{% else %}ماژول قرارداد با لایسنس فعال ربات در دسترس است؛ تا آن زمان معاملات را در قیف CRM دنبال کنید.{% endif %}",
+            tip: "قراردادها به معامله و مخاطب متصل می‌شوند تا پرونده یکپارچه بماند."
+        },
+        {
+            target: "[data-tour='nav-deals-finance']",
+            section: "CRM",
+            icon: "fa-coins",
+            accent: "#14B8A6",
+            placement: "left",
+            openSidebar: true,
+            scrollSidebar: true,
+            title: "مالی معاملات",
+            desc: "کمیسیون، پیش‌پرداخت، اقساط و خلاصهٔ مالی هر معامله — جدا از قیف برای دید حسابداری روشن.",
+            tip: "برای گزارش درآمد ماهانه، از این بخش به‌جای صفحهٔ قیف استفاده کنید."
         },
         {
             target: "[data-tour='nav-calendar']",
-            icon: "fa-calendar",
+            section: "CRM",
+            icon: "fa-calendar-days",
             accent: "#06B6D4",
             placement: "left",
             openSidebar: true,
             scrollSidebar: true,
             title: "تقویم",
-            desc: "برنامه‌ریزی بازدید، جلسه و تماس در تقویم یکپارچه — نمای روزانه، هفتگی و ماهانه برای زمان‌بندی حرفه‌ای."
+            desc: "بازدید، جلسه و تماس در تقویم یکپارچه — نمای روز، هفته و ماه برای زمان‌بندی حرفه‌ای.",
+            tip: "یادآورهای ثبت‌شده در CRM اینجا هم دیده می‌شوند."
         },
+        {% if ws_show_agency_nav %}
         {
-            target: "[data-tour='nav-templates']",
-            icon: "fa-message",
-            accent: "#A855F7",
-            placement: "left",
-            openSidebar: true,
-            scrollSidebar: true,
-            title: "قالب پیام",
-            desc: "پیام‌های آماده برای واتساپ، پیامک و شبکه‌های اجتماعی — پاسخ سریع و یکدست به مشتریان بدون تایپ تکراری."
-        },
-        {
-            target: "[data-tour='nav-automation']",
-            icon: "fa-robot",
-            accent: "#64748B",
-            placement: "left",
-            openSidebar: true,
-            scrollSidebar: true,
-            title: "اتوماسیون",
-            desc: "قوانین خودکار برای پیگیری — مثلاً یادآور خودکار پس از ثبت مخاطب یا تغییر وضعیت معامله."
-        },
-        {
-            target: "[data-tour='nav-team']",
+            target: "[data-tour='nav-team-top']",
+            section: "آژانس",
             icon: "fa-people-group",
             accent: "#EC4899",
             placement: "left",
             openSidebar: true,
             scrollSidebar: true,
             title: "آژانس",
-            desc: "همکاری و تخصیص کار بین اعضای آژانس — نقش‌ها، دسترسی‌ها و پیگیری مشترک روی مخاطبین و معاملات."
+            desc: "هاب مدیریت تیم: نقش‌ها، تخصیص سرنخ، صندوق ورودی، Agency TV و گزارش عملکرد اعضا.",
+            tip: "نشانگر روی منو یعنی پیام یا درخواست جدید در هاب آژانس دارید."
+        },
+        {% endif %}
+        {
+            target: "[data-tour='nav-more']",
+            section: "بیشتر",
+            icon: "fa-ellipsis",
+            accent: "#64748B",
+            placement: "left",
+            openSidebar: true,
+            openNavMore: true,
+            title: "منوی «بیشتر»",
+            desc: "ابزارهای کم‌تکرار اما مهم: نمای CRM، یادآورها، قالب پیام، اتوماسیون، آکادمی، راهنما و پشتیبانی.",
+            tip: "این بخش را باز نگه دارید؛ چند آیتم بعدی همین‌جا هستند."
         },
         {
-            target: "[data-tour='nav-tools']",
+            target: ".ws-nav-more-body [data-tour='nav-crm']",
+            section: "بیشتر",
+            icon: "fa-chart-pie",
+            accent: "#6366F1",
+            placement: "left",
+            openSidebar: true,
+            openNavMore: true,
+            scrollSidebar: true,
+            title: "نمای مدیریت مشتری",
+            desc: "داشبورد تحلیلی CRM: قیف، نرخ تبدیل، فعالیت تیم و شاخص‌های دوره‌ای — برای مرور هفتگی مناسب است.",
+            tip: "کار روزانه را از «کارهای امروز» شروع کنید؛ این صفحه برای نگاه مدیریتی است."
+        },
+        {
+            target: ".ws-nav-more-body [data-tour='nav-reminders']",
+            section: "بیشتر",
+            icon: "fa-bell",
+            accent: "#EF4444",
+            placement: "left",
+            openSidebar: true,
+            openNavMore: true,
+            scrollSidebar: true,
+            title: "یادآورها",
+            desc: "لیست کامل یادآورها با فیلتر وضعیت — علاوه بر کارت یادآور در میزکار.",
+            tip: "اتوماسیون می‌تواند پس از رویدادها یادآور خودکار بسازد."
+        },
+        {
+            target: ".ws-nav-more-body [data-tour='nav-templates']",
+            section: "بیشتر",
+            icon: "fa-message",
+            accent: "#A855F7",
+            placement: "left",
+            openSidebar: true,
+            openNavMore: true,
+            scrollSidebar: true,
+            title: "قالب پیام",
+            desc: "پیام‌های آماده برای واتساپ، پیامک و شبکه‌ها — پاسخ سریع و یکدست بدون تایپ تکراری.",
+            tip: "از پروفایل مخاطب می‌توانید قالب را با یک کلیک ارسال کنید."
+        },
+        {
+            target: ".ws-nav-more-body [data-tour='nav-automation']",
+            section: "بیشتر",
+            icon: "fa-robot",
+            accent: "#475569",
+            placement: "left",
+            openSidebar: true,
+            openNavMore: true,
+            scrollSidebar: true,
+            title: "اتوماسیون",
+            desc: "قوانین خودکار: مثلاً یادآور بعد از ثبت مخاطب، تغییر وضعیت معامله، یا اعلان به تیم.",
+            tip: "با یک قانون ساده، پیگیری‌های تکراری را کم کنید."
+        },
+        {
+            target: ".ws-nav-more-body [data-tour='nav-tools']",
+            section: "بیشتر",
             icon: "fa-wand-magic-sparkles",
             accent: "#F97316",
             placement: "left",
             openSidebar: true,
+            openNavMore: true,
             scrollSidebar: true,
             title: "ابزارهای هوشمند",
-            desc: "{% if has_bot_license %}تحلیل بازار، نقشهٔ حرارتی، برآورد قیمت و سایر ابزارهای هوش مصنوعی برای تصمیم‌گیری سریع‌تر.{% else %}مجموعهٔ ابزارهای تحلیلی و هوشمند — با لایسنس ربات در دسترس است. CRM فعلی شما کاملاً رایگان و بدون محدودیت است.{% endif %}"
+            desc: "{% if has_bot_license %}تحلیل بازار، نقشهٔ حرارتی، برآورد قیمت و ابزارهای AI برای تصمیم سریع‌تر.{% else %}با لایسنس ربات فعال می‌شود؛ CRM و مدیریت مشتری همین حالا رایگان است.{% endif %}",
+            tip: "میانبرهای میزکار هم به تحلیل و نقشه دسترسی سریع می‌دهند."
         },
         {
+            target: ".ws-nav-more-body [data-tour='nav-academy']",
+            section: "بیشتر",
+            icon: "fa-graduation-cap",
+            accent: "#8B5CF6",
+            placement: "left",
+            openSidebar: true,
+            openNavMore: true,
+            scrollSidebar: true,
+            title: "آکادمی",
+            desc: "ویدیوهای آموزشی گام‌به‌گام برای فایلینگ، CRM و تحلیل — مناسب تازه‌واردها و تیم.",
+            tip: "آیکون آکادمی در پایین سایدبار هم همان مسیر را باز می‌کند."
+        },
+        {
+            target: ".ws-nav-more-body [data-tour='nav-help']",
+            section: "بیشتر",
+            icon: "fa-circle-question",
+            accent: "#0EA5E9",
+            placement: "left",
+            openSidebar: true,
+            openNavMore: true,
+            scrollSidebar: true,
+            title: "راهنما",
+            desc: "مرکز راهنمای کامل با جستجو — هر بخش با تصویر و توضیح؛ می‌توانید این تور را هر زمان از راهنما دوباره ببینید.",
+            tip: "لینک «تور آموزشی» در صفحهٔ راهنما همین تجربه را باز می‌کند."
+        },
+        {
+            target: ".ws-nav-more-body [data-tour='nav-support']",
+            section: "بیشتر",
+            icon: "fa-headset",
+            accent: "#10B981",
+            placement: "left",
+            openSidebar: true,
+            openNavMore: true,
+            scrollSidebar: true,
+            title: "پشتیبانی",
+            desc: "تیکت پشتیبانی و پیگیری پاسخ‌ها — شمارنده روی منو یعنی پاسخ خوانده‌نشده دارید.",
+            tip: "برای مشکل فنی یا سوال فاکتور، از همین بخش تیکت بزنید."
+        },
+        {% if not ws_show_agency_nav %}
+        {
+            target: ".ws-nav-more-body [data-tour='nav-team-more']",
+            section: "بیشتر",
+            icon: "fa-people-group",
+            accent: "#EC4899",
+            placement: "left",
+            openSidebar: true,
+            openNavMore: true,
+            scrollSidebar: true,
+            title: "آژانس",
+            desc: "راه‌اندازی فضای تیمی، دعوت اعضا و مدیریت سرنخ مشترک — برای آژانس‌های چند مشاوره.",
+            tip: "پس از فعال‌سازی اشتراک آژانس، این آیتم به منوی اصلی منتقل می‌شود."
+        },
+        {% endif %}
+        {
             target: "[data-tour='sidebar-util']",
+            section: "پایین منو",
             icon: "fa-sliders",
             accent: "#64748B",
             placement: "left",
             openSidebar: true,
-            title: "تنظیمات و راهنما",
-            desc: "تغییر تم، تنظیمات آژانس، راهنمای کامل و بازگشت به سایت — همیشه از پایین منو در دسترس است."
+            title: "نوار ابزار پایین",
+            desc: "تنظیمات، آکادمی، راهنما، مستندات API، تغییر تم روشن/تاریک و بازگشت به سایت — همیشه در دسترس.",
+            tip: "تنظیمات آژانس و پروفایل مشاور از دکمهٔ تنظیمات باز می‌شود."
         },
         {
-            target: "[data-tour='quick-actions']",
+            target: "[data-tour='workspace-hero']",
+            section: "میزکار",
+            icon: "fa-sun",
+            accent: "#7C3AED",
+            placement: "bottom",
+            closeSidebar: true,
+            title: "سربرگ میزکار",
+            desc: "سلام شخصی‌سازی‌شده، تاریخ شمسی و وضعیت لایسنس — خلاصهٔ آمادگی شما برای امروز.",
+            tip: "روی پیل لایسنس می‌توانید وضعیت یا خرید را ببینید."
+        },
+        {
+            target: "[data-tour='workspace-search']",
+            section: "میزکار",
+            icon: "fa-magnifying-glass",
+            accent: "#2563EB",
+            placement: "bottom",
+            closeSidebar: true,
+            title: "جستجوی سراسری",
+            desc: "جستجو در مخاطبین، فایل‌های شخصی{% if has_bot_license %} و آگهی‌های فایلینگ{% endif %} — از هر نقطهٔ میزکار.",
+            tip: "کلید میانبر Focus روی باکس جستجو در دسکتاپ سریع‌تر است."
+        },
+        {
+            target: "[data-tour='workspace-nba']",
+            section: "میزکار",
+            icon: "fa-bullhorn",
+            accent: "#F59E0B",
+            placement: "bottom",
+            closeSidebar: true,
+            skipIfMissing: true,
+            title: "اقدام‌های پیشنهادی",
+            desc: "هوش میزکار کارهای مهم امروز را برجسته می‌کند: پیگیری معوق، مچ فایل، صندوق آژانس و موارد مشابه.",
+            tip: "اگر همه‌چیز سبز بود، از میانبرهای زیر شروع کنید."
+        },
+        {
+            target: "[data-tour='workspace-start']",
+            section: "میزکار",
+            icon: "fa-route",
+            accent: "#8B5CF6",
+            placement: "bottom",
+            closeSidebar: true,
+            skipIfMissing: true,
+            title: "شروع برای کاربر جدید",
+            desc: "سه مسیر روشن: مخاطب دارم، فایل شخصی دارم، یا می‌خواهم در فایلینگ جستجو کنم.",
+            tip: "پس از اولین ثبت، این بخش با داشبورد کامل جایگزین می‌شود."
+        },
+        {
+            target: "[data-tour='workspace-quick-actions']",
+            section: "میزکار",
             icon: "fa-bolt",
             accent: "#F59E0B",
             placement: "bottom",
-            title: "عملیات سریع",
-            desc: "از همین‌جا مخاطب جدید یا فایل شخصی جدید بسازید. میانبر «پیدا کردن فایل» فقط وقتی فایلینگ قابل استفاده باشد نمایش داده می‌شود."
+            closeSidebar: true,
+            skipIfMissing: true,
+            title: "اقدام‌های سریع",
+            desc: "ثبت مخاطب، فایل شخصی{% if has_bot_license %} و جستجوی پیشرفتهٔ فایل{% else %} و ورود به فایل‌های شخصی{% endif %} — بدون رفتن به منو.",
+            tip: "پرکاربردترین کارهای روز اینجا جمع شده‌اند."
         },
         {
-            target: "[data-tour='metrics']",
-            icon: "fa-gauge-high",
-            accent: "#2563EB",
-            placement: "bottom",
-            title: "شاخص‌های کلیدی",
-            desc: "آمار فایلینگ، مخاطبین، فایل‌های شخصی، کارهای امروز و یادآورها اینجاست؛ بعد از اقدام‌های پیشنهادی و میانبرها دیده می‌شوند، نه به‌عنوان نقطهٔ شروع."
-        },
-        {
-            target: "[data-tour='quick-bar']",
+            target: "[data-tour='workspace-shortcuts']",
+            section: "میزکار",
             icon: "fa-rocket",
             accent: "#06B6D4",
             placement: "bottom",
-            title: "دسترسی سریع",
-            desc: "میانبرهای پرکاربرد مثل آپلود، تحلیل، نقشه، مقایسه و نمای مدیریت مشتری — بدون جستجو در منو."
+            closeSidebar: true,
+            skipIfMissing: true,
+            title: "میانبرهای میزکار",
+            desc: "آپلود، فایلینگ، تحلیل، نقشه، مقایسه، CRM، امروز، تقویم و پشتیبانی — یک ردیف دسترسی سریع.",
+            tip: "آیتم‌های قفل‌دار به صفحهٔ ارتقا می‌برند."
         },
         {
-            target: "[data-tour='workspace-panels']",
+            target: "[data-tour='workspace-kpis']",
+            section: "میزکار",
+            icon: "fa-gauge-high",
+            accent: "#2563EB",
+            placement: "top",
+            closeSidebar: true,
+            skipIfMissing: true,
+            title: "شاخص‌های کلیدی",
+            desc: "آمار لحظه‌ای مخاطبین، معاملات، فایل‌ها، کارهای امروز و یادآور — برای پایش سریع وضعیت.",
+            tip: "روی هر کارت می‌توانید مستقیم به همان بخش بروید."
+        },
+        {
+            target: "[data-tour='workspace-panels-mid']",
+            section: "میزکار",
             icon: "fa-table-columns",
             accent: "#10B981",
             placement: "top",
-            title: "فضای کاری روزانه",
-            desc: "فایل‌های اخیر، پیگیری‌های امروز، یادآورها و قیف فروش — همه‌چیز برای شروع رو کاری در یک صفحه جمع شده."
+            closeSidebar: true,
+            skipIfMissing: true,
+            title: "پیگیری و فایلینگ",
+            desc: "یادآورهای نزدیک و آخرین فایل‌های فایلینگ — دو ستون برای شروع رو کاری.",
+            tip: "کارت فایلینگ بدون لایسنس قفل است اما CRM کامل فعال می‌ماند."
         },
         {
-            target: "[data-tour='insights']",
-            icon: "fa-chart-pie",
+            target: "[data-tour='workspace-insights']",
+            section: "میزکار",
+            icon: "fa-chart-line",
             accent: "#8B5CF6",
             placement: "top",
-            title: "بینش و تحلیل",
-            desc: "نمودار روند ۷ روزه فعالیت، توزیع وضعیت مخاطبین و کانال‌های ارتباطی — تصمیم‌گیری مبتنی بر داده."
+            closeSidebar: true,
+            skipIfMissing: true,
+            title: "بینش و قیف",
+            desc: "قیف وضعیت معاملات، توزیع مخاطبین و نمودار روند ۷ روزهٔ فعالیت — تصمیم بر پایهٔ داده.",
+            tip: "نمودار روند با ثبت فعالیت در CRM پررنگ‌تر می‌شود."
+        },
+        {
+            target: "[data-tour='workspace-panels-lower']",
+            section: "میزکار",
+            icon: "fa-layer-group",
+            accent: "#14B8A6",
+            placement: "top",
+            closeSidebar: true,
+            skipIfMissing: true,
+            title: "املاک و کانال‌ها",
+            desc: "آخرین فایل‌های شخصی ثبت‌شده و کانال‌های ارتباطی (تماس، واتساپ و …) برای مرور سریع.",
+            tip: "کانال‌ها کمک می‌کند ببینید مشتریان از کجا می‌آیند."
+        },
+        {
+            target: "[data-tour='mobile-bottom-nav']",
+            section: "موبایل",
+            icon: "fa-mobile-screen",
+            accent: "#7C3AED",
+            placement: "top",
+            closeSidebar: true,
+            skipIfMissing: true,
+            onlyMobile: true,
+            title: "ناوبری پایین (موبایل)",
+            desc: "در موبایل: میزکار، فایلینگ، مخاطبین، امروز و «بیشتر» — معادل سریع سایدبار دسکتاپ.",
+            tip: "دکمهٔ بیشتر همان منوی کشویی سایدبار را باز می‌کند."
         },
         {
             type: "finish",
-            title: "آماده پرواز هستید!",
-            desc: "حالا با هر بخش منو آشنا شدید. از همین حالا مشتری ثبت کنید، فایلینگ بسازید و بازار را تحلیل کنید. موفق باشید!"
+            title: "آماده‌اید — بزن بریم!",
+            desc: "منو و میزکار را دیدید. پیشنهاد: یک مخاطب ثبت کنید، «کارهای امروز» را چک کنید{% if has_bot_license %} و یک Dataset در فایلینگ بسازید{% endif %}. هر زمان از راهنما تور را دوباره ببینید."
         }
     ]
 };
 </script>
-<script src="{% static 'workspace/js/onboarding-tour.js' %}?v=3"></script>
+<script src="{% static 'workspace/js/onboarding-tour.js' %}?v=4"></script>
 {% endif %}

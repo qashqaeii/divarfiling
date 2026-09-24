@@ -59,8 +59,10 @@
                         <button type="button" class="ws-tour-skip" id="wsTourSkip">رد کردن</button>
                     </div>
                     <div class="ws-tour-icon-wrap" id="wsTourIcon" aria-hidden="true"></div>
+                    <p class="ws-tour-section" id="wsTourSection" hidden></p>
                     <h2 class="ws-tour-title" id="wsTourTitle"></h2>
                     <p class="ws-tour-desc" id="wsTourDesc"></p>
+                    <p class="ws-tour-tip" id="wsTourTip" hidden></p>
                     <div class="ws-tour-progress" aria-hidden="true"><i id="wsTourProgressBar"></i></div>
                     <div class="ws-tour-dots" id="wsTourDots" aria-hidden="true"></div>
                     <div class="ws-tour-actions">
@@ -114,6 +116,29 @@
 
     function isModalStep(step) {
         return step.type === 'welcome' || step.type === 'finish';
+    }
+
+    function isStepVisible(step) {
+        if (step.onlyMobile && window.innerWidth > 900) return false;
+        if (!step.target) return true;
+        const el = document.querySelector(step.target);
+        if (!el) return !step.skipIfMissing;
+        if (step.onlyMobile) {
+            const style = window.getComputedStyle(el);
+            if (style.display === 'none' || style.visibility === 'hidden') return false;
+        }
+        return true;
+    }
+
+    function resolveStepIndex(index, direction) {
+        let i = index;
+        const delta = direction >= 0 ? 1 : -1;
+        while (i >= 0 && i < config.steps.length) {
+            const step = config.steps[i];
+            if (isModalStep(step) || isStepVisible(step)) return i;
+            i += delta;
+        }
+        return direction >= 0 ? config.steps.length - 1 : 0;
     }
 
     function clearTarget() {
@@ -205,7 +230,8 @@
             <div class="ws-tour-modal-features">
                 <div class="ws-tour-modal-feature"><i class="fas fa-users"></i><span>CRM رایگان</span></div>
                 <div class="ws-tour-modal-feature"><i class="fas fa-database"></i><span>فایلینگ دیوار</span></div>
-                <div class="ws-tour-modal-feature"><i class="fas fa-chart-line"></i><span>تحلیل بازار</span></div>
+                <div class="ws-tour-modal-feature"><i class="fas fa-file-signature"></i><span>قرارداد و مالی</span></div>
+                <div class="ws-tour-modal-feature"><i class="fas fa-microphone-lines"></i><span>دستیار هوشمند</span></div>
             </div>
         ` : '';
 
@@ -225,7 +251,7 @@
                         ? `<img src="${config.logoUrl}" alt="" width="44" height="44">`
                         : `<i class="fas ${isWelcome ? 'fa-compass' : 'fa-rocket'}"></i>`}
                 </div>
-                ${isWelcome ? '<span class="ws-tour-modal-eyebrow"><i class="fas fa-sparkles"></i> تور تعاملی · ۳ دقیقه</span>' : ''}
+                ${isWelcome ? '<span class="ws-tour-modal-eyebrow"><i class="fas fa-sparkles"></i> تور تعاملی · حدود ۵ دقیقه</span>' : ''}
                 <h2 class="ws-tour-modal-title">${step.title}</h2>
                 <p class="ws-tour-modal-desc">${step.desc}</p>
                 ${features}
@@ -264,9 +290,19 @@
         }
     }
 
-    function ensureSidebarOpen(step) {
-        if (step.openSidebar && window.innerWidth <= 900) {
-            document.getElementById('wsSidebar')?.classList.add('open');
+    function ensureNavMoreOpen(step) {
+        if (!step.openNavMore) return;
+        const more = document.querySelector('[data-tour="nav-more"]');
+        if (more && more.tagName === 'DETAILS') more.open = true;
+    }
+
+    function ensureSidebarForStep(step) {
+        const sidebar = document.getElementById('wsSidebar');
+        if (!sidebar) return;
+        if (step.closeSidebar) {
+            sidebar.classList.remove('open');
+        } else if (step.openSidebar && window.innerWidth <= 900) {
+            sidebar.classList.add('open');
         }
     }
 
@@ -308,8 +344,33 @@
         document.getElementById('wsTourStepBadge').textContent =
             tourIndex >= 0 ? `مرحله ${tourIndex + 1} از ${tourTotal}` : '';
         document.getElementById('wsTourIcon').innerHTML = `<i class="fas ${step.icon || 'fa-circle-info'}"></i>`;
+        const sectionEl = document.getElementById('wsTourSection');
+        if (step.section) {
+            sectionEl.textContent = step.section;
+            sectionEl.hidden = false;
+        } else {
+            sectionEl.textContent = '';
+            sectionEl.hidden = true;
+        }
+
         document.getElementById('wsTourTitle').textContent = step.title;
         document.getElementById('wsTourDesc').textContent = step.desc;
+
+        const tipEl = document.getElementById('wsTourTip');
+        if (step.tip) {
+            tipEl.replaceChildren();
+            const tipIcon = document.createElement('i');
+            tipIcon.className = 'fas fa-lightbulb';
+            tipIcon.setAttribute('aria-hidden', 'true');
+            const tipText = document.createElement('span');
+            tipText.textContent = step.tip;
+            tipEl.append(tipIcon, tipText);
+            tipEl.hidden = false;
+        } else {
+            tipEl.replaceChildren();
+            tipEl.hidden = true;
+        }
+
         document.getElementById('wsTourProgressBar').style.width =
             `${((index + 1) / total) * 100}%`;
 
@@ -320,7 +381,7 @@
 
         const dotsEl = document.getElementById('wsTourDots');
         if (dotsEl) {
-            dotsEl.hidden = total > 18;
+            dotsEl.hidden = total > 22;
         }
 
         const prevBtn = document.getElementById('wsTourPrev');
@@ -340,11 +401,17 @@
         clearTarget();
         const target = step.target ? document.querySelector(step.target) : null;
 
+        if (step.target && !target && step.skipIfMissing) {
+            next();
+            return;
+        }
+
         if (target) {
-            ensureSidebarOpen(step);
+            ensureNavMoreOpen(step);
+            ensureSidebarForStep(step);
             activateTarget(target);
             scrollToTarget(target, step);
-            const delay = step.openSidebar && window.innerWidth <= 900 ? 320 : (step.scrollSidebar ? 180 : 80);
+            const delay = step.openSidebar && window.innerWidth <= 900 ? 320 : (step.openNavMore ? 220 : (step.scrollSidebar ? 180 : 80));
             repositionForTarget(target, step, delay);
         } else {
             spotlight.classList.remove('is-visible');
@@ -356,7 +423,9 @@
     }
 
     function goTo(index, animate = true) {
-        current = Math.max(0, Math.min(index, config.steps.length - 1));
+        const clamped = Math.max(0, Math.min(index, config.steps.length - 1));
+        const direction = index >= current ? 1 : -1;
+        current = resolveStepIndex(clamped, direction);
         const step = config.steps[current];
 
         if (!animate) {
@@ -374,12 +443,25 @@
     }
 
     function next() {
-        if (current >= config.steps.length - 1) finish();
-        else goTo(current + 1);
+        if (current >= config.steps.length - 1) {
+            finish();
+            return;
+        }
+        let nextIndex = current + 1;
+        while (nextIndex < config.steps.length && !isModalStep(config.steps[nextIndex]) && !isStepVisible(config.steps[nextIndex])) {
+            nextIndex += 1;
+        }
+        if (nextIndex >= config.steps.length) finish();
+        else goTo(nextIndex);
     }
 
     function prev() {
-        if (current > 0) goTo(current - 1);
+        if (current <= 0) return;
+        let prevIndex = current - 1;
+        while (prevIndex > 0 && !isModalStep(config.steps[prevIndex]) && !isStepVisible(config.steps[prevIndex])) {
+            prevIndex -= 1;
+        }
+        goTo(prevIndex);
     }
 
     function finish() {

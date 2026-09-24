@@ -3,6 +3,81 @@
 
     initTocNav();
     initImageLightbox();
+    initHelpSearch();
+
+    function initHelpSearch() {
+        var input = document.getElementById('hlpSearch');
+        if (!input) return;
+
+        var clearBtn = document.getElementById('hlpSearchClear');
+        var hintEl = document.getElementById('hlpSearchHint');
+        var emptyEl = document.getElementById('hlpSearchEmpty');
+        var sections = Array.prototype.slice.call(
+            document.querySelectorAll('[data-hlp-searchable]')
+        );
+        var faqItems = Array.prototype.slice.call(
+            document.querySelectorAll('[data-hlp-faq]')
+        );
+
+        function normalize(text) {
+            return (text || '').replace(/\s+/g, ' ').trim().toLowerCase();
+        }
+
+        function applyFilter() {
+            var q = normalize(input.value);
+            if (clearBtn) clearBtn.hidden = !q;
+
+            if (!q) {
+                sections.forEach(function (el) {
+                    el.classList.remove('hlp-section--filtered-out');
+                });
+                faqItems.forEach(function (el) {
+                    el.classList.remove('hlp-faq-item--hidden');
+                });
+                if (hintEl) {
+                    hintEl.hidden = true;
+                    hintEl.textContent = '';
+                }
+                if (emptyEl) emptyEl.hidden = true;
+                return;
+            }
+
+            var visibleSections = 0;
+            var visibleFaq = 0;
+
+            sections.forEach(function (section) {
+                var text = normalize(section.textContent);
+                var match = text.indexOf(q) !== -1;
+                section.classList.toggle('hlp-section--filtered-out', !match);
+                if (match) visibleSections += 1;
+            });
+
+            faqItems.forEach(function (item) {
+                var text = normalize(item.textContent);
+                var match = text.indexOf(q) !== -1;
+                item.classList.toggle('hlp-faq-item--hidden', !match);
+                if (match) visibleFaq += 1;
+            });
+
+            var total = visibleSections + visibleFaq;
+            if (hintEl) {
+                hintEl.hidden = false;
+                hintEl.textContent = total
+                    ? total + ' نتیجه برای «' + input.value.trim() + '»'
+                    : 'نتیجه‌ای یافت نشد';
+            }
+            if (emptyEl) emptyEl.hidden = total > 0;
+        }
+
+        input.addEventListener('input', applyFilter);
+        if (clearBtn) {
+            clearBtn.addEventListener('click', function () {
+                input.value = '';
+                input.focus();
+                applyFilter();
+            });
+        }
+    }
 
     function initTocNav() {
         var links = document.querySelectorAll('.hlp-toc-link[data-target]');

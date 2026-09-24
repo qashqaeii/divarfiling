@@ -164,7 +164,7 @@
 
             {% block status_bar %}
 
-            <nav class="ws-bottom-nav" id="wsBottomNav" aria-label="ناوبری پایین صفحه">
+            <nav class="ws-bottom-nav" id="wsBottomNav" data-tour="mobile-bottom-nav" aria-label="ناوبری پایین صفحه">
                 <a href="{% url 'workspace:home' %}" class="ws-bottom-nav-item{% if request.resolver_match.url_name == 'home' %} is-active{% endif %}">
                     <i class="fas fa-house" aria-hidden="true"></i>
                     <span>میزکار</span>

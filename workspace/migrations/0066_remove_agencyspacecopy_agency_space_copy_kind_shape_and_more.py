@@ -39,14 +39,10 @@ class Migration(migrations.Migration):
         migrations.AddConstraint(
             model_name="agencyspacecopy",
             constraint=models.CheckConstraint(
-                condition=models.Q(
-                    models.Q(
-                        ("copied_customer__isnull", True), ("target_kind", "property")
-                    ),
-                    models.Q(
-                        ("copied_property__isnull", True), ("target_kind", "customer")
-                    ),
-                    _connector="OR",
+                check=models.Q(
+                    ("target_kind", "property"), ("copied_customer__isnull", True),
+                ) | models.Q(
+                    ("target_kind", "customer"), ("copied_property__isnull", True),
                 ),
                 name="agency_space_copy_kind_shape",
             ),

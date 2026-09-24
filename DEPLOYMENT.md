@@ -701,6 +701,46 @@ grep CACHE_BACKEND $DJANGO_ROOT/.env
 pip show redis
 ```
 
+### بعد از `git reset --hard` هنوز فایل‌های `modified` (فیلتر خط‌پایان گیت)
+
+علامت: محتوای commit درست است اما `git status` چند فایل `.py` / `.html` را modified نشان می‌دهد؛
+`git diff` شبیه عوض شدن همهٔ خطوط است؛ هش خام با `--no-filters` با `HEAD:` یکی است اما
+`git hash-object <path>` بدون `--no-filters` هش دیگری می‌دهد.
+
+**علت:** در همان clone، گیت هنگام مقایسهٔ worktree فیلتر `text`/`eol` را اشتباه اعمال می‌کند
+(روی سرور لینوکس؛ `.gitattributes` ریپو درست است).
+
+**رفع یک‌بار (فقط روی سرور — در `.git/info/attributes`، commit نمی‌شود):**
+
+```bash
+cd ~/DivarFiling
+bash scripts/fix-server-git-worktree.sh
+sudo systemctl restart divar_shop
+```
+
+یا دستی:
+
+```bash
+cd ~/DivarFiling
+mkdir -p .git/info
+grep -qx '* -text' .git/info/attributes 2>/dev/null || echo '* -text' >> .git/info/attributes
+git config --local core.autocrlf false
+git config --local core.eol lf
+git fetch origin main && git reset --hard origin/main
+# سپس همان اسکریپت فایل‌ها را از blob بازنویسی می‌کند
+```
+
+**Deploy عادی بعد از رفع:**
+
+```bash
+cd ~/DivarFiling
+git fetch origin main
+git reset --hard origin/main
+sudo systemctl restart divar_shop
+```
+
+`secrets/` و migrationهای ساخته‌شده روی سرور را commit نکنید.
+
 ---
 
 ## ۱۹. چک‌لیست امنیتی

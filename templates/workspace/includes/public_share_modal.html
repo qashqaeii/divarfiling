@@ -188,14 +188,21 @@
                                 <button type="button" class="mk-share-rte-btn" data-rte-cmd="createLink" title="لینک"><i class="fas fa-link" aria-hidden="true"></i></button>
                                 <button type="button" class="mk-share-rte-btn" data-rte-cmd="removeFormat" title="حذف قالب"><i class="fas fa-eraser" aria-hidden="true"></i></button>
                             </div>
-                            <div class="mk-share-rte-editor"
-                                 contenteditable="true"
-                                 role="textbox"
-                                 aria-multiline="true"
-                                 aria-label="پیام خوش‌آمد"
-                                 data-welcome-editor
-                                 dir="rtl"
-                                 data-placeholder="مثلاً: برای هماهنگی بازدید با من در تماس باشید…">{% if sp.welcome_message %}{{ sp.welcome_message|safe }}{% elif share.welcome_message %}{{ share.welcome_message|linebreaksbr }}{% endif %}</div>
+                            <div class="crm-field-voice crm-field-voice--rte" data-crm-field-voice>
+                                <div class="crm-field-voice__wrap mk-share-rte-editor-wrap">
+                                    <div class="mk-share-rte-editor"
+                                         contenteditable="true"
+                                         role="textbox"
+                                         aria-multiline="true"
+                                         aria-label="پیام خوش‌آمد"
+                                         data-welcome-editor
+                                         data-crm-field-voice-editor
+                                         dir="rtl"
+                                         data-placeholder="مثلاً: برای هماهنگی بازدید با من در تماس باشید…">{% if sp.welcome_message %}{{ sp.welcome_message|safe }}{% elif share.welcome_message %}{{ share.welcome_message|linebreaksbr }}{% endif %}</div>
+                                    {% include 'workspace/crm/includes/crm_field_voice_mic.html' %}
+                                </div>
+                                <p class="crm-field-voice__status" data-crm-field-voice-status role="status" aria-live="polite" hidden></p>
+                            </div>
                         </div>
                         <div class="mk-share-welcome-actions">
                             <label class="mk-share-check-row">

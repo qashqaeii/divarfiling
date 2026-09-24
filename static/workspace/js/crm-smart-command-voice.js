@@ -297,6 +297,7 @@
      *   micBtn: HTMLButtonElement|null,
      *   voiceStatusEl?: HTMLElement|null,
      *   setInputValue: function(string): void,
+     *   getInputValue?: function(): string,
      *   isInputDisabled?: function(): boolean,
      *   silenceTimeoutMs?: number,
      *   restartDelayMs?: number,
@@ -316,6 +317,9 @@
         const micBtn = config.micBtn;
         const voiceStatusEl = config.voiceStatusEl || null;
         const setInputValue = config.setInputValue;
+        const getInputValue = config.getInputValue || function () {
+            return (input && (input.value || '').trim()) || '';
+        };
         const isInputDisabled = config.isInputDisabled || (() => !!(input && input.disabled));
         const silenceTimeoutMs = config.silenceTimeoutMs || DEFAULT_SILENCE_TIMEOUT_MS;
         const restartDelayMs = config.restartDelayMs || DEFAULT_RESTART_DELAY_MS;
@@ -788,7 +792,7 @@
             lastRestartAt = 0;
             lastOnEndHandledAt = 0;
 
-            baseInputText = (input && (input.value || '').trim()) || '';
+            baseInputText = getInputValue();
             sessionTranscript = '';
             resetCycleBuffers();
 

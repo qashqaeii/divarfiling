@@ -517,6 +517,10 @@ function initWelcomeRichEditors(form) {
     editor.addEventListener('input', syncHidden);
     editor.addEventListener('blur', syncHidden);
     form.addEventListener('submit', syncHidden);
+
+    if (typeof window.initCRMFieldVoice === 'function') {
+        window.initCRMFieldVoice(rte);
+    }
 }
 
 function initPublicShareMessageEditors() {
@@ -783,6 +787,9 @@ function initPublicShareForms() {
         form.dataset.shareAjaxBound = '1';
         initShareModalTabs(form);
         initWelcomeRichEditors(form);
+        if (typeof window.initCRMFieldVoice === 'function') {
+            window.initCRMFieldVoice(form);
+        }
         initShareProfileImagePreviews(form);
         initApproxRadiusToggle(form);
         initNearbyPoisShareToggle(form);

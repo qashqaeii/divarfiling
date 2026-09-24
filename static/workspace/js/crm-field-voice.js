@@ -8,12 +8,62 @@
     const FIELD_MIC_ARIA_STOP = 'توقف ورود صوتی';
     const FIELD_MIC_TOOLTIP = 'ورود صوتی';
 
-    function findFieldInput(wrap) {
-        const direct = wrap.querySelector(':scope > .crm-field-voice__wrap > .crm-input, :scope > .crm-field-voice__wrap > .crm-textarea');
-        if (direct) return direct;
-        return wrap.querySelector('.crm-input, .crm-textarea');
+    /**
+     * @param {HTMLElement|null} el
+     */
+    function isContentEditableField(el) {
+        if (!el) return false;
+        return el.isContentEditable || el.getAttribute('contenteditable') === 'true';
     }
 
+    /**
+     * @param {HTMLElement|null} el
+     */
+    function getFieldPlainText(el) {
+        if (!el) return '';
+        if (isContentEditableField(el)) {
+            return (el.innerText || '').replace(/\s+/g, ' ').trim();
+        }
+        return (el.value || '').trim();
+    }
+
+    /**
+     * @param {HTMLElement|null} el
+     * @param {string} text
+     */
+    function setFieldPlainText(el, text) {
+        if (!el) return;
+        if (isContentEditableField(el)) {
+            el.innerText = text;
+            el.classList.toggle('is-empty', !String(text || '').trim());
+        } else {
+            el.value = text;
+        }
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+        el.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+
+    /**
+     * @param {HTMLElement} wrap
+     * @returns {HTMLElement|null}
+     */
+    function findFieldInput(wrap) {
+        const wrapEl = wrap.querySelector(':scope > .crm-field-voice__wrap');
+        if (wrapEl) {
+            const direct = wrapEl.querySelector(
+                '.crm-input, .crm-textarea, [data-crm-field-voice-editor], [contenteditable="true"]',
+            );
+            if (direct) return direct;
+        }
+        return wrap.querySelector(
+            '.crm-input, .crm-textarea, [data-crm-field-voice-editor], [contenteditable="true"]',
+        );
+    }
+
+    /**
+     * @param {ParentNode|Document} scope
+     * @param {HTMLElement} exceptWrap
+     */
     function stopOtherFieldVoices(scope, exceptWrap) {
         scope.querySelectorAll('[data-crm-field-voice]').forEach(function (otherWrap) {
             if (otherWrap === exceptWrap) return;
@@ -45,13 +95,18 @@
                 micAriaStart: FIELD_MIC_ARIA_START,
                 micAriaStop: FIELD_MIC_ARIA_STOP,
                 micTooltip: FIELD_MIC_TOOLTIP,
+                getInputValue: function () {
+                    return getFieldPlainText(input);
+                },
                 setInputValue: function (text) {
-                    input.value = text;
-                    input.dispatchEvent(new Event('input', { bubbles: true }));
-                    input.dispatchEvent(new Event('change', { bubbles: true }));
+                    setFieldPlainText(input, text);
                 },
                 isInputDisabled: function () {
-                    return !!input.disabled;
+                    return !!(
+                        input.disabled
+                        || input.getAttribute('aria-disabled') === 'true'
+                        || input.getAttribute('contenteditable') === 'false'
+                    );
                 },
             });
 

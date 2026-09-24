@@ -9,6 +9,8 @@
         var input = document.getElementById('hlpSearch');
         if (!input) return;
 
+        var unlockSearchInput = preventHelpSearchAutofill(input);
+
         var clearBtn = document.getElementById('hlpSearchClear');
         var hintEl = document.getElementById('hlpSearchHint');
         var emptyEl = document.getElementById('hlpSearchEmpty');
@@ -77,6 +79,64 @@
                 applyFilter();
             });
         }
+
+        document.querySelectorAll('[data-hlp-search-suggest]').forEach(function (chip) {
+            chip.addEventListener('click', function () {
+                unlockSearchInput();
+                input.value = chip.getAttribute('data-hlp-search-suggest') || '';
+                input.focus();
+                applyFilter();
+            });
+        });
+
+        document.addEventListener('keydown', function (e) {
+            if (e.key !== '/' || e.ctrlKey || e.metaKey || e.altKey) return;
+            var tag = (document.activeElement && document.activeElement.tagName) || '';
+            if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || document.activeElement.isContentEditable) {
+                return;
+            }
+            e.preventDefault();
+            unlockSearchInput();
+            input.focus();
+            input.select();
+        });
+    }
+
+    function preventHelpSearchAutofill(input) {
+        input.setAttribute('autocomplete', 'off');
+        input.setAttribute('data-lpignore', 'true');
+        input.setAttribute('data-1p-ignore', 'true');
+
+        function unlock() {
+            input.removeAttribute('readonly');
+        }
+
+        input.addEventListener('focus', unlock, { once: true });
+        input.addEventListener('mousedown', unlock, { once: true });
+        input.addEventListener('touchstart', unlock, { once: true, passive: true });
+
+        function clearAutofillIfPhone() {
+            if (input.value && looksLikeAutofillPhone(input.value)) {
+                input.value = '';
+            }
+        }
+
+        window.setTimeout(clearAutofillIfPhone, 50);
+        window.setTimeout(clearAutofillIfPhone, 350);
+        window.setTimeout(clearAutofillIfPhone, 900);
+
+        return unlock;
+    }
+
+    function looksLikeAutofillPhone(value) {
+        var fa = '۰۱۲۳۴۵۶۷۸۹';
+        var normalized = String(value || '').trim().replace(/[\s\u200c()-]/g, '');
+        normalized = normalized.replace(/[۰-۹]/g, function (ch) {
+            var idx = fa.indexOf(ch);
+            return idx >= 0 ? String(idx) : ch;
+        });
+        var digits = normalized.replace(/\D/g, '');
+        return digits.length >= 10 && digits.length <= 13;
     }
 
     function initTocNav() {

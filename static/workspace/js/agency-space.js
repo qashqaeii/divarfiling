@@ -28,6 +28,13 @@
     }).then((r) => r.json());
   }
 
+  function portalModalToBody(id) {
+    const el = typeof id === 'string' ? document.getElementById(id) : id;
+    if (!el || el.parentElement === document.body) return el;
+    document.body.appendChild(el);
+    return el;
+  }
+
   function openModal(id) {
     const el = typeof id === 'string' ? document.getElementById(id) : id;
     if (!el) return;
@@ -104,6 +111,10 @@
   }
 
   document.addEventListener('DOMContentLoaded', function () {
+    ['modal-space-gallery', 'modal-space-moderate', 'modal-agency-space-publish'].forEach((modalId) => {
+      portalModalToBody(modalId);
+    });
+
     const filterToggle = document.querySelector('[data-space-filters-open]');
     const filterPanel = document.getElementById('agency-space-filters-panel');
     const backdrop = document.getElementById('agency-space-filters-backdrop');

@@ -3,7 +3,7 @@
 
 {% block crm_extra_css %}
 {{ block.super }}
-<link rel="stylesheet" href="{% static 'workspace/css/agency-space.css' %}?v=12">
+<link rel="stylesheet" href="{% static 'workspace/css/agency-space.css' %}?v=14">
 {% endblock %}
 
 {% block agency_hub_content %}
@@ -544,5 +544,5 @@ window.AGENCY_SPACE_API = {
   publishContact: "{% url 'workspace:api_agency_space_publish_contact' %}"
 };
 </script>
-<script src="{% static 'workspace/js/agency-space.js' %}?v=6" defer></script>
+<script src="{% static 'workspace/js/agency-space.js' %}?v=7" defer></script>
 {% endblock %}

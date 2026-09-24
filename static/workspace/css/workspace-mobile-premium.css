@@ -364,25 +364,34 @@
         display: none;
     }
 
-    .crm-contact-detail-pro .crm-contact-agency-strip {
-        border-top-color: color-mix(in srgb, var(--ws-border) 70%, transparent);
-    }
-
     .crm-contact-agency-bar__row {
-        padding: 10px var(--ws-mob-gutter) 12px !important;
-        gap: 10px !important;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 6px !important;
+        padding: 6px var(--ws-mob-gutter) !important;
+        min-height: 0 !important;
     }
 
-    .crm-contact-agency-bar__panel {
-        padding: 10px 12px;
+    .crm-contact-agency-bar__sep {
+        display: none;
     }
 
-    .crm-contact-agency-bar__panel-copy strong {
-        font-size: 0.78rem !important;
+    .crm-contact-agency-bar__seg {
+        width: 100%;
+        flex: 1 1 auto !important;
+    }
+
+    .crm-contact-agency-bar__seg-body--team {
+        justify-content: flex-start;
+    }
+
+    .crm-contact-agency-bar__select {
+        max-width: none !important;
+        flex: 1 1 auto !important;
     }
 
     .crm-contact-agency-bar__chips {
-        padding: 0 var(--ws-mob-gutter) 12px !important;
+        padding: 0 var(--ws-mob-gutter) 6px !important;
     }
 
     .crm-deal-detail-mobile .crm-deal-dossier.crm-deal-hero {

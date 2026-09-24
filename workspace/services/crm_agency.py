@@ -287,8 +287,9 @@ def set_commission_splits(actor, deal: CRMDeal, splits: List[Dict[str, Any]]) ->
 
 
 def member_display(member: CRMAgencyMember) -> str:
-    u = member.user
-    return u.get_full_name() or u.phone or u.username
+    from workspace.services.user_display import user_display_name
+
+    return user_display_name(member.user)
 
 
 def role_label(role: str) -> str:

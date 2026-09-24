@@ -7,6 +7,7 @@ from django.urls import reverse
 
 from workspace.models import AgencySpaceCopy, CRMProperty, Customer
 from workspace.services.agency_space_query import get_space_item_for_user
+from workspace.services.user_display import user_display_name
 
 
 def provenance_for_property(prop: CRMProperty, viewer=None) -> Optional[Dict[str, Any]]:
@@ -52,7 +53,7 @@ def _payload(rec: Optional[AgencySpaceCopy], viewer) -> Optional[Dict[str, Any]]
     pub = item.publisher
     name = ''
     if pub:
-        name = pub.get_full_name() or getattr(pub, 'phone', '') or pub.username
+        name = user_display_name(pub)
     space_item_url = ''
     if viewer and viewer.is_authenticated:
         if get_space_item_for_user(viewer, item.pk):
@@ -67,4 +68,4 @@ def _payload(rec: Optional[AgencySpaceCopy], viewer) -> Optional[Dict[str, Any]]
         'space_item_id': item.pk,
         'space_item_url': space_item_url,
     }
-
+

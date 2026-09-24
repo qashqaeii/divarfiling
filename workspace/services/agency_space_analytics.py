@@ -10,6 +10,7 @@ from django.utils import timezone
 from workspace.models import AgencySpaceCopy, AgencySpaceItem, CRMAgency
 from workspace.services.agency_space_access import can_moderate_agency_space
 from workspace.services.crm_scope import agency_members
+from workspace.services.user_display import user_display_name
 
 
 def can_view_space_analytics(user, agency: Optional[CRMAgency] = None) -> bool:
@@ -87,7 +88,7 @@ def get_contributor_metrics(agency: CRMAgency) -> List[Dict[str, Any]]:
         member = members_by_user.get(uid)
         name = ''
         if member and member.user:
-            name = member.user.get_full_name() or getattr(member.user, 'phone', '') or ''
+            name = user_display_name(member.user)
         out.append({
             'user_id': uid,
             'name': name,

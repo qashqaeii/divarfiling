@@ -6,6 +6,7 @@ from typing import Any, Dict, List, Optional
 from django.contrib.auth import get_user_model
 
 from workspace.models import AgencySpaceItem, CRMProperty, Customer
+from workspace.services.user_display import user_display_name
 from workspace.services.agency_space_access import (
     can_copy_from_agency_space,
     can_view_space_item,
@@ -72,7 +73,7 @@ def _publisher_payload(user: User) -> Dict[str, Any]:
         role_label = dict(membership._meta.get_field('role').choices).get(role, role)
     return {
         'id': user.pk,
-        'name': user.get_full_name() or getattr(user, 'phone', '') or user.username,
+        'name': user_display_name(user),
         'role': role,
         'role_label': role_label,
     }

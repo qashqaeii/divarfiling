@@ -1,21 +1,16 @@
 {% load static workspace_tags %}
 <section class="agency-hero" aria-label="خلاصه آژانس">
-    <div class="agency-hero__main">
-        <div class="agency-hero__visual{% if hub_agency_logo_url %} agency-hero__visual--logo{% endif %}">
+    <div class="agency-hero__brand">
+        <figure class="agency-hero__avatar{% if hub_agency_logo_url %} agency-hero__avatar--logo{% endif %}">
             {% if hub_agency_logo_url %}
-            <img src="{{ hub_agency_logo_url }}" alt="لوگوی {{ hub_agency.name|default:'آژانس' }}" class="agency-hero__logo" loading="lazy" decoding="async">
+            <img src="{{ hub_agency_logo_url }}" alt="لوگوی {{ hub_agency.name|default:'آژانس' }}" class="agency-hero__avatar-img" width="56" height="56" loading="eager" decoding="async">
             {% else %}
-            <div class="agency-hero__orb" aria-hidden="true"></div>
-            <div class="agency-hero__building-art" aria-hidden="true">
-                {% include 'includes/icon_slot.html' with decor='building' size='lg' only %}
-            </div>
-            <span class="agency-hero__mark" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='building' size='sm' only %}</span>
+            <span class="agency-hero__avatar-fallback" aria-hidden="true">{{ hub_agency.name|default:"آ"|slice:":1" }}</span>
             {% endif %}
-        </div>
-        <div class="agency-hero__copy">
-            <span class="agency-hero__eyebrow">مدیریت آژانس</span>
+        </figure>
+        <div class="agency-hero__identity">
+            <p class="agency-hero__eyebrow">مدیریت آژانس</p>
             <h1 class="agency-hero__title">{{ hub_agency.name|default:"آژانس" }}</h1>
-            <p class="agency-hero__subtitle">تیمی قدرتمند، مسیری هموار‌تر به سوی موفقیت در معاملات.</p>
             {% if hub_subscription %}
             <div class="agency-hero__badges">
                 <span class="agency-hub-chip agency-hub-chip--plan">
@@ -31,21 +26,15 @@
         </div>
     </div>
 
-    <aside class="agency-hero__aside">
+    <div class="agency-hero__end">
         {% if hub_seats %}
-        <div class="agency-hero__seats">
-            <p class="agency-hero__seats-label">
-                <strong>{{ hub_seats.assigned }}</strong> از <strong>{{ hub_seats.total }}</strong> صندلی تخصیص داده شده
-            </p>
-            <div class="agency-hero__seat-meter" role="progressbar" aria-valuenow="{{ hub_seats.assigned }}" aria-valuemin="0" aria-valuemax="{{ hub_seats.total }}">
+        <div class="agency-hero__seats" aria-label="صندلی مشاوران">
+            <span class="agency-hero__seats-kpi">
+                <span class="agency-hero__seats-kpi-label">صندلی</span>
+                <strong>{{ hub_seats.assigned }}</strong><span class="agency-hero__seats-kpi-sep">/</span><span>{{ hub_seats.total }}</span>
+            </span>
+            <div class="agency-hero__seat-meter" role="progressbar" aria-valuenow="{{ hub_seats.assigned }}" aria-valuemin="0" aria-valuemax="{{ hub_seats.total }}" aria-label="تخصیص صندلی">
                 <span style="width: {% widthratio hub_seats.assigned hub_seats.total 100 %}%;"></span>
-            </div>
-            <div class="agency-hero__seat-dots" aria-hidden="true">
-                {% for i in "12345678901234567890"|make_list %}
-                {% if forloop.counter <= hub_seats.total %}
-                <span class="agency-hero__seat-dot{% if forloop.counter <= hub_seats.assigned %} is-filled{% endif %}"><span>{% include 'includes/icon_slot.html' with decor='user' size='xs' only %}</span></span>
-                {% endif %}
-                {% endfor %}
             </div>
         </div>
         {% endif %}
@@ -72,5 +61,5 @@
             </a>
             {% endif %}
         </div>
-    </aside>
+    </div>
 </section>

@@ -164,15 +164,30 @@ def tv_initials(user) -> str:
 
 
 def _agency_logo_url(agency: CRMAgency) -> Optional[str]:
-    """لوگوی ثبت‌شده مالک آژانس در تنظیمات میزکار."""
-    ws = (
-        WorkspaceSettings.objects
-        .filter(user_id=agency.owner_id)
-        .only('agency_logo')
-        .first()
+    """لوگوی آژانس از تنظیمات میزکار مالک یا مدیران فعال."""
+    if not agency:
+        return None
+    candidate_ids: list[int] = [agency.owner_id]
+    manager_ids = (
+        CRMAgencyMember.objects.filter(
+            agency_id=agency.pk,
+            is_active=True,
+            role__in=['owner', 'manager'],
+        )
+        .values_list('user_id', flat=True)
     )
-    if ws and ws.agency_logo:
-        return ws.agency_logo.url
+    for uid in manager_ids:
+        if uid not in candidate_ids:
+            candidate_ids.append(uid)
+    for user_id in candidate_ids:
+        ws = (
+            WorkspaceSettings.objects
+            .filter(user_id=user_id)
+            .only('agency_logo')
+            .first()
+        )
+        if ws and ws.agency_logo:
+            return ws.agency_logo.url
     return None
 
 

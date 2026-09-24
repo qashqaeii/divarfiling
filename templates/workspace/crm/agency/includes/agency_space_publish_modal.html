@@ -2,36 +2,58 @@
 <div class="ws-modal" id="modal-agency-space-publish" role="dialog" aria-modal="true" aria-labelledby="agencySpacePublishTitle">
     <div class="ws-modal-overlay" data-modal-close></div>
     <div class="ws-modal-panel ws-modal-panel-lg agency-space-publish-modal">
-        <div class="ws-modal-head">
-            <div>
-                <h2 class="ws-modal-title" id="agencySpacePublishTitle">انتشار در فضای آژانس</h2>
-                <p class="ws-modal-sub">در فضای مشترک تیم قابل مشاهده می‌شود — مالکیت فایل تغییر نمی‌کند.</p>
+        <div class="agency-space-publish-modal__accent" aria-hidden="true"></div>
+        <header class="agency-space-publish-modal__head">
+            <div class="agency-space-publish-modal__head-main">
+                <span class="agency-space-publish-modal__icon" aria-hidden="true">
+                    <i class="fas fa-users"></i>
+                </span>
+                <div class="agency-space-publish-modal__titles">
+                    <h2 class="agency-space-publish-modal__title" id="agencySpacePublishTitle">{% if agency_space_edit_mode %}ویرایش انتشار در فضا{% else %}انتشار در فضای آژانس{% endif %}</h2>
+                    <p class="agency-space-publish-modal__sub">{% if agency_space_edit_mode %}دسترسی، مخاطبان محرمانه و یادداشت تیم را به‌روز کنید.{% else %}فایل در فضای مشترک تیم دیده می‌شود؛ همکاران می‌توانند نسخهٔ شخصی در CRM بسازند.{% endif %}</p>
+                </div>
             </div>
-            <button type="button" class="ws-modal-close" data-modal-close aria-label="بستن">
+            <button type="button" class="agency-space-publish-modal__close ws-modal-close" data-modal-close aria-label="بستن">
                 <i class="fas fa-times" aria-hidden="true"></i>
             </button>
-        </div>
+        </header>
         <form id="agency-space-publish-form" class="agency-space-publish-form"
               data-source-kind="{{ agency_space_source_kind }}"
               data-property-id="{{ agency_space_property_id|default:'' }}"
               data-customer-id="{{ agency_space_customer_id|default:'' }}"
               data-item-id="{{ agency_space_item.id|default:'' }}">
-            <div class="ws-modal-body">
+            <div class="ws-modal-body agency-space-publish-modal__body">
+                <p class="agency-space-publish-trust">
+                    <i class="fas fa-shield-halved" aria-hidden="true"></i>
+                    <span>مالکیت داده تغییر نمی‌کند — فقط <strong>نمایش در فضای تیم</strong></span>
+                </p>
                 <fieldset class="agency-space-publish-field">
                     <legend class="agency-space-publish-field__legend">سطح دسترسی</legend>
                     <div class="agency-space-publish-choices">
                         <label class="agency-space-publish-choice">
                             <input type="radio" name="visibility" value="agency_public" checked>
                             <span class="agency-space-publish-choice__box">
-                                <strong>عمومی برای آژانس</strong>
-                                <small>همهٔ اعضای فعال می‌بینند</small>
+                                <span class="agency-space-publish-choice__icon agency-space-publish-choice__icon--public">
+                                    <i class="fas fa-building" aria-hidden="true"></i>
+                                </span>
+                                <span class="agency-space-publish-choice__text">
+                                    <strong>عمومی برای آژانس</strong>
+                                    <small>همهٔ اعضای فعال می‌بینند</small>
+                                </span>
+                                <span class="agency-space-publish-choice__mark" aria-hidden="true"><i class="fas fa-check"></i></span>
                             </span>
                         </label>
                         <label class="agency-space-publish-choice">
                             <input type="radio" name="visibility" value="selected_members">
                             <span class="agency-space-publish-choice__box">
-                                <strong>محرمانه</strong>
-                                <small>فقط اعضای منتخب</small>
+                                <span class="agency-space-publish-choice__icon agency-space-publish-choice__icon--private">
+                                    <i class="fas fa-user-lock" aria-hidden="true"></i>
+                                </span>
+                                <span class="agency-space-publish-choice__text">
+                                    <strong>محرمانه</strong>
+                                    <small>فقط اعضای منتخب</small>
+                                </span>
+                                <span class="agency-space-publish-choice__mark" aria-hidden="true"><i class="fas fa-check"></i></span>
                             </span>
                         </label>
                     </div>
@@ -43,22 +65,36 @@
                         <label class="agency-space-publish-choice">
                             <input type="radio" name="contact_share_level" value="summary" checked>
                             <span class="agency-space-publish-choice__box">
-                                <strong>خلاصه</strong>
-                                <small>بدون شماره تماس</small>
+                                <span class="agency-space-publish-choice__icon agency-space-publish-choice__icon--summary">
+                                    <i class="fas fa-id-card" aria-hidden="true"></i>
+                                </span>
+                                <span class="agency-space-publish-choice__text">
+                                    <strong>خلاصه</strong>
+                                    <small>بدون شماره تماس</small>
+                                </span>
+                                <span class="agency-space-publish-choice__mark" aria-hidden="true"><i class="fas fa-check"></i></span>
                             </span>
                         </label>
                         <label class="agency-space-publish-choice">
                             <input type="radio" name="contact_share_level" value="full">
                             <span class="agency-space-publish-choice__box">
-                                <strong>کامل</strong>
-                                <small>شامل شماره تماس</small>
+                                <span class="agency-space-publish-choice__icon agency-space-publish-choice__icon--full">
+                                    <i class="fas fa-phone" aria-hidden="true"></i>
+                                </span>
+                                <span class="agency-space-publish-choice__text">
+                                    <strong>کامل</strong>
+                                    <small>شامل شماره تماس</small>
+                                </span>
+                                <span class="agency-space-publish-choice__mark" aria-hidden="true"><i class="fas fa-check"></i></span>
                             </span>
                         </label>
                     </div>
                 </fieldset>
                 {% endif %}
                 <div class="agency-space-publish-audience" id="agency-space-audience" hidden>
-                    <p class="agency-space-publish-field__legend">اعضای مجاز</p>
+                    <p class="agency-space-publish-field__legend">
+                        <i class="fas fa-users" aria-hidden="true"></i> اعضای مجاز
+                    </p>
                     <div class="agency-space-publish-members">
                         {% for m in agency_space_team_members %}
                         <label class="agency-space-publish-member">
@@ -69,13 +105,16 @@
                     </div>
                 </div>
                 <label class="agency-space-publish-note">
-                    <span class="agency-space-publish-field__legend">یادداشت کوتاه (اختیاری)</span>
-                    <textarea name="note" rows="3" maxlength="300" class="crm-input" placeholder="برای همکاران در فضای آژانس…"></textarea>
+                    <span class="agency-space-publish-field__legend">یادداشت برای همکاران (اختیاری)</span>
+                    <textarea name="note" rows="3" maxlength="300" class="crm-input agency-space-publish-note__input" placeholder="مثلاً: فایل ویژهٔ مالک، هماهنگی قبل از بازدید…"></textarea>
                 </label>
             </div>
-            <div class="ws-modal-foot">
-                <button type="button" class="crm-btn crm-btn-ghost" data-modal-close>انصراف</button>
-                <button type="submit" class="crm-btn crm-btn-primary">انتشار در فضا</button>
+            <div class="ws-modal-foot agency-space-publish-modal__foot">
+                <button type="button" class="ws-btn ws-btn-ghost" data-modal-close>انصراف</button>
+                <button type="submit" class="ws-btn ws-btn-primary agency-space-publish-submit">
+                    <i class="fas fa-{% if agency_space_edit_mode %}check{% else %}paper-plane{% endif %}" aria-hidden="true"></i>
+                    <span>{% if agency_space_edit_mode %}ذخیره تغییرات{% else %}انتشار در فضا{% endif %}</span>
+                </button>
             </div>
         </form>
     </div>

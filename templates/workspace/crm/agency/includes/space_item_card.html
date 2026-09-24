@@ -1,121 +1,119 @@
-<article class="agency-space-card" data-space-kind="{{ item.source_kind }}" data-item-id="{{ item.id }}">
-
-    {% if item.is_publisher %}
-
-    <span class="agency-space-card__ribbon">منتشرشده توسط من</span>
-
-    {% endif %}
-
-
+<article class="agency-space-card agency-space-card--{{ item.source_kind }}" data-space-kind="{{ item.source_kind }}" data-item-id="{{ item.id }}">
 
     {% if item.source_kind == 'property' and item.property %}
 
-    <a href="{% url 'workspace:agency_hub_space_item' item.id %}" class="agency-space-card__media-link">
-
-        <div class="agency-space-card__media">
-
-            {% if item.property.thumbnail_url %}
-
-            <img src="{{ item.property.thumbnail_url }}" alt="" loading="lazy" width="320" height="200">
-
-            {% else %}
-
-            <span class="agency-space-card__media-fallback" aria-hidden="true">🏠</span>
-
-            {% endif %}
-
+    <div class="agency-space-card__media-wrap">
+        {% if item.is_publisher %}
+        <span class="agency-space-card__ribbon">منتشرشده توسط من</span>
+        {% endif %}
+        <a href="{% url 'workspace:agency_hub_space_item' item.id %}" class="agency-space-card__media-link" tabindex="-1" aria-hidden="true">
+            <div class="agency-space-card__media">
+                {% if item.property.thumbnail_url %}
+                <img src="{{ item.property.thumbnail_url }}" alt="" loading="lazy" width="400" height="250">
+                {% else %}
+                <span class="agency-space-card__media-fallback"><i class="fas fa-building" aria-hidden="true"></i></span>
+                {% endif %}
+            </div>
+        </a>
+        <div class="agency-space-card__media-chips">
+            {% if item.property.deal_mode %}<span class="agency-space-card__chip">{{ item.property.deal_mode }}</span>{% endif %}
+            {% if item.property.property_type %}<span class="agency-space-card__chip agency-space-card__chip--muted">{{ item.property.property_type }}</span>{% endif %}
         </div>
+    </div>
 
-    </a>
-
-    <h3 class="agency-space-card__title"><a href="{% url 'workspace:agency_hub_space_item' item.id %}">{{ item.property.title }}</a></h3>
-
-    <p class="agency-space-card__meta">
-
-        {{ item.property.property_type }} · {{ item.property.deal_mode }}
-
-        {% if item.property.region %} · {{ item.property.region }}{% endif %}
-
-        {% if item.property.area %} · {{ item.property.area }} متر{% endif %}
-
-    </p>
-
-    {% if item.property.price_label %}<p class="agency-space-card__price">{{ item.property.price_label }}</p>{% endif %}
-
-
+    <div class="agency-space-card__body">
+        <h3 class="agency-space-card__title">
+            <a href="{% url 'workspace:agency_hub_space_item' item.id %}">{{ item.property.title }}</a>
+        </h3>
+        {% if item.property.region %}
+        <p class="agency-space-card__location">
+            <i class="fas fa-location-dot" aria-hidden="true"></i>
+            <span>{{ item.property.region }}</span>
+        </p>
+        {% endif %}
+        <div class="agency-space-card__stats">
+            {% if item.property.price_label %}
+            <p class="agency-space-card__price">{{ item.property.price_label }}</p>
+            {% endif %}
+            {% if item.property.area_label %}
+            <span class="agency-space-card__area">{{ item.property.area_label }}</span>
+            {% elif item.property.area %}
+            <span class="agency-space-card__area">{{ item.property.area }} متر</span>
+            {% endif %}
+        </div>
+    </div>
 
     {% elif item.source_kind == 'customer' and item.customer %}
 
-    <div class="agency-space-card__avatar" aria-hidden="true">👤</div>
+    <div class="agency-space-card__media-wrap agency-space-card__media-wrap--contact">
+        {% if item.is_publisher %}
+        <span class="agency-space-card__ribbon">منتشرشده توسط من</span>
+        {% endif %}
+        <div class="agency-space-card__avatar" aria-hidden="true">
+            <i class="fas fa-user"></i>
+        </div>
+    </div>
 
-    <h3 class="agency-space-card__title"><a href="{% url 'workspace:agency_hub_space_item' item.id %}">{{ item.customer.name }}</a></h3>
-
-    <p class="agency-space-card__meta">
-
-        {{ item.customer.customer_type }}
-
-        {% if item.customer.need_summary %} · {{ item.customer.need_summary|truncatechars:80 }}{% endif %}
-
-        {% if item.customer.region %} · {{ item.customer.region }}{% endif %}
-
-    </p>
-
-    {% if item.customer.budget_label %}<p class="agency-space-card__price">{{ item.customer.budget_label }}</p>{% endif %}
+    <div class="agency-space-card__body">
+        <h3 class="agency-space-card__title">
+            <a href="{% url 'workspace:agency_hub_space_item' item.id %}">{{ item.customer.name }}</a>
+        </h3>
+        <p class="agency-space-card__location">
+            <span class="agency-space-card__chip agency-space-card__chip--inline">{{ item.customer.customer_type }}</span>
+            {% if item.customer.region %}<span>{{ item.customer.region }}</span>{% endif %}
+        </p>
+        {% if item.customer.need_summary %}
+        <p class="agency-space-card__need">{{ item.customer.need_summary|truncatechars:90 }}</p>
+        {% endif %}
+        {% if item.customer.budget_label %}
+        <p class="agency-space-card__price">{{ item.customer.budget_label }}</p>
+        {% endif %}
+    </div>
 
     {% endif %}
 
-
-
     <footer class="agency-space-card__foot">
-
-        <p class="agency-space-card__publisher">{{ item.publisher.name }}</p>
-
-        {% if item.published_at %}<time class="agency-space-card__time" datetime="{{ item.published_at }}">{{ item.published_at|slice:":10" }}</time>{% endif %}
-
-        <div class="agency-space-card__badges">
-
-            <span class="agency-space-badge agency-space-badge--{{ item.visibility }}">{{ item.visibility_label }}</span>
-
-            {% if item.status != 'active' %}
-
-            <span class="agency-space-badge agency-space-badge--status">{{ item.status_label }}</span>
-
-            {% endif %}
-
-            {% if item.is_publisher and item.copy_count != None %}
-
-            <span class="agency-space-badge">{{ item.copy_count }} کپی</span>
-
-            {% endif %}
-
+        <div class="agency-space-card__publisher-row">
+            <span class="agency-space-card__publisher-avatar" aria-hidden="true">{{ item.publisher.name|slice:":1"|upper }}</span>
+            <div class="agency-space-card__publisher-meta">
+                <span class="agency-space-card__publisher">{{ item.publisher.name }}</span>
+                {% if item.published_at_display %}
+                <time class="agency-space-card__time" datetime="{{ item.published_at }}">{{ item.published_at_display }}</time>
+                {% endif %}
+            </div>
         </div>
-
+        <div class="agency-space-card__badges">
+            <span class="agency-space-badge agency-space-badge--{{ item.visibility }}">{{ item.visibility_label }}</span>
+            {% if item.status != 'active' %}
+            <span class="agency-space-badge agency-space-badge--status">{{ item.status_label }}</span>
+            {% endif %}
+            {% if item.is_publisher and item.copy_count != None %}
+            <span class="agency-space-badge">{{ item.copy_count }} کپی</span>
+            {% endif %}
+        </div>
     </footer>
 
-
-
     <div class="agency-space-card__actions">
-
-        {% if item.already_copied and item.copy_target_url %}
-
-        <span class="agency-space-card__badge-done">{% if item.source_kind == 'property' %}در فایل‌های من{% else %}در مخاطبین من{% endif %}</span>
-
+        {% if item.owns_source_in_crm and item.source_crm_url %}
+        <span class="agency-space-card__badge-done">
+            <i class="fas fa-circle-check" aria-hidden="true"></i>
+            {% if item.source_kind == 'property' %}فایل CRM من{% else %}مخاطب CRM من{% endif %}
+        </span>
+        <a href="{{ item.source_crm_url }}" class="crm-btn crm-btn-ghost crm-btn-sm">باز کردن در CRM</a>
+        {% elif item.already_copied and item.copy_target_url %}
+        <span class="agency-space-card__badge-done">
+            <i class="fas fa-circle-check" aria-hidden="true"></i>
+            {% if item.source_kind == 'property' %}در فایل‌های من{% else %}در مخاطبین من{% endif %}
+        </span>
         <a href="{{ item.copy_target_url }}" class="crm-btn crm-btn-ghost crm-btn-sm">مشاهده نسخه من</a>
-
         {% elif item.can_copy %}
-
-        <button type="button" class="crm-btn crm-btn-primary crm-btn-sm" data-space-copy data-item-id="{{ item.id }}">
-
+        <button type="button" class="crm-btn crm-btn-primary crm-btn-sm agency-space-card__cta" data-space-copy data-item-id="{{ item.id }}">
             {% if item.source_kind == 'property' %}افزودن به فایل‌های من{% else %}افزودن به مخاطبین من{% endif %}
-
         </button>
-
         {% endif %}
-
-        <a href="{% url 'workspace:agency_hub_space_item' item.id %}" class="crm-btn crm-btn-ghost crm-btn-sm">{% if item.is_publisher %}مدیریت انتشار{% else %}جزئیات{% endif %}</a>
-
+        <a href="{% url 'workspace:agency_hub_space_item' item.id %}" class="crm-btn crm-btn-ghost crm-btn-sm">
+            {% if item.is_publisher %}مدیریت انتشار{% else %}جزئیات{% endif %}
+        </a>
     </div>
 
 </article>
-
-

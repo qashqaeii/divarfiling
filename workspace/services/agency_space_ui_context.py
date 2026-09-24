@@ -5,7 +5,7 @@ from typing import Any, Dict, Optional
 
 from django.urls import reverse
 
-from workspace.models import CRMProperty, Customer
+from workspace.models import AgencySpaceItem, CRMProperty, Customer
 from workspace.services.agency_space_access import (
     can_publish_to_agency_space,
     get_user_space_agency,
@@ -62,3 +62,38 @@ def apply_agency_space_crm_context(
         ]
     else:
         ctx['agency_space_team_members'] = []
+
+
+def apply_agency_space_item_detail_context(
+    ctx: Dict[str, Any],
+    user,
+    item: AgencySpaceItem,
+    payload: Dict[str, Any],
+) -> None:
+    """Context for hub space item detail — edit publication modal + API URLs."""
+    agency = item.agency
+    ctx['agency_space_enabled'] = is_agency_feature_enabled('agency_space', agency)
+    ctx['agency_space_edit_mode'] = bool(payload.get('can_edit'))
+    ctx['agency_space_can_publish'] = ctx['agency_space_edit_mode']
+    ctx['agency_space_item'] = item
+    ctx['agency_space_source_kind'] = item.content_kind()
+    ctx['agency_space_property_id'] = item.property_id or ''
+    ctx['agency_space_customer_id'] = item.customer_id or ''
+    ctx['agency_space_api_base'] = reverse('workspace:api_agency_space_items')
+    ctx['agency_space_manage_url'] = reverse(
+        'workspace:agency_hub_space_item',
+        kwargs={'item_id': item.pk},
+    )
+    if ctx['agency_space_can_publish'] and agency:
+        ctx['agency_space_team_members'] = ctx.get('space_team_members') or [
+            m for m in agency_members(agency)
+            if m.is_active and m.user_id != user.id
+        ]
+    else:
+        ctx['agency_space_team_members'] = []
+    ctx['space_edit_config'] = {
+        'visibility': item.visibility,
+        'contact_share_level': item.contact_share_level or AgencySpaceItem.CONTACT_SUMMARY,
+        'note': item.note or '',
+        'member_ids': payload.get('audience_member_ids') or [],
+    }

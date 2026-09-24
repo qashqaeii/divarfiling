@@ -178,6 +178,16 @@ class AgencySpacePublishTests(AgencySpaceTestBase):
         )
         self.assertTrue(can_view_space_item(self.advisor, item))
 
+    def test_publisher_owns_source_not_copy_target(self):
+        from workspace.services.agency_space_serialize import serialize_space_item
+
+        prop = self._prop()
+        item = publish_property(self.advisor, prop.pk, visibility=AgencySpaceItem.VISIBILITY_AGENCY_PUBLIC)
+        data = serialize_space_item(item, self.advisor, detail=True)
+        self.assertTrue(data['owns_source_in_crm'])
+        self.assertFalse(data['can_copy'])
+        self.assertIn(str(prop.pk), data['source_crm_url'])
+
     def test_secretary_sees_public(self):
         prop = self._prop()
         item = publish_property(self.advisor, prop.pk, visibility=AgencySpaceItem.VISIBILITY_AGENCY_PUBLIC)

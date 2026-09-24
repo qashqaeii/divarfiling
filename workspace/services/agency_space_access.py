@@ -140,7 +140,13 @@ def can_copy_from_agency_space(user, item: AgencySpaceItem) -> bool:
         return False
     if not can_view_space_item(user, item):
         return False
-    return can_publish_to_agency_space(user, item.agency)
+    if not can_publish_to_agency_space(user, item.agency):
+        return False
+    if item.property_id and item.property and item.property.user_id == user.id:
+        return False
+    if item.customer_id and item.customer and item.customer.user_id == user.id:
+        return False
+    return True
 
 
 def assert_can_copy_from_agency_space(user, item: AgencySpaceItem) -> None:

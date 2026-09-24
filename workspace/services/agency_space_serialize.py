@@ -14,8 +14,48 @@ from workspace.services.agency_space_access import (
 from workspace.services.agency_space_copy import space_copy_target_url
 from workspace.models import AgencySpaceCopy
 from workspace.services.crm_scope import get_membership
+from workspace.services.display import to_jalali_display
+from workspace.services.formatting import format_area, format_toman
 
 User = get_user_model()
+
+
+def _viewer_owns_space_source(viewer: User, item: AgencySpaceItem) -> bool:
+    """انتشار از همان فایل/مخاطب CRM خود کاربر — کپی جدا لازم نیست."""
+    if item.property_id and item.property:
+        return item.property.user_id == viewer.id
+    if item.customer_id and item.customer:
+        return item.customer.user_id == viewer.id
+    return False
+
+
+def _property_price_label(prop: CRMProperty) -> str:
+    parts = []
+    if prop.deposit:
+        parts.append(f'رهن {format_toman(prop.deposit)}')
+    if prop.monthly_rent:
+        parts.append(f'اجاره {format_toman(prop.monthly_rent)}')
+    if parts:
+        return ' · '.join(parts)
+    if prop.sale_price:
+        return format_toman(prop.sale_price)
+    return ''
+
+
+def _customer_budget_label(customer: Customer) -> str:
+    if customer.budget_min and customer.budget_max:
+        return f'{format_toman(customer.budget_min)} تا {format_toman(customer.budget_max)}'
+    if customer.budget_max:
+        return f'تا {format_toman(customer.budget_max)}'
+    if customer.budget_min:
+        return f'از {format_toman(customer.budget_min)}'
+    return ''
+
+
+def _format_published_at(dt) -> str:
+    if not dt:
+        return ''
+    return to_jalali_display(dt)
 
 
 def _publisher_payload(user: User) -> Dict[str, Any]:
@@ -39,30 +79,38 @@ def _publisher_payload(user: User) -> Dict[str, Any]:
 
 
 def _property_card(prop: CRMProperty, *, include_sensitive: bool) -> Dict[str, Any]:
-    thumb = ''
-    if prop.images and isinstance(prop.images, list) and prop.images:
-        thumb = prop.images[0] if isinstance(prop.images[0], str) else ''
-    price_label = ''
-    if prop.sale_price:
-        price_label = str(prop.sale_price)
-    elif prop.deposit or prop.monthly_rent:
-        price_label = f'{prop.deposit or 0}/{prop.monthly_rent or 0}'
+    images: List[str] = []
+    if prop.images and isinstance(prop.images, list):
+        images = [u for u in prop.images if isinstance(u, str) and u.strip()][:8]
+    thumb = images[0] if images else ''
     area = prop.area
+    area_label = format_area(area) if area not in (None, '') else ''
     region = ' · '.join(p for p in (prop.neighborhood, prop.district, prop.city) if p)
     data = {
         'id': prop.pk,
         'title': prop.title,
         'thumbnail_url': thumb,
-        'price_label': price_label,
+        'images': images if include_sensitive else ([thumb] if thumb else []),
+        'price_label': _property_price_label(prop),
         'area': area,
+        'area_label': area_label,
         'region': region,
         'property_type': prop.property_type,
         'deal_mode': prop.deal_mode,
+        'transaction_status': prop.transaction_status,
+        'rooms': prop.rooms or '',
+        'floor': prop.floor,
+        'total_floors': prop.total_floors,
+        'build_year': prop.build_year,
     }
     if include_sensitive:
         data['address'] = prop.address
         data['phone'] = prop.phone
         data['notes'] = prop.notes
+        data['amenities'] = (prop.amenities or '')[:500]
+        data['has_parking'] = prop.has_parking
+        data['has_elevator'] = prop.has_elevator
+        data['has_storage'] = prop.has_storage
     return data
 
 
@@ -77,16 +125,13 @@ def _customer_payload(
         item.contact_share_level == AgencySpaceItem.CONTACT_FULL
         and can_view_space_item_content(viewer, item)
     )
-    budget = ''
-    if customer.budget_min or customer.budget_max:
-        budget = f'{customer.budget_min or ""} — {customer.budget_max or ""}'
     region = ' · '.join(p for p in (customer.district, customer.city, customer.areas) if p)
     data = {
         'id': customer.pk,
         'name': customer.name,
         'customer_type': customer.customer_type,
         'need_summary': (customer.notes or '')[:300] if detail else (customer.notes or '')[:120],
-        'budget_label': budget,
+        'budget_label': _customer_budget_label(customer),
         'region': region,
         'status': customer.status,
     }
@@ -99,6 +144,11 @@ def _customer_payload(
         data['phone_alt'] = ''
         data['email'] = ''
     data['contact_share_level'] = item.contact_share_level
+    data['contact_share_level_label'] = dict(
+        AgencySpaceItem.CONTACT_SHARE_LEVEL_CHOICES,
+    ).get(item.contact_share_level, item.contact_share_level)
+    if detail:
+        data['notes'] = (customer.notes or '')[:800]
     return data
 
 
@@ -131,7 +181,10 @@ def serialize_space_item(
         ),
         'note': item.note,
         'published_at': item.published_at.isoformat() if item.published_at else '',
+        'published_at_display': _format_published_at(item.published_at),
         'updated_at': item.updated_at.isoformat() if item.updated_at else '',
+        'updated_at_display': _format_published_at(item.updated_at),
+        'archived_at_display': _format_published_at(item.archived_at) if item.archived_at else '',
         'publisher': _publisher_payload(item.publisher),
         'is_publisher': item.publisher_id == viewer.id,
         'can_edit': item.publisher_id == viewer.id and item.status == AgencySpaceItem.STATUS_ACTIVE,
@@ -159,7 +212,16 @@ def serialize_space_item(
             item.audience_members.values_list('member_id', flat=True)
         )
 
-    payload['can_copy'] = can_copy_from_agency_space(viewer, item)
+    owns_source = _viewer_owns_space_source(viewer, item)
+    payload['owns_source_in_crm'] = owns_source
+    payload['source_crm_url'] = ''
+    if owns_source:
+        if item.property_id:
+            payload['source_crm_url'] = space_copy_target_url('property', item.property_id)
+        elif item.customer_id:
+            payload['source_crm_url'] = space_copy_target_url('customer', item.customer_id)
+
+    payload['can_copy'] = can_copy_from_agency_space(viewer, item) and not owns_source
     already = bool(getattr(item, 'viewer_has_live_copy', False))
     if not already and detail:
         rec = AgencySpaceCopy.objects.filter(item=item, copied_by=viewer).first()
@@ -168,11 +230,13 @@ def serialize_space_item(
     payload['copy_target_id'] = None
     payload['copy_target_url'] = ''
     payload['copy_created_at'] = ''
-    created_at = getattr(item, 'viewer_copy_created_at', None)
-    if created_at:
+    payload['copy_created_at_display'] = ''
+    copy_dt = getattr(item, 'viewer_copy_created_at', None)
+    if copy_dt:
         payload['copy_created_at'] = (
-            created_at.isoformat() if hasattr(created_at, 'isoformat') else str(created_at)
+            copy_dt.isoformat() if hasattr(copy_dt, 'isoformat') else str(copy_dt)
         )
+        payload['copy_created_at_display'] = _format_published_at(copy_dt)
     if already:
         tid = getattr(item, 'viewer_copy_property_id', None) or getattr(
             item, 'viewer_copy_customer_id', None,
@@ -181,8 +245,9 @@ def serialize_space_item(
             rec = AgencySpaceCopy.objects.filter(item=item, copied_by=viewer).first()
             if rec:
                 tid = rec.copied_property_id or rec.copied_customer_id
-                if rec.created_at and not payload['copy_created_at']:
+                if rec.created_at:
                     payload['copy_created_at'] = rec.created_at.isoformat()
+                    payload['copy_created_at_display'] = _format_published_at(rec.created_at)
         if tid:
             payload['copy_target_id'] = tid
             payload['copy_target_url'] = space_copy_target_url(item.content_kind(), tid)

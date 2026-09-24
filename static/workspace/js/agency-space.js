@@ -52,6 +52,40 @@
     document.body.classList.remove('ws-modal-open');
   }
 
+  function prefillSpacePublishForm(config) {
+    const form = document.getElementById('agency-space-publish-form');
+    if (!form || !config || !form.dataset.itemId) return;
+    const visibility = config.visibility;
+    if (visibility) {
+      const visEl = form.querySelector(`input[name="visibility"][value="${visibility}"]`);
+      if (visEl) visEl.checked = true;
+    }
+    const csl = config.contact_share_level;
+    if (csl) {
+      const cslEl = form.querySelector(`input[name="contact_share_level"][value="${csl}"]`);
+      if (cslEl) cslEl.checked = true;
+    }
+    const noteEl = form.querySelector('[name="note"]');
+    if (noteEl && config.note != null) noteEl.value = config.note;
+    const memberIds = Array.isArray(config.member_ids) ? config.member_ids : [];
+    form.querySelectorAll('input[name="member_ids"]').forEach((cb) => {
+      cb.checked = memberIds.indexOf(parseInt(cb.value, 10)) !== -1;
+    });
+    const audience = document.getElementById('agency-space-audience');
+    const visChecked = form.querySelector('input[name="visibility"]:checked')?.value;
+    if (audience) audience.hidden = visChecked !== 'selected_members';
+  }
+
+  function readEditConfig() {
+    const el = document.getElementById('agency-space-edit-config');
+    if (!el || !el.textContent) return null;
+    try {
+      return JSON.parse(el.textContent);
+    } catch (e) {
+      return null;
+    }
+  }
+
   function setFiltersOpen(open) {
     const filterPanel = document.getElementById('agency-space-filters-panel');
     const filterToggle = document.querySelector('[data-space-filters-open]');
@@ -103,11 +137,18 @@
 
     const form = document.getElementById('agency-space-publish-form');
     if (form) {
+      const editConfig = readEditConfig();
+      if (editConfig) prefillSpacePublishForm(editConfig);
       const audience = document.getElementById('agency-space-audience');
       form.querySelectorAll('input[name="visibility"]').forEach((el) => {
         el.addEventListener('change', function () {
           if (!audience) return;
           audience.hidden = form.querySelector('input[name="visibility"]:checked')?.value !== 'selected_members';
+        });
+      });
+      document.querySelectorAll('[data-space-edit-publication]').forEach((btn) => {
+        btn.addEventListener('click', function () {
+          if (editConfig) prefillSpacePublishForm(editConfig);
         });
       });
       form.addEventListener('submit', function (e) {
@@ -167,6 +208,20 @@
         }).catch(() => {
           btn.disabled = false;
           alert('خطا در ارتباط');
+        });
+      });
+    });
+
+    document.querySelectorAll('[data-space-gallery]').forEach((gallery) => {
+      const main = gallery.querySelector('[data-space-gallery-main]');
+      if (!main) return;
+      gallery.querySelectorAll('[data-space-gallery-thumb]').forEach((btn) => {
+        btn.addEventListener('click', function () {
+          const src = btn.dataset.src;
+          if (!src) return;
+          main.src = src;
+          gallery.querySelectorAll('[data-space-gallery-thumb]').forEach((b) => b.classList.remove('is-active'));
+          btn.classList.add('is-active');
         });
       });
     });

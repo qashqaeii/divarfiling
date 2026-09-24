@@ -163,5 +163,10 @@ class AgencyHubSpaceItemView(AgencySpaceFeatureMixin, LoginRequiredMixin, Templa
                 if m.is_active and m.user_id != self.request.user.id
             ] if agency else [],
         })
+        from workspace.services.agency_space_ui_context import apply_agency_space_item_detail_context
+
+        apply_agency_space_item_detail_context(
+            ctx, self.request.user, item, payload or {},
+        )
         return ctx
-
+

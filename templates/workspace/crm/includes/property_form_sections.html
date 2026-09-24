@@ -13,7 +13,7 @@
             <div class="crm-field"><label class="crm-label">نوع آگهی‌دهنده</label>{{ form.business_type }}</div>
             <div class="crm-field"><label class="crm-label">شماره تماس مالک</label>{{ form.phone }}</div>
             <div class="crm-field"><label class="crm-label">نام مالک</label>{% include 'workspace/crm/includes/crm_field_voice.html' with widget=form.owner_name %}</div>
-            <div class="crm-field crm-field-full"><label class="crm-label">لینک آگهی</label>{% include 'workspace/crm/includes/crm_field_voice.html' with widget=form.link %}</div>
+            <div class="crm-field crm-field-full"><label class="crm-label">لینک آگهی</label>{{ form.link }}</div>
             {% if form.instance.pk and form.instance.token %}
             <div class="crm-field crm-field-full">
                 <label class="crm-label">شناسه آگهی</label>

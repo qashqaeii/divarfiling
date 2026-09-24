@@ -3,38 +3,46 @@
 }
 
 .crm-field-voice__wrap {
-    display: flex;
-    align-items: stretch;
-    gap: 0.35rem;
+    position: relative;
+    display: block;
     min-width: 0;
 }
 
 .crm-field-voice__wrap > .crm-input,
 .crm-field-voice__wrap > .crm-textarea {
-    flex: 1;
+    width: 100%;
     min-width: 0;
+    box-sizing: border-box;
+    padding-inline-end: 2.65rem;
 }
 
-.crm-field-voice__wrap > .crm-textarea + .crm-field-voice__mic {
-    align-self: flex-start;
-    margin-top: 0.35rem;
+.crm-field-voice__wrap > .crm-textarea {
+    padding-block-start: 0.55rem;
 }
 
 .crm-field-voice__mic {
+    position: absolute;
+    inset-inline-end: 0.4rem;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 2;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    flex-shrink: 0;
-    align-self: center;
-    width: 2.35rem;
-    height: 2.35rem;
+    width: 2rem;
+    height: 2rem;
     padding: 0;
     border: none;
-    border-radius: 10px;
+    border-radius: 8px;
     color: var(--ws-primary, #2563eb);
     background: color-mix(in srgb, var(--ws-primary, #2563eb) 10%, transparent);
     cursor: pointer;
     transition: background 0.12s, color 0.12s, box-shadow 0.12s;
+}
+
+.crm-field-voice__wrap > .crm-textarea + .crm-field-voice__mic {
+    top: 0.45rem;
+    transform: none;
 }
 
 .crm-field-voice__mic:hover:not(:disabled):not(.is-unsupported) {
@@ -43,13 +51,13 @@
 
 .crm-field-voice__mic:focus-visible {
     outline: 2px solid color-mix(in srgb, var(--ws-primary, #2563eb) 55%, transparent);
-    outline-offset: 2px;
+    outline-offset: 1px;
 }
 
 .crm-field-voice__mic.is-listening {
     color: #fff;
     background: linear-gradient(165deg, #ef4444 0%, #dc2626 100%);
-    box-shadow: 0 0 0 3px color-mix(in srgb, #ef4444 22%, transparent);
+    box-shadow: 0 0 0 2px color-mix(in srgb, #ef4444 22%, transparent);
     animation: crm-field-voice-pulse 2.4s ease-in-out infinite;
 }
 
@@ -63,11 +71,12 @@
 }
 
 .crm-field-voice__mic-icon {
-    font-size: 0.9rem;
+    font-size: 0.85rem;
+    pointer-events: none;
 }
 
 .crm-field-voice__mic.is-listening .crm-field-voice__mic-icon--stop {
-    font-size: 0.68rem;
+    font-size: 0.62rem;
 }
 
 .crm-field-voice__status {
@@ -93,16 +102,12 @@
     min-width: 0;
 }
 
-.crm-occ__field .crm-field-voice__wrap {
-    align-items: center;
-}
-
 @keyframes crm-field-voice-pulse {
     0%,
     100% {
-        box-shadow: 0 0 0 3px color-mix(in srgb, #ef4444 22%, transparent);
+        box-shadow: 0 0 0 2px color-mix(in srgb, #ef4444 22%, transparent);
     }
     50% {
-        box-shadow: 0 0 0 6px color-mix(in srgb, #ef4444 8%, transparent);
+        box-shadow: 0 0 0 5px color-mix(in srgb, #ef4444 8%, transparent);
     }
 }

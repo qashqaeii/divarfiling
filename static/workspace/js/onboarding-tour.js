@@ -91,10 +91,11 @@
                     </div>
                     <div class="ws-tour-icon-wrap" id="wsTourIcon" aria-hidden="true"></div>
                     <p class="ws-tour-section" id="wsTourSection" hidden></p>
-                    <h2 class="ws-tour-title" id="wsTourTitle"></h2>
+                    <h2 class="ws-tour-title" id="wsTourTitle" aria-live="polite"></h2>
                     <p class="ws-tour-desc" id="wsTourDesc"></p>
                     <p class="ws-tour-tip" id="wsTourTip" hidden></p>
                     <div class="ws-tour-progress" aria-hidden="true"><i id="wsTourProgressBar"></i></div>
+                    <p class="ws-tour-swipe-hint" id="wsTourSwipeHint">برای مرحله بعد/قبل، کارت را به چپ یا راست بکشید</p>
                     <div class="ws-tour-dots" id="wsTourDots" aria-hidden="true"></div>
                     <div class="ws-tour-actions">
                         <button type="button" class="ws-tour-btn ws-tour-btn--ghost" id="wsTourPrev" disabled>
@@ -129,6 +130,28 @@
 
         document.addEventListener('keydown', onKey);
         window.addEventListener('resize', () => goTo(current, false));
+        bindSwipeGestures(card);
+    }
+
+    function bindSwipeGestures(el) {
+        if (!el || el.dataset.tourSwipeBound === '1') return;
+        el.dataset.tourSwipeBound = '1';
+        let startX = 0;
+        let startY = 0;
+        el.addEventListener('touchstart', (e) => {
+            const t = e.changedTouches[0];
+            startX = t.clientX;
+            startY = t.clientY;
+        }, { passive: true });
+        el.addEventListener('touchend', (e) => {
+            if (!root || !root.classList.contains('is-active') || root.classList.contains('is-modal-step')) return;
+            const t = e.changedTouches[0];
+            const dx = t.clientX - startX;
+            const dy = t.clientY - startY;
+            if (Math.abs(dx) < 48 || Math.abs(dy) > Math.abs(dx) * 0.85) return;
+            if (dx < 0) next();
+            else prev();
+        }, { passive: true });
     }
 
     function onKey(e) {
@@ -175,6 +198,7 @@
     function clearTarget() {
         if (prevTarget) {
             prevTarget.removeAttribute('data-tour-active');
+            prevTarget.removeAttribute('data-fl-tour-active');
             if (prevTarget.dataset.tourPosRestored === '1') {
                 prevTarget.style.position = '';
                 delete prevTarget.dataset.tourPosRestored;
@@ -190,6 +214,7 @@
             el.dataset.tourPosRestored = '1';
         }
         el.setAttribute('data-tour-active', '');
+        el.setAttribute('data-fl-tour-active', '');
         prevTarget = el;
     }
 
@@ -418,7 +443,15 @@
 
         document.getElementById('wsTourStepBadge').textContent =
             tourIndex >= 0 ? `مرحله ${tourIndex + 1} از ${tourTotal}` : '';
-        document.getElementById('wsTourIcon').innerHTML = `<i class="fas ${step.icon || 'fa-circle-info'}"></i>`;
+        const iconWrap = document.getElementById('wsTourIcon');
+        iconWrap.innerHTML = `<i class="fas ${step.icon || 'fa-circle-info'}"></i>`;
+        iconWrap.classList.remove('is-pop');
+        void iconWrap.offsetWidth;
+        iconWrap.classList.add('is-pop');
+        card.classList.remove('is-step-enter');
+        void card.offsetWidth;
+        card.classList.add('is-step-enter');
+        root.classList.add('is-tooltip-step');
         const sectionEl = document.getElementById('wsTourSection');
         if (step.section) {
             sectionEl.textContent = step.section;

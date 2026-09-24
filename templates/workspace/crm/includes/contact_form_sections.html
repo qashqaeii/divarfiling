@@ -31,14 +31,14 @@
 
     <div data-panel="basic" class="crm-form-panel">
         <div class="crm-fields crm-fields-2">
-            {% crm_field form.name 'نام و نام خانوادگی *' %}
+            {% crm_field form.name 'نام و نام خانوادگی *' voice=1 %}
             {% crm_field form.customer_type 'نوع مخاطب' %}
             {% crm_field form.phone 'موبایل' %}
             {% crm_field form.phone_alt 'تلفن دوم' %}
             {% crm_field form.email 'ایمیل' %}
-            {% crm_field form.city 'شهر' %}
-            {% crm_field form.district 'منطقه' %}
-            {% crm_field form.job 'شغل' %}
+            {% crm_field form.city 'شهر' voice=1 %}
+            {% crm_field form.district 'منطقه' voice=1 %}
+            {% crm_field form.job 'شغل' voice=1 %}
             <div class="crm-field crm-field-check{% if form.is_legal_entity.errors %} crm-field-has-error{% endif %}" data-field="is_legal_entity">
                 {{ form.is_legal_entity }}
                 <label class="crm-label crm-label-check" for="{{ form.is_legal_entity.id_for_label }}">شخص حقوقی</label>
@@ -46,7 +46,7 @@
                 <p class="crm-field-error" role="alert">{{ error }}</p>
                 {% endfor %}
             </div>
-            {% crm_field form.company_name 'نام شرکت' 'crm-legal-field' %}
+            {% crm_field form.company_name 'نام شرکت' 'crm-legal-field' voice=1 %}
             {% crm_field form.national_id 'کد ملی' %}
         </div>
         <div class="crm-field crm-field-full crm-lease-deadline crm-lease-panel{% if not form.instance.customer_type|shows_lease_deadline_filter %} hidden{% endif %}{% if form.lease_deadline.errors %} crm-field-has-error{% endif %}" data-field="lease_deadline">
@@ -175,12 +175,12 @@
                 <p class="crm-field-error" role="alert">{{ error }}</p>
                 {% endfor %}
             </div>
-            {% crm_field form.tags 'برچسب‌ها' 'crm-field-full' %}
+            {% crm_field form.tags 'برچسب‌ها' 'crm-field-full' voice=1 %}
         </div>
         <details class="crm-notes-expand">
             <summary><i class="fas fa-sticky-note" aria-hidden="true"></i> یادداشت</summary>
             <div class="crm-field crm-field-full{% if form.notes.errors %} crm-field-has-error{% endif %}" data-field="notes">
-                {{ form.notes }}
+                {% include 'workspace/crm/includes/crm_field_voice.html' with widget=form.notes %}
                 {% for error in form.notes.errors %}
                 <p class="crm-field-error" role="alert">{{ error }}</p>
                 {% endfor %}

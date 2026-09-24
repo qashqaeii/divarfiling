@@ -58,17 +58,23 @@
                     </span>
                     <span>{{ ch.label }}</span>
                 </label>
-                <input type="text"
-                       class="crm-input crm-contact-channel-input"
-                       id="crm-ch-handle-{{ ch.key }}"
-                       name="contact_social_{{ ch.key }}"
-                       value="{{ ch.handle }}"
-                       placeholder="{{ ch.placeholder }}"
-                       dir="ltr"
-                       inputmode="text"
-                       autocomplete="off"
-                       aria-label="شناسه {{ ch.label }}"
-                       {% if not ch.active %}disabled{% endif %}>
+                <div class="crm-field-voice crm-field-voice--channel" data-crm-field-voice>
+                    <div class="crm-field-voice__wrap">
+                        <input type="text"
+                               class="crm-input crm-contact-channel-input"
+                               id="crm-ch-handle-{{ ch.key }}"
+                               name="contact_social_{{ ch.key }}"
+                               value="{{ ch.handle }}"
+                               placeholder="{{ ch.placeholder }}"
+                               dir="ltr"
+                               inputmode="text"
+                               autocomplete="off"
+                               aria-label="شناسه {{ ch.label }}"
+                               {% if not ch.active %}disabled{% endif %}>
+                        {% include 'workspace/crm/includes/crm_field_voice_mic.html' %}
+                    </div>
+                    <p class="crm-field-voice__status" data-crm-field-voice-status role="status" aria-live="polite" hidden></p>
+                </div>
             </div>
             {% endif %}
             {% endfor %}

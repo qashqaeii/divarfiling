@@ -1,12 +1,7 @@
 <div class="crm-field-voice{% if extra_class %} {{ extra_class }}{% endif %}" data-crm-field-voice>
     <div class="crm-field-voice__wrap">
         {{ widget }}
-        <button type="button" class="crm-field-voice__mic" data-crm-field-voice-mic
-            aria-label="شروع ورود صوتی"
-            aria-pressed="false"
-            title="ورود صوتی">
-            <i class="fas fa-microphone crm-field-voice__mic-icon" data-sc="voice-icon" aria-hidden="true"></i>
-        </button>
+        {% include 'workspace/crm/includes/crm_field_voice_mic.html' %}
     </div>
     <p class="crm-field-voice__status" data-crm-field-voice-status role="status" aria-live="polite" hidden></p>
 </div>

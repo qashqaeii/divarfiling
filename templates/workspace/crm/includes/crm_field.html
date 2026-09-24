@@ -2,7 +2,11 @@
     {% if show_label %}
     <label class="crm-label{% if label_class %} {{ label_class }}{% endif %}" for="{{ field.id_for_label }}">{{ label }}</label>
     {% endif %}
+    {% if voice %}
+    {% include 'workspace/crm/includes/crm_field_voice.html' with widget=field %}
+    {% else %}
     {{ field }}
+    {% endif %}
     {% for error in field.errors %}
     <p class="crm-field-error" role="alert">{{ error }}</p>
     {% endfor %}

@@ -74,4 +74,5 @@ if [[ "$dirty" != "0" ]]; then
 fi
 
 echo ""
-echo "OK: working tree clean (tracked files). Restart app: sudo systemctl restart divar_shop"
+echo "OK: working tree clean (tracked files)."
+echo "Next: bash scripts/deploy-server.sh   (migrate + collectstatic + restart)"

@@ -271,13 +271,14 @@ def crm_portfolio_suggested_count(property_links, linked_listings):
 
 
 @register.inclusion_tag('workspace/crm/includes/crm_field.html')
-def crm_field(field, label=None, extra_class='', label_class='', show_label=True):
+def crm_field(field, label=None, extra_class='', label_class='', show_label=True, voice=False):
     return {
         'field': field,
         'label': label if label is not None else field.label,
         'extra_class': extra_class,
         'label_class': label_class,
         'show_label': show_label,
+        'voice': bool(voice),
     }
 
 

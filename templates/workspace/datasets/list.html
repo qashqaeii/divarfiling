@@ -19,7 +19,7 @@
     {% include 'workspace/includes/filing/filing_kpi.html' %}
     {% include 'workspace/includes/filing/filing_toolbar.html' %}
 
-    <section class="fl-panel ws-glass-panel mk-panel mk-panel-flush mk-filing-panel">
+    <section class="fl-panel ws-glass-panel mk-panel mk-panel-flush mk-filing-panel" data-fl-tour="filing-panel">
         <header class="fl-panel__head mk-filing-panel-head">
             <div class="fl-panel__title mk-filing-panel-title">
                 <h2>{% if has_filters %}نتایج فیلتر{% else %}همه پوشه‌های استخراج{% endif %}</h2>
@@ -53,7 +53,7 @@
             {% if view_mode == 'table' or view_mode == 'auto' %}
             <div class="mk-ds-layout-table fl-ds-layout-table" aria-label="نمای جدول">
                 <div class="mk-table-wrap mk-filing-table-wrap fl-table-wrap">
-                    <table class="mk-data-table mk-data-table-filing fl-data-table" id="filingTable" data-mk-table data-default-sort="date" data-default-sort-dir="desc">
+                    <table class="mk-data-table mk-data-table-filing fl-data-table" id="filingTable" data-mk-table data-default-sort="date" data-default-sort-dir="desc" data-fl-tour="filing-table">
                         <thead>
                             <tr>
                                 <th class="mk-col-check fl-col-check">
@@ -96,7 +96,7 @@
         {% csrf_token %}
         <div id="dsBulkDeleteIds"></div>
     </form>
-    <div class="fl-bulk-bar mk-bulk-bar" id="dsBulkBar" hidden>
+    <div class="fl-bulk-bar mk-bulk-bar" id="dsBulkBar" data-fl-tour="filing-bulk" hidden>
         <span class="fl-bulk-bar__count mk-bulk-count"><strong id="dsBulkCount">0</strong> مورد انتخاب شده</span>
         <div class="fl-bulk-bar__actions mk-bulk-actions">
             <button type="button" class="mk-bulk-btn mk-bulk-btn-primary" id="dsBulkView"
@@ -111,12 +111,13 @@
     </div>
     {% endif %}
 
-    <button type="button" class="mk-filing-fab fl-fab" data-modal-open="modal-upload" aria-label="آپلود فایل">
+    <button type="button" class="mk-filing-fab fl-fab" data-modal-open="modal-upload" aria-label="آپلود فایل" data-fl-tour="filing-fab">
         <i class="fas fa-cloud-arrow-up" aria-hidden="true"></i>
         <span>آپلود</span>
     </button>
 
     {% include 'workspace/includes/filing/filing_help_modal.html' %}
+    {% include 'workspace/includes/filing/filing_list_tour.html' %}
 
 </div>
 

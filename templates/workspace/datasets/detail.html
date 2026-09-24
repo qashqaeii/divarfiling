@@ -23,7 +23,7 @@
     {% include 'workspace/includes/filing/filing_dataset_detail_header.html' %}
     {% include 'workspace/includes/filing/filing_dataset_detail_kpi.html' %}
 
-    <section class="fl-dd-filter mk-filter-shell" id="wsFilterShell">
+    <section class="fl-dd-filter mk-filter-shell" id="wsFilterShell" data-fl-tour="filing-detail-filter">
         {% include 'workspace/includes/listing_filter_bar.html' %}
     </section>
 
@@ -34,7 +34,7 @@
         <button type="button" class="mk-notice__close" data-mk-notice-close aria-label="بستن"><i class="fas fa-times"></i></button>
     </div>
 
-    <section class="fl-panel fl-dd-panel mk-listing-panel" data-list-view="{{ listing_view_mode|default:'auto' }}">
+    <section class="fl-panel fl-dd-panel mk-listing-panel" data-list-view="{{ listing_view_mode|default:'auto' }}" data-fl-tour="filing-detail-listings">
         <header class="fl-panel__head">
             <div class="fl-panel__title">
                 <h2>لیست آگهی‌ها</h2>
@@ -113,6 +113,7 @@
     </nav>
 
     {% include 'workspace/includes/filing/filing_dataset_detail_help_modal.html' %}
+    {% include 'workspace/includes/filing/filing_detail_tour.html' %}
 </div>
 {% endblock %}
 

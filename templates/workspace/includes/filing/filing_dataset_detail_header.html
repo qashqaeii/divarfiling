@@ -40,7 +40,8 @@
         </div>
 
         <div class="fl-header__actions fl-dd-header__actions" role="toolbar" aria-label="عملیات پوشه">
-            <button type="button" class="fl-header__help" title="راهنمای جدول آگهی" aria-label="راهنمای جدول آگهی" data-modal-open="modal-dataset-detail-help">
+            {% include 'workspace/includes/filing/filing_tour_button.html' with show_tour_label=True tour_attr='filing-detail-tour-btn' %}
+            <button type="button" class="fl-header__help" title="راهنمای جدول آگهی" aria-label="راهنمای جدول آگهی" data-modal-open="modal-dataset-detail-help" data-fl-tour="filing-detail-help-btn">
                 <span class="fl-header__help-ring" aria-hidden="true"></span>
                 <span class="fl-header__help-bulb" aria-hidden="true">
                     <i class="fas fa-lightbulb"></i>
@@ -48,13 +49,13 @@
                 </span>
                 <span class="fl-header__help-label">راهنما</span>
             </button>
-            <a href="{% url 'workspace:dataset_analyze' dataset.id %}" class="fl-header__btn fl-header__btn--primary" title="تحلیل بازار">
+            <a href="{% url 'workspace:dataset_analyze' dataset.id %}" class="fl-header__btn fl-header__btn--primary" title="تحلیل بازار" data-fl-tour="filing-detail-analyze">
                 <i class="fas fa-chart-line" aria-hidden="true"></i><span>تحلیل</span>
             </a>
-            <a href="{% url 'workspace:dataset_map' dataset.id %}{% if filter_qs_noview %}?{{ filter_qs_noview }}{% endif %}" class="fl-header__btn fl-header__btn--ghost" title="نقشه آگهی‌ها">
+            <a href="{% url 'workspace:dataset_map' dataset.id %}{% if filter_qs_noview %}?{{ filter_qs_noview }}{% endif %}" class="fl-header__btn fl-header__btn--ghost" title="نقشه آگهی‌ها" data-fl-tour="filing-detail-map">
                 <i class="fas fa-map-location-dot" aria-hidden="true"></i><span>نقشه</span>
             </a>
-            <a href="{% url 'workspace:dataset_export' dataset.id %}?format=csv" class="fl-header__btn fl-header__btn--ghost js-secure-export" data-export-label="خروجی CSV مجموعه" title="دانلود CSV">
+            <a href="{% url 'workspace:dataset_export' dataset.id %}?format=csv" class="fl-header__btn fl-header__btn--ghost js-secure-export" data-export-label="خروجی CSV مجموعه" title="دانلود CSV" data-fl-tour="filing-detail-export">
                 <i class="fas fa-download" aria-hidden="true"></i><span>خروجی</span>
             </a>
             {% if filing_video.available %}
@@ -96,6 +97,7 @@
             </div>
         </div>
         <div class="fl-dd-mob-header__actions" role="toolbar" aria-label="عملیات">
+            {% include 'workspace/includes/filing/filing_tour_button.html' with show_tour_label=False mobile=True tour_attr='filing-detail-tour-btn' %}
             <button type="button" class="fl-mob-header__icon fl-mob-header__icon--help" title="راهنما" aria-label="راهنما" data-modal-open="modal-dataset-detail-help">
                 <span class="fl-mob-header__help-pulse" aria-hidden="true"></span>
                 <span class="fl-header__help-bulb" aria-hidden="true">

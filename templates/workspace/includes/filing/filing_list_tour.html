@@ -1,0 +1,189 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'workspace/css/onboarding-tour.css' %}?v=6">
+<script>
+window.wsFilingListTourConfig = {
+    variant: "filing",
+    autoStart: false,
+    ariaLabel: "تور آموزشی فایلینگ",
+    welcomeEyebrow: "<i class=\"fas fa-folder-open\" aria-hidden=\"true\"></i> تور تعاملی فایلینگ",
+    welcomeButtonText: "شروع تور فایلینگ",
+    finishButtonText: "بستن و ادامه کار",
+    welcomeIcon: "fa-folder-tree",
+    finishIcon: "fa-check-double",
+    welcomeFeatures: [
+        { icon: "fa-cloud-arrow-up", label: "آپلود Dataset" },
+        { icon: "fa-table-list", label: "لیست پوشه‌ها" },
+        { icon: "fa-chart-line", label: "تحلیل و نقشه" },
+        { icon: "fa-compass", label: "تور روی صفحه" }
+    ],
+    hasDatasets: {{ datasets|yesno:"true,false" }},
+    steps: [
+        {
+            type: "welcome",
+            title: "تور فایلینگ دیوار",
+            desc: "{% if datasets %}در چند قدم کوتاه، لیست پوشه‌ها، فیلترها و کارهای روزمره در فایلینگ را می‌بینیم.{% else %}هنوز پوشه‌ای ندارید — مسیر آپلود و شروع کار را با هم مرور می‌کنیم.{% endif %}"
+        },
+        {
+            target: "[data-fl-tour='filing-header']",
+            section: "شروع",
+            icon: "fa-folder-open",
+            accent: "#2563EB",
+            placement: "bottom",
+            title: "صفحهٔ فایلینگ",
+            desc: "بانک پوشه‌های استخراج دیوار شما — مدیریت، جستجو، فیلتر و ورود به جدول آگهی هر پوشه.",
+            tip: "فایلینگ جدا از «فایل‌های شخصی» CRM است؛ اینجا دادهٔ استخراج‌شده از دیوار نگه‌داری می‌شود."
+        },
+        {
+            target: "[data-fl-tour='filing-tour-btn']",
+            section: "راهنما",
+            icon: "fa-compass",
+            accent: "#7C3AED",
+            placement: "bottom",
+            title: "تور آموزشی",
+            desc: "همین دکمه را هر زمان بزنید تا تور تعاملی دوباره باز شود — کنار «راهنما» برای دسترسی سریع.",
+            tip: "راهنما متن کامل دارد؛ تور روی خود صفحه شما را هدایت می‌کند."
+        },
+        {
+            target: "[data-fl-tour='filing-help-btn']",
+            section: "راهنما",
+            icon: "fa-lightbulb",
+            accent: "#F59E0B",
+            placement: "bottom",
+            title: "راهنمای متنی",
+            desc: "پنجرهٔ راهنما با نکات تفصیلی، FAQ و لینک‌های آموزشی — وقتی جزئیات بیشتر می‌خواهید.",
+            tip: "در موبایل هم آیکون لامپ همان راهنما را باز می‌کند."
+        },
+        {
+            target: "[data-fl-tour='filing-upload']",
+            section: "اقدام",
+            icon: "fa-cloud-arrow-up",
+            accent: "#10B981",
+            placement: "bottom",
+            title: "آپلود فایل / پوشه",
+            desc: "خروجی ربات استخراج (Excel، CSV یا JSON) را اینجا بارگذاری کنید تا پوشه و آگهی‌ها ساخته شوند.",
+            tip: "{% if datasets %}می‌توانید چند فایل را در یک بار آپلود کنید؛ پوشه‌ها ادغام یا به‌روز می‌شوند.{% else %}اولین قدم شما معمولاً همین دکمه است — پس از آپلود، لیست پوشه‌ها پر می‌شود.{% endif %}"
+        },
+        {
+            target: "[data-fl-tour='filing-tools']",
+            section: "تحلیل",
+            icon: "fa-calculator",
+            accent: "#F97316",
+            placement: "bottom",
+            title: "ابزارهای هوشمند",
+            desc: "میانبر به تحلیل بازار، برآورد قیمت و سایر ابزارهای AI مرتبط با دادهٔ فایلینگ.",
+            tip: "پس از داشتن پوشه، از هر ردیف می‌توانید مستقیم به تحلیل همان Dataset بروید."
+        },
+        {
+            target: "[data-fl-tour='filing-kpi']",
+            section: "آمار",
+            icon: "fa-chart-simple",
+            accent: "#6366F1",
+            placement: "top",
+            title: "شاخص‌های فایلینگ",
+            desc: "تعداد پوشه‌ها، مجموع آگهی‌ها و تفکیک فروش/اجاره — نمای کلی سلامت بانک فایل شما.",
+            tip: "با فیلتر فعال، KPI همچنان کل فایلینگ را نشان می‌دهد نه فقط نتایج فیلتر."
+        },
+        {
+            target: "[data-fl-tour='filing-toolbar']",
+            section: "جستجو",
+            icon: "fa-magnifying-glass",
+            accent: "#0EA5E9",
+            placement: "bottom",
+            title: "جستجو و فیلتر",
+            desc: "جستجو در نام پوشه، فیلتر معامله/شهر/فرمت و تعویض نمای جدول یا کارت.",
+            tip: "روی موبایل دکمهٔ «فیلتر» پنل فیلترها را باز می‌کند."
+        },
+        {
+            target: "[data-fl-tour='filing-empty']",
+            section: "شروع",
+            icon: "fa-seedling",
+            accent: "#14B8A6",
+            placement: "top",
+            skipIfMissing: true,
+            title: "هنوز پوشه‌ای ندارید",
+            desc: "این بخش وقتی خالی است دیده می‌شود — با آپلود اولین فایل استخراج، پوشهٔ شما اینجا ظاهر می‌شود.",
+            tip: "اگر ربات را نصب نکرده‌اید، از راهنمای سایت برای دریافت خروجی استفاده کنید."
+        },
+        {
+            target: "[data-fl-tour='filing-panel']",
+            section: "لیست",
+            icon: "fa-table-list",
+            accent: "#2563EB",
+            placement: "top",
+            skipIfMissing: true,
+            title: "لیست پوشه‌های استخراج",
+            desc: "هر ردیف یک پوشه است — با کلیک وارد جدول آگهی‌ها، تحلیل و نقشهٔ همان Dataset می‌شوید.",
+            tip: "از مرتب‌سازی بالای جدول برای پیدا کردن پوشهٔ بزرگ‌تر یا جدیدتر استفاده کنید."
+        },
+        {
+            target: "[data-fl-tour='filing-table']",
+            section: "لیست",
+            icon: "fa-table",
+            accent: "#8B5CF6",
+            placement: "top",
+            skipIfMissing: true,
+            title: "نمای جدول",
+            desc: "ستون‌های مکان، موضوع، نوع معامله، تعداد آگهی و تاریخ به‌روزرسانی — برای مقایسهٔ سریع پوشه‌ها.",
+            tip: "چند پوشه را انتخاب کنید تا نوار عملیات گروهی پایین باز شود."
+        },
+        {
+            target: "[data-fl-tour='filing-bulk']",
+            section: "پیشرفته",
+            icon: "fa-check-double",
+            accent: "#EC4899",
+            placement: "top",
+            skipIfMissing: true,
+            title: "عملیات گروهی",
+            desc: "با انتخاب چند پوشه: مشاهدهٔ یک‌جای آگهی‌ها یا حذف دسته‌ای — نوار پایین صفحه فعال می‌شود.",
+            tip: "این نوار فقط وقتی حداقل یک پوشه انتخاب شده باشد دیده می‌شود."
+        },
+        {
+            target: "[data-fl-tour='filing-fab']",
+            section: "موبایل",
+            icon: "fa-plus",
+            accent: "#7C3AED",
+            placement: "top",
+            skipIfMissing: true,
+            onlyMobile: true,
+            title: "دکمهٔ آپلود شناور",
+            desc: "در موبایل، دکمهٔ «آپلود» همیشه پایین صفحه در دسترس است — همان پنجرهٔ آپلود دسکتاپ.",
+            tip: "در دسکتاپ از دکمهٔ بالای صفحه استفاده کنید."
+        },
+        {
+            type: "finish",
+            title: "{% if datasets %}آمادهٔ کار با پوشه‌ها هستید{% else %}قدم بعدی: اولین آپلود{% endif %}",
+            desc: "{% if datasets %}یک پوشه را باز کنید تا آگهی‌ها را ببینید، فیلتر کنید و به تحلیل یا نقشه بروید.{% else %}فایل استخراج را آپلود کنید؛ بعد از ساخت پوشه، همین تور را دوباره ببینید تا بخش‌های لیست را کامل بشناسید.{% endif %}"
+        }
+    ]
+};
+</script>
+<script src="{% static 'workspace/js/onboarding-tour.js' %}?v=6"></script>
+<script>
+(function () {
+    var cfg = window.wsFilingListTourConfig;
+    if (!cfg) return;
+
+    function startFilingListTour() {
+        document.querySelectorAll('.ws-modal.is-open').forEach(function (m) {
+            m.classList.remove('is-open');
+        });
+        document.body.classList.remove('ws-modal-open');
+        if (window.wsWorkspaceTour) window.wsWorkspaceTour.start(cfg);
+    }
+
+    window.wsStartFilingListTour = startFilingListTour;
+
+    document.querySelectorAll('[data-fl-tour-start]').forEach(function (btn) {
+        btn.addEventListener('click', startFilingListTour);
+    });
+
+    var params = new URLSearchParams(window.location.search);
+    if (params.get('filing_tour') === '1' || params.get('tour') === 'filing') {
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', function () { setTimeout(startFilingListTour, 400); });
+        } else {
+            setTimeout(startFilingListTour, 400);
+        }
+    }
+})();
+</script>

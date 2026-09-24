@@ -1,15 +1,21 @@
 /**
- * Workspace Onboarding Tour — cinematic first-visit guide
+ * Workspace Tour — shared cinematic guide (میزکار، فایلینگ، …)
  */
-(function () {
+(function (global) {
     'use strict';
 
-    const config = window.wsOnboardingConfig;
-    if (!config || !config.steps || !config.steps.length) return;
+    function createWorkspaceTour(userConfig) {
+    const config = userConfig;
+    if (!config || !config.steps || !config.steps.length) {
+        return { start() {}, destroy() {} };
+    }
 
     const PAD = 10;
+    const PAD_MOBILE = 6;
     const GAP = 16;
     const CARD_W = 380;
+    const MOBILE_BP = 768;
+    const TABLET_BP = 900;
 
     let current = 0;
     let completed = false;
@@ -27,7 +33,7 @@
     }
 
     function markComplete() {
-        if (completed) return;
+        if (completed || !config.completeUrl) return;
         completed = true;
         fetch(config.completeUrl, {
             method: 'POST',
@@ -39,19 +45,44 @@
         }).catch(() => {});
     }
 
+    function isMobileView() {
+        return window.innerWidth <= MOBILE_BP;
+    }
+
+    function getMobileBottomInset() {
+        let inset = 12;
+        const bottomNav = document.getElementById('wsBottomNav');
+        if (bottomNav && window.innerWidth <= TABLET_BP) {
+            const style = window.getComputedStyle(bottomNav);
+            if (style.display !== 'none' && style.visibility !== 'hidden') {
+                inset += bottomNav.getBoundingClientRect().height;
+            }
+        }
+        const fab = document.querySelector('.mk-filing-fab:not([hidden])');
+        if (fab && isMobileView()) {
+            inset = Math.max(inset, 72);
+        }
+        return inset;
+    }
+
     function buildDOM() {
         root = document.createElement('div');
         root.className = 'ws-tour-root';
+        if (config.variant) {
+            root.classList.add(`ws-tour-root--${config.variant}`);
+        }
         root.setAttribute('role', 'dialog');
         root.setAttribute('aria-modal', 'true');
-        root.setAttribute('aria-label', 'تور آموزشی میزکار');
+        root.setAttribute('aria-label', config.ariaLabel || 'تور آموزشی');
         root.innerHTML = `
             <div class="ws-tour-backdrop" data-tour-backdrop></div>
             <div class="ws-tour-spotlight" id="wsTourSpotlight" aria-hidden="true">
                 <span class="ws-tour-spotlight-pulse"></span>
+                <span class="ws-tour-spotlight-corners" aria-hidden="true"></span>
             </div>
             <div class="ws-tour-modal" id="wsTourModal" hidden></div>
             <div class="ws-tour-card" id="wsTourCard" hidden>
+                <div class="ws-tour-sheet-handle" aria-hidden="true"><span></span></div>
                 <div class="ws-tour-card-accent"></div>
                 <div class="ws-tour-card-inner">
                     <div class="ws-tour-card-top">
@@ -163,11 +194,12 @@
     }
 
     function positionSpotlight(el) {
+        const pad = isMobileView() ? PAD_MOBILE : PAD;
         const rect = el.getBoundingClientRect();
-        const top = Math.max(4, rect.top - PAD);
-        const left = Math.max(4, rect.left - PAD);
-        const width = Math.min(window.innerWidth - left - 4, rect.width + PAD * 2);
-        const height = Math.min(window.innerHeight - top - 4, rect.height + PAD * 2);
+        const top = Math.max(4, rect.top - pad);
+        const left = Math.max(4, rect.left - pad);
+        const width = Math.min(window.innerWidth - left - 4, rect.width + pad * 2);
+        const height = Math.min(window.innerHeight - top - 4, rect.height + pad * 2);
 
         spotlight.style.top = `${top}px`;
         spotlight.style.left = `${left}px`;
@@ -181,15 +213,33 @@
         const cardRect = card.getBoundingClientRect();
         const vw = window.innerWidth;
         const vh = window.innerHeight;
-        const isMobile = vw <= 768;
+        const cardH = cardRect.height || 320;
 
-        if (isMobile) {
-            card.style.top = 'auto';
-            card.style.left = '12px';
-            card.style.right = '12px';
-            card.style.bottom = '16px';
+        if (isMobileView()) {
+            const bottomInset = getMobileBottomInset();
+            const targetMid = rect.top + rect.height / 2;
+            const placeAboveTarget = targetMid > vh * 0.52 && rect.top > cardH + 24;
+
+            card.classList.toggle('is-mobile-sheet', !placeAboveTarget);
+            card.classList.toggle('is-mobile-float', placeAboveTarget);
+
+            card.style.left = '10px';
+            card.style.right = '10px';
+            card.style.width = 'auto';
+
+            if (placeAboveTarget) {
+                let top = Math.max(12, rect.top - cardH - GAP);
+                top = Math.min(top, vh - cardH - bottomInset - 8);
+                card.style.top = `${top}px`;
+                card.style.bottom = 'auto';
+            } else {
+                card.style.top = 'auto';
+                card.style.bottom = `calc(${bottomInset}px + env(safe-area-inset-bottom, 0px))`;
+            }
             return;
         }
+
+        card.classList.remove('is-mobile-sheet', 'is-mobile-float');
 
         let top;
         let left;
@@ -218,22 +268,37 @@
         card.style.bottom = 'auto';
     }
 
+    function renderWelcomeFeaturesHtml() {
+        const defaults = [
+            { icon: 'fa-users', label: 'CRM رایگان' },
+            { icon: 'fa-database', label: 'فایلینگ دیوار' },
+            { icon: 'fa-file-signature', label: 'قرارداد و مالی' },
+            { icon: 'fa-microphone-lines', label: 'دستیار هوشمند' },
+        ];
+        const items = (config.welcomeFeatures && config.welcomeFeatures.length)
+            ? config.welcomeFeatures
+            : defaults;
+        const cells = items.map((f) =>
+            `<div class="ws-tour-modal-feature"><i class="fas ${f.icon}" aria-hidden="true"></i><span>${f.label}</span></div>`
+        ).join('');
+        return `<div class="ws-tour-modal-features">${cells}</div>`;
+    }
+
     function renderModal(step) {
         root.classList.add('is-modal-step');
+        root.classList.remove('is-tooltip-step');
         spotlight.classList.remove('is-visible');
         card.hidden = true;
         card.classList.remove('is-visible');
         modal.hidden = false;
 
         const isWelcome = step.type === 'welcome';
-        const features = isWelcome ? `
-            <div class="ws-tour-modal-features">
-                <div class="ws-tour-modal-feature"><i class="fas fa-users"></i><span>CRM رایگان</span></div>
-                <div class="ws-tour-modal-feature"><i class="fas fa-database"></i><span>فایلینگ دیوار</span></div>
-                <div class="ws-tour-modal-feature"><i class="fas fa-file-signature"></i><span>قرارداد و مالی</span></div>
-                <div class="ws-tour-modal-feature"><i class="fas fa-microphone-lines"></i><span>دستیار هوشمند</span></div>
-            </div>
-        ` : '';
+        const features = isWelcome ? renderWelcomeFeaturesHtml() : '';
+        const eyebrowText = isWelcome
+            ? (config.welcomeEyebrow || '<i class="fas fa-sparkles"></i> تور تعاملی · حدود ۵ دقیقه')
+            : '';
+        const finishCta = config.finishButtonText || 'ورود به میزکار';
+        const welcomeCta = config.welcomeButtonText || 'شروع تور آموزشی';
 
         const confetti = !isWelcome ? '<div class="ws-tour-finish-confetti" id="wsTourConfetti"></div>' : '';
 
@@ -249,15 +314,15 @@
                 <div class="ws-tour-modal-logo">
                     ${isWelcome && config.logoUrl
                         ? `<img src="${config.logoUrl}" alt="" width="44" height="44">`
-                        : `<i class="fas ${isWelcome ? 'fa-compass' : 'fa-rocket'}"></i>`}
+                        : `<i class="fas ${isWelcome ? (config.welcomeIcon || 'fa-compass') : (config.finishIcon || 'fa-rocket')}"></i>`}
                 </div>
-                ${isWelcome ? '<span class="ws-tour-modal-eyebrow"><i class="fas fa-sparkles"></i> تور تعاملی · حدود ۵ دقیقه</span>' : ''}
+                ${isWelcome ? `<span class="ws-tour-modal-eyebrow">${eyebrowText}</span>` : ''}
                 <h2 class="ws-tour-modal-title">${step.title}</h2>
                 <p class="ws-tour-modal-desc">${step.desc}</p>
                 ${features}
                 <div class="ws-tour-modal-actions">
                     <button type="button" class="ws-tour-btn ws-tour-btn--primary" id="wsTourModalPrimary">
-                        ${isWelcome ? 'شروع تور آموزشی' : 'ورود به میزکار'}
+                        ${isWelcome ? welcomeCta : finishCta}
                         <i class="fas fa-arrow-left" aria-hidden="true"></i>
                     </button>
                     ${isWelcome ? '<button type="button" class="ws-tour-btn ws-tour-btn--ghost" id="wsTourModalSkip">فعلاً رد کنم</button>' : ''}
@@ -285,6 +350,11 @@
             const targetRect = target.getBoundingClientRect();
             const offset = targetRect.top - navRect.top - (navRect.height / 2) + (targetRect.height / 2);
             nav.scrollTo({ top: nav.scrollTop + offset, behavior: 'smooth' });
+        } else if (isMobileView()) {
+            const vh = window.innerHeight;
+            const rect = target.getBoundingClientRect();
+            const block = rect.top > vh * 0.55 ? 'end' : (rect.top < vh * 0.25 ? 'start' : 'center');
+            target.scrollIntoView({ behavior: 'smooth', block, inline: 'nearest' });
         } else {
             target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
         }
@@ -308,9 +378,14 @@
 
     function repositionForTarget(target, step, delay) {
         setTimeout(() => {
+            root.classList.add('is-tooltip-step');
+            root.classList.remove('is-modal-step');
             positionSpotlight(target);
             positionCard(target, step.placement);
-            card.classList.add('is-visible');
+            card.classList.remove('is-visible');
+            requestAnimationFrame(() => {
+                card.classList.add('is-visible');
+            });
         }, delay);
     }
 
@@ -371,8 +446,9 @@
             tipEl.hidden = true;
         }
 
-        document.getElementById('wsTourProgressBar').style.width =
-            `${((index + 1) / total) * 100}%`;
+        const progressPct = ((index + 1) / total) * 100;
+        document.getElementById('wsTourProgressBar').style.width = `${progressPct}%`;
+        root.style.setProperty('--ws-tour-progress', `${progressPct}%`);
 
         document.querySelectorAll('.ws-tour-dot').forEach((dot, i) => {
             dot.classList.toggle('is-active', i === index);
@@ -465,16 +541,20 @@
     }
 
     function finish() {
-        markComplete();
+        if (config.completeUrl) markComplete();
+        if (!root) return;
         root.classList.add('is-closing');
         root.classList.remove('is-active');
         document.body.classList.remove('ws-tour-active');
         clearTarget();
         document.getElementById('wsSidebar')?.classList.remove('open');
         document.removeEventListener('keydown', onKey);
+        const completeUrl = config.completeUrl;
         setTimeout(function () {
             root?.remove();
-            fetch(config.completeUrl, {
+            root = null;
+            if (!completeUrl) return;
+            fetch(completeUrl, {
                 method: 'POST',
                 headers: {
                     'X-CSRFToken': getCsrfToken(),
@@ -485,7 +565,7 @@
                 .then(function (r) { return r.json(); })
                 .then(function (data) {
                     if (data && data.redirect_url) {
-                        window.location.href = data.redirect_url;
+                        global.location.href = data.redirect_url;
                     }
                 })
                 .catch(function () {});
@@ -493,6 +573,9 @@
     }
 
     function start() {
+        if (root) return;
+        completed = false;
+        current = 0;
         buildDOM();
         document.body.classList.add('ws-tour-active');
         requestAnimationFrame(() => {
@@ -501,9 +584,30 @@
         });
     }
 
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => setTimeout(start, 600));
-    } else {
-        setTimeout(start, 600);
+    return { start, destroy: finish };
     }
-})();
+
+    global.wsWorkspaceTour = {
+        start(cfg) {
+            if (this._instance) {
+                try { this._instance.destroy(); } catch (e) { /* ignore */ }
+            }
+            this._instance = createWorkspaceTour(cfg);
+            this._instance.start();
+        },
+    };
+
+    function bootConfiguredTour() {
+        if (!global.wsOnboardingConfig) return;
+        if (global.wsOnboardingConfig.autoStart === false) return;
+        const delay = global.wsOnboardingConfig.startDelay ?? 600;
+        const run = () => global.wsWorkspaceTour.start(global.wsOnboardingConfig);
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => setTimeout(run, delay));
+        } else {
+            setTimeout(run, delay);
+        }
+    }
+
+    bootConfiguredTour();
+})(window);

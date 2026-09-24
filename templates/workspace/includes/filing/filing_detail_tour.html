@@ -1,0 +1,154 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'workspace/css/onboarding-tour.css' %}?v=6">
+<script>
+window.wsFilingDetailTourConfig = {
+    variant: "filing",
+    autoStart: false,
+    ariaLabel: "تور جدول آگهی فایلینگ",
+    welcomeEyebrow: "<i class=\"fas fa-table\" aria-hidden=\"true\"></i> تور داخل پوشه",
+    welcomeButtonText: "شروع تور آگهی‌ها",
+    finishButtonText: "ادامه کار روی پوشه",
+    welcomeIcon: "fa-table-cells",
+    finishIcon: "fa-flag-checkered",
+    welcomeFeatures: [
+        { icon: "fa-filter", label: "فیلتر آگهی" },
+        { icon: "fa-table", label: "جدول / کارت" },
+        { icon: "fa-chart-line", label: "تحلیل" },
+        { icon: "fa-map", label: "نقشه" }
+    ],
+    steps: [
+        {
+            type: "welcome",
+            title: "تور جدول آگهی",
+            desc: "داخل پوشه «{{ dataset.name|escapejs }}» هستید — فیلتر، لیست آگهی‌ها و میانبرهای تحلیل را مرور می‌کنیم."
+        },
+        {
+            target: ".fl-dd-crumb",
+            section: "ناوبری",
+            icon: "fa-arrow-right",
+            accent: "#64748B",
+            placement: "bottom",
+            title: "بازگشت به فایلینگ",
+            desc: "با این مسیر هر زمان به لیست همهٔ پوشه‌ها برمی‌گردید.",
+            tip: "در موبایل دکمهٔ بازگشت کنار عنوان همین کار را می‌کند."
+        },
+        {
+            target: ".fl-dd-header__main",
+            section: "پوشه",
+            icon: "fa-folder-open",
+            accent: "#2563EB",
+            placement: "bottom",
+            title: "اطلاعات پوشه",
+            desc: "نام پوشه، تعداد آگهی (فیلترشده / کل)، شهر، نوع معامله و فرمت فایل — خلاصهٔ Dataset فعال.",
+            tip: "اگر فیلتر فعال باشد، عدد اول آگهی‌های نمایش‌داده‌شده است."
+        },
+        {
+            target: "[data-fl-tour='filing-detail-tour-btn']",
+            section: "راهنما",
+            icon: "fa-compass",
+            accent: "#7C3AED",
+            placement: "bottom",
+            title: "تور این صفحه",
+            desc: "کنار «راهنما» — هر زمان تور جدول آگهی را از همین دکمه دوباره شروع کنید.",
+            tip: "راهنما توضیحات متنی ستون‌ها را دارد؛ تور روی عناصر واقعی صفحه است."
+        },
+        {
+            target: "[data-fl-tour='filing-detail-analyze']",
+            section: "تحلیل",
+            icon: "fa-chart-line",
+            accent: "#10B981",
+            placement: "bottom",
+            title: "تحلیل بازار",
+            desc: "آمار قیمت، توزیع و Value Score مخصوص همین پوشه — برای قیمت‌گذاری و مقایسه.",
+            tip: "فیلترهای فعال در تحلیل هم اعمال می‌شوند."
+        },
+        {
+            target: "[data-fl-tour='filing-detail-map']",
+            section: "تحلیل",
+            icon: "fa-map-location-dot",
+            accent: "#06B6D4",
+            placement: "bottom",
+            title: "نقشهٔ آگهی‌ها",
+            desc: "نمایش جغرافیایی آگهی‌های این پوشه روی نقشه — مناسب بررسی محله و تراکم.",
+            tip: "در موبایل از میانبر «نقشه» در نوار پایین هدر هم دسترسی دارید."
+        },
+        {
+            target: "[data-fl-tour='filing-detail-kpi']",
+            section: "آمار",
+            icon: "fa-gauge-high",
+            accent: "#6366F1",
+            placement: "top",
+            skipIfMissing: true,
+            title: "شاخص‌های پوشه",
+            desc: "خلاصهٔ آماری همین Dataset در یک نگاه — مکمل جدول آگهی‌ها.",
+            tip: "در موبایل آمار سریع در نوار زیر هدر هم دیده می‌شود."
+        },
+        {
+            target: "[data-fl-tour='filing-detail-filter']",
+            section: "فیلتر",
+            icon: "fa-sliders",
+            accent: "#0EA5E9",
+            placement: "bottom",
+            title: "فیلتر آگهی‌ها",
+            desc: "محدود کردن لیست بر اساس قیمت، متراژ، محله، نوع آگهی‌دهنده و سایر فیلدها.",
+            tip: "دکمهٔ «فیلتر» در موبایل مستقیم به این بخش اسکرول می‌کند."
+        },
+        {
+            target: "[data-fl-tour='filing-detail-listings']",
+            section: "آگهی‌ها",
+            icon: "fa-table",
+            accent: "#8B5CF6",
+            placement: "top",
+            title: "لیست آگهی‌ها",
+            desc: "جدول یا کارت آگهی‌ها — شخصی‌ها معمولاً بالاتر، سپس مشاورین. از هر ردیف جزئیات آگهی را باز کنید.",
+            tip: "بین نمای جدول و کارت با آیکن بالای پنل جابه‌جا شوید."
+        },
+        {
+            target: "[data-fl-tour='filing-detail-export']",
+            section: "خروجی",
+            icon: "fa-download",
+            accent: "#F59E0B",
+            placement: "bottom",
+            skipIfMissing: true,
+            title: "خروجی CSV",
+            desc: "دانلود آگهی‌های این پوشه (با فیلترهای فعال) برای Excel یا ابزارهای خارجی.",
+            tip: "خروجی امن ممکن است یک تأیید کوتاه بخواهد."
+        },
+        {
+            type: "finish",
+            title: "پوشه را مسلط شدید",
+            desc: "فیلتر کنید، آگهی مناسب را پیدا کنید و در صورت نیاز به تحلیل یا نقشه بروید. برای مدیریت چند پوشه، به لیست فایلینگ برگردید."
+        }
+    ]
+};
+</script>
+<script src="{% static 'workspace/js/onboarding-tour.js' %}?v=6"></script>
+<script>
+(function () {
+    var cfg = window.wsFilingDetailTourConfig;
+    if (!cfg) return;
+
+    function startFilingDetailTour() {
+        document.querySelectorAll('.ws-modal.is-open').forEach(function (m) {
+            m.classList.remove('is-open');
+        });
+        document.body.classList.remove('ws-modal-open');
+        if (window.wsWorkspaceTour) window.wsWorkspaceTour.start(cfg);
+    }
+
+    window.wsStartFilingDetailTour = startFilingDetailTour;
+
+    document.querySelectorAll('[data-fl-tour-start]').forEach(function (btn) {
+        btn.addEventListener('click', startFilingDetailTour);
+    });
+
+    var params = new URLSearchParams(window.location.search);
+    if (params.get('filing_tour') === '1' || params.get('tour') === 'filing') {
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', function () { setTimeout(startFilingDetailTour, 400); });
+        } else {
+            setTimeout(startFilingDetailTour, 400);
+        }
+    }
+})();
+</script>

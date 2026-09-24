@@ -1,4 +1,4 @@
-<header class="fl-header mk-filing-desk-header" data-help-tour="filing-datasets">
+<header class="fl-header mk-filing-desk-header" data-help-tour="filing-datasets" data-fl-tour="filing-header">
     <div class="fl-header__main">
         <span class="fl-header__icon" aria-hidden="true"><i class="fas fa-folder-open"></i></span>
         <div class="fl-header__text">
@@ -7,7 +7,8 @@
         </div>
     </div>
     <div class="fl-header__actions" role="toolbar" aria-label="عملیات فایلینگ">
-        <button type="button" class="fl-header__help" title="راهنمای فایلینگ" aria-label="راهنمای فایلینگ" data-modal-open="modal-filing-help">
+        {% include 'workspace/includes/filing/filing_tour_button.html' with show_tour_label=True %}
+        <button type="button" class="fl-header__help" title="راهنمای فایلینگ" aria-label="راهنمای فایلینگ" data-modal-open="modal-filing-help" data-fl-tour="filing-help-btn">
             <span class="fl-header__help-ring" aria-hidden="true"></span>
             <span class="fl-header__help-bulb" aria-hidden="true">
                 <i class="fas fa-lightbulb"></i>
@@ -15,10 +16,10 @@
             </span>
             <span class="fl-header__help-label">راهنما</span>
         </button>
-        <a href="{% url 'workspace:tools' %}" class="fl-header__btn fl-header__btn--ghost" title="ابزارهای هوشمند">
+        <a href="{% url 'workspace:tools' %}" class="fl-header__btn fl-header__btn--ghost" title="ابزارهای هوشمند" data-fl-tour="filing-tools">
             {% include 'includes/icon_slot.html' with decor='calculator' size='inline' only %}<span>ابزارها</span>
         </a>
-        <button type="button" class="fl-header__btn fl-header__btn--primary" data-modal-open="modal-upload">
+        <button type="button" class="fl-header__btn fl-header__btn--primary" data-modal-open="modal-upload" data-fl-tour="filing-upload">
             {% include 'includes/icon_slot.html' with decor='upload' size='inline' only %}<span>آپلود فایل / پوشه</span>
         </button>
     </div>
@@ -32,7 +33,8 @@
             <p class="fl-mob-header__sub">مدیریت پوشه‌های استخراج دیوار</p>
         </div>
         <div class="fl-mob-header__actions" role="toolbar" aria-label="عملیات">
-            <button type="button" class="fl-mob-header__icon fl-mob-header__icon--help" title="راهنمای فایلینگ" aria-label="راهنمای فایلینگ" data-modal-open="modal-filing-help">
+            {% include 'workspace/includes/filing/filing_tour_button.html' with show_tour_label=False mobile=True %}
+            <button type="button" class="fl-mob-header__icon fl-mob-header__icon--help" title="راهنمای فایلینگ" aria-label="راهنمای فایلینگ" data-modal-open="modal-filing-help" data-fl-tour="filing-help-btn">
                 <span class="fl-mob-header__help-pulse" aria-hidden="true"></span>
                 <span class="fl-header__help-bulb" aria-hidden="true">
                     <i class="fas fa-lightbulb"></i>

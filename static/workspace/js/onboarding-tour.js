@@ -84,7 +84,8 @@
             <div class="ws-tour-card" id="wsTourCard" hidden>
                 <div class="ws-tour-sheet-handle" aria-hidden="true"><span></span></div>
                 <div class="ws-tour-card-accent"></div>
-                <div class="ws-tour-card-inner">
+                <div class="ws-tour-scroll-area" id="wsTourScrollArea">
+                <div class="ws-tour-card-inner" id="wsTourScrollInner">
                     <div class="ws-tour-card-top">
                         <span class="ws-tour-step-badge" id="wsTourStepBadge"></span>
                         <button type="button" class="ws-tour-skip" id="wsTourSkip">رد کردن</button>
@@ -97,6 +98,9 @@
                     <div class="ws-tour-progress" aria-hidden="true"><i id="wsTourProgressBar"></i></div>
                     <p class="ws-tour-swipe-hint" id="wsTourSwipeHint">برای مرحله بعد/قبل، کارت را به چپ یا راست بکشید</p>
                     <div class="ws-tour-dots" id="wsTourDots" aria-hidden="true"></div>
+                </div>
+                </div>
+                <div class="ws-tour-card-footer">
                     <div class="ws-tour-actions">
                         <button type="button" class="ws-tour-btn ws-tour-btn--ghost" id="wsTourPrev" disabled>
                             <i class="fas fa-arrow-right" aria-hidden="true"></i> قبلی
@@ -131,6 +135,32 @@
         document.addEventListener('keydown', onKey);
         window.addEventListener('resize', () => goTo(current, false));
         bindSwipeGestures(card);
+        const scrollInner = document.getElementById('wsTourScrollInner');
+        if (scrollInner) {
+            scrollInner.addEventListener('scroll', updateScrollAreaState, { passive: true });
+        }
+    }
+
+    function updateScrollAreaState() {
+        const area = document.getElementById('wsTourScrollArea');
+        const inner = document.getElementById('wsTourScrollInner');
+        if (!area || !inner) return;
+        const scrollable = inner.scrollHeight > inner.clientHeight + 6;
+        area.classList.toggle('is-scrollable', scrollable);
+        const atBottom = inner.scrollHeight - inner.scrollTop - inner.clientHeight < 10;
+        area.classList.toggle('is-at-bottom', atBottom);
+    }
+
+    function updateModalScrollState() {
+        const wrap = document.getElementById('wsTourModalScrollWrap');
+        const inner = document.getElementById('wsTourModalScroll');
+        const hint = document.getElementById('wsTourModalScrollHint');
+        if (!wrap || !inner) return;
+        const scrollable = inner.scrollHeight > inner.clientHeight + 8;
+        wrap.classList.toggle('is-scrollable', scrollable);
+        const atBottom = inner.scrollHeight - inner.scrollTop - inner.clientHeight < 12;
+        wrap.classList.toggle('is-at-bottom', atBottom);
+        if (hint) hint.hidden = !scrollable || atBottom;
     }
 
     function bindSwipeGestures(el) {
@@ -196,6 +226,9 @@
     }
 
     function clearTarget() {
+        const sidebar = document.getElementById('wsSidebar');
+        sidebar?.removeAttribute('data-tour-active');
+        sidebar?.removeAttribute('data-fl-tour-active');
         if (prevTarget) {
             prevTarget.removeAttribute('data-tour-active');
             prevTarget.removeAttribute('data-fl-tour-active');
@@ -216,6 +249,37 @@
         el.setAttribute('data-tour-active', '');
         el.setAttribute('data-fl-tour-active', '');
         prevTarget = el;
+    }
+
+    function resolveSpotlightTarget(target, step) {
+        if (!target) return target;
+        if (isMobileView() && step.openSidebar) {
+            const sidebar = document.getElementById('wsSidebar');
+            if (sidebar) {
+                const nav = sidebar.querySelector('.ws-nav');
+                if (nav) return nav;
+                if (sidebar.contains(target)) return sidebar;
+            }
+        }
+        if (isMobileView() && step.openNavMore) {
+            const more = target.closest('[data-tour="nav-more"]');
+            if (more) return more;
+        }
+        if (isMobileView() && step.openFilterPanel) {
+            const toolbar = document.querySelector('[data-fl-tour="filing-toolbar"]');
+            if (toolbar) return toolbar;
+            const panel = document.getElementById('dsFilterDetails');
+            if (panel && (panel.contains(target) || target.closest('.fl-toolbar'))) return panel;
+        }
+        if (isMobileView()) {
+            const mobHeader = target.closest('.fl-mob-header, .fl-dd-mob-header');
+            if (mobHeader) return mobHeader;
+        }
+        if (step.spotlightSelector) {
+            const custom = target.closest(step.spotlightSelector);
+            if (custom) return custom;
+        }
+        return target;
     }
 
     function positionSpotlight(el) {
@@ -243,23 +307,46 @@
         if (isMobileView()) {
             const bottomInset = getMobileBottomInset();
             const targetMid = rect.top + rect.height / 2;
-            const placeAboveTarget = targetMid > vh * 0.52 && rect.top > cardH + 24;
+            const sidebarStep = root?.classList.contains('is-sidebar-step');
+            const placeAboveTarget = !sidebarStep
+                && targetMid > vh * 0.52
+                && rect.top > cardH + 24;
 
-            card.classList.toggle('is-mobile-sheet', !placeAboveTarget);
-            card.classList.toggle('is-mobile-float', placeAboveTarget);
+            card.classList.toggle('is-mobile-sheet', !placeAboveTarget && !sidebarStep);
+            card.classList.toggle('is-mobile-float', placeAboveTarget && !sidebarStep);
+            card.classList.toggle('is-mobile-sidebar', !!sidebarStep);
 
-            card.style.left = '10px';
-            card.style.right = '10px';
-            card.style.width = 'auto';
-
-            if (placeAboveTarget) {
-                let top = Math.max(12, rect.top - cardH - GAP);
-                top = Math.min(top, vh - cardH - bottomInset - 8);
-                card.style.top = `${top}px`;
-                card.style.bottom = 'auto';
-            } else {
+            if (sidebarStep) {
+                const sidebar = document.getElementById('wsSidebar');
+                const sbRect = sidebar?.getBoundingClientRect();
+                const gap = 10;
+                card.style.width = 'auto';
                 card.style.top = 'auto';
                 card.style.bottom = `calc(${bottomInset}px + env(safe-area-inset-bottom, 0px))`;
+                if (sbRect && sbRect.width > 48 && sbRect.right > vw * 0.45) {
+                    card.style.left = `${gap}px`;
+                    card.style.right = `${Math.max(gap, vw - sbRect.left + gap)}px`;
+                } else if (sbRect && sbRect.width > 48) {
+                    card.style.left = `${sbRect.right + gap}px`;
+                    card.style.right = `${gap}px`;
+                } else {
+                    card.style.left = `${gap}px`;
+                    card.style.right = `${gap}px`;
+                }
+            } else {
+                card.style.left = '10px';
+                card.style.right = '10px';
+                card.style.width = 'auto';
+
+                if (placeAboveTarget) {
+                    let top = Math.max(12, rect.top - cardH - GAP);
+                    top = Math.min(top, vh - cardH - bottomInset - 8);
+                    card.style.top = `${top}px`;
+                    card.style.bottom = 'auto';
+                } else {
+                    card.style.top = 'auto';
+                    card.style.bottom = `calc(${bottomInset}px + env(safe-area-inset-bottom, 0px))`;
+                }
             }
             return;
         }
@@ -336,15 +423,23 @@
             </div>
             <div class="ws-tour-modal-panel">
                 ${confetti}
-                <div class="ws-tour-modal-logo">
-                    ${isWelcome && config.logoUrl
-                        ? `<img src="${config.logoUrl}" alt="" width="44" height="44">`
-                        : `<i class="fas ${isWelcome ? (config.welcomeIcon || 'fa-compass') : (config.finishIcon || 'fa-rocket')}"></i>`}
+                <div class="ws-tour-modal-scroll-wrap" id="wsTourModalScrollWrap">
+                <div class="ws-tour-modal-scroll" id="wsTourModalScroll">
+                    <div class="ws-tour-modal-logo">
+                        ${isWelcome && config.logoUrl
+                            ? `<img src="${config.logoUrl}" alt="" width="44" height="44">`
+                            : `<i class="fas ${isWelcome ? (config.welcomeIcon || 'fa-compass') : (config.finishIcon || 'fa-rocket')}"></i>`}
+                    </div>
+                    ${isWelcome ? `<span class="ws-tour-modal-eyebrow">${eyebrowText}</span>` : ''}
+                    <h2 class="ws-tour-modal-title">${step.title}</h2>
+                    <p class="ws-tour-modal-desc">${step.desc}</p>
+                    ${features}
                 </div>
-                ${isWelcome ? `<span class="ws-tour-modal-eyebrow">${eyebrowText}</span>` : ''}
-                <h2 class="ws-tour-modal-title">${step.title}</h2>
-                <p class="ws-tour-modal-desc">${step.desc}</p>
-                ${features}
+                <p class="ws-tour-scroll-more" id="wsTourModalScrollHint" hidden>
+                    <i class="fas fa-chevron-down" aria-hidden="true"></i>
+                    <span>برای دیدن ادامه بکشید</span>
+                </p>
+                </div>
                 <div class="ws-tour-modal-actions">
                     <button type="button" class="ws-tour-btn ws-tour-btn--primary" id="wsTourModalPrimary">
                         ${isWelcome ? welcomeCta : finishCta}
@@ -355,7 +450,16 @@
             </div>
         `;
 
-        requestAnimationFrame(() => modal.classList.add('is-visible'));
+        requestAnimationFrame(() => {
+            modal.classList.add('is-visible');
+            const scrollEl = document.getElementById('wsTourModalScroll');
+            if (scrollEl) {
+                scrollEl.scrollTop = 0;
+                scrollEl.removeEventListener('scroll', updateModalScrollState);
+                scrollEl.addEventListener('scroll', updateModalScrollState, { passive: true });
+            }
+            updateModalScrollState();
+        });
 
         document.getElementById('wsTourModalPrimary').addEventListener('click', () => {
             if (isWelcome) next();
@@ -368,13 +472,22 @@
         if (!isWelcome) spawnConfetti();
     }
 
+    function scrollSidebarNavToItem(target) {
+        const sidebar = document.getElementById('wsSidebar');
+        const nav = sidebar?.querySelector('.ws-nav');
+        if (!nav || !target || !sidebar?.contains(target)) return;
+        const navRect = nav.getBoundingClientRect();
+        const targetRect = target.getBoundingClientRect();
+        const outOfView = targetRect.bottom > navRect.bottom - 12 || targetRect.top < navRect.top + 12;
+        if (!outOfView && !isMobileView()) return;
+        const offset = targetRect.top - navRect.top - (navRect.height / 2) + (targetRect.height / 2);
+        nav.scrollTo({ top: nav.scrollTop + offset, behavior: 'smooth' });
+    }
+
     function scrollToTarget(target, step) {
         const nav = target.closest('.ws-nav');
-        if (step.scrollSidebar && nav) {
-            const navRect = nav.getBoundingClientRect();
-            const targetRect = target.getBoundingClientRect();
-            const offset = targetRect.top - navRect.top - (navRect.height / 2) + (targetRect.height / 2);
-            nav.scrollTo({ top: nav.scrollTop + offset, behavior: 'smooth' });
+        if ((step.scrollSidebar || step.openSidebar) && nav) {
+            scrollSidebarNavToItem(target);
         } else if (isMobileView()) {
             const vh = window.innerHeight;
             const rect = target.getBoundingClientRect();
@@ -393,23 +506,49 @@
 
     function ensureSidebarForStep(step) {
         const sidebar = document.getElementById('wsSidebar');
+        const shellBackdrop = document.getElementById('wsShellBackdrop');
         if (!sidebar) return;
         if (step.closeSidebar) {
             sidebar.classList.remove('open');
-        } else if (step.openSidebar && window.innerWidth <= 900) {
+            shellBackdrop?.setAttribute('hidden', '');
+            root?.classList.remove('is-sidebar-step');
+            document.body.classList.remove('ws-tour-mobile-sidebar');
+        } else if (step.openSidebar && window.innerWidth <= TABLET_BP) {
             sidebar.classList.add('open');
+            shellBackdrop?.removeAttribute('hidden');
+            root?.classList.add('is-sidebar-step');
+            document.body.classList.add('ws-tour-mobile-sidebar');
         }
+    }
+
+    function ensureFilingPanels(step) {
+        if (!isMobileView() || !step.openFilterPanel) return;
+        const details = document.getElementById('dsFilterDetails');
+        if (details) details.setAttribute('open', '');
+        const toggle = document.querySelector('[data-ws-mob-filter-toggle]');
+        if (toggle) toggle.setAttribute('aria-expanded', 'true');
     }
 
     function repositionForTarget(target, step, delay) {
         setTimeout(() => {
             root.classList.add('is-tooltip-step');
             root.classList.remove('is-modal-step');
-            positionSpotlight(target);
+            if (step.openSidebar && isMobileView()) {
+                scrollSidebarNavToItem(target);
+            }
+            const spotlightEl = resolveSpotlightTarget(target, step);
+            positionSpotlight(spotlightEl);
             positionCard(target, step.placement);
             card.classList.remove('is-visible');
             requestAnimationFrame(() => {
                 card.classList.add('is-visible');
+                updateScrollAreaState();
+                if (step.openSidebar && isMobileView()) {
+                    setTimeout(() => {
+                        positionSpotlight(resolveSpotlightTarget(target, step));
+                        positionCard(target, step.placement);
+                    }, 280);
+                }
             });
         }, delay);
     }
@@ -507,6 +646,8 @@
             root.style.removeProperty('--ws-tour-accent');
         }
 
+        requestAnimationFrame(updateScrollAreaState);
+
         clearTarget();
         const target = step.target ? document.querySelector(step.target) : null;
 
@@ -515,12 +656,31 @@
             return;
         }
 
+        const swipeHint = document.getElementById('wsTourSwipeHint');
+        if (swipeHint) {
+            if (isMobileView() && step.openSidebar) {
+                swipeHint.textContent = 'منو را بالا و پایین بکشید · کارت را برای بعد/قبل بکشید';
+            } else {
+                swipeHint.textContent = 'برای مرحله بعد/قبل، کارت را به چپ یا راست بکشید';
+            }
+        }
+
         if (target) {
             ensureNavMoreOpen(step);
             ensureSidebarForStep(step);
+            ensureFilingPanels(step);
             activateTarget(target);
+            if (isMobileView() && step.openSidebar) {
+                const sidebar = document.getElementById('wsSidebar');
+                if (sidebar) {
+                    sidebar.setAttribute('data-tour-active', '');
+                    sidebar.setAttribute('data-fl-tour-active', '');
+                }
+            }
             scrollToTarget(target, step);
-            const delay = step.openSidebar && window.innerWidth <= 900 ? 320 : (step.openNavMore ? 220 : (step.scrollSidebar ? 180 : 80));
+            const delay = step.openSidebar && window.innerWidth <= TABLET_BP ? 380
+                : (step.openNavMore ? 260 : (step.openFilterPanel && isMobileView() ? 280
+                    : (step.scrollSidebar ? 200 : 90)));
             repositionForTarget(target, step, delay);
         } else {
             spotlight.classList.remove('is-visible');
@@ -581,6 +741,10 @@
         document.body.classList.remove('ws-tour-active');
         clearTarget();
         document.getElementById('wsSidebar')?.classList.remove('open');
+        document.getElementById('wsShellBackdrop')?.setAttribute('hidden', '');
+        root?.classList.remove('is-sidebar-step');
+        document.body.classList.remove('ws-tour-mobile-sidebar');
+        document.body.classList.remove('ws-tour-variant-filing');
         document.removeEventListener('keydown', onKey);
         const completeUrl = config.completeUrl;
         setTimeout(function () {
@@ -611,6 +775,9 @@
         current = 0;
         buildDOM();
         document.body.classList.add('ws-tour-active');
+        if (config.variant === 'filing') {
+            document.body.classList.add('ws-tour-variant-filing');
+        }
         requestAnimationFrame(() => {
             root.classList.add('is-active');
             goTo(0);

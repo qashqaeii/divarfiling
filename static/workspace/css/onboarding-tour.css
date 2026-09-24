@@ -646,11 +646,30 @@ body.ws-tour-active {
 .ws-tour-root--filing {
     --ws-tour-accent: #2563eb;
     --ws-tour-accent-2: #06b6d4;
+    --ws-tour-overlay: rgba(8, 15, 30, 0.09);
 }
 
-.ws-tour-root.is-tooltip-step .ws-tour-backdrop {
-    background: color-mix(in srgb, var(--ws-tour-overlay) 35%, transparent);
-    backdrop-filter: blur(2px);
+[data-theme="light"] .ws-tour-root--filing {
+    --ws-tour-overlay: rgba(15, 23, 42, 0.05);
+}
+
+.ws-tour-root.is-sidebar-step {
+    --ws-tour-overlay: rgba(8, 15, 30, 0.14);
+}
+
+[data-theme="light"] .ws-tour-root.is-sidebar-step {
+    --ws-tour-overlay: rgba(15, 23, 42, 0.08);
+}
+
+/* فایلینگ: بدون لایهٔ مات اضافه — فقط اسپات‌لایت تاریک می‌کند */
+.ws-tour-root--filing.is-tooltip-step .ws-tour-backdrop {
+    background: transparent;
+    backdrop-filter: none;
+}
+
+.ws-tour-root--workspace.is-tooltip-step .ws-tour-backdrop {
+    background: color-mix(in srgb, var(--ws-tour-overlay) 22%, transparent);
+    backdrop-filter: blur(1px);
 }
 
 .ws-tour-sheet-handle {
@@ -665,11 +684,99 @@ body.ws-tour-active {
     box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
 }
 
+.ws-tour-scroll-area {
+    position: relative;
+    max-height: min(52vh, 420px);
+}
+
+.ws-tour-scroll-area::before {
+    content: '';
+    position: absolute;
+    inset-inline-end: 2px;
+    top: 8px;
+    bottom: 8px;
+    width: 3px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--ws-text-muted, #94a3b8) 10%, transparent);
+    pointer-events: none;
+    z-index: 2;
+    opacity: 0.65;
+}
+
+.ws-tour-scroll-area:not(.is-scrollable)::before {
+    opacity: 0;
+}
+
+.ws-tour-scroll-area.is-at-bottom::after,
+.ws-tour-scroll-area:not(.is-scrollable)::after {
+    opacity: 0;
+}
+
+.ws-tour-scroll-area::after {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    bottom: 0;
+    height: 28px;
+    border-radius: 0 0 16px 16px;
+    background: linear-gradient(
+        to top,
+        color-mix(in srgb, var(--ws-tour-card) 98%, transparent),
+        transparent
+    );
+    pointer-events: none;
+    z-index: 3;
+    opacity: 1;
+    transition: opacity 0.25s ease;
+}
+
 .ws-tour-card-inner {
     max-height: min(52vh, 420px);
+    overflow-x: hidden;
     overflow-y: auto;
     overscroll-behavior: contain;
+    scrollbar-gutter: stable;
     scrollbar-width: thin;
+    scrollbar-color: color-mix(in srgb, var(--ws-tour-accent) 75%, #64748b)
+        color-mix(in srgb, var(--ws-text-muted, #94a3b8) 10%, transparent);
+    padding-inline-end: 0.15rem;
+}
+
+.ws-tour-card-inner::-webkit-scrollbar,
+.ws-tour-modal-panel::-webkit-scrollbar {
+    width: 8px;
+}
+
+.ws-tour-card-inner::-webkit-scrollbar-track,
+.ws-tour-modal-panel::-webkit-scrollbar-track {
+    margin-block: 8px;
+    background: color-mix(in srgb, var(--ws-text-muted, #94a3b8) 8%, transparent);
+    border-radius: 999px;
+}
+
+.ws-tour-card-inner::-webkit-scrollbar-thumb,
+.ws-tour-modal-panel::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--ws-tour-accent) 90%, #fff),
+        color-mix(in srgb, var(--ws-tour-accent-2) 85%, #fff)
+    );
+    border: 2px solid transparent;
+    background-clip: padding-box;
+    box-shadow: 0 0 10px color-mix(in srgb, var(--ws-tour-accent) 25%, transparent);
+}
+
+.ws-tour-card-inner::-webkit-scrollbar-thumb:hover,
+.ws-tour-modal-panel::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, var(--ws-tour-accent), var(--ws-tour-accent-2));
+}
+
+.ws-tour-modal-panel {
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in srgb, var(--ws-tour-accent) 75%, #64748b)
+        color-mix(in srgb, var(--ws-text-muted, #94a3b8) 10%, transparent);
 }
 
 .ws-tour-root--filing .ws-tour-modal-panel {
@@ -689,8 +796,12 @@ body.ws-tour-active {
 }
 
 @media (max-width: 768px) {
-    .ws-tour-root.is-tooltip-step .ws-tour-backdrop {
-        backdrop-filter: blur(4px);
+    .ws-tour-root--workspace.is-tooltip-step .ws-tour-backdrop {
+        backdrop-filter: blur(2px);
+    }
+
+    .ws-tour-root--filing.is-tooltip-step .ws-tour-backdrop {
+        backdrop-filter: none;
     }
 
     .ws-tour-card {
@@ -727,8 +838,12 @@ body.ws-tour-active {
         display: none;
     }
 
+    .ws-tour-scroll-area,
     .ws-tour-card-inner {
         max-height: min(46vh, 360px);
+    }
+
+    .ws-tour-card-inner {
         padding-bottom: 0.25rem;
     }
 
@@ -790,7 +905,7 @@ body.ws-tour-active {
     .ws-tour-modal-panel {
         width: 100%;
         max-height: min(92dvh, 640px);
-        overflow-y: auto;
+        overflow: hidden;
         border-radius: 22px 22px 18px 18px;
         margin-bottom: env(safe-area-inset-bottom, 0px);
     }
@@ -815,7 +930,19 @@ body.ws-tour-active {
 
     body.ws-tour-active {
         overflow: hidden;
+    }
+
+    body.ws-tour-active:not(.ws-tour-mobile-sidebar) {
         touch-action: none;
+    }
+
+    body.ws-tour-active.ws-tour-mobile-sidebar {
+        touch-action: manipulation;
+    }
+
+    body.ws-tour-active.ws-tour-mobile-sidebar .ws-sidebar .ws-nav {
+        touch-action: pan-y;
+        -webkit-overflow-scrolling: touch;
     }
 }
 
@@ -945,8 +1072,8 @@ body.ws-tour-active {
         0 0 0 1px rgba(15, 23, 42, 0.06);
 }
 
-[data-theme="light"] .ws-tour-root.is-tooltip-step .ws-tour-backdrop {
-    background: rgba(15, 23, 42, 0.28);
+[data-theme="light"] .ws-tour-root--workspace.is-tooltip-step .ws-tour-backdrop {
+    background: rgba(15, 23, 42, 0.22);
 }
 
 .ws-tour-swipe-hint {
@@ -990,5 +1117,371 @@ body.ws-tour-active {
     .ws-tour-icon-wrap.is-pop,
     .ws-tour-card.is-step-enter {
         animation: none !important;
+    }
+}
+
+/* ── Filing tour v8: lighter veil, richer card, modal scroll ── */
+
+.ws-tour-root--filing .ws-tour-spotlight.is-visible {
+    box-shadow:
+        0 0 0 2px rgba(255, 255, 255, 0.34),
+        0 0 0 3px color-mix(in srgb, var(--ws-tour-accent) 36%, transparent),
+        0 0 22px color-mix(in srgb, var(--ws-tour-accent) 14%, transparent),
+        0 0 0 9999px var(--ws-tour-overlay);
+}
+
+.ws-tour-root--filing .ws-tour-card {
+    background: linear-gradient(
+        165deg,
+        color-mix(in srgb, #2563eb 5%, var(--ws-tour-card)),
+        var(--ws-tour-card) 42%
+    );
+    border: 1px solid color-mix(in srgb, var(--ws-tour-accent) 24%, var(--ws-border, rgba(148, 163, 184, 0.14)));
+    box-shadow:
+        0 22px 56px rgba(15, 23, 42, 0.22),
+        0 0 0 1px rgba(255, 255, 255, 0.05) inset,
+        0 12px 40px color-mix(in srgb, var(--ws-tour-accent) 8%, transparent);
+}
+
+.ws-tour-root--filing .ws-tour-modal-panel {
+    border: 1px solid color-mix(in srgb, var(--ws-tour-accent) 22%, var(--ws-border));
+    box-shadow:
+        0 28px 72px rgba(15, 23, 42, 0.28),
+        0 0 0 1px rgba(255, 255, 255, 0.06) inset;
+}
+
+.ws-tour-root--filing .ws-tour-scroll-area::before {
+    background: linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--ws-tour-accent) 18%, transparent),
+        color-mix(in srgb, var(--ws-tour-accent-2) 12%, transparent)
+    );
+    opacity: 0.5;
+}
+
+.ws-tour-root--filing .ws-tour-tip {
+    border-style: solid;
+    background: color-mix(in srgb, var(--ws-tour-accent) 8%, transparent);
+}
+
+/* ── v9: card footer, modal scroll, mobile sidebar & filing UX ── */
+
+.ws-tour-card {
+    display: flex;
+    flex-direction: column;
+    max-height: min(72dvh, 500px);
+}
+
+.ws-tour-scroll-area {
+    flex: 1;
+    min-height: 0;
+    max-height: none;
+}
+
+.ws-tour-card-footer {
+    flex-shrink: 0;
+    padding: 0.55rem 1.15rem calc(0.75rem + env(safe-area-inset-bottom, 0px));
+    border-top: 1px solid color-mix(in srgb, var(--ws-tour-accent) 14%, var(--ws-border, rgba(148, 163, 184, 0.12)));
+    background: linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--ws-tour-card) 82%, transparent),
+        var(--ws-tour-card)
+    );
+}
+
+.ws-tour-card-footer .ws-tour-actions {
+    margin: 0;
+    padding: 0;
+    position: static;
+    background: none;
+}
+
+.ws-tour-modal-panel {
+    display: flex;
+    flex-direction: column;
+    max-height: min(90dvh, 680px);
+    overflow: hidden;
+    padding: 0;
+}
+
+.ws-tour-modal-scroll {
+    flex: 1;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 2rem 1.35rem 1rem;
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in srgb, var(--ws-tour-accent) 70%, #64748b)
+        color-mix(in srgb, var(--ws-text-muted, #94a3b8) 8%, transparent);
+}
+
+.ws-tour-modal-scroll::-webkit-scrollbar {
+    width: 9px;
+}
+
+.ws-tour-modal-scroll::-webkit-scrollbar-track {
+    margin-block: 10px;
+    background: color-mix(in srgb, var(--ws-text-muted, #94a3b8) 7%, transparent);
+    border-radius: 999px;
+}
+
+.ws-tour-modal-scroll::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--ws-tour-accent) 88%, #fff),
+        color-mix(in srgb, var(--ws-tour-accent-2) 82%, #fff)
+    );
+    border: 2px solid transparent;
+    background-clip: padding-box;
+    box-shadow: 0 0 12px color-mix(in srgb, var(--ws-tour-accent) 22%, transparent);
+}
+
+.ws-tour-modal-panel .ws-tour-modal-actions {
+    flex-shrink: 0;
+    margin: 0;
+    padding: 0.85rem 1.35rem calc(1.1rem + env(safe-area-inset-bottom, 0px));
+    border-top: 1px solid color-mix(in srgb, var(--ws-tour-accent) 12%, var(--ws-border));
+    background: color-mix(in srgb, var(--ws-tour-card) 96%, transparent);
+    backdrop-filter: blur(8px);
+}
+
+.ws-tour-root--filing.is-modal-step .ws-tour-modal-bg {
+    backdrop-filter: blur(4px) saturate(1.05);
+    background:
+        radial-gradient(ellipse 85% 55% at 15% 8%, color-mix(in srgb, #2563eb 12%, transparent), transparent 52%),
+        radial-gradient(ellipse 75% 48% at 88% 92%, color-mix(in srgb, #06b6d4 10%, transparent), transparent 48%),
+        rgba(8, 15, 30, 0.28);
+}
+
+[data-theme="light"] .ws-tour-root--filing.is-modal-step .ws-tour-modal-bg {
+    background:
+        radial-gradient(ellipse 85% 55% at 15% 8%, color-mix(in srgb, #2563eb 10%, transparent), transparent 52%),
+        radial-gradient(ellipse 75% 48% at 88% 92%, color-mix(in srgb, #06b6d4 8%, transparent), transparent 48%),
+        rgba(255, 255, 255, 0.38);
+}
+
+body.ws-tour-mobile-sidebar #wsShellBackdrop {
+    background: rgba(15, 23, 42, 0.22);
+    backdrop-filter: blur(2px);
+}
+
+body.ws-tour-mobile-sidebar #wsSidebar.open {
+    z-index: calc(var(--ws-tour-z) + 4) !important;
+    box-shadow: 8px 0 40px rgba(0, 0, 0, 0.2);
+}
+
+body.ws-tour-active .ws-sidebar[data-tour-active] .ws-nav {
+    max-height: min(70dvh, 520px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+}
+
+body.ws-tour-active .ws-sidebar[data-tour-active] .ws-nav-item[data-tour-active] {
+    background: color-mix(in srgb, var(--ws-tour-accent, #7c3aed) 12%, transparent);
+}
+
+@media (max-width: 768px) {
+    .ws-tour-card {
+        max-height: min(62dvh, 440px);
+    }
+
+    .ws-tour-card.is-mobile-sheet {
+        max-height: min(58dvh, 400px);
+    }
+
+    .ws-tour-card.is-mobile-sidebar {
+        max-height: min(46dvh, 320px);
+        margin-inline: 8px;
+    }
+
+    .ws-tour-card-inner {
+        max-height: none;
+        padding-bottom: 0.35rem;
+    }
+
+    .ws-tour-card-footer {
+        padding-inline: 1rem;
+    }
+
+    .ws-tour-modal-scroll {
+        padding: 1.65rem 1.15rem 0.85rem;
+    }
+
+    .ws-tour-scroll-area::after {
+        height: 20px;
+    }
+}
+
+/* ── v10: lighter filing veil, modal scroll chrome, mobile sidebar ── */
+
+.ws-tour-root--filing .ws-tour-spotlight.is-visible {
+    box-shadow:
+        0 0 0 2px rgba(255, 255, 255, 0.38),
+        0 0 0 3px color-mix(in srgb, var(--ws-tour-accent) 28%, transparent),
+        0 0 18px color-mix(in srgb, var(--ws-tour-accent) 10%, transparent),
+        0 0 0 9999px var(--ws-tour-overlay);
+}
+
+body.ws-tour-mobile-sidebar .ws-tour-root {
+    --ws-tour-overlay: rgba(8, 15, 30, 0.08);
+}
+
+[data-theme="light"] body.ws-tour-mobile-sidebar .ws-tour-root {
+    --ws-tour-overlay: rgba(15, 23, 42, 0.04);
+}
+
+body.ws-tour-mobile-sidebar #wsShellBackdrop {
+    background: rgba(15, 23, 42, 0.12);
+    backdrop-filter: blur(1px);
+}
+
+body.ws-tour-variant-filing #wsShellBackdrop[hidden] {
+    display: none;
+}
+
+.ws-tour-modal-scroll-wrap {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.ws-tour-modal-scroll-wrap::before {
+    content: '';
+    position: absolute;
+    inset-inline-end: 6px;
+    top: 12px;
+    bottom: 12px;
+    width: 4px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--ws-text-muted, #94a3b8) 8%, transparent);
+    pointer-events: none;
+    z-index: 2;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+}
+
+.ws-tour-modal-scroll-wrap.is-scrollable::before {
+    opacity: 1;
+}
+
+.ws-tour-modal-scroll-wrap::after {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    bottom: 0;
+    height: 32px;
+    border-radius: 0 0 16px 16px;
+    background: linear-gradient(
+        to top,
+        color-mix(in srgb, var(--ws-tour-card) 96%, transparent),
+        transparent
+    );
+    pointer-events: none;
+    z-index: 2;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+}
+
+.ws-tour-modal-scroll-wrap.is-scrollable:not(.is-at-bottom)::after {
+    opacity: 1;
+}
+
+.ws-tour-scroll-more {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    margin: 0;
+    padding: 0.35rem 0.5rem 0.15rem;
+    font-size: 0.62rem;
+    font-weight: 600;
+    color: var(--ws-tour-accent);
+    text-align: center;
+}
+
+.ws-tour-modal-scroll-wrap.is-scrollable:not(.is-at-bottom) .ws-tour-scroll-more {
+    display: flex;
+}
+
+.ws-tour-scroll-more i {
+    font-size: 0.55rem;
+    animation: wsTourScrollBounce 1.4s ease-in-out infinite;
+}
+
+@keyframes wsTourScrollBounce {
+    0%, 100% { transform: translateY(0); opacity: 0.65; }
+    50% { transform: translateY(3px); opacity: 1; }
+}
+
+.ws-tour-root--filing.is-modal-step .ws-tour-modal-bg {
+    backdrop-filter: blur(3px) saturate(1.04);
+}
+
+.ws-tour-root--workspace.is-modal-step .ws-tour-modal-bg {
+    backdrop-filter: blur(5px) saturate(1.06);
+}
+
+body.ws-tour-active .ws-sidebar[data-tour-active] {
+    border-inline-end: 2px solid color-mix(in srgb, var(--ws-tour-accent, #7c3aed) 55%, transparent);
+}
+
+body.ws-tour-active .ws-sidebar[data-tour-active] .ws-nav-item[data-tour-active],
+body.ws-tour-active .ws-sidebar[data-tour-active] .ws-nav-more-summary[data-tour-active] {
+    scroll-margin-block: 12px;
+}
+
+@media (max-width: 768px) {
+    .ws-tour-root--filing.is-tooltip-step .ws-tour-spotlight.is-visible {
+        box-shadow:
+            0 0 0 2px rgba(255, 255, 255, 0.42),
+            0 0 0 3px color-mix(in srgb, var(--ws-tour-accent) 24%, transparent),
+            0 0 14px color-mix(in srgb, var(--ws-tour-accent) 8%, transparent),
+            0 0 0 9999px var(--ws-tour-overlay);
+    }
+
+    .ws-tour-card.is-mobile-sidebar {
+        max-height: min(42dvh, 300px);
+        border-radius: 18px 18px 14px 14px;
+    }
+
+    .ws-tour-card.is-mobile-sidebar .ws-tour-scroll-area,
+    .ws-tour-card.is-mobile-sidebar .ws-tour-card-inner {
+        max-height: min(28dvh, 200px);
+    }
+
+    body.ws-tour-active .ws-sidebar[data-tour-active] .ws-nav {
+        max-height: min(62dvh, 520px);
+        padding-bottom: 0.5rem;
+    }
+
+    body.ws-tour-mobile-sidebar .ws-tour-backdrop {
+        pointer-events: none;
+    }
+
+    body.ws-tour-mobile-sidebar .ws-tour-card,
+    body.ws-tour-mobile-sidebar .ws-tour-spotlight {
+        pointer-events: none;
+    }
+
+    body.ws-tour-mobile-sidebar .ws-tour-card .ws-tour-btn,
+    body.ws-tour-mobile-sidebar .ws-tour-card .ws-tour-skip,
+    body.ws-tour-mobile-sidebar .ws-tour-card .ws-tour-scroll-area {
+        pointer-events: auto;
+    }
+
+    body.ws-tour-mobile-sidebar #wsShellBackdrop {
+        pointer-events: auto;
+    }
+
+    .ws-tour-card.is-mobile-sidebar .ws-tour-swipe-hint {
+        font-size: 0.58rem;
+        line-height: 1.45;
+        padding-inline: 0.15rem;
     }
 }

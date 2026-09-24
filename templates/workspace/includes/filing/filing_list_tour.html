@@ -1,5 +1,5 @@
 {% load static %}
-<link rel="stylesheet" href="{% static 'workspace/css/onboarding-tour.css' %}?v=7">
+<link rel="stylesheet" href="{% static 'workspace/css/onboarding-tour.css' %}?v=10">
 <script>
 window.wsFilingListTourConfig = {
     variant: "filing",
@@ -89,6 +89,7 @@ window.wsFilingListTourConfig = {
             icon: "fa-magnifying-glass",
             accent: "#0EA5E9",
             placement: "bottom",
+            openFilterPanel: true,
             title: "جستجو و فیلتر",
             desc: "جستجو در نام پوشه، فیلتر معامله/شهر/فرمت و تعویض نمای جدول یا کارت.",
             tip: "روی موبایل دکمهٔ «فیلتر» پنل فیلترها را باز می‌کند."
@@ -157,7 +158,7 @@ window.wsFilingListTourConfig = {
     ]
 };
 </script>
-<script src="{% static 'workspace/js/onboarding-tour.js' %}?v=7"></script>
+<script src="{% static 'workspace/js/onboarding-tour.js' %}?v=10"></script>
 <script>
 (function () {
     var cfg = window.wsFilingListTourConfig;

@@ -1,0 +1,108 @@
+.crm-field-voice {
+    min-width: 0;
+}
+
+.crm-field-voice__wrap {
+    display: flex;
+    align-items: stretch;
+    gap: 0.35rem;
+    min-width: 0;
+}
+
+.crm-field-voice__wrap > .crm-input,
+.crm-field-voice__wrap > .crm-textarea {
+    flex: 1;
+    min-width: 0;
+}
+
+.crm-field-voice__wrap > .crm-textarea + .crm-field-voice__mic {
+    align-self: flex-start;
+    margin-top: 0.35rem;
+}
+
+.crm-field-voice__mic {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    align-self: center;
+    width: 2.35rem;
+    height: 2.35rem;
+    padding: 0;
+    border: none;
+    border-radius: 10px;
+    color: var(--ws-primary, #2563eb);
+    background: color-mix(in srgb, var(--ws-primary, #2563eb) 10%, transparent);
+    cursor: pointer;
+    transition: background 0.12s, color 0.12s, box-shadow 0.12s;
+}
+
+.crm-field-voice__mic:hover:not(:disabled):not(.is-unsupported) {
+    background: color-mix(in srgb, var(--ws-primary, #2563eb) 18%, transparent);
+}
+
+.crm-field-voice__mic:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--ws-primary, #2563eb) 55%, transparent);
+    outline-offset: 2px;
+}
+
+.crm-field-voice__mic.is-listening {
+    color: #fff;
+    background: linear-gradient(165deg, #ef4444 0%, #dc2626 100%);
+    box-shadow: 0 0 0 3px color-mix(in srgb, #ef4444 22%, transparent);
+    animation: crm-field-voice-pulse 2.4s ease-in-out infinite;
+}
+
+.crm-field-voice__mic.is-processing {
+    opacity: 0.85;
+}
+
+.crm-field-voice__mic.is-unsupported {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.crm-field-voice__mic-icon {
+    font-size: 0.9rem;
+}
+
+.crm-field-voice__mic.is-listening .crm-field-voice__mic-icon--stop {
+    font-size: 0.68rem;
+}
+
+.crm-field-voice__status {
+    margin: 0.3rem 0 0;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--ws-text-secondary, #64748b);
+    line-height: 1.45;
+}
+
+.crm-field-voice__status.is-error {
+    color: #b91c1c;
+}
+
+.crm-field-voice.is-voice-listening .crm-field-voice__wrap > .crm-input,
+.crm-field-voice.is-voice-listening .crm-field-voice__wrap > .crm-textarea {
+    border-color: color-mix(in srgb, #ef4444 32%, var(--ws-border, #e2e8f0));
+    box-shadow: 0 0 0 2px color-mix(in srgb, #ef4444 12%, transparent);
+}
+
+.crm-occ__field .crm-field-voice {
+    flex: 1;
+    min-width: 0;
+}
+
+.crm-occ__field .crm-field-voice__wrap {
+    align-items: center;
+}
+
+@keyframes crm-field-voice-pulse {
+    0%,
+    100% {
+        box-shadow: 0 0 0 3px color-mix(in srgb, #ef4444 22%, transparent);
+    }
+    50% {
+        box-shadow: 0 0 0 6px color-mix(in srgb, #ef4444 8%, transparent);
+    }
+}

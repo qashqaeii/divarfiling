@@ -301,6 +301,9 @@
      *   silenceTimeoutMs?: number,
      *   restartDelayMs?: number,
      *   forceMobileVoice?: boolean,
+     *   micAriaStart?: string,
+     *   micAriaStop?: string,
+     *   micTooltip?: string,
      *   win?: Window,
      *   doc?: Document,
      * }} config
@@ -356,11 +359,16 @@
         let cycleFinalTranscript = '';
         let cycleInterimTranscript = '';
 
-        const privacyTitle = MIC_TOOLTIP + ' — ' + PRIVACY_NOTE;
+        const micAriaStart = config.micAriaStart || MIC_ARIA_START;
+        const micAriaStop = config.micAriaStop || MIC_ARIA_STOP;
+        const micTooltipLabel = config.micTooltip || MIC_TOOLTIP;
+        const privacyTitle = micTooltipLabel + ' — ' + PRIVACY_NOTE;
         const queryMicBtn =
             typeof micBtn.querySelector === 'function' ? micBtn.querySelector.bind(micBtn) : null;
         const voiceIconEl = queryMicBtn
-            ? queryMicBtn('[data-sc="voice-icon"]') || queryMicBtn('.crm-nl-command__voice-icon')
+            ? queryMicBtn('[data-sc="voice-icon"]')
+                || queryMicBtn('.crm-nl-command__voice-icon')
+                || queryMicBtn('.crm-field-voice__mic-icon')
             : null;
 
         /**
@@ -370,7 +378,7 @@
             const listening = mode === 'listening';
             micBtn.classList.toggle('is-listening', listening);
             micBtn.setAttribute('aria-pressed', listening ? 'true' : 'false');
-            micBtn.setAttribute('aria-label', listening ? MIC_ARIA_STOP : MIC_ARIA_START);
+            micBtn.setAttribute('aria-label', listening ? micAriaStop : micAriaStart);
             if (supported) {
                 micBtn.title = listening ? MIC_TOOLTIP_STOP : privacyTitle;
             }
@@ -378,6 +386,7 @@
                 voiceIconEl.classList.toggle('fa-microphone', !listening);
                 voiceIconEl.classList.toggle('fa-stop', listening);
                 voiceIconEl.classList.toggle('crm-nl-command__voice-icon--stop', listening);
+                voiceIconEl.classList.toggle('crm-field-voice__mic-icon--stop', listening);
             }
         }
 

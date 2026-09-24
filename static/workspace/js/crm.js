@@ -202,10 +202,16 @@ const CRMDrawer = {
         if (typeof window.initCRMFormMaps === 'function') {
             window.initCRMFormMaps(drawer);
         }
+        if (typeof window.initCRMFieldVoice === 'function') {
+            window.initCRMFieldVoice(drawer);
+        }
     },
     close(drawer) {
         const el = typeof drawer === 'string' ? document.getElementById(drawer) : drawer;
         if (!el) return;
+        if (typeof window.stopCRMFieldVoiceIn === 'function') {
+            window.stopCRMFieldVoiceIn(el);
+        }
         el.classList.remove('is-open');
         document.body.classList.remove('crm-drawer-open');
         if (this.active === el) this.active = null;
@@ -5979,6 +5985,9 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
         if (typeof window.initCRMFormMaps === 'function') window.initCRMFormMaps();
     } catch (err) { console.error(err); }
+    try {
+        if (typeof window.initCRMFieldVoice === 'function') window.initCRMFieldVoice(document);
+    } catch (err) { console.error('initCRMFieldVoice', err); }
     try { initCRMTeamPage(); } catch (err) { console.error(err); }
     initCRMSidePanel();
     initCRMQuickLead();

@@ -5,15 +5,15 @@
             <h3>اطلاعات پایه</h3>
         </header>
         <div class="crm-fields crm-fields-2">
-            <div class="crm-field crm-field-full"><label class="crm-label">عنوان *</label>{{ form.title }}</div>
+            <div class="crm-field crm-field-full"><label class="crm-label">عنوان *</label>{% include 'workspace/crm/includes/crm_field_voice.html' with widget=form.title %}</div>
             <div class="crm-field"><label class="crm-label">نوع ملک</label>{{ form.property_type }}</div>
             <div class="crm-field"><label class="crm-label">نوع معامله</label>{{ form.deal_mode }}</div>
             <div class="crm-field"><label class="crm-label">وضعیت معامله</label>{{ form.transaction_status }}</div>
             <div class="crm-field"><label class="crm-label">وضعیت انتشار</label>{{ form.publish_status }}</div>
             <div class="crm-field"><label class="crm-label">نوع آگهی‌دهنده</label>{{ form.business_type }}</div>
             <div class="crm-field"><label class="crm-label">شماره تماس مالک</label>{{ form.phone }}</div>
-            <div class="crm-field"><label class="crm-label">نام مالک</label>{{ form.owner_name }}</div>
-            <div class="crm-field crm-field-full"><label class="crm-label">لینک آگهی</label>{{ form.link }}</div>
+            <div class="crm-field"><label class="crm-label">نام مالک</label>{% include 'workspace/crm/includes/crm_field_voice.html' with widget=form.owner_name %}</div>
+            <div class="crm-field crm-field-full"><label class="crm-label">لینک آگهی</label>{% include 'workspace/crm/includes/crm_field_voice.html' with widget=form.link %}</div>
             {% if form.instance.pk and form.instance.token %}
             <div class="crm-field crm-field-full">
                 <label class="crm-label">شناسه آگهی</label>
@@ -32,16 +32,16 @@
             <h3>موقعیت</h3>
         </header>
         <div class="crm-fields crm-fields-2">
-            <div class="crm-field crm-field-full"><label class="crm-label">آدرس</label>{{ form.address }}</div>
-            <div class="crm-field"><label class="crm-label">شهر</label>{{ form.city }}</div>
+            <div class="crm-field crm-field-full"><label class="crm-label">آدرس</label>{% include 'workspace/crm/includes/crm_field_voice.html' with widget=form.address %}</div>
+            <div class="crm-field"><label class="crm-label">شهر</label>{% include 'workspace/crm/includes/crm_field_voice.html' with widget=form.city %}</div>
             <div class="crm-field">
                 <label class="crm-label" for="{{ form.district.id_for_label }}">منطقه</label>
-                {{ form.district }}
+                {% include 'workspace/crm/includes/crm_field_voice.html' with widget=form.district %}
                 <p class="crm-form-hint crm-form-hint--tight">منطقه شهرداری / مسیر دیوار</p>
             </div>
             <div class="crm-field">
                 <label class="crm-label" for="{{ form.neighborhood.id_for_label }}">محله</label>
-                {{ form.neighborhood }}
+                {% include 'workspace/crm/includes/crm_field_voice.html' with widget=form.neighborhood %}
             </div>
         </div>
 
@@ -128,7 +128,7 @@
                     {% endfor %}
                 </div>
                 <label class="crm-label crm-prop-amenities-extra-label" for="{{ form.amenities_extra.id_for_label }}">سایر امکانات / جزئیات</label>
-                {{ form.amenities_extra }}
+                {% include 'workspace/crm/includes/crm_field_voice.html' with widget=form.amenities_extra %}
                 {{ form.amenities }}
                 {{ form.has_parking }}{{ form.has_storage }}{{ form.has_elevator }}
             </div>
@@ -387,7 +387,7 @@
                         <label class="crm-label" for="{{ form.tenant_name.id_for_label }}">نام و نام خانوادگی <span class="crm-label-optional">(اختیاری)</span></label>
                         <div class="crm-occ__field">
                             <span class="crm-occ__field-ico" aria-hidden="true"><i class="fas fa-user"></i></span>
-                            {{ form.tenant_name }}
+                            {% include 'workspace/crm/includes/crm_field_voice.html' with widget=form.tenant_name %}
                         </div>
                     </div>
                     <div class="crm-field">
@@ -448,7 +448,7 @@
         </div>
 
         <div class="crm-fields crm-fields-2 crm-prop-price-notes">
-            <div class="crm-field crm-field-full"><label class="crm-label">یادداشت</label>{{ form.notes }}</div>
+            <div class="crm-field crm-field-full"><label class="crm-label">یادداشت</label>{% include 'workspace/crm/includes/crm_field_voice.html' with widget=form.notes %}</div>
         </div>
     </section>
     {% endwith %}

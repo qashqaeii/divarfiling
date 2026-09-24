@@ -134,6 +134,13 @@ class AgencySpacePublishTests(AgencySpaceTestBase):
         got = get_space_item_for_user(self.advisor2, item.pk)
         self.assertIsNotNone(got)
 
+    def test_seated_advisor_member_hub_links_agency_space(self):
+        self.client.force_login(self.advisor)
+        resp = self.client.get(reverse('workspace:agency_advisor_member'))
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, reverse('workspace:agency_hub_space'))
+        self.assertContains(resp, 'فضای آژانس')
+
     def test_advisor_no_seat_sees_public_read_only(self):
         prop = self._prop()
         item = publish_property(self.advisor, prop.pk, visibility=AgencySpaceItem.VISIBILITY_AGENCY_PUBLIC)

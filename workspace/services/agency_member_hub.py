@@ -17,6 +17,7 @@ from workspace.services.agency_data_scope import (
 from workspace.services.crm_agency import member_display
 from workspace.services.crm_agency_analytics import get_member_performance_row
 from workspace.services.crm_agency_announcements import list_announcements, unread_announcement_count
+from workspace.services.agency_space_access import can_access_agency_space
 from workspace.services.crm_agency_features import is_agency_feature_enabled
 from workspace.services.crm_agency_messages import unread_message_count
 from workspace.services.crm_agency_tv import _agency_logo_url
@@ -111,6 +112,10 @@ def build_member_hub_context(
 
     feature_messages = is_agency_feature_enabled('messages', agency)
     feature_announcements = is_agency_feature_enabled('announcements', agency)
+    feature_space = is_agency_feature_enabled('agency_space', agency)
+    agency_space_hub_url = ''
+    if feature_space and can_access_agency_space(user, agency):
+        agency_space_hub_url = reverse('workspace:agency_hub_space')
 
     ctx: dict[str, Any] = {
         'crm_section': 'agency',
@@ -143,6 +148,8 @@ def build_member_hub_context(
         'announcements_total': ann_total,
         'agency_feature_messages': feature_messages,
         'agency_feature_announcements': feature_announcements,
+        'agency_feature_space': feature_space,
+        'agency_space_hub_url': agency_space_hub_url,
         'messages_unread_count': unread_message_count(user) if feature_messages else 0,
         'announcements_unread_count': unread_announcement_count(user) if feature_announcements else 0,
         'quick_links': {

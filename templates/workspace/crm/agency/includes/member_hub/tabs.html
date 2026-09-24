@@ -23,4 +23,12 @@
     {% endif %}
     {% endif %}
     {% endfor %}
+    {% if agency_space_hub_url %}
+    <a href="{{ agency_space_hub_url }}" class="amh-tab amh-tab--space">
+        <span class="amh-tab__icon" aria-hidden="true">
+            {% include 'includes/icon_slot.html' with decor='users' size='nav' only %}
+        </span>
+        <span>فضای آژانس</span>
+    </a>
+    {% endif %}
 </nav>

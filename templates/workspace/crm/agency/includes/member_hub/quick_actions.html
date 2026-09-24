@@ -25,5 +25,11 @@
             <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='database' size='sm' only %}</span>
             <span>فایلینگ</span>
         </a>
+        {% if agency_space_hub_url %}
+        <a href="{{ agency_space_hub_url }}" class="amh-quick__btn amh-quick__btn--indigo">
+            <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='team' size='sm' only %}</span>
+            <span>فضای آژانس</span>
+        </a>
+        {% endif %}
     </div>
 </div>

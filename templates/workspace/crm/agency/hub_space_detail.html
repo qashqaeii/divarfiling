@@ -3,7 +3,7 @@
 
 {% block crm_extra_css %}
 {{ block.super }}
-<link rel="stylesheet" href="{% static 'workspace/css/agency-space.css' %}?v=10">
+<link rel="stylesheet" href="{% static 'workspace/css/agency-space.css' %}?v=11">
 {% endblock %}
 
 {% block agency_hub_content %}
@@ -143,7 +143,7 @@
                         </article>
                     </div>
                 </div>
-            </header>
+    </header>
 
             {% if prop.images|length > 1 %}
             <section class="agency-space-detail__section agency-space-detail__section--gallery-grid" aria-labelledby="space-gallery-grid-heading">
@@ -253,7 +253,7 @@
             </section>
             {% endwith %}
 
-            {% elif space_payload.source_kind == 'customer' and space_payload.customer %}
+        {% elif space_payload.source_kind == 'customer' and space_payload.customer %}
             {% with cust=space_payload.customer %}
             <header class="agency-space-detail__hero agency-space-detail__hero--contact">
                 <div class="agency-space-detail__chips">
@@ -278,7 +278,7 @@
                 </div>
                 {% if cust.need_summary %}
                 <p class="agency-space-detail__lead">{{ cust.need_summary }}</p>
-                {% endif %}
+        {% endif %}
             </header>
 
             <div class="agency-space-detail__kpis" aria-label="خلاصه مخاطب">
@@ -308,14 +308,14 @@
                 {% if cust.email %}<p class="agency-space-detail__body"><strong>ایمیل:</strong> {{ cust.email }}</p>{% endif %}
                 {% else %}
                 <p class="agency-space-detail__body crm-muted">شماره تماس در سطح «خلاصه» نمایش داده نمی‌شود. ناشر می‌تواند سطح اشتراک را در ویرایش انتشار تغییر دهد.</p>
-                {% endif %}
+        {% endif %}
                 {% if cust.notes %}
                 <div class="agency-space-detail__notes-block">
                     <h3 class="agency-space-detail__h-sub">یادداشت مخاطب</h3>
                     <p class="agency-space-detail__body">{{ cust.notes|linebreaksbr }}</p>
                 </div>
-                {% endif %}
-            </section>
+        {% endif %}
+    </section>
             {% endwith %}
 
             {% else %}
@@ -356,13 +356,13 @@
                         ذخیره در CRM{% if space_payload.copy_created_at_display %} · {{ space_payload.copy_created_at_display }}{% endif %}
                     </p>
                     <a href="{{ space_payload.copy_target_url }}" class="crm-btn crm-btn-primary crm-btn-sm crm-btn-block">مشاهده نسخه من</a>
-                    {% elif space_payload.can_copy %}
+        {% elif space_payload.can_copy %}
                     <p class="agency-space-detail__aside-hint">برای پیگیری شخصی، یک نسخه در CRM خود بسازید.</p>
                     <button type="button" class="crm-btn crm-btn-primary crm-btn-sm crm-btn-block" data-space-copy data-item-id="{{ space_item.pk }}">
                         <i class="fas fa-plus" aria-hidden="true"></i>
-                        {% if space_payload.source_kind == 'property' %}افزودن به فایل‌های من{% else %}افزودن به مخاطبین من{% endif %}
-                    </button>
-                    {% else %}
+            {% if space_payload.source_kind == 'property' %}افزودن به فایل‌های من{% else %}افزودن به مخاطبین من{% endif %}
+        </button>
+        {% else %}
                     <p class="agency-space-detail__aside-hint crm-muted">کپی در دسترس نیست.</p>
                     {% endif %}
                 </div>
@@ -441,12 +441,12 @@
                         <li><i class="fas fa-signal" aria-hidden="true"></i><span>وضعیت</span><strong>{{ space_payload.status_label }}</strong></li>
                         {% if space_payload.is_publisher and space_payload.copy_count != None %}
                         <li><i class="fas fa-copy" aria-hidden="true"></i><span>کپی CRM</span><strong>{{ space_payload.copy_count }}</strong></li>
-                        {% endif %}
+        {% endif %}
                     </ul>
                 </div>
             </article>
 
-            {% if space_payload.can_edit %}
+    {% if space_payload.can_edit %}
             <article class="agency-space-detail__aside-card agency-space-detail__aside-card--manage" aria-labelledby="space-actions-heading">
                 <header class="agency-space-detail__aside-head">
                     <span class="agency-space-detail__aside-head-icon" aria-hidden="true"><i class="fas fa-sliders"></i></span>
@@ -462,7 +462,7 @@
                     <button type="button" class="crm-btn crm-btn-ghost crm-btn-sm crm-btn-block" data-space-unpublish>لغو انتشار</button>
                 </div>
             </article>
-            {% endif %}
+    {% endif %}
         </aside>
     </div>
 
@@ -480,7 +480,7 @@
     <section class="agency-space-detail__section agency-space-detail__section--stack">
         <h2 class="agency-space-detail__h">بازگردانی</h2>
         <div class="agency-space-detail__actions">
-            <button type="button" class="crm-btn crm-btn-primary crm-btn-sm" data-space-moderate-restore>بازگردانی به فضا</button>
+        <button type="button" class="crm-btn crm-btn-primary crm-btn-sm" data-space-moderate-restore>بازگردانی به فضا</button>
         </div>
     </section>
     {% endif %}
@@ -526,18 +526,18 @@
             <div class="ws-modal-body">
                 <label class="agency-space-publish-note">
                     <span class="agency-space-publish-field__legend">دلیل (اختیاری)</span>
-                    <select name="reason_preset" class="crm-input">
-                        <option value="">—</option>
-                        <option value="اطلاعات اشتباه">اطلاعات اشتباه</option>
-                        <option value="فایل قدیمی">فایل قدیمی</option>
-                        <option value="نامناسب برای فضای تیم">نامناسب برای فضای تیم</option>
-                        <option value="سایر">سایر</option>
-                    </select>
-                </label>
+                <select name="reason_preset" class="crm-input">
+                    <option value="">—</option>
+                    <option value="اطلاعات اشتباه">اطلاعات اشتباه</option>
+                    <option value="فایل قدیمی">فایل قدیمی</option>
+                    <option value="نامناسب برای فضای تیم">نامناسب برای فضای تیم</option>
+                    <option value="سایر">سایر</option>
+                </select>
+            </label>
                 <label class="agency-space-publish-note">
                     <span class="agency-space-publish-field__legend">توضیح کوتاه</span>
-                    <input type="text" name="reason_text" class="crm-input" maxlength="200">
-                </label>
+                <input type="text" name="reason_text" class="crm-input" maxlength="200">
+            </label>
             </div>
             <div class="ws-modal-foot">
                 <button type="button" class="crm-btn crm-btn-ghost crm-btn-sm" data-modal-close>انصراف</button>

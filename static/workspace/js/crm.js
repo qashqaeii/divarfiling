@@ -3707,6 +3707,19 @@ function initCRMContactTeam() {
     const groups = document.querySelectorAll('[data-crm-team-share]');
     if (!groups.length && !document.querySelector('[data-crm-contact-team]')) return;
 
+    document.querySelectorAll('[data-contact-team-focus]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            const bar = document.getElementById('crm-contact-team-bar');
+            const select = document.getElementById('crm-share-select');
+            if (bar) {
+                bar.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+            if (select) {
+                select.focus();
+            }
+        });
+    });
+
     const postMember = async (url, memberId, note = '') => {
         const body = new FormData();
         body.append('member_id', memberId);

@@ -1427,9 +1427,79 @@
 }
 
 @media (min-width: 769px) {
-    .crm-contact-detail-pro .crm-contact-hero__toolbar,
-    .crm-contact-detail-pro .crm-contact-team-bar {
+    .crm-contact-detail-pro .crm-contact-hero__toolbar {
         display: none !important;
+    }
+
+    .crm-contact-detail-pro .crm-contact-team-bar--compact {
+        display: flex !important;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px 12px;
+        padding: 10px 14px !important;
+        font-size: 0.8125rem !important;
+        border-top: 1px solid var(--ws-border);
+        background: color-mix(in srgb, var(--ws-surface-2) 45%, var(--ws-surface));
+    }
+
+    .crm-contact-detail-pro .crm-contact-team-bar--compact .crm-contact-team-label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--ws-text-secondary);
+        margin-inline-end: 4px;
+    }
+
+    .crm-contact-detail-pro .crm-contact-team-bar--compact .crm-contact-team-actions {
+        margin-inline-start: auto;
+        flex: 1 1 auto;
+        justify-content: flex-end;
+        flex-wrap: wrap;
+        gap: 6px 8px;
+    }
+
+    .crm-contact-detail-pro .crm-contact-team-bar--compact .crm-contact-team-channel {
+        flex: 0 1 auto;
+    }
+
+    .crm-contact-detail-pro .crm-contact-team-bar--compact .crm-contact-team-actions--grouped {
+        max-width: min(100%, 280px);
+    }
+
+    .crm-contact-detail-pro .crm-contact-team-bar--compact .crm-contact-team-actions--grouped .crm-select-sm {
+        min-width: 8.5rem;
+        height: 32px;
+        font-size: 0.75rem;
+    }
+
+    .crm-contact-detail-pro .crm-contact-team-bar--compact .crm-dash-act {
+        min-height: 32px;
+        height: 32px;
+        padding: 0 10px;
+        font-size: 0.75rem;
+    }
+
+    .crm-contact-detail-pro .crm-contact-team-bar--compact .crm-dash-act--ghost {
+        width: auto;
+        padding: 0 10px;
+    }
+
+    .crm-contact-detail-pro .crm-contact-team-bar--compact .crm-dash-act--ghost span,
+    .crm-contact-detail-pro .crm-contact-team-bar--compact .crm-dash-act--primary span {
+        display: inline !important;
+    }
+
+    .crm-contact-detail-pro .crm-contact-hero__action--channel {
+        color: #5b21b6;
+        border-color: color-mix(in srgb, #7c3aed 35%, var(--ws-border));
+        background: color-mix(in srgb, #7c3aed 8%, var(--ws-surface));
+    }
+
+    .crm-contact-detail-pro .crm-contact-hero__action--channel:hover {
+        background: color-mix(in srgb, #7c3aed 14%, var(--ws-surface));
+    }
+
+    .crm-contact-detail-pro .crm-contact-hero__action--transfer {
+        border-color: var(--ws-border);
     }
 
     .crm-contact-detail-pro .crm-contact-hero--compact .crm-contact-hero__top {

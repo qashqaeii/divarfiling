@@ -143,6 +143,20 @@
                     <i class="fas fa-comment" aria-hidden="true"></i><span>پیام</span>
                 </a>
                 {% endif %}
+                {% if can_share_team_resources and is_customer_owner %}
+                {% if agency_space_enabled and agency_space_item %}
+                <a href="{{ agency_space_manage_url }}" class="crm-contact-hero__action crm-contact-hero__action--channel" title="مدیریت انتشار در کانال آژانس">
+                    <i class="fas fa-bullhorn" aria-hidden="true"></i><span>کانال</span>
+                </a>
+                {% elif agency_space_enabled and agency_space_can_publish %}
+                <button type="button" class="crm-contact-hero__action crm-contact-hero__action--channel" data-modal-open="modal-agency-space-publish" title="انتشار در کانال آژانس">
+                    <i class="fas fa-bullhorn" aria-hidden="true"></i><span>انتشار در کانال</span>
+                </button>
+                {% endif %}
+                <button type="button" class="crm-contact-hero__action crm-contact-hero__action--transfer" data-contact-team-focus title="انتقال بین هم‌تیمی‌ها">
+                    <i class="fas fa-right-left" aria-hidden="true"></i><span>انتقال</span>
+                </button>
+                {% endif %}
                 <details class="crm-contact-hero__more">
                     <summary class="crm-contact-hero__action crm-contact-hero__more-trigger" aria-label="گزینه‌های بیشتر">
                         <i class="fas fa-ellipsis" aria-hidden="true"></i><span>بیشتر</span>
@@ -183,7 +197,7 @@
                         <button type="button" class="crm-contact-hero__more-item" role="menuitem" data-drawer-open="drawer-document">
                             <i class="fas fa-upload" aria-hidden="true"></i><span>آپلود مدرک</span>
                         </button>
-                        {% if crm_agency and is_customer_owner %}
+                        {% if can_share_team_resources and is_customer_owner %}
                         <div class="crm-contact-hero__more-team" data-crm-team-share>
                             <span class="crm-contact-hero__more-label">اشتراک تیمی</span>
                             <select class="crm-select crm-select-sm" aria-label="ارسال به هم‌تیمی">
@@ -236,52 +250,12 @@
             {% endif %}
         </div>
         {% if can_share_team_resources %}
-        <div class="crm-contact-hero__team crm-contact-team-bar crm-contact-team-bar--compact" data-crm-contact-team data-customer-id="{{ customer.pk }}">
+        <div id="crm-contact-team-bar" class="crm-contact-hero__team crm-contact-team-bar crm-contact-team-bar--compact" data-crm-contact-team data-customer-id="{{ customer.pk }}">
+                <span class="crm-contact-team-label"><i class="fas fa-users" aria-hidden="true"></i> تیم و کانال</span>
                 {% if customer_is_shared %}
                 {% include 'workspace/crm/includes/shared_view_badge.html' with share=customer_share %}
                 {% elif is_customer_owner %}
-                <div class="crm-contact-team-actions" data-crm-team-share>
-                    {% if agency_space_enabled %}
-                    <div class="agency-space-embed agency-space-embed--compact">
-                        <div class="agency-space-embed__row">
-                            {% if agency_space_item %}
-                            <span class="agency-space-badge agency-space-badge--active">در فضای آژانس</span>
-                            <a href="{{ agency_space_manage_url }}" class="crm-btn crm-btn-ghost crm-btn-sm">مدیریت انتشار</a>
-                            {% elif agency_space_can_publish %}
-                            <button type="button" class="crm-btn crm-btn-primary crm-btn-sm" data-modal-open="modal-agency-space-publish">
-                                <i class="fas fa-users" aria-hidden="true"></i> انتشار در فضای آژانس
-                            </button>
-                            {% endif %}
-                        </div>
-                    </div>
-                    {% endif %}
-                    <div class="crm-contact-team-actions--grouped">
-                        <select class="crm-select crm-select-sm" id="crm-share-select" aria-label="ارسال به هم‌تیمی">
-                            <option value="">ارسال به هم‌تیمی…</option>
-                            {% for m in agency_members %}
-                            {% if m.user_id != request.user.id %}
-                            <option value="{{ m.pk }}">{{ m.user.get_full_name|default:m.user.username }}</option>
-                            {% endif %}
-                            {% endfor %}
-                        </select>
-                        <button type="button" class="crm-dash-act crm-dash-act--primary" id="crm-share-btn" data-crm-share title="اشتراک با هم‌تیمی">
-                            <i class="fas fa-paper-plane" aria-hidden="true"></i><span>اشتراک</span>
-                        </button>
-                    </div>
-                    <button type="button" class="crm-dash-act crm-dash-act--ghost" id="crm-transfer-btn" data-crm-transfer title="انتقال مالکیت">
-                        <i class="fas fa-right-left" aria-hidden="true"></i><span>انتقال</span>
-                    </button>
-                </div>
-                {% if customer_shares %}
-                <ul class="crm-contact-share-list">
-                    {% for s in customer_shares %}
-                    <li>
-                        <span>{{ s.shared_with.get_full_name|default:s.shared_with.username }}</span>
-                        <button type="button" class="crm-team-icon-btn-v2" data-revoke-share="{{ s.pk }}" title="لغو اشتراک"><i class="fas fa-xmark"></i></button>
-                    </li>
-                    {% endfor %}
-                </ul>
-                {% endif %}
+                {% include 'workspace/crm/includes/contact_detail_agency_team_strip.html' %}
                 {% endif %}
             </div>
         {% endif %}

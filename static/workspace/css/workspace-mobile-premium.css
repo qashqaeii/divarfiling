@@ -365,13 +365,40 @@
     }
 
     .crm-contact-detail-pro .crm-contact-team-bar--compact {
-        padding: 6px var(--ws-mob-gutter) !important;
+        padding: 8px var(--ws-mob-gutter) 10px !important;
         font-size: var(--mobile-meta) !important;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px !important;
     }
 
-    .crm-contact-detail-pro .crm-contact-team-actions,
-    .crm-contact-detail-pro .crm-contact-share-list {
-        display: none;
+    .crm-contact-detail-pro .crm-contact-team-bar--compact .crm-contact-team-label {
+        width: 100%;
+    }
+
+    .crm-contact-detail-pro .crm-contact-team-bar--compact .crm-contact-team-actions {
+        display: flex !important;
+        width: 100%;
+        margin-inline-start: 0 !important;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px !important;
+    }
+
+    .crm-contact-detail-pro .crm-contact-team-bar--compact .crm-contact-team-actions--grouped {
+        max-width: none !important;
+        width: 100%;
+    }
+
+    .crm-contact-detail-pro .crm-contact-team-bar--compact .crm-dash-act--ghost span,
+    .crm-contact-detail-pro .crm-contact-team-bar--compact .crm-dash-act--primary span {
+        display: inline !important;
+    }
+
+    .crm-contact-detail-pro .crm-contact-team-bar--compact .crm-contact-share-list {
+        display: flex !important;
+        flex-wrap: wrap;
+        width: 100%;
     }
 
     .crm-deal-detail-mobile .crm-deal-dossier.crm-deal-hero {

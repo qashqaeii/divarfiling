@@ -3,7 +3,7 @@
 
 {% block crm_extra_css %}
 {{ block.super }}
-<link rel="stylesheet" href="{% static 'workspace/css/agency-space.css' %}?v=11">
+<link rel="stylesheet" href="{% static 'workspace/css/agency-space.css' %}?v=12">
 {% endblock %}
 
 {% block agency_hub_content %}
@@ -144,19 +144,6 @@
                     </div>
                 </div>
     </header>
-
-            {% if prop.images|length > 1 %}
-            <section class="agency-space-detail__section agency-space-detail__section--gallery-grid" aria-labelledby="space-gallery-grid-heading">
-                <h2 id="space-gallery-grid-heading" class="agency-space-detail__h"><i class="fas fa-images" aria-hidden="true"></i> گالری تصاویر</h2>
-                <div class="agency-space-detail__photo-grid">
-                    {% for img in prop.images %}
-                    <button type="button" class="agency-space-detail__photo-cell{% if forloop.first %} is-active{% endif %}" data-space-gallery-thumb data-src="{{ img }}" aria-label="تصویر {{ forloop.counter }}">
-                        <img src="{{ img }}" alt="" loading="lazy">
-                    </button>
-                    {% endfor %}
-                </div>
-            </section>
-            {% endif %}
 
             <section class="agency-space-detail__section agency-space-detail__section--specs" aria-labelledby="space-specs-heading">
                 <h2 id="space-specs-heading" class="agency-space-detail__h"><i class="fas fa-clipboard-list" aria-hidden="true"></i> جزئیات ملک</h2>

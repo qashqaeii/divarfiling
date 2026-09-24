@@ -99,6 +99,10 @@
                     <p class="ws-tour-swipe-hint" id="wsTourSwipeHint">برای مرحله بعد/قبل، کارت را به چپ یا راست بکشید</p>
                     <div class="ws-tour-dots" id="wsTourDots" aria-hidden="true"></div>
                 </div>
+                <p class="ws-tour-scroll-more ws-tour-card-scroll-more" id="wsTourCardScrollHint" hidden>
+                    <i class="fas fa-chevron-down" aria-hidden="true"></i>
+                    <span>ادامهٔ توضیحات</span>
+                </p>
                 </div>
                 <div class="ws-tour-card-footer">
                     <div class="ws-tour-actions">
@@ -149,6 +153,10 @@
         area.classList.toggle('is-scrollable', scrollable);
         const atBottom = inner.scrollHeight - inner.scrollTop - inner.clientHeight < 10;
         area.classList.toggle('is-at-bottom', atBottom);
+        const cardHint = document.getElementById('wsTourCardScrollHint');
+        if (cardHint) {
+            cardHint.hidden = !scrollable || atBottom;
+        }
     }
 
     function updateModalScrollState() {
@@ -255,10 +263,19 @@
         if (!target) return target;
         if (isMobileView() && step.openSidebar) {
             const sidebar = document.getElementById('wsSidebar');
-            if (sidebar) {
-                const nav = sidebar.querySelector('.ws-nav');
-                if (nav) return nav;
-                if (sidebar.contains(target)) return sidebar;
+            if (sidebar?.contains(target)) {
+                if (target.matches('[data-tour="sidebar-intro"]')) {
+                    const nav = sidebar.querySelector('.ws-nav');
+                    if (nav) return nav;
+                }
+                if (step.spotlightNav) {
+                    const nav = sidebar.querySelector('.ws-nav');
+                    if (nav) return nav;
+                }
+                const navItem = target.closest('.ws-nav-item, .ws-nav-more-summary');
+                if (navItem) return navItem;
+                const moreBlock = target.closest('details.ws-nav-more');
+                if (moreBlock) return moreBlock;
             }
         }
         if (isMobileView() && step.openNavMore) {
@@ -287,8 +304,12 @@
         const rect = el.getBoundingClientRect();
         const top = Math.max(4, rect.top - pad);
         const left = Math.max(4, rect.left - pad);
-        const width = Math.min(window.innerWidth - left - 4, rect.width + pad * 2);
-        const height = Math.min(window.innerHeight - top - 4, rect.height + pad * 2);
+        let width = Math.min(window.innerWidth - left - 4, rect.width + pad * 2);
+        let height = Math.min(window.innerHeight - top - 4, rect.height + pad * 2);
+        if (isMobileView() && el.closest?.('.ws-nav-item, .ws-nav-more-summary')) {
+            height = Math.max(height, 46);
+            width = Math.max(width, Math.min(window.innerWidth - left - 8, rect.width + pad * 2));
+        }
 
         spotlight.style.top = `${top}px`;
         spotlight.style.left = `${left}px`;
@@ -538,15 +559,16 @@
             }
             const spotlightEl = resolveSpotlightTarget(target, step);
             positionSpotlight(spotlightEl);
-            positionCard(target, step.placement);
+            positionCard(spotlightEl, step.placement);
             card.classList.remove('is-visible');
             requestAnimationFrame(() => {
                 card.classList.add('is-visible');
                 updateScrollAreaState();
                 if (step.openSidebar && isMobileView()) {
                     setTimeout(() => {
-                        positionSpotlight(resolveSpotlightTarget(target, step));
-                        positionCard(target, step.placement);
+                        const spot = resolveSpotlightTarget(target, step);
+                        positionSpotlight(spot);
+                        positionCard(spot, step.placement);
                     }, 280);
                 }
             });

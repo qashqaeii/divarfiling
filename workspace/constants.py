@@ -540,7 +540,7 @@ AGENCY_COMMAND_CENTER_FEATURES = {
     'team_calendar': True,
     'heatmap': True,
     'tv_mode': True,
-    'agency_space': False,
+    'agency_space': True,
 }
 
 MESSAGE_RETENTION_DAYS = 30

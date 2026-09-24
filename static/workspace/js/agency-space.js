@@ -212,21 +212,31 @@
       });
     });
 
-    document.querySelectorAll('[data-space-gallery]').forEach((gallery) => {
-      const main = gallery.querySelector('[data-space-gallery-main]');
-      if (!main) return;
-      gallery.querySelectorAll('[data-space-gallery-thumb]').forEach((btn) => {
+    const detail = document.querySelector('.agency-space-detail');
+    if (detail) {
+      const main = detail.querySelector('[data-space-gallery-main]');
+      const lightboxImg = document.getElementById('agency-space-lightbox-img');
+      const setActiveImage = (src, activeBtn) => {
+        if (!src) return;
+        if (main) main.src = src;
+        if (lightboxImg) lightboxImg.src = src;
+        detail.querySelectorAll('[data-space-gallery-thumb]').forEach((b) => b.classList.remove('is-active'));
+        if (activeBtn) activeBtn.classList.add('is-active');
+      };
+      detail.querySelectorAll('[data-space-gallery-thumb]').forEach((btn) => {
         btn.addEventListener('click', function () {
-          const src = btn.dataset.src;
-          if (!src) return;
-          main.src = src;
-          gallery.querySelectorAll('[data-space-gallery-thumb]').forEach((b) => b.classList.remove('is-active'));
-          btn.classList.add('is-active');
+          setActiveImage(btn.dataset.src, btn);
         });
       });
-    });
+      detail.querySelectorAll('[data-space-gallery-lightbox]').forEach((btn) => {
+        btn.addEventListener('click', function () {
+          const src = main?.src || btn.querySelector('img')?.src;
+          if (lightboxImg && src) lightboxImg.src = src;
+          openModal('modal-space-gallery');
+        });
+      });
+    }
 
-    const detail = document.querySelector('.agency-space-detail');
     if (detail) {
       const itemId = detail.dataset.itemId;
       const unpublish = detail.querySelector('[data-space-unpublish]');

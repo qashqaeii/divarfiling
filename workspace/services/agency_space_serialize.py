@@ -81,7 +81,7 @@ def _publisher_payload(user: User) -> Dict[str, Any]:
 def _property_card(prop: CRMProperty, *, include_sensitive: bool) -> Dict[str, Any]:
     images: List[str] = []
     if prop.images and isinstance(prop.images, list):
-        images = [u for u in prop.images if isinstance(u, str) and u.strip()][:8]
+        images = [u for u in prop.images if isinstance(u, str) and u.strip()][:12]
     thumb = images[0] if images else ''
     area = prop.area
     area_label = format_area(area) if area not in (None, '') else ''
@@ -102,15 +102,19 @@ def _property_card(prop: CRMProperty, *, include_sensitive: bool) -> Dict[str, A
         'floor': prop.floor,
         'total_floors': prop.total_floors,
         'build_year': prop.build_year,
+        'city': prop.city or '',
+        'district': prop.district or '',
+        'neighborhood': prop.neighborhood or '',
     }
     if include_sensitive:
         data['address'] = prop.address
         data['phone'] = prop.phone
         data['notes'] = prop.notes
-        data['amenities'] = (prop.amenities or '')[:500]
+        data['amenities'] = (prop.amenities or '')[:1200]
         data['has_parking'] = prop.has_parking
         data['has_elevator'] = prop.has_elevator
         data['has_storage'] = prop.has_storage
+        data['is_vacant'] = prop.is_vacant
     return data
 
 

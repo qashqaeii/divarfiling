@@ -320,7 +320,7 @@
     </div>
 </div>
 
-{% json_script space_edit_config "agency-space-edit-config" %}
+{{ space_edit_config|json_script:"agency-space-edit-config" }}
 {% include 'workspace/crm/agency/includes/agency_space_publish_modal.html' %}
 
 <div class="ws-modal" id="modal-space-moderate" role="dialog" aria-modal="true" aria-labelledby="spaceModerateTitle" data-modal-uses-hidden hidden>

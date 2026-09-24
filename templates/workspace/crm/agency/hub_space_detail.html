@@ -450,102 +450,39 @@
 
 
 
-<div class="ws-modal" id="modal-space-moderate" role="dialog" aria-modal="true" aria-labelledby="spaceModerateTitle" hidden>
-
-
-
-    <div class="ws-modal__backdrop" data-modal-close></div>
-
-
-
-    <div class="ws-modal__panel agency-space-modal">
-
-
-
-        <h3 id="spaceModerateTitle">مخفی‌سازی از فضای آژانس</h3>
-
-
-
-        <p class="agency-space-modal__hint">دلیل اختیاری است و فقط برای مدیران آژانس ثبت می‌شود.</p>
-
-
-
-        <form id="agency-space-moderate-form">
-
-
-
-            <label class="agency-space-modal__field">دلیل (اختیاری)
-
-
-
-                <select name="reason_preset" class="crm-input">
-
-
-
-                    <option value="">—</option>
-
-
-
-                    <option value="اطلاعات اشتباه">اطلاعات اشتباه</option>
-
-
-
-                    <option value="فایل قدیمی">فایل قدیمی</option>
-
-
-
-                    <option value="نامناسب برای فضای تیم">نامناسب برای فضای تیم</option>
-
-
-
-                    <option value="سایر">سایر</option>
-
-
-
-                </select>
-
-
-
-            </label>
-
-
-
-            <label class="agency-space-modal__field">توضیح کوتاه
-
-
-
-                <input type="text" name="reason_text" class="crm-input" maxlength="200">
-
-
-
-            </label>
-
-
-
-            <div class="agency-space-modal__actions">
-
-
-
-                <button type="button" class="crm-btn crm-btn-ghost crm-btn-sm" data-modal-close>انصراف</button>
-
-
-
-                <button type="submit" class="crm-btn crm-btn-primary crm-btn-sm">تأیید مخفی‌سازی</button>
-
-
-
+<div class="ws-modal" id="modal-space-moderate" role="dialog" aria-modal="true" aria-labelledby="spaceModerateTitle" data-modal-uses-hidden hidden>
+    <div class="ws-modal-overlay" data-modal-close></div>
+    <div class="ws-modal-panel ws-modal-panel-sm agency-space-publish-modal">
+        <div class="ws-modal-head">
+            <div>
+                <h2 class="ws-modal-title" id="spaceModerateTitle">مخفی‌سازی از فضای آژانس</h2>
+                <p class="ws-modal-sub">دلیل اختیاری است و فقط برای مدیران ثبت می‌شود.</p>
             </div>
-
-
-
+            <button type="button" class="ws-modal-close" data-modal-close aria-label="بستن"><i class="fas fa-times" aria-hidden="true"></i></button>
+        </div>
+        <form id="agency-space-moderate-form">
+            <div class="ws-modal-body">
+                <label class="agency-space-publish-note">
+                    <span class="agency-space-publish-field__legend">دلیل (اختیاری)</span>
+                    <select name="reason_preset" class="crm-input">
+                        <option value="">—</option>
+                        <option value="اطلاعات اشتباه">اطلاعات اشتباه</option>
+                        <option value="فایل قدیمی">فایل قدیمی</option>
+                        <option value="نامناسب برای فضای تیم">نامناسب برای فضای تیم</option>
+                        <option value="سایر">سایر</option>
+                    </select>
+                </label>
+                <label class="agency-space-publish-note">
+                    <span class="agency-space-publish-field__legend">توضیح کوتاه</span>
+                    <input type="text" name="reason_text" class="crm-input" maxlength="200">
+                </label>
+            </div>
+            <div class="ws-modal-foot">
+                <button type="button" class="crm-btn crm-btn-ghost crm-btn-sm" data-modal-close>انصراف</button>
+                <button type="submit" class="crm-btn crm-btn-primary crm-btn-sm">تأیید مخفی‌سازی</button>
+            </div>
         </form>
-
-
-
     </div>
-
-
-
 </div>
 
 

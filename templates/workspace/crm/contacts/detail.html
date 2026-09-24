@@ -9,6 +9,9 @@
 
 {% block crm_extra_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/mk-filing-datasets.css' %}?v=19">
+{% if agency_space_enabled %}
+<link rel="stylesheet" href="{% static 'workspace/css/agency-space.css' %}?v=4">
+{% endif %}
 {% endblock %}
 
 {% block crm_actions %}{% endblock %}
@@ -239,13 +242,17 @@
                 {% elif is_customer_owner %}
                 <div class="crm-contact-team-actions" data-crm-team-share>
                     {% if agency_space_enabled %}
-                    <div class="crm-contact-space-actions" style="margin-bottom:0.5rem">
-                        {% if agency_space_item %}
-                        <span class="agency-space-badge agency-space-badge--active">در فضای آژانس</span>
-                        <a href="{{ agency_space_manage_url }}" class="crm-btn crm-btn-ghost crm-btn-sm">مدیریت انتشار در فضای آژانس</a>
-                        {% elif agency_space_can_publish %}
-                        <button type="button" class="crm-btn crm-btn-ghost crm-btn-sm" data-modal-open="modal-agency-space-publish">انتشار در فضای آژانس</button>
-                        {% endif %}
+                    <div class="agency-space-embed agency-space-embed--compact">
+                        <div class="agency-space-embed__row">
+                            {% if agency_space_item %}
+                            <span class="agency-space-badge agency-space-badge--active">در فضای آژانس</span>
+                            <a href="{{ agency_space_manage_url }}" class="crm-btn crm-btn-ghost crm-btn-sm">مدیریت انتشار</a>
+                            {% elif agency_space_can_publish %}
+                            <button type="button" class="crm-btn crm-btn-primary crm-btn-sm" data-modal-open="modal-agency-space-publish">
+                                <i class="fas fa-users" aria-hidden="true"></i> انتشار در فضای آژانس
+                            </button>
+                            {% endif %}
+                        </div>
                     </div>
                     {% endif %}
                     <div class="crm-contact-team-actions--grouped">
@@ -1328,7 +1335,7 @@ window.AGENCY_SPACE_API = {
   itemUrl: "{% url 'workspace:api_agency_space_item' item_id=0 %}".replace('/0/', '/'),
 };
 </script>
-<script src="{% static 'workspace/js/agency-space.js' %}?v=1" defer></script>
+<script src="{% static 'workspace/js/agency-space.js' %}?v=4" defer></script>
 {% endif %}
 <script src="{% static 'workspace/js/filing-help-modal.js' %}?v=2"></script>
 <script src="{% static 'workspace/js/ai.js' %}?v=6"></script>

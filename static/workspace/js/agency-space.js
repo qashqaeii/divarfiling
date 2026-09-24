@@ -29,12 +29,27 @@
   }
 
   function openModal(id) {
-    const el = document.getElementById(id);
-    if (el) el.hidden = false;
+    const el = typeof id === 'string' ? document.getElementById(id) : id;
+    if (!el) return;
+    if (typeof window.WSModal !== 'undefined' && window.WSModal.open) {
+      window.WSModal.open(el.id || id);
+      return;
+    }
+    el.hidden = false;
+    el.classList.add('is-open');
+    document.body.classList.add('ws-modal-open');
   }
 
   function closeModal(el) {
-    if (el) el.hidden = true;
+    const modal = typeof el === 'string' ? document.getElementById(el) : el;
+    if (!modal) return;
+    if (typeof window.WSModal !== 'undefined' && window.WSModal.close) {
+      window.WSModal.close(modal);
+      return;
+    }
+    modal.hidden = true;
+    modal.classList.remove('is-open');
+    document.body.classList.remove('ws-modal-open');
   }
 
   function setFiltersOpen(open) {

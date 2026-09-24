@@ -52,6 +52,7 @@ const WSModal = {
                 if (icon) icon.className = 'fas fa-bars';
             }
         }
+        modal.removeAttribute('hidden');
         modal.classList.add('is-open');
         document.body.classList.add('ws-modal-open');
         this.active = modal;
@@ -63,6 +64,9 @@ const WSModal = {
         const el = typeof modal === 'string' ? document.getElementById(modal) : modal;
         if (!el) return;
         el.classList.remove('is-open');
+        if (el.hasAttribute('data-modal-uses-hidden')) {
+            el.setAttribute('hidden', '');
+        }
         document.body.classList.remove('ws-modal-open');
         if (this.active === el) this.active = null;
     },
@@ -87,6 +91,10 @@ const WSModal = {
         this.open('modal-confirm');
     },
 };
+
+if (typeof window !== 'undefined') {
+    window.WSModal = WSModal;
+}
 
 function initWSGalleryLightbox() {
     const galleries = document.querySelectorAll('[data-ws-gallery]');

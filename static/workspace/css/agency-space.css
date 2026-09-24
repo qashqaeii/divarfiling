@@ -619,60 +619,169 @@
   text-align: right;
 }
 
-/* Modals */
-.agency-space-modal h2,
-.agency-space-modal h3 {
-  margin: 0 0 0.35rem;
-  font-size: 1.05rem;
-  font-weight: 700;
+/* Publish modal (property/contact detail — uses ws-modal) */
+.agency-space-publish-modal .ws-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
-.agency-space-modal__hint {
-  margin: 0 0 1rem;
-  font-size: 0.8125rem;
-  color: var(--as-muted);
-  line-height: 1.5;
+.agency-space-publish-form {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1;
 }
 
-.agency-space-modal__field {
-  margin: 0 0 0.85rem;
+.agency-space-publish-field {
+  margin: 0;
   padding: 0;
   border: none;
+  min-width: 0;
 }
 
-.agency-space-modal__field legend {
-  font-size: 0.78rem;
+.agency-space-publish-field__legend {
+  display: block;
+  font-size: 0.75rem;
   font-weight: 600;
   color: var(--as-muted);
-  margin-bottom: 0.35rem;
+  margin-bottom: 0.45rem;
 }
 
-.agency-space-modal__field label {
+.agency-space-publish-choices {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.agency-space-publish-choices--compact .agency-space-publish-choice__box small {
+  font-size: 0.68rem;
+}
+
+.agency-space-publish-choice {
+  display: block;
+  cursor: pointer;
+  min-width: 0;
+}
+
+.agency-space-publish-choice input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.agency-space-publish-choice__box {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  height: 100%;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--as-border);
+  border-radius: var(--as-radius-sm);
+  background: var(--ws-surface, #fff);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.agency-space-publish-choice__box strong {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ws-text, #1e293b);
+}
+
+.agency-space-publish-choice__box small {
+  font-size: 0.72rem;
+  color: var(--as-muted);
+  line-height: 1.35;
+}
+
+.agency-space-publish-choice input:checked + .agency-space-publish-choice__box {
+  border-color: color-mix(in srgb, var(--as-purple) 45%, var(--as-border));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--as-purple) 25%, transparent);
+  background: color-mix(in srgb, var(--as-purple) 5%, #fff);
+}
+
+.agency-space-publish-choice input:focus-visible + .agency-space-publish-choice__box {
+  outline: 2px solid color-mix(in srgb, var(--as-purple) 50%, #fff);
+  outline-offset: 2px;
+}
+
+.agency-space-publish-audience {
+  padding: 0.65rem 0.75rem;
+  border-radius: var(--as-radius-sm);
+  background: var(--ws-surface-2, #f8fafc);
+  border: 1px solid var(--as-border);
+}
+
+.agency-space-publish-members {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  max-height: 9rem;
+  overflow-y: auto;
+}
+
+.agency-space-publish-member {
   display: flex;
   align-items: center;
   gap: 0.45rem;
-  font-size: 0.875rem;
-  margin-bottom: 0.35rem;
+  font-size: 0.8125rem;
   cursor: pointer;
 }
 
-.agency-space-modal__audience {
-  margin-bottom: 0.85rem;
-  padding: 0.65rem;
-  border-radius: var(--as-radius-sm);
-  background: var(--ws-surface-2, #f8fafc);
-  max-height: 10rem;
-  overflow: auto;
+.agency-space-publish-note {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin: 0;
 }
 
-.agency-space-modal__actions {
+.agency-space-publish-note textarea {
+  resize: vertical;
+  min-height: 4.5rem;
+}
+
+/* Embed on property/contact detail */
+.agency-space-embed {
+  margin-bottom: 0.75rem;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--as-border);
+  border-radius: var(--as-radius-sm);
+  background: color-mix(in srgb, var(--as-purple) 4%, #fff);
+}
+
+.agency-space-embed--compact {
+  margin-bottom: 0.5rem;
+  padding: 0.5rem 0.65rem;
+}
+
+.agency-space-embed__row {
   display: flex;
   flex-wrap: wrap;
-  justify-content: flex-end;
+  align-items: center;
   gap: 0.5rem;
-  margin-top: 1rem;
-  padding-top: 0.75rem;
-  border-top: 1px solid var(--as-border);
+}
+
+.agency-space-embed__hint {
+  margin: 0.45rem 0 0;
+  font-size: 0.75rem;
+  color: var(--as-muted);
+  line-height: 1.45;
+}
+
+.agency-space-badge--active {
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+}
+
+@media (max-width: 480px) {
+  .agency-space-publish-choices {
+    grid-template-columns: 1fr;
+  }
 }
 
 .agency-space-filters-backdrop {

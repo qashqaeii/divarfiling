@@ -596,10 +596,6 @@
         </aside>
     </div>
 
-    {% if ai_enabled and has_bot_license %}
-    {% include 'workspace/includes/ai_listing_summary_card.html' with ai_summary_url=listing_summary_ai_url ai_listing_summary_quota=ai_listing_summary_quota only %}
-    {% endif %}
-
     {% if listing.latitude and listing.longitude %}
     <section class="crm-prop-map-finale" id="wsLdMapFinale" aria-label="نقشه موقعیت آگهی">
         <div class="crm-prop-map-finale-intro">
@@ -901,8 +897,5 @@ document.addEventListener('DOMContentLoaded', function () {
 {% endif %}
 {% if advertiser_analysis %}
 <script src="{% static 'workspace/js/advertiser-analysis.js' %}?v=5"></script>
-{% endif %}
-{% if ai_enabled and has_bot_license %}
-<script src="{% static 'workspace/js/ai.js' %}?v=7"></script>
 {% endif %}
 {% endblock %}

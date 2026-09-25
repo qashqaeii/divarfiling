@@ -47,4 +47,5 @@
             bar.style.width = w;
         });
     });
+
 })();

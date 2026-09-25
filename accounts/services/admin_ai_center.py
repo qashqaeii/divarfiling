@@ -555,43 +555,37 @@ def _build_charts(days: int) -> Dict[str, Any]:
         return {}
     charts: Dict[str, Any] = {
         'ai_usage_trend': {
-            'type': 'combo',
+            'type': 'bar',
             'labels': series['labels'],
             'datasets': [
                 {
                     'label': 'درخواست',
                     'data': series['requests'],
-                    'type': 'bar',
                     'backgroundColor': 'rgba(124, 58, 237, 0.55)',
                     'borderRadius': 6,
-                    'yAxisID': 'y',
                 },
             ],
             'axis': 'count',
         },
         'ai_token_consumption': {
-            'type': 'combo',
+            'type': 'line',
             'labels': series['labels'],
             'datasets': [
                 {
                     'label': 'توکن ورودی',
                     'data': series['input_tokens'],
-                    'type': 'line',
                     'borderColor': 'rgba(245, 158, 11, 1)',
                     'backgroundColor': 'rgba(245, 158, 11, 0.12)',
                     'fill': True,
                     'tension': 0.35,
-                    'yAxisID': 'y',
                 },
                 {
                     'label': 'توکن خروجی',
                     'data': series['output_tokens'],
-                    'type': 'line',
                     'borderColor': 'rgba(20, 184, 166, 1)',
                     'backgroundColor': 'rgba(20, 184, 166, 0.12)',
                     'fill': True,
                     'tension': 0.35,
-                    'yAxisID': 'y',
                 },
             ],
             'axis': 'count',

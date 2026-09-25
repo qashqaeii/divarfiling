@@ -283,7 +283,7 @@
         const observer = new ResizeObserver(function () {
             window.requestAnimationFrame(resizeCharts);
         });
-        document.querySelectorAll('.ecc-section .ecc-chart-wrap').forEach(function (el) {
+        document.querySelectorAll('.ecc-chart-wrap, .aic-chart-wrap').forEach(function (el) {
             observer.observe(el);
         });
     }

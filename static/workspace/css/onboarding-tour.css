@@ -1555,3 +1555,12 @@ body.ws-tour-active .ws-sidebar[data-tour-active] .ws-nav-more-summary[data-tour
         --ws-tour-overlay: rgba(15, 23, 42, 0.03);
     }
 }
+
+/* Tour trigger buttons — desktop only */
+@media (max-width: 768px) {
+    .ws-tour-trigger--desktop,
+    .fl-mob-header__icon--tour,
+    button[data-fl-tour-start].fl-mob-header__icon {
+        display: none !important;
+    }
+}

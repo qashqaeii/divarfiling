@@ -448,6 +448,7 @@
                         <th>قابلیت</th>
                         <th>Provider</th>
                         <th>توکن</th>
+                        <th>هزینه≈</th>
                         <th>وضعیت</th>
                         <th>تأخیر</th>
                         <th>کش</th>
@@ -461,6 +462,7 @@
                         <td>{{ log.feature_label }}</td>
                         <td class="aic-mono">{{ log.provider }}</td>
                         <td>{{ log.total_tokens|default:"—"|to_persian_digits }}</td>
+                        <td class="aic-mono">{% if log.cost_formatted %}<span title="{{ log.cost_formatted.exact }} تومان">{{ log.cost_formatted.exact|to_persian_digits }}</span>{% else %}—{% endif %}</td>
                         <td>
                             {% if log.status == 'ok' %}<span class="aic-badge aic-badge--ok">ok</span>
                             {% elif log.status == 'fallback' %}<span class="aic-badge aic-badge--fallback">fallback</span>
@@ -469,11 +471,11 @@
                             {% elif log.status == 'quota_exceeded' %}<span class="aic-badge aic-badge--quota">quota</span>
                             {% else %}<span class="aic-badge">{{ log.status }}</span>{% endif %}
                         </td>
-                        <td>{{ log.latency_ms|to_persian_digits }}</td>
+                        <td class="aic-mono"{% if log.latency_title %} title="{{ log.latency_title }}"{% endif %}>{{ log.latency_label|to_persian_digits }}</td>
                         <td>{% if log.cache_hit %}<span class="aic-badge aic-badge--cached">بله</span>{% else %}خیر{% endif %}</td>
                     </tr>
                     {% empty %}
-                    <tr><td colspan="8" class="aic-empty">بدون لاگ</td></tr>
+                    <tr><td colspan="9" class="aic-empty">بدون لاگ</td></tr>
                     {% endfor %}
                 </tbody>
             </table>

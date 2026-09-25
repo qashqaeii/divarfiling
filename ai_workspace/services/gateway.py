@@ -106,7 +106,7 @@ def _log_usage(
 
 
 def _global_cap_reached() -> bool:
-    cap = int(getattr(settings, 'AI_GLOBAL_DAILY_CAP', 350) or 0)
+    cap = int(getattr(settings, 'AI_GLOBAL_DAILY_CAP', 1050) or 0)
     if cap <= 0:
         return False
     key = 'ai_global_daily_count'

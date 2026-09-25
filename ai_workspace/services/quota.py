@@ -36,7 +36,7 @@ class QuotaStatus:
 
 
 def _daily_token_limit() -> int:
-    return int(getattr(settings, 'AI_DAILY_TOKEN_LIMIT', 30000) or 0)
+    return int(getattr(settings, 'AI_DAILY_TOKEN_LIMIT', 90000) or 0)
 
 
 def _is_unlimited(user) -> bool:

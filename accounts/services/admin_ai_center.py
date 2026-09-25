@@ -96,6 +96,22 @@ def _license_label(has_active: bool) -> str:
     return 'فعال' if has_active else 'بدون لایسنس فعال'
 
 
+def format_latency_seconds(ms: int | None) -> Dict[str, str]:
+    """تأخیر برای جدول لاگ — مثلاً 2s یا 3.4s."""
+    raw = int(ms or 0)
+    if raw <= 0:
+        return {'display': '—', 'title': ''}
+    sec = raw / 1000.0
+    if sec >= 100:
+        display = f'{sec:.0f}s'
+    elif sec >= 1:
+        rounded = round(sec, 1)
+        display = f'{int(rounded)}s' if rounded == int(rounded) else f'{rounded}s'
+    else:
+        display = f'{round(sec, 1)}s'
+    return {'display': display, 'title': f'{raw:,} ms'}
+
+
 def format_latency_ms(value: float | int | None) -> Dict[str, Any]:
     ms = float(value or 0)
     if ms <= 0:
@@ -447,6 +463,21 @@ def get_ai_recent_logs(
         eff = log.total_tokens
         if eff is None:
             eff = (log.input_tokens or 0) + (log.output_tokens or 0)
+        inp = int(log.input_tokens or 0)
+        out = int(log.output_tokens or 0)
+        billable = not log.cache_hit and log.status != AIUsageLog.STATUS_CACHED
+        cost_toman = 0
+        cost_formatted = None
+        if billable:
+            cost_amount, priced = estimate_token_cost_toman(
+                model=log.model,
+                input_tokens=inp,
+                output_tokens=out,
+            )
+            if priced and (inp or out):
+                cost_toman = int(cost_amount)
+                cost_formatted = format_toman_amount(cost_amount)
+        latency = format_latency_seconds(log.latency_ms)
         rows.append({
             'id': log.pk,
             'created_at': log.created_at,
@@ -461,6 +492,10 @@ def get_ai_recent_logs(
             'total_tokens': eff,
             'status': log.status,
             'latency_ms': log.latency_ms,
+            'latency_label': latency['display'],
+            'latency_title': latency['title'],
+            'cost_toman': cost_toman if cost_formatted else None,
+            'cost_formatted': cost_formatted,
             'cache_hit': log.cache_hit,
             'provider_attempt': log.provider_attempt,
             'prompt_hash': log.prompt_hash[:12] + '…' if log.prompt_hash else '',
@@ -913,7 +948,7 @@ def ai_usage_export_sheets(days: int) -> List[ExportSheet]:
 
     log_headers = [
         'زمان', 'کاربر', 'قابلیت', 'Provider', 'Model',
-        'ورودی', 'خروجی', 'مجموع', 'وضعیت', 'تأخیر', 'کش', 'تلاش Provider',
+        'ورودی', 'خروجی', 'مجموع', 'هزینه تخمینی (تومان)', 'وضعیت', 'تأخیر', 'کش', 'تلاش Provider',
     ]
     log_rows = [
         {
@@ -925,8 +960,9 @@ def ai_usage_export_sheets(days: int) -> List[ExportSheet]:
             'ورودی': r['input_tokens'],
             'خروجی': r['output_tokens'],
             'مجموع': r['total_tokens'],
+            'هزینه تخمینی (تومان)': r['cost_toman'] if r.get('cost_formatted') else '',
             'وضعیت': r['status'],
-            'تأخیر': r['latency_ms'],
+            'تأخیر': r.get('latency_label') or '—',
             'کش': 'بله' if r['cache_hit'] else 'خیر',
             'تلاش Provider': r['provider_attempt'],
         }

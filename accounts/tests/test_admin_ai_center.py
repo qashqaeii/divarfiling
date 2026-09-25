@@ -6,6 +6,8 @@ from django.urls import reverse
 from django.utils import timezone
 
 from accounts.services.admin_ai_center import (
+    format_latency_seconds,
+    get_ai_recent_logs,
     CACHE_HIT_Q,
     PROVIDER_SUCCESS_Q,
     build_ai_center_context,
@@ -45,6 +47,36 @@ class AiCenterServiceTests(TestCase):
         cache.clear()
         self.user = User.objects.create_user(username='aiu1', password='x', phone='09120001001')
         self.other = User.objects.create_user(username='aiu2', password='x', phone='09120001002')
+
+    def test_recent_log_latency_and_cost(self):
+        _log(
+            self.user,
+            model='Gemini-2.5-Flash-lite',
+            input_tokens=1000,
+            output_tokens=500,
+            latency_ms=2340,
+            cache_hit=False,
+        )
+        rows = get_ai_recent_logs(7)
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]['latency_label'], '2.3s')
+        self.assertGreater(rows[0]['cost_toman'], 0)
+
+    def test_recent_log_cached_no_cost(self):
+        _log(
+            self.user,
+            model='Gemini-2.5-Flash-lite',
+            input_tokens=1000,
+            output_tokens=0,
+            cache_hit=True,
+            status=AIUsageLog.STATUS_CACHED,
+        )
+        rows = get_ai_recent_logs(7)
+        self.assertIsNone(rows[0]['cost_formatted'])
+
+    def test_format_latency_seconds(self):
+        self.assertEqual(format_latency_seconds(2000)['display'], '2s')
+        self.assertEqual(format_latency_seconds(3500)['display'], '3.5s')
 
     def test_estimated_cost_in_kpis(self):
         _log(

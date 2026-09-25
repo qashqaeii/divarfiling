@@ -34,7 +34,7 @@ class QuotaTests(TestCase):
     @patch('ai_workspace.services.quota.has_active_bot_license', return_value=True)
     def test_feature_cap(self, _mock):
         quota = get_or_create_quota(self.user)
-        quota.listing_summary_used = 10
+        quota.listing_summary_used = 30
         quota.save()
         with self.assertRaises(QuotaExceededError) as ctx:
             check_quota(self.user, FEATURE_LISTING_SUMMARY)
@@ -55,7 +55,7 @@ class QuotaTests(TestCase):
     @patch('ai_workspace.services.quota.has_active_bot_license', return_value=True)
     def test_daily_limit(self, _mock):
         quota = get_or_create_quota(self.user)
-        quota.used_today = 10
+        quota.used_today = 30
         quota.save()
         with self.assertRaises(QuotaExceededError) as ctx:
             check_quota(self.user, FEATURE_LISTING_SUMMARY)
@@ -68,6 +68,6 @@ class QuotaTests(TestCase):
         quota.save()
         payload = feature_quota_dict(self.user, FEATURE_LISTING_SUMMARY)
         self.assertEqual(payload['feature_used'], 3)
-        self.assertEqual(payload['feature_limit'], 10)
-        self.assertEqual(payload['feature_remaining'], 7)
-        self.assertEqual(payload['feature_percent_used'], 30)
+        self.assertEqual(payload['feature_limit'], 30)
+        self.assertEqual(payload['feature_remaining'], 27)
+        self.assertEqual(payload['feature_percent_used'], 10)

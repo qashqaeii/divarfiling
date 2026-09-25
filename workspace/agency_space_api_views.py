@@ -1,4 +1,7 @@
-"""API وب فضای آژانس — /workspace/api/crm/agency/space/"""
+"""API وب فضای آژانس — /workspace/api/crm/agency/space/
+
+Web Phase 1–3: frozen — parity changes go through mobile API + Android native.
+"""
 from __future__ import annotations
 
 import json
@@ -222,4 +225,4 @@ class AgencySpaceModerateAPIView(_AgencySpaceAPIBase):
         except AgencySpaceModerationError as exc:
             return self._err(str(exc))
         return JsonResponse({'ok': True, 'item_id': item.pk, 'status': item.status})
-
+

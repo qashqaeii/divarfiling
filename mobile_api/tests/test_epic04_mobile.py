@@ -56,6 +56,7 @@ class Epic04AgencyMobileTests(TestCase):
         data = resp.json()['data']
         self.assertTrue(data['has_agency'])
         self.assertIn('kpis', data)
+        self.assertIn('capabilities', data)
         self.assertTrue(data['permissions']['can_manage_agency'])
 
     def test_list_advisors(self):

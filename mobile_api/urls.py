@@ -1,7 +1,17 @@
 """URLهای API موبایل — /api/mobile/v1/"""
 from django.urls import path
 
-from mobile_api import agency_views, commerce_views, contracts_views, epic03_views, export_security_views, team_views, views
+from mobile_api import (
+    agency_space_views,
+    agency_views,
+    commerce_views,
+    contracts_views,
+    epic03_views,
+    export_security_views,
+    nl_views,
+    team_views,
+    views,
+)
 
 app_name = 'mobile_api'
 
@@ -163,6 +173,10 @@ urlpatterns = [
     path('support/tickets/<int:ticket_id>/reopen', views.SupportTicketReopenView.as_view(), name='support_ticket_reopen'),
 
     path('ai/quota', views.AIQuotaView.as_view(), name='ai_quota'),
+    path('ai/capabilities', nl_views.AICapabilitiesView.as_view(), name='ai_capabilities'),
+    path('ai/nl/parse', nl_views.NLCommandParseView.as_view(), name='ai_nl_parse'),
+    path('ai/nl/confirm', nl_views.NLCommandConfirmView.as_view(), name='ai_nl_confirm'),
+    path('ai/nl/resolve-contact', nl_views.NLCommandResolveContactView.as_view(), name='ai_nl_resolve_contact'),
     path('ai/draft-message', views.AIDraftMessageView.as_view(), name='ai_draft_message'),
     path('ai/summarize-listing', views.AISummarizeListingView.as_view(), name='ai_summarize_listing'),
     path('ai/summarize-property', views.AISummarizePropertyView.as_view(), name='ai_summarize_property'),
@@ -175,6 +189,15 @@ urlpatterns = [
     path('agency/invitations/<int:invitation_id>', agency_views.AgencyInvitationActionView.as_view(), name='agency_invitation_action'),
     path('agency/seats', agency_views.AgencySeatsView.as_view(), name='agency_seats'),
     path('agency/performance', agency_views.AgencyPerformanceView.as_view(), name='agency_performance'),
+
+    path('agency/space/items', agency_space_views.AgencySpaceItemsView.as_view(), name='agency_space_items'),
+    path('agency/space/analytics', agency_space_views.AgencySpaceAnalyticsView.as_view(), name='agency_space_analytics'),
+    path('agency/space/publish/property', agency_space_views.AgencySpacePublishPropertyView.as_view(), name='agency_space_publish_property'),
+    path('agency/space/publish/contact', agency_space_views.AgencySpacePublishContactView.as_view(), name='agency_space_publish_contact'),
+    path('agency/space/items/<int:item_id>', agency_space_views.AgencySpaceItemDetailView.as_view(), name='agency_space_item'),
+    path('agency/space/items/<int:item_id>/unpublish', agency_space_views.AgencySpaceUnpublishView.as_view(), name='agency_space_unpublish'),
+    path('agency/space/items/<int:item_id>/copy', agency_space_views.AgencySpaceCopyView.as_view(), name='agency_space_copy'),
+    path('agency/space/items/<int:item_id>/moderate', agency_space_views.AgencySpaceModerateView.as_view(), name='agency_space_moderate'),
 
     path('crm/team/overview', team_views.TeamOverviewView.as_view(), name='team_overview'),
     path('crm/team/members', team_views.TeamMembersView.as_view(), name='team_members'),

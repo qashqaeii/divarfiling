@@ -91,12 +91,16 @@ def _active_deals_count(agency, user_id: int) -> int:
 
 
 def agency_home_for_user(user) -> Dict[str, Any]:
+    from mobile_api.services.agency_space_mobile import agency_space_capabilities
+    from workspace.services.agency_space_analytics import get_space_header_kpis
+
     overview = team_overview_for_user(user)
     if not overview.get('has_agency'):
         return overview
 
     membership = get_membership(user)
     agency = membership.agency
+    capabilities = agency_space_capabilities(user, agency)
     _, sub = resolve_managed_agency(user)
     seats = seat_usage_summary(sub) if sub else None
     dash = build_members_dashboard(user, agency) if can_manage_agency(user, agency) else None
@@ -150,11 +154,17 @@ def agency_home_for_user(user) -> Dict[str, Any]:
         'active_deals': stats.get('active_deals', 0),
     }
 
+    space_kpis = None
+    if capabilities.get('can_view_space_analytics'):
+        space_kpis = get_space_header_kpis(user, agency)
+
     return {
         **overview,
         'permissions': permissions,
+        'capabilities': capabilities,
         'seats': _seat_dict(seats),
         'kpis': kpis,
+        'space_kpis': space_kpis,
         'attention': attention,
         'invite_capacity': get_agency_invite_capacity(agency, sub) if sub and can_manage_agency(user, agency) else None,
     }

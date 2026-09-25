@@ -7,8 +7,13 @@ import logging
 from django.http import JsonResponse
 from django.views import View
 
-from ai_workspace.services.nl_command.errors import NLCommandError, normalize_error_code, is_retryable_error_code
-from ai_workspace.services.nl_command.service import confirm_command, parse_command, resolve_contact
+from ai_workspace.services.nl_command.api_bridge import (
+    nl_confirm_from_body,
+    nl_parse_from_body,
+    nl_resolve_contact_from_body,
+    run_nl_action,
+)
+from ai_workspace.services.nl_command.errors import NLCommandError, is_retryable_error_code, normalize_error_code
 from ai_workspace.views import AIEnabledMixin
 
 logger = logging.getLogger(__name__)
@@ -54,29 +59,15 @@ class _NLJsonMixin(AIEnabledMixin):
         except json.JSONDecodeError:
             return {}
 
-
-class NLCommandParseView(_NLJsonMixin, View):
-    def post(self, request):
+    def _dispatch_nl(self, handler, request):
         body = self._parse_body(request)
-        text = body.get('text') or ''
-        locale = body.get('locale') or 'fa-IR'
-        tz_name = body.get('timezone') or 'Asia/Tehran'
-        command_id = (body.get('command_id') or '').strip() or None
-        resume_correction = bool(body.get('resume_correction'))
         try:
-            payload = parse_command(
-                request.user,
-                text=text,
-                locale=locale,
-                tz_name=tz_name,
-                command_id=command_id,
-                resume_correction=resume_correction,
-            )
-            return JsonResponse(payload)
+            payload, status = run_nl_action(handler, request.user, body)
+            return JsonResponse(payload, status=status)
         except NLCommandError as exc:
             return _error_from_exception(exc)
         except Exception:
-            logger.exception('nl_command_parse_failed user_id=%s', request.user.pk)
+            logger.exception('nl_command_failed user_id=%s', request.user.pk)
             return _error_response(
                 'خطا در پردازش فرمان.',
                 code='server_error',
@@ -84,43 +75,16 @@ class NLCommandParseView(_NLJsonMixin, View):
             )
 
 
+class NLCommandParseView(_NLJsonMixin, View):
+    def post(self, request):
+        return self._dispatch_nl(nl_parse_from_body, request)
+
+
 class NLCommandConfirmView(_NLJsonMixin, View):
     def post(self, request):
-        body = self._parse_body(request)
-        command_id = (body.get('command_id') or '').strip()
-        if not command_id:
-            return _error_response(
-                'command_id الزامی است.',
-                code='missing_command_id',
-                status=400,
-            )
-        try:
-            payload = confirm_command(request.user, command_id)
-            return JsonResponse(payload)
-        except NLCommandError as exc:
-            return _error_from_exception(exc)
-        except Exception:
-            logger.exception('nl_command_confirm_failed user_id=%s', request.user.pk)
-            return _error_response(
-                'خطا در ثبت فرمان.',
-                code='server_error',
-                status=500,
-            )
+        return self._dispatch_nl(nl_confirm_from_body, request)
 
 
 class NLCommandResolveContactView(_NLJsonMixin, View):
     def post(self, request):
-        body = self._parse_body(request)
-        command_id = (body.get('command_id') or '').strip()
-        contact_id = body.get('contact_id')
-        if not command_id or contact_id is None:
-            return _error_response(
-                'command_id و contact_id الزامی است.',
-                code='missing_fields',
-                status=400,
-            )
-        try:
-            payload = resolve_contact(request.user, command_id, int(contact_id))
-            return JsonResponse(payload)
-        except NLCommandError as exc:
-            return _error_from_exception(exc)
+        return self._dispatch_nl(nl_resolve_contact_from_body, request)

@@ -93,6 +93,13 @@ def get_property_detail(user, property_id: int, *, request=None) -> Optional[dic
         )
         share = get_or_create_property_share(user, prop)
         payload['public_share'] = property_public_share_to_dict(share, request)
+    from mobile_api.services.agency_space_mobile import (
+        mobile_provenance_for_property,
+        mobile_source_context,
+    )
+
+    payload['agency_space'] = mobile_source_context(user, property=prop)
+    payload['agency_space_provenance'] = mobile_provenance_for_property(prop, user)
     return payload
 
 

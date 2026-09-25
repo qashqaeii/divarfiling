@@ -73,7 +73,7 @@ def contact_detail_payload(user, contact_id: int, *, request=None) -> Optional[d
     documents = list(
         CustomerDocument.objects.filter(user=user, customer=c).order_by('-uploaded_at')[:30]
     )
-    return contact_detail_to_dict(
+    payload = contact_detail_to_dict(
         c,
         activities=activities,
         reminders=reminders,
@@ -83,6 +83,14 @@ def contact_detail_payload(user, contact_id: int, *, request=None) -> Optional[d
         documents=documents,
         request=request,
     )
+    from mobile_api.services.agency_space_mobile import (
+        mobile_provenance_for_customer,
+        mobile_source_context,
+    )
+
+    payload['agency_space'] = mobile_source_context(user, customer=c)
+    payload['agency_space_provenance'] = mobile_provenance_for_customer(c, user)
+    return payload
 
 
 def _field_present(data: Dict[str, Any], key: str) -> bool:

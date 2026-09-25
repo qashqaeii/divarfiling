@@ -28,7 +28,7 @@ from ai_workspace.services.payload import (
     normalize_payload,
 )
 from ai_workspace.services.prompts import prompt_hash, prompt_version, render
-from ai_workspace.services.quota import QuotaExceededError, check_quota, consume_quota
+from ai_workspace.services.quota import QuotaExceededError, check_quota, consume_quota, is_ai_unlimited_user
 from ai_workspace.services.validation import prepare_context
 
 logger = logging.getLogger(__name__)
@@ -210,7 +210,7 @@ def run(
                 status=AIUsageLog.STATUS_CACHED,
             )
 
-    use_rule_only = _global_cap_reached()
+    use_rule_only = _global_cap_reached() and not is_ai_unlimited_user(user)
     if not use_rule_only:
         check_quota(user, feature)
 

@@ -46,6 +46,11 @@ def _is_unlimited(user) -> bool:
     return bool(quota and quota.is_unlimited)
 
 
+def is_ai_unlimited_user(user) -> bool:
+    """مدیر/staff/superuser یا پرچم is_unlimited — بدون سقف سهمیه و لایسنس AI."""
+    return _is_unlimited(user)
+
+
 def get_or_create_quota(user) -> AIQuota:
     today = timezone.localdate()
     quota, created = AIQuota.objects.get_or_create(
@@ -130,11 +135,18 @@ def get_status(user) -> QuotaStatus:
     features = {}
     for feat, lim in FEATURE_DAILY_LIMITS.items():
         used_f = quota.feature_used(feat) if quota else 0
-        features[feat] = {
-            'limit': lim,
-            'used': used_f,
-            'remaining': max(0, lim - used_f),
-        }
+        if unlimited:
+            features[feat] = {
+                'limit': lim,
+                'used': used_f,
+                'remaining': 9999,
+            }
+        else:
+            features[feat] = {
+                'limit': lim,
+                'used': used_f,
+                'remaining': max(0, lim - used_f),
+            }
     return QuotaStatus(
         daily_limit=daily_limit,
         used_today=used,

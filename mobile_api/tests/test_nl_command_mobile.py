@@ -101,6 +101,43 @@ class MobileNLCommandApiTests(TestCase):
         data = resp.json()['data']
         self.assertTrue(data['can_use_smart_command'])
         self.assertIn('smart_command_profiles', data)
+        nl = data.get('nl_command') or {}
+        self.assertIn('remaining', nl)
+        self.assertIn('limit', nl)
+        self.assertEqual(nl['remaining'], nl.get('feature_remaining'))
+
+    @override_settings(AI_ENABLED=True)
+    def test_capabilities_superuser_without_license_unlimited(self):
+        admin = User.objects.create_superuser(
+            username='09129990000',
+            phone='09129990000',
+            password='x',
+        )
+        client = APIClient()
+        token = RefreshToken.for_user(admin)
+        client.credentials(HTTP_AUTHORIZATION=f'Bearer {token.access_token}')
+        resp = client.get('/api/mobile/v1/ai/capabilities')
+        self.assertEqual(resp.status_code, 200)
+        data = resp.json()['data']
+        self.assertTrue(data['is_unlimited'])
+        self.assertTrue(data['has_license'])
+        self.assertTrue(data['can_use_smart_command'])
+        self.assertTrue(data['can_use_crm_message'])
+
+    @override_settings(AI_ENABLED=True)
+    def test_parse_superuser_without_license(self):
+        admin = User.objects.create_superuser(
+            username='09129990001',
+            phone='09129990001',
+            password='x',
+        )
+        client = APIClient()
+        token = RefreshToken.for_user(admin)
+        client.credentials(HTTP_AUTHORIZATION=f'Bearer {token.access_token}')
+        with _patch_chain(_UNKNOWN_JSON):
+            resp = client.post('/api/mobile/v1/ai/nl/parse', {'text': 'چیزی نامربوط'}, format='json')
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.json()['data']['intent'], 'unknown')
 
     def test_parse_requires_auth(self):
         client = APIClient()

@@ -76,6 +76,7 @@ from accounts.services.admin_activity_center import get_activity_center_context
 from accounts.services.admin_android_center import get_android_center_context
 from accounts.services.admin_windows_center import get_windows_center_context
 from accounts.services.admin_crm_center import get_crm_center_context
+from accounts.services.admin_ai_center import build_ai_center_context, build_ai_stats_json
 from accounts.services.admin_affiliates_center import get_affiliates_center_context
 from accounts.services.admin_exports_center import get_exports_center_context
 from accounts.services.admin_management_assistant import (
@@ -1041,6 +1042,58 @@ class AdminAndroidSmsSendView(StaffRequiredMixin, View):
             f'{campaign.failed_count} ناموفق، {campaign.skipped_count} ردشده.',
         )
         return redirect('admin_panel_marketing_detail', pk=campaign.pk)
+
+
+class AdminAiCenterView(StaffRequiredMixin, TemplateView):
+    """مرکز هوش مصنوعی — مصرف و observability."""
+
+    template_name = 'accounts/admin_ai_center.html'
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        days, range_key = parse_admin_panel_range(self.request)
+        compare = self.request.GET.get('compare') == '1'
+        top_mode = (self.request.GET.get('top_mode') or 'tokens').strip()
+        log_filters = {
+            'feature': (self.request.GET.get('feature') or '').strip() or None,
+            'status': (self.request.GET.get('status') or '').strip() or None,
+            'provider': (self.request.GET.get('provider') or '').strip() or None,
+        }
+        data = build_ai_center_context(
+            days=days,
+            compare=compare,
+            top_mode=top_mode,
+            log_filters=log_filters,
+        )
+        for card in data.get('range_kpi_cards', []):
+            card['sparkline_json'] = '[]'
+        ctx.update(data)
+        ctx['chart_days'] = days
+        ctx['admin_panel_range_key'] = range_key
+        ctx['admin_panel_compare'] = compare
+        ctx['charts_json'] = json.dumps(data['charts'], ensure_ascii=False, default=str)
+        return ctx
+
+
+class AdminAiStatsJsonView(StaffRequiredMixin, View):
+    """JSON آمار مرکز AI — با cache کوتاه."""
+
+    def get(self, request):
+        days, _range_key = parse_admin_panel_range(request)
+        compare = request.GET.get('compare') == '1'
+        top_mode = (request.GET.get('top_mode') or 'tokens').strip()
+        log_filters = {
+            'feature': (request.GET.get('feature') or '').strip() or None,
+            'status': (request.GET.get('status') or '').strip() or None,
+            'provider': (request.GET.get('provider') or '').strip() or None,
+        }
+        payload = build_ai_stats_json(
+            days=days,
+            compare=compare,
+            top_mode=top_mode,
+            log_filters=log_filters,
+        )
+        return JsonResponse(payload, json_dumps_params={'ensure_ascii': False})
 
 
 class AdminCrmCenterView(StaffRequiredMixin, TemplateView):

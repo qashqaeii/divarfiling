@@ -1,0 +1,357 @@
+{% extends 'accounts/admin_panel_base.html' %}
+{% load static %}
+{% load persian_tags %}
+
+{% block title %}هوش مصنوعی | پنل مدیریت{% endblock %}
+
+{% block admin_panel_title %}مرکز هوش مصنوعی{% endblock %}
+
+{% block admin_panel_header_subtitle %}
+مصرف، عملکرد و وضعیت قابلیت‌های هوشمند فایلینگ دیوار
+{% endblock %}
+
+{% block admin_panel_extra_css %}
+<link rel="stylesheet" href="{% static 'css/mizkar-admin-business.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'css/admin-ai-center.css' %}?v=1">
+{% endblock %}
+
+{% block admin_panel_header_actions %}
+<a href="{{ export_url }}" class="ecc-btn ecc-btn--primary" title="خروجی Excel">
+    <i class="fas fa-file-excel"></i>
+</a>
+<a href="{{ admin_list_url }}" class="ecc-btn ecc-btn--ghost" target="_blank" rel="noopener" title="Django Admin — لاگ AI">
+    <i class="fas fa-cog"></i>
+</a>
+{% endblock %}
+
+{% block admin_panel_content %}
+<div class="aic-page cust-page biz-page" id="ecc-ai">
+
+<header class="aic-hero" aria-label="مرکز هوش مصنوعی">
+    <p class="biz-meta-pill"><i class="fas fa-brain"></i> AI Observability</p>
+    <h1>مرکز <em>هوش مصنوعی</em></h1>
+    <p>{{ range_label }}{% if admin_panel_compare %} · مقایسه با دوره قبل{% endif %}</p>
+</header>
+
+<section class="ecc-section ecc-cmd-kpi" id="ai-kpi" aria-label="شاخص‌ها">
+    <header class="ecc-section-head ecc-section-head--slim">
+        <div>
+            <h2><i class="fas fa-chart-simple"></i> شاخص‌های کلیدی</h2>
+            <p>بر اساس AIUsageLog — درخواست AI ≠ توکن LLM در کش</p>
+        </div>
+    </header>
+    <div class="ecc-kpi-grid ecc-kpi-grid--cmd">
+        {% for card in range_kpi_cards %}
+        <article class="ecc-kpi" data-accent="{{ card.accent }}" data-kpi-kind="range">
+            <div class="ecc-kpi-top">
+                <span class="ecc-kpi-icon"><i class="fas {{ card.icon }}"></i></span>
+                {% if card.delta is not None %}
+                <span class="ecc-kpi-delta{% if card.delta >= 0 %} is-up{% else %} is-down{% endif %}">
+                    {% if card.delta >= 0 %}+{% endif %}{{ card.delta|to_persian_digits }}٪
+                </span>
+                {% endif %}
+            </div>
+            {% if card.format == 'token' %}
+            <strong class="ecc-kpi-val" title="{{ kpis.tokens_formatted.exact }}">{{ kpis.tokens_formatted.display|to_persian_digits }}</strong>
+            <span class="ecc-kpi-lbl">{{ card.label }}</span>
+            <span class="ecc-kpi-sub">{{ card.sublabel }}</span>
+            {% elif card.format == 'ms' %}
+            <strong class="ecc-kpi-val">{{ card.value|to_persian_digits }}<small> ms</small></strong>
+            <span class="ecc-kpi-lbl">{{ card.label }}</span>
+            <span class="ecc-kpi-sub">{{ card.sublabel }}</span>
+            {% else %}
+            <strong class="ecc-kpi-val" data-count-up="{{ card.value }}">{{ card.value|to_persian_digits }}</strong>
+            <span class="ecc-kpi-lbl">{{ card.label }}</span>
+            <span class="ecc-kpi-sub">{{ card.sublabel }}</span>
+            {% endif %}
+        </article>
+        {% endfor %}
+    </div>
+</section>
+
+<section class="ecc-section" aria-label="وضعیت امروز">
+    <header class="ecc-section-head ecc-section-head--slim">
+        <div>
+            <h2><i class="fas fa-sun"></i> وضعیت امروز</h2>
+            <p>از AIQuota — جدا از نمودار تاریخی</p>
+        </div>
+    </header>
+    <div class="aic-quota-grid">
+        <div class="aic-quota-card">
+            <span>کاربران با مصرف</span>
+            <strong>{{ quota_snapshot.users_with_usage|to_persian_digits }}</strong>
+        </div>
+        <div class="aic-quota-card">
+            <span>درخواست امروز (جمع)</span>
+            <strong>{{ quota_snapshot.used_today_aggregate|to_persian_digits }}</strong>
+        </div>
+        <div class="aic-quota-card">
+            <span>توکن امروز (جمع)</span>
+            <strong title="{{ quota_snapshot.tokens_used_today_aggregate }}">{{ quota_snapshot.tokens_used_today_aggregate|to_persian_digits }}</strong>
+        </div>
+        <div class="aic-quota-card">
+            <span>نزدیک سقف</span>
+            <strong>{{ quota_snapshot.near_quota_users|to_persian_digits }}</strong>
+        </div>
+        <div class="aic-quota-card">
+            <span>سقف تمام‌شده</span>
+            <strong>{{ quota_snapshot.exhausted_users|to_persian_digits }}</strong>
+        </div>
+        {% if quota_snapshot.global_cap.enabled %}
+        <div class="aic-quota-card">
+            <span>ظرفیت AI امروز (درخواست Provider)</span>
+            <strong>{{ quota_snapshot.global_cap.used|to_persian_digits }} / {{ quota_snapshot.global_cap.cap|to_persian_digits }}</strong>
+            <div class="aic-cap-bar" role="progressbar" aria-valuenow="{{ quota_snapshot.global_cap.pct }}" aria-valuemin="0" aria-valuemax="100">
+                <div class="aic-cap-fill" style="width: {{ quota_snapshot.global_cap.pct }}%"></div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+<div class="aic-split">
+    <section class="ecc-section" aria-label="مصرف قابلیت‌ها">
+        <header class="ecc-section-head ecc-section-head--slim">
+            <div>
+                <h2><i class="fas fa-layer-group"></i> مصرف براساس قابلیت</h2>
+                <p>سهم توکن</p>
+            </div>
+        </header>
+        <div class="aic-bar-list">
+            {% for f in feature_breakdown %}
+            <div class="aic-bar-row">
+                <span>{{ f.label }}</span>
+                <div class="aic-bar-track"><div class="aic-bar-fill" style="width: {{ f.token_share_pct }}%"></div></div>
+                <span title="{{ f.total_tokens_formatted.exact }}">{{ f.total_tokens_formatted.display|to_persian_digits }}</span>
+            </div>
+            {% empty %}
+            <p class="ecc-cmd-actions-empty">داده‌ای در این بازه نیست.</p>
+            {% endfor %}
+        </div>
+        <p class="aic-note">{{ help_note_nl_command }}</p>
+    </section>
+
+    <section class="ecc-section" aria-label="کاربران برتر">
+        <header class="ecc-section-head ecc-section-head--slim">
+            <div>
+                <h2><i class="fas fa-ranking-star"></i> ۵ کاربر برتر</h2>
+            </div>
+        </header>
+        <nav class="aic-mode-tabs" aria-label="حالت رتبه‌بندی">
+            {% for mode_key, mode_label in top_user_modes %}
+            <a href="{% url 'admin_panel_ai' %}?days={{ days }}{% if admin_panel_compare %}&amp;compare=1{% endif %}&amp;top_mode={{ mode_key }}"
+               class="{% if top_mode == mode_key %}is-active{% endif %}">{{ mode_label }}</a>
+            {% endfor %}
+        </nav>
+        <div class="aic-table-wrap">
+            <table class="ecc-table ecc-table--compact">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>کاربر</th>
+                        <th>درخواست</th>
+                        <th>توکن</th>
+                        <th>سهم</th>
+                        <th>لایسنس</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in top_users %}
+                    <tr>
+                        <td>{{ u.rank|to_persian_digits }}</td>
+                        <td><a href="{{ u.user_admin_url }}" target="_blank" rel="noopener">{{ u.display_name }}</a></td>
+                        <td>{{ u.requests|to_persian_digits }}</td>
+                        <td title="{{ u.total_tokens_formatted.exact }}">{{ u.total_tokens_formatted.display|to_persian_digits }}</td>
+                        <td>{{ u.token_share_pct|to_persian_digits }}٪</td>
+                        <td>{{ u.license_label }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="6">بدون داده</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+
+{% if charts_enabled %}
+<section class="ecc-section" id="ai-chart" aria-label="روند مصرف">
+    <header class="ecc-section-head ecc-section-head--slim">
+        <div>
+            <h2><i class="fas fa-chart-line"></i> روند مصرف AI</h2>
+            <p>درخواست و توکن روزانه</p>
+        </div>
+    </header>
+    <div class="ecc-chart-wrap">
+        <canvas id="chart-ai_usage_trend" height="120" aria-label="نمودار روند AI"></canvas>
+    </div>
+</section>
+{% endif %}
+
+<section class="ecc-section" aria-label="Fallback">
+    <header class="ecc-section-head ecc-section-head--slim">
+        <div>
+            <h2><i class="fas fa-shuffle"></i> Fallback</h2>
+            <p>{{ fallback_summary.total|to_persian_digits }} درخواست · {{ fallback_summary.rate_pct|to_persian_digits }}٪</p>
+        </div>
+    </header>
+    <div class="aic-table-wrap">
+        <table class="ecc-table ecc-table--compact">
+            <thead><tr><th>Provider</th><th>Model</th><th>تعداد</th></tr></thead>
+            <tbody>
+                {% for row in fallback_summary.by_provider_model %}
+                <tr>
+                    <td>{{ row.provider }}</td>
+                    <td>{{ row.model|default:"—" }}</td>
+                    <td>{{ row.count|to_persian_digits }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="3">بدون fallback در بازه</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<section class="ecc-section" aria-label="مدل‌ها و Providerها">
+    <header class="ecc-section-head ecc-section-head--slim">
+        <div><h2><i class="fas fa-server"></i> مدل‌ها و Providerها</h2></div>
+    </header>
+    <div class="aic-table-wrap">
+        <table class="ecc-table">
+            <thead>
+                <tr>
+                    <th>Provider</th>
+                    <th>Model</th>
+                    <th>درخواست</th>
+                    <th>توکن</th>
+                    <th>تأخیر</th>
+                    <th>خطا٪</th>
+                    <th>Fallback</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in provider_breakdown %}
+                <tr>
+                    <td>{{ p.provider }}</td>
+                    <td>{{ p.model }}</td>
+                    <td>{{ p.requests|to_persian_digits }}</td>
+                    <td title="{{ p.total_tokens_formatted.exact }}">{{ p.total_tokens_formatted.display|to_persian_digits }}</td>
+                    <td>{% if p.avg_latency_ms %}{{ p.avg_latency_ms|to_persian_digits }} ms{% else %}—{% endif %}</td>
+                    <td>{{ p.error_rate|to_persian_digits }}٪</td>
+                    <td>{{ p.fallbacks|to_persian_digits }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="7">بدون داده</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<section class="ecc-section" aria-label="قابلیت‌ها — جزئیات">
+    <header class="ecc-section-head ecc-section-head--slim">
+        <div><h2><i class="fas fa-table"></i> جزئیات قابلیت‌ها</h2></div>
+    </header>
+    <div class="aic-table-wrap">
+        <table class="ecc-table ecc-table--compact">
+            <thead>
+                <tr>
+                    <th>قابلیت</th>
+                    <th>درخواست</th>
+                    <th>توکن</th>
+                    <th>کش</th>
+                    <th>خطا٪</th>
+                    <th>سهم درخواست</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for f in feature_breakdown %}
+                <tr>
+                    <td>{{ f.label }}</td>
+                    <td>{{ f.requests|to_persian_digits }}</td>
+                    <td title="{{ f.total_tokens_formatted.exact }}">{{ f.total_tokens_formatted.display|to_persian_digits }}</td>
+                    <td>{{ f.cache_hits|to_persian_digits }}</td>
+                    <td>{{ f.error_rate|to_persian_digits }}٪</td>
+                    <td>{{ f.request_share_pct|to_persian_digits }}٪</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<section class="ecc-section" id="ai-logs" aria-label="آخرین درخواست‌ها">
+    <header class="ecc-section-head ecc-section-head--slim">
+        <div>
+            <h2><i class="fas fa-list"></i> آخرین درخواست‌ها</h2>
+            <p>بدون prompt — حداکثر {{ recent_logs|length|to_persian_digits }} ردیف</p>
+        </div>
+    </header>
+    <form method="get" class="biz-toolbar" style="margin-bottom:0.75rem">
+        <input type="hidden" name="days" value="{{ days }}">
+        {% if admin_panel_compare %}<input type="hidden" name="compare" value="1">{% endif %}
+        <select name="feature" class="ecc-input ecc-input--sm">
+            <option value="">همه قابلیت‌ها</option>
+            {% for fc, fl in feature_filter_choices %}
+            <option value="{{ fc }}"{% if log_filters.feature == fc %} selected{% endif %}>{{ fl }}</option>
+            {% endfor %}
+        </select>
+        <select name="status" class="ecc-input ecc-input--sm">
+            <option value="">همه وضعیت‌ها</option>
+            {% for st in log_filter_statuses %}
+            <option value="{{ st }}"{% if log_filters.status == st %} selected{% endif %}>{{ st }}</option>
+            {% endfor %}
+        </select>
+        <select name="provider" class="ecc-input ecc-input--sm">
+            <option value="">همه Provider</option>
+            {% for pr in provider_choices %}
+            <option value="{{ pr }}"{% if log_filters.provider == pr %} selected{% endif %}>{{ pr }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit" class="biz-btn biz-btn--sm biz-btn--primary">فیلتر</button>
+    </form>
+    <div class="aic-table-wrap">
+        <table class="ecc-table ecc-table--compact">
+            <thead>
+                <tr>
+                    <th>زمان</th>
+                    <th>کاربر</th>
+                    <th>قابلیت</th>
+                    <th>Provider</th>
+                    <th>توکن</th>
+                    <th>وضعیت</th>
+                    <th>تأخیر</th>
+                    <th>کش</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in recent_logs %}
+                <tr>
+                    <td>{{ log.created_at|date:"Y/m/d H:i" }}</td>
+                    <td><a href="{{ log.user_admin_url }}" target="_blank" rel="noopener">{{ log.user_display }}</a></td>
+                    <td>{{ log.feature_label }}</td>
+                    <td>{{ log.provider }}</td>
+                    <td>{{ log.total_tokens|default:"—"|to_persian_digits }}</td>
+                    <td>{{ log.status }}</td>
+                    <td>{{ log.latency_ms|to_persian_digits }}</td>
+                    <td>{% if log.cache_hit %}بله{% else %}خیر{% endif %}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="8">بدون لاگ</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+</div>
+{% endblock %}
+
+{% block admin_panel_extra_js %}
+<script src="{% static 'js/mizkar-admin-dashboard.js' %}?v=14"></script>
+<script>
+window.admCharts = {{ charts_json|safe }};
+window.admChartDays = {{ chart_days }};
+</script>
+{% endblock %}

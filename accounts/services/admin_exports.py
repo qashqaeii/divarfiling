@@ -711,6 +711,16 @@ EXPORT_REGISTRY: Dict[str, Dict[str, Any]] = {
         'accent': 'teal',
         'builder': _android_active_devices_rows,
     },
+    'ai_usage': {
+        'title': 'مصرف هوش مصنوعی',
+        'description': 'خلاصه، قابلیت‌ها، مدل‌ها، کاربران برتر و لاگ AI',
+        'category': 'analytics',
+        'icon': 'fa-brain',
+        'accent': 'violet',
+        'builder': None,
+        'supports_days': True,
+        'multisheet': True,
+    },
 }
 
 
@@ -735,6 +745,12 @@ def get_export_count(export_key: str, days: int | None = None) -> int:
         else:
             since = timezone.now() - timedelta(days=days)
         return User.objects.filter(date_joined__gte=since).count()
+    if meta.get('multisheet') and days is not None:
+        from accounts.services.admin_ai_center import _logs_in_range
+
+        return _logs_in_range(days).count()
+    if not meta.get('builder'):
+        return 0
     _, rows = meta['builder']()
     if isinstance(rows, list):
         return len(rows)
@@ -763,6 +779,18 @@ def build_export(export_key: str, fmt: str = 'xlsx', days: int | None = None) ->
     meta = EXPORT_REGISTRY.get(export_key)
     if not meta:
         return HttpResponse('گزارش یافت نشد', status=404)
+
+    if meta.get('multisheet'):
+        if fmt == 'csv':
+            return HttpResponse('این گزارش فقط Excel است', status=400)
+        from accounts.services.admin_dashboard import ALL_TIME_DAYS, is_all_time_range
+        from accounts.services.admin_ai_center import ai_usage_export_sheets
+
+        export_days = days if days is not None else ALL_TIME_DAYS
+        sheets = ai_usage_export_sheets(export_days)
+        filename_base = f'filing-divar-{export_key}'
+        filename_base += '-all' if is_all_time_range(export_days) else f'-{export_days}d'
+        return _build_multisheet_xlsx_response(sheets, filename_base, meta['title'])
 
     builder = meta['builder']
     if meta.get('supports_days') and days is not None:
@@ -799,6 +827,63 @@ def _build_csv_response(headers: List[str], rows: List[ExportRow], filename_base
     return response
 
 
+def _build_multisheet_xlsx_response(
+    sheets: List[tuple],
+    filename_base: str,
+    workbook_title: str,
+) -> HttpResponse:
+    from openpyxl import Workbook
+
+    wb = Workbook()
+    wb.remove(wb.active)
+    for idx, (title, headers, rows) in enumerate(sheets):
+        ws = wb.create_sheet(title=title[:31], index=idx)
+        ws.sheet_view.rightToLeft = True
+        _write_xlsx_sheet(ws, headers, rows if isinstance(rows, list) else list(rows))
+    buffer = io.BytesIO()
+    wb.save(buffer)
+    buffer.seek(0)
+    response = HttpResponse(
+        buffer.getvalue(),
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    )
+    response['Content-Disposition'] = f'attachment; filename="{filename_base}.xlsx"'
+    return response
+
+
+def _write_xlsx_sheet(ws, headers: List[str], rows: List[ExportRow]) -> None:
+    from openpyxl.styles import Alignment, Font, PatternFill
+    from openpyxl.utils import get_column_letter
+
+    header_fill = PatternFill(start_color='7C3AED', end_color='7C3AED', fill_type='solid')
+    header_font = Font(bold=True, color='FFFFFF', name='Tahoma', size=10)
+    body_font = Font(name='Tahoma', size=10)
+
+    for col_idx, header in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col_idx, value=header)
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = Alignment(horizontal='center', vertical='center')
+
+    for row_idx, row in enumerate(rows, 2):
+        for col_idx, header in enumerate(headers, 1):
+            val = row.get(header, '')
+            if hasattr(val, 'tzinfo') and val.tzinfo is not None:
+                val = timezone.localtime(val).replace(tzinfo=None)
+            cell = ws.cell(row=row_idx, column=col_idx, value=val)
+            cell.font = body_font
+            cell.alignment = Alignment(horizontal='right', vertical='center')
+
+    for col_idx, header in enumerate(headers, 1):
+        max_len = len(str(header))
+        for row in rows[:200]:
+            val = str(row.get(header, ''))
+            max_len = max(max_len, len(val))
+        ws.column_dimensions[get_column_letter(col_idx)].width = min(max_len + 4, 48)
+
+    ws.freeze_panes = 'A2'
+
+
 def _build_xlsx_response(
     headers: List[str],
     rows: List[ExportRow],
@@ -813,31 +898,7 @@ def _build_xlsx_response(
     ws = wb.active
     ws.title = sheet_title[:31]
     ws.sheet_view.rightToLeft = True
-
-    header_fill = PatternFill(start_color='7C3AED', end_color='7C3AED', fill_type='solid')
-    header_font = Font(bold=True, color='FFFFFF', name='Tahoma', size=10)
-    body_font = Font(name='Tahoma', size=10)
-
-    for col_idx, header in enumerate(headers, 1):
-        cell = ws.cell(row=1, column=col_idx, value=header)
-        cell.fill = header_fill
-        cell.font = header_font
-        cell.alignment = Alignment(horizontal='center', vertical='center')
-
-    for row_idx, row in enumerate(rows, 2):
-        for col_idx, header in enumerate(headers, 1):
-            cell = ws.cell(row=row_idx, column=col_idx, value=row.get(header, ''))
-            cell.font = body_font
-            cell.alignment = Alignment(horizontal='right', vertical='center')
-
-    for col_idx, header in enumerate(headers, 1):
-        max_len = len(str(header))
-        for row in rows[:200]:
-            val = str(row.get(header, ''))
-            max_len = max(max_len, len(val))
-        ws.column_dimensions[get_column_letter(col_idx)].width = min(max_len + 4, 48)
-
-    ws.freeze_panes = 'A2'
+    _write_xlsx_sheet(ws, headers, rows)
 
     buffer = io.BytesIO()
     wb.save(buffer)

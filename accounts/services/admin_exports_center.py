@@ -14,6 +14,7 @@ EXPORT_CATEGORIES: Dict[str, str] = {
     'licenses': 'لایسنس‌ها',
     'finance': 'مالی',
     'support': 'پشتیبانی',
+    'analytics': 'تحلیل',
 }
 
 EXPORT_CATEGORY_FILTERS = (('all', 'همه'),) + tuple(EXPORT_CATEGORIES.items())

@@ -109,8 +109,8 @@
         </div>
     </div>
 
-    <div class="ecc-nav-group{% if active == 'windows' or active == 'android' %} is-open{% endif %}" data-nav-group="product">
-        <button type="button" class="ecc-nav-group-toggle" aria-expanded="{% if active == 'windows' or active == 'android' %}true{% else %}false{% endif %}">
+    <div class="ecc-nav-group{% if active == 'windows' or active == 'android' or active == 'ai' %} is-open{% endif %}" data-nav-group="product">
+        <button type="button" class="ecc-nav-group-toggle" aria-expanded="{% if active == 'windows' or active == 'android' or active == 'ai' %}true{% else %}false{% endif %}">
             <span><i class="fas fa-cube" aria-hidden="true"></i> محصول</span>
             <i class="fas fa-chevron-down ecc-nav-group-chevron" aria-hidden="true"></i>
         </button>
@@ -124,6 +124,12 @@
                class="ecc-nav-item ecc-nav-item--sub{% if active == 'android' %} is-active{% endif %}"
                data-nav-id="android">
                 <span>اندروید</span>
+            </a>
+            <a href="{% url 'admin_panel_ai' %}{{ days_qs }}"
+               class="ecc-nav-item ecc-nav-item--sub{% if active == 'ai' %} is-active{% endif %}"
+               data-nav-id="ai">
+                <i class="fas fa-brain" aria-hidden="true"></i>
+                <span>هوش مصنوعی</span>
             </a>
         </div>
     </div>

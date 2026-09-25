@@ -25,6 +25,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from accounts.services.admin_dashboard import (
+    CHART_COLORS,
     _date_range,
     _fill_daily_series,
     _pct_change,
@@ -32,6 +33,11 @@ from accounts.services.admin_dashboard import (
     _range_label_fa,
     _today,
     is_all_time_range,
+)
+from ai_workspace.arvan_model_pricing import (
+    aggregate_cost_from_model_rows,
+    estimate_token_cost_toman,
+    format_toman_amount,
 )
 from ai_workspace.constants import FEATURE_LABELS
 from ai_workspace.models import AIQuota, AIUsageLog
@@ -48,6 +54,8 @@ STATUS_PROVIDER_SUCCESS = (AIUsageLog.STATUS_OK, AIUsageLog.STATUS_FALLBACK)
 CACHE_HIT_Q = Q(cache_hit=True) | Q(status=AIUsageLog.STATUS_CACHED)
 PROVIDER_SUCCESS_Q = Q(status__in=STATUS_PROVIDER_SUCCESS) & ~Q(cache_hit=True)
 LATENCY_ELIGIBLE_Q = ~CACHE_HIT_Q & Q(latency_ms__gt=0)
+# توکن LLM قابل‌قیمت‌گذاری — بدون کش (مصرف provider واقعی نیست)
+BILLABLE_TOKEN_Q = ~CACHE_HIT_Q
 
 TOP_USER_MODES = (
     ('tokens', 'بر اساس توکن'),
@@ -88,6 +96,18 @@ def _license_label(has_active: bool) -> str:
     return 'فعال' if has_active else 'بدون لایسنس فعال'
 
 
+def format_latency_ms(value: float | int | None) -> Dict[str, Any]:
+    ms = float(value or 0)
+    if ms <= 0:
+        return {'display': '—', 'exact': '0', 'unit': '', 'raw': 0}
+    if ms >= 60_000:
+        sec = ms / 1000
+        return {'display': f'{sec:.1f}', 'exact': f'{ms:,.0f} ms', 'unit': 'ثانیه', 'raw': ms}
+    if ms >= 1000:
+        return {'display': f'{ms / 1000:.2f}'.rstrip('0').rstrip('.'), 'exact': f'{ms:,.0f} ms', 'unit': 'ثانیه', 'raw': ms}
+    return {'display': f'{ms:.0f}', 'exact': f'{ms:,.0f} ms', 'unit': 'ms', 'raw': ms}
+
+
 def format_token_count(value: int | None) -> Dict[str, Any]:
     n = int(value or 0)
     exact = f'{n:,}'
@@ -112,6 +132,19 @@ def _logs_in_range(days: int):
         created_at__date__gte=start,
         created_at__date__lte=end,
     )
+
+
+def _cost_rows_from_queryset(qs) -> List[Dict[str, Any]]:
+    billable = qs.filter(BILLABLE_TOKEN_Q)
+    rows = billable.values('model').annotate(
+        sum_input=Sum(Coalesce(F('input_tokens'), Value(0))),
+        sum_output=Sum(Coalesce(F('output_tokens'), Value(0))),
+    )
+    return [{'model': r['model'], 'sum_input': r['sum_input'], 'sum_output': r['sum_output']} for r in rows]
+
+
+def compute_ai_usage_cost_estimate(qs) -> Dict[str, Any]:
+    return aggregate_cost_from_model_rows(_cost_rows_from_queryset(qs))
 
 
 def _apply_log_filters(qs, *, feature: str | None, status: str | None, provider: str | None, user_id: int | None):
@@ -160,6 +193,9 @@ def _aggregate_kpis(qs) -> Dict[str, Any]:
         'total_tokens': total_tokens,
         'active_users': int(agg['active_users'] or 0),
         'avg_latency_ms': round(float(agg['avg_latency'] or 0), 1) if agg['avg_latency'] is not None else None,
+        'latency_formatted': format_latency_ms(
+            round(float(agg['avg_latency'] or 0), 1) if agg['avg_latency'] is not None else None
+        ),
         'tokens_formatted': format_token_count(total_tokens),
         'input_tokens_formatted': format_token_count(input_tok),
         'output_tokens_formatted': format_token_count(output_tok),
@@ -169,6 +205,8 @@ def _aggregate_kpis(qs) -> Dict[str, Any]:
 def get_ai_kpis(days: int, compare: bool = False) -> Dict[str, Any]:
     qs = _logs_in_range(days)
     current = _aggregate_kpis(qs)
+    cost = compute_ai_usage_cost_estimate(qs)
+    current['cost_estimate'] = cost
     deltas: Dict[str, float | None] = {}
     if compare:
         prev_start, prev_end = _previous_period_bounds(days)
@@ -177,8 +215,13 @@ def get_ai_kpis(days: int, compare: bool = False) -> Dict[str, Any]:
             created_at__date__lte=prev_end,
         )
         prev = _aggregate_kpis(prev_qs)
+        prev_cost = compute_ai_usage_cost_estimate(prev_qs)
         for key in ('total_requests', 'total_tokens', 'active_users', 'errors'):
             deltas[key] = _pct_change(current[key], prev[key])
+        deltas['estimated_cost_toman'] = _pct_change(
+            cost['total_toman'],
+            prev_cost['total_toman'],
+        )
     current['deltas'] = deltas
     return current
 
@@ -198,9 +241,29 @@ def get_ai_daily_series(days: int) -> Dict[str, Any]:
         .annotate(total=Sum(_effective_tokens_expr()))
         .order_by('day')
     )
+    in_rows = (
+        base.annotate(day=TruncDate('created_at'))
+        .values('day')
+        .annotate(total=Sum(Coalesce(F('input_tokens'), Value(0))))
+        .order_by('day')
+    )
+    out_rows = (
+        base.annotate(day=TruncDate('created_at'))
+        .values('day')
+        .annotate(total=Sum(Coalesce(F('output_tokens'), Value(0))))
+        .order_by('day')
+    )
     labels, req_values = _fill_daily_series(start, end, req_rows, days=days)
     _, tok_values = _fill_daily_series(start, end, tok_rows, value_key='total', days=days)
-    return {'labels': labels, 'requests': req_values, 'tokens': tok_values}
+    _, in_values = _fill_daily_series(start, end, in_rows, value_key='total', days=days)
+    _, out_values = _fill_daily_series(start, end, out_rows, value_key='total', days=days)
+    return {
+        'labels': labels,
+        'requests': req_values,
+        'tokens': tok_values,
+        'input_tokens': in_values,
+        'output_tokens': out_values,
+    }
 
 
 def get_ai_feature_breakdown(days: int) -> List[Dict[str, Any]]:
@@ -254,6 +317,8 @@ def get_ai_provider_breakdown(days: int) -> List[Dict[str, Any]]:
         .annotate(
             requests=Count('id'),
             sum_tokens=Sum(_effective_tokens_expr()),
+            sum_input=Sum(Coalesce(F('input_tokens'), Value(0)), filter=BILLABLE_TOKEN_Q),
+            sum_output=Sum(Coalesce(F('output_tokens'), Value(0)), filter=BILLABLE_TOKEN_Q),
             avg_latency=Avg('latency_ms', filter=LATENCY_ELIGIBLE_Q),
             errors=Count('id', filter=Q(status=AIUsageLog.STATUS_ERROR)),
             fallbacks=Count('id', filter=Q(status=AIUsageLog.STATUS_FALLBACK)),
@@ -265,16 +330,28 @@ def get_ai_provider_breakdown(days: int) -> List[Dict[str, Any]]:
     for row in rows:
         req = int(row['requests'] or 0)
         err = int(row['errors'] or 0)
+        inp = int(row['sum_input'] or 0)
+        out = int(row['sum_output'] or 0)
+        cost_amount, priced = estimate_token_cost_toman(
+            model=row['model'],
+            input_tokens=inp,
+            output_tokens=out,
+        )
         result.append({
             'provider': row['provider'] or '—',
             'model': row['model'] or '—',
             'requests': req,
+            'input_tokens': inp,
+            'output_tokens': out,
             'total_tokens': int(row['sum_tokens'] or 0),
             'total_tokens_formatted': format_token_count(int(row['sum_tokens'] or 0)),
             'avg_latency_ms': round(float(row['avg_latency'] or 0), 1) if row['avg_latency'] else None,
             'error_rate': round((err / req) * 100, 1) if req else 0.0,
             'fallbacks': int(row['fallbacks'] or 0),
             'provider_attempt_rows': int(row['max_attempt'] or 0),
+            'cost_toman': int(cost_amount) if priced else None,
+            'cost_formatted': format_toman_amount(cost_amount) if priced else None,
+            'cost_priced': priced and (inp or out),
         })
     return result
 
@@ -445,11 +522,38 @@ def get_ai_quota_snapshot() -> Dict[str, Any]:
     }
 
 
+def _model_share_for_chart(days: int, limit: int = 6) -> Dict[str, Any]:
+    rows = sorted(
+        get_ai_provider_breakdown(days),
+        key=lambda r: int(r.get('total_tokens') or 0),
+        reverse=True,
+    )
+    top = rows[:limit]
+    other_tokens = sum(int(r.get('total_tokens') or 0) for r in rows[limit:])
+    labels = []
+    values = []
+    for row in top:
+        model = (row.get('model') or '—')[:28]
+        provider = (row.get('provider') or '')[:12]
+        labels.append(f'{provider} · {model}' if provider else model)
+        values.append(int(row.get('total_tokens') or 0))
+    if other_tokens > 0:
+        labels.append('سایر')
+        values.append(other_tokens)
+    total = sum(values) or 0
+    return {
+        'labels': labels,
+        'values': values,
+        'total_tokens': total,
+        'total_formatted': format_token_count(total),
+    }
+
+
 def _build_charts(days: int) -> Dict[str, Any]:
     series = get_ai_daily_series(days)
     if sum(series['requests']) == 0 and sum(series['tokens']) == 0:
         return {}
-    return {
+    charts: Dict[str, Any] = {
         'ai_usage_trend': {
             'type': 'combo',
             'labels': series['labels'],
@@ -458,25 +562,56 @@ def _build_charts(days: int) -> Dict[str, Any]:
                     'label': 'درخواست',
                     'data': series['requests'],
                     'type': 'bar',
-                    'backgroundColor': 'rgba(124, 58, 237, 0.65)',
-                    'borderRadius': 4,
+                    'backgroundColor': 'rgba(124, 58, 237, 0.55)',
+                    'borderRadius': 6,
                     'yAxisID': 'y',
-                },
-                {
-                    'label': 'توکن',
-                    'data': series['tokens'],
-                    'type': 'line',
-                    'borderColor': 'rgba(59, 130, 246, 1)',
-                    'backgroundColor': 'rgba(59, 130, 246, 0.08)',
-                    'fill': False,
-                    'tension': 0.3,
-                    'yAxisID': 'y1',
                 },
             ],
             'axis': 'count',
-            'dual_axis': True,
+        },
+        'ai_token_consumption': {
+            'type': 'combo',
+            'labels': series['labels'],
+            'datasets': [
+                {
+                    'label': 'توکن ورودی',
+                    'data': series['input_tokens'],
+                    'type': 'line',
+                    'borderColor': 'rgba(245, 158, 11, 1)',
+                    'backgroundColor': 'rgba(245, 158, 11, 0.12)',
+                    'fill': True,
+                    'tension': 0.35,
+                    'yAxisID': 'y',
+                },
+                {
+                    'label': 'توکن خروجی',
+                    'data': series['output_tokens'],
+                    'type': 'line',
+                    'borderColor': 'rgba(20, 184, 166, 1)',
+                    'backgroundColor': 'rgba(20, 184, 166, 0.12)',
+                    'fill': True,
+                    'tension': 0.35,
+                    'yAxisID': 'y',
+                },
+            ],
+            'axis': 'count',
         },
     }
+    share = _model_share_for_chart(days)
+    if share['total_tokens'] > 0:
+        charts['ai_model_share'] = {
+            'type': 'doughnut',
+            'labels': share['labels'],
+            'datasets': [{
+                'data': share['values'],
+                'backgroundColor': CHART_COLORS[: len(share['values'])],
+                'borderWidth': 0,
+            }],
+            'axis': 'count',
+            'centerTotal': share['total_formatted']['display'],
+            'centerLabel': 'توکن مجموع',
+        }
+    return charts
 
 
 def _build_range_kpi_cards(kpis: Dict[str, Any], *, days: int, compare: bool) -> List[Dict[str, Any]]:
@@ -499,7 +634,8 @@ def _build_range_kpi_cards(kpis: Dict[str, Any], *, days: int, compare: bool) ->
         }
 
     tok = kpis['tokens_formatted']
-    return [
+    cost = kpis.get('cost_estimate') or {}
+    cards = [
         card('ai_requests', 'درخواست AI', kpis['total_requests'], 'fa-bolt', 'violet', delta_key='total_requests'),
         card(
             'ai_tokens',
@@ -511,6 +647,18 @@ def _build_range_kpi_cards(kpis: Dict[str, Any], *, days: int, compare: bool) ->
             delta_key='total_tokens',
             sub=f"ورودی {kpis['input_tokens_formatted']['display']} · خروجی {kpis['output_tokens_formatted']['display']}",
         ),
+        card(
+            'ai_estimated_cost',
+            'هزینه تخمینی',
+            cost.get('total_toman', 0),
+            'fa-coins',
+            'amber',
+            fmt='toman',
+            delta_key='estimated_cost_toman',
+            sub=f"پوشش نرخ {cost.get('coverage_pct', 0)}٪ · Arvan catalog",
+        ),
+    ]
+    cards.extend([
         card('ai_active_users', 'کاربران فعال AI', kpis['active_users'], 'fa-users', 'indigo', delta_key='active_users'),
         card('ai_cache', 'پاسخ از کش', kpis['cache_hits'], 'fa-database', 'cyan'),
         card('ai_errors', 'خطا', kpis['errors'], 'fa-triangle-exclamation', 'rose', delta_key='errors'),
@@ -520,11 +668,12 @@ def _build_range_kpi_cards(kpis: Dict[str, Any], *, days: int, compare: bool) ->
             kpis['avg_latency_ms'] or 0,
             'fa-gauge',
             'amber',
-            fmt='ms',
+            fmt='latency',
         ),
         card('ai_provider_ok', 'موفق Provider', kpis['provider_success'], 'fa-circle-check', 'emerald'),
         card('ai_quota', 'رد سهمیه', kpis['quota_exceeded'], 'fa-ban', 'red'),
-    ]
+    ])
+    return cards
 
 
 def _cache_key(
@@ -539,7 +688,7 @@ def _cache_key(
 ) -> str:
     parts = f'{days}|{int(compare)}|{feature or ""}|{status or ""}|{provider or ""}|{user_id or ""}|{top_mode or "tokens"}'
     digest = hashlib.md5(parts.encode()).hexdigest()[:12]
-    return f'admin:ai_center:v1:{digest}'
+    return f'admin:ai_center:v2:{digest}'
 
 
 def _build_query_suffix(
@@ -620,6 +769,7 @@ def build_ai_center_context(
         'quota_snapshot': quota,
         'charts': charts,
         'charts_enabled': bool(charts),
+        'model_share': _model_share_for_chart(days),
         'log_filters': log_filters,
         'log_filter_features': LOG_FILTER_FEATURES,
         'feature_filter_choices': [(k, FEATURE_LABELS.get(k, k)) for k in LOG_FILTER_FEATURES],
@@ -631,6 +781,7 @@ def build_ai_center_context(
         'export_url': reverse('admin_panel_export', args=['ai_usage'])
         + f'?format=xlsx&days={"all" if is_all_time_range(days) else days}',
         'admin_list_url': reverse('admin:ai_workspace_aiusagelog_changelist'),
+        'cost_estimate': kpis.get('cost_estimate') or compute_ai_usage_cost_estimate(_logs_in_range(days)),
         'help_note_nl_command': (
             'درخواست‌های «فرمان هوشمند» فقط parseهای AI را نشان می‌دهند؛ '
             'تأیید/Resolve ممکن است LLM نباشد و با اقدامات CRM یکی نیست.'
@@ -707,6 +858,8 @@ def ai_usage_export_sheets(days: int) -> List[ExportSheet]:
         {'شاخص': 'توکن خروجی', 'مقدار': kpis['output_tokens']},
         {'شاخص': 'مجموع توکن', 'مقدار': kpis['total_tokens']},
         {'شاخص': 'کاربران فعال', 'مقدار': kpis['active_users']},
+        {'شاخص': 'هزینه تخمینی (تومان)', 'مقدار': kpis.get('cost_estimate', {}).get('total_toman', 0)},
+        {'شاخص': 'پوشش نرخ Arvan (٪)', 'مقدار': kpis.get('cost_estimate', {}).get('coverage_pct', 0)},
     ]
 
     feat_headers = [

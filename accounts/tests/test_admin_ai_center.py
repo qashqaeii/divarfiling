@@ -46,6 +46,29 @@ class AiCenterServiceTests(TestCase):
         self.user = User.objects.create_user(username='aiu1', password='x', phone='09120001001')
         self.other = User.objects.create_user(username='aiu2', password='x', phone='09120001002')
 
+    def test_estimated_cost_in_kpis(self):
+        _log(
+            self.user,
+            model='Gemini-2.5-Flash-lite',
+            input_tokens=1_000_000,
+            output_tokens=0,
+            cache_hit=False,
+        )
+        kpis = get_ai_kpis(7)
+        self.assertGreaterEqual(kpis['cost_estimate']['total_toman'], 21000)
+
+    def test_cached_rows_excluded_from_cost(self):
+        _log(
+            self.user,
+            model='Gemini-2.5-Flash-lite',
+            input_tokens=1_000_000,
+            output_tokens=0,
+            cache_hit=True,
+            status=AIUsageLog.STATUS_CACHED,
+        )
+        kpis = get_ai_kpis(7)
+        self.assertEqual(kpis['cost_estimate']['total_toman'], 0)
+
     def test_kpi_totals_and_cache(self):
         _log(self.user, status=AIUsageLog.STATUS_OK, cache_hit=False)
         _log(self.user, status=AIUsageLog.STATUS_CACHED, cache_hit=True, total_tokens=0)

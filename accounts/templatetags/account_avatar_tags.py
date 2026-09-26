@@ -1,20 +1,20 @@
 from django import template
 
 from accounts.avatar_catalog import (
-    DEFAULT_AVATAR_KEY,
-    avatar_static_relative_path,
-    resolve_user_avatar_display,
+    account_avatar_url_for_request,
+    consultant_portrait_url,
 )
-from django.templatetags.static import static
 
 register = template.Library()
 
 
 @register.simple_tag(takes_context=True)
 def account_user_avatar_url(context, user):
-    profile = getattr(user, 'profile', None)
-    display = resolve_user_avatar_display(profile, request=context.get('request'))
-    if display['has_custom_avatar'] and display['url']:
-        return display['url']
-    key = display['avatar_key'] or DEFAULT_AVATAR_KEY
-    return static(avatar_static_relative_path(key))
+    request = context.get('request')
+    return account_avatar_url_for_request(user, request=request)
+
+
+@register.simple_tag(takes_context=True)
+def consultant_portrait_url_tag(context, user, ws_settings=None):
+    request = context.get('request')
+    return consultant_portrait_url(user, ws_settings, request=request)

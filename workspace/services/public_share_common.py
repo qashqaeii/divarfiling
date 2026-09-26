@@ -769,7 +769,9 @@ def share_profile_context(user, share, *, title: str = '', share_url: str = '') 
     agency_socials = normalize_social_links(ws.agency_social_links or {})
     networks = _social_networks_form_list(socials)
     agency_networks = _social_networks_form_list(agency_socials)
-    photo_url = _media_url_or_none(ws.consultant_photo)
+    from accounts.avatar_catalog import consultant_portrait_url
+
+    photo_url = consultant_portrait_url(user, ws, request=None)
     card_url = _media_url_or_none(ws.business_card_image)
     return {
         **form_vals,
@@ -1409,8 +1411,10 @@ def build_consultant_block(user, share, *, title: str = 'ملک') -> Dict[str, A
     socials = normalize_social_links(ws.social_links or {})
     social_items = social_networks_for_display(socials)
     office = build_agency_office_block(ws)
+    from accounts.avatar_catalog import consultant_portrait_url
+
     photo = ws.consultant_photo if ws.consultant_photo else None
-    photo_url = _media_url_or_none(photo) or _media_url_or_none(ws.agency_logo)
+    photo_url = consultant_portrait_url(user, ws, request=None) or _media_url_or_none(ws.agency_logo)
     card_url = _media_url_or_none(ws.business_card_image)
     has_consultant_socials = bool(social_items)
     has_agency_socials = office['has_socials']

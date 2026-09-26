@@ -1,20 +1,21 @@
+{% load account_avatar_tags %}
 <aside class="mk-account-sidebar" id="accountSidebar" aria-label="منوی حساب کاربری">
     <button type="button" class="mk-account-sidebar__close" data-account-sidebar-close aria-label="بستن منو">
         <i class="fas fa-times" aria-hidden="true"></i>
     </button>
 
     <div class="mk-account-sidebar__user">
-        <div class="mk-account-sidebar__avatar" aria-hidden="true">
-            {% if user.profile and user.profile.avatar %}
-            <img src="{{ user.profile.avatar.url }}" alt="">
-            {% else %}
-            <span>{{ user.username|slice:":1"|upper }}</span>
-            {% endif %}
-        </div>
+        <button type="button" class="mk-account-sidebar__avatar-btn" onclick="openAccountAvatarPicker()" aria-label="تغییر آواتار">
+            <span class="mk-account-sidebar__avatar">
+                <img id="accountAvatarSidebarImg" src="{% account_user_avatar_url user %}" alt="" width="48" height="48" loading="lazy" decoding="async">
+            </span>
+            <span class="mk-account-sidebar__avatar-edit" aria-hidden="true"><i class="fas fa-pen"></i></span>
+        </button>
         <div class="mk-account-sidebar__user-copy">
             <strong class="mk-account-sidebar__user-name">{{ user.get_full_name|default:user.username }}</strong>
             <span class="mk-account-sidebar__user-meta">@{{ user.username }}</span>
             {% if user.phone %}<span class="mk-account-sidebar__user-meta" dir="ltr">{{ user.phone }}</span>{% endif %}
+            <button type="button" class="mk-account-sidebar__avatar-link" onclick="openAccountAvatarPicker()">تغییر آواتار</button>
         </div>
     </div>
 

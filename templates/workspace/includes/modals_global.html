@@ -1,4 +1,4 @@
-{% load workspace_tags static %}
+{% load workspace_tags static account_avatar_tags %}
 
 {% if has_bot_license %}
 {# ─── آپلود فایل / پوشه ─── #}
@@ -237,14 +237,11 @@
                             </div>
                             <div class="mk-share-upload-row">
                                 <div class="mk-share-upload-preview" data-photo-preview>
-                                    {% if ws_settings.consultant_photo %}
-                                    <img src="{{ ws_settings.consultant_photo.url }}" alt="" width="56" height="56">
-                                    {% else %}
-                                    <span class="mk-share-upload-placeholder" aria-hidden="true"><i class="fas fa-user"></i></span>
-                                    {% endif %}
+                                    <img src="{% consultant_portrait_url_tag user ws_settings %}" alt="" width="56" height="56" id="wsConsultantPortraitPreview">
                                 </div>
                                 <div class="mk-share-upload-meta">
                                     <label class="ws-label" for="id_consultant_photo">عکس مشاور</label>
+                                    <p class="ws-settings-hint ws-settings-hint--inline">اگر عکس جداگانه نگذارید، آواتار حساب کاربری شما نمایش داده می‌شود.</p>
                                     <input type="file" name="consultant_photo" id="id_consultant_photo" class="ws-input mk-share-file-input" accept="image/*" data-image-preview>
                                     {% if ws_settings.consultant_photo %}
                                     <label class="mk-share-check-row mk-share-check-row--compact">
@@ -252,6 +249,7 @@
                                         <span>حذف عکس</span>
                                     </label>
                                     {% endif %}
+                                    <a href="{% url 'dashboard_tab' tab='profile' %}?open=avatar" class="ws-settings-account-avatar-link">تغییر آواتار حساب</a>
                                 </div>
                             </div>
                             <div class="mk-share-social-block">

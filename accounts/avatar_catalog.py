@@ -102,6 +102,39 @@ def resolve_contact_photo_url(customer, request=None) -> str:
         return ''
 
 
+def account_avatar_url_for_request(user, request=None) -> str:
+    """URL نهایی آواتار حساب برای img (آپلود، preset یا پیش‌فرض)."""
+    profile = getattr(user, 'profile', None)
+    display = resolve_user_avatar_display(profile, request=request)
+    if display['has_custom_avatar'] and display['url']:
+        url = display['url']
+        if request and url.startswith('/'):
+            return request.build_absolute_uri(url)
+        return url
+    key = display.get('avatar_key') or DEFAULT_AVATAR_KEY
+    rel = static(avatar_static_relative_path(key))
+    if request:
+        return request.build_absolute_uri(rel)
+    return rel
+
+
+def consultant_portrait_url(user, ws_settings=None, request=None) -> str:
+    """
+    عکس مشاور برای اشتراک/تنظیمات:
+    consultant_photo → آواتار حساب (preset یا آپلود).
+    """
+    photo = getattr(ws_settings, 'consultant_photo', None) if ws_settings is not None else None
+    if photo and getattr(photo, 'name', ''):
+        try:
+            raw = photo.url
+            if request and raw.startswith('/'):
+                return request.build_absolute_uri(raw)
+            return raw
+        except Exception:
+            pass
+    return account_avatar_url_for_request(user, request=request)
+
+
 def resolve_contact_avatar_display(customer, request=None) -> Dict[str, Any]:
     photo_url = resolve_contact_photo_url(customer, request=request)
     if photo_url:

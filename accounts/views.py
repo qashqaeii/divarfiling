@@ -330,13 +330,10 @@ class DashboardView(LoginRequiredMixin, TemplateView):
                 ]
 
             welcome_raw = (ws.default_welcome_message or '').strip()
-            photo_url = ''
+            from accounts.avatar_catalog import consultant_portrait_url
+
+            photo_url = consultant_portrait_url(user, ws, request=self.request)
             card_url = ''
-            try:
-                if ws.consultant_photo:
-                    photo_url = ws.consultant_photo.url
-            except (ValueError, AttributeError):
-                pass
             try:
                 if ws.business_card_image:
                     card_url = ws.business_card_image.url

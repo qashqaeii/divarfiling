@@ -15,12 +15,12 @@
 <link rel="stylesheet" href="{% static 'css/mizkar-dashboard-licenses.css' %}?v=2">
 <link rel="stylesheet" href="{% static 'css/mizkar-dashboard-profile.css' %}?v=3">
 <link rel="stylesheet" href="{% static 'css/mizkar-dashboard-premium.css' %}?v=1">
-<link rel="stylesheet" href="{% static 'css/mizkar-account-shell.css' %}?v=9">
+<link rel="stylesheet" href="{% static 'css/mizkar-account-shell.css' %}?v=10">
 <link rel="stylesheet" href="{% static 'css/mizkar-dashboard-orders.css' %}?v=2">
 <link rel="stylesheet" href="{% static 'css/mizkar-dashboard-tabs.css' %}?v=1">
 <link rel="stylesheet" href="{% static 'css/mizkar-app-download.css' %}?v=4">
 <link rel="stylesheet" href="{% static 'workspace/css/modals.css' %}?v=34">
-<link rel="stylesheet" href="{% static 'css/mizkar-account-mobile.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'css/mizkar-account-mobile.css' %}?v=3">
 {% endblock %}
 
 {% block content %}
@@ -54,6 +54,8 @@
     </div>
 </div>
 </div>
+
+{% include 'accounts/partials/account_avatar_picker_shell.html' %}
 
 <!-- Modal برای ویرایش اطلاعات کاربری -->
 <div id="userInfoModal" class="modal-professional" onclick="closeProfessionalModal(event, 'userInfoModal')">
@@ -528,8 +530,26 @@ function previewConsultantImage(event, imgId, placeholderId) {
 
 let accountAvatarPendingKey = null;
 
+function getAccountAvatarStateEl() {
+    return document.getElementById('accountAvatarSection') || document.getElementById('accountAvatarMeta');
+}
+
+function syncAccountAvatarStateDatasets(patch) {
+    ['accountAvatarSection', 'accountAvatarMeta'].forEach((id) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        Object.entries(patch).forEach(([key, value]) => {
+            el.dataset[key] = value;
+        });
+    });
+}
+
+function openAccountAvatarPicker() {
+    openAvatarPickerModal();
+}
+
 function openAvatarPickerModal() {
-    const section = document.getElementById('accountAvatarSection');
+    const section = getAccountAvatarStateEl();
     const saved = section?.dataset.savedKey || '';
     const effective = section?.dataset.effectiveKey || 'avatar_01';
     const hasCustom = section?.dataset.hasCustom === '1';
@@ -561,7 +581,7 @@ function syncAvatarPickerSelection(key) {
 }
 
 function updateAvatarPickerSaveState() {
-    const section = document.getElementById('accountAvatarSection');
+    const section = getAccountAvatarStateEl();
     const saveBtn = document.getElementById('avatarPickerSaveBtn');
     if (!section || !saveBtn) return;
     const saved = section.dataset.savedKey || '';
@@ -574,7 +594,7 @@ function updateAvatarPickerSaveState() {
 }
 
 function applyAccountAvatarToDom(url) {
-    ['accountAvatarHeroImg', 'accountAvatarPanelImg', 'avatarPickerPreviewImg'].forEach((id) => {
+    ['accountAvatarHeroImg', 'accountAvatarPanelImg', 'avatarPickerPreviewImg', 'accountAvatarSidebarImg', 'accountAvatarMobImg'].forEach((id) => {
         const el = document.getElementById(id);
         if (el) el.src = url;
     });
@@ -599,12 +619,7 @@ function saveAccountAvatarKey() {
         .then((r) => r.json().then((data) => ({ ok: r.ok, data })))
         .then(({ ok, data }) => {
             if (!ok || !data.success) throw new Error(data.error || 'ذخیره ناموفق بود');
-            const section = document.getElementById('accountAvatarSection');
-            if (section) {
-                section.dataset.savedKey = key;
-                section.dataset.effectiveKey = key;
-                section.dataset.hasCustom = '0';
-            }
+            syncAccountAvatarStateDatasets({ savedKey: key, effectiveKey: key, hasCustom: '0' });
             applyAccountAvatarToDom(data.data.avatar_url);
             if (typeof showNotification === 'function') showNotification(data.message, 'success');
             closeProfessionalModal(null, 'avatarPickerModal');
@@ -637,11 +652,7 @@ function uploadAccountAvatarFile(event) {
         .then((r) => r.json().then((data) => ({ ok: r.ok, data })))
         .then(({ ok, data }) => {
             if (!ok || !data.success) throw new Error(data.error || 'آپلود ناموفق بود');
-            const section = document.getElementById('accountAvatarSection');
-            if (section) {
-                section.dataset.savedKey = '';
-                section.dataset.hasCustom = '1';
-            }
+            syncAccountAvatarStateDatasets({ savedKey: '', hasCustom: '1' });
             applyAccountAvatarToDom(data.data.avatar_url);
             if (typeof showNotification === 'function') showNotification(data.message, 'success');
         })
@@ -661,12 +672,7 @@ function resetAccountAvatar() {
         .then((r) => r.json().then((data) => ({ ok: r.ok, data })))
         .then(({ ok, data }) => {
             if (!ok || !data.success) throw new Error(data.error || 'بازنشانی ناموفق بود');
-            const section = document.getElementById('accountAvatarSection');
-            if (section) {
-                section.dataset.savedKey = '';
-                section.dataset.effectiveKey = 'avatar_01';
-                section.dataset.hasCustom = '0';
-            }
+            syncAccountAvatarStateDatasets({ savedKey: '', effectiveKey: 'avatar_01', hasCustom: '0' });
             applyAccountAvatarToDom(data.data.avatar_url);
             if (typeof showNotification === 'function') showNotification(data.message, 'success');
             window.location.reload();
@@ -698,6 +704,10 @@ function previewAvatar(event) {
 
 // اسکرول به anchor در hash (مثلاً #licenses)
 document.addEventListener('DOMContentLoaded', function() {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('open') === 'avatar' && typeof openAccountAvatarPicker === 'function') {
+        window.requestAnimationFrame(function() { openAccountAvatarPicker(); });
+    }
     const hash = window.location.hash.replace('#', '');
     const downloadAnchors = new Set(['download-apps', 'mk-dl-android-notes', 'mk-dl-windows-notes']);
     if (!hash) return;

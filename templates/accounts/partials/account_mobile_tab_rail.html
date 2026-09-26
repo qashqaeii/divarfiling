@@ -1,13 +1,12 @@
+{% load account_avatar_tags %}
 <div class="mk-account-mob-shell">
     <header class="mk-account-mob-top">
         <div class="mk-account-mob-top__user">
-            <span class="mk-account-mob-top__avatar" aria-hidden="true">
-                {% if user.profile and user.profile.avatar %}
-                <img src="{{ user.profile.avatar.url }}" alt="">
-                {% else %}
-                <span>{{ user.username|slice:":1"|upper }}</span>
-                {% endif %}
-            </span>
+            <button type="button" class="mk-account-mob-top__avatar-btn" onclick="openAccountAvatarPicker()" aria-label="تغییر آواتار">
+                <span class="mk-account-mob-top__avatar" aria-hidden="true">
+                    <img id="accountAvatarMobImg" src="{% account_user_avatar_url user %}" alt="" width="40" height="40" loading="lazy" decoding="async">
+                </span>
+            </button>
             <div class="mk-account-mob-top__copy">
                 <strong>{{ user.get_full_name|default:user.username }}</strong>
                 <span>حساب کاربری · @{{ user.username }}</span>

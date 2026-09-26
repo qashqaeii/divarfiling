@@ -9,9 +9,10 @@
     </header>
 
     <div class="prof-hero" aria-label="پروفایل کاربر">
-        <div class="prof-hero__avatar">
-            <img src="{% account_user_avatar_url user %}" alt="" width="88" height="88" loading="eager" decoding="async">
-        </div>
+        <button type="button" class="prof-hero__avatar prof-hero__avatar-btn" onclick="openAvatarPickerModal()" aria-label="تغییر آواتار">
+            <img id="accountAvatarHeroImg" src="{{ account_avatar_panel_url }}" alt="" width="88" height="88" loading="eager" decoding="async">
+            <span class="prof-hero__avatar-edit" aria-hidden="true"><i class="fas fa-pen"></i></span>
+        </button>
         <div class="prof-hero__copy">
             <h2 class="prof-hero__name">{{ user.get_full_name|default:user.username }}</h2>
             <p class="prof-hero__username">@{{ user.username }}</p>
@@ -21,6 +22,9 @@
             </p>
         </div>
         <div class="prof-hero__actions">
+            <button type="button" class="prof-edit-btn prof-edit-btn--primary" onclick="openAvatarPickerModal()">
+                <i class="fas fa-user-circle" aria-hidden="true"></i> انتخاب آواتار
+            </button>
             <button type="button" class="prof-edit-btn" onclick="openUserInfoModal()">
                 <i class="fas fa-pen" aria-hidden="true"></i> ویرایش حساب
             </button>
@@ -29,6 +33,40 @@
             </button>
         </div>
     </div>
+
+    <section class="prof-card prof-card--avatar mk-acc-panel" id="accountAvatarSection"
+             data-saved-key="{{ account_avatar_saved_key }}"
+             data-effective-key="{{ account_avatar_effective_key }}"
+             data-has-custom="{% if account_avatar_has_custom %}1{% else %}0{% endif %}">
+        <header class="prof-card-head">
+            <div>
+                <h3 class="prof-card-title">آواتار حساب کاربری</h3>
+                <p class="prof-card-desc">در اپ موبایل و بخش‌های پروفایل شما نمایش داده می‌شود</p>
+            </div>
+            <button type="button" class="prof-edit-btn prof-edit-btn--primary" onclick="openAvatarPickerModal()">
+                <i class="fas fa-images" aria-hidden="true"></i> تغییر آواتار
+            </button>
+        </header>
+        <div class="prof-avatar-panel">
+            <button type="button" class="prof-avatar-panel__preview" onclick="openAvatarPickerModal()" aria-label="انتخاب آواتار">
+                <img id="accountAvatarPanelImg" src="{{ account_avatar_panel_url }}" alt="" width="96" height="96" loading="lazy" decoding="async">
+                <span class="prof-avatar-panel__badge"><i class="fas fa-pen" aria-hidden="true"></i></span>
+            </button>
+            <div class="prof-avatar-panel__copy">
+                <p class="prof-avatar-panel__hint">از مجموعه آواتارهای آماده انتخاب کنید یا یک عکس شخصی آپلود کنید.</p>
+                <div class="prof-avatar-panel__actions">
+                    <button type="button" class="prof-save-btn prof-save-btn--sm" onclick="openAvatarPickerModal()">انتخاب از آواتارها</button>
+                    <label class="prof-edit-btn prof-edit-btn--ghost">
+                        <i class="fas fa-upload" aria-hidden="true"></i> آپلود عکس
+                        <input type="file" id="accountAvatarFileInput" accept="image/*" hidden onchange="uploadAccountAvatarFile(event)">
+                    </label>
+                    {% if account_avatar_has_custom or account_avatar_saved_key %}
+                    <button type="button" class="prof-edit-btn prof-edit-btn--ghost" onclick="resetAccountAvatar()">بازنشانی</button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </section>
 
     <div class="prof-grid mk-acc-profile-grid">
         <section class="prof-card mk-acc-panel">
@@ -251,4 +289,48 @@
             </footer>
         </form>
     </section>
+</div>
+
+<div id="avatarPickerModal" class="modal-professional prof-avatar-modal" onclick="closeProfessionalModal(event, 'avatarPickerModal')" role="dialog" aria-modal="true" aria-labelledby="avatarPickerModalTitle">
+    <div class="modal-content-professional prof-avatar-modal__dialog" onclick="event.stopPropagation()">
+        <div class="modal-header-professional">
+            <div>
+                <h2 id="avatarPickerModalTitle" class="modal-title-professional">
+                    <i class="fas fa-user-circle" aria-hidden="true"></i>
+                    انتخاب آواتار
+                </h2>
+                <p class="prof-avatar-modal__sub">یک تصویر برای پروفایل خود انتخاب کنید</p>
+            </div>
+            <button type="button" class="modal-close-btn" onclick="closeProfessionalModal(event, 'avatarPickerModal')" aria-label="بستن">
+                <i class="fas fa-times" aria-hidden="true"></i>
+            </button>
+        </div>
+        <div class="modal-body-professional prof-avatar-modal__body">
+            <div class="prof-avatar-modal__preview-wrap">
+                <p class="prof-avatar-modal__preview-label">پیش‌نمایش</p>
+                <img id="avatarPickerPreviewImg" src="{{ account_avatar_panel_url }}" alt="" width="96" height="96" class="prof-avatar-modal__preview-img">
+            </div>
+            <div class="prof-avatar-modal__grid" id="avatarPickerGrid" role="listbox" aria-label="لیست آواتارها">
+                {% for item in account_avatar_catalog %}
+                <button type="button"
+                        class="prof-avatar-modal__cell{% if item.key == account_avatar_saved_key and not account_avatar_has_custom %} is-selected{% elif not account_avatar_saved_key and not account_avatar_has_custom and item.key == account_avatar_effective_key %} is-selected{% endif %}"
+                        data-key="{{ item.key }}"
+                        onclick="selectAccountAvatarKey('{{ item.key }}')"
+                        role="option"
+                        aria-selected="{% if item.key == account_avatar_saved_key and not account_avatar_has_custom %}true{% elif not account_avatar_saved_key and not account_avatar_has_custom and item.key == account_avatar_effective_key %}true{% else %}false{% endif %}"
+                        aria-label="آواتار {{ forloop.counter }}">
+                    <img src="{{ item.url }}" alt="" width="64" height="64" loading="lazy" decoding="async">
+                    <span class="prof-avatar-modal__check" aria-hidden="true"><i class="fas fa-check"></i></span>
+                </button>
+                {% endfor %}
+            </div>
+            <p id="avatarPickerError" class="alert alert-danger modal-error" style="display: none;"></p>
+        </div>
+        <div class="modal-footer-professional">
+            <button type="button" class="btn btn-secondary" onclick="closeProfessionalModal(event, 'avatarPickerModal')">انصراف</button>
+            <button type="button" id="avatarPickerSaveBtn" class="btn btn-primary" onclick="saveAccountAvatarKey()" disabled>
+                <i class="fas fa-save" aria-hidden="true"></i> ذخیره تغییرات
+            </button>
+        </div>
+    </div>
 </div>

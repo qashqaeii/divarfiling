@@ -13,7 +13,7 @@
 <link rel="stylesheet" href="{% static 'css/mizkar-dashboard.css' %}?v=19">
 <link rel="stylesheet" href="{% static 'css/mizkar-dashboard-head.css' %}?v=2">
 <link rel="stylesheet" href="{% static 'css/mizkar-dashboard-licenses.css' %}?v=2">
-<link rel="stylesheet" href="{% static 'css/mizkar-dashboard-profile.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'css/mizkar-dashboard-profile.css' %}?v=3">
 <link rel="stylesheet" href="{% static 'css/mizkar-dashboard-premium.css' %}?v=1">
 <link rel="stylesheet" href="{% static 'css/mizkar-account-shell.css' %}?v=9">
 <link rel="stylesheet" href="{% static 'css/mizkar-dashboard-orders.css' %}?v=2">
@@ -524,6 +524,156 @@ function previewConsultantImage(event, imgId, placeholderId) {
         if (placeholder) placeholder.style.display = 'none';
     };
     reader.readAsDataURL(file);
+}
+
+let accountAvatarPendingKey = null;
+
+function openAvatarPickerModal() {
+    const section = document.getElementById('accountAvatarSection');
+    const saved = section?.dataset.savedKey || '';
+    const effective = section?.dataset.effectiveKey || 'avatar_01';
+    const hasCustom = section?.dataset.hasCustom === '1';
+    accountAvatarPendingKey = hasCustom ? null : (saved || effective);
+    syncAvatarPickerSelection(accountAvatarPendingKey);
+    updateAvatarPickerSaveState();
+    const modal = document.getElementById('avatarPickerModal');
+    if (!modal) return;
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    setTimeout(() => modal.classList.add('active'), 10);
+}
+
+function selectAccountAvatarKey(key) {
+    accountAvatarPendingKey = key;
+    syncAvatarPickerSelection(key);
+    const preview = document.getElementById('avatarPickerPreviewImg');
+    const cell = document.querySelector(`.prof-avatar-modal__cell[data-key="${key}"] img`);
+    if (preview && cell) preview.src = cell.src;
+    updateAvatarPickerSaveState();
+}
+
+function syncAvatarPickerSelection(key) {
+    document.querySelectorAll('.prof-avatar-modal__cell').forEach((btn) => {
+        const selected = btn.dataset.key === key;
+        btn.classList.toggle('is-selected', selected);
+        btn.setAttribute('aria-selected', selected ? 'true' : 'false');
+    });
+}
+
+function updateAvatarPickerSaveState() {
+    const section = document.getElementById('accountAvatarSection');
+    const saveBtn = document.getElementById('avatarPickerSaveBtn');
+    if (!section || !saveBtn) return;
+    const saved = section.dataset.savedKey || '';
+    const effective = section.dataset.effectiveKey || 'avatar_01';
+    const hasCustom = section.dataset.hasCustom === '1';
+    const baseline = hasCustom ? '' : (saved || effective);
+    const pending = accountAvatarPendingKey || '';
+    const dirty = hasCustom ? !!pending : pending !== baseline;
+    saveBtn.disabled = !dirty || !pending;
+}
+
+function applyAccountAvatarToDom(url) {
+    ['accountAvatarHeroImg', 'accountAvatarPanelImg', 'avatarPickerPreviewImg'].forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) el.src = url;
+    });
+}
+
+function saveAccountAvatarKey() {
+    const key = accountAvatarPendingKey;
+    if (!key) return;
+    const saveBtn = document.getElementById('avatarPickerSaveBtn');
+    const errorDiv = document.getElementById('avatarPickerError');
+    if (errorDiv) errorDiv.style.display = 'none';
+    if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> در حال ذخیره…';
+    }
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || getCookie('csrftoken');
+    fetch('{% url "update_account_avatar" %}', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+        body: JSON.stringify({ avatar_key: key }),
+    })
+        .then((r) => r.json().then((data) => ({ ok: r.ok, data })))
+        .then(({ ok, data }) => {
+            if (!ok || !data.success) throw new Error(data.error || 'ذخیره ناموفق بود');
+            const section = document.getElementById('accountAvatarSection');
+            if (section) {
+                section.dataset.savedKey = key;
+                section.dataset.effectiveKey = key;
+                section.dataset.hasCustom = '0';
+            }
+            applyAccountAvatarToDom(data.data.avatar_url);
+            if (typeof showNotification === 'function') showNotification(data.message, 'success');
+            closeProfessionalModal(null, 'avatarPickerModal');
+        })
+        .catch((err) => {
+            if (errorDiv) {
+                errorDiv.textContent = err.message || 'خطا در ذخیره آواتار';
+                errorDiv.style.display = 'block';
+            }
+        })
+        .finally(() => {
+            if (saveBtn) {
+                saveBtn.innerHTML = '<i class="fas fa-save" aria-hidden="true"></i> ذخیره تغییرات';
+                updateAvatarPickerSaveState();
+            }
+        });
+}
+
+function uploadAccountAvatarFile(event) {
+    const file = event.target.files && event.target.files[0];
+    if (!file) return;
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || getCookie('csrftoken');
+    const formData = new FormData();
+    formData.append('avatar', file);
+    fetch('{% url "update_account_avatar" %}', {
+        method: 'POST',
+        headers: { 'X-CSRFToken': csrfToken },
+        body: formData,
+    })
+        .then((r) => r.json().then((data) => ({ ok: r.ok, data })))
+        .then(({ ok, data }) => {
+            if (!ok || !data.success) throw new Error(data.error || 'آپلود ناموفق بود');
+            const section = document.getElementById('accountAvatarSection');
+            if (section) {
+                section.dataset.savedKey = '';
+                section.dataset.hasCustom = '1';
+            }
+            applyAccountAvatarToDom(data.data.avatar_url);
+            if (typeof showNotification === 'function') showNotification(data.message, 'success');
+        })
+        .catch((err) => {
+            if (typeof showNotification === 'function') showNotification(err.message, 'error');
+            else alert(err.message);
+        });
+    event.target.value = '';
+}
+
+function resetAccountAvatar() {
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || getCookie('csrftoken');
+    fetch('{% url "update_account_avatar" %}', {
+        method: 'DELETE',
+        headers: { 'X-CSRFToken': csrfToken },
+    })
+        .then((r) => r.json().then((data) => ({ ok: r.ok, data })))
+        .then(({ ok, data }) => {
+            if (!ok || !data.success) throw new Error(data.error || 'بازنشانی ناموفق بود');
+            const section = document.getElementById('accountAvatarSection');
+            if (section) {
+                section.dataset.savedKey = '';
+                section.dataset.effectiveKey = 'avatar_01';
+                section.dataset.hasCustom = '0';
+            }
+            applyAccountAvatarToDom(data.data.avatar_url);
+            if (typeof showNotification === 'function') showNotification(data.message, 'success');
+            window.location.reload();
+        })
+        .catch((err) => {
+            if (typeof showNotification === 'function') showNotification(err.message, 'error');
+        });
 }
 
 // پیش‌نمایش آواتار

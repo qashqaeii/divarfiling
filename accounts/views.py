@@ -381,6 +381,32 @@ class DashboardView(LoginRequiredMixin, TemplateView):
                 'consultant_photo_url': '',
                 'consultant_business_card_url': '',
             })
+
+        from accounts.avatar_catalog import (
+            DEFAULT_AVATAR_KEY,
+            avatar_static_relative_path,
+            list_avatar_catalog,
+            normalize_avatar_key,
+            resolve_user_avatar_display,
+        )
+        from django.templatetags.static import static
+
+        profile, _ = UserProfile.objects.get_or_create(user=user)
+        avatar_display = resolve_user_avatar_display(profile, request=self.request)
+        if avatar_display['has_custom_avatar'] and avatar_display['url']:
+            avatar_panel_url = avatar_display['url']
+        else:
+            key = avatar_display.get('avatar_key') or DEFAULT_AVATAR_KEY
+            avatar_panel_url = self.request.build_absolute_uri(
+                static(avatar_static_relative_path(key)),
+            )
+        context.update({
+            'account_avatar_catalog': list_avatar_catalog(request=self.request),
+            'account_avatar_saved_key': normalize_avatar_key(profile.avatar_key) or '',
+            'account_avatar_effective_key': avatar_display.get('effective_key') or DEFAULT_AVATAR_KEY,
+            'account_avatar_has_custom': avatar_display.get('has_custom_avatar', False),
+            'account_avatar_panel_url': avatar_panel_url,
+        })
         return context
 
 
@@ -451,6 +477,73 @@ class UpdateUserInfoView(LoginRequiredMixin, View):
             })
         except Exception as e:
             return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+
+class UpdateAccountAvatarView(LoginRequiredMixin, View):
+    """تغییر آواتار preset یا آپلود تصویر شخصی."""
+
+    def _avatar_json(self, request):
+        from accounts.avatar_catalog import (
+            DEFAULT_AVATAR_KEY,
+            avatar_static_relative_path,
+            resolve_user_avatar_display,
+        )
+        from django.templatetags.static import static
+
+        profile, _ = UserProfile.objects.get_or_create(user=request.user)
+        display = resolve_user_avatar_display(profile, request=request)
+        if display['has_custom_avatar'] and display['url']:
+            url = display['url']
+        else:
+            key = display.get('avatar_key') or DEFAULT_AVATAR_KEY
+            url = request.build_absolute_uri(static(avatar_static_relative_path(key)))
+        return {
+            'avatar_url': url,
+            'avatar_key': display.get('avatar_key') or '',
+            'has_custom_avatar': display['has_custom_avatar'],
+        }
+
+    def post(self, request):
+        try:
+            content_type = (request.content_type or '').lower()
+            if 'application/json' in content_type:
+                data = json.loads(request.body.decode() or '{}')
+                avatar_key = data.get('avatar_key')
+                from mobile_api.services.settings_service import set_profile_avatar_key
+                set_profile_avatar_key(request.user, avatar_key, request=request)
+            elif request.FILES.get('avatar'):
+                from mobile_api.services.settings_service import update_profile_avatar
+                update_profile_avatar(
+                    request.user,
+                    avatar=request.FILES['avatar'],
+                    request=request,
+                )
+            else:
+                return JsonResponse(
+                    {'success': False, 'error': 'کلید آواتار یا فایل تصویر ارسال نشده است.'},
+                    status=400,
+                )
+            return JsonResponse({
+                'success': True,
+                'message': 'آواتار شما تغییر کرد.',
+                'data': self._avatar_json(request),
+            })
+        except ValueError as exc:
+            return JsonResponse({'success': False, 'error': str(exc)}, status=400)
+        except Exception as exc:
+            return JsonResponse({'success': False, 'error': str(exc)}, status=400)
+
+    def delete(self, request):
+        try:
+            from mobile_api.services.settings_service import update_profile_avatar
+            update_profile_avatar(request.user, clear=True, request=request)
+            return JsonResponse({
+                'success': True,
+                'message': 'آواتار به حالت پیش‌فرض بازگشت.',
+                'data': self._avatar_json(request),
+            })
+        except Exception as exc:
+            return JsonResponse({'success': False, 'error': str(exc)}, status=400)
 
 
 class UpdateProfileView(LoginRequiredMixin, View):

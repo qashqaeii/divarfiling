@@ -277,18 +277,13 @@ def resolve_dataset_covers_batch(
 
 
 def user_to_dict(user, request=None) -> Dict[str, Any]:
+    from accounts.avatar_catalog import resolve_user_avatar_display
+
     agency_name = ''
-    avatar_url = ''
     profile = getattr(user, 'profile', None)
     if profile is not None:
         agency_name = getattr(profile, 'company_name', '') or ''
-        avatar = getattr(profile, 'avatar', None)
-        if avatar:
-            try:
-                url = avatar.url
-                avatar_url = request.build_absolute_uri(url) if request else url
-            except Exception:
-                avatar_url = ''
+    avatar_display = resolve_user_avatar_display(profile, request=request)
     full_name = user.get_full_name() or user.username or ''
     return {
         'id': user.pk,
@@ -296,15 +291,22 @@ def user_to_dict(user, request=None) -> Dict[str, Any]:
         'phone': user.phone or '',
         'agency_name': agency_name,
         'phone_verified': bool(getattr(user, 'phone_verified', False)),
-        'avatar_url': avatar_url,
+        'avatar_url': avatar_display['url'],
+        'avatar_key': avatar_display['avatar_key'],
+        'has_custom_avatar': avatar_display['has_custom_avatar'],
     }
 
 
-def contact_to_dict(c: Customer) -> Dict[str, Any]:
+def contact_to_dict(c: Customer, request=None) -> Dict[str, Any]:
+    from accounts.avatar_catalog import resolve_contact_avatar_display
+
     budget = c.budget_max or c.budget_min
+    contact_avatar = resolve_contact_avatar_display(c, request=request)
     return {
         'id': c.pk,
         'full_name': c.name,
+        'photo_url': contact_avatar['photo_url'],
+        'avatar_key': contact_avatar['avatar_key'],
         'phone': c.phone or '',
         'customer_type': c.customer_type,
         'status': c.status,

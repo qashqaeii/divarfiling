@@ -116,6 +116,7 @@ from mobile_api.services.sync_service import pull_sync, push_sync
 from mobile_api.services.settings_service import (
     get_notification_prefs,
     get_profile,
+    set_profile_avatar_key,
     update_notification_prefs,
     update_profile,
     update_profile_avatar,
@@ -826,14 +827,32 @@ class ProfileView(APIView):
         return api_ok(update_profile(request.user, data, request=request))
 
 
+class AvatarCatalogView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        from accounts.avatar_catalog import list_avatar_catalog
+
+        return api_ok({'items': list_avatar_catalog(request=request)})
+
+
 class ProfileAvatarView(APIView):
     permission_classes = [IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def post(self, request):
+        if not request.FILES.get('avatar'):
+            data = _parse_body(request)
+            if isinstance(data, dict) and 'avatar_key' in data:
+                try:
+                    return api_ok(
+                        set_profile_avatar_key(request.user, data.get('avatar_key'), request=request),
+                    )
+                except ValueError as exc:
+                    return api_error(str(exc), code='VALIDATION_ERROR')
         avatar = request.FILES.get('avatar')
         if not avatar:
-            return api_error('فایل تصویر ارسال نشده است.', code='VALIDATION_ERROR')
+            return api_error('فایل تصویر یا کلید آواتار ارسال نشده است.', code='VALIDATION_ERROR')
         try:
             return api_ok(update_profile_avatar(request.user, avatar=avatar, request=request))
         except ValueError as exc:

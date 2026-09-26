@@ -575,7 +575,21 @@ class CustomerPanelView(LoginRequiredMixin, View):
             if phone_wa.startswith('98'):
                 phone_wa = phone_wa[2:]
 
+        from accounts.avatar_catalog import (
+            DEFAULT_AVATAR_KEY,
+            avatar_static_relative_path,
+            resolve_contact_avatar_display,
+        )
+        from django.templatetags.static import static
         from workspace.templatetags.crm_tags import crm_avatar_hue, crm_initials, crm_status_dot
+
+        contact_avatar = resolve_contact_avatar_display(customer, request=request)
+        if contact_avatar['photo_url']:
+            panel_avatar_url = contact_avatar['photo_url']
+        else:
+            panel_avatar_url = request.build_absolute_uri(
+                static(avatar_static_relative_path(DEFAULT_AVATAR_KEY)),
+            )
 
         return JsonResponse({
             'id': customer.pk,
@@ -583,6 +597,7 @@ class CustomerPanelView(LoginRequiredMixin, View):
             'company_name': customer.company_name or '',
             'initials': crm_initials(customer.name),
             'avatar_hue': crm_avatar_hue(customer.name),
+            'avatar_url': panel_avatar_url,
             'status_dot': crm_status_dot(customer.status),
             'phone': customer.phone,
             'email': customer.email,

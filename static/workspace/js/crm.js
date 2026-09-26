@@ -1690,6 +1690,9 @@ function initCRMSidePanel() {
     function renderPanel(data) {
         const hue = data.avatar_hue ?? crmAvatarHue(data.name);
         const initials = data.initials || crmAvatarInitials(data.name);
+        const avatarImg = data.avatar_url
+            ? `<img class="crm-sp-avatar crm-sp-avatar--img" src="${crmEscapeHtml(data.avatar_url)}" alt="" width="56" height="56" loading="lazy" decoding="async">`
+            : `<span class="crm-sp-avatar crm-sp-avatar--hue-${hue}" aria-hidden="true">${crmEscapeHtml(initials)}</span>`;
         const follow = followLabel(data.follow_state, data.next_follow_up);
         const statusDot = data.status_dot || '#94a3b8';
 
@@ -1733,7 +1736,7 @@ function initCRMSidePanel() {
                 <header class="crm-sp-hero">
                     <div class="crm-sp-hero-glow" aria-hidden="true"></div>
                     <div class="crm-sp-hero-main">
-                        <span class="crm-sp-avatar crm-sp-avatar--hue-${hue}" aria-hidden="true">${crmEscapeHtml(initials)}</span>
+                        ${avatarImg}
                         <div class="crm-sp-hero-copy">
                             <h2 class="crm-sp-name">${crmEscapeHtml(data.name)}</h2>
                             ${data.company_name ? `<p class="crm-sp-company"><i class="fas fa-building"></i> ${crmEscapeHtml(data.company_name)}</p>` : ''}

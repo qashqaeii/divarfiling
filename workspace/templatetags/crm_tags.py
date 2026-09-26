@@ -1,6 +1,12 @@
 from django import template
+from django.templatetags.static import static
 from django.utils.html import format_html
 
+from accounts.avatar_catalog import (
+    DEFAULT_AVATAR_KEY,
+    avatar_static_relative_path,
+    resolve_contact_avatar_display,
+)
 from workspace.constants import (
     AGENCY_ROLE_STYLES, DEAL_STAGE_COLORS, DEAL_STAGE_ICONS, PROPERTY_TX_COLORS, ROLE_COLORS, shows_lease_deadline,
 )
@@ -46,6 +52,20 @@ def nav_badge_count(value):
 def shows_lease_deadline_filter(customer_type):
     """آیا فیلد مهلت اجاره برای این نوع مخاطب نمایش داده شود؟"""
     return shows_lease_deadline(customer_type)
+
+
+@register.simple_tag
+def crm_default_avatar_url():
+    return static(avatar_static_relative_path(DEFAULT_AVATAR_KEY))
+
+
+@register.simple_tag(takes_context=True)
+def crm_contact_avatar_url(context, customer):
+    request = context.get('request')
+    display = resolve_contact_avatar_display(customer, request=request)
+    if display['photo_url']:
+        return display['photo_url']
+    return static(avatar_static_relative_path(DEFAULT_AVATAR_KEY))
 
 
 @register.filter

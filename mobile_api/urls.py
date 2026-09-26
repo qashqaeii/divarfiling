@@ -46,6 +46,7 @@ urlpatterns = [
 
     path('settings/profile', views.ProfileView.as_view(), name='profile'),
     path('settings/profile/avatar', views.ProfileAvatarView.as_view(), name='profile_avatar'),
+    path('settings/avatars', views.AvatarCatalogView.as_view(), name='avatar_catalog'),
     path('settings/notifications', views.NotificationPrefsView.as_view(), name='notifications'),
 
     path('notifications', views.NotificationsListView.as_view(), name='notifications_list'),

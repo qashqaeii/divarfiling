@@ -24,6 +24,24 @@ def update_profile(user, data: Dict[str, Any], request=None) -> Dict[str, Any]:
     if data.get('phone'):
         user.phone = data['phone']
     user.save()
+    if 'avatar_key' in data:
+        set_profile_avatar_key(user, data.get('avatar_key'), request=request)
+    return get_profile(user, request=request)
+
+
+def set_profile_avatar_key(user, avatar_key: Optional[str], request=None) -> Dict[str, Any]:
+    from accounts.avatar_catalog import normalize_avatar_key
+    from accounts.models import UserProfile
+
+    profile, _created = UserProfile.objects.get_or_create(user=user)
+    normalized = normalize_avatar_key(avatar_key)
+    if avatar_key is not None and avatar_key != '' and normalized is None:
+        raise ValueError('کلید آواتار نامعتبر است.')
+    if profile.avatar:
+        profile.avatar.delete(save=False)
+        profile.avatar = None
+    profile.avatar_key = normalized
+    profile.save(update_fields=['avatar', 'avatar_key'])
     return get_profile(user, request=request)
 
 
@@ -41,7 +59,8 @@ def update_profile_avatar(
         if profile.avatar:
             profile.avatar.delete(save=False)
         profile.avatar = None
-        profile.save(update_fields=['avatar'])
+        profile.avatar_key = None
+        profile.save(update_fields=['avatar', 'avatar_key'])
         return get_profile(user, request=request)
     if avatar is None:
         raise ValueError('فایل تصویر ارسال نشده است.')
@@ -51,7 +70,8 @@ def update_profile_avatar(
     if profile.avatar:
         profile.avatar.delete(save=False)
     profile.avatar = avatar
-    profile.save(update_fields=['avatar'])
+    profile.avatar_key = None
+    profile.save(update_fields=['avatar', 'avatar_key'])
     return get_profile(user, request=request)
 
 

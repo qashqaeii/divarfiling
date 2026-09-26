@@ -76,6 +76,9 @@ class UserProfile(models.Model):
         verbose_name='کاربر',
     )
     avatar = models.ImageField(upload_to='avatars/', blank=True, null=True, verbose_name='تصویر پروفایل')
+    avatar_key = models.CharField(
+        max_length=32, blank=True, null=True, verbose_name='کلید آواتار پیش‌فرض',
+    )
     bio = models.TextField(blank=True, verbose_name='درباره من')
     address = models.TextField(blank=True, verbose_name='آدرس')
     city = models.CharField(max_length=100, blank=True, verbose_name='شهر')

@@ -410,6 +410,9 @@ class Customer(models.Model):
         default='private',
         verbose_name='نمایش تیمی',
     )
+    photo = models.ImageField(
+        upload_to='crm/customer_photos/', blank=True, null=True, verbose_name='تصویر مخاطب',
+    )
     name = models.CharField(max_length=200, verbose_name='نام')
     phone = models.CharField(max_length=20, blank=True, verbose_name='تلفن')
     phone_alt = models.CharField(max_length=20, blank=True, verbose_name='تلفن دوم')

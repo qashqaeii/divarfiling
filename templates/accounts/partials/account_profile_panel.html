@@ -1,5 +1,6 @@
 {% load persian_tags %}
 {% load static %}
+{% load account_avatar_tags %}
 
 <div id="tab-profile" class="mk-acc-tab-panel mk-acc-tab-shell mk-profile-tab tab-content dash-tab-panel prof-tab"{% if active_tab != 'profile' %} hidden{% endif %}>
     <header class="mk-account-page-head">
@@ -9,11 +10,7 @@
 
     <div class="prof-hero" aria-label="پروفایل کاربر">
         <div class="prof-hero__avatar">
-            {% if user.profile and user.profile.avatar %}
-            <img src="{{ user.profile.avatar.url }}" alt="">
-            {% else %}
-            <span class="prof-hero__avatar-ph" aria-hidden="true">{{ user.username|slice:":1"|upper }}</span>
-            {% endif %}
+            <img src="{% account_user_avatar_url user %}" alt="" width="88" height="88" loading="eager" decoding="async">
         </div>
         <div class="prof-hero__copy">
             <h2 class="prof-hero__name">{{ user.get_full_name|default:user.username }}</h2>

@@ -298,7 +298,7 @@
                                 <div class="crm-contacts-mob-card">
                                     <div class="crm-contacts-mob-card-head">
                                         <a href="{% url 'workspace:crm_detail' c.id %}" class="crm-contacts-person crm-contacts-person-link">
-                                            <img class="crm-contacts-avatar crm-contacts-avatar--preset" src="{% crm_contact_avatar_url c %}" alt="" width="44" height="44" loading="lazy" decoding="async">
+                                            {% include 'workspace/crm/includes/contact_avatar.html' with contact=c css_class='crm-contacts-avatar' width=44 height=44 %}
                                             <div class="crm-contacts-person-text">
                                                 <span class="crm-contacts-name">{{ c.name }}</span>
                                                 {% if c.company_name %}<span class="crm-contacts-sub">{{ c.company_name }}</span>{% endif %}

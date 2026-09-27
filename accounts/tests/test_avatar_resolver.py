@@ -43,17 +43,17 @@ class AvatarResolverTests(TestCase):
         self.assertTrue(display['has_custom_avatar'])
         self.assertTrue(display['url'])
 
-    def test_contact_without_photo_uses_default_avatar(self):
+    def test_contact_without_photo_has_no_account_avatar(self):
         customer = Customer.objects.create(user=self.user, name='علی')
         display = resolve_contact_avatar_display(customer)
-        self.assertTrue(display['uses_default_preset'])
-        self.assertEqual(display['effective_key'], DEFAULT_AVATAR_KEY)
+        self.assertFalse(display['has_photo'])
         self.assertEqual(display['photo_url'], '')
+        self.assertIsNone(display['avatar_key'])
 
     def test_contact_with_photo_uses_contact_photo(self):
         customer = Customer.objects.create(user=self.user, name='سارا')
         customer.photo = SimpleUploadedFile('c.jpg', b'x', content_type='image/jpeg')
         customer.save()
         display = resolve_contact_avatar_display(customer)
-        self.assertFalse(display['uses_default_preset'])
+        self.assertTrue(display['has_photo'])
         self.assertTrue(display['photo_url'])

@@ -92,7 +92,7 @@
                 <a href="{% url 'workspace:crm_contacts' %}" class="crm-contact-hero__back crm-contact-hero__back--stage" title="بازگشت به مخاطبین" aria-label="بازگشت به مخاطبین">
                     <i class="fas fa-arrow-right" aria-hidden="true"></i>
                 </a>
-                <img class="crm-contact-hero__avatar crm-contact-hero__avatar--preset" src="{% crm_contact_avatar_url customer %}" alt="" width="72" height="72" loading="eager" decoding="async">
+                {% include 'workspace/crm/includes/contact_avatar.html' with contact=customer css_class='crm-contact-hero__avatar' width=72 height=72 loading='eager' %}
                 <div class="crm-contact-hero__identity">
                     <div class="crm-contact-hero__headline">
                         <h1 class="crm-contact-hero__title">{{ customer.name }}</h1>

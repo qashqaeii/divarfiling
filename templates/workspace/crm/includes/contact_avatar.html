@@ -1,0 +1,6 @@
+{% load crm_tags %}
+{% if contact.photo %}
+<img class="{{ css_class }} {{ css_class }}--photo" src="{{ contact.photo.url }}" alt=""{% if width %} width="{{ width }}" height="{{ height }}"{% endif %} loading="{{ loading|default:'lazy' }}" decoding="async">
+{% else %}
+<span class="{{ css_class }} crm-deals-avatar crm-deals-avatar--hue-{{ contact.name|crm_avatar_hue }}" aria-hidden="true">{{ contact.name|crm_initials }}</span>
+{% endif %}

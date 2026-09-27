@@ -136,17 +136,13 @@ def consultant_portrait_url(user, ws_settings=None, request=None) -> str:
 
 
 def resolve_contact_avatar_display(customer, request=None) -> Dict[str, Any]:
+    """
+    آواتار مخاطب CRM: فقط تصویر اختصاصی مخاطب (فیلد photo).
+    آواتار/عکس حساب کاربری یا presetهای حساب در اینجا استفاده نمی‌شوند.
+    """
     photo_url = resolve_contact_photo_url(customer, request=request)
-    if photo_url:
-        return {
-            'photo_url': photo_url,
-            'avatar_key': None,
-            'effective_key': None,
-            'uses_default_preset': False,
-        }
     return {
-        'photo_url': '',
+        'photo_url': photo_url,
         'avatar_key': None,
-        'effective_key': DEFAULT_AVATAR_KEY,
-        'uses_default_preset': True,
+        'has_photo': bool(photo_url),
     }

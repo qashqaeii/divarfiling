@@ -36,51 +36,58 @@
 
         {% if ai_listing_summary_tone_options %}
         <div class="ws-ai-studio__panel" data-ai-summary-prefs>
-            <div class="ws-ai-studio__prefs-row">
-            <div class="ws-ai-studio__block ws-ai-studio__block--tone">
-                <div class="ws-ai-studio__block-head">
-                    <span class="ws-ai-studio__block-title">لحن</span>
-                    <span class="ws-ai-studio__block-hint" data-ai-tone-hint aria-live="polite"></span>
-                </div>
-                <div class="ws-ai-studio__tone-grid" role="radiogroup" aria-label="لحن خلاصه">
-                    {% for opt in ai_listing_summary_tone_options %}
-                    <label class="ws-ai-studio__pick ws-ai-studio__pick--tone">
-                        <input type="radio"
-                               name="aiListingSummaryTone"
-                               value="{{ opt.key }}"
-                               data-ai-tone-input
-                               {% if opt.key == ai_listing_summary_default_tone %}checked{% endif %}>
-                        <span class="ws-ai-studio__pick-face" title="{{ opt.hint }}">
-                            <span class="ws-ai-studio__pick-ico"><i class="fas {{ opt.icon|default:'fa-circle' }}" aria-hidden="true"></i></span>
-                            <span class="ws-ai-studio__pick-label">{{ opt.label }}</span>
-                            <span class="ws-ai-studio__pick-hint">{{ opt.hint }}</span>
+            <div class="ws-ai-studio__folds">
+                <details class="ws-ai-studio__fold" data-ai-fold="tone">
+                    <summary class="ws-ai-studio__fold-trigger">
+                        <span class="ws-ai-studio__fold-key">لحن</span>
+                        <span class="ws-ai-studio__fold-val" data-ai-tone-current>
+                            {% for opt in ai_listing_summary_tone_options %}{% if opt.key == ai_listing_summary_default_tone %}{{ opt.label }}{% endif %}{% endfor %}
                         </span>
-                    </label>
-                    {% endfor %}
-                </div>
-            </div>
+                        <i class="fas fa-chevron-down ws-ai-studio__fold-chevron" aria-hidden="true"></i>
+                    </summary>
+                    <div class="ws-ai-studio__fold-menu" role="radiogroup" aria-label="لحن خلاصه">
+                        {% for opt in ai_listing_summary_tone_options %}
+                        <label class="ws-ai-studio__fold-opt">
+                            <input type="radio"
+                                   name="aiListingSummaryTone"
+                                   value="{{ opt.key }}"
+                                   data-ai-tone-input
+                                   {% if opt.key == ai_listing_summary_default_tone %}checked{% endif %}>
+                            <span class="ws-ai-studio__fold-opt-body">
+                                <i class="fas {{ opt.icon|default:'fa-circle' }}" aria-hidden="true"></i>
+                                <span class="ws-ai-studio__fold-opt-text">{{ opt.label }}</span>
+                                <span class="ws-ai-studio__fold-opt-hint">{{ opt.hint }}</span>
+                            </span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                </details>
 
-            <div class="ws-ai-studio__block ws-ai-studio__block--style">
-                <div class="ws-ai-studio__block-head">
-                    <span class="ws-ai-studio__block-title">سبک</span>
-                    <span class="ws-ai-studio__block-hint" data-ai-style-hint aria-live="polite"></span>
-                </div>
-                <div class="ws-ai-studio__style-rail" role="radiogroup" aria-label="سبک خلاصه">
-                    {% for opt in ai_listing_summary_style_options %}
-                    <label class="ws-ai-studio__pick ws-ai-studio__pick--style">
-                        <input type="radio"
-                               name="aiListingSummaryStyle"
-                               value="{{ opt.key }}"
-                               data-ai-style-input
-                               {% if opt.key == ai_listing_summary_default_style %}checked{% endif %}>
-                        <span class="ws-ai-studio__pick-face" title="{{ opt.hint }}">
-                            <span class="ws-ai-studio__pick-ico"><i class="fas {{ opt.icon|default:'fa-file' }}" aria-hidden="true"></i></span>
-                            <span class="ws-ai-studio__pick-label">{{ opt.label }}</span>
+                <details class="ws-ai-studio__fold" data-ai-fold="style">
+                    <summary class="ws-ai-studio__fold-trigger">
+                        <span class="ws-ai-studio__fold-key">سبک</span>
+                        <span class="ws-ai-studio__fold-val" data-ai-style-current>
+                            {% for opt in ai_listing_summary_style_options %}{% if opt.key == ai_listing_summary_default_style %}{{ opt.label }}{% endif %}{% endfor %}
                         </span>
-                    </label>
-                    {% endfor %}
-                </div>
-            </div>
+                        <i class="fas fa-chevron-down ws-ai-studio__fold-chevron" aria-hidden="true"></i>
+                    </summary>
+                    <div class="ws-ai-studio__fold-menu" role="radiogroup" aria-label="سبک خلاصه">
+                        {% for opt in ai_listing_summary_style_options %}
+                        <label class="ws-ai-studio__fold-opt">
+                            <input type="radio"
+                                   name="aiListingSummaryStyle"
+                                   value="{{ opt.key }}"
+                                   data-ai-style-input
+                                   {% if opt.key == ai_listing_summary_default_style %}checked{% endif %}>
+                            <span class="ws-ai-studio__fold-opt-body">
+                                <i class="fas {{ opt.icon|default:'fa-file' }}" aria-hidden="true"></i>
+                                <span class="ws-ai-studio__fold-opt-text">{{ opt.label }}</span>
+                                <span class="ws-ai-studio__fold-opt-hint">{{ opt.hint }}</span>
+                            </span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                </details>
             </div>
 
             <div class="ws-ai-studio__actions">
@@ -107,29 +114,18 @@
 
         <div class="ws-ai-studio__stage" data-ai-body>
             <div class="ws-ai-studio__idle" data-ai-empty>
-                <div class="ws-ai-studio__mock" aria-hidden="true">
-                    <div class="ws-ai-studio__mock-card ws-ai-studio__mock-card--a">
-                        <i class="fas fa-chart-line"></i>
-                        <span></span><span></span>
-                    </div>
-                    <div class="ws-ai-studio__mock-card ws-ai-studio__mock-card--b">
-                        <i class="fas fa-building"></i>
-                        <span></span><span></span>
-                    </div>
-                    <div class="ws-ai-studio__mock-card ws-ai-studio__mock-card--c">
-                        <i class="fas fa-handshake"></i>
-                        <span></span>
-                    </div>
-                </div>
-                <p class="ws-ai-studio__idle-title">یک کلیک تا خلاصه حرفه‌ای</p>
-                <p class="ws-ai-studio__idle-desc">لحن و سبک را انتخاب کنید، سپس دکمه بالا را بزنید.</p>
+                <p class="ws-ai-studio__idle-copy">
+                    <span class="ws-ai-studio__idle-lead">یک کلیک تا خلاصه حرفه‌ای</span>
+                    <span class="ws-ai-studio__idle-sep" aria-hidden="true">·</span>
+                    <span class="ws-ai-studio__idle-steps">لحن و سبک را انتخاب کنید، سپس «تولید خلاصه».</span>
+                </p>
             </div>
             <div class="ws-ai-result ws-ai-card__result" data-ai-result hidden></div>
         </div>
 
-        <footer class="ws-ai-studio__foot">
+        <p class="ws-ai-studio__fineprint">
             <i class="fas fa-shield-halved" aria-hidden="true"></i>
-            <span>اعداد از فایلینگ شما · AI فقط توضیح می‌دهد</span>
-        </footer>
+            اعداد از فایلینگ شما — AI فقط توضیح می‌دهد
+        </p>
     </div>
 </section>

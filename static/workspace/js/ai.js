@@ -113,22 +113,24 @@
         };
     }
 
+    function selectedFoldLabel(input) {
+        if (!input) return '';
+        const label = input.closest('label')?.querySelector('.ws-ai-studio__fold-opt-text');
+        return label?.textContent?.trim() || '';
+    }
+
     function updateListingPrefHints(card) {
         const panel = card?.querySelector('[data-ai-summary-prefs]');
         if (!panel) return;
         const toneInput = panel.querySelector('[data-ai-tone-input]:checked');
         const styleInput = panel.querySelector('[data-ai-style-input]:checked');
-        const toneHint = panel.querySelector('[data-ai-tone-hint]');
-        const styleHint = panel.querySelector('[data-ai-style-hint]');
-        if (toneHint && toneInput) {
-            const face = toneInput.closest('label')?.querySelector('.ws-ai-studio__pick-face, .ws-ai-pro__seg-btn');
-            toneHint.textContent = face?.getAttribute('title')
-                || toneInput.closest('label')?.querySelector('.ws-ai-studio__pick-hint')?.textContent
-                || '';
+        const toneCurrent = panel.querySelector('[data-ai-tone-current]');
+        const styleCurrent = panel.querySelector('[data-ai-style-current]');
+        if (toneCurrent && toneInput) {
+            toneCurrent.textContent = selectedFoldLabel(toneInput);
         }
-        if (styleHint && styleInput) {
-            const face = styleInput.closest('label')?.querySelector('.ws-ai-studio__pick-face, .ws-ai-pro__seg-btn');
-            styleHint.textContent = face?.getAttribute('title') || '';
+        if (styleCurrent && styleInput) {
+            styleCurrent.textContent = selectedFoldLabel(styleInput);
         }
     }
 
@@ -172,10 +174,21 @@
         document.querySelectorAll('#wsAiListingSummary[data-ai-card]').forEach((card) => {
             restoreListingSummaryPrefs(card);
             updateListingPrefHints(card);
-            card.querySelectorAll('[data-ai-tone-input], [data-ai-style-input]').forEach((input) => {
+            const panel = card.querySelector('[data-ai-summary-prefs]');
+            panel?.querySelectorAll('[data-ai-tone-input], [data-ai-style-input]').forEach((input) => {
                 input.addEventListener('change', () => {
                     updateListingPrefHints(card);
                     persistListingSummaryPrefs(card);
+                    const fold = input.closest('details.ws-ai-studio__fold');
+                    if (fold) fold.open = false;
+                });
+            });
+            panel?.querySelectorAll('details.ws-ai-studio__fold').forEach((fold) => {
+                fold.addEventListener('toggle', () => {
+                    if (!fold.open || !panel) return;
+                    panel.querySelectorAll('details.ws-ai-studio__fold').forEach((other) => {
+                        if (other !== fold) other.open = false;
+                    });
                 });
             });
         });

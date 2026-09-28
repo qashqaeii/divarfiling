@@ -30,6 +30,7 @@ from workspace.services.nearby_pois import (
     haversine_m,
     listing_location_metadata,
     property_accessibility_radius_km,
+    nearby_pois_page_context,
     refresh_property_accessibilities,
     resolve_nearby_catalog,
     resolve_nearby_items,
@@ -455,6 +456,25 @@ class CRMPropertyNearbyPoisViewTests(TestCase):
         self.assertEqual(resp.status_code, 200)
         self.prop.refresh_from_db()
         self.assertEqual(self.prop.nearby_pois, {})
+
+    @patch('workspace.services.nearby_pois.fetch_overpass_elements')
+    def test_repair_restores_display_after_coords_metadata_drift(self, mock_fetch):
+        mock_fetch.return_value = _sample_elements()
+        self.client.post(self.url, data='{}', content_type='application/json')
+        self.prop.refresh_from_db()
+        data = dict(self.prop.nearby_pois or {})
+        self.assertTrue(data.get('items'))
+        data['radius_m'] = 5000
+        data['coords'] = {
+            'lat': round(float(self.prop.latitude), 4),
+            'lng': round(float(self.prop.longitude), 4),
+        }
+        self.prop.nearby_pois = data
+        self.prop.save(update_fields=['nearby_pois'])
+        ctx = nearby_pois_page_context(self.prop)
+        self.assertTrue(ctx['has_stored'])
+        self.assertIsNotNone(ctx['initial_payload'])
+        self.assertGreater(int(ctx['initial_payload'].get('found_count') or 0), 0)
 
     @patch('workspace.services.nearby_pois.fetch_overpass_elements')
     def test_stored_data_shown_on_detail(self, mock_fetch):

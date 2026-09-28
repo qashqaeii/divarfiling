@@ -1237,16 +1237,22 @@ def stored_nearby_pois_valid(prop, *, radius_m: Optional[int] = None) -> bool:
     return True
 
 
-def get_stored_nearby_pois_payload(prop) -> Optional[Dict[str, Any]]:
-    if not stored_nearby_pois_valid(prop):
+def get_stored_nearby_pois_payload(
+    prop,
+    *,
+    repair_save: bool = True,
+) -> Optional[Dict[str, Any]]:
+    raw = getattr(prop, 'nearby_pois', None) or {}
+    if stored_nearby_pois_valid(prop):
+        return _enrich_nearby_payload(dict(raw))
+
+    repaired = _try_repair_nearby_pois_record(prop, raw)
+    if not repaired:
         return None
-    data = dict(prop.nearby_pois or {})
-    if not data.get('groups'):
-        data['groups'] = group_nearby_items(data.get('items') or [])
-    if not data.get('highlights'):
-        data['highlights'] = nearest_highlights(data.get('items') or [])
-    data['cached'] = True
-    return data
+    if repair_save and repaired != raw:
+        prop.nearby_pois = repaired
+        prop.save(update_fields=['nearby_pois', 'updated_at'])
+    return _enrich_nearby_payload(repaired)
 
 
 def _cache_day_key(prefix: str, *, day: Optional[date] = None) -> str:
@@ -1334,10 +1340,76 @@ def fetch_and_save_nearby_pois(
     )
 
 
+def _nearby_poi_location_clear_threshold_m() -> float:
+    return float(getattr(settings, 'NEARBY_POI_LOCATION_CLEAR_THRESHOLD_M', 80))
+
+
+def should_clear_nearby_pois_on_location_change(
+    old_lat: Optional[float],
+    old_lng: Optional[float],
+    new_lat: Optional[float],
+    new_lng: Optional[float],
+) -> bool:
+    """Only drop cached POIs when the pin moves meaningfully (not float noise)."""
+    if new_lat is None or new_lng is None:
+        return True
+    if old_lat is None or old_lng is None:
+        return False
+    if old_lat == new_lat and old_lng == new_lng:
+        return False
+    threshold = _nearby_poi_location_clear_threshold_m()
+    return haversine_m(float(old_lat), float(old_lng), float(new_lat), float(new_lng)) > threshold
+
+
 def clear_nearby_pois(prop) -> None:
     if prop.nearby_pois:
         prop.nearby_pois = {}
         prop.save(update_fields=['nearby_pois', 'updated_at'])
+
+
+def _stored_coords_distance_m(prop, data: Dict[str, Any]) -> float:
+    coords = data.get('coords') or {}
+    slat, slng = coords.get('lat'), coords.get('lng')
+    lat, lng = getattr(prop, 'latitude', None), getattr(prop, 'longitude', None)
+    if slat is None or slng is None or lat is None or lng is None:
+        return float('inf')
+    return haversine_m(float(lat), float(lng), float(slat), float(slng))
+
+
+def _enrich_nearby_payload(data: Dict[str, Any]) -> Dict[str, Any]:
+    out = dict(data)
+    items = out.get('items') or []
+    if not out.get('groups'):
+        out['groups'] = group_nearby_items(items)
+    if not out.get('highlights'):
+        out['highlights'] = nearest_highlights(items)
+    out['cached'] = True
+    return out
+
+
+def _try_repair_nearby_pois_record(prop, data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    """Reuse saved POIs when metadata drifted (coords keys, radius, version) but location is same."""
+    if not isinstance(data, dict) or not data.get('items'):
+        return None
+    status = _accessibility_status(data)
+    if status == ACCESSIBILITY_STATUS_PENDING:
+        return None
+    location = resolve_property_location(prop)
+    if not location['usable']:
+        return None
+    if _stored_coords_distance_m(prop, data) > _nearby_poi_location_clear_threshold_m():
+        return None
+
+    lat_key, lng_key = _coords_key(location['lat'], location['lng'])
+    out = dict(data)
+    out['coords'] = {'lat': lat_key, 'lng': lng_key}
+    out['radius_m'] = property_accessibility_radius_m()
+    out['version'] = PAYLOAD_VERSION
+    if status in ('', ACCESSIBILITY_STATUS_FAILED) and int(out.get('found_count') or 0) > 0:
+        out['status'] = ACCESSIBILITY_STATUS_READY
+    elif not status:
+        out['status'] = ACCESSIBILITY_STATUS_READY
+    return out
 
 
 def nearby_pois_page_context(prop) -> Dict[str, Any]:

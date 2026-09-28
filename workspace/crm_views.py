@@ -2115,10 +2115,14 @@ class CRMPropertyUpdateView(LoginRequiredMixin, UpdateView):
             from workspace.services.nearby_pois import (
                 clear_nearby_pois,
                 mark_property_manual_location,
+                should_clear_nearby_pois_on_location_change,
             )
 
             mark_property_manual_location(self.object)
-            clear_nearby_pois(self.object)
+            if should_clear_nearby_pois_on_location_change(
+                old_lat, old_lng, self.object.latitude, self.object.longitude,
+            ):
+                clear_nearby_pois(self.object)
         messages.success(self.request, 'ملک به‌روز شد.')
         return redirect('workspace:crm_property_detail', property_id=self.object.pk)
 
@@ -2183,9 +2187,11 @@ class CRMPropertyLocationUpdateView(LoginRequiredMixin, View):
         mark_property_manual_location(prop)
         prop.save(update_fields=['latitude', 'longitude', 'updated_at'])
 
-        if (old_lat, old_lng) != (lat, lng):
-            from workspace.services.nearby_pois import clear_nearby_pois
-
+        from workspace.services.nearby_pois import (
+            clear_nearby_pois,
+            should_clear_nearby_pois_on_location_change,
+        )
+        if should_clear_nearby_pois_on_location_change(old_lat, old_lng, lat, lng):
             clear_nearby_pois(prop)
 
         return JsonResponse({

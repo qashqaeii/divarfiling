@@ -1068,12 +1068,7 @@ def add_listing_to_personal_files(user, listing) -> tuple[CRMProperty, bool]:
         get_crm_property_by_source_identity,
         is_user_source_listing_integrity_error,
     )
-    from workspace.services.nearby_pois import schedule_property_accessibilities
-
     logger = logging.getLogger(__name__)
-
-    def _schedule(prop: CRMProperty) -> None:
-        schedule_property_accessibilities(prop.pk, user.pk)
 
     def _sync_contacts(prop: CRMProperty) -> None:
         phone = owner_phone_from_listing(listing) or prop.phone
@@ -1135,7 +1130,6 @@ def add_listing_to_personal_files(user, listing) -> tuple[CRMProperty, bool]:
         _sync_contacts(prop)
         finalize_listing_moved_to_personal(user, listing, prop)
 
-    _schedule(prop)
     return prop, created
 
 

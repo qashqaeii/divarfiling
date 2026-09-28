@@ -1,7 +1,6 @@
 (function (global) {
     'use strict';
 
-    const STATUS_PENDING = 'pending';
     const STATUS_READY = 'ready';
     const STATUS_FAILED = 'failed';
 
@@ -133,12 +132,8 @@
         const openMapBtn = root.querySelector('[data-open-property-map]');
 
         let hasStored = root.dataset.hasStored === '1';
-        let status = root.dataset.status || '';
         let locationPrecision = root.dataset.locationPrecision || 'none';
         let busy = false;
-        let pollTimer = null;
-        let pollAttempts = 0;
-        const POLL_MAX_ATTEMPTS = 40;
 
         function setError(message) {
             if (!errorEl) return;
@@ -168,17 +163,12 @@
         }
 
         function updateHeaderState(data) {
-            const nextStatus = data?.status || status;
             const nextPrecision = data?.location_precision || locationPrecision;
-            status = nextStatus;
             locationPrecision = nextPrecision;
-            root.dataset.status = status;
             root.dataset.locationPrecision = locationPrecision;
 
             if (headerSub) {
-                if (status === STATUS_PENDING) {
-                    headerSub.innerHTML = '<span class="crm-nearby-pois__sub-pending">⏳ در حال بررسی موقعیت‌های اطراف ملک…</span>';
-                } else if (status === STATUS_FAILED) {
+                if (data?.status === STATUS_FAILED) {
                     headerSub.textContent = 'محاسبه دسترسی‌ها انجام نشد';
                 } else if (hasStored && data) {
                     const found = data.found_count != null
@@ -190,15 +180,15 @@
                         : `شعاع ${faDigits(radius)} متر`;
                     const updated = data.fetched_at_label ? ` · به‌روزرسانی ${data.fetched_at_label}` : '';
                     headerSub.innerHTML = `<strong>${faDigits(found)} مکان نزدیک</strong> · ${radiusLabel}${updated}`;
+                } else if (!hasCoords) {
+                    headerSub.textContent = 'برای محاسبه دسترسی‌ها، موقعیت ملک را روی نقشه مشخص کنید';
+                } else if (!hasStored) {
+                    headerSub.textContent = root.dataset.radiusHint || 'برای دریافت دسترسی‌ها دکمه «محاسبه» را بزنید';
                 }
             }
 
             if (approxNote) {
                 approxNote.hidden = !(hasStored && locationPrecision === 'approximate');
-            }
-
-            if (loading) {
-                loading.hidden = status !== STATUS_PENDING;
             }
         }
 
@@ -269,32 +259,30 @@
             if (loading) loading.hidden = true;
             hasStored = true;
             root.dataset.hasStored = '1';
-            status = data.status || STATUS_READY;
+            root.dataset.status = STATUS_READY;
             updateButtonLabel();
             updateHeaderState(data);
             setError('');
-            stopPolling();
         }
 
-        function stopPolling() {
-            if (pollTimer) {
-                window.clearInterval(pollTimer);
-                pollTimer = null;
-            }
-        }
-
-        function showPendingState() {
-            status = STATUS_PENDING;
+        function resetForNewLocation() {
             hasStored = false;
             root.dataset.hasStored = '0';
-            root.dataset.status = STATUS_PENDING;
-            updateHeaderState({ status: STATUS_PENDING });
-            setError('');
+            root.dataset.status = '';
             if (body) body.hidden = true;
             if (stats) stats.hidden = true;
-            if (placeholder) placeholder.hidden = true;
-            if (loading) loading.hidden = false;
+            if (placeholder) placeholder.hidden = false;
+            if (loading) loading.hidden = true;
+            if (groupsHost) groupsHost.innerHTML = '';
+            if (highlightsHost) {
+                highlightsHost.innerHTML = '';
+                highlightsHost.hidden = true;
+            }
+            if (missingHost) missingHost.innerHTML = '';
+            if (toggleMissing) toggleMissing.hidden = true;
             updateButtonLabel();
+            updateHeaderState({});
+            setError('');
         }
 
         toggleMissing?.addEventListener('click', () => {
@@ -309,16 +297,6 @@
             const mapRoot = document.querySelector('[data-crm-property-map]');
             mapRoot?.scrollIntoView({ behavior: 'smooth', block: 'start' });
         });
-
-        async function getStatus() {
-            const resp = await fetch(fetchUrl, {
-                method: 'GET',
-                headers: { Accept: 'application/json' },
-                credentials: 'same-origin',
-            });
-            const data = await resp.json().catch(() => ({}));
-            return { resp, data };
-        }
 
         async function postNearby(body) {
             const resp = await fetch(fetchUrl, {
@@ -375,74 +353,12 @@
             );
         }
 
-        async function pollUntilReady() {
-            if (!fetchUrl || !hasCoords) return;
-            stopPolling();
-            pollAttempts = 0;
-            pollTimer = window.setInterval(async () => {
-                pollAttempts += 1;
-                try {
-                    const { resp, data } = await getStatus();
-                    if (!resp.ok || !data.ok) {
-                        if (pollAttempts >= POLL_MAX_ATTEMPTS) {
-                            stopPolling();
-                            setError('دریافت وضعیت محاسبه ممکن نشد. دکمه «بروزرسانی» را بزنید.');
-                            if (loading) loading.hidden = true;
-                            if (fetchBtn) fetchBtn.disabled = !hasCoords;
-                        }
-                        return;
-                    }
-                    if (data.status === STATUS_READY && Array.isArray(data.items)) {
-                        renderPayload(data);
-                    } else if (data.status === STATUS_FAILED) {
-                        if (data.fallback) {
-                            try {
-                                const elements = await fetchOverpassFromBrowser(data.fallback);
-                                const posted = await postNearby({ refresh: true, elements });
-                                if (posted.resp.ok && posted.data.ok && posted.data.status !== STATUS_PENDING) {
-                                    renderPayload(posted.data);
-                                    return;
-                                }
-                            } catch (_) {
-                                /* fall through to error UI */
-                            }
-                        }
-                        stopPolling();
-                        status = STATUS_FAILED;
-                        updateHeaderState(data);
-                        setError(data.error_message || 'محاسبه دسترسی‌ها انجام نشد.');
-                        if (loading) loading.hidden = true;
-                        if (fetchBtn) fetchBtn.disabled = !hasCoords;
-                    } else if (
-                        data.status === STATUS_PENDING
-                        && pollAttempts >= POLL_MAX_ATTEMPTS
-                    ) {
-                        stopPolling();
-                        status = STATUS_FAILED;
-                        updateHeaderState(data);
-                        setError(
-                            'محاسبه بیش از حد طول کشید. دکمه «بروزرسانی» را بزنید یا اتصال اینترنت را بررسی کنید.',
-                        );
-                        if (loading) loading.hidden = true;
-                        if (fetchBtn) fetchBtn.disabled = !hasCoords;
-                    }
-                } catch (_) {
-                    /* ignore transient poll errors */
-                }
-            }, 2500);
-        }
-
         async function fetchNearby(refresh) {
             if (!fetchUrl || !hasCoords || busy) return;
             setError('');
             setLoading(true);
             try {
                 let { resp, data } = await postNearby({ refresh: !!refresh });
-                if (resp.ok && data.ok && data.status === STATUS_PENDING) {
-                    showPendingState();
-                    pollUntilReady();
-                    return;
-                }
                 if ((!resp.ok || !data.ok) && data.fallback) {
                     const elements = await fetchOverpassFromBrowser(data.fallback);
                     ({ resp, data } = await postNearby({
@@ -452,11 +368,6 @@
                 }
                 if (!resp.ok || !data.ok) {
                     throw new Error(data.error || data.error_message || 'دریافت امکانات و دسترسی‌ها ناموفق بود.');
-                }
-                if (data.status === STATUS_PENDING) {
-                    showPendingState();
-                    pollUntilReady();
-                    return;
                 }
                 renderPayload(data);
                 if (typeof global.showToast === 'function' && !data.cached) {
@@ -479,27 +390,11 @@
             fetchNearby(hasStored);
         });
 
-        root.addEventListener('crm-property-location-saved', (event) => {
+        root.addEventListener('crm-property-location-saved', () => {
             hasCoords = true;
             root.dataset.hasCoords = '1';
-            hasStored = false;
-            root.dataset.hasStored = '0';
             if (fetchBtn) fetchBtn.disabled = false;
-            if (body) body.hidden = true;
-            if (stats) stats.hidden = true;
-            if (groupsHost) groupsHost.innerHTML = '';
-            if (highlightsHost) {
-                highlightsHost.innerHTML = '';
-                highlightsHost.hidden = true;
-            }
-            if (missingHost) missingHost.innerHTML = '';
-            if (toggleMissing) toggleMissing.hidden = true;
-            updateButtonLabel();
-            setError('');
-            if (event.detail?.accessibility_status === STATUS_PENDING || !event.detail?.accessibility_status) {
-                showPendingState();
-                pollUntilReady();
-            }
+            resetForNewLocation();
         });
 
         const initialEl = document.getElementById('crm-nearby-pois-initial');
@@ -509,15 +404,12 @@
             } catch (_) {
                 /* ignore */
             }
-        } else if (status === STATUS_PENDING) {
-            showPendingState();
-            pollUntilReady();
         } else {
-            updateHeaderState({ status, location_precision: locationPrecision });
+            updateHeaderState({});
         }
 
         updateButtonLabel();
-        return { refresh: () => fetchNearby(true), pollUntilReady };
+        return { refresh: () => fetchNearby(true) };
     }
 
     function bootNearbyPois() {

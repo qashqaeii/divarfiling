@@ -599,9 +599,6 @@ def refresh_property_accessibilities(
         if cached:
             return api_response_payload(cached, cached=True)
 
-    if force_refresh and elements is None and not generation_id:
-        generation_id = mark_property_accessibilities_pending(prop, location=location)
-
     lat = location['lat']
     lng = location['lng']
     radius_m = property_accessibility_radius_m()
@@ -659,32 +656,8 @@ def refresh_property_accessibilities(
     return api_response_payload(payload, cached=False)
 
 
-def _inline_process_pending_accessibility(prop) -> None:
-    """When no background worker runs, complete queued jobs during API poll."""
-    from workspace.services.property_accessibility_jobs import (
-        is_property_accessibility_pending_stale,
-        process_property_accessibility_jobs_for_property,
-        reconcile_stale_pending_accessibilities,
-    )
-
-    if get_property_accessibility_status(prop) != ACCESSIBILITY_STATUS_PENDING:
-        return
-    process_property_accessibility_jobs_for_property(prop.pk, limit=2)
-    prop.refresh_from_db()
-    if get_property_accessibility_status(prop) == ACCESSIBILITY_STATUS_PENDING:
-        if is_property_accessibility_pending_stale(prop):
-            reconcile_stale_pending_accessibilities(
-                timeout_minutes=int(
-                    getattr(settings, 'PROPERTY_ACCESSIBILITY_PENDING_TIMEOUT_MIN', 15),
-                ),
-            )
-            prop.refresh_from_db()
-
-
 def property_accessibility_status_payload(prop) -> Dict[str, Any]:
-    """Status for polling; may run queued jobs inline when workers are absent."""
-    if get_property_accessibility_status(prop) == ACCESSIBILITY_STATUS_PENDING:
-        _inline_process_pending_accessibility(prop)
+    """Read stored accessibility data / status (no background fetch)."""
     status = get_property_accessibility_status(prop)
     data = getattr(prop, 'nearby_pois', None) or {}
     stored = get_stored_nearby_pois_payload(prop)
@@ -1369,16 +1342,19 @@ def clear_nearby_pois(prop) -> None:
 
 def nearby_pois_page_context(prop) -> Dict[str, Any]:
     has_coords = prop.latitude is not None and prop.longitude is not None
-    status = get_property_accessibility_status(prop)
     stored = get_stored_nearby_pois_payload(prop) if has_coords else None
+    status = get_property_accessibility_status(prop)
+    if status == ACCESSIBILITY_STATUS_PENDING and not stored:
+        status = ''
     location = resolve_property_location(prop)
     radius_m = property_accessibility_radius_m()
+    radius_label = accessibility_radius_label_fa(radius_m=radius_m)
     return {
         'has_coords': has_coords,
         'has_stored': bool(stored),
         'status': status,
-        'pending': status == ACCESSIBILITY_STATUS_PENDING,
-        'failed': status == ACCESSIBILITY_STATUS_FAILED,
+        'pending': False,
+        'failed': status == ACCESSIBILITY_STATUS_FAILED and not stored,
         'unavailable': status == ACCESSIBILITY_STATUS_UNAVAILABLE,
         'location_precision': location.get('precision') or 'none',
         'initial_payload': stored,

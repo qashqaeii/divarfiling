@@ -1527,9 +1527,6 @@ class CRMPropertyCreateView(LoginRequiredMixin, CreateView):
             crm_property=self.object,
             source='سایر',
         )
-        from workspace.services.nearby_pois import schedule_property_accessibilities
-
-        schedule_property_accessibilities(self.object.pk, self.request.user.pk)
         messages.success(self.request, 'ملک ثبت شد.')
         return redirect('workspace:crm_property_detail', property_id=self.object.pk)
 
@@ -2116,16 +2113,12 @@ class CRMPropertyUpdateView(LoginRequiredMixin, UpdateView):
         )
         if (old_lat, old_lng) != (self.object.latitude, self.object.longitude):
             from workspace.services.nearby_pois import (
+                clear_nearby_pois,
                 mark_property_manual_location,
-                schedule_property_accessibilities,
             )
 
             mark_property_manual_location(self.object)
-            schedule_property_accessibilities(
-                self.object.pk,
-                self.request.user.pk,
-                force=True,
-            )
+            clear_nearby_pois(self.object)
         messages.success(self.request, 'ملک به‌روز شد.')
         return redirect('workspace:crm_property_detail', property_id=self.object.pk)
 
@@ -2190,24 +2183,17 @@ class CRMPropertyLocationUpdateView(LoginRequiredMixin, View):
         mark_property_manual_location(prop)
         prop.save(update_fields=['latitude', 'longitude', 'updated_at'])
 
-        location_changed = (old_lat, old_lng) != (lat, lng)
-        accessibility_status = ''
-        if location_changed:
-            from workspace.services.nearby_pois import (
-                get_property_accessibility_status,
-                schedule_property_accessibilities,
-            )
+        if (old_lat, old_lng) != (lat, lng):
+            from workspace.services.nearby_pois import clear_nearby_pois
 
-            schedule_property_accessibilities(prop.pk, request.user.pk, force=True)
-            prop.refresh_from_db()
-            accessibility_status = get_property_accessibility_status(prop)
+            clear_nearby_pois(prop)
 
         return JsonResponse({
             'ok': True,
             'latitude': lat,
             'longitude': lng,
             'map_navigation': build_map_navigation(lat, lng),
-            'accessibility_status': accessibility_status,
+            'accessibility_status': '',
         })
 
 
@@ -2234,7 +2220,6 @@ class CRMPropertyNearbyPoisView(LoginRequiredMixin, View):
             get_stored_nearby_pois_payload,
             property_accessibility_status_payload,
             refresh_property_accessibilities,
-            schedule_property_accessibilities,
         )
 
         prop = property_for_user(request.user, property_id)
@@ -2279,16 +2264,28 @@ class CRMPropertyNearbyPoisView(LoginRequiredMixin, View):
                 return JsonResponse(api_response_payload(cached, cached=True))
 
         try:
-            schedule_property_accessibilities(
-                prop.pk,
-                request.user.pk,
-                force=force_refresh,
+            body = refresh_property_accessibilities(
+                prop,
+                request.user,
+                force_refresh=force_refresh or not bool(get_stored_nearby_pois_payload(prop)),
             )
-        except Exception:
-            return JsonResponse({'ok': False, 'error': 'زمان‌بندی محاسبه ناموفق بود.'}, status=500)
-
-        prop.refresh_from_db()
-        body = property_accessibility_status_payload(prop)
+        except NearbyPoiError as exc:
+            body = {
+                'ok': False,
+                'code': exc.code,
+                'error': exc.message,
+                'error_message': exc.message,
+                'status': 'failed',
+            }
+            if exc.code in ('service_unavailable', 'service_busy'):
+                from workspace.services.nearby_pois import (
+                    overpass_client_fallback,
+                    resolve_property_location,
+                )
+                loc = resolve_property_location(prop)
+                if loc.get('usable'):
+                    body['fallback'] = overpass_client_fallback(loc['lat'], loc['lng'])
+            return JsonResponse(body, status=exc.status)
         return JsonResponse(body)
 
 

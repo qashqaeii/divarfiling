@@ -4,7 +4,8 @@
          data-has-coords="{% if nearby_pois_ctx.has_coords %}1{% else %}0{% endif %}"
          data-has-stored="{% if nearby_pois_ctx.has_stored %}1{% else %}0{% endif %}"
          data-status="{{ nearby_pois_ctx.status|default:'' }}"
-         data-location-precision="{{ nearby_pois_ctx.location_precision|default:'none' }}">
+         data-location-precision="{{ nearby_pois_ctx.location_precision|default:'none' }}"
+         data-radius-hint="{{ nearby_pois_ctx.radius_label|default:'شعاع ۳ کیلومتر' }} · {{ nearby_pois_ctx.category_count|default:22 }} دسته — دکمه «محاسبه»">
     <div class="crm-nearby-pois__inner">
         <header class="crm-nearby-pois__header">
             <div class="crm-nearby-pois__lead">
@@ -14,9 +15,7 @@
                 <div class="crm-nearby-pois__titles">
                     <h2 class="crm-nearby-pois__title">امکانات و دسترسی‌ها</h2>
                     <p class="crm-nearby-pois__sub" data-nearby-header-sub>
-                        {% if nearby_pois_ctx.pending %}
-                            <span class="crm-nearby-pois__sub-pending">⏳ در حال بررسی موقعیت‌های اطراف ملک…</span>
-                        {% elif nearby_pois_ctx.failed %}
+                        {% if nearby_pois_ctx.failed %}
                             محاسبه دسترسی‌ها انجام نشد
                         {% elif not nearby_pois_ctx.has_coords %}
                             برای محاسبه دسترسی‌ها، موقعیت ملک را روی نقشه مشخص کنید
@@ -81,13 +80,12 @@
         </div>
 
         <p class="crm-nearby-pois__hint" data-nearby-placeholder
-           {% if nearby_pois_ctx.has_stored or nearby_pois_ctx.pending %}hidden{% endif %}>
+           {% if nearby_pois_ctx.has_stored %}hidden{% endif %}>
             <i class="fas fa-circle-info" aria-hidden="true"></i>
-            فاصله خط مستقیم تا نزدیک‌ترین مکان‌ها — پس از ساخت فایل به‌صورت خودکار محاسبه می‌شود.
+            فاصله خط مستقیم تا نزدیک‌ترین مکان‌ها — با دکمه «محاسبه» دریافت و ذخیره می‌شود.
         </p>
 
-        <div class="crm-nearby-pois__loading" data-nearby-loading
-             {% if not nearby_pois_ctx.pending %}hidden{% endif %}
+        <div class="crm-nearby-pois__loading" data-nearby-loading hidden
              aria-live="polite" aria-busy="true">
             <span class="crm-nearby-pois__loading-dot" aria-hidden="true"></span>
             <span class="crm-nearby-pois__loading-dot" aria-hidden="true"></span>

@@ -525,7 +525,7 @@ class ContractDeleteDraftView(ContractAccessMixin, View):
         return_to = (request.POST.get('return_to') or '').strip()
         try:
             internal_number = delete_draft_contract(contract, user=request.user, request=request)
-            messages.success(request, f'پیش‌نویس {internal_number} حذف شد.')
+            messages.success(request, f'قرارداد {internal_number} حذف شد.')
         except ContractError as exc:
             messages.error(request, str(exc))
         if return_to.startswith('/workspace/'):

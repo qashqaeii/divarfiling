@@ -351,6 +351,15 @@ class ContractDeleteDraftTests(TestCase):
         with self.assertRaises(ContractError):
             delete_draft_contract(contract, user=self.user)
 
+    def test_delete_cancelled_contract(self):
+        contract = create_contract(self.user, CONTRACT_TYPE_LEASE)
+        Contract.objects.filter(pk=contract.pk).update(status='cancelled')
+        self.client.force_login(self.user)
+        url = reverse('workspace:contract_delete_draft_standalone', kwargs={'contract_id': contract.pk})
+        resp = self.client.post(url)
+        self.assertEqual(resp.status_code, 302)
+        self.assertIsNone(contract_for_user(self.user, contract.pk))
+
 
 class FinalViewContextTests(TestCase):
     def test_build_final_view_includes_document_when_verified(self):

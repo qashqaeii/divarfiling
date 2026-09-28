@@ -45,7 +45,7 @@ from contracts.services.prefill import (
     prefill_parties_from_deal,
     prefill_property_from_deal,
 )
-from contracts.services.scope import can_edit_contract
+from contracts.services.scope import can_edit_contract, contract_for_user
 from contracts.services.state_machine import InvalidStateTransition, transition_contract
 from contracts.services.tokens import generate_bearer_token
 from contracts.services.version_copy import copy_version_entities
@@ -460,11 +460,11 @@ def create_new_version(contract: Contract, *, user=None, request=None) -> Contra
 
 @transaction.atomic
 def delete_draft_contract(contract: Contract, *, user=None, request=None) -> str:
-    """حذف کامل قرارداد پیش‌نویس — غیرقابل بازگشت."""
-    if not user or not can_edit_contract(user, contract):
+    """حذف کامل پیش‌نویس یا قرارداد لغوشده — غیرقابل بازگشت."""
+    if not user or not contract_for_user(user, contract.pk):
         raise ContractError('این قرارداد قابل حذف نیست.')
-    if contract.status != CONTRACT_STATUS_DRAFT:
-        raise ContractError('فقط قراردادهای پیش‌نویس قابل حذف هستند.')
+    if contract.status not in (CONTRACT_STATUS_DRAFT, CONTRACT_STATUS_CANCELLED):
+        raise ContractError('فقط پیش‌نویس یا قرارداد لغوشده قابل حذف است.')
     internal_number = contract.internal_number
     contract.delete()
     return internal_number

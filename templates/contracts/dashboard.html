@@ -323,9 +323,11 @@
                                         <a href="{% ct_manage_url c %}" role="menuitem">مدیریت قرارداد</a>
                                         {% if c.status == 'draft' %}
                                         <a href="{% ct_wizard_url c %}" role="menuitem">ادامه ویزارد</a>
-                                        <form method="post" action="{% ct_delete_draft_url c %}" class="ct-menu-panel__form" onsubmit="return confirm('این پیش‌نویس حذف شود؟ این عمل قابل بازگشت نیست.');">
+                                        {% endif %}
+                                        {% if c.status == 'draft' or c.status == 'cancelled' %}
+                                        <form method="post" action="{% ct_delete_draft_url c %}" class="ct-menu-panel__form" onsubmit="return confirm('این قرارداد حذف شود؟ این عمل قابل بازگشت نیست.');">
                                             {% csrf_token %}
-                                            <button type="submit" class="is-destructive" role="menuitem">حذف پیش‌نویس</button>
+                                            <button type="submit" class="is-destructive" role="menuitem">حذف قرارداد</button>
                                         </form>
                                         {% endif %}
                                         {% if c.deal %}

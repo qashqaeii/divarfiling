@@ -104,6 +104,12 @@ def ct_pdf_url(contract):
 
 
 @register.simple_tag
+def ct_delete_draft_url(contract):
+    from contracts.services.routing import contract_delete_draft_url
+    return contract_delete_draft_url(contract)
+
+
+@register.simple_tag
 def ct_handover_create_url(contract):
     from contracts.services.routing import handover_create_url
     return handover_create_url(contract)

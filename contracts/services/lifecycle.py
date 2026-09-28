@@ -459,6 +459,18 @@ def create_new_version(contract: Contract, *, user=None, request=None) -> Contra
 
 
 @transaction.atomic
+def delete_draft_contract(contract: Contract, *, user=None, request=None) -> str:
+    """حذف کامل قرارداد پیش‌نویس — غیرقابل بازگشت."""
+    if not user or not can_edit_contract(user, contract):
+        raise ContractError('این قرارداد قابل حذف نیست.')
+    if contract.status != CONTRACT_STATUS_DRAFT:
+        raise ContractError('فقط قراردادهای پیش‌نویس قابل حذف هستند.')
+    internal_number = contract.internal_number
+    contract.delete()
+    return internal_number
+
+
+@transaction.atomic
 def cancel_contract(contract: Contract, reason: str = '', *, user=None, request=None) -> Contract:
     if contract.status == CONTRACT_STATUS_FINALIZED:
         raise ContractError('قرارداد نهایی‌شده قابل لغو مستقیم نیست.')

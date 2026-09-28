@@ -52,6 +52,11 @@ standalone_urlpatterns = [
         name='contract_manage_standalone',
     ),
     path(
+        'crm/contracts/<int:contract_id>/delete-draft/',
+        views.ContractDeleteDraftView.as_view(),
+        name='contract_delete_draft_standalone',
+    ),
+    path(
         'crm/contracts/<int:contract_id>/pdf/',
         views.ContractPdfDownloadView.as_view(),
         name='contract_pdf_standalone',
@@ -109,6 +114,11 @@ legacy_deal_urlpatterns = [
         'crm/deals/<int:deal_id>/contracts/<int:contract_id>/',
         views.ContractManageView.as_view(),
         name='contract_manage',
+    ),
+    path(
+        'crm/deals/<int:deal_id>/contracts/<int:contract_id>/delete-draft/',
+        views.ContractDeleteDraftView.as_view(),
+        name='contract_delete_draft',
     ),
     path(
         'crm/deals/<int:deal_id>/contracts/<int:contract_id>/pdf/',

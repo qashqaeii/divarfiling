@@ -42,6 +42,7 @@ from contracts.services.lifecycle import (
     copy_contract,
     create_contract,
     create_new_version,
+    delete_draft_contract,
     prepare_for_send,
     save_wizard_step,
     validate_contract_ready,
@@ -509,6 +510,29 @@ class ContractManageView(ContractAccessMixin, DetailView):
         except (ContractError, ValueError) as exc:
             messages.error(request, str(exc))
         return redirect(contract_manage_url(contract))
+
+
+class ContractDeleteDraftView(ContractAccessMixin, View):
+    """حذف قرارداد پیش‌نویس از لیست یا معامله."""
+
+    @method_decorator(csrf_protect)
+    def post(self, request, contract_id, deal_id=None):
+        self.kwargs.setdefault('contract_id', contract_id)
+        if deal_id is not None:
+            self.kwargs['deal_id'] = deal_id
+        contract = self.get_contract()
+        saved_deal_id = contract.deal_id
+        return_to = (request.POST.get('return_to') or '').strip()
+        try:
+            internal_number = delete_draft_contract(contract, user=request.user, request=request)
+            messages.success(request, f'پیش‌نویس {internal_number} حذف شد.')
+        except ContractError as exc:
+            messages.error(request, str(exc))
+        if return_to.startswith('/workspace/'):
+            return redirect(return_to)
+        if saved_deal_id:
+            return redirect(contracts_dashboard_url(deal=saved_deal_id))
+        return redirect(contracts_dashboard_url())
 
 
 class ContractPdfDownloadView(ContractAccessMixin, View):

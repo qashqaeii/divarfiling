@@ -12,9 +12,11 @@ from accounts.services.otp import hash_otp_code
 from contracts.services.tokens import hash_token
 from contracts.services.hashing import compute_content_hash
 from contracts.tests.helpers import grant_bot_license
+from contracts.models import Contract
 from contracts.services.lifecycle import (
     ContractError,
     create_contract,
+    delete_draft_contract,
     prepare_for_send,
     save_wizard_step,
     validate_contract_ready,
@@ -319,6 +321,35 @@ class ContractWizardPickerTests(TestCase):
         self.assertEqual(data['next_offset'], 10)
         second = self.client.get(url, {'limit': 10, 'offset': data['next_offset']})
         self.assertEqual(len(second.json()['results']), 10)
+
+
+class ContractDeleteDraftTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='del_u', phone='09129870001', password='x')
+        grant_bot_license(self.user)
+
+    def test_delete_draft_via_post(self):
+        contract = create_contract(self.user, CONTRACT_TYPE_LEASE)
+        self.client.force_login(self.user)
+        url = reverse('workspace:contract_delete_draft_standalone', kwargs={'contract_id': contract.pk})
+        resp = self.client.post(url)
+        self.assertEqual(resp.status_code, 302)
+        self.assertIsNone(contract_for_user(self.user, contract.pk))
+
+    def test_delete_draft_rejects_non_draft(self):
+        contract = create_contract(self.user, CONTRACT_TYPE_SALE)
+        Contract.objects.filter(pk=contract.pk).update(status='ready')
+        self.client.force_login(self.user)
+        url = reverse('workspace:contract_delete_draft_standalone', kwargs={'contract_id': contract.pk})
+        self.client.post(url)
+        self.assertIsNotNone(contract_for_user(self.user, contract.pk))
+
+    def test_delete_draft_service_checks_status(self):
+        contract = create_contract(self.user, CONTRACT_TYPE_LEASE)
+        Contract.objects.filter(pk=contract.pk).update(status='ready')
+        contract.refresh_from_db()
+        with self.assertRaises(ContractError):
+            delete_draft_contract(contract, user=self.user)
 
 
 class FinalViewContextTests(TestCase):

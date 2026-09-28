@@ -22,6 +22,12 @@ def contract_manage_url(contract) -> str:
     return reverse('workspace:contract_manage_standalone', kwargs={'contract_id': contract.pk})
 
 
+def contract_delete_draft_url(contract) -> str:
+    if contract.deal_id:
+        return reverse('workspace:contract_delete_draft', kwargs=_deal_kw(contract))
+    return reverse('workspace:contract_delete_draft_standalone', kwargs={'contract_id': contract.pk})
+
+
 def contract_pdf_url(contract) -> str:
     if contract.deal_id:
         return reverse('workspace:contract_pdf', kwargs=_deal_kw(contract))

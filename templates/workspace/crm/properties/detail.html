@@ -972,7 +972,10 @@
 <aside class="crm-drawer" id="drawer-edit" {% if open_drawer == 'edit' %}data-open="1"{% endif %}>
     <div class="crm-drawer-overlay" data-drawer-close></div>
     <div class="crm-drawer-panel crm-drawer-panel-lg">
-        {% include 'workspace/crm/includes/property_drawer_head.html' with head_title='ویرایش ملک' head_subtitle=property.title %}
+        <div class="crm-drawer-head">
+            <div><h2>ویرایش ملک</h2><p>{{ property.title }}</p></div>
+            <button type="button" class="crm-drawer-close" data-drawer-close><i class="fas fa-times"></i></button>
+        </div>
         <form method="post" action="{% url 'workspace:crm_property_edit' property.id %}" class="crm-drawer-form">
             <div class="crm-drawer-body">{% csrf_token %}{% include 'workspace/crm/includes/property_form_sections.html' with form=property_form %}</div>
             <div class="crm-drawer-foot">

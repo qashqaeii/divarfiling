@@ -4253,6 +4253,33 @@ body.crm-side-open { overflow: hidden; }
 .crm-drawer-head-accent { background: linear-gradient(135deg, #4f46e5, #7c3aed); color: #fff; }
 .crm-drawer-head-accent h2 { color: #fff; }
 .crm-drawer-head-accent p { color: rgba(255,255,255,.8); }
+.crm-drawer-head.crm-drawer-head-property {
+    position: relative;
+    overflow: hidden;
+    color: #fff;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.14) !important;
+    background-color: #3730a3 !important;
+    background-image:
+        linear-gradient(
+            105deg,
+            rgba(30, 27, 75, 0.82) 0%,
+            rgba(76, 29, 149, 0.68) 52%,
+            rgba(49, 46, 129, 0.78) 100%
+        ),
+        var(--crm-prop-head-image, none);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+.crm-drawer-head-property h2 {
+    color: #fff;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+}
+.crm-drawer-head-property p {
+    color: rgba(255, 255, 255, 0.88);
+    margin-top: 0.2rem;
+}
 .crm-drawer-close--on-accent {
     background: rgba(255,255,255,.15) !important;
     color: #fff !important;

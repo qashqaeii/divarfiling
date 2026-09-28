@@ -649,19 +649,46 @@ function resolveCRMFeatProfile(dealMode, propertyType) {
     return 'sale';
 }
 
+function syncCrmFeatToggleInput(input) {
+    if (!input || input.type !== 'checkbox') return;
+    const wrap = input.closest('.crm-feat-toggle');
+    if (!wrap) return;
+    const label = wrap.querySelector('[data-feat-toggle-txt], .crm-feat-toggle-txt');
+    const onTxt = input.dataset.toggleOn || label?.dataset.toggleOn || 'دارد';
+    const offTxt = input.dataset.toggleOff || label?.dataset.toggleOff || 'ندارد';
+    if (label) label.textContent = input.checked ? onTxt : offTxt;
+    wrap.classList.toggle('is-on', input.checked);
+}
+
 function initCRMFeatToggles(root) {
     const scope = root || document;
     scope.querySelectorAll('.crm-feat-toggle input[type="checkbox"]').forEach((input) => {
-        if (input.dataset.crmToggleBound === '1') return;
+        if (input.dataset.crmToggleBound === '1') {
+            syncCrmFeatToggleInput(input);
+            return;
+        }
         input.dataset.crmToggleBound = '1';
-        const label = input.closest('.crm-feat-toggle')?.querySelector('[data-feat-toggle-txt], .crm-feat-toggle-txt');
-        const onTxt = input.dataset.toggleOn || label?.dataset.toggleOn || 'دارد';
-        const offTxt = input.dataset.toggleOff || label?.dataset.toggleOff || 'ندارد';
-        const sync = () => {
-            if (label) label.textContent = input.checked ? onTxt : offTxt;
-        };
-        input.addEventListener('change', sync);
-        sync();
+        input.addEventListener('change', () => syncCrmFeatToggleInput(input));
+        input.addEventListener('input', () => syncCrmFeatToggleInput(input));
+        syncCrmFeatToggleInput(input);
+    });
+}
+
+function initCRMFeatToggleDelegation() {
+    if (window.__crmFeatToggleDelegation) return;
+    window.__crmFeatToggleDelegation = true;
+    document.addEventListener('change', (e) => {
+        const input = e.target;
+        if (input instanceof HTMLInputElement && input.type === 'checkbox' && input.closest('.crm-feat-toggle')) {
+            syncCrmFeatToggleInput(input);
+        }
+    });
+    document.addEventListener('click', (e) => {
+        const wrap = e.target.closest('.crm-prop-bool-toggle .crm-feat-toggle, .crm-feat-field--toggle .crm-feat-toggle');
+        if (!wrap) return;
+        const input = wrap.querySelector('input[type="checkbox"]');
+        if (!input || input.disabled) return;
+        window.requestAnimationFrame(() => syncCrmFeatToggleInput(input));
     });
 }
 
@@ -5954,6 +5981,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initCRMTypeProfiles();
     initPropertyDealMode();
     initCRMFeatureProfile();
+    initCRMFeatToggleDelegation();
     initCRMFeatToggles(document);
     initCRMGlobalSearch();
     initCRMMultiSelect();

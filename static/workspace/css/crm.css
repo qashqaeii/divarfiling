@@ -6517,13 +6517,43 @@ body.crm-side-open { overflow: hidden; }
     flex-shrink: 0;
 }
 .crm-prop-bool-toggle .crm-feat-toggle {
+    position: relative;
     justify-content: flex-end;
+    min-width: 6.5rem;
+    min-height: 26px;
+    cursor: pointer;
 }
 .crm-prop-bool-toggle .crm-feat-toggle input[type="checkbox"] {
     position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
     opacity: 0;
-    width: 0;
-    height: 0;
+    cursor: pointer;
+    z-index: 2;
+}
+.crm-prop-bool-toggle .crm-feat-toggle-ui {
+    position: relative;
+    z-index: 1;
+    pointer-events: none;
+}
+.crm-prop-bool-toggle .crm-feat-toggle-txt {
+    position: relative;
+    z-index: 1;
+    pointer-events: none;
+}
+.crm-prop-bool-toggle .crm-feat-toggle input:checked + .crm-feat-toggle-ui,
+.crm-prop-bool-toggle .crm-feat-toggle:has(input:checked) .crm-feat-toggle-ui {
+    background: #22c55e;
+}
+.crm-prop-bool-toggle .crm-feat-toggle input:checked + .crm-feat-toggle-ui + .crm-feat-toggle-txt,
+.crm-prop-bool-toggle .crm-feat-toggle:has(input:checked) .crm-feat-toggle-txt,
+.crm-prop-bool-toggle .crm-feat-toggle.is-on .crm-feat-toggle-txt {
+    color: #16a34a;
+}
+.crm-prop-bool-toggle .crm-feat-toggle.is-on .crm-feat-toggle-ui {
+    background: #22c55e;
 }
 .crm-prop-amenity-groups {
     display: flex;
@@ -6780,7 +6810,8 @@ body.crm-side-open { overflow: hidden; }
     user-select: none;
     -webkit-tap-highlight-color: transparent;
 }
-.crm-feat-toggle input {
+.crm-feat-field--toggle .crm-feat-toggle > input[type="checkbox"],
+.crm-feat-profile .crm-feat-toggle > input[type="checkbox"] {
     position: absolute;
     opacity: 0;
     width: 0;
@@ -6806,10 +6837,12 @@ body.crm-side-open { overflow: hidden; }
     box-shadow: 0 1px 4px rgba(18, 20, 26, 0.18);
     transition: transform 0.18s ease;
 }
-.crm-feat-toggle input:checked + .crm-feat-toggle-ui {
+.crm-feat-toggle input:checked + .crm-feat-toggle-ui,
+.crm-feat-toggle:has(input:checked) .crm-feat-toggle-ui {
     background: var(--crm-feat-accent);
 }
-.crm-feat-toggle input:checked + .crm-feat-toggle-ui .crm-feat-toggle-knob {
+.crm-feat-toggle input:checked + .crm-feat-toggle-ui .crm-feat-toggle-knob,
+.crm-feat-toggle:has(input:checked) .crm-feat-toggle-knob {
     transform: translateX(-18px);
 }
 .crm-feat-toggle-txt {
@@ -6818,7 +6851,8 @@ body.crm-side-open { overflow: hidden; }
     color: var(--ws-text-muted, #64748b);
     min-width: 2.4rem;
 }
-.crm-feat-toggle:has(input:checked) .crm-feat-toggle-txt {
+.crm-feat-toggle:has(input:checked) .crm-feat-toggle-txt,
+.crm-feat-toggle input:checked + .crm-feat-toggle-ui + .crm-feat-toggle-txt {
     color: var(--crm-feat-accent);
 }
 

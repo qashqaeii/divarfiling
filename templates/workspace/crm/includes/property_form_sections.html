@@ -139,36 +139,47 @@
             <h3>امکانات سریع</h3>
             <span class="crm-prop-form-block-hint">پارکینگ، انباری و امکانات ساختمان — موارد تفصیلی در بخش ویژگی‌ها</span>
         </header>
-        <div class="crm-prop-amenity-groups crm-prop-amenity-groups--grid" role="group" aria-label="امکانات ملک">
-            {% for group in form.amenity_checkbox_groups %}
-            <div class="crm-prop-amenity-group crm-prop-bool-panel" data-amenity-group="{{ group.id }}">
-                <header class="crm-prop-bool-panel__head crm-prop-amenity-group-title">
-                    <i class="fas {{ group.icon }}" aria-hidden="true"></i>
-                    <span>{{ group.title }}</span>
-                </header>
-                <div class="crm-prefs-amenity-list crm-prop-amenity-list">
-                    {% for item in group.items %}
-                    <label class="crm-prefs-amenity crm-prop-amenity{% if item.checked %} is-checked{% endif %}">
-                        <span class="crm-prop-amenity__txt">
-                            <i class="fas {{ item.icon }}" aria-hidden="true"></i>
-                            <span>{{ item.label }}</span>
-                        </span>
-                        <input
-                            type="checkbox"
-                            name="amenity_flags"
-                            value="{{ item.label }}"
-                            class="crm-checkbox crm-prop-amenity__check"
-                            {% if item.checked %}checked{% endif %}
-                        >
-                    </label>
+        <div class="crm-prop-bool-panel crm-prop-amenity-one-card" role="group" aria-label="امکانات ملک">
+            <div class="crm-prop-amenity-two-col">
+                <div class="crm-prop-amenity-col" data-amenity-col="primary">
+                    {% for group in form.amenity_checkbox_groups %}
+                    {% if group.id == 'core' or group.id == 'luxury' %}
+                    <div class="crm-prop-amenity-block" data-amenity-group="{{ group.id }}">
+                        <header class="crm-prop-bool-panel__head">
+                            <i class="fas {{ group.icon }}" aria-hidden="true"></i>
+                            <span>{{ group.title }}</span>
+                        </header>
+                        <div class="crm-prop-bool-panel__items">
+                            {% for item in group.items %}
+                            {% include 'workspace/crm/includes/property_form_amenity_toggle.html' with label=item.label icon=item.icon checked=item.checked %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+                <div class="crm-prop-amenity-col" data-amenity-col="building">
+                    {% for group in form.amenity_checkbox_groups %}
+                    {% if group.id == 'building' %}
+                    <div class="crm-prop-amenity-block" data-amenity-group="{{ group.id }}">
+                        <header class="crm-prop-bool-panel__head">
+                            <i class="fas {{ group.icon }}" aria-hidden="true"></i>
+                            <span>{{ group.title }}</span>
+                        </header>
+                        <div class="crm-prop-bool-panel__items">
+                            {% for item in group.items %}
+                            {% include 'workspace/crm/includes/property_form_amenity_toggle.html' with label=item.label icon=item.icon checked=item.checked %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
                     {% endfor %}
                 </div>
             </div>
-            {% endfor %}
-        </div>
-        <div class="crm-prop-amenities-extra-card">
-            <label class="crm-label crm-prop-amenities-extra-label" for="{{ form.amenities_extra.id_for_label }}">سایر امکانات / جزئیات</label>
-            {% include 'workspace/crm/includes/crm_field_voice.html' with widget=form.amenities_extra %}
+            <div class="crm-prop-amenity-extra">
+                <label class="crm-label crm-prop-amenities-extra-label" for="{{ form.amenities_extra.id_for_label }}">سایر امکانات / جزئیات</label>
+                {% include 'workspace/crm/includes/crm_field_voice.html' with widget=form.amenities_extra %}
+            </div>
         </div>
         {{ form.amenities }}
         {{ form.has_parking }}{{ form.has_storage }}{{ form.has_elevator }}

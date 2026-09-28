@@ -1,0 +1,27 @@
+<div class="crm-prop-bool-toggle">
+    <div class="crm-prop-bool-toggle__label">
+        <i class="fas {{ icon }}" aria-hidden="true"></i>
+        <span>{{ label }}</span>
+    </div>
+    <label class="crm-feat-toggle{% if checked %} is-on{% endif %}">
+        <input
+            type="checkbox"
+            name="amenity_flags"
+            value="{{ label }}"
+            class="crm-prop-bool-input crm-prop-amenity-input"
+            data-prop-amenity="1"
+            data-toggle-on="دارد"
+            data-toggle-off="ندارد"
+            {% if checked %}checked{% endif %}
+        >
+        <span class="crm-feat-toggle-ui" aria-hidden="true">
+            <span class="crm-feat-toggle-knob"></span>
+        </span>
+        <span
+            class="crm-feat-toggle-txt"
+            data-feat-toggle-txt
+            data-toggle-on="دارد"
+            data-toggle-off="ندارد"
+        >{% if checked %}دارد{% else %}ندارد{% endif %}</span>
+    </label>
+</div>

@@ -6450,80 +6450,41 @@ body.crm-side-open { overflow: hidden; }
     flex-direction: column;
     gap: .55rem;
 }
-.crm-prop-amenity-groups--grid {
+.crm-prop-amenity-one-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+.crm-prop-amenity-two-col {
     display: grid;
     grid-template-columns: 1fr;
-    gap: .75rem;
+    gap: .85rem;
 }
 @media (min-width: 900px) {
-    .crm-prop-amenity-groups--grid {
+    .crm-prop-amenity-two-col {
         grid-template-columns: repeat(2, minmax(0, 1fr));
         align-items: start;
-    }
-    .crm-prop-amenity-groups--grid .crm-prop-amenity-group:only-child {
-        grid-column: 1 / -1;
+        gap: 1rem 1.25rem;
     }
 }
-.crm-prop-amenity-group.crm-prop-bool-panel {
-    margin: 0;
-}
-.crm-prop-amenity-group .crm-prop-amenity-list {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: .4rem;
-}
-@media (min-width: 560px) {
-    .crm-prop-amenity-group .crm-prop-amenity-list {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-}
-.crm-prop-form-block .crm-prop-amenity {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: center;
-    gap: .5rem;
-    width: 100%;
-    min-height: 2.35rem;
-    padding: .45rem .55rem;
-    border-radius: 10px;
-    border: 1px solid var(--crm-border-light, #e8e6ef);
-    background: var(--ws-surface, #fff);
-    font-size: .76rem;
-    font-weight: 600;
-    color: var(--ws-text, #1e293b);
-    cursor: pointer;
-    user-select: none;
-    transition: border-color .15s ease, background .15s ease, box-shadow .15s ease;
-}
-.crm-prop-amenity__txt {
-    display: inline-flex;
-    align-items: center;
-    gap: .4rem;
+.crm-prop-amenity-col {
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
     min-width: 0;
 }
-.crm-prop-amenity__txt i {
-    width: 1rem;
-    text-align: center;
-    font-size: .72rem;
-    color: var(--ws-primary);
-    opacity: .85;
-    flex-shrink: 0;
+.crm-prop-amenity-block + .crm-prop-amenity-block {
+    padding-top: .15rem;
 }
-.crm-prop-amenity__check {
-    width: 1rem;
-    height: 1rem;
-    margin: 0;
-    accent-color: var(--ws-primary, #7c3aed);
-    flex-shrink: 0;
+.crm-prop-amenity-block .crm-prop-bool-panel__head {
+    margin-bottom: .35rem;
 }
-.crm-prop-amenities-extra-card {
+.crm-prop-amenity-extra {
     margin-top: .85rem;
-    padding: .7rem .8rem;
-    border-radius: 12px;
-    border: 1px solid var(--crm-border-light, #f0eef5);
-    background: var(--crm-surface-muted, #f8f7fa);
+    padding-top: .85rem;
+    border-top: 1px solid color-mix(in srgb, var(--crm-border-light, #f0eef5) 90%, transparent);
 }
-.crm-prop-amenities-extra-card .crm-textarea {
+.crm-prop-amenity-extra .crm-textarea {
     min-height: 4.5rem;
 }
 .crm-prop-notes-card {

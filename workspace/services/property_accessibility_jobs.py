@@ -198,18 +198,11 @@ def _process_single_job(job) -> None:
         job.save(update_fields=['status', 'finished_at', 'last_error', 'updated_at'])
 
 
-def process_property_accessibility_jobs(*, limit: int = 10) -> int:
-    """Claim and run queued accessibility jobs. Safe for cron/worker loops."""
-    from workspace.models import PropertyAccessibilityJob
-
-    close_old_connections()
-    reconcile_stale_pending_accessibilities()
-    processed = 0
+def _claim_queued_jobs(queryset, *, limit: int) -> list:
     now = timezone.now()
-
     with transaction.atomic():
         jobs = list(
-            PropertyAccessibilityJob.objects.select_for_update(skip_locked=True)
+            queryset.select_for_update(skip_locked=True)
             .filter(status=JOB_STATUS_QUEUED, run_after__lte=now)
             .order_by('run_after', 'id')[:limit],
         )
@@ -218,7 +211,11 @@ def process_property_accessibility_jobs(*, limit: int = 10) -> int:
             job.attempts += 1
             job.locked_at = now
             job.save(update_fields=['status', 'attempts', 'locked_at', 'updated_at'])
+    return jobs
 
+
+def _run_claimed_jobs(jobs) -> int:
+    processed = 0
     for job in jobs:
         try:
             _process_single_job(job)
@@ -231,5 +228,30 @@ def process_property_accessibility_jobs(*, limit: int = 10) -> int:
             job.save(update_fields=['status', 'finished_at', 'last_error', 'updated_at'])
         finally:
             close_old_connections()
-
     return processed
+
+
+def process_property_accessibility_jobs_for_property(
+    property_id: int,
+    *,
+    limit: int = 2,
+) -> int:
+    """Run queued jobs for one property (inline fallback when no cron worker)."""
+    from workspace.models import PropertyAccessibilityJob
+
+    close_old_connections()
+    jobs = _claim_queued_jobs(
+        PropertyAccessibilityJob.objects.filter(property_id=property_id),
+        limit=limit,
+    )
+    return _run_claimed_jobs(jobs)
+
+
+def process_property_accessibility_jobs(*, limit: int = 10) -> int:
+    """Claim and run queued accessibility jobs. Safe for cron/worker loops."""
+    from workspace.models import PropertyAccessibilityJob
+
+    close_old_connections()
+    reconcile_stale_pending_accessibilities()
+    jobs = _claim_queued_jobs(PropertyAccessibilityJob.objects.all(), limit=limit)
+    return _run_claimed_jobs(jobs)

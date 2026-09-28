@@ -659,8 +659,32 @@ def refresh_property_accessibilities(
     return api_response_payload(payload, cached=False)
 
 
+def _inline_process_pending_accessibility(prop) -> None:
+    """When no background worker runs, complete queued jobs during API poll."""
+    from workspace.services.property_accessibility_jobs import (
+        is_property_accessibility_pending_stale,
+        process_property_accessibility_jobs_for_property,
+        reconcile_stale_pending_accessibilities,
+    )
+
+    if get_property_accessibility_status(prop) != ACCESSIBILITY_STATUS_PENDING:
+        return
+    process_property_accessibility_jobs_for_property(prop.pk, limit=2)
+    prop.refresh_from_db()
+    if get_property_accessibility_status(prop) == ACCESSIBILITY_STATUS_PENDING:
+        if is_property_accessibility_pending_stale(prop):
+            reconcile_stale_pending_accessibilities(
+                timeout_minutes=int(
+                    getattr(settings, 'PROPERTY_ACCESSIBILITY_PENDING_TIMEOUT_MIN', 15),
+                ),
+            )
+            prop.refresh_from_db()
+
+
 def property_accessibility_status_payload(prop) -> Dict[str, Any]:
-    """Lightweight status for polling — never calls external providers."""
+    """Status for polling; may run queued jobs inline when workers are absent."""
+    if get_property_accessibility_status(prop) == ACCESSIBILITY_STATUS_PENDING:
+        _inline_process_pending_accessibility(prop)
     status = get_property_accessibility_status(prop)
     data = getattr(prop, 'nearby_pois', None) or {}
     stored = get_stored_nearby_pois_payload(prop)

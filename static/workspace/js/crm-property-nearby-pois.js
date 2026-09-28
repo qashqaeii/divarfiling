@@ -137,6 +137,8 @@
         let locationPrecision = root.dataset.locationPrecision || 'none';
         let busy = false;
         let pollTimer = null;
+        let pollAttempts = 0;
+        const POLL_MAX_ATTEMPTS = 40;
 
         function setError(message) {
             if (!errorEl) return;
@@ -376,11 +378,21 @@
         async function pollUntilReady() {
             if (!fetchUrl || !hasCoords) return;
             stopPolling();
+            pollAttempts = 0;
             pollTimer = window.setInterval(async () => {
+                pollAttempts += 1;
                 try {
                     const { resp, data } = await getStatus();
-                    if (!resp.ok || !data.ok) return;
-                    if (data.status === STATUS_READY && Array.isArray(data.items) && data.items.length) {
+                    if (!resp.ok || !data.ok) {
+                        if (pollAttempts >= POLL_MAX_ATTEMPTS) {
+                            stopPolling();
+                            setError('دریافت وضعیت محاسبه ممکن نشد. دکمه «بروزرسانی» را بزنید.');
+                            if (loading) loading.hidden = true;
+                            if (fetchBtn) fetchBtn.disabled = !hasCoords;
+                        }
+                        return;
+                    }
+                    if (data.status === STATUS_READY && Array.isArray(data.items)) {
                         renderPayload(data);
                     } else if (data.status === STATUS_FAILED) {
                         if (data.fallback) {
@@ -399,6 +411,18 @@
                         status = STATUS_FAILED;
                         updateHeaderState(data);
                         setError(data.error_message || 'محاسبه دسترسی‌ها انجام نشد.');
+                        if (loading) loading.hidden = true;
+                        if (fetchBtn) fetchBtn.disabled = !hasCoords;
+                    } else if (
+                        data.status === STATUS_PENDING
+                        && pollAttempts >= POLL_MAX_ATTEMPTS
+                    ) {
+                        stopPolling();
+                        status = STATUS_FAILED;
+                        updateHeaderState(data);
+                        setError(
+                            'محاسبه بیش از حد طول کشید. دکمه «بروزرسانی» را بزنید یا اتصال اینترنت را بررسی کنید.',
+                        );
                         if (loading) loading.hidden = true;
                         if (fetchBtn) fetchBtn.disabled = !hasCoords;
                     }

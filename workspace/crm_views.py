@@ -2288,7 +2288,8 @@ class CRMPropertyNearbyPoisView(LoginRequiredMixin, View):
             return JsonResponse({'ok': False, 'error': 'زمان‌بندی محاسبه ناموفق بود.'}, status=500)
 
         prop.refresh_from_db()
-        return JsonResponse(property_accessibility_status_payload(prop))
+        body = property_accessibility_status_payload(prop)
+        return JsonResponse(body)
 
 
 class CRMPropertyDuplicateView(LoginRequiredMixin, View):

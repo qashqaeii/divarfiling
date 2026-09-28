@@ -358,6 +358,25 @@ class CRMPropertyNearbyPoisViewTests(TestCase):
         self.assertEqual(get_property_accessibility_status(self.prop), ACCESSIBILITY_STATUS_READY)
 
     @patch('workspace.services.nearby_pois.fetch_overpass_elements')
+    def test_get_poll_processes_queued_job_without_worker(self, mock_fetch):
+        mock_fetch.return_value = _sample_elements()
+        with self.captureOnCommitCallbacks(execute=True):
+            self.client.post(
+                self.url,
+                data=json.dumps({'refresh': True}),
+                content_type='application/json',
+            )
+        self.prop.refresh_from_db()
+        self.assertEqual(get_property_accessibility_status(self.prop), ACCESSIBILITY_STATUS_PENDING)
+        resp = self.client.get(self.url)
+        self.assertEqual(resp.status_code, 200)
+        data = resp.json()
+        self.assertTrue(data['ok'])
+        self.assertEqual(data.get('status'), ACCESSIBILITY_STATUS_READY)
+        self.assertTrue(data.get('items'))
+        mock_fetch.assert_called()
+
+    @patch('workspace.services.nearby_pois.fetch_overpass_elements')
     def test_post_cached_second_call(self, mock_fetch):
         mock_fetch.return_value = _sample_elements()
         with self.captureOnCommitCallbacks(execute=True):

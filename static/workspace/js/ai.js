@@ -42,8 +42,8 @@
         const usedEl = panel.querySelector('[data-ai-quota-used]');
         const limitEl = panel.querySelector('[data-ai-quota-limit]');
         const remainingPill = panel.querySelector('[data-ai-quota-remaining-pill]');
-        const fillEl = panel.querySelector('[data-ai-quota-fill]');
-        const trackEl = panel.querySelector('[data-ai-quota-track]');
+        const fillEl = card.querySelector('[data-ai-quota-fill]');
+        const trackEl = card.querySelector('[data-ai-quota-track]');
         const dailyRemainingEl = panel.querySelector('[data-ai-daily-remaining]');
         const dailyLimitEl = panel.querySelector('[data-ai-daily-limit]');
 
@@ -121,10 +121,10 @@
         const toneHint = panel.querySelector('[data-ai-tone-hint]');
         const styleHint = panel.querySelector('[data-ai-style-hint]');
         if (toneHint && toneInput) {
-            toneHint.textContent = toneInput.closest('label')?.querySelector('.ws-ai-summary-prefs__opt-pill')?.getAttribute('title') || '';
+            toneHint.textContent = toneInput.closest('label')?.querySelector('.ws-ai-pro__seg-btn, .ws-ai-summary-prefs__opt-pill')?.getAttribute('title') || '';
         }
         if (styleHint && styleInput) {
-            styleHint.textContent = styleInput.closest('label')?.querySelector('.ws-ai-summary-prefs__opt-pill')?.getAttribute('title') || '';
+            styleHint.textContent = styleInput.closest('label')?.querySelector('.ws-ai-pro__seg-btn, .ws-ai-summary-prefs__opt-pill')?.getAttribute('title') || '';
         }
     }
 
@@ -303,7 +303,6 @@
             listingSummaryLoadTimer = null;
         }
         card?.classList.remove('is-ai-loading');
-        card?.querySelectorAll('[data-ai-chip]').forEach((chip) => chip.classList.remove('is-active'));
         card?.querySelectorAll('[data-ai-load-step]').forEach((step) => {
             step.classList.remove('is-active', 'is-done');
         });
@@ -314,18 +313,12 @@
         stopListingSummaryLoadAnimation(card);
         card.classList.add('is-ai-loading');
         const steps = card.querySelectorAll('[data-ai-load-step]');
-        const chips = card.querySelectorAll('[data-ai-chip]');
         let index = 0;
 
         const tick = () => {
             steps.forEach((el, i) => {
                 el.classList.toggle('is-active', i === index);
                 el.classList.toggle('is-done', i < index);
-            });
-            chips.forEach((chip) => {
-                const key = chip.getAttribute('data-ai-chip');
-                const stepId = LISTING_SUMMARY_LOAD_STEPS[index]?.id;
-                chip.classList.toggle('is-active', key === stepId);
             });
             index = (index + 1) % LISTING_SUMMARY_LOAD_STEPS.length;
         };

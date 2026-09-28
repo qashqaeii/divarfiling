@@ -1,159 +1,108 @@
 {% load persian_tags %}
-<section class="ws-ai-card ws-ai-card--listing" id="wsAiListingSummary" data-ai-card aria-label="خلاصه هوشمند فایل">
-    <div class="ws-ai-card__glow" aria-hidden="true"></div>
-    <div class="ws-ai-card__mesh" aria-hidden="true"></div>
-    <div class="ws-ai-card__inner">
-        <header class="ws-ai-card__header">
-            <div class="ws-ai-card__brand">
-                <span class="ws-ai-card__orb">
-                    {% include 'includes/icon_slot.html' with decor='ai' size='hero' class_name='ws-ai-card__icon' only %}
-                </span>
-                <div class="ws-ai-card__titles">
-                    <p class="ws-ai-card__eyebrow">هوش مصنوعی فایلینگ دیوار</p>
-                    <h3 class="ws-ai-card__title">خلاصه هوشمند فایل</h3>
-                </div>
-            </div>
-            <button type="button"
-                    class="ws-ai-card__cta ws-ai-trigger"
-                    data-ai-feature="listing_summary"
-                    data-ai-url="{{ ai_summary_url }}">
-                <span class="ws-ai-card__cta-glow" aria-hidden="true"></span>
-                <span class="ws-ai-card__cta-icon" aria-hidden="true">
-                    {% include 'includes/icon_slot.html' with decor='ai_wand' size='inline' class_name='ws-ai-card__cta-icon-img' only %}
-                </span>
-                <span class="ws-ai-card__cta-label">تولید خلاصه</span>
-            </button>
-        </header>
-
-        {% if ai_listing_summary_quota %}
-        <div class="ws-ai-quota{% if ai_listing_summary_quota.is_unlimited %} ws-ai-quota--unlimited{% elif ai_listing_summary_quota.feature_remaining <= 2 %} ws-ai-quota--low{% endif %}"
-             data-ai-quota-panel
-             role="group"
-             aria-label="ظرفیت روزانه خلاصه هوشمند">
-            <div class="ws-ai-quota__head">
-                <span class="ws-ai-quota__icon" aria-hidden="true"><i class="fas fa-gauge-high"></i></span>
-                <div class="ws-ai-quota__copy">
-                    <span class="ws-ai-quota__title">ظرفیت روزانه خلاصه هوشمند</span>
+<section class="ws-ai-card ws-ai-card--listing ws-ai-card--pro" id="wsAiListingSummary" data-ai-card aria-label="خلاصه هوشمند فایل">
+    <div class="ws-ai-card__inner ws-ai-pro">
+        <header class="ws-ai-pro__head">
+            <div class="ws-ai-pro__head-copy">
+                <p class="ws-ai-pro__kicker">هوش مصنوعی · فایلینگ</p>
+                <h3 class="ws-ai-pro__title">خلاصه هوشمند فایل</h3>
+                {% if ai_listing_summary_quota %}
+                <p class="ws-ai-pro__quota" data-ai-quota-panel>
                     {% if ai_listing_summary_quota.is_unlimited %}
-                    <span class="ws-ai-quota__subtitle">دسترسی نامحدود</span>
+                    <span class="ws-ai-pro__quota-dot" aria-hidden="true"></span> ظرفیت نامحدود
                     {% else %}
-                    <span class="ws-ai-quota__subtitle">
-                        <span data-ai-quota-used>{{ ai_listing_summary_quota.feature_used|to_persian_digits }}</span>
-                        از
-                        <span data-ai-quota-limit>{{ ai_listing_summary_quota.feature_limit|to_persian_digits }}</span>
-                        درخواست استفاده شده
-                    </span>
+                    <span data-ai-quota-used>{{ ai_listing_summary_quota.feature_used|to_persian_digits }}</span>
+                    /
+                    <span data-ai-quota-limit>{{ ai_listing_summary_quota.feature_limit|to_persian_digits }}</span>
+                    درخواست امروز
+                    ·
+                    <span data-ai-quota-remaining-pill>{{ ai_listing_summary_quota.feature_remaining|to_persian_digits }} باقی‌مانده</span>
                     {% endif %}
+                </p>
+                {% if not ai_listing_summary_quota.is_unlimited %}
+                <div class="ws-ai-pro__quota-track" data-ai-quota-track role="progressbar"
+                     aria-valuemin="0"
+                     aria-valuemax="{{ ai_listing_summary_quota.feature_limit }}"
+                     aria-valuenow="{{ ai_listing_summary_quota.feature_used }}">
+                    <div class="ws-ai-pro__quota-fill" data-ai-quota-fill style="width: {{ ai_listing_summary_quota.feature_percent_used }}%;"></div>
                 </div>
-                {% if ai_listing_summary_quota.is_unlimited %}
-                <span class="ws-ai-quota__pill ws-ai-quota__pill--unlimited">نامحدود</span>
-                {% else %}
-                <span class="ws-ai-quota__pill" data-ai-quota-remaining-pill>
-                    {{ ai_listing_summary_quota.feature_remaining|to_persian_digits }} باقی‌مانده
-                </span>
+                {% endif %}
                 {% endif %}
             </div>
-            {% if not ai_listing_summary_quota.is_unlimited %}
-            <div class="ws-ai-quota__track"
-                 role="progressbar"
-                 aria-valuemin="0"
-                 aria-valuemax="{{ ai_listing_summary_quota.feature_limit }}"
-                 aria-valuenow="{{ ai_listing_summary_quota.feature_used }}"
-                 data-ai-quota-track>
-                <div class="ws-ai-quota__fill"
-                     data-ai-quota-fill
-                     style="width: {{ ai_listing_summary_quota.feature_percent_used }}%;"></div>
-            </div>
-            <p class="ws-ai-quota__hint">
-                <i class="fas fa-bolt" aria-hidden="true"></i>
-                کل AI امروز:
-                <strong data-ai-daily-remaining>{{ ai_listing_summary_quota.daily_remaining|to_persian_digits }}</strong>
-                از
-                <strong data-ai-daily-limit>{{ ai_listing_summary_quota.daily_limit|to_persian_digits }}</strong>
-                درخواست باقی‌مانده
-            </p>
-            {% endif %}
-        </div>
-        {% endif %}
+            <span class="ws-ai-pro__glyph" aria-hidden="true">
+                {% include 'includes/icon_slot.html' with decor='ai' size='inline' class_name='ws-ai-pro__glyph-img' only %}
+            </span>
+        </header>
 
         {% if ai_listing_summary_tone_options %}
-        <div class="ws-ai-summary-prefs" data-ai-summary-prefs role="group" aria-label="تنظیمات خلاصه هوشمند">
-            <div class="ws-ai-summary-prefs__row">
-                <div class="ws-ai-summary-prefs__label">
-                    <span class="ws-ai-summary-prefs__label-ico" aria-hidden="true"><i class="fas fa-microphone-lines"></i></span>
-                    <div>
-                        <span class="ws-ai-summary-prefs__label-title">لحن</span>
-                        <span class="ws-ai-summary-prefs__label-hint" data-ai-tone-hint></span>
-                    </div>
+        <div class="ws-ai-pro__studio" data-ai-summary-prefs>
+            <div class="ws-ai-pro__field">
+                <div class="ws-ai-pro__field-head">
+                    <span class="ws-ai-pro__field-label">لحن</span>
+                    <span class="ws-ai-pro__field-hint" data-ai-tone-hint aria-live="polite"></span>
                 </div>
-                <div class="ws-ai-summary-prefs__options" role="radiogroup" aria-label="لحن خلاصه">
+                <div class="ws-ai-pro__seg" role="radiogroup" aria-label="لحن خلاصه">
                     {% for opt in ai_listing_summary_tone_options %}
-                    <label class="ws-ai-summary-prefs__opt">
+                    <label class="ws-ai-pro__seg-item">
                         <input type="radio"
                                name="aiListingSummaryTone"
                                value="{{ opt.key }}"
                                data-ai-tone-input
                                {% if opt.key == ai_listing_summary_default_tone %}checked{% endif %}>
-                        <span class="ws-ai-summary-prefs__opt-pill" title="{{ opt.hint }}">{{ opt.label }}</span>
+                        <span class="ws-ai-pro__seg-btn" title="{{ opt.hint }}">{{ opt.label }}</span>
                     </label>
                     {% endfor %}
                 </div>
             </div>
-            <div class="ws-ai-summary-prefs__row">
-                <div class="ws-ai-summary-prefs__label">
-                    <span class="ws-ai-summary-prefs__label-ico ws-ai-summary-prefs__label-ico--style" aria-hidden="true"><i class="fas fa-palette"></i></span>
-                    <div>
-                        <span class="ws-ai-summary-prefs__label-title">سبک</span>
-                        <span class="ws-ai-summary-prefs__label-hint" data-ai-style-hint></span>
-                    </div>
+
+            <div class="ws-ai-pro__field">
+                <div class="ws-ai-pro__field-head">
+                    <span class="ws-ai-pro__field-label">سبک</span>
+                    <span class="ws-ai-pro__field-hint" data-ai-style-hint aria-live="polite"></span>
                 </div>
-                <div class="ws-ai-summary-prefs__options ws-ai-summary-prefs__options--wrap" role="radiogroup" aria-label="سبک خلاصه">
+                <div class="ws-ai-pro__seg ws-ai-pro__seg--styles" role="radiogroup" aria-label="سبک خلاصه">
                     {% for opt in ai_listing_summary_style_options %}
-                    <label class="ws-ai-summary-prefs__opt">
+                    <label class="ws-ai-pro__seg-item">
                         <input type="radio"
                                name="aiListingSummaryStyle"
                                value="{{ opt.key }}"
                                data-ai-style-input
                                {% if opt.key == ai_listing_summary_default_style %}checked{% endif %}>
-                        <span class="ws-ai-summary-prefs__opt-pill" title="{{ opt.hint }}">{{ opt.label }}</span>
+                        <span class="ws-ai-pro__seg-btn" title="{{ opt.hint }}">{{ opt.label }}</span>
                     </label>
                     {% endfor %}
                 </div>
             </div>
+
+            <button type="button"
+                    class="ws-ai-pro__submit ws-ai-trigger"
+                    data-ai-feature="listing_summary"
+                    data-ai-url="{{ ai_summary_url }}">
+                <span class="ws-ai-pro__submit-icon" aria-hidden="true">
+                    {% include 'includes/icon_slot.html' with decor='ai_wand' size='inline' class_name='ws-ai-pro__submit-icon-img' only %}
+                </span>
+                <span class="ws-ai-card__cta-label">تولید خلاصه</span>
+            </button>
         </div>
+        {% else %}
+        <button type="button"
+                class="ws-ai-pro__submit ws-ai-trigger ws-ai-pro__submit--solo"
+                data-ai-feature="listing_summary"
+                data-ai-url="{{ ai_summary_url }}">
+            <span class="ws-ai-card__cta-label">تولید خلاصه</span>
+        </button>
         {% endif %}
 
-        <div class="ws-ai-card__chips" data-ai-chips aria-hidden="true">
-            <span class="ws-ai-card__chip" data-ai-chip="market"><i class="fas fa-chart-line"></i> تحلیل بازار</span>
-            <span class="ws-ai-card__chip" data-ai-chip="features"><i class="fas fa-building" aria-hidden="true"></i> ویژگی‌های ملک</span>
-            <span class="ws-ai-card__chip" data-ai-chip="negotiation"><i class="fas fa-handshake"></i> نکته مذاکره</span>
-        </div>
-
-        <div class="ws-ai-card__body" data-ai-body>
-            <div class="ws-ai-card__empty" data-ai-empty>
-                <div class="ws-ai-card__empty-previews" aria-hidden="true">
-                    <div class="ws-ai-card__empty-preview">
-                        <i class="fas fa-chart-line"></i>
-                        <span></span><span></span>
-                    </div>
-                    <div class="ws-ai-card__empty-preview">
-                        <i class="fas fa-building"></i>
-                        <span></span><span></span>
-                    </div>
-                    <div class="ws-ai-card__empty-preview">
-                        <i class="fas fa-handshake"></i>
-                        <span></span><span></span>
-                    </div>
-                </div>
-                <p class="ws-ai-card__empty-title">خلاصه حرفه‌ای این ملک را یک‌کلیکه بگیرید</p>
-                <p class="ws-ai-card__empty-desc">تحلیل بازار، نکات برجسته و پیشنهاد مذاکره — آماده ارسال به مشتری یا یادداشت داخلی.</p>
+        <div class="ws-ai-pro__canvas" data-ai-body>
+            <div class="ws-ai-pro__placeholder" data-ai-empty>
+                <span class="ws-ai-pro__placeholder-line" aria-hidden="true"></span>
+                <p class="ws-ai-pro__placeholder-title">آماده تولید</p>
+                <p class="ws-ai-pro__placeholder-desc">لحن و سبک را انتخاب کنید؛ خروجی بر پایه داده‌های همین فایل ساخته می‌شود.</p>
             </div>
             <div class="ws-ai-result ws-ai-card__result" data-ai-result hidden></div>
         </div>
 
-        <footer class="ws-ai-card__footer">
-            <i class="fas fa-shield-halved" aria-hidden="true"></i>
-            <span>مکمل تحلیل آماری — اعداد از سیستم فایلینگ؛ AI فقط توضیح می‌دهد.</span>
+        <footer class="ws-ai-pro__fineprint">
+            <span>اعداد از فایلینگ · AI توضیح می‌دهد</span>
         </footer>
     </div>
 </section>

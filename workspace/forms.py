@@ -768,6 +768,16 @@ class CRMPropertyForm(CRMMoneyFieldsMixin, forms.ModelForm):
             for label in feature_on:
                 if label not in selected:
                     selected.append(label)
+            from workspace.constants import PROPERTY_AMENITY_QUICK_FEATURE_KEYS
+            from workspace.services.property_features import (
+                FEATURE_BOOL_TO_AMENITY,
+                _normalize_toggle,
+            )
+            for feat_key in PROPERTY_AMENITY_QUICK_FEATURE_KEYS:
+                label = FEATURE_BOOL_TO_AMENITY.get(feat_key, feat_key)
+                if _normalize_toggle(str(self._parsed_feature_data.get(feat_key) or '')) == 'دارد':
+                    if label not in selected:
+                        selected.append(label)
             self._parsed_feature_data = sync_amenity_quick_to_feature_data(
                 selected, self._parsed_feature_data,
             )

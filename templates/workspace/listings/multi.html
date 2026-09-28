@@ -357,6 +357,9 @@
         advPanel.classList.toggle('is-open', open);
         filterShell?.classList.toggle('mk-filter-shell-open', open);
         if (filtersOpenField) filtersOpenField.value = open ? '1' : '0';
+        if (open && typeof initFormattedNumericInputs === 'function') {
+            initFormattedNumericInputs(filterShell || document);
+        }
     }
 
     advToggle?.addEventListener('click', function () {

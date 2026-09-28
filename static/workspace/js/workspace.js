@@ -1973,12 +1973,23 @@ function formatMapMoney(n, perSqm = false) {
 }
 
 const FA_DIGITS = '۰۱۲۳۴۵۶۷۸۹';
+const AR_DIGITS = '٠١٢٣٤٥٦٧٨٩';
 
 function toAsciiDigits(str) {
-    return String(str ?? '').replace(/[۰-۹]/g, (ch) => {
-        const i = FA_DIGITS.indexOf(ch);
-        return i >= 0 ? String(i) : '';
-    });
+    return String(str ?? '')
+        .replace(/[۰-۹]/g, (ch) => {
+            const i = FA_DIGITS.indexOf(ch);
+            return i >= 0 ? String(i) : ch;
+        })
+        .replace(/[٠-٩]/g, (ch) => {
+            const i = AR_DIGITS.indexOf(ch);
+            return i >= 0 ? String(i) : ch;
+        });
+}
+
+/** فقط رقم خام سال (بدون Number) — برای تایپ تدریجی ۱۳۹۵ */
+function extractYearDigits(raw) {
+    return toAsciiDigits(raw).replace(/\D/g, '').slice(0, 4);
 }
 
 function parseFormattedNumber(val) {
@@ -2004,35 +2015,12 @@ function toPersianDigits(str) {
 }
 
 function sanitizeBuildYear(raw) {
-    const s = parseFormattedNumber(raw);
-    if (!s) return '';
+    const s = extractYearDigits(raw);
+    if (s.length !== 4) return '';
     const n = Number(s);
     if (!Number.isFinite(n)) return '';
     if (n < BUILD_YEAR_MIN || n > BUILD_YEAR_MAX) return '';
     return String(Math.round(n));
-}
-
-/** آیا رقم‌های تایپ‌شده می‌توانند پیشوند یک سال معتبر در بازه باشند؟ */
-function isBuildYearPrefix(digits) {
-    if (!digits) return true;
-    if (!/^\d{1,4}$/.test(digits)) return false;
-    if (digits.length === 4) return Boolean(sanitizeBuildYear(digits));
-    if (digits.length <= 2) {
-        if (digits.length === 2 && expandShortBuildYear(digits)) return true;
-        return /^\d{1,2}$/.test(digits);
-    }
-    const low = Number(digits.padEnd(4, '0'));
-    const high = Number(digits.padEnd(4, '9'));
-    return high >= BUILD_YEAR_MIN && low <= BUILD_YEAR_MAX;
-}
-
-/** هنگام تایپ — سال کامل را اعتبارسنجی می‌کند، وگرنه پیشوند معتبر را نگه می‌دارد. */
-function sanitizeBuildYearPartial(raw) {
-    const s = parseFormattedNumber(raw);
-    if (!s) return '';
-    if (!/^\d{1,4}$/.test(s)) return '';
-    if (s.length === 4) return sanitizeBuildYear(s);
-    return isBuildYearPrefix(s) ? s : '';
 }
 
 function expandShortBuildYear(digits) {
@@ -2045,7 +2033,7 @@ function expandShortBuildYear(digits) {
 }
 
 function finalizeBuildYear(raw) {
-    const s = parseFormattedNumber(raw);
+    const s = extractYearDigits(raw);
     if (!s) return '';
     if (s.length === 4) return sanitizeBuildYear(s);
     if (s.length === 2) return expandShortBuildYear(s);
@@ -2061,7 +2049,7 @@ function readYearInput(el) {
     if (!el) return '';
     const raw = (el.dataset.rawValue != null && el.dataset.rawValue !== '')
         ? el.dataset.rawValue
-        : parseFormattedNumber(el.value);
+        : extractYearDigits(el.value);
     if (!raw) return '';
     return finalizeBuildYear(raw);
 }
@@ -2078,19 +2066,18 @@ function bindYearNumericInput(el, { onChange } = {}) {
     el.setAttribute('maxlength', '4');
 
     const applyInput = () => {
-        const clean = sanitizeBuildYearPartial(el.value);
-        el.dataset.rawValue = clean;
-        el.value = clean ? toPersianDigits(clean) : '';
-        onChange?.(clean);
+        const digits = extractYearDigits(el.value);
+        el.dataset.rawValue = digits;
+        el.value = digits ? toPersianDigits(digits) : '';
+        onChange?.(digits);
     };
 
     const applyBlur = () => {
-        const raw = el.dataset.rawValue || parseFormattedNumber(el.value);
-        let out = finalizeBuildYear(raw);
-        if (!out && raw) out = sanitizeBuildYearPartial(raw);
+        const raw = el.dataset.rawValue || extractYearDigits(el.value);
+        const out = finalizeBuildYear(raw);
         el.dataset.rawValue = out;
         el.value = out ? toPersianDigits(out) : '';
-        onChange?.(finalizeBuildYear(out) || '');
+        onChange?.(out);
     };
 
     el.addEventListener('input', applyInput);
@@ -2107,6 +2094,7 @@ function readFormattedInput(el) {
 
 function bindFormattedNumericInput(el, { onChange } = {}) {
     if (!el || el.dataset.fmtBound === '1') return;
+    if (el.classList.contains('mk-filter-year') || el.dataset.yearBound === '1') return;
     el.dataset.fmtBound = '1';
     if (el.type === 'number') el.type = 'text';
     el.setAttribute('inputmode', 'numeric');

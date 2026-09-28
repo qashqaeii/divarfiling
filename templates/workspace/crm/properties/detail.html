@@ -887,7 +887,7 @@
 
     {% if ai_enabled and has_bot_license %}
     {% url 'workspace:ai_workspace:property_summary' property.id as property_summary_ai_url %}
-    {% include 'workspace/includes/ai_listing_summary_card.html' with ai_summary_url=property_summary_ai_url ai_listing_summary_quota=ai_listing_summary_quota only %}
+    {% include 'workspace/includes/ai_listing_summary_card.html' with ai_summary_url=property_summary_ai_url ai_listing_summary_quota=ai_listing_summary_quota ai_listing_summary_tone_options=ai_listing_summary_tone_options ai_listing_summary_style_options=ai_listing_summary_style_options ai_listing_summary_default_tone=ai_listing_summary_default_tone ai_listing_summary_default_style=ai_listing_summary_default_style only %}
     {% endif %}
 
     {% if owner_phone and not mask_sensitive or can_create_deal or can_edit_property or is_property_owner and not property_is_deleted %}

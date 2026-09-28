@@ -6657,22 +6657,17 @@ body.crm-side-open { overflow: hidden; }
 }
 .crm-feat-profile[hidden] { display: none !important; }
 .crm-feat-profile {
-    display: grid;
-    grid-template-columns: 1fr;
+    display: flex;
+    flex-direction: column;
     gap: 0.45rem;
 }
-@media (min-width: 960px) {
-    .crm-feat-profile {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 0.5rem;
-        align-items: start;
-    }
-}
 .crm-feat-group {
+    container-type: inline-size;
+    container-name: crm-feat-group;
     border: 1px solid color-mix(in srgb, var(--crm-border-light, #f0eef5) 92%, #cbd5e1);
     border-radius: 10px;
     background: var(--ws-surface, #fff);
-    overflow: hidden;
+    overflow: clip;
     transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 .crm-feat-group[open] {
@@ -6759,6 +6754,14 @@ body.crm-side-open { overflow: hidden; }
 .crm-feat-field--number {
     gap: 0.35rem;
 }
+.crm-feat-field--chips .crm-feat-field-label {
+    width: 100%;
+}
+.crm-feat-chip span {
+    text-align: center;
+    line-height: 1.25;
+    word-break: break-word;
+}
 .crm-feat-field-label {
     display: inline-flex;
     flex-wrap: wrap;
@@ -6790,18 +6793,24 @@ body.crm-side-open { overflow: hidden; }
 .crm-feat-field:hover .crm-feat-field-hint {
     display: block;
 }
-.crm-feat-chips {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.28rem;
+.crm-feat .crm-feat-chips {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(3.5rem, 1fr));
+    gap: 0.3rem;
+    width: 100%;
+    max-width: 100%;
+    margin-top: 0;
+    justify-content: stretch;
+    align-items: stretch;
 }
 .crm-feat-chip {
     position: relative;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-height: 28px;
-    padding: 0.18rem 0.5rem;
+    min-height: 30px;
+    min-width: 0;
+    padding: 0.22rem 0.4rem;
     border-radius: 8px;
     border: 1px solid var(--crm-border-light, #e8e6ef);
     background: var(--ws-surface, #fff);
@@ -6979,7 +6988,7 @@ body.crm-side-open { overflow: hidden; }
     color: #16a34a;
 }
 
-@media (min-width: 720px) {
+@container crm-feat-group (min-width: 480px) {
     .crm-feat-fields {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -6991,25 +7000,41 @@ body.crm-side-open { overflow: hidden; }
     .crm-feat-field:nth-child(2n) {
         border-inline-end: none;
     }
-    .crm-feat-field--chips {
+    .crm-feat-field--chips,
+    .crm-feat-field--select,
+    .crm-feat-field--date,
+    .crm-feat-field--number {
         grid-column: 1 / -1;
-        grid-template-columns: minmax(7.5rem, 9.5rem) minmax(0, 1fr);
-        align-items: start;
-        column-gap: 0.45rem;
-    }
-    .crm-feat-field--chips .crm-feat-field-label {
-        padding-top: 0.2rem;
     }
     .crm-feat-field--toggle {
         grid-template-columns: minmax(0, 1fr) auto;
     }
 }
 
+@container crm-feat-group (min-width: 560px) {
+    .crm-feat .crm-feat-chips {
+        grid-template-columns: repeat(auto-fill, minmax(3.25rem, 1fr));
+    }
+}
+
+/* دراور ملک: عرض محدود — یک ستون، چیپ‌ها تمام‌عرض */
+.crm-drawer-body .crm-feat-fields {
+    display: flex;
+    flex-direction: column;
+}
+.crm-drawer-body .crm-feat-field {
+    border-inline-end: none;
+    grid-column: auto;
+}
+.crm-drawer-body .crm-feat .crm-feat-chips {
+    grid-template-columns: repeat(auto-fill, minmax(3.35rem, 1fr));
+}
+
 @media (max-width: 640px) {
     .crm-feat-shell { padding: 0.45rem 0.5rem 0.55rem; }
     .crm-feat-field { padding: 0.5rem 0.45rem; }
     .crm-feat-chip { min-height: 30px; font-size: 0.68rem; }
-    .crm-feat-chips { gap: 0.3rem; }
+    .crm-feat .crm-feat-chips { gap: 0.28rem; }
 }
 
 .crm-prop-amenity.is-checked,

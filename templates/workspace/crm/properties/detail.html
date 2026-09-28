@@ -972,13 +972,7 @@
 <aside class="crm-drawer" id="drawer-edit" {% if open_drawer == 'edit' %}data-open="1"{% endif %}>
     <div class="crm-drawer-overlay" data-drawer-close></div>
     <div class="crm-drawer-panel crm-drawer-panel-lg">
-        <div
-            class="crm-drawer-head crm-drawer-head-property"
-            style="--crm-prop-head-image: url('{% static 'property_header.webp' %}')"
-        >
-            <div><h2>ویرایش ملک</h2><p>{{ property.title }}</p></div>
-            <button type="button" class="crm-drawer-close crm-drawer-close--on-accent" data-drawer-close aria-label="بستن"><i class="fas fa-times" aria-hidden="true"></i></button>
-        </div>
+        {% include 'workspace/crm/includes/property_drawer_head.html' with head_title='ویرایش ملک' head_subtitle=property.title %}
         <form method="post" action="{% url 'workspace:crm_property_edit' property.id %}" class="crm-drawer-form">
             <div class="crm-drawer-body">{% csrf_token %}{% include 'workspace/crm/includes/property_form_sections.html' with form=property_form %}</div>
             <div class="crm-drawer-foot">

@@ -9,7 +9,7 @@
 <link rel="stylesheet" href="{% static 'workspace/css/crm-ecosystem.css' %}?v=2">
 <link rel="stylesheet" href="{% static 'contracts/css/contracts-manage.css' %}?v=4">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-zonkan.css' %}?v=7">
-<link rel="stylesheet" href="{% static 'contracts/css/contracts-contract-wizard.css' %}?v=6">
+<link rel="stylesheet" href="{% static 'contracts/css/contracts-contract-wizard.css' %}?v=8">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-mobile-v2-contracts.css' %}?v=1">
 {% endblock %}
 
@@ -86,8 +86,12 @@
             </div>
         </nav>
 
-    <form method="post" class="ct-wizard-form" id="ct-wizard-form">
+    <form method="post" class="ct-wizard-form" id="ct-wizard-form" autocomplete="off" data-form-type="other" data-lpignore="true" data-1p-ignore>
         {% csrf_token %}
+        <div class="ct-wizard-autofill-guard" aria-hidden="true">
+            <input type="text" tabindex="-1" autocomplete="username" class="ct-wizard-autofill-guard__trap">
+            <input type="password" tabindex="-1" autocomplete="current-password" class="ct-wizard-autofill-guard__trap">
+        </div>
         <input type="hidden" name="step" value="{{ wizard_step }}">
 
         <div class="crm-contract-wizard-layout">
@@ -178,14 +182,14 @@
                                     <option value="legal"{% if p.person_type == 'legal' %} selected{% endif %}>حقوقی</option>
                                 </select>
                             </label>
-                            <label>نام<input class="crm-input" name="party_{{ forloop.counter0 }}_first_name" value="{{ p.first_name }}"></label>
-                            <label>نام خانوادگی<input class="crm-input" name="party_{{ forloop.counter0 }}_last_name" value="{{ p.last_name }}"></label>
-                            <label>نام پدر<input class="crm-input" name="party_{{ forloop.counter0 }}_father_name" value="{{ p.father_name|default:'' }}"></label>
-                            <label>کد ملی<input class="crm-input" name="party_{{ forloop.counter0 }}_national_id" value="{{ p.national_id }}" inputmode="numeric"></label>
-                            <label>موبایل<input class="crm-input" type="tel" name="party_{{ forloop.counter0 }}_mobile" value="{{ p.mobile }}" inputmode="tel"></label>
-                            <label>قدرالسهم<input class="crm-input" name="party_{{ forloop.counter0 }}_ownership_share" value="{{ p.ownership_share|default:'' }}" placeholder="۶ دانگ"></label>
-                            <label class="crm-contract-span-2">نشانی<input class="crm-input" name="party_{{ forloop.counter0 }}_address" value="{{ p.address }}"></label>
-                            <label>کد پستی<input class="crm-input" name="party_{{ forloop.counter0 }}_postal_code" value="{{ p.postal_code|default:'' }}" inputmode="numeric"></label>
+                            <label>نام<input class="crm-input" name="party_{{ forloop.counter0 }}_first_name" value="{{ p.first_name }}" autocomplete="given-name"></label>
+                            <label>نام خانوادگی<input class="crm-input" name="party_{{ forloop.counter0 }}_last_name" value="{{ p.last_name }}" autocomplete="family-name"></label>
+                            <label>نام پدر<input class="crm-input" name="party_{{ forloop.counter0 }}_father_name" value="{{ p.father_name|default:'' }}" autocomplete="additional-name"></label>
+                            <label>کد ملی<input class="crm-input" name="party_{{ forloop.counter0 }}_national_id" value="{{ p.national_id }}" inputmode="numeric" autocomplete="off" data-lpignore="true" data-1p-ignore></label>
+                            <label>موبایل<input class="crm-input" type="tel" name="party_{{ forloop.counter0 }}_mobile" value="{{ p.mobile }}" inputmode="tel" autocomplete="tel"></label>
+                            <label>قدرالسهم<input class="crm-input" name="party_{{ forloop.counter0 }}_ownership_share" value="{{ p.ownership_share|default:'' }}" placeholder="۶ دانگ" autocomplete="off"></label>
+                            <label class="crm-contract-span-2">نشانی<input class="crm-input" name="party_{{ forloop.counter0 }}_address" value="{{ p.address }}" autocomplete="street-address"></label>
+                            <label>کد پستی<input class="crm-input" name="party_{{ forloop.counter0 }}_postal_code" value="{{ p.postal_code|default:'' }}" inputmode="numeric" autocomplete="postal-code"></label>
                         </div>
                     </div>
                 </article>
@@ -548,10 +552,10 @@
                     <div class="crm-contract-form-grid">
                         <input type="hidden" name="witness_1_role" value="شاهد موجر">
                         {% with w=wizard_data.witnesses.0 %}
-                        <label>نام<input class="crm-input" name="witness_1_first_name" value="{% if w %}{{ w.first_name }}{% endif %}"></label>
-                        <label>نام خانوادگی<input class="crm-input" name="witness_1_last_name" value="{% if w %}{{ w.last_name }}{% endif %}"></label>
-                        <label>کد ملی<input class="crm-input" name="witness_1_national_id" value="{% if w %}{{ w.national_id }}{% endif %}" inputmode="numeric"></label>
-                        <label>موبایل<input class="crm-input" type="tel" name="witness_1_mobile" value="{% if w %}{{ w.mobile }}{% endif %}" inputmode="tel"></label>
+                        <label>نام<input class="crm-input" name="witness_1_first_name" value="{% if w %}{{ w.first_name }}{% endif %}" autocomplete="given-name"></label>
+                        <label>نام خانوادگی<input class="crm-input" name="witness_1_last_name" value="{% if w %}{{ w.last_name }}{% endif %}" autocomplete="family-name"></label>
+                        <label>کد ملی<input class="crm-input" name="witness_1_national_id" value="{% if w %}{{ w.national_id }}{% endif %}" inputmode="numeric" autocomplete="off" data-lpignore="true" data-1p-ignore></label>
+                        <label>موبایل<input class="crm-input" type="tel" name="witness_1_mobile" value="{% if w %}{{ w.mobile }}{% endif %}" inputmode="tel" autocomplete="tel"></label>
                         {% endwith %}
                     </div>
                 </div>
@@ -560,10 +564,10 @@
                     <div class="crm-contract-form-grid">
                         <input type="hidden" name="witness_2_role" value="شاهد مستأجر">
                         {% with w=wizard_data.witnesses.1 %}
-                        <label>نام<input class="crm-input" name="witness_2_first_name" value="{% if w %}{{ w.first_name }}{% endif %}"></label>
-                        <label>نام خانوادگی<input class="crm-input" name="witness_2_last_name" value="{% if w %}{{ w.last_name }}{% endif %}"></label>
-                        <label>کد ملی<input class="crm-input" name="witness_2_national_id" value="{% if w %}{{ w.national_id }}{% endif %}" inputmode="numeric"></label>
-                        <label>موبایل<input class="crm-input" type="tel" name="witness_2_mobile" value="{% if w %}{{ w.mobile }}{% endif %}" inputmode="tel"></label>
+                        <label>نام<input class="crm-input" name="witness_2_first_name" value="{% if w %}{{ w.first_name }}{% endif %}" autocomplete="given-name"></label>
+                        <label>نام خانوادگی<input class="crm-input" name="witness_2_last_name" value="{% if w %}{{ w.last_name }}{% endif %}" autocomplete="family-name"></label>
+                        <label>کد ملی<input class="crm-input" name="witness_2_national_id" value="{% if w %}{{ w.national_id }}{% endif %}" inputmode="numeric" autocomplete="off" data-lpignore="true" data-1p-ignore></label>
+                        <label>موبایل<input class="crm-input" type="tel" name="witness_2_mobile" value="{% if w %}{{ w.mobile }}{% endif %}" inputmode="tel" autocomplete="tel"></label>
                         {% endwith %}
                     </div>
                 </div>
@@ -1195,10 +1199,10 @@
             </header>
             <div class="crm-zonkan-modal__body ct-wizard-picker-modal__body">
                 <div class="ct-wizard-picker-search-wrap">
-                    <div class="crm-field-voice ct-wizard-picker-search-voice" data-crm-field-voice>
+                    <div class="crm-field-voice ct-wizard-picker-search-voice" data-crm-field-voice data-crm-field-voice-silence-ms="1500">
                         <div class="ct-wizard-picker-search crm-field-voice__wrap">
                             <i class="fas fa-search" aria-hidden="true"></i>
-                            <input type="search" class="crm-input" data-ct-picker-search autocomplete="off" inputmode="search" aria-label="جستجو در لیست">
+                            <input type="text" class="crm-input" data-ct-picker-search autocomplete="off" inputmode="search" aria-label="جستجو در لیست">
                             {% include 'workspace/crm/includes/crm_field_voice_mic.html' %}
                         </div>
                         <p class="crm-field-voice__status" data-crm-field-voice-status role="status" aria-live="polite" hidden></p>
@@ -1214,5 +1218,5 @@
 
 {% block extra_js %}
 {% if wizard_enable_pickers %}<script src="{% static 'contracts/js/wizard-pickers.js' %}?v=3"></script>{% endif %}
-<script src="{% static 'contracts/js/wizard.js' %}?v=14"></script>
+<script src="{% static 'contracts/js/wizard.js' %}?v=15"></script>
 {% endblock %}

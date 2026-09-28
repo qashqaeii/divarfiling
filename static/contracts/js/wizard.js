@@ -447,14 +447,14 @@
       '<div class="crm-contract-form-grid">' +
       '<label>نقش<select class="crm-input" name="party_' + idx + '_role">' + roleOptions + '</select></label>' +
       '<label>نوع<select class="crm-input" name="party_' + idx + '_person_type"><option value="natural">حقیقی</option><option value="legal">حقوقی</option></select></label>' +
-      '<label>نام<input class="crm-input" name="party_' + idx + '_first_name"></label>' +
-      '<label>نام خانوادگی<input class="crm-input" name="party_' + idx + '_last_name"></label>' +
-      '<label>نام پدر<input class="crm-input" name="party_' + idx + '_father_name"></label>' +
-      '<label>کد ملی<input class="crm-input" name="party_' + idx + '_national_id" inputmode="numeric"></label>' +
-      '<label>موبایل<input class="crm-input" type="tel" name="party_' + idx + '_mobile" inputmode="tel"></label>' +
-      '<label>قدرالسهم<input class="crm-input" name="party_' + idx + '_ownership_share" placeholder="۶ دانگ"></label>' +
-      '<label class="crm-contract-span-2">نشانی<input class="crm-input" name="party_' + idx + '_address"></label>' +
-      '<label>کد پستی<input class="crm-input" name="party_' + idx + '_postal_code" inputmode="numeric"></label>' +
+      '<label>نام<input class="crm-input" name="party_' + idx + '_first_name" autocomplete="given-name"></label>' +
+      '<label>نام خانوادگی<input class="crm-input" name="party_' + idx + '_last_name" autocomplete="family-name"></label>' +
+      '<label>نام پدر<input class="crm-input" name="party_' + idx + '_father_name" autocomplete="additional-name"></label>' +
+      '<label>کد ملی<input class="crm-input" name="party_' + idx + '_national_id" inputmode="numeric" autocomplete="off" data-lpignore="true" data-1p-ignore></label>' +
+      '<label>موبایل<input class="crm-input" type="tel" name="party_' + idx + '_mobile" inputmode="tel" autocomplete="tel"></label>' +
+      '<label>قدرالسهم<input class="crm-input" name="party_' + idx + '_ownership_share" placeholder="۶ دانگ" autocomplete="off"></label>' +
+      '<label class="crm-contract-span-2">نشانی<input class="crm-input" name="party_' + idx + '_address" autocomplete="street-address"></label>' +
+      '<label>کد پستی<input class="crm-input" name="party_' + idx + '_postal_code" inputmode="numeric" autocomplete="postal-code"></label>' +
       '</div></div></article>';
   }
 

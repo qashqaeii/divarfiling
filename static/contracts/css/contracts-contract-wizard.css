@@ -22,6 +22,15 @@ body:has(.ct-contract-wizard) .ws-bottom-nav {
     min-width: 0;
 }
 
+.ct-wizard-autofill-guard {
+    position: absolute;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+    opacity: 0;
+    pointer-events: none;
+}
+
 .ct-contract-wizard .ct-wizard-autosave {
     display: inline-block;
     margin-inline-start: 0.35rem;
@@ -1213,9 +1222,8 @@ body:has(.ct-contract-wizard) .ws-bottom-nav {
 .ct-wizard-picker-search {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0 0.65rem;
-    padding-inline-end: 0.35rem;
+    gap: 0.35rem;
+    padding: 0 0.5rem 0 0.65rem;
     border-radius: 12px;
     border: 1px solid var(--ct-m-border, rgba(15, 23, 42, 0.1));
     background: rgba(15, 23, 42, 0.02);
@@ -1235,13 +1243,14 @@ body:has(.ct-contract-wizard) .ws-bottom-nav {
     font-size: 0.85rem;
 }
 
-.ct-wizard-picker-search .crm-input {
+.ct-wizard-picker-search.crm-field-voice__wrap > .crm-input {
     flex: 1;
+    min-width: 0;
     border: 0;
     background: transparent;
     box-shadow: none;
     padding: 0.55rem 0;
-    padding-inline-end: 2.35rem;
+    padding-inline-end: 0;
     min-height: 2.5rem;
 }
 
@@ -1249,8 +1258,14 @@ body:has(.ct-contract-wizard) .ws-bottom-nav {
     padding: 0 0.15rem;
 }
 
-.ct-wizard-picker-search .crm-field-voice__mic {
-    inset-inline-end: 0.15rem;
+/* Mic sits in the flex row (not over the input) — avoids overlap with browser clear controls */
+.ct-wizard-picker-search.crm-field-voice__wrap > .crm-field-voice__mic {
+    position: static;
+    transform: none;
+    flex-shrink: 0;
+    width: 2.15rem;
+    height: 2.15rem;
+    margin-inline-start: 0.1rem;
 }
 
 .ct-wizard-picker-results {

@@ -88,7 +88,9 @@
             const statusEl = wrap.querySelector('[data-crm-field-voice-status]');
             if (!input || !micBtn) return;
 
-            const adapter = Voice.createVoiceInputAdapter(wrap, {
+            var silenceAttr = wrap.getAttribute('data-crm-field-voice-silence-ms');
+            var silenceMs = silenceAttr ? parseInt(silenceAttr, 10) : NaN;
+            var adapterConfig = {
                 input: input,
                 micBtn: micBtn,
                 voiceStatusEl: statusEl,
@@ -108,7 +110,11 @@
                         || input.getAttribute('contenteditable') === 'false'
                     );
                 },
-            });
+            };
+            if (!isNaN(silenceMs) && silenceMs > 0) {
+                adapterConfig.silenceTimeoutMs = silenceMs;
+            }
+            const adapter = Voice.createVoiceInputAdapter(wrap, adapterConfig);
 
             micBtn.addEventListener(
                 'click',

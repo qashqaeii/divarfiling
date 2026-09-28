@@ -4253,14 +4253,17 @@ body.crm-side-open { overflow: hidden; }
 .crm-drawer-head-accent { background: linear-gradient(135deg, #4f46e5, #7c3aed); color: #fff; }
 .crm-drawer-head-accent h2 { color: #fff; }
 .crm-drawer-head-accent p { color: rgba(255,255,255,.8); }
+/* Property drawer banner: match asset aspect 3:1 (e.g. 1200×400 or 1800×600) */
 .crm-drawer-head.crm-drawer-head-property {
     position: relative;
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: space-between;
     gap: 0.75rem;
-    min-height: 6.5rem;
-    padding: 1.15rem 1.35rem 1.2rem;
+    width: 100%;
+    aspect-ratio: 3 / 1;
+    min-height: 0;
+    padding: 1rem 1.25rem;
     overflow: hidden;
     color: #fff;
     border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
@@ -4273,12 +4276,11 @@ body.crm-side-open { overflow: hidden; }
     z-index: 0;
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;
     object-position: center;
     display: block;
     pointer-events: none;
     user-select: none;
-    transform: scale(1.02);
 }
 .crm-drawer-head-property__veil {
     position: absolute;

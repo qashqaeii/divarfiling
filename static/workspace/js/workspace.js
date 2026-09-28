@@ -2012,17 +2012,58 @@ function sanitizeBuildYear(raw) {
     return String(Math.round(n));
 }
 
+/** آیا رقم‌های تایپ‌شده می‌توانند پیشوند یک سال معتبر در بازه باشند؟ */
+function isBuildYearPrefix(digits) {
+    if (!digits) return true;
+    if (!/^\d{1,4}$/.test(digits)) return false;
+    if (digits.length === 4) return Boolean(sanitizeBuildYear(digits));
+    if (digits.length <= 2) {
+        if (digits.length === 2 && expandShortBuildYear(digits)) return true;
+        return /^\d{1,2}$/.test(digits);
+    }
+    const low = Number(digits.padEnd(4, '0'));
+    const high = Number(digits.padEnd(4, '9'));
+    return high >= BUILD_YEAR_MIN && low <= BUILD_YEAR_MAX;
+}
+
+/** هنگام تایپ — سال کامل را اعتبارسنجی می‌کند، وگرنه پیشوند معتبر را نگه می‌دارد. */
+function sanitizeBuildYearPartial(raw) {
+    const s = parseFormattedNumber(raw);
+    if (!s) return '';
+    if (!/^\d{1,4}$/.test(s)) return '';
+    if (s.length === 4) return sanitizeBuildYear(s);
+    return isBuildYearPrefix(s) ? s : '';
+}
+
+function expandShortBuildYear(digits) {
+    if (!/^\d{2}$/.test(digits)) return '';
+    const n = Number(digits);
+    if (!Number.isFinite(n)) return '';
+    if (n >= 50 && n <= 99) return sanitizeBuildYear(String(1300 + n));
+    if (n >= 0 && n <= 49) return sanitizeBuildYear(String(1400 + n));
+    return '';
+}
+
+function finalizeBuildYear(raw) {
+    const s = parseFormattedNumber(raw);
+    if (!s) return '';
+    if (s.length === 4) return sanitizeBuildYear(s);
+    if (s.length === 2) return expandShortBuildYear(s);
+    return '';
+}
+
 function parseBuildYearFilter(val) {
-    const clean = sanitizeBuildYear(val);
-    return clean ? Number(clean) : null;
+    const full = finalizeBuildYear(val);
+    return full ? Number(full) : null;
 }
 
 function readYearInput(el) {
     if (!el) return '';
-    if (el.dataset.rawValue != null && el.dataset.rawValue !== '') {
-        return sanitizeBuildYear(el.dataset.rawValue);
-    }
-    return sanitizeBuildYear(el.value);
+    const raw = (el.dataset.rawValue != null && el.dataset.rawValue !== '')
+        ? el.dataset.rawValue
+        : parseFormattedNumber(el.value);
+    if (!raw) return '';
+    return finalizeBuildYear(raw);
 }
 
 function bindYearNumericInput(el, { onChange } = {}) {
@@ -2036,16 +2077,26 @@ function bindYearNumericInput(el, { onChange } = {}) {
     el.setAttribute('data-1p-ignore', 'true');
     el.setAttribute('maxlength', '4');
 
-    const applyFormat = () => {
-        const clean = sanitizeBuildYear(el.value);
+    const applyInput = () => {
+        const clean = sanitizeBuildYearPartial(el.value);
         el.dataset.rawValue = clean;
         el.value = clean ? toPersianDigits(clean) : '';
         onChange?.(clean);
     };
 
-    el.addEventListener('input', applyFormat);
-    el.addEventListener('change', applyFormat);
-    if (el.value) applyFormat();
+    const applyBlur = () => {
+        const raw = el.dataset.rawValue || parseFormattedNumber(el.value);
+        let out = finalizeBuildYear(raw);
+        if (!out && raw) out = sanitizeBuildYearPartial(raw);
+        el.dataset.rawValue = out;
+        el.value = out ? toPersianDigits(out) : '';
+        onChange?.(finalizeBuildYear(out) || '');
+    };
+
+    el.addEventListener('input', applyInput);
+    el.addEventListener('blur', applyBlur);
+    el.addEventListener('change', applyBlur);
+    if (el.value) applyInput();
 }
 
 function readFormattedInput(el) {

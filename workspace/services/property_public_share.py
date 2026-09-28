@@ -245,7 +245,13 @@ def property_amenity_checkbox_labels() -> frozenset[str]:
 
 def property_amenity_checkbox_order() -> List[str]:
     """ترتیب پایدار برچسب‌ها مطابق گروه‌بندی فرم."""
-    return [label for label, _ in property_amenity_checkbox_choices()]
+    from workspace.constants import PROPERTY_LUXURY_AMENITY_LABELS
+
+    ordered = [label for label, _ in property_amenity_checkbox_choices()]
+    for label in PROPERTY_LUXURY_AMENITY_LABELS:
+        if label not in ordered:
+            ordered.append(label)
+    return ordered
 
 
 def split_amenities_for_checkbox_form(

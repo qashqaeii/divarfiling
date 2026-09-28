@@ -692,6 +692,46 @@ function initCRMFeatToggleDelegation() {
     });
 }
 
+function crmFeatFieldFilled(input) {
+    if (!input || input.disabled) return false;
+    if (input.type === 'checkbox') return input.checked;
+    if (input.type === 'radio') return input.checked && String(input.value || '').trim() !== '';
+    return String(input.value || '').trim() !== '';
+}
+
+function refreshCRMFeatGroupBadge(groupEl) {
+    if (!groupEl) return;
+    const badge = groupEl.querySelector('[data-feat-group-badge]');
+    if (!badge) return;
+    const fields = groupEl.querySelectorAll('.crm-feat-field');
+    let total = fields.length;
+    let filled = 0;
+    fields.forEach((field) => {
+        const inputs = field.querySelectorAll('[data-feat-input]');
+        if (!inputs.length) return;
+        let on = false;
+        const radio = field.querySelector('input[type="radio"][data-feat-input]');
+        const toggle = field.querySelector('input[type="checkbox"][data-feat-input]');
+        if (radio) {
+            on = Array.from(field.querySelectorAll('input[type="radio"][data-feat-input]')).some(
+                (el) => el.checked && String(el.value || '').trim() !== '',
+            );
+        } else if (toggle) {
+            on = toggle.checked;
+        } else {
+            on = Array.from(inputs).some((el) => crmFeatFieldFilled(el));
+        }
+        if (on) filled += 1;
+    });
+    badge.textContent = `${filled}/${total}`;
+    badge.title = `${filled} از ${total} مورد`;
+    badge.classList.toggle('is-empty', filled === 0);
+}
+
+function refreshCRMFeatGroupBadges(section) {
+    section.querySelectorAll('.crm-feat-group').forEach((group) => refreshCRMFeatGroupBadge(group));
+}
+
 function initCRMFeatureProfile(root) {
     const scope = root || document;
     scope.querySelectorAll('[data-crm-feat]').forEach((section) => {
@@ -747,10 +787,19 @@ function initCRMFeatureProfile(root) {
                     const chip = el.closest('.crm-feat-chip');
                     if (chip) chip.classList.toggle('is-on', el.checked);
                 });
+                refreshCRMFeatGroupBadge(input.closest('.crm-feat-group'));
             });
         });
 
+        section.addEventListener('change', (e) => {
+            const t = e.target;
+            if (!(t instanceof HTMLElement)) return;
+            if (!t.matches('[data-feat-input]')) return;
+            refreshCRMFeatGroupBadge(t.closest('.crm-feat-group'));
+        });
+
         initCRMFeatToggles(section);
+        refreshCRMFeatGroupBadges(section);
 
         apply();
         if (dealSelect) dealSelect.addEventListener('change', apply);

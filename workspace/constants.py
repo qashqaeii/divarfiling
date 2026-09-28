@@ -184,26 +184,25 @@ PROPERTY_AMENITY_CHECKBOX_GROUPS = (
             ('آنتن مرکزی', 'fa-satellite-dish'),
         ),
     },
-    {
-        'id': 'luxury',
-        'title': 'رفاهی و لوکس',
-        'icon': 'fa-spa',
-        'items': (
-            ('استخر', 'fa-water-ladder'),
-            ('روف گاردن', 'fa-seedling'),
-            ('جکوزی', 'fa-hot-tub-person'),
-            ('سونا', 'fa-temperature-high'),
-            ('سالن ورزش', 'fa-dumbbell'),
-        ),
-    },
+    # استخر، جکوزی، سونا، روف گاردن، سالن ورزش → فقط بخش «سایر ویژگی‌ها» (رفاهی و لوکس)
 )
 
-# برچسب‌های بولین شناخته‌شده (چک‌باکس CRM + چیپ‌های دیوار)
+# سوئیچ‌های بخش ویژگی‌ها — در «امکانات سریع» نشان داده نمی‌شوند؛ در متن amenities شناخته می‌شوند
+PROPERTY_FEATURE_UI_AMENITY_LABELS = frozenset({
+    'بالکن', 'استخر', 'سونا', 'جکوزی', 'روف گاردن', 'سالن ورزش',
+    'حیوان خانگی مجاز', 'بازسازی شده', 'قابل معاوضه', 'نگهبانی',
+})
+
+PROPERTY_LUXURY_AMENITY_LABELS = (
+    'استخر', 'جکوزی', 'سونا', 'روف گاردن', 'سالن ورزش',
+)
+
+# برچسب‌های بولین شناخته‌شده (فرم + پارس پرونده / دیوار)
 PROPERTY_BOOL_AMENITY_LABELS = frozenset(
     label
     for group in PROPERTY_AMENITY_CHECKBOX_GROUPS
     for label, _icon in group['items']
-)
+) | PROPERTY_FEATURE_UI_AMENITY_LABELS
 
 BUILDER_BUY_PROPERTY_TYPES = ['ویلا', 'کلنگی', 'زمین']
 BUILDER_SELL_PROPERTY_TYPES = ['آپارتمان']

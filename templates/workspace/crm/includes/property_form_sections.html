@@ -137,13 +137,13 @@
         <header class="crm-prop-form-block-head">
             <i class="fas fa-star" aria-hidden="true"></i>
             <h3>امکانات سریع</h3>
-            <span class="crm-prop-form-block-hint">پارکینگ، انباری و امکانات ساختمان — موارد تفصیلی در بخش ویژگی‌ها</span>
+            <span class="crm-prop-form-block-hint">پارکینگ، انباری و ساختمان — استخر، روف گاردن و لوکس در «سایر ویژگی‌ها»</span>
         </header>
         <div class="crm-prop-bool-panel crm-prop-amenity-one-card" role="group" aria-label="امکانات ملک">
             <div class="crm-prop-amenity-two-col">
                 <div class="crm-prop-amenity-col" data-amenity-col="primary">
                     {% for group in form.amenity_checkbox_groups %}
-                    {% if group.id == 'core' or group.id == 'luxury' %}
+                    {% if group.id == 'core' %}
                     <div class="crm-prop-amenity-block" data-amenity-group="{{ group.id }}">
                         <header class="crm-prop-bool-panel__head">
                             <i class="fas {{ group.icon }}" aria-hidden="true"></i>
@@ -194,6 +194,7 @@
         </header>
         <input type="hidden" name="feat_profile" value="{{ fctx.profile_id }}" data-crm-feat-profile>
 
+        <div class="crm-feat-shell crm-prop-bool-panel">
         <div class="crm-feat-profiles">
             {% for profile in fctx.all_profiles %}
             <div
@@ -202,18 +203,32 @@
                 {% if profile.id != fctx.profile_id %}hidden{% endif %}
             >
                 {% for group in profile.groups %}
-                <div class="crm-feat-group" data-feat-group="{{ group.id }}">
-                    <div class="crm-feat-group-head">
+                <details
+                    class="crm-feat-group"
+                    data-feat-group="{{ group.id }}"
+                    {% if forloop.first or group.has_filled %}open{% endif %}
+                >
+                    <summary class="crm-feat-group-head">
                         <span class="crm-feat-group-ico" aria-hidden="true"><i class="fas {{ group.icon }}"></i></span>
                         <strong>{{ group.title }}</strong>
-                    </div>
+                        <span
+                            class="crm-feat-group-badge{% if not group.filled_count %} is-empty{% endif %}"
+                            data-feat-group-badge
+                            title="{{ group.filled_count }} از {{ group.item_count }} مورد"
+                        >{{ group.filled_count }}/{{ group.item_count }}</span>
+                        <i class="fas fa-chevron-down crm-feat-group-chev" aria-hidden="true"></i>
+                    </summary>
                     <div class="crm-feat-fields">
                         {% for item in group.items %}
-                        <div class="crm-feat-field crm-feat-field--{{ item.widget }}" data-feat-key="{{ item.key }}">
+                        <div
+                            class="crm-feat-field crm-feat-field--{{ item.widget }}"
+                            data-feat-key="{{ item.key }}"
+                            {% if item.hint %}title="{{ item.hint }}"{% endif %}
+                        >
                             <div class="crm-feat-field-label">
                                 <i class="fas {{ item.icon }}" aria-hidden="true"></i>
                                 <span>{{ item.label }}</span>
-                                {% if item.hint %}<em>{{ item.hint }}</em>{% endif %}
+                                {% if item.hint %}<em class="crm-feat-field-hint">{{ item.hint }}</em>{% endif %}
                             </div>
 
                             {% if item.widget == 'toggle' %}
@@ -241,7 +256,7 @@
 
                             {% elif item.widget == 'chips' %}
                             <div class="crm-feat-chips" role="radiogroup" aria-label="{{ item.label }}">
-                                <label class="crm-feat-chip crm-feat-chip--clear{% if not item.value %} is-on{% endif %}">
+                                <label class="crm-feat-chip crm-feat-chip--clear{% if not item.value %} is-on{% endif %}" title="بدون انتخاب">
                                     <input
                                         type="radio"
                                         name="{{ item.input_name }}"
@@ -250,7 +265,8 @@
                                         {% if profile.id != fctx.profile_id %}disabled{% endif %}
                                         data-feat-input
                                     >
-                                    <span>انتخاب نشده</span>
+                                    <span aria-hidden="true">—</span>
+                                    <span class="crm-feat-chip-clear-sr">پاک</span>
                                 </label>
                                 {% for choice in item.choices %}
                                 <label class="crm-feat-chip{% if item.value == choice %} is-on{% endif %}">
@@ -307,7 +323,7 @@
                                     data-feat-input
                                 >
                             </div>
-                            <p class="crm-feat-date-hint">تقویم شمسی — روی فیلد بزنید و تاریخ را انتخاب کنید</p>
+                            <p class="crm-feat-date-hint crm-feat-field-hint">تقویم شمسی</p>
 
                             {% else %}
                             <input
@@ -323,10 +339,11 @@
                         </div>
                         {% endfor %}
                     </div>
-                </div>
+                </details>
                 {% endfor %}
             </div>
             {% endfor %}
+        </div>
         </div>
         {% endwith %}
     </section>

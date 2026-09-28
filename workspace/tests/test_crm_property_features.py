@@ -150,9 +150,10 @@ class CRMPropertyFeatureDataTests(TestCase):
             for item in group['items']
         }
         self.assertIn('پارکینگ', labels)
-        self.assertIn('روف گاردن', labels)
         for managed in FEATURE_MANAGED_AMENITY_LABELS:
             self.assertNotIn(managed, labels)
+        self.assertNotIn('روف گاردن', labels)
+        self.assertNotIn('سالن ورزش', labels)
         # سوییچ ویژگی از امکانات قدیمی seed شده
         ctx = form.feature_form_context()
         rent_or_sale_items = {
@@ -162,6 +163,13 @@ class CRMPropertyFeatureDataTests(TestCase):
         }
         self.assertTrue(rent_or_sale_items.get('استخر', {}).get('checked'))
         self.assertTrue(rent_or_sale_items.get('بالکن', {}).get('checked'))
+        luxury_group = next(g for g in ctx['groups'] if g['id'] == 'sale_luxury')
+        self.assertEqual(luxury_group['title'], 'رفاهی و لوکس')
+        luxury_keys = {item['key'] for item in luxury_group['items']}
+        self.assertEqual(
+            luxury_keys,
+            {'استخر', 'جکوزی', 'سونا', 'روف گاردن', 'سالن ورزش'},
+        )
 
     def test_vacancy_date_jalali_normalized(self):
         from workspace.services.jalali_input import to_persian_digits

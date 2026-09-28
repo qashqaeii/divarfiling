@@ -310,11 +310,12 @@ class PropertyAmenityCheckboxFormTests(TestCase):
             'deal_mode': self.prop.deal_mode,
             'transaction_status': self.prop.transaction_status or 'فعال',
             'publish_status': self.prop.publish_status or 'خصوصی',
-            'amenity_flags': ['پارکینگ', 'آسانسور', 'روف گاردن'],
+            'amenity_flags': ['پارکینگ', 'آسانسور'],
             'amenities_extra': 'جنس کف: پارکت',
             'feat_profile': 'sale',
             'feat__استخر': 'دارد',
             'feat__بالکن': 'دارد',
+            'feat__روف گاردن': 'دارد',
         }
         form = CRMPropertyForm(data, instance=self.prop)
         self.assertTrue(form.is_valid(), form.errors)

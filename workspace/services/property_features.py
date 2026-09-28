@@ -3,7 +3,12 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
-from workspace.constants import LISTING_FEATURE_GROUPS, PROPERTY_BOOL_AMENITY_LABELS
+from workspace.constants import (
+    LISTING_FEATURE_GROUPS,
+    PROPERTY_BOOL_AMENITY_LABELS,
+    PROPERTY_FEATURE_UI_AMENITY_LABELS,
+    PROPERTY_LUXURY_AMENITY_LABELS,
+)
 from workspace.services.listing_features import _icon_for_key
 
 # ── Choices ──────────────────────────────────────────────────────────────
@@ -44,14 +49,18 @@ FEATURE_BOOL_TO_AMENITY = {
     'استخر': 'استخر',
     'سونا': 'سونا',
     'جکوزی': 'جکوزی',
+    'روف گاردن': 'روف گاردن',
+    'سالن ورزش': 'سالن ورزش',
     'حیوان خانگی مجاز': 'حیوان خانگی مجاز',
     'بازسازی شده': 'بازسازی شده',
     'قابل معاوضه': 'قابل معاوضه',
     'نگهبانی': 'نگهبانی',
 }
 
+LUXURY_FEATURE_KEYS: Tuple[str, ...] = PROPERTY_LUXURY_AMENITY_LABELS
+
 # این برچسب‌ها فقط از سوییچ‌های بخش ویژگی‌ها مدیریت می‌شوند (در چک‌باکس امکانات نشان داده نمی‌شوند)
-FEATURE_MANAGED_AMENITY_LABELS = frozenset(FEATURE_BOOL_TO_AMENITY.values())
+FEATURE_MANAGED_AMENITY_LABELS = PROPERTY_FEATURE_UI_AMENITY_LABELS
 
 
 def seed_feature_toggles_from_amenities(
@@ -179,6 +188,8 @@ FIELDS: Dict[str, Dict[str, Any]] = {
     'استخر': _field('استخر', widget='toggle', icon='fa-water-ladder'),
     'سونا': _field('سونا', widget='toggle', icon='fa-temperature-high'),
     'جکوزی': _field('جکوزی', widget='toggle', icon='fa-hot-tub-person'),
+    'روف گاردن': _field('روف گاردن', widget='toggle', icon='fa-seedling'),
+    'سالن ورزش': _field('سالن ورزش', widget='toggle', icon='fa-dumbbell'),
     'مبله': _field('مبله', widget='toggle', icon='fa-couch'),
     'حداقل مدت قرارداد': _field(
         'حداقل مدت قرارداد', widget='select', choices=_int_choices(1, 36),
@@ -276,9 +287,9 @@ RENT_GROUPS: Tuple[Dict[str, Any], ...] = (
     },
     {
         'id': 'rent_luxury',
-        'title': 'امکانات لوکس',
+        'title': 'رفاهی و لوکس',
         'icon': 'fa-spa',
-        'keys': ('استخر', 'سونا', 'جکوزی'),
+        'keys': LUXURY_FEATURE_KEYS,
     },
 )
 
@@ -317,9 +328,9 @@ SALE_GROUPS: Tuple[Dict[str, Any], ...] = (
     },
     {
         'id': 'sale_luxury',
-        'title': 'امکانات لوکس',
+        'title': 'رفاهی و لوکس',
         'icon': 'fa-spa',
-        'keys': ('استخر', 'جکوزی', 'سونا'),
+        'keys': LUXURY_FEATURE_KEYS,
     },
 )
 
@@ -589,11 +600,22 @@ def feature_form_groups_with_values(
                 meta['value'] = raw_val
                 meta['checked'] = False
             items.append(meta)
+        filled_count = sum(
+            1 for meta in items
+            if (
+                meta['widget'] == 'toggle' and meta.get('checked')
+            ) or (
+                meta['widget'] != 'toggle' and str(meta.get('value') or '').strip()
+            )
+        )
         groups.append({
             'id': group['id'],
             'title': group['title'],
             'icon': group['icon'],
             'items': items,
+            'item_count': len(items),
+            'filled_count': filled_count,
+            'has_filled': filled_count > 0,
         })
     return groups
 

@@ -127,6 +127,49 @@ class NLCommandPropertyTests(TestCase):
         state = load_state(self.user.pk, parsed['command_id'])
         self.assertFalse(state['validated']['has_parking'])
 
+    def test_extended_specs_and_feature_data_validator(self):
+        from mobile_api.services.crm_service import create_property_from_nl
+
+        validated, missing, ambiguous, _ = validate_property_parse(
+            {
+                'property_type': 'آپارتمان',
+                'deal_mode': 'فروش',
+                'area': 95,
+                'specs': {
+                    'postal_code': '۱۲۳۴۵۶۷۸۹۰',
+                    'land_area': 120,
+                    'frontage_width': 8,
+                },
+                'features': {
+                    'has_wardrobe': True,
+                    'amenity_labels': ['مجوز ساخت', 'لابی'],
+                },
+                'feature_data': {
+                    'پروانه پایان کار': 'دارد',
+                    'جنس کف': 'پارکت',
+                },
+            },
+            llm_missing=[],
+            llm_ambiguous=[],
+        )
+        self.assertFalse(missing)
+        self.assertFalse(ambiguous)
+        self.assertEqual(validated['postal_code'], '1234567890')
+        self.assertEqual(validated['land_area'], 120.0)
+        self.assertTrue(validated['has_wardrobe'])
+        self.assertEqual(validated['feature_data'].get('مجوز ساخت'), 'دارد')
+        self.assertEqual(validated['feature_data'].get('پروانه پایان کار'), 'دارد')
+        self.assertIn('لابی', validated['amenities'])
+
+        validated['title'] = 'تست دستیار فیلدهای جدید'
+        validated['_explicit_fields'] = list(validated.get('_explicit_fields') or [])
+        prop = create_property_from_nl(self.user, validated)
+        prop.refresh_from_db()
+        self.assertEqual(prop.postal_code, '1234567890')
+        self.assertTrue(prop.has_wardrobe)
+        self.assertEqual(prop.feature_data.get('مجوز ساخت'), 'دارد')
+        self.assertEqual(prop.feature_data.get('جنس کف'), 'پارکت')
+
     def test_e_price_normalization_validator(self):
         validated, missing, ambiguous, _ = validate_property_parse(
             {

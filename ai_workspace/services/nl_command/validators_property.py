@@ -4,13 +4,16 @@ from __future__ import annotations
 from typing import Any, Dict, List, Optional, Set, Tuple
 
 from accounts.phone_utils import normalize_phone_field
+from contracts.services.party_sanitize import sanitize_postal_code
 from workspace.constants import (
     CRM_PROPERTIES,
     PROPERTY_DEAL_MODES,
+    PROPERTY_FEATURE_UI_AMENITY_LABELS,
     PROPERTY_PUBLISH_STATUSES,
     PROPERTY_TX_STATUSES,
 )
 from workspace.services.jalali_input import to_persian_digits
+from workspace.services.property_features import CRM_FEATURE_FORM_KEYS, FEATURE_BOOL_TO_AMENITY, FIELDS
 from workspace.services.property_public_share import (
     property_amenity_checkbox_labels,
     serialize_amenity_checkboxes,
@@ -22,6 +25,11 @@ _TX_STATUS_SET = frozenset(PROPERTY_TX_STATUSES)
 _PUBLISH_STATUS_SET = frozenset(PROPERTY_PUBLISH_STATUSES)
 _BOOL_KEYS = ('has_parking', 'has_storage', 'has_elevator', 'is_vacant')
 _TRI_STATE_KEYS = ('has_parking', 'has_storage', 'has_elevator', 'is_vacant')
+_SPEC_BOOL_KEYS = (
+    'has_wardrobe', 'has_two_corner', 'has_two_access',
+    'has_wallpaper', 'has_knauf', 'has_lighting',
+)
+_AMENITY_LABEL_TO_FEAT_KEY = {label: key for key, label in FEATURE_BOOL_TO_AMENITY.items()}
 _RENT_DEAL_MODES = frozenset({'اجاره', 'رهن و اجاره'})
 _SALE_DEAL_MODES = frozenset({'فروش', 'پیش‌فروش'})
 _KNOWN_AMENITY_LABELS = property_amenity_checkbox_labels()
@@ -150,6 +158,32 @@ def flatten_property_llm_data(data: Dict[str, Any]) -> Dict[str, Any]:
             specs.get('total_floors') if specs.get('total_floors') is not None else data.get('total_floors')
         ),
         'build_year': specs.get('build_year') if specs.get('build_year') is not None else data.get('build_year'),
+        'postal_code': (
+            specs.get('postal_code') if specs.get('postal_code') is not None else data.get('postal_code')
+        ),
+        'land_area': specs.get('land_area') if specs.get('land_area') is not None else data.get('land_area'),
+        'frontage_width': (
+            specs.get('frontage_width') if specs.get('frontage_width') is not None else data.get('frontage_width')
+        ),
+        'has_wardrobe': (
+            features.get('has_wardrobe') if features.get('has_wardrobe') is not None else data.get('has_wardrobe')
+        ),
+        'has_two_corner': (
+            features.get('has_two_corner') if features.get('has_two_corner') is not None else data.get('has_two_corner')
+        ),
+        'has_two_access': (
+            features.get('has_two_access') if features.get('has_two_access') is not None else data.get('has_two_access')
+        ),
+        'has_wallpaper': (
+            features.get('has_wallpaper') if features.get('has_wallpaper') is not None else data.get('has_wallpaper')
+        ),
+        'has_knauf': (
+            features.get('has_knauf') if features.get('has_knauf') is not None else data.get('has_knauf')
+        ),
+        'has_lighting': (
+            features.get('has_lighting') if features.get('has_lighting') is not None else data.get('has_lighting')
+        ),
+        'feature_data': data.get('feature_data') if isinstance(data.get('feature_data'), dict) else {},
         'has_parking': (
             features.get('has_parking')
             if features.get('has_parking') is not None
@@ -230,6 +264,12 @@ def _explicit_to_model_fields(explicit_paths: Set[str]) -> Set[str]:
         'specs.floor': 'floor',
         'specs.total_floors': 'total_floors',
         'specs.build_year': 'build_year',
+        'specs.postal_code': 'postal_code',
+        'specs.land_area': 'land_area',
+        'specs.frontage_width': 'frontage_width',
+        'postal_code': 'postal_code',
+        'land_area': 'land_area',
+        'frontage_width': 'frontage_width',
         'area': 'area',
         'rooms': 'rooms',
         'floor': 'floor',
@@ -239,7 +279,19 @@ def _explicit_to_model_fields(explicit_paths: Set[str]) -> Set[str]:
         'features.has_storage': 'has_storage',
         'features.has_elevator': 'has_elevator',
         'features.is_vacant': 'is_vacant',
+        'features.has_wardrobe': 'has_wardrobe',
+        'features.has_two_corner': 'has_two_corner',
+        'features.has_two_access': 'has_two_access',
+        'features.has_wallpaper': 'has_wallpaper',
+        'features.has_knauf': 'has_knauf',
+        'features.has_lighting': 'has_lighting',
         'features.amenity_labels': 'amenities',
+        'has_wardrobe': 'has_wardrobe',
+        'has_two_corner': 'has_two_corner',
+        'has_two_access': 'has_two_access',
+        'has_wallpaper': 'has_wallpaper',
+        'has_knauf': 'has_knauf',
+        'has_lighting': 'has_lighting',
         'has_parking': 'has_parking',
         'has_storage': 'has_storage',
         'has_elevator': 'has_elevator',
@@ -297,8 +349,9 @@ def _apply_amenity_labels(
     labels: Any,
     bools: Dict[str, Optional[bool]],
     explicit_model: Set[str],
+    feature_data: Dict[str, str],
 ) -> Tuple[str, Set[str]]:
-    """برچسب‌های امکانات → boolهای اصلی + متن amenities."""
+    """برچسب‌های امکانات → boolهای اصلی + feature_data + متن amenities."""
     selected: List[str] = []
     leftover: List[str] = []
     if not isinstance(labels, list):
@@ -314,6 +367,12 @@ def _apply_amenity_labels(
             bools[field] = True
             model.add(field)
             continue
+        if label in PROPERTY_FEATURE_UI_AMENITY_LABELS:
+            feat_key = _AMENITY_LABEL_TO_FEAT_KEY.get(label, label)
+            if feat_key in CRM_FEATURE_FORM_KEYS:
+                feature_data[feat_key] = 'دارد'
+                model.add('feature_data')
+            continue
         if label in _KNOWN_AMENITY_LABELS:
             selected.append(label)
         else:
@@ -322,6 +381,42 @@ def _apply_amenity_labels(
     if amenities_text:
         model.add('amenities')
     return amenities_text, model
+
+
+def _normalize_feature_toggle_value(value: Any) -> Optional[str]:
+    parsed = _optional_bool(value)
+    if parsed is True:
+        return 'دارد'
+    if parsed is False:
+        return 'ندارد'
+    text = _clean_str(str(value)) if value is not None else ''
+    if text in ('دارد', 'ندارد', 'هست', 'نیست'):
+        return text
+    return None
+
+
+def _merge_feature_data_from_nl(
+    raw: Any,
+    *,
+    explicit_model: Set[str],
+) -> Dict[str, str]:
+    out: Dict[str, str] = {}
+    if not isinstance(raw, dict):
+        return out
+    for key, val in raw.items():
+        feat_key = _clean_str(str(key))
+        if feat_key not in CRM_FEATURE_FORM_KEYS:
+            continue
+        meta = FIELDS.get(feat_key) or {}
+        if meta.get('widget') == 'toggle':
+            norm = _normalize_feature_toggle_value(val)
+            if norm:
+                out[feat_key] = norm
+                explicit_model.add('feature_data')
+        elif val is not None and _clean_str(str(val)):
+            out[feat_key] = _clean_str(str(val))
+            explicit_model.add('feature_data')
+    return out
 
 
 def _infer_deal_mode(
@@ -485,10 +580,49 @@ def validate_property_parse(
             if parsed is not None:
                 explicit_model.add(key)
 
+    spec_bools: Dict[str, Optional[bool]] = {k: None for k in _SPEC_BOOL_KEYS}
+    for key in _SPEC_BOOL_KEYS:
+        if key in explicit_model or flat.get(key) is not None:
+            parsed = _optional_bool(flat.get(key))
+            if flat.get(key) is not None and parsed is None:
+                ambiguous = _merge_missing(ambiguous, [key])
+            spec_bools[key] = parsed
+            if parsed is not None:
+                explicit_model.add(key)
+
+    postal_code = ''
+    if flat.get('postal_code'):
+        postal_code = sanitize_postal_code(str(flat.get('postal_code')))
+        if postal_code:
+            explicit_model.add('postal_code')
+        elif flat.get('postal_code'):
+            ambiguous = _merge_missing(ambiguous, ['postal_code'])
+
+    land_area = _pos_float(flat.get('land_area'))
+    if flat.get('land_area') is not None and flat.get('land_area') != '' and land_area is None:
+        ambiguous = _merge_missing(ambiguous, ['land_area'])
+    elif land_area is not None and land_area <= 0:
+        ambiguous = _merge_missing(ambiguous, ['land_area'])
+        land_area = None
+
+    frontage_width = _pos_float(flat.get('frontage_width'))
+    if flat.get('frontage_width') is not None and flat.get('frontage_width') != '' and frontage_width is None:
+        ambiguous = _merge_missing(ambiguous, ['frontage_width'])
+    elif frontage_width is not None and frontage_width <= 0:
+        ambiguous = _merge_missing(ambiguous, ['frontage_width'])
+        frontage_width = None
+
+    feature_data: Dict[str, str] = _merge_feature_data_from_nl(
+        flat.get('feature_data'),
+        explicit_model=explicit_model,
+    )
+
     amenities_text = ''
     amenities_raw = flat.get('amenities')
     if isinstance(amenities_raw, list):
-        amenities_text, explicit_model = _apply_amenity_labels(amenities_raw, bools, explicit_model)
+        amenities_text, explicit_model = _apply_amenity_labels(
+            amenities_raw, bools, explicit_model, feature_data,
+        )
     elif amenities_raw:
         amenities_text = _clean_str(str(amenities_raw))
         if amenities_text:
@@ -572,6 +706,16 @@ def validate_property_parse(
         'has_storage': bools['has_storage'],
         'has_elevator': bools['has_elevator'],
         'is_vacant': bools['is_vacant'],
+        'has_wardrobe': spec_bools['has_wardrobe'],
+        'has_two_corner': spec_bools['has_two_corner'],
+        'has_two_access': spec_bools['has_two_access'],
+        'has_wallpaper': spec_bools['has_wallpaper'],
+        'has_knauf': spec_bools['has_knauf'],
+        'has_lighting': spec_bools['has_lighting'],
+        'postal_code': postal_code,
+        'land_area': land_area,
+        'frontage_width': frontage_width,
+        'feature_data': feature_data,
         'sale_price': sale_price,
         'deposit': deposit,
         'monthly_rent': monthly_rent,
@@ -638,14 +782,24 @@ def validated_as_llm_shape(validated: Dict[str, Any]) -> Dict[str, Any]:
             'floor': validated.get('floor'),
             'total_floors': validated.get('total_floors'),
             'build_year': validated.get('build_year'),
+            'postal_code': validated.get('postal_code') or None,
+            'land_area': validated.get('land_area'),
+            'frontage_width': validated.get('frontage_width'),
         },
         'features': {
             'has_parking': validated.get('has_parking'),
             'has_storage': validated.get('has_storage'),
             'has_elevator': validated.get('has_elevator'),
             'is_vacant': validated.get('is_vacant'),
+            'has_wardrobe': validated.get('has_wardrobe'),
+            'has_two_corner': validated.get('has_two_corner'),
+            'has_two_access': validated.get('has_two_access'),
+            'has_wallpaper': validated.get('has_wallpaper'),
+            'has_knauf': validated.get('has_knauf'),
+            'has_lighting': validated.get('has_lighting'),
             'amenity_labels': amenity_labels,
         },
+        'feature_data': dict(validated.get('feature_data') or {}),
         'financial': {
             'sale_price': validated.get('sale_price'),
             'deposit': validated.get('deposit'),

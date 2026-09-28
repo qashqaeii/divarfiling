@@ -269,6 +269,12 @@ def build_property_preview(validated: Dict[str, Any]) -> Dict[str, Any]:
         specs.append(f'{to_persian_digits(str(total_floors))} طبقه')
     if _ex('build_year') and validated.get('build_year'):
         specs.append(f'ساخت {to_persian_digits(str(validated["build_year"]))}')
+    if _ex('postal_code') and validated.get('postal_code'):
+        specs.append(f'کد پستی {to_persian_digits(validated["postal_code"])}')
+    if _ex('land_area') and validated.get('land_area') is not None:
+        specs.append(f'زمین {to_persian_digits(str(validated["land_area"]))} متر')
+    if _ex('frontage_width') and validated.get('frontage_width') is not None:
+        specs.append(f'دهنه {to_persian_digits(str(validated["frontage_width"]))} متر')
     if specs:
         sections.append({'title': 'مشخصات', 'lines': specs})
 
@@ -291,7 +297,27 @@ def build_property_preview(validated: Dict[str, Any]) -> Dict[str, Any]:
             features_negative.append('بدون انباری')
     if _ex('is_vacant') and validated.get('is_vacant') is True:
         features_positive.append('تخلیه')
+    _spec_feat_labels = (
+        ('has_wardrobe', 'کمد دیواری'),
+        ('has_two_corner', 'دو نبش'),
+        ('has_two_access', 'دو معبر'),
+        ('has_wallpaper', 'کاغذ دیواری'),
+        ('has_knauf', 'کناف'),
+        ('has_lighting', 'نورپردازی'),
+    )
+    for field, label in _spec_feat_labels:
+        if _ex(field):
+            if validated.get(field) is True:
+                features_positive.append(label)
+            elif validated.get(field) is False:
+                features_negative.append(f'بدون {label}')
     feat_lines = list(features_positive) + list(features_negative)
+    fd = validated.get('feature_data') or {}
+    if isinstance(fd, dict):
+        for key, val in sorted(fd.items()):
+            if not val:
+                continue
+            feat_lines.append(f'{key}: {val}')
     if _ex('amenities') and validated.get('amenities'):
         for part in str(validated['amenities']).replace('\n', '،').split('،'):
             label = part.strip()

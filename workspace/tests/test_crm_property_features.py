@@ -65,6 +65,30 @@ class CRMPropertyFeatureDataTests(TestCase):
         for key in ('جنس کف', 'گرمایش', 'تعداد واحد در طبقه', 'نوع سند'):
             self.assertIn(key, CRM_FEATURE_FORM_KEYS)
 
+    def test_sale_legal_permit_toggles_persist(self):
+        form = CRMPropertyForm(data={
+            'title': 'فروش مجوز',
+            'property_type': 'آپارتمان',
+            'deal_mode': 'فروش',
+            'transaction_status': 'فعال',
+            'publish_status': 'پیش‌نویس',
+            'feat_profile': 'sale',
+            'feat__مجوز ساخت': 'دارد',
+            'feat__پروانه پایان کار': 'ندارد',
+        })
+        self.assertTrue(form.is_valid(), form.errors)
+        prop = form.save(commit=False)
+        prop.user = self.user
+        prop.save()
+        prop.refresh_from_db()
+        self.assertEqual(prop.feature_data.get('مجوز ساخت'), 'دارد')
+        self.assertEqual(prop.feature_data.get('پروانه پایان کار'), 'ندارد')
+        ctx = CRMPropertyForm(instance=prop).feature_form_context()
+        legal = next(g for g in ctx['groups'] if g['id'] == 'sale_legal')
+        by_key = {item['key']: item for item in legal['items']}
+        self.assertTrue(by_key['مجوز ساخت']['checked'])
+        self.assertFalse(by_key['پروانه پایان کار']['checked'])
+
     def test_rent_profile_toggles_default_off(self):
         form = CRMPropertyForm(data={
             'title': 'اجاره تست',

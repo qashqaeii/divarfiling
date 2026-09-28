@@ -358,7 +358,11 @@ _NL_PROPERTY_ALLOWED = frozenset({
     'title', 'property_type', 'deal_mode', 'transaction_status', 'publish_status',
     'business_type', 'city', 'district', 'neighborhood', 'address',
     'area', 'rooms', 'floor', 'total_floors', 'build_year',
+    'postal_code', 'land_area', 'frontage_width',
     'has_parking', 'has_storage', 'has_elevator', 'is_vacant',
+    'has_wardrobe', 'has_two_corner', 'has_two_access',
+    'has_wallpaper', 'has_knauf', 'has_lighting',
+    'feature_data',
     'sale_price', 'deposit', 'monthly_rent', 'amenities', 'phone', 'owner_name', 'notes',
 })
 
@@ -423,9 +427,40 @@ def create_property_from_nl(user, data: Dict[str, Any]) -> CRMProperty:
         if int_field in explicit and payload.get(int_field) is not None:
             setattr(prop, int_field, payload.get(int_field))
 
-    for bool_field in ('has_parking', 'has_storage', 'has_elevator', 'is_vacant'):
+    for bool_field in (
+        'has_parking', 'has_storage', 'has_elevator', 'is_vacant',
+        'has_wardrobe', 'has_two_corner', 'has_two_access',
+        'has_wallpaper', 'has_knauf', 'has_lighting',
+    ):
         if bool_field in explicit and payload.get(bool_field) is not None:
             setattr(prop, bool_field, bool(payload[bool_field]))
+
+    if 'postal_code' in explicit:
+        from contracts.services.party_sanitize import sanitize_postal_code
+        prop.postal_code = sanitize_postal_code(str(payload.get('postal_code') or ''))
+
+    for float_field in ('land_area', 'frontage_width'):
+        if float_field in explicit and payload.get(float_field) is not None:
+            setattr(prop, float_field, payload.get(float_field))
+
+    fd = dict(payload.get('feature_data') or {})
+    if fd:
+        from workspace.services.property_features import seed_feature_toggles_from_amenities
+        from workspace.services.property_public_share import split_amenities_for_checkbox_form
+
+        if 'amenities' in explicit and payload.get('amenities'):
+            selected, _left = split_amenities_for_checkbox_form(
+                payload.get('amenities') or '',
+                has_parking=prop.has_parking,
+                has_storage=prop.has_storage,
+                has_elevator=prop.has_elevator,
+            )
+            fd = seed_feature_toggles_from_amenities(fd, selected)
+        prop.feature_data = fd
+
+    if 'postal_code' in explicit:
+        from mobile_api.services.properties_service import _sync_property_postal_feature
+        _sync_property_postal_feature(prop)
 
     prop.save()
     return prop

@@ -132,14 +132,32 @@ Schema create_personal_property (ساختار nested؛ فیلدهای flat قد�
       "rooms": null,
       "floor": null,
       "total_floors": null,
-      "build_year": null
+      "build_year": null,
+      "postal_code": null,
+      "land_area": null,
+      "frontage_width": null
     },
     "features": {
       "has_parking": null,
       "has_storage": null,
       "has_elevator": null,
       "is_vacant": null,
+      "has_wardrobe": null,
+      "has_two_corner": null,
+      "has_two_access": null,
+      "has_wallpaper": null,
+      "has_knauf": null,
+      "has_lighting": null,
       "amenity_labels": []
+    },
+    "feature_data": {
+      "مجوز ساخت": null,
+      "پروانه پایان کار": null,
+      "جنس کف": null,
+      "گرمایش": null,
+      "سرمایش": null,
+      "نوع سند": null,
+      "نمای ساختمان": null
     },
     "financial": {
       "sale_price": null,
@@ -164,8 +182,11 @@ Schema create_personal_property (ساختار nested؛ فیلدهای flat قد�
 }
 
 - property_type/deal_mode/transaction_status/publish_status را فقط اگر کاربر صریح گفت پر کن؛ default مدل (آپارتمان/فروش/فعال/پیش‌نویس) را حدس نزن.
-- امکانات checkbox فرم (بالکن، بازسازی شده، …) → amenity_labels فقط برچسب‌های واقعی فرم
-- feature_data تفصیلی (جنس کف، گرمایش، …) → notes اگر field رسمی ندارد
+- امکانات سریع (لابی، تراس، …) → amenity_labels
+- امکانات/ویژگی‌های سوئیچی (بالکن، استخر، مجوز ساخت، پروانه پایان کار، …) → amenity_labels یا feature_data با «دارد»/«ندارد»
+- کمد دیواری، دو نبش، دو معبر، کاغذ دیواری، کناف، نورپردازی → features.has_wardrobe و … (true/false)
+- کد پستی، متراژ زمین، دهنه → specs.postal_code، specs.land_area، specs.frontage_width
+- feature_data: کلید فارسی ویژگی‌های فرم (جنس کف، نوع سند، مجوز ساخت، …) — مقدار متن یا دارد/ندارد برای سوئیچ‌ها
 - owner.phone / owner.owner_name: فقط روی فیلدهای phone و owner_name ملک — مخاطب CRM ساخته یا لینک نمی‌شود
 - source برای فایل شخصی پشتیبانی نمی‌شود؛ استخراج نکن
 

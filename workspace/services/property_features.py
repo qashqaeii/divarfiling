@@ -220,6 +220,12 @@ FIELDS: Dict[str, Dict[str, Any]] = {
     'وام دارد': _field(
         'وام دارد', widget='toggle', icon='fa-sack-dollar', toggle_on='دارد', toggle_off='ندارد',
     ),
+    'مجوز ساخت': _field(
+        'مجوز ساخت', widget='toggle', icon='fa-hard-hat', toggle_on='دارد', toggle_off='ندارد',
+    ),
+    'پروانه پایان کار': _field(
+        'پروانه پایان کار', widget='toggle', icon='fa-certificate', toggle_on='دارد', toggle_off='ندارد',
+    ),
     'قابل معاوضه': _field(
         'قابل معاوضه', widget='toggle', icon='fa-right-left', toggle_on='هست', toggle_off='نیست',
     ),
@@ -323,7 +329,8 @@ SALE_GROUPS: Tuple[Dict[str, Any], ...] = (
         'title': 'سند و وضعیت',
         'icon': 'fa-file-contract',
         'keys': (
-            'نوع سند', 'وضعیت سکونت', 'بازسازی شده', 'وام دارد', 'قابل معاوضه',
+            'نوع سند', 'وضعیت سکونت', 'مجوز ساخت', 'پروانه پایان کار',
+            'بازسازی شده', 'وام دارد', 'قابل معاوضه',
         ),
     },
     {

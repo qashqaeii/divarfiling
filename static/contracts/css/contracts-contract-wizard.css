@@ -1118,7 +1118,9 @@ body:has(.ct-contract-wizard) .ws-bottom-nav {
 
 .ct-wizard-picker-modal {
     --ct-picker-modal-height: min(86vh, 600px);
-    --ct-picker-search-block-height: 6.35rem;
+    --ct-picker-search-block-height: 6.5rem;
+    --ct-picker-radius: 18px;
+    --ct-picker-brand: var(--crm-brand, #6366f1);
     border: 0;
     padding: 0;
     max-width: min(540px, 96vw);
@@ -1127,8 +1129,9 @@ body:has(.ct-contract-wizard) .ws-bottom-nav {
 }
 
 .ct-wizard-picker-modal::backdrop {
-    background: rgba(15, 23, 42, 0.5);
-    backdrop-filter: blur(2px);
+    background: rgba(15, 23, 42, 0.52);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
 }
 
 .ct-wizard-picker-modal__box {
@@ -1138,8 +1141,13 @@ body:has(.ct-contract-wizard) .ws-bottom-nav {
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    border-radius: 16px;
-    box-shadow: 0 24px 48px rgba(15, 23, 42, 0.18);
+    border-radius: var(--ct-picker-radius);
+    border: 1px solid rgba(255, 255, 255, 0.65);
+    background: var(--crm-surface, #fff);
+    box-shadow:
+        0 0 0 1px rgba(15, 23, 42, 0.04),
+        0 20px 40px rgba(15, 23, 42, 0.14),
+        0 48px 80px rgba(15, 23, 42, 0.1);
 }
 
 .ct-wizard-picker-head {
@@ -1148,9 +1156,10 @@ body:has(.ct-contract-wizard) .ws-bottom-nav {
     align-items: flex-start;
     justify-content: space-between;
     gap: 0.75rem;
-    padding: 1rem 1rem 0.75rem;
-    border-bottom: 1px solid var(--ct-m-border, rgba(15, 23, 42, 0.08));
-    background: linear-gradient(180deg, rgba(99, 102, 241, 0.06), transparent);
+    padding: 1.05rem 1.05rem 0.85rem;
+    border-bottom: 1px solid var(--ct-m-border, rgba(15, 23, 42, 0.07));
+    background:
+        linear-gradient(135deg, rgba(99, 102, 241, 0.09) 0%, rgba(99, 102, 241, 0.02) 42%, transparent 100%);
 }
 
 .ct-wizard-picker-head__main {
@@ -1162,29 +1171,35 @@ body:has(.ct-contract-wizard) .ws-bottom-nav {
 
 .ct-wizard-picker-head__icon {
     flex-shrink: 0;
-    width: 2.25rem;
-    height: 2.25rem;
-    border-radius: 10px;
+    width: 2.4rem;
+    height: 2.4rem;
+    border-radius: 11px;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(99, 102, 241, 0.12);
-    color: var(--crm-brand, #6366f1);
-    font-size: 1rem;
+    background: linear-gradient(165deg, rgba(99, 102, 241, 0.16), rgba(99, 102, 241, 0.08));
+    color: var(--ct-picker-brand);
+    font-size: 1.02rem;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55);
 }
 
 .ct-wizard-picker-head__title {
     margin: 0;
-    font-size: 0.95rem;
+    font-size: 0.98rem;
     font-weight: 700;
     line-height: 1.35;
+    letter-spacing: -0.01em;
 }
 
 .ct-wizard-picker-head__subtitle {
-    margin: 0.2rem 0 0;
-    font-size: 0.68rem;
+    margin: 0.22rem 0 0;
+    font-size: 0.7rem;
     color: var(--ct-m-muted, #64748b);
-    line-height: 1.45;
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
 
 .ct-wizard-picker-head__close {
@@ -1193,17 +1208,23 @@ body:has(.ct-contract-wizard) .ws-bottom-nav {
     height: 2.25rem;
     border: 0;
     border-radius: 10px;
-    background: rgba(15, 23, 42, 0.05);
-    color: inherit;
+    background: rgba(15, 23, 42, 0.04);
+    color: var(--ct-m-muted, #64748b);
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: background 0.15s;
+    transition: background 0.15s, color 0.15s, box-shadow 0.15s;
 }
 
 .ct-wizard-picker-head__close:hover {
-    background: rgba(15, 23, 42, 0.1);
+    background: rgba(15, 23, 42, 0.08);
+    color: inherit;
+}
+
+.ct-wizard-picker-head__close:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.22);
 }
 
 .ct-wizard-picker-modal__body {
@@ -1221,8 +1242,8 @@ body:has(.ct-contract-wizard) .ws-bottom-nav {
     z-index: 2;
     flex-shrink: 0;
     min-height: var(--ct-picker-search-block-height);
-    padding: 0.65rem 0.85rem;
-    background: var(--crm-surface, #fff);
+    padding: 0.7rem 0.9rem 0.65rem;
+    background: linear-gradient(180deg, rgba(248, 250, 252, 0.95), #fff 55%);
     border-bottom: 1px solid var(--ct-m-border, rgba(15, 23, 42, 0.06));
     box-sizing: border-box;
 }
@@ -1230,25 +1251,36 @@ body:has(.ct-contract-wizard) .ws-bottom-nav {
 .ct-wizard-picker-search {
     display: flex;
     align-items: center;
-    gap: 0.35rem;
-    padding: 0 0.5rem 0 0.65rem;
-    border-radius: 12px;
-    border: 1px solid var(--ct-m-border, rgba(15, 23, 42, 0.1));
-    background: rgba(15, 23, 42, 0.02);
-    transition: border-color 0.15s, box-shadow 0.15s;
+    gap: 0.4rem;
+    padding: 0 0.45rem 0 0.7rem;
+    border-radius: 13px;
+    border: 1px solid rgba(15, 23, 42, 0.09);
+    background: #fff;
+    box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.03);
+    transition: border-color 0.18s, box-shadow 0.18s, background 0.18s;
     position: relative;
     min-width: 0;
 }
 
 .ct-wizard-picker-search:focus-within {
-    border-color: var(--crm-brand, #6366f1);
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+    border-color: color-mix(in srgb, var(--ct-picker-brand) 55%, #fff);
+    box-shadow:
+        inset 0 1px 2px rgba(15, 23, 42, 0.02),
+        0 0 0 3px rgba(99, 102, 241, 0.14);
     background: #fff;
 }
 
+.ct-wizard-picker-search-voice.is-voice-listening .ct-wizard-picker-search {
+    border-color: color-mix(in srgb, #ef4444 45%, #fff);
+    box-shadow:
+        inset 0 1px 2px rgba(15, 23, 42, 0.02),
+        0 0 0 3px rgba(239, 68, 68, 0.12);
+}
+
 .ct-wizard-picker-search i {
-    color: var(--ct-m-muted, #94a3b8);
-    font-size: 0.85rem;
+    color: var(--ct-picker-brand);
+    opacity: 0.75;
+    font-size: 0.82rem;
 }
 
 .ct-wizard-picker-search.crm-field-voice__wrap > .crm-input {
@@ -1263,16 +1295,30 @@ body:has(.ct-contract-wizard) .ws-bottom-nav {
 }
 
 .ct-wizard-picker-search-voice .crm-field-voice__status {
-    margin: 0.3rem 0 0;
-    padding: 0 0.15rem;
-    min-height: 1.85rem;
+    margin: 0.32rem 0 0;
+    padding: 0.18rem 0.45rem;
+    min-height: 1.75rem;
     line-height: 1.45;
+    border-radius: 8px;
+    font-size: 0.68rem;
+    font-weight: 600;
+}
+
+.ct-wizard-picker-search-voice > .crm-field-voice__status:not([hidden]) {
+    color: color-mix(in srgb, var(--ct-picker-brand) 78%, #1e293b);
+    background: rgba(99, 102, 241, 0.07);
+}
+
+.ct-wizard-picker-search-voice.is-voice-listening > .crm-field-voice__status:not([hidden]) {
+    color: #b91c1c;
+    background: rgba(239, 68, 68, 0.08);
 }
 
 /* Reserve status line height so listening / idle toggles do not resize the modal */
 .ct-wizard-picker-search-voice > .crm-field-voice__status[hidden] {
     display: block;
     visibility: hidden;
+    background: transparent;
 }
 
 /* Mic sits in the flex row (not over the input) — avoids overlap with browser clear controls */
@@ -1280,9 +1326,10 @@ body:has(.ct-contract-wizard) .ws-bottom-nav {
     position: static;
     transform: none;
     flex-shrink: 0;
-    width: 2.15rem;
-    height: 2.15rem;
-    margin-inline-start: 0.1rem;
+    width: 2.2rem;
+    height: 2.2rem;
+    margin-inline-start: 0.05rem;
+    border-radius: 10px;
 }
 
 .ct-wizard-picker-results {
@@ -1291,8 +1338,23 @@ body:has(.ct-contract-wizard) .ws-bottom-nav {
     flex: 1 1 auto;
     min-height: 0;
     height: 0;
-    padding: 0.65rem 0.85rem 0.85rem;
+    padding: 0.55rem 0.9rem 0.9rem;
     -webkit-overflow-scrolling: touch;
+    scrollbar-gutter: stable;
+    background: linear-gradient(180deg, rgba(248, 250, 252, 0.35), transparent 2.5rem);
+}
+
+.ct-wizard-picker-results::-webkit-scrollbar {
+    width: 6px;
+}
+
+.ct-wizard-picker-results::-webkit-scrollbar-thumb {
+    background: rgba(15, 23, 42, 0.14);
+    border-radius: 999px;
+}
+
+.ct-wizard-picker-results::-webkit-scrollbar-thumb:hover {
+    background: rgba(15, 23, 42, 0.22);
 }
 
 .ct-wizard-picker-results > .ct-picker-state {
@@ -1303,45 +1365,54 @@ body:has(.ct-contract-wizard) .ws-bottom-nav {
 .ct-picker-list {
     display: flex;
     flex-direction: column;
-    gap: 0.45rem;
+    gap: 0.5rem;
 }
 
 .ct-picker-card {
     display: flex;
     align-items: center;
-    gap: 0.6rem;
+    gap: 0.65rem;
     width: 100%;
-    padding: 0.65rem 0.7rem;
-    border: 1px solid var(--ct-m-border, rgba(15, 23, 42, 0.08));
-    border-radius: 12px;
+    padding: 0.7rem 0.75rem;
+    border: 1px solid rgba(15, 23, 42, 0.07);
+    border-radius: 14px;
     background: #fff;
     cursor: pointer;
     text-align: right;
     font: inherit;
     color: inherit;
-    transition: border-color 0.15s, box-shadow 0.15s, transform 0.12s;
+    transition: border-color 0.16s, box-shadow 0.16s, transform 0.12s, background 0.16s;
 }
 
 .ct-picker-card:hover,
 .ct-picker-card:focus-visible {
-    border-color: rgba(99, 102, 241, 0.45);
-    box-shadow: 0 4px 14px rgba(99, 102, 241, 0.1);
+    border-color: rgba(99, 102, 241, 0.38);
+    background: rgba(99, 102, 241, 0.02);
+    box-shadow: 0 6px 18px rgba(99, 102, 241, 0.09);
+}
+
+.ct-picker-card:focus-visible {
+    outline: none;
+    box-shadow:
+        0 0 0 3px rgba(99, 102, 241, 0.18),
+        0 6px 18px rgba(99, 102, 241, 0.08);
 }
 
 .ct-picker-card:active {
-    transform: scale(0.995);
+    transform: translateY(1px);
 }
 
 .ct-picker-card__avatar {
     flex-shrink: 0;
-    width: 2.35rem;
-    height: 2.35rem;
-    border-radius: 10px;
+    width: 2.45rem;
+    height: 2.45rem;
+    border-radius: 11px;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(99, 102, 241, 0.1);
-    color: var(--crm-brand, #6366f1);
+    background: linear-gradient(165deg, rgba(99, 102, 241, 0.14), rgba(99, 102, 241, 0.06));
+    color: var(--ct-picker-brand);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65);
 }
 
 .ct-picker-card__avatar--property {
@@ -1382,11 +1453,12 @@ body:has(.ct-contract-wizard) .ws-bottom-nav {
 
 .ct-picker-card__tag {
     font-size: 0.62rem;
-    color: var(--crm-brand, #6366f1);
-    background: rgba(99, 102, 241, 0.08);
-    padding: 0.1rem 0.4rem;
-    border-radius: 6px;
-    margin-top: 0.1rem;
+    font-weight: 600;
+    color: var(--ct-picker-brand);
+    background: rgba(99, 102, 241, 0.09);
+    padding: 0.12rem 0.45rem;
+    border-radius: 999px;
+    margin-top: 0.12rem;
 }
 
 .ct-picker-card__chips {
@@ -1423,11 +1495,17 @@ body:has(.ct-contract-wizard) .ws-bottom-nav {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 0.45rem;
+    gap: 0.5rem;
     text-align: center;
-    padding: 1.25rem 0.75rem;
-    font-size: 0.72rem;
+    padding: 1.35rem 0.85rem;
+    font-size: 0.73rem;
     color: var(--ct-m-muted, #64748b);
+}
+
+.ct-picker-state p {
+    margin: 0;
+    max-width: 18rem;
+    line-height: 1.55;
 }
 
 .ct-picker-state--full {
@@ -1452,18 +1530,30 @@ body:has(.ct-contract-wizard) .ws-bottom-nav {
 }
 
 .ct-picker-state--end {
-    padding: 0.65rem;
-    font-size: 0.65rem;
-    opacity: 0.85;
+    padding: 0.75rem 0.5rem 0.25rem;
+    margin-top: 0.15rem;
+    font-size: 0.64rem;
+    opacity: 0.8;
+    border-top: 1px dashed rgba(15, 23, 42, 0.08);
+}
+
+.ct-picker-state--loading.ct-picker-state--full {
+    width: 100%;
+    align-items: stretch;
 }
 
 .ct-picker-skeleton {
-    height: 3.25rem;
-    border-radius: 12px;
-    margin-bottom: 0.45rem;
-    background: linear-gradient(90deg, rgba(15, 23, 42, 0.04), rgba(15, 23, 42, 0.08), rgba(15, 23, 42, 0.04));
+    height: 3.35rem;
+    border-radius: 14px;
+    margin-bottom: 0.5rem;
+    border: 1px solid rgba(15, 23, 42, 0.04);
+    background: linear-gradient(90deg, rgba(15, 23, 42, 0.03), rgba(15, 23, 42, 0.07), rgba(15, 23, 42, 0.03));
     background-size: 200% 100%;
     animation: ct-picker-shimmer 1.2s ease-in-out infinite;
+}
+
+.ct-picker-skeleton:last-child {
+    margin-bottom: 0;
 }
 
 @keyframes ct-picker-shimmer {
@@ -1472,12 +1562,14 @@ body:has(.ct-contract-wizard) .ws-bottom-nav {
 }
 
 .ct-picker-toast {
-    margin-bottom: 0.5rem;
-    padding: 0.5rem 0.65rem;
-    border-radius: 10px;
+    margin-bottom: 0.55rem;
+    padding: 0.55rem 0.7rem;
+    border-radius: 11px;
+    border: 1px solid rgba(239, 68, 68, 0.15);
     background: #fef2f2;
     color: #b91c1c;
     font-size: 0.7rem;
+    font-weight: 600;
     text-align: center;
 }
 

@@ -310,7 +310,7 @@ class ContractWizardPickerTests(TestCase):
         self.assertContains(resp, 'data-ct-picker-search')
         self.assertContains(resp, 'data-crm-field-voice')
         self.assertContains(resp, 'data-crm-field-voice-mic')
-        self.assertContains(resp, 'data-crm-field-voice-silence-ms="1500"')
+        self.assertContains(resp, 'data-crm-field-voice-silence-ms="1000"')
         self.assertContains(resp, 'id="ct-wizard-form"')
         self.assertContains(resp, 'autocomplete="off"')
         self.assertContains(resp, 'party_0_last_name')

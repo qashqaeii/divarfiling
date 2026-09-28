@@ -316,6 +316,15 @@ class ContractWizardPickerTests(TestCase):
         self.assertContains(resp, 'party_0_last_name')
         self.assertContains(resp, 'autocomplete="family-name"')
 
+    def test_customer_search_empty_lists_batch(self):
+        for i in range(8):
+            Customer.objects.create(user=self.user, name=f'لیست {i}', phone=f'0912100{i:04d}')
+        self.client.force_login(self.user)
+        url = reverse('workspace:contract_wizard_customer_search')
+        data = self.client.get(url, {'q': '', 'limit': 30, 'offset': 0}).json()
+        self.assertTrue(data['ok'])
+        self.assertGreaterEqual(len(data['results']), 8)
+
     def test_customer_search_pagination_metadata(self):
         for i in range(25):
             Customer.objects.create(user=self.user, name=f'مخاطب {i:02d}', phone=f'0912000{i:04d}')

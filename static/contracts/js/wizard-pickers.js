@@ -11,6 +11,13 @@
   if (!modal || !form) return;
 
   var PAGE_SIZE = 20;
+  var INITIAL_BROWSE_LIMIT = 30;
+  var INITIAL_FILL_TARGET = 14;
+  var MAX_INITIAL_BROWSE_PAGES = 3;
+  var MIN_LOADING_MS = 240;
+  var SKELETON_ROWS = 6;
+  var initialBrowseFetches = 0;
+  var loadingStartedAt = 0;
   var modalTitle = modal.querySelector('[data-ct-picker-title]');
   var modalSubtitle = modal.querySelector('[data-ct-picker-subtitle]');
   var modalIcon = modal.querySelector('[data-ct-picker-icon]');
@@ -52,6 +59,54 @@
     listState.loading = false;
     listState.loadingMore = false;
     listState.error = false;
+    initialBrowseFetches = 0;
+  }
+
+  function loadingSkeletonHtml() {
+    var cards = '';
+    for (var i = 0; i < SKELETON_ROWS; i += 1) {
+      cards +=
+        '<div class="ct-picker-skeleton-card" aria-hidden="true">' +
+        '<span class="ct-picker-skeleton-card__avatar"></span>' +
+        '<span class="ct-picker-skeleton-card__lines">' +
+        '<span class="ct-picker-skeleton-card__line ct-picker-skeleton-card__line--title"></span>' +
+        '<span class="ct-picker-skeleton-card__line ct-picker-skeleton-card__line--sub"></span>' +
+        '<span class="ct-picker-skeleton-card__line ct-picker-skeleton-card__line--tag"></span>' +
+        '</span></div>';
+    }
+    return (
+      '<div class="ct-picker-state ct-picker-state--loading ct-picker-state--full ct-picker-state--initial">' +
+      '<div class="ct-picker-loading-head" aria-live="polite">' +
+      '<span class="ct-picker-loading-head__spinner" aria-hidden="true"></span>' +
+      '<span class="ct-picker-loading-head__text">در حال بارگذاری لیست…</span>' +
+      '</div>' +
+      '<div class="ct-picker-skeleton-list">' + cards + '</div>' +
+      '</div>'
+    );
+  }
+
+  function finishInitialLoading(renderFn) {
+    if (!listState.loading || listState.items.length) {
+      renderFn();
+      return;
+    }
+    var elapsed = Date.now() - (loadingStartedAt || 0);
+    var wait = Math.max(0, MIN_LOADING_MS - elapsed);
+    if (!wait) {
+      renderFn();
+      return;
+    }
+    window.setTimeout(renderFn, wait);
+  }
+
+  function maybeExpandInitialBrowse() {
+    if (listState.query) return;
+    if (!listState.hasMore) return;
+    if (listState.items.length >= INITIAL_FILL_TARGET) return;
+    if (initialBrowseFetches >= MAX_INITIAL_BROWSE_PAGES) return;
+    if (listState.loading || listState.loadingMore) return;
+    initialBrowseFetches += 1;
+    fetchPage(false);
   }
 
   function setModalChrome(mode, title) {
@@ -84,8 +139,9 @@
     }
     if (listState.loadingMore) {
       return (
-        '<div class="ct-picker-state ct-picker-state--loading" aria-live="polite">' +
-        '<i class="fas fa-spinner fa-spin" aria-hidden="true"></i><span>در حال بارگذاری…</span></div>'
+        '<div class="ct-picker-state ct-picker-state--loading ct-picker-state--more" aria-live="polite">' +
+        '<span class="ct-picker-loading-head__spinner ct-picker-loading-head__spinner--sm" aria-hidden="true"></span>' +
+        '<span>بارگذاری موارد بیشتر…</span></div>'
       );
     }
     if (listState.items.length && !listState.hasMore) {
@@ -155,10 +211,7 @@
   function renderList() {
     if (!modalResults) return;
     if (listState.loading && !listState.items.length) {
-      modalResults.innerHTML =
-        '<div class="ct-picker-state ct-picker-state--loading ct-picker-state--full">' +
-        '<div class="ct-picker-skeleton"></div><div class="ct-picker-skeleton"></div><div class="ct-picker-skeleton"></div>' +
-        '</div>';
+      modalResults.innerHTML = loadingSkeletonHtml();
       return;
     }
     var q = listState.query;
@@ -196,6 +249,8 @@
       listState.items = [];
       listState.nextOffset = 0;
       listState.hasMore = false;
+      initialBrowseFetches = 0;
+      loadingStartedAt = Date.now();
       if (modalResults) modalResults.scrollTop = 0;
       renderList();
     } else {
@@ -206,8 +261,9 @@
     if (activeController) activeController.abort();
     activeController = new AbortController();
     var offset = reset ? 0 : listState.nextOffset;
+    var pageLimit = reset && !listState.query ? INITIAL_BROWSE_LIMIT : PAGE_SIZE;
     var qs = '?q=' + encodeURIComponent(listState.query || '') +
-      '&limit=' + PAGE_SIZE + '&offset=' + offset;
+      '&limit=' + pageLimit + '&offset=' + offset;
 
     fetch(url + qs, {
       credentials: 'same-origin',
@@ -216,9 +272,9 @@
     }).then(function (r) { return r.json(); }).then(function (data) {
       if (gen !== listState.requestGen) return;
       activeController = null;
-      listState.loading = false;
-      listState.loadingMore = false;
       if (!data.ok) {
+        listState.loading = false;
+        listState.loadingMore = false;
         listState.error = true;
         if (!listState.items.length) renderList();
         else {
@@ -229,11 +285,31 @@
       }
       listState.error = false;
       var batch = data.results || [];
-      if (reset) listState.items = batch;
-      else listState.items = listState.items.concat(batch);
+      if (reset) {
+        listState.items = batch;
+        initialBrowseFetches = 1;
+      } else {
+        listState.items = listState.items.concat(batch);
+      }
       listState.hasMore = !!data.has_more;
       listState.nextOffset = data.next_offset != null ? data.next_offset : (offset + batch.length);
-      renderList();
+
+      function afterDataApplied() {
+        listState.loading = false;
+        listState.loadingMore = false;
+        renderList();
+        maybeExpandInitialBrowse();
+      }
+
+      if (reset && !listState.query && !listState.items.length) {
+        afterDataApplied();
+        return;
+      }
+      if (reset && !listState.query) {
+        finishInitialLoading(afterDataApplied);
+        return;
+      }
+      afterDataApplied();
     }).catch(function (err) {
       if (err && err.name === 'AbortError') return;
       if (gen !== listState.requestGen) return;
@@ -260,6 +336,9 @@
     setModalChrome(mode, title);
     if (modalSearch) modalSearch.value = '';
     listState.query = '';
+    listState.loading = true;
+    loadingStartedAt = Date.now();
+    renderList();
     modal.showModal();
     setTimeout(function () { if (modalSearch) modalSearch.focus(); }, 50);
     fetchPage(true);

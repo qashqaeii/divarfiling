@@ -1117,6 +1117,8 @@ body:has(.ct-contract-wizard) .ws-bottom-nav {
 }
 
 .ct-wizard-picker-modal {
+    --ct-picker-modal-height: min(86vh, 600px);
+    --ct-picker-search-block-height: 6.35rem;
     border: 0;
     padding: 0;
     max-width: min(540px, 96vw);
@@ -1130,7 +1132,9 @@ body:has(.ct-contract-wizard) .ws-bottom-nav {
 }
 
 .ct-wizard-picker-modal__box {
-    max-height: min(86vh, 680px);
+    height: var(--ct-picker-modal-height);
+    min-height: var(--ct-picker-modal-height);
+    max-height: var(--ct-picker-modal-height);
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -1139,6 +1143,7 @@ body:has(.ct-contract-wizard) .ws-bottom-nav {
 }
 
 .ct-wizard-picker-head {
+    flex-shrink: 0;
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
@@ -1214,9 +1219,12 @@ body:has(.ct-contract-wizard) .ws-bottom-nav {
     position: sticky;
     top: 0;
     z-index: 2;
+    flex-shrink: 0;
+    min-height: var(--ct-picker-search-block-height);
     padding: 0.65rem 0.85rem;
     background: var(--crm-surface, #fff);
     border-bottom: 1px solid var(--ct-m-border, rgba(15, 23, 42, 0.06));
+    box-sizing: border-box;
 }
 
 .ct-wizard-picker-search {
@@ -1255,7 +1263,16 @@ body:has(.ct-contract-wizard) .ws-bottom-nav {
 }
 
 .ct-wizard-picker-search-voice .crm-field-voice__status {
+    margin: 0.3rem 0 0;
     padding: 0 0.15rem;
+    min-height: 1.85rem;
+    line-height: 1.45;
+}
+
+/* Reserve status line height so listening / idle toggles do not resize the modal */
+.ct-wizard-picker-search-voice > .crm-field-voice__status[hidden] {
+    display: block;
+    visibility: hidden;
 }
 
 /* Mic sits in the flex row (not over the input) — avoids overlap with browser clear controls */
@@ -1269,12 +1286,18 @@ body:has(.ct-contract-wizard) .ws-bottom-nav {
 }
 
 .ct-wizard-picker-results {
-    overflow: auto;
-    flex: 1;
-    min-height: 12rem;
-    max-height: min(52vh, 420px);
+    overflow-x: hidden;
+    overflow-y: auto;
+    flex: 1 1 auto;
+    min-height: 0;
+    height: 0;
     padding: 0.65rem 0.85rem 0.85rem;
     -webkit-overflow-scrolling: touch;
+}
+
+.ct-wizard-picker-results > .ct-picker-state {
+    min-height: 100%;
+    box-sizing: border-box;
 }
 
 .ct-picker-list {
@@ -1409,6 +1432,11 @@ body:has(.ct-contract-wizard) .ws-bottom-nav {
 
 .ct-picker-state--full {
     padding: 0.5rem 0;
+    justify-content: flex-start;
+}
+
+.ct-picker-state--full.ct-picker-state--loading {
+    justify-content: center;
 }
 
 .ct-picker-state--hint i,
@@ -1454,12 +1482,11 @@ body:has(.ct-contract-wizard) .ws-bottom-nav {
 }
 
 @media (max-width: 480px) {
-    .ct-wizard-picker-modal__box {
-        max-height: 92vh;
-        border-radius: 14px 14px 0 0;
+    .ct-wizard-picker-modal {
+        --ct-picker-modal-height: min(92vh, 640px);
     }
-    .ct-wizard-picker-results {
-        max-height: 58vh;
+    .ct-wizard-picker-modal__box {
+        border-radius: 14px 14px 0 0;
     }
 }
 

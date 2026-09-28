@@ -14,6 +14,7 @@ from ai_workspace.constants import (
     NL_COMMAND_INTENT_CREATE_PERSONAL_PROPERTY,
     NL_COMMAND_INTENT_CREATE_REMINDER,
 )
+from ai_workspace.services.listing_summary_polish import polish_listing_payload
 from ai_workspace.services.parse import parse_json_text, salvage_listing_json
 
 _STRING_FIELD_RE = re.compile(r'"(summary|negotiation_tip|advertiser_note|executive_summary|outliers_note|duplicates_note)"\s*:\s*"((?:[^"\\]|\\.)*)"', re.DOTALL)
@@ -70,7 +71,7 @@ def normalize_listing_payload(data: Optional[Dict[str, Any]], raw_text: str = ''
     payload['highlights'] = _coerce_str_list(payload.get('highlights'))
     payload.pop('advertiser_note', None)
     payload.pop('raw', None)
-    return payload
+    return polish_listing_payload(payload)
 
 
 def is_valid_listing_payload(data: Optional[Dict[str, Any]]) -> bool:

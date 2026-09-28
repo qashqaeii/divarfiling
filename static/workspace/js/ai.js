@@ -86,12 +86,73 @@
         return `<div class="ws-ai-result-meta">${badge}${quota}</div>`;
     }
 
-    function setLoading(btn, loading) {
+    const LISTING_SUMMARY_LOAD_STEPS = [
+        { id: 'market', label: 'تحلیل بازار و قیمت', icon: 'fa-chart-line' },
+        { id: 'features', label: 'امکانات و ویژگی‌های ملک', icon: 'fa-building' },
+        { id: 'negotiation', label: 'پیشنهاد مذاکره', icon: 'fa-handshake' },
+    ];
+
+    const HIGHLIGHT_ICONS = [
+        'fa-circle-check',
+        'fa-bolt',
+        'fa-gem',
+        'fa-location-dot',
+        'fa-chart-simple',
+        'fa-house-chimney',
+        'fa-star',
+        'fa-shield-halved',
+    ];
+
+    function pickHighlightIcon(text) {
+        const t = String(text || '');
+        if (/قیمت|معامله|رهن|اجاره|ودیعه|میلیارد|تومان|متری/i.test(t)) return 'fa-coins';
+        if (/متراژ|خواب|اتاق|طبقه|ساخت|سال/i.test(t)) return 'fa-ruler-combined';
+        if (/محله|منطقه|موقعیت|دسترسی|شهر/i.test(t)) return 'fa-location-dot';
+        if (/بازار|میانه|زیر|بالا|متعارف/i.test(t)) return 'fa-chart-line';
+        if (/پارکینگ|انباری|آسانسور|امکانات|بالکن/i.test(t)) return 'fa-sparkles';
+        return 'fa-circle-check';
+    }
+
+    function formatSummaryHtml(summary) {
+        const clean = String(summary || '').trim();
+        if (!clean) return '';
+        const parts = clean
+            .split(/(?<=[.!?؟۔])\s+/)
+            .map((s) => s.trim())
+            .filter(Boolean);
+        if (parts.length <= 1) {
+            return `<p class="ws-ai-summary-pro__lead-text">${escapeHtml(clean)}</p>`;
+        }
+        return `<div class="ws-ai-summary-pro__lead-text ws-ai-summary-pro__lead-text--stacked">${parts
+            .map((p) => `<p class="ws-ai-summary-pro__sentence">${escapeHtml(p)}</p>`)
+            .join('')}</div>`;
+    }
+
+    let listingSummaryLoadTimer = null;
+
+    function setLoading(btn, loading, { listing = false } = {}) {
         if (!btn) return;
         btn.disabled = loading;
         btn.classList.toggle('ws-ai-loading', loading);
-        if (loading) btn.dataset.aiOrigText = btn.innerHTML;
-        else if (btn.dataset.aiOrigText) btn.innerHTML = btn.dataset.aiOrigText;
+        btn.classList.toggle('is-loading', loading && listing);
+        const label = btn.querySelector('.ws-ai-card__cta-label');
+        if (loading) {
+            if (!btn.dataset.aiOrigText) btn.dataset.aiOrigText = btn.innerHTML;
+            if (label) {
+                if (!btn.dataset.aiOrigLabel) btn.dataset.aiOrigLabel = label.textContent;
+                label.textContent = listing ? 'در حال تولید…' : (btn.dataset.aiOrigLabel || label.textContent);
+            }
+        } else {
+            if (btn.dataset.aiOrigText) {
+                btn.innerHTML = btn.dataset.aiOrigText;
+                delete btn.dataset.aiOrigText;
+            }
+            if (label && btn.dataset.aiOrigLabel) {
+                label.textContent = btn.dataset.aiOrigLabel;
+                delete btn.dataset.aiOrigLabel;
+            }
+            btn.classList.remove('is-loading');
+        }
     }
 
     function renderBadge(data) {
@@ -125,14 +186,163 @@
         return '';
     }
 
+    function renderListingSummaryLoading() {
+        const steps = LISTING_SUMMARY_LOAD_STEPS.map((step) => (
+            `<li class="ws-ai-load-step" data-ai-load-step="${step.id}">
+                <span class="ws-ai-load-step__icon"><i class="fas ${step.icon}" aria-hidden="true"></i></span>
+                <span class="ws-ai-load-step__label">${escapeHtml(step.label)}</span>
+                <span class="ws-ai-load-step__status" aria-hidden="true"></span>
+            </li>`
+        )).join('');
+        return `<div class="ws-ai-summary-loading" role="status" aria-live="polite" aria-busy="true">
+            <div class="ws-ai-summary-loading__orb" aria-hidden="true">
+                <span class="ws-ai-summary-loading__ring"></span>
+                <span class="ws-ai-summary-loading__core"><i class="fas fa-wand-magic-sparkles"></i></span>
+            </div>
+            <p class="ws-ai-summary-loading__title">در حال ساخت خلاصه هوشمند</p>
+            <p class="ws-ai-summary-loading__sub">داده‌های فایل، امکانات و موقعیت در حال ترکیب است…</p>
+            <ol class="ws-ai-load-steps">${steps}</ol>
+            <div class="ws-ai-summary-loading__bar" aria-hidden="true"><span class="ws-ai-summary-loading__bar-fill"></span></div>
+        </div>`;
+    }
+
+    function stopListingSummaryLoadAnimation(card) {
+        if (listingSummaryLoadTimer) {
+            clearInterval(listingSummaryLoadTimer);
+            listingSummaryLoadTimer = null;
+        }
+        card?.classList.remove('is-ai-loading');
+        card?.querySelectorAll('[data-ai-chip]').forEach((chip) => chip.classList.remove('is-active'));
+        card?.querySelectorAll('[data-ai-load-step]').forEach((step) => {
+            step.classList.remove('is-active', 'is-done');
+        });
+    }
+
+    function startListingSummaryLoadAnimation(card) {
+        if (!card) return;
+        stopListingSummaryLoadAnimation(card);
+        card.classList.add('is-ai-loading');
+        const steps = card.querySelectorAll('[data-ai-load-step]');
+        const chips = card.querySelectorAll('[data-ai-chip]');
+        let index = 0;
+
+        const tick = () => {
+            steps.forEach((el, i) => {
+                el.classList.toggle('is-active', i === index);
+                el.classList.toggle('is-done', i < index);
+            });
+            chips.forEach((chip) => {
+                const key = chip.getAttribute('data-ai-chip');
+                const stepId = LISTING_SUMMARY_LOAD_STEPS[index]?.id;
+                chip.classList.toggle('is-active', key === stepId);
+            });
+            index = (index + 1) % LISTING_SUMMARY_LOAD_STEPS.length;
+        };
+
+        tick();
+        listingSummaryLoadTimer = setInterval(tick, 1400);
+    }
+
+    function summaryPlainText(d) {
+        const parts = [];
+        const summary = (d.summary || '').trim();
+        if (summary) parts.push(summary);
+        (d.highlights || []).forEach((h) => {
+            const line = String(h || '').trim();
+            if (line) parts.push(`• ${line}`);
+        });
+        const tip = (d.negotiation_tip || '').trim();
+        if (tip) parts.push(`نکته مذاکره: ${tip}`);
+        return parts.join('\n\n');
+    }
+
+    function bindListingSummaryActions(container, data) {
+        if (!container) return;
+        const copyBtn = container.querySelector('[data-ai-copy-summary]');
+        if (!copyBtn) return;
+        const d = data.data || {};
+        const text = summaryPlainText(d) || String(data.text || '').trim();
+        copyBtn.addEventListener('click', () => {
+            if (!text) return;
+            const done = () => {
+                copyBtn.classList.add('is-copied');
+                const span = copyBtn.querySelector('span');
+                if (span) {
+                    const orig = span.textContent;
+                    span.textContent = 'کپی شد';
+                    setTimeout(() => {
+                        span.textContent = orig;
+                        copyBtn.classList.remove('is-copied');
+                    }, 1800);
+                }
+            };
+            if (navigator.clipboard?.writeText) {
+                navigator.clipboard.writeText(text).then(done).catch(() => {});
+            }
+        });
+    }
+
     function renderListingSummary(data) {
         const d = data.data || {};
-        const highlights = (d.highlights || []).map(h => `<li>${escapeHtml(h)}</li>`).join('');
-        let html = renderResultMeta(data);
-        if (d.summary) html += `<p class="ws-ai-summary">${escapeHtml(d.summary)}</p>`;
-        if (highlights) html += `<ul class="ws-ai-highlights">${highlights}</ul>`;
-        if (d.negotiation_tip) html += `<p class="ws-ai-tip"><strong>مذاکره:</strong> ${escapeHtml(d.negotiation_tip)}</p>`;
-        return html || `<p>${escapeHtml(d.summary || data.text || '')}</p>`;
+        const summary = (d.summary || data.text || '').trim();
+        const highlights = (d.highlights || []).filter((h) => String(h || '').trim());
+        const negotiation = (d.negotiation_tip || '').trim();
+        const meta = renderResultMeta(data);
+        const canCopy = !!(summary || highlights.length || negotiation);
+
+        let html = '<div class="ws-ai-summary-pro ws-ai-summary-pro--enter">';
+        if (meta || canCopy) {
+            html += '<div class="ws-ai-summary-pro__toolbar">';
+            html += meta || '<div></div>';
+            if (canCopy) {
+                html += `<div class="ws-ai-summary-pro__actions">
+                    <button type="button" class="ws-ai-summary-pro__copy" data-ai-copy-summary>
+                        <i class="fas fa-copy" aria-hidden="true"></i><span>کپی متن</span>
+                    </button>
+                </div>`;
+            }
+            html += '</div>';
+        }
+
+        if (summary) {
+            html += `<article class="ws-ai-summary-pro__lead">
+                <header class="ws-ai-summary-pro__lead-head">
+                    <span class="ws-ai-summary-pro__lead-icon" aria-hidden="true"><i class="fas fa-file-lines"></i></span>
+                    <h4>خلاصه اجرایی</h4>
+                </header>
+                ${formatSummaryHtml(summary)}
+            </article>`;
+        }
+
+        if (highlights.length) {
+            html += '<section class="ws-ai-summary-pro__grid" aria-label="نکات برجسته">';
+            html += '<h4 class="ws-ai-summary-pro__section-title"><i class="fas fa-star" aria-hidden="true"></i> نکات برجسته</h4>';
+            html += '<ul class="ws-ai-summary-pro__highlights">';
+            highlights.forEach((h, i) => {
+                const icon = pickHighlightIcon(h) || HIGHLIGHT_ICONS[i % HIGHLIGHT_ICONS.length];
+                html += `<li class="ws-ai-summary-pro__highlight">
+                    <span class="ws-ai-summary-pro__highlight-ico" aria-hidden="true"><i class="fas ${icon}"></i></span>
+                    <span>${escapeHtml(h)}</span>
+                </li>`;
+            });
+            html += '</ul></section>';
+        }
+
+        if (negotiation) {
+            html += `<aside class="ws-ai-summary-pro__negotiate">
+                <div class="ws-ai-summary-pro__negotiate-icon" aria-hidden="true"><i class="fas fa-handshake"></i></div>
+                <div>
+                    <strong>نکته مذاکره</strong>
+                    <p>${escapeHtml(negotiation)}</p>
+                </div>
+            </aside>`;
+        }
+
+        html += '</div>';
+        if (!summary && !highlights.length && !negotiation) {
+            return `<p class="ws-ai-summary">${escapeHtml(data.text || '')}</p>`;
+        }
+        return html;
     }
 
     async function postJson(url, body) {
@@ -161,37 +371,51 @@
         if (empty) empty.hidden = !show;
     }
 
-    function showResult(container, html) {
+    function showResult(container, html, { card, data } = {}) {
         if (!container) return;
         container.innerHTML = html;
         container.hidden = false;
-        const card = container.closest('[data-ai-card]');
-        if (card) toggleAiEmpty(card, false);
+        const rootCard = card || container.closest('[data-ai-card]');
+        if (rootCard) toggleAiEmpty(rootCard, false);
+        if (data) bindListingSummaryActions(container, data);
     }
 
     async function handleListingSummary(btn) {
         const card = btn.closest('[data-ai-card]') || document.getElementById('wsAiListingSummary');
-        const result = card ? card.querySelector('.ws-ai-result') : null;
-        setLoading(btn, true);
+        const result = card ? card.querySelector('[data-ai-result], .ws-ai-result') : null;
+        setLoading(btn, true, { listing: true });
         toggleAiEmpty(card, false);
         if (result) {
-            result.innerHTML = '<div class="ws-ai-card__loading"><span class="ws-ai-card__loading-dot"></span><span class="ws-ai-card__loading-dot"></span><span class="ws-ai-card__loading-dot"></span><p>در حال تحلیل هوشمند فایل…</p></div>';
+            result.innerHTML = renderListingSummaryLoading();
             result.hidden = false;
         }
+        startListingSummaryLoadAnimation(card);
         try {
             const data = await postJson(btn.dataset.aiUrl);
+            stopListingSummaryLoadAnimation(card);
             if (data.skipped) {
                 const hint = data.message || 'برای تولید خلاصه هوشمند، اطلاعات بیشتری از ملک ثبت کنید.';
-                showResult(result, `<p class="ws-ai-note">${escapeHtml(hint)}</p>`);
+                showResult(result, `<div class="ws-ai-summary-pro ws-ai-summary-pro--enter">
+                    <div class="ws-ai-summary-pro__skipped">
+                        <i class="fas fa-circle-info" aria-hidden="true"></i>
+                        <span>${escapeHtml(hint)}</span>
+                    </div>
+                </div>`, { card });
                 if (card && data.quota) updateCardQuota(card, data.quota);
                 return;
             }
-            showResult(result, renderListingSummary(data));
+            showResult(result, renderListingSummary(data), { card, data });
             if (card && data.quota) updateCardQuota(card, data.quota);
         } catch (e) {
-            showResult(result, `<p class="ws-ai-error">${escapeHtml(e.message)}</p>`);
+            stopListingSummaryLoadAnimation(card);
+            showResult(result, `<div class="ws-ai-summary-pro ws-ai-summary-pro--enter">
+                <div class="ws-ai-summary-pro__error">
+                    <i class="fas fa-triangle-exclamation" aria-hidden="true"></i>
+                    <span>${escapeHtml(e.message)}</span>
+                </div>
+            </div>`, { card });
         } finally {
-            setLoading(btn, false);
+            setLoading(btn, false, { listing: true });
         }
     }
 

@@ -137,46 +137,54 @@ def build(context: Dict[str, Any]) -> Dict[str, Any]:
     location_lines = _first_line_block(context.get('tab_location') or '')
     feature_lines = _first_line_block(context.get('tab_features') or '')
 
-    summary_blocks = [
-        _build_intro(context),
-        _build_specs_sentence(context, property_lines),
-        _build_financial_sentence(financial_lines, context),
-    ]
+    intro = _build_intro(context)
+    specs = _build_specs_sentence(context, property_lines).replace('مشخصات: ', '')
+    financial = _build_financial_sentence(financial_lines, context).replace('معامله: ', '')
 
     amenities = _amenity_highlights(context, feature_lines)
-    if amenities:
-        summary_blocks.append('امکانات برجسته: ' + '، '.join(amenities))
+    market_line = _market_highlight(bench, verdict) or (verdict if verdict else '')
 
-    market_line = _market_highlight(bench, verdict)
+    summary_sentences: List[str] = []
+    head = intro
+    if specs:
+        head += f' با {specs}'
+    summary_sentences.append(head.rstrip(' .') + '.')
+    if financial:
+        summary_sentences.append(f'شرایط معامله: {financial.rstrip(".")}.')
     if market_line:
-        summary_blocks.append('تحلیل بازار: ' + market_line)
-    elif verdict:
-        summary_blocks.append('تحلیل بازار: ' + verdict)
+        summary_sentences.append(f'نسبت به فایلینگ شما: {market_line.rstrip(".")}.')
+    elif amenities:
+        summary_sentences.append(
+            'امکانات قابل‌توجه: ' + '، '.join(amenities[:4]) + '.'
+        )
 
     excerpt = (context.get('description_excerpt') or context.get('tab_text') or '').strip()
-    if excerpt and len(excerpt) > 40:
+    if excerpt and len(excerpt) > 40 and len(summary_sentences) < 3:
         first_sentence = excerpt.split('\n')[0].strip()
-        if len(first_sentence) > 220:
-            first_sentence = first_sentence[:217].rstrip() + '…'
-        if first_sentence and first_sentence not in summary_blocks[0]:
-            summary_blocks.append('توضیح: ' + first_sentence)
+        if len(first_sentence) > 160:
+            first_sentence = first_sentence[:157].rstrip() + '…'
+        if first_sentence:
+            summary_sentences.append(first_sentence.rstrip('.') + '.')
 
-    summary = '\n'.join(block for block in summary_blocks if block)
+    summary = ' '.join(summary_sentences[:3])
 
     highlights: List[str] = []
-    highlights.extend(_labeled_lines('\n'.join(financial_lines), 'مالی — ', 3))
-    highlights.extend(_labeled_lines('\n'.join(property_lines), 'ملک — ', 4))
-    highlights.extend(_labeled_lines('\n'.join(location_lines), 'موقعیت — ', 2))
-    for feat in feature_lines[:4]:
-        item = feat if feat.startswith('ویژگی') else f'ویژگی — {feat}'
-        highlights.append(item)
-    for amenity in amenities:
-        item = f'امکانات: {amenity}'
-        if item not in highlights:
-            highlights.append(item)
-    market_h = _market_highlight(bench, verdict)
-    if market_h:
-        highlights.append('بازار — ' + market_h)
+    for line in financial_lines[:2]:
+        text = line if ':' in line else f'قیمت و معامله: {line}'
+        highlights.append(text)
+    for line in property_lines[:3]:
+        text = line if ':' in line else line
+        highlights.append(text)
+    for line in location_lines[:2]:
+        text = line if ':' in line else f'موقعیت: {line}'
+        highlights.append(text)
+    for amenity in amenities[:3]:
+        highlights.append(f'امکانات شامل {amenity}')
+    for feat in feature_lines[:2]:
+        if feat not in highlights:
+            highlights.append(feat)
+    if market_line:
+        highlights.append(f'وضعیت بازار: {market_line}')
     note = (context.get('benchmark_note') or bench.get('note') or '').strip()
     if note and note not in highlights:
         highlights.append(note)

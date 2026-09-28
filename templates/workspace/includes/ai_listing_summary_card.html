@@ -76,18 +76,32 @@
         </div>
         {% endif %}
 
-        <div class="ws-ai-card__chips" aria-hidden="true">
-            <span class="ws-ai-card__chip"><i class="fas fa-chart-line"></i> تحلیل بازار</span>
-            <span class="ws-ai-card__chip"><i class="fas fa-handshake"></i> نکته مذاکره</span>
-            <span class="ws-ai-card__chip"><i class="fas fa-building" aria-hidden="true"></i> ویژگی‌های ملک</span>
+        <div class="ws-ai-card__chips" data-ai-chips aria-hidden="true">
+            <span class="ws-ai-card__chip" data-ai-chip="market"><i class="fas fa-chart-line"></i> تحلیل بازار</span>
+            <span class="ws-ai-card__chip" data-ai-chip="features"><i class="fas fa-building" aria-hidden="true"></i> ویژگی‌های ملک</span>
+            <span class="ws-ai-card__chip" data-ai-chip="negotiation"><i class="fas fa-handshake"></i> نکته مذاکره</span>
         </div>
 
-        <div class="ws-ai-card__body">
+        <div class="ws-ai-card__body" data-ai-body>
             <div class="ws-ai-card__empty" data-ai-empty>
+                <div class="ws-ai-card__empty-previews" aria-hidden="true">
+                    <div class="ws-ai-card__empty-preview">
+                        <i class="fas fa-chart-line"></i>
+                        <span></span><span></span>
+                    </div>
+                    <div class="ws-ai-card__empty-preview">
+                        <i class="fas fa-building"></i>
+                        <span></span><span></span>
+                    </div>
+                    <div class="ws-ai-card__empty-preview">
+                        <i class="fas fa-handshake"></i>
+                        <span></span><span></span>
+                    </div>
+                </div>
                 <p class="ws-ai-card__empty-title">خلاصه حرفه‌ای این ملک را یک‌کلیکه بگیرید</p>
-                <p class="ws-ai-card__empty-desc">مناسب ارائه به مشتری، مذاکره و یادداشت داخلی — بر پایه داده‌های همین فایل.</p>
+                <p class="ws-ai-card__empty-desc">تحلیل بازار، نکات برجسته و پیشنهاد مذاکره — آماده ارسال به مشتری یا یادداشت داخلی.</p>
             </div>
-            <div class="ws-ai-result ws-ai-card__result" hidden></div>
+            <div class="ws-ai-result ws-ai-card__result" data-ai-result hidden></div>
         </div>
 
         <footer class="ws-ai-card__footer">

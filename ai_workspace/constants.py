@@ -78,7 +78,7 @@ JSON_FEATURES = frozenset({FEATURE_LISTING_SUMMARY, FEATURE_NL_COMMAND})
 
 # نسخه دستی prompt — فقط وقتی محتوا عوض شد افزایش دهید (نه mtime)
 PROMPT_VERSIONS = {
-    FEATURE_LISTING_SUMMARY: 'listing_summary_v5',
+    FEATURE_LISTING_SUMMARY: 'listing_summary_v6',
     FEATURE_CRM_MESSAGE: 'crm_message_v5',
     FEATURE_UPLOAD_BRIEF: 'upload_brief_v1',
     FEATURE_NL_COMMAND: 'nl_command_v3',

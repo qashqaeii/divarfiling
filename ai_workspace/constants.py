@@ -74,11 +74,72 @@ CRM_MESSAGE_TONE_CHOICES = tuple(
     (key, meta['label']) for key, meta in CRM_MESSAGE_TONES.items()
 )
 
+DEFAULT_LISTING_SUMMARY_TONE = 'مشاورانه'
+DEFAULT_LISTING_SUMMARY_STYLE = 'کارتی'
+
+LISTING_SUMMARY_TONES = {
+    'رسمی': {
+        'label': 'رسمی',
+        'hint': 'محترمانه و حرفه‌ای',
+        'guide': 'لحن رسمی و شفاف؛ مناسب ارائه به مشتری جدی و مکاتبات رسمی؛ از عامیانه پرهیز کنید.',
+    },
+    'صمیمی': {
+        'label': 'صمیمی',
+        'hint': 'گرم و قابل‌فهم',
+        'guide': 'لحن دوستانه اما حرفه‌ای؛ از «شما» استفاده کنید؛ جملات روان و نزدیک به گفت‌وگو.',
+    },
+    'مشاورانه': {
+        'label': 'مشاورانه',
+        'hint': 'راهنما و تحلیلی',
+        'guide': 'لحن مشاور املاک؛ توضیح «چرا این فایل مهم است»؛ متعادل بین تحلیل و پیشنهاد عمل.',
+    },
+    'کوتاه': {
+        'label': 'کوتاه',
+        'hint': 'مستقیم و فشرده',
+        'guide': 'حداقل کلمات؛ بدون مقدمه؛ هر جمله یک اطلاعات مشخص؛ مناسب اسکن سریع.',
+    },
+}
+
+LISTING_SUMMARY_STYLES = {
+    'کارتی': {
+        'label': 'کارت‌وار',
+        'hint': 'خلاصه + نکات لیستی',
+        'guide': 'summary ۲–۳ جمله؛ highlights ۴–۶ مورد کوتاه و اسکن‌پذیر؛ negotiation_tip یک جمله عملی.',
+    },
+    'واتساپ': {
+        'label': 'پیام واتساپ',
+        'hint': 'آماده ارسال',
+        'guide': 'متن طوری بنویس که مشاور بتواند با کمترین ویرایش در واتساپ بفرستد؛ summary حداکثر ۲ جمله؛ highlights حداکثر ۴ مورد خیلی کوتاه.',
+    },
+    'ارائه': {
+        'label': 'ارائه به مشتری',
+        'hint': 'حرفه‌ای و جذاب',
+        'guide': 'مناسب معرفی اولیه ملک؛ تاکید بر مزیت رقابتی و موقعیت؛ highlights با عبارت کامل و مثبتِ واقع‌بینانه.',
+    },
+    'یادداشت داخلی': {
+        'label': 'یادداشت داخلی',
+        'hint': 'فقط برای خود مشاور',
+        'guide': 'مستقیم و کاربردی؛ تاکید بر ریسک، نقطه ضعف احتمالی و اقدام بعدی؛ negotiation_tip بسیار عملی.',
+    },
+    'تحلیلی': {
+        'label': 'تحلیلی',
+        'hint': 'تمرکز بر بازار',
+        'guide': 'اگر benchmark در CONTEXT هست در summary و highlights پررنگ کن؛ مقایسه با میانه بازار؛ بدون عدد جدید.',
+    },
+}
+
+LISTING_SUMMARY_TONE_CHOICES = tuple(
+    {'key': key, **meta} for key, meta in LISTING_SUMMARY_TONES.items()
+)
+LISTING_SUMMARY_STYLE_CHOICES = tuple(
+    {'key': key, **meta} for key, meta in LISTING_SUMMARY_STYLES.items()
+)
+
 JSON_FEATURES = frozenset({FEATURE_LISTING_SUMMARY, FEATURE_NL_COMMAND})
 
 # نسخه دستی prompt — فقط وقتی محتوا عوض شد افزایش دهید (نه mtime)
 PROMPT_VERSIONS = {
-    FEATURE_LISTING_SUMMARY: 'listing_summary_v6',
+    FEATURE_LISTING_SUMMARY: 'listing_summary_v7',
     FEATURE_CRM_MESSAGE: 'crm_message_v5',
     FEATURE_UPLOAD_BRIEF: 'upload_brief_v1',
     FEATURE_NL_COMMAND: 'nl_command_v3',
@@ -157,6 +218,32 @@ def normalize_crm_tone(tone: str | None) -> str:
 
 def crm_tone_meta(tone: str | None) -> dict:
     return CRM_MESSAGE_TONES[normalize_crm_tone(tone)]
+
+
+def normalize_listing_summary_tone(tone: str | None) -> str:
+    key = (tone or '').strip()
+    if key in LISTING_SUMMARY_TONES:
+        return key
+    return DEFAULT_LISTING_SUMMARY_TONE
+
+
+def normalize_listing_summary_style(style: str | None) -> str:
+    key = (style or '').strip()
+    if key in LISTING_SUMMARY_STYLES:
+        return key
+    return DEFAULT_LISTING_SUMMARY_STYLE
+
+
+def listing_summary_tone_meta(tone: str | None) -> dict:
+    key = normalize_listing_summary_tone(tone)
+    meta = LISTING_SUMMARY_TONES[key]
+    return {'key': key, **meta}
+
+
+def listing_summary_style_meta(style: str | None) -> dict:
+    key = normalize_listing_summary_style(style)
+    meta = LISTING_SUMMARY_STYLES[key]
+    return {'key': key, **meta}
 
 
 INTERNAL_MODEL_LABEL = 'مدل داخلی سیستم'

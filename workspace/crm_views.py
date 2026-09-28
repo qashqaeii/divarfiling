@@ -1741,12 +1741,23 @@ class CRMPropertyDetailView(CRMContextMixin, LoginRequiredMixin, DetailView):
             ctx['show_nearby_pois'] = False
             ctx['nearby_pois_ctx'] = {}
             ctx['nearby_pois_url'] = ''
-        from ai_workspace.constants import FEATURE_LISTING_SUMMARY, is_ai_enabled
+        from ai_workspace.constants import (
+            DEFAULT_LISTING_SUMMARY_STYLE,
+            DEFAULT_LISTING_SUMMARY_TONE,
+            FEATURE_LISTING_SUMMARY,
+            LISTING_SUMMARY_STYLE_CHOICES,
+            LISTING_SUMMARY_TONE_CHOICES,
+            is_ai_enabled,
+        )
         from ai_workspace.services.quota import feature_quota_dict
         if is_ai_enabled() and ctx.get('has_bot_license'):
             ctx['ai_listing_summary_quota'] = feature_quota_dict(
                 self.request.user, FEATURE_LISTING_SUMMARY,
             )
+            ctx['ai_listing_summary_tone_options'] = LISTING_SUMMARY_TONE_CHOICES
+            ctx['ai_listing_summary_style_options'] = LISTING_SUMMARY_STYLE_CHOICES
+            ctx['ai_listing_summary_default_tone'] = DEFAULT_LISTING_SUMMARY_TONE
+            ctx['ai_listing_summary_default_style'] = DEFAULT_LISTING_SUMMARY_STYLE
         from workspace.services.agency_space_ui_context import apply_agency_space_crm_context
         from workspace.services.agency_space_provenance import provenance_for_property
         apply_agency_space_crm_context(ctx, self.request.user, property=p)

@@ -12,6 +12,7 @@ from ai_workspace.constants import FEATURE_UPLOAD_BRIEF, is_ai_enabled, is_featu
 from ai_workspace.services.crm_message import generate_message, result_to_dict as crm_result_to_dict
 from ai_workspace.services.gateway import FeatureDisabledError
 from ai_workspace.services.listing_summary import generate_summary, result_to_dict as listing_result_to_dict
+from ai_workspace.services.listing_summary_prefs import parse_listing_summary_preferences, preference_labels
 from ai_workspace.services.property_summary import generate_summary_for_user
 from ai_workspace.services.property_summary_skip import (
     PropertySummaryInsufficientContext,
@@ -38,13 +39,28 @@ class AIQuotaView(AIEnabledMixin, View):
         return JsonResponse({'ok': True, **status_to_dict(get_status(request.user))})
 
 
+def _parse_ai_json_body(request) -> dict:
+    try:
+        return json.loads(request.body.decode('utf-8') or '{}')
+    except json.JSONDecodeError:
+        return {}
+
+
 class ListingSummaryView(AIEnabledMixin, View):
     def post(self, request, dataset_id, listing_id):
         dataset = get_object_or_404(Dataset, pk=dataset_id, user=request.user)
         listing = get_object_or_404(dataset.listings, pk=listing_id)
+        body = _parse_ai_json_body(request)
+        tone, style = parse_listing_summary_preferences(body)
         try:
-            result = generate_summary(request.user, dataset, listing)
-            return JsonResponse(listing_result_to_dict(result, user=request.user))
+            result = generate_summary(
+                request.user, dataset, listing, tone=tone, style=style,
+            )
+            return JsonResponse(listing_result_to_dict(
+                result,
+                user=request.user,
+                preferences=preference_labels(tone, style),
+            ))
         except FeatureDisabledError as exc:
             return JsonResponse({'ok': False, 'error': str(exc)}, status=403)
         except QuotaExceededError as exc:
@@ -53,9 +69,17 @@ class ListingSummaryView(AIEnabledMixin, View):
 
 class PropertySummaryView(AIEnabledMixin, View):
     def post(self, request, property_id):
+        body = _parse_ai_json_body(request)
+        tone, style = parse_listing_summary_preferences(body)
         try:
-            result = generate_summary_for_user(request.user, property_id)
-            return JsonResponse(listing_result_to_dict(result, user=request.user))
+            result = generate_summary_for_user(
+                request.user, property_id, tone=tone, style=style,
+            )
+            return JsonResponse(listing_result_to_dict(
+                result,
+                user=request.user,
+                preferences=preference_labels(tone, style),
+            ))
         except PropertySummaryInsufficientContext as exc:
             return JsonResponse(
                 property_summary_skipped_dict(

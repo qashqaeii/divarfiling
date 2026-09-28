@@ -79,11 +79,102 @@
         </span>`;
     }
 
+    const LISTING_PREFS_STORAGE_KEY = 'ws_ai_listing_summary_prefs_v1';
+
+    function renderPreferenceBadges(prefs) {
+        if (!prefs) return '';
+        const tone = prefs.tone_label || prefs.tone || '';
+        const style = prefs.style_label || prefs.style || '';
+        let html = '';
+        if (tone) {
+            html += `<span class="ws-ai-pref-badge" title="لحن تولید"><i class="fas fa-microphone-lines" aria-hidden="true"></i> ${escapeHtml(tone)}</span>`;
+        }
+        if (style) {
+            html += `<span class="ws-ai-pref-badge ws-ai-pref-badge--style" title="سبک تولید"><i class="fas fa-palette" aria-hidden="true"></i> ${escapeHtml(style)}</span>`;
+        }
+        return html;
+    }
+
     function renderResultMeta(data) {
         const badge = renderBadge(data);
         const quota = renderQuotaInline(data.quota);
-        if (!badge && !quota) return '';
-        return `<div class="ws-ai-result-meta">${badge}${quota}</div>`;
+        const prefs = renderPreferenceBadges(data.preferences);
+        if (!badge && !quota && !prefs) return '';
+        return `<div class="ws-ai-result-meta">${badge}${prefs}${quota}</div>`;
+    }
+
+    function readListingSummaryPrefs(card) {
+        const panel = card?.querySelector('[data-ai-summary-prefs]');
+        const toneInput = panel?.querySelector('[data-ai-tone-input]:checked');
+        const styleInput = panel?.querySelector('[data-ai-style-input]:checked');
+        return {
+            tone: toneInput?.value || 'مشاورانه',
+            style: styleInput?.value || 'کارتی',
+        };
+    }
+
+    function updateListingPrefHints(card) {
+        const panel = card?.querySelector('[data-ai-summary-prefs]');
+        if (!panel) return;
+        const toneInput = panel.querySelector('[data-ai-tone-input]:checked');
+        const styleInput = panel.querySelector('[data-ai-style-input]:checked');
+        const toneHint = panel.querySelector('[data-ai-tone-hint]');
+        const styleHint = panel.querySelector('[data-ai-style-hint]');
+        if (toneHint && toneInput) {
+            toneHint.textContent = toneInput.closest('label')?.querySelector('.ws-ai-summary-prefs__opt-pill')?.getAttribute('title') || '';
+        }
+        if (styleHint && styleInput) {
+            styleHint.textContent = styleInput.closest('label')?.querySelector('.ws-ai-summary-prefs__opt-pill')?.getAttribute('title') || '';
+        }
+    }
+
+    function persistListingSummaryPrefs(card) {
+        const prefs = readListingSummaryPrefs(card);
+        try {
+            localStorage.setItem(LISTING_PREFS_STORAGE_KEY, JSON.stringify(prefs));
+        } catch (_e) { /* ignore */ }
+    }
+
+    function restoreListingSummaryPrefs(card) {
+        const panel = card?.querySelector('[data-ai-summary-prefs]');
+        if (!panel) return;
+        let saved = null;
+        try {
+            saved = JSON.parse(localStorage.getItem(LISTING_PREFS_STORAGE_KEY) || 'null');
+        } catch (_e) {
+            saved = null;
+        }
+        if (!saved || typeof saved !== 'object') return;
+        const tone = saved.tone;
+        const style = saved.style;
+        const escAttr = (value) => {
+            if (window.CSS && typeof window.CSS.escape === 'function') {
+                return window.CSS.escape(String(value));
+            }
+            return String(value).replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+        };
+        if (tone) {
+            const input = panel.querySelector(`[data-ai-tone-input][value="${escAttr(tone)}"]`);
+            if (input) input.checked = true;
+        }
+        if (style) {
+            const input = panel.querySelector(`[data-ai-style-input][value="${escAttr(style)}"]`);
+            if (input) input.checked = true;
+        }
+        updateListingPrefHints(card);
+    }
+
+    function initListingSummaryPrefs() {
+        document.querySelectorAll('#wsAiListingSummary[data-ai-card]').forEach((card) => {
+            restoreListingSummaryPrefs(card);
+            updateListingPrefHints(card);
+            card.querySelectorAll('[data-ai-tone-input], [data-ai-style-input]').forEach((input) => {
+                input.addEventListener('change', () => {
+                    updateListingPrefHints(card);
+                    persistListingSummaryPrefs(card);
+                });
+            });
+        });
     }
 
     const LISTING_SUMMARY_LOAD_STEPS = [
@@ -391,7 +482,9 @@
         }
         startListingSummaryLoadAnimation(card);
         try {
-            const data = await postJson(btn.dataset.aiUrl);
+            const prefs = readListingSummaryPrefs(card);
+            persistListingSummaryPrefs(card);
+            const data = await postJson(btn.dataset.aiUrl, prefs);
             stopListingSummaryLoadAnimation(card);
             if (data.skipped) {
                 const hint = data.message || 'برای تولید خلاصه هوشمند، اطلاعات بیشتری از ملک ثبت کنید.';
@@ -497,6 +590,7 @@
     }
 
     document.addEventListener('DOMContentLoaded', () => {
+        initListingSummaryPrefs();
         document.querySelectorAll('.ws-ai-trigger[data-ai-url]').forEach(btn => {
             btn.addEventListener('click', () => handleListingSummary(btn));
         });

@@ -16,6 +16,7 @@ from ai_workspace.constants import FEATURE_LISTING_SUMMARY
 from ai_workspace.context_builders import property_context
 from ai_workspace.services.gateway import GatewayResult, run
 from ai_workspace.services.listing_summary import generate_summary
+from ai_workspace.services.listing_summary_prefs import apply_listing_summary_preferences
 from ai_workspace.services.property_context_gate import assess_property_context
 from ai_workspace.services.property_summary_skip import PropertySummaryInsufficientContext
 
@@ -152,11 +153,13 @@ def generate_property_summary(
     prop: CRMProperty,
     *,
     feature_profile: Dict[str, Any] | None = None,
+    tone: str | None = None,
+    style: str | None = None,
 ) -> GatewayResult:
     """خلاصه هوشمند — اگر آگهی منبع در فایلینگ باشد همان مسیر آگهی، وگرنه از داده فایل شخصی."""
     source = resolve_listing_for_property(user, prop)
     if source and source.dataset:
-        return generate_summary(user, source.dataset, source)
+        return generate_summary(user, source.dataset, source, tone=tone, style=style)
 
     profile = feature_profile if feature_profile is not None else _feature_profile_for_property(user, prop)
     assessment = assess_property_context(prop, feature_profile=profile)
@@ -165,6 +168,7 @@ def generate_property_summary(
 
     benchmark = benchmark_crm_property(user, prop)
     context = property_context.build(prop, benchmark, feature_profile=profile)
+    context = apply_listing_summary_preferences(context, tone=tone, style=style)
     return run(
         FEATURE_LISTING_SUMMARY,
         user,
@@ -197,8 +201,14 @@ def build_fallback_for_listing(user, dataset, listing) -> Dict[str, Any]:
     return build(context)['data']
 
 
-def generate_summary_for_user(user, property_id: int) -> GatewayResult:
+def generate_summary_for_user(
+    user,
+    property_id: int,
+    *,
+    tone: str | None = None,
+    style: str | None = None,
+) -> GatewayResult:
     prop = property_for_user(user, property_id)
     if not prop or prop.deleted_at is not None:
         raise LookupError('property_not_found')
-    return generate_property_summary(user, prop)
+    return generate_property_summary(user, prop, tone=tone, style=style)

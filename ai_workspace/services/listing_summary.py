@@ -9,13 +9,22 @@ from workspace.services.analyzer import benchmark_listing, listings_to_dataframe
 from ai_workspace.constants import FEATURE_LISTING_SUMMARY, resolve_model_label
 from ai_workspace.context_builders import listing_context
 from ai_workspace.services.gateway import GatewayResult, run
+from ai_workspace.services.listing_summary_prefs import apply_listing_summary_preferences
 from ai_workspace.services.quota import feature_quota_dict
 
 
-def generate_summary(user, dataset: Dataset, listing: Listing) -> GatewayResult:
+def generate_summary(
+    user,
+    dataset: Dataset,
+    listing: Listing,
+    *,
+    tone: str | None = None,
+    style: str | None = None,
+) -> GatewayResult:
     df = listings_to_dataframe(dataset.listings.all())
     benchmark = benchmark_listing(listing, df, dataset.transaction_type) if len(df) else {}
     context = listing_context.build(listing, dataset, benchmark)
+    context = apply_listing_summary_preferences(context, tone=tone, style=style)
     return run(
         FEATURE_LISTING_SUMMARY,
         user,
@@ -25,7 +34,12 @@ def generate_summary(user, dataset: Dataset, listing: Listing) -> GatewayResult:
     )
 
 
-def result_to_dict(result: GatewayResult, user=None) -> Dict[str, Any]:
+def result_to_dict(
+    result: GatewayResult,
+    user=None,
+    *,
+    preferences: Dict[str, Any] | None = None,
+) -> Dict[str, Any]:
     payload = {
         'ok': True,
         'feature': result.feature,
@@ -44,4 +58,6 @@ def result_to_dict(result: GatewayResult, user=None) -> Dict[str, Any]:
     }
     if user is not None:
         payload['quota'] = feature_quota_dict(user, result.feature)
+    if preferences:
+        payload['preferences'] = preferences
     return payload

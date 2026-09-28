@@ -76,6 +76,53 @@
         </div>
         {% endif %}
 
+        {% if ai_listing_summary_tone_options %}
+        <div class="ws-ai-summary-prefs" data-ai-summary-prefs role="group" aria-label="تنظیمات خلاصه هوشمند">
+            <div class="ws-ai-summary-prefs__row">
+                <div class="ws-ai-summary-prefs__label">
+                    <span class="ws-ai-summary-prefs__label-ico" aria-hidden="true"><i class="fas fa-microphone-lines"></i></span>
+                    <div>
+                        <span class="ws-ai-summary-prefs__label-title">لحن</span>
+                        <span class="ws-ai-summary-prefs__label-hint" data-ai-tone-hint></span>
+                    </div>
+                </div>
+                <div class="ws-ai-summary-prefs__options" role="radiogroup" aria-label="لحن خلاصه">
+                    {% for opt in ai_listing_summary_tone_options %}
+                    <label class="ws-ai-summary-prefs__opt">
+                        <input type="radio"
+                               name="aiListingSummaryTone"
+                               value="{{ opt.key }}"
+                               data-ai-tone-input
+                               {% if opt.key == ai_listing_summary_default_tone %}checked{% endif %}>
+                        <span class="ws-ai-summary-prefs__opt-pill" title="{{ opt.hint }}">{{ opt.label }}</span>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="ws-ai-summary-prefs__row">
+                <div class="ws-ai-summary-prefs__label">
+                    <span class="ws-ai-summary-prefs__label-ico ws-ai-summary-prefs__label-ico--style" aria-hidden="true"><i class="fas fa-palette"></i></span>
+                    <div>
+                        <span class="ws-ai-summary-prefs__label-title">سبک</span>
+                        <span class="ws-ai-summary-prefs__label-hint" data-ai-style-hint></span>
+                    </div>
+                </div>
+                <div class="ws-ai-summary-prefs__options ws-ai-summary-prefs__options--wrap" role="radiogroup" aria-label="سبک خلاصه">
+                    {% for opt in ai_listing_summary_style_options %}
+                    <label class="ws-ai-summary-prefs__opt">
+                        <input type="radio"
+                               name="aiListingSummaryStyle"
+                               value="{{ opt.key }}"
+                               data-ai-style-input
+                               {% if opt.key == ai_listing_summary_default_style %}checked{% endif %}>
+                        <span class="ws-ai-summary-prefs__opt-pill" title="{{ opt.hint }}">{{ opt.label }}</span>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
         <div class="ws-ai-card__chips" data-ai-chips aria-hidden="true">
             <span class="ws-ai-card__chip" data-ai-chip="market"><i class="fas fa-chart-line"></i> تحلیل بازار</span>
             <span class="ws-ai-card__chip" data-ai-chip="features"><i class="fas fa-building" aria-hidden="true"></i> ویژگی‌های ملک</span>

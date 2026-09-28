@@ -2472,8 +2472,19 @@ class AISummarizePropertyView(APIView):
                     property_summary_skipped_dict,
                 )
 
-                result = generate_summary_for_user(request.user, property_id)
-                payload = listing_result_to_dict(result)
+                from ai_workspace.services.listing_summary_prefs import (
+                    parse_listing_summary_preferences,
+                    preference_labels,
+                )
+
+                tone, style = parse_listing_summary_preferences(data)
+                result = generate_summary_for_user(
+                    request.user, property_id, tone=tone, style=style,
+                )
+                payload = listing_result_to_dict(
+                    result,
+                    preferences=preference_labels(tone, style),
+                )
                 summary_data = payload.get('data') or {}
                 text = summary_data.get('summary') if isinstance(summary_data, dict) else ''
                 if not text:

@@ -9,7 +9,7 @@
 <link rel="stylesheet" href="{% static 'workspace/css/crm-ecosystem.css' %}?v=2">
 <link rel="stylesheet" href="{% static 'contracts/css/contracts-manage.css' %}?v=4">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-zonkan.css' %}?v=7">
-<link rel="stylesheet" href="{% static 'contracts/css/contracts-contract-wizard.css' %}?v=5">
+<link rel="stylesheet" href="{% static 'contracts/css/contracts-contract-wizard.css' %}?v=6">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-mobile-v2-contracts.css' %}?v=1">
 {% endblock %}
 
@@ -1181,16 +1181,24 @@
     {% if wizard_enable_pickers %}
     <dialog class="crm-zonkan-modal ct-wizard-picker-modal" id="ct-wizard-picker-modal" aria-labelledby="ctWizardPickerTitle">
         <div class="crm-zonkan-modal__box ct-wizard-picker-modal__box">
-            <header class="crm-zonkan-modal__head">
-                <h3 class="crm-zonkan-modal__title" id="ctWizardPickerTitle" data-ct-picker-title>انتخاب</h3>
-                <button type="button" class="crm-zonkan-modal__close" data-ct-picker-close aria-label="بستن">
+            <header class="ct-wizard-picker-head">
+                <div class="ct-wizard-picker-head__main">
+                    <span class="ct-wizard-picker-head__icon" data-ct-picker-icon aria-hidden="true"><i class="fas fa-address-book"></i></span>
+                    <div class="ct-wizard-picker-head__text">
+                        <h3 class="ct-wizard-picker-head__title" id="ctWizardPickerTitle" data-ct-picker-title>انتخاب</h3>
+                        <p class="ct-wizard-picker-head__subtitle" data-ct-picker-subtitle></p>
+                    </div>
+                </div>
+                <button type="button" class="ct-wizard-picker-head__close" data-ct-picker-close aria-label="بستن">
                     <i class="fas fa-times"></i>
                 </button>
             </header>
             <div class="crm-zonkan-modal__body ct-wizard-picker-modal__body">
-                <div class="crm-input-search ct-wizard-picker-search">
-                    <i class="fas fa-search" aria-hidden="true"></i>
-                    <input type="search" class="crm-input" data-ct-picker-search autocomplete="off" inputmode="search">
+                <div class="ct-wizard-picker-search-wrap">
+                    <label class="ct-wizard-picker-search">
+                        <i class="fas fa-search" aria-hidden="true"></i>
+                        <input type="search" class="crm-input" data-ct-picker-search autocomplete="off" inputmode="search" aria-label="جستجو در لیست">
+                    </label>
                 </div>
                 <div class="ct-wizard-picker-results" data-ct-picker-results role="listbox" aria-label="نتایج"></div>
             </div>
@@ -1201,6 +1209,6 @@
 {% endblock %}
 
 {% block extra_js %}
-{% if wizard_enable_pickers %}<script src="{% static 'contracts/js/wizard-pickers.js' %}?v=1"></script>{% endif %}
+{% if wizard_enable_pickers %}<script src="{% static 'contracts/js/wizard-pickers.js' %}?v=2"></script>{% endif %}
 <script src="{% static 'contracts/js/wizard.js' %}?v=14"></script>
 {% endblock %}

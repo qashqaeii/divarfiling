@@ -201,14 +201,14 @@ class ContractWizardCustomerSearchView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        from contracts.services.wizard_sources import search_wizard_customers
+        from contracts.services.wizard_sources import parse_picker_request_params, search_wizard_customers_page
 
-        q = request.GET.get('q', '')
-        try:
-            limit = min(int(request.GET.get('limit', 20)), 40)
-        except (TypeError, ValueError):
-            limit = 20
-        return api_ok({'results': search_wizard_customers(request.user, q, limit=limit)})
+        q, offset, limit = parse_picker_request_params(
+            request.GET.get('q', ''),
+            request.GET.get('offset', 0),
+            request.GET.get('limit', 20),
+        )
+        return api_ok(search_wizard_customers_page(request.user, q, offset=offset, limit=limit))
 
 
 class ContractWizardCustomerDetailView(APIView):
@@ -227,14 +227,14 @@ class ContractWizardPropertySearchView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        from contracts.services.wizard_sources import search_wizard_properties
+        from contracts.services.wizard_sources import parse_picker_request_params, search_wizard_properties_page
 
-        q = request.GET.get('q', '')
-        try:
-            limit = min(int(request.GET.get('limit', 20)), 40)
-        except (TypeError, ValueError):
-            limit = 20
-        return api_ok({'results': search_wizard_properties(request.user, q, limit=limit)})
+        q, offset, limit = parse_picker_request_params(
+            request.GET.get('q', ''),
+            request.GET.get('offset', 0),
+            request.GET.get('limit', 20),
+        )
+        return api_ok(search_wizard_properties_page(request.user, q, offset=offset, limit=limit))
 
 
 class ContractWizardPropertyDetailView(APIView):

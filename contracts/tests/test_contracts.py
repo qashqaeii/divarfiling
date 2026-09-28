@@ -306,6 +306,20 @@ class ContractWizardPickerTests(TestCase):
         self.assertContains(resp, 'انتخاب از مخاطبین')
         self.assertContains(resp, 'data-enable-pickers="1"')
 
+    def test_customer_search_pagination_metadata(self):
+        for i in range(25):
+            Customer.objects.create(user=self.user, name=f'مخاطب {i:02d}', phone=f'0912000{i:04d}')
+        self.client.force_login(self.user)
+        url = reverse('workspace:contract_wizard_customer_search')
+        first = self.client.get(url, {'limit': 10, 'offset': 0})
+        self.assertEqual(first.status_code, 200)
+        data = first.json()
+        self.assertTrue(data['has_more'])
+        self.assertEqual(len(data['results']), 10)
+        self.assertEqual(data['next_offset'], 10)
+        second = self.client.get(url, {'limit': 10, 'offset': data['next_offset']})
+        self.assertEqual(len(second.json()['results']), 10)
+
 
 class FinalViewContextTests(TestCase):
     def test_build_final_view_includes_document_when_verified(self):

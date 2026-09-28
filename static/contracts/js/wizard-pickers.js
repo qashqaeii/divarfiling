@@ -7,39 +7,262 @@
   var apiCustomers = wizard.getAttribute('data-api-customers') || '';
   var apiProperties = wizard.getAttribute('data-api-properties') || '';
   var form = document.getElementById('ct-wizard-form');
-
   var modal = document.getElementById('ct-wizard-picker-modal');
   if (!modal || !form) return;
 
+  var PAGE_SIZE = 20;
   var modalTitle = modal.querySelector('[data-ct-picker-title]');
+  var modalSubtitle = modal.querySelector('[data-ct-picker-subtitle]');
+  var modalIcon = modal.querySelector('[data-ct-picker-icon]');
   var modalSearch = modal.querySelector('[data-ct-picker-search]');
   var modalResults = modal.querySelector('[data-ct-picker-results]');
   var modalClose = modal.querySelector('[data-ct-picker-close]');
+  var modalRetry = modal.querySelector('[data-ct-picker-retry]');
+
   var pickerMode = '';
   var pickerTarget = null;
   var searchTimer;
   var activeController = null;
+  var selecting = false;
+
+  var listState = {
+    items: [],
+    query: '',
+    nextOffset: 0,
+    hasMore: false,
+    loading: false,
+    loadingMore: false,
+    error: false,
+    requestGen: 0,
+  };
 
   function escapeHtml(s) {
     return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
   }
 
-  function setResultsState(html) {
-    if (modalResults) modalResults.innerHTML = html;
+  function apiBase() {
+    return pickerMode === 'customer' ? apiCustomers : apiProperties;
+  }
+
+  function resetListState() {
+    listState.items = [];
+    listState.query = '';
+    listState.nextOffset = 0;
+    listState.hasMore = false;
+    listState.loading = false;
+    listState.loadingMore = false;
+    listState.error = false;
+  }
+
+  function setModalChrome(mode, title) {
+    var isCustomer = mode === 'customer';
+    if (modalTitle) modalTitle.textContent = title || (isCustomer ? 'انتخاب مخاطب' : 'انتخاب فایل شخصی');
+    if (modalSubtitle) {
+      modalSubtitle.textContent = isCustomer
+        ? 'از لیست مخاطبین CRM انتخاب کنید یا جستجو کنید'
+        : 'از فایل‌های شخصی خود یک ملک انتخاب کنید';
+    }
+    if (modalIcon) {
+      modalIcon.innerHTML = isCustomer
+        ? '<i class="fas fa-address-book" aria-hidden="true"></i>'
+        : '<i class="fas fa-folder-open" aria-hidden="true"></i>';
+    }
+    if (modalSearch) {
+      modalSearch.placeholder = isCustomer ? 'جستجو: نام، موبایل، شرکت…' : 'جستجو: عنوان، محله، آدرس…';
+    }
+  }
+
+  function footerHtml() {
+    if (listState.error) {
+      return (
+        '<div class="ct-picker-state ct-picker-state--error">' +
+        '<i class="fas fa-circle-exclamation" aria-hidden="true"></i>' +
+        '<p>بارگذاری نتایج ممکن نشد.</p>' +
+        '<button type="button" class="crm-dash-act" data-ct-picker-retry-inline>تلاش مجدد</button>' +
+        '</div>'
+      );
+    }
+    if (listState.loadingMore) {
+      return (
+        '<div class="ct-picker-state ct-picker-state--loading" aria-live="polite">' +
+        '<i class="fas fa-spinner fa-spin" aria-hidden="true"></i><span>در حال بارگذاری…</span></div>'
+      );
+    }
+    if (listState.items.length && !listState.hasMore) {
+      return '<div class="ct-picker-state ct-picker-state--end">همه موارد نمایش داده شد</div>';
+    }
+    return '';
+  }
+
+  function renderCustomerRow(item) {
+    var meta = item.meta ? '<span class="ct-picker-card__tag">' + escapeHtml(item.meta) + '</span>' : '';
+    return (
+      '<button type="button" class="ct-picker-card" data-id="' + item.id + '" role="option">' +
+      '<span class="ct-picker-card__avatar" aria-hidden="true"><i class="fas fa-user"></i></span>' +
+      '<span class="ct-picker-card__body">' +
+      '<strong class="ct-picker-card__title">' + escapeHtml(item.name) + '</strong>' +
+      '<span class="ct-picker-card__sub" dir="ltr">' + escapeHtml(item.phone_masked || item.phone || '') + '</span>' +
+      meta +
+      '</span>' +
+      '<span class="ct-picker-card__chev" aria-hidden="true"><i class="fas fa-chevron-left"></i></span>' +
+      '</button>'
+    );
+  }
+
+  function renderPropertyRow(item) {
+    var chips = (item.chips || []).slice(0, 3).map(function (c) {
+      return '<span class="ct-picker-card__chip">' + escapeHtml(c) + '</span>';
+    }).join('');
+    var typeLine = item.property_type
+      ? '<span class="ct-picker-card__sub">' + escapeHtml(item.property_type) +
+        (item.deal_mode ? ' · ' + escapeHtml(item.deal_mode) : '') + '</span>'
+      : '';
+    var loc = item.location
+      ? '<span class="ct-picker-card__meta">' + escapeHtml(item.location) + '</span>'
+      : '';
+    var price = item.price_hint
+      ? '<span class="ct-picker-card__price">' + escapeHtml(item.price_hint) + '</span>'
+      : '';
+    return (
+      '<button type="button" class="ct-picker-card ct-picker-card--property" data-id="' + item.id + '" role="option">' +
+      '<span class="ct-picker-card__avatar ct-picker-card__avatar--property" aria-hidden="true"><i class="fas fa-building"></i></span>' +
+      '<span class="ct-picker-card__body">' +
+      '<strong class="ct-picker-card__title">' + escapeHtml(item.title) + '</strong>' +
+      typeLine + loc +
+      (chips ? '<span class="ct-picker-card__chips">' + chips + '</span>' : '') +
+      price +
+      '</span>' +
+      '<span class="ct-picker-card__chev" aria-hidden="true"><i class="fas fa-chevron-left"></i></span>' +
+      '</button>'
+    );
+  }
+
+  function bindResultButtons() {
+    if (!modalResults) return;
+    modalResults.querySelectorAll('.ct-picker-card[data-id]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        selectItem(parseInt(btn.getAttribute('data-id'), 10));
+      });
+    });
+    var retry = modalResults.querySelector('[data-ct-picker-retry-inline]');
+    if (retry) {
+      retry.addEventListener('click', function () {
+        fetchPage(listState.items.length === 0);
+      });
+    }
+  }
+
+  function renderList() {
+    if (!modalResults) return;
+    if (listState.loading && !listState.items.length) {
+      modalResults.innerHTML =
+        '<div class="ct-picker-state ct-picker-state--loading ct-picker-state--full">' +
+        '<div class="ct-picker-skeleton"></div><div class="ct-picker-skeleton"></div><div class="ct-picker-skeleton"></div>' +
+        '</div>';
+      return;
+    }
+    var q = listState.query;
+    if (q.length === 1) {
+      modalResults.innerHTML =
+        '<div class="ct-picker-state ct-picker-state--hint">' +
+        '<i class="fas fa-keyboard" aria-hidden="true"></i>' +
+        '<p>برای جستجو حداقل ۲ حرف وارد کنید.</p></div>';
+      return;
+    }
+    if (!listState.items.length && !listState.loading && !listState.error) {
+      modalResults.innerHTML =
+        '<div class="ct-picker-state ct-picker-state--empty">' +
+        '<i class="fas fa-inbox" aria-hidden="true"></i>' +
+        '<p>' + (q.length >= 2 ? 'نتیجه‌ای یافت نشد.' : 'موردی برای نمایش نیست.') + '</p></div>';
+      return;
+    }
+    var rows = listState.items.map(function (item) {
+      return pickerMode === 'customer' ? renderCustomerRow(item) : renderPropertyRow(item);
+    }).join('');
+    modalResults.innerHTML = '<div class="ct-picker-list">' + rows + footerHtml() + '</div>';
+    bindResultButtons();
+  }
+
+  function fetchPage(reset) {
+    var url = apiBase();
+    if (!url) return;
+    if (!reset && (!listState.hasMore || listState.loadingMore || listState.loading)) return;
+
+    var gen = ++listState.requestGen;
+    if (reset) {
+      listState.loading = true;
+      listState.loadingMore = false;
+      listState.error = false;
+      listState.items = [];
+      listState.nextOffset = 0;
+      listState.hasMore = false;
+      if (modalResults) modalResults.scrollTop = 0;
+      renderList();
+    } else {
+      listState.loadingMore = true;
+      renderList();
+    }
+
+    if (activeController) activeController.abort();
+    activeController = new AbortController();
+    var offset = reset ? 0 : listState.nextOffset;
+    var qs = '?q=' + encodeURIComponent(listState.query || '') +
+      '&limit=' + PAGE_SIZE + '&offset=' + offset;
+
+    fetch(url + qs, {
+      credentials: 'same-origin',
+      headers: { 'X-Requested-With': 'XMLHttpRequest' },
+      signal: activeController.signal,
+    }).then(function (r) { return r.json(); }).then(function (data) {
+      if (gen !== listState.requestGen) return;
+      activeController = null;
+      listState.loading = false;
+      listState.loadingMore = false;
+      if (!data.ok) {
+        listState.error = true;
+        if (!listState.items.length) renderList();
+        else {
+          listState.hasMore = false;
+          renderList();
+        }
+        return;
+      }
+      listState.error = false;
+      var batch = data.results || [];
+      if (reset) listState.items = batch;
+      else listState.items = listState.items.concat(batch);
+      listState.hasMore = !!data.has_more;
+      listState.nextOffset = data.next_offset != null ? data.next_offset : (offset + batch.length);
+      renderList();
+    }).catch(function (err) {
+      if (err && err.name === 'AbortError') return;
+      if (gen !== listState.requestGen) return;
+      activeController = null;
+      listState.loading = false;
+      listState.loadingMore = false;
+      listState.error = true;
+      renderList();
+    });
+  }
+
+  function onResultsScroll() {
+    if (!modalResults || listState.loading || listState.loadingMore || !listState.hasMore) return;
+    var threshold = 72;
+    if (modalResults.scrollTop + modalResults.clientHeight >= modalResults.scrollHeight - threshold) {
+      fetchPage(false);
+    }
   }
 
   function openModal(mode, target, title) {
     pickerMode = mode;
     pickerTarget = target;
-    if (modalTitle) modalTitle.textContent = title || 'انتخاب';
-    if (modalSearch) {
-      modalSearch.value = '';
-      modalSearch.placeholder = mode === 'customer' ? 'نام یا شماره موبایل…' : 'عنوان، محله یا آدرس…';
-    }
-    setResultsState('<p class="ct-picker-hint">برای جستجو حداقل ۲ حرف وارد کنید.</p>');
+    resetListState();
+    setModalChrome(mode, title);
+    if (modalSearch) modalSearch.value = '';
+    listState.query = '';
     modal.showModal();
     setTimeout(function () { if (modalSearch) modalSearch.focus(); }, 50);
-    runSearch('');
+    fetchPage(true);
   }
 
   function closeModal() {
@@ -47,83 +270,56 @@
       activeController.abort();
       activeController = null;
     }
+    listState.requestGen += 1;
+    resetListState();
     modal.close();
     pickerMode = '';
     pickerTarget = null;
+    selecting = false;
   }
 
   if (modalClose) modalClose.addEventListener('click', closeModal);
   modal.addEventListener('click', function (e) {
     if (e.target === modal) closeModal();
   });
-
-  function runSearch(q) {
-    var url = pickerMode === 'customer' ? apiCustomers : apiProperties;
-    if (!url) return;
-    if (activeController) activeController.abort();
-    activeController = new AbortController();
-    var qs = '?q=' + encodeURIComponent(q || '') + '&limit=20';
-    setResultsState('<p class="ct-picker-loading"><i class="fas fa-spinner fa-spin"></i> در حال جستجو…</p>');
-    fetch(url + qs, {
-      credentials: 'same-origin',
-      headers: { 'X-Requested-With': 'XMLHttpRequest' },
-      signal: activeController.signal,
-    }).then(function (r) { return r.json(); }).then(function (data) {
-      activeController = null;
-      if (!data.ok) {
-        setResultsState('<p class="ct-picker-empty">خطا در بارگذاری</p>');
-        return;
-      }
-      var items = data.results || [];
-      if (!items.length) {
-        setResultsState('<p class="ct-picker-empty">' + (q.length >= 2 || !q ? 'نتیجه‌ای یافت نشد.' : 'مخاطب یا فایلی برای نمایش نیست.') + '</p>');
-        return;
-      }
-      var html = items.map(function (item) {
-        if (pickerMode === 'customer') {
-          return '<button type="button" class="ct-picker-item" data-id="' + item.id + '">' +
-            '<strong>' + escapeHtml(item.name) + '</strong>' +
-            '<span dir="ltr">' + escapeHtml(item.phone_masked || item.phone || '') + '</span>' +
-            (item.meta ? '<em>' + escapeHtml(item.meta) + '</em>' : '') +
-            '</button>';
-        }
-        var chips = (item.chips || []).map(function (c) { return escapeHtml(c); }).join(' · ');
-        return '<button type="button" class="ct-picker-item" data-id="' + item.id + '">' +
-          '<strong>' + escapeHtml(item.title) + '</strong>' +
-          (item.location ? '<span>' + escapeHtml(item.location) + '</span>' : '') +
-          (chips ? '<em>' + chips + '</em>' : '') +
-          (item.price_hint ? '<span class="ct-picker-price">' + escapeHtml(item.price_hint) + '</span>' : '') +
-          '</button>';
-      }).join('');
-      setResultsState(html);
-      modalResults.querySelectorAll('.ct-picker-item').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-          selectItem(parseInt(btn.getAttribute('data-id'), 10));
-        });
-      });
-    }).catch(function (err) {
-      if (err && err.name === 'AbortError') return;
-      setResultsState('<p class="ct-picker-empty">خطا در ارتباط با سرور</p>');
-    });
+  if (modalRetry) {
+    modalRetry.addEventListener('click', function () { fetchPage(true); });
+  }
+  if (modalResults) {
+    modalResults.addEventListener('scroll', onResultsScroll);
   }
 
   if (modalSearch) {
     modalSearch.addEventListener('input', function () {
       clearTimeout(searchTimer);
       var q = modalSearch.value.trim();
-      searchTimer = setTimeout(function () { runSearch(q); }, 280);
+      searchTimer = setTimeout(function () {
+        listState.query = q;
+        fetchPage(true);
+      }, 280);
     });
   }
 
   function selectItem(id) {
-    if (!id || !pickerTarget) return;
-    var base = pickerMode === 'customer' ? apiCustomers : apiProperties;
-    var detailUrl = base.replace(/\/?$/, '/') + id + '/';
+    if (!id || !pickerTarget || selecting) return;
+    selecting = true;
+    var detailUrl = apiBase().replace(/\/?$/, '/') + id + '/';
     fetch(detailUrl, {
       credentials: 'same-origin',
       headers: { 'X-Requested-With': 'XMLHttpRequest' },
     }).then(function (r) { return r.json(); }).then(function (data) {
-      if (!data.ok) return;
+      selecting = false;
+      if (!data.ok) {
+        if (modalResults) {
+          modalResults.insertAdjacentHTML('afterbegin',
+            '<div class="ct-picker-toast" role="alert">انتخاب ممکن نشد — دوباره تلاش کنید.</div>');
+          setTimeout(function () {
+            var t = modalResults.querySelector('.ct-picker-toast');
+            if (t) t.remove();
+          }, 3500);
+        }
+        return;
+      }
       if (pickerMode === 'customer') {
         applyCustomerToCard(pickerTarget, data.party || {});
       } else {
@@ -131,6 +327,12 @@
       }
       closeModal();
       form.dispatchEvent(new Event('input', { bubbles: true }));
+    }).catch(function () {
+      selecting = false;
+      if (modalResults) {
+        modalResults.insertAdjacentHTML('afterbegin',
+          '<div class="ct-picker-toast" role="alert">خطا در ارتباط — اتصال را بررسی کنید.</div>');
+      }
     });
   }
 
@@ -192,6 +394,8 @@
   }
 
   function bindPartyContactLink(card) {
+    if (card.dataset.ctPickerBound === '1') return;
+    card.dataset.ctPickerBound = '1';
     var pickBtn = card.querySelector('[data-ct-party-pick]');
     var changeBtn = card.querySelector('[data-ct-party-change]');
     var clearBtn = card.querySelector('[data-ct-party-clear]');
@@ -317,10 +521,10 @@
     partyContactLinkHtml: function (idx, customerId) {
       return (
         '<div class="ct-party-contact-link" data-ct-party-contact-link>' +
-        '<div class="ct-party-contact-link__pick" data-ct-party-pick>' +
+        '<button type="button" class="ct-party-contact-link__pick" data-ct-party-pick>' +
         '<i class="fas fa-address-book" aria-hidden="true"></i>' +
         '<span>انتخاب از مخاطبین</span>' +
-        '<em>یا اطلاعات را دستی وارد کنید</em></div>' +
+        '<em>یا اطلاعات را دستی وارد کنید</em></button>' +
         '<div class="ct-party-contact-link__linked" data-ct-party-linked hidden>' +
         '<div class="ct-party-contact-link__linked-main">' +
         '<i class="fas fa-check-circle" aria-hidden="true"></i>' +

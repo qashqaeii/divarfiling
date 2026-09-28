@@ -1,7 +1,7 @@
 """جستجو و نگاشت مخاطب / فایل شخصی برای ویزارد قرارداد."""
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 from django.db.models import Q
 
@@ -9,6 +9,19 @@ from contracts.services.party_sanitize import sanitize_party_payload
 from contracts.constants import PERSON_TYPE_LEGAL, PERSON_TYPE_NATURAL
 from workspace.models import CRMProperty, Customer
 from workspace.services.crm_scope import customer_for_user, customers_qs, properties_qs, property_for_user
+
+
+def parse_picker_request_params(q: str = '', offset_raw='', limit_raw='') -> Tuple[str, int, int]:
+    query = (q or '').strip() if q is not None else ''
+    try:
+        limit = min(int(limit_raw or 20), 40)
+    except (TypeError, ValueError):
+        limit = 20
+    try:
+        offset = max(0, int(offset_raw or 0))
+    except (TypeError, ValueError):
+        offset = 0
+    return query, offset, limit
 
 
 def _mask_phone(phone: str) -> str:
@@ -74,23 +87,50 @@ def serialize_wizard_customer_summary(customer: Customer) -> Dict[str, Any]:
     }
 
 
-def search_wizard_customers(user, query: str = '', limit: int = 20) -> List[Dict[str, Any]]:
+def _customer_search_qs(user, query: str):
     q = (query or '').strip()
     qs = customers_qs(user).order_by('-updated_at')
-    if q:
-        if len(q) < 2:
-            return []
-        qs = qs.filter(
-            Q(name__icontains=q)
-            | Q(phone__icontains=q)
-            | Q(phone_alt__icontains=q)
-            | Q(company_name__icontains=q)
-            | Q(national_id__icontains=q),
-        )
-    else:
-        qs = qs[:limit]
-        return [serialize_wizard_customer_summary(c) for c in qs]
-    return [serialize_wizard_customer_summary(c) for c in qs[:limit]]
+    if not q:
+        return qs, q
+    if len(q) < 2:
+        return None, q
+    qs = qs.filter(
+        Q(name__icontains=q)
+        | Q(phone__icontains=q)
+        | Q(phone_alt__icontains=q)
+        | Q(company_name__icontains=q)
+        | Q(national_id__icontains=q),
+    )
+    return qs, q
+
+
+def _slice_page(qs, offset: int, limit: int) -> Tuple[List, bool, int]:
+    offset = max(0, offset)
+    limit = max(1, min(limit, 40))
+    rows = list(qs[offset: offset + limit + 1])
+    has_more = len(rows) > limit
+    if has_more:
+        rows = rows[:limit]
+    next_offset = offset + len(rows)
+    return rows, has_more, next_offset
+
+
+def search_wizard_customers_page(
+    user, query: str = '', offset: int = 0, limit: int = 20,
+) -> Dict[str, Any]:
+    qs, q = _customer_search_qs(user, query)
+    if qs is None:
+        return {'results': [], 'has_more': False, 'next_offset': 0}
+    rows, has_more, next_offset = _slice_page(qs, offset, limit)
+    return {
+        'results': [serialize_wizard_customer_summary(c) for c in rows],
+        'has_more': has_more,
+        'next_offset': next_offset,
+    }
+
+
+def search_wizard_customers(user, query: str = '', limit: int = 20) -> List[Dict[str, Any]]:
+    return search_wizard_customers_page(user, query, offset=0, limit=limit)['results']
 
 
 def wizard_customer_party_payload(user, customer_id: int) -> Optional[Dict[str, Any]]:
@@ -189,25 +229,41 @@ def serialize_wizard_property_summary(prop: CRMProperty) -> Dict[str, Any]:
     }
 
 
-def search_wizard_properties(user, query: str = '', limit: int = 20) -> List[Dict[str, Any]]:
+def _property_search_qs(user, query: str):
     q = (query or '').strip()
     qs = properties_qs(user).filter(deleted_at__isnull=True).order_by('-updated_at')
-    if q:
-        if len(q) < 2:
-            return []
-        qs = qs.filter(
-            Q(title__icontains=q)
-            | Q(address__icontains=q)
-            | Q(neighborhood__icontains=q)
-            | Q(district__icontains=q)
-            | Q(city__icontains=q)
-            | Q(property_type__icontains=q)
-            | Q(owner_name__icontains=q),
-        )
-    else:
-        qs = qs[:limit]
-        return [serialize_wizard_property_summary(p) for p in qs]
-    return [serialize_wizard_property_summary(p) for p in qs[:limit]]
+    if not q:
+        return qs, q
+    if len(q) < 2:
+        return None, q
+    qs = qs.filter(
+        Q(title__icontains=q)
+        | Q(address__icontains=q)
+        | Q(neighborhood__icontains=q)
+        | Q(district__icontains=q)
+        | Q(city__icontains=q)
+        | Q(property_type__icontains=q)
+        | Q(owner_name__icontains=q),
+    )
+    return qs, q
+
+
+def search_wizard_properties_page(
+    user, query: str = '', offset: int = 0, limit: int = 20,
+) -> Dict[str, Any]:
+    qs, q = _property_search_qs(user, query)
+    if qs is None:
+        return {'results': [], 'has_more': False, 'next_offset': 0}
+    rows, has_more, next_offset = _slice_page(qs, offset, limit)
+    return {
+        'results': [serialize_wizard_property_summary(p) for p in rows],
+        'has_more': has_more,
+        'next_offset': next_offset,
+    }
+
+
+def search_wizard_properties(user, query: str = '', limit: int = 20) -> List[Dict[str, Any]]:
+    return search_wizard_properties_page(user, query, offset=0, limit=limit)['results']
 
 
 def wizard_property_payload(user, property_id: int) -> Optional[Dict[str, Any]]:

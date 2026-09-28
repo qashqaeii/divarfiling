@@ -36,7 +36,8 @@
 
         {% if ai_listing_summary_tone_options %}
         <div class="ws-ai-studio__panel" data-ai-summary-prefs>
-            <div class="ws-ai-studio__block">
+            <div class="ws-ai-studio__prefs-row">
+            <div class="ws-ai-studio__block ws-ai-studio__block--tone">
                 <div class="ws-ai-studio__block-head">
                     <span class="ws-ai-studio__block-title">لحن</span>
                     <span class="ws-ai-studio__block-hint" data-ai-tone-hint aria-live="polite"></span>
@@ -59,9 +60,9 @@
                 </div>
             </div>
 
-            <div class="ws-ai-studio__block">
+            <div class="ws-ai-studio__block ws-ai-studio__block--style">
                 <div class="ws-ai-studio__block-head">
-                    <span class="ws-ai-studio__block-title">سبک خروجی</span>
+                    <span class="ws-ai-studio__block-title">سبک</span>
                     <span class="ws-ai-studio__block-hint" data-ai-style-hint aria-live="polite"></span>
                 </div>
                 <div class="ws-ai-studio__style-rail" role="radiogroup" aria-label="سبک خلاصه">
@@ -80,17 +81,20 @@
                     {% endfor %}
                 </div>
             </div>
+            </div>
 
-            <button type="button"
-                    class="ws-ai-studio__go ws-ai-trigger"
-                    data-ai-feature="listing_summary"
-                    data-ai-url="{{ ai_summary_url }}">
-                <span class="ws-ai-studio__go-shine" aria-hidden="true"></span>
-                <span class="ws-ai-studio__go-ico" aria-hidden="true">
-                    {% include 'includes/icon_slot.html' with decor='ai_wand' size='inline' class_name='ws-ai-studio__go-ico-img' only %}
-                </span>
-                <span class="ws-ai-card__cta-label">ساخت خلاصه هوشمند</span>
-            </button>
+            <div class="ws-ai-studio__actions">
+                <button type="button"
+                        class="ws-ai-studio__go ws-ai-trigger"
+                        data-ai-feature="listing_summary"
+                        data-ai-url="{{ ai_summary_url }}">
+                    <span class="ws-ai-studio__go-shine" aria-hidden="true"></span>
+                    <span class="ws-ai-studio__go-ico" aria-hidden="true">
+                        {% include 'includes/icon_slot.html' with decor='ai_wand' size='inline' class_name='ws-ai-studio__go-ico-img' only %}
+                    </span>
+                    <span class="ws-ai-card__cta-label">تولید خلاصه</span>
+                </button>
+            </div>
         </div>
         {% else %}
         <button type="button"

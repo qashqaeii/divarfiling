@@ -5,6 +5,7 @@ from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 from workspace.constants import (
     LISTING_FEATURE_GROUPS,
+    PROPERTY_AMENITY_QUICK_FEATURE_KEYS,
     PROPERTY_BOOL_AMENITY_LABELS,
     PROPERTY_FEATURE_UI_AMENITY_LABELS,
     PROPERTY_LUXURY_AMENITY_LABELS,
@@ -270,7 +271,7 @@ RENT_GROUPS: Tuple[Dict[str, Any], ...] = (
         'title': 'ساختمان و طبقه',
         'icon': 'fa-building',
         'keys': (
-            'تعداد واحد در طبقه', 'تعداد کل طبقات ساختمان', 'جهت ساختمان', 'بالکن',
+            'تعداد واحد در طبقه', 'تعداد کل طبقات ساختمان', 'جهت ساختمان',
         ),
     },
     {
@@ -306,7 +307,7 @@ SALE_GROUPS: Tuple[Dict[str, Any], ...] = (
         'icon': 'fa-building',
         'keys': (
             'تعداد واحد در طبقه', 'تعداد کل طبقات ساختمان', 'جهت ساختمان',
-            'بالکن', 'نمای ساختمان',
+            'نمای ساختمان',
         ),
     },
     {
@@ -541,7 +542,11 @@ def parse_feature_data_from_post(
                 pass
 
     for key, val in posted.items():
-        if key in active_keys or not has_feat_fields:
+        if (
+            key in active_keys
+            or key in PROPERTY_AMENITY_QUICK_FEATURE_KEYS
+            or not has_feat_fields
+        ):
             out[key] = val
     return out
 
@@ -551,10 +556,25 @@ def amenity_labels_from_feature_data(feature_data: Optional[dict]) -> List[str]:
     data = feature_data or {}
     labels: List[str] = []
     for feat_key, amenity_label in FEATURE_BOOL_TO_AMENITY.items():
+        if feat_key in PROPERTY_AMENITY_QUICK_FEATURE_KEYS:
+            continue
         val = _normalize_toggle(str(data.get(feat_key) or ''))
         if val == 'دارد' and amenity_label not in labels:
             labels.append(amenity_label)
     return labels
+
+
+def sync_amenity_quick_to_feature_data(
+    selected_amenity_labels: Sequence[str],
+    feature_data: Optional[dict],
+) -> Dict[str, str]:
+    """امکانات سریع (مثل بالکن) → feat__ در feature_data."""
+    out = dict(feature_data or {})
+    selected = {str(x).strip() for x in (selected_amenity_labels or []) if str(x).strip()}
+    for feat_key in PROPERTY_AMENITY_QUICK_FEATURE_KEYS:
+        amenity_label = FEATURE_BOOL_TO_AMENITY.get(feat_key, feat_key)
+        out[feat_key] = 'دارد' if amenity_label in selected else 'ندارد'
+    return out
 
 
 OCCUPANCY_PANEL_FEATURE_KEYS = frozenset({'تاریخ تخلیه'})

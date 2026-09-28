@@ -292,7 +292,7 @@ class PropertyAmenityCheckboxFormTests(TestCase):
         groups = form.amenity_checkbox_groups()
         flat = {item['label']: item['checked'] for g in groups for item in g['items']}
         self.assertTrue(flat['پارکینگ'])
-        self.assertNotIn('بالکن', flat)  # در بخش ویژگی‌ها
+        self.assertTrue(flat['بالکن'])
         self.assertNotIn('استخر', flat)
         self.assertFalse(flat['آسانسور'])
         self.assertEqual(form.fields['amenities_extra'].initial, 'جنس کف: سرامیک')
@@ -302,7 +302,7 @@ class PropertyAmenityCheckboxFormTests(TestCase):
             for group in form.feature_form_context()['groups']
             for item in group['items']
         }
-        self.assertTrue(feat_items['بالکن']['checked'])
+        self.assertNotIn('بالکن', feat_items)
 
         data = {
             'title': self.prop.title,
@@ -310,11 +310,10 @@ class PropertyAmenityCheckboxFormTests(TestCase):
             'deal_mode': self.prop.deal_mode,
             'transaction_status': self.prop.transaction_status or 'فعال',
             'publish_status': self.prop.publish_status or 'خصوصی',
-            'amenity_flags': ['پارکینگ', 'آسانسور'],
+            'amenity_flags': ['پارکینگ', 'آسانسور', 'بالکن'],
             'amenities_extra': 'جنس کف: پارکت',
             'feat_profile': 'sale',
             'feat__استخر': 'دارد',
-            'feat__بالکن': 'دارد',
             'feat__روف گاردن': 'دارد',
         }
         form = CRMPropertyForm(data, instance=self.prop)

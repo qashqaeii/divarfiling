@@ -174,11 +174,17 @@ class CRMPropertyFeatureDataTests(TestCase):
             for item in group['items']
         }
         self.assertIn('پارکینگ', labels)
+        self.assertIn('بالکن', labels)
         for managed in FEATURE_MANAGED_AMENITY_LABELS:
             self.assertNotIn(managed, labels)
         self.assertNotIn('روف گاردن', labels)
         self.assertNotIn('سالن ورزش', labels)
-        # سوییچ ویژگی از امکانات قدیمی seed شده
+        flat = {
+            item['label']: item['checked']
+            for group in form.amenity_checkbox_groups()
+            for item in group['items']
+        }
+        self.assertTrue(flat['بالکن'])
         ctx = form.feature_form_context()
         rent_or_sale_items = {
             item['key']: item
@@ -186,7 +192,7 @@ class CRMPropertyFeatureDataTests(TestCase):
             for item in group['items']
         }
         self.assertTrue(rent_or_sale_items.get('استخر', {}).get('checked'))
-        self.assertTrue(rent_or_sale_items.get('بالکن', {}).get('checked'))
+        self.assertNotIn('بالکن', rent_or_sale_items)
         luxury_group = next(g for g in ctx['groups'] if g['id'] == 'sale_luxury')
         self.assertEqual(luxury_group['title'], 'رفاهی و لوکس')
         luxury_keys = {item['key'] for item in luxury_group['items']}

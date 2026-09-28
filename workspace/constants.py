@@ -168,6 +168,7 @@ PROPERTY_AMENITY_CHECKBOX_GROUPS = (
             ('پارکینگ', 'fa-square-parking'),
             ('انباری', 'fa-box-archive'),
             ('آسانسور', 'fa-elevator'),
+            ('بالکن', 'fa-fan'),
         ),
     },
     {
@@ -175,7 +176,6 @@ PROPERTY_AMENITY_CHECKBOX_GROUPS = (
         'title': 'امکانات ساختمان',
         'icon': 'fa-building',
         'items': (
-            ('بالکن', 'fa-fan'),
             ('تراس', 'fa-tree'),
             ('لابی', 'fa-hotel'),
             ('آیفون تصویری', 'fa-video'),
@@ -189,8 +189,11 @@ PROPERTY_AMENITY_CHECKBOX_GROUPS = (
 )
 
 # سوئیچ‌های بخش ویژگی‌ها — در «امکانات سریع» نشان داده نمی‌شوند؛ در متن amenities شناخته می‌شوند
+# سوئیچ‌های امکانات سریع که در feature_data هم ذخیره می‌شوند (نه در بخش ویژگی‌ها)
+PROPERTY_AMENITY_QUICK_FEATURE_KEYS = frozenset({'بالکن'})
+
 PROPERTY_FEATURE_UI_AMENITY_LABELS = frozenset({
-    'بالکن', 'استخر', 'سونا', 'جکوزی', 'روف گاردن', 'سالن ورزش',
+    'استخر', 'سونا', 'جکوزی', 'روف گاردن', 'سالن ورزش',
     'مجوز ساخت', 'پروانه پایان کار',
     'حیوان خانگی مجاز', 'بازسازی شده', 'قابل معاوضه', 'نگهبانی',
 })

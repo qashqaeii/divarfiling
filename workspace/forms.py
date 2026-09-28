@@ -736,6 +736,7 @@ class CRMPropertyForm(CRMMoneyFieldsMixin, forms.ModelForm):
             amenity_labels_from_feature_data,
             normalize_feature_date_value,
             parse_feature_data_from_post,
+            sync_amenity_quick_to_feature_data,
             sync_total_floors_from_feature_data,
         )
         from workspace.services.property_public_share import serialize_amenity_checkboxes
@@ -767,6 +768,9 @@ class CRMPropertyForm(CRMMoneyFieldsMixin, forms.ModelForm):
             for label in feature_on:
                 if label not in selected:
                     selected.append(label)
+            self._parsed_feature_data = sync_amenity_quick_to_feature_data(
+                selected, self._parsed_feature_data,
+            )
             floors = sync_total_floors_from_feature_data(self._parsed_feature_data)
             if floors is not None:
                 cleaned['total_floors'] = floors

@@ -1215,10 +1215,13 @@ body:has(.ct-contract-wizard) .ws-bottom-nav {
     align-items: center;
     gap: 0.5rem;
     padding: 0 0.65rem;
+    padding-inline-end: 0.35rem;
     border-radius: 12px;
     border: 1px solid var(--ct-m-border, rgba(15, 23, 42, 0.1));
     background: rgba(15, 23, 42, 0.02);
     transition: border-color 0.15s, box-shadow 0.15s;
+    position: relative;
+    min-width: 0;
 }
 
 .ct-wizard-picker-search:focus-within {
@@ -1238,7 +1241,16 @@ body:has(.ct-contract-wizard) .ws-bottom-nav {
     background: transparent;
     box-shadow: none;
     padding: 0.55rem 0;
+    padding-inline-end: 2.35rem;
     min-height: 2.5rem;
+}
+
+.ct-wizard-picker-search-voice .crm-field-voice__status {
+    padding: 0 0.15rem;
+}
+
+.ct-wizard-picker-search .crm-field-voice__mic {
+    inset-inline-end: 0.15rem;
 }
 
 .ct-wizard-picker-results {
@@ -1435,4 +1447,4 @@ body:has(.ct-contract-wizard) .ws-bottom-nav {
         max-height: 58vh;
     }
 }
-
+

@@ -1195,10 +1195,14 @@
             </header>
             <div class="crm-zonkan-modal__body ct-wizard-picker-modal__body">
                 <div class="ct-wizard-picker-search-wrap">
-                    <label class="ct-wizard-picker-search">
-                        <i class="fas fa-search" aria-hidden="true"></i>
-                        <input type="search" class="crm-input" data-ct-picker-search autocomplete="off" inputmode="search" aria-label="جستجو در لیست">
-                    </label>
+                    <div class="crm-field-voice ct-wizard-picker-search-voice" data-crm-field-voice>
+                        <div class="ct-wizard-picker-search crm-field-voice__wrap">
+                            <i class="fas fa-search" aria-hidden="true"></i>
+                            <input type="search" class="crm-input" data-ct-picker-search autocomplete="off" inputmode="search" aria-label="جستجو در لیست">
+                            {% include 'workspace/crm/includes/crm_field_voice_mic.html' %}
+                        </div>
+                        <p class="crm-field-voice__status" data-crm-field-voice-status role="status" aria-live="polite" hidden></p>
+                    </div>
                 </div>
                 <div class="ct-wizard-picker-results" data-ct-picker-results role="listbox" aria-label="نتایج"></div>
             </div>
@@ -1209,6 +1213,6 @@
 {% endblock %}
 
 {% block extra_js %}
-{% if wizard_enable_pickers %}<script src="{% static 'contracts/js/wizard-pickers.js' %}?v=2"></script>{% endif %}
+{% if wizard_enable_pickers %}<script src="{% static 'contracts/js/wizard-pickers.js' %}?v=3"></script>{% endif %}
 <script src="{% static 'contracts/js/wizard.js' %}?v=14"></script>
 {% endblock %}

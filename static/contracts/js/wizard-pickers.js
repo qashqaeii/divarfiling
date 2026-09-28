@@ -266,6 +266,9 @@
   }
 
   function closeModal() {
+    if (typeof window.stopCRMFieldVoiceIn === 'function') {
+      window.stopCRMFieldVoiceIn(modal);
+    }
     if (activeController) {
       activeController.abort();
       activeController = null;
@@ -514,6 +517,10 @@
       var titleEl = propertyLink.querySelector('[data-ct-property-linked-title]');
       updatePropertyLinkBar(titleEl ? titleEl.textContent : 'فایل انتخاب‌شده');
     }
+  }
+
+  if (typeof window.initCRMFieldVoice === 'function') {
+    window.initCRMFieldVoice(modal);
   }
 
   window.ctWizardPickers = {

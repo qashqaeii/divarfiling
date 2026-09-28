@@ -307,6 +307,9 @@ class ContractWizardPickerTests(TestCase):
         self.assertEqual(resp.status_code, 200)
         self.assertContains(resp, 'انتخاب از مخاطبین')
         self.assertContains(resp, 'data-enable-pickers="1"')
+        self.assertContains(resp, 'data-ct-picker-search')
+        self.assertContains(resp, 'data-crm-field-voice')
+        self.assertContains(resp, 'data-crm-field-voice-mic')
 
     def test_customer_search_pagination_metadata(self):
         for i in range(25):

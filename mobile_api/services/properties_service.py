@@ -16,6 +16,33 @@ from workspace.services.crm_scope import can_edit_property, customers_qs, get_ag
 from workspace.services.features import extract_listing_features
 from workspace.services.listing_features import build_listing_feature_profile
 
+_CRM_PROPERTY_BOOL_FIELDS = (
+    'has_parking', 'has_storage', 'has_elevator', 'is_vacant',
+    'has_wardrobe', 'has_two_corner', 'has_two_access',
+    'has_wallpaper', 'has_knauf', 'has_lighting',
+)
+
+
+def _sync_property_postal_feature(prop: CRMProperty) -> None:
+    fd = dict(prop.feature_data or {})
+    pc = (prop.postal_code or '').strip()
+    if pc:
+        fd['کد پستی'] = pc
+    else:
+        fd.pop('کد پستی', None)
+    prop.feature_data = fd
+
+
+def _apply_mobile_spec_fields(prop: CRMProperty, data: Dict[str, Any]) -> None:
+    if 'postal_code' in data and data.get('postal_code') is not None:
+        from contracts.services.party_sanitize import sanitize_postal_code
+        prop.postal_code = sanitize_postal_code(str(data.get('postal_code') or ''))
+        _sync_property_postal_feature(prop)
+    if 'land_area' in data:
+        prop.land_area = _parse_float(data.get('land_area'))
+    if 'frontage_width' in data:
+        prop.frontage_width = _parse_float(data.get('frontage_width'))
+
 
 def list_properties_paginated(
     user,
@@ -181,7 +208,8 @@ def _apply_mobile_extended_fields(prop: CRMProperty, data: Dict[str, Any]) -> No
         prop.feature_data = fd
     if 'images' in data and data.get('images') is not None:
         prop.images = list(data.get('images') or [])
-    for bool_field in ('has_parking', 'has_storage', 'has_elevator', 'is_vacant'):
+    _apply_mobile_spec_fields(prop, data)
+    for bool_field in _CRM_PROPERTY_BOOL_FIELDS:
         if bool_field in data and data.get(bool_field) is not None:
             setattr(prop, bool_field, bool(data.get(bool_field)))
     if data.get('is_vacant'):
@@ -231,8 +259,9 @@ def _apply_mobile_property_overrides(prop: CRMProperty, data: Dict[str, Any], *,
         prop.total_floors = _parse_int(data.get('total_floors'))
     if 'build_year' in data:
         prop.build_year = _parse_int(data.get('build_year'))
-    for bool_field in ('has_parking', 'has_storage', 'has_elevator'):
-        if bool_field in data:
+    _apply_mobile_spec_fields(prop, data)
+    for bool_field in _CRM_PROPERTY_BOOL_FIELDS:
+        if bool_field in data and data.get(bool_field) is not None:
             setattr(prop, bool_field, bool(data.get(bool_field)))
     if data.get('images'):
         prop.images = list(data.get('images') or [])
@@ -316,6 +345,8 @@ def create_property_from_mobile(user, data: Dict[str, Any]) -> tuple[CRMProperty
         neighborhood=(data.get('neighborhood') or '')[:200],
         address=(data.get('address') or ''),
         area=_parse_float(data.get('area')),
+        land_area=_parse_float(data.get('land_area')),
+        frontage_width=_parse_float(data.get('frontage_width')),
         rooms=(data.get('rooms') or '')[:20],
         floor=_parse_int(data.get('floor')),
         total_floors=_parse_int(data.get('total_floors')),
@@ -334,7 +365,9 @@ def create_property_from_mobile(user, data: Dict[str, Any]) -> tuple[CRMProperty
         latitude=_parse_float(data.get('latitude')),
         longitude=_parse_float(data.get('longitude')),
     )
-    for bool_field in ('has_parking', 'has_storage', 'has_elevator', 'is_vacant'):
+    from contracts.services.party_sanitize import sanitize_postal_code
+    prop.postal_code = sanitize_postal_code(str(data.get('postal_code') or ''))
+    for bool_field in _CRM_PROPERTY_BOOL_FIELDS:
         if bool_field in data:
             setattr(prop, bool_field, bool(data.get(bool_field)))
     if data.get('tenant_name') is not None:
@@ -342,6 +375,7 @@ def create_property_from_mobile(user, data: Dict[str, Any]) -> tuple[CRMProperty
     if data.get('tenant_phone') is not None:
         prop.tenant_phone = (data.get('tenant_phone') or '')[:20]
     _apply_mobile_extended_fields(prop, data)
+    _sync_property_postal_feature(prop)
     prop.save()
 
     if prop.phone or prop.owner_name:
@@ -418,7 +452,8 @@ def update_property_from_mobile(user, property_id: int, data: Dict[str, Any]) ->
         prop.floor = _parse_int(data.get('floor'))
     if 'build_year' in data and data.get('build_year') is not None:
         prop.build_year = _parse_int(data.get('build_year'))
-    for bool_field in ('has_parking', 'has_storage', 'has_elevator', 'is_vacant'):
+    _apply_mobile_spec_fields(prop, data)
+    for bool_field in _CRM_PROPERTY_BOOL_FIELDS:
         if bool_field in data and data.get(bool_field) is not None:
             setattr(prop, bool_field, bool(data.get(bool_field)))
     if 'total_floors' in data and data.get('total_floors') is not None:

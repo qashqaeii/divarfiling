@@ -413,9 +413,13 @@ class CRMPropertyForm(CRMMoneyFieldsMixin, forms.ModelForm):
         fields = [
             'title', 'property_type', 'deal_mode', 'transaction_status', 'publish_status',
             'business_type', 'phone', 'owner_name', 'tenant_phone', 'tenant_name',
-            'address', 'city', 'district', 'neighborhood',
-            'latitude', 'longitude', 'area', 'rooms', 'floor', 'total_floors',
-            'has_parking', 'has_storage', 'has_elevator', 'is_vacant', 'build_year',
+            'address', 'city', 'district', 'neighborhood', 'postal_code',
+            'latitude', 'longitude', 'area', 'land_area', 'frontage_width',
+            'rooms', 'floor', 'total_floors',
+            'has_parking', 'has_storage', 'has_elevator',
+            'has_wardrobe', 'has_two_corner', 'has_two_access',
+            'has_wallpaper', 'has_knauf', 'has_lighting',
+            'is_vacant', 'build_year',
             'sale_price', 'deposit', 'monthly_rent', 'amenities', 'notes', 'link',
         ]
         widgets = {
@@ -454,6 +458,14 @@ class CRMPropertyForm(CRMMoneyFieldsMixin, forms.ModelForm):
                 'placeholder': 'مثلاً نیاوران',
                 'autocomplete': 'off',
             }),
+            'postal_code': forms.TextInput(attrs={
+                'class': 'crm-input',
+                'dir': 'ltr',
+                'inputmode': 'numeric',
+                'autocomplete': 'postal-code',
+                'placeholder': 'مثلاً ۱۹۸۷۶۵۴۳۲۱',
+                'maxlength': '10',
+            }),
             'latitude': forms.NumberInput(attrs={
                 'class': 'crm-input',
                 'step': 'any',
@@ -468,7 +480,15 @@ class CRMPropertyForm(CRMMoneyFieldsMixin, forms.ModelForm):
                 'inputmode': 'decimal',
                 'data-crm-form-map-lng': '1',
             }),
-            'area': forms.NumberInput(attrs={'class': 'crm-input', 'step': '0.1'}),
+            'area': forms.NumberInput(attrs={
+                'class': 'crm-input', 'step': '0.1', 'inputmode': 'decimal', 'min': '0',
+            }),
+            'land_area': forms.NumberInput(attrs={
+                'class': 'crm-input', 'step': '0.1', 'inputmode': 'decimal', 'min': '0',
+            }),
+            'frontage_width': forms.NumberInput(attrs={
+                'class': 'crm-input', 'step': '0.1', 'inputmode': 'decimal', 'min': '0',
+            }),
             'rooms': forms.TextInput(attrs={'class': 'crm-input'}),
             'floor': forms.NumberInput(attrs={'class': 'crm-input'}),
             'total_floors': forms.NumberInput(attrs={'class': 'crm-input'}),
@@ -482,6 +502,12 @@ class CRMPropertyForm(CRMMoneyFieldsMixin, forms.ModelForm):
             'has_parking': forms.HiddenInput(),
             'has_storage': forms.HiddenInput(),
             'has_elevator': forms.HiddenInput(),
+            'has_wardrobe': forms.CheckboxInput(attrs={'class': 'crm-checkbox', 'data-prop-bool': '1'}),
+            'has_two_corner': forms.CheckboxInput(attrs={'class': 'crm-checkbox', 'data-prop-bool': '1'}),
+            'has_two_access': forms.CheckboxInput(attrs={'class': 'crm-checkbox', 'data-prop-bool': '1'}),
+            'has_wallpaper': forms.CheckboxInput(attrs={'class': 'crm-checkbox', 'data-prop-bool': '1'}),
+            'has_knauf': forms.CheckboxInput(attrs={'class': 'crm-checkbox', 'data-prop-bool': '1'}),
+            'has_lighting': forms.CheckboxInput(attrs={'class': 'crm-checkbox', 'data-prop-bool': '1'}),
             'is_vacant': forms.CheckboxInput(attrs={
                 'class': 'crm-checkbox',
                 'data-vacant-checkbox': '1',
@@ -510,6 +536,12 @@ class CRMPropertyForm(CRMMoneyFieldsMixin, forms.ModelForm):
         self._amenity_groups_meta = PROPERTY_AMENITY_CHECKBOX_GROUPS
 
         instance = getattr(self, 'instance', None)
+        if instance is not None and not self.is_bound and not (instance.postal_code or '').strip():
+            fd_pc = ''
+            if isinstance(getattr(instance, 'feature_data', None), dict):
+                fd_pc = str((instance.feature_data or {}).get('کد پستی') or '').strip()
+            if fd_pc:
+                self.initial['postal_code'] = fd_pc
         if instance is not None and not self.is_bound and not (instance.district or '').strip():
             from workspace.services.crm import resolve_district_for_property
             resolved_district = resolve_district_for_property(instance)
@@ -652,6 +684,22 @@ class CRMPropertyForm(CRMMoneyFieldsMixin, forms.ModelForm):
             data = getattr(self.instance, 'feature_data', None) or {}
         return format_feature_date_display(str(data.get('تاریخ تخلیه') or ''))
 
+    def clean_postal_code(self):
+        from contracts.services.party_sanitize import sanitize_postal_code
+        return sanitize_postal_code(self.cleaned_data.get('postal_code') or '')
+
+    def clean_land_area(self):
+        val = self.cleaned_data.get('land_area')
+        if val is not None and val < 0:
+            raise forms.ValidationError('متراژ زمین نمی‌تواند منفی باشد.')
+        return val
+
+    def clean_frontage_width(self):
+        val = self.cleaned_data.get('frontage_width')
+        if val is not None and val <= 0:
+            raise forms.ValidationError('دهنه ملک باید بزرگ‌تر از صفر باشد.')
+        return val
+
     def clean(self):
         from workspace.services.property_features import (
             FEATURE_MANAGED_AMENITY_LABELS,
@@ -705,7 +753,12 @@ class CRMPropertyForm(CRMMoneyFieldsMixin, forms.ModelForm):
 
     def save(self, commit=True):
         instance = super().save(commit=False)
-        instance.feature_data = getattr(self, '_parsed_feature_data', None) or {}
+        instance.feature_data = dict(getattr(self, '_parsed_feature_data', None) or {})
+        pc = (instance.postal_code or '').strip()
+        if pc:
+            instance.feature_data['کد پستی'] = pc
+        else:
+            instance.feature_data.pop('کد پستی', None)
         if commit:
             instance.save()
             self.save_m2m()

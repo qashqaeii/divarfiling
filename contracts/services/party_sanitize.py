@@ -7,7 +7,8 @@ from contracts.constants import PERSON_TYPE_LEGAL, PERSON_TYPE_NATURAL
 
 
 def _digits(value: str) -> str:
-    return ''.join(c for c in (value or '') if c.isdigit())
+    translated = (value or '').translate(str.maketrans('۰۱۲۳۴۵۶۷۸۹', '0123456789'))
+    return ''.join(c for c in translated if c.isdigit())
 
 
 def sanitize_personal_national_id(value: str) -> str:

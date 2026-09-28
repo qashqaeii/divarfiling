@@ -6450,6 +6450,17 @@ body.crm-side-open { overflow: hidden; }
     flex-direction: column;
     gap: .55rem;
 }
+.crm-prop-bool-grid__items {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(11.5rem, 1fr));
+    gap: .55rem .75rem;
+}
+.crm-prop-bool-toggle .crm-feat-toggle input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
 .crm-prop-amenity-groups {
     display: flex;
     flex-direction: column;

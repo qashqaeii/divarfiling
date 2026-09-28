@@ -70,8 +70,20 @@
             </div>
             {% if property.area %}
             <div>
-                <dt><i class="fas {{ 'متراژ'|feature_icon }}" aria-hidden="true"></i> متراژ</dt>
+                <dt><i class="fas {{ 'متراژ'|feature_icon }}" aria-hidden="true"></i> متراژ بنا</dt>
                 <dd>{{ property.area|ws_area }}</dd>
+            </div>
+            {% endif %}
+            {% if property.land_area %}
+            <div>
+                <dt><i class="fas {{ 'متراژ'|feature_icon }}" aria-hidden="true"></i> متراژ زمین</dt>
+                <dd>{{ property.land_area|ws_area }}</dd>
+            </div>
+            {% endif %}
+            {% if property.frontage_width %}
+            <div>
+                <dt><i class="fas fa-ruler-horizontal" aria-hidden="true"></i> دهنه ملک</dt>
+                <dd>{{ property.frontage_width|floatformat:"-1" }} متر</dd>
             </div>
             {% endif %}
             {% if property.rooms %}
@@ -130,6 +142,12 @@
             <div>
                 <dt><i class="fas {{ 'منطقه'|feature_icon }}" aria-hidden="true"></i> منطقه</dt>
                 <dd>{{ property.district }}</dd>
+            </div>
+            {% endif %}
+            {% if property.postal_code %}
+            <div>
+                <dt><i class="fas fa-mail-bulk" aria-hidden="true"></i> کد پستی</dt>
+                <dd dir="ltr">{{ property.postal_code }}</dd>
             </div>
             {% endif %}
             {% if property.address %}

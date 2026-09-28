@@ -196,18 +196,6 @@ PROPERTY_AMENITY_CHECKBOX_GROUPS = (
             ('سالن ورزش', 'fa-dumbbell'),
         ),
     },
-    {
-        'id': 'conditions',
-        'title': 'شرایط و وضعیت',
-        'icon': 'fa-clipboard-check',
-        'items': (
-            ('حیوان خانگی مجاز', 'fa-paw'),
-            ('قابل معاوضه', 'fa-right-left'),
-            ('بازسازی شده', 'fa-hammer'),
-            ('سند', 'fa-file-signature'),
-            ('مجوز ساخت', 'fa-hard-hat'),
-        ),
-    },
 )
 
 # برچسب‌های بولین شناخته‌شده (چک‌باکس CRM + چیپ‌های دیوار)

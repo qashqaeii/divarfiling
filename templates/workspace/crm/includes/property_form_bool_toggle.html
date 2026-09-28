@@ -1,5 +1,5 @@
-<div class="crm-feat-field crm-feat-field--toggle crm-prop-bool-toggle">
-    <div class="crm-feat-field-label">
+<div class="crm-prop-bool-toggle">
+    <div class="crm-prop-bool-toggle__label">
         <i class="fas {{ icon }}" aria-hidden="true"></i>
         <span>{{ label }}</span>
     </div>
@@ -8,6 +8,11 @@
         <span class="crm-feat-toggle-ui" aria-hidden="true">
             <span class="crm-feat-toggle-knob"></span>
         </span>
-        <span class="crm-feat-toggle-txt" data-feat-toggle-txt>{% if field.value %}دارد{% else %}ندارد{% endif %}</span>
+        <span
+            class="crm-feat-toggle-txt"
+            data-feat-toggle-txt
+            data-toggle-on="دارد"
+            data-toggle-off="ندارد"
+        >{% if field.value %}دارد{% else %}ندارد{% endif %}</span>
     </label>
 </div>

@@ -189,6 +189,7 @@ const CRMDrawer = {
         initCRMMoneyInputs(drawer);
         initPropertyDealMode(drawer);
         initCRMFeatureProfile(drawer);
+        initCRMFeatToggles(drawer);
         initCRMTypeProfiles(drawer);
         initCRMLeaseDeadline(drawer);
         initCRMPropertyOccVacancyDate(drawer);
@@ -648,6 +649,22 @@ function resolveCRMFeatProfile(dealMode, propertyType) {
     return 'sale';
 }
 
+function initCRMFeatToggles(root) {
+    const scope = root || document;
+    scope.querySelectorAll('.crm-feat-toggle input[type="checkbox"]').forEach((input) => {
+        if (input.dataset.crmToggleBound === '1') return;
+        input.dataset.crmToggleBound = '1';
+        const label = input.closest('.crm-feat-toggle')?.querySelector('[data-feat-toggle-txt], .crm-feat-toggle-txt');
+        const onTxt = input.dataset.toggleOn || label?.dataset.toggleOn || 'دارد';
+        const offTxt = input.dataset.toggleOff || label?.dataset.toggleOff || 'ندارد';
+        const sync = () => {
+            if (label) label.textContent = input.checked ? onTxt : offTxt;
+        };
+        input.addEventListener('change', sync);
+        sync();
+    });
+}
+
 function initCRMFeatureProfile(root) {
     const scope = root || document;
     scope.querySelectorAll('[data-crm-feat]').forEach((section) => {
@@ -706,14 +723,7 @@ function initCRMFeatureProfile(root) {
             });
         });
 
-        section.querySelectorAll('.crm-feat-toggle input[type="checkbox"]').forEach((input) => {
-            const label = input.closest('.crm-feat-toggle')?.querySelector('[data-feat-toggle-txt], .crm-feat-toggle-txt');
-            const sync = () => {
-                if (label) label.textContent = input.checked ? 'دارد' : 'ندارد';
-            };
-            input.addEventListener('change', sync);
-            sync();
-        });
+        initCRMFeatToggles(section);
 
         apply();
         if (dealSelect) dealSelect.addEventListener('change', apply);
@@ -5944,6 +5954,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initCRMTypeProfiles();
     initPropertyDealMode();
     initCRMFeatureProfile();
+    initCRMFeatToggles(document);
     initCRMGlobalSearch();
     initCRMMultiSelect();
     initCRMTabs();

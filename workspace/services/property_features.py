@@ -112,6 +112,8 @@ def _field(
     max_v: int | None = None,
     hint: str = '',
     icon: str = 'fa-circle',
+    toggle_on: str = 'دارد',
+    toggle_off: str = 'ندارد',
 ) -> Dict[str, Any]:
     return {
         'key': key,
@@ -122,6 +124,8 @@ def _field(
         'max': max_v,
         'hint': hint,
         'icon': icon,
+        'toggle_on': toggle_on,
+        'toggle_off': toggle_off,
         'input_name': f'feat__{key}',
     }
 
@@ -169,7 +173,9 @@ FIELDS: Dict[str, Dict[str, Any]] = {
     'جنس کابینت': _field(
         'جنس کابینت', widget='chips', choices=CHOICES_CABINET,         icon='fa-box-archive',
     ),
-    'بازسازی شده': _field('بازسازی شده', widget='toggle', icon='fa-hammer'),
+    'بازسازی شده': _field(
+        'بازسازی شده', widget='toggle', icon='fa-hammer', toggle_on='هست', toggle_off='نیست',
+    ),
     'استخر': _field('استخر', widget='toggle', icon='fa-water-ladder'),
     'سونا': _field('سونا', widget='toggle', icon='fa-temperature-high'),
     'جکوزی': _field('جکوزی', widget='toggle', icon='fa-hot-tub-person'),
@@ -200,8 +206,12 @@ FIELDS: Dict[str, Dict[str, Any]] = {
     'تعداد حمام': _field(
         'تعداد حمام', widget='select', choices=_int_choices(0, 10), icon='fa-bath',
     ),
-    'وام دارد': _field('وام دارد', widget='toggle', icon='fa-sack-dollar'),
-    'قابل معاوضه': _field('قابل معاوضه', widget='toggle', icon='fa-right-left'),
+    'وام دارد': _field(
+        'وام دارد', widget='toggle', icon='fa-sack-dollar', toggle_on='دارد', toggle_off='ندارد',
+    ),
+    'قابل معاوضه': _field(
+        'قابل معاوضه', widget='toggle', icon='fa-right-left', toggle_on='هست', toggle_off='نیست',
+    ),
     # Commercial
     'وضعیت سند': _field(
         'وضعیت سند', widget='chips', choices=CHOICES_DOC_STATUS, icon='fa-file-signature',
@@ -569,7 +579,9 @@ def feature_form_groups_with_values(
             raw_val = str(data.get(key) or '').strip()
             if meta['widget'] == 'toggle':
                 meta['checked'] = _normalize_toggle(raw_val) == 'دارد'
-                meta['value'] = 'دارد' if meta['checked'] else 'ندارد'
+                on_label = str(meta.get('toggle_on') or 'دارد')
+                off_label = str(meta.get('toggle_off') or 'ندارد')
+                meta['value'] = on_label if meta['checked'] else off_label
             elif meta['widget'] == 'date':
                 meta['value'] = format_feature_date_display(raw_val)
                 meta['checked'] = False

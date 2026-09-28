@@ -106,20 +106,28 @@
             <div class="crm-field"><label class="crm-label">تعداد طبقات</label>{{ form.total_floors }}</div>
             <div class="crm-field"><label class="crm-label">سال ساخت</label>{{ form.build_year }}</div>
             <div class="crm-field"><label class="crm-label">دهنه ملک (متر)</label>{{ form.frontage_width }}</div>
-            <div class="crm-field crm-field-full crm-prop-bool-grid" role="group" aria-label="ویژگی‌های موقعیت ملک">
-                <span class="crm-label">ویژگی‌های ملک</span>
-                <div class="crm-prop-bool-grid__items">
-                    {% include 'workspace/crm/includes/property_form_bool_toggle.html' with field=form.has_wardrobe label='کمد دیواری' icon='fa-door-closed' %}
-                    {% include 'workspace/crm/includes/property_form_bool_toggle.html' with field=form.has_two_corner label='دو نبش' icon='fa-vector-square' %}
-                    {% include 'workspace/crm/includes/property_form_bool_toggle.html' with field=form.has_two_access label='دو معبر' icon='fa-road' %}
+            <div class="crm-field crm-field-full crm-prop-bool-panels" role="group" aria-label="ویژگی‌های تکمیلی ملک">
+                <div class="crm-prop-bool-panel">
+                    <header class="crm-prop-bool-panel__head">
+                        <i class="fas fa-th-large" aria-hidden="true"></i>
+                        <span>ویژگی‌های ملک</span>
+                    </header>
+                    <div class="crm-prop-bool-panel__items">
+                        {% include 'workspace/crm/includes/property_form_bool_toggle.html' with field=form.has_wardrobe label='کمد دیواری' icon='fa-door-closed' %}
+                        {% include 'workspace/crm/includes/property_form_bool_toggle.html' with field=form.has_two_corner label='دو نبش' icon='fa-vector-square' %}
+                        {% include 'workspace/crm/includes/property_form_bool_toggle.html' with field=form.has_two_access label='دو معبر' icon='fa-road' %}
+                    </div>
                 </div>
-            </div>
-            <div class="crm-field crm-field-full crm-prop-bool-grid" role="group" aria-label="رفاهی و تزئینات">
-                <span class="crm-label">رفاهی و تزئینات</span>
-                <div class="crm-prop-bool-grid__items">
-                    {% include 'workspace/crm/includes/property_form_bool_toggle.html' with field=form.has_wallpaper label='کاغذ دیواری' icon='fa-paint-roller' %}
-                    {% include 'workspace/crm/includes/property_form_bool_toggle.html' with field=form.has_knauf label='کناف' icon='fa-border-none' %}
-                    {% include 'workspace/crm/includes/property_form_bool_toggle.html' with field=form.has_lighting label='نورپردازی' icon='fa-lightbulb' %}
+                <div class="crm-prop-bool-panel">
+                    <header class="crm-prop-bool-panel__head">
+                        <i class="fas fa-paint-roller" aria-hidden="true"></i>
+                        <span>رفاهی و تزئینات</span>
+                    </header>
+                    <div class="crm-prop-bool-panel__items">
+                        {% include 'workspace/crm/includes/property_form_bool_toggle.html' with field=form.has_wallpaper label='کاغذ دیواری' icon='fa-paint-roller' %}
+                        {% include 'workspace/crm/includes/property_form_bool_toggle.html' with field=form.has_knauf label='کناف' icon='fa-border-none' %}
+                        {% include 'workspace/crm/includes/property_form_bool_toggle.html' with field=form.has_lighting label='نورپردازی' icon='fa-lightbulb' %}
+                    </div>
                 </div>
             </div>
             <div class="crm-field crm-field-full crm-prop-amenities-field">
@@ -197,11 +205,18 @@
                                     {% if item.checked %}checked{% endif %}
                                     {% if profile.id != fctx.profile_id %}disabled{% endif %}
                                     data-feat-input
+                                    data-toggle-on="{{ item.toggle_on|default:'دارد' }}"
+                                    data-toggle-off="{{ item.toggle_off|default:'ندارد' }}"
                                 >
                                 <span class="crm-feat-toggle-ui" aria-hidden="true">
                                     <span class="crm-feat-toggle-knob"></span>
                                 </span>
-                                <span class="crm-feat-toggle-txt" data-feat-toggle-txt>{% if item.checked %}دارد{% else %}ندارد{% endif %}</span>
+                                <span
+                                    class="crm-feat-toggle-txt"
+                                    data-feat-toggle-txt
+                                    data-toggle-on="{{ item.toggle_on|default:'دارد' }}"
+                                    data-toggle-off="{{ item.toggle_off|default:'ندارد' }}"
+                                >{% if item.checked %}{{ item.toggle_on|default:'دارد' }}{% else %}{{ item.toggle_off|default:'ندارد' }}{% endif %}</span>
                             </label>
 
                             {% elif item.widget == 'chips' %}

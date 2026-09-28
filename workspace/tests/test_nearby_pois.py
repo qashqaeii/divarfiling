@@ -225,6 +225,8 @@ class NearbyPoisServiceTests(TestCase):
         groups = group_nearby_items([i.as_dict() for i in items])
         self.assertTrue(any(g['key'] == 'religion' for g in groups))
         self.assertTrue(any(g['key'] == 'transport' for g in groups))
+        transport = next(g for g in groups if g['key'] == 'transport')
+        self.assertEqual(transport.get('icon'), 'fa-route')
 
     def test_stored_cache_invalid_when_coords_change(self):
         prop = CRMProperty(

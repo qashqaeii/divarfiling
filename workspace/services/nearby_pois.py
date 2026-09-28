@@ -43,14 +43,14 @@ DEFAULT_OVERPASS_URLS = (
 _OVERPASS_IPV4_LOCK = threading.Lock()
 MAX_INGEST_ELEMENTS = 8000
 
-POI_GROUPS: Tuple[Dict[str, str], ...] = (
-    {'key': 'transport', 'label': 'دسترسی و حمل‌ونقل'},
-    {'key': 'daily', 'label': 'زندگی روزمره'},
-    {'key': 'health', 'label': 'درمان و سلامت'},
-    {'key': 'education', 'label': 'آموزش'},
-    {'key': 'religion', 'label': 'مذهبی'},
-    {'key': 'leisure', 'label': 'تفریح و ورزش'},
-    {'key': 'safety', 'label': 'امنیت و خدمات'},
+POI_GROUPS: Tuple[Dict[str, Any], ...] = (
+    {'key': 'transport', 'label': 'دسترسی و حمل‌ونقل', 'icon': 'fa-route'},
+    {'key': 'daily', 'label': 'زندگی روزمره', 'icon': 'fa-basket-shopping'},
+    {'key': 'health', 'label': 'درمان و سلامت', 'icon': 'fa-hospital'},
+    {'key': 'education', 'label': 'آموزش', 'icon': 'fa-graduation-cap'},
+    {'key': 'religion', 'label': 'مذهبی', 'icon': 'fa-mosque'},
+    {'key': 'leisure', 'label': 'تفریح و ورزش', 'icon': 'fa-dumbbell'},
+    {'key': 'safety', 'label': 'امنیت و خدمات', 'icon': 'fa-shield-halved'},
 )
 
 POI_CATEGORIES: Tuple[Dict[str, Any], ...] = (
@@ -1158,6 +1158,7 @@ def group_nearby_items(items: Sequence[Dict[str, Any]]) -> List[Dict[str, Any]]:
         groups.append({
             'key': group['key'],
             'label': group['label'],
+            'icon': group.get('icon') or 'fa-layer-group',
             'found_count': len(found),
             'items': found + missing,
         })
@@ -1320,7 +1321,7 @@ def api_response_payload(data: Dict[str, Any], *, cached: bool) -> Dict[str, Any
         'total_count': data.get('total_count', len(items)),
         'missing_count': data.get('missing_count', 0),
         'items': items,
-        'groups': data.get('groups') or group_nearby_items(items),
+        'groups': group_nearby_items(items),
         'highlights': data.get('highlights') or nearest_highlights(items),
     }
 
@@ -1379,8 +1380,7 @@ def _stored_coords_distance_m(prop, data: Dict[str, Any]) -> float:
 def _enrich_nearby_payload(data: Dict[str, Any]) -> Dict[str, Any]:
     out = dict(data)
     items = out.get('items') or []
-    if not out.get('groups'):
-        out['groups'] = group_nearby_items(items)
+    out['groups'] = group_nearby_items(items)
     if not out.get('highlights'):
         out['highlights'] = nearest_highlights(items)
     out['cached'] = True
@@ -1485,6 +1485,7 @@ def build_public_nearby_pois_context(prop, share) -> Optional[Dict[str, Any]]:
         groups.append({
             'key': group['key'],
             'label': group['label'],
+            'icon': group.get('icon') or 'fa-layer-group',
             'items': found_items,
         })
 

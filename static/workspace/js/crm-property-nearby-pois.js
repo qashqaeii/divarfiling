@@ -84,7 +84,15 @@
 
         const title = document.createElement('h3');
         title.className = 'crm-nearby-pois__group-title';
-        title.textContent = group.label || '';
+        const titleIcon = document.createElement('span');
+        titleIcon.className = 'crm-nearby-pois__group-title-icon';
+        titleIcon.setAttribute('aria-hidden', 'true');
+        titleIcon.innerHTML = `<i class="fas ${group.icon || 'fa-layer-group'}"></i>`;
+        const titleText = document.createElement('span');
+        titleText.className = 'crm-nearby-pois__group-title-text';
+        titleText.textContent = group.label || '';
+        title.appendChild(titleIcon);
+        title.appendChild(titleText);
         section.appendChild(title);
         section.appendChild(renderRows(found));
         return section;

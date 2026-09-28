@@ -125,11 +125,31 @@
 }
 
 .ps-access__group-title {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
     margin: 0 0 0.45rem;
     font-size: 0.72rem;
     font-weight: 800;
     color: #94a3b8;
     letter-spacing: 0.02em;
+}
+
+.ps-access__group-title-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 8px;
+    font-size: 0.68rem;
+    color: #0891b2;
+    background: rgba(8, 145, 178, 0.12);
+}
+
+.ps-access__group-title-text {
+    min-width: 0;
 }
 
 .ps-access__list {

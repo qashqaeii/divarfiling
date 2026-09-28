@@ -37,7 +37,12 @@
         <div class="ps-access__groups">
             {% for group in public_nearby_pois.groups %}
             <section class="ps-access__group">
-                <h3 class="ps-access__group-title">{{ group.label }}</h3>
+                <h3 class="ps-access__group-title">
+                    <span class="ps-access__group-title-icon" aria-hidden="true">
+                        <i class="fas {{ group.icon|default:'fa-layer-group' }}"></i>
+                    </span>
+                    <span class="ps-access__group-title-text">{{ group.label }}</span>
+                </h3>
                 <ul class="ps-access__list">
                     {% for item in group.items %}
                     <li class="ps-access__item" style="--acc-color: {{ item.color|default:'#0891b2' }}">

@@ -183,14 +183,21 @@
                     if (fold) fold.open = false;
                 });
             });
+            const syncFoldMenuLayer = () => {
+                const anyOpen = !!panel?.querySelector('details.ws-ai-studio__fold[open]');
+                card.classList.toggle('ws-ai-studio--menu-open', anyOpen);
+            };
             panel?.querySelectorAll('details.ws-ai-studio__fold').forEach((fold) => {
                 fold.addEventListener('toggle', () => {
-                    if (!fold.open || !panel) return;
-                    panel.querySelectorAll('details.ws-ai-studio__fold').forEach((other) => {
-                        if (other !== fold) other.open = false;
-                    });
+                    if (fold.open && panel) {
+                        panel.querySelectorAll('details.ws-ai-studio__fold').forEach((other) => {
+                            if (other !== fold) other.open = false;
+                        });
+                    }
+                    syncFoldMenuLayer();
                 });
             });
+            syncFoldMenuLayer();
         });
     }
 

@@ -20,9 +20,9 @@
 <link rel="stylesheet" href="{% static 'workspace/css/crm-prop-detail-mobile.css' %}?v=3">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-property-deal-create.css' %}?v=6">
 {% if show_nearby_pois %}
-<link rel="stylesheet" href="{% static 'workspace/css/crm-nearby-pois.css' %}?v=10">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-nearby-pois.css' %}?v=11">
 {% endif %}
-<link rel="stylesheet" href="{% static 'workspace/css/crm-ai-listing-summary.css' %}?v=8">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-ai-listing-summary.css' %}?v=9">
 {% if agency_space_enabled %}
 <link rel="stylesheet" href="{% static 'workspace/css/agency-space.css' %}?v=6">
 {% endif %}
@@ -1097,10 +1097,10 @@ document.addEventListener('DOMContentLoaded', function () {
 </script>
 {% endif %}
 {% if show_nearby_pois %}
-<script src="{% static 'workspace/js/crm-property-nearby-pois.js' %}?v=7"></script>
+<script src="{% static 'workspace/js/crm-property-nearby-pois.js' %}?v=8"></script>
 {% endif %}
 {% if ai_enabled and has_bot_license %}
-<script src="{% static 'workspace/js/ai.js' %}?v=13"></script>
+<script src="{% static 'workspace/js/ai.js' %}?v=14"></script>
 {% endif %}
 
 {% if can_edit_property %}

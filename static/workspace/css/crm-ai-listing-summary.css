@@ -2,6 +2,7 @@
 
 .ws-ai-card--studio.ws-ai-card--listing {
     position: relative;
+    z-index: 1;
     margin: 0.85rem 0 0.5rem;
     border-radius: 18px;
     border: 1px solid color-mix(in srgb, #8b5cf6 14%, #e8ecf4);
@@ -11,6 +12,11 @@
         0 12px 40px rgba(88, 28, 135, 0.07),
         0 2px 8px rgba(15, 23, 42, 0.04);
     overflow: visible;
+    isolation: auto;
+}
+
+.ws-ai-card--studio.ws-ai-studio--menu-open {
+    z-index: 40;
 }
 
 .ws-ai-card--studio .ws-ai-card__glow,
@@ -141,6 +147,8 @@
 
 /* Panel */
 .ws-ai-studio__panel {
+    position: relative;
+    z-index: 30;
     margin: 0 0.85rem;
     padding: 0.55rem 0.65rem 0.65rem;
     overflow: visible;
@@ -160,7 +168,12 @@
 
 .ws-ai-studio__fold {
     position: relative;
+    z-index: 1;
     min-width: 0;
+}
+
+.ws-ai-studio__fold[open] {
+    z-index: 50;
 }
 
 .ws-ai-studio__fold-trigger {
@@ -216,7 +229,7 @@
 
 .ws-ai-studio__fold-menu {
     position: absolute;
-    z-index: 12;
+    z-index: 100;
     top: calc(100% + 0.25rem);
     right: 0;
     left: 0;
@@ -287,6 +300,8 @@
 }
 
 .ws-ai-studio__actions {
+    position: relative;
+    z-index: 25;
     display: flex;
     justify-content: center;
     margin-top: 0.55rem;
@@ -386,7 +401,16 @@
 
 /* Stage */
 .ws-ai-studio__stage {
+    position: relative;
+    z-index: 1;
     padding: 0.5rem 1rem 0.75rem;
+}
+
+.ws-ai-summary-pro,
+.ws-ai-summary-pro__toolbar,
+.ws-ai-summary-pro__lead {
+    position: relative;
+    z-index: 0;
 }
 
 .ws-ai-studio__idle {

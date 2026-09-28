@@ -4,6 +4,33 @@
     const STATUS_READY = 'ready';
     const STATUS_FAILED = 'failed';
 
+    const NEARBY_LOAD_STEPS = [
+        { id: 'loc', label: 'خواندن موقعیت ملک', icon: 'fa-map-pin' },
+        { id: 'osm', label: 'جستجو در دادهٔ نقشه', icon: 'fa-magnifying-glass-location' },
+        { id: 'dist', label: 'محاسبه فاصله و زمان پیاده', icon: 'fa-person-walking' },
+        { id: 'group', label: 'دسته‌بندی امکانات و دسترسی‌ها', icon: 'fa-layer-group' },
+    ];
+
+    function renderNearbyLoadingMarkup() {
+        const steps = NEARBY_LOAD_STEPS.map((step) => (
+            `<li class="crm-nearby-pois__load-step" data-nearby-load-step="${step.id}">
+                <span class="crm-nearby-pois__load-step-icon"><i class="fas ${step.icon}" aria-hidden="true"></i></span>
+                <span class="crm-nearby-pois__load-step-label">${step.label}</span>
+                <span class="crm-nearby-pois__load-step-status" aria-hidden="true"></span>
+            </li>`
+        )).join('');
+        return `<div class="crm-nearby-pois__load-panel" role="status" aria-live="polite" aria-busy="true">
+            <div class="crm-nearby-pois__load-orb" aria-hidden="true">
+                <span class="crm-nearby-pois__load-ring"></span>
+                <span class="crm-nearby-pois__load-core"><i class="fas fa-map-location-dot"></i></span>
+            </div>
+            <p class="crm-nearby-pois__load-title">در حال محاسبه امکانات و دسترسی‌ها</p>
+            <p class="crm-nearby-pois__load-sub">جستجو در شعاع اطراف ملک و مرتب‌سازی نتایج…</p>
+            <ol class="crm-nearby-pois__load-steps">${steps}</ol>
+            <div class="crm-nearby-pois__load-bar" aria-hidden="true"><span class="crm-nearby-pois__load-bar-fill"></span></div>
+        </div>`;
+    }
+
     function getCsrfToken() {
         const input = document.querySelector('input[name="csrfmiddlewaretoken"]');
         if (input?.value) return input.value;
@@ -142,6 +169,35 @@
         let hasStored = root.dataset.hasStored === '1';
         let locationPrecision = root.dataset.locationPrecision || 'none';
         let busy = false;
+        let nearbyLoadTimer = null;
+
+        function stopNearbyLoadAnimation() {
+            if (nearbyLoadTimer) {
+                clearInterval(nearbyLoadTimer);
+                nearbyLoadTimer = null;
+            }
+            root.classList.remove('is-nearby-loading');
+            loading?.querySelectorAll('[data-nearby-load-step]').forEach((step) => {
+                step.classList.remove('is-active', 'is-done');
+            });
+        }
+
+        function startNearbyLoadAnimation() {
+            stopNearbyLoadAnimation();
+            root.classList.add('is-nearby-loading');
+            const steps = loading?.querySelectorAll('[data-nearby-load-step]');
+            if (!steps?.length) return;
+            let index = 0;
+            const tick = () => {
+                steps.forEach((el, i) => {
+                    el.classList.toggle('is-active', i === index);
+                    el.classList.toggle('is-done', i < index);
+                });
+                index = (index + 1) % NEARBY_LOAD_STEPS.length;
+            };
+            tick();
+            nearbyLoadTimer = setInterval(tick, 1300);
+        }
 
         function setError(message) {
             if (!errorEl) return;
@@ -156,7 +212,16 @@
 
         function setLoading(active) {
             busy = active;
-            if (loading) loading.hidden = !active;
+            if (loading) {
+                if (active) {
+                    loading.innerHTML = renderNearbyLoadingMarkup();
+                    loading.hidden = false;
+                    startNearbyLoadAnimation();
+                } else {
+                    stopNearbyLoadAnimation();
+                    loading.hidden = true;
+                }
+            }
             if (fetchBtn) {
                 fetchBtn.classList.toggle('is-loading', active);
                 fetchBtn.disabled = active || !hasCoords;
@@ -264,7 +329,10 @@
 
             if (body) body.hidden = false;
             if (placeholder) placeholder.hidden = true;
-            if (loading) loading.hidden = true;
+            if (loading) {
+                stopNearbyLoadAnimation();
+                loading.hidden = true;
+            }
             hasStored = true;
             root.dataset.hasStored = '1';
             root.dataset.status = STATUS_READY;
@@ -280,7 +348,10 @@
             if (body) body.hidden = true;
             if (stats) stats.hidden = true;
             if (placeholder) placeholder.hidden = false;
-            if (loading) loading.hidden = true;
+            if (loading) {
+                stopNearbyLoadAnimation();
+                loading.hidden = true;
+            }
             if (groupsHost) groupsHost.innerHTML = '';
             if (highlightsHost) {
                 highlightsHost.innerHTML = '';

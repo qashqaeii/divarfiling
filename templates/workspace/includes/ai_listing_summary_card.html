@@ -1,108 +1,131 @@
 {% load persian_tags %}
-<section class="ws-ai-card ws-ai-card--listing ws-ai-card--pro" id="wsAiListingSummary" data-ai-card aria-label="خلاصه هوشمند فایل">
-    <div class="ws-ai-card__inner ws-ai-pro">
-        <header class="ws-ai-pro__head">
-            <div class="ws-ai-pro__head-copy">
-                <p class="ws-ai-pro__kicker">هوش مصنوعی · فایلینگ</p>
-                <h3 class="ws-ai-pro__title">خلاصه هوشمند فایل</h3>
+<section class="ws-ai-card ws-ai-card--listing ws-ai-card--studio" id="wsAiListingSummary" data-ai-card aria-label="خلاصه هوشمند فایل">
+    <div class="ws-ai-studio__aura" aria-hidden="true"></div>
+    <div class="ws-ai-card__inner ws-ai-studio">
+        <header class="ws-ai-studio__hero">
+            <div class="ws-ai-studio__hero-copy">
+                <span class="ws-ai-studio__badge"><i class="fas fa-sparkles" aria-hidden="true"></i> AI</span>
+                <h3 class="ws-ai-studio__title">خلاصه هوشمند فایل</h3>
+                <p class="ws-ai-studio__subtitle">بر پایه داده‌های همین ملک — آماده مشتری، واتساپ یا یادداشت شما</p>
                 {% if ai_listing_summary_quota %}
-                <p class="ws-ai-pro__quota" data-ai-quota-panel>
+                <p class="ws-ai-studio__quota" data-ai-quota-panel>
                     {% if ai_listing_summary_quota.is_unlimited %}
-                    <span class="ws-ai-pro__quota-dot" aria-hidden="true"></span> ظرفیت نامحدود
+                    <span class="ws-ai-studio__quota-pulse" aria-hidden="true"></span> ظرفیت نامحدود
                     {% else %}
                     <span data-ai-quota-used>{{ ai_listing_summary_quota.feature_used|to_persian_digits }}</span>
                     /
                     <span data-ai-quota-limit>{{ ai_listing_summary_quota.feature_limit|to_persian_digits }}</span>
-                    درخواست امروز
-                    ·
+                    امروز ·
                     <span data-ai-quota-remaining-pill>{{ ai_listing_summary_quota.feature_remaining|to_persian_digits }} باقی‌مانده</span>
                     {% endif %}
                 </p>
                 {% if not ai_listing_summary_quota.is_unlimited %}
-                <div class="ws-ai-pro__quota-track" data-ai-quota-track role="progressbar"
+                <div class="ws-ai-studio__quota-bar" data-ai-quota-track role="progressbar"
                      aria-valuemin="0"
                      aria-valuemax="{{ ai_listing_summary_quota.feature_limit }}"
                      aria-valuenow="{{ ai_listing_summary_quota.feature_used }}">
-                    <div class="ws-ai-pro__quota-fill" data-ai-quota-fill style="width: {{ ai_listing_summary_quota.feature_percent_used }}%;"></div>
+                    <div class="ws-ai-studio__quota-fill" data-ai-quota-fill style="width: {{ ai_listing_summary_quota.feature_percent_used }}%;"></div>
                 </div>
                 {% endif %}
                 {% endif %}
             </div>
-            <span class="ws-ai-pro__glyph" aria-hidden="true">
-                {% include 'includes/icon_slot.html' with decor='ai' size='inline' class_name='ws-ai-pro__glyph-img' only %}
-            </span>
+            <div class="ws-ai-studio__orb" aria-hidden="true">
+                {% include 'includes/icon_slot.html' with decor='ai' size='hero' class_name='ws-ai-studio__orb-img' only %}
+            </div>
         </header>
 
         {% if ai_listing_summary_tone_options %}
-        <div class="ws-ai-pro__studio" data-ai-summary-prefs>
-            <div class="ws-ai-pro__field">
-                <div class="ws-ai-pro__field-head">
-                    <span class="ws-ai-pro__field-label">لحن</span>
-                    <span class="ws-ai-pro__field-hint" data-ai-tone-hint aria-live="polite"></span>
+        <div class="ws-ai-studio__panel" data-ai-summary-prefs>
+            <div class="ws-ai-studio__block">
+                <div class="ws-ai-studio__block-head">
+                    <span class="ws-ai-studio__block-title">لحن</span>
+                    <span class="ws-ai-studio__block-hint" data-ai-tone-hint aria-live="polite"></span>
                 </div>
-                <div class="ws-ai-pro__seg" role="radiogroup" aria-label="لحن خلاصه">
+                <div class="ws-ai-studio__tone-grid" role="radiogroup" aria-label="لحن خلاصه">
                     {% for opt in ai_listing_summary_tone_options %}
-                    <label class="ws-ai-pro__seg-item">
+                    <label class="ws-ai-studio__pick ws-ai-studio__pick--tone">
                         <input type="radio"
                                name="aiListingSummaryTone"
                                value="{{ opt.key }}"
                                data-ai-tone-input
                                {% if opt.key == ai_listing_summary_default_tone %}checked{% endif %}>
-                        <span class="ws-ai-pro__seg-btn" title="{{ opt.hint }}">{{ opt.label }}</span>
+                        <span class="ws-ai-studio__pick-face" title="{{ opt.hint }}">
+                            <span class="ws-ai-studio__pick-ico"><i class="fas {{ opt.icon|default:'fa-circle' }}" aria-hidden="true"></i></span>
+                            <span class="ws-ai-studio__pick-label">{{ opt.label }}</span>
+                            <span class="ws-ai-studio__pick-hint">{{ opt.hint }}</span>
+                        </span>
                     </label>
                     {% endfor %}
                 </div>
             </div>
 
-            <div class="ws-ai-pro__field">
-                <div class="ws-ai-pro__field-head">
-                    <span class="ws-ai-pro__field-label">سبک</span>
-                    <span class="ws-ai-pro__field-hint" data-ai-style-hint aria-live="polite"></span>
+            <div class="ws-ai-studio__block">
+                <div class="ws-ai-studio__block-head">
+                    <span class="ws-ai-studio__block-title">سبک خروجی</span>
+                    <span class="ws-ai-studio__block-hint" data-ai-style-hint aria-live="polite"></span>
                 </div>
-                <div class="ws-ai-pro__seg ws-ai-pro__seg--styles" role="radiogroup" aria-label="سبک خلاصه">
+                <div class="ws-ai-studio__style-rail" role="radiogroup" aria-label="سبک خلاصه">
                     {% for opt in ai_listing_summary_style_options %}
-                    <label class="ws-ai-pro__seg-item">
+                    <label class="ws-ai-studio__pick ws-ai-studio__pick--style">
                         <input type="radio"
                                name="aiListingSummaryStyle"
                                value="{{ opt.key }}"
                                data-ai-style-input
                                {% if opt.key == ai_listing_summary_default_style %}checked{% endif %}>
-                        <span class="ws-ai-pro__seg-btn" title="{{ opt.hint }}">{{ opt.label }}</span>
+                        <span class="ws-ai-studio__pick-face" title="{{ opt.hint }}">
+                            <span class="ws-ai-studio__pick-ico"><i class="fas {{ opt.icon|default:'fa-file' }}" aria-hidden="true"></i></span>
+                            <span class="ws-ai-studio__pick-label">{{ opt.label }}</span>
+                        </span>
                     </label>
                     {% endfor %}
                 </div>
             </div>
 
             <button type="button"
-                    class="ws-ai-pro__submit ws-ai-trigger"
+                    class="ws-ai-studio__go ws-ai-trigger"
                     data-ai-feature="listing_summary"
                     data-ai-url="{{ ai_summary_url }}">
-                <span class="ws-ai-pro__submit-icon" aria-hidden="true">
-                    {% include 'includes/icon_slot.html' with decor='ai_wand' size='inline' class_name='ws-ai-pro__submit-icon-img' only %}
+                <span class="ws-ai-studio__go-shine" aria-hidden="true"></span>
+                <span class="ws-ai-studio__go-ico" aria-hidden="true">
+                    {% include 'includes/icon_slot.html' with decor='ai_wand' size='inline' class_name='ws-ai-studio__go-ico-img' only %}
                 </span>
-                <span class="ws-ai-card__cta-label">تولید خلاصه</span>
+                <span class="ws-ai-card__cta-label">ساخت خلاصه هوشمند</span>
             </button>
         </div>
         {% else %}
         <button type="button"
-                class="ws-ai-pro__submit ws-ai-trigger ws-ai-pro__submit--solo"
+                class="ws-ai-studio__go ws-ai-trigger ws-ai-studio__go--solo"
                 data-ai-feature="listing_summary"
                 data-ai-url="{{ ai_summary_url }}">
-            <span class="ws-ai-card__cta-label">تولید خلاصه</span>
+            <span class="ws-ai-card__cta-label">ساخت خلاصه هوشمند</span>
         </button>
         {% endif %}
 
-        <div class="ws-ai-pro__canvas" data-ai-body>
-            <div class="ws-ai-pro__placeholder" data-ai-empty>
-                <span class="ws-ai-pro__placeholder-line" aria-hidden="true"></span>
-                <p class="ws-ai-pro__placeholder-title">آماده تولید</p>
-                <p class="ws-ai-pro__placeholder-desc">لحن و سبک را انتخاب کنید؛ خروجی بر پایه داده‌های همین فایل ساخته می‌شود.</p>
+        <div class="ws-ai-studio__stage" data-ai-body>
+            <div class="ws-ai-studio__idle" data-ai-empty>
+                <div class="ws-ai-studio__mock" aria-hidden="true">
+                    <div class="ws-ai-studio__mock-card ws-ai-studio__mock-card--a">
+                        <i class="fas fa-chart-line"></i>
+                        <span></span><span></span>
+                    </div>
+                    <div class="ws-ai-studio__mock-card ws-ai-studio__mock-card--b">
+                        <i class="fas fa-building"></i>
+                        <span></span><span></span>
+                    </div>
+                    <div class="ws-ai-studio__mock-card ws-ai-studio__mock-card--c">
+                        <i class="fas fa-handshake"></i>
+                        <span></span>
+                    </div>
+                </div>
+                <p class="ws-ai-studio__idle-title">یک کلیک تا خلاصه حرفه‌ای</p>
+                <p class="ws-ai-studio__idle-desc">لحن و سبک را انتخاب کنید، سپس دکمه بالا را بزنید.</p>
             </div>
             <div class="ws-ai-result ws-ai-card__result" data-ai-result hidden></div>
         </div>
 
-        <footer class="ws-ai-pro__fineprint">
-            <span>اعداد از فایلینگ · AI توضیح می‌دهد</span>
+        <footer class="ws-ai-studio__foot">
+            <i class="fas fa-shield-halved" aria-hidden="true"></i>
+            <span>اعداد از فایلینگ شما · AI فقط توضیح می‌دهد</span>
         </footer>
     </div>
 </section>

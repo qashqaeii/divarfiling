@@ -121,10 +121,14 @@
         const toneHint = panel.querySelector('[data-ai-tone-hint]');
         const styleHint = panel.querySelector('[data-ai-style-hint]');
         if (toneHint && toneInput) {
-            toneHint.textContent = toneInput.closest('label')?.querySelector('.ws-ai-pro__seg-btn, .ws-ai-summary-prefs__opt-pill')?.getAttribute('title') || '';
+            const face = toneInput.closest('label')?.querySelector('.ws-ai-studio__pick-face, .ws-ai-pro__seg-btn');
+            toneHint.textContent = face?.getAttribute('title')
+                || toneInput.closest('label')?.querySelector('.ws-ai-studio__pick-hint')?.textContent
+                || '';
         }
         if (styleHint && styleInput) {
-            styleHint.textContent = styleInput.closest('label')?.querySelector('.ws-ai-pro__seg-btn, .ws-ai-summary-prefs__opt-pill')?.getAttribute('title') || '';
+            const face = styleInput.closest('label')?.querySelector('.ws-ai-studio__pick-face, .ws-ai-pro__seg-btn');
+            styleHint.textContent = face?.getAttribute('title') || '';
         }
     }
 

@@ -197,6 +197,58 @@ class ContractPdfView(APIView):
         return response
 
 
+class ContractWizardCustomerSearchView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        from contracts.services.wizard_sources import search_wizard_customers
+
+        q = request.GET.get('q', '')
+        try:
+            limit = min(int(request.GET.get('limit', 20)), 40)
+        except (TypeError, ValueError):
+            limit = 20
+        return api_ok({'results': search_wizard_customers(request.user, q, limit=limit)})
+
+
+class ContractWizardCustomerDetailView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, customer_id):
+        from contracts.services.wizard_sources import wizard_customer_party_payload
+
+        payload = wizard_customer_party_payload(request.user, customer_id)
+        if not payload:
+            return api_error('مخاطب یافت نشد.', code='NOT_FOUND', status=404)
+        return api_ok({'party': payload})
+
+
+class ContractWizardPropertySearchView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        from contracts.services.wizard_sources import search_wizard_properties
+
+        q = request.GET.get('q', '')
+        try:
+            limit = min(int(request.GET.get('limit', 20)), 40)
+        except (TypeError, ValueError):
+            limit = 20
+        return api_ok({'results': search_wizard_properties(request.user, q, limit=limit)})
+
+
+class ContractWizardPropertyDetailView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, property_id):
+        from contracts.services.wizard_sources import wizard_property_payload
+
+        payload = wizard_property_payload(request.user, property_id)
+        if not payload:
+            return api_error('فایل شخصی یافت نشد.', code='NOT_FOUND', status=404)
+        return api_ok({'property': payload})
+
+
 class ContractHandoverView(APIView):
     permission_classes = [IsAuthenticated]
 

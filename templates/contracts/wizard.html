@@ -8,12 +8,13 @@
 <link rel="stylesheet" href="{% static 'contracts/css/workspace.css' %}?v=4">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-ecosystem.css' %}?v=2">
 <link rel="stylesheet" href="{% static 'contracts/css/contracts-manage.css' %}?v=4">
-<link rel="stylesheet" href="{% static 'contracts/css/contracts-contract-wizard.css' %}?v=4">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-zonkan.css' %}?v=7">
+<link rel="stylesheet" href="{% static 'contracts/css/contracts-contract-wizard.css' %}?v=5">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-mobile-v2-contracts.css' %}?v=1">
 {% endblock %}
 
 {% block crm_content %}
-<div class="crm-page-chrome crm-contract-manage crm-contract-wizard ct-wizard ct-contract-wizard{% if wizard_step == 'review' %} ct-wizard--review{% endif %}" data-contract-id="{{ contract.pk }}"{% if deal %} data-deal-id="{{ deal.pk }}"{% endif %} data-contract-type="{{ contract.contract_type }}" data-current-step="{{ wizard_step }}">
+<div class="crm-page-chrome crm-contract-manage crm-contract-wizard ct-wizard ct-contract-wizard{% if wizard_step == 'review' %} ct-wizard--review{% endif %}" data-contract-id="{{ contract.pk }}"{% if deal %} data-deal-id="{{ deal.pk }}"{% endif %} data-contract-type="{{ contract.contract_type }}" data-current-step="{{ wizard_step }}"{% if wizard_enable_pickers %} data-enable-pickers="1" data-api-customers="{% url 'workspace:contract_wizard_customer_search' %}" data-api-properties="{% url 'workspace:contract_wizard_property_search' %}"{% endif %}>
     <div class="ct-manage-inner">
 
         <div class="ct-manage-topbar">
@@ -139,6 +140,30 @@
                         </div>
                     </div>
                     <div class="ct-party-card__body">
+                        {% if wizard_enable_pickers %}
+                        <div class="ct-party-contact-link{% if p.customer_id %} is-linked{% endif %}" data-ct-party-contact-link>
+                            <button type="button" class="ct-party-contact-link__pick" data-ct-party-pick{% if p.customer_id %} hidden{% endif %}>
+                                <i class="fas fa-address-book" aria-hidden="true"></i>
+                                <span>انتخاب از مخاطبین</span>
+                                <em>یا اطلاعات را دستی وارد کنید</em>
+                            </button>
+                            <div class="ct-party-contact-link__linked" data-ct-party-linked{% if not p.customer_id %} hidden{% endif %}>
+                                <div class="ct-party-contact-link__linked-main">
+                                    <i class="fas fa-check-circle" aria-hidden="true"></i>
+                                    <div>
+                                        <strong data-ct-party-linked-name">{% if p.first_name or p.last_name %}{{ p.first_name }} {{ p.last_name }}{% elif p.company_name %}{{ p.company_name }}{% else %}مخاطب انتخاب‌شده{% endif %}</strong>
+                                        <span dir="ltr" data-ct-party-linked-phone">{{ p.mobile }}</span>
+                                        <small>انتخاب‌شده از مخاطبین</small>
+                                    </div>
+                                </div>
+                                <div class="ct-party-contact-link__linked-actions">
+                                    <button type="button" class="crm-dash-act" data-ct-party-change>تغییر مخاطب</button>
+                                    <button type="button" class="crm-dash-act" data-ct-party-clear>حذف اتصال</button>
+                                </div>
+                            </div>
+                            <input type="hidden" name="party_{{ forloop.counter0 }}_customer_id" value="{{ p.customer_id|default:'' }}" data-ct-party-customer-id>
+                        </div>
+                        {% endif %}
                         <div class="crm-contract-form-grid">
                             <label>نقش
                                 <select class="crm-input" name="party_{{ forloop.counter0 }}_role">
@@ -196,6 +221,30 @@
             <div class="crm-deal-panel-body">
             {% if prefill_property %}
             <div class="crm-contract-prefill crm-contract-prefill--info"><i class="fas fa-circle-info"></i> اطلاعات ملک از فایل شخصی وارد شده است.</div>
+            {% endif %}
+            {% if wizard_enable_pickers %}
+            <div class="ct-property-file-link{% if wizard_data.property.crm_property_id %} is-linked{% endif %}" id="ct-property-file-link">
+                <button type="button" class="ct-property-file-link__pick" data-ct-property-pick{% if wizard_data.property.crm_property_id %} hidden{% endif %}>
+                    <i class="fas fa-folder-open" aria-hidden="true"></i>
+                    <span>انتخاب از فایل‌های شخصی</span>
+                    <em>یا مشخصات ملک را دستی وارد کنید</em>
+                </button>
+                <div class="ct-property-file-link__linked" data-ct-property-linked{% if not wizard_data.property.crm_property_id %} hidden{% endif %}>
+                    <div class="ct-property-file-link__linked-main">
+                        <i class="fas fa-check-circle" aria-hidden="true"></i>
+                        <div>
+                            <strong data-ct-property-linked-title">{{ wizard_data.property.crm_property_title|default:"فایل انتخاب‌شده" }}</strong>
+                            <small>انتخاب‌شده از فایل‌های شخصی</small>
+                        </div>
+                    </div>
+                    <div class="ct-property-file-link__linked-actions">
+                        <button type="button" class="crm-dash-act" data-ct-property-change>تغییر فایل</button>
+                        <button type="button" class="crm-dash-act" data-ct-property-clear>حذف اتصال</button>
+                    </div>
+                </div>
+                <input type="hidden" name="prop_crm_property_id" id="prop_crm_property_id" value="{{ wizard_data.property.crm_property_id|default:'' }}">
+                <input type="hidden" name="prop_crm_title" value="{{ wizard_data.property.crm_property_title|default:'' }}">
+            </div>
             {% endif %}
             <div class="crm-contract-form-grid ct-wizard-field-grid">
                 <label class="ct-field-labeled">
@@ -1128,9 +1177,30 @@
     </form>
 
     </div>{# .ct-manage-inner #}
+
+    {% if wizard_enable_pickers %}
+    <dialog class="crm-zonkan-modal ct-wizard-picker-modal" id="ct-wizard-picker-modal" aria-labelledby="ctWizardPickerTitle">
+        <div class="crm-zonkan-modal__box ct-wizard-picker-modal__box">
+            <header class="crm-zonkan-modal__head">
+                <h3 class="crm-zonkan-modal__title" id="ctWizardPickerTitle" data-ct-picker-title>انتخاب</h3>
+                <button type="button" class="crm-zonkan-modal__close" data-ct-picker-close aria-label="بستن">
+                    <i class="fas fa-times"></i>
+                </button>
+            </header>
+            <div class="crm-zonkan-modal__body ct-wizard-picker-modal__body">
+                <div class="crm-input-search ct-wizard-picker-search">
+                    <i class="fas fa-search" aria-hidden="true"></i>
+                    <input type="search" class="crm-input" data-ct-picker-search autocomplete="off" inputmode="search">
+                </div>
+                <div class="ct-wizard-picker-results" data-ct-picker-results role="listbox" aria-label="نتایج"></div>
+            </div>
+        </div>
+    </dialog>
+    {% endif %}
 </div>
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'contracts/js/wizard.js' %}?v=13"></script>
+{% if wizard_enable_pickers %}<script src="{% static 'contracts/js/wizard-pickers.js' %}?v=1"></script>{% endif %}
+<script src="{% static 'contracts/js/wizard.js' %}?v=14"></script>
 {% endblock %}

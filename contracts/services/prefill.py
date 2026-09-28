@@ -20,19 +20,10 @@ from workspace.models import CRMDeal, Customer
 
 
 def _customer_to_party_data(customer: Customer, role: str) -> Dict[str, Any]:
-    person_type = PERSON_TYPE_LEGAL if customer.is_legal_entity else PERSON_TYPE_NATURAL
-    payload = {
-        'role': role,
-        'customer_id': customer.pk,
-        'person_type': person_type,
-        'first_name': customer.name.split()[0] if customer.name else '',
-        'last_name': ' '.join(customer.name.split()[1:]) if customer.name else '',
-        'national_id': '' if person_type == PERSON_TYPE_LEGAL else (customer.national_id or ''),
-        'company_national_id': (customer.national_id or '') if person_type == PERSON_TYPE_LEGAL else '',
-        'mobile': customer.phone or '',
-        'address': '',
-        'company_name': customer.company_name or '',
-    }
+    from contracts.services.wizard_sources import customer_wizard_party_fields
+
+    payload = customer_wizard_party_fields(customer)
+    payload['role'] = role
     return sanitize_party_payload(payload)
 
 

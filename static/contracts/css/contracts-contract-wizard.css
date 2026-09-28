@@ -1025,4 +1025,169 @@ body:has(.ct-contract-wizard) .ws-bottom-nav {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
+
+/* ——— Contact / property pickers (قرارداد بدون معامله) ——— */
+.ct-party-contact-link,
+.ct-property-file-link {
+    margin-bottom: 0.85rem;
+    padding: 0.65rem 0.75rem;
+    border: 1px solid var(--ct-m-border, rgba(15, 23, 42, 0.08));
+    border-radius: 12px;
+    background: linear-gradient(180deg, rgba(99, 102, 241, 0.04), transparent);
+}
+
+.ct-party-contact-link__pick,
+.ct-property-file-link__pick {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.15rem;
+    width: 100%;
+    padding: 0.35rem 0.15rem;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    text-align: right;
+    font: inherit;
+    color: inherit;
+}
+
+.ct-party-contact-link__pick i,
+.ct-property-file-link__pick i {
+    color: var(--crm-brand, #6366f1);
+    font-size: 1rem;
+    margin-bottom: 0.15rem;
+}
+
+.ct-party-contact-link__pick span,
+.ct-property-file-link__pick span {
+    font-weight: 650;
+    font-size: 0.82rem;
+}
+
+.ct-party-contact-link__pick em,
+.ct-property-file-link__pick em {
+    font-size: 0.68rem;
+    color: var(--ct-m-muted, #64748b);
+    font-style: normal;
+}
+
+.ct-party-contact-link__linked-main,
+.ct-property-file-link__linked-main {
+    display: flex;
+    gap: 0.55rem;
+    align-items: flex-start;
+}
+
+.ct-party-contact-link__linked-main i,
+.ct-property-file-link__linked-main i {
+    color: #059669;
+    margin-top: 0.15rem;
+}
+
+.ct-party-contact-link__linked-main strong,
+.ct-property-file-link__linked-main strong {
+    display: block;
+    font-size: 0.82rem;
+}
+
+.ct-party-contact-link__linked-main small,
+.ct-property-file-link__linked-main small {
+    display: block;
+    font-size: 0.62rem;
+    color: var(--ct-m-muted, #64748b);
+    margin-top: 0.1rem;
+}
+
+.ct-party-contact-link__linked-actions,
+.ct-property-file-link__linked-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-top: 0.55rem;
+}
+
+.ct-wizard-picker-modal {
+    border: 0;
+    padding: 0;
+    max-width: min(520px, 96vw);
+    width: 100%;
+    background: transparent;
+}
+
+.ct-wizard-picker-modal::backdrop {
+    background: rgba(15, 23, 42, 0.45);
+}
+
+.ct-wizard-picker-modal__box {
+    max-height: min(82vh, 640px);
+    display: flex;
+    flex-direction: column;
+}
+
+.ct-wizard-picker-modal__body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    min-height: 0;
+}
+
+.ct-wizard-picker-search {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+}
+
+.ct-wizard-picker-search .crm-input {
+    flex: 1;
+}
+
+.ct-wizard-picker-results {
+    overflow: auto;
+    max-height: 50vh;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.ct-picker-item {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.12rem;
+    width: 100%;
+    padding: 0.55rem 0.65rem;
+    border: 1px solid var(--ct-m-border, rgba(15, 23, 42, 0.08));
+    border-radius: 10px;
+    background: #fff;
+    cursor: pointer;
+    text-align: right;
+    font: inherit;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.ct-picker-item:hover,
+.ct-picker-item:focus-visible {
+    border-color: var(--crm-brand, #6366f1);
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.12);
+}
+
+.ct-picker-item strong {
+    font-size: 0.8rem;
+}
+
+.ct-picker-item span,
+.ct-picker-item em {
+    font-size: 0.68rem;
+    color: var(--ct-m-muted, #64748b);
+}
+
+.ct-picker-hint,
+.ct-picker-empty,
+.ct-picker-loading {
+    font-size: 0.72rem;
+    color: var(--ct-m-muted, #64748b);
+    text-align: center;
+    padding: 1rem 0.5rem;
+}
 

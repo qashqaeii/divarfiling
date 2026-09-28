@@ -20,6 +20,26 @@ public_urlpatterns = [
 standalone_urlpatterns = [
     path('crm/contracts/', views.ContractsDashboardView.as_view(), name='contracts_dashboard'),
     path('crm/contracts/api/deals/', views.DealSearchApiView.as_view(), name='contract_deal_search'),
+    path(
+        'crm/contracts/api/wizard/customers/',
+        views.ContractWizardCustomerSearchView.as_view(),
+        name='contract_wizard_customer_search',
+    ),
+    path(
+        'crm/contracts/api/wizard/customers/<int:customer_id>/',
+        views.ContractWizardCustomerDetailView.as_view(),
+        name='contract_wizard_customer_detail',
+    ),
+    path(
+        'crm/contracts/api/wizard/properties/',
+        views.ContractWizardPropertySearchView.as_view(),
+        name='contract_wizard_property_search',
+    ),
+    path(
+        'crm/contracts/api/wizard/properties/<int:property_id>/',
+        views.ContractWizardPropertyDetailView.as_view(),
+        name='contract_wizard_property_detail',
+    ),
     path('crm/contracts/create/', views.ContractCreateStandaloneView.as_view(), name='contract_create_standalone'),
     path(
         'crm/contracts/<int:contract_id>/wizard/',

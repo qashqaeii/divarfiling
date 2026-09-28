@@ -269,7 +269,10 @@ class ContractWizardView(ContractAccessMixin, TemplateView):
             'step_total': len(display_steps),
             'next_step_label': next_label,
             'prefill_parties': any(p.get('customer_id') for p in (wizard.get('parties') or [])),
-            'prefill_property': bool(wizard.get('property')),
+            'prefill_property': bool(wizard.get('property')) or bool(
+                (wizard.get('property') or {}).get('crm_property_id'),
+            ),
+            'wizard_enable_pickers': not bool(deal),
             'prefill_financial': bool(wizard.get('financial')),
             'selected_clause_codes': selected_codes,
             'legal_disclaimer': LEGAL_DISCLAIMER_FULL,
@@ -624,3 +627,49 @@ class ContractsDashboardView(
             'filter_qs': self.request.GET.urlencode(),
         })
         return ctx
+
+
+class ContractWizardCustomerSearchView(ContractLicenseRequiredMixin, View):
+    """جستجوی مخاطب برای ویزارد قرارداد (بدون بارگذاری لیست کامل)."""
+
+    def get(self, request):
+        from contracts.services.wizard_sources import search_wizard_customers
+
+        q = request.GET.get('q', '')
+        try:
+            limit = min(int(request.GET.get('limit', 20)), 40)
+        except (TypeError, ValueError):
+            limit = 20
+        return JsonResponse({'ok': True, 'results': search_wizard_customers(request.user, q, limit=limit)})
+
+
+class ContractWizardCustomerDetailView(ContractLicenseRequiredMixin, View):
+    def get(self, request, customer_id):
+        from contracts.services.wizard_sources import wizard_customer_party_payload
+
+        payload = wizard_customer_party_payload(request.user, customer_id)
+        if not payload:
+            return JsonResponse({'ok': False, 'error': 'مخاطب یافت نشد'}, status=404)
+        return JsonResponse({'ok': True, 'party': payload})
+
+
+class ContractWizardPropertySearchView(ContractLicenseRequiredMixin, View):
+    def get(self, request):
+        from contracts.services.wizard_sources import search_wizard_properties
+
+        q = request.GET.get('q', '')
+        try:
+            limit = min(int(request.GET.get('limit', 20)), 40)
+        except (TypeError, ValueError):
+            limit = 20
+        return JsonResponse({'ok': True, 'results': search_wizard_properties(request.user, q, limit=limit)})
+
+
+class ContractWizardPropertyDetailView(ContractLicenseRequiredMixin, View):
+    def get(self, request, property_id):
+        from contracts.services.wizard_sources import wizard_property_payload
+
+        payload = wizard_property_payload(request.user, property_id)
+        if not payload:
+            return JsonResponse({'ok': False, 'error': 'فایل شخصی یافت نشد'}, status=404)
+        return JsonResponse({'ok': True, 'property': payload})

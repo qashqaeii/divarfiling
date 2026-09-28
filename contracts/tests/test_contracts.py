@@ -247,6 +247,66 @@ class ContractWizardUXTests(TestCase):
         self.assertTrue(data['has_elevator'])
 
 
+class ContractWizardPickerTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='picker_u', phone='09129990001', password='x')
+        self.other = User.objects.create_user(username='picker_o', phone='09129990002', password='x')
+        self.customer = Customer.objects.create(
+            user=self.user, name='علی رضایی', phone='09121112233', national_id='1234567890',
+        )
+        self.prop = CRMProperty.objects.create(
+            user=self.user, title='آپارتمان ونک', address='خیابان ولیعصر', area=95,
+            neighborhood='ونک', city='تهران', has_parking=True,
+        )
+        Customer.objects.create(user=self.other, name='مخاطب دیگر', phone='09120000099')
+        CRMProperty.objects.create(user=self.other, title='ملک دیگران', address='مخفی')
+        grant_bot_license(self.user)
+
+    def test_customer_search_scoped_to_user(self):
+        self.client.force_login(self.user)
+        url = reverse('workspace:contract_wizard_customer_search')
+        resp = self.client.get(url, {'q': 'علی'})
+        self.assertEqual(resp.status_code, 200)
+        ids = [r['id'] for r in resp.json()['results']]
+        self.assertIn(self.customer.pk, ids)
+        self.assertNotIn(Customer.objects.get(user=self.other).pk, ids)
+
+    def test_property_payload_mapping(self):
+        from contracts.services.wizard_sources import wizard_property_payload
+
+        payload = wizard_property_payload(self.user, self.prop.pk)
+        self.assertIsNotNone(payload)
+        self.assertEqual(payload['crm_property_id'], self.prop.pk)
+        self.assertEqual(payload['address'], 'خیابان ولیعصر')
+        self.assertTrue(payload['has_parking'])
+
+    def test_wizard_persists_customer_id_in_parties(self):
+        c = create_contract(self.user, CONTRACT_TYPE_LEASE)
+        parties = parse_wizard_step({
+            'party_0_role': 'landlord',
+            'party_0_customer_id': str(self.customer.pk),
+            'party_0_person_type': 'natural',
+            'party_0_first_name': 'علی',
+            'party_0_last_name': 'رضایی',
+            'party_0_mobile': '09121112233',
+            'party_1_role': 'tenant',
+            'party_1_person_type': 'natural',
+            'party_1_first_name': 'م',
+            'party_1_last_name': 'م',
+            'party_1_mobile': '09123334444',
+        }, 'parties', 'lease')
+        self.assertEqual(parties[0].get('customer_id'), self.customer.pk)
+
+    def test_standalone_wizard_shows_picker_ui(self):
+        c = create_contract(self.user, CONTRACT_TYPE_LEASE)
+        self.client.force_login(self.user)
+        url = reverse('workspace:contract_wizard_standalone', kwargs={'contract_id': c.pk})
+        resp = self.client.get(url + '?step=parties')
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, 'انتخاب از مخاطبین')
+        self.assertContains(resp, 'data-enable-pickers="1"')
+
+
 class FinalViewContextTests(TestCase):
     def test_build_final_view_includes_document_when_verified(self):
         from contracts.models import Contract, ContractParty, ContractVersion

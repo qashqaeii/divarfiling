@@ -48,6 +48,14 @@ def sanitize_party_payload(party: Dict[str, Any]) -> Dict[str, Any]:
         data.get('representative_national_id', ''),
     )
     data['postal_code'] = sanitize_postal_code(data.get('postal_code', ''))
+    cid = data.get('customer_id')
+    if cid in (None, '', 0, '0'):
+        data.pop('customer_id', None)
+    else:
+        try:
+            data['customer_id'] = int(cid)
+        except (TypeError, ValueError):
+            data.pop('customer_id', None)
     return data
 
 

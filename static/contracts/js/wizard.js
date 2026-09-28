@@ -412,6 +412,10 @@
       el.addEventListener('change', function () { updatePartySummary(card); });
     });
     updatePartySummary(card);
+    card.__updatePartySummary = function () { updatePartySummary(card); };
+    if (window.ctWizardPickers && window.ctWizardPickers.bindPartyContactLink) {
+      window.ctWizardPickers.bindPartyContactLink(card);
+    }
   }
 
   if (partyContainer) {
@@ -436,7 +440,11 @@
       '<div class="ct-menu-wrap ct-party-menu">' +
       '<button type="button" class="crm-dash-act crm-dash-act--icon" aria-label="عملیات"><i class="fas fa-ellipsis-v"></i></button>' +
       '<div class="ct-menu-panel"><button type="button" class="ct-party-card__delete is-destructive">حذف از قرارداد</button></div></div></div></div>' +
-      '<div class="ct-party-card__body"><div class="crm-contract-form-grid">' +
+      '<div class="ct-party-card__body">' +
+      (window.ctWizardPickers && window.ctWizardPickers.partyContactLinkHtml
+        ? window.ctWizardPickers.partyContactLinkHtml(idx, '')
+        : '') +
+      '<div class="crm-contract-form-grid">' +
       '<label>نقش<select class="crm-input" name="party_' + idx + '_role">' + roleOptions + '</select></label>' +
       '<label>نوع<select class="crm-input" name="party_' + idx + '_person_type"><option value="natural">حقیقی</option><option value="legal">حقوقی</option></select></label>' +
       '<label>نام<input class="crm-input" name="party_' + idx + '_first_name"></label>' +

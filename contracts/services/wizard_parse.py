@@ -34,6 +34,7 @@ def parse_parties(post: QueryDict) -> List[Dict[str, Any]]:
             continue
         parties.append(sanitize_party_payload({
             'role': _get(post, f'{prefix}role'),
+            'customer_id': _get(post, f'{prefix}customer_id'),
             'person_type': _get(post, f'{prefix}person_type', 'natural'),
             'first_name': _get(post, f'{prefix}first_name'),
             'last_name': _get(post, f'{prefix}last_name'),
@@ -63,9 +64,22 @@ def _parse_utilities(post: QueryDict) -> Dict[str, Any]:
     return utilities
 
 
+def _optional_int(val: str):
+    val = (val or '').strip()
+    if not val:
+        return None
+    try:
+        return int(val)
+    except ValueError:
+        return None
+
+
 def parse_property(post: QueryDict) -> Dict[str, Any]:
     common_areas = [a for a in COMMON_AREAS if post.get(f'common_{a}') == 'on']
-    return {
+    crm_property_id = _optional_int(_get(post, 'prop_crm_property_id'))
+    data = {
+        'crm_property_id': crm_property_id,
+        'crm_property_title': _get(post, 'prop_crm_title'),
         'property_type': _get(post, 'prop_property_type'),
         'usage': _get(post, 'prop_usage'),
         'province': _get(post, 'prop_province'),
@@ -110,6 +124,9 @@ def parse_property(post: QueryDict) -> Dict[str, Any]:
         'has_separation_minutes': post.get('prop_has_separation_minutes') == 'on',
         'declared_by_parties': True,
     }
+    if not data.get('crm_property_id'):
+        data.pop('crm_property_id', None)
+    return data
 
 
 def _parse_costs(post: QueryDict) -> Dict[str, str]:

@@ -213,6 +213,30 @@ class ManagementAIPromptVersionTests(TestCase):
 
 
 class ManagementAIValidatorTests(TestCase):
+    def test_bare_metric_refs_normalized(self):
+        snap = {
+            'metrics': {
+                'retention_d30': {'current': 12},
+                'users_without_license': {'current': 3},
+            },
+        }
+        data = {
+            **SAMPLE_AI,
+            'insights': [{
+                'title': 'x',
+                'description': 'y',
+                'type': 'interpretation',
+                'metric_refs': ['retention_d30', 'users_without_license'],
+                'confidence': 0.5,
+            }],
+        }
+        cleaned, errs = validate_analysis_response(data, snap)
+        self.assertEqual(errs, [])
+        self.assertEqual(
+            cleaned['insights'][0]['metric_refs'],
+            ['metrics.retention_d30', 'metrics.users_without_license'],
+        )
+
     def test_invalid_metric_refs_rejected(self):
         snap = {'metrics': {'users_new_period': {'current': 5}}}
         bad = {**SAMPLE_AI, 'insights': [{

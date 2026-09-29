@@ -41,22 +41,62 @@ def _valid_ref(ref: str, allowed: Set[str]) -> bool:
     return any(ref.startswith(p + '.') for p in allowed)
 
 
+def _normalize_metric_ref(ref: str, allowed: Set[str]) -> str | None:
+    """Map provider shorthand (e.g. retention_d30) to snapshot paths (metrics.retention_d30)."""
+    if not ref:
+        return None
+    text = ref.strip()
+    if _valid_ref(text, allowed):
+        return text
+    if not text.startswith('metrics.'):
+        prefixed = f'metrics.{text}'
+        if _valid_ref(prefixed, allowed):
+            return prefixed
+    suffix_matches = [
+        p for p in allowed
+        if p == text or p.endswith(f'.{text}') or p.split('.')[-1] == text
+    ]
+    if len(suffix_matches) == 1:
+        return suffix_matches[0]
+    if len(suffix_matches) > 1:
+        preferred = f'metrics.{text}'
+        if preferred in suffix_matches:
+            return preferred
+        return min(suffix_matches, key=len)
+    return None
+
+
+def _normalize_metric_refs(
+    refs: Any,
+    allowed: Set[str],
+    ctx: str,
+    errors: List[str],
+) -> List[str]:
+    if not refs:
+        return []
+    if not isinstance(refs, list):
+        errors.append(f'{ctx}: metric_refs must be a list')
+        return []
+    normalized: List[str] = []
+    for ref in refs:
+        if not isinstance(ref, str):
+            errors.append(f'{ctx}: metric_ref must be a string')
+            continue
+        canon = _normalize_metric_ref(ref, allowed)
+        if canon:
+            if canon not in normalized:
+                normalized.append(canon)
+        else:
+            errors.append(f'{ctx}: invalid metric_ref {ref!r}')
+    return normalized
+
+
 def validate_analysis_response(
     data: Dict[str, Any],
     snapshot: Dict[str, Any],
 ) -> Tuple[Dict[str, Any], List[str]]:
     errors: List[str] = []
     allowed_refs = _collect_metric_paths(snapshot)
-
-    def check_refs(refs: Any, ctx: str) -> None:
-        if not refs:
-            return
-        if not isinstance(refs, list):
-            errors.append(f'{ctx}: metric_refs must be a list')
-            return
-        for ref in refs:
-            if not isinstance(ref, str) or not _valid_ref(ref, allowed_refs):
-                errors.append(f'{ctx}: invalid metric_ref {ref!r}')
 
     cleaned = {
         'summary': str(data.get('summary') or '').strip(),
@@ -75,12 +115,14 @@ def validate_analysis_response(
         for i, item in enumerate(insights[:MAX_INSIGHTS]):
             if not isinstance(item, dict):
                 continue
-            check_refs(item.get('metric_refs'), f'insights[{i}]')
+            metric_refs = _normalize_metric_refs(
+                item.get('metric_refs'), allowed_refs, f'insights[{i}]', errors,
+            )
             cleaned['insights'].append({
                 'title': str(item.get('title') or ''),
                 'description': str(item.get('description') or ''),
                 'type': item.get('type') if item.get('type') in ('fact', 'interpretation', 'hypothesis') else 'interpretation',
-                'metric_refs': list(item.get('metric_refs') or []),
+                'metric_refs': metric_refs,
                 'confidence': float(item.get('confidence') or 0),
             })
 
@@ -90,7 +132,9 @@ def validate_analysis_response(
         for i, item in enumerate(actions[:MAX_ACTIONS]):
             if not isinstance(item, dict):
                 continue
-            check_refs(item.get('metric_refs'), f'actions[{i}]')
+            metric_refs = _normalize_metric_refs(
+                item.get('metric_refs'), allowed_refs, f'actions[{i}]', errors,
+            )
             target_ref = item.get('action_target_ref')
             if target_ref and target_ref not in targets:
                 errors.append(f'actions[{i}]: invalid action_target_ref {target_ref!r}')
@@ -100,7 +144,7 @@ def validate_analysis_response(
                 'priority': item.get('priority') if item.get('priority') in ('critical', 'high', 'medium', 'low') else 'medium',
                 'impact': item.get('impact') if item.get('impact') in ('high', 'medium', 'low') else 'medium',
                 'effort': item.get('effort') if item.get('effort') in ('high', 'medium', 'low') else 'medium',
-                'metric_refs': list(item.get('metric_refs') or []),
+                'metric_refs': metric_refs,
                 'action_target_ref': target_ref,
             })
 
@@ -113,11 +157,13 @@ def validate_analysis_response(
         for i, item in enumerate(block[:max_n]):
             if not isinstance(item, dict):
                 continue
-            check_refs(item.get('metric_refs'), f'{key}[{i}]')
+            metric_refs = _normalize_metric_refs(
+                item.get('metric_refs'), allowed_refs, f'{key}[{i}]', errors,
+            )
             entry = {
                 'title': str(item.get('title') or ''),
                 'description': str(item.get('description') or ''),
-                'metric_refs': list(item.get('metric_refs') or []),
+                'metric_refs': metric_refs,
             }
             if key == 'risks':
                 entry['severity'] = item.get('severity') if item.get('severity') in ('critical', 'high', 'medium', 'low') else 'medium'

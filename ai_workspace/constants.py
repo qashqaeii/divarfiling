@@ -165,7 +165,7 @@ PROMPT_VERSIONS = {
     FEATURE_UPLOAD_BRIEF: 'upload_brief_v1',
     FEATURE_NL_COMMAND: 'nl_command_v3',
     # max 20 chars — AIUsageLog.prompt_version
-    FEATURE_MANAGEMENT_ANALYSIS: 'mgmt_analysis_v1',
+    FEATURE_MANAGEMENT_ANALYSIS: 'mgmt_analysis_v2',
 }
 
 NL_COMMAND_INTENT_CREATE_REMINDER = 'create_reminder'

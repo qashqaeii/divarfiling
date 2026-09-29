@@ -18892,23 +18892,70 @@ button.crm-prop-hero-cover {
     font-size: 0.62rem;
 }
 
+/* Contact identity block (gender + legal) in contact form */
+.crm-contact-identity-block {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    padding: 0.85rem 0.95rem;
+    margin-bottom: 0.15rem;
+    border: 1px solid var(--ws-border-light, #e2e8f0);
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--ws-surface-2, #f8fafc) 70%, var(--ws-surface));
+}
+.crm-contact-identity-block .crm-gender-field {
+    margin-bottom: 0;
+}
+.crm-contact-legal-fields {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.65rem 0.75rem;
+    align-items: end;
+}
+.crm-contact-legal-toggle {
+    grid-column: 1 / -1;
+    margin-bottom: 0;
+    padding: 0.55rem 0.7rem;
+    border-radius: 10px;
+    border: 1px solid var(--ws-border);
+    background: var(--ws-surface);
+    min-height: 2.65rem;
+}
+.crm-contact-legal-toggle .crm-label-check {
+    margin: 0;
+    font-weight: 600;
+    color: var(--ws-text);
+}
+.crm-contact-legal-fields .crm-legal-field,
+.crm-contact-legal-fields .crm-contact-national-field {
+    margin-bottom: 0;
+}
+.crm-contact-legal-fields .crm-contact-national-field {
+    grid-column: 1 / -1;
+}
+@media (max-width: 560px) {
+    .crm-contact-legal-fields {
+        grid-template-columns: 1fr;
+    }
+}
+
 /* Contact gender segmented control */
 .crm-gender-segment {
-    display: inline-flex;
+    display: flex;
     align-items: stretch;
-    flex-wrap: wrap;
+    width: 100%;
     max-width: 100%;
-    padding: 2px;
+    padding: 3px;
     border: 1px solid var(--ws-border);
-    border-radius: 8px;
+    border-radius: 10px;
     background: var(--ws-surface-2);
-    gap: 2px;
+    gap: 3px;
 }
 .crm-gender-seg {
     position: relative;
     cursor: pointer;
     margin: 0;
-    flex: 1 1 auto;
+    flex: 1 1 0;
     min-width: 0;
 }
 .crm-gender-seg input {

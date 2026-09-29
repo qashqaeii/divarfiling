@@ -4,33 +4,108 @@
     class="ecc-section ecc-mgmt-ai-panel"
     id="ecc-mgmt-ai-{{ ai_section }}"
     data-mgmt-ai-panel
+    data-mgmt-ai-state="loading"
     data-mgmt-ai-section="{{ ai_section }}"
     data-mgmt-ai-label="{{ ai_section_label }}"
     data-mgmt-ai-get-url="{% url 'admin_panel_ai_analysis' ai_section %}{{ admin_panel_query_suffix|default:'?days=all' }}"
     data-mgmt-ai-post-url="{% url 'admin_panel_ai_analysis_generate' ai_section %}"
     aria-label="تحلیل هوشمند {{ ai_section_label }}"
+    aria-busy="true"
 >
+    <div class="ecc-mgmt-ai-glow" aria-hidden="true"></div>
+
     <header class="ecc-mgmt-ai-head">
-        <h2><i class="fas fa-sparkles" aria-hidden="true"></i> تحلیل هوشمند {{ ai_section_label }}</h2>
-        <p class="ecc-mgmt-ai-sub" data-mgmt-ai-status-text>در حال بارگذاری وضعیت…</p>
+        <div class="ecc-mgmt-ai-brand">
+            <span class="ecc-mgmt-ai-icon" aria-hidden="true">
+                <i class="fas fa-wand-magic-sparkles"></i>
+            </span>
+            <div class="ecc-mgmt-ai-titles">
+                <h2>تحلیل هوشمند <span class="ecc-mgmt-ai-section-name">{{ ai_section_label }}</span></h2>
+                <p class="ecc-mgmt-ai-tagline">خلاصهٔ مدیریتی بر اساس KPI همین صفحه — فقط با کلیک شما اجرا می‌شود</p>
+            </div>
+        </div>
+        <span class="ecc-mgmt-ai-status-pill" data-mgmt-ai-status-pill hidden>
+            <span class="ecc-mgmt-ai-status-dot" aria-hidden="true"></span>
+            <span data-mgmt-ai-status-pill-text></span>
+        </span>
     </header>
+
+    <p class="ecc-mgmt-ai-lead" data-mgmt-ai-status-text>در حال بارگذاری وضعیت…</p>
+
+    <div class="ecc-mgmt-ai-skeleton" data-mgmt-ai-skeleton aria-hidden="true">
+        <div class="ecc-mgmt-ai-skeleton-line ecc-mgmt-ai-skeleton-line--wide"></div>
+        <div class="ecc-mgmt-ai-skeleton-line"></div>
+        <div class="ecc-mgmt-ai-skeleton-line"></div>
+        <div class="ecc-mgmt-ai-skeleton-cards">
+            <div class="ecc-mgmt-ai-skeleton-card"></div>
+            <div class="ecc-mgmt-ai-skeleton-card"></div>
+        </div>
+    </div>
+
+    <div class="ecc-mgmt-ai-empty" data-mgmt-ai-empty hidden>
+        <div class="ecc-mgmt-ai-empty-visual" aria-hidden="true">
+            <i class="fas fa-chart-line"></i>
+        </div>
+        <strong>هنوز تحلیلی برای این بازه ثبت نشده</strong>
+        <p>با یک کلیک، مدل روی دادهٔ خلاصهٔ این بخش تحلیل می‌دهد — بدون دسترسی به جزئیات حساس.</p>
+    </div>
+
     <div class="ecc-mgmt-ai-body" data-mgmt-ai-body hidden>
-        <p class="ecc-mgmt-ai-summary" data-mgmt-ai-summary></p>
-        <ul class="ecc-mgmt-ai-list" data-mgmt-ai-insights></ul>
-        <p class="ecc-mgmt-ai-stale" data-mgmt-ai-stale hidden>
+        <blockquote class="ecc-mgmt-ai-summary-card">
+            <p class="ecc-mgmt-ai-summary" data-mgmt-ai-summary></p>
+        </blockquote>
+
+        <div class="ecc-mgmt-ai-block" data-mgmt-ai-insights-block hidden>
+            <h3 class="ecc-mgmt-ai-block-title"><i class="fas fa-lightbulb" aria-hidden="true"></i> نکات کلیدی</h3>
+            <div class="ecc-mgmt-ai-insights" data-mgmt-ai-insights role="list"></div>
+        </div>
+
+        <div class="ecc-mgmt-ai-block" data-mgmt-ai-actions-block hidden>
+            <h3 class="ecc-mgmt-ai-block-title"><i class="fas fa-bolt" aria-hidden="true"></i> اقدام‌های پیشنهادی</h3>
+            <div class="ecc-mgmt-ai-chips" data-mgmt-ai-actions role="list"></div>
+        </div>
+
+        <div class="ecc-mgmt-ai-block" data-mgmt-ai-risks-block hidden>
+            <h3 class="ecc-mgmt-ai-block-title"><i class="fas fa-shield-halved" aria-hidden="true"></i> ریسک‌ها</h3>
+            <div class="ecc-mgmt-ai-risks" data-mgmt-ai-risks role="list"></div>
+        </div>
+
+        <div class="ecc-mgmt-ai-stale" data-mgmt-ai-stale hidden role="status">
             <i class="fas fa-triangle-exclamation" aria-hidden="true"></i>
-            داده‌های این بخش از زمان آخرین تحلیل تغییر کرده‌اند.
-        </p>
-        <p class="ecc-mgmt-ai-meta" data-mgmt-ai-meta></p>
+            <span>داده‌های این بخش از زمان آخرین تحلیل تغییر کرده‌اند — برای به‌روزرسانی، «تحلیل مجدد» را بزنید.</span>
+        </div>
+
+        <footer class="ecc-mgmt-ai-meta" data-mgmt-ai-meta-wrap hidden>
+            <span data-mgmt-ai-meta></span>
+            <span class="ecc-mgmt-ai-meta-sep" aria-hidden="true">·</span>
+            <span data-mgmt-ai-provider></span>
+        </footer>
     </div>
-    <div class="ecc-mgmt-ai-actions">
-        <button type="button" class="ecc-btn ecc-btn--primary ecc-btn--sm" data-mgmt-ai-generate>
-            دریافت تحلیل AI
-        </button>
-        <button type="button" class="ecc-btn ecc-btn--ghost ecc-btn--sm" data-mgmt-ai-regenerate hidden>
-            تحلیل مجدد
-        </button>
+
+    <div class="ecc-mgmt-ai-footer">
+        <div class="ecc-mgmt-ai-actions">
+            <button
+                type="button"
+                class="ecc-btn ecc-btn--primary ecc-btn--sm ecc-mgmt-ai-btn-generate"
+                data-mgmt-ai-generate
+                data-default-label="دریافت تحلیل AI"
+            >
+                <i class="fas fa-play" aria-hidden="true"></i>
+                <span data-mgmt-ai-generate-label>دریافت تحلیل AI</span>
+            </button>
+            <button
+                type="button"
+                class="ecc-btn ecc-btn--ghost ecc-btn--sm ecc-mgmt-ai-btn-regen"
+                data-mgmt-ai-regenerate
+                hidden
+                data-default-label="تحلیل مجدد"
+            >
+                <i class="fas fa-rotate" aria-hidden="true"></i>
+                <span data-mgmt-ai-regenerate-label>تحلیل مجدد</span>
+            </button>
+        </div>
+        <p class="ecc-mgmt-ai-hint" data-mgmt-ai-hint>حداکثر یک درخواست در دقیقه برای هر بازه</p>
+        <p class="ecc-mgmt-ai-error" data-mgmt-ai-error hidden role="alert"></p>
     </div>
-    <p class="ecc-mgmt-ai-error" data-mgmt-ai-error hidden role="alert"></p>
 </section>
 {% endif %}

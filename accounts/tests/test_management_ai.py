@@ -15,7 +15,7 @@ from accounts.services.management_ai.registry import build_section_snapshot
 from accounts.services.management_ai.sanitize import assert_no_pii, sanitize_snapshot_dict
 from accounts.services.management_ai.service import generate_analysis, get_latest_analysis
 from accounts.services.management_ai.validator import validate_analysis_response
-from ai_workspace.constants import FEATURE_MANAGEMENT_ANALYSIS
+from ai_workspace.constants import FEATURE_MANAGEMENT_ANALYSIS, PROMPT_VERSIONS
 
 User = get_user_model()
 
@@ -200,6 +200,16 @@ class ManagementAIExecutiveEfficiencyTests(TestCase):
         ) as mock_insights:
             build_section_snapshot('executive', 30, False)
             self.assertEqual(mock_insights.call_count, 1)
+
+
+class ManagementAIPromptVersionTests(TestCase):
+    def test_prompt_versions_fit_ai_usage_log(self):
+        for feature, version in PROMPT_VERSIONS.items():
+            self.assertLessEqual(
+                len(version),
+                20,
+                msg=f'{feature} prompt_version too long for AIUsageLog: {version!r}',
+            )
 
 
 class ManagementAIValidatorTests(TestCase):

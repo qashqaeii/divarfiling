@@ -38,9 +38,6 @@
             {% if academy_views_total is not None %}
             <span class="acd-head-chip" role="listitem"><i class="fas fa-eye" aria-hidden="true"></i> {{ academy_views_total }} بازدید</span>
             {% endif %}
-            {% if summary.mission and not summary.mission_completed %}
-            <span class="acd-head-chip acd-head-chip--accent" role="listitem"><i class="fas fa-bullseye" aria-hidden="true"></i> ماموریت فعال</span>
-            {% endif %}
             {% if summary.continue_watching %}
             <span class="acd-head-chip" role="listitem"><i class="fas fa-play" aria-hidden="true"></i> ادامه یادگیری</span>
             {% endif %}

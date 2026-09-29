@@ -4,20 +4,20 @@ from __future__ import annotations
 from datetime import timedelta
 from typing import Any
 
-from django.db.models import Count, Q, Sum
+from django.db.models import Avg, Count, F, Q, Sum
 from django.db.models.functions import TruncDate
 from django.urls import reverse
 from django.utils import timezone
 
+from workspace.academy.curriculum import ACTIVE_PATH_SLUGS
 from workspace.academy.models import (
     AcademyEvent,
-    AcademyMission,
     AcademyVideo,
     AcademyVideoViewDaily,
     LearningPath,
-    UserMissionProgress,
     UserVideoProgress,
 )
+from workspace.academy.search import admin_video_search_blob
 
 SCHEMA_VERSION = '1.0'
 
@@ -40,9 +40,16 @@ def get_academy_dashboard_stats() -> dict[str, Any]:
         views_total = progress_floor
         public_views = UserVideoProgress.objects.filter(video__is_public=True, video__is_active=True).count()
 
-    learners = UserVideoProgress.objects.values('user_id').distinct().count()
-    completions_total = UserVideoProgress.objects.filter(completed=True).count()
-    completions_month = UserVideoProgress.objects.filter(
+    curriculum_filter = Q(
+        video__path__slug__in=ACTIVE_PATH_SLUGS,
+        video__path__is_active=True,
+        video__is_active=True,
+    )
+    progress_qs = UserVideoProgress.objects.filter(curriculum_filter)
+    learners = progress_qs.values('user_id').distinct().count()
+    starts_total = progress_qs.count()
+    completions_total = progress_qs.filter(completed=True).count()
+    completions_month = progress_qs.filter(
         completed=True, completed_at__gte=month_ago,
     ).count()
     starts_week = AcademyEvent.objects.filter(
@@ -50,16 +57,19 @@ def get_academy_dashboard_stats() -> dict[str, Any]:
         created_at__gte=week_ago,
     ).count()
     if starts_week == 0:
-        starts_week = UserVideoProgress.objects.filter(updated_at__gte=week_ago).count()
+        starts_week = progress_qs.filter(updated_at__gte=week_ago).count()
 
-    mission = AcademyMission.objects.filter(is_active=True).first()
-    mission_started = 0
-    mission_completed = 0
-    if mission:
-        mission_started = UserMissionProgress.objects.filter(mission=mission).count()
-        mission_completed = UserMissionProgress.objects.filter(
-            mission=mission, completed=True,
-        ).count()
+    completion_rate = round(
+        (completions_total / starts_total * 100) if starts_total else 0,
+        1,
+    )
+    avg_progress = progress_qs.aggregate(
+        avg=Avg(
+            F('watched_seconds') * 100.0 / F('video__duration_seconds'),
+            filter=Q(video__duration_seconds__gt=0),
+        ),
+    )['avg']
+    avg_progress_percent = round(min(float(avg_progress or 0), 100.0), 1)
 
     top_videos = list(
         active_qs.select_related('path')
@@ -102,16 +112,16 @@ def get_academy_dashboard_stats() -> dict[str, Any]:
         'views_public': public_views,
         'avg_views': round(views_total / max(active_qs.count(), 1)),
         'learners_total': learners,
+        'unique_viewers': learners,
+        'starts_total': starts_total,
         'completions_total': completions_total,
         'completions_month': completions_month,
+        'completion_rate': completion_rate,
+        'avg_progress_percent': avg_progress_percent,
         'starts_week': starts_week,
-        'paths_total': LearningPath.objects.filter(is_active=True).count(),
-        'mission_started': mission_started,
-        'mission_completed': mission_completed,
-        'mission_rate': round(
-            (mission_completed / mission_started * 100) if mission_started else 0,
-            1,
-        ),
+        'paths_total': LearningPath.objects.filter(
+            slug__in=ACTIVE_PATH_SLUGS, is_active=True,
+        ).count(),
         'top_videos': top_videos,
         'paths': paths,
         'needs_backfill': (
@@ -148,6 +158,7 @@ def get_academy_videos_table(*, limit: int = 80, status: str = 'all') -> list[di
             'id': video.id,
             'title': video.title,
             'slug': video.slug,
+            'search_blob': admin_video_search_blob(video),
             'path': video.path.title if video.path_id else '—',
             'path_slug': video.path.slug if video.path_id else '',
             'is_public': video.is_public,
@@ -369,8 +380,11 @@ def get_academy_analytics_chart(days: int = 30) -> dict[str, Any]:
             'views_total': stats['views_total'],
             'videos_active': stats['videos_active'],
             'learners_total': stats['learners_total'],
+            'unique_viewers': stats['unique_viewers'],
+            'starts_total': stats['starts_total'],
             'completions_total': stats['completions_total'],
-            'mission_rate': stats['mission_rate'],
+            'completion_rate': stats['completion_rate'],
+            'avg_progress_percent': stats['avg_progress_percent'],
         },
     }
 

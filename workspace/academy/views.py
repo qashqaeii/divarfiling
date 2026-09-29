@@ -6,12 +6,11 @@ from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect
 from django.views.generic import TemplateView
 
-from workspace.academy.models import AcademyVideo, CuratedPath, LearningPath
+from workspace.academy.curriculum import active_paths_qs
+from workspace.academy.models import AcademyVideo, LearningPath
 from workspace.academy.services.academy_service import (
     get_home_context,
-    get_mission_context,
     get_path_context,
-    get_traditional_context,
     get_video_context,
     user_can_access_path,
 )
@@ -29,17 +28,10 @@ class AcademyHomeView(WorkspaceLoginMixin, TemplateView):
 
 
 class AcademyMissionView(WorkspaceLoginMixin, TemplateView):
-    template_name = 'workspace/academy/mission.html'
+    """ماموریت قدیمی — redirect به خانه آکادمی."""
 
-    def get_context_data(self, **kwargs):
-        ctx = super().get_context_data(**kwargs)
-        mission_ctx = get_mission_context(self.request.user)
-        if not mission_ctx.get('mission'):
-            raise Http404
-        ctx.update(mission_ctx)
-        ctx['academy_section'] = 'mission'
-        ctx['show_badge_modal'] = self.request.GET.get('badge') == '1' or mission_ctx.get('show_badge_modal')
-        return ctx
+    def get(self, request, *args, **kwargs):
+        return redirect('workspace:academy_home')
 
 
 class AcademyPathView(WorkspaceLoginMixin, TemplateView):
@@ -55,6 +47,9 @@ class AcademyPathView(WorkspaceLoginMixin, TemplateView):
 
     def get(self, request, *args, **kwargs):
         path = get_object_or_404(LearningPath, slug=kwargs['slug'], is_active=True)
+        if path.slug not in {p.slug for p in active_paths_qs()}:
+            messages.info(request, 'این مسیر آموزشی دیگر در دسترس نیست.')
+            return redirect('workspace:academy_home')
         if not user_can_access_path(request.user, path):
             messages.info(request, 'این مسیر یادگیری برای نقش شما در دسترس نیست.')
             return redirect('workspace:academy_home')
@@ -67,10 +62,10 @@ class AcademyVideoView(TemplateView):
     def get_context_data(self, **kwargs):
         video = get_object_or_404(AcademyVideo, slug=kwargs['slug'], is_active=True)
         user = self.request.user
+        ctx = super().get_context_data(**kwargs)
         if not video.is_public:
             if not user.is_authenticated:
                 return redirect('login')
-        ctx = super().get_context_data(**kwargs)
         if not video.is_public and not user_can_access_path(user, video.path):
             raise Http404
         vctx = get_video_context(user, video, public_ok=video.is_public)
@@ -92,10 +87,5 @@ class AcademyVideoView(TemplateView):
 
 
 class AcademyTraditionalPathView(WorkspaceLoginMixin, TemplateView):
-    template_name = 'workspace/academy/traditional.html'
-
-    def get_context_data(self, **kwargs):
-        ctx = super().get_context_data(**kwargs)
-        ctx.update(get_traditional_context(self.request.user))
-        ctx['academy_section'] = 'traditional'
-        return ctx
+    def get(self, request, *args, **kwargs):
+        return redirect('workspace:academy_home')

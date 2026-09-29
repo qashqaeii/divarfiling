@@ -1,34 +1,42 @@
 {% extends 'workspace/academy/base_academy.html' %}
 
 {% block academy_content %}
-{% if path_ctx %}
-{% url 'workspace:academy_path' slug=video.path.slug as video_path_url %}
-{% include 'workspace/academy/includes/page_header.html' with variant='page' kicker=path_ctx.path.title title=video.title desc=video.subtitle icon='fa-circle-play' back_url=video_path_url back_label='بازگشت به مسیر' %}
-{% else %}
-{% include 'workspace/academy/includes/page_header.html' with variant='page' kicker='آموزش' title=video.title desc=video.subtitle icon='fa-circle-play' %}
-{% endif %}
+<nav class="acd-breadcrumb" aria-label="مسیر">
+    <a href="{% url 'workspace:academy_home' %}">آکادمی</a>
+    <span aria-hidden="true">/</span>
+    <a href="{% url 'workspace:academy_path' slug=video.path.slug %}">{{ video.path.title }}</a>
+    <span aria-hidden="true">/</span>
+    <span aria-current="page">آموزش {{ global_index|stringformat:"02d" }}</span>
+</nav>
 
-<div class="acd-path-layout{% if not path_ctx %} acd-path-layout--single{% endif %}">
+{% include 'workspace/academy/includes/page_header.html' with variant='page' kicker=video.path.title title=video.title desc=video.description icon='fa-circle-play' %}
+
+<div class="acd-path-layout">
     <main class="acd-path-main">
         {% if player.available %}
         <div class="acd-video-player-wrap" data-acd-video-slug="{{ video.slug }}"{% if context_key %} data-acd-context="{{ context_key }}"{% endif %}>
             {% include 'includes/mk_video_player.html' with video=player variant='academy' show_heading=False show_meta=True %}
         </div>
         {% else %}
-        <p class="acd-mission-unavailable">این ویدیو به‌زودی اضافه می‌شود.</p>
+        <p class="acd-mission-unavailable">فایل ویدیو در دسترس نیست. لطفاً بعداً دوباره تلاش کنید.</p>
         {% endif %}
 
         <div class="acd-video-info">
+            {% if video.description %}
+            <div class="acd-video-desc">
+                <p>{{ video.description }}</p>
+            </div>
+            {% endif %}
             {% if video.subtitle %}
             <div class="acd-video-objective">
                 <span class="acd-video-objective-label"><i class="fas fa-lightbulb" aria-hidden="true"></i> هدف این درس</span>
                 <p>{{ video.subtitle }}</p>
             </div>
             {% endif %}
-            {% if video.action_label %}
+            {% if next_video %}
             <div class="acd-video-outcome">
-                <span class="acd-video-outcome-label"><i class="fas fa-flag-checkered" aria-hidden="true"></i> بعد از این درس</span>
-                <p>می‌توانید {{ video.action_label|lower }} — همین الان در نرم‌افزار امتحان کنید.</p>
+                <span class="acd-video-outcome-label"><i class="fas fa-arrow-left" aria-hidden="true"></i> بعد از این درس</span>
+                <p>آموزش بعدی: {{ next_video.title }}</p>
             </div>
             {% endif %}
         </div>
@@ -38,12 +46,26 @@
             {{ video.action_label }} <i class="fas fa-arrow-left" aria-hidden="true"></i>
         </a>
         {% endif %}
+
+        <nav class="acd-video-nav" aria-label="آموزش قبلی و بعدی">
+            {% if prev_video %}
+            <a class="acd-btn acd-btn--ghost" href="{% url 'workspace:academy_video' slug=prev_video.slug %}">
+                <i class="fas fa-arrow-right" aria-hidden="true"></i> قبلی: {{ prev_video.title|truncatechars:40 }}
+            </a>
+            {% endif %}
+            {% if next_video %}
+            <a class="acd-btn acd-btn--primary" href="{% url 'workspace:academy_video' slug=next_video.slug %}">
+                بعدی: {{ next_video.title|truncatechars:40 }} <i class="fas fa-arrow-left" aria-hidden="true"></i>
+            </a>
+            {% else %}
+            <a class="acd-btn acd-btn--primary" href="/workspace/">ورود به فایلینگ دیوار</a>
+            <a class="acd-btn acd-btn--ghost" href="{% url 'workspace:academy_home' %}">بازگشت به آکادمی</a>
+            {% endif %}
+        </nav>
     </main>
-    {% if path_ctx %}
     <div class="acd-path-sidebar">
-    {% include 'workspace/academy/includes/playlist_sidebar.html' with path=path_ctx.path items=path_ctx.items %}
+    {% include 'workspace/academy/includes/playlist_sidebar.html' with playlist_sections=playlist_sections %}
     </div>
-    {% endif %}
 </div>
 {% endblock %}
 

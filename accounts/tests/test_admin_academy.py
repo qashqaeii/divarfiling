@@ -99,8 +99,8 @@ class AdminAcademyPanelTests(TestCase):
     def test_dashboard_includes_academy_section(self):
         resp = self.client.get(reverse('admin_panel'))
         self.assertEqual(resp.status_code, 200)
-        self.assertContains(resp, 'ecc-academy')
-        self.assertContains(resp, 'پنل آکادمی')
+        self.assertContains(resp, '/accounts/admin-panel/academy/')
+        self.assertContains(resp, 'آکادمی')
 
     def test_build_academy_stats_json_structure(self):
         payload = build_academy_stats_json(days=30, status='public', videos_limit=50)
@@ -108,6 +108,9 @@ class AdminAcademyPanelTests(TestCase):
         self.assertEqual(payload['meta']['source'], 'admin_panel_academy')
         stats = get_academy_dashboard_stats()
         self.assertGreaterEqual(stats['videos_active'], 1)
+        self.assertIn('completion_rate', stats)
+        self.assertIn('avg_progress_percent', stats)
+        self.assertNotIn('mission_rate', stats)
         chart = get_academy_analytics_chart(days=7)
         self.assertIn('pulse', chart)
 

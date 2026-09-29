@@ -24,7 +24,7 @@ def workspace_help_content():
             {'icon': 'fa-gift', 'accent': 'emerald', 'label': 'CRM و آژانس', 'value': 'رایگان'},
             {'icon': 'fa-robot', 'accent': 'violet', 'label': 'فایلینگ و تحلیل', 'value': 'با لایسنس ربات'},
             {'icon': 'fa-microphone', 'accent': 'cyan', 'label': 'دستیار هوشمند', 'value': 'متن + صوت'},
-            {'icon': 'fa-route', 'accent': 'sky', 'label': 'آکادمی', 'value': 'مسیر ۱۵ دقیقه‌ای'},
+            {'icon': 'fa-route', 'accent': 'sky', 'label': 'آکادمی', 'value': '۸ آموزش ویدیویی'},
         ],
         'products': [
             {
@@ -65,7 +65,7 @@ def workspace_help_content():
         'resources': [
             {
                 'title': 'آکادمی فایلینگ دیوار',
-                'desc': 'ویدیو، ماموریت ۱۵ دقیقه‌ای و مسیرهای یادگیری',
+                'desc': '۸ آموزش ویدیویی در دو مسیر — از آشنایی تا مدیریت فایل',
                 'icon': 'fa-graduation-cap',
                 'accent': 'violet',
                 'url_name': 'workspace:academy_home',
@@ -1335,7 +1335,7 @@ def workspace_help_content():
             },
             {
                 'q': 'آکادمی و این صفحه راهنما چه تفاوتی دارند؟',
-                'a': 'آکادمی مسیر تعاملی با ماموریت و پیشرفت است. این صفحه مرجع کامل متنی با فهرست، FAQ و لینک مستقیم به هر بخش میزکار است.',
+                'a': 'آکادمی ویدیویی قدم‌به‌قدم در میزکار است؛ این صفحه مرجع متنی با فهرست، FAQ و لینک مستقیم به هر بخش میزکار است.',
             },
             {
                 'q': 'مشکل فنی یا سوال فروش دارم؛ کجا بپرسم؟',

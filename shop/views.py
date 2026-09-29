@@ -849,6 +849,8 @@ class PublicAcademyPlaylistView(TemplateView):
             self.request, active_item=active, sections=sections, flat_items=flat,
         )
         ctx['first_video_item'] = flat[0] if flat else None
+        from workspace.academy.search import academy_search_entries
+        ctx['academy_search_entries'] = academy_search_entries(workspace=False)
         if active:
             seo = video_item_seo(active, site_url=get_site_url())
             player = active['player']

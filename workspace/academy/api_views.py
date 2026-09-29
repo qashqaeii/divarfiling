@@ -10,17 +10,11 @@ from django.views import View
 from workspace.academy.models import AcademyVideo
 from workspace.academy.services.contextual_service import dismiss_contextual
 from workspace.academy.services.progress_service import (
-    complete_mission_step_manual,
     compute_progress_summary,
-    get_mission,
-    get_mission_progress,
-    start_mission_if_needed,
-    sync_mission_auto_confirm,
     track_event,
     update_video_progress,
 )
 from workspace.academy.services.view_tracking import record_video_view
-from workspace.academy.services.academy_service import get_mission_context
 from workspace.mixins import WorkspaceLoginMixin
 
 
@@ -41,13 +35,10 @@ class AcademyProgressAPIView(WorkspaceLoginMixin, View):
             }
         return JsonResponse({
             'ok': True,
-            'level': summary['level'],
-            'level_label': summary['level_label'],
-            'max_level': summary['max_level'],
+            'completed_count': summary['completed_count'],
+            'total_count': summary['total_count'],
+            'percent': summary['percent'],
             'eta_minutes': summary['eta_minutes'],
-            'mission': summary['mission'],
-            'mission_completed': summary['mission_completed'],
-            'earned_slugs': list(summary['earned_slugs']),
             'continue_watching': continue_data,
             'ttlv_seconds': summary['ttlv_seconds'],
         })
@@ -55,47 +46,12 @@ class AcademyProgressAPIView(WorkspaceLoginMixin, View):
 
 class AcademyMissionAPIView(WorkspaceLoginMixin, View):
     def get(self, request):
-        start_mission_if_needed(request.user)
-        sync_mission_auto_confirm(request.user)
-        ctx = get_mission_context(request.user)
-        if not ctx.get('mission'):
-            return JsonResponse({'ok': False, 'error': 'ماموریت یافت نشد.'}, status=404)
-        steps = []
-        for item in ctx['steps']:
-            step = item['step']
-            steps.append({
-                'order': step.order,
-                'title': step.video.title,
-                'state': item['state'],
-                'is_current': item['is_current'],
-                'is_done': item['is_done'],
-                'action_url': step.action_url,
-                'action_label': step.action_label,
-                'video_slug': step.video.slug,
-                'confirm_type': step.confirm_type,
-            })
-        return JsonResponse({
-            'ok': True,
-            'completed': ctx['completed'],
-            'current_step': ctx['current_step'],
-            'steps': steps,
-        })
+        return JsonResponse({'ok': True, 'mission': None, 'deprecated': True})
 
 
 class AcademyMissionStepCompleteAPIView(WorkspaceLoginMixin, View):
     def post(self, request, step_order: int):
-        ok = complete_mission_step_manual(request.user, step_order)
-        if not ok:
-            return JsonResponse({
-                'ok': False,
-                'error': 'ابتدا ویدیو را تماشا کنید یا عمل را انجام دهید.',
-            }, status=400)
-        progress = get_mission_progress(request.user)
-        return JsonResponse({
-            'ok': True,
-            'completed': bool(progress and progress.completed),
-            'current_step': progress.current_step if progress else step_order,
-        })
+        return JsonResponse({'ok': False, 'deprecated': True}, status=410)
 
 
 class AcademyVideoProgressAPIView(WorkspaceLoginMixin, View):

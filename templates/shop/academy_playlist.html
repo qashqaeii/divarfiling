@@ -76,7 +76,7 @@
                 <i class="fas fa-layer-group" aria-hidden="true"></i>
             </a>
             {% else %}
-            <a href="{% url 'register' %}?next={% url 'workspace:academy_mission' %}" class="acd-pl-btn acd-pl-btn--primary acd-pl-btn--sm">
+            <a href="{% url 'register' %}?next={% url 'workspace:academy_home' %}" class="acd-pl-btn acd-pl-btn--primary acd-pl-btn--sm">
                 <i class="fas fa-user-plus" aria-hidden="true"></i> <span class="acd-pl-btn-label">شروع رایگان</span>
             </a>
             {% endif %}
@@ -187,9 +187,9 @@
                     <aside class="acd-pl-cta-band">
                         <div class="acd-pl-cta-copy">
                             <strong>بعد از تماشا، در میزکار تمرین کنید</strong>
-                            <p>ثبت‌نام رایگان — ماموریت ۱۵ دقیقه‌ای و CRM مشاور بدون محدودیت.</p>
+                            <p>ثبت‌نام رایگان — آکادمی ویدیویی و CRM مشاور بدون محدودیت.</p>
                         </div>
-                        <a href="{% url 'register' %}?next={% url 'workspace:academy_mission' %}" class="acd-pl-btn acd-pl-btn--primary">
+                        <a href="{% url 'register' %}?next={% url 'workspace:academy_home' %}" class="acd-pl-btn acd-pl-btn--primary">
                             شروع رایگان در میزکار
                         </a>
                     </aside>
@@ -217,8 +217,8 @@
                         </div>
                         <h1 class="acd-pl-stage-title" id="acdPlHubTitle">پلی‌لیست آموزش ویدیویی آکادمی</h1>
                         <p class="acd-pl-stage-desc">
-                            مسیر کامل یادگیری فایلینگ دیوار برای مشاوران املاک —
-                            از معرفی پلتفرم تا شروع سریع. یک ویدیو را از فهرست انتخاب کنید یا از اول شروع کنید.
+                            ۸ آموزش در دو مسیر — از آشنایی با فایلینگ دیوار تا استخراج و مدیریت فایل‌ها.
+                            یک ویدیو را از فهرست انتخاب کنید یا از اول شروع کنید.
                         </p>
                     </div>
                     {% if first_video_item %}
@@ -287,7 +287,7 @@
                             <i class="fas fa-list-ul" aria-hidden="true"></i>
                             فهرست پلی‌لیست
                         </h2>
-                        <p class="acd-pl-sidebar-sub">{{ playlist_stats.video_count }} ویدیو · {{ playlist_stats.section_count }} فصل · {{ playlist_stats.views_total|default:0 }} بازدید</p>
+                        <p class="acd-pl-sidebar-sub">{{ playlist_stats.video_count }} آموزش · {{ playlist_stats.section_count }} مسیر · {{ playlist_stats.views_total|default:0 }} بازدید</p>
                     </div>
                     <button type="button" class="acd-pl-sidebar-close" data-acd-pl-close aria-label="بستن فهرست">
                         <i class="fas fa-times" aria-hidden="true"></i>
@@ -299,6 +299,15 @@
                 </div>
                 {% endif %}
             </div>
+            <div class="acd-pl-search-wrap">
+                <label class="acd-pl-search-label" for="acdPlSearch">
+                    <i class="fas fa-search" aria-hidden="true"></i>
+                    <span class="visually-hidden">جستجو در آموزش‌ها</span>
+                </label>
+                <input type="search" id="acdPlSearch" class="acd-pl-search-input" placeholder="جستجو: داشبورد، لایسنس، استخراج…" autocomplete="off" dir="auto">
+            </div>
+            <p class="acd-pl-search-empty" id="acdPlSearchEmpty" hidden>آموزشی با این عبارت پیدا نشد.</p>
+            {{ academy_search_entries|json_script:"acdPlSearchData" }}
             <div class="acd-pl-sidebar-body" id="acdPlList">
                 {% for section in playlist_sections %}
                 <section class="acd-pl-chapter" aria-labelledby="acdPlChapter{{ forloop.counter }}">
@@ -312,7 +321,8 @@
                     <ol class="acd-pl-tracks">
                         {% for item in section.videos %}
                         <li class="acd-pl-track{% if active_item and active_item.video.id == item.video.id %} is-active{% endif %}"
-                            id="track-{{ item.video.slug }}">
+                            id="track-{{ item.video.slug }}"
+                            data-acd-pl-slug="{{ item.video.slug }}">
                             <a href="{{ item.url }}" class="acd-pl-track-link"
                                {% if active_item and active_item.video.id == item.video.id %}aria-current="true"{% endif %}
                                title="{{ item.video.title }}">

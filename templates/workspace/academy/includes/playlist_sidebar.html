@@ -1,25 +1,25 @@
 <button type="button" class="acd-playlist-toggle" data-acd-playlist-toggle aria-expanded="false" aria-controls="acdPlaylistBody">
-    <span><i class="fas fa-list" aria-hidden="true"></i> فهرست درس‌ها</span>
+    <span><i class="fas fa-list" aria-hidden="true"></i> فهرست آموزش‌ها</span>
     <i class="fas fa-chevron-down" aria-hidden="true"></i>
 </button>
-<aside class="acd-playlist" id="acdPlaylist" aria-label="فهرست ویدیوها">
-    <header class="acd-playlist-head">
-        <h2 class="acd-playlist-title"><i class="fas {{ path.icon }}" aria-hidden="true"></i> {{ path.title }}</h2>
-        <p class="acd-playlist-desc">{{ path.description|truncatechars:100 }}</p>
-        <p class="acd-playlist-progress"><i class="fas fa-layer-group" aria-hidden="true"></i> {{ items|length }} درس در این مسیر</p>
-    </header>
+<aside class="acd-playlist" id="acdPlaylist" aria-label="فهرست ۸ آموزش آکادمی">
     <div class="acd-playlist-body-inner" id="acdPlaylistBody">
+        {% for section in playlist_sections %}
+        <header class="acd-playlist-head">
+            <h2 class="acd-playlist-title"><i class="fas {{ section.path.icon }}" aria-hidden="true"></i> {{ section.path.title }}</h2>
+            <p class="acd-playlist-progress"><i class="fas fa-layer-group" aria-hidden="true"></i> {{ section.video_count }} آموزش</p>
+        </header>
         <ol class="acd-playlist-list">
-            {% for item in items %}
+            {% for item in section.items %}
             <li class="acd-playlist-item{% if item.active %} is-active{% endif %}{% if item.completed %} is-done{% endif %}">
-                <a href="{% url 'workspace:academy_path' slug=path.slug %}?v={{ item.video.slug }}"
+                <a href="{% url 'workspace:academy_video' slug=item.video.slug %}"
                    class="acd-playlist-link">
                     <span class="acd-playlist-index">
-                        {% if item.completed %}<i class="fas fa-check" aria-hidden="true"></i>{% else %}{{ forloop.counter }}{% endif %}
+                        {% if item.completed %}<i class="fas fa-check" aria-hidden="true"></i>{% else %}{{ item.global_index|stringformat:"02d" }}{% endif %}
                     </span>
                     <span class="acd-playlist-body">
                         <strong>{{ item.video.title }}</strong>
-                        <span>{{ item.video.duration_display }} · {{ item.video.views_count|default:0 }} بازدید</span>
+                        <span>{{ item.video.duration_display }}</span>
                     </span>
                     {% if item.completed %}
                     <span class="acd-playlist-check" aria-label="تماشا شده"><i class="fas fa-check"></i></span>
@@ -30,5 +30,6 @@
             </li>
             {% endfor %}
         </ol>
+        {% endfor %}
     </div>
 </aside>

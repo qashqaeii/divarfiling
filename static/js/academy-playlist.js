@@ -208,9 +208,62 @@
         });
     }
 
+    function normalizeFaQuery(raw) {
+        return String(raw || '').trim().toLowerCase()
+            .replace(/ي/g, 'ی').replace(/ك/g, 'ک');
+    }
+
+    function initPlaylistSearch() {
+        var dataEl = document.getElementById('acdPlSearchData');
+        var input = document.getElementById('acdPlSearch');
+        var empty = document.getElementById('acdPlSearchEmpty');
+        if (!dataEl || !input) return;
+
+        var bySlug = {};
+        try {
+            JSON.parse(dataEl.textContent || '[]').forEach(function (item) {
+                bySlug[item.slug] = normalizeFaQuery(item.searchText || item.title || '');
+            });
+        } catch (e) {
+            return;
+        }
+
+        function trackScore(slug, q) {
+            if (!q) return 1;
+            var blob = bySlug[slug] || '';
+            var s = 0;
+            if (blob.indexOf(q) !== -1) s += 100;
+            q.split(/\s+/).forEach(function (tok) {
+                if (tok.length >= 2 && blob.indexOf(tok) !== -1) s += 12;
+            });
+            return s;
+        }
+
+        function applyFilter() {
+            var q = normalizeFaQuery(input.value);
+            var anyVisible = false;
+            document.querySelectorAll('.acd-pl-track[data-acd-pl-slug]').forEach(function (row) {
+                var slug = row.getAttribute('data-acd-pl-slug');
+                var show = !q || trackScore(slug, q) > 0;
+                row.hidden = !show;
+                if (show) anyVisible = true;
+            });
+            document.querySelectorAll('.acd-pl-chapter').forEach(function (chapter) {
+                var tracks = chapter.querySelectorAll('.acd-pl-track[data-acd-pl-slug]');
+                var visible = Array.prototype.some.call(tracks, function (t) { return !t.hidden; });
+                chapter.hidden = q && !visible;
+            });
+            if (empty) empty.hidden = !q || anyVisible;
+        }
+
+        input.addEventListener('input', applyFilter);
+        input.addEventListener('search', applyFilter);
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
         initDrawer();
         initViewTracking();
+        initPlaylistSearch();
         window.requestAnimationFrame(scrollActiveTrack);
     });
 })();

@@ -50,10 +50,10 @@
         <div class="aal-hero-inner">
             <p class="aal-brand" data-aal-reveal>فایلینگ دیوار</p>
             <p class="aal-brand-sub" data-aal-reveal>Academy</p>
-            <h1 id="aalHeroTitle" class="aal-title" data-aal-reveal>از اولین فایل تا اولین معامله</h1>
+            <h1 id="aalHeroTitle" class="aal-title" data-aal-reveal>آکادمی فایلینگ دیوار</h1>
             <p class="aal-lead" data-aal-reveal>
-                مسیر ویدیویی رایگان برای مشاور املاک —
-                {% if playlist_stats.video_count %}{{ playlist_stats.video_count }} درس در حدود {{ playlist_stats.total_minutes }} دقیقه{% else %}از آشنایی تا شروع کار واقعی{% endif %}.
+                آموزش قدم‌به‌قدم فایلینگ دیوار؛ از آشنایی اولیه تا استخراج و مدیریت حرفه‌ای فایل‌ها —
+                {% if playlist_stats.video_count %}{{ playlist_stats.video_count }} آموزش · {{ playlist_stats.path_count|default:2 }} مسیر · حدود {{ playlist_stats.total_minutes }} دقیقه{% else %}۸ آموزش رایگان{% endif %}.
             </p>
 
             <div class="aal-cta" data-aal-reveal>
@@ -65,9 +65,9 @@
                     </span>
                 </a>
                 {% if user.is_authenticated %}
-                <a href="{% url 'workspace:academy_mission' %}" class="aal-cta-secondary">ماموریت ۱۵ دقیقه‌ای</a>
+                <a href="{% url 'workspace:academy_home' %}" class="aal-cta-secondary">آکادمی در میزکار</a>
                 {% else %}
-                <a href="{% url 'register' %}?next={% url 'workspace:academy_mission' %}" class="aal-cta-secondary">ثبت‌نام و تمرین در میزکار</a>
+                <a href="{% url 'register' %}?next={% url 'workspace:academy_home' %}" class="aal-cta-secondary">ثبت‌نام و شروع آموزش</a>
                 {% endif %}
             </div>
         </div>
@@ -84,7 +84,7 @@
         <div class="aal-section-head" data-aal-reveal>
             <p class="aal-eyebrow">Learning Paths</p>
             <h2 id="aalPathsTitle" class="aal-section-title">مسیر یادگیری را انتخاب کنید</h2>
-            <p class="aal-section-lead">هر فصل یک مهارت — از معرفی پلتفرم تا پیگیری مشتری.</p>
+            <p class="aal-section-lead">شروع کار با محصول، سپس استخراج و مدیریت فایل‌ها.</p>
         </div>
 
         <ol class="aal-path-rail">
@@ -131,8 +131,8 @@
             </li>
             <li class="aal-flow-step" data-aal-reveal style="--aal-i: 2">
                 <span class="aal-flow-num">۳</span>
-                <strong>ماموریت ۱۵ دقیقه‌ای</strong>
-                <p>اولین فایل و مشتری را داخل محصول ثبت کنید — نه فقط در ویدیو.</p>
+                <strong>در محصول تمرین کنید</strong>
+                <p>بعد از هر آموزش، همان مراحل را در میزکار خودتان انجام دهید.</p>
             </li>
         </ol>
     </section>

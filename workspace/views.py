@@ -2076,5 +2076,5 @@ class OnboardingCompleteView(WorkspaceLoginMixin, View):
             settings_obj.save(update_fields=['onboarding_completed', 'updated_at'])
         return JsonResponse({
             'ok': True,
-            'redirect_url': reverse('workspace:academy_mission'),
+            'redirect_url': reverse('workspace:academy_home'),
         })

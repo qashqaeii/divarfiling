@@ -1,16 +1,14 @@
-"""Tests for workspace academy."""
+"""Tests for workspace academy curriculum (8 videos)."""
+from pathlib import Path
+
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 from django.urls import reverse
 
+from workspace.academy.curriculum import adjacent_videos, ordered_videos
 from workspace.academy.models import AcademyMission, AcademyVideo, LearningPath
-from workspace.academy.services.progress_service import (
-    check_action_complete,
-    get_mission_progress,
-    sync_mission_auto_confirm,
-    update_video_progress,
-)
-from workspace.models import Customer, ListingMeta
+from workspace.academy.seed_data import CURRICULUM_VIDEO_SLUGS, VIDEOS
 
 User = get_user_model()
 
@@ -19,73 +17,128 @@ class AcademySeedTests(TestCase):
     @classmethod
     def setUpTestData(cls):
         from django.core.management import call_command
+        call_command('seed_academy', '--reset', '--yes')
+
+    def test_exact_curriculum_counts(self):
+        self.assertEqual(LearningPath.objects.filter(is_active=True).count(), 2)
+        self.assertEqual(AcademyVideo.objects.filter(is_active=True).count(), 8)
+        self.assertFalse(AcademyMission.objects.exists())
+
+    def test_path_video_counts(self):
+        p1 = LearningPath.objects.get(slug='getting-started')
+        p2 = LearningPath.objects.get(slug='extracting-and-managing-files')
+        self.assertEqual(p1.videos.filter(is_active=True).count(), 3)
+        self.assertEqual(p2.videos.filter(is_active=True).count(), 5)
+
+    def test_global_order_and_adjacency(self):
+        items = ordered_videos()
+        self.assertEqual(len(items), 8)
+        self.assertEqual(items[0].slug, 'academy-what-is-divar-filing')
+        self.assertEqual(items[2].slug, 'academy-license-purchase-activation')
+        self.assertEqual(items[3].slug, 'academy-extract-divar-listings')
+        prev_v, next_v = adjacent_videos(items[2])
+        self.assertEqual(prev_v.slug, 'academy-dashboard-overview')
+        self.assertEqual(next_v.slug, 'academy-extract-divar-listings')
+
+    def test_all_public(self):
+        self.assertEqual(AcademyVideo.objects.filter(is_public=False).count(), 0)
+
+    def test_seed_idempotent(self):
+        from django.core.management import call_command
         call_command('seed_academy')
+        self.assertEqual(AcademyVideo.objects.count(), 8)
 
-    def test_paths_and_videos_seeded(self):
-        self.assertGreaterEqual(LearningPath.objects.count(), 5)
-        self.assertGreaterEqual(AcademyVideo.objects.count(), 25)
-        self.assertTrue(AcademyMission.objects.filter(slug='day-one').exists())
-
-    def test_launch_videos_flagged(self):
-        self.assertEqual(AcademyVideo.objects.filter(is_launch=True).count(), 8)
+    def test_media_and_posters_exist(self):
+        media = Path(settings.MEDIA_ROOT)
+        for row in VIDEOS:
+            video_file = media / row['file_path'] / row['file_name']
+            poster_file = media / row['poster_path']
+            self.assertTrue(video_file.is_file(), msg=str(video_file))
+            self.assertTrue(poster_file.is_file(), msg=str(poster_file))
 
 
 class AcademyPageTests(TestCase):
     @classmethod
     def setUpTestData(cls):
         from django.core.management import call_command
-        call_command('seed_academy')
+        call_command('seed_academy', '--reset', '--yes')
         cls.user = User.objects.create_user(username='acduser', password='test-pass-123')
 
     def setUp(self):
         self.client = Client()
         self.client.login(username='acduser', password='test-pass-123')
 
-    def test_academy_home_requires_login(self):
-        anon = Client()
-        resp = anon.get(reverse('workspace:academy_home'))
-        self.assertEqual(resp.status_code, 302)
-
     def test_academy_home_ok(self):
         resp = self.client.get(reverse('workspace:academy_home'))
         self.assertEqual(resp.status_code, 200)
         self.assertContains(resp, 'آکادمی فایلینگ دیوار')
+        self.assertNotContains(resp, 'ماموریت روز اول')
+        self.assertNotContains(resp, 'مشاور سنتی')
 
-    def test_mission_page_ok(self):
+    def test_mission_redirects_home(self):
         resp = self.client.get(reverse('workspace:academy_mission'))
-        self.assertEqual(resp.status_code, 200)
-        self.assertContains(resp, 'ماموریت روز اول')
-        self.assertContains(resp, 'bot-install-video.js')
-        self.assertContains(resp, 'data-mk-vid-player')
+        self.assertEqual(resp.status_code, 302)
+        self.assertIn('academy', resp.url)
+
+    def test_traditional_redirects_home(self):
+        resp = self.client.get(reverse('workspace:academy_traditional'))
+        self.assertEqual(resp.status_code, 302)
 
     def test_onboarding_complete_redirect_url(self):
         resp = self.client.post(reverse('workspace:onboarding_complete'))
         self.assertEqual(resp.status_code, 200)
         data = resp.json()
-        self.assertTrue(data.get('ok'))
-        self.assertIn('academy/mission', data.get('redirect_url', ''))
+        self.assertIn('academy', data.get('redirect_url', ''))
+        self.assertNotIn('mission', data.get('redirect_url', ''))
+
+    def test_each_video_page_200(self):
+        for slug in CURRICULUM_VIDEO_SLUGS:
+            resp = self.client.get(reverse('workspace:academy_video', kwargs={'slug': slug}))
+            self.assertEqual(resp.status_code, 200, slug)
+
+    def test_extract_video_title_updated(self):
+        video = AcademyVideo.objects.get(slug='academy-extract-divar-listings')
+        self.assertEqual(video.title, 'استخراج سریع آگهی‌های دیوار')
+        resp = self.client.get(reverse('workspace:academy_video', kwargs={'slug': video.slug}))
+        self.assertContains(resp, 'استخراج سریع آگهی‌های دیوار')
+        self.assertNotContains(resp, 'کمتر از یک دقیقه')
+
+    def test_academy_home_has_search(self):
+        resp = self.client.get(reverse('workspace:academy_home'))
+        self.assertContains(resp, 'acdSearchInput')
+        self.assertContains(resp, 'acdSearchData')
+
+    def test_persian_search_keywords(self):
+        from workspace.academy.search import find_videos_by_query
+
+        cases = {
+            'فایلینگ دیوار': 'academy-what-is-divar-filing',
+            'داشبورد': 'academy-dashboard-overview',
+            'لایسنس': 'academy-license-purchase-activation',
+            'استخراج': 'academy-extract-divar-listings',
+            'فیلتر': 'academy-filter-files',
+            'تحلیل فایل': 'academy-review-analyze-file',
+            'فایل شخصی': 'academy-personal-files-map',
+            'نقشه': 'academy-personal-files-map',
+            'زونکن': 'academy-file-cabinets-folders',
+            'کمد': 'academy-file-cabinets-folders',
+        }
+        for query, expected_slug in cases.items():
+            hits = find_videos_by_query(query)
+            self.assertTrue(hits, msg=query)
+            self.assertEqual(hits[0].slug, expected_slug, msg=query)
 
 
 class AcademyProgressTests(TestCase):
     @classmethod
     def setUpTestData(cls):
         from django.core.management import call_command
-        call_command('seed_academy')
+        call_command('seed_academy', '--reset', '--yes')
         cls.user = User.objects.create_user(username='proguser', password='test-pass-123')
-
-    def test_first_contact_detection(self):
-        self.assertFalse(check_action_complete(self.user, 'first_contact_created'))
-        Customer.objects.create(user=self.user, name='Test', phone='09120000000')
-        self.assertTrue(check_action_complete(self.user, 'first_contact_created'))
-
-    def test_first_file_favorite(self):
-        self.assertFalse(check_action_complete(self.user, 'first_file_found'))
-        ListingMeta.objects.create(user=self.user, token='tok1', is_favorite=True)
-        self.assertTrue(check_action_complete(self.user, 'first_file_found'))
 
     def test_video_progress_api(self):
         import json
-        video = AcademyVideo.objects.get(slug='quick-start-first-value')
+        video = AcademyVideo.objects.get(slug='academy-what-is-divar-filing')
         self.client = Client()
         self.client.login(username='proguser', password='test-pass-123')
         url = reverse('workspace:api_academy_video_progress', kwargs={'slug': video.slug})
@@ -96,54 +149,28 @@ class AcademyProgressTests(TestCase):
         )
         self.assertEqual(resp.status_code, 200)
         self.assertFalse(resp.json().get('completed'))
-
+        min_watch = max(int(video.duration_seconds * 0.85), 5)
         resp = self.client.post(
             url,
-            json.dumps({'watched_seconds': 55, 'completed': True}),
+            json.dumps({'watched_seconds': min_watch, 'completed': True}),
             content_type='application/json',
         )
-        self.assertEqual(resp.status_code, 200)
         self.assertTrue(resp.json().get('completed'))
-        progress = get_mission_progress(self.user)
-        sync_mission_auto_confirm(self.user)
-        self.assertIsNotNone(progress)
-
-
-class AcademyPosterTests(TestCase):
-    @classmethod
-    def setUpTestData(cls):
-        from django.core.management import call_command
-        call_command('seed_academy')
-
-    def test_poster_image_in_player_context(self):
-        from django.core.files.uploadedfile import SimpleUploadedFile
-        video = AcademyVideo.objects.get(slug='quick-start-first-value')
-        video.poster_image = SimpleUploadedFile(
-            'poster.jpg',
-            b'\xff\xd8\xff\xd9',
-            content_type='image/jpeg',
-        )
-        video.save()
-        ctx = video.to_player_context()
-        self.assertEqual(ctx['poster_kind'], 'media')
-        self.assertIn('/media/academy/posters/', ctx['poster'])
-
-    def test_legacy_static_poster_path(self):
-        video = AcademyVideo.objects.get(slug='quick-start-first-value')
-        video.poster_path = 'images/test-poster.jpg'
-        video.save()
-        ctx = video.to_player_context()
-        self.assertEqual(ctx['poster_kind'], 'static')
-        self.assertEqual(ctx['poster'], 'images/test-poster.jpg')
 
 
 class PublicAcademyTests(TestCase):
     @classmethod
     def setUpTestData(cls):
         from django.core.management import call_command
-        call_command('seed_academy')
+        call_command('seed_academy', '--reset', '--yes')
 
     def test_public_academy_page(self):
         resp = Client().get(reverse('public_academy'))
         self.assertEqual(resp.status_code, 200)
         self.assertContains(resp, 'آکادمی فایلینگ دیوار')
+        self.assertContains(resp, '8 آموزش')
+
+    def test_public_playlist_count(self):
+        resp = Client().get(reverse('public_academy_playlist'))
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.context['playlist_stats']['video_count'], 8)

@@ -1,15 +1,41 @@
 {% extends 'workspace/academy/base_academy.html' %}
 
 {% block academy_content %}
-{% include 'workspace/academy/includes/page_header.html' with variant='home' kicker='آکادمی فایلینگ دیوار' title='از اولین فایل تا اولین معامله' %}
+{% include 'workspace/academy/includes/page_header.html' with variant='home' kicker='آکادمی فایلینگ دیوار' title='آکادمی فایلینگ دیوار' desc='قدم‌به‌قدم یاد بگیر چطور فایلینگ دیوار را حرفه‌ای‌تر استفاده کنی.' %}
 
 {% include 'workspace/academy/includes/progress_card.html' %}
-{% include 'workspace/academy/includes/mission_card.html' %}
 {% include 'workspace/academy/includes/continue_card.html' %}
-{% include 'workspace/academy/includes/traditional_card.html' %}
+
+<section class="acd-search acd-card" aria-labelledby="acd-search-title">
+    <label class="acd-search-label" for="acdSearchInput">
+        <i class="fas fa-search" aria-hidden="true"></i>
+        <span id="acd-search-title">جستجو در ۸ آموزش</span>
+    </label>
+    <input type="search" id="acdSearchInput" class="acd-search-input" placeholder="مثلاً داشبورد، لایسنس، استخراج، نقشه، کمد…" autocomplete="off" dir="auto">
+    <ul class="acd-search-results" id="acdSearchResults" hidden></ul>
+    <p class="acd-search-empty" id="acdSearchEmpty" hidden>آموزشی با این عبارت پیدا نشد.</p>
+</section>
+{{ academy_search_entries|json_script:"acdSearchData" }}
+
+<div class="acd-hero-cta">
+    {% if curriculum.start_video %}
+    <a href="{% url 'workspace:academy_video' slug=curriculum.start_video.slug %}" class="acd-btn acd-btn--primary acd-btn--block">
+        {% if curriculum.completed_count %}ادامه آموزش{% else %}شروع از آموزش ۱{% endif %}
+        <i class="fas fa-arrow-left" aria-hidden="true"></i>
+    </a>
+    {% endif %}
+</div>
+
+<p class="acd-home-stats" aria-label="آمار آکادمی">
+    <span>{{ stats.video_count }} آموزش</span>
+    <span>·</span>
+    <span>{{ stats.path_count }} مسیر آموزشی</span>
+    <span>·</span>
+    <span>حدود {{ stats.total_minutes }} دقیقه</span>
+</p>
 
 <section class="acd-paths" aria-labelledby="acd-paths-title">
-    {% include 'workspace/academy/includes/section_header.html' with section_id='acd-paths-title' title='مسیرهای رشد' icon='fa-route' desc='هر مسیر، یک مهارت جدید — قدم‌به‌قدم پیش بروید.' %}
+    {% include 'workspace/academy/includes/section_header.html' with section_id='acd-paths-title' title='مسیرهای آموزشی' icon='fa-route' desc='دو مسیر کوتاه برای شروع و مدیریت فایل‌ها.' %}
     <div class="acd-paths-grid">
         {% for item in paths %}
         {% include 'workspace/academy/includes/path_card.html' %}

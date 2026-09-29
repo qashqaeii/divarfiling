@@ -1,5 +1,5 @@
 /**
- * Academy — video progress, mission steps, contextual dismiss, playlist drawer
+ * Academy — video progress, playlist drawer, search, contextual dismiss
  */
 (function () {
     'use strict';
@@ -144,6 +144,77 @@
             btn.classList.toggle('is-current', step === n);
             btn.setAttribute('aria-current', step === n ? 'step' : 'false');
         });
+    }
+
+    function normalizeFaQuery(raw) {
+        return String(raw || '').trim().toLowerCase()
+            .replace(/ي/g, 'ی').replace(/ك/g, 'ک');
+    }
+
+    function initAcademySearch() {
+        var dataEl = document.getElementById('acdSearchData');
+        var input = document.getElementById('acdSearchInput');
+        var list = document.getElementById('acdSearchResults');
+        var empty = document.getElementById('acdSearchEmpty');
+        if (!dataEl || !input || !list) return;
+
+        var entries = [];
+        try {
+            entries = JSON.parse(dataEl.textContent || '[]');
+        } catch (e) {
+            return;
+        }
+
+        function render(q) {
+            var query = normalizeFaQuery(q);
+            var matches = entries;
+            if (query) {
+                function scoreItem(item) {
+                    var blob = normalizeFaQuery(item.searchText || item.title || '');
+                    var s = 0;
+                    if (blob.indexOf(query) !== -1) s += 100;
+                    (item.keywords || []).forEach(function (kw) {
+                        var nkw = normalizeFaQuery(kw);
+                        if (query === nkw) s += 90;
+                        else if (nkw.indexOf(query) !== -1 || query.indexOf(nkw) !== -1) s += 70;
+                    });
+                    query.split(/\s+/).forEach(function (tok) {
+                        if (tok.length >= 2 && blob.indexOf(tok) !== -1) s += 12;
+                    });
+                    return s;
+                }
+                matches = entries
+                    .map(function (item) { return { item: item, score: scoreItem(item) }; })
+                    .filter(function (row) { return row.score > 0; })
+                    .sort(function (a, b) { return b.score - a.score; })
+                    .map(function (row) { return row.item; });
+            }
+            list.innerHTML = '';
+            if (!query) {
+                list.hidden = true;
+                if (empty) empty.hidden = true;
+                return;
+            }
+            if (!matches.length) {
+                list.hidden = true;
+                if (empty) empty.hidden = false;
+                return;
+            }
+            if (empty) empty.hidden = true;
+            list.hidden = false;
+            matches.forEach(function (item) {
+                var li = document.createElement('li');
+                var a = document.createElement('a');
+                a.href = item.url;
+                a.className = 'acd-search-hit';
+                a.innerHTML = '<strong>' + item.title + '</strong><small>' + (item.path || '') + '</small>';
+                li.appendChild(a);
+                list.appendChild(li);
+            });
+        }
+
+        input.addEventListener('input', function () { render(input.value); });
+        input.addEventListener('search', function () { render(input.value); });
     }
 
     function initMission() {
@@ -307,6 +378,7 @@
         initPlayers();
         initPlaylist();
         initContextual();
+        initAcademySearch();
         initMission();
         if (!window.acdMissionConfig) {
             initBadgeModal();

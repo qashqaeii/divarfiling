@@ -221,9 +221,6 @@ def update_video_progress(user, video: AcademyVideo, watched_seconds: int, compl
             video=video,
             metadata={'duration_seconds': video.duration_seconds},
         )
-        if video.mission_step:
-            complete_mission_step_video(user, video.mission_step)
-        _check_badges(user)
         _check_path_completion(user, video)
     progress.save()
     return progress
@@ -302,55 +299,33 @@ def get_continue_watching(user):
 
 
 def compute_progress_summary(user) -> dict:
-    sync_mission_auto_confirm(user)
+    from workspace.academy.curriculum import curriculum_stats, user_curriculum_summary
+
     settings_obj = get_or_create_academy_settings(user)
-    mission_progress = get_mission_progress(user)
-    badges = list(
-        UserAcademyBadge.objects.filter(user=user)
-        .select_related('badge')
-        .order_by('badge__level')
-    )
-    all_badges = list(AcademyBadge.objects.all().order_by('level'))
-    earned_slugs = {b.badge.slug for b in badges}
-    level = settings_obj.learning_level
-    level_labels = {
-        1: 'مشاور تازه‌کار',
-        2: 'مشاور آماده فایلینگ',
-        3: 'مشاور حرفه‌ای',
-        4: 'مشاور داده‌محور',
-        5: 'مشاور سیستماتیک',
-    }
-    remaining = AcademyVideo.objects.filter(is_active=True).exclude(
-        user_progress__user=user,
-        user_progress__completed=True,
-    ).count()
-    avg_duration = 300
-    eta_minutes = max(1, (remaining * avg_duration) // 60)
-    continue_item = get_continue_watching(user)
-    mission_data = None
-    if mission_progress and not mission_progress.completed:
-        total_steps = mission_progress.mission.steps.count()
-        done_steps = sum(
-            1 for k, v in (mission_progress.step_states or {}).items() if v == 'done'
-        )
-        mission_data = {
-            'current_step': mission_progress.current_step,
-            'total_steps': total_steps,
-            'done_steps': done_steps,
-            'percent': int(done_steps / total_steps * 100) if total_steps else 0,
-        }
+    curriculum = user_curriculum_summary(user)
+    stats = curriculum_stats()
+    remaining = curriculum['total_count'] - curriculum['completed_count']
+    avg = stats['total_seconds'] // max(stats['video_count'], 1)
+    eta_minutes = max(1, (remaining * avg) // 60) if remaining else 0
+    completed = curriculum['completed_count']
+    total = curriculum['total_count']
+    if completed >= total and total:
+        level_label = f'{total} از {total} آموزش'
+    elif completed:
+        level_label = f'{completed} از {total} آموزش'
+    else:
+        level_label = 'شروع آکادمی'
     return {
-        'level': level,
-        'level_label': level_labels.get(level, 'مشاور تازه‌کار'),
-        'max_level': 5,
+        'completed_count': completed,
+        'total_count': total,
+        'percent': curriculum['percent'],
+        'total_minutes': stats['total_minutes'],
+        'path_count': stats['path_count'],
         'eta_minutes': eta_minutes,
-        'badges_earned': badges,
-        'badges_all': all_badges,
-        'earned_slugs': earned_slugs,
-        'mission': mission_data,
-        'mission_completed': bool(mission_progress and mission_progress.completed),
-        'continue_watching': continue_item,
+        'continue_watching': curriculum['continue_watching'],
+        'start_video': curriculum['start_video'],
         'ttlv_seconds': settings_obj.ttlv_seconds,
+        'level_label': level_label,
     }
 
 

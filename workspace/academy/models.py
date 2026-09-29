@@ -39,7 +39,8 @@ class AcademyVideo(models.Model):
     )
     slug = models.SlugField(unique=True, verbose_name='شناسه')
     title = models.CharField(max_length=200, verbose_name='عنوان')
-    subtitle = models.TextField(blank=True, verbose_name='زیرعنوان')
+    subtitle = models.TextField(blank=True, verbose_name='هدف درس')
+    description = models.TextField(blank=True, verbose_name='شرح آموزش')
     file_name = models.CharField(max_length=255, verbose_name='نام فایل')
     file_path = models.CharField(max_length=512, verbose_name='مسیر فایل')
     poster_path = models.CharField(

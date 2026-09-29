@@ -11,7 +11,7 @@
             {% include 'includes/mk_video_player.html' with video=active_player variant='academy' show_heading=False show_meta=True %}
         </div>
         {% else %}
-        <p class="acd-mission-unavailable">این ویدیو به‌زودی اضافه می‌شود.</p>
+        <p class="acd-mission-unavailable">فایل ویدیو در دسترس نیست.</p>
         {% endif %}
 
         <div class="acd-video-info">
@@ -37,7 +37,7 @@
         {% endif %}
     </main>
     <div class="acd-path-sidebar">
-    {% include 'workspace/academy/includes/playlist_sidebar.html' %}
+    {% include 'workspace/academy/includes/playlist_sidebar.html' with playlist_sections=playlist_sections %}
     </div>
 </div>
 {% endblock %}

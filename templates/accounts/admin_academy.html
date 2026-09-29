@@ -41,7 +41,7 @@
             <div class="ab-hero__body">
                 <p class="ab-hero__eyebrow">Learning Analytics</p>
                 <h1 class="ab-hero__title">استودیو آمار <em>آکادمی</em></h1>
-                <p class="ab-hero__lead">بازدید ویدیوها، یادگیرندگان، تکمیل مسیر و ماموریت — برای پلی‌لیست عمومی و میزکار.</p>
+                <p class="ab-hero__lead">بازدید، یادگیرندگان یکتا، شروع و تکمیل ۸ آموزش — پلی‌لیست عمومی و میزکار.</p>
             </div>
 
             <div class="ab-hero__actions">
@@ -78,7 +78,7 @@
                 <article class="ab-stack-card ab-stack-card--3">
                     <span class="ab-stack-icon"><i class="fas fa-users"></i></span>
                     <strong>{{ academy_stats.learners_total|currency }} یادگیرنده</strong>
-                    <small>ماموریت {{ academy_stats.mission_rate|to_persian_digits }}٪</small>
+                    <small>تکمیل {{ academy_stats.completion_rate|to_persian_digits }}٪</small>
                 </article>
                 <div class="ab-stack-glow"></div>
             </div>
@@ -142,7 +142,21 @@
                 <div class="ab-kpi__icon"><i class="fas fa-flag-checkered"></i></div>
                 <div class="ab-kpi__body">
                     <span class="ab-kpi__val" data-count="{{ academy_stats.completions_month }}">{{ academy_stats.completions_month|currency }}</span>
-                    <span class="ab-kpi__lbl">تکمیل ۳۰ روز · ماموریت {{ academy_stats.mission_rate|to_persian_digits }}٪</span>
+                    <span class="ab-kpi__lbl">تکمیل ۳۰ روز</span>
+                </div>
+            </article>
+            <article class="ab-kpi" data-accent="sky">
+                <div class="ab-kpi__icon"><i class="fas fa-percent"></i></div>
+                <div class="ab-kpi__body">
+                    <span class="ab-kpi__val" data-count="{{ academy_stats.completion_rate }}">{{ academy_stats.completion_rate|to_persian_digits }}٪</span>
+                    <span class="ab-kpi__lbl">نرخ تکمیل · میانگین پیشرفت {{ academy_stats.avg_progress_percent|to_persian_digits }}٪</span>
+                </div>
+            </article>
+            <article class="ab-kpi" data-accent="indigo">
+                <div class="ab-kpi__icon"><i class="fas fa-play-circle"></i></div>
+                <div class="ab-kpi__body">
+                    <span class="ab-kpi__val" data-count="{{ academy_stats.starts_total }}">{{ academy_stats.starts_total|currency }}</span>
+                    <span class="ab-kpi__lbl">شروع تماشا (ثبت پیشرفت)</span>
                 </div>
             </article>
         </div>
@@ -208,10 +222,10 @@
             <article class="ab-glass ab-bento__cta">
                 <div class="ab-cta-card">
                     <span class="ab-cta-icon"><i class="fas fa-rocket"></i></span>
-                    <h3>ماموریت ۱۵ دقیقه‌ای</h3>
-                    <p>{{ academy_stats.mission_completed|currency }} تکمیل از {{ academy_stats.mission_started|currency }} شروع — نرخ {{ academy_stats.mission_rate|to_persian_digits }}٪</p>
+                    <h3>آکادمی میزکار</h3>
+                    <p>{{ academy_stats.videos_active|default:8 }} ویدیو فعال — Curriculum فعلی ۸ آموزش</p>
                     <div class="ab-cta-actions">
-                        <a href="{% url 'workspace:academy_mission' %}" target="_blank" rel="noopener" class="ab-btn ab-btn--gold ab-btn--sm">باز کردن ماموریت</a>
+                        <a href="{% url 'workspace:academy_home' %}" target="_blank" rel="noopener" class="ab-btn ab-btn--gold ab-btn--sm">باز کردن آکادمی میزکار</a>
                         <a href="/admin/workspace/academyvideo/" target="_blank" rel="noopener" class="ab-btn ab-btn--ghost ab-btn--sm">ویرایش ویدیوها</a>
                     </div>
                 </div>
@@ -242,7 +256,7 @@
 
             <div class="ab-posts-list" id="ab-posts-list">
                 {% for v in academy_videos %}
-                <article class="ab-post-row" data-search="{{ v.title }} {{ v.slug }} {{ v.path }}">
+                <article class="ab-post-row" data-search="{{ v.search_blob|default:v.title }} {{ v.slug }} {{ v.path }}">
                     <div class="ab-post-row__main">
                         <div class="ab-post-row__status">
                             {% if not v.is_active %}

@@ -5,10 +5,7 @@ from django.urls import reverse
 
 # اولویت ویدیو برای هیرو — کوتاه‌ترین معرفی عمومی اول
 HERO_VIDEO_SLUG_PREFERENCE = (
-    'intro-what-is-divar-filing',
-    'quick-start-first-value',
-    'intro-consultant-pain-points',
-    'intro-before-after-day',
+    'academy-what-is-divar-filing',
 )
 
 

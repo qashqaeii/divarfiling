@@ -575,13 +575,29 @@
                     {% if contact_links %}
                     <label class="crm-input-search crm-prop-contacts-search">
                         {% include 'includes/icon_slot.html' with decor='search' size='inline' only %}
-                        <input type="search" placeholder="جستجو: نام، موبایل، نقش..." autocomplete="off" data-prop-contacts-filter aria-label="جستجو در مخاطبین">
+                        <input type="text"
+                               name="prop_related_contacts_filter"
+                               value=""
+                               placeholder="جستجو در مخاطبین مرتبط..."
+                               autocomplete="off"
+                               autocorrect="off"
+                               autocapitalize="off"
+                               spellcheck="false"
+                               enterkeyhint="search"
+                               inputmode="search"
+                               role="searchbox"
+                               data-lpignore="true"
+                               data-1p-ignore="true"
+                               data-form-type="other"
+                               readonly
+                               data-prop-contacts-filter
+                               aria-label="جستجو در مخاطبین">
                     </label>
                     <div class="crm-prop-contact-grid" data-prop-contacts-grid>
                         {% for link in contact_links %}
                         <article class="crm-prop-contact-tile" data-contact-search="{{ link.customer.name }} {{ link.customer.phone }} {{ link.role }}">
                             <a href="{% url 'workspace:crm_detail' link.customer_id %}" class="crm-prop-contact-main">
-                                <span class="crm-prop-contact-avatar">{{ link.customer.name|crm_initials }}</span>
+                                {% include 'workspace/crm/includes/contact_avatar.html' with contact=link.customer css_class='crm-prop-contact-avatar' width=38 height=38 %}
                                 <div class="crm-prop-contact-body">
                                     <strong>{{ link.customer.name }}</strong>
                                     <span class="crm-prop-contact-role" {% crm_role_style_attr link.role %}>{{ link.role }}</span>
@@ -1050,6 +1066,10 @@ document.addEventListener('DOMContentLoaded', function () {
     var filterInput = document.querySelector('[data-prop-contacts-filter]');
     var grid = document.querySelector('[data-prop-contacts-grid]');
     if (!filterInput || !grid) return;
+    filterInput.value = '';
+    filterInput.addEventListener('focus', function () {
+        filterInput.removeAttribute('readonly');
+    }, { once: true });
     filterInput.addEventListener('input', function () {
         var q = (filterInput.value || '').trim().toLowerCase();
         grid.querySelectorAll('.crm-prop-contact-tile').forEach(function (tile) {

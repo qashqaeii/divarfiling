@@ -290,7 +290,7 @@
                                     <div class="crm-deal-mcard__links">
                                         {% if d.customer_id %}
                                         <a href="{% url 'workspace:crm_detail' d.customer_id %}" class="crm-deal-mcard__person">
-                                            <span class="crm-deals-avatar crm-deals-avatar--hue-{{ d.customer.name|crm_avatar_hue }}">{{ d.customer.name|crm_initials }}</span>
+                                            {% include 'workspace/crm/includes/contact_avatar.html' with contact=d.customer css_class='crm-deals-avatar' width=32 height=32 %}
                                             <span class="crm-deal-mcard__person-txt">
                                                 <em>مخاطب</em>
                                                 <strong>{{ d.customer.name }}</strong>
@@ -355,6 +355,7 @@
                             </td>
                             <td class="crm-deals-col-contact crm-deals-col--desk" data-label="مخاطب">
                                 <a href="{% url 'workspace:crm_detail' d.customer_id %}" class="crm-deals-cell-contact" onclick="event.stopPropagation()">
+                                    {% include 'workspace/crm/includes/contact_avatar.html' with contact=d.customer css_class='crm-deals-avatar' width=32 height=32 %}
                                     <span class="crm-deals-contact-name">{{ d.customer.name }}</span>
                                 </a>
                             </td>

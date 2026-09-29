@@ -30,7 +30,7 @@
             <div class="crm-rm-chips">
                 {% if r.customer_id %}
                 <a href="{% url 'workspace:crm_detail' r.customer_id %}" class="crm-rm-chip crm-rm-chip--contact">
-                    <span class="crm-rm-avatar crm-rm-avatar--hue-{{ r.customer.name|crm_avatar_hue }}" aria-hidden="true">{{ r.customer.name|crm_initials }}</span>
+                    {% include 'workspace/crm/includes/contact_avatar.html' with contact=r.customer css_class='crm-rm-avatar' width=20 height=20 %}
                     <span>{{ r.customer.name }}</span>
                 </a>
                 {% endif %}

@@ -3061,12 +3061,21 @@ a.crm-queue-card-name:hover { color: var(--ws-primary); }
 .crm-sp-avatar--img,
 .crm-contacts-avatar--photo,
 .crm-contact-hero__avatar--photo,
-.crm-kanban-avatar--photo {
+.crm-kanban-avatar--photo,
+.crm-deals-avatar--photo,
+.crm-prop-contact-avatar--photo,
+.crm-rm-avatar--photo {
     object-fit: cover;
     border-radius: 50%;
     background: #f1f5f9;
 }
 .crm-kanban-avatar--photo {
+    border-radius: 10px;
+}
+.crm-deals-avatar--photo {
+    border-radius: 9px;
+}
+.crm-prop-contact-avatar--photo {
     border-radius: 10px;
 }
 .crm-sp-avatar--img {
@@ -5477,7 +5486,7 @@ body.crm-side-open { overflow: hidden; }
     min-width: 0;
 }
 .crm-deals-cell-deal:hover strong,
-.crm-deals-cell-contact:hover span:last-child {
+.crm-deals-cell-contact:hover .crm-deals-contact-name {
     color: var(--ws-primary);
 }
 

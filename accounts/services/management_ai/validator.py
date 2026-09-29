@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Set, Tuple
 
+from accounts.services.management_ai.text_quality import polish_analysis_dict
 from accounts.services.management_ai.schemas import (
     MAX_ACTIONS,
     MAX_INSIGHTS,
@@ -218,4 +219,5 @@ def validate_analysis_response(
     if errors and invalid_ratio > 0.5:
         raise ValueError('Too many invalid metric_refs in AI response: ' + '; '.join(errors[:5]))
 
+    polish_analysis_dict(cleaned)
     return cleaned, errors

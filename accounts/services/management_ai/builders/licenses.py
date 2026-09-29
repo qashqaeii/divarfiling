@@ -6,6 +6,7 @@ from typing import Any, Dict
 from accounts.services.admin_licenses_center import get_licenses_center_context
 from accounts.services.management_ai.builders._helpers import kpi_metrics, trend_summary
 from accounts.services.management_ai.facts import build_action_targets, build_facts_for_section
+from accounts.services.management_ai.metric_semantics import enrich_data_quality
 from accounts.services.management_ai.schemas import SNAPSHOT_SCHEMA_VERSION
 
 
@@ -45,15 +46,16 @@ def build_licenses_snapshot(days: int, compare: bool, *, include_facts: bool = T
         metrics['activation_trend'] = lic_trend
 
     facts = build_facts_for_section('licenses') if include_facts else []
+    period = {
+        'days': str(days) if days != 0 else 'all',
+        'comparison_enabled': bool(compare),
+    }
     return {
         'schema_version': SNAPSHOT_SCHEMA_VERSION,
         'section': 'licenses',
-        'period': {
-            'days': str(days) if days != 0 else 'all',
-            'comparison_enabled': bool(compare),
-        },
+        'period': period,
         'metrics': metrics,
         'facts': facts,
         'action_targets': build_action_targets('licenses', facts) if include_facts else {},
-        'data_quality': {'completeness': None, 'warnings': []},
+        'data_quality': enrich_data_quality('licenses', metrics, period),
     }

@@ -9,6 +9,7 @@ from django.conf import settings
 from ai_workspace.constants import FEATURE_MANAGEMENT_ANALYSIS
 from ai_workspace.services.gateway import FeatureDisabledError, run as gateway_run
 from ai_workspace.services.parse import parse_json_text
+from accounts.services.management_ai.glossary import GLOSSARY_BLOCK, section_playbook
 from accounts.services.management_ai.sanitize import assert_no_pii, sanitize_snapshot_dict
 from accounts.services.management_ai.schemas import SECTION_LABELS_FA
 from accounts.services.management_ai.validator import validate_analysis_response
@@ -48,6 +49,8 @@ def run_management_analysis(
     context = {
         'section': section,
         'section_label': SECTION_LABELS_FA.get(section, section),
+        'glossary': GLOSSARY_BLOCK,
+        'section_playbook': section_playbook(section),
         'snapshot': clean,
         'content_version': fingerprint,
         'response_schema_hint': 'management_analysis_v1',

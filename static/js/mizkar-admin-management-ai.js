@@ -14,7 +14,7 @@
         good: { label: 'مطلوب', pill: 'is-good' },
         watch: { label: 'رصد', pill: 'is-watch' },
         warning: { label: 'هشدار', pill: 'is-warning' },
-        critical: { label: 'نیازمند توجه', pill: 'is-critical' },
+        critical: { label: 'بحرانی', pill: 'is-critical' },
     };
 
     function getCookie(name) {
@@ -94,19 +94,16 @@
         var type = (item.type || 'interpretation').toLowerCase();
         card.setAttribute('data-insight-type', type);
 
-        var head = document.createElement('div');
-        head.className = 'ecc-mgmt-ai-insight-head';
         var badge = document.createElement('span');
         badge.className = 'ecc-mgmt-ai-insight-type';
         badge.textContent = TYPE_LABELS[type] || type;
-        head.appendChild(badge);
+        card.appendChild(badge);
         if (item.title) {
-            var title = document.createElement('strong');
+            var title = document.createElement('h4');
             title.className = 'ecc-mgmt-ai-insight-title';
             title.textContent = item.title;
-            head.appendChild(title);
+            card.appendChild(title);
         }
-        card.appendChild(head);
 
         if (item.description) {
             var desc = document.createElement('p');
@@ -123,11 +120,13 @@
         chip.setAttribute('role', 'listitem');
         var pri = (item.priority || 'medium').toLowerCase();
         chip.setAttribute('data-priority', pri);
-        var title = document.createElement('strong');
+        var title = document.createElement('h4');
+        title.className = 'ecc-mgmt-ai-action-title';
         title.textContent = item.title || 'اقدام';
         chip.appendChild(title);
         if (item.description) {
-            var p = document.createElement('span');
+            var p = document.createElement('p');
+            p.className = 'ecc-mgmt-ai-action-desc';
             p.textContent = item.description;
             chip.appendChild(p);
         }
@@ -211,19 +210,40 @@
         summaryEl.textContent = analysis.summary || '';
 
         clearBlocks(panel);
-        var insights = (analysis.insights || []).slice(0, 5);
+        var insights = (analysis.insights || []).slice(0, 3);
         insights.forEach(function (item) {
             listEl.appendChild(renderInsightCard(item));
         });
         insightsBlock.hidden = insights.length === 0;
 
-        var actions = (analysis.actions || []).slice(0, 5);
+        var actions = (analysis.actions || []).slice(0, 3);
         actions.forEach(function (item) {
             actionsEl.appendChild(renderActionChip(item));
         });
         actionsBlock.hidden = actions.length === 0;
 
-        var risks = (analysis.risks || []).slice(0, 3);
+        var risks = (analysis.risks || []).slice(0, 2);
+        var oppsBlock = panel.querySelector('[data-mgmt-ai-opportunities-block]');
+        var oppsEl = panel.querySelector('[data-mgmt-ai-opportunities]');
+        var opportunities = (analysis.opportunities || []).slice(0, 2);
+        if (oppsEl) {
+            oppsEl.innerHTML = '';
+            opportunities.forEach(function (item) {
+                var row = document.createElement('article');
+                row.className = 'ecc-mgmt-ai-opportunity';
+                row.setAttribute('role', 'listitem');
+                var t = document.createElement('strong');
+                t.textContent = item.title || 'فرصت';
+                row.appendChild(t);
+                if (item.description) {
+                    var pd = document.createElement('p');
+                    pd.textContent = item.description;
+                    row.appendChild(pd);
+                }
+                oppsEl.appendChild(row);
+            });
+        }
+        if (oppsBlock) oppsBlock.hidden = opportunities.length === 0;
         risks.forEach(function (item) {
             risksEl.appendChild(renderRiskRow(item));
         });
@@ -232,11 +252,13 @@
         if (payload.generated_at && metaEl) {
             metaEl.textContent = 'آخرین تحلیل: ' + new Date(payload.generated_at).toLocaleString('fa-IR');
         }
+        var metaSep = panel.querySelector('.ecc-mgmt-ai-meta-sep');
         if (providerEl) {
             var prov = payload.provider || '';
             var model = payload.model || '';
-            providerEl.textContent = prov ? ('مدل: ' + (model || prov)) : '';
+            providerEl.textContent = model || prov ? ('مدل: ' + (model || prov)) : '';
         }
+        if (metaSep) metaSep.hidden = !providerEl || !providerEl.textContent;
         if (metaWrap) metaWrap.hidden = !payload.generated_at;
 
         setPanelState(panel, 'ready');

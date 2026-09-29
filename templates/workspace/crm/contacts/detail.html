@@ -95,7 +95,14 @@
                 {% include 'workspace/crm/includes/contact_avatar.html' with contact=customer css_class='crm-contact-hero__avatar' width=72 height=72 loading='eager' %}
                 <div class="crm-contact-hero__identity">
                     <div class="crm-contact-hero__headline">
+                        <div class="crm-contact-hero__title-row">
                         <h1 class="crm-contact-hero__title">{{ customer.name }}</h1>
+                        {% if customer.gender and not customer.is_legal_entity %}
+                        <span class="crm-contact-hero__gender" title="{% if customer.gender == 'female' %}خانم{% else %}آقا{% endif %}" aria-label="{% if customer.gender == 'female' %}خانم{% else %}آقا{% endif %}">
+                            <i class="fas {% if customer.gender == 'female' %}fa-venus{% else %}fa-mars{% endif %}" aria-hidden="true"></i>
+                        </span>
+                        {% endif %}
+                        </div>
                         {% include 'workspace/crm/agency/includes/agency_space_copy_provenance.html' %}
                         {% if customer.company_name %}<p class="crm-contact-hero__company">{{ customer.company_name }}</p>{% endif %}
                         <div class="crm-contact-hero__badges">

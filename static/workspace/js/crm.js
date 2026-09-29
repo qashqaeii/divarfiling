@@ -194,6 +194,7 @@ const CRMDrawer = {
         initCRMLeaseDeadline(drawer);
         initCRMPropertyOccVacancyDate(drawer);
         initCRMContactChannels(drawer);
+        initCRMContactGender(drawer);
         initCRMAreasPicker(drawer);
         initCRMFormErrors();
         if (id === 'drawer-import' || id === 'drawer-property-import') initCRMImportDrawer(drawer);
@@ -2684,6 +2685,26 @@ function initCRMAreasPicker(root) {
                 row.classList.toggle('is-hidden', q && !text.includes(q));
             });
         });
+    });
+}
+
+function initCRMContactGender(root) {
+    const scope = root || document;
+    scope.querySelectorAll('[data-crm-gender-field]').forEach(block => {
+        if (block.dataset.genderInit === '1') return;
+        block.dataset.genderInit = '1';
+        const form = block.closest('form');
+        const legalCb = form?.querySelector('[name="is_legal_entity"]');
+        const sync = () => {
+            const legal = !!legalCb?.checked;
+            block.classList.toggle('is-hidden', legal);
+            if (legal) {
+                const unset = block.querySelector('input[name="gender"][value=""]');
+                if (unset) unset.checked = true;
+            }
+        };
+        legalCb?.addEventListener('change', sync);
+        sync();
     });
 }
 
@@ -6043,6 +6064,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initCRMFormErrors();
     initCRMContactFormGuard();
     initCRMContactChannels(document);
+    initCRMContactGender(document);
     initCRMAreasPicker(document);
     initCRMPipeline();
     initCRMDealPipeline();

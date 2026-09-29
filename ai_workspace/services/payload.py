@@ -386,6 +386,7 @@ def _normalize_contact_data(inner: Dict[str, Any]) -> Dict[str, Any]:
         },
         'profile': {
             'job': _nullable_str(profile.get('job')),
+            'gender': _nullable_str(profile.get('gender')),
             'is_legal_entity': _nullable_bool(profile.get('is_legal_entity')),
             'company_name': _nullable_str(profile.get('company_name')),
         },

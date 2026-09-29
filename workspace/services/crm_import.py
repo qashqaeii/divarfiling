@@ -7,6 +7,7 @@ from typing import Any, Dict, List, Tuple
 from workspace.constants import CRM_PRIORITIES, CRM_SOURCES, CRM_STATUSES, CRM_TYPES, IMPORT_CONTACT_COLUMNS
 from workspace.models import Customer
 from workspace.services.crm import log_activity, normalize_phone
+from workspace.services.contact_gender import normalize_contact_gender_import
 
 
 def _normalize_header(h: str) -> str:
@@ -94,12 +95,15 @@ def import_contacts_from_file(user, uploaded_file) -> Tuple[int, int, List[str]]
         if source and source not in CRM_SOURCES:
             source = 'سایر'
 
+        gender = normalize_contact_gender_import(data.get('gender'))
+
         customer = Customer.objects.create(
             user=user,
             name=name_val,
             phone=phone,
             phone_alt=_clean_str(data.get('phone_alt')),
             email=_clean_str(data.get('email')),
+            gender=gender,
             customer_type=customer_type,
             status=status,
             priority=priority,
@@ -128,6 +132,7 @@ def import_column_specs() -> List[Dict[str, Any]]:
         {'header': 'تلفن', 'required': False, 'hint': 'شناسه یکتا — تکراری‌ها رد می‌شوند', 'example': '09121234567'},
         {'header': 'تلفن دوم', 'required': False, 'hint': 'شماره جایگزین', 'example': '02188776655'},
         {'header': 'ایمیل', 'required': False, 'hint': 'اختیاری', 'example': 'ali@example.com'},
+        {'header': 'جنسیت', 'required': False, 'hint': 'اختیاری — آقا، خانم، male، female', 'example': 'خانم'},
         {'header': 'نوع', 'required': False, 'hint': 'سرنخ، خریدار، فروشنده، …', 'example': 'سرنخ', 'values_key': 'types'},
         {'header': 'وضعیت', 'required': False, 'hint': 'مرحله پیگیری', 'example': 'جدید', 'values_key': 'statuses'},
         {'header': 'اولویت', 'required': False, 'hint': 'سطح اهمیت', 'example': 'متوسط', 'values_key': 'priorities'},
@@ -150,6 +155,7 @@ def import_template_excel_response():
         'تلفن': '09121234567',
         'تلفن دوم': '',
         'ایمیل': 'ali@example.com',
+        'جنسیت': 'خانم',
         'نوع': 'سرنخ',
         'وضعیت': 'جدید',
         'اولویت': 'متوسط',

@@ -25,6 +25,7 @@ create_contact — وقتی کاربر مخاطب/مشتری/سرنخ جدید �
 - required_amenities: فقط اگر الزام قطعی است — parking، storage، elevator (یا پارکینگ، انباری، آسانسور)
 - «اگه آسانسور داشت بهتره» → required_amenities نه
 - national_id و شبکه‌های اجتماعی را استخراج نکن
+- gender فقط male یا female — فقط اگر کاربر صریحاً «آقا/خانم/مرد/زن» یا معادل انگلیسی گفت؛ از اسم، لقب ضمنی یا حدس مدل استفاده نکن
 - next_followup_date_text: عبارت خام تاریخ فارسی (مثلاً «پس‌فردا») فقط اگر کاربر پیگیری بعدی خواست
 - اگر شماره در متن نیست phone=null
 
@@ -75,6 +76,7 @@ Schema create_contact:
     },
     "profile": {
       "job": null,
+      "gender": null,
       "is_legal_entity": null,
       "company_name": null
     },

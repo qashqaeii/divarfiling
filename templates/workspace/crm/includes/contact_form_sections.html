@@ -39,6 +39,28 @@
             {% crm_field form.city 'شهر' voice=1 %}
             {% crm_field form.district 'منطقه' voice=1 %}
             {% crm_field form.job 'شغل' voice=1 %}
+            <div class="crm-field crm-field-full crm-gender-field{% if form.gender.errors %} crm-field-has-error{% endif %}" data-field="gender" data-crm-gender-field>
+                <span class="crm-label" id="crmGenderLabel">جنسیت</span>
+                <div class="crm-gender-segment" role="radiogroup" aria-labelledby="crmGenderLabel">
+                    {% with selected=form.gender.value|default_if_none:'' %}
+                    <label class="crm-gender-seg">
+                        <input type="radio" name="gender" value=""{% if not selected %} checked{% endif %}>
+                        <span>مشخص نشده</span>
+                    </label>
+                    <label class="crm-gender-seg">
+                        <input type="radio" name="gender" value="female"{% if selected == 'female' %} checked{% endif %}>
+                        <span>خانم</span>
+                    </label>
+                    <label class="crm-gender-seg">
+                        <input type="radio" name="gender" value="male"{% if selected == 'male' %} checked{% endif %}>
+                        <span>آقا</span>
+                    </label>
+                    {% endwith %}
+                </div>
+                {% for error in form.gender.errors %}
+                <p class="crm-field-error" role="alert">{{ error }}</p>
+                {% endfor %}
+            </div>
             <div class="crm-field crm-field-check{% if form.is_legal_entity.errors %} crm-field-has-error{% endif %}" data-field="is_legal_entity">
                 {{ form.is_legal_entity }}
                 <label class="crm-label crm-label-check" for="{{ form.is_legal_entity.id_for_label }}">شخص حقوقی</label>

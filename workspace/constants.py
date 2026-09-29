@@ -851,6 +851,7 @@ IMPORT_CONTACT_COLUMNS = {
     'منطقه': 'district',
     'یادداشت': 'notes',
     'برچسب‌ها': 'tags',
+    'جنسیت': 'gender',
 }
 
 IMPORT_PROPERTY_COLUMNS = {

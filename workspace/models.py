@@ -420,6 +420,13 @@ class Customer(models.Model):
     city = models.CharField(max_length=100, blank=True, verbose_name='شهر')
     district = models.CharField(max_length=100, blank=True, verbose_name='منطقه')
     job = models.CharField(max_length=120, blank=True, verbose_name='شغل')
+    gender = models.CharField(
+        max_length=10,
+        choices=[('male', 'مرد'), ('female', 'زن')],
+        null=True,
+        blank=True,
+        verbose_name='جنسیت',
+    )
     is_legal_entity = models.BooleanField(default=False, verbose_name='شخص حقوقی')
     company_name = models.CharField(max_length=200, blank=True, verbose_name='نام شرکت')
     national_id = models.CharField(max_length=20, blank=True, verbose_name='کد ملی')

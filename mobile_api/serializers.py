@@ -340,6 +340,7 @@ def contact_to_dict(c: Customer, request=None) -> Dict[str, Any]:
         'phone_alt': c.phone_alt or '',
         'email': getattr(c, 'email', '') or '',
         'job': getattr(c, 'job', '') or '',
+        'gender': getattr(c, 'gender', None),
         'company_name': getattr(c, 'company_name', '') or '',
         'national_id': getattr(c, 'national_id', '') or '',
         'lease_deadline': c.lease_deadline.isoformat() if getattr(c, 'lease_deadline', None) else None,

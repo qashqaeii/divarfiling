@@ -116,6 +116,10 @@ def build_contact_preview(validated: Dict[str, Any]) -> Dict[str, Any]:
         contact_lines.append(validated['district'])
     if _explicit(validated, 'job') and validated.get('job'):
         contact_lines.append(f'شغل: {validated["job"]}')
+    if _explicit(validated, 'gender') and validated.get('gender'):
+        from workspace.services.contact_gender import CONTACT_GENDER_EXPORT_LABELS
+        label = CONTACT_GENDER_EXPORT_LABELS.get(validated['gender'], validated['gender'])
+        contact_lines.append(f'جنسیت: {label}')
     if _explicit(validated, 'company_name') and validated.get('company_name'):
         contact_lines.append(validated['company_name'])
     if _explicit(validated, 'is_legal_entity') and validated.get('is_legal_entity'):

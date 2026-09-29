@@ -175,6 +175,17 @@ def update_contact(user, contact_id: int, data: Dict[str, Any]) -> Optional[Cust
         c.company_name = (data.get('company_name') or '').strip()[:200]
     if 'national_id' in data and data['national_id'] is not None:
         c.national_id = (data.get('national_id') or '').strip()[:20]
+    if 'gender' in data:
+        from workspace.services.contact_gender import parse_contact_gender_api
+        raw_gender = data.get('gender')
+        if raw_gender is None:
+            pass
+        elif raw_gender == '':
+            c.gender = None
+        else:
+            c.gender = parse_contact_gender_api(raw_gender)
+    if c.is_legal_entity:
+        c.gender = None
     if _field_present(data, 'lease_deadline'):
         from workspace.services.jalali_input import parse_jalali_date_string
         raw = data.get('lease_deadline')
@@ -256,7 +267,7 @@ def create_quick_lead(user, data: Dict[str, Any]) -> Customer:
 
 
 _NL_CUSTOMER_ALLOWED = frozenset({
-    'name', 'phone', 'phone_alt', 'email', 'city', 'district', 'job',
+    'name', 'phone', 'phone_alt', 'email', 'city', 'district', 'job', 'gender',
     'is_legal_entity', 'company_name',
     'customer_type', 'status', 'priority', 'source', 'property_type',
     'budget_min', 'budget_max', 'deposit_min', 'deposit_max', 'rent_min', 'rent_max',
@@ -319,6 +330,7 @@ def create_customer_from_nl(user, data: Dict[str, Any]) -> Customer:
         city=(payload.get('city') or '').strip()[:100],
         district=(payload.get('district') or '').strip()[:100],
         job=(payload.get('job') or '').strip()[:120],
+        gender=payload.get('gender') if payload.get('gender') in ('male', 'female') else None,
         is_legal_entity=bool(payload.get('is_legal_entity')) if payload.get('is_legal_entity') is not None else False,
         company_name=(payload.get('company_name') or '').strip()[:200],
         customer_type=customer_type,
@@ -349,6 +361,8 @@ def create_customer_from_nl(user, data: Dict[str, Any]) -> Customer:
         notes=(payload.get('notes') or '').strip(),
         next_follow_up=payload.get('next_follow_up'),
     )
+    if customer.is_legal_entity:
+        customer.gender = None
     customer.save()
     log_activity(customer, 'یادداشت', content='ثبت از فرمان هوشمند', title='ثبت مخاطب')
     return customer

@@ -142,6 +142,9 @@ class ListingEditForm(forms.ModelForm):
         }
 
 
+from workspace.services.contact_gender import CONTACT_GENDER_FORM_CHOICES, parse_contact_gender_api
+
+
 class CustomerForm(CRMMoneyFieldsMixin, forms.ModelForm):
     money_fields = (
         'budget_min', 'budget_max', 'deposit_min', 'deposit_max', 'rent_min', 'rent_max',
@@ -198,10 +201,27 @@ class CustomerForm(CRMMoneyFieldsMixin, forms.ModelForm):
                 self.initial['builder_buy_types'] = list(BUILDER_BUY_PROPERTY_TYPES)
             if self.instance.customer_type == 'سازنده' and not self.instance.property_type:
                 self.initial.setdefault('property_type', 'آپارتمان')
-            if self.instance.pk and not self.instance.rooms_min and self.instance.rooms:
-                digits = ''.join(ch for ch in self.instance.rooms if ch.isdigit())
-                if digits:
-                    self.initial.setdefault('rooms_min', int(digits))
+        if self.instance.pk and not self.instance.rooms_min and self.instance.rooms:
+            digits = ''.join(ch for ch in self.instance.rooms if ch.isdigit())
+            if digits:
+                self.initial.setdefault('rooms_min', int(digits))
+        self.fields['gender'] = forms.ChoiceField(
+            label='جنسیت',
+            required=False,
+            choices=CONTACT_GENDER_FORM_CHOICES,
+            widget=forms.RadioSelect(attrs={'class': 'crm-gender-segment-input'}),
+        )
+        if not self.is_bound and self.instance.pk:
+            self.initial.setdefault('gender', self.instance.gender or '')
+
+    def clean_gender(self):
+        raw = self.cleaned_data.get('gender')
+        if not raw:
+            return None
+        try:
+            return parse_contact_gender_api(raw)
+        except ValueError as exc:
+            raise forms.ValidationError(str(exc)) from exc
 
     def clean_next_follow_up(self):
         raw = self.cleaned_data.get('next_follow_up')
@@ -243,6 +263,8 @@ class CustomerForm(CRMMoneyFieldsMixin, forms.ModelForm):
         )
         if duplicate:
             raise forms.ValidationError(duplicate_contact_message(duplicate))
+        if cleaned.get('is_legal_entity'):
+            cleaned['gender'] = None
         return cleaned
 
     def save(self, commit=True):
@@ -261,6 +283,8 @@ class CustomerForm(CRMMoneyFieldsMixin, forms.ModelForm):
             active, links = contact_channels_from_post(self.data)
             instance.active_channels = active
             instance.social_links = links
+        if instance.is_legal_entity:
+            instance.gender = None
         if commit:
             instance.save()
             self.save_m2m()
@@ -269,7 +293,7 @@ class CustomerForm(CRMMoneyFieldsMixin, forms.ModelForm):
     class Meta:
         model = Customer
         fields = [
-            'name', 'phone', 'phone_alt', 'email', 'city', 'district', 'job',
+            'name', 'phone', 'phone_alt', 'email', 'city', 'district', 'job', 'gender',
             'is_legal_entity', 'company_name', 'national_id',
             'customer_type', 'status', 'priority', 'property_type', 'source',
             'budget_min', 'budget_max', 'deposit_min', 'deposit_max',

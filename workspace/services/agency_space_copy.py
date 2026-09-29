@@ -23,6 +23,7 @@ User = get_user_model()
 CUSTOMER_COPY_SCALAR_FIELDS = [
     'name', 'customer_type', 'status', 'priority', 'property_type',
     'city', 'district', 'job', 'is_legal_entity', 'company_name',
+    'gender',
     'budget_min', 'budget_max', 'deposit_min', 'deposit_max',
     'rent_min', 'rent_max', 'min_area', 'max_area', 'rooms',
     'rooms_min', 'rooms_max', 'year_min', 'year_max',

@@ -75,6 +75,10 @@ def _import_contacts(user, agency, rows: List[dict], *, merge: bool, dry_run: bo
         if dry_run:
             stats['contacts'] += 1
             continue
+        gender = None
+        if row.get('gender') is not None:
+            from workspace.services.contact_gender import normalize_contact_gender_import
+            gender = normalize_contact_gender_import(row.get('gender'))
         Customer.objects.create(
             user=user,
             agency=agency,
@@ -82,6 +86,7 @@ def _import_contacts(user, agency, rows: List[dict], *, merge: bool, dry_run: bo
             phone=phone,
             phone_alt=row.get('phone_alt') or '',
             email=row.get('email') or '',
+            gender=gender,
             customer_type=row.get('customer_type') or 'سرنخ',
             status=row.get('status') or 'جدید',
             priority=row.get('priority') or 'متوسط',

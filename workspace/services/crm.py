@@ -2104,6 +2104,8 @@ def _excel_safe_value(value: Any) -> Any:
 
 
 def customers_to_export_rows(customers) -> List[Dict[str, Any]]:
+    from workspace.services.contact_gender import contact_gender_export_label
+
     rows = []
     for c in customers:
         rows.append({
@@ -2111,6 +2113,7 @@ def customers_to_export_rows(customers) -> List[Dict[str, Any]]:
             'تلفن': c.phone,
             'تلفن دوم': c.phone_alt,
             'ایمیل': c.email,
+            'جنسیت': contact_gender_export_label(c.gender),
             'نوع': c.customer_type,
             'وضعیت': c.status,
             'اولویت': c.priority,

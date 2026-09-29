@@ -18857,10 +18857,71 @@ button.crm-prop-hero-cover {
     padding: 0.28rem 0.55rem;
     border-radius: 5px;
     font-size: 0.62rem;
-    font-weight: 700;
-    color: var(--ws-text-muted);
+}
+
+/* Contact gender segmented control */
+.crm-gender-segment {
+    display: inline-flex;
+    align-items: stretch;
+    flex-wrap: wrap;
+    max-width: 100%;
+    padding: 2px;
+    border: 1px solid var(--ws-border);
+    border-radius: 8px;
+    background: var(--ws-surface-2);
+    gap: 2px;
+}
+.crm-gender-seg {
+    position: relative;
+    cursor: pointer;
+    margin: 0;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+.crm-gender-seg input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+}
+.crm-gender-seg > span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.38rem 0.55rem;
+    border-radius: 6px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--ws-text-secondary);
     white-space: nowrap;
-    transition: background 0.12s, color 0.12s, box-shadow 0.12s;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+.crm-gender-seg:has(input:checked) > span {
+    background: var(--ws-primary);
+    color: #fff;
+}
+.crm-gender-field.is-hidden {
+    display: none !important;
+}
+.crm-contact-hero__title-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.35rem 0.5rem;
+}
+.crm-contact-hero__gender {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.35rem;
+    height: 1.35rem;
+    border-radius: 999px;
+    background: var(--ws-surface-2);
+    border: 1px solid var(--ws-border-light);
+    color: var(--ws-text-muted);
+    font-size: 0.62rem;
+    flex-shrink: 0;
 }
 .crm-prop-share-seg > span i { font-size: 0.58rem; opacity: 0.75; }
 .crm-prop-share-seg:has(input:checked) > span {

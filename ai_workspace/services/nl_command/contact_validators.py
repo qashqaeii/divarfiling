@@ -107,7 +107,7 @@ def _collect_explicit_paths(data: Dict[str, Any], prefix: str = '') -> Set[str]:
 
 def _flat_model_keys() -> Set[str]:
     return {
-        'name', 'phone', 'phone_alt', 'email', 'city', 'district', 'job',
+        'name', 'phone', 'phone_alt', 'email', 'city', 'district', 'job', 'gender',
         'is_legal_entity', 'company_name',
         'customer_type', 'status', 'priority', 'source', 'property_type',
         'budget_min', 'budget_max', 'deposit_min', 'deposit_max', 'rent_min', 'rent_max',
@@ -139,6 +139,7 @@ def flatten_contact_llm_data(data: Dict[str, Any]) -> Dict[str, Any]:
         'city': location.get('city'),
         'district': location.get('district'),
         'job': profile.get('job'),
+        'gender': profile.get('gender') if profile.get('gender') is not None else data.get('gender'),
         'is_legal_entity': profile.get('is_legal_entity'),
         'company_name': profile.get('company_name'),
         'customer_type': data.get('customer_type'),
@@ -181,6 +182,8 @@ def _explicit_to_model_fields(explicit_paths: Set[str]) -> Set[str]:
         'location.city': 'city',
         'location.district': 'district',
         'profile.job': 'job',
+        'profile.gender': 'gender',
+        'gender': 'gender',
         'profile.is_legal_entity': 'is_legal_entity',
         'profile.company_name': 'company_name',
         'customer_type': 'customer_type',
@@ -452,6 +455,17 @@ def validate_contact_parse(
         ambiguous = _merge_missing(ambiguous, ['is_legal_entity'])
         is_legal = None
 
+    from workspace.services.contact_gender import parse_contact_gender_nl
+
+    gender = None
+    if flat_in.get('gender') is not None and flat_in.get('gender') != '':
+        parsed_gender = parse_contact_gender_nl(flat_in.get('gender'))
+        if parsed_gender:
+            gender = parsed_gender
+            explicit_model.add('gender')
+        else:
+            ambiguous = _merge_missing(ambiguous, ['gender'])
+
     rooms_display = ''
     if rooms_min is not None and rooms_max is not None:
         if rooms_min == rooms_max:
@@ -478,6 +492,7 @@ def validate_contact_parse(
         'city': (flat_in.get('city') or '').strip()[:100],
         'district': (flat_in.get('district') or '').strip()[:100],
         'job': (flat_in.get('job') or '').strip()[:120],
+        'gender': None if is_legal else gender,
         'is_legal_entity': bool(is_legal) if is_legal is not None else None,
         'company_name': (flat_in.get('company_name') or '').strip()[:200],
         'customer_type': customer_type,
@@ -589,6 +604,7 @@ def validated_as_llm_shape(validated: Dict[str, Any]) -> Dict[str, Any]:
         },
         'profile': {
             'job': validated.get('job'),
+            'gender': validated.get('gender'),
             'is_legal_entity': validated.get('is_legal_entity'),
             'company_name': validated.get('company_name'),
         },

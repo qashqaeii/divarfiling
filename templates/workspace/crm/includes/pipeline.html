@@ -24,7 +24,7 @@
                     <span class="crm-kanban-grip" aria-hidden="true" title="جابجایی">
                         <i class="fas fa-grip-vertical"></i>
                     </span>
-                    <span class="crm-kanban-avatar crm-kanban-avatar--hue-{{ c.name|crm_avatar_hue }}">{{ c.name|crm_initials }}</span>
+                    {% include 'workspace/crm/includes/contact_avatar.html' with contact=c css_class='crm-kanban-avatar' width=34 height=34 %}
                     <div class="crm-kanban-card-info">
                         <div class="crm-kanban-title-row">
                             <strong class="crm-kanban-name">{{ c.name }}</strong>
@@ -60,7 +60,7 @@
             {% else %}
             <a href="{% url 'workspace:crm_detail' c.id %}" class="crm-kanban-card crm-kanban-card--link" title="{{ c.name }}">
                 <div class="crm-kanban-card-head">
-                    <span class="crm-kanban-avatar crm-kanban-avatar--hue-{{ c.name|crm_avatar_hue }}">{{ c.name|crm_initials }}</span>
+                    {% include 'workspace/crm/includes/contact_avatar.html' with contact=c css_class='crm-kanban-avatar' width=34 height=34 %}
                     <div class="crm-kanban-card-info">
                         <div class="crm-kanban-title-row">
                             <strong class="crm-kanban-name">{{ c.name }}</strong>

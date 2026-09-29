@@ -3,6 +3,9 @@ from django.test import SimpleTestCase, TestCase
 
 from accounts.avatar_catalog import (
     DEFAULT_AVATAR_KEY,
+    contact_avatar_gender_prefix,
+    contact_avatar_role_slug,
+    contact_role_avatar_static_relative_path,
     normalize_avatar_key,
     resolve_contact_avatar_display,
     resolve_user_avatar_display,
@@ -43,12 +46,49 @@ class AvatarResolverTests(TestCase):
         self.assertTrue(display['has_custom_avatar'])
         self.assertTrue(display['url'])
 
-    def test_contact_without_photo_has_no_account_avatar(self):
-        customer = Customer.objects.create(user=self.user, name='علی')
+    def test_contact_without_photo_uses_role_avatar(self):
+        customer = Customer.objects.create(
+            user=self.user,
+            name='علی',
+            customer_type='خریدار',
+            gender='male',
+        )
         display = resolve_contact_avatar_display(customer)
         self.assertFalse(display['has_photo'])
-        self.assertEqual(display['photo_url'], '')
-        self.assertIsNone(display['avatar_key'])
+        self.assertIn('CONTACTAVATAR/MANBuyer.webp', display['photo_url'])
+        self.assertEqual(display['avatar_key'], 'contact_man_buyer')
+
+    def test_contact_female_uses_woman_role_avatar(self):
+        customer = Customer.objects.create(
+            user=self.user,
+            name='سارا',
+            customer_type='متقاضی خرید',
+            gender='female',
+        )
+        self.assertEqual(
+            contact_role_avatar_static_relative_path(customer),
+            'images/avatar/CONTACTAVATAR/WOMANBuyerApplicant.webp',
+        )
+
+    def test_contact_without_gender_defaults_to_man(self):
+        customer = Customer.objects.create(
+            user=self.user,
+            name='ناشناس',
+            customer_type='سرنخ',
+        )
+        self.assertEqual(contact_avatar_gender_prefix(customer), 'MAN')
+        self.assertEqual(contact_avatar_role_slug(customer), 'Lead')
+
+    def test_legal_entity_uses_corporate_avatar(self):
+        customer = Customer.objects.create(
+            user=self.user,
+            name='شرکت',
+            customer_type='اشخاص حقوقی',
+            is_legal_entity=True,
+            gender='female',
+        )
+        self.assertEqual(contact_avatar_role_slug(customer), 'CorporateEntity')
+        self.assertEqual(contact_avatar_gender_prefix(customer), 'MAN')
 
     def test_contact_with_photo_uses_contact_photo(self):
         customer = Customer.objects.create(user=self.user, name='سارا')

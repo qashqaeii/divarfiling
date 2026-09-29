@@ -11,6 +11,24 @@ DEFAULT_AVATAR_KEY = 'avatar_01'
 # avatar_01 … avatar_16 ↔ Avatar1.png … Avatar16.png در static/images/avatar/
 AVATAR_KEYS: Tuple[str, ...] = tuple(f'avatar_{i:02d}' for i in range(1, 17))
 
+# نوع مخاطب CRM → پسوند فایل در static/images/avatar/CONTACTAVATAR/{MAN|WOMAN}{Role}.webp
+CONTACT_TYPE_AVATAR_ROLE: Dict[str, str] = {
+    'خریدار': 'Buyer',
+    'فروشنده': 'Seller',
+    'سازنده': 'Builder',
+    'مالک': 'Owner',
+    'مستاجر': 'Tenant',
+    'موجر': 'Landlord',
+    'سرمایه‌گذار': 'Investor',
+    'سرنخ': 'Lead',
+    'متقاضی خرید': 'BuyerApplicant',
+    'متقاضی اجاره': 'RentalApplicant',
+    'فروشنده ملک': 'PropertySeller',
+    'اشخاص حقوقی': 'CorporateEntity',
+}
+DEFAULT_CONTACT_AVATAR_ROLE = 'Lead'
+CONTACT_AVATAR_STATIC_DIR = 'images/avatar/CONTACTAVATAR'
+
 
 def normalize_avatar_key(key: Optional[str]) -> Optional[str]:
     if not key:
@@ -90,6 +108,47 @@ def resolve_user_avatar_display(profile, request=None) -> Dict[str, Any]:
     }
 
 
+def _contact_is_corporate(customer) -> bool:
+    if getattr(customer, 'is_legal_entity', False):
+        return True
+    return (getattr(customer, 'customer_type', None) or '') == 'اشخاص حقوقی'
+
+
+def contact_avatar_role_slug(customer) -> str:
+    """پسوند نقش برای فایل آواتار مخاطب (مثلاً Buyer، Lead)."""
+    if _contact_is_corporate(customer):
+        return 'CorporateEntity'
+    customer_type = getattr(customer, 'customer_type', None) or ''
+    return CONTACT_TYPE_AVATAR_ROLE.get(customer_type, DEFAULT_CONTACT_AVATAR_ROLE)
+
+
+def contact_avatar_gender_prefix(customer) -> str:
+    """MAN یا WOMAN — بدون جنسیت یا شخص حقوقی → MAN."""
+    if _contact_is_corporate(customer):
+        return 'MAN'
+    gender = getattr(customer, 'gender', None)
+    if gender == 'female':
+        return 'WOMAN'
+    return 'MAN'
+
+
+def contact_role_avatar_static_relative_path(customer) -> str:
+    role = contact_avatar_role_slug(customer)
+    prefix = contact_avatar_gender_prefix(customer)
+    return f'{CONTACT_AVATAR_STATIC_DIR}/{prefix}{role}.webp'
+
+
+def contact_role_avatar_url(customer, request=None) -> str:
+    rel = contact_role_avatar_static_relative_path(customer)
+    url = static(rel)
+    if request is not None:
+        return request.build_absolute_uri(url)
+    base = getattr(settings, 'STATIC_URL', '/static/') or '/static/'
+    if url.startswith('http'):
+        return url
+    return f'{base.rstrip("/")}/{rel}'
+
+
 def resolve_contact_photo_url(customer, request=None) -> str:
     """URL تصویر اختصاصی مخاطب؛ خالی اگر ندارد."""
     photo = getattr(customer, 'photo', None)
@@ -137,12 +196,22 @@ def consultant_portrait_url(user, ws_settings=None, request=None) -> str:
 
 def resolve_contact_avatar_display(customer, request=None) -> Dict[str, Any]:
     """
-    آواتار مخاطب CRM: فقط تصویر اختصاصی مخاطب (فیلد photo).
-    آواتار/عکس حساب کاربری یا presetهای حساب در اینجا استفاده نمی‌شوند.
+    آواتار مخاطب CRM:
+    ۱) تصویر اختصاصی (فیلد photo)
+    ۲) آواتار پیش‌فرض نقش + جنسیت از CONTACTAVATAR
     """
-    photo_url = resolve_contact_photo_url(customer, request=request)
+    custom_url = resolve_contact_photo_url(customer, request=request)
+    if custom_url:
+        return {
+            'photo_url': custom_url,
+            'avatar_key': None,
+            'has_photo': True,
+        }
+    role = contact_avatar_role_slug(customer)
+    prefix = contact_avatar_gender_prefix(customer)
+    avatar_key = f'contact_{prefix.lower()}_{role.lower()}'
     return {
-        'photo_url': photo_url,
-        'avatar_key': None,
-        'has_photo': bool(photo_url),
+        'photo_url': contact_role_avatar_url(customer, request=request),
+        'avatar_key': avatar_key,
+        'has_photo': False,
     }

@@ -61,7 +61,7 @@ def crm_default_avatar_url():
 
 @register.simple_tag(takes_context=True)
 def crm_contact_avatar_url(context, customer):
-    """URL تصویر مخاطب؛ خالی اگر مخاطب عکس اختصاصی ندارد (نه آواتار حساب کاربری)."""
+    """URL نمایش آواتار مخاطب: عکس اختصاصی یا آواتار نقش/جنسیت."""
     request = context.get('request')
     display = resolve_contact_avatar_display(customer, request=request)
     return display['photo_url'] or ''

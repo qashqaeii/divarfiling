@@ -1,0 +1,36 @@
+{% load static %}
+{% if admin_management_ai_enabled %}
+<section
+    class="ecc-section ecc-mgmt-ai-panel"
+    id="ecc-mgmt-ai-{{ ai_section }}"
+    data-mgmt-ai-panel
+    data-mgmt-ai-section="{{ ai_section }}"
+    data-mgmt-ai-label="{{ ai_section_label }}"
+    data-mgmt-ai-get-url="{% url 'admin_panel_ai_analysis' ai_section %}{{ admin_panel_query_suffix|default:'?days=all' }}"
+    data-mgmt-ai-post-url="{% url 'admin_panel_ai_analysis_generate' ai_section %}"
+    aria-label="تحلیل هوشمند {{ ai_section_label }}"
+>
+    <header class="ecc-mgmt-ai-head">
+        <h2><i class="fas fa-sparkles" aria-hidden="true"></i> تحلیل هوشمند {{ ai_section_label }}</h2>
+        <p class="ecc-mgmt-ai-sub" data-mgmt-ai-status-text>در حال بارگذاری وضعیت…</p>
+    </header>
+    <div class="ecc-mgmt-ai-body" data-mgmt-ai-body hidden>
+        <p class="ecc-mgmt-ai-summary" data-mgmt-ai-summary></p>
+        <ul class="ecc-mgmt-ai-list" data-mgmt-ai-insights></ul>
+        <p class="ecc-mgmt-ai-stale" data-mgmt-ai-stale hidden>
+            <i class="fas fa-triangle-exclamation" aria-hidden="true"></i>
+            داده‌های این بخش از زمان آخرین تحلیل تغییر کرده‌اند.
+        </p>
+        <p class="ecc-mgmt-ai-meta" data-mgmt-ai-meta></p>
+    </div>
+    <div class="ecc-mgmt-ai-actions">
+        <button type="button" class="ecc-btn ecc-btn--primary ecc-btn--sm" data-mgmt-ai-generate>
+            دریافت تحلیل AI
+        </button>
+        <button type="button" class="ecc-btn ecc-btn--ghost ecc-btn--sm" data-mgmt-ai-regenerate hidden>
+            تحلیل مجدد
+        </button>
+    </div>
+    <p class="ecc-mgmt-ai-error" data-mgmt-ai-error hidden role="alert"></p>
+</section>
+{% endif %}

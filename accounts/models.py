@@ -1701,3 +1701,37 @@ class UserDiscountIssuance(models.Model):
 
     def __str__(self):
         return f'{self.user_id} · {self.discount_code.code}'
+
+
+class AdminManagementAIAnalysis(models.Model):
+    """آخرین تحلیل AI مدیریت برای هر بازه — فقط با درخواست دستی Admin."""
+
+    section = models.CharField(max_length=32, db_index=True, verbose_name='بخش')
+    days_key = models.CharField(max_length=8, verbose_name='کلید بازه')
+    compare = models.BooleanField(default=False, verbose_name='مقایسه')
+    snapshot_fingerprint = models.CharField(max_length=64, verbose_name='Fingerprint')
+    analysis_json = models.JSONField(default=dict, verbose_name='خروجی AI')
+    generated_at = models.DateTimeField(auto_now=True, verbose_name='زمان تولید')
+    generated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='management_ai_analyses',
+        verbose_name='تولیدکننده',
+    )
+    provider = models.CharField(max_length=30, blank=True, verbose_name='Provider')
+    model = models.CharField(max_length=120, blank=True, verbose_name='مدل')
+
+    class Meta:
+        verbose_name = 'تحلیل AI مدیریت'
+        verbose_name_plural = 'تحلیل‌های AI مدیریت'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['section', 'days_key', 'compare'],
+                name='accounts_mgmt_ai_scope_uniq',
+            ),
+        ]
+
+    def __str__(self):
+        return f'{self.section} · {self.days_key} · compare={self.compare}'

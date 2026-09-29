@@ -299,6 +299,7 @@ WORKSPACE_LICENSE_STAFF_BYPASS = config('WORKSPACE_LICENSE_STAFF_BYPASS', defaul
 
 # AI Workspace — Gemini primary + Arvan AIaaS backup + rule-based fallback
 AI_ENABLED = config('AI_ENABLED', default=False, cast=bool)
+ADMIN_MANAGEMENT_AI_ENABLED = config('ADMIN_MANAGEMENT_AI_ENABLED', default=False, cast=bool)
 GEMINI_API_KEY = config('GEMINI_API_KEY', default='')
 GEMINI_MODEL = config('GEMINI_MODEL', default='gemini-3.1-flash-lite')
 GEMINI_FALLBACK_MODEL = config('GEMINI_FALLBACK_MODEL', default='gemini-2.5-flash-lite')

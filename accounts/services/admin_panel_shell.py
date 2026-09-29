@@ -109,8 +109,11 @@ def build_admin_panel_shell_context(request) -> Dict[str, Any]:
     query_suffix = f'?days={range_key}'
     if request.GET.get('compare') == '1' and range_key != ADMIN_PANEL_RANGE_ALL:
         query_suffix += '&compare=1'
+    from accounts.services.management_ai.service import is_management_ai_enabled
+
     return {
         'admin_panel_shell': True,
+        'admin_management_ai_enabled': is_management_ai_enabled(),
         'chart_days': days,
         'chart_days_effective': effective_range_days(days),
         'admin_panel_range_key': range_key,

@@ -93,6 +93,7 @@
     </div>
 
     {% if tab == 'suggestions' %}
+    {% include 'accounts/partials/admin_ai_analysis_panel.html' with ai_section='executive' ai_section_label='مدیریت کلان' %}
     <section class="maa-section" aria-label="پیشنهادهای امروز">
         {% if insights %}
         <div class="maa-insights">

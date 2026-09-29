@@ -73,6 +73,10 @@ from .growth_pipeline_views import (
     AdminGrowthPipelineJsonView,
     AdminGrowthPipelineView,
 )
+from .management_ai_views import (
+    AdminManagementAIAnalysisGenerateView,
+    AdminManagementAIAnalysisView,
+)
 from .lead_acquisition_views import (
     AdminLeadAcquisitionView,
     AdminLeadBulkTemplatesView,
@@ -112,6 +116,16 @@ urlpatterns = [
     path('dashboard/licenses/activate-for-owner/', views.ActivateLicenseForOwnerView.as_view(), name='license_activate_for_owner'),
     path('dashboard/licenses/release-to-pool/', views.ReleaseLicenseToPoolView.as_view(), name='license_release_to_pool'),
     path('admin-panel/', AdminDashboardView.as_view(), name='admin_panel'),
+    path(
+        'admin-panel/ai-analysis/<str:section>/',
+        AdminManagementAIAnalysisView.as_view(),
+        name='admin_panel_ai_analysis',
+    ),
+    path(
+        'admin-panel/ai-analysis/<str:section>/generate/',
+        AdminManagementAIAnalysisGenerateView.as_view(),
+        name='admin_panel_ai_analysis_generate',
+    ),
     path('admin-panel/assistant/', AdminManagementAssistantView.as_view(), name='admin_panel_assistant'),
     path(
         'admin-panel/assistant/preview.json',

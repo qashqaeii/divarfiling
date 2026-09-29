@@ -9,6 +9,7 @@ FEATURE_LISTING_SUMMARY = 'listing_summary'
 FEATURE_CRM_MESSAGE = 'crm_message'
 FEATURE_UPLOAD_BRIEF = 'upload_brief'
 FEATURE_NL_COMMAND = 'nl_command'
+FEATURE_MANAGEMENT_ANALYSIS = 'management_analysis'
 
 AI_FEATURES = {
     FEATURE_LISTING_SUMMARY: True,
@@ -16,18 +17,24 @@ AI_FEATURES = {
     # غیرفعال محصولی — endpoint فقط پاسخ کنترل‌شده می‌دهد؛ LLM صدا زده نمی‌شود.
     FEATURE_UPLOAD_BRIEF: False,
     FEATURE_NL_COMMAND: True,
+    FEATURE_MANAGEMENT_ANALYSIS: True,
 }
 
 FEATURE_DAILY_LIMITS = {
     FEATURE_LISTING_SUMMARY: 30,
     FEATURE_CRM_MESSAGE: 24,
     FEATURE_NL_COMMAND: 30,
+    FEATURE_MANAGEMENT_ANALYSIS: 200,
 }
 
 FEATURE_GENERATION = {
     FEATURE_NL_COMMAND: {
         'temperature': 0.1,
         'max_tokens': 700,
+    },
+    FEATURE_MANAGEMENT_ANALYSIS: {
+        'temperature': 0.1,
+        'max_tokens': 2200,
     },
 }
 
@@ -38,6 +45,7 @@ FEATURE_LABELS = {
     FEATURE_CRM_MESSAGE: 'پیام CRM',
     FEATURE_UPLOAD_BRIEF: 'تحلیل آپلود',
     FEATURE_NL_COMMAND: 'فرمان هوشمند',
+    FEATURE_MANAGEMENT_ANALYSIS: 'تحلیل مدیریت',
 }
 
 DEFAULT_CRM_TONE = 'رسمی'
@@ -144,7 +152,11 @@ LISTING_SUMMARY_STYLE_CHOICES = tuple(
     {'key': key, **meta} for key, meta in LISTING_SUMMARY_STYLES.items()
 )
 
-JSON_FEATURES = frozenset({FEATURE_LISTING_SUMMARY, FEATURE_NL_COMMAND})
+JSON_FEATURES = frozenset({
+    FEATURE_LISTING_SUMMARY,
+    FEATURE_NL_COMMAND,
+    FEATURE_MANAGEMENT_ANALYSIS,
+})
 
 # نسخه دستی prompt — فقط وقتی محتوا عوض شد افزایش دهید (نه mtime)
 PROMPT_VERSIONS = {
@@ -152,6 +164,7 @@ PROMPT_VERSIONS = {
     FEATURE_CRM_MESSAGE: 'crm_message_v5',
     FEATURE_UPLOAD_BRIEF: 'upload_brief_v1',
     FEATURE_NL_COMMAND: 'nl_command_v3',
+    FEATURE_MANAGEMENT_ANALYSIS: 'management_analysis_v1',
 }
 
 NL_COMMAND_INTENT_CREATE_REMINDER = 'create_reminder'
@@ -200,6 +213,14 @@ def is_ai_enabled() -> bool:
 
 
 def is_feature_enabled(feature: str, user) -> bool:
+    if feature == FEATURE_MANAGEMENT_ANALYSIS:
+        if not getattr(settings, 'ADMIN_MANAGEMENT_AI_ENABLED', False):
+            return False
+        if not is_ai_enabled():
+            return False
+        if not user or not user.is_authenticated:
+            return False
+        return bool(getattr(user, 'is_staff', False) or getattr(user, 'is_superuser', False))
     if not is_ai_enabled():
         return False
     if feature not in AI_FEATURES or not AI_FEATURES[feature]:

@@ -29,5 +29,8 @@
 
 {% block extra_js %}
 <script src="{% static 'js/mizkar-admin-panel-shell.js' %}?v=2"></script>
+{% if admin_management_ai_enabled %}
+<script src="{% static 'js/mizkar-admin-management-ai.js' %}?v=1"></script>
+{% endif %}
 {% block admin_panel_extra_js %}{% endblock %}
 {% endblock %}

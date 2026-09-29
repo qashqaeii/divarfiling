@@ -237,6 +237,38 @@ class ManagementAIValidatorTests(TestCase):
             ['metrics.retention_d30', 'metrics.users_without_license'],
         )
 
+    def test_facts_and_action_target_refs_normalized(self):
+        snap = {
+            'metrics': {'pending_orders': {'current': 4}},
+            'facts': [{'key': 'pending_orders', 'count': 4, 'severity': 'warn'}],
+            'action_targets': {
+                'pending_orders': {'type': 'internal_url', 'url': '/sales/'},
+            },
+        }
+        data = {
+            **SAMPLE_AI,
+            'insights': [{
+                'title': 'سفارش معلق',
+                'description': 'd',
+                'type': 'fact',
+                'metric_refs': ['facts.pending_orders'],
+                'confidence': 0.9,
+            }],
+            'actions': [{
+                'title': 'پیگیری',
+                'description': 'a',
+                'priority': 'high',
+                'impact': 'high',
+                'effort': 'low',
+                'metric_refs': ['facts.pending_orders'],
+                'action_target_ref': 'action_targets.pending_orders',
+            }],
+        }
+        cleaned, errs = validate_analysis_response(data, snap)
+        self.assertEqual(errs, [])
+        self.assertEqual(cleaned['insights'][0]['metric_refs'], ['metrics.pending_orders'])
+        self.assertEqual(cleaned['actions'][0]['action_target_ref'], 'pending_orders')
+
     def test_invalid_metric_refs_rejected(self):
         snap = {'metrics': {'users_new_period': {'current': 5}}}
         bad = {**SAMPLE_AI, 'insights': [{

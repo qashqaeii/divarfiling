@@ -11,6 +11,27 @@ from accounts.services.management_ai.schemas import (
 )
 
 
+# Sales snapshot uses orders_pending target key; facts/LLM often say pending_orders.
+_ACTION_TARGET_ALIASES: Dict[str, Tuple[str, ...]] = {
+    'pending_orders': ('orders_pending',),
+    'orders_pending': ('pending_orders',),
+}
+
+
+def _collect_fact_paths(snapshot: Dict[str, Any]) -> Set[str]:
+    paths: Set[str] = set()
+    for fact in snapshot.get('facts') or []:
+        if isinstance(fact, dict):
+            key = fact.get('key')
+            if key:
+                paths.add(f'facts.{key}')
+    return paths
+
+
+def _collect_allowed_refs(snapshot: Dict[str, Any]) -> Set[str]:
+    return _collect_metric_paths(snapshot) | _collect_fact_paths(snapshot)
+
+
 def _collect_metric_paths(snapshot: Dict[str, Any], prefix: str = 'metrics') -> Set[str]:
     paths: Set[str] = set()
     node = snapshot.get('metrics') if prefix == 'metrics' else snapshot
@@ -41,11 +62,32 @@ def _valid_ref(ref: str, allowed: Set[str]) -> bool:
     return any(ref.startswith(p + '.') for p in allowed)
 
 
+def _normalize_action_target_ref(ref: Any, targets: Dict[str, Any]) -> str | None:
+    if not ref or not isinstance(ref, str):
+        return None
+    text = ref.strip()
+    if text.startswith('action_targets.'):
+        text = text[len('action_targets.'):]
+    if text in targets:
+        return text
+    for alt in _ACTION_TARGET_ALIASES.get(text, ()):
+        if alt in targets:
+            return alt
+    return None
+
+
 def _normalize_metric_ref(ref: str, allowed: Set[str]) -> str | None:
     """Map provider shorthand (e.g. retention_d30) to snapshot paths (metrics.retention_d30)."""
     if not ref:
         return None
     text = ref.strip()
+    if text.startswith('facts.'):
+        fact_key = text[6:]
+        metric_path = f'metrics.{fact_key}'
+        if metric_path in allowed:
+            return metric_path
+        if _valid_ref(text, allowed):
+            return text
     if _valid_ref(text, allowed):
         return text
     if not text.startswith('metrics.'):
@@ -96,7 +138,7 @@ def validate_analysis_response(
     snapshot: Dict[str, Any],
 ) -> Tuple[Dict[str, Any], List[str]]:
     errors: List[str] = []
-    allowed_refs = _collect_metric_paths(snapshot)
+    allowed_refs = _collect_allowed_refs(snapshot)
 
     cleaned = {
         'summary': str(data.get('summary') or '').strip(),
@@ -135,9 +177,10 @@ def validate_analysis_response(
             metric_refs = _normalize_metric_refs(
                 item.get('metric_refs'), allowed_refs, f'actions[{i}]', errors,
             )
-            target_ref = item.get('action_target_ref')
-            if target_ref and target_ref not in targets:
-                errors.append(f'actions[{i}]: invalid action_target_ref {target_ref!r}')
+            raw_target = item.get('action_target_ref')
+            target_ref = _normalize_action_target_ref(raw_target, targets) if raw_target else None
+            if raw_target and not target_ref:
+                errors.append(f'actions[{i}]: invalid action_target_ref {raw_target!r}')
             cleaned['actions'].append({
                 'title': str(item.get('title') or ''),
                 'description': str(item.get('description') or ''),

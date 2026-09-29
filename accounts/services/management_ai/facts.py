@@ -60,10 +60,12 @@ def build_action_targets(section: str, facts: List[Dict[str, Any]]) -> Dict[str,
             'url': reverse('admin_panel_users') + '?days=30#ecc-users',
         })
     elif section == 'sales':
-        targets.setdefault('orders_pending', {
+        sales_pending = {
             'type': 'internal_url',
             'url': reverse('admin_panel_sales') + '#sales-actions',
-        })
+        }
+        targets.setdefault('orders_pending', sales_pending)
+        targets.setdefault('pending_orders', sales_pending)
     elif section == 'crm':
         targets.setdefault('crm_overview', {
             'type': 'internal_url',

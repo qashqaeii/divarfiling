@@ -38,6 +38,7 @@ from workspace.services.agency_space_ui_context import (
     build_space_publisher_filter_options,
     prefetch_publisher_workspace_for_space_items,
 )
+from workspace.services.crm_scope import agency_members
 
 
 def _hub_shell(request, hub_section: str) -> dict:

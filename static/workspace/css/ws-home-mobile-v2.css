@@ -4,19 +4,112 @@
    ═══════════════════════════════════════════════════════════ */
 
 @media (max-width: 767px) {
+    /* ── Post-Deploy Fix 01 — single content column (gutter = .ws-content only) ── */
+    .wsh-dashboard.ws-home.mk-hub-pro {
+        --wsh-mob-section-gap: var(--mobile-section-gap, var(--ws-mob-gap, 16px));
+        width: 100% !important;
+        max-width: none !important;
+        min-width: 0;
+        margin-inline: 0 !important;
+        padding-inline: 0 !important;
+        box-sizing: border-box;
+        gap: var(--wsh-mob-section-gap);
+    }
+
+    .wsh-dashboard > :is(
+        .wsh-hero,
+        .wsh-nba,
+        .wsh-nba-success,
+        .wsh-card,
+        .wsh-kpi,
+        .wsh-actions,
+        .wsh-shortcuts,
+        .wsh-start,
+        .wsh-mid-grid,
+        .wsh-lower-grid,
+        .wsh-footer,
+        .ws-home-alert,
+        .announcements-section
+    ) {
+        width: 100% !important;
+        max-width: none !important;
+        min-width: 0;
+        margin-inline: 0 !important;
+        box-sizing: border-box;
+    }
+
+    .wsh-mid-grid,
+    .wsh-lower-grid,
+    .wsh-lower-grid--2 {
+        width: 100% !important;
+        padding-inline: 0 !important;
+        margin-inline: 0 !important;
+    }
+
+    .wsh-mid-grid > *,
+    .wsh-lower-grid > *,
+    .wsh-lower-grid--2 > * {
+        width: 100% !important;
+        max-width: none !important;
+        min-width: 0;
+        margin-inline: 0 !important;
+        box-sizing: border-box;
+    }
+
+    .wsh-kpi,
+    .wsh-kpi__grid {
+        width: 100%;
+        max-width: none;
+    }
+
+    .wsh-nba {
+        width: 100%;
+    }
+
+    .wsh-nba .ws-home-alert {
+        width: 100% !important;
+        max-width: none !important;
+    }
+
+    /* Legacy home.css filing cards — drop extra tbody gutter inside wsh-files */
+    .wsh-dashboard .wsh-files .wsh-files__table-wrap,
+    .wsh-dashboard .wsh-files .mk-table-wrap {
+        width: 100%;
+        max-width: none;
+        margin-inline: 0 !important;
+        padding-inline: 0 !important;
+    }
+
+    .wsh-dashboard .wsh-files #homeFilesTable.mk-home-files-table {
+        width: 100% !important;
+        max-width: none !important;
+        min-width: 0 !important;
+    }
+
+    .wsh-dashboard .wsh-files #homeFilesTable.mk-home-files-table tbody {
+        width: 100%;
+        padding: 0 !important;
+        margin-inline: 0 !important;
+    }
+
+    .wsh-dashboard .wsh-files #homeFilesTable.mk-home-files-table tbody tr.mk-home-file-row {
+        width: 100% !important;
+        max-width: none !important;
+        margin-inline: 0 !important;
+        box-sizing: border-box;
+    }
+
     /* ── Layout rhythm ── */
     .wsh-dashboard,
     .ws-home.ws-home-pro {
         display: flex;
         flex-direction: column;
-        gap: 0.65rem;
         min-width: 0;
         overflow-x: clip;
     }
 
     .wsh-dashboard > * {
         min-width: 0;
-        max-width: 100%;
     }
 
     /* ── A: Compact hero / context ── */

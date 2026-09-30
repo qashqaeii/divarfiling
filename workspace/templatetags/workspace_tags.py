@@ -219,8 +219,8 @@ def _pagination_context(page_obj, query_params=None, aria_label='صفحه‌بن
     return {
         'page_obj': page_obj,
         'pages': pages,
-        'prev_url': page_href(page_obj.previous_page_number) if page_obj.has_previous else None,
-        'next_url': page_href(page_obj.next_page_number) if page_obj.has_next else None,
+        'prev_url': page_href(page_obj.previous_page_number()) if page_obj.has_previous else None,
+        'next_url': page_href(page_obj.next_page_number()) if page_obj.has_next else None,
         'start_index': page_obj.start_index(),
         'end_index': page_obj.end_index(),
         'total_count': paginator.count,

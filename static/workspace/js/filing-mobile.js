@@ -68,7 +68,7 @@
         var form = document.getElementById('dsFilterForm');
         if (!details || !form) return;
 
-        var desktop = window.matchMedia('(min-width: 768px)');
+        var desktop = window.matchMedia('(min-width: 769px)');
 
         function closeFilterSheet() {
             details.removeAttribute('open');

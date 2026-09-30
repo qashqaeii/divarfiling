@@ -81,18 +81,20 @@
 </header>
 
 <header class="fl-dd-mob-header fl-mob-header">
-    <div class="fl-dd-mob-header__mesh" aria-hidden="true"></div>
     <div class="fl-dd-mob-header__inner">
         <div class="fl-dd-mob-header__main">
             <a href="{% url 'workspace:dataset_list' %}" class="fl-dd-mob-back" aria-label="بازگشت به فایلینگ">
                 <i class="fas fa-arrow-right" aria-hidden="true"></i>
             </a>
             <div class="fl-dd-mob-header__text">
-                <span class="fl-dd-mob-header__kicker">{{ dataset.file_format|upper }} · {{ tx.badge }}</span>
-                <h1 class="fl-dd-mob-header__title">{{ dataset.name|truncatechars:28 }}</h1>
+                <div class="fl-dd-mob-header__title-row">
+                    <span class="fl-dd-mob-header__badge mk-tx-badge mk-tx-{{ tx.mode }}">{{ tx.badge }}</span>
+                    <h1 class="fl-dd-mob-header__title">{{ dataset.name }}</h1>
+                </div>
                 <p class="fl-dd-mob-header__sub">
-                    <strong>{{ filtered_count|intcomma }}</strong> از {{ total_count|intcomma }} آگهی
-                    {% if dataset.city %} · {{ dataset.city|truncatechars:12 }}{% endif %}
+                    {% if dataset.city %}{{ dataset.city }}{% if dataset.district %} · {{ dataset.district }}{% endif %} · {% endif %}
+                    <strong>{{ total_count|intcomma }}</strong> آگهی
+                    <span class="fl-dd-mob-header__format">{{ dataset.file_format|upper }}</span>
                 </p>
             </div>
         </div>
@@ -104,12 +106,10 @@
                     <span class="fl-header__help-bulb-glow"></span>
                 </span>
             </button>
-            <a href="{% url 'workspace:dataset_analyze' dataset.id %}" class="fl-dd-mob-header__icon fl-dd-mob-header__icon--primary" title="تحلیل" aria-label="تحلیل بازار">
-                <i class="fas fa-chart-line" aria-hidden="true"></i>
-            </a>
             <details class="fl-dd-mob-more" id="mkDsMobileMore">
                 <summary class="fl-dd-mob-header__icon" aria-label="عملیات بیشتر"><i class="fas fa-ellipsis-vertical" aria-hidden="true"></i></summary>
                 <div class="fl-dd-mob-more-panel" role="menu">
+                    <a href="{% url 'workspace:dataset_analyze' dataset.id %}" class="fl-dd-mob-more-item" role="menuitem"><i class="fas fa-chart-line" aria-hidden="true"></i> تحلیل بازار</a>
                     <a href="{% url 'workspace:dataset_map' dataset.id %}{% if filter_qs_noview %}?{{ filter_qs_noview }}{% endif %}" class="fl-dd-mob-more-item" role="menuitem"><i class="fas fa-map-location-dot" aria-hidden="true"></i> نقشه آگهی‌ها</a>
                     <a href="{% url 'workspace:dataset_export' dataset.id %}?format=csv" class="fl-dd-mob-more-item js-secure-export" data-export-label="خروجی CSV مجموعه" role="menuitem"><i class="fas fa-download" aria-hidden="true"></i> خروجی CSV</a>
                     {% if filing_video.available %}
@@ -126,22 +126,33 @@
             </details>
         </div>
     </div>
-    <div class="fl-dd-mob-quick" aria-label="میانبرها">
-        <button type="button" class="fl-dd-mob-quick__chip fl-dd-mob-quick__chip--primary" data-ds-filter-jump>
-            <i class="fas fa-sliders" aria-hidden="true"></i> فیلتر{% if filter_count %} · {{ filter_count }}{% endif %}
+    <div class="fl-dd-mob-actions" role="toolbar" aria-label="عملیات اصلی پوشه">
+        <button type="button" class="fl-dd-mob-act fl-dd-mob-act--primary{% if filter_count %} has-active{% endif %}" data-ds-filter-jump>
+            <i class="fas fa-sliders" aria-hidden="true"></i>
+            <span>فیلتر</span>
+            {% if filter_count %}<em class="fl-dd-mob-act__badge" aria-label="{{ filter_count }} فیلتر فعال">{{ filter_count }}</em>{% endif %}
         </button>
-        <a href="{% url 'workspace:dataset_map' dataset.id %}{% if filter_qs_noview %}?{{ filter_qs_noview }}{% endif %}" class="fl-dd-mob-quick__chip">
-            <i class="fas fa-map-location-dot" aria-hidden="true"></i> نقشه
+        <a href="{% url 'workspace:dataset_map' dataset.id %}{% if filter_qs_noview %}?{{ filter_qs_noview }}{% endif %}" class="fl-dd-mob-act">
+            <i class="fas fa-map-location-dot" aria-hidden="true"></i>
+            <span>نقشه</span>
         </a>
-        <a href="{% url 'workspace:dataset_export' dataset.id %}?format=csv" class="fl-dd-mob-quick__chip js-secure-export" data-export-label="خروجی CSV مجموعه">
-            <i class="fas fa-download" aria-hidden="true"></i> خروجی
+        <a href="{% url 'workspace:dataset_export' dataset.id %}?format=csv" class="fl-dd-mob-act js-secure-export" data-export-label="خروجی CSV مجموعه">
+            <i class="fas fa-download" aria-hidden="true"></i>
+            <span>خروجی</span>
         </a>
+        <button type="button" class="fl-dd-mob-act fl-dd-mob-act--icon" data-ds-more-open aria-label="عملیات بیشتر">
+            <i class="fas fa-ellipsis" aria-hidden="true"></i>
+        </button>
     </div>
     <div class="fl-dd-mob-stats" aria-label="آمار سریع پوشه">
         <div class="fl-dd-mob-stats__grid">
             <div class="fl-dd-mob-stat">
+                <strong>{{ total_count|intcomma }}</strong>
+                <span>کل فایل</span>
+            </div>
+            <div class="fl-dd-mob-stat{% if is_listing_filtered %} is-highlight{% endif %}">
                 <strong>{{ filtered_count|intcomma }}</strong>
-                <span>در نمایش</span>
+                <span>فعال</span>
             </div>
             <div class="fl-dd-mob-stat">
                 <strong>{{ consultant_count|intcomma }}</strong>
@@ -150,10 +161,6 @@
             <div class="fl-dd-mob-stat">
                 <strong>{{ personal_count|intcomma }}</strong>
                 <span>شخصی</span>
-            </div>
-            <div class="fl-dd-mob-stat">
-                <strong>{{ total_count|intcomma }}</strong>
-                <span>کل آگهی</span>
             </div>
         </div>
     </div>

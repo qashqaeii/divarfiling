@@ -546,10 +546,11 @@
         gap: 0.45rem;
     }
 
-    /* Checkbox in action row — never overlay title/cover (override premium absolute rules) */
+    /* Checkbox under thumb column, before date in footer row */
     .mk-filing-mobile .mk-ds-card-glass > .mk-ds-card-check,
     .mk-filing-mobile .mk-ds-card-top .mk-ds-card-check,
-    .mk-filing-mobile .mk-ds-card-body .mk-ds-card-check {
+    .mk-filing-mobile .mk-ds-card-body .mk-ds-card-check,
+    .mk-filing-mobile .mk-ds-card-acts .mk-ds-card-check {
         display: none !important;
     }
 
@@ -558,21 +559,27 @@
         flex-direction: column;
         gap: 0.4rem;
         overflow: visible;
+        padding-top: 0.35rem;
+        margin-top: 0.15rem;
+        border-top: 1px solid color-mix(in srgb, var(--ws-border) 45%, transparent);
     }
 
-    .mk-filing-mobile .mk-ds-card-foot .mk-ds-card-date {
-        width: 100%;
+    .mk-filing-mobile .mk-ds-card-foot-meta {
+        display: grid;
+        grid-template-columns: 6.75rem minmax(0, 1fr);
+        column-gap: 0.28rem;
+        align-items: center;
         min-width: 0;
     }
 
-    .mk-filing-mobile .mk-ds-card-acts .mk-ds-card-check {
+    .mk-filing-mobile .mk-ds-card-foot-meta .mk-ds-card-check {
         position: relative !important;
         top: auto !important;
         inset-inline-start: auto !important;
         inset-inline-end: auto !important;
         width: 2.35rem !important;
         height: 2.35rem !important;
-        margin: 0 !important;
+        margin: 0 auto !important;
         display: grid !important;
         place-items: center;
         border-radius: 10px;
@@ -581,7 +588,13 @@
         opacity: 1 !important;
         z-index: 1;
         flex-shrink: 0;
-        order: -1;
+        justify-self: center;
+    }
+
+    .mk-filing-mobile .mk-ds-card-foot-meta .mk-ds-card-date {
+        width: 100%;
+        min-width: 0;
+        font-size: 0.72rem;
     }
 
     .mk-filing-mobile .mk-ds-card-check .mk-checkbox {
@@ -595,6 +608,19 @@
         column-gap: 0.28rem !important;
         align-items: start !important;
         width: 100%;
+        min-width: 0;
+    }
+
+    .mk-filing-mobile .mk-ds-card-top .mk-ds-card-cover {
+        display: block;
+        text-decoration: none;
+        color: inherit;
+    }
+
+    .mk-filing-mobile .mk-ds-card-top .mk-ds-card-body {
+        display: block;
+        text-decoration: none;
+        color: inherit;
         min-width: 0;
     }
 
@@ -917,7 +943,8 @@
 }
 
 @media (max-width: 360px) {
-    .mk-filing-mobile .mk-ds-card-top .mk-ds-card-main {
+    .mk-filing-mobile .mk-ds-card-top .mk-ds-card-main,
+    .mk-filing-mobile .mk-ds-card-foot-meta {
         grid-template-columns: 5.75rem minmax(0, 1fr) !important;
     }
 

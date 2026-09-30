@@ -588,3 +588,79 @@
         max-width: 4.75rem !important;
     }
 }
+
+/* Dataset detail — listing card polish (scoped) */
+@media (max-width: 767px) {
+    .mk-filing-dataset-detail.mk-listing-page .mk-lcard-native {
+        border-radius: 16px !important;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06) !important;
+    }
+
+    .mk-filing-dataset-detail.mk-listing-page .mk-lcard-native .mk-lcard-native__media {
+        aspect-ratio: 16 / 10 !important;
+    }
+
+    .mk-filing-dataset-detail.mk-listing-page .mk-lcard-native .mk-lcard-native__panel {
+        padding: 0.65rem 0.75rem 0.7rem !important;
+        gap: 0.3rem !important;
+    }
+
+    .mk-filing-dataset-detail.mk-listing-page .mk-lcard-native .mk-lcard-native__status {
+        display: none !important;
+    }
+
+    .mk-filing-dataset-detail.mk-listing-page .mk-lcard-native .mk-lcard-native__pricebox {
+        margin: 0.15rem 0 0 !important;
+        padding: 0 !important;
+        border: none !important;
+        background: transparent !important;
+        border-radius: 0 !important;
+    }
+
+    .mk-filing-dataset-detail.mk-listing-page .mk-lcard-native .mk-lcard-native__price {
+        font-size: 1.125rem !important;
+        font-weight: 900 !important;
+        color: var(--ws-text) !important;
+    }
+
+    .mk-filing-dataset-detail.mk-listing-page .mk-lcard-native .mk-lcard-native__ppm {
+        display: block;
+        width: 100%;
+        margin-top: 0.1rem;
+        font-size: 0.6875rem !important;
+        color: var(--ws-text-muted) !important;
+    }
+
+    .mk-filing-dataset-detail.mk-listing-page .mk-lcard-native .mk-lcard-native__rail {
+        gap: 0.3rem !important;
+    }
+
+    .mk-filing-dataset-detail.mk-listing-page .mk-lcard-native .mk-lcard-native__rail-item {
+        padding: 0.22rem 0.42rem !important;
+        font-size: 0.625rem !important;
+    }
+
+    .mk-filing-dataset-detail.mk-listing-page .mk-lcard-native .mk-lcard-native__foot {
+        margin-top: 0.25rem !important;
+        padding-top: 0.5rem !important;
+    }
+
+    .mk-filing-dataset-detail.mk-listing-page .mk-lcard-native .mk-lcard-native__cta {
+        min-height: 2.875rem !important;
+        border-radius: 12px !important;
+        box-shadow: 0 2px 10px color-mix(in srgb, var(--ws-primary) 22%, transparent) !important;
+    }
+}
+
+@media (max-width: 320px) {
+    .mk-filing-dataset-detail.mk-listing-page .mk-lcard-native .mk-lcard-native__price {
+        font-size: 1rem !important;
+        word-break: break-word;
+    }
+
+    .mk-filing-dataset-detail.mk-listing-page .mk-lcard-native .mk-lcard-native__rail-item span {
+        max-width: 4.5rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+}

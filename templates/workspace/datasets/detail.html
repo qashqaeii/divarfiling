@@ -8,8 +8,8 @@
 <link rel="stylesheet" href="{% static 'workspace/css/mk-filing-datasets.css' %}?v=20">
 <link rel="stylesheet" href="{% static 'workspace/css/mk-filing-mobile.css' %}?v=9">
 <link rel="stylesheet" href="{% static 'workspace/css/mk-filing-dataset-detail.css' %}?v=2">
-<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-dataset-detail-mobile-v2.css' %}?v=2">
-<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-listing-cards-mobile-v2.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-dataset-detail-mobile-v2.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-listing-cards-mobile-v2.css' %}?v=3">
 <link rel="stylesheet" href="{% static 'workspace/css/ws-listing-detail-mobile-v2.css' %}?v=3">
 <link rel="stylesheet" href="{% static 'workspace/css/ws-listing-detail-mobile-v2.css' %}?v=3">
 <link rel="stylesheet" href="{% static 'workspace/css/ws-listing-detail-mobile-v2.css' %}?v=3">
@@ -94,16 +94,12 @@
         {% mk_pagination page_obj page_query aria_label="صفحه‌بندی آگهی‌ها" %}
     </section>
 
-    <nav class="fl-dd-mob-dock" aria-label="عملیات سریع موبایل">
+    <nav class="fl-dd-mob-dock" aria-label="عملیات زمینه پوشه">
         <div class="fl-dd-mob-dock__inner">
-            <button type="button" class="fl-dd-mob-dock__btn{% if filter_count %} has-active{% endif %}" data-ds-filter-jump title="فیلتر آگهی‌ها">
+            <button type="button" class="fl-dd-mob-dock__btn{% if filter_count %} has-active{% endif %}" data-ds-filter-jump title="جستجو و فیلتر">
                 <i class="fas fa-sliders" aria-hidden="true"></i>
                 <span>فیلتر</span>
             </button>
-            <a href="{% url 'workspace:dataset_map' dataset.id %}{% if filter_qs_noview %}?{{ filter_qs_noview }}{% endif %}" class="fl-dd-mob-dock__btn" title="نقشه آگهی‌ها">
-                <i class="fas fa-map-location-dot" aria-hidden="true"></i>
-                <span>نقشه</span>
-            </a>
             <a href="{% url 'workspace:dataset_analyze' dataset.id %}" class="fl-dd-mob-dock__btn fl-dd-mob-dock__btn--primary" title="تحلیل بازار">
                 <i class="fas fa-chart-line" aria-hidden="true"></i>
                 <span>تحلیل</span>

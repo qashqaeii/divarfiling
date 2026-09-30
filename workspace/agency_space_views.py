@@ -83,11 +83,13 @@ class AgencyHubSpaceView(AgencySpaceFeatureMixin, LoginRequiredMixin, TemplateVi
             ]
             items = [i for i in items if i]
 
+        filter_chips = build_space_filter_chips(filters)
         ctx.update({
             'space_tab': tab,
             'space_scope': filters.normalized_scope(),
             'space_filters': filters,
-            'space_filter_chips': build_space_filter_chips(filters),
+            'space_filter_chips': filter_chips,
+            'space_filters_open': bool(filter_chips) or self.request.GET.get('adv') == '1',
             'space_items': items,
             'space_page': page_obj,
             'space_result_total': total_count,

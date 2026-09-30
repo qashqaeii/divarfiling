@@ -102,6 +102,62 @@ def _customer_budget_label(customer: Customer) -> str:
     return ''
 
 
+def _customer_rent_deposit_label(customer: Customer) -> str:
+    parts: List[str] = []
+    if customer.deposit_min or customer.deposit_max:
+        if customer.deposit_min and customer.deposit_max:
+            parts.append(
+                f'رهن {format_toman(customer.deposit_min)} تا {format_toman(customer.deposit_max)}',
+            )
+        elif customer.deposit_max:
+            parts.append(f'رهن تا {format_toman(customer.deposit_max)}')
+        else:
+            parts.append(f'رهن از {format_toman(customer.deposit_min)}')
+    if customer.rent_min or customer.rent_max:
+        if customer.rent_min and customer.rent_max:
+            parts.append(
+                f'اجاره {format_toman(customer.rent_min)} تا {format_toman(customer.rent_max)}',
+            )
+        elif customer.rent_max:
+            parts.append(f'اجاره تا {format_toman(customer.rent_max)}')
+        else:
+            parts.append(f'اجاره از {format_toman(customer.rent_min)}')
+    return ' · '.join(parts)
+
+
+def _customer_area_label(customer: Customer) -> str:
+    if customer.min_area and customer.max_area:
+        return f'{format_area(customer.min_area)} تا {format_area(customer.max_area)}'
+    if customer.max_area:
+        return f'تا {format_area(customer.max_area)}'
+    if customer.min_area:
+        return f'از {format_area(customer.min_area)}'
+    return ''
+
+
+def _customer_rooms_label(customer: Customer) -> str:
+    if customer.rooms:
+        return customer.rooms if 'خواب' in customer.rooms else f'{customer.rooms} خواب'
+    if customer.rooms_min is not None and customer.rooms_max is not None:
+        return f'{customer.rooms_min} تا {customer.rooms_max} خواب'
+    if customer.rooms_max is not None:
+        return f'تا {customer.rooms_max} خواب'
+    if customer.rooms_min is not None:
+        return f'از {customer.rooms_min} خواب'
+    return ''
+
+
+def _customer_amenity_tags(customer: Customer) -> List[str]:
+    tags: List[str] = []
+    if customer.want_parking:
+        tags.append('پارکینگ')
+    if customer.want_storage:
+        tags.append('انباری')
+    if customer.want_elevator:
+        tags.append('آسانسور')
+    return tags
+
+
 def _format_published_at(dt) -> str:
     if not dt:
         return ''
@@ -226,14 +282,27 @@ def _customer_payload(
     need_summary = ''
     if can_full:
         need_summary = (customer.notes or '')[:300] if detail else (customer.notes or '')[:120]
+    budget_label = _customer_budget_label(customer)
+    rent_deposit_label = _customer_rent_deposit_label(customer)
+    finance_label = budget_label or rent_deposit_label
     data = {
         'id': customer.pk,
         'name': customer.name,
         'customer_type': customer.customer_type,
         'need_summary': need_summary,
-        'budget_label': _customer_budget_label(customer),
+        'budget_label': budget_label,
+        'rent_deposit_label': rent_deposit_label,
+        'finance_label': finance_label,
         'region': region,
         'status': customer.status,
+        'priority': customer.priority or '',
+        'property_type': customer.property_type or '',
+        'source': customer.source or '',
+        'area_label': _customer_area_label(customer),
+        'rooms_label': _customer_rooms_label(customer),
+        'areas_display': (customer.areas or '').strip(),
+        'amenity_tags': _customer_amenity_tags(customer),
+        'has_phone': bool(can_full and customer.phone),
     }
     if can_full:
         data['phone'] = customer.phone

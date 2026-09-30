@@ -93,24 +93,43 @@
     }
   }
 
-  function setFiltersOpen(open) {
+  function initSpaceExpandFilters() {
     const filterPanel = document.getElementById('agency-space-filters-panel');
-    const filterToggle = document.querySelector('[data-space-filters-open]');
-    const backdrop = document.getElementById('agency-space-filters-backdrop');
-    if (!filterPanel) return;
-    filterPanel.hidden = !open;
-    if (filterToggle) {
-      filterToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-      filterToggle.classList.toggle('is-active', open);
-    }
-    if (backdrop) {
-      backdrop.hidden = !open;
-      backdrop.setAttribute('aria-hidden', open ? 'false' : 'true');
-    }
-    document.body.classList.toggle('agency-space-filters-open', open);
-    if (open && filterPanel && typeof initCRMJalaliPickers === 'function') {
+    const filterToggle = document.getElementById('agencySpaceAdvToggle');
+    if (!filterPanel || filterPanel.dataset.bound === '1') return;
+    filterPanel.dataset.bound = '1';
+
+    const setOpen = (open) => {
+      if (filterToggle) {
+        filterToggle.classList.toggle('is-open', open);
+        filterToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+      }
+      filterPanel.classList.toggle('is-open', open);
+      if (open) {
+        filterPanel.removeAttribute('hidden');
+        if (typeof initCRMJalaliPickers === 'function') {
+          initCRMJalaliPickers(filterPanel);
+        }
+      } else {
+        filterPanel.setAttribute('hidden', '');
+      }
+    };
+
+    filterToggle?.addEventListener('click', () => {
+      setOpen(!filterPanel.classList.contains('is-open'));
+    });
+
+    if (filterPanel.classList.contains('is-open') && typeof initCRMJalaliPickers === 'function') {
       initCRMJalaliPickers(filterPanel);
     }
+
+    filterPanel.addEventListener('change', (e) => {
+      const input = e.target;
+      if (!input.classList || !input.classList.contains('agency-space-team-pick__input')) return;
+      filterPanel.querySelectorAll('.agency-space-team-pick__item').forEach((item) => {
+        item.classList.toggle('is-selected', !!item.querySelector('.agency-space-team-pick__input:checked'));
+      });
+    });
   }
 
   document.addEventListener('DOMContentLoaded', function () {
@@ -118,41 +137,7 @@
       portalModalToBody(modalId);
     });
 
-    const filterPanel = document.getElementById('agency-space-filters-panel');
-    const backdrop = document.getElementById('agency-space-filters-backdrop');
-    if (filterPanel) portalModalToBody(filterPanel);
-    if (backdrop) portalModalToBody(backdrop);
-
-    const filterToggle = document.querySelector('[data-space-filters-open]');
-    if (filterToggle && filterPanel) {
-      filterToggle.addEventListener('click', function () {
-        setFiltersOpen(filterPanel.hidden);
-      });
-    }
-    document.querySelectorAll('[data-space-filters-close]').forEach((btn) => {
-      btn.addEventListener('click', function () {
-        setFiltersOpen(false);
-      });
-    });
-    if (backdrop) {
-      backdrop.addEventListener('click', function () {
-        setFiltersOpen(false);
-      });
-    }
-    if (filterPanel) {
-      filterPanel.addEventListener('change', function (e) {
-        const input = e.target;
-        if (!input.classList || !input.classList.contains('agency-space-team-pick__input')) return;
-        filterPanel.querySelectorAll('.agency-space-team-pick__item').forEach((item) => {
-          item.classList.toggle('is-selected', !!item.querySelector('.agency-space-team-pick__input:checked'));
-        });
-      });
-    }
-    document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape' && filterPanel && !filterPanel.hidden) {
-        setFiltersOpen(false);
-      }
-    });
+    initSpaceExpandFilters();
 
     document.querySelectorAll('[data-modal-close]').forEach((btn) => {
       btn.addEventListener('click', function () {

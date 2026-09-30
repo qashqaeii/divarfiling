@@ -4,7 +4,7 @@
 
 {% block crm_extra_css %}
 {{ block.super }}
-<link rel="stylesheet" href="{% static 'workspace/css/agency-space.css' %}?v=19">
+<link rel="stylesheet" href="{% static 'workspace/css/agency-space.css' %}?v=22">
 {% endblock %}
 
 {% block agency_hub_content %}
@@ -46,7 +46,7 @@
         {% else %}
 
         <div class="agency-space-discovery">
-            <form class="agency-space-discovery__form" method="get" action="">
+            <form class="agency-space-discovery__form crm-page-filters" method="get" action="" id="agency-space-list-form">
                 {% include "workspace/crm/agency/includes/space_query_hidden.html" %}
 
                 <div class="agency-space-discovery__primary">
@@ -56,7 +56,6 @@
                             placeholder="{% if space_tab == 'properties' %}جستجو در عنوان، محله، منطقه، ناشر…{% elif space_tab == 'contacts' %}جستجو در نام، نیاز، محدوده، ناشر…{% else %}جستجو در فضای آژانس…{% endif %}">
                     </div>
                     <label class="agency-space-discovery__sort">
-                        <span class="agency-space-discovery__sort-label">مرتب‌سازی</span>
                         <select name="ordering" class="crm-input crm-input-sm" aria-label="مرتب‌سازی">
                             <option value="newest"{% if space_filters.ordering == 'newest' %} selected{% endif %}>جدیدترین</option>
                             <option value="oldest"{% if space_filters.ordering == 'oldest' %} selected{% endif %}>قدیمی‌ترین</option>
@@ -81,10 +80,15 @@
                         {% if space_tab == 'properties' %}<strong>{{ space_result_total|intcomma }}</strong> فایل{% elif space_tab == 'contacts' %}<strong>{{ space_result_total|intcomma }}</strong> مخاطب{% else %}<strong>{{ space_result_total|intcomma }}</strong> مورد{% endif %}
                     </p>
                     <div class="agency-space-discovery__tools">
-                        <button type="button" class="crm-btn crm-btn-ghost crm-btn-sm agency-space-filters-toggle{% if space_filter_chips %} is-active{% endif %}" data-space-filters-open aria-expanded="false" aria-controls="agency-space-filters-panel">
+                        <button type="button"
+                                class="crm-files-adv-toggle agency-space-adv-toggle{% if space_filters_open %} is-open{% endif %}"
+                                id="agencySpaceAdvToggle"
+                                aria-expanded="{% if space_filters_open %}true{% else %}false{% endif %}"
+                                aria-controls="agency-space-filters-panel">
                             <i class="fas fa-sliders" aria-hidden="true"></i>
-                            فیلترها
-                            {% if space_filter_chips %}<span class="agency-space-filters-badge">{{ space_filter_chips|length }}</span>{% endif %}
+                            <span>فیلترها</span>
+                            {% if space_filter_chips %}<em class="crm-files-adv-badge">{{ space_filter_chips|length }}</em>{% endif %}
+                            <i class="fas fa-chevron-down crm-files-adv-chevron" aria-hidden="true"></i>
                         </button>
                         <div class="agency-space-view-toggle" role="group" aria-label="نمای نتایج">
                             <button type="button" class="agency-space-view-toggle__btn is-active" data-space-view="grid" title="شبکه" aria-label="نمای شبکه"><i class="fas fa-th-large" aria-hidden="true"></i></button>
@@ -92,10 +96,11 @@
                         </div>
                     </div>
                 </div>
+
+                {% include "workspace/crm/agency/includes/space_list_filters.html" %}
             </form>
         </div>
 
-        {% include "workspace/crm/agency/includes/space_list_filters.html" %}
         {% include "workspace/crm/agency/includes/space_filter_chips.html" %}
 
         <div class="agency-space-results">
@@ -140,5 +145,5 @@
 
 {% block crm_js %}
 {{ block.super }}
-<script src="{% static 'workspace/js/agency-space.js' %}?v=11" defer></script>
+<script src="{% static 'workspace/js/agency-space.js' %}?v=12" defer></script>
 {% endblock %}

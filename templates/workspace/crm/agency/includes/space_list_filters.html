@@ -1,40 +1,16 @@
-<div class="agency-space-filters-backdrop" id="agency-space-filters-backdrop" hidden aria-hidden="true"></div>
-
-
-
-<form class="agency-space-filters" method="get" action="" id="agency-space-filters-panel" hidden role="dialog" aria-modal="true" aria-labelledby="agency-space-filters-title">
+<div class="agency-space-filters agency-space-filters--expand crm-files-adv{% if space_filters_open %} is-open{% endif %}"
+     id="agency-space-filters-panel"
+     aria-labelledby="agency-space-filters-title"
+     {% if not space_filters_open %}hidden{% endif %}>
 
     <div class="agency-space-filters__accent" aria-hidden="true"></div>
 
-    <div class="agency-space-filters__mobile-head">
-
+    <header class="agency-space-filters__intro">
         <div class="agency-space-filters__head-copy">
-
-            <h2 id="agency-space-filters-title">فیلتر و محدوده</h2>
-
-            <p class="agency-space-filters__subtitle">جستجوی دقیق‌تر در فضای آژانس — تاریخ‌ها شمسی</p>
-
+            <h2 class="agency-space-filters__title" id="agency-space-filters-title">فیلتر پیشرفته</h2>
+            <p class="agency-space-filters__subtitle">مشاور، محدوده قیمت و تاریخ انتشار — تقویم شمسی</p>
         </div>
-
-        <button type="button" class="agency-space-filters__close" data-space-filters-close aria-label="بستن فیلترها">
-
-            <i class="fas fa-times" aria-hidden="true"></i>
-
-        </button>
-
-    </div>
-
-
-
-    <input type="hidden" name="tab" value="{{ space_tab }}">
-
-    {% if space_scope != 'all' %}<input type="hidden" name="scope" value="{{ space_scope }}">{% endif %}
-
-    {% if space_filters.q %}<input type="hidden" name="q" value="{{ space_filters.q }}">{% endif %}
-
-    <input type="hidden" name="ordering" value="{{ space_filters.ordering }}">
-
-
+    </header>
 
     <div class="agency-space-filters__body">
 
@@ -404,10 +380,10 @@
 
         </button>
 
-        <a href="?tab={{ space_tab }}" class="crm-btn crm-btn-ghost crm-btn-sm">پاک کردن همه</a>
+        <a href="?tab={{ space_tab }}{% if space_scope != 'all' %}&scope={{ space_scope }}{% endif %}" class="crm-btn crm-btn-ghost crm-btn-sm">پاک کردن همه</a>
 
     </div>
 
-</form>
+</div>
 
 

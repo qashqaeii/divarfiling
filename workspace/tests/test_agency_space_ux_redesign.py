@@ -179,3 +179,5 @@ class AgencySpaceUxNavTests(AgencySpaceTestBase):
         )
         cdata = serialize_space_item(c_item, self.advisor2, detail=False)
         self.assertIn('avatar_url', cdata['customer'])
+        self.assertIn('finance_label', cdata['customer'])
+        self.assertIn('area_label', cdata['customer'])

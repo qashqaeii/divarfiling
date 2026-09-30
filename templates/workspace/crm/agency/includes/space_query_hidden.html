@@ -1,0 +1,5 @@
+{% for key, val in space_filters.as_query_dict.items %}
+{% if key != 'q' and key != 'ordering' and key != 'page' %}
+<input type="hidden" name="{{ key }}" value="{{ val }}">
+{% endif %}
+{% endfor %}

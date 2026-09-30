@@ -4,7 +4,7 @@
 
 {% block crm_extra_css %}
 {{ block.super }}
-<link rel="stylesheet" href="{% static 'workspace/css/agency-space.css' %}?v=15">
+<link rel="stylesheet" href="{% static 'workspace/css/agency-space.css' %}?v=16">
 {% endblock %}
 
 {% block agency_hub_content %}
@@ -45,54 +45,58 @@
         {% endif %}
         {% else %}
 
-        <div class="agency-space-toolbar">
-            <form class="agency-space-search" method="get" action="">
-                <input type="hidden" name="tab" value="{{ space_tab }}">
-                {% if space_scope != 'all' %}<input type="hidden" name="scope" value="{{ space_scope }}">{% endif %}
-                <div class="agency-space-search__field">
-                    <span class="agency-space-search__icon" aria-hidden="true">{% include 'includes/icon_slot.html' with fa='fa-search' size='inline' only %}</span>
-                    <input type="search" name="q" value="{{ space_filters.q }}" class="crm-input" aria-label="جستجو"
-                        placeholder="{% if space_tab == 'properties' %}جستجو در عنوان، محله، منطقه، ناشر…{% elif space_tab == 'contacts' %}جستجو در نام، نیاز، محدوده، ناشر…{% else %}جستجو در فضای آژانس…{% endif %}">
+        <div class="agency-space-discovery">
+            <form class="agency-space-discovery__form" method="get" action="">
+                {% include "workspace/crm/agency/includes/space_query_hidden.html" %}
+
+                <div class="agency-space-discovery__primary">
+                    <div class="agency-space-search__field agency-space-discovery__search">
+                        <span class="agency-space-search__icon" aria-hidden="true">{% include 'includes/icon_slot.html' with fa='fa-search' size='inline' only %}</span>
+                        <input type="search" name="q" value="{{ space_filters.q }}" class="crm-input" aria-label="جستجو"
+                            placeholder="{% if space_tab == 'properties' %}جستجو در عنوان، محله، منطقه، ناشر…{% elif space_tab == 'contacts' %}جستجو در نام، نیاز، محدوده، ناشر…{% else %}جستجو در فضای آژانس…{% endif %}">
+                    </div>
+                    <label class="agency-space-discovery__sort">
+                        <span class="agency-space-discovery__sort-label">مرتب‌سازی</span>
+                        <select name="ordering" class="crm-input crm-input-sm" aria-label="مرتب‌سازی">
+                            <option value="newest"{% if space_filters.ordering == 'newest' %} selected{% endif %}>جدیدترین</option>
+                            <option value="oldest"{% if space_filters.ordering == 'oldest' %} selected{% endif %}>قدیمی‌ترین</option>
+                            {% if space_tab == 'properties' or space_tab == 'crm' %}
+                            <option value="price_asc"{% if space_filters.ordering == 'price_asc' %} selected{% endif %}>قیمت کمتر</option>
+                            <option value="price_desc"{% if space_filters.ordering == 'price_desc' %} selected{% endif %}>قیمت بیشتر</option>
+                            <option value="area_asc"{% if space_filters.ordering == 'area_asc' %} selected{% endif %}>متراژ کمتر</option>
+                            <option value="area_desc"{% if space_filters.ordering == 'area_desc' %} selected{% endif %}>متراژ بیشتر</option>
+                            <option value="most_copied"{% if space_filters.ordering == 'most_copied' %} selected{% endif %}>بیشترین کپی</option>
+                            {% endif %}
+                            {% if space_tab == 'contacts' %}
+                            <option value="budget_asc"{% if space_filters.ordering == 'budget_asc' %} selected{% endif %}>بودجه کمتر</option>
+                            <option value="budget_desc"{% if space_filters.ordering == 'budget_desc' %} selected{% endif %}>بودجه بیشتر</option>
+                            {% endif %}
+                        </select>
+                    </label>
+                    <button type="submit" class="crm-btn crm-btn-primary crm-btn-sm agency-space-discovery__submit">اعمال</button>
                 </div>
-                <button type="submit" class="crm-btn crm-btn-primary crm-btn-sm">جستجو</button>
+
+                <div class="agency-space-discovery__secondary">
+                    <p class="agency-space-discovery__count">
+                        {% if space_tab == 'properties' %}<strong>{{ space_result_total|intcomma }}</strong> فایل{% elif space_tab == 'contacts' %}<strong>{{ space_result_total|intcomma }}</strong> مخاطب{% else %}<strong>{{ space_result_total|intcomma }}</strong> مورد{% endif %}
+                    </p>
+                    <div class="agency-space-discovery__tools">
+                        <button type="button" class="crm-btn crm-btn-ghost crm-btn-sm agency-space-filters-toggle{% if space_filter_chips %} is-active{% endif %}" data-space-filters-open aria-expanded="false" aria-controls="agency-space-filters-panel">
+                            <i class="fas fa-sliders" aria-hidden="true"></i>
+                            فیلترها
+                            {% if space_filter_chips %}<span class="agency-space-filters-badge">{{ space_filter_chips|length }}</span>{% endif %}
+                        </button>
+                        <div class="agency-space-view-toggle" role="group" aria-label="نمای نتایج">
+                            <button type="button" class="agency-space-view-toggle__btn is-active" data-space-view="grid" title="شبکه" aria-label="نمای شبکه"><i class="fas fa-th-large" aria-hidden="true"></i></button>
+                            <button type="button" class="agency-space-view-toggle__btn" data-space-view="list" title="لیست" aria-label="نمای لیست"><i class="fas fa-list" aria-hidden="true"></i></button>
+                        </div>
+                    </div>
+                </div>
             </form>
-            <button type="button" class="crm-btn crm-btn-ghost crm-btn-sm agency-space-filters-toggle" data-space-filters-open aria-expanded="false" aria-controls="agency-space-filters-panel">فیلترها</button>
         </div>
 
         {% include "workspace/crm/agency/includes/space_list_filters.html" %}
         {% include "workspace/crm/agency/includes/space_filter_chips.html" %}
-
-        <div class="agency-space-result-head">
-            <p class="agency-space-result-head__count">
-                {% if space_tab == 'properties' %}{{ space_result_total|intcomma }} فایل{% elif space_tab == 'contacts' %}{{ space_result_total|intcomma }} مخاطب{% else %}{{ space_result_total|intcomma }} مورد{% endif %}
-            </p>
-            <form class="agency-space-result-head__sort" method="get" action="">
-                <input type="hidden" name="tab" value="{{ space_tab }}">
-                {% if space_scope != 'all' %}<input type="hidden" name="scope" value="{{ space_scope }}">{% endif %}
-                {% if space_filters.q %}<input type="hidden" name="q" value="{{ space_filters.q }}">{% endif %}
-                <label>مرتب‌سازی
-                    <select name="ordering" class="crm-input crm-input-sm" onchange="this.form.submit()">
-                        <option value="newest"{% if space_filters.ordering == 'newest' %} selected{% endif %}>جدیدترین</option>
-                        <option value="oldest"{% if space_filters.ordering == 'oldest' %} selected{% endif %}>قدیمی‌ترین</option>
-                        {% if space_tab == 'properties' or space_tab == 'crm' %}
-                        <option value="price_asc"{% if space_filters.ordering == 'price_asc' %} selected{% endif %}>قیمت کمتر</option>
-                        <option value="price_desc"{% if space_filters.ordering == 'price_desc' %} selected{% endif %}>قیمت بیشتر</option>
-                        <option value="area_asc"{% if space_filters.ordering == 'area_asc' %} selected{% endif %}>متراژ کمتر</option>
-                        <option value="area_desc"{% if space_filters.ordering == 'area_desc' %} selected{% endif %}>متراژ بیشتر</option>
-                        <option value="most_copied"{% if space_filters.ordering == 'most_copied' %} selected{% endif %}>بیشترین کپی</option>
-                        {% endif %}
-                        {% if space_tab == 'contacts' %}
-                        <option value="budget_asc"{% if space_filters.ordering == 'budget_asc' %} selected{% endif %}>بودجه کمتر</option>
-                        <option value="budget_desc"{% if space_filters.ordering == 'budget_desc' %} selected{% endif %}>بودجه بیشتر</option>
-                        {% endif %}
-                    </select>
-                </label>
-            </form>
-            <div class="agency-space-view-toggle" role="group" aria-label="نمای نتایج">
-                <button type="button" class="agency-space-view-toggle__btn is-active" data-space-view="grid" title="شبکه">▦</button>
-                <button type="button" class="agency-space-view-toggle__btn" data-space-view="list" title="لیست">☰</button>
-            </div>
-        </div>
 
         <div class="agency-space-results">
             <div class="agency-space-grid{% if space_tab == 'contacts' %} agency-space-grid--contacts{% endif %}{% if not space_items %} agency-space-grid--empty{% endif %}" data-space-grid>
@@ -136,5 +140,5 @@
 
 {% block crm_js %}
 {{ block.super }}
-<script src="{% static 'workspace/js/agency-space.js' %}?v=8" defer></script>
+<script src="{% static 'workspace/js/agency-space.js' %}?v=9" defer></script>
 {% endblock %}

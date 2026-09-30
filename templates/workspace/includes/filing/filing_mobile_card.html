@@ -8,10 +8,6 @@
 
     <div class="mk-ds-card-glass">
 
-        <label class="mk-ds-card-check fl-mob-card__check" title="انتخاب">
-            <input type="checkbox" class="mk-checkbox mk-ds-check" value="{{ ds.id }}" aria-label="انتخاب {{ ds.name }}">
-        </label>
-
         <div class="mk-ds-card-top">
 
             <a href="{% url 'workspace:dataset_detail' ds.id %}" class="mk-ds-card-main">
@@ -33,6 +29,10 @@
                 </div>
 
                 <div class="mk-ds-card-body">
+
+                    <label class="mk-ds-card-check fl-mob-card__check" title="انتخاب">
+                        <input type="checkbox" class="mk-checkbox mk-ds-check" value="{{ ds.id }}" aria-label="انتخاب {{ ds.name }}">
+                    </label>
 
                     <h3 class="mk-ds-card-title" title="{{ ds.name }}">{{ ds.name }}</h3>
 

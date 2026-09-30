@@ -39,6 +39,7 @@ from workspace.services.agency_space_query import (
     paginate_space_items,
 )
 from workspace.services.agency_space_serialize import serialize_space_item
+from workspace.services.agency_space_ui_context import prefetch_publisher_workspace_for_space_items
 from workspace.services.crm_agency_features import is_agency_feature_enabled
 
 
@@ -72,9 +73,11 @@ class AgencySpaceItemsAPIView(_AgencySpaceAPIBase):
             filters.page,
             filters.page_size,
         )
+        row_list = list(rows)
+        prefetch_publisher_workspace_for_space_items(row_list)
         items = [
-            serialize_space_item(i, request.user, detail=False)
-            for i in rows
+            serialize_space_item(i, request.user, detail=False, request=request)
+            for i in row_list
         ]
         return JsonResponse({
             'ok': True,
@@ -106,7 +109,8 @@ class AgencySpaceItemAPIView(_AgencySpaceAPIBase):
         item = get_space_item_for_user(request.user, item_id)
         if not item:
             return self._err('آیتم یافت نشد', 404)
-        data = serialize_space_item(item, request.user, detail=True)
+        prefetch_publisher_workspace_for_space_items([item])
+        data = serialize_space_item(item, request.user, detail=True, request=request)
         return JsonResponse({'ok': True, 'item': data})
 
     def patch(self, request, item_id: int):
@@ -128,7 +132,7 @@ class AgencySpaceItemAPIView(_AgencySpaceAPIBase):
             return self._err(str(exc))
         return JsonResponse({
             'ok': True,
-            'item': serialize_space_item(item, request.user, detail=True),
+            'item': serialize_space_item(item, request.user, detail=True, request=request),
         })
 
 
@@ -151,7 +155,7 @@ class AgencySpacePublishPropertyAPIView(_AgencySpaceAPIBase):
             return self._err(str(exc))
         return JsonResponse({
             'ok': True,
-            'item': serialize_space_item(item, request.user, detail=True),
+            'item': serialize_space_item(item, request.user, detail=True, request=request),
         }, status=201)
 
 
@@ -175,7 +179,7 @@ class AgencySpacePublishContactAPIView(_AgencySpaceAPIBase):
             return self._err(str(exc))
         return JsonResponse({
             'ok': True,
-            'item': serialize_space_item(item, request.user, detail=True),
+            'item': serialize_space_item(item, request.user, detail=True, request=request),
         }, status=201)
 
 

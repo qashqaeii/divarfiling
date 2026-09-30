@@ -124,6 +124,19 @@ class SpaceListFilters:
     def without_params(self, *params: str) -> str:
         return self.query_string(exclude=frozenset(params))
 
+    def published_after_jalali(self) -> str:
+        return _format_filter_date_jalali(self.published_after)
+
+    def published_before_jalali(self) -> str:
+        return _format_filter_date_jalali(self.published_before)
+
+
+def _format_filter_date_jalali(value: Optional[date]) -> str:
+    if not value:
+        return ''
+    from workspace.services.jalali_input import format_jalali_date, to_persian_digits
+    return to_persian_digits(format_jalali_date(value))
+
 
 def _int_param(raw: str) -> Optional[int]:
     raw = (raw or '').strip()
@@ -149,7 +162,9 @@ def _date_param(raw: str) -> Optional[date]:
     try:
         return date.fromisoformat(raw[:10])
     except ValueError:
-        return None
+        pass
+    from workspace.services.jalali_input import parse_jalali_date_string
+    return parse_jalali_date_string(raw)
 
 
 def parse_space_list_filters(get_params: Any) -> SpaceListFilters:
@@ -310,4 +325,8 @@ def build_space_filter_chips(filters: SpaceListFilters) -> list:
         chips.append(_chip('crm_copy', 'کپی نشده'))
     if filters.publisher_id:
         chips.append(_chip('publisher', f'ناشر #{filters.publisher_id}'))
+    if filters.published_after is not None or filters.published_before is not None:
+        lo = filters.published_after_jalali() or '…'
+        hi = filters.published_before_jalali() or '…'
+        chips.append(_range_chip('published_after', 'published_before', label=f'تاریخ {lo} – {hi}'))
     return chips

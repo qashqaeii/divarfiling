@@ -65,6 +65,14 @@ class AgencySpaceUxNavTests(AgencySpaceTestBase):
         self.assertIn('scope=published_by_me', qs)
         self.assertIn('city', qs)
 
+    def test_jalali_date_filter_parsing(self):
+        from django.http import QueryDict
+
+        qd = QueryDict('tab=properties&published_after=1403/06/15')
+        f = parse_space_list_filters(qd)
+        self.assertIsNotNone(f.published_after)
+        self.assertTrue(f.published_after_jalali())
+
     def test_price_range_chip_clears_min_and_max(self):
         from workspace.services.agency_space_params import build_space_filter_chips
 
@@ -73,6 +81,31 @@ class AgencySpaceUxNavTests(AgencySpaceTestBase):
         price_chip = next(c for c in chips if c['label'].startswith('قیمت'))
         self.assertNotIn('min_price=100', price_chip['clear_query'])
         self.assertNotIn('max_price=500', price_chip['clear_query'])
+
+    def test_property_detail_includes_full_specs(self):
+        from workspace.services.agency_space_serialize import serialize_space_item
+
+        prop = CRMProperty.objects.create(
+            user=self.advisor,
+            agency=self.agency,
+            title='Detail Prop',
+            sale_price=5_000_000_000,
+            area=120,
+            land_area=200,
+            phone='09121112233',
+            owner_name='مالک',
+            notes='یادداشت داخلی',
+            feature_data={'گرمایش': 'پکیج'},
+        )
+        item = publish_property(
+            self.advisor, prop.pk, visibility=AgencySpaceItem.VISIBILITY_AGENCY_PUBLIC,
+        )
+        data = serialize_space_item(item, self.advisor2, detail=True)
+        p = data['property']
+        self.assertEqual(p['phone'], '09121112233')
+        self.assertTrue(p['price_rows'])
+        self.assertEqual(p['owner_name'], 'مالک')
+        self.assertTrue(p['feature_data_rows'])
 
     def test_summary_contact_phone_not_discoverable_via_search(self):
         from workspace.services.agency_space_publish import publish_customer
@@ -109,3 +142,40 @@ class AgencySpaceUxNavTests(AgencySpaceTestBase):
         )
         f2 = SpaceListFilters(tab='contacts', q=secret_phone)
         self.assertEqual(get_space_items_from_filters(self.advisor2, f2).count(), 1)
+
+    def test_publisher_filter_options_include_role_and_avatar(self):
+        from workspace.services.agency_space_ui_context import build_space_publisher_filter_options
+
+        opts = build_space_publisher_filter_options(None, self.agency, self.advisor.pk)
+        by_id = {o['user_id']: o for o in opts}
+        self.assertIn(self.advisor.pk, by_id)
+        row = by_id[self.advisor.pk]
+        self.assertTrue(row['selected'])
+        self.assertTrue(row['avatar_url'])
+        self.assertIn('role_label', row)
+        self.assertIn('role_bg', row)
+
+    def test_serialize_publisher_and_customer_avatars(self):
+        from workspace.services.agency_space_publish import publish_customer
+        from workspace.models import Customer
+        from workspace.services.agency_space_serialize import serialize_space_item
+
+        prop = CRMProperty.objects.create(
+            user=self.advisor, agency=self.agency, title='Avatar card', sale_price=1,
+        )
+        p_item = publish_property(
+            self.advisor, prop.pk, visibility=AgencySpaceItem.VISIBILITY_AGENCY_PUBLIC,
+        )
+        pdata = serialize_space_item(p_item, self.advisor2, detail=False)
+        self.assertIn('avatar_url', pdata['publisher'])
+        self.assertIn('role_label', pdata['publisher'])
+
+        c = Customer.objects.create(user=self.advisor, agency=self.agency, name='Avatar C')
+        c_item = publish_customer(
+            self.advisor,
+            c.pk,
+            visibility=AgencySpaceItem.VISIBILITY_AGENCY_PUBLIC,
+            contact_share_level=AgencySpaceItem.CONTACT_SUMMARY,
+        )
+        cdata = serialize_space_item(c_item, self.advisor2, detail=False)
+        self.assertIn('avatar_url', cdata['customer'])

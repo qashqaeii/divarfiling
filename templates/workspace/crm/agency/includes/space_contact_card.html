@@ -1,6 +1,10 @@
 <article class="agency-space-card agency-space-card--customer agency-space-card--contact-compact" data-space-kind="customer" data-item-id="{{ item.id }}">
     <a href="{% url 'workspace:agency_hub_space_item' item.id %}" class="agency-space-card__contact-row">
+        {% if item.customer.avatar_url %}
+        <img class="agency-space-card__avatar agency-space-card__avatar--img" src="{{ item.customer.avatar_url }}" alt="" width="36" height="36" loading="lazy" decoding="async">
+        {% else %}
         <span class="agency-space-card__avatar" aria-hidden="true">{{ item.customer.name|slice:":1"|upper }}</span>
+        {% endif %}
         <div class="agency-space-card__contact-main">
             <div class="agency-space-card__meta-row agency-space-card__meta-row--contact">
                 <span class="agency-space-badge agency-space-badge--{{ item.visibility }}"{% if item.audience_count %} title="فقط {{ item.audience_count }} عضو"{% endif %}>{{ item.visibility_label }}</span>
@@ -23,7 +27,15 @@
         </div>
     </a>
     <footer class="agency-space-card__foot agency-space-card__foot--compact">
-        <span class="agency-space-card__publisher-name">{% if item.is_publisher %}منتشرشده توسط من{% else %}{{ item.publisher.name }}{% endif %}</span>
+        <div class="agency-space-card__publisher agency-space-card__publisher--compact">
+            {% if item.publisher.avatar_url %}
+            <img class="agency-space-card__publisher-avatar agency-space-card__publisher-avatar--img" src="{{ item.publisher.avatar_url }}" alt="" width="20" height="20" loading="lazy" decoding="async" style="--role-ring: {{ item.publisher.role_bg }}">
+            {% else %}
+            <span class="agency-space-card__publisher-avatar" aria-hidden="true" style="background: {{ item.publisher.role_bg }}; color: {{ item.publisher.role_fg }}">{{ item.publisher.name|slice:":1"|upper }}</span>
+            {% endif %}
+            <span class="agency-space-card__publisher-name">{% if item.is_publisher %}منتشرشده توسط من{% else %}{{ item.publisher.name }}{% endif %}</span>
+            {% if item.publisher.role_label %}<span class="agency-space-card__publisher-role agency-space-card__publisher-role--compact" style="background: {{ item.publisher.role_bg }}; color: {{ item.publisher.role_fg }}">{{ item.publisher.role_label }}</span>{% endif %}
+        </div>
         {% if item.published_at_display %}<time class="agency-space-card__time">{{ item.published_at_display }}</time>{% endif %}
     </footer>
     <div class="agency-space-card__actions agency-space-card__actions--compact">

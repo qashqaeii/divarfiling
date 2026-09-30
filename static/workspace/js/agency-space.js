@@ -108,6 +108,9 @@
       backdrop.setAttribute('aria-hidden', open ? 'false' : 'true');
     }
     document.body.classList.toggle('agency-space-filters-open', open);
+    if (open && filterPanel && typeof initCRMJalaliPickers === 'function') {
+      initCRMJalaliPickers(filterPanel);
+    }
   }
 
   document.addEventListener('DOMContentLoaded', function () {
@@ -115,9 +118,12 @@
       portalModalToBody(modalId);
     });
 
-    const filterToggle = document.querySelector('[data-space-filters-open]');
     const filterPanel = document.getElementById('agency-space-filters-panel');
     const backdrop = document.getElementById('agency-space-filters-backdrop');
+    if (filterPanel) portalModalToBody(filterPanel);
+    if (backdrop) portalModalToBody(backdrop);
+
+    const filterToggle = document.querySelector('[data-space-filters-open]');
     if (filterToggle && filterPanel) {
       filterToggle.addEventListener('click', function () {
         setFiltersOpen(filterPanel.hidden);
@@ -131,6 +137,15 @@
     if (backdrop) {
       backdrop.addEventListener('click', function () {
         setFiltersOpen(false);
+      });
+    }
+    if (filterPanel) {
+      filterPanel.addEventListener('change', function (e) {
+        const input = e.target;
+        if (!input.classList || !input.classList.contains('agency-space-team-pick__input')) return;
+        filterPanel.querySelectorAll('.agency-space-team-pick__item').forEach((item) => {
+          item.classList.toggle('is-selected', !!item.querySelector('.agency-space-team-pick__input:checked'));
+        });
       });
     }
     document.addEventListener('keydown', function (e) {
@@ -201,23 +216,45 @@
     }
 
     function promoteCopyButton(btn, targetUrl) {
+      document.querySelectorAll(`[data-space-copy][data-item-id="${btn.dataset.itemId}"]`).forEach((b) => {
+        b.remove();
+      });
       const card = btn.closest('.agency-space-card');
-      btn.remove();
-      const link = document.createElement('a');
-      link.href = targetUrl;
-      link.className = 'agency-space-card__btn agency-space-card__btn--primary';
-      link.setAttribute('data-space-crm-link', '');
-      link.textContent = 'در CRM من';
-      const actions = card ? card.querySelector('.agency-space-card__actions') : null;
-      if (actions) actions.appendChild(link);
-      const flag = card ? card.querySelector('.agency-space-card__crm-flag') : null;
-      if (!flag && card) {
+      if (card) {
+        const link = document.createElement('a');
+        link.href = targetUrl;
+        link.className = 'agency-space-card__btn agency-space-card__btn--primary';
+        link.setAttribute('data-space-crm-link', '');
+        link.textContent = 'در CRM من';
+        const actions = card.querySelector('.agency-space-card__actions');
+        if (actions) actions.appendChild(link);
         const row = card.querySelector('.agency-space-card__meta-row');
-        if (row) {
+        if (row && !card.querySelector('.agency-space-card__crm-flag')) {
           const span = document.createElement('span');
           span.className = 'agency-space-card__crm-flag';
           span.innerHTML = '<i class="fas fa-circle-check" aria-hidden="true"></i>در CRM من';
           row.appendChild(span);
+        }
+      }
+      const detail = document.querySelector('.agency-space-detail');
+      if (detail) {
+        detail.querySelectorAll('.agency-space-detail__sticky-primary[data-space-copy]').forEach((el) => el.remove());
+        const sticky = detail.querySelector('.agency-space-detail__sticky-inner');
+        if (sticky && !sticky.querySelector('.agency-space-detail__sticky-primary')) {
+          const stickyLink = document.createElement('a');
+          stickyLink.href = targetUrl;
+          stickyLink.className = 'crm-btn crm-btn-primary crm-btn-sm agency-space-detail__sticky-primary';
+          stickyLink.textContent = 'مشاهده در CRM';
+          sticky.appendChild(stickyLink);
+        }
+        const crmBody = detail.querySelector('.agency-space-detail__aside-card--crm .agency-space-detail__aside-body');
+        if (crmBody) {
+          crmBody.innerHTML = '<p class="agency-space-detail__crm-ok"><i class="fas fa-circle-check" aria-hidden="true"></i> ذخیره در CRM شما</p>';
+          const a = document.createElement('a');
+          a.href = targetUrl;
+          a.className = 'crm-btn crm-btn-primary crm-btn-sm crm-btn-block';
+          a.textContent = 'مشاهده نسخه من';
+          crmBody.appendChild(a);
         }
       }
     }

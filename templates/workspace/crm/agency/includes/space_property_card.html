@@ -34,8 +34,15 @@
     </div>
     <footer class="agency-space-card__foot">
         <div class="agency-space-card__publisher">
-            <span class="agency-space-card__publisher-avatar" aria-hidden="true">{{ item.publisher.name|slice:":1"|upper }}</span>
-            <span class="agency-space-card__publisher-name">{% if item.is_publisher %}شما{% else %}{{ item.publisher.name }}{% endif %}</span>
+            {% if item.publisher.avatar_url %}
+            <img class="agency-space-card__publisher-avatar agency-space-card__publisher-avatar--img" src="{{ item.publisher.avatar_url }}" alt="" width="22" height="22" loading="lazy" decoding="async" style="--role-ring: {{ item.publisher.role_bg }}">
+            {% else %}
+            <span class="agency-space-card__publisher-avatar" aria-hidden="true" style="background: {{ item.publisher.role_bg }}; color: {{ item.publisher.role_fg }}">{{ item.publisher.name|slice:":1"|upper }}</span>
+            {% endif %}
+            <span class="agency-space-card__publisher-text">
+                <span class="agency-space-card__publisher-name">{% if item.is_publisher %}شما{% else %}{{ item.publisher.name }}{% endif %}</span>
+                {% if item.publisher.role_label %}<span class="agency-space-card__publisher-role" style="background: {{ item.publisher.role_bg }}; color: {{ item.publisher.role_fg }}">{{ item.publisher.role_label }}</span>{% endif %}
+            </span>
         </div>
         {% if item.published_at_display %}<time class="agency-space-card__time">{{ item.published_at_display }}</time>{% endif %}
     </footer>

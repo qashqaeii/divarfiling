@@ -17,6 +17,8 @@ from workspace.models import AgencySpaceCopy
 from workspace.services.crm_scope import get_membership
 from workspace.services.display import to_jalali_display
 from workspace.services.formatting import format_area, format_toman
+from workspace.constants import AGENCY_ROLE_STYLES
+from accounts.avatar_catalog import consultant_portrait_url, resolve_contact_avatar_display
 
 User = get_user_model()
 
@@ -28,6 +30,53 @@ def _viewer_owns_space_source(viewer: User, item: AgencySpaceItem) -> bool:
     if item.customer_id and item.customer:
         return item.customer.user_id == viewer.id
     return False
+
+
+def _property_price_rows(prop: CRMProperty) -> List[Dict[str, str]]:
+    rows: List[Dict[str, str]] = []
+    if prop.sale_price:
+        rows.append({'label': 'قیمت فروش', 'value': format_toman(prop.sale_price)})
+    if prop.deposit:
+        rows.append({'label': 'رهن', 'value': format_toman(prop.deposit)})
+    if prop.monthly_rent:
+        rows.append({'label': 'اجاره ماهانه', 'value': format_toman(prop.monthly_rent)})
+    return rows
+
+
+def _property_amenity_flags(prop: CRMProperty) -> List[Dict[str, str]]:
+    mapping = [
+        ('has_parking', 'پارکینگ', 'fa-car'),
+        ('has_storage', 'انباری', 'fa-box'),
+        ('has_elevator', 'آسانسور', 'fa-arrow-up'),
+        ('has_wardrobe', 'کمد دیواری', 'fa-door-closed'),
+        ('has_two_corner', 'دو نبش', 'fa-vector-square'),
+        ('has_two_access', 'دو معبر', 'fa-road'),
+        ('has_wallpaper', 'کاغذ دیواری', 'fa-paint-roller'),
+        ('has_knauf', 'کناف', 'fa-border-all'),
+        ('has_lighting', 'نورپردازی', 'fa-lightbulb'),
+        ('is_vacant', 'تخلیه', 'fa-key'),
+    ]
+    out: List[Dict[str, str]] = []
+    for attr, label, icon in mapping:
+        if getattr(prop, attr, False):
+            out.append({'label': label, 'icon': icon})
+    return out
+
+
+def _property_feature_data_rows(prop: CRMProperty) -> List[Dict[str, str]]:
+    raw = prop.feature_data if isinstance(prop.feature_data, dict) else {}
+    rows: List[Dict[str, str]] = []
+    for key, val in raw.items():
+        if val is None or val == '' or val is False:
+            continue
+        if isinstance(val, bool):
+            if not val:
+                continue
+            display = 'بله'
+        else:
+            display = str(val)
+        rows.append({'label': str(key), 'value': display})
+    return rows[:40]
 
 
 def _property_price_label(prop: CRMProperty) -> str:
@@ -59,7 +108,7 @@ def _format_published_at(dt) -> str:
     return to_jalali_display(dt)
 
 
-def _publisher_payload(user: User) -> Dict[str, Any]:
+def _publisher_payload(user: User, request=None) -> Dict[str, Any]:
     pref = getattr(user, '_space_pub_membership', None)
     if pref:
         membership = pref[0] if pref else None
@@ -71,11 +120,21 @@ def _publisher_payload(user: User) -> Dict[str, Any]:
     role_label = ''
     if membership:
         role_label = dict(membership._meta.get_field('role').choices).get(role, role)
+    role_bg, role_fg = AGENCY_ROLE_STYLES.get(role, ('#f1f5f9', '#64748b'))
+    ws = getattr(user, '_space_ws_settings', None)
+    if ws is None and request is not None:
+        from workspace.models import WorkspaceSettings
+
+        ws = WorkspaceSettings.objects.filter(user_id=user.pk).only('consultant_photo').first()
+        user._space_ws_settings = ws
     return {
         'id': user.pk,
         'name': user_display_name(user),
         'role': role,
         'role_label': role_label,
+        'role_bg': role_bg,
+        'role_fg': role_fg,
+        'avatar_url': consultant_portrait_url(user, ws_settings=ws, request=request),
     }
 
 
@@ -119,12 +178,35 @@ def _property_card(prop: CRMProperty, *, include_sensitive: bool) -> Dict[str, A
     if include_sensitive:
         data['address'] = prop.address
         data['phone'] = prop.phone
-        data['notes'] = prop.notes
+        data['tenant_phone'] = prop.tenant_phone or ''
+        data['owner_name'] = prop.owner_name or ''
+        data['notes'] = prop.notes or ''
         data['amenities'] = (prop.amenities or '')[:1200]
+        data['land_area'] = prop.land_area
+        data['land_area_label'] = format_area(prop.land_area) if prop.land_area not in (None, '') else ''
+        data['frontage_width'] = prop.frontage_width
+        data['postal_code'] = prop.postal_code or ''
+        data['publish_status'] = prop.publish_status or ''
+        data['business_type'] = prop.business_type or ''
+        data['link'] = prop.link or ''
+        data['token'] = prop.token or ''
+        data['source_platform'] = prop.source_platform or ''
+        data['latitude'] = prop.latitude
+        data['longitude'] = prop.longitude
+        data['has_map'] = prop.latitude is not None and prop.longitude is not None
+        data['price_rows'] = _property_price_rows(prop)
+        data['amenity_flags'] = _property_amenity_flags(prop)
+        data['feature_data_rows'] = _property_feature_data_rows(prop)
         data['has_parking'] = prop.has_parking
         data['has_elevator'] = prop.has_elevator
         data['has_storage'] = prop.has_storage
         data['is_vacant'] = prop.is_vacant
+        data['has_wardrobe'] = prop.has_wardrobe
+        data['has_two_corner'] = prop.has_two_corner
+        data['has_two_access'] = prop.has_two_access
+        data['has_wallpaper'] = prop.has_wallpaper
+        data['has_knauf'] = prop.has_knauf
+        data['has_lighting'] = prop.has_lighting
     return data
 
 
@@ -134,6 +216,7 @@ def _customer_payload(
     viewer: User,
     *,
     detail: bool,
+    request=None,
 ) -> Dict[str, Any]:
     can_full = (
         item.contact_share_level == AgencySpaceItem.CONTACT_FULL
@@ -164,6 +247,8 @@ def _customer_payload(
     data['contact_share_level_label'] = dict(
         AgencySpaceItem.CONTACT_SHARE_LEVEL_CHOICES,
     ).get(item.contact_share_level, item.contact_share_level)
+    avatar = resolve_contact_avatar_display(customer, request=request)
+    data['avatar_url'] = avatar.get('photo_url') or ''
     if detail and can_full:
         data['notes'] = (customer.notes or '')[:800]
     return data
@@ -178,6 +263,7 @@ def serialize_space_item(
     viewer: User,
     *,
     detail: bool = False,
+    request=None,
 ) -> Optional[Dict[str, Any]]:
     if not can_view_space_item(viewer, item):
         return None
@@ -202,7 +288,7 @@ def serialize_space_item(
         'updated_at': item.updated_at.isoformat() if item.updated_at else '',
         'updated_at_display': _format_published_at(item.updated_at),
         'archived_at_display': _format_published_at(item.archived_at) if item.archived_at else '',
-        'publisher': _publisher_payload(item.publisher),
+        'publisher': _publisher_payload(item.publisher, request=request),
         'is_publisher': item.publisher_id == viewer.id,
         'can_edit': item.publisher_id == viewer.id and item.status == AgencySpaceItem.STATUS_ACTIVE,
         'can_unpublish': item.publisher_id == viewer.id and item.status == AgencySpaceItem.STATUS_ACTIVE,
@@ -221,7 +307,9 @@ def serialize_space_item(
     elif item.property_id:
         payload['property'] = {'id': item.property_id, 'missing': True}
     if item.customer_id and item.customer:
-        payload['customer'] = _customer_payload(item.customer, item, viewer, detail=detail)
+        payload['customer'] = _customer_payload(
+            item.customer, item, viewer, detail=detail, request=request,
+        )
     elif item.customer_id:
         payload['customer'] = {'id': item.customer_id, 'missing': True}
     if detail and item.visibility == AgencySpaceItem.VISIBILITY_SELECTED_MEMBERS:
@@ -281,7 +369,9 @@ def serialize_space_item(
     return payload
 
 
-def serialize_space_item_safe_metadata(item: AgencySpaceItem, viewer: User) -> Optional[Dict[str, Any]]:
+def serialize_space_item_safe_metadata(
+    item: AgencySpaceItem, viewer: User, *, request=None,
+) -> Optional[Dict[str, Any]]:
     from workspace.services.agency_space_access import can_view_space_item_safe_metadata
 
     if not can_view_space_item_safe_metadata(viewer, item):
@@ -294,5 +384,5 @@ def serialize_space_item_safe_metadata(item: AgencySpaceItem, viewer: User) -> O
         'status': item.status,
         'status_label': dict(AgencySpaceItem.STATUS_CHOICES).get(item.status, item.status),
         'published_at': item.published_at.isoformat() if item.published_at else '',
-        'publisher': _publisher_payload(item.publisher),
+        'publisher': _publisher_payload(item.publisher, request=request),
     }

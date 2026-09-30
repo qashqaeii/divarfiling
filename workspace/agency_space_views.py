@@ -34,7 +34,10 @@ from workspace.services.agency_space_query import (
     serialize_management_row,
 )
 from workspace.services.agency_space_serialize import serialize_space_item
-from workspace.services.crm_scope import agency_members
+from workspace.services.agency_space_ui_context import (
+    build_space_publisher_filter_options,
+    prefetch_publisher_workspace_for_space_items,
+)
 
 
 def _hub_shell(request, hub_section: str) -> dict:
@@ -72,9 +75,11 @@ class AgencyHubSpaceView(AgencySpaceFeatureMixin, LoginRequiredMixin, TemplateVi
             total_count = qs.count()
             paginator = Paginator(qs, filters.page_size)
             page_obj = paginator.get_page(filters.page)
+            page_rows = list(page_obj.object_list)
+            prefetch_publisher_workspace_for_space_items(page_rows)
             items = [
-                serialize_space_item(item, user, detail=False)
-                for item in page_obj.object_list
+                serialize_space_item(item, user, detail=False, request=self.request)
+                for item in page_rows
             ]
             items = [i for i in items if i]
 
@@ -87,7 +92,9 @@ class AgencyHubSpaceView(AgencySpaceFeatureMixin, LoginRequiredMixin, TemplateVi
             'space_page': page_obj,
             'space_result_total': total_count,
             'space_overview': overview,
-            'space_publishers': agency_members(agency) if agency else [],
+            'space_publisher_options': build_space_publisher_filter_options(
+                self.request, agency, filters.publisher_id,
+            ),
             'space_detail_url_name': 'workspace:agency_hub_space_item',
             'space_api_items_url': reverse('workspace:api_agency_space_items'),
             'space_api_analytics_url': reverse('workspace:api_agency_space_analytics'),
@@ -164,7 +171,10 @@ class AgencyHubSpaceItemView(AgencySpaceFeatureMixin, LoginRequiredMixin, Templa
         ctx = super().get_context_data(**kwargs)
         ctx.update(_hub_shell(self.request, self.hub_section))
         item = get_space_item_for_user(self.request.user, self.kwargs['item_id'])
-        payload = serialize_space_item(item, self.request.user, detail=True)
+        prefetch_publisher_workspace_for_space_items([item])
+        payload = serialize_space_item(
+            item, self.request.user, detail=True, request=self.request,
+        )
         agency = get_user_space_agency(self.request.user)
         ctx.update({
             'space_item': item,

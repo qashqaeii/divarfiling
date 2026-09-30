@@ -1,0 +1,20 @@
+<article class="agency-space-property-detail__aside-card agency-space-property-detail__aside-card--crm"{% if crm_heading_id %} aria-labelledby="{{ crm_heading_id }}"{% endif %}>
+    <h2 {% if crm_heading_id %}id="{{ crm_heading_id }}"{% endif %} class="agency-space-property-detail__aside-h">افزودن به CRM من</h2>
+    <p class="agency-space-property-detail__aside-lead">یک نسخه مستقل از این فایل در CRM شخصی شما ساخته می‌شود؛ فایل اصلی در فضای آژانس تغییر نمی‌کند.</p>
+    <p class="agency-space-property-detail__provenance">نسخه CRM شما مستقل از نسخه منتشرشده در فضای آژانس است.</p>
+    <div class="agency-space-property-detail__aside-body">
+        {% if space_payload.owns_source_in_crm and space_payload.source_crm_url %}
+        <p class="agency-space-property-detail__crm-ok"><i class="fas fa-circle-check" aria-hidden="true"></i> این فایل از CRM شما منتشر شده</p>
+        <a href="{{ space_payload.source_crm_url }}" class="crm-btn crm-btn-primary crm-btn-sm crm-btn-block">مشاهده فایل در CRM</a>
+        {% elif space_payload.already_copied and space_payload.copy_target_url %}
+        <p class="agency-space-property-detail__crm-ok"><i class="fas fa-circle-check" aria-hidden="true"></i> این فایل در CRM شماست{% if space_payload.copy_created_at_display %}<br><span class="agency-space-property-detail__crm-time">ذخیره: {{ space_payload.copy_created_at_display }}</span>{% endif %}</p>
+        <a href="{{ space_payload.copy_target_url }}" class="crm-btn crm-btn-primary crm-btn-sm crm-btn-block" data-space-crm-link>باز کردن CRM</a>
+        {% elif space_payload.can_copy %}
+        <button type="button" class="crm-btn crm-btn-primary crm-btn-sm crm-btn-block" data-space-copy data-item-id="{{ space_item.pk }}">
+            <i class="fas fa-plus" aria-hidden="true"></i> کپی به CRM من
+        </button>
+        {% else %}
+        <p class="agency-space-property-detail__muted">کپی در دسترس نیست.</p>
+        {% endif %}
+    </div>
+</article>

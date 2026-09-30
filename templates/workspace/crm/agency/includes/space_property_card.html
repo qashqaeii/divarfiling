@@ -1,8 +1,8 @@
 <article class="agency-space-card agency-space-property-card" data-space-kind="property" data-item-id="{{ item.id }}">
-    <a href="{% url 'workspace:agency_hub_space_item' item.id %}" class="agency-space-property-card__media-hit">
+    <a href="{% url 'workspace:agency_hub_space_item' item.id %}" class="agency-space-property-card__media-hit" tabindex="-1" aria-hidden="true">
         <div class="agency-space-property-card__media">
             {% if item.property.thumbnail_url %}
-            <img src="{{ item.property.thumbnail_url }}" alt="" loading="lazy" width="400" height="240" decoding="async">
+            <img src="{{ item.property.thumbnail_url }}" alt="" loading="lazy" width="400" height="225" decoding="async">
             {% else %}
             <span class="agency-space-property-card__media-fallback" aria-hidden="true"><i class="fas fa-building"></i></span>
             {% endif %}
@@ -12,9 +12,6 @@
                 {% endif %}
                 <span class="agency-space-badge agency-space-badge--{{ item.visibility }} agency-space-property-card__badge agency-space-property-card__badge--vis"{% if item.audience_count %} title="فقط {{ item.audience_count }} عضو"{% endif %}>{{ item.visibility_label }}</span>
             </div>
-            {% if item.is_publisher %}
-            <span class="agency-space-property-card__mine">منتشرشده توسط من</span>
-            {% endif %}
         </div>
     </a>
 
@@ -30,42 +27,35 @@
             </p>
             {% endif %}
             {% if item.property.area_label or item.property.area or item.property.rooms %}
-            <div class="agency-space-property-card__specs">
+            <p class="agency-space-property-card__specs">
                 {% if item.property.area_label or item.property.area %}
-                <span class="agency-space-property-card__spec">{% if item.property.area_label %}{{ item.property.area_label }}{% else %}{{ item.property.area }} متر{% endif %}</span>
+                <span>{% if item.property.area_label %}{{ item.property.area_label }}{% else %}{{ item.property.area }} متر{% endif %}</span>
                 {% endif %}
                 {% if item.property.rooms %}
-                <span class="agency-space-property-card__spec">{{ item.property.rooms }} خواب</span>
+                <span>{{ item.property.rooms }} خواب</span>
                 {% endif %}
-            </div>
+            </p>
             {% endif %}
         </div>
 
         <div class="agency-space-property-card__trail">
             <div class="agency-space-property-card__publisher">
                 {% if item.publisher.avatar_url %}
-                <img class="agency-space-property-card__publisher-avatar" src="{{ item.publisher.avatar_url }}" alt="" width="24" height="24" loading="lazy" decoding="async">
+                <img class="agency-space-property-card__publisher-avatar" src="{{ item.publisher.avatar_url }}" alt="" width="22" height="22" loading="lazy" decoding="async">
                 {% else %}
                 <span class="agency-space-property-card__publisher-avatar agency-space-property-card__publisher-avatar--initial" aria-hidden="true" style="background: {{ item.publisher.role_bg }}; color: {{ item.publisher.role_fg }}">{{ item.publisher.name|slice:":1"|upper }}</span>
                 {% endif %}
-                <span class="agency-space-property-card__publisher-line">
+                <p class="agency-space-property-card__publisher-line">
                     <span class="agency-space-property-card__publisher-name">{% if item.is_publisher %}شما{% else %}{{ item.publisher.name }}{% endif %}</span>
                     {% if item.publisher.role_label or item.published_at_display %}
                     <span class="agency-space-property-card__publisher-meta">
                         {% if item.publisher.role_label %}{{ item.publisher.role_label }}{% endif %}
-                        {% if item.publisher.role_label and item.published_at_display %} • {% endif %}
+                        {% if item.publisher.role_label and item.published_at_display %} · {% endif %}
                         {% if item.published_at_display %}<time>{{ item.published_at_display }}</time>{% endif %}
                     </span>
                     {% endif %}
-                </span>
+                </p>
             </div>
-
-            {% if item.owns_source_in_crm or item.already_copied %}
-            <p class="agency-space-property-card__crm-state">
-                <i class="fas fa-circle-check" aria-hidden="true"></i>
-                {% if item.owns_source_in_crm %}فایل CRM شما{% else %}در CRM من{% endif %}
-            </p>
-            {% endif %}
         </div>
     </div>
 
@@ -77,6 +67,12 @@
             <p class="agency-space-property-card__ppm">{{ item.property.price_per_meter_label }} / متر</p>
             {% endif %}
         </div>
+        {% endif %}
+
+        {% if item.owns_source_in_crm or item.already_copied %}
+        <p class="agency-space-property-card__crm-state">
+            <i class="fas fa-circle-check" aria-hidden="true"></i> در CRM من
+        </p>
         {% endif %}
 
         <div class="agency-space-property-card__actions">

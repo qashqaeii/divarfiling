@@ -1,0 +1,147 @@
+{% with cust=space_payload.customer %}
+<div class="agency-space-contact-detail">
+    <header class="agency-space-contact-detail__hero">
+        <div class="agency-space-contact-detail__hero-main">
+            <div class="agency-space-contact-detail__identity">
+                {% if cust.avatar_url %}
+                <img class="agency-space-contact-detail__avatar" src="{{ cust.avatar_url }}" alt="" width="72" height="72" loading="eager" decoding="async">
+                {% else %}
+                <span class="agency-space-contact-detail__avatar agency-space-contact-detail__avatar--initial" aria-hidden="true">{{ cust.name|slice:":1"|upper }}</span>
+                {% endif %}
+                <div class="agency-space-contact-detail__who">
+                    <h1 class="agency-space-contact-detail__name">{{ cust.name }}</h1>
+                    <div class="agency-space-contact-detail__meta-row">
+                        {% if cust.customer_type %}
+                        <span class="agency-space-contact-detail__type">{{ cust.customer_type }}</span>
+                        {% endif %}
+                        {% if cust.status %}
+                        <span class="agency-space-contact-detail__status">{{ cust.status }}</span>
+                        {% endif %}
+                        {% if cust.priority and cust.priority != 'متوسط' %}
+                        <span class="agency-space-contact-detail__priority{% if cust.priority == 'بالا' or cust.priority == 'فوری' %} agency-space-contact-detail__priority--high{% endif %}">
+                            <span class="agency-space-contact-detail__priority-dot" aria-hidden="true"></span>{{ cust.priority }}
+                        </span>
+                        {% endif %}
+                    </div>
+                    {% if cust.region or cust.areas_display %}
+                    <p class="agency-space-contact-detail__location">
+                        <i class="fas fa-location-dot" aria-hidden="true"></i>
+                        <span>{% if cust.region %}{{ cust.region }}{% endif %}{% if cust.region and cust.areas_display %} • {% endif %}{% if cust.areas_display %}{{ cust.areas_display }}{% endif %}</span>
+                    </p>
+                    {% endif %}
+                    <div class="agency-space-contact-detail__access-row">
+                        <span class="agency-space-badge agency-space-badge--{{ space_payload.visibility }}">{{ space_payload.visibility_label }}</span>
+                        {% if cust.contact_share_level_label %}
+                        <span class="agency-space-contact-detail__share">{{ cust.contact_share_level_label }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="agency-space-contact-detail__hero-cta">
+            {% if space_payload.owns_source_in_crm and space_payload.source_crm_url %}
+            <p class="agency-space-contact-detail__crm-ok"><i class="fas fa-circle-check" aria-hidden="true"></i> مخاطب CRM شما</p>
+            <a href="{{ space_payload.source_crm_url }}" class="crm-btn crm-btn-primary crm-btn-sm">باز کردن در CRM</a>
+            {% elif space_payload.already_copied and space_payload.copy_target_url %}
+            <p class="agency-space-contact-detail__crm-ok"><i class="fas fa-circle-check" aria-hidden="true"></i> در CRM من</p>
+            <a href="{{ space_payload.copy_target_url }}" class="crm-btn crm-btn-primary crm-btn-sm" data-space-crm-link>باز کردن مخاطب در CRM</a>
+            {% elif space_payload.can_copy %}
+            <button type="button" class="crm-btn crm-btn-primary crm-btn-sm" data-space-copy data-item-id="{{ space_item.pk }}">کپی به CRM من</button>
+            {% endif %}
+        </div>
+    </header>
+
+    {% if cust.property_type or cust.area_label or cust.rooms_label or cust.budget_rows %}
+    <section class="agency-space-contact-detail__panel" aria-labelledby="space-contact-need-heading">
+        <h2 id="space-contact-need-heading" class="agency-space-contact-detail__h">نیاز مخاطب</h2>
+        <dl class="agency-space-contact-detail__spec-grid">
+            {% if cust.property_type %}
+            <div class="agency-space-contact-detail__spec">
+                <dt>نوع ملک</dt>
+                <dd>{{ cust.property_type }}</dd>
+            </div>
+            {% endif %}
+            {% if cust.area_label %}
+            <div class="agency-space-contact-detail__spec">
+                <dt>متراژ</dt>
+                <dd>{{ cust.area_label }}</dd>
+            </div>
+            {% endif %}
+            {% if cust.rooms_label %}
+            <div class="agency-space-contact-detail__spec">
+                <dt>خواب</dt>
+                <dd>{{ cust.rooms_label }}</dd>
+            </div>
+            {% endif %}
+        </dl>
+        {% if cust.budget_rows %}
+        <div class="agency-space-contact-detail__budget-block">
+            <span class="agency-space-contact-detail__budget-title">بودجه</span>
+            <ul class="agency-space-contact-detail__budget-list">
+                {% for row in cust.budget_rows %}
+                <li><span>{{ row.label }}</span><strong>{{ row.value }}</strong></li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+    </section>
+    {% endif %}
+
+    {% if cust.has_phone and cust.phone or cust.email %}
+    <section class="agency-space-contact-detail__panel" aria-labelledby="space-contact-info-heading">
+        <h2 id="space-contact-info-heading" class="agency-space-contact-detail__h">اطلاعات تماس</h2>
+        <ul class="agency-space-contact-detail__contact-list">
+            {% if cust.phone %}
+            <li><span>موبایل</span><a href="tel:{{ cust.phone }}" dir="ltr">{{ cust.phone }}</a></li>
+            {% endif %}
+            {% if cust.phone_alt %}
+            <li><span>موبایل دوم</span><a href="tel:{{ cust.phone_alt }}" dir="ltr">{{ cust.phone_alt }}</a></li>
+            {% endif %}
+            {% if cust.email %}
+            <li><span>ایمیل</span><a href="mailto:{{ cust.email }}">{{ cust.email }}</a></li>
+            {% endif %}
+        </ul>
+    </section>
+    {% elif cust.contact_share_level != 'full' %}
+    <section class="agency-space-contact-detail__panel agency-space-contact-detail__panel--muted" aria-labelledby="space-contact-info-heading">
+        <h2 id="space-contact-info-heading" class="agency-space-contact-detail__h">اطلاعات تماس</h2>
+        <p class="agency-space-contact-detail__muted">اطلاعات تماس در این سطح اشتراک نمایش داده نمی‌شود.</p>
+    </section>
+    {% endif %}
+
+    {% if cust.amenity_tags or cust.areas_display %}
+    <section class="agency-space-contact-detail__panel" aria-labelledby="space-contact-pref-heading">
+        <h2 id="space-contact-pref-heading" class="agency-space-contact-detail__h">ترجیحات</h2>
+        {% if cust.amenity_tags %}
+        <div class="agency-space-contact-detail__chips">
+            {% for tag in cust.amenity_tags %}
+            <span class="agency-space-contact-detail__chip">{{ tag }}</span>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% if cust.areas_display and not cust.region %}
+        <p class="agency-space-contact-detail__areas"><i class="fas fa-map-pin" aria-hidden="true"></i> {{ cust.areas_display }}</p>
+        {% endif %}
+    </section>
+    {% endif %}
+
+    {% if cust.notes %}
+    <section class="agency-space-contact-detail__panel" aria-labelledby="space-contact-notes-heading">
+        <h2 id="space-contact-notes-heading" class="agency-space-contact-detail__h">یادداشت مخاطب</h2>
+        <div class="agency-space-contact-detail__notes">{{ cust.notes|linebreaksbr }}</div>
+    </section>
+    {% elif cust.need_summary and not cust.notes %}
+    <section class="agency-space-contact-detail__panel" aria-labelledby="space-contact-notes-heading">
+        <h2 id="space-contact-notes-heading" class="agency-space-contact-detail__h">خلاصه نیاز</h2>
+        <div class="agency-space-contact-detail__notes">{{ cust.need_summary|linebreaksbr }}</div>
+    </section>
+    {% endif %}
+
+    {% if cust.status %}
+    <section class="agency-space-contact-detail__panel agency-space-contact-detail__panel--compact" aria-labelledby="space-contact-status-heading">
+        <h2 id="space-contact-status-heading" class="agency-space-contact-detail__h">وضعیت پیگیری</h2>
+        <p class="agency-space-contact-detail__status-line">{{ cust.status }}</p>
+    </section>
+    {% endif %}
+</div>
+{% endwith %}

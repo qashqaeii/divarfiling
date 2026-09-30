@@ -102,6 +102,31 @@ def _customer_budget_label(customer: Customer) -> str:
     return ''
 
 
+def _customer_budget_rows(customer: Customer) -> List[Dict[str, str]]:
+    """ردیف‌های بودجه برای UI جزئیات — بدون داده حساس."""
+    rows: List[Dict[str, str]] = []
+    purchase = _customer_budget_label(customer)
+    if purchase:
+        rows.append({'label': 'بودجه خرید', 'value': purchase})
+    if customer.deposit_min or customer.deposit_max:
+        if customer.deposit_min and customer.deposit_max:
+            val = f'{format_toman(customer.deposit_min)} تا {format_toman(customer.deposit_max)}'
+        elif customer.deposit_max:
+            val = f'تا {format_toman(customer.deposit_max)}'
+        else:
+            val = f'از {format_toman(customer.deposit_min)}'
+        rows.append({'label': 'رهن', 'value': val})
+    if customer.rent_min or customer.rent_max:
+        if customer.rent_min and customer.rent_max:
+            val = f'{format_toman(customer.rent_min)} تا {format_toman(customer.rent_max)}'
+        elif customer.rent_max:
+            val = f'تا {format_toman(customer.rent_max)}'
+        else:
+            val = f'از {format_toman(customer.rent_min)}'
+        rows.append({'label': 'اجاره', 'value': val})
+    return rows
+
+
 def _customer_rent_deposit_label(customer: Customer) -> str:
     parts: List[str] = []
     if customer.deposit_min or customer.deposit_max:
@@ -303,6 +328,7 @@ def _customer_payload(
         'areas_display': (customer.areas or '').strip(),
         'amenity_tags': _customer_amenity_tags(customer),
         'has_phone': bool(can_full and customer.phone),
+        'budget_rows': _customer_budget_rows(customer),
     }
     if can_full:
         data['phone'] = customer.phone

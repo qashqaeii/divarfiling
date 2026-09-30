@@ -4,7 +4,7 @@
 
 {% block crm_extra_css %}
 {{ block.super }}
-<link rel="stylesheet" href="{% static 'workspace/css/agency-space.css' %}?v=26">
+<link rel="stylesheet" href="{% static 'workspace/css/agency-space.css' %}?v=31">
 {% endblock %}
 
 {% block agency_hub_content %}
@@ -115,7 +115,7 @@
                     {% if space_scope == 'published_by_me' and can_publish_space %}
                     {% include "workspace/crm/agency/includes/empty_state.html" with decor="file_edit" title="هنوز انتشاری ندارید" description="از CRM فایل یا مخاطب خود را در فضای تیم منتشر کنید." action_url=space_publish_property_url action_label="رفتن به فایل‌ها" %}
                     {% elif space_filter_chips %}
-                    {% include "workspace/crm/agency/includes/empty_state.html" with decor="clipboard_list" title="نتیجه‌ای پیدا نشد" description="فیلترها را تغییر دهید یا جستجو را پاک کنید." %}
+                    {% include "workspace/crm/agency/includes/empty_state.html" with decor="clipboard_list" title="نتیجه‌ای پیدا نشد" description="فیلترهای فعلی نتیجه‌ای ندارند." action_url='?tab='|add:space_tab action_label="پاک کردن فیلترها" %}
                     {% elif space_tab == 'crm' %}
                     {% include "workspace/crm/agency/includes/empty_state.html" with decor="inbox" title="هنوز به CRM شما اضافه نشده" description="از فایل‌ها یا مخاطبین، موارد موردنیاز را کپی کنید." %}
                     {% else %}
@@ -144,5 +144,5 @@
 
 {% block crm_js %}
 {{ block.super }}
-<script src="{% static 'workspace/js/agency-space.js' %}?v=15" defer></script>
+<script src="{% static 'workspace/js/agency-space.js' %}?v=18" defer></script>
 {% endblock %}

@@ -1,77 +1,52 @@
 <article class="agency-space-card agency-space-contact-card" data-space-kind="customer" data-item-id="{{ item.id }}">
     <div class="agency-space-contact-card__identity-col">
-    <header class="agency-space-contact-card__header">
-        <div class="agency-space-contact-card__identity">
-            {% if item.customer.avatar_url %}
-            <img class="agency-space-contact-card__avatar" src="{{ item.customer.avatar_url }}" alt="" width="52" height="52" loading="lazy" decoding="async">
-            {% else %}
-            <span class="agency-space-contact-card__avatar agency-space-contact-card__avatar--initial" aria-hidden="true">{{ item.customer.name|slice:":1"|upper }}</span>
-            {% endif %}
-            <div class="agency-space-contact-card__who">
-                <h3 class="agency-space-contact-card__name">
-                    <a href="{% url 'workspace:agency_hub_space_item' item.id %}">{{ item.customer.name }}</a>
-                </h3>
-                {% if item.customer.customer_type %}
-                <span class="agency-space-contact-card__type">{{ item.customer.customer_type }}</span>
+        <header class="agency-space-contact-card__header">
+            <div class="agency-space-contact-card__identity">
+                {% if item.customer.avatar_url %}
+                <img class="agency-space-contact-card__avatar" src="{{ item.customer.avatar_url }}" alt="" width="50" height="50" loading="lazy" decoding="async">
+                {% else %}
+                <span class="agency-space-contact-card__avatar agency-space-contact-card__avatar--initial" aria-hidden="true">{{ item.customer.name|slice:":1"|upper }}</span>
                 {% endif %}
+                <div class="agency-space-contact-card__who">
+                    <h3 class="agency-space-contact-card__name">
+                        <a href="{% url 'workspace:agency_hub_space_item' item.id %}">{{ item.customer.name }}</a>
+                    </h3>
+                    {% if item.customer.customer_type %}
+                    <span class="agency-space-contact-card__type">{{ item.customer.customer_type }}</span>
+                    {% endif %}
+                    {% if item.customer.priority %}
+                    <span class="agency-space-contact-card__priority{% if item.customer.priority == 'بالا' or item.customer.priority == 'فوری' %} agency-space-contact-card__priority--high{% elif item.customer.priority == 'پایین' %} agency-space-contact-card__priority--low{% endif %}">
+                        <span class="agency-space-contact-card__priority-dot" aria-hidden="true"></span>{{ item.customer.priority }}
+                    </span>
+                    {% endif %}
+                </div>
             </div>
-        </div>
-        {% if item.customer.priority %}
-        <span class="agency-space-contact-card__priority{% if item.customer.priority == 'بالا' or item.customer.priority == 'فوری' %} agency-space-contact-card__priority--high{% elif item.customer.priority == 'پایین' %} agency-space-contact-card__priority--low{% endif %}" title="اولویت">
-            <span class="agency-space-contact-card__priority-dot" aria-hidden="true"></span>{{ item.customer.priority }}
-        </span>
-        {% endif %}
-    </header>
-
-    <div class="agency-space-contact-card__tags" aria-label="وضعیت و دسترسی">
-        {% if item.customer.status %}
-        <span class="agency-space-contact-card__tag agency-space-contact-card__tag--state">{{ item.customer.status }}</span>
-        {% endif %}
-        <span class="agency-space-badge agency-space-badge--{{ item.visibility }} agency-space-contact-card__tag agency-space-contact-card__tag--access"{% if item.audience_count %} title="فقط {{ item.audience_count }} عضو"{% endif %}>{{ item.visibility_label }}</span>
-        {% if item.customer.contact_share_level_label %}
-        <span class="agency-space-contact-card__tag agency-space-contact-card__tag--share">{{ item.customer.contact_share_level_label }}</span>
-        {% endif %}
-    </div>
+        </header>
     </div>
 
-    <div class="agency-space-contact-card__body">
+    <section class="agency-space-contact-card__need-col" aria-label="نیاز مخاطب">
         {% if item.customer.region or item.customer.areas_display %}
         <p class="agency-space-contact-card__location">
             <i class="fas fa-location-dot" aria-hidden="true"></i>
-            <span>{% if item.customer.region %}{{ item.customer.region }}{% endif %}{% if item.customer.region and item.customer.areas_display %} • {% endif %}{% if item.customer.areas_display %}{{ item.customer.areas_display|truncatechars:80 }}{% endif %}</span>
+            <span>{% if item.customer.region %}{{ item.customer.region }}{% endif %}{% if item.customer.region and item.customer.areas_display %} · {% endif %}{% if item.customer.areas_display %}{{ item.customer.areas_display|truncatechars:72 }}{% endif %}</span>
         </p>
         {% endif %}
 
         {% if item.customer.property_type or item.customer.area_label or item.customer.rooms_label %}
         <div class="agency-space-contact-card__need">
             <span class="agency-space-contact-card__need-title">نیاز مشتری</span>
-            <dl class="agency-space-contact-card__need-grid">
-                {% if item.customer.property_type %}
-                <div class="agency-space-contact-card__need-row">
-                    <dt>نوع ملک</dt>
-                    <dd>{{ item.customer.property_type }}</dd>
-                </div>
-                {% endif %}
-                {% if item.customer.area_label %}
-                <div class="agency-space-contact-card__need-row">
-                    <dt>متراژ</dt>
-                    <dd>{{ item.customer.area_label }}</dd>
-                </div>
-                {% endif %}
-                {% if item.customer.rooms_label %}
-                <div class="agency-space-contact-card__need-row">
-                    <dt>خواب</dt>
-                    <dd>{{ item.customer.rooms_label }}</dd>
-                </div>
-                {% endif %}
-            </dl>
+            <p class="agency-space-contact-card__need-lines">
+                {% if item.customer.property_type %}<span class="agency-space-contact-card__need-line">{{ item.customer.property_type }}</span>{% endif %}
+                {% if item.customer.area_label %}<span class="agency-space-contact-card__need-line">{{ item.customer.area_label }}</span>{% endif %}
+                {% if item.customer.rooms_label %}<span class="agency-space-contact-card__need-line">{{ item.customer.rooms_label }}</span>{% endif %}
+            </p>
         </div>
         {% endif %}
 
         {% if item.customer.need_summary %}
-        <p class="agency-space-contact-card__notes">{{ item.customer.need_summary|truncatechars:160 }}</p>
+        <p class="agency-space-contact-card__notes">{{ item.customer.need_summary|truncatechars:140 }}</p>
         {% elif item.note %}
-        <p class="agency-space-contact-card__notes">{{ item.note|truncatechars:120 }}</p>
+        <p class="agency-space-contact-card__notes">{{ item.note|truncatechars:100 }}</p>
         {% endif %}
 
         {% if item.customer.has_phone and item.customer.phone %}
@@ -80,51 +55,70 @@
             <span dir="ltr">{{ item.customer.phone }}</span>
         </p>
         {% endif %}
-    </div>
+    </section>
 
-    {% if item.customer.budget_label or item.customer.rent_deposit_label %}
-    <div class="agency-space-contact-card__budget">
+    {% if item.customer.budget_rows or item.customer.budget_label or item.customer.rent_deposit_label %}
+    <section class="agency-space-contact-card__budget-col" aria-label="بودجه">
         <span class="agency-space-contact-card__budget-title">بودجه</span>
-        {% if item.customer.rent_deposit_label %}
-        <p class="agency-space-contact-card__budget-line">{{ item.customer.rent_deposit_label }}</p>
+        {% if item.customer.budget_rows %}
+        <ul class="agency-space-contact-card__budget-lines">
+            {% for row in item.customer.budget_rows %}
+            <li><span>{{ row.label }}</span><strong>{{ row.value }}</strong></li>
+            {% endfor %}
+        </ul>
+        {% elif item.customer.rent_deposit_label %}
+        <p class="agency-space-contact-card__budget-fallback">{{ item.customer.rent_deposit_label }}</p>
         {% elif item.customer.budget_label %}
-        <p class="agency-space-contact-card__budget-line">{{ item.customer.budget_label }}</p>
+        <p class="agency-space-contact-card__budget-fallback">{{ item.customer.budget_label }}</p>
         {% endif %}
-    </div>
+    </section>
     {% endif %}
 
-    <footer class="agency-space-contact-card__publisher">
-        <span class="agency-space-contact-card__publisher-label">{% if item.is_publisher %}منتشرشده توسط من{% else %}منتشرکننده{% endif %}</span>
+    <footer class="agency-space-contact-card__trail">
         <div class="agency-space-contact-card__publisher-row">
             {% if item.publisher.avatar_url %}
-            <img class="agency-space-contact-card__publisher-avatar" src="{{ item.publisher.avatar_url }}" alt="" width="22" height="22" loading="lazy" decoding="async">
+            <img class="agency-space-contact-card__publisher-avatar" src="{{ item.publisher.avatar_url }}" alt="" width="20" height="20" loading="lazy" decoding="async">
             {% else %}
             <span class="agency-space-contact-card__publisher-avatar agency-space-contact-card__publisher-avatar--initial" aria-hidden="true" style="background: {{ item.publisher.role_bg }}; color: {{ item.publisher.role_fg }}">{{ item.publisher.name|slice:":1"|upper }}</span>
             {% endif %}
             <span class="agency-space-contact-card__publisher-name">{% if item.is_publisher %}شما{% else %}{{ item.publisher.name }}{% endif %}</span>
-            {% if item.published_at_display %}<time class="agency-space-contact-card__time">{{ item.published_at_display }}</time>{% endif %}
+            {% if item.published_at_display %}<span class="agency-space-contact-card__trail-sep" aria-hidden="true">·</span><time class="agency-space-contact-card__time">{{ item.published_at_display }}</time>{% endif %}
         </div>
-    </footer>
-
-    <div class="agency-space-contact-card__side">
-    <div class="agency-space-contact-card__commerce">
         {% if item.owns_source_in_crm or item.already_copied %}
-        <p class="agency-space-contact-card__crm-state">
+        <p class="agency-space-contact-card__trail-crm">
             <i class="fas fa-circle-check" aria-hidden="true"></i>
-            {% if item.owns_source_in_crm %}فایل CRM شما{% else %}در CRM من{% endif %}
+            {% if item.owns_source_in_crm %}در CRM من{% else %}در CRM من{% endif %}
         </p>
         {% endif %}
+    </footer>
 
-        <div class="agency-space-contact-card__actions">
-            <a href="{% url 'workspace:agency_hub_space_item' item.id %}" class="agency-space-contact-card__btn agency-space-contact-card__btn--ghost">جزئیات</a>
-            {% if item.owns_source_in_crm and item.source_crm_url %}
-            <a href="{{ item.source_crm_url }}" class="agency-space-contact-card__btn agency-space-contact-card__btn--primary">باز کردن CRM</a>
-            {% elif item.already_copied and item.copy_target_url %}
-            <a href="{{ item.copy_target_url }}" class="agency-space-contact-card__btn agency-space-contact-card__btn--primary" data-space-crm-link>باز کردن CRM</a>
-            {% elif item.can_copy %}
-            <button type="button" class="agency-space-contact-card__btn agency-space-contact-card__btn--primary" data-space-copy data-item-id="{{ item.id }}">کپی به CRM</button>
+    <div class="agency-space-contact-card__meta-col">
+        <div class="agency-space-contact-card__tags" aria-label="وضعیت و دسترسی">
+            {% if item.customer.status %}
+            <span class="agency-space-contact-card__tag agency-space-contact-card__tag--state">{{ item.customer.status }}</span>
+            {% endif %}
+            <span class="agency-space-badge agency-space-badge--{{ item.visibility }} agency-space-contact-card__tag agency-space-contact-card__tag--access"{% if item.audience_count %} title="فقط {{ item.audience_count }} عضو"{% endif %}>{{ item.visibility_label }}</span>
+            {% if item.customer.contact_share_level_label %}
+            <span class="agency-space-contact-card__tag agency-space-contact-card__tag--share">{{ item.customer.contact_share_level_label }}</span>
             {% endif %}
         </div>
-    </div>
+        <div class="agency-space-contact-card__commerce">
+            {% if item.owns_source_in_crm or item.already_copied %}
+            <p class="agency-space-contact-card__crm-state">
+                <i class="fas fa-circle-check" aria-hidden="true"></i> در CRM من
+            </p>
+            {% endif %}
+
+            <div class="agency-space-contact-card__actions">
+                <a href="{% url 'workspace:agency_hub_space_item' item.id %}" class="agency-space-contact-card__btn agency-space-contact-card__btn--ghost">جزئیات</a>
+                {% if item.owns_source_in_crm and item.source_crm_url %}
+                <a href="{{ item.source_crm_url }}" class="agency-space-contact-card__btn agency-space-contact-card__btn--primary">باز کردن CRM</a>
+                {% elif item.already_copied and item.copy_target_url %}
+                <a href="{{ item.copy_target_url }}" class="agency-space-contact-card__btn agency-space-contact-card__btn--primary" data-space-crm-link>باز کردن CRM</a>
+                {% elif item.can_copy %}
+                <button type="button" class="agency-space-contact-card__btn agency-space-contact-card__btn--primary" data-space-copy data-item-id="{{ item.id }}">کپی به CRM</button>
+                {% endif %}
+            </div>
+        </div>
     </div>
 </article>

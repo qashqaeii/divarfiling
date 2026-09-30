@@ -29,7 +29,7 @@
 {% endblock %}
 
 {% block ws_surface_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/crm-prop-detail-mobile-premium.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-prop-detail-mobile-premium.css' %}?v=4">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-mobile-v2-properties.css' %}?v=1">
 {% endblock %}
 
@@ -384,46 +384,45 @@
 
             {% if can_share_team_resources and is_property_owner %}
             <div class="crm-prop-hero-share-block" data-crm-property-team data-property-id="{{ property.pk }}">
-            <div class="crm-prop-share-bar">
-                {% if agency_space_enabled and is_property_owner %}
-                <div class="agency-space-embed">
-                    <div class="agency-space-embed__row">
-                        {% if agency_space_item %}
-                        <span class="agency-space-badge agency-space-badge--active">در فضای آژانس</span>
-                        <a href="{{ agency_space_manage_url }}" class="crm-btn crm-btn-ghost crm-btn-sm">مدیریت انتشار</a>
-                        {% elif agency_space_can_publish %}
-                        <button type="button" class="crm-btn crm-btn-primary crm-btn-sm" data-modal-open="modal-agency-space-publish">
-                            <i class="fas fa-users" aria-hidden="true"></i> انتشار در فضای آژانس
-                        </button>
-                        {% endif %}
+            <div class="crm-prop-share-bar crm-prop-share-bar--pro" role="toolbar" aria-label="اشتراک با هم‌تیمی">
+                <div class="crm-prop-share-bar__cluster crm-prop-share-bar__cluster--mode">
+                    <span class="crm-prop-share-bar-label" title="فایل خصوصی شما — فقط با ارسال صریح در اختیار هم‌تیمی قرار می‌گیرد">
+                        <i class="fas fa-lock" aria-hidden="true"></i>
+                        <span>فایل خصوصی</span>
+                    </span>
+                    <div class="crm-prop-share-segment" role="radiogroup" aria-label="نوع ارسال">
+                        <label class="crm-prop-share-seg" title="اشتراک کامل — اطلاعات کامل و ویرایش مشترک">
+                            <input type="radio" name="crm-prop-share-mode" value="collaborative" checked>
+                            <span><i class="fas fa-people-arrows" aria-hidden="true"></i> کامل</span>
+                        </label>
+                        <label class="crm-prop-share-seg" title="ارسال محرمانه — فقط معرفی ملک">
+                            <input type="radio" name="crm-prop-share-mode" value="confidential">
+                            <span><i class="fas fa-user-secret" aria-hidden="true"></i> محرمانه</span>
+                        </label>
                     </div>
-                    <p class="agency-space-embed__hint">جدا از «اشتراک مستقیم با هم‌تیمی» — برای دیدن تیم در فضای آژانس</p>
+                </div>
+                {% if agency_space_enabled and is_property_owner %}
+                <span class="crm-prop-share-bar-vrule" aria-hidden="true"></span>
+                <div class="crm-prop-share-bar__cluster crm-prop-share-bar__cluster--agency agency-space-embed agency-space-embed--inline" title="جدا از اشتراک مستقیم — انتشار در فضای آژانس برای دیدن تیم">
+                    {% if agency_space_item %}
+                    <span class="agency-space-badge agency-space-badge--active">در فضای آژانس</span>
+                    <a href="{{ agency_space_manage_url }}" class="crm-prop-share-bar__link-btn">مدیریت</a>
+                    {% elif agency_space_can_publish %}
+                    <button type="button" class="crm-prop-share-bar__link-btn crm-prop-share-bar__link-btn--accent" data-modal-open="modal-agency-space-publish">
+                        <i class="fas fa-users" aria-hidden="true"></i> فضای آژانس
+                    </button>
+                    {% endif %}
                 </div>
                 {% endif %}
-                <span class="crm-prop-share-bar-label" title="فایل خصوصی شما — فقط با ارسال صریح در اختیار هم‌تیمی قرار می‌گیرد">
-                    <i class="fas fa-lock" aria-hidden="true"></i>
-                    <span>فایل خصوصی</span>
-                </span>
-                <span class="crm-prop-share-bar-vrule" aria-hidden="true"></span>
-                <div class="crm-prop-share-segment" role="radiogroup" aria-label="نوع ارسال">
-                    <label class="crm-prop-share-seg" title="اشتراک کامل — اطلاعات کامل و ویرایش مشترک">
-                        <input type="radio" name="crm-prop-share-mode" value="collaborative" checked>
-                        <span><i class="fas fa-people-arrows" aria-hidden="true"></i> کامل</span>
-                    </label>
-                    <label class="crm-prop-share-seg" title="ارسال محرمانه — فقط معرفی ملک">
-                        <input type="radio" name="crm-prop-share-mode" value="confidential">
-                        <span><i class="fas fa-user-secret" aria-hidden="true"></i> محرمانه</span>
-                    </label>
-                </div>
-                <span class="crm-prop-share-bar-vrule" aria-hidden="true"></span>
-                <div class="crm-contact-team-actions crm-contact-team-actions--grouped">
+                <span class="crm-prop-share-bar-vrule crm-prop-share-bar-vrule--before-send" aria-hidden="true"></span>
+                <div class="crm-prop-share-bar__cluster crm-prop-share-bar__cluster--send crm-contact-team-actions crm-contact-team-actions--grouped">
                     <select class="crm-select crm-select-sm" id="crm-prop-share-select" aria-label="ارسال به هم‌تیمی">
                         <option value="">هم‌تیمی…</option>
                         {% for m in agency_members %}{% if m.user_id != request.user.id %}
                         <option value="{{ m.pk }}">{{ m.user.get_full_name|default:m.user.username }}</option>
                         {% endif %}{% endfor %}
                     </select>
-                    <button type="button" class="crm-dash-act crm-dash-act--primary" id="crm-prop-share-btn"><i class="fas fa-paper-plane"></i><span>ارسال</span></button>
+                    <button type="button" class="crm-dash-act crm-dash-act--primary" id="crm-prop-share-btn"><i class="fas fa-paper-plane" aria-hidden="true"></i><span>ارسال</span></button>
                 </div>
             </div>
             {% if property_shares %}

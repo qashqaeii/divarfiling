@@ -1,76 +1,159 @@
 {% load static %}
-<section class="agency-space-overview" aria-label="نمای کلی فضای آژانس">
-    <div class="agency-space-overview__cols">
-        <div class="agency-space-overview__block">
-            <header class="agency-space-overview__head">
-                <h2>آخرین فایل‌ها</h2>
-                <a href="?tab=properties" class="agency-space-overview__more">همه فایل‌ها</a>
+<section class="agency-space-overview agency-space-overview--pro" aria-label="نمای کلی فضای آژانس">
+    <div class="agency-space-overview__mosaic">
+        <article class="agency-space-overview-card agency-space-overview-card--feed agency-space-overview-card--properties">
+            <header class="agency-space-overview-card__head">
+                <span class="agency-space-overview-card__icon agency-space-overview-card__icon--orange" aria-hidden="true"><i class="fas fa-building"></i></span>
+                <div class="agency-space-overview-card__titles">
+                    <h2 class="agency-space-overview-card__title">آخرین فایل‌ها</h2>
+                    <p class="agency-space-overview-card__sub">تازه‌ترین انتشارهای تیم</p>
+                </div>
+                <a href="?tab=properties" class="agency-space-overview-card__cta">همه فایل‌ها <i class="fas fa-arrow-left" aria-hidden="true"></i></a>
             </header>
-            <ul class="agency-space-overview__list">
+            <ul class="agency-space-overview-feed">
                 {% for item in space_overview.recent_properties %}
                 <li>
-                    <a href="{% url 'workspace:agency_hub_space_item' item.id %}">
-                        <span class="agency-space-overview__title">{{ item.property.title }}</span>
-                        <span class="agency-space-overview__meta">{{ item.publisher.name }} · {{ item.published_at_display }}</span>
+                    <a class="agency-space-overview-feed__link" href="{% url 'workspace:agency_hub_space_item' item.id %}">
+                        <span class="agency-space-overview-feed__media" aria-hidden="true">
+                            {% if item.property.thumbnail_url %}
+                            <img src="{{ item.property.thumbnail_url }}" alt="" width="48" height="48" loading="lazy" decoding="async">
+                            {% else %}
+                            <i class="fas fa-home"></i>
+                            {% endif %}
+                        </span>
+                        <span class="agency-space-overview-feed__body">
+                            <span class="agency-space-overview-feed__title">{{ item.property.title }}</span>
+                            <span class="agency-space-overview-feed__meta">
+                                <span class="agency-space-overview-feed__publisher">{{ item.publisher.name }}</span>
+                                <span class="agency-space-overview-feed__dot" aria-hidden="true">·</span>
+                                <time>{{ item.published_at_display }}</time>
+                            </span>
+                            {% if item.property.price_label or item.property.region %}
+                            <span class="agency-space-overview-feed__chips">
+                                {% if item.property.price_label %}<span class="agency-space-overview-chip agency-space-overview-chip--price">{{ item.property.price_label }}</span>{% endif %}
+                                {% if item.property.region %}<span class="agency-space-overview-chip">{{ item.property.region|truncatechars:32 }}</span>{% endif %}
+                            </span>
+                            {% endif %}
+                        </span>
+                        <i class="fas fa-chevron-left agency-space-overview-feed__chev" aria-hidden="true"></i>
                     </a>
                 </li>
                 {% empty %}
-                <li class="agency-space-overview__empty">هنوز فایلی منتشر نشده.</li>
+                <li class="agency-space-overview-empty">
+                    <span class="agency-space-overview-empty__icon" aria-hidden="true"><i class="fas fa-inbox"></i></span>
+                    <p>هنوز فایلی منتشر نشده.</p>
+                </li>
                 {% endfor %}
             </ul>
-        </div>
-        <div class="agency-space-overview__block">
-            <header class="agency-space-overview__head">
-                <h2>آخرین مخاطبین</h2>
-                <a href="?tab=contacts" class="agency-space-overview__more">همه مخاطبین</a>
+        </article>
+
+        <article class="agency-space-overview-card agency-space-overview-card--feed agency-space-overview-card--contacts">
+            <header class="agency-space-overview-card__head">
+                <span class="agency-space-overview-card__icon agency-space-overview-card__icon--blue" aria-hidden="true"><i class="fas fa-user-group"></i></span>
+                <div class="agency-space-overview-card__titles">
+                    <h2 class="agency-space-overview-card__title">آخرین مخاطبین</h2>
+                    <p class="agency-space-overview-card__sub">نیازهای تازه در فضای تیم</p>
+                </div>
+                <a href="?tab=contacts" class="agency-space-overview-card__cta">همه مخاطبین <i class="fas fa-arrow-left" aria-hidden="true"></i></a>
             </header>
-            <ul class="agency-space-overview__list">
+            <ul class="agency-space-overview-feed">
                 {% for item in space_overview.recent_contacts %}
                 <li>
-                    <a href="{% url 'workspace:agency_hub_space_item' item.id %}">
-                        <span class="agency-space-overview__title">{{ item.customer.name }}</span>
-                        <span class="agency-space-overview__meta">{{ item.publisher.name }} · {{ item.published_at_display }}</span>
+                    <a class="agency-space-overview-feed__link" href="{% url 'workspace:agency_hub_space_item' item.id %}">
+                        <span class="agency-space-overview-feed__media agency-space-overview-feed__media--avatar" aria-hidden="true">
+                            {% if item.customer.avatar_url %}
+                            <img src="{{ item.customer.avatar_url }}" alt="" width="48" height="48" loading="lazy" decoding="async">
+                            {% else %}
+                            <span class="agency-space-overview-feed__initial">{{ item.customer.name|slice:":1"|upper }}</span>
+                            {% endif %}
+                        </span>
+                        <span class="agency-space-overview-feed__body">
+                            <span class="agency-space-overview-feed__title">{{ item.customer.name }}</span>
+                            <span class="agency-space-overview-feed__meta">
+                                <span class="agency-space-overview-feed__publisher">{{ item.publisher.name }}</span>
+                                <span class="agency-space-overview-feed__dot" aria-hidden="true">·</span>
+                                <time>{{ item.published_at_display }}</time>
+                            </span>
+                            {% if item.customer.finance_label or item.customer.property_type %}
+                            <span class="agency-space-overview-feed__chips">
+                                {% if item.customer.property_type %}<span class="agency-space-overview-chip">{{ item.customer.property_type }}</span>{% endif %}
+                                {% if item.customer.finance_label %}<span class="agency-space-overview-chip agency-space-overview-chip--budget">{{ item.customer.finance_label|truncatechars:28 }}</span>{% endif %}
+                            </span>
+                            {% endif %}
+                        </span>
+                        <i class="fas fa-chevron-left agency-space-overview-feed__chev" aria-hidden="true"></i>
                     </a>
                 </li>
                 {% empty %}
-                <li class="agency-space-overview__empty">هنوز مخاطبی منتشر نشده.</li>
+                <li class="agency-space-overview-empty">
+                    <span class="agency-space-overview-empty__icon" aria-hidden="true"><i class="fas fa-user-clock"></i></span>
+                    <p>هنوز مخاطبی منتشر نشده.</p>
+                </li>
                 {% endfor %}
             </ul>
-        </div>
-    </div>
-    <div class="agency-space-overview__cols">
-        <div class="agency-space-overview__block">
-            <header class="agency-space-overview__head">
-                <h2>فعال‌ترین اعضا</h2>
+        </article>
+
+        <article class="agency-space-overview-card agency-space-overview-card--leaders">
+            <header class="agency-space-overview-card__head">
+                <span class="agency-space-overview-card__icon agency-space-overview-card__icon--purple" aria-hidden="true"><i class="fas fa-ranking-star"></i></span>
+                <div class="agency-space-overview-card__titles">
+                    <h2 class="agency-space-overview-card__title">فعال‌ترین اعضا</h2>
+                    <p class="agency-space-overview-card__sub">بر اساس انتشار فایل و مخاطب</p>
+                </div>
             </header>
-            <ul class="agency-space-overview__list agency-space-overview__list--contrib">
+            <ol class="agency-space-overview-leaders">
                 {% for row in space_overview.contributors %}
-                <li>
-                    <span>{{ row.name }}</span>
-                    <span class="agency-space-overview__stat">{{ row.properties_published }} فایل · {{ row.contacts_published }} مخاطب</span>
+                <li class="agency-space-overview-leader">
+                    <span class="agency-space-overview-leader__rank" aria-hidden="true">{{ forloop.counter }}</span>
+                    <span class="agency-space-overview-leader__avatar" aria-hidden="true">{{ row.name|slice:":1"|upper }}</span>
+                    <div class="agency-space-overview-leader__body">
+                        <span class="agency-space-overview-leader__name">{{ row.name }}</span>
+                        <span class="agency-space-overview-leader__stats">
+                            <span><i class="fas fa-building" aria-hidden="true"></i> {{ row.properties_published }} فایل</span>
+                            <span><i class="fas fa-user" aria-hidden="true"></i> {{ row.contacts_published }} مخاطب</span>
+                        </span>
+                        <span class="agency-space-overview-leader__bar" aria-hidden="true"><span style="width: {{ row.score_percent }}%"></span></span>
+                    </div>
                 </li>
                 {% empty %}
-                <li class="agency-space-overview__empty">داده‌ای نیست.</li>
+                <li class="agency-space-overview-empty">
+                    <span class="agency-space-overview-empty__icon" aria-hidden="true"><i class="fas fa-chart-simple"></i></span>
+                    <p>داده‌ای برای رتبه‌بندی نیست.</p>
+                </li>
                 {% endfor %}
-            </ul>
-        </div>
-        <div class="agency-space-overview__block">
-            <header class="agency-space-overview__head">
-                <h2>فعالیت اخیر</h2>
+            </ol>
+        </article>
+
+        <article class="agency-space-overview-card agency-space-overview-card--activity">
+            <header class="agency-space-overview-card__head">
+                <span class="agency-space-overview-card__icon agency-space-overview-card__icon--teal" aria-hidden="true"><i class="fas fa-bolt"></i></span>
+                <div class="agency-space-overview-card__titles">
+                    <h2 class="agency-space-overview-card__title">فعالیت اخیر</h2>
+                    <p class="agency-space-overview-card__sub">رویدادهای تیم در آژانس</p>
+                </div>
             </header>
-            <ul class="agency-space-overview__list agency-space-overview__list--activity">
+            <ul class="agency-space-overview-timeline">
                 {% for ev in space_overview.activity %}
-                <li>
-                    <span class="agency-space-overview__activity-text">
-                        {% if ev.actor_name %}{{ ev.actor_name }}{% endif %}
-                        {{ ev.label }}
-                        {% if ev.detail %}<span class="agency-space-overview__muted">({{ ev.detail }})</span>{% endif %}
-                    </span>
+                <li class="agency-space-overview-timeline__item">
+                    <span class="agency-space-overview-timeline__icon" aria-hidden="true"><i class="fas {{ ev.icon }}"></i></span>
+                    <div class="agency-space-overview-timeline__body">
+                        <p class="agency-space-overview-timeline__text">
+                            {% if ev.actor_name %}<strong>{{ ev.actor_name }}</strong>{% endif %}
+                            <span>{{ ev.label }}</span>
+                            {% if ev.detail %}<span class="agency-space-overview-timeline__detail">{{ ev.detail }}</span>{% endif %}
+                        </p>
+                        {% if ev.created_at_display %}
+                        <time class="agency-space-overview-timeline__time">{{ ev.created_at_display }}</time>
+                        {% endif %}
+                    </div>
                 </li>
                 {% empty %}
-                <li class="agency-space-overview__empty">فعالیتی ثبت نشده.</li>
+                <li class="agency-space-overview-empty">
+                    <span class="agency-space-overview-empty__icon" aria-hidden="true"><i class="fas fa-wave-square"></i></span>
+                    <p>فعالیتی ثبت نشده.</p>
+                </li>
                 {% endfor %}
             </ul>
-        </div>
+        </article>
     </div>
 </section>

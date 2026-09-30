@@ -25,28 +25,28 @@
             <div class="agency-space-prop-hero__highlights">
                 {% if prop.price_label or prop.price_per_meter_label %}
                 <div class="agency-space-prop-hero-highlight" aria-label="قیمت">
-                    <div class="agency-space-prop-hero-highlight__card agency-space-prop-hero-highlight__card--price">
-                        <div class="agency-space-prop-hero-highlight__head">
-                            <span class="agency-space-prop-hero-highlight__icon agency-space-prop-hero-highlight__icon--price" aria-hidden="true"><i class="fas fa-tags"></i></span>
-                            <div class="agency-space-prop-hero-highlight__titles">
-                                <span class="agency-space-prop-hero-highlight__eyebrow">قیمت</span>
-                                {% if prop.price_label %}
-                                <p class="agency-space-prop-hero-highlight__value">{{ prop.price_label }}</p>
-                                {% endif %}
+                    <div class="agency-space-prop-hero-highlight__card agency-space-prop-hero-highlight__card--price agency-space-prop-hero-highlight__card--compact">
+                        <div class="agency-space-prop-hero-highlight__strip">
+                            <div class="agency-space-prop-hero-highlight__head">
+                                <span class="agency-space-prop-hero-highlight__icon agency-space-prop-hero-highlight__icon--price" aria-hidden="true"><i class="fas fa-tags"></i></span>
+                                <div class="agency-space-prop-hero-highlight__titles">
+                                    <span class="agency-space-prop-hero-highlight__eyebrow">قیمت</span>
+                                    {% if prop.price_label %}
+                                    <p class="agency-space-prop-hero-highlight__value">{{ prop.price_label }}</p>
+                                    {% endif %}
+                                </div>
                             </div>
+                            {% if prop.price_per_meter_label %}
+                            <span class="agency-space-prop-hero-highlight__ppm" dir="ltr">{{ prop.price_per_meter_label }} <small>/ متر</small></span>
+                            {% endif %}
                         </div>
-                        {% if prop.price_per_meter_label %}
-                        <div class="agency-space-prop-hero-highlight__foot">
-                            <span class="agency-space-prop-hero-highlight__foot-label">قیمت هر متر</span>
-                            <span class="agency-space-prop-hero-highlight__foot-value" dir="ltr">{{ prop.price_per_meter_label }}</span>
-                        </div>
-                        {% endif %}
                     </div>
                 </div>
                 {% endif %}
                 {% if prop.owner_name or prop.phone or prop.tenant_phone %}
                 <div class="agency-space-prop-hero-highlight" aria-label="مالک و تماس">
-                    <div class="agency-space-prop-hero-highlight__card agency-space-prop-hero-highlight__card--contact">
+                    <div class="agency-space-prop-hero-highlight__card agency-space-prop-hero-highlight__card--contact agency-space-prop-hero-highlight__card--compact">
+                        <div class="agency-space-prop-hero-highlight__strip agency-space-prop-hero-highlight__strip--contact">
                         <div class="agency-space-prop-hero-highlight__head">
                             <span class="agency-space-prop-hero-highlight__icon agency-space-prop-hero-highlight__icon--contact" aria-hidden="true">
                                 {% if prop.owner_name %}{{ prop.owner_name|slice:":1" }}{% else %}<i class="fas fa-user"></i>{% endif %}
@@ -60,7 +60,7 @@
                                 {% endif %}
                             </div>
                         </div>
-                        <div class="agency-space-prop-hero-contact__actions">
+                        <div class="agency-space-prop-hero-contact__actions agency-space-prop-hero-contact__actions--compact">
                             {% if prop.phone %}
                             <div class="agency-space-prop-hero-contact__phone-row">
                                 <a class="agency-space-prop-hero-contact__call" href="tel:{{ prop.phone }}" dir="ltr">
@@ -89,6 +89,7 @@
                                 </button>
                             </div>
                             {% endif %}
+                        </div>
                         </div>
                     </div>
                 </div>

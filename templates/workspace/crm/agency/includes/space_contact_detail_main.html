@@ -41,6 +41,23 @@
         </div>
     </header>
 
+    {% if cust.property_type or cust.area_label or cust.rooms_label or cust.budget_rows %}
+    <div class="agency-space-prop-detail__metrics agency-space-prop-detail__metrics--contact" aria-label="خلاصه نیاز">
+        {% if cust.property_type %}
+        <span class="agency-space-prop-detail__metric"><i class="fas fa-building" aria-hidden="true"></i>{{ cust.property_type }}</span>
+        {% endif %}
+        {% if cust.area_label %}
+        <span class="agency-space-prop-detail__metric"><i class="fas fa-up-right-and-down-left-from-center" aria-hidden="true"></i>{{ cust.area_label }}</span>
+        {% endif %}
+        {% if cust.rooms_label %}
+        <span class="agency-space-prop-detail__metric"><i class="fas fa-bed" aria-hidden="true"></i>{{ cust.rooms_label }}</span>
+        {% endif %}
+        {% for row in cust.budget_rows|slice:":2" %}
+        <span class="agency-space-prop-detail__metric agency-space-prop-detail__metric--budget"><i class="fas fa-wallet" aria-hidden="true"></i>{{ row.value|truncatechars:28 }}</span>
+        {% endfor %}
+    </div>
+    {% endif %}
+
     <section class="agency-space-pro-panel" aria-labelledby="space-contact-need-heading">
         <header class="agency-space-pro-panel__head">
             <span class="agency-space-pro-panel__icon" aria-hidden="true"><i class="fas fa-bullseye"></i></span>

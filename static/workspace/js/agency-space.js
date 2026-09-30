@@ -378,33 +378,124 @@
     if (detail) {
       const main = detail.querySelector('[data-space-gallery-main]');
       const lightboxImg = document.getElementById('agency-space-lightbox-img');
-      const setActiveImage = (src, activeBtn) => {
-        if (!src) return;
+      const lightboxCounter = document.getElementById('agency-space-lightbox-counter');
+      const lightboxFilmstrip = document.getElementById('agency-space-lightbox-filmstrip');
+      const galleryModal = document.getElementById('modal-space-gallery');
+      let galleryImages = [];
+      const galleryScript = document.getElementById('space-property-gallery-images');
+      if (galleryScript) {
+        try {
+          galleryImages = JSON.parse(galleryScript.textContent || '[]');
+        } catch (e) {
+          galleryImages = [];
+        }
+      }
+      let galleryIndex = 0;
+      let filmstripBuilt = false;
+
+      const syncThumbActive = (index) => {
+        detail.querySelectorAll('[data-space-gallery-thumb]').forEach((btn) => {
+          const i = parseInt(btn.dataset.galleryIndex, 10);
+          btn.classList.toggle('is-active', i === index);
+        });
+        if (lightboxFilmstrip) {
+          lightboxFilmstrip.querySelectorAll('[data-gallery-film]').forEach((btn) => {
+            const i = parseInt(btn.dataset.galleryFilm, 10);
+            btn.classList.toggle('is-active', i === index);
+          });
+        }
+      };
+
+      const showGalleryIndex = (index, { openModal: shouldOpen } = {}) => {
+        if (!galleryImages.length) return;
+        galleryIndex = (index + galleryImages.length) % galleryImages.length;
+        const src = galleryImages[galleryIndex];
         if (main) main.src = src;
         if (lightboxImg) lightboxImg.src = src;
-        detail.querySelectorAll('[data-space-gallery-thumb]').forEach((b) => b.classList.remove('is-active'));
-        if (activeBtn) activeBtn.classList.add('is-active');
+        if (lightboxCounter) {
+          lightboxCounter.textContent = `${galleryIndex + 1} / ${galleryImages.length}`;
+        }
+        syncThumbActive(galleryIndex);
+        if (shouldOpen) openModal('modal-space-gallery');
       };
+
+      const buildFilmstrip = () => {
+        if (!lightboxFilmstrip || filmstripBuilt || galleryImages.length < 2) return;
+        lightboxFilmstrip.innerHTML = '';
+        galleryImages.forEach((src, i) => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'agency-space-lightbox__film';
+          btn.dataset.galleryFilm = String(i);
+          btn.setAttribute('aria-label', `تصویر ${i + 1}`);
+          const img = document.createElement('img');
+          img.src = src;
+          img.alt = '';
+          img.loading = 'lazy';
+          btn.appendChild(img);
+          btn.addEventListener('click', () => showGalleryIndex(i));
+          lightboxFilmstrip.appendChild(btn);
+        });
+        filmstripBuilt = true;
+      };
+
+      const stepGallery = (delta) => {
+        showGalleryIndex(galleryIndex + delta);
+      };
+
       detail.querySelectorAll('[data-space-gallery-thumb]').forEach((btn) => {
         btn.addEventListener('click', function () {
-          setActiveImage(btn.dataset.src, btn);
+          const idx = parseInt(btn.dataset.galleryIndex, 10);
+          if (Number.isNaN(idx)) {
+            showGalleryIndex(0, { openModal: true });
+            return;
+          }
+          showGalleryIndex(idx, { openModal: true });
+          buildFilmstrip();
         });
       });
-      detail.querySelectorAll('[data-space-gallery-lightbox]').forEach((btn) => {
+      detail.querySelectorAll('[data-space-gallery-open]').forEach((btn) => {
         btn.addEventListener('click', function () {
-          const src = main?.src || btn.querySelector('img')?.src;
-          if (lightboxImg && src) lightboxImg.src = src;
-          openModal('modal-space-gallery');
+          const idx = parseInt(btn.dataset.galleryIndex, 10);
+          showGalleryIndex(Number.isNaN(idx) ? 0 : idx, { openModal: true });
+          buildFilmstrip();
         });
       });
-      detail.querySelectorAll('[data-space-gallery-more]').forEach((btn) => {
-        btn.addEventListener('click', function () {
-          const src = btn.dataset.src;
-          if (src) setActiveImage(src, null);
-          if (lightboxImg && src) lightboxImg.src = src;
-          openModal('modal-space-gallery');
-        });
+
+      galleryModal?.querySelector('[data-gallery-prev]')?.addEventListener('click', () => stepGallery(-1));
+      galleryModal?.querySelector('[data-gallery-next]')?.addEventListener('click', () => stepGallery(1));
+
+      document.addEventListener('keydown', (ev) => {
+        if (!galleryModal || galleryModal.hidden) return;
+        if (ev.key === 'ArrowLeft') {
+          ev.preventDefault();
+          stepGallery(1);
+        } else if (ev.key === 'ArrowRight') {
+          ev.preventDefault();
+          stepGallery(-1);
+        } else if (ev.key === 'Escape') {
+          const close = galleryModal.querySelector('[data-modal-close]');
+          close?.click();
+        }
       });
+
+      let touchStartX = 0;
+      lightboxImg?.addEventListener(
+        'touchstart',
+        (ev) => {
+          touchStartX = ev.changedTouches[0]?.screenX || 0;
+        },
+        { passive: true },
+      );
+      lightboxImg?.addEventListener(
+        'touchend',
+        (ev) => {
+          const dx = (ev.changedTouches[0]?.screenX || 0) - touchStartX;
+          if (Math.abs(dx) < 40) return;
+          stepGallery(dx < 0 ? 1 : -1);
+        },
+        { passive: true },
+      );
     }
 
     if (detail) {

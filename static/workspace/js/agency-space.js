@@ -234,8 +234,17 @@
         link.className = 'agency-space-property-card__btn agency-space-property-card__btn--primary agency-space-card__btn agency-space-card__btn--primary';
         link.setAttribute('data-space-crm-link', '');
         link.textContent = 'باز کردن CRM';
-        const actions = card.querySelector('.agency-space-property-card__actions, .agency-space-card__actions');
+        const actions = card.querySelector(
+          '.agency-space-property-card__actions, .agency-space-contact-card__actions, .agency-space-card__actions',
+        );
         if (actions) actions.appendChild(link);
+        const contactCrm = card.querySelector('.agency-space-contact-card__commerce');
+        if (contactCrm && !card.querySelector('.agency-space-contact-card__crm-state')) {
+          const p = document.createElement('p');
+          p.className = 'agency-space-contact-card__crm-state';
+          p.innerHTML = '<i class="fas fa-circle-check" aria-hidden="true"></i>در CRM من';
+          contactCrm.insertBefore(p, contactCrm.firstChild);
+        }
         const trail = card.querySelector('.agency-space-property-card__trail');
         if (trail && !card.querySelector('.agency-space-property-card__crm-state')) {
           const p = document.createElement('p');

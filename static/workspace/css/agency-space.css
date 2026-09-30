@@ -6147,6 +6147,91 @@
   text-align: end;
 }
 
+.agency-space-pro-spec-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+
+.agency-space-pro-spec-grid--features {
+  margin-top: 0.65rem;
+}
+
+.agency-space-pro-spec-grid--features:first-child {
+  margin-top: 0;
+}
+
+.agency-space-pro-spec-cell {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.5rem 0.55rem;
+  border-radius: 10px;
+  border: 1px solid #eef2f7;
+  background: #fff;
+  min-height: 0;
+}
+
+.agency-space-pro-spec-cell--accent {
+  background: linear-gradient(135deg, #faf5ff 0%, #fff 100%);
+  border-color: #ede9fe;
+}
+
+.agency-space-pro-spec-cell__icon {
+  flex-shrink: 0;
+  width: 1.75rem;
+  height: 1.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--pro-purple, #7c3aed) 10%, #fff);
+  color: var(--pro-purple, #7c3aed);
+  font-size: 0.72rem;
+}
+
+.agency-space-pro-spec-cell--accent .agency-space-pro-spec-cell__icon {
+  background: color-mix(in srgb, #7c3aed 14%, #fff);
+  color: #6d28d9;
+}
+
+.agency-space-pro-spec-cell__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.12rem;
+}
+
+.agency-space-pro-spec-cell__label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: #64748b;
+  line-height: 1.25;
+}
+
+.agency-space-pro-spec-cell__value {
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.35;
+  word-break: break-word;
+  font-variant-numeric: tabular-nums;
+}
+
+.agency-space-pro-spec-cell--accent .agency-space-pro-spec-cell__value {
+  color: #5b21b6;
+}
+
+@media (max-width: 520px) {
+  .agency-space-pro-spec-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .agency-space-pro-contact {
   list-style: none;
   margin: 0;
@@ -6820,6 +6905,15 @@
 
 .agency-space-detail--polished .agency-space-pro-kv__value {
   font-variant-numeric: tabular-nums;
+}
+
+.agency-space-detail--polished .agency-space-pro-spec-grid {
+  gap: 0.5rem;
+}
+
+.agency-space-detail--polished .agency-space-pro-spec-cell {
+  border-color: #e8ecf4;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
 }
 
 .agency-space-prop-detail__metrics--contact {

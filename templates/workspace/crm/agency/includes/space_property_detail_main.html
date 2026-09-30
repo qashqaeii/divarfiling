@@ -120,30 +120,54 @@
                 <span class="agency-space-pro-panel__icon" aria-hidden="true"><i class="fas fa-clipboard-list"></i></span>
                 <h2 id="space-prop-specs-heading" class="agency-space-pro-panel__title">مشخصات اصلی</h2>
             </header>
-            <ul class="agency-space-pro-kv">
+            <ul class="agency-space-pro-spec-grid">
                 {% if prop.area_label or prop.area %}
-                <li class="agency-space-pro-kv__row"><span class="agency-space-pro-kv__label"><i class="fas fa-ruler-combined" aria-hidden="true"></i> متراژ بنا</span><span class="agency-space-pro-kv__value">{% if prop.area_label %}{{ prop.area_label }}{% else %}{{ prop.area }} متر{% endif %}</span></li>
+                <li class="agency-space-pro-spec-cell">
+                    <span class="agency-space-pro-spec-cell__icon" aria-hidden="true"><i class="fas fa-ruler-combined"></i></span>
+                    <div class="agency-space-pro-spec-cell__body">
+                        <span class="agency-space-pro-spec-cell__label">متراژ بنا</span>
+                        <span class="agency-space-pro-spec-cell__value">{% if prop.area_label %}{{ prop.area_label }}{% else %}{{ prop.area }} متر{% endif %}</span>
+                    </div>
+                </li>
                 {% endif %}
                 {% if prop.land_area_label or prop.land_area %}
-                <li class="agency-space-pro-kv__row"><span class="agency-space-pro-kv__label"><i class="fas fa-map" aria-hidden="true"></i> متراژ زمین</span><span class="agency-space-pro-kv__value">{{ prop.land_area_label|default:prop.land_area }}</span></li>
+                <li class="agency-space-pro-spec-cell">
+                    <span class="agency-space-pro-spec-cell__icon" aria-hidden="true"><i class="fas fa-map"></i></span>
+                    <div class="agency-space-pro-spec-cell__body">
+                        <span class="agency-space-pro-spec-cell__label">متراژ زمین</span>
+                        <span class="agency-space-pro-spec-cell__value">{{ prop.land_area_label|default:prop.land_area }}</span>
+                    </div>
+                </li>
                 {% endif %}
                 {% if prop.rooms %}
-                <li class="agency-space-pro-kv__row"><span class="agency-space-pro-kv__label"><i class="fas fa-door-open" aria-hidden="true"></i> اتاق</span><span class="agency-space-pro-kv__value">{{ prop.rooms }}</span></li>
+                {% include "workspace/crm/agency/includes/space_pro_spec_cell.html" with icon="fa-door-open" label="اتاق" value=prop.rooms %}
                 {% endif %}
                 {% if prop.floor is not None %}
-                <li class="agency-space-pro-kv__row"><span class="agency-space-pro-kv__label"><i class="fas fa-layer-group" aria-hidden="true"></i> طبقه</span><span class="agency-space-pro-kv__value">{{ prop.floor }}{% if prop.total_floors %} از {{ prop.total_floors }}{% endif %}</span></li>
+                <li class="agency-space-pro-spec-cell">
+                    <span class="agency-space-pro-spec-cell__icon" aria-hidden="true"><i class="fas fa-layer-group"></i></span>
+                    <div class="agency-space-pro-spec-cell__body">
+                        <span class="agency-space-pro-spec-cell__label">طبقه</span>
+                        <span class="agency-space-pro-spec-cell__value">{{ prop.floor }}{% if prop.total_floors %} از {{ prop.total_floors }}{% endif %}</span>
+                    </div>
+                </li>
                 {% endif %}
                 {% if prop.build_year %}
-                <li class="agency-space-pro-kv__row"><span class="agency-space-pro-kv__label"><i class="fas fa-hammer" aria-hidden="true"></i> سال ساخت</span><span class="agency-space-pro-kv__value">{{ prop.build_year }}</span></li>
+                {% include "workspace/crm/agency/includes/space_pro_spec_cell.html" with icon="fa-hammer" label="سال ساخت" value=prop.build_year %}
                 {% endif %}
                 {% if prop.frontage_width %}
-                <li class="agency-space-pro-kv__row"><span class="agency-space-pro-kv__label"><i class="fas fa-arrows-left-right" aria-hidden="true"></i> دهنه</span><span class="agency-space-pro-kv__value">{{ prop.frontage_width }} متر</span></li>
+                <li class="agency-space-pro-spec-cell">
+                    <span class="agency-space-pro-spec-cell__icon" aria-hidden="true"><i class="fas fa-arrows-left-right"></i></span>
+                    <div class="agency-space-pro-spec-cell__body">
+                        <span class="agency-space-pro-spec-cell__label">دهنه</span>
+                        <span class="agency-space-pro-spec-cell__value">{{ prop.frontage_width }} متر</span>
+                    </div>
+                </li>
                 {% endif %}
                 {% if prop.publish_status %}
-                <li class="agency-space-pro-kv__row"><span class="agency-space-pro-kv__label"><i class="fas fa-bullhorn" aria-hidden="true"></i> وضعیت انتشار</span><span class="agency-space-pro-kv__value">{{ prop.publish_status }}</span></li>
+                {% include "workspace/crm/agency/includes/space_pro_spec_cell.html" with icon="fa-bullhorn" label="وضعیت انتشار" value=prop.publish_status %}
                 {% endif %}
                 {% if prop.business_type %}
-                <li class="agency-space-pro-kv__row"><span class="agency-space-pro-kv__label"><i class="fas fa-user-tie" aria-hidden="true"></i> نوع آگهی‌دهنده</span><span class="agency-space-pro-kv__value">{{ prop.business_type }}</span></li>
+                {% include "workspace/crm/agency/includes/space_pro_spec_cell.html" with icon="fa-user-tie" label="نوع آگهی‌دهنده" value=prop.business_type %}
                 {% endif %}
             </ul>
         </section>
@@ -155,18 +179,24 @@
                 <span class="agency-space-pro-panel__icon" aria-hidden="true"><i class="fas fa-map-location-dot"></i></span>
                 <h2 id="space-prop-loc-heading" class="agency-space-pro-panel__title">موقعیت</h2>
             </header>
-            <ul class="agency-space-pro-kv">
+            <ul class="agency-space-pro-spec-grid">
                 {% if prop.city %}
-                <li class="agency-space-pro-kv__row"><span class="agency-space-pro-kv__label"><i class="fas fa-city" aria-hidden="true"></i> شهر</span><span class="agency-space-pro-kv__value">{{ prop.city }}</span></li>
+                {% include "workspace/crm/agency/includes/space_pro_spec_cell.html" with icon="fa-city" label="شهر" value=prop.city %}
                 {% endif %}
                 {% if prop.district %}
-                <li class="agency-space-pro-kv__row"><span class="agency-space-pro-kv__label"><i class="fas fa-map-pin" aria-hidden="true"></i> منطقه</span><span class="agency-space-pro-kv__value">{{ prop.district }}</span></li>
+                {% include "workspace/crm/agency/includes/space_pro_spec_cell.html" with icon="fa-map-pin" label="منطقه" value=prop.district %}
                 {% endif %}
                 {% if prop.neighborhood %}
-                <li class="agency-space-pro-kv__row"><span class="agency-space-pro-kv__label"><i class="fas fa-location-crosshairs" aria-hidden="true"></i> محله</span><span class="agency-space-pro-kv__value">{{ prop.neighborhood }}</span></li>
+                {% include "workspace/crm/agency/includes/space_pro_spec_cell.html" with icon="fa-location-crosshairs" label="محله" value=prop.neighborhood %}
                 {% endif %}
                 {% if prop.postal_code %}
-                <li class="agency-space-pro-kv__row"><span class="agency-space-pro-kv__label"><i class="fas fa-envelope" aria-hidden="true"></i> کد پستی</span><span class="agency-space-pro-kv__value" dir="ltr">{{ prop.postal_code }}</span></li>
+                <li class="agency-space-pro-spec-cell">
+                    <span class="agency-space-pro-spec-cell__icon" aria-hidden="true"><i class="fas fa-envelope"></i></span>
+                    <div class="agency-space-pro-spec-cell__body">
+                        <span class="agency-space-pro-spec-cell__label">کد پستی</span>
+                        <span class="agency-space-pro-spec-cell__value" dir="ltr">{{ prop.postal_code }}</span>
+                    </div>
+                </li>
                 {% endif %}
             </ul>
             {% if prop.address %}
@@ -214,9 +244,9 @@
             </ul>
             {% endif %}
             {% if prop.feature_data_rows %}
-            <ul class="agency-space-pro-kv agency-space-pro-kv--tight">
+            <ul class="agency-space-pro-spec-grid agency-space-pro-spec-grid--features">
                 {% for row in prop.feature_data_rows %}
-                <li class="agency-space-pro-kv__row"><span class="agency-space-pro-kv__label">{{ row.label }}</span><span class="agency-space-pro-kv__value">{{ row.value }}</span></li>
+                {% include "workspace/crm/agency/includes/space_pro_spec_cell.html" with icon=row.icon|default:"fa-circle-dot" label=row.label value=row.value %}
                 {% endfor %}
             </ul>
             {% endif %}

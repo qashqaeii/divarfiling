@@ -678,6 +678,104 @@ def _display_icon_for_key(key: str) -> str:
     return field.get('icon') or _icon_for_key(key)
 
 
+INTERNAL_FEATURE_DATA_KEYS = frozenset({
+    'location_source',
+    'location_precision',
+    '_location_source',
+    '_location_precision',
+    'phone',
+    'شماره تماس',
+})
+
+_LOCATION_PRECISION_FA = {
+    'exact': 'دقیق',
+    'approximate': 'تقریبی',
+    'none': 'ثبت نشده',
+}
+
+_LOCATION_SOURCE_FA = {
+    'manual_pin': 'پین روی نقشه',
+    'listing_coordinates': 'مختصات آگهی مبدأ',
+    'none': 'نامشخص',
+}
+
+
+def is_internal_feature_data_key(key: str) -> bool:
+    k = (key or '').strip()
+    if not k or k.startswith('_'):
+        return True
+    base = k.rstrip('_')
+    if k in INTERNAL_FEATURE_DATA_KEYS or base in INTERNAL_FEATURE_DATA_KEYS:
+        return True
+    if base in ('location_source', 'location_precision'):
+        return True
+    return False
+
+
+def _format_feature_value_for_display(key: str, value: Any) -> str:
+    if value is None:
+        return ''
+    if isinstance(value, bool):
+        return 'دارد' if value else ''
+    raw = str(value).strip()
+    if not raw:
+        return ''
+    low = raw.lower()
+    if low in _LOCATION_PRECISION_FA:
+        return _LOCATION_PRECISION_FA[low]
+    if low in _LOCATION_SOURCE_FA:
+        return _LOCATION_SOURCE_FA[low]
+    field = FIELDS.get(key) or {}
+    if field.get('widget') == 'date':
+        return format_feature_date_display(raw) or raw
+    if field.get('widget') == 'toggle':
+        on = field.get('toggle_on') or 'دارد'
+        off = field.get('toggle_off') or 'ندارد'
+        norm = _normalize_toggle(raw)
+        if norm in ('دارد', 'هست', 'بله', 'true', '1'):
+            return on
+        if norm in ('ندارد', 'نیست', 'خیر', 'false', '0'):
+            return off
+    return raw
+
+
+def feature_data_rows_for_display(
+    feature_data: Optional[dict],
+    *,
+    limit: int = 40,
+) -> List[Dict[str, str]]:
+    """ردیف‌های برچسب/مقدار فارسی برای UI عمومی (فضای آژانس و …)."""
+    rows: List[Dict[str, str]] = []
+    for group in feature_profile_groups_from_data(feature_data):
+        for item in group['items']:
+            key = str(item.get('key') or '')
+            if is_internal_feature_data_key(key):
+                continue
+            label = str(item.get('label') or key).strip()
+            if not label or not _is_persian_friendly_label(label):
+                continue
+            value = _format_feature_value_for_display(key, item.get('value'))
+            if not value:
+                continue
+            icon = str(item.get('icon') or _display_icon_for_key(key) or 'fa-circle-dot')
+            rows.append({'label': label, 'value': value, 'icon': icon})
+            if len(rows) >= limit:
+                return rows
+    return rows
+
+
+def _is_persian_friendly_label(label: str) -> bool:
+    """کلیدهای انگلیسی خام (متادیتا) در UI نشان داده نشوند."""
+    if not label:
+        return False
+    if label.startswith('_'):
+        return False
+    ascii_snake = all(c.isascii() and (c.isalnum() or c in '_-') for c in label)
+    if ascii_snake and '_' in label and not any('\u0600' <= c <= '\u06ff' for c in label):
+        return False
+    return True
+
+
 def feature_profile_groups_from_data(feature_data: Optional[dict]) -> List[Dict[str, Any]]:
     """گروه‌های نمایش پرونده از feature_data."""
     data = feature_data or {}
@@ -712,7 +810,7 @@ def feature_profile_groups_from_data(feature_data: Optional[dict]) -> List[Dict[
             })
     extra_items = []
     for key, val in data.items():
-        if key in used or not str(val or '').strip():
+        if key in used or is_internal_feature_data_key(key) or not str(val or '').strip():
             continue
         extra_items.append({
             'key': key,

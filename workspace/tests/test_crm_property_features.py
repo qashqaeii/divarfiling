@@ -10,6 +10,7 @@ from workspace.forms import CRMPropertyForm
 from workspace.models import CRMProperty
 from workspace.services.property_features import (
     CRM_FEATURE_FORM_KEYS,
+    feature_data_rows_for_display,
     parse_feature_data_from_post,
     resolve_feature_profile,
     sync_total_floors_from_feature_data,
@@ -316,3 +317,63 @@ class CRMPropertyFeatureDataTests(TestCase):
         self.assertIn('سیستم سرمایش', labels)
         self.assertIn('جنس کف', labels)
         self.assertTrue(profile.get('has_details'))
+
+
+class FeatureDataDisplayRowsTests(TestCase):
+    def test_agency_space_rows_are_persian_and_skip_internal_keys(self):
+        rows = feature_data_rows_for_display({
+            'بالکن': 'دارد',
+            'جنس کف': 'پارکت چوب',
+            'گرمایش': 'فن‌کویل',
+            '_location_source': 'manual_pin',
+            'location_precision': 'exact',
+            'location_source_': 'manual_pin',
+        })
+        labels = [r['label'] for r in rows]
+        values = ' '.join(r['value'] for r in rows)
+        self.assertIn('جنس کف', labels)
+        self.assertIn('سیستم گرمایش', labels)
+        self.assertNotIn('location_source_', labels)
+        self.assertNotIn('location_precision', labels)
+        self.assertNotIn('manual_pin', values)
+        self.assertNotIn('exact', values)
+
+
+class FeatureDataDisplayRowsTests(TestCase):
+    def test_agency_space_rows_are_persian_and_skip_internal_keys(self):
+        rows = feature_data_rows_for_display({
+            'بالکن': 'دارد',
+            'جنس کف': 'پارکت چوب',
+            'گرمایش': 'فن‌کویل',
+            '_location_source': 'manual_pin',
+            'location_precision': 'exact',
+            'location_source_': 'manual_pin',
+        })
+        labels = [r['label'] for r in rows]
+        values = ' '.join(r['value'] for r in rows)
+        self.assertIn('جنس کف', labels)
+        self.assertIn('سیستم گرمایش', labels)
+        self.assertNotIn('location_source_', labels)
+        self.assertNotIn('location_precision', labels)
+        self.assertNotIn('manual_pin', values)
+        self.assertNotIn('exact', values)
+
+
+class FeatureDataDisplayRowsTests(TestCase):
+    def test_agency_space_rows_are_persian_and_skip_internal_keys(self):
+        rows = feature_data_rows_for_display({
+            'بالکن': 'دارد',
+            'جنس کف': 'پارکت چوب',
+            'گرمایش': 'فن‌کویل',
+            '_location_source': 'manual_pin',
+            'location_precision': 'exact',
+            'location_source_': 'manual_pin',
+        })
+        labels = [r['label'] for r in rows]
+        values = ' '.join(r['value'] for r in rows)
+        self.assertIn('جنس کف', labels)
+        self.assertIn('سیستم گرمایش', labels)
+        self.assertNotIn('location_source_', labels)
+        self.assertNotIn('location_precision', labels)
+        self.assertNotIn('manual_pin', values)
+        self.assertNotIn('exact', values)

@@ -17,6 +17,7 @@ from workspace.models import AgencySpaceCopy
 from workspace.services.crm_scope import get_membership
 from workspace.services.display import to_jalali_display
 from workspace.services.formatting import format_area, format_toman
+from workspace.services.property_features import feature_data_rows_for_display
 from workspace.constants import AGENCY_ROLE_STYLES
 from accounts.avatar_catalog import consultant_portrait_url, resolve_contact_avatar_display
 
@@ -65,18 +66,7 @@ def _property_amenity_flags(prop: CRMProperty) -> List[Dict[str, str]]:
 
 def _property_feature_data_rows(prop: CRMProperty) -> List[Dict[str, str]]:
     raw = prop.feature_data if isinstance(prop.feature_data, dict) else {}
-    rows: List[Dict[str, str]] = []
-    for key, val in raw.items():
-        if val is None or val == '' or val is False:
-            continue
-        if isinstance(val, bool):
-            if not val:
-                continue
-            display = 'بله'
-        else:
-            display = str(val)
-        rows.append({'label': str(key), 'value': display})
-    return rows[:40]
+    return feature_data_rows_for_display(raw)
 
 
 def _property_price_label(prop: CRMProperty) -> str:

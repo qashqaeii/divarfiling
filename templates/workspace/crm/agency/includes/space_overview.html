@@ -68,7 +68,12 @@
                             {% endif %}
                         </span>
                         <span class="agency-space-overview-feed__body">
-                            <span class="agency-space-overview-feed__title">{{ item.customer.name }}</span>
+                            <span class="agency-space-overview-feed__title-row">
+                                <span class="agency-space-overview-feed__title">{{ item.customer.name }}</span>
+                                {% if item.customer.customer_type %}
+                                <span class="agency-space-overview-chip agency-space-overview-chip--role">{{ item.customer.customer_type }}</span>
+                                {% endif %}
+                            </span>
                             <span class="agency-space-overview-feed__meta">
                                 <span class="agency-space-overview-feed__publisher">{{ item.publisher.name }}</span>
                                 <span class="agency-space-overview-feed__dot" aria-hidden="true">·</span>

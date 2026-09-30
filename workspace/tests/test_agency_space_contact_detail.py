@@ -1,13 +1,26 @@
 """Agency Space — contact detail page & serialize privacy."""
 from django.urls import reverse
 
+from licenses.models import License
 from workspace.models import AgencySpaceItem
+from workspace.services.agency_seats import assign_seat_to_member
 from workspace.services.agency_space_publish import publish_customer
 from workspace.services.agency_space_serialize import serialize_space_item
 from workspace.tests.test_agency_space_phase1 import AgencySpaceTestBase
 
 
 class AgencySpaceContactDetailTests(AgencySpaceTestBase):
+    def _seat_advisor2(self):
+        lic = (
+            License.objects.filter(agency_subscription=self.sub)
+            .order_by('pk')
+            .exclude(assigned_user_id=self.advisor.pk)
+            .first()
+        )
+        if lic is None:
+            lic = License.objects.filter(agency_subscription=self.sub).order_by('-pk').first()
+        assign_seat_to_member(self.owner, lic.pk, self.advisor2.pk)
+
     def test_summary_detail_no_phone_or_notes_in_payload(self):
         c = self._customer(phone='09121112233', notes='secret note')
         item = publish_customer(
@@ -22,7 +35,11 @@ class AgencySpaceContactDetailTests(AgencySpaceTestBase):
         self.assertFalse(data['customer']['has_phone'])
 
     def test_full_detail_shows_phone_when_authorized(self):
-        c = self._customer(phone='09127776655')
+        c = self._customer(
+            phone='09127776655',
+            budget_min=1_000_000_000,
+            budget_max=5_000_000_000,
+        )
         item = publish_customer(
             self.advisor,
             c.pk,
@@ -53,6 +70,7 @@ class AgencySpaceContactDetailTests(AgencySpaceTestBase):
         self.assertNotContains(resp, 'private')
 
     def test_contact_detail_shows_copy_cta(self):
+        self._seat_advisor2()
         c = self._customer()
         item = publish_customer(
             self.advisor,

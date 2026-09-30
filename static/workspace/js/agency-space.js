@@ -234,20 +234,38 @@
       if (card) {
         const link = document.createElement('a');
         link.href = targetUrl;
-        link.className = 'agency-space-property-card__btn agency-space-property-card__btn--primary agency-space-card__btn agency-space-card__btn--primary';
+        const isContact = card.classList.contains('agency-space-contact-card');
+        link.className = isContact
+          ? 'agency-space-contact-card__btn agency-space-contact-card__btn--primary'
+          : 'agency-space-property-card__btn agency-space-property-card__btn--primary agency-space-card__btn agency-space-card__btn--primary';
         link.setAttribute('data-space-crm-link', '');
-        link.textContent = 'باز کردن CRM';
-        link.setAttribute('data-space-crm-link', '');
-        const actions = card.querySelector(
+        link.innerHTML = isContact
+          ? 'باز کردن CRM <i class="fas fa-arrow-up-left" aria-hidden="true"></i>'
+          : 'باز کردن CRM';
+        const actionBlocks = card.querySelectorAll(
           '.agency-space-property-card__actions, .agency-space-contact-card__actions, .agency-space-card__actions',
         );
-        if (actions) actions.appendChild(link);
-        const contactCrm = card.querySelector('.agency-space-contact-card__commerce');
-        if (contactCrm && !card.querySelector('.agency-space-contact-card__crm-state')) {
-          const p = document.createElement('p');
-          p.className = 'agency-space-contact-card__crm-state';
-          p.innerHTML = '<i class="fas fa-circle-check" aria-hidden="true"></i>در CRM من';
-          contactCrm.insertBefore(p, contactCrm.firstChild);
+        actionBlocks.forEach((actions) => {
+          const next = link.cloneNode(true);
+          actions.appendChild(next);
+        });
+        if (isContact && !card.querySelector('.agency-space-contact-card__crm-badge')) {
+          const badgeHtml =
+            '<i class="fas fa-circle-check" aria-hidden="true"></i> در CRM من';
+          const statusCol = card.querySelector('.agency-space-contact-card__status-col');
+          if (statusCol) {
+            const p = document.createElement('p');
+            p.className = 'agency-space-contact-card__crm-badge';
+            p.innerHTML = badgeHtml;
+            statusCol.insertBefore(p, statusCol.querySelector('.agency-space-contact-card__actions--list'));
+          }
+          const footMeta = card.querySelector('.agency-space-contact-card__foot-meta');
+          if (footMeta) {
+            const p = document.createElement('p');
+            p.className = 'agency-space-contact-card__crm-badge agency-space-contact-card__crm-badge--foot';
+            p.innerHTML = badgeHtml;
+            footMeta.appendChild(p);
+          }
         }
         const propertyCommerce = card.querySelector('.agency-space-property-card__commerce');
         if (propertyCommerce && !card.querySelector('.agency-space-property-card__crm-state')) {

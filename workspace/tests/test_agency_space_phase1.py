@@ -101,10 +101,15 @@ class AgencySpaceTestBase(TestCase):
             user=user, agency=self.agency, title='ملک تست', phone='09121111111',
         )
 
-    def _customer(self, user=None, phone='09122222222'):
+    def _customer(self, user=None, phone='09122222222', notes='نیاز آپارتمان', **fields):
         user = user or self.advisor
         return Customer.objects.create(
-            user=user, agency=self.agency, name='مشتری تست', phone=phone, notes='نیاز آپارتمان',
+            user=user,
+            agency=self.agency,
+            name='مشتری تست',
+            phone=phone,
+            notes=notes,
+            **fields,
         )
 
 

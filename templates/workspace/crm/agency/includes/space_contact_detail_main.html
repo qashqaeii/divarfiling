@@ -51,9 +51,9 @@
         </div>
     </header>
 
-    {% if cust.property_type or cust.area_label or cust.rooms_label or cust.budget_rows %}
     <section class="agency-space-contact-detail__panel" aria-labelledby="space-contact-need-heading">
         <h2 id="space-contact-need-heading" class="agency-space-contact-detail__h">نیاز مخاطب</h2>
+        {% if cust.property_type or cust.area_label or cust.rooms_label or cust.budget_rows %}
         <dl class="agency-space-contact-detail__spec-grid">
             {% if cust.property_type %}
             <div class="agency-space-contact-detail__spec">
@@ -84,8 +84,10 @@
             </ul>
         </div>
         {% endif %}
+        {% else %}
+        <p class="agency-space-contact-detail__muted">جزئیات نیاز ثبت نشده است.</p>
+        {% endif %}
     </section>
-    {% endif %}
 
     {% if cust.has_phone and cust.phone or cust.email %}
     <section class="agency-space-contact-detail__panel" aria-labelledby="space-contact-info-heading">

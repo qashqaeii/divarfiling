@@ -56,17 +56,17 @@
                     <i class="fas fa-eye" aria-hidden="true"></i>
                     <span>مشاهده</span>
                 </a>
-                <a href="{% url 'workspace:dataset_analyze' ds.id %}" class="mk-ds-card-act" title="تحلیل" aria-label="تحلیل">
-                    <i class="fas fa-chart-bar" aria-hidden="true"></i>
-                </a>
-                <a href="{% url 'workspace:dataset_map' ds.id %}" class="mk-ds-card-act" title="نقشه" aria-label="نقشه">
-                    <i class="fas fa-map" aria-hidden="true"></i>
-                </a>
                 <details class="fl-row-menu mk-ds-card-menu">
                     <summary class="mk-ds-card-act fl-row-btn--more" title="بیشتر" aria-label="عملیات بیشتر">
                         <i class="fas fa-ellipsis" aria-hidden="true"></i>
                     </summary>
                     <div class="fl-row-menu__panel" role="menu">
+                        <a href="{% url 'workspace:dataset_analyze' ds.id %}" class="fl-row-menu__item" role="menuitem">
+                            <i class="fas fa-chart-bar" aria-hidden="true"></i> تحلیل
+                        </a>
+                        <a href="{% url 'workspace:dataset_map' ds.id %}" class="fl-row-menu__item" role="menuitem">
+                            <i class="fas fa-map" aria-hidden="true"></i> نقشه
+                        </a>
                         <a href="{% url 'workspace:dataset_export' ds.id %}?format=csv" class="fl-row-menu__item js-secure-export" data-export-label="خروجی CSV" role="menuitem">
                             <i class="fas fa-download" aria-hidden="true"></i> دانلود
                         </a>

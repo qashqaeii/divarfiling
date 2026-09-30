@@ -4,6 +4,433 @@
    ═══════════════════════════════════════════════════════════ */
 
 @media (max-width: 767px) {
+    /* ── Post-Deploy Fix — single outer gutter (owned by .ws-content) ── */
+    .mk-filing-mobile.mk-filing-datasets.mk-page {
+        width: 100% !important;
+        max-width: none !important;
+        margin-inline: 0 !important;
+        padding-inline: 0 !important;
+        box-sizing: border-box;
+        gap: var(--mobile-section-gap, 0.65rem);
+        overflow-x: clip;
+    }
+
+    .mk-filing-mobile.mk-filing-datasets :is(
+        .fl-mob-header,
+        .fl-kpi-grid,
+        .fl-toolbar,
+        .fl-panel,
+        .mk-filing-panel
+    ) {
+        width: 100% !important;
+        max-width: none !important;
+        margin-inline: 0 !important;
+        box-sizing: border-box;
+    }
+
+    .mk-filing-mobile.mk-filing-datasets .fl-mob-header__inner {
+        padding-inline: 0 !important;
+    }
+
+    .mk-filing-mobile.mk-filing-datasets .mk-filing-panel.mk-panel-flush {
+        padding: 0 !important;
+    }
+
+    .mk-filing-mobile.mk-filing-datasets .fl-kpi-grid {
+        padding-inline: 0 !important;
+    }
+
+    .mk-filing-mobile.mk-filing-datasets .fl-toolbar {
+        margin: 0 !important;
+        padding: 0 !important;
+        border: none !important;
+        box-shadow: none !important;
+        background: transparent !important;
+    }
+
+    .mk-filing-mobile.mk-filing-datasets .fl-panel,
+    .mk-filing-mobile.mk-filing-datasets .mk-filing-panel {
+        margin-inline: 0 !important;
+    }
+
+    .mk-filing-mobile.mk-filing-datasets .mk-filing-panel,
+    .mk-filing-mobile.mk-filing-datasets .fl-panel__head {
+        padding-inline: 0 !important;
+    }
+
+    .mk-filing-mobile .fl-mob-cards,
+    .mk-filing-mobile .mk-filing-mob-cards,
+    .mk-filing-mobile .fl-mob-cards.mk-ds-grid,
+    .mk-filing-mobile .mk-filing-mob-cards.mk-ds-grid {
+        width: 100% !important;
+        max-width: none !important;
+        padding: 0 !important;
+        margin-inline: 0 !important;
+        gap: 0.65rem;
+    }
+
+    .mk-filing-mobile .fl-mob-card,
+    .mk-filing-mobile .mk-filing-mob-card {
+        width: 100% !important;
+        max-width: none !important;
+        min-width: 0;
+        padding: 0 !important;
+    }
+
+    .mk-filing-mobile .fl-mob-card .mk-ds-card-glass {
+        width: 100%;
+        max-width: none;
+    }
+
+    /* Card-only on mobile even when ?view=table|grid */
+    .mk-filing-mobile.mk-filing-datasets.mk-filing-pro[data-view-mode="grid"] .fl-mob-cards,
+    .mk-filing-mobile.mk-filing-datasets.mk-filing-pro[data-view-mode="table"] .fl-mob-cards,
+    .mk-filing-mobile.mk-filing-datasets.mk-filing-pro[data-view-mode="auto"] .fl-mob-cards {
+        display: flex !important;
+    }
+
+    .mk-filing-mobile.mk-filing-datasets.mk-filing-pro[data-view-mode="grid"] .fl-gcard-grid,
+    .mk-filing-mobile.mk-filing-datasets .fl-ds-layout-table {
+        display: none !important;
+    }
+
+    .mk-filing-mobile .fl-toolbar__view {
+        display: none !important;
+    }
+
+    /* Compact toolbar: search + filter */
+    .mk-filing-mobile .fl-toolbar__row {
+        flex-direction: row;
+        align-items: stretch;
+        gap: 0.45rem;
+    }
+
+    .mk-filing-mobile .fl-toolbar__search {
+        flex: 1 1 auto;
+        min-width: 0;
+        min-height: 2.75rem;
+    }
+
+    .mk-filing-mobile .fl-toolbar__mob-actions {
+        flex: 0 0 auto;
+        display: flex;
+        align-items: stretch;
+    }
+
+    .mk-filing-mobile .fl-toolbar__mob-toggle {
+        width: auto !important;
+        min-width: 2.75rem;
+        min-height: 2.75rem;
+        padding: 0 0.85rem;
+        white-space: nowrap;
+    }
+
+    .mk-filing-mobile .fl-toolbar__mob-count {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 1.25rem;
+        min-height: 1.25rem;
+        padding: 0 0.35rem;
+        margin-inline-start: 0.25rem;
+        border-radius: 999px;
+        background: var(--ws-primary);
+        color: #fff;
+        font-style: normal;
+        font-size: 0.6875rem;
+        font-weight: 800;
+        line-height: 1;
+    }
+
+    .mk-filing-mobile .fl-toolbar__mob-badge {
+        display: none;
+    }
+
+    .mk-filing-mobile .fl-toolbar__chips {
+        margin-top: 0.45rem;
+        padding-top: 0;
+        border-top: none;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+    }
+
+    .mk-filing-mobile .fl-toolbar__chip--dismiss {
+        min-height: 2.25rem;
+        padding-inline: 0.55rem;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    .mk-filing-mobile .fl-toolbar__chip-x {
+        margin-inline-start: 0.2rem;
+        opacity: 0.75;
+        font-weight: 700;
+    }
+
+    /* Filter bottom sheet */
+    .mk-filing-mobile #dsFilterDetails {
+        position: static;
+        border: none;
+        background: transparent;
+    }
+
+    .mk-filing-mobile #dsFilterDetails:not([open]) .fl-toolbar__panel-inner {
+        display: none;
+    }
+
+    .mk-filing-mobile #dsFilterDetails[open] {
+        position: fixed;
+        inset: 0;
+        z-index: 192;
+        display: block;
+        margin: 0;
+        padding: 0;
+    }
+
+    .mk-filing-mobile #dsFilterDetails[open] .fl-toolbar__sheet-backdrop {
+        position: fixed;
+        inset: 0;
+        border: 0;
+        margin: 0;
+        padding: 0;
+        background: rgba(15, 23, 42, 0.45);
+        cursor: pointer;
+    }
+
+    .mk-filing-mobile #dsFilterDetails[open] .fl-toolbar__panel-inner {
+        position: fixed;
+        inset-inline: 0;
+        bottom: 0;
+        z-index: 1;
+        display: flex;
+        flex-direction: column;
+        max-height: min(88dvh, 640px);
+        margin: 0;
+        padding: 0;
+        border-radius: 20px 20px 0 0;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 70%, transparent);
+        border-bottom: none;
+        background: var(--ws-surface);
+        box-shadow: 0 -12px 40px rgba(15, 23, 42, 0.16);
+        overflow: hidden;
+    }
+
+    .mk-filing-mobile .fl-mob-filter-sheet__head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 0.65rem;
+        padding: 0.65rem 1rem 0.5rem;
+        flex-shrink: 0;
+        border-bottom: 1px solid color-mix(in srgb, var(--ws-border) 50%, transparent);
+    }
+
+    .mk-filing-mobile .fl-mob-filter-sheet__title {
+        margin: 0;
+        font-size: 1.0625rem;
+        font-weight: 800;
+    }
+
+    .mk-filing-mobile .fl-mob-filter-sheet__meta {
+        margin: 0.2rem 0 0;
+        font-size: 0.75rem;
+        color: var(--ws-text-muted);
+    }
+
+    .mk-filing-mobile .fl-mob-filter-sheet__head-actions {
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+
+    .mk-filing-mobile .fl-mob-filter-sheet__reset {
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: var(--ws-primary);
+        text-decoration: none;
+        min-height: 2.75rem;
+        display: inline-flex;
+        align-items: center;
+        padding-inline: 0.35rem;
+    }
+
+    .mk-filing-mobile .fl-mob-filter-sheet__close {
+        width: 2.75rem;
+        height: 2.75rem;
+        min-width: 2.75rem;
+        min-height: 2.75rem;
+        border-radius: 12px;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 60%, transparent);
+        background: var(--ws-surface-2);
+        color: var(--ws-text-secondary);
+        cursor: pointer;
+        font-family: inherit;
+    }
+
+    .mk-filing-mobile .fl-mob-filter-sheet__body {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        padding: 0.65rem 1rem;
+    }
+
+    .mk-filing-mobile .fl-mob-filter-section + .fl-mob-filter-section {
+        margin-top: 0.85rem;
+        padding-top: 0.85rem;
+        border-top: 1px solid color-mix(in srgb, var(--ws-border) 45%, transparent);
+    }
+
+    .mk-filing-mobile .fl-mob-filter-section__title {
+        margin: 0 0 0.45rem;
+        font-size: 0.75rem;
+        font-weight: 800;
+        color: var(--ws-text-secondary);
+    }
+
+    .mk-filing-mobile .fl-mob-filter-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+        margin-bottom: 0.15rem;
+    }
+
+    .mk-filing-mobile .fl-mob-filter-chips--scroll {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 0.15rem;
+    }
+
+    .mk-filing-mobile .fl-mob-filter-chips--scroll::-webkit-scrollbar {
+        display: none;
+    }
+
+    .mk-filing-mobile .fl-mob-filter-chip {
+        flex-shrink: 0;
+        min-height: 2.75rem;
+        padding: 0 0.75rem;
+        border-radius: 999px;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 70%, transparent);
+        background: var(--ws-surface);
+        font-family: inherit;
+        font-size: 0.8125rem;
+        font-weight: 700;
+        color: var(--ws-text-secondary);
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .mk-filing-mobile .fl-mob-filter-chip.is-active {
+        border-color: color-mix(in srgb, var(--ws-primary) 35%, var(--ws-border));
+        background: color-mix(in srgb, var(--ws-primary) 10%, var(--ws-surface));
+        color: var(--ws-primary);
+    }
+
+    .mk-filing-mobile .fl-toolbar__field {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+    }
+
+    .mk-filing-mobile .fl-toolbar__filters {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0;
+    }
+
+    .mk-filing-mobile .fl-toolbar__actions {
+        display: none !important;
+    }
+
+    .mk-filing-mobile .fl-mob-filter-sheet__foot {
+        display: flex;
+        align-items: center;
+        gap: 0.45rem;
+        padding: 0.65rem 1rem max(0.65rem, env(safe-area-inset-bottom, 0px));
+        border-top: 1px solid color-mix(in srgb, var(--ws-border) 50%, transparent);
+        background: var(--ws-surface);
+        flex-shrink: 0;
+    }
+
+    .mk-filing-mobile .fl-mob-filter-sheet__clear {
+        flex: 0 0 auto;
+        min-height: 2.75rem;
+        padding: 0 0.85rem;
+        border-radius: 12px;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 65%, transparent);
+        background: var(--ws-surface);
+        font-family: inherit;
+        font-size: 0.8125rem;
+        font-weight: 700;
+        color: var(--ws-text-secondary);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+    }
+
+    .mk-filing-mobile .fl-mob-filter-sheet__apply {
+        flex: 1;
+        min-height: 2.75rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.35rem;
+        border: none;
+        border-radius: 12px;
+        background: var(--ws-primary);
+        color: #fff;
+        font-family: inherit;
+        font-size: 0.875rem;
+        font-weight: 800;
+        cursor: pointer;
+    }
+
+    body.ws-filing-filter-open {
+        overflow: hidden;
+        touch-action: none;
+    }
+
+    /* Card layout — wider thumb, 2-line title, primary + more */
+    .mk-filing-mobile .mk-ds-card-main {
+        grid-template-columns: 5.5rem minmax(0, 1fr) !important;
+    }
+
+    .mk-filing-mobile .mk-ds-card-cover {
+        min-height: 5.5rem !important;
+    }
+
+    .mk-filing-mobile .mk-ds-card-cover-fmt {
+        width: 2.85rem !important;
+        height: 2.85rem !important;
+    }
+
+    .mk-filing-mobile .mk-ds-card-title {
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
+    }
+
+    .mk-filing-mobile .mk-ds-card-acts {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 0.4rem;
+    }
+
+    .mk-filing-mobile .mk-ds-card-act--open {
+        min-height: 2.75rem;
+    }
+
+    .mk-filing-mobile .mk-ds-card-menu > summary {
+        min-width: 2.75rem;
+        min-height: 2.75rem;
+    }
+
     .mk-filing-mobile.mk-page {
         padding-bottom: calc(5.75rem + env(safe-area-inset-bottom, 0px));
     }
@@ -149,5 +576,53 @@
         min-width: 2.75rem;
         min-height: 2.75rem;
         border-radius: 12px;
+    }
+}
+
+@media (max-width: 360px) {
+    .mk-filing-mobile .mk-ds-card-main {
+        grid-template-columns: 5rem minmax(0, 1fr) !important;
+    }
+}
+
+@media (min-width: 768px) {
+    .mk-filing-datasets .fl-toolbar__sheet-backdrop,
+    .mk-filing-datasets .fl-mob-filter-sheet__head,
+    .mk-filing-datasets .fl-mob-filter-sheet__foot {
+        display: none !important;
+    }
+
+    .mk-filing-datasets .fl-mob-filter-sheet__body {
+        display: block;
+        padding: 0;
+        overflow: visible;
+    }
+
+    .mk-filing-datasets .fl-mob-filter-section__title,
+    .mk-filing-datasets .fl-mob-filter-chips {
+        display: none !important;
+    }
+
+    .mk-filing-datasets .fl-mob-filter-section {
+        display: contents;
+    }
+
+    .mk-filing-datasets .fl-mob-filter-section + .fl-mob-filter-section {
+        margin: 0;
+        padding: 0;
+        border: none;
+    }
+
+    .mk-filing-datasets .fl-toolbar__field {
+        position: relative;
+        width: auto;
+        height: auto;
+        overflow: visible;
+        clip: auto;
+        white-space: normal;
+    }
+
+    .mk-filing-datasets .fl-toolbar__mob-actions {
+        display: none;
     }
 }

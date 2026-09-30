@@ -5,9 +5,9 @@
 {% block mobile_bar_title %}فایلینگ{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-datasets.css' %}?v=20">
+<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-datasets.css' %}?v=21">
 <link rel="stylesheet" href="{% static 'workspace/css/mk-filing-mobile.css' %}?v=9">
-<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-mobile-v2.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-mobile-v2.css' %}?v=3">
 {% include 'workspace/academy/includes/academy_assets_css.html' %}
 {% endblock %}
 
@@ -199,37 +199,6 @@
 {% block extra_js %}
 <script>
 (function () {
-    var details = document.getElementById('dsFilterDetails');
-    if (details) {
-        var desktop = window.matchMedia('(min-width: 769px)');
-        function syncFilterDetails() {
-            if (desktop.matches) {
-                details.setAttribute('open', '');
-            } else if (!details.classList.contains('is-active')) {
-                details.removeAttribute('open');
-            }
-        }
-        syncFilterDetails();
-        if (typeof desktop.addEventListener === 'function') {
-            desktop.addEventListener('change', syncFilterDetails);
-        } else if (typeof desktop.addListener === 'function') {
-            desktop.addListener(syncFilterDetails);
-        }
-        document.querySelectorAll('[data-ws-mob-filter-toggle]').forEach(function (btn) {
-            btn.addEventListener('click', function () {
-                if (desktop.matches) return;
-                var open = details.hasAttribute('open');
-                if (open) {
-                    details.removeAttribute('open');
-                    btn.setAttribute('aria-expanded', 'false');
-                } else {
-                    details.setAttribute('open', '');
-                    btn.setAttribute('aria-expanded', 'true');
-                }
-            });
-        });
-    }
-
     var sortSelect = document.getElementById('flTableSort');
     var table = document.getElementById('filingTable');
     if (sortSelect && table) {
@@ -255,6 +224,7 @@
     });
 })();
 </script>
+<script src="{% static 'workspace/js/filing-mobile.js' %}?v=2"></script>
 <script src="{% static 'workspace/js/filing-help.js' %}?v=4"></script>
 {% if ai_enabled and has_bot_license %}
 <script src="{% static 'workspace/js/ai.js' %}?v=6"></script>

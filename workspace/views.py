@@ -276,6 +276,7 @@ def _dataset_list_context(request, extra=None):
         'filters': filters,
         'filter_qs': _dataset_filter_qs(request),
         'has_filters': any(filters.get(k) for k in ('q', 'tx', 'city', 'format')),
+        'active_filter_count': sum(1 for k in ('q', 'tx', 'city', 'format') if filters.get(k)),
         'view_mode': filters.get('view') or 'auto',
         'page_query': _dataset_page_query(request),
     }
@@ -313,6 +314,9 @@ class DatasetListView(LicenseRequiredMixin, ListView):
             'filters': filters,
             'filter_qs': _dataset_filter_qs(self.request),
             'has_filters': any(filters.get(k) for k in ('q', 'tx', 'city', 'format')),
+            'active_filter_count': sum(
+                1 for k in ('q', 'tx', 'city', 'format') if filters.get(k)
+            ),
             'view_mode': filters.get('view') or 'auto',
             'page_query': _dataset_page_query(self.request),
             'filing_video': get_filing_video_context(),

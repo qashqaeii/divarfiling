@@ -1,55 +1,310 @@
 /* ═══════════════════════════════════════════════════════════
-   Workspace Home — Mobile Pass 02 (Surfaces #16–23)
+   Workspace Home — Mobile (Phase 2 Dashboard)
    Scoped: max-width 767px — Desktop unchanged
    ═══════════════════════════════════════════════════════════ */
 
 @media (max-width: 767px) {
+    /* ── Layout rhythm ── */
     .wsh-dashboard,
     .ws-home.ws-home-pro {
-        gap: 0.55rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.65rem;
         min-width: 0;
         overflow-x: clip;
     }
 
-    /* Hero / header (#17) */
+    .wsh-dashboard > * {
+        min-width: 0;
+        max-width: 100%;
+    }
+
+    /* ── A: Compact hero / context ── */
     .wsh-hero {
-        padding: 0.8rem 0.85rem;
+        padding: 0.65rem 0.75rem 0.7rem;
         border-radius: 16px;
+        min-height: 0 !important;
+    }
+
+    .wsh-hero__main {
+        margin-bottom: 0.45rem;
     }
 
     .wsh-hero__title {
-        font-size: 1.25rem; /* 20px */
-        line-height: 1.3;
+        font-size: 1.0625rem;
+        line-height: 1.35;
+        font-weight: 800;
     }
 
-    .wsh-hero__meta,
+    .wsh-hero__greeting-line {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .wsh-hero__meta {
+        font-size: 0.75rem;
+        line-height: 1.4;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+    }
+
+    .wsh-hero__sub--context,
     .wsh-hero__sub {
-        font-size: 0.8125rem;
+        font-size: 0.75rem;
         line-height: 1.45;
+        margin-top: 0.25rem;
+        color: var(--ws-text-muted);
     }
 
-    /* KPI strip */
+    .wsh-hero__search {
+        margin-top: 0.15rem;
+    }
+
+    /* ── B: NBA ── */
+    .wsh-nba {
+        gap: 0.4rem;
+    }
+
+    .wsh-nba .ws-home-alert {
+        padding: 0.7rem 0.75rem;
+    }
+
+    .wsh-nba .ws-home-alert__desc {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .wsh-nba-success {
+        padding: 0.55rem 0.65rem;
+        border-radius: 12px;
+        font-size: 0.8125rem;
+    }
+
+    .wsh-nba-success p {
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+
+    /* ── C: Today / overdue queue ── */
+    .wsh-queue {
+        padding: 0.65rem 0.7rem;
+    }
+
+    .wsh-queue__list {
+        max-height: none;
+    }
+
+    .wsh-queue__row {
+        padding: 0.48rem 0.5rem;
+    }
+
+    .wsh-queue__name {
+        font-size: 0.8125rem;
+    }
+
+    .wsh-queue__act {
+        width: 2.75rem;
+        height: 2.75rem;
+        min-width: 2.75rem;
+        min-height: 2.75rem;
+    }
+
+    /* ── D: KPI compact 2×2 / 2×4 ── */
     .wsh-kpi__grid {
-        gap: 0.45rem;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.4rem;
     }
 
     .wsh-kpi__card {
-        min-height: 3.5rem;
-        padding: 0.65rem 0.7rem;
+        min-height: 0;
+        padding: 0.55rem 0.58rem;
         border-radius: 14px;
         -webkit-tap-highlight-color: transparent;
     }
 
+    .wsh-kpi__icon {
+        width: 1.45rem;
+        height: 1.45rem;
+        font-size: 0.62rem;
+        margin-bottom: 0.08rem;
+    }
+
     .wsh-kpi__value {
-        font-size: 1rem;
+        font-size: 0.9375rem;
         font-weight: 800;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
     .wsh-kpi__label {
         font-size: 0.6875rem;
+        font-weight: 700;
     }
 
-    /* Global search (#18) */
+    .wsh-kpi__sub {
+        display: none;
+    }
+
+    /* ── E: Quick actions — shell «بیشتر» duplicates quick create ── */
+    .wsh-actions {
+        display: none !important;
+    }
+
+    /* ── Shortcuts ── */
+    .wsh-shortcuts {
+        padding: 0.4rem 0.45rem;
+        border-radius: 14px;
+    }
+
+    .wsh-shortcut {
+        min-width: 3.75rem;
+        min-height: 2.75rem;
+        padding: 0.35rem 0.4rem;
+    }
+
+    .wsh-shortcut__label {
+        font-size: 0.625rem;
+    }
+
+    /* ── Shared cards ── */
+    .wsh-card {
+        border-radius: 16px;
+        padding: 0.7rem 0.75rem;
+        min-width: 0;
+    }
+
+    .wsh-card__head {
+        margin-bottom: 0.45rem;
+        padding-bottom: 0.4rem;
+    }
+
+    .wsh-card__title h2 {
+        font-size: 0.9375rem;
+        font-weight: 800;
+    }
+
+    .wsh-card__link {
+        min-height: 2.75rem;
+        display: inline-flex;
+        align-items: center;
+        padding-inline: 0.15rem;
+        font-size: 0.75rem;
+    }
+
+    /* ── Reminders widget ── */
+    .wsh-tabs {
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 0.15rem;
+    }
+
+    .wsh-tabs::-webkit-scrollbar {
+        display: none;
+    }
+
+    .wsh-tabs__btn {
+        flex-shrink: 0;
+        min-height: 2.25rem;
+        padding: 0.35rem 0.65rem;
+        font-size: 0.6875rem;
+    }
+
+    .wsh-reminders__list {
+        max-height: 16rem;
+    }
+
+    .wsh-reminders__item {
+        min-height: 2.75rem;
+        padding: 0.48rem 0.5rem;
+    }
+
+    .wsh-reminders__act {
+        width: 2.75rem;
+        height: 2.75rem;
+        min-width: 2.75rem;
+        min-height: 2.75rem;
+    }
+
+    .wsh-reminders__empty {
+        padding: 0.65rem 0.5rem;
+        font-size: 0.8125rem;
+    }
+
+    /* ── Grids → single column ── */
+    .wsh-mid-grid,
+    .wsh-lower-grid,
+    .wsh-lower-grid--2 {
+        display: flex;
+        flex-direction: column;
+        gap: 0.65rem;
+    }
+
+    /* ── Charts ── */
+    .wsh-trend__chart,
+    .wsh-contacts__chart {
+        position: relative;
+        width: 100%;
+        height: 11.5rem;
+        min-height: 10.5rem;
+        max-height: 13rem;
+    }
+
+    .wsh-trend__chart canvas,
+    .wsh-contacts__chart canvas {
+        max-height: 100%;
+    }
+
+    .wsh-trend__legend {
+        font-size: 0.6875rem;
+        gap: 0.35rem;
+        flex-wrap: wrap;
+    }
+
+    .wsh-trend__range-btn,
+    .wsh-trend__range .mk-insight-range-btn {
+        min-height: 2.25rem;
+        padding: 0.3rem 0.55rem;
+        font-size: 0.6875rem;
+    }
+
+    .wsh-contacts__layout {
+        flex-direction: column;
+        gap: 0.55rem;
+    }
+
+    .wsh-contacts__legend {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.35rem 0.5rem;
+    }
+
+    .wsh-contacts__legend li {
+        min-width: 0;
+        font-size: 0.6875rem;
+    }
+
+    .wsh-contacts__name {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .wsh-pipeline__row {
+        min-height: 2.75rem;
+        padding-block: 0.35rem;
+    }
+
+    /* ── Search ── */
     .wsh-search {
         width: 100%;
         min-width: 0;
@@ -64,7 +319,7 @@
 
     .wsh-search__input,
     .wsh-search .crm-search-input {
-        font-size: 1rem; /* prevent iOS zoom */
+        font-size: 1rem;
         min-height: 2.75rem;
     }
 
@@ -77,7 +332,7 @@
     .wsh-search .crm-search-results {
         position: fixed;
         inset-inline: 0.65rem;
-        top: calc(3.35rem + env(safe-area-inset-top, 0px) + 0.35rem);
+        top: calc(var(--ws-mob-topbar-h, 3rem) + env(safe-area-inset-top, 0px) + 0.35rem);
         max-height: min(62dvh, 420px);
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
@@ -86,73 +341,70 @@
         box-shadow: 0 16px 48px rgba(15, 23, 42, 0.16);
     }
 
-    /* Quick actions / shortcuts (#19) */
-    .wsh-actions,
-    .wsh-shortcuts__grid {
+    /* ── Empty / start ── */
+    .wsh-start__grid {
+        grid-template-columns: 1fr;
         gap: 0.45rem;
     }
 
-    .wsh-action,
-    .wsh-shortcuts__item,
     .wsh-start__card {
         min-height: 3.25rem;
         padding: 0.7rem 0.75rem;
         border-radius: 14px;
-        -webkit-tap-highlight-color: transparent;
-    }
-
-    .wsh-action:active,
-    .wsh-shortcuts__item:active,
-    .wsh-start__card:active {
-        transform: scale(0.985);
-    }
-
-    .wsh-start__grid {
-        gap: 0.45rem;
     }
 
     .wsh-start__title {
         font-size: 0.9375rem;
         font-weight: 750;
-        margin-bottom: 0.35rem;
     }
 
-    /* Widget cards (#20–23) */
-    .wsh-card {
-        border-radius: 16px;
-        padding: 0.75rem 0.8rem;
-        min-width: 0;
-    }
-
-    .wsh-card__title {
-        font-size: 0.9375rem;
-        font-weight: 750;
-    }
-
-    .wsh-reminders__item,
-    .wsh-props__row,
-    .wsh-contacts__row {
-        min-height: 2.75rem;
-        padding-block: 0.55rem;
-    }
-
-    .wsh-mid-grid,
-    .wsh-lower-grid {
-        gap: 0.55rem;
-    }
-
-    /* NBA alerts — full-width CTA already in home.css */
-    .wsh-nba {
-        gap: 0.45rem;
+    .wsh-empty,
+    .wsh-empty--inline {
+        font-size: 0.8125rem;
+        padding: 0.5rem 0;
     }
 
     .ws-home-alert__cta {
         min-height: 2.75rem !important;
     }
 
-    /* Footer status on home */
     .wsh-footer {
         font-size: 0.6875rem;
         padding-block: 0.35rem;
+        text-align: center;
+    }
+}
+
+@media (max-width: 360px) {
+    .wsh-kpi__value {
+        font-size: 0.875rem;
+    }
+
+    .wsh-kpi__label {
+        font-size: 0.625rem;
+    }
+
+    .wsh-hero__title {
+        font-size: 1rem;
+    }
+
+    .wsh-queue__meta {
+        font-size: 0.5625rem;
+    }
+
+    .wsh-contacts__legend {
+        grid-template-columns: 1fr;
+    }
+
+    .ws-home-alert__title {
+        font-size: 0.8125rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .wsh-action:active,
+    .wsh-start__card:active,
+    .wsh-queue__act:active {
+        transform: none;
     }
 }

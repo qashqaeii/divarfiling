@@ -7,8 +7,8 @@
 {% endblock %}
 
 {% block ws_surface_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/mk-workspace-home.css' %}?v=5">
-<link rel="stylesheet" href="{% static 'workspace/css/ws-home-mobile-v2.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'workspace/css/mk-workspace-home.css' %}?v=6">
+<link rel="stylesheet" href="{% static 'workspace/css/ws-home-mobile-v2.css' %}?v=2">
 {% endblock %}
 
 {% block page_title %}{% endblock %}
@@ -67,6 +67,8 @@
         </section>
         {% endif %}
 
+        {% include 'workspace/includes/home/workspace_today_queue.html' %}
+        {% include 'workspace/includes/home/workspace_kpi.html' %}
         {% include 'workspace/includes/home/workspace_quick_actions.html' %}
     {% endif %}
 
@@ -84,7 +86,6 @@
 
     {% if not home_is_empty %}
     {% include 'workspace/includes/home/workspace_shortcuts.html' %}
-    {% include 'workspace/includes/home/workspace_kpi.html' %}
 
     <div class="wsh-mid-grid" data-tour="workspace-panels-mid">
         {% include 'workspace/includes/home/workspace_reminders.html' %}
@@ -111,5 +112,5 @@
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script>window.wsCharts = {{ charts_json|safe }}; window.wsChartsHub = true;</script>
-<script src="{% static 'workspace/js/home.js' %}?v=5"></script>
+<script src="{% static 'workspace/js/home.js' %}?v=6"></script>
 {% endblock %}

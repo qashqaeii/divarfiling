@@ -131,4 +131,23 @@
     #modal-batch-result.is-open .ws-modal-foot {
         padding-bottom: max(0.85rem, env(safe-area-inset-bottom, 0px));
     }
+
+    /* Dataset list pagination — prev / current / next */
+    .mk-filing-mobile .mk-page-list .mk-page-num:not(.is-active),
+    .mk-filing-mobile .mk-page-list .mk-page-ellipsis {
+        display: none;
+    }
+
+    .mk-filing-mobile .fl-pagination__nav,
+    .mk-filing-mobile .mk-pagination-nav {
+        justify-content: center;
+        gap: 0.45rem;
+    }
+
+    .mk-filing-mobile .mk-page-btn,
+    .mk-filing-mobile .mk-page-num {
+        min-width: 2.75rem;
+        min-height: 2.75rem;
+        border-radius: 12px;
+    }
 }

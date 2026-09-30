@@ -235,10 +235,12 @@
 
     function initResizeWatch() {
         let t = null;
-        window.addEventListener('resize', () => {
+        const onResize = () => {
             clearTimeout(t);
             t = setTimeout(resizeHomeCharts, 120);
-        });
+        };
+        window.addEventListener('resize', onResize);
+        window.addEventListener('orientationchange', onResize);
     }
 
     document.addEventListener('DOMContentLoaded', () => {

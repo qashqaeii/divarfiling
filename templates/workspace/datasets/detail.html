@@ -8,8 +8,10 @@
 <link rel="stylesheet" href="{% static 'workspace/css/mk-filing-datasets.css' %}?v=20">
 <link rel="stylesheet" href="{% static 'workspace/css/mk-filing-mobile.css' %}?v=9">
 <link rel="stylesheet" href="{% static 'workspace/css/mk-filing-dataset-detail.css' %}?v=2">
-<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-dataset-detail-mobile-v2.css' %}?v=1">
-<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-listing-cards-mobile-v2.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-dataset-detail-mobile-v2.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-listing-cards-mobile-v2.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'workspace/css/ws-listing-detail-mobile-v2.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'workspace/css/ws-listing-detail-mobile-v2.css' %}?v=3">
 {% endblock %}
 
 {% block ws_surface_css %}
@@ -192,6 +194,7 @@
 <script src="{% static 'workspace/js/listing-edit.js' %}?v=6"></script>
 <script src="{% static 'workspace/js/listing-cards.js' %}?v=1"></script>
 <script src="{% static 'workspace/js/filing-help-modal.js' %}?v=2"></script>
+<script src="{% static 'workspace/js/filing-mobile.js' %}?v=1"></script>
 <script>
 (function () {
     const advToggle = document.getElementById('wsAdvToggle');
@@ -223,14 +226,9 @@
     document.getElementById('wsAdvToggleMob')?.addEventListener('click', function () {
         setFilterPanel(advPanel.hidden);
     });
-    document.getElementById('wsMobSortFocus')?.addEventListener('click', function () {
-        setFilterPanel(true);
-        const nb = document.querySelector('.mk-filter-select--neighborhood');
-        if (nb) {
-            nb.focus();
-            try { nb.showPicker(); } catch (e) { /* unsupported */ }
-        }
-    });
+    window.__wsCloseFilingFilter = function () {
+        setFilterPanel(false);
+    };
     if (advPanel && !advPanel.hidden) setFilterPanel(true);
 
     initListingEdit({

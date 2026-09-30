@@ -7,7 +7,10 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/ws-ds-mobile.css' %}?v=4">
 <link rel="stylesheet" href="{% static 'workspace/css/multi-listings.css' %}?v=1">
-<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-listing-cards-mobile-v2.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-dataset-detail-mobile-v2.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-listing-cards-mobile-v2.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'workspace/css/ws-listing-detail-mobile-v2.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'workspace/css/ws-listing-detail-mobile-v2.css' %}?v=3">
 <link rel="stylesheet" href="{% static 'workspace/css/ws-analyze-mobile-v2.css' %}?v=1">
 {% include 'workspace/academy/includes/academy_assets_css.html' %}
 {% endblock %}
@@ -246,7 +249,7 @@
         </div>
     </section>
 
-    <section class="mk-filter-shell" id="wsFilterShell">
+    <section class="mk-filter-shell fl-dd-filter" id="wsFilterShell">
         {% include 'workspace/includes/listing_filter_bar.html' with filter_form_action=filter_form_action %}
     </section>
 
@@ -339,6 +342,7 @@
 {% block extra_js %}
 <script src="{% static 'workspace/js/listing-edit.js' %}?v=6"></script>
 <script src="{% static 'workspace/js/listing-cards.js' %}?v=1"></script>
+<script src="{% static 'workspace/js/filing-mobile.js' %}?v=1"></script>
 <script>
 (function () {
     const advToggle = document.getElementById('wsAdvToggle');
@@ -356,13 +360,21 @@
         advToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
         advPanel.classList.toggle('is-open', open);
         filterShell?.classList.toggle('mk-filter-shell-open', open);
+        filterShell?.classList.toggle('fl-dd-filter-open', open);
         if (filtersOpenField) filtersOpenField.value = open ? '1' : '0';
         if (open && typeof initFormattedNumericInputs === 'function') {
             initFormattedNumericInputs(filterShell || document);
         }
     }
 
+    window.__wsCloseFilingFilter = function () {
+        setFilterPanel(false);
+    };
+
     advToggle?.addEventListener('click', function () {
+        setFilterPanel(advPanel.hidden);
+    });
+    document.getElementById('wsAdvToggleMob')?.addEventListener('click', function () {
         setFilterPanel(advPanel.hidden);
     });
     if (advPanel && !advPanel.hidden) setFilterPanel(true);

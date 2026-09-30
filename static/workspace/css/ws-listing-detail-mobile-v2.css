@@ -623,6 +623,16 @@
         background: color-mix(in srgb, var(--ws-primary) 6%, var(--ws-surface));
     }
 
+    .ws-ld-detail .ws-ld-mob-more__act--personal {
+        border-color: color-mix(in srgb, #10b981 28%, var(--ws-border));
+        background: color-mix(in srgb, #10b981 7%, var(--ws-surface));
+        color: #047857;
+    }
+
+    .ws-ld-detail .ws-ld-mob-more__act--personal i {
+        color: #059669;
+    }
+
     .ws-ld-detail .ws-ld-mob-more__notice {
         grid-column: 1 / -1;
         font-size: 0.72rem;
@@ -758,11 +768,37 @@
     }
 
     #modal-edit-listing.is-open .mk-edit-form.ws-modal-body {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        min-height: 0;
+        overflow: hidden;
+        padding: 0 !important;
+        gap: 0;
+    }
+
+    #modal-edit-listing.is-open .mk-edit-scroll {
         flex: 1;
         min-height: 0;
         overflow-y: auto;
+        overflow-x: hidden;
         -webkit-overflow-scrolling: touch;
         overscroll-behavior: contain;
+        padding: 0 0.85rem;
+    }
+
+    #modal-edit-listing.is-open .ws-input,
+    #modal-edit-listing.is-open .ws-select,
+    #modal-edit-listing.is-open textarea {
+        font-size: 1rem;
+        min-height: 2.75rem;
+    }
+
+    #modal-edit-listing.is-open .ws-modal-close {
+        width: 2.75rem;
+        height: 2.75rem;
+        min-width: 2.75rem;
+        min-height: 2.75rem;
     }
 
     #modal-edit-listing.is-open .ws-modal-head,

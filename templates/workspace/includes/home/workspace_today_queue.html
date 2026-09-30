@@ -1,0 +1,70 @@
+{% load workspace_tags crm_tags %}
+{% if overdue_contacts or due_contacts %}
+<section class="wsh-card wsh-queue" aria-label="کارهای امروز و پیگیری معوق" data-tour="workspace-today-queue">
+    <header class="wsh-card__head wsh-card__head--tight">
+        <div class="wsh-card__title">
+            <span class="wsh-card__icon" aria-hidden="true"><i class="fas fa-list-check"></i></span>
+            <div>
+                <h2>امروز و معوق</h2>
+                {% if crm_stats.overdue_followups or crm_stats.due_today %}
+                <span class="wsh-card__sub">
+                    {% if crm_stats.overdue_followups %}<span class="wsh-queue__stat wsh-queue__stat--warn">{{ crm_stats.overdue_followups }} معوق</span>{% endif %}
+                    {% if crm_stats.due_today %}<span class="wsh-queue__stat">{{ crm_stats.due_today }} امروز</span>{% endif %}
+                </span>
+                {% endif %}
+            </div>
+        </div>
+        <a href="{% url 'workspace:crm_today' %}" class="wsh-card__link">صف کار</a>
+    </header>
+
+    {% if overdue_contacts %}
+    <div class="wsh-queue__group" data-tone="warn">
+        <p class="wsh-queue__kicker"><i class="fas fa-clock" aria-hidden="true"></i> پیگیری معوق</p>
+        <ul class="wsh-queue__list">
+            {% for c in overdue_contacts %}
+            <li class="wsh-queue__row">
+                <a href="{% url 'workspace:crm_detail' c.id %}" class="wsh-queue__main">
+                    <span class="wsh-queue__name">{{ c.name|truncatechars:28 }}</span>
+                    <span class="wsh-queue__meta">
+                        <span class="wsh-queue__badge wsh-queue__badge--warn">معوق</span>
+                        {% if c.next_follow_up %}<time datetime="{{ c.next_follow_up|date:'Y-m-d' }}">{{ c.next_follow_up|ws_jalali_date }}</time>{% endif %}
+                        {% if c.status %}<span class="wsh-queue__status">{{ c.status }}</span>{% endif %}
+                    </span>
+                </a>
+                {% if c.phone %}
+                <a href="tel:{{ c.phone }}" class="wsh-queue__act" aria-label="تماس با {{ c.name }}"><i class="fas fa-phone" aria-hidden="true"></i></a>
+                {% else %}
+                <span class="wsh-queue__act wsh-queue__act--muted" aria-hidden="true"><i class="fas fa-chevron-left"></i></span>
+                {% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    {% if due_contacts %}
+    <div class="wsh-queue__group" data-tone="today">
+        <p class="wsh-queue__kicker"><i class="fas fa-sun" aria-hidden="true"></i> پیگیری امروز</p>
+        <ul class="wsh-queue__list">
+            {% for c in due_contacts %}
+            <li class="wsh-queue__row">
+                <a href="{% url 'workspace:crm_detail' c.id %}" class="wsh-queue__main">
+                    <span class="wsh-queue__name">{{ c.name|truncatechars:28 }}</span>
+                    <span class="wsh-queue__meta">
+                        <span class="wsh-queue__badge">امروز</span>
+                        {% if c.phone %}<span class="wsh-queue__phone" dir="ltr">{{ c.phone }}</span>{% endif %}
+                        {% if c.status %}<span class="wsh-queue__status">{{ c.status }}</span>{% endif %}
+                    </span>
+                </a>
+                {% if c.phone %}
+                <a href="tel:{{ c.phone }}" class="wsh-queue__act" aria-label="تماس با {{ c.name }}"><i class="fas fa-phone" aria-hidden="true"></i></a>
+                {% else %}
+                <span class="wsh-queue__act wsh-queue__act--muted" aria-hidden="true"><i class="fas fa-chevron-left"></i></span>
+                {% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+</section>
+{% endif %}

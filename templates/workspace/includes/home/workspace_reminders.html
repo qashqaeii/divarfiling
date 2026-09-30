@@ -23,7 +23,11 @@
                     <em>{{ c.phone|default:"—" }}</em>
                 </span>
             </a>
-            <span class="wsh-reminders__act" aria-hidden="true"><i class="fas fa-phone"></i></span>
+            {% if c.phone %}
+            <a href="tel:{{ c.phone }}" class="wsh-reminders__act" aria-label="تماس با {{ c.name }}"><i class="fas fa-phone" aria-hidden="true"></i></a>
+            {% else %}
+            <span class="wsh-reminders__act wsh-reminders__act--muted" aria-hidden="true"><i class="fas fa-phone"></i></span>
+            {% endif %}
         </li>
         {% endfor %}
         {% for r in upcoming_reminders %}

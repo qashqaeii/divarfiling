@@ -24,11 +24,7 @@
         min-width: 0;
     }
 
-    /* View toggle hidden on mobile (#47) */
-    .mk-filing-dataset-detail .mk-listing-view-toggle,
-    .mk-filing-dataset-detail .mk-filing-view-toggle {
-        display: none !important;
-    }
+    /* View toggle — see mk-filing-listing-cards-mobile-v2.css */
 
     /* ── Compact mobile header (#42) ── */
     .mk-filing-dataset-detail .fl-dd-mob-header {
@@ -413,5 +409,182 @@
     .mk-filing-dataset-detail .mk-lcard-empty-state .ws-btn {
         min-height: 2.75rem;
         margin-top: 0.5rem;
+    }
+
+    /* ── Shared: multi + dataset filter/sort mobile chrome ── */
+    :is(.mk-filing-dataset-detail, .ws-ds-mobile.mk-listing-page) .fl-dd-filter.mk-filter-shell-open::before,
+    :is(.mk-filing-dataset-detail, .ws-ds-mobile.mk-listing-page) .fl-dd-filter.fl-dd-filter-open::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        z-index: 190;
+        background: rgba(15, 23, 42, 0.45);
+        backdrop-filter: blur(3px);
+        -webkit-backdrop-filter: blur(3px);
+    }
+
+    :is(.mk-filing-dataset-detail, .ws-ds-mobile.mk-listing-page) .ws-mob-search-bar__clear {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 2rem;
+        height: 2rem;
+        min-width: 2rem;
+        min-height: 2rem;
+        border: 0;
+        border-radius: 8px;
+        background: transparent;
+        color: var(--ws-text-muted);
+        cursor: pointer;
+        flex-shrink: 0;
+    }
+
+    :is(.mk-filing-dataset-detail, .ws-ds-mobile.mk-listing-page) .ws-mob-search-bar__badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 1.125rem;
+        height: 1.125rem;
+        padding: 0 0.25rem;
+        border-radius: 999px;
+        font-size: 0.625rem;
+        font-weight: 800;
+        font-style: normal;
+        background: var(--ws-primary);
+        color: #fff;
+        position: absolute;
+        top: 0.15rem;
+        inset-inline-end: 0.15rem;
+    }
+
+    :is(.mk-filing-dataset-detail, .ws-ds-mobile.mk-listing-page) .ws-mob-search-bar__btn--filter {
+        position: relative;
+    }
+
+    :is(.mk-filing-dataset-detail, .ws-ds-mobile.mk-listing-page) .ws-mob-search-bar__btn--filter.has-active {
+        border-color: color-mix(in srgb, var(--ws-primary) 35%, var(--ws-border));
+        color: var(--ws-primary);
+    }
+
+    :is(.mk-filing-dataset-detail, .ws-ds-mobile.mk-listing-page) .mk-filter-chip--reset {
+        background: color-mix(in srgb, #ef4444 8%, var(--ws-surface));
+        color: #b91c1c;
+        text-decoration: none;
+        font-weight: 700;
+    }
+
+    :is(.mk-filing-dataset-detail, .ws-ds-mobile.mk-listing-page) .mk-page-list .mk-page-num:not(.is-active),
+    :is(.mk-filing-dataset-detail, .ws-ds-mobile.mk-listing-page) .mk-page-list .mk-page-ellipsis {
+        display: none;
+    }
+
+    /* Sort bottom sheet */
+    .ws-filing-sort-sheet {
+        position: fixed;
+        inset: 0;
+        z-index: 205;
+        display: flex;
+        align-items: flex-end;
+        pointer-events: none;
+        visibility: hidden;
+    }
+
+    .ws-filing-sort-sheet.is-open {
+        pointer-events: auto;
+        visibility: visible;
+    }
+
+    .ws-filing-sort-sheet__backdrop {
+        position: absolute;
+        inset: 0;
+        border: 0;
+        background: rgba(15, 23, 42, 0.45);
+        cursor: pointer;
+    }
+
+    .ws-filing-sort-sheet__panel {
+        position: relative;
+        width: 100%;
+        background: var(--ws-surface);
+        border-radius: 20px 20px 0 0;
+        box-shadow: 0 -12px 40px rgba(15, 23, 42, 0.16);
+        transform: translateY(105%);
+        transition: transform 0.26s cubic-bezier(0.32, 0.72, 0, 1);
+        padding-bottom: max(0.5rem, env(safe-area-inset-bottom, 0px));
+    }
+
+    .ws-filing-sort-sheet.is-open .ws-filing-sort-sheet__panel {
+        transform: translateY(0);
+    }
+
+    .ws-filing-sort-sheet__grab {
+        width: 2.5rem;
+        height: 0.25rem;
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--ws-text-muted) 35%, transparent);
+        margin: 0.5rem auto 0.35rem;
+    }
+
+    .ws-filing-sort-sheet__head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.35rem 0.85rem 0.5rem;
+    }
+
+    .ws-filing-sort-sheet__title {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 800;
+    }
+
+    .ws-filing-sort-sheet__close {
+        width: 2.75rem;
+        height: 2.75rem;
+        border-radius: 12px;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 55%, transparent);
+        background: var(--ws-surface);
+        color: var(--ws-text-secondary);
+        cursor: pointer;
+    }
+
+    .ws-filing-sort-sheet__list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.2rem;
+        padding: 0 0.65rem 0.65rem;
+    }
+
+    .ws-filing-sort-sheet__opt {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-height: 2.75rem;
+        padding: 0.45rem 0.65rem;
+        border-radius: 12px;
+        text-decoration: none;
+        color: var(--ws-text);
+        font-size: 0.875rem;
+        font-weight: 650;
+    }
+
+    .ws-filing-sort-sheet__opt i {
+        opacity: 0;
+        color: var(--ws-primary);
+        font-size: 0.75rem;
+    }
+
+    .ws-filing-sort-sheet__opt.is-active {
+        background: color-mix(in srgb, var(--ws-primary) 10%, var(--ws-surface));
+        color: var(--ws-primary);
+    }
+
+    .ws-filing-sort-sheet__opt.is-active i {
+        opacity: 1;
+    }
+
+    body.ws-filing-sort-open {
+        overflow: hidden;
+        touch-action: none;
     }
 }

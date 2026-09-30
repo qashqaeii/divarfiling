@@ -59,6 +59,7 @@
     <link rel="stylesheet" href="{% static 'workspace/css/workspace-saas-polish.css' %}?v=2">
     <link rel="stylesheet" href="{% static 'workspace/css/workspace-mobile-premium.css' %}?v=16">
     <link rel="stylesheet" href="{% static 'workspace/css/workspace-mobile-premium-v7.css' %}?v=4">
+    <link rel="stylesheet" href="{% static 'workspace/css/ws-shell-mobile-v3.css' %}?v=1">
     {% block ws_surface_css %}{% endblock %}
     <link rel="stylesheet" href="{% static 'workspace/css/workspace-icon-motion.css' %}?v=8">
     <link rel="stylesheet" href="{% static 'workspace/css/workspace-kpi.css' %}?v=1">
@@ -120,8 +121,11 @@
 
             <div class="ws-mobile-topbar">
                 <div class="ws-mobile-topbar-brand">
+                    <button type="button" class="ws-mobile-topbar-back" id="wsMobileBack" hidden aria-label="بازگشت">
+                        <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                    </button>
                     <img src="{% static 'logo.png' %}" alt="" class="ws-mobile-topbar-logo" width="30" height="30" decoding="async">
-                    <span class="ws-mobile-topbar-title">{% block mobile_bar_title %}میزکار{% endblock %}</span>
+                    <span class="ws-mobile-topbar-title" id="wsMobileTopbarTitle">{% block mobile_bar_title %}میزکار{% endblock %}</span>
                 </div>
                 <div class="ws-mobile-topbar-actions">
                     <button type="button" class="ws-mobile-topbar-act" data-modal-open="modal-settings" title="تنظیمات" aria-label="تنظیمات">
@@ -180,7 +184,7 @@
                     <span>فایلینگ</span>
                 </a>
                 {% endif %}
-                <a href="{% url 'workspace:crm_contacts' %}" class="ws-bottom-nav-item{% if '/crm/contacts' in request.path or '/crm/deals' in request.path or '/crm/properties' in request.path %} is-active{% endif %}">
+                <a href="{% url 'workspace:crm_contacts' %}" class="ws-bottom-nav-item{% if '/crm/contacts' in request.path %} is-active{% endif %}">
                     <i class="fas fa-users" aria-hidden="true"></i>
                     <span>مخاطبین</span>
                 </a>
@@ -188,11 +192,13 @@
                     <i class="fas fa-list-check" aria-hidden="true"></i>
                     <span>امروز</span>
                 </a>
-                <button type="button" class="ws-bottom-nav-item{% if ws_nav_more_open %} is-active{% endif %}" data-ws-bottom-more aria-label="منوی بیشتر">
+                <button type="button" class="ws-bottom-nav-item" data-ws-bottom-more aria-expanded="false" aria-controls="wsMobileMoreSheet" aria-label="منوی بیشتر">
                     <i class="fas fa-ellipsis" aria-hidden="true"></i>
                     <span>بیشتر</span>
                 </button>
             </nav>
+
+            {% include 'workspace/includes/mobile_more_sheet.html' %}
 
             <footer class="ws-status-bar">
 
@@ -228,7 +234,7 @@
     {% include 'workspace/includes/carto_basemap_config.html' %}
     <script src="{% static 'workspace/js/crm-smart-command-voice.js' %}?v=7"></script>
     <script src="{% static 'workspace/js/crm-field-voice.js' %}?v=3"></script>
-    <script src="{% static 'workspace/js/workspace.js' %}?v=99"></script>
+    <script src="{% static 'workspace/js/workspace.js' %}?v=100"></script>
     <script src="{% static 'workspace/js/export-security.js' %}?v=1"></script>
 
     {% include 'workspace/includes/onboarding_tour.html' %}

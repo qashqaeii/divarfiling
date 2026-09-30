@@ -1,0 +1,326 @@
+/* ═══════════════════════════════════════════════════════════
+   Workspace Shell — Mobile Pass 02 (Phase 1 completion)
+   Loads after workspace-mobile-premium*.css
+   ═══════════════════════════════════════════════════════════ */
+
+@media (max-width: 767px) {
+    /* Sticky shell chrome */
+    .ws-mobile-topbar {
+        position: sticky;
+        top: 0;
+        z-index: 175;
+    }
+
+    .ws-mobile-topbar-brand {
+        gap: 0.35rem;
+    }
+
+    .ws-mobile-topbar-back {
+        display: none;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        width: 2.75rem;
+        height: 2.75rem;
+        min-width: 2.75rem;
+        min-height: 2.75rem;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 55%, transparent);
+        border-radius: 12px;
+        background: var(--ws-surface);
+        color: var(--ws-text-secondary);
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        transition: background 0.12s, color 0.12s, transform 0.12s;
+    }
+
+    .ws-mobile-topbar-back.is-visible {
+        display: inline-flex;
+    }
+
+    .ws-mobile-topbar-back:active {
+        transform: scale(0.94);
+        color: var(--ws-primary);
+    }
+
+    .ws-mobile-topbar-back:focus-visible,
+    .ws-mob-sheet-close:focus-visible,
+    .ws-mob-sheet-link:focus-visible,
+    .ws-mob-sheet-quick-btn:focus-visible {
+        outline: 2px solid var(--ws-primary);
+        outline-offset: 2px;
+    }
+
+    /* Shell touch targets — 44px minimum on chrome controls */
+    .ws-mobile-topbar-act,
+    .ws-mobile-menu {
+        width: 2.75rem !important;
+        height: 2.75rem !important;
+        min-width: 2.75rem !important;
+        min-height: 2.75rem !important;
+    }
+
+    .ws-bottom-nav-item {
+        min-height: 3.25rem !important;
+    }
+
+    /* Bottom nav — clearer active state */
+    .ws-bottom-nav-item.is-active span {
+        font-weight: 700;
+    }
+
+    /* ── Mobile more bottom sheet ── */
+    .ws-mob-sheet {
+        position: fixed;
+        inset: 0;
+        z-index: 190;
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        pointer-events: none;
+        visibility: hidden;
+    }
+
+    .ws-mob-sheet.is-open {
+        pointer-events: auto;
+        visibility: visible;
+    }
+
+    .ws-mob-sheet-backdrop {
+        position: absolute;
+        inset: 0;
+        border: 0;
+        margin: 0;
+        padding: 0;
+        background: rgba(15, 23, 42, 0.45);
+        opacity: 0;
+        transition: opacity 0.22s ease;
+        cursor: pointer;
+    }
+
+    .ws-mob-sheet.is-open .ws-mob-sheet-backdrop {
+        opacity: 1;
+    }
+
+    .ws-mob-sheet-panel {
+        position: relative;
+        width: 100%;
+        max-height: min(88dvh, 640px);
+        background: var(--ws-surface);
+        border-radius: 20px 20px 0 0;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 70%, transparent);
+        border-bottom: none;
+        box-shadow: 0 -12px 40px rgba(15, 23, 42, 0.16);
+        transform: translateY(105%);
+        transition: transform 0.28s cubic-bezier(0.32, 0.72, 0, 1);
+        display: flex;
+        flex-direction: column;
+        padding-bottom: max(0.5rem, env(safe-area-inset-bottom, 0px));
+    }
+
+    .ws-mob-sheet.is-open .ws-mob-sheet-panel {
+        transform: translateY(0);
+    }
+
+    .ws-mob-sheet-grab {
+        width: 2.5rem;
+        height: 0.25rem;
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--ws-text-muted) 35%, transparent);
+        margin: 0.5rem auto 0;
+        flex-shrink: 0;
+    }
+
+    .ws-mob-sheet-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        padding: 0.65rem 1rem 0.5rem;
+        flex-shrink: 0;
+    }
+
+    .ws-mob-sheet-title {
+        margin: 0;
+        font-size: 1.0625rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        color: var(--ws-text);
+    }
+
+    .ws-mob-sheet-close {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 2.75rem;
+        height: 2.75rem;
+        border-radius: 12px;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 60%, transparent);
+        background: color-mix(in srgb, var(--ws-bg) 40%, var(--ws-surface));
+        color: var(--ws-text-secondary);
+        cursor: pointer;
+    }
+
+    .ws-mob-sheet-body {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior: contain;
+        padding: 0 1rem 0.75rem;
+    }
+
+    .ws-mob-sheet-section + .ws-mob-sheet-section {
+        margin-top: 1rem;
+        padding-top: 0.85rem;
+        border-top: 1px solid color-mix(in srgb, var(--ws-border) 45%, transparent);
+    }
+
+    .ws-mob-sheet-kicker {
+        margin: 0 0 0.55rem;
+        font-size: 0.6875rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--ws-text-muted);
+    }
+
+    .ws-mob-sheet-quick {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0.5rem;
+    }
+
+    .ws-mob-sheet-quick-btn {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.35rem;
+        min-height: 4.5rem;
+        padding: 0.55rem 0.35rem;
+        border-radius: 14px;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 55%, transparent);
+        background: color-mix(in srgb, var(--ws-bg) 25%, var(--ws-surface));
+        color: var(--ws-text);
+        text-decoration: none;
+        font-size: 0.6875rem;
+        font-weight: 650;
+        text-align: center;
+        line-height: 1.25;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .ws-mob-sheet-quick-btn--accent {
+        border-color: color-mix(in srgb, var(--ws-primary) 35%, var(--ws-border));
+        background: color-mix(in srgb, var(--ws-primary) 8%, var(--ws-surface));
+        color: var(--ws-primary);
+    }
+
+    .ws-mob-sheet-quick-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 2.25rem;
+        height: 2.25rem;
+        border-radius: 11px;
+        background: color-mix(in srgb, var(--ws-primary) 10%, transparent);
+        color: var(--ws-primary);
+        font-size: 1rem;
+    }
+
+    .ws-mob-sheet-quick-btn--accent .ws-mob-sheet-quick-icon {
+        background: var(--ws-primary);
+        color: #fff;
+    }
+
+    .ws-mob-sheet-nav {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    .ws-mob-sheet-link {
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+        min-height: 2.75rem;
+        padding: 0.45rem 0.65rem;
+        border-radius: 12px;
+        color: var(--ws-text);
+        text-decoration: none;
+        font-size: 0.875rem;
+        font-weight: 600;
+        border: 0;
+        background: transparent;
+        width: 100%;
+        text-align: inherit;
+        cursor: pointer;
+        font-family: inherit;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .ws-mob-sheet-link i {
+        width: 1.35rem;
+        text-align: center;
+        color: var(--ws-text-muted);
+        flex-shrink: 0;
+    }
+
+    .ws-mob-sheet-link.is-active {
+        background: color-mix(in srgb, var(--ws-primary) 10%, transparent);
+        color: var(--ws-primary);
+    }
+
+    .ws-mob-sheet-link.is-active i {
+        color: var(--ws-primary);
+    }
+
+    .ws-mob-sheet-link:active {
+        background: color-mix(in srgb, var(--ws-primary) 6%, var(--ws-surface));
+    }
+
+    .ws-mob-sheet-badge {
+        margin-inline-start: auto;
+        font-size: 0.6875rem;
+        font-weight: 700;
+        padding: 0.15rem 0.45rem;
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--ws-primary) 12%, transparent);
+        color: var(--ws-primary);
+    }
+
+    body.ws-shell-more-open {
+        overflow: hidden;
+        touch-action: none;
+    }
+
+    body.ws-shell-more-open .ws-bottom-nav {
+        pointer-events: none;
+    }
+
+    #mkToastStack.mk-notices--toast {
+        z-index: 200;
+    }
+
+    /* Sidebar drawer polish when opened from sheet */
+    .ws-sidebar.open {
+        z-index: 210;
+    }
+
+    body.ws-sidebar-open .ws-shell-backdrop {
+        z-index: 205;
+    }
+}
+
+@media (max-width: 360px) {
+    .ws-mob-sheet-quick-label {
+        font-size: 0.625rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ws-mob-sheet-panel,
+    .ws-mob-sheet-backdrop {
+        transition: none !important;
+    }
+}

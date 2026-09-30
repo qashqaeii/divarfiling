@@ -9,12 +9,17 @@
         <div class="ws-mob-search-bar ws-mob-search-bar--listing">
             <label class="mk-filter-search mk-filter-search-grow ws-mob-search-bar__search">
                 {% include 'includes/icon_slot.html' with decor='search' size='inline' only %}
-                <input type="search" name="q" value="{{ filters.q }}" placeholder="جستجو فایل…" autocomplete="off" aria-label="جستجو">
+                <input type="search" name="q" value="{{ filters.q }}" placeholder="جستجو فایل…" autocomplete="off" aria-label="جستجو" enterkeyhint="search">
+                {% if filters.q %}
+                <button type="button" class="ws-mob-search-bar__clear" data-filing-search-clear aria-label="پاک کردن جستجو">
+                    <i class="fas fa-xmark" aria-hidden="true"></i>
+                </button>
+                {% endif %}
             </label>
-            <button type="button" class="ws-mob-search-bar__btn ws-mob-search-bar__btn--filter" id="wsAdvToggleMob" aria-expanded="{% if filters_open %}true{% else %}false{% endif %}" aria-controls="wsAdvPanel">
+            <button type="button" class="ws-mob-search-bar__btn ws-mob-search-bar__btn--filter{% if filter_count %} has-active{% endif %}" id="wsAdvToggleMob" aria-expanded="{% if filters_open %}true{% else %}false{% endif %}" aria-controls="wsAdvPanel">
                 <i class="fas fa-sliders" aria-hidden="true"></i>
                 <span>فیلتر</span>
-                {% if advanced_filter_count %}<em class="ws-mob-search-bar__badge" aria-hidden="true"></em>{% endif %}
+                {% if filter_count %}<em class="ws-mob-search-bar__badge" aria-label="{{ filter_count }} فیلتر فعال">{{ filter_count }}</em>{% endif %}
             </button>
             <button type="button" class="ws-mob-search-bar__btn ws-mob-search-bar__btn--sort" id="wsMobSortFocus" aria-label="مرتب‌سازی">
                 <i class="fas fa-arrow-down-wide-short" aria-hidden="true"></i>
@@ -259,8 +264,13 @@
         {% if filters.storage == '1' %}<span class="mk-filter-chip">انباری</span>{% endif %}
         {% if filters.value == 'below' %}<span class="mk-filter-chip">زیر بازار</span>{% elif filters.value == 'fair' %}<span class="mk-filter-chip">متعارف</span>{% elif filters.value == 'above' %}<span class="mk-filter-chip">بالای بازار</span>{% endif %}
         {% if advanced_filter_count %}<span class="mk-filter-chip mk-filter-chip-muted">+{{ advanced_filter_count }} فیلتر دیگر</span>{% endif %}
+        {% if filter_reset_url %}
+        <a href="{{ filter_reset_url }}" class="mk-filter-chip mk-filter-chip--reset">پاک کردن همه</a>
+        {% endif %}
     </div>
     {% endif %}
+
+    {% include 'workspace/includes/filing/filing_mobile_sort_sheet.html' %}
 
     <input type="hidden" name="sort" value="{{ filters.sort }}">
     <input type="hidden" name="filters_open" id="filtersOpenField" value="{% if filters_open %}1{% else %}0{% endif %}">

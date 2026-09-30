@@ -52,6 +52,18 @@ const WSModal = {
                 if (icon) icon.className = 'fas fa-bars';
             }
         }
+        const moreSheet = document.getElementById('wsMobileMoreSheet');
+        if (moreSheet?.classList.contains('is-open')) {
+            moreSheet.classList.remove('is-open');
+            moreSheet.hidden = true;
+            moreSheet.setAttribute('aria-hidden', 'true');
+            document.body.classList.remove('ws-shell-more-open');
+            const bottomMore = document.querySelector('[data-ws-bottom-more]');
+            if (bottomMore) {
+                bottomMore.classList.remove('is-active');
+                bottomMore.setAttribute('aria-expanded', 'false');
+            }
+        }
         modal.removeAttribute('hidden');
         modal.classList.add('is-open');
         document.body.classList.add('ws-modal-open');
@@ -272,11 +284,57 @@ document.addEventListener('DOMContentLoaded', () => {
     const bottomMore = document.querySelector('[data-ws-bottom-more]');
     const bottomNav = document.getElementById('wsBottomNav');
     const shellBackdrop = document.getElementById('wsShellBackdrop');
+    const moreSheet = document.getElementById('wsMobileMoreSheet');
+    const mobileBack = document.getElementById('wsMobileBack');
+
+    function setMoreSheetOpen(open) {
+        if (!moreSheet) return;
+        if (open && sidebar?.classList.contains('open')) {
+            setSidebarOpen(false);
+        }
+        if (open && document.body.classList.contains('ws-modal-open')) {
+            WSModal.closeAll();
+        }
+        moreSheet.hidden = !open;
+        moreSheet.classList.toggle('is-open', open);
+        moreSheet.setAttribute('aria-hidden', open ? 'false' : 'true');
+        document.body.classList.toggle('ws-shell-more-open', open);
+        if (bottomMore) {
+            bottomMore.classList.toggle('is-active', open);
+            bottomMore.setAttribute('aria-expanded', open ? 'true' : 'false');
+        }
+        if (open) {
+            const closeBtn = moreSheet.querySelector('[data-ws-more-close].ws-mob-sheet-close')
+                || moreSheet.querySelector('[data-ws-more-close]');
+            if (closeBtn) setTimeout(() => closeBtn.focus(), 80);
+        }
+    }
+
+    function initWSMobileTopbarBack() {
+        if (!mobileBack) return;
+        const homePath = mobileBack.dataset.wsHomePath || '/workspace/';
+        const onHome = window.location.pathname === homePath
+            || window.location.pathname.replace(/\/$/, '') === homePath.replace(/\/$/, '');
+        const showBack = !onHome && window.history.length > 1;
+        mobileBack.hidden = !showBack;
+        mobileBack.classList.toggle('is-visible', showBack);
+        if (!mobileBack.dataset.wsBackBound) {
+            mobileBack.dataset.wsBackBound = '1';
+            mobileBack.addEventListener('click', () => {
+                if (window.history.length > 1) {
+                    window.history.back();
+                } else {
+                    window.location.href = homePath;
+                }
+            });
+        }
+    }
 
     if (sidebar) {
         if (toggle) {
             toggle.addEventListener('click', (e) => {
                 e.stopPropagation();
+                if (moreSheet?.classList.contains('is-open')) setMoreSheetOpen(false);
                 setSidebarOpen(!sidebar.classList.contains('open'));
             });
         }
@@ -284,10 +342,22 @@ document.addEventListener('DOMContentLoaded', () => {
         bottomMore?.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
-            setSidebarOpen(!sidebar.classList.contains('open'));
+            setMoreSheetOpen(!moreSheet?.classList.contains('is-open'));
         });
 
-        shellBackdrop?.addEventListener('click', () => setSidebarOpen(false));
+        moreSheet?.querySelectorAll('[data-ws-more-close]').forEach(el => {
+            el.addEventListener('click', () => setMoreSheetOpen(false));
+        });
+
+        moreSheet?.querySelector('[data-ws-open-full-nav]')?.addEventListener('click', () => {
+            setMoreSheetOpen(false);
+            setSidebarOpen(true);
+        });
+
+        shellBackdrop?.addEventListener('click', () => {
+            setSidebarOpen(false);
+            setMoreSheetOpen(false);
+        });
 
         document.addEventListener('click', (e) => {
             if (!sidebar.classList.contains('open')) return;
@@ -296,15 +366,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 || toggle?.contains(e.target)
                 || bottomMore?.contains(e.target)
                 || bottomNav?.contains(e.target)
+                || moreSheet?.contains(e.target)
             ) return;
             setSidebarOpen(false);
         });
 
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && sidebar.classList.contains('open')) {
+            if (e.key !== 'Escape') return;
+            if (moreSheet?.classList.contains('is-open')) {
+                setMoreSheetOpen(false);
+                return;
+            }
+            if (sidebar.classList.contains('open')) {
                 setSidebarOpen(false);
             }
         });
+    }
+
+    if (mobileBack) {
+        mobileBack.dataset.wsHomePath = mobileBack.dataset.wsHomePath
+            || document.querySelector('.ws-logo-min')?.getAttribute('href')
+            || '/workspace/';
+        initWSMobileTopbarBack();
     }
 
     // Modal triggers

@@ -24,13 +24,13 @@
                 </a>
                 {% endif %}
             </p>
-            <p class="wsh-hero__sub">
-                {% if home_nba and not home_is_empty %}
-                امروز {{ home_nba|length }} مورد نیاز به توجه دارد — از میانبرها سریع اقدام کنید.
-                {% elif home_is_empty %}
+            <p class="wsh-hero__sub wsh-hero__sub--context">
+                {% if home_is_empty %}
                 برای شروع، یکی از گزینه‌های زیر را انتخاب کنید.
+                {% elif home_nba %}
+                {{ home_nba|length }} اقدام پیشنهادی در بالای صفحه
                 {% else %}
-                هر روز، یک قدم نزدیک‌تر به معاملات بزرگ‌تر.
+                وضعیت امروز را در یک نگاه ببینید.
                 {% endif %}
             </p>
         </div>

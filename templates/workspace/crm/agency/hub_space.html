@@ -3,214 +3,138 @@
 {% load static humanize %}
 
 {% block crm_extra_css %}
-
 {{ block.super }}
-
-<link rel="stylesheet" href="{% static 'workspace/css/agency-space.css' %}?v=14">
-
+<link rel="stylesheet" href="{% static 'workspace/css/agency-space.css' %}?v=15">
 {% endblock %}
 
 {% block agency_hub_content %}
+<div class="agency-space agency-space-page" data-space-page>
 
-<div class="agency-space agency-space-page">
-
-    <header class="agency-dash-toolbar agency-space-page__intro">
-
-        <div class="agency-space-page__intro-copy">
-
+    <header class="agency-space-page__head">
+        <div class="agency-space-page__head-copy">
             <h1 class="agency-page-head__title">فضای آژانس</h1>
-
-            <p class="agency-page-head__sub">فایل‌ها و مخاطبین منتشرشدهٔ تیم — موارد موردنیاز را به CRM شخصی خود اضافه کنید.</p>
-
+            <p class="agency-page-head__sub">اشتراک فایل و مخاطب بین تیم — بدون انتقال مالکیت.</p>
         </div>
-
-        {% if can_moderate_space %}
-
-        <div class="agency-space-page__intro-actions">
-
+        <div class="agency-space-page__head-actions">
+            {% if can_publish_space %}
+            <a href="{{ space_publish_property_url }}" class="crm-btn crm-btn-primary crm-btn-sm">+ انتشار فایل</a>
+            <a href="{{ space_publish_contact_url }}" class="crm-btn crm-btn-ghost crm-btn-sm">+ انتشار مخاطب</a>
+            {% endif %}
+            {% if can_moderate_space %}
             <a href="{{ space_management_url }}" class="crm-btn crm-btn-ghost crm-btn-sm">مدیریت فضا</a>
-
+            {% endif %}
         </div>
-
-        {% endif %}
-
     </header>
 
-
-
     {% if space_kpis %}
-
     <div class="agency-kpi-strip agency-kpi-strip--ref agency-kpi-strip--4 agency-space-page__kpis" aria-label="شاخص‌های فضا">
-
         {% include "workspace/crm/agency/includes/kpi_card.html" with label="فایل فعال" value=space_kpis.active_properties decor="building" tone="orange" %}
-
         {% include "workspace/crm/agency/includes/kpi_card.html" with label="مخاطب فعال" value=space_kpis.active_contacts decor="users" tone="blue" %}
-
         {% include "workspace/crm/agency/includes/kpi_card.html" with label="مشارکت‌کننده" value=space_kpis.active_publishers decor="team" tone="purple" %}
-
         {% include "workspace/crm/agency/includes/kpi_card.html" with label="کپی به CRM" value=space_kpis.total_copies decor="clipboard_list" tone="teal" %}
-
     </div>
-
     {% endif %}
 
+    <section class="agency-panel agency-space-panel" aria-label="فضای آژانس">
+        {% include "workspace/crm/agency/includes/space_nav.html" %}
+        {% include "workspace/crm/agency/includes/space_scope_nav.html" %}
 
-
-    <section class="agency-panel agency-space-panel" aria-label="فهرست فضای آژانس">
-
-        <nav class="agency-space-tabs" aria-label="بخش‌های فضا">
-
-            <a href="?tab=all" class="agency-space-tabs__item{% if space_tab == 'all' %} is-active{% endif %}">همه</a>
-
-            <a href="?tab=properties" class="agency-space-tabs__item{% if space_tab == 'properties' %} is-active{% endif %}">فایل‌ها</a>
-
-            <a href="?tab=contacts" class="agency-space-tabs__item{% if space_tab == 'contacts' %} is-active{% endif %}">مخاطبین</a>
-
-            <a href="?tab=published_by_me" class="agency-space-tabs__item{% if space_tab == 'published_by_me' %} is-active{% endif %}">منتشرشده توسط من</a>
-
-            <a href="?tab=saved_by_me" class="agency-space-tabs__item{% if space_tab == 'saved_by_me' %} is-active{% endif %}">اضافه‌شده به CRM من</a>
-
-        </nav>
-
-
+        {% if space_tab == 'overview' %}
+        {% if space_overview %}
+        {% include "workspace/crm/agency/includes/space_overview.html" %}
+        {% endif %}
+        {% else %}
 
         <div class="agency-space-toolbar">
-
             <form class="agency-space-search" method="get" action="">
-
                 <input type="hidden" name="tab" value="{{ space_tab }}">
-
+                {% if space_scope != 'all' %}<input type="hidden" name="scope" value="{{ space_scope }}">{% endif %}
                 <div class="agency-space-search__field">
-
                     <span class="agency-space-search__icon" aria-hidden="true">{% include 'includes/icon_slot.html' with fa='fa-search' size='inline' only %}</span>
-
-                    <input type="search" name="q" value="{{ space_filters.q }}" placeholder="جستجو در عنوان، منطقه، مشاور…" class="crm-input" aria-label="جستجو در فضای آژانس">
-
+                    <input type="search" name="q" value="{{ space_filters.q }}" class="crm-input" aria-label="جستجو"
+                        placeholder="{% if space_tab == 'properties' %}جستجو در عنوان، محله، منطقه، ناشر…{% elif space_tab == 'contacts' %}جستجو در نام، نیاز، محدوده، ناشر…{% else %}جستجو در فضای آژانس…{% endif %}">
                 </div>
-
                 <button type="submit" class="crm-btn crm-btn-primary crm-btn-sm">جستجو</button>
-
             </form>
-
             <button type="button" class="crm-btn crm-btn-ghost crm-btn-sm agency-space-filters-toggle" data-space-filters-open aria-expanded="false" aria-controls="agency-space-filters-panel">فیلترها</button>
-
         </div>
-
-
 
         {% include "workspace/crm/agency/includes/space_list_filters.html" %}
+        {% include "workspace/crm/agency/includes/space_filter_chips.html" %}
 
-
-
-        {% if space_tab == 'published_by_me' %}
-
-        <form class="agency-space-subfilters" method="get">
-
-            <input type="hidden" name="tab" value="published_by_me">
-
-            <label class="agency-space-subfilters__label">وضعیت انتشار
-
-                <select name="publication_status" class="crm-input crm-input-sm" onchange="this.form.submit()">
-
-                    <option value="active"{% if space_filters.publication_status == 'active' %} selected{% endif %}>فعال</option>
-
-                    <option value="archived"{% if space_filters.publication_status == 'archived' %} selected{% endif %}>بایگانی</option>
-
-                    <option value="all"{% if space_filters.publication_status == 'all' %} selected{% endif %}>همه</option>
-
-                </select>
-
-            </label>
-
-        </form>
-
-        {% endif %}
-
-
-
-        <div class="agency-space-results">
-
-            <div class="agency-space-grid{% if not space_items %} agency-space-grid--empty{% endif %}">
-
-                {% for item in space_items %}
-
-                {% include "workspace/crm/agency/includes/space_item_card.html" with item=item %}
-
-                {% empty %}
-
-                <div class="agency-space-empty agency-space-empty--panel">
-
-                    {% if space_tab == 'published_by_me' %}
-
-                    {% if can_publish_space %}
-
-                    {% url 'workspace:crm_properties' as space_props_url %}
-
-                    {% include "workspace/crm/agency/includes/empty_state.html" with decor="file_edit" title="هنوز انتشاری ندارید" description="فایل یا مخاطب خود را در فضای تیم به اشتراک بگذارید تا همکاران ببینند." action_url=space_props_url action_label="رفتن به فایل‌ها" %}
-
-                    {% else %}
-
-                    {% include "workspace/crm/agency/includes/empty_state.html" with decor="file_edit" title="هنوز انتشاری ندارید" description="فایل یا مخاطب خود را در فضای تیم به اشتراک بگذارید تا همکاران ببینند." %}
-
-                    {% endif %}
-
-                    {% elif space_filters.q or space_filters.publisher_id or space_filters.visibility %}
-
-                    {% include "workspace/crm/agency/includes/empty_state.html" with decor="clipboard_list" title="نتیجه‌ای پیدا نشد" description="فیلتر یا عبارت جستجو را تغییر دهید؛ از دکمه «فیلترها» می‌توانید همه را پاک کنید." %}
-
-                    {% elif space_tab == 'saved_by_me' %}
-
-                    {% include "workspace/crm/agency/includes/empty_state.html" with decor="inbox" title="هنوز به CRM شما اضافه نشده" description="از تب «همه» یا «فایل‌ها» موارد موردنیاز را با «افزودن به فایل‌های من» ذخیره کنید." %}
-
-                    {% else %}
-
-                    {% include "workspace/crm/agency/includes/empty_state.html" with decor="users" title="فضای آژانس خالی است" description="وقتی اعضای تیم انتشار انجام دهند، اینجا نمایش داده می‌شود." %}
-
-                    {% endif %}
-
-                </div>
-
-                {% endfor %}
-
+        <div class="agency-space-result-head">
+            <p class="agency-space-result-head__count">
+                {% if space_tab == 'properties' %}{{ space_result_total|intcomma }} فایل{% elif space_tab == 'contacts' %}{{ space_result_total|intcomma }} مخاطب{% else %}{{ space_result_total|intcomma }} مورد{% endif %}
+            </p>
+            <form class="agency-space-result-head__sort" method="get" action="">
+                <input type="hidden" name="tab" value="{{ space_tab }}">
+                {% if space_scope != 'all' %}<input type="hidden" name="scope" value="{{ space_scope }}">{% endif %}
+                {% if space_filters.q %}<input type="hidden" name="q" value="{{ space_filters.q }}">{% endif %}
+                <label>مرتب‌سازی
+                    <select name="ordering" class="crm-input crm-input-sm" onchange="this.form.submit()">
+                        <option value="newest"{% if space_filters.ordering == 'newest' %} selected{% endif %}>جدیدترین</option>
+                        <option value="oldest"{% if space_filters.ordering == 'oldest' %} selected{% endif %}>قدیمی‌ترین</option>
+                        {% if space_tab == 'properties' or space_tab == 'crm' %}
+                        <option value="price_asc"{% if space_filters.ordering == 'price_asc' %} selected{% endif %}>قیمت کمتر</option>
+                        <option value="price_desc"{% if space_filters.ordering == 'price_desc' %} selected{% endif %}>قیمت بیشتر</option>
+                        <option value="area_asc"{% if space_filters.ordering == 'area_asc' %} selected{% endif %}>متراژ کمتر</option>
+                        <option value="area_desc"{% if space_filters.ordering == 'area_desc' %} selected{% endif %}>متراژ بیشتر</option>
+                        <option value="most_copied"{% if space_filters.ordering == 'most_copied' %} selected{% endif %}>بیشترین کپی</option>
+                        {% endif %}
+                        {% if space_tab == 'contacts' %}
+                        <option value="budget_asc"{% if space_filters.ordering == 'budget_asc' %} selected{% endif %}>بودجه کمتر</option>
+                        <option value="budget_desc"{% if space_filters.ordering == 'budget_desc' %} selected{% endif %}>بودجه بیشتر</option>
+                        {% endif %}
+                    </select>
+                </label>
+            </form>
+            <div class="agency-space-view-toggle" role="group" aria-label="نمای نتایج">
+                <button type="button" class="agency-space-view-toggle__btn is-active" data-space-view="grid" title="شبکه">▦</button>
+                <button type="button" class="agency-space-view-toggle__btn" data-space-view="list" title="لیست">☰</button>
             </div>
-
         </div>
 
-
+        <div class="agency-space-results">
+            <div class="agency-space-grid{% if space_tab == 'contacts' %} agency-space-grid--contacts{% endif %}{% if not space_items %} agency-space-grid--empty{% endif %}" data-space-grid>
+                {% for item in space_items %}
+                {% if item.source_kind == 'property' %}
+                {% include "workspace/crm/agency/includes/space_property_card.html" with item=item %}
+                {% else %}
+                {% include "workspace/crm/agency/includes/space_contact_card.html" with item=item %}
+                {% endif %}
+                {% empty %}
+                <div class="agency-space-empty agency-space-empty--panel">
+                    {% if space_scope == 'published_by_me' and can_publish_space %}
+                    {% include "workspace/crm/agency/includes/empty_state.html" with decor="file_edit" title="هنوز انتشاری ندارید" description="از CRM فایل یا مخاطب خود را در فضای تیم منتشر کنید." action_url=space_publish_property_url action_label="رفتن به فایل‌ها" %}
+                    {% elif space_filter_chips %}
+                    {% include "workspace/crm/agency/includes/empty_state.html" with decor="clipboard_list" title="نتیجه‌ای پیدا نشد" description="فیلترها را تغییر دهید یا جستجو را پاک کنید." %}
+                    {% elif space_tab == 'crm' %}
+                    {% include "workspace/crm/agency/includes/empty_state.html" with decor="inbox" title="هنوز به CRM شما اضافه نشده" description="از فایل‌ها یا مخاطبین، موارد موردنیاز را کپی کنید." %}
+                    {% else %}
+                    {% include "workspace/crm/agency/includes/empty_state.html" with decor="users" title="موردی پیدا نشد" description="وقتی اعضای تیم انتشار انجام دهند، اینجا نمایش داده می‌شود." %}
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
 
         {% if space_page.has_other_pages %}
-
         <nav class="agency-space-pager" aria-label="صفحه‌بندی">
-
             {% if space_page.has_previous %}
-
             <a href="?{{ space_filters.query_string|default:'' }}{% if space_filters.query_string %}&{% endif %}page={{ space_page.previous_page_number }}">قبلی</a>
-
             {% endif %}
-
             <span>{{ space_page.number }} / {{ space_page.paginator.num_pages }}</span>
-
             {% if space_page.has_next %}
-
             <a href="?{{ space_filters.query_string|default:'' }}{% if space_filters.query_string %}&{% endif %}page={{ space_page.next_page_number }}">بعدی</a>
-
             {% endif %}
-
         </nav>
-
         {% endif %}
-
+        {% endif %}
     </section>
-
 </div>
-
 {% endblock %}
 
 {% block crm_js %}
-
 {{ block.super }}
-
-<script src="{% static 'workspace/js/agency-space.js' %}?v=7" defer></script>
-
+<script src="{% static 'workspace/js/agency-space.js' %}?v=8" defer></script>
 {% endblock %}
-

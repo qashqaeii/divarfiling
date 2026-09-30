@@ -148,7 +148,9 @@ def _apply_search(qs: QuerySet, query: str) -> QuerySet:
 
         return qs
 
-    return qs.filter(
+    from workspace.models import AgencySpaceItem
+
+    property_q = (
 
         Q(property__title__icontains=query)
 
@@ -158,27 +160,81 @@ def _apply_search(qs: QuerySet, query: str) -> QuerySet:
 
         | Q(property__neighborhood__icontains=query)
 
-        | Q(property__address__icontains=query)
-
         | Q(property__property_type__icontains=query)
 
         | Q(property__deal_mode__icontains=query)
 
-        | Q(customer__name__icontains=query)
-
-        | Q(customer__company_name__icontains=query)
-
-        | Q(customer__notes__icontains=query)
-
-        | Q(customer__areas__icontains=query)
-
-        | Q(customer__customer_type__icontains=query)
-
-        | Q(customer__city__icontains=query)
-
-        | Q(customer__district__icontains=query)
-
         | Q(note__icontains=query)
+
+    )
+
+    # آدرس/تلفن ملک فقط روی آیتم‌های فایل — نه مخاطب summary
+
+    property_q |= Q(
+
+        property__isnull=False,
+
+    ) & (
+
+        Q(property__address__icontains=query)
+
+    )
+
+    customer_safe_q = (
+
+        Q(customer__isnull=False)
+
+        & (
+
+            Q(customer__name__icontains=query)
+
+            | Q(customer__company_name__icontains=query)
+
+            | Q(customer__areas__icontains=query)
+
+            | Q(customer__customer_type__icontains=query)
+
+            | Q(customer__city__icontains=query)
+
+            | Q(customer__district__icontains=query)
+
+        )
+
+    )
+
+    customer_confidential_q = (
+
+        Q(customer__isnull=False)
+
+        & Q(contact_share_level=AgencySpaceItem.CONTACT_FULL)
+
+        & (
+
+            Q(customer__notes__icontains=query)
+
+            | Q(customer__phone__icontains=query)
+
+            | Q(customer__phone_alt__icontains=query)
+
+            | Q(customer__email__icontains=query)
+
+        )
+
+    )
+
+    publisher_q = (
+
+        Q(publisher__first_name__icontains=query)
+
+        | Q(publisher__last_name__icontains=query)
+
+        | Q(publisher__phone__icontains=query)
+
+    )
+
+    return qs.filter(
+
+        property_q | customer_safe_q | customer_confidential_q | publisher_q,
 
     )
 
@@ -259,6 +315,12 @@ def _apply_property_filters(qs: QuerySet, **kwargs) -> QuerySet:
     if max_area is not None:
 
         qs = qs.filter(property__area__lte=max_area)
+
+    rooms = kwargs.get('rooms') or ''
+
+    if rooms:
+
+        qs = qs.filter(property__rooms=rooms)
 
     if published_after:
 
@@ -438,6 +500,20 @@ def _apply_ordering(qs: QuerySet, ordering: str) -> QuerySet:
 
         return qs.order_by(F('property__area').desc(nulls_last=True))
 
+    if ordering == 'budget_asc':
+
+        return qs.order_by(F('customer__budget_max').asc(nulls_last=True))
+
+    if ordering == 'budget_desc':
+
+        return qs.order_by(F('customer__budget_max').desc(nulls_last=True))
+
+    if ordering == 'most_copied':
+
+        return qs.annotate(_mc=Count('space_copies', distinct=True)).order_by(
+            '-_mc', '-published_at',
+        )
+
     return qs.order_by('-published_at')
 
 
@@ -572,10 +648,21 @@ def get_space_items_qs(
 
     publication_status: str = 'active',
 
+    scope: str = 'all',
+
+    contact_share_level: str = '',
+
+    crm_copy: str = '',
+
+    rooms: str = '',
+
 ) -> QuerySet:
 
     if tab == 'mine':
         tab = 'published_by_me'
+
+    if tab == 'crm':
+        tab = 'saved_by_me'
 
     agency = agency or get_user_space_agency(user)
 
@@ -621,15 +708,19 @@ def get_space_items_qs(
 
         'max_budget': max_budget,
 
+        'rooms': rooms,
+
     }
 
 
+
+    use_published_scope = scope == 'published_by_me' or tab == 'published_by_me'
 
     if tab == 'saved_by_me':
 
         qs = _saved_by_me_qs(user, agency)
 
-    elif tab == 'published_by_me':
+    elif tab == 'published_by_me' or use_published_scope:
 
         qs = _published_by_me_qs(user, agency, publication_status)
 
@@ -681,13 +772,55 @@ def get_space_items_qs(
 
 
 
-    qs = _apply_ordering(qs, ordering if ordering in (
+    if contact_share_level in ('summary', 'full'):
+
+        qs = qs.filter(contact_share_level=contact_share_level)
+
+
+
+    qs = annotate_space_list_for_user(qs, user)
+
+
+
+    if crm_copy == 'copied':
+
+        qs = qs.filter(viewer_has_live_copy=True)
+
+    elif crm_copy == 'not_copied':
+
+        qs = qs.filter(viewer_has_live_copy=False)
+
+
+
+    if scope == 'copied_by_me' and tab != 'saved_by_me':
+
+        live_item_ids = AgencySpaceCopy.objects.filter(
+
+            copied_by=user,
+
+            item__agency=agency,
+
+        ).filter(
+
+            Q(copied_property_id__isnull=False) | Q(copied_customer_id__isnull=False),
+
+        ).values_list('item_id', flat=True)
+
+        qs = qs.filter(pk__in=live_item_ids)
+
+
+
+    valid_order = (
 
         'newest', 'oldest', 'price_asc', 'price_desc', 'area_asc', 'area_desc',
 
-    ) else 'newest')
+        'budget_asc', 'budget_desc', 'most_copied',
 
-    return annotate_space_list_for_user(qs, user)
+    )
+
+    qs = _apply_ordering(qs, ordering if ordering in valid_order else 'newest')
+
+    return qs
 
 
 
@@ -699,11 +832,7 @@ def get_space_items_from_filters(user, filters: SpaceListFilters) -> QuerySet:
 
     legacy_tab = ''
 
-    if tab == 'published_by_me':
-
-        legacy_tab = 'published_by_me'
-
-    elif tab == 'saved_by_me':
+    if tab in ('crm', 'saved_by_me'):
 
         legacy_tab = 'saved_by_me'
 
@@ -711,11 +840,15 @@ def get_space_items_from_filters(user, filters: SpaceListFilters) -> QuerySet:
 
         legacy_tab = tab
 
+    scope = filters.normalized_scope()
+
     return get_space_items_qs(
 
         user,
 
         tab=legacy_tab,
+
+        scope=scope,
 
         kind=filters.kind,
 
@@ -756,6 +889,12 @@ def get_space_items_from_filters(user, filters: SpaceListFilters) -> QuerySet:
         max_budget=filters.max_budget,
 
         publication_status=filters.publication_status,
+
+        contact_share_level=filters.contact_share_level,
+
+        crm_copy=filters.crm_copy,
+
+        rooms=filters.rooms,
 
     )
 

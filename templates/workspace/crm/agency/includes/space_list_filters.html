@@ -1,165 +1,95 @@
 <div class="agency-space-filters-backdrop" id="agency-space-filters-backdrop" hidden aria-hidden="true"></div>
 
 <form class="agency-space-filters" method="get" action="" id="agency-space-filters-panel" hidden>
-
     <div class="agency-space-filters__mobile-head">
-
         <h2>فیلترها</h2>
-
         <button type="button" class="crm-btn crm-btn-ghost crm-btn-sm" data-space-filters-close>بستن</button>
-
     </div>
 
     <input type="hidden" name="tab" value="{{ space_tab }}">
-
+    {% if space_scope != 'all' %}<input type="hidden" name="scope" value="{{ space_scope }}">{% endif %}
     {% if space_filters.q %}<input type="hidden" name="q" value="{{ space_filters.q }}">{% endif %}
 
-
-
     <div class="agency-space-filters__grid">
-
         <label>مشاور
-
             <select name="publisher" class="crm-input">
-
                 <option value="">همه</option>
-
                 {% for m in space_publishers %}
-
                 <option value="{{ m.user_id }}"{% if space_filters.publisher_id == m.user_id %} selected{% endif %}>{{ m.user.get_full_name|default:m.user.phone }}</option>
-
                 {% endfor %}
-
             </select>
-
         </label>
 
         <label>دسترسی
-
             <select name="visibility" class="crm-input">
-
                 <option value="">همه</option>
-
-                <option value="agency_public"{% if space_filters.visibility == 'agency_public' %} selected{% endif %}>عمومی</option>
-
-                <option value="selected_members"{% if space_filters.visibility == 'selected_members' %} selected{% endif %}>محرمانه</option>
-
+                <option value="agency_public"{% if space_filters.visibility == 'agency_public' %} selected{% endif %}>عمومی آژانس</option>
+                <option value="selected_members"{% if space_filters.visibility == 'selected_members' %} selected{% endif %}>اعضای منتخب</option>
             </select>
-
         </label>
 
-        <label>مرتب‌سازی
-
-            <select name="ordering" class="crm-input">
-
-                <option value="newest"{% if space_filters.ordering == 'newest' %} selected{% endif %}>جدیدترین</option>
-
-                <option value="oldest"{% if space_filters.ordering == 'oldest' %} selected{% endif %}>قدیمی‌ترین</option>
-
-                {% if space_tab == 'properties' or space_tab == 'all' %}
-
-                <option value="price_asc"{% if space_filters.ordering == 'price_asc' %} selected{% endif %}>قیمت کمتر</option>
-
-                <option value="price_desc"{% if space_filters.ordering == 'price_desc' %} selected{% endif %}>قیمت بیشتر</option>
-
-                <option value="area_asc"{% if space_filters.ordering == 'area_asc' %} selected{% endif %}>متراژ کمتر</option>
-
-                <option value="area_desc"{% if space_filters.ordering == 'area_desc' %} selected{% endif %}>متراژ بیشتر</option>
-
-                {% endif %}
-
+        <label>وضعیت CRM
+            <select name="crm_copy" class="crm-input">
+                <option value="">همه</option>
+                <option value="not_copied"{% if space_filters.crm_copy == 'not_copied' %} selected{% endif %}>کپی نشده</option>
+                <option value="copied"{% if space_filters.crm_copy == 'copied' %} selected{% endif %}>در CRM من</option>
             </select>
-
         </label>
 
-        {% if space_tab == 'properties' or space_tab == 'all' %}
-
+        {% if space_tab == 'properties' or space_tab == 'crm' %}
         <label>نوع معامله
-
             <select name="deal_mode" class="crm-input">
-
                 <option value="">همه</option>
-
                 {% for d in space_deal_modes %}
-
                 <option value="{{ d }}"{% if space_filters.deal_mode == d %} selected{% endif %}>{{ d }}</option>
-
                 {% endfor %}
-
             </select>
-
         </label>
-
         <label>نوع ملک
-
             <select name="property_type" class="crm-input">
-
                 <option value="">همه</option>
-
                 {% for p in space_property_types %}
-
                 <option value="{{ p }}"{% if space_filters.property_type == p %} selected{% endif %}>{{ p }}</option>
-
                 {% endfor %}
-
             </select>
-
         </label>
-
         <label>شهر<input type="text" name="city" value="{{ space_filters.city }}" class="crm-input"></label>
-
-        <label>منطقه<input type="text" name="district" value="{{ space_filters.district }}" class="crm-input"></label>
-
+        <label>منطقه / محله<input type="text" name="district" value="{{ space_filters.district }}" class="crm-input"></label>
         <label>حداقل قیمت<input type="number" name="min_price" value="{{ space_filters.min_price|default:'' }}" class="crm-input" min="0"></label>
-
         <label>حداکثر قیمت<input type="number" name="max_price" value="{{ space_filters.max_price|default:'' }}" class="crm-input" min="0"></label>
-
         <label>حداقل متراژ<input type="number" name="min_area" value="{{ space_filters.min_area|default:'' }}" class="crm-input" min="0" step="any"></label>
-
         <label>حداکثر متراژ<input type="number" name="max_area" value="{{ space_filters.max_area|default:'' }}" class="crm-input" min="0" step="any"></label>
-
+        <label>تعداد خواب<input type="text" name="rooms" value="{{ space_filters.rooms }}" class="crm-input" placeholder="مثلاً 2"></label>
         {% endif %}
 
-        {% if space_tab == 'contacts' or space_tab == 'all' %}
-
+        {% if space_tab == 'contacts' or space_tab == 'crm' %}
         <label>نوع مخاطب
-
             <select name="customer_type" class="crm-input">
-
                 <option value="">همه</option>
-
                 {% for t in space_customer_types %}
-
                 <option value="{{ t }}"{% if space_filters.customer_type == t %} selected{% endif %}>{{ t }}</option>
-
                 {% endfor %}
-
             </select>
-
         </label>
-
-        <label>منطقه موردنظر<input type="text" name="region" value="{{ space_filters.region }}" class="crm-input"></label>
-
+        <label>سطح اشتراک
+            <select name="contact_share_level" class="crm-input">
+                <option value="">همه</option>
+                <option value="summary"{% if space_filters.contact_share_level == 'summary' %} selected{% endif %}>خلاصه (بدون تماس)</option>
+                <option value="full"{% if space_filters.contact_share_level == 'full' %} selected{% endif %}>اطلاعات کامل</option>
+            </select>
+        </label>
+        <label>محدوده<input type="text" name="region" value="{{ space_filters.region }}" class="crm-input"></label>
         <label>حداقل بودجه<input type="number" name="min_budget" value="{{ space_filters.min_budget|default:'' }}" class="crm-input" min="0"></label>
-
         <label>حداکثر بودجه<input type="number" name="max_budget" value="{{ space_filters.max_budget|default:'' }}" class="crm-input" min="0"></label>
-
         {% endif %}
 
         <label>انتشار از<input type="date" name="published_after" value="{{ space_filters.published_after|date:'Y-m-d' }}" class="crm-input"></label>
-
         <label>انتشار تا<input type="date" name="published_before" value="{{ space_filters.published_before|date:'Y-m-d' }}" class="crm-input"></label>
-
     </div>
 
     <div class="agency-space-filters__actions">
-
         <button type="submit" class="crm-btn crm-btn-primary crm-btn-sm">اعمال فیلتر</button>
-
         <a href="?tab={{ space_tab }}" class="crm-btn crm-btn-ghost crm-btn-sm">پاک کردن</a>
-
     </div>
-
 </form>
-
 

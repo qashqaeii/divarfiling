@@ -1,0 +1,76 @@
+{% load static %}
+<section class="agency-space-overview" aria-label="نمای کلی فضای آژانس">
+    <div class="agency-space-overview__cols">
+        <div class="agency-space-overview__block">
+            <header class="agency-space-overview__head">
+                <h2>آخرین فایل‌ها</h2>
+                <a href="?tab=properties" class="agency-space-overview__more">همه فایل‌ها</a>
+            </header>
+            <ul class="agency-space-overview__list">
+                {% for item in space_overview.recent_properties %}
+                <li>
+                    <a href="{% url 'workspace:agency_hub_space_item' item.id %}">
+                        <span class="agency-space-overview__title">{{ item.property.title }}</span>
+                        <span class="agency-space-overview__meta">{{ item.publisher.name }} · {{ item.published_at_display }}</span>
+                    </a>
+                </li>
+                {% empty %}
+                <li class="agency-space-overview__empty">هنوز فایلی منتشر نشده.</li>
+                {% endfor %}
+            </ul>
+        </div>
+        <div class="agency-space-overview__block">
+            <header class="agency-space-overview__head">
+                <h2>آخرین مخاطبین</h2>
+                <a href="?tab=contacts" class="agency-space-overview__more">همه مخاطبین</a>
+            </header>
+            <ul class="agency-space-overview__list">
+                {% for item in space_overview.recent_contacts %}
+                <li>
+                    <a href="{% url 'workspace:agency_hub_space_item' item.id %}">
+                        <span class="agency-space-overview__title">{{ item.customer.name }}</span>
+                        <span class="agency-space-overview__meta">{{ item.publisher.name }} · {{ item.published_at_display }}</span>
+                    </a>
+                </li>
+                {% empty %}
+                <li class="agency-space-overview__empty">هنوز مخاطبی منتشر نشده.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    <div class="agency-space-overview__cols">
+        <div class="agency-space-overview__block">
+            <header class="agency-space-overview__head">
+                <h2>فعال‌ترین اعضا</h2>
+            </header>
+            <ul class="agency-space-overview__list agency-space-overview__list--contrib">
+                {% for row in space_overview.contributors %}
+                <li>
+                    <span>{{ row.name }}</span>
+                    <span class="agency-space-overview__stat">{{ row.properties_published }} فایل · {{ row.contacts_published }} مخاطب</span>
+                </li>
+                {% empty %}
+                <li class="agency-space-overview__empty">داده‌ای نیست.</li>
+                {% endfor %}
+            </ul>
+        </div>
+        <div class="agency-space-overview__block">
+            <header class="agency-space-overview__head">
+                <h2>فعالیت اخیر</h2>
+            </header>
+            <ul class="agency-space-overview__list agency-space-overview__list--activity">
+                {% for ev in space_overview.activity %}
+                <li>
+                    <span class="agency-space-overview__activity-text">
+                        {% if ev.actor_name %}{{ ev.actor_name }}{% endif %}
+                        {{ ev.label }}
+                        {% if ev.detail %}<span class="agency-space-overview__muted">({{ ev.detail }})</span>{% endif %}
+                    </span>
+                </li>
+                {% empty %}
+                <li class="agency-space-overview__empty">فعالیتی ثبت نشده.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</section>

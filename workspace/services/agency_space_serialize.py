@@ -87,6 +87,14 @@ def _property_card(prop: CRMProperty, *, include_sensitive: bool) -> Dict[str, A
     area = prop.area
     area_label = format_area(area) if area not in (None, '') else ''
     region = ' · '.join(p for p in (prop.neighborhood, prop.district, prop.city) if p)
+    price_per_meter_label = ''
+    if prop.sale_price and area:
+        try:
+            area_f = float(area)
+            if area_f > 0:
+                price_per_meter_label = format_toman(int(prop.sale_price / area_f))
+        except (TypeError, ValueError):
+            price_per_meter_label = ''
     data = {
         'id': prop.pk,
         'title': prop.title,
@@ -106,6 +114,7 @@ def _property_card(prop: CRMProperty, *, include_sensitive: bool) -> Dict[str, A
         'city': prop.city or '',
         'district': prop.district or '',
         'neighborhood': prop.neighborhood or '',
+        'price_per_meter_label': price_per_meter_label,
     }
     if include_sensitive:
         data['address'] = prop.address
@@ -131,11 +140,14 @@ def _customer_payload(
         and can_view_space_item_content(viewer, item)
     )
     region = ' · '.join(p for p in (customer.district, customer.city, customer.areas) if p)
+    need_summary = ''
+    if can_full:
+        need_summary = (customer.notes or '')[:300] if detail else (customer.notes or '')[:120]
     data = {
         'id': customer.pk,
         'name': customer.name,
         'customer_type': customer.customer_type,
-        'need_summary': (customer.notes or '')[:300] if detail else (customer.notes or '')[:120],
+        'need_summary': need_summary,
         'budget_label': _customer_budget_label(customer),
         'region': region,
         'status': customer.status,
@@ -152,7 +164,7 @@ def _customer_payload(
     data['contact_share_level_label'] = dict(
         AgencySpaceItem.CONTACT_SHARE_LEVEL_CHOICES,
     ).get(item.contact_share_level, item.contact_share_level)
-    if detail:
+    if detail and can_full:
         data['notes'] = (customer.notes or '')[:800]
     return data
 
@@ -216,6 +228,11 @@ def serialize_space_item(
         payload['audience_member_ids'] = list(
             item.audience_members.values_list('member_id', flat=True)
         )
+    if item.visibility == AgencySpaceItem.VISIBILITY_SELECTED_MEMBERS:
+        if payload['is_publisher'] or payload.get('can_moderate'):
+            payload['audience_count'] = item.audience_members.count()
+        else:
+            payload['audience_count'] = None
 
     owns_source = _viewer_owns_space_source(viewer, item)
     payload['owns_source_in_crm'] = owns_source

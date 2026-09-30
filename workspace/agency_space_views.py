@@ -22,7 +22,11 @@ from workspace.services.agency_space_analytics import (
     get_space_analytics_payload,
     get_space_header_kpis,
 )
-from workspace.services.agency_space_params import parse_space_list_filters
+from workspace.services.agency_space_overview import get_space_overview_payload
+from workspace.services.agency_space_params import (
+    build_space_filter_chips,
+    parse_space_list_filters,
+)
 from workspace.services.agency_space_query import (
     get_space_item_for_user,
     get_space_items_from_filters,
@@ -53,27 +57,41 @@ class AgencyHubSpaceView(AgencySpaceFeatureMixin, LoginRequiredMixin, TemplateVi
         user = self.request.user
         filters = parse_space_list_filters(self.request.GET)
         tab = filters.normalized_tab()
-
-        qs = get_space_items_from_filters(user, filters)
-        paginator = Paginator(qs, filters.page_size)
-        page_obj = paginator.get_page(filters.page)
-        items = [
-            serialize_space_item(item, user, detail=False)
-            for item in page_obj.object_list
-        ]
-        items = [i for i in items if i]
-
         agency = get_user_space_agency(user)
         can_moderate = can_moderate_agency_space(user, agency)
+
+        items = []
+        page_obj = None
+        total_count = 0
+        overview = None
+        if filters.is_overview():
+            if agency:
+                overview = get_space_overview_payload(user, agency)
+        else:
+            qs = get_space_items_from_filters(user, filters)
+            total_count = qs.count()
+            paginator = Paginator(qs, filters.page_size)
+            page_obj = paginator.get_page(filters.page)
+            items = [
+                serialize_space_item(item, user, detail=False)
+                for item in page_obj.object_list
+            ]
+            items = [i for i in items if i]
+
         ctx.update({
             'space_tab': tab,
+            'space_scope': filters.normalized_scope(),
             'space_filters': filters,
+            'space_filter_chips': build_space_filter_chips(filters),
             'space_items': items,
             'space_page': page_obj,
+            'space_result_total': total_count,
+            'space_overview': overview,
             'space_publishers': agency_members(agency) if agency else [],
             'space_detail_url_name': 'workspace:agency_hub_space_item',
             'space_api_items_url': reverse('workspace:api_agency_space_items'),
             'space_api_analytics_url': reverse('workspace:api_agency_space_analytics'),
+            'space_api_copy_url_template': '/workspace/api/crm/agency/space/items/0/copy/',
             'can_moderate_space': can_moderate,
             'can_publish_space': can_publish_to_agency_space(user, agency),
             'space_kpis': get_space_header_kpis(user, agency) if agency else {},
@@ -81,6 +99,8 @@ class AgencyHubSpaceView(AgencySpaceFeatureMixin, LoginRequiredMixin, TemplateVi
             'space_deal_modes': PROPERTY_DEAL_MODES,
             'space_customer_types': CRM_TYPES,
             'space_management_url': reverse('workspace:agency_hub_space_manage'),
+            'space_publish_property_url': reverse('workspace:crm_properties'),
+            'space_publish_contact_url': reverse('workspace:crm_contacts'),
         })
         return ctx
 

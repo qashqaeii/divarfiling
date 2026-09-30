@@ -1,0 +1,52 @@
+<article class="agency-space-card agency-space-card--property" data-space-kind="property" data-item-id="{{ item.id }}">
+    <a href="{% url 'workspace:agency_hub_space_item' item.id %}" class="agency-space-card__media-link">
+        <div class="agency-space-card__media">
+            {% if item.property.thumbnail_url %}
+            <img src="{{ item.property.thumbnail_url }}" alt="" loading="lazy" width="400" height="225">
+            {% else %}
+            <span class="agency-space-card__media-fallback" aria-hidden="true"><i class="fas fa-building"></i></span>
+            {% endif %}
+            <div class="agency-space-card__media-overlay">
+                {% if item.property.deal_mode %}<span class="agency-space-card__chip agency-space-card__chip--dark">{{ item.property.deal_mode }}</span>{% endif %}
+                {% if item.property.property_type %}<span class="agency-space-card__chip">{{ item.property.property_type }}</span>{% endif %}
+            </div>
+            {% if item.is_publisher %}<span class="agency-space-card__mine">منتشرشده توسط من</span>{% endif %}
+        </div>
+    </a>
+    <div class="agency-space-card__body">
+        <div class="agency-space-card__meta-row">
+            <span class="agency-space-badge agency-space-badge--{{ item.visibility }}"{% if item.audience_count %} title="فقط {{ item.audience_count }} عضو"{% endif %}>{{ item.visibility_label }}</span>
+            {% if item.owns_source_in_crm or item.already_copied %}
+            <span class="agency-space-card__crm-flag"><i class="fas fa-circle-check" aria-hidden="true"></i>{% if item.owns_source_in_crm %}فایل CRM{% else %}در CRM من{% endif %}</span>
+            {% endif %}
+        </div>
+        <h3 class="agency-space-card__title"><a href="{% url 'workspace:agency_hub_space_item' item.id %}">{{ item.property.title }}</a></h3>
+        {% if item.property.region %}
+        <p class="agency-space-card__location"><i class="fas fa-location-dot" aria-hidden="true"></i><span>{{ item.property.region }}</span></p>
+        {% endif %}
+        <div class="agency-space-card__facts">
+            {% if item.property.area_label or item.property.area %}
+            <span class="agency-space-card__fact"><i class="fas fa-ruler-combined" aria-hidden="true"></i>{% if item.property.area_label %}{{ item.property.area_label }}{% else %}{{ item.property.area }} متر{% endif %}</span>
+            {% endif %}
+            {% if item.property.rooms %}<span class="agency-space-card__fact">{{ item.property.rooms }} خواب</span>{% endif %}
+        </div>
+        {% if item.property.price_label %}<p class="agency-space-card__price">{{ item.property.price_label }}{% if item.property.price_per_meter_label %} <span class="agency-space-card__ppm">({{ item.property.price_per_meter_label }}/متر)</span>{% endif %}</p>{% endif %}
+    </div>
+    <footer class="agency-space-card__foot">
+        <div class="agency-space-card__publisher">
+            <span class="agency-space-card__publisher-avatar" aria-hidden="true">{{ item.publisher.name|slice:":1"|upper }}</span>
+            <span class="agency-space-card__publisher-name">{% if item.is_publisher %}شما{% else %}{{ item.publisher.name }}{% endif %}</span>
+        </div>
+        {% if item.published_at_display %}<time class="agency-space-card__time">{{ item.published_at_display }}</time>{% endif %}
+    </footer>
+    <div class="agency-space-card__actions">
+        <a href="{% url 'workspace:agency_hub_space_item' item.id %}" class="agency-space-card__btn agency-space-card__btn--ghost">جزئیات</a>
+        {% if item.owns_source_in_crm and item.source_crm_url %}
+        <a href="{{ item.source_crm_url }}" class="agency-space-card__btn agency-space-card__btn--primary">باز کردن CRM</a>
+        {% elif item.already_copied and item.copy_target_url %}
+        <a href="{{ item.copy_target_url }}" class="agency-space-card__btn agency-space-card__btn--primary" data-space-crm-link>در CRM من</a>
+        {% elif item.can_copy %}
+        <button type="button" class="agency-space-card__btn agency-space-card__btn--primary" data-space-copy data-item-id="{{ item.id }}">کپی به CRM</button>
+        {% endif %}
+    </div>
+</article>

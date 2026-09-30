@@ -200,28 +200,74 @@
       });
     }
 
+    function promoteCopyButton(btn, targetUrl) {
+      const card = btn.closest('.agency-space-card');
+      btn.remove();
+      const link = document.createElement('a');
+      link.href = targetUrl;
+      link.className = 'agency-space-card__btn agency-space-card__btn--primary';
+      link.setAttribute('data-space-crm-link', '');
+      link.textContent = 'در CRM من';
+      const actions = card ? card.querySelector('.agency-space-card__actions') : null;
+      if (actions) actions.appendChild(link);
+      const flag = card ? card.querySelector('.agency-space-card__crm-flag') : null;
+      if (!flag && card) {
+        const row = card.querySelector('.agency-space-card__meta-row');
+        if (row) {
+          const span = document.createElement('span');
+          span.className = 'agency-space-card__crm-flag';
+          span.innerHTML = '<i class="fas fa-circle-check" aria-hidden="true"></i>در CRM من';
+          row.appendChild(span);
+        }
+      }
+    }
+
     document.querySelectorAll('[data-space-copy]').forEach((btn) => {
       btn.addEventListener('click', function () {
         const id = btn.dataset.itemId;
-        if (!id) return;
+        if (!id || btn.disabled || btn.dataset.copying === '1') return;
+        const card = btn.closest('.agency-space-card');
+        if (card && card.querySelector('[data-space-crm-link]')) return;
+        btn.dataset.copying = '1';
         btn.disabled = true;
         postJson(`/workspace/api/crm/agency/space/items/${id}/copy/`, {}).then((res) => {
           if (res.ok && res.data && res.data.target_url) {
-            if (res.data.already_copied) {
-              window.location.href = res.data.target_url;
-            } else {
-              window.location.href = res.data.target_url;
-            }
+            promoteCopyButton(btn, res.data.target_url);
           } else {
             btn.disabled = false;
+            btn.dataset.copying = '0';
             alert(res.error || 'خطا در کپی');
           }
         }).catch(() => {
           btn.disabled = false;
+          btn.dataset.copying = '0';
           alert('خطا در ارتباط');
         });
       });
     });
+
+    const grid = document.querySelector('[data-space-grid]');
+    const viewBtns = document.querySelectorAll('[data-space-view]');
+    const viewKey = 'agency-space-view-mode';
+    function setView(mode) {
+      if (!grid) return;
+      grid.classList.toggle('is-list-view', mode === 'list');
+      viewBtns.forEach((b) => {
+        b.classList.toggle('is-active', b.dataset.spaceView === mode);
+      });
+      try {
+        localStorage.setItem(viewKey, mode);
+      } catch (e) { /* ignore */ }
+    }
+    viewBtns.forEach((b) => {
+      b.addEventListener('click', function () {
+        setView(b.dataset.spaceView || 'grid');
+      });
+    });
+    try {
+      const saved = localStorage.getItem(viewKey);
+      if (saved === 'list' || saved === 'grid') setView(saved);
+    } catch (e) { /* ignore */ }
 
     const detail = document.querySelector('.agency-space-detail');
     if (detail) {

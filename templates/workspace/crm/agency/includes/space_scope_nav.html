@@ -1,0 +1,16 @@
+{% if space_tab == 'properties' or space_tab == 'contacts' or space_tab == 'crm' %}
+<nav class="agency-space-scope" aria-label="محدوده نمایش">
+    {% with base_tab=space_tab %}
+    <a href="?tab={{ base_tab }}" class="agency-space-scope__item{% if space_scope == 'all' %} is-active{% endif %}">
+        {% if space_tab == 'crm' %}همه موارد{% elif space_tab == 'properties' %}همه فایل‌ها{% else %}همه مخاطبین{% endif %}
+    </a>
+    {% if space_tab != 'crm' %}
+    <a href="?tab={{ base_tab }}&scope=published_by_me" class="agency-space-scope__item{% if space_scope == 'published_by_me' %} is-active{% endif %}">منتشرشده توسط من</a>
+    <a href="?tab={{ base_tab }}&scope=copied_by_me" class="agency-space-scope__item{% if space_scope == 'copied_by_me' %} is-active{% endif %}">کپی‌شده به CRM من</a>
+    {% else %}
+    <a href="?tab=crm&kind=property" class="agency-space-scope__item{% if space_filters.kind == 'property' %} is-active{% endif %}">فقط فایل‌ها</a>
+    <a href="?tab=crm&kind=customer" class="agency-space-scope__item{% if space_filters.kind == 'customer' %} is-active{% endif %}">فقط مخاطبین</a>
+    {% endif %}
+    {% endwith %}
+</nav>
+{% endif %}

@@ -196,6 +196,12 @@ def _pagination_context(page_obj, query_params=None, aria_label='صفحه‌بن
     }
 
     def page_href(page_number):
+        try:
+            page_number = int(page_number)
+        except (TypeError, ValueError):
+            return None
+        if page_number < 1:
+            return None
         return '?' + urlencode({**base, 'page': page_number})
 
     paginator = page_obj.paginator
@@ -209,18 +215,27 @@ def _pagination_context(page_obj, query_params=None, aria_label='صفحه‌بن
         if num == paginator.ELLIPSIS:
             pages.append({'type': 'ellipsis'})
         else:
+            url = page_href(num)
             pages.append({
                 'type': 'page',
                 'num': num,
-                'url': page_href(num),
+                'url': url or page_href(page_obj.number),
                 'active': num == page_obj.number,
             })
+
+    prev_url = None
+    if page_obj.has_previous():
+        prev_url = page_href(page_obj.previous_page_number())
+
+    next_url = None
+    if page_obj.has_next():
+        next_url = page_href(page_obj.next_page_number())
 
     return {
         'page_obj': page_obj,
         'pages': pages,
-        'prev_url': page_href(page_obj.previous_page_number()) if page_obj.has_previous else None,
-        'next_url': page_href(page_obj.next_page_number()) if page_obj.has_next else None,
+        'prev_url': prev_url,
+        'next_url': next_url,
         'start_index': page_obj.start_index(),
         'end_index': page_obj.end_index(),
         'total_count': paginator.count,

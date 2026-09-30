@@ -325,3 +325,31 @@ class PersonalFileFromListingTests(TestCase):
         prop.refresh_from_db()
         self.assertEqual(len(prop.images), 2)
         self.assertEqual(prop.images[0], 'https://example.com/b.jpg')
+
+
+class PaginationContextTests(TestCase):
+    def test_first_page_omits_prev_link(self):
+        from django.core.paginator import Paginator
+
+        from workspace.templatetags.workspace_tags import _pagination_context
+
+        page = Paginator(list(range(60)), 25).page(1)
+        ctx = _pagination_context(page, {'q': 'tehran'})
+
+        self.assertIsNone(ctx['prev_url'])
+        self.assertIsNotNone(ctx['next_url'])
+        self.assertIn('page=2', ctx['next_url'])
+        self.assertIn('q=tehran', ctx['next_url'])
+
+    def test_last_page_omits_next_link(self):
+        from django.core.paginator import Paginator
+
+        from workspace.templatetags.workspace_tags import _pagination_context
+
+        paginator = Paginator(list(range(60)), 25)
+        page = paginator.page(paginator.num_pages)
+        ctx = _pagination_context(page)
+
+        self.assertIsNone(ctx['next_url'])
+        self.assertIsNotNone(ctx['prev_url'])
+        self.assertIn('page=2', ctx['prev_url'])

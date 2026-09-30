@@ -1,7 +1,8 @@
 {% with prop=space_payload.property %}
-<div class="agency-space-property-detail">
-    <header class="agency-space-property-detail__hero">
-        <div class="agency-space-property-detail__hero-main">
+<div class="agency-space-property-detail agency-space-pro-detail">
+    <header class="agency-space-property-detail__hero agency-space-pro-hero agency-space-pro-hero--property">
+        <div class="agency-space-pro-hero__mesh" aria-hidden="true"></div>
+        <div class="agency-space-property-detail__hero-main agency-space-pro-hero__body">
             <div class="agency-space-property-detail__chips">
                 {% if prop.deal_mode %}
                 <span class="agency-space-property-detail__chip agency-space-property-detail__chip--deal">{{ prop.deal_mode }}</span>
@@ -21,13 +22,17 @@
             </p>
             {% endif %}
             {% if prop.price_label or prop.price_per_meter_label %}
-            <div class="agency-space-property-detail__price-block">
-                {% if prop.price_label %}
-                <p class="agency-space-property-detail__price">{{ prop.price_label }}</p>
-                {% endif %}
-                {% if prop.price_per_meter_label %}
-                <p class="agency-space-property-detail__ppm">{{ prop.price_per_meter_label }} / متر</p>
-                {% endif %}
+            <div class="agency-space-property-detail__price-block agency-space-pro-price">
+                <span class="agency-space-pro-price__icon" aria-hidden="true"><i class="fas fa-tags"></i></span>
+                <div>
+                    {% if prop.price_label %}
+                    <p class="agency-space-property-detail__price">{{ prop.price_label }}</p>
+                    <span class="agency-space-pro-price__label">قیمت فروش</span>
+                    {% endif %}
+                    {% if prop.price_per_meter_label %}
+                    <p class="agency-space-property-detail__ppm">{{ prop.price_per_meter_label }} / متر</p>
+                    {% endif %}
+                </div>
             </div>
             {% endif %}
             {% if prop.price_rows %}
@@ -36,11 +41,6 @@
                 <li><span>{{ row.label }}</span><strong>{{ row.value }}</strong></li>
                 {% endfor %}
             </ul>
-            {% endif %}
-        </div>
-        <div class="agency-space-property-detail__hero-aside">
-            {% if space_payload.owns_source_in_crm or space_payload.already_copied %}
-            <p class="agency-space-property-detail__crm-ok"><i class="fas fa-circle-check" aria-hidden="true"></i> در CRM من</p>
             {% endif %}
         </div>
     </header>
@@ -116,8 +116,11 @@
     </div>
     {% endif %}
 
-    <section class="agency-space-property-detail__panel" aria-labelledby="space-prop-specs-heading">
-        <h2 id="space-prop-specs-heading" class="agency-space-property-detail__h">مشخصات اصلی</h2>
+    <section class="agency-space-property-detail__panel agency-space-pro-panel" aria-labelledby="space-prop-specs-heading">
+        <header class="agency-space-pro-panel__head">
+            <span class="agency-space-pro-panel__icon" aria-hidden="true"><i class="fas fa-clipboard-list"></i></span>
+            <h2 id="space-prop-specs-heading" class="agency-space-pro-panel__title">مشخصات اصلی</h2>
+        </header>
         <dl class="agency-space-property-detail__spec-grid">
             {% if prop.area_label or prop.area %}
             <div class="agency-space-property-detail__spec">

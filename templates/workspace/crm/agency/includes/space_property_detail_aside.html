@@ -1,8 +1,14 @@
 {% include "workspace/crm/agency/includes/space_property_detail_crm_panel.html" with crm_heading_id="space-prop-crm-heading" %}
 
-<article class="agency-space-property-detail__aside-card" aria-labelledby="space-prop-pub-heading">
-    <h2 id="space-prop-pub-heading" class="agency-space-property-detail__aside-h">انتشار و دسترسی</h2>
-    <div class="agency-space-property-detail__aside-publisher">
+<article class="agency-space-property-detail__aside-card agency-space-pro-aside-card" aria-labelledby="space-prop-pub-heading">
+    <header class="agency-space-pro-aside-card__head">
+        <span class="agency-space-pro-aside-card__icon agency-space-pro-aside-card__icon--soft" aria-hidden="true"><i class="fas fa-share-nodes"></i></span>
+        <div>
+            <h2 id="space-prop-pub-heading" class="agency-space-property-detail__aside-h">انتشار و دسترسی</h2>
+            <p class="agency-space-pro-aside-card__sub">زمان‌بندی و سطح دسترسی</p>
+        </div>
+    </header>
+    <div class="agency-space-property-detail__aside-publisher agency-space-pro-publisher">
         <span class="agency-space-property-detail__aside-label">منتشرکننده</span>
         <div class="agency-space-property-detail__publisher-row">
             {% if space_payload.publisher.avatar_url %}
@@ -17,20 +23,20 @@
         </div>
         {% if space_payload.is_publisher %}<p class="agency-space-property-detail__mine">منتشرشده توسط من</p>{% endif %}
     </div>
-    <ul class="agency-space-property-detail__meta-list">
+    <ul class="agency-space-pro-timeline">
         {% if space_payload.published_at_display %}
-        <li><span>تاریخ انتشار</span><strong>{{ space_payload.published_at_display }}</strong></li>
+        <li><span class="agency-space-pro-timeline__icon" aria-hidden="true"><i class="fas fa-calendar-day"></i></span><span class="agency-space-pro-timeline__label">تاریخ انتشار</span><strong>{{ space_payload.published_at_display }}</strong></li>
         {% endif %}
         {% if space_payload.updated_at_display %}
-        <li><span>به‌روزرسانی</span><strong>{{ space_payload.updated_at_display }}</strong></li>
+        <li><span class="agency-space-pro-timeline__icon" aria-hidden="true"><i class="fas fa-clock-rotate-left"></i></span><span class="agency-space-pro-timeline__label">به‌روزرسانی</span><strong>{{ space_payload.updated_at_display }}</strong></li>
         {% endif %}
-        <li><span>دسترسی</span><strong>{{ space_payload.visibility_label }}{% if space_payload.audience_count %} ({{ space_payload.audience_count }} عضو){% endif %}</strong></li>
-        <li><span>وضعیت</span><strong>{{ space_payload.status_label }}</strong></li>
+        <li><span class="agency-space-pro-timeline__icon" aria-hidden="true"><i class="fas fa-eye"></i></span><span class="agency-space-pro-timeline__label">دسترسی</span><strong>{{ space_payload.visibility_label }}{% if space_payload.audience_count %} ({{ space_payload.audience_count }} عضو){% endif %}</strong></li>
+        <li><span class="agency-space-pro-timeline__icon" aria-hidden="true"><i class="fas fa-signal"></i></span><span class="agency-space-pro-timeline__label">وضعیت</span><strong>{{ space_payload.status_label }}</strong></li>
         {% if space_payload.is_publisher and space_payload.copy_count != None %}
-        <li><span>کپی CRM</span><strong>{{ space_payload.copy_count }}</strong></li>
+        <li><span class="agency-space-pro-timeline__icon" aria-hidden="true"><i class="fas fa-copy"></i></span><span class="agency-space-pro-timeline__label">کپی CRM</span><strong>{{ space_payload.copy_count }}</strong></li>
         {% endif %}
         {% if space_payload.archived_at %}
-        <li><span>بایگانی</span><strong>{{ space_payload.archived_at_display|default:space_payload.archived_at|slice:":16" }}</strong></li>
+        <li><span class="agency-space-pro-timeline__icon" aria-hidden="true"><i class="fas fa-box-archive"></i></span><span class="agency-space-pro-timeline__label">بایگانی</span><strong>{{ space_payload.archived_at_display|default:space_payload.archived_at|slice:":16" }}</strong></li>
         {% endif %}
     </ul>
     {% if space_payload.archived_reason_label %}

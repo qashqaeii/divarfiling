@@ -1,4 +1,4 @@
-<article class="agency-space-property-detail__aside-card agency-space-property-detail__aside-card--crm agency-space-pro-aside-card"{% if crm_heading_id %} aria-labelledby="{{ crm_heading_id }}"{% endif %}>
+<article class="agency-space-property-detail__aside-card agency-space-property-detail__aside-card--crm agency-space-pro-aside-card agency-space-prop-aside__card agency-space-prop-aside__card--crm"{% if crm_heading_id %} aria-labelledby="{{ crm_heading_id }}"{% endif %}>
     <header class="agency-space-pro-aside-card__head">
         <span class="agency-space-pro-aside-card__icon" aria-hidden="true"><i class="fas fa-folder-plus"></i></span>
         <div>
@@ -6,9 +6,8 @@
             <p class="agency-space-pro-aside-card__sub">کپی مستقل در فایل‌های شما</p>
         </div>
     </header>
-    <p class="agency-space-property-detail__aside-lead">یک نسخه مستقل از این فایل در CRM شخصی شما ساخته می‌شود؛ فایل اصلی در فضای آژانس تغییر نمی‌کند.</p>
-    <p class="agency-space-property-detail__provenance">نسخه CRM شما مستقل از نسخه منتشرشده در فضای آژانس است.</p>
-    <div class="agency-space-property-detail__aside-body">
+    <p class="agency-space-property-detail__aside-lead">نسخهٔ مستقل در فایل‌های شما — بدون تغییر در فایل منتشرشدهٔ تیم.</p>
+    <div class="agency-space-property-detail__aside-body agency-space-prop-aside__body">
         {% if space_payload.owns_source_in_crm and space_payload.source_crm_url %}
         <p class="agency-space-pro-status agency-space-pro-status--ok"><i class="fas fa-circle-check" aria-hidden="true"></i> این فایل از CRM شما منتشر شده</p>
         <a href="{{ space_payload.source_crm_url }}" class="agency-space-pro-btn agency-space-pro-btn--primary crm-btn-block">مشاهده فایل در CRM</a>

@@ -1,6 +1,7 @@
 """Serialization امن Agency Space — phone masking در backend."""
 from __future__ import annotations
 
+import re
 from typing import Any, Dict, List, Optional
 
 from django.contrib.auth import get_user_model
@@ -31,6 +32,59 @@ def _viewer_owns_space_source(viewer: User, item: AgencySpaceItem) -> bool:
     if item.customer_id and item.customer:
         return item.customer.user_id == viewer.id
     return False
+
+
+def _normalize_location_piece(text: str) -> str:
+    if not text:
+        return ''
+    t = str(text).strip()
+    t = t.replace('\u064a', '\u06cc').replace('\u0643', '\u06a9')
+    t = re.sub(r'\s+', ' ', t)
+    return t
+
+
+def _property_address_redundant_with_fields(prop: CRMProperty) -> bool:
+    """آدرس متنی که فقط همان شهر/منطقه/محلهٔ جداگانه است، در UI تکراری است."""
+    raw = (prop.address or '').strip()
+    if not raw:
+        return True
+    addr = _normalize_location_piece(raw)
+    pieces = [
+        _normalize_location_piece(x)
+        for x in (prop.city, prop.district, prop.neighborhood)
+        if x and str(x).strip()
+    ]
+    if not pieces:
+        return False
+    if addr in pieces:
+        return True
+    region = _normalize_location_piece(
+        ' · '.join(p for p in (prop.neighborhood, prop.district, prop.city) if p),
+    )
+    if region and addr == region:
+        return True
+    for sep in (' · ', '،', ',', '-', '–', '|', '/'):
+        variants = [sep.join(pieces)]
+        if len(pieces) >= 2:
+            variants.append(sep.join(reversed(pieces)))
+        for variant in variants:
+            if _normalize_location_piece(variant) == addr:
+                return True
+    addr_parts = [
+        _normalize_location_piece(p)
+        for p in re.split(r'[،,|/\-–]+', addr)
+        if p and str(p).strip()
+    ]
+    if addr_parts and all(part in pieces for part in addr_parts):
+        return True
+    return False
+
+
+def _property_address_for_display(prop: CRMProperty) -> str:
+    raw = (prop.address or '').strip()
+    if not raw or _property_address_redundant_with_fields(prop):
+        return ''
+    return raw
 
 
 def _property_price_rows(prop: CRMProperty) -> List[Dict[str, str]]:
@@ -247,7 +301,7 @@ def _property_card(prop: CRMProperty, *, include_sensitive: bool) -> Dict[str, A
         'price_per_meter_label': price_per_meter_label,
     }
     if include_sensitive:
-        data['address'] = prop.address
+        data['address'] = _property_address_for_display(prop)
         data['phone'] = prop.phone
         data['tenant_phone'] = prop.tenant_phone or ''
         data['owner_name'] = prop.owner_name or ''

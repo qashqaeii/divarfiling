@@ -24,34 +24,39 @@
             {% if prop.price_label or prop.price_per_meter_label or prop.owner_name or prop.phone or prop.tenant_phone %}
             <div class="agency-space-prop-hero__highlights">
                 {% if prop.price_label or prop.price_per_meter_label %}
-                <div class="agency-space-prop-detail__price-row agency-space-prop-hero__price">
-                    <div class="agency-space-property-detail__price-block agency-space-pro-price">
-                        <span class="agency-space-pro-price__icon" aria-hidden="true"><i class="fas fa-tags"></i></span>
-                        <div>
-                            {% if prop.price_label %}
-                            <p class="agency-space-property-detail__price">{{ prop.price_label }}</p>
-                            <span class="agency-space-pro-price__label">قیمت</span>
-                            {% endif %}
-                            {% if prop.price_per_meter_label %}
-                            <p class="agency-space-property-detail__ppm">{{ prop.price_per_meter_label }} / متر</p>
-                            {% endif %}
+                <div class="agency-space-prop-hero-highlight" aria-label="قیمت">
+                    <div class="agency-space-prop-hero-highlight__card agency-space-prop-hero-highlight__card--price">
+                        <div class="agency-space-prop-hero-highlight__head">
+                            <span class="agency-space-prop-hero-highlight__icon agency-space-prop-hero-highlight__icon--price" aria-hidden="true"><i class="fas fa-tags"></i></span>
+                            <div class="agency-space-prop-hero-highlight__titles">
+                                <span class="agency-space-prop-hero-highlight__eyebrow">قیمت</span>
+                                {% if prop.price_label %}
+                                <p class="agency-space-prop-hero-highlight__value">{{ prop.price_label }}</p>
+                                {% endif %}
+                            </div>
                         </div>
+                        {% if prop.price_per_meter_label %}
+                        <div class="agency-space-prop-hero-highlight__foot">
+                            <span class="agency-space-prop-hero-highlight__foot-label">قیمت هر متر</span>
+                            <span class="agency-space-prop-hero-highlight__foot-value" dir="ltr">{{ prop.price_per_meter_label }}</span>
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
                 {% endif %}
                 {% if prop.owner_name or prop.phone or prop.tenant_phone %}
-                <div class="agency-space-prop-hero-contact" aria-label="مالک و تماس">
-                    <div class="agency-space-prop-hero-contact__card">
-                        <div class="agency-space-prop-hero-contact__identity">
-                            <span class="agency-space-prop-hero-contact__avatar" aria-hidden="true">
+                <div class="agency-space-prop-hero-highlight" aria-label="مالک و تماس">
+                    <div class="agency-space-prop-hero-highlight__card agency-space-prop-hero-highlight__card--contact">
+                        <div class="agency-space-prop-hero-highlight__head">
+                            <span class="agency-space-prop-hero-highlight__icon agency-space-prop-hero-highlight__icon--contact" aria-hidden="true">
                                 {% if prop.owner_name %}{{ prop.owner_name|slice:":1" }}{% else %}<i class="fas fa-user"></i>{% endif %}
                             </span>
-                            <div class="agency-space-prop-hero-contact__who">
-                                <span class="agency-space-prop-hero-contact__eyebrow">مالک و تماس</span>
+                            <div class="agency-space-prop-hero-highlight__titles">
+                                <span class="agency-space-prop-hero-highlight__eyebrow">مالک و تماس</span>
                                 {% if prop.owner_name %}
-                                <p class="agency-space-prop-hero-contact__name">{{ prop.owner_name }}</p>
+                                <p class="agency-space-prop-hero-highlight__value">{{ prop.owner_name }}</p>
                                 {% else %}
-                                <p class="agency-space-prop-hero-contact__name agency-space-prop-hero-contact__name--muted">اطلاعات تماس</p>
+                                <p class="agency-space-prop-hero-highlight__value agency-space-prop-hero-highlight__value--muted">اطلاعات تماس</p>
                                 {% endif %}
                             </div>
                         </div>
@@ -287,19 +292,6 @@
                 <h2 id="space-prop-notes-heading" class="agency-space-pro-panel__title">یادداشت داخلی</h2>
             </header>
             <div class="agency-space-pro-prose">{{ prop.notes|linebreaksbr }}</div>
-        </section>
-        {% endif %}
-
-        {% if prop.link or prop.token %}
-        <section class="agency-space-pro-panel agency-space-pro-panel--muted">
-            <header class="agency-space-pro-panel__head">
-                <span class="agency-space-pro-panel__icon" aria-hidden="true"><i class="fas fa-link"></i></span>
-                <h2 class="agency-space-pro-panel__title">منبع آگهی</h2>
-            </header>
-            {% if prop.token %}<p class="agency-space-property-detail__source-id">شناسه: <span dir="ltr">{{ prop.token }}</span></p>{% endif %}
-            {% if prop.link %}
-            <a href="{{ prop.link }}" class="agency-space-prop-detail__source-link" target="_blank" rel="noopener noreferrer"><i class="fas fa-external-link" aria-hidden="true"></i> باز کردن لینک منبع</a>
-            {% endif %}
         </section>
         {% endif %}
     </div>

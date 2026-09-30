@@ -243,8 +243,9 @@
     }
 
     /* ── Filters (mobile) ── */
-    .mk-filing-mobile .mk-filing-toolbar,
-    .mk-filing-mobile .fl-toolbar {
+    /* Dataset list toolbar row: mk-filing-mobile-v2.css (search | filter grid) */
+    .mk-filing-mobile:not(.mk-filing-datasets) .mk-filing-toolbar,
+    .mk-filing-mobile:not(.mk-filing-datasets) .fl-toolbar {
         margin: 0 0.7rem;
         padding: 0;
         position: static;
@@ -256,12 +257,12 @@
     .mk-filing-mobile .fl-toolbar__form {
         width: 100%;
     }
-    .mk-filing-mobile .fl-toolbar__row {
+    .mk-filing-mobile:not(.mk-filing-datasets) .fl-toolbar__row {
         display: flex;
         flex-direction: column;
         gap: 0.55rem;
     }
-    .mk-filing-mobile .fl-toolbar__search {
+    .mk-filing-mobile:not(.mk-filing-datasets) .fl-toolbar__search {
         width: 100%;
         height: 2.75rem;
         border-radius: 14px;
@@ -270,10 +271,10 @@
         border: 1px solid color-mix(in srgb, var(--ws-border) 55%, transparent);
         box-shadow: 0 2px 12px rgba(15, 23, 42, 0.04);
     }
-    .mk-filing-mobile .fl-toolbar__search input {
+    .mk-filing-mobile:not(.mk-filing-datasets) .fl-toolbar__search input {
         font-size: 0.86rem;
     }
-    .mk-filing-mobile .fl-toolbar__mob-toggle {
+    .mk-filing-mobile:not(.mk-filing-datasets) .fl-toolbar__mob-toggle {
         display: inline-flex !important;
         width: 100%;
         height: 2.75rem;

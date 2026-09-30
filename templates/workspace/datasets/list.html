@@ -6,9 +6,12 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/mk-filing-datasets.css' %}?v=21">
-<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-mobile.css' %}?v=9">
-<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-mobile-v2.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-mobile.css' %}?v=10">
 {% include 'workspace/academy/includes/academy_assets_css.html' %}
+{% endblock %}
+
+{% block ws_surface_css %}
+<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-mobile-v2.css' %}?v=9">
 {% endblock %}
 
 {% block content %}
@@ -224,7 +227,7 @@
     });
 })();
 </script>
-<script src="{% static 'workspace/js/filing-mobile.js' %}?v=2"></script>
+<script src="{% static 'workspace/js/filing-mobile.js' %}?v=6"></script>
 <script src="{% static 'workspace/js/filing-help.js' %}?v=4"></script>
 {% if ai_enabled and has_bot_license %}
 <script src="{% static 'workspace/js/ai.js' %}?v=6"></script>

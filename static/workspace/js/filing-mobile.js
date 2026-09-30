@@ -154,10 +154,48 @@
         });
     }
 
+    function initDatasetCardMenus() {
+        document.querySelectorAll('.mk-ds-card-check').forEach(function (label) {
+            label.addEventListener('click', function (e) {
+                e.stopPropagation();
+            });
+            var input = label.querySelector('input[type="checkbox"]');
+            if (input) {
+                input.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                });
+            }
+        });
+
+        document.querySelectorAll('.mk-ds-card-menu').forEach(function (menu) {
+            var summary = menu.querySelector('summary');
+            if (summary) {
+                summary.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                });
+            }
+
+            menu.addEventListener('toggle', function () {
+                if (!menu.open) return;
+                document.querySelectorAll('.mk-ds-card-menu[open]').forEach(function (other) {
+                    if (other !== menu) other.removeAttribute('open');
+                });
+            });
+        });
+
+        document.addEventListener('click', function (e) {
+            if (e.target.closest('.mk-ds-card-menu')) return;
+            document.querySelectorAll('.mk-ds-card-menu[open]').forEach(function (menu) {
+                menu.removeAttribute('open');
+            });
+        });
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
         initFilingSearchClear();
         initFilingSortSheet();
         initFilterBackdropDismiss();
         initDatasetFilterSheet();
+        initDatasetCardMenus();
     });
 })();

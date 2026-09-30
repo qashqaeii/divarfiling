@@ -139,6 +139,18 @@
 
     initSpaceExpandFilters();
 
+    const listForm = document.getElementById('agency-space-list-form');
+    const orderingSelect = listForm?.querySelector('[name="ordering"]');
+    if (listForm && orderingSelect) {
+      orderingSelect.addEventListener('change', () => {
+        if (typeof listForm.requestSubmit === 'function') {
+          listForm.requestSubmit();
+        } else {
+          listForm.submit();
+        }
+      });
+    }
+
     document.querySelectorAll('[data-modal-close]').forEach((btn) => {
       btn.addEventListener('click', function () {
         const modal = btn.closest('.ws-modal');

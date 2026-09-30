@@ -1,5 +1,6 @@
 {% if space_filter_chips %}
 <div class="agency-space-chips" aria-label="فیلترهای فعال">
+    <span class="agency-space-chips__label">فیلترهای فعال:</span>
     {% for chip in space_filter_chips %}
     <a href="?{{ chip.clear_query }}" class="agency-space-chips__chip" title="حذف فیلتر">
         {{ chip.label }} <span aria-hidden="true">×</span>

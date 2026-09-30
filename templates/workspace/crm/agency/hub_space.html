@@ -4,7 +4,7 @@
 
 {% block crm_extra_css %}
 {{ block.super }}
-<link rel="stylesheet" href="{% static 'workspace/css/agency-space.css' %}?v=22">
+<link rel="stylesheet" href="{% static 'workspace/css/agency-space.css' %}?v=23">
 {% endblock %}
 
 {% block agency_hub_content %}
@@ -46,17 +46,18 @@
         {% else %}
 
         <div class="agency-space-discovery">
-            <form class="agency-space-discovery__form crm-page-filters" method="get" action="" id="agency-space-list-form">
+            <form class="agency-space-toolbar" method="get" action="" id="agency-space-list-form">
                 {% include "workspace/crm/agency/includes/space_query_hidden.html" %}
 
-                <div class="agency-space-discovery__primary">
-                    <div class="agency-space-search__field agency-space-discovery__search">
+                <div class="agency-space-toolbar__row">
+                    <div class="agency-space-toolbar__search agency-space-search__field">
                         <span class="agency-space-search__icon" aria-hidden="true">{% include 'includes/icon_slot.html' with fa='fa-search' size='inline' only %}</span>
-                        <input type="search" name="q" value="{{ space_filters.q }}" class="crm-input" aria-label="جستجو"
+                        <input type="search" name="q" value="{{ space_filters.q }}" class="crm-input agency-space-toolbar__search-input" aria-label="جستجو"
                             placeholder="{% if space_tab == 'properties' %}جستجو در عنوان، محله، منطقه، ناشر…{% elif space_tab == 'contacts' %}جستجو در نام، نیاز، محدوده، ناشر…{% else %}جستجو در فضای آژانس…{% endif %}">
                     </div>
-                    <label class="agency-space-discovery__sort">
-                        <select name="ordering" class="crm-input crm-input-sm" aria-label="مرتب‌سازی">
+
+                    <div class="agency-space-toolbar__sort">
+                        <select name="ordering" class="crm-input agency-space-toolbar__sort-select" aria-label="مرتب‌سازی">
                             <option value="newest"{% if space_filters.ordering == 'newest' %} selected{% endif %}>جدیدترین</option>
                             <option value="oldest"{% if space_filters.ordering == 'oldest' %} selected{% endif %}>قدیمی‌ترین</option>
                             {% if space_tab == 'properties' or space_tab == 'crm' %}
@@ -71,26 +72,24 @@
                             <option value="budget_desc"{% if space_filters.ordering == 'budget_desc' %} selected{% endif %}>بودجه بیشتر</option>
                             {% endif %}
                         </select>
-                    </label>
-                    <button type="submit" class="crm-btn crm-btn-primary crm-btn-sm agency-space-discovery__submit">اعمال</button>
-                </div>
+                    </div>
 
-                <div class="agency-space-discovery__secondary">
-                    <p class="agency-space-discovery__count">
-                        {% if space_tab == 'properties' %}<strong>{{ space_result_total|intcomma }}</strong> فایل{% elif space_tab == 'contacts' %}<strong>{{ space_result_total|intcomma }}</strong> مخاطب{% else %}<strong>{{ space_result_total|intcomma }}</strong> مورد{% endif %}
-                    </p>
-                    <div class="agency-space-discovery__tools">
-                        <button type="button"
-                                class="crm-files-adv-toggle agency-space-adv-toggle{% if space_filters_open %} is-open{% endif %}"
-                                id="agencySpaceAdvToggle"
-                                aria-expanded="{% if space_filters_open %}true{% else %}false{% endif %}"
-                                aria-controls="agency-space-filters-panel">
-                            <i class="fas fa-sliders" aria-hidden="true"></i>
-                            <span>فیلترها</span>
-                            {% if space_filter_chips %}<em class="crm-files-adv-badge">{{ space_filter_chips|length }}</em>{% endif %}
-                            <i class="fas fa-chevron-down crm-files-adv-chevron" aria-hidden="true"></i>
-                        </button>
-                        <div class="agency-space-view-toggle" role="group" aria-label="نمای نتایج">
+                    <button type="button"
+                            class="agency-space-toolbar__filters crm-files-adv-toggle agency-space-adv-toggle{% if space_filters_open %} is-open{% endif %}"
+                            id="agencySpaceAdvToggle"
+                            aria-expanded="{% if space_filters_open %}true{% else %}false{% endif %}"
+                            aria-controls="agency-space-filters-panel">
+                        <i class="fas fa-sliders" aria-hidden="true"></i>
+                        <span>فیلترها</span>
+                        {% if space_filter_chips %}<em class="crm-files-adv-badge">{{ space_filter_chips|length }}</em>{% endif %}
+                        <i class="fas fa-chevron-down crm-files-adv-chevron agency-space-toolbar__filters-chevron" aria-hidden="true"></i>
+                    </button>
+
+                    <div class="agency-space-toolbar__meta">
+                        <p class="agency-space-toolbar__count" aria-live="polite">
+                            {% if space_tab == 'properties' %}<strong>{{ space_result_total|intcomma }}</strong> فایل{% elif space_tab == 'contacts' %}<strong>{{ space_result_total|intcomma }}</strong> مخاطب{% else %}<strong>{{ space_result_total|intcomma }}</strong> مورد{% endif %}
+                        </p>
+                        <div class="agency-space-view-toggle agency-space-toolbar__view" role="group" aria-label="نمای نتایج">
                             <button type="button" class="agency-space-view-toggle__btn is-active" data-space-view="grid" title="شبکه" aria-label="نمای شبکه"><i class="fas fa-th-large" aria-hidden="true"></i></button>
                             <button type="button" class="agency-space-view-toggle__btn" data-space-view="list" title="لیست" aria-label="نمای لیست"><i class="fas fa-list" aria-hidden="true"></i></button>
                         </div>
@@ -145,5 +144,5 @@
 
 {% block crm_js %}
 {{ block.super }}
-<script src="{% static 'workspace/js/agency-space.js' %}?v=12" defer></script>
+<script src="{% static 'workspace/js/agency-space.js' %}?v=13" defer></script>
 {% endblock %}

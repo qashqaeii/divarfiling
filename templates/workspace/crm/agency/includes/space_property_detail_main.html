@@ -21,28 +21,72 @@
                 <span>{{ prop.region }}</span>
             </p>
             {% endif %}
-            {% if prop.price_label or prop.price_per_meter_label or prop.price_rows %}
-            <div class="agency-space-prop-detail__price-row">
+            {% if prop.price_label or prop.price_per_meter_label or prop.owner_name or prop.phone or prop.tenant_phone %}
+            <div class="agency-space-prop-hero__highlights">
                 {% if prop.price_label or prop.price_per_meter_label %}
-                <div class="agency-space-property-detail__price-block agency-space-pro-price">
-                    <span class="agency-space-pro-price__icon" aria-hidden="true"><i class="fas fa-tags"></i></span>
-                    <div>
-                        {% if prop.price_label %}
-                        <p class="agency-space-property-detail__price">{{ prop.price_label }}</p>
-                        <span class="agency-space-pro-price__label">قیمت</span>
-                        {% endif %}
-                        {% if prop.price_per_meter_label %}
-                        <p class="agency-space-property-detail__ppm">{{ prop.price_per_meter_label }} / متر</p>
-                        {% endif %}
+                <div class="agency-space-prop-detail__price-row agency-space-prop-hero__price">
+                    <div class="agency-space-property-detail__price-block agency-space-pro-price">
+                        <span class="agency-space-pro-price__icon" aria-hidden="true"><i class="fas fa-tags"></i></span>
+                        <div>
+                            {% if prop.price_label %}
+                            <p class="agency-space-property-detail__price">{{ prop.price_label }}</p>
+                            <span class="agency-space-pro-price__label">قیمت</span>
+                            {% endif %}
+                            {% if prop.price_per_meter_label %}
+                            <p class="agency-space-property-detail__ppm">{{ prop.price_per_meter_label }} / متر</p>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
                 {% endif %}
-                {% if prop.price_rows %}
-                <ul class="agency-space-prop-detail__price-mini" aria-label="جزئیات قیمت">
-                    {% for row in prop.price_rows %}
-                    <li><span>{{ row.label }}</span><strong>{{ row.value }}</strong></li>
-                    {% endfor %}
-                </ul>
+                {% if prop.owner_name or prop.phone or prop.tenant_phone %}
+                <div class="agency-space-prop-hero-contact" aria-label="مالک و تماس">
+                    <div class="agency-space-prop-hero-contact__card">
+                        <div class="agency-space-prop-hero-contact__identity">
+                            <span class="agency-space-prop-hero-contact__avatar" aria-hidden="true">
+                                {% if prop.owner_name %}{{ prop.owner_name|slice:":1" }}{% else %}<i class="fas fa-user"></i>{% endif %}
+                            </span>
+                            <div class="agency-space-prop-hero-contact__who">
+                                <span class="agency-space-prop-hero-contact__eyebrow">مالک و تماس</span>
+                                {% if prop.owner_name %}
+                                <p class="agency-space-prop-hero-contact__name">{{ prop.owner_name }}</p>
+                                {% else %}
+                                <p class="agency-space-prop-hero-contact__name agency-space-prop-hero-contact__name--muted">اطلاعات تماس</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="agency-space-prop-hero-contact__actions">
+                            {% if prop.phone %}
+                            <div class="agency-space-prop-hero-contact__phone-row">
+                                <a class="agency-space-prop-hero-contact__call" href="tel:{{ prop.phone }}" dir="ltr">
+                                    <span class="agency-space-prop-hero-contact__call-icon" aria-hidden="true"><i class="fas fa-phone"></i></span>
+                                    <span class="agency-space-prop-hero-contact__call-text">
+                                        <span class="agency-space-prop-hero-contact__call-label">تماس با مالک</span>
+                                        <span class="agency-space-prop-hero-contact__call-number">{{ prop.phone }}</span>
+                                    </span>
+                                </a>
+                                <button type="button" class="agency-space-prop-hero-contact__copy" data-space-copy-phone="{{ prop.phone }}" title="کپی شماره" aria-label="کپی شماره مالک">
+                                    <i class="fas fa-copy" aria-hidden="true"></i>
+                                </button>
+                            </div>
+                            {% endif %}
+                            {% if prop.tenant_phone %}
+                            <div class="agency-space-prop-hero-contact__phone-row">
+                                <a class="agency-space-prop-hero-contact__call agency-space-prop-hero-contact__call--secondary" href="tel:{{ prop.tenant_phone }}" dir="ltr">
+                                    <span class="agency-space-prop-hero-contact__call-icon" aria-hidden="true"><i class="fas fa-mobile-screen"></i></span>
+                                    <span class="agency-space-prop-hero-contact__call-text">
+                                        <span class="agency-space-prop-hero-contact__call-label">مستاجر</span>
+                                        <span class="agency-space-prop-hero-contact__call-number">{{ prop.tenant_phone }}</span>
+                                    </span>
+                                </a>
+                                <button type="button" class="agency-space-prop-hero-contact__copy" data-space-copy-phone="{{ prop.tenant_phone }}" title="کپی شماره" aria-label="کپی شماره مستاجر">
+                                    <i class="fas fa-copy" aria-hidden="true"></i>
+                                </button>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
                 {% endif %}
             </div>
             {% endif %}
@@ -91,17 +135,8 @@
         {% include "workspace/crm/agency/includes/space_property_detail_crm_panel.html" with crm_heading_id="space-prop-crm-heading-mobile" %}
     </div>
 
-    {% if prop.area_label or prop.area or prop.rooms or prop.build_year or prop.amenity_flags or prop.transaction_status %}
+    {% if prop.amenity_flags or prop.transaction_status %}
     <div class="agency-space-prop-detail__metrics" aria-label="خلاصه ملک">
-        {% if prop.area_label or prop.area %}
-        <span class="agency-space-prop-detail__metric"><i class="fas fa-up-right-and-down-left-from-center" aria-hidden="true"></i>{% if prop.area_label %}{{ prop.area_label }}{% else %}{{ prop.area }} متر{% endif %}</span>
-        {% endif %}
-        {% if prop.rooms %}
-        <span class="agency-space-prop-detail__metric"><i class="fas fa-bed" aria-hidden="true"></i>{{ prop.rooms }} خواب</span>
-        {% endif %}
-        {% if prop.build_year %}
-        <span class="agency-space-prop-detail__metric"><i class="fas fa-calendar" aria-hidden="true"></i>{{ prop.build_year }}</span>
-        {% endif %}
         {% if prop.transaction_status %}
         <span class="agency-space-prop-detail__metric"><i class="fas fa-circle-check" aria-hidden="true"></i>{{ prop.transaction_status }}</span>
         {% endif %}
@@ -173,7 +208,7 @@
         </section>
         {% endif %}
 
-        {% if prop.city or prop.district or prop.neighborhood or prop.address or prop.postal_code %}
+        {% if prop.city or prop.district or prop.neighborhood or prop.address or prop.postal_code or prop.has_map %}
         <section class="agency-space-pro-panel" aria-labelledby="space-prop-loc-heading">
             <header class="agency-space-pro-panel__head">
                 <span class="agency-space-pro-panel__icon" aria-hidden="true"><i class="fas fa-map-location-dot"></i></span>
@@ -202,31 +237,15 @@
             {% if prop.address %}
             <div class="agency-space-prop-detail__address">
                 <p class="agency-space-prop-detail__address-text">{{ prop.address }}</p>
-                {% if prop.has_map %}
-                <a class="agency-space-prop-detail__map-link" href="https://www.google.com/maps?q={{ prop.latitude }},{{ prop.longitude }}" target="_blank" rel="noopener noreferrer"><i class="fas fa-map" aria-hidden="true"></i> مشاهده روی نقشه</a>
-                {% endif %}
             </div>
             {% endif %}
-        </section>
-        {% endif %}
-
-        {% if prop.owner_name or prop.phone or prop.tenant_phone %}
-        <section class="agency-space-pro-panel agency-space-pro-panel--accent" aria-labelledby="space-prop-owner-heading">
-            <header class="agency-space-pro-panel__head">
-                <span class="agency-space-pro-panel__icon agency-space-pro-panel__icon--green" aria-hidden="true"><i class="fas fa-address-book"></i></span>
-                <h2 id="space-prop-owner-heading" class="agency-space-pro-panel__title">مالک و تماس</h2>
-            </header>
-            <ul class="agency-space-pro-contact">
-                {% if prop.owner_name %}
-                <li><span><i class="fas fa-user" aria-hidden="true"></i><span>{{ prop.owner_name }}</span></span></li>
-                {% endif %}
-                {% if prop.phone %}
-                <li><a href="tel:{{ prop.phone }}" dir="ltr"><i class="fas fa-mobile-screen" aria-hidden="true"></i><span>{{ prop.phone }}</span></a></li>
-                {% endif %}
-                {% if prop.tenant_phone %}
-                <li><a href="tel:{{ prop.tenant_phone }}" dir="ltr"><i class="fas fa-phone" aria-hidden="true"></i><span>{{ prop.tenant_phone }} <small>(مستاجر)</small></span></a></li>
-                {% endif %}
-            </ul>
+            {% if prop.has_map %}
+            <div class="agency-space-prop-detail__map-wrap" data-space-prop-map data-lat="{{ prop.latitude }}" data-lng="{{ prop.longitude }}" data-title="{{ prop.title|escape }}">
+                <div class="agency-space-prop-detail__map-stage" id="agencySpacePropMapStage">
+                    <div id="agencySpacePropLocationMap" class="agency-space-prop-detail__map ws-ld-location-map ws-map" role="application" aria-label="نقشه موقعیت ملک"></div>
+                </div>
+            </div>
+            {% endif %}
         </section>
         {% endif %}
 
@@ -249,9 +268,6 @@
                 {% include "workspace/crm/agency/includes/space_pro_spec_cell.html" with icon=row.icon|default:"fa-circle-dot" label=row.label value=row.value %}
                 {% endfor %}
             </ul>
-            {% endif %}
-            {% if prop.amenities %}
-            <div class="agency-space-pro-prose agency-space-prop-detail__amenity-prose">{{ prop.amenities|linebreaksbr }}</div>
             {% endif %}
         </section>
         {% elif prop.amenities %}

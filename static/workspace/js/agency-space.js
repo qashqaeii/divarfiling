@@ -498,6 +498,66 @@
       );
     }
 
+    function initAgencySpacePropertyMap() {
+      const wrap = document.querySelector('[data-space-prop-map]');
+      const mapEl = document.getElementById('agencySpacePropLocationMap');
+      if (!wrap || !mapEl || typeof window.initListingDetailMap !== 'function' || !window.L) return;
+      const lat = Number(wrap.dataset.lat);
+      const lng = Number(wrap.dataset.lng);
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+      const title = wrap.dataset.title || '';
+      const api = window.initListingDetailMap({
+        uiPrefix: 'agencySpaceProp',
+        mapId: 'agencySpacePropLocationMap',
+        stageId: 'agencySpacePropMapStage',
+        lat,
+        lng,
+        marker: { lat, lng, title },
+        zoom: 16,
+        editable: false,
+      });
+      if (api && typeof api.refresh === 'function') {
+        requestAnimationFrame(() => {
+          setTimeout(() => api.refresh(), 80);
+        });
+      }
+    }
+
+    initAgencySpacePropertyMap();
+
+    document.querySelectorAll('[data-space-copy-phone]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const phone = (btn.dataset.spaceCopyPhone || '').trim();
+        if (!phone) return;
+        try {
+          if (navigator.clipboard?.writeText) {
+            await navigator.clipboard.writeText(phone);
+          } else {
+            const ta = document.createElement('textarea');
+            ta.value = phone;
+            ta.setAttribute('readonly', '');
+            ta.style.position = 'fixed';
+            ta.style.left = '-9999px';
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+          }
+          btn.classList.add('is-copied');
+          const icon = btn.querySelector('i');
+          if (icon) {
+            icon.classList.replace('fa-copy', 'fa-check');
+            window.setTimeout(() => {
+              btn.classList.remove('is-copied');
+              icon.classList.replace('fa-check', 'fa-copy');
+            }, 1600);
+          }
+        } catch (e) {
+          /* ignore */
+        }
+      });
+    });
+
     if (detail) {
       const itemId = detail.dataset.itemId;
       const unpublish = detail.querySelector('[data-space-unpublish]');

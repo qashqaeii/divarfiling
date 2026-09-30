@@ -3,7 +3,11 @@
 
 {% block crm_extra_css %}
 {{ block.super }}
-<link rel="stylesheet" href="{% static 'workspace/css/agency-space.css' %}?v=38">
+<link rel="stylesheet" href="{% static 'workspace/css/agency-space.css' %}?v=40">
+{% if space_payload.source_kind == 'property' and space_payload.property and space_payload.property.has_map %}
+<link rel="stylesheet" href="{% static 'workspace/css/listing-map.css' %}?v=6">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+{% endif %}
 {% endblock %}
 
 {% block agency_hub_content %}
@@ -293,5 +297,10 @@ window.AGENCY_SPACE_API = {
   publishContact: "{% url 'workspace:api_agency_space_publish_contact' %}"
 };
 </script>
-<script src="{% static 'workspace/js/agency-space.js' %}?v=20" defer></script>
+{% if space_payload.source_kind == 'property' and space_payload.property and space_payload.property.has_map %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="{% static 'workspace/js/carto-basemap.js' %}?v=2"></script>
+<script src="{% static 'workspace/js/listing-map.js' %}?v=9"></script>
+{% endif %}
+<script src="{% static 'workspace/js/agency-space.js' %}?v=22" defer></script>
 {% endblock %}

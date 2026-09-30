@@ -5237,7 +5237,7 @@
 .agency-space-detail__aside--contact {
   display: flex;
   flex-direction: column;
-  gap: 0.65rem;
+  gap: 0.85rem;
 }
 
 .agency-space-contact-detail__hero {
@@ -5669,7 +5669,7 @@
 
   .agency-space-detail__layout--contact .agency-space-detail__aside--contact {
     flex: 0 0 30%;
-    max-width: 20rem;
+    max-width: 22rem;
     position: sticky;
     top: 0.75rem;
   }
@@ -7845,6 +7845,12 @@
   color: #047857;
 }
 
+.agency-space-prop-aside__badge--share {
+  border-color: #bfdbfe;
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
 .agency-space-prop-aside__publisher {
   padding: 0.65rem 0.7rem;
   border-radius: 14px;
@@ -7958,6 +7964,48 @@
   box-shadow:
     0 14px 40px rgba(124, 58, 237, 0.14),
     0 0 0 1px color-mix(in srgb, #7c3aed 18%, transparent) !important;
+}
+
+/* Contact detail — aside column (shared prop-aside polish) */
+.agency-space-contact-aside {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  width: 100%;
+}
+
+.agency-space-detail__aside--contact .agency-space-contact-detail__aside-h {
+  margin: 0;
+  font-size: 0.92rem;
+  letter-spacing: -0.02em;
+}
+
+.agency-space-detail__aside--contact .agency-space-contact-detail__aside-lead {
+  margin: 0 0 0.5rem;
+  font-size: 0.72rem;
+  line-height: 1.55;
+}
+
+.agency-space-detail__aside--contact .agency-space-contact-detail__aside-publisher.agency-space-prop-aside__publisher {
+  margin-bottom: 0.65rem;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.agency-space-detail__aside--contact .agency-space-contact-detail__publisher-avatar {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+  border: 2px solid #fff;
+}
+
+.agency-space-detail__aside--contact .agency-space-prop-aside__card.agency-space-contact-detail__aside-card {
+  border-radius: 18px !important;
+  padding: 1.05rem 1.1rem 1.1rem !important;
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 8px 28px rgba(15, 23, 42, 0.06) !important;
 }
 
 @media (prefers-reduced-motion: reduce) {

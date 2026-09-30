@@ -1,19 +1,19 @@
-<article class="agency-space-contact-detail__aside-card agency-space-contact-detail__aside-card--crm agency-space-pro-aside-card" aria-labelledby="space-contact-crm-heading">
+<div class="agency-space-contact-aside agency-space-prop-aside">
+<article class="agency-space-contact-detail__aside-card agency-space-contact-detail__aside-card--crm agency-space-pro-aside-card agency-space-prop-aside__card agency-space-prop-aside__card--crm" aria-labelledby="space-contact-crm-heading">
     <header class="agency-space-pro-aside-card__head">
         <span class="agency-space-pro-aside-card__icon" aria-hidden="true"><i class="fas fa-user-plus"></i></span>
-        <div>
+        <div class="agency-space-prop-aside__head-text">
             <h2 id="space-contact-crm-heading" class="agency-space-contact-detail__aside-h">افزودن به CRM من</h2>
             <p class="agency-space-pro-aside-card__sub">نسخه مستقل در فایل‌های شخصی</p>
         </div>
     </header>
-    <p class="agency-space-contact-detail__aside-lead">یک نسخه مستقل از این مخاطب در CRM شخصی شما ایجاد می‌شود؛ منبع اصلی در فضای آژانس تغییر نمی‌کند.</p>
-    <p class="agency-space-contact-detail__provenance">نسخه CRM شما مستقل از نسخه منتشرشده در فضای آژانس است.</p>
-    <div class="agency-space-contact-detail__aside-body">
+    <p class="agency-space-contact-detail__aside-lead">نسخه CRM شما مستقل است؛ بدون تغییر در مخاطب منتشرشدهٔ تیم.</p>
+    <div class="agency-space-contact-detail__aside-body agency-space-prop-aside__body">
         {% if space_payload.owns_source_in_crm and space_payload.source_crm_url %}
         <p class="agency-space-pro-status agency-space-pro-status--ok"><i class="fas fa-circle-check" aria-hidden="true"></i> این مخاطب از CRM شما منتشر شده</p>
         <a href="{{ space_payload.source_crm_url }}" class="agency-space-pro-btn agency-space-pro-btn--primary crm-btn-block">باز کردن در CRM</a>
         {% elif space_payload.already_copied and space_payload.copy_target_url %}
-        <p class="agency-space-pro-status agency-space-pro-status--ok"><i class="fas fa-circle-check" aria-hidden="true"></i> این مخاطب در CRM شماست{% if space_payload.copy_created_at_display %} · {{ space_payload.copy_created_at_display }}{% endif %}</p>
+        <p class="agency-space-pro-status agency-space-pro-status--ok"><i class="fas fa-circle-check" aria-hidden="true"></i> این مخاطب در CRM شماست{% if space_payload.copy_created_at_display %}<br><span class="agency-space-property-detail__crm-time">ذخیره: {{ space_payload.copy_created_at_display }}</span>{% endif %}</p>
         <a href="{{ space_payload.copy_target_url }}" class="agency-space-pro-btn agency-space-pro-btn--primary crm-btn-block" data-space-crm-link>باز کردن مخاطب در CRM</a>
         {% elif space_payload.can_copy %}
         <button type="button" class="agency-space-pro-btn agency-space-pro-btn--primary crm-btn-block" data-space-copy data-item-id="{{ space_item.pk }}">
@@ -25,53 +25,59 @@
     </div>
 </article>
 
-<article class="agency-space-contact-detail__aside-card agency-space-pro-aside-card" aria-labelledby="space-contact-pub-heading">
+<article class="agency-space-contact-detail__aside-card agency-space-pro-aside-card agency-space-prop-aside__card agency-space-prop-aside__card--pub" aria-labelledby="space-contact-pub-heading">
     <header class="agency-space-pro-aside-card__head">
         <span class="agency-space-pro-aside-card__icon agency-space-pro-aside-card__icon--soft" aria-hidden="true"><i class="fas fa-share-nodes"></i></span>
-        <div>
+        <div class="agency-space-prop-aside__head-text">
             <h2 id="space-contact-pub-heading" class="agency-space-contact-detail__aside-h">انتشار و دسترسی</h2>
             <p class="agency-space-pro-aside-card__sub">شفافیت برای تیم آژانس</p>
         </div>
     </header>
-    <div class="agency-space-contact-detail__aside-publisher agency-space-pro-publisher">
+
+    <div class="agency-space-prop-aside__badges" aria-label="خلاصه وضعیت">
+        <span class="agency-space-prop-aside__badge agency-space-prop-aside__badge--status">{{ space_payload.status_label }}</span>
+        <span class="agency-space-badge agency-space-badge--{{ space_payload.visibility }}">{{ space_payload.visibility_label }}</span>
+        {% if space_payload.customer.contact_share_level_label %}
+        <span class="agency-space-prop-aside__badge agency-space-prop-aside__badge--share">{{ space_payload.customer.contact_share_level_label }}</span>
+        {% endif %}
+    </div>
+
+    <div class="agency-space-contact-detail__aside-publisher agency-space-pro-publisher agency-space-prop-aside__publisher">
         <span class="agency-space-contact-detail__aside-label">منتشرکننده</span>
         <div class="agency-space-contact-detail__publisher-row">
             {% if space_payload.publisher.avatar_url %}
-            <img class="agency-space-contact-detail__publisher-avatar" src="{{ space_payload.publisher.avatar_url }}" alt="" width="32" height="32" loading="lazy" decoding="async">
+            <img class="agency-space-contact-detail__publisher-avatar" src="{{ space_payload.publisher.avatar_url }}" alt="" width="36" height="36" loading="lazy" decoding="async">
             {% else %}
             <span class="agency-space-contact-detail__publisher-avatar agency-space-contact-detail__publisher-avatar--initial" aria-hidden="true" style="background: {{ space_payload.publisher.role_bg }}; color: {{ space_payload.publisher.role_fg }}">{{ space_payload.publisher.name|slice:":1"|upper }}</span>
             {% endif %}
-            <div>
+            <div class="agency-space-prop-aside__publisher-meta">
                 <p class="agency-space-contact-detail__publisher-name">{% if space_payload.is_publisher %}شما{% else %}{{ space_payload.publisher.name }}{% endif %}</p>
                 {% if space_payload.publisher.role_label %}<p class="agency-space-contact-detail__publisher-role">{{ space_payload.publisher.role_label }}</p>{% endif %}
             </div>
         </div>
-        {% if space_payload.is_publisher %}<p class="agency-space-contact-detail__mine"><i class="fas fa-star" aria-hidden="true"></i> منتشرشده توسط من</p>{% endif %}
+        {% if space_payload.is_publisher %}
+        <p class="agency-space-contact-detail__mine agency-space-prop-aside__mine"><i class="fas fa-star" aria-hidden="true"></i> منتشرشده توسط من</p>
+        {% endif %}
     </div>
-    <ul class="agency-space-pro-timeline">
+
+    <ul class="agency-space-pro-timeline agency-space-prop-aside__timeline">
         {% if space_payload.published_at_display %}
         <li><span class="agency-space-pro-timeline__icon" aria-hidden="true"><i class="fas fa-calendar-day"></i></span><span class="agency-space-pro-timeline__label">تاریخ انتشار</span><strong>{{ space_payload.published_at_display }}</strong></li>
         {% endif %}
         {% if space_payload.updated_at_display %}
         <li><span class="agency-space-pro-timeline__icon" aria-hidden="true"><i class="fas fa-clock-rotate-left"></i></span><span class="agency-space-pro-timeline__label">به‌روزرسانی</span><strong>{{ space_payload.updated_at_display }}</strong></li>
         {% endif %}
-        <li><span class="agency-space-pro-timeline__icon" aria-hidden="true"><i class="fas fa-eye"></i></span><span class="agency-space-pro-timeline__label">دسترسی</span><strong>{{ space_payload.visibility_label }}{% if space_payload.audience_count %} ({{ space_payload.audience_count }} عضو){% endif %}</strong></li>
-        <li><span class="agency-space-pro-timeline__icon" aria-hidden="true"><i class="fas fa-user-shield"></i></span><span class="agency-space-pro-timeline__label">اشتراک مخاطب</span><strong>{{ space_payload.customer.contact_share_level_label|default:"خلاصه" }}</strong></li>
-        <li><span class="agency-space-pro-timeline__icon" aria-hidden="true"><i class="fas fa-signal"></i></span><span class="agency-space-pro-timeline__label">وضعیت انتشار</span><strong>{{ space_payload.status_label }}</strong></li>
+        <li><span class="agency-space-pro-timeline__icon" aria-hidden="true"><i class="fas fa-users"></i></span><span class="agency-space-pro-timeline__label">مخاطبان</span><strong>{% if space_payload.audience_count %}{{ space_payload.audience_count }} عضو{% else %}—{% endif %}</strong></li>
+        <li><span class="agency-space-pro-timeline__icon" aria-hidden="true"><i class="fas fa-user-shield"></i></span><span class="agency-space-pro-timeline__label">اشتراک تماس</span><strong>{{ space_payload.customer.contact_share_level_label|default:"خلاصه" }}</strong></li>
     </ul>
-</article>
 
-{% if space_payload.can_edit %}
-<article class="agency-space-contact-detail__aside-card agency-space-pro-aside-card">
-    <header class="agency-space-pro-aside-card__head">
-        <span class="agency-space-pro-aside-card__icon" aria-hidden="true"><i class="fas fa-pen-to-square"></i></span>
-        <h2 class="agency-space-contact-detail__aside-h">مدیریت انتشار</h2>
-    </header>
-    <div class="agency-space-contact-detail__aside-body agency-space-detail__actions agency-space-detail__actions--stack">
-        <button type="button" class="agency-space-pro-btn agency-space-pro-btn--primary crm-btn-block" data-modal-open="modal-agency-space-publish" data-space-edit-publication>
+    {% if space_payload.can_edit %}
+    <div class="agency-space-contact-detail__aside-body agency-space-prop-aside__actions">
+        <button type="button" class="agency-space-pro-btn agency-space-pro-btn--primary" data-modal-open="modal-agency-space-publish" data-space-edit-publication>
             <i class="fas fa-pen" aria-hidden="true"></i> ویرایش انتشار
         </button>
-        <button type="button" class="agency-space-pro-btn agency-space-pro-btn--ghost crm-btn-block" data-space-unpublish>لغو انتشار</button>
+        <button type="button" class="agency-space-pro-btn agency-space-pro-btn--ghost" data-space-unpublish>لغو انتشار</button>
     </div>
+    {% endif %}
 </article>
-{% endif %}
+</div>

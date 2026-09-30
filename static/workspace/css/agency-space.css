@@ -517,6 +517,15 @@
   min-height: 2.15rem;
 }
 
+.agency-space-filters__money.crm-input-sm,
+.agency-space-filters input[data-money="1"].crm-input-sm {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+  text-align: end;
+  color: #0f172a;
+}
+
 .agency-space-filters--expand .agency-space-filters__actions {
   margin-top: 0;
   padding: 0.65rem 1rem 0.85rem;
@@ -738,8 +747,465 @@
 }
 
 @media (min-width: 1280px) {
-  .agency-space-grid {
+  .agency-space-grid:not(.is-list-view) {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* —— Property cards (grid browse + list compare) —— */
+.agency-space-property-card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border-radius: 12px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+}
+
+.agency-space-property-card:hover {
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.08);
+}
+
+.agency-space-property-card__media-hit {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  flex-shrink: 0;
+}
+
+.agency-space-property-card__media {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  max-height: 10.5rem;
+  overflow: hidden;
+  background: linear-gradient(145deg, #e8edf2 0%, #d1dae4 100%);
+}
+
+.agency-space-property-card__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.agency-space-property-card__media-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  font-size: 1.75rem;
+  color: #94a3b8;
+}
+
+.agency-space-property-card__media-badges {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.35rem;
+  padding: 0.45rem 0.5rem;
+  pointer-events: none;
+}
+
+.agency-space-property-card__badge {
+  font-size: 0.625rem;
+  font-weight: 700;
+  line-height: 1.2;
+  padding: 0.18rem 0.45rem;
+  border-radius: 6px;
+  max-width: 48%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.agency-space-property-card__badge--deal {
+  background: rgba(15, 23, 42, 0.82);
+  color: #fff;
+}
+
+.agency-space-property-card__badge--vis {
+  font-size: 0.58rem;
+  padding: 0.15rem 0.4rem;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12);
+}
+
+.agency-space-property-card__mine {
+  position: absolute;
+  bottom: 0.4rem;
+  inset-inline: 0.5rem;
+  text-align: center;
+  font-size: 0.58rem;
+  font-weight: 600;
+  color: #475569;
+  background: rgba(255, 255, 255, 0.88);
+  padding: 0.12rem 0.35rem;
+  border-radius: 5px;
+  pointer-events: none;
+}
+
+.agency-space-property-card__info {
+  display: contents;
+}
+
+.agency-space-property-card__head {
+  padding: 0.55rem 0.7rem 0.15rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.28rem;
+  order: 2;
+  min-width: 0;
+}
+
+.agency-space-property-card__trail {
+  padding: 0 0.7rem 0.35rem;
+  order: 4;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.agency-space-property-card__title {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 800;
+  line-height: 1.4;
+  letter-spacing: -0.02em;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.agency-space-property-card__title a {
+  color: var(--ws-text, #0f172a);
+  text-decoration: none;
+}
+
+.agency-space-property-card__title a:hover {
+  color: var(--as-purple);
+}
+
+.agency-space-property-card__location {
+  margin: 0;
+  font-size: 0.7rem;
+  color: var(--as-muted);
+  line-height: 1.35;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.28rem;
+  min-width: 0;
+}
+
+.agency-space-property-card__location i {
+  margin-top: 0.1rem;
+  font-size: 0.62rem;
+  opacity: 0.75;
+}
+
+.agency-space-property-card__location span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.agency-space-property-card__specs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.65rem;
+  margin-top: 0.1rem;
+}
+
+.agency-space-property-card__spec {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.agency-space-property-card__spec:not(:first-child)::before {
+  content: "·";
+  margin-inline-end: 0.45rem;
+  color: #cbd5e1;
+  font-weight: 400;
+}
+
+.agency-space-property-card__publisher {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.35rem;
+  padding-top: 0.45rem;
+  border-top: 1px solid color-mix(in srgb, var(--as-border) 85%, transparent);
+  min-width: 0;
+}
+
+.agency-space-property-card__publisher-avatar {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 7px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.agency-space-property-card__publisher-avatar--initial {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.62rem;
+  font-weight: 800;
+}
+
+.agency-space-property-card__publisher-line {
+  display: flex;
+  flex-direction: column;
+  gap: 0.05rem;
+  min-width: 0;
+}
+
+.agency-space-property-card__publisher-name {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #334155;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.agency-space-property-card__publisher-meta {
+  font-size: 0.62rem;
+  font-weight: 500;
+  color: var(--as-muted);
+}
+
+.agency-space-property-card__crm-state {
+  margin: 0.15rem 0 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  align-self: flex-start;
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: color-mix(in srgb, var(--as-purple) 75%, #5b21b6);
+  background: color-mix(in srgb, var(--as-purple) 8%, #f8fafc);
+  padding: 0.12rem 0.4rem;
+  border-radius: 999px;
+}
+
+.agency-space-property-card__crm-state i {
+  font-size: 0.55rem;
+}
+
+.agency-space-property-card__media-hit {
+  order: 1;
+}
+
+.agency-space-property-card__commerce {
+  display: contents;
+}
+
+.agency-space-property-card__pricing {
+  padding: 0 0.7rem 0.15rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  order: 3;
+}
+
+.agency-space-property-card__price {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #1e293b;
+  line-height: 1.3;
+}
+
+.agency-space-property-card__ppm {
+  margin: 0;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--as-muted);
+}
+
+.agency-space-property-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  padding: 0.45rem 0.7rem 0.65rem;
+  margin-top: 0.05rem;
+  order: 5;
+}
+
+.agency-space-property-card__btn {
+  flex: 1 1 auto;
+  min-height: 2rem;
+  padding: 0.35rem 0.55rem;
+  border-radius: 8px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-family: inherit;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+
+.agency-space-property-card__btn--ghost {
+  background: var(--ws-surface-2, #f8fafc);
+  border-color: var(--as-border);
+  color: #475569;
+}
+
+.agency-space-property-card__btn--ghost:hover {
+  border-color: #cbd5e1;
+  color: #334155;
+}
+
+.agency-space-property-card__btn--primary {
+  background: var(--as-purple);
+  color: #fff;
+  border-color: var(--as-purple);
+}
+
+.agency-space-property-card__btn--primary:hover {
+  filter: brightness(1.05);
+}
+
+.agency-space-grid.is-list-view .agency-space-property-card {
+  display: grid;
+  grid-template-columns: 11.25rem minmax(0, 1fr) minmax(8.5rem, 10.75rem);
+  grid-template-areas: "media info commerce";
+  align-items: center;
+  column-gap: 0.85rem;
+  row-gap: 0.2rem;
+  padding: 0.55rem 0.75rem;
+  min-height: 7.5rem;
+}
+
+.agency-space-grid.is-list-view .agency-space-property-card__media-hit,
+.agency-space-grid.is-list-view .agency-space-property-card__head,
+.agency-space-grid.is-list-view .agency-space-property-card__trail,
+.agency-space-grid.is-list-view .agency-space-property-card__pricing,
+.agency-space-grid.is-list-view .agency-space-property-card__actions {
+  order: unset;
+}
+
+.agency-space-grid.is-list-view .agency-space-property-card__media-hit {
+  grid-area: media;
+  height: 100%;
+  align-self: stretch;
+}
+
+.agency-space-grid.is-list-view .agency-space-property-card__media {
+  height: 100%;
+  min-height: 7rem;
+  max-height: 8.125rem;
+  aspect-ratio: auto;
+  border-radius: 10px;
+}
+
+.agency-space-grid.is-list-view .agency-space-property-card__info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.22rem;
+  grid-area: info;
+  min-width: 0;
+}
+
+.agency-space-grid.is-list-view .agency-space-property-card__head {
+  padding: 0;
+  order: unset;
+}
+
+.agency-space-grid.is-list-view .agency-space-property-card__trail {
+  padding: 0;
+  order: unset;
+}
+
+.agency-space-grid.is-list-view .agency-space-property-card__publisher {
+  margin-top: 0.35rem;
+  padding-top: 0;
+  border-top: none;
+}
+
+.agency-space-grid.is-list-view .agency-space-property-card__commerce {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 0.45rem;
+  grid-area: commerce;
+  text-align: end;
+  min-width: 0;
+}
+
+.agency-space-grid.is-list-view .agency-space-property-card__pricing {
+  padding: 0;
+  align-items: flex-end;
+}
+
+.agency-space-grid.is-list-view .agency-space-property-card__price {
+  font-size: 0.9rem;
+}
+
+.agency-space-grid.is-list-view .agency-space-property-card__actions {
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+  padding: 0;
+  margin: 0;
+  gap: 0.3rem;
+}
+
+.agency-space-grid.is-list-view .agency-space-property-card__btn {
+  flex: none;
+  width: 100%;
+  min-height: 1.85rem;
+  padding: 0.3rem 0.45rem;
+  font-size: 0.68rem;
+}
+
+.agency-space-grid.is-list-view .agency-space-property-card__crm-state {
+  margin-top: 0.2rem;
+}
+
+@media (max-width: 640px) {
+  .agency-space-grid.is-list-view .agency-space-property-card {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "media"
+      "info"
+      "commerce";
+    padding: 0.55rem;
+    min-height: 0;
+  }
+
+  .agency-space-grid.is-list-view .agency-space-property-card__media {
+    max-height: 11rem;
+    min-height: 0;
+    aspect-ratio: 16 / 10;
+  }
+
+  .agency-space-grid.is-list-view .agency-space-property-card__commerce {
+    align-items: stretch;
+    text-align: start;
+  }
+
+  .agency-space-grid.is-list-view .agency-space-property-card__pricing {
+    align-items: flex-start;
+  }
+
+  .agency-space-grid.is-list-view .agency-space-property-card__actions {
+    flex-direction: row;
+  }
+
+  .agency-space-grid.is-list-view .agency-space-property-card__btn {
+    flex: 1;
   }
 }
 
@@ -3063,56 +3529,6 @@
   box-shadow: 0 2px 12px rgba(15, 23, 42, 0.06);
 }
 
-.agency-space-grid.is-list-view .agency-space-card--property {
-  display: grid;
-  grid-template-columns: 7.5rem minmax(0, 1fr) auto;
-  grid-template-rows: auto auto;
-  grid-template-areas:
-    "thumb body actions"
-    "thumb foot actions";
-  column-gap: 0.85rem;
-  row-gap: 0.25rem;
-  align-items: center;
-  padding: 0.55rem 0.65rem;
-}
-
-.agency-space-grid.is-list-view .agency-space-card--property .agency-space-card__media-link {
-  grid-area: thumb;
-  width: 7.5rem;
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.agency-space-grid.is-list-view .agency-space-card--property .agency-space-card__media {
-  aspect-ratio: 4 / 3;
-  height: auto;
-  min-height: 4.5rem;
-}
-
-.agency-space-grid.is-list-view .agency-space-card--property .agency-space-card__body {
-  grid-area: body;
-  padding: 0;
-}
-
-.agency-space-grid.is-list-view .agency-space-card--property .agency-space-card__foot {
-  grid-area: foot;
-  margin: 0;
-  padding: 0;
-  border: none;
-}
-
-.agency-space-grid.is-list-view .agency-space-card--property .agency-space-card__actions {
-  grid-area: actions;
-  flex-direction: column;
-  padding: 0;
-  align-self: center;
-  min-width: 6.5rem;
-}
-
-.agency-space-grid.is-list-view .agency-space-card--property .agency-space-card__mine {
-  font-size: 0.58rem;
-}
-
 .agency-space-grid.is-list-view .agency-space-card--contact-pro {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -3186,24 +3602,6 @@
 }
 
 @media (max-width: 640px) {
-  .agency-space-grid.is-list-view .agency-space-card--property {
-    grid-template-columns: 5.5rem 1fr;
-    grid-template-areas:
-      "thumb body"
-      "thumb foot"
-      "actions actions";
-  }
-
-  .agency-space-grid.is-list-view .agency-space-card--property .agency-space-card__media-link {
-    width: 5.5rem;
-  }
-
-  .agency-space-grid.is-list-view .agency-space-card--property .agency-space-card__actions {
-    flex-direction: row;
-    width: 100%;
-    min-width: 0;
-  }
-
   .agency-space-grid.is-list-view .agency-space-card--contact-pro {
     grid-template-columns: 1fr;
     grid-template-areas: "main" "foot" "actions";

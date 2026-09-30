@@ -1,3 +1,4 @@
+{% load humanize %}
 <div class="agency-space-filters agency-space-filters--expand crm-files-adv{% if space_filters_open %} is-open{% endif %}"
      id="agency-space-filters-panel"
      aria-labelledby="agency-space-filters-title"
@@ -250,7 +251,7 @@
 
                     <span class="agency-space-filters__label">حداقل قیمت</span>
 
-                    <input type="number" name="min_price" value="{{ space_filters.min_price|default:'' }}" class="crm-input crm-input-sm" min="0">
+                    <input type="text" name="min_price" value="{% if space_filters.min_price %}{{ space_filters.min_price|intcomma }}{% endif %}" class="crm-input crm-input-sm agency-space-filters__money" data-money="1" inputmode="numeric" autocomplete="off" placeholder="مثلاً 1,400,000,000" dir="ltr">
 
                 </label>
 
@@ -258,7 +259,7 @@
 
                     <span class="agency-space-filters__label">حداکثر قیمت</span>
 
-                    <input type="number" name="max_price" value="{{ space_filters.max_price|default:'' }}" class="crm-input crm-input-sm" min="0">
+                    <input type="text" name="max_price" value="{% if space_filters.max_price %}{{ space_filters.max_price|intcomma }}{% endif %}" class="crm-input crm-input-sm agency-space-filters__money" data-money="1" inputmode="numeric" autocomplete="off" placeholder="مثلاً 2,500,000,000" dir="ltr">
 
                 </label>
 

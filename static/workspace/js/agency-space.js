@@ -110,6 +110,9 @@
         if (typeof initCRMJalaliPickers === 'function') {
           initCRMJalaliPickers(filterPanel);
         }
+        if (typeof initCRMMoneyInputs === 'function') {
+          initCRMMoneyInputs(document.getElementById('agency-space-list-form') || filterPanel);
+        }
       } else {
         filterPanel.setAttribute('hidden', '');
       }
@@ -119,8 +122,13 @@
       setOpen(!filterPanel.classList.contains('is-open'));
     });
 
-    if (filterPanel.classList.contains('is-open') && typeof initCRMJalaliPickers === 'function') {
-      initCRMJalaliPickers(filterPanel);
+    if (filterPanel.classList.contains('is-open')) {
+      if (typeof initCRMJalaliPickers === 'function') {
+        initCRMJalaliPickers(filterPanel);
+      }
+      if (typeof initCRMMoneyInputs === 'function') {
+        initCRMMoneyInputs(document.getElementById('agency-space-list-form') || filterPanel);
+      }
     }
 
     filterPanel.addEventListener('change', (e) => {
@@ -140,6 +148,9 @@
     initSpaceExpandFilters();
 
     const listForm = document.getElementById('agency-space-list-form');
+    if (listForm && typeof initCRMMoneyInputs === 'function') {
+      initCRMMoneyInputs(listForm);
+    }
     const orderingSelect = listForm?.querySelector('[name="ordering"]');
     if (listForm && orderingSelect) {
       orderingSelect.addEventListener('change', () => {
@@ -220,17 +231,25 @@
       if (card) {
         const link = document.createElement('a');
         link.href = targetUrl;
-        link.className = 'agency-space-card__btn agency-space-card__btn--primary';
+        link.className = 'agency-space-property-card__btn agency-space-property-card__btn--primary agency-space-card__btn agency-space-card__btn--primary';
         link.setAttribute('data-space-crm-link', '');
-        link.textContent = 'در CRM من';
-        const actions = card.querySelector('.agency-space-card__actions');
+        link.textContent = 'باز کردن CRM';
+        const actions = card.querySelector('.agency-space-property-card__actions, .agency-space-card__actions');
         if (actions) actions.appendChild(link);
-        const row = card.querySelector('.agency-space-card__meta-row');
-        if (row && !card.querySelector('.agency-space-card__crm-flag')) {
-          const span = document.createElement('span');
-          span.className = 'agency-space-card__crm-flag';
-          span.innerHTML = '<i class="fas fa-circle-check" aria-hidden="true"></i>در CRM من';
-          row.appendChild(span);
+        const trail = card.querySelector('.agency-space-property-card__trail');
+        if (trail && !card.querySelector('.agency-space-property-card__crm-state')) {
+          const p = document.createElement('p');
+          p.className = 'agency-space-property-card__crm-state';
+          p.innerHTML = '<i class="fas fa-circle-check" aria-hidden="true"></i>در CRM من';
+          trail.appendChild(p);
+        } else {
+          const row = card.querySelector('.agency-space-card__meta-row');
+          if (row && !card.querySelector('.agency-space-card__crm-flag')) {
+            const span = document.createElement('span');
+            span.className = 'agency-space-card__crm-flag';
+            span.innerHTML = '<i class="fas fa-circle-check" aria-hidden="true"></i>در CRM من';
+            row.appendChild(span);
+          }
         }
       }
       const detail = document.querySelector('.agency-space-detail');

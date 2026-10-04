@@ -31,18 +31,16 @@
     }
 
     function resolveBasemapId(preferredId) {
-        if (isCartoBasemapId(preferredId) && !hasCartoBasemapKey()) {
-            return 'standard';
-        }
-        return preferredId;
+        return preferredId || 'voyager';
     }
 
     function cartoRasterTileUrl(stylePath, options) {
-        if (!hasCartoBasemapKey()) return null;
-        var retina = options && options.retina;
-        var r = retina ? '{r}' : '';
-        return 'https://{s}.basemaps.cartocdn.com/' + stylePath + '/{z}/{x}/{y}' + r + '.png?key='
-            + encodeURIComponent(cartoBasemapKey);
+        var retinaSuffix = (options && options.retina) ? '@2x' : '';
+        var base = 'https://{s}.basemaps.cartocdn.com/' + stylePath + '/{z}/{x}/{y}' + retinaSuffix + '.png';
+        if (hasCartoBasemapKey()) {
+            return base + '?key=' + encodeURIComponent(cartoBasemapKey);
+        }
+        return base;
     }
 
     // Wikimedia and tile.openstreetmap.org return 403 for third-party sites.
@@ -71,6 +69,11 @@
         return L.tileLayer(url, options || {});
     }
 
+    function createPreferredVoyagerLayer(L, options, layerOptions) {
+        return createCartoLayer(L, 'voyager', options, layerOptions)
+            || createOsmStandardLayer(L, options);
+    }
+
     global.CartoBasemap = {
         setKey: setCartoBasemapKey,
         getKey: getCartoBasemapKey,
@@ -79,5 +82,6 @@
         resolveBasemapId: resolveBasemapId,
         createCartoLayer: createCartoLayer,
         createOsmStandardLayer: createOsmStandardLayer,
+        createPreferredVoyagerLayer: createPreferredVoyagerLayer,
     };
 }(typeof window !== 'undefined' ? window : this));

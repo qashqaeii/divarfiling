@@ -5,19 +5,16 @@
     const MAP_BASEMAP_STORAGE_KEY = 'ws-map-basemap';
 
     function createCartoBasemapLayer(styleId, options, layerOpts) {
-        if (global.CartoBasemap?.hasKey()) {
-            return global.CartoBasemap.createCartoLayer(L, styleId, options, layerOpts);
-        }
         if (global.CartoBasemap) {
-            return global.CartoBasemap.createOsmStandardLayer(L, options);
+            const layer = global.CartoBasemap.createCartoLayer(L, styleId, options, layerOpts);
+            if (layer) return layer;
         }
-        return global.CartoBasemap?.createOsmStandardLayer(L, options)
-            || L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {
-                attribution: options?.attribution || '&copy; OpenStreetMap &copy; OSM France',
-                maxZoom: options?.maxZoom || 19,
-                subdomains: 'abc',
-                crossOrigin: true,
-            });
+        return L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {
+            attribution: options?.attribution || '&copy; OpenStreetMap &copy; OSM France',
+            maxZoom: options?.maxZoom || 19,
+            subdomains: 'abc',
+            crossOrigin: true,
+        });
     }
 
     const MAP_BASEMAPS = {
@@ -36,13 +33,15 @@
         },
         standard: {
             label: 'استاندارد',
-            hint: 'OpenStreetMap کلاسیک',
+            hint: 'خیابان‌ها با برچسب خوانا',
             preview: 'standard',
             create() {
-                return global.CartoBasemap.createOsmStandardLayer(L, {
-                    maxZoom: 19,
+                return createCartoBasemapLayer('voyager', {
+                    attribution: '&copy; OSM &copy; CARTO',
+                    maxZoom: 20,
+                    subdomains: 'abcd',
                     crossOrigin: true,
-                });
+                }, { retina: true });
             },
         },
         light: {
@@ -134,7 +133,7 @@
             if (stored && MAP_BASEMAPS[stored]) preferred = stored;
         } catch (e) { /* ignore */ }
         if (!preferred) {
-            preferred = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'voyager';
+            preferred = 'voyager';
         }
         return global.CartoBasemap?.resolveBasemapId(preferred) || preferred;
     }

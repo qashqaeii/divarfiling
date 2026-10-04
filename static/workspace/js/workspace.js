@@ -2333,8 +2333,21 @@ const MAP_MARKET_COLORS = {
 };
 
 function parseRoomsCount(raw) {
-    const n = parseInt(String(raw || '').replace(/[^\d]/g, ''), 10);
+    const s = toAsciiDigits(raw).replace(/[^\d]/g, '');
+    const n = parseInt(s, 10);
     return Number.isFinite(n) ? n : null;
+}
+
+function normalizeMapValueTierFilter(filter) {
+    if (!filter || filter === 'all') return '';
+    const map = {
+        below: 'under',
+        above: 'over',
+        under: 'under',
+        over: 'over',
+        fair: 'fair',
+    };
+    return map[filter] || filter;
 }
 
 function matchRoomsFilter(markerRooms, filter) {
@@ -2395,8 +2408,9 @@ function matchAmenityFilter(markerValue, required) {
 }
 
 function matchValueTierFilter(marketTier, filter) {
-    if (!filter || filter === 'all') return true;
-    return marketTier === filter;
+    const want = normalizeMapValueTierFilter(filter);
+    if (!want) return true;
+    return (marketTier || 'unknown') === want;
 }
 
 function matchTxModeFilter(txMode, filter) {
@@ -2537,19 +2551,16 @@ function buildMapLegendScale(mode, stats) {
 }
 
 function createCartoBasemapLayer(styleId, options, layerOpts = {}) {
-    if (window.CartoBasemap?.hasKey()) {
-        return window.CartoBasemap.createCartoLayer(L, styleId, options, layerOpts);
-    }
     if (window.CartoBasemap) {
-        return window.CartoBasemap.createOsmStandardLayer(L, options);
+        const layer = window.CartoBasemap.createCartoLayer(L, styleId, options, layerOpts);
+        if (layer) return layer;
     }
-    return window.CartoBasemap?.createOsmStandardLayer(L, options)
-        || L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {
-            attribution: options?.attribution || '&copy; OpenStreetMap &copy; OSM France',
-            maxZoom: options?.maxZoom || 19,
-            subdomains: 'abc',
-            crossOrigin: true,
-        });
+    return L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {
+        attribution: options?.attribution || '&copy; OpenStreetMap &copy; OSM France',
+        maxZoom: options?.maxZoom || 19,
+        subdomains: 'abc',
+        crossOrigin: true,
+    });
 }
 
 const MAP_BASEMAP_STORAGE_KEY = 'ws-map-basemap';
@@ -2571,14 +2582,16 @@ const MAP_BASEMAPS = {
     },
     standard: {
         label: 'استاندارد',
-        hint: 'OpenStreetMap کلاسیک',
+        hint: 'خیابان‌ها با برچسب خوانا',
         preview: 'standard',
-        exportSafe: false,
+        exportSafe: true,
         create() {
-            return window.CartoBasemap.createOsmStandardLayer(L, {
-                maxZoom: 19,
+            return createCartoBasemapLayer('voyager', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+                maxZoom: 20,
+                subdomains: 'abcd',
                 crossOrigin: true,
-            });
+            }, { retina: true });
         },
     },
     light: {
@@ -2672,7 +2685,7 @@ function getDefaultBasemapId() {
         if (stored && MAP_BASEMAPS[stored]) preferred = stored;
     } catch (e) { /* ignore */ }
     if (!preferred) {
-        preferred = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'voyager';
+        preferred = 'voyager';
     }
     return window.CartoBasemap?.resolveBasemapId(preferred) || preferred;
 }

@@ -56,6 +56,6 @@ def warn_if_carto_key_missing() -> None:
     if get_carto_basemap_api_key():
         return
     logger.warning(
-        'CARTO_BASEMAP_API_KEY is empty — CARTO raster basemaps fall back to OSM France tiles '
-        'in the browser and in server-side article map renders.'
+        'CARTO_BASEMAP_API_KEY is empty — browser maps use public CARTO Voyager tiles; '
+        'server-side article map renders fall back to OSM France tiles.'
     )

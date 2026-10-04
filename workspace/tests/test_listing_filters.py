@@ -41,6 +41,16 @@ class ListingRoomsFilterTests(TestCase):
         filtered = apply_amenity_filters(list(qs), {'rooms': '۳'})
         self.assertEqual({lst.token for lst in filtered}, {'r3'})
 
+    def test_map_markers_include_rooms_from_data_json(self):
+        from workspace.services.charts import map_markers
+
+        self.three_rooms.latitude = 35.7
+        self.three_rooms.longitude = 51.4
+        self.three_rooms.save(update_fields=['latitude', 'longitude'])
+        markers = map_markers([self.three_rooms])
+        self.assertEqual(len(markers), 1)
+        self.assertEqual(markers[0]['rooms'], '3')
+
     def test_parse_filter_params_normalizes_rooms(self):
         class Req:
             GET = {'rooms': '3'}

@@ -613,7 +613,7 @@ def map_markers(
             'rent_label': rent_label,
             'area': lst.area,
             'area_label': format_area(lst.area) if lst.area else '',
-            'rooms': lst.rooms or '',
+            'rooms': feat.get('rooms') or lst.rooms or '',
             'pps_label': format_toman(lst.price_per_sqm, per_sqm=True) if lst.price_per_sqm else '',
             'full_deposit': full_dep,
             'full_deposit_label': format_toman(full_dep) if full_dep else '',

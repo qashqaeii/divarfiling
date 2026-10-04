@@ -178,19 +178,18 @@
                 scrollWheelZoom: true,
             }).setView([DEFAULT_CENTER.lat, DEFAULT_CENTER.lng], DEFAULT_CENTER.zoom);
 
-            const tileLayer = global.CartoBasemap?.hasKey()
-                ? global.CartoBasemap.createCartoLayer(L, 'voyager', {
+            const tileLayer = global.CartoBasemap
+                ? (global.CartoBasemap.createPreferredVoyagerLayer(L, {
                     attribution: '&copy; OSM &copy; CARTO',
                     subdomains: 'abcd',
                     maxZoom: 19,
                 }, { retina: true })
-                : (global.CartoBasemap
-                    ? global.CartoBasemap.createOsmStandardLayer(L, { maxZoom: 19 })
-                    : L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {
-                        attribution: '&copy; OSM &copy; OSM France',
-                        subdomains: 'abc',
-                        maxZoom: 19,
-                    }));
+                    || global.CartoBasemap.createOsmStandardLayer(L, { maxZoom: 19 }))
+                : L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {
+                    attribution: '&copy; OSM &copy; OSM France',
+                    subdomains: 'abc',
+                    maxZoom: 19,
+                });
             tileLayer.addTo(map);
 
             map.on('click', (e) => {

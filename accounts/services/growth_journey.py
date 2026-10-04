@@ -739,6 +739,23 @@ def journeys_for_stage(stage: str, *, limit: int = 100):
     )
 
 
+def journey_display_name(journey: GrowthJourney) -> str:
+    """نام مشاور یا آژانس برای گزارش و خروجی — اولویت با دادهٔ سرنخ جذب."""
+    lead = journey.lead
+    if lead and (lead.display_name or '').strip():
+        return lead.display_name.strip()
+    user = journey.user
+    if user:
+        ws = getattr(user, 'workspace_settings', None)
+        agency = (getattr(ws, 'agency_name', None) or '').strip() if ws else ''
+        if agency:
+            return agency
+        full = (user.get_full_name() or '').strip()
+        if full:
+            return full
+    return ''
+
+
 def on_lead_imported(lead: MarketingLead) -> Optional[GrowthJourney]:
     if lead.status == MarketingLead.Status.EXISTING_USER:
         return transition(

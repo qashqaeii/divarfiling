@@ -199,7 +199,15 @@ class AdminExportView(StaffRequiredMixin, View):
             from accounts.services.admin_dashboard import ALL_TIME_DAYS
             days_int = ALL_TIME_DAYS
 
-        return build_export(export_key, fmt=fmt, days=days_int)
+        stage = (request.GET.get('stage') or '').strip() or None
+        if stage and meta.get('supports_stage'):
+            from accounts.models import GrowthJourney
+
+            valid_stages = {choice[0] for choice in GrowthJourney.Stage.choices}
+            if stage not in valid_stages:
+                stage = None
+
+        return build_export(export_key, fmt=fmt, days=days_int, stage=stage)
 
 
 class AdminSystemSummaryView(StaffRequiredMixin, View):

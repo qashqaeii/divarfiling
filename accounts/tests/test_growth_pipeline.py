@@ -7,7 +7,7 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
 
 from accounts.models import GrowthJourney, MarketingLead
-from accounts.services.growth_journey import on_click_landing, on_signup, transition
+from accounts.services.growth_journey import journey_display_name, on_click_landing, on_signup, transition
 from accounts.services.growth_suppression import (
     PURPOSE_ACQUISITION,
     PURPOSE_ACTIVATION,
@@ -123,3 +123,36 @@ class GrowthPipelineAdminViewTests(TestCase):
         resp = self.client.get('/accounts/admin-panel/marketing/growth/')
         self.assertEqual(resp.status_code, 200)
         self.assertContains(resp, 'پایپلاین رشد')
+        self.assertContains(resp, 'خروجی Excel')
+
+    def test_growth_journeys_export_xlsx(self):
+        MarketingLead.objects.create(
+            phone_normalized='09123334444',
+            display_name='آژانس نمونه',
+            status=MarketingLead.Status.COLD,
+            source='test',
+        )
+        transition(phone='09123334444', event_type='lead_imported')
+        self.client.force_login(self.staff)
+        resp = self.client.get('/accounts/admin-panel/export/growth_journeys/?format=xlsx')
+        self.assertEqual(resp.status_code, 200)
+        self.assertIn(
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            resp['Content-Type'],
+        )
+        self.assertIn('attachment', resp.get('Content-Disposition', ''))
+
+
+class JourneyDisplayNameTests(TestCase):
+    def test_prefers_lead_display_name(self):
+        lead = MarketingLead.objects.create(
+            phone_normalized='09124445555',
+            display_name='دفتر املاک X',
+            status=MarketingLead.Status.COLD,
+        )
+        j = GrowthJourney.objects.create(
+            phone_normalized='09124445555',
+            lead=lead,
+            stage=GrowthJourney.Stage.COLD_LEAD,
+        )
+        self.assertEqual(journey_display_name(j), 'دفتر املاک X')

@@ -556,6 +556,26 @@ def _users_management_export_rows() -> Tuple[List[str], Iterable[ExportRow]]:
     return export_users_management_rows()
 
 
+def _growth_journeys_rows(stage: str | None = None) -> Tuple[List[str], Iterable[ExportRow]]:
+    from accounts.models import GrowthJourney
+    from accounts.services.growth_journey import journey_display_name
+
+    headers = ['شماره تماس', 'نام یا نام آژانس']
+    qs = GrowthJourney.objects.select_related('user', 'lead', 'user__workspace_settings').order_by(
+        'phone_normalized',
+    )
+    if stage:
+        qs = qs.filter(stage=stage)
+    rows = [
+        {
+            'شماره تماس': j.phone_normalized,
+            'نام یا نام آژانس': journey_display_name(j),
+        }
+        for j in qs.iterator(chunk_size=500)
+    ]
+    return headers, rows
+
+
 EXPORT_REGISTRY: Dict[str, Dict[str, Any]] = {
     'pending_orders': {
         'title': 'سفارش‌های پرداخت‌نشده',
@@ -721,6 +741,15 @@ EXPORT_REGISTRY: Dict[str, Dict[str, Any]] = {
         'supports_days': True,
         'multisheet': True,
     },
+    'growth_journeys': {
+        'title': 'پرونده‌های پایپلاین رشد',
+        'description': 'همه سرنخ‌ها و مسیرهای رشد — شماره و نام/آژانس',
+        'category': 'marketing',
+        'icon': 'fa-route',
+        'accent': 'violet',
+        'builder': lambda: _growth_journeys_rows(),
+        'supports_stage': True,
+    },
 }
 
 
@@ -745,6 +774,10 @@ def get_export_count(export_key: str, days: int | None = None) -> int:
         else:
             since = timezone.now() - timedelta(days=days)
         return User.objects.filter(date_joined__gte=since).count()
+    if export_key == 'growth_journeys':
+        from accounts.models import GrowthJourney
+
+        return GrowthJourney.objects.count()
     if meta.get('multisheet') and days is not None:
         from accounts.services.admin_ai_center import _logs_in_range
 
@@ -775,7 +808,12 @@ def get_export_catalog(days: int = 30) -> List[Dict[str, Any]]:
     return catalog
 
 
-def build_export(export_key: str, fmt: str = 'xlsx', days: int | None = None) -> HttpResponse:
+def build_export(
+    export_key: str,
+    fmt: str = 'xlsx',
+    days: int | None = None,
+    stage: str | None = None,
+) -> HttpResponse:
     meta = EXPORT_REGISTRY.get(export_key)
     if not meta:
         return HttpResponse('گزارش یافت نشد', status=404)
@@ -793,7 +831,9 @@ def build_export(export_key: str, fmt: str = 'xlsx', days: int | None = None) ->
         return _build_multisheet_xlsx_response(sheets, filename_base, meta['title'])
 
     builder = meta['builder']
-    if meta.get('supports_days') and days is not None:
+    if export_key == 'growth_journeys':
+        headers, rows = _growth_journeys_rows(stage=stage)
+    elif meta.get('supports_days') and days is not None:
         if export_key == 'paid_orders':
             headers, rows = _paid_orders_rows(days=days)
         elif export_key == 'new_users':
@@ -811,6 +851,8 @@ def build_export(export_key: str, fmt: str = 'xlsx', days: int | None = None) ->
         from accounts.services.admin_dashboard import is_all_time_range
 
         filename_base += '-all' if is_all_time_range(days) else f'-{days}d'
+    if stage and meta.get('supports_stage'):
+        filename_base += f'-{stage}'
 
     if fmt == 'csv':
         return _build_csv_response(headers, rows, filename_base)

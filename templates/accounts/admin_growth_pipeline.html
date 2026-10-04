@@ -37,6 +37,11 @@
             <a class="biz-btn biz-btn--ghost biz-btn--sm" href="{% url 'admin_panel_marketing' %}">
                 <i class="fas fa-bullhorn" aria-hidden="true"></i> بازاریابی
             </a>
+            <a class="biz-btn biz-btn--primary biz-btn--sm"
+               href="{% url 'admin_panel_export' 'growth_journeys' %}?format=xlsx{% if selected_stage %}&stage={{ selected_stage }}{% endif %}"
+               title="دانلود Excel — شماره و نام/آژانس">
+                <i class="fas fa-file-excel" aria-hidden="true"></i> خروجی Excel
+            </a>
             <form method="post" style="display:inline">
                 {% csrf_token %}
                 <input type="hidden" name="action" value="backfill">
@@ -186,6 +191,10 @@
                 <h2>{{ selected_meta.label }}</h2>
                 <p>{{ detail_rows|length|to_persian_digits }} شماره · {{ selected_meta.you_do }}</p>
             </div>
+            <a class="adm-lac-btn adm-lac-btn--ghost adm-lac-btn--sm"
+               href="{% url 'admin_panel_export' 'growth_journeys' %}?format=xlsx&stage={{ selected_stage }}">
+                <i class="fas fa-file-excel" aria-hidden="true"></i> Excel این مرحله
+            </a>
         </div>
         <div class="adm-lac-table-scroll">
             <table class="adm-lac-data-table">

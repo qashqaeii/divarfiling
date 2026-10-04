@@ -15,6 +15,7 @@ EXPORT_CATEGORIES: Dict[str, str] = {
     'finance': 'مالی',
     'support': 'پشتیبانی',
     'analytics': 'تحلیل',
+    'marketing': 'بازاریابی',
 }
 
 EXPORT_CATEGORY_FILTERS = (('all', 'همه'),) + tuple(EXPORT_CATEGORIES.items())

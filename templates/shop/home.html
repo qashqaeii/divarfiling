@@ -204,56 +204,6 @@
 {% include 'shop/includes/home_intelligence.html' %}
 {% include 'shop/includes/home_compare.html' %}
 {% include 'shop/includes/home_flow.html' %}
-{% include 'shop/includes/home_pillars.html' %}
-
-{# ─── پلن‌ها (فشرده) ─── #}
-<section class="mk-section mk-pricing-tiers h-pricing" id="mk-pricing" aria-label="پلن‌های پلتفرم">
-    <div class="container">
-        <header class="mk-section-head h-pricing__head mk-reveal">
-            <h2 class="mk-section-title">{{ home_page.pricing_section.title }}</h2>
-            {% if home_page.pricing_section.subtitle %}
-            <p class="mk-section-desc">{{ home_page.pricing_section.subtitle }}</p>
-            {% endif %}
-            <p class="h-pricing__hint">میزکار CRM رایگان است · لایسنس ربات برای استخراج و تحلیل عمیق</p>
-        </header>
-        <div class="mk-tier-grid h-pricing__grid mk-reveal">
-            {% for tier in home_page.pricing_tiers %}
-            <article class="mk-tier-card mk-tier-card--{{ tier.accent }} h-pricing__card{% if tier.id == 'free' %} h-pricing__card--featured{% endif %}" data-tier="{{ tier.id }}">
-                <header class="mk-tier-head">
-                    <span class="mk-tier-icon">{% include 'includes/icon_slot.html' with decor=tier.decor_icon fa=tier.icon only %}</span>
-                    <div class="mk-tier-title-wrap">
-                        <h3 class="mk-tier-title">{{ tier.title }}</h3>
-                        <span class="mk-tier-badge">{{ tier.badge }}</span>
-                    </div>
-                </header>
-                <div class="mk-tier-price">
-                    <span class="mk-tier-price-val">{{ tier.price }}</span>
-                    <span class="mk-tier-price-note">{{ tier.price_note }}</span>
-                    {% if tier.price_hint %}
-                    <span class="mk-tier-price-hint">{{ tier.price_hint }}</span>
-                    {% endif %}
-                </div>
-                <ul class="mk-tier-features">
-                    {% for feat in tier.features %}
-                    <li><i class="fas fa-check" aria-hidden="true"></i> {{ feat }}</li>
-                    {% endfor %}
-                </ul>
-                <footer class="mk-tier-foot">
-                    {% if tier.id == 'free' %}
-                    {% if user.is_authenticated %}
-                    <a href="{% url 'workspace:home' %}" class="mk-tier-cta"><i class="fas fa-layer-group"></i> ورود به میزکار</a>
-                    {% else %}
-                    <a href="{% url 'register' %}" class="mk-tier-cta"><i class="fas {{ tier.cta_icon }}"></i> {{ tier.cta_label }}</a>
-                    {% endif %}
-                    {% else %}
-                    <a href="{% url 'product_list' %}" class="mk-tier-cta mk-tier-cta--accent"><i class="fas {{ tier.cta_icon }}"></i> {{ tier.cta_label }}</a>
-                    {% endif %}
-                </footer>
-            </article>
-            {% endfor %}
-        </div>
-    </div>
-</section>
 
 {# ─── FAQ (فشرده) ─── #}
 <section class="mk-section mk-faq-min h-faq">

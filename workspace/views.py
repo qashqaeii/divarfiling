@@ -146,8 +146,6 @@ class WorkspaceHomeView(WorkspaceLoginMixin, TemplateView):
             and not ctx['data_stats']['datasets']
             and not ctx['home_nba']
         )
-        from workspace.services.home_intro_video import get_home_intro_video_context
-        ctx['home_intro_video'] = get_home_intro_video_context(user)
         return ctx
 
 

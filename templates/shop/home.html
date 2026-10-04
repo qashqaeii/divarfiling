@@ -11,6 +11,8 @@
 <link rel="stylesheet" href="{% static 'css/home-hero-mobile.css' %}?v=16">
 <link rel="stylesheet" href="{% static 'css/home-v2.css' %}?v=9">
 <link rel="stylesheet" href="{% static 'css/home-mobile.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'css/mk-intro-video-showcase.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'css/mizkar-video-player.css' %}?v=2">
 {% endblock %}
 
 {% block content %}
@@ -206,6 +208,8 @@
     </div>
 </section>
 
+{% include 'shop/includes/home_intro_video.html' %}
+
 {% include 'shop/includes/home_scrollytelling.html' %}
 {% include 'shop/includes/home_compare.html' %}
 {% include 'shop/includes/home_flow.html' %}
@@ -304,4 +308,5 @@
 {% block extra_js %}
 <script src="{% static 'js/mizkar-home.js' %}?v=15" defer></script>
 <script src="{% static 'js/home-story.js' %}?v=6" defer></script>
+{% if intro_video and intro_video.can_embed %}<script src="{% static 'js/bot-install-video.js' %}?v=1" defer></script>{% endif %}
 {% endblock %}

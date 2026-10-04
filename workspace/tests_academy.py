@@ -108,12 +108,16 @@ class AcademyPageTests(TestCase):
         self.assertContains(resp, 'acdSearchInput')
         self.assertContains(resp, 'acdSearchData')
 
-    def test_workspace_home_shows_intro_video(self):
+    def test_workspace_home_does_not_show_intro_video_block(self):
         resp = self.client.get(reverse('workspace:home'))
         self.assertEqual(resp.status_code, 200)
-        self.assertContains(resp, 'wsh-intro')
-        self.assertContains(resp, 'فایلینگ دیوار دقیقاً چه کاری انجام می‌دهد')
-        self.assertContains(resp, reverse('workspace:academy_home'))
+        self.assertNotContains(resp, 'mk-intro-vid')
+
+    def test_public_home_shows_intro_video_below_stats(self):
+        resp = Client().get(reverse('home'))
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, 'mk-intro-vid')
+        self.assertContains(resp, reverse('public_academy_playlist'))
 
     def test_persian_search_keywords(self):
         from workspace.academy.search import find_videos_by_query

@@ -47,6 +47,9 @@ class HomeView(TemplateView):
         context['bot_product'] = get_bot_product()
         context['home_page'] = home_page_content()
         context['stats'] = home_display_stats()
+        from workspace.services.home_intro_video import get_intro_video_showcase
+        user = self.request.user if self.request.user.is_authenticated else None
+        context['intro_video'] = get_intro_video_showcase(user, public_site=True)
         
         # SEO Meta Tags
         context['meta_title'] = 'فایلینگ دیوار — سیستم‌عامل مشاور حرفه‌ای املاک'

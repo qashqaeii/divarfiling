@@ -1,0 +1,69 @@
+{% load static %}
+{% if intro_video %}
+<section class="mk-intro-vid mk-intro-vid--{{ intro_video_skin|default:'workspace' }}{% if intro_video.completed %} is-done{% endif %}"
+         aria-labelledby="mk-intro-vid-title-{{ intro_video_skin|default:'ws' }}"
+         {% if intro_video_skin == 'workspace' %}data-tour="workspace-intro-video" data-help-tour="workspace-intro-video"{% endif %}>
+    <div class="mk-intro-vid__ambient" aria-hidden="true"></div>
+    {% if intro_video_skin == 'marketing' %}<div class="container">{% endif %}
+    <div class="mk-intro-vid__inner">
+        <div class="mk-intro-vid__copy">
+            <p class="mk-intro-vid__kicker">
+                <span class="mk-intro-vid__kicker-icon" aria-hidden="true"><i class="fas fa-sparkles"></i></span>
+                {% if intro_video.completed %}
+                <span>آموزش اول · تماشا شده</span>
+                {% else %}
+                <span>اولین قدم · آموزش ۱ از ۸</span>
+                {% endif %}
+            </p>
+            <h2 class="mk-intro-vid__title" id="mk-intro-vid-title-{{ intro_video_skin|default:'ws' }}">{{ intro_video.video.title }}</h2>
+            <p class="mk-intro-vid__lead">{{ intro_video.video.description }}</p>
+
+            <ul class="mk-intro-vid__points" aria-label="در این ویدیو">
+                <li><i class="fas fa-compass" aria-hidden="true"></i><span>می‌فهمید فایلینگ دیوار دقیقاً چه کاری انجام می‌دهد</span></li>
+                <li><i class="fas fa-layer-group" aria-hidden="true"></i><span>استخراج، فایلینگ، CRM و تحلیل در یک میزکار یکپارچه</span></li>
+                <li><i class="fas fa-route" aria-hidden="true"></i><span>مسیر بعدی برای شروع حرفه‌ای روشن می‌شود</span></li>
+            </ul>
+
+            <div class="mk-intro-vid__actions">
+                <a href="{{ intro_video.academy_url }}" class="mk-intro-vid__btn mk-intro-vid__btn--primary">
+                    <i class="fas fa-graduation-cap" aria-hidden="true"></i>
+                    مشاهده همه آموزش‌ها
+                </a>
+                <a href="{{ intro_video.video_url }}" class="mk-intro-vid__btn mk-intro-vid__btn--ghost">
+                    {% if intro_video.can_embed %}ادامه در آکادمی{% else %}تماشای ویدیو{% endif %}
+                    <i class="fas fa-arrow-left" aria-hidden="true"></i>
+                </a>
+            </div>
+            <p class="mk-intro-vid__meta">
+                <i class="fas fa-clock" aria-hidden="true"></i>
+                {{ intro_video.player.duration }}
+                <span aria-hidden="true">·</span>
+                <i class="fas fa-closed-captioning" aria-hidden="true"></i>
+                فارسی
+            </p>
+        </div>
+
+        <div class="mk-intro-vid__media">
+            <div class="mk-intro-vid__player-shell">
+                {% if intro_video.can_embed %}
+                {% include 'includes/mk_video_player.html' with video=intro_video.player variant='academy' show_heading=False show_meta=False extra_class='mk-intro-vid-player' %}
+                {% else %}
+                <a href="{{ intro_video.video_url }}" class="mk-intro-vid__poster-link">
+                    {% if intro_video.player.poster %}
+                    <img class="mk-intro-vid__poster-img" alt=""
+                         src="{% if intro_video.player.poster_kind == 'static' %}{% static intro_video.player.poster %}{% else %}{{ intro_video.player.poster }}{% endif %}">
+                    {% else %}
+                    <span class="mk-intro-vid__poster-fallback" aria-hidden="true"><i class="fas fa-circle-play"></i></span>
+                    {% endif %}
+                    <span class="mk-intro-vid__poster-play">
+                        <i class="fas fa-play" aria-hidden="true"></i>
+                        تماشای معرفی
+                    </span>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% if intro_video_skin == 'marketing' %}</div>{% endif %}
+</section>
+{% endif %}

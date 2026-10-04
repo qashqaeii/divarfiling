@@ -1,6 +1,8 @@
 {% load static %}
 <section class="h-intel" id="mk-intelligence" aria-labelledby="h-intel-title" data-h-intel>
     <div class="h-intel__backdrop" aria-hidden="true">
+        <div class="h-intel__blob h-intel__blob--a"></div>
+        <div class="h-intel__blob h-intel__blob--b"></div>
         <div class="h-intel__grid-glow"></div>
         <div class="h-intel__line h-intel__line--a"></div>
         <div class="h-intel__line h-intel__line--b"></div>
@@ -8,78 +10,145 @@
     <div class="container">
         <header class="h-intel__head mk-reveal">
             <span class="h-intel__kicker"><i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i> {{ home_page.intelligence_section.kicker }}</span>
-            <h2 class="h-intel__title" id="h-intel-title">{{ home_page.intelligence_section.title }}</h2>
+            <h2 class="h-intel__title" id="h-intel-title">
+                {% if home_page.intelligence_section.title_lead %}
+                <span class="h-intel__title-accent">{{ home_page.intelligence_section.title_lead }}</span>
+                {{ home_page.intelligence_section.title_rest }}
+                {% else %}
+                {{ home_page.intelligence_section.title }}
+                {% endif %}
+            </h2>
             <p class="h-intel__sub">{{ home_page.intelligence_section.subtitle }}</p>
         </header>
 
         <div class="h-intel__panels mk-reveal-stagger">
             {% for panel in home_page.intelligence_section.panels %}
             <article class="h-intel-panel h-intel-panel--{{ panel.id }}" data-h-intel-panel="{{ panel.id }}">
-                <div class="h-intel-panel__copy">
-                    <span class="h-intel-panel__icon" aria-hidden="true"><i class="fas {{ panel.icon }}"></i></span>
+                <header class="h-intel-panel__head">
+                    <span class="h-intel-panel__hero" aria-hidden="true">
+                        <span class="h-intel-panel__hero-glow"></span>
+                        <i class="fas {{ panel.icon }}"></i>
+                    </span>
                     <h3 class="h-intel-panel__title">{{ panel.title }}</h3>
                     <p class="h-intel-panel__desc">{{ panel.desc }}</p>
-                </div>
+                </header>
 
                 {% if panel.id == 'voice' %}
                 <div class="h-intel-voice" data-h-intel-voice>
-                    <div class="h-intel-voice__wave" aria-hidden="true">
-                        <span></span><span></span><span></span><span></span><span></span>
-                        <span></span><span></span><span></span><span></span><span></span>
-                    </div>
                     <div class="h-intel-voice__demos">
                         {% for demo in panel.demos %}
                         <div class="h-intel-voice__demo{% if forloop.first %} is-active{% endif %}" data-h-intel-voice-demo="{{ forloop.counter0 }}" role="tabpanel"{% if not forloop.first %} hidden{% endif %}>
-                            <p class="h-intel-voice__cmd"><i class="fas fa-microphone" aria-hidden="true"></i> «{{ demo.command }}»</p>
-                            <div class="h-intel-voice__result">
-                                <i class="fas {{ demo.result_icon }}" aria-hidden="true"></i>
-                                <span>{{ demo.result }}</span>
+                            <div class="h-intel-voice__bar">
+                                <span class="h-intel-voice__wave" aria-hidden="true">
+                                    <span></span><span></span><span></span><span></span><span></span>
+                                    <span></span><span></span><span></span>
+                                </span>
+                                <p class="h-intel-voice__utterance">{{ demo.command }}</p>
+                                <span class="h-intel-voice__mic" aria-hidden="true"><i class="fas fa-microphone"></i></span>
+                            </div>
+                            {% if panel.chips %}
+                            <div class="h-intel-voice__chips" aria-hidden="true">
+                                {% for chip in panel.chips %}
+                                <span class="h-intel-voice__chip">{{ chip }}</span>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                            <div class="h-intel-voice__success">
+                                <span class="h-intel-voice__success-check" aria-hidden="true"><i class="fas fa-check"></i></span>
+                                <div class="h-intel-voice__success-copy">
+                                    <strong>{{ demo.result }}</strong>
+                                    {% if demo.result_detail %}
+                                    <p>{{ demo.result_detail }}</p>
+                                    {% endif %}
+                                </div>
+                                <span class="h-intel-voice__success-cal" aria-hidden="true"><i class="fas {{ demo.result_icon }}"></i></span>
                             </div>
                         </div>
                         {% endfor %}
                     </div>
                     <div class="h-intel-voice__tabs" role="tablist" aria-label="نمونه فرمان">
                         {% for demo in panel.demos %}
-                        <button type="button" class="h-intel-voice__tab{% if forloop.first %} is-active{% endif %}" role="tab" aria-selected="{% if forloop.first %}true{% else %}false{% endif %}" data-h-intel-voice-tab="{{ forloop.counter0 }}">نمونه {{ forloop.counter }}</button>
+                        <button type="button" class="h-intel-voice__tab{% if forloop.first %} is-active{% endif %}" role="tab" aria-selected="{% if forloop.first %}true{% else %}false{% endif %}" data-h-intel-voice-tab="{{ forloop.counter0 }}">
+                            <i class="fas fa-play" aria-hidden="true"></i>
+                            نمونه {{ forloop.counter }}
+                        </button>
                         {% endfor %}
                     </div>
                 </div>
+
                 {% elif panel.id == 'matching' %}
                 <div class="h-intel-match" aria-label="نمایش مفهومی تطبیق">
-                    <div class="h-intel-match__customer">
-                        <span class="h-intel-match__label">نیاز مشتری</span>
+                    <div class="h-intel-match__need">
+                        <span class="h-intel-match__need-label"><i class="fas fa-user" aria-hidden="true"></i> نیاز مشتری</span>
                         <strong>{{ panel.customer.name }}</strong>
                         <em>{{ panel.customer.need }}</em>
                     </div>
-                    <div class="h-intel-match__engine" aria-hidden="true">
-                        <i class="fas fa-arrows-left-right"></i>
-                        <span>تطبیق</span>
+
+                    <div class="h-intel-match__viz" aria-hidden="true">
+                        <div class="h-intel-match__viz-need">{{ panel.customer.need }}</div>
+                        <div class="h-intel-match__viz-hub">
+                            <span class="h-intel-match__viz-line h-intel-match__viz-line--1"></span>
+                            <span class="h-intel-match__viz-line h-intel-match__viz-line--2"></span>
+                            <span class="h-intel-match__viz-line h-intel-match__viz-line--3"></span>
+                            <span class="h-intel-match__pill"><i class="fas fa-wand-magic-sparkles"></i> تطبیق هوشمند</span>
+                        </div>
+                        <div class="h-intel-match__viz-thumbs">
+                            <span></span><span></span><span></span>
+                        </div>
                     </div>
-                    <ul class="h-intel-match__list">
-                        {% for m in panel.matches %}
-                        <li>
-                            <span class="h-intel-match__score">{{ m.score }}<small>٪</small></span>
-                            <span class="h-intel-match__file">{{ m.label }}</span>
-                        </li>
-                        {% endfor %}
-                    </ul>
+
+                    <div class="h-intel-match__list-wrap">
+                        <span class="h-intel-match__list-title">{{ panel.matches_title|default:"پیشنهادهای تطبیق" }}</span>
+                        <ul class="h-intel-match__list">
+                            {% for m in panel.matches %}
+                            <li>
+                                <span class="h-intel-match__thumb" aria-hidden="true"></span>
+                                <div class="h-intel-match__meta">
+                                    <strong>{{ m.meta }}</strong>
+                                    <span>{{ m.price }}</span>
+                                </div>
+                                <span class="h-intel-match__badge h-intel-match__badge--{{ m.tier }}">
+                                    <span class="h-intel-match__badge-bars" aria-hidden="true"><i></i><i></i><i></i></span>
+                                    {{ m.tier_label }}
+                                </span>
+                                <i class="fas fa-chevron-left h-intel-match__chev" aria-hidden="true"></i>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
                 </div>
+
                 {% elif panel.id == 'summary' %}
                 <div class="h-intel-summary">
-                    <div class="h-intel-summary__raw">
-                        <span class="h-intel-summary__tag">داده فایل</span>
-                        <ul>
+                    <div class="h-intel-summary__box h-intel-summary__box--raw">
+                        <div class="h-intel-summary__box-head">
+                            <i class="fas fa-file-lines" aria-hidden="true"></i>
+                            <span>{{ panel.raw_label|default:"داده خام فایل" }}</span>
+                        </div>
+                        <ul class="h-intel-summary__raw-lines">
                             {% for line in panel.raw_lines %}
                             <li>{{ line }}</li>
                             {% endfor %}
                         </ul>
                     </div>
-                    <div class="h-intel-summary__arrow" aria-hidden="true"><i class="fas fa-arrow-down"></i></div>
-                    <div class="h-intel-summary__ai">
-                        <span class="h-intel-summary__tag">خلاصه هوشمند</span>
-                        <ul>
+                    <div class="h-intel-summary__flow" aria-hidden="true">
+                        <span class="h-intel-summary__flow-btn"><i class="fas fa-arrow-down"></i></span>
+                    </div>
+                    <div class="h-intel-summary__box h-intel-summary__box--ai">
+                        <div class="h-intel-summary__box-head">
+                            <i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i>
+                            <span>{{ panel.summary_label|default:"خلاصه هوشمند" }}</span>
+                        </div>
+                        <ul class="h-intel-summary__insights">
                             {% for bullet in panel.summary_bullets %}
-                            <li><i class="fas fa-check" aria-hidden="true"></i> {{ bullet }}</li>
+                            <li>
+                                <span class="h-intel-summary__insight-icon" aria-hidden="true"><i class="fas {{ bullet.icon }}"></i></span>
+                                <div class="h-intel-summary__insight-copy">
+                                    <strong>{{ bullet.title }}</strong>
+                                    <p>{{ bullet.desc }}</p>
+                                </div>
+                                <i class="fas fa-check h-intel-summary__check" aria-hidden="true"></i>
+                            </li>
                             {% endfor %}
                         </ul>
                     </div>

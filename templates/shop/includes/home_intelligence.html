@@ -28,8 +28,8 @@
                     <div class="h-intel-panel__hero{% if panel.hero_image %} h-intel-panel__hero--art{% endif %}" aria-hidden="true">
                         <span class="h-intel-panel__hero-glow"></span>
                         {% if panel.hero_image %}
-                        <span class="h-intel-panel__orbit h-intel-panel__orbit--a"></span>
-                        <span class="h-intel-panel__orbit h-intel-panel__orbit--b"></span>
+                        <span class="h-intel-panel__orbit h-intel-panel__orbit--a h-intel-panel__orbit--flat"></span>
+                        <span class="h-intel-panel__orbit h-intel-panel__orbit--b h-intel-panel__orbit--flat"></span>
                         <div class="h-intel-panel__hero-stage">
                             <img
                                 class="h-intel-panel__hero-img"
@@ -107,7 +107,7 @@
                 </div>
 
                 {% elif panel.id == 'matching' %}
-                <div class="h-intel-match" aria-label="نمایش مفهومی تطبیق">
+                <div class="h-intel-match" data-h-intel-match aria-label="نمایش مفهومی تطبیق">
                     <div class="h-intel-match__need">
                         <span class="h-intel-match__need-label"><i class="fas fa-user" aria-hidden="true"></i> نیاز مشتری</span>
                         <strong>{{ panel.customer.name }}</strong>
@@ -149,7 +149,7 @@
                 </div>
 
                 {% elif panel.id == 'summary' %}
-                <div class="h-intel-summary">
+                <div class="h-intel-summary" data-h-intel-summary>
                     <div class="h-intel-summary__box h-intel-summary__box--raw">
                         <div class="h-intel-summary__box-head">
                             <i class="fas fa-file-lines" aria-hidden="true"></i>

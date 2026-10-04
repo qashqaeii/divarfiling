@@ -338,7 +338,90 @@
         if (!tabs.length || !demos.length) return;
 
         var voiceTimers = [];
+        var intelLoopTimers = [];
         var activeDemoIndex = 0;
+        var intelVisible = true;
+        var voicePanel = document.querySelector('.h-intel-panel--voice');
+        var matchPanel = document.querySelector('[data-h-intel-match]');
+        var summaryPanel = document.querySelector('[data-h-intel-summary]');
+        var matchCycleClasses = [
+            'is-cycle-need',
+            'is-cycle-hub',
+            'is-cycle-list-0',
+            'is-cycle-list-1',
+            'is-cycle-list-2',
+        ];
+        var summaryCycleClasses = [
+            'is-cycle-raw',
+            'is-cycle-flow',
+            'is-cycle-ai',
+            'is-cycle-insight-0',
+            'is-cycle-insight-1',
+            'is-cycle-insight-2',
+        ];
+        var matchCycleIndex = 0;
+        var summaryCycleIndex = 0;
+        var VOICE_HOLD_MS = 2600;
+
+        function clearIntelLoopTimers() {
+            intelLoopTimers.forEach(function (id) {
+                window.clearTimeout(id);
+            });
+            intelLoopTimers = [];
+        }
+
+        function scheduleIntelLoop(fn, delay) {
+            var id = window.setTimeout(fn, delay);
+            intelLoopTimers.push(id);
+            return id;
+        }
+
+        function clearMatchCycleClasses() {
+            if (!matchPanel) return;
+            matchCycleClasses.forEach(function (cls) {
+                matchPanel.classList.remove(cls);
+            });
+        }
+
+        function clearSummaryCycleClasses() {
+            if (!summaryPanel) return;
+            summaryCycleClasses.forEach(function (cls) {
+                summaryPanel.classList.remove(cls);
+            });
+        }
+
+        function runMatchCycle() {
+            if (!matchPanel || !intelVisible || prefersReduced) return;
+            clearMatchCycleClasses();
+            matchPanel.classList.add(matchCycleClasses[matchCycleIndex]);
+            matchCycleIndex = (matchCycleIndex + 1) % matchCycleClasses.length;
+            scheduleIntelLoop(runMatchCycle, 1900);
+        }
+
+        function runSummaryCycle() {
+            if (!summaryPanel || !intelVisible || prefersReduced) return;
+            clearSummaryCycleClasses();
+            summaryPanel.classList.add(summaryCycleClasses[summaryCycleIndex]);
+            summaryCycleIndex = (summaryCycleIndex + 1) % summaryCycleClasses.length;
+            scheduleIntelLoop(runSummaryCycle, 1750);
+        }
+
+        function startIntelPanelLoops() {
+            clearIntelLoopTimers();
+            clearMatchCycleClasses();
+            clearSummaryCycleClasses();
+            matchCycleIndex = 0;
+            summaryCycleIndex = 0;
+            if (prefersReduced || !intelVisible) return;
+            scheduleIntelLoop(runMatchCycle, 400);
+            scheduleIntelLoop(runSummaryCycle, 700);
+        }
+
+        function stopIntelPanelLoops() {
+            clearIntelLoopTimers();
+            clearMatchCycleClasses();
+            clearSummaryCycleClasses();
+        }
 
         function clearVoiceTimers() {
             voiceTimers.forEach(function (id) {
@@ -374,6 +457,9 @@
 
             demoEl.classList.remove('is-transcribed', 'is-voice-busy');
             bar.classList.remove('is-recording', 'is-complete');
+            if (voicePanel) {
+                voicePanel.classList.remove('is-hero-recording');
+            }
             if (mic) {
                 mic.classList.remove('is-live');
             }
@@ -400,6 +486,9 @@
 
             demoEl.classList.add('is-voice-busy');
             bar.classList.add('is-recording');
+            if (voicePanel) {
+                voicePanel.classList.add('is-hero-recording');
+            }
             if (mic) {
                 mic.classList.add('is-live');
             }
@@ -415,6 +504,9 @@
             scheduleVoice(function () {
                 bar.classList.remove('is-recording');
                 bar.classList.add('is-complete');
+                if (voicePanel) {
+                    voicePanel.classList.remove('is-hero-recording');
+                }
                 if (mic) {
                     mic.classList.remove('is-live');
                 }
@@ -432,6 +524,12 @@
                 demoEl.classList.remove('is-voice-busy');
                 demoEl.classList.add('is-transcribed');
             }, delay + 580);
+
+            scheduleVoice(function () {
+                if (!intelVisible) return;
+                if (!demoEl.classList.contains('is-active') || demoEl.hasAttribute('hidden')) return;
+                runVoiceTranscription(demoEl);
+            }, delay + 580 + VOICE_HOLD_MS);
         }
 
         function show(index) {
@@ -480,24 +578,36 @@
             });
         });
 
-        if (!prefersReduced && 'IntersectionObserver' in window) {
+        if ('IntersectionObserver' in window) {
             var intelSection = document.querySelector('[data-h-intel]');
             var started = false;
             var io = new IntersectionObserver(function (entries) {
                 entries.forEach(function (entry) {
-                    if (!entry.isIntersecting || started) return;
-                    started = true;
-                    show(activeDemoIndex);
-                    io.disconnect();
+                    intelVisible = entry.isIntersecting;
+                    if (!entry.isIntersecting) {
+                        clearVoiceTimers();
+                        stopIntelPanelLoops();
+                        if (voicePanel) {
+                            voicePanel.classList.remove('is-hero-recording');
+                        }
+                        return;
+                    }
+                    if (!started) {
+                        started = true;
+                        show(activeDemoIndex);
+                    }
+                    startIntelPanelLoops();
                 });
-            }, { threshold: 0.25 });
+            }, { threshold: 0.2 });
             if (intelSection) {
                 io.observe(intelSection);
             } else {
                 show(0);
+                startIntelPanelLoops();
             }
         } else {
             show(0);
+            startIntelPanelLoops();
         }
     }
 

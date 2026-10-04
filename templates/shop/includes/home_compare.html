@@ -3,7 +3,7 @@
         <span class="h-compare__deco h-compare__deco--chart"><i class="fas fa-chart-simple"></i></span>
         <span class="h-compare__deco h-compare__deco--files"><i class="fas fa-file-lines"></i></span>
     </div>
-    <div class="container">
+    <div class="container h-compare__container">
         <header class="h-compare__head mk-reveal">
             <h2 class="h-compare__title" id="h-compare-title">{{ home_page.before_after.title }}</h2>
             {% if home_page.before_after.subtitle %}
@@ -12,82 +12,89 @@
         </header>
 
         <div class="h-compare__panel mk-reveal" data-h-compare>
-            <div class="h-compare__matrix">
-                <div class="h-compare__matrix-cell h-compare__matrix-cell--before h-compare__matrix-head">
-                    <header class="h-compare__side-head">
-                        <span class="h-compare__side-icon h-compare__side-icon--muted" aria-hidden="true">
-                            <i class="fas {{ home_page.before_after.before_icon|default:'fa-layer-group' }}"></i>
+            <div class="h-compare__board">
+                <div class="h-compare__col h-compare__col--old">
+                    <div class="h-compare__col-head">
+                        <header class="h-compare__side-head">
+                            <span class="h-compare__side-icon h-compare__side-icon--muted" aria-hidden="true">
+                                <i class="fas {{ home_page.before_after.before_icon|default:'fa-layer-group' }}"></i>
+                            </span>
+                            <div class="h-compare__side-titles">
+                                <h3 class="h-compare__side-title">{{ home_page.before_after.before_label }}</h3>
+                                {% if home_page.before_after.before_tagline %}
+                                <p class="h-compare__side-tagline">{{ home_page.before_after.before_tagline }}</p>
+                                {% endif %}
+                            </div>
+                        </header>
+                        <ul class="h-compare__chips h-compare__chips--old" aria-label="ابزارهای پراکنده">
+                            {% for item in home_page.before_after.before_stack %}
+                            <li class="{% if forloop.last %}h-compare__chip-wide{% endif %}">
+                                <i class="fas {{ item.icon }}" aria-hidden="true"></i>{{ item.text }}
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% for pair in home_page.before_after.pairs %}
+                    <article class="h-compare__outcome h-compare__outcome--old" data-h-compare-pair>
+                        <span class="h-compare__outcome-mark h-compare__outcome-mark--muted" aria-hidden="true">
+                            <i class="fas fa-xmark"></i>
                         </span>
-                        <div class="h-compare__side-titles">
-                            <h3 class="h-compare__side-title">{{ home_page.before_after.before_label }}</h3>
-                            {% if home_page.before_after.before_tagline %}
-                            <p class="h-compare__side-tagline">{{ home_page.before_after.before_tagline }}</p>
+                        <div class="h-compare__outcome-copy">
+                            <strong class="h-compare__outcome-title">{{ pair.before }}</strong>
+                            {% if pair.before_desc %}
+                            <p class="h-compare__outcome-desc">{{ pair.before_desc }}</p>
                             {% endif %}
                         </div>
-                    </header>
-                    <ul class="h-compare__chips h-compare__chips--before" aria-label="ابزارهای پراکنده">
-                        {% for item in home_page.before_after.before_stack %}
-                        <li class="{% if forloop.last %}h-compare__chip-search{% endif %}">
-                            <i class="fas {{ item.icon }}" aria-hidden="true"></i>{{ item.text }}
-                        </li>
+                    </article>
+                    {% endfor %}
+                </div>
+
+                <aside class="h-compare__col h-compare__col--rail" aria-hidden="true">
+                    <div class="h-compare__col-head h-compare__col-head--rail">
+                        <span class="h-compare__rail-btn"><i class="fas fa-arrow-left-long"></i></span>
+                    </div>
+                    <div class="h-compare__rail-track">
+                        {% for pair in home_page.before_after.pairs %}
+                        <span class="h-compare__rail-tag">{{ pair.step }}</span>
                         {% endfor %}
-                    </ul>
-                </div>
+                    </div>
+                </aside>
 
-                <div class="h-compare__matrix-cell h-compare__matrix-cell--rail h-compare__matrix-head" aria-hidden="true">
-                    <span class="h-compare__rail-arrow"><i class="fas fa-arrow-left-long"></i></span>
-                </div>
-
-                <div class="h-compare__matrix-cell h-compare__matrix-cell--after h-compare__matrix-head">
-                    <header class="h-compare__side-head">
-                        <span class="h-compare__side-icon h-compare__side-icon--brand" aria-hidden="true">
-                            <i class="fas {{ home_page.before_after.after_icon|default:'fa-cloud' }}"></i>
+                <div class="h-compare__col h-compare__col--new">
+                    <div class="h-compare__col-head h-compare__col-head--new">
+                        <header class="h-compare__side-head">
+                            <span class="h-compare__side-icon h-compare__side-icon--brand" aria-hidden="true">
+                                <i class="fas {{ home_page.before_after.after_icon|default:'fa-cloud' }}"></i>
+                            </span>
+                            <div class="h-compare__side-titles">
+                                <h3 class="h-compare__side-title h-compare__side-title--brand">{{ home_page.before_after.after_label }}</h3>
+                                {% if home_page.before_after.after_tagline %}
+                                <p class="h-compare__side-tagline h-compare__side-tagline--brand">{{ home_page.before_after.after_tagline }}</p>
+                                {% endif %}
+                            </div>
+                        </header>
+                        <ul class="h-compare__chips h-compare__chips--new" aria-label="جریان یکپارچه">
+                            {% for item in home_page.before_after.after_stack %}
+                            <li class="{% if forloop.last %}h-compare__chip-wide h-compare__chip-wide--accent{% endif %}">
+                                <i class="fas {{ item.icon }}" aria-hidden="true"></i>{{ item.text }}
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% for pair in home_page.before_after.pairs %}
+                    <article class="h-compare__outcome h-compare__outcome--new">
+                        <span class="h-compare__outcome-mark h-compare__outcome-mark--ok" aria-hidden="true">
+                            <i class="fas fa-check"></i>
                         </span>
-                        <div class="h-compare__side-titles">
-                            <h3 class="h-compare__side-title h-compare__side-title--brand">{{ home_page.before_after.after_label }}</h3>
-                            {% if home_page.before_after.after_tagline %}
-                            <p class="h-compare__side-tagline h-compare__side-tagline--brand">{{ home_page.before_after.after_tagline }}</p>
+                        <div class="h-compare__outcome-copy">
+                            <strong class="h-compare__outcome-title h-compare__outcome-title--brand">{{ pair.after }}</strong>
+                            {% if pair.after_desc %}
+                            <p class="h-compare__outcome-desc">{{ pair.after_desc }}</p>
                             {% endif %}
                         </div>
-                    </header>
-                    <ul class="h-compare__chips h-compare__chips--after" aria-label="جریان یکپارچه">
-                        {% for item in home_page.before_after.after_stack %}
-                        <li><i class="fas {{ item.icon }}" aria-hidden="true"></i>{{ item.text }}</li>
-                        {% endfor %}
-                    </ul>
+                    </article>
+                    {% endfor %}
                 </div>
-
-                <div class="h-compare__matrix-rail-line" aria-hidden="true"></div>
-
-                {% for pair in home_page.before_after.pairs %}
-                <article class="h-compare__matrix-cell h-compare__matrix-cell--before h-compare__card h-compare__card--before" data-h-compare-pair>
-                    <span class="h-compare__card-mark h-compare__card-mark--muted" aria-hidden="true">
-                        <i class="fas fa-xmark"></i>
-                    </span>
-                    <div class="h-compare__card-copy">
-                        <strong class="h-compare__card-title">{{ pair.before }}</strong>
-                        {% if pair.before_desc %}
-                        <p class="h-compare__card-desc">{{ pair.before_desc }}</p>
-                        {% endif %}
-                    </div>
-                    <i class="fas fa-chevron-left h-compare__card-chevron" aria-hidden="true"></i>
-                </article>
-
-                <span class="h-compare__matrix-cell h-compare__matrix-cell--rail h-compare__rail-pill">{{ pair.step }}</span>
-
-                <article class="h-compare__matrix-cell h-compare__matrix-cell--after h-compare__card h-compare__card--after">
-                    <span class="h-compare__card-mark h-compare__card-mark--ok" aria-hidden="true">
-                        <i class="fas fa-check"></i>
-                    </span>
-                    <div class="h-compare__card-copy">
-                        <strong class="h-compare__card-title h-compare__card-title--brand">{{ pair.after }}</strong>
-                        {% if pair.after_desc %}
-                        <p class="h-compare__card-desc">{{ pair.after_desc }}</p>
-                        {% endif %}
-                    </div>
-                    <i class="fas fa-chevron-left h-compare__card-chevron" aria-hidden="true"></i>
-                </article>
-                {% endfor %}
             </div>
         </div>
     </div>

@@ -1,0 +1,42 @@
+<section class="h-faq mk-section mk-faq-min" id="mk-faq" aria-labelledby="h-faq-title">
+    <div class="container h-faq__container mk-faq-wrap">
+        <header class="h-faq__intro mk-faq-intro mk-reveal">
+            <span class="mk-faq-eyebrow h-faq__eyebrow">{{ home_page.faq_section.eyebrow }}</span>
+            <h2 class="mk-faq-title h-faq__title" id="h-faq-title">{{ home_page.faq_section.title }}</h2>
+            {% if home_page.faq_section.desc %}
+            <p class="mk-faq-desc h-faq__desc">{{ home_page.faq_section.desc }}</p>
+            {% endif %}
+            {% if home_page.faq_section.highlights %}
+            <ul class="h-faq__highlights" aria-label="موضوعات پرتکرار">
+                {% for item in home_page.faq_section.highlights %}
+                <li><i class="fas {{ item.icon }}" aria-hidden="true"></i>{{ item.text }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+        </header>
+
+        <div class="h-faq__panel mk-faq-panel mk-reveal" data-faq>
+            {% for faq in home_page.faqs %}
+            <details class="mk-faq-item h-faq__item">
+                <summary>
+                    <span class="mk-faq-num h-faq__num">{{ forloop.counter|stringformat:"02d" }}</span>
+                    <span class="mk-faq-q h-faq__q">{{ faq.q }}</span>
+                    <span class="h-faq__toggle" aria-hidden="true"><i class="fas fa-plus mk-faq-icon"></i></span>
+                </summary>
+                <div class="mk-faq-answer h-faq__answer" id="mk-faq-answer-{{ forloop.counter }}">
+                    <p>{{ faq.a }}</p>
+                </div>
+            </details>
+            {% endfor %}
+        </div>
+
+        {% if home_page.faq_section.footer_note %}
+        <p class="h-faq__foot mk-reveal">
+            {{ home_page.faq_section.footer_note }}
+            {% if home_page.faq_section.footer_url_name %}
+            <a href="{% url home_page.faq_section.footer_url_name %}">{{ home_page.faq_section.footer_link_label }}</a>
+            {% endif %}
+        </p>
+        {% endif %}
+    </div>
+</section>

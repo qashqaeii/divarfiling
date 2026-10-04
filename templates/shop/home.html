@@ -9,7 +9,7 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/mizkar-home.css' %}?v=93">
 <link rel="stylesheet" href="{% static 'css/home-hero-mobile.css' %}?v=17">
-<link rel="stylesheet" href="{% static 'css/home-v2.css' %}?v=32">
+<link rel="stylesheet" href="{% static 'css/home-v2.css' %}?v=33">
 <link rel="stylesheet" href="{% static 'css/home-mobile.css' %}?v=3">
 <link rel="stylesheet" href="{% static 'css/mk-intro-video-showcase.css' %}?v=3">
 <link rel="stylesheet" href="{% static 'css/mizkar-video-player.css' %}?v=2">
@@ -205,27 +205,7 @@
 {% include 'shop/includes/home_compare.html' %}
 {% include 'shop/includes/home_flow.html' %}
 
-{# ─── FAQ (فشرده) ─── #}
-<section class="mk-section mk-faq-min h-faq">
-    <div class="container mk-faq-wrap">
-        <header class="mk-faq-intro mk-reveal">
-            <span class="mk-faq-eyebrow">{{ home_page.faq_section.eyebrow }}</span>
-            <h2 class="mk-faq-title">{{ home_page.faq_section.title }}</h2>
-        </header>
-        <div class="mk-faq-panel mk-reveal" data-faq>
-            {% for faq in home_page.faqs %}
-            <details class="mk-faq-item">
-                <summary>
-                    <span class="mk-faq-num">{{ forloop.counter|stringformat:"02d" }}</span>
-                    <span class="mk-faq-q">{{ faq.q }}</span>
-                    <i class="fas fa-plus mk-faq-icon" aria-hidden="true"></i>
-                </summary>
-                <div class="mk-faq-answer" id="mk-faq-answer-{{ forloop.counter }}"><p>{{ faq.a }}</p></div>
-            </details>
-            {% endfor %}
-        </div>
-    </div>
-</section>
+{% include 'shop/includes/home_faq.html' %}
 
 {% include 'shop/includes/home_final_cta.html' %}
 

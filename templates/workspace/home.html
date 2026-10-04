@@ -7,8 +7,9 @@
 {% endblock %}
 
 {% block ws_surface_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/mk-workspace-home.css' %}?v=6">
+<link rel="stylesheet" href="{% static 'workspace/css/mk-workspace-home.css' %}?v=7">
 <link rel="stylesheet" href="{% static 'workspace/css/ws-home-mobile-v2.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'css/mizkar-video-player.css' %}?v=2">
 {% endblock %}
 
 {% block page_title %}{% endblock %}
@@ -46,6 +47,7 @@
             </a>
         </div>
     </section>
+    {% include 'workspace/includes/home/workspace_intro_video.html' %}
     {% else %}
         {% if home_nba %}
         <section class="wsh-nba" aria-label="اقدام‌های پیشنهادی" data-tour="workspace-nba">
@@ -69,6 +71,7 @@
 
         {% include 'workspace/includes/home/workspace_today_queue.html' %}
         {% include 'workspace/includes/home/workspace_kpi.html' %}
+        {% include 'workspace/includes/home/workspace_intro_video.html' %}
         {% include 'workspace/includes/home/workspace_quick_actions.html' %}
     {% endif %}
 
@@ -113,4 +116,5 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script>window.wsCharts = {{ charts_json|safe }}; window.wsChartsHub = true;</script>
 <script src="{% static 'workspace/js/home.js' %}?v=6"></script>
+{% if home_intro_video %}<script src="{% static 'js/bot-install-video.js' %}?v=1" defer></script>{% endif %}
 {% endblock %}

@@ -62,7 +62,7 @@ class AcademyPageTests(TestCase):
     def setUpTestData(cls):
         from django.core.management import call_command
         call_command('seed_academy', '--reset', '--yes')
-        cls.user = User.objects.create_user(username='acduser', password='test-pass-123')
+        cls.user = User.objects.create_user(username='acduser', password='test-pass-123', phone='09120000001')
 
     def setUp(self):
         self.client = Client()
@@ -107,6 +107,13 @@ class AcademyPageTests(TestCase):
         resp = self.client.get(reverse('workspace:academy_home'))
         self.assertContains(resp, 'acdSearchInput')
         self.assertContains(resp, 'acdSearchData')
+
+    def test_workspace_home_shows_intro_video(self):
+        resp = self.client.get(reverse('workspace:home'))
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, 'wsh-intro')
+        self.assertContains(resp, 'فایلینگ دیوار دقیقاً چه کاری انجام می‌دهد')
+        self.assertContains(resp, reverse('workspace:academy_home'))
 
     def test_persian_search_keywords(self):
         from workspace.academy.search import find_videos_by_query

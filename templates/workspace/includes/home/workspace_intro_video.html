@@ -1,0 +1,54 @@
+{% if home_intro_video and home_intro_video.player.available %}
+<section class="wsh-intro{% if home_intro_video.completed %} wsh-intro--done{% endif %}"
+         aria-labelledby="wsh-intro-title"
+         data-tour="workspace-intro-video"
+         data-help-tour="workspace-intro-video">
+    <div class="wsh-intro__ambient" aria-hidden="true"></div>
+    <div class="wsh-intro__inner">
+        <div class="wsh-intro__copy">
+            <div class="wsh-intro__head">
+                <p class="wsh-intro__kicker">
+                    <span class="wsh-intro__kicker-icon" aria-hidden="true"><i class="fas fa-sparkles"></i></span>
+                    {% if home_intro_video.completed %}
+                    <span>آموزش اول · تماشا شده</span>
+                    {% else %}
+                    <span>اولین قدم · آموزش ۱ از ۸</span>
+                    {% endif %}
+                </p>
+                <h2 class="wsh-intro__title" id="wsh-intro-title">{{ home_intro_video.video.title }}</h2>
+                <p class="wsh-intro__lead">{{ home_intro_video.video.description }}</p>
+            </div>
+
+            <ul class="wsh-intro__points" aria-label="در این ویدیو">
+                <li><i class="fas fa-folder-tree" aria-hidden="true"></i><span>می‌فهمید فایلینگ دیوار دقیقاً چه مسئله‌ای را حل می‌کند</span></li>
+                <li><i class="fas fa-sitemap" aria-hidden="true"></i><span>بخش‌های اصلی میزکار را در چند دقیقه می‌شناسید</span></li>
+                <li><i class="fas fa-route" aria-hidden="true"></i><span>مسیر بعدی برای استخراج، CRM و تحلیل بازار روشن می‌شود</span></li>
+            </ul>
+
+            <div class="wsh-intro__actions">
+                <a href="{{ home_intro_video.academy_url }}" class="wsh-intro__btn wsh-intro__btn--primary">
+                    <i class="fas fa-graduation-cap" aria-hidden="true"></i>
+                    مشاهده همه آموزش‌ها
+                </a>
+                <a href="{{ home_intro_video.video_url }}" class="wsh-intro__btn wsh-intro__btn--ghost">
+                    ادامه در آکادمی
+                    <i class="fas fa-arrow-left" aria-hidden="true"></i>
+                </a>
+            </div>
+            <p class="wsh-intro__meta">
+                <i class="fas fa-clock" aria-hidden="true"></i>
+                حدود {{ home_intro_video.player.duration }}
+                <span aria-hidden="true">·</span>
+                <i class="fas fa-closed-captioning" aria-hidden="true"></i>
+                فارسی
+            </p>
+        </div>
+
+        <div class="wsh-intro__media">
+            <div class="wsh-intro__player-shell">
+                {% include 'includes/mk_video_player.html' with video=home_intro_video.player variant='academy' show_heading=False show_meta=False extra_class='wsh-intro-vid' %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endif %}

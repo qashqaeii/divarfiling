@@ -2279,9 +2279,12 @@ html.mk-public .mk-home-page .h-intel strong {
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: clamp(0.85rem, 2vw, 1.15rem);
     align-items: stretch;
+    perspective: 1280px;
+    perspective-origin: 50% 28%;
 }
 
 .h-intel-panel {
+    position: relative;
     display: flex;
     flex-direction: column;
     gap: 0.85rem;
@@ -2294,6 +2297,134 @@ html.mk-public .mk-home-page .h-intel strong {
     box-shadow:
         0 0 0 1px rgba(255, 255, 255, 0.04) inset,
         0 28px 64px -36px rgba(0, 0, 0, 0.65);
+    transform-style: preserve-3d;
+    transform-origin: center center;
+    will-change: transform;
+    animation: h-intel-card-breathe 11s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+}
+
+.h-intel-panel--voice {
+    animation-name: h-intel-card-breathe-voice;
+    animation-duration: 10.5s;
+    animation-delay: -1.2s;
+}
+
+.h-intel-panel--matching {
+    animation-name: h-intel-card-breathe-match;
+    animation-duration: 12s;
+    animation-delay: -3.4s;
+}
+
+.h-intel-panel--summary {
+    animation-name: h-intel-card-breathe-summary;
+    animation-duration: 11.5s;
+    animation-delay: -5.1s;
+}
+
+.h-intel-panel::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    opacity: 0;
+    background: linear-gradient(
+        125deg,
+        transparent 38%,
+        rgba(167, 139, 250, 0.14) 48%,
+        transparent 58%
+    );
+    background-size: 220% 220%;
+    animation: h-intel-card-shine 14s ease-in-out infinite;
+}
+
+.h-intel-panel--voice::after {
+    animation-duration: 12s;
+    animation-delay: -2s;
+}
+
+.h-intel-panel--matching::after {
+    animation-duration: 15s;
+    animation-delay: -4.5s;
+}
+
+.h-intel-panel--summary::after {
+    animation-duration: 13s;
+    animation-delay: -1s;
+}
+
+@keyframes h-intel-card-breathe {
+    0%, 100% {
+        transform: translate3d(0, 0, 0) rotateX(1.2deg) rotateY(-2deg) rotateZ(0deg);
+    }
+    50% {
+        transform: translate3d(0, -5px, 4px) rotateX(-1deg) rotateY(2deg) rotateZ(0.35deg);
+    }
+}
+
+@keyframes h-intel-card-breathe-voice {
+    0%, 100% {
+        transform: translate3d(0, 1px, 0) rotateX(0.8deg) rotateY(2.5deg) rotateZ(-0.4deg);
+    }
+    33% {
+        transform: translate3d(0, -4px, 6px) rotateX(-1.4deg) rotateY(-3deg) rotateZ(0.5deg);
+    }
+    66% {
+        transform: translate3d(0, -6px, 8px) rotateX(1deg) rotateY(3.5deg) rotateZ(-0.25deg);
+    }
+}
+
+@keyframes h-intel-card-breathe-match {
+    0%, 100% {
+        transform: translate3d(0, 0, 0) rotateX(1.5deg) rotateY(-3deg) rotateZ(0.3deg);
+    }
+    40% {
+        transform: translate3d(0, -5px, 5px) rotateX(-0.6deg) rotateY(2.8deg) rotateZ(-0.45deg);
+    }
+    70% {
+        transform: translate3d(0, -3px, 3px) rotateX(0.9deg) rotateY(-2.2deg) rotateZ(0.2deg);
+    }
+}
+
+@keyframes h-intel-card-breathe-summary {
+    0%, 100% {
+        transform: translate3d(0, 0, 0) rotateX(-0.6deg) rotateY(2.2deg) rotateZ(0.2deg);
+    }
+    45% {
+        transform: translate3d(0, -6px, 7px) rotateX(1.3deg) rotateY(-3.2deg) rotateZ(-0.35deg);
+    }
+    80% {
+        transform: translate3d(0, -2px, 2px) rotateX(-0.8deg) rotateY(1.5deg) rotateZ(0.15deg);
+    }
+}
+
+@keyframes h-intel-card-shine {
+    0%, 72%, 100% {
+        opacity: 0;
+        background-position: 120% 40%;
+    }
+    78% {
+        opacity: 0.55;
+        background-position: 40% 60%;
+    }
+    86% {
+        opacity: 0;
+        background-position: -20% 80%;
+    }
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .h-intel-panel {
+        transition: box-shadow 0.45s ease, border-color 0.45s ease;
+    }
+
+    .h-intel-panel:hover {
+        border-color: rgba(167, 139, 250, 0.22);
+        box-shadow:
+            0 0 0 1px rgba(255, 255, 255, 0.06) inset,
+            0 36px 72px -32px rgba(0, 0, 0, 0.7),
+            0 0 40px rgba(124, 58, 237, 0.12);
+    }
 }
 
 .h-intel-panel__head {
@@ -2318,15 +2449,68 @@ html.mk-public .mk-home-page .h-intel strong {
 .h-intel-panel__hero--art {
     width: min(100%, 12rem);
     height: auto;
-    min-height: 5.5rem;
+    min-height: 5.75rem;
     margin: 0 auto 0.25rem;
     padding: 0;
     background: transparent;
     border: none;
     box-shadow: none;
     border-radius: 0;
-    perspective: 920px;
-    perspective-origin: 50% 42%;
+    perspective: 980px;
+    perspective-origin: 50% 40%;
+    transform-style: preserve-3d;
+}
+
+.h-intel-panel__orbit {
+    position: absolute;
+    left: 50%;
+    top: 52%;
+    width: 78%;
+    aspect-ratio: 1;
+    margin: 0;
+    border-radius: 50%;
+    border: 1px solid transparent;
+    pointer-events: none;
+    z-index: 0;
+    transform-style: preserve-3d;
+    transform: translate3d(-50%, -50%, 0) rotateX(68deg);
+}
+
+.h-intel-panel__orbit--a {
+    border-color: rgba(167, 139, 250, 0.28);
+    box-shadow: 0 0 18px rgba(124, 58, 237, 0.12);
+    animation: h-intel-orbit-spin-a 22s linear infinite;
+}
+
+.h-intel-panel__orbit--b {
+    width: 62%;
+    border-color: rgba(96, 165, 250, 0.22);
+    opacity: 0.75;
+    animation: h-intel-orbit-spin-b 16s linear infinite reverse;
+}
+
+.h-intel-panel--voice .h-intel-panel__orbit--a {
+    border-color: rgba(96, 165, 250, 0.32);
+    animation-duration: 19s;
+}
+
+.h-intel-panel--matching .h-intel-panel__orbit--b {
+    animation-duration: 24s;
+}
+
+.h-intel-panel--summary .h-intel-panel__orbit--a {
+    animation-duration: 26s;
+    animation-direction: reverse;
+}
+
+@keyframes h-intel-orbit-spin-a {
+    from { transform: translate3d(-50%, -50%, 0) rotateX(68deg) rotateZ(0deg); }
+    to { transform: translate3d(-50%, -50%, 0) rotateX(68deg) rotateZ(360deg); }
+}
+
+@keyframes h-intel-orbit-spin-b {
+    from { transform: translate3d(-50%, -50%, 0) rotateX(72deg) rotateZ(12deg); }
+    to { transform: translate3d(-50%, -50%, 0) rotateX(72deg) rotateZ(372deg); }
 }
 
 .h-intel-panel__hero--art .h-intel-panel__hero-glow {
@@ -2358,8 +2542,8 @@ html.mk-public .mk-home-page .h-intel strong {
 }
 
 @keyframes h-intel-hero-glow {
-    0%, 100% { opacity: 0.85; transform: scale(1); }
-    50% { opacity: 1; transform: scale(1.06); }
+    0%, 100% { opacity: 0.82; transform: scale(1) rotateZ(0deg); }
+    50% { opacity: 1; transform: scale(1.07) rotateZ(6deg); }
 }
 
 .h-intel-panel__hero-stage {
@@ -2406,37 +2590,58 @@ html.mk-public .mk-home-page .h-intel strong {
 
 @keyframes h-intel-hero-float {
     0%, 100% {
-        transform: translate3d(0, 0, 0) rotateX(7deg) rotateY(-9deg);
+        transform: translate3d(0, 0, 0) rotateX(10deg) rotateY(-16deg) rotateZ(-1deg);
+    }
+    25% {
+        transform: translate3d(1px, -4px, 8px) rotateX(-6deg) rotateY(8deg) rotateZ(1.5deg);
     }
     50% {
-        transform: translate3d(0, -7px, 10px) rotateX(-5deg) rotateY(7deg);
+        transform: translate3d(0, -8px, 14px) rotateX(-10deg) rotateY(18deg) rotateZ(2deg);
+    }
+    75% {
+        transform: translate3d(-1px, -3px, 6px) rotateX(5deg) rotateY(-10deg) rotateZ(-0.5deg);
     }
 }
 
 @keyframes h-intel-hero-float-voice {
     0%, 100% {
-        transform: translate3d(0, 2px, 0) rotateX(5deg) rotateY(10deg) rotateZ(-1deg);
+        transform: translate3d(0, 2px, 0) rotateX(8deg) rotateY(14deg) rotateZ(-2deg);
     }
-    50% {
-        transform: translate3d(0, -9px, 14px) rotateX(-6deg) rotateY(-6deg) rotateZ(1deg);
+    30% {
+        transform: translate3d(2px, -5px, 10px) rotateX(-5deg) rotateY(-10deg) rotateZ(2deg);
+    }
+    55% {
+        transform: translate3d(0, -10px, 16px) rotateX(-9deg) rotateY(-18deg) rotateZ(3deg);
+    }
+    80% {
+        transform: translate3d(-2px, -4px, 8px) rotateX(6deg) rotateY(12deg) rotateZ(-1deg);
     }
 }
 
 @keyframes h-intel-hero-float-match {
     0%, 100% {
-        transform: translate3d(0, 0, 0) rotateX(8deg) rotateY(-11deg);
+        transform: translate3d(0, 0, 0) rotateX(9deg) rotateY(-18deg) rotateZ(1deg);
     }
-    50% {
-        transform: translate3d(0, -6px, 8px) rotateX(-4deg) rotateY(9deg);
+    35% {
+        transform: translate3d(0, -5px, 9px) rotateX(-4deg) rotateY(12deg) rotateZ(-2deg);
+    }
+    65% {
+        transform: translate3d(0, -7px, 12px) rotateX(-8deg) rotateY(20deg) rotateZ(2.5deg);
     }
 }
 
 @keyframes h-intel-hero-float-summary {
     0%, 100% {
-        transform: translate3d(0, 1px, 0) rotateX(6deg) rotateY(8deg);
+        transform: translate3d(0, 1px, 0) rotateX(7deg) rotateY(12deg) rotateZ(0.5deg);
     }
-    50% {
-        transform: translate3d(0, -8px, 12px) rotateX(-7deg) rotateY(-8deg);
+    28% {
+        transform: translate3d(-1px, -4px, 7px) rotateX(-5deg) rotateY(-14deg) rotateZ(-1.5deg);
+    }
+    52% {
+        transform: translate3d(0, -9px, 15px) rotateX(-9deg) rotateY(-20deg) rotateZ(-2.5deg);
+    }
+    78% {
+        transform: translate3d(1px, -3px, 5px) rotateX(4deg) rotateY(8deg) rotateZ(1deg);
     }
 }
 
@@ -2464,8 +2669,47 @@ html.mk-public .mk-home-page .h-intel strong {
     mix-blend-mode: darken;
     user-select: none;
     -webkit-user-drag: none;
-    transform: translateZ(12px);
+    transform: translateZ(16px);
     filter: brightness(1.12) contrast(1.06) saturate(1.1);
+    animation: h-intel-hero-img-tilt 7.5s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+}
+
+.h-intel-panel--voice .h-intel-panel__hero-img {
+    animation-name: h-intel-hero-img-tilt-voice;
+    animation-duration: 6.8s;
+    animation-delay: -1.5s;
+}
+
+.h-intel-panel--matching .h-intel-panel__hero-img {
+    animation-name: h-intel-hero-img-tilt-match;
+    animation-duration: 7.8s;
+    animation-delay: -2.8s;
+}
+
+.h-intel-panel--summary .h-intel-panel__hero-img {
+    animation-name: h-intel-hero-img-tilt-summary;
+    animation-duration: 8.2s;
+    animation-delay: -0.9s;
+}
+
+@keyframes h-intel-hero-img-tilt {
+    0%, 100% { transform: translateZ(16px) rotateY(-6deg); }
+    50% { transform: translateZ(22px) rotateY(8deg); }
+}
+
+@keyframes h-intel-hero-img-tilt-voice {
+    0%, 100% { transform: translateZ(18px) rotateY(8deg) rotateX(2deg); }
+    50% { transform: translateZ(24px) rotateY(-10deg) rotateX(-3deg); }
+}
+
+@keyframes h-intel-hero-img-tilt-match {
+    0%, 100% { transform: translateZ(16px) rotateY(-9deg); }
+    50% { transform: translateZ(21px) rotateY(11deg); }
+}
+
+@keyframes h-intel-hero-img-tilt-summary {
+    0%, 100% { transform: translateZ(17px) rotateY(7deg); }
+    50% { transform: translateZ(23px) rotateY(-9deg); }
 }
 
 .h-intel-panel--voice .h-intel-panel__hero-img {
@@ -3532,14 +3776,23 @@ html.mk-public[data-theme="dark"] .h-bento__cell {
         background: linear-gradient(145deg, #34d399, #10b981);
     }
 
+    .h-intel-panel,
+    .h-intel-panel::after,
+    .h-intel-panel__orbit,
     .h-intel-panel__hero-stage,
-    .h-intel-panel__hero--art .h-intel-panel__hero-glow {
+    .h-intel-panel__hero--art .h-intel-panel__hero-glow,
+    .h-intel-panel__hero-img {
         animation: none !important;
         transform: none !important;
     }
 
+    .h-intel-panel__orbit--a,
+    .h-intel-panel__orbit--b {
+        transform: translate3d(-50%, -50%, 0) rotateX(68deg);
+    }
+
     .h-intel-panel__hero-img {
-        transform: none;
+        transform: translateZ(0);
     }
 }
 

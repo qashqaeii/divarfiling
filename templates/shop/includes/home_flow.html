@@ -1,6 +1,10 @@
 {% load static %}
 <section class="h-flow" data-h-flow aria-labelledby="h-flow-title">
-    <div class="container">
+    <div class="h-flow__scene" aria-hidden="true">
+        <span class="h-flow__scene-glow"></span>
+        <span class="h-flow__scene-house"><i class="fas fa-house-chimney"></i></span>
+    </div>
+    <div class="container h-flow__container">
         <header class="h-flow__head mk-reveal">
             <span class="h-flow__kicker">{{ home_page.product_flow.kicker }}</span>
             <h2 class="h-flow__title" id="h-flow-title">{{ home_page.product_flow.title }}</h2>
@@ -10,30 +14,7 @@
         </header>
 
         <div class="h-flow__panel mk-reveal" data-h-flow-wrap>
-            <p class="h-flow__ai-note" aria-hidden="true">
-                <i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i>
-                کمک هوش مصنوعی در ثبت، تطبیق و خلاصه
-            </p>
-
             <div class="h-flow__layout">
-                <div
-                    class="h-flow__spotlight"
-                    data-h-flow-spotlight
-                    data-accent="violet"
-                    aria-live="polite"
-                >
-                    <div class="h-flow__spotlight-top">
-                        <span class="h-flow__spotlight-step" data-h-flow-spotlight-step></span>
-                        <span class="h-flow__spotlight-icon" data-h-flow-spotlight-icon aria-hidden="true"></span>
-                    </div>
-                    <strong class="h-flow__spotlight-title" data-h-flow-spotlight-title></strong>
-                    <p class="h-flow__spotlight-text" data-h-flow-spotlight-text></p>
-                    <div class="h-flow__spotlight-progress" aria-hidden="true">
-                        <span class="h-flow__spotlight-progress-track"></span>
-                        <span class="h-flow__spotlight-progress-fill" data-h-flow-progress></span>
-                    </div>
-                </div>
-
                 <div class="h-flow__journey">
                     <span class="h-flow__journey-line" aria-hidden="true"></span>
                     <ol class="h-flow__nodes" data-h-flow-track role="list">
@@ -54,20 +35,77 @@
                                 data-flow-detail="{{ step.detail }}"
                                 data-flow-icon="{{ step.icon }}"
                             >
-                                <span class="h-flow__node-marker" aria-hidden="true">
-                                    <span class="h-flow__node-dot"></span>
-                                    <span class="h-flow__node-icon"><i class="fas {{ step.icon }}" aria-hidden="true"></i></span>
-                                </span>
+                                <span class="h-flow__node-chevron" aria-hidden="true"><i class="fas fa-chevron-left"></i></span>
                                 <span class="h-flow__node-copy">
                                     <span class="h-flow__node-index">{{ forloop.counter|stringformat:"02d" }}</span>
                                     <strong class="h-flow__node-title">{{ step.title }}</strong>
                                     <em class="h-flow__node-desc">{{ step.desc }}</em>
                                 </span>
-                                <span class="h-flow__node-chevron" aria-hidden="true"><i class="fas fa-chevron-left"></i></span>
+                                <span class="h-flow__node-marker" aria-hidden="true">
+                                    <span class="h-flow__node-dot"></span>
+                                    <span class="h-flow__node-icon"><i class="fas {{ step.icon }}" aria-hidden="true"></i></span>
+                                </span>
                             </button>
                         </li>
                         {% endfor %}
                     </ol>
+                </div>
+
+                <div class="h-flow__detail" data-h-flow-detail data-accent="violet">
+                    <p class="h-flow__ai-note">
+                        <i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i>
+                        {{ home_page.product_flow.ai_note }}
+                    </p>
+
+                    <div class="h-flow__panes">
+                        {% for step in home_page.product_flow.steps %}
+                        <div
+                            class="h-flow__pane{% if forloop.first %} is-active{% endif %}"
+                            data-h-flow-pane="{{ forloop.counter0 }}"
+                            data-accent="{{ step.accent }}"
+                            {% if not forloop.first %}hidden{% endif %}
+                        >
+                            <header class="h-flow__pane-head">
+                                <span class="h-flow__pane-step">مرحله {{ forloop.counter|stringformat:"02d" }}</span>
+                                <h3 class="h-flow__pane-title">{{ step.title }}</h3>
+                                <p class="h-flow__pane-text">{{ step.detail }}</p>
+                            </header>
+                            {% if step.features %}
+                            <ul class="h-flow__features">
+                                {% for feat in step.features %}
+                                <li><i class="fas {{ feat.icon }}" aria-hidden="true"></i>{{ feat.text }}</li>
+                                {% endfor %}
+                            </ul>
+                            {% endif %}
+                            {% if step.image %}
+                            <figure class="h-flow__preview">
+                                <img
+                                    src="{% static step.image %}"
+                                    alt="پیش‌نمایش {{ step.title }}"
+                                    loading="lazy"
+                                    decoding="async"
+                                >
+                            </figure>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <footer class="h-flow__footer">
+                        <div class="h-flow__footer-progress" aria-hidden="true">
+                            <span class="h-flow__footer-progress-track"></span>
+                            <span class="h-flow__footer-progress-fill" data-h-flow-progress></span>
+                        </div>
+                        <div class="h-flow__footer-nav">
+                            <span class="h-flow__footer-count" data-h-flow-count>1 / {{ home_page.product_flow.steps|length }}</span>
+                            <button type="button" class="h-flow__footer-btn" data-h-flow-prev aria-label="مرحله قبل">
+                                <i class="fas fa-chevron-right" aria-hidden="true"></i>
+                            </button>
+                            <button type="button" class="h-flow__footer-btn" data-h-flow-next aria-label="مرحله بعد">
+                                <i class="fas fa-chevron-left" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                    </footer>
                 </div>
             </div>
 

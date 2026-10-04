@@ -4,7 +4,7 @@
 <div class="mk-vid{% if variant %} mk-vid--{{ variant }}{% endif %}{% if extra_class %} {{ extra_class }}{% endif %}"
      {% if section_id %}id="{{ section_id }}"{% endif %}
      data-mk-vid-player>
-    {% if show_heading|default:True %}
+    {% if show_heading is not False %}
     <header class="mk-vid-head">
         <span class="mk-vid-kicker">
             <i class="fas fa-circle-play" aria-hidden="true"></i>
@@ -37,7 +37,7 @@
                 <i class="fas fa-video"></i> HD
             </span>
         </div>
-        {% if show_meta|default:True %}
+        {% if show_meta is not False %}
         <div class="mk-vid-meta">
             <span><i class="fas fa-clock" aria-hidden="true"></i> {{ video.duration }}</span>
             <span><i class="fas fa-closed-captioning" aria-hidden="true"></i> فارسی</span>

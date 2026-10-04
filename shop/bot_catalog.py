@@ -1613,6 +1613,7 @@ def home_page_content():
             'kicker': 'جریان کار',
             'title': 'از استخراج تا معامله',
             'subtitle': 'مسیر فایل از دیوار تا قرارداد — در یک خط پیوسته',
+            'ai_note': 'با کمک هوش مصنوعی در ثبت، تطبیق و خلاصه',
             'steps': [
                 {
                     'icon': 'fa-robot',
@@ -1620,6 +1621,13 @@ def home_page_content():
                     'desc': 'فایل‌ها را پیدا کن',
                     'detail': 'ربات استخراج، آگهی‌های مرتبط دیوار را خودکار وارد میزکار می‌کند — بدون جستجوی دستی چندساعته.',
                     'accent': 'violet',
+                    'image': 'images/help-bot-extract-tab.png',
+                    'features': [
+                        {'icon': 'fa-magnifying-glass', 'text': 'جستجوی خودکار دیوار'},
+                        {'icon': 'fa-inbox', 'text': 'ورود به میزکار'},
+                        {'icon': 'fa-clock', 'text': 'صرفه‌جویی در زمان'},
+                        {'icon': 'fa-rotate', 'text': 'به‌روزرسانی منظم'},
+                    ],
                 },
                 {
                     'icon': 'fa-database',
@@ -1627,6 +1635,13 @@ def home_page_content():
                     'desc': 'مرتب و فیلتر کن',
                     'detail': 'فایل‌ها با ساختار استان، شهر و محله سازماندهی می‌شوند؛ فیلتر مالک، مشاور و نوع ملک همیشه آماده است.',
                     'accent': 'indigo',
+                    'image': 'images/help-workspace-home.png',
+                    'features': [
+                        {'icon': 'fa-user', 'text': 'فیلتر مالک'},
+                        {'icon': 'fa-location-dot', 'text': 'دسته‌بندی شهر و محله'},
+                        {'icon': 'fa-sort', 'text': 'مرتب‌سازی سریع'},
+                        {'icon': 'fa-magnifying-glass', 'text': 'آماده برای جستجو'},
+                    ],
                 },
                 {
                     'icon': 'fa-chart-line',
@@ -1634,6 +1649,13 @@ def home_page_content():
                     'desc': 'بازار را بفهم',
                     'detail': 'قیمت متر، روند بازار و مقایسه دوره‌ای — قبل از پیشنهاد قیمت یا مذاکره، تصویر واقعی بازار را ببینید.',
                     'accent': 'emerald',
+                    'image': 'images/help-analyze-dashboard.png',
+                    'features': [
+                        {'icon': 'fa-chart-column', 'text': 'قیمت متر و روند'},
+                        {'icon': 'fa-layer-group', 'text': 'گزارش چندلایه'},
+                        {'icon': 'fa-code-compare', 'text': 'مقایسه دوره‌ای'},
+                        {'icon': 'fa-lightbulb', 'text': 'تصمیم مبتنی بر داده'},
+                    ],
                 },
                 {
                     'icon': 'fa-arrows-left-right',
@@ -1641,6 +1663,13 @@ def home_page_content():
                     'desc': 'فایل را به مشتری وصل کن',
                     'detail': 'بر اساس بودجه، متراژ، محله و نوع معامله — فایل‌های نزدیک‌تر به نیاز ثبت‌شده را ببین و سریع‌تر پیشنهاد بده.',
                     'accent': 'sky',
+                    'image': 'images/help-compare-files.png',
+                    'features': [
+                        {'icon': 'fa-sliders', 'text': 'بودجه و متراژ'},
+                        {'icon': 'fa-map-pin', 'text': 'محله و نوع ملک'},
+                        {'icon': 'fa-percent', 'text': 'درصد تطبیق'},
+                        {'icon': 'fa-paper-plane', 'text': 'ارسال سریع پیشنهاد'},
+                    ],
                 },
                 {
                     'icon': 'fa-users',
@@ -1648,6 +1677,13 @@ def home_page_content():
                     'desc': 'مشتری را پیگیری کن',
                     'detail': 'سرنخ تا قرارداد در قیف معاملات؛ صف کار امروز و یادآوری پیگیری — هیچ تماسی در مسیر فروش گم نمی‌شود.',
                     'accent': 'violet',
+                    'image': 'images/help-crm-dashboard.png',
+                    'features': [
+                        {'icon': 'fa-list-check', 'text': 'صف امروز'},
+                        {'icon': 'fa-bell', 'text': 'یادآوری پیگیری'},
+                        {'icon': 'fa-filter', 'text': 'قیف معاملات'},
+                        {'icon': 'fa-phone', 'text': 'ثبت تماس و قرار'},
+                    ],
                 },
                 {
                     'icon': 'fa-handshake',
@@ -1655,6 +1691,13 @@ def home_page_content():
                     'desc': 'فرصت را به قرارداد تبدیل کن',
                     'detail': 'فایل مناسب به مشتری درست وصل می‌شود — از اولین تماس تا امضای قرارداد، همه‌چیز در یک خط پیوسته.',
                     'accent': 'amber',
+                    'image': 'images/help-crm-deals.png',
+                    'features': [
+                        {'icon': 'fa-file-signature', 'text': 'قرارداد و پیش‌نویس'},
+                        {'icon': 'fa-route', 'text': 'مسیر تا امضا'},
+                        {'icon': 'fa-check-double', 'text': 'بستن معامله'},
+                        {'icon': 'fa-chart-pie', 'text': 'گزارش نتیجه'},
+                    ],
                 },
             ],
         },

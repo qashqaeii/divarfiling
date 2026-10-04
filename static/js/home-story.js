@@ -175,24 +175,27 @@
 
         var track = wrap.querySelector('[data-h-flow-track]');
         var nodes = wrap.querySelectorAll('.h-flow__node[data-h-flow-step]');
+        var panes = wrap.querySelectorAll('[data-h-flow-pane]');
+        var detail = wrap.querySelector('[data-h-flow-detail]');
         var progress = wrap.querySelector('[data-h-flow-progress]');
+        var countEl = wrap.querySelector('[data-h-flow-count]');
+        var prevBtn = wrap.querySelector('[data-h-flow-prev]');
+        var nextBtn = wrap.querySelector('[data-h-flow-next]');
         var buttons = wrap.querySelectorAll('[data-h-flow-btn]');
-        var spotlight = wrap.querySelector('[data-h-flow-spotlight]');
-        var spotlightStep = wrap.querySelector('[data-h-flow-spotlight-step]');
-        var spotlightTitle = wrap.querySelector('[data-h-flow-spotlight-title]');
-        var spotlightText = wrap.querySelector('[data-h-flow-spotlight-text]');
-        var spotlightIcon = wrap.querySelector('[data-h-flow-spotlight-icon]');
         var mobileDetail = wrap.querySelector('[data-h-flow-mobile-detail]');
         var mobileStep = wrap.querySelector('[data-h-flow-mobile-step]');
         var mobileTitle = wrap.querySelector('[data-h-flow-mobile-title]');
         var mobileText = wrap.querySelector('[data-h-flow-mobile-text]');
         if (!track || !nodes.length) return;
 
+        var activeIndex = 0;
+
         function progressPct(index) {
             return nodes.length <= 1 ? 100 : (index / (nodes.length - 1)) * 100;
         }
 
         function setActive(index) {
+            activeIndex = index;
             nodes.forEach(function (node, i) {
                 var active = i === index;
                 node.classList.toggle('is-active', active);
@@ -201,34 +204,31 @@
                     btn.setAttribute('aria-pressed', active ? 'true' : 'false');
                 }
             });
+            panes.forEach(function (pane, i) {
+                var active = i === index;
+                pane.classList.toggle('is-active', active);
+                if (active) {
+                    pane.removeAttribute('hidden');
+                } else {
+                    pane.setAttribute('hidden', '');
+                }
+            });
+            var node = nodes[index];
+            var accent = (node && node.getAttribute('data-accent')) || 'violet';
+            if (detail) {
+                detail.setAttribute('data-accent', accent);
+            }
             if (progress) {
                 progress.style.width = progressPct(index) + '%';
             }
-        }
-
-        function fillDetail(btn, index) {
-            if (!btn) return;
-            var node = nodes[index];
-            var accent = (node && node.getAttribute('data-accent')) || 'violet';
-            var stepLabel = 'مرحله ' + (btn.getAttribute('data-flow-step') || '');
-            var title = btn.getAttribute('data-flow-title') || '';
-            var detail = btn.getAttribute('data-flow-detail') || '';
-            var iconClass = btn.getAttribute('data-flow-icon') || '';
-
-            if (spotlight) {
-                spotlight.setAttribute('data-accent', accent);
+            if (countEl) {
+                countEl.textContent = (index + 1) + ' / ' + nodes.length;
             }
-            if (spotlightStep) {
-                spotlightStep.textContent = stepLabel;
+            if (prevBtn) {
+                prevBtn.disabled = index <= 0;
             }
-            if (spotlightTitle) {
-                spotlightTitle.textContent = title;
-            }
-            if (spotlightText) {
-                spotlightText.textContent = detail;
-            }
-            if (spotlightIcon) {
-                spotlightIcon.innerHTML = '<i class="fas ' + iconClass + '" aria-hidden="true"></i>';
+            if (nextBtn) {
+                nextBtn.disabled = index >= nodes.length - 1;
             }
         }
 
@@ -258,10 +258,10 @@
         }
 
         function selectStep(index) {
+            if (index < 0 || index >= nodes.length) return;
             var btn = buttons[index];
             if (!btn) return;
             setActive(index);
-            fillDetail(btn, index);
             if (desktopMq.matches) {
                 hideMobileDetail();
             } else {
@@ -276,6 +276,17 @@
             });
         });
 
+        if (prevBtn) {
+            prevBtn.addEventListener('click', function () {
+                selectStep(activeIndex - 1);
+            });
+        }
+        if (nextBtn) {
+            nextBtn.addEventListener('click', function () {
+                selectStep(activeIndex + 1);
+            });
+        }
+
         function onFlowModeChange() {
             if (desktopMq.matches) {
                 hideMobileDetail();
@@ -287,7 +298,7 @@
                 });
                 if (activeBtn) {
                     var idx = parseInt(activeBtn.getAttribute('data-h-flow-btn'), 10);
-                    fillDetail(activeBtn, idx);
+                    setActive(idx);
                 }
             } else if (buttons.length) {
                 var activeIndex = 0;

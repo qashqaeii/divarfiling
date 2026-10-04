@@ -28,15 +28,17 @@
                     <div class="h-intel-panel__hero{% if panel.hero_image %} h-intel-panel__hero--art{% endif %}" aria-hidden="true">
                         <span class="h-intel-panel__hero-glow"></span>
                         {% if panel.hero_image %}
-                        <img
-                            class="h-intel-panel__hero-img"
-                            src="{% static panel.hero_image %}"
-                            alt=""
-                            width="280"
-                            height="200"
-                            loading="lazy"
-                            decoding="async"
-                        >
+                        <div class="h-intel-panel__hero-stage">
+                            <img
+                                class="h-intel-panel__hero-img"
+                                src="{% static panel.hero_image %}"
+                                alt=""
+                                width="280"
+                                height="200"
+                                loading="lazy"
+                                decoding="async"
+                            >
+                        </div>
                         {% else %}
                         <i class="fas {{ panel.icon }}"></i>
                         {% endif %}
@@ -50,13 +52,24 @@
                     <div class="h-intel-voice__demos">
                         {% for demo in panel.demos %}
                         <div class="h-intel-voice__demo{% if forloop.first %} is-active{% endif %}" data-h-intel-voice-demo="{{ forloop.counter0 }}" role="tabpanel"{% if not forloop.first %} hidden{% endif %}>
-                            <div class="h-intel-voice__bar">
+                            <div class="h-intel-voice__bar" data-h-intel-voice-bar>
                                 <span class="h-intel-voice__wave" aria-hidden="true">
                                     <span></span><span></span><span></span><span></span><span></span>
                                     <span></span><span></span><span></span>
                                 </span>
-                                <p class="h-intel-voice__utterance">{{ demo.command }}</p>
-                                <span class="h-intel-voice__mic" aria-hidden="true"><i class="fas fa-microphone"></i></span>
+                                <p
+                                    class="h-intel-voice__utterance"
+                                    data-h-intel-voice-utterance
+                                    data-voice-text="{{ demo.command }}"
+                                    aria-live="polite"
+                                    aria-atomic="true"
+                                >
+                                    <span class="h-intel-voice__typed" data-h-intel-voice-typed></span><span class="h-intel-voice__caret" aria-hidden="true"></span>
+                                </p>
+                                <span class="h-intel-voice__mic" data-h-intel-voice-mic aria-hidden="true">
+                                    <span class="h-intel-voice__mic-pulse"></span>
+                                    <i class="fas fa-microphone"></i>
+                                </span>
                             </div>
                             {% if panel.chips %}
                             <div class="h-intel-voice__chips" aria-hidden="true">
@@ -65,15 +78,18 @@
                                 {% endfor %}
                             </div>
                             {% endif %}
-                            <div class="h-intel-voice__success">
-                                <span class="h-intel-voice__success-check" aria-hidden="true"><i class="fas fa-check"></i></span>
-                                <div class="h-intel-voice__success-copy">
+                            <div class="h-intel-voice__success" data-h-intel-voice-success aria-hidden="true">
+                                <span class="h-intel-voice__success-check" data-h-intel-voice-success-check aria-hidden="true">
+                                    <span class="h-intel-voice__success-check-ring"></span>
+                                    <i class="fas fa-check"></i>
+                                </span>
+                                <div class="h-intel-voice__success-copy" data-h-intel-voice-success-copy>
                                     <strong>{{ demo.result }}</strong>
                                     {% if demo.result_detail %}
                                     <p>{{ demo.result_detail }}</p>
                                     {% endif %}
                                 </div>
-                                <span class="h-intel-voice__success-cal" aria-hidden="true"><i class="fas {{ demo.result_icon }}"></i></span>
+                                <span class="h-intel-voice__success-cal" data-h-intel-voice-success-cal aria-hidden="true"><i class="fas {{ demo.result_icon }}"></i></span>
                             </div>
                         </div>
                         {% endfor %}

@@ -27,7 +27,9 @@
                     </header>
                     <ul class="h-compare__chips h-compare__chips--before" aria-label="ابزارهای پراکنده">
                         {% for item in home_page.before_after.before_stack %}
-                        <li><i class="fas {{ item.icon }}" aria-hidden="true"></i>{{ item.text }}</li>
+                        <li class="{% if forloop.last %}h-compare__chip-search{% endif %}">
+                            <i class="fas {{ item.icon }}" aria-hidden="true"></i>{{ item.text }}
+                        </li>
                         {% endfor %}
                     </ul>
                 </div>
@@ -58,7 +60,7 @@
                 <div class="h-compare__matrix-rail-line" aria-hidden="true"></div>
 
                 {% for pair in home_page.before_after.pairs %}
-                <article class="h-compare__matrix-cell h-compare__matrix-cell--before h-compare__card h-compare__card--before">
+                <article class="h-compare__matrix-cell h-compare__matrix-cell--before h-compare__card h-compare__card--before" data-h-compare-pair>
                     <span class="h-compare__card-mark h-compare__card-mark--muted" aria-hidden="true">
                         <i class="fas fa-xmark"></i>
                     </span>
@@ -73,7 +75,7 @@
 
                 <span class="h-compare__matrix-cell h-compare__matrix-cell--rail h-compare__rail-pill">{{ pair.step }}</span>
 
-                <article class="h-compare__matrix-cell h-compare__matrix-cell--after h-compare__card h-compare__card--after" data-h-compare-pair>
+                <article class="h-compare__matrix-cell h-compare__matrix-cell--after h-compare__card h-compare__card--after">
                     <span class="h-compare__card-mark h-compare__card-mark--ok" aria-hidden="true">
                         <i class="fas fa-check"></i>
                     </span>

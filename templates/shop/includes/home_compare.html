@@ -1,35 +1,45 @@
 <section class="h-compare" id="mk-compare" aria-labelledby="h-compare-title">
     <div class="container">
-        <header class="h-compare__head">
+        <header class="h-compare__head mk-reveal">
             <h2 class="h-compare__title" id="h-compare-title">{{ home_page.before_after.title }}</h2>
             {% if home_page.before_after.subtitle %}
             <p class="h-compare__subtitle">{{ home_page.before_after.subtitle }}</p>
             {% endif %}
         </header>
 
-        <div class="h-compare__board" data-h-compare>
-            <div class="h-compare__columns" aria-hidden="true">
-                <span class="h-compare__col-label h-compare__col-label--before">{{ home_page.before_after.before_label }}</span>
-                <span class="h-compare__col-label h-compare__col-label--after">{{ home_page.before_after.after_label }}</span>
+        <div class="h-compare__canvas mk-reveal" data-h-compare>
+            <div class="h-compare__stack h-compare__stack--before" aria-label="{{ home_page.before_after.before_label }}">
+                <span class="h-compare__stack-label">{{ home_page.before_after.before_label }}</span>
+                <ul class="h-compare__chips">
+                    {% for item in home_page.before_after.before_stack %}
+                    <li><i class="fas {{ item.icon }}" aria-hidden="true"></i> {{ item.text }}</li>
+                    {% endfor %}
+                </ul>
             </div>
 
-            <ul class="h-compare__pairs">
-                {% for pair in home_page.before_after.pairs %}
-                <li class="h-compare__pair" data-h-compare-pair>
-                    <div class="h-compare__cell h-compare__cell--before">
-                        <i class="fa-solid fa-xmark" aria-hidden="true"></i>
-                        <span>{{ pair.before }}</span>
-                    </div>
-                    <div class="h-compare__bridge" aria-hidden="true">
-                        <i class="fa-solid fa-arrow-left-long"></i>
-                    </div>
-                    <div class="h-compare__cell h-compare__cell--after">
-                        <i class="fa-solid fa-check" aria-hidden="true"></i>
-                        <span>{{ pair.after }}</span>
-                    </div>
-                </li>
-                {% endfor %}
-            </ul>
+            <div class="h-compare__transform" aria-hidden="true">
+                <span class="h-compare__transform-line"></span>
+                <span class="h-compare__transform-icon"><i class="fas fa-arrow-left-long"></i></span>
+            </div>
+
+            <div class="h-compare__stack h-compare__stack--after" aria-label="{{ home_page.before_after.after_label }}">
+                <span class="h-compare__stack-label">{{ home_page.before_after.after_label }}</span>
+                <ul class="h-compare__chips">
+                    {% for item in home_page.before_after.after_stack %}
+                    <li><i class="fas {{ item.icon }}" aria-hidden="true"></i> {{ item.text }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
         </div>
+
+        <ul class="h-compare__outcomes mk-reveal">
+            {% for pair in home_page.before_after.pairs %}
+            <li class="h-compare__outcome" data-h-compare-pair>
+                <span class="h-compare__outcome-before">{{ pair.before }}</span>
+                <i class="fas fa-arrow-left-long" aria-hidden="true"></i>
+                <span class="h-compare__outcome-after">{{ pair.after }}</span>
+            </li>
+            {% endfor %}
+        </ul>
     </div>
 </section>

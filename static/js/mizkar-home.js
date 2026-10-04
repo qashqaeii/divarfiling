@@ -361,7 +361,7 @@
 
     /* ─── Stats counter animation ─── */
     function animateStatCounts() {
-        var vals = document.querySelectorAll('.mk-stat-val[data-count]');
+        var vals = document.querySelectorAll('.mk-stat-val[data-count], .h-stats__val[data-count]');
         if (!vals.length) return;
 
         function run(el) {

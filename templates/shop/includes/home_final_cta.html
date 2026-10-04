@@ -15,9 +15,15 @@
                 {{ home_page.cta_section.primary_label }}
             </a>
             {% endif %}
+            {% if home_page.cta_section.secondary_url_name %}
+            <a href="{% url home_page.cta_section.secondary_url_name %}" class="h-final-cta__btn h-final-cta__btn--ghost">
+                {{ home_page.cta_section.secondary_label }}
+            </a>
+            {% elif home_page.cta_section.secondary_href %}
             <a href="{{ home_page.cta_section.secondary_href }}" class="h-final-cta__btn h-final-cta__btn--ghost">
                 {{ home_page.cta_section.secondary_label }}
             </a>
+            {% endif %}
         </div>
         <p class="h-final-cta__edu">
             <a href="{% url 'education' %}">مرکز آموزش</a>

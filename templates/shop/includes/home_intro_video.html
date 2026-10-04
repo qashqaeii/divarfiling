@@ -1,1 +1,11 @@
-{% include 'includes/intro_video_showcase.html' with intro_video_skin='marketing' %}
+{% load static %}
+<section class="h-intro-feature" aria-labelledby="h-intro-feature-title">
+    <div class="container h-intro-feature__head mk-reveal">
+        <span class="h-intro-feature__kicker">{{ home_page.intro_video_section.kicker }}</span>
+        <h2 class="h-intro-feature__title" id="h-intro-feature-title">{{ home_page.intro_video_section.title }}</h2>
+        <p class="h-intro-feature__lead">{{ home_page.intro_video_section.lead }}</p>
+    </div>
+    <div class="container h-intro-feature__player">
+        {% include 'includes/intro_video_showcase.html' with intro_video_skin='marketing' %}
+    </div>
+</section>

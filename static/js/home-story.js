@@ -388,6 +388,45 @@
         });
     }
 
+    function initIntelligence() {
+        var voice = document.querySelector('[data-h-intel-voice]');
+        if (!voice) return;
+
+        var tabs = voice.querySelectorAll('[data-h-intel-voice-tab]');
+        var demos = voice.querySelectorAll('[data-h-intel-voice-demo]');
+        if (!tabs.length || !demos.length) return;
+
+        function show(index) {
+            tabs.forEach(function (tab, i) {
+                var active = i === index;
+                tab.classList.toggle('is-active', active);
+                tab.setAttribute('aria-selected', active ? 'true' : 'false');
+            });
+            demos.forEach(function (demo, i) {
+                var active = i === index;
+                demo.classList.toggle('is-active', active);
+                if (active) {
+                    demo.removeAttribute('hidden');
+                } else {
+                    demo.setAttribute('hidden', '');
+                }
+            });
+        }
+
+        tabs.forEach(function (tab) {
+            tab.addEventListener('click', function () {
+                show(parseInt(tab.getAttribute('data-h-intel-voice-tab'), 10));
+            });
+            tab.addEventListener('keydown', function (e) {
+                if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+                e.preventDefault();
+                var idx = parseInt(tab.getAttribute('data-h-intel-voice-tab'), 10);
+                if (e.key === 'ArrowLeft') show((idx + 1) % tabs.length);
+                else show((idx - 1 + tabs.length) % tabs.length);
+            });
+        });
+    }
+
     function initPillars() {
         var root = document.querySelector('[data-h-pillars]');
         if (!root) return;
@@ -426,6 +465,7 @@
         initClimaxReveal();
         initCompare();
         initFlow();
+        initIntelligence();
         initPillars();
     });
 })();

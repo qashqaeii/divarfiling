@@ -7,11 +7,11 @@
 {% block body_class %}mk-home-page{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/mizkar-home.css' %}?v=92">
-<link rel="stylesheet" href="{% static 'css/home-hero-mobile.css' %}?v=16">
-<link rel="stylesheet" href="{% static 'css/home-v2.css' %}?v=9">
-<link rel="stylesheet" href="{% static 'css/home-mobile.css' %}?v=1">
-<link rel="stylesheet" href="{% static 'css/mk-intro-video-showcase.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'css/mizkar-home.css' %}?v=93">
+<link rel="stylesheet" href="{% static 'css/home-hero-mobile.css' %}?v=17">
+<link rel="stylesheet" href="{% static 'css/home-v2.css' %}?v=12">
+<link rel="stylesheet" href="{% static 'css/home-mobile.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'css/mk-intro-video-showcase.css' %}?v=2">
 <link rel="stylesheet" href="{% static 'css/mizkar-video-player.css' %}?v=2">
 {% endblock %}
 
@@ -157,51 +157,47 @@
     </div>
 </section>
 
+<div class="h-hero-bridge" aria-hidden="true">
+    <div class="h-hero-bridge__fade"></div>
+    <div class="h-hero-bridge__signal"></div>
+</div>
+
 <div class="mk-home-body">
 
 {# ─── آمار لایو ─── #}
-<section class="h-stats" aria-label="آمار زنده پلتفرم">
+<section class="h-stats h-stats--strip" aria-label="آمار زنده پلتفرم">
     <div class="container">
-        <div class="h-stats__panel mk-reveal">
-            <header class="h-stats__head">
-                <div class="h-stats__live">
+        <div class="h-stats__strip mk-reveal">
+            <div class="h-stats__meta">
+                <span class="h-stats__live">
                     <span class="h-stats__live-dot" aria-hidden="true"></span>
-                    <span>آمار زنده</span>
-                </div>
+                    <span>سیگنال پلتفرم</span>
+                </span>
                 {% if stats.uptime_label %}
-                <span class="h-stats__uptime" style="font-size:0.75rem;font-weight:600;color:#64748b;">
+                <span class="h-stats__uptime">
                     <i class="fas fa-clock" aria-hidden="true"></i> {{ stats.uptime_label }}
                 </span>
                 {% endif %}
-            </header>
-            <div class="h-stats__grid">
-                <article class="h-stats__item">
-                    <span class="h-stats__item-icon"><i class="fas fa-users" aria-hidden="true"></i></span>
-                    <span>
-                        <span class="h-stats__val" data-count="{{ stats.total_users }}">{{ stats.total_users|intcomma }}</span>
-                        <span class="h-stats__lbl">کاربر فعال</span>
-                    </span>
+            </div>
+            <div class="h-stats__grid" role="list">
+                <article class="h-stats__item" role="listitem">
+                    <span class="h-stats__val" data-count="{{ stats.total_users }}">{{ stats.total_users|intcomma }}</span>
+                    <span class="h-stats__lbl">کاربر فعال</span>
                 </article>
-                <article class="h-stats__item">
-                    <span class="h-stats__item-icon"><i class="fas fa-shopping-bag" aria-hidden="true"></i></span>
-                    <span>
-                        <span class="h-stats__val" data-count="{{ stats.total_orders }}">{{ stats.total_orders|intcomma }}</span>
-                        <span class="h-stats__lbl">خرید موفق</span>
-                    </span>
+                <span class="h-stats__sep" aria-hidden="true"></span>
+                <article class="h-stats__item" role="listitem">
+                    <span class="h-stats__val" data-count="{{ stats.total_orders }}">{{ stats.total_orders|intcomma }}</span>
+                    <span class="h-stats__lbl">خرید موفق</span>
                 </article>
-                <article class="h-stats__item">
-                    <span class="h-stats__item-icon"><i class="fas fa-key" aria-hidden="true"></i></span>
-                    <span>
-                        <span class="h-stats__val" data-count="{{ stats.total_licenses }}">{{ stats.total_licenses|intcomma }}</span>
-                        <span class="h-stats__lbl">لایسنس فعال</span>
-                    </span>
+                <span class="h-stats__sep" aria-hidden="true"></span>
+                <article class="h-stats__item" role="listitem">
+                    <span class="h-stats__val" data-count="{{ stats.total_licenses }}">{{ stats.total_licenses|intcomma }}</span>
+                    <span class="h-stats__lbl">لایسنس فعال</span>
                 </article>
-                <article class="h-stats__item">
-                    <span class="h-stats__item-icon"><i class="fas fa-heart" aria-hidden="true"></i></span>
-                    <span>
-                        <span class="h-stats__val">{{ stats.satisfaction_rate }}<small>%</small></span>
-                        <span class="h-stats__lbl">رضایت کاربران</span>
-                    </span>
+                <span class="h-stats__sep" aria-hidden="true"></span>
+                <article class="h-stats__item" role="listitem">
+                    <span class="h-stats__val h-stats__val--static">{{ stats.satisfaction_rate }}<small>%</small></span>
+                    <span class="h-stats__lbl">رضایت کاربران</span>
                 </article>
             </div>
         </div>
@@ -211,22 +207,24 @@
 {% include 'shop/includes/home_intro_video.html' %}
 
 {% include 'shop/includes/home_scrollytelling.html' %}
+{% include 'shop/includes/home_intelligence.html' %}
 {% include 'shop/includes/home_compare.html' %}
 {% include 'shop/includes/home_flow.html' %}
 {% include 'shop/includes/home_pillars.html' %}
 
 {# ─── پلن‌ها (فشرده) ─── #}
-<section class="mk-section mk-pricing-tiers h-pricing" aria-label="پلن‌های پلتفرم">
+<section class="mk-section mk-pricing-tiers h-pricing" id="mk-pricing" aria-label="پلن‌های پلتفرم">
     <div class="container">
-        <header class="mk-section-head mk-reveal">
+        <header class="mk-section-head h-pricing__head mk-reveal">
             <h2 class="mk-section-title">{{ home_page.pricing_section.title }}</h2>
             {% if home_page.pricing_section.subtitle %}
             <p class="mk-section-desc">{{ home_page.pricing_section.subtitle }}</p>
             {% endif %}
+            <p class="h-pricing__hint">میزکار CRM رایگان است · لایسنس ربات برای استخراج و تحلیل عمیق</p>
         </header>
-        <div class="mk-tier-grid mk-reveal">
+        <div class="mk-tier-grid h-pricing__grid mk-reveal">
             {% for tier in home_page.pricing_tiers %}
-            <article class="mk-tier-card mk-tier-card--{{ tier.accent }}" data-tier="{{ tier.id }}">
+            <article class="mk-tier-card mk-tier-card--{{ tier.accent }} h-pricing__card{% if tier.id == 'free' %} h-pricing__card--featured{% endif %}" data-tier="{{ tier.id }}">
                 <header class="mk-tier-head">
                     <span class="mk-tier-icon">{% include 'includes/icon_slot.html' with decor=tier.decor_icon fa=tier.icon only %}</span>
                     <div class="mk-tier-title-wrap">
@@ -278,7 +276,7 @@
                     <span class="mk-faq-q">{{ faq.q }}</span>
                     <i class="fas fa-plus mk-faq-icon" aria-hidden="true"></i>
                 </summary>
-                <div class="mk-faq-answer"><p>{{ faq.a }}</p></div>
+                <div class="mk-faq-answer" id="mk-faq-answer-{{ forloop.counter }}"><p>{{ faq.a }}</p></div>
             </details>
             {% endfor %}
         </div>
@@ -306,7 +304,7 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'js/mizkar-home.js' %}?v=15" defer></script>
-<script src="{% static 'js/home-story.js' %}?v=6" defer></script>
+<script src="{% static 'js/mizkar-home.js' %}?v=16" defer></script>
+<script src="{% static 'js/home-story.js' %}?v=7" defer></script>
 {% if intro_video and intro_video.can_embed %}<script src="{% static 'js/bot-install-video.js' %}?v=1" defer></script>{% endif %}
 {% endblock %}

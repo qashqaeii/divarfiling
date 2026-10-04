@@ -1541,7 +1541,7 @@ def home_page_content():
                 },
                 {
                     'id': 'summary',
-                    'icon': 'fa-sparkles',
+                    'icon': 'fa-wand-magic-sparkles',
                     'title': 'خلاصه هوشمند فایل',
                     'desc': 'اطلاعات زیاد را سریع‌تر بخوان؛ نکات مهم فایل را در یک خلاصه ساختاریافته ببین.',
                     'raw_lines': [

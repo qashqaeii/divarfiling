@@ -30,7 +30,17 @@
                 btn.setAttribute('aria-current', active ? 'step' : 'false');
             });
             if (barFill) {
-                barFill.style.width = (((i + 1) / total) * 100) + '%';
+                var pct = (((i + 1) / total) * 100) + '%';
+                if (barFill.classList.contains('h-story__timeline-fill')) {
+                    barFill.style.height = pct;
+                } else {
+                    barFill.style.width = pct;
+                }
+            }
+            var activeScene = scenes[i];
+            if (activeScene && rail) {
+                var accent = activeScene.getAttribute('data-accent') || 'violet';
+                rail.style.setProperty('--h-story-active-accent', 'var(--h-story-accent-' + accent + ', #7c3aed)');
             }
         }
 
@@ -45,8 +55,9 @@
             });
         });
 
+        setScene(0);
+
         if (prefersReduced || !('IntersectionObserver' in window)) {
-            setScene(0);
             return;
         }
 
@@ -129,27 +140,6 @@
         });
     }
 
-    function initClimaxReveal() {
-        var product = document.querySelector('.h-climax__product');
-        if (!product) return;
-
-        if (prefersReduced || !('IntersectionObserver' in window)) {
-            product.classList.add('is-visible');
-            return;
-        }
-
-        var observer = new IntersectionObserver(function (entries) {
-            entries.forEach(function (entry) {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('is-visible');
-                    observer.unobserve(entry.target);
-                }
-            });
-        }, { threshold: 0.25 });
-
-        observer.observe(product);
-    }
-
     function initCompare() {
         var root = document.querySelector('[data-h-compare]');
         if (!root) return;
@@ -187,19 +177,20 @@
         var nodes = wrap.querySelectorAll('.h-flow__node[data-h-flow-step]');
         var progress = wrap.querySelector('[data-h-flow-progress]');
         var buttons = wrap.querySelectorAll('[data-h-flow-btn]');
-        var popup = wrap.querySelector('[data-h-flow-popup]');
-        var popupCard = wrap.querySelector('[data-h-flow-popup-card]');
-        var popupStep = wrap.querySelector('[data-h-flow-popup-step]');
-        var popupTitle = wrap.querySelector('[data-h-flow-popup-title]');
-        var popupText = wrap.querySelector('[data-h-flow-popup-text]');
-        var popupIcon = wrap.querySelector('[data-h-flow-popup-icon]');
-        var popupClose = wrap.querySelector('[data-h-flow-popup-close]');
+        var spotlight = wrap.querySelector('[data-h-flow-spotlight]');
+        var spotlightStep = wrap.querySelector('[data-h-flow-spotlight-step]');
+        var spotlightTitle = wrap.querySelector('[data-h-flow-spotlight-title]');
+        var spotlightText = wrap.querySelector('[data-h-flow-spotlight-text]');
+        var spotlightIcon = wrap.querySelector('[data-h-flow-spotlight-icon]');
         var mobileDetail = wrap.querySelector('[data-h-flow-mobile-detail]');
         var mobileStep = wrap.querySelector('[data-h-flow-mobile-step]');
         var mobileTitle = wrap.querySelector('[data-h-flow-mobile-title]');
         var mobileText = wrap.querySelector('[data-h-flow-mobile-text]');
-        var openIndex = -1;
         if (!track || !nodes.length) return;
+
+        function progressPct(index) {
+            return nodes.length <= 1 ? 100 : (index / (nodes.length - 1)) * 100;
+        }
 
         function setActive(index) {
             nodes.forEach(function (node, i) {
@@ -211,23 +202,34 @@
                 }
             });
             if (progress) {
-                var pct = nodes.length <= 1 ? 100 : (index / (nodes.length - 1)) * 100;
-                progress.style.width = pct + '%';
+                progress.style.width = progressPct(index) + '%';
             }
         }
 
-        function closePopup() {
-            if (!popup) return;
-            openIndex = -1;
-            popup.classList.remove('is-open');
-            popup.setAttribute('hidden', '');
-            nodes.forEach(function (node) {
-                node.classList.remove('is-popup-open');
-                var btn = node.querySelector('.h-flow__node-btn');
-                if (btn) {
-                    btn.setAttribute('aria-expanded', 'false');
-                }
-            });
+        function fillDetail(btn, index) {
+            if (!btn) return;
+            var node = nodes[index];
+            var accent = (node && node.getAttribute('data-accent')) || 'violet';
+            var stepLabel = 'مرحله ' + (btn.getAttribute('data-flow-step') || '');
+            var title = btn.getAttribute('data-flow-title') || '';
+            var detail = btn.getAttribute('data-flow-detail') || '';
+            var iconClass = btn.getAttribute('data-flow-icon') || '';
+
+            if (spotlight) {
+                spotlight.setAttribute('data-accent', accent);
+            }
+            if (spotlightStep) {
+                spotlightStep.textContent = stepLabel;
+            }
+            if (spotlightTitle) {
+                spotlightTitle.textContent = title;
+            }
+            if (spotlightText) {
+                spotlightText.textContent = detail;
+            }
+            if (spotlightIcon) {
+                spotlightIcon.innerHTML = '<i class="fas ' + iconClass + '" aria-hidden="true"></i>';
+            }
         }
 
         function showMobileDetail(index, btn) {
@@ -255,93 +257,46 @@
             mobileDetail.setAttribute('hidden', '');
         }
 
-        function positionPopup(node) {
-            if (!popup || !node) return;
-            var centerX = node.offsetLeft + node.offsetWidth / 2;
-            var topY = node.offsetTop;
-            popup.style.left = centerX + 'px';
-            popup.style.top = topY + 'px';
-        }
-
-        function showPopup(index, btn) {
-            if (!desktopMq.matches || !popup || !btn) return;
-
-            if (openIndex === index && popup.classList.contains('is-open')) {
-                closePopup();
-                return;
+        function selectStep(index) {
+            var btn = buttons[index];
+            if (!btn) return;
+            setActive(index);
+            fillDetail(btn, index);
+            if (desktopMq.matches) {
+                hideMobileDetail();
+            } else {
+                showMobileDetail(index, btn);
             }
-
-            var node = nodes[index];
-            var accent = node.getAttribute('data-accent') || 'violet';
-
-            if (popupStep) {
-                popupStep.textContent = 'مرحله ' + btn.getAttribute('data-flow-step');
-            }
-            if (popupTitle) {
-                popupTitle.textContent = btn.getAttribute('data-flow-title') || '';
-            }
-            if (popupText) {
-                popupText.textContent = btn.getAttribute('data-flow-detail') || '';
-            }
-            if (popupIcon) {
-                popupIcon.innerHTML = '<i class="fas ' + btn.getAttribute('data-flow-icon') + '" aria-hidden="true"></i>';
-            }
-            if (popupCard) {
-                popupCard.setAttribute('data-accent', accent);
-            }
-
-            nodes.forEach(function (node, i) {
-                node.classList.toggle('is-popup-open', i === index);
-                var nodeBtn = node.querySelector('.h-flow__node-btn');
-                if (nodeBtn) {
-                    nodeBtn.setAttribute('aria-expanded', i === index ? 'true' : 'false');
-                }
-            });
-
-            positionPopup(node);
-            popup.removeAttribute('hidden');
-            requestAnimationFrame(function () {
-                popup.classList.add('is-open');
-            });
-            openIndex = index;
         }
 
         buttons.forEach(function (btn) {
             btn.addEventListener('click', function () {
                 var index = parseInt(btn.getAttribute('data-h-flow-btn'), 10);
-                setActive(index);
-                if (desktopMq.matches) {
-                    hideMobileDetail();
-                    showPopup(index, btn);
-                } else {
-                    closePopup();
-                    showMobileDetail(index, btn);
-                }
+                selectStep(index);
             });
         });
 
-        if (popupClose) {
-            popupClose.addEventListener('click', closePopup);
-        }
-
-        document.addEventListener('click', function (event) {
-            if (!popup || !popup.classList.contains('is-open')) return;
-            if (event.target.closest('[data-h-flow-popup]')) return;
-            if (event.target.closest('[data-h-flow-btn]')) return;
-            closePopup();
-        });
-
-        document.addEventListener('keydown', function (event) {
-            if (event.key === 'Escape') {
-                closePopup();
-            }
-        });
-
         function onFlowModeChange() {
-            if (!desktopMq.matches) {
-                closePopup();
-            } else {
+            if (desktopMq.matches) {
                 hideMobileDetail();
+                var activeBtn = buttons[0];
+                nodes.forEach(function (node, i) {
+                    if (node.classList.contains('is-active')) {
+                        activeBtn = buttons[i];
+                    }
+                });
+                if (activeBtn) {
+                    var idx = parseInt(activeBtn.getAttribute('data-h-flow-btn'), 10);
+                    fillDetail(activeBtn, idx);
+                }
+            } else if (buttons.length) {
+                var activeIndex = 0;
+                nodes.forEach(function (node, i) {
+                    if (node.classList.contains('is-active')) {
+                        activeIndex = i;
+                    }
+                });
+                showMobileDetail(activeIndex, buttons[activeIndex]);
             }
         }
 
@@ -351,17 +306,7 @@
             desktopMq.addListener(onFlowModeChange);
         }
 
-        window.addEventListener('resize', function () {
-            if (openIndex >= 0 && desktopMq.matches) {
-                positionPopup(nodes[openIndex]);
-            }
-        }, { passive: true });
-
-        setActive(0);
-
-        if (!desktopMq.matches && buttons.length) {
-            showMobileDetail(0, buttons[0]);
-        }
+        selectStep(0);
 
         if (prefersReduced || !('IntersectionObserver' in window) || desktopMq.matches) {
             return;
@@ -371,11 +316,7 @@
             entries.forEach(function (entry) {
                 if (entry.isIntersecting) {
                     var idx = parseInt(entry.target.getAttribute('data-h-flow-step'), 10);
-                    setActive(idx);
-                    var activeBtn = buttons[idx];
-                    if (activeBtn) {
-                        showMobileDetail(idx, activeBtn);
-                    }
+                    selectStep(idx);
                 }
             });
         }, {
@@ -462,7 +403,6 @@
     document.addEventListener('DOMContentLoaded', function () {
         initStoryScroll();
         initStoryMobileReveal();
-        initClimaxReveal();
         initCompare();
         initFlow();
         initIntelligence();

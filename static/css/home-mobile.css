@@ -54,7 +54,6 @@
     /* Section rhythm */
     .mk-home-page .mk-home-body > section,
     .mk-home-page .mk-home-body > .h-story,
-    .mk-home-page .mk-home-body > .h-climax,
     .mk-home-page .mk-home-body > .h-intel,
     .mk-home-page .mk-home-body > .h-intro-feature {
         padding-block: var(--hm-section-y);
@@ -345,36 +344,14 @@
         line-height: 1.6;
     }
 
-    /* ── Climax ── */
-    .mk-home-page .h-climax {
-        padding-inline: var(--hm-pad-x);
-    }
-
-    .mk-home-page .h-climax__title {
-        font-size: var(--hm-title);
-    }
-
-    .mk-home-page .h-climax__sub {
-        font-size: var(--hm-card-title);
-    }
-
-    .mk-home-page .h-climax__line {
-        font-size: var(--hm-body);
-        max-width: none;
-    }
-
-    .mk-home-page .h-climax__frame {
-        margin-top: 0.5rem;
-    }
-
-    /* ── Compare — stacked card pairs ── */
+    /* ── Compare — compact panel ── */
     .mk-home-page .h-compare {
         padding-inline: 0;
     }
 
     .mk-home-page .h-compare__head {
         padding-inline: var(--hm-pad-x);
-        margin-bottom: 1rem;
+        margin-bottom: 0.85rem;
     }
 
     .mk-home-page .h-compare__title {
@@ -385,50 +362,18 @@
         font-size: var(--hm-body);
     }
 
-    .mk-home-page .h-compare__board {
+    .mk-home-page .h-compare__panel {
         margin-inline: var(--hm-pad-x);
-        padding: 0.75rem;
         border-radius: var(--hm-radius);
     }
 
-    .mk-home-page .h-compare__pairs {
-        gap: 0.75rem;
+    .mk-home-page .h-compare__tags li {
+        white-space: normal;
+        font-size: var(--hm-caption);
     }
 
-    .mk-home-page .h-compare__pair {
-        display: flex;
-        flex-direction: column;
-        gap: 0.45rem;
-        padding: 0.75rem;
-        border-radius: var(--hm-radius-sm);
-        background: rgba(148, 163, 184, 0.05);
-        border: 1px solid var(--hm-border);
-    }
-
-    .mk-home-page .h-compare__bridge {
-        display: none;
-    }
-
-    .mk-home-page .h-compare__cell {
-        width: 100%;
-        padding: 0.7rem 0.8rem;
+    .mk-home-page .h-compare__row {
         font-size: var(--hm-body);
-        line-height: 1.6;
-        border-radius: 10px;
-    }
-
-    .mk-home-page .h-compare__cell--after {
-        order: 1;
-    }
-
-    .mk-home-page .h-compare__cell--before {
-        order: 2;
-        opacity: 0.88;
-    }
-
-    .mk-home-page .h-compare__cell span {
-        overflow-wrap: anywhere;
-        word-break: break-word;
     }
 
     /* ── Product flow — vertical + inline detail ── */
@@ -440,20 +385,21 @@
         font-size: var(--hm-title);
     }
 
-    .mk-home-page .h-flow__stage {
-        padding-inline: var(--hm-pad-x);
+    .mk-home-page .h-flow__panel {
+        margin-inline: var(--hm-pad-x);
+        border-radius: var(--hm-radius);
     }
 
     .mk-home-page .h-flow__node-btn {
         min-height: var(--hm-touch);
-        padding: 0.8rem 0.95rem;
-        border-radius: var(--hm-radius);
+        padding: 0.75rem 0.85rem;
+        border-radius: var(--hm-radius-sm);
         -webkit-tap-highlight-color: transparent;
     }
 
-    .mk-home-page .h-flow__node-ring {
-        width: 2.75rem;
-        height: 2.75rem;
+    .mk-home-page .h-flow__node-marker {
+        width: 2.5rem;
+        height: 2.5rem;
     }
 
     .mk-home-page .h-flow__node-title {
@@ -773,7 +719,7 @@
         margin-inline: auto;
     }
 
-    .mk-home-page .h-compare__board {
+    .mk-home-page .h-compare__panel {
         max-width: 36rem;
     }
 

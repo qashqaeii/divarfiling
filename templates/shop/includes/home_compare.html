@@ -7,39 +7,45 @@
             {% endif %}
         </header>
 
-        <div class="h-compare__canvas mk-reveal" data-h-compare>
-            <div class="h-compare__stack h-compare__stack--before" aria-label="{{ home_page.before_after.before_label }}">
-                <span class="h-compare__stack-label">{{ home_page.before_after.before_label }}</span>
-                <ul class="h-compare__chips">
-                    {% for item in home_page.before_after.before_stack %}
-                    <li><i class="fas {{ item.icon }}" aria-hidden="true"></i> {{ item.text }}</li>
-                    {% endfor %}
-                </ul>
+        <div class="h-compare__panel mk-reveal" data-h-compare>
+            <div class="h-compare__spectrum" aria-hidden="true">
+                <span class="h-compare__spectrum-before"></span>
+                <span class="h-compare__spectrum-after"></span>
             </div>
 
-            <div class="h-compare__transform" aria-hidden="true">
-                <span class="h-compare__transform-line"></span>
-                <span class="h-compare__transform-icon"><i class="fas fa-arrow-left-long"></i></span>
+            <div class="h-compare__lanes">
+                <div class="h-compare__lane h-compare__lane--before">
+                    <span class="h-compare__lane-label">{{ home_page.before_after.before_label }}</span>
+                    <ul class="h-compare__tags" aria-label="ابزارهای پراکنده">
+                        {% for item in home_page.before_after.before_stack %}
+                        <li><i class="fas {{ item.icon }}" aria-hidden="true"></i>{{ item.text }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+
+                <div class="h-compare__pivot" aria-hidden="true">
+                    <span class="h-compare__pivot-ring"><i class="fas fa-arrow-left-long"></i></span>
+                </div>
+
+                <div class="h-compare__lane h-compare__lane--after">
+                    <span class="h-compare__lane-label">{{ home_page.before_after.after_label }}</span>
+                    <ul class="h-compare__tags" aria-label="جریان یکپارچه">
+                        {% for item in home_page.before_after.after_stack %}
+                        <li><i class="fas {{ item.icon }}" aria-hidden="true"></i>{{ item.text }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
             </div>
 
-            <div class="h-compare__stack h-compare__stack--after" aria-label="{{ home_page.before_after.after_label }}">
-                <span class="h-compare__stack-label">{{ home_page.before_after.after_label }}</span>
-                <ul class="h-compare__chips">
-                    {% for item in home_page.before_after.after_stack %}
-                    <li><i class="fas {{ item.icon }}" aria-hidden="true"></i> {{ item.text }}</li>
-                    {% endfor %}
-                </ul>
-            </div>
+            <ul class="h-compare__rows" aria-label="تغییر در عمل روزانه">
+                {% for pair in home_page.before_after.pairs %}
+                <li class="h-compare__row" data-h-compare-pair>
+                    <span class="h-compare__row-before">{{ pair.before }}</span>
+                    <span class="h-compare__row-mid" aria-hidden="true"><i class="fas fa-chevron-left"></i></span>
+                    <span class="h-compare__row-after"><i class="fas fa-check" aria-hidden="true"></i>{{ pair.after }}</span>
+                </li>
+                {% endfor %}
+            </ul>
         </div>
-
-        <ul class="h-compare__outcomes mk-reveal">
-            {% for pair in home_page.before_after.pairs %}
-            <li class="h-compare__outcome" data-h-compare-pair>
-                <span class="h-compare__outcome-before">{{ pair.before }}</span>
-                <i class="fas fa-arrow-left-long" aria-hidden="true"></i>
-                <span class="h-compare__outcome-after">{{ pair.after }}</span>
-            </li>
-            {% endfor %}
-        </ul>
     </div>
 </section>

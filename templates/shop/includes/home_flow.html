@@ -8,79 +8,74 @@
             <p class="h-flow__subtitle">{{ home_page.product_flow.subtitle }}</p>
             {% endif %}
         </header>
-    </div>
 
-    <div class="h-flow__stage" data-h-flow-wrap>
-        <div class="h-flow__ai-layer" aria-hidden="true">
-            <span class="h-flow__ai-label"><i class="fas fa-sparkles"></i> کمک هوش مصنوعی در ثبت، تطبیق و خلاصه</span>
-            <span class="h-flow__ai-beam"></span>
-        </div>
-        <div class="h-flow__rail" aria-hidden="true">
-            <span class="h-flow__rail-track"></span>
-            <span class="h-flow__rail-fill" data-h-flow-progress></span>
-        </div>
+        <div class="h-flow__panel mk-reveal" data-h-flow-wrap>
+            <p class="h-flow__ai-note" aria-hidden="true">
+                <i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i>
+                کمک هوش مصنوعی در ثبت، تطبیق و خلاصه
+            </p>
 
-        <ol class="h-flow__nodes" data-h-flow-track role="list">
-            {% for step in home_page.product_flow.steps %}
-            <li
-                class="h-flow__node{% if forloop.first %} is-active{% endif %}"
-                data-h-flow-step="{{ forloop.counter0 }}"
-                data-accent="{{ step.accent }}"
-                role="listitem"
-            >
-                <button
-                    type="button"
-                    class="h-flow__node-btn"
-                    data-h-flow-btn="{{ forloop.counter0 }}"
-                    aria-pressed="{% if forloop.first %}true{% else %}false{% endif %}"
-                    aria-haspopup="dialog"
-                    aria-expanded="false"
-                    aria-controls="h-flow-popup"
-                    data-flow-step="{{ forloop.counter|stringformat:'02d' }}"
-                    data-flow-title="{{ step.title }}"
-                    data-flow-detail="{{ step.detail }}"
-                    data-flow-icon="{{ step.icon }}"
+            <div class="h-flow__layout">
+                <div
+                    class="h-flow__spotlight"
+                    data-h-flow-spotlight
+                    data-accent="violet"
+                    aria-live="polite"
                 >
-                    <span class="h-flow__node-ring" aria-hidden="true">
-                        <span class="h-flow__node-index">{{ forloop.counter|stringformat:"02d" }}</span>
-                        <span class="h-flow__node-icon"><i class="fas {{ step.icon }}" aria-hidden="true"></i></span>
-                    </span>
-                    <span class="h-flow__node-copy">
-                        <strong class="h-flow__node-title">{{ step.title }}</strong>
-                        <em class="h-flow__node-desc">{{ step.desc }}</em>
-                    </span>
-                </button>
-            </li>
-            {% endfor %}
-        </ol>
-
-        <div class="h-flow__mobile-detail" data-h-flow-mobile-detail hidden aria-live="polite">
-            <span class="h-flow__mobile-detail-step" data-h-flow-mobile-step></span>
-            <strong class="h-flow__mobile-detail-title" data-h-flow-mobile-title></strong>
-            <p class="h-flow__mobile-detail-text" data-h-flow-mobile-text></p>
-        </div>
-
-        <div
-            class="h-flow__popup"
-            id="h-flow-popup"
-            data-h-flow-popup
-            role="dialog"
-            aria-modal="false"
-            aria-labelledby="h-flow-popup-title"
-            hidden
-        >
-            <div class="h-flow__popup-card" data-h-flow-popup-card>
-                <div class="h-flow__popup-head">
-                    <span class="h-flow__popup-icon" data-h-flow-popup-icon aria-hidden="true"></span>
-                    <span class="h-flow__popup-step" data-h-flow-popup-step></span>
-                    <button type="button" class="h-flow__popup-close" data-h-flow-popup-close aria-label="بستن">
-                        <i class="fas fa-xmark" aria-hidden="true"></i>
-                    </button>
+                    <div class="h-flow__spotlight-top">
+                        <span class="h-flow__spotlight-step" data-h-flow-spotlight-step></span>
+                        <span class="h-flow__spotlight-icon" data-h-flow-spotlight-icon aria-hidden="true"></span>
+                    </div>
+                    <strong class="h-flow__spotlight-title" data-h-flow-spotlight-title></strong>
+                    <p class="h-flow__spotlight-text" data-h-flow-spotlight-text></p>
+                    <div class="h-flow__spotlight-progress" aria-hidden="true">
+                        <span class="h-flow__spotlight-progress-track"></span>
+                        <span class="h-flow__spotlight-progress-fill" data-h-flow-progress></span>
+                    </div>
                 </div>
-                <strong class="h-flow__popup-title" id="h-flow-popup-title" data-h-flow-popup-title></strong>
-                <p class="h-flow__popup-text" data-h-flow-popup-text></p>
+
+                <div class="h-flow__journey">
+                    <span class="h-flow__journey-line" aria-hidden="true"></span>
+                    <ol class="h-flow__nodes" data-h-flow-track role="list">
+                        {% for step in home_page.product_flow.steps %}
+                        <li
+                            class="h-flow__node{% if forloop.first %} is-active{% endif %}"
+                            data-h-flow-step="{{ forloop.counter0 }}"
+                            data-accent="{{ step.accent }}"
+                            role="listitem"
+                        >
+                            <button
+                                type="button"
+                                class="h-flow__node-btn"
+                                data-h-flow-btn="{{ forloop.counter0 }}"
+                                aria-pressed="{% if forloop.first %}true{% else %}false{% endif %}"
+                                data-flow-step="{{ forloop.counter|stringformat:'02d' }}"
+                                data-flow-title="{{ step.title }}"
+                                data-flow-detail="{{ step.detail }}"
+                                data-flow-icon="{{ step.icon }}"
+                            >
+                                <span class="h-flow__node-marker" aria-hidden="true">
+                                    <span class="h-flow__node-dot"></span>
+                                    <span class="h-flow__node-icon"><i class="fas {{ step.icon }}" aria-hidden="true"></i></span>
+                                </span>
+                                <span class="h-flow__node-copy">
+                                    <span class="h-flow__node-index">{{ forloop.counter|stringformat:"02d" }}</span>
+                                    <strong class="h-flow__node-title">{{ step.title }}</strong>
+                                    <em class="h-flow__node-desc">{{ step.desc }}</em>
+                                </span>
+                                <span class="h-flow__node-chevron" aria-hidden="true"><i class="fas fa-chevron-left"></i></span>
+                            </button>
+                        </li>
+                        {% endfor %}
+                    </ol>
+                </div>
             </div>
-            <span class="h-flow__popup-arrow" aria-hidden="true"></span>
+
+            <div class="h-flow__mobile-detail" data-h-flow-mobile-detail hidden aria-live="polite">
+                <span class="h-flow__mobile-detail-step" data-h-flow-mobile-step></span>
+                <strong class="h-flow__mobile-detail-title" data-h-flow-mobile-title></strong>
+                <p class="h-flow__mobile-detail-text" data-h-flow-mobile-text></p>
+            </div>
         </div>
     </div>
 </section>

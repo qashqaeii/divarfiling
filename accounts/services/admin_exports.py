@@ -558,10 +558,15 @@ def _users_management_export_rows() -> Tuple[List[str], Iterable[ExportRow]]:
 
 def _growth_journeys_rows(stage: str | None = None) -> Tuple[List[str], Iterable[ExportRow]]:
     from accounts.models import GrowthJourney
-    from accounts.services.growth_journey import journey_display_name
+    from accounts.services.growth_journey import journey_display_name, journey_extraction_district
 
-    headers = ['شماره تماس', 'نام یا نام آژانس']
-    qs = GrowthJourney.objects.select_related('user', 'lead', 'user__workspace_settings').order_by(
+    headers = ['شماره تماس', 'نام یا نام آژانس', 'منطقه استخراج']
+    qs = GrowthJourney.objects.select_related(
+        'user',
+        'lead',
+        'lead__first_batch',
+        'user__workspace_settings',
+    ).order_by(
         'phone_normalized',
     )
     if stage:
@@ -570,6 +575,7 @@ def _growth_journeys_rows(stage: str | None = None) -> Tuple[List[str], Iterable
         {
             'شماره تماس': j.phone_normalized,
             'نام یا نام آژانس': journey_display_name(j),
+            'منطقه استخراج': journey_extraction_district(j),
         }
         for j in qs.iterator(chunk_size=500)
     ]

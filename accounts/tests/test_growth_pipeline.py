@@ -7,7 +7,7 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
 
 from accounts.models import GrowthJourney, MarketingLead
-from accounts.services.growth_journey import journey_display_name, on_click_landing, on_signup, transition
+from accounts.services.growth_journey import journey_display_name, journey_extraction_district, on_click_landing, on_signup, transition
 from accounts.services.growth_suppression import (
     PURPOSE_ACQUISITION,
     PURPOSE_ACTIVATION,
@@ -156,3 +156,18 @@ class JourneyDisplayNameTests(TestCase):
             stage=GrowthJourney.Stage.COLD_LEAD,
         )
         self.assertEqual(journey_display_name(j), 'دفتر املاک X')
+
+    def test_extraction_district_from_lead(self):
+        lead = MarketingLead.objects.create(
+            phone_normalized='09125556666',
+            display_name='مشاور',
+            district='ونک',
+            city='تهران',
+            status=MarketingLead.Status.COLD,
+        )
+        j = GrowthJourney.objects.create(
+            phone_normalized='09125556666',
+            lead=lead,
+            stage=GrowthJourney.Stage.COLD_LEAD,
+        )
+        self.assertEqual(journey_extraction_district(j), 'ونک')

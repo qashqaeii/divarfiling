@@ -756,6 +756,19 @@ def journey_display_name(journey: GrowthJourney) -> str:
     return ''
 
 
+def journey_extraction_district(journey: GrowthJourney) -> str:
+    """منطقهٔ استخراج سرنخ — همان منطق نمایش در پیامک، بدون placeholder بازاریابی."""
+    lead = journey.lead
+    if not lead:
+        return ''
+    from accounts.services.lead_import import display_district_for_lead
+
+    label = (display_district_for_lead(lead) or '').strip()
+    if label == 'منطقه شما':
+        return ''
+    return label
+
+
 def on_lead_imported(lead: MarketingLead) -> Optional[GrowthJourney]:
     if lead.status == MarketingLead.Status.EXISTING_USER:
         return transition(

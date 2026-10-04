@@ -341,7 +341,6 @@
         var intelLoopTimers = [];
         var activeDemoIndex = 0;
         var intelVisible = true;
-        var voicePanel = document.querySelector('.h-intel-panel--voice');
         var matchPanel = document.querySelector('[data-h-intel-match]');
         var summaryPanel = document.querySelector('[data-h-intel-summary]');
         var matchCycleClasses = [
@@ -457,9 +456,6 @@
 
             demoEl.classList.remove('is-transcribed', 'is-voice-busy');
             bar.classList.remove('is-recording', 'is-complete');
-            if (voicePanel) {
-                voicePanel.classList.remove('is-hero-recording');
-            }
             if (mic) {
                 mic.classList.remove('is-live');
             }
@@ -486,9 +482,6 @@
 
             demoEl.classList.add('is-voice-busy');
             bar.classList.add('is-recording');
-            if (voicePanel) {
-                voicePanel.classList.add('is-hero-recording');
-            }
             if (mic) {
                 mic.classList.add('is-live');
             }
@@ -504,9 +497,6 @@
             scheduleVoice(function () {
                 bar.classList.remove('is-recording');
                 bar.classList.add('is-complete');
-                if (voicePanel) {
-                    voicePanel.classList.remove('is-hero-recording');
-                }
                 if (mic) {
                     mic.classList.remove('is-live');
                 }
@@ -587,9 +577,6 @@
                     if (!entry.isIntersecting) {
                         clearVoiceTimers();
                         stopIntelPanelLoops();
-                        if (voicePanel) {
-                            voicePanel.classList.remove('is-hero-recording');
-                        }
                         return;
                     }
                     if (!started) {

@@ -2315,14 +2315,72 @@ html.mk-public .mk-home-page .h-intel strong {
     box-shadow: 0 0 24px rgba(124, 58, 237, 0.35);
 }
 
-.h-intel-panel--voice .h-intel-panel__hero {
-    width: 4rem;
-    height: 4rem;
+.h-intel-panel__hero--art {
+    width: min(100%, 11.5rem);
+    height: auto;
+    min-height: 5.25rem;
+    margin: 0 auto 0.35rem;
+    padding: 0.15rem 0.25rem 0.25rem;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    border-radius: 0;
+}
+
+.h-intel-panel__hero--art .h-intel-panel__hero-glow {
+    inset: 12% 8% 0;
+    border: none;
     border-radius: 50%;
-    font-size: 1.45rem;
-    color: #bfdbfe;
-    background: radial-gradient(circle at 30% 30%, rgba(96, 165, 250, 0.45), rgba(124, 58, 237, 0.35));
-    box-shadow: 0 0 36px rgba(59, 130, 246, 0.45);
+    background: radial-gradient(ellipse 80% 70% at 50% 55%, rgba(124, 58, 237, 0.28), transparent 68%);
+    opacity: 1;
+    z-index: 0;
+}
+
+.h-intel-panel--voice .h-intel-panel__hero--art .h-intel-panel__hero-glow {
+    background: radial-gradient(ellipse 85% 72% at 50% 58%, rgba(59, 130, 246, 0.32), transparent 70%);
+}
+
+.h-intel-panel--matching .h-intel-panel__hero--art .h-intel-panel__hero-glow {
+    background: radial-gradient(ellipse 82% 70% at 50% 55%, rgba(99, 102, 241, 0.3), transparent 68%);
+}
+
+.h-intel-panel--summary .h-intel-panel__hero--art .h-intel-panel__hero-glow {
+    background: radial-gradient(ellipse 82% 70% at 50% 55%, rgba(167, 139, 250, 0.32), transparent 68%);
+}
+
+.h-intel-panel__hero-img {
+    position: relative;
+    z-index: 1;
+    display: block;
+    width: auto;
+    max-width: 100%;
+    height: clamp(4.75rem, 11vw, 6.25rem);
+    margin-inline: auto;
+    object-fit: contain;
+    object-position: center;
+    filter: drop-shadow(0 14px 28px rgba(15, 23, 42, 0.45));
+    user-select: none;
+    -webkit-user-drag: none;
+}
+
+.h-intel-panel--voice .h-intel-panel__hero-img {
+    height: clamp(5.25rem, 12.5vw, 7rem);
+    filter:
+        drop-shadow(0 18px 32px rgba(59, 130, 246, 0.35))
+        drop-shadow(0 0 24px rgba(124, 58, 237, 0.22));
+}
+
+.h-intel-panel--matching .h-intel-panel__hero-img {
+    height: clamp(5rem, 11.5vw, 6.5rem);
+    filter:
+        drop-shadow(0 16px 30px rgba(99, 102, 241, 0.32))
+        drop-shadow(0 0 20px rgba(124, 58, 237, 0.18));
+}
+
+.h-intel-panel--summary .h-intel-panel__hero-img {
+    filter:
+        drop-shadow(0 16px 30px rgba(124, 58, 237, 0.32))
+        drop-shadow(0 0 22px rgba(167, 139, 250, 0.2));
 }
 
 .h-intel-panel__hero-glow {
@@ -2331,6 +2389,10 @@ html.mk-public .mk-home-page .h-intel strong {
     border-radius: inherit;
     border: 1px solid rgba(167, 139, 250, 0.2);
     opacity: 0.6;
+}
+
+.h-intel-panel__hero--art .h-intel-panel__hero-glow {
+    pointer-events: none;
 }
 
 .h-intel-panel__title {

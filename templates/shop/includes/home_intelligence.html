@@ -25,10 +25,22 @@
             {% for panel in home_page.intelligence_section.panels %}
             <article class="h-intel-panel h-intel-panel--{{ panel.id }}" data-h-intel-panel="{{ panel.id }}">
                 <header class="h-intel-panel__head">
-                    <span class="h-intel-panel__hero" aria-hidden="true">
+                    <div class="h-intel-panel__hero{% if panel.hero_image %} h-intel-panel__hero--art{% endif %}" aria-hidden="true">
                         <span class="h-intel-panel__hero-glow"></span>
+                        {% if panel.hero_image %}
+                        <img
+                            class="h-intel-panel__hero-img"
+                            src="{% static panel.hero_image %}"
+                            alt=""
+                            width="280"
+                            height="200"
+                            loading="lazy"
+                            decoding="async"
+                        >
+                        {% else %}
                         <i class="fas {{ panel.icon }}"></i>
-                    </span>
+                        {% endif %}
+                    </div>
                     <h3 class="h-intel-panel__title">{{ panel.title }}</h3>
                     <p class="h-intel-panel__desc">{{ panel.desc }}</p>
                 </header>

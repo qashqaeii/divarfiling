@@ -1509,6 +1509,7 @@ def home_page_content():
                 {
                     'id': 'voice',
                     'icon': 'fa-microphone-lines',
+                    'hero_image': 'images/Voice-command.png',
                     'title': 'فرمان هوشمند و صوتی',
                     'desc': 'لازم نیست همیشه تایپ کنی؛ مخاطب، فایل شخصی و یادآوری را با جملهٔ طبیعی ثبت کن.',
                     'chips': ['ثبت فایل جدید', 'یادآوری تماس', 'جستجوی فایل'],
@@ -1530,6 +1531,7 @@ def home_page_content():
                 {
                     'id': 'matching',
                     'icon': 'fa-house-circle-check',
+                    'hero_image': 'images/Tatbigh.png',
                     'title': 'تطبیق هوشمند',
                     'desc': 'نیاز مشتری را ثبت کن؛ سیستم فایل‌های نزدیک‌تر به بودجه، متراژ و محله را پیشنهاد می‌دهد.',
                     'customer': {
@@ -1561,6 +1563,7 @@ def home_page_content():
                 {
                     'id': 'summary',
                     'icon': 'fa-folder-open',
+                    'hero_image': 'images/Ai-Command.png',
                     'title': 'خلاصه هوشمند فایل',
                     'desc': 'اطلاعات زیاد را سریع‌تر بخوان؛ نکات مهم فایل را در یک خلاصه ساختاریافته ببین.',
                     'raw_label': 'داده خام فایل',

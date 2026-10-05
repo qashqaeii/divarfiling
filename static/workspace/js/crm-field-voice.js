@@ -51,12 +51,12 @@
         const wrapEl = wrap.querySelector(':scope > .crm-field-voice__wrap');
         if (wrapEl) {
             const direct = wrapEl.querySelector(
-                '.crm-input, .crm-textarea, [data-crm-field-voice-editor], [contenteditable="true"]',
+                '.crm-input, .crm-textarea, .ws-input, .ws-textarea, [data-crm-field-voice-editor], [contenteditable="true"]',
             );
             if (direct) return direct;
         }
         return wrap.querySelector(
-            '.crm-input, .crm-textarea, [data-crm-field-voice-editor], [contenteditable="true"]',
+            '.crm-input, .crm-textarea, .ws-input, .ws-textarea, [data-crm-field-voice-editor], [contenteditable="true"]',
         );
     }
 

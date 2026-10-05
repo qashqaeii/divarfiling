@@ -47,7 +47,7 @@
                 <div class="ws-fields ws-fields-2">
                     <div class="ws-field ws-field-full">
                         <label class="ws-label" for="editTitle">عنوان آگهی</label>
-                        <input type="text" name="title" id="editTitle" class="ws-input" required autocomplete="off">
+                        {% include 'workspace/includes/ws_field_voice.html' with voice_name='title' voice_id='editTitle' voice_required=True voice_autocomplete='off' %}
                     </div>
                     <div class="ws-field">
                         <label class="ws-label" for="editBusiness">آگهی‌دهنده</label>
@@ -70,7 +70,7 @@
                     </div>
                     <div class="ws-field">
                         <label class="ws-label" for="editOwnerName">نام مالک</label>
-                        <input type="text" name="owner_name" id="editOwnerName" class="ws-input" placeholder="نام و نام خانوادگی">
+                        {% include 'workspace/includes/ws_field_voice.html' with voice_name='owner_name' voice_id='editOwnerName' voice_placeholder='نام و نام خانوادگی' %}
                     </div>
                     <div class="ws-field ws-field-full">
                         <label class="ws-label" for="editLink">لینک دیوار</label>
@@ -327,7 +327,7 @@
                 <div class="ws-fields ws-fields-2">
                     <div class="ws-field ws-field-full">
                         <label class="ws-label" for="editAddress">آدرس</label>
-                        <input type="text" name="address" id="editAddress" class="ws-input" placeholder="آدرس کامل ملک">
+                        {% include 'workspace/includes/ws_field_voice.html' with voice_name='address' voice_id='editAddress' voice_placeholder='آدرس کامل ملک' %}
                     </div>
                     <div class="ws-field">
                         <label class="ws-label" for="editCity">شهر</label>
@@ -335,11 +335,11 @@
                     </div>
                     <div class="ws-field">
                         <label class="ws-label" for="editDistrict">منطقه</label>
-                        <input type="text" name="district" id="editDistrict" class="ws-input">
+                        {% include 'workspace/includes/ws_field_voice.html' with voice_name='district' voice_id='editDistrict' %}
                     </div>
                     <div class="ws-field">
                         <label class="ws-label" for="editNeighborhood">محله</label>
-                        <input type="text" name="neighborhood" id="editNeighborhood" class="ws-input">
+                        {% include 'workspace/includes/ws_field_voice.html' with voice_name='neighborhood' voice_id='editNeighborhood' %}
                     </div>
                     <div class="ws-field">
                         <label class="ws-label" for="editLatitude">عرض جغرافیایی</label>
@@ -373,7 +373,7 @@
             <section class="mk-edit-section mk-edit-section-last" id="sec-desc">
                 <h3 class="mk-edit-section-title"><i class="fas fa-align-right" aria-hidden="true"></i> توضیحات</h3>
                 <div class="ws-field ws-field-full">
-                    <textarea name="description" id="editDescription" class="ws-textarea mk-edit-description" rows="10" placeholder="متن کامل آگهی…"></textarea>
+                    {% include 'workspace/includes/ws_field_voice.html' with voice_field_tag='textarea' voice_name='description' voice_id='editDescription' voice_extra_class='mk-edit-description' voice_rows=10 voice_placeholder='متن کامل آگهی…' %}
                 </div>
             </section>
             </div>

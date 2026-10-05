@@ -136,7 +136,23 @@
         this._bindDelete();
         this._bindFormSubmit();
         this._bindActionMenus();
+        this._bindEditModalVoice();
     }
+
+    ListingEditController.prototype._bindEditModalVoice = function () {
+        var self = this;
+        if (!this.editModal) return;
+        if (typeof window.initCRMFieldVoice === 'function') {
+            window.initCRMFieldVoice(this.editModal);
+        }
+        this.editModal.querySelectorAll('[data-modal-close]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                if (typeof window.stopCRMFieldVoiceIn === 'function') {
+                    window.stopCRMFieldVoiceIn(self.editModal);
+                }
+            });
+        });
+    };
 
     ListingEditController.prototype._syncOccupancyUI = function () {
         var f = this.fields;
@@ -665,6 +681,9 @@
         if (this.editModal) {
             this.editModal.classList.add('is-open');
             document.body.classList.add('ws-modal-open');
+            if (typeof window.initCRMFieldVoice === 'function') {
+                window.initCRMFieldVoice(this.editModal);
+            }
         }
         this._refreshNavSections();
         this._resetNavState();

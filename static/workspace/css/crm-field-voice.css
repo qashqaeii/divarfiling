@@ -9,14 +9,17 @@
 }
 
 .crm-field-voice__wrap > .crm-input,
-.crm-field-voice__wrap > .crm-textarea {
+.crm-field-voice__wrap > .crm-textarea,
+.crm-field-voice__wrap > .ws-input,
+.crm-field-voice__wrap > .ws-textarea {
     width: 100%;
     min-width: 0;
     box-sizing: border-box;
     padding-inline-end: 2.65rem;
 }
 
-.crm-field-voice__wrap > .crm-textarea {
+.crm-field-voice__wrap > .crm-textarea,
+.crm-field-voice__wrap > .ws-textarea {
     padding-block-start: 0.55rem;
 }
 
@@ -40,7 +43,8 @@
     transition: background 0.12s, color 0.12s, box-shadow 0.12s;
 }
 
-.crm-field-voice__wrap > .crm-textarea + .crm-field-voice__mic {
+.crm-field-voice__wrap > .crm-textarea + .crm-field-voice__mic,
+.crm-field-voice__wrap > .ws-textarea + .crm-field-voice__mic {
     top: 0.45rem;
     transform: none;
 }
@@ -92,7 +96,9 @@
 }
 
 .crm-field-voice.is-voice-listening .crm-field-voice__wrap > .crm-input,
-.crm-field-voice.is-voice-listening .crm-field-voice__wrap > .crm-textarea {
+.crm-field-voice.is-voice-listening .crm-field-voice__wrap > .crm-textarea,
+.crm-field-voice.is-voice-listening .crm-field-voice__wrap > .ws-input,
+.crm-field-voice.is-voice-listening .crm-field-voice__wrap > .ws-textarea {
     border-color: color-mix(in srgb, #ef4444 32%, var(--ws-border, #e2e8f0));
     box-shadow: 0 0 0 2px color-mix(in srgb, #ef4444 12%, transparent);
 }

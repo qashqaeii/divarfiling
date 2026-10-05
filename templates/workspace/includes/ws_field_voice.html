@@ -1,0 +1,11 @@
+<div class="crm-field-voice" data-crm-field-voice>
+    <div class="crm-field-voice__wrap">
+        {% if voice_field_tag == 'textarea' %}
+        <textarea name="{{ voice_name }}" id="{{ voice_id }}" class="ws-textarea{% if voice_extra_class %} {{ voice_extra_class }}{% endif %}" rows="{{ voice_rows|default:10 }}"{% if voice_placeholder %} placeholder="{{ voice_placeholder }}"{% endif %}></textarea>
+        {% else %}
+        <input type="{{ voice_input_type|default:'text' }}" name="{{ voice_name }}" id="{{ voice_id }}" class="ws-input{% if voice_extra_class %} {{ voice_extra_class }}{% endif %}"{% if voice_placeholder %} placeholder="{{ voice_placeholder }}"{% endif %}{% if voice_dir %} dir="{{ voice_dir }}"{% endif %}{% if voice_inputmode %} inputmode="{{ voice_inputmode }}"{% endif %}{% if voice_required %} required{% endif %}{% if voice_autocomplete %} autocomplete="{{ voice_autocomplete }}"{% endif %}>
+        {% endif %}
+        {% include 'workspace/crm/includes/crm_field_voice_mic.html' %}
+    </div>
+    <p class="crm-field-voice__status" data-crm-field-voice-status role="status" aria-live="polite" hidden></p>
+</div>

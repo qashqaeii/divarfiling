@@ -394,6 +394,22 @@ class PropertyDistrictAndPriceFormTests(TestCase):
         self.assertEqual(created.deal_mode, 'فروش')
         self.assertEqual(created.sale_price, 10_000_000_000)
 
+    def test_property_from_listing_maps_address_and_meta_note(self):
+        from workspace.models import ListingMeta
+        from workspace.services.crm import property_from_listing
+
+        self.prop.delete()
+        self.listing.data = {'آدرس': 'خیابان ولیعصر، پلاک ۱۲'}
+        self.listing.save(update_fields=['data'])
+        ListingMeta.objects.create(
+            user=self.user,
+            token=self.listing.token,
+            note='تماس با مالک فردا',
+        )
+        prop = property_from_listing(self.user, self.listing)
+        self.assertEqual(prop.address, 'خیابان ولیعصر، پلاک ۱۲')
+        self.assertEqual(prop.notes, 'تماس با مالک فردا')
+
     def test_rent_listing_maps_deal_mode_and_prices(self):
         from workspace.services.crm import property_from_listing
 

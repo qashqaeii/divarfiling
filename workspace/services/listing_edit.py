@@ -23,6 +23,7 @@ TENANT_PHONE_KEYS = ('شماره مستاجر', 'tenant_phone', 'شماره مس
 TENANT_NAME_KEYS = ('نام مستاجر', 'tenant_name', 'نام مستأجر', 'نام و نام خانوادگی مستاجر')
 VACANCY_DATE_KEYS = ('تاریخ تخلیه', 'vacancy_date', 'تاریخ تخلیه یا آماده تحویل')
 ADDRESS_KEYS = ('آدرس', 'address', 'مکان_آدرس')
+NOTE_DATA_KEYS = ('یادداشت', 'notes', 'note', 'internal_note')
 DISTRICT_KEYS = ('منطقه', 'district', 'district_persian', 'مکان_منطقه')
 
 # امکانات اضافه (علاوه بر آسانسور/پارکینگ/انباری)
@@ -243,6 +244,31 @@ def address_from_listing(listing) -> str:
         if value is not None and str(value).strip():
             return str(value).strip()
     return ''
+
+
+def note_from_listing_data(listing) -> str:
+    data = listing.data or {}
+    for key in NOTE_DATA_KEYS:
+        value = data.get(key)
+        if value is not None and str(value).strip():
+            return str(value).strip()
+    return ''
+
+
+def filing_notes_for_personal_property(user, listing) -> str:
+    """یادداشت داخلی فایلینگ (متادیتا + داده آگهی) برای انتقال به فایل شخصی."""
+    from workspace.models import ListingMeta
+
+    meta_note = ''
+    token = str(getattr(listing, 'token', '') or '').strip()
+    if token and user is not None:
+        meta = ListingMeta.objects.filter(user_id=user.pk, token=token).only('note').first()
+        if meta:
+            meta_note = (meta.note or '').strip()
+    data_note = note_from_listing_data(listing)
+    if meta_note and data_note and meta_note != data_note:
+        return f'{meta_note}\n\n{data_note}'
+    return meta_note or data_note
 
 
 def district_from_listing(listing) -> str:

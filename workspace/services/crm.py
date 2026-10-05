@@ -883,7 +883,9 @@ def property_from_listing(user, listing) -> CRMProperty:
     """ساخت ملک CRM از آگهی اسکرپ‌شده."""
     from workspace.services.features import extract_listing_features
     from workspace.services.listing_edit import (
+        address_from_listing,
         district_from_listing,
+        filing_notes_for_personal_property,
         owner_name_from_listing,
         owner_phone_from_listing,
         tenant_name_from_listing,
@@ -927,13 +929,15 @@ def property_from_listing(user, listing) -> CRMProperty:
     platform, external_id = DIVAR_SOURCE_PLATFORM, str(listing.token or '').strip()
     feature_data = extract_feature_data_from_listing_data(merged_data)
     feature_data.update(listing_location_metadata(listing))
+    listing_address = address_from_listing(listing)
+    filing_notes = filing_notes_for_personal_property(user, listing)
     return CRMProperty.objects.create(
         user=user,
         agency=get_agency(user),
         title=listing.title or f'ملک {listing.token}',
         property_type='آپارتمان',
         deal_mode=deal_mode,
-        address=listing.neighborhood,
+        address=listing_address,
         city=listing.city,
         district=district_from_listing(listing),
         neighborhood=listing.neighborhood,
@@ -963,8 +967,32 @@ def property_from_listing(user, listing) -> CRMProperty:
         business_type=biz or 'شخصی',
         phone=owner_phone,
         owner_name=owner_name,
+        notes=filing_notes,
         publish_status='منتشرشده',
     )
+
+
+def sync_listing_address_and_notes_to_property(user, listing, prop: CRMProperty) -> None:
+    """پس از ویرایش آگهی، آدرس و یادداشت را روی فایل شخصی موجود همگام می‌کند."""
+    from workspace.services.listing_edit import (
+        address_from_listing,
+        filing_notes_for_personal_property,
+    )
+
+    update_fields: list[str] = []
+    listing_address = address_from_listing(listing)
+    if listing_address and (prop.address or '').strip() != listing_address:
+        prop.address = listing_address
+        update_fields.append('address')
+
+    filing_notes = filing_notes_for_personal_property(user, listing)
+    if filing_notes and not (prop.notes or '').strip():
+        prop.notes = filing_notes
+        update_fields.append('notes')
+
+    if update_fields:
+        update_fields.append('updated_at')
+        prop.save(update_fields=update_fields)
 
 
 def get_crm_property_by_token(user, token: str) -> Optional[CRMProperty]:
@@ -1127,6 +1155,7 @@ def add_listing_to_personal_files(user, listing) -> tuple[CRMProperty, bool]:
                     token[:12] if token else '',
                 )
 
+        sync_listing_address_and_notes_to_property(user, listing, prop)
         _sync_contacts(prop)
         finalize_listing_moved_to_personal(user, listing, prop)
 

@@ -986,7 +986,7 @@ def sync_listing_address_and_notes_to_property(user, listing, prop: CRMProperty)
         update_fields.append('address')
 
     filing_notes = filing_notes_for_personal_property(user, listing)
-    if filing_notes and not (prop.notes or '').strip():
+    if filing_notes and (prop.notes or '').strip() != filing_notes:
         prop.notes = filing_notes
         update_fields.append('notes')
 

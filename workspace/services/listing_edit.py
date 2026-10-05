@@ -255,8 +255,20 @@ def note_from_listing_data(listing) -> str:
     return ''
 
 
+def _unique_note_parts(*parts: str) -> str:
+    seen: set[str] = set()
+    blocks: List[str] = []
+    for part in parts:
+        text = (part or '').strip()
+        if not text or text in seen:
+            continue
+        seen.add(text)
+        blocks.append(text)
+    return '\n\n'.join(blocks)
+
+
 def filing_notes_for_personal_property(user, listing) -> str:
-    """یادداشت داخلی فایلینگ (متادیتا + داده آگهی) برای انتقال به فایل شخصی."""
+    """یادداشت فایلینگ برای انتقال به تب یادداشت فایل شخصی."""
     from workspace.models import ListingMeta
 
     meta_note = ''
@@ -266,9 +278,8 @@ def filing_notes_for_personal_property(user, listing) -> str:
         if meta:
             meta_note = (meta.note or '').strip()
     data_note = note_from_listing_data(listing)
-    if meta_note and data_note and meta_note != data_note:
-        return f'{meta_note}\n\n{data_note}'
-    return meta_note or data_note
+    description = (getattr(listing, 'description', None) or '').strip()
+    return _unique_note_parts(meta_note, data_note, description)
 
 
 def district_from_listing(listing) -> str:

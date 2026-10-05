@@ -410,6 +410,15 @@ class PropertyDistrictAndPriceFormTests(TestCase):
         self.assertEqual(prop.address, 'خیابان ولیعصر، پلاک ۱۲')
         self.assertEqual(prop.notes, 'تماس با مالک فردا')
 
+    def test_property_from_listing_maps_description_to_notes(self):
+        from workspace.services.crm import property_from_listing
+
+        self.prop.delete()
+        self.listing.description = 'یادداشت داخلی مشاور برای این فایل'
+        self.listing.save(update_fields=['description'])
+        prop = property_from_listing(self.user, self.listing)
+        self.assertEqual(prop.notes, 'یادداشت داخلی مشاور برای این فایل')
+
     def test_rent_listing_maps_deal_mode_and_prices(self):
         from workspace.services.crm import property_from_listing
 

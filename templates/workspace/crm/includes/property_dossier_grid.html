@@ -188,7 +188,7 @@
     {% if dossier_amenities %}
     <div class="crm-prop-dossier-group crm-prop-dossier-group--amenities">
         <h3 class="crm-prop-dossier-h">
-            <span class="crm-prop-dossier-h__ico" aria-hidden="true"><i class="fas fa-sparkles"></i></span>
+            <span class="crm-prop-dossier-h__ico" aria-hidden="true"><i class="fas {{ 'امکانات'|feature_icon }}" aria-hidden="true"></i></span>
             <span class="crm-prop-dossier-h__text">
                 <span class="crm-prop-dossier-h__title">امکانات</span>
                 <span class="crm-prop-dossier-h__sub">تجهیزات و امکانات ثبت‌شده</span>
@@ -217,7 +217,7 @@
     {% elif property.amenities %}
     <div class="crm-prop-dossier-group crm-prop-dossier-group--amenities">
         <h3 class="crm-prop-dossier-h">
-            <span class="crm-prop-dossier-h__ico" aria-hidden="true"><i class="fas fa-sparkles"></i></span>
+            <span class="crm-prop-dossier-h__ico" aria-hidden="true"><i class="fas {{ 'امکانات'|feature_icon }}" aria-hidden="true"></i></span>
             <span class="crm-prop-dossier-h__text">
                 <span class="crm-prop-dossier-h__title">امکانات</span>
                 <span class="crm-prop-dossier-h__sub">تجهیزات و امکانات ثبت‌شده</span>

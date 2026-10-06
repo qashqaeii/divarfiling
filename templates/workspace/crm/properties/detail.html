@@ -31,7 +31,7 @@
 {% block ws_surface_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/crm-prop-detail-mobile-premium.css' %}?v=4">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-mobile-v2-properties.css' %}?v=1">
-<link rel="stylesheet" href="{% static 'workspace/css/ws-crm-property-detail-mobile-v1.css' %}?v=12">
+<link rel="stylesheet" href="{% static 'workspace/css/ws-crm-property-detail-mobile-v1.css' %}?v=17">
 {% endblock %}
 
 {% block crm_content %}
@@ -108,6 +108,7 @@
                     <i class="fas fa-arrow-right" aria-hidden="true"></i>
                 </a>
                 <div class="ws-crm-pd-mob-hero-bar">
+                    <span class="ws-crm-pd-mob-hero-bar__ico" aria-hidden="true"><i class="fas fa-building"></i></span>
                     <span class="ws-crm-pd-mob-hero-title">{{ property.title|truncatechars:34 }}</span>
                 </div>
                 <nav class="crm-prop-hero-crumb" aria-label="مسیر">
@@ -474,27 +475,47 @@
         {% endif %}
 
         <div class="ws-crm-pd-mob-keyfacts" aria-label="خلاصه ملک">
-            {% if property.sale_price %}
-            <p class="ws-crm-pd-mob-keyfacts__price">{{ property.sale_price|ws_money }}</p>
-            {% elif property.deposit %}
-            <p class="ws-crm-pd-mob-keyfacts__price"><span class="ws-crm-pd-mob-keyfacts__price-lbl">ودیعه</span> {{ property.deposit|ws_money }}</p>
-            {% elif property.monthly_rent %}
-            <p class="ws-crm-pd-mob-keyfacts__price"><span class="ws-crm-pd-mob-keyfacts__price-lbl">اجاره</span> {{ property.monthly_rent|ws_money }}</p>
-            {% else %}
-            <p class="ws-crm-pd-mob-keyfacts__price ws-crm-pd-mob-keyfacts__price--muted">قیمت ثبت نشده</p>
-            {% endif %}
-            <p class="ws-crm-pd-mob-keyfacts__meta">
-                {% if property.area %}<span>{{ property.area|ws_area }}</span>{% endif %}
-                {% if property.rooms %}<span>{{ property.rooms }} خواب</span>{% endif %}
-                <span>{{ property.deal_mode }}</span>
-            </p>
+            <div class="ws-crm-pd-mob-keyfacts__primary">
+                <div class="ws-crm-pd-mob-keyfacts__price-block">
+                    {% if property.deal_mode %}
+                    <span class="ws-crm-pd-mob-keyfacts__deal"><i class="fas fa-tag" aria-hidden="true"></i>{{ property.deal_mode }}</span>
+                    {% endif %}
+                    {% if property.sale_price %}
+                    <p class="ws-crm-pd-mob-keyfacts__price">{{ property.sale_price|ws_money }}</p>
+                    {% elif property.deposit %}
+                    <p class="ws-crm-pd-mob-keyfacts__price"><span class="ws-crm-pd-mob-keyfacts__price-lbl">ودیعه</span> {{ property.deposit|ws_money }}</p>
+                    {% elif property.monthly_rent %}
+                    <p class="ws-crm-pd-mob-keyfacts__price"><span class="ws-crm-pd-mob-keyfacts__price-lbl">اجاره</span> {{ property.monthly_rent|ws_money }}</p>
+                    {% else %}
+                    <p class="ws-crm-pd-mob-keyfacts__price ws-crm-pd-mob-keyfacts__price--muted">قیمت ثبت نشده</p>
+                    {% endif %}
+                </div>
+                <span class="ws-crm-pd-mob-keyfacts__status">{{ property.transaction_status }}</span>
+            </div>
+            <div class="ws-crm-pd-mob-keyfacts__attrs">
+                {% if property.area %}
+                <span class="ws-crm-pd-mob-keyfacts__attr">
+                    <i class="fas fa-ruler-combined" aria-hidden="true"></i>
+                    <span class="ws-crm-pd-mob-keyfacts__attr-val">{{ property.area|ws_area }}</span>
+                </span>
+                {% endif %}
+                {% if property.rooms %}
+                <span class="ws-crm-pd-mob-keyfacts__attr">
+                    <i class="fas fa-bed" aria-hidden="true"></i>
+                    <span class="ws-crm-pd-mob-keyfacts__attr-val">{{ property.rooms }} خواب</span>
+                </span>
+                {% endif %}
+                <span class="ws-crm-pd-mob-keyfacts__attr">
+                    <i class="fas fa-building" aria-hidden="true"></i>
+                    <span class="ws-crm-pd-mob-keyfacts__attr-val">{{ property.property_type }}</span>
+                </span>
+            </div>
             {% if property_location_display and property_location_display != "—" %}
-            <p class="ws-crm-pd-mob-keyfacts__loc"><i class="fas fa-location-dot" aria-hidden="true"></i>{{ property_location_display }}</p>
-            {% endif %}
-            <p class="ws-crm-pd-mob-keyfacts__status">
-                <span>{{ property.transaction_status }}</span>
-                <span>{{ property.property_type }}</span>
+            <p class="ws-crm-pd-mob-keyfacts__loc">
+                <span class="ws-crm-pd-mob-keyfacts__loc-ico" aria-hidden="true"><i class="fas fa-location-dot"></i></span>
+                <span class="ws-crm-pd-mob-keyfacts__loc-txt">{{ property_location_display }}</span>
             </p>
+            {% endif %}
         </div>
         </div>
     </header>

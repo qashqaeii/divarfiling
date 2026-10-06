@@ -305,6 +305,7 @@ def _icon_for_key(key: str) -> str:
     """آیکون مناسب برای کلید ویژگی / امکانات / مشخصات."""
     icons = {
         # امکانات اصلی
+        'امکانات': 'fa-star',
         'آسانسور': 'fa-elevator',
         'پارکینگ': 'fa-square-parking',
         'انباری': 'fa-box-archive',

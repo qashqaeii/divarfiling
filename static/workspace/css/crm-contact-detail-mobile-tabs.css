@@ -1,0 +1,541 @@
+/* Contact Detail — Tab navigation + tab bodies (mobile ≤768, dossier only) */
+
+@media (max-width: 768px) {
+    .crm-contact-dossier.crm-contact-detail-pro {
+        --crm-tab-gutter: 0.875rem;
+    }
+
+    .crm-contact-dossier .crm-contact-main {
+        padding-bottom: calc(var(--ws-mob-dock-clearance, 4.5rem) + env(safe-area-inset-bottom, 0px) + 0.35rem);
+    }
+
+    /* ── Tab bar (beat crm-contacts-mobile 3×2 grid + width:100% tab cells) ── */
+    .crm-contact-dossier .crm-contact-segrail {
+        position: sticky;
+        top: 0;
+        z-index: 22;
+        margin: 0 0 0.5rem !important;
+        padding: 0.35rem var(--crm-tab-gutter) 0.45rem !important;
+        background: color-mix(in srgb, var(--ws-bg, #f4f6fb) 88%, var(--ws-surface));
+        border-bottom: 1px solid color-mix(in srgb, var(--ws-border) 38%, transparent);
+        transition: box-shadow 0.18s ease;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        overflow: visible !important;
+    }
+
+    .crm-contact-dossier .crm-contact-segrail.is-stuck {
+        box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
+    }
+
+    .crm-contact-dossier.crm-contact-mobile .crm-contact-tabs.crm-tabs-pro,
+    .crm-contact-dossier .crm-contact-tabs.crm-tabs-pro {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        align-items: center;
+        gap: 0.4rem !important;
+        min-height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior-x: contain;
+        touch-action: pan-x pan-y;
+        scroll-snap-type: x proximity;
+        scroll-padding-inline: 0.25rem;
+        grid-template-columns: unset !important;
+        grid-auto-flow: unset !important;
+        border: none !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        position: static !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+    }
+
+    .crm-contact-dossier .crm-contact-tabs.crm-tabs-pro::-webkit-scrollbar {
+        display: none;
+    }
+
+    .crm-contact-dossier.crm-contact-mobile .crm-contact-tabs .crm-tab-pro,
+    .crm-contact-dossier .crm-contact-tabs .crm-tab-pro {
+        flex: 0 0 auto !important;
+        display: inline-flex !important;
+        flex-direction: row !important;
+        align-items: center;
+        justify-content: center;
+        gap: 0.3rem;
+        width: auto !important;
+        max-width: none !important;
+        min-width: 0;
+        min-height: 2.65rem !important;
+        height: 2.65rem;
+        padding: 0 0.65rem !important;
+        margin: 0 !important;
+        border: 1px solid transparent !important;
+        border-radius: 11px !important;
+        background: transparent !important;
+        color: var(--ws-text-secondary) !important;
+        font-size: 0.74rem !important;
+        font-weight: 700 !important;
+        white-space: nowrap !important;
+        line-height: 1.2;
+        scroll-snap-align: center;
+        transition: background 0.16s ease, color 0.16s ease, border-color 0.16s ease;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .crm-contact-dossier .crm-contact-tabs .crm-tab-pro:active {
+        transform: scale(0.98);
+    }
+
+    .crm-contact-dossier .crm-contact-tabs .crm-tab-pro .crm-contact-seg__ico {
+        display: inline-flex !important;
+        width: 1rem !important;
+        height: 1rem !important;
+        font-size: 0.55rem !important;
+        color: var(--ws-text-muted) !important;
+        background: transparent !important;
+    }
+
+    .crm-contact-dossier .crm-contact-tabs .crm-tab-pro .crm-contact-seg__short {
+        display: none;
+    }
+
+    .crm-contact-dossier .crm-contact-tabs .crm-tab-pro em {
+        font-size: 0.58rem !important;
+        font-weight: 800 !important;
+        font-style: normal;
+        min-width: 1rem !important;
+        height: 1rem !important;
+        padding: 0 0.2rem;
+        line-height: 1rem;
+        border-radius: 6px;
+        background: color-mix(in srgb, var(--ws-surface-2) 75%, var(--ws-surface)) !important;
+        color: var(--ws-text-muted) !important;
+    }
+
+    .crm-contact-dossier .crm-contact-tabs .crm-tab-pro em.is-empty {
+        opacity: 0.55;
+    }
+
+    .crm-contact-dossier .crm-contact-tabs .crm-tab-pro.active {
+        background: color-mix(in srgb, var(--ws-primary) 10%, var(--ws-surface)) !important;
+        color: var(--ws-primary) !important;
+        border-color: color-mix(in srgb, var(--ws-primary) 18%, transparent) !important;
+        box-shadow: inset 0 -2px 0 color-mix(in srgb, var(--ws-primary) 55%, transparent) !important;
+    }
+
+    .crm-contact-dossier .crm-contact-tabs .crm-tab-pro.active .crm-contact-seg__ico {
+        color: var(--ws-primary) !important;
+    }
+
+    .crm-contact-dossier .crm-contact-tabs .crm-tab-pro.active em {
+        background: color-mix(in srgb, var(--ws-primary) 12%, var(--ws-surface)) !important;
+        color: var(--ws-primary) !important;
+    }
+
+    /* ── Tab panel shell (single page scroll — no nested vertical scroller) ── */
+    .crm-contact-dossier .crm-contact-tab-panel,
+    .crm-contact-dossier .crm-contact-panel {
+        min-height: 0 !important;
+        overflow: visible !important;
+    }
+
+    .crm-contact-dossier .crm-contact-tab-panel .crm-contact-panel-body,
+    .crm-contact-dossier .crm-contact-panel-body {
+        flex: none !important;
+        overflow: visible !important;
+        min-height: 0;
+    }
+
+    .crm-contact-dossier .crm-contact-tab-panel {
+        border: none !important;
+        border-radius: 0 !important;
+        margin-bottom: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+    }
+
+    .crm-contact-dossier .crm-contact-workspace__body,
+    .crm-contact-dossier .crm-detail-grid,
+    .crm-contact-dossier .crm-contact-main {
+        overflow: visible !important;
+        min-height: 0;
+    }
+
+    .crm-contact-dossier .crm-contact-tab-panel:not([hidden]) {
+        animation: crm-contact-tab-in 0.17s ease;
+    }
+
+    @keyframes crm-contact-tab-in {
+        from {
+            opacity: 0.65;
+            transform: translateY(5px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .crm-contact-dossier .crm-contact-tab-head {
+        padding: 0.5rem var(--crm-tab-gutter) 0.45rem !important;
+        align-items: flex-start;
+        border-bottom: 1px solid color-mix(in srgb, var(--ws-border) 32%, transparent);
+    }
+
+    .crm-contact-dossier .crm-contact-tab-head .crm-contact-panel-head-text h2 {
+        font-size: 0.88rem !important;
+        font-weight: 800;
+        margin: 0;
+        line-height: 1.25;
+    }
+
+    .crm-contact-dossier .crm-contact-tab-head__sub {
+        display: block !important;
+        margin: 0.15rem 0 0;
+        font-size: 0.68rem !important;
+        font-weight: 600;
+        color: var(--ws-text-muted);
+        line-height: 1.35;
+    }
+
+    .crm-contact-dossier .crm-contact-tab-head__cta {
+        min-height: 2.25rem !important;
+        padding: 0 0.6rem !important;
+        font-size: 0.68rem !important;
+        font-weight: 800;
+        border-radius: 10px;
+        flex-shrink: 0;
+    }
+
+    .crm-contact-dossier .crm-contact-tab-head__cta--icon {
+        width: 2.35rem;
+        min-width: 2.35rem;
+        padding: 0 !important;
+        justify-content: center;
+    }
+
+    .crm-contact-dossier .crm-contact-tab-panel .crm-contact-panel-body {
+        padding: 0.35rem var(--crm-tab-gutter) 0.25rem !important;
+    }
+
+    .crm-contact-dossier .crm-contact-panel-body--flush {
+        padding-inline: 0 !important;
+    }
+
+    /* ── Empty states (Activities styles: crm-contact-detail-mobile-activities.css) ── */
+    .crm-contact-dossier .crm-contact-tab-panel .crm-contact-empty {
+        min-height: 0;
+        max-height: 13.5rem;
+        margin: 0.5rem 0 0.75rem;
+        padding: 1rem 0.75rem;
+        border-radius: 12px;
+        border: 1px dashed color-mix(in srgb, var(--ws-border) 55%, transparent);
+        background: color-mix(in srgb, var(--ws-surface-2) 35%, var(--ws-surface));
+        text-align: center;
+    }
+
+    .crm-contact-dossier .crm-contact-tab-panel .crm-contact-empty-icon {
+        width: 2.25rem;
+        height: 2.25rem;
+        margin: 0 auto 0.45rem;
+        font-size: 0.9rem;
+        border-radius: 10px;
+        background: var(--ws-surface);
+    }
+
+    .crm-contact-dossier .crm-contact-tab-panel .crm-contact-empty strong {
+        font-size: 0.8rem;
+    }
+
+    .crm-contact-dossier .crm-contact-tab-panel .crm-contact-empty p {
+        font-size: 0.72rem;
+        margin: 0.25rem 0 0.55rem;
+        color: var(--ws-text-muted);
+    }
+
+    .crm-contact-dossier .crm-contact-tab-panel .crm-contact-empty .crm-dash-act {
+        min-height: 2.25rem;
+        font-size: 0.72rem;
+    }
+
+    /* ── Visits ── */
+    .crm-contact-dossier .crm-visit-album-pro {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+    }
+
+    .crm-contact-dossier .crm-visit-card-pro {
+        padding: 0.65rem 0 !important;
+        border-bottom: 1px solid color-mix(in srgb, var(--ws-border) 35%, transparent) !important;
+    }
+
+    .crm-contact-dossier .crm-visit-card-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 0.5rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .crm-contact-dossier .crm-visit-card-head time {
+        font-size: 0.68rem;
+        font-weight: 700;
+        color: var(--ws-text-muted);
+    }
+
+    .crm-contact-dossier .crm-visit-outcome {
+        font-size: 0.68rem;
+        font-weight: 800;
+    }
+
+    .crm-contact-dossier .crm-visit-card-title {
+        display: block;
+        font-size: 0.8rem;
+        font-weight: 800;
+        line-height: 1.35;
+        margin-bottom: 0.2rem;
+    }
+
+    .crm-contact-dossier .crm-visit-reason,
+    .crm-contact-dossier .crm-visit-notes {
+        font-size: 0.72rem;
+        color: var(--ws-text-secondary);
+        margin: 0.15rem 0 0;
+    }
+
+    /* ── Deals ── */
+    .crm-contact-dossier .crm-contact-deal-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+    }
+
+    .crm-contact-dossier .crm-contact-deal-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 0.25rem;
+        padding: 0.65rem 0 !important;
+        border-bottom: 1px solid color-mix(in srgb, var(--ws-border) 35%, transparent);
+        text-decoration: none;
+        color: inherit;
+    }
+
+    .crm-contact-dossier .crm-contact-deal-row__title {
+        font-size: 0.8rem;
+        font-weight: 800;
+        line-height: 1.35;
+    }
+
+    .crm-contact-dossier .crm-contact-deal-row__amount {
+        font-size: 0.76rem;
+        font-weight: 800;
+        color: var(--ws-text);
+        font-variant-numeric: tabular-nums;
+    }
+
+    .crm-contact-dossier .crm-contact-deal-row__link {
+        font-size: 0.68rem;
+        font-weight: 700;
+        color: var(--ws-primary);
+        margin-top: 0.15rem;
+    }
+
+    /* ── Notes ── */
+    .crm-contact-dossier .crm-contact-note-card {
+        padding: 0.75rem 0.85rem;
+        border-radius: 12px;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 42%, transparent);
+        background: var(--ws-surface);
+        font-size: 0.78rem;
+        line-height: 1.55;
+        color: var(--ws-text);
+    }
+
+    .crm-contact-dossier .crm-tags-pro {
+        margin-top: 0.65rem;
+        padding-top: 0.55rem;
+        border-top: 1px solid color-mix(in srgb, var(--ws-border) 32%, transparent);
+    }
+
+    /* ── Documents ── */
+    .crm-contact-dossier .crm-doc-list-pro {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+    }
+
+    .crm-contact-dossier .crm-doc-list-pro .crm-doc-item {
+        display: flex;
+        align-items: center;
+        gap: 0.55rem;
+        min-height: 3.5rem;
+        padding: 0.45rem 0 !important;
+        border-bottom: 1px solid color-mix(in srgb, var(--ws-border) 32%, transparent) !important;
+    }
+
+    .crm-contact-dossier .crm-doc-link {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.55rem;
+        text-decoration: none;
+        color: inherit;
+    }
+
+    .crm-contact-dossier .crm-doc-icon {
+        width: 2.25rem;
+        height: 2.25rem;
+        border-radius: 10px;
+        background: color-mix(in srgb, var(--ws-surface-2) 60%, var(--ws-surface));
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .crm-contact-dossier .crm-doc-info strong {
+        display: block;
+        font-size: 0.78rem;
+        font-weight: 800;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .crm-contact-dossier .crm-doc-info time {
+        font-size: 0.65rem;
+        color: var(--ws-text-muted);
+    }
+
+    .crm-contact-dossier .crm-doc-dl {
+        width: 2.25rem;
+        height: 2.25rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        color: var(--ws-primary);
+        flex-shrink: 0;
+    }
+
+    /* ── Properties / matches (flush panels) ── */
+    .crm-contact-dossier [data-panel="properties"] .crm-portfolio-hero,
+    .crm-contact-dossier [data-panel="matches"] .crm-matches-head {
+        display: none !important;
+    }
+
+    .crm-contact-dossier [data-panel="properties"] .crm-portfolio {
+        margin: 0;
+    }
+
+    .crm-contact-dossier [data-panel="properties"] .crm-portfolio-filters {
+        margin: 0 var(--crm-tab-gutter) 0.5rem !important;
+        display: flex;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        scrollbar-width: none;
+        gap: 0.35rem;
+        padding: 0.2rem !important;
+        border-radius: 11px;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 40%, transparent);
+        background: var(--ws-surface);
+    }
+
+    .crm-contact-dossier [data-panel="properties"] .crm-portfolio-filters::-webkit-scrollbar {
+        display: none;
+    }
+
+    .crm-contact-dossier [data-panel="properties"] .crm-portfolio-filter {
+        flex: 0 0 auto;
+        white-space: nowrap;
+    }
+
+    .crm-contact-dossier [data-panel="properties"] .crm-portfolio-grid {
+        padding-inline: var(--crm-tab-gutter);
+        gap: 0.55rem;
+    }
+
+    .crm-contact-dossier [data-panel="properties"] .crm-portfolio-card {
+        border-radius: 12px !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 40%, transparent) !important;
+        box-shadow: none !important;
+        overflow: hidden;
+    }
+
+    .crm-contact-dossier [data-panel="properties"] .crm-pf-head {
+        padding: 0.45rem 0.65rem 0 !important;
+    }
+
+    .crm-contact-dossier [data-panel="properties"] .crm-portfolio-card-body {
+        padding: 0.45rem 0.65rem 0.6rem !important;
+    }
+
+    .crm-contact-dossier [data-panel="matches"] .crm-matches-v3 {
+        border: none;
+        border-radius: 0;
+        background: transparent;
+    }
+
+    .crm-contact-dossier [data-panel="matches"] .crm-matches-toolbar,
+    .crm-contact-dossier [data-panel="matches"] .crm-matches-feed {
+        padding-inline: var(--crm-tab-gutter);
+    }
+
+    .crm-contact-dossier [data-panel="matches"] .crm-matches-ineligible-v3,
+    .crm-contact-dossier [data-panel="matches"] .crm-matches-empty-v3 {
+        margin-inline: var(--crm-tab-gutter);
+        max-height: 13.5rem;
+    }
+}
+
+@media (max-width: 360px) {
+    .crm-contact-dossier .crm-contact-tabs .crm-tab-pro {
+        padding: 0 0.5rem !important;
+        font-size: 0.7rem !important;
+    }
+
+    .crm-contact-dossier .crm-contact-tab-head__cta span {
+        display: none;
+    }
+
+    .crm-contact-dossier .crm-contact-tab-head__cta:not(.crm-contact-tab-head__cta--icon) {
+        width: 2.35rem;
+        min-width: 2.35rem;
+        padding: 0 !important;
+    }
+}
+
+@media (min-width: 769px) {
+    .crm-contact-dossier [data-panel="matches"] > .crm-contact-tab-head,
+    .crm-contact-dossier [data-panel="properties"] > .crm-contact-tab-head {
+        display: none;
+    }
+
+    .crm-contact-dossier .crm-timeline-day__label {
+        display: none;
+    }
+
+    .crm-contact-dossier .crm-contact-deal-row__link {
+        display: none;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .crm-contact-dossier .crm-contact-tab-panel:not([hidden]),
+    .crm-contact-dossier .crm-contact-tabs .crm-tab-pro {
+        animation: none !important;
+        transition: none !important;
+    }
+}

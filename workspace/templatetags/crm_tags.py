@@ -302,6 +302,46 @@ def crm_field(field, label=None, extra_class='', label_class='', show_label=True
 
 
 @register.filter
+def crm_activity_day_label(dt):
+    """برچسب روز برای گروه‌بندی تایم‌لاین فعالیت (امروز / دیروز / تاریخ شمسی)."""
+    if not dt:
+        return ''
+    from datetime import timedelta
+
+    from django.utils import timezone
+
+    from workspace.services.jalali_input import format_jalali_date
+
+    local = timezone.localtime(dt)
+    today = timezone.localtime(timezone.now()).date()
+    d = local.date()
+    if d == today:
+        return 'امروز'
+    if d == today - timedelta(days=1):
+        return 'دیروز'
+    return format_jalali_date(dt) or ''
+
+
+@register.filter
+def crm_activity_day_secondary(dt):
+    """تاریخ شمسی ثانویه برای امروز/دیروز در گروه‌بندی فعالیت."""
+    if not dt:
+        return ''
+    from datetime import timedelta
+
+    from django.utils import timezone
+
+    from workspace.services.jalali_input import format_jalali_date
+
+    local = timezone.localtime(dt)
+    today = timezone.localtime(timezone.now()).date()
+    d = local.date()
+    if d == today or d == today - timedelta(days=1):
+        return format_jalali_date(dt) or ''
+    return ''
+
+
+@register.filter
 def crm_activity_icon(activity_type):
     icons = {
         'تماس': 'fas fa-phone',

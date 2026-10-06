@@ -2457,7 +2457,20 @@ function initCRMTabJump() {
 }
 
 function scrollCRMTabIntoView(btn) {
-    if (!btn || typeof btn.scrollIntoView !== 'function') return;
+    if (!btn) return;
+    const track = btn.closest('.crm-contact-tabs');
+    if (track) {
+        const max = Math.max(0, track.scrollWidth - track.clientWidth);
+        const target = btn.offsetLeft - (track.clientWidth - btn.offsetWidth) / 2;
+        const left = Math.max(0, Math.min(max, target));
+        try {
+            track.scrollTo({ left, behavior: 'smooth' });
+        } catch (e) {
+            track.scrollLeft = left;
+        }
+        return;
+    }
+    if (typeof btn.scrollIntoView !== 'function') return;
     try {
         btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
     } catch (e) {
@@ -2478,12 +2491,37 @@ function syncContactSegrailFades(rail) {
     rail.classList.toggle('is-scrollable', max > 3);
 }
 
+function initContactActivityFeed(root) {
+    const scope = root || document;
+    scope.querySelectorAll('.crm-activity-feed [data-activity-desc]').forEach(block => {
+        if (block.dataset.activityDescReady === '1') return;
+        const text = block.querySelector('.crm-activity-desc__text');
+        if (!text) return;
+        const probe = () => text.scrollHeight > text.clientHeight + 2;
+        if (!probe()) return;
+        block.dataset.activityDescReady = '1';
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'crm-activity-desc__more';
+        btn.textContent = 'ادامه';
+        btn.addEventListener('click', () => {
+            const open = block.classList.toggle('is-expanded');
+            btn.textContent = open ? 'بستن' : 'ادامه';
+        });
+        block.appendChild(btn);
+    });
+}
+
 function initContactSegrail() {
     document.querySelectorAll('[data-contact-segrail]').forEach(rail => {
         const track = rail.querySelector('.crm-contact-tabs');
         if (!track) return;
-        const update = () => syncContactSegrailFades(rail);
+        const update = () => {
+            syncContactSegrailFades(rail);
+            rail.classList.toggle('is-stuck', (rail.getBoundingClientRect().top || 0) <= 1);
+        };
         track.addEventListener('scroll', update, { passive: true });
+        window.addEventListener('scroll', update, { passive: true });
         window.addEventListener('resize', update, { passive: true });
         update();
         const active = track.querySelector('.crm-tab.active');
@@ -6057,6 +6095,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initCRMMultiSelect();
     initCRMTabs();
     initContactSegrail();
+    initContactActivityFeed();
     initCRMJalaliPickers(document);
     initCRMLeaseDeadline(document);
     initCRMPropertyOccVacancyDate(document);

@@ -30,7 +30,9 @@
     {% crm_contact_channels_form form %}
 
     <div data-panel="basic" class="crm-form-panel">
-        <div class="crm-fields crm-fields-2">
+        <section class="crm-form-section" aria-labelledby="crmFormSecIdentity">
+            <h3 class="crm-form-section-title" id="crmFormSecIdentity"><i class="fas fa-id-card" aria-hidden="true"></i> اطلاعات هویتی</h3>
+            <div class="crm-fields crm-fields-2">
             {% crm_field form.name 'نام و نام خانوادگی *' voice=1 %}
             {% crm_field form.customer_type 'نوع مخاطب' %}
             {% crm_field form.phone 'موبایل' %}
@@ -39,6 +41,11 @@
             {% crm_field form.city 'شهر' voice=1 %}
             {% crm_field form.district 'منطقه' voice=1 %}
             {% crm_field form.job 'شغل' voice=1 %}
+            </div>
+        </section>
+        <section class="crm-form-section" aria-labelledby="crmFormSecExtra">
+            <h3 class="crm-form-section-title" id="crmFormSecExtra"><i class="fas fa-user-pen" aria-hidden="true"></i> اطلاعات تکمیلی</h3>
+            <div class="crm-fields crm-fields-2">
             <div class="crm-contact-identity-block crm-field-full">
                 <div class="crm-field crm-gender-field{% if form.gender.errors %} crm-field-has-error{% endif %}" data-field="gender" data-crm-gender-field>
                     <span class="crm-label" id="crmGenderLabel">جنسیت</span>
@@ -74,7 +81,8 @@
                     {% crm_field form.national_id 'کد ملی' 'crm-contact-national-field' %}
                 </div>
             </div>
-        </div>
+            </div>
+        </section>
         <div class="crm-field crm-field-full crm-lease-deadline crm-lease-panel{% if not form.instance.customer_type|shows_lease_deadline_filter %} hidden{% endif %}{% if form.lease_deadline.errors %} crm-field-has-error{% endif %}" data-field="lease_deadline">
             <header class="crm-lease-panel__head">
                 <span class="crm-lease-panel__ico" aria-hidden="true"><i class="fas fa-calendar-check"></i></span>
@@ -109,9 +117,15 @@
                 </div>
             </div>
         </div>
-        <button type="button" class="crm-contact-channels-open" data-crm-channels-open>
-            <i class="fas fa-pen-to-square" aria-hidden="true"></i>
-            ویرایش شناسه شبکه‌های اجتماعی
+        <button type="button" class="crm-contact-channels-open crm-mob-settings-row" data-crm-channels-open>
+            <span class="crm-mob-settings-row__main">
+                <span class="crm-mob-settings-row__icon" aria-hidden="true"><i class="fas fa-share-nodes"></i></span>
+                <span class="crm-mob-settings-row__text">
+                    <strong>شبکه‌های اجتماعی</strong>
+                    <small>مدیریت شناسه‌ها</small>
+                </span>
+            </span>
+            <span class="crm-mob-settings-row__action">ویرایش <i class="fas fa-chevron-left" aria-hidden="true"></i></span>
         </button>
     </div>
 

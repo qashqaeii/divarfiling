@@ -1,0 +1,568 @@
+/* CRM Mobile Sheets & Dialogs — ≤768px only. Desktop drawer styles unchanged. */
+
+@media (min-width: 769px) {
+    .crm-contact-channels-fold {
+        display: block;
+        border: none;
+        background: transparent;
+    }
+
+    .crm-contact-channels-fold__summary {
+        display: none;
+    }
+
+    .crm-contact-channels-fold > .crm-contact-channels-bar {
+        display: block !important;
+    }
+
+    .crm-mob-settings-row__text small {
+        display: none;
+    }
+}
+
+@media (max-width: 768px) {
+    /* ── Shared motion ── */
+    .crm-app .crm-drawer-overlay {
+        transition: opacity 0.18s ease;
+    }
+
+    .crm-app .crm-drawer .crm-drawer-panel {
+        transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .crm-app .crm-drawer:not(.is-open) .crm-drawer-overlay {
+        opacity: 0;
+    }
+
+    /* B) Short choice / quick create — bottom sheet (default CRM drawers) */
+    .crm-app .crm-drawer:not(.crm-mob-sheet--form) {
+        align-items: flex-end;
+        justify-content: center;
+    }
+
+    .crm-app .crm-drawer:not(.crm-mob-sheet--form) .crm-drawer-panel {
+        transform: translateY(105%);
+        max-height: min(88dvh, 720px);
+        border-radius: 20px 20px 0 0;
+    }
+
+    .crm-app .crm-drawer:not(.crm-mob-sheet--form).is-open .crm-drawer-panel {
+        transform: translateY(0);
+    }
+
+    .crm-app .crm-drawer.crm-mob-sheet--quick .crm-drawer-panel {
+        max-height: min(78dvh, 640px);
+    }
+
+    .crm-app .crm-drawer:not(.crm-mob-sheet--form) .crm-drawer-head::before {
+        content: "";
+        display: block;
+        width: 2.5rem;
+        height: 0.28rem;
+        margin: 0 auto 0.5rem;
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--ws-border) 70%, transparent);
+    }
+
+    /* A) Long form — full-screen sheet */
+    .crm-app .crm-drawer.crm-mob-sheet--form {
+        align-items: stretch;
+        justify-content: stretch;
+    }
+
+    .crm-app .crm-drawer.crm-mob-sheet--form .crm-drawer-panel {
+        position: fixed;
+        inset-inline: 0;
+        top: calc(var(--ws-mob-topbar-h, 3rem) + env(safe-area-inset-top, 0px));
+        bottom: 0;
+        width: 100%;
+        max-width: 100%;
+        height: auto;
+        max-height: none;
+        margin: 0;
+        border: none;
+        border-radius: 16px 16px 0 0;
+        box-shadow: 0 -8px 32px rgba(15, 23, 42, 0.12);
+        transform: translateY(100%);
+    }
+
+    body.ws-body:has(.crm-contact-detail-pro) .crm-app .crm-drawer.crm-mob-sheet--form .crm-drawer-panel,
+    body.ws-body:not(:has(.ws-mobile-topbar)) .crm-app .crm-drawer.crm-mob-sheet--form .crm-drawer-panel {
+        top: env(safe-area-inset-top, 0px);
+        border-radius: 0;
+    }
+
+    .crm-app .crm-drawer.crm-mob-sheet--form.is-open .crm-drawer-panel {
+        transform: translateY(0);
+    }
+
+    .crm-app .crm-drawer.crm-mob-sheet--form .crm-drawer-head::before {
+        display: none;
+    }
+
+    .crm-app .crm-drawer.crm-mob-sheet--form .crm-drawer-overlay {
+        background: rgba(15, 23, 42, 0.42);
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+    }
+
+    /* Header */
+    .crm-app .crm-mob-sheet-head {
+        align-items: center;
+        min-height: 4rem;
+        max-height: 4.5rem;
+        padding: 0.65rem 0.9rem !important;
+        gap: 0.65rem;
+        border-bottom: 1px solid color-mix(in srgb, var(--ws-border) 45%, transparent) !important;
+        background: color-mix(in srgb, var(--ws-surface) 96%, transparent) !important;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+    }
+
+    .crm-app .crm-mob-sheet-head__text {
+        flex: 1;
+        min-width: 0;
+        text-align: start;
+    }
+
+    .crm-app .crm-mob-sheet-head h2 {
+        margin: 0;
+        font-size: 1rem !important;
+        font-weight: 800 !important;
+        letter-spacing: -0.02em;
+        line-height: 1.25;
+        color: var(--ws-text);
+    }
+
+    .crm-app .crm-mob-sheet-head p {
+        margin: 0.12rem 0 0;
+        font-size: 0.72rem !important;
+        font-weight: 600;
+        color: var(--ws-text-muted);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .crm-app .crm-mob-sheet-close {
+        flex-shrink: 0;
+        width: 2.65rem !important;
+        height: 2.65rem !important;
+        border-radius: 12px !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 55%, transparent) !important;
+        background: var(--ws-surface) !important;
+        color: var(--ws-text-secondary) !important;
+    }
+
+    /* Footer */
+    .crm-app .crm-mob-sheet-foot {
+        display: grid !important;
+        grid-template-columns: minmax(5.5rem, 0.95fr) minmax(0, 1.65fr);
+        gap: 0.5rem !important;
+        align-items: stretch;
+        padding: 0.65rem 0.85rem calc(0.7rem + env(safe-area-inset-bottom, 0px)) !important;
+        border-top: 1px solid color-mix(in srgb, var(--ws-border) 50%, transparent) !important;
+        background: color-mix(in srgb, var(--ws-surface) 94%, transparent) !important;
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+    }
+
+    .crm-app .crm-mob-sheet-foot .crm-btn {
+        min-height: 2.85rem;
+        border-radius: 12px;
+        font-weight: 800;
+        font-size: 0.82rem;
+        white-space: nowrap;
+    }
+
+    .crm-app .crm-mob-sheet-foot__secondary {
+        justify-content: center;
+    }
+
+    .crm-app .crm-mob-sheet-foot__primary {
+        justify-content: center;
+        box-shadow: 0 4px 14px rgba(124, 58, 237, 0.22);
+    }
+
+    .crm-app .crm-drawer.crm-mob-sheet--form .crm-drawer-body {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+        padding: 0.75rem 0.9rem 1rem !important;
+        background: var(--ws-bg, #f4f6fb) !important;
+    }
+
+    /* ── Contact form inside long sheet ── */
+    .crm-app .crm-contact-form .crm-form-tabs {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        align-items: stretch;
+        gap: 0.35rem !important;
+        overflow-x: auto !important;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+        scroll-snap-type: x proximity;
+        padding: 0.2rem !important;
+        margin: 0 0 0.75rem !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 50%, transparent) !important;
+        border-radius: 12px !important;
+        background: color-mix(in srgb, var(--ws-surface-2, #f1f5f9) 35%, var(--ws-surface)) !important;
+        box-shadow: none !important;
+        position: sticky;
+        top: 0;
+        z-index: 6;
+    }
+
+    .crm-app .crm-contact-form .crm-form-tab {
+        flex: 1 0 auto !important;
+        min-width: 4.25rem !important;
+        max-width: none !important;
+        width: auto !important;
+        min-height: 2.65rem !important;
+        padding: 0.45rem 0.75rem !important;
+        border: none !important;
+        border-radius: 10px !important;
+        background: transparent !important;
+        color: var(--ws-text-secondary) !important;
+        font-size: 0.76rem !important;
+        font-weight: 700 !important;
+        box-shadow: none !important;
+        scroll-snap-align: start;
+        transition: background 0.16s ease, color 0.16s ease;
+    }
+
+    .crm-app .crm-contact-form .crm-form-tab i {
+        display: none !important;
+    }
+
+    .crm-app .crm-contact-form .crm-form-tab.active {
+        background: color-mix(in srgb, var(--ws-primary) 14%, var(--ws-surface)) !important;
+        color: var(--ws-primary) !important;
+        border: 1px solid color-mix(in srgb, var(--ws-primary) 22%, transparent) !important;
+    }
+
+    .crm-app .crm-contact-form .crm-form-panel:not([hidden]) {
+        animation: crm-mob-tab-in 0.18s ease;
+    }
+
+    @keyframes crm-mob-tab-in {
+        from {
+            opacity: 0.6;
+            transform: translateY(4px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .crm-app .crm-form-section {
+        margin-bottom: 1rem;
+    }
+
+    .crm-app .crm-form-section-title {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        margin: 0 0 0.55rem;
+        font-size: 0.78rem;
+        font-weight: 800;
+        color: var(--ws-text);
+        letter-spacing: -0.01em;
+    }
+
+    .crm-app .crm-form-section-title i {
+        width: 1.1rem;
+        text-align: center;
+        font-size: 0.72rem;
+        color: var(--ws-text-muted);
+    }
+
+    .crm-app .crm-contact-form .crm-contact-identity-block {
+        padding: 0;
+        margin: 0;
+        border: none;
+        background: transparent;
+        gap: 0.75rem;
+    }
+
+    .crm-app .crm-contact-form .crm-label {
+        font-size: 0.72rem;
+        font-weight: 700;
+        margin-bottom: 0.32rem;
+    }
+
+    .crm-app .crm-contact-form .crm-input,
+    .crm-app .crm-contact-form .crm-select,
+    .crm-app .crm-contact-form .crm-textarea,
+    .crm-app .crm-contact-form input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+    .crm-app .crm-contact-form select,
+    .crm-app .crm-contact-form textarea {
+        min-height: 3.25rem;
+        border-radius: 13px !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 55%, transparent) !important;
+        background: var(--ws-surface) !important;
+        font-size: 0.9rem !important;
+        padding: 0.7rem 0.85rem !important;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .crm-app .crm-contact-form .crm-input:focus,
+    .crm-app .crm-contact-form .crm-select:focus,
+    .crm-app .crm-contact-form .crm-textarea:focus,
+    .crm-app .crm-contact-form input:not([type="checkbox"]):not([type="radio"]):focus,
+    .crm-app .crm-contact-form select:focus,
+    .crm-app .crm-contact-form textarea:focus {
+        border-color: color-mix(in srgb, var(--ws-primary) 45%, var(--ws-border)) !important;
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--ws-primary) 12%, transparent);
+        outline: none;
+    }
+
+    .crm-app .crm-contact-form .crm-field-has-error .crm-input,
+    .crm-app .crm-contact-form .crm-field-has-error .crm-select,
+    .crm-app .crm-contact-form .crm-field-has-error textarea {
+        border-color: color-mix(in srgb, #ef4444 55%, var(--ws-border)) !important;
+    }
+
+    .crm-app .crm-contact-form .crm-field-voice__wrap > .crm-input,
+    .crm-app .crm-contact-form .crm-field-voice__wrap > .crm-textarea {
+        padding-inline-end: 2.85rem !important;
+    }
+
+    .crm-app .crm-contact-form .crm-field-voice__mic {
+        width: 2.35rem;
+        height: 2.35rem;
+        inset-inline-end: 0.45rem;
+        border-radius: 10px;
+    }
+
+    /* Gender segmented */
+    .crm-app .crm-contact-form .crm-gender-segment {
+        min-height: 2.625rem;
+        padding: 3px;
+        border-radius: 12px;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 55%, transparent);
+        background: var(--ws-surface);
+    }
+
+    .crm-app .crm-contact-form .crm-gender-seg > span {
+        min-height: 2.15rem;
+        padding: 0.4rem 0.35rem;
+        border-radius: 9px;
+        font-size: 0.72rem;
+    }
+
+    .crm-app .crm-contact-form .crm-gender-seg:has(input:checked) > span {
+        background: color-mix(in srgb, var(--ws-primary) 14%, var(--ws-surface));
+        color: var(--ws-primary);
+        box-shadow: none;
+    }
+
+    /* Legal entity switch row */
+    .crm-app .crm-contact-form .crm-contact-legal-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        min-height: 3rem;
+        padding: 0.55rem 0.75rem;
+        border-radius: 12px;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 50%, transparent);
+        background: var(--ws-surface);
+    }
+
+    .crm-app .crm-contact-form .crm-contact-legal-toggle .crm-label-check {
+        margin: 0;
+        font-weight: 700;
+        font-size: 0.8rem;
+        color: var(--ws-text);
+    }
+
+    .crm-app .crm-contact-form .crm-contact-legal-toggle input[type="checkbox"] {
+        appearance: none;
+        width: 2.75rem;
+        height: 1.55rem;
+        margin: 0;
+        flex-shrink: 0;
+        border-radius: 999px;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 60%, transparent);
+        background: color-mix(in srgb, var(--ws-surface-2) 80%, var(--ws-surface));
+        position: relative;
+        cursor: pointer;
+        transition: background 0.18s ease, border-color 0.18s ease;
+    }
+
+    .crm-app .crm-contact-form .crm-contact-legal-toggle input[type="checkbox"]::after {
+        content: "";
+        position: absolute;
+        top: 2px;
+        inset-inline-start: 2px;
+        width: 1.15rem;
+        height: 1.15rem;
+        border-radius: 50%;
+        background: var(--ws-surface);
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.18);
+        transition: transform 0.18s ease;
+    }
+
+    .crm-app .crm-contact-form .crm-contact-legal-toggle input[type="checkbox"]:checked {
+        background: color-mix(in srgb, var(--ws-primary) 75%, #5b21b6);
+        border-color: transparent;
+    }
+
+    .crm-app .crm-contact-form .crm-contact-legal-toggle input[type="checkbox"]:checked::after {
+        inset-inline-start: calc(100% - 1.15rem - 2px);
+        transform: none;
+    }
+
+    /* Channels collapsible */
+    .crm-app .crm-contact-channels-fold {
+        margin-bottom: 0.65rem;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 45%, transparent);
+        border-radius: 12px;
+        background: var(--ws-surface);
+        overflow: hidden;
+    }
+
+    .crm-app .crm-contact-channels-fold__summary {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+        min-height: 3rem;
+        padding: 0.55rem 0.75rem;
+        list-style: none;
+        cursor: pointer;
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: var(--ws-text);
+    }
+
+    .crm-app .crm-contact-channels-fold__summary::-webkit-details-marker {
+        display: none;
+    }
+
+    .crm-app .crm-contact-channels-fold__action {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: var(--ws-text-muted);
+    }
+
+    .crm-app .crm-contact-channels-fold:not([open]) .crm-contact-channels-bar {
+        display: none;
+    }
+
+    .crm-app .crm-contact-channels-fold .crm-contact-channels-bar {
+        border: none;
+        border-radius: 0;
+        padding: 0 0.75rem 0.65rem;
+        background: transparent;
+        box-shadow: none;
+    }
+
+    .crm-app .crm-contact-channels-fold .crm-contact-channels-bar-head {
+        display: none;
+    }
+
+    /* Social settings row */
+    .crm-app .crm-mob-settings-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.65rem;
+        width: 100%;
+        min-height: 3.35rem;
+        margin-top: 0.65rem;
+        padding: 0.55rem 0.75rem;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 50%, transparent);
+        border-radius: 12px;
+        background: var(--ws-surface);
+        text-align: start;
+        cursor: pointer;
+    }
+
+    .crm-app .crm-mob-settings-row__main {
+        display: flex;
+        align-items: center;
+        gap: 0.55rem;
+        min-width: 0;
+    }
+
+    .crm-app .crm-mob-settings-row__icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 2rem;
+        height: 2rem;
+        border-radius: 10px;
+        background: color-mix(in srgb, var(--ws-surface-2) 70%, var(--ws-surface));
+        color: var(--ws-text-muted);
+        flex-shrink: 0;
+    }
+
+    .crm-app .crm-mob-settings-row__text {
+        display: flex;
+        flex-direction: column;
+        gap: 0.1rem;
+        min-width: 0;
+    }
+
+    .crm-app .crm-mob-settings-row__text strong {
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: var(--ws-text);
+    }
+
+    .crm-app .crm-mob-settings-row__text small {
+        font-size: 0.68rem;
+        font-weight: 600;
+        color: var(--ws-text-muted);
+    }
+
+    .crm-app .crm-mob-settings-row__action {
+        flex-shrink: 0;
+        font-size: 0.7rem;
+        font-weight: 700;
+        color: var(--ws-primary);
+        white-space: nowrap;
+    }
+
+    .crm-app .crm-contact-form .crm-form-hint {
+        background: color-mix(in srgb, var(--ws-surface-2) 50%, var(--ws-surface));
+        border: 1px solid color-mix(in srgb, var(--ws-border) 45%, transparent);
+        color: var(--ws-text-secondary);
+    }
+}
+
+@media (max-width: 360px) {
+    .crm-app .crm-mob-sheet-foot {
+        grid-template-columns: minmax(4.75rem, 0.9fr) minmax(0, 1.75fr);
+        gap: 0.4rem !important;
+    }
+
+    .crm-app .crm-mob-sheet-foot .crm-btn {
+        font-size: 0.76rem;
+        padding-inline: 0.45rem;
+    }
+
+    .crm-app .crm-contact-form .crm-form-tab {
+        min-width: 3.75rem !important;
+        padding-inline: 0.55rem !important;
+        font-size: 0.7rem !important;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .crm-app .crm-drawer .crm-drawer-panel,
+    .crm-app .crm-drawer-overlay,
+    .crm-app .crm-contact-form .crm-form-panel:not([hidden]) {
+        animation: none !important;
+        transition: none !important;
+    }
+}

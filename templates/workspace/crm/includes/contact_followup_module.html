@@ -1,0 +1,66 @@
+{% load workspace_tags %}
+<details class="crm-contact-side-card crm-contact-side-card--followup crm-followup-v2 crm-contact-side-fold{% if mobile_slot %} crm-contact-followup--mob{% else %} crm-contact-followup--desk{% endif %}" open>
+    <summary class="crm-contact-side-head">
+        <span class="crm-contact-side-icon crm-contact-side-icon--followup" aria-hidden="true"><i class="fas fa-calendar-check"></i></span>
+        <h3>{% if mobile_slot %}پیگیری بعدی{% else %}پیگیری{% endif %}</h3>
+        {% if follow_up_state == 'overdue' %}
+        <span class="crm-followup-badge overdue">معوق</span>
+        {% elif follow_up_state == 'today' %}
+        <span class="crm-followup-badge today">امروز</span>
+        {% elif follow_up_state == 'upcoming' %}
+        <span class="crm-followup-badge upcoming">برنامه‌ریزی</span>
+        {% endif %}
+    </summary>
+
+    <div class="crm-followup-stack">
+    {% if customer.next_follow_up %}
+    <div class="crm-followup-status {% if follow_up_state == 'overdue' %}is-overdue{% elif follow_up_state == 'today' %}is-today{% endif %}">
+        <span class="crm-followup-status__state">{% if follow_up_state == 'overdue' %}معوق{% elif follow_up_state == 'today' %}امروز{% elif follow_up_state == 'upcoming' %}برنامه‌ریزی{% else %}پیگیری بعدی{% endif %}</span>
+        <strong>{% if follow_up_state == 'overdue' %}معوق · {% endif %}{{ customer.next_follow_up|ws_jalali }}</strong>
+    </div>
+    {% if mobile_slot and customer.phone and not customer_is_shared %}
+    <form method="post" class="crm-followup-log-call-mob">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="log_call">
+        <button type="submit" class="crm-btn crm-btn-sm crm-btn-primary crm-btn-block">
+            <i class="fas fa-phone-volume" aria-hidden="true"></i> ثبت تماس
+        </button>
+    </form>
+    {% endif %}
+    <form method="post" class="crm-followup-v2-done">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="complete_followup">
+        <button type="submit" class="crm-btn crm-btn-sm crm-btn-primary crm-btn-block">
+            <i class="fas fa-check" aria-hidden="true"></i> انجام شد
+        </button>
+    </form>
+    {% else %}
+    <p class="crm-followup-v2-empty">پیگیری بعدی ثبت نشده</p>
+    {% endif %}
+
+    <div class="crm-followup-v2-quick">
+        <form method="post">{% csrf_token %}<input type="hidden" name="action" value="quick_followup"><input type="hidden" name="days" value="1"><button type="submit">فردا</button></form>
+        <form method="post">{% csrf_token %}<input type="hidden" name="action" value="quick_followup"><input type="hidden" name="days" value="3"><button type="submit">۳ روز</button></form>
+        <form method="post">{% csrf_token %}<input type="hidden" name="action" value="quick_followup"><input type="hidden" name="days" value="7"><button type="submit">۱ هفته</button></form>
+    </div>
+
+    <div class="crm-followup-links">
+        <button type="button" class="crm-followup-link" data-drawer-open="drawer-followup">ثبت پیگیری</button>
+        <button type="button" class="crm-followup-link" data-drawer-open="drawer-reminder">یادآور</button>
+    </div>
+    </div>
+
+    {% if follow_up_logs %}
+    <div class="crm-followup-v2-history">
+        <span class="crm-followup-v2-history-title">سوابق پیگیری</span>
+        <ul>
+            {% for a in follow_up_logs %}
+            <li>
+                <time>{{ a.created_at|ws_jalali }}</time>
+                <span>{{ a.content|truncatechars:60 }}</span>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+</details>

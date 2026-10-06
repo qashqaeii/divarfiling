@@ -443,21 +443,21 @@
 {% endblock %}
 
 {% block crm_drawers %}
-<aside class="crm-drawer" id="drawer-contact" {% if open_modal == 'drawer-contact' %}data-open="1"{% endif %}>
+<aside class="crm-drawer crm-mob-sheet crm-mob-sheet--form" id="drawer-contact" {% if open_modal == 'drawer-contact' %}data-open="1"{% endif %}>
     <div class="crm-drawer-overlay" data-drawer-close></div>
     <div class="crm-drawer-panel crm-drawer-panel-lg">
-        <div class="crm-drawer-head">
-            <div><h2>مخاطب جدید</h2><p>اطلاعات کامل مخاطب</p></div>
-            <button type="button" class="crm-drawer-close" data-drawer-close aria-label="بستن"><i class="fas fa-times" aria-hidden="true"></i></button>
+        <div class="crm-drawer-head crm-mob-sheet-head">
+            <div class="crm-mob-sheet-head__text"><h2>مخاطب جدید</h2><p>اطلاعات کامل مخاطب</p></div>
+            <button type="button" class="crm-drawer-close crm-mob-sheet-close" data-drawer-close aria-label="بستن"><i class="fas fa-times" aria-hidden="true"></i></button>
         </div>
         <form method="post" action="{% url 'workspace:crm_create' %}" class="crm-drawer-form">
             <div class="crm-drawer-body">
                 {% csrf_token %}
                 {% include 'workspace/crm/includes/contact_form_sections.html' with form=customer_form type_profiles_json=type_profiles_json %}
             </div>
-            <div class="crm-drawer-foot">
-                <button type="button" class="crm-btn crm-btn-ghost" data-drawer-close>انصراف</button>
-                <button type="submit" class="crm-btn crm-btn-primary">ثبت مخاطب</button>
+            <div class="crm-drawer-foot crm-mob-sheet-foot">
+                <button type="button" class="crm-btn crm-btn-ghost crm-mob-sheet-foot__secondary" data-drawer-close>انصراف</button>
+                <button type="submit" class="crm-btn crm-btn-primary crm-mob-sheet-foot__primary">ثبت مخاطب</button>
             </div>
         </form>
     </div>

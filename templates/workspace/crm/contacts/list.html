@@ -11,6 +11,7 @@
 
 {% block crm_extra_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/mk-filing-datasets.css' %}?v=19">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-contacts-list-mobile-scan.css' %}?v=6">
 {% endblock %}
 
 {% block crm_content %}
@@ -18,31 +19,36 @@
 <div class="crm-contacts-pro crm-page-chrome crm-contacts-mobile mk-filing-datasets">
 
     <div class="crm-contacts-mob-chrome">
-    <header class="crm-contacts-mob-header">
-        <div class="crm-contacts-mob-header-main">
-            <h1 class="crm-contacts-mob-title">مخاطبین</h1>
-            <p class="crm-contacts-mob-sub">
-                <span>{{ stats.total }} مخاطب</span>
-                {% if request.GET.match_alerts == '1' %}
-                <span class="crm-contacts-mob-sub-chip">فایل پیشنهادی</span>
+    <form method="get" class="crm-contacts-filters crm-page-filters" id="crmContactFilters">
+        <input type="hidden" name="view" value="{{ view_mode }}">
+
+        <div class="crm-contacts-mob-toolbar-sticky">
+        <div class="crm-contacts-filter-primary crm-contacts-mob-toolbar-row">
+            <label class="crm-contacts-search">
+                <i class="fas fa-search" aria-hidden="true"></i>
+                <input type="search" name="q" value="{{ request.GET.q }}" placeholder="جستجوی مخاطب..." autocomplete="off" aria-label="جستجو">
+            </label>
+            <button type="button"
+                    class="crm-contacts-mob-filter-trigger"
+                    id="crmContactsFilterOpen"
+                    aria-expanded="false"
+                    aria-controls="crmContactsFilterPanel"
+                    title="فیلتر"
+                    aria-label="فیلتر">
+                <i class="fas fa-sliders" aria-hidden="true"></i>
+                <span class="crm-contacts-mob-filter-trigger-text">فیلتر</span>
+                {% if request.GET.customer_type or request.GET.status or request.GET.priority or request.GET.due %}
+                <span class="crm-contacts-mob-filter-badge" aria-hidden="true"></span>
                 {% endif %}
-                {% if stats.due_today %}
-                <span class="crm-contacts-mob-sub-chip is-warn">{{ stats.due_today }} امروز</span>
-                {% endif %}
-            </p>
-        </div>
-        <div class="crm-contacts-mob-header-actions" role="toolbar" aria-label="عملیات مخاطبین">
-            <button type="button" class="crm-contacts-mob-icon-btn crm-contacts-mob-help-btn" title="راهنمای مخاطبین" aria-label="راهنمای مخاطبین" data-modal-open="modal-crm-contacts-help">
-                <span class="fl-header__help-bulb" aria-hidden="true">
-                    <i class="fas fa-lightbulb"></i>
-                    <span class="fl-header__help-bulb-glow"></span>
-                </span>
             </button>
             <details class="crm-contacts-mob-toolbar-menu">
-                <summary class="crm-contacts-mob-icon-btn crm-contacts-mob-icon-btn--ghost" aria-label="ابزارهای بیشتر">
+                <summary class="crm-contacts-mob-icon-btn crm-contacts-mob-icon-btn--ghost" aria-label="بیشتر">
                     <i class="fas fa-ellipsis-vertical" aria-hidden="true"></i>
                 </summary>
                 <div class="crm-contacts-mob-toolbar-panel" role="menu">
+                    <button type="button" class="crm-contacts-mob-toolbar-item" role="menuitem" data-modal-open="modal-crm-contacts-help">
+                        <i class="fas fa-lightbulb" aria-hidden="true"></i><span>راهنما</span>
+                    </button>
                     <button type="button" class="crm-contacts-mob-toolbar-item" role="menuitem" data-drawer-open="drawer-quick-lead">
                         <i class="fas fa-bolt" aria-hidden="true"></i><span>مخاطب سریع</span>
                     </button>
@@ -57,31 +63,8 @@
                     </a>
                 </div>
             </details>
-            <button type="button" class="crm-contacts-mob-add-btn" data-drawer-open="drawer-contact" title="مخاطب جدید" aria-label="مخاطب جدید">
-                <i class="fas fa-user-plus" aria-hidden="true"></i>
-            </button>
-        </div>
-    </header>
-
-    <form method="get" class="crm-contacts-filters crm-page-filters" id="crmContactFilters">
-        <input type="hidden" name="view" value="{{ view_mode }}">
-
-        <div class="crm-contacts-filter-primary">
-            <label class="crm-contacts-search">
-                <i class="fas fa-search" aria-hidden="true"></i>
-                <input type="search" name="q" value="{{ request.GET.q }}" placeholder="جستجوی مخاطب..." autocomplete="off" aria-label="جستجو">
-            </label>
-            <button type="button"
-                    class="crm-contacts-mob-filter-trigger"
-                    id="crmContactsFilterOpen"
-                    aria-expanded="false"
-                    aria-controls="crmContactsFilterPanel"
-                    title="فیلترهای پیشرفته"
-                    aria-label="فیلترهای پیشرفته">
-                <i class="fas fa-sliders" aria-hidden="true"></i>
-                {% if request.GET.customer_type or request.GET.status or request.GET.priority or request.GET.due %}
-                <span class="crm-contacts-mob-filter-badge" aria-hidden="true"></span>
-                {% endif %}
+            <button type="button" class="crm-contacts-mob-toolbar-add" data-drawer-open="drawer-contact" title="مخاطب جدید" aria-label="مخاطب جدید">
+                <i class="fas fa-plus" aria-hidden="true"></i>
             </button>
         </div>
 
@@ -122,6 +105,7 @@
             {% endif %}
         </div>
         {% endif %}
+        </div>
 
         <div class="crm-contacts-mob-filter-sheet" id="crmContactsFilterSheet" aria-hidden="true">
             <div class="crm-contacts-mob-filter-backdrop" data-contacts-filter-close tabindex="-1" aria-hidden="true"></div>
@@ -297,14 +281,32 @@
                         <tr data-id="{{ c.id }}" class="crm-row-selectable{% if c.next_follow_up %} crm-row-has-followup{% endif %}{% if c.next_follow_up and c.next_follow_up < today %} crm-row-followup-overdue{% elif c.next_follow_up == today %} crm-row-followup-today{% endif %}" data-panel-url="{% url 'workspace:crm_contact_panel' c.id %}" style="--crm-card-accent: {{ c.status|crm_status_dot }}">
                             <td class="crm-contacts-col-check"><input type="checkbox" class="crm-checkbox crm-row-check" value="{{ c.id }}"></td>
                             <td>
-                                <div class="crm-contacts-mob-card">
-                                    <div class="crm-contacts-mob-card-head">
-                                        <a href="{% url 'workspace:crm_detail' c.id %}" class="crm-contacts-person crm-contacts-person-link">
-                                            {% include 'workspace/crm/includes/contact_avatar.html' with contact=c css_class='crm-contacts-avatar' width=52 height=52 %}
-                                            <div class="crm-contacts-person-text">
-                                                <span class="crm-contacts-name">{{ c.name }}</span>
-                                                {% if c.company_name %}<span class="crm-contacts-sub">{{ c.company_name }}</span>{% endif %}
-                                                {% if c.phone %}<span class="crm-contacts-mob-phone" dir="ltr">{{ c.phone }}</span>{% endif %}
+                                <div class="crm-contacts-mob-card crm-contacts-mob-card--scan">
+                                    <div class="crm-contacts-mob-card__top">
+                                        <a href="{% url 'workspace:crm_detail' c.id %}" class="crm-contacts-mob-card__body crm-contacts-person-link">
+                                            <div class="crm-contacts-mob-card__identity">
+                                                {% include 'workspace/crm/includes/contact_avatar.html' with contact=c css_class='crm-contacts-avatar' width=48 height=48 %}
+                                                <div class="crm-contacts-mob-card__identity-text">
+                                                    <span class="crm-contacts-name">{{ c.name }}</span>
+                                                    {% if c.customer_type %}<span class="crm-contacts-mob-type">{{ c.customer_type }}</span>{% elif c.company_name %}<span class="crm-contacts-mob-type crm-contacts-mob-type--muted">{{ c.company_name }}</span>{% endif %}
+                                                    {% if c.phone %}
+                                                    <span class="crm-contacts-mob-phone" dir="ltr">{{ c.phone }}</span>
+                                                    {% else %}
+                                                    <span class="crm-contacts-mob-phone crm-contacts-mob-phone--empty">بدون شماره</span>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                            <div class="crm-contacts-mob-card__state">
+                                                <span class="crm-contacts-mob-status-pill{% if c.status == 'جدید' %} crm-contacts-mob-status-pill--new{% elif c.status == 'در حال پیگیری' %} crm-contacts-mob-status-pill--following{% elif c.status == 'بازدید انجام شد' %} crm-contacts-mob-status-pill--visited{% elif c.status == 'قرارداد' %} crm-contacts-mob-status-pill--visited{% else %} crm-contacts-mob-status-pill--default{% endif %}">
+                                                    <span class="crm-contacts-dot" aria-hidden="true"></span>
+                                                    {{ c.status }}
+                                                </span>
+                                                {% contact_followup_mob c.next_follow_up today as fu %}
+                                                {% if fu.label %}
+                                                <span class="crm-contacts-mob-followup-pill crm-contacts-mob-followup-pill--{{ fu.tone }}">
+                                                    {{ fu.label }}
+                                                </span>
+                                                {% endif %}
                                             </div>
                                         </a>
                                         <details class="crm-contacts-mob-row-more">
@@ -331,16 +333,21 @@
                                             </div>
                                         </details>
                                     </div>
-                                    <div class="crm-contacts-mob-card-body">
-                                        <span class="crm-contacts-mob-status-chip">
-                                            <span class="crm-contacts-dot" style="background:{{ c.status|crm_status_dot }}"></span>
-                                            {{ c.status }}
-                                        </span>
-                                        {% if c.next_follow_up %}
-                                        <p class="crm-contacts-mob-followup-line{% if c.next_follow_up < today %} is-overdue{% elif c.next_follow_up == today %} is-today{% endif %}">
-                                            <span class="crm-contacts-mob-followup-lbl">پیگیری بعدی</span>
-                                            <time>{{ c.next_follow_up|ws_jalali }}</time>
-                                        </p>
+                                    <div class="crm-contacts-mob-card__actions" role="group" aria-label="عملیات سریع">
+                                        {% if c.phone %}
+                                        <a href="{{ c.phone|phone_tel_href }}" class="crm-contacts-mob-act crm-contacts-mob-act--call" title="تماس" aria-label="تماس با {{ c.name }}">
+                                            <i class="fas fa-phone" aria-hidden="true"></i>
+                                            <span>تماس</span>
+                                        </a>
+                                        <a href="{{ c.phone|phone_sms_href }}" class="crm-contacts-mob-act crm-contacts-mob-act--msg" title="پیام" aria-label="پیام به {{ c.name }}">
+                                            <i class="fas fa-comment" aria-hidden="true"></i>
+                                            <span>پیام</span>
+                                        </a>
+                                        {% else %}
+                                        <a href="{% url 'workspace:crm_detail' c.id %}" class="crm-contacts-mob-act crm-contacts-mob-act--call" title="پروفایل" aria-label="پروفایل {{ c.name }}">
+                                            <i class="fas fa-user" aria-hidden="true"></i>
+                                            <span>پروفایل</span>
+                                        </a>
                                         {% endif %}
                                     </div>
                                 </div>
@@ -366,23 +373,6 @@
                                 {% else %}<span class="crm-contacts-muted">—</span>{% endif %}
                             </td>
                             <td class="crm-contacts-col-actions">
-                                <div class="crm-contacts-mob-actions" role="group" aria-label="عملیات سریع">
-                                    {% if c.phone %}
-                                    <a href="{{ c.phone|phone_tel_href }}" class="crm-contacts-mob-act crm-contacts-mob-act--primary" title="تماس" aria-label="تماس با {{ c.name }}">
-                                        <i class="fas fa-phone" aria-hidden="true"></i>
-                                        <span>تماس</span>
-                                    </a>
-                                    <a href="{{ c.phone|phone_wa_href }}" target="_blank" rel="noopener" class="crm-contacts-mob-act crm-contacts-mob-act--secondary" title="پیام" aria-label="پیام به {{ c.name }}">
-                                        <i class="fas fa-comment" aria-hidden="true"></i>
-                                        <span>پیام</span>
-                                    </a>
-                                    {% else %}
-                                    <a href="{% url 'workspace:crm_detail' c.id %}" class="crm-contacts-mob-act crm-contacts-mob-act--primary" title="پروفایل" aria-label="پروفایل {{ c.name }}">
-                                        <i class="fas fa-user" aria-hidden="true"></i>
-                                        <span>پروفایل</span>
-                                    </a>
-                                    {% endif %}
-                                </div>
                                 <div class="crm-contacts-row-actions crm-contacts-desk-actions">
                                     {% if c.customer_type in match_eligible_types %}
                                     <a href="{% url 'workspace:crm_detail' c.id %}?tab=matches" class="crm-contacts-row-act crm-contacts-row-act--match" title="فایل‌های پیشنهادی"><i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i></a>
@@ -447,10 +437,6 @@
     </div>
 
     {% endif %}
-
-    <button type="button" class="crm-contacts-fab" data-drawer-open="drawer-contact" aria-label="مخاطب جدید" title="مخاطب جدید">
-        <i class="fas fa-user-plus" aria-hidden="true"></i>
-    </button>
 
     {% include 'workspace/crm/includes/crm_contacts_help_modal.html' %}
 </div>

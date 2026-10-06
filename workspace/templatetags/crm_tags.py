@@ -521,3 +521,24 @@ def dict_get(mapping, key):
     if not mapping:
         return key
     return mapping.get(key, key)
+
+
+@register.simple_tag
+def contact_followup_mob(follow_date, today):
+    """برچسب پیگیری برای لیست موبایل مخاطبین."""
+    from workspace.services.jalali_input import format_jalali_date, to_persian_digits
+
+    empty = {'tone': '', 'label': '', 'sublabel': ''}
+    if not follow_date:
+        return empty
+    jalali = to_persian_digits(format_jalali_date(follow_date) or '')
+    if follow_date < today:
+        days = (today - follow_date).days
+        if days <= 1:
+            label = 'دیروز' if days == 1 else 'معوق'
+        else:
+            label = f'{to_persian_digits(days)} روز گذشته'
+        return {'tone': 'overdue', 'label': label, 'sublabel': jalali}
+    if follow_date == today:
+        return {'tone': 'today', 'label': 'امروز پیگیری', 'sublabel': jalali}
+    return {'tone': 'future', 'label': jalali, 'sublabel': ''}

@@ -1,0 +1,560 @@
+/* CRM Contacts List — Mobile scan list (max-width 767px only) */
+
+@media (max-width: 767px) {
+    .crm-contacts-mobile.crm-page-chrome {
+        padding: 0 0 calc(4.5rem + env(safe-area-inset-bottom, 0px));
+        gap: 0;
+        background: var(--ws-bg, #f4f6fb);
+        overflow-x: clip;
+    }
+
+    /* No duplicate hero — topbar title is enough */
+    .crm-contacts-mob-header {
+        display: none !important;
+    }
+
+    .crm-contacts-mob-chrome {
+        display: block;
+        position: static;
+        z-index: auto;
+        box-shadow: none;
+        background: transparent;
+    }
+
+    .crm-contacts-mob-toolbar-sticky {
+        position: sticky;
+        top: calc(var(--ws-mob-topbar-h, 3rem) + env(safe-area-inset-top, 0px));
+        z-index: 24;
+        padding: 0.4rem 0.75rem 0.35rem;
+        background: color-mix(in srgb, var(--ws-bg, #f4f6fb) 92%, var(--ws-surface));
+        border-bottom: 1px solid color-mix(in srgb, var(--ws-border) 45%, transparent);
+    }
+
+    .crm-contacts-mobile .crm-contacts-filters {
+        margin: 0;
+        padding: 0;
+        border: none;
+        background: transparent;
+        gap: 0;
+    }
+
+    .crm-contacts-mob-toolbar-row {
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+        width: 100%;
+    }
+
+    .crm-contacts-mobile .crm-contacts-search {
+        flex: 1 1 auto;
+        min-width: 0;
+        height: 40px;
+        padding: 0 0.65rem;
+        border-radius: 12px;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 70%, transparent);
+        background: var(--ws-surface);
+        box-shadow: none;
+    }
+
+    .crm-contacts-mobile .crm-contacts-search input {
+        font-size: max(16px, 0.875rem);
+    }
+
+    .crm-contacts-mobile .crm-contacts-mob-filter-trigger {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.2rem;
+        flex-shrink: 0;
+        height: 40px;
+        min-width: auto;
+        padding: 0 0.55rem;
+        border-radius: 12px;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 70%, transparent);
+        background: var(--ws-surface);
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: var(--ws-text-secondary);
+    }
+
+    .crm-contacts-mob-filter-trigger-text {
+        display: inline;
+    }
+
+    .crm-contacts-mob-toolbar-menu {
+        display: block;
+        position: relative;
+        flex-shrink: 0;
+    }
+
+    .crm-contacts-mob-icon-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 65%, transparent);
+        background: var(--ws-surface);
+    }
+
+    .crm-contacts-mob-icon-btn--ghost {
+        border: none;
+        background: transparent;
+    }
+
+    .crm-contacts-mob-toolbar-add {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        width: 40px;
+        height: 40px;
+        padding: 0;
+        border: none;
+        border-radius: 12px;
+        background: var(--ws-primary);
+        color: #fff;
+        font-size: 1rem;
+        cursor: pointer;
+        box-shadow: 0 4px 12px -4px color-mix(in srgb, var(--ws-primary) 50%, transparent);
+    }
+
+    .crm-contacts-mob-toolbar-add:active {
+        transform: scale(0.96);
+    }
+
+    .crm-contacts-mob-add-btn,
+    .crm-contacts-fab {
+        display: none !important;
+    }
+
+    .crm-contacts-mob-filter-chips {
+        display: flex;
+        gap: 0.35rem;
+        margin: 0;
+        padding: 0.35rem 0.75rem 0.45rem;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    }
+
+    .crm-contacts-mob-filter-chips::-webkit-scrollbar {
+        display: none;
+    }
+
+    .crm-contacts-mob-filter-chip {
+        min-height: 1.85rem;
+        padding: 0.28rem 0.65rem;
+        font-size: 0.72rem;
+        font-weight: 700;
+        border-radius: 999px;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 70%, transparent);
+        background: var(--ws-surface);
+        color: var(--ws-text-secondary);
+        white-space: nowrap;
+    }
+
+    .crm-contacts-mob-filter-chip.is-active {
+        background: color-mix(in srgb, var(--ws-primary) 10%, var(--ws-surface));
+        border-color: color-mix(in srgb, var(--ws-primary) 28%, var(--ws-border));
+        color: var(--ws-primary);
+    }
+
+    .crm-contacts-mobile .crm-contacts-mob-active-chips {
+        padding: 0 0.75rem 0.35rem;
+    }
+
+    .crm-contacts-mobile .crm-smart-command-wrap {
+        display: none;
+    }
+
+    .crm-contacts-mobile .crm-dash-kpis {
+        display: none !important;
+    }
+
+    /* List */
+    .crm-contacts-mobile .crm-contacts-workspace,
+    .crm-contacts-mobile .crm-contacts-main {
+        padding: 0;
+    }
+
+    .crm-contacts-mobile .crm-contacts-table-wrap {
+        padding: 0.35rem 0.75rem 0.5rem;
+        background: transparent;
+        border: none;
+        box-shadow: none;
+    }
+
+    .crm-contacts-mobile .crm-contacts-table tbody {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        padding: 0;
+    }
+
+    .crm-contacts-mobile .crm-contacts-table tbody tr.crm-row-selectable {
+        display: flex;
+        flex-direction: column;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 38%, transparent) !important;
+        border-radius: 16px !important;
+        background: var(--ws-surface) !important;
+        box-shadow:
+            0 1px 2px rgba(15, 23, 42, 0.03),
+            0 2px 8px rgba(15, 23, 42, 0.04) !important;
+        overflow: hidden;
+        transition: background 0.12s ease, box-shadow 0.12s ease;
+    }
+
+    .crm-contacts-mobile .crm-contacts-table tbody tr.crm-row-selectable:active {
+        background: color-mix(in srgb, var(--ws-primary) 3%, var(--ws-surface)) !important;
+        box-shadow:
+            0 1px 2px rgba(15, 23, 42, 0.02),
+            0 1px 4px rgba(15, 23, 42, 0.03) !important;
+    }
+
+    .crm-contacts-mobile .crm-contacts-table tbody tr.crm-row-selectable::before {
+        display: none;
+    }
+
+    .crm-contacts-mobile .crm-contacts-table tbody tr.crm-row-selectable > td.crm-contacts-col-actions {
+        display: none !important;
+    }
+
+    .crm-contacts-mobile .crm-contacts-table tbody tr.crm-row-selectable > td:nth-child(2) {
+        width: 100% !important;
+        padding: 0 !important;
+    }
+
+    .crm-contacts-mobile .crm-contacts-mob-card.crm-contacts-mob-card--scan {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+        padding: 0.75rem 0.875rem 0.5625rem !important;
+    }
+
+    /* Override premium inbox person-link (row) — scan card is column */
+    .crm-contacts-mobile .crm-contacts-mob-card--scan .crm-contacts-mob-card__body.crm-contacts-person-link {
+        flex: none !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 0.375rem;
+        padding: 0 !important;
+    }
+
+    .crm-contacts-mob-card__top {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 2.75rem;
+        gap: 0.25rem;
+        align-items: start;
+    }
+
+    .crm-contacts-mob-card__body {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+        min-width: 0;
+        text-decoration: none;
+        color: inherit;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .crm-contacts-mob-card__identity {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.65rem;
+        min-width: 0;
+    }
+
+    .crm-contacts-mob-card__identity-text {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.08rem;
+        min-width: 0;
+        flex: 1;
+        text-align: start;
+    }
+
+    .crm-contacts-mobile .crm-contacts-avatar,
+    .crm-contacts-mobile .crm-contacts-avatar--photo {
+        width: 48px !important;
+        height: 48px !important;
+        min-width: 48px;
+        border-radius: 14px;
+        object-fit: cover;
+        flex-shrink: 0;
+    }
+
+    .crm-contacts-mobile .crm-contacts-avatar.crm-deals-avatar {
+        border-radius: 14px;
+        font-size: 0.95rem;
+    }
+
+    .crm-contacts-mobile .crm-contacts-mob-card--scan .crm-contacts-name {
+        font-size: 0.94rem;
+        font-weight: 800;
+        line-height: 1.2;
+        letter-spacing: -0.01em;
+        color: var(--ws-text, #0f172a);
+        width: 100%;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .crm-contacts-mob-card--scan .crm-contacts-mob-type {
+        font-size: 0.68rem;
+        font-weight: 500;
+        color: var(--ws-text-muted);
+        width: 100%;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .crm-contacts-mob-type--muted {
+        font-weight: 500;
+    }
+
+    .crm-contacts-mob-card--scan .crm-contacts-mob-card__identity-text .crm-contacts-mob-phone {
+        font-size: 0.68rem;
+        font-weight: 500;
+        font-variant-numeric: tabular-nums;
+        color: var(--ws-text-muted);
+        line-height: 1.25;
+        white-space: nowrap;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .crm-contacts-mob-phone--empty {
+        color: var(--ws-text-muted);
+        font-weight: 500;
+    }
+
+    .crm-contacts-mob-card__state {
+        display: flex;
+        flex-direction: row;
+        direction: rtl;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.4rem;
+        min-height: 1.375rem;
+        margin-block: 0.0625rem;
+        width: 100%;
+    }
+
+    .crm-contacts-mob-status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.28rem;
+        max-width: 55%;
+        min-height: 1.375rem;
+        padding: 0.1rem 0.42rem;
+        border-radius: 999px;
+        font-size: 0.64rem;
+        font-weight: 700;
+        line-height: 1.2;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        flex-shrink: 1;
+    }
+
+    .crm-contacts-mob-status-pill .crm-contacts-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+
+    .crm-contacts-mob-status-pill--new {
+        color: #1d4ed8;
+        background: color-mix(in srgb, #3b82f6 10%, var(--ws-surface));
+        border: 1px solid color-mix(in srgb, #3b82f6 22%, var(--ws-border));
+    }
+    .crm-contacts-mob-status-pill--new .crm-contacts-dot {
+        background: #3b82f6;
+    }
+
+    .crm-contacts-mob-status-pill--following {
+        color: #b45309;
+        background: color-mix(in srgb, #f59e0b 10%, var(--ws-surface));
+        border: 1px solid color-mix(in srgb, #f59e0b 22%, var(--ws-border));
+    }
+    .crm-contacts-mob-status-pill--following .crm-contacts-dot {
+        background: #f59e0b;
+    }
+
+    .crm-contacts-mob-status-pill--visited {
+        color: #047857;
+        background: color-mix(in srgb, #10b981 10%, var(--ws-surface));
+        border: 1px solid color-mix(in srgb, #10b981 22%, var(--ws-border));
+    }
+    .crm-contacts-mob-status-pill--visited .crm-contacts-dot {
+        background: #10b981;
+    }
+
+    .crm-contacts-mob-status-pill--default {
+        color: var(--ws-text-secondary);
+        background: color-mix(in srgb, var(--ws-surface-2) 55%, var(--ws-surface));
+        border: 1px solid color-mix(in srgb, var(--ws-border) 65%, transparent);
+    }
+    .crm-contacts-mob-status-pill--default .crm-contacts-dot {
+        background: var(--ws-text-muted);
+    }
+
+    .crm-contacts-mob-followup-pill {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 1.375rem;
+        padding: 0.1rem 0.42rem;
+        border-radius: 999px;
+        font-size: 0.62rem;
+        font-weight: 700;
+        line-height: 1.2;
+        white-space: nowrap;
+        max-width: 45%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        flex-shrink: 1;
+        color: var(--ws-text-muted);
+        background: color-mix(in srgb, var(--ws-surface-2) 50%, var(--ws-surface));
+        border: 1px solid color-mix(in srgb, var(--ws-border) 60%, transparent);
+    }
+
+    .crm-contacts-mob-followup-pill--overdue {
+        color: #b91c1c;
+        background: color-mix(in srgb, #ef4444 8%, var(--ws-surface));
+        border-color: color-mix(in srgb, #ef4444 18%, var(--ws-border));
+    }
+
+    .crm-contacts-mob-followup-pill--today {
+        color: #b45309;
+        background: color-mix(in srgb, #f59e0b 9%, var(--ws-surface));
+        border-color: color-mix(in srgb, #f59e0b 20%, var(--ws-border));
+    }
+
+    .crm-contacts-mob-followup-pill--future {
+        color: var(--ws-text-secondary);
+        background: color-mix(in srgb, var(--ws-primary) 6%, var(--ws-surface));
+        border-color: color-mix(in srgb, var(--ws-primary) 14%, var(--ws-border));
+    }
+
+    .crm-contacts-mob-card__actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.45rem;
+        margin-top: 0.5rem;
+        padding-top: 0.4375rem;
+        border-top: 1px solid color-mix(in srgb, var(--ws-border) 40%, transparent);
+    }
+
+    .crm-contacts-mobile .crm-contacts-mob-card__actions .crm-contacts-mob-act {
+        min-height: 2.5rem;
+        max-height: 2.75rem;
+        padding: 0.3rem 0.45rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.38rem;
+        border-radius: 11px;
+        font-size: 0.74rem;
+        font-weight: 700;
+        text-decoration: none;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 58%, transparent);
+        background: var(--ws-surface);
+        color: var(--ws-text-secondary);
+        transition: background 0.12s ease, border-color 0.12s ease;
+    }
+
+    .crm-contacts-mob-card__actions .crm-contacts-mob-act i {
+        font-size: 0.8rem;
+    }
+
+    .crm-contacts-mobile .crm-contacts-mob-card__actions .crm-contacts-mob-act--call {
+        color: var(--ws-primary);
+        font-weight: 800;
+        border-color: color-mix(in srgb, var(--ws-primary) 38%, var(--ws-border));
+        background: color-mix(in srgb, var(--ws-primary) 11%, var(--ws-surface));
+    }
+
+    .crm-contacts-mobile .crm-contacts-mob-card__actions .crm-contacts-mob-act--call i {
+        font-size: 0.82rem;
+    }
+
+    .crm-contacts-mobile .crm-contacts-mob-card__actions .crm-contacts-mob-act--call:active {
+        background: color-mix(in srgb, var(--ws-primary) 16%, var(--ws-surface));
+    }
+
+    .crm-contacts-mobile .crm-contacts-mob-card__actions .crm-contacts-mob-act--msg {
+        color: var(--ws-text-muted);
+        font-weight: 600;
+        border-color: color-mix(in srgb, var(--ws-border) 72%, transparent);
+        background: color-mix(in srgb, var(--ws-surface-2, #f1f5f9) 35%, var(--ws-surface));
+    }
+
+    .crm-contacts-mobile .crm-contacts-mob-card__actions .crm-contacts-mob-act--msg i {
+        font-size: 0.76rem;
+        opacity: 0.85;
+    }
+
+    .crm-contacts-mob-card--scan .crm-contacts-mob-row-more {
+        justify-self: end;
+        align-self: start;
+        margin-top: -0.0625rem;
+    }
+
+    .crm-contacts-mob-card--scan .crm-contacts-mob-row-more-trigger {
+        width: 2.75rem;
+        height: 2.75rem;
+        min-width: 2.75rem;
+        border-radius: 10px;
+        border: 1px solid transparent;
+        background: color-mix(in srgb, var(--ws-surface-2, #f1f5f9) 40%, transparent);
+        color: var(--ws-text-muted);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .crm-contacts-mob-card--scan .crm-contacts-mob-row-more-trigger:active {
+        background: color-mix(in srgb, var(--ws-border) 25%, var(--ws-surface));
+    }
+
+    .crm-contacts-mob-card-body,
+    .crm-contacts-mob-status-chip,
+    .crm-contacts-mob-followup-line {
+        display: none !important;
+    }
+
+    .crm-contacts-alert-rail {
+        padding: 0.35rem 0.75rem 0;
+    }
+
+    .crm-contacts-mobile .crm-contacts-alert-card {
+        border-radius: 14px;
+        padding: 0.65rem 0.75rem;
+    }
+}
+
+@media (max-width: 360px) {
+    .crm-contacts-mobile .crm-contacts-mob-card.crm-contacts-mob-card--scan {
+        padding: 0.6875rem 0.8rem 0.5rem !important;
+    }
+
+    .crm-contacts-mob-status-pill,
+    .crm-contacts-mob-followup-pill {
+        font-size: 0.6rem;
+        padding-inline: 0.4rem;
+    }
+
+    .crm-contacts-mob-filter-trigger-text {
+        display: none;
+    }
+
+    .crm-contacts-mobile .crm-contacts-mob-filter-trigger {
+        min-width: 40px;
+        padding: 0;
+    }
+}

@@ -1717,7 +1717,7 @@ function initCRMSidePanel() {
     if (!panel) {
         layout.querySelectorAll('.crm-row-selectable').forEach(row => {
             row.addEventListener('click', e => {
-                if (e.target.closest('a, button, input, .crm-contacts-col-check')) return;
+                if (e.target.closest('a, button, input, .crm-contacts-col-check, details, summary, .crm-contacts-mob-card__actions')) return;
                 const link = row.querySelector('.crm-contacts-person-link');
                 if (link) window.location.href = link.href;
             });

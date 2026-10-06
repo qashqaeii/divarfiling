@@ -3,6 +3,10 @@
    Final layer for /workspace/crm/contacts/
    ═══════════════════════════════════════════════════════════ */
 
+.crm-contacts-mob-chrome {
+    display: contents;
+}
+
 .crm-contacts-mob-toolbar-menu,
 .crm-contacts-mob-add-btn,
 .crm-contacts-mob-filter-chips,
@@ -48,7 +52,34 @@
         color: var(--ws-text-muted);
     }
     .crm-contacts-mob-sub-chip {
-        display: none;
+        display: inline-flex;
+        align-items: center;
+        padding: 0.1rem 0.42rem;
+        border-radius: 999px;
+        font-size: 0.66rem;
+        font-weight: 700;
+        background: var(--ws-primary-soft);
+        color: var(--ws-primary);
+    }
+    .crm-contacts-mob-sub-chip.is-warn {
+        background: rgba(245, 158, 11, 0.14);
+        color: #b45309;
+    }
+
+    .crm-contacts-mob-chrome {
+        display: block;
+        position: sticky;
+        top: calc(var(--ws-mob-topbar-h, 3rem) + env(safe-area-inset-top, 0px));
+        z-index: 28;
+        background: var(--ws-bg, #f4f6fb);
+        box-shadow: 0 6px 20px rgba(15, 23, 42, 0.05);
+    }
+    .crm-contacts-mob-chrome .crm-contacts-mob-header {
+        border-radius: 0;
+        box-shadow: none;
+    }
+    .crm-contacts-mob-chrome .crm-contacts-filters {
+        border-radius: 0 0 20px 20px;
     }
     .crm-contacts-mob-header-actions {
         gap: 0.45rem;
@@ -214,7 +245,18 @@
         padding: 0;
     }
     .crm-contacts-mobile .crm-contacts-table-wrap {
-        padding: 0.5rem 0 1.25rem;
+        padding: 0.5rem 0 4.75rem;
+    }
+
+    .crm-contacts-mobile .crm-smart-command-wrap {
+        margin: 0.45rem 1rem 0.35rem;
+    }
+    .crm-contacts-mobile .crm-smart-command {
+        border-radius: 16px;
+        padding: 0.75rem 0.85rem;
+    }
+    .crm-contacts-mobile .crm-smart-command .crm-nl-command__sub {
+        display: none;
     }
     .crm-contacts-mobile .crm-contacts-table tbody {
         gap: 0.55rem;

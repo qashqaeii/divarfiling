@@ -17,6 +17,7 @@
 {% include 'workspace/academy/includes/contextual_banner.html' %}
 <div class="crm-contacts-pro crm-page-chrome crm-contacts-mobile mk-filing-datasets">
 
+    <div class="crm-contacts-mob-chrome">
     <header class="crm-contacts-mob-header">
         <div class="crm-contacts-mob-header-main">
             <h1 class="crm-contacts-mob-title">مخاطبین</h1>
@@ -61,63 +62,6 @@
             </button>
         </div>
     </header>
-
-    <header class="crm-dash-bar crm-contacts-desk-header">
-        <div class="crm-dash-bar-main">
-            <h1 class="crm-dash-bar-title">مخاطبین</h1>
-            {% if request.GET.match_alerts == '1' %}
-            <p class="crm-dash-bar-sub is-visible">فقط مخاطبانی که فایل پیشنهادی قابل بررسی دارند</p>
-            {% endif %}
-        </div>
-        <div class="crm-dash-bar-actions" role="toolbar" aria-label="عملیات مخاطبین">
-            <button type="button" class="fl-header__help crm-contacts-help" title="راهنمای مخاطبین" aria-label="راهنمای مخاطبین" data-modal-open="modal-crm-contacts-help">
-                <span class="fl-header__help-ring" aria-hidden="true"></span>
-                <span class="fl-header__help-bulb" aria-hidden="true">
-                    <i class="fas fa-lightbulb"></i>
-                    <span class="fl-header__help-bulb-glow"></span>
-                </span>
-                <span class="fl-header__help-label">راهنما</span>
-            </button>
-            <button type="button" class="crm-dash-act" data-drawer-open="drawer-import" title="ورود گروهی مخاطبین">
-                <i class="fas fa-file-import" aria-hidden="true"></i><span>ورود فایل</span>
-            </button>
-            <a href="{% url 'workspace:crm_export' %}?{{ filter_qs }}" class="crm-dash-act crm-dash-act--icon js-secure-export" data-export-label="مخاطبین Excel" title="خروجی Excel">
-                <i class="fas fa-file-excel" aria-hidden="true"></i>
-            </a>
-            <button type="button" class="crm-dash-act" data-drawer-open="drawer-quick-lead">
-                <i class="fas fa-bolt" aria-hidden="true"></i><span>مخاطب سریع</span>
-            </button>
-            <button type="button" class="crm-dash-act crm-dash-act--primary" data-drawer-open="drawer-contact">
-                <i class="fas fa-user-plus" aria-hidden="true"></i><span>مخاطب</span>
-            </button>
-        </div>
-    </header>
-
-    <section class="kpi-strip kpi-strip--compact kpi-strip--4 crm-dash-kpis" aria-label="آمار مخاطبین">
-        {% include 'workspace/includes/kpi_item.html' with variant='compact' extra_class='crm-dash-kpi' value=stats.total label='کل' %}
-        {% include 'workspace/includes/kpi_item.html' with variant='compact' extra_class='crm-dash-kpi' value=stats.new label='جدید' %}
-        {% include 'workspace/includes/kpi_item.html' with variant='compact' extra_class='crm-dash-kpi crm-dash-kpi--accent' accent=1 value=stats.in_progress label='پیگیری' %}
-        {% include 'workspace/includes/kpi_item.html' with variant='compact' extra_class='crm-dash-kpi' warn=stats.due_today value=stats.due_today label='امروز' %}
-    </section>
-
-    {% include 'workspace/crm/includes/crm_smart_command.html' %}
-
-    {% if duplicate_groups %}
-    <section class="crm-contacts-alert-rail" aria-label="اقدامات فوری">
-        <button type="button" class="crm-contacts-alert-card" data-drawer-open="drawer-merge">
-            <span class="crm-contacts-alert-card__icon" aria-hidden="true"><i class="fas fa-clone"></i></span>
-            <span class="crm-contacts-alert-card__body">
-                <span class="crm-contacts-alert-card__kicker">نیاز به توجه</span>
-                <strong class="crm-contacts-alert-card__title">
-                    <em class="crm-contacts-alert-card__count">{{ duplicate_groups|length }}</em>
-                    گروه تکراری
-                </strong>
-                <span class="crm-contacts-alert-card__desc">تلفن یکسان — برای تمیزی دیتابیس ادغام کنید</span>
-            </span>
-            <span class="crm-contacts-alert-card__cta">ادغام <i class="fas fa-arrow-left" aria-hidden="true"></i></span>
-        </button>
-    </section>
-    {% endif %}
 
     <form method="get" class="crm-contacts-filters crm-page-filters" id="crmContactFilters">
         <input type="hidden" name="view" value="{{ view_mode }}">
@@ -267,6 +211,64 @@
             </div>
         </div>
     </form>
+    </div>
+
+    <header class="crm-dash-bar crm-contacts-desk-header">
+        <div class="crm-dash-bar-main">
+            <h1 class="crm-dash-bar-title">مخاطبین</h1>
+            {% if request.GET.match_alerts == '1' %}
+            <p class="crm-dash-bar-sub is-visible">فقط مخاطبانی که فایل پیشنهادی قابل بررسی دارند</p>
+            {% endif %}
+        </div>
+        <div class="crm-dash-bar-actions" role="toolbar" aria-label="عملیات مخاطبین">
+            <button type="button" class="fl-header__help crm-contacts-help" title="راهنمای مخاطبین" aria-label="راهنمای مخاطبین" data-modal-open="modal-crm-contacts-help">
+                <span class="fl-header__help-ring" aria-hidden="true"></span>
+                <span class="fl-header__help-bulb" aria-hidden="true">
+                    <i class="fas fa-lightbulb"></i>
+                    <span class="fl-header__help-bulb-glow"></span>
+                </span>
+                <span class="fl-header__help-label">راهنما</span>
+            </button>
+            <button type="button" class="crm-dash-act" data-drawer-open="drawer-import" title="ورود گروهی مخاطبین">
+                <i class="fas fa-file-import" aria-hidden="true"></i><span>ورود فایل</span>
+            </button>
+            <a href="{% url 'workspace:crm_export' %}?{{ filter_qs }}" class="crm-dash-act crm-dash-act--icon js-secure-export" data-export-label="مخاطبین Excel" title="خروجی Excel">
+                <i class="fas fa-file-excel" aria-hidden="true"></i>
+            </a>
+            <button type="button" class="crm-dash-act" data-drawer-open="drawer-quick-lead">
+                <i class="fas fa-bolt" aria-hidden="true"></i><span>مخاطب سریع</span>
+            </button>
+            <button type="button" class="crm-dash-act crm-dash-act--primary" data-drawer-open="drawer-contact">
+                <i class="fas fa-user-plus" aria-hidden="true"></i><span>مخاطب</span>
+            </button>
+        </div>
+    </header>
+
+    <section class="kpi-strip kpi-strip--compact kpi-strip--4 crm-dash-kpis" aria-label="آمار مخاطبین">
+        {% include 'workspace/includes/kpi_item.html' with variant='compact' extra_class='crm-dash-kpi' value=stats.total label='کل' %}
+        {% include 'workspace/includes/kpi_item.html' with variant='compact' extra_class='crm-dash-kpi' value=stats.new label='جدید' %}
+        {% include 'workspace/includes/kpi_item.html' with variant='compact' extra_class='crm-dash-kpi crm-dash-kpi--accent' accent=1 value=stats.in_progress label='پیگیری' %}
+        {% include 'workspace/includes/kpi_item.html' with variant='compact' extra_class='crm-dash-kpi' warn=stats.due_today value=stats.due_today label='امروز' %}
+    </section>
+
+    {% include 'workspace/crm/includes/crm_smart_command.html' %}
+
+    {% if duplicate_groups %}
+    <section class="crm-contacts-alert-rail" aria-label="اقدامات فوری">
+        <button type="button" class="crm-contacts-alert-card" data-drawer-open="drawer-merge">
+            <span class="crm-contacts-alert-card__icon" aria-hidden="true"><i class="fas fa-clone"></i></span>
+            <span class="crm-contacts-alert-card__body">
+                <span class="crm-contacts-alert-card__kicker">نیاز به توجه</span>
+                <strong class="crm-contacts-alert-card__title">
+                    <em class="crm-contacts-alert-card__count">{{ duplicate_groups|length }}</em>
+                    گروه تکراری
+                </strong>
+                <span class="crm-contacts-alert-card__desc">تلفن یکسان — برای تمیزی دیتابیس ادغام کنید</span>
+            </span>
+            <span class="crm-contacts-alert-card__cta">ادغام <i class="fas fa-arrow-left" aria-hidden="true"></i></span>
+        </button>
+    </section>
+    {% endif %}
 
     {% if view_mode == 'pipeline' %}
     <section class="crm-contacts-pipeline">

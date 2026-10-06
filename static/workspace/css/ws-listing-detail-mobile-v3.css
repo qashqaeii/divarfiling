@@ -1,0 +1,335 @@
+/* ═══════════════════════════════════════════════════════════
+   Listing Detail — Mobile Pass 07 (Mobile-first IA)
+   Scoped: .ws-ld-detail.ws-ld-mobile @ max-width 767px
+   Loads last — overrides decorative passes where needed
+   ═══════════════════════════════════════════════════════════ */
+
+.ws-ld-mob-keyfacts,
+.ws-ld-mob-sections {
+    display: none;
+}
+
+@media (max-width: 767px) {
+    /* ── Calmer shell (reduce “desktop hero” decoration) ── */
+    .ws-ld-detail.ws-ld-mobile.crm-page-chrome {
+        background: var(--ws-bg, #f8fafc);
+        gap: 0.35rem;
+    }
+
+    .ws-ld-detail.ws-ld-mobile .crm-prop-hero {
+        border-radius: 0;
+        box-shadow: none;
+        background: var(--ws-surface);
+    }
+
+    .ws-ld-detail .ws-ld-hero-ribbon,
+    .ws-ld-detail .ws-ld-hero-mesh,
+    .ws-ld-detail .crm-prop-hero-ambient {
+        display: none !important;
+    }
+
+    .ws-ld-detail .crm-prop-hero-amenities {
+        display: none !important;
+    }
+
+    /* Desktop hero copy hidden — replaced by keyfacts + section rows */
+    .ws-ld-detail.ws-ld-mobile.crm-prop-detail-mobile .crm-prop-hero-content {
+        display: none !important;
+    }
+
+    /* Premium shell uses display:contents on hero — hide leaked children if override loses */
+    .ws-ld-detail.ws-ld-mobile .crm-prop-hero-status-row,
+    .ws-ld-detail.ws-ld-mobile .crm-prop-hero-content .crm-prop-hero-title,
+    .ws-ld-detail.ws-ld-mobile .crm-prop-hero-chips,
+    .ws-ld-detail.ws-ld-mobile .crm-prop-hero-board,
+    .ws-ld-detail.ws-ld-mobile .crm-prop-hero-kpi-row,
+    .ws-ld-detail.ws-ld-mobile .crm-prop-hero-amenities,
+    .ws-ld-detail.ws-ld-mobile .ws-ld-hero-bench {
+        display: none !important;
+    }
+
+    /* ── Compact keyfacts (scan layer) ── */
+    .ws-ld-detail .ws-ld-mob-keyfacts {
+        display: block;
+        padding: 0.65rem 0.85rem 0.75rem;
+        border-bottom: 1px solid color-mix(in srgb, var(--ws-border) 50%, transparent);
+        background: var(--ws-surface);
+    }
+
+    .ws-ld-detail .ws-ld-mob-keyfacts__price {
+        margin: 0;
+        font-size: 1.35rem;
+        font-weight: 850;
+        line-height: 1.25;
+        letter-spacing: -0.02em;
+        color: var(--ws-primary);
+    }
+
+    .ws-ld-detail .ws-ld-mob-keyfacts__price--muted {
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--ws-text-muted);
+    }
+
+    .ws-ld-detail .ws-ld-mob-keyfacts__price-lbl {
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: var(--ws-text-muted);
+        margin-inline-end: 0.25rem;
+    }
+
+    .ws-ld-detail .ws-ld-mob-keyfacts__meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem 0.55rem;
+        margin: 0.35rem 0 0;
+        font-size: 0.8125rem;
+        font-weight: 650;
+        color: var(--ws-text-secondary);
+    }
+
+    .ws-ld-detail .ws-ld-mob-keyfacts__meta span:not(:last-child)::after {
+        content: "·";
+        margin-inline-start: 0.55rem;
+        opacity: 0.45;
+        font-weight: 400;
+    }
+
+    .ws-ld-detail .ws-ld-mob-keyfacts__loc {
+        margin: 0.4rem 0 0;
+        font-size: 0.8125rem;
+        font-weight: 650;
+        color: var(--ws-text);
+        line-height: 1.45;
+    }
+
+    .ws-ld-detail .ws-ld-mob-keyfacts__loc i {
+        margin-inline-end: 0.35rem;
+        color: var(--ws-text-muted);
+        font-size: 0.75rem;
+    }
+
+    .ws-ld-detail .ws-ld-mob-keyfacts__status {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+        margin: 0.45rem 0 0;
+        font-size: 0.6875rem;
+        font-weight: 700;
+        color: var(--ws-text-muted);
+    }
+
+    .ws-ld-detail .ws-ld-mob-keyfacts__status span {
+        padding: 0.18rem 0.45rem;
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--ws-surface-2) 80%, var(--ws-surface));
+    }
+
+    .ws-ld-detail .ws-ld-mob-keyfacts__warn {
+        color: #b45309;
+        background: color-mix(in srgb, #f59e0b 12%, var(--ws-surface)) !important;
+    }
+
+    /* ── Gallery: hero only; drop duplicate strip ── */
+    .ws-ld-detail .ws-ld-mobile-gallery {
+        display: none !important;
+    }
+
+    .ws-ld-detail .crm-prop-hero-cover,
+    .ws-ld-detail .crm-prop-hero-cover img {
+        aspect-ratio: 4 / 3;
+        max-height: min(52vw, 240px);
+    }
+
+    /* ── Section rows instead of horizontal tabs ── */
+    .ws-ld-detail .crm-prop-segrail .crm-prop-tabs.crm-tabs-pro {
+        display: none !important;
+    }
+
+    .ws-ld-detail .crm-prop-segrail {
+        margin: 0 0 0.35rem;
+    }
+
+    /* Dock «بیشتر» is enough — avoid duplicate hero overflow menu */
+    .ws-ld-detail .ws-ld-mob-hero-more {
+        display: none !important;
+    }
+
+    .ws-ld-detail .crm-prop-hero-nav {
+        grid-template-columns: auto minmax(0, 1fr);
+        grid-template-areas: "back title";
+    }
+
+    .ws-ld-detail .ws-ld-mob-sections {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+        margin: 0 0.65rem;
+        border-radius: 16px;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 55%, transparent);
+        background: var(--ws-surface);
+        overflow: hidden;
+    }
+
+    .ws-ld-detail .ws-ld-mob-section-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+        width: 100%;
+        min-height: 3rem;
+        padding: 0.65rem 0.85rem;
+        border: none;
+        border-bottom: 1px solid color-mix(in srgb, var(--ws-border) 45%, transparent);
+        background: transparent;
+        font-family: inherit;
+        font-size: 0.8125rem;
+        font-weight: 700;
+        color: var(--ws-text-secondary);
+        text-align: right;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .ws-ld-detail .ws-ld-mob-section-row:last-child {
+        border-bottom: none;
+    }
+
+    .ws-ld-detail .ws-ld-mob-section-row em {
+        font-style: normal;
+        font-size: 0.6875rem;
+        font-weight: 800;
+        color: var(--ws-primary);
+        margin-inline-start: 0.25rem;
+    }
+
+    .ws-ld-detail .ws-ld-mob-section-row i {
+        font-size: 0.65rem;
+        opacity: 0.45;
+        color: var(--ws-text-muted);
+    }
+
+    .ws-ld-detail .ws-ld-mob-section-row.active {
+        color: var(--ws-primary);
+        background: color-mix(in srgb, var(--ws-primary) 5%, var(--ws-surface));
+    }
+
+    .ws-ld-detail .ws-ld-mob-section-row.active i {
+        opacity: 0.85;
+        color: var(--ws-primary);
+    }
+
+    .ws-ld-detail .crm-prop-panel-head {
+        display: none;
+    }
+
+    .ws-ld-detail .crm-prop-panel-pro {
+        margin-top: 0.45rem;
+        border: none;
+        box-shadow: none;
+        background: transparent;
+    }
+
+    .ws-ld-detail .crm-prop-panel-body {
+        padding-inline: 0.65rem;
+    }
+
+    /* ── Map intro slimmer ── */
+    .ws-ld-detail .crm-prop-map-finale-intro-inner {
+        gap: 0.35rem;
+    }
+
+    .ws-ld-detail .crm-prop-map-finale-kicker,
+    .ws-ld-detail .crm-prop-map-finale-title {
+        display: none;
+    }
+
+    .ws-ld-detail .crm-prop-map-finale-intro {
+        padding: 0.55rem 0.75rem;
+    }
+
+    /* ── Dock: تماس | ارسال برای مشتری | بیشتر ── */
+    .ws-ld-detail .ws-ld-mob-dock .ws-ld-dock-form,
+    .ws-ld-detail .ws-ld-mob-dock .ws-ld-dock-edit {
+        display: none !important;
+    }
+
+    .ws-ld-detail .ws-ld-mob-dock .crm-prop-mobile-dock__inner {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr) auto;
+        gap: 0.35rem;
+        align-items: stretch;
+    }
+
+    .ws-ld-detail .ws-ld-mob-dock .crm-prop-dock-btn--more {
+        min-width: 3rem;
+        padding-inline: 0.35rem;
+    }
+
+    .ws-ld-detail .ws-ld-mob-dock .crm-prop-dock-btn--primary {
+        font-size: 0.62rem;
+        font-weight: 800;
+        line-height: 1.2;
+        white-space: normal;
+    }
+
+    .ws-ld-detail .ws-ld-mob-dock .crm-prop-dock-btn--primary .crm-prop-dock-btn__label {
+        max-width: 100%;
+    }
+
+    .ws-ld-detail .ws-ld-mob-dock .crm-prop-dock-btn__short {
+        display: none;
+    }
+
+    .ws-ld-detail .ws-ld-mob-dock .crm-prop-dock-btn span {
+        font-size: 0.6875rem;
+        line-height: 1.25;
+    }
+
+    .ws-ld-detail .ws-ld-mob-dock .crm-prop-dock-btn--more span {
+        font-size: 0.625rem;
+    }
+}
+
+@media (max-width: 360px) {
+    .ws-ld-detail .ws-ld-mob-dock .crm-prop-dock-btn--primary .crm-prop-dock-btn__long {
+        display: none;
+    }
+
+    .ws-ld-detail .ws-ld-mob-dock .crm-prop-dock-btn--primary .crm-prop-dock-btn__short {
+        display: inline;
+    }
+}
+
+@media (max-width: 320px) {
+    .ws-ld-detail .ws-ld-mob-dock .crm-prop-mobile-dock__inner {
+        grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr) auto;
+        gap: 0.28rem;
+        padding: 0.38rem 0.32rem;
+    }
+
+    .ws-ld-detail .ws-ld-mob-dock .crm-prop-dock-btn {
+        padding-inline: 0.35rem;
+        min-height: 2.65rem;
+    }
+
+    .ws-ld-detail .ws-ld-mob-dock .crm-prop-dock-btn--more {
+        min-width: 2.65rem;
+    }
+
+    .ws-ld-detail .ws-ld-mob-keyfacts__price {
+        font-size: 1.2rem;
+    }
+
+    .ws-ld-detail .ws-ld-mob-section-row {
+        padding-inline: 0.7rem;
+        font-size: 0.78rem;
+    }
+}
+
+@media (min-width: 768px) {
+    .ws-ld-detail .ws-ld-mob-keyfacts,
+    .ws-ld-detail .ws-ld-mob-sections {
+        display: none !important;
+    }
+}

@@ -21,23 +21,28 @@
     }
 
     function updateNavLinks(root, nav) {
-        if (!root || !nav) return;
-        const google = root.querySelector('[data-map-nav="google"]');
-        const neshan = root.querySelector('[data-map-nav="neshan"]');
-        const waze = root.querySelector('[data-map-nav="waze"]');
-        if (google && nav.google_url) {
-            google.href = nav.google_url;
-            google.hidden = false;
-        }
-        if (neshan && nav.neshan_url) {
-            neshan.href = nav.neshan_url;
-            neshan.hidden = false;
-        }
-        if (waze && nav.waze_url) {
-            waze.href = nav.waze_url;
-            waze.hidden = false;
-        }
-        root.querySelector('[data-map-nav-actions]')?.removeAttribute('hidden');
+        if (!nav) return;
+        const scope = root || document;
+        ['google', 'neshan', 'waze'].forEach((key) => {
+            const url = nav[`${key}_url`];
+            if (!url) return;
+            const inRoot = scope.querySelectorAll(`[data-map-nav="${key}"]`);
+            const inSheet = document.querySelectorAll(`#wsCrmPdMapNavSheet [data-map-nav="${key}"]`);
+            inRoot.forEach((el) => {
+                el.href = url;
+                el.hidden = false;
+            });
+            inSheet.forEach((el) => {
+                el.href = url;
+                el.hidden = false;
+            });
+        });
+        scope.querySelectorAll('[data-map-nav-actions]').forEach((el) => {
+            el.removeAttribute('hidden');
+        });
+        document.querySelectorAll('[data-crm-pd-map-nav-open]').forEach((btn) => {
+            btn.removeAttribute('hidden');
+        });
     }
 
     function updatePlaceHint(root, lat, lng) {
@@ -186,6 +191,29 @@
             }, { rootMargin: '80px' });
             obs.observe(root);
         }
+
+        if (dock && 'IntersectionObserver' in global) {
+            const dockObs = new IntersectionObserver((entries) => {
+                entries.forEach((entry) => {
+                    if (!entry.isIntersecting) {
+                        dock.hidden = true;
+                        dock.dataset.offscreen = '1';
+                        return;
+                    }
+                    if (dock.dataset.offscreen !== '1') return;
+                    delete dock.dataset.offscreen;
+                    const draft = mapApi.getDraft?.();
+                    if (draft) onDraftChange(draft);
+                });
+            }, { threshold: 0.12 });
+            dockObs.observe(root);
+        }
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'hidden' && dock && !dock.hidden) {
+                dock.hidden = true;
+            }
+        });
 
         return mapApi;
     }

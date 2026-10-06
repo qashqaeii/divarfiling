@@ -21575,23 +21575,30 @@ button.crm-prop-hero-cover {
     color: var(--ws-text-muted);
 }
 .crm-prop-map-edit-dock {
-    position: absolute;
-    z-index: 500;
-    left: 50%;
-    bottom: 1rem;
-    transform: translateX(-50%);
+    position: static;
+    z-index: auto;
+    left: auto;
+    bottom: auto;
+    transform: none;
     display: flex;
     align-items: center;
     gap: 0.75rem;
     flex-wrap: wrap;
     justify-content: space-between;
-    width: min(calc(100% - 1.5rem), 440px);
-    padding: 0.65rem 0.75rem;
-    border-radius: 14px;
-    background: color-mix(in srgb, #0f172a 92%, transparent);
-    color: #f8fafc;
-    box-shadow: 0 12px 36px rgba(15, 23, 42, 0.35);
-    backdrop-filter: blur(14px) saturate(1.2);
+    width: 100%;
+    max-width: none;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0.75rem 1rem;
+    border-radius: 0;
+    border-top: 1px solid var(--ws-border-light);
+    background: var(--ws-surface-2);
+    color: var(--ws-text);
+    box-shadow: none;
+    backdrop-filter: none;
+}
+.crm-prop-map-edit-dock[hidden] {
+    display: none !important;
 }
 .crm-prop-map-edit-dock-main {
     display: flex;
@@ -21607,8 +21614,8 @@ button.crm-prop-hero-cover {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background: rgba(249, 115, 22, 0.2);
-    color: #fdba74;
+    background: color-mix(in srgb, var(--ws-primary) 12%, var(--ws-surface));
+    color: var(--ws-primary);
     flex-shrink: 0;
 }
 .crm-prop-map-edit-dock-text {
@@ -21623,7 +21630,7 @@ button.crm-prop-hero-cover {
 }
 .crm-prop-map-edit-dock-text span {
     font-size: 0.68rem;
-    color: #cbd5e1;
+    color: var(--ws-text-muted);
     font-variant-numeric: tabular-nums;
 }
 .crm-prop-map-edit-dock-acts {
@@ -21649,8 +21656,9 @@ button.crm-prop-hero-cover {
     cursor: wait;
 }
 .crm-prop-map-edit-btn--ghost {
-    background: rgba(248, 250, 252, 0.1);
-    color: #e2e8f0;
+    background: var(--ws-surface);
+    color: var(--ws-text-secondary);
+    border: 1px solid var(--ws-border);
 }
 .crm-prop-map-edit-btn--primary {
     background: linear-gradient(135deg, #f97316, #ea580c);
@@ -21724,7 +21732,7 @@ button.crm-prop-hero-cover {
     .crm-prop-map-edit-dock {
         flex-direction: column;
         align-items: stretch;
-        bottom: 0.65rem;
+        padding: 0.75rem 0.85rem;
     }
     .crm-prop-map-edit-dock-acts {
         width: 100%;

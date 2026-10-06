@@ -14,6 +14,7 @@
             maxZoom: options?.maxZoom || 19,
             subdomains: 'abc',
             crossOrigin: true,
+            errorTileUrl: '',
         });
     }
 
@@ -801,7 +802,7 @@
             btn.addEventListener('click', () => setTimeout(refreshMapSize, 180), { signal });
         });
         /* Map finale is visible on load — refresh after layout settles */
-        if (el.closest('.crm-prop-map-finale')) {
+        if (el.closest('.crm-prop-map-finale') || el.closest('.ws-ld-dossier-map-embed')) {
             requestAnimationFrame(() => setTimeout(refreshMapSize, 80));
         }
 

@@ -54,7 +54,8 @@
         return L.tileLayer(STANDARD_BASEMAP_TILE_URL, {
             attribution: opts.attribution || STANDARD_BASEMAP_ATTRIBUTION,
             maxZoom: opts.maxZoom != null ? opts.maxZoom : 19,
-            subdomains: opts.subdomains || 'abc',
+            /* tile.openstreetmap.fr/osmfr — فقط a/b/c؛ d اغلب tile خالی/خطا می‌دهد */
+            subdomains: 'abc',
             crossOrigin: opts.crossOrigin !== false,
         });
     }

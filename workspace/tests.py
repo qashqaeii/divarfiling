@@ -778,6 +778,50 @@ class ListingDisplaySectionTests(SimpleTestCase):
         self.assertIn('محله', sections['مکان'])
         self.assertIn('عرض جغرافیایی', sections['مکان'])
 
+    def test_build_listing_display_data_collapses_schedule_duplicates(self):
+        from datetime import datetime
+        from workspace.services.display import build_listing_display_data, format_supplementary_groups, transaction_profile
+
+        class Listing:
+            token = 'tok2'
+            title = 'تست'
+            link = ''
+            area = 70
+            rooms = '2'
+            city = 'تهران'
+            neighborhood = 'نارمک'
+            price = None
+            deposit = 1_000_000_000
+            rent = 10_000_000
+            business_type = 'مالک'
+            latitude = None
+            longitude = None
+            published_at = datetime(2026, 10, 6, 8, 37)
+            expires_at = datetime(2026, 11, 6, 8, 37)
+            images = []
+            description = ''
+            data = {
+                'ایجاد آگهی': '1405/07/15 12:07',
+                'تاریخ انتشار': '1405/07/15 08:37',
+                'انقضا آگهی': '1405/08/15 12:07',
+                'تاریخ انقضا': '1405/08/15 08:37',
+            }
+
+        profile = transaction_profile('اجاره')
+        data = build_listing_display_data(Listing(), {})
+        self.assertIn('تاریخ انتشار', data)
+        self.assertNotIn('ایجاد آگهی', data)
+        self.assertIn('تاریخ انقضا', data)
+        self.assertNotIn('انقضا آگهی', data)
+        groups = format_supplementary_groups(data, profile, {})
+        timing = next((g for g in groups if g.get('name') == 'زمان‌بندی'), None)
+        self.assertIsNotNone(timing)
+        labels = [r.get('key') for r in timing.get('fields', [])]
+        self.assertEqual(labels.count('تاریخ انتشار'), 1)
+        self.assertEqual(labels.count('تاریخ انقضا'), 1)
+        self.assertNotIn('ایجاد آگهی', labels)
+        self.assertNotIn('انقضا آگهی', labels)
+
     def test_feature_columns_stay_out_of_property_tab(self):
         from workspace.services.display import format_sections, transaction_profile
 

@@ -1243,8 +1243,24 @@
 
     .ws-filing-mob-dl.ws-ld-detail.mk-page {
         padding-inline: 14px !important;
-        padding-bottom: calc(5.75rem + env(safe-area-inset-bottom, 0px)) !important;
+        padding-bottom: calc(7.35rem + env(safe-area-inset-bottom, 0px)) !important;
         overflow-x: clip;
+    }
+
+    body.ws-body:has(.ws-filing-mob-dl.ws-ld-detail) .ws-mobile-topbar-title {
+        display: block;
+        min-width: 0;
+        max-width: min(42vw, 11.5rem);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        line-height: 1.35;
+    }
+
+    @media (max-width: 360px) {
+        body.ws-body:has(.ws-filing-mob-dl.ws-ld-detail) .ws-mobile-topbar-title {
+            max-width: min(38vw, 9.5rem);
+        }
     }
 
     .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-hero-title {
@@ -1370,21 +1386,29 @@
         border-bottom: none;
     }
 
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-dossier-section {
+        padding-bottom: 1.25rem;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-dossier-section:last-child {
+        padding-bottom: 0.35rem;
+    }
+
     .ws-filing-mob-dl.ws-ld-detail .ws-ld-dossier-h {
         display: flex;
-        align-items: flex-start;
-        gap: 0.65rem;
+        align-items: center;
+        gap: 0.55rem;
         margin: 0;
-        padding: 0.75rem 0 0.55rem;
+        padding: 0.35rem 0 0.65rem;
         border: none;
         background: transparent;
     }
 
     .ws-filing-mob-dl.ws-ld-detail .ws-ld-dossier-h__ico {
         display: inline-flex;
-        width: 2.25rem;
-        height: 2.25rem;
-        border-radius: 11px;
+        width: 1.85rem;
+        height: 1.85rem;
+        border-radius: 9px;
         align-items: center;
         justify-content: center;
         flex-shrink: 0;
@@ -1403,7 +1427,8 @@
     }
 
     .ws-filing-mob-dl.ws-ld-detail .ws-ld-dossier-section .ws-field-list {
-        padding: 0 0 0.65rem;
+        padding: 0;
+        margin-top: 0.1rem;
     }
 
     .ws-filing-mob-dl.ws-ld-detail .ws-field-row {
@@ -1412,7 +1437,7 @@
         align-items: baseline;
         justify-content: space-between;
         gap: 0.65rem;
-        padding: 0.45rem 0;
+        padding: 0.38rem 0;
         border-bottom: 1px solid color-mix(in srgb, var(--ws-border) 28%, transparent);
     }
 
@@ -1484,16 +1509,38 @@
         margin: 0;
     }
 
-    .ws-filing-mob-dl.ws-ld-detail .ws-ld-dock-form--personal .crm-prop-dock-btn {
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-dock-form--personal .crm-prop-dock-btn,
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-dock-personal-link {
         width: 100%;
     }
 
-    .ws-filing-mob-dl.ws-ld-detail .crm-prop-dock-btn--personal {
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-dock-personal-link {
+        display: flex !important;
+        min-width: 0;
+        text-decoration: none;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .crm-prop-dock-btn--personal:not(.crm-prop-dock-btn--primary) {
         color: var(--ws-text-secondary);
     }
 
-    .ws-filing-mob-dl.ws-ld-detail .crm-prop-dock-btn--personal i {
+    .ws-filing-mob-dl.ws-ld-detail .crm-prop-dock-btn--personal:not(.crm-prop-dock-btn--primary) i {
         color: var(--ws-primary);
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-dock .crm-prop-dock-btn--share.crm-prop-dock-btn--primary {
+        white-space: nowrap;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-dock .crm-prop-dock-btn--share.crm-prop-dock-btn--primary .crm-prop-dock-btn__label {
+        white-space: normal;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-mob-dock .crm-prop-dock-btn--personal > span {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%;
     }
 
     /* ── Listing detail: hero (image-first, no duplicate back) ── */
@@ -1591,6 +1638,31 @@
         word-break: break-word;
     }
 
+    .ws-filing-mob-dl.ws-ld-detail .ws-fv-prose {
+        width: 100%;
+        direction: rtl;
+        text-align: start;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-fv-prose-preview,
+    .ws-filing-mob-dl.ws-ld-detail .ws-fv-prose-full {
+        font-size: 0.8125rem;
+        line-height: 1.7;
+        color: var(--ws-text);
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-fv-prose-more {
+        margin-top: 0.35rem;
+        padding: 0;
+        border: none;
+        background: transparent;
+        font-family: inherit;
+        font-size: 0.75rem;
+        font-weight: 800;
+        color: var(--ws-primary);
+        cursor: pointer;
+    }
+
     /* ── Amenities — flat rows (no card-in-card) ── */
     .ws-filing-mob-dl.ws-ld-detail .crm-prop-panel[data-panel="specs"] > .crm-prop-panel-head {
         display: none !important;
@@ -1621,7 +1693,7 @@
         justify-content: space-between;
         gap: 0.65rem;
         min-height: 0;
-        padding: 0.45rem 0;
+        padding: 0.38rem 0;
         border: none !important;
         border-radius: 0 !important;
         border-bottom: 1px solid color-mix(in srgb, var(--ws-border) 28%, transparent) !important;
@@ -1712,7 +1784,7 @@
         flex-direction: row;
         align-items: center;
         gap: 0.45rem;
-        padding: 0.55rem 0 0.35rem;
+        padding: 0.45rem 0 0.28rem;
         margin: 0;
         border: none;
         background: transparent;
@@ -2024,50 +2096,57 @@
         margin-top: 0.15rem;
     }
 
-    /* ── Map — stage height = leaflet (fix gray band) ── */
-    .ws-filing-mob-dl.ws-ld-detail .crm-prop-map-finale {
-        margin-inline: 0 !important;
-        border-radius: 12px;
+    /* ── Map inside بخش مکان (single instance) ── */
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-dossier-map-embed {
+        margin: 0.65rem 0 0;
+        padding: 0;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-dossier-map-embed .ws-ld-map-nav-trigger {
+        width: 100%;
+        margin: 0 0 0.55rem;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-dossier-map-canvas {
+        position: relative;
         overflow: hidden;
+        border-radius: 12px;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 45%, transparent);
         isolation: isolate;
     }
 
-    .ws-filing-mob-dl.ws-ld-detail .crm-prop-map-finale-intro {
-        padding: 0.65rem 0.85rem 0.55rem !important;
-    }
-
-    .ws-filing-mob-dl.ws-ld-detail .crm-prop-map-finale-place {
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-dossier-map-canvas .ws-ld-location-map-wrap {
         margin: 0;
-        font-size: 0.875rem;
-        font-weight: 750;
-        line-height: 1.4;
+        border: none;
+        background: transparent;
     }
 
-    .ws-filing-mob-dl.ws-ld-detail .crm-prop-map-finale-accuracy {
-        margin-top: 0.25rem;
-        font-size: 0.6875rem;
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-dossier-map-canvas .ws-ld-location-map-head {
+        max-width: min(calc(100% - 1rem), 220px);
+        z-index: 25;
     }
 
-    .ws-filing-mob-dl.ws-ld-detail .crm-prop-map-finale-canvas {
-        overflow: hidden !important;
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-dossier-map-canvas .ws-ld-location-map-head-main {
+        display: none;
     }
 
-    .ws-filing-mob-dl.ws-ld-detail .crm-prop-map-finale .ws-ld-location-map-stage {
-        height: auto !important;
-        min-height: 0 !important;
-        max-height: none !important;
-        background: #e8edf2;
-    }
-
-    .ws-filing-mob-dl.ws-ld-detail .crm-prop-map-finale #wsLdLocationMap.ws-ld-location-map {
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-dossier-map-canvas .ws-ld-location-map-stage,
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-dossier-map-canvas #wsLdLocationMap.ws-ld-location-map,
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-dossier-map-canvas #wsLdLocationMap.ws-ld-location-map.leaflet-container {
         height: clamp(260px, 42vw, 320px) !important;
         min-height: 260px !important;
         max-height: 320px !important;
         width: 100% !important;
+        background: #f4f6f8;
     }
 
-    .ws-filing-mob-dl.ws-ld-detail .crm-prop-map-finale .ws-ld-location-map-head {
-        max-width: min(calc(100% - 1rem), 220px);
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-dossier-map-canvas .ws-ld-location-map-stage {
+        background: transparent;
+    }
+
+    .ws-filing-mob-dl.ws-ld-detail .ws-ld-dossier-section--location {
+        border-bottom: none;
+        padding-bottom: 0.5rem;
     }
 
     /* ── Hub dataset cards — compact scan layout ── */

@@ -7,6 +7,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import jdatetime
 
+from workspace.services.columns import COLUMN_ALIASES
 from workspace.services.formatting import format_area, format_toman
 from workspace.services.jalali_input import to_persian_digits
 from workspace.services.listing_features import is_listing_feature_key
@@ -542,6 +543,43 @@ def _set_if_missing(data: dict, key: str, value: Any) -> None:
         data[key] = value
 
 
+def _schedule_field_has_value(value: Any) -> bool:
+    if value is None:
+        return False
+    s = str(value).strip()
+    return bool(s) and s.lower() not in ('nan', 'none', '-', '—')
+
+
+def _collapse_schedule_fields(data: dict, listing) -> None:
+    """یک برچسب برای انتشار و یک برای انقضا — معادل‌های اکسل و مدل ادغام می‌شوند."""
+    if not data:
+        return
+    for model_attr, label, aliases in (
+        ('published_at', 'تاریخ انتشار', COLUMN_ALIASES['published_at']),
+        ('expires_at', 'تاریخ انقضا', COLUMN_ALIASES['expires_at']),
+    ):
+        model_val = getattr(listing, model_attr, None)
+        keys_present = [k for k in aliases if k in data]
+        if model_val is None and not keys_present:
+            continue
+        value = model_val
+        if value is None:
+            for key in aliases:
+                raw = data.get(key)
+                if _schedule_field_has_value(raw):
+                    value = raw
+                    break
+        if value is None:
+            for key in aliases:
+                data.pop(key, None)
+            data.pop(label, None)
+            continue
+        for key in aliases:
+            data.pop(key, None)
+        data.pop(label, None)
+        data[label] = value
+
+
 def _dedupe_listing_data_keys(data: dict) -> dict:
     """حذف کلیدهای تکراری انگلیسی/داخلی وقتی معادل فارسی export وجود دارد."""
     if not data:
@@ -664,6 +702,7 @@ def build_listing_display_data(listing, feat: Optional[Dict[str, Any]] = None) -
         _set_if_missing(data, 'تاریخ انتشار', listing.published_at)
     if listing.expires_at:
         _set_if_missing(data, 'تاریخ انقضا', listing.expires_at)
+    _collapse_schedule_fields(data, listing)
     if listing.images:
         data['تعداد تصاویر'] = len(listing.images)
 
@@ -865,8 +904,21 @@ _SUPPLEMENTARY_GROUP_ICONS: Dict[str, str] = {
 }
 
 
+_PUBLISH_SCHEDULE_KEYS = frozenset(COLUMN_ALIASES['published_at'])
+_EXPIRE_SCHEDULE_KEYS = frozenset(COLUMN_ALIASES['expires_at'])
+
+_SUPPLEMENTARY_ROW_PREF: Dict[str, Tuple[str, ...]] = {
+    'schedule_published': ('تاریخ انتشار', 'ایجاد آگهی', 'published_at', 'created_at'),
+    'schedule_expires': ('تاریخ انقضا', 'انقضا آگهی', 'expires_at', 'انتشار_unavailable_after'),
+}
+
+
 def _normalize_supplementary_row_key(key: str) -> str:
     k = str(key or '').strip().lower().replace(' ', '').replace('_', '').replace('‌', '')
+    if key in _PUBLISH_SCHEDULE_KEYS:
+        return 'schedule_published'
+    if key in _EXPIRE_SCHEDULE_KEYS:
+        return 'schedule_expires'
     if any(m in key for m in ('نوع آگهی', 'آگهی دهنده', 'آگهی‌دهنده')) or 'advertiser' in k:
         return 'advertiser_type'
     if 'لینک تصویر اول' in key or k == 'لینکتصویراول':
@@ -876,18 +928,32 @@ def _normalize_supplementary_row_key(key: str) -> str:
     return k
 
 
+def _supplementary_row_preference(norm: str, raw_key: str) -> int:
+    order = _SUPPLEMENTARY_ROW_PREF.get(norm)
+    if not order:
+        return 99
+    for idx, marker in enumerate(order):
+        if raw_key == marker or marker in raw_key:
+            return idx
+    return 50
+
+
 def dedupe_supplementary_rows(rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     """حذف نمایش تکراری فیلدهای هم‌معنا در مشخصات بیشتر."""
-    seen: set = set()
-    out: List[Dict[str, Any]] = []
+    by_norm: Dict[str, Dict[str, Any]] = {}
+    order: List[str] = []
     for row in rows:
         raw_key = str(row.get('raw_key') or row.get('key') or '')
         nk = _normalize_supplementary_row_key(raw_key)
-        if nk in seen:
+        if nk not in by_norm:
+            by_norm[nk] = row
+            order.append(nk)
             continue
-        seen.add(nk)
-        out.append(row)
-    return out
+        existing = by_norm[nk]
+        ex_key = str(existing.get('raw_key') or existing.get('key') or '')
+        if _supplementary_row_preference(nk, raw_key) < _supplementary_row_preference(nk, ex_key):
+            by_norm[nk] = row
+    return [by_norm[k] for k in order]
 
 
 def _collect_supplementary_rows(

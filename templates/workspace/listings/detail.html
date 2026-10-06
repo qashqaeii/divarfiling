@@ -13,8 +13,8 @@
 <link rel="stylesheet" href="{% static 'workspace/css/mk-filing-datasets.css' %}?v=19">
 <link rel="stylesheet" href="{% static 'workspace/css/mk-filing-listing-detail.css' %}?v=1">
 <link rel="stylesheet" href="{% static 'workspace/css/ws-listing-detail-mobile-v2.css' %}?v=3">
-<link rel="stylesheet" href="{% static 'workspace/css/ws-listing-detail-mobile-v3.css' %}?v=3">
-<link rel="stylesheet" href="{% static 'workspace/css/ws-filing-mobile-dl-v1.css' %}?v=26">
+<link rel="stylesheet" href="{% static 'workspace/css/ws-listing-detail-mobile-v3.css' %}?v=5">
+<link rel="stylesheet" href="{% static 'workspace/css/ws-filing-mobile-dl-v1.css' %}?v=29">
 {% if listing.latitude and listing.longitude %}
 <link rel="stylesheet" href="{% static 'workspace/css/listing-map.css' %}?v=4">
 {% endif %}
@@ -488,6 +488,19 @@
                             {% with section_rows|dict_get:section as rows %}
                             {% include 'workspace/includes/listing_field_list_ld_mob.html' with fields=rows %}
                             {% endwith %}
+                            {% if section == 'مکان' and listing.latitude and listing.longitude %}
+                            <div class="ws-ld-dossier-map-embed" id="wsLdMapFinale">
+                                {% if map_navigation %}
+                                <button type="button" class="ws-ld-map-nav-trigger" data-ld-nav-open aria-haspopup="dialog" aria-controls="wsLdNavSheet">
+                                    <i class="fas fa-diamond-turn-right" aria-hidden="true"></i>
+                                    <span>مسیریابی</span>
+                                </button>
+                                {% endif %}
+                                <div class="ws-ld-dossier-map-canvas">
+                                    {% include 'workspace/includes/listing_location_map.html' with map_prefix='wsLd' map_navigation=None location_accuracy=None %}
+                                </div>
+                            </div>
+                            {% endif %}
                         </section>
                         {% endif %}
                         {% endfor %}
@@ -723,54 +736,6 @@
     </div>
 
     {% if listing.latitude and listing.longitude %}
-    <section class="crm-prop-map-finale" id="wsLdMapFinale" aria-label="نقشه موقعیت آگهی">
-        <div class="crm-prop-map-finale-intro">
-            <div class="crm-prop-map-finale-intro-inner">
-                <span class="crm-prop-map-finale-kicker">
-                    <i class="fas fa-map-location-dot" aria-hidden="true"></i>
-                    موقعیت روی نقشه
-                </span>
-                <h2 class="crm-prop-map-finale-title">کجا قرار دارد؟</h2>
-                {% if listing.neighborhood or listing.city %}
-                <p class="crm-prop-map-finale-place">
-                    <i class="fas fa-location-dot" aria-hidden="true"></i>
-                    {% if listing.neighborhood %}{{ listing.neighborhood }}{% endif %}{% if listing.neighborhood and listing.city %} · {% endif %}{% if listing.city %}{{ listing.city }}{% endif %}
-                </p>
-                {% endif %}
-                {% if location_accuracy.label %}
-                <span class="crm-prop-map-finale-accuracy crm-prop-map-finale-accuracy--{{ location_accuracy.kind|default:'exact' }}">
-                    {{ location_accuracy.label }}
-                </span>
-                {% endif %}
-                <span class="crm-prop-map-finale-coords ws-ld-map-coords-secondary" dir="ltr" title="مختصات">
-                    {{ listing.latitude|floatformat:4 }} ، {{ listing.longitude|floatformat:4 }}
-                </span>
-                {% if map_navigation %}
-                <div class="crm-prop-map-finale-actions crm-prop-map-finale-actions--desk">
-                    <a href="{{ map_navigation.google_url }}" class="crm-prop-map-finale-btn crm-prop-map-finale-btn--primary" target="_blank" rel="noopener noreferrer">
-                        <i class="fas fa-diamond-turn-right" aria-hidden="true"></i>
-                        مسیریابی گوگل
-                    </a>
-                    <a href="{{ map_navigation.neshan_url }}" class="crm-prop-map-finale-btn" target="_blank" rel="noopener noreferrer">
-                        <i class="fas fa-map" aria-hidden="true"></i>
-                        نشان
-                    </a>
-                    <a href="{{ map_navigation.waze_url }}" class="crm-prop-map-finale-btn" target="_blank" rel="noopener noreferrer">
-                        <i class="fas fa-car" aria-hidden="true"></i>
-                        ویز
-                    </a>
-                </div>
-                <button type="button" class="ws-ld-map-nav-trigger" data-ld-nav-open aria-haspopup="dialog" aria-controls="wsLdNavSheet">
-                    <i class="fas fa-diamond-turn-right" aria-hidden="true"></i>
-                    <span>مسیریابی</span>
-                </button>
-                {% endif %}
-            </div>
-        </div>
-        <div class="crm-prop-map-finale-canvas">
-            {% include 'workspace/includes/listing_location_map.html' with map_prefix='wsLd' map_navigation=None location_accuracy=None %}
-        </div>
-    </section>
     {% if map_navigation %}
     <div class="ws-mob-sheet ws-ld-map-nav-sheet" id="wsLdNavSheet" hidden aria-hidden="true">
         <button type="button" class="ws-mob-sheet-backdrop" data-ld-nav-close aria-label="بستن"></button>
@@ -825,8 +790,15 @@
 
     <nav class="crm-prop-mobile-dock ws-ld-mob-dock" aria-label="عملیات سریع موبایل">
         <div class="crm-prop-mobile-dock__inner">
+            <button type="button" class="crm-prop-dock-btn crm-prop-dock-btn--share crm-prop-dock-btn--primary" data-modal-open="modal-share" title="ارسال لینک برای مشتری" aria-label="ارسال برای مشتری">
+                <i class="fas fa-share-alt" aria-hidden="true"></i>
+                <span class="crm-prop-dock-btn__label">
+                    <span class="crm-prop-dock-btn__long">ارسال برای مشتری</span>
+                    <span class="crm-prop-dock-btn__short">برای مشتری</span>
+                </span>
+            </button>
             {% if crm_property %}
-            <a href="{% url 'workspace:crm_property_detail' crm_property.id %}" class="crm-prop-dock-btn crm-prop-dock-btn--personal" title="مشاهده فایل شخصی">
+            <a href="{% url 'workspace:crm_property_detail' crm_property.id %}" class="crm-prop-dock-btn crm-prop-dock-btn--personal ws-ld-dock-personal-link" title="مشاهده فایل شخصی" aria-label="مشاهده فایل شخصی">
                 <i class="fas fa-folder-open" aria-hidden="true"></i>
                 <span>فایل شخصی</span>
             </a>
@@ -835,19 +807,12 @@
                 {% csrf_token %}
                 <input type="hidden" name="redirect" value="property">
                 <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                <button type="submit" class="crm-prop-dock-btn crm-prop-dock-btn--personal" title="افزودن به فایل‌های شخصی">
+                <button type="submit" class="crm-prop-dock-btn crm-prop-dock-btn--personal" title="افزودن به فایل شخصی" aria-label="افزودن به فایل شخصی">
                     <i class="fas fa-folder-plus" aria-hidden="true"></i>
-                    <span>فایل شخصی</span>
+                    <span>افزودن شخصی</span>
                 </button>
             </form>
             {% endif %}
-            <button type="button" class="crm-prop-dock-btn crm-prop-dock-btn--share crm-prop-dock-btn--primary" data-modal-open="modal-share" title="ارسال لینک برای مشتری" aria-label="ارسال برای مشتری">
-                <i class="fas fa-share-alt" aria-hidden="true"></i>
-                <span class="crm-prop-dock-btn__label" aria-hidden="true">
-                    <span class="crm-prop-dock-btn__long">ارسال برای مشتری</span>
-                    <span class="crm-prop-dock-btn__short" aria-hidden="true">برای مشتری</span>
-                </span>
-            </button>
             <form method="post" action="{% url 'workspace:listing_favorite_toggle' dataset.id listing.id %}" class="ws-ld-dock-form">
                 {% csrf_token %}
                 <input type="hidden" name="next" value="{{ request.get_full_path }}">
@@ -1241,7 +1206,7 @@ document.addEventListener('DOMContentLoaded', function () {
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 {% include 'workspace/includes/carto_basemap_config.html' %}
-<script src="{% static 'workspace/js/listing-map.js' %}?v=9"></script>
+<script src="{% static 'workspace/js/listing-map.js' %}?v=10"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     var markerEl = document.getElementById('listing-map-marker');

@@ -175,8 +175,8 @@
             </div>
             {% endif %}
             {% if property.latitude and property.longitude %}
-            <div>
-                <dt><i class="fas fa-crosshairs" aria-hidden="true"></i> مختصات</dt>
+            <div class="crm-prop-dossier-row--meta">
+                <dt>مختصات</dt>
                 <dd class="crm-prop-dl-coords" dir="ltr">{{ property.latitude }}, {{ property.longitude }}</dd>
             </div>
             {% endif %}
@@ -185,6 +185,28 @@
             {% endif %}
         </dl>
     </div>
+    {% if source_listing.description and not mask_sensitive %}
+    <div class="crm-prop-dossier-group crm-prop-dossier-group--text">
+        <h3 class="crm-prop-dossier-h">
+            <span class="crm-prop-dossier-h__ico" aria-hidden="true"><i class="fas fa-align-right"></i></span>
+            <span class="crm-prop-dossier-h__text">
+                <span class="crm-prop-dossier-h__title">متن</span>
+                <span class="crm-prop-dossier-h__sub">توضیحات آگهی منبع</span>
+            </span>
+        </h3>
+        <div class="crm-prop-dossier-text crm-prop-dossier-text--prose">
+            <div class="ws-fv-prose" data-fv-prose>
+                {% if source_listing.description|length > 320 %}
+                <div class="ws-fv-prose-preview">{{ source_listing.description|truncatechars:320 }}</div>
+                <div class="ws-fv-prose-full" hidden>{{ source_listing.description|linebreaksbr }}</div>
+                <button type="button" class="ws-fv-prose-more" data-fv-prose-toggle aria-expanded="false">ادامه</button>
+                {% else %}
+                <div class="ws-fv-prose-preview">{{ source_listing.description|linebreaksbr }}</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
     {% if dossier_amenities %}
     <div class="crm-prop-dossier-group crm-prop-dossier-group--amenities">
         <h3 class="crm-prop-dossier-h">
@@ -223,7 +245,17 @@
                 <span class="crm-prop-dossier-h__sub">تجهیزات و امکانات ثبت‌شده</span>
             </span>
         </h3>
-        <p class="crm-prop-dossier-text">{{ property.amenities }}</p>
+        <div class="crm-prop-dossier-text crm-prop-dossier-text--prose">
+            <div class="ws-fv-prose" data-fv-prose>
+                {% if property.amenities|length > 320 %}
+                <div class="ws-fv-prose-preview">{{ property.amenities|truncatechars:320 }}</div>
+                <div class="ws-fv-prose-full" hidden>{{ property.amenities|linebreaksbr }}</div>
+                <button type="button" class="ws-fv-prose-more" data-fv-prose-toggle aria-expanded="false">ادامه</button>
+                {% else %}
+                <div class="ws-fv-prose-preview">{{ property.amenities|linebreaksbr }}</div>
+                {% endif %}
+            </div>
+        </div>
     </div>
     {% endif %}
     {% if property.notes and not mask_sensitive %}
@@ -235,7 +267,17 @@
                 <span class="crm-prop-dossier-h__sub">یادداشت‌های ثبت‌شده برای این فایل</span>
             </span>
         </h3>
-        <p class="crm-prop-dossier-text">{{ property.notes|linebreaks }}</p>
+        <div class="crm-prop-dossier-text crm-prop-dossier-text--prose">
+            <div class="ws-fv-prose" data-fv-prose>
+                {% if property.notes|length > 320 %}
+                <div class="ws-fv-prose-preview">{{ property.notes|truncatechars:320 }}</div>
+                <div class="ws-fv-prose-full" hidden>{{ property.notes|linebreaksbr }}</div>
+                <button type="button" class="ws-fv-prose-more" data-fv-prose-toggle aria-expanded="false">ادامه</button>
+                {% else %}
+                <div class="ws-fv-prose-preview">{{ property.notes|linebreaksbr }}</div>
+                {% endif %}
+            </div>
+        </div>
     </div>
     {% elif mask_sensitive %}
     <div class="crm-prop-dossier-group crm-prop-dossier-group--masked crm-prop-dossier-group--notes">
@@ -258,23 +300,43 @@
             </span>
         </h3>
         <dl class="crm-prop-dossier-dl">
-            <div>
-                <dt><i class="fas fa-calendar-plus" aria-hidden="true"></i> ثبت</dt>
+            {% if property.token and not mask_sensitive %}
+            <div class="crm-prop-dossier-row--meta">
+                <dt>شناسه</dt>
+                <dd dir="ltr">{{ property.token }}</dd>
+            </div>
+            {% endif %}
+            {% if property.link and not mask_sensitive %}
+            <div class="crm-prop-dossier-row--meta crm-prop-dossier-dl--full">
+                <dt>لینک</dt>
+                <dd>
+                    <span class="ws-fv-url">
+                        <span class="ws-fv-url-label" title="{{ property.link }}">{{ property.link }}</span>
+                        <span class="ws-fv-url-actions">
+                            <button type="button" class="ws-fv-btn" data-copy="{{ property.link }}" title="کپی"><i class="fas fa-copy" aria-hidden="true"></i></button>
+                            <a href="{{ property.link }}" target="_blank" rel="noopener" class="ws-fv-btn" title="باز کردن"><i class="fas fa-external-link-alt" aria-hidden="true"></i></a>
+                        </span>
+                    </span>
+                </dd>
+            </div>
+            {% endif %}
+            <div class="crm-prop-dossier-row--meta">
+                <dt>ثبت</dt>
                 <dd>{{ property.created_at|ws_jalali }}</dd>
             </div>
-            <div>
-                <dt><i class="fas fa-arrows-rotate" aria-hidden="true"></i> بروزرسانی</dt>
+            <div class="crm-prop-dossier-row--meta">
+                <dt>بروزرسانی</dt>
                 <dd>{{ property.updated_at|ws_jalali }}</dd>
             </div>
             {% if property.images %}
-            <div>
-                <dt><i class="fas fa-images" aria-hidden="true"></i> تصاویر</dt>
+            <div class="crm-prop-dossier-row--meta">
+                <dt>تصاویر</dt>
                 <dd>{{ property.images|length }} عدد</dd>
             </div>
             {% endif %}
             {% if property.videos %}
-            <div>
-                <dt><i class="fas fa-video" aria-hidden="true"></i> ویدئو</dt>
+            <div class="crm-prop-dossier-row--meta">
+                <dt>ویدئو</dt>
                 <dd>{{ property.videos|length }} عدد</dd>
             </div>
             {% endif %}

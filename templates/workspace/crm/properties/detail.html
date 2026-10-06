@@ -31,7 +31,7 @@
 {% block ws_surface_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/crm-prop-detail-mobile-premium.css' %}?v=4">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-mobile-v2-properties.css' %}?v=1">
-<link rel="stylesheet" href="{% static 'workspace/css/ws-crm-property-detail-mobile-v1.css' %}?v=18">
+<link rel="stylesheet" href="{% static 'workspace/css/ws-crm-property-detail-mobile-v1.css' %}?v=19">
 {% endblock %}
 
 {% block crm_content %}
@@ -749,7 +749,19 @@
                     {% endif %}
                 </header>
                 <div class="crm-prop-panel-body">
-                    {% include 'workspace/includes/listing_features_panel.html' with feature_profile=feature_profile %}
+                    {% include 'workspace/includes/listing_features_panel.html' with feature_profile=feature_profile embedded=True %}
+                </div>
+            </div>
+            {% endif %}
+
+            {% if supplementary_groups %}
+            <div data-panel="extra" class="crm-prop-panel crm-prop-panel-pro" hidden role="tabpanel">
+                <header class="crm-prop-panel-head">
+                    <h2>مشخصات بیشتر</h2>
+                    <p>اطلاعات تکمیلی منبع آگهی</p>
+                </header>
+                <div class="crm-prop-panel-body">
+                    {% include 'workspace/includes/supplementary_fields.html' with groups=supplementary_groups %}
                 </div>
             </div>
             {% endif %}
@@ -1132,6 +1144,12 @@
                         <span>مشخصات</span>
                     </button>
                     {% endif %}
+                    {% if supplementary_groups %}
+                    <button type="button" class="ws-mob-sheet-link" data-crm-pd-section-pick data-tab="extra" data-section-label="مشخصات بیشتر" data-tab-icon="fa-layer-group">
+                        <i class="fas fa-layer-group" aria-hidden="true"></i>
+                        <span>مشخصات بیشتر</span>
+                    </button>
+                    {% endif %}
                     <button type="button" class="ws-mob-sheet-link" data-crm-pd-section-pick data-tab="notes" data-section-label="یادداشت" data-tab-icon="fa-note-sticky">
                         <i class="fas fa-note-sticky" aria-hidden="true"></i>
                         <span>یادداشت</span>
@@ -1322,6 +1340,23 @@ document.addEventListener('DOMContentLoaded', function () {
         grid.querySelectorAll('.crm-prop-contact-tile').forEach(function (tile) {
             var hay = (tile.getAttribute('data-contact-search') || '').toLowerCase();
             tile.classList.toggle('is-filter-hidden', q && hay.indexOf(q) === -1);
+        });
+    });
+});
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('[data-fv-prose-toggle]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var wrap = btn.closest('[data-fv-prose]');
+            if (!wrap) return;
+            var preview = wrap.querySelector('.ws-fv-prose-preview');
+            var full = wrap.querySelector('.ws-fv-prose-full');
+            var open = btn.getAttribute('aria-expanded') === 'true';
+            if (full) full.hidden = open;
+            if (preview) preview.hidden = !open;
+            btn.setAttribute('aria-expanded', open ? 'false' : 'true');
+            btn.textContent = open ? 'ادامه' : 'بستن';
         });
     });
 });

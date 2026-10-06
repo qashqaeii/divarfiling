@@ -1579,6 +1579,8 @@ class CRMPropertyDetailView(CRMContextMixin, LoginRequiredMixin, DetailView):
             ctx['listing_highlights'] = []
             ctx['dossier_amenities'] = []
             ctx['source_listing'] = None
+            ctx['supplementary_groups'] = []
+            ctx['supplementary_fields'] = []
             ctx['property_form'] = CRMPropertyForm(instance=p)
             ctx['document_form'] = CustomerDocumentForm()
             ctx['open_drawer'] = ''
@@ -1603,12 +1605,31 @@ class CRMPropertyDetailView(CRMContextMixin, LoginRequiredMixin, DetailView):
         ctx['feature_profile'] = {'has_details': False, 'groups': [], 'core': [], 'detail_count': 0}
         ctx['listing_highlights'] = []
         ctx['dossier_amenities'] = []
+        ctx['supplementary_groups'] = []
+        ctx['supplementary_fields'] = []
         source_listing = resolve_listing_for_property(self.request.user, p)
         ctx['source_listing'] = source_listing
         if source_listing:
             feat = extract_listing_features(source_listing)
             ctx['feature_profile'] = build_listing_feature_profile(source_listing, feat)
             ctx['listing_highlights'] = feat.get('highlights') or []
+            from workspace.services.display import (
+                build_listing_display_data,
+                format_sections,
+                format_supplementary_fields,
+                format_supplementary_groups,
+                transaction_profile,
+            )
+            listing_data = build_listing_display_data(source_listing, feat)
+            listing_tx = transaction_profile(p.deal_mode)
+            listing_sections = format_sections(listing_data, listing_tx)
+            listing_sections.pop('سایر', None)
+            ctx['supplementary_fields'] = format_supplementary_fields(
+                listing_data, listing_tx, listing_sections,
+            )
+            ctx['supplementary_groups'] = format_supplementary_groups(
+                listing_data, listing_tx, listing_sections,
+            )
         from workspace.services.property_public_share import build_property_amenity_dossier_items
         ctx['dossier_amenities'] = build_property_amenity_dossier_items(p)
         ctx['is_property_owner'] = is_property_owner(self.request.user, p)

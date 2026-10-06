@@ -1,0 +1,156 @@
+{% load humanize workspace_tags %}
+{% with feat=listing_features|dict_get:listing.id score=value_map|dict_get:listing.token lm=listing_metas|dict_get:listing.token pf=personal_files_map|dict_get:listing.token ret=listing_retention_map|dict_get:listing.token %}
+<article class="mk-lcard mk-lcard-native mk-lcard--ds-detail-mob" data-token="{{ listing.token }}" data-href="{% url 'workspace:listing_detail' listing.dataset_id listing.id %}">
+    <div class="mk-lcard-cover mk-lcard-native__media{% if listing.images|length > 1 %} mk-lcard-cover--gallery{% endif %}{% if listing.images %} mk-lcard-cover--lightbox{% endif %}"{% if listing.images %} data-ws-gallery{% endif %}>
+        {% if listing.images %}
+        <button type="button" class="mk-lcard-cover-link" data-ws-lightbox="{{ listing.images.0 }}" aria-label="بزرگ‌نمایی تصویر">
+            <img class="mk-lcard-cover-img" src="{{ listing.images.0 }}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer"
+                 onerror="this.classList.add('is-failed'); this.closest('.mk-lcard-native__media')?.classList.add('mk-lcard-native__media--broken');">
+        </button>
+        {% if listing.images|length > 1 %}
+        {% with gallery_imgs=listing.images|slice:":16" %}
+        {% for img in gallery_imgs %}
+        {% if not forloop.first %}
+        <button type="button" class="mk-lcard-lightbox-src" data-ws-lightbox="{{ img }}" hidden tabindex="-1" aria-hidden="true"></button>
+        {% endif %}
+        {% endfor %}
+        <div class="mk-lcard-gallery-urls" hidden aria-hidden="true">
+            {% for img in gallery_imgs %}
+            <span data-url="{{ img }}"></span>
+            {% endfor %}
+        </div>
+        <button type="button" class="mk-lcard-nav mk-lcard-nav--prev" aria-label="عکس قبلی">
+            <i class="fas fa-chevron-right" aria-hidden="true"></i>
+        </button>
+        <button type="button" class="mk-lcard-nav mk-lcard-nav--next" aria-label="عکس بعدی">
+            <i class="fas fa-chevron-left" aria-hidden="true"></i>
+        </button>
+        {% endwith %}
+        {% endif %}
+        {% else %}
+        <a href="{% url 'workspace:listing_detail' listing.dataset_id listing.id %}" class="mk-lcard-cover-link mk-lcard-cover-link--empty" tabindex="-1" aria-hidden="true">
+            <div class="mk-lcard-cover-empty mk-lcard-cover-empty--compact">
+                <i class="fas fa-image" aria-hidden="true"></i>
+                <span>بدون تصویر</span>
+            </div>
+        </a>
+        {% endif %}
+        {% if listing.images|length %}
+        <span class="mk-lcard-native__photos" aria-label="{{ listing.images|length }} تصویر">
+            <i class="fas fa-camera" aria-hidden="true"></i>
+            <span>{{ listing.images|length }}</span>
+        </span>
+        {% endif %}
+        {% if not feat.is_consultant %}
+        <div class="mk-lcard-cover-top mk-lcard-native__cover-meta">
+            {% if feat.advertiser.signal == 'personal' %}
+            <span class="mk-lcard-native__owner-pill" title="آگهی مالک">
+                <span class="mk-lcard-native__owner-pill-dot" aria-hidden="true"></span>
+                مالک
+            </span>
+            {% else %}
+            {% include 'workspace/includes/listing_advertiser_pill.html' %}
+            {% endif %}
+        </div>
+        {% endif %}
+        {% include 'workspace/includes/listing_image_auth_badge.html' with auth_class='mk-img-auth--cover' %}
+    </div>
+
+    <div class="mk-lcard-body mk-lcard-native__panel">
+        <h3 class="mk-lcard-title mk-lcard-native__title">
+            <a href="{% url 'workspace:listing_detail' listing.dataset_id listing.id %}" title="{{ listing.title }}">{{ listing.title }}</a>
+        </h3>
+
+        <div class="mk-lcard-native__pricebox">
+            {% if tx.show_price and listing.price %}
+            <strong class="mk-lcard-native__price mk-money" title="{{ listing.price|ws_money }}">{{ listing.price|ws_money_compact }}</strong>
+            {% if listing.area %}
+            {% widthratio listing.price listing.area 1 as ppm_val %}
+            <span class="mk-lcard-native__ppm">{{ ppm_val|ws_money_compact }} / متر</span>
+            {% endif %}
+            {% elif tx.show_deposit and listing.deposit %}
+            <strong class="mk-lcard-native__price mk-money mk-money--deposit" title="{{ listing.deposit|ws_money }}">{{ listing.deposit|ws_money_compact }}</strong>
+            <span class="mk-lcard-native__ppm">ودیعه</span>
+            {% elif tx.show_rent and listing.rent %}
+            <strong class="mk-lcard-native__price mk-money mk-money--rent" title="{{ listing.rent|ws_money }}">{{ listing.rent|ws_money_compact }}</strong>
+            <span class="mk-lcard-native__ppm">اجاره ماهانه</span>
+            {% elif tx.show_rent and listing.deposit %}
+            <strong class="mk-lcard-native__price">رهن کامل</strong>
+            {% else %}
+            <strong class="mk-lcard-native__price is-muted">—</strong>
+            {% endif %}
+        </div>
+
+        {% if listing.neighborhood or listing.city %}
+        <p class="mk-lcard-native__loc">
+            <i class="fas fa-location-dot" aria-hidden="true"></i>
+            <span>{% if listing.neighborhood %}{{ listing.neighborhood|truncatechars:22 }}{% if listing.city %}، {% endif %}{% endif %}{% if listing.city %}{{ listing.city|truncatechars:16 }}{% endif %}</span>
+        </p>
+        {% endif %}
+
+        <ul class="mk-lcard-native__rail" aria-label="مشخصات">
+            {% if listing.area %}
+            <li class="mk-lcard-native__rail-item">
+                <span>{{ listing.area|floatformat:0 }} متر</span>
+            </li>
+            {% endif %}
+            {% if feat.rooms or listing.rooms %}
+            <li class="mk-lcard-native__rail-item">
+                <span>{{ feat.rooms|default:listing.rooms }} خواب</span>
+            </li>
+            {% endif %}
+            {% if feat.parking is True %}
+            <li class="mk-lcard-native__rail-item">
+                <span>پارکینگ</span>
+            </li>
+            {% endif %}
+            {% if feat.elevator is True %}
+            <li class="mk-lcard-native__rail-item">
+                <span>آسانسور</span>
+            </li>
+            {% elif feat.storage is True %}
+            <li class="mk-lcard-native__rail-item">
+                <span>انباری</span>
+            </li>
+            {% endif %}
+        </ul>
+
+        <footer class="mk-lcard-foot mk-lcard-native__foot">
+            <a href="{% url 'workspace:listing_detail' listing.dataset_id listing.id %}" class="mk-lcard-native__cta">
+                <span>مشاهده جزئیات</span>
+                <i class="fas fa-arrow-left" aria-hidden="true"></i>
+            </a>
+            <details class="mk-action-menu mk-lcard-more">
+                <summary class="mk-lcard-btn mk-lcard-btn--icon mk-lcard-native__menu" aria-label="عملیات بیشتر"><i class="fas fa-ellipsis-vertical" aria-hidden="true"></i></summary>
+                <div class="mk-action-menu-panel" role="menu">
+                    <button type="button" class="mk-action-menu-item js-edit-listing"
+                        data-id="{{ listing.id }}" data-dataset-id="{{ listing.dataset_id }}">{% include 'includes/icon_slot.html' with decor='file_edit' size='inline' only %} ویرایش</button>
+                    <form method="post" action="{% url 'workspace:listing_favorite_toggle' listing.dataset_id listing.id %}" class="mk-inline-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                        <button type="submit" class="mk-action-menu-item"><i class="fas fa-star" aria-hidden="true"></i> {% if lm.is_favorite %}علاقه‌مند{% else %}افزودن به علاقه‌مند{% endif %}</button>
+                    </form>
+                    {% if pf %}
+                    <a href="{% url 'workspace:crm_property_detail' pf %}" class="mk-action-menu-item"><i class="fas fa-folder-open" aria-hidden="true"></i> مشاهده فایل شخصی</a>
+                    <span class="mk-action-menu-item mk-action-menu-item--disabled" title="این آگهی قبلاً به فایل‌های شخصی شما اضافه شده است."><i class="fas fa-check" aria-hidden="true"></i> قبلاً اضافه شده</span>
+                    {% else %}
+                    <form method="post" action="{% url 'workspace:listing_add_personal' listing.dataset_id listing.id %}" class="mk-inline-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                        <button type="submit" class="mk-action-menu-item"><i class="fas fa-folder-plus" aria-hidden="true"></i> افزودن به فایل شخصی</button>
+                    </form>
+                    {% endif %}
+                    <button type="button" class="mk-action-menu-item" data-copy="{{ listing.token }}">{% include 'includes/icon_slot.html' with decor='copy' size='inline' only %} کپی شناسه</button>
+                    {% if listing.link %}
+                    <a href="{{ listing.link }}" target="_blank" rel="noopener" class="mk-action-menu-item">{% include 'includes/icon_slot.html' with decor='external_link' size='inline' only %} دیوار</a>
+                    {% endif %}
+                    <button type="button" class="mk-action-menu-item mk-action-menu-danger js-delete-listing"
+                        data-id="{{ listing.id }}"
+                        data-dataset-id="{{ listing.dataset_id }}"
+                        data-title="{{ listing.title|truncatechars:40|escapejs }}"><i class="fas fa-trash" aria-hidden="true"></i> حذف</button>
+                </div>
+            </details>
+        </footer>
+    </div>
+</article>
+{% endwith %}

@@ -14,13 +14,14 @@
 <link rel="stylesheet" href="{% static 'workspace/css/mk-filing-listing-detail.css' %}?v=1">
 <link rel="stylesheet" href="{% static 'workspace/css/ws-listing-detail-mobile-v2.css' %}?v=3">
 <link rel="stylesheet" href="{% static 'workspace/css/ws-listing-detail-mobile-v3.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'workspace/css/ws-filing-mobile-dl-v1.css' %}?v=2">
 {% if listing.latitude and listing.longitude %}
 <link rel="stylesheet" href="{% static 'workspace/css/listing-map.css' %}?v=4">
 {% endif %}
 {% endblock %}
 
 {% block content %}
-<div class="crm-prop-detail-v2 crm-prop-detail-mobile crm-page-chrome ws-ld-detail ws-ld-mobile mk-filing-datasets{% if tx.is_sale %} ws-ld-detail--sale{% elif tx.is_rent %} ws-ld-detail--rent{% elif tx.show_deposit %} ws-ld-detail--deposit{% endif %}">
+<div class="crm-prop-detail-v2 crm-prop-detail-mobile crm-page-chrome ws-ld-detail ws-ld-mobile ws-filing-mob-dl mk-filing-datasets{% if tx.is_sale %} ws-ld-detail--sale{% elif tx.is_rent %} ws-ld-detail--rent{% elif tx.show_deposit %} ws-ld-detail--deposit{% endif %}">
 
     {% if listing_retention.status == 'warning' %}
     <div class="mk-notice mk-notice--warning mk-notice--banner ws-retention-warning" role="status">
@@ -389,7 +390,19 @@
                 </button>
                 {% endif %}
             </nav>
-            <div class="ws-ld-mob-sections" role="tablist" aria-label="بخش‌های جزئیات">
+            <div class="ws-crm-pd-mob-section-ui">
+                <div class="ws-crm-pd-mob-section-bar">
+                    <span class="ws-crm-pd-mob-section-bar__label" id="wsLdSectionLabel">
+                        <i class="fas fa-table-columns ws-crm-pd-mob-section-bar__label-ico" aria-hidden="true"></i>
+                        <span data-filing-mob-section-label-text>اطلاعات اصلی</span>
+                    </span>
+                    <button type="button" class="ws-crm-pd-mob-section-bar__trigger" data-filing-mob-sections-open aria-haspopup="dialog" aria-controls="wsLdSectionSheet" aria-expanded="false">
+                        <span>بخش‌ها</span>
+                        <i class="fas fa-chevron-down ws-crm-pd-mob-section-bar__chev" aria-hidden="true"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="ws-ld-mob-sections" role="tablist" aria-label="بخش‌های جزئیات" hidden>
                 <button type="button" class="ws-ld-mob-section-row active" data-tab="overview" role="tab" aria-selected="true">
                     <span>اطلاعات اصلی</span>
                     <i class="fas fa-chevron-left" aria-hidden="true"></i>
@@ -845,6 +858,56 @@
         </div>
     </div>
 
+    <div class="ws-mob-sheet ws-filing-mob-section-sheet" id="wsLdSectionSheet" hidden aria-hidden="true">
+        <button type="button" class="ws-mob-sheet-backdrop" data-filing-mob-sections-close aria-label="بستن"></button>
+        <div class="ws-mob-sheet-panel" role="dialog" aria-modal="true" aria-labelledby="wsLdSectionSheetTitle">
+            <div class="ws-mob-sheet-grab" aria-hidden="true"></div>
+            <header class="ws-mob-sheet-head">
+                <h2 class="ws-mob-sheet-title" id="wsLdSectionSheetTitle">بخش‌های این آگهی</h2>
+                <button type="button" class="ws-mob-sheet-close" data-filing-mob-sections-close aria-label="بستن">
+                    <i class="fas fa-xmark" aria-hidden="true"></i>
+                </button>
+            </header>
+            <div class="ws-mob-sheet-body">
+                <nav class="ws-mob-sheet-nav" aria-label="انتخاب بخش">
+                    <button type="button" class="ws-mob-sheet-link is-active" data-filing-mob-section-pick data-tab="overview" data-section-label="اطلاعات اصلی" data-tab-icon="fa-table-columns">
+                        <i class="fas fa-check" aria-hidden="true"></i>
+                        <span>اطلاعات اصلی</span>
+                    </button>
+                    <button type="button" class="ws-mob-sheet-link" data-filing-mob-section-pick data-tab="contacts" data-section-label="مخاطبین" data-tab-icon="fa-users">
+                        <i class="fas fa-users" aria-hidden="true"></i>
+                        <span>مخاطبین</span>
+                        {% if crm_links %}<span class="ws-mob-sheet-badge">{{ crm_links|length }}</span>{% endif %}
+                    </button>
+                    {% if feature_profile.has_details %}
+                    <button type="button" class="ws-mob-sheet-link" data-filing-mob-section-pick data-tab="specs" data-section-label="امکانات و مشخصات" data-tab-icon="fa-list-check">
+                        <i class="fas fa-list-check" aria-hidden="true"></i>
+                        <span>امکانات و مشخصات</span>
+                        {% if feature_profile.detail_count %}<span class="ws-mob-sheet-badge">{{ feature_profile.detail_count }}</span>{% endif %}
+                    </button>
+                    {% endif %}
+                    {% if supplementary_fields or supplementary_groups %}
+                    <button type="button" class="ws-mob-sheet-link" data-filing-mob-section-pick data-tab="extra" data-section-label="مشخصات بیشتر" data-tab-icon="fa-layer-group">
+                        <i class="fas fa-layer-group" aria-hidden="true"></i>
+                        <span>مشخصات بیشتر</span>
+                    </button>
+                    {% endif %}
+                    <button type="button" class="ws-mob-sheet-link" data-filing-mob-section-pick data-tab="notes" data-section-label="یادداشت‌ها" data-tab-icon="fa-note-sticky">
+                        <i class="fas fa-note-sticky" aria-hidden="true"></i>
+                        <span>یادداشت‌ها</span>
+                    </button>
+                    {% if price_history %}
+                    <button type="button" class="ws-mob-sheet-link" data-filing-mob-section-pick data-tab="history" data-section-label="تاریخچه قیمت" data-tab-icon="fa-clock-rotate-left">
+                        <i class="fas fa-clock-rotate-left" aria-hidden="true"></i>
+                        <span>تاریخچه قیمت</span>
+                        <span class="ws-mob-sheet-badge">{{ price_history|length }}</span>
+                    </button>
+                    {% endif %}
+                </nav>
+            </div>
+        </div>
+    </div>
+
     {% include 'workspace/includes/filing/filing_listing_detail_help_modal.html' %}
 </div>
 {% endblock %}
@@ -945,6 +1008,72 @@ document.addEventListener('DOMContentLoaded', function () {
             row.setAttribute('aria-selected', on ? 'true' : 'false');
         });
     }
+    function syncFilingMobSectionUI(tabName) {
+        document.querySelectorAll('[data-filing-mob-section-pick]').forEach(function (pick) {
+            var on = pick.getAttribute('data-tab') === tabName;
+            pick.classList.toggle('is-active', on);
+            var icon = pick.querySelector('i.fas');
+            var base = pick.getAttribute('data-tab-icon');
+            if (icon && base) {
+                icon.className = on ? 'fas fa-check' : 'fas ' + base;
+            }
+        });
+        var activePick = document.querySelector('[data-filing-mob-section-pick][data-tab="' + tabName + '"]');
+        var labelEl = document.getElementById('wsLdSectionLabel');
+        if (labelEl && activePick) {
+            var labelTextEl = labelEl.querySelector('[data-filing-mob-section-label-text]');
+            var nextLabel = activePick.getAttribute('data-section-label') || (labelTextEl ? labelTextEl.textContent : '');
+            if (labelTextEl) labelTextEl.textContent = nextLabel;
+            var labelIco = labelEl.querySelector('.ws-crm-pd-mob-section-bar__label-ico');
+            var icoBase = activePick.getAttribute('data-tab-icon');
+            if (labelIco && icoBase) {
+                labelIco.className = 'fas ' + icoBase + ' ws-crm-pd-mob-section-bar__label-ico';
+            }
+        }
+    }
+    var ldSectionSheet = document.getElementById('wsLdSectionSheet');
+    var ldSectionTrigger = document.querySelector('[data-filing-mob-sections-open]');
+    function closeFilingMobSections() {
+        if (!ldSectionSheet) return;
+        ldSectionSheet.classList.remove('is-open');
+        ldSectionSheet.hidden = true;
+        ldSectionSheet.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
+        if (ldSectionTrigger) ldSectionTrigger.setAttribute('aria-expanded', 'false');
+    }
+    function openFilingMobSections() {
+        if (!ldSectionSheet) return;
+        ldSectionSheet.hidden = false;
+        ldSectionSheet.classList.add('is-open');
+        ldSectionSheet.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+        if (ldSectionTrigger) ldSectionTrigger.setAttribute('aria-expanded', 'true');
+    }
+    document.querySelectorAll('[data-filing-mob-sections-open]').forEach(function (btn) {
+        btn.addEventListener('click', openFilingMobSections);
+    });
+    document.querySelectorAll('[data-filing-mob-sections-close]').forEach(function (btn) {
+        btn.addEventListener('click', closeFilingMobSections);
+    });
+    document.querySelectorAll('[data-filing-mob-section-pick]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var panelName = btn.getAttribute('data-tab');
+            activateListingDetailTab(panelName);
+            syncFilingMobSectionUI(panelName);
+            closeFilingMobSections();
+            var panel = document.querySelector('.ws-ld-detail [data-panel="' + panelName + '"]');
+            if (!panel) return;
+            var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            requestAnimationFrame(function () {
+                panel.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
+            });
+        });
+    });
+    if (ldSectionSheet) {
+        ldSectionSheet.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') closeFilingMobSections();
+        });
+    }
     function activateListingDetailTab(tabName) {
         var main = document.querySelector('.ws-ld-detail .crm-prop-main');
         if (!main) return;
@@ -966,7 +1095,9 @@ document.addEventListener('DOMContentLoaded', function () {
     });
     document.querySelectorAll('.ws-ld-detail .crm-prop-tabs .crm-tab[data-tab]').forEach(function (tabBtn) {
         tabBtn.addEventListener('click', function () {
-            syncLdMobSectionRows(tabBtn.getAttribute('data-tab'));
+            var tabName = tabBtn.getAttribute('data-tab');
+            syncLdMobSectionRows(tabName);
+            syncFilingMobSectionUI(tabName);
         });
     });
     if (moreSheet) {

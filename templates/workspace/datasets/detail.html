@@ -7,21 +7,19 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/mk-filing-datasets.css' %}?v=20">
 <link rel="stylesheet" href="{% static 'workspace/css/mk-filing-mobile.css' %}?v=9">
-<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-dataset-detail.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-dataset-detail.css' %}?v=3">
 <link rel="stylesheet" href="{% static 'workspace/css/mk-filing-dataset-detail-mobile-v2.css' %}?v=3">
 <link rel="stylesheet" href="{% static 'workspace/css/mk-filing-listing-cards-mobile-v2.css' %}?v=3">
-<link rel="stylesheet" href="{% static 'workspace/css/ws-listing-detail-mobile-v2.css' %}?v=3">
-<link rel="stylesheet" href="{% static 'workspace/css/ws-listing-detail-mobile-v2.css' %}?v=3">
-<link rel="stylesheet" href="{% static 'workspace/css/ws-listing-detail-mobile-v2.css' %}?v=3">
 {% endblock %}
 
 {% block ws_surface_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/listing-table-compact.css' %}?v=1">
 <link rel="stylesheet" href="{% static 'workspace/css/mk-filing-listings.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'workspace/css/ws-filing-mobile-dl-v1.css' %}?v=14">
 {% endblock %}
 
 {% block content %}
-<div class="mk-page mk-filing-pro mk-filing-mobile mk-filing-datasets mk-filing-dataset-detail mk-filing-listings-pro mk-listing-page ws-ds-mobile">
+<div class="mk-page mk-filing-pro mk-filing-mobile mk-filing-datasets mk-filing-dataset-detail mk-filing-listings-pro mk-listing-page ws-ds-mobile ws-filing-mob-dl">
 
     {% include 'workspace/includes/filing/filing_dataset_detail_header.html' %}
     {% include 'workspace/includes/filing/filing_dataset_detail_kpi.html' %}
@@ -30,9 +28,9 @@
         {% include 'workspace/includes/listing_filter_bar.html' %}
     </section>
 
-    <div class="mk-notice mk-notice--info mk-notice--inline ws-filing-retention-policy" data-notice-kind="filing_retention_policy" data-notice-id="filing-retention-policy-v1">
+    <div class="mk-notice mk-notice--info mk-notice--inline ws-filing-retention-policy ws-filing-retention-policy--compact" data-notice-kind="filing_retention_policy" data-notice-id="filing-retention-policy-v1">
         <div class="mk-notice__body">
-            <p class="mk-notice__text">فایل‌های بدون فعالیت، پس از {{ filing_listing_retention_days|to_persian_digits }} روز وارد چرخه پاک‌سازی می‌شوند و در اولین روز ماه بعد حذف خواهند شد. فایل‌های مهم را به فایل شخصی منتقل کنید.</p>
+            <p class="mk-notice__text"><i class="fas fa-circle-info" aria-hidden="true"></i> فایل‌های بدون فعالیت پس از {{ filing_listing_retention_days|to_persian_digits }} روز وارد چرخه پاک‌سازی می‌شوند.</p>
         </div>
         <button type="button" class="mk-notice__close" data-mk-notice-close aria-label="بستن"><i class="fas fa-times"></i></button>
     </div>
@@ -50,7 +48,7 @@
         </header>
 
         <div class="mk-listing-cards-shell" aria-label="لیست آگهی‌ها">
-            {% include 'workspace/includes/listing_cards.html' %}
+            {% include 'workspace/includes/listing_cards_dataset_detail.html' %}
         </div>
 
         <div class="mk-table-wrap mk-table-wrap-fit mk-listing-table-desk">
@@ -94,23 +92,7 @@
         {% mk_pagination page_obj page_query aria_label="صفحه‌بندی آگهی‌ها" %}
     </section>
 
-    <nav class="fl-dd-mob-dock" aria-label="عملیات زمینه پوشه">
-        <div class="fl-dd-mob-dock__inner">
-            <button type="button" class="fl-dd-mob-dock__btn{% if filter_count %} has-active{% endif %}" data-ds-filter-jump title="جستجو و فیلتر">
-                <i class="fas fa-sliders" aria-hidden="true"></i>
-                <span>فیلتر</span>
-            </button>
-            <a href="{% url 'workspace:dataset_analyze' dataset.id %}" class="fl-dd-mob-dock__btn fl-dd-mob-dock__btn--primary" title="تحلیل بازار">
-                <i class="fas fa-chart-line" aria-hidden="true"></i>
-                <span>تحلیل</span>
-            </a>
-            <button type="button" class="fl-dd-mob-dock__btn" data-ds-more-open title="عملیات بیشتر">
-                <i class="fas fa-ellipsis" aria-hidden="true"></i>
-                <span>بیشتر</span>
-            </button>
-        </div>
-    </nav>
-
+    {% include 'workspace/includes/filing/filing_dataset_detail_stats_sheet.html' %}
     {% include 'workspace/includes/filing/filing_dataset_detail_help_modal.html' %}
     {% include 'workspace/includes/filing/filing_detail_tour.html' %}
 </div>
@@ -191,24 +173,28 @@
 <script src="{% static 'workspace/js/listing-edit.js' %}?v=7"></script>
 <script src="{% static 'workspace/js/listing-cards.js' %}?v=1"></script>
 <script src="{% static 'workspace/js/filing-help-modal.js' %}?v=2"></script>
-<script src="{% static 'workspace/js/filing-mobile.js' %}?v=1"></script>
+<script src="{% static 'workspace/js/filing-mobile.js' %}?v=10"></script>
 <script>
 (function () {
     const advToggle = document.getElementById('wsAdvToggle');
+    const advToggleMob = document.getElementById('wsAdvToggleMob');
     const advPanel = document.getElementById('wsAdvPanel');
     const filtersOpenField = document.getElementById('filtersOpenField');
     const filterShell = document.getElementById('wsFilterShell');
+    const desktop = window.matchMedia('(min-width: 768px)');
 
     function setFilterPanel(open) {
-        if (!advPanel || !advToggle) return;
+        if (!advPanel) return;
         if (open) {
             advPanel.removeAttribute('hidden');
         } else {
             advPanel.setAttribute('hidden', '');
         }
         advPanel.classList.toggle('is-open', open);
-        advToggle.classList.toggle('is-open', open);
-        advToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+        advToggle?.classList.toggle('is-open', open);
+        advToggle?.setAttribute('aria-expanded', open ? 'true' : 'false');
+        advToggleMob?.classList.toggle('is-open', open);
+        advToggleMob?.setAttribute('aria-expanded', open ? 'true' : 'false');
         filterShell?.classList.toggle('mk-filter-shell-open', open);
         filterShell?.classList.toggle('fl-dd-filter-open', open);
         if (filtersOpenField) filtersOpenField.value = open ? '1' : '0';
@@ -220,13 +206,23 @@
     advToggle?.addEventListener('click', function () {
         setFilterPanel(advPanel.hidden);
     });
-    document.getElementById('wsAdvToggleMob')?.addEventListener('click', function () {
+    advToggleMob?.addEventListener('click', function (e) {
+        if (!desktop.matches) {
+            e.preventDefault();
+            setFilterPanel(!filterShell?.classList.contains('fl-dd-filter-open'));
+            return;
+        }
         setFilterPanel(advPanel.hidden);
     });
     window.__wsCloseFilingFilter = function () {
         setFilterPanel(false);
     };
-    if (advPanel && !advPanel.hidden) setFilterPanel(true);
+
+    if (desktop.matches) {
+        if (advPanel && !advPanel.hidden) setFilterPanel(true);
+    } else {
+        setFilterPanel(false);
+    }
 
     initListingEdit({
         defaultDatasetId: '{{ dataset.id }}',
@@ -262,17 +258,6 @@
         });
     });
 
-    function jumpToFilters(openAdvanced) {
-        const shell = document.getElementById('wsFilterShell');
-        if (!shell) return;
-        shell.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        const search = shell.querySelector('input[name="q"]');
-        if (openAdvanced && advPanel && advPanel.hidden) setFilterPanel(true);
-        setTimeout(function () { search?.focus({ preventScroll: true }); }, 280);
-    }
-    document.querySelectorAll('[data-ds-filter-jump]').forEach(function (btn) {
-        btn.addEventListener('click', function () { jumpToFilters(true); });
-    });
     document.querySelectorAll('[data-ds-more-open]').forEach(function (btn) {
         btn.addEventListener('click', function () {
             if (!dsMobileMore) return;

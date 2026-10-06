@@ -1,0 +1,23 @@
+<div class="ws-modal" id="modal-rename" role="dialog" aria-modal="true" aria-labelledby="modal-rename-title">
+    <div class="ws-modal-overlay" data-modal-close></div>
+    <div class="ws-modal-panel ws-modal-panel-sm">
+        <div class="ws-modal-head">
+            <h2 class="ws-modal-title" id="modal-rename-title">تغییر نام پوشه استخراج</h2>
+            <button type="button" class="ws-modal-close" data-modal-close aria-label="بستن"><i class="fas fa-times" aria-hidden="true"></i></button>
+        </div>
+        <form method="post" id="wsDatasetRenameForm" class="ws-modal-body"
+              action="#"
+              data-rename-url-template="{% url 'workspace:dataset_rename' dataset_id='00000000-0000-0000-0000-000000000000' %}">
+            {% csrf_token %}
+            <input type="hidden" name="next" id="wsDatasetRenameNext" value="">
+            <div class="ws-field">
+                <label class="ws-label" for="wsDatasetRenameName">نام پوشه استخراج</label>
+                <input type="text" name="name" id="wsDatasetRenameName" class="ws-input" required autocomplete="off">
+            </div>
+            <div class="ws-modal-foot">
+                <button type="button" class="ws-btn ws-btn-ghost" data-modal-close>انصراف</button>
+                <button type="submit" class="ws-btn ws-btn-primary">ذخیره</button>
+            </div>
+        </form>
+    </div>
+</div>

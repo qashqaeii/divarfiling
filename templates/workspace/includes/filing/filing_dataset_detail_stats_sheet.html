@@ -1,0 +1,39 @@
+{% load humanize %}
+<div class="ws-filing-sort-sheet ws-filing-dd-stats-sheet" id="wsFilingDdStatsSheet" hidden aria-hidden="true">
+    <button type="button" class="ws-filing-sort-sheet__backdrop" data-ws-dd-stats-close aria-label="بستن"></button>
+    <div class="ws-filing-sort-sheet__panel" role="dialog" aria-modal="true" aria-labelledby="wsFilingDdStatsTitle">
+        <div class="ws-filing-sort-sheet__grab" aria-hidden="true"></div>
+        <header class="ws-filing-sort-sheet__head">
+            <h2 class="ws-filing-sort-sheet__title" id="wsFilingDdStatsTitle">آمار پوشه</h2>
+            <button type="button" class="ws-filing-sort-sheet__close" data-ws-dd-stats-close aria-label="بستن">
+                <i class="fas fa-xmark" aria-hidden="true"></i>
+            </button>
+        </header>
+        <div class="ws-filing-dd-stats-sheet__body">
+            <div class="ws-filing-dd-stats-sheet__grid">
+                <div class="ws-filing-dd-stats-sheet__cell">
+                    <strong>{{ total_count|intcomma }}</strong>
+                    <span>کل فایل</span>
+                </div>
+                <div class="ws-filing-dd-stats-sheet__cell{% if is_listing_filtered %} is-highlight{% endif %}">
+                    <strong>{{ filtered_count|intcomma }}</strong>
+                    <span>در نمایش</span>
+                </div>
+                <div class="ws-filing-dd-stats-sheet__cell">
+                    <strong>{{ consultant_count|intcomma }}</strong>
+                    <span>مشاور</span>
+                </div>
+                <div class="ws-filing-dd-stats-sheet__cell">
+                    <strong>{{ personal_count|intcomma }}</strong>
+                    <span>شخصی</span>
+                </div>
+            </div>
+            {% if total_count %}
+            <p class="ws-filing-dd-stats-sheet__hint">
+                {% if genuine_personal_count %}{{ genuine_personal_count|intcomma }} مالک واقعی{% if disguised_consultant_count %} · {% endif %}{% endif %}
+                {% if disguised_consultant_count %}{{ disguised_consultant_count|intcomma }} مشاور پنهان{% endif %}
+            </p>
+            {% endif %}
+        </div>
+    </div>
+</div>

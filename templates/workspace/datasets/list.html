@@ -12,15 +12,26 @@
 
 {% block ws_surface_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/mk-filing-mobile-v2.css' %}?v=15">
+<link rel="stylesheet" href="{% static 'workspace/css/ws-filing-mobile-dl-v1.css' %}?v=8">
 {% endblock %}
 
 {% block content %}
 {% include 'workspace/academy/includes/contextual_banner.html' %}
-<div class="mk-page mk-filing-pro mk-filing-mobile mk-filing-datasets" data-view-mode="{{ view_mode }}">
+<div class="mk-page mk-filing-pro mk-filing-mobile mk-filing-datasets ws-filing-mob-dl" data-view-mode="{{ view_mode }}">
 
     {% include 'workspace/includes/filing/filing_header.html' %}
     {% include 'workspace/includes/filing/filing_kpi.html' %}
     {% include 'workspace/includes/filing/filing_toolbar.html' %}
+
+    {% if datasets %}
+    <div class="fl-mob-ds-list-head" id="flMobDsListHead" data-dataset-total="{{ page_obj.paginator.count }}">
+        <p class="fl-mob-ds-list-head__label" id="flMobDsListHeadLabel">{{ page_obj.paginator.count }} دیتاست</p>
+        <div class="fl-mob-ds-list-head__actions">
+            <button type="button" class="fl-mob-ds-list-head__btn" id="flMobDsSelectEnter">انتخاب</button>
+            <button type="button" class="fl-mob-ds-list-head__btn fl-mob-ds-list-head__btn--cancel" id="flMobDsSelectCancel" hidden>لغو</button>
+        </div>
+    </div>
+    {% endif %}
 
     <section class="fl-panel ws-glass-panel mk-panel mk-panel-flush mk-filing-panel" data-fl-tour="filing-panel">
         <header class="fl-panel__head mk-filing-panel-head">
@@ -99,16 +110,17 @@
         {% csrf_token %}
         <div id="dsBulkDeleteIds"></div>
     </form>
-    <div class="fl-bulk-bar mk-bulk-bar" id="dsBulkBar" data-fl-tour="filing-bulk" hidden>
-        <span class="fl-bulk-bar__count mk-bulk-count"><strong id="dsBulkCount">0</strong> مورد انتخاب شده</span>
-        <div class="fl-bulk-bar__actions mk-bulk-actions">
-            <button type="button" class="mk-bulk-btn mk-bulk-btn-primary" id="dsBulkView"
-                data-url="{% url 'workspace:multi_listings' %}">
-                <i class="fas fa-table-list" aria-hidden="true"></i> مشاهده آگهی‌ها
-            </button>
-            <button type="button" class="mk-bulk-btn" id="dsBulkClear">لغو انتخاب</button>
-            <button type="button" class="mk-bulk-btn mk-bulk-btn-danger" id="dsBulkDelete">
-                <i class="fas fa-trash" aria-hidden="true"></i> حذف
+    <div class="fl-bulk-bar mk-bulk-bar fl-hub-select-bar" id="dsBulkBar" data-fl-tour="filing-bulk" hidden>
+        <p class="fl-bulk-bar__count mk-bulk-count fl-hub-select-bar__count">
+            <strong id="dsBulkCount">0</strong>
+            <span class="fl-hub-select-bar__count-label">مورد انتخاب شده</span>
+        </p>
+        <div class="fl-bulk-bar__actions mk-bulk-actions fl-hub-select-bar__actions">
+            <button type="button" class="mk-bulk-btn mk-bulk-btn-primary fl-hub-select-bar__btn" id="dsBulkView"
+                data-url="{% url 'workspace:multi_listings' %}">مشاهده</button>
+            <button type="button" class="mk-bulk-btn mk-bulk-btn-danger fl-hub-select-bar__btn fl-hub-select-bar__btn--danger" id="dsBulkDelete">حذف</button>
+            <button type="button" class="mk-bulk-btn fl-hub-select-bar__btn fl-hub-select-bar__btn--icon" id="dsBulkClear" aria-label="لغو انتخاب" title="لغو انتخاب">
+                <i class="fas fa-xmark" aria-hidden="true"></i>
             </button>
         </div>
     </div>
@@ -199,6 +211,10 @@
 {% endif %}
 {% endblock %}
 
+{% block modals %}
+{% include 'workspace/includes/filing/filing_dataset_rename_modal.html' %}
+{% endblock %}
+
 {% block extra_js %}
 <script>
 (function () {
@@ -225,9 +241,82 @@
             });
         });
     });
+
+    var hubRoot = document.querySelector('.mk-filing-mobile.mk-filing-datasets.ws-filing-mob-dl');
+    var selectEnter = document.getElementById('flMobDsSelectEnter');
+    var selectCancel = document.getElementById('flMobDsSelectCancel');
+    var listHead = document.getElementById('flMobDsListHead');
+    var listHeadLabel = document.getElementById('flMobDsListHeadLabel');
+
+    function hubSelectedCount() {
+        return document.querySelectorAll('.mk-filing-mob-cards .mk-ds-check:checked').length;
+    }
+
+    function syncHubListHead() {
+        if (!listHeadLabel || !listHead) return;
+        var total = listHead.getAttribute('data-dataset-total') || '0';
+        var inMode = hubRoot && hubRoot.classList.contains('fl-mob-ds-select-mode');
+        if (inMode) {
+            var n = hubSelectedCount();
+            listHeadLabel.textContent = n + ' مورد انتخاب شده';
+        } else {
+            listHeadLabel.textContent = total + ' دیتاست';
+        }
+    }
+
+    function clearHubSelections() {
+        document.querySelectorAll('.mk-filing-mob-cards .mk-ds-check').forEach(function (c) {
+            c.checked = false;
+            c.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+    }
+
+    function setHubSelectMode(on) {
+        if (!hubRoot) return;
+        hubRoot.classList.toggle('fl-mob-ds-select-mode', on);
+        if (selectEnter) selectEnter.hidden = !!on;
+        if (selectCancel) selectCancel.hidden = !on;
+        if (!on) clearHubSelections();
+        syncHubListHead();
+    }
+
+    if (selectEnter && hubRoot) {
+        selectEnter.addEventListener('click', function () {
+            setHubSelectMode(true);
+        });
+    }
+    if (selectCancel && hubRoot) {
+        selectCancel.addEventListener('click', function () {
+            setHubSelectMode(false);
+        });
+    }
+
+    if (hubRoot) {
+        hubRoot.addEventListener('change', function (e) {
+            if (e.target && e.target.classList && e.target.classList.contains('mk-ds-check')) {
+                syncHubListHead();
+            }
+        });
+
+        hubRoot.addEventListener('click', function (e) {
+            if (!hubRoot.classList.contains('fl-mob-ds-select-mode')) return;
+            if (e.target.closest('.mk-ds-card-check, .mk-ds-card-menu, .fl-row-menu, .mk-ds-card-act')) return;
+            var primary = e.target.closest('.mk-ds-card-primary');
+            if (!primary) return;
+            e.preventDefault();
+            e.stopPropagation();
+            var card = primary.closest('.mk-ds-card');
+            var cb = card && card.querySelector('.mk-ds-check');
+            if (!cb) return;
+            cb.checked = !cb.checked;
+            cb.dispatchEvent(new Event('change', { bubbles: true }));
+        }, true);
+    }
+
+    syncHubListHead();
 })();
 </script>
-<script src="{% static 'workspace/js/filing-mobile.js' %}?v=7"></script>
+<script src="{% static 'workspace/js/filing-mobile.js' %}?v=13"></script>
 <script src="{% static 'workspace/js/filing-help.js' %}?v=4"></script>
 {% if ai_enabled and has_bot_license %}
 <script src="{% static 'workspace/js/ai.js' %}?v=6"></script>

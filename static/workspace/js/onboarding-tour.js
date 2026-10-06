@@ -285,7 +285,7 @@
         if (isMobileView() && step.openFilterPanel) {
             const toolbar = document.querySelector('[data-fl-tour="filing-toolbar"]');
             if (toolbar) return toolbar;
-            const panel = document.getElementById('dsFilterDetails');
+            const panel = document.getElementById('wsFilingHubFilterSheet');
             if (panel && (panel.contains(target) || target.closest('.fl-toolbar'))) return panel;
         }
         if (isMobileView()) {
@@ -544,8 +544,12 @@
 
     function ensureFilingPanels(step) {
         if (!isMobileView() || !step.openFilterPanel) return;
-        const details = document.getElementById('dsFilterDetails');
-        if (details) details.setAttribute('open', '');
+        const sheet = document.getElementById('wsFilingHubFilterSheet');
+        if (sheet) {
+            sheet.hidden = false;
+            sheet.classList.add('is-open');
+            sheet.setAttribute('aria-hidden', 'false');
+        }
         const toggle = document.querySelector('[data-ws-mob-filter-toggle]');
         if (toggle) toggle.setAttribute('aria-expanded', 'true');
     }

@@ -12,6 +12,7 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views import View
 from django.views.generic import CreateView, DetailView, ListView, TemplateView, UpdateView
 
@@ -971,6 +972,13 @@ class DatasetRenameView(DatasetOwnerMixin, UpdateView):
         return redirect(f"{reverse('workspace:dataset_detail', kwargs={'dataset_id': dataset.pk})}?open=modal-rename")
 
     def get_success_url(self):
+        nxt = (self.request.POST.get('next') or '').strip()
+        if nxt and url_has_allowed_host_and_scheme(
+            nxt,
+            allowed_hosts={self.request.get_host()},
+            require_https=self.request.is_secure(),
+        ):
+            return nxt
         return reverse('workspace:dataset_detail', kwargs={'dataset_id': self.object.pk})
 
     def form_invalid(self, form):

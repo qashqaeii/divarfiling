@@ -64,15 +64,18 @@
     }
 
     function initDatasetFilterSheet() {
-        var details = document.getElementById('dsFilterDetails');
+        var sheet = document.getElementById('wsFilingHubFilterSheet');
         var form = document.getElementById('dsFilterForm');
-        if (!details || !form) return;
+        if (!sheet || !form) return;
 
         var desktop = window.matchMedia('(min-width: 769px)');
 
         function closeFilterSheet() {
-            details.removeAttribute('open');
-            details.classList.remove('is-open');
+            sheet.classList.remove('is-open');
+            if (!desktop.matches) {
+                sheet.hidden = true;
+                sheet.setAttribute('aria-hidden', 'true');
+            }
             document.body.classList.remove('ws-filing-filter-open');
             var toggle = document.querySelector('[data-ws-mob-filter-toggle]');
             if (toggle) toggle.setAttribute('aria-expanded', 'false');
@@ -80,43 +83,53 @@
 
         function openFilterSheet() {
             if (desktop.matches) return;
-            details.setAttribute('open', '');
-            details.classList.add('is-open');
+            sheet.hidden = false;
+            sheet.classList.add('is-open');
+            sheet.setAttribute('aria-hidden', 'false');
             document.body.classList.add('ws-filing-filter-open');
             var toggle = document.querySelector('[data-ws-mob-filter-toggle]');
             if (toggle) toggle.setAttribute('aria-expanded', 'true');
-            var closeBtn = details.querySelector('.fl-mob-filter-sheet__close');
+            var closeBtn = sheet.querySelector('[data-ws-filing-hub-filter-close].ws-mob-sheet-close');
             if (closeBtn) closeBtn.focus();
         }
 
         window.__wsCloseFilingFilter = closeFilterSheet;
 
-        function syncFilterDetailsDesktop() {
+        function syncFilterDesktop() {
             if (desktop.matches) {
-                details.setAttribute('open', '');
+                sheet.hidden = false;
+                sheet.setAttribute('aria-hidden', 'false');
+                sheet.classList.remove('is-open');
                 document.body.classList.remove('ws-filing-filter-open');
-            } else if (!details.classList.contains('is-open')) {
-                details.removeAttribute('open');
+                var toggle = document.querySelector('[data-ws-mob-filter-toggle]');
+                if (toggle) toggle.setAttribute('aria-expanded', 'false');
+            } else {
+                sheet.classList.remove('is-open');
+                sheet.hidden = true;
+                sheet.setAttribute('aria-hidden', 'true');
+                document.body.classList.remove('ws-filing-filter-open');
+                var toggleMob = document.querySelector('[data-ws-mob-filter-toggle]');
+                if (toggleMob) toggleMob.setAttribute('aria-expanded', 'false');
             }
         }
 
-        syncFilterDetailsDesktop();
+        syncFilterDesktop();
         if (typeof desktop.addEventListener === 'function') {
-            desktop.addEventListener('change', syncFilterDetailsDesktop);
+            desktop.addEventListener('change', syncFilterDesktop);
         } else if (typeof desktop.addListener === 'function') {
-            desktop.addListener(syncFilterDetailsDesktop);
+            desktop.addListener(syncFilterDesktop);
         }
 
         document.querySelectorAll('[data-ws-mob-filter-toggle]').forEach(function (btn) {
             btn.addEventListener('click', function (e) {
                 e.preventDefault();
                 if (desktop.matches) return;
-                if (details.hasAttribute('open')) closeFilterSheet();
+                if (sheet.classList.contains('is-open')) closeFilterSheet();
                 else openFilterSheet();
             });
         });
 
-        details.querySelectorAll('[data-ws-filter-close]').forEach(function (el) {
+        sheet.querySelectorAll('[data-ws-filing-hub-filter-close]').forEach(function (el) {
             el.addEventListener('click', function (e) {
                 if (desktop.matches) return;
                 e.preventDefault();
@@ -125,9 +138,13 @@
         });
 
         document.addEventListener('keydown', function (e) {
-            if (e.key === 'Escape' && details.hasAttribute('open') && !desktop.matches) {
+            if (e.key === 'Escape' && sheet.classList.contains('is-open') && !desktop.matches) {
                 closeFilterSheet();
             }
+        });
+
+        form.addEventListener('submit', function () {
+            if (!desktop.matches) closeFilterSheet();
         });
 
         document.querySelectorAll('[data-fl-filter-sync]').forEach(function (group) {
@@ -150,6 +167,91 @@
                 group.querySelectorAll('.fl-mob-filter-chip').forEach(function (chip) {
                     chip.classList.toggle('is-active', (chip.getAttribute('data-value') || '') === val);
                 });
+            });
+        });
+    }
+
+    function initDatasetDetailStatsSheet() {
+        var sheet = document.getElementById('wsFilingDdStatsSheet');
+        if (!sheet) return;
+
+        function closeSheet() {
+            sheet.hidden = true;
+            sheet.classList.remove('is-open');
+            sheet.setAttribute('aria-hidden', 'true');
+            document.body.classList.remove('ws-filing-dd-stats-open');
+        }
+
+        function openSheet() {
+            sheet.hidden = false;
+            sheet.classList.add('is-open');
+            sheet.setAttribute('aria-hidden', 'false');
+            document.body.classList.add('ws-filing-dd-stats-open');
+            var closeBtn = sheet.querySelector('[data-ws-dd-stats-close].ws-filing-sort-sheet__close');
+            if (closeBtn) closeBtn.focus();
+        }
+
+        document.querySelectorAll('[data-ds-stats-open]').forEach(function (btn) {
+            btn.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelectorAll('.fl-dd-mob-more[open]').forEach(function (m) {
+                    m.removeAttribute('open');
+                });
+                if (sheet.classList.contains('is-open')) closeSheet();
+                else openSheet();
+            });
+        });
+
+        sheet.querySelectorAll('[data-ws-dd-stats-close]').forEach(function (el) {
+            el.addEventListener('click', closeSheet);
+        });
+
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && sheet.classList.contains('is-open')) closeSheet();
+        });
+    }
+
+    function initDatasetRenameFromHub() {
+        var modal = document.getElementById('modal-rename');
+        var form = document.getElementById('wsDatasetRenameForm');
+        if (!modal || !form) return;
+
+        var urlTemplate = form.getAttribute('data-rename-url-template') || '';
+        var nameInput = document.getElementById('wsDatasetRenameName');
+        var nextInput = document.getElementById('wsDatasetRenameNext');
+        var placeholder = '00000000-0000-0000-0000-000000000000';
+
+        function openRenameModal(datasetId, datasetName) {
+            if (!datasetId || !urlTemplate) return;
+            form.action = urlTemplate.replace(placeholder, datasetId);
+            if (nameInput) {
+                nameInput.value = datasetName || '';
+            }
+            if (nextInput) {
+                nextInput.value = window.location.pathname + window.location.search;
+            }
+            document.querySelectorAll('.fl-row-menu[open], .mk-ds-card-menu[open], .fl-gcard__menu[open]').forEach(function (m) {
+                m.removeAttribute('open');
+            });
+            if (typeof window.WSModal !== 'undefined') {
+                window.WSModal.open('modal-rename');
+            } else {
+                modal.classList.add('is-open');
+                document.body.classList.add('ws-modal-open');
+            }
+            if (nameInput) {
+                setTimeout(function () {
+                    nameInput.focus();
+                    nameInput.select();
+                }, 120);
+            }
+        }
+
+        document.querySelectorAll('[data-ds-rename-open]').forEach(function (btn) {
+            btn.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                openRenameModal(btn.getAttribute('data-dataset-id'), btn.getAttribute('data-dataset-name'));
             });
         });
     }
@@ -196,6 +298,8 @@
         initFilingSortSheet();
         initFilterBackdropDismiss();
         initDatasetFilterSheet();
+        initDatasetDetailStatsSheet();
+        initDatasetRenameFromHub();
         initDatasetCardMenus();
     });
 })();

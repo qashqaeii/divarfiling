@@ -28,6 +28,7 @@
 <header class="fl-mob-header mk-filing-mob-header">
     <div class="fl-mob-header__inner">
         <div class="fl-mob-header__main">
+            <h1 class="fl-mob-header__title">فایلینگ</h1>
             <p class="fl-mob-header__sub">مدیریت پوشه‌های استخراج دیوار</p>
         </div>
         <div class="fl-mob-header__actions" role="toolbar" aria-label="عملیات">
@@ -38,12 +39,17 @@
                     <span class="fl-header__help-bulb-glow"></span>
                 </span>
             </button>
-            <a href="{% url 'workspace:tools' %}" class="fl-mob-header__icon" title="ابزارها" aria-label="ابزارها">
-                <i class="fas fa-calculator" aria-hidden="true"></i>
-            </a>
-            <button type="button" class="fl-mob-header__icon fl-mob-header__icon--primary" data-modal-open="modal-upload" title="آپلود" aria-label="آپلود فایل">
-                <i class="fas fa-cloud-arrow-up" aria-hidden="true"></i>
-            </button>
+            <details class="fl-mob-header__more">
+                <summary class="fl-mob-header__icon fl-mob-header__icon--more" title="بیشتر" aria-label="عملیات بیشتر">
+                    <i class="fas fa-ellipsis" aria-hidden="true"></i>
+                </summary>
+                <div class="fl-mob-header__more-panel" role="menu">
+                    <a href="{% url 'workspace:tools' %}" class="fl-mob-header__more-item" role="menuitem" data-fl-tour="filing-tools">
+                        <i class="fas fa-calculator" aria-hidden="true"></i>
+                        <span>ابزارها</span>
+                    </a>
+                </div>
+            </details>
         </div>
     </div>
 </header>

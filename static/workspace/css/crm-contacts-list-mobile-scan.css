@@ -38,16 +38,21 @@
         gap: 0;
     }
 
-    .crm-contacts-mob-toolbar-row {
-        display: flex;
+    .crm-contacts-mobile .crm-contacts-filter-primary.crm-contacts-mob-toolbar-row {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) auto auto auto;
         align-items: center;
         gap: 0.35rem;
         width: 100%;
+        max-width: 100%;
+        min-width: 0;
     }
 
     .crm-contacts-mobile .crm-contacts-search {
-        flex: 1 1 auto;
+        grid-column: 1;
+        width: 100%;
         min-width: 0;
+        max-width: 100%;
         height: 40px;
         padding: 0 0.65rem;
         border-radius: 12px;
@@ -121,9 +126,39 @@
         transform: scale(0.96);
     }
 
-    .crm-contacts-mob-add-btn,
-    .crm-contacts-fab {
-        display: none !important;
+    .crm-contacts-mob-toolbar-add {
+        grid-column: 4;
+        position: relative;
+        z-index: 2;
+    }
+
+    .crm-contacts-mobile .crm-contacts-fab {
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+        position: fixed;
+        inset-inline-end: 0.85rem;
+        bottom: calc(var(--ws-mob-nav-offset, 4.25rem) + env(safe-area-inset-bottom, 0px) + 0.35rem);
+        z-index: 150;
+        width: 3rem;
+        height: 3rem;
+        min-height: 3rem;
+        padding: 0;
+        border: none;
+        border-radius: 14px;
+        background: var(--ws-primary);
+        color: #fff;
+        font-size: 1.05rem;
+        cursor: pointer;
+        box-shadow: 0 8px 22px -6px color-mix(in srgb, var(--ws-primary) 55%, transparent);
+    }
+
+    .crm-contacts-mobile .crm-contacts-fab span {
+        display: none;
+    }
+
+    .crm-contacts-mobile .crm-contacts-fab:active {
+        transform: scale(0.96);
     }
 
     .crm-contacts-mob-filter-chips {
@@ -163,6 +198,29 @@
     }
 
     .crm-contacts-mobile .crm-smart-command-wrap {
+        display: block;
+        margin: 0.35rem 0.75rem 0.45rem;
+        min-width: 0;
+    }
+
+    .crm-contacts-mobile .crm-smart-command {
+        border-radius: 14px;
+        padding: 0.65rem 0.75rem;
+    }
+
+    .crm-contacts-mobile .crm-smart-command .crm-nl-command__sub {
+        display: none;
+    }
+
+    .crm-contacts-mobile .crm-smart-command .crm-nl-command__title {
+        font-size: 0.82rem;
+    }
+
+    .crm-contacts-mobile .crm-smart-command .crm-nl-command__kicker {
+        font-size: 0.62rem;
+    }
+
+    .crm-contacts-mobile .crm-smart-command .crm-nl-command__chips-head {
         display: none;
     }
 
@@ -535,6 +593,18 @@
     .crm-contacts-mobile .crm-contacts-alert-card {
         border-radius: 14px;
         padding: 0.65rem 0.75rem;
+    }
+}
+
+@media (max-width: 420px) {
+    .crm-contacts-mob-filter-trigger-text {
+        display: none;
+    }
+
+    .crm-contacts-mobile .crm-contacts-mob-filter-trigger {
+        min-width: 40px;
+        padding: 0;
+        justify-content: center;
     }
 }
 

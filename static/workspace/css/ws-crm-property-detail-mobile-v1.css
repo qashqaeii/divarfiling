@@ -187,21 +187,42 @@
         box-sizing: border-box;
         min-height: 2.75rem;
         max-height: 3rem;
-        padding: 0 0.75rem;
+        padding: 0.35rem 0.35rem 0.35rem 0.75rem;
         border-radius: 12px;
         border: 1px solid color-mix(in srgb, var(--ws-border) 55%, transparent);
-        background: var(--ws-surface);
+        background: color-mix(in srgb, var(--ws-primary) 5%, var(--ws-surface));
     }
 
     .ws-crm-pd-mob .ws-crm-pd-mob-section-bar__label {
         min-width: 0;
         flex: 1;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
         font-size: 0.875rem;
-        font-weight: 800;
+        font-weight: 850;
         color: var(--ws-text);
+        overflow: hidden;
+    }
+
+    .ws-crm-pd-mob .ws-crm-pd-mob-section-bar__label [data-crm-pd-section-label-text] {
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+        min-width: 0;
+    }
+
+    .ws-crm-pd-mob .ws-crm-pd-mob-section-bar__label-ico {
+        flex-shrink: 0;
+        width: 1.75rem;
+        height: 1.75rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 9px;
+        font-size: 0.72rem;
+        color: var(--ws-primary);
+        background: color-mix(in srgb, var(--ws-primary) 10%, var(--ws-surface));
     }
 
     .ws-crm-pd-mob .ws-crm-pd-mob-section-bar__trigger {
@@ -211,20 +232,26 @@
         flex-shrink: 0;
         min-height: 2.25rem;
         padding: 0.35rem 0.55rem;
-        border: 1px solid color-mix(in srgb, var(--ws-border) 50%, transparent);
+        border: 1px solid color-mix(in srgb, var(--ws-primary) 14%, var(--ws-border));
         border-radius: 10px;
-        background: color-mix(in srgb, var(--ws-surface-2) 35%, var(--ws-surface));
+        background: color-mix(in srgb, var(--ws-surface-2) 40%, var(--ws-surface));
         font-family: inherit;
         font-size: 0.75rem;
         font-weight: 750;
         color: var(--ws-text-secondary);
         cursor: pointer;
         -webkit-tap-highlight-color: transparent;
+        transition: background 0.16s ease, border-color 0.16s ease;
     }
 
-    .ws-crm-pd-mob .ws-crm-pd-mob-section-bar__trigger i {
+    .ws-crm-pd-mob .ws-crm-pd-mob-section-bar__chev {
         font-size: 0.625rem;
-        opacity: 0.75;
+        opacity: 0.8;
+        transition: transform 0.18s ease;
+    }
+
+    .ws-crm-pd-mob .ws-crm-pd-mob-section-bar__trigger[aria-expanded="true"] .ws-crm-pd-mob-section-bar__chev {
+        transform: rotate(180deg);
     }
 
     .ws-crm-pd-mob .ws-crm-pd-mob-section-bar__trigger:active {
@@ -362,6 +389,167 @@
 
     .ws-crm-pd-mob .crm-prop-panel-head {
         display: none;
+    }
+
+    .ws-crm-pd-mob .crm-prop-panel:not([data-panel="overview"]) > .crm-prop-panel-head {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.15rem;
+        margin: 0 0 0.35rem;
+        padding: 0.8rem 0.85rem;
+        border-radius: 12px;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 50%, transparent);
+        border-bottom: 1px solid color-mix(in srgb, var(--ws-border) 45%, transparent);
+        background: color-mix(in srgb, var(--ws-primary) 5%, var(--ws-surface));
+    }
+
+    .ws-crm-pd-mob .crm-prop-panel:not([data-panel="overview"]) > .crm-prop-panel-head.crm-prop-panel-head--row {
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 0.5rem;
+    }
+
+    .ws-crm-pd-mob .crm-prop-panel:not([data-panel="overview"]) .crm-prop-panel-head h2 {
+        margin: 0;
+        font-size: 0.875rem;
+        font-weight: 850;
+        color: var(--ws-text);
+        line-height: 1.35;
+    }
+
+    .ws-crm-pd-mob .crm-prop-panel:not([data-panel="overview"]) .crm-prop-panel-head p {
+        margin: 0;
+        font-size: 0.6875rem;
+        font-weight: 600;
+        color: var(--ws-text-muted);
+        line-height: 1.35;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* Dossier + zonkan section headers — shared mobile language */
+    .ws-crm-pd-mob .crm-prop-dossier-full {
+        gap: 0.55rem;
+    }
+
+    .ws-crm-pd-mob .crm-prop-dossier-group {
+        padding: 0;
+        border-radius: 12px;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 52%, transparent);
+        background: var(--ws-surface);
+        overflow: hidden;
+    }
+
+    .ws-crm-pd-mob .crm-prop-dossier-h {
+        margin: 0;
+        padding: 0.8rem 0.85rem;
+        align-items: flex-start;
+        gap: 0.65rem;
+        border-bottom: 1px solid color-mix(in srgb, var(--ws-border) 42%, transparent);
+        background: color-mix(in srgb, var(--ws-primary) 5%, var(--ws-surface));
+        font-size: 0.875rem;
+        font-weight: 850;
+        line-height: 1.3;
+    }
+
+    .ws-crm-pd-mob .crm-prop-dossier-h__ico {
+        width: 2rem;
+        height: 2rem;
+        border-radius: 10px;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        background: color-mix(in srgb, var(--ws-primary) 10%, var(--ws-surface));
+    }
+
+    .ws-crm-pd-mob .crm-prop-dossier-h__ico i {
+        font-size: 0.75rem;
+    }
+
+    .ws-crm-pd-mob .crm-prop-dossier-group--deal .crm-prop-dossier-h__ico,
+    .ws-crm-pd-mob .crm-prop-dossier-group--specs .crm-prop-dossier-h__ico,
+    .ws-crm-pd-mob .crm-prop-dossier-group--location .crm-prop-dossier-h__ico {
+        background: color-mix(in srgb, var(--ws-primary) 14%, var(--ws-surface));
+    }
+
+    .ws-crm-pd-mob .crm-prop-dossier-h__text {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.12rem;
+        flex: 1;
+        min-width: 0;
+    }
+
+    .ws-crm-pd-mob .crm-prop-dossier-h__sub {
+        display: block;
+        width: 100%;
+        font-size: 0.6875rem;
+        font-weight: 600;
+        color: var(--ws-text-muted);
+        line-height: 1.35;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .ws-crm-pd-mob .crm-prop-dossier-group > .crm-prop-dossier-dl,
+    .ws-crm-pd-mob .crm-prop-dossier-group > .crm-prop-dossier-text,
+    .ws-crm-pd-mob .crm-prop-dossier-group > .crm-prop-mask-notice,
+    .ws-crm-pd-mob .crm-prop-dossier-group > .crm-prop-mask-blur {
+        padding: 0.65rem 0.85rem 0.8rem;
+    }
+
+    .ws-crm-pd-mob .crm-zonkan-picker--detail {
+        margin: 0 0 0.55rem;
+        border-radius: 12px;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 52%, transparent);
+        background: var(--ws-surface);
+        box-shadow: none;
+    }
+
+    .ws-crm-pd-mob .crm-zonkan-picker--detail .crm-zonkan-picker__head {
+        padding: 0.8rem 0.85rem;
+        border-bottom: 1px solid color-mix(in srgb, var(--ws-border) 42%, transparent);
+        background: color-mix(in srgb, var(--ws-primary) 5%, var(--ws-surface));
+    }
+
+    .ws-crm-pd-mob .crm-zonkan-picker--detail .crm-zonkan-picker__ico {
+        width: 2rem;
+        height: 2rem;
+        border-radius: 10px;
+        background: color-mix(in srgb, var(--ws-primary) 12%, var(--ws-surface));
+    }
+
+    .ws-crm-pd-mob .crm-zonkan-picker__title {
+        font-size: 0.875rem;
+        font-weight: 850;
+    }
+
+    .ws-crm-pd-mob .crm-zonkan-picker__sub {
+        font-size: 0.6875rem;
+        font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .ws-crm-pd-mob .crm-zonkan-picker__stat {
+        font-size: 0.625rem;
+        padding: 0.2rem 0.45rem;
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--ws-primary) 8%, var(--ws-surface));
+        color: var(--ws-text-muted);
+    }
+
+    .ws-crm-pd-mob .crm-zonkan-picker--detail .crm-zonkan-picker__grid,
+    .ws-crm-pd-mob .crm-zonkan-picker--detail .crm-zonkan-picker__hint,
+    .ws-crm-pd-mob .crm-zonkan-picker--detail .crm-zonkan-picker__empty {
+        padding-inline: 0.85rem;
     }
 
     /* Single page gutter — ws-content already provides ~16px; no double pad on grid */

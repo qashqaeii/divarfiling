@@ -19213,7 +19213,8 @@ button.crm-prop-hero-cover {
     border-radius: 10px;
     background: var(--ws-surface-2);
 }
-.crm-prop-dossier-group h3 {
+.crm-prop-dossier-group h3,
+.crm-prop-dossier-group .crm-prop-dossier-h {
     margin: 0 0 0.55rem;
     font-size: 0.72rem;
     font-weight: 800;
@@ -19223,7 +19224,27 @@ button.crm-prop-hero-cover {
     gap: 0.35rem;
     flex-wrap: wrap;
 }
-.crm-prop-dossier-group h3 i { color: var(--ws-primary); font-size: 0.65rem; }
+.crm-prop-dossier-group h3 i,
+.crm-prop-dossier-h__ico i { color: var(--ws-primary); font-size: 0.65rem; }
+.crm-prop-dossier-h__ico {
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+.crm-prop-dossier-h__text {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem;
+    min-width: 0;
+}
+.crm-prop-dossier-h__title {
+    font: inherit;
+    color: inherit;
+}
+.crm-prop-dossier-h__sub {
+    display: none;
+}
 .crm-prop-dossier-dl {
     margin: 0;
     display: flex;

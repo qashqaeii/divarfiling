@@ -1568,7 +1568,7 @@ class CRMMessageTemplateForm(forms.ModelForm):
         model = CRMMessageTemplate
         fields = ['name', 'category', 'channel', 'body']
         widgets = {
-            'name': forms.TextInput(attrs={'class': 'crm-input'}),
+            'name': forms.TextInput(attrs={'class': 'crm-input', 'data-voice-input': 'off'}),
             'category': forms.Select(attrs={'class': 'crm-select'}),
             'channel': forms.Select(attrs={'class': 'crm-select'}),
             'body': forms.Textarea(attrs={'class': 'crm-textarea', 'rows': 6}),
@@ -1583,16 +1583,19 @@ class CRMAutomationRuleForm(forms.ModelForm):
             'action', 'action_status', 'action_reminder_title', 'action_reminder_days',
         ]
         widgets = {
-            'name': forms.TextInput(attrs={'class': 'crm-input'}),
+            'name': forms.TextInput(attrs={'class': 'crm-input', 'data-voice-input': 'off'}),
             'is_active': forms.CheckboxInput(attrs={'class': 'crm-checkbox'}),
             'trigger': forms.Select(attrs={'class': 'crm-select'}),
             'trigger_days': forms.NumberInput(attrs={'class': 'crm-input', 'min': 1, 'max': 90}),
             'trigger_statuses': forms.TextInput(attrs={
                 'class': 'crm-input', 'placeholder': 'جدید,در حال پیگیری',
+                'data-voice-input': 'off',
             }),
             'action': forms.Select(attrs={'class': 'crm-select', 'data-automation-action': '1'}),
             'action_status': forms.Select(attrs={'class': 'crm-select'}),
-            'action_reminder_title': forms.TextInput(attrs={'class': 'crm-input'}),
+            'action_reminder_title': forms.TextInput(attrs={
+                'class': 'crm-input', 'data-voice-input': 'off',
+            }),
             'action_reminder_days': forms.NumberInput(attrs={'class': 'crm-input', 'min': 0, 'max': 30}),
         }
 

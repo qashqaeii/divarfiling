@@ -96,6 +96,29 @@
     }
 
     /**
+     * Insert dictated voice between preserved prefix/suffix (cursor or selection replacement).
+     * @param {string} prefix
+     * @param {string} voicePart
+     * @param {string} suffix
+     */
+    function joinVoiceAtCursor(prefix, voicePart, suffix) {
+        const voice = normalizeWhitespace(voicePart);
+        const p = prefix || '';
+        const s = suffix || '';
+        if (!voice) {
+            return p + s;
+        }
+        let piece = voice;
+        if (p.length > 0 && !/\s$/.test(p)) {
+            piece = ' ' + piece;
+        }
+        if (s.length > 0 && !/^\s/.test(s) && !/\s$/.test(piece)) {
+            piece = piece + ' ';
+        }
+        return p + piece + s;
+    }
+
+    /**
      * @param {string} sessionTranscript
      * @param {string} cycleFinalTranscript
      * @param {string} cycleInterimTranscript
@@ -121,12 +144,16 @@
         sessionTranscript,
         cycleFinalTranscript,
         cycleInterimTranscript,
+        anchorSuffix,
     ) {
         const voicePart = combineSessionVoiceDisplay(
             sessionTranscript,
             cycleFinalTranscript,
             cycleInterimTranscript,
         );
+        if (anchorSuffix !== undefined) {
+            return joinVoiceAtCursor(baseInputText, voicePart, anchorSuffix);
+        }
         return appendTranscriptSegmentSafe(baseInputText, voicePart);
     }
 
@@ -305,6 +332,8 @@
      *   micAriaStart?: string,
      *   micAriaStop?: string,
      *   micTooltip?: string,
+     *   getSelectionRange?: function(): { start: number, end: number }|null,
+     *   setSelectionRange?: function(number, number): void,
      *   win?: Window,
      *   doc?: Document,
      * }} config
@@ -359,9 +388,52 @@
         }
 
         let baseInputText = '';
+        /** @type {string|undefined} */
+        let anchorSuffix = undefined;
         let sessionTranscript = '';
         let cycleFinalTranscript = '';
         let cycleInterimTranscript = '';
+
+        const getSelectionRange = config.getSelectionRange;
+        const setSelectionRange = config.setSelectionRange;
+
+        function captureListenAnchor() {
+            const full = getInputValue();
+            let start = full.length;
+            let end = full.length;
+            if (typeof getSelectionRange === 'function') {
+                const range = getSelectionRange();
+                if (range && Number.isFinite(range.start) && Number.isFinite(range.end)) {
+                    start = range.start;
+                    end = range.end;
+                }
+            } else if (input && typeof input.selectionStart === 'number') {
+                start = input.selectionStart;
+                end = input.selectionEnd;
+            }
+            start = Math.max(0, Math.min(start, full.length));
+            end = Math.max(start, Math.min(end, full.length));
+            if (
+                typeof getSelectionRange === 'function'
+                || (input && typeof input.selectionStart === 'number')
+            ) {
+                baseInputText = full.slice(0, start);
+                anchorSuffix = full.slice(end);
+            } else {
+                baseInputText = full;
+                anchorSuffix = undefined;
+            }
+        }
+
+        function composeLiveInputValue() {
+            return buildLiveTextareaValue(
+                baseInputText,
+                sessionTranscript,
+                cycleFinalTranscript,
+                cycleInterimTranscript,
+                anchorSuffix,
+            );
+        }
 
         const micAriaStart = config.micAriaStart || MIC_ARIA_START;
         const micAriaStop = config.micAriaStop || MIC_ARIA_STOP;
@@ -438,6 +510,7 @@
 
         function resetSessionBuffers() {
             baseInputText = '';
+            anchorSuffix = undefined;
             sessionTranscript = '';
             resetCycleBuffers();
         }
@@ -451,13 +524,7 @@
         }
 
         function syncLiveInput() {
-            const display = buildLiveTextareaValue(
-                baseInputText,
-                sessionTranscript,
-                cycleFinalTranscript,
-                cycleInterimTranscript,
-            );
-            setInputValue(display);
+            setInputValue(composeLiveInputValue());
         }
 
         function resetSilenceTimer() {
@@ -491,6 +558,9 @@
             voiceText = appendTranscriptSegmentSafe(voiceText, cycleFinalTranscript);
             if (flushRemainingInterim) {
                 voiceText = appendTranscriptSegmentSafe(voiceText, cycleInterimTranscript);
+            }
+            if (anchorSuffix !== undefined) {
+                return joinVoiceAtCursor(baseInputText, voiceText, anchorSuffix);
             }
             return appendTranscriptSegmentSafe(baseInputText, voiceText);
         }
@@ -559,6 +629,10 @@
             );
             if (finalText) {
                 setInputValue(finalText);
+                if (typeof setSelectionRange === 'function' && anchorSuffix !== undefined) {
+                    const caret = finalText.length - anchorSuffix.length;
+                    setSelectionRange(caret, caret);
+                }
             }
             if (input) {
                 input.focus();
@@ -792,7 +866,7 @@
             lastRestartAt = 0;
             lastOnEndHandledAt = 0;
 
-            baseInputText = getInputValue();
+            captureListenAnchor();
             sessionTranscript = '';
             resetCycleBuffers();
 
@@ -881,12 +955,13 @@
                     return baseInputText;
                 },
                 getLiveText: function () {
-                    return buildLiveTextareaValue(
-                        baseInputText,
-                        sessionTranscript,
-                        cycleFinalTranscript,
-                        cycleInterimTranscript,
-                    );
+                    return composeLiveInputValue();
+                },
+                getAnchorPrefix: function () {
+                    return baseInputText;
+                },
+                getAnchorSuffix: function () {
+                    return anchorSuffix;
                 },
                 /** @deprecated */
                 getFinalTranscript: function () {
@@ -940,6 +1015,7 @@
         MIC_ARIA_STOP,
         appendTranscriptSegment,
         appendTranscriptSegmentSafe,
+        joinVoiceAtCursor,
         combineSessionVoiceDisplay,
         buildLiveTextareaValue,
         combineListeningDisplay,

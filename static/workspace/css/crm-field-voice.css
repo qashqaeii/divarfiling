@@ -1,4 +1,8 @@
+/* Workspace field voice — shared desktop + mobile (RTL-safe) */
 .crm-field-voice {
+    --ws-voice-mic-size: 2.25rem; /* ~36px desktop */
+    --ws-voice-mic-gap: 0.4rem;
+    --ws-voice-input-pad-end: calc(var(--ws-voice-mic-size) + var(--ws-voice-mic-gap) + 0.35rem);
     min-width: 0;
 }
 
@@ -11,57 +15,74 @@
 .crm-field-voice__wrap > .crm-input,
 .crm-field-voice__wrap > .crm-textarea,
 .crm-field-voice__wrap > .ws-input,
-.crm-field-voice__wrap > .ws-textarea {
+.crm-field-voice__wrap > .ws-textarea,
+.crm-field-voice__wrap > .crm-msg-composer-field,
+.crm-field-voice__wrap > .crm-act-content,
+.crm-field-voice__wrap > .agency-space-publish-note__input,
+.crm-field-voice__wrap > .mk-share-msg-input {
     width: 100%;
     min-width: 0;
+    max-width: 100%;
     box-sizing: border-box;
-    padding-inline-end: 2.65rem;
+    padding-inline-end: var(--ws-voice-input-pad-end);
 }
 
 .crm-field-voice__wrap > .crm-textarea,
-.crm-field-voice__wrap > .ws-textarea {
+.crm-field-voice__wrap > .ws-textarea,
+.crm-field-voice__wrap > .crm-act-content,
+.crm-field-voice__wrap > .agency-space-publish-note__input,
+.crm-field-voice__wrap > .mk-share-msg-input {
     padding-block-start: 0.55rem;
 }
 
 .crm-field-voice__mic {
     position: absolute;
-    inset-inline-end: 0.4rem;
+    inset-inline-end: var(--ws-voice-mic-gap);
     top: 50%;
     transform: translateY(-50%);
     z-index: 2;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 2rem;
-    height: 2rem;
+    width: var(--ws-voice-mic-size);
+    height: var(--ws-voice-mic-size);
+    min-width: var(--ws-voice-mic-size);
+    min-height: var(--ws-voice-mic-size);
     padding: 0;
+    margin: 0;
     border: none;
     border-radius: 8px;
-    color: var(--ws-primary, #2563eb);
-    background: color-mix(in srgb, var(--ws-primary, #2563eb) 10%, transparent);
+    color: var(--ws-primary, #7c3aed);
+    background: color-mix(in srgb, var(--ws-primary, #7c3aed) 10%, transparent);
     cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
     transition: background 0.12s, color 0.12s, box-shadow 0.12s;
 }
 
 .crm-field-voice__wrap > .crm-textarea + .crm-field-voice__mic,
-.crm-field-voice__wrap > .ws-textarea + .crm-field-voice__mic {
-    top: 0.45rem;
+.crm-field-voice__wrap > .ws-textarea + .crm-field-voice__mic,
+.crm-field-voice__wrap > .crm-act-content + .crm-field-voice__mic,
+.crm-field-voice__wrap > .agency-space-publish-note__input + .crm-field-voice__mic,
+.crm-field-voice__wrap > .crm-msg-composer-field + .crm-field-voice__mic,
+.crm-field-voice__wrap > .mk-share-msg-input + .crm-field-voice__mic {
+    top: 0.42rem;
     transform: none;
 }
 
 .crm-field-voice__mic:hover:not(:disabled):not(.is-unsupported) {
-    background: color-mix(in srgb, var(--ws-primary, #2563eb) 18%, transparent);
+    background: color-mix(in srgb, var(--ws-primary, #7c3aed) 18%, transparent);
 }
 
 .crm-field-voice__mic:focus-visible {
-    outline: 2px solid color-mix(in srgb, var(--ws-primary, #2563eb) 55%, transparent);
+    outline: 2px solid color-mix(in srgb, var(--ws-primary, #7c3aed) 55%, transparent);
     outline-offset: 1px;
 }
 
 .crm-field-voice__mic.is-listening {
     color: #fff;
-    background: linear-gradient(165deg, #ef4444 0%, #dc2626 100%);
-    box-shadow: 0 0 0 2px color-mix(in srgb, #ef4444 22%, transparent);
+    background: var(--ws-primary, #7c3aed);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--ws-primary, #7c3aed) 28%, transparent);
     animation: crm-field-voice-pulse 2.4s ease-in-out infinite;
 }
 
@@ -98,9 +119,12 @@
 .crm-field-voice.is-voice-listening .crm-field-voice__wrap > .crm-input,
 .crm-field-voice.is-voice-listening .crm-field-voice__wrap > .crm-textarea,
 .crm-field-voice.is-voice-listening .crm-field-voice__wrap > .ws-input,
-.crm-field-voice.is-voice-listening .crm-field-voice__wrap > .ws-textarea {
-    border-color: color-mix(in srgb, #ef4444 32%, var(--ws-border, #e2e8f0));
-    box-shadow: 0 0 0 2px color-mix(in srgb, #ef4444 12%, transparent);
+.crm-field-voice.is-voice-listening .crm-field-voice__wrap > .ws-textarea,
+.crm-field-voice.is-voice-listening .crm-field-voice__wrap > .crm-msg-composer-field,
+.crm-field-voice.is-voice-listening .crm-field-voice__wrap > .crm-act-content,
+.crm-field-voice.is-voice-listening .crm-field-voice__wrap > .mk-share-msg-input {
+    border-color: color-mix(in srgb, var(--ws-primary, #7c3aed) 32%, var(--ws-border, #e2e8f0));
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--ws-primary, #7c3aed) 12%, transparent);
 }
 
 .crm-occ__field .crm-field-voice {
@@ -115,7 +139,7 @@
 }
 
 .crm-field-voice--channel .crm-field-voice__wrap > .crm-input {
-    padding-inline-end: 2.65rem;
+    padding-inline-end: var(--ws-voice-input-pad-end);
 }
 
 .crm-field-voice--rte {
@@ -128,13 +152,56 @@
     margin-top: 0;
 }
 
+/* Team message composer (flex row) */
+.crm-msg-composer-box > .crm-field-voice {
+    flex: 1 1 auto;
+    min-width: 0;
+    align-self: stretch;
+    display: flex;
+    align-items: center;
+}
+
+.crm-msg-composer-box .crm-field-voice__wrap {
+    width: 100%;
+}
+
+.crm-msg-composer-box .crm-field-voice__wrap > .crm-msg-composer-field {
+    border: none;
+    background: transparent;
+    box-shadow: none;
+    padding-inline-end: var(--ws-voice-input-pad-end);
+}
+
+.crm-msg-composer-box .crm-field-voice__wrap > .crm-msg-composer-field:focus {
+    outline: none;
+    box-shadow: none;
+}
+
+/* Support ticket reply */
+.sup-compose-box .crm-field-voice {
+    display: block;
+}
+
+.sup-compose-box .crm-field-voice__wrap > textarea,
+.sup-compose-box .crm-field-voice__wrap > .ws-textarea {
+    border: none;
+    background: transparent;
+    box-shadow: none;
+    padding-inline-end: var(--ws-voice-input-pad-end);
+}
+
+.sup-compose-box .crm-field-voice__wrap > textarea:focus,
+.sup-compose-box .crm-field-voice__wrap > .ws-textarea:focus {
+    outline: none;
+}
+
 .mk-share-rte .mk-share-rte-editor-wrap {
     position: relative;
     display: block;
 }
 
 .mk-share-rte .mk-share-rte-editor-wrap > .mk-share-rte-editor {
-    padding-inline-end: 2.75rem;
+    padding-inline-end: var(--ws-voice-input-pad-end);
 }
 
 .mk-share-rte .mk-share-rte-editor-wrap > .crm-field-voice__mic {
@@ -143,12 +210,54 @@
     transform: none;
 }
 
+.mk-share-msg-card .crm-field-voice__wrap > .mk-share-msg-input {
+    min-height: 8rem;
+}
+
 @keyframes crm-field-voice-pulse {
     0%,
     100% {
-        box-shadow: 0 0 0 2px color-mix(in srgb, #ef4444 22%, transparent);
+        box-shadow: 0 0 0 2px color-mix(in srgb, var(--ws-primary, #7c3aed) 24%, transparent);
     }
     50% {
-        box-shadow: 0 0 0 5px color-mix(in srgb, #ef4444 8%, transparent);
+        box-shadow: 0 0 0 4px color-mix(in srgb, var(--ws-primary, #7c3aed) 8%, transparent);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .crm-field-voice__mic.is-listening {
+        animation: none;
+    }
+}
+
+/* Mobile: 44px touch target, extra inline padding — without changing input min-height */
+@media (max-width: 767px) {
+    .crm-field-voice {
+        --ws-voice-mic-size: 2.75rem;
+        --ws-voice-mic-gap: 0.35rem;
+    }
+
+    .crm-field-voice__mic {
+        border-radius: 10px;
+    }
+
+    .crm-field-voice__mic-icon {
+        font-size: 0.92rem;
+    }
+
+    .crm-field-voice__wrap > .crm-textarea + .crm-field-voice__mic,
+    .crm-field-voice__wrap > .ws-textarea + .crm-field-voice__mic,
+    .crm-field-voice__wrap > .crm-act-content + .crm-field-voice__mic,
+    .crm-field-voice__wrap > .agency-space-publish-note__input + .crm-field-voice__mic,
+    .crm-field-voice__wrap > .crm-msg-composer-field + .crm-field-voice__mic,
+    .crm-field-voice__wrap > .mk-share-msg-input + .crm-field-voice__mic {
+        top: 0.38rem;
+    }
+}
+
+/* Narrow phones */
+@media (max-width: 380px) {
+    .crm-field-voice {
+        --ws-voice-mic-gap: 0.28rem;
     }
 }

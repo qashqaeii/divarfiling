@@ -870,7 +870,9 @@ function initPublicShareForms() {
         form.dataset.shareAjaxBound = '1';
         initShareModalTabs(form);
         initWelcomeRichEditors(form);
-        if (typeof window.initCRMFieldVoice === 'function') {
+        if (typeof window.enhanceWorkspaceVoiceInputs === 'function') {
+            window.enhanceWorkspaceVoiceInputs(form);
+        } else if (typeof window.initCRMFieldVoice === 'function') {
             window.initCRMFieldVoice(form);
         }
         initShareProfileImagePreviews(form);

@@ -4,9 +4,9 @@
     /** @type {WeakMap<HTMLElement, { stop: function(): void }>} */
     const adaptersByRoot = new WeakMap();
 
-    const FIELD_MIC_ARIA_START = 'شروع ورود صوتی';
-    const FIELD_MIC_ARIA_STOP = 'توقف ورود صوتی';
-    const FIELD_MIC_TOOLTIP = 'ورود صوتی';
+    const FIELD_MIC_ARIA_START = 'ورود با صدا';
+    const FIELD_MIC_ARIA_STOP = 'توقف ضبط';
+    const FIELD_MIC_TOOLTIP = 'ورود با صدا';
 
     /**
      * @param {HTMLElement|null} el
@@ -51,12 +51,12 @@
         const wrapEl = wrap.querySelector(':scope > .crm-field-voice__wrap');
         if (wrapEl) {
             const direct = wrapEl.querySelector(
-                '.crm-input, .crm-textarea, .ws-input, .ws-textarea, [data-crm-field-voice-editor], [contenteditable="true"]',
+                '.crm-input, .crm-textarea, .ws-input, .ws-textarea, .crm-msg-composer-field, .crm-act-content, .agency-space-publish-note__input, .mk-share-msg-input, [data-crm-field-voice-editor], [contenteditable="true"]',
             );
             if (direct) return direct;
         }
         return wrap.querySelector(
-            '.crm-input, .crm-textarea, .ws-input, .ws-textarea, [data-crm-field-voice-editor], [contenteditable="true"]',
+            '.crm-input, .crm-textarea, .ws-input, .ws-textarea, .crm-msg-composer-field, .crm-act-content, .agency-space-publish-note__input, .mk-share-msg-input, [data-crm-field-voice-editor], [contenteditable="true"]',
         );
     }
 
@@ -102,6 +102,25 @@
                 },
                 setInputValue: function (text) {
                     setFieldPlainText(input, text);
+                },
+                getSelectionRange: function () {
+                    if (isContentEditableField(input)) {
+                        return { start: null, end: null };
+                    }
+                    if (typeof input.selectionStart === 'number' && typeof input.selectionEnd === 'number') {
+                        return { start: input.selectionStart, end: input.selectionEnd };
+                    }
+                    return { start: null, end: null };
+                },
+                setSelectionRange: function (start, end) {
+                    if (isContentEditableField(input)) return;
+                    if (typeof input.setSelectionRange === 'function') {
+                        try {
+                            input.setSelectionRange(start, end);
+                        } catch (_e) {
+                            /* readonly or detached */
+                        }
+                    }
                 },
                 isInputDisabled: function () {
                     return !!(

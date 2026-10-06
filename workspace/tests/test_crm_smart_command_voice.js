@@ -48,10 +48,17 @@ function makeDom(initialInput) {
         hidden: true,
         classList: { items: new Set(), add(n) { this.items.add(n); }, remove(n) { this.items.delete(n); } },
     };
+    const initial = initialInput || '';
     const input = {
-        value: initialInput || '',
+        value: initial,
+        selectionStart: initial.length,
+        selectionEnd: initial.length,
         disabled: false,
         focus() {},
+        setSelectionRange(start, end) {
+            this.selectionStart = start;
+            this.selectionEnd = end;
+        },
         addEventListener() {},
     };
     return { root, micBtn, statusEl, input };
@@ -462,5 +469,121 @@ test('manual stop does not auto restart', () => {
     micBtn.click();
     win.runTimers(1000);
     assert.equal(win.instances.length, 1);
+    adapter.destroy();
+});
+
+test('joinVoiceAtCursor inserts between prefix and suffix with Persian spacing', () => {
+    const out = voice.joinVoiceAtCursor(
+        'مشتری آپارتمان',
+        'در پاسداران',
+        ' دو خواب می‌خواهد',
+    );
+    assert.equal(out, 'مشتری آپارتمان در پاسداران دو خواب می‌خواهد');
+});
+
+test('buildLiveTextareaValue with anchorSuffix does not append to end only', () => {
+    const live = voice.buildLiveTextareaValue(
+        'مشتری آپارتمان',
+        'در پاسداران',
+        '',
+        '',
+        ' دو خواب می‌خواهد',
+    );
+    assert.equal(live, 'مشتری آپارتمان در پاسداران دو خواب می‌خواهد');
+});
+
+test('voice at cursor preserves text before and after', () => {
+    const existing = 'مشتری آپارتمان دو خواب می‌خواهد';
+    const cursor = existing.indexOf('دو');
+    const { root, micBtn, statusEl, input } = makeDom(existing);
+    input.selectionStart = cursor;
+    input.selectionEnd = cursor;
+
+    class MockRecognition {
+        start() {
+            this.onstart && this.onstart();
+        }
+        stop() {
+            this.onend && this.onend();
+        }
+    }
+    const win = makeTimerWin(MockRecognition);
+    const adapter = voice.createVoiceInputAdapter(root, {
+        input,
+        micBtn,
+        voiceStatusEl: statusEl,
+        setInputValue(v) {
+            input.value = v;
+        },
+        win,
+    });
+    micBtn.click();
+    emitFinal(win.instances[0], 'در پاسداران');
+    micBtn.click();
+    assert.equal(input.value, 'مشتری آپارتمان در پاسداران دو خواب می‌خواهد');
+    adapter.destroy();
+});
+
+test('voice replaces selected range', () => {
+    const existing = 'مشتری آپارتمان قدیم دو خواب می‌خواهد';
+    const selStart = existing.indexOf('قدیم');
+    const selEnd = selStart + 'قدیم'.length;
+    const { root, micBtn, statusEl, input } = makeDom(existing);
+    input.selectionStart = selStart;
+    input.selectionEnd = selEnd;
+
+    class MockRecognition {
+        start() {
+            this.onstart && this.onstart();
+        }
+        stop() {
+            this.onend && this.onend();
+        }
+    }
+    const win = makeTimerWin(MockRecognition);
+    const adapter = voice.createVoiceInputAdapter(root, {
+        input,
+        micBtn,
+        voiceStatusEl: statusEl,
+        setInputValue(v) {
+            input.value = v;
+        },
+        win,
+    });
+    micBtn.click();
+    emitFinal(win.instances[0], 'در پاسداران');
+    micBtn.click();
+    assert.equal(input.value, 'مشتری آپارتمان در پاسداران دو خواب می‌خواهد');
+    adapter.destroy();
+});
+
+test('cursor insertion on input type text', () => {
+    const existing = 'الف ب';
+    const { root, micBtn, statusEl, input } = makeDom(existing);
+    input.selectionStart = 4;
+    input.selectionEnd = 4;
+
+    class MockRecognition {
+        start() {
+            this.onstart && this.onstart();
+        }
+        stop() {
+            this.onend && this.onend();
+        }
+    }
+    const win = makeTimerWin(MockRecognition);
+    const adapter = voice.createVoiceInputAdapter(root, {
+        input,
+        micBtn,
+        voiceStatusEl: statusEl,
+        setInputValue(v) {
+            input.value = v;
+        },
+        win,
+    });
+    micBtn.click();
+    emitFinal(win.instances[0], 'میان');
+    micBtn.click();
+    assert.equal(input.value, 'الف میان ب');
     adapter.destroy();
 });

@@ -3,6 +3,7 @@ import re
 
 from django import template
 
+from workspace.voice_input import field_allows_workspace_voice
 from workspace.services.display import to_jalali_display, transaction_profile
 from workspace.services.jalali_input import format_jalali_date
 from workspace.services.formatting import (
@@ -53,6 +54,11 @@ def subcategory_short_label(value):
 @register.inclusion_tag('workspace/includes/fields.html')
 def render_fields(form, columns=1):
     return {'form': form, 'columns': columns}
+
+
+@register.filter
+def ws_voice_eligible(field):
+    return field_allows_workspace_voice(field)
 
 
 @register.inclusion_tag('workspace/includes/page_header.html')

@@ -204,7 +204,9 @@ const CRMDrawer = {
         if (typeof window.initCRMFormMaps === 'function') {
             window.initCRMFormMaps(drawer);
         }
-        if (typeof window.initCRMFieldVoice === 'function') {
+        if (typeof window.enhanceWorkspaceVoiceInputs === 'function') {
+            window.enhanceWorkspaceVoiceInputs(drawer);
+        } else if (typeof window.initCRMFieldVoice === 'function') {
             window.initCRMFieldVoice(drawer);
         }
     },
@@ -6138,8 +6140,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (typeof window.initCRMFormMaps === 'function') window.initCRMFormMaps();
     } catch (err) { console.error(err); }
     try {
-        if (typeof window.initCRMFieldVoice === 'function') window.initCRMFieldVoice(document);
-    } catch (err) { console.error('initCRMFieldVoice', err); }
+        if (typeof window.enhanceWorkspaceVoiceInputs === 'function') {
+            window.enhanceWorkspaceVoiceInputs(document);
+        } else if (typeof window.initCRMFieldVoice === 'function') {
+            window.initCRMFieldVoice(document);
+        }
+    } catch (err) { console.error('initWorkspaceVoiceInput', err); }
     try { initCRMTeamPage(); } catch (err) { console.error(err); }
     initCRMSidePanel();
     initCRMQuickLead();

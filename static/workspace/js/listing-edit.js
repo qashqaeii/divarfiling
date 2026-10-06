@@ -142,7 +142,9 @@
     ListingEditController.prototype._bindEditModalVoice = function () {
         var self = this;
         if (!this.editModal) return;
-        if (typeof window.initCRMFieldVoice === 'function') {
+        if (typeof window.enhanceWorkspaceVoiceInputs === 'function') {
+            window.enhanceWorkspaceVoiceInputs(this.editModal);
+        } else if (typeof window.initCRMFieldVoice === 'function') {
             window.initCRMFieldVoice(this.editModal);
         }
         this.editModal.querySelectorAll('[data-modal-close]').forEach(function (btn) {
@@ -681,7 +683,9 @@
         if (this.editModal) {
             this.editModal.classList.add('is-open');
             document.body.classList.add('ws-modal-open');
-            if (typeof window.initCRMFieldVoice === 'function') {
+            if (typeof window.enhanceWorkspaceVoiceInputs === 'function') {
+                window.enhanceWorkspaceVoiceInputs(this.editModal);
+            } else if (typeof window.initCRMFieldVoice === 'function') {
                 window.initCRMFieldVoice(this.editModal);
             }
         }

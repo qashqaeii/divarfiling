@@ -2,12 +2,18 @@
 <div class="ws-extra-groups">
     {% for group in groups %}
     <section class="ws-extra-group">
-        <h4 class="ws-extra-group-title">{{ group.name }}</h4>
+        <header class="ws-extra-group-head">
+            <span class="ws-extra-group-icon" aria-hidden="true"><i class="fas {{ group.icon|default:'fa-layer-group' }}"></i></span>
+            <h4 class="ws-extra-group-title">{{ group.name }}</h4>
+        </header>
         <dl class="ws-extra-grid">
             {% for field in group.fields %}
             <div class="ws-extra-item">
-                <dt>{{ field.key }}</dt>
-                <dd>{% include 'workspace/includes/field_value.html' with field=field %}</dd>
+                <span class="ws-extra-item-icon" aria-hidden="true"><i class="fas {{ field.icon|default:'fa-circle' }}"></i></span>
+                <div class="ws-extra-item-body">
+                    <dt>{{ field.key }}</dt>
+                    <dd>{% include 'workspace/includes/field_value.html' with field=field %}</dd>
+                </div>
             </div>
             {% endfor %}
         </dl>

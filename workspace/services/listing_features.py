@@ -330,7 +330,7 @@ def _icon_for_key(key: str) -> str:
         'نوع آشپزخانه': 'fa-kitchen-set',
         'جنس کابینت': 'fa-cubes',
         'جنس کف': 'fa-border-all',
-        'بالکن': 'fa-fan',
+        'بالکن': 'fa-door-open',
         'تراس': 'fa-tree',
         'سرویس بهداشتی': 'fa-bath',
         'تعداد حمام': 'fa-shower',
@@ -390,6 +390,20 @@ def _icon_for_key(key: str) -> str:
         'مغازه': 'fa-shop',
         'دفتر': 'fa-briefcase',
         'مستغلات': 'fa-building-columns',
+        # تکمیلی / شناسایی
+        'شناسه': 'fa-fingerprint',
+        'عنوان': 'fa-heading',
+        'لینک': 'fa-arrow-up-right-from-square',
+        'لینک تصاویر': 'fa-images',
+        'لینک تصویر اول': 'fa-image',
+        'نوع آگهی دهنده': 'fa-user-check',
+        'نوع آگهی‌دهنده': 'fa-user-check',
+        'ایجاد آگهی': 'fa-calendar-plus',
+        'تاریخ انتشار': 'fa-calendar-day',
+        'انقضا آگهی': 'fa-hourglass-end',
+        'تاریخ انقضا': 'fa-hourglass-end',
+        'ویدیو دارد؟': 'fa-video',
+        'تعداد تصاویر': 'fa-images',
     }
     text = str(key or '').strip()
     if text in icons:
@@ -400,7 +414,7 @@ def _icon_for_key(key: str) -> str:
         ('پارکینگ', 'fa-square-parking'),
         ('آسانسور', 'fa-elevator'),
         ('انباری', 'fa-box-archive'),
-        ('بالکن', 'fa-fan'),
+        ('بالکن', 'fa-door-open'),
         ('تراس', 'fa-tree'),
         ('استخر', 'fa-water-ladder'),
         ('جکوزی', 'fa-hot-tub-person'),
@@ -432,6 +446,19 @@ def _icon_for_key(key: str) -> str:
         ('اجاره', 'fa-calendar-day'),
         ('محله', 'fa-location-dot'),
         ('آدرس', 'fa-map-location-dot'),
+        ('شناسه', 'fa-fingerprint'),
+        ('token', 'fa-fingerprint'),
+        ('عنوان', 'fa-heading'),
+        ('title', 'fa-heading'),
+        ('لینک تصویر', 'fa-image'),
+        ('لینک', 'fa-arrow-up-right-from-square'),
+        ('نوع آگهی', 'fa-user-check'),
+        ('آگهی دهنده', 'fa-user-tie'),
+        ('ایجاد', 'fa-calendar-plus'),
+        ('انتشار', 'fa-calendar-day'),
+        ('انقضا', 'fa-hourglass-end'),
+        ('ویدیو', 'fa-video'),
+        ('تعداد تصویر', 'fa-images'),
         ('مناسب', 'fa-user-group'),
         ('خانواده', 'fa-user-group'),
         ('مجرد', 'fa-user'),
@@ -799,3 +826,8 @@ def build_listing_amenity_dossier_items(
             _add(key, value, state)
 
     return items
+
+
+def listing_field_icon(key: str) -> str:
+    """آیکون Font Awesome برای برچسب فیلد (پرونده، تکمیلی، امکانات)."""
+    return _icon_for_key(key)

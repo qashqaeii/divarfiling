@@ -1,0 +1,12 @@
+<div class="ws-field-list">
+    {% for field in fields %}
+    {% if field.key != 'عرض جغرافیایی' and field.key != 'طول جغرافیایی' and field.key != 'latitude' and field.key != 'longitude' and field.key != 'lat' and field.key != 'lng' %}
+    <div class="ws-field-row{% if field.kind == 'long' %} ws-field-row--long{% endif %}">
+        <div class="ws-field-key">{{ field.key }}</div>
+        <div class="ws-field-val{% if field.kind == 'long' %} ws-field-val--long{% endif %}">{% include 'workspace/includes/field_value.html' with field=field %}</div>
+    </div>
+    {% endif %}
+    {% empty %}
+    <p class="ws-field-empty">فیلدی برای نمایش نیست.</p>
+    {% endfor %}
+</div>

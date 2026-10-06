@@ -1,6 +1,6 @@
 {% load humanize workspace_tags %}
 {% with feat=listing_features|dict_get:listing.id score=value_map|dict_get:listing.token lm=listing_metas|dict_get:listing.token pf=personal_files_map|dict_get:listing.token ret=listing_retention_map|dict_get:listing.token %}
-<article class="mk-lcard mk-lcard-native mk-lcard--ds-detail-mob" data-token="{{ listing.token }}" data-href="{% url 'workspace:listing_detail' listing.dataset_id listing.id %}">
+<article class="mk-lcard mk-lcard-native mk-lcard--ds-detail-mob{% if not listing.images %} mk-lcard--ds-detail-mob-no-photo{% endif %}" data-token="{{ listing.token }}" data-href="{% url 'workspace:listing_detail' listing.dataset_id listing.id %}">
     <div class="mk-lcard-cover mk-lcard-native__media{% if listing.images|length > 1 %} mk-lcard-cover--gallery{% endif %}{% if listing.images %} mk-lcard-cover--lightbox{% endif %}"{% if listing.images %} data-ws-gallery{% endif %}>
         {% if listing.images %}
         <button type="button" class="mk-lcard-cover-link" data-ws-lightbox="{{ listing.images.0 }}" aria-label="بزرگ‌نمایی تصویر">
@@ -35,6 +35,7 @@
             </div>
         </a>
         {% endif %}
+        <span class="mk-lcard-cover-shade mk-lcard-cover-shade--ds-mob" aria-hidden="true"></span>
         {% if listing.images|length %}
         <span class="mk-lcard-native__photos" aria-label="{{ listing.images|length }} تصویر">
             <i class="fas fa-camera" aria-hidden="true"></i>
@@ -56,10 +57,18 @@
         {% include 'workspace/includes/listing_image_auth_badge.html' with auth_class='mk-img-auth--cover' %}
     </div>
 
-    <div class="mk-lcard-body mk-lcard-native__panel">
-        <h3 class="mk-lcard-title mk-lcard-native__title">
-            <a href="{% url 'workspace:listing_detail' listing.dataset_id listing.id %}" title="{{ listing.title }}">{{ listing.title }}</a>
-        </h3>
+    <div class="mk-lcard-body mk-lcard-native__content">
+        <div class="mk-lcard-native__head">
+            <h3 class="mk-lcard-title mk-lcard-native__title">
+                <a href="{% url 'workspace:listing_detail' listing.dataset_id listing.id %}" title="{{ listing.title }}">{{ listing.title }}</a>
+            </h3>
+            {% if listing.neighborhood or listing.city %}
+            <p class="mk-lcard-native__meta">
+                <i class="fas fa-location-dot" aria-hidden="true"></i>
+                <span>{% if listing.neighborhood %}{{ listing.neighborhood|truncatechars:24 }}{% if listing.city %}، {% endif %}{% endif %}{% if listing.city %}{{ listing.city|truncatechars:18 }}{% endif %}</span>
+            </p>
+            {% endif %}
+        </div>
 
         <div class="mk-lcard-native__pricebox">
             {% if tx.show_price and listing.price %}
@@ -68,6 +77,28 @@
             {% widthratio listing.price listing.area 1 as ppm_val %}
             <span class="mk-lcard-native__ppm">{{ ppm_val|ws_money_compact }} / متر</span>
             {% endif %}
+            {% elif tx.show_deposit and tx.show_rent %}
+            {% if listing.deposit and listing.rent %}
+            <div class="mk-lcard-rent-dual" aria-label="ودیعه و اجاره ماهانه">
+                <div class="mk-lcard-rent-dual__col mk-lcard-rent-dual__col--deposit">
+                    <span class="mk-lcard-rent-dual__label">ودیعه</span>
+                    <strong class="mk-lcard-rent-dual__amount mk-money mk-money--deposit" title="{{ listing.deposit|ws_money }}">{{ listing.deposit|ws_money_compact }}</strong>
+                </div>
+                <span class="mk-lcard-rent-dual__divider" aria-hidden="true"></span>
+                <div class="mk-lcard-rent-dual__col mk-lcard-rent-dual__col--rent">
+                    <span class="mk-lcard-rent-dual__label">اجاره</span>
+                    <strong class="mk-lcard-rent-dual__amount mk-money mk-money--rent" title="{{ listing.rent|ws_money }}">{{ listing.rent|ws_money_compact }}</strong>
+                </div>
+            </div>
+            {% elif listing.deposit %}
+            <strong class="mk-lcard-native__price mk-money mk-money--deposit" title="{{ listing.deposit|ws_money }}">{{ listing.deposit|ws_money_compact }}</strong>
+            <span class="mk-lcard-native__ppm mk-lcard-native__ppm--deal">رهن کامل</span>
+            {% elif listing.rent %}
+            <strong class="mk-lcard-native__price mk-money mk-money--rent" title="{{ listing.rent|ws_money }}">{{ listing.rent|ws_money_compact }}</strong>
+            <span class="mk-lcard-native__ppm">اجاره ماهانه</span>
+            {% else %}
+            <strong class="mk-lcard-native__price is-muted">—</strong>
+            {% endif %}
             {% elif tx.show_deposit and listing.deposit %}
             <strong class="mk-lcard-native__price mk-money mk-money--deposit" title="{{ listing.deposit|ws_money }}">{{ listing.deposit|ws_money_compact }}</strong>
             <span class="mk-lcard-native__ppm">ودیعه</span>
@@ -75,41 +106,40 @@
             <strong class="mk-lcard-native__price mk-money mk-money--rent" title="{{ listing.rent|ws_money }}">{{ listing.rent|ws_money_compact }}</strong>
             <span class="mk-lcard-native__ppm">اجاره ماهانه</span>
             {% elif tx.show_rent and listing.deposit %}
-            <strong class="mk-lcard-native__price">رهن کامل</strong>
+            <strong class="mk-lcard-native__price mk-money mk-money--deposit" title="{{ listing.deposit|ws_money }}">{{ listing.deposit|ws_money_compact }}</strong>
+            <span class="mk-lcard-native__ppm mk-lcard-native__ppm--deal">رهن کامل</span>
             {% else %}
             <strong class="mk-lcard-native__price is-muted">—</strong>
             {% endif %}
         </div>
 
-        {% if listing.neighborhood or listing.city %}
-        <p class="mk-lcard-native__loc">
-            <i class="fas fa-location-dot" aria-hidden="true"></i>
-            <span>{% if listing.neighborhood %}{{ listing.neighborhood|truncatechars:22 }}{% if listing.city %}، {% endif %}{% endif %}{% if listing.city %}{{ listing.city|truncatechars:16 }}{% endif %}</span>
-        </p>
-        {% endif %}
-
         <ul class="mk-lcard-native__rail" aria-label="مشخصات">
             {% if listing.area %}
             <li class="mk-lcard-native__rail-item">
+                <i class="fas fa-ruler-combined" aria-hidden="true"></i>
                 <span>{{ listing.area|floatformat:0 }} متر</span>
             </li>
             {% endif %}
             {% if feat.rooms or listing.rooms %}
             <li class="mk-lcard-native__rail-item">
+                <i class="fas fa-bed" aria-hidden="true"></i>
                 <span>{{ feat.rooms|default:listing.rooms }} خواب</span>
             </li>
             {% endif %}
             {% if feat.parking is True %}
             <li class="mk-lcard-native__rail-item">
+                <i class="fas fa-square-parking" aria-hidden="true"></i>
                 <span>پارکینگ</span>
             </li>
             {% endif %}
             {% if feat.elevator is True %}
             <li class="mk-lcard-native__rail-item">
+                <i class="fas fa-building" aria-hidden="true"></i>
                 <span>آسانسور</span>
             </li>
             {% elif feat.storage is True %}
             <li class="mk-lcard-native__rail-item">
+                <i class="fas fa-box" aria-hidden="true"></i>
                 <span>انباری</span>
             </li>
             {% endif %}

@@ -786,6 +786,32 @@ def format_field_rows(fields: Dict[str, str], data: dict) -> List[Dict[str, Any]
     return rows
 
 
+def _normalize_dossier_field_key(key: str) -> str:
+    k = str(key or '').strip().lower().replace(' ', '').replace('_', '').replace('‌', '')
+    if k in ('سالساخت', 'ساخت', 'buildyear', 'سنبنا'):
+        return 'build_year'
+    return k
+
+
+def dedupe_listing_dossier_rows(rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """حذف نمایش تکراری فیلدهای هم‌معنا در پرونده آگهی (مثلاً سال ساخت و ساخت)."""
+    by_norm: Dict[str, Dict[str, Any]] = {}
+    order: List[str] = []
+    for row in rows:
+        raw_key = str(row.get('raw_key') or row.get('key') or '')
+        nk = _normalize_dossier_field_key(raw_key)
+        if nk not in by_norm:
+            by_norm[nk] = row
+            order.append(nk)
+            continue
+        if nk == 'build_year':
+            existing = by_norm[nk]
+            ex_key = str(existing.get('raw_key') or existing.get('key') or '')
+            if 'سال ساخت' in raw_key and 'سال ساخت' not in ex_key:
+                by_norm[nk] = row
+    return [by_norm[k] for k in order]
+
+
 def _supplementary_sort_key(key: str) -> Tuple[int, int, str]:
     """اولویت نمایش فیلدهای تکمیلی."""
     priority = [
@@ -831,6 +857,39 @@ def _supplementary_group_name(key: str) -> str:
     return 'سایر'
 
 
+_SUPPLEMENTARY_GROUP_ICONS: Dict[str, str] = {
+    'شناسایی': 'fa-fingerprint',
+    'زمان‌بندی': 'fa-clock',
+    'رسانه': 'fa-photo-film',
+    'سایر': 'fa-ellipsis',
+}
+
+
+def _normalize_supplementary_row_key(key: str) -> str:
+    k = str(key or '').strip().lower().replace(' ', '').replace('_', '').replace('‌', '')
+    if any(m in key for m in ('نوع آگهی', 'آگهی دهنده', 'آگهی‌دهنده')) or 'advertiser' in k:
+        return 'advertiser_type'
+    if 'لینک تصویر اول' in key or k == 'لینکتصویراول':
+        return 'first_image_link'
+    if 'لینک تصاویر' in key or k == 'لینکتصاویر':
+        return 'images_link'
+    return k
+
+
+def dedupe_supplementary_rows(rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """حذف نمایش تکراری فیلدهای هم‌معنا در مشخصات بیشتر."""
+    seen: set = set()
+    out: List[Dict[str, Any]] = []
+    for row in rows:
+        raw_key = str(row.get('raw_key') or row.get('key') or '')
+        nk = _normalize_supplementary_row_key(raw_key)
+        if nk in seen:
+            continue
+        seen.add(nk)
+        out.append(row)
+    return out
+
+
 def _collect_supplementary_rows(
     data: dict,
     profile: Dict,
@@ -863,7 +922,7 @@ def _collect_supplementary_rows(
         rows.append(classify_field_for_display(k, display, v))
 
     rows.sort(key=lambda r: _supplementary_sort_key(r['key']))
-    return rows
+    return dedupe_supplementary_rows(rows)
 
 
 def format_supplementary_fields(
@@ -881,13 +940,22 @@ def format_supplementary_groups(
     sections: Dict[str, Dict[str, str]],
 ) -> List[Dict[str, Any]]:
     """فیلدهای تکمیلی گروه‌بندی‌شده برای نمایش حرفه‌ای."""
+    from workspace.services.listing_features import listing_field_icon
+
     rows = _collect_supplementary_rows(data, profile, sections)
     group_order = ['شناسایی', 'زمان‌بندی', 'رسانه', 'سایر']
     buckets: Dict[str, List[Dict[str, Any]]] = {g: [] for g in group_order}
     for row in rows:
-        buckets[_supplementary_group_name(row['key'])].append(row)
+        buckets[_supplementary_group_name(row['key'])].append({
+            **row,
+            'icon': listing_field_icon(str(row.get('raw_key') or row.get('key') or '')),
+        })
     return [
-        {'name': name, 'fields': fields}
+        {
+            'name': name,
+            'icon': _SUPPLEMENTARY_GROUP_ICONS.get(name, 'fa-layer-group'),
+            'fields': fields,
+        }
         for name in group_order
         for fields in [buckets[name]]
         if fields

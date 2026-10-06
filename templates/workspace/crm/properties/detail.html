@@ -31,7 +31,7 @@
 {% block ws_surface_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/crm-prop-detail-mobile-premium.css' %}?v=4">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-mobile-v2-properties.css' %}?v=1">
-<link rel="stylesheet" href="{% static 'workspace/css/ws-crm-property-detail-mobile-v1.css' %}?v=17">
+<link rel="stylesheet" href="{% static 'workspace/css/ws-crm-property-detail-mobile-v1.css' %}?v=18">
 {% endblock %}
 
 {% block crm_content %}
@@ -482,10 +482,22 @@
                     {% endif %}
                     {% if property.sale_price %}
                     <p class="ws-crm-pd-mob-keyfacts__price">{{ property.sale_price|ws_money }}</p>
+                    {% elif property.deposit and property.monthly_rent %}
+                    <div class="ws-crm-pd-mob-keyfacts__rent-dual" aria-label="ودیعه و اجاره ماهانه">
+                        <div class="ws-crm-pd-mob-keyfacts__rent-col">
+                            <span class="ws-crm-pd-mob-keyfacts__rent-lbl">ودیعه</span>
+                            <strong class="ws-crm-pd-mob-keyfacts__rent-val">{{ property.deposit|ws_money }}</strong>
+                        </div>
+                        <span class="ws-crm-pd-mob-keyfacts__rent-sep" aria-hidden="true"></span>
+                        <div class="ws-crm-pd-mob-keyfacts__rent-col">
+                            <span class="ws-crm-pd-mob-keyfacts__rent-lbl">اجاره ماهانه</span>
+                            <strong class="ws-crm-pd-mob-keyfacts__rent-val">{{ property.monthly_rent|ws_money }}</strong>
+                        </div>
+                    </div>
                     {% elif property.deposit %}
                     <p class="ws-crm-pd-mob-keyfacts__price"><span class="ws-crm-pd-mob-keyfacts__price-lbl">ودیعه</span> {{ property.deposit|ws_money }}</p>
                     {% elif property.monthly_rent %}
-                    <p class="ws-crm-pd-mob-keyfacts__price"><span class="ws-crm-pd-mob-keyfacts__price-lbl">اجاره</span> {{ property.monthly_rent|ws_money }}</p>
+                    <p class="ws-crm-pd-mob-keyfacts__price"><span class="ws-crm-pd-mob-keyfacts__price-lbl">اجاره ماهانه</span> {{ property.monthly_rent|ws_money }}</p>
                     {% else %}
                     <p class="ws-crm-pd-mob-keyfacts__price ws-crm-pd-mob-keyfacts__price--muted">قیمت ثبت نشده</p>
                     {% endif %}

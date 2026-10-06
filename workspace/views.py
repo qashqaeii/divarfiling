@@ -60,7 +60,7 @@ from workspace.services.folder_import import (
 )
 from workspace.services.importer import import_dataset, import_message
 from workspace.services.display import (
-    build_listing_display_data, format_field_rows, format_sections,
+    build_listing_display_data, dedupe_listing_dossier_rows, format_field_rows, format_sections,
     format_supplementary_fields, format_supplementary_groups, location_accuracy_for_map,
     transaction_profile,
 )
@@ -1034,7 +1034,8 @@ class ListingDetailView(DatasetOwnerMixin, DetailView):
             sections.setdefault('مکان', {})
         ctx['sections'] = sections
         ctx['section_rows'] = {
-            name: format_field_rows(fields, data) for name, fields in sections.items()
+            name: dedupe_listing_dossier_rows(format_field_rows(fields, data))
+            for name, fields in sections.items()
         }
         ctx['location_accuracy'] = location_accuracy_for_map(data)
         ctx['supplementary_fields'] = format_supplementary_fields(data, tx, sections)
@@ -1119,6 +1120,7 @@ class ListingDetailView(DatasetOwnerMixin, DetailView):
             'workspace:listing_advertiser_feedback',
             kwargs={'dataset_id': dataset.id, 'listing_id': listing.id},
         )
+        ctx['carto_basemap_key'] = get_carto_basemap_api_key()
         return ctx
 
     def _whatsapp_text(self, listing, tx):

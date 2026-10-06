@@ -227,6 +227,57 @@
         margin: 0 0 0.12rem;
     }
 
+    .ws-crm-pd-mob .ws-crm-pd-mob-keyfacts__rent-dual {
+        display: flex;
+        flex-direction: row;
+        align-items: stretch;
+        gap: 0;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+    }
+
+    .ws-crm-pd-mob .ws-crm-pd-mob-keyfacts__rent-col {
+        flex: 1 1 0;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.2rem;
+    }
+
+    .ws-crm-pd-mob .ws-crm-pd-mob-keyfacts__rent-lbl {
+        font-size: 0.6875rem;
+        font-weight: 750;
+        line-height: 1.2;
+        color: var(--ws-text-muted);
+    }
+
+    .ws-crm-pd-mob .ws-crm-pd-mob-keyfacts__rent-val {
+        font-size: 1.0625rem;
+        font-weight: 900;
+        line-height: 1.15;
+        letter-spacing: -0.024em;
+        color: var(--ws-primary);
+        font-variant-numeric: tabular-nums;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .ws-crm-pd-mob .ws-crm-pd-mob-keyfacts__rent-col:first-child .ws-crm-pd-mob-keyfacts__rent-val {
+        font-size: 1.125rem;
+    }
+
+    .ws-crm-pd-mob .ws-crm-pd-mob-keyfacts__rent-sep {
+        flex: 0 0 1px;
+        align-self: stretch;
+        margin-block: 0.1rem;
+        margin-inline: 0.55rem;
+        background: color-mix(in srgb, var(--ws-border) 42%, transparent);
+    }
+
     .ws-crm-pd-mob .ws-crm-pd-mob-keyfacts__status {
         flex-shrink: 0;
         max-width: 42%;

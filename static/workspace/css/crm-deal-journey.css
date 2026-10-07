@@ -227,6 +227,61 @@
     margin-top: 0.15rem;
 }
 
+.dj-deal__meta-line {
+    display: none;
+    margin: 0.35rem 0 0;
+    font-size: 0.72rem;
+    font-weight: 600;
+    line-height: 1.45;
+    color: var(--ws-text-muted, #64748b);
+}
+
+.dj-deal__meta-line-sep {
+    margin-inline: 0.25rem;
+    opacity: 0.55;
+}
+
+.dj-deal-mob-summary {
+    display: none;
+}
+
+.dj-deal__more-danger {
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid color-mix(in srgb, var(--ws-border, #e2e8f0) 65%, transparent);
+    margin-top: 0.2rem;
+    padding-top: 0.2rem;
+}
+
+.dj-deal__more-danger button {
+    display: block;
+    width: 100%;
+    text-align: right;
+    padding: 0.55rem 0.7rem;
+    border: none;
+    background: none;
+    cursor: pointer;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #b91c1c;
+    font-family: inherit;
+}
+
+.dj-deal__more-danger button:hover {
+    background: rgba(239, 68, 68, 0.08);
+}
+
+@media (min-width: 768px) {
+    .dj-deal__title-row .dj-deal__title {
+        order: 1;
+    }
+    .dj-deal__title-row .dj-deal__stage-pill {
+        order: 2;
+        margin-top: 0.15rem;
+    }
+}
+
 .dj-deal__meta-chips {
     display: flex;
     flex-wrap: wrap;
@@ -1747,7 +1802,8 @@
 
 @media (max-width: 960px) {
     .dj-deal__body { grid-template-columns: 1fr; }
-    .dj-deal__context { position: static; order: -1; }
+    .dj-deal__context { position: static; order: 2; }
+    .dj-deal__main { order: 1; }
     .dj-deal__header-actions { width: 100%; justify-content: flex-start; }
     .dj-context-stack {
         display: grid;
@@ -1774,9 +1830,6 @@
     .dj-deal__header { padding: 0.9rem 0.95rem 0.85rem; }
     .dj-stage-rail { padding: 0.75rem 0.95rem 0.95rem; }
     .dj-deal__chip { font-size: 0.68rem; padding: 0.28rem 0.5rem; }
-    .dj-deal .dj-tab-panels { padding: 0.85rem; }
-    .dj-deal .dj-tabs--pro .dj-tabs__item span { display: none; }
-    .dj-deal .dj-tabs--pro .dj-tabs__item { padding: 0.48rem 0.62rem; }
 }
 
 /* Pipeline v2 enhancements */

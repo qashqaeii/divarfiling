@@ -40,10 +40,18 @@
                     <div class="dj-deal__more-wrap">
                         <button type="button" class="dj-deal__act" id="djDealMoreBtn" aria-haspopup="true" aria-expanded="false" aria-label="بیشتر"><i class="fas fa-ellipsis-h"></i></button>
                         <div class="dj-deal__more-menu" id="djDealMoreMenu" role="menu" hidden>
+                            <button type="button" role="menuitem" data-drawer-open="drawer-followup">ثبت پیگیری</button>
+                            <button type="button" role="menuitem" data-drawer-open="drawer-next-action">اقدام بعدی</button>
                             <button type="button" role="menuitem" data-drawer-open="drawer-finance">مالی و کمیسیون</button>
                             {% if deal.customer_id %}<a href="{% url 'workspace:crm_detail' deal.customer_id %}" role="menuitem">مخاطب</a>{% endif %}
                             {% if deal.property_id %}<a href="{% url 'workspace:crm_property_detail' deal.property_id %}" role="menuitem">ملک</a>{% endif %}
                             <a href="{{ deal_contracts_url }}" role="menuitem">قراردادها</a>
+                            <button type="button" role="menuitem" data-drawer-open="drawer-edit">ویرایش معامله</button>
+                            <form method="post" action="{% url 'workspace:crm_deal_detail' deal.pk %}" class="dj-deal__more-danger" onsubmit="return confirm('این معامله حذف شود؟ این کار قابل بازگشت نیست.');">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="delete">
+                                <button type="submit" role="menuitem">حذف معامله</button>
+                            </form>
                         </div>
                     </div>
                 </div>
@@ -51,9 +59,14 @@
 
             <div class="dj-deal__header-main">
                 <div class="dj-deal__title-row">
-                    <h1 class="dj-deal__title">{{ deal.title }}</h1>
                     <span class="dj-deal__stage-pill" style="{% crm_deal_stage_style deal.stage %}">{{ deal.stage }}</span>
+                    <h1 class="dj-deal__title">{{ deal.title }}</h1>
                 </div>
+                <p class="dj-deal__meta-line">
+                    <span>احتمال {{ deal.probability|to_persian_digits }}٪</span>
+                    <span class="dj-deal__meta-line-sep" aria-hidden="true">·</span>
+                    <span>آخرین بروزرسانی {{ deal.updated_at|ws_jalali_date }} {{ deal.updated_at|ws_time }}</span>
+                </p>
                 <div class="dj-deal__meta-chips">
                     {% if deal.customer_id %}
                     <a href="{% url 'workspace:crm_detail' deal.customer_id %}" class="dj-deal__chip"><i class="fas fa-user" aria-hidden="true"></i>{{ deal.customer.name }}</a>
@@ -104,6 +117,26 @@
                 {% endfor %}
             </ol>
         </nav>
+
+        <div class="dj-deal-mob-summary" aria-label="خلاصه مالی معامله">
+            <dl class="dj-deal-mob-summary__rows">
+                <div class="dj-deal-mob-summary__row">
+                    <dt>ارزش معامله</dt>
+                    <dd>{% if deal.value %}{{ deal.value|ws_money }}{% else %}ثبت نشده{% endif %}</dd>
+                </div>
+                {% if finance.net_advisor %}
+                <div class="dj-deal-mob-summary__row dj-deal-mob-summary__row--accent">
+                    <dt>سهم شما</dt>
+                    <dd>{{ finance.net_advisor|ws_money }}</dd>
+                </div>
+                {% elif finance.advisor_commission %}
+                <div class="dj-deal-mob-summary__row dj-deal-mob-summary__row--accent">
+                    <dt>سهم مشاور</dt>
+                    <dd>{{ finance.advisor_commission|ws_money }}</dd>
+                </div>
+                {% endif %}
+            </dl>
+        </div>
     </div>
 
     <div class="dj-deal__body">

@@ -9,7 +9,7 @@
 {% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/about-page.css' %}?v=8">
+<link rel="stylesheet" href="{% static 'css/about-page.css' %}?v=9">
 <link rel="stylesheet" href="{% static 'css/about-mobile.css' %}?v=2">
 {% endblock %}
 
@@ -124,6 +124,17 @@
                     <li class="abt-reveal" style="--abt-delay: 3">پیگیری هوشمند مشتریان</li>
                 </ul>
             </div>
+        </div>
+    </section>
+
+    <section class="abt-band abt-band--social" aria-labelledby="abt-social-title">
+        <div class="container abt-social-wrap abt-reveal" style="--abt-delay: 0">
+            <div class="abt-social-copy">
+                <span class="abt-kicker">همراه ما باشید</span>
+                <h2 id="abt-social-title">آموزش، به‌روزرسانی و نکات کاربردی در شبکه‌های اجتماعی</h2>
+                <p>ویدیوهای آموزشی، اخبار محصول و تجربه مشاوران را در کانال‌های رسمی فایلینگ دیوار دنبال کنید.</p>
+            </div>
+            {% include 'includes/brand_social_links.html' with variant='tiles' extra_class='abt-social-links' %}
         </div>
     </section>
 

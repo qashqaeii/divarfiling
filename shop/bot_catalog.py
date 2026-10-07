@@ -1,7 +1,7 @@
 """کاتالوگ محتوای محصول واحد — ربات استخراج دیوار."""
 from django.urls import reverse
 
-from divar_shop.brand import site_brand_context
+from divar_shop.brand import company_social_links, site_brand_context
 
 BOT_PRODUCT_SLUG = 'divar-extraction-bot'
 
@@ -16,20 +16,12 @@ def footer_content():
         'creator_line': f'توسعه: {brand["creator_name"]} · {brand["site_url_display"]}',
         'social': [
             {
-                'icon': 'fab fa-telegram',
-                'label': 'تلگرام سازنده',
-                'href': brand['creator_telegram_url'],
-            },
-            {
-                'icon': 'fas fa-phone-alt',
-                'label': 'تماس',
-                'href': f'tel:{brand["creator_phone_tel"]}',
-            },
-            {
-                'icon': 'fas fa-envelope',
-                'label': 'ایمیل',
-                'href': f'mailto:{brand["support_email"]}',
-            },
+                'icon': item.get('icon') or '',
+                'icon_file': item.get('icon_file') or '',
+                'label': item['label'],
+                'href': item['href'],
+            }
+            for item in company_social_links()
         ],
     }
 

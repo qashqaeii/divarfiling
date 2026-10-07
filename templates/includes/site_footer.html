@@ -35,13 +35,7 @@
                         <span class="mk-ft-logo-text">فایلینگ دیوار</span>
                     </a>
                     <p class="mk-ft-tagline">{{ footer_content.tagline }}</p>
-                    <div class="mk-ft-social">
-                        {% for s in footer_content.social %}
-                        <a href="{{ s.href }}" class="mk-ft-social-link" aria-label="{{ s.label }}"{% if s.href|slice:':4' == 'http' %} target="_blank" rel="noopener noreferrer"{% endif %}>
-                            <i class="{{ s.icon }}" aria-hidden="true"></i>
-                        </a>
-                        {% endfor %}
-                    </div>
+                    {% include 'includes/brand_social_links.html' with variant='icons' extra_class='mk-ft-social' link_class='mk-ft-social-link' %}
                 </div>
 
                 <nav class="mk-ft-links" aria-label="لینک‌های پاورقی">

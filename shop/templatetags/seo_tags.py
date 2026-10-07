@@ -122,9 +122,7 @@ def schema_organization():
             "@type": "Person",
             "name": brand["creator_name"],
         },
-        "sameAs": [
-            brand["creator_telegram_url"],
-        ],
+        "sameAs": brand.get("company_social_urls") or [],
         "contactPoint": {
             "@type": "ContactPoint",
             "telephone": brand["creator_phone_tel"],

@@ -556,6 +556,48 @@ html.mk-public[data-theme="dark"] .abt-stats-panel {
     color: #fff;
 }
 
+/* ─── Social band ─── */
+.abt-band--social {
+    padding-block: clamp(1.5rem, 4vw, 2.25rem);
+}
+
+.abt-social-wrap {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+    gap: clamp(1rem, 3vw, 1.75rem);
+    align-items: center;
+}
+
+.abt-social-copy h2 {
+    margin: 0.35rem 0 0.5rem;
+    font-size: clamp(1.1rem, 2.5vw, 1.35rem);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--mk-text, #0f172a);
+}
+
+.abt-social-copy p {
+    margin: 0;
+    max-width: 34rem;
+    font-size: 0.84rem;
+    line-height: 1.75;
+    color: var(--mk-text-secondary, #64748b);
+}
+
+.abt-social-links {
+    justify-content: flex-end;
+}
+
+@media (max-width: 768px) {
+    .abt-social-wrap {
+        grid-template-columns: 1fr;
+    }
+
+    .abt-social-links {
+        justify-content: flex-start;
+    }
+}
+
 /* ─── Responsive ─── */
 @media (max-width: 900px) {
     .abt-pillars {

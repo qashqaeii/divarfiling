@@ -9,7 +9,7 @@
 {% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/contact-page.css' %}?v=4">
+<link rel="stylesheet" href="{% static 'css/contact-page.css' %}?v=5">
 <link rel="stylesheet" href="{% static 'css/contact-mobile.css' %}?v=2">
 {% endblock %}
 
@@ -30,14 +30,14 @@
                     <i class="fas fa-phone-alt"></i>
                     <span>{{ site_brand.creator_phone_display }}</span>
                 </a>
-                <a href="{{ site_brand.creator_telegram_url }}" class="mk-contact-quick__item" target="_blank" rel="noopener">
-                    <i class="fab fa-telegram"></i>
-                    <span>{{ site_brand.creator_telegram }}</span>
-                </a>
                 <a href="mailto:{{ site_brand.support_email }}" class="mk-contact-quick__item">
                     <i class="fas fa-envelope"></i>
                     <span>{{ site_brand.support_email }}</span>
                 </a>
+            </div>
+            <div class="mk-contact-social-block">
+                <p class="mk-contact-social-kicker">شبکه‌های اجتماعی فایلینگ دیوار</p>
+                {% include 'includes/brand_social_links.html' with variant='icons' %}
             </div>
         </header>
 
@@ -127,6 +127,10 @@
                         </li>
                     </ul>
                     <p class="mk-contact-hours"><i class="fas fa-clock" aria-hidden="true"></i> شنبه تا پنجشنبه · ۹ تا ۱۸</p>
+                    <div class="mk-contact-aside-social">
+                        <p class="mk-contact-aside-social__title">ما را دنبال کنید</p>
+                        {% include 'includes/brand_social_links.html' with variant='icons' %}
+                    </div>
                 </div>
 
                 <details class="mk-contact-faq">

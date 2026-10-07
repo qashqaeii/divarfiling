@@ -1,0 +1,23 @@
+{% load static %}
+{# variant: icons | tiles — پیش‌فرض tiles #}
+<nav class="mk-brand-social{% if variant == 'icons' %} mk-brand-social--icons{% else %} mk-brand-social--tiles{% endif %}{% if extra_class %} {{ extra_class }}{% endif %}"
+     aria-label="شبکه‌های اجتماعی فایلینگ دیوار">
+    {% for s in site_brand.company_social_links %}
+    <a href="{{ s.href }}"
+       class="mk-brand-social__link{% if link_class %} {{ link_class }}{% endif %}"
+       target="_blank"
+       rel="noopener noreferrer"
+       aria-label="{{ s.label }}">
+        <span class="mk-brand-social__icon-wrap" aria-hidden="true">
+            {% if s.icon_file %}
+            <img src="{% static s.icon_file %}" alt="" width="24" height="24" loading="lazy" class="mk-brand-social__icon">
+            {% elif s.icon %}
+            <i class="{{ s.icon }}"></i>
+            {% endif %}
+        </span>
+        {% if variant != 'icons' %}
+        <span class="mk-brand-social__label">{{ s.label|cut:" فایلینگ دیوار" }}</span>
+        {% endif %}
+    </a>
+    {% endfor %}
+</nav>

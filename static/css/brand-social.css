@@ -1,0 +1,118 @@
+/* شبکه‌های اجتماعی رسمی فایلینگ دیوار — فوتر، تماس، درباره ما */
+
+.mk-brand-social {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.45rem;
+}
+
+.mk-brand-social__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    color: inherit;
+    transition:
+        border-color 0.22s ease,
+        background 0.22s ease,
+        transform 0.22s ease,
+        box-shadow 0.22s ease;
+}
+
+.mk-brand-social__icon-wrap {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    line-height: 0;
+}
+
+.mk-brand-social__icon {
+    width: 1.2rem;
+    height: 1.2rem;
+    object-fit: contain;
+    display: block;
+}
+
+/* آیکن‌محور (فوتر و تماس) */
+.mk-brand-social--icons .mk-brand-social__link:not(.mk-ft-social-link) {
+    justify-content: center;
+    width: 2.35rem;
+    height: 2.35rem;
+    padding: 0;
+    border-radius: 11px;
+    border: 1px solid rgba(226, 232, 240, 0.95);
+    background: rgba(255, 255, 255, 0.82);
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+html.mk-public[data-theme="dark"] .mk-brand-social--icons .mk-brand-social__link:not(.mk-ft-social-link) {
+    border-color: rgba(148, 163, 184, 0.18);
+    background: rgba(15, 23, 42, 0.65);
+}
+
+.mk-brand-social--icons .mk-brand-social__link:not(.mk-ft-social-link):hover {
+    transform: translateY(-2px);
+    border-color: rgba(124, 58, 237, 0.35);
+    box-shadow: 0 4px 14px rgba(124, 58, 237, 0.12);
+}
+
+.mk-ft-social-link .mk-brand-social__icon {
+    width: 1.05rem;
+    height: 1.05rem;
+}
+
+/* کارت‌محور (درباره ما) */
+.mk-brand-social--tiles {
+    gap: 0.55rem;
+}
+
+.mk-brand-social--tiles .mk-brand-social__link {
+    padding: 0.55rem 0.9rem;
+    border-radius: 12px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--mk-text, #0f172a);
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid rgba(226, 232, 240, 0.95);
+    box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
+}
+
+html.mk-public[data-theme="dark"] .mk-brand-social--tiles .mk-brand-social__link {
+    color: #e2e8f0;
+    background: rgba(15, 23, 42, 0.75);
+    border-color: rgba(148, 163, 184, 0.16);
+}
+
+.mk-brand-social--tiles .mk-brand-social__link:hover {
+    transform: translateY(-1px);
+    border-color: rgba(124, 58, 237, 0.3);
+}
+
+.mk-brand-social--tiles .mk-brand-social__icon {
+    width: 1.35rem;
+    height: 1.35rem;
+}
+
+.mk-brand-social__label {
+    white-space: nowrap;
+}
+
+@media (max-width: 520px) {
+    .mk-brand-social--tiles {
+        width: 100%;
+    }
+
+    .mk-brand-social--tiles .mk-brand-social__link {
+        flex: 1 1 calc(50% - 0.3rem);
+        justify-content: center;
+        min-width: 0;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mk-brand-social__link {
+        transition: none;
+    }
+}

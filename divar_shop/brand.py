@@ -14,6 +14,46 @@ CREATOR_TELEGRAM_URL = 'https://t.me/hosseinQashqaeii'
 
 SUPPORT_EMAIL = 'info@divarfiling.ir'
 
+# شبکه‌های اجتماعی رسمی برند فایلینگ دیوار (فوتر، تماس، SEO)
+COMPANY_SOCIAL_LINKS: tuple[dict, ...] = (
+    {
+        'key': 'telegram',
+        'label': 'تلگرام فایلینگ دیوار',
+        'href': 'https://t.me/divarfiling',
+        'icon': 'fab fa-telegram',
+        'icon_file': 'icons/telegram.png',
+    },
+    {
+        'key': 'instagram',
+        'label': 'اینستاگرام فایلینگ دیوار',
+        'href': 'https://www.instagram.com/divarfiling/',
+        'icon': 'fab fa-instagram',
+        'icon_file': 'icons/Instagram.png',
+    },
+    {
+        'key': 'youtube',
+        'label': 'یوتیوب فایلینگ دیوار',
+        'href': 'https://www.youtube.com/@DivarFiling',
+        'icon': 'fab fa-youtube',
+        'icon_file': 'icons/youtube.png',
+    },
+    {
+        'key': 'aparat',
+        'label': 'آپارات فایلینگ دیوار',
+        'href': 'https://www.aparat.com/DivarFiling',
+        'icon': 'fas fa-play-circle',
+        'icon_file': 'icons/aparat.png',
+    },
+)
+
+
+def company_social_links() -> list:
+    return list(COMPANY_SOCIAL_LINKS)
+
+
+def company_social_urls() -> list:
+    return [item['href'] for item in COMPANY_SOCIAL_LINKS]
+
 
 def site_brand_context() -> dict:
     """دیکشنری برای context processor و قالب‌ها."""
@@ -28,4 +68,6 @@ def site_brand_context() -> dict:
         'creator_telegram': CREATOR_TELEGRAM,
         'creator_telegram_url': CREATOR_TELEGRAM_URL,
         'support_email': SUPPORT_EMAIL,
+        'company_social_links': company_social_links(),
+        'company_social_urls': company_social_urls(),
     }

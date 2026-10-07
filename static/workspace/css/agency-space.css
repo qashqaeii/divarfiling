@@ -4405,8 +4405,10 @@
   .agency-space-grid.is-list-view .agency-space-contact-card {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
-    padding: 0.85rem 0.9rem;
+    gap: 0.45rem;
+    padding: 0.7rem 0.75rem;
+    min-height: 0;
+    overflow: visible;
   }
 
   .agency-space-grid.is-list-view .agency-space-contact-card__profile,
@@ -4414,22 +4416,47 @@
   .agency-space-grid.is-list-view .agency-space-contact-card__budget {
     border: none;
     padding: 0;
+    min-height: 0;
+    flex: 0 0 auto;
+  }
+
+  .agency-space-grid.is-list-view .agency-space-contact-card__profile {
+    justify-content: flex-start;
+  }
+
+  .agency-space-grid.is-list-view .agency-space-contact-card__need,
+  .agency-space-grid.is-list-view .agency-space-contact-card__budget {
+    display: none;
+  }
+
+  .agency-space-grid.is-list-view .agency-space-contact-card__profile-pub {
+    display: none;
   }
 
   .agency-space-grid.is-list-view .agency-space-contact-card__pills {
     flex-direction: row;
+    flex-wrap: wrap;
   }
 
   .agency-space-grid.is-list-view .agency-space-contact-card__foot {
-    display: flex;
+    display: none;
   }
 
   .agency-space-grid.is-list-view .agency-space-contact-card__actions--grid {
-    display: flex;
+    display: none;
   }
 
   .agency-space-grid.is-list-view .agency-space-contact-card__actions--list {
-    display: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    width: 100%;
+    margin-top: 0.25rem;
+  }
+
+  .agency-space-grid.is-list-view .agency-space-contact-card__actions--list .agency-space-contact-card__btn {
+    width: 100%;
+    justify-content: center;
   }
 }
 

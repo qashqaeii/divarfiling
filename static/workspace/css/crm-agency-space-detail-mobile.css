@@ -1,0 +1,457 @@
+/* Agency Space — property/contact detail mobile (≤767px). Desktop unchanged. */
+
+@media (max-width: 767px) {
+    .agency-hub .agency-space-detail--mob {
+        overflow-x: clip;
+        min-width: 0;
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+        padding-bottom: calc(5.25rem + env(safe-area-inset-bottom, 0px));
+    }
+
+    .agency-space-detail--mob .agency-space-detail__layout,
+    .agency-space-detail--mob .agency-space-detail__main,
+    .agency-space-detail--mob .agency-space-detail__aside,
+    .agency-space-detail--mob .agency-space-pro-detail,
+    .agency-space-detail--mob .agency-space-prop-aside,
+    .agency-space-detail--mob .agency-space-contact-aside {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
+    }
+
+    .agency-space-detail--mob .agency-space-detail__layout--property .agency-space-detail__aside--property,
+    .agency-space-detail--mob .agency-space-detail__layout--contact .agency-space-detail__aside--contact {
+        max-width: none;
+    }
+
+    .agency-space-detail--mob .agency-space-detail__layout {
+        gap: 0.55rem;
+    }
+
+    .agency-space-detail--mob .agency-space-pro-panel,
+    .agency-space-detail--mob .agency-space-pro-hero,
+    .agency-space-detail--mob .agency-space-prop-gallery,
+    .agency-space-detail--mob .agency-space-detail__crumb,
+    .agency-space-detail--mob .agency-space-prop-aside__card,
+    .agency-space-detail--mob .agency-space-pro-aside-card,
+    .agency-space-detail--mob .agency-space-property-detail__crm-slot--mobile,
+    .agency-space-detail--mob .agency-space-contact-detail__crm-slot--mobile {
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+
+    .agency-space-detail--mob .agency-space-detail__aside--contact .agency-space-prop-aside__card.agency-space-contact-detail__aside-card,
+    .agency-space-detail--mob .agency-space-detail__aside--property .agency-space-prop-aside__card.agency-space-pro-aside-card {
+        padding: 0.75rem 0.8rem !important;
+        box-shadow: none !important;
+    }
+
+    /* Breadcrumb */
+    .agency-space-detail--mob .agency-space-detail__crumb {
+        margin-bottom: 0.45rem;
+        padding: 0.35rem 0.5rem;
+        gap: 0.35rem;
+        align-items: center;
+    }
+
+    .agency-space-detail--mob .agency-space-detail__nav-sep {
+        display: none;
+    }
+
+    .agency-space-detail--mob .agency-space-detail__crumb-link {
+        font-size: 0.74rem;
+        font-weight: 700;
+        padding: 0.25rem 0.4rem;
+    }
+
+    .agency-space-detail--mob .agency-space-detail__crumb-current {
+        font-size: 0.7rem;
+        padding: 0.2rem 0.5rem;
+        margin-inline-start: auto;
+    }
+
+    /* Shared pro surfaces */
+    .agency-space-detail--mob .agency-space-pro-hero__mesh {
+        display: none;
+    }
+
+    .agency-space-detail--mob .agency-space-pro-hero {
+        border-radius: 14px;
+        box-shadow: none;
+        border: 1px solid color-mix(in srgb, #7c3aed 10%, #e2e8f0);
+        background: #fff;
+    }
+
+    .agency-space-detail--mob .agency-space-pro-hero__body {
+        padding: 0.7rem 0.75rem !important;
+    }
+
+    .agency-space-detail--mob .agency-space-pro-panel {
+        padding: 0.72rem 0.75rem;
+        border-radius: 14px;
+        box-shadow: none;
+        border-color: color-mix(in srgb, var(--ws-border, #e2e8f0) 85%, transparent);
+    }
+
+    .agency-space-detail--mob .agency-space-pro-panel:hover {
+        transform: none;
+        box-shadow: none;
+    }
+
+    .agency-space-detail--mob .agency-space-pro-panel__head {
+        margin-bottom: 0.45rem;
+        padding-bottom: 0.4rem;
+    }
+
+    .agency-space-detail--mob .agency-space-pro-panel__title {
+        font-size: 0.92rem;
+    }
+
+    .agency-space-detail--mob .agency-space-pro-spec-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 0.35rem;
+    }
+
+    .agency-space-detail--mob .agency-space-pro-spec-cell {
+        padding: 0.45rem 0.5rem;
+        border-radius: 11px;
+    }
+
+    .agency-space-detail--mob .agency-space-pro-spec-cell__value {
+        font-size: 0.78rem;
+    }
+
+    /* —— Property detail —— */
+    .agency-space-detail--mob .agency-space-property-detail.agency-space-pro-detail {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .agency-space-detail--mob .agency-space-property-detail .agency-space-prop-gallery {
+        order: 1;
+    }
+
+    .agency-space-detail--mob .agency-space-property-detail .agency-space-property-detail__hero {
+        order: 2;
+    }
+
+    .agency-space-detail--mob .agency-space-property-detail .agency-space-property-detail__crm-slot--mobile {
+        order: 3;
+    }
+
+    .agency-space-detail--mob .agency-space-property-detail .agency-space-prop-detail__metrics {
+        order: 4;
+    }
+
+    .agency-space-detail--mob .agency-space-property-detail .agency-space-prop-detail__stack {
+        order: 5;
+    }
+
+    .agency-space-detail--mob .agency-space-prop-gallery {
+        border: none;
+        box-shadow: none;
+        padding: 0;
+        background: transparent;
+    }
+
+    .agency-space-detail--mob .agency-space-prop-gallery__stage {
+        border-radius: 14px;
+        overflow: hidden;
+        aspect-ratio: 16 / 10;
+        max-height: min(52vw, 13.5rem);
+        border: 1px solid color-mix(in srgb, var(--ws-border, #e2e8f0) 80%, transparent);
+    }
+
+    .agency-space-detail--mob .agency-space-prop-gallery__main-hit img,
+    .agency-space-detail--mob .agency-space-property-detail__gallery-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .agency-space-detail--mob .agency-space-prop-gallery__thumbs {
+        margin-top: 0.35rem;
+        gap: 0.3rem;
+        scrollbar-width: none;
+    }
+
+    .agency-space-detail--mob .agency-space-prop-gallery__thumbs::-webkit-scrollbar {
+        display: none;
+    }
+
+    .agency-space-detail--mob .agency-space-prop-gallery__thumb {
+        width: 3.25rem;
+        height: 3.25rem;
+        flex-shrink: 0;
+    }
+
+    .agency-space-detail--mob .agency-space-property-detail__title {
+        font-size: 1.08rem !important;
+        line-height: 1.35;
+        letter-spacing: -0.02em;
+    }
+
+    .agency-space-detail--mob .agency-space-property-detail__location {
+        font-size: 0.78rem;
+        margin-top: 0.15rem;
+    }
+
+    .agency-space-detail--mob .agency-space-property-detail__chips {
+        gap: 0.28rem;
+        margin-bottom: 0.2rem;
+    }
+
+    .agency-space-detail--mob .agency-space-property-detail__chip {
+        font-size: 0.64rem;
+        padding: 0.14rem 0.42rem;
+        border-radius: 999px;
+    }
+
+    .agency-space-detail--mob .agency-space-prop-hero__highlights {
+        margin-top: 0.35rem;
+        gap: 0.35rem;
+    }
+
+    .agency-space-detail--mob .agency-space-prop-hero-highlight__card--compact {
+        border-radius: 12px;
+    }
+
+    .agency-space-detail--mob .agency-space-prop-hero-contact__call {
+        min-height: 2.85rem;
+        border-radius: 12px;
+    }
+
+    .agency-space-detail--mob .agency-space-prop-detail__metrics {
+        display: flex;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        gap: 0.35rem;
+        margin: 0;
+        padding: 0.05rem 0 0.2rem;
+    }
+
+    .agency-space-detail--mob .agency-space-prop-detail__metrics::-webkit-scrollbar {
+        display: none;
+    }
+
+    .agency-space-detail--mob .agency-space-prop-detail__metric {
+        flex: 0 0 auto;
+        margin: 0;
+        padding: 0.32rem 0.55rem;
+        border-radius: 999px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        white-space: nowrap;
+    }
+
+    .agency-space-detail--mob .agency-space-property-detail__crm-slot--mobile .agency-space-pro-aside-card {
+        border-radius: 14px !important;
+        padding: 0.75rem 0.8rem !important;
+        box-shadow: none !important;
+    }
+
+    .agency-space-detail--mob .agency-space-property-detail__crm-slot--mobile .agency-space-property-detail__aside-lead {
+        font-size: 0.72rem;
+        margin-bottom: 0.45rem;
+    }
+
+    /* —— Contact detail —— */
+    .agency-space-detail--mob .agency-space-contact-detail__identity {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 0.55rem;
+    }
+
+    .agency-space-detail--mob .agency-space-contact-detail__who {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+    }
+
+    .agency-space-detail--mob .agency-space-contact-detail__avatar {
+        width: 4.25rem !important;
+        height: 4.25rem !important;
+    }
+
+    .agency-space-detail--mob .agency-space-contact-detail__name {
+        font-size: 1.12rem !important;
+        line-height: 1.35;
+        text-align: center;
+    }
+
+    .agency-space-detail--mob .agency-space-contact-detail__meta-row {
+        justify-content: center;
+        gap: 0.35rem;
+    }
+
+    .agency-space-detail--mob .agency-space-contact-detail__location {
+        justify-content: center;
+        font-size: 0.78rem;
+    }
+
+    .agency-space-detail--mob .agency-space-contact-detail__access-row {
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+    }
+
+    .agency-space-detail--mob .agency-space-contact-detail__crm-slot--mobile {
+        display: block;
+    }
+
+    .agency-space-detail--mob .agency-space-detail__aside--contact .agency-space-prop-aside__card--crm {
+        display: none;
+    }
+
+    .agency-space-detail--mob .agency-space-contact-detail__crm-slot--mobile .agency-space-pro-aside-card {
+        border-radius: 14px !important;
+        padding: 0.75rem 0.8rem !important;
+        box-shadow: none !important;
+    }
+
+    .agency-space-detail--mob .agency-space-contact-detail .agency-space-prop-detail__metrics--contact {
+        display: none;
+    }
+
+    .agency-space-detail--mob .agency-space-pro-contact a {
+        min-height: 3rem;
+        padding: 0.65rem 0.75rem;
+        border-radius: 12px;
+        font-size: 0.88rem;
+    }
+
+    .agency-space-detail--mob .agency-space-contact-detail__chips {
+        gap: 0.35rem;
+    }
+
+    .agency-space-detail--mob .agency-space-contact-detail__chip {
+        font-size: 0.72rem;
+        padding: 0.28rem 0.55rem;
+        border-radius: 999px;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+    }
+
+    /* Aside — publication summary */
+    .agency-space-detail--mob .agency-space-detail__aside {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        min-width: 0;
+    }
+
+    .agency-space-detail--mob .agency-space-prop-aside__card {
+        border-radius: 14px !important;
+        padding: 0.8rem 0.85rem !important;
+        box-shadow: none !important;
+    }
+
+    .agency-space-detail--mob .agency-space-prop-aside__card:hover {
+        transform: none;
+    }
+
+    .agency-space-detail--mob .agency-space-pro-aside-card__sub {
+        font-size: 0.68rem;
+    }
+
+    .agency-space-detail--mob .agency-space-prop-aside__badges {
+        flex-wrap: wrap;
+        gap: 0.3rem;
+    }
+
+    .agency-space-detail--mob .agency-space-pro-timeline.agency-space-prop-aside__timeline {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.35rem;
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .agency-space-detail--mob .agency-space-pro-timeline.agency-space-prop-aside__timeline li {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.15rem;
+        padding: 0.45rem 0.5rem;
+        border-radius: 10px;
+        background: #f8fafc;
+        border: 1px solid #eef2f7;
+        border-bottom: none;
+        font-size: 0.68rem;
+    }
+
+    .agency-space-detail--mob .agency-space-pro-timeline.agency-space-prop-aside__timeline .agency-space-pro-timeline__icon {
+        display: none;
+    }
+
+    .agency-space-detail--mob .agency-space-pro-timeline__label {
+        color: #64748b;
+        font-weight: 600;
+    }
+
+    .agency-space-detail--mob .agency-space-pro-timeline li strong {
+        font-size: 0.72rem;
+        font-weight: 800;
+        text-align: start;
+        max-width: 100%;
+        overflow-wrap: anywhere;
+    }
+
+    .agency-space-detail--mob .agency-space-prop-aside__publisher {
+        max-width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
+    }
+
+    .agency-space-detail--mob .agency-space-prop-aside__badges {
+        max-width: 100%;
+    }
+
+    .agency-space-detail--mob .agency-space-pro-btn {
+        min-height: 2.75rem;
+        border-radius: 12px;
+        justify-content: center;
+    }
+
+    /* Sticky CTA */
+    .agency-space-detail--mob .agency-space-detail__sticky {
+        padding: 0.45rem 0.65rem calc(0.45rem + env(safe-area-inset-bottom, 0px));
+        background: color-mix(in srgb, var(--ws-bg, #f4f6fb) 92%, #fff);
+        border-top: 1px solid color-mix(in srgb, var(--ws-border, #e2e8f0) 70%, transparent);
+        backdrop-filter: blur(10px);
+    }
+
+    .agency-space-detail--mob .agency-space-detail__sticky {
+        box-sizing: border-box;
+    }
+
+    .agency-space-detail--mob .agency-space-detail__sticky-inner {
+        gap: 0.4rem;
+        max-width: none;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .agency-space-detail--mob .agency-space-detail__sticky-back,
+    .agency-space-detail--mob .agency-space-detail__sticky-primary {
+        min-height: 2.85rem;
+        border-radius: 12px;
+        flex: 1 1 auto;
+        justify-content: center;
+    }
+}
+
+.agency-space-contact-detail__crm-slot--mobile {
+    display: none;
+}

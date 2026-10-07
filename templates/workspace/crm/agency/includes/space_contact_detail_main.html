@@ -41,6 +41,10 @@
         </div>
     </header>
 
+    <div class="agency-space-contact-detail__crm-slot agency-space-contact-detail__crm-slot--mobile">
+        {% include "workspace/crm/agency/includes/space_contact_detail_crm_panel.html" with crm_heading_id="space-contact-crm-heading-mobile" %}
+    </div>
+
     {% if cust.property_type or cust.area_label or cust.rooms_label or cust.budget_rows %}
     <div class="agency-space-prop-detail__metrics agency-space-prop-detail__metrics--contact" aria-label="خلاصه نیاز">
         {% if cust.property_type %}

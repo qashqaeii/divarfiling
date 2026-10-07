@@ -16,6 +16,19 @@
         min-width: 0;
     }
 
+    .agency-hub--closure:has(.agency-space-detail--mob) {
+        overflow-x: clip;
+        min-width: 0;
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .agency-hub--closure:has(.agency-space-detail--mob) .agency-hub-body {
+        padding-inline: 0 !important;
+        width: 100%;
+        max-width: 100%;
+    }
+
     .agency-hub--space .agency-space-panel {
         padding-inline: 0 !important;
     }
@@ -485,14 +498,14 @@
         max-height: 6.75rem;
     }
 
-    /* Contact cards — lighter */
-    .agency-space-contact-card__tools,
-    .agency-space-contact-card__spec-grid,
-    .agency-space-contact-card__section-title,
-    .agency-space-contact-card__budget-panel,
-    .agency-space-contact-card__budget-list,
-    .agency-space-contact-card__share-hint,
-    .agency-space-contact-card__btn--outline {
+    /* Contact cards — lighter (grid view; list view has its own row layout) */
+    .agency-space-grid:not(.is-list-view) .agency-space-contact-card__tools,
+    .agency-space-grid:not(.is-list-view) .agency-space-contact-card__spec-grid,
+    .agency-space-grid:not(.is-list-view) .agency-space-contact-card__section-title,
+    .agency-space-grid:not(.is-list-view) .agency-space-contact-card__budget-panel,
+    .agency-space-grid:not(.is-list-view) .agency-space-contact-card__budget-list,
+    .agency-space-grid:not(.is-list-view) .agency-space-contact-card__share-hint,
+    .agency-space-grid:not(.is-list-view) .agency-space-contact-card__btn--outline {
         display: none !important;
     }
 
@@ -517,13 +530,170 @@
         display: none;
     }
 
-    .agency-space-contact-card__actions--list {
+    .agency-space-grid:not(.is-list-view) .agency-space-contact-card__actions--list {
         margin-top: 0.35rem;
     }
 
-    .agency-space-contact-card__actions--list .agency-space-contact-card__btn--primary {
+    .agency-space-grid:not(.is-list-view) .agency-space-contact-card__actions--list .agency-space-contact-card__btn--primary {
         width: 100%;
         justify-content: center;
+    }
+
+    /* List view — mobile row (no desktop 4-column table) */
+    .agency-hub--space .agency-space-results,
+    .agency-hub--space .agency-space-grid.is-list-view {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        overflow-x: clip;
+    }
+
+    .agency-space-grid.is-list-view .agency-space-contact-card {
+        display: flex !important;
+        flex-direction: column !important;
+        grid-template-columns: unset !important;
+        grid-template-areas: unset !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-height: 0 !important;
+        min-width: 0 !important;
+        box-sizing: border-box;
+        padding: 0.65rem 0.7rem !important;
+        gap: 0.4rem !important;
+        overflow: visible;
+        align-items: stretch;
+    }
+
+    .agency-space-grid.is-list-view .agency-space-contact-card__profile,
+    .agency-space-grid.is-list-view .agency-space-contact-card__status-col,
+    .agency-space-grid.is-list-view .agency-space-contact-card__budget,
+    .agency-space-grid.is-list-view .agency-space-contact-card__need {
+        border: none !important;
+        padding: 0 !important;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        min-height: 0 !important;
+        flex: 0 0 auto !important;
+    }
+
+    .agency-space-grid.is-list-view .agency-space-contact-card__profile {
+        justify-content: flex-start !important;
+    }
+
+    .agency-space-grid.is-list-view .agency-space-contact-card__status-col {
+        display: flex !important;
+        flex-direction: column;
+        gap: 0.35rem;
+    }
+
+    .agency-space-grid.is-list-view .agency-space-contact-card__need,
+    .agency-space-grid.is-list-view .agency-space-contact-card__budget,
+    .agency-space-grid.is-list-view .agency-space-contact-card__foot,
+    .agency-space-grid.is-list-view .agency-space-contact-card__profile-pub {
+        display: none !important;
+    }
+
+    .agency-space-grid.is-list-view .agency-space-contact-card__profile-head {
+        grid-template-columns: minmax(0, 1fr) auto;
+        grid-template-areas: "text avatar";
+        width: 100%;
+    }
+
+    .agency-space-grid.is-list-view .agency-space-contact-card__role {
+        display: flex;
+    }
+
+    .agency-space-grid.is-list-view .agency-space-contact-card__name {
+        font-size: 0.92rem;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .agency-space-grid.is-list-view .agency-space-contact-card__title-row {
+        flex-wrap: nowrap;
+        min-width: 0;
+    }
+
+    .agency-space-grid.is-list-view .agency-space-contact-card__status-col {
+        padding-top: 0.35rem;
+        border-top: 1px solid color-mix(in srgb, var(--ws-border, #e2e8f0) 70%, transparent);
+    }
+
+    .agency-space-grid.is-list-view .agency-space-contact-card__pills {
+        flex-direction: row;
+        flex-wrap: wrap;
+        margin-top: 0;
+        gap: 0.28rem;
+    }
+
+    .agency-space-grid.is-list-view .agency-space-contact-card__actions--grid {
+        display: none !important;
+    }
+
+    .agency-space-grid.is-list-view .agency-space-contact-card__actions--list {
+        display: flex !important;
+        flex-direction: column;
+        gap: 0.35rem;
+        width: 100%;
+        margin-top: 0.25rem;
+    }
+
+    .agency-space-grid.is-list-view .agency-space-contact-card__actions--list .agency-space-contact-card__btn {
+        width: 100%;
+        justify-content: center;
+        min-height: 2.75rem;
+    }
+
+    .agency-space-grid.is-list-view .agency-space-contact-card__btn--outline {
+        display: inline-flex !important;
+    }
+
+    .agency-space-grid.is-list-view .agency-space-property-card {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        grid-template-areas:
+            "media"
+            "info"
+            "commerce" !important;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
+        padding: 0.55rem 0.6rem !important;
+        gap: 0.35rem !important;
+        overflow: hidden;
+    }
+
+    .agency-space-grid.is-list-view .agency-space-property-card__media {
+        width: 100% !important;
+        max-height: 7.25rem !important;
+        min-height: 5.25rem !important;
+        height: auto !important;
+    }
+
+    .agency-space-grid.is-list-view .agency-space-property-card__commerce {
+        min-width: 0 !important;
+        width: 100% !important;
+        align-items: stretch !important;
+        text-align: start !important;
+    }
+
+    .agency-space-grid.is-list-view .agency-space-property-card__price {
+        white-space: normal;
+    }
+
+    .agency-space-grid.is-list-view .agency-space-property-card__actions {
+        justify-content: stretch !important;
+        flex-wrap: wrap !important;
+    }
+
+    .agency-space-grid.is-list-view .agency-space-property-card__btn {
+        flex: 1 1 auto;
+        width: auto;
+        min-width: 0;
     }
 
     /* CRM empty */

@@ -4,6 +4,7 @@
 {% block crm_extra_css %}
 {{ block.super }}
 <link rel="stylesheet" href="{% static 'workspace/css/agency-space.css' %}?v=45">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-agency-space-detail-mobile.css' %}?v=2">
 {% if space_payload.source_kind == 'property' and space_payload.property and space_payload.property.has_map %}
 <link rel="stylesheet" href="{% static 'workspace/css/listing-map.css' %}?v=6">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
@@ -11,7 +12,7 @@
 {% endblock %}
 
 {% block agency_hub_content %}
-<div class="agency-space agency-space-detail agency-space-detail--polished"
+<div class="agency-space agency-space-detail agency-space-detail--polished agency-space-detail--mob"
      data-item-id="{{ space_item.pk }}"
      data-api-url="{{ space_api_item_url }}"
      data-moderate-url="{{ space_api_moderate_url }}"

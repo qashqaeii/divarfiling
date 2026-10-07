@@ -1484,14 +1484,261 @@
 .dj-empty strong { display: block; font-size: 0.95rem; color: var(--ws-text, #0f172a); margin-bottom: 0.35rem; }
 .dj-empty p { margin: 0 0 1rem; font-size: 0.82rem; line-height: 1.5; }
 
-/* Transition dialog */
-.dj-transition { max-width: 420px; }
-.dj-transition__head { margin-bottom: 0.75rem; }
-.dj-transition__head h3 { margin: 0 0 0.25rem; font-size: 1.05rem; }
-.dj-transition__head p { margin: 0; font-size: 0.85rem; color: var(--ws-muted, #64748b); }
-.dj-transition__field { margin-bottom: 0.75rem; }
-.dj-transition__field label { display: block; font-size: 0.82rem; font-weight: 600; margin-bottom: 0.25rem; }
-.dj-transition__actions { display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 1rem; }
+/* Stage transition modal (#djStageTransition) — desktop + shared; mobile sheet in crm-mobile-v2-deals.css */
+#djStageTransition {
+    border: none;
+    padding: 0;
+    margin: auto;
+    max-width: min(28rem, calc(100vw - 2rem));
+    width: 100%;
+    background: transparent;
+    color: inherit;
+}
+
+#djStageTransition::backdrop {
+    background: rgba(15, 23, 42, 0.42);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}
+
+#djStageTransition .dj-transition__inner {
+    box-sizing: border-box;
+    width: 100%;
+    margin: 0;
+    padding: 1.15rem 1.25rem 1.1rem;
+    border: 1px solid color-mix(in srgb, var(--ws-border, #e2e8f0) 82%, transparent);
+    border-radius: 16px;
+    background: var(--ws-surface, #fff);
+    box-shadow: 0 24px 64px rgba(15, 23, 42, 0.16);
+}
+
+.dj-transition__head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.35rem;
+}
+
+.dj-transition__head h2,
+.dj-transition__head h3 {
+    flex: 1;
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 800;
+    line-height: 1.35;
+    text-align: start;
+}
+
+.dj-transition__close {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    margin: -0.1rem 0 0;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    background: var(--ws-surface-2, #f1f5f9);
+    color: var(--ws-text-secondary, #64748b);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    font: inherit;
+    line-height: 1;
+}
+
+.dj-transition__close:hover {
+    background: color-mix(in srgb, var(--ws-border, #e2e8f0) 55%, var(--ws-surface-2, #f1f5f9));
+    color: var(--ws-text, #0f172a);
+}
+
+.dj-transition__close:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--ws-primary, #7c3aed) 45%, transparent);
+    outline-offset: 2px;
+}
+
+.dj-transition__desc {
+    margin: 0 0 1rem;
+    font-size: 0.85rem;
+    line-height: 1.55;
+    color: var(--ws-muted, #64748b);
+}
+
+.dj-transition__field {
+    display: block;
+    margin-bottom: 0.85rem;
+}
+
+.dj-transition__field > span:first-child {
+    display: block;
+    font-size: 0.82rem;
+    font-weight: 600;
+    margin-bottom: 0.35rem;
+}
+
+.dj-transition__field .crm-textarea,
+.dj-transition__field .crm-input,
+.dj-transition__field .crm-select {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.dj-transition__field .crm-field-voice {
+    display: block;
+}
+
+.dj-transition__won-q,
+.dj-transition__lost-label,
+.dj-transition__contract-msg {
+    margin: 0 0 0.65rem;
+    font-size: 0.88rem;
+    font-weight: 650;
+    line-height: 1.45;
+}
+
+.dj-transition__summary {
+    margin: 0 0 0.85rem;
+    padding: 0.65rem 0.75rem;
+    border-radius: 12px;
+    background: var(--ws-surface-2, #f8fafc);
+    border: 1px solid color-mix(in srgb, var(--ws-border, #e2e8f0) 75%, transparent);
+    font-size: 0.82rem;
+}
+
+.dj-transition__summary div {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.28rem 0;
+}
+
+.dj-transition__summary dt {
+    margin: 0;
+    color: var(--ws-muted, #64748b);
+    font-weight: 600;
+}
+
+.dj-transition__summary dd {
+    margin: 0;
+    text-align: end;
+    font-weight: 650;
+}
+
+.dj-transition__warn {
+    margin: 0 0 0.75rem;
+    padding: 0.55rem 0.65rem;
+    border-radius: 10px;
+    font-size: 0.8rem;
+    line-height: 1.45;
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.dj-lost-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-bottom: 0.65rem;
+}
+
+.dj-lost-chip {
+    cursor: pointer;
+}
+
+.dj-lost-chip input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.dj-lost-chip span {
+    display: inline-block;
+    padding: 0.35rem 0.65rem;
+    border-radius: 999px;
+    border: 1px solid var(--ws-border, #e2e8f0);
+    font-size: 0.78rem;
+    font-weight: 600;
+    background: var(--ws-surface, #fff);
+    transition: border-color 0.12s, background 0.12s;
+}
+
+.dj-lost-chip input:checked + span {
+    border-color: var(--ws-primary, #7c3aed);
+    background: color-mix(in srgb, var(--ws-primary, #7c3aed) 12%, #fff);
+    color: var(--ws-primary, #7c3aed);
+}
+
+.dj-transition__contract-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    margin-bottom: 0.5rem;
+}
+
+.dj-transition__next {
+    margin: 0.15rem 0 0.85rem;
+    border: 1px solid color-mix(in srgb, var(--ws-border, #e2e8f0) 80%, transparent);
+    border-radius: 12px;
+    padding: 0.55rem 0.75rem;
+    background: var(--ws-surface-2, #f8fafc);
+}
+
+.dj-transition__next summary {
+    cursor: pointer;
+    font-size: 0.84rem;
+    font-weight: 650;
+    color: var(--ws-text-secondary, #475569);
+    list-style: none;
+    user-select: none;
+}
+
+.dj-transition__next summary::-webkit-details-marker {
+    display: none;
+}
+
+.dj-transition__next[open] summary {
+    margin-bottom: 0.65rem;
+}
+
+.dj-transition__next label {
+    display: block;
+    margin-bottom: 0.55rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.dj-transition__next label:last-child {
+    margin-bottom: 0;
+}
+
+.dj-transition__foot,
+.dj-transition__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: flex-start;
+    align-items: center;
+    margin-top: 0.15rem;
+    padding-top: 0.9rem;
+    border-top: 1px solid color-mix(in srgb, var(--ws-border, #e2e8f0) 72%, transparent);
+}
+
+.dj-transition__foot .crm-btn,
+.dj-transition__actions .crm-btn {
+    min-height: 2.5rem;
+    padding-inline: 1.05rem;
+    border-radius: 11px;
+    font-weight: 750;
+}
+
+@media (min-width: 768px) {
+    #djStageTransition .dj-transition__foot .crm-btn-primary,
+    #djStageTransition .dj-transition__actions .crm-btn-primary {
+        min-width: 7.5rem;
+    }
+}
 .dj-toast {
     position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%);
     padding: 0.65rem 1.15rem; border-radius: 10px; background: #0f172a; color: #fff;

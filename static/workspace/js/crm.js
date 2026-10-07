@@ -4527,8 +4527,6 @@ function initCRMDealsPage() {
             timer = setTimeout(() => search.form?.submit(), 420);
         });
     }
-    // Filter sheet uses native <details> on mobile.
-    // Keep it open on desktop so selects stay in the form row.
     const details = document.getElementById('crmDealsFilterDetails');
     if (details) {
         const deskMq = window.matchMedia('(min-width: 769px)');
@@ -4538,6 +4536,140 @@ function initCRMDealsPage() {
         syncDetails();
         deskMq.addEventListener?.('change', syncDetails);
     }
+
+    initDealsMobileFilters();
+
+    const stageTrack = page.querySelector('.crm-deal-path--mob-chips .crm-deal-path__track');
+    const activeStage = stageTrack?.querySelector('.crm-deal-path__chip.is-active');
+    if (stageTrack) {
+        requestAnimationFrame(() => {
+            if (activeStage) {
+                scrollDealsStageChipIntoView(stageTrack, activeStage);
+            } else {
+                trimDealsStageChipEdges(stageTrack);
+            }
+        });
+    }
+}
+
+function countDealsStageChipPartials(track, pad = 12) {
+    const nav = track?.parentElement;
+    if (!track || !nav) return 0;
+    const nr = nav.getBoundingClientRect();
+    return [...track.querySelectorAll('.crm-deal-path__chip')].filter((chip) => {
+        const r = chip.getBoundingClientRect();
+        const clipStart = r.left < nr.left + pad - 0.5 && r.right > nr.left;
+        const clipEnd = r.right > nr.right - pad + 0.5 && r.left < nr.right;
+        return clipStart || clipEnd;
+    }).length;
+}
+
+function settleDealsStageChipScroll(track, activeChip) {
+    if (!track) return;
+    const pad = 12;
+    const maxScroll = Math.max(0, track.scrollWidth - track.clientWidth);
+    if (maxScroll <= 0) return;
+
+    let bestScroll = track.scrollLeft;
+    let bestScore = Infinity;
+    const step = maxScroll > 120 ? 6 : 3;
+
+    for (let sl = 0; sl <= maxScroll; sl += step) {
+        track.scrollLeft = sl;
+        const partials = countDealsStageChipPartials(track, pad);
+        if (partials >= bestScore) continue;
+
+        if (activeChip) {
+            const nr = track.parentElement.getBoundingClientRect();
+            const cr = activeChip.getBoundingClientRect();
+            const inView = cr.right > nr.left + pad && cr.left < nr.right - pad;
+            if (!inView) continue;
+        }
+
+        bestScore = partials;
+        bestScroll = sl;
+        if (partials === 0) break;
+    }
+
+    track.scrollLeft = bestScroll;
+
+    if (activeChip) {
+        const trackRect = track.getBoundingClientRect();
+        const chipRect = activeChip.getBoundingClientRect();
+        const overflowStart = chipRect.left - trackRect.left - pad;
+        const overflowEnd = chipRect.right - trackRect.right + pad;
+        if (overflowStart < 0) {
+            track.scrollLeft = Math.max(0, track.scrollLeft + overflowStart);
+        } else if (overflowEnd > 0) {
+            track.scrollLeft = Math.min(maxScroll, track.scrollLeft + overflowEnd);
+        }
+    }
+}
+
+function scrollDealsStageChipIntoView(track, chip) {
+    settleDealsStageChipScroll(track, chip);
+}
+
+function trimDealsStageChipEdges(track) {
+    settleDealsStageChipScroll(track, null);
+}
+
+function initDealsMobileFilters() {
+    const form = document.getElementById('crmDealFilters');
+    const sheet = document.getElementById('crmDealsFilterSheet');
+    const openBtn = document.getElementById('crmDealsFilterOpen');
+    if (!form) return;
+
+    const mq = window.matchMedia('(max-width: 768px)');
+
+    const syncFieldDisabled = () => {
+        const mobile = mq.matches;
+        form.querySelectorAll('.crm-deals-desk-select, .crm-deals-q-desk').forEach(el => {
+            el.disabled = mobile;
+        });
+        form.querySelectorAll('.crm-deals-mob-select, .crm-deals-q-mob').forEach(el => {
+            el.disabled = !mobile;
+        });
+    };
+    syncFieldDisabled();
+    mq.addEventListener?.('change', syncFieldDisabled);
+
+    if (!sheet || !openBtn) return;
+
+    const setOpen = (open) => {
+        sheet.classList.toggle('is-open', open);
+        sheet.setAttribute('aria-hidden', open ? 'false' : 'true');
+        openBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+        openBtn.classList.toggle('is-open', open);
+        document.body.classList.toggle('crm-deals-filter-open', open);
+    };
+
+    const close = () => setOpen(false);
+    const open = () => {
+        if (!mq.matches) return;
+        setOpen(true);
+    };
+
+    openBtn.addEventListener('click', () => {
+        if (sheet.classList.contains('is-open')) close();
+        else open();
+    });
+
+    sheet.querySelectorAll('[data-deals-filter-close]').forEach(el => {
+        el.addEventListener('click', close);
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && sheet.classList.contains('is-open')) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            close();
+        }
+    }, true);
+
+    form.addEventListener('submit', () => {
+        if (mq.matches) close();
+    });
 }
 
 function initCRMPropertyAdvFilters() {

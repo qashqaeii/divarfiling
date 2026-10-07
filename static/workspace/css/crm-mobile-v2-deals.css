@@ -16,8 +16,7 @@
         border-radius: 0 0 20px 20px;
     }
 
-    .crm-deals-mobile .crm-deals-mob-icon-btn,
-    .crm-deals-mobile .crm-deals-fab {
+    .crm-deals-mobile .crm-deals-mob-icon-btn {
         min-width: 2.75rem;
         min-height: 2.75rem;
         border-radius: 12px;
@@ -25,12 +24,10 @@
     }
 
     .crm-deals-mobile .crm-deals-fab {
-        min-height: 3rem;
-        bottom: calc(4.85rem + env(safe-area-inset-bottom, 0px));
-        z-index: 150;
+        display: none !important;
     }
 
-    .crm-deals-mobile .crm-deal-path {
+    .crm-deals-mobile .crm-deal-path:not(.crm-deal-path--mob-chips) {
         position: sticky;
         top: 0;
         z-index: 20;
@@ -44,7 +41,7 @@
         box-shadow: 0 6px 20px rgba(15, 23, 42, 0.05);
     }
 
-    .crm-deals-mobile .crm-deal-path__track {
+    .crm-deals-mobile .crm-deal-path:not(.crm-deal-path--mob-chips) .crm-deal-path__track {
         scroll-snap-type: x mandatory;
         gap: 0.35rem;
         padding-bottom: 0.2rem;
@@ -131,11 +128,11 @@
         font-weight: 800;
     }
 
-    .crm-deals-mobile .crm-deal-mcard {
+    .crm-deals-mobile .crm-deal-mcard:not(.crm-deal-mcard--scan) {
         border-radius: 18px;
     }
 
-    .crm-deals-mobile .crm-deal-mcard__go {
+    .crm-deals-mobile .crm-deal-mcard:not(.crm-deal-mcard--scan) .crm-deal-mcard__go {
         min-width: 2.75rem;
         min-height: 2.75rem;
     }
@@ -223,10 +220,29 @@
         background: color-mix(in srgb, var(--ws-border) 70%, transparent);
     }
 
+    #djStageTransition .dj-transition__head {
+        margin-bottom: 0.5rem;
+        padding-inline-end: 0.15rem;
+    }
+
+    #djStageTransition .dj-transition__head h2 {
+        font-size: 1.02rem;
+        padding-inline-end: 0.35rem;
+    }
+
     #djStageTransition .dj-transition__close {
         min-width: 2.75rem;
         min-height: 2.75rem;
         border-radius: 12px;
+        background: transparent;
+    }
+
+    #djStageTransition .dj-transition__desc {
+        margin-bottom: 0.85rem;
+    }
+
+    #djStageTransition .dj-transition__field .crm-field-voice__mic {
+        --ws-voice-mic-size: 2.75rem;
     }
 
     #djStageTransition .dj-transition__foot .crm-btn,

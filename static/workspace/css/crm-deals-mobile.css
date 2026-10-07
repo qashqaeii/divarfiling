@@ -338,8 +338,8 @@
         background: transparent !important;
     }
 
-    /* ── Premium deal cards (mini dossier) ── */
-    .crm-deals-mobile .crm-deal-mcard {
+    /* ── Premium deal cards (legacy — scan cards use --scan + closure CSS) ── */
+    .crm-deals-mobile .crm-deal-mcard:not(.crm-deal-mcard--scan) {
         display: flex !important;
         flex-direction: column;
         gap: 0.65rem;
@@ -360,9 +360,13 @@
             0 1px 0 rgba(255, 255, 255, 0.55) inset;
         transition: transform 0.14s, box-shadow 0.14s, border-color 0.14s;
     }
-    .crm-deals-mobile .crm-deal-mcard:active {
+    .crm-deals-mobile .crm-deal-mcard:not(.crm-deal-mcard--scan):active {
         transform: scale(0.985);
         box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
+    }
+
+    .crm-deals-mobile .crm-deal-mcard.crm-deal-mcard--scan {
+        display: flex !important;
     }
     .crm-deals-mobile .crm-deal-mcard__mesh {
         position: absolute;
@@ -382,18 +386,18 @@
         pointer-events: none;
         background: linear-gradient(90deg, var(--deal-accent, #0f766e), #2563eb 55%, #10b981);
     }
-    .crm-deals-mobile .crm-deals-row.is-won .crm-deal-mcard {
+    .crm-deals-mobile .crm-deals-row.is-won .crm-deal-mcard:not(.crm-deal-mcard--scan) {
         border-color: color-mix(in srgb, #10b981 30%, var(--ws-border));
     }
     .crm-deals-mobile .crm-deals-row.is-won .crm-deal-mcard__accent {
         background: linear-gradient(90deg, #059669, #34d399);
     }
-    .crm-deals-mobile .crm-deals-row.is-lost .crm-deal-mcard {
+    .crm-deals-mobile .crm-deals-row.is-lost .crm-deal-mcard:not(.crm-deal-mcard--scan) {
         opacity: 0.92;
         filter: saturate(0.82);
         border-color: color-mix(in srgb, #94a3b8 35%, var(--ws-border));
     }
-    .crm-deals-mobile .crm-deals-row.is-overdue .crm-deal-mcard {
+    .crm-deals-mobile .crm-deals-row.is-overdue .crm-deal-mcard:not(.crm-deal-mcard--scan) {
         border-color: color-mix(in srgb, #ef4444 32%, var(--ws-border));
         box-shadow:
             0 12px 28px rgba(239, 68, 68, 0.08),
@@ -876,9 +880,9 @@
         padding: 0.4rem 0.9rem;
     }
 
-    /* ── FAB ── */
+    /* FAB removed — create via toolbar + on mobile */
     .crm-deals-fab {
-        display: inline-flex !important;
+        display: none !important;
         position: fixed;
         inset-inline-end: 0.85rem;
         bottom: calc(4.35rem + env(safe-area-inset-bottom, 0px));

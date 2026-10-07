@@ -2,7 +2,7 @@
     <span><i class="fas fa-list" aria-hidden="true"></i> فهرست آموزش‌ها</span>
     <i class="fas fa-chevron-down" aria-hidden="true"></i>
 </button>
-<aside class="acd-playlist" id="acdPlaylist" aria-label="فهرست ۸ آموزش آکادمی">
+<aside class="acd-playlist" id="acdPlaylist" aria-label="فهرست {% if curriculum %}{{ curriculum.total_count }}{% else %}{{ stats.video_count }}{% endif %} آموزش آکادمی">
     <div class="acd-playlist-body-inner" id="acdPlaylistBody">
         {% for section in playlist_sections %}
         <header class="acd-playlist-head">

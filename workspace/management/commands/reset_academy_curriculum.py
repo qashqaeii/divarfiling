@@ -8,7 +8,7 @@ from workspace.academy.seed_ops import reset_academy_curriculum, reset_academy_c
 
 
 class Command(BaseCommand):
-    help = 'Reset legacy academy curriculum and seed the current 8-video curriculum'
+    help = 'Reset legacy academy curriculum and seed the current 12-video curriculum'
 
     def add_arguments(self, parser):
         parser.add_argument('--yes', action='store_true', help='Confirm destructive reset')

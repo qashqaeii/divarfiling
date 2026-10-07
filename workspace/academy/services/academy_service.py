@@ -87,6 +87,8 @@ def get_path_context(user, path: LearningPath, active_slug: str | None = None) -
         'active_video': active,
         'active_player': active.to_player_context() if active else None,
         'playlist_sections': playlist,
+        'stats': curriculum_stats(),
+        'curriculum': user_curriculum_summary(user),
     }
 
 
@@ -99,6 +101,10 @@ def get_video_context(user, video: AcademyVideo, *, public_ok: bool = False) -> 
     prev_video, next_video = adjacent_videos(video)
     playlist = workspace_playlist_sections(user) if user.is_authenticated else []
     mark_playlist_active(playlist, video.slug)
+    stats = curriculum_stats()
+    curriculum = user_curriculum_summary(user) if user.is_authenticated else {
+        'total_count': stats['video_count'],
+    }
     return {
         'video': video,
         'player': video.to_player_context(),
@@ -107,4 +113,6 @@ def get_video_context(user, video: AcademyVideo, *, public_ok: bool = False) -> 
         'global_index': global_index_for(video),
         'prev_video': prev_video,
         'next_video': next_video,
+        'stats': stats,
+        'curriculum': curriculum,
     }

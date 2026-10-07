@@ -9,9 +9,9 @@
 <section class="acd-search acd-card" aria-labelledby="acd-search-title">
     <label class="acd-search-label" for="acdSearchInput">
         <i class="fas fa-search" aria-hidden="true"></i>
-        <span id="acd-search-title">جستجو در ۸ آموزش</span>
+        <span id="acd-search-title">جستجو در {{ stats.video_count }} آموزش</span>
     </label>
-    <input type="search" id="acdSearchInput" class="acd-search-input" placeholder="مثلاً داشبورد، لایسنس، استخراج، نقشه، کمد…" autocomplete="off" dir="auto">
+    <input type="search" id="acdSearchInput" class="acd-search-input" placeholder="مثلاً داشبورد، لایسنس، استخراج، CRM، یادآوری، اشتراک فایل…" autocomplete="off" dir="auto">
     <ul class="acd-search-results" id="acdSearchResults" hidden></ul>
     <p class="acd-search-empty" id="acdSearchEmpty" hidden>آموزشی با این عبارت پیدا نشد.</p>
 </section>
@@ -35,7 +35,7 @@
 </p>
 
 <section class="acd-paths" aria-labelledby="acd-paths-title">
-    {% include 'workspace/academy/includes/section_header.html' with section_id='acd-paths-title' title='مسیرهای آموزشی' icon='fa-route' desc='دو مسیر کوتاه برای شروع و مدیریت فایل‌ها.' %}
+    {% include 'workspace/academy/includes/section_header.html' with section_id='acd-paths-title' title='مسیرهای آموزشی' icon='fa-route' desc='مسیرهای کوتاه برای شروع، مدیریت فایل‌ها و CRM.' %}
     <div class="acd-paths-grid">
         {% for item in paths %}
         {% include 'workspace/academy/includes/path_card.html' %}

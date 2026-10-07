@@ -1,4 +1,4 @@
-"""داده seed آکادمی — Curriculum فعال: ۲ مسیر، ۸ ویدیو."""
+"""داده seed آکادمی — Curriculum فعال: ۳ مسیر، ۱۲ ویدیو."""
 from __future__ import annotations
 
 PATHS = [
@@ -20,6 +20,18 @@ PATHS = [
         'is_public': True,
         'phase': 'launch',
     },
+    {
+        'slug': 'customer-and-crm',
+        'title': 'مدیریت مشتری و CRM',
+        'icon': 'fa-users',
+        'description': (
+            'از ثبت مشتری تا پیگیری، یادآوری و ارسال فایل مناسب؛ '
+            'CRM فایلینگ دیوار را برای مدیریت حرفه‌ای ارتباط با مشتری یاد بگیرید.'
+        ),
+        'order': 2,
+        'is_public': True,
+        'phase': 'launch',
+    },
 ]
 
 # slugهای Curriculum فعال — برای پاک‌سازی DB
@@ -32,6 +44,10 @@ CURRICULUM_VIDEO_SLUGS = (
     'academy-review-analyze-file',
     'academy-personal-files-map',
     'academy-file-cabinets-folders',
+    'academy-what-is-crm',
+    'academy-adding-a-new-contact-to-crm',
+    'academy-crm-reminders-and-follow-ups',
+    'academy-personal-files-and-sharing-with-customers',
 )
 
 LEGACY_PATH_SLUGS = (
@@ -189,6 +205,94 @@ VIDEOS = [
         'is_public': True,
         'action_url': '/workspace/',
         'action_label': 'ورود به فایلینگ دیوار',
+        'next_cta': 'آموزش بعدی: CRM چیست و چه کاربردی دارد؟',
+    },
+    {
+        'path_slug': 'customer-and-crm',
+        'order': 1,
+        'slug': 'academy-what-is-crm',
+        'title': 'CRM چیست و چه کاربردی دارد؟',
+        'description': (
+            'با CRM فایلینگ دیوار آشنا شوید و ببینید چطور می‌توانید اطلاعات مشتری‌ها، نیازها، '
+            'پیگیری‌ها و روند ارتباط با هر مشتری را یکجا مدیریت کنید.'
+        ),
+        'subtitle': (
+            'بعد از این آموزش می‌دانید CRM چه کمکی به کار روزانه مشاور املاک می‌کند '
+            'و اطلاعات مشتری‌ها چطور در یک فضای منظم مدیریت می‌شوند.'
+        ),
+        'file_name': 'What-Is-CRM-and-What-Is-It-Used-For.mp4',
+        'file_path': 'Video',
+        'poster_path': 'academy/posters/What-Is-CRM-and-What-Is-It-Used-For.png',
+        'duration_seconds': 153,
+        'is_public': True,
+        'action_url': '/workspace/crm/',
+        'action_label': 'ورود به CRM',
+        'next_cta': 'آموزش بعدی: ثبت مخاطب جدید در CRM',
+    },
+    {
+        'path_slug': 'customer-and-crm',
+        'order': 2,
+        'slug': 'academy-adding-a-new-contact-to-crm',
+        'title': 'ثبت مخاطب جدید در CRM',
+        'description': (
+            'یاد بگیرید چطور یک مشتری جدید را در CRM ثبت کنید، اطلاعات و نیازهای او را نگه دارید '
+            'و از همان ابتدا یک پرونده منظم برای پیگیری مشتری داشته باشید.'
+        ),
+        'subtitle': (
+            'بعد از این آموزش می‌توانید مخاطب جدید ثبت کنید '
+            'و اطلاعات اولیه مشتری را برای پیگیری‌های بعدی در CRM نگه دارید.'
+        ),
+        'file_name': 'Adding-a-New-Contact-to-CRM.mp4',
+        'file_path': 'Video',
+        'poster_path': 'academy/posters/Adding-a-New-Contact-to-CRM.png',
+        'duration_seconds': 275,
+        'is_public': True,
+        'action_url': '/workspace/crm/contacts/',
+        'action_label': 'مخاطبین CRM',
+        'next_cta': 'آموزش بعدی: یادآوری و پیگیری‌ها',
+    },
+    {
+        'path_slug': 'customer-and-crm',
+        'order': 3,
+        'slug': 'academy-crm-reminders-and-follow-ups',
+        'title': 'ثبت یادآوری و پیگیری‌ها در CRM',
+        'description': (
+            'برای تماس‌ها و کارهای بعدی یادآوری ثبت کنید، مشتری مرتبط را مشخص کنید '
+            'و پیگیری‌های روزانه را از داخل CRM منظم و قابل‌کنترل نگه دارید.'
+        ),
+        'subtitle': (
+            'بعد از این آموزش می‌توانید برای مشتری‌ها یادآوری بسازید، '
+            'کارهای پیگیری را مدیریت کنید و موارد انجام‌شده را ثبت کنید.'
+        ),
+        'file_name': 'CRM-Reminders-and-Follow-Ups.mp4',
+        'file_path': 'Video',
+        'poster_path': 'academy/posters/CRM-Reminders-and-Follow-Ups.png',
+        'duration_seconds': 201,
+        'is_public': True,
+        'action_url': '/workspace/crm/today/',
+        'action_label': 'صف امروز CRM',
+        'next_cta': 'آموزش بعدی: اشتراک فایل با مشتری',
+    },
+    {
+        'path_slug': 'customer-and-crm',
+        'order': 4,
+        'slug': 'academy-personal-files-and-sharing-with-customers',
+        'title': 'فایل‌های شخصی و اشتراک فایل با مشتری',
+        'description': (
+            'فایل‌های شخصی خود را مدیریت کنید و اطلاعات ملک را با یک لینک حرفه‌ای برای مشتری بفرستید؛ '
+            'با امکان انتخاب اطلاعات قابل نمایش و آماده‌سازی متن مناسب برای ارسال.'
+        ),
+        'subtitle': (
+            'بعد از این آموزش می‌توانید فایل شخصی ایجاد و مدیریت کنید '
+            'و ملک را با اطلاعات انتخابی از طریق یک لینک برای مشتری به اشتراک بگذارید.'
+        ),
+        'file_name': 'Personal-Files-and-Sharing-with-Customers-via-Link.mp4',
+        'file_path': 'Video',
+        'poster_path': 'academy/posters/Personal-Files-and-Sharing-with-Customers-via-Link.png',
+        'duration_seconds': 272,
+        'is_public': True,
+        'action_url': '/workspace/crm/properties/',
+        'action_label': 'فایل‌های شخصی',
         'next_cta': '',
     },
 ]

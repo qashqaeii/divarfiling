@@ -12,11 +12,11 @@ class PublicAcademyPlaylistTests(TestCase):
         from django.core.management import call_command
         call_command('seed_academy', '--reset', '--yes')
 
-    def test_hub_lists_eight_videos(self):
+    def test_hub_lists_twelve_videos(self):
         resp = Client().get(reverse('public_academy_playlist'))
         self.assertEqual(resp.status_code, 200)
-        self.assertEqual(resp.context['playlist_stats']['video_count'], 8)
-        self.assertEqual(resp.context['playlist_stats']['section_count'], 2)
+        self.assertEqual(resp.context['playlist_stats']['video_count'], 12)
+        self.assertEqual(resp.context['playlist_stats']['section_count'], 3)
 
     def test_video_detail_200(self):
         slug = CURRICULUM_VIDEO_SLUGS[0]

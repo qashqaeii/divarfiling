@@ -1,4 +1,4 @@
-"""Seed academy — Curriculum فعال: ۲ مسیر، ۸ ویدیو."""
+"""Seed academy — Curriculum فعال: ۳ مسیر، ۱۲ ویدیو."""
 from __future__ import annotations
 
 from pathlib import Path
@@ -14,7 +14,7 @@ from workspace.academy.seed_ops import reset_academy_curriculum, reset_academy_c
 
 
 class Command(BaseCommand):
-    help = 'Seed academy curriculum (2 paths, 8 videos). Use --reset to wipe legacy data first.'
+    help = 'Seed academy curriculum (3 paths, 12 videos). Use --reset to wipe legacy data first.'
 
     def add_arguments(self, parser):
         parser.add_argument(

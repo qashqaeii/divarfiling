@@ -24,7 +24,7 @@ def workspace_help_content():
             {'icon': 'fa-gift', 'accent': 'emerald', 'label': 'CRM و آژانس', 'value': 'رایگان'},
             {'icon': 'fa-robot', 'accent': 'violet', 'label': 'فایلینگ و تحلیل', 'value': 'با لایسنس ربات'},
             {'icon': 'fa-microphone', 'accent': 'cyan', 'label': 'دستیار هوشمند', 'value': 'متن + صوت'},
-            {'icon': 'fa-route', 'accent': 'sky', 'label': 'آکادمی', 'value': '۸ آموزش ویدیویی'},
+            {'icon': 'fa-route', 'accent': 'sky', 'label': 'آکادمی', 'value': '۱۲ آموزش ویدیویی'},
         ],
         'products': [
             {
@@ -65,7 +65,7 @@ def workspace_help_content():
         'resources': [
             {
                 'title': 'آکادمی فایلینگ دیوار',
-                'desc': '۸ آموزش ویدیویی در دو مسیر — از آشنایی تا مدیریت فایل',
+                'desc': '۱۲ آموزش ویدیویی در سه مسیر — از آشنایی تا CRM و مدیریت فایل',
                 'icon': 'fa-graduation-cap',
                 'accent': 'violet',
                 'url_name': 'workspace:academy_home',

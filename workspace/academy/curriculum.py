@@ -1,4 +1,4 @@
-"""Curriculum فعال آکادمی — ۲ مسیر، ۸ ویدیو."""
+"""Curriculum فعال آکادمی — ۳ مسیر، ۱۲ ویدیو."""
 from __future__ import annotations
 
 from django.conf import settings
@@ -7,7 +7,11 @@ from django.urls import reverse
 
 from workspace.academy.models import AcademyVideo, LearningPath, UserVideoProgress
 
-ACTIVE_PATH_SLUGS = ('getting-started', 'extracting-and-managing-files')
+ACTIVE_PATH_SLUGS = (
+    'getting-started',
+    'extracting-and-managing-files',
+    'customer-and-crm',
+)
 
 
 def active_paths_qs():

@@ -135,24 +135,37 @@ def _enrich_education_content(content):
     return content
 
 
+def _academy_public_stats() -> tuple[str, str]:
+    try:
+        from workspace.academy.curriculum import curriculum_stats
+        stats = curriculum_stats()
+        return str(stats['video_count']), str(stats['path_count'])
+    except Exception:
+        return '12', '3'
+
+
 def education_hub_content():
+    video_count, path_count = _academy_public_stats()
     content = {
         'hero': {
             'eyebrow': 'آکادمی ویدیویی · آموزش مشاوران',
             'title': 'آکادمی',
             'title_highlight': 'فایلینگ دیوار',
-            'lead': 'آموزش قدم‌به‌قدم فایلینگ دیوار؛ از آشنایی اولیه تا استخراج و مدیریت حرفه‌ای فایل‌ها.',
+            'lead': (
+                'آموزش قدم‌به‌قدم فایلینگ دیوار؛ از آشنایی اولیه تا استخراج فایل، '
+                'مدیریت فایل‌های شخصی و CRM.'
+            ),
             'academy': {
                 'badge': 'آکادمی ویدیویی',
                 'title': 'فایلینگ دیوار دقیقاً چه کاری انجام می‌دهد؟',
-                'subtitle': '۸ آموزش ویدیویی · ۲ مسیر · رایگان',
+                'subtitle': f'{video_count} آموزش ویدیویی · {path_count} مسیر · رایگان',
                 'cta': 'شروع آموزش رایگان',
                 'cta_hint': 'مشاهده همه آموزش‌ها',
             },
         },
         'stats': [
-            {'num': '۸', 'label': 'آموزش ویدیویی'},
-            {'num': '۲', 'label': 'مسیر آموزشی'},
+            {'num': video_count, 'label': 'آموزش ویدیویی'},
+            {'num': path_count, 'label': 'مسیر آموزشی'},
             {'num': 'رایگان', 'label': 'برای همه'},
             {'num': 'ویدیو', 'label': 'قدم‌به‌قدم'},
         ],

@@ -1,4 +1,4 @@
-"""جستجوی آکادمی — ۸ آموزش فعال و کلیدواژه‌های فارسی."""
+"""جستجوی آکادمی — آموزش‌های فعال و کلیدواژه‌های فارسی."""
 from __future__ import annotations
 
 import re
@@ -18,6 +18,12 @@ EXTRA_KEYWORDS_BY_SLUG: dict[str, tuple[str, ...]] = {
     'academy-review-analyze-file': ('تحلیل فایل', 'تحلیل', 'بررسی فایل'),
     'academy-personal-files-map': ('فایل شخصی', 'فایل‌های شخصی', 'نقشه',),
     'academy-file-cabinets-folders': ('زونکن', 'کمد', 'کمد فایل',),
+    'academy-what-is-crm': ('CRM', 'مدیریت مشتری', 'مشتری',),
+    'academy-adding-a-new-contact-to-crm': ('ثبت مخاطب', 'مخاطب', 'ثبت مشتری',),
+    'academy-crm-reminders-and-follow-ups': ('یادآوری', 'پیگیری', 'پیگیری مشتری',),
+    'academy-personal-files-and-sharing-with-customers': (
+        'اشتراک فایل', 'لینک مشتری', 'ارسال ملک', 'فایل شخصی',
+    ),
 }
 
 

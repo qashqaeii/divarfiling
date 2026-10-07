@@ -1,4 +1,4 @@
-"""Tests for workspace academy curriculum (8 videos)."""
+"""Tests for workspace academy curriculum (12 videos)."""
 from pathlib import Path
 
 from django.conf import settings
@@ -20,25 +20,31 @@ class AcademySeedTests(TestCase):
         call_command('seed_academy', '--reset', '--yes')
 
     def test_exact_curriculum_counts(self):
-        self.assertEqual(LearningPath.objects.filter(is_active=True).count(), 2)
-        self.assertEqual(AcademyVideo.objects.filter(is_active=True).count(), 8)
+        self.assertEqual(LearningPath.objects.filter(is_active=True).count(), 3)
+        self.assertEqual(AcademyVideo.objects.filter(is_active=True).count(), 12)
         self.assertFalse(AcademyMission.objects.exists())
 
     def test_path_video_counts(self):
         p1 = LearningPath.objects.get(slug='getting-started')
         p2 = LearningPath.objects.get(slug='extracting-and-managing-files')
+        p3 = LearningPath.objects.get(slug='customer-and-crm')
         self.assertEqual(p1.videos.filter(is_active=True).count(), 3)
         self.assertEqual(p2.videos.filter(is_active=True).count(), 5)
+        self.assertEqual(p3.videos.filter(is_active=True).count(), 4)
 
     def test_global_order_and_adjacency(self):
         items = ordered_videos()
-        self.assertEqual(len(items), 8)
+        self.assertEqual(len(items), 12)
         self.assertEqual(items[0].slug, 'academy-what-is-divar-filing')
-        self.assertEqual(items[2].slug, 'academy-license-purchase-activation')
-        self.assertEqual(items[3].slug, 'academy-extract-divar-listings')
-        prev_v, next_v = adjacent_videos(items[2])
-        self.assertEqual(prev_v.slug, 'academy-dashboard-overview')
-        self.assertEqual(next_v.slug, 'academy-extract-divar-listings')
+        self.assertEqual(items[7].slug, 'academy-file-cabinets-folders')
+        self.assertEqual(items[8].slug, 'academy-what-is-crm')
+        self.assertEqual(items[11].slug, 'academy-personal-files-and-sharing-with-customers')
+        prev_v, next_v = adjacent_videos(items[7])
+        self.assertEqual(prev_v.slug, 'academy-personal-files-map')
+        self.assertEqual(next_v.slug, 'academy-what-is-crm')
+        prev_v, next_v = adjacent_videos(items[11])
+        self.assertEqual(prev_v.slug, 'academy-crm-reminders-and-follow-ups')
+        self.assertIsNone(next_v)
 
     def test_all_public(self):
         self.assertEqual(AcademyVideo.objects.filter(is_public=False).count(), 0)
@@ -46,7 +52,7 @@ class AcademySeedTests(TestCase):
     def test_seed_idempotent(self):
         from django.core.management import call_command
         call_command('seed_academy')
-        self.assertEqual(AcademyVideo.objects.count(), 8)
+        self.assertEqual(AcademyVideo.objects.count(), 12)
 
     def test_media_and_posters_exist(self):
         media = Path(settings.MEDIA_ROOT)
@@ -133,6 +139,10 @@ class AcademyPageTests(TestCase):
             'نقشه': 'academy-personal-files-map',
             'زونکن': 'academy-file-cabinets-folders',
             'کمد': 'academy-file-cabinets-folders',
+            'CRM': 'academy-what-is-crm',
+            'ثبت مخاطب': 'academy-adding-a-new-contact-to-crm',
+            'یادآوری': 'academy-crm-reminders-and-follow-ups',
+            'اشتراک فایل': 'academy-personal-files-and-sharing-with-customers',
         }
         for query, expected_slug in cases.items():
             hits = find_videos_by_query(query)
@@ -179,9 +189,10 @@ class PublicAcademyTests(TestCase):
         resp = Client().get(reverse('public_academy'))
         self.assertEqual(resp.status_code, 200)
         self.assertContains(resp, 'آکادمی فایلینگ دیوار')
-        self.assertContains(resp, '8 آموزش')
+        self.assertContains(resp, '12 آموزش')
 
     def test_public_playlist_count(self):
         resp = Client().get(reverse('public_academy_playlist'))
         self.assertEqual(resp.status_code, 200)
-        self.assertEqual(resp.context['playlist_stats']['video_count'], 8)
+        self.assertEqual(resp.context['playlist_stats']['video_count'], 12)
+        self.assertEqual(resp.context['playlist_stats']['section_count'], 3)

@@ -256,6 +256,8 @@
                         if (!wasOpen && el.classList.contains('is-open')) {
                             unhidden.push(el);
                         }
+                    } else if (m.attributeName === 'open' && el.tagName === 'DIALOG' && el.hasAttribute('open')) {
+                        unhidden.push(el);
                     }
                 }
             }
@@ -266,7 +268,7 @@
             childList: true,
             subtree: true,
             attributes: true,
-            attributeFilter: ['hidden', 'class'],
+            attributeFilter: ['hidden', 'class', 'open'],
             attributeOldValue: true,
         });
     }

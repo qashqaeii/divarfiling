@@ -16,7 +16,7 @@
 <link rel="stylesheet" href="{% static 'workspace/css/crm-ecosystem.css' %}?v=1">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-deal-path.css' %}?v=2">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-mobile-v2-deals.css' %}?v=4">
-<link rel="stylesheet" href="{% static 'workspace/css/crm-deals-list-mobile-closure.css' %}?v=8">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-deals-list-mobile-closure.css' %}?v=12">
 {% endblock %}
 
 {% block crm_content %}
@@ -85,7 +85,7 @@
     </section>
 
     {% if stats.stale %}
-    <a href="?view={{ view_mode }}&bucket=stale" class="crm-deals-stale-banner{% if request.GET.bucket == 'stale' %} is-active{% endif %}">
+    <a href="?view={{ view_mode }}&bucket=stale" class="crm-deals-stale-banner crm-deals-stale-banner--page{% if request.GET.bucket == 'stale' %} is-active{% endif %}">
         <i class="fas fa-hourglass-end" aria-hidden="true"></i>
         <strong>{{ stats.stale }}</strong>
         معامله نیاز به پیگیری دارند — در مرحله فعلی مانده‌اند
@@ -99,6 +99,13 @@
 
             <div class="crm-deals-mob-chrome">
             <div class="crm-deals-mob-toolbar-sticky">
+                {% if stats.stale %}
+                <a href="?view={{ view_mode }}&bucket=stale" class="crm-deals-stale-banner crm-deals-stale-banner--mob-toolbar{% if request.GET.bucket == 'stale' %} is-active{% endif %}">
+                    <i class="fas fa-hourglass-end" aria-hidden="true"></i>
+                    <strong>{{ stats.stale }}</strong>
+                    معامله نیاز به پیگیری دارند — در مرحله فعلی مانده‌اند
+                </a>
+                {% endif %}
                 <div class="crm-deals-mob-summary" aria-label="خلاصه معاملات">
                     <span>{{ stats.active|to_persian_digits }} فعال</span>
                     <span class="crm-deals-mob-summary-muted">{{ stats.pipeline_value|ws_money }}</span>
@@ -117,6 +124,10 @@
                     <input type="search" name="q" value="{{ request.GET.q }}" class="crm-deals-q-mob" placeholder="جستجو در معاملات…" autocomplete="off" aria-label="جستجو در معاملات">
                 </label>
                 <div class="crm-deals-mob-toolbar-actions">
+                    <button type="button" class="crm-deals-mob-new-deal" data-drawer-open="drawer-deal" title="معامله جدید" aria-label="معامله جدید">
+                        <i class="fas fa-plus" aria-hidden="true"></i>
+                        <span class="crm-deals-mob-new-deal__label">معامله جدید</span>
+                    </button>
                     <button type="button"
                             class="crm-deals-mob-filter-open"
                             id="crmDealsFilterOpen"
@@ -124,46 +135,25 @@
                             aria-controls="crmDealsFilterPanel"
                             title="فیلترها"
                             aria-label="فیلترها">
-                        <i class="fas fa-sliders" aria-hidden="true"></i>
-                        <span>فیلترها</span>
-                        {% if request.GET.stage or request.GET.sort and request.GET.sort != '-updated_at' %}<em class="crm-deals-mob-filter-count" aria-hidden="true"></em>{% endif %}
+                        <i class="fas fa-filter" aria-hidden="true"></i>
+                        <span class="crm-deals-mob-filter-open__label">فیلترها</span>
+                        {% if request.GET.sort and request.GET.sort != '-updated_at' %}<em class="crm-deals-mob-filter-count" aria-label="۱ فیلتر فعال">{{ 1|to_persian_digits }}</em>{% endif %}
                     </button>
-                    <div class="crm-deals-view-toggle crm-deals-view-toggle--mob" role="tablist" aria-label="نمای نمایش">
-                        <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}view=table" class="crm-deals-view-btn {% if view_mode != 'pipeline' %}is-active{% endif %}" title="لیست" aria-label="لیست"><i class="fas fa-list" aria-hidden="true"></i></a>
-                        <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}view=pipeline" class="crm-deals-view-btn {% if view_mode == 'pipeline' %}is-active{% endif %}" title="کانبان" aria-label="کانبان"><i class="fas fa-table-columns" aria-hidden="true"></i></a>
+                    <div class="crm-deals-view-toggle crm-deals-view-toggle--mob crm-deals-view-segment" role="tablist" aria-label="نمای نمایش">
+                        <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}view=table" role="tab" class="crm-deals-view-btn {% if view_mode != 'pipeline' %}is-active{% endif %}" title="لیست" aria-label="لیست" aria-selected="{% if view_mode != 'pipeline' %}true{% else %}false{% endif %}">
+                            <i class="fas fa-list" aria-hidden="true"></i>
+                            <span>لیست</span>
+                        </a>
+                        <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}view=pipeline" role="tab" class="crm-deals-view-btn {% if view_mode == 'pipeline' %}is-active{% endif %}" title="کانبان" aria-label="کانبان" aria-selected="{% if view_mode == 'pipeline' %}true{% else %}false{% endif %}">
+                            <i class="fas fa-table-columns" aria-hidden="true"></i>
+                            <span>کانبان</span>
+                        </a>
                     </div>
-                    <button type="button" class="crm-deals-mob-toolbar-add" data-drawer-open="drawer-deal" title="معامله جدید" aria-label="معامله جدید">
-                        <i class="fas fa-plus" aria-hidden="true"></i>
-                    </button>
                 </div>
+            </div>
 
-                {% if deal_stages %}
-                <nav class="crm-deal-path crm-deal-path--mob-chips" aria-label="مراحل معامله">
-                    <div class="crm-deal-path__track" role="list">
-                        <a href="?view={{ view_mode }}{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}{% if request.GET.bucket %}&bucket={{ request.GET.bucket|urlencode }}{% endif %}"
-                           class="crm-deal-path__chip{% if not request.GET.stage %} is-active{% endif %}"
-                           role="listitem"
-                           {% if not request.GET.stage %}aria-current="true"{% endif %}>
-                            <span>همه</span>
-                            <em>{{ stats.active|default:stats.total|to_persian_digits }}</em>
-                        </a>
-                        {% for s in deal_stages %}
-                        {% with cnt=stats.by_stage|dict_get:s|default:0 %}
-                        <a href="?view={{ view_mode }}{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}{% if request.GET.bucket %}&bucket={{ request.GET.bucket|urlencode }}{% endif %}&stage={{ s|urlencode }}"
-                           class="crm-deal-path__chip{% if request.GET.stage == s %} is-active{% endif %}{% if not cnt %} is-empty{% endif %}"
-                           style="--stage-accent: {{ s|crm_deal_stage_dot:deal_stage_meta }}"
-                           role="listitem"
-                           {% if request.GET.stage == s %}aria-current="true"{% endif %}>
-                            <span>{{ s }}</span>
-                            <em>{{ cnt|to_persian_digits }}</em>
-                        </a>
-                        {% endwith %}
-                        {% endfor %}
-                    </div>
-                </nav>
-                {% endif %}
-
-                <nav class="crm-deals-quick" aria-label="فیلتر وضعیت">
+            <div class="crm-deals-mob-toolbar-filters">
+                <nav class="crm-deals-quick crm-deals-bucket-nav" aria-label="وضعیت معامله">
                     <a href="?view={{ view_mode }}{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}{% if request.GET.stage %}&stage={{ request.GET.stage|urlencode }}{% endif %}"
                        class="crm-deals-quick-btn{% if not request.GET.bucket %} is-active{% endif %}">همه</a>
                     <a href="?view={{ view_mode }}&bucket=active{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}{% if request.GET.stage %}&stage={{ request.GET.stage|urlencode }}{% endif %}"
@@ -174,24 +164,48 @@
                        class="crm-deals-quick-btn{% if request.GET.bucket == 'lost' %} is-active{% endif %}">از دست رفته</a>
                 </nav>
 
-                {% if request.GET.q or request.GET.stage or request.GET.bucket or request.GET.sort and request.GET.sort != '-updated_at' %}
+                {% if deal_stages %}
+                <div class="crm-deals-mob-stage-block">
+                    <p class="crm-deals-mob-stage-label" id="crmDealsMobStageLabel">مرحله معامله</p>
+                    <nav class="crm-deal-path crm-deal-path--mob-chips" aria-labelledby="crmDealsMobStageLabel">
+                        <div class="crm-deal-path__track" role="list">
+                            <a href="?view={{ view_mode }}{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}{% if request.GET.bucket %}&bucket={{ request.GET.bucket|urlencode }}{% endif %}"
+                               class="crm-deal-path__chip crm-deal-path__chip--all{% if not request.GET.stage %} is-active{% endif %}"
+                               role="listitem"
+                               {% if not request.GET.stage %}aria-current="true"{% endif %}>
+                                <span>همه مراحل</span>
+                                <em>{{ stats.active|default:stats.total|to_persian_digits }}</em>
+                            </a>
+                            {% for s in deal_stages %}
+                            {% with cnt=stats.by_stage|dict_get:s|default:0 %}
+                            <a href="?view={{ view_mode }}{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}{% if request.GET.bucket %}&bucket={{ request.GET.bucket|urlencode }}{% endif %}&stage={{ s|urlencode }}"
+                               class="crm-deal-path__chip crm-deal-path__chip--stage{% if request.GET.stage == s %} is-active{% endif %}{% if not cnt %} is-empty{% endif %}"
+                               style="--stage-accent: {{ s|crm_deal_stage_dot:deal_stage_meta }}"
+                               role="listitem"
+                               {% if request.GET.stage == s %}aria-current="true"{% endif %}>
+                                <span>{{ s }}</span>
+                                <em>{{ cnt|to_persian_digits }}</em>
+                            </a>
+                            {% endwith %}
+                            {% endfor %}
+                        </div>
+                    </nav>
+                </div>
+                {% endif %}
+
+                {% if request.GET.q or request.GET.sort and request.GET.sort != '-updated_at' %}
                 <div class="crm-deals-mob-active-chips" aria-label="فیلترهای فعال">
                     {% if request.GET.q %}
                     <a href="?view={{ view_mode }}{% if request.GET.stage %}&stage={{ request.GET.stage|urlencode }}{% endif %}{% if request.GET.bucket %}&bucket={{ request.GET.bucket|urlencode }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort|urlencode }}{% endif %}" class="crm-deals-mob-chip">
                         <span>جستجو</span><i class="fas fa-times" aria-hidden="true"></i>
                     </a>
                     {% endif %}
-                    {% if request.GET.stage %}
-                    <a href="?view={{ view_mode }}{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}{% if request.GET.bucket %}&bucket={{ request.GET.bucket|urlencode }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort|urlencode }}{% endif %}" class="crm-deals-mob-chip">
-                        <span>{{ request.GET.stage }}</span><i class="fas fa-times" aria-hidden="true"></i>
+                    {% if request.GET.sort and request.GET.sort != '-updated_at' %}
+                    <a href="?view={{ view_mode }}{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}{% if request.GET.stage %}&stage={{ request.GET.stage|urlencode }}{% endif %}{% if request.GET.bucket %}&bucket={{ request.GET.bucket|urlencode }}{% endif %}" class="crm-deals-mob-chip">
+                        <span>مرتب‌سازی</span><i class="fas fa-times" aria-hidden="true"></i>
                     </a>
                     {% endif %}
-                    {% if request.GET.bucket %}
-                    <a href="?view={{ view_mode }}{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}{% if request.GET.stage %}&stage={{ request.GET.stage|urlencode }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort|urlencode }}{% endif %}" class="crm-deals-mob-chip">
-                        <span>{% if request.GET.bucket == 'active' %}فعال{% elif request.GET.bucket == 'closed' %}بسته‌شده{% elif request.GET.bucket == 'lost' %}از دست رفته{% elif request.GET.bucket == 'stale' %}نیازمند پیگیری{% else %}{{ request.GET.bucket }}{% endif %}</span><i class="fas fa-times" aria-hidden="true"></i>
-                    </a>
-                    {% endif %}
-                    <a href="{% url 'workspace:crm_deals' %}?view={{ view_mode }}" class="crm-deals-mob-chip crm-deals-mob-chip--clear">پاک کردن همه</a>
+                    <a href="{% url 'workspace:crm_deals' %}?view={{ view_mode }}{% if request.GET.stage %}&stage={{ request.GET.stage|urlencode }}{% endif %}{% if request.GET.bucket %}&bucket={{ request.GET.bucket|urlencode }}{% endif %}" class="crm-deals-mob-chip crm-deals-mob-chip--clear">پاک کردن همه</a>
                 </div>
                 {% endif %}
             </div>

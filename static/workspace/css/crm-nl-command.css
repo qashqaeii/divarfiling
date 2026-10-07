@@ -1075,3 +1075,132 @@
     color: var(--ws-text);
     line-height: 1.45;
 }
+
+/* Today mobile — compact inline composer (loads after closure; overrides 640px stack) */
+@media (max-width: 768px) {
+    .crm-today-mobile .crm-today-smart-anchor {
+        box-sizing: border-box;
+        width: 100%;
+        max-width: 100%;
+        padding: 0 0.75rem 0.35rem;
+        overflow: hidden;
+    }
+
+    .crm-today-mobile .crm-today-smart-anchor .crm-smart-command-wrap {
+        margin: 0 !important;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        overflow: hidden;
+    }
+
+    .crm-today-mobile .crm-today-smart-anchor .crm-smart-command {
+        padding: 0.45rem 0.5rem 0.5rem;
+        border-radius: 12px;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 52%, transparent);
+        box-shadow: none;
+        overflow: hidden;
+    }
+
+    .crm-today-mobile .crm-today-smart-anchor .crm-smart-command::before {
+        display: none;
+    }
+
+    .crm-today-mobile .crm-today-smart-anchor .crm-nl-command__head,
+    .crm-today-mobile .crm-today-smart-anchor .crm-nl-command__chips-head,
+    .crm-today-mobile .crm-today-smart-anchor .crm-nl-command__composer-foot {
+        display: none !important;
+    }
+
+    .crm-today-mobile .crm-today-smart-anchor .crm-nl-command__composer::before {
+        content: 'دستیار هوشمند';
+        display: block;
+        margin-bottom: 0.3rem;
+        font-size: 0.62rem;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        color: color-mix(in srgb, var(--ws-primary) 55%, var(--ws-text-muted));
+    }
+
+    .crm-today-mobile .crm-today-smart-anchor .crm-nl-command__composer-surface {
+        padding: 0.15rem;
+        border-radius: 10px;
+        background: var(--ws-surface);
+        border: 1px solid color-mix(in srgb, var(--ws-border) 65%, transparent);
+    }
+
+    .crm-today-mobile .crm-today-smart-anchor .crm-nl-command__composer-surface:focus-within {
+        border-color: color-mix(in srgb, var(--ws-primary) 32%, var(--ws-border));
+        box-shadow: 0 0 0 2px color-mix(in srgb, var(--ws-primary) 10%, transparent);
+    }
+
+    .crm-today-mobile .crm-today-smart-anchor .crm-nl-command__row {
+        flex-direction: row !important;
+        align-items: center !important;
+        align-self: stretch;
+        gap: 0.3rem !important;
+        min-height: 0 !important;
+        padding: 0.15rem 0.2rem 0.15rem 0.3rem !important;
+        border-radius: 8px;
+        background: transparent;
+    }
+
+    .crm-today-mobile .crm-today-smart-anchor .crm-nl-command__input-wrap {
+        flex: 1 1 auto !important;
+        width: auto !important;
+        min-width: 0;
+        align-items: center;
+        gap: 0.2rem;
+    }
+
+    .crm-today-mobile .crm-today-smart-anchor .crm-nl-command__input {
+        flex: 1 1 auto;
+        min-height: 2.4rem;
+        max-height: 2.4rem;
+        padding: 0.35rem 0.2rem;
+        font-size: max(16px, 0.78rem);
+        line-height: 1.35;
+        overflow: hidden;
+    }
+
+    .crm-today-mobile .crm-today-smart-anchor .crm-nl-command__input::placeholder {
+        font-size: 0.76rem;
+    }
+
+    .crm-today-mobile .crm-today-smart-anchor .crm-nl-command__voice {
+        width: 2.35rem;
+        height: 2.35rem;
+        min-width: 2.35rem;
+        min-height: 2.35rem;
+        border-radius: 8px;
+    }
+
+    .crm-today-mobile .crm-today-smart-anchor .crm-nl-command__voice-icon {
+        font-size: 0.88rem;
+    }
+
+    .crm-today-mobile .crm-today-smart-anchor .crm-nl-command__parse {
+        width: 2.35rem !important;
+        min-width: 2.35rem !important;
+        height: 2.35rem !important;
+        min-height: 2.35rem !important;
+        flex: 0 0 auto !important;
+        padding: 0 !important;
+        border-radius: 8px;
+    }
+
+    .crm-today-mobile .crm-today-smart-anchor .crm-nl-command__parse-label {
+        display: none !important;
+    }
+
+    .crm-today-mobile .crm-today-smart-anchor .crm-nl-command__parse-icon {
+        font-size: 0.82rem;
+    }
+
+    .crm-today-mobile .crm-today-smart-anchor .crm-nl-command__voice-status,
+    .crm-today-mobile .crm-today-smart-anchor .crm-nl-command__feedback {
+        margin-top: 0.3rem;
+        font-size: 0.72rem;
+        line-height: 1.4;
+    }
+}

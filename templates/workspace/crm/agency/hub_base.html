@@ -9,7 +9,7 @@
 <link rel="stylesheet" href="{% static 'workspace/css/crm-mobile-v2-agency.css' %}?v=1">
 {% endblock %}
 {% block crm_content %}
-<div class="agency-hub crm-page-chrome mk-filing-datasets" dir="rtl">
+<div class="agency-hub crm-page-chrome mk-filing-datasets{% if hub_section == 'space' %} agency-hub--space{% endif %}" dir="rtl">
     {% include "workspace/crm/agency/includes/hub_header.html" %}
     {% include "workspace/crm/agency/includes/hub_nav.html" %}
     <div class="agency-hub-body">

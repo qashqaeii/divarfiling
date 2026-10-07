@@ -1,0 +1,17 @@
+<div class="agency-space-toolbar__sort{% if ordering_variant == 'mob' %} agency-space-toolbar__sort--mob{% else %} agency-space-toolbar__sort--desk{% endif %}">
+    <select name="ordering" class="crm-input agency-space-toolbar__sort-select agency-space-ordering-select{% if ordering_variant == 'mob' %} agency-space-ordering-select--mob{% else %} agency-space-ordering-select--desk{% endif %}" aria-label="مرتب‌سازی"{% if ordering_variant == 'mob' %} data-space-ordering-mob{% else %} data-space-ordering-desk{% endif %}>
+        <option value="newest"{% if space_filters.ordering == 'newest' %} selected{% endif %}>جدیدترین</option>
+        <option value="oldest"{% if space_filters.ordering == 'oldest' %} selected{% endif %}>قدیمی‌ترین</option>
+        {% if space_tab == 'properties' or space_tab == 'crm' %}
+        <option value="price_asc"{% if space_filters.ordering == 'price_asc' %} selected{% endif %}>قیمت کمتر</option>
+        <option value="price_desc"{% if space_filters.ordering == 'price_desc' %} selected{% endif %}>قیمت بیشتر</option>
+        <option value="area_asc"{% if space_filters.ordering == 'area_asc' %} selected{% endif %}>متراژ کمتر</option>
+        <option value="area_desc"{% if space_filters.ordering == 'area_desc' %} selected{% endif %}>متراژ بیشتر</option>
+        <option value="most_copied"{% if space_filters.ordering == 'most_copied' %} selected{% endif %}>بیشترین کپی</option>
+        {% endif %}
+        {% if space_tab == 'contacts' %}
+        <option value="budget_asc"{% if space_filters.ordering == 'budget_asc' %} selected{% endif %}>بودجه کمتر</option>
+        <option value="budget_desc"{% if space_filters.ordering == 'budget_desc' %} selected{% endif %}>بودجه بیشتر</option>
+        {% endif %}
+    </select>
+</div>

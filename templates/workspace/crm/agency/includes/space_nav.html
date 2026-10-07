@@ -1,6 +1,6 @@
-<nav class="agency-space-nav" aria-label="بخش‌های فضای آژانس">
-    <a href="?tab=overview" class="agency-space-nav__item{% if space_tab == 'overview' %} is-active{% endif %}">نمای کلی</a>
-    <a href="?tab=properties" class="agency-space-nav__item{% if space_tab == 'properties' %} is-active{% endif %}">فایل‌ها</a>
-    <a href="?tab=contacts" class="agency-space-nav__item{% if space_tab == 'contacts' %} is-active{% endif %}">مخاطبین</a>
-    <a href="?tab=crm" class="agency-space-nav__item{% if space_tab == 'crm' %} is-active{% endif %}">CRM من</a>
+<nav class="agency-space-nav" aria-label="بخش‌های فضای آژانس" role="tablist">
+    <a href="?tab=overview" class="agency-space-nav__item{% if space_tab == 'overview' %} is-active{% endif %}" role="tab"{% if space_tab == 'overview' %} aria-current="page"{% endif %}>نمای کلی</a>
+    <a href="?tab=properties" class="agency-space-nav__item{% if space_tab == 'properties' %} is-active{% endif %}" role="tab"{% if space_tab == 'properties' %} aria-current="page"{% endif %}>فایل‌ها</a>
+    <a href="?tab=contacts" class="agency-space-nav__item{% if space_tab == 'contacts' %} is-active{% endif %}" role="tab"{% if space_tab == 'contacts' %} aria-current="page"{% endif %}>مخاطبین</a>
+    <a href="?tab=crm" class="agency-space-nav__item{% if space_tab == 'crm' %} is-active{% endif %}" role="tab"{% if space_tab == 'crm' %} aria-current="page"{% endif %}>CRM من</a>
 </nav>

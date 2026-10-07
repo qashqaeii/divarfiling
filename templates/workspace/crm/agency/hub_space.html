@@ -5,12 +5,13 @@
 {% block crm_extra_css %}
 {{ block.super }}
 <link rel="stylesheet" href="{% static 'workspace/css/agency-space.css' %}?v=44">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-agency-space-mobile-closure.css' %}?v=1">
 {% endblock %}
 
 {% block agency_hub_content %}
-<div class="agency-space agency-space-page" data-space-page>
+<div class="agency-space agency-space-page" data-space-page data-space-tab="{{ space_tab }}">
 
-    <header class="agency-space-page__head">
+    <header class="agency-space-page__head agency-space-page__head--desk">
         <div class="agency-space-page__head-copy">
             <h1 class="agency-page-head__title">فضای آژانس</h1>
             <p class="agency-page-head__sub">اشتراک فایل و مخاطب بین تیم — بدون انتقال مالکیت.</p>
@@ -36,6 +37,20 @@
     {% endif %}
 
     <section class="agency-panel agency-space-panel" aria-label="فضای آژانس">
+        {% if space_kpis %}
+        <p class="agency-space-page__mob-context" aria-label="خلاصه فضای آژانس">
+            <span class="agency-space-page__mob-context-title">فضای آژانس</span>
+            <span class="agency-space-page__mob-context-stats">
+                <span>{{ space_kpis.active_properties|intcomma }} فایل</span>
+                <span class="agency-space-page__mob-context-sep" aria-hidden="true">·</span>
+                <span>{{ space_kpis.active_contacts|intcomma }} مخاطب</span>
+            </span>
+        </p>
+        {% else %}
+        <p class="agency-space-page__mob-context" aria-label="فضای آژانس">
+            <span class="agency-space-page__mob-context-title">فضای آژانس</span>
+        </p>
+        {% endif %}
         {% include "workspace/crm/agency/includes/space_nav.html" %}
         {% include "workspace/crm/agency/includes/space_scope_nav.html" %}
 
@@ -53,26 +68,10 @@
                     <div class="agency-space-toolbar__search agency-space-search__field">
                         <span class="agency-space-search__icon" aria-hidden="true">{% include 'includes/icon_slot.html' with fa='fa-search' size='inline' only %}</span>
                         <input type="search" name="q" value="{{ space_filters.q }}" class="crm-input agency-space-toolbar__search-input" aria-label="جستجو"
-                            placeholder="{% if space_tab == 'properties' %}جستجو در عنوان، محله، منطقه، ناشر…{% elif space_tab == 'contacts' %}جستجو در نام، نیاز، محدوده، ناشر…{% else %}جستجو در فضای آژانس…{% endif %}">
+                            placeholder="{% if space_tab == 'properties' %}جستجو در فایل‌های آژانس…{% elif space_tab == 'contacts' %}جستجو در مخاطبین آژانس…{% else %}جستجو در فضای آژانس…{% endif %}">
                     </div>
 
-                    <div class="agency-space-toolbar__sort">
-                        <select name="ordering" class="crm-input agency-space-toolbar__sort-select" aria-label="مرتب‌سازی">
-                            <option value="newest"{% if space_filters.ordering == 'newest' %} selected{% endif %}>جدیدترین</option>
-                            <option value="oldest"{% if space_filters.ordering == 'oldest' %} selected{% endif %}>قدیمی‌ترین</option>
-                            {% if space_tab == 'properties' or space_tab == 'crm' %}
-                            <option value="price_asc"{% if space_filters.ordering == 'price_asc' %} selected{% endif %}>قیمت کمتر</option>
-                            <option value="price_desc"{% if space_filters.ordering == 'price_desc' %} selected{% endif %}>قیمت بیشتر</option>
-                            <option value="area_asc"{% if space_filters.ordering == 'area_asc' %} selected{% endif %}>متراژ کمتر</option>
-                            <option value="area_desc"{% if space_filters.ordering == 'area_desc' %} selected{% endif %}>متراژ بیشتر</option>
-                            <option value="most_copied"{% if space_filters.ordering == 'most_copied' %} selected{% endif %}>بیشترین کپی</option>
-                            {% endif %}
-                            {% if space_tab == 'contacts' %}
-                            <option value="budget_asc"{% if space_filters.ordering == 'budget_asc' %} selected{% endif %}>بودجه کمتر</option>
-                            <option value="budget_desc"{% if space_filters.ordering == 'budget_desc' %} selected{% endif %}>بودجه بیشتر</option>
-                            {% endif %}
-                        </select>
-                    </div>
+                    {% include "workspace/crm/agency/includes/space_ordering_select.html" with ordering_variant="desk" %}
 
                     <button type="button"
                             class="agency-space-toolbar__filters crm-files-adv-toggle agency-space-adv-toggle{% if space_filters_open %} is-open{% endif %}"
@@ -90,12 +89,13 @@
                             {% if space_tab == 'properties' %}<strong>{{ space_result_total|intcomma }}</strong> فایل{% elif space_tab == 'contacts' %}<strong>{{ space_result_total|intcomma }}</strong> مخاطب{% else %}<strong>{{ space_result_total|intcomma }}</strong> مورد{% endif %}
                         </p>
                         <div class="agency-space-view-toggle agency-space-toolbar__view" role="group" aria-label="نمای نتایج">
-                            <button type="button" class="agency-space-view-toggle__btn is-active" data-space-view="grid" title="شبکه" aria-label="نمای شبکه"><i class="fas fa-th-large" aria-hidden="true"></i></button>
-                            <button type="button" class="agency-space-view-toggle__btn" data-space-view="list" title="لیست" aria-label="نمای لیست"><i class="fas fa-list" aria-hidden="true"></i></button>
+                            <button type="button" class="agency-space-view-toggle__btn is-active" data-space-view="grid" title="کارت" aria-label="نمای کارت" aria-pressed="true"><i class="fas fa-th-large" aria-hidden="true"></i><span class="agency-space-view-toggle__label">کارت</span></button>
+                            <button type="button" class="agency-space-view-toggle__btn" data-space-view="list" title="لیست" aria-label="نمای لیست" aria-pressed="false"><i class="fas fa-list" aria-hidden="true"></i><span class="agency-space-view-toggle__label">لیست</span></button>
                         </div>
                     </div>
                 </div>
 
+                <button type="button" class="agency-space-mob-filters-backdrop" id="agencySpaceFilterBackdrop" hidden aria-hidden="true" tabindex="-1" data-space-filter-close></button>
                 {% include "workspace/crm/agency/includes/space_list_filters.html" %}
             </form>
         </div>
@@ -144,5 +144,5 @@
 
 {% block crm_js %}
 {{ block.super }}
-<script src="{% static 'workspace/js/agency-space.js' %}?v=19" defer></script>
+<script src="{% static 'workspace/js/agency-space.js' %}?v=20" defer></script>
 {% endblock %}

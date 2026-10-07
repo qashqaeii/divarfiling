@@ -93,11 +93,36 @@
     }
   }
 
+  function initSpaceOrderingSync() {
+    const desk = document.querySelector('[data-space-ordering-desk]');
+    const mob = document.querySelector('[data-space-ordering-mob]');
+    if (!desk || !mob) return;
+    const mq = window.matchMedia('(max-width: 767px)');
+    const syncDisabled = () => {
+      const mobile = mq.matches;
+      desk.disabled = mobile;
+      mob.disabled = !mobile;
+      if (mobile && mob.value !== desk.value) mob.value = desk.value;
+      if (!mobile && desk.value !== mob.value) desk.value = mob.value;
+    };
+    const onChange = (from, to) => {
+      if (!from || !to || from.disabled) return;
+      to.value = from.value;
+    };
+    desk.addEventListener('change', () => onChange(desk, mob));
+    mob.addEventListener('change', () => onChange(mob, desk));
+    syncDisabled();
+    mq.addEventListener?.('change', syncDisabled);
+  }
+
   function initSpaceExpandFilters() {
     const filterPanel = document.getElementById('agency-space-filters-panel');
     const filterToggle = document.getElementById('agencySpaceAdvToggle');
+    const backdrop = document.getElementById('agencySpaceFilterBackdrop');
     if (!filterPanel || filterPanel.dataset.bound === '1') return;
     filterPanel.dataset.bound = '1';
+
+    const mq = window.matchMedia('(max-width: 767px)');
 
     const setOpen = (open) => {
       if (filterToggle) {
@@ -107,6 +132,13 @@
       filterPanel.classList.toggle('is-open', open);
       if (open) {
         filterPanel.removeAttribute('hidden');
+        if (backdrop) {
+          backdrop.hidden = false;
+          backdrop.setAttribute('aria-hidden', 'false');
+        }
+        if (mq.matches) {
+          document.body.classList.add('agency-space-filter-open');
+        }
         if (typeof initCRMJalaliPickers === 'function') {
           initCRMJalaliPickers(filterPanel);
         }
@@ -115,11 +147,36 @@
         }
       } else {
         filterPanel.setAttribute('hidden', '');
+        if (backdrop) {
+          backdrop.hidden = true;
+          backdrop.setAttribute('aria-hidden', 'true');
+        }
+        document.body.classList.remove('agency-space-filter-open');
       }
     };
 
+    const close = () => setOpen(false);
+
     filterToggle?.addEventListener('click', () => {
       setOpen(!filterPanel.classList.contains('is-open'));
+    });
+
+    backdrop?.addEventListener('click', close);
+    filterPanel.querySelectorAll('[data-space-filter-close]').forEach((el) => {
+      el.addEventListener('click', close);
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && filterPanel.classList.contains('is-open') && mq.matches) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        close();
+      }
+    }, true);
+
+    const listForm = document.getElementById('agency-space-list-form');
+    listForm?.addEventListener('submit', () => {
+      if (mq.matches && filterPanel.classList.contains('is-open')) close();
     });
 
     if (filterPanel.classList.contains('is-open')) {
@@ -146,6 +203,7 @@
     });
 
     initSpaceExpandFilters();
+    initSpaceOrderingSync();
 
     const listForm = document.getElementById('agency-space-list-form');
     if (listForm && typeof initCRMMoneyInputs === 'function') {
@@ -338,6 +396,9 @@
         postJson(`/workspace/api/crm/agency/space/items/${id}/copy/`, {}).then((res) => {
           if (res.ok && res.data && res.data.target_url) {
             promoteCopyButton(btn, res.data.target_url);
+            if (typeof window.showToast === 'function') {
+              window.showToast('به CRM شما اضافه شد', 'success');
+            }
           } else {
             btn.dataset.copying = '0';
             setCopyLoading(btn, false);
@@ -358,7 +419,9 @@
       if (!grid) return;
       grid.classList.toggle('is-list-view', mode === 'list');
       viewBtns.forEach((b) => {
-        b.classList.toggle('is-active', b.dataset.spaceView === mode);
+        const on = b.dataset.spaceView === mode;
+        b.classList.toggle('is-active', on);
+        b.setAttribute('aria-pressed', on ? 'true' : 'false');
       });
       try {
         localStorage.setItem(viewKey, mode);

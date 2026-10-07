@@ -1,7 +1,8 @@
 {% extends "workspace/crm/agency/hub_base.html" %}
 {% load workspace_tags %}
 {% block agency_hub_content %}
-<div class="agency-page-head">
+<div class="agency-licenses-page">
+<div class="agency-page-head agency-licenses-page__head">
     <div>
         <h2 class="agency-page-head__title">مدیریت صندلی و لایسنس</h2>
         <p class="agency-page-head__sub">تخصیص، پیگیری وضعیت و انقضای صندلی‌های آژانس</p>
@@ -24,7 +25,7 @@
 
 <section class="agency-section">
     {% include "workspace/crm/agency/includes/section_head.html" with title="لیست صندلی‌ها" decor="team" %}
-    <div class="agency-panel agency-panel--flush">
+    <div class="agency-panel agency-panel--flush agency-panel--licenses">
         {% if license_pool %}
         <div class="agency-table-wrap">
             <table class="agency-table">
@@ -68,6 +69,40 @@
                 </tbody>
             </table>
         </div>
+        {% if not license_pool.available_licenses and not license_pool.assigned_by_user %}
+        <div class="agency-licenses-seat-empty">
+            {% include "workspace/crm/agency/includes/empty_state.html" with decor="team" title="صندلی‌ای یافت نشد" description="صندلی جدید با تمدید یا ارتقای پلن آژانس اضافه می‌شود." compact=True variant="inline" %}
+        </div>
+        {% else %}
+        <ul class="agency-card-list agency-card-list--seats" role="list">
+            {% for lic in license_pool.available_licenses %}
+            <li class="agency-seat-card agency-seat-card--open" role="listitem">
+                <div class="agency-seat-card__head">
+                    <strong class="agency-seat-card__num">صندلی #{{ lic.sequence }}</strong>
+                    {% include "workspace/crm/agency/includes/status_badge.html" with status="ok" label="آزاد" %}
+                </div>
+                <p class="agency-seat-card__hint">برای تخصیص به یک مشاور، از دکمه زیر استفاده کنید.</p>
+                <a href="{% url 'workspace:agency_hub_advisors' %}#invite" class="crm-btn crm-btn-primary crm-btn-sm agency-seat-card__cta">تخصیص لایسنس</a>
+            </li>
+            {% endfor %}
+            {% for uid, lic in license_pool.assigned_by_user.items %}
+            <li class="agency-seat-card agency-seat-card--assigned" role="listitem">
+                <div class="agency-seat-card__head">
+                    <strong class="agency-seat-card__num">صندلی #{{ lic.sequence }}</strong>
+                    {% include "workspace/crm/agency/includes/status_badge.html" with status="ok" label="فعال" %}
+                </div>
+                <div class="agency-seat-card__advisor">
+                    <span class="agency-table__avatar" aria-hidden="true">{{ lic.assigned_member.name|default:lic.assigned_member.username|slice:":1" }}</span>
+                    <div class="agency-seat-card__advisor-meta">
+                        <span class="agency-seat-card__advisor-name">{{ lic.assigned_member.name|default:lic.assigned_member.username }}</span>
+                        <span class="agency-seat-card__advisor-label">مشاور</span>
+                    </div>
+                </div>
+                <a href="{% url 'workspace:agency_hub_advisors' %}" class="crm-btn crm-btn-ghost crm-btn-sm agency-seat-card__cta">مدیریت مشاوران</a>
+            </li>
+            {% endfor %}
+        </ul>
+        {% endif %}
         {% if hub_seats and hub_seats.available == 0 and hub_seats.total > 0 %}
         <div class="agency-alert agency-alert--warn" style="margin:1rem;">
             <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='warning' size='inline' only %}</span>
@@ -79,4 +114,5 @@
         {% endif %}
     </div>
 </section>
+</div>
 {% endblock %}

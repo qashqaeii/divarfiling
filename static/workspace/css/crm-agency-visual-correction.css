@@ -1,0 +1,689 @@
+/* Agency Mobile — Visual Correction Pass (≤767px). Loads last. */
+
+@media (max-width: 767px) {
+    .agency-hub--closure .agency-hero {
+        max-height: 5.65rem;
+        overflow: hidden;
+        margin-bottom: 0.3rem !important;
+        padding: 0.45rem 0.65rem !important;
+        border: 1px solid color-mix(in srgb, var(--ws-border, #e2e8f0) 70%, transparent);
+        background: var(--ws-surface, #fff);
+    }
+
+    /* Single column: ws-content owns horizontal gutter — no double pad on body */
+    .agency-hub--closure .agency-hub-body {
+        padding-inline: 0 !important;
+        min-width: 0;
+    }
+
+    .agency-hub--space .agency-space-panel {
+        padding-inline: 0 !important;
+    }
+
+    .agency-hub--space .agency-space-overview-card,
+    .agency-hub--space .agency-space-overview__mosaic {
+        width: 100%;
+        max-width: none;
+        margin-inline: 0;
+    }
+
+    .agency-hub--space .agency-space-page__mob-context-title {
+        display: none;
+    }
+
+    .agency-hub--space .agency-space-page__mob-context {
+        margin-bottom: 0.35rem;
+        padding: 0;
+    }
+
+    .agency-hub--space .agency-space-page__mob-context-stats {
+        font-size: 0.75rem;
+    }
+
+    /* Dashboard — KPI + period */
+    .agency-dash-toolbar {
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.35rem 0.5rem;
+        margin-bottom: 0.4rem;
+    }
+
+    .agency-dash-toolbar__copy {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    .agency-dash .agency-page-head__title {
+        font-size: 1.05rem;
+        font-weight: 800;
+    }
+
+    .agency-period {
+        flex: 1 1 100%;
+        min-height: 2.75rem;
+        padding: 0.18rem;
+    }
+
+    .agency-period__btn {
+        min-height: 2.75rem;
+        font-size: 0.78rem;
+    }
+
+    .agency-kpi-strip--ref {
+        gap: 0.35rem !important;
+        margin-bottom: 0.45rem !important;
+    }
+
+    .agency-kpi-strip--ref .agency-kpi-v2 {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        grid-template-rows: auto auto;
+        align-items: center;
+        column-gap: 0.35rem;
+        padding: 0.4rem 0.5rem !important;
+        min-height: 3.65rem;
+        box-shadow: none;
+    }
+
+    .agency-kpi-v2__top {
+        grid-column: 1;
+        grid-row: 1;
+    }
+
+    .agency-kpi-v2__icon {
+        grid-column: 2;
+        grid-row: 1 / span 2;
+        opacity: 0.55;
+        transform: scale(0.85);
+    }
+
+    .agency-kpi-v2__label {
+        font-size: 0.72rem !important;
+        font-weight: 650;
+        color: var(--ws-text-muted, #64748b);
+    }
+
+    .agency-kpi-v2__value {
+        grid-column: 1;
+        grid-row: 2;
+        font-size: 1.15rem !important;
+        line-height: 1.1;
+    }
+
+    .agency-kpi-v2__sub {
+        display: none;
+    }
+
+    /* Dashboard performance rows */
+    .agency-card-list--perf {
+        gap: 0.35rem;
+    }
+
+    .agency-perf-row {
+        display: flex;
+        align-items: center;
+        gap: 0.55rem;
+        padding: 0.55rem 0.6rem;
+        min-height: 5.1rem;
+        border-radius: 12px;
+        border: 1px solid color-mix(in srgb, var(--ws-border, #e2e8f0) 80%, transparent);
+        background: var(--ws-surface, #fff);
+        text-decoration: none;
+        color: inherit;
+    }
+
+    .agency-perf-row__avatar {
+        flex-shrink: 0;
+    }
+
+    .agency-perf-row__body {
+        flex: 1 1 auto;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.12rem;
+    }
+
+    .agency-perf-row__top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.35rem;
+    }
+
+    .agency-perf-row__name {
+        font-size: 0.88rem;
+        font-weight: 800;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .agency-perf-row__status {
+        flex-shrink: 0;
+        font-size: 0.65rem;
+        font-weight: 700;
+        padding: 0.12rem 0.4rem;
+        border-radius: 999px;
+    }
+
+    .agency-perf-row__status--ok {
+        background: #ecfdf5;
+        color: #047857;
+    }
+
+    .agency-perf-row__status--muted {
+        background: #f1f5f9;
+        color: #64748b;
+    }
+
+    .agency-perf-row__role {
+        font-size: 0.72rem;
+    }
+
+    .agency-perf-row__metrics {
+        font-size: 0.68rem;
+        color: var(--ws-text-muted, #64748b);
+        line-height: 1.35;
+    }
+
+    .agency-perf-row__chev {
+        flex-shrink: 0;
+        font-size: 0.65rem;
+        opacity: 0.45;
+    }
+
+    .agency-dash-tip {
+        display: none;
+    }
+
+    /* Advisors — summary strip + filters */
+    .agency-members-manage .agency-kpi-strip--4 .agency-kpi-v2 {
+        min-height: 3.6rem;
+    }
+
+    .agency-members-filter {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        grid-template-areas:
+            "search filter"
+            "sheet sheet";
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.45rem 0.55rem;
+        margin-bottom: 0.35rem !important;
+    }
+
+    .agency-members-manage .agency-panel--flush {
+        margin-top: 0;
+    }
+
+    .agency-members-filter .agency-filter-bar__search {
+        grid-area: search;
+        min-width: 0;
+    }
+
+    .agency-members-filter__open {
+        grid-area: filter;
+    }
+
+    .agency-members-filter__backdrop,
+    .agency-members-filter__panel {
+        grid-area: sheet;
+    }
+
+    .agency-members-manage .agency-filter-bar.agency-members-filter {
+        margin-bottom: 0.35rem !important;
+    }
+
+    .agency-members-manage .agency-panel--flush {
+        margin-top: 0;
+    }
+
+    .agency-members-filter__open {
+        flex: 0 0 auto;
+        min-height: 2.65rem;
+        gap: 0.35rem;
+        position: relative;
+    }
+
+    .agency-members-filter__badge {
+        font-style: normal;
+        font-size: 0.62rem;
+        font-weight: 800;
+        min-width: 1.1rem;
+        height: 1.1rem;
+        padding: 0 0.25rem;
+        border-radius: 999px;
+        background: #7c3aed;
+        color: #fff;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .agency-members-filter__panel {
+        display: none;
+    }
+
+    .agency-members-filter__backdrop {
+        display: none;
+    }
+
+    body.agency-members-filter-open .agency-members-filter__backdrop {
+        display: block;
+        position: fixed;
+        inset: 0;
+        z-index: 198;
+        border: 0;
+        margin: 0;
+        padding: 0;
+        background: rgba(15, 23, 42, 0.42);
+    }
+
+    body.agency-members-filter-open .agency-members-filter__panel {
+        display: flex;
+        flex-direction: column;
+        position: fixed;
+        inset: auto 0 0 0;
+        z-index: 199;
+        max-height: min(88dvh, 520px);
+        border-radius: 18px 18px 0 0;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 70%, transparent);
+        background: var(--ws-surface, #fff);
+        box-shadow: 0 -12px 40px rgba(15, 23, 42, 0.14);
+        transform: translateY(0);
+    }
+
+    .agency-members-filter__head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.65rem 0.85rem;
+        border-bottom: 1px solid color-mix(in srgb, var(--ws-border) 55%, transparent);
+    }
+
+    .agency-members-filter__title {
+        margin: 0;
+        font-size: 0.92rem;
+        font-weight: 800;
+    }
+
+    .agency-members-filter__close {
+        border: 0;
+        background: transparent;
+        padding: 0.35rem;
+        color: var(--ws-text-muted, #64748b);
+    }
+
+    .agency-members-filter__body {
+        padding: 0.65rem 0.85rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.55rem;
+        overflow-y: auto;
+    }
+
+    .agency-members-filter__field {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    .agency-members-filter__label {
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: var(--ws-text-muted, #64748b);
+    }
+
+    .agency-members-filter__foot {
+        display: flex;
+        gap: 0.45rem;
+        padding: 0.65rem 0.85rem calc(0.65rem + env(safe-area-inset-bottom, 0px));
+        border-top: 1px solid color-mix(in srgb, var(--ws-border) 55%, transparent);
+    }
+
+    .agency-members-filter__foot .crm-btn {
+        flex: 1;
+        min-height: 2.75rem;
+        justify-content: center;
+    }
+
+    body.agency-members-filter-open {
+        overflow: hidden;
+    }
+
+    /* Advisor member cards */
+    .agency-member-card {
+        position: relative;
+        padding: 0.55rem 0.65rem;
+    }
+
+    .agency-member-card__head {
+        margin-bottom: 0.35rem;
+    }
+
+    .agency-member-card__meta {
+        margin-bottom: 0.35rem;
+    }
+
+    .agency-member-card__actions {
+        border-top: none;
+        padding-top: 0;
+        justify-content: flex-end;
+        gap: 0.25rem;
+    }
+
+    .agency-member-card__actions > a.crm-btn {
+        flex: 1;
+        justify-content: center;
+        min-height: 2.5rem;
+    }
+
+    .agency-member-card__actions > form .crm-btn[style*="color:#dc2626"],
+    .agency-member-card__actions > form button.crm-btn-ghost:last-child {
+        display: none;
+    }
+
+    .agency-member-card__overflow {
+        position: absolute;
+        top: 0.45rem;
+        inset-inline-start: 0.45rem;
+    }
+
+    .agency-member-card__overflow summary {
+        list-style: none;
+        width: 2rem;
+        height: 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        color: var(--ws-text-muted, #64748b);
+    }
+
+    .agency-member-card__overflow summary::-webkit-details-marker {
+        display: none;
+    }
+
+    .agency-member-card__overflow-menu {
+        position: absolute;
+        inset-inline-start: 0;
+        top: 100%;
+        z-index: 5;
+        min-width: 10.5rem;
+        padding: 0.35rem;
+        border-radius: 10px;
+        border: 1px solid var(--ws-border, #e2e8f0);
+        background: #fff;
+        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+    }
+
+    .agency-member-card__overflow-menu form,
+    .agency-member-card__overflow-menu button {
+        width: 100%;
+        text-align: start;
+    }
+
+    /* Space overview feeds */
+    .agency-space-overview-feed__link {
+        min-height: 4.25rem;
+        padding: 0.45rem 0;
+    }
+
+    .agency-space-overview-feed__media {
+        width: 3rem !important;
+        height: 3rem !important;
+        border-radius: 10px;
+        font-size: 0.95rem !important;
+    }
+
+    .agency-space-overview-feed__media img {
+        width: 3rem !important;
+        height: 3rem !important;
+    }
+
+    .agency-space-overview-feed__chips {
+        display: none;
+    }
+
+    .agency-space-overview-card__sub {
+        display: none;
+    }
+
+    .agency-space-overview-feed__price {
+        display: block;
+        font-size: 0.78rem;
+        font-weight: 800;
+        color: #0f172a;
+    }
+
+    .agency-space-overview-feed__title {
+        font-size: 0.84rem;
+        font-weight: 750;
+    }
+
+    .agency-space-overview-feed__meta {
+        font-size: 0.72rem;
+    }
+
+    /* Property cards — grid media height */
+    .agency-space-grid:not(.is-list-view) .agency-space-property-card__media {
+        aspect-ratio: auto;
+        max-height: 10.25rem;
+        min-height: 7rem;
+    }
+
+    .agency-space-grid:not(.is-list-view) .agency-space-property-card__media-fallback {
+        font-size: 1.25rem;
+        max-height: 10.25rem;
+    }
+
+    .agency-space-grid.is-list-view .agency-space-property-card__media {
+        width: 6.5rem;
+        max-height: 6.75rem;
+    }
+
+    /* Contact cards — lighter */
+    .agency-space-contact-card__tools,
+    .agency-space-contact-card__spec-grid,
+    .agency-space-contact-card__section-title,
+    .agency-space-contact-card__budget-panel,
+    .agency-space-contact-card__budget-list,
+    .agency-space-contact-card__share-hint,
+    .agency-space-contact-card__btn--outline {
+        display: none !important;
+    }
+
+    .agency-space-contact-card__pills .agency-space-contact-card__pill--visibility,
+    .agency-space-contact-card__pills .agency-space-contact-card__pill--share {
+        background: transparent;
+        border: none;
+        padding: 0;
+        font-size: 0.68rem;
+        color: var(--ws-text-muted, #64748b);
+    }
+
+    .agency-space-contact-card__priority-pill:not(.agency-space-contact-card__priority-pill--high) {
+        display: none;
+    }
+
+    .agency-space-contact-card__need {
+        padding-top: 0.35rem;
+    }
+
+    .agency-space-contact-card__budget-fallback--empty {
+        display: none;
+    }
+
+    .agency-space-contact-card__actions--list {
+        margin-top: 0.35rem;
+    }
+
+    .agency-space-contact-card__actions--list .agency-space-contact-card__btn--primary {
+        width: 100%;
+        justify-content: center;
+    }
+
+    /* CRM empty */
+    .agency-empty__actions--row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+        justify-content: center;
+        width: 100%;
+    }
+
+    .agency-space-empty--crm .agency-empty__actions--row .crm-btn-primary {
+        flex: 1 1 auto;
+    }
+
+    /* CRM tab — simplify chrome when empty */
+    .agency-space-page[data-space-tab="crm"] .agency-space-grid--empty ~ .agency-space-pager,
+    .agency-space-page[data-space-tab="crm"] .agency-space-grid--empty {
+        margin-top: 0;
+    }
+
+    .agency-space-page[data-space-tab="crm"] .agency-space-grid--empty + .agency-space-pager {
+        display: none;
+    }
+
+    .agency-space-page[data-space-tab="crm"]:has(.agency-space-grid--empty) .agency-space-toolbar__view {
+        opacity: 0.55;
+    }
+
+    /* Activity — filters + timeline */
+    .agency-activity-page__head .agency-page-head__sub {
+        display: none;
+    }
+
+    .agency-activity-page__filters.agency-filter-bar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.4rem;
+        margin-bottom: 0.5rem;
+        padding: 0.5rem 0.6rem;
+    }
+
+    .agency-activity-page__filters .agency-filter-bar__search {
+        flex: 0 0 auto;
+    }
+
+    .agency-activity-page__filter-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+        align-items: center;
+    }
+
+    .agency-activity-page__filter-actions .crm-btn-primary {
+        flex: 1 1 auto;
+        justify-content: center;
+        min-height: 2.65rem;
+    }
+
+    .agency-activity-page__timeline.agency-panel--timeline {
+        padding: 0.25rem 0.55rem 0.35rem;
+        border-radius: 14px;
+    }
+
+    .agency-timeline--hub .agency-timeline__item {
+        padding: 0.62rem 0;
+    }
+
+    .agency-timeline--hub .agency-timeline__icon--tone {
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: 11px;
+    }
+
+    .agency-timeline--hub .agency-timeline__rail {
+        right: 1.25rem;
+    }
+
+    .agency-timeline--hub .agency-timeline__action {
+        font-size: 0.84rem;
+    }
+
+    /* Licenses — head CTA, KPI dates, seat cards (table hidden ≤768px) */
+    .agency-licenses-page__head.agency-page-head {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.45rem;
+        margin-bottom: 0.55rem;
+    }
+
+    .agency-licenses-page__head .agency-page-head__sub {
+        display: none;
+    }
+
+    .agency-licenses-page__head .crm-btn {
+        width: 100%;
+        min-height: 2.75rem;
+        justify-content: center;
+        gap: 0.35rem;
+        line-height: 1.25;
+        padding-block: 0.55rem;
+    }
+
+    .agency-licenses-page .agency-kpi-strip--4 .agency-kpi-v2:nth-child(4) .agency-kpi-v2__value {
+        font-size: 0.78rem !important;
+        letter-spacing: -0.02em;
+        white-space: nowrap;
+    }
+
+    .agency-licenses-page .agency-seat-summary {
+        margin-bottom: 0.55rem;
+        padding: 0.55rem 0.65rem;
+    }
+
+    .agency-licenses-page .agency-panel--licenses .agency-card-list--seats {
+        padding: 0.5rem 0.55rem 0.6rem;
+        gap: 0.45rem;
+    }
+
+    .agency-licenses-page .agency-panel--licenses .agency-alert {
+        margin: 0.5rem 0.55rem 0.6rem !important;
+        font-size: 0.74rem;
+        line-height: 1.45;
+    }
+
+    .agency-licenses-page .agency-licenses-seat-empty {
+        display: block;
+        padding: 0.65rem 0.55rem 0.75rem;
+    }
+}
+
+@media (min-width: 768px) {
+    .agency-members-filter__open,
+    .agency-members-filter__backdrop {
+        display: none !important;
+    }
+
+    .agency-members-filter__panel {
+        display: contents !important;
+    }
+
+    .agency-members-filter__head,
+    .agency-members-filter__foot,
+    .agency-members-filter__label {
+        display: none !important;
+    }
+
+    .agency-members-filter__body {
+        display: contents !important;
+    }
+
+    .agency-members-filter__field {
+        display: contents;
+    }
+
+    .agency-members-filter {
+        flex-wrap: wrap;
+    }
+
+    .agency-member-card__overflow {
+        display: none;
+    }
+}

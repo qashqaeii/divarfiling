@@ -10,7 +10,11 @@ from django.views.generic import TemplateView
 from workspace.crm_views import CRMTeamView, CRMContextMixin
 from workspace.mixins_agency import AgencyOwnerRequiredMixin, AgencyTeamHubRequiredMixin
 from workspace.services.agency_hub import build_dashboard_context, hub_base_context
-from workspace.services.agency_hub_nav import build_hub_nav, build_settings_advanced_tabs
+from workspace.services.agency_hub_nav import (
+    build_hub_nav,
+    build_settings_advanced_tabs,
+    partition_hub_nav,
+)
 from workspace.services.agency_members import build_members_dashboard
 from workspace.services.agency_seats import list_available_seats
 from workspace.services.agency_team_routes import redirect_after_team_action
@@ -20,11 +24,15 @@ def _hub_shell_context(request, hub_section: str) -> dict:
     from workspace.services.agency_activity import EVENT_TYPE_LABELS
 
     ctx = hub_base_context(request.user)
+    hub_nav = build_hub_nav(request.user)
+    hub_nav_primary, hub_nav_more = partition_hub_nav(hub_nav)
     ctx.update({
         'crm_section': 'agency',
         'hub_section': hub_section,
         'agency_event_labels': EVENT_TYPE_LABELS,
-        'hub_nav': build_hub_nav(request.user),
+        'hub_nav': hub_nav,
+        'hub_nav_primary': hub_nav_primary,
+        'hub_nav_more': hub_nav_more,
         'agency_team_action_url': reverse('workspace:agency_team_action'),
         'crm_team_url': reverse('workspace:agency_team_action'),
     })

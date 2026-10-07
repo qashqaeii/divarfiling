@@ -1460,6 +1460,9 @@
     .crm-msg-rail {
         grid-column: 1 / -1;
         flex-direction: row;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
         border-radius: var(--m-radius-sm);
     }
 
@@ -1468,15 +1471,29 @@
     .crm-msg-folders {
         flex-direction: row;
         flex: 1;
-        overflow-x: auto;
+        min-width: 0;
+        overflow-x: hidden;
         overflow-y: hidden;
         padding: 0.4rem;
         gap: 0.35rem;
+        scrollbar-width: none;
+    }
+
+    .crm-msg-folders::-webkit-scrollbar {
+        display: none;
     }
 
     .crm-msg-folder {
-        flex: 0 0 auto;
-        min-width: 9.5rem;
+        flex: 1 1 0;
+        min-width: 0;
+        padding: 0.45rem 0.35rem;
+    }
+
+    .crm-msg-folder-copy strong {
+        display: block;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
     .crm-msg-folder.active { box-shadow: inset 0 -3px 0 var(--m-accent); }

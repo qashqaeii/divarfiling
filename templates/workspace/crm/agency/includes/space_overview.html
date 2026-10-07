@@ -23,17 +23,13 @@
                         </span>
                         <span class="agency-space-overview-feed__body">
                             <span class="agency-space-overview-feed__title">{{ item.property.title }}</span>
-                            <span class="agency-space-overview-feed__meta">
-                                <span class="agency-space-overview-feed__publisher">{{ item.publisher.name }}</span>
-                                <span class="agency-space-overview-feed__dot" aria-hidden="true">·</span>
-                                <time>{{ item.published_at_display }}</time>
-                            </span>
-                            {% if item.property.price_label or item.property.region %}
-                            <span class="agency-space-overview-feed__chips">
-                                {% if item.property.price_label %}<span class="agency-space-overview-chip agency-space-overview-chip--price">{{ item.property.price_label }}</span>{% endif %}
-                                {% if item.property.region %}<span class="agency-space-overview-chip">{{ item.property.region|truncatechars:32 }}</span>{% endif %}
-                            </span>
+                            {% if item.property.price_label %}
+                            <span class="agency-space-overview-feed__price">{{ item.property.price_label }}</span>
                             {% endif %}
+                            <span class="agency-space-overview-feed__meta">
+                                {% if item.property.region %}<span>{{ item.property.region|truncatechars:28 }}</span><span class="agency-space-overview-feed__dot" aria-hidden="true">·</span>{% endif %}
+                                <span class="agency-space-overview-feed__publisher">{{ item.publisher.name }}</span>
+                            </span>
                         </span>
                         <i class="fas fa-chevron-left agency-space-overview-feed__chev" aria-hidden="true"></i>
                     </a>

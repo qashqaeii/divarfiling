@@ -1,0 +1,447 @@
+/* Agency Hub — global mobile closure (≤767px). Loads after crm-mobile-v2-agency.css */
+
+@media (max-width: 767px) {
+    .agency-hub--closure {
+        overflow-x: clip;
+        gap: 0 !important;
+        padding-bottom: calc(4.75rem + env(safe-area-inset-bottom, 0px));
+    }
+
+    .agency-hub--closure .agency-hub-body {
+        padding-inline: 0.75rem;
+        min-width: 0;
+    }
+
+    .agency-hub--space .agency-hub-body {
+        padding-inline: 0;
+    }
+
+    /* Compact agency identity bar (all hub sections including Space) */
+    .agency-hub--closure .agency-hero {
+        margin: 0 0 0.35rem;
+        padding: 0.5rem 0.65rem;
+        gap: 0.5rem;
+        flex-direction: row;
+        align-items: center;
+        flex-wrap: wrap;
+        border-radius: 14px;
+        box-shadow: none;
+    }
+
+    .agency-hub--closure .agency-hero__brand {
+        flex: 1 1 auto;
+        min-width: 0;
+        gap: 0.5rem;
+    }
+
+    .agency-hub--closure .agency-hero__avatar {
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: 10px;
+    }
+
+    .agency-hub--closure .agency-hero__avatar-img {
+        width: 2.5rem;
+        height: 2.5rem;
+    }
+
+    .agency-hub--closure .agency-hero__eyebrow,
+    .agency-hub--closure .agency-hero__badges,
+    .agency-hub--closure .agency-hero__seat-meter {
+        display: none;
+    }
+
+    .agency-hub--closure .agency-hero__title {
+        font-size: 0.92rem;
+        font-weight: 800;
+        line-height: 1.25;
+        margin: 0;
+    }
+
+    .agency-hub--closure .agency-hero__end {
+        width: auto;
+        flex: 0 0 auto;
+        flex-direction: row;
+        align-items: center;
+        gap: 0.35rem;
+    }
+
+    .agency-hub--closure .agency-hero__seats {
+        padding: 0;
+        border: none;
+        background: transparent;
+    }
+
+    .agency-hub--closure .agency-hero__seats-kpi {
+        font-size: 0.68rem;
+        white-space: nowrap;
+    }
+
+    .agency-hub--closure .agency-hero__role {
+        margin: 0;
+        font-size: 0.68rem;
+        font-weight: 600;
+        color: var(--ws-text-muted, #64748b);
+        line-height: 1.2;
+    }
+
+    .agency-hub--closure .agency-hero__actions {
+        display: none;
+    }
+
+    /* Hub navigation */
+    .agency-hub-nav__track--desk {
+        display: none;
+    }
+
+    .agency-hub-nav__mobile {
+        display: flex;
+        align-items: stretch;
+        gap: 0.35rem;
+        margin: 0 0 0.45rem;
+        min-width: 0;
+    }
+
+    .agency-hub-nav__primary {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+        flex: 1 1 auto;
+        gap: 0.2rem;
+        padding: 0.2rem;
+        border-radius: 12px;
+        border: 1px solid color-mix(in srgb, var(--ws-border, #e2e8f0) 65%, transparent);
+        background: var(--ws-surface, #fff);
+        min-width: 0;
+    }
+
+    .agency-hub-nav__primary-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.12rem;
+        min-height: 2.75rem;
+        padding: 0.25rem 0.15rem;
+        border-radius: 9px;
+        text-decoration: none;
+        color: var(--ws-text-muted, #64748b);
+        font-size: 0.62rem;
+        font-weight: 750;
+        text-align: center;
+    }
+
+    .agency-hub-nav__primary-item.is-active {
+        color: #6d28d9;
+        background: color-mix(in srgb, #7c3aed 10%, #fff);
+        box-shadow: inset 0 0 0 1px color-mix(in srgb, #7c3aed 16%, transparent);
+    }
+
+    .agency-hub-nav__more-btn {
+        flex: 0 0 auto;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.12rem;
+        min-width: 3.1rem;
+        min-height: 2.75rem;
+        padding: 0.25rem 0.35rem;
+        border-radius: 12px;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 65%, transparent);
+        background: var(--ws-surface, #fff);
+        color: var(--ws-text-muted);
+        font-size: 0.62rem;
+        font-weight: 750;
+        cursor: pointer;
+    }
+
+    .agency-hub-nav-sheet.is-open {
+        display: block;
+    }
+
+    .agency-hub-nav-sheet[hidden] {
+        display: none !important;
+    }
+
+    .agency-hub-nav-sheet__links {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        padding: 0.35rem 0.75rem calc(0.75rem + env(safe-area-inset-bottom, 0px));
+    }
+
+    .agency-hub-nav-sheet__link {
+        display: flex;
+        align-items: center;
+        gap: 0.55rem;
+        min-height: 2.85rem;
+        padding: 0.45rem 0.55rem;
+        border-radius: 12px;
+        text-decoration: none;
+        color: #334155;
+        font-weight: 700;
+        font-size: 0.82rem;
+    }
+
+    .agency-hub-nav-sheet__link.is-active {
+        background: color-mix(in srgb, #7c3aed 8%, #fff);
+        color: #6d28d9;
+    }
+
+    .agency-hub-nav-sheet__icon {
+        width: 1.75rem;
+        display: inline-flex;
+        justify-content: center;
+    }
+
+    .agency-hub-nav-sheet__chev {
+        margin-inline-start: auto;
+        font-size: 0.65rem;
+        opacity: 0.45;
+    }
+
+    /* Page heads — avoid duplicate titles under workspace topbar */
+    .agency-dash .agency-dash-toolbar .agency-page-head__sub,
+    .agency-page-head__sub {
+        display: none;
+    }
+
+    .agency-dash .agency-page-head__title,
+    .agency-page-head__title {
+        font-size: 1rem;
+        margin: 0;
+    }
+
+    .agency-dash-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.45rem;
+        margin-bottom: 0.45rem;
+    }
+
+    .agency-period {
+        display: flex;
+        gap: 0.25rem;
+        padding: 0.2rem;
+        border-radius: 12px;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 60%, transparent);
+        background: var(--ws-surface, #fff);
+    }
+
+    .agency-period__btn {
+        flex: 1;
+        min-height: 2.65rem;
+        border-radius: 9px;
+        font-size: 0.75rem;
+        font-weight: 750;
+        text-align: center;
+    }
+
+    .agency-kpi-strip--ref {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 0.4rem;
+        margin-bottom: 0.55rem;
+    }
+
+    .agency-kpi-strip--ref .agency-kpi-v2 {
+        padding: 0.45rem 0.5rem;
+        border-radius: 12px;
+        min-height: 0;
+    }
+
+    .agency-kpi-v2__value {
+        font-size: 1.1rem !important;
+    }
+
+    .agency-kpi-v2__label {
+        font-size: 0.68rem;
+    }
+
+    .agency-dash-tip {
+        margin-top: 0.5rem;
+        padding: 0.55rem 0.65rem;
+        font-size: 0.72rem;
+    }
+
+    /* Settings hub */
+    .agency-settings-grid {
+        grid-template-columns: 1fr !important;
+        gap: 0.55rem;
+    }
+
+    .agency-settings-card {
+        border-radius: 14px;
+        padding: 0.85rem;
+    }
+
+    .agency-settings-list a {
+        min-height: 2.85rem;
+    }
+
+    /* Space management */
+    .agency-space-manage {
+        padding: 0;
+    }
+
+    .agency-space-manage .agency-page-head {
+        margin-bottom: 0.5rem;
+    }
+
+    .agency-space-manage .agency-space-kpis {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.35rem;
+        margin-bottom: 0.55rem;
+    }
+
+    .agency-space-subfilters {
+        display: flex;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        gap: 0.3rem;
+        margin-bottom: 0.55rem;
+        padding-bottom: 0.15rem;
+    }
+
+    .agency-space-subfilters::-webkit-scrollbar {
+        display: none;
+    }
+
+    .agency-space-subfilters .crm-btn {
+        flex: 0 0 auto;
+        white-space: nowrap;
+        min-height: 2.5rem;
+    }
+
+    /* Invite modal → bottom sheet */
+    #agencyInviteModal .ws-modal-panel,
+    #modal-hub-invite .ws-modal-panel {
+        width: 100%;
+        max-width: 100%;
+        max-height: 92dvh;
+        border-radius: 18px 18px 0 0;
+        margin-top: auto;
+    }
+
+    #modal-agency-space-publish .ws-modal-panel {
+        width: 100%;
+        max-width: 100%;
+        max-height: 92dvh;
+        border-radius: 18px 18px 0 0;
+        margin-top: auto;
+    }
+
+    /* Team tabs inside hub */
+    .agency-team-tab {
+        margin-inline: -0.75rem;
+        padding-inline: 0.75rem;
+        min-width: 0;
+        overflow-x: clip;
+    }
+
+    .agency-team-tab .crm-team-tab-v2-row,
+    .agency-team-tab .crm-team-subnav {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        flex-wrap: nowrap;
+    }
+
+    .agency-team-tab .crm-team-msg-card,
+    .agency-team-tab .crm-team-ann-card {
+        border-radius: 14px;
+    }
+
+    .agency-team-tab .crm-msg-hub--studio {
+        min-width: 0;
+        max-width: 100%;
+    }
+
+    .agency-team-tab .crm-msg-shell,
+    .agency-team-tab .crm-msg-rail {
+        min-width: 0;
+        max-width: 100%;
+    }
+
+    .agency-team-tab .crm-msg-folders {
+        overflow-x: hidden;
+        scrollbar-width: none;
+    }
+
+    .agency-team-tab .crm-msg-folders::-webkit-scrollbar {
+        display: none;
+    }
+
+    .agency-team-tab .crm-msg-folder {
+        flex: 1 1 0;
+        min-width: 0;
+    }
+
+    body.agency-hub-nav-sheet-open {
+        overflow: hidden;
+    }
+}
+
+@media (min-width: 768px) {
+    .agency-hub-nav__mobile,
+    .agency-hub-nav-sheet {
+        display: none !important;
+    }
+}
+
+/* Advisor 360 — outside hub shell */
+@media (max-width: 767px) {
+    .agency-advisor360 {
+        overflow-x: clip;
+        padding: 0 0.75rem calc(4.75rem + env(safe-area-inset-bottom, 0px));
+    }
+
+    .agency-advisor360 .a360-data-view .agency-table-wrap {
+        display: none;
+    }
+
+    .agency-advisor360 .a360-card-list {
+        display: grid;
+        gap: 0.5rem;
+    }
+
+    .agency-advisor360 .advisor360-tabs {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        flex-wrap: nowrap;
+    }
+
+    .agency-advisor360 .advisor360-kpi-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+
+    /* Space detail — CRM action earlier on mobile */
+    .agency-space-detail__sticky-bar {
+        position: sticky;
+        bottom: calc(4.25rem + env(safe-area-inset-bottom, 0px));
+        z-index: 22;
+        padding: 0.45rem 0.75rem;
+        background: color-mix(in srgb, var(--ws-bg, #f4f6fb) 94%, #fff);
+        border-top: 1px solid color-mix(in srgb, var(--ws-border) 45%, transparent);
+    }
+
+    .agency-space-pro-hero__mesh {
+        opacity: 0.35;
+    }
+
+    .agency-space-pro-hero__body {
+        padding: 0.85rem 0.9rem !important;
+    }
+
+    .agency-space-property-detail__title,
+    .agency-space-contact-detail__name {
+        font-size: 1.15rem !important;
+    }
+
+    .agency-space-property-detail__gallery-main {
+        border-radius: 12px;
+        max-height: 52vw;
+    }
+}

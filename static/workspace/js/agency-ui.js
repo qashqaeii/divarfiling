@@ -319,11 +319,37 @@
     document.querySelectorAll(SEARCH_GUARD_SELECTOR).forEach(bindSearchAutofillGuard);
   }
 
+  function initAgencyMembersFilterSheet() {
+    var openBtn = document.getElementById('agencyMemberFilterOpen');
+    var panel = document.getElementById('agencyMemberFilterPanel');
+    var backdrop = document.getElementById('agencyMemberFilterBackdrop');
+    if (!openBtn || !panel) return;
+
+    function setOpen(open) {
+      document.body.classList.toggle('agency-members-filter-open', open);
+      openBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    }
+
+    openBtn.addEventListener('click', function () {
+      setOpen(true);
+    });
+    document.querySelectorAll('[data-agency-members-filter-close]').forEach(function (el) {
+      el.addEventListener('click', function () { setOpen(false); });
+    });
+    window.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && document.body.classList.contains('agency-members-filter-open')) {
+        setOpen(false);
+      }
+    });
+  }
+
   function initMemberFilters() {
     var search = document.getElementById('agencyMemberSearch');
     var statusF = document.getElementById('agencyMemberStatusFilter');
     var licenseF = document.getElementById('agencyMemberLicenseFilter');
+    var sortF = document.getElementById('agencyMemberSort');
     var clearBtn = document.getElementById('agencyMemberFilterClear');
+    var badge = document.getElementById('agencyMemberFilterBadge');
     var empty = document.getElementById('agencyMembersFilterEmpty');
     if (!search) return;
 
@@ -331,12 +357,29 @@
 
     var userEdited = false;
 
+    function activeFilterCount() {
+      var n = 0;
+      if (statusF && statusF.value) n++;
+      if (licenseF && licenseF.value) n++;
+      if (sortF && sortF.value && sortF.value !== 'name') n++;
+      return n;
+    }
+
     function hasActiveFilters() {
-      return !!(search.value.trim() || (statusF && statusF.value) || (licenseF && licenseF.value));
+      return !!(search.value.trim() || activeFilterCount());
     }
 
     function updateClearBtn() {
       if (clearBtn) clearBtn.hidden = !hasActiveFilters();
+      if (badge) {
+        var n = activeFilterCount();
+        if (n > 0) {
+          badge.hidden = false;
+          badge.textContent = String(n);
+        } else {
+          badge.hidden = true;
+        }
+      }
     }
 
     function checkEmpty() {
@@ -369,6 +412,7 @@
       search.value = '';
       if (statusF) statusF.value = '';
       if (licenseF) licenseF.value = '';
+      if (sortF) sortF.value = 'name';
       filterMembers();
       search.focus();
     }
@@ -387,6 +431,7 @@
     });
     if (statusF) statusF.addEventListener('change', filterMembers);
     if (licenseF) licenseF.addEventListener('change', filterMembers);
+    if (sortF) sortF.addEventListener('change', filterMembers);
     if (clearBtn) clearBtn.addEventListener('click', resetFilters);
 
     search.value = '';
@@ -441,6 +486,51 @@
     apply();
   }
 
+  function initAgencyHubNavMoreSheet() {
+    var sheet = document.getElementById('agencyHubNavSheet');
+    var openBtn = document.getElementById('agencyHubNavMoreBtn');
+    if (!sheet || !openBtn) return;
+
+    var mq = window.matchMedia('(max-width: 767px)');
+
+    function setOpen(open) {
+      if (!mq.matches) {
+        sheet.hidden = true;
+        sheet.classList.remove('is-open');
+        sheet.setAttribute('aria-hidden', 'true');
+        openBtn.setAttribute('aria-expanded', 'false');
+        document.body.classList.remove('agency-hub-nav-sheet-open');
+        return;
+      }
+      sheet.hidden = !open;
+      sheet.classList.toggle('is-open', open);
+      sheet.setAttribute('aria-hidden', open ? 'false' : 'true');
+      openBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      document.body.classList.toggle('agency-hub-nav-sheet-open', open);
+    }
+
+    openBtn.addEventListener('click', function () {
+      setOpen(!sheet.classList.contains('is-open'));
+    });
+
+    sheet.querySelectorAll('[data-agency-hub-nav-more-close]').forEach(function (el) {
+      el.addEventListener('click', function () {
+        setOpen(false);
+      });
+    });
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && sheet.classList.contains('is-open')) {
+        e.preventDefault();
+        setOpen(false);
+      }
+    }, true);
+
+    mq.addEventListener?.('change', function () {
+      if (!mq.matches) setOpen(false);
+    });
+  }
+
   function initAdvisor360ExportMenus() {
     document.querySelectorAll('.a360-export').forEach(function (wrap) {
       wrap.addEventListener('toggle', function () {
@@ -459,11 +549,13 @@
   }
 
   document.addEventListener('DOMContentLoaded', function () {
+    initAgencyHubNavMoreSheet();
     initAgencyInviteModal();
     initInvitePhonePreview();
     initModalInvitePreview();
     initStickyStepFooter();
     initNavScrollHint();
+    initAgencyMembersFilterSheet();
     initMemberFilters();
     initSearchAutofillGuards();
     initAdvisor360ActivityFilters();

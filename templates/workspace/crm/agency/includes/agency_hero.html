@@ -11,6 +11,7 @@
         <div class="agency-hero__identity">
             <p class="agency-hero__eyebrow">مدیریت آژانس</p>
             <h1 class="agency-hero__title">{{ hub_agency.name|default:"آژانس" }}</h1>
+            {% if hub_member_role %}<p class="agency-hero__role">{{ hub_member_role }}</p>{% endif %}
             {% if hub_subscription %}
             <div class="agency-hero__badges">
                 <span class="agency-hub-chip agency-hub-chip--plan">

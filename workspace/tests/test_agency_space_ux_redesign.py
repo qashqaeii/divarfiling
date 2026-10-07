@@ -1,4 +1,5 @@
 """Agency Space UX — tab/scope/filter parsing."""
+from workspace.services.agency_hub_nav import partition_hub_nav
 from workspace.services.agency_space_params import (
     SpaceListFilters,
     parse_space_list_filters,
@@ -13,6 +14,18 @@ from workspace.models import CRMProperty
 
 
 class AgencySpaceUxNavTests(AgencySpaceTestBase):
+    def test_partition_hub_nav_primary_order(self):
+        nav = [
+            ('dashboard', 'داشبورد', '/d/'),
+            ('advisors', 'مشاوران', '/a/'),
+            ('space', 'فضا', '/s/'),
+            ('inbox', 'صندوق', '/i/'),
+            ('settings', 'تنظیمات', '/set/'),
+        ]
+        primary, more = partition_hub_nav(nav)
+        self.assertEqual([k for k, _, _ in primary], ['dashboard', 'advisors', 'space'])
+        self.assertEqual([k for k, _, _ in more], ['inbox', 'settings'])
+
     def test_overview_tab_alias(self):
         f = parse_space_list_filters({'tab': 'all'})
         self.assertEqual(f.normalized_tab(), 'overview')

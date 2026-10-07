@@ -9,7 +9,7 @@ from django.views.generic import TemplateView
 
 from workspace.constants import CRM_PROPERTIES, CRM_TYPES, PROPERTY_DEAL_MODES
 from workspace.mixins_agency_space import AgencySpaceFeatureMixin
-from workspace.services.agency_hub_nav import build_hub_nav
+from workspace.services.agency_hub_nav import build_hub_nav, partition_hub_nav
 from workspace.services.agency_hub import hub_base_context
 from workspace.services.agency_space_access import (
     can_moderate_agency_space,
@@ -43,10 +43,14 @@ from workspace.services.crm_scope import agency_members
 
 def _hub_shell(request, hub_section: str) -> dict:
     ctx = hub_base_context(request.user)
+    hub_nav = build_hub_nav(request.user)
+    hub_nav_primary, hub_nav_more = partition_hub_nav(hub_nav)
     ctx.update({
         'crm_section': 'agency',
         'hub_section': hub_section,
-        'hub_nav': build_hub_nav(request.user),
+        'hub_nav': hub_nav,
+        'hub_nav_primary': hub_nav_primary,
+        'hub_nav_more': hub_nav_more,
     })
     return ctx
 

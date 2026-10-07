@@ -9,6 +9,24 @@ from workspace.services.crm_agency_features import is_agency_feature_enabled
 from workspace.services.crm_scope import can_manage_team, can_view_team_inbox, get_membership
 
 
+# Mobile primary rail — order matters; only keys present in build_hub_nav() are shown.
+HUB_NAV_MOBILE_PRIMARY_KEYS: tuple[str, ...] = (
+    'dashboard',
+    'advisors',
+    'space',
+    'activity',
+)
+
+
+def partition_hub_nav(nav: list[tuple[str, str, str]]) -> tuple[list[tuple[str, str, str]], list[tuple[str, str, str]]]:
+    """Split hub nav into primary mobile rail vs overflow (settings, inbox, …)."""
+    by_key = {key: (key, label, url) for key, label, url in nav}
+    primary = [by_key[k] for k in HUB_NAV_MOBILE_PRIMARY_KEYS if k in by_key]
+    primary_keys = {item[0] for item in primary}
+    secondary = [item for item in nav if item[0] not in primary_keys]
+    return primary, secondary
+
+
 def build_hub_nav(user) -> list[tuple[str, str, str]]:
     agency, _sub = resolve_managed_agency(user)
     if not agency:

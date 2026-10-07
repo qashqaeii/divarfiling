@@ -1,0 +1,21 @@
+{% load advisor360_tags crm_tags humanize %}
+<ul class="agency-timeline agency-timeline--ref agency-timeline--hub" role="list">
+    {% for ev in events %}
+    <li class="agency-timeline__item agency-timeline__item--{{ ev.event_type|agency_hub_event_tone }}" role="listitem">
+        <span class="agency-timeline__rail" aria-hidden="true"></span>
+        <span class="agency-timeline__icon agency-timeline__icon--tone" aria-hidden="true">
+            {% with icon_decor=ev.event_type|agency_hub_event_icon %}{% include 'includes/icon_slot.html' with decor=icon_decor size='xs' only %}{% endwith %}
+        </span>
+        <div class="agency-timeline__body">
+            <p class="agency-timeline__action">{{ agency_event_labels|dict_get:ev.event_type }}</p>
+            <p class="agency-timeline__meta">
+                <span class="agency-timeline__actor">{{ ev.actor.get_full_name|default:ev.actor.phone }}</span>
+                {% with obj_label=ev.object_type|agency_hub_object_label %}
+                {% if obj_label %}<span class="agency-timeline__dot" aria-hidden="true">·</span><span class="agency-timeline__ref">{{ obj_label }}</span>{% endif %}
+                {% endwith %}
+            </p>
+        </div>
+        <time class="agency-timeline__time" datetime="{{ ev.created_at|date:'c' }}">{{ ev.created_at|naturaltime }}</time>
+    </li>
+    {% endfor %}
+</ul>

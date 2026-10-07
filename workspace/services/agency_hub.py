@@ -17,23 +17,28 @@ from workspace.services.agency_entitlement import (
 from workspace.services.agency_members import build_members_dashboard
 from workspace.services.agency_seats import get_member_seat
 from workspace.services.crm_agency_tv import _agency_logo_url
+from workspace.services.crm_scope import get_membership
 
 
 def hub_base_context(user) -> dict[str, Any]:
     agency, sub = resolve_managed_agency(user)
+    membership = get_membership(user)
     if not agency:
-        from workspace.services.crm_scope import can_manage_team, get_membership
+        from workspace.services.crm_scope import can_manage_team
 
-        membership = get_membership(user)
         if membership and membership.is_active and can_manage_team(user):
             agency = membership.agency
             sub = get_subscription_for_agency(agency) if agency else None
     seats = seat_usage_summary(sub) if sub else None
+    hub_member_role = ''
+    if membership and membership.is_active:
+        hub_member_role = membership.get_role_display()
     return {
         'hub_agency': agency,
         'hub_subscription': sub,
         'hub_seats': seats,
         'hub_agency_logo_url': _agency_logo_url(agency) if agency else None,
+        'hub_member_role': hub_member_role,
     }
 
 

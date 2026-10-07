@@ -1,21 +1,62 @@
 <nav class="agency-hub-nav agency-hub-nav--ref" aria-label="بخش‌های آژانس">
-    <div class="agency-hub-nav__track">
+    <div class="agency-hub-nav__track agency-hub-nav__track--desk">
         {% for key, label, url in hub_nav %}
-        <a href="{{ url }}" class="agency-hub-nav__item{% if hub_section == key %} is-active{% endif %}">
+        <a href="{{ url }}" class="agency-hub-nav__item{% if hub_section == key %} is-active{% endif %}"{% if hub_section == key %} aria-current="page"{% endif %}>
             <span class="agency-hub-nav__icon" aria-hidden="true">
-                {% if key == 'dashboard' %}{% include 'includes/icon_slot.html' with decor='house' size='nav' only %}
-                {% elif key == 'advisors' %}{% include 'includes/icon_slot.html' with decor='users' size='nav' only %}
-                {% elif key == 'licenses' %}{% include 'includes/icon_slot.html' with decor='team' size='nav' only %}
-                {% elif key == 'space' %}{% include 'includes/icon_slot.html' with decor='layers' size='nav' only %}
-                {% elif key == 'activity' %}{% include 'includes/icon_slot.html' with decor='history' size='nav' only %}
-                {% elif key == 'inbox' %}{% include 'includes/icon_slot.html' with decor='inbox' size='nav' only %}
-                {% elif key == 'messages' %}{% include 'includes/icon_slot.html' with decor='email' size='nav' only %}
-                {% elif key == 'announcements' %}{% include 'includes/icon_slot.html' with decor='megaphone' size='nav' only %}
-                {% elif key == 'settings' %}{% include 'includes/icon_slot.html' with decor='settings' size='nav' only %}
-                {% endif %}
+                {% include "workspace/crm/agency/includes/hub_nav_item_icon.html" with key=key %}
             </span>
             <span class="agency-hub-nav__label">{{ label }}</span>
         </a>
         {% endfor %}
     </div>
+
+    <div class="agency-hub-nav__mobile" data-agency-hub-nav-mobile>
+        <div class="agency-hub-nav__primary" role="tablist" aria-label="بخش‌های اصلی آژانس">
+            {% for key, label, url in hub_nav_primary %}
+            <a href="{{ url }}" class="agency-hub-nav__primary-item{% if hub_section == key %} is-active{% endif %}" role="tab"{% if hub_section == key %} aria-current="page"{% endif %}>
+                <span class="agency-hub-nav__icon" aria-hidden="true">
+                    {% include "workspace/crm/agency/includes/hub_nav_item_icon.html" with key=key %}
+                </span>
+                <span class="agency-hub-nav__label">{{ label }}</span>
+            </a>
+            {% endfor %}
+        </div>
+        {% if hub_nav_more %}
+        <button type="button"
+                class="agency-hub-nav__more-btn"
+                id="agencyHubNavMoreBtn"
+                aria-expanded="false"
+                aria-controls="agencyHubNavSheet"
+                data-agency-hub-nav-more-open>
+            <span class="agency-hub-nav__icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='more_vertical' size='nav' only %}</span>
+            <span class="agency-hub-nav__label">بیشتر</span>
+        </button>
+        {% endif %}
+    </div>
 </nav>
+
+{% if hub_nav_more %}
+<div class="ws-mob-sheet agency-hub-nav-sheet" id="agencyHubNavSheet" hidden aria-hidden="true">
+    <button type="button" class="ws-mob-sheet-backdrop" data-agency-hub-nav-more-close tabindex="-1" aria-label="بستن"></button>
+    <div class="ws-mob-sheet-panel" role="dialog" aria-modal="true" aria-labelledby="agencyHubNavSheetTitle">
+        <div class="ws-mob-sheet-grab" aria-hidden="true"></div>
+        <header class="ws-mob-sheet-head">
+            <h2 class="ws-mob-sheet-title" id="agencyHubNavSheetTitle">سایر بخش‌های آژانس</h2>
+            <button type="button" class="ws-mob-sheet-close" data-agency-hub-nav-more-close aria-label="بستن">
+                <i class="fas fa-times" aria-hidden="true"></i>
+            </button>
+        </header>
+        <nav class="ws-mob-sheet-body agency-hub-nav-sheet__links" aria-label="بخش‌های دیگر">
+            {% for key, label, url in hub_nav_more %}
+            <a href="{{ url }}" class="agency-hub-nav-sheet__link{% if hub_section == key %} is-active{% endif %}"{% if hub_section == key %} aria-current="page"{% endif %}>
+                <span class="agency-hub-nav-sheet__icon" aria-hidden="true">
+                    {% include "workspace/crm/agency/includes/hub_nav_item_icon.html" with key=key %}
+                </span>
+                <span>{{ label }}</span>
+                <i class="fas fa-chevron-left agency-hub-nav-sheet__chev" aria-hidden="true"></i>
+            </a>
+            {% endfor %}
+        </nav>
+    </div>
+</div>
+{% endif %}

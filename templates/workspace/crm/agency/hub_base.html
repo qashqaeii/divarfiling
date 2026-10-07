@@ -3,13 +3,15 @@
 {% block crm_extra_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/agency-phase2.css' %}?v=5">
 <link rel="stylesheet" href="{% static 'workspace/css/agency-phase3.css' %}?v=5">
-<link rel="stylesheet" href="{% static 'workspace/css/agency-hub.css' %}?v=10">
+<link rel="stylesheet" href="{% static 'workspace/css/agency-hub.css' %}?v=13">
 <link rel="stylesheet" href="{% static 'workspace/css/agency-polish.css' %}?v=1">
 <link rel="stylesheet" href="{% static 'workspace/css/agency-decor-icons.css' %}?v=1">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-mobile-v2-agency.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-agency-hub-mobile-closure.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-agency-visual-correction.css' %}?v=4">
 {% endblock %}
 {% block crm_content %}
-<div class="agency-hub crm-page-chrome mk-filing-datasets{% if hub_section == 'space' %} agency-hub--space{% endif %}" dir="rtl">
+<div class="agency-hub crm-page-chrome mk-filing-datasets agency-hub--closure{% if hub_section == 'space' %} agency-hub--space{% endif %}" dir="rtl">
     {% include "workspace/crm/agency/includes/hub_header.html" %}
     {% include "workspace/crm/agency/includes/hub_nav.html" %}
     <div class="agency-hub-body">
@@ -20,5 +22,5 @@
 {% include 'workspace/crm/includes/help/crm_agency_help_modal.html' %}
 {% endblock %}
 {% block crm_js %}
-<script src="{% static 'workspace/js/agency-ui.js' %}?v=5" defer></script>
+<script src="{% static 'workspace/js/agency-ui.js' %}?v=7" defer></script>
 {% endblock %}

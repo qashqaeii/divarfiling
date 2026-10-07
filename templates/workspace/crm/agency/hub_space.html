@@ -5,7 +5,8 @@
 {% block crm_extra_css %}
 {{ block.super }}
 <link rel="stylesheet" href="{% static 'workspace/css/agency-space.css' %}?v=44">
-<link rel="stylesheet" href="{% static 'workspace/css/crm-agency-space-mobile-closure.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-agency-space-mobile-closure.css' %}?v=4">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-agency-visual-correction.css' %}?v=2">
 {% endblock %}
 
 {% block agency_hub_content %}
@@ -76,6 +77,7 @@
                     <button type="button"
                             class="agency-space-toolbar__filters crm-files-adv-toggle agency-space-adv-toggle{% if space_filters_open %} is-open{% endif %}"
                             id="agencySpaceAdvToggle"
+                            aria-label="فیلترها"
                             aria-expanded="{% if space_filters_open %}true{% else %}false{% endif %}"
                             aria-controls="agency-space-filters-panel">
                         <i class="fas fa-sliders" aria-hidden="true"></i>
@@ -117,7 +119,17 @@
                     {% elif space_filter_chips %}
                     {% include "workspace/crm/agency/includes/empty_state.html" with decor="clipboard_list" title="نتیجه‌ای پیدا نشد" description="فیلترهای فعلی نتیجه‌ای ندارند." action_url='?tab='|add:space_tab action_label="پاک کردن فیلترها" %}
                     {% elif space_tab == 'crm' %}
-                    {% include "workspace/crm/agency/includes/empty_state.html" with decor="inbox" title="هنوز به CRM شما اضافه نشده" description="از فایل‌ها یا مخاطبین، موارد موردنیاز را کپی کنید." %}
+                    <div class="agency-empty agency-empty--compact agency-space-empty--crm">
+                        <span class="agency-empty__icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='inbox' size='lg' only %}</span>
+                        <div class="agency-empty__body">
+                            <h3 class="agency-empty__title">هنوز به CRM شما اضافه نشده</h3>
+                            <p class="agency-empty__desc">از فضای آژانس فایل یا مخاطب را کپی کنید.</p>
+                        </div>
+                        <div class="agency-empty__actions agency-empty__actions--row">
+                            <a href="?tab=properties" class="crm-btn crm-btn-primary crm-btn-sm">مشاهده فایل‌ها</a>
+                            <a href="?tab=contacts" class="crm-btn crm-btn-ghost crm-btn-sm">مشاهده مخاطبین</a>
+                        </div>
+                    </div>
                     {% else %}
                     {% include "workspace/crm/agency/includes/empty_state.html" with decor="users" title="موردی پیدا نشد" description="وقتی اعضای تیم انتشار انجام دهند، اینجا نمایش داده می‌شود." %}
                     {% endif %}

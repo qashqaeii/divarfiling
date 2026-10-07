@@ -73,6 +73,32 @@ _EVENT_ICONS = {
     'deal_followup': 'clipboard_list',
     'property_visit': 'building',
     'customer_activity': 'history',
+    'space_item_published': 'share',
+}
+
+_HUB_EVENT_TONES = {
+    'space_item_published': 'blue',
+    'contact_created': 'teal',
+    'personal_property_created': 'orange',
+    'dataset_created': 'slate',
+    'extraction_completed': 'slate',
+    'deal_created': 'green',
+    'deal_stage_changed': 'green',
+    'follow_up': 'purple',
+    'call': 'purple',
+    'visit': 'purple',
+    'contract_created': 'green',
+    'license_assigned': 'indigo',
+    'license_unassigned': 'indigo',
+    'advisor_data_export': 'slate',
+}
+
+_OBJECT_TYPE_LABELS = {
+    'customer': 'مخاطب',
+    'property': 'فایل',
+    'deal': 'معامله',
+    'contract': 'قرارداد',
+    'dataset': 'فایلینگ',
 }
 
 
@@ -248,3 +274,21 @@ def amh_greeting(user):
         prefix = 'شب بخیر'
     name = a360_display_name(user)
     return f'{prefix}، {name}'
+
+
+@register.filter
+def agency_hub_event_icon(event_type):
+    return _EVENT_ICONS.get((event_type or '').strip(), 'zap')
+
+
+@register.filter
+def agency_hub_event_tone(event_type):
+    return _HUB_EVENT_TONES.get((event_type or '').strip(), 'purple')
+
+
+@register.filter
+def agency_hub_object_label(object_type):
+    key = (object_type or '').strip().lower()
+    if not key:
+        return ''
+    return _OBJECT_TYPE_LABELS.get(key, key)

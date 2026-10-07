@@ -82,28 +82,24 @@
                         </tbody>
                     </table>
                 </div>
-                <div class="agency-card-list">
+                <div class="agency-card-list agency-card-list--perf">
                     {% for row in performance_rows %}
-                    <article class="agency-member-card">
-                        <div class="agency-member-card__head">
-                            <span class="agency-table__avatar">{{ row.member.user.get_full_name|default:row.member.user.phone|slice:":1" }}</span>
-                            <div>
-                                <strong>{{ row.member.user.get_full_name|default:row.member.user.phone }}</strong>
-                                <span class="agency-table__sub">{{ row.member.get_role_display }}</span>
-                            </div>
-                        </div>
-                        <div class="agency-member-card__meta">
-                            {% if row.has_seat %}
-                            {% include "workspace/crm/agency/includes/status_badge.html" with status="ok" label="فعال" %}
-                            {% else %}
-                            {% include "workspace/crm/agency/includes/status_badge.html" with status="unlicensed" label="بدون لایسنس" %}
-                            {% endif %}
-                            <span class="agency-status agency-status--muted">م {{ row.contacts }} · ف {{ row.properties }} · مع {{ row.deals }}</span>
-                        </div>
-                        <div class="agency-member-card__actions">
-                            <a href="{% url 'workspace:agency_advisor_detail' row.member.pk %}" class="crm-btn crm-btn-ghost crm-btn-sm">مشاهده ۳۶۰</a>
-                        </div>
-                    </article>
+                    <a href="{% url 'workspace:agency_advisor_detail' row.member.pk %}" class="agency-perf-row" aria-label="مشاهده پروفایل {{ row.member.user.get_full_name|default:row.member.user.phone }}">
+                        <span class="agency-table__avatar agency-perf-row__avatar">{{ row.member.user.get_full_name|default:row.member.user.phone|slice:":1" }}</span>
+                        <span class="agency-perf-row__body">
+                            <span class="agency-perf-row__top">
+                                <strong class="agency-perf-row__name">{{ row.member.user.get_full_name|default:row.member.user.phone }}</strong>
+                                {% if row.has_seat %}
+                                <span class="agency-perf-row__status agency-perf-row__status--ok">فعال</span>
+                                {% else %}
+                                <span class="agency-perf-row__status agency-perf-row__status--muted">بدون لایسنس</span>
+                                {% endif %}
+                            </span>
+                            <span class="agency-table__sub agency-perf-row__role">{{ row.member.get_role_display }}</span>
+                            <span class="agency-perf-row__metrics">مخاطب {{ row.contacts }} · فایل {{ row.properties }} · معامله {{ row.deals }} · قرارداد {{ row.contracts }}</span>
+                        </span>
+                        <i class="fas fa-chevron-left agency-perf-row__chev" aria-hidden="true"></i>
+                    </a>
                     {% endfor %}
                 </div>
                 <div class="agency-dash-tip">
@@ -120,19 +116,9 @@
             {% include "workspace/crm/agency/includes/section_head.html" with title="فعالیت اخیر" decor="history" link_url=activity_url link_label="مشاهده همه" %}
             <div class="agency-panel agency-panel--activity agency-panel--timeline">
                 {% if recent_events %}
-                <ul class="agency-timeline agency-timeline--ref">
-                    {% for ev in recent_events|slice:":8" %}
-                    <li class="agency-timeline__item">
-                        <span class="agency-timeline__rail" aria-hidden="true"></span>
-                        <span class="agency-timeline__icon agency-timeline__icon--soft"><span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='zap' size='xs' only %}</span></span>
-                        <div class="agency-timeline__body">
-                            <div class="agency-timeline__action">{{ agency_event_labels|dict_get:ev.event_type }}</div>
-                            <div class="agency-timeline__meta">{{ ev.actor.get_full_name|default:ev.actor.phone|default:ev.actor.username }}</div>
-                        </div>
-                        <time class="agency-timeline__time">{{ ev.created_at|naturaltime }}</time>
-                    </li>
-                    {% endfor %}
-                </ul>
+                {% with events=recent_events|slice:":8" %}
+                {% include "workspace/crm/agency/includes/agency_hub_activity_timeline.html" %}
+                {% endwith %}
                 {% else %}
                 {% include "workspace/crm/agency/includes/empty_state.html" with decor="history" title="فعالیتی ثبت نشده" description="با شروع کار تیم، رویدادها اینجا نمایش داده می‌شوند." compact=True variant="inline" %}
                 {% endif %}

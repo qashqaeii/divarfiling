@@ -1,50 +1,39 @@
 {% extends "workspace/crm/agency/hub_base.html" %}
-{% load crm_tags humanize %}
+{% load crm_tags humanize advisor360_tags %}
 {% block agency_hub_content %}
-<div class="agency-page-head">
-    <div>
-        <h2 class="agency-page-head__title">فعالیت تیم</h2>
-        <p class="agency-page-head__sub">رویدادها و اقدامات مشاوران در یک نگاه</p>
+<section class="agency-activity-page" aria-label="فعالیت تیم">
+    <div class="agency-page-head agency-activity-page__head">
+        <div>
+            <h2 class="agency-page-head__title">فعالیت تیم</h2>
+            <p class="agency-page-head__sub">رویدادها و اقدامات مشاوران در یک نگاه</p>
+        </div>
     </div>
-</div>
 
-<form method="get" class="agency-filter-bar">
-    <select name="advisor" id="activityAdvisor" class="agency-filter-bar__select" aria-label="فیلتر مشاور">
-        <option value="">همه مشاوران</option>
-        {% for m in advisors %}
-        <option value="{{ m.pk }}" {% if request.GET.advisor == m.pk|stringformat:"s" %}selected{% endif %}>{{ m.user.get_full_name|default:m.user.phone }}</option>
-        {% endfor %}
-    </select>
-    <input type="text" name="event_type" id="activityEventType" value="{{ event_type_filter }}" placeholder="نوع رویداد..." class="agency-filter-bar__select" aria-label="نوع رویداد" style="flex:1;">
-    <button type="submit" class="crm-btn crm-btn-primary crm-btn-sm">
-        <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='filter' size='inline' only %}</span>
-        اعمال
-    </button>
-    {% if request.GET.advisor or event_type_filter %}
-    <a href="{% url 'workspace:agency_hub_activity' %}" class="crm-btn crm-btn-ghost crm-btn-sm">پاک کردن</a>
-    {% endif %}
-</form>
+    <form method="get" class="agency-filter-bar agency-activity-page__filters">
+        <select name="advisor" id="activityAdvisor" class="agency-filter-bar__select" aria-label="فیلتر مشاور">
+            <option value="">همه مشاوران</option>
+            {% for m in advisors %}
+            <option value="{{ m.pk }}" {% if request.GET.advisor == m.pk|stringformat:"s" %}selected{% endif %}>{{ m.user.get_full_name|default:m.user.phone }}</option>
+            {% endfor %}
+        </select>
+        <input type="text" name="event_type" id="activityEventType" value="{{ event_type_filter }}" placeholder="نوع رویداد..." class="agency-filter-bar__select agency-activity-page__event-input" aria-label="نوع رویداد">
+        <div class="agency-activity-page__filter-actions">
+            <button type="submit" class="crm-btn crm-btn-primary crm-btn-sm">
+                <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='filter' size='inline' only %}</span>
+                اعمال
+            </button>
+            {% if request.GET.advisor or event_type_filter %}
+            <a href="{% url 'workspace:agency_hub_activity' %}" class="crm-btn crm-btn-ghost crm-btn-sm">پاک کردن</a>
+            {% endif %}
+        </div>
+    </form>
 
-<div class="agency-panel agency-panel--activity agency-panel--timeline">
-    {% if events %}
-    <ul class="agency-timeline agency-timeline--ref">
-        {% for ev in events %}
-        <li class="agency-timeline__item">
-            <span class="agency-timeline__rail" aria-hidden="true"></span>
-            <span class="agency-timeline__icon agency-timeline__icon--soft"><span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='dot' size='xs' only %}</span></span>
-            <div class="agency-timeline__body">
-                <div class="agency-timeline__action">{{ agency_event_labels|dict_get:ev.event_type }}</div>
-                <div class="agency-timeline__meta">
-                    {{ ev.actor.get_full_name|default:ev.actor.phone }}
-                    {% if ev.object_type %} · {{ ev.object_type }} #{{ ev.object_id }}{% endif %}
-                </div>
-            </div>
-            <time class="agency-timeline__time">{{ ev.created_at|naturaltime }}</time>
-        </li>
-        {% endfor %}
-    </ul>
-    {% else %}
-    {% include "workspace/crm/agency/includes/empty_state.html" with decor="history" title="رویدادی یافت نشد" description="فیلترها را تغییر دهید یا بعداً دوباره بررسی کنید." %}
-    {% endif %}
-</div>
+    <div class="agency-panel agency-panel--activity agency-panel--timeline agency-activity-page__timeline">
+        {% if events %}
+        {% include "workspace/crm/agency/includes/agency_hub_activity_timeline.html" with events=events %}
+        {% else %}
+        {% include "workspace/crm/agency/includes/empty_state.html" with decor="history" title="رویدادی یافت نشد" description="فیلترها را تغییر دهید یا بعداً دوباره بررسی کنید." %}
+        {% endif %}
+    </div>
+</section>
 {% endblock %}

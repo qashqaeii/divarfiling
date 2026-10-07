@@ -14,16 +14,27 @@
         var closeBtn = document.querySelector('[data-acd-pl-close]');
         if (!sidebar || !openBtns.length) return;
 
+        var lastFocusTrigger = null;
+
         function isDesktop() {
             return mqDesktop.matches;
         }
 
-        function setOpen(open) {
+        function setDrawerScrollLock(locked) {
+            document.documentElement.classList.toggle('acd-pl-drawer-open', locked);
+            document.body.classList.toggle('acd-pl-drawer-open', locked);
+        }
+
+        function setOpen(open, trigger) {
             if (isDesktop()) {
                 open = false;
             }
+            var wasOpen = sidebar.classList.contains('is-open');
+            if (open && !wasOpen) {
+                lastFocusTrigger = trigger || document.activeElement;
+            }
             sidebar.classList.toggle('is-open', open);
-            document.body.classList.toggle('acd-pl-drawer-open', open);
+            setDrawerScrollLock(open);
             openBtns.forEach(function (btn) {
                 btn.setAttribute('aria-expanded', open ? 'true' : 'false');
             });
@@ -45,12 +56,21 @@
                         list.scrollTop = Math.max(0, top);
                     }
                 });
+            } else if (wasOpen) {
+                var restore = lastFocusTrigger;
+                lastFocusTrigger = null;
+                if (restore && typeof restore.focus === 'function') {
+                    window.requestAnimationFrame(function () {
+                        restore.focus();
+                    });
+                }
             }
         }
 
         openBtns.forEach(function (btn) {
             btn.addEventListener('click', function () {
-                setOpen(!sidebar.classList.contains('is-open'));
+                var nextOpen = !sidebar.classList.contains('is-open');
+                setOpen(nextOpen, nextOpen ? btn : null);
             });
         });
 
@@ -125,7 +145,9 @@
         }
 
         if (page) {
-            page._acdPlSetOpen = setOpen;
+            page._acdPlSetOpen = function (open, trigger) {
+                setOpen(open, trigger);
+            };
         }
     }
 
@@ -260,10 +282,80 @@
         input.addEventListener('search', applyFilter);
     }
 
+    function initMobilePathPills() {
+        var pills = document.querySelectorAll('[data-acd-pl-path-pill]');
+        var chapters = document.querySelectorAll('[data-acd-pl-mob-chapter]');
+        if (!pills.length || !chapters.length) return;
+
+        pills.forEach(function (pill) {
+            pill.addEventListener('click', function () {
+                var targetId = pill.getAttribute('data-acd-pl-path-id');
+                if (!targetId) return;
+                pills.forEach(function (p) {
+                    var on = p === pill;
+                    p.classList.toggle('is-active', on);
+                    p.setAttribute('aria-selected', on ? 'true' : 'false');
+                });
+                chapters.forEach(function (ch) {
+                    var match = ch.id === targetId;
+                    ch.classList.toggle('is-path-active', match);
+                    if (match) {
+                        ch.setAttribute('open', '');
+                    } else {
+                        ch.removeAttribute('open');
+                    }
+                });
+            });
+        });
+    }
+
+    function initMobileSearchOpen() {
+        var btn = document.querySelector('[data-acd-pl-search-open]');
+        var input = document.getElementById('acdPlSearch');
+        var page = document.getElementById('acdPlaylistPage');
+        if (!btn || !input) return;
+
+        btn.addEventListener('click', function () {
+            if (page && page._acdPlSetOpen) {
+                page._acdPlSetOpen(true, btn);
+            } else {
+                var sidebar = document.getElementById('acdPlSidebar');
+                if (sidebar) sidebar.classList.add('is-open');
+            }
+            window.setTimeout(function () {
+                input.focus();
+                try {
+                    input.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+                } catch (e) {
+                    input.scrollIntoView(false);
+                }
+            }, 320);
+        });
+    }
+
+    function initMobilePrimaryCta() {
+        var page = document.getElementById('acdPlaylistPage');
+        var cta = document.getElementById('acdPlMobPrimaryCta');
+        if (!page || !cta) return;
+        var label = cta.querySelector('[data-acd-pl-cta-label]');
+        var playerShell = document.querySelector('[data-acd-pl-player]');
+        var video = playerShell ? playerShell.querySelector('video') : null;
+        if (!video || !label) return;
+
+        function onEnded() {
+            label.textContent = 'آموزش بعدی';
+        }
+
+        video.addEventListener('ended', onEnded);
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
         initDrawer();
         initViewTracking();
         initPlaylistSearch();
+        initMobilePathPills();
+        initMobileSearchOpen();
+        initMobilePrimaryCta();
         window.requestAnimationFrame(scrollActiveTrack);
     });
 })();

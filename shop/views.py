@@ -854,6 +854,19 @@ class PublicAcademyPlaylistView(TemplateView):
         ctx['first_video_item'] = flat[0] if flat else None
         from workspace.academy.search import academy_search_entries
         ctx['academy_search_entries'] = academy_search_entries(workspace=False)
+        completed_ids = set()
+        user = self.request.user
+        if user.is_authenticated:
+            from workspace.academy.models import UserVideoProgress
+            completed_ids = set(
+                UserVideoProgress.objects.filter(
+                    user=user,
+                    completed=True,
+                    video__is_public=True,
+                    video__is_active=True,
+                ).values_list('video_id', flat=True)
+            )
+        ctx['academy_completed_video_ids'] = completed_ids
         if active:
             seo = video_item_seo(active, site_url=get_site_url())
             player = active['player']

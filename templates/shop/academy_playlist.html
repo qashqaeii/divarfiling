@@ -38,8 +38,8 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/mizkar-video-player.css' %}?v=2">
-<link rel="stylesheet" href="{% static 'css/mizkar-academy-playlist.css' %}?v=5">
-<link rel="stylesheet" href="{% static 'css/academy-mobile.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'css/mizkar-academy-playlist.css' %}?v=6">
+<link rel="stylesheet" href="{% static 'css/academy-mobile.css' %}?v=4">
 {% endblock %}
 
 {% block content %}
@@ -58,10 +58,11 @@
         <div class="acd-pl-topbar-brand">
             <span class="acd-pl-kicker" aria-hidden="true"><i class="fas fa-graduation-cap"></i></span>
             <div class="acd-pl-topbar-copy">
-                <p class="acd-pl-playlist-name">پلی‌لیست مشاور املاک</p>
+                <p class="acd-pl-playlist-name">آکادمی فایلینگ دیوار</p>
+                <p class="acd-pl-topbar-subline">آموزش قدم‌به‌قدم فایلینگ، CRM و مدیریت مشتری</p>
                 <div class="acd-pl-topbar-meta" aria-label="آمار پلی‌لیست">
-                    <span><i class="fas fa-film" aria-hidden="true"></i> {{ playlist_stats.video_count }} ویدیو</span>
-                    <span><i class="fas fa-clock" aria-hidden="true"></i> ~{{ playlist_stats.total_minutes }} دقیقه</span>
+                    <span class="acd-pl-topbar-badge-count"><i class="fas fa-film" aria-hidden="true"></i> {{ playlist_stats.video_count }} آموزش</span>
+                    <span class="acd-pl-topbar-meta-desk"><i class="fas fa-clock" aria-hidden="true"></i> ~{{ playlist_stats.total_minutes }} دقیقه</span>
                     <span class="acd-pl-topbar-meta-extra"><i class="fas fa-eye" aria-hidden="true"></i> {{ playlist_stats.views_total|default:0 }} بازدید</span>
                     <span class="acd-pl-topbar-meta-extra"><i class="fas fa-unlock" aria-hidden="true"></i> رایگان</span>
                 </div>
@@ -107,7 +108,7 @@
 
                 <div class="acd-pl-stage-body">
                     <div class="acd-pl-stage-head">
-                        <div class="acd-pl-stage-badges">
+                        <div class="acd-pl-stage-badges acd-pl-stage-badges--desk">
                             <span class="acd-pl-badge acd-pl-badge--ep">ویدیو {{ active_item.global_index }} از {{ playlist_stats.video_count }}</span>
                             {% if active_item.path %}
                             <span class="acd-pl-badge">{{ active_item.path.title }}</span>
@@ -120,11 +121,54 @@
                                 <span data-acd-pl-views-count>{{ active_video.views_count|default:0 }}</span> بازدید
                             </span>
                         </div>
+                        <div class="acd-pl-mob-lesson-meta" aria-hidden="false">
+                            <span class="acd-pl-mob-chip acd-pl-mob-chip--ep">{{ active_item.global_index|stringformat:"02d" }}</span>
+                            {% if active_item.path %}
+                            <span class="acd-pl-mob-chip">{{ active_item.path.title }}</span>
+                            {% endif %}
+                            {% if active_player.duration %}
+                            <span class="acd-pl-mob-chip acd-pl-mob-chip--dur">{{ active_player.duration }}</span>
+                            {% endif %}
+                        </div>
                         <h1 class="acd-pl-stage-title" id="acdPlVideoTitle">{{ active_video.title }}</h1>
                         {% if active_video.subtitle %}
                         <p class="acd-pl-stage-desc">{{ active_video.subtitle }}</p>
                         {% endif %}
                     </div>
+
+                    {% if next_item %}
+                    <a href="{{ next_item.url }}" class="acd-pl-mob-primary-cta acd-pl-btn acd-pl-btn--primary acd-pl-btn--block" id="acdPlMobPrimaryCta" data-acd-pl-primary-cta>
+                        <i class="fas fa-forward-step" aria-hidden="true"></i>
+                        <span data-acd-pl-cta-label>ادامه آموزش</span>
+                    </a>
+                    {% elif user.is_authenticated %}
+                    <a href="{% url 'workspace:academy_home' %}" class="acd-pl-mob-primary-cta acd-pl-btn acd-pl-btn--primary acd-pl-btn--block">
+                        <i class="fas fa-layer-group" aria-hidden="true"></i>
+                        ادامه در میزکار آکادمی
+                    </a>
+                    {% else %}
+                    <a href="{% url 'register' %}?next={% url 'workspace:academy_home' %}" class="acd-pl-mob-primary-cta acd-pl-btn acd-pl-btn--primary acd-pl-btn--block">
+                        <i class="fas fa-user-plus" aria-hidden="true"></i>
+                        شروع رایگان و تمرین
+                    </a>
+                    {% endif %}
+
+                    {% if active_item.path %}
+                    {% for section in playlist_sections %}
+                    {% if section.path.id == active_item.path.id %}
+                    <div class="acd-pl-mob-path-progress" aria-label="پیشرفت در مسیر آموزشی">
+                        <div class="acd-pl-mob-path-progress-head">
+                            <span class="acd-pl-mob-path-progress-title">{{ section.path.title }}</span>
+                            <span class="acd-pl-mob-path-progress-count">{{ active_item.index }} از {{ section.video_count }} آموزش</span>
+                        </div>
+                        <div class="acd-pl-mob-path-progress-track" role="progressbar" aria-valuenow="{{ active_item.index }}" aria-valuemin="0" aria-valuemax="{{ section.video_count }}">
+                            <span class="acd-pl-mob-path-progress-fill" style="width: {% widthratio active_item.index section.video_count 100 %}%"></span>
+                        </div>
+                        <span class="acd-pl-mob-path-progress-pct">{% widthratio active_item.index section.video_count 100 %}٪</span>
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                    {% endif %}
 
                     <div class="acd-pl-stage-toolbar">
                         <div class="acd-pl-stage-nav" role="group" aria-label="ناوبری ویدیو">
@@ -246,7 +290,86 @@
             </article>
             {% endif %}
 
-            {# Mobile-only compact playlist preview #}
+            <section class="acd-pl-mob-playlist" aria-label="فهرست آموزش‌ها">
+                <div class="acd-pl-mob-playlist-head">
+                    <div>
+                        <h2 class="acd-pl-mob-playlist-title">فهرست آموزش‌ها</h2>
+                        {% if active_item %}
+                        <p class="acd-pl-mob-playlist-sub">آموزش {{ active_item.global_index }} از {{ playlist_stats.video_count }}</p>
+                        {% else %}
+                        <p class="acd-pl-mob-playlist-sub">{{ playlist_stats.video_count }} آموزش · {{ playlist_stats.section_count }} مسیر</p>
+                        {% endif %}
+                    </div>
+                    <button type="button" class="acd-pl-mob-search-open" data-acd-pl-search-open aria-label="جستجو در آموزش‌ها">
+                        <i class="fas fa-search" aria-hidden="true"></i>
+                        <span>جستجو</span>
+                    </button>
+                </div>
+                <div class="acd-pl-mob-paths" role="tablist" aria-label="مسیرهای آموزشی">
+                    {% for section in playlist_sections %}
+                    <button type="button"
+                            class="acd-pl-mob-path-pill{% if active_item and active_item.path.id == section.path.id %} is-active{% elif not active_item and forloop.first %} is-active{% endif %}"
+                            role="tab"
+                            aria-selected="{% if active_item and active_item.path.id == section.path.id %}true{% elif not active_item and forloop.first %}true{% else %}false{% endif %}"
+                            data-acd-pl-path-pill
+                            data-acd-pl-path-id="path-{{ section.path.id }}"
+                            id="acdPlPathTab{{ forloop.counter }}">
+                        {{ section.path.title }}
+                    </button>
+                    {% endfor %}
+                </div>
+                <div class="acd-pl-mob-chapters">
+                    {% for section in playlist_sections %}
+                    <details class="acd-pl-mob-chapter{% if active_item and active_item.path.id == section.path.id %} is-path-active{% elif not active_item and forloop.first %} is-path-active{% endif %}"
+                             id="path-{{ section.path.id }}"
+                             data-acd-pl-mob-chapter
+                             {% if active_item and active_item.path.id == section.path.id %}open{% elif not active_item and forloop.first %}open{% endif %}>
+                        <summary class="acd-pl-mob-chapter-sum">
+                            <span class="acd-pl-mob-chapter-icon"><i class="fas {{ section.path.icon }}" aria-hidden="true"></i></span>
+                            <span class="acd-pl-mob-chapter-copy">
+                                <strong>{{ section.path.title }}</strong>
+                                <span>{{ section.video_count }} آموزش · ~{{ section.total_minutes }} دقیقه</span>
+                            </span>
+                            <i class="fas fa-chevron-down acd-pl-mob-chapter-chevron" aria-hidden="true"></i>
+                        </summary>
+                        <ol class="acd-pl-mob-lessons">
+                            {% for item in section.videos %}
+                            <li class="acd-pl-mob-lesson{% if active_item and active_item.video.id == item.video.id %} is-current{% endif %}{% if item.video.id in academy_completed_video_ids %} is-done{% endif %}">
+                                <a href="{{ item.url }}" class="acd-pl-mob-lesson-link"
+                                   {% if active_item and active_item.video.id == item.video.id %}aria-current="true"{% endif %}>
+                                    <span class="acd-pl-mob-lesson-num">{{ item.global_index|stringformat:"02d" }}</span>
+                                    <span class="acd-pl-mob-lesson-body">
+                                        <strong>{{ item.video.title }}</strong>
+                                        {% if item.video.duration_display %}
+                                        <span>{{ item.video.duration_display }}</span>
+                                        {% endif %}
+                                    </span>
+                                    <span class="acd-pl-mob-lesson-state">
+                                        {% if active_item and active_item.video.id == item.video.id %}
+                                        <i class="fas fa-circle-play" aria-hidden="true"></i>
+                                        <span class="visually-hidden">در حال تماشا</span>
+                                        {% elif item.video.id in academy_completed_video_ids %}
+                                        <i class="fas fa-check" aria-hidden="true"></i>
+                                        <span class="visually-hidden">تماشا شده</span>
+                                        {% else %}
+                                        <i class="fas fa-circle" aria-hidden="true"></i>
+                                        <span class="visually-hidden">شروع نشده</span>
+                                        {% endif %}
+                                    </span>
+                                </a>
+                            </li>
+                            {% endfor %}
+                        </ol>
+                    </details>
+                    {% endfor %}
+                </div>
+                <button type="button" class="acd-pl-mob-playlist-all acd-pl-btn acd-pl-btn--ghost acd-pl-btn--block" data-acd-pl-open>
+                    <i class="fas fa-list-ul" aria-hidden="true"></i>
+                    مشاهده همه در فهرست کامل
+                </button>
+            </section>
+
+            {# Mobile horizontal rail (tablet fallback) #}
             <section class="acd-pl-rail" aria-label="پیش‌نمایش پلی‌لیست">
                 <div class="acd-pl-rail-head">
                     <h2>فهرست پلی‌لیست</h2>
@@ -305,7 +428,7 @@
                     <i class="fas fa-search" aria-hidden="true"></i>
                     <span class="visually-hidden">جستجو در آموزش‌ها</span>
                 </label>
-                <input type="search" id="acdPlSearch" class="acd-pl-search-input" placeholder="جستجو: داشبورد، لایسنس، استخراج…" autocomplete="off" dir="auto">
+                <input type="search" id="acdPlSearch" class="acd-pl-search-input" placeholder="جستجو در {{ playlist_stats.video_count }} آموزش…" autocomplete="off" dir="auto" enterkeyhint="search">
             </div>
             <p class="acd-pl-search-empty" id="acdPlSearchEmpty" hidden>آموزشی با این عبارت پیدا نشد.</p>
             {{ academy_search_entries|json_script:"acdPlSearchData" }}
@@ -321,7 +444,7 @@
                     </header>
                     <ol class="acd-pl-tracks">
                         {% for item in section.videos %}
-                        <li class="acd-pl-track{% if active_item and active_item.video.id == item.video.id %} is-active{% endif %}"
+                        <li class="acd-pl-track{% if active_item and active_item.video.id == item.video.id %} is-active{% endif %}{% if item.video.id in academy_completed_video_ids %} is-done{% endif %}"
                             id="track-{{ item.video.slug }}"
                             data-acd-pl-slug="{{ item.video.slug }}">
                             <a href="{{ item.url }}" class="acd-pl-track-link"
@@ -371,5 +494,5 @@
 
 {% block extra_js %}
 <script src="{% static 'js/bot-install-video.js' %}?v=1" defer></script>
-<script src="{% static 'js/academy-playlist.js' %}?v=5" defer></script>
+<script src="{% static 'js/academy-playlist.js' %}?v=7" defer></script>
 {% endblock %}

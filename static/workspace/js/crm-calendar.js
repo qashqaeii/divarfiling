@@ -1,5 +1,5 @@
 /**
- * CRM Calendar — view switch, category filters, day selection, week/list panels.
+ * CRM Calendar — view switch, category filters, day selection, week/list panels, mobile agenda.
  */
 (function () {
     'use strict';
@@ -11,12 +11,36 @@
         contract: 'قرارداد',
     };
 
+    var FILTER_LABELS = {
+        all: 'همه دسته‌ها',
+        followup: 'پیگیری',
+        visit: 'بازدید',
+        reminder: 'یادآور',
+        contract: 'قرارداد',
+    };
+
     var TYPE_CLASS = {
         followup: 'crm-cal-event--followup',
         reminder: 'crm-cal-event--reminder',
         visit: 'crm-cal-event--visit',
         contract: 'crm-cal-event--contract',
     };
+
+    var MOB_EV_CLASS = {
+        followup: 'crm-cal-mob-ev--followup',
+        reminder: 'crm-cal-mob-ev--reminder',
+        visit: 'crm-cal-mob-ev--visit',
+        contract: 'crm-cal-mob-ev--contract',
+    };
+
+    var PERSIAN_MONTHS = [
+        'فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور',
+        'مهر', 'آبان', 'آذر', 'دی', 'بهمن', 'اسفند',
+    ];
+
+    var PERSIAN_WEEKDAYS = [
+        'شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنج‌شنبه', 'جمعه',
+    ];
 
     function toPersianDigits(str) {
         var map = {'0': '۰', '1': '۱', '2': '۲', '3': '۳', '4': '۴', '5': '۵', '6': '۶', '7': '۷', '8': '۸', '9': '۹'};
@@ -31,6 +55,70 @@
         } catch (e) {
             return [];
         }
+    }
+
+    function isMobileLayout() {
+        return window.matchMedia('(max-width: 768px)').matches;
+    }
+
+    function relationLine(ev) {
+        if (ev.customer_name) {
+            return 'مخاطب: ' + ev.customer_name;
+        }
+        if (ev.type === 'contract' && ev.short_label) {
+            return 'معامله: ' + ev.short_label;
+        }
+        if (ev.location) {
+            return ev.location;
+        }
+        return '';
+    }
+
+    function dayHeaderFromJkey(jkey, events, root) {
+        var sample = null;
+        for (var i = 0; i < events.length; i++) {
+            if (events[i].jkey === jkey) {
+                sample = events[i];
+                break;
+            }
+        }
+        if (sample) {
+            return {
+                title: (sample.weekday || '') + ' · ' + (sample.day_label || '') + ' ' + PERSIAN_MONTHS[(sample.jmonth || 1) - 1],
+                weekday: sample.weekday || '',
+            };
+        }
+
+        var cell = root.querySelector('.crm-cal-cell[data-jkey="' + jkey + '"]');
+        var dayNum = cell ? cell.querySelector('.crm-cal-day-num') : null;
+        var monthTitle = root.querySelector('.crm-cal-toolbar-title strong');
+        var weekday = '';
+        if (cell) {
+            var cellsList = root.querySelectorAll('.crm-cal-cell[data-jkey]');
+            var idx = Array.prototype.indexOf.call(cellsList, cell);
+            if (idx >= 0) {
+                weekday = PERSIAN_WEEKDAYS[idx % 7] || '';
+            }
+        }
+        var dayLabel = dayNum ? dayNum.textContent.trim() : '';
+        var monthLabel = monthTitle ? monthTitle.textContent.trim() : '';
+        if (dayLabel && monthLabel) {
+            return {
+                title: (weekday ? weekday + ' · ' : '') + dayLabel + ' ' + monthLabel.split(' ')[0],
+                weekday: weekday,
+            };
+        }
+
+        var parts = jkey.split('-');
+        if (parts.length !== 3) {
+            return { title: jkey, weekday: '' };
+        }
+        var jd = parseInt(parts[2], 10);
+        var jm = parseInt(parts[1], 10);
+        return {
+            title: toPersianDigits(jd) + ' ' + PERSIAN_MONTHS[jm - 1],
+            weekday: weekday,
+        };
     }
 
     function initCalendarApp() {
@@ -51,18 +139,156 @@
         var viewPanels = root.querySelectorAll('[data-cal-view-panel]');
         var weekGrid = document.getElementById('crmCalWeekGrid');
         var listEl = document.getElementById('crmCalList');
+        var mobAgendaBody = document.getElementById('crmCalMobAgendaBody');
+        var mobAgendaTitle = document.getElementById('crmCalMobAgendaTitle');
+        var mobAgendaMeta = document.getElementById('crmCalMobAgendaMeta');
+        var filterActiveEl = document.getElementById('crmCalFilterActive');
+        var filterSheet = document.getElementById('crmCalFilterSheet');
+        var filterOpenBtn = document.getElementById('crmCalFilterOpen');
 
         function setSelectedDay(jkey) {
             if (!jkey) return;
             selectedJkey = jkey;
             cells.forEach(function (cell) {
-                cell.classList.toggle('is-selected', cell.getAttribute('data-jkey') === jkey);
+                var selected = cell.getAttribute('data-jkey') === jkey && !cell.classList.contains('is-out');
+                cell.classList.toggle('is-selected', selected);
+                cell.setAttribute('aria-selected', selected ? 'true' : 'false');
             });
+            renderMobileAgenda(jkey);
+        }
+
+        function updateFilterLabel(filter) {
+            var label = FILTER_LABELS[filter] || FILTER_LABELS.all;
+            if (filterActiveEl) {
+                filterActiveEl.textContent = label;
+                filterActiveEl.setAttribute('data-filter-label', label);
+            }
+        }
+
+        function eventsForDay(jkey) {
+            return filteredEvents(events).filter(function (ev) {
+                return ev.jkey === jkey;
+            }).sort(function (a, b) {
+                return (a.time || '99:99').localeCompare(b.time || '99:99');
+            });
+        }
+
+        function openDrawerViaCrm(drawerId) {
+            if (!drawerId) return;
+            var wired = root.querySelector(
+                '.crm-cal-mob-cta[data-drawer-open="' + drawerId + '"], ' +
+                '.crm-cal-page-head-actions [data-drawer-open="' + drawerId + '"]'
+            );
+            if (wired) {
+                wired.click();
+                return;
+            }
+            var drawer = document.getElementById(drawerId);
+            if (!drawer) return;
+            drawer.hidden = false;
+            drawer.removeAttribute('hidden');
+            drawer.classList.add('is-open');
+            document.body.classList.add('crm-drawer-open');
+        }
+
+        function renderMobileAgenda(jkey) {
+            if (!mobAgendaBody || !isMobileLayout()) return;
+
+            var header = dayHeaderFromJkey(jkey, events, root);
+            if (mobAgendaTitle) {
+                mobAgendaTitle.textContent = header.title;
+            }
+
+            var dayEvents = eventsForDay(jkey);
+            if (mobAgendaMeta) {
+                mobAgendaMeta.textContent = dayEvents.length
+                    ? toPersianDigits(dayEvents.length) + ' برنامه'
+                    : 'بدون برنامه';
+            }
+
+            if (!dayEvents.length) {
+                mobAgendaBody.innerHTML =
+                    '<div class="crm-cal-mob-agenda-empty">' +
+                    '<p>برای این روز برنامه‌ای ثبت نشده</p>' +
+                    '<button type="button" class="crm-cal-mob-agenda-empty-cta" data-drawer-open="drawer-reminder">' +
+                    '<i class="fas fa-plus" aria-hidden="true"></i> ثبت یادآوری</button></div>';
+                var emptyCta = mobAgendaBody.querySelector('.crm-cal-mob-agenda-empty-cta[data-drawer-open]');
+                if (emptyCta) {
+                    emptyCta.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        openDrawerViaCrm(emptyCta.getAttribute('data-drawer-open'));
+                    });
+                }
+                return;
+            }
+
+            var html = '<ol class="crm-cal-mob-agenda-list">';
+            dayEvents.forEach(function (ev) {
+                var overdue = jkey < todayJkey && (ev.type === 'reminder' || ev.type === 'followup');
+                var rel = relationLine(ev);
+                html += '<li>';
+                html += '<a href="' + ev.href + '" class="crm-cal-mob-ev ' + (MOB_EV_CLASS[ev.type] || '') + (overdue ? ' is-overdue' : '') + '">';
+                html += '<time class="crm-cal-mob-ev-time">' + (ev.time ? toPersianDigits(ev.time) : '—') + '</time>';
+                html += '<span class="crm-cal-mob-ev-body">';
+                html += '<span class="crm-cal-mob-ev-type">' + (TYPE_LABELS[ev.type] || 'رویداد') + '</span>';
+                if (overdue) {
+                    html += '<span class="crm-cal-mob-ev-status">عقب‌افتاده</span>';
+                }
+                html += '<strong class="crm-cal-mob-ev-title">' + (ev.short_label || ev.label) + '</strong>';
+                if (rel) {
+                    html += '<span class="crm-cal-mob-ev-rel">' + rel + '</span>';
+                }
+                html += '</span>';
+                html += '<i class="fas fa-chevron-left crm-cal-mob-ev-go" aria-hidden="true"></i>';
+                html += '</a></li>';
+            });
+            html += '</ol>';
+            mobAgendaBody.innerHTML = html;
+        }
+
+        function updateDayIndicators() {
+            cells.forEach(function (cell) {
+                if (cell.classList.contains('is-out')) return;
+                var jkey = cell.getAttribute('data-jkey');
+                var dayEvents = eventsForDay(jkey);
+                var count = dayEvents.length;
+                var countEl = cell.querySelector('.crm-cal-day-count');
+                var dotsWrap = cell.querySelector('.crm-cal-dots');
+
+                cell.classList.toggle('has-events', count > 0);
+
+                if (countEl) {
+                    if (count > 0) {
+                        countEl.textContent = toPersianDigits(count);
+                        countEl.hidden = false;
+                    } else {
+                        countEl.hidden = true;
+                    }
+                }
+
+                if (dotsWrap) {
+                    dotsWrap.innerHTML = '';
+                    if (count > 0) {
+                        var typesSeen = {};
+                        dayEvents.forEach(function (ev) {
+                            if (typesSeen[ev.type] || Object.keys(typesSeen).length >= 3) return;
+                            typesSeen[ev.type] = true;
+                            var dot = document.createElement('i');
+                            dot.className = 'crm-cal-dot crm-cal-dot--' + ev.type;
+                            dotsWrap.appendChild(dot);
+                        });
+                    }
+                }
+            });
+            if (selectedJkey) {
+                renderMobileAgenda(selectedJkey);
+            }
         }
 
         function applyFilter(filter) {
             activeFilter = filter;
             root.setAttribute('data-cal-filter-active', filter);
+            updateFilterLabel(filter);
 
             filterChips.forEach(function (chip) {
                 chip.classList.toggle('is-active', chip.getAttribute('data-cal-filter') === filter);
@@ -80,6 +306,7 @@
             });
 
             updateMoreCounts();
+            updateDayIndicators();
             if (activeView === 'week') renderWeekView(true);
             if (activeView === 'list') renderListView(true);
         }
@@ -225,6 +452,22 @@
             listEl.innerHTML = html;
         }
 
+        function openFilterSheet() {
+            if (!filterSheet) return;
+            filterSheet.classList.add('is-open');
+            filterSheet.setAttribute('aria-hidden', 'false');
+            if (filterOpenBtn) filterOpenBtn.setAttribute('aria-expanded', 'true');
+            document.body.classList.add('crm-cal-filter-sheet-open');
+        }
+
+        function closeFilterSheet() {
+            if (!filterSheet) return;
+            filterSheet.classList.remove('is-open');
+            filterSheet.setAttribute('aria-hidden', 'true');
+            if (filterOpenBtn) filterOpenBtn.setAttribute('aria-expanded', 'false');
+            document.body.classList.remove('crm-cal-filter-sheet-open');
+        }
+
         cells.forEach(function (cell) {
             cell.addEventListener('click', function (e) {
                 if (cell.classList.contains('is-out')) return;
@@ -244,7 +487,24 @@
         filterChips.forEach(function (chip) {
             chip.addEventListener('click', function () {
                 applyFilter(chip.getAttribute('data-cal-filter') || 'all');
+                if (chip.closest('.crm-cal-mob-filter-sheet')) {
+                    closeFilterSheet();
+                }
             });
+        });
+
+        if (filterOpenBtn) {
+            filterOpenBtn.addEventListener('click', function () {
+                if (filterSheet && filterSheet.classList.contains('is-open')) {
+                    closeFilterSheet();
+                } else {
+                    openFilterSheet();
+                }
+            });
+        }
+
+        root.querySelectorAll('[data-cal-filter-close]').forEach(function (el) {
+            el.addEventListener('click', closeFilterSheet);
         });
 
         viewBtns.forEach(function (btn) {
@@ -285,8 +545,15 @@
             });
         });
 
+        window.addEventListener('resize', function () {
+            if (selectedJkey) {
+                renderMobileAgenda(selectedJkey);
+            }
+        });
+
         setSelectedDay(todayJkey);
         applyFilter('all');
+        updateDayIndicators();
     }
 
     if (document.readyState === 'loading') {

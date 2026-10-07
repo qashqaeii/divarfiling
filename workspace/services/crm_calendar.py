@@ -188,7 +188,7 @@ def get_calendar_month(user, jyear: int, jmonth: int) -> Dict[str, Any]:
             jd = cursor_j
             in_month = jd.year == jyear and jd.month == jmonth
             is_today = jd == today_j
-            is_friday = jd.weekday() == 4
+            is_friday = jd.weekday() == 6  # jdatetime: شنبه=۰ … جمعه=۶
             events = events_by_jkey.get(_jkey(jd), []) if in_month else []
             week.append({
                 'jyear': jd.year,

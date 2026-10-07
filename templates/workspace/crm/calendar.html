@@ -10,7 +10,7 @@
 
 {% block crm_extra_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/crm-calendar.css' %}?v=4">
-<link rel="stylesheet" href="{% static 'workspace/css/crm-calendar-mobile.css' %}?v=4">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-calendar-mobile.css' %}?v=7">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-mobile-v2-deals.css' %}?v=1">
 {% endblock %}
 
@@ -19,21 +19,13 @@
      data-today-jkey="{{ calendar.today_jkey }}">
     {{ calendar.events_flat|json_script:"crmCalEventsData" }}
 
-    <header class="crm-cal-mob-header">
+    <header class="crm-cal-mob-header" aria-label="عملیات تقویم">
         <div class="crm-cal-mob-header-inner">
-            <div class="crm-cal-mob-header-main">
-                <h1 class="crm-cal-mob-title">تقویم</h1>
-                <p class="crm-cal-mob-sub">
-                    <span>{{ calendar.month_label }} {{ calendar.year_label }}</span>
-                    <span class="crm-cal-mob-sub-chip">{{ calendar.event_total_label }} کار</span>
-                </p>
-            </div>
-            <div class="crm-cal-mob-header-actions" role="toolbar" aria-label="عملیات تقویم">
-                {% include 'workspace/crm/includes/help/crm_help_mob_btn.html' with help_modal_id='modal-crm-calendar-help' help_title='راهنمای تقویم' help_mob_class='crm-cal-mob-icon-btn' %}
-                <button type="button" class="crm-cal-mob-icon-btn crm-cal-mob-icon-btn--primary" data-drawer-open="drawer-reminder" title="ایجاد یادآور" aria-label="ایجاد یادآور">
-                    <i class="fas fa-plus" aria-hidden="true"></i>
-                </button>
-            </div>
+            <button type="button" class="crm-cal-mob-cta" data-drawer-open="drawer-reminder">
+                <i class="fas fa-plus" aria-hidden="true"></i>
+                <span>یادآوری</span>
+            </button>
+            {% include 'workspace/crm/includes/help/crm_help_mob_btn.html' with help_modal_id='modal-crm-calendar-help' help_title='راهنمای تقویم' help_mob_class='crm-cal-mob-icon-btn crm-cal-mob-icon-btn--ghost' %}
         </div>
     </header>
 
@@ -91,7 +83,7 @@
     <div class="crm-shell-body crm-shell-body--flush">
         <div class="crm-cal-layout">
 
-            <aside class="crm-cal-agenda" aria-label="برنامه امروز">
+            <aside class="crm-cal-agenda crm-cal-agenda--sidebar" aria-label="برنامه امروز">
                 <div class="crm-cal-agenda-panel">
                     <header class="crm-cal-agenda-head">
                         <div class="crm-cal-agenda-head-icon" aria-hidden="true"><i class="fas fa-sun"></i></div>
@@ -217,12 +209,47 @@
                     </div>
                 </header>
 
-                <div class="crm-cal-filters" role="group" aria-label="فیلتر دسته‌بندی">
+                <div class="crm-cal-mob-filter-bar" aria-label="فیلتر رویدادها">
+                    <p class="crm-cal-mob-filter-active" id="crmCalFilterActive" data-filter-label="همه دسته‌ها">همه دسته‌ها</p>
+                    <button type="button"
+                            class="crm-cal-mob-filter-open"
+                            id="crmCalFilterOpen"
+                            aria-expanded="false"
+                            aria-controls="crmCalFilterPanel"
+                            aria-label="فیلتر نوع رویداد">
+                        <i class="fas fa-sliders" aria-hidden="true"></i>
+                        <span>فیلتر</span>
+                    </button>
+                </div>
+
+                <div class="crm-cal-filters crm-cal-filters--desk" role="group" aria-label="فیلتر دسته‌بندی">
                     <button type="button" class="crm-cal-filter-chip is-active" data-cal-filter="all">همه دسته‌ها</button>
                     <button type="button" class="crm-cal-filter-chip crm-cal-filter-chip--followup" data-cal-filter="followup">پیگیری</button>
                     <button type="button" class="crm-cal-filter-chip crm-cal-filter-chip--visit" data-cal-filter="visit">بازدید</button>
                     <button type="button" class="crm-cal-filter-chip crm-cal-filter-chip--reminder" data-cal-filter="reminder">یادآور</button>
                     <button type="button" class="crm-cal-filter-chip crm-cal-filter-chip--contract" data-cal-filter="contract">قرارداد</button>
+                </div>
+
+                <div class="crm-cal-mob-filter-sheet" id="crmCalFilterSheet" aria-hidden="true">
+                    <div class="crm-cal-mob-filter-backdrop" data-cal-filter-close tabindex="-1" aria-hidden="true"></div>
+                    <div class="crm-cal-mob-filter-panel" id="crmCalFilterPanel" role="dialog" aria-modal="true" aria-labelledby="crmCalFilterTitle">
+                        <header class="crm-cal-mob-filter-head">
+                            <div class="crm-cal-mob-filter-head-text">
+                                <h2 id="crmCalFilterTitle">فیلتر تقویم</h2>
+                                <p>نوع رویداد را انتخاب کنید</p>
+                            </div>
+                            <button type="button" class="crm-cal-mob-filter-close" data-cal-filter-close aria-label="بستن">
+                                <i class="fas fa-times" aria-hidden="true"></i>
+                            </button>
+                        </header>
+                        <div class="crm-cal-mob-filter-body" role="group" aria-label="نوع رویداد">
+                            <button type="button" class="crm-cal-filter-chip is-active" data-cal-filter="all">همه دسته‌ها</button>
+                            <button type="button" class="crm-cal-filter-chip crm-cal-filter-chip--followup" data-cal-filter="followup">پیگیری</button>
+                            <button type="button" class="crm-cal-filter-chip crm-cal-filter-chip--visit" data-cal-filter="visit">بازدید</button>
+                            <button type="button" class="crm-cal-filter-chip crm-cal-filter-chip--reminder" data-cal-filter="reminder">یادآور</button>
+                            <button type="button" class="crm-cal-filter-chip crm-cal-filter-chip--contract" data-cal-filter="contract">قرارداد</button>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="crm-cal-view crm-cal-view--month is-active" data-cal-view-panel="month">
@@ -239,8 +266,14 @@
                                  role="gridcell"
                                  tabindex="0"
                                  data-jkey="{{ day.jkey }}"
+                                 data-event-total="{{ day.event_count }}"
+                                 aria-selected="{% if day.is_today %}true{% else %}false{% endif %}"
+                                 {% if day.is_today %}aria-current="date"{% endif %}
                                  aria-label="{{ day.day_label }} {{ calendar.month_label }}{% if day.event_count %} · {{ day.event_count }} رویداد{% endif %}">
                                 <span class="crm-cal-day-num">{{ day.day_label }}</span>
+                                {% if day.in_month and day.event_count %}
+                                <span class="crm-cal-day-count" aria-hidden="true">{{ day.event_count_label }}</span>
+                                {% endif %}
                                 {% if day.in_month %}
                                 <div class="crm-cal-events">
                                     {% for ev in day.events|slice:":2" %}
@@ -282,6 +315,20 @@
                     </div>
                     <span class="crm-cal-days-count">{{ calendar.days_in_month_label }} روز</span>
                 </footer>
+            </section>
+
+            <section class="crm-cal-mob-agenda" id="crmCalMobAgenda" aria-label="برنامه روز انتخاب‌شده" aria-live="polite">
+                <header class="crm-cal-mob-agenda-head">
+                    <div class="crm-cal-mob-agenda-head-copy">
+                        <h2 id="crmCalMobAgendaTitle">{{ calendar.today_weekday }} · {{ calendar.today_full_label }}</h2>
+                        <p id="crmCalMobAgendaMeta">{% if calendar.today_agenda_count %}{{ calendar.today_agenda_count_label }} برنامه{% else %}بدون برنامه{% endif %}</p>
+                    </div>
+                    <button type="button" class="crm-cal-mob-agenda-add" data-drawer-open="drawer-reminder" aria-label="ثبت یادآوری">
+                        <i class="fas fa-plus" aria-hidden="true"></i>
+                        <span class="crm-cal-mob-agenda-add-label">ثبت یادآوری</span>
+                    </button>
+                </header>
+                <div class="crm-cal-mob-agenda-body" id="crmCalMobAgendaBody"></div>
             </section>
         </div>
     </div>
@@ -337,5 +384,5 @@
 {% endblock %}
 
 {% block crm_js %}
-<script src="{% static 'workspace/js/crm-calendar.js' %}?v=1"></script>
+<script src="{% static 'workspace/js/crm-calendar.js' %}?v=3"></script>
 {% endblock %}

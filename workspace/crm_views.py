@@ -298,12 +298,41 @@ class CRMTodayView(CRMContextMixin, LoginRequiredMixin, TemplateView):
         from workspace.services.crm_smart_command import inject_smart_command_context
 
         inject_smart_command_context(ctx, self.request, 'today')
+        ctx['reminder_form'] = ctx.get('reminder_form', CRMReminderForm())
+        ctx['crm_customers'] = customers_qs(self.request.user).order_by('name')[:200]
+        ctx['open_drawer'] = self.request.GET.get('drawer', '')
         if not items and stats.get('total', 0) == 0:
             from workspace.academy.context_helpers import inject_academy_context
             inject_academy_context(ctx, self.request.user, 'today_empty')
         return ctx
 
     def post(self, request):
+        if request.POST.get('reminder_create') == '1':
+            form = CRMReminderForm(request.POST)
+            if form.is_valid():
+                reminder = form.save(commit=False)
+                reminder.user = request.user
+                customer_id = request.POST.get('customer_id')
+                if customer_id:
+                    linked = customer_for_user(request.user, int(customer_id))
+                    if not linked or not can_edit_customer(request.user, linked):
+                        messages.error(request, 'مخاطب انتخاب‌شده یافت نشد.')
+                        ctx = self.get_context_data()
+                        ctx['reminder_form'] = form
+                        ctx['open_drawer'] = 'reminder'
+                        return render(request, self.template_name, ctx)
+                    reminder.customer = linked
+                reminder.save()
+                messages.success(request, 'یادآور ثبت شد.')
+                return redirect('workspace:crm_today')
+            ctx = self.get_context_data()
+            ctx['reminder_form'] = form
+            ctx['open_drawer'] = 'reminder'
+            for errors in form.errors.values():
+                for err in errors:
+                    messages.error(request, str(err))
+            return render(request, self.template_name, ctx)
+
         action = request.POST.get('action', '')
         customer_id = request.POST.get('customer_id')
         reminder_id = request.POST.get('reminder_id')

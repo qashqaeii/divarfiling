@@ -905,3 +905,216 @@ a.crm-today-pro .crm-queue-card-name:hover,
     }
 }
 
+/* ── Task card v2 (desktop + shared) ── */
+.crm-today-pro .crm-today-task-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.4rem;
+    margin-bottom: 0.35rem;
+}
+
+.crm-today-pro .crm-today-task-status {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.3rem 0.45rem;
+    min-width: 0;
+    flex: 1;
+}
+
+.crm-today-pro .crm-today-task-status-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.66rem;
+    font-weight: 800;
+    padding: 0.14rem 0.45rem;
+    border-radius: 999px;
+}
+
+.crm-today-pro .crm-today-task-status-chip--overdue {
+    background: var(--tq-overdue-soft);
+    color: #b45309;
+}
+
+.crm-today-pro .crm-today-task-status-chip--today {
+    background: var(--tq-today-soft);
+    color: var(--ws-primary);
+}
+
+.crm-today-pro .crm-today-task-when {
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: var(--ws-text-muted);
+}
+
+.crm-today-pro .crm-today-task-more {
+    position: relative;
+    flex-shrink: 0;
+}
+
+.crm-today-pro .crm-today-task-more-btn {
+    width: 2rem;
+    height: 2rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    border: 1px solid var(--ws-border);
+    background: var(--ws-surface);
+    color: var(--ws-text-muted);
+    list-style: none;
+    cursor: pointer;
+}
+
+.crm-today-pro .crm-today-task-more:not([open]) .crm-today-task-more-panel {
+    display: none;
+}
+
+.crm-today-pro .crm-today-task-more-panel {
+    position: absolute;
+    inset-inline-end: 0;
+    z-index: 20;
+    min-width: 10.5rem;
+    margin-top: 0.2rem;
+    padding: 0.25rem;
+    border-radius: 10px;
+    border: 1px solid var(--ws-border);
+    background: var(--ws-surface);
+    box-shadow: 0 8px 22px -10px rgba(15, 23, 42, 0.15);
+}
+
+.crm-today-pro .crm-today-task-more-item {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    width: 100%;
+    min-height: 2.25rem;
+    padding: 0.3rem 0.45rem;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    font-family: inherit;
+    font-size: 0.74rem;
+    font-weight: 650;
+    color: var(--ws-text-secondary);
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.crm-today-pro .crm-today-task-title {
+    margin: 0;
+    font-size: 0.88rem;
+    font-weight: 800;
+    line-height: 1.35;
+}
+
+.crm-today-pro .crm-today-task-title a {
+    color: inherit;
+    text-decoration: none;
+}
+
+.crm-today-pro a.crm-today-task-title a:hover,
+.crm-today-pro .crm-today-task-title a:hover {
+    color: var(--ws-primary);
+}
+
+.crm-today-pro .crm-today-task-context {
+    margin: 0.15rem 0 0;
+    font-size: 0.72rem;
+    color: var(--ws-text-muted);
+}
+
+.crm-today-pro .crm-today-task-note {
+    margin: 0.35rem 0 0;
+    padding: 0.45rem 0.55rem;
+    border-radius: 8px;
+    background: var(--ws-surface-2);
+    font-size: 0.72rem;
+    line-height: 1.5;
+    border-inline-start: 2px solid var(--ws-border);
+}
+
+.crm-today-pro .crm-today-task-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-top: 0.45rem;
+}
+
+.crm-today-pro .crm-today-task-meta-row {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    min-height: 1.65rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    background: var(--ws-surface-2);
+    border: 1px solid var(--ws-border);
+    text-decoration: none;
+    color: var(--ws-text-secondary);
+}
+
+.crm-today-pro .crm-today-task-meta-k {
+    font-size: 0.65rem;
+    color: var(--ws-text-muted);
+}
+
+.crm-today-pro .crm-today-task-foot {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-top: 0.55rem;
+    padding-top: 0.55rem;
+    border-top: 1px solid var(--ws-border-light, var(--ws-border));
+}
+
+.crm-today-pro .crm-today-task-done-form {
+    flex: 1;
+    min-width: 0;
+}
+
+.crm-today-pro .crm-today-task-done {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
+    width: 100%;
+    min-height: 2.35rem;
+    padding: 0.4rem 0.65rem;
+    border-radius: 10px;
+    border: 1px solid color-mix(in srgb, #22c55e 30%, var(--ws-border));
+    background: color-mix(in srgb, #22c55e 7%, var(--ws-surface));
+    color: #15803d;
+    font-family: inherit;
+    font-size: 0.76rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: background 0.12s, transform 0.12s;
+}
+
+.crm-today-pro .crm-today-task-done:hover {
+    background: color-mix(in srgb, #22c55e 14%, var(--ws-surface));
+}
+
+.crm-today-pro .crm-today-task-kind {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    flex-shrink: 0;
+    font-size: 0.66rem;
+    font-weight: 700;
+    color: var(--ws-text-muted);
+}
+
+.crm-today-pro .crm-queue-card--overdue.crm-today-task {
+    background: color-mix(in srgb, #f59e0b 4%, var(--ws-surface));
+}
+
+.crm-today-pro .crm-queue-card--today.crm-today-task {
+    background: color-mix(in srgb, var(--ws-primary) 3%, var(--ws-surface));
+}
+

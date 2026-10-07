@@ -20,6 +20,8 @@ TIME_OF_DAY_DEFAULTS = {
     'شب‌ها': time(20, 0),
 }
 
+_AFTERNOON_EVENING_KEYWORDS = frozenset({'عصر', 'غروب', 'شب', 'شب‌ها'})
+
 _WEEKDAY_MAP = {name: idx for idx, name in enumerate(PERSIAN_WEEKDAYS)}
 
 _WORD_HOUR = {
@@ -53,7 +55,9 @@ def _parse_clock(text: str) -> Optional[time]:
             hour_match = re.search(r'ساعت\s*(\d{1,2})', s)
             if hour_match:
                 hour = int(hour_match.group(1))
-                if hour <= 12 and 'شب' in s and hour < 12:
+                if hour <= 11 and keyword in _AFTERNOON_EVENING_KEYWORDS:
+                    hour += 12
+                elif hour <= 12 and 'شب' in s and hour < 12:
                     hour += 12
                 return time(hour, 0)
             minute_match = re.search(r'(\d{1,2})\s*:\s*(\d{2})', s)
@@ -122,6 +126,8 @@ def parse_due_datetime(
         target_date = now_local.date()
 
     clock = _parse_clock(time_text or '')
+    if not clock and not (time_text or '').strip():
+        clock = _parse_clock(date_text or '')
     if not clock and (time_text or '').strip():
         return None, 'invalid_time'
     if not clock:

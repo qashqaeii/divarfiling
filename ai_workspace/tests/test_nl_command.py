@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 from datetime import timedelta
+from zoneinfo import ZoneInfo
 from unittest.mock import MagicMock, patch
 
 from django.contrib.auth import get_user_model
@@ -159,6 +160,27 @@ class NLCommandDatetimeTests(TestCase):
         due, err = parse_due_datetime(date_text='پس‌فردا', time_text='ظهر', tz_name='Asia/Tehran', now=now)
         self.assertEqual(err, '')
         self.assertEqual(due.hour, 12)
+
+    def test_today_afternoon_explicit_hour(self):
+        tz = ZoneInfo('Asia/Tehran')
+        now = timezone.now().astimezone(tz).replace(hour=14, minute=30, second=0, microsecond=0)
+        due, err = parse_due_datetime(
+            date_text='امروز عصر',
+            time_text='ساعت ۵ عصر',
+            tz_name='Asia/Tehran',
+            now=now,
+        )
+        self.assertEqual(err, '')
+        self.assertIsNotNone(due)
+        self.assertEqual(due.hour, 17)
+        self.assertGreater(due, now)
+
+    def test_today_afternoon_from_date_text_only(self):
+        tz = ZoneInfo('Asia/Tehran')
+        now = timezone.now().astimezone(tz).replace(hour=10, minute=0, second=0, microsecond=0)
+        due, err = parse_due_datetime(date_text='امروز عصر', time_text='', tz_name='Asia/Tehran', now=now)
+        self.assertEqual(err, '')
+        self.assertEqual(due.hour, 16)
 
 
 @override_settings(AI_ENABLED=True)

@@ -1,85 +1,124 @@
 {% load crm_tags %}
-<article class="crm-queue-card crm-queue-card--{{ item.urgency }} crm-queue-card--{{ item.kind }}">
-    <div class="crm-queue-card-accent" aria-hidden="true"></div>
-    <div class="crm-queue-card-inner">
-        <div class="crm-queue-card-head">
+<article class="crm-queue-card crm-today-task crm-queue-card--{{ item.urgency }} crm-queue-card--{{ item.kind }}" data-task-kind="{{ item.kind }}">
+    <div class="crm-queue-card-accent crm-today-task-accent" aria-hidden="true"></div>
+    <div class="crm-queue-card-inner crm-today-task-inner">
+        <header class="crm-today-task-head">
+            <div class="crm-today-task-status" aria-label="وضعیت کار">
+                {% if item.urgency == 'overdue' %}
+                <span class="crm-today-task-status-chip crm-today-task-status-chip--overdue">
+                    <i class="fas fa-clock" aria-hidden="true"></i>
+                    <span>عقب‌افتاده</span>
+                </span>
+                {% else %}
+                <span class="crm-today-task-status-chip crm-today-task-status-chip--today">
+                    <i class="fas fa-sun" aria-hidden="true"></i>
+                    <span>امروز</span>
+                </span>
+                {% endif %}
+                <span class="crm-today-task-when">{{ item.subtitle }}</span>
+            </div>
+            <details class="crm-today-task-more">
+                <summary class="crm-today-task-more-btn" aria-label="عملیات بیشتر">
+                    <i class="fas fa-ellipsis-v" aria-hidden="true"></i>
+                </summary>
+                <div class="crm-today-task-more-panel" role="menu">
+                    {% if item.customer_id %}
+                    <a href="{% url 'workspace:crm_detail' item.customer_id %}" class="crm-today-task-more-item" role="menuitem">
+                        <i class="fas fa-user" aria-hidden="true"></i><span>پروفایل مخاطب</span>
+                    </a>
+                    {% endif %}
+                    {% if item.kind == 'followup' and item.customer_id %}
+                    <form method="post" class="crm-inline-form crm-today-task-more-form" role="none">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="log_call">
+                        <input type="hidden" name="customer_id" value="{{ item.customer_id }}">
+                        <button type="submit" class="crm-today-task-more-item" role="menuitem"{% if item.customer_phone %} data-tel="{{ item.customer_phone }}"{% endif %}>
+                            <i class="fas fa-phone-volume" aria-hidden="true"></i><span>ثبت تماس</span>
+                        </button>
+                    </form>
+                    {% endif %}
+                    {% if item.kind == 'reminder' %}
+                    <a href="{% url 'workspace:crm_reminders' %}" class="crm-today-task-more-item" role="menuitem">
+                        <i class="fas fa-pen" aria-hidden="true"></i><span>ویرایش در یادآورها</span>
+                    </a>
+                    {% endif %}
+                </div>
+            </details>
+        </header>
+
+        <div class="crm-today-task-main">
+            {% if item.kind == 'reminder' %}
+            <h3 class="crm-today-task-title">{{ item.title }}</h3>
+            {% if item.customer_id %}
+            <p class="crm-today-task-context">
+                <span class="crm-today-task-context-label">مخاطب:</span>
+                <a href="{% url 'workspace:crm_detail' item.customer_id %}" class="crm-today-task-context-link">{{ item.customer_name }}</a>
+            </p>
+            {% endif %}
+            {% else %}
+            <h3 class="crm-today-task-title">
+                {% if item.customer_id %}
+                <a href="{% url 'workspace:crm_detail' item.customer_id %}">{{ item.title }}</a>
+                {% else %}
+                {{ item.title }}
+                {% endif %}
+            </h3>
+            <p class="crm-today-task-context">
+                <span class="crm-today-task-context-label">پیگیری:</span>
+                <span>{{ item.customer_type|default:"تماس با مشتری" }}</span>
+            </p>
+            {% endif %}
+            {% if item.note %}
+            <p class="crm-today-task-note">{{ item.note }}</p>
+            {% endif %}
+        </div>
+
+        {% if item.customer_phone or item.customer_status %}
+        <div class="crm-today-task-meta">
+            {% if item.customer_status %}
+            <span class="crm-today-task-meta-row crm-today-task-meta-row--status" style="{% crm_status_style item.customer_status %}">
+                <span class="crm-today-task-meta-k">وضعیت</span>
+                <span>{{ item.customer_status }}</span>
+            </span>
+            {% endif %}
+            {% if item.customer_phone %}
+            <a href="tel:{{ item.customer_phone }}" class="crm-today-task-meta-row crm-today-task-meta-row--link" dir="ltr">
+                <span class="crm-today-task-meta-k">تماس</span>
+                <span>{{ item.customer_phone }}</span>
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <footer class="crm-today-task-foot">
             {% if item.kind == 'followup' and item.customer_id %}
-            <form method="post" class="crm-inline-form">
+            <form method="post" class="crm-inline-form crm-today-task-done-form">
                 {% csrf_token %}
                 <input type="hidden" name="action" value="complete_followup">
                 <input type="hidden" name="customer_id" value="{{ item.customer_id }}">
-                <button type="submit" class="crm-queue-check" title="انجام شد" aria-label="انجام پیگیری {{ item.title }}">
+                <button type="submit" class="crm-today-task-done" aria-label="انجام شد — {{ item.title }}">
                     <i class="fas fa-check" aria-hidden="true"></i>
+                    <span>انجام شد</span>
                 </button>
             </form>
             {% elif item.kind == 'reminder' %}
-            <form method="post" class="crm-inline-form">
+            <form method="post" class="crm-inline-form crm-today-task-done-form">
                 {% csrf_token %}
                 <input type="hidden" name="action" value="toggle_reminder">
                 <input type="hidden" name="reminder_id" value="{{ item.reminder_id }}">
-                <button type="submit" class="crm-queue-check" title="انجام شد" aria-label="انجام یادآور">
+                <button type="submit" class="crm-today-task-done" aria-label="انجام شد — {{ item.title }}">
                     <i class="fas fa-check" aria-hidden="true"></i>
+                    <span>انجام شد</span>
                 </button>
             </form>
-            {% else %}
-            <span class="crm-queue-check crm-queue-check--static" aria-hidden="true"></span>
             {% endif %}
-
-            <span class="crm-queue-card-avatar" aria-hidden="true">{{ item.title|slice:":1" }}</span>
-
-            <div class="crm-queue-card-info">
-                {% if item.customer_id %}
-                <a href="{% url 'workspace:crm_detail' item.customer_id %}" class="crm-queue-card-name">{{ item.title }}</a>
-                {% else %}
-                <span class="crm-queue-card-name">{{ item.title }}</span>
-                {% endif %}
-                <p class="crm-queue-card-sub">{{ item.subtitle }}</p>
-            </div>
-
-            <span class="crm-queue-card-kind">
+            <span class="crm-today-task-kind" aria-label="نوع کار">
                 {% if item.kind == 'reminder' %}
-                <i class="fas fa-bell" aria-hidden="true"></i> یادآور
+                <i class="fas fa-bell" aria-hidden="true"></i><span>یادآور</span>
                 {% else %}
-                <i class="fas fa-phone-volume" aria-hidden="true"></i> پیگیری
+                <i class="fas fa-phone-volume" aria-hidden="true"></i><span>پیگیری</span>
                 {% endif %}
             </span>
-        </div>
-
-        {% if item.customer_type or item.customer_phone or item.customer_status or item.note %}
-        <div class="crm-queue-card-meta">
-            {% if item.customer_status %}
-            <span class="crm-queue-meta-pill crm-queue-meta-pill--status" style="{% crm_status_style item.customer_status %}">{{ item.customer_status }}</span>
-            {% endif %}
-            {% if item.customer_type %}
-            <span class="crm-queue-meta-pill">{{ item.customer_type }}</span>
-            {% endif %}
-            {% if item.customer_phone %}
-            <a href="tel:{{ item.customer_phone }}" class="crm-queue-meta-pill crm-queue-meta-pill--phone" dir="ltr">
-                <i class="fas fa-phone" aria-hidden="true"></i>{{ item.customer_phone }}
-            </a>
-            {% endif %}
-        </div>
-        {% if item.note %}<p class="crm-queue-card-note">{{ item.note }}</p>{% endif %}
-        {% endif %}
-
-        <div class="crm-queue-card-actions">
-            {% if item.kind == 'followup' and item.customer_id %}
-            <form method="post" class="crm-inline-form crm-queue-act-form">
-                {% csrf_token %}
-                <input type="hidden" name="action" value="log_call">
-                <input type="hidden" name="customer_id" value="{{ item.customer_id }}">
-                <button type="submit" class="crm-queue-act crm-queue-act--call"{% if item.customer_phone %} data-tel="{{ item.customer_phone }}"{% endif %}>
-                    <i class="fas fa-phone-volume" aria-hidden="true"></i><span>ثبت تماس</span>
-                </button>
-            </form>
-            <a href="{% url 'workspace:crm_detail' item.customer_id %}" class="crm-queue-act crm-queue-act--ghost">
-                <span>پروفایل</span><i class="fas fa-chevron-left" aria-hidden="true"></i>
-            </a>
-            {% elif item.kind == 'reminder' and item.customer_id %}
-            <a href="{% url 'workspace:crm_detail' item.customer_id %}" class="crm-queue-act crm-queue-act--ghost crm-queue-act--wide">
-                <span>پروفایل</span><i class="fas fa-chevron-left" aria-hidden="true"></i>
-            </a>
-            {% endif %}
-        </div>
+        </footer>
     </div>
 </article>

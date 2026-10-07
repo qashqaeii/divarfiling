@@ -2,20 +2,27 @@
 <article class="crm-queue-card crm-today-task crm-queue-card--{{ item.urgency }} crm-queue-card--{{ item.kind }}" data-task-kind="{{ item.kind }}">
     <div class="crm-queue-card-accent crm-today-task-accent" aria-hidden="true"></div>
     <div class="crm-queue-card-inner crm-today-task-inner">
-        <header class="crm-today-task-head">
-            <div class="crm-today-task-status" aria-label="وضعیت کار">
-                {% if item.urgency == 'overdue' %}
-                <span class="crm-today-task-status-chip crm-today-task-status-chip--overdue">
-                    <i class="fas fa-clock" aria-hidden="true"></i>
-                    <span>عقب‌افتاده</span>
-                </span>
+        <div class="crm-today-task-top">
+            <div class="crm-today-task-identity">
+                {% if item.kind == 'reminder' %}
+                <h3 class="crm-today-task-title">{{ item.title }}</h3>
                 {% else %}
-                <span class="crm-today-task-status-chip crm-today-task-status-chip--today">
-                    <i class="fas fa-sun" aria-hidden="true"></i>
-                    <span>امروز</span>
-                </span>
+                <h3 class="crm-today-task-title">
+                    {% if item.customer_id %}
+                    <a href="{% url 'workspace:crm_detail' item.customer_id %}">{{ item.title }}</a>
+                    {% else %}
+                    {{ item.title }}
+                    {% endif %}
+                </h3>
                 {% endif %}
-                <span class="crm-today-task-when">{{ item.subtitle }}</span>
+                <p class="crm-today-task-lede">
+                    <span class="crm-today-task-kind-label">
+                        {% if item.kind == 'reminder' %}یادآور{% else %}پیگیری{% endif %}
+                    </span>
+                    {% if item.subtitle %}
+                    <span class="crm-today-task-when">{{ item.subtitle }}</span>
+                    {% endif %}
+                </p>
             </div>
             <details class="crm-today-task-more">
                 <summary class="crm-today-task-more-btn" aria-label="عملیات بیشتر">
@@ -44,81 +51,60 @@
                     {% endif %}
                 </div>
             </details>
-        </header>
-
-        <div class="crm-today-task-main">
-            {% if item.kind == 'reminder' %}
-            <h3 class="crm-today-task-title">{{ item.title }}</h3>
-            {% if item.customer_id %}
-            <p class="crm-today-task-context">
-                <span class="crm-today-task-context-label">مخاطب:</span>
-                <a href="{% url 'workspace:crm_detail' item.customer_id %}" class="crm-today-task-context-link">{{ item.customer_name }}</a>
-            </p>
-            {% endif %}
-            {% else %}
-            <h3 class="crm-today-task-title">
-                {% if item.customer_id %}
-                <a href="{% url 'workspace:crm_detail' item.customer_id %}">{{ item.title }}</a>
-                {% else %}
-                {{ item.title }}
-                {% endif %}
-            </h3>
-            <p class="crm-today-task-context">
-                <span class="crm-today-task-context-label">پیگیری:</span>
-                <span>{{ item.customer_type|default:"تماس با مشتری" }}</span>
-            </p>
-            {% endif %}
-            {% if item.note %}
-            <p class="crm-today-task-note">{{ item.note }}</p>
-            {% endif %}
         </div>
 
-        {% if item.customer_phone or item.customer_status %}
+        {% if item.kind == 'reminder' and item.customer_id or item.kind == 'followup' %}
+        <p class="crm-today-task-context">
+            {% if item.kind == 'reminder' %}
+            <a href="{% url 'workspace:crm_detail' item.customer_id %}" class="crm-today-task-context-link">{{ item.customer_name }}</a>
+            {% else %}
+            {{ item.customer_type|default:"تماس با مشتری" }}
+            {% endif %}
+        </p>
+        {% endif %}
+
+        {% if item.note %}
+        <p class="crm-today-task-note">{{ item.note }}</p>
+        {% endif %}
+
+        {% if item.customer_status %}
         <div class="crm-today-task-meta">
-            {% if item.customer_status %}
             <span class="crm-today-task-meta-row crm-today-task-meta-row--status" style="{% crm_status_style item.customer_status %}">
-                <span class="crm-today-task-meta-k">وضعیت</span>
-                <span>{{ item.customer_status }}</span>
+                {{ item.customer_status }}
             </span>
-            {% endif %}
-            {% if item.customer_phone %}
-            <a href="tel:{{ item.customer_phone }}" class="crm-today-task-meta-row crm-today-task-meta-row--link" dir="ltr">
-                <span class="crm-today-task-meta-k">تماس</span>
-                <span>{{ item.customer_phone }}</span>
-            </a>
-            {% endif %}
         </div>
         {% endif %}
 
-        <footer class="crm-today-task-foot">
+        {% if item.kind == 'followup' and item.customer_id or item.kind == 'reminder' %}
+        <footer class="crm-today-task-actions{% if not item.customer_phone %} crm-today-task-actions--solo{% endif %}">
+            {% if item.customer_phone %}
+            <a href="tel:{{ item.customer_phone }}" class="crm-today-task-act crm-today-task-act--call" dir="ltr">
+                <i class="fas fa-phone" aria-hidden="true"></i>
+                <span>تماس</span>
+            </a>
+            {% endif %}
             {% if item.kind == 'followup' and item.customer_id %}
-            <form method="post" class="crm-inline-form crm-today-task-done-form">
+            <form method="post" class="crm-inline-form crm-today-task-act-form">
                 {% csrf_token %}
                 <input type="hidden" name="action" value="complete_followup">
                 <input type="hidden" name="customer_id" value="{{ item.customer_id }}">
-                <button type="submit" class="crm-today-task-done" aria-label="انجام شد — {{ item.title }}">
+                <button type="submit" class="crm-today-task-act crm-today-task-act--done" aria-label="انجام شد — {{ item.title }}">
                     <i class="fas fa-check" aria-hidden="true"></i>
                     <span>انجام شد</span>
                 </button>
             </form>
             {% elif item.kind == 'reminder' %}
-            <form method="post" class="crm-inline-form crm-today-task-done-form">
+            <form method="post" class="crm-inline-form crm-today-task-act-form">
                 {% csrf_token %}
                 <input type="hidden" name="action" value="toggle_reminder">
                 <input type="hidden" name="reminder_id" value="{{ item.reminder_id }}">
-                <button type="submit" class="crm-today-task-done" aria-label="انجام شد — {{ item.title }}">
+                <button type="submit" class="crm-today-task-act crm-today-task-act--done" aria-label="انجام شد — {{ item.title }}">
                     <i class="fas fa-check" aria-hidden="true"></i>
                     <span>انجام شد</span>
                 </button>
             </form>
             {% endif %}
-            <span class="crm-today-task-kind" aria-label="نوع کار">
-                {% if item.kind == 'reminder' %}
-                <i class="fas fa-bell" aria-hidden="true"></i><span>یادآور</span>
-                {% else %}
-                <i class="fas fa-phone-volume" aria-hidden="true"></i><span>پیگیری</span>
-                {% endif %}
-            </span>
         </footer>
+        {% endif %}
     </div>
 </article>

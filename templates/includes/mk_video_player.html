@@ -20,7 +20,6 @@
     <div class="mk-vid-wrap">
         <div class="mk-vid-frame">
             <video class="mk-vid-el"
-                   controls
                    playsinline
                    preload="metadata"
                    {% if video.poster %}{% if video.poster_kind == 'static' %}poster="{% static video.poster %}"{% else %}poster="{{ video.poster }}"{% endif %}{% endif %}

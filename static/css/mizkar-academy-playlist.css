@@ -567,14 +567,43 @@ html.mk-public[data-theme="light"] .acd-pl-page {
     padding: 0.65rem 1rem 0.5rem;
     border-bottom: 1px solid var(--acd-pl-border, rgba(148, 163, 184, 0.15));
 }
+
+.acd-pl-search-field {
+    display: block;
+    position: relative;
+}
+
+.acd-pl-search-icon {
+    position: absolute;
+    inset-inline-end: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    display: grid;
+    place-items: center;
+    width: 1.1rem;
+    height: 1.1rem;
+    color: var(--acd-pl-muted);
+    font-size: 0.82rem;
+    pointer-events: none;
+    z-index: 1;
+}
+
 .acd-pl-search-input {
+    display: block;
     width: 100%;
+    box-sizing: border-box;
     border-radius: 10px;
     border: 1px solid rgba(148, 163, 184, 0.25);
-    padding: 0.55rem 0.75rem;
+    padding-block: 0.55rem;
+    padding-inline: 0.75rem 2.35rem;
     font: inherit;
     background: rgba(15, 23, 42, 0.35);
     color: inherit;
+}
+
+html.mk-public[data-theme="light"] .acd-pl-search-input {
+    background: rgba(15, 23, 42, 0.06);
+    border-color: var(--acd-pl-border);
 }
 .acd-pl-search-empty {
     margin: 0.35rem 1rem 0;
@@ -1128,10 +1157,20 @@ html.mk-public[data-theme="light"] .acd-pl-page {
 
 /* Scrim + FAB — must sit in the same stacking context as the sheet
    (never trap the sheet under a low-z parent while scrim is higher). */
+.acd-pl-overlay-portal {
+    position: relative;
+    z-index: 0;
+}
+
+.acd-pl-sidebar-mount {
+    display: none;
+    min-width: 0;
+}
+
 .acd-pl-scrim {
     position: fixed;
     inset: 0;
-    z-index: 1200;
+    z-index: 1300;
     background: rgba(2, 6, 14, 0.58);
     backdrop-filter: blur(3px);
     -webkit-backdrop-filter: blur(3px);
@@ -1149,7 +1188,7 @@ html.mk-public[data-theme="light"] .acd-pl-page {
     position: fixed;
     inset-inline-start: max(0.85rem, env(safe-area-inset-left, 0px));
     bottom: calc(0.9rem + var(--acd-pl-safe-bottom));
-    z-index: 1190;
+    z-index: 1320;
     min-height: 2.75rem;
     padding: 0.65rem 1rem;
     border: 0;
@@ -1198,7 +1237,7 @@ html.mk-public[data-theme="light"] .acd-pl-page {
         max-height: min(82vh, 720px);
         height: auto;
         border-radius: 20px 20px 0 0;
-        z-index: 1210;
+        z-index: 1310;
         transform: translate3d(0, 110%, 0);
         transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
         border-bottom: 0;
@@ -1213,6 +1252,28 @@ html.mk-public[data-theme="light"] .acd-pl-page {
         transform: translate3d(0, 0, 0);
     }
 
+    .acd-pl-sidebar {
+        min-height: 0;
+        height: min(82vh, 720px);
+    }
+
+    .acd-pl-search-wrap {
+        flex-shrink: 0;
+        background: var(--acd-pl-surface-solid);
+    }
+
+    .acd-pl-sidebar-body {
+        min-height: 0;
+        flex: 1 1 auto;
+        overscroll-behavior-y: contain;
+        -webkit-overflow-scrolling: touch;
+        background: var(--acd-pl-surface-solid);
+    }
+
+    .acd-pl-chapter-head {
+        background: var(--acd-pl-surface-solid);
+    }
+
     body.acd-pl-drawer-open .acd-pl-fab {
         opacity: 0;
         pointer-events: none;
@@ -1222,8 +1283,36 @@ html.mk-public[data-theme="light"] .acd-pl-page {
 
     .acd-pl-sidebar-close { display: grid; }
 
+    html.acd-pl-drawer-open,
     body.acd-pl-drawer-open {
         overflow: hidden;
+        height: 100%;
+        overscroll-behavior: none;
+    }
+
+    .acd-pl-overlay-portal {
+        position: fixed;
+        inset: 0;
+        z-index: 1300;
+        pointer-events: none;
+    }
+
+    .acd-pl-overlay-portal .acd-pl-scrim:not([hidden]) {
+        pointer-events: auto;
+    }
+
+    .acd-pl-overlay-portal .acd-pl-sidebar.is-open {
+        pointer-events: auto;
+    }
+
+    .acd-pl-overlay-portal .acd-pl-fab {
+        pointer-events: auto;
+    }
+
+    body.acd-pl-drawer-open .mk-footer-v2.footer,
+    body.acd-pl-drawer-open .mk-site-header {
+        visibility: hidden;
+        pointer-events: none;
     }
 }
 
@@ -1344,6 +1433,15 @@ html.mk-public[data-theme="light"] .acd-pl-page {
 
 /* ── Desktop cinema layout ── */
 @media (min-width: 1100px) {
+    .acd-pl-sidebar-mount {
+        display: block;
+    }
+
+    .acd-pl-overlay-portal .acd-pl-scrim,
+    .acd-pl-overlay-portal .acd-pl-fab {
+        display: none !important;
+    }
+
     .acd-pl-page {
         --acd-pl-shell: min(1360px, calc(100% - 2.5rem));
         --acd-pl-radius-lg: 22px;

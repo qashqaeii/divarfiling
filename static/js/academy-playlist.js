@@ -6,6 +6,26 @@
 
     var mqDesktop = window.matchMedia('(min-width: 1100px)');
 
+    function syncPlaylistPortal() {
+        var mount = document.getElementById('acdPlSidebarMount');
+        var portal = document.getElementById('acdPlOverlayPortal');
+        var sidebar = document.getElementById('acdPlSidebar');
+        if (!mount || !portal || !sidebar) return;
+
+        if (mqDesktop.matches) {
+            if (sidebar.parentElement !== mount) {
+                mount.appendChild(sidebar);
+            }
+        } else {
+            var scrim = portal.querySelector('[data-acd-pl-scrim]');
+            if (scrim) {
+                scrim.insertAdjacentElement('afterend', sidebar);
+            } else if (sidebar.parentElement !== portal) {
+                portal.appendChild(sidebar);
+            }
+        }
+    }
+
     function initDrawer() {
         var page = document.getElementById('acdPlaylistPage');
         var sidebar = document.getElementById('acdPlSidebar') || document.querySelector('.acd-pl-sidebar');
@@ -15,6 +35,7 @@
         if (!sidebar || !openBtns.length) return;
 
         var lastFocusTrigger = null;
+        var lockedScrollY = 0;
 
         function isDesktop() {
             return mqDesktop.matches;
@@ -23,6 +44,23 @@
         function setDrawerScrollLock(locked) {
             document.documentElement.classList.toggle('acd-pl-drawer-open', locked);
             document.body.classList.toggle('acd-pl-drawer-open', locked);
+            if (isDesktop()) {
+                document.body.style.position = '';
+                document.body.style.top = '';
+                document.body.style.width = '';
+                return;
+            }
+            if (locked) {
+                lockedScrollY = window.scrollY || window.pageYOffset || 0;
+                document.body.style.position = 'fixed';
+                document.body.style.top = '-' + lockedScrollY + 'px';
+                document.body.style.width = '100%';
+            } else {
+                document.body.style.position = '';
+                document.body.style.top = '';
+                document.body.style.width = '';
+                window.scrollTo(0, lockedScrollY);
+            }
         }
 
         function setOpen(open, trigger) {
@@ -96,6 +134,7 @@
 
         function onViewportChange() {
             if (isDesktop()) setOpen(false);
+            syncPlaylistPortal();
         }
 
         if (typeof mqDesktop.addEventListener === 'function') {
@@ -350,6 +389,7 @@
     }
 
     document.addEventListener('DOMContentLoaded', function () {
+        syncPlaylistPortal();
         initDrawer();
         initViewTracking();
         initPlaylistSearch();

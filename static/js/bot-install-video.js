@@ -1,5 +1,5 @@
 /**
- * پخش‌کننده ویدیوی آموزشی نصب ربات — overlay پلی و مخفی‌سازی پس از شروع
+ * پخش‌کننده ویدیوی آموزشی — overlay پلی سفارشی؛ controls مرورگر پس از شروع پخش
  */
 (function () {
     function initPlayer(root) {
@@ -7,6 +7,8 @@
         var video = root.querySelector('.mk-vid-el');
         var playBtn = root.querySelector('[data-mk-vid-play]');
         if (!frame || !video) return;
+
+        video.removeAttribute('controls');
 
         function setPlaying(playing) {
             frame.classList.toggle('is-playing', playing);
@@ -17,22 +19,38 @@
             if (ended) frame.classList.remove('is-playing');
         }
 
+        function enableNativeControls() {
+            if (!video.hasAttribute('controls')) {
+                video.setAttribute('controls', '');
+            }
+        }
+
+        function startPlayback() {
+            enableNativeControls();
+            video.play().catch(function () {});
+        }
+
         if (playBtn) {
-            playBtn.addEventListener('click', function () {
-                video.play().catch(function () {});
-            });
+            playBtn.addEventListener('click', startPlayback);
         }
 
         video.addEventListener('play', function () {
+            enableNativeControls();
             setPlaying(true);
             setEnded(false);
         });
 
         video.addEventListener('pause', function () {
-            if (!video.ended) setPlaying(false);
+            if (video.ended) return;
+            if (video.currentTime > 0) {
+                setPlaying(true);
+            } else {
+                setPlaying(false);
+            }
         });
 
         video.addEventListener('ended', function () {
+            video.removeAttribute('controls');
             setPlaying(false);
             setEnded(true);
         });

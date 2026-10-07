@@ -38,7 +38,7 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/mizkar-video-player.css' %}?v=2">
-<link rel="stylesheet" href="{% static 'css/mizkar-academy-playlist.css' %}?v=6">
+<link rel="stylesheet" href="{% static 'css/mizkar-academy-playlist.css' %}?v=9">
 <link rel="stylesheet" href="{% static 'css/academy-mobile.css' %}?v=4">
 {% endblock %}
 
@@ -402,6 +402,14 @@
             </section>
         </main>
 
+        <div id="acdPlSidebarMount" class="acd-pl-sidebar-mount"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block page_overlays %}
+<div class="acd-pl-overlay-portal" id="acdPlOverlayPortal">
+    <div class="acd-pl-scrim" data-acd-pl-scrim hidden aria-hidden="true"></div>
         <aside class="acd-pl-sidebar" id="acdPlSidebar" aria-label="فهرست پلی‌لیست">
             <div class="acd-pl-sidebar-grab" aria-hidden="true" data-acd-pl-grab></div>
             <div class="acd-pl-sidebar-head">
@@ -424,11 +432,11 @@
                 {% endif %}
             </div>
             <div class="acd-pl-search-wrap">
-                <label class="acd-pl-search-label" for="acdPlSearch">
-                    <i class="fas fa-search" aria-hidden="true"></i>
+                <label class="acd-pl-search-field" for="acdPlSearch">
+                    <span class="acd-pl-search-icon" aria-hidden="true"><i class="fas fa-search"></i></span>
                     <span class="visually-hidden">جستجو در آموزش‌ها</span>
+                    <input type="search" id="acdPlSearch" class="acd-pl-search-input" placeholder="جستجو در {{ playlist_stats.video_count }} آموزش…" autocomplete="off" dir="auto" enterkeyhint="search">
                 </label>
-                <input type="search" id="acdPlSearch" class="acd-pl-search-input" placeholder="جستجو در {{ playlist_stats.video_count }} آموزش…" autocomplete="off" dir="auto" enterkeyhint="search">
             </div>
             <p class="acd-pl-search-empty" id="acdPlSearchEmpty" hidden>آموزشی با این عبارت پیدا نشد.</p>
             {{ academy_search_entries|json_script:"acdPlSearchData" }}
@@ -480,10 +488,6 @@
                 {% endfor %}
             </div>
         </aside>
-    </div>
-
-    <div class="acd-pl-scrim" data-acd-pl-scrim hidden aria-hidden="true"></div>
-
     <button type="button" class="acd-pl-fab" data-acd-pl-open aria-controls="acdPlSidebar" aria-expanded="false">
         <i class="fas fa-list" aria-hidden="true"></i>
         <span>فهرست</span>
@@ -493,6 +497,6 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'js/bot-install-video.js' %}?v=1" defer></script>
-<script src="{% static 'js/academy-playlist.js' %}?v=7" defer></script>
+<script src="{% static 'js/bot-install-video.js' %}?v=2" defer></script>
+<script src="{% static 'js/academy-playlist.js' %}?v=9" defer></script>
 {% endblock %}

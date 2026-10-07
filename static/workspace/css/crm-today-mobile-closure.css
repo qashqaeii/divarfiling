@@ -23,6 +23,7 @@
 
     /* ── Compact context + quick actions ── */
     .crm-today-mob-chrome {
+        order: 1;
         display: flex;
         flex-direction: column;
         gap: 0.45rem;
@@ -167,6 +168,8 @@
         gap: 0.85rem;
         padding: 0.45rem 0.75rem 0.25rem;
         min-width: 0;
+        flex: 1 1 auto;
+        overflow: visible;
     }
 
     .crm-today-mobile #panel-today {
@@ -258,57 +261,81 @@
         border: 1px dashed color-mix(in srgb, var(--ws-primary) 18%, var(--ws-border));
     }
 
-    /* ── Smart command: compact bar ── */
-    .crm-today-mobile {
+    /* ── Smart command: compact bar (directly under mob chrome) ── */
+    .crm-today-mobile.crm-today-pro {
         display: flex;
         flex-direction: column;
     }
 
-    .crm-today-mobile .crm-today-board {
+    .crm-today-mobile .crm-today-smart-anchor {
         order: 2;
+        flex: 0 0 auto;
+        min-width: 0;
     }
 
-    .crm-today-mobile .crm-smart-command-wrap {
+    .crm-today-mobile .crm-today-smart-anchor:empty {
+        display: none;
+    }
+
+    .crm-today-mobile .crm-today-smart-anchor .crm-smart-command-wrap {
+        margin: 0 0.75rem 0.5rem;
+        min-width: 0;
+        display: block !important;
+        flex: 0 0 auto;
+    }
+
+    .crm-today-mobile .crm-today-smart-anchor .crm-smart-command .crm-nl-command__head {
+        display: flex !important;
+    }
+
+    .crm-today-mobile .crm-today-smart-anchor .crm-smart-command .crm-nl-command__kicker {
+        display: none;
+    }
+
+    .crm-today-mobile .crm-today-smart-anchor .crm-smart-command .crm-nl-command__title {
+        font-size: 0.82rem;
+        margin: 0;
+        height: auto;
+        overflow: visible;
+    }
+
+    .crm-today-mobile .crm-today-smart-anchor .crm-smart-command .crm-nl-command__sub {
+        display: block !important;
+        font-size: 0.68rem;
+        margin-top: 0.1rem;
+    }
+
+    .crm-today-mobile .crm-today-board {
         order: 3;
-        margin: 0.35rem 0.75rem 0.5rem;
     }
 
-    .crm-today-mobile .crm-smart-command {
-        padding: 0.55rem 0.65rem 0.6rem;
+    .crm-today-mobile .crm-today-smart-anchor .crm-smart-command {
+        padding: 0.65rem 0.7rem 0.7rem;
         border-radius: 12px;
         box-shadow: none;
     }
 
-    .crm-today-mobile .crm-smart-command .crm-nl-command__head,
-    .crm-today-mobile .crm-smart-command .crm-nl-command__chips-head,
-    .crm-today-mobile .crm-smart-command .crm-nl-command__sub {
+    .crm-today-mobile .crm-today-smart-anchor .crm-smart-command .crm-nl-command__chips-head {
         display: none !important;
     }
 
-    .crm-today-mobile .crm-smart-command .crm-nl-command__title {
-        font-size: 0;
-        margin: 0;
-        height: 0;
-        overflow: hidden;
-    }
-
-    .crm-today-mobile .crm-smart-command .crm-nl-command__parse-label {
+    .crm-today-mobile .crm-today-smart-anchor .crm-smart-command .crm-nl-command__parse-label {
         display: none;
     }
 
-    .crm-today-mobile .crm-smart-command .crm-nl-command__parse {
+    .crm-today-mobile .crm-today-smart-anchor .crm-smart-command .crm-nl-command__parse {
         min-width: 2.75rem;
         min-height: 2.75rem;
         padding: 0;
         border-radius: 10px;
     }
 
-    .crm-today-mobile .crm-smart-command .crm-nl-command__input {
+    .crm-today-mobile .crm-today-smart-anchor .crm-smart-command .crm-nl-command__input {
         min-height: 2.75rem;
         font-size: max(16px, 0.82rem);
     }
 
-    .crm-today-mobile .crm-smart-command .crm-nl-command__voice {
+    .crm-today-mobile .crm-today-smart-anchor .crm-smart-command .crm-nl-command__voice {
         width: 2.75rem;
         height: 2.75rem;
         min-width: 2.75rem;
@@ -566,6 +593,28 @@
     .crm-today-mob-section-label,
     .crm-today-mob-queue-empty {
         display: none !important;
+    }
+
+    .crm-today-pro .crm-today-desk-header {
+        order: 10;
+    }
+
+    .crm-today-pro .crm-today-desk-kpis {
+        order: 20;
+    }
+
+    .crm-today-pro .crm-today-smart-anchor {
+        order: 30;
+        flex: 0 0 auto;
+    }
+
+    .crm-today-pro .crm-today-board,
+    .crm-today-pro .crm-today-empty-wrap {
+        order: 40;
+    }
+
+    .crm-today-pro .crm-today-tabs {
+        order: 35;
     }
 }
 

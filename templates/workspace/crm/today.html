@@ -12,7 +12,7 @@
 {% block crm_extra_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/mk-filing-datasets.css' %}?v=19">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-today.css' %}?v=10">
-<link rel="stylesheet" href="{% static 'workspace/css/crm-today-mobile-closure.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-today-mobile-closure.css' %}?v=4">
 {% endblock %}
 
 {% block crm_content %}
@@ -55,6 +55,12 @@
             </button>
         </div>
     </div>
+
+    {% if smart_command.enabled %}
+    <div class="crm-today-smart-anchor" id="crmTodaySmart">
+        {% include 'workspace/crm/includes/crm_smart_command.html' %}
+    </div>
+    {% endif %}
 
     <header class="crm-dash-bar crm-today-desk-header">
         <div class="crm-dash-bar-main">
@@ -177,13 +183,10 @@
         </section>
     </div>
 
-    {% include 'workspace/crm/includes/crm_smart_command.html' %}
-
     {% else %}
     <div class="crm-today-empty-wrap">
         {% include 'workspace/crm/includes/list_empty_state.html' with tone='muted' decor='list_todo' title='برای امروز کاری ثبت نشده' desc='یادآوری یا پیگیری جدید ثبت کنید تا در این صفحه ببینید.' btn_text='ثبت یادآوری' btn_icon='fa-plus' btn_drawer='drawer-reminder' extra_class='crm-today-empty' %}
     </div>
-    {% include 'workspace/crm/includes/crm_smart_command.html' %}
     {% endif %}
 
     {% include 'workspace/crm/includes/crm_today_help_modal.html' %}

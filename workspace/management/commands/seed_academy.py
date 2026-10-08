@@ -9,6 +9,7 @@ from django.db import transaction
 
 from workspace.academy.media_utils import mp4_duration_seconds
 from workspace.academy.models import AcademyVideo, LearningPath
+from workspace.academy.cta import canonical_cta_path_for_slug, normalize_stored_action_url
 from workspace.academy.seed_data import PATHS, VIDEOS
 from workspace.academy.seed_ops import reset_academy_curriculum, reset_academy_curriculum_summary
 
@@ -69,6 +70,12 @@ class Command(BaseCommand):
             probed = mp4_duration_seconds(file_path)
             if probed:
                 duration = probed
+            action_url = row.get('action_url', '')
+            canonical = canonical_cta_path_for_slug(row['slug'])
+            if canonical:
+                action_url = canonical
+            else:
+                action_url = normalize_stored_action_url(action_url)
             AcademyVideo.objects.update_or_create(
                 slug=row['slug'],
                 defaults={
@@ -83,7 +90,7 @@ class Command(BaseCommand):
                     'order': row['order'],
                     'is_public': row.get('is_public', True),
                     'is_launch': False,
-                    'action_url': row.get('action_url', ''),
+                    'action_url': action_url,
                     'action_label': row.get('action_label', ''),
                     'mission_step': None,
                     'auto_confirm_event': '',

@@ -958,6 +958,54 @@
     background: var(--acd-primary-hover);
 }
 
+.acd-btn--secondary {
+    background: var(--acd-card);
+    border-color: rgba(124, 58, 237, 0.22);
+    color: var(--acd-primary);
+    box-shadow: none;
+}
+
+.acd-btn--secondary:hover:not(:disabled) {
+    background: var(--acd-primary-soft);
+}
+
+.acd-btn--sm {
+    min-height: 2.35rem;
+    padding: 0.4rem 0.75rem;
+    font-size: 0.78rem;
+}
+
+.acd-resume-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem 0.75rem;
+    margin: 0.55rem 0 0.35rem;
+    padding: 0.65rem 0.75rem;
+    border-radius: var(--acd-radius-sm);
+    border: 1px solid var(--acd-border);
+    background: var(--acd-surface);
+}
+
+.acd-resume-bar[hidden] {
+    display: none !important;
+}
+
+.acd-resume-bar__text {
+    margin: 0;
+    font-size: 0.78rem;
+    color: var(--acd-muted);
+    flex: 1;
+    min-width: 10rem;
+}
+
+.acd-resume-bar__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+
 .acd-btn--ghost {
     background: transparent;
     border-color: var(--acd-border);

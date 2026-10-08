@@ -13,7 +13,7 @@
             {% for item in section.items %}
             <li class="acd-playlist-item{% if item.active %} is-active{% endif %}{% if item.completed %} is-done{% endif %}">
                 <a href="{% url 'workspace:academy_video' slug=item.video.slug %}"
-                   class="acd-playlist-link">
+                   class="acd-playlist-link"{% if item.active %} aria-current="true"{% endif %}>
                     <span class="acd-playlist-index">
                         {% if item.completed %}<i class="fas fa-check" aria-hidden="true"></i>{% else %}{{ item.global_index|stringformat:"02d" }}{% endif %}
                     </span>

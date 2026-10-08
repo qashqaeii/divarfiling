@@ -1,5 +1,7 @@
 {% extends 'workspace/academy/base_academy.html' %}
 
+{% block academy_page_class %}{% if next_video %} acd-page--has-lesson-dock{% endif %}{% endblock %}
+
 {% block academy_content %}
 <nav class="acd-breadcrumb acd-breadcrumb--desk" aria-label="مسیر">
     <a href="{% url 'workspace:academy_home' %}">آکادمی</a>
@@ -12,12 +14,21 @@
 {% url 'workspace:academy_path' slug=video.path.slug as path_url %}
 {% include 'workspace/academy/includes/page_header.html' with variant='lesson' back_url=path_url back_label=video.path.title kicker=video.path.title title=video.title icon='fa-circle-play' lesson_index=global_index video_duration=video.duration_display %}
 
-<div class="acd-path-layout acd-lesson-layout{% if next_video %} acd-lesson-layout--has-next{% endif %}">
+<div class="acd-path-layout acd-lesson-layout">
     <main class="acd-path-main">
         {% if player.available %}
-        <div class="acd-video-player-wrap" data-acd-video-slug="{{ video.slug }}"{% if context_key %} data-acd-context="{{ context_key }}"{% endif %}>
+        <div class="acd-video-player-wrap" data-acd-video-slug="{{ video.slug }}" data-acd-duration="{{ video.duration_seconds }}"{% if resume_seconds %} data-acd-resume-seconds="{{ resume_seconds }}"{% endif %}{% if context_key %} data-acd-context="{{ context_key }}"{% endif %}>
             {% include 'includes/mk_video_player.html' with video=player variant='academy' show_heading=False show_meta=True %}
         </div>
+        {% if resume_seconds %}
+        <div class="acd-resume-bar" data-acd-resume-bar hidden>
+            <p class="acd-resume-bar__text">می‌خواهید از جایی که مانده‌اید ادامه دهید؟</p>
+            <div class="acd-resume-bar__actions">
+                <button type="button" class="acd-btn acd-btn--primary acd-btn--sm" data-acd-resume-apply>ادامه تماشا</button>
+                <button type="button" class="acd-btn acd-btn--ghost acd-btn--sm" data-acd-resume-dismiss>از اول</button>
+            </div>
+        </div>
+        {% endif %}
         {% else %}
         <p class="acd-mission-unavailable">فایل ویدیو در دسترس نیست. لطفاً بعداً دوباره تلاش کنید.</p>
         {% endif %}
@@ -42,8 +53,8 @@
             {% endif %}
         </div>
 
-        {% if video.action_url and video.action_label %}
-        <a href="{{ video.action_url }}" class="acd-btn acd-btn--primary acd-video-cta acd-btn--block" data-acd-cta="1">
+        {% if video.action_label and video_action_url %}
+        <a href="{{ video_action_url }}" class="acd-btn acd-btn--secondary acd-video-cta acd-btn--block" data-acd-cta="1">
             {{ video.action_label }} <i class="fas fa-arrow-left" aria-hidden="true"></i>
         </a>
         {% endif %}

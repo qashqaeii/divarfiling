@@ -30,6 +30,61 @@
         }).catch(function () {});
     }
 
+    function prefersReducedMotion() {
+        return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    }
+
+    function bindVideoResume(slugEl, video) {
+        const resumeRaw = slugEl.getAttribute('data-acd-resume-seconds');
+        const resumeAt = parseInt(resumeRaw || '0', 10);
+        if (!resumeAt || resumeAt <= 0) return;
+
+        const bar = slugEl.parentElement
+            ? slugEl.parentElement.querySelector('[data-acd-resume-bar]')
+            : document.querySelector('[data-acd-resume-bar]');
+        const maxDur = parseInt(slugEl.getAttribute('data-acd-duration') || '0', 10);
+
+        function clampPos(sec) {
+            let pos = Math.max(0, sec);
+            if (maxDur > 0) pos = Math.min(pos, maxDur);
+            return pos;
+        }
+
+        function showBar() {
+            if (bar) bar.hidden = false;
+        }
+
+        function applyResume() {
+            const target = clampPos(resumeAt);
+            if (target > 0 && video.duration && video.currentTime < 1) {
+                try {
+                    video.currentTime = Math.min(target, Math.max(video.duration - 0.5, 0));
+                } catch (e) { /* ignore */ }
+            }
+        }
+
+        video.addEventListener('loadedmetadata', function () {
+            showBar();
+        });
+
+        if (bar) {
+            const applyBtn = bar.querySelector('[data-acd-resume-apply]');
+            const dismissBtn = bar.querySelector('[data-acd-resume-dismiss]');
+            if (applyBtn) {
+                applyBtn.addEventListener('click', function () {
+                    applyResume();
+                    bar.hidden = true;
+                });
+            }
+            if (dismissBtn) {
+                dismissBtn.addEventListener('click', function () {
+                    try { video.currentTime = 0; } catch (e) { /* ignore */ }
+                    bar.hidden = true;
+                });
+            }
+        }
+    }
+
     function bindVideoProgress(root) {
         const slugEl = root.matches('[data-acd-video-slug]') ? root : root.querySelector('[data-acd-video-slug]');
         if (!slugEl) return;
@@ -40,6 +95,7 @@
         const url = urlTpl.replace('__SLUG__', slug);
         const video = slugEl.querySelector('video') || root.querySelector('video');
         if (!video) return;
+        bindVideoResume(slugEl, video);
         let lastSent = 0;
         let started = false;
 
@@ -87,8 +143,15 @@
         function scrollActiveLesson() {
             if (!isMobile() || !playlist.classList.contains('is-open')) return;
             const active = playlist.querySelector('.acd-playlist-item.is-active');
-            if (!active) return;
-            active.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+            const inner = playlist.querySelector('.acd-playlist-body-inner');
+            if (!active || !inner) return;
+            const innerRect = inner.getBoundingClientRect();
+            const itemRect = active.getBoundingClientRect();
+            if (itemRect.top < innerRect.top) {
+                inner.scrollTop -= (innerRect.top - itemRect.top);
+            } else if (itemRect.bottom > innerRect.bottom) {
+                inner.scrollTop += (itemRect.bottom - innerRect.bottom);
+            }
         }
 
         function setOpen(open) {
@@ -219,7 +282,12 @@
                 var a = document.createElement('a');
                 a.href = item.url;
                 a.className = 'acd-search-hit';
-                a.innerHTML = '<strong>' + item.title + '</strong><small>' + (item.path || '') + '</small>';
+                var titleEl = document.createElement('strong');
+                titleEl.textContent = item.title || '';
+                var pathEl = document.createElement('small');
+                pathEl.textContent = item.path || '';
+                a.appendChild(titleEl);
+                a.appendChild(pathEl);
                 li.appendChild(a);
                 list.appendChild(li);
             });
@@ -386,12 +454,28 @@
         });
     }
 
+    function initLessonDock() {
+        const dock = document.querySelector('[data-acd-lesson-dock]');
+        if (!dock) return;
+
+        function syncDockVisibility() {
+            const fs = document.fullscreenElement || document.webkitFullscreenElement;
+            const hide = Boolean(fs);
+            document.body.classList.toggle('acd-dock-hidden', hide);
+        }
+
+        document.addEventListener('fullscreenchange', syncDockVisibility);
+        document.addEventListener('webkitfullscreenchange', syncDockVisibility);
+        syncDockVisibility();
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
         initPlayers();
         initPlaylist();
         initContextual();
         initAcademySearch();
         initMission();
+        initLessonDock();
         if (!window.acdMissionConfig) {
             initBadgeModal();
         }

@@ -1,5 +1,8 @@
+from django import forms
 from django.contrib import admin
 from django.utils.html import format_html
+
+from workspace.academy.cta import django_validate_action_url
 
 from workspace.academy.models import (
     AcademyBadge,
@@ -32,8 +35,21 @@ class LearningPathAdmin(admin.ModelAdmin):
     inlines = [AcademyVideoInline]
 
 
+class AcademyVideoAdminForm(forms.ModelForm):
+    class Meta:
+        model = AcademyVideo
+        fields = '__all__'
+
+    def clean_action_url(self):
+        value = (self.cleaned_data.get('action_url') or '').strip()
+        if value:
+            django_validate_action_url(value)
+        return value
+
+
 @admin.register(AcademyVideo)
 class AcademyVideoAdmin(admin.ModelAdmin):
+    form = AcademyVideoAdminForm
     list_display = (
         'title', 'slug', 'path', 'order', 'duration_seconds',
         'views_count', 'has_poster', 'is_launch', 'is_public', 'is_active',

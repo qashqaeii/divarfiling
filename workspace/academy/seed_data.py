@@ -108,7 +108,7 @@ VIDEOS = [
         'poster_path': 'academy/posters/Purchasing_and_Activating_a_License.webp',
         'duration_seconds': 96,
         'is_public': True,
-        'action_url': '/shop/',
+        'action_url': '/products/divar-extraction-bot/',
         'action_label': 'مشاهده پلن‌ها و خرید',
         'next_cta': 'شروع استخراج فایل‌ها',
     },

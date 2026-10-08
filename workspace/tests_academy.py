@@ -6,6 +6,8 @@ from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 from django.urls import reverse
 
+from workspace.academy.models import UserVideoProgress
+
 from workspace.academy.curriculum import adjacent_videos, ordered_videos
 from workspace.academy.models import AcademyMission, AcademyVideo, LearningPath
 from workspace.academy.seed_data import CURRICULUM_VIDEO_SLUGS, VIDEOS
@@ -177,6 +179,98 @@ class AcademyProgressTests(TestCase):
             content_type='application/json',
         )
         self.assertTrue(resp.json().get('completed'))
+
+
+class AcademyCtaTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        from django.core.management import call_command
+        from shop.models import Product
+
+        call_command('seed_academy', '--reset', '--yes')
+        Product.objects.get_or_create(
+            slug='divar-extraction-bot',
+            defaults={
+                'title': 'ربات استخراج دیوار',
+                'description': 'تست',
+                'is_active': True,
+            },
+        )
+        cls.user = User.objects.create_user(username='ctauser', password='test-pass-123')
+
+    def setUp(self):
+        self.client = Client()
+        self.client.login(username='ctauser', password='test-pass-123')
+
+    def test_license_video_cta_points_to_product(self):
+        video = AcademyVideo.objects.get(slug='academy-license-purchase-activation')
+        video.action_url = '/shop/'
+        video.save(update_fields=['action_url'])
+        expected = reverse('product_detail', kwargs={'slug': 'divar-extraction-bot'})
+        self.assertEqual(video.resolved_action_url(), expected)
+        resp = self.client.get(reverse('workspace:academy_video', kwargs={'slug': video.slug}))
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, expected)
+
+    def test_all_active_video_ctas_resolve(self):
+        for video in AcademyVideo.objects.filter(is_active=True).exclude(action_url=''):
+            url = video.resolved_action_url()
+            self.assertTrue(url, msg=video.slug)
+            if url.startswith('/'):
+                resp = self.client.get(url)
+                self.assertIn(
+                    resp.status_code,
+                    (200, 302),
+                    msg=f'{video.slug} -> {url} status {resp.status_code}',
+                )
+
+
+class AcademyResumeTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        from django.core.management import call_command
+        call_command('seed_academy', '--reset', '--yes')
+        cls.user = User.objects.create_user(username='resumeuser', password='test-pass-123')
+
+    def setUp(self):
+        self.client = Client()
+        self.client.login(username='resumeuser', password='test-pass-123')
+
+    def test_resume_position_on_video_page(self):
+        import json
+        video = AcademyVideo.objects.get(slug='academy-dashboard-overview')
+        url = reverse('workspace:api_academy_video_progress', kwargs={'slug': video.slug})
+        self.client.post(
+            url,
+            json.dumps({'watched_seconds': 37}),
+            content_type='application/json',
+        )
+        page = self.client.get(reverse('workspace:academy_video', kwargs={'slug': video.slug}))
+        self.assertContains(page, 'data-acd-resume-seconds="37"')
+
+    def test_inactive_video_not_in_continue_watching(self):
+        from workspace.academy.services.progress_service import get_continue_watching
+
+        video = AcademyVideo.objects.get(slug='academy-filter-files')
+        UserVideoProgress.objects.update_or_create(
+            user=self.user,
+            video=video,
+            defaults={'last_position': 40, 'watched_seconds': 40, 'completed': False},
+        )
+        video.is_active = False
+        video.save(update_fields=['is_active'])
+        self.assertIsNone(get_continue_watching(self.user))
+
+    def test_progress_api_rejects_invalid_watched_seconds(self):
+        import json
+        video = AcademyVideo.objects.get(slug='academy-what-is-divar-filing')
+        url = reverse('workspace:api_academy_video_progress', kwargs={'slug': video.slug})
+        resp = self.client.post(
+            url,
+            json.dumps({'watched_seconds': 'not-a-number'}),
+            content_type='application/json',
+        )
+        self.assertEqual(resp.status_code, 400)
 
 
 class PublicAcademyTests(TestCase):

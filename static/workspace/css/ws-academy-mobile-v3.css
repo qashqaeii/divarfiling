@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════════════════════
    Workspace Academy — Mobile Learning Hub (closure v3)
-   ≤767px — loads after academy.css + ws-academy-mobile-v2.css
+   ≤767px — loads after academy.css + ws-academy-mobile-v2.css (v3)
    ═══════════════════════════════════════════════════════════ */
 
 @media (max-width: 767px) {
@@ -20,8 +20,23 @@
         overflow-x: clip;
     }
 
-    .acd-page--video.acd-lesson-layout--has-next {
-        padding-bottom: calc(var(--acd-mob-sticky-bottom) + var(--acd-mob-dock-height) + 0.5rem);
+    .acd-page--video.acd-page--has-lesson-dock,
+    .acd-page--video:has(.acd-lesson-dock) {
+        padding-bottom: calc(var(--acd-mob-sticky-bottom) + var(--acd-mob-dock-height) + 0.85rem);
+    }
+
+    .acd-page--video.acd-page--has-lesson-dock .acd-path-main,
+    .acd-page--video:has(.acd-lesson-dock) .acd-path-main {
+        scroll-margin-bottom: calc(var(--acd-mob-sticky-bottom) + var(--acd-mob-dock-height));
+    }
+
+    body.acd-dock-hidden .acd-lesson-dock {
+        display: none !important;
+    }
+
+    body.acd-dock-hidden .acd-page--video.acd-page--has-lesson-dock,
+    body.acd-dock-hidden .acd-page--video:has(.acd-lesson-dock) {
+        padding-bottom: calc(var(--acd-mob-sticky-bottom) + 0.35rem);
     }
 
     /* ── Home hub ── */
@@ -310,8 +325,13 @@
         min-width: 0;
     }
 
-    .acd-lesson-layout--has-next .acd-video-nav .acd-btn--primary {
+    .acd-page--has-lesson-dock .acd-video-nav .acd-btn--primary,
+    .acd-page--video:has(.acd-lesson-dock) .acd-video-nav .acd-btn--primary {
         display: none;
+    }
+
+    .acd-page--video .acd-video-cta.acd-btn--secondary {
+        margin-top: 0.65rem;
     }
 
     /* ── Playlist (bottom sheet style) ── */

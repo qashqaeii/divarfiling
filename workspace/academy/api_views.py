@@ -60,8 +60,12 @@ class AcademyVideoProgressAPIView(WorkspaceLoginMixin, View):
         try:
             payload = json.loads(request.body.decode('utf-8') or '{}')
         except json.JSONDecodeError:
-            payload = request.POST
-        watched = int(payload.get('watched_seconds', 0) or 0)
+            return JsonResponse({'ok': False, 'error': 'invalid_json'}, status=400)
+        raw_watched = payload.get('watched_seconds', 0)
+        try:
+            watched = int(raw_watched if raw_watched is not None else 0)
+        except (TypeError, ValueError):
+            return JsonResponse({'ok': False, 'error': 'invalid_watched_seconds'}, status=400)
         completed = bool(payload.get('completed'))
         progress = update_video_progress(request.user, video, watched, completed=completed)
         return JsonResponse({
@@ -162,7 +166,7 @@ class AcademyVideoMetaAPIView(View):
                 'subtitle': video.subtitle,
                 'duration_seconds': video.duration_seconds,
                 'stream_url': video.get_stream_url(),
-                'action_url': video.action_url,
+                'action_url': video.resolved_action_url(),
                 'action_label': video.action_label,
                 'views_count': video.views_count,
             },

@@ -202,19 +202,30 @@ def complete_mission(user, progress: UserMissionProgress) -> None:
     )
 
 
+def _clamp_watch_position(video: AcademyVideo, seconds: int) -> int:
+    pos = max(0, int(seconds or 0))
+    if video.duration_seconds:
+        pos = min(pos, video.duration_seconds)
+    return pos
+
+
 def update_video_progress(user, video: AcademyVideo, watched_seconds: int, completed: bool = False) -> UserVideoProgress:
+    watched_seconds = _clamp_watch_position(video, watched_seconds)
     progress, _ = UserVideoProgress.objects.get_or_create(user=user, video=video)
+    if progress.completed:
+        progress.watched_seconds = max(progress.watched_seconds, watched_seconds)
+        progress.last_position = _clamp_watch_position(video, progress.last_position)
+        progress.save(update_fields=['watched_seconds', 'last_position', 'updated_at'])
+        return progress
+
     progress.watched_seconds = max(progress.watched_seconds, watched_seconds)
     progress.last_position = watched_seconds
     min_watch = max(int(video.duration_seconds * 0.85), 5) if video.duration_seconds else 5
-    mark_complete = (
-        not progress.completed
-        and completed
-        and watched_seconds >= min_watch
-    )
+    mark_complete = completed and watched_seconds >= min_watch
     if mark_complete:
         progress.completed = True
         progress.completed_at = timezone.now()
+        progress.last_position = _clamp_watch_position(video, video.duration_seconds or watched_seconds)
         AcademyEvent.objects.create(
             user=user,
             event_type='academy_video_completed',
@@ -289,9 +300,29 @@ def _mvp_videos_complete(user) -> bool:
     return done >= len(slugs)
 
 
+def get_resume_seconds(user, video: AcademyVideo) -> int:
+    if not user or not user.is_authenticated:
+        return 0
+    if not video.is_active or not video.path.is_active:
+        return 0
+    prog = UserVideoProgress.objects.filter(user=user, video=video).first()
+    if not prog or prog.completed or prog.last_position <= 0:
+        return 0
+    pos = _clamp_watch_position(video, prog.last_position)
+    if video.duration_seconds and pos >= max(video.duration_seconds - 2, 1):
+        return 0
+    return pos
+
+
 def get_continue_watching(user):
     return (
-        UserVideoProgress.objects.filter(user=user, completed=False, last_position__gt=0)
+        UserVideoProgress.objects.filter(
+            user=user,
+            completed=False,
+            last_position__gt=0,
+            video__is_active=True,
+            video__path__is_active=True,
+        )
         .select_related('video', 'video__path')
         .order_by('-updated_at')
         .first()

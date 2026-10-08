@@ -8,9 +8,18 @@
     <main class="acd-path-main">
         {% if active_video %}
         {% if active_player.available %}
-        <div class="acd-video-player-wrap" data-acd-video-slug="{{ active_video.slug }}">
+        <div class="acd-video-player-wrap" data-acd-video-slug="{{ active_video.slug }}" data-acd-duration="{{ active_video.duration_seconds }}"{% if resume_seconds %} data-acd-resume-seconds="{{ resume_seconds }}"{% endif %}>
             {% include 'includes/mk_video_player.html' with video=active_player variant='academy' show_heading=False show_meta=True %}
         </div>
+        {% if resume_seconds %}
+        <div class="acd-resume-bar" data-acd-resume-bar hidden>
+            <p class="acd-resume-bar__text">می‌خواهید از جایی که مانده‌اید ادامه دهید؟</p>
+            <div class="acd-resume-bar__actions">
+                <button type="button" class="acd-btn acd-btn--primary acd-btn--sm" data-acd-resume-apply>ادامه تماشا</button>
+                <button type="button" class="acd-btn acd-btn--ghost acd-btn--sm" data-acd-resume-dismiss>از اول</button>
+            </div>
+        </div>
+        {% endif %}
         {% else %}
         <p class="acd-mission-unavailable">فایل ویدیو در دسترس نیست.</p>
         {% endif %}
@@ -30,8 +39,8 @@
             {% endif %}
         </div>
 
-        {% if active_video.action_url and active_video.action_label %}
-        <a href="{{ active_video.action_url }}" class="acd-btn acd-btn--primary acd-video-cta acd-btn--block" data-acd-cta="1">
+        {% if active_video.action_label and active_video.resolved_action_url %}
+        <a href="{{ active_video.resolved_action_url }}" class="acd-btn acd-btn--secondary acd-video-cta acd-btn--block" data-acd-cta="1">
             {{ active_video.action_label }} <i class="fas fa-arrow-left" aria-hidden="true"></i>
         </a>
         {% endif %}

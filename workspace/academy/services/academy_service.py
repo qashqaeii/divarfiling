@@ -12,7 +12,7 @@ from workspace.academy.curriculum import (
 )
 from workspace.academy.models import AcademyVideo, LearningPath, UserVideoProgress
 from workspace.academy.search import academy_search_entries
-from workspace.academy.services.progress_service import compute_progress_summary
+from workspace.academy.services.progress_service import compute_progress_summary, get_resume_seconds
 
 
 def user_can_access_path(user, path: LearningPath) -> bool:
@@ -81,6 +81,7 @@ def get_path_context(user, path: LearningPath, active_slug: str | None = None) -
         })
     playlist = workspace_playlist_sections(user)
     mark_playlist_active(playlist, active.slug if active else active_slug)
+    resume_seconds = get_resume_seconds(user, active) if active else 0
     return {
         'path': path,
         'items': items,
@@ -89,6 +90,7 @@ def get_path_context(user, path: LearningPath, active_slug: str | None = None) -
         'playlist_sections': playlist,
         'stats': curriculum_stats(),
         'curriculum': user_curriculum_summary(user),
+        'resume_seconds': resume_seconds,
     }
 
 
@@ -105,6 +107,7 @@ def get_video_context(user, video: AcademyVideo, *, public_ok: bool = False) -> 
     curriculum = user_curriculum_summary(user) if user.is_authenticated else {
         'total_count': stats['video_count'],
     }
+    resume_seconds = get_resume_seconds(user, video) if user.is_authenticated else 0
     return {
         'video': video,
         'player': video.to_player_context(),
@@ -115,4 +118,6 @@ def get_video_context(user, video: AcademyVideo, *, public_ok: bool = False) -> 
         'next_video': next_video,
         'stats': stats,
         'curriculum': curriculum,
+        'resume_seconds': resume_seconds,
+        'video_action_url': video.resolved_action_url(),
     }

@@ -109,6 +109,10 @@ class AcademyVideo(models.Model):
             return f'{settings.MEDIA_URL.rstrip("/")}/{rel}', 'media'
         return self.poster_path, 'static'
 
+    def resolved_action_url(self) -> str:
+        from workspace.academy.cta import resolve_academy_action_url
+        return resolve_academy_action_url(self.action_url)
+
     def to_player_context(self) -> dict:
         url = self.get_stream_url()
         poster, poster_kind = self.get_poster_context()

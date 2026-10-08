@@ -387,8 +387,21 @@
     }
 
     .agency-team-tab .crm-msg-list-pane {
-        min-height: 14rem;
+        display: flex;
+        flex-direction: column;
+        min-height: min(70vh, 32rem);
         width: 100%;
+    }
+
+    .agency-team-tab .crm-msg-thread-list {
+        flex: 1 1 auto;
+        min-height: 10rem;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .agency-team-tab .crm-msg-hub--studio:not(.crm-msg-hub--detail-open) .crm-msg-list-pane {
+        display: flex !important;
     }
 
     body.agency-hub-nav-sheet-open {

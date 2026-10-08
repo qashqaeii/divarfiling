@@ -170,6 +170,7 @@ class AgencyHubMessagesView(_AgencyTeamTabView):
     team_tab_template = 'workspace/crm/includes/team_tab_messages.html'
     extra_team_css = [
         'workspace/css/crm-team-messages.css',
+        'workspace/css/crm-team-mobile.css',
     ]
     extra_team_js = [
         'workspace/js/crm-team-messages.js',

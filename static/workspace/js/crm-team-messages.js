@@ -8,7 +8,10 @@
     if (!root) return;
 
     const csrf = document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
-    const apiThreads = root.dataset.apiThreads;
+    const apiThreadsRaw = (root.dataset.apiThreads || '').trim();
+    const apiThreads = apiThreadsRaw
+        ? (apiThreadsRaw.endsWith('/') ? apiThreadsRaw : `${apiThreadsRaw}/`)
+        : '';
     const apiUnread = root.dataset.apiUnread;
     const apiMembers = root.dataset.apiMembers;
     const apiNotifications = root.dataset.apiNotifications;
@@ -23,6 +26,7 @@
     let currentThreadId = null;
     let currentThreadMeta = null;
     let threadsCache = [];
+    let threadsLoaded = false;
     let composeKind = 'direct';
     let pollTimer = null;
     let confirmCallback = null;
@@ -41,7 +45,7 @@
         purgeBtn: root.querySelector('[data-msg-purge-thread]'),
         threadMenuBtn: root.querySelector('[data-msg-thread-menu]'),
         threadMenuPanel: root.querySelector('[data-msg-thread-menu-panel]'),
-        search: root.querySelector('[data-msg-search]'),
+        search: root.querySelector('input[data-msg-search]'),
         folderTitle: root.querySelector('[data-msg-folder-title]'),
         threadCount: root.querySelector('[data-msg-thread-count]'),
         backBtn: root.querySelector('[data-msg-back]'),
@@ -173,7 +177,21 @@
         return `<${el} class="crm-msg-state"><span class="crm-msg-state-ring"><i class="fas ${icon}"></i></span><p>${text}</p></${el}>`;
     }
 
+    function clearJunkSearchValue() {
+        const input = els.search;
+        if (!input) return false;
+        const raw = (input.value || '').trim();
+        if (!raw) return false;
+        const digits = raw.replace(/\D/g, '');
+        if (digits.length >= 10 && digits.startsWith('09')) {
+            input.value = '';
+            return true;
+        }
+        return false;
+    }
+
     function renderThreads(threads) {
+        if (threadsLoaded) clearJunkSearchValue();
         const q = (els.search?.value || '').trim().toLowerCase();
         const filtered = q ? threads.filter(t =>
             (t.subject || '').toLowerCase().includes(q) ||
@@ -229,10 +247,27 @@
     }
 
     function loadThreads() {
-        return fetchJson(`${apiThreads}?folder=${currentFolder}`).then(data => {
-            if (!data.ok) return;
+        if (!apiThreads) {
+            els.threadList.innerHTML = renderEmptyState(
+                'fa-triangle-exclamation',
+                'آدرس API پیام‌ها در صفحه تنظیم نشده است.',
+            );
+            return Promise.resolve();
+        }
+        return fetchJson(`${apiThreads}?folder=${encodeURIComponent(currentFolder)}`).then(data => {
+            if (!data.ok) {
+                if (!threadsLoaded) {
+                    els.threadList.innerHTML = renderEmptyState(
+                        'fa-triangle-exclamation',
+                        data.error || 'بارگذاری مکالمات ممکن نشد.',
+                    );
+                }
+                return;
+            }
             threadsCache = data.threads || [];
+            threadsLoaded = true;
             renderThreads(threadsCache);
+            root.dispatchEvent(new CustomEvent('crm-msg-threads-loaded', { bubbles: true }));
         });
     }
 
@@ -606,7 +641,13 @@
     });
 
     els.backBtn?.addEventListener('click', closeDetail);
-    mobileMq.addEventListener('change', () => { if (!mobileMq.matches) setDetailOpen(false); });
+    mobileMq.addEventListener('change', () => {
+        if (!mobileMq.matches) {
+            setDetailOpen(false);
+            return;
+        }
+        if (!currentThreadId || els.detail?.hidden) setDetailOpen(false);
+    });
 
     document.querySelectorAll('[data-msg-compose-kind] [data-kind]').forEach(btn => {
         btn.addEventListener('click', () => setComposeKind(btn.dataset.kind));
@@ -669,7 +710,10 @@
         loadThreads();
     });
 
-    els.search?.addEventListener('input', () => renderThreads(threadsCache));
+    els.search?.addEventListener('input', () => {
+        if (!threadsLoaded) return;
+        renderThreads(threadsCache);
+    });
 
     els.replyForm?.addEventListener('submit', e => {
         e.preventDefault();
@@ -714,9 +758,20 @@
             .finally(() => { if (submitBtn) submitBtn.disabled = false; });
     });
 
+    root.classList.remove('crm-msg-hub--detail-open');
+    if (els.detail) els.detail.hidden = true;
+    if (els.placeholder) els.placeholder.hidden = false;
+
     loadThreads().then(refreshUnread);
-    const initial = root.dataset.initialThread;
-    if (initial) openThread(parseInt(initial, 10));
+    const initial = (root.dataset.initialThread || '').trim();
+    if (initial && /^\d+$/.test(initial)) openThread(parseInt(initial, 10));
+
+    window.addEventListener('pageshow', (e) => {
+        if (!e.persisted) return;
+        closeDetail();
+        if (threadsLoaded) renderThreads(threadsCache);
+        else loadThreads();
+    });
 
     pollTimer = setInterval(() => {
         loadThreads();

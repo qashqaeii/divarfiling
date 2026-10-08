@@ -4,12 +4,12 @@
 {% block crm_extra_css %}
 {{ block.super }}
 {% for css_path in extra_team_css %}
-<link rel="stylesheet" href="{% static css_path %}?v=17">
+<link rel="stylesheet" href="{% static css_path %}?v=18">
 {% endfor %}
 {% endblock %}
 
 {% block agency_hub_content %}
-<div class="agency-team-tab" data-tab="{{ tab }}">
+<div class="agency-team-tab{% if tab == 'messages' %} crm-team-mobile{% endif %}" data-tab="{{ tab }}">
     {% include team_tab_template %}
 </div>
 {% endblock %}
@@ -41,7 +41,7 @@ window.crmApiKeyRegenerateUrl = '{{ crm_api_key_regenerate_url }}';
 </script>
 {% endif %}
 {% for js_path in extra_team_js %}
-<script src="{% static js_path %}?v=1" defer></script>
+<script src="{% static js_path %}?v=18" defer></script>
 {% endfor %}
 {% if tab == 'audit' and can_manage_team %}
 <script src="{% static 'workspace/js/crm-team-audit.js' %}?v=1" defer></script>

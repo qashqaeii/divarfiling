@@ -307,12 +307,18 @@
     var userEdited = { current: !!input.value.trim() };
     input.addEventListener('input', function () { userEdited.current = true; });
     function sweep() { sweepSearchAutofill(input, userEdited); }
-    sweep();
-    requestAnimationFrame(function () { requestAnimationFrame(sweep); });
-    window.setTimeout(sweep, 120);
-    window.setTimeout(sweep, 500);
-    window.setTimeout(sweep, 1000);
-    window.setTimeout(sweep, 2000);
+    var msgHub = input.closest('[data-crm-messages]');
+    if (msgHub) {
+      msgHub.addEventListener('crm-msg-threads-loaded', sweep, { once: true });
+      window.setTimeout(sweep, 3000);
+    } else {
+      sweep();
+      requestAnimationFrame(function () { requestAnimationFrame(sweep); });
+      window.setTimeout(sweep, 120);
+      window.setTimeout(sweep, 500);
+      window.setTimeout(sweep, 1000);
+      window.setTimeout(sweep, 2000);
+    }
   }
 
   function initSearchAutofillGuards() {

@@ -1,8 +1,12 @@
 <div class="wsh-search crm-global-search mk-global-search" id="crmGlobalSearch" data-help-tour="workspace-search" data-tour="workspace-search">
     <div class="crm-search-input-wrap mk-search-wrap wsh-search__wrap">
-        <i class="fas fa-search" aria-hidden="true"></i>
-        <input type="search" class="crm-search-input wsh-search__input" id="crmSearchInput" data-url="{% url 'workspace:crm_search' %}" placeholder="جستجو در فایل‌ها، مخاطبین، آگهی‌ها..." autocomplete="off" aria-label="جستجوی سراسری">
+        <i class="fas fa-search wsh-search__lead" aria-hidden="true"></i>
+        <input type="search" class="crm-search-input wsh-search__input" id="crmSearchInput" data-url="{% url 'workspace:crm_search' %}" placeholder="جستجو: فایل، مخاطب، آگهی…" autocomplete="off" enterkeyhint="search" aria-label="جستجوی سراسری" aria-controls="crmSearchResults" aria-expanded="false">
+        <div class="wsh-search__trailing" aria-hidden="false">
+            <span class="wsh-search__loading" id="crmSearchLoading" hidden aria-hidden="true"><i class="fas fa-circle-notch fa-spin" aria-hidden="true"></i></span>
+            <button type="button" class="wsh-search__clear" id="crmSearchClear" hidden aria-label="پاک کردن جستجو"><i class="fas fa-times" aria-hidden="true"></i></button>
+        </div>
         <kbd class="crm-search-kbd wsh-search__kbd" aria-hidden="true">Ctrl+K</kbd>
     </div>
-    <div class="crm-search-results mk-search-results wsh-search__results" id="crmSearchResults" hidden></div>
+    <div class="crm-search-results mk-search-results wsh-search__results" id="crmSearchResults" hidden role="listbox" aria-label="نتایج جستجو"></div>
 </div>

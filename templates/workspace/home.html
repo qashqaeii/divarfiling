@@ -7,15 +7,15 @@
 {% endblock %}
 
 {% block ws_surface_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/mk-workspace-home.css' %}?v=7">
-<link rel="stylesheet" href="{% static 'workspace/css/ws-home-mobile-v2.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'workspace/css/mk-workspace-home.css' %}?v=18">
+<link rel="stylesheet" href="{% static 'workspace/css/ws-home-mobile-v2.css' %}?v=14">
 {% endblock %}
 
 {% block page_title %}{% endblock %}
 {% block mobile_bar_title %}میزکار{% endblock %}
 
 {% block content %}
-<div class="mk-page mk-hub mk-hub-pro ws-home ws-home-pro wsh-dashboard" id="wsHome">
+<div class="mk-page mk-hub mk-hub-pro ws-home ws-home-pro wsh-dashboard wsh-dashboard--mob3" id="wsHome">
 
     {% include 'workspace/includes/home/workspace_header.html' %}
 
@@ -67,9 +67,9 @@
         </section>
         {% endif %}
 
-        {% include 'workspace/includes/home/workspace_today_queue.html' %}
-        {% include 'workspace/includes/home/workspace_kpi.html' %}
         {% include 'workspace/includes/home/workspace_quick_actions.html' %}
+        {% include 'workspace/includes/home/workspace_kpi.html' %}
+        {% include 'workspace/includes/home/workspace_today_queue.html' %}
     {% endif %}
 
     {% if support_nav_counts.unread_replies %}
@@ -92,16 +92,23 @@
         {% include 'workspace/includes/home/workspace_latest_files.html' %}
     </div>
 
-    <div class="wsh-lower-grid" data-tour="workspace-insights">
-        {% include 'workspace/includes/home/workspace_pipeline.html' %}
-        {% include 'workspace/includes/home/workspace_contact_status.html' %}
-        {% include 'workspace/includes/home/workspace_trend.html' %}
-    </div>
-
-    <div class="wsh-lower-grid wsh-lower-grid--2" data-tour="workspace-panels-lower">
-        {% include 'workspace/includes/home/workspace_recent_properties.html' %}
-        {% include 'workspace/includes/home/workspace_channels.html' %}
-    </div>
+    <details class="wsh-insights" data-tour="workspace-insights">
+        <summary class="wsh-insights__summary">
+            <span class="wsh-insights__summary-title"><i class="fas fa-chart-line" aria-hidden="true"></i> گزارش‌ها و تحلیل</span>
+            <span class="wsh-insights__summary-hint">قیف CRM، روند فعالیت و بیشتر</span>
+        </summary>
+        <div class="wsh-insights__body">
+            <div class="wsh-lower-grid">
+                {% include 'workspace/includes/home/workspace_pipeline.html' %}
+                {% include 'workspace/includes/home/workspace_contact_status.html' %}
+                {% include 'workspace/includes/home/workspace_trend.html' %}
+            </div>
+            <div class="wsh-lower-grid wsh-lower-grid--2" data-tour="workspace-panels-lower">
+                {% include 'workspace/includes/home/workspace_recent_properties.html' %}
+                {% include 'workspace/includes/home/workspace_channels.html' %}
+            </div>
+        </div>
+    </details>
 
     {% include 'workspace/includes/home/workspace_footer_status.html' %}
     {% endif %}
@@ -112,5 +119,5 @@
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script>window.wsCharts = {{ charts_json|safe }}; window.wsChartsHub = true;</script>
-<script src="{% static 'workspace/js/home.js' %}?v=6"></script>
+<script src="{% static 'workspace/js/home.js' %}?v=10"></script>
 {% endblock %}

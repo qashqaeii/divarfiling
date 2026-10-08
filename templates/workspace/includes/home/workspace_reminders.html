@@ -1,54 +1,55 @@
 {% load workspace_tags %}
-<section class="wsh-card wsh-reminders" data-help-tour="workspace-reminders" aria-label="یادآورها و پیگیری‌ها" id="wshReminders">
-    <header class="wsh-card__head">
+<section class="wsh-card wsh-reminders" data-help-tour="workspace-reminders" aria-label="یادآورها" id="wshReminders">
+    <header class="wsh-card__head wsh-card__head--tight">
         <div class="wsh-card__title">
             <span class="wsh-card__icon" aria-hidden="true"><i class="fas fa-bell"></i></span>
-            <h2>یادآورها و پیگیری‌ها</h2>
+            <h2>یادآورها</h2>
         </div>
-        <a href="{% url 'workspace:crm_reminders' %}" class="wsh-card__link">مشاهده همه</a>
+        <a href="{% url 'workspace:crm_reminders' %}" class="wsh-card__link">همه</a>
     </header>
-    <div class="wsh-tabs" role="tablist" aria-label="فیلتر یادآورها">
-        <button type="button" class="wsh-tabs__btn is-active" role="tab" aria-selected="true" data-wsh-reminder-tab="all">همه</button>
-        <button type="button" class="wsh-tabs__btn" role="tab" aria-selected="false" data-wsh-reminder-tab="today">امروز</button>
-        <button type="button" class="wsh-tabs__btn" role="tab" aria-selected="false" data-wsh-reminder-tab="tomorrow">فردا</button>
-        <button type="button" class="wsh-tabs__btn" role="tab" aria-selected="false" data-wsh-reminder-tab="week">هفته آینده</button>
+
+    <div class="wsh-reminders__tabs-wrap">
+        <div class="wsh-tabs wsh-reminders__tabs" role="tablist" aria-label="فیلتر یادآورها">
+            <button type="button" class="wsh-tabs__btn is-active" role="tab" aria-selected="true" data-wsh-reminder-tab="all">همه</button>
+            <button type="button" class="wsh-tabs__btn" role="tab" aria-selected="false" data-wsh-reminder-tab="today">امروز</button>
+            <button type="button" class="wsh-tabs__btn" role="tab" aria-selected="false" data-wsh-reminder-tab="tomorrow">فردا</button>
+            <button type="button" class="wsh-tabs__btn" role="tab" aria-selected="false" data-wsh-reminder-tab="week">هفته</button>
+        </div>
     </div>
-    <ul class="wsh-reminders__list" id="wshRemindersList">
-        {% for c in due_contacts %}
-        <li class="wsh-reminders__item" data-wsh-reminder-scope="today followup">
-            <a href="{% url 'workspace:crm_detail' c.id %}" class="wsh-reminders__main">
-                <span class="wsh-reminders__time">امروز</span>
-                <span class="wsh-reminders__body">
-                    <strong>پیگیری — {{ c.name }}</strong>
-                    <em>{{ c.phone|default:"—" }}</em>
-                </span>
+
+    <p class="wsh-reminders__hint" id="wshRemindersHint">پیگیری‌های امروز در «امروز و معوق» بالاتر هستند؛ اینجا فقط یادآورهای برنامه‌ریزی‌شده.</p>
+
+    <ul class="wsh-reminders__list wsh-reminders__list--dense" id="wshRemindersList">
+        {% for r in upcoming_reminders %}
+        {% if r.customer %}
+        {% url 'workspace:crm_detail' r.customer.id as reminder_target_url %}
+        {% else %}
+        {% url 'workspace:crm_reminders' as reminder_target_url %}
+        {% endif %}
+        <li class="wsh-reminders__row" data-wsh-reminder-date="{{ r.due_at|date:'Y-m-d' }}">
+            <span class="wsh-reminders__time">{{ r.due_at|ws_time }}</span>
+            <a href="{{ reminder_target_url }}" class="wsh-reminders__main">
+                <span class="wsh-reminders__title">{{ r.title }}</span>
+                {% if r.customer %}<span class="wsh-reminders__contact">{{ r.customer.name }}</span>{% endif %}
             </a>
-            {% if c.phone %}
-            <a href="tel:{{ c.phone }}" class="wsh-reminders__act" aria-label="تماس با {{ c.name }}"><i class="fas fa-phone" aria-hidden="true"></i></a>
+            {% if r.customer and r.customer.phone %}
+            <a href="tel:{{ r.customer.phone }}" class="wsh-reminders__act wsh-reminders__act--call" aria-label="تماس با {{ r.customer.name }}"><i class="fas fa-phone" aria-hidden="true"></i></a>
             {% else %}
-            <span class="wsh-reminders__act wsh-reminders__act--muted" aria-hidden="true"><i class="fas fa-phone"></i></span>
+            <a href="{{ reminder_target_url }}" class="wsh-reminders__act wsh-reminders__act--go" aria-label="جزئیات"><i class="fas fa-chevron-left" aria-hidden="true"></i></a>
             {% endif %}
         </li>
         {% endfor %}
-        {% for r in upcoming_reminders %}
-        <li class="wsh-reminders__item" data-wsh-reminder-date="{{ r.due_at|date:'Y-m-d' }}">
-            <div class="wsh-reminders__main">
-                <span class="wsh-reminders__time">{{ r.due_at|ws_time }}</span>
-                <span class="wsh-reminders__body">
-                    <strong>{{ r.title }}</strong>
-                    {% if r.customer %}<em>{{ r.customer.name }}</em>{% endif %}
-                </span>
-            </div>
-            <span class="wsh-reminders__act" aria-hidden="true"><i class="fas fa-bell"></i></span>
-        </li>
-        {% endfor %}
-        <li class="wsh-reminders__empty" id="wshRemindersEmpty"{% if due_contacts or upcoming_reminders %} hidden{% endif %}>
+        <li class="wsh-reminders__empty" id="wshRemindersEmpty"{% if upcoming_reminders %} hidden{% endif %}>
             <i class="fas fa-check-circle" aria-hidden="true"></i>
-            <p>یادآور یا پیگیری فعالی نیست</p>
+            <p>یادآور فعالی نیست</p>
         </li>
         <li class="wsh-reminders__empty" id="wshRemindersTabEmpty" hidden>
             <i class="fas fa-calendar-check" aria-hidden="true"></i>
             <p>موردی در این بازه نیست</p>
         </li>
     </ul>
+
+    <footer class="wsh-reminders__foot">
+        <a href="{% url 'workspace:crm_reminders' %}?drawer=reminder" class="wsh-reminders__foot-link">یادآور جدید <i class="fas fa-plus" aria-hidden="true"></i></a>
+    </footer>
 </section>

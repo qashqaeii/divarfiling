@@ -9,7 +9,7 @@
 {% block crm_search %}{% endblock %}
 
 {% block crm_extra_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/crm-templates-mobile.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-templates-mobile.css' %}?v=5">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-mobile-v2-deals.css' %}?v=1">
 {% endblock %}
 
@@ -22,8 +22,7 @@
         <div class="crm-tpl-mob-header-accent" aria-hidden="true"></div>
         <div class="crm-tpl-mob-header-inner">
             <div class="crm-tpl-mob-header-main">
-                <span class="crm-tpl-mob-kicker"><i class="fas fa-message" aria-hidden="true"></i> کتابخانه پیام</span>
-                <h1 class="crm-tpl-mob-title">قالب پیام</h1>
+                <p class="crm-tpl-mob-lead"><i class="fas fa-message" aria-hidden="true"></i> کتابخانه پیام</p>
                 <p class="crm-tpl-mob-sub">
                     <span>{{ stats.total }} قالب</span>
                     {% if stats.whatsapp %}<span class="crm-tpl-mob-sub-chip is-wa">{{ stats.whatsapp }} واتساپ</span>{% endif %}
@@ -125,7 +124,12 @@
             <form method="get" class="crm-tpl-search" role="search">
                 {% if cat_filter %}<input type="hidden" name="cat" value="{{ cat_filter }}">{% endif %}
                 <i class="fas fa-search" aria-hidden="true"></i>
-                <input type="search" name="q" value="{{ search_q }}" placeholder="جستجو نام یا متن..." autocomplete="off" aria-label="جستجو قالب">
+                <input type="search" name="q" value="{{ search_q }}" placeholder="جستجو نام یا متن..." autocomplete="off" aria-label="جستجو قالب" enterkeyhint="search">
+                {% if search_q or cat_filter %}
+                <a href="{% url 'workspace:crm_templates' %}" class="crm-tpl-search-clear" aria-label="پاک کردن فیلترها" title="پاک کردن فیلتر">
+                    <i class="fas fa-times" aria-hidden="true"></i>
+                </a>
+                {% endif %}
             </form>
         </div>
 
@@ -161,12 +165,12 @@
                         {% endif %}
                     </header>
 
-                    <div class="crm-tpl-phone">
+                    <div class="crm-tpl-phone crm-tpl-card-v2-preview">
                         <div class="crm-tpl-phone-bar" aria-hidden="true">
                             <span></span><span></span><span></span>
                         </div>
                         <div class="crm-tpl-bubble-v2">
-                            <p>{{ t.body|crm_template_sample|truncatechars:240 }}</p>
+                            <p class="crm-tpl-snippet">{{ t.body|crm_template_sample|truncatechars:200 }}</p>
                         </div>
                         <textarea class="crm-tpl-copy-src" hidden readonly aria-hidden="true">{{ t.body }}</textarea>
                     </div>
@@ -175,37 +179,40 @@
                         <button type="button" class="crm-tpl-act crm-tpl-act--primary crm-tpl-copy-raw" title="کپی متن خام">
                             <i class="fas fa-copy" aria-hidden="true"></i><span>کپی</span>
                         </button>
-                        <button type="button" class="crm-tpl-act" data-sample="{{ t.body|escapejs }}" title="کپی با داده نمونه">
-                            <i class="fas fa-eye" aria-hidden="true"></i><span>نمونه</span>
-                        </button>
-                        <button type="button" class="crm-tpl-act"
-                            data-drawer-open="drawer-template"
-                            data-template-id="{{ t.id }}"
-                            data-template-name="{{ t.name }}"
-                            data-template-category="{{ t.category }}"
-                            data-template-channel="{{ t.channel }}"
-                            data-template-body="{{ t.body|escapejs }}"
-                            title="ویرایش">
-                            <i class="fas fa-pen" aria-hidden="true"></i>
-                        </button>
-                        <form method="post" class="crm-tpl-inline-form">
-                            {% csrf_token %}
-                            <input type="hidden" name="action" value="duplicate">
-                            <input type="hidden" name="template_id" value="{{ t.id }}">
-                            <button type="submit" class="crm-tpl-act" title="کپی قالب">
-                                <i class="fas fa-clone" aria-hidden="true"></i>
-                            </button>
-                        </form>
-                        {% if not t.is_system %}
-                        <form method="post" class="crm-tpl-inline-form" onsubmit="return confirm('حذف این قالب؟')">
-                            {% csrf_token %}
-                            <input type="hidden" name="action" value="delete">
-                            <input type="hidden" name="template_id" value="{{ t.id }}">
-                            <button type="submit" class="crm-tpl-act crm-tpl-act--danger" title="حذف">
-                                <i class="fas fa-trash" aria-hidden="true"></i>
-                            </button>
-                        </form>
-                        {% endif %}
+                        <details class="crm-tpl-more">
+                            <summary class="crm-tpl-act crm-tpl-more-trigger" aria-label="سایر عملیات">
+                                <i class="fas fa-ellipsis" aria-hidden="true"></i>
+                            </summary>
+                            <div class="crm-tpl-more-menu" role="menu">
+                                <button type="button" class="crm-tpl-more-item crm-tpl-copy-sample" data-template-id="{{ t.id }}" role="menuitem">
+                                    <i class="fas fa-eye" aria-hidden="true"></i><span>کپی با داده نمونه</span>
+                                </button>
+                                <button type="button" class="crm-tpl-more-item"
+                                    data-drawer-open="drawer-template"
+                                    data-template-id="{{ t.id }}"
+                                    role="menuitem">
+                                    <i class="fas fa-pen" aria-hidden="true"></i><span>ویرایش</span>
+                                </button>
+                                <form method="post" class="crm-tpl-more-form" role="none">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="duplicate">
+                                    <input type="hidden" name="template_id" value="{{ t.id }}">
+                                    <button type="submit" class="crm-tpl-more-item" role="menuitem">
+                                        <i class="fas fa-clone" aria-hidden="true"></i><span>ساخت نسخه کپی</span>
+                                    </button>
+                                </form>
+                                {% if not t.is_system %}
+                                <form method="post" class="crm-tpl-more-form" role="none" onsubmit="return confirm('حذف این قالب؟')">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="delete">
+                                    <input type="hidden" name="template_id" value="{{ t.id }}">
+                                    <button type="submit" class="crm-tpl-more-item crm-tpl-more-item--danger" role="menuitem">
+                                        <i class="fas fa-trash" aria-hidden="true"></i><span>حذف</span>
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </div>
+                        </details>
                     </footer>
                 </article>
                 {% endfor %}
@@ -220,7 +227,10 @@
                 <i class="fas fa-message"></i>
             </div>
             <h2>{% if search_q or cat_filter %}قالبی پیدا نشد{% else %}هنوز قالبی ندارید{% endif %}</h2>
-            <p>{% if search_q %}عبارت جستجو را تغییر دهید یا قالب جدید بسازید.{% else %}اولین قالب پیام خود را برای واتساپ یا پیامک بسازید.{% endif %}</p>
+            <p>{% if search_q or cat_filter %}فیلتر یا جستجو را تغییر دهید، یا قالب جدید بسازید.{% else %}اولین قالب پیام خود را برای واتساپ یا پیامک بسازید.{% endif %}</p>
+            {% if search_q or cat_filter %}
+            <a href="{% url 'workspace:crm_templates' %}" class="crm-btn crm-btn-ghost">پاک کردن فیلتر</a>
+            {% endif %}
             <button type="button" class="crm-dash-act crm-dash-act--primary" data-drawer-open="drawer-template">
                 <i class="fas fa-plus" aria-hidden="true"></i><span>ساخت قالب</span>
             </button>
@@ -228,23 +238,19 @@
         {% endif %}
     </div>
 
-    <button type="button" class="crm-tpl-fab" data-drawer-open="drawer-template" aria-label="قالب جدید">
-        <i class="fas fa-plus" aria-hidden="true"></i>
-        <span>قالب</span>
-    </button>
     {% include 'workspace/crm/includes/help/crm_templates_help_modal.html' %}
 </div>
+{{ template_edit_payload|json_script:"crmTplEditData" }}
 {% endblock %}
 
 {% block crm_drawers %}
 <aside class="crm-drawer" id="drawer-template" {% if open_drawer %}data-open="1"{% endif %}>
     <div class="crm-drawer-overlay" data-drawer-close></div>
     <div class="crm-drawer-panel crm-drawer-panel-lg crm-tpl-drawer-v2">
-        <div class="crm-drawer-head">
+        <div class="crm-drawer-head crm-tpl-drawer-head-compact">
             <div>
-                <span class="crm-tpl-drawer-kicker"><i class="fas fa-message" aria-hidden="true"></i> کتابخانه پیام</span>
                 <h2 id="crmTplDrawerTitle">قالب جدید</h2>
-                <p>متغیرها هنگام ارسال خودکار پر می‌شوند</p>
+                <p id="crmTplDrawerDesc">متغیرها هنگام ارسال خودکار پر می‌شوند</p>
             </div>
             <button type="button" class="crm-drawer-close" data-drawer-close aria-label="بستن"><i class="fas fa-times"></i></button>
         </div>
@@ -313,9 +319,16 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!form) return;
 
     const titleEl = document.getElementById('crmTplDrawerTitle');
+    const descEl = document.getElementById('crmTplDrawerDesc');
     const previewEl = document.getElementById('crmTplPreviewText');
     const bodyTa = form.querySelector('[name="body"]');
     const idField = document.getElementById('crmTemplateId');
+    const submitBtn = form.querySelector('[type="submit"]');
+    let editMap = {};
+    try {
+        const raw = document.getElementById('crmTplEditData')?.textContent;
+        if (raw) editMap = JSON.parse(raw);
+    } catch (_) { /* ignore corrupt payload */ }
 
     const sampleMap = {
         '{name}': 'علی محمدی',
@@ -326,11 +339,54 @@ document.addEventListener('DOMContentLoaded', () => {
         '{agency}': 'آژانس املاک نمونه',
     };
 
-    function renderPreview(text) {
-        if (!previewEl) return;
+    function withSample(text) {
         let out = text || '';
         Object.entries(sampleMap).forEach(([k, v]) => { out = out.split(k).join(v); });
-        previewEl.textContent = out.trim() || 'متن پیام اینجا نمایش داده می‌شود...';
+        return out.trim();
+    }
+
+    function renderPreview(text) {
+        if (!previewEl) return;
+        const out = withSample(text);
+        previewEl.textContent = out || 'متن پیام اینجا نمایش داده می‌شود...';
+    }
+
+    function flashBtn(btn) {
+        const icon = btn?.querySelector('i');
+        if (!icon) return;
+        const orig = icon.className;
+        icon.className = 'fas fa-check';
+        setTimeout(() => { icon.className = orig; }, 1500);
+    }
+
+    async function copyText(text, btn) {
+        const value = (text || '').trim();
+        if (!value) return false;
+        try {
+            if (navigator.clipboard?.writeText) {
+                await navigator.clipboard.writeText(value);
+            } else {
+                const ta = document.createElement('textarea');
+                ta.value = value;
+                ta.setAttribute('readonly', '');
+                ta.style.position = 'fixed';
+                ta.style.opacity = '0';
+                document.body.appendChild(ta);
+                ta.select();
+                const ok = document.execCommand('copy');
+                ta.remove();
+                if (!ok) throw new Error('copy failed');
+            }
+            flashBtn(btn);
+            return true;
+        } catch (_) {
+            if (btn) {
+                const prev = btn.getAttribute('title') || '';
+                btn.setAttribute('title', 'کپی ناموفق — متن را دستی انتخاب کنید');
+                setTimeout(() => btn.setAttribute('title', prev), 2500);
+            }
+            return false;
+        }
     }
 
     bodyTa?.addEventListener('input', () => renderPreview(bodyTa.value));
@@ -348,58 +404,102 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    function payloadFor(id) {
+        return id ? editMap[String(id)] : null;
+    }
+
     function fillTemplateForm(btn) {
-        const isEdit = Boolean(btn?.dataset?.templateId);
+        const tplId = btn?.dataset?.templateId || '';
+        const payload = payloadFor(tplId);
+        const isEdit = Boolean(payload);
         if (titleEl) titleEl.textContent = isEdit ? 'ویرایش قالب' : 'قالب جدید';
-        if (idField) idField.value = btn?.dataset?.templateId || '';
+        if (descEl) descEl.textContent = 'متغیرها هنگام ارسال خودکار پر می‌شوند';
+        if (idField) idField.value = tplId;
         if (!isEdit) {
             form.reset();
             if (idField) idField.value = '';
             renderPreview('');
+            if (submitBtn) submitBtn.disabled = false;
             return;
         }
         const set = (n, v) => {
             const el = form.querySelector(`[name="${n}"]`);
             if (el) el.value = v ?? '';
         };
-        set('name', btn.dataset.templateName);
-        set('category', btn.dataset.templateCategory);
-        set('channel', btn.dataset.templateChannel);
-        set('body', btn.dataset.templateBody);
-        renderPreview(btn.dataset.templateBody || '');
+        set('name', payload.name);
+        set('category', payload.category);
+        set('channel', payload.channel);
+        set('body', payload.body);
+        renderPreview(payload.body || '');
+        if (submitBtn) submitBtn.disabled = false;
     }
 
     document.querySelectorAll('[data-drawer-open="drawer-template"]').forEach(btn => {
         btn.addEventListener('click', () => fillTemplateForm(btn));
     });
 
+    function resetTplMenu(menu) {
+        if (!menu) return;
+        ['position', 'insetInlineEnd', 'bottom', 'top', 'maxHeight', 'zIndex', 'overflowY'].forEach(k => { menu.style[k] = ''; });
+    }
+
+    function anchorTplMenu(details) {
+        const menu = details.querySelector('.crm-tpl-more-menu');
+        if (!details.open) {
+            resetTplMenu(menu);
+            return;
+        }
+        document.querySelectorAll('.crm-tpl-more[open]').forEach(other => {
+            if (other !== details) other.open = false;
+        });
+        if (!menu) return;
+        const summary = details.querySelector('summary');
+        const r = summary?.getBoundingClientRect();
+        if (!r) return;
+        const gap = 8;
+        const navClear = 76;
+        menu.style.position = 'fixed';
+        menu.style.zIndex = '200';
+        menu.style.insetInlineEnd = `${Math.max(12, window.innerWidth - r.right)}px`;
+        menu.style.overflowY = 'auto';
+        const spaceAbove = r.top - navClear;
+        menu.style.maxHeight = `min(14rem, ${Math.max(100, spaceAbove - gap)}px)`;
+        if (spaceAbove > 130) {
+            menu.style.bottom = `${window.innerHeight - r.top + gap}px`;
+            menu.style.top = 'auto';
+        } else {
+            menu.style.top = `${Math.min(window.innerHeight - navClear - 8, r.bottom + gap)}px`;
+            menu.style.bottom = 'auto';
+        }
+    }
+
+    document.querySelectorAll('.crm-tpl-more').forEach(details => {
+        details.addEventListener('toggle', () => anchorTplMenu(details));
+    });
+    window.addEventListener('scroll', () => {
+        document.querySelectorAll('.crm-tpl-more[open]').forEach(d => { d.open = false; });
+    }, { passive: true });
+
     if (bodyTa?.value) renderPreview(bodyTa.value);
+
+    form.addEventListener('submit', () => {
+        if (submitBtn) submitBtn.disabled = true;
+    });
 
     document.querySelectorAll('.crm-tpl-copy-raw').forEach(btn => {
         btn.addEventListener('click', () => {
             const src = btn.closest('.crm-tpl-card-v2')?.querySelector('.crm-tpl-copy-src');
             if (!src) return;
-            navigator.clipboard.writeText(src.value).then(() => {
-                const icon = btn.querySelector('i');
-                if (!icon) return;
-                const orig = icon.className;
-                icon.className = 'fas fa-check';
-                setTimeout(() => { icon.className = orig; }, 1500);
-            });
+            copyText(src.value, btn);
         });
     });
 
-    document.querySelectorAll('[data-sample]').forEach(btn => {
+    document.querySelectorAll('.crm-tpl-copy-sample').forEach(btn => {
         btn.addEventListener('click', () => {
-            let text = btn.dataset.sample || '';
-            Object.entries(sampleMap).forEach(([k, v]) => { text = text.split(k).join(v); });
-            navigator.clipboard.writeText(text.trim()).then(() => {
-                const icon = btn.querySelector('i');
-                if (!icon) return;
-                const orig = icon.className;
-                icon.className = 'fas fa-check';
-                setTimeout(() => { icon.className = orig; }, 1500);
-            });
+            const payload = payloadFor(btn.dataset.templateId);
+            if (!payload?.body) return;
+            copyText(withSample(payload.body), btn);
+            btn.closest('details')?.removeAttribute('open');
         });
     });
 });

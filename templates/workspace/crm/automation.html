@@ -9,7 +9,7 @@
 {% block crm_search %}{% endblock %}
 
 {% block crm_extra_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/crm-automation-mobile.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-automation-mobile.css' %}?v=5">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-mobile-v2-deals.css' %}?v=1">
 {% endblock %}
 
@@ -21,11 +21,10 @@
         <div class="crm-auto-mob-header-accent" aria-hidden="true"></div>
         <div class="crm-auto-mob-header-inner">
             <div class="crm-auto-mob-header-main">
-                <span class="crm-auto-mob-kicker">
+                <p class="crm-auto-mob-lead">
                     <i class="fas fa-robot" aria-hidden="true"></i> پیگیری خودکار
                     <em class="crm-auto-mob-beta">BETA</em>
-                </span>
-                <h1 class="crm-auto-mob-title">اتوماسیون</h1>
+                </p>
                 <p class="crm-auto-mob-sub">
                     <span>{{ stats.total }} قانون</span>
                     {% if stats.active %}<span class="crm-auto-mob-sub-chip is-active">{{ stats.active }} فعال</span>{% endif %}
@@ -92,15 +91,14 @@
                 <span class="crm-auto-kpi-lbl">مخاطب در صف</span>
             </div>
         </article>
-        <article class="crm-auto-kpi crm-auto-kpi--clock">
-            <span class="crm-auto-kpi-glow" aria-hidden="true"></span>
-            <span class="crm-auto-kpi-icon" aria-hidden="true"><i class="fas fa-clock"></i></span>
-            <div class="crm-auto-kpi-body">
-                <span class="crm-auto-kpi-val crm-auto-kpi-val--sm">{% if stats.last_run %}{{ stats.last_run|ws_jalali_date }}{% else %}—{% endif %}</span>
-                <span class="crm-auto-kpi-lbl">آخرین اجرا · خودکار هر ساعت</span>
-            </div>
-        </article>
     </section>
+
+    <p class="crm-auto-last-run" role="status">
+        <i class="fas fa-clock" aria-hidden="true"></i>
+        <span class="crm-auto-last-run-label">آخرین اجرا</span>
+        <span class="crm-auto-last-run-val">{% if stats.last_run %}{{ stats.last_run|ws_jalali_date }}{% else %}—{% endif %}</span>
+        <span class="crm-auto-last-run-hint">خودکار هر ساعت</span>
+    </p>
 
     <div class="crm-shell-body">
         <div class="crm-auto-tip" role="note">
@@ -120,6 +118,7 @@
                     <i class="fas fa-chevron-down crm-auto-presets-chevron" aria-hidden="true"></i>
                 </summary>
                 <div class="crm-auto-presets-sheet">
+                    <p class="crm-auto-presets-note">قالب را انتخاب کنید — فرم پر می‌شود؛ تا زمان «ذخیره» هیچ اجرایی انجام نمی‌شود.</p>
                     <div class="crm-auto-preset-grid">
                         {% for p in automation_presets %}
                         <button type="button" class="crm-auto-preset crm-auto-preset--{{ p.tone }}"
@@ -154,10 +153,13 @@
                 <header class="crm-auto-card-v2-head">
                     <div class="crm-auto-card-v2-title-wrap">
                         <h3 class="crm-auto-card-v2-title">{{ r.name }}</h3>
+                        <span class="crm-auto-card-v2-pill {% if r.is_active %}is-on{% else %}is-off{% endif %}">
+                            {% if r.is_active %}فعال{% else %}غیرفعال{% endif %}
+                        </span>
                         {% if r.match_count %}
                         <span class="crm-auto-card-v2-queue" title="مخاطبین واجد شرط الان">
                             <i class="fas fa-user-clock" aria-hidden="true"></i>
-                            {{ r.match_count }}
+                            {{ r.match_count }} مخاطب
                         </span>
                         {% endif %}
                     </div>
@@ -172,7 +174,32 @@
                     </form>
                 </header>
 
-                <div class="crm-auto-pipeline">
+                <div class="crm-auto-rule-brief">
+                    <p class="crm-auto-rule-line">
+                        <span class="crm-auto-rule-kicker">اگر</span>
+                        <span class="crm-auto-rule-text">
+                            <strong>{{ r.trigger_days }} روز</strong> بدون فعالیت
+                            <span class="crm-auto-rule-chips">
+                                {% for s in r.trigger_statuses|split_tags %}
+                                <em>{{ s }}</em>
+                                {% endfor %}
+                            </span>
+                        </span>
+                    </p>
+                    <p class="crm-auto-rule-line crm-auto-rule-line--then">
+                        <span class="crm-auto-rule-kicker">آنگاه</span>
+                        <span class="crm-auto-rule-text">
+                            <strong>{{ r.get_action_display }}</strong>
+                            {% if r.action == 'create_reminder' %}
+                            <span class="crm-auto-rule-detail">«{{ r.action_reminder_title }}»{% if r.action_reminder_days %} · +{{ r.action_reminder_days }} روز{% endif %}</span>
+                            {% elif r.action_status %}
+                            <span class="crm-auto-rule-detail">→ {{ r.action_status }}</span>
+                            {% endif %}
+                        </span>
+                    </p>
+                </div>
+
+                <div class="crm-auto-pipeline crm-auto-pipeline--desk">
                     <div class="crm-auto-pipeline-node crm-auto-pipeline-node--if">
                         <span class="crm-auto-pipeline-tag">اگر</span>
                         <div class="crm-auto-pipeline-body">
@@ -216,44 +243,51 @@
                         {% endif %}
                     </div>
                     <div class="crm-auto-card-v2-actions">
-                        <form method="post" class="crm-auto-inline-form">
+                        <form method="post" class="crm-auto-inline-form crm-auto-run-one-form">
                             {% csrf_token %}
                             <input type="hidden" name="action" value="run_rule">
                             <input type="hidden" name="rule_id" value="{{ r.id }}">
-                            <button type="submit" class="crm-auto-act" title="اجرای این قانون" {% if not r.is_active %}disabled{% endif %}>
-                                <i class="fas fa-play" aria-hidden="true"></i>
+                            <button type="submit" class="crm-auto-act crm-auto-act--run" title="اجرای این قانون" {% if not r.is_active %}disabled{% endif %}>
+                                <i class="fas fa-play" aria-hidden="true"></i><span>اجرا</span>
                             </button>
                         </form>
-                        <button type="button" class="crm-auto-act"
-                            data-drawer-open="drawer-rule"
-                            data-rule-id="{{ r.id }}"
-                            data-rule-name="{{ r.name }}"
-                            data-rule-active="{{ r.is_active|yesno:'1,0' }}"
-                            data-rule-days="{{ r.trigger_days }}"
-                            data-rule-statuses="{{ r.trigger_statuses }}"
-                            data-rule-action="{{ r.action }}"
-                            data-rule-action-status="{{ r.action_status }}"
-                            data-rule-reminder-title="{{ r.action_reminder_title }}"
-                            data-rule-reminder-days="{{ r.action_reminder_days }}"
-                            title="ویرایش">
-                            <i class="fas fa-pen" aria-hidden="true"></i>
-                        </button>
-                        <form method="post" class="crm-auto-inline-form">
-                            {% csrf_token %}
-                            <input type="hidden" name="action" value="duplicate">
-                            <input type="hidden" name="rule_id" value="{{ r.id }}">
-                            <button type="submit" class="crm-auto-act" title="کپی قانون">
-                                <i class="fas fa-copy" aria-hidden="true"></i>
-                            </button>
-                        </form>
-                        <form method="post" class="crm-auto-inline-form" onsubmit="return confirm('حذف این قانون؟')">
-                            {% csrf_token %}
-                            <input type="hidden" name="action" value="delete">
-                            <input type="hidden" name="rule_id" value="{{ r.id }}">
-                            <button type="submit" class="crm-auto-act crm-auto-act--danger" title="حذف">
-                                <i class="fas fa-trash" aria-hidden="true"></i>
-                            </button>
-                        </form>
+                        <details class="crm-auto-more">
+                            <summary class="crm-auto-act crm-auto-more-trigger" aria-label="سایر عملیات">
+                                <i class="fas fa-ellipsis" aria-hidden="true"></i>
+                            </summary>
+                            <div class="crm-auto-more-menu" role="menu">
+                                <button type="button" class="crm-auto-more-item"
+                                    data-drawer-open="drawer-rule"
+                                    data-rule-id="{{ r.id }}"
+                                    data-rule-name="{{ r.name }}"
+                                    data-rule-active="{{ r.is_active|yesno:'1,0' }}"
+                                    data-rule-days="{{ r.trigger_days }}"
+                                    data-rule-statuses="{{ r.trigger_statuses }}"
+                                    data-rule-action="{{ r.action }}"
+                                    data-rule-action-status="{{ r.action_status }}"
+                                    data-rule-reminder-title="{{ r.action_reminder_title }}"
+                                    data-rule-reminder-days="{{ r.action_reminder_days }}"
+                                    role="menuitem">
+                                    <i class="fas fa-pen" aria-hidden="true"></i><span>ویرایش</span>
+                                </button>
+                                <form method="post" class="crm-auto-more-form" role="none">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="duplicate">
+                                    <input type="hidden" name="rule_id" value="{{ r.id }}">
+                                    <button type="submit" class="crm-auto-more-item" role="menuitem">
+                                        <i class="fas fa-copy" aria-hidden="true"></i><span>کپی قانون</span>
+                                    </button>
+                                </form>
+                                <form method="post" class="crm-auto-more-form" role="none" onsubmit="return confirm('حذف این قانون؟')">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="delete">
+                                    <input type="hidden" name="rule_id" value="{{ r.id }}">
+                                    <button type="submit" class="crm-auto-more-item crm-auto-more-item--danger" role="menuitem">
+                                        <i class="fas fa-trash" aria-hidden="true"></i><span>حذف</span>
+                                    </button>
+                                </form>
+                            </div>
+                        </details>
                     </div>
                 </footer>
             </article>
@@ -273,10 +307,6 @@
         </div>
     </div>
 
-    <button type="button" class="crm-auto-fab" data-drawer-open="drawer-rule" aria-label="قانون جدید">
-        <i class="fas fa-plus" aria-hidden="true"></i>
-        <span>قانون</span>
-    </button>
     {% include 'workspace/crm/includes/help/crm_automation_help_modal.html' %}
 </div>
 {% endblock %}
@@ -285,9 +315,8 @@
 <aside class="crm-drawer" id="drawer-rule" {% if open_drawer %}data-open="1"{% endif %}>
     <div class="crm-drawer-overlay" data-drawer-close></div>
     <div class="crm-drawer-panel crm-drawer-panel-lg crm-auto-drawer-v2">
-        <div class="crm-drawer-head">
+        <div class="crm-drawer-head crm-auto-drawer-head-compact">
             <div>
-                <span class="crm-auto-drawer-kicker"><i class="fas fa-robot" aria-hidden="true"></i> اتوماسیون</span>
                 <h2 id="crmRuleDrawerTitle">قانون جدید</h2>
                 <p id="crmRuleDrawerDesc">شرط + عمل = پیگیری بدون فراموشی</p>
             </div>
@@ -419,10 +448,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const days = form.querySelector('[name="trigger_days"]')?.value || '۳';
         const statuses = selectedStatuses().join('، ') || 'مخاطب هدف';
         const action = actionSel?.value || 'create_reminder';
-        let actionTxt = action === 'set_status'
+        const actionTxt = action === 'set_status'
             ? `وضعیت به «${form.querySelector('[name="action_status"]')?.value || '…'}» تغییر کند`
             : `یادآور «${form.querySelector('[name="action_reminder_title"]')?.value || 'پیگیری'}» ساخته شود`;
-        previewEl.innerHTML = `اگر مخاطب <strong>${days} روز</strong> بدون فعالیت (${statuses}) بماند → <strong>${actionTxt}</strong>`;
+        previewEl.replaceChildren();
+        previewEl.append(document.createTextNode('اگر مخاطب '));
+        const daysEl = document.createElement('strong');
+        daysEl.textContent = `${days} روز`;
+        previewEl.append(daysEl);
+        previewEl.append(document.createTextNode(` بدون فعالیت (${statuses}) بماند → `));
+        const actEl = document.createElement('strong');
+        actEl.textContent = actionTxt;
+        previewEl.append(actEl);
     }
 
     ['trigger_days', 'action_reminder_title', 'action_status'].forEach(name => {
@@ -440,7 +477,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const isEdit = Boolean(btn?.dataset?.ruleId);
         const isPreset = Boolean(btn?.dataset?.presetName);
         if (titleEl) titleEl.textContent = isEdit ? 'ویرایش قانون' : (isPreset ? 'قانون از قالب' : 'قانون جدید');
-        if (descEl) descEl.textContent = isPreset ? btn.dataset.presetName : (isEdit ? 'تغییرات را ذخیره کنید' : 'شرط + عمل = پیگیری بدون فراموشی');
+        if (descEl) {
+            descEl.textContent = isPreset
+                ? 'پیش‌نمایش را بررسی کنید — با «ذخیره» قانون ساخته می‌شود (بدون اجرای فوری).'
+                : (isEdit ? 'تغییرات را ذخیره کنید' : 'شرط + عمل = پیگیری بدون فراموشی');
+        }
         document.getElementById('crmRuleId').value = btn?.dataset?.ruleId || '';
 
         if (!isEdit && !isPreset) {
@@ -467,6 +508,64 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.querySelectorAll('[data-drawer-open="drawer-rule"]').forEach(btn => {
         btn.addEventListener('click', () => fillRuleForm(btn));
+    });
+
+    function resetAutoMenu(menu) {
+        if (!menu) return;
+        ['position', 'insetInlineEnd', 'bottom', 'top', 'maxHeight', 'zIndex', 'overflowY'].forEach(k => { menu.style[k] = ''; });
+    }
+
+    function anchorAutoMenu(details) {
+        const menu = details.querySelector('.crm-auto-more-menu');
+        if (!details.open) {
+            resetAutoMenu(menu);
+            return;
+        }
+        document.querySelectorAll('.crm-auto-more[open]').forEach(other => {
+            if (other !== details) other.open = false;
+        });
+        if (!menu) return;
+        const summary = details.querySelector('summary');
+        const r = summary?.getBoundingClientRect();
+        if (!r) return;
+        const gap = 8;
+        const navClear = 76;
+        menu.style.position = 'fixed';
+        menu.style.zIndex = '200';
+        menu.style.insetInlineEnd = `${Math.max(12, window.innerWidth - r.right)}px`;
+        menu.style.overflowY = 'auto';
+        const spaceAbove = r.top - navClear;
+        menu.style.maxHeight = `min(14rem, ${Math.max(100, spaceAbove - gap)}px)`;
+        if (spaceAbove > 130) {
+            menu.style.bottom = `${window.innerHeight - r.top + gap}px`;
+            menu.style.top = 'auto';
+        } else {
+            menu.style.top = `${Math.min(window.innerHeight - navClear - 8, r.bottom + gap)}px`;
+            menu.style.bottom = 'auto';
+        }
+    }
+
+    document.querySelectorAll('.crm-auto-more').forEach(details => {
+        details.addEventListener('toggle', () => anchorAutoMenu(details));
+    });
+    window.addEventListener('scroll', () => {
+        document.querySelectorAll('.crm-auto-more[open]').forEach(d => { d.open = false; });
+    }, { passive: true });
+
+    const submitBtn = form.querySelector('[type="submit"]');
+    form.addEventListener('submit', () => {
+        if (submitBtn) submitBtn.disabled = true;
+    });
+
+    document.querySelectorAll('.crm-auto-run-one-form, .crm-auto-mob-run-form, .crm-auto-run-all-form').forEach(runForm => {
+        runForm.addEventListener('submit', (ev) => {
+            const btn = runForm.querySelector('[type="submit"]');
+            if (btn?.disabled) {
+                ev.preventDefault();
+                return;
+            }
+            if (btn) btn.disabled = true;
+        });
     });
 
     syncExtras();

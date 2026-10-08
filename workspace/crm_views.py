@@ -3150,6 +3150,15 @@ class CRMTemplatesView(CRMContextMixin, LoginRequiredMixin, TemplateView):
             'sms': sum(1 for t in all_templates if t.channel == 'پیامک'),
             'categories': len({t.category for t in all_templates}),
         }
+        ctx['template_edit_payload'] = {
+            str(t.pk): {
+                'name': t.name,
+                'category': t.category,
+                'channel': t.channel,
+                'body': t.body,
+            }
+            for t in all_templates
+        }
         ctx['crm_section'] = 'templates'
         ctx['open_drawer'] = self.request.GET.get('drawer', '')
         return ctx

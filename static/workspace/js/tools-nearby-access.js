@@ -7,6 +7,42 @@
 
     const DEFAULT_CENTER = { lat: 35.6892, lng: 51.3890, zoom: 12 };
     const DEFAULT_RADIUS = 1000;
+    const LEAFLET_CSS = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+    const LEAFLET_JS = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+    let leafletPromise = null;
+
+    function loadLeaflet() {
+        if (global.L?.map) return Promise.resolve(global.L);
+        if (leafletPromise) return leafletPromise;
+
+        leafletPromise = new Promise((resolve, reject) => {
+            if (!document.querySelector('link[data-ws-nearby-leaflet-css]')) {
+                const link = document.createElement('link');
+                link.rel = 'stylesheet';
+                link.href = LEAFLET_CSS;
+                link.setAttribute('data-ws-nearby-leaflet-css', '1');
+                document.head.appendChild(link);
+            }
+            if (global.L?.map) {
+                resolve(global.L);
+                return;
+            }
+            const existing = document.querySelector('script[data-ws-nearby-leaflet]');
+            if (existing) {
+                existing.addEventListener('load', () => resolve(global.L));
+                existing.addEventListener('error', () => reject(new Error('leaflet load failed')));
+                return;
+            }
+            const script = document.createElement('script');
+            script.src = LEAFLET_JS;
+            script.async = true;
+            script.setAttribute('data-ws-nearby-leaflet', '1');
+            script.onload = () => resolve(global.L);
+            script.onerror = () => reject(new Error('leaflet load failed'));
+            document.head.appendChild(script);
+        });
+        return leafletPromise;
+    }
 
     function getCsrfToken() {
         const input = document.querySelector('input[name="csrfmiddlewaretoken"]');
@@ -169,42 +205,109 @@
             if (bounds) map.fitBounds(bounds, { padding: [24, 24], maxZoom: 16 });
         }
 
+        function addStandardBasemap(L) {
+            const cartoOpts = {
+                attribution:
+                    '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> '
+                    + '&copy; <a href="https://carto.com/attributions">CARTO</a>',
+                maxZoom: 20,
+                subdomains: 'abcd',
+                crossOrigin: true,
+            };
+            if (global.CartoBasemap?.createPreferredVoyagerLayer) {
+                return global.CartoBasemap.createPreferredVoyagerLayer(L, cartoOpts, { retina: true });
+            }
+            if (global.CartoBasemap?.createCartoLayer) {
+                const layer = global.CartoBasemap.createCartoLayer(L, 'voyager', cartoOpts, { retina: true });
+                if (layer) return layer;
+            }
+            return L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png', cartoOpts);
+        }
+
+        function showMapLoadError(message) {
+            if (!mapShell) return;
+            let el = mapShell.querySelector('[data-nearby-map-error]');
+            if (!el) {
+                el = document.createElement('p');
+                el.className = 'ws-nearby-access__map-error';
+                el.dataset.nearbyMapError = '';
+                mapShell.appendChild(el);
+            }
+            el.textContent = message || 'بارگذاری نقشه ناموفق بود. اتصال را بررسی کنید و صفحه را رفرش کنید.';
+            el.hidden = false;
+        }
+
+        function mapHasLayout() {
+            const probe = mapEl || mapShell;
+            if (!probe) return false;
+            const rect = probe.getBoundingClientRect();
+            return rect.width > 8 && rect.height > 8;
+        }
+
+        function refreshMapSize() {
+            if (!map) return;
+            const run = () => {
+                try {
+                    map.invalidateSize({ animate: false });
+                } catch (_) {
+                    map.invalidateSize();
+                }
+            };
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    run();
+                    setTimeout(run, 120);
+                });
+            });
+        }
+
         function initMap() {
-            if (!mapEl || !global.L) return;
+            if (!mapEl || !global.L?.map) return;
             const L = global.L;
+            if (mapShell) {
+                const shellH = mapShell.getBoundingClientRect().height;
+                if (shellH > 8) {
+                    mapEl.style.minHeight = `${Math.floor(shellH)}px`;
+                }
+            }
             map = L.map(mapEl, {
                 zoomControl: true,
                 attributionControl: true,
                 scrollWheelZoom: true,
             }).setView([DEFAULT_CENTER.lat, DEFAULT_CENTER.lng], DEFAULT_CENTER.zoom);
 
-            const tileLayer = global.CartoBasemap
-                ? (global.CartoBasemap.createPreferredVoyagerLayer(L, {
-                    attribution: '&copy; OSM &copy; CARTO',
-                    subdomains: 'abcd',
-                    maxZoom: 19,
-                }, { retina: true })
-                    || global.CartoBasemap.createOsmStandardLayer(L, { maxZoom: 19 }))
-                : L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {
-                    attribution: '&copy; OSM &copy; OSM France',
-                    subdomains: 'abc',
-                    maxZoom: 19,
-                });
-            tileLayer.addTo(map);
+            addStandardBasemap(L).addTo(map);
 
             map.on('click', (e) => {
                 setCoords(e.latlng.lat, e.latlng.lng);
                 clearResults();
             });
 
-            setTimeout(() => map.invalidateSize(), 80);
+            refreshMapSize();
         }
 
-        function ensureMap() {
+        async function ensureMap(attempt) {
+            const tries = attempt || 0;
             if (!mapEl) return;
-            if (!global.L) return;
+            if (!mapHasLayout()) {
+                if (tries < 80) {
+                    requestAnimationFrame(() => ensureMap(tries + 1));
+                }
+                return;
+            }
+            try {
+                await loadLeaflet();
+            } catch (_) {
+                showMapLoadError();
+                return;
+            }
+            if (!global.L?.map) {
+                showMapLoadError();
+                return;
+            }
+            mapShell?.querySelector('[data-nearby-map-error]')?.setAttribute('hidden', '');
             if (!map) initMap();
-            else setTimeout(() => map.invalidateSize(), 60);
+            else refreshMapSize();
         }
 
         function setRadius(newRadius) {
@@ -605,7 +708,21 @@
         if (fetchSpinner) fetchSpinner.hidden = true;
         root.classList.remove('is-busy');
 
+        if (mapShell && typeof ResizeObserver !== 'undefined') {
+            const ro = new ResizeObserver(() => {
+                if (!mapHasLayout()) return;
+                if (!map) ensureMap();
+                else refreshMapSize();
+            });
+            ro.observe(mapShell);
+        }
+
         global.wsNearbyAccessOnShow = ensureMap;
+
+        const nearbyPanel = root.closest('.ws-tbx-panel[data-tool-panel="nearby_access"]');
+        if (nearbyPanel && !nearbyPanel.hidden && nearbyPanel.classList.contains('is-active')) {
+            ensureMap();
+        }
     }
 
     function boot() {

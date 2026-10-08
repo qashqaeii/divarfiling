@@ -494,30 +494,6 @@ def workspace_help_content():
                         'feature': 'map',
                     },
                     {
-                        'title': 'مقایسه دو فایل',
-                        'icon': 'fa-code-compare',
-                        'steps': [
-                            {
-                                'title': 'انتخاب فایل‌ها',
-                                'desc': 'منوی «مقایسه» → دو مجموعه (مثلاً این هفته و دو هفته قبل).',
-                            },
-                            {
-                                'title': 'تغییرات قیمت',
-                                'desc': 'آگهی‌های جدید، حذف‌شده و تغییر قیمت نمایش داده می‌شود.',
-                            },
-                            {
-                                'title': 'تحلیل روند',
-                                'desc': 'بفهمید بازار در حال رشد، ثبات یا افت است.',
-                            },
-                        ],
-                        'tips': ['هر هفته یک مقایسه کوتاه، دید بهتری از رقبا می‌دهد.'],
-                        'image': 'help-compare-files.png',
-                        'image_caption': 'صفحه مقایسه — دو فایل کنار هم با تغییرات برجسته',
-                        'url_name': 'workspace:compare',
-                        'requires_bot': True,
-                        'feature': 'compare',
-                    },
-                    {
                         'title': 'جزئیات آگهی و تبدیل به فایل شخصی',
                         'icon': 'fa-file-lines',
                         'steps': [

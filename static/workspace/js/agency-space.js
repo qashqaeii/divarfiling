@@ -434,8 +434,14 @@
     });
     try {
       const saved = localStorage.getItem(viewKey);
-      if (saved === 'list' || saved === 'grid') setView(saved);
-    } catch (e) { /* ignore */ }
+      if (saved === 'list' || saved === 'grid') {
+        setView(saved);
+      } else {
+        setView('list');
+      }
+    } catch (e) {
+      setView('list');
+    }
 
     const detail = document.querySelector('.agency-space-detail');
     if (detail) {

@@ -96,9 +96,6 @@
             <a href="{% url 'workspace:tools' %}" class="ws-nav-item ws-nav-item--sub {% if url_name == 'tools' %}active{% endif %}" data-tour="nav-tools">
                 <span class="ws-nav-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='calculator' size='nav' only %}</span><span>ابزارهای هوشمند</span>
             </a>
-            <a href="{% url 'workspace:compare' %}" class="ws-nav-item ws-nav-item--sub {% if url_name == 'compare' %}active{% endif %}">
-                <span class="ws-nav-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='scale' size='nav' only %}</span><span>مقایسه</span>
-            </a>
             {% else %}
             <a href="{% url 'workspace:upgrade' %}?feature=tools" class="ws-nav-item ws-nav-item--sub ws-nav-locked {% if url_name == 'upgrade' %}active{% endif %}" data-tour="nav-tools">
                 <span class="ws-nav-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='calculator' size='nav' only %}</span><span>ابزارهای هوشمند</span>

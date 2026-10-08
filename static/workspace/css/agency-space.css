@@ -4407,6 +4407,8 @@
     flex-direction: column;
     gap: 0.5rem;
     padding: 0.85rem 0.9rem;
+    overflow: visible;
+    height: auto;
   }
 
   .agency-space-grid.is-list-view .agency-space-contact-card__profile,
@@ -4414,6 +4416,9 @@
   .agency-space-grid.is-list-view .agency-space-contact-card__budget {
     border: none;
     padding: 0;
+    min-height: 0;
+    flex: 0 0 auto;
+    justify-content: flex-start;
   }
 
   .agency-space-grid.is-list-view .agency-space-contact-card__pills {

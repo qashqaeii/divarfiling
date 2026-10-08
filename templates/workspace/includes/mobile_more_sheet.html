@@ -66,9 +66,6 @@
                     <a href="{% url 'workspace:tools' %}" class="ws-mob-sheet-link{% if request.resolver_match.url_name == 'tools' %} is-active{% endif %}">
                         <i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i><span>ابزارهای هوشمند</span>
                     </a>
-                    <a href="{% url 'workspace:compare' %}" class="ws-mob-sheet-link{% if request.resolver_match.url_name == 'compare' %} is-active{% endif %}">
-                        <i class="fas fa-scale-balanced" aria-hidden="true"></i><span>مقایسه</span>
-                    </a>
                     <a href="{% url 'workspace:contracts_dashboard' %}" class="ws-mob-sheet-link{% if '/contracts' in request.path %} is-active{% endif %}">
                         <i class="fas fa-file-signature" aria-hidden="true"></i><span>قراردادها</span>
                     </a>

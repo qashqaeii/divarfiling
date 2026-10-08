@@ -559,7 +559,8 @@
         box-sizing: border-box;
         padding: 0.65rem 0.7rem !important;
         gap: 0.4rem !important;
-        overflow: hidden;
+        overflow: visible;
+        height: auto;
     }
 
     .agency-hub--space .agency-space-grid.is-list-view .agency-space-contact-card__profile,
@@ -571,6 +572,12 @@
         width: 100%;
         max-width: 100%;
         min-width: 0;
+        min-height: 0 !important;
+        flex: 0 0 auto;
+    }
+
+    .agency-hub--space .agency-space-grid.is-list-view .agency-space-contact-card__profile {
+        justify-content: flex-start !important;
     }
 
     .agency-hub--space .agency-space-grid.is-list-view .agency-space-contact-card__need,
@@ -602,6 +609,11 @@
     .agency-hub--space .agency-space-grid.is-list-view .agency-space-contact-card__status-col {
         padding-top: 0.35rem;
         border-top: 1px solid color-mix(in srgb, var(--ws-border, #e2e8f0) 70%, transparent);
+        justify-content: flex-start !important;
+    }
+
+    .agency-hub--space .agency-space-grid.is-list-view .agency-space-contact-card__actions--list {
+        margin-top: 0.35rem !important;
     }
 
     .agency-hub--space .agency-space-grid.is-list-view .agency-space-contact-card__pills {

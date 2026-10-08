@@ -7,7 +7,6 @@
         <li><a href="{% url 'workspace:dataset_analyze' active_dataset.id %}" class="wsh-shortcut" title="تحلیل بازار"><span class="wsh-shortcut__icon" data-tone="green"><i class="fas fa-chart-line"></i></span><span class="wsh-shortcut__label">تحلیل</span></a></li>
         <li><a href="{% url 'workspace:dataset_map' active_dataset.id %}" class="wsh-shortcut" title="نقشه"><span class="wsh-shortcut__icon" data-tone="cyan"><i class="fas fa-map-location-dot"></i></span><span class="wsh-shortcut__label">نقشه</span></a></li>
         {% endif %}
-        <li><a href="{% url 'workspace:compare' %}" class="wsh-shortcut" title="مقایسه"><span class="wsh-shortcut__icon" data-tone="cyan"><i class="fas fa-scale-balanced"></i></span><span class="wsh-shortcut__label">مقایسه</span></a></li>
         <li><a href="{% url 'workspace:tools' %}" class="wsh-shortcut" title="ابزار"><span class="wsh-shortcut__icon" data-tone="amber"><i class="fas fa-calculator"></i></span><span class="wsh-shortcut__label">ابزار</span></a></li>
         {% else %}
         <li><a href="{% url 'workspace:upgrade' %}?feature=upload" class="wsh-shortcut" title="آپلود"><span class="wsh-shortcut__icon" data-tone="purple"><i class="fas fa-lock"></i></span><span class="wsh-shortcut__label">آپلود</span></a></li>

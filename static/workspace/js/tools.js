@@ -11,6 +11,17 @@
         'evaluate', 'opportunities', 'neighborhood', 'nearby_access',
     ];
 
+    /** ابزارهای موقتاً مخفی از UI (منطق محاسبه در کد باقی می‌ماند) */
+    const HIDDEN_TOOL_KEYS = new Set(['compare']);
+
+    function isToolVisible(tool) {
+        return !HIDDEN_TOOL_KEYS.has(tool);
+    }
+
+    function visibleToolKeys() {
+        return TOOL_KEYS.filter(isToolVisible);
+    }
+
     const TOOL_GROUP_MAP = {
         mixed: 'price', deposit: 'price', area: 'price',
         discount: 'negotiate', commission: 'negotiate', rent_commission: 'negotiate',
@@ -18,6 +29,28 @@
         pricing: 'market', evaluate: 'market', opportunities: 'market', neighborhood: 'market',
         nearby_access: 'location',
     };
+
+    const TOOL_MOB_META = {
+        mixed: { title: 'رهن ترکیبی', sub: 'ودیعه + اجاره → معادل کامل' },
+        deposit: { title: 'ودیعه ↔ اجاره', sub: 'تبدیل رهن کامل' },
+        compare: { title: 'مقایسه دو آگهی', sub: 'کدام ارزان‌تر است؟' },
+        area: { title: 'متراژ و قیمت', sub: 'قیمت متر، متراژ یا کل' },
+        discount: { title: 'تخفیف و مذاکره', sub: 'قیمت نهایی پس از تخفیف' },
+        commission: { title: 'کمیسیون فروش', sub: 'خریدار و فروشنده' },
+        rent_commission: { title: 'کمیسیون اجاره', sub: 'مستأجر و مالک' },
+        budget: { title: 'بودجه مشتری', sub: 'توان خرید و متراژ' },
+        pricing: { title: 'قیمت‌گذاری هوشمند', sub: 'باند P25–P75 بازار' },
+        evaluate: { title: 'ارزیابی آنی آگهی', sub: 'زیر یا بالای بازار؟' },
+        opportunities: { title: 'فرصت‌های زیر بازار', sub: 'بهترین آگهی‌های فایل' },
+        neighborhood: { title: 'بازه قیمت محله', sub: 'P25 تا P75 هر محله' },
+        nearby_access: { title: 'دسترسی‌های اطراف', sub: 'امکانات اطراف موقعیت' },
+    };
+
+    const MOB_TOOLS_MQ = window.matchMedia('(max-width: 768px)');
+
+    function isMobileToolsLayout() {
+        return MOB_TOOLS_MQ.matches;
+    }
 
     let marketSnapshot = null;
     let marketSnapshots = {};
@@ -517,7 +550,7 @@
             </div>` : '';
         const confHtml = data.confidence ? `
             <span class="ws-tbx-confidence ws-tbx-confidence--${data.confidence.tone}">اطمینان تحلیل: ${data.confidence.label}</span>` : '';
-        const actionsHtml = (data.actions || []).map(a => {
+        const actionsHtml = (data.actions || []).filter(a => !a.tool || isToolVisible(a.tool)).map(a => {
             if (a.href) {
                 return `<a href="${a.href}" class="ws-mkt-link-btn" data-action-href="${a.href}"><i class="fas ${a.icon || 'fa-arrow-left'}"></i> ${a.label}</a>`;
             }
@@ -627,13 +660,90 @@
         });
     }
 
+    function updateMobToolbar(tool) {
+        const meta = TOOL_MOB_META[tool] || { title: 'ابزار', sub: '' };
+        const titleEl = document.getElementById('wsTbxMobTitle');
+        const subEl = document.getElementById('wsTbxMobSub');
+        const bar = document.getElementById('wsTbxMobToolbar');
+        if (titleEl) titleEl.textContent = meta.title;
+        if (subEl) subEl.textContent = meta.sub || '';
+        if (bar) bar.hidden = false;
+    }
+
+    function setMobileToolOpen(open) {
+        const root = document.getElementById('wsToolbox');
+        if (!root) return;
+        if (!isMobileToolsLayout()) {
+            root.classList.remove('is-mob-tool-open');
+            const bar = document.getElementById('wsTbxMobToolbar');
+            if (bar) bar.hidden = true;
+            return;
+        }
+        root.classList.toggle('is-mob-tool-open', open);
+        const bar = document.getElementById('wsTbxMobToolbar');
+        if (bar) bar.hidden = !open;
+    }
+
+    function expandAllNavGroupsForMobileHub() {
+        if (!isMobileToolsLayout()) return;
+        document.querySelectorAll('.ws-tbx-nav-group[data-tool-group]').forEach(group => {
+            group.classList.add('is-open');
+            const toggle = group.querySelector('.ws-tbx-nav-group-toggle');
+            const items = group.querySelector('.ws-tbx-nav-group-items');
+            if (toggle) toggle.setAttribute('aria-expanded', 'true');
+            if (items) items.hidden = false;
+        });
+    }
+
+    function focusMobPanelTitle(tool) {
+        const panel = document.querySelector(`.ws-tbx-panel[data-tool-panel="${tool}"]`);
+        const title = panel?.querySelector('.ws-tbx-panel-head h2');
+        if (!title) return;
+        title.setAttribute('tabindex', '-1');
+        requestAnimationFrame(() => {
+            try {
+                title.focus({ preventScroll: true });
+            } catch (e) { /* ignore */ }
+        });
+    }
+
+    function scheduleNearbyMapRefresh() {
+        const fn = window.wsNearbyAccessOnShow;
+        if (typeof fn !== 'function') return;
+        const run = () => {
+            try {
+                fn();
+            } catch (e) { /* ignore */ }
+        };
+        requestAnimationFrame(() => requestAnimationFrame(run));
+        setTimeout(run, 120);
+        setTimeout(run, 350);
+        setTimeout(run, 700);
+    }
+
+    function mobBackToHub() {
+        const root = document.getElementById('wsToolbox');
+        if (!root || !isMobileToolsLayout()) return;
+        setMobileToolOpen(false);
+        try { history.replaceState(null, '', buildToolsUrl(null)); } catch (e) { /* ignore */ }
+        root.scrollIntoView({ block: 'start', behavior: 'smooth' });
+        const search = document.getElementById('wsTbxSearch');
+        if (search) {
+            requestAnimationFrame(() => {
+                try {
+                    search.focus({ preventScroll: true });
+                } catch (e) { /* ignore */ }
+            });
+        }
+    }
+
     function switchTool(tool) {
-        if (!TOOL_KEYS.includes(tool)) tool = TOOL_KEYS[0];
+        if (!TOOL_KEYS.includes(tool) || !isToolVisible(tool)) tool = TOOL_KEYS[0];
         document.querySelectorAll('.ws-tbx-nav-item').forEach(btn => {
             const active = btn.dataset.tool === tool;
             btn.classList.toggle('is-active', active);
             btn.setAttribute('aria-selected', active ? 'true' : 'false');
-            if (active) {
+            if (active && !isMobileToolsLayout()) {
                 btn.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
             }
         });
@@ -644,10 +754,20 @@
         });
         const groupKey = TOOL_GROUP_MAP[tool];
         if (groupKey) openNavGroup(groupKey);
-        if (tool === 'nearby_access' && typeof window.wsNearbyAccessOnShow === 'function') {
-            window.wsNearbyAccessOnShow();
+        if (isMobileToolsLayout()) {
+            setMobileToolOpen(true);
+            updateMobToolbar(tool);
         }
-        try { history.replaceState(null, '', buildToolsUrl(tool)); } catch (e) {}
+        if (tool === 'nearby_access') {
+            scheduleNearbyMapRefresh();
+        }
+        if (isMobileToolsLayout()) {
+            requestAnimationFrame(() => {
+                document.getElementById('wsTbxStage')?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+                focusMobPanelTitle(tool);
+            });
+        }
+        try { history.replaceState(null, '', buildToolsUrl(tool)); } catch (e) { /* ignore */ }
     }
 
     function openNavGroup(groupKey) {
@@ -1058,6 +1178,17 @@
 
         initNavAccordion();
         openNavGroup(TOOL_GROUP_MAP.mixed);
+        expandAllNavGroupsForMobileHub();
+        document.getElementById('wsTbxMobBack')?.addEventListener('click', mobBackToHub);
+        MOB_TOOLS_MQ.addEventListener('change', () => {
+            if (!isMobileToolsLayout()) {
+                setMobileToolOpen(false);
+            } else if (document.getElementById('wsToolbox')?.classList.contains('is-mob-tool-open')) {
+                updateMobToolbar(currentToolKey());
+            } else {
+                expandAllNavGroupsForMobileHub();
+            }
+        });
 
         document.getElementById('tbxDepositSwap')?.addEventListener('click', () => {
             const depEl = document.getElementById('tbxFullDeposit');
@@ -1202,15 +1333,19 @@
             }
             if (e.target.matches('input, textarea, select')) return;
             const n = parseInt(e.key, 10);
-            if (n >= 1 && n <= 9) switchTool(TOOL_KEYS[n - 1]);
+            const keys = visibleToolKeys();
+            if (n >= 1 && n <= keys.length) switchTool(keys[n - 1]);
         });
 
         const params = new URLSearchParams(window.location.search);
         const initial = params.get('tool');
         if (initial && TOOL_KEYS.includes(initial)) {
             switchTool(initial);
+        } else if (isMobileToolsLayout()) {
+            setMobileToolOpen(false);
+            try { history.replaceState(null, '', buildToolsUrl(null)); } catch (e) { /* ignore */ }
         } else {
-            try { history.replaceState(null, '', buildToolsUrl(currentToolKey())); } catch (e) {}
+            try { history.replaceState(null, '', buildToolsUrl(currentToolKey())); } catch (e) { /* ignore */ }
         }
 
         updateCompareModeUI();

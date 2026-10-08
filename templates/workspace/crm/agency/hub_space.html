@@ -4,9 +4,9 @@
 
 {% block crm_extra_css %}
 {{ block.super }}
-<link rel="stylesheet" href="{% static 'workspace/css/agency-space.css' %}?v=45">
+<link rel="stylesheet" href="{% static 'workspace/css/agency-space.css' %}?v=47">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-agency-space-mobile-closure.css' %}?v=4">
-<link rel="stylesheet" href="{% static 'workspace/css/crm-agency-visual-correction.css' %}?v=6">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-agency-visual-correction.css' %}?v=7">
 {% endblock %}
 
 {% block agency_hub_content %}
@@ -91,8 +91,8 @@
                             {% if space_tab == 'properties' %}<strong>{{ space_result_total|intcomma }}</strong> فایل{% elif space_tab == 'contacts' %}<strong>{{ space_result_total|intcomma }}</strong> مخاطب{% else %}<strong>{{ space_result_total|intcomma }}</strong> مورد{% endif %}
                         </p>
                         <div class="agency-space-view-toggle agency-space-toolbar__view" role="group" aria-label="نمای نتایج">
-                            <button type="button" class="agency-space-view-toggle__btn is-active" data-space-view="grid" title="کارت" aria-label="نمای کارت" aria-pressed="true"><i class="fas fa-th-large" aria-hidden="true"></i><span class="agency-space-view-toggle__label">کارت</span></button>
-                            <button type="button" class="agency-space-view-toggle__btn" data-space-view="list" title="لیست" aria-label="نمای لیست" aria-pressed="false"><i class="fas fa-list" aria-hidden="true"></i><span class="agency-space-view-toggle__label">لیست</span></button>
+                            <button type="button" class="agency-space-view-toggle__btn" data-space-view="grid" title="کارت" aria-label="نمای کارت" aria-pressed="false"><i class="fas fa-th-large" aria-hidden="true"></i><span class="agency-space-view-toggle__label">کارت</span></button>
+                            <button type="button" class="agency-space-view-toggle__btn is-active" data-space-view="list" title="لیست" aria-label="نمای لیست" aria-pressed="true"><i class="fas fa-list" aria-hidden="true"></i><span class="agency-space-view-toggle__label">لیست</span></button>
                         </div>
                     </div>
                 </div>
@@ -105,7 +105,7 @@
         {% include "workspace/crm/agency/includes/space_filter_chips.html" %}
 
         <div class="agency-space-results">
-            <div class="agency-space-grid{% if space_tab == 'contacts' %} agency-space-grid--contacts{% endif %}{% if not space_items %} agency-space-grid--empty{% endif %}" data-space-grid>
+            <div class="agency-space-grid is-list-view{% if space_tab == 'contacts' %} agency-space-grid--contacts{% endif %}{% if not space_items %} agency-space-grid--empty{% endif %}" data-space-grid>
                 {% for item in space_items %}
                 {% if item.source_kind == 'property' %}
                 {% include "workspace/crm/agency/includes/space_property_card.html" with item=item %}
@@ -156,5 +156,5 @@
 
 {% block crm_js %}
 {{ block.super }}
-<script src="{% static 'workspace/js/agency-space.js' %}?v=20" defer></script>
+<script src="{% static 'workspace/js/agency-space.js' %}?v=21" defer></script>
 {% endblock %}

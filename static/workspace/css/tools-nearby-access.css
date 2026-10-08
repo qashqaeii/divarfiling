@@ -100,6 +100,28 @@
     z-index: 1;
 }
 
+.ws-nearby-access__map.leaflet-container {
+    height: min(52vh, 440px);
+    min-height: 280px;
+    width: 100%;
+    background: #e8edf2;
+}
+
+.ws-nearby-access__map-error {
+    position: absolute;
+    z-index: 700;
+    inset: auto 0.75rem 0.75rem;
+    margin: 0;
+    padding: 0.55rem 0.75rem;
+    border-radius: 10px;
+    background: rgba(127, 29, 29, 0.92);
+    color: #fff;
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-align: center;
+    line-height: 1.45;
+}
+
 /* کرسر pointer برای انتخاب موقعیت — نه دست/grab */
 .ws-nearby-access__map--pick,
 .ws-nearby-access__map--pick .leaflet-container,

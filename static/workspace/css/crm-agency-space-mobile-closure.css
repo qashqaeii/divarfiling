@@ -85,6 +85,12 @@
     .agency-space-nav__item.is-active {
         background: color-mix(in srgb, #7c3aed 10%, #fff);
         box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+        color: #5b21b6;
+    }
+
+    .agency-space-nav__item:focus-visible {
+        outline: 2px solid color-mix(in srgb, #7c3aed 55%, #fff);
+        outline-offset: 2px;
     }
 
     /* Scope chips */
@@ -182,6 +188,39 @@
         border-radius: 12px;
         border: 1px solid color-mix(in srgb, var(--ws-border, #e2e8f0) 80%, transparent);
         background: var(--ws-surface, #fff);
+    }
+
+    .agency-space-search__field--has-value .agency-space-toolbar__search-input.crm-input {
+        padding-inline-end: 2.35rem;
+    }
+
+    .agency-space-search__clear {
+        position: absolute;
+        inset-inline-end: 0.3rem;
+        top: 50%;
+        transform: translateY(-50%);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 2.25rem;
+        height: 2.25rem;
+        margin: 0;
+        padding: 0;
+        border: none;
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--ws-border, #e2e8f0) 35%, transparent);
+        color: var(--ws-text-muted, #64748b);
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .agency-space-search__clear:focus-visible {
+        outline: 2px solid color-mix(in srgb, #7c3aed 45%, #fff);
+        outline-offset: 1px;
+    }
+
+    .agency-space-search__clear[hidden] {
+        display: none !important;
     }
 
     .agency-space-toolbar__sort--desk {
@@ -444,6 +483,90 @@
         font-weight: 700;
         font-size: 0.78rem;
     }
+
+    /* Property grid — compact 2-up browse */
+    .agency-hub--space .agency-space-grid:not(.is-list-view):not(.agency-space-grid--contacts) {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.45rem;
+    }
+
+    .agency-hub--space .agency-space-grid:not(.is-list-view) .agency-space-property-card__title {
+        font-size: 0.78rem;
+        -webkit-line-clamp: 2;
+    }
+
+    .agency-hub--space .agency-space-grid:not(.is-list-view) .agency-space-property-card__media {
+        aspect-ratio: 4 / 3;
+    }
+
+    .agency-hub--space .agency-space-grid:not(.is-list-view) .agency-space-property-card__price {
+        font-size: 0.78rem;
+        white-space: normal;
+        word-break: break-word;
+    }
+
+    .agency-hub--space .agency-space-grid:not(.is-list-view) .agency-space-property-card__trail,
+    .agency-hub--space .agency-space-grid:not(.is-list-view) .agency-space-property-card__ppm {
+        display: none;
+    }
+
+    .agency-hub--space .agency-space-grid:not(.is-list-view) .agency-space-property-card__btn {
+        min-height: 2.45rem;
+        font-size: 0.68rem;
+        padding-inline: 0.35rem;
+    }
+
+    /* Contact cards — progressive disclosure on small screens */
+    .agency-hub--space .agency-space-grid.is-list-view .agency-space-contact-card__foot {
+        display: none !important;
+    }
+
+    .agency-hub--space .agency-space-grid.is-list-view .agency-space-contact-card__actions--list {
+        display: flex !important;
+    }
+
+    .agency-hub--space .agency-space-grid.is-list-view .agency-space-contact-card__actions--grid {
+        display: none !important;
+    }
+
+    .agency-hub--space .agency-space-contact-card__budget-panel,
+    .agency-hub--space .agency-space-contact-card__notes-panel,
+    .agency-hub--space .agency-space-contact-card__share-hint {
+        display: none !important;
+    }
+
+    .agency-hub--space .agency-space-contact-card__section-title {
+        display: none;
+    }
+
+    .agency-hub--space .agency-space-contact-card__budget {
+        margin-top: 0;
+        padding-top: 0.15rem;
+        border-top: 1px solid color-mix(in srgb, var(--ws-border) 45%, transparent);
+    }
+
+    .agency-hub--space .agency-space-contact-card__budget-fallback,
+    .agency-hub--space .agency-space-contact-card__budget-lines {
+        margin: 0;
+        font-size: 0.78rem;
+    }
+
+    .agency-hub--space .agency-space-contact-card__budget-line-value {
+        font-size: 0.82rem;
+    }
+
+    .agency-hub--space .agency-space-contact-card__need {
+        gap: 0.25rem;
+    }
+
+    .agency-hub--space .agency-space-grid--contacts:not(.is-list-view) {
+        grid-template-columns: 1fr;
+    }
+
+    .agency-space-property-card__btn.agency-space-btn--loading,
+    .agency-space-contact-card__btn.agency-space-btn--loading {
+        min-width: 5.75rem;
+    }
 }
 
 @media (min-width: 768px) {
@@ -456,6 +579,10 @@
 }
 
 @media (max-width: 359px) {
+    .agency-hub--space .agency-space-grid:not(.is-list-view):not(.agency-space-grid--contacts) {
+        grid-template-columns: 1fr;
+    }
+
     .agency-space-nav {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }

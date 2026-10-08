@@ -204,6 +204,7 @@
 
     initSpaceExpandFilters();
     initSpaceOrderingSync();
+    initSpaceSearchClear();
 
     const listForm = document.getElementById('agency-space-list-form');
     if (listForm && typeof initCRMMoneyInputs === 'function') {
@@ -281,6 +282,53 @@
       });
     }
 
+    function isElementVisible(el) {
+      if (!el || el.hidden) return false;
+      const st = window.getComputedStyle(el);
+      return st.display !== 'none' && st.visibility !== 'hidden';
+    }
+
+    function getVisibleSpaceActionBlocks(card) {
+      return Array.from(
+        card.querySelectorAll(
+          '.agency-space-property-card__actions, .agency-space-contact-card__actions, .agency-space-card__actions',
+        ),
+      ).filter(isElementVisible);
+    }
+
+    function initSpaceSearchClear() {
+      const field = document.querySelector('.agency-space-toolbar__search');
+      const input = field?.querySelector('input[name="q"]');
+      if (!field || !input) return;
+      let clearBtn = field.querySelector('[data-space-search-clear]');
+      if (!clearBtn) {
+        clearBtn = document.createElement('button');
+        clearBtn.type = 'button';
+        clearBtn.className = 'agency-space-search__clear';
+        clearBtn.setAttribute('data-space-search-clear', '');
+        clearBtn.setAttribute('aria-label', 'پاک کردن جستجو');
+        clearBtn.innerHTML = '<i class="fas fa-times" aria-hidden="true"></i>';
+        field.appendChild(clearBtn);
+      }
+      const syncClear = () => {
+        const hasValue = Boolean((input.value || '').trim());
+        clearBtn.hidden = !hasValue;
+        field.classList.toggle('agency-space-search__field--has-value', hasValue);
+      };
+      clearBtn.addEventListener('click', () => {
+        input.value = '';
+        syncClear();
+        input.focus();
+        const form = input.closest('form');
+        if (form) {
+          if (typeof form.requestSubmit === 'function') form.requestSubmit();
+          else form.submit();
+        }
+      });
+      input.addEventListener('input', syncClear);
+      syncClear();
+    }
+
     function promoteCopyButton(btn, targetUrl) {
       document.querySelectorAll(`[data-space-copy][data-item-id="${btn.dataset.itemId}"]`).forEach((b) => {
         b.remove();
@@ -290,6 +338,7 @@
       });
       const card = btn.closest('.agency-space-card');
       if (card) {
+        card.querySelectorAll('[data-space-crm-link]').forEach((a) => a.remove());
         const link = document.createElement('a');
         link.href = targetUrl;
         const isContact = card.classList.contains('agency-space-contact-card');
@@ -300,25 +349,32 @@
         link.innerHTML = isContact
           ? 'باز کردن CRM <i class="fas fa-arrow-up-left" aria-hidden="true"></i>'
           : 'باز کردن CRM';
-        const actionBlocks = card.querySelectorAll(
-          '.agency-space-property-card__actions, .agency-space-contact-card__actions, .agency-space-card__actions',
-        );
-        actionBlocks.forEach((actions) => {
-          const next = link.cloneNode(true);
-          actions.appendChild(next);
+        const actionBlocks = getVisibleSpaceActionBlocks(card);
+        const targets = actionBlocks.length
+          ? actionBlocks
+          : Array.from(
+            card.querySelectorAll(
+              '.agency-space-property-card__actions, .agency-space-contact-card__actions, .agency-space-card__actions',
+            ),
+          ).slice(0, 1);
+        targets.forEach((actions) => {
+          actions.appendChild(link.cloneNode(true));
         });
-        if (isContact && !card.querySelector('.agency-space-contact-card__crm-badge')) {
+        if (isContact && !card.querySelector('.agency-space-contact-card__crm-badge:not(.agency-space-contact-card__crm-badge--foot)')) {
           const badgeHtml =
             '<i class="fas fa-circle-check" aria-hidden="true"></i> در CRM من';
           const statusCol = card.querySelector('.agency-space-contact-card__status-col');
-          if (statusCol) {
+          if (statusCol && isElementVisible(statusCol)) {
             const p = document.createElement('p');
             p.className = 'agency-space-contact-card__crm-badge';
             p.innerHTML = badgeHtml;
-            statusCol.insertBefore(p, statusCol.querySelector('.agency-space-contact-card__actions--list'));
+            const listActions = statusCol.querySelector('.agency-space-contact-card__actions--list');
+            if (listActions) statusCol.insertBefore(p, listActions);
+            else statusCol.appendChild(p);
           }
           const footMeta = card.querySelector('.agency-space-contact-card__foot-meta');
-          if (footMeta) {
+          const foot = card.querySelector('.agency-space-contact-card__foot');
+          if (footMeta && foot && isElementVisible(foot) && !footMeta.querySelector('.agency-space-contact-card__crm-badge')) {
             const p = document.createElement('p');
             p.className = 'agency-space-contact-card__crm-badge agency-space-contact-card__crm-badge--foot';
             p.innerHTML = badgeHtml;

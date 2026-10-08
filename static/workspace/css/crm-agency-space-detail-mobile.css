@@ -265,45 +265,95 @@
     }
 
     /* —— Contact detail —— */
+    .agency-space-detail--mob .agency-space-contact-detail__hero-main {
+        width: 100%;
+        min-width: 0;
+    }
+
     .agency-space-detail--mob .agency-space-contact-detail__identity {
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-        gap: 0.55rem;
+        flex-direction: row;
+        align-items: flex-start;
+        text-align: start;
+        gap: 0.65rem;
     }
 
     .agency-space-detail--mob .agency-space-contact-detail__who {
         display: flex;
         flex-direction: column;
-        align-items: center;
-        width: 100%;
+        align-items: stretch;
+        flex: 1;
+        min-width: 0;
+        width: auto;
     }
 
     .agency-space-detail--mob .agency-space-contact-detail__avatar {
-        width: 4.25rem !important;
-        height: 4.25rem !important;
+        width: 3.75rem !important;
+        height: 3.75rem !important;
+        border-width: 2px;
+        box-shadow: 0 4px 14px rgba(124, 58, 237, 0.12);
     }
 
     .agency-space-detail--mob .agency-space-contact-detail__name {
-        font-size: 1.12rem !important;
+        font-size: 1.05rem !important;
         line-height: 1.35;
-        text-align: center;
+        text-align: start;
+        word-break: break-word;
+    }
+
+    .agency-space-detail--mob .agency-space-contact-detail__role {
+        margin-top: 0.12rem;
+        font-size: 0.76rem;
     }
 
     .agency-space-detail--mob .agency-space-contact-detail__meta-row {
-        justify-content: center;
-        gap: 0.35rem;
+        justify-content: flex-start;
+        gap: 0.28rem;
+        margin-top: 0.4rem;
+    }
+
+    .agency-space-detail--mob .agency-space-contact-detail__status,
+    .agency-space-detail--mob .agency-space-pro-detail .agency-space-contact-detail__priority {
+        font-size: 0.66rem;
+        padding: 0.14rem 0.42rem;
+        border-radius: 999px;
+        white-space: nowrap;
     }
 
     .agency-space-detail--mob .agency-space-contact-detail__location {
-        justify-content: center;
-        font-size: 0.78rem;
+        justify-content: flex-start;
+        font-size: 0.74rem;
+        margin-top: 0.35rem;
+        text-align: start;
+    }
+
+    .agency-space-detail--mob .agency-space-contact-detail__location > span:last-child {
+        min-width: 0;
+        line-height: 1.45;
     }
 
     .agency-space-detail--mob .agency-space-contact-detail__access-row {
-        justify-content: center;
+        justify-content: flex-start;
         flex-wrap: wrap;
-        gap: 0.35rem;
+        gap: 0.3rem;
+        width: 100%;
+        margin-top: 0.55rem;
+        padding-top: 0.55rem;
+        border-top: 1px solid color-mix(in srgb, var(--ws-border, #e2e8f0) 55%, transparent);
+    }
+
+    .agency-space-detail--mob .agency-space-contact-detail__vis-badge {
+        font-size: 0.66rem;
+        font-weight: 750;
+        padding: 0.14rem 0.45rem;
+        border-radius: 999px;
+    }
+
+    .agency-space-detail--mob .agency-space-contact-detail__share {
+        font-size: 0.66rem;
+        padding: 0.14rem 0.45rem;
+        max-width: 100%;
+        line-height: 1.35;
+        text-align: start;
     }
 
     .agency-space-detail--mob .agency-space-contact-detail__crm-slot--mobile {

@@ -1,10 +1,6 @@
 <article class="agency-space-card agency-space-contact-card" data-space-kind="customer" data-item-id="{{ item.id }}">
     <div class="agency-space-contact-card__profile">
         <div class="agency-space-contact-card__profile-head">
-            <div class="agency-space-contact-card__tools" aria-hidden="true">
-                <span class="agency-space-contact-card__tool"><i class="far fa-bookmark"></i></span>
-                <span class="agency-space-contact-card__tool"><i class="fas fa-ellipsis"></i></span>
-            </div>
             <div class="agency-space-contact-card__head-text">
                 <div class="agency-space-contact-card__title-row">
                     <span class="agency-space-contact-card__status-dot" aria-hidden="true"></span>
@@ -59,11 +55,6 @@
             </span>
             {% endif %}
         </div>
-        {% if item.customer.contact_share_level_label %}
-        <p class="agency-space-contact-card__share-hint">
-            <i class="fas fa-phone" aria-hidden="true"></i>{{ item.customer.contact_share_level_label }}
-        </p>
-        {% endif %}
         {% if item.owns_source_in_crm or item.already_copied %}
         <p class="agency-space-contact-card__crm-badge">
             <i class="fas fa-circle-check" aria-hidden="true"></i> در CRM من

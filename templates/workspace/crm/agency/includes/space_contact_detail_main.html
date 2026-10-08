@@ -11,10 +11,14 @@
                 {% endif %}
                 <div class="agency-space-contact-detail__who">
                     <h1 class="agency-space-contact-detail__name">{{ cust.name }}</h1>
-                    <div class="agency-space-contact-detail__meta-row">
-                        {% if cust.customer_type %}
-                        <span class="agency-space-contact-detail__type"><i class="fas fa-briefcase" aria-hidden="true"></i>{{ cust.customer_type }}</span>
-                        {% endif %}
+                    {% if cust.customer_type %}
+                    <p class="agency-space-contact-detail__role">
+                        <i class="fas fa-briefcase" aria-hidden="true"></i>
+                        <span>{{ cust.customer_type }}</span>
+                    </p>
+                    {% endif %}
+                    {% if cust.status or cust.priority %}
+                    <div class="agency-space-contact-detail__meta-row" aria-label="وضعیت و اولویت">
                         {% if cust.status %}
                         <span class="agency-space-contact-detail__status"><i class="fas fa-arrows-rotate" aria-hidden="true"></i>{{ cust.status }}</span>
                         {% endif %}
@@ -24,14 +28,15 @@
                         </span>
                         {% endif %}
                     </div>
+                    {% endif %}
                     {% if cust.region or cust.areas_display %}
                     <p class="agency-space-contact-detail__location">
                         <span class="agency-space-pro-icon-wrap agency-space-pro-icon-wrap--soft" aria-hidden="true"><i class="fas fa-location-dot"></i></span>
                         <span>{% if cust.region %}{{ cust.region }}{% endif %}{% if cust.region and cust.areas_display %} · {% endif %}{% if cust.areas_display %}{{ cust.areas_display }}{% endif %}</span>
                     </p>
                     {% endif %}
-                    <div class="agency-space-contact-detail__access-row">
-                        <span class="agency-space-badge agency-space-badge--{{ space_payload.visibility }}">{{ space_payload.visibility_label }}</span>
+                    <div class="agency-space-contact-detail__access-row" aria-label="دسترسی و اشتراک">
+                        <span class="agency-space-badge agency-space-badge--{{ space_payload.visibility }} agency-space-contact-detail__vis-badge">{{ space_payload.visibility_label }}</span>
                         {% if cust.contact_share_level_label %}
                         <span class="agency-space-contact-detail__share"><i class="fas fa-phone" aria-hidden="true"></i>{{ cust.contact_share_level_label }}</span>
                         {% endif %}

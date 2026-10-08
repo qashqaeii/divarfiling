@@ -1,10 +1,13 @@
 {% extends 'workspace/academy/base_academy.html' %}
 
 {% block academy_content %}
-{% include 'workspace/academy/includes/page_header.html' with variant='home' kicker='آکادمی فایلینگ دیوار' title='آکادمی فایلینگ دیوار' desc='قدم‌به‌قدم یاد بگیر چطور فایلینگ دیوار را حرفه‌ای‌تر استفاده کنی.' %}
+<div class="acd-home-hub">
+{% include 'workspace/academy/includes/page_header.html' with variant='home' kicker='میزکار آموزشی' title='آکادمی فایلینگ دیوار' desc='قدم‌به‌قدم یاد بگیر چطور فایلینگ دیوار را حرفه‌ای‌تر استفاده کنی.' %}
 
-{% include 'workspace/academy/includes/progress_card.html' %}
+<div class="acd-home-priority">
 {% include 'workspace/academy/includes/continue_card.html' %}
+{% include 'workspace/academy/includes/progress_card.html' %}
+</div>
 
 <section class="acd-search acd-card" aria-labelledby="acd-search-title">
     <label class="acd-search-label" for="acdSearchInput">
@@ -17,14 +20,14 @@
 </section>
 {{ academy_search_entries|json_script:"acdSearchData" }}
 
+{% if curriculum.start_video and not summary.continue_watching %}
 <div class="acd-hero-cta">
-    {% if curriculum.start_video %}
     <a href="{% url 'workspace:academy_video' slug=curriculum.start_video.slug %}" class="acd-btn acd-btn--primary acd-btn--block">
         {% if curriculum.completed_count %}ادامه آموزش{% else %}شروع از آموزش ۱{% endif %}
         <i class="fas fa-arrow-left" aria-hidden="true"></i>
     </a>
-    {% endif %}
 </div>
+{% endif %}
 
 <p class="acd-home-stats" aria-label="آمار آکادمی">
     <span>{{ stats.video_count }} آموزش</span>
@@ -42,4 +45,5 @@
         {% endfor %}
     </div>
 </section>
+</div>
 {% endblock %}

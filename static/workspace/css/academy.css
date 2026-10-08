@@ -1928,6 +1928,89 @@
     color: var(--acd-muted);
 }
 
+/* ── Home quick CTA & stats ── */
+.acd-hero-cta {
+    margin-bottom: 0.85rem;
+}
+
+.acd-home-stats {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem 0.5rem;
+    margin: 0 0 1rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--acd-muted);
+}
+
+.acd-home-stats span:nth-child(2n) {
+    opacity: 0.45;
+}
+
+/* ── Breadcrumb (desktop lesson context) ── */
+.acd-breadcrumb {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem 0.45rem;
+    margin: 0 0 0.85rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--acd-muted);
+}
+
+.acd-breadcrumb a {
+    color: var(--acd-primary);
+    text-decoration: none;
+}
+
+.acd-breadcrumb a:hover {
+    text-decoration: underline;
+}
+
+.acd-breadcrumb [aria-current="page"] {
+    color: var(--acd-text-secondary);
+}
+
+/* ── Video lesson navigation ── */
+.acd-video-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 1.15rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--acd-border);
+}
+
+.acd-video-nav .acd-btn {
+    flex: 1 1 auto;
+    min-width: min(100%, 12rem);
+    justify-content: center;
+    white-space: normal;
+    text-align: center;
+    line-height: 1.35;
+}
+
+.acd-lesson-index {
+    margin: 0 0 0.35rem;
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--acd-primary);
+    letter-spacing: 0.04em;
+}
+
+.acd-lesson-dock {
+    display: none;
+}
+
+.acd-video-desc p {
+    margin: 0;
+    font-size: 0.88rem;
+    line-height: 1.65;
+    color: var(--acd-text-secondary);
+}
+
 /* ── Video player academy variant ── */
 .acd-page .mk-vid--academy {
     border-radius: 0;

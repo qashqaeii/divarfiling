@@ -11,6 +11,10 @@
     </a>
     {% endif %}
 
+    {% if variant == 'lesson' and lesson_index %}
+    <p class="acd-lesson-index" aria-hidden="true">آموزش {{ lesson_index|stringformat:"02d" }}</p>
+    {% endif %}
+
     <div class="acd-head-row">
         <div class="acd-head-main">
             {% if icon %}
@@ -64,6 +68,8 @@
 
     {% if meta_count %}
     <div class="acd-head-meta"><i class="fas fa-film" aria-hidden="true"></i> {{ meta_count }} ویدیو{% if meta_minutes %} · ~{{ meta_minutes }} دقیقه{% endif %}</div>
+    {% elif video_duration %}
+    <div class="acd-head-meta"><i class="fas fa-clock" aria-hidden="true"></i> {{ video_duration }}</div>
     {% elif meta_note %}
     <div class="acd-head-meta">{{ meta_note }}</div>
     {% endif %}

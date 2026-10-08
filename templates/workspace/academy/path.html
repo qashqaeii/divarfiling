@@ -1,9 +1,10 @@
 {% extends 'workspace/academy/base_academy.html' %}
 
 {% block academy_content %}
-{% include 'workspace/academy/includes/page_header.html' with variant='page' kicker='مسیر یادگیری' title=path.title desc=path.description icon=path.icon %}
+{% url 'workspace:academy_home' as academy_home_url %}
+{% include 'workspace/academy/includes/page_header.html' with variant='page' back_url=academy_home_url back_label='آکادمی' kicker='مسیر یادگیری' title=path.title desc=path.description icon=path.icon meta_count=items|length %}
 
-<div class="acd-path-layout">
+<div class="acd-path-layout acd-path-page">
     <main class="acd-path-main">
         {% if active_video %}
         {% if active_player.available %}

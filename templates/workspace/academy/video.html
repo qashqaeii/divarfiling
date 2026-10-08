@@ -1,7 +1,7 @@
 {% extends 'workspace/academy/base_academy.html' %}
 
 {% block academy_content %}
-<nav class="acd-breadcrumb" aria-label="مسیر">
+<nav class="acd-breadcrumb acd-breadcrumb--desk" aria-label="مسیر">
     <a href="{% url 'workspace:academy_home' %}">آکادمی</a>
     <span aria-hidden="true">/</span>
     <a href="{% url 'workspace:academy_path' slug=video.path.slug %}">{{ video.path.title }}</a>
@@ -9,9 +9,10 @@
     <span aria-current="page">آموزش {{ global_index|stringformat:"02d" }}</span>
 </nav>
 
-{% include 'workspace/academy/includes/page_header.html' with variant='page' kicker=video.path.title title=video.title desc=video.description icon='fa-circle-play' %}
+{% url 'workspace:academy_path' slug=video.path.slug as path_url %}
+{% include 'workspace/academy/includes/page_header.html' with variant='lesson' back_url=path_url back_label=video.path.title kicker=video.path.title title=video.title icon='fa-circle-play' lesson_index=global_index video_duration=video.duration_display %}
 
-<div class="acd-path-layout">
+<div class="acd-path-layout acd-lesson-layout{% if next_video %} acd-lesson-layout--has-next{% endif %}">
     <main class="acd-path-main">
         {% if player.available %}
         <div class="acd-video-player-wrap" data-acd-video-slug="{{ video.slug }}"{% if context_key %} data-acd-context="{{ context_key }}"{% endif %}>
@@ -67,6 +68,18 @@
     {% include 'workspace/academy/includes/playlist_sidebar.html' with playlist_sections=playlist_sections %}
     </div>
 </div>
+
+{% if next_video %}
+<aside class="acd-lesson-dock" data-acd-lesson-dock aria-label="ادامه یادگیری">
+    <a class="acd-lesson-dock__link" href="{% url 'workspace:academy_video' slug=next_video.slug %}">
+        <span class="acd-lesson-dock__copy">
+            <span class="acd-lesson-dock__kicker">آموزش بعدی</span>
+            <strong class="acd-lesson-dock__title">{{ next_video.title }}</strong>
+        </span>
+        <span class="acd-lesson-dock__action" aria-hidden="true"><i class="fas fa-arrow-left"></i></span>
+    </a>
+</aside>
+{% endif %}
 {% endblock %}
 
 {% block academy_js %}

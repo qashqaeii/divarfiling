@@ -82,18 +82,30 @@
         if (!toggle || !playlist) return;
 
         const isDesktop = function () { return window.matchMedia('(min-width: 960px)').matches; };
+        const isMobile = function () { return window.matchMedia('(max-width: 767px)').matches; };
+
+        function scrollActiveLesson() {
+            if (!isMobile() || !playlist.classList.contains('is-open')) return;
+            const active = playlist.querySelector('.acd-playlist-item.is-active');
+            if (!active) return;
+            active.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        }
 
         function setOpen(open) {
             playlist.classList.toggle('is-open', open);
             toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+            if (open) {
+                window.requestAnimationFrame(scrollActiveLesson);
+            }
         }
 
         toggle.addEventListener('click', function () {
             setOpen(!playlist.classList.contains('is-open'));
         });
 
-        if (playlist.querySelector('.acd-playlist-item.is-active')) {
-            setOpen(true);
+        const hasActive = playlist.querySelector('.acd-playlist-item.is-active');
+        if (hasActive) {
+            setOpen(isDesktop());
         }
 
         window.addEventListener('resize', function () {

@@ -32,12 +32,13 @@ ACCESSIBILITY_STATUS_UNAVAILABLE = 'unavailable'
 PROPERTY_ACCESSIBILITY_RADIUS_KM = 3
 
 DEFAULT_OVERPASS_URLS = (
+    # آینه‌های پایدار جهانی — اولویت برای ایران (آینه‌های منطقه‌ای اغلب 504/خالی می‌دهند)
+    'https://overpass-api.de/api/interpreter',
+    'https://overpass.kumi.systems/api/interpreter',
+    'https://overpass.osm.ch/api/interpreter',
     'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
     'https://overpass.openstreetmap.ru/api/interpreter',
     'https://overpass.private.coffee/api/interpreter',
-    'https://overpass.osm.ch/api/interpreter',
-    'https://overpass-api.de/api/interpreter',
-    'https://overpass.kumi.systems/api/interpreter',
 )
 
 _OVERPASS_IPV4_LOCK = threading.Lock()
@@ -952,6 +953,19 @@ def build_overpass_query(lat: float, lng: float, *, radius_m: Optional[int] = No
     )
 
 
+def _overpass_payload_usable(payload: Dict[str, Any]) -> Tuple[bool, str]:
+    """True when response is a completed query with elements (not timeout stub / error remark)."""
+    remark = str(payload.get('remark') or payload.get('error') or '').strip()
+    if remark:
+        return False, remark
+    elements = payload.get('elements')
+    if not isinstance(elements, list):
+        return False, 'invalid elements'
+    if not elements:
+        return False, 'empty elements'
+    return True, ''
+
+
 def fetch_overpass_elements(lat: float, lng: float, *, radius_m: Optional[int] = None) -> List[Dict[str, Any]]:
     query = build_overpass_query(lat, lng, radius_m=radius_m)
     headers = {'User-Agent': 'DivarFilingCRM/1.0 (nearby-pois; contact@divarfiling.local)'}
@@ -959,6 +973,7 @@ def fetch_overpass_elements(lat: float, lng: float, *, radius_m: Optional[int] =
     timeout = (_overpass_connect_timeout(), _overpass_timeout())
     had_timeout = False
     had_busy = False
+    saw_empty_ok = False
 
     for base_url in _overpass_urls():
         try:
@@ -969,9 +984,16 @@ def fetch_overpass_elements(lat: float, lng: float, *, radius_m: Optional[int] =
                 continue
             resp.raise_for_status()
             payload = resp.json()
-            elements = payload.get('elements') or []
-            if not isinstance(elements, list):
+            if not isinstance(payload, dict):
                 raise ValueError('پاسخ Overpass نامعتبر است')
+            usable, reason = _overpass_payload_usable(payload)
+            if not usable:
+                if reason == 'empty elements':
+                    saw_empty_ok = True
+                had_busy = True
+                logger.warning('Overpass unusable on %s: %s', base_url, reason)
+                continue
+            elements = payload['elements']
             logger.info('Overpass succeeded via %s (%s elements)', base_url, len(elements))
             return elements
         except NearbyPoiError:
@@ -1005,6 +1027,9 @@ def fetch_overpass_elements(lat: float, lng: float, *, radius_m: Optional[int] =
             status=503,
             extra=extra,
         )
+    if saw_empty_ok and last_error is None:
+        logger.info('Overpass: all mirrors returned empty for %.6f,%.6f', lat, lng)
+        return []
     raise NearbyPoiError(
         'service_unavailable',
         'سرویس نقشه از سمت سرور در دسترس نیست. در حال تلاش از مرورگر شما…',

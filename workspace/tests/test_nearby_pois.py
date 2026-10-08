@@ -129,6 +129,27 @@ class NearbyPoisServiceTests(TestCase):
         self.assertEqual(len(elements), len(_sample_elements()))
         self.assertEqual(mock_post.call_count, 2)
 
+    @override_settings(
+        NEARBY_POI_OVERPASS_URLS=(
+            'https://example.invalid/a',
+            'https://example.invalid/b',
+        ),
+        NEARBY_POI_FORCE_IPV4=False,
+    )
+    @patch('workspace.services.nearby_pois._post_overpass')
+    def test_overpass_tries_next_url_after_empty_elements(self, mock_post):
+        from workspace.services.nearby_pois import fetch_overpass_elements
+        empty = MagicMock()
+        empty.status_code = 200
+        empty.json.return_value = {'elements': []}
+        ok = MagicMock()
+        ok.status_code = 200
+        ok.json.return_value = {'elements': _sample_elements()}
+        mock_post.side_effect = [empty, ok]
+        elements = fetch_overpass_elements(35.7, 51.4)
+        self.assertEqual(len(elements), len(_sample_elements()))
+        self.assertEqual(mock_post.call_count, 2)
+
     def test_resolve_v3_transport_and_daily_categories(self):
         elements = [
             {

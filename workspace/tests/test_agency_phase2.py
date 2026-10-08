@@ -35,6 +35,7 @@ from workspace.models import AgencyLicenseAssignmentLog
 User = get_user_model()
 
 
+@override_settings(SITE_URL='https://divarfiling.ir')
 class AgencyPhase2TestBase(TestCase):
     def setUp(self):
         self.product = Product.objects.create(
@@ -143,14 +144,15 @@ class InvitationTests(AgencyPhase2TestBase):
             agency=self.agency, user=self.owner, defaults={'role': 'owner'},
         )
 
-    @patch('workspace.services.agency_invitations.send_simple_sms')
+    @patch('workspace.services.agency_invitations.send_pattern_sms')
     def test_create_invitation_and_sms(self, mock_sms):
         mock_sms.return_value = None
         inv = create_agency_invitation(self.owner, self.phones[1], request=None)
         self.assertEqual(inv.status, AgencyInvitation.STATUS_PENDING)
         mock_sms.assert_called_once()
+        self.assertEqual(mock_sms.call_args[1].get('purpose'), 'agency_invite')
 
-    @patch('workspace.services.agency_invitations.send_simple_sms')
+    @patch('workspace.services.agency_invitations.send_pattern_sms')
     def test_sms_failure_keeps_invitation(self, mock_sms):
         from accounts.services.sms import SmsError
         mock_sms.side_effect = SmsError('fail')
@@ -158,7 +160,7 @@ class InvitationTests(AgencyPhase2TestBase):
         self.assertTrue(AgencyInvitation.objects.filter(pk=inv.pk).exists())
         self.assertEqual(inv.sms_metadata.get('last_status'), 'failed')
 
-    @patch('workspace.services.agency_invitations.send_simple_sms')
+    @patch('workspace.services.agency_invitations.send_pattern_sms')
     def test_accept_creates_membership_with_consent(self, mock_sms):
         mock_sms.return_value = None
         inv, raw = None, None
@@ -186,7 +188,7 @@ class InvitationTests(AgencyPhase2TestBase):
         with self.assertRaises(ValueError):
             accept_agency_invitation(inv, self.other, consent_acknowledged=True)
 
-    @patch('workspace.services.agency_invitations.send_simple_sms')
+    @patch('workspace.services.agency_invitations.send_pattern_sms')
     def test_expired_subscription_blocks_accept(self, mock_sms):
         sub = get_subscription_for_agency(self.agency)
         sub.expires_at = timezone.now() - timedelta(hours=1)
@@ -232,7 +234,7 @@ class SeatTests(AgencyPhase2TestBase):
 
 
 class SecurityTests(AgencyPhase2TestBase):
-    @patch('workspace.services.agency_invitations.send_simple_sms')
+    @patch('workspace.services.agency_invitations.send_pattern_sms')
     def test_advisor_cannot_create_invitation(self, mock_sms):
         self._agency_order()
         agency = create_or_link_agency(self.owner, 'Sec Agency')

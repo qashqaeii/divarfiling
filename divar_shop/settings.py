@@ -432,6 +432,7 @@ FARAZSMS_PATTERNS = {
     'card_transfer_admin_review': config('FARAZSMS_PATTERN_CARD_TRANSFER_ADMIN', default=''),
     'card_transfer_license_activated': config('FARAZSMS_PATTERN_CARD_TRANSFER_ACTIVATED', default=''),
     'card_transfer_rejected': config('FARAZSMS_PATTERN_CARD_TRANSFER_REJECTED', default=''),
+    'agency_invite': config('FARAZSMS_PATTERN_AGENCY_INVITE', default='mPibtIrJSo'),
 }
 # شماره‌های مدیر برای اعلان کارت‌به‌کارت (جدا با کاما) — در صورت خالی، staff فعال
 CARD_TRANSFER_ADMIN_PHONES = config('CARD_TRANSFER_ADMIN_PHONES', default='')

@@ -4,7 +4,7 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
@@ -26,6 +26,7 @@ from workspace.services.agency_seats import assign_seat_to_member
 User = get_user_model()
 
 
+@override_settings(SITE_URL='https://divarfiling.ir')
 class InviteCapacityTestBase(TestCase):
     def setUp(self):
         self.product = Product.objects.create(
@@ -70,7 +71,7 @@ class InviteCapacityCalculationTests(InviteCapacityTestBase):
         self.assertEqual(cap['total'], 3)
         self.assertEqual(cap['invite_available'], 3)
 
-    @patch('workspace.services.agency_invitations.send_simple_sms')
+    @patch('workspace.services.agency_invitations.send_pattern_sms')
     def test_three_invites_ok_fourth_denied(self, mock_sms):
         mock_sms.return_value = None
         self._setup_agency(qty=3)
@@ -81,7 +82,7 @@ class InviteCapacityCalculationTests(InviteCapacityTestBase):
         with self.assertRaises(AgencyInviteCapacityError):
             create_agency_invitation(self.owner, self.phones[9], request=None)
 
-    @patch('workspace.services.agency_invitations.send_simple_sms')
+    @patch('workspace.services.agency_invitations.send_pattern_sms')
     def test_two_assigned_one_invite_ok_second_denied(self, mock_sms):
         mock_sms.return_value = None
         self._setup_agency(qty=3)
@@ -102,7 +103,7 @@ class InviteCapacityCalculationTests(InviteCapacityTestBase):
         with self.assertRaises(AgencyInviteCapacityError):
             create_agency_invitation(self.owner, self.phones[6], request=None)
 
-    @patch('workspace.services.agency_invitations.send_simple_sms')
+    @patch('workspace.services.agency_invitations.send_pattern_sms')
     def test_two_assigned_one_pending_blocks_new(self, mock_sms):
         mock_sms.return_value = None
         self._setup_agency(qty=3)
@@ -121,7 +122,7 @@ class InviteCapacityCalculationTests(InviteCapacityTestBase):
         with self.assertRaises(AgencyInviteCapacityError):
             create_agency_invitation(self.owner, self.phones[6], request=None)
 
-    @patch('workspace.services.agency_invitations.send_simple_sms')
+    @patch('workspace.services.agency_invitations.send_pattern_sms')
     def test_cancelled_pending_frees_capacity(self, mock_sms):
         mock_sms.return_value = None
         self._setup_agency(qty=3)
@@ -154,7 +155,7 @@ class InviteCapacityCalculationTests(InviteCapacityTestBase):
 
 
 class InviteCapacityValidationTests(InviteCapacityTestBase):
-    @patch('workspace.services.agency_invitations.send_simple_sms')
+    @patch('workspace.services.agency_invitations.send_pattern_sms')
     def test_invalid_phone_denied(self, mock_sms):
         mock_sms.return_value = None
         self._setup_agency(qty=3)
@@ -163,7 +164,7 @@ class InviteCapacityValidationTests(InviteCapacityTestBase):
         with self.assertRaises(ValueError):
             create_agency_invitation(self.owner, '09123', request=None)
 
-    @patch('workspace.services.agency_invitations.send_simple_sms')
+    @patch('workspace.services.agency_invitations.send_pattern_sms')
     def test_duplicate_phone_denied(self, mock_sms):
         mock_sms.return_value = None
         self._setup_agency(qty=3)
@@ -171,7 +172,7 @@ class InviteCapacityValidationTests(InviteCapacityTestBase):
         with self.assertRaises(ValueError):
             create_agency_invitation(self.owner, self.phones[5], request=None)
 
-    @patch('workspace.services.agency_invitations.send_simple_sms')
+    @patch('workspace.services.agency_invitations.send_pattern_sms')
     def test_bulk_rejects_when_over_capacity(self, mock_sms):
         mock_sms.return_value = None
         self._setup_agency(qty=3)
@@ -187,7 +188,7 @@ class InviteCapacityValidationTests(InviteCapacityTestBase):
             2,
         )
 
-    @patch('workspace.services.agency_invitations.send_simple_sms')
+    @patch('workspace.services.agency_invitations.send_pattern_sms')
     def test_api_returns_409_on_capacity(self, mock_sms):
         mock_sms.return_value = None
         self._setup_agency(qty=3)
@@ -207,7 +208,7 @@ class InviteCapacityValidationTests(InviteCapacityTestBase):
 class InviteCapacityConcurrencyTests(InviteCapacityTestBase):
     """Bulk boundary — no partial success when capacity exceeded."""
 
-    @patch('workspace.services.agency_invitations.send_simple_sms')
+    @patch('workspace.services.agency_invitations.send_pattern_sms')
     def test_bulk_at_exact_capacity_ok(self, mock_sms):
         mock_sms.return_value = None
         self._setup_agency(qty=3)
@@ -224,7 +225,7 @@ class InviteCapacityConcurrencyTests(InviteCapacityTestBase):
             3,
         )
 
-    @patch('workspace.services.agency_invitations.send_simple_sms')
+    @patch('workspace.services.agency_invitations.send_pattern_sms')
     def test_sequential_invites_stop_at_capacity(self, mock_sms):
         mock_sms.return_value = None
         self._setup_agency(qty=3)

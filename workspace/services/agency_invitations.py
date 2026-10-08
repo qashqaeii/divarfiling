@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import logging
 from datetime import timedelta
+from urllib.parse import urlparse
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -11,7 +12,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from accounts.phone_utils import find_user_by_phone, is_valid_iran_mobile, normalize_phone
-from accounts.services.sms import SmsError, send_simple_sms
+from accounts.services.sms import SmsError, SmsSendError, send_pattern_sms
 from workspace.models import AgencyInvitation, AgencySubscription, CRMAgencyMember
 from workspace.services.agency_entitlement import (
     CONSENT_VERSION_CURRENT,
@@ -115,11 +116,30 @@ def _build_invite_url(request, raw_token: str) -> str:
     return f'{site.rstrip("/")}{path}'
 
 
-def _sms_body(agency_name: str, invite_url: str) -> str:
-    return (
-        f'برای عضویت در آژانس «{agency_name}» در فایلینگ دیوار دعوت شده‌اید.\n'
-        f'مشاهده و پاسخ:\n{invite_url}'
-    )
+_DIVAR_FILING_INVITE_HOSTS = frozenset({'divarfiling.ir', 'www.divarfiling.ir'})
+
+
+def _allowed_invite_link_hosts() -> frozenset[str]:
+    hosts = set(_DIVAR_FILING_INVITE_HOSTS)
+    if settings.DEBUG:
+        hosts.update({'localhost', '127.0.0.1'})
+    return frozenset(hosts)
+
+
+def _pattern_link_from_invite_url(invite_url: str) -> str:
+    """مسیر نسبی (بدون اسلش ابتدایی) برای متغیر link پترن — دامنه در متن پترن ثبت شده است."""
+    parsed = urlparse((invite_url or '').strip())
+    if parsed.scheme not in ('http', 'https'):
+        raise SmsSendError('لینک دعوت نامعتبر است.', code='agency_invite_invalid_link')
+    host = (parsed.hostname or '').lower()
+    if host not in _allowed_invite_link_hosts():
+        raise SmsSendError('لینک دعوت نامعتبر است.', code='agency_invite_invalid_link')
+    path = (parsed.path or '/').lstrip('/')
+    if parsed.query:
+        path = f'{path}?{parsed.query}'
+    if not path:
+        raise SmsSendError('لینک دعوت نامعتبر است.', code='agency_invite_invalid_link')
+    return path
 
 
 def _mask_phone(phone: str) -> str:
@@ -132,9 +152,13 @@ def _mask_phone(phone: str) -> str:
 def _send_invite_sms(invitation: AgencyInvitation, invite_url: str, *, is_resend: bool = False) -> None:
     meta = dict(invitation.sms_metadata or {})
     try:
-        send_simple_sms(
+        link_path = _pattern_link_from_invite_url(invite_url)
+        send_pattern_sms(
             invitation.phone,
-            _sms_body(invitation.agency.name, invite_url),
+            attributes={
+                'agency': invitation.agency.name,
+                'link': link_path,
+            },
             purpose='agency_invite',
         )
         invitation.sms_sent_at = timezone.now()

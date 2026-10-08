@@ -332,12 +332,18 @@
         margin-top: auto;
     }
 
-    /* Team tabs inside hub */
-    .agency-team-tab {
+    /* Team tabs inside hub + advisor member hub messaging */
+    .agency-team-tab,
+    .agency-member-hub .amh-messages-host {
         margin-inline: -0.75rem;
         padding-inline: 0.75rem;
         min-width: 0;
         overflow-x: clip;
+    }
+
+    .agency-member-hub .amh-messages-host {
+        margin-inline: 0;
+        padding-inline: 0;
     }
 
     .agency-team-tab .crm-team-tab-v2-row,
@@ -353,55 +359,75 @@
         border-radius: 14px;
     }
 
-    .agency-team-tab .crm-msg-hub--studio {
+    .agency-team-tab .crm-msg-hub--studio,
+    .agency-member-hub .amh-messages-host .crm-msg-hub--studio {
         min-width: 0;
         max-width: 100%;
     }
 
     .agency-team-tab .crm-msg-shell,
-    .agency-team-tab .crm-msg-rail {
+    .agency-team-tab .crm-msg-rail,
+    .agency-member-hub .amh-messages-host .crm-msg-shell,
+    .agency-member-hub .amh-messages-host .crm-msg-rail {
         min-width: 0;
         max-width: 100%;
     }
 
-    .agency-team-tab .crm-msg-folders {
+    .agency-team-tab .crm-msg-folders,
+    .agency-member-hub .amh-messages-host .crm-msg-folders {
         overflow-x: hidden;
         scrollbar-width: none;
     }
 
-    .agency-team-tab .crm-msg-folders::-webkit-scrollbar {
+    .agency-team-tab .crm-msg-folders::-webkit-scrollbar,
+    .agency-member-hub .amh-messages-host .crm-msg-folders::-webkit-scrollbar {
         display: none;
     }
 
-    .agency-team-tab .crm-msg-folder {
+    .agency-team-tab .crm-msg-folder,
+    .agency-member-hub .amh-messages-host .crm-msg-folder {
         flex: 1 1 0;
         min-width: 0;
     }
 
-    .agency-team-tab .crm-msg-shell {
+    .agency-team-tab .crm-msg-shell,
+    .agency-member-hub .amh-messages-host .crm-msg-shell {
         grid-template-columns: 1fr;
     }
 
-    .agency-team-tab .crm-msg-empty {
+    .agency-team-tab .crm-msg-empty,
+    .agency-member-hub .amh-messages-host .crm-msg-empty {
         display: none !important;
     }
 
-    .agency-team-tab .crm-msg-list-pane {
+    .agency-team-tab .crm-msg-list-pane,
+    .agency-member-hub .amh-messages-host .crm-msg-list-pane {
         display: flex;
         flex-direction: column;
         min-height: min(70vh, 32rem);
         width: 100%;
     }
 
-    .agency-team-tab .crm-msg-thread-list {
+    .agency-team-tab .crm-msg-thread-list,
+    .agency-member-hub .amh-messages-host .crm-msg-thread-list {
         flex: 1 1 auto;
         min-height: 10rem;
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
     }
 
-    .agency-team-tab .crm-msg-hub--studio:not(.crm-msg-hub--detail-open) .crm-msg-list-pane {
+    .agency-team-tab .crm-msg-hub--studio:not(.crm-msg-hub--detail-open) .crm-msg-list-pane,
+    .agency-member-hub .amh-messages-host .crm-msg-hub--studio:not(.crm-msg-hub--detail-open) .crm-msg-list-pane {
         display: flex !important;
+    }
+
+    .agency-member-hub[data-amh-tab="messages"] .amh-body,
+    .agency-member-hub[data-amh-tab="announcements"] .amh-body {
+        padding-bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
+    }
+
+    .agency-member-hub .amh-messages-host .crm-msg-composer {
+        padding-bottom: max(0.55rem, env(safe-area-inset-bottom, 0px));
     }
 
     body.agency-hub-nav-sheet-open {

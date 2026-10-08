@@ -5,19 +5,21 @@
 <link rel="stylesheet" href="{% static 'workspace/css/agency-phase2.css' %}?v=8">
 <link rel="stylesheet" href="{% static 'workspace/css/agency-phase3.css' %}?v=9">
 <link rel="stylesheet" href="{% static 'workspace/css/agency-hub.css' %}?v=9">
-<link rel="stylesheet" href="{% static 'workspace/css/agency-member-hub.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'workspace/css/agency-member-hub.css' %}?v=4">
 <link rel="stylesheet" href="{% static 'workspace/css/agency-decor-icons.css' %}?v=1">
 {% if tab == 'messages' %}
-<link rel="stylesheet" href="{% static 'workspace/css/crm-team-messages.css' %}?v=15">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-team-messages.css' %}?v=18">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-team-mobile.css' %}?v=8">
 {% elif tab == 'announcements' %}
 <link rel="stylesheet" href="{% static 'workspace/css/crm-team-announcements.css' %}?v=5">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-team-mobile.css' %}?v=8">
 {% endif %}
 <link rel="stylesheet" href="{% static 'workspace/css/crm-mobile-v2-agency.css' %}?v=1">
-<link rel="stylesheet" href="{% static 'workspace/css/crm-agency-hub-mobile-closure.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-agency-hub-mobile-closure.css' %}?v=5">
 {% endblock %}
 
 {% block crm_content %}
-<div class="agency-member-hub" dir="rtl">
+<div class="agency-member-hub" data-amh-tab="{{ tab }}" dir="rtl">
     {% include "workspace/crm/agency/includes/member_hub/header.html" %}
     {% include "workspace/crm/agency/includes/member_hub/tabs.html" %}
 
@@ -50,10 +52,14 @@
         </div>
 
         {% elif tab == 'messages' and agency_feature_messages %}
-        {% include "workspace/crm/includes/team_tab_messages.html" %}
+        <div class="amh-messages-host crm-team-mobile" data-tab="messages">
+            {% include "workspace/crm/includes/team_tab_messages.html" %}
+        </div>
 
         {% elif tab == 'announcements' and agency_feature_announcements %}
-        {% include "workspace/crm/includes/team_tab_announcements.html" %}
+        <div class="amh-messages-host crm-team-mobile" data-tab="announcements">
+            {% include "workspace/crm/includes/team_tab_announcements.html" %}
+        </div>
 
         {% elif tab == 'membership' %}
         {% include "workspace/crm/agency/includes/member_hub/membership_panel.html" %}
@@ -66,11 +72,20 @@
 </div>
 {% endblock %}
 
-{% block crm_js %}
-<script src="{% static 'workspace/js/agency-ui.js' %}?v=5" defer></script>
+{% block modals %}
 {% if tab == 'messages' and agency_feature_messages %}
-<script src="{% static 'workspace/js/crm-team-messages.js' %}?v=1" defer></script>
+{% include 'workspace/crm/includes/team_messages_modals.html' %}
+{% endif %}
+{% if tab == 'announcements' and agency_feature_announcements %}
+{% include 'workspace/crm/includes/team_announcements_modals.html' %}
+{% endif %}
+{% endblock %}
+
+{% block crm_js %}
+<script src="{% static 'workspace/js/agency-ui.js' %}?v=8" defer></script>
+{% if tab == 'messages' and agency_feature_messages %}
+<script src="{% static 'workspace/js/crm-team-messages.js' %}?v=18" defer></script>
 {% elif tab == 'announcements' and agency_feature_announcements %}
-<script src="{% static 'workspace/js/crm-team-announcements.js' %}?v=1" defer></script>
+<script src="{% static 'workspace/js/crm-team-announcements.js' %}?v=5" defer></script>
 {% endif %}
 {% endblock %}

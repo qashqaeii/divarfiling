@@ -747,6 +747,94 @@
   .amh-kpi-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .amh-grid--split { grid-template-columns: 1fr; }
   .amh-perf-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+  .amh-tabs {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    padding: 0.35rem 0 0.5rem;
+    margin: 0 -0.25rem 0.65rem;
+    background: color-mix(in srgb, var(--amh-surface) 92%, transparent);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .amh-tabs::-webkit-scrollbar { display: none; }
+
+  .amh-tab {
+    flex: 0 0 auto;
+    min-height: 2.65rem;
+    white-space: nowrap;
+  }
+
+  .agency-member-hub[data-amh-tab="messages"] .amh-hero,
+  .agency-member-hub[data-amh-tab="announcements"] .amh-hero {
+    margin-bottom: 0.5rem;
+    border-radius: 14px;
+    box-shadow: 0 6px 22px rgba(91, 33, 182, 0.06);
+  }
+
+  .agency-member-hub[data-amh-tab="messages"] .amh-hero__shell,
+  .agency-member-hub[data-amh-tab="announcements"] .amh-hero__shell {
+    padding: 0.75rem 0.85rem;
+    gap: 0.65rem;
+  }
+
+  .agency-member-hub[data-amh-tab="messages"] .amh-hero__insights,
+  .agency-member-hub[data-amh-tab="announcements"] .amh-hero__insights,
+  .agency-member-hub[data-amh-tab="messages"] .amh-hero__orb,
+  .agency-member-hub[data-amh-tab="announcements"] .amh-hero__orb {
+    display: none;
+  }
+
+  .agency-member-hub[data-amh-tab="messages"] .amh-hero__title,
+  .agency-member-hub[data-amh-tab="announcements"] .amh-hero__title {
+    font-size: 1.05rem;
+    font-weight: 800;
+  }
+
+  .agency-member-hub[data-amh-tab="messages"] .amh-hero__avatar,
+  .agency-member-hub[data-amh-tab="announcements"] .amh-hero__avatar {
+    width: 52px;
+    height: 52px;
+  }
+
+  .agency-member-hub[data-amh-tab="messages"] .amh-hero__avatar--logo img,
+  .agency-member-hub[data-amh-tab="announcements"] .amh-hero__avatar--logo img,
+  .agency-member-hub[data-amh-tab="messages"] .amh-hero__avatar-fallback,
+  .agency-member-hub[data-amh-tab="announcements"] .amh-hero__avatar-fallback {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+  }
+
+  .agency-member-hub[data-amh-tab="messages"] .amh-hero__chips,
+  .agency-member-hub[data-amh-tab="announcements"] .amh-hero__chips {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    gap: 0.4rem;
+    padding-bottom: 0.1rem;
+  }
+
+  .agency-member-hub[data-amh-tab="messages"] .amh-hero__chip,
+  .agency-member-hub[data-amh-tab="announcements"] .amh-hero__chip {
+    flex: 0 0 auto;
+    min-width: 0;
+  }
+
+  .agency-member-hub[data-amh-tab="messages"] .amh-hero__chip:nth-child(n + 3),
+  .agency-member-hub[data-amh-tab="announcements"] .amh-hero__chip:nth-child(n + 3) {
+    display: none;
+  }
+
+  .agency-member-hub[data-amh-tab="overview"] .amh-panel--membership {
+    display: none;
+  }
 }
 
 @media (max-width: 390px) {

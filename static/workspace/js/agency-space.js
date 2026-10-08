@@ -329,12 +329,44 @@
       syncClear();
     }
 
-    function promoteCopyButton(btn, targetUrl) {
-      document.querySelectorAll(`[data-space-copy][data-item-id="${btn.dataset.itemId}"]`).forEach((b) => {
-        b.remove();
+    function detailIsContact(detailRoot) {
+      if (!detailRoot) return false;
+      return Boolean(
+        detailRoot.querySelector('.agency-space-contact-detail')
+        || detailRoot.querySelector('.agency-space-detail__layout--contact'),
+      );
+    }
+
+    function fillCrmSuccessPanel(container, targetUrl, isContact, linkClass) {
+      container.textContent = '';
+      const status = document.createElement('p');
+      status.className = 'agency-space-pro-status agency-space-pro-status--ok';
+      status.innerHTML = isContact
+        ? '<i class="fas fa-circle-check" aria-hidden="true"></i> این مخاطب در CRM شماست'
+        : '<i class="fas fa-circle-check" aria-hidden="true"></i> این فایل در CRM شماست';
+      const link = document.createElement('a');
+      link.href = targetUrl;
+      link.className = linkClass;
+      link.setAttribute('data-space-crm-link', '');
+      link.textContent = isContact ? 'باز کردن مخاطب در CRM' : 'باز کردن CRM';
+      container.appendChild(status);
+      container.appendChild(link);
+    }
+
+    function renderDetailCrmSuccess(detail, targetUrl, isContact) {
+      detail.querySelectorAll('[data-space-crm-panel]').forEach((panel) => {
+        fillCrmSuccessPanel(panel, targetUrl, isContact, 'agency-space-pro-btn agency-space-pro-btn--primary crm-btn-block');
       });
-      document.querySelectorAll('.agency-space-property-detail__crm-slot--mobile').forEach((el) => {
-        el.remove();
+      detail.querySelectorAll('.agency-space-property-detail__aside-card--crm .agency-space-property-detail__aside-body, .agency-space-contact-detail__aside-card--crm .agency-space-contact-detail__aside-body, .agency-space-detail__aside-card--crm .agency-space-detail__aside-body').forEach((body) => {
+        if (body.hasAttribute('data-space-crm-panel')) return;
+        fillCrmSuccessPanel(body, targetUrl, isContact, 'crm-btn crm-btn-primary crm-btn-sm crm-btn-block');
+      });
+    }
+
+    function promoteCopyButton(btn, targetUrl) {
+      const itemId = btn.dataset.itemId;
+      document.querySelectorAll(`[data-space-copy][data-item-id="${itemId}"]`).forEach((b) => {
+        b.remove();
       });
       const card = btn.closest('.agency-space-card');
       if (card) {
@@ -401,42 +433,42 @@
       }
       const detail = document.querySelector('.agency-space-detail');
       if (detail) {
-        detail.querySelectorAll('.agency-space-detail__sticky-primary[data-space-copy]').forEach((el) => el.remove());
+        const isContact = detailIsContact(detail);
+        detail.querySelectorAll('.agency-space-detail__sticky-primary[data-space-copy], .agency-space-detail__sticky-primary.agency-space-btn--copy').forEach((el) => el.remove());
         const sticky = detail.querySelector('.agency-space-detail__sticky-inner');
-        if (sticky && !sticky.querySelector('.agency-space-detail__sticky-primary')) {
+        if (sticky && !sticky.querySelector('.agency-space-detail__sticky-primary[data-space-crm-link]')) {
           const stickyLink = document.createElement('a');
           stickyLink.href = targetUrl;
           stickyLink.className = 'crm-btn crm-btn-primary crm-btn-sm agency-space-detail__sticky-primary';
+          stickyLink.setAttribute('data-space-crm-link', '');
           stickyLink.textContent = 'مشاهده در CRM';
           sticky.appendChild(stickyLink);
         }
-        const crmBody = detail.querySelector(
-          '.agency-space-property-detail__aside-card--crm .agency-space-property-detail__aside-body, .agency-space-detail__aside-card--crm .agency-space-detail__aside-body',
-        );
-        if (crmBody) {
-          crmBody.innerHTML = '<p class="agency-space-property-detail__crm-ok agency-space-detail__crm-ok"><i class="fas fa-circle-check" aria-hidden="true"></i> این فایل در CRM شماست</p>';
-          const a = document.createElement('a');
-          a.href = targetUrl;
-          a.className = 'crm-btn crm-btn-primary crm-btn-sm crm-btn-block';
-          a.setAttribute('data-space-crm-link', '');
-          a.textContent = 'باز کردن CRM';
-          crmBody.appendChild(a);
-        }
+        renderDetailCrmSuccess(detail, targetUrl, isContact);
       }
     }
 
+    function copyButtonsForItem(itemId) {
+      if (!itemId) return [];
+      return Array.from(document.querySelectorAll(`[data-space-copy][data-item-id="${itemId}"]`));
+    }
+
     function setCopyLoading(btn, on) {
-      if (!btn) return;
-      if (on) {
-        if (!btn.dataset.spaceCopyLabel) btn.dataset.spaceCopyLabel = btn.innerHTML;
-        btn.classList.add('agency-space-btn--loading');
-        btn.setAttribute('aria-busy', 'true');
-        btn.disabled = true;
-      } else {
-        btn.classList.remove('agency-space-btn--loading');
-        btn.removeAttribute('aria-busy');
-        if (btn.dataset.spaceCopyLabel) btn.innerHTML = btn.dataset.spaceCopyLabel;
-      }
+      const itemId = btn?.dataset?.itemId;
+      const targets = itemId ? copyButtonsForItem(itemId) : (btn ? [btn] : []);
+      targets.forEach((target) => {
+        if (on) {
+          if (!target.dataset.spaceCopyLabel) target.dataset.spaceCopyLabel = target.innerHTML;
+          target.classList.add('agency-space-btn--loading');
+          target.setAttribute('aria-busy', 'true');
+          target.disabled = true;
+        } else {
+          target.classList.remove('agency-space-btn--loading');
+          target.removeAttribute('aria-busy');
+          target.disabled = false;
+          if (target.dataset.spaceCopyLabel) target.innerHTML = target.dataset.spaceCopyLabel;
+        }
+      });
     }
 
     document.querySelectorAll('[data-space-copy]').forEach((btn) => {
@@ -447,7 +479,7 @@
         if (detailRoot && detailRoot.querySelector('[data-space-crm-link]')) return;
         const card = btn.closest('.agency-space-card');
         if (card && card.querySelector('[data-space-crm-link]')) return;
-        btn.dataset.copying = '1';
+        copyButtonsForItem(id).forEach((b) => { b.dataset.copying = '1'; });
         setCopyLoading(btn, true);
         postJson(`/workspace/api/crm/agency/space/items/${id}/copy/`, {}).then((res) => {
           if (res.ok && res.data && res.data.target_url) {
@@ -456,12 +488,12 @@
               window.showToast('به CRM شما اضافه شد', 'success');
             }
           } else {
-            btn.dataset.copying = '0';
+            copyButtonsForItem(id).forEach((b) => { b.dataset.copying = '0'; });
             setCopyLoading(btn, false);
             alert(res.error || 'خطا در کپی');
           }
         }).catch(() => {
-          btn.dataset.copying = '0';
+          copyButtonsForItem(id).forEach((b) => { b.dataset.copying = '0'; });
           setCopyLoading(btn, false);
           alert('خطا در ارتباط');
         });
@@ -586,6 +618,27 @@
           buildFilmstrip();
         });
       });
+
+      let stageTouchX = 0;
+      const galleryStage = detail.querySelector('.agency-space-prop-gallery__stage');
+      if (galleryStage && galleryImages.length > 1) {
+        galleryStage.addEventListener(
+          'touchstart',
+          (ev) => {
+            stageTouchX = ev.changedTouches[0]?.screenX || 0;
+          },
+          { passive: true },
+        );
+        galleryStage.addEventListener(
+          'touchend',
+          (ev) => {
+            const dx = (ev.changedTouches[0]?.screenX || 0) - stageTouchX;
+            if (Math.abs(dx) < 48) return;
+            showGalleryIndex(galleryIndex + (dx < 0 ? 1 : -1));
+          },
+          { passive: true },
+        );
+      }
 
       galleryModal?.querySelector('[data-gallery-prev]')?.addEventListener('click', () => stepGallery(-1));
       galleryModal?.querySelector('[data-gallery-next]')?.addEventListener('click', () => stepGallery(1));

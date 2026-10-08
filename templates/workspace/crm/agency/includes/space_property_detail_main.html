@@ -21,10 +21,26 @@
                 <span>{{ prop.region }}</span>
             </p>
             {% endif %}
+            {% if prop.price_label or prop.area_label or prop.area or prop.price_per_meter_label %}
+            <div class="agency-space-prop-hero__quickfacts" aria-label="قیمت و متراژ">
+                {% if prop.price_label %}
+                <span class="agency-space-prop-hero__quickfact agency-space-prop-hero__quickfact--price">{{ prop.price_label }}</span>
+                {% endif %}
+                {% if prop.area_label or prop.area %}
+                <span class="agency-space-prop-hero__quickfact agency-space-prop-hero__quickfact--area">
+                    <i class="fas fa-ruler-combined" aria-hidden="true"></i>
+                    {% if prop.area_label %}{{ prop.area_label }}{% else %}{{ prop.area }} متر{% endif %}
+                </span>
+                {% endif %}
+                {% if prop.price_per_meter_label and not prop.price_label %}
+                <span class="agency-space-prop-hero__quickfact agency-space-prop-hero__quickfact--ppm" dir="ltr">{{ prop.price_per_meter_label }}<small>/متر</small></span>
+                {% endif %}
+            </div>
+            {% endif %}
             {% if prop.price_label or prop.price_per_meter_label or prop.owner_name or prop.phone or prop.tenant_phone %}
             <div class="agency-space-prop-hero__highlights">
                 {% if prop.price_label or prop.price_per_meter_label %}
-                <div class="agency-space-prop-hero-highlight" aria-label="قیمت">
+                <div class="agency-space-prop-hero-highlight agency-space-prop-hero-highlight--price" aria-label="قیمت">
                     <div class="agency-space-prop-hero-highlight__card agency-space-prop-hero-highlight__card--price agency-space-prop-hero-highlight__card--compact">
                         <div class="agency-space-prop-hero-highlight__strip">
                             <div class="agency-space-prop-hero-highlight__head">
@@ -44,7 +60,7 @@
                 </div>
                 {% endif %}
                 {% if prop.owner_name or prop.phone or prop.tenant_phone %}
-                <div class="agency-space-prop-hero-highlight" aria-label="مالک و تماس">
+                <div class="agency-space-prop-hero-highlight agency-space-prop-hero-highlight--contact" aria-label="مالک و تماس">
                     <div class="agency-space-prop-hero-highlight__card agency-space-prop-hero-highlight__card--contact agency-space-prop-hero-highlight__card--compact">
                         <div class="agency-space-prop-hero-highlight__strip agency-space-prop-hero-highlight__strip--contact">
                         <div class="agency-space-prop-hero-highlight__head">
@@ -140,6 +156,26 @@
     <div class="agency-space-property-detail__crm-slot agency-space-property-detail__crm-slot--mobile">
         {% include "workspace/crm/agency/includes/space_property_detail_crm_panel.html" with crm_heading_id="space-prop-crm-heading-mobile" %}
     </div>
+
+    {% if prop.owner_name or prop.phone or prop.tenant_phone %}
+    <section class="agency-space-pro-panel agency-space-prop-contact-panel--mob" aria-labelledby="space-prop-contact-mob-heading">
+        <header class="agency-space-pro-panel__head">
+            <span class="agency-space-pro-panel__icon agency-space-pro-panel__icon--green" aria-hidden="true"><i class="fas fa-phone"></i></span>
+            <h2 id="space-prop-contact-mob-heading" class="agency-space-pro-panel__title">تماس مجاز</h2>
+        </header>
+        <ul class="agency-space-pro-contact">
+            {% if prop.owner_name %}
+            <li class="agency-space-pro-contact__name"><i class="fas fa-user" aria-hidden="true"></i><span>{{ prop.owner_name }}</span></li>
+            {% endif %}
+            {% if prop.phone %}
+            <li><a href="tel:{{ prop.phone }}" dir="ltr"><i class="fas fa-mobile-screen" aria-hidden="true"></i><span>{{ prop.phone }}</span></a></li>
+            {% endif %}
+            {% if prop.tenant_phone %}
+            <li><a href="tel:{{ prop.tenant_phone }}" dir="ltr"><i class="fas fa-phone" aria-hidden="true"></i><span>مستاجر · {{ prop.tenant_phone }}</span></a></li>
+            {% endif %}
+        </ul>
+    </section>
+    {% endif %}
 
     {% if prop.amenity_flags or prop.transaction_status %}
     <div class="agency-space-prop-detail__metrics" aria-label="خلاصه ملک">

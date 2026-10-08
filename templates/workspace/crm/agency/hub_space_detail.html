@@ -3,8 +3,8 @@
 
 {% block crm_extra_css %}
 {{ block.super }}
-<link rel="stylesheet" href="{% static 'workspace/css/agency-space.css' %}?v=48">
-<link rel="stylesheet" href="{% static 'workspace/css/crm-agency-space-detail-mobile.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'workspace/css/agency-space.css' %}?v=49">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-agency-space-detail-mobile.css' %}?v=4">
 {% if space_payload.source_kind == 'property' and space_payload.property and space_payload.property.has_map %}
 <link rel="stylesheet" href="{% static 'workspace/css/listing-map.css' %}?v=6">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
@@ -223,14 +223,16 @@
     <div class="agency-space-detail__sticky" aria-hidden="false">
         <div class="agency-space-detail__sticky-inner">
             <a href="{% url 'workspace:agency_hub_space' %}" class="crm-btn crm-btn-ghost crm-btn-sm agency-space-detail__sticky-back">فهرست</a>
-            {% if space_payload.can_copy %}
-            <button type="button" class="crm-btn crm-btn-primary crm-btn-sm agency-space-detail__sticky-primary" data-space-copy data-item-id="{{ space_item.pk }}">
+            {% if space_payload.owns_source_in_crm and space_payload.source_crm_url %}
+            <a href="{{ space_payload.source_crm_url }}" class="crm-btn crm-btn-primary crm-btn-sm agency-space-detail__sticky-primary" data-space-crm-link>
+                {% if space_payload.source_kind == 'property' %}فایل CRM من{% else %}مخاطب CRM من{% endif %}
+            </a>
+            {% elif space_payload.already_copied and space_payload.copy_target_url %}
+            <a href="{{ space_payload.copy_target_url }}" class="crm-btn crm-btn-primary crm-btn-sm agency-space-detail__sticky-primary" data-space-crm-link>مشاهده در CRM</a>
+            {% elif space_payload.can_copy %}
+            <button type="button" class="crm-btn crm-btn-primary crm-btn-sm agency-space-detail__sticky-primary agency-space-btn--copy" data-space-copy data-item-id="{{ space_item.pk }}">
                 {% if space_payload.source_kind == 'property' %}افزودن به CRM{% else %}کپی به CRM من{% endif %}
             </button>
-            {% elif space_payload.source_crm_url %}
-            <a href="{{ space_payload.source_crm_url }}" class="crm-btn crm-btn-primary crm-btn-sm agency-space-detail__sticky-primary">CRM من</a>
-            {% elif space_payload.copy_target_url %}
-            <a href="{{ space_payload.copy_target_url }}" class="crm-btn crm-btn-primary crm-btn-sm agency-space-detail__sticky-primary">نسخه من</a>
             {% endif %}
         </div>
     </div>
@@ -303,5 +305,5 @@ window.AGENCY_SPACE_API = {
 <script src="{% static 'workspace/js/carto-basemap.js' %}?v=2"></script>
 <script src="{% static 'workspace/js/listing-map.js' %}?v=9"></script>
 {% endif %}
-<script src="{% static 'workspace/js/agency-space.js' %}?v=22" defer></script>
+<script src="{% static 'workspace/js/agency-space.js' %}?v=23" defer></script>
 {% endblock %}

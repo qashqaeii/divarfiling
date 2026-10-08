@@ -35,6 +35,16 @@
                         <span>{% if cust.region %}{{ cust.region }}{% endif %}{% if cust.region and cust.areas_display %} · {% endif %}{% if cust.areas_display %}{{ cust.areas_display }}{% endif %}</span>
                     </p>
                     {% endif %}
+                    {% if cust.budget_rows %}
+                    <div class="agency-space-contact-detail__budget-row" aria-label="بودجه">
+                        {% for row in cust.budget_rows|slice:":2" %}
+                        <span class="agency-space-contact-detail__budget-item">
+                            <span class="agency-space-contact-detail__budget-label">{{ row.label }}</span>
+                            <span class="agency-space-contact-detail__budget-value">{{ row.value }}</span>
+                        </span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
                     <div class="agency-space-contact-detail__access-row" aria-label="دسترسی و اشتراک">
                         <span class="agency-space-badge agency-space-badge--{{ space_payload.visibility }} agency-space-contact-detail__vis-badge">{{ space_payload.visibility_label }}</span>
                         {% if cust.contact_share_level_label %}

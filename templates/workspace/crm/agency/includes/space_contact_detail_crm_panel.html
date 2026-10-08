@@ -7,7 +7,7 @@
         </div>
     </header>
     <p class="agency-space-contact-detail__aside-lead">نسخه CRM شما مستقل است؛ بدون تغییر در مخاطب منتشرشدهٔ تیم.</p>
-    <div class="agency-space-contact-detail__aside-body agency-space-prop-aside__body">
+    <div class="agency-space-contact-detail__aside-body agency-space-prop-aside__body" data-space-crm-panel>
         {% if space_payload.owns_source_in_crm and space_payload.source_crm_url %}
         <p class="agency-space-pro-status agency-space-pro-status--ok"><i class="fas fa-circle-check" aria-hidden="true"></i> این مخاطب از CRM شما منتشر شده</p>
         <a href="{{ space_payload.source_crm_url }}" class="agency-space-pro-btn agency-space-pro-btn--primary crm-btn-block">باز کردن در CRM</a>

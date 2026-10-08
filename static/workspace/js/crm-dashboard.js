@@ -31,6 +31,19 @@
             setOpen(!bento.classList.contains('is-insights-open'));
         });
 
+        btn.addEventListener('keydown', (ev) => {
+            if (ev.key === 'Enter' || ev.key === ' ') {
+                ev.preventDefault();
+                setOpen(!bento.classList.contains('is-insights-open'));
+            }
+        });
+
+        let resizeTimer;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(resizeDashCharts, 120);
+        });
+
         const mq = window.matchMedia('(max-width: 768px)');
         const sync = () => {
             if (!mq.matches) {

@@ -17,9 +17,14 @@
         padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px)) !important;
     }
 
-    .crm-app .crm-page-chrome {
+    .crm-app:not(.crm-app-dashboard) .crm-page-chrome {
         padding-inline: 0;
         gap: 0.55rem;
+    }
+
+    .crm-app-dashboard .crm-page-chrome.crm-dash--pro {
+        padding-inline: 0.7rem;
+        gap: 0.65rem;
     }
 
     .crm-app .crm-main {
@@ -113,42 +118,7 @@
         gap: 0.65rem;
     }
 
-    .crm-app-dashboard .crm-dash--pro .crm-dash-bar {
-        margin-inline: 0;
-        border-radius: 0 0 20px 20px;
-        padding: 0.85rem 0.8rem 0.7rem;
-        border: none;
-        box-shadow: 0 8px 28px rgba(15, 23, 42, 0.06);
-    }
-
-    .crm-app-dashboard .crm-dash--pro .crm-dash-bar-title {
-        font-size: 1.15rem;
-        letter-spacing: -0.03em;
-    }
-
-    .crm-app-dashboard .crm-dash--pro .crm-dash-bar-actions {
-        border-radius: 14px !important;
-        padding: 0.35rem !important;
-    }
-
-    .crm-app-dashboard .crm-dash--pro .crm-dash-act {
-        min-width: 2.75rem;
-        min-height: 2.75rem;
-        border-radius: 12px;
-    }
-
-    .crm-app-dashboard .acd-mission-card,
-    .crm-app-dashboard .crm-dash-bento .crm-cell,
-    .crm-app-dashboard .crm-feed-v2-item,
-    .crm-app-dashboard .crm-dash-alert-card {
-        margin-inline: 0.75rem;
-        border-radius: 16px;
-    }
-
-    .crm-app-dashboard .crm-dash-bento {
-        padding-inline: 0.75rem;
-        gap: 0.5rem;
-    }
+    /* Dashboard gutter + surfaces: see crm-dashboard.css (single source) */
 
     /* ── CRM global search (#107) ── */
     .crm-app .crm-global-search,

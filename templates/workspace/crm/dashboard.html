@@ -8,64 +8,68 @@
 {% block crm_search %}{% endblock %}
 {% block crm_header %}{% endblock %}
 
-{% block crm_extra_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/academy.css' %}?v=5">
-{% endblock %}
+{% block crm_extra_css %}{% endblock %}
 
 {% block ws_surface_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/crm-dashboard.css' %}?v=7">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-dashboard.css' %}?v=9">
 {% endblock %}
 
 {% block crm_content %}
 <div class="crm-dash crm-page-chrome crm-dash--pro" id="crmDash">
 
-    <header class="crm-dash-bar">
-        <div class="crm-dash-bar-main">
-            <h1 class="crm-dash-bar-title">مدیریت مشتری (CRM)</h1>
-            <p class="crm-dash-bar-sub is-visible">
-                {% if today_jalali %}<span>{{ today_jalali }}</span>{% endif %}
-                {% if stats.due_today %}
-                <span class="crm-dash-bar-chip{% if stats.overdue_followups %} is-warn{% endif %}">{{ stats.due_today }} پیگیری امروز</span>
-                {% endif %}
-                {% if stats.overdue_followups %}
-                <span class="crm-dash-bar-chip is-warn">{{ stats.overdue_followups }} معوق</span>
-                {% endif %}
-            </p>
-        </div>
-        <div class="crm-dash-bar-actions" role="toolbar" aria-label="عملیات سریع">
-            <a href="{% url 'workspace:crm_today' %}" class="crm-dash-act crm-dash-act--icon crm-dash-act--today{% if today_count %} crm-dash-act--pulse{% endif %}" title="کارهای امروز" aria-label="کارهای امروز{% if today_count %} ({{ today_count }}){% endif %}">
-                <i class="fas fa-list-check" aria-hidden="true"></i>
-            </a>
-            <button type="button" class="crm-dash-act crm-dash-act--icon crm-dash-act--lead" data-drawer-open="drawer-quick-lead" title="مخاطب سریع" aria-label="مخاطب سریع">
-                <i class="fas fa-bolt" aria-hidden="true"></i>
-            </button>
-            <a href="{% url 'workspace:crm_contacts' %}?open=drawer-contact" class="crm-dash-act crm-dash-act--icon crm-dash-act--primary" title="مخاطب جدید" aria-label="مخاطب جدید">
-                <i class="fas fa-user-plus" aria-hidden="true"></i>
-            </a>
-            <a href="{% url 'workspace:crm_properties' %}?open=drawer-property" class="crm-dash-act crm-dash-act--icon crm-dash-act--property" title="ملک جدید" aria-label="ملک جدید">
-                <i class="fas fa-building" aria-hidden="true"></i>
-            </a>
-            <a href="{% url 'workspace:crm_reminders' %}?drawer=reminder" class="crm-dash-act crm-dash-act--icon crm-dash-act--reminder" title="یادآور جدید" aria-label="یادآور جدید">
-                <i class="fas fa-bell" aria-hidden="true"></i>
-            </a>
-            <a href="{% url 'workspace:academy_home' %}" class="crm-dash-act crm-dash-act--icon crm-dash-act--academy" title="آکادمی" aria-label="آکادمی">
-                <i class="fas fa-graduation-cap" aria-hidden="true"></i>
-            </a>
-        </div>
-    </header>
-
-    <section class="acd-mission-card">
-        <div class="acd-mission-card-top">
-            <div class="acd-mission-card-head">
-                <span class="acd-mission-icon" aria-hidden="true"><i class="fas fa-graduation-cap"></i></span>
-                <div>
-                    <h2 class="acd-mission-card-title">آکادمی فایلینگ دیوار</h2>
-                    <p class="acd-mission-card-meta">۱۲ آموزش ویدیویی · سه مسیر — از شروع کار تا CRM و مدیریت فایل</p>
-                </div>
+    <div class="crm-dash-hero">
+        <header class="crm-dash-bar crm-dash-bar--crm">
+            <div class="crm-dash-bar-main">
+                <h1 class="crm-dash-bar-title">
+                    <span class="crm-dash-bar-title-desk">مدیریت مشتری (CRM)</span>
+                    <span class="crm-dash-bar-title-a11y">مدیریت مشتری</span>
+                </h1>
+                <p class="crm-dash-bar-sub is-visible">
+                    {% if today_jalali %}<span class="crm-dash-bar-date">{{ today_jalali }}</span>{% endif %}
+                    {% if stats.due_today %}
+                    <span class="crm-dash-bar-chip{% if stats.overdue_followups %} is-warn{% endif %}">{{ stats.due_today }} پیگیری امروز</span>
+                    {% endif %}
+                    {% if stats.overdue_followups %}
+                    <span class="crm-dash-bar-chip is-warn">{{ stats.overdue_followups }} معوق</span>
+                    {% elif stats.due_today %}
+                    <span class="crm-dash-bar-chip is-ok">بدون معوق</span>
+                    {% endif %}
+                </p>
             </div>
-            <a href="{% url 'workspace:academy_home' %}" class="acd-btn acd-btn--sm acd-mission-cta">ورود به آکادمی</a>
+        </header>
+
+        <div class="crm-dash-bar-actions crm-dash-quick" role="toolbar" aria-label="عملیات سریع">
+            <div class="crm-dash-quick-group crm-dash-quick-group--create">
+                <a href="{% url 'workspace:crm_contacts' %}?open=drawer-contact" class="crm-dash-act crm-dash-act--primary crm-dash-act--featured" title="مخاطب جدید" aria-label="مخاطب جدید">
+                    <i class="fas fa-user-plus" aria-hidden="true"></i>
+                    <span class="crm-dash-act-label">مخاطب جدید</span>
+                </a>
+                <button type="button" class="crm-dash-act crm-dash-act--icon crm-dash-act--lead" data-drawer-open="drawer-quick-lead" title="مخاطب سریع" aria-label="مخاطب سریع">
+                    <i class="fas fa-bolt" aria-hidden="true"></i>
+                    <span class="crm-dash-act-label">سریع</span>
+                </button>
+                <a href="{% url 'workspace:crm_properties' %}?open=drawer-property" class="crm-dash-act crm-dash-act--icon crm-dash-act--property" title="ملک جدید" aria-label="ملک جدید">
+                    <i class="fas fa-building" aria-hidden="true"></i>
+                    <span class="crm-dash-act-label">ملک</span>
+                </a>
+                <a href="{% url 'workspace:crm_reminders' %}?drawer=reminder" class="crm-dash-act crm-dash-act--icon crm-dash-act--reminder" title="یادآور جدید" aria-label="یادآور جدید">
+                    <i class="fas fa-bell" aria-hidden="true"></i>
+                    <span class="crm-dash-act-label">یادآور</span>
+                </a>
+            </div>
+            <span class="crm-dash-quick-sep" aria-hidden="true"></span>
+            <div class="crm-dash-quick-group crm-dash-quick-group--nav">
+                <a href="{% url 'workspace:crm_today' %}" class="crm-dash-act crm-dash-act--icon crm-dash-act--today{% if today_count %} crm-dash-act--pulse{% endif %}" title="کارهای امروز" aria-label="کارهای امروز{% if today_count %} ({{ today_count }}){% endif %}">
+                    <i class="fas fa-list-check" aria-hidden="true"></i>
+                    <span class="crm-dash-act-label">امروز</span>
+                </a>
+            </div>
+            <a href="{% url 'workspace:academy_home' %}" class="crm-dash-act crm-dash-act--icon crm-dash-act--academy crm-dash-act--desk-only" title="آکادمی" aria-label="آکادمی">
+                <i class="fas fa-graduation-cap" aria-hidden="true"></i>
+                <span class="crm-dash-act-label">آکادمی</span>
+            </a>
         </div>
-    </section>
+    </div>
 
     {% if stagnant_count or overdue_contacts %}
     <section class="crm-action-rail crm-dash-alerts" aria-label="اقدامات فوری">
@@ -78,9 +82,9 @@
                     <em class="crm-dash-alert-card__count">{{ stagnant_count }}</em>
                     مخاطب راکد
                 </strong>
-                <span class="crm-dash-alert-card__desc">بیش از ۷ روز بدون فعالیت</span>
+                <span class="crm-dash-alert-card__desc">+۷ روز بدون فعالیت</span>
             </span>
-            <span class="crm-dash-alert-card__cta">اتوماسیون <i class="fas fa-arrow-left" aria-hidden="true"></i></span>
+            <span class="crm-dash-alert-card__go" aria-hidden="true"><i class="fas fa-chevron-left"></i></span>
         </a>
         {% endif %}
         {% if overdue_contacts %}
@@ -93,9 +97,9 @@
                     <em class="crm-dash-alert-card__count">{{ overdue_contacts|length }}</em>
                     پیگیری معوق
                 </strong>
-                <span class="crm-dash-alert-card__desc">همین حالا صف پیگیری را باز کنید</span>
+                <span class="crm-dash-alert-card__desc">پیگیری عقب‌افتاده</span>
             </span>
-            <span class="crm-dash-alert-card__cta">مشاهده <i class="fas fa-arrow-left" aria-hidden="true"></i></span>
+            <span class="crm-dash-alert-card__go" aria-hidden="true"><i class="fas fa-chevron-left"></i></span>
         </a>
         {% endif %}
     </section>
@@ -142,7 +146,7 @@
                 <h2><i class="fas fa-list-check" aria-hidden="true"></i> پیگیری امروز</h2>
                 <a href="{% url 'workspace:crm_today' %}" class="crm-cell-link">کارهای امروز</a>
             </header>
-            <ul class="crm-feed-v2">
+            <ul class="crm-feed-v2 crm-feed-v2--dash">
                 {% for c in due_contacts %}
                 <li class="crm-feed-v2-item">
                     <a href="{% url 'workspace:crm_detail' c.id %}" class="crm-feed-v2-main">
@@ -155,9 +159,15 @@
                     <span class="crm-pill-v2" style="{% crm_status_style c.status %}">{{ c.status }}</span>
                 </li>
                 {% empty %}
-                <li class="crm-feed-v2-empty">
-                    <i class="fas fa-check-circle" aria-hidden="true"></i>
-                    پیگیریی برای امروز نیست
+                <li class="crm-feed-v2-empty crm-feed-v2-empty--context">
+                    {% if stats.overdue_followups %}
+                    <span class="crm-feed-v2-empty-icon" aria-hidden="true"><i class="fas fa-clock"></i></span>
+                    <span class="crm-feed-v2-empty-text">امروز پیگیری زمان‌بندی‌شده ندارید؛ <strong>{{ stats.overdue_followups }} مورد معوق</strong> در صف است.</span>
+                    <a href="{% url 'workspace:crm_contacts' %}?due=overdue" class="crm-feed-v2-empty-link">مشاهده معوق‌ها</a>
+                    {% else %}
+                    <span class="crm-feed-v2-empty-icon" aria-hidden="true"><i class="fas fa-check-circle"></i></span>
+                    <span class="crm-feed-v2-empty-text">پیگیریی برای امروز نیست — روزتان آزاد است.</span>
+                    {% endif %}
                 </li>
                 {% endfor %}
             </ul>
@@ -168,9 +178,9 @@
                 <h2><i class="fas fa-bell" aria-hidden="true"></i> یادآورها</h2>
                 <a href="{% url 'workspace:crm_reminders' %}" class="crm-cell-link">همه</a>
             </header>
-            <ul class="crm-feed-v2">
-                {% for r in upcoming_reminders %}
-                <li class="crm-feed-v2-item">
+            <ul class="crm-feed-v2 crm-feed-v2--dash crm-feed-v2--remind">
+                {% for r in upcoming_reminders|slice:":3" %}
+                <li class="crm-feed-v2-item crm-feed-v2-item--remind">
                     <div class="crm-feed-v2-main">
                         <span class="crm-feed-v2-time">{{ r.due_at|ws_time }}</span>
                         <span class="crm-feed-v2-text">
@@ -186,6 +196,9 @@
                 </li>
                 {% endfor %}
             </ul>
+            {% if upcoming_reminders|length > 3 %}
+            <p class="crm-cell-footnote">{{ upcoming_reminders|length|add:"-3" }} یادآور دیگر در فهرست</p>
+            {% endif %}
         </section>
 
         <section class="crm-cell crm-cell--contacts crm-cell--priority">
@@ -193,9 +206,9 @@
                 <h2><i class="fas fa-users" aria-hidden="true"></i> مخاطبین اخیر</h2>
                 <a href="{% url 'workspace:crm_contacts' %}" class="crm-cell-link">همه</a>
             </header>
-            <ul class="crm-feed-v2">
+            <ul class="crm-feed-v2 crm-feed-v2--dash crm-feed-v2--contacts">
                 {% for c in recent_contacts %}
-                <li class="crm-feed-v2-item">
+                <li class="crm-feed-v2-item crm-feed-v2-item--contact">
                     <a href="{% url 'workspace:crm_detail' c.id %}" class="crm-feed-v2-main">
                         <span class="crm-feed-v2-avatar">{{ c.name|slice:":1" }}</span>
                         <span class="crm-feed-v2-text">
@@ -342,6 +355,15 @@
         </div>
     </div>
 
+    <a href="{% url 'workspace:academy_home' %}" class="crm-dash-learn">
+        <span class="crm-dash-learn-icon" aria-hidden="true"><i class="fas fa-graduation-cap"></i></span>
+        <span class="crm-dash-learn-text">
+            <strong>آکادمی فایلینگ دیوار</strong>
+            <em>ویدیوهای آموزشی CRM، فایلینگ و کار روزانه</em>
+        </span>
+        <span class="crm-dash-learn-go" aria-hidden="true"><i class="fas fa-arrow-left"></i></span>
+    </a>
+
 </div>
 {% endblock %}
 
@@ -355,5 +377,5 @@
 window.wsCharts = {{ charts_json|safe }};
 window.crmQuickLeadUrl = "{% url 'workspace:crm_quick_lead' %}";
 </script>
-<script src="{% static 'workspace/js/crm-dashboard.js' %}?v=1"></script>
+<script src="{% static 'workspace/js/crm-dashboard.js' %}?v=2"></script>
 {% endblock %}

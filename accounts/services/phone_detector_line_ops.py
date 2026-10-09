@@ -232,6 +232,33 @@ def apply_run_outcome_from_engine(
         if not row:
             row = PhoneDetectorExtractionLine.objects.create(phone=phone)
 
+        prior_status = row.operational_status
+
+        if prior_status == OPS.PAUSED:
+            continue
+
+        if prior_status == OPS.BLOCKED_CAPTCHA:
+            continue
+
+        if prior_status == OPS.ERROR:
+            if acc.get('needs_relogin') or acc.get('ok') is False:
+                row.last_error_at = now
+                row.last_error_reason = 'نشست منقضی — نیاز به ورود مجدد'
+                row.status_detail = 'ورود مجدد OTP لازم است'
+                row.last_checked_at = now
+                row.last_run_id = run_id
+                row.save(
+                    update_fields=[
+                        'last_error_at',
+                        'last_error_reason',
+                        'status_detail',
+                        'last_checked_at',
+                        'last_run_id',
+                        'updated_at',
+                    ],
+                )
+            continue
+
         if acc.get('hip_blocked') or _is_captcha_hip(acc.get('last_hip_status')):
             blocked_this_run.append(phone)
             row.operational_status = OPS.BLOCKED_CAPTCHA
@@ -256,12 +283,6 @@ def apply_run_outcome_from_engine(
             row.last_checked_at = now
             row.last_run_id = run_id
             row.save()
-            continue
-
-        if row.operational_status == OPS.PAUSED:
-            continue
-
-        if row.operational_status == OPS.BLOCKED_CAPTCHA:
             continue
 
         if row.operational_status == OPS.RUNNING:
@@ -443,11 +464,15 @@ def probe_and_reactivate_line(phone: str) -> dict[str, Any]:
             row.last_error_at = now
             row.last_error_reason = message
             row.status_detail = 'بررسی شد — نیاز به OTP'
-        elif code in ('still_blocked', 'probe_unavailable'):
+        elif code in ('still_blocked', 'probe_unavailable', 'probe_failed'):
             row.operational_status = OPS.BLOCKED_CAPTCHA
             row.last_error_at = now
             row.last_error_reason = message
-            row.status_detail = 'بررسی شد — محدودیت هنوز برقرار است'
+            row.status_detail = (
+                'بررسی شد — محدودیت یا خطای API'
+                if code != 'probe_unavailable'
+                else 'بررسی در دسترس نبود'
+            )
         else:
             row.status_detail = message
         row.save()

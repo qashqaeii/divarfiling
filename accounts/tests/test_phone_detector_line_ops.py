@@ -99,6 +99,24 @@ class PhoneDetectorLineOpsTests(TestCase):
         self.line2.save()
         self.assertIn('09222222222', excluded_phones_for_extraction())
 
+    def test_paused_not_marked_blocked_when_engine_hip_blocked(self):
+        self.line2.operational_status = PhoneDetectorExtractionLine.OperationalStatus.PAUSED
+        self.line2.save()
+        apply_run_outcome_from_engine(
+            run_id=103,
+            accounts=[
+                {'phone': '09222222222', 'ok': True, 'hip_blocked': True},
+            ],
+            hip={'captcha_triggered': 1},
+            phones_extracted=0,
+            worker_status='completed',
+        )
+        self.line2.refresh_from_db()
+        self.assertEqual(
+            self.line2.operational_status,
+            PhoneDetectorExtractionLine.OperationalStatus.PAUSED,
+        )
+
     def test_blocked_stays_blocked_when_engine_shows_healthy(self):
         self.line2.operational_status = PhoneDetectorExtractionLine.OperationalStatus.BLOCKED_CAPTCHA
         self.line2.save()
@@ -140,6 +158,24 @@ class PhoneDetectorLineOpsTests(TestCase):
         self.line2.save()
         with self.assertRaises(PhoneDetectorLineError):
             set_line_paused('09222222222', paused=False)
+        self.line2.refresh_from_db()
+        self.assertEqual(
+            self.line2.operational_status,
+            PhoneDetectorExtractionLine.OperationalStatus.BLOCKED_CAPTCHA,
+        )
+
+    @patch('accounts.services.phone_detector_lines._get_engine')
+    def test_probe_api_error_does_not_activate_line(self, mock_engine):
+        self.line2.operational_status = PhoneDetectorExtractionLine.OperationalStatus.BLOCKED_CAPTCHA
+        self.line2.save()
+        engine = mock_engine.return_value
+        engine.probe_line_reactivation.return_value = {
+            'ok': False,
+            'code': 'probe_failed',
+            'message': 'HTTP 503',
+        }
+        with self.assertRaises(PhoneDetectorLineError):
+            probe_and_reactivate_line('09222222222')
         self.line2.refresh_from_db()
         self.assertEqual(
             self.line2.operational_status,

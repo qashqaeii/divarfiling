@@ -12,12 +12,15 @@ from accounts.models import (
     PhoneDetectorExtractionLine,
 )
 from accounts.services.acquisition_automation import finalize_run_from_worker, schedule_due_campaigns
+from accounts.services.phone_detector_lines import PhoneDetectorLineError
 from accounts.services.phone_detector_line_ops import (
     apply_run_outcome_from_engine,
     build_run_summary_message,
     count_schedulable_lines,
     excluded_phones_for_extraction,
+    probe_and_reactivate_line,
     recover_stale_running_lines,
+    set_line_paused,
     sync_lines_from_sessions,
 )
 
@@ -95,6 +98,71 @@ class PhoneDetectorLineOpsTests(TestCase):
         self.line2.operational_status = PhoneDetectorExtractionLine.OperationalStatus.BLOCKED_CAPTCHA
         self.line2.save()
         self.assertIn('09222222222', excluded_phones_for_extraction())
+
+    def test_blocked_stays_blocked_when_engine_shows_healthy(self):
+        self.line2.operational_status = PhoneDetectorExtractionLine.OperationalStatus.BLOCKED_CAPTCHA
+        self.line2.save()
+        apply_run_outcome_from_engine(
+            run_id=101,
+            accounts=[
+                {'phone': '09111111111', 'ok': True, 'hip_blocked': False},
+                {'phone': '09222222222', 'ok': True, 'hip_blocked': False},
+            ],
+            hip={},
+            phones_extracted=3,
+            worker_status='completed',
+        )
+        self.line2.refresh_from_db()
+        self.assertEqual(
+            self.line2.operational_status,
+            PhoneDetectorExtractionLine.OperationalStatus.BLOCKED_CAPTCHA,
+        )
+
+    def test_success_count_only_for_lines_with_via_session(self):
+        apply_run_outcome_from_engine(
+            run_id=102,
+            accounts=[
+                {'phone': '09111111111', 'ok': True, 'hip_blocked': False},
+                {'phone': '09222222222', 'ok': True, 'hip_blocked': False},
+            ],
+            hip={},
+            phones_extracted=2,
+            worker_status='completed',
+            lines_phone_counts={'09111111111': 2},
+        )
+        self.line1.refresh_from_db()
+        self.line2.refresh_from_db()
+        self.assertEqual(self.line1.success_extract_count, 2)
+        self.assertEqual(self.line2.success_extract_count, 0)
+
+    def test_unpause_does_not_clear_blocked_captcha(self):
+        self.line2.operational_status = PhoneDetectorExtractionLine.OperationalStatus.BLOCKED_CAPTCHA
+        self.line2.save()
+        with self.assertRaises(PhoneDetectorLineError):
+            set_line_paused('09222222222', paused=False)
+        self.line2.refresh_from_db()
+        self.assertEqual(
+            self.line2.operational_status,
+            PhoneDetectorExtractionLine.OperationalStatus.BLOCKED_CAPTCHA,
+        )
+
+    @patch('accounts.services.phone_detector_lines._get_engine')
+    def test_probe_failure_does_not_activate_line(self, mock_engine):
+        self.line2.operational_status = PhoneDetectorExtractionLine.OperationalStatus.BLOCKED_CAPTCHA
+        self.line2.save()
+        engine = mock_engine.return_value
+        engine.probe_line_reactivation.return_value = {
+            'ok': False,
+            'code': 'still_blocked',
+            'message': 'هنوز محدود',
+        }
+        with self.assertRaises(PhoneDetectorLineError):
+            probe_and_reactivate_line('09222222222')
+        self.line2.refresh_from_db()
+        self.assertEqual(
+            self.line2.operational_status,
+            PhoneDetectorExtractionLine.OperationalStatus.BLOCKED_CAPTCHA,
+        )
 
     def test_all_lines_blocked_message(self):
         for line in (self.line1, self.line2, self.line3):

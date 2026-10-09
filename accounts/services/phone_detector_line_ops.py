@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import logging
 import re
+from collections import Counter
 from typing import Any, Optional
 
 from django.db import transaction
@@ -188,6 +189,18 @@ def _infer_block_scope(account: dict) -> str:
     return BLOCK.LINE
 
 
+def lines_phone_counts_from_payload(payload: dict) -> dict[str, int]:
+    """شمارش واقعی استخراج به ازای via_session در خروجی JSON."""
+    counts: Counter[str] = Counter()
+    for row in payload.get('consultants') or []:
+        if not row.get('phone'):
+            continue
+        session_phone = normalize_line_phone(row.get('via_session') or '')
+        if session_phone:
+            counts[session_phone] += 1
+    return dict(counts)
+
+
 @transaction.atomic
 def apply_run_outcome_from_engine(
     *,
@@ -196,6 +209,7 @@ def apply_run_outcome_from_engine(
     hip: dict,
     phones_extracted: int,
     worker_status: str,
+    lines_phone_counts: Optional[dict[str, int]] = None,
 ) -> dict[str, Any]:
     """پس از worker، وضعیت خطوط را از deck_state به‌روز کن."""
     sync_lines_from_sessions()
@@ -208,7 +222,6 @@ def apply_run_outcome_from_engine(
 
     blocked_this_run: list[str] = []
     healthy_remaining = 0
-    used_success: list[str] = []
 
     for phone, acc in by_phone.items():
         row = (
@@ -248,16 +261,22 @@ def apply_run_outcome_from_engine(
         if row.operational_status == OPS.PAUSED:
             continue
 
-        if row.operational_status in (OPS.RUNNING, OPS.BLOCKED_CAPTCHA, OPS.ERROR):
+        if row.operational_status == OPS.BLOCKED_CAPTCHA:
+            continue
+
+        if row.operational_status == OPS.RUNNING:
             row.operational_status = OPS.ACTIVE
             row.status_detail = 'آماده استخراج'
+            row.last_checked_at = now
+            row.save()
+        elif row.operational_status == OPS.ERROR and acc.get('ok'):
+            row.operational_status = OPS.ACTIVE
+            row.status_detail = 'نشست بازیابی شد — آماده استخراج'
             row.last_checked_at = now
             row.save()
 
         if row.operational_status == OPS.ACTIVE:
             healthy_remaining += 1
-            if phones_extracted > 0:
-                used_success.append(phone)
 
     PhoneDetectorExtractionLine.objects.filter(
         operational_status=OPS.RUNNING,
@@ -268,12 +287,15 @@ def apply_run_outcome_from_engine(
         updated_at=now,
     )
 
-    if used_success:
-        PhoneDetectorExtractionLine.objects.filter(phone__in=used_success).update(
-            last_success_at=now,
-            success_extract_count=F('success_extract_count') + 1,
-            updated_at=now,
-        )
+    if lines_phone_counts:
+        for phone, cnt in lines_phone_counts.items():
+            if cnt <= 0:
+                continue
+            PhoneDetectorExtractionLine.objects.filter(phone=phone).update(
+                last_success_at=now,
+                success_extract_count=F('success_extract_count') + int(cnt),
+                updated_at=now,
+            )
 
     schedulable = count_schedulable_lines()
     all_blocked = schedulable == 0 and bool(by_phone)
@@ -373,6 +395,11 @@ def set_line_paused(phone: str, *, paused: bool) -> PhoneDetectorExtractionLine:
         row.operational_status = OPS.PAUSED
         row.status_detail = 'متوقف توسط مدیر — در زمان‌بندی انتخاب نمی‌شود'
     else:
+        if row.operational_status == OPS.BLOCKED_CAPTCHA:
+            raise PhoneDetectorLineError(
+                'خط هنوز محدودیت کپچا دارد — از «بررسی و فعال‌سازی مجدد» استفاده کنید.',
+                code='line_blocked_captcha',
+            )
         row.operational_status = OPS.ACTIVE
         row.status_detail = 'فعال‌سازی توسط مدیر'
     row.last_checked_at = now
@@ -381,7 +408,7 @@ def set_line_paused(phone: str, *, paused: bool) -> PhoneDetectorExtractionLine:
 
 
 def probe_and_reactivate_line(phone: str) -> dict[str, Any]:
-    """بررسی واقعی سشن قبل از بازگرداندن خط به چرخه."""
+    """Probe read-only Divar + session auth — بدون پاک‌کردن دستی hip_blocked."""
     from accounts.services.phone_detector_lines import _get_engine, list_lines
 
     phone = normalize_line_phone(phone)
@@ -399,7 +426,7 @@ def probe_and_reactivate_line(phone: str) -> dict[str, Any]:
     row.last_checked_at = now
     try:
         engine = _get_engine()
-        info = engine.list_accounts()
+        probe = engine.probe_line_reactivation(phone)
     except Exception as exc:
         row.status_detail = f'بررسی ناموفق: {exc}'
         row.save(update_fields=['last_checked_at', 'status_detail', 'updated_at'])
@@ -408,69 +435,36 @@ def probe_and_reactivate_line(phone: str) -> dict[str, Any]:
             code='probe_failed',
         ) from exc
 
-    acc = next(
-        (
-            a
-            for a in info.get('accounts') or []
-            if normalize_line_phone(a.get('phone') or '') == phone
-        ),
-        None,
-    )
-    if not acc:
-        row.status_detail = 'حساب در engine یافت نشد'
-        row.save(update_fields=['last_checked_at', 'status_detail', 'updated_at'])
-        raise PhoneDetectorLineError('خط در phone-detector یافت نشد.', code='line_missing')
-
-    if acc.get('hip_blocked'):
-        slot = engine.accounts.get(phone)
-        if slot:
-            slot.hip_blocked = False
-            slot.consecutive_hip = 0
-            engine.scraper.reset_hip_gate()
-            if engine._ensure_slot_fresh(slot):
-                info = engine.list_accounts()
-                acc = next(
-                    (
-                        a
-                        for a in info.get('accounts') or []
-                        if normalize_line_phone(a.get('phone') or '') == phone
-                    ),
-                    acc,
-                )
-        if acc.get('hip_blocked'):
+    if not probe.get('ok'):
+        code = str(probe.get('code') or 'still_blocked')
+        message = str(probe.get('message') or 'بررسی ناموفق')
+        if code == 'needs_relogin':
+            row.operational_status = OPS.ERROR
+            row.last_error_at = now
+            row.last_error_reason = message
+            row.status_detail = 'بررسی شد — نیاز به OTP'
+        elif code in ('still_blocked', 'probe_unavailable'):
             row.operational_status = OPS.BLOCKED_CAPTCHA
             row.last_error_at = now
-            row.last_error_reason = 'هنوز محدودیت کپچا/HIP فعال است'
+            row.last_error_reason = message
             row.status_detail = 'بررسی شد — محدودیت هنوز برقرار است'
-            row.save()
-            raise PhoneDetectorLineError(
-                'محدودیت کپچا هنوز برقرار است — بعداً دوباره بررسی کنید.',
-                code='still_blocked',
-            )
-
-    if acc.get('needs_relogin') or not acc.get('ok'):
-        row.operational_status = OPS.ERROR
-        row.last_error_at = now
-        row.last_error_reason = 'نشست نامعتبر — ورود مجدد لازم'
-        row.status_detail = 'بررسی شد — نیاز به OTP'
+        else:
+            row.status_detail = message
         row.save()
-        raise PhoneDetectorLineError(
-            'نشست معتبر نیست — «ورود مجدد» را انجام دهید.',
-            code='needs_relogin',
-        )
+        raise PhoneDetectorLineError(message, code=code)
 
     row.operational_status = OPS.ACTIVE
     row.block_scope = ''
     row.blocked_until = None
     row.last_error_reason = ''
-    row.status_detail = 'بررسی موفق — خط به چرخه بازگشت'
+    row.status_detail = str(probe.get('message') or 'بررسی موفق — خط به چرخه بازگشت')
     row.save()
 
     payload = list_lines(probe=True)
     return {
         'reactivated': True,
         'phone': phone,
-        'message': 'خط پس از بررسی فعال شد.',
+        'message': 'خط پس از بررسی read-only فعال شد.',
         **payload,
     }
 

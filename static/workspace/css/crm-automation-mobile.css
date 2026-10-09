@@ -31,7 +31,6 @@
     }
     .crm-auto-mobile.crm-page-chrome {
         background:
-        background:
             radial-gradient(120% 40% at 50% 0%, color-mix(in srgb, var(--ws-primary) 6%, transparent), transparent 55%),
             color-mix(in srgb, var(--ws-surface-2) 40%, var(--ws-bg, #f8fafc));
     }
@@ -554,11 +553,15 @@
         color: var(--ws-text-muted);
     }
 
-    .crm-auto-mobile .crm-auto-pipeline {
+    /* pipeline دسکتاپ — فقط brief در موبایل */
+    .crm-auto-mobile .crm-auto-pipeline:not(.crm-auto-pipeline--desk) {
         display: flex !important;
         flex-direction: column;
         gap: 0.3rem;
         grid-template-columns: unset !important;
+    }
+    .crm-auto-mobile .crm-auto-pipeline.crm-auto-pipeline--desk {
+        display: none !important;
     }
     .crm-auto-mobile .crm-auto-pipeline-node {
         padding: 0.65rem 0.7rem;
@@ -753,6 +756,46 @@
     .crm-app #drawer-rule .crm-auto-drawer-v2-body input,
     .crm-app #drawer-rule .crm-auto-drawer-v2-body select {
         font-size: 1rem;
+    }
+
+    /* ── Width closure — یک گاتر (.ws-content) برای همه بلوک‌ها ── */
+    .crm-app .crm-auto-mobile.crm-page-chrome {
+        padding-inline: 0 !important;
+    }
+    .crm-app .crm-auto-mobile.crm-page-chrome .crm-auto-kpis {
+        background: transparent !important;
+        border: none !important;
+        border-radius: 0 !important;
+        overflow: visible !important;
+        box-shadow: none !important;
+    }
+    .crm-app .crm-auto-mobile.crm-page-chrome .crm-auto-kpi {
+        border-inline-start: none !important;
+        border-top: none !important;
+        background: var(--ws-surface);
+    }
+    .crm-app .crm-auto-mobile.crm-page-chrome .crm-auto-kpi-icon {
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+    }
+    .crm-auto-mobile .crm-shell-body > * {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        margin-inline: 0;
+        box-sizing: border-box;
+    }
+    .crm-auto-mobile .crm-auto-kpi {
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+}
+
+@media (max-width: 430px) {
+    .crm-app .crm-auto-mobile.crm-page-chrome {
+        padding-inline: 0 !important;
     }
 }
 

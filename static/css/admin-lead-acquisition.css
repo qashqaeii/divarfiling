@@ -2675,9 +2675,26 @@ html.mk-public:not([data-theme="light"]) .adm-lac-bulk-bar {
     color: #b45309;
 }
 
-.adm-lac-line-status--rate_limited {
+.adm-lac-line-status--rate_limited,
+.adm-lac-line-status--blocked_captcha {
     background: rgba(225, 29, 72, 0.12);
     color: #be123c;
+}
+
+.adm-lac-line-status--paused {
+    background: rgba(100, 116, 139, 0.15);
+    color: #475569;
+}
+
+.adm-lac-line-status--running {
+    background: rgba(14, 165, 233, 0.15);
+    color: #0369a1;
+}
+
+.adm-lac-line-status--error,
+.adm-lac-line-status--cooldown {
+    background: rgba(217, 119, 6, 0.15);
+    color: #b45309;
 }
 
 .adm-lac-line-primary {

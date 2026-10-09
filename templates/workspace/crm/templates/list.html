@@ -9,34 +9,13 @@
 {% block crm_search %}{% endblock %}
 
 {% block crm_extra_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/crm-templates-mobile.css' %}?v=5">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-templates-mobile.css' %}?v=7">
 <link rel="stylesheet" href="{% static 'workspace/css/crm-mobile-v2-deals.css' %}?v=1">
 {% endblock %}
 
 {% block crm_content %}
 {% crm_placeholder_meta as ph_meta %}
-<div class="crm-shell-page crm-tpl-pro crm-tpl-pro-v2 crm-tpl-mobile crm-page-chrome mk-filing-datasets">
-
-    <header class="crm-tpl-mob-header">
-        <div class="crm-tpl-mob-header-mesh" aria-hidden="true"></div>
-        <div class="crm-tpl-mob-header-accent" aria-hidden="true"></div>
-        <div class="crm-tpl-mob-header-inner">
-            <div class="crm-tpl-mob-header-main">
-                <p class="crm-tpl-mob-lead"><i class="fas fa-message" aria-hidden="true"></i> کتابخانه پیام</p>
-                <p class="crm-tpl-mob-sub">
-                    <span>{{ stats.total }} قالب</span>
-                    {% if stats.whatsapp %}<span class="crm-tpl-mob-sub-chip is-wa">{{ stats.whatsapp }} واتساپ</span>{% endif %}
-                    {% if stats.sms %}<span class="crm-tpl-mob-sub-chip is-sms">{{ stats.sms }} پیامک</span>{% endif %}
-                </p>
-            </div>
-            <div class="crm-tpl-mob-header-actions" role="toolbar" aria-label="عملیات قالب‌ها">
-                {% include 'workspace/crm/includes/help/crm_help_mob_btn.html' with help_modal_id='modal-crm-templates-help' help_title='راهنمای قالب پیام' help_mob_class='crm-tpl-mob-icon-btn' %}
-                <button type="button" class="crm-tpl-mob-icon-btn crm-tpl-mob-icon-btn--primary" data-drawer-open="drawer-template" title="قالب جدید" aria-label="قالب جدید">
-                    <i class="fas fa-plus" aria-hidden="true"></i>
-                </button>
-            </div>
-        </div>
-    </header>
+<div class="crm-shell-page crm-tpl-pro crm-tpl-pro-v2 crm-tpl-mobile crm-page-chrome">
 
     <header class="crm-dash-bar crm-tpl-desk-header">
         <div class="crm-dash-bar-main">
@@ -86,7 +65,69 @@
     </section>
 
     <div class="crm-shell-body">
-        <section class="crm-tpl-vars-pro" aria-label="متغیرهای هوشمند">
+        <div class="crm-tpl-mob-chrome">
+            <div class="crm-tpl-mob-toolbar-sticky">
+                <div class="crm-tpl-mob-toolbar-row">
+                    <form method="get" class="crm-tpl-search" role="search">
+                        {% if cat_filter %}<input type="hidden" name="cat" value="{{ cat_filter }}">{% endif %}
+                        <i class="fas fa-search" aria-hidden="true"></i>
+                        <input type="search" name="q" value="{{ search_q }}" placeholder="جستجو قالب..." autocomplete="off" aria-label="جستجو قالب" enterkeyhint="search">
+                        {% if search_q %}
+                        <a href="{% if cat_filter %}?cat={{ cat_filter|urlencode }}{% else %}{% url 'workspace:crm_templates' %}{% endif %}" class="crm-tpl-search-clear" aria-label="پاک کردن جستجو" title="پاک کردن جستجو">
+                            <i class="fas fa-times" aria-hidden="true"></i>
+                        </a>
+                        {% endif %}
+                    </form>
+                    <button type="button" class="crm-tpl-mob-toolbar-btn" id="crmTplVarsOpen" title="متغیرهای هوشمند" aria-label="متغیرهای هوشمند" aria-controls="crmTplVarsSheet">
+                        <i class="fas fa-code" aria-hidden="true"></i>
+                    </button>
+                    <details class="crm-tpl-mob-toolbar-menu">
+                        <summary class="crm-tpl-mob-toolbar-btn crm-tpl-mob-toolbar-btn--ghost" aria-label="بیشتر">
+                            <i class="fas fa-ellipsis-vertical" aria-hidden="true"></i>
+                        </summary>
+                        <div class="crm-tpl-mob-toolbar-panel" role="menu">
+                            <button type="button" class="crm-tpl-mob-toolbar-item" role="menuitem" data-modal-open="modal-crm-templates-help">
+                                <i class="fas fa-lightbulb" aria-hidden="true"></i><span>راهنما</span>
+                            </button>
+                        </div>
+                    </details>
+                    <button type="button" class="crm-tpl-mob-toolbar-add" data-drawer-open="drawer-template" title="قالب جدید" aria-label="قالب جدید">
+                        <i class="fas fa-plus" aria-hidden="true"></i>
+                    </button>
+                </div>
+                <p class="crm-tpl-mob-summary" aria-live="polite">
+                    <span>{{ stats.total }} قالب</span>
+                    {% if stats.whatsapp %}<span class="crm-tpl-mob-summary-dot" aria-hidden="true">·</span><span>{{ stats.whatsapp }} واتساپ</span>{% endif %}
+                    {% if stats.sms %}<span class="crm-tpl-mob-summary-dot" aria-hidden="true">·</span><span>{{ stats.sms }} پیامک</span>{% endif %}
+                </p>
+                <nav class="crm-tpl-segment" role="tablist" aria-label="فیلتر دسته">
+                    <a href="?{% if search_q %}q={{ search_q|urlencode }}&{% endif %}" class="crm-tpl-seg-btn {% if not cat_filter %}is-active{% endif %}" role="tab">همه</a>
+                    {% for c in template_categories %}
+                    <a href="?cat={{ c|urlencode }}{% if search_q %}&q={{ search_q|urlencode }}{% endif %}" class="crm-tpl-seg-btn {% if cat_filter == c %}is-active{% endif %}" role="tab">
+                        <i class="fas {{ c|crm_template_category_icon }}" aria-hidden="true"></i>
+                        <span>{{ c }}</span>
+                    </a>
+                    {% endfor %}
+                </nav>
+                {% if search_q or cat_filter %}
+                <div class="crm-tpl-mob-active-filters">
+                    {% if cat_filter %}
+                    <a href="?{% if search_q %}q={{ search_q|urlencode }}{% endif %}" class="crm-tpl-mob-active-chip">
+                        <span>{{ cat_filter }}</span><i class="fas fa-times" aria-hidden="true"></i>
+                    </a>
+                    {% endif %}
+                    {% if search_q %}
+                    <a href="{% if cat_filter %}?cat={{ cat_filter|urlencode }}{% else %}{% url 'workspace:crm_templates' %}{% endif %}" class="crm-tpl-mob-active-chip">
+                        <span>«{{ search_q|truncatechars:18 }}»</span><i class="fas fa-times" aria-hidden="true"></i>
+                    </a>
+                    {% endif %}
+                    <a href="{% url 'workspace:crm_templates' %}" class="crm-tpl-mob-active-clear">پاک کردن همه</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <section class="crm-tpl-vars-pro crm-tpl-vars-pro--desk" aria-label="متغیرهای هوشمند">
             <div class="crm-tpl-vars-pro-head">
                 <h2>متغیرهای هوشمند</h2>
                 <p>کلیک کنید تا کپی شود — هنگام ارسال با اطلاعات مخاطب جایگزین می‌شوند</p>
@@ -111,7 +152,7 @@
             </details>
         </section>
 
-        <div class="crm-tpl-toolbar">
+        <div class="crm-tpl-toolbar crm-tpl-toolbar--desk">
             <nav class="crm-tpl-segment" role="tablist" aria-label="فیلتر دسته">
                 <a href="?{% if search_q %}q={{ search_q|urlencode }}&{% endif %}" class="crm-tpl-seg-btn {% if not cat_filter %}is-active{% endif %}" role="tab">همه</a>
                 {% for c in template_categories %}
@@ -131,6 +172,32 @@
                 </a>
                 {% endif %}
             </form>
+        </div>
+
+        <div class="crm-tpl-mob-vars-sheet" id="crmTplVarsSheet" hidden aria-hidden="true">
+            <div class="crm-tpl-mob-vars-backdrop" data-tpl-vars-close tabindex="-1" aria-hidden="true"></div>
+            <div class="crm-tpl-mob-vars-panel" role="dialog" aria-modal="true" aria-labelledby="crmTplVarsTitle">
+                <header class="crm-tpl-mob-vars-head">
+                    <div>
+                        <h2 id="crmTplVarsTitle">متغیرهای هوشمند</h2>
+                        <p>برای درج در پیام، روی هر متغیر بزنید تا کپی شود.</p>
+                    </div>
+                    <button type="button" class="crm-tpl-mob-vars-close" data-tpl-vars-close aria-label="بستن">
+                        <i class="fas fa-times" aria-hidden="true"></i>
+                    </button>
+                </header>
+                <div class="crm-tpl-mob-vars-body">
+                    <div class="crm-tpl-vars-pro-row">
+                        {% for key, label, icon in ph_meta %}
+                        <button type="button" class="crm-tpl-var-pro" data-copy="{{ key }}" title="کپی {{ key }}">
+                            <i class="fas {{ icon }}" aria-hidden="true"></i>
+                            <span class="crm-tpl-var-pro-key">{{ key }}</span>
+                            <span class="crm-tpl-var-pro-lbl">{{ label }}</span>
+                        </button>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
         </div>
 
         {% if has_templates %}
@@ -176,6 +243,21 @@
                     </div>
 
                     <footer class="crm-tpl-card-v2-foot">
+                        <div class="crm-tpl-mob-card-actions" role="group" aria-label="عملیات قالب">
+                            <button type="button" class="crm-tpl-act crm-tpl-act--primary crm-tpl-copy-raw" title="کپی متن خام">
+                                <i class="fas fa-copy" aria-hidden="true"></i><span>کپی متن</span>
+                            </button>
+                            <button type="button" class="crm-tpl-act crm-tpl-copy-sample" data-template-id="{{ t.id }}" title="کپی با داده نمونه">
+                                <i class="fas fa-eye" aria-hidden="true"></i><span>نمونه</span>
+                            </button>
+                            <button type="button" class="crm-tpl-act"
+                                data-drawer-open="drawer-template"
+                                data-template-id="{{ t.id }}"
+                                title="ویرایش">
+                                <i class="fas fa-pen" aria-hidden="true"></i><span>ویرایش</span>
+                            </button>
+                        </div>
+                        <div class="crm-tpl-desk-card-actions">
                         <button type="button" class="crm-tpl-act crm-tpl-act--primary crm-tpl-copy-raw" title="کپی متن خام">
                             <i class="fas fa-copy" aria-hidden="true"></i><span>کپی</span>
                         </button>
@@ -193,6 +275,32 @@
                                     role="menuitem">
                                     <i class="fas fa-pen" aria-hidden="true"></i><span>ویرایش</span>
                                 </button>
+                                <form method="post" class="crm-tpl-more-form" role="none">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="duplicate">
+                                    <input type="hidden" name="template_id" value="{{ t.id }}">
+                                    <button type="submit" class="crm-tpl-more-item" role="menuitem">
+                                        <i class="fas fa-clone" aria-hidden="true"></i><span>ساخت نسخه کپی</span>
+                                    </button>
+                                </form>
+                                {% if not t.is_system %}
+                                <form method="post" class="crm-tpl-more-form" role="none" onsubmit="return confirm('حذف این قالب؟')">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="delete">
+                                    <input type="hidden" name="template_id" value="{{ t.id }}">
+                                    <button type="submit" class="crm-tpl-more-item crm-tpl-more-item--danger" role="menuitem">
+                                        <i class="fas fa-trash" aria-hidden="true"></i><span>حذف</span>
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </div>
+                        </details>
+                        </div>
+                        <details class="crm-tpl-more crm-tpl-more--mob">
+                            <summary class="crm-tpl-act crm-tpl-more-trigger" aria-label="سایر عملیات">
+                                <i class="fas fa-ellipsis" aria-hidden="true"></i>
+                            </summary>
+                            <div class="crm-tpl-more-menu" role="menu">
                                 <form method="post" class="crm-tpl-more-form" role="none">
                                     {% csrf_token %}
                                     <input type="hidden" name="action" value="duplicate">
@@ -480,6 +588,15 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.crm-tpl-more[open]').forEach(d => { d.open = false; });
     }, { passive: true });
 
+    document.querySelectorAll('.crm-tpl-mob-toolbar-menu').forEach(menu => {
+        menu.addEventListener('toggle', () => {
+            if (!menu.open) return;
+            document.querySelectorAll('.crm-tpl-mob-toolbar-menu[open]').forEach(other => {
+                if (other !== menu) other.open = false;
+            });
+        });
+    });
+
     if (bodyTa?.value) renderPreview(bodyTa.value);
 
     form.addEventListener('submit', () => {
@@ -501,6 +618,29 @@ document.addEventListener('DOMContentLoaded', () => {
             copyText(withSample(payload.body), btn);
             btn.closest('details')?.removeAttribute('open');
         });
+    });
+
+    const varsSheet = document.getElementById('crmTplVarsSheet');
+    const varsOpen = document.getElementById('crmTplVarsOpen');
+    function closeVarsSheet() {
+        if (!varsSheet) return;
+        varsSheet.hidden = true;
+        varsSheet.setAttribute('aria-hidden', 'true');
+        document.body.classList.remove('crm-tpl-vars-sheet-open');
+    }
+    function openVarsSheet() {
+        if (!varsSheet) return;
+        varsSheet.hidden = false;
+        varsSheet.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('crm-tpl-vars-sheet-open');
+        varsSheet.querySelector('.crm-tpl-mob-vars-close')?.focus();
+    }
+    varsOpen?.addEventListener('click', openVarsSheet);
+    varsSheet?.querySelectorAll('[data-tpl-vars-close]').forEach(el => {
+        el.addEventListener('click', closeVarsSheet);
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && varsSheet && !varsSheet.hidden) closeVarsSheet();
     });
 });
 </script>

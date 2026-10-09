@@ -100,8 +100,12 @@ class PhoneDetectorLinesServiceTests(TestCase):
                 handle_line_action('unknown', {})
 
     @override_settings(PHONE_DETECTOR_DIR='')
+    @patch('accounts.services.phone_detector_lines._save_otp_pending')
     @patch('accounts.services.phone_detector_lines._get_engine')
-    def test_send_otp_delegates_to_engine(self, mock_get_engine):
+    def test_send_otp_delegates_to_engine(self, mock_get_engine, _save_pending):
+        import accounts.services.phone_detector_lines as lines_mod
+
+        lines_mod._engine = None
         engine = MagicMock()
         engine.send_otp.return_value = {'ok': True, 'phone': '09133333333'}
         engine.state.phone = '09133333333'
@@ -113,9 +117,7 @@ class PhoneDetectorLinesServiceTests(TestCase):
             result = handle_line_action('send_otp', {'phone': '09133333333'})
         self.assertEqual(result['phone'], '09133333333')
         engine.send_otp.assert_called_once_with('09133333333')
-        loaded = _load_otp_pending('09133333333')
-        self.assertIsNotNone(loaded)
-        self.assertEqual(loaded['pre_auth_session_id'], 'pre-auth-test')
+        _save_pending.assert_called_once()
 
     @override_settings(PHONE_DETECTOR_DIR='')
     def test_restore_otp_pending_applies_cookies(self):

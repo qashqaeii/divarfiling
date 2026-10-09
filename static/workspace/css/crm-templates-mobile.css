@@ -32,7 +32,6 @@
     }
     .crm-tpl-mobile.crm-page-chrome {
         background:
-        background:
             radial-gradient(120% 40% at 50% 0%, color-mix(in srgb, var(--ws-primary) 6%, transparent), transparent 55%),
             color-mix(in srgb, var(--ws-surface-2) 40%, var(--ws-bg, #f8fafc));
     }
@@ -50,9 +49,240 @@
         display: none !important;
     }
 
-    /* ── Mobile header ── */
-    .crm-tpl-mob-header {
+    /* KPI / هدر قدیمی — عنوان در topbar میزکار است */
+    .crm-tpl-mobile .crm-tpl-kpis {
+        display: none !important;
+    }
+    .crm-tpl-mobile .crm-tpl-toolbar--desk,
+    .crm-tpl-mobile .crm-tpl-vars-pro--desk {
+        display: none !important;
+    }
+
+    /* ── Sticky toolbar (الگوی مخاطبین) ── */
+    .crm-tpl-mob-chrome {
         display: block;
+        min-width: 0;
+        max-width: 100%;
+    }
+    .crm-tpl-mob-toolbar-sticky {
+        position: sticky;
+        top: calc(var(--ws-mob-topbar-h, 3rem) + env(safe-area-inset-top, 0px));
+        z-index: 24;
+        padding: 0.35rem 0 0.45rem;
+        margin-bottom: 0.35rem;
+        background: color-mix(in srgb, var(--ws-bg, #f4f6fb) 94%, var(--ws-surface));
+        border-bottom: 1px solid color-mix(in srgb, var(--ws-border) 42%, transparent);
+    }
+    .crm-tpl-mob-toolbar-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto auto auto;
+        align-items: center;
+        gap: 0.35rem;
+        width: 100%;
+        min-width: 0;
+    }
+    .crm-tpl-mob-toolbar-row .crm-tpl-search {
+        grid-column: 1;
+        min-width: 0;
+        height: 2.5rem;
+        padding: 0 0.55rem;
+        border-radius: 12px;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 65%, transparent);
+        background: var(--ws-surface);
+        box-shadow: none;
+    }
+    .crm-tpl-mob-toolbar-row .crm-tpl-search input {
+        min-height: 2.35rem;
+        font-size: max(16px, 0.875rem);
+    }
+    .crm-tpl-mob-toolbar-btn {
+        flex-shrink: 0;
+        width: 2.5rem;
+        height: 2.5rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 65%, transparent);
+        background: var(--ws-surface);
+        color: var(--ws-text-secondary);
+        font-family: inherit;
+        font-size: 0.85rem;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+    }
+    .crm-tpl-mob-toolbar-btn--ghost {
+        list-style: none;
+    }
+    .crm-tpl-mob-toolbar-btn--ghost::-webkit-details-marker {
+        display: none;
+    }
+    .crm-tpl-mob-toolbar-add {
+        width: 2.5rem;
+        height: 2.5rem;
+        flex-shrink: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        border-radius: 12px;
+        background: var(--ws-primary);
+        color: #fff;
+        font-size: 0.95rem;
+        cursor: pointer;
+        box-shadow: 0 4px 14px color-mix(in srgb, var(--ws-primary) 30%, transparent);
+        -webkit-tap-highlight-color: transparent;
+    }
+    .crm-tpl-mob-toolbar-menu {
+        position: relative;
+    }
+    .crm-tpl-mob-toolbar-panel {
+        position: absolute;
+        inset-inline-end: 0;
+        top: calc(100% + 0.35rem);
+        z-index: 30;
+        min-width: 10.5rem;
+        padding: 0.35rem;
+        border-radius: 14px;
+        border: 1px solid color-mix(in srgb, var(--ws-border) 55%, transparent);
+        background: var(--ws-surface);
+        box-shadow: 0 12px 28px rgba(15, 23, 42, 0.12);
+    }
+    .crm-tpl-mob-toolbar-item {
+        display: flex;
+        align-items: center;
+        gap: 0.45rem;
+        width: 100%;
+        min-height: 2.5rem;
+        padding: 0.45rem 0.55rem;
+        border: none;
+        border-radius: 10px;
+        background: transparent;
+        font-family: inherit;
+        font-size: 0.78rem;
+        font-weight: 750;
+        color: var(--ws-text);
+        text-align: start;
+        cursor: pointer;
+    }
+    .crm-tpl-mob-toolbar-item:active {
+        background: var(--ws-primary-soft);
+    }
+    .crm-tpl-mob-summary {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.25rem 0.35rem;
+        margin: 0.35rem 0 0.15rem;
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: var(--ws-text-muted);
+    }
+    .crm-tpl-mob-summary-dot {
+        opacity: 0.45;
+    }
+    .crm-tpl-mob-active-filters {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.25rem 0 0.1rem;
+    }
+    .crm-tpl-mob-active-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        min-height: 1.65rem;
+        padding: 0.12rem 0.45rem;
+        border-radius: 999px;
+        font-size: 0.68rem;
+        font-weight: 750;
+        text-decoration: none;
+        color: var(--ws-primary);
+        background: var(--ws-primary-soft);
+        border: 1px solid color-mix(in srgb, var(--ws-primary) 18%, transparent);
+    }
+    .crm-tpl-mob-active-clear {
+        font-size: 0.68rem;
+        font-weight: 750;
+        color: var(--ws-text-muted);
+        text-decoration: none;
+        padding: 0.15rem 0.25rem;
+    }
+
+    /* Vars bottom sheet */
+    .crm-tpl-mob-vars-sheet {
+        position: fixed;
+        inset: 0;
+        z-index: 180;
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        pointer-events: none;
+    }
+    .crm-tpl-mob-vars-sheet:not([hidden]) {
+        pointer-events: auto;
+    }
+    .crm-tpl-mob-vars-backdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.45);
+    }
+    .crm-tpl-mob-vars-panel {
+        position: relative;
+        z-index: 1;
+        width: 100%;
+        max-width: 32rem;
+        max-height: min(78dvh, 520px);
+        margin: 0 auto;
+        border-radius: 20px 20px 0 0;
+        background: var(--ws-surface);
+        box-shadow: 0 -8px 32px rgba(15, 23, 42, 0.12);
+        display: flex;
+        flex-direction: column;
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    .crm-tpl-mob-vars-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 0.65rem;
+        padding: 0.85rem 0.85rem 0.55rem;
+        border-bottom: 1px solid color-mix(in srgb, var(--ws-border) 45%, transparent);
+    }
+    .crm-tpl-mob-vars-head h2 {
+        margin: 0;
+        font-size: 0.95rem;
+        font-weight: 900;
+    }
+    .crm-tpl-mob-vars-head p {
+        margin: 0.2rem 0 0;
+        font-size: 0.72rem;
+        color: var(--ws-text-muted);
+        line-height: 1.45;
+    }
+    .crm-tpl-mob-vars-close {
+        width: 2.35rem;
+        height: 2.35rem;
+        flex-shrink: 0;
+        border: none;
+        border-radius: 10px;
+        background: var(--ws-surface-2);
+        color: var(--ws-text-secondary);
+        cursor: pointer;
+    }
+    .crm-tpl-mob-vars-body {
+        overflow-y: auto;
+        padding: 0.65rem 0.75rem 0.85rem;
+        -webkit-overflow-scrolling: touch;
+    }
+    body.crm-tpl-vars-sheet-open {
+        overflow: hidden;
+    }
+
+    /* ── Mobile header (legacy — hidden) ── */
+    .crm-tpl-mob-header {
+        display: none !important;
         position: relative;
         overflow: hidden;
         background: var(--ws-surface);
@@ -394,11 +624,11 @@
 
     /* ── Section heads ── */
     .crm-tpl-mobile .crm-tpl-section-v2 {
-        margin-top: 0.2rem;
+        margin-top: 0.35rem;
     }
     .crm-tpl-mobile .crm-tpl-section-v2-head {
-        padding: 0.1rem 0 0.35rem;
-        margin-bottom: 0.25rem;
+        padding: 0.15rem 0 0.4rem;
+        margin-bottom: 0.15rem;
         border-bottom: none;
     }
     .crm-tpl-mobile .crm-tpl-section-v2-title h2 {
@@ -505,45 +735,70 @@
     .crm-tpl-mobile .crm-tpl-phone-bar { display: none; }
     .crm-tpl-mobile .crm-tpl-snippet {
         margin: 0;
-        padding: 0 0.75rem 0.55rem;
-        font-size: 0.84rem;
+        padding: 0 0.65rem 0.5rem;
+        font-size: 0.82rem;
         line-height: 1.55;
         color: var(--ws-text-secondary);
         overflow-wrap: anywhere;
         display: -webkit-box;
-        -webkit-line-clamp: 3;
+        -webkit-line-clamp: 2;
         -webkit-box-orient: vertical;
         overflow: hidden;
     }
 
     .crm-tpl-mobile .crm-tpl-card-v2-foot {
         display: flex;
+        flex-wrap: wrap;
         align-items: center;
         gap: 0.35rem;
-        padding: 0.5rem 0.75rem 0.65rem;
+        padding: 0.55rem 0.65rem 0.65rem;
         border-top: 1px solid color-mix(in srgb, var(--ws-border) 45%, transparent);
-        background: transparent;
+        background: color-mix(in srgb, var(--ws-surface-2) 22%, var(--ws-surface));
+    }
+    .crm-tpl-mobile .crm-tpl-mob-card-actions {
+        display: grid;
+        grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1fr);
+        gap: 0.35rem;
+        width: 100%;
+        min-width: 0;
     }
     .crm-tpl-mobile .crm-tpl-act {
-        min-height: 2.5rem;
-        min-width: 2.5rem;
+        min-height: 2.65rem;
+        min-width: 0;
         border-radius: 11px;
-        font-size: 0.8rem;
-        font-weight: 750;
+        font-size: 0.74rem;
+        font-weight: 800;
+        justify-content: center;
         -webkit-tap-highlight-color: transparent;
     }
     .crm-tpl-mobile .crm-tpl-act--primary {
-        flex: 1 1 auto;
-        max-width: 58%;
-        padding-inline: 0.75rem;
+        max-width: none;
+        padding-inline: 0.45rem;
         background: var(--ws-primary);
         color: #fff;
         border: none;
         box-shadow: none;
     }
+    .crm-tpl-mobile .crm-tpl-act:not(.crm-tpl-act--primary) {
+        border: 1px solid color-mix(in srgb, var(--ws-border) 55%, transparent);
+        background: var(--ws-surface);
+        color: var(--ws-text-secondary);
+    }
     .crm-tpl-mobile .crm-tpl-more {
         position: relative;
         flex-shrink: 0;
+        margin-inline-start: auto;
+    }
+    .crm-tpl-mobile .crm-tpl-more-trigger {
+        width: 2.65rem;
+        min-width: 2.65rem;
+        min-height: 2.65rem;
+    }
+    .crm-tpl-mobile .crm-tpl-desk-card-actions {
+        display: none !important;
+    }
+    .crm-tpl-mobile .crm-tpl-more--mob {
+        display: block;
     }
     .crm-tpl-mobile .crm-tpl-more-trigger {
         list-style: none;
@@ -630,10 +885,61 @@
     .crm-app #drawer-template .crm-tpl-drawer-v2-body textarea {
         font-size: 1rem;
     }
+
+    /* ── Width closure — یک گاتر (.ws-content) برای همه بلوک‌ها ── */
+    .crm-app .crm-tpl-mobile.crm-page-chrome {
+        padding-inline: 0 !important;
+    }
+    .crm-app .crm-tpl-mobile.crm-page-chrome .crm-tpl-kpis {
+        background: transparent !important;
+        border: none !important;
+        border-radius: 0 !important;
+        overflow: visible !important;
+        box-shadow: none !important;
+    }
+    .crm-app .crm-tpl-mobile.crm-page-chrome .crm-tpl-kpi {
+        border-inline-start: none !important;
+        border-top: none !important;
+        background: var(--ws-surface);
+    }
+    .crm-app .crm-tpl-mobile.crm-page-chrome .crm-tpl-kpi-icon {
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+    }
+    .crm-tpl-mobile .crm-shell-body > * {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        margin-inline: 0;
+        box-sizing: border-box;
+    }
+}
+
+@media (max-width: 430px) {
+    .crm-app .crm-tpl-mobile.crm-page-chrome {
+        padding-inline: 0 !important;
+    }
 }
 
 /* Desktop: flatten vars details */
 @media (min-width: 769px) {
+    .crm-tpl-mob-chrome,
+    .crm-tpl-mob-vars-sheet {
+        display: none !important;
+    }
+    .crm-tpl-mobile .crm-tpl-mob-card-actions,
+    .crm-tpl-mobile .crm-tpl-more--mob {
+        display: none !important;
+    }
+    .crm-tpl-mobile .crm-tpl-desk-card-actions {
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+        flex: 1;
+        min-width: 0;
+    }
+
     .crm-tpl-more > summary.crm-tpl-more-trigger {
         display: none;
     }

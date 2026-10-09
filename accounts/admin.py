@@ -7,6 +7,7 @@ from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from .models import (
     AcquisitionAutomationCampaign,
     AcquisitionRun,
+    PhoneDetectorExtractionLine,
     CampaignEnrollment,
     CampaignMessage,
     CampaignStep,
@@ -316,6 +317,22 @@ class AcquisitionAutomationCampaignAdmin(admin.ModelAdmin):
     list_filter = ['is_active', 'city']
     search_fields = ['name', 'city']
     readonly_fields = ['last_run_at', 'created_at']
+
+
+@admin.register(PhoneDetectorExtractionLine)
+class PhoneDetectorExtractionLineAdmin(admin.ModelAdmin):
+    list_display = [
+        'phone',
+        'line_index',
+        'operational_status',
+        'success_extract_count',
+        'error_count',
+        'last_success_at',
+        'last_error_at',
+    ]
+    list_filter = ['operational_status']
+    search_fields = ['phone', 'status_detail', 'last_error_reason']
+    readonly_fields = ['created_at', 'updated_at']
 
 
 @admin.register(AcquisitionRun)

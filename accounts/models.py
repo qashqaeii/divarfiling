@@ -1465,6 +1465,60 @@ class AcquisitionRun(models.Model):
         return f'Run #{self.pk} [{self.status}] {self.district or "—"}'
 
 
+class PhoneDetectorExtractionLine(models.Model):
+    """وضعیت عملیاتی پایدار هر خط استخراج (سشن دیوار) برای اتوماسیون LAC."""
+
+    class OperationalStatus(models.TextChoices):
+        ACTIVE = 'active', 'فعال'
+        RUNNING = 'running', 'در حال استخراج'
+        BLOCKED_CAPTCHA = 'blocked_captcha', 'محدودیت کپچا'
+        COOLDOWN = 'cooldown', 'استراحت'
+        PAUSED = 'paused', 'متوقف توسط مدیر'
+        ERROR = 'error', 'خطای فنی'
+
+    class BlockScope(models.TextChoices):
+        LINE = 'line', 'خط'
+        SHARED_SESSION = 'shared_session', 'نشست مشترک'
+        SHARED_IP = 'shared_ip', 'IP مشترک'
+
+    phone = models.CharField(max_length=20, unique=True, db_index=True)
+    line_index = models.PositiveSmallIntegerField(
+        default=0,
+        help_text='ترتیب نمایش در پنل (۱، ۲، …)',
+    )
+    operational_status = models.CharField(
+        max_length=32,
+        choices=OperationalStatus.choices,
+        default=OperationalStatus.ACTIVE,
+        db_index=True,
+    )
+    block_scope = models.CharField(
+        max_length=32,
+        choices=BlockScope.choices,
+        blank=True,
+        default='',
+    )
+    last_success_at = models.DateTimeField(null=True, blank=True)
+    last_error_at = models.DateTimeField(null=True, blank=True)
+    last_error_reason = models.TextField(blank=True)
+    error_count = models.PositiveIntegerField(default=0)
+    success_extract_count = models.PositiveIntegerField(default=0)
+    last_checked_at = models.DateTimeField(null=True, blank=True)
+    status_detail = models.TextField(blank=True)
+    blocked_until = models.DateTimeField(null=True, blank=True)
+    last_run_id = models.PositiveIntegerField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'خط استخراج phone-detector'
+        verbose_name_plural = 'خطوط استخراج phone-detector'
+        ordering = ['line_index', 'phone']
+
+    def __str__(self):
+        return f'{self.phone} [{self.get_operational_status_display()}]'
+
+
 class ManagementAutomationRule(models.Model):
     """قوانین خودکارسازی دستیار مدیریت — فعال/غیرفعال توسط مدیر."""
 

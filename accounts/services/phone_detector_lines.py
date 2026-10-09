@@ -426,11 +426,33 @@ def list_lines(*, probe: bool = False) -> dict[str, Any]:
         except Exception as exc:
             engine_info = {'probe_error': str(exc)}
 
-    healthy = sum(1 for row in lines if row.get('ok') and not row.get('hip_blocked'))
+    from accounts.services.phone_detector_line_ops import (
+        merge_operational_fields,
+        operational_summary,
+        sync_lines_from_sessions,
+    )
+
+    sync_lines_from_sessions()
+    lines = [merge_operational_fields(row) for row in lines]
+    for row in lines:
+        if not row.get('line_index'):
+            row['line_index'] = 0
+
+    healthy = sum(
+        1
+        for row in lines
+        if row.get('operational_status') in ('active', 'running')
+        and row.get('ok')
+        and not row.get('captcha_blocked')
+        and not row.get('hip_blocked')
+    )
+    schedulable = healthy
     return {
         'ok': True,
         'configured': True,
         'lines': lines,
+        'operational': operational_summary(),
+        'schedulable_count': schedulable,
         'rotate': index.get('rotate', True),
         'active_phone': index.get('active_phone'),
         'sessions_dir': str(root),
@@ -532,4 +554,18 @@ def handle_line_action(action: str, data: dict) -> dict[str, Any]:
         if enabled is None:
             enabled = data.get('rotate')
         return set_line_rotate(enabled=bool(enabled))
+    if action == 'pause':
+        from accounts.services.phone_detector_line_ops import set_line_paused
+
+        set_line_paused(data.get('phone') or '', paused=True)
+        return list_lines(probe=False)
+    if action == 'unpause':
+        from accounts.services.phone_detector_line_ops import set_line_paused
+
+        set_line_paused(data.get('phone') or '', paused=False)
+        return list_lines(probe=False)
+    if action in ('probe_reactivate', 'reactivate'):
+        from accounts.services.phone_detector_line_ops import probe_and_reactivate_line
+
+        return probe_and_reactivate_line(data.get('phone') or '')
     raise PhoneDetectorLineError(f'عملیات نامعتبر: {action}', code='invalid_action')

@@ -864,7 +864,7 @@
                 <p class="adm-lac-kpi-sub" style="margin-top:.75rem">
                     worker systemd: <code>divar-acquisition-worker</code><br>
                     cron: هر ۱۵ دقیقه <code>run_acquisition_automation</code><br>
-                    <strong>بدون Playwright</strong> — در صورت کپچا، استخراج همان run متوقف می‌شود و تا اجرای بعدی صبر می‌کند.
+                    <strong>بدون Playwright</strong> — در صورت کپچا روی یک خط، همان خط از چرخه خارج می‌شود و خطوط سالم ادامه می‌دهند.
                 </p>
             </aside>
         </div>
@@ -904,15 +904,16 @@
                 <table class="adm-lac-table adm-lac-lines-table">
                     <thead>
                         <tr>
-                            <th>شماره خط</th>
-                            <th>وضعیت</th>
+                            <th>خط</th>
+                            <th>وضعیت عملیاتی</th>
+                            <th>آخرین موفق / خطا</th>
                             <th>سشن</th>
                             <th>عملیات</th>
                         </tr>
                     </thead>
                     <tbody id="lac-lines-tbody">
                         <tr>
-                            <td colspan="4">
+                            <td colspan="5">
                                 <div class="adm-lac-empty"><i class="fas fa-spinner fa-spin"></i> در حال بارگذاری خطوط...</div>
                             </td>
                         </tr>
@@ -2515,25 +2516,53 @@
       }
 
       if (!lines.length) {
-        tbody.innerHTML = '<tr><td colspan="4"><div class="adm-lac-empty"><i class="fas fa-mobile-screen"></i> هنوز خطی ثبت نشده — «خط جدید» را بزنید.</div></td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5"><div class="adm-lac-empty"><i class="fas fa-mobile-screen"></i> هنوز خطی ثبت نشده — «خط جدید» را بزنید.</div></td></tr>';
         return;
       }
 
       tbody.innerHTML = lines.map(function (row) {
-        var status = row.status || 'unknown';
-        var label = row.status_label || status;
-        var primary = row.is_active ? '<span class="adm-lac-line-primary">فعال</span>' : '';
+        var opStatus = row.operational_status || row.status || 'unknown';
+        var opLabel = row.operational_status_label || row.status_label || opStatus;
+        var lineTitle = row.line_index
+          ? 'خط ' + pdDigits(row.line_index)
+          : 'خط';
+        var primary = row.is_active ? '<span class="adm-lac-line-primary">انتخاب‌شده</span>' : '';
         var sessionMeta = formatSavedAt(row.saved_at);
         if (row.expires_at) sessionMeta += '<br><span class="adm-lac-kpi-sub">انقضا: ' + formatSavedAt(row.expires_at) + '</span>';
+        var successMeta = row.success_extract_count
+          ? pdDigits(row.success_extract_count) + ' استخراج موفق'
+          : '—';
+        if (row.last_success_at) {
+          successMeta += '<br><span class="adm-lac-kpi-sub">آخرین موفق: ' + formatSavedAt(row.last_success_at) + '</span>';
+        }
+        var errMeta = '';
+        if (row.last_error_at || row.last_error_reason) {
+          errMeta = '<span class="adm-lac-kpi-sub adm-lac-kpi-sub--error">' +
+            (row.last_error_reason || 'خطا') +
+            (row.last_error_at ? ' · ' + formatSavedAt(row.last_error_at) : '') +
+            '</span>';
+        }
         var reloginBtn = row.needs_relogin
           ? '<button type="button" class="adm-lac-btn adm-lac-btn--primary adm-lac-btn--sm lac-line-relogin" data-phone="' + row.phone + '"><i class="fas fa-key"></i> ورود مجدد</button>'
           : '';
+        var pauseBtn = row.admin_paused || opStatus === 'paused'
+          ? '<button type="button" class="adm-lac-btn adm-lac-btn--ghost adm-lac-btn--sm lac-line-unpause" data-phone="' + row.phone + '"><i class="fas fa-play"></i> فعال‌سازی</button>'
+          : '<button type="button" class="adm-lac-btn adm-lac-btn--ghost adm-lac-btn--sm lac-line-pause" data-phone="' + row.phone + '"><i class="fas fa-pause"></i> توقف</button>';
+        var reactivateBtn = (opStatus === 'blocked_captcha' || row.captcha_blocked)
+          ? '<button type="button" class="adm-lac-btn adm-lac-btn--cyan adm-lac-btn--sm lac-line-reactivate" data-phone="' + row.phone + '"><i class="fas fa-shield-check"></i> بررسی و فعال‌سازی</button>'
+          : '';
+        var detailHint = row.status_detail
+          ? '<p class="adm-lac-kpi-sub">' + row.status_detail + '</p>'
+          : '';
         return '<tr>' +
-          '<td><strong dir="ltr">' + row.phone + '</strong>' + primary + '</td>' +
-          '<td><span class="adm-lac-line-status adm-lac-line-status--' + status + '">' + label + '</span></td>' +
+          '<td><strong>' + lineTitle + '</strong><br><span dir="ltr" class="adm-lac-kpi-sub">' + row.phone + '</span>' + primary + detailHint + '</td>' +
+          '<td><span class="adm-lac-line-status adm-lac-line-status--' + opStatus + '">' + opLabel + '</span></td>' +
+          '<td><span class="adm-lac-kpi-sub">' + successMeta + '</span>' + errMeta + '</td>' +
           '<td><span class="adm-lac-kpi-sub">' + sessionMeta + '</span></td>' +
           '<td><div class="adm-lac-lines-actions">' +
+            reactivateBtn +
             reloginBtn +
+            pauseBtn +
             '<button type="button" class="adm-lac-btn adm-lac-btn--ghost adm-lac-btn--sm lac-line-switch" data-phone="' + row.phone + '"><i class="fas fa-check"></i> انتخاب</button>' +
             '<button type="button" class="adm-lac-btn adm-lac-btn--ghost adm-lac-btn--sm lac-line-remove" data-phone="' + row.phone + '"><i class="fas fa-trash"></i> حذف</button>' +
           '</div></td>' +
@@ -2569,6 +2598,45 @@
           openLinesModal('ورود مجدد — ' + btn.getAttribute('data-phone'), btn.getAttribute('data-phone'));
         });
       });
+
+      tbody.querySelectorAll('.lac-line-pause').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var phone = btn.getAttribute('data-phone');
+          if (!phone || linesBusy) return;
+          linesBusy = true;
+          linesPost('pause', { phone: phone })
+            .then(function (data) { renderLines(data); })
+            .catch(function (err) { alert(err.message); })
+            .finally(function () { linesBusy = false; });
+        });
+      });
+
+      tbody.querySelectorAll('.lac-line-unpause').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var phone = btn.getAttribute('data-phone');
+          if (!phone || linesBusy) return;
+          linesBusy = true;
+          linesPost('unpause', { phone: phone })
+            .then(function (data) { renderLines(data); })
+            .catch(function (err) { alert(err.message); })
+            .finally(function () { linesBusy = false; });
+        });
+      });
+
+      tbody.querySelectorAll('.lac-line-reactivate').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var phone = btn.getAttribute('data-phone');
+          if (!phone || linesBusy) return;
+          linesBusy = true;
+          linesPost('probe_reactivate', { phone: phone })
+            .then(function (data) {
+              if (data.message) alert(data.message);
+              renderLines(data);
+            })
+            .catch(function (err) { alert(err.message); })
+            .finally(function () { linesBusy = false; });
+        });
+      });
     }
 
     function loadLines(probe) {
@@ -2577,13 +2645,13 @@
         .then(function (r) { return r.json(); })
         .then(function (data) {
           if (!data.ok && data.configured === false) {
-            tbody.innerHTML = '<tr><td colspan="4"><div class="adm-lac-empty">phone-detector پیکربندی نشده</div></td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5"><div class="adm-lac-empty">phone-detector پیکربندی نشده</div></td></tr>';
             return;
           }
           renderLines(data);
         })
         .catch(function (err) {
-          tbody.innerHTML = '<tr><td colspan="4"><div class="adm-lac-empty adm-lac-kpi-sub--error">' + (err.message || 'خطا') + '</div></td></tr>';
+          tbody.innerHTML = '<tr><td colspan="5"><div class="adm-lac-empty adm-lac-kpi-sub--error">' + (err.message || 'خطا') + '</div></td></tr>';
         });
     }
 

@@ -122,6 +122,15 @@ def schedule_due_campaigns(*, max_jobs: int = 1) -> list[AcquisitionRun]:
     if cache.get(LOCK_KEY):
         return []
 
+    from accounts.services.phone_detector_line_ops import (
+        count_schedulable_lines,
+        operational_summary,
+        sync_lines_from_sessions,
+    )
+
+    sync_lines_from_sessions()
+    lines_summary = operational_summary()
+
     now = timezone.now()
     created: list[AcquisitionRun] = []
 
@@ -134,6 +143,18 @@ def schedule_due_campaigns(*, max_jobs: int = 1) -> list[AcquisitionRun]:
         if len(created) >= max_jobs:
             break
         if campaign.next_run_at and campaign.next_run_at > now:
+            continue
+
+        if lines_summary.get('total_lines') and count_schedulable_lines() == 0:
+            logger.info(
+                'Skipping campaign %s — no schedulable extraction lines (waiting for healthy line)',
+                campaign.pk,
+            )
+            if not campaign.next_run_at or campaign.next_run_at <= now:
+                campaign.next_run_at = now + timedelta(
+                    hours=max(1, int(campaign.interval_hours or 6)),
+                )
+                campaign.save(update_fields=['next_run_at'])
             continue
 
         district = pick_district(campaign)
@@ -294,8 +315,9 @@ def finalize_run_from_worker(
         return {'error': 'run_not_found'}
 
     run.finished_at = timezone.now()
-    run.error_message = error_message or ''
     run.metrics = {**(run.metrics or {}), **(metrics or {})}
+    summary_message = (metrics or {}).get('summary_message') or ''
+    run.error_message = summary_message or error_message or ''
 
     if output_path:
         run.output_path = output_path
@@ -320,19 +342,22 @@ def finalize_run_from_worker(
     run.status = status_map.get(worker_status, AcquisitionRun.Status.FAILED)
     run.save()
 
+    line_outcome = (metrics or {}).get('line_outcome') or {}
+
     if worker_status == 'rate_limited':
-        campaign = AcquisitionAutomationCampaign.objects.filter(pk=run.campaign_id).first()
-        hours = _cooldown_hours()
-        if campaign:
-            hours = max(hours, int(campaign.interval_hours or 6))
-        cooldown = timezone.now() + timedelta(hours=hours)
-        AcquisitionAutomationCampaign.objects.filter(pk=run.campaign_id).update(
-            next_run_at=cooldown,
-        )
+        all_lines_blocked = bool(line_outcome.get('all_lines_blocked'))
+        if all_lines_blocked:
+            campaign = AcquisitionAutomationCampaign.objects.filter(pk=run.campaign_id).first()
+            hours = _cooldown_hours()
+            if campaign:
+                hours = max(hours, int(campaign.interval_hours or 6))
+            cooldown = timezone.now() + timedelta(hours=hours)
+            AcquisitionAutomationCampaign.objects.filter(pk=run.campaign_id).update(
+                next_run_at=cooldown,
+            )
         if not run.error_message:
-            run.error_message = (
-                'محدودیت کپچا/HIP — اجرای بعدی پس از '
-                f'{hours} ساعت.'
+            run.error_message = summary_message or (
+                'تمام خطوط استخراج محدود یا غیرفعال — تا آماده‌شدن خط سالم صبر می‌شود.'
             )
             run.save(update_fields=['error_message'])
 

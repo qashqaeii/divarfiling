@@ -15,6 +15,14 @@
 .sup-filter-actions { display: flex; gap: .5rem; flex-wrap: wrap; }
 
 .sup-list-panel { padding: 0; overflow: hidden; }
+@media (min-width: 769px) {
+    .sup-list-panel {
+        background: var(--ws-surface);
+        border: 1px solid var(--ws-border);
+        border-radius: var(--ws-radius);
+        box-shadow: var(--ws-shadow);
+    }
+}
 .sup-table-wrap { overflow-x: auto; }
 .sup-table { margin: 0; }
 .sup-table th { white-space: nowrap; font-size: .75rem; }
@@ -154,8 +162,7 @@ a.sup-card .sup-card-btn { display: none; }
         border-radius: 16px;
         padding: 0.7rem 0.75rem;
     }
-    .sup-page-mobile .sup-filters,
-    .sup-page-mobile .sup-list-panel {
+    .sup-page-mobile .sup-filters {
         margin: 0 0.7rem;
         border-radius: 18px;
         overflow: hidden;
@@ -239,10 +246,10 @@ a.sup-card .sup-card-btn { display: none; }
         height: 2.45rem;
         border-radius: 13px;
     }
-    .sup-detail-pro.sup-page-mobile .sup-detail-layout,
-    .sup-detail-pro.sup-page-mobile .sup-detail-chat {
-        margin-inline: 0.7rem;
-        border-radius: 16px;
+    .sup-detail-pro.sup-page-mobile .sup-detail-layout {
+        margin-inline: 0;
+        width: 100%;
+        max-width: 100%;
     }
     .sup-detail-pro.sup-page-mobile .sup-detail-sidebar {
         margin: 0 0.7rem;
@@ -276,6 +283,29 @@ a.sup-card .sup-card-btn { display: none; }
 .ws-textarea { min-height: 120px; resize: vertical; }
 .ws-field-hint { font-size: .7rem; color: var(--ws-text-muted); margin-top: .35rem; }
 .ws-field-error { display: block; font-size: .75rem; color: #dc2626; margin-top: .25rem; }
+
+/* Detail — desktop: collapsible block behaves like open hero timeline */
+@media (min-width: 769px) {
+    .sup-detail-mob-secondary,
+    .sup-detail-mob-facts {
+        display: none;
+    }
+    .sup-detail-progress-fold {
+        border: none;
+        background: transparent;
+        margin: 0;
+    }
+    .sup-detail-progress-fold__summary {
+        display: none;
+    }
+    .sup-detail-progress-fold__body {
+        padding: 0;
+        border: none;
+    }
+    .sup-detail-progress-fold .sup-detail-timeline {
+        margin-top: 1.15rem;
+    }
+}
 
 /* Detail / Chat — Premium */
 .sup-detail-pro {
@@ -866,16 +896,11 @@ a.sup-card .sup-card-btn { display: none; }
 @media (max-width: 640px) {
     .sup-detail-hero { padding: 1rem; border-radius: 14px; }
     .sup-detail-hero__avatar { width: 44px; height: 44px; font-size: 1rem; }
-    .sup-detail-hero__actions { width: 100%; }
+    .sup-detail-hero__actions--desk { width: 100%; }
     .sup-detail-act { width: 100%; justify-content: center; }
-    .sup-detail-timeline__label { font-size: .5rem; }
-    .sup-detail-timeline__dot { width: 24px; height: 24px; font-size: .52rem; }
     .sup-bubble { max-width: 96%; }
-    .sup-detail-chat { min-height: 460px; }
-    .sup-detail-chat__body { max-height: 50vh; padding: .85rem; }
     .sup-compose-toolbar { flex-wrap: wrap; }
-    .sup-compose-send { width: 100%; justify-content: center; margin-right: 0; }
-    .sup-detail-sidebar { grid-template-columns: 1fr; }
+    .sup-detail-sidebar--desk { grid-template-columns: 1fr; }
 }
 
 [data-theme="dark"] .sup-bubble--staff .sup-bubble__content {

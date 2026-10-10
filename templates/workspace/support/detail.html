@@ -6,8 +6,8 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/support.css' %}?v=4">
-<link rel="stylesheet" href="{% static 'workspace/css/ws-support-mobile.css' %}?v=1">
-<link rel="stylesheet" href="{% static 'workspace/css/ws-support-mobile-v2.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'workspace/css/ws-support-mobile.css' %}?v=5">
+<link rel="stylesheet" href="{% static 'workspace/css/ws-support-mobile-v2.css' %}?v=5">
 {% endblock %}
 
 {% block content %}
@@ -42,7 +42,7 @@
                         {% endif %}
                     </div>
                     <h1 class="sup-detail-hero__title">{{ ticket.subject }}</h1>
-                    <div class="sup-detail-hero__chips">
+                    <div class="sup-detail-hero__chips sup-detail-hero__chips--desk">
                         <span class="sup-detail-chip">
                             <i class="fas fa-tag" aria-hidden="true"></i>
                             {{ ticket.get_category_display }}
@@ -61,7 +61,7 @@
                 </div>
             </div>
 
-            <div class="sup-detail-hero__actions">
+            <div class="sup-detail-hero__actions sup-detail-hero__actions--desk">
                 {% if ticket.is_closed %}
                 <button type="button" class="sup-detail-act sup-detail-act--primary" data-modal-open="modal-ticket-reopen">
                     <i class="fas fa-rotate-left" aria-hidden="true"></i>
@@ -76,28 +76,44 @@
             </div>
         </div>
 
-        <ol class="sup-detail-timeline" aria-label="پیشرفت تیکت" data-step="{{ ticket.status|sup_status_step }}">
-            <li class="sup-detail-timeline__item{% if ticket.status|sup_status_step >= 1 %} is-done{% endif %}{% if ticket.status == 'open' %} is-current{% endif %}">
-                <span class="sup-detail-timeline__dot"><i class="fas fa-paper-plane" aria-hidden="true"></i></span>
-                <span class="sup-detail-timeline__label">ثبت شد</span>
-            </li>
-            <li class="sup-detail-timeline__item{% if ticket.status|sup_status_step >= 2 %} is-done{% endif %}{% if ticket.status == 'in_review' %} is-current{% endif %}">
-                <span class="sup-detail-timeline__dot"><i class="fas fa-magnifying-glass" aria-hidden="true"></i></span>
-                <span class="sup-detail-timeline__label">در بررسی</span>
-            </li>
-            <li class="sup-detail-timeline__item{% if ticket.status|sup_status_step >= 3 %} is-done{% endif %}{% if ticket.status == 'answered' %} is-current{% endif %}">
-                <span class="sup-detail-timeline__dot"><i class="fas fa-reply" aria-hidden="true"></i></span>
-                <span class="sup-detail-timeline__label">پاسخ داده شد</span>
-            </li>
-            <li class="sup-detail-timeline__item{% if ticket.status|sup_status_step >= 4 %} is-done{% endif %}{% if ticket.status == 'waiting_user' %} is-current{% endif %}">
-                <span class="sup-detail-timeline__dot"><i class="fas fa-hourglass-half" aria-hidden="true"></i></span>
-                <span class="sup-detail-timeline__label">منتظر شما</span>
-            </li>
-            <li class="sup-detail-timeline__item{% if ticket.status == 'closed' %} is-done is-current{% endif %}">
-                <span class="sup-detail-timeline__dot"><i class="fas fa-lock" aria-hidden="true"></i></span>
-                <span class="sup-detail-timeline__label">بسته شده</span>
-            </li>
-        </ol>
+        <details class="sup-detail-progress-fold">
+        <summary class="sup-detail-progress-fold__summary">
+            <span class="sup-detail-progress-fold__label">جزئیات و پیشرفت</span>
+            <span class="sup-detail-progress-fold__status">{{ ticket.get_status_display }}</span>
+        </summary>
+        <div class="sup-detail-progress-fold__body">
+            <ol class="sup-detail-timeline sup-detail-timeline--compact" aria-label="پیشرفت تیکت" data-step="{{ ticket.status|sup_status_step }}">
+                <li class="sup-detail-timeline__item{% if ticket.status|sup_status_step >= 1 %} is-done{% endif %}{% if ticket.status == 'open' %} is-current{% endif %}">
+                    <span class="sup-detail-timeline__dot"><i class="fas fa-paper-plane" aria-hidden="true"></i></span>
+                    <span class="sup-detail-timeline__label">ثبت شد</span>
+                </li>
+                <li class="sup-detail-timeline__item{% if ticket.status|sup_status_step >= 2 %} is-done{% endif %}{% if ticket.status == 'in_review' %} is-current{% endif %}">
+                    <span class="sup-detail-timeline__dot"><i class="fas fa-magnifying-glass" aria-hidden="true"></i></span>
+                    <span class="sup-detail-timeline__label">در بررسی</span>
+                </li>
+                <li class="sup-detail-timeline__item{% if ticket.status|sup_status_step >= 3 %} is-done{% endif %}{% if ticket.status == 'answered' %} is-current{% endif %}">
+                    <span class="sup-detail-timeline__dot"><i class="fas fa-reply" aria-hidden="true"></i></span>
+                    <span class="sup-detail-timeline__label">پاسخ داده شد</span>
+                </li>
+                <li class="sup-detail-timeline__item{% if ticket.status|sup_status_step >= 4 %} is-done{% endif %}{% if ticket.status == 'waiting_user' %} is-current{% endif %}">
+                    <span class="sup-detail-timeline__dot"><i class="fas fa-hourglass-half" aria-hidden="true"></i></span>
+                    <span class="sup-detail-timeline__label">منتظر شما</span>
+                </li>
+                <li class="sup-detail-timeline__item{% if ticket.status == 'closed' %} is-done is-current{% endif %}">
+                    <span class="sup-detail-timeline__dot"><i class="fas fa-lock" aria-hidden="true"></i></span>
+                    <span class="sup-detail-timeline__label">بسته شده</span>
+                </li>
+            </ol>
+            <dl class="sup-detail-mob-facts">
+                <div><dt>دسته</dt><dd>{{ ticket.get_category_display }}</dd></div>
+                <div><dt>ایجاد</dt><dd>{{ ticket.created_at|ws_jalali }}</dd></div>
+                <div><dt>بروزرسانی</dt><dd>{{ ticket.updated_at|ws_jalali }}</dd></div>
+                {% if ticket.closed_at %}
+                <div><dt>بسته شدن</dt><dd>{{ ticket.closed_at|ws_jalali }}</dd></div>
+                {% endif %}
+            </dl>
+        </div>
+        </details>
     </section>
 
     {% if ticket.is_closed %}
@@ -111,7 +127,7 @@
     {% endif %}
 
     <div class="sup-detail-layout">
-        <aside class="sup-detail-sidebar" aria-label="جزئیات تیکت">
+        <aside class="sup-detail-sidebar sup-detail-sidebar--desk" aria-label="جزئیات تیکت">
             <article class="sup-detail-card">
                 <h2 class="sup-detail-card__title"><i class="fas fa-circle-info" aria-hidden="true"></i> اطلاعات تیکت</h2>
                 <dl class="sup-detail-card__list">
@@ -161,11 +177,11 @@
             </article>
         </aside>
 
-        <section class="sup-detail-chat" aria-label="گفتگو با پشتیبانی">
+        <section class="sup-detail-chat sup-detail-chat--thread" aria-label="گفتگو با پشتیبانی">
             <header class="sup-detail-chat__head">
                 <div>
-                    <h2 class="sup-detail-chat__title">گفتگو با پشتیبانی</h2>
-                    <p class="sup-detail-chat__sub">تیم ما در اسرع وقت پاسخ می‌دهد</p>
+                    <h2 class="sup-detail-chat__title">گفتگو</h2>
+                    <p class="sup-detail-chat__sub sup-detail-chat__sub--desk">تیم ما در اسرع وقت پاسخ می‌دهد</p>
                 </div>
                 <span class="sup-detail-chat__live{% if not ticket.is_closed %} is-active{% endif %}">
                     <span class="sup-detail-chat__live-dot" aria-hidden="true"></span>
@@ -253,28 +269,14 @@
         </section>
     </div>
 
-    {# ── Mobile dock ── #}
-    <nav class="sup-detail-dock" aria-label="عملیات تیکت">
-        <a href="{% url 'workspace:support_list' %}" class="sup-detail-dock-btn">
-            <i class="fas fa-list" aria-hidden="true"></i>
-            <span>لیست</span>
-        </a>
+    <div class="sup-detail-mob-secondary" aria-label="عملیات ثانویه">
         {% if ticket.is_closed %}
-        <button type="button" class="sup-detail-dock-btn sup-detail-dock-btn--primary" data-modal-open="modal-ticket-reopen">
-            <i class="fas fa-rotate-left" aria-hidden="true"></i>
-            <span>باز کردن</span>
-        </button>
+        <button type="button" class="sup-detail-text-action" data-modal-open="modal-ticket-reopen">باز کردن مجدد تیکت</button>
         {% else %}
-        <button type="button" class="sup-detail-dock-btn" data-sup-scroll-compose>
-            <i class="fas fa-pen" aria-hidden="true"></i>
-            <span>پاسخ</span>
-        </button>
-        <button type="button" class="sup-detail-dock-btn sup-detail-dock-btn--danger" data-modal-open="modal-ticket-close">
-            <i class="fas fa-lock" aria-hidden="true"></i>
-            <span>بستن</span>
-        </button>
+        <button type="button" class="sup-detail-text-action sup-detail-text-action--muted" data-modal-open="modal-ticket-close">بستن تیکت پس از حل مشکل</button>
         {% endif %}
-    </nav>
+    </div>
+
 </div>
 
 {# ── Close confirm modal ── #}
@@ -329,5 +331,5 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'workspace/js/support-detail.js' %}?v=2"></script>
+<script src="{% static 'workspace/js/support-detail.js' %}?v=4"></script>
 {% endblock %}

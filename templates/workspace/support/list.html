@@ -6,39 +6,70 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/support.css' %}?v=4">
-<link rel="stylesheet" href="{% static 'workspace/css/ws-support-mobile.css' %}?v=1">
-<link rel="stylesheet" href="{% static 'workspace/css/ws-support-mobile-v2.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'workspace/css/ws-support-mobile.css' %}?v=4">
+<link rel="stylesheet" href="{% static 'workspace/css/ws-support-mobile-v2.css' %}?v=4">
 {% endblock %}
 
 {% block content %}
-<div class="mk-page sup-page sup-page-mobile">
+<div class="mk-page sup-page sup-page-mobile{% if search_q or status_filter or priority_filter %} sup-page-mobile--filtered{% endif %}">
 
-    {# ── Mobile HQ header ── #}
+    {# ── Mobile header ── #}
     <header class="sup-mob-header">
         <div class="sup-mob-header-mesh" aria-hidden="true"></div>
         <div class="sup-mob-header-accent" aria-hidden="true"></div>
         <div class="sup-mob-header-inner">
             <div class="sup-mob-header-main">
-                <span class="sup-mob-kicker"><i class="fas fa-headset" aria-hidden="true"></i> مرکز پشتیبانی</span>
-                <h1 class="sup-mob-title">تیکت‌ها</h1>
-                <p class="sup-mob-sub">
-                    <span>{{ stats.total }} تیکت</span>
-                    {% if stats.open %}<span class="sup-mob-sub-chip is-open">{{ stats.open }} باز</span>{% endif %}
-                    {% if stats.waiting_user %}<span class="sup-mob-sub-chip is-wait">{{ stats.waiting_user }} منتظر شما</span>{% endif %}
+                <h1 class="sup-mob-title">پشتیبانی</h1>
+                <p class="sup-mob-sub" aria-live="polite">
+                    {% if status_filter or priority_filter or search_q %}
+                    <span class="sup-mob-sub-plain">نمایش فیلترشده</span>
+                    {% else %}
+                    <span class="sup-mob-sub-plain">{{ stats.total }} تیکت</span>
+                    {% endif %}
                     {% if stats.unread_replies %}<span class="sup-mob-sub-chip is-unread">{{ stats.unread_replies }} پاسخ جدید</span>{% endif %}
+                    {% if stats.waiting_user %}<span class="sup-mob-sub-chip is-wait">{{ stats.waiting_user }} منتظر شما</span>{% endif %}
                 </p>
             </div>
             <div class="sup-mob-header-actions" role="toolbar" aria-label="عملیات پشتیبانی">
-                <button type="button" class="sup-mob-icon-btn" data-modal-open="modal-ticket-filters" title="فیلتر" aria-label="فیلتر تیکت‌ها">
+                <button type="button" class="sup-mob-icon-btn" data-modal-open="modal-ticket-filters" title="فیلتر و جستجو" aria-label="فیلتر و جستجو">
                     <i class="fas fa-sliders" aria-hidden="true"></i>
                     {% if search_q or status_filter or priority_filter %}<span class="sup-mob-icon-dot" aria-hidden="true"></span>{% endif %}
                 </button>
+                {% if tickets %}
                 <button type="button" class="sup-mob-icon-btn sup-mob-icon-btn--primary" data-modal-open="modal-ticket-create" title="تیکت جدید" aria-label="تیکت جدید">
                     <i class="fas fa-plus" aria-hidden="true"></i>
                 </button>
+                {% endif %}
             </div>
         </div>
+        <form method="get" class="sup-mob-search" role="search" aria-label="جستجوی تیکت">
+            <label class="sup-mob-search-field">
+                <i class="fas fa-search" aria-hidden="true"></i>
+                <input type="search" name="q" value="{{ search_q }}" class="sup-mob-search-input" placeholder="عنوان یا شماره تیکت…" autocomplete="off">
+            </label>
+            {% if status_filter %}<input type="hidden" name="status" value="{{ status_filter }}">{% endif %}
+            {% if priority_filter %}<input type="hidden" name="priority" value="{{ priority_filter }}">{% endif %}
+        </form>
     </header>
+
+    <nav class="sup-mob-status" aria-label="فیلتر وضعیت تیکت">
+        <a href="{% url 'workspace:support_list' %}{% if search_q %}?q={{ search_q|urlencode }}{% endif %}" class="sup-mob-status-item{% if not status_filter %} is-active{% endif %}">
+            <span class="sup-mob-status-val">{{ stats.total }}</span>
+            <span class="sup-mob-status-lbl">همه</span>
+        </a>
+        <a href="?status=open{% if search_q %}&q={{ search_q|urlencode }}{% endif %}" class="sup-mob-status-item{% if status_filter == 'open' %} is-active{% endif %}" data-tone="blue">
+            <span class="sup-mob-status-val">{{ stats.open }}</span>
+            <span class="sup-mob-status-lbl">باز</span>
+        </a>
+        <a href="?status=waiting_user{% if search_q %}&q={{ search_q|urlencode }}{% endif %}" class="sup-mob-status-item{% if status_filter == 'waiting_user' %} is-active{% endif %}" data-tone="amber">
+            <span class="sup-mob-status-val">{{ stats.waiting_user }}</span>
+            <span class="sup-mob-status-lbl">منتظر شما</span>
+        </a>
+        <a href="?status=closed{% if search_q %}&q={{ search_q|urlencode }}{% endif %}" class="sup-mob-status-item{% if status_filter == 'closed' %} is-active{% endif %}" data-tone="gray">
+            <span class="sup-mob-status-val">{{ stats.closed }}</span>
+            <span class="sup-mob-status-lbl">بسته</span>
+        </a>
+    </nav>
 
     {# ── Desktop header ── #}
     <header class="mk-hub-head sup-desk-header">
@@ -55,7 +86,7 @@
     </header>
 
     {% if stats.unread_replies %}
-    <div class="mk-notice mk-notice--info mk-notice--inline mk-notice--compact sup-unread-banner">
+    <div class="mk-notice mk-notice--info mk-notice--inline mk-notice--compact sup-unread-banner sup-unread-banner--desk">
         <span class="mk-notice__icon" aria-hidden="true"><i class="fas fa-envelope"></i></span>
         <div class="mk-notice__body">
             <strong class="mk-notice__title">{{ stats.unread_replies }} پاسخ جدید از پشتیبانی دارید</strong>
@@ -63,7 +94,7 @@
     </div>
     {% endif %}
 
-    <section class="mk-hub-metrics sup-metrics" aria-label="خلاصه تیکت‌ها">
+    <section class="mk-hub-metrics sup-metrics sup-metrics--desk" aria-label="خلاصه تیکت‌ها">
         <a href="{% url 'workspace:support_list' %}" class="mk-hub-metric{% if not status_filter and not priority_filter %} is-active{% endif %}" data-tone="purple">
             <span class="mk-hub-metric-icon"><i class="fas fa-ticket" aria-hidden="true"></i></span>
             <span class="mk-hub-metric-body">
@@ -127,7 +158,7 @@
         </form>
     </section>
 
-    <section class="ws-glass-panel sup-list-panel">
+    <section class="sup-list-panel">
         {% if tickets %}
         <div class="sup-table-wrap">
             <table class="ws-table sup-table">
@@ -174,7 +205,7 @@
                 <h2 class="sup-card-title">{{ t.subject }}</h2>
                 <p class="sup-card-meta">
                     <span><i class="fas fa-tag" aria-hidden="true"></i> {{ t.get_category_display }}</span>
-                    <span><i class="fas fa-clock" aria-hidden="true"></i> {{ t.updated_at|ws_jalali }}</span>
+                    <span class="sup-card-meta-time"><i class="fas fa-clock" aria-hidden="true"></i> {{ t.updated_at|ws_jalali }}</span>
                 </p>
                 <span class="sup-card-go" aria-hidden="true"><i class="fas fa-chevron-left"></i></span>
             </a>
@@ -186,29 +217,26 @@
         {% endif %}
 
         {% else %}
-        <div class="ws-empty sup-empty">
-            <div class="ws-empty-icon"><i class="fas fa-headset" aria-hidden="true"></i></div>
+        <div class="ws-empty sup-empty sup-empty--mobile">
+            <div class="sup-empty-visual" aria-hidden="true"><i class="fas fa-headset"></i></div>
             <p class="ws-empty-title">{% if search_q or status_filter or priority_filter %}نتیجه‌ای یافت نشد{% else %}هنوز تیکتی ثبت نکرده‌اید{% endif %}</p>
-            <p class="ws-empty-desc">{% if search_q or status_filter or priority_filter %}فیلترها را تغییر دهید یا پاک کنید.{% else %}اگر سوالی دارید یا مشکلی پیش آمده، اولین درخواست پشتیبانی خود را ثبت کنید.{% endif %}</p>
+            <p class="ws-empty-desc">{% if search_q or status_filter or priority_filter %}فیلترها را تغییر دهید یا پاک کنید.{% else %}سوال یا مشکل خود را بنویسید؛ تیم پشتیبانی در اسرع وقت پاسخ می‌دهد.{% endif %}</p>
             {% if search_q or status_filter or priority_filter %}
-            <a href="{% url 'workspace:support_list' %}" class="ws-btn ws-btn-ghost">پاک کردن فیلتر</a>
+            <a href="{% url 'workspace:support_list' %}" class="ws-btn ws-btn-ghost sup-empty-cta">پاک کردن فیلتر</a>
             {% else %}
-            <button type="button" class="ws-btn ws-btn-primary" data-modal-open="modal-ticket-create">ثبت تیکت جدید</button>
+            <button type="button" class="ws-btn ws-btn-primary sup-empty-cta" data-modal-open="modal-ticket-create">ثبت اولین تیکت</button>
             {% endif %}
         </div>
         {% endif %}
     </section>
 
-    <button type="button" class="sup-fab" data-modal-open="modal-ticket-create" aria-label="تیکت جدید">
-        <i class="fas fa-plus" aria-hidden="true"></i>
-        <span>تیکت جدید</span>
-    </button>
 </div>
 
 {# ── Filter modal (mobile) ── #}
-<div class="ws-modal sup-modal" id="modal-ticket-filters" role="dialog" aria-modal="true" aria-labelledby="sup-filter-modal-title">
+<div class="ws-modal sup-modal sup-filter-modal" id="modal-ticket-filters" role="dialog" aria-modal="true" aria-labelledby="sup-filter-modal-title">
     <div class="ws-modal-overlay" data-modal-close tabindex="-1" aria-hidden="true"></div>
     <div class="ws-modal-panel ws-modal-panel-sm sup-filter-modal-panel">
+        <div class="sup-create-modal-grab" aria-hidden="true"></div>
         <header class="ws-modal-head">
             <div>
                 <h2 id="sup-filter-modal-title" class="ws-modal-title">فیلتر تیکت‌ها</h2>
@@ -216,7 +244,8 @@
             </div>
             <button type="button" class="ws-modal-close" data-modal-close aria-label="بستن"><i class="fas fa-times" aria-hidden="true"></i></button>
         </header>
-        <form method="get" class="ws-modal-body" role="search">
+        <form method="get" class="sup-filter-modal-form" role="search">
+            <div class="ws-modal-body sup-filter-modal-body">
             <div class="ws-field">
                 <label class="ws-label" for="sup-q-m">جستجو</label>
                 <input type="search" id="sup-q-m" name="q" value="{{ search_q }}" class="ws-input" placeholder="عنوان یا شماره تیکت…">
@@ -239,7 +268,8 @@
                     {% endfor %}
                 </select>
             </div>
-            <div class="ws-modal-foot">
+            </div>
+            <div class="ws-modal-foot sup-filter-modal-foot">
                 {% if search_q or status_filter or priority_filter %}
                 <a href="{% url 'workspace:support_list' %}" class="ws-btn ws-btn-ghost">پاک کردن</a>
                 {% else %}
@@ -255,5 +285,5 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'workspace/js/support-list.js' %}?v=1"></script>
+<script src="{% static 'workspace/js/support-list.js' %}?v=2"></script>
 {% endblock %}

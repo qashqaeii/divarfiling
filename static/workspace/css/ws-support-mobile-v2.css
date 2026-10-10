@@ -1,155 +1,108 @@
-/* ═══════════════════════════════════════════════════════════
-   Support Tickets — Mobile Pass 15 (#263–268)
-   Scoped: max-width 767px only — Desktop unchanged
-   Loads after ws-support-mobile.css
-   ═══════════════════════════════════════════════════════════ */
+/* Support mobile — final layout pass (loads after ws-support-mobile.css) */
 
 @media (max-width: 767px) {
-    /* List (#263) */
     .sup-page-mobile.mk-page {
-        padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
+        padding-bottom: calc(3.85rem + env(safe-area-inset-bottom, 0px));
         overflow-x: clip;
     }
 
-    .sup-page-mobile .sup-mob-header {
-        border-radius: 0 0 20px 20px;
+    .sup-page-mobile .sup-mob-status-item {
+        min-height: 3.35rem;
+        border-radius: 13px;
     }
 
-    .sup-page-mobile .sup-mob-header-inner {
-        padding: 0.8rem 0.75rem 0.7rem;
+    .sup-page-mobile .sup-mob-status-val {
+        font-size: 1.02rem;
+        font-weight: 850;
     }
 
-    .sup-page-mobile .sup-mob-title {
-        font-size: 1.18rem;
-        line-height: 1.28;
+    .sup-page-mobile .sup-mob-status-lbl {
+        font-size: 0.64rem;
+        font-weight: 750;
     }
 
-    .sup-page-mobile .sup-filter-chips {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: none;
-        flex-wrap: nowrap;
-        padding-bottom: 0.15rem;
+    .sup-page-mobile .sup-list-panel {
+        margin: 0;
+        padding: 0 0.75rem;
+        background: transparent;
+        border: none;
+        border-radius: 0;
+        box-shadow: none;
+        overflow: visible;
     }
 
-    .sup-page-mobile .sup-filter-chips::-webkit-scrollbar {
-        display: none;
-    }
-
-    .sup-page-mobile .sup-filter-chip {
-        flex: 0 0 auto;
-        min-height: 2.5rem;
-        white-space: nowrap;
+    .sup-page-mobile .sup-cards {
+        display: flex;
+        flex-direction: column;
+        padding: 0;
+        gap: 0.5rem;
     }
 
     .sup-page-mobile .sup-card {
         border-radius: 14px;
-        padding: 0.85rem 0.9rem 2.5rem;
-        min-height: 3.25rem;
+        padding: 0.8rem 2.35rem 0.8rem 0.85rem;
+        min-height: 0;
+        box-shadow: 0 1px 6px rgba(15, 23, 42, 0.04);
     }
 
-    .sup-page-mobile .sup-fab {
-        bottom: calc(5.75rem + env(safe-area-inset-bottom, 0px));
-        min-width: 3.25rem;
-        min-height: 3.25rem;
+    .sup-page-mobile .sup-card-title {
+        font-size: 0.92rem;
+        font-weight: 800;
+        line-height: 1.35;
+        margin-bottom: 0.35rem;
     }
 
-    /* Create (#264) */
-    .sup-page-mobile .sup-create-form {
-        gap: 0.65rem;
+    .sup-page-mobile .sup-card-head {
+        margin-bottom: 0.35rem;
     }
 
-    .sup-page-mobile .sup-create-form .ws-input,
-    .sup-page-mobile .sup-create-form .ws-select,
-    .sup-page-mobile .sup-create-form textarea {
-        min-height: 2.75rem;
-        font-size: 1rem;
+    .sup-page-mobile .sup-card-meta {
+        font-size: 0.78rem;
     }
 
-    .sup-page-mobile .sup-create-submit {
-        width: 100%;
-        min-height: 2.85rem;
-        position: sticky;
-        bottom: calc(0.65rem + env(safe-area-inset-bottom, 0px));
-        z-index: 15;
+    .sup-page-mobile .sup-card-head .sup-badge,
+    .sup-page-mobile .sup-card-head .sup-priority {
+        font-size: 0.7rem;
+        padding: 0.2rem 0.5rem;
     }
 
-    .sup-attach-drop {
-        min-height: 3.25rem;
+    .sup-page-mobile .sup-ticket-num {
+        font-size: 0.72rem;
     }
 
-    /* Quick create modal (#265) */
-    #modal-sup-create .ws-modal-panel {
-        width: 100%;
-        max-width: 100%;
-        max-height: 92dvh;
-        border-radius: 18px 18px 0 0;
-        margin-top: auto;
+    .sup-page-mobile .sup-empty {
+        padding: 1.25rem 0.25rem 0.5rem;
     }
 
-    #modal-sup-create .ws-modal-body {
-        max-height: calc(92dvh - 10rem);
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
+    #modal-ticket-create.is-open .ws-modal-panel,
+    #modal-ticket-filters.is-open .ws-modal-panel {
+        max-height: min(94dvh, 920px);
     }
 
-    /* Filter modal (#266) */
-    #modal-ticket-filters .ws-modal-panel {
+    #modal-ticket-close.is-open .ws-modal-panel,
+    #modal-ticket-reopen.is-open .ws-modal-panel {
         width: 100%;
         max-width: 100%;
-        max-height: 88dvh;
-        border-radius: 18px 18px 0 0;
-        margin-top: auto;
+        margin: 0;
+        border-radius: 20px 20px 0 0;
     }
 
-    /* Detail (#267) */
-    .sup-detail-pro .sup-detail-dock {
-        position: fixed;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        z-index: 30;
-        padding: 0.6rem 0.75rem calc(0.6rem + env(safe-area-inset-bottom, 0px));
-        background: color-mix(in srgb, var(--ws-surface, #fff) 94%, #f8fafc);
-        border-top: 1px solid var(--ws-border, #e2e8f0);
-        box-shadow: 0 -8px 24px rgba(15, 23, 42, 0.08);
-    }
-
-    .sup-detail-pro .sup-detail-dock .ws-btn,
-    .sup-detail-pro .sup-detail-dock .crm-btn {
-        flex: 1;
-        min-height: 2.85rem;
-    }
-
-    .sup-detail-pro .sup-thread {
-        padding-bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
-    }
-
-    .sup-detail-pro .sup-reply-bar textarea {
-        min-height: 2.75rem;
-        font-size: 1rem;
-    }
-
-    .sup-detail-pro .sup-reply-bar .ws-btn {
-        min-height: 2.75rem;
-        min-width: 2.75rem;
-    }
-
-    /* Close/reopen modals (#268) */
-    #modal-ticket-close .ws-modal-panel,
-    #modal-ticket-reopen .ws-modal-panel {
-        width: 100%;
-        max-width: calc(100% - 1.5rem);
-        border-radius: 16px;
-    }
-
-    .sup-confirm-modal-foot {
+    .sup-confirm-modal-panel .ws-modal-foot {
         flex-direction: column-reverse;
         gap: 0.45rem;
     }
 
-    .sup-confirm-modal-foot .ws-btn {
+    .sup-confirm-modal-panel .ws-modal-foot .ws-btn {
         width: 100%;
         min-height: 2.85rem;
+    }
+
+}
+
+@media (min-width: 768px) {
+    .sup-mob-status,
+    .sup-mob-search,
+    .sup-empty-visual {
+        display: none !important;
     }
 }

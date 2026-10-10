@@ -39,17 +39,4 @@
             }
         });
     }
-
-    document.querySelectorAll('[data-sup-scroll-compose]').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            var compose = document.querySelector('.sup-detail-compose');
-            if (!compose) return;
-            compose.scrollIntoView({ behavior: 'smooth', block: 'end' });
-            if (textarea) {
-                setTimeout(function () {
-                    textarea.focus({ preventScroll: true });
-                }, 280);
-            }
-        });
-    });
 })();

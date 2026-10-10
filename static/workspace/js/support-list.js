@@ -33,9 +33,25 @@
         );
     }
 
-    // Shrink body textarea rows in modal for mobile sheet feel
     var modalBody = document.querySelector('#modal-ticket-create textarea');
     if (modalBody && window.matchMedia('(max-width: 768px)').matches) {
-        modalBody.setAttribute('rows', '5');
+        modalBody.setAttribute('rows', '4');
+    }
+
+    var mobSearch = document.querySelector('.sup-mob-search');
+    if (mobSearch) {
+        var searchInput = mobSearch.querySelector('.sup-mob-search-input');
+        var debounceTimer;
+        if (searchInput) {
+            searchInput.addEventListener('input', function () {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(function () {
+                    var len = searchInput.value.trim().length;
+                    if (len === 0 || len >= 2) {
+                        mobSearch.submit();
+                    }
+                }, 450);
+            });
+        }
     }
 })();

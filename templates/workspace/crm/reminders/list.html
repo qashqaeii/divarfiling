@@ -7,39 +7,66 @@
 {% block crm_desc %}{% endblock %}
 {% block crm_actions %}{% endblock %}
 {% block crm_search %}{% endblock %}
+{% block status_bar %}{% endblock %}
 
 {% block crm_extra_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/crm-reminders-mobile.css' %}?v=2">
-<link rel="stylesheet" href="{% static 'workspace/css/crm-mobile-v2-deals.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-reminders-mobile.css' %}?v=7">
 {% endblock %}
 
 {% block crm_content %}
 <div class="crm-shell-page crm-reminders-pro crm-reminders-pro-v2 crm-reminders-mobile crm-page-chrome mk-filing-datasets">
 
-    <header class="crm-rm-mob-header">
-        <div class="crm-rm-mob-header-mesh" aria-hidden="true"></div>
-        <div class="crm-rm-mob-header-accent" aria-hidden="true"></div>
-        <div class="crm-rm-mob-header-inner">
-            <div class="crm-rm-mob-header-main">
-                <span class="crm-rm-mob-kicker"><i class="fas fa-bell" aria-hidden="true"></i> پیگیری هوشمند</span>
-                <h1 class="crm-rm-mob-title">یادآورها</h1>
-                <p class="crm-rm-mob-sub">
-                    <span data-stat="active">{{ stats.active }} فعال</span>
-                    {% if stats.overdue %}<span class="crm-rm-mob-sub-chip is-overdue" data-stat-wrap="overdue">{{ stats.overdue }} معوق</span>{% endif %}
-                    {% if stats.today %}<span class="crm-rm-mob-sub-chip is-today" data-stat-wrap="today">{{ stats.today }} امروز</span>{% endif %}
-                </p>
+    <div class="crm-rm-mob-chrome" aria-label="یادآورها — موبایل">
+        <div class="crm-rm-mob-toolbar-sticky">
+            <div class="crm-rm-mob-toolbar-panel">
+            <div class="crm-rm-mob-toolbar-row" role="toolbar" aria-label="عملیات یادآورها">
+                <div class="crm-rm-mob-stats" aria-live="polite">
+                    {% if stats.active %}
+                    <span class="crm-rm-mob-stat-pill crm-rm-mob-stat-pill--active"><strong data-stat="active">{{ stats.active }}</strong> فعال</span>
+                    {% if stats.overdue %}
+                    <span class="crm-rm-mob-stat-pill crm-rm-mob-stat-pill--warn" data-stat-wrap="overdue">معوق <strong data-stat="overdue">{{ stats.overdue }}</strong></span>
+                    {% endif %}
+                    {% if stats.today %}
+                    <span class="crm-rm-mob-stat-pill crm-rm-mob-stat-pill--today">امروز <strong data-stat="today">{{ stats.today }}</strong></span>
+                    {% endif %}
+                    {% else %}
+                    <span class="crm-rm-mob-stat-pill crm-rm-mob-stat-pill--muted">بدون یادآور فعال</span>
+                    {% endif %}
+                </div>
+                <div class="crm-rm-mob-toolbar-actions">
+                    <details class="crm-rm-mob-more-menu">
+                        <summary class="crm-rm-mob-toolbar-btn crm-rm-mob-toolbar-btn--ghost" aria-label="منوی بیشتر">
+                            <i class="fas fa-ellipsis-vertical" aria-hidden="true"></i>
+                        </summary>
+                        <div class="crm-rm-mob-more-panel" role="menu">
+                            <button type="button" class="crm-rm-mob-more-item" role="menuitem" data-modal-open="modal-crm-reminders-help">
+                                <i class="fas fa-lightbulb" aria-hidden="true"></i><span>راهنما</span>
+                            </button>
+                            <a href="{% url 'workspace:crm_today' %}" class="crm-rm-mob-more-item" role="menuitem">
+                                <i class="fas fa-list-check" aria-hidden="true"></i><span>کارهای امروز</span>
+                            </a>
+                            <a href="{% url 'workspace:crm_calendar' %}" class="crm-rm-mob-more-item" role="menuitem">
+                                <i class="fas fa-calendar-days" aria-hidden="true"></i><span>تقویم</span>
+                            </a>
+                        </div>
+                    </details>
+                    <button type="button" class="crm-rm-mob-toolbar-add" data-drawer-open="drawer-reminder" title="یادآور جدید" aria-label="یادآور جدید">
+                        <i class="fas fa-plus" aria-hidden="true"></i>
+                    </button>
+                </div>
             </div>
-            <div class="crm-rm-mob-header-actions" role="toolbar" aria-label="عملیات یادآورها">
-                {% include 'workspace/crm/includes/help/crm_help_mob_btn.html' with help_modal_id='modal-crm-reminders-help' help_title='راهنمای یادآورها' help_mob_class='crm-rm-mob-icon-btn' %}
-                <a href="{% url 'workspace:crm_today' %}" class="crm-rm-mob-icon-btn" title="کارهای امروز" aria-label="کارهای امروز">
-                    <i class="fas fa-list-check" aria-hidden="true"></i>
+            <nav class="crm-rm-mob-tabs" role="tablist" aria-label="فیلتر یادآورها">
+                <a href="?show=active" class="crm-rm-mob-tab{% if show == 'active' %} is-active{% endif %}" role="tab" {% if show == 'active' %}aria-selected="true"{% endif %}>
+                    فعال{% if stats.active %}<em class="crm-rm-seg-count" data-stat="active">{{ stats.active }}</em>{% endif %}
                 </a>
-                <button type="button" class="crm-rm-mob-icon-btn crm-rm-mob-icon-btn--primary" data-drawer-open="drawer-reminder" title="یادآور جدید" aria-label="یادآور جدید">
-                    <i class="fas fa-plus" aria-hidden="true"></i>
-                </button>
+                <a href="?show=done" class="crm-rm-mob-tab{% if show == 'done' %} is-active{% endif %}" role="tab" {% if show == 'done' %}aria-selected="true"{% endif %}>
+                    انجام‌شده{% if stats.done %}<em class="crm-rm-seg-count" data-stat="done">{{ stats.done }}</em>{% endif %}
+                </a>
+                <a href="?show=all" class="crm-rm-mob-tab{% if show == 'all' %} is-active{% endif %}" role="tab" {% if show == 'all' %}aria-selected="true"{% endif %}>همه</a>
+            </nav>
             </div>
         </div>
-    </header>
+    </div>
 
     <header class="crm-dash-bar crm-rm-desk-header">
         <div class="crm-dash-bar-main">
@@ -54,7 +81,7 @@
         </div>
     </header>
 
-    <section class="crm-rm-kpis" aria-label="آمار یادآورها">
+    <section class="crm-rm-kpis crm-rm-desk-kpis" aria-label="آمار یادآورها">
         <a href="?show=active" class="crm-rm-kpi crm-rm-kpi--active{% if show == 'active' %} is-active{% endif %}">
             <span class="crm-rm-kpi-glow" aria-hidden="true"></span>
             <span class="crm-rm-kpi-icon" aria-hidden="true"><i class="fas fa-bell"></i></span>
@@ -90,7 +117,7 @@
     </section>
 
     <div class="crm-shell-body">
-        <nav class="crm-rm-segment" role="tablist" aria-label="فیلتر یادآورها">
+        <nav class="crm-rm-segment crm-rm-desk-segment" role="tablist" aria-label="فیلتر یادآورها">
             <a href="?show=active" class="crm-rm-seg-btn {% if show == 'active' %}is-active{% endif %}" role="tab" {% if show == 'active' %}aria-selected="true"{% endif %}>
                 <i class="fas fa-bolt" aria-hidden="true"></i>
                 <span>فعال</span>
@@ -107,15 +134,15 @@
             </a>
         </nav>
 
-        <div class="crm-rm-result-bar">
+        <div class="crm-rm-result-bar crm-rm-desk-meta">
             <span class="crm-rm-result-count" data-stat="total">{{ page_obj.paginator.count }} یادآور</span>
             {% if show == 'active' and stats.overdue %}
-            <span class="crm-rm-result-hint" data-stat-wrap="overdue"><i class="fas fa-circle" aria-hidden="true"></i> {{ stats.overdue }} مورد نیاز به پیگیری فوری</span>
+            <span class="crm-rm-result-hint crm-rm-desk-meta-hint" data-stat-wrap="overdue"><i class="fas fa-circle" aria-hidden="true"></i> {{ stats.overdue }} مورد نیاز به پیگیری فوری</span>
             {% endif %}
         </div>
 
         {% if show == 'active' and reminders %}
-        <div class="crm-rm-tip" role="note">
+        <div class="crm-rm-tip crm-rm-desk-tip" role="note">
             <span class="crm-rm-tip-icon" aria-hidden="true"><i class="fas fa-circle-check"></i></span>
             <span class="crm-rm-tip-text">با دکمهٔ سبز <strong>انجام شد</strong> یادآور را ببندید — بعداً از تب «انجام‌شده» قابل بازگردانی است.</span>
         </div>
@@ -151,7 +178,7 @@
 
     </div>
 
-    <button type="button" class="crm-rm-fab" data-drawer-open="drawer-reminder" aria-label="یادآور جدید">
+    <button type="button" class="crm-rm-fab crm-rm-desk-fab" data-drawer-open="drawer-reminder" aria-label="یادآور جدید">
         <i class="fas fa-plus" aria-hidden="true"></i>
         <span>یادآور</span>
     </button>
@@ -160,12 +187,12 @@
 {% endblock %}
 
 {% block crm_drawers %}
-<aside class="crm-drawer" id="drawer-reminder" {% if open_drawer == 'reminder' %}data-open="1"{% endif %}>
+<aside class="crm-drawer crm-mob-sheet crm-mob-sheet--form" id="drawer-reminder" {% if open_drawer == 'reminder' %}data-open="1"{% endif %}>
     <div class="crm-drawer-overlay" data-drawer-close></div>
     <div class="crm-drawer-panel">
         <div class="crm-drawer-head">
-            <div><h2>یادآور جدید</h2><p>پیگیری و یادآوری هوشمند</p></div>
-            <button type="button" class="crm-drawer-close" data-drawer-close><i class="fas fa-times" aria-hidden="true"></i></button>
+            <div><h2>یادآور جدید</h2><p>پیگیری و یادآوری</p></div>
+            <button type="button" class="crm-drawer-close" data-drawer-close aria-label="بستن"><i class="fas fa-times" aria-hidden="true"></i></button>
         </div>
         <form method="post" class="crm-drawer-form">
             <div class="crm-drawer-body">
@@ -206,5 +233,5 @@
 {% endblock %}
 
 {% block crm_js %}
-<script src="{% static 'workspace/js/crm-reminders-list.js' %}?v=1"></script>
+<script src="{% static 'workspace/js/crm-reminders-list.js' %}?v=3"></script>
 {% endblock %}

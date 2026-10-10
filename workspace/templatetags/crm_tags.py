@@ -465,6 +465,37 @@ def crm_reminder_rel_label(reminder):
 
 
 @register.filter
+def crm_reminder_show_note(reminder):
+    """یادداشت تکراری با عنوان یا چیپ مخاطب را در لیست نشان نده."""
+    note = (getattr(reminder, 'note', None) or '').strip()
+    if not note:
+        return False
+    title = (getattr(reminder, 'title', None) or '').strip()
+    if note == title:
+        return False
+    customer = getattr(reminder, 'customer', None)
+    name = getattr(customer, 'name', None) if customer else None
+    if name and name in note and 'یادآور' in note and len(note) <= len(name) + 24:
+        return False
+    return True
+
+
+@register.filter
+def crm_reminder_overdue_stale(reminder):
+    """معوقی‌های بسیار دیرکرد — تاکید بصری بیشتر در موبایل."""
+    from django.utils import timezone
+
+    if getattr(reminder, 'is_done', False):
+        return False
+    due_at = getattr(reminder, 'due_at', None)
+    if not due_at or due_at >= timezone.now():
+        return False
+    due = timezone.localtime(due_at).date()
+    local_now = timezone.localtime(timezone.now()).date()
+    return (local_now - due).days >= 14
+
+
+@register.filter
 def crm_property_type_icon(property_type):
     icons = {
         'آپارتمان': 'fa-building',

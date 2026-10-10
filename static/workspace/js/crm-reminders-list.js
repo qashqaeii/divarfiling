@@ -35,9 +35,7 @@
 
     function updateStat(key, value) {
         document.querySelectorAll('[data-stat="' + key + '"]').forEach(function (el) {
-            if (key === 'active' && el.closest('.crm-rm-mob-sub')) {
-                el.textContent = value + ' فعال';
-            } else if (key === 'total') {
+            if (key === 'total') {
                 el.textContent = value + ' یادآور';
             } else {
                 el.textContent = String(value);
@@ -48,11 +46,15 @@
             if (key === 'overdue') {
                 if (value > 0) {
                     el.hidden = false;
-                    el.innerHTML = '<i class="fas fa-circle" aria-hidden="true"></i> ' + value + ' مورد نیاز به پیگیری فوری';
+                    if (el.classList.contains('crm-rm-mob-stat-pill--warn')) {
+                        el.innerHTML = 'معوق <strong data-stat="overdue">' + value + '</strong>';
+                    } else {
+                        el.innerHTML = '<i class="fas fa-circle" aria-hidden="true"></i> ' + value + ' مورد نیاز به پیگیری فوری';
+                    }
                 } else {
                     el.hidden = true;
                 }
-            } else if (key === 'today') {
+            } else if (key === 'today' && el.hasAttribute('data-stat-wrap')) {
                 if (value > 0) {
                     el.hidden = false;
                     el.textContent = value + ' امروز';
@@ -110,6 +112,7 @@
 
     function updateToggleButton(btn, isDone) {
         btn.classList.toggle('is-done', isDone);
+        btn.classList.toggle('is-pending', !isDone);
         btn.setAttribute('aria-label', isDone ? 'بازگردانی یادآور' : 'علامت‌گذاری به‌عنوان انجام‌شده');
         btn.title = isDone ? 'بازگردانی' : 'انجام شد';
         var icon = btn.querySelector('.crm-rm-complete-icon i');

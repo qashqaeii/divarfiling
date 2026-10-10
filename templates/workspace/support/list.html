@@ -6,8 +6,8 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/support.css' %}?v=4">
-<link rel="stylesheet" href="{% static 'workspace/css/ws-support-mobile.css' %}?v=4">
-<link rel="stylesheet" href="{% static 'workspace/css/ws-support-mobile-v2.css' %}?v=4">
+<link rel="stylesheet" href="{% static 'workspace/css/ws-support-mobile.css' %}?v=9">
+<link rel="stylesheet" href="{% static 'workspace/css/ws-support-mobile-v2.css' %}?v=9">
 {% endblock %}
 
 {% block content %}
@@ -53,22 +53,28 @@
     </header>
 
     <nav class="sup-mob-status" aria-label="فیلتر وضعیت تیکت">
-        <a href="{% url 'workspace:support_list' %}{% if search_q %}?q={{ search_q|urlencode }}{% endif %}" class="sup-mob-status-item{% if not status_filter %} is-active{% endif %}">
-            <span class="sup-mob-status-val">{{ stats.total }}</span>
-            <span class="sup-mob-status-lbl">همه</span>
-        </a>
-        <a href="?status=open{% if search_q %}&q={{ search_q|urlencode }}{% endif %}" class="sup-mob-status-item{% if status_filter == 'open' %} is-active{% endif %}" data-tone="blue">
-            <span class="sup-mob-status-val">{{ stats.open }}</span>
-            <span class="sup-mob-status-lbl">باز</span>
-        </a>
-        <a href="?status=waiting_user{% if search_q %}&q={{ search_q|urlencode }}{% endif %}" class="sup-mob-status-item{% if status_filter == 'waiting_user' %} is-active{% endif %}" data-tone="amber">
-            <span class="sup-mob-status-val">{{ stats.waiting_user }}</span>
-            <span class="sup-mob-status-lbl">منتظر شما</span>
-        </a>
-        <a href="?status=closed{% if search_q %}&q={{ search_q|urlencode }}{% endif %}" class="sup-mob-status-item{% if status_filter == 'closed' %} is-active{% endif %}" data-tone="gray">
-            <span class="sup-mob-status-val">{{ stats.closed }}</span>
-            <span class="sup-mob-status-lbl">بسته</span>
-        </a>
+        <div class="sup-mob-status-track">
+            <a href="{% url 'workspace:support_list' %}{% if search_q %}?q={{ search_q|urlencode }}{% endif %}" class="sup-mob-status-item{% if not status_filter %} is-active{% endif %}" data-tone="purple">
+                <span class="sup-mob-status-icon" aria-hidden="true"><i class="fas fa-layer-group"></i></span>
+                <span class="sup-mob-status-val">{{ stats.total }}</span>
+                <span class="sup-mob-status-lbl">همه</span>
+            </a>
+            <a href="?status=open{% if search_q %}&q={{ search_q|urlencode }}{% endif %}" class="sup-mob-status-item{% if status_filter == 'open' %} is-active{% endif %}" data-tone="blue">
+                <span class="sup-mob-status-icon" aria-hidden="true"><i class="fas fa-folder-open"></i></span>
+                <span class="sup-mob-status-val">{{ stats.open }}</span>
+                <span class="sup-mob-status-lbl">باز</span>
+            </a>
+            <a href="?status=waiting_user{% if search_q %}&q={{ search_q|urlencode }}{% endif %}" class="sup-mob-status-item{% if status_filter == 'waiting_user' %} is-active{% endif %}" data-tone="amber">
+                <span class="sup-mob-status-icon" aria-hidden="true"><i class="fas fa-hourglass-half"></i></span>
+                <span class="sup-mob-status-val">{{ stats.waiting_user }}</span>
+                <span class="sup-mob-status-lbl">منتظر شما</span>
+            </a>
+            <a href="?status=closed{% if search_q %}&q={{ search_q|urlencode }}{% endif %}" class="sup-mob-status-item{% if status_filter == 'closed' %} is-active{% endif %}" data-tone="gray">
+                <span class="sup-mob-status-icon" aria-hidden="true"><i class="fas fa-circle-check"></i></span>
+                <span class="sup-mob-status-val">{{ stats.closed }}</span>
+                <span class="sup-mob-status-lbl">بسته</span>
+            </a>
+        </div>
     </nav>
 
     {# ── Desktop header ── #}
@@ -197,16 +203,26 @@
         <div class="sup-cards">
             {% for t in tickets %}
             <a href="{% url 'workspace:support_detail' t.id %}" class="sup-card{% if t.user_has_unread %} sup-card--unread{% endif %}">
-                <header class="sup-card-head">
-                    <code class="sup-ticket-num">{{ t.ticket_number }}</code>
-                    {% if t.user_has_unread %}<span class="sup-card-pulse">جدید</span>{% endif %}
-                    {% sup_ticket_badges t %}
-                </header>
-                <h2 class="sup-card-title">{{ t.subject }}</h2>
-                <p class="sup-card-meta">
-                    <span><i class="fas fa-tag" aria-hidden="true"></i> {{ t.get_category_display }}</span>
-                    <span class="sup-card-meta-time"><i class="fas fa-clock" aria-hidden="true"></i> {{ t.updated_at|ws_jalali }}</span>
-                </p>
+                <span class="sup-card-accent" aria-hidden="true"></span>
+                <div class="sup-card-body">
+                    <div class="sup-card-row-top">
+                        <span class="sup-card-icon" aria-hidden="true">
+                            <i class="fas {{ t.category|sup_category_icon }}"></i>
+                        </span>
+                        <div class="sup-card-idline">
+                            <code class="sup-ticket-num">{{ t.ticket_number }}</code>
+                            <time class="sup-card-time" datetime="{{ t.updated_at|date:'c' }}">{{ t.updated_at|ws_jalali }}</time>
+                        </div>
+                        {% if t.user_has_unread %}
+                        <span class="sup-card-unread" title="پاسخ جدید">جدید</span>
+                        {% endif %}
+                    </div>
+                    <h2 class="sup-card-title">{{ t.subject }}</h2>
+                    <div class="sup-card-row-foot">
+                        <div class="sup-card-badges">{% sup_ticket_badges t %}</div>
+                        <span class="sup-card-cat">{{ t.get_category_display }}</span>
+                    </div>
+                </div>
                 <span class="sup-card-go" aria-hidden="true"><i class="fas fa-chevron-left"></i></span>
             </a>
             {% endfor %}

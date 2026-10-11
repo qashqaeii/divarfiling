@@ -10,7 +10,8 @@
 <link rel="stylesheet" href="{% static 'css/mizkar-home.css' %}?v=93">
 <link rel="stylesheet" href="{% static 'css/home-hero-mobile.css' %}?v=17">
 <link rel="stylesheet" href="{% static 'css/home-v2.css' %}?v=34">
-<link rel="stylesheet" href="{% static 'css/home-mobile.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'css/home-intel-theme.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'css/home-mobile.css' %}?v=5">
 <link rel="stylesheet" href="{% static 'css/mk-intro-video-showcase.css' %}?v=3">
 <link rel="stylesheet" href="{% static 'css/mizkar-video-player.css' %}?v=2">
 {% endblock %}
@@ -201,9 +202,15 @@
 
 {% include 'shop/includes/home_intro_video.html' %}
 
+{% include 'shop/includes/home_scrollytelling.html' %}
+
 {% include 'shop/includes/home_intelligence.html' %}
 {% include 'shop/includes/home_compare.html' %}
 {% include 'shop/includes/home_flow.html' %}
+
+{% include 'shop/includes/home_pillars.html' %}
+
+{% include 'shop/includes/home_pricing.html' %}
 
 {% include 'shop/includes/home_faq.html' %}
 

@@ -1,0 +1,51 @@
+<section class="h-pricing" id="mk-pricing" aria-labelledby="h-pricing-title">
+    <div class="container">
+        <header class="mk-section-head mk-reveal">
+            <h2 class="mk-section-title" id="h-pricing-title">{{ home_page.pricing_section.title }}</h2>
+            {% if home_page.pricing_section.subtitle %}
+            <p class="mk-section-desc">{{ home_page.pricing_section.subtitle }}</p>
+            {% endif %}
+        </header>
+
+        <div class="mk-tier-grid h-pricing__grid mk-reveal-stagger">
+            {% for tier in home_page.pricing_tiers %}
+            <article class="mk-tier-card mk-tier-card--{{ tier.accent }}" data-tier="{{ tier.id }}">
+                <header class="mk-tier-head">
+                    <span class="mk-tier-icon" aria-hidden="true"><i class="fas {{ tier.icon }}"></i></span>
+                    <div class="mk-tier-title-wrap">
+                        <h3 class="mk-tier-title">{{ tier.title }}</h3>
+                        {% if tier.badge %}
+                        <span class="mk-tier-badge">{{ tier.badge }}</span>
+                        {% endif %}
+                    </div>
+                </header>
+                <div class="mk-tier-price">
+                    <span class="mk-tier-price-val">{{ tier.price }}</span>
+                    {% if tier.price_note %}
+                    <span class="mk-tier-price-note">{{ tier.price_note }}</span>
+                    {% endif %}
+                </div>
+                {% if tier.price_hint %}
+                <p class="mk-tier-price-hint">{{ tier.price_hint }}</p>
+                {% endif %}
+                <ul class="mk-tier-features">
+                    {% for feature in tier.features %}
+                    <li><i class="fas fa-check" aria-hidden="true"></i><span>{{ feature }}</span></li>
+                    {% endfor %}
+                </ul>
+                {% if tier.id == 'free' %}
+                <a href="{% url 'register' %}" class="mk-tier-cta">
+                    <i class="fas {{ tier.cta_icon|default:'fa-user-plus' }}" aria-hidden="true"></i>
+                    {{ tier.cta_label }}
+                </a>
+                {% else %}
+                <a href="{% if bot_product %}{% url 'buy' slug=bot_product.slug %}{% else %}{% url 'product_list' %}{% endif %}" class="mk-tier-cta">
+                    <i class="fas {{ tier.cta_icon|default:'fa-tags' }}" aria-hidden="true"></i>
+                    {{ tier.cta_label }}
+                </a>
+                {% endif %}
+            </article>
+            {% endfor %}
+        </div>
+    </div>
+</section>

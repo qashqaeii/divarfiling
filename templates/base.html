@@ -47,8 +47,9 @@
     <link rel="stylesheet" href="{% static 'css/mizkar-platform.css' %}?v=10">
     <link rel="stylesheet" href="{% static 'css/mizkar-pages.css' %}?v=6">
     <link rel="stylesheet" href="{% static 'css/decor-icons.css' %}?v=4">
-    <link rel="stylesheet" href="{% static 'css/responsive-base.css' %}?v=4">
-    <link rel="stylesheet" href="{% static 'css/mk-mobile-nav.css' %}?v=6">
+    <link rel="stylesheet" href="{% static 'css/responsive-base.css' %}?v=5">
+    <link rel="stylesheet" href="{% static 'css/mk-public-mobile-system.css' %}?v=2">
+    <link rel="stylesheet" href="{% static 'css/mk-mobile-nav.css' %}?v=7">
     <link rel="stylesheet" href="{% static 'css/mk-notices.css' %}?v=1">
     <link rel="stylesheet" href="{% static 'css/mk-affiliate.css' %}?v=1">
     
@@ -67,6 +68,12 @@
                 </a>
 
                 <div class="mk-nav-mobile-tools">
+                    {% if not user.is_authenticated %}
+                    <a href="{% url 'register' %}" class="mk-nav-mobile-cta">
+                        <span class="mk-nav-mobile-cta__long">شروع رایگان</span>
+                        <span class="mk-nav-mobile-cta__short">رایگان</span>
+                    </a>
+                    {% endif %}
                     <button type="button" class="mk-theme-toggle mk-theme-toggle--bar" data-theme-toggle aria-label="فعال‌سازی تم تاریک" title="تغییر تم">
                         <i class="fas fa-sun" aria-hidden="true"></i>
                     </button>
@@ -92,6 +99,9 @@
                     <span>میزکار هوشمند مشاوران املاک</span>
                 </div>
             </div>
+            <button type="button" class="mk-mobile-panel__close" id="mkMobilePanelClose" aria-label="بستن منو">
+                <i class="fas fa-times" aria-hidden="true"></i>
+            </button>
         </header>
 
         {% include 'includes/public_nav_links.html' with menu_id='siteNavMenu' %}
@@ -125,12 +135,9 @@
 
     <!-- Scripts -->
     <script src="{% static 'js/mk-notices.js' %}?v=2"></script>
-    <script src="{% static 'js/main.js' %}?v=4"></script>
+    <script src="{% static 'js/main.js' %}?v=5"></script>
     <script src="{% static 'js/mk-footer.js' %}?v=3" defer></script>
     <script src="{% static 'js/mk-platform-nav.js' %}?v=8" defer></script>
-    {% if show_goftino %}
-    {% include 'includes/goftino.html' %}
-    {% endif %}
     {% block extra_js %}{% endblock %}
 </body>
 </html>

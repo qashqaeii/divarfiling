@@ -125,6 +125,15 @@ document.addEventListener('DOMContentLoaded', function() {
             else openMenu();
         });
 
+        const mobilePanelClose = document.getElementById('mkMobilePanelClose');
+        if (mobilePanelClose) {
+            mobilePanelClose.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                closeMenu();
+            });
+        }
+
         navBackdrop.addEventListener('click', closeMenu);
 
         document.addEventListener('keydown', function (e) {

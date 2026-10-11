@@ -1,8 +1,6 @@
 """
 Context processors برای قالب‌ها
 """
-from django.conf import settings
-
 from divar_shop.brand import site_brand_context
 from divar_shop.db_safe import DB_CONTEXT_ERRORS
 
@@ -21,7 +19,6 @@ def _shop_context_fallback(request):
     from shop.services.app_downloads import build_app_download_context
 
     bot = get_bot_product()
-    goftino_id = getattr(settings, 'GOFTINO_WIDGET_ID', '') or ''
     return {
         'products': [bot] if bot else [],
         'bot_product': bot,
@@ -29,8 +26,6 @@ def _shop_context_fallback(request):
         'site_brand': site_brand_context(),
         'announcements': [],
         'banners': [],
-        'goftino_widget_id': goftino_id,
-        'show_goftino': bool(goftino_id) and _is_public_site_request(request),
         'app_downloads': build_app_download_context(request),
         'app_download_hub': app_download_hub_content(),
     }
@@ -67,7 +62,6 @@ def _build_shop_context(request):
     from shop.services.app_downloads import build_app_download_context
 
     bot = get_bot_product()
-    goftino_id = getattr(settings, 'GOFTINO_WIDGET_ID', '') or ''
     ctx = {
         'products': [bot] if bot else [],
         'bot_product': bot,
@@ -75,8 +69,6 @@ def _build_shop_context(request):
         'site_brand': site_brand_context(),
         'announcements': visible_announcements,
         'banners': visible_banners,
-        'goftino_widget_id': goftino_id,
-        'show_goftino': bool(goftino_id) and _is_public_site_request(request),
         'app_downloads': build_app_download_context(request),
         'app_download_hub': app_download_hub_content(),
     }

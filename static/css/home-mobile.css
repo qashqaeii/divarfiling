@@ -7,11 +7,11 @@
 /* ─── Design tokens (mobile scope) ─── */
 @media (max-width: 1024px) {
     .mk-home-page {
-        --hm-pad-x: clamp(1rem, 4.2vw, 1.35rem);
-        --hm-section-y: clamp(1.75rem, 5vw, 2.75rem);
-        --hm-radius: 16px;
-        --hm-radius-sm: 12px;
-        --hm-touch: 2.75rem; /* 44px */
+        --hm-pad-x: var(--mk-pub-pad-x, clamp(1rem, 4.2vw, 1.35rem));
+        --hm-section-y: var(--mk-pub-section-y, clamp(1.75rem, 5vw, 2.75rem));
+        --hm-radius: var(--mk-pub-radius, 16px);
+        --hm-radius-sm: var(--mk-pub-radius-sm, 12px);
+        --hm-touch: var(--mk-pub-touch, 2.75rem);
         --hm-title: clamp(1.25rem, 5vw, 1.5rem);
         --hm-card-title: clamp(1rem, 4.2vw, 1.125rem);
         --hm-body: clamp(0.875rem, 3.6vw, 0.9375rem);
@@ -228,6 +228,80 @@
     .mk-home-page .h-stats {
         padding-top: 0.85rem;
         padding-bottom: 0.5rem;
+    }
+
+    .mk-home-page .h-stats__strip {
+        padding: 0.85rem 0.9rem;
+        border-radius: var(--hm-radius);
+        gap: 0.75rem;
+    }
+
+    .mk-home-page .h-stats__meta {
+        width: 100%;
+    }
+
+    .mk-home-page .h-stats__grid {
+        width: 100%;
+        justify-content: stretch;
+    }
+
+    .mk-home-page .h-stats__sep {
+        display: none;
+    }
+
+    .mk-home-page .h-ecosystem {
+        padding-inline: 0;
+    }
+
+    .mk-home-page .h-ecosystem__head {
+        padding-inline: var(--hm-pad-x);
+        text-align: center;
+    }
+
+    .mk-home-page .h-ecosystem__title {
+        font-size: var(--hm-title);
+    }
+
+    .mk-home-page .h-ecosystem__subtitle {
+        font-size: var(--hm-body);
+        line-height: 1.7;
+        max-width: 28rem;
+        margin-inline: auto;
+    }
+
+    .mk-home-page .h-bento {
+        padding-inline: var(--hm-pad-x);
+        gap: 0.75rem;
+    }
+
+    .mk-home-page .h-bento__cell {
+        min-height: 11rem;
+        border-radius: var(--hm-radius);
+    }
+
+    .mk-home-page .h-bento__title {
+        font-size: var(--hm-card-title);
+    }
+
+    .mk-home-page .h-bento__outcome,
+    .mk-home-page .h-bento__benefits {
+        font-size: var(--hm-body);
+        line-height: 1.65;
+    }
+
+    .mk-home-page .h-bento__link {
+        min-height: var(--hm-touch);
+        display: inline-flex;
+        align-items: center;
+        margin-top: 0.5rem;
+    }
+
+    .mk-home-page .h-intel {
+        padding-block: var(--hm-section-y);
+    }
+
+    .mk-home-page .h-intro-feature {
+        padding-block: var(--hm-section-y);
     }
 
     .mk-home-page .h-stats__panel {
@@ -520,6 +594,7 @@
         border-color: rgba(16, 185, 129, 0.22);
     }
 
+    .mk-home-page .mk-tier-card[data-tier="pro"],
     .mk-home-page .mk-tier-card[data-tier="bot"] {
         border-color: rgba(124, 58, 237, 0.28);
         box-shadow:

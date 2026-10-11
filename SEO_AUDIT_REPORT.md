@@ -378,7 +378,6 @@ static/
 | بدون preload فونت critical | LCP |
 | بدون WebP / responsive images | LCP |
 | اسکریپت inline طولانی در base.html (announcement/banner) | TBT جزئی |
-| Goftino chat widget | CLS/TBT در صورت فعال بودن |
 
 ### ۱۴.۳ اهداف Lighthouse (پرامپت)
 

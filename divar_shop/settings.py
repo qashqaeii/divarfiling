@@ -204,9 +204,6 @@ SITE_URL = config('SITE_URL', default='https://divarfiling.ir')
 # هندل توییتر/X — فقط اگر مقدار دارد در meta نمایش داده می‌شود (مثلاً divarfiling)
 TWITTER_SITE = config('TWITTER_SITE', default='').strip()
 
-# گفتینو — فقط در قالب عمومی (base.html) بارگذاری می‌شود
-GOFTINO_WIDGET_ID = config('GOFTINO_WIDGET_ID', default='')
-
 # Zibal Payment Gateway Settings
 ZIBAL_MERCHANT_ID = config('ZIBAL_MERCHANT_ID', default='')
 ZIBAL_CALLBACK_URL = config('ZIBAL_CALLBACK_URL', default='https://divarfiling.ir/payment/callback/')

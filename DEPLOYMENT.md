@@ -277,7 +277,6 @@ DEFAULT_FROM_EMAIL=noreply@divarfiling.ir
 | `LICENSE_SECRET_KEY` | ✅ | امضای کلید لایسنس |
 | `LICENSE_BOT_API_KEY` | ✅ | احراز هویت API ربات |
 | `CACHE_BACKEND` | ⚠️ | بدون Redis، rate limit بین workerها کار نمی‌کند |
-| `GOFTINO_WIDGET_ID` | ❌ | ویجت چت آنلاین (اختیاری) |
 
 ---
 

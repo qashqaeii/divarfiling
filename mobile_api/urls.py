@@ -102,6 +102,11 @@ urlpatterns = [
 
     path('contracts', contracts_views.ContractsListCreateView.as_view(), name='contracts'),
     path('contracts/<int:contract_id>', contracts_views.ContractDetailView.as_view(), name='contract_detail'),
+    path(
+        'contracts/<int:contract_id>/wizard',
+        contracts_views.ContractWizardView.as_view(),
+        name='contract_wizard',
+    ),
     path('contracts/<int:contract_id>/timeline', contracts_views.ContractTimelineView.as_view(), name='contract_timeline'),
     path('contracts/<int:contract_id>/attachments', contracts_views.ContractAttachmentsView.as_view(), name='contract_attachments'),
     path(

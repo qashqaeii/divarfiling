@@ -249,6 +249,52 @@ class ContractWizardPropertyDetailView(APIView):
         return api_ok({'property': payload})
 
 
+class ContractWizardView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, contract_id):
+        from mobile_api.services.contracts_wizard_mobile import contract_wizard_get_payload
+
+        step = request.GET.get('step') or None
+        try:
+            payload = contract_wizard_get_payload(request.user, contract_id, step=step)
+        except ValueError as exc:
+            return _contract_value_error(exc)
+        if payload is None:
+            return api_error('قرارداد یافت نشد.', code='NOT_FOUND', status=404)
+        return api_ok(payload)
+
+    def patch(self, request, contract_id):
+        from contracts.services.wizard_json import WizardJsonError
+        from mobile_api.services.contracts_wizard_mobile import contract_wizard_patch_payload
+
+        data = _parse_body(request)
+        step = (data.get('step') or '').strip()
+        if not step:
+            return api_error('مرحله ویزارد الزامی است.', code='VALIDATION_ERROR')
+        body = data.get('data')
+        if body is None:
+            return api_error('داده مرحله الزامی است.', code='VALIDATION_ERROR')
+        if_match = (data.get('if_match_updated_at') or data.get('updated_at') or '').strip() or None
+        try:
+            payload = contract_wizard_patch_payload(
+                request.user,
+                contract_id,
+                step=step,
+                data=body,
+                if_match_updated_at=if_match,
+                request=request,
+            )
+        except WizardJsonError as exc:
+            msg = str(exc)
+            if msg.startswith('CONFLICT:'):
+                return api_error(msg.split(':', 1)[1], code='CONFLICT', status=409)
+            return api_error(msg, code='VALIDATION_ERROR')
+        except ValueError as exc:
+            return _contract_value_error(exc)
+        return api_ok(payload)
+
+
 class ContractHandoverView(APIView):
     permission_classes = [IsAuthenticated]
 

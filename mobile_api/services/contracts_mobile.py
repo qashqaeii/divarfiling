@@ -165,7 +165,7 @@ def build_contract_next_action(contract: Contract) -> Dict[str, Any]:
             'label': 'تکمیل قرارداد',
             'action': 'OPEN_WIZARD',
             'web_path': paths['wizard'],
-            'native_target': 'bridge',
+            'native_target': 'wizard',
         }
     if contract.status in ACTION_STATUSES or contract.status == CONTRACT_STATUS_READY:
         return {

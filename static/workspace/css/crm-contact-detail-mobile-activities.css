@@ -432,4 +432,79 @@
         text-decoration: none;
         color: var(--ws-primary);
     }
+
+    .crm-contact-dossier .crm-activity-event {
+        align-items: start;
+        gap: 0.75rem;
+    }
+
+    .crm-contact-dossier .crm-activity-event__rail {
+        display: flex;
+        justify-content: center;
+        padding-top: 0.1rem;
+    }
+
+    .crm-contact-dossier .crm-activity-event__rail::after {
+        display: none;
+    }
+
+    .crm-contact-dossier .crm-activity-event__node {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 1.75rem;
+        height: 1.75rem;
+        border-radius: 999px;
+        border: 1px solid var(--ws-border);
+        background: var(--ws-surface);
+        font-size: 0.65rem;
+        color: var(--ws-text-muted);
+    }
+
+    .crm-contact-dossier .crm-activity-event__content {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+    }
+
+    .crm-contact-dossier .crm-activity-event__head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+    }
+
+    .crm-contact-dossier .crm-activity-event__title {
+        margin: 0;
+        font-size: 0.8125rem;
+        font-weight: 700;
+        line-height: 1.45;
+    }
+
+    .crm-contact-dossier .crm-activity-event__foot {
+        margin-top: 0.15rem;
+    }
+
+    .crm-contact-dossier .crm-activity-event__cta {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.3rem 0.6rem;
+        border-radius: 8px;
+        border: 1px solid var(--ws-border);
+        background: var(--ws-surface);
+        color: var(--ws-text-secondary);
+        font-family: inherit;
+        font-size: 0.72rem;
+        font-weight: 600;
+        cursor: pointer;
+        line-height: 1.2;
+    }
+
+    .crm-contact-dossier .crm-activity-event__cta:hover {
+        background: var(--ws-surface-2, #f8fafc);
+        border-color: color-mix(in srgb, var(--ws-primary) 22%, var(--ws-border));
+        color: var(--ws-primary);
+    }
 }

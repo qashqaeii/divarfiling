@@ -628,3 +628,113 @@
         padding: 0;
     }
 }
+
+/* Desktop table — scan-card markup is mobile-first; collapse to classic person cell */
+@media (min-width: 768px) {
+    .crm-contacts-table .crm-contacts-mob-card.crm-contacts-mob-card--scan {
+        padding: 0;
+        margin: 0;
+        border: none;
+        background: transparent;
+        box-shadow: none;
+    }
+
+    .crm-contacts-table .crm-contacts-mob-card__top {
+        display: flex;
+        align-items: center;
+        gap: 0;
+        min-width: 0;
+    }
+
+    .crm-contacts-table .crm-contacts-mob-card__body.crm-contacts-person-link {
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+        flex: 1;
+        min-width: 0;
+        padding: 0;
+        text-decoration: none;
+        color: inherit;
+    }
+
+    .crm-contacts-table .crm-contacts-mob-card__identity {
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+        min-width: 0;
+        flex: 1;
+    }
+
+    .crm-contacts-table .crm-contacts-mob-card__identity-text {
+        display: flex;
+        flex-direction: column;
+        gap: 0.12rem;
+        min-width: 0;
+    }
+
+    .crm-contacts-table .crm-contacts-mob-card--scan .crm-contacts-name {
+        font-size: 0.8125rem;
+        font-weight: 600;
+        line-height: 1.35;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%;
+    }
+
+    .crm-contacts-table .crm-contacts-mob-card__state,
+    .crm-contacts-table .crm-contacts-mob-card__actions,
+    .crm-contacts-table .crm-contacts-mob-row-more {
+        display: none !important;
+    }
+
+    .crm-contacts-table .crm-contacts-mob-card--scan .crm-contacts-mob-type,
+    .crm-contacts-table .crm-contacts-mob-card--scan .crm-contacts-mob-phone,
+    .crm-contacts-table .crm-contacts-mob-card--scan .crm-contacts-mob-phone--empty {
+        display: none !important;
+    }
+
+    /* Page chrome — desktop order & filter bar (no mobile + FAB in toolbar) */
+    .crm-contacts-pro.crm-page-chrome {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .crm-contacts-pro .crm-contacts-desk-header {
+        order: 1;
+    }
+
+    .crm-contacts-pro .crm-contacts-mob-chrome {
+        order: 2;
+    }
+
+    .crm-contacts-pro > .crm-dash-kpis {
+        order: 3;
+    }
+
+    .crm-contacts-pro > .crm-smart-command-wrap {
+        order: 4;
+        margin-bottom: 0.35rem;
+    }
+
+    .crm-contacts-pro > .crm-contacts-alert-rail {
+        order: 5;
+    }
+
+    .crm-contacts-pro > .crm-contacts-workspace,
+    .crm-contacts-pro > .crm-contacts-pipeline {
+        order: 6;
+    }
+
+    .crm-contacts-pro .crm-contacts-mob-toolbar-sticky {
+        position: static;
+        padding: 0;
+        background: transparent;
+        border: none;
+    }
+
+    .crm-contacts-pro .crm-contacts-mob-filter-chips {
+        display: none !important;
+    }
+}

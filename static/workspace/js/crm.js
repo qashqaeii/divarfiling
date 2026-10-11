@@ -2084,10 +2084,26 @@ function bindCRMMatchingToleranceRoot(root) {
     });
 }
 
+function crmMatchCardSource(card) {
+    return (card.getAttribute('data-source') || card.dataset.source || '').trim();
+}
+
+function initCRMMatchesFilterDelegation() {
+    if (window.__crmMatchesFilterDelegation) return;
+    window.__crmMatchesFilterDelegation = true;
+    document.addEventListener('click', (ev) => {
+        const filterBtn = ev.target.closest('[data-crm-matches-panel] [data-match-filter]');
+        if (!filterBtn) return;
+        const panel = filterBtn.closest('[data-crm-matches-panel]');
+        if (!panel || typeof panel._crmMatchesApplyFilter !== 'function') return;
+        ev.preventDefault();
+        panel._crmMatchesApplyFilter(filterBtn.getAttribute('data-match-filter') || 'all');
+    });
+}
+
 function initCRMMatches() {
     const panel = document.getElementById('crmMatches');
     if (!panel || panel.dataset.bound === '1') return;
-    panel.dataset.bound = '1';
 
     const jsonInput = document.getElementById('crmMatchesJson');
     const countEl = document.getElementById('crmSuggestCount');
@@ -2108,29 +2124,46 @@ function initCRMMatches() {
         });
     }
 
+    function setMatchNodeHidden(node, hide) {
+        if (!node) return;
+        node.hidden = hide;
+        node.classList.toggle('is-match-source-hidden', hide);
+    }
+
     function visibleCards() {
-        return [...panel.querySelectorAll('[data-match-card]')].filter((card) => !card.hidden);
+        return [...panel.querySelectorAll('[data-match-card]')].filter(
+            (card) => !card.hidden && !card.classList.contains('is-match-source-hidden'),
+        );
     }
 
     function applySourceFilter(source) {
+        const filter = source || 'all';
         panel.querySelectorAll('[data-match-card]').forEach((card) => {
-            card.hidden = source !== 'all' && card.dataset.source !== source;
+            const hide = filter !== 'all' && crmMatchCardSource(card) !== filter;
+            setMatchNodeHidden(card, hide);
+        });
+        panel.querySelectorAll('.crm-matches-col-v3').forEach((col) => {
+            const colSource = (col.getAttribute('data-match-source') || '').trim();
+            setMatchNodeHidden(col, filter !== 'all' && colSource !== filter);
         });
         panel.querySelectorAll('[data-match-locked]').forEach((el) => {
-            el.hidden = source === 'crm';
+            setMatchNodeHidden(el, filter === 'crm');
         });
         panel.querySelectorAll('[data-match-feed]').forEach((feed) => {
-            feed.classList.toggle('is-source-all', source === 'all');
+            feed.classList.toggle('is-source-all', filter === 'all');
         });
         const anyVisible = visibleCards().length > 0
-            || (source !== 'crm' && [...panel.querySelectorAll('[data-match-locked]')].some((el) => !el.hidden));
+            || (filter !== 'crm' && [...panel.querySelectorAll('[data-match-locked]')].some((el) => !el.hidden));
         if (filterEmpty) filterEmpty.hidden = anyVisible;
         panel.querySelectorAll('[data-match-filter]').forEach((btn) => {
-            const on = btn.dataset.matchFilter === source;
+            const on = (btn.getAttribute('data-match-filter') || 'all') === filter;
             btn.classList.toggle('is-active', on);
             btn.setAttribute('aria-selected', on ? 'true' : 'false');
         });
+        panel.dataset.matchSourceFilter = filter;
     }
+
+    panel._crmMatchesApplyFilter = applySourceFilter;
 
     function syncCardState() {
         panel.querySelectorAll('[data-match-card]').forEach(card => {
@@ -2172,7 +2205,11 @@ function initCRMMatches() {
         syncCardState();
     }
 
-    flattenFeeds();
+    try {
+        flattenFeeds();
+    } catch (err) {
+        console.error('initCRMMatches flattenFeeds', err);
+    }
 
     const crmCount = panel.querySelectorAll('[data-match-card][data-source="crm"]').length;
     const divarCount = panel.querySelectorAll('[data-match-card][data-source="divar"]').length;
@@ -2194,7 +2231,7 @@ function initCRMMatches() {
     panel.addEventListener('click', (ev) => {
         const filterBtn = ev.target.closest('[data-match-filter]');
         if (filterBtn) {
-            applySourceFilter(filterBtn.dataset.matchFilter || 'all');
+            applySourceFilter(filterBtn.getAttribute('data-match-filter') || 'all');
             return;
         }
         if (ev.target.closest('#crmClearMatchSelection')) {
@@ -2203,6 +2240,7 @@ function initCRMMatches() {
         }
     });
 
+    panel.dataset.bound = '1';
     updateSelection();
 }
 
@@ -2552,6 +2590,9 @@ function initCRMTabs() {
             btn.setAttribute('aria-selected', 'true');
             const panel = shell.querySelector(`[data-panel="${tab}"]`);
             if (panel) panel.hidden = false;
+            if (tab === 'matches') {
+                try { initCRMMatches(); } catch (err) { console.error('initCRMMatches', err); }
+            }
             scrollCRMTabIntoView(btn);
             const rail = btn.closest('[data-contact-segrail], [data-prop-segrail]');
             if (rail && rail.hasAttribute('data-contact-segrail')) syncContactSegrailFades(rail);
@@ -6282,6 +6323,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initCRMSidePanel();
     initCRMQuickLead();
     initCRMImportDrawer();
+    initCRMMatchesFilterDelegation();
     initCRMMatches();
     initCRMPropContactMatches();
     initCRMMatchingTolerance();

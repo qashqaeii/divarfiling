@@ -2235,6 +2235,15 @@
     padding: 0;
 }
 
+#crmMatches.crm-matches-v3 [data-match-card][hidden],
+#crmMatches.crm-matches-v3 [data-match-card].is-match-source-hidden,
+#crmMatches.crm-matches-v3 [data-match-locked][hidden],
+#crmMatches.crm-matches-v3 [data-match-locked].is-match-source-hidden,
+#crmMatches.crm-matches-v3 .crm-matches-col-v3[hidden],
+#crmMatches.crm-matches-v3 .crm-matches-col-v3.is-match-source-hidden {
+    display: none !important;
+}
+
 #crmMatches.crm-matches-v3 .crm-match-card-v3 {
     display: grid;
     grid-template-columns: 1.85rem minmax(0, 1fr);

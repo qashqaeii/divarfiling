@@ -19,3 +19,143 @@
         color: #92400e;
     }
 }
+
+/* ── Desktop: تب پرونده (dossier) — grid + key/value + map ── */
+@media (min-width: 768px) {
+    .ws-ld-detail.mk-filing-datasets .ws-ld-dossier-h {
+        display: flex;
+        align-items: center;
+        gap: 0.45rem;
+        margin: 0 0 0.55rem;
+        padding: 0;
+        border: none;
+        background: transparent;
+    }
+
+    .ws-ld-detail.mk-filing-datasets .ws-ld-dossier-h__ico {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 1.65rem;
+        height: 1.65rem;
+        flex-shrink: 0;
+        border-radius: 8px;
+        border: 1px solid color-mix(in srgb, var(--ws-primary) 18%, var(--ws-border));
+        background: color-mix(in srgb, var(--ws-primary) 7%, var(--ws-surface));
+        color: var(--ws-primary);
+        font-size: 0.72rem;
+    }
+
+    .ws-ld-detail.mk-filing-datasets .ws-ld-dossier-h__text strong {
+        font-size: 0.8rem;
+        font-weight: 800;
+        color: var(--ws-text);
+    }
+
+    .ws-ld-detail.mk-filing-datasets .ws-ld-dossier-grid .ws-field-row {
+        display: grid;
+        grid-template-columns: minmax(5.25rem, 36%) minmax(0, 1fr);
+        gap: 0.55rem 0.75rem;
+        align-items: baseline;
+        justify-content: unset;
+        flex-direction: unset;
+        padding: 0.45rem 0;
+    }
+
+    .ws-ld-detail.mk-filing-datasets .ws-ld-dossier-grid .ws-field-key {
+        flex: unset;
+        max-width: none;
+        font-size: 0.74rem;
+        font-weight: 600;
+        line-height: 1.45;
+        text-align: start;
+    }
+
+    .ws-ld-detail.mk-filing-datasets .ws-ld-dossier-grid .ws-field-val {
+        flex: unset;
+        text-align: start;
+        font-size: 0.8rem;
+        font-weight: 650;
+        line-height: 1.5;
+    }
+
+    .ws-ld-detail.mk-filing-datasets .ws-ld-dossier-section--full .ws-field-row--long {
+        grid-template-columns: 1fr;
+        gap: 0.35rem;
+    }
+
+    .ws-ld-detail.mk-filing-datasets .ws-ld-dossier-section--full .ws-field-val--long {
+        text-align: start;
+        width: auto;
+        max-width: none;
+    }
+}
+
+@media (min-width: 901px) {
+    .ws-ld-detail.mk-filing-datasets .ws-ld-dossier-grid {
+        gap: 0.75rem;
+        align-items: stretch;
+    }
+
+    .ws-ld-detail.mk-filing-datasets .ws-ld-dossier-grid .ws-ld-dossier-section {
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+    }
+
+    .ws-ld-detail.mk-filing-datasets .ws-ld-dossier-section--location:has(.ws-ld-dossier-map-embed) {
+        grid-column: 1 / -1;
+        display: grid;
+        grid-template-columns: minmax(0, 280px) minmax(0, 1fr);
+        grid-template-rows: auto auto;
+        gap: 0.35rem 1rem;
+        align-items: start;
+    }
+
+    .ws-ld-detail.mk-filing-datasets .ws-ld-dossier-section--location:has(.ws-ld-dossier-map-embed) .ws-ld-dossier-h {
+        grid-column: 1 / -1;
+        margin-bottom: 0.35rem;
+    }
+
+    .ws-ld-detail.mk-filing-datasets .ws-ld-dossier-section--location:has(.ws-ld-dossier-map-embed) .ws-field-list {
+        grid-column: 1;
+        grid-row: 2;
+        align-self: start;
+    }
+
+    .ws-ld-detail.mk-filing-datasets .ws-ld-dossier-section--location .ws-ld-dossier-map-embed {
+        grid-column: 2;
+        grid-row: 2;
+        margin: 0;
+        min-width: 0;
+        width: 100%;
+    }
+
+    .ws-ld-detail.mk-filing-datasets .ws-ld-dossier-map-canvas {
+        border-radius: 10px;
+        overflow: hidden;
+        border: 1px solid var(--ws-border-light);
+    }
+
+    .ws-ld-detail.mk-filing-datasets .ws-ld-dossier-map-canvas .ws-ld-location-map-head-main {
+        display: block;
+    }
+
+    .ws-ld-detail.mk-filing-datasets .ws-ld-dossier-map-canvas .ws-ld-location-map-stage,
+    .ws-ld-detail.mk-filing-datasets .ws-ld-dossier-map-canvas #wsLdLocationMap.ws-ld-location-map,
+    .ws-ld-detail.mk-filing-datasets .ws-ld-dossier-map-canvas #wsLdLocationMap.ws-ld-location-map.leaflet-container {
+        height: clamp(220px, 28vw, 320px) !important;
+        min-height: 220px !important;
+        max-height: 320px !important;
+        width: 100% !important;
+    }
+
+    .ws-ld-detail.mk-filing-datasets .ws-ld-dossier-map-embed .ws-ld-map-nav-trigger {
+        display: none;
+    }
+
+    .ws-ld-detail.mk-filing-datasets .ws-ld-dossier-section--text,
+    .ws-ld-detail.mk-filing-datasets .ws-ld-dossier-section--full.ws-ld-dossier-section--text {
+        grid-column: 1 / -1;
+    }
+}

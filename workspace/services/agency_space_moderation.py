@@ -86,3 +86,42 @@ def _get_item_for_moderation(actor: User, item_id: int) -> AgencySpaceItem:
     if raw.status != AgencySpaceItem.STATUS_ACTIVE:
         raise AgencySpaceModerationError('آیتم فعال نیست')
     return raw
+
+
+def bulk_moderate_space_items(
+    actor: User,
+    item_ids: list,
+    action: str,
+    *,
+    moderation_reason: str = '',
+) -> dict:
+    """Moderation گروهی — هر آیتم جداگانه مجوز و خطا."""
+    action = (action or '').strip()
+    if action not in ('hide', 'restore'):
+        raise AgencySpaceModerationError('عملیات نامعتبر است')
+    results = []
+    for raw_id in item_ids or []:
+        try:
+            item_id = int(raw_id)
+        except (TypeError, ValueError):
+            results.append({'item_id': raw_id, 'ok': False, 'error': 'شناسه نامعتبر'})
+            continue
+        try:
+            if action == 'hide':
+                item = hide_space_item_public(
+                    actor,
+                    item_id,
+                    moderation_reason=moderation_reason,
+                )
+            else:
+                item = restore_space_item_moderation(actor, item_id)
+            results.append({'item_id': item_id, 'ok': True, 'status': item.status})
+        except AgencySpaceModerationError as exc:
+            results.append({'item_id': item_id, 'ok': False, 'error': str(exc)})
+    succeeded = sum(1 for r in results if r.get('ok'))
+    return {
+        'action': action,
+        'results': results,
+        'succeeded': succeeded,
+        'failed': len(results) - succeeded,
+    }

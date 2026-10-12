@@ -115,7 +115,18 @@ urlpatterns = [
         name='contract_attachment_download',
     ),
     path('contracts/<int:contract_id>/pdf', contracts_views.ContractPdfView.as_view(), name='contract_pdf'),
+    path('contracts/<int:contract_id>/actions', contracts_views.ContractActionView.as_view(), name='contract_actions'),
     path('contracts/<int:contract_id>/handover', contracts_views.ContractHandoverView.as_view(), name='contract_handover'),
+    path(
+        'contracts/<int:contract_id>/handover/<int:handover_id>/wizard',
+        contracts_views.ContractHandoverWizardView.as_view(),
+        name='contract_handover_wizard',
+    ),
+    path(
+        'contracts/<int:contract_id>/handover/<int:handover_id>/pdf',
+        contracts_views.ContractHandoverPdfView.as_view(),
+        name='contract_handover_pdf',
+    ),
     path('contracts/wizard/customers', contracts_views.ContractWizardCustomerSearchView.as_view(), name='contract_wizard_customers'),
     path('contracts/wizard/customers/<int:customer_id>', contracts_views.ContractWizardCustomerDetailView.as_view(), name='contract_wizard_customer'),
     path('contracts/wizard/properties', contracts_views.ContractWizardPropertySearchView.as_view(), name='contract_wizard_properties'),
@@ -199,6 +210,11 @@ urlpatterns = [
     path('agency/invitations/<int:invitation_id>', agency_views.AgencyInvitationActionView.as_view(), name='agency_invitation_action'),
     path('agency/seats', agency_views.AgencySeatsView.as_view(), name='agency_seats'),
     path('agency/performance', agency_views.AgencyPerformanceView.as_view(), name='agency_performance'),
+    path('agency/activity', agency_views.AgencyActivityView.as_view(), name='agency_activity'),
+    path('agency/settings', agency_views.AgencySettingsView.as_view(), name='agency_settings'),
+    path('agency/audit', agency_views.AgencyAuditView.as_view(), name='agency_audit'),
+    path('agency/invite/preview', agency_views.AgencyInvitePreviewView.as_view(), name='agency_invite_preview'),
+    path('agency/invite/respond', agency_views.AgencyInviteRespondView.as_view(), name='agency_invite_respond'),
 
     path('agency/space/items', agency_space_views.AgencySpaceItemsView.as_view(), name='agency_space_items'),
     path('agency/space/analytics', agency_space_views.AgencySpaceAnalyticsView.as_view(), name='agency_space_analytics'),
@@ -208,6 +224,7 @@ urlpatterns = [
     path('agency/space/items/<int:item_id>/unpublish', agency_space_views.AgencySpaceUnpublishView.as_view(), name='agency_space_unpublish'),
     path('agency/space/items/<int:item_id>/copy', agency_space_views.AgencySpaceCopyView.as_view(), name='agency_space_copy'),
     path('agency/space/items/<int:item_id>/moderate', agency_space_views.AgencySpaceModerateView.as_view(), name='agency_space_moderate'),
+    path('agency/space/moderate/bulk', agency_space_views.AgencySpaceBulkModerateView.as_view(), name='agency_space_moderate_bulk'),
 
     path('crm/team/overview', team_views.TeamOverviewView.as_view(), name='team_overview'),
     path('crm/team/members', team_views.TeamMembersView.as_view(), name='team_members'),

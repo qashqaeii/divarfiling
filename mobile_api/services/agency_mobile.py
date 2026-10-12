@@ -6,8 +6,13 @@ from typing import Any, Dict, List, Optional
 
 from django.utils import timezone
 
-from workspace.constants import AGENCY_ROLES, TEAM_VISIBILITY_INBOX
-from workspace.models import AgencyInvitation, CRMAgencyMember, Customer
+from workspace.constants import (
+    AGENCY_ROLE_OWNER,
+    AGENCY_ROLES,
+    LEAD_ROUTING_CHOICES,
+    TEAM_VISIBILITY_INBOX,
+)
+from workspace.models import AgencyActivityEvent, AgencyInvitation, CRMAgencyMember, Customer
 from workspace.services.agency_entitlement import (
     can_manage_agency,
     get_subscription_for_agency,
@@ -18,7 +23,7 @@ from workspace.services.agency_hub import build_activity_feed
 from workspace.services.agency_invitations import get_agency_invite_capacity
 from workspace.services.agency_members import build_members_dashboard
 from workspace.services.agency_seats import get_member_seat, list_available_seats
-from workspace.services.crm_agency import get_team_inbox, member_display
+from workspace.services.crm_agency import get_team_inbox, member_display, update_agency_settings
 from workspace.services.crm_agency_analytics import (
     get_command_center_stats,
     get_member_performance_row,
@@ -158,6 +163,17 @@ def agency_home_for_user(user) -> Dict[str, Any]:
     if capabilities.get('can_view_space_analytics'):
         space_kpis = get_space_header_kpis(user, agency)
 
+    team_activity: List[Dict[str, Any]] = []
+    if can_manage_team(user):
+        for ev in build_activity_feed(user, limit=8):
+            team_activity.append({
+                'id': ev.pk,
+                'event_type': ev.event_type,
+                'title': ev.event_type.replace('.', ' · '),
+                'created_at': ev.created_at.isoformat() if ev.created_at else '',
+                'actor_name': ev.actor.get_full_name() if ev.actor_id else '',
+            })
+
     return {
         **overview,
         'permissions': permissions,
@@ -166,6 +182,7 @@ def agency_home_for_user(user) -> Dict[str, Any]:
         'kpis': kpis,
         'space_kpis': space_kpis,
         'attention': attention,
+        'team_activity': team_activity,
         'invite_capacity': get_agency_invite_capacity(agency, sub) if sub and can_manage_agency(user, agency) else None,
     }
 
@@ -263,16 +280,48 @@ def advisor_detail_for_user(user, member_id: int) -> Optional[Dict[str, Any]]:
 
     u = member.user
     can_manage = can_manage_agency(user, agency)
+    can_set_role = can_manage and member.role != AGENCY_ROLE_OWNER and member.is_active
+    assignable_roles = []
+    if can_set_role:
+        assignable_roles = [
+            {'value': code, 'label': label}
+            for code, label in AGENCY_ROLES
+            if code != AGENCY_ROLE_OWNER
+        ]
+
+    goals: List[Dict[str, Any]] = []
+    if can_manage_team(user):
+        perf_data = get_team_performance(agency, days=30)
+        for row in get_team_goals_progress(agency, days=30, perf=perf_data):
+            goal = row.get('goal')
+            if goal and goal.member_id and goal.member_id != member.pk:
+                continue
+            goals.append({
+                'member_name': row.get('member_name', ''),
+                'metric': goal.metric if goal else '',
+                'target': row.get('target', 0),
+                'actual': row.get('actual', 0),
+                'pct': row.get('pct', 0),
+                'period_label': row.get('period_label', ''),
+            })
+
     return {
         'member': member_to_dict(member),
         'membership_status': 'active' if member.is_active else 'inactive',
         'email': getattr(u, 'email', '') or '',
         'seat': _member_seat_payload(member),
         'performance': performance,
+        'stats': {
+            'active_leads': _active_leads_count(agency, member.user_id),
+            'active_deals': _active_deals_count(agency, member.user_id),
+        },
+        'goals': goals,
+        'assignable_roles': assignable_roles,
         'recent_activity': activities,
         'permissions': {
             'can_manage_member': can_manage and member.role != 'owner',
             'can_manage_seat': can_manage and member.role != 'owner',
+            'can_set_role': can_set_role,
             'can_transfer_leads': can_operate_team_leads(user) or can_manage_team(user),
         },
     }
@@ -347,6 +396,120 @@ def team_performance_for_user(user, *, days: int = 7) -> Dict[str, Any]:
         'members': members,
         'goals': goals,
     }
+
+
+def agency_activity_for_user(
+    user,
+    *,
+    advisor_member_id: int | None = None,
+    event_type: str = '',
+    limit: int = 50,
+) -> Optional[Dict[str, Any]]:
+    membership = get_membership(user)
+    if not membership:
+        return None
+    agency = membership.agency
+    actor_user_id: int | None = None
+    advisors: List[Dict[str, Any]] = []
+    can_filter = can_manage_team(user)
+
+    if can_filter:
+        from workspace.services.agency_data_scope import (
+            list_visible_advisor_members,
+            resolve_visible_agency_member,
+        )
+
+        advisors = [member_to_dict(m) for m in list_visible_advisor_members(user)]
+        if advisor_member_id:
+            try:
+                actor_user_id = resolve_visible_agency_member(
+                    user, advisor_member_id,
+                ).user_id
+            except Exception:
+                return {
+                    'events': [],
+                    'advisors': advisors,
+                    'can_filter_advisor': True,
+                    'event_type': event_type or '',
+                }
+    else:
+        actor_user_id = user.id
+
+    events = []
+    for ev in build_activity_feed(
+        user,
+        advisor_id=actor_user_id,
+        event_type=(event_type or '').strip(),
+        limit=limit,
+    ):
+        events.append({
+            'id': ev.pk,
+            'event_type': ev.event_type,
+            'title': ev.event_type.replace('.', ' · '),
+            'created_at': ev.created_at.isoformat() if ev.created_at else '',
+            'actor_name': ev.actor.get_full_name() if ev.actor_id else '',
+        })
+    since = timezone.now() - timedelta(days=90)
+    event_types = list(
+        AgencyActivityEvent.objects.filter(agency=agency, created_at__gte=since)
+        .order_by('event_type')
+        .values_list('event_type', flat=True)
+        .distinct()[:40],
+    )
+    return {
+        'events': events,
+        'advisors': advisors,
+        'can_filter_advisor': can_filter,
+        'event_type': (event_type or '').strip(),
+        'event_types': event_types,
+    }
+
+
+def agency_settings_payload(user) -> Optional[Dict[str, Any]]:
+    membership = get_membership(user)
+    if not membership:
+        return None
+    agency = membership.agency
+    can_edit = can_manage_team(user)
+    return {
+        'name': agency.name,
+        'slug': agency.slug,
+        'lead_routing_policy': agency.lead_routing_policy or '',
+        'lead_routing_options': [
+            {'value': code, 'label': label} for code, label in LEAD_ROUTING_CHOICES
+        ],
+        'permissions': {'can_edit': can_edit},
+    }
+
+
+def agency_settings_update(user, *, name: str = '', lead_routing_policy: str = '') -> Dict[str, Any]:
+    update_agency_settings(user, name=name, lead_routing_policy=lead_routing_policy)
+    payload = agency_settings_payload(user)
+    if not payload:
+        raise ValueError('آژانس یافت نشد')
+    return payload
+
+
+def agency_audit_payload(user, *, limit: int = 50) -> Dict[str, Any]:
+    if not can_manage_team(user):
+        raise ValueError('دسترسی گزارش ممیزی ندارید')
+    membership = get_membership(user)
+    if not membership:
+        raise ValueError('آژانس یافت نشد')
+    from workspace.models import CRMAgencyAuditLog
+    from workspace.services.crm_audit import build_audit_timeline
+
+    cap = max(1, min(int(limit or 50), 80))
+    logs = list(
+        CRMAgencyAuditLog.objects.filter(agency=membership.agency)
+        .select_related('actor')
+        .order_by('-created_at')[:cap],
+    )
+    timeline = build_audit_timeline(logs)
+    for group in timeline.get('groups') or []:
+        for entry in group.get('entries') or []:
+            entry.pop('_created_at', None)
+    return {'timeline': timeline}
 
 
 def serialize_inbox_leads_enriched(agency, *, filter_key: str = 'all') -> List[Dict[str, Any]]:

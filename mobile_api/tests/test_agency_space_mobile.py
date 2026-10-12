@@ -148,6 +148,18 @@ class AgencySpaceMobileApiTests(TestCase):
         self.assertEqual(resp.status_code, 200)
         self.assertIn('agency_space', resp.json()['data'])
 
+    def test_patch_item_visibility_and_note(self):
+        item = publish_property(self.advisor, self.prop.pk, visibility='agency_public')
+        resp = self.client.patch(
+            f'/api/mobile/v1/agency/space/items/{item.pk}',
+            {'note': 'یادداشت موبایل', 'visibility': 'agency_public'},
+            format='json',
+        )
+        self.assertEqual(resp.status_code, 200)
+        patched = resp.json()['data']['item']
+        self.assertEqual(patched['note'], 'یادداشت موبایل')
+        self.assertIn('edit_team_members', patched)
+
     def test_feature_disabled_returns_not_found(self):
         self.feature_patch.stop()
         with patch.dict(

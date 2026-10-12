@@ -15,7 +15,7 @@ from workspace.services.agency_space_access import (
 )
 from workspace.services.agency_space_copy import space_copy_target_url
 from workspace.models import AgencySpaceCopy
-from workspace.services.crm_scope import get_membership
+from workspace.services.crm_scope import agency_members, get_membership
 from workspace.services.display import to_jalali_display
 from workspace.services.formatting import format_area, format_toman
 from workspace.services.property_features import feature_data_rows_for_display
@@ -455,6 +455,22 @@ def serialize_space_item(
         payload['audience_member_ids'] = list(
             item.audience_members.values_list('member_id', flat=True)
         )
+    if detail and payload.get('can_edit'):
+        if item.customer_id:
+            payload['contact_share_level'] = item.contact_share_level
+            payload['contact_share_level_label'] = dict(
+                AgencySpaceItem.CONTACT_SHARE_CHOICES,
+            ).get(item.contact_share_level, item.contact_share_level)
+        payload['edit_team_members'] = [
+            {
+                'id': m.pk,
+                'user_id': m.user_id,
+                'name': user_display_name(m.user),
+                'role': m.role,
+            }
+            for m in agency_members(item.agency)
+            if m.is_active and m.user_id != viewer.id
+        ]
     if item.visibility == AgencySpaceItem.VISIBILITY_SELECTED_MEMBERS:
         if payload['is_publisher'] or payload.get('can_moderate'):
             payload['audience_count'] = item.audience_members.count()

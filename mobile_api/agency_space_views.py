@@ -178,6 +178,38 @@ class AgencySpaceCopyView(APIView):
         return api_ok(copy_result_to_api_dict(result))
 
 
+class AgencySpaceBulkModerateView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        from workspace.services.agency_space_moderation import (
+            AgencySpaceModerationError,
+            bulk_moderate_space_items,
+        )
+
+        _, err = require_agency_space_access(request.user)
+        if err:
+            return api_error(err['message'], code=err['code'], status=err['status'])
+        body = _parse_body(request) or {}
+        action = (body.get('action') or '').strip()
+        item_ids = body.get('item_ids') or []
+        if not isinstance(item_ids, list) or not item_ids:
+            return api_error('حداقل یک مورد انتخاب کنید.', code='VALIDATION_ERROR')
+        if len(item_ids) > 50:
+            return api_error('حداکثر ۵۰ مورد در هر درخواست.', code='VALIDATION_ERROR')
+        reason = (body.get('reason') or body.get('moderation_reason') or '').strip()
+        try:
+            payload = bulk_moderate_space_items(
+                request.user,
+                item_ids,
+                action,
+                moderation_reason=reason,
+            )
+        except AgencySpaceModerationError as exc:
+            return api_error(str(exc), code='VALIDATION_ERROR')
+        return api_ok(payload)
+
+
 class AgencySpaceModerateView(APIView):
     permission_classes = [IsAuthenticated]
 

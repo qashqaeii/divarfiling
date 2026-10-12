@@ -154,3 +154,173 @@ class ContractWizardMobileApiTests(TestCase):
             format='json',
         )
         self.assertEqual(resp.status_code, 400)
+
+    def test_wizard_snapshot_includes_clause_fields(self):
+        contract = self._create(CONTRACT_TYPE_LEASE)
+        save_wizard_step(
+            contract,
+            'clauses',
+            {
+                'optional_clauses': [{'code': 'LEASE_CARE'}],
+                'custom_agreements': [{'title': 'توافق', 'body': 'متن اختصاصی'}],
+                'transfer_choice': 'denied',
+                'usage_type': 'residential',
+                'costs': {'water': 'tenant'},
+                'penalties': {
+                    'tenant_vacate_delay': {
+                        'enabled': True,
+                        'amount_per_day': 500000,
+                        'unit': 'daily',
+                    },
+                },
+            },
+            user=self.user,
+        )
+        contract.refresh_from_db()
+        resp = self.client.get(
+            f'/api/mobile/v1/contracts/{contract.pk}/wizard',
+            {'step': 'clauses'},
+        )
+        self.assertEqual(resp.status_code, 200)
+        wd = resp.json()['data']['wizard_data']
+        self.assertIn('clause_optional', wd)
+        self.assertIn('custom_agreements', wd)
+        fin = wd.get('financial') or {}
+        self.assertEqual((fin.get('penalties') or {}).get('tenant_vacate_delay', {}).get('amount_per_day'), 500000)
+        self.assertIn('clause_sections', resp.json()['data'].get('clause_ui') or {})
+
+    def test_patch_clauses_preserves_financial_costs(self):
+        contract = self._create(CONTRACT_TYPE_LEASE)
+        save_wizard_step(
+            contract,
+            'clauses',
+            {
+                'optional_clauses': [],
+                'custom_agreements': [],
+                'transfer_choice': 'denied',
+                'usage_type': 'residential',
+                'costs': {'water': 'landlord', 'electricity': 'tenant'},
+                'penalties': {},
+            },
+            user=self.user,
+        )
+        contract.refresh_from_db()
+        updated_at = contract.updated_at.isoformat()
+        resp = self.client.patch(
+            f'/api/mobile/v1/contracts/{contract.pk}/wizard',
+            {
+                'step': 'clauses',
+                'data': {
+                    'optional_clauses': ['LEASE_CARE'],
+                    'custom_agreements': [{'title': 'الف', 'body': 'بند سفارشی'}],
+                    'transfer_choice': 'denied',
+                    'usage_type': 'residential',
+                },
+                'if_match_updated_at': updated_at,
+            },
+            format='json',
+        )
+        self.assertEqual(resp.status_code, 200)
+        contract.refresh_from_db()
+        costs = (contract.wizard_data.get('financial') or {}).get('costs') or {}
+        self.assertEqual(costs.get('water'), 'landlord')
+        self.assertEqual(costs.get('electricity'), 'tenant')
+        self.assertEqual(len(contract.wizard_data.get('custom_agreements') or []), 1)
+
+    def test_patch_clauses_empty_optional_keeps_user_choice(self):
+        contract = self._create(CONTRACT_TYPE_LEASE)
+        save_wizard_step(
+            contract,
+            'clauses',
+            {
+                'optional_clauses': [{'code': 'LEASE_CARE'}],
+                'transfer_choice': 'denied',
+                'usage_type': 'residential',
+            },
+            user=self.user,
+        )
+        contract.refresh_from_db()
+        updated_at = contract.updated_at.isoformat()
+        resp = self.client.patch(
+            f'/api/mobile/v1/contracts/{contract.pk}/wizard',
+            {
+                'step': 'clauses',
+                'data': {
+                    'optional_clauses': [],
+                    'transfer_choice': 'denied',
+                    'usage_type': 'residential',
+                },
+                'if_match_updated_at': updated_at,
+            },
+            format='json',
+        )
+        self.assertEqual(resp.status_code, 200)
+        contract.refresh_from_db()
+        self.assertEqual(contract.wizard_data.get('clause_optional'), [])
+
+    def test_patch_parties_preserves_all_roles(self):
+        contract = self._create(CONTRACT_TYPE_SALE)
+        parties = [
+            {'role': 'seller', 'first_name': 'a', 'last_name': '1', 'mobile': '09120000000'},
+            {'role': 'buyer', 'first_name': 'b', 'last_name': '2', 'mobile': '09120000001'},
+            {'role': 'seller', 'first_name': 'c', 'last_name': '3', 'mobile': '09120000002'},
+        ]
+        save_wizard_step(contract, 'parties', parties, user=self.user)
+        contract.refresh_from_db()
+        resp = self.client.get(f'/api/mobile/v1/contracts/{contract.pk}/wizard?step=parties')
+        self.assertEqual(resp.status_code, 200)
+        saved = resp.json()['data']['wizard_data'].get('parties') or []
+        self.assertEqual(len(saved), 3)
+        self.assertEqual(saved[2]['first_name'], 'c')
+
+    def test_review_step_includes_document_sections(self):
+        contract = self._create(CONTRACT_TYPE_SALE)
+        save_wizard_step(
+            contract,
+            'parties',
+            [
+                {'role': 'seller', 'first_name': 'a', 'last_name': 'b', 'mobile': '09121111111'},
+                {'role': 'buyer', 'first_name': 'c', 'last_name': 'd', 'mobile': '09122222222'},
+            ],
+            user=self.user,
+        )
+        resp = self.client.get(f'/api/mobile/v1/contracts/{contract.pk}/wizard?step=review')
+        self.assertEqual(resp.status_code, 200)
+        review = resp.json()['data'].get('review_context') or {}
+        self.assertIn('document_sections', review)
+        self.assertTrue(resp.json()['data'].get('pdf_available'))
+
+    def test_patch_wizard_conflict_409(self):
+        contract = self._create(CONTRACT_TYPE_SALE)
+        parties_a = [
+            {'role': 'seller', 'first_name': 'a', 'last_name': 'b', 'mobile': '09121111111'},
+            {'role': 'buyer', 'first_name': 'c', 'last_name': 'd', 'mobile': '09122222222'},
+        ]
+        first = self.client.patch(
+            f'/api/mobile/v1/contracts/{contract.pk}/wizard',
+            {'step': 'parties', 'data': parties_a},
+            format='json',
+        )
+        self.assertEqual(first.status_code, 200)
+        stale = first.json()['data']['updated_at']
+        parties_b = [
+            {'role': 'seller', 'first_name': 'server', 'last_name': 'win', 'mobile': '09121111111'},
+            {'role': 'buyer', 'first_name': 'c', 'last_name': 'd', 'mobile': '09122222222'},
+        ]
+        second = self.client.patch(
+            f'/api/mobile/v1/contracts/{contract.pk}/wizard',
+            {'step': 'parties', 'data': parties_b},
+            format='json',
+        )
+        self.assertEqual(second.status_code, 200)
+        resp = self.client.patch(
+            f'/api/mobile/v1/contracts/{contract.pk}/wizard',
+            {
+                'step': 'parties',
+                'data': parties_a,
+                'if_match_updated_at': stale,
+            },
+            format='json',
+        )
+        self.assertEqual(resp.status_code, 409)
+        self.assertEqual(resp.json()['code'], 'CONFLICT')

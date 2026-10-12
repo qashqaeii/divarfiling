@@ -122,6 +122,8 @@ class ContractAttachmentsView(APIView):
         uploaded = request.FILES.get('file') or request.FILES.get('attachment')
         if not uploaded:
             return api_error('فایلی انتخاب نشده است.', code='VALIDATION_ERROR')
+        handover_raw = (request.POST.get('handover_id') or '').strip()
+        handover_id = int(handover_raw) if handover_raw.isdigit() else None
         try:
             item = upload_attachment_payload(
                 request.user,
@@ -129,6 +131,7 @@ class ContractAttachmentsView(APIView):
                 uploaded,
                 title=(request.POST.get('title') or '').strip(),
                 attachment_type=(request.POST.get('attachment_type') or 'other').strip(),
+                handover_id=handover_id,
             )
         except ValueError as exc:
             if str(exc) == LICENSE_REQUIRED_MSG:
@@ -295,6 +298,35 @@ class ContractWizardView(APIView):
         return api_ok(payload)
 
 
+class ContractActionView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, contract_id):
+        from mobile_api.services.contracts_actions_mobile import contract_action_payload
+
+        data = _parse_body(request)
+        action = (data.get('action') or '').strip()
+        reason = (data.get('reason') or '').strip()
+        inv_raw = data.get('invitation_id')
+        invitation_id = int(inv_raw) if inv_raw not in (None, '') else None
+        if not action:
+            return api_error('عملیات الزامی است.', code='VALIDATION_ERROR')
+        try:
+            payload = contract_action_payload(
+                request.user,
+                contract_id,
+                action,
+                reason=reason,
+                invitation_id=invitation_id,
+                request=request,
+            )
+        except ValueError as exc:
+            return _contract_value_error(exc)
+        if payload is None:
+            return api_error('قرارداد یافت نشد.', code='NOT_FOUND', status=404)
+        return api_ok(payload)
+
+
 class ContractHandoverView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -308,3 +340,91 @@ class ContractHandoverView(APIView):
         if not detail:
             return api_error('قرارداد یافت نشد.', code='NOT_FOUND', status=404)
         return api_ok(detail.get('handover') or {})
+
+    def post(self, request, contract_id):
+        from mobile_api.services.handover_wizard_mobile import handover_create_payload
+
+        try:
+            payload = handover_create_payload(request.user, contract_id, request=request)
+        except ValueError as exc:
+            return _contract_value_error(exc)
+        return api_ok(payload, status=201)
+
+
+class ContractHandoverWizardView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, contract_id, handover_id):
+        from mobile_api.services.handover_wizard_mobile import handover_wizard_get_payload
+
+        step = request.GET.get('step') or None
+        try:
+            payload = handover_wizard_get_payload(
+                request.user, contract_id, handover_id, step=step,
+            )
+        except ValueError as exc:
+            return _contract_value_error(exc)
+        if payload is None:
+            return api_error('صورت‌جلسه یافت نشد.', code='NOT_FOUND', status=404)
+        return api_ok(payload)
+
+    def patch(self, request, contract_id, handover_id):
+        from mobile_api.services.handover_wizard_mobile import HandoverJsonError, handover_wizard_patch_payload
+
+        data = _parse_body(request)
+        step = (data.get('step') or '').strip()
+        body = data.get('data')
+        if not step:
+            return api_error('مرحله الزامی است.', code='VALIDATION_ERROR')
+        if body is None:
+            return api_error('داده مرحله الزامی است.', code='VALIDATION_ERROR')
+        publish = bool(data.get('publish'))
+        try:
+            payload = handover_wizard_patch_payload(
+                request.user,
+                contract_id,
+                handover_id,
+                step=step,
+                data=body,
+                publish=publish,
+                request=request,
+            )
+        except HandoverJsonError as exc:
+            return api_error(str(exc), code='VALIDATION_ERROR')
+        except ValueError as exc:
+            return _contract_value_error(exc)
+        return api_ok(payload)
+
+
+class ContractHandoverPdfView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, contract_id, handover_id):
+        from contracts.services.handover_pdf import render_handover_pdf_bytes
+        from mobile_api.services.contracts_mobile import assert_mobile_contract_license, contract_for_user
+
+        try:
+            assert_mobile_contract_license(request.user)
+        except ValueError as exc:
+            return _contract_value_error(exc)
+        contract = contract_for_user(request.user, contract_id)
+        if not contract:
+            return api_error('قرارداد یافت نشد.', code='NOT_FOUND', status=404)
+        handover = contract.handovers.filter(pk=handover_id).first()
+        if not handover:
+            return api_error('صورت‌جلسه یافت نشد.', code='NOT_FOUND', status=404)
+        preview = handover.status != 'finalized'
+        pdf_bytes = render_handover_pdf_bytes(handover, preview=preview)
+        if not pdf_bytes and handover.pdf_file:
+            pdf_bytes = handover.pdf_file.read()
+        if not pdf_bytes:
+            return api_error('PDF در دسترس نیست.', code='NOT_FOUND', status=404)
+        filename = f'handover_{contract.internal_number}_{handover.pk}.pdf'
+        response = FileResponse(
+            io.BytesIO(pdf_bytes),
+            content_type='application/pdf',
+            filename=filename,
+        )
+        if request.GET.get('inline') == '1':
+            response['Content-Disposition'] = f'inline; filename="{filename}"'
+        return response

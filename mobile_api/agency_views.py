@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import logging
 
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.views import APIView
 
 from mobile_api.responses import api_error, api_ok
@@ -155,6 +155,116 @@ class AgencySeatsView(APIView):
         except Exception as exc:
             return api_error(str(exc), code='VALIDATION_ERROR')
         return api_ok({'license_id': lic.pk, 'action': action})
+
+
+class AgencyInvitePreviewView(APIView):
+    """پیش‌نمایش دعوت — بدون افشای شماره کامل."""
+
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        from mobile_api.services.agency_invite_mobile import invitation_preview
+
+        token = (request.query_params.get('token') or '').strip()
+        if not token:
+            return api_error('توکن الزامی است.', code='VALIDATION_ERROR')
+        user = request.user if request.user.is_authenticated else None
+        return api_ok(invitation_preview(token, user))
+
+
+class AgencyInviteRespondView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        from mobile_api.services.agency_invite_mobile import respond_to_invitation
+
+        data = _parse_body(request)
+        token = (data.get('token') or '').strip()
+        action = (data.get('action') or '').strip()
+        consent = bool(data.get('consent_acknowledged'))
+        if not token:
+            return api_error('توکن الزامی است.', code='VALIDATION_ERROR')
+        try:
+            payload = respond_to_invitation(
+                request.user,
+                token,
+                action=action,
+                consent_acknowledged=consent,
+            )
+        except ValueError as exc:
+            return api_error(str(exc), code='VALIDATION_ERROR')
+        return api_ok(payload)
+
+
+class AgencySettingsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        from mobile_api.services.agency_mobile import agency_settings_payload
+
+        _, err = _require_membership(request.user)
+        if err:
+            return err
+        payload = agency_settings_payload(request.user)
+        if payload is None:
+            return api_error('آژانس یافت نشد.', code='NOT_FOUND', status=404)
+        return api_ok(payload)
+
+    def patch(self, request):
+        from mobile_api.services.agency_mobile import agency_settings_update
+
+        _, err = _require_membership(request.user)
+        if err:
+            return err
+        data = _parse_body(request)
+        try:
+            payload = agency_settings_update(
+                request.user,
+                name=(data.get('name') or ''),
+                lead_routing_policy=(data.get('lead_routing_policy') or ''),
+            )
+        except ValueError as exc:
+            return api_error(str(exc), code='FORBIDDEN', status=403)
+        return api_ok(payload)
+
+
+class AgencyAuditView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        from mobile_api.services.agency_mobile import agency_audit_payload
+
+        _, err = _require_membership(request.user)
+        if err:
+            return err
+        limit = int(request.query_params.get('limit') or 50)
+        try:
+            payload = agency_audit_payload(request.user, limit=limit)
+        except ValueError as exc:
+            return api_error(str(exc), code='FORBIDDEN', status=403)
+        return api_ok(payload)
+
+
+class AgencyActivityView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        from mobile_api.services.agency_mobile import agency_activity_for_user
+
+        _, err = _require_membership(request.user)
+        if err:
+            return err
+        advisor_raw = request.query_params.get('advisor')
+        advisor_member_id = int(advisor_raw) if advisor_raw and advisor_raw.isdigit() else None
+        event_type = (request.query_params.get('event_type') or '').strip()
+        payload = agency_activity_for_user(
+            request.user,
+            advisor_member_id=advisor_member_id,
+            event_type=event_type,
+        )
+        if payload is None:
+            return api_error('آژانس یافت نشد.', code='NOT_FOUND', status=404)
+        return api_ok(payload)
 
 
 class AgencyPerformanceView(APIView):

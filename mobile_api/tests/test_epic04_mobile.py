@@ -119,6 +119,32 @@ class Epic04AgencyMobileTests(TestCase):
         )
         self.assertEqual(resp.status_code, 400)
 
+    def test_advisor_set_role(self):
+        resp = self.client.post(
+            f'/api/mobile/v1/agency/advisors/{self.member.pk}/actions',
+            {'action': 'set_role', 'role': 'manager'},
+            format='json',
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.member.refresh_from_db()
+        self.assertEqual(self.member.role, 'manager')
+
+    def test_advisor_detail_includes_goals_and_roles(self):
+        resp = self.client.get(f'/api/mobile/v1/agency/advisors/{self.member.pk}')
+        self.assertEqual(resp.status_code, 200)
+        data = resp.json()['data']
+        self.assertIn('assignable_roles', data)
+        self.assertTrue(any(r['value'] == 'advisor' for r in data['assignable_roles']))
+        self.assertIn('stats', data)
+        self.assertTrue(data['permissions']['can_set_role'])
+
+    def test_agency_activity_feed(self):
+        resp = self.client.get('/api/mobile/v1/agency/activity')
+        self.assertEqual(resp.status_code, 200)
+        body = resp.json()['data']
+        self.assertIn('events', body)
+        self.assertTrue(body['can_filter_advisor'])
+
     def test_unauthorized_transfer(self):
         owned_by_owner = Customer.objects.create(
             user=self.owner,

@@ -11,6 +11,7 @@ from django.utils import timezone
 
 from contracts.constants import (
     ALLOWED_ATTACHMENT_EXTENSIONS,
+    CONTRACT_STATUS_CANCELLED,
     CONTRACT_STATUS_DRAFT,
     CONTRACT_STATUS_EXPIRED,
     CONTRACT_STATUS_FINALIZED,
@@ -27,6 +28,7 @@ from contracts.services.contract_display import build_contract_display
 from contracts.services.dashboard import ACTION_STATUSES, contract_acceptance_progress, contract_dashboard_stats, filter_contracts
 from contracts.services.license_gate import LICENSE_REQUIRED_MSG, user_has_contract_license
 from contracts.services.lifecycle import ContractError, create_contract
+from contracts.services.scope import can_edit_contract
 from contracts.services.routing import (
     contract_manage_url,
     contract_wizard_url,
@@ -134,7 +136,7 @@ def _contract_cta(contract: Contract) -> str:
     return 'view_contract'
 
 
-def _handover_cta(contract: Contract) -> Optional[Dict[str, str]]:
+def _handover_cta(contract: Contract) -> Optional[Dict[str, Any]]:
     ho = contract.handovers.order_by('-updated_at').first()
     if not ho:
         if contract.status == CONTRACT_STATUS_FINALIZED:
@@ -142,6 +144,7 @@ def _handover_cta(contract: Contract) -> Optional[Dict[str, str]]:
                 'label': 'شروع تحویل',
                 'action': 'OPEN_HANDOVER_CREATE',
                 'web_path': handover_create_url(contract),
+                'native_target': 'handover_create',
             }
         return None
     if ho.status == 'finalized':
@@ -149,11 +152,15 @@ def _handover_cta(contract: Contract) -> Optional[Dict[str, str]]:
             'label': 'مشاهده تحویل',
             'action': 'OPEN_HANDOVER',
             'web_path': handover_wizard_url(contract, ho),
+            'native_target': 'handover_wizard',
+            'handover_id': ho.pk,
         }
     return {
         'label': 'ادامه تحویل',
         'action': 'OPEN_HANDOVER',
         'web_path': handover_wizard_url(contract, ho),
+        'native_target': 'handover_wizard',
+        'handover_id': ho.pk,
     }
 
 
@@ -195,6 +202,7 @@ def build_contract_next_action(contract: Contract) -> Dict[str, Any]:
 
 def serialize_contract(contract: Contract, *, include_next_action: bool = True) -> Dict[str, Any]:
     primary_party = _party_summary(contract)
+    version = contract.current_version
     payload: Dict[str, Any] = {
         'id': contract.pk,
         'title': _contract_title(contract),
@@ -203,6 +211,8 @@ def serialize_contract(contract: Contract, *, include_next_action: bool = True) 
         'internal_number': contract.internal_number or '',
         'status': contract.status,
         'status_label': contract.get_status_display(),
+        'current_version_number': version.version_number if version else 0,
+        'wizard_step': contract.wizard_step if contract.status == CONTRACT_STATUS_DRAFT else '',
         'parties': primary_party,
         'primary_party': primary_party[0] if primary_party else '',
         'signature_status': _signature_label(contract),
@@ -342,6 +352,12 @@ def build_party_signatures(contract: Contract) -> List[Dict[str, Any]]:
             status = _party_invitation_status(contract, version, party, inv)
             if party.pk in accepted_ids:
                 status = 'accepted'
+            can_resend = bool(
+                inv
+                and party.pk not in accepted_ids
+                and status not in ('accepted',)
+                and contract.status not in (CONTRACT_STATUS_FINALIZED, CONTRACT_STATUS_CANCELLED)
+            )
             rows.append({
                 'kind': 'party',
                 'role': party.role,
@@ -350,6 +366,8 @@ def build_party_signatures(contract: Contract) -> List[Dict[str, Any]]:
                 'status': status,
                 'status_label': _status_label(status),
                 'accepted': party.pk in accepted_ids,
+                'invitation_id': inv.pk if inv else None,
+                'can_resend': can_resend,
             })
         accepted_w = set(version.acceptances.filter(witness_id__isnull=False).values_list('witness_id', flat=True))
         for witness in version.witnesses.order_by('witness_number'):
@@ -357,6 +375,12 @@ def build_party_signatures(contract: Contract) -> List[Dict[str, Any]]:
             status = _party_invitation_status(contract, version, witness, inv)
             if witness.pk in accepted_w:
                 status = 'accepted'
+            can_resend = bool(
+                inv
+                and witness.pk not in accepted_w
+                and status not in ('accepted',)
+                and contract.status not in (CONTRACT_STATUS_FINALIZED, CONTRACT_STATUS_CANCELLED)
+            )
             rows.append({
                 'kind': 'witness',
                 'role': 'witness',
@@ -365,6 +389,8 @@ def build_party_signatures(contract: Contract) -> List[Dict[str, Any]]:
                 'status': status,
                 'status_label': _status_label(status),
                 'accepted': witness.pk in accepted_w,
+                'invitation_id': inv.pk if inv else None,
+                'can_resend': can_resend,
             })
     else:
         wizard = contract.wizard_data or {}
@@ -486,8 +512,32 @@ def contract_detail_payload(user, contract_id: int) -> Optional[Dict[str, Any]]:
             'allowed_extensions': list(ALLOWED_ATTACHMENT_EXTENSIONS),
         },
         'can_edit_clauses': contract.is_editable,
+        'can_cancel': contract.status not in (
+            CONTRACT_STATUS_FINALIZED,
+            CONTRACT_STATUS_CANCELLED,
+        ),
+        'can_copy': True,
+        'can_new_version': can_edit_contract(user, contract) and contract.status not in (
+            CONTRACT_STATUS_CANCELLED,
+        ),
+        'current_version_number': (contract.current_version.version_number if contract.current_version else 0),
+        'versions': _contract_versions_summary(contract),
     })
     return base
+
+
+def _contract_versions_summary(contract: Contract) -> List[Dict[str, Any]]:
+    rows = []
+    for version in contract.versions.order_by('-version_number')[:20]:
+        rows.append({
+            'id': version.pk,
+            'version_number': version.version_number,
+            'is_current': contract.current_version_id == version.pk,
+            'is_locked': bool(version.is_locked),
+            'created_at': version.created_at.isoformat() if version.created_at else None,
+            'status_label': 'قفل‌شده' if version.is_locked else 'پیش‌نویس',
+        })
+    return rows
 
 
 def contract_timeline_payload(user, contract_id: int) -> Optional[List[Dict[str, Any]]]:
@@ -531,7 +581,15 @@ def list_attachments_payload(user, contract_id: int) -> Optional[List[Dict[str, 
     return [serialize_attachment(a) for a in atts]
 
 
-def upload_attachment_payload(user, contract_id: int, uploaded, *, title: str = '', attachment_type: str = 'other'):
+def upload_attachment_payload(
+    user,
+    contract_id: int,
+    uploaded,
+    *,
+    title: str = '',
+    attachment_type: str = 'other',
+    handover_id: Optional[int] = None,
+):
     assert_mobile_contract_license(user)
     contract = contract_for_user(user, contract_id)
     if not contract:
@@ -539,6 +597,13 @@ def upload_attachment_payload(user, contract_id: int, uploaded, *, title: str = 
     version = contract.current_version
     if not version:
         raise ValueError('نسخه قرارداد آماده نیست.')
+    handover = None
+    if handover_id:
+        handover = contract.handovers.filter(pk=handover_id).first()
+        if not handover:
+            raise ValueError('صورت‌جلسه یافت نشد.')
+        if handover.status not in ('draft', 'pending'):
+            raise ValueError('این صورت‌جلسه قابل ویرایش نیست.')
     try:
         validate_upload_file(uploaded)
         att = save_contract_attachment(
@@ -548,6 +613,7 @@ def upload_attachment_payload(user, contract_id: int, uploaded, *, title: str = 
             attachment_type=attachment_type or 'other',
             title=title,
             user=user,
+            handover=handover,
         )
     except ValidationError as exc:
         msg = exc.messages[0] if getattr(exc, 'messages', None) else str(exc)

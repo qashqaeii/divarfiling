@@ -6,8 +6,16 @@ from typing import Any, Dict, List, Optional
 from django.db import transaction
 from django.utils.dateparse import parse_datetime
 
-from contracts.constants import WIZARD_DISPLAY_STEPS, WIZARD_STEP_LABELS
-from contracts.services.clause_ux import build_clause_sections, clause_warnings, get_applicable_clauses
+from contracts.constants import CONTRACT_TYPE_LEASE, WIZARD_DISPLAY_STEPS, WIZARD_STEP_LABELS
+from contracts.services.clause_ux import (
+    LEASE_PENALTY_FIELDS,
+    SALE_PENALTY_FIELDS,
+    build_clause_context,
+    build_clause_sections,
+    clause_warnings,
+    get_applicable_clauses,
+)
+from contracts.services.clauses import render_clause_body
 from contracts.services.lifecycle import ContractError, save_wizard_step, validate_contract_ready
 from contracts.services.prefill import ensure_default_parties
 from contracts.services.scope import can_edit_contract, contract_for_user
@@ -32,7 +40,12 @@ def _resolve_step(contract, requested: Optional[str]) -> str:
 
 
 def _wizard_data_snapshot(wizard: Dict[str, Any]) -> Dict[str, Any]:
-    keys = PATCHABLE_WIZARD_STEPS | {'selected_clauses', 'jv'}
+    keys = PATCHABLE_WIZARD_STEPS | {
+        'selected_clauses',
+        'jv',
+        'clause_optional',
+        'custom_agreements',
+    }
     out = {}
     for key in keys:
         if key in wizard:
@@ -45,21 +58,117 @@ def _display_steps(contract_type: str) -> List[Dict[str, str]]:
     return [{'key': key, 'label': label} for key, label in rows]
 
 
-def _clause_ui(contract, wizard: Dict[str, Any]) -> Dict[str, Any]:
-    from contracts.services.clause_ux import build_clause_context
+def _penalty_inline_values(item: Dict[str, Any]) -> Dict[str, str]:
+    amount = item.get('amount_per_day') or item.get('amount') or ''
+    unit = item.get('unit', 'daily')
+    return {
+        'amount': str(amount),
+        'penalty_amount': str(amount),
+        'penalty_unit': unit,
+        'unit': unit,
+    }
 
+
+def _enrich_clause_sections_rendered(
+    contract_type: str,
+    wizard: Dict[str, Any],
+    sections: List[Dict[str, Any]],
+    *,
+    user=None,
+) -> List[Dict[str, Any]]:
+    from contracts.services.clause_ux import _library_clauses
+
+    context_data = build_clause_context(wizard, contract_type)
+    library = _library_clauses(contract_type, context_data, user=user)
+    fin = wizard.get('financial') or {}
+    penalties = fin.get('penalties') or {}
+    penalty_fields = LEASE_PENALTY_FIELDS if contract_type == CONTRACT_TYPE_LEASE else SALE_PENALTY_FIELDS
+    penalty_id_to_code = {row[0]: row[3] for row in penalty_fields}
+
+    enriched_sections = []
+    for section in sections:
+        section = dict(section)
+        cards_out = []
+        for card in section.get('cards') or []:
+            card = dict(card)
+            code = card.get('clause_code')
+            if not code and card.get('type') == 'penalty':
+                code = penalty_id_to_code.get(card.get('id') or '')
+            defn = library.get(code) if code else None
+            template = (defn.body_template if defn else None) or card.get('clause_preview') or ''
+            inline: Dict[str, str] = {}
+            if card.get('type') == 'penalty':
+                item = penalties.get(card.get('id') or '') or {}
+                if item:
+                    inline = _penalty_inline_values(item)
+            if template and defn:
+                card['clause_rendered'] = render_clause_body(defn, inline)
+            elif template:
+                card['clause_rendered'] = render_clause_body(
+                    type('_Tmp', (), {'body_template': template})(),
+                    inline,
+                )
+            cards_out.append(card)
+        section['cards'] = cards_out
+        enriched_sections.append(section)
+    return enriched_sections
+
+
+def _clause_ui(contract, wizard: Dict[str, Any]) -> Dict[str, Any]:
     context_data = build_clause_context(wizard, contract.contract_type)
+    sections = build_clause_sections(
+        contract.contract_type,
+        wizard,
+        user=contract.user,
+        is_staff=False,
+    )
+    sections = _enrich_clause_sections_rendered(
+        contract.contract_type,
+        wizard,
+        sections,
+        user=contract.user,
+    )
     return {
         'available_clauses': get_applicable_clauses(
             contract.contract_type, context_data, user=contract.user,
         ),
-        'clause_sections': build_clause_sections(
-            contract.contract_type,
-            wizard,
-            user=contract.user,
-            is_staff=False,
-        ),
+        'clause_sections': sections,
         'clause_step_warnings': clause_warnings(wizard, contract.contract_type),
+    }
+
+
+def _mobile_review_payload(contract, validation_errors: List[str]) -> Dict[str, Any]:
+    from contracts.services.contract_renderer import render_contract_document
+    from contracts.services.review_context import build_review_context
+
+    review = build_review_context(contract, validation_errors=validation_errors)
+    document_sections = render_contract_document(contract, contract.current_version)
+    doc_out = []
+    for sec in document_sections:
+        if not isinstance(sec, dict):
+            continue
+        doc_out.append({
+            'title': sec.get('title') or '',
+            'body': sec.get('body') or '',
+            'edit_step': sec.get('edit_step') or '',
+            'nav_key': sec.get('nav_key') or '',
+        })
+    return {
+        'readiness': review.get('readiness'),
+        'readiness_message': review.get('readiness_message'),
+        'readiness_detail': review.get('readiness_detail'),
+        'issues': review.get('issues') or [],
+        'blocking_count': review.get('blocking_count') or 0,
+        'warning_count': review.get('warning_count') or 0,
+        'contract_meta': review.get('contract_meta') or {},
+        'financial_summary': review.get('financial_summary') or {},
+        'important_dates': review.get('important_dates') or [],
+        'custom_agreements': review.get('custom_agreements') or [],
+        'completeness': review.get('completeness') or [],
+        'nav_items': review.get('nav_items') or [],
+        'send_disabled': review.get('send_disabled'),
+        'send_disabled_reason': review.get('send_disabled_reason') or '',
+        'document_sections': doc_out,
     }
 
 
@@ -112,8 +221,11 @@ def contract_wizard_get_payload(
         'workspace_paths': workspace_paths(contract),
         'updated_at': contract.updated_at.isoformat() if contract.updated_at else None,
     }
-    if current in ('clauses', 'review') or wizard.get('selected_clauses') or wizard.get('optional_clauses'):
+    if current in ('clauses', 'review') or wizard.get('selected_clauses') or wizard.get('clause_optional'):
         payload['clause_ui'] = _clause_ui(contract, wizard)
+    if current == 'review':
+        payload['review_context'] = _mobile_review_payload(contract, validation_errors)
+        payload['pdf_available'] = bool(contract.current_version)
     return payload
 
 

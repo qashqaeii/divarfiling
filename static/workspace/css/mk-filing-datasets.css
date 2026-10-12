@@ -392,6 +392,9 @@
     --fl-toolbar-h: 38px;
     --fl-toolbar-gap: 0.5rem;
     --fl-toolbar-pad: 0.75rem 0.9rem;
+    width: 100%;
+    max-width: none;
+    box-sizing: border-box;
     display: flex;
     flex-direction: column;
     gap: 0;
@@ -701,45 +704,46 @@
     border-color: color-mix(in srgb, #ef4444 30%, var(--ws-border));
 }
 
-/* Desktop / tablet toolbar — single horizontal row */
+/* Desktop / tablet toolbar — single full-width row */
 @media (min-width: 769px) {
     .mk-filing-datasets .fl-toolbar {
         --fl-toolbar-h: 42px;
         --fl-toolbar-gap: 0.5rem;
         --fl-toolbar-pad: 0.5rem 0.75rem;
+        --fl-toolbar-filter-col: minmax(5.25rem, 7rem);
+    }
+
+    .mk-filing-datasets .fl-toolbar__form {
+        width: 100%;
+        max-width: none;
+        min-width: 0;
     }
 
     .mk-filing-datasets .fl-toolbar__row {
-        display: flex;
-        flex-wrap: nowrap;
+        display: grid;
+        grid-template-columns:
+            minmax(0, 1fr)
+            var(--fl-toolbar-filter-col)
+            var(--fl-toolbar-filter-col)
+            var(--fl-toolbar-filter-col)
+            auto;
         align-items: center;
         gap: var(--fl-toolbar-gap);
+        width: 100%;
         min-width: 0;
+    }
+
+    .mk-filing-datasets .fl-toolbar__desk,
+    .mk-filing-datasets .fl-toolbar__filters--desk {
+        display: contents;
     }
 
     .mk-filing-datasets .fl-toolbar__search {
-        flex: 1 1 0;
+        width: 100%;
         min-width: 0;
         max-width: none;
         height: var(--fl-toolbar-h);
-    }
-
-    .mk-filing-datasets .fl-toolbar__desk {
-        display: flex;
-        flex: 0 1 auto;
-        align-items: center;
-        gap: var(--fl-toolbar-gap);
-        flex-wrap: nowrap;
-        min-width: 0;
-    }
-
-    .mk-filing-datasets .fl-toolbar__filters--desk {
-        display: flex;
-        align-items: center;
-        gap: var(--fl-toolbar-gap);
-        flex-wrap: nowrap;
-        flex: 0 1 auto;
-        min-width: 0;
+        flex: unset;
     }
 
     .mk-filing-datasets .fl-toolbar__filters--mob {
@@ -747,13 +751,14 @@
     }
 
     .mk-filing-datasets .fl-toolbar__field {
-        flex: 0 1 7.5rem;
-        min-width: 5.5rem;
-        max-width: 9rem;
-        width: auto;
+        min-width: 0;
+        max-width: none;
+        width: 100%;
+        flex: unset;
     }
 
     .mk-filing-datasets .fl-toolbar__select {
+        width: 100%;
         height: var(--fl-toolbar-h);
         font-size: 0.72rem;
         border-radius: 10px;
@@ -762,9 +767,10 @@
     .mk-filing-datasets .fl-toolbar__actions--desk {
         display: flex !important;
         align-items: center;
+        justify-content: flex-end;
         gap: 0.4rem;
-        flex-shrink: 0;
         flex-wrap: nowrap;
+        min-width: 0;
         padding: 0;
         margin: 0;
         border: none;
@@ -809,26 +815,21 @@
 @media (min-width: 1100px) {
     .mk-filing-datasets .fl-toolbar {
         --fl-toolbar-gap: 0.65rem;
-    }
-
-    .mk-filing-datasets .fl-toolbar__field {
-        flex-basis: 8.5rem;
-        max-width: 10rem;
+        --fl-toolbar-filter-col: minmax(6rem, 8.25rem);
     }
 }
 
 @media (min-width: 769px) and (max-width: 1023px) {
+    .mk-filing-datasets .fl-toolbar {
+        --fl-toolbar-filter-col: minmax(4.5rem, 6.25rem);
+    }
+
     .mk-filing-datasets .fl-toolbar__field-icon {
         display: none;
     }
 
     .mk-filing-datasets .fl-toolbar__select {
         padding-inline-start: 0.5rem;
-    }
-
-    .mk-filing-datasets .fl-toolbar__field {
-        min-width: 4.75rem;
-        max-width: 7.5rem;
     }
 
     .mk-filing-datasets .fl-toolbar__apply span {

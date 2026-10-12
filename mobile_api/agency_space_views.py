@@ -28,7 +28,7 @@ class AgencySpaceItemsView(APIView):
             filters.page_size,
         )
         items = [
-            space_item_payload(i, request.user, detail=False)
+            space_item_payload(i, request.user, detail=False, request=request)
             for i in rows
         ]
         return api_ok({
@@ -69,7 +69,7 @@ class AgencySpaceItemDetailView(APIView):
         item = get_space_item_for_user(request.user, item_id)
         if not item:
             return api_error('آیتم یافت نشد.', code='NOT_FOUND', status=404)
-        data = space_item_payload(item, request.user, detail=True)
+        data = space_item_payload(item, request.user, detail=True, request=request)
         return api_ok({'item': data})
 
     def patch(self, request, item_id: int):
@@ -90,7 +90,7 @@ class AgencySpaceItemDetailView(APIView):
             )
         except AgencySpacePublishError as exc:
             return api_error(str(exc), code='VALIDATION_ERROR')
-        return api_ok({'item': space_item_payload(item, request.user, detail=True)})
+        return api_ok({'item': space_item_payload(item, request.user, detail=True, request=request)})
 
 
 class AgencySpacePublishPropertyView(APIView):
@@ -113,7 +113,7 @@ class AgencySpacePublishPropertyView(APIView):
             )
         except (AgencySpacePublishError, ValueError) as exc:
             return api_error(str(exc), code='VALIDATION_ERROR')
-        return api_ok({'item': space_item_payload(item, request.user, detail=True)}, status=201)
+        return api_ok({'item': space_item_payload(item, request.user, detail=True, request=request)}, status=201)
 
 
 class AgencySpacePublishContactView(APIView):
@@ -137,7 +137,7 @@ class AgencySpacePublishContactView(APIView):
             )
         except (AgencySpacePublishError, ValueError) as exc:
             return api_error(str(exc), code='VALIDATION_ERROR')
-        return api_ok({'item': space_item_payload(item, request.user, detail=True)}, status=201)
+        return api_ok({'item': space_item_payload(item, request.user, detail=True, request=request)}, status=201)
 
 
 class AgencySpaceUnpublishView(APIView):

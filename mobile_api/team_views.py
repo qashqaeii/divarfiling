@@ -202,6 +202,28 @@ class TeamAnnouncementsView(APIView):
             'unread': unread_announcement_count(request.user),
         })
 
+    def post(self, request):
+        from workspace.services.crm_agency_announcements import create_announcement, parse_announcement_datetime
+
+        membership, err = _require_feature(request.user, 'announcements')
+        if err:
+            return err
+        data = _parse_body(request)
+        try:
+            ann = create_announcement(
+                request.user,
+                title=data.get('title', ''),
+                body=data.get('body', ''),
+                importance=data.get('importance', 'normal'),
+                is_pinned=data.get('is_pinned') in (True, '1', 'true', 1),
+                target_roles=data.get('target_roles') or [],
+                published_at=parse_announcement_datetime(data.get('published_at')),
+                expires_at=parse_announcement_datetime(data.get('expires_at')),
+            )
+        except (TypeError, ValueError) as exc:
+            return api_error(str(exc), code='VALIDATION_ERROR')
+        return api_ok({'id': ann.pk})
+
 
 class TeamAnnouncementDetailView(APIView):
     permission_classes = [IsAuthenticated]

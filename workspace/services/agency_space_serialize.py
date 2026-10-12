@@ -388,6 +388,7 @@ def _customer_payload(
     ).get(item.contact_share_level, item.contact_share_level)
     avatar = resolve_contact_avatar_display(customer, request=request)
     data['avatar_url'] = avatar.get('photo_url') or ''
+    data['avatar_key'] = avatar.get('avatar_key') or ''
     if detail and can_full:
         data['notes'] = (customer.notes or '')[:800]
     return data

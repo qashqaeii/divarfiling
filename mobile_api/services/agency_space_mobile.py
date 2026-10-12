@@ -126,5 +126,5 @@ def mobile_source_context(
     return base
 
 
-def space_item_payload(item, user, *, detail: bool = False) -> Optional[Dict[str, Any]]:
-    return serialize_space_item(item, user, detail=detail)
+def space_item_payload(item, user, *, detail: bool = False, request=None) -> Optional[Dict[str, Any]]:
+    return serialize_space_item(item, user, detail=detail, request=request)

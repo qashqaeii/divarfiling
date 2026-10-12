@@ -43,13 +43,29 @@ def list_available_seats(actor, agency) -> list[License]:
 
 
 def get_member_seat(member: CRMAgencyMember) -> License | None:
+    """Active agency seat for member — aligned with advisor entitlement checks."""
     sub = get_subscription_for_agency(member.agency)
     if not sub:
         return None
-    return License.objects.filter(
-        assigned_user=member.user,
-        agency_subscription=sub,
-    ).select_related('plan').first()
+    now = timezone.now()
+    active_assigned = (
+        License.objects.filter(
+            assigned_user=member.user,
+            order__status='paid',
+        )
+        .exclude(status__in=['suspended', 'expired'])
+        .filter(Q(expires_at__isnull=True) | Q(expires_at__gt=now))
+        .select_related('plan')
+    )
+    lic = active_assigned.filter(agency_subscription=sub).first()
+    if lic:
+        return lic
+    # Legacy rows: assignment on another subscription record for the same agency.
+    return (
+        active_assigned.filter(agency_subscription__agency_id=member.agency_id)
+        .order_by('-agency_subscription_id')
+        .first()
+    )
 
 
 @transaction.atomic

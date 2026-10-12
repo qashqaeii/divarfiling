@@ -69,6 +69,10 @@ def list_properties_paginated(
 def get_property_detail(user, property_id: int, *, request=None) -> Optional[dict]:
     prop = properties_qs(user).filter(pk=property_id).first()
     if not prop:
+        from workspace.services.agency_data_scope import property_for_agency_viewer
+
+        prop = property_for_agency_viewer(user, property_id)
+    if not prop:
         return None
 
     share_ctx = build_property_share_context(user, prop)

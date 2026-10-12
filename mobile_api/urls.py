@@ -205,6 +205,11 @@ urlpatterns = [
     path('agency/home', agency_views.AgencyHomeView.as_view(), name='agency_home'),
     path('agency/advisors', agency_views.AgencyAdvisorsView.as_view(), name='agency_advisors'),
     path('agency/advisors/<int:member_id>', agency_views.AgencyAdvisorDetailView.as_view(), name='agency_advisor_detail'),
+    path(
+        'agency/advisors/<int:member_id>/workspace',
+        agency_views.AgencyAdvisorWorkspaceView.as_view(),
+        name='agency_advisor_workspace',
+    ),
     path('agency/advisors/<int:member_id>/actions', agency_views.AgencyAdvisorActionView.as_view(), name='agency_advisor_action'),
     path('agency/invitations', agency_views.AgencyInvitationsView.as_view(), name='agency_invitations'),
     path('agency/invitations/<int:invitation_id>', agency_views.AgencyInvitationActionView.as_view(), name='agency_invitation_action'),

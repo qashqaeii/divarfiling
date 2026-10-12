@@ -490,6 +490,10 @@ def contract_detail_payload(user, contract_id: int) -> Optional[Dict[str, Any]]:
     assert_mobile_contract_license(user)
     contract = contract_for_user(user, contract_id)
     if not contract:
+        from workspace.services.agency_data_scope import contract_for_agency_viewer
+
+        contract = contract_for_agency_viewer(user, contract_id)
+    if not contract:
         return None
     display = build_contract_display(contract)
     base = serialize_contract(contract)
@@ -623,4 +627,9 @@ def upload_attachment_payload(
 
 def get_contract_for_pdf(user, contract_id: int) -> Optional[Contract]:
     assert_mobile_contract_license(user)
-    return contract_for_user(user, contract_id)
+    contract = contract_for_user(user, contract_id)
+    if contract:
+        return contract
+    from workspace.services.agency_data_scope import contract_for_agency_viewer
+
+    return contract_for_agency_viewer(user, contract_id)

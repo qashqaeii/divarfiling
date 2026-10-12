@@ -72,6 +72,16 @@ def get_deal_detail(user, deal_id: int) -> Optional[dict]:
         .first()
     )
     if not deal:
+        from workspace.services.agency_data_scope import deal_for_agency_viewer
+
+        deal = deal_for_agency_viewer(user, deal_id)
+        if deal:
+            deal = (
+                CRMDeal.objects.filter(pk=deal.pk)
+                .select_related('customer', 'property')
+                .first()
+            )
+    if not deal:
         return None
     ensure_deal_checklist(deal)
     meta = stage_meta_map(user).get(deal.stage) or {}

@@ -442,3 +442,53 @@ def _apply_date_filter(qs, field: str, date_from=None, date_to=None):
     if date_to:
         qs = qs.filter(**{f'{field}__lte': date_to})
     return qs
+
+
+def build_agency_viewer_record_scope_q(viewer) -> Q:
+    """اتحاد محدوده رکوردهای مشاورانی که viewer مجاز به دیدن داده‌شان است."""
+    agency, sub = resolve_managed_agency(viewer)
+    if not agency or not sub:
+        return Q(pk__in=[])
+    combined = Q()
+    has_scope = False
+    members = CRMAgencyMember.objects.filter(agency=agency).exclude(role='owner')
+    for member in members:
+        if can_view_agency_member(viewer, member):
+            combined |= _member_record_scope(member)
+            has_scope = True
+    return combined if has_scope else Q(pk__in=[])
+
+
+def customer_for_agency_viewer(viewer, contact_id: int) -> Optional[Customer]:
+    scope = build_agency_viewer_record_scope_q(viewer)
+    if scope == Q(pk__in=[]):
+        return None
+    return Customer.objects.filter(pk=contact_id).filter(scope).first()
+
+
+def property_for_agency_viewer(viewer, property_id: int) -> Optional[CRMProperty]:
+    scope = build_agency_viewer_record_scope_q(viewer)
+    if scope == Q(pk__in=[]):
+        return None
+    return CRMProperty.objects.filter(pk=property_id).filter(scope).first()
+
+
+def deal_for_agency_viewer(viewer, deal_id: int) -> Optional[CRMDeal]:
+    scope = build_agency_viewer_record_scope_q(viewer)
+    if scope == Q(pk__in=[]):
+        return None
+    return CRMDeal.objects.filter(pk=deal_id).filter(scope).first()
+
+
+def contract_for_agency_viewer(viewer, contract_id: int) -> Optional[Contract]:
+    agency, sub = resolve_managed_agency(viewer)
+    if not agency or not sub:
+        return None
+    members = CRMAgencyMember.objects.filter(agency=agency).exclude(role='owner')
+    for member in members:
+        if not can_view_agency_member(viewer, member):
+            continue
+        contract = get_member_contracts_qs(viewer, member).filter(pk=contract_id).first()
+        if contract:
+            return contract
+    return None

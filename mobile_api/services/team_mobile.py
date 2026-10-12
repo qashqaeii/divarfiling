@@ -9,6 +9,7 @@ from workspace.services.crm_agency_announcements import unread_announcement_coun
 from workspace.services.crm_agency_features import is_agency_feature_enabled
 from workspace.services.crm_agency_messages import unread_message_count
 from workspace.services.crm_panel_notifications import unread_panel_count
+from workspace.services.crm_agency_tv import _agency_logo_url
 from workspace.services.crm_scope import (
     agency_members,
     can_manage_team,
@@ -86,6 +87,7 @@ def team_overview_for_user(user) -> Dict[str, Any]:
             'id': agency.pk,
             'name': agency.name,
             'slug': agency.slug,
+            'logo_url': _agency_logo_url(agency) or '',
         },
         'membership': {
             'id': membership.pk,

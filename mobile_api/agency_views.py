@@ -59,6 +59,42 @@ class AgencyAdvisorDetailView(APIView):
         return api_ok(payload)
 
 
+class AgencyAdvisorWorkspaceView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, member_id: int):
+        from mobile_api.services.agency_advisor_mobile import advisor_workspace_for_user
+
+        _, err = _require_membership(request.user)
+        if err:
+            return err
+        tab = (request.query_params.get('tab') or 'overview').strip()
+        page = request.query_params.get('page') or '1'
+        period_raw = request.query_params.get('period') or '30'
+        try:
+            page_i = int(page)
+        except (TypeError, ValueError):
+            page_i = 1
+        try:
+            period_i = int(period_raw)
+        except (TypeError, ValueError):
+            period_i = 30
+        payload = advisor_workspace_for_user(
+            request.user,
+            member_id,
+            tab=tab,
+            page=page_i,
+            q=(request.query_params.get('q') or '').strip(),
+            status=(request.query_params.get('status') or '').strip(),
+            stage=(request.query_params.get('stage') or '').strip(),
+            dataset_id=(request.query_params.get('dataset_id') or '').strip() or None,
+            period=period_i,
+        )
+        if not payload:
+            return api_error('دسترسی به داده مشاور مجاز نیست.', code='FORBIDDEN', status=403)
+        return api_ok(payload)
+
+
 class AgencyInvitationsView(APIView):
     permission_classes = [IsAuthenticated]
 

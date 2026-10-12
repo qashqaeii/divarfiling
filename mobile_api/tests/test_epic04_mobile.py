@@ -55,6 +55,7 @@ class Epic04AgencyMobileTests(TestCase):
         self.assertEqual(resp.status_code, 200)
         data = resp.json()['data']
         self.assertTrue(data['has_agency'])
+        self.assertIn('logo_url', data['agency'])
         self.assertIn('kpis', data)
         self.assertIn('capabilities', data)
         self.assertTrue(data['permissions']['can_manage_agency'])
@@ -128,6 +129,22 @@ class Epic04AgencyMobileTests(TestCase):
         self.assertEqual(resp.status_code, 200)
         self.member.refresh_from_db()
         self.assertEqual(self.member.role, 'manager')
+
+    def test_advisor_workspace_contacts(self):
+        Customer.objects.create(
+            user=self.advisor,
+            agency=self.agency,
+            name='مخاطب مشاور',
+            phone='09125556677',
+            status='جدید',
+        )
+        resp = self.client.get(
+            f'/api/mobile/v1/agency/advisors/{self.member.pk}/workspace',
+            {'tab': 'contacts'},
+        )
+        self.assertEqual(resp.status_code, 200)
+        items = resp.json()['data']['items']
+        self.assertTrue(any(i['name'] == 'مخاطب مشاور' for i in items))
 
     def test_advisor_detail_includes_goals_and_roles(self):
         resp = self.client.get(f'/api/mobile/v1/agency/advisors/{self.member.pk}')

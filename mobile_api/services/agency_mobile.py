@@ -37,6 +37,27 @@ from workspace.services.crm_scope import (
     get_membership,
 )
 from mobile_api.services.team_mobile import member_to_dict, team_overview_for_user
+from workspace.services.agency_activity import EVENT_TYPE_LABELS
+
+
+def _activity_event_title(event_type: str) -> str:
+    key = (event_type or '').strip()
+    if not key:
+        return ''
+    return EVENT_TYPE_LABELS.get(key, key.replace('_', ' '))
+
+
+def _activity_event_payload(ev) -> Dict[str, Any]:
+    event_type = ev.event_type
+    label = _activity_event_title(event_type)
+    return {
+        'id': ev.pk,
+        'event_type': event_type,
+        'event_label': label,
+        'title': label,
+        'created_at': ev.created_at.isoformat() if ev.created_at else '',
+        'actor_name': ev.actor.get_full_name() if ev.actor_id else '',
+    }
 
 
 def _invitation_to_dict(inv: AgencyInvitation) -> Dict[str, Any]:
@@ -166,13 +187,7 @@ def agency_home_for_user(user) -> Dict[str, Any]:
     team_activity: List[Dict[str, Any]] = []
     if can_manage_team(user):
         for ev in build_activity_feed(user, limit=8):
-            team_activity.append({
-                'id': ev.pk,
-                'event_type': ev.event_type,
-                'title': ev.event_type.replace('.', ' · '),
-                'created_at': ev.created_at.isoformat() if ev.created_at else '',
-                'actor_name': ev.actor.get_full_name() if ev.actor_id else '',
-            })
+            team_activity.append(_activity_event_payload(ev))
 
     return {
         **overview,
@@ -270,13 +285,7 @@ def advisor_detail_for_user(user, member_id: int) -> Optional[Dict[str, Any]]:
     activities = []
     if can_manage_team(user):
         for ev in build_activity_feed(user, advisor_id=member.user_id, limit=8):
-            activities.append({
-                'id': ev.pk,
-                'event_type': ev.event_type,
-                'title': ev.event_type.replace('.', ' · '),
-                'created_at': ev.created_at.isoformat() if ev.created_at else '',
-                'actor_name': ev.actor.get_full_name() if ev.actor_id else '',
-            })
+            activities.append(_activity_event_payload(ev))
 
     u = member.user
     can_manage = can_manage_agency(user, agency)
@@ -305,9 +314,17 @@ def advisor_detail_for_user(user, member_id: int) -> Optional[Dict[str, Any]]:
                 'period_label': row.get('period_label', ''),
             })
 
+    from mobile_api.services.agency_advisor_mobile import advisor_section_counts
+    from workspace.services.agency_entitlement import can_view_agency_member
+
+    section_counts = advisor_section_counts(user, member_id) or {}
+    can_workspace = can_view_agency_member(user, member)
+
     return {
         'member': member_to_dict(member),
         'membership_status': 'active' if member.is_active else 'inactive',
+        'section_counts': section_counts,
+        'can_view_workspace': can_workspace,
         'email': getattr(u, 'email', '') or '',
         'seat': _member_seat_payload(member),
         'performance': performance,
@@ -442,13 +459,7 @@ def agency_activity_for_user(
         event_type=(event_type or '').strip(),
         limit=limit,
     ):
-        events.append({
-            'id': ev.pk,
-            'event_type': ev.event_type,
-            'title': ev.event_type.replace('.', ' · '),
-            'created_at': ev.created_at.isoformat() if ev.created_at else '',
-            'actor_name': ev.actor.get_full_name() if ev.actor_id else '',
-        })
+        events.append(_activity_event_payload(ev))
     since = timezone.now() - timedelta(days=90)
     event_types = list(
         AgencyActivityEvent.objects.filter(agency=agency, created_at__gte=since)
@@ -462,6 +473,10 @@ def agency_activity_for_user(
         'can_filter_advisor': can_filter,
         'event_type': (event_type or '').strip(),
         'event_types': event_types,
+        'event_type_options': [
+            {'value': t, 'label': _activity_event_title(t)}
+            for t in event_types
+        ],
     }
 
 

@@ -53,7 +53,12 @@ def list_contacts(
 
 
 def get_contact(user, contact_id: int) -> Optional[Customer]:
-    return filter_contacts(user, {}).filter(pk=contact_id).first()
+    contact = filter_contacts(user, {}).filter(pk=contact_id).first()
+    if contact:
+        return contact
+    from workspace.services.agency_data_scope import customer_for_agency_viewer
+
+    return customer_for_agency_viewer(user, contact_id)
 
 
 def contact_detail_payload(user, contact_id: int, *, request=None) -> Optional[dict]:

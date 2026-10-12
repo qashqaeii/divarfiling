@@ -386,9 +386,13 @@ def _customer_payload(
     data['contact_share_level_label'] = dict(
         AgencySpaceItem.CONTACT_SHARE_LEVEL_CHOICES,
     ).get(item.contact_share_level, item.contact_share_level)
-    avatar = resolve_contact_avatar_display(customer, request=request)
-    data['avatar_url'] = avatar.get('photo_url') or ''
-    data['avatar_key'] = avatar.get('avatar_key') or ''
+    try:
+        avatar = resolve_contact_avatar_display(customer, request=request)
+        data['avatar_url'] = avatar.get('photo_url') or ''
+        data['avatar_key'] = avatar.get('avatar_key') or ''
+    except Exception:
+        data['avatar_url'] = ''
+        data['avatar_key'] = ''
     if detail and can_full:
         data['notes'] = (customer.notes or '')[:800]
     return data
@@ -460,7 +464,7 @@ def serialize_space_item(
         if item.customer_id:
             payload['contact_share_level'] = item.contact_share_level
             payload['contact_share_level_label'] = dict(
-                AgencySpaceItem.CONTACT_SHARE_CHOICES,
+                AgencySpaceItem.CONTACT_SHARE_LEVEL_CHOICES,
             ).get(item.contact_share_level, item.contact_share_level)
         payload['edit_team_members'] = [
             {

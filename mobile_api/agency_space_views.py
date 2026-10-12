@@ -70,6 +70,8 @@ class AgencySpaceItemDetailView(APIView):
         if not item:
             return api_error('آیتم یافت نشد.', code='NOT_FOUND', status=404)
         data = space_item_payload(item, request.user, detail=True, request=request)
+        if not data:
+            return api_error('دسترسی مجاز نیست.', code='FORBIDDEN', status=403)
         return api_ok({'item': data})
 
     def patch(self, request, item_id: int):

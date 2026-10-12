@@ -5,13 +5,13 @@
 {% block mobile_bar_title %}فایلینگ{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-datasets.css' %}?v=21">
+<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-datasets.css' %}?v=22">
 <link rel="stylesheet" href="{% static 'workspace/css/mk-filing-mobile.css' %}?v=10">
 {% include 'workspace/academy/includes/academy_assets_css.html' %}
 {% endblock %}
 
 {% block ws_surface_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-mobile-v2.css' %}?v=15">
+<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-mobile-v2.css' %}?v=16">
 <link rel="stylesheet" href="{% static 'workspace/css/ws-filing-mobile-dl-v1.css' %}?v=8">
 {% endblock %}
 
@@ -99,7 +99,7 @@
             {% url 'workspace:dataset_list' as filing_clear_url %}
             {% include 'workspace/includes/filing/filing_empty_state.html' with variant='filter' title='نتیجه‌ای با این فیلترها پیدا نشد' description='فیلترها را تغییر دهید یا جستجو را پاک کنید.' action_url=filing_clear_url action_label='پاک کردن فیلترها' %}
             {% else %}
-            {% include 'workspace/includes/filing/filing_empty_state.html' with title='هنوز پوشه استخراجی ندارید' description='برای شروع، یک فایل یا پوشه استخراج آپلود کنید.' action_modal='modal-upload' action_label='آپلود فایل / پوشه' %}
+            {% include 'workspace/includes/filing/filing_first_extract_empty.html' %}
             {% endif %}
         </div>
         {% endif %}

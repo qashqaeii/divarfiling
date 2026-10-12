@@ -1,0 +1,86 @@
+{% load static %}
+<div class="fl-extract-start" data-fl-tour="filing-empty" aria-labelledby="fl-extract-start-title">
+    <div class="fl-extract-start__intro">
+        <span class="fl-extract-start__kicker">
+            <i class="fas fa-rocket" aria-hidden="true"></i>
+            گام اول فایلینگ
+        </span>
+        <h3 class="fl-extract-start__title" id="fl-extract-start-title">اولین استخراج را با اپ اندروید یا ربات ویندوز شروع کنید</h3>
+        <p class="fl-extract-start__lead">
+            لایسنس شما فعال است. برای ساخت پوشهٔ استخراج، اپ را دانلود و نصب کنید؛ پس از اولین استخراج، پوشه‌ها همین‌جا در فایلینگ ظاهر می‌شوند.
+        </p>
+    </div>
+
+    <ol class="fl-extract-start__steps" aria-label="مراحل شروع">
+        <li><span class="fl-extract-start__step-num">۱</span><span>دانلود و نصب یکی از اپ‌ها</span></li>
+        <li><span class="fl-extract-start__step-num">۲</span><span>ورود با همان حساب میزکار و فعال‌سازی لایسنس</span></li>
+        <li><span class="fl-extract-start__step-num">۳</span><span>انتخاب شهر و فیلتر — شروع استخراج از دیوار</span></li>
+    </ol>
+
+    <div class="fl-extract-start__grid">
+        <article class="fl-extract-start__card fl-extract-start__card--windows">
+            <div class="fl-extract-start__card-top">
+                <span class="fl-extract-start__card-icon" aria-hidden="true"><i class="fab fa-windows"></i></span>
+                <div class="fl-extract-start__card-meta">
+                    <div class="fl-extract-start__card-labels">
+                        <strong class="fl-extract-start__card-name">ربات ویندوز</strong>
+                        <span class="fl-extract-start__pill fl-extract-start__pill--rec">پیشنهادی</span>
+                    </div>
+                    <p class="fl-extract-start__card-desc">استخراج حجیم، چند زیردسته و خروجی اکسل — مناسب دفتر</p>
+                    {% if app_downloads.windows.version_label %}
+                    <span class="fl-extract-start__ver" dir="ltr">{{ app_downloads.windows.version_label }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="fl-extract-start__card-actions">
+                {% if app_downloads.windows_download %}
+                <a
+                    href="{% url 'payment:download' app_downloads.windows_download.order_id %}"
+                    class="fl-extract-start__btn fl-extract-start__btn--windows"
+                >
+                    <i class="fas fa-download" aria-hidden="true"></i>
+                    دانلود نصب‌کننده
+                </a>
+                {% else %}
+                <a href="{% url 'dashboard_tab' tab='downloads' %}" class="fl-extract-start__btn fl-extract-start__btn--windows">
+                    <i class="fas fa-download" aria-hidden="true"></i>
+                    دریافت از پنل دانلود
+                </a>
+                {% endif %}
+                <a href="{% url 'license_guide' %}" class="fl-extract-start__link">راهنمای نصب و فعال‌سازی</a>
+            </div>
+        </article>
+
+        <article class="fl-extract-start__card fl-extract-start__card--android">
+            <div class="fl-extract-start__card-top">
+                <span class="fl-extract-start__card-icon" aria-hidden="true"><i class="fab fa-android"></i></span>
+                <div class="fl-extract-start__card-meta">
+                    <div class="fl-extract-start__card-labels">
+                        <strong class="fl-extract-start__card-name">اپ اندروید</strong>
+                        <span class="fl-extract-start__pill">موبایل</span>
+                    </div>
+                    <p class="fl-extract-start__card-desc">استخراج سریع در مسیر — همگام با فایلینگ میزکار</p>
+                    {% if app_downloads.android.available and app_downloads.android.version_label %}
+                    <span class="fl-extract-start__ver" dir="ltr">{{ app_downloads.android.version_label }}{% if app_downloads.android.size_label %} · {{ app_downloads.android.size_label }}{% endif %}</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="fl-extract-start__card-actions">
+                {% if app_downloads.android.available %}
+                <a href="{% url 'android_app_download' %}" class="fl-extract-start__btn fl-extract-start__btn--android">
+                    <i class="fas fa-download" aria-hidden="true"></i>
+                    دانلود APK
+                </a>
+                {% else %}
+                <span class="fl-extract-start__btn fl-extract-start__btn--disabled" aria-disabled="true">به‌زودی در دسترس</span>
+                {% endif %}
+                <a href="{% url 'android_tutorial' %}" class="fl-extract-start__link">آموزش نصب اندروید</a>
+            </div>
+        </article>
+    </div>
+
+    <p class="fl-extract-start__foot">
+        <span>فایل اکسل از قبل دارید؟</span>
+        <button type="button" class="fl-extract-start__foot-btn" data-modal-open="modal-upload">آپلود دستی پوشه</button>
+    </p>
+</div>

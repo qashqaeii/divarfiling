@@ -184,13 +184,23 @@
         }
     }
 
+    function dismissContextualEl(el) {
+        if (!el || el.classList.contains('is-leaving')) return;
+        el.classList.add('is-leaving');
+        window.setTimeout(function () {
+            const shell = el.closest('.acd-contextual-shell');
+            if (shell) shell.remove();
+            else el.remove();
+        }, 220);
+    }
+
     function initContextual() {
         document.querySelectorAll('[data-acd-dismiss-contextual]').forEach(function (btn) {
             btn.addEventListener('click', function () {
                 const key = btn.getAttribute('data-acd-dismiss-contextual');
+                const wrap = btn.closest('[data-acd-contextual]');
                 postJson('/workspace/api/academy/contextual/dismiss/', { key: key }).then(function () {
-                    const wrap = btn.closest('[data-acd-contextual]');
-                    if (wrap) wrap.remove();
+                    dismissContextualEl(wrap);
                 });
             });
         });

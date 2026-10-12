@@ -20,6 +20,7 @@ def get_contextual_banner(user, key: str) -> dict | None:
     video = AcademyVideo.objects.filter(slug=meta['video_slug'], is_active=True).first()
     if not video:
         return None
+    poster, poster_kind = video.get_poster_context()
     return {
         'key': key,
         'title': meta['title'],
@@ -27,6 +28,8 @@ def get_contextual_banner(user, key: str) -> dict | None:
         'video': video,
         'duration_display': video.duration_display,
         'video_url': reverse('workspace:academy_video', kwargs={'slug': video.slug}) + f'?context={key}',
+        'poster': poster,
+        'poster_kind': poster_kind,
     }
 
 

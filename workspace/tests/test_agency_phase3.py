@@ -219,6 +219,24 @@ class ContractsScopeTests(AgencyPhase3Base):
         qs = get_member_contracts_qs(self.owner_a, self.member_a)
         self.assertIn(contract, list(qs))
 
+    def test_agency_contracts_qs_for_owner(self):
+        from workspace.services.agency_data_scope import get_agency_contracts_qs
+
+        from contracts.services.tokens import generate_bearer_token
+
+        _, th = generate_bearer_token()
+        contract = Contract.objects.create(
+            user=self.advisor_a,
+            agency=self.agency_a,
+            deal=self.deal_a,
+            contract_type='lease',
+            internal_number=f'C-{uuid.uuid4().hex[:8]}',
+            verification_token_hash=th,
+            title='Team Contract',
+        )
+        qs = get_agency_contracts_qs(self.owner_a)
+        self.assertIn(contract, list(qs))
+
     def test_cross_agency_contract_denied(self):
         from contracts.services.tokens import generate_bearer_token
         raw, th = generate_bearer_token()

@@ -225,6 +225,37 @@ def get_member_contract(viewer, member: CRMAgencyMember, contract_id: int) -> Co
     return get_member_contracts_qs(viewer, member).filter(pk=contract_id).first()
 
 
+def get_agency_contracts_qs(viewer) -> QuerySet:
+    """قراردادهای مشاوران قابل‌مشاهده برای مدیر تیم — read-only."""
+    from workspace.services.crm_scope import can_manage_team
+
+    agency, sub = resolve_managed_agency(viewer)
+    if not agency or not sub:
+        raise AgencyDataScopeError('اشتراک آژانس فعال نیست')
+    if not can_manage_team(viewer):
+        raise AgencyDataScopeError('دسترسی مجاز نیست')
+
+    visible_user_ids: list[int] = []
+    for member in list_visible_advisor_members(viewer):
+        if can_view_agency_member(viewer, member):
+            visible_user_ids.append(member.user_id)
+    if not visible_user_ids:
+        return Contract.objects.none()
+
+    deal_ids = CRMDeal.objects.filter(
+        agency=agency,
+        user_id__in=visible_user_ids,
+    ).values_list('pk', flat=True)
+    return (
+        Contract.objects.filter(
+            Q(user_id__in=visible_user_ids) | Q(deal_id__in=deal_ids),
+        )
+        .filter(Q(agency_id=agency.id) | Q(agency__isnull=True, user_id__in=visible_user_ids))
+        .select_related('deal', 'deal__customer', 'current_version', 'user')
+        .distinct()
+    )
+
+
 def get_member_tasks_qs(viewer, member: CRMAgencyMember) -> QuerySet:
     """پیگیری‌های باز — Reminder + next_action روی Deal."""
     if isinstance(member, int):

@@ -1,18 +1,68 @@
+{% load static %}
 {% if academy_contextual %}
-<section class="acd-contextual" data-acd-contextual="{{ academy_contextual.key }}" aria-label="راهنمای لحظه‌ای">
-    <div class="acd-contextual-body">
-        <span class="acd-contextual-avatar" aria-hidden="true"><i class="fas fa-user-tie"></i></span>
-        <div>
-            <span class="acd-contextual-kicker">مربی فایلینگ دیوار</span>
-            <strong class="acd-contextual-title">{{ academy_contextual.title }}</strong>
-            <p class="acd-contextual-msg">{{ academy_contextual.message }} · {{ academy_contextual.duration_display }}</p>
-        </div>
-    </div>
-    <div class="acd-contextual-actions">
-        <a href="{{ academy_contextual.video_url }}" class="acd-btn acd-btn--primary acd-btn--sm">
-            <i class="fas fa-circle-play" aria-hidden="true"></i> مشاهده آموزش
+<div class="acd-contextual-shell">
+    <section
+        class="acd-contextual contextual-academy-banner"
+        data-acd-contextual="{{ academy_contextual.key }}"
+        aria-labelledby="acd-contextual-title-{{ academy_contextual.key }}"
+    >
+        <button
+            type="button"
+            class="acd-contextual-dismiss"
+            data-acd-dismiss-contextual="{{ academy_contextual.key }}"
+            aria-label="بستن پیشنهاد مربی"
+        >
+            <i class="fas fa-xmark" aria-hidden="true"></i>
+        </button>
+
+        <a
+            href="{{ academy_contextual.video_url }}"
+            class="acd-contextual-media"
+            data-acd-cta
+            aria-label="پخش آموزش: {{ academy_contextual.title }}"
+        >
+            {% if academy_contextual.poster %}
+            <img
+                class="acd-contextual-media-img"
+                src="{% if academy_contextual.poster_kind == 'static' %}{% static academy_contextual.poster %}{% else %}{{ academy_contextual.poster }}{% endif %}"
+                alt=""
+                loading="lazy"
+                decoding="async"
+                width="160"
+                height="90"
+            >
+            {% else %}
+            <span class="acd-contextual-media-fallback" aria-hidden="true">
+                <i class="fas fa-circle-play"></i>
+            </span>
+            {% endif %}
+            <span class="acd-contextual-media-play" aria-hidden="true"><i class="fas fa-play"></i></span>
+            <span class="acd-contextual-media-duration">{{ academy_contextual.duration_display }}</span>
         </a>
-        <button type="button" class="acd-btn acd-btn--ghost acd-btn--sm" data-acd-dismiss-contextual="{{ academy_contextual.key }}">بعداً</button>
-    </div>
-</section>
+
+        <div class="acd-contextual-copy">
+            <div class="acd-contextual-head">
+                <span class="acd-contextual-kicker">
+                    <i class="fas fa-graduation-cap" aria-hidden="true"></i>
+                    مربی فایلینگ دیوار
+                </span>
+                <span class="acd-contextual-chip">ویدیوی آموزشی</span>
+            </div>
+            <h2 class="acd-contextual-title" id="acd-contextual-title-{{ academy_contextual.key }}">
+                {{ academy_contextual.title }}
+            </h2>
+            <p class="acd-contextual-msg">{{ academy_contextual.message }}</p>
+        </div>
+
+        <div class="acd-contextual-actions">
+            <a href="{{ academy_contextual.video_url }}" class="acd-btn acd-btn--primary acd-btn--sm acd-contextual-cta" data-acd-cta>
+                <i class="fas fa-play" aria-hidden="true"></i>
+                شروع آموزش
+            </a>
+            <button type="button" class="acd-btn acd-btn--ghost acd-btn--sm" data-acd-dismiss-contextual="{{ academy_contextual.key }}">
+                بعداً یادآوری کن
+            </button>
+        </div>
+    </section>
+</div>
 {% endif %}

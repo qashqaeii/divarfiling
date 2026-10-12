@@ -214,6 +214,7 @@ urlpatterns = [
     path('agency/invitations', agency_views.AgencyInvitationsView.as_view(), name='agency_invitations'),
     path('agency/invitations/<int:invitation_id>', agency_views.AgencyInvitationActionView.as_view(), name='agency_invitation_action'),
     path('agency/seats', agency_views.AgencySeatsView.as_view(), name='agency_seats'),
+    path('agency/contracts', agency_views.AgencyContractsView.as_view(), name='agency_contracts'),
     path('agency/performance', agency_views.AgencyPerformanceView.as_view(), name='agency_performance'),
     path('agency/activity', agency_views.AgencyActivityView.as_view(), name='agency_activity'),
     path('agency/settings', agency_views.AgencySettingsView.as_view(), name='agency_settings'),

@@ -146,3 +146,15 @@ class AgencyClosureMobileTests(TestCase):
         resp = self.owner_client.get('/api/mobile/v1/agency/audit', {'limit': 10})
         self.assertEqual(resp.status_code, 200)
         self.assertIn('timeline', resp.json()['data'])
+
+    def test_agency_contracts_list_owner(self):
+        resp = self.owner_client.get('/api/mobile/v1/agency/contracts')
+        self.assertEqual(resp.status_code, 200)
+        body = resp.json()
+        self.assertIn('items', body['data'])
+        self.assertIn('stats', body['data'])
+        self.assertIn('advisors', body['data'])
+
+    def test_agency_contracts_forbidden_for_advisor(self):
+        resp = self.advisor_client.get('/api/mobile/v1/agency/contracts')
+        self.assertEqual(resp.status_code, 403)

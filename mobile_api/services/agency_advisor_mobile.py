@@ -109,7 +109,7 @@ def _contract_item(row) -> Dict[str, Any]:
     return {
         'id': row.pk,
         'internal_number': row.internal_number or '',
-        'status': row.status or '',
+        'status': row.get_status_display() if row.status else '',
         'title': row.title or '',
         'deal_title': row.deal.title if row.deal_id else '',
         'version': version.version_number if version else None,

@@ -1749,77 +1749,286 @@
     color: var(--acd-muted);
 }
 
-/* ── Contextual Coach Card ── */
-.acd-contextual {
-    display: grid;
-    gap: 0.85rem;
-    padding: 1rem 1.1rem;
+/* ── Contextual Coach Card (workspace embed) ── */
+.acd-contextual-shell {
+    --acd-primary: var(--ws-primary, var(--ds-purple, #7c3aed));
+    --acd-primary-hover: var(--ds-purple-hover, #6d28d9);
+    --acd-primary-soft: var(--ds-purple-soft, rgba(124, 58, 237, 0.12));
+    --acd-primary-glow: var(--ds-purple-glow, rgba(124, 58, 237, 0.32));
+    --acd-muted: var(--ws-text-muted, #64748b);
+    --acd-text-secondary: var(--ws-text-secondary, #94a3b8);
+    --acd-card: var(--ws-card, var(--ws-surface, #0f172a));
+    --acd-surface: var(--ws-surface, #111827);
+    --acd-border: var(--ws-border, rgba(148, 163, 184, 0.14));
+    --acd-radius: 16px;
+    --acd-radius-sm: 12px;
+    --acd-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+    --acd-ease: cubic-bezier(0.4, 0, 0.2, 1);
     margin-bottom: 1rem;
-    border-radius: var(--acd-radius);
-    border: 1px solid rgba(124, 58, 237, 0.25);
-    background: linear-gradient(135deg, var(--acd-primary-soft) 0%, var(--acd-card) 100%);
-    box-shadow: var(--acd-shadow);
+    max-width: 100%;
 }
 
-@media (min-width: 640px) {
-    .acd-contextual {
-        grid-template-columns: 1fr auto;
-        align-items: center;
+@media (prefers-reduced-motion: no-preference) {
+    .acd-contextual-shell .acd-contextual {
+        animation: acd-contextual-enter 0.4s var(--acd-ease) both;
     }
 }
 
-.acd-contextual-body {
-    display: flex;
-    gap: 0.85rem;
-    align-items: flex-start;
+@keyframes acd-contextual-enter {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.acd-contextual-shell .acd-contextual.is-leaving {
+    animation: acd-contextual-leave 0.22s var(--acd-ease) forwards;
+}
+
+@keyframes acd-contextual-leave {
+    to {
+        opacity: 0;
+        transform: translateY(-6px) scale(0.985);
+    }
+}
+
+.acd-contextual {
+    position: relative;
+    display: grid;
+    gap: 0.85rem 1rem;
+    padding: 0.85rem;
+    border-radius: var(--acd-radius);
+    border: 1px solid color-mix(in srgb, var(--acd-primary) 22%, var(--acd-border));
+    background:
+        radial-gradient(ellipse 90% 80% at 100% 0%, color-mix(in srgb, var(--acd-primary) 14%, transparent), transparent 58%),
+        var(--acd-surface);
+    box-shadow: var(--acd-shadow), 0 10px 28px -18px color-mix(in srgb, var(--acd-primary) 35%, transparent);
+    overflow: hidden;
+}
+
+@media (min-width: 720px) {
+    .acd-contextual {
+        grid-template-columns: auto 1fr auto;
+        grid-template-rows: auto;
+        align-items: center;
+        padding: 0.9rem 1rem 0.9rem 0.9rem;
+    }
+}
+
+.acd-contextual-dismiss {
+    position: absolute;
+    top: 0.45rem;
+    inset-inline-end: 0.45rem;
+    z-index: 2;
+    width: 2rem;
+    height: 2rem;
+    display: grid;
+    place-items: center;
+    border: none;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--acd-card) 88%, transparent);
+    color: var(--acd-text-secondary);
+    cursor: pointer;
+    transition: background 0.15s var(--acd-ease), color 0.15s var(--acd-ease), transform 0.15s var(--acd-ease);
+    backdrop-filter: blur(6px);
+}
+
+.acd-contextual-dismiss:hover {
+    background: var(--acd-primary-soft);
+    color: var(--acd-primary);
+}
+
+.acd-contextual-dismiss:active {
+    transform: scale(0.94);
+}
+
+.acd-contextual-media {
+    position: relative;
+    display: block;
+    flex-shrink: 0;
+    width: 100%;
+    max-width: 100%;
+    aspect-ratio: 16 / 9;
+    border-radius: var(--acd-radius-sm);
+    overflow: hidden;
+    text-decoration: none;
+    color: inherit;
+    box-shadow: 0 6px 18px -10px rgba(15, 23, 42, 0.45);
+    isolation: isolate;
+}
+
+@media (min-width: 720px) {
+    .acd-contextual-media {
+        width: 148px;
+        aspect-ratio: 16 / 10;
+        margin-top: 0.15rem;
+    }
+}
+
+.acd-contextual-media::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, transparent 35%, rgba(15, 23, 42, 0.55) 100%);
+    pointer-events: none;
+    z-index: 1;
+}
+
+.acd-contextual-media-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.35s var(--acd-ease);
+}
+
+.acd-contextual-media:hover .acd-contextual-media-img {
+    transform: scale(1.04);
+}
+
+.acd-contextual-media-fallback {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    height: 100%;
+    min-height: 5.5rem;
+    background: linear-gradient(135deg, var(--acd-primary-soft), color-mix(in srgb, var(--acd-card) 90%, var(--acd-primary-soft)));
+    color: var(--acd-primary);
+    font-size: 2rem;
+}
+
+.acd-contextual-media-play {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    display: grid;
+    place-items: center;
+    pointer-events: none;
+}
+
+.acd-contextual-media-play i {
+    width: 2.65rem;
+    height: 2.65rem;
+    display: grid;
+    place-items: center;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.94);
+    color: var(--acd-primary);
+    font-size: 0.85rem;
+    padding-inline-start: 0.12rem;
+    box-shadow: 0 8px 22px rgba(15, 23, 42, 0.28);
+    transition: transform 0.2s var(--acd-ease), box-shadow 0.2s var(--acd-ease);
+}
+
+.acd-contextual-media:hover .acd-contextual-media-play i {
+    transform: scale(1.06);
+    box-shadow: 0 10px 26px rgba(15, 23, 42, 0.32);
+}
+
+.acd-contextual-media-duration {
+    position: absolute;
+    z-index: 3;
+    inset-inline-end: 0.45rem;
+    bottom: 0.45rem;
+    padding: 0.18rem 0.45rem;
+    border-radius: 6px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: #fff;
+    background: rgba(15, 23, 42, 0.72);
+    backdrop-filter: blur(4px);
+    pointer-events: none;
+}
+
+.acd-contextual-copy {
     min-width: 0;
 }
 
-.acd-contextual-avatar {
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    display: grid;
-    place-items: center;
-    background: var(--acd-primary);
-    color: #fff;
-    flex-shrink: 0;
-    font-size: 1rem;
-    box-shadow: 0 4px 12px var(--acd-primary-glow);
+.acd-contextual-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem 0.55rem;
+    margin-bottom: 0.35rem;
 }
 
 .acd-contextual-kicker {
-    display: block;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
     font-size: 0.72rem;
     font-weight: 700;
     color: var(--acd-primary);
-    margin-bottom: 0.2rem;
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
+    letter-spacing: 0.01em;
+}
+
+.acd-contextual-kicker i {
+    font-size: 0.78rem;
+    opacity: 0.9;
+}
+
+.acd-contextual-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.12rem 0.45rem;
+    border-radius: 999px;
+    font-size: 0.64rem;
+    font-weight: 600;
+    color: var(--acd-text-secondary);
+    background: color-mix(in srgb, var(--acd-card) 75%, transparent);
+    border: 1px solid var(--acd-border);
 }
 
 .acd-contextual-title {
-    display: block;
-    font-size: 0.92rem;
-    font-weight: 700;
-    line-height: 1.4;
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 800;
+    line-height: 1.35;
+    letter-spacing: -0.01em;
+}
+
+@media (min-width: 720px) {
+    .acd-contextual-title {
+        font-size: 1.05rem;
+    }
 }
 
 .acd-contextual-msg {
-    margin: 0.25rem 0 0;
+    margin: 0.35rem 0 0;
     font-size: 0.82rem;
     color: var(--acd-muted);
-    line-height: 1.55;
+    line-height: 1.6;
 }
 
 .acd-contextual-actions {
     display: flex;
-    gap: 0.5rem;
-    flex-wrap: wrap;
+    flex-direction: column;
+    gap: 0.45rem;
+    align-items: stretch;
 }
 
-@media (min-width: 640px) {
-    .acd-contextual-actions { justify-content: flex-end; }
+@media (min-width: 720px) {
+    .acd-contextual-actions {
+        align-items: flex-end;
+        min-width: 9.5rem;
+    }
+}
+
+.acd-contextual-shell .acd-contextual-cta {
+    box-shadow: 0 6px 16px -6px var(--acd-primary-glow);
+}
+
+@media (max-width: 719px) {
+    .acd-contextual-shell .acd-contextual-actions .acd-btn {
+        width: 100%;
+        min-height: 2.75rem;
+        justify-content: center;
+    }
 }
 
 /* ── Badge success modal ── */

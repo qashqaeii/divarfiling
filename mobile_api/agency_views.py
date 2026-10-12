@@ -303,6 +303,46 @@ class AgencyActivityView(APIView):
         return api_ok(payload)
 
 
+class AgencyContractsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        from mobile_api.pagination import clamp_page, clamp_page_size
+        from mobile_api.services.agency_contracts_mobile import agency_contracts_for_user
+        from workspace.services.agency_data_scope import AgencyDataScopeError
+
+        _, err = _require_membership(request.user)
+        if err:
+            return err
+        page = clamp_page(request.GET.get('page', 1))
+        page_size = clamp_page_size(request.GET.get('page_size', 20), default=20, maximum=50)
+        params = {
+            'q': request.GET.get('q') or request.GET.get('search') or '',
+            'status': request.GET.get('status') or '',
+            'type': request.GET.get('type') or request.GET.get('contract_type') or '',
+            'deal_id': request.GET.get('deal_id') or '',
+            'deal_linked': request.GET.get('deal_linked') or '',
+            'date_from': request.GET.get('date_from') or '',
+            'date_to': request.GET.get('date_to') or '',
+            'sort': request.GET.get('sort') or 'updated',
+            'needs_action': request.GET.get('needs_action') or '',
+            'advisor': request.GET.get('advisor') or request.GET.get('advisor_member_id') or '',
+        }
+        try:
+            payload = agency_contracts_for_user(
+                request.user,
+                page=page,
+                page_size=page_size,
+                query=params,
+            )
+        except AgencyDataScopeError as exc:
+            return api_error(str(exc), code='FORBIDDEN', status=403)
+        if payload is None:
+            return api_error('آژانس یافت نشد.', code='NOT_FOUND', status=404)
+        meta = payload.pop('meta', {})
+        return api_ok(payload, meta=meta)
+
+
 class AgencyPerformanceView(APIView):
     permission_classes = [IsAuthenticated]
 

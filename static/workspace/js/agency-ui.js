@@ -236,14 +236,45 @@
 
   function initNavScrollHint() {
     document.querySelectorAll('.agency-hub-nav__track, .a360-tabs, .amh-tabs').forEach(function (track) {
+      function rtlScrollMax() {
+        return Math.max(0, track.scrollWidth - track.clientWidth);
+      }
+
+      function revealRtlOverflow() {
+        if (getComputedStyle(track).direction !== 'rtl') return;
+        var max = rtlScrollMax();
+        if (max < 2) return;
+        /* RTL horizontal scroll: default position can clip inline-start (e.g. تنظیمات). */
+        if (track.scrollLeft === 0) {
+          track.scrollLeft = -max;
+        }
+        if (track.scrollLeft > 0 && track.scrollLeft < max - 1) {
+          track.scrollLeft = max;
+        }
+      }
+
       function update() {
-        var atEnd = track.scrollWidth - track.clientWidth - track.scrollLeft < 8;
-        var atStart = track.scrollLeft < 8;
+        var max = rtlScrollMax();
+        var sl = track.scrollLeft;
+        var atEnd;
+        var atStart;
+        if (getComputedStyle(track).direction === 'rtl' && sl <= 0) {
+          atEnd = Math.abs(sl) >= max - 8;
+          atStart = Math.abs(sl) < 8;
+        } else {
+          atEnd = max - sl < 8;
+          atStart = sl < 8;
+        }
         track.classList.toggle('is-scroll-end', atEnd);
         track.classList.toggle('is-scroll-start', atStart);
       }
       track.addEventListener('scroll', update, { passive: true });
+      revealRtlOverflow();
       update();
+      window.addEventListener('resize', function () {
+        revealRtlOverflow();
+        update();
+      }, { passive: true });
     });
   }
 

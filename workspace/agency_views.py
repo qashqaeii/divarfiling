@@ -28,6 +28,7 @@ from workspace.services.agency_onboarding import (
     resolve_onboarding_step,
 )
 from workspace.services.agency_seats import assign_seat_to_member
+from shop.bot_catalog import get_bot_product_buy_url
 
 
 class AgencyLockedView(LoginRequiredMixin, TemplateView):
@@ -35,7 +36,7 @@ class AgencyLockedView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx['agency_buy_url'] = reverse('shop:buy') + '#agency-plans'
+        ctx['agency_buy_url'] = f'{get_bot_product_buy_url()}#agency-plans'
         return ctx
 
 

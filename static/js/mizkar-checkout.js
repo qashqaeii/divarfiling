@@ -612,6 +612,10 @@
             setPlanMode('personal');
         }
 
+        if (window.location.hash === '#agency-plans') {
+            setPlanMode('agency');
+        }
+
         setTimeout(function () {
             if (pricingState.loading) {
                 pricingState.loading = false;

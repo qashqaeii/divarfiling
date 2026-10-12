@@ -73,7 +73,7 @@ def _property_item(row) -> Dict[str, Any]:
 
 def _dataset_item(row) -> Dict[str, Any]:
     return {
-        'id': row.pk,
+        'id': str(row.pk),
         'name': row.name or '',
         'listing_count': int(getattr(row, 'listing_count', 0) or 0),
         'updated_at_display': _dt_label(row.updated_at),
@@ -88,7 +88,7 @@ def _listing_item(row) -> Dict[str, Any]:
         'district': row.district or '',
         'price_label': (row.price or '') if hasattr(row, 'price') else '',
         'created_at_display': _dt_label(row.created_at),
-        'dataset_id': row.dataset_id,
+        'dataset_id': str(row.dataset_id) if row.dataset_id else '',
         'dataset_name': row.dataset.name if row.dataset_id else '',
     }
 

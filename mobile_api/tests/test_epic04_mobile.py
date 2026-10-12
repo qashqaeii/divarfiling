@@ -6,7 +6,7 @@ from rest_framework.test import APIClient
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from workspace.constants import TEAM_VISIBILITY_INBOX
-from workspace.models import CRMAgencyMember, Customer
+from workspace.models import CRMAgencyMember, Customer, Dataset
 from workspace.services.crm_agency import create_agency
 from workspace.tests.agency_test_utils import ensure_agency_subscription
 
@@ -145,6 +145,24 @@ class Epic04AgencyMobileTests(TestCase):
         self.assertEqual(resp.status_code, 200)
         items = resp.json()['data']['items']
         self.assertTrue(any(i['name'] == 'مخاطب مشاور' for i in items))
+
+    def test_advisor_workspace_filing_dataset_ids_are_strings(self):
+        ds = Dataset.objects.create(
+            user=self.advisor,
+            name='زونکن تست',
+            original_filename='t.xlsx',
+            file_format='xlsx',
+        )
+        resp = self.client.get(
+            f'/api/mobile/v1/agency/advisors/{self.member.pk}/workspace',
+            {'tab': 'filing'},
+        )
+        self.assertEqual(resp.status_code, 200)
+        datasets = resp.json()['data']['datasets']
+        row = next((d for d in datasets if d['name'] == 'زونکن تست'), None)
+        self.assertIsNotNone(row)
+        self.assertEqual(row['id'], str(ds.pk))
+        self.assertIsInstance(row['id'], str)
 
     def test_advisor_detail_includes_goals_and_roles(self):
         resp = self.client.get(f'/api/mobile/v1/agency/advisors/{self.member.pk}')

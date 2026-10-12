@@ -1,5 +1,5 @@
 <div class="fl-mob-filter-sheet__body ws-filing-hub-filter-body">
-    <div class="fl-toolbar__filters">
+    <div class="fl-toolbar__filters fl-toolbar__filters--mob">
         <section class="fl-mob-filter-section" aria-labelledby="wsFilingFilterTx">
             <h3 class="fl-mob-filter-section__title" id="wsFilingFilterTx">نوع معامله</h3>
             <div class="fl-mob-filter-chips" data-fl-filter-sync="tx">
@@ -8,15 +8,6 @@
                 <button type="button" class="fl-mob-filter-chip{% if filters.tx == 'rent' %} is-active{% endif %}" data-value="rent">اجاره</button>
                 <button type="button" class="fl-mob-filter-chip{% if filters.tx == 'mixed' %} is-active{% endif %}" data-value="mixed">ترکیبی</button>
             </div>
-            <label class="fl-toolbar__field fl-toolbar__field--sr">
-                <span class="fl-toolbar__field-icon" aria-hidden="true"><i class="fas fa-exchange-alt"></i></span>
-                <select name="tx" class="fl-toolbar__select mk-filter-select" aria-label="نوع معامله">
-                    <option value="">همه معاملات</option>
-                    <option value="sale" {% if filters.tx == 'sale' %}selected{% endif %}>فروش</option>
-                    <option value="rent" {% if filters.tx == 'rent' %}selected{% endif %}>اجاره</option>
-                    <option value="mixed" {% if filters.tx == 'mixed' %}selected{% endif %}>ترکیبی</option>
-                </select>
-            </label>
         </section>
         <section class="fl-mob-filter-section" aria-labelledby="wsFilingFilterCity">
             <h3 class="fl-mob-filter-section__title" id="wsFilingFilterCity">شهر</h3>
@@ -26,15 +17,6 @@
                 <button type="button" class="fl-mob-filter-chip{% if filters.city == c %} is-active{% endif %}" data-value="{{ c }}">{{ c }}</button>
                 {% endfor %}
             </div>
-            <label class="fl-toolbar__field fl-toolbar__field--sr">
-                <span class="fl-toolbar__field-icon" aria-hidden="true"><i class="fas fa-map-marker-alt"></i></span>
-                <select name="city" class="fl-toolbar__select mk-filter-select" aria-label="شهر">
-                    <option value="">همه شهرها</option>
-                    {% for c in cities %}
-                    <option value="{{ c }}" {% if filters.city == c %}selected{% endif %}>{{ c }}</option>
-                    {% endfor %}
-                </select>
-            </label>
         </section>
         <section class="fl-mob-filter-section" aria-labelledby="wsFilingFilterFmt">
             <h3 class="fl-mob-filter-section__title" id="wsFilingFilterFmt">فرمت فایل</h3>
@@ -44,15 +26,6 @@
                 <button type="button" class="fl-mob-filter-chip{% if filters.format == 'csv' %} is-active{% endif %}" data-value="csv">CSV</button>
                 <button type="button" class="fl-mob-filter-chip{% if filters.format == 'json' %} is-active{% endif %}" data-value="json">JSON</button>
             </div>
-            <label class="fl-toolbar__field fl-toolbar__field--sr">
-                <span class="fl-toolbar__field-icon" aria-hidden="true"><i class="fas fa-file"></i></span>
-                <select name="format" class="fl-toolbar__select mk-filter-select" aria-label="فرمت">
-                    <option value="">همه فرمت‌ها</option>
-                    <option value="xlsx" {% if filters.format == 'xlsx' %}selected{% endif %}>Excel</option>
-                    <option value="csv" {% if filters.format == 'csv' %}selected{% endif %}>CSV</option>
-                    <option value="json" {% if filters.format == 'json' %}selected{% endif %}>JSON</option>
-                </select>
-            </label>
         </section>
     </div>
 </div>
@@ -68,20 +41,3 @@
         <span>اعمال فیلترها</span>
     </button>
 </footer>
-
-<div class="fl-toolbar__actions fl-toolbar__actions--desk">
-    <button type="submit" class="fl-toolbar__apply">
-        <i class="fas fa-filter" aria-hidden="true"></i>
-        <span>اعمال فیلترها</span>
-    </button>
-    {% if has_filters %}
-    <a href="{% url 'workspace:dataset_list' %}{% if view_mode != 'auto' %}?view={{ view_mode }}{% endif %}" class="fl-toolbar__clear" title="پاک کردن فیلترها" aria-label="پاک کردن فیلترها">
-        <i class="fas fa-times" aria-hidden="true"></i>
-    </a>
-    {% endif %}
-    <div class="fl-toolbar__view" role="group" aria-label="نمایش">
-        <span class="fl-toolbar__view-label">نمایش</span>
-        <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}view=table" class="fl-toolbar__view-btn{% if view_mode == 'table' or view_mode == 'auto' %} is-active{% endif %}" title="جدول" aria-label="نمای جدول"><i class="fas fa-table" aria-hidden="true"></i></a>
-        <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}view=grid" class="fl-toolbar__view-btn{% if view_mode == 'grid' %} is-active{% endif %}" title="کارت" aria-label="نمای کارت"><i class="fas fa-th-large" aria-hidden="true"></i></a>
-    </div>
-</div>

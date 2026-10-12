@@ -10,6 +10,11 @@
                 <input type="search" name="q" value="{{ filters.q }}" placeholder="جستجو در پوشه‌های استخراج..." autocomplete="off" aria-label="جستجو">
             </label>
 
+            <div class="fl-toolbar__desk" data-fl-toolbar-desk>
+                {% include 'workspace/includes/filing/filing_toolbar_filter_fields.html' %}
+                {% include 'workspace/includes/filing/filing_toolbar_actions_desk.html' %}
+            </div>
+
             <div class="fl-toolbar__mob-actions">
                 <button type="button" class="fl-toolbar__mob-toggle" aria-controls="wsFilingHubFilterSheet" aria-expanded="false" data-ws-mob-filter-toggle>
                     <i class="fas fa-sliders" aria-hidden="true"></i>

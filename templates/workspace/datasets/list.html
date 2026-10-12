@@ -5,14 +5,14 @@
 {% block mobile_bar_title %}فایلینگ{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-datasets.css' %}?v=24">
+<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-datasets.css' %}?v=25">
 <link rel="stylesheet" href="{% static 'workspace/css/mk-filing-mobile.css' %}?v=10">
 {% include 'workspace/academy/includes/academy_assets_css.html' %}
 {% endblock %}
 
 {% block ws_surface_css %}
 <link rel="stylesheet" href="{% static 'workspace/css/mk-filing-mobile-v2.css' %}?v=16">
-<link rel="stylesheet" href="{% static 'workspace/css/ws-filing-mobile-dl-v1.css' %}?v=10">
+<link rel="stylesheet" href="{% static 'workspace/css/ws-filing-mobile-dl-v1.css' %}?v=11">
 {% endblock %}
 
 {% block content %}
@@ -316,7 +316,7 @@
     syncHubListHead();
 })();
 </script>
-<script src="{% static 'workspace/js/filing-mobile.js' %}?v=13"></script>
+<script src="{% static 'workspace/js/filing-mobile.js' %}?v=14"></script>
 <script src="{% static 'workspace/js/filing-help.js' %}?v=4"></script>
 {% if ai_enabled and has_bot_license %}
 <script src="{% static 'workspace/js/ai.js' %}?v=6"></script>

@@ -701,178 +701,134 @@
     border-color: color-mix(in srgb, #ef4444 30%, var(--ws-border));
 }
 
-/* Desktop toolbar — one minimal row (search + 3 filters + actions) */
+/* Desktop / tablet toolbar — single horizontal row */
 @media (min-width: 769px) {
     .mk-filing-datasets .fl-toolbar {
-        --fl-toolbar-h: 36px;
-        --fl-toolbar-gap: 0.4rem;
-        --fl-toolbar-pad: 0.55rem 0.75rem;
-    }
-
-    /* Override workspace-polish grid on .mk-filing-filters-sheet */
-    .mk-filing-datasets.mk-filing-pro.mk-filing-mobile .mk-filing-mob-filter-details > .mk-filing-filters-sheet,
-    .mk-filing-datasets.mk-filing-pro.mk-filing-mobile .mk-filing-mob-filter-details:not([open]) > .mk-filing-filters-sheet,
-    .mk-filing-datasets .mk-filing-filters-sheet.fl-toolbar__panel-inner {
-        display: contents !important;
-        grid-template-columns: unset !important;
-        gap: 0 !important;
-        min-height: 0 !important;
-        padding: 0 !important;
-        width: auto !important;
+        --fl-toolbar-h: 42px;
+        --fl-toolbar-gap: 0.5rem;
+        --fl-toolbar-pad: 0.5rem 0.75rem;
     }
 
     .mk-filing-datasets .fl-toolbar__row {
-        display: grid !important;
-        grid-template-columns: minmax(7rem, 12.5rem) repeat(3, minmax(4.25rem, 1fr)) auto;
+        display: flex;
+        flex-wrap: nowrap;
         align-items: center;
         gap: var(--fl-toolbar-gap);
         min-width: 0;
-        width: 100%;
     }
 
     .mk-filing-datasets .fl-toolbar__search {
-        grid-column: auto;
-        width: 100%;
+        flex: 1 1 0;
         min-width: 0;
         max-width: none;
         height: var(--fl-toolbar-h);
-        padding-inline: 0.6rem;
-        border-radius: 9px;
     }
 
-    .mk-filing-datasets .fl-toolbar__search input {
-        font-size: 0.74rem;
+    .mk-filing-datasets .fl-toolbar__desk {
+        display: flex;
+        flex: 0 1 auto;
+        align-items: center;
+        gap: var(--fl-toolbar-gap);
+        flex-wrap: nowrap;
+        min-width: 0;
     }
 
-    .mk-filing-datasets .fl-toolbar__mob-actions {
-        display: none !important;
+    .mk-filing-datasets .fl-toolbar__filters--desk {
+        display: flex;
+        align-items: center;
+        gap: var(--fl-toolbar-gap);
+        flex-wrap: nowrap;
+        flex: 0 1 auto;
+        min-width: 0;
     }
 
-    .mk-filing-datasets .fl-toolbar__row > .ws-filing-hub-filter-sheet,
-    .mk-filing-datasets .fl-toolbar__row > .fl-toolbar__panel {
-        display: contents !important;
-        border: none;
-        background: transparent;
-        box-shadow: none;
-    }
-
-    .mk-filing-datasets .ws-filing-hub-filter-backdrop,
-    .mk-filing-datasets .ws-filing-hub-filter-grab,
-    .mk-filing-datasets .mk-filing-filters-sheet > .ws-mob-sheet-head,
-    .mk-filing-datasets .ws-filing-hub-filter-foot,
-    .mk-filing-datasets .fl-mob-filter-sheet__foot {
-        display: none !important;
-    }
-
-    .mk-filing-datasets .ws-filing-hub-filter-body,
-    .mk-filing-datasets .fl-mob-filter-sheet__body,
-    .mk-filing-datasets .fl-toolbar__filters,
-    .mk-filing-datasets .fl-mob-filter-section {
-        display: contents !important;
-    }
-
-    .mk-filing-datasets .fl-mob-filter-section__title,
-    .mk-filing-datasets .fl-mob-filter-chips {
+    .mk-filing-datasets .fl-toolbar__filters--mob {
         display: none !important;
     }
 
     .mk-filing-datasets .fl-toolbar__field {
-        min-width: 0;
-        max-width: none;
-        width: 100%;
-    }
-
-    .mk-filing-datasets .fl-toolbar__field-icon {
-        inset-inline-start: 0.5rem;
-        font-size: 0.58rem;
-        opacity: 0.75;
+        flex: 0 1 7.5rem;
+        min-width: 5.5rem;
+        max-width: 9rem;
+        width: auto;
     }
 
     .mk-filing-datasets .fl-toolbar__select {
         height: var(--fl-toolbar-h);
-        padding-inline-start: 1.55rem;
-        padding-inline-end: 1.35rem;
-        font-size: 0.7rem;
-        border-radius: 9px;
+        font-size: 0.72rem;
+        border-radius: 10px;
     }
 
-    .mk-filing-datasets .fl-toolbar__actions,
     .mk-filing-datasets .fl-toolbar__actions--desk {
         display: flex !important;
         align-items: center;
-        justify-content: flex-end;
-        gap: 0.3rem;
+        gap: 0.4rem;
+        flex-shrink: 0;
         flex-wrap: nowrap;
-        white-space: nowrap;
         padding: 0;
         margin: 0;
         border: none;
-        min-width: 0;
     }
 
     .mk-filing-datasets .fl-toolbar__apply {
         height: var(--fl-toolbar-h);
-        padding: 0 0.6rem;
-        font-size: 0.68rem;
-        border-radius: 9px;
+        padding: 0 0.75rem;
+        font-size: 0.72rem;
+        border-radius: 10px;
     }
 
     .mk-filing-datasets .fl-toolbar__clear {
         width: var(--fl-toolbar-h);
         height: var(--fl-toolbar-h);
-        border-radius: 9px;
+        border-radius: 10px;
     }
 
     .mk-filing-datasets .fl-toolbar__view {
         height: var(--fl-toolbar-h);
-        padding: 0.15rem;
-        border-radius: 9px;
+        border-radius: 10px;
     }
 
     .mk-filing-datasets .fl-toolbar__view-btn {
-        width: 1.75rem;
-        height: calc(var(--fl-toolbar-h) - 0.3rem);
-        border-radius: 7px;
-        font-size: 0.7rem;
+        height: calc(var(--fl-toolbar-h) - 0.35rem);
     }
 
-    .mk-filing-datasets .fl-toolbar__view-label {
-        display: none;
-    }
-
-    .mk-filing-datasets .fl-toolbar__mob-toggle {
+    .mk-filing-datasets .fl-toolbar__mob-actions,
+    .mk-filing-datasets .fl-toolbar__row > .ws-filing-hub-filter-sheet {
         display: none !important;
+    }
+
+    /* Neutralize legacy grid on sheet (workspace-polish) */
+    .mk-filing-datasets.mk-filing-pro.mk-filing-mobile .mk-filing-filters-sheet {
+        display: block !important;
+        grid-template-columns: unset !important;
+        min-height: 0 !important;
+        padding: 0 !important;
     }
 }
 
 @media (min-width: 1100px) {
-    .mk-filing-datasets .fl-toolbar__row {
-        grid-template-columns: minmax(8rem, 14rem) repeat(3, minmax(5rem, 1fr)) auto;
-        gap: 0.45rem;
+    .mk-filing-datasets .fl-toolbar {
+        --fl-toolbar-gap: 0.65rem;
     }
 
-    .mk-filing-datasets .fl-toolbar__apply {
-        padding: 0 0.75rem;
-        font-size: 0.72rem;
-    }
-
-    .mk-filing-datasets .fl-toolbar__view-label {
-        display: inline;
-        font-size: 0.6rem;
+    .mk-filing-datasets .fl-toolbar__field {
+        flex-basis: 8.5rem;
+        max-width: 10rem;
     }
 }
 
-@media (min-width: 769px) and (max-width: 1099px) {
-    .mk-filing-datasets .fl-toolbar__row {
-        grid-template-columns: minmax(6.5rem, 10rem) repeat(3, minmax(3.75rem, 1fr)) auto;
-    }
-
+@media (min-width: 769px) and (max-width: 1023px) {
     .mk-filing-datasets .fl-toolbar__field-icon {
         display: none;
     }
 
     .mk-filing-datasets .fl-toolbar__select {
-        padding-inline-start: 0.45rem;
+        padding-inline-start: 0.5rem;
+    }
+
+    .mk-filing-datasets .fl-toolbar__field {
+        min-width: 4.75rem;
+        max-width: 7.5rem;
     }
 
     .mk-filing-datasets .fl-toolbar__apply span {
@@ -883,6 +839,16 @@
         width: var(--fl-toolbar-h);
         padding: 0;
         justify-content: center;
+    }
+
+    .mk-filing-datasets .fl-toolbar__view-label {
+        display: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .mk-filing-datasets .fl-toolbar__desk {
+        display: none !important;
     }
 }
 

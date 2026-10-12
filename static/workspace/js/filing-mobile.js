@@ -97,8 +97,8 @@
 
         function syncFilterDesktop() {
             if (desktop.matches) {
-                sheet.hidden = false;
-                sheet.setAttribute('aria-hidden', 'false');
+                sheet.hidden = true;
+                sheet.setAttribute('aria-hidden', 'true');
                 sheet.classList.remove('is-open');
                 document.body.classList.remove('ws-filing-filter-open');
                 var toggle = document.querySelector('[data-ws-mob-filter-toggle]');

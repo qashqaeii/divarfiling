@@ -16,22 +16,22 @@
                     <span class="fl-toolbar__mob-toggle-label">فیلتر{% if active_filter_count %}<span class="fl-toolbar__mob-count" aria-label="{{ active_filter_count }} فیلتر فعال">{{ active_filter_count }}</span>{% endif %}</span>
                 </button>
             </div>
-        </div>
 
-        <div class="ws-mob-sheet ws-filing-hub-filter-sheet fl-toolbar__panel mk-filing-mob-filter-details{% if has_filters %} is-active{% endif %}"
-             id="wsFilingHubFilterSheet"
-             hidden
-             aria-hidden="true">
-            <button type="button" class="ws-mob-sheet-backdrop ws-filing-hub-filter-backdrop" data-ws-filing-hub-filter-close aria-label="بستن فیلتر"></button>
-            <div class="ws-mob-sheet-panel fl-toolbar__panel-inner mk-filing-filters-sheet" role="dialog" aria-modal="true" aria-labelledby="wsFilingFilterTitle">
-                <div class="ws-mob-sheet-grab ws-filing-hub-filter-grab" aria-hidden="true"></div>
-                <header class="ws-mob-sheet-head fl-mob-filter-sheet__head">
-                    <h2 class="ws-mob-sheet-title fl-mob-filter-sheet__title" id="wsFilingFilterTitle">فیلترها</h2>
-                    <button type="button" class="ws-mob-sheet-close fl-mob-filter-sheet__close" data-ws-filing-hub-filter-close aria-label="بستن">
-                        <i class="fas fa-xmark" aria-hidden="true"></i>
-                    </button>
-                </header>
-                {% include 'workspace/includes/filing/filing_hub_filter_inner.html' %}
+            <div class="ws-mob-sheet ws-filing-hub-filter-sheet fl-toolbar__panel mk-filing-mob-filter-details{% if has_filters %} is-active{% endif %}"
+                 id="wsFilingHubFilterSheet"
+                 hidden
+                 aria-hidden="true">
+                <button type="button" class="ws-mob-sheet-backdrop ws-filing-hub-filter-backdrop" data-ws-filing-hub-filter-close aria-label="بستن فیلتر"></button>
+                <div class="ws-mob-sheet-panel fl-toolbar__panel-inner mk-filing-filters-sheet" role="dialog" aria-modal="true" aria-labelledby="wsFilingFilterTitle">
+                    <div class="ws-mob-sheet-grab ws-filing-hub-filter-grab" aria-hidden="true"></div>
+                    <header class="ws-mob-sheet-head fl-mob-filter-sheet__head">
+                        <h2 class="ws-mob-sheet-title fl-mob-filter-sheet__title" id="wsFilingFilterTitle">فیلترها</h2>
+                        <button type="button" class="ws-mob-sheet-close fl-mob-filter-sheet__close" data-ws-filing-hub-filter-close aria-label="بستن">
+                            <i class="fas fa-xmark" aria-hidden="true"></i>
+                        </button>
+                    </header>
+                    {% include 'workspace/includes/filing/filing_hub_filter_inner.html' %}
+                </div>
             </div>
         </div>
     </form>

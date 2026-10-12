@@ -205,7 +205,13 @@
                 </div>
                 {% elif item.allocation_state == 'owner_active' %}
                 <div class="lic-alloc-row">
-                    <span class="lic-alloc-label"><i class="fas fa-check-circle" aria-hidden="true"></i> این کلید روی {{ item.active_count }} دستگاه فعال است</span>
+                    <span class="lic-alloc-label"><i class="fas fa-check-circle" aria-hidden="true"></i>
+                        {% if item.active_count %}
+                        این کلید روی {{ item.active_count }} دستگاه فعال است
+                        {% else %}
+                        دسترسی این کلید برای شما فعال است — کلید را در ربات یا اپ وارد کنید
+                        {% endif %}
+                    </span>
                     <button type="button" class="lic-alloc-btn lic-alloc-btn--ghost" data-license-release-pool>
                         آزادسازی برای تخصیص
                     </button>

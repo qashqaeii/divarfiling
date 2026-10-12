@@ -288,11 +288,11 @@ class LicenseKeyAssignmentTests(TestCase):
         self.assertEqual(self.license_c.status, 'active')
         self.assertIsNone(self.license_c.assigned_user_id)
 
-    def test_active_status_without_devices_is_available_for_pool(self):
+    def test_active_status_without_devices_shows_owner_active(self):
         activate_license_for_owner(self.owner, self.license_a.pk)
         self.license_a.refresh_from_db()
         self.assertEqual(self.license_a.status, 'active')
-        self.assertEqual(_allocation_state(self.license_a), 'available')
+        self.assertEqual(_allocation_state(self.license_a), 'owner_active')
 
     def test_revoke_clears_member_devices_and_returns_to_pool(self):
         assign_license_to_member(self.owner, self.license_a.pk, self.member.id)

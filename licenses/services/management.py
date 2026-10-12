@@ -255,10 +255,12 @@ def _license_for_agency_actor(actor, license_id) -> License:
 
 
 def _allocation_state(license_obj: License) -> str:
-    """available = استخر آژانس | owner_active = دستگاه فعال روی کلید | assigned = تخصیص به عضو."""
+    """available = استخر آژانس | owner_active = مالک/دستگاه فعال | assigned = تخصیص به عضو."""
     if license_obj.assigned_user_id:
         return 'assigned'
     if license_obj.activations.filter(is_active=True).exists():
+        return 'owner_active'
+    if license_obj.status == 'active':
         return 'owner_active'
     return 'available'
 

@@ -251,13 +251,17 @@ def create_quick_lead(user, data: Dict[str, Any]) -> Customer:
     valid_sources = {s for s, _ in Customer._meta.get_field('source').choices}
     if source not in valid_sources:
         source = 'موبایل' if 'موبایل' in valid_sources else 'سایر'
+    customer_type = (data.get('customer_type') or '').strip()
+    valid_types = {t for t, _ in Customer._meta.get_field('customer_type').choices}
+    if customer_type not in valid_types:
+        customer_type = 'سرنخ'
     customer = Customer(
         user=user,
         agency=get_agency(user),
         name=name,
         phone=phone,
         source=source,
-        customer_type='سرنخ',
+        customer_type=customer_type,
         status='جدید',
         priority='متوسط',
     )

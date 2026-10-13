@@ -32,6 +32,25 @@ def _last_follow_up_summary(customer: Customer) -> Optional[Dict[str, Any]]:
     return None
 
 
+def _budget_summary(customer: Customer) -> str:
+    parts: List[str] = []
+    if customer.budget_min:
+        parts.append(f"از {customer.budget_min:,}")
+    if customer.budget_max:
+        parts.append(f"تا {customer.budget_max:,}")
+    if not parts:
+        return ''
+    return 'بودجه: ' + ' '.join(parts)
+
+
+def _areas_summary(customer: Customer) -> str:
+    for value in (customer.areas, customer.district, customer.city):
+        text = (value or '').strip()
+        if text:
+            return text[:200]
+    return ''
+
+
 def _contact_brief(customer: Customer) -> Dict[str, Any]:
     return {
         'id': customer.pk,
@@ -40,6 +59,8 @@ def _contact_brief(customer: Customer) -> Dict[str, Any]:
         'customer_type': customer.customer_type or '',
         'status': customer.status or '',
         'last_follow_up': _last_follow_up_summary(customer),
+        'areas_summary': _areas_summary(customer),
+        'budget_summary': _budget_summary(customer),
     }
 
 

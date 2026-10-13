@@ -4,13 +4,16 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 
+from shop.models import LicensePlan, Order, Product
 from shop.services.app_downloads import (
     ANDROID_APK_FILENAME,
     android_apk_available,
     android_apk_version_info,
     build_android_apk_response,
     parse_apk_version_from_filename,
+    resolve_windows_download_for_user,
 )
+from licenses.models import License
 
 
 class AndroidAppDownloadTests(TestCase):
@@ -85,6 +88,53 @@ class AndroidAppDownloadTests(TestCase):
         response = self.client.get(reverse('dashboard'))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, reverse('android_app_download'))
+
+    @patch('shop.services.downloads.order_can_download', return_value=True)
+    @patch('shop.services.downloads.get_order_download_filename', return_value='setup.zip')
+    def test_resolve_windows_download_for_assigned_seat_member(self, _mock_name, _mock_can):
+        owner = get_user_model().objects.create_user(
+            username='owner_dl',
+            password='test-pass-123',
+            phone='09120000001',
+        )
+        member = get_user_model().objects.create_user(
+            username='member_dl',
+            password='test-pass-123',
+            phone='09120000002',
+        )
+        product = Product.objects.create(
+            title='ربات',
+            slug='bot-dl-assigned',
+            description='test',
+            is_active=True,
+        )
+        plan = LicensePlan.objects.create(
+            product=product,
+            name='ماهانه',
+            plan_type='monthly',
+            price=100000,
+            duration_days=30,
+            max_activations=1,
+            is_active=True,
+        )
+        order = Order.objects.create(
+            user=owner,
+            product=product,
+            plan=plan,
+            amount=plan.price,
+            status='paid',
+        )
+        License.objects.create(
+            order=order,
+            plan=plan,
+            license_key='ASSIGNED-DL-KEY-0001',
+            status='active',
+            max_activations=1,
+            assigned_user=member,
+        )
+        resolved = resolve_windows_download_for_user(member)
+        self.assertIsNotNone(resolved)
+        self.assertEqual(resolved['order_id'], str(order.pk))
 
     def test_build_app_download_context_without_user_attribute(self):
         from types import SimpleNamespace

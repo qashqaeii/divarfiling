@@ -3,6 +3,7 @@
 """
 import logging
 
+from django.http import Http404
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views import View
 from django.views.generic import TemplateView
@@ -521,7 +522,11 @@ class OrderDownloadView(LoginRequiredMixin, View):
     """دانلود فایل نصب ربات — فقط برای سفارش پرداخت‌شده."""
 
     def get(self, request, order_id):
-        order = get_object_or_404(Order, id=order_id, user=request.user)
+        from workspace.services.access import user_can_download_bot_order
+
+        order = get_object_or_404(Order, id=order_id)
+        if not user_can_download_bot_order(request.user, order):
+            raise Http404()
         if order.status != 'paid':
             messages.error(request, 'فقط پس از تایید پرداخت می‌توانید فایل را دانلود کنید.')
             return redirect('dashboard')

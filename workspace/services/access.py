@@ -115,6 +115,28 @@ def _user_bot_license(user) -> Optional[License]:
     return activation.license if activation else None
 
 
+def resolve_license_workspace_user(license_obj: License, activation: Optional[LicenseActivation] = None):
+    """کاربری که دادهٔ استخراج/فایلینگ به workspace او وارد می‌شود."""
+    if activation is not None and activation.assigned_user_id:
+        return activation.assigned_user
+    if license_obj.assigned_user_id:
+        return license_obj.assigned_user
+    return license_obj.order.user
+
+
+def user_can_download_bot_order(user, order: Order) -> bool:
+    """دانلود نصب ویندوز — مالک سفارش یا عضو با صندلی/لایسنس تخصیص‌یافته."""
+    if not user or not getattr(user, 'is_authenticated', False):
+        return False
+    if order.status != 'paid':
+        return False
+    if order.user_id == user.id:
+        return True
+    if _assigned_license_qs(user).filter(order_id=order.pk).exists():
+        return True
+    return _assigned_active_seat_qs(user).filter(license__order_id=order.pk).exists()
+
+
 def get_bot_license_display(user) -> Dict[str, Any]:
     """خلاصه نمایشی لایسنس ربات در هدر میزکار."""
     from workspace.services.jalali_input import to_persian_digits

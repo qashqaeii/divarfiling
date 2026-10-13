@@ -253,6 +253,42 @@ class LicenseAPITests(TestCase):
         self.assertEqual(dataset.original_filename, 'اجاره_آپارتمان.xlsx')
         self.assertEqual(Dataset.objects.filter(user=self.user).count(), 1)
 
+    def test_bot_import_dataset_targets_assigned_license_member(self):
+        advisor = User.objects.create_user(
+            username='advisor_import',
+            password='pass1234',
+            phone='09121111112',
+        )
+        self.license.assigned_user = advisor
+        self.license.status = 'active'
+        self.license.save(update_fields=['assigned_user', 'status'])
+
+        act = self.client.post('/api/licenses/activate/', {
+            'license_key': TEST_KEY,
+            'hardware_fingerprint': TEST_HW,
+        }, format='json')
+        self.assertEqual(act.status_code, 200, act.content)
+
+        payload = json.dumps([
+            {'token': 'tok-adv-001', 'title': 'آگهی مشاور'},
+        ], ensure_ascii=False).encode('utf-8')
+        rel_path = 'قم/فروش_آپارتمان/advisor_import.json'
+
+        resp = self.client.post(
+            '/api/licenses/import-dataset/',
+            {
+                'license_key': TEST_KEY,
+                'hardware_fingerprint': TEST_HW,
+                'relative_path': rel_path,
+                'file': io.BytesIO(payload),
+            },
+            format='multipart',
+        )
+        self.assertEqual(resp.status_code, 200, resp.content)
+        self.assertTrue(resp.json().get('success'))
+        self.assertEqual(Dataset.objects.filter(user=advisor).count(), 1)
+        self.assertEqual(Dataset.objects.filter(user=self.user).count(), 0)
+
 
 @override_settings(LICENSE_ALLOW_LOCAL_DEV=True, LICENSE_RATE_LIMIT_IMPORT=1, LICENSE_RATE_LIMIT_WINDOW=300)
 class LicenseImportRateLimitTests(TestCase):

@@ -141,13 +141,19 @@ def resolve_windows_download_for_user(user) -> Optional[Dict[str, Any]]:
         return None
     from shop.models import Order
     from shop.services.downloads import get_order_download_filename, order_can_download
+    from workspace.services.access import _user_bot_license
 
-    order = (
-        Order.objects.filter(user=user, status='paid')
-        .select_related('product')
-        .order_by('-paid_at', '-created_at')
-        .first()
-    )
+    order = None
+    lic = _user_bot_license(user)
+    if lic is not None and lic.order_id:
+        order = lic.order
+    if order is None:
+        order = (
+            Order.objects.filter(user=user, status='paid')
+            .select_related('product')
+            .order_by('-paid_at', '-created_at')
+            .first()
+        )
     if not order or not order_can_download(order):
         return None
     return {

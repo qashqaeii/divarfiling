@@ -30,7 +30,9 @@ def _resolve_bot_license_user(license_key: str, hardware_fingerprint: str) -> tu
         raise LicenseAPIError('شناسه سخت‌افزاری نامعتبر است.', http_status=400)
 
     try:
-        license_obj = License.objects.select_related('order', 'order__user', 'plan').get(
+        license_obj = License.objects.select_related(
+            'order', 'order__user', 'plan', 'assigned_user',
+        ).get(
             license_key=license_key,
         )
     except License.DoesNotExist as exc:
@@ -45,15 +47,21 @@ def _resolve_bot_license_user(license_key: str, hardware_fingerprint: str) -> tu
     if license_obj.expires_at and license_obj.expires_at < timezone.now():
         raise LicenseAPIError('لایسنس منقضی شده است.', http_status=403)
 
-    activation = LicenseActivation.objects.filter(
-        license=license_obj,
-        hardware_fingerprint=hardware_fingerprint,
-        is_active=True,
-    ).first()
+    activation = (
+        LicenseActivation.objects.select_related('assigned_user')
+        .filter(
+            license=license_obj,
+            hardware_fingerprint=hardware_fingerprint,
+            is_active=True,
+        )
+        .first()
+    )
     if not activation:
         raise LicenseAPIError('لایسنس روی این سیستم فعال نیست.', http_status=403)
 
-    return license_obj, license_obj.order.user
+    from workspace.services.access import resolve_license_workspace_user
+
+    return license_obj, resolve_license_workspace_user(license_obj, activation)
 
 
 def import_dataset_for_bot(request) -> dict:

@@ -17,8 +17,8 @@ def is_daily_plan(plan: LicensePlan | None) -> bool:
 
 
 def requires_phone_verification_for_plan(plan: LicensePlan | None) -> bool:
-    """پلن آزمایشی یک‌هفته‌ای — تأیید موبایل الزامی."""
-    return is_daily_plan(plan)
+    """تأیید موبایل قبل از خرید — فعلاً برای هیچ پلنی الزامی نیست."""
+    return False
 
 
 def user_has_purchased_daily_plan(user) -> bool:
@@ -58,13 +58,6 @@ def evaluate_plan_purchase(user, plan: LicensePlan | None) -> tuple[bool, str | 
             False,
             'پلن آزمایشی یک‌هفته‌ای فقط یک‌بار قابل خرید است. لطفاً یکی از پلن‌های دیگر را انتخاب کنید.',
             BLOCK_DAILY_USED,
-        )
-
-    if not getattr(user, 'phone_verified', False):
-        return (
-            False,
-            'برای خرید پلن آزمایشی یک‌هفته‌ای، تأیید شماره موبایل با پیامک الزامی است.',
-            BLOCK_PHONE_VERIFY,
         )
 
     return True, None, BLOCK_NONE

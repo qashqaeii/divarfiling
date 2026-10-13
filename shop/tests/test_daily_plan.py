@@ -150,18 +150,18 @@ class DailyPlanPhoneVerificationTests(TestCase):
             order=1,
         )
 
-    def test_daily_plan_requires_phone_verification(self):
+    def test_daily_plan_allowed_without_phone_verification(self):
         ok, _ = user_meets_plan_requirements(self.user, self.daily_plan)
-        self.assertFalse(ok)
+        self.assertTrue(ok)
         ok, _ = user_meets_plan_requirements(self.user, self.monthly_plan)
         self.assertTrue(ok)
 
-    def test_buy_daily_redirects_to_verify_phone(self):
+    def test_buy_daily_allowed_without_phone_verification(self):
         self.client.force_login(self.user)
         url = reverse('buy', kwargs={'slug': self.product.slug})
         response = self.client.get(f'{url}?plan={self.daily_plan.pk}')
-        self.assertEqual(response.status_code, 302)
-        self.assertIn(reverse('otp_verify_phone'), response.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, self.daily_plan.name)
 
     def test_buy_monthly_allowed_without_phone_verification(self):
         self.client.force_login(self.user)

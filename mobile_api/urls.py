@@ -62,6 +62,7 @@ urlpatterns = [
     path('crm/neighborhoods', views.CrmNeighborhoodsView.as_view(), name='crm_neighborhoods'),
     path('crm/contacts/export', views.ContactsExportView.as_view(), name='contacts_export'),
     path('crm/contacts/quick-lead', views.QuickLeadView.as_view(), name='quick_lead'),
+    path('crm/post-call/resolve', views.PostCallResolveView.as_view(), name='post_call_resolve'),
     path('crm/contacts/<int:contact_id>', views.ContactDetailView.as_view(), name='contact_detail'),
     path('crm/contacts/<int:contact_id>/activities', views.ContactActivitiesView.as_view(), name='contact_activities'),
     path('crm/contacts/<int:contact_id>/notes', views.ContactNotesView.as_view(), name='contact_notes'),

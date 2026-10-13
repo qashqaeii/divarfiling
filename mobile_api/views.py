@@ -383,6 +383,19 @@ class QuickLeadView(APIView):
             return api_error(str(exc), code='VALIDATION_ERROR')
 
 
+class PostCallResolveView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        from mobile_api.services.post_call_resolve import resolve_post_call_phone
+
+        data = _parse_body(request)
+        phone = (data.get('phone') or '').strip()
+        if not phone:
+            return api_error('شماره تماس الزامی است.', code='VALIDATION_ERROR')
+        return api_ok(resolve_post_call_phone(request.user, phone))
+
+
 class TodayView(APIView):
     permission_classes = [IsAuthenticated]
 

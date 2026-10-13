@@ -28,7 +28,7 @@ from contracts.services.contract_display import build_contract_display
 from contracts.services.dashboard import ACTION_STATUSES, contract_acceptance_progress, contract_dashboard_stats, filter_contracts
 from contracts.services.license_gate import LICENSE_REQUIRED_MSG, user_has_contract_license
 from contracts.services.lifecycle import ContractError, create_contract
-from contracts.services.scope import can_edit_contract
+from workspace.services.crm_scope import can_manage_team
 from contracts.services.routing import (
     contract_manage_url,
     contract_wizard_url,
@@ -486,13 +486,31 @@ def handover_summary(contract: Contract) -> Dict[str, Any]:
     }
 
 
+def contract_for_mobile_user(user, contract_id: int) -> Optional[Contract]:
+    """مالک قرارداد یا مدیر آژانس با دسترسی به قرارداد مشاور."""
+    contract = contract_for_user(user, contract_id)
+    if contract:
+        return contract
+    from workspace.services.agency_data_scope import contract_for_agency_viewer
+
+    return contract_for_agency_viewer(user, contract_id)
+
+
+def can_edit_contract_mobile(user, contract: Contract) -> bool:
+    if not contract.is_editable:
+        return False
+    if contract_for_user(user, contract.pk):
+        return True
+    if not can_manage_team(user):
+        return False
+    from workspace.services.agency_data_scope import contract_for_agency_viewer
+
+    return contract_for_agency_viewer(user, contract.pk) is not None
+
+
 def contract_detail_payload(user, contract_id: int) -> Optional[Dict[str, Any]]:
     assert_mobile_contract_license(user)
-    contract = contract_for_user(user, contract_id)
-    if not contract:
-        from workspace.services.agency_data_scope import contract_for_agency_viewer
-
-        contract = contract_for_agency_viewer(user, contract_id)
+    contract = contract_for_mobile_user(user, contract_id)
     if not contract:
         return None
     display = build_contract_display(contract)
@@ -515,13 +533,13 @@ def contract_detail_payload(user, contract_id: int) -> Optional[Dict[str, Any]]:
             'max_size_bytes': MAX_ATTACHMENT_SIZE,
             'allowed_extensions': list(ALLOWED_ATTACHMENT_EXTENSIONS),
         },
-        'can_edit_clauses': contract.is_editable,
+        'can_edit_clauses': can_edit_contract_mobile(user, contract),
         'can_cancel': contract.status not in (
             CONTRACT_STATUS_FINALIZED,
             CONTRACT_STATUS_CANCELLED,
         ),
         'can_copy': True,
-        'can_new_version': can_edit_contract(user, contract) and contract.status not in (
+        'can_new_version': can_edit_contract_mobile(user, contract) and contract.status not in (
             CONTRACT_STATUS_CANCELLED,
         ),
         'current_version_number': (contract.current_version.version_number if contract.current_version else 0),
@@ -546,7 +564,7 @@ def _contract_versions_summary(contract: Contract) -> List[Dict[str, Any]]:
 
 def contract_timeline_payload(user, contract_id: int) -> Optional[List[Dict[str, Any]]]:
     assert_mobile_contract_license(user)
-    contract = contract_for_user(user, contract_id)
+    contract = contract_for_mobile_user(user, contract_id)
     if not contract:
         return None
     events = contract.audit_events.select_related('party', 'actor_user', 'version').order_by('-created_at')[:80]
@@ -578,7 +596,7 @@ def serialize_attachment(att: ContractAttachment) -> Dict[str, Any]:
 
 def list_attachments_payload(user, contract_id: int) -> Optional[List[Dict[str, Any]]]:
     assert_mobile_contract_license(user)
-    contract = contract_for_user(user, contract_id)
+    contract = contract_for_mobile_user(user, contract_id)
     if not contract:
         return None
     atts = contract.attachments.filter(handover__isnull=True).order_by('-created_at')[:100]
@@ -595,7 +613,7 @@ def upload_attachment_payload(
     handover_id: Optional[int] = None,
 ):
     assert_mobile_contract_license(user)
-    contract = contract_for_user(user, contract_id)
+    contract = contract_for_mobile_user(user, contract_id)
     if not contract:
         raise ValueError('قرارداد یافت نشد.')
     version = contract.current_version
@@ -627,9 +645,4 @@ def upload_attachment_payload(
 
 def get_contract_for_pdf(user, contract_id: int) -> Optional[Contract]:
     assert_mobile_contract_license(user)
-    contract = contract_for_user(user, contract_id)
-    if contract:
-        return contract
-    from workspace.services.agency_data_scope import contract_for_agency_viewer
-
-    return contract_for_agency_viewer(user, contract_id)
+    return contract_for_mobile_user(user, contract_id)

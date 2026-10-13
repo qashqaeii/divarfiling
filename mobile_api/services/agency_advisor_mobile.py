@@ -81,12 +81,18 @@ def _dataset_item(row) -> Dict[str, Any]:
 
 
 def _listing_item(row) -> Dict[str, Any]:
+    from workspace.services.formatting import format_toman
+
+    region = ' · '.join(p for p in (row.neighborhood, row.city) if p)
+    price_label = ''
+    if getattr(row, 'price', None):
+        price_label = format_toman(row.price)
     return {
         'id': row.pk,
         'token': row.token or '',
         'title': row.title or '',
-        'district': row.district or '',
-        'price_label': (row.price or '') if hasattr(row, 'price') else '',
+        'district': region,
+        'price_label': price_label,
         'created_at_display': _dt_label(row.created_at),
         'dataset_id': str(row.dataset_id) if row.dataset_id else '',
         'dataset_name': row.dataset.name if row.dataset_id else '',

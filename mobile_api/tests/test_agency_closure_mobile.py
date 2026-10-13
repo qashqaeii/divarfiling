@@ -158,3 +158,16 @@ class AgencyClosureMobileTests(TestCase):
     def test_agency_contracts_forbidden_for_advisor(self):
         resp = self.advisor_client.get('/api/mobile/v1/agency/contracts')
         self.assertEqual(resp.status_code, 403)
+
+    def test_agency_owner_can_open_advisor_contract_wizard(self):
+        from contracts.constants import CONTRACT_TYPE_SALE
+        from contracts.services.lifecycle import create_contract
+        from contracts.tests.helpers import grant_bot_license
+
+        grant_bot_license(self.owner)
+        grant_bot_license(self.advisor)
+        contract = create_contract(self.advisor, CONTRACT_TYPE_SALE)
+        resp = self.owner_client.get(f'/api/mobile/v1/contracts/{contract.pk}/wizard')
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.json()['data']['contract_id'], contract.pk)
+        self.assertTrue(resp.json()['data']['can_edit'])

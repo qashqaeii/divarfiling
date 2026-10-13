@@ -14,8 +14,11 @@ from contracts.services.lifecycle import (
 )
 from contracts.models import ContractInvitation
 from contracts.services.invitations import resend_invitation, send_invitations
-from contracts.services.scope import can_edit_contract, contract_for_user
-from mobile_api.services.contracts_mobile import assert_mobile_contract_license
+from mobile_api.services.contracts_mobile import (
+    assert_mobile_contract_license,
+    can_edit_contract_mobile,
+    contract_for_mobile_user,
+)
 
 
 ALLOWED_ACTIONS = frozenset({'prepare_send', 'cancel', 'copy', 'resend_invitation', 'new_version'})
@@ -31,7 +34,7 @@ def contract_action_payload(
     request=None,
 ) -> Optional[Dict[str, Any]]:
     assert_mobile_contract_license(user)
-    contract = contract_for_user(user, contract_id)
+    contract = contract_for_mobile_user(user, contract_id)
     if not contract:
         return None
 
@@ -42,7 +45,7 @@ def contract_action_payload(
     if action == 'prepare_send':
         if contract.status != CONTRACT_STATUS_DRAFT:
             raise ValueError('فقط پیش‌نویس قابل ارسال است.')
-        if not can_edit_contract(user, contract):
+        if not can_edit_contract_mobile(user, contract):
             raise ValueError('این قرارداد قابل ارسال نیست.')
         try:
             prepare_for_send(contract, user=user, request=request)
@@ -51,7 +54,7 @@ def contract_action_payload(
             raise ValueError(str(exc)) from exc
         contract.refresh_from_db()
     elif action == 'cancel':
-        if not can_edit_contract(user, contract):
+        if not can_edit_contract_mobile(user, contract):
             raise ValueError('این قرارداد قابل لغو نیست.')
         try:
             cancel_contract(contract, reason or '', user=user, request=request)
@@ -65,7 +68,7 @@ def contract_action_payload(
             raise ValueError(str(exc)) from exc
         return _action_result(user, new_contract)
     elif action == 'new_version':
-        if not can_edit_contract(user, contract):
+        if not can_edit_contract_mobile(user, contract):
             raise ValueError('نسخه جدید قابل ایجاد نیست.')
         try:
             create_new_version(contract, user=user, request=request)
@@ -94,7 +97,7 @@ def _action_result(user, contract) -> Dict[str, Any]:
         'contract_id': contract.pk,
         'status': contract.status,
         'status_label': contract.get_status_display(),
-        'can_edit': can_edit_contract(user, contract),
+        'can_edit': can_edit_contract_mobile(user, contract),
         'validation_errors': validation_errors,
         'validation_count': len(validation_errors),
     }

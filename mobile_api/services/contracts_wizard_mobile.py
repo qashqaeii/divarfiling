@@ -18,7 +18,6 @@ from contracts.services.clause_ux import (
 from contracts.services.clauses import render_clause_body
 from contracts.services.lifecycle import ContractError, save_wizard_step, validate_contract_ready
 from contracts.services.prefill import ensure_default_parties
-from contracts.services.scope import can_edit_contract, contract_for_user
 from contracts.services.wizard_json import (
     PATCHABLE_WIZARD_STEPS,
     WizardJsonError,
@@ -26,7 +25,11 @@ from contracts.services.wizard_json import (
     parse_wizard_json_step,
     wizard_choices_payload,
 )
-from mobile_api.services.contracts_mobile import assert_mobile_contract_license, workspace_paths
+from mobile_api.services.contracts_mobile import (
+    assert_mobile_contract_license,
+    can_edit_contract_mobile,
+    contract_for_mobile_user,
+), workspace_paths
 
 
 def _resolve_step(contract, requested: Optional[str]) -> str:
@@ -179,7 +182,7 @@ def contract_wizard_get_payload(
     step: Optional[str] = None,
 ) -> Optional[Dict[str, Any]]:
     assert_mobile_contract_license(user)
-    contract = contract_for_user(user, contract_id)
+    contract = contract_for_mobile_user(user, contract_id)
     if not contract:
         return None
 
@@ -213,7 +216,7 @@ def contract_wizard_get_payload(
         'display_steps': display,
         'wizard_step_labels': {k: WIZARD_STEP_LABELS.get(k, k) for k in step_keys},
         'wizard_data': _wizard_data_snapshot(wizard),
-        'can_edit': can_edit_contract(user, contract),
+        'can_edit': can_edit_contract_mobile(user, contract),
         'picker_enabled': contract.deal_id is None,
         'validation_errors': validation_errors,
         'validation_count': len(validation_errors),
@@ -240,10 +243,10 @@ def contract_wizard_patch_payload(
     request=None,
 ) -> Dict[str, Any]:
     assert_mobile_contract_license(user)
-    contract = contract_for_user(user, contract_id)
+    contract = contract_for_mobile_user(user, contract_id)
     if not contract:
         raise ValueError('قرارداد یافت نشد.')
-    if not can_edit_contract(user, contract):
+    if not can_edit_contract_mobile(user, contract):
         raise ValueError('این قرارداد قابل ویرایش نیست.')
 
     if if_match_updated_at and contract.updated_at:

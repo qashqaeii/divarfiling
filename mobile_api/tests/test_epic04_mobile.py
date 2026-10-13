@@ -164,6 +164,36 @@ class Epic04AgencyMobileTests(TestCase):
         self.assertEqual(row['id'], str(ds.pk))
         self.assertIsInstance(row['id'], str)
 
+    def test_advisor_workspace_filing_listings_in_dataset(self):
+        from workspace.models import Listing
+
+        ds = Dataset.objects.create(
+            user=self.advisor,
+            name='زونکن آگهی',
+            original_filename='t.xlsx',
+            file_format='xlsx',
+        )
+        Listing.objects.create(
+            dataset=ds,
+            token='tok-mobile-1',
+            title='آگهی تست',
+            price=1_500_000_000,
+            neighborhood='ولنجک',
+            city='تهران',
+        )
+        resp = self.client.get(
+            f'/api/mobile/v1/agency/advisors/{self.member.pk}/workspace',
+            {'tab': 'filing', 'dataset_id': str(ds.pk)},
+        )
+        self.assertEqual(resp.status_code, 200)
+        data = resp.json()['data']
+        self.assertEqual(data['dataset_id'], str(ds.pk))
+        listings = data['listings']
+        self.assertEqual(len(listings), 1)
+        self.assertEqual(listings[0]['token'], 'tok-mobile-1')
+        self.assertIsInstance(listings[0]['price_label'], str)
+        self.assertIn('ولنجک', listings[0]['district'])
+
     def test_advisor_detail_includes_goals_and_roles(self):
         resp = self.client.get(f'/api/mobile/v1/agency/advisors/{self.member.pk}')
         self.assertEqual(resp.status_code, 200)

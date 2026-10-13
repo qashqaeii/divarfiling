@@ -195,6 +195,34 @@ def unread_announcement_count(user) -> int:
     return qs.exclude(pk__in=read_ids).count()
 
 
+def _manager_active_announcements(membership: CRMAgencyMember):
+    now = timezone.now()
+    return CRMAgencyAnnouncement.objects.filter(
+        agency=membership.agency,
+        published_at__lte=now,
+    ).filter(Q(expires_at__isnull=True) | Q(expires_at__gte=now))
+
+
+def announcements_with_team_unread_count(user) -> int:
+    """تعداد اطلاعیه‌های فعال که هنوز حداقل یک عضو مخاطب آن را نخوانده (برای مدیران)."""
+    membership = get_membership(user)
+    if not membership or membership.role not in AGENCY_MANAGER_ROLES:
+        return 0
+    pending = 0
+    for ann in _manager_active_announcements(membership).iterator():
+        if _build_read_stats(ann)['unread_count'] > 0:
+            pending += 1
+    return pending
+
+
+def announcements_unread_for_hub(user) -> int:
+    """شمارنده کارت «اطلاعیه‌ها» در میزکار — برای مدیران، خوانده‌نشده تیم هم لحاظ می‌شود."""
+    personal = unread_announcement_count(user)
+    if personal > 0:
+        return personal
+    return announcements_with_team_unread_count(user)
+
+
 @transaction.atomic
 def create_announcement(
     actor,

@@ -5,7 +5,7 @@ from typing import Any, Dict, List, Optional
 
 from workspace.constants import AGENCY_ROLES, AGENCY_MANAGER_ROLES
 from workspace.services.crm_agency import get_team_inbox
-from workspace.services.crm_agency_announcements import unread_announcement_count
+from workspace.services.crm_agency_announcements import announcements_unread_for_hub
 from workspace.services.crm_agency_features import is_agency_feature_enabled
 from workspace.services.crm_agency_messages import unread_message_count
 from workspace.services.crm_panel_notifications import unread_panel_count
@@ -70,7 +70,7 @@ def team_overview_for_user(user) -> Dict[str, Any]:
     announcements_enabled = is_agency_feature_enabled('announcements', agency)
     unread_messages = unread_message_count(user) if messages_enabled else 0
     unread_notifications = unread_panel_count(user)
-    unread_announcements = unread_announcement_count(user) if announcements_enabled else 0
+    unread_announcements = announcements_unread_for_hub(user) if announcements_enabled else 0
     can_manage = can_manage_team(user)
     can_inbox = can_operate_team_leads(user)
     members = list(agency_members(agency))

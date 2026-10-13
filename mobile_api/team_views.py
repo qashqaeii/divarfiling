@@ -180,8 +180,8 @@ class TeamAnnouncementsView(APIView):
 
     def get(self, request):
         from workspace.services.crm_agency_announcements import (
+            announcements_unread_for_hub,
             list_announcements,
-            unread_announcement_count,
         )
 
         membership, err = _require_feature(request.user, 'announcements')
@@ -199,7 +199,7 @@ class TeamAnnouncementsView(APIView):
         return api_ok({
             'announcements': items,
             'total': total,
-            'unread': unread_announcement_count(request.user),
+            'unread': announcements_unread_for_hub(request.user),
         })
 
     def post(self, request):

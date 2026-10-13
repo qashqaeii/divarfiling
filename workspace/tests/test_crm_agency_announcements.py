@@ -10,6 +10,8 @@ from django.utils import timezone
 from workspace.models import CRMAgencyAnnouncement, CRMAgencyMember, CRMAgencyPanelNotification
 from workspace.services.crm_agency import create_agency
 from workspace.services.crm_agency_announcements import (
+    announcements_unread_for_hub,
+    announcements_with_team_unread_count,
     create_announcement,
     list_announcements,
     mark_announcement_read,
@@ -44,6 +46,9 @@ class CRMAgencyAnnouncementsTests(TestCase):
         self.assertTrue(ann.is_pinned)
         self.assertEqual(unread_announcement_count(self.advisor), 1)
         self.assertEqual(unread_announcement_count(self.owner), 0)
+        self.assertEqual(announcements_with_team_unread_count(self.owner), 1)
+        self.assertEqual(announcements_unread_for_hub(self.owner), 1)
+        self.assertEqual(announcements_unread_for_hub(self.advisor), 1)
 
     def test_advisor_cannot_create(self):
         client = Client()

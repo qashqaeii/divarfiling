@@ -29,7 +29,8 @@ from mobile_api.services.contracts_mobile import (
     assert_mobile_contract_license,
     can_edit_contract_mobile,
     contract_for_mobile_user,
-), workspace_paths
+    workspace_paths,
+)
 
 
 def _resolve_step(contract, requested: Optional[str]) -> str:

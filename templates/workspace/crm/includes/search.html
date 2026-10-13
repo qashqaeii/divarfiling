@@ -1,7 +1,7 @@
 <div class="crm-global-search mk-global-search" id="crmGlobalSearch">
     <div class="crm-search-input-wrap mk-search-wrap">
         <i class="fas fa-search" aria-hidden="true"></i>
-        <input type="search" class="crm-search-input" id="crmSearchInput" data-search-url="{% url 'workspace:crm_search' %}" placeholder="جستجوی سراسری — نام، تلفن، ملک..." autocomplete="off">
+        <input type="search" class="crm-search-input" id="crmSearchInput" name="mk_workspace_global_search_q" data-url="{% url 'workspace:crm_search' %}" data-search-url="{% url 'workspace:crm_search' %}" placeholder="جستجوی سراسری — نام، تلفن، ملک..." role="searchbox" inputmode="search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true" data-form-type="other" readonly value="">
         <kbd class="crm-search-kbd">Ctrl+K</kbd>
     </div>
     <div class="crm-search-results mk-search-results" id="crmSearchResults" hidden></div>

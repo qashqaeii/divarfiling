@@ -486,6 +486,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     initThemeToggle();
     initClock();
+    initWorkspaceGlobalSearchAutofillGuard();
     initGlobalSearchShortcut();
     document.querySelectorAll('[data-mk-table]').forEach(initMkDataTable);
     initDatasetBulkSelect();
@@ -1170,6 +1171,75 @@ function initClock() {
     }
     tick();
     setInterval(tick, 1000);
+}
+
+const WS_IR_MOBILE_AUTOFILL_RE = /^(?:09\d{9}|9\d{9}|989\d{9})$/;
+
+function wsNormalizePhoneDigits(value) {
+    return String(value ?? '').replace(/\D/g, '');
+}
+
+function wsLooksLikeIranMobileAutofill(value) {
+    return WS_IR_MOBILE_AUTOFILL_RE.test(wsNormalizePhoneDigits(value));
+}
+
+function guardWorkspaceSearchInputAutofill(input, fieldName) {
+    if (!input || input.dataset.searchAutofillGuard === '1') return;
+    input.dataset.searchAutofillGuard = '1';
+    input.setAttribute('autocomplete', 'off');
+    input.setAttribute('autocorrect', 'off');
+    input.setAttribute('autocapitalize', 'off');
+    input.setAttribute('spellcheck', 'false');
+    input.setAttribute('data-lpignore', 'true');
+    input.setAttribute('data-1p-ignore', 'true');
+    input.setAttribute('data-form-type', 'other');
+    if (!input.getAttribute('role')) input.setAttribute('role', 'searchbox');
+    const riskyName = !input.name || input.name === 'phone' || input.name === 'tel' || input.name === 'mobile';
+    if (riskyName) input.name = fieldName || 'mk_workspace_global_search_q';
+    input.setAttribute('readonly', 'readonly');
+    input.addEventListener('focus', () => input.removeAttribute('readonly'), { once: true });
+}
+
+function clearWorkspaceSearchPhoneAutofill(input) {
+    if (!input) return false;
+    const value = input.value.trim();
+    if (!value || !wsLooksLikeIranMobileAutofill(value)) return false;
+    input.value = '';
+    try {
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+    } catch (e) { /* ignore */ }
+    return true;
+}
+
+function bindWorkspaceGlobalSearchAutofillGuard(input) {
+    if (!input) return;
+    guardWorkspaceSearchInputAutofill(input, 'mk_workspace_global_search_q');
+    const userEdited = { current: !!input.value.trim() };
+    input.addEventListener('input', () => { userEdited.current = true; });
+
+    function sweep() {
+        if (userEdited.current) return;
+        if (!clearWorkspaceSearchPhoneAutofill(input)) return;
+        const results = document.getElementById('crmSearchResults');
+        if (results) {
+            results.hidden = true;
+            results.innerHTML = '';
+        }
+        input.setAttribute('aria-expanded', 'false');
+        const clearBtn = document.getElementById('crmSearchClear');
+        if (clearBtn) clearBtn.hidden = true;
+        const loadingEl = document.getElementById('crmSearchLoading');
+        if (loadingEl) loadingEl.hidden = true;
+    }
+
+    sweep();
+    requestAnimationFrame(() => requestAnimationFrame(sweep));
+    [120, 500, 1000, 2000].forEach((ms) => window.setTimeout(sweep, ms));
+}
+
+function initWorkspaceGlobalSearchAutofillGuard() {
+    bindWorkspaceGlobalSearchAutofillGuard(document.getElementById('crmSearchInput'));
+    bindWorkspaceGlobalSearchAutofillGuard(document.getElementById('wsSearchInput'));
 }
 
 function initGlobalSearchShortcut() {

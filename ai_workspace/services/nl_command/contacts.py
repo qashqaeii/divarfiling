@@ -88,6 +88,43 @@ def _reverse_substring_matches(user, query: str, limit: int) -> List[Any]:
     return found
 
 
+def _contact_names_similar_for_duplicate_hint(input_name: str, stored_name: str) -> bool:
+    """
+    آیا دو نام برای هشدار «مشابه» در ثبت مخاطب جدید کافی‌شبیه‌اند؟
+    پیشوند مشترک داخل یک توکن (مثل سلیمان در سلیمانی) کافی نیست.
+    """
+    a = normalize_contact_name(input_name).casefold()
+    b = normalize_contact_name(stored_name).casefold()
+    if not a or not b:
+        return False
+    if a == b:
+        return True
+    a_tokens = [t for t in strip_contact_honorifics(input_name).casefold().split() if len(t) >= _MIN_TERM_LEN]
+    b_tokens = [t for t in strip_contact_honorifics(stored_name).casefold().split() if len(t) >= _MIN_TERM_LEN]
+    if a_tokens and b_tokens and set(a_tokens) & set(b_tokens):
+        return True
+    return False
+
+
+def find_similar_contacts_by_name(user, name: Optional[str], limit: int = 5) -> List[Any]:
+    """مخاطبین با نام واقعاً مشابه — برای هشدار ثبت مخاطب جدید (نه resolve یادآوری)."""
+    clean = normalize_contact_name(name or '')
+    if not clean:
+        return []
+    found: List[Any] = []
+    for customer in (
+        customers_qs(user)
+        .exclude(name='')
+        .only('id', 'name', 'phone', 'updated_at')
+        .order_by('-updated_at')[:400]
+    ):
+        if _contact_names_similar_for_duplicate_hint(clean, customer.name):
+            found.append(customer)
+            if len(found) >= limit:
+                break
+    return found
+
+
 def resolve_contact_by_name(
     user,
     name: Optional[str],

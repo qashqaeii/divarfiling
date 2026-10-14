@@ -1,6 +1,6 @@
 {% load static %}
 {% if smart_command.enabled %}
-<link rel="stylesheet" href="{% static 'workspace/css/crm-nl-command.css' %}?v=11">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-nl-command.css' %}?v=14">
 <div class="crm-smart-command-wrap">
 <section class="crm-nl-command crm-smart-command crm-smart-command--ctx-{{ smart_command.context }}"
     data-crm-smart-command
@@ -46,6 +46,7 @@
     </header>
 
     <div class="crm-nl-command__composer" data-sc="composer">
+        <p class="crm-nl-command__composer-kicker" aria-hidden="true">دستیار هوشمند</p>
         <label class="visually-hidden" for="crmSmartCmdInput-{{ smart_command.context }}">متن فرمان</label>
         <div class="crm-nl-command__composer-surface">
         <div class="crm-nl-command__row">
@@ -159,5 +160,5 @@
     <div class="crm-nl-command__backdrop" data-sc="backdrop" hidden aria-hidden="true"></div>
 </section>
 </div>
-<script src="{% static 'workspace/js/crm-smart-command.js' %}?v=6"></script>
+<script src="{% static 'workspace/js/crm-smart-command.js' %}?v=8"></script>
 {% endif %}

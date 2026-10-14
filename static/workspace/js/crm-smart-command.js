@@ -382,6 +382,26 @@
                     successLink.textContent = 'مشاهده یادآوری';
                 }
             }
+            if (readyStep) {
+                readyStep.classList.toggle('crm-nl-command__ready-step--contact', isContact);
+                readyStep.classList.toggle('crm-nl-command__ready-step--property', isProperty);
+            }
+        }
+
+        function appendSectionBlock(parent, sec) {
+            const block = document.createElement('div');
+            block.className = 'crm-nl-command__contact-block';
+            if (sec.title) {
+                const titleEl = document.createElement('p');
+                titleEl.className = 'crm-nl-command__contact-block-title';
+                titleEl.textContent = sec.title;
+                block.appendChild(titleEl);
+            }
+            const lineEl = document.createElement('p');
+            lineEl.className = 'crm-nl-command__contact-block-line';
+            lineEl.textContent = sec.lines.join(' · ');
+            block.appendChild(lineEl);
+            parent.appendChild(block);
         }
 
         function joinPreviewParts(parts) {
@@ -422,6 +442,10 @@
                     p.rent_display,
                 ]);
             } else if (effective === 'create_contact') {
+                if (normalizeContactSections(p).length > 0) {
+                    previewSummary.hidden = true;
+                    return;
+                }
                 line = (p.name || '').trim();
                 if (!line && p.sections && p.sections.length) {
                     const head = p.sections[0];
@@ -454,31 +478,22 @@
             if (sectionsHost && p.sections && p.sections.length) {
                 sectionsHost.innerHTML = '';
                 normalizeContactSections(p).forEach((sec) => {
-                    const block = document.createElement('div');
-                    block.className = 'crm-nl-command__contact-block';
-                    if (sec.title) {
-                        const titleEl = document.createElement('p');
-                        titleEl.className = 'crm-nl-command__contact-block-title';
-                        titleEl.textContent = sec.title;
-                        block.appendChild(titleEl);
-                    }
-                    sec.lines.forEach((line) => {
-                        const lineEl = document.createElement('p');
-                        lineEl.className = 'crm-nl-command__contact-block-line';
-                        lineEl.textContent = line;
-                        block.appendChild(lineEl);
-                    });
-                    sectionsHost.appendChild(block);
+                    appendSectionBlock(sectionsHost, sec);
                 });
                 const legacySheet = previewPropertyBody.querySelector('.crm-nl-command__sheet');
                 if (legacySheet) legacySheet.hidden = true;
                 sectionsHost.hidden = false;
+                if (readyStep) {
+                    const n = normalizeContactSections(p).length;
+                    readyStep.classList.toggle('has-section-grid', n > 0);
+                }
                 fillPreviewSummary(p, 'create_personal_property');
                 return;
             }
             const legacySheet = previewPropertyBody.querySelector('.crm-nl-command__sheet');
             if (legacySheet) legacySheet.hidden = false;
             if (sectionsHost) sectionsHost.hidden = true;
+            if (readyStep) readyStep.classList.remove('has-section-grid');
             const setRow = (selector, val, rowEl) => {
                 const el = previewPropertyBody.querySelector('[data-field="' + selector + '"]');
                 const text = (val || '').trim();
@@ -507,7 +522,7 @@
 
         function normalizeContactSections(p) {
             const raw = (p && p.sections) || [];
-            return raw
+            const sections = raw
                 .map((sec) => {
                     const title = (sec.title || '').trim();
                     const lines = (sec.lines || [])
@@ -516,6 +531,12 @@
                     return { title, lines };
                 })
                 .filter((sec) => sec.lines.length > 0);
+            const name = (p && p.name || '').trim();
+            if (sections.length > 1 && name && !sections[0].title
+                && sections[0].lines.length === 1 && sections[0].lines[0] === name) {
+                sections.shift();
+            }
+            return sections;
         }
 
         function fillContactPreview(p) {
@@ -523,22 +544,11 @@
             contactSectionsEl.innerHTML = '';
             const sections = normalizeContactSections(p);
             sections.forEach((sec) => {
-                const block = document.createElement('div');
-                block.className = 'crm-nl-command__contact-block';
-                if (sec.title) {
-                    const titleEl = document.createElement('p');
-                    titleEl.className = 'crm-nl-command__contact-block-title';
-                    titleEl.textContent = sec.title;
-                    block.appendChild(titleEl);
-                }
-                sec.lines.forEach((line) => {
-                    const lineEl = document.createElement('p');
-                    lineEl.className = 'crm-nl-command__contact-block-line';
-                    lineEl.textContent = line;
-                    block.appendChild(lineEl);
-                });
-                contactSectionsEl.appendChild(block);
+                appendSectionBlock(contactSectionsEl, sec);
             });
+            if (readyStep) {
+                readyStep.classList.toggle('has-section-grid', sections.length > 0);
+            }
         }
 
         function isIncompleteProperty(data) {

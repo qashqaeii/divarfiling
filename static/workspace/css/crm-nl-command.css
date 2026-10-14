@@ -88,6 +88,22 @@
     align-items: flex-start;
     gap: 0.55rem;
     min-width: 0;
+    font-family: var(--nl-font);
+}
+
+.crm-smart-command .crm-nl-command__titles {
+    min-width: 0;
+    font-family: var(--nl-font);
+}
+
+.crm-smart-command .crm-nl-command__composer-kicker {
+    display: none;
+    margin: 0 0 0.3rem;
+    font-family: var(--nl-font);
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0;
+    color: color-mix(in srgb, var(--sc-accent) 55%, var(--ws-text-muted));
 }
 
 .crm-smart-command .crm-nl-command__spark {
@@ -1045,37 +1061,69 @@
     }
 }
 
-.crm-smart-command .crm-nl-command__contact-sections {
-    display: flex;
-    flex-direction: column;
-    gap: 0.65rem;
+.crm-smart-command .crm-nl-command__contact-sections,
+.crm-smart-command [data-sc="property-sections"] {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.35rem 0.45rem;
 }
 
-.crm-smart-command .crm-nl-command__contact-sections:empty {
+.crm-smart-command .crm-nl-command__contact-sections:empty,
+.crm-smart-command [data-sc="property-sections"]:empty {
     display: none;
 }
 
 .crm-smart-command .crm-nl-command__contact-block {
-    padding: 0.55rem 0.65rem;
-    border-radius: 10px;
-    background: color-mix(in srgb, var(--ws-border) 8%, var(--ws-surface));
-    border: 1px solid color-mix(in srgb, var(--ws-border) 90%, transparent);
+    padding: 0.4rem 0.5rem;
+    border-radius: 8px;
+    background: var(--ws-surface, #fff);
+    border: 1px solid color-mix(in srgb, var(--ws-border) 88%, transparent);
+    min-width: 0;
 }
 
 .crm-smart-command .crm-nl-command__contact-block-title {
-    margin: 0 0 0.25rem;
-    font-size: 0.68rem;
-    font-weight: 800;
-    color: var(--ws-muted, #64748b);
+    margin: 0 0 0.12rem;
+    font-size: 0.62rem;
+    font-weight: 700;
+    color: var(--ws-text-muted, #64748b);
     letter-spacing: 0.01em;
 }
 
 .crm-smart-command .crm-nl-command__contact-block-line {
     margin: 0;
-    font-size: 0.82rem;
-    font-weight: 700;
+    font-size: 0.76rem;
+    font-weight: 600;
     color: var(--ws-text);
-    line-height: 1.45;
+    line-height: 1.35;
+    word-break: break-word;
+}
+
+.crm-smart-command .crm-nl-command__ready-step.has-section-grid .crm-nl-command__preview-summary {
+    display: none !important;
+}
+
+.crm-smart-command .crm-nl-command__ready-step--contact .crm-nl-command__panel-title,
+.crm-smart-command .crm-nl-command__ready-step--property .crm-nl-command__panel-title {
+    margin-bottom: 0.4rem;
+}
+
+.crm-smart-command .crm-nl-command__ready-step--contact .crm-nl-command__preview-bodies,
+.crm-smart-command .crm-nl-command__ready-step--property .crm-nl-command__preview-bodies {
+    padding-top: 0;
+}
+
+.crm-smart-command .crm-nl-command__ready-step--contact .crm-nl-command__actions,
+.crm-smart-command .crm-nl-command__ready-step--property .crm-nl-command__actions {
+    margin-top: 0.45rem;
+    padding-top: 0.45rem;
+    border-top: 1px dashed color-mix(in srgb, var(--ws-border) 80%, transparent);
+}
+
+@media (max-width: 559px) {
+    .crm-smart-command .crm-nl-command__contact-sections,
+    .crm-smart-command [data-sc="property-sections"] {
+        grid-template-columns: 1fr;
+    }
 }
 
 /* Today mobile — compact inline composer (loads after closure; overrides 640px stack) */
@@ -1114,14 +1162,8 @@
         display: none !important;
     }
 
-    .crm-today-mobile .crm-today-smart-anchor .crm-nl-command__composer::before {
-        content: 'دستیار هوشمند';
+    .crm-today-mobile .crm-today-smart-anchor .crm-nl-command__composer-kicker {
         display: block;
-        margin-bottom: 0.3rem;
-        font-size: 0.62rem;
-        font-weight: 700;
-        letter-spacing: 0.02em;
-        color: color-mix(in srgb, var(--ws-primary) 55%, var(--ws-text-muted));
     }
 
     .crm-today-mobile .crm-today-smart-anchor .crm-nl-command__composer-surface {
@@ -1440,18 +1482,17 @@
     }
 
     .crm-contacts-pro .crm-contacts-smart-anchor .crm-nl-command__kicker {
-        display: none;
+        display: block;
+        margin-bottom: 0.06rem;
+        font-size: 0.62rem;
+        font-weight: 700;
+        line-height: 1.2;
     }
 
     .crm-contacts-pro .crm-contacts-smart-anchor .crm-nl-command__title {
         font-size: 0.84rem;
         font-weight: 800;
-    }
-
-    .crm-contacts-pro .crm-contacts-smart-anchor .crm-nl-command__title::before {
-        content: 'دستیار · ';
-        font-weight: 600;
-        color: color-mix(in srgb, var(--sc-accent) 55%, var(--ws-text-muted));
+        letter-spacing: 0;
     }
 
     .crm-contacts-pro .crm-contacts-smart-anchor .crm-nl-command__sub {
@@ -1594,21 +1635,22 @@
         margin-top: 0.15rem;
     }
 
+    .crm-contacts-pro .crm-contacts-smart-anchor .crm-nl-command__contact-sections {
+        gap: 0.32rem 0.4rem;
+    }
+
     .crm-contacts-pro .crm-contacts-smart-anchor .crm-nl-command__contact-block {
-        padding: 0.4rem 0.5rem;
-        border-radius: 8px;
-        background: var(--ws-surface);
-        border-color: color-mix(in srgb, var(--ws-border) 88%, transparent);
+        padding: 0.35rem 0.45rem;
     }
 
-    .crm-contacts-pro .crm-contacts-smart-anchor .crm-nl-command__contact-block-title {
-        font-size: 0.64rem;
-        margin-bottom: 0.15rem;
+    .crm-contacts-pro .crm-contacts-smart-anchor .crm-nl-command__ready-step--contact .crm-nl-command__actions {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: flex-end;
     }
 
-    .crm-contacts-pro .crm-contacts-smart-anchor .crm-nl-command__contact-block-line {
-        font-size: 0.78rem;
-        font-weight: 600;
+    .crm-contacts-pro .crm-contacts-smart-anchor .crm-nl-command__ready-step--contact .crm-nl-command__btn--primary {
+        min-width: 7.5rem;
     }
 
     .crm-contacts-pro .crm-contacts-smart-anchor .crm-nl-command__sheet dt {

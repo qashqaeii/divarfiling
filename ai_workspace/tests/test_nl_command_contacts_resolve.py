@@ -5,6 +5,8 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 
 from ai_workspace.services.nl_command.contacts import (
+    _contact_names_similar_for_duplicate_hint,
+    find_similar_contacts_by_name,
     resolve_contact_by_name,
     strip_contact_honorifics,
 )
@@ -46,3 +48,23 @@ class NLCommandContactResolveTests(TestCase):
         self.assertIsNone(cid)
         self.assertEqual(amb, 'none')
         self.assertEqual(candidates, [])
+
+    def test_similar_hint_not_prefix_family_name(self):
+        Customer.objects.create(user=self.user, name='سلیمانی', phone='09166312383')
+        self.assertFalse(
+            _contact_names_similar_for_duplicate_hint('سلیمان نژاد', 'سلیمانی'),
+        )
+        self.assertEqual(find_similar_contacts_by_name(self.user, 'سلیمان نژاد'), [])
+
+    def test_similar_hint_shared_full_token(self):
+        Customer.objects.create(user=self.user, name='علی رضایی', phone='09121111111')
+        self.assertTrue(
+            _contact_names_similar_for_duplicate_hint('علی مرادی', 'علی رضایی'),
+        )
+        self.assertEqual(len(find_similar_contacts_by_name(self.user, 'علی مرادی')), 1)
+
+    def test_similar_hint_exact_name(self):
+        Customer.objects.create(user=self.user, name='سلیمان نژاد', phone='09120000000')
+        self.assertTrue(
+            _contact_names_similar_for_duplicate_hint('سلیمان نژاد', 'سلیمان نژاد'),
+        )

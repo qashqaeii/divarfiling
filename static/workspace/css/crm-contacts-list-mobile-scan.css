@@ -252,12 +252,9 @@
         padding: 0.12rem 0.38rem;
     }
 
-    .crm-contacts-mobile .crm-contacts-smart-anchor .crm-nl-command__composer::before {
-        content: 'دستیار هوشمند';
+    .crm-contacts-mobile .crm-contacts-smart-anchor .crm-nl-command__composer-kicker {
         display: block;
         margin-bottom: 0.28rem;
-        font-size: 0.62rem;
-        font-weight: 700;
         color: color-mix(in srgb, var(--ws-primary) 50%, var(--ws-text-muted));
     }
 
@@ -805,7 +802,30 @@
         display: none !important;
     }
 
-    /* Page chrome — desktop order & filter bar (no mobile + FAB in toolbar) */
+    /* Mobile — filter bar below smart assistant (not hoisted above header) */
+    .crm-contacts-pro > .crm-contacts-smart-anchor {
+        order: 3;
+    }
+
+    .crm-contacts-pro .crm-contacts-mob-chrome,
+    .crm-contacts-pro > #crmContactFilters {
+        order: 4;
+    }
+
+    .crm-contacts-pro .crm-contacts-mob-toolbar-sticky {
+        position: static;
+        padding: 0;
+        background: transparent;
+        border: none;
+    }
+
+    .crm-contacts-pro .crm-contacts-mob-filter-chips {
+        display: none !important;
+    }
+}
+
+/* Desktop — column order: header → KPIs → smart → filters → list */
+@media (min-width: 768px) {
     .crm-contacts-pro.crm-page-chrome {
         display: flex;
         flex-direction: column;
@@ -846,6 +866,11 @@
     }
 
     .crm-contacts-pro .crm-contacts-mob-filter-chips {
+        display: none !important;
+    }
+
+    .crm-contacts-pro .crm-contacts-mob-toolbar-menu,
+    .crm-contacts-pro .crm-contacts-mob-toolbar-add {
         display: none !important;
     }
 }

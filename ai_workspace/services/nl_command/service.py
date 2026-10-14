@@ -23,7 +23,10 @@ from ai_workspace.constants import (
     resolve_model_label,
 )
 from ai_workspace.services.gateway import FeatureDisabledError, GatewayResult, run as gateway_run
-from ai_workspace.services.nl_command.contacts import resolve_contact_by_name
+from ai_workspace.services.nl_command.contacts import (
+    find_similar_contacts_by_name,
+    resolve_contact_by_name,
+)
 from ai_workspace.services.nl_command.datetime_parser import format_due_display, parse_due_datetime
 from ai_workspace.services.nl_command.errors import NLCommandError
 from ai_workspace.services.nl_command.executors.contact import check_phone_duplicate, confirm_create_contact
@@ -237,8 +240,7 @@ def _parse_create_contact(
 
     name_warning = None
     if validated.get('name') and not duplicate_contact:
-        _cid, _cands, amb = resolve_contact_by_name(user, validated.get('name'), limit=3)
-        if amb == 'multiple' or (amb == '' and _cid):
+        if find_similar_contacts_by_name(user, validated.get('name'), limit=1):
             name_warning = 'مخاطبی با نام مشابه در CRM وجود دارد.'
 
     can_confirm = (

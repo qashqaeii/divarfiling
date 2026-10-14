@@ -378,11 +378,36 @@ class CustomerListView(CRMContextMixin, LoginRequiredMixin, ListView):
     context_object_name = 'customers'
     paginate_by = 25
 
+    def get_paginate_by(self, queryset):
+        if self.request.GET.get('view') == 'pipeline':
+            return None
+        return self.paginate_by
+
+    def render_to_response(self, context, **response_kwargs):
+        view_mode = context.get('view_mode') or self.request.GET.get('view', 'table')
+        if self.request.GET.get('partial') == '1' and view_mode != 'pipeline':
+            page_obj = context.get('page_obj')
+            html = render_to_string(
+                'workspace/crm/contacts/_contact_table_rows.html',
+                context,
+                request=self.request,
+            )
+            return JsonResponse({
+                'html': html,
+                'has_next': bool(page_obj and page_obj.has_next()),
+                'next_page': page_obj.next_page_number() if page_obj and page_obj.has_next() else None,
+            })
+        return super().render_to_response(context, **response_kwargs)
+
     def get_queryset(self):
         return filter_contacts(self.request.user, self.request.GET)
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
+        if self.request.GET.get('partial') == '1':
+            ctx['match_eligible_types'] = MATCH_TYPES | LEAD_TYPES
+            ctx['today'] = timezone.now().date()
+            return ctx
         user = self.request.user
         today = timezone.now().date()
         cqs = customers_qs(user)
@@ -403,7 +428,7 @@ class CustomerListView(CRMContextMixin, LoginRequiredMixin, ListView):
         ctx['crm_section'] = 'contacts'
         ctx['filter_qs'] = urlencode({
             k: v for k, v in self.request.GET.items()
-            if k not in ('view', 'page', 'open') and v
+            if k not in ('view', 'page', 'open', 'partial') and v
         })
         ctx['view_mode'] = self.request.GET.get('view', 'table')
         ctx['pipeline'] = get_pipeline_data(self.request.user, per_column=50)

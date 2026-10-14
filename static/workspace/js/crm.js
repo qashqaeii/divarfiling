@@ -862,15 +862,20 @@ function initCRMGlobalSearch() {
 
 function initCRMMultiSelect() {
     const selectAll = document.getElementById('crmSelectAll');
-    const checks = document.querySelectorAll('.crm-row-check');
+    const contactsTable = document.getElementById('crmContactsTable');
     const bulkBar = document.getElementById('crmBulkBar');
     const bulkCount = document.getElementById('crmBulkCount');
     const bulkForm = document.getElementById('crmBulkForm');
     const bulkIds = document.getElementById('crmBulkIds');
-    if (!checks.length) return;
+
+    function rowChecks() {
+        const root = contactsTable || document;
+        return root.querySelectorAll('.crm-row-check');
+    }
+    if (!rowChecks().length) return;
 
     function selectedIds() {
-        return [...checks].filter(c => c.checked).map(c => c.value);
+        return [...rowChecks()].filter(c => c.checked).map(c => c.value);
     }
 
     function updateBulk() {
@@ -893,16 +898,21 @@ function initCRMMultiSelect() {
 
     if (selectAll) {
         selectAll.addEventListener('change', () => {
-            checks.forEach(c => { c.checked = selectAll.checked; });
+            rowChecks().forEach(c => { c.checked = selectAll.checked; });
             updateBulk();
         });
     }
-    checks.forEach(c => c.addEventListener('change', updateBulk));
+    const checkChangeRoot = contactsTable || document.body;
+    checkChangeRoot.addEventListener('change', e => {
+        if (!e.target.classList.contains('crm-row-check')) return;
+        if (contactsTable && !contactsTable.contains(e.target)) return;
+        updateBulk();
+    });
 
     const bulkClear = document.getElementById('crmBulkClear');
     if (bulkClear) {
         bulkClear.addEventListener('click', () => {
-            checks.forEach(c => { c.checked = false; });
+            rowChecks().forEach(c => { c.checked = false; });
             if (selectAll) selectAll.checked = false;
             updateBulk();
         });
@@ -1717,12 +1727,12 @@ function initCRMSidePanel() {
 
     const panel = document.getElementById('crmSidePanel');
     if (!panel) {
-        layout.querySelectorAll('.crm-row-selectable').forEach(row => {
-            row.addEventListener('click', e => {
-                if (e.target.closest('a, button, input, .crm-contacts-col-check, details, summary, .crm-contacts-mob-card__actions')) return;
-                const link = row.querySelector('.crm-contacts-person-link');
-                if (link) window.location.href = link.href;
-            });
+        layout.addEventListener('click', e => {
+            const row = e.target.closest('.crm-row-selectable');
+            if (!row || !layout.contains(row)) return;
+            if (e.target.closest('a, button, input, .crm-contacts-col-check, details, summary, .crm-contacts-mob-card__actions')) return;
+            const link = row.querySelector('.crm-contacts-person-link');
+            if (link) window.location.href = link.href;
         });
         return;
     }
@@ -1894,11 +1904,11 @@ function initCRMSidePanel() {
         }
     }
 
-    layout.querySelectorAll('.crm-row-selectable').forEach(row => {
-        row.addEventListener('click', e => {
-            if (e.target.closest('a, button, input, .crm-col-check')) return;
-            openPanel(row);
-        });
+    layout.addEventListener('click', e => {
+        const row = e.target.closest('.crm-row-selectable');
+        if (!row || !layout.contains(row)) return;
+        if (e.target.closest('a, button, input, .crm-col-check, .crm-contacts-col-check, details, summary, .crm-contacts-mob-card__actions')) return;
+        openPanel(row);
     });
 
     if (closeBtn) closeBtn.addEventListener('click', closePanel);

@@ -189,6 +189,11 @@
             return window.matchMedia('(max-width: 640px)').matches;
         }
 
+        function syncPreviewOpen() {
+            const open = !!(preview && !preview.hidden);
+            root.classList.toggle('is-preview-open', open);
+        }
+
         function setSheetOpen(on) {
             const sheet = !!on && isMobileSheet();
             root.classList.toggle('is-sheet-open', sheet);
@@ -285,6 +290,7 @@
 
         function hidePreviewPanel() {
             if (preview) preview.hidden = true;
+            syncPreviewOpen();
             setSheetOpen(false);
             if (ambigStep) ambigStep.hidden = true;
             if (readyStep) readyStep.hidden = true;
@@ -607,6 +613,7 @@
             if (candidatesEl) candidatesEl.innerHTML = '';
             if (continueBtn) continueBtn.disabled = true;
             preview.hidden = false;
+            syncPreviewOpen();
             setSheetOpen(true);
         }
 
@@ -683,6 +690,7 @@
             const searchName = (data.preview && data.preview.contact_name) || '';
             renderCandidates(data.contact_candidates, searchName);
             preview.hidden = false;
+            syncPreviewOpen();
             setSheetOpen(true);
             setStatus('');
         }

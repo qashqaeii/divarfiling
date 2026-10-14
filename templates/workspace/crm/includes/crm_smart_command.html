@@ -1,6 +1,6 @@
 {% load static %}
 {% if smart_command.enabled %}
-<link rel="stylesheet" href="{% static 'workspace/css/crm-nl-command.css' %}?v=10">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-nl-command.css' %}?v=11">
 <div class="crm-smart-command-wrap">
 <section class="crm-nl-command crm-smart-command crm-smart-command--ctx-{{ smart_command.context }}"
     data-crm-smart-command
@@ -26,7 +26,7 @@
                 <span class="crm-nl-command__kicker">دستیار هوشمند</span>
                 <h2 class="crm-nl-command__title">{{ smart_command.title }}</h2>
                 {% if smart_command.subtitle %}
-                <p class="crm-nl-command__sub">{{ smart_command.subtitle }}</p>
+                <p class="crm-nl-command__sub" id="crmSmartCmdHint-{{ smart_command.context }}">{{ smart_command.subtitle }}</p>
                 {% endif %}
             </div>
         </div>
@@ -52,6 +52,7 @@
             <div class="crm-nl-command__input-wrap">
                 <textarea id="crmSmartCmdInput-{{ smart_command.context }}" class="crm-nl-command__input" data-sc="input" rows="1"
                     placeholder="{{ smart_command.placeholder }}"
+                    {% if smart_command.subtitle %}aria-describedby="crmSmartCmdHint-{{ smart_command.context }}"{% endif %}
                     autocomplete="off" spellcheck="false"></textarea>
                 <button type="button" class="crm-nl-command__voice" data-sc="voice-btn"
                     aria-label="شروع فرمان صوتی"
@@ -158,5 +159,5 @@
     <div class="crm-nl-command__backdrop" data-sc="backdrop" hidden aria-hidden="true"></div>
 </section>
 </div>
-<script src="{% static 'workspace/js/crm-smart-command.js' %}?v=5"></script>
+<script src="{% static 'workspace/js/crm-smart-command.js' %}?v=6"></script>
 {% endif %}

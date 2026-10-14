@@ -1249,206 +1249,92 @@
     }
 }
 
-/* ── Today queue — desktop smart command (صف امروز) ── */
-@media (min-width: 769px) {
-    .crm-today-pro .crm-today-smart-anchor .crm-smart-command-wrap {
-        width: 100%;
-        margin-bottom: 0.85rem;
+/* ── Personal files — mobile smart assistant ── */
+@media (max-width: 768px) {
+    .crm-files-mobile .crm-files-smart-anchor .crm-smart-command-wrap {
+        display: block;
+        margin: 0.35rem 0.75rem 0.45rem;
+        min-width: 0;
     }
 
-    .crm-today-pro .crm-smart-command--ctx-today {
-        overflow: hidden;
-        padding: 1rem 1.15rem 1.1rem;
-        border-radius: 16px;
-        border-color: color-mix(in srgb, var(--sc-accent) 16%, var(--ws-border));
-        background:
-            radial-gradient(ellipse 85% 70% at 100% 0%, var(--sc-today-glow), transparent 58%),
-            radial-gradient(ellipse 55% 45% at 0% 100%, color-mix(in srgb, var(--ws-primary) 6%, transparent), transparent 55%),
-            var(--ws-surface);
-        box-shadow:
-            0 1px 2px rgba(15, 23, 42, 0.04),
-            0 12px 32px -24px color-mix(in srgb, var(--sc-accent) 28%, rgba(15, 23, 42, 0.2));
-    }
-
-    .crm-today-pro .crm-smart-command--ctx-today::before {
-        inset-inline: 0;
-        height: 2px;
-        border-radius: 0;
-        background: linear-gradient(
-            90deg,
-            transparent 0%,
-            color-mix(in srgb, var(--sc-accent-warm) 55%, transparent) 35%,
-            color-mix(in srgb, var(--sc-accent) 70%, transparent) 65%,
-            transparent 100%
-        );
-        opacity: 1;
-    }
-
-    .crm-today-pro .crm-smart-command--ctx-today .crm-nl-command__head {
-        align-items: center;
-        margin-bottom: 0.85rem;
-        padding-bottom: 0;
-        border-bottom: none;
-    }
-
-    .crm-today-pro .crm-smart-command--ctx-today .crm-nl-command__spark {
-        width: 2.35rem;
-        height: 2.35rem;
+    .crm-files-mobile .crm-files-smart-anchor .crm-smart-command {
         border-radius: 12px;
-        font-size: 0.9rem;
-        color: #fff;
-        background: linear-gradient(
-            145deg,
-            color-mix(in srgb, var(--sc-accent-warm) 90%, #fff),
-            var(--sc-accent)
-        );
-        box-shadow:
-            0 0 0 1px color-mix(in srgb, var(--sc-accent) 25%, transparent),
-            0 8px 18px -10px color-mix(in srgb, var(--sc-accent) 45%, transparent);
+        padding: 0.5rem 0.55rem 0.55rem;
+        border-color: color-mix(in srgb, var(--ws-border) 55%, transparent);
+        box-shadow: none;
     }
 
-    .crm-today-pro .crm-smart-command--ctx-today .crm-nl-command__kicker {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.3rem;
-        margin-bottom: 0.25rem;
-        padding: 0.14rem 0.5rem;
-        border-radius: 999px;
-        font-size: 0.62rem;
-        font-weight: 800;
-        letter-spacing: 0.01em;
-        color: color-mix(in srgb, var(--sc-accent) 75%, var(--ws-text));
-        background: color-mix(in srgb, var(--sc-accent) 10%, var(--ws-surface));
-        border: 1px solid color-mix(in srgb, var(--sc-accent) 18%, transparent);
+    .crm-files-mobile .crm-files-smart-anchor .crm-smart-command::before {
+        display: none;
     }
 
-    .crm-today-pro .crm-smart-command--ctx-today .crm-nl-command__title {
-        font-size: 1.02rem;
-        line-height: 1.3;
+    .crm-files-mobile .crm-files-smart-anchor .crm-nl-command__brand,
+    .crm-files-mobile .crm-files-smart-anchor .crm-nl-command__sub,
+    .crm-files-mobile .crm-files-smart-anchor .crm-nl-command__chips-head,
+    .crm-files-mobile .crm-files-smart-anchor .crm-nl-command__composer-foot {
+        display: none !important;
     }
 
-    .crm-today-pro .crm-smart-command--ctx-today .crm-nl-command__sub {
-        font-size: 0.74rem;
-        max-width: 36rem;
+    .crm-files-mobile .crm-files-smart-anchor .crm-smart-command {
+        position: relative;
     }
 
-    .crm-today-pro .crm-smart-command--ctx-today .crm-nl-command__quota {
-        border-color: color-mix(in srgb, var(--sc-accent) 14%, var(--ws-border));
-        background: color-mix(in srgb, var(--ws-surface) 92%, var(--sc-accent) 8%);
+    .crm-files-mobile .crm-files-smart-anchor .crm-nl-command__head {
+        position: absolute;
+        top: 0.42rem;
+        inset-inline-end: 0.45rem;
+        z-index: 2;
+        margin: 0;
+        padding: 0;
+        border: none;
+        background: transparent;
+        pointer-events: none;
     }
 
-    .crm-today-pro .crm-smart-command--ctx-today .crm-nl-command__composer-surface {
-        padding: 0.2rem;
-        border-radius: 14px;
-        background: color-mix(in srgb, var(--ws-surface) 94%, var(--sc-accent) 6%);
-        border-color: color-mix(in srgb, var(--sc-accent) 12%, var(--ws-border));
-        box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 40%, transparent);
+    .crm-files-mobile .crm-files-smart-anchor .crm-nl-command__head-meta {
+        pointer-events: auto;
     }
 
-    .crm-today-pro .crm-smart-command--ctx-today .crm-nl-command__composer-surface:focus-within {
-        border-color: color-mix(in srgb, var(--sc-accent) 32%, var(--ws-border));
-        box-shadow:
-            inset 0 1px 0 color-mix(in srgb, #fff 35%, transparent),
-            0 0 0 3px color-mix(in srgb, var(--sc-accent) 12%, transparent);
+    .crm-files-mobile .crm-files-smart-anchor .crm-nl-command__composer-kicker {
+        display: block;
+        margin-bottom: 0.28rem;
+        color: color-mix(in srgb, var(--ws-primary) 50%, var(--ws-text-muted));
     }
 
-    .crm-today-pro .crm-smart-command--ctx-today .crm-nl-command__row {
-        min-height: 3.25rem;
-        padding: 0.35rem 0.4rem 0.35rem 0.6rem;
-        border-radius: 11px;
+    .crm-files-mobile .crm-files-smart-anchor .crm-nl-command__composer-surface {
+        padding: 0.12rem;
+        border-radius: 10px;
         background: var(--ws-surface);
+        border-color: color-mix(in srgb, var(--ws-border) 70%, transparent);
     }
 
-    .crm-today-pro .crm-smart-command--ctx-today .crm-nl-command__parse {
-        min-width: 6.75rem;
-        min-height: 2.65rem;
-        border-radius: 11px;
-        background: linear-gradient(
-            165deg,
-            color-mix(in srgb, var(--sc-accent-warm) 88%, #fff) 0%,
-            var(--sc-accent) 48%,
-            color-mix(in srgb, var(--sc-accent) 92%, #1e293b) 100%
-        );
+    .crm-files-mobile .crm-files-smart-anchor .crm-nl-command__row {
+        flex-direction: row !important;
+        align-items: center !important;
+        min-height: 0 !important;
+        padding: 0.12rem 0.15rem 0.12rem 0.25rem !important;
+        gap: 0.25rem !important;
     }
 
-    .crm-today-pro .crm-smart-command--ctx-today .crm-nl-command__chips-head {
-        align-items: center;
-        margin-top: 0.65rem;
-        padding-top: 0.55rem;
-        border-top: 1px dashed color-mix(in srgb, var(--ws-border) 75%, transparent);
+    .crm-files-mobile .crm-files-smart-anchor .crm-nl-command__input {
+        min-height: 2.4rem;
+        max-height: 2.4rem;
+        font-size: max(16px, 0.78rem);
+        overflow: hidden;
     }
 
-    .crm-today-pro .crm-smart-command--ctx-today .crm-nl-command__chips-label {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.25rem;
-        font-size: 0.64rem;
-        text-transform: none;
-        color: color-mix(in srgb, var(--sc-accent) 45%, var(--ws-text-muted));
-    }
-
-    .crm-today-pro .crm-smart-command--ctx-today .crm-nl-command__chips-label::before {
-        content: '✦';
-        font-size: 0.55rem;
-        opacity: 0.85;
-    }
-
-    .crm-today-pro .crm-smart-command--ctx-today .crm-nl-command__chips {
-        flex-wrap: nowrap;
-        overflow-x: auto;
-        padding-bottom: 0.15rem;
-        mask-image: linear-gradient(to left, transparent, #000 12px, #000 calc(100% - 12px), transparent);
-    }
-
-    .crm-today-pro .crm-smart-command--ctx-today .crm-nl-command__chip {
-        padding: 0.32rem 0.65rem;
-        border-radius: 999px;
-        font-size: 0.7rem;
-        border-color: color-mix(in srgb, var(--ws-border) 80%, var(--sc-accent) 20%);
-        background: var(--ws-surface);
-        transition: border-color 0.15s, background 0.15s, color 0.15s, transform 0.12s;
-    }
-
-    .crm-today-pro .crm-smart-command--ctx-today .crm-nl-command__chip:hover {
-        border-color: color-mix(in srgb, var(--sc-accent) 35%, var(--ws-border));
-        background: color-mix(in srgb, var(--sc-accent) 8%, var(--ws-surface));
-        color: var(--ws-text);
-        transform: translateY(-1px);
-    }
-
-    .crm-today-pro .crm-smart-command--ctx-today .crm-nl-command__chip.is-active {
-        border-color: color-mix(in srgb, var(--sc-accent) 45%, transparent);
-        background: color-mix(in srgb, var(--sc-accent) 14%, var(--ws-surface));
-        color: color-mix(in srgb, var(--sc-accent) 85%, var(--ws-text));
-        box-shadow: 0 4px 12px -8px color-mix(in srgb, var(--sc-accent) 40%, transparent);
-    }
-
-    .crm-today-pro .crm-smart-command--ctx-today .crm-nl-command__composer-foot {
-        margin-top: 0.15rem;
-    }
-
-    .crm-today-pro .crm-smart-command--ctx-today .crm-nl-command__composer-hint {
-        opacity: 0.75;
+    .crm-files-mobile .crm-files-smart-anchor .crm-smart-command.is-preview-open .crm-nl-command__composer-kicker {
+        display: none;
     }
 }
 
-@media (prefers-reduced-motion: reduce) {
-    .crm-today-pro .crm-smart-command--ctx-today .crm-nl-command__chip:hover {
-        transform: none;
-    }
-
-    .crm-today-pro .crm-smart-command--ctx-today .crm-nl-command__parse:not(:disabled):hover {
-        transform: none;
-    }
-}
-
-/* ── Contacts — minimal smart assistant (desktop) ── */
+/* ── CRM smart assistant — minimal (desktop: Today, Contacts, Properties) ── */
 @media (min-width: 769px) {
-    .crm-contacts-pro .crm-contacts-smart-anchor .crm-smart-command-wrap {
+    .crm-smart-command-anchor--minimal .crm-smart-command-wrap {
         margin: 0 0 0.55rem;
     }
 
-    .crm-contacts-pro .crm-contacts-smart-anchor .crm-smart-command--ctx-contacts {
+    .crm-smart-command-anchor--minimal .crm-smart-command {
         padding: 0.7rem 0.8rem 0.75rem;
         border-radius: 12px;
         border-color: color-mix(in srgb, var(--ws-border) 94%, var(--sc-accent) 6%);
@@ -1456,17 +1342,17 @@
         transition: border-color 0.2s, box-shadow 0.2s;
     }
 
-    .crm-contacts-pro .crm-contacts-smart-anchor .crm-smart-command--ctx-contacts::before {
+    .crm-smart-command-anchor--minimal .crm-smart-command::before {
         display: none;
     }
 
-    .crm-contacts-pro .crm-contacts-smart-anchor .crm-smart-command--ctx-contacts.is-preview-open,
-    .crm-contacts-pro .crm-contacts-smart-anchor .crm-smart-command--ctx-contacts.is-has-input {
+    .crm-smart-command-anchor--minimal .crm-smart-command.is-preview-open,
+    .crm-smart-command-anchor--minimal .crm-smart-command.is-has-input {
         border-color: color-mix(in srgb, var(--sc-accent) 18%, var(--ws-border));
         box-shadow: 0 4px 18px -16px color-mix(in srgb, var(--sc-accent) 35%, rgba(15, 23, 42, 0.15));
     }
 
-    .crm-contacts-pro .crm-contacts-smart-anchor .crm-nl-command__head {
+    .crm-smart-command-anchor--minimal .crm-nl-command__head {
         align-items: center;
         margin-bottom: 0.45rem;
         padding-bottom: 0;
@@ -1474,14 +1360,14 @@
         gap: 0.5rem;
     }
 
-    .crm-contacts-pro .crm-contacts-smart-anchor .crm-nl-command__spark {
+    .crm-smart-command-anchor--minimal .crm-nl-command__spark {
         width: 1.75rem;
         height: 1.75rem;
         border-radius: 9px;
         font-size: 0.72rem;
     }
 
-    .crm-contacts-pro .crm-contacts-smart-anchor .crm-nl-command__kicker {
+    .crm-smart-command-anchor--minimal .crm-nl-command__kicker {
         display: block;
         margin-bottom: 0.06rem;
         font-size: 0.62rem;
@@ -1489,13 +1375,13 @@
         line-height: 1.2;
     }
 
-    .crm-contacts-pro .crm-contacts-smart-anchor .crm-nl-command__title {
+    .crm-smart-command-anchor--minimal .crm-nl-command__title {
         font-size: 0.84rem;
         font-weight: 800;
         letter-spacing: 0;
     }
 
-    .crm-contacts-pro .crm-contacts-smart-anchor .crm-nl-command__sub {
+    .crm-smart-command-anchor--minimal .crm-nl-command__sub {
         position: absolute;
         width: 1px;
         height: 1px;
@@ -1507,38 +1393,38 @@
         border: 0;
     }
 
-    .crm-contacts-pro .crm-contacts-smart-anchor .crm-nl-command__quota {
+    .crm-smart-command-anchor--minimal .crm-nl-command__quota {
         font-size: 0.64rem;
         padding: 0.18rem 0.45rem;
     }
 
-    .crm-contacts-pro .crm-contacts-smart-anchor .crm-nl-command__composer-surface {
+    .crm-smart-command-anchor--minimal .crm-nl-command__composer-surface {
         padding: 0;
         background: transparent;
         border-radius: 10px;
         border: 1px solid color-mix(in srgb, var(--ws-border) 92%, var(--sc-accent) 8%);
     }
 
-    .crm-contacts-pro .crm-contacts-smart-anchor .crm-nl-command__row {
+    .crm-smart-command-anchor--minimal .crm-nl-command__row {
         min-height: 2.65rem;
         padding: 0.18rem 0.3rem 0.18rem 0.45rem;
         border-radius: 9px;
         background: transparent;
     }
 
-    .crm-contacts-pro .crm-contacts-smart-anchor .crm-nl-command__input {
+    .crm-smart-command-anchor--minimal .crm-nl-command__input {
         min-height: 2.35rem;
         font-size: 0.82rem;
     }
 
-    .crm-contacts-pro .crm-contacts-smart-anchor .crm-nl-command__voice {
+    .crm-smart-command-anchor--minimal .crm-nl-command__voice {
         width: 2.25rem;
         height: 2.25rem;
         border-radius: 8px;
         background: transparent;
     }
 
-    .crm-contacts-pro .crm-contacts-smart-anchor .crm-nl-command__parse {
+    .crm-smart-command-anchor--minimal .crm-nl-command__parse {
         min-height: 2.25rem;
         min-width: 2.35rem;
         padding: 0 0.65rem;
@@ -1547,58 +1433,58 @@
         box-shadow: none;
     }
 
-    .crm-contacts-pro .crm-contacts-smart-anchor .crm-smart-command--ctx-contacts:not(.is-has-input):not(.is-loading) .crm-nl-command__parse {
+    .crm-smart-command-anchor--minimal .crm-smart-command:not(.is-has-input):not(.is-loading) .crm-nl-command__parse {
         width: 2.35rem;
         min-width: 2.35rem;
         padding: 0;
     }
 
-    .crm-contacts-pro .crm-contacts-smart-anchor .crm-smart-command--ctx-contacts:not(.is-has-input):not(.is-loading) .crm-nl-command__parse-label {
+    .crm-smart-command-anchor--minimal .crm-smart-command:not(.is-has-input):not(.is-loading) .crm-nl-command__parse-label {
         display: none;
     }
 
-    .crm-contacts-pro .crm-contacts-smart-anchor .crm-smart-command--ctx-contacts.is-has-input .crm-nl-command__parse,
-    .crm-contacts-pro .crm-contacts-smart-anchor .crm-smart-command--ctx-contacts.is-loading .crm-nl-command__parse {
+    .crm-smart-command-anchor--minimal .crm-smart-command.is-has-input .crm-nl-command__parse,
+    .crm-smart-command-anchor--minimal .crm-smart-command.is-loading .crm-nl-command__parse {
         min-width: 5.75rem;
         padding: 0 0.75rem;
     }
 
-    .crm-contacts-pro .crm-contacts-smart-anchor .crm-smart-command--ctx-contacts.is-has-input .crm-nl-command__parse-label,
-    .crm-contacts-pro .crm-contacts-smart-anchor .crm-smart-command--ctx-contacts.is-loading .crm-nl-command__parse-label {
+    .crm-smart-command-anchor--minimal .crm-smart-command.is-has-input .crm-nl-command__parse-label,
+    .crm-smart-command-anchor--minimal .crm-smart-command.is-loading .crm-nl-command__parse-label {
         display: inline;
     }
 
-    .crm-contacts-pro .crm-contacts-smart-anchor .crm-nl-command__chips-head {
+    .crm-smart-command-anchor--minimal .crm-nl-command__chips-head {
         margin-top: 0.4rem;
         align-items: center;
     }
 
-    .crm-contacts-pro .crm-contacts-smart-anchor .crm-nl-command__chips-label {
+    .crm-smart-command-anchor--minimal .crm-nl-command__chips-label {
         display: none;
     }
 
-    .crm-contacts-pro .crm-contacts-smart-anchor .crm-nl-command__chip {
+    .crm-smart-command-anchor--minimal .crm-nl-command__chip {
         font-size: 0.66rem;
         padding: 0.26rem 0.55rem;
         border-color: color-mix(in srgb, var(--ws-border) 90%, transparent);
         background: color-mix(in srgb, var(--ws-surface-2, #f8fafc) 80%, var(--ws-surface));
     }
 
-    .crm-contacts-pro .crm-contacts-smart-anchor .crm-nl-command__composer-foot {
+    .crm-smart-command-anchor--minimal .crm-nl-command__composer-foot {
         margin-top: 0.3rem;
     }
 
-    .crm-contacts-pro .crm-contacts-smart-anchor .crm-nl-command__composer-hint {
+    .crm-smart-command-anchor--minimal .crm-nl-command__composer-hint {
         opacity: 0.65;
         font-size: 0.6rem;
     }
 
-    .crm-contacts-pro .crm-contacts-smart-anchor .crm-smart-command--ctx-contacts.is-preview-open .crm-nl-command__chips-head,
-    .crm-contacts-pro .crm-contacts-smart-anchor .crm-smart-command--ctx-contacts.is-preview-open .crm-nl-command__composer-foot {
+    .crm-smart-command-anchor--minimal .crm-smart-command.is-preview-open .crm-nl-command__chips-head,
+    .crm-smart-command-anchor--minimal .crm-smart-command.is-preview-open .crm-nl-command__composer-foot {
         display: none;
     }
 
-    .crm-contacts-pro .crm-contacts-smart-anchor .crm-nl-command__panel {
+    .crm-smart-command-anchor--minimal .crm-nl-command__panel {
         margin-top: 0.45rem;
         padding: 0.6rem 0.7rem 0.65rem;
         border: none;
@@ -1608,84 +1494,86 @@
         border-inline-start: 3px solid color-mix(in srgb, var(--sc-accent) 42%, transparent);
     }
 
-    .crm-contacts-pro .crm-contacts-smart-anchor .crm-nl-command__panel-title {
+    .crm-smart-command-anchor--minimal .crm-nl-command__panel-title {
         margin-bottom: 0.45rem;
         font-size: 0.76rem;
     }
 
-    .crm-contacts-pro .crm-contacts-smart-anchor .crm-nl-command__panel-badge {
+    .crm-smart-command-anchor--minimal .crm-nl-command__panel-badge {
         width: 1.2rem;
         height: 1.2rem;
         font-size: 0.55rem;
     }
 
-    .crm-contacts-pro .crm-contacts-smart-anchor .crm-nl-command__preview-summary {
+    .crm-smart-command-anchor--minimal .crm-nl-command__preview-summary {
         margin-bottom: 0.45rem;
         padding: 0.45rem 0.55rem;
         border-radius: 8px;
         background: var(--ws-surface);
     }
 
-    .crm-contacts-pro .crm-contacts-smart-anchor .crm-nl-command__preview-summary-line {
+    .crm-smart-command-anchor--minimal .crm-nl-command__preview-summary-line {
         font-size: 0.82rem;
     }
 
-    .crm-contacts-pro .crm-contacts-smart-anchor .crm-nl-command__preview-summary-sub {
+    .crm-smart-command-anchor--minimal .crm-nl-command__preview-summary-sub {
         font-size: 0.7rem;
         margin-top: 0.15rem;
     }
 
-    .crm-contacts-pro .crm-contacts-smart-anchor .crm-nl-command__contact-sections {
+    .crm-smart-command-anchor--minimal .crm-nl-command__contact-sections {
         gap: 0.32rem 0.4rem;
     }
 
-    .crm-contacts-pro .crm-contacts-smart-anchor .crm-nl-command__contact-block {
+    .crm-smart-command-anchor--minimal .crm-nl-command__contact-block {
         padding: 0.35rem 0.45rem;
     }
 
-    .crm-contacts-pro .crm-contacts-smart-anchor .crm-nl-command__ready-step--contact .crm-nl-command__actions {
+    .crm-smart-command-anchor--minimal .crm-nl-command__ready-step--contact .crm-nl-command__actions,
+    .crm-smart-command-anchor--minimal .crm-nl-command__ready-step--property .crm-nl-command__actions {
         flex-direction: row;
         flex-wrap: wrap;
         justify-content: flex-end;
     }
 
-    .crm-contacts-pro .crm-contacts-smart-anchor .crm-nl-command__ready-step--contact .crm-nl-command__btn--primary {
+    .crm-smart-command-anchor--minimal .crm-nl-command__ready-step--contact .crm-nl-command__btn--primary,
+    .crm-smart-command-anchor--minimal .crm-nl-command__ready-step--property .crm-nl-command__btn--primary {
         min-width: 7.5rem;
     }
 
-    .crm-contacts-pro .crm-contacts-smart-anchor .crm-nl-command__sheet dt {
+    .crm-smart-command-anchor--minimal .crm-nl-command__sheet dt {
         font-size: 0.66rem;
     }
 
-    .crm-contacts-pro .crm-contacts-smart-anchor .crm-nl-command__sheet dd {
+    .crm-smart-command-anchor--minimal .crm-nl-command__sheet dd {
         font-size: 0.78rem;
         font-weight: 600;
     }
 
-    .crm-contacts-pro .crm-contacts-smart-anchor .crm-nl-command__actions {
+    .crm-smart-command-anchor--minimal .crm-nl-command__actions {
         margin-top: 0.55rem;
         gap: 0.35rem;
     }
 
-    .crm-contacts-pro .crm-contacts-smart-anchor .crm-nl-command__btn {
+    .crm-smart-command-anchor--minimal .crm-nl-command__btn {
         min-height: 2.1rem;
         font-size: 0.72rem;
         border-radius: 8px;
     }
 
-    .crm-contacts-pro .crm-contacts-smart-anchor .crm-nl-command__btn--primary {
+    .crm-smart-command-anchor--minimal .crm-nl-command__btn--primary {
         min-height: 2.15rem;
         box-shadow: none;
     }
 
-    .crm-contacts-pro .crm-contacts-smart-anchor .crm-nl-command__feedback {
+    .crm-smart-command-anchor--minimal .crm-nl-command__feedback {
         margin-top: 0.4rem;
         padding: 0.45rem 0.55rem;
         font-size: 0.72rem;
         border-radius: 8px;
     }
 
-    .crm-contacts-pro .crm-contacts-smart-anchor .crm-nl-command__success {
+    .crm-smart-command-anchor--minimal .crm-nl-command__success {
         margin-top: 0.45rem;
         padding: 0.55rem 0.65rem;
         border-radius: 10px;
@@ -1693,7 +1581,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .crm-contacts-pro .crm-contacts-smart-anchor .crm-smart-command--ctx-contacts {
+    .crm-smart-command-anchor--minimal .crm-smart-command {
         transition: none;
     }
 }

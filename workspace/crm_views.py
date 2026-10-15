@@ -3948,10 +3948,15 @@ class CRMTeamView(AgencyTeamHubRequiredMixin, CRMContextMixin, LoginRequiredMixi
         ctx['agency_hub_access_level'] = agency_hub_access_level(user)
         ctx['can_manage_agency'] = can_manage_agency(user)
         if agency and can_manage_agency(user):
+            from workspace.constants import AGENCY_ROLES_ASSIGNABLE, AGENCY_ROLES_INVITE
             from workspace.services.agency_members import build_members_dashboard
+            from workspace.services.agency_rbac import is_agency_rbac_v2_enabled
             from workspace.services.agency_seats import list_available_seats
             ctx['members_dashboard'] = build_members_dashboard(user, agency)
             ctx['available_seats'] = list_available_seats(user, agency)
+            ctx['agency_roles_invite'] = AGENCY_ROLES_INVITE
+            ctx['agency_roles_assignable'] = AGENCY_ROLES_ASSIGNABLE
+            ctx['agency_rbac_v2'] = is_agency_rbac_v2_enabled(agency)
         else:
             ctx['members_dashboard'] = None
             ctx['available_seats'] = []

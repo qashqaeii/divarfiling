@@ -39,7 +39,7 @@ def _hub_shell_context(request, hub_section: str) -> dict:
         m = get_membership(request.user)
         agency = m.agency if m else None
     ctx['agency_rbac_v2'] = is_agency_rbac_v2_enabled(agency) if agency else False
-    ctx['agency_roles_invite'] = AGENCY_ROLES_INVITE if ctx['agency_rbac_v2'] else None
+    ctx['agency_roles_invite'] = AGENCY_ROLES_INVITE
     hub_nav = build_hub_nav(request.user)
     hub_nav_primary, hub_nav_more = partition_hub_nav(
         hub_nav, profile=resolve_nav_profile(request.user),
@@ -93,6 +93,7 @@ class AgencyHubAdvisorsView(AgencyTeamManageRequiredMixin, _AgencyHubTeamBase):
             rbac_v2_enabled_for_user,
         )
         from workspace.constants import AGENCY_ROLES_ASSIGNABLE, AGENCY_ROLES_INVITE
+        from workspace.services.agency_entitlement import can_manage_agency
 
         ctx = super().get_context_data(**kwargs)
         agency = ctx.get('hub_agency')
@@ -115,8 +116,10 @@ class AgencyHubAdvisorsView(AgencyTeamManageRequiredMixin, _AgencyHubTeamBase):
             ctx['members_dashboard'] = dash
             ctx['available_seats'] = list_available_seats(self.request.user, agency)
             ctx['team_export_url'] = reverse('workspace:agency_team_export')
-            ctx['agency_roles_invite'] = AGENCY_ROLES_INVITE if ctx['agency_rbac_v2'] else None
-            ctx['agency_roles_assignable'] = AGENCY_ROLES_ASSIGNABLE if ctx['agency_rbac_v2'] else None
+            ctx['agency_roles_invite'] = AGENCY_ROLES_INVITE
+            ctx['agency_roles_assignable'] = (
+                AGENCY_ROLES_ASSIGNABLE if can_manage_agency(self.request.user, agency) else None
+            )
             ctx['can_edit_member_permissions'] = (
                 rbac_v2_enabled_for_user(self.request.user)
                 and has_agency_permission(self.request.user, PERM_MEMBERS_PERMISSIONS_EDIT)

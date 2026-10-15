@@ -209,8 +209,7 @@ def update_member_role(actor, member_id: int, role: str) -> CRMAgencyMember:
         raise ValueError('نقش مالک قابل تغییر نیست')
     if role == AGENCY_ROLE_OWNER:
         raise ValueError('نقش مالک مجاز نیست')
-    if is_agency_rbac_v2_enabled(m.agency):
-        role = validate_role_change(role)
+    role = validate_role_change(role)
     member.role = role
     member.save(update_fields=['role'])
     if is_agency_rbac_v2_enabled(m.agency):

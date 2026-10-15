@@ -6,33 +6,41 @@
             <input type="hidden" name="tab" value="members">
             <div class="modal-header agency-modal__header">
                 <div>
-                    <h5 class="modal-title" id="agencyInviteModalLabel">دعوت مشاور جدید</h5>
-                    <p class="agency-modal__subtitle">دعوت از طریق SMS ارسال می‌شود</p>
+                    <h5 class="modal-title" id="agencyInviteModalLabel">دعوت عضو جدید</h5>
+                    <p class="agency-modal__subtitle">افزودن همکار به آژانس املاک · دعوت از طریق SMS</p>
                 </div>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="بستن"></button>
             </div>
             <div class="modal-body">
-                <div class="agency-modal__info">
-                    <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='send' size='inline' only %}</span>
-                    <span>پس از پذیرش دعوت، می‌توانید صندلی لایسنس را به مشاور تخصیص دهید.</span>
-                </div>
+                {% if agency_roles_invite %}
+                <fieldset class="agency-invite-role-fieldset">
+                    <legend class="agency-form-label">نقش عضو</legend>
+                    <div class="agency-invite-role-grid" role="radiogroup" aria-label="نقش عضو">
+                        <label class="agency-invite-role-card">
+                            <input type="radio" name="role" value="advisor" checked>
+                            <span class="agency-invite-role-card__title">مشاور</span>
+                            <span class="agency-invite-role-card__desc">فایلینگ، مشتریان و معاملات</span>
+                        </label>
+                        <label class="agency-invite-role-card">
+                            <input type="radio" name="role" value="secretary">
+                            <span class="agency-invite-role-card__title">منشی</span>
+                            <span class="agency-invite-role-card__desc">پذیرش، ثبت مشتری و ارجاع</span>
+                        </label>
+                    </div>
+                    <p class="agency-form-helper agency-invite-role-note">منشی بدون صندلی استخراج است؛ دعوت منشی ظرفیت لایسنس مشاوران را مصرف نمی‌کند.</p>
+                </fieldset>
+                {% else %}
+                <input type="hidden" name="role" value="advisor">
+                {% endif %}
                 <div class="agency-field">
                     <label class="agency-form-label" for="agencyInvitePhone">شماره موبایل</label>
                     <input type="tel" id="agencyInvitePhone" name="phone" class="crm-input agency-modal__input" required dir="ltr" placeholder="09123456789" autocomplete="tel" inputmode="tel">
                     <p class="agency-form-helper" id="agencyModalPhoneHint" hidden></p>
                 </div>
-                {% if agency_roles_invite %}
-                <div class="agency-field">
-                    <label class="agency-form-label" for="agencyInviteRole">نقش</label>
-                    <select id="agencyInviteRole" name="role" class="crm-input agency-modal__input" required>
-                        {% for code, label in agency_roles_invite %}
-                        <option value="{{ code }}"{% if code == 'advisor' %} selected{% endif %}>{{ label }}</option>
-                        {% endfor %}
-                    </select>
+                <div class="agency-modal__info">
+                    <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='send' size='inline' only %}</span>
+                    <span>پس از پذیرش دعوت مشاور، می‌توانید صندلی لایسنس استخراج را تخصیص دهید.</span>
                 </div>
-                {% else %}
-                <input type="hidden" name="role" value="advisor">
-                {% endif %}
             </div>
             <div class="modal-footer agency-modal__footer">
                 <button type="button" class="crm-btn crm-btn-ghost" data-bs-dismiss="modal">انصراف</button>

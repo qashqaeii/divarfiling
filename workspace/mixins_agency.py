@@ -45,12 +45,19 @@ class AgencyTeamHubRequiredMixin(AgencyHubAccessMixin):
 
         from workspace.services.agency_rbac import (
             NAV_PROFILE_SECRETARY,
-            rbac_v2_enabled_for_user,
+            is_agency_secretary_hub_enabled,
             resolve_nav_profile,
             staff_can_access_agency_hub_without_seat,
         )
+        from workspace.services.crm_scope import get_membership
 
-        if rbac_v2_enabled_for_user(user) and resolve_nav_profile(user) == NAV_PROFILE_SECRETARY:
+        membership = get_membership(user)
+        agency = membership.agency if membership else None
+        if (
+            resolve_nav_profile(user) == NAV_PROFILE_SECRETARY
+            and agency
+            and is_agency_secretary_hub_enabled(agency)
+        ):
             return super().dispatch(request, *args, **kwargs)
 
         if (

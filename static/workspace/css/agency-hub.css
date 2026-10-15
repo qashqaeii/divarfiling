@@ -1343,6 +1343,64 @@ body.agency-modal-open {
 
 .agency-modal__footer { gap: 0.5rem; }
 
+.agency-invite-role-fieldset {
+  border: 0;
+  margin: 0 0 1rem;
+  padding: 0;
+}
+
+.agency-invite-role-fieldset .agency-form-label {
+  margin-bottom: 0.5rem;
+}
+
+.agency-invite-role-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.agency-invite-role-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--ah-border, #e5e7eb);
+  border-radius: var(--ah-radius-sm, 10px);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.agency-invite-role-card input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.agency-invite-role-card:has(input:checked) {
+  border-color: #7c3aed;
+  background: var(--ah-purple-soft, #f5f3ff);
+}
+
+.agency-invite-role-card__title {
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.agency-invite-role-card__desc {
+  font-size: 0.75rem;
+  color: var(--ah-text-muted, #6b7280);
+  line-height: 1.4;
+}
+
+.agency-invite-role-note {
+  margin-top: 0.5rem;
+}
+
+.agency-invite-row__role {
+  font-size: 0.8125rem;
+  color: var(--ah-text-muted, #6b7280);
+}
+
 .agency-seat-num { color: #5b21b6; }
 
 .agency-assign-inline {

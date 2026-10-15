@@ -115,6 +115,13 @@ class WorkspaceAgencyHomePanelTests(TestCase):
         resp = self.client.get(reverse('workspace:home'))
         self.assertNotContains(resp, 'wsh-agency__card')
 
+    def test_secretary_hub_flag_enables_panel_without_rbac_v2(self):
+        self.agency.feature_flags = {'agency_secretary_hub': True}
+        self.agency.save(update_fields=['feature_flags'])
+        panel = build_workspace_agency_panel(self.secretary)
+        self.assertIsNotNone(panel)
+        self.assertEqual(panel['enter_label'], 'ورود به آژانس')
+
     def test_rbac_v2_secretary_panel_and_shortcuts(self):
         self.agency.feature_flags = {'agency_rbac_v2': True}
         self.agency.save(update_fields=['feature_flags'])

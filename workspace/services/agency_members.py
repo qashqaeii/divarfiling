@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from django.db import transaction
 
+from workspace.constants import AGENCY_ROLE_SECRETARY, AGENCY_ROLES_REQUIRING_EXTRACTION_SEAT
 from workspace.models import CRMAgencyMember
 from workspace.services.agency_entitlement import can_manage_agency, resolve_managed_agency
 from workspace.services.agency_seats import get_member_seat, unassign_seat
@@ -22,10 +23,13 @@ def build_members_dashboard(actor, agency) -> dict:
         if m.role == 'owner':
             continue
         seat = get_member_seat(m)
+        needs_seat = m.role in AGENCY_ROLES_REQUIRING_EXTRACTION_SEAT
         members.append({
             'member': m,
             'seat': seat,
             'has_seat': seat is not None,
+            'needs_extraction_seat': needs_seat,
+            'seat_not_required': m.role == AGENCY_ROLE_SECRETARY,
         })
     invitations = list_agency_invitations(agency)
     return {
@@ -33,7 +37,10 @@ def build_members_dashboard(actor, agency) -> dict:
         'invitations': invitations,
         'seats': seats,
         'active_count': sum(1 for row in members if row['member'].is_active),
-        'without_seat': sum(1 for row in members if row['member'].is_active and not row['has_seat']),
+        'without_seat': sum(
+            1 for row in members
+            if row['member'].is_active and row.get('needs_extraction_seat') and not row['has_seat']
+        ),
         'pending_invites': sum(
             1 for i in invitations if i.status == AgencyInvitation.STATUS_PENDING
         ),

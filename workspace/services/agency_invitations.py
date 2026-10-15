@@ -11,8 +11,14 @@ from django.db import transaction
 from django.urls import reverse
 from django.utils import timezone
 
-from accounts.phone_utils import find_user_by_phone, is_valid_iran_mobile, normalize_phone
+from accounts.phone_utils import is_valid_iran_mobile, normalize_phone
 from accounts.services.sms import SmsError, SmsSendError, send_pattern_sms
+from workspace.constants import (
+    AGENCY_MAX_SECRETARIES_PER_AGENCY,
+    AGENCY_ROLE_ADVISOR,
+    AGENCY_ROLE_SECRETARY,
+    AGENCY_ROLES_REQUIRING_EXTRACTION_SEAT,
+)
 from workspace.models import AgencyInvitation, AgencySubscription, CRMAgencyMember
 from workspace.services.agency_entitlement import (
     CONSENT_VERSION_CURRENT,
@@ -38,18 +44,38 @@ class AgencyInviteCapacityError(ValueError):
 
     code = 'agency_seat_capacity_reached'
 
-    def __init__(self, message: str = '', *, available: int = 0, requested: int = 1):
+    def __init__(
+        self,
+        message: str = '',
+        *,
+        available: int = 0,
+        requested: int = 1,
+        code: str | None = None,
+    ):
         self.available = available
         self.requested = requested
+        if code:
+            self.code = code
         super().__init__(message or 'ظرفیت دعوت تکمیل شده است.')
 
 
-def _count_pending_invitations(agency) -> int:
-    return AgencyInvitation.objects.filter(
+def _normalize_invite_role(role: str) -> str:
+    from workspace.services.agency_rbac import validate_invite_role
+
+    return validate_invite_role(role)
+
+
+def _count_pending_invitations(agency, *, role: str | None = None) -> int:
+    qs = AgencyInvitation.objects.filter(
         agency=agency,
         status=AgencyInvitation.STATUS_PENDING,
         expires_at__gt=timezone.now(),
-    ).count()
+    )
+    if role == AGENCY_ROLE_SECRETARY:
+        qs = qs.filter(role=AGENCY_ROLE_SECRETARY)
+    elif role == AGENCY_ROLE_ADVISOR:
+        qs = qs.filter(role__in=AGENCY_ROLES_REQUIRING_EXTRACTION_SEAT)
+    return qs.count()
 
 
 def _count_members_without_seat(agency, subscription) -> int:
@@ -62,18 +88,42 @@ def _count_members_without_seat(agency, subscription) -> int:
     return (
         CRMAgencyMember.objects.filter(agency=agency, is_active=True)
         .exclude(role='owner')
+        .filter(role__in=AGENCY_ROLES_REQUIRING_EXTRACTION_SEAT)
         .exclude(user_id__in=assigned_user_ids)
         .count()
     )
 
 
+def _count_active_secretaries(agency) -> int:
+    return CRMAgencyMember.objects.filter(
+        agency=agency, is_active=True, role=AGENCY_ROLE_SECRETARY,
+    ).count()
+
+
+def get_secretary_invite_capacity(agency) -> dict:
+    """ظرفیت دعوت منشی — مستقل از صندلی استخراج مشاور."""
+    max_slots = AGENCY_MAX_SECRETARIES_PER_AGENCY
+    active = _count_active_secretaries(agency)
+    pending = _count_pending_invitations(agency, role=AGENCY_ROLE_SECRETARY)
+    consumed = active + pending
+    invite_available = max(0, max_slots - consumed)
+    return {
+        'max': max_slots,
+        'active': active,
+        'pending_invitations': pending,
+        'consumed': consumed,
+        'invite_available': invite_available,
+    }
+
+
 def get_agency_invite_capacity(agency, subscription) -> dict:
-    """ظرفیت باقی‌مانده برای دعوت — pending + اعضای بدون seat + seat تخصیص‌یافته."""
+    """ظرفیت باقی‌مانده برای دعوت مشاور — منشی در محاسبه صندلی لحاظ نمی‌شود."""
     seats = seat_usage_summary(subscription)
-    pending = _count_pending_invitations(agency)
+    pending = _count_pending_invitations(agency, role=AGENCY_ROLE_ADVISOR)
     without_seat = _count_members_without_seat(agency, subscription)
     consumed = seats['assigned'] + pending + without_seat
     invite_available = max(0, seats['total'] - consumed)
+    secretary = get_secretary_invite_capacity(agency)
     return {
         'total': seats['total'],
         'assigned': seats['assigned'],
@@ -82,23 +132,55 @@ def get_agency_invite_capacity(agency, subscription) -> dict:
         'members_without_seat': without_seat,
         'consumed': consumed,
         'invite_available': invite_available,
+        'secretary': secretary,
+        'secretary_invite_available': secretary['invite_available'],
     }
 
 
-def can_create_agency_invitation(agency, subscription, *, count: int = 1) -> tuple[bool, str]:
+def can_create_agency_invitation(
+    agency,
+    subscription,
+    *,
+    count: int = 1,
+    role: str = AGENCY_ROLE_ADVISOR,
+) -> tuple[bool, str]:
+    role = _normalize_invite_role(role)
+    if role == AGENCY_ROLE_SECRETARY:
+        cap = get_secretary_invite_capacity(agency)
+        if count <= cap['invite_available']:
+            return True, ''
+        avail = cap['invite_available']
+        if avail == 0:
+            return False, f'حداکثر {cap["max"]} منشی برای این آژانس مجاز است.'
+        return False, f'فقط {avail} ظرفیت برای دعوت منشی باقی مانده است.'
     cap = get_agency_invite_capacity(agency, subscription)
     if count <= cap['invite_available']:
         return True, ''
     avail = cap['invite_available']
     if avail == 0:
         return False, f'تمام {cap["total"]} لایسنس این آژانس استفاده یا رزرو شده‌اند.'
-    return False, f'فقط {avail} ظرفیت برای دعوت باقی مانده است.'
+    return False, f'فقط {avail} ظرفیت برای دعوت مشاور باقی مانده است.'
 
 
-def _assert_invite_capacity(agency, subscription, *, count: int = 1) -> None:
-    ok, msg = can_create_agency_invitation(agency, subscription, count=count)
+def _assert_invite_capacity(
+    agency,
+    subscription,
+    *,
+    count: int = 1,
+    role: str = AGENCY_ROLE_ADVISOR,
+) -> None:
+    role = _normalize_invite_role(role)
+    ok, msg = can_create_agency_invitation(agency, subscription, count=count, role=role)
     if ok:
         return
+    if role == AGENCY_ROLE_SECRETARY:
+        cap = get_secretary_invite_capacity(agency)
+        raise AgencyInviteCapacityError(
+            msg,
+            available=cap['invite_available'],
+            requested=count,
+            code='agency_secretary_capacity_reached',
+        )
     cap = get_agency_invite_capacity(agency, subscription)
     raise AgencyInviteCapacityError(msg, available=cap['invite_available'], requested=count)
 
@@ -230,14 +312,11 @@ def create_agency_invitation(
         raise ValueError('اشتراک آژانس در حال حاضر فعال نیست.')
 
     phone = _validate_invite_phone(agency, phone)
-    from workspace.services.agency_rbac import is_agency_rbac_v2_enabled, validate_invite_role
-
-    if is_agency_rbac_v2_enabled(agency):
-        role = validate_invite_role(role)
+    role = _normalize_invite_role(role)
 
     with transaction.atomic():
         locked_sub = AgencySubscription.objects.select_for_update().get(pk=sub.pk)
-        _assert_invite_capacity(agency, locked_sub, count=1)
+        _assert_invite_capacity(agency, locked_sub, count=1, role=role)
         invitation, raw = _create_invitation_record(actor, agency, phone, role)
 
     invite_url = _build_invite_url(request, raw)
@@ -251,6 +330,11 @@ def create_bulk_agency_invitations(actor, phones: list[str], role: str = 'adviso
         return {'created': [], 'errors': [{'phone': '', 'error': 'دسترسی مدیریت آژانس ندارید'}]}
     if not sub:
         return {'created': [], 'errors': [{'phone': '', 'error': 'اشتراک آژانس در حال حاضر فعال نیست.'}]}
+
+    try:
+        role = _normalize_invite_role(role)
+    except ValueError as exc:
+        return {'created': [], 'errors': [{'phone': '', 'error': str(exc)}]}
 
     normalized: list[str] = []
     errors: list[dict] = []
@@ -281,7 +365,7 @@ def create_bulk_agency_invitations(actor, phones: list[str], role: str = 'adviso
     try:
         with transaction.atomic():
             locked_sub = AgencySubscription.objects.select_for_update().get(pk=sub.pk)
-            _assert_invite_capacity(agency, locked_sub, count=len(normalized))
+            _assert_invite_capacity(agency, locked_sub, count=len(normalized), role=role)
             for phone in normalized:
                 invitation, raw = _create_invitation_record(actor, agency, phone, role)
                 created.append(invitation)

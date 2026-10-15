@@ -134,6 +134,15 @@ def is_agency_rbac_v2_enabled(agency: Optional[CRMAgency]) -> bool:
     return is_agency_feature_enabled('agency_rbac_v2', agency)
 
 
+def is_agency_secretary_hub_enabled(agency: Optional[CRMAgency]) -> bool:
+    """دسترسی منشی به Hub بدون صندلی — با RBAC v2 همیشه؛ بدون آن فقط با flag آزمایشی."""
+    if not agency:
+        return False
+    if is_agency_rbac_v2_enabled(agency):
+        return True
+    return is_agency_feature_enabled('agency_secretary_hub', agency)
+
+
 def rbac_v2_enabled_for_user(user) -> bool:
     m = get_membership(user)
     if not m or not m.is_active:
@@ -324,12 +333,18 @@ def resolve_nav_profile(user) -> str:
 
 def staff_can_access_agency_hub_without_seat(user) -> bool:
     """منشی/مدیر legacy با عضویت فعال — بدون نیاز به seat مشاور."""
-    m = get_membership(user)
-    if not m or not m.is_active or not is_agency_rbac_v2_enabled(m.agency):
-        return False
-    if m.role in (AGENCY_ROLE_SECRETARY, AGENCY_ROLE_MANAGER):
-        from workspace.services.agency_entitlement import get_subscription_for_agency
+    from workspace.services.agency_entitlement import get_subscription_for_agency
 
+    m = get_membership(user)
+    if not m or not m.is_active:
+        return False
+    if m.role == AGENCY_ROLE_SECRETARY:
+        if not is_agency_secretary_hub_enabled(m.agency):
+            return False
+        return get_subscription_for_agency(m.agency) is not None
+    if m.role == AGENCY_ROLE_MANAGER:
+        if not is_agency_rbac_v2_enabled(m.agency):
+            return False
         return get_subscription_for_agency(m.agency) is not None
     if m.role == AGENCY_ROLE_OWNER:
         return True

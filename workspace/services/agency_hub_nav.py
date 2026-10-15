@@ -65,7 +65,7 @@ def build_hub_nav(user) -> list[tuple[str, str, str]]:
         ('dashboard', 'داشبورد', reverse('workspace:agency_hub_dashboard')),
     ]
     if profile != NAV_PROFILE_SECRETARY:
-        nav.append(('advisors', 'مشاوران', reverse('workspace:agency_hub_advisors')))
+        nav.append(('advisors', 'اعضا', reverse('workspace:agency_hub_advisors')))
     if can_manage_agency(user):
         nav.append(('licenses', 'لایسنس‌ها', reverse('workspace:agency_hub_licenses')))
     show_activity = False

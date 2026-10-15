@@ -498,6 +498,13 @@ AGENCY_ROLES_ASSIGNABLE = [
     ('secretary', 'منشی'),
 ]
 AGENCY_ROLES_INVITE = AGENCY_ROLES_ASSIGNABLE
+# نقش‌هایی که برای استخراج/فایلینگ به صندلی لایسنس نیاز دارند (منشی خارج از این مجموعه است)
+AGENCY_ROLES_REQUIRING_EXTRACTION_SEAT = frozenset({
+    AGENCY_ROLE_ADVISOR,
+    AGENCY_ROLE_MANAGER,
+})
+# سقف منشی فعال + دعوت در انتظار — مستقل از صندلی‌های مشاور
+AGENCY_MAX_SECRETARIES_PER_AGENCY = 5
 AGENCY_MANAGER_ROLES = {AGENCY_ROLE_OWNER, AGENCY_ROLE_MANAGER}
 AGENCY_FULL_VIEW_ROLES = {AGENCY_ROLE_OWNER, AGENCY_ROLE_MANAGER, AGENCY_ROLE_SECRETARY}
 AGENCY_INBOX_ROLES = AGENCY_FULL_VIEW_ROLES
@@ -542,6 +549,8 @@ AGENCY_COMMAND_CENTER_FEATURES = {
     'agency_space': True,
     # نقش‌محور RBAC + داشبورد/ناوبری اختصاصی — پیش‌فرض خاموش؛ per-agency در feature_flags
     'agency_rbac_v2': False,
+    # میزکار پذیرش منشی بدون صندلی استخراج — فقط وقتی agency_rbac_v2 خاموش است معنا دارد
+    'agency_secretary_hub': False,
 }
 
 MESSAGE_RETENTION_DAYS = 30

@@ -383,6 +383,7 @@
   function initMemberFilters() {
     var search = document.getElementById('agencyMemberSearch');
     var statusF = document.getElementById('agencyMemberStatusFilter');
+    var roleF = document.getElementById('agencyMemberRoleFilter');
     var licenseF = document.getElementById('agencyMemberLicenseFilter');
     var sortF = document.getElementById('agencyMemberSort');
     var clearBtn = document.getElementById('agencyMemberFilterClear');
@@ -397,6 +398,7 @@
     function activeFilterCount() {
       var n = 0;
       if (statusF && statusF.value) n++;
+      if (roleF && roleF.value) n++;
       if (licenseF && licenseF.value) n++;
       if (sortF && sortF.value && sortF.value !== 'name') n++;
       return n;
@@ -431,14 +433,16 @@
     function filterMembers() {
       var q = (search.value || '').trim().toLowerCase();
       var st = statusF ? statusF.value : '';
+      var role = roleF ? roleF.value : '';
       var lic = licenseF ? licenseF.value : '';
       document.querySelectorAll('#agencyMembersTable tbody tr[data-name], .agency-member-card[data-name]').forEach(function (el) {
         var name = el.getAttribute('data-name') || '';
         var phone = el.getAttribute('data-phone') || '';
         var matchQ = !q || name.indexOf(q) !== -1 || phone.indexOf(q) !== -1;
         var matchS = !st || el.getAttribute('data-status') === st;
+        var matchR = !role || el.getAttribute('data-role') === role;
         var matchL = !lic || el.getAttribute('data-license') === lic;
-        el.style.display = matchQ && matchS && matchL ? '' : 'none';
+        el.style.display = matchQ && matchS && matchR && matchL ? '' : 'none';
       });
       updateClearBtn();
       checkEmpty();
@@ -448,6 +452,7 @@
       userEdited = false;
       search.value = '';
       if (statusF) statusF.value = '';
+      if (roleF) roleF.value = '';
       if (licenseF) licenseF.value = '';
       if (sortF) sortF.value = 'name';
       filterMembers();
@@ -467,6 +472,7 @@
       filterMembers();
     });
     if (statusF) statusF.addEventListener('change', filterMembers);
+    if (roleF) roleF.addEventListener('change', filterMembers);
     if (licenseF) licenseF.addEventListener('change', filterMembers);
     if (sortF) sortF.addEventListener('change', filterMembers);
     if (clearBtn) clearBtn.addEventListener('click', resetFilters);

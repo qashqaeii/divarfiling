@@ -8,6 +8,7 @@ from django.db.models import Q
 from django.utils import timezone
 
 from licenses.models import License, LicenseActivation
+from workspace.constants import AGENCY_ROLE_SECRETARY
 from workspace.models import AgencyLicenseAssignmentLog, CRMAgencyMember
 from workspace.services.agency_entitlement import (
     can_manage_agency,
@@ -95,6 +96,8 @@ def assign_seat_to_member(actor, license_id: int, member_user_id: int) -> Licens
     member = agency.members.filter(user=assignee, is_active=True).first()
     if not member or member.role == 'owner':
         raise ValidationError('فقط اعضای پذیرفته‌شده قابل تخصیص صندلی هستند.')
+    if member.role == AGENCY_ROLE_SECRETARY:
+        raise ValidationError('منشی به لایسنس استخراج نیاز ندارد.')
 
     if not member.data_visibility_consent_at:
         raise ValidationError('عضو هنوز دعوت را پذیرش نکرده است.')

@@ -1401,16 +1401,7 @@ body.agency-modal-open {
   color: var(--ah-text-muted, #6b7280);
 }
 
-/* —— میزکار پذیرش (منشی) —— */
-.agency-dash--secretary {
-  max-width: 52rem;
-}
-
-.agency-kpi-strip--secretary {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  max-width: 28rem;
-}
-
+/* —— میزکار پذیرش (منشی) — quick actions & inbox; KPI layout at end of file —— */
 .agency-quick-actions {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1484,10 +1475,6 @@ body.agency-modal-open {
 }
 
 @media (max-width: 640px) {
-  .agency-kpi-strip--secretary {
-    max-width: none;
-  }
-
   .agency-quick-actions {
     grid-template-columns: 1fr;
   }
@@ -2387,4 +2374,131 @@ body.agency-has-sticky-footer { padding-bottom: 72px; }
   .agency-filter-bar__clear { width: 100%; justify-content: center; }
 
   .agency-kpi-v2__value { font-size: 1.25rem; }
+}
+
+/* ═══ میزکار پذیرش (منشی) — بعد از قوانین KPI شش‌ستونه ═══ */
+.agency-dash--secretary {
+  width: 100%;
+  max-width: none;
+}
+
+.agency-dash--secretary .agency-dash-toolbar {
+  margin-bottom: 1rem;
+}
+
+.agency-dash--secretary .agency-section {
+  margin-bottom: 1.35rem;
+}
+
+.agency-kpi-strip--ref.agency-kpi-strip--secretary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  width: 100%;
+  max-width: none;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.agency-dash--secretary .agency-kpi-v2 {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 7.25rem;
+  padding: 1rem 1.1rem;
+  border-radius: 14px;
+  background: #fff;
+  border: 1px solid rgba(15, 23, 42, 0.07);
+  box-shadow: 0 2px 12px rgba(15, 23, 42, 0.04);
+}
+
+.agency-dash--secretary .agency-kpi-v2--purple {
+  background: linear-gradient(165deg, #faf5ff 0%, #fff 52%);
+  border-color: rgba(124, 58, 237, 0.14);
+}
+
+.agency-dash--secretary .agency-kpi-v2--blue {
+  background: linear-gradient(165deg, #eff6ff 0%, #fff 52%);
+  border-color: rgba(59, 130, 246, 0.14);
+}
+
+.agency-dash--secretary .agency-kpi-v2__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.65rem;
+  margin-bottom: 0.5rem;
+}
+
+.agency-dash--secretary .agency-kpi-v2__icon {
+  position: static;
+  flex-shrink: 0;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.06);
+}
+
+.agency-dash--secretary .agency-kpi-v2--purple .agency-kpi-v2__icon {
+  color: #6d28d9;
+  background: rgba(124, 58, 237, 0.1);
+}
+
+.agency-dash--secretary .agency-kpi-v2--blue .agency-kpi-v2__icon {
+  color: #2563eb;
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.agency-dash--secretary .agency-kpi-v2__label {
+  padding: 0;
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 650;
+  line-height: 1.45;
+  color: #475569;
+  flex: 1;
+  min-width: 0;
+}
+
+.agency-dash--secretary .agency-kpi-v2__value {
+  font-size: clamp(1.65rem, 4vw, 2rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #0f172a;
+  line-height: 1;
+}
+
+.agency-dash--secretary .agency-quick-actions {
+  gap: 0.75rem;
+}
+
+@media (min-width: 768px) {
+  .agency-kpi-strip--ref.agency-kpi-strip--secretary {
+    gap: 1rem;
+  }
+
+  .agency-dash--secretary .agency-quick-actions {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 767px) {
+  .agency-kpi-strip--ref.agency-kpi-strip--secretary {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+  }
+
+  .agency-dash--secretary .agency-kpi-v2 {
+    min-height: 6.5rem;
+    padding: 0.75rem 0.65rem;
+  }
+
+  .agency-dash--secretary .agency-kpi-v2__label {
+    font-size: 0.72rem;
+    line-height: 1.35;
+  }
+
+  .agency-dash--secretary .agency-kpi-v2__value {
+    font-size: 1.35rem;
+  }
 }

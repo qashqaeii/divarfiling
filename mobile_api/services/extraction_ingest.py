@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from typing import Any, Dict, List
 
 import pandas as pd
+from django.conf import settings
 from django.db import transaction
 from django.utils import timezone
 
@@ -31,7 +32,7 @@ from workspace.services.price_history import load_latest_snapshots, should_recor
 
 MAX_MOBILE_ITEMS = 500
 MAX_CLOUD_EXTRACT_ITEMS = 500
-EXTRACTIONS_DAILY_LIMIT = 10
+EXTRACTIONS_DAILY_LIMIT = 0  # 0 means unlimited daily extraction runs.
 INGEST_VERSION = 6
 logger = logging.getLogger(__name__)
 
@@ -162,10 +163,13 @@ def mobile_extractions_today_count(user) -> int:
 
 
 def check_mobile_extraction_allowed(user) -> None:
+    limit = max(0, int(getattr(settings, 'MOBILE_EXTRACTIONS_DAILY_LIMIT', EXTRACTIONS_DAILY_LIMIT) or 0))
+    if not limit:
+        return
     count = mobile_extractions_today_count(user)
-    if count >= EXTRACTIONS_DAILY_LIMIT:
+    if count >= limit:
         raise ValueError(
-            f'سقف استخراج روزانه ({EXTRACTIONS_DAILY_LIMIT}) تکمیل شده است. فردا دوباره تلاش کنید.',
+            f'سقف استخراج روزانه ({limit}) تکمیل شده است. فردا دوباره تلاش کنید.',
         )
 
 
@@ -457,13 +461,16 @@ def ingest_mobile_extraction(user, payload: Dict[str, Any]) -> IngestResult:
 
 def extraction_limits_payload(user) -> Dict[str, Any]:
     count = mobile_extractions_today_count(user)
-    remaining = max(0, EXTRACTIONS_DAILY_LIMIT - count)
+    limit = max(0, int(getattr(settings, 'MOBILE_EXTRACTIONS_DAILY_LIMIT', EXTRACTIONS_DAILY_LIMIT) or 0))
+    unlimited = limit == 0
+    remaining = None if unlimited else max(0, limit - count)
     return {
         'max_items': MAX_MOBILE_ITEMS,
         'max_concurrent_hint': 2,
         'extractions_today': count,
-        'extractions_daily_limit': EXTRACTIONS_DAILY_LIMIT,
-        'can_extract_now': remaining > 0,
+        'extractions_daily_limit': None if unlimited else limit,
+        'is_unlimited': unlimited,
+        'can_extract_now': unlimited or remaining > 0,
         'remaining_today': remaining,
     }
 

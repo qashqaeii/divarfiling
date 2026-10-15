@@ -1,4 +1,4 @@
-"""Mobile NL Command — capabilities + license gate."""
+"""Mobile NL Command — capabilities + access (free tier / licensed unlimited)."""
 from __future__ import annotations
 
 from typing import Any, Dict, List
@@ -11,8 +11,13 @@ from ai_workspace.constants import (
     is_ai_enabled,
     is_feature_enabled,
 )
-from ai_workspace.services.quota import feature_quota_dict, get_status, is_ai_unlimited_user
-from workspace.services.access import has_active_bot_license
+from ai_workspace.services.quota import (
+    ai_licensed_unlimited_enabled,
+    feature_quota_dict,
+    get_status,
+    is_ai_unlimited_user,
+)
+from workspace.services.access import get_bot_product_buy_url, has_active_bot_license
 from workspace.services.crm_smart_command import SMART_COMMAND_PROFILES
 
 
@@ -53,18 +58,16 @@ def _profile_for_mobile(key: str) -> Dict[str, Any]:
 def ai_capabilities_for_user(user) -> Dict[str, Any]:
     ai_on = is_ai_enabled()
     unlimited = bool(user and user.is_authenticated and is_ai_unlimited_user(user))
-    licensed = bool(
-        user and user.is_authenticated and (has_active_bot_license(user) or unlimited)
-    )
+    licensed = bool(user and user.is_authenticated and has_active_bot_license(user))
     can_nl = ai_on and is_feature_enabled(FEATURE_NL_COMMAND, user)
     can_msg = ai_on and is_feature_enabled(FEATURE_CRM_MESSAGE, user)
     can_listing = ai_on and is_feature_enabled(FEATURE_LISTING_SUMMARY, user)
 
-    quota_nl = feature_quota_dict(user, FEATURE_NL_COMMAND) if can_nl else None
-    quota_msg = feature_quota_dict(user, FEATURE_CRM_MESSAGE) if can_msg else None
+    quota_nl = feature_quota_dict(user, FEATURE_NL_COMMAND) if can_nl and not unlimited else None
+    quota_msg = feature_quota_dict(user, FEATURE_CRM_MESSAGE) if can_msg and not unlimited else None
 
     overall = None
-    if ai_on and licensed:
+    if ai_on and user and user.is_authenticated and not unlimited:
         try:
             st = get_status(user)
             overall = {
@@ -75,23 +78,42 @@ def ai_capabilities_for_user(user) -> Dict[str, Any]:
             }
         except Exception:
             overall = {
-                'remaining': 9999 if unlimited else 0,
+                'remaining': 0,
                 'limit': 0,
                 'has_license': licensed,
                 'is_unlimited': unlimited,
             }
+    elif unlimited:
+        overall = {
+            'remaining': 0,
+            'limit': 0,
+            'has_license': licensed,
+            'is_unlimited': True,
+        }
 
-    no_license_message = 'این قابلیت برای کاربران دارای لایسنس فعال در دسترس است.'
-    quota_exhausted_message = 'سهمیه امروز دستیار هوشمند شما تمام شده است.'
+    upgrade_url = get_bot_product_buy_url()
+    if ai_licensed_unlimited_enabled():
+        no_license_message = (
+            'این قابلیت برای حساب شما فعال نیست. لطفاً دوباره وارد شوید یا با پشتیبانی تماس بگیرید.'
+        )
+        quota_exhausted_message = (
+            'سهمیه امروز دستیار هوشمند شما تمام شده است. '
+            f'برای استفاده نامحدود، لایسنس ربات استخراج دیوار را فعال کنید.'
+        )
+    else:
+        no_license_message = 'این قابلیت برای کاربران دارای لایسنس فعال در دسترس است.'
+        quota_exhausted_message = 'سهمیه امروز دستیار هوشمند شما تمام شده است.'
+
     ai_disabled_message = 'سرویس AI فعلاً غیرفعال است.'
 
     return {
         'ai_enabled': ai_on,
         'has_license': licensed,
         'is_unlimited': unlimited,
-        'can_use_smart_command': can_nl and licensed,
-        'can_use_crm_message': can_msg and licensed,
-        'can_use_listing_summary': can_listing and licensed,
+        'can_use_smart_command': can_nl,
+        'can_use_crm_message': can_msg,
+        'can_use_listing_summary': can_listing,
+        'upgrade_url': upgrade_url,
         'messages': {
             'no_license': no_license_message,
             'quota_exhausted': quota_exhausted_message,
@@ -111,16 +133,22 @@ def ai_capabilities_for_user(user) -> Dict[str, Any]:
 
 def require_nl_access(user) -> None:
     from ai_workspace.services.nl_command.errors import NLCommandError
+    from ai_workspace.services.quota import QuotaExceededError, check_quota
 
     if not is_ai_enabled():
         raise NLCommandError('سرویس AI فعلاً غیرفعال است.', code='ai_disabled', status=503)
     if not user or not user.is_authenticated:
         raise NLCommandError('ورود لازم است.', code='unauthorized', status=401)
-    if not is_ai_unlimited_user(user) and not has_active_bot_license(user):
-        raise NLCommandError(
-            'این قابلیت برای کاربران دارای لایسنس فعال در دسترس است.',
-            code='license_required',
-            status=403,
-        )
+    if not ai_licensed_unlimited_enabled():
+        if not is_ai_unlimited_user(user) and not has_active_bot_license(user):
+            raise NLCommandError(
+                'این قابلیت برای کاربران دارای لایسنس فعال در دسترس است.',
+                code='license_required',
+                status=403,
+            )
     if not is_feature_enabled(FEATURE_NL_COMMAND, user):
         raise NLCommandError('فرمان هوشمند فعال نیست.', code='feature_disabled', status=403)
+    try:
+        check_quota(user, FEATURE_NL_COMMAND)
+    except QuotaExceededError as exc:
+        raise NLCommandError(str(exc), code=exc.code, status=429) from exc

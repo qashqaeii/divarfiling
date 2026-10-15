@@ -18,15 +18,15 @@ from ai_workspace.services.property_summary_skip import (
     PropertySummaryInsufficientContext,
     property_summary_skipped_dict,
 )
-from ai_workspace.services.quota import QuotaExceededError, get_status, status_to_dict
-from workspace.mixins import LicenseRequiredMixin
+from ai_workspace.services.quota import QuotaExceededError, get_status, quota_error_response, status_to_dict
+from workspace.mixins import WorkspaceLoginMixin
 from workspace.models import Dataset, Listing
 from workspace.services.crm_scope import customer_for_user
 
 logger = logging.getLogger(__name__)
 
-class AIEnabledMixin(LicenseRequiredMixin):
-    """نیاز به لایسنس + AI_ENABLED."""
+class AIEnabledMixin(WorkspaceLoginMixin):
+    """ورود + AI_ENABLED — سهمیه و مجوز قابلیت در gateway."""
 
     def dispatch(self, request, *args, **kwargs):
         if not is_ai_enabled():
@@ -64,7 +64,7 @@ class ListingSummaryView(AIEnabledMixin, View):
         except FeatureDisabledError as exc:
             return JsonResponse({'ok': False, 'error': str(exc)}, status=403)
         except QuotaExceededError as exc:
-            return JsonResponse({'ok': False, 'error': str(exc), 'code': exc.code}, status=429)
+            return JsonResponse(quota_error_response(request.user, exc), status=429)
 
 
 class PropertySummaryView(AIEnabledMixin, View):
@@ -93,7 +93,7 @@ class PropertySummaryView(AIEnabledMixin, View):
         except FeatureDisabledError as exc:
             return JsonResponse({'ok': False, 'error': str(exc)}, status=403)
         except QuotaExceededError as exc:
-            return JsonResponse({'ok': False, 'error': str(exc), 'code': exc.code}, status=429)
+            return JsonResponse(quota_error_response(request.user, exc), status=429)
 
 
 class CRMMessageView(AIEnabledMixin, View):
@@ -115,7 +115,7 @@ class CRMMessageView(AIEnabledMixin, View):
         except FeatureDisabledError as exc:
             return JsonResponse({'ok': False, 'error': str(exc)}, status=403)
         except QuotaExceededError as exc:
-            return JsonResponse({'ok': False, 'error': str(exc), 'code': exc.code}, status=429)
+            return JsonResponse(quota_error_response(request.user, exc), status=429)
         except Exception:
             logger.exception('crm_message_failed customer_id=%s tone=%s', customer_id, tone)
             return JsonResponse(

@@ -67,7 +67,7 @@
     function renderQuotaInline(quota) {
         if (!quota) return '';
         if (quota.is_unlimited) {
-            return '<span class="ws-ai-quota-inline ws-ai-quota-inline--unlimited"><i class="fas fa-infinity" aria-hidden="true"></i> ظرفیت نامحدود</span>';
+            return '<span class="ws-ai-quota-inline ws-ai-quota-inline--unlimited"><i class="fas fa-infinity" aria-hidden="true"></i> استفاده نامحدود ∞</span>';
         }
         const used = quota.feature_used ?? 0;
         const limit = quota.feature_limit ?? 0;

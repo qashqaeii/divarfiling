@@ -100,11 +100,12 @@ class MobileNLCommandApiTests(TestCase):
         self.assertEqual(resp.status_code, 200)
         data = resp.json()['data']
         self.assertTrue(data['can_use_smart_command'])
+        self.assertTrue(data['is_unlimited'])
+        self.assertTrue(data['has_license'])
         self.assertIn('smart_command_profiles', data)
-        nl = data.get('nl_command') or {}
-        self.assertIn('remaining', nl)
-        self.assertIn('limit', nl)
-        self.assertEqual(nl['remaining'], nl.get('feature_remaining'))
+        self.assertIsNone(data.get('nl_command'))
+        overall = data.get('quota') or {}
+        self.assertTrue(overall.get('is_unlimited'))
 
     @override_settings(AI_ENABLED=True)
     def test_capabilities_superuser_without_license_unlimited(self):
@@ -120,7 +121,7 @@ class MobileNLCommandApiTests(TestCase):
         self.assertEqual(resp.status_code, 200)
         data = resp.json()['data']
         self.assertTrue(data['is_unlimited'])
-        self.assertTrue(data['has_license'])
+        self.assertFalse(data['has_license'])
         self.assertTrue(data['can_use_smart_command'])
         self.assertTrue(data['can_use_crm_message'])
 
@@ -192,13 +193,34 @@ class MobileNLCommandApiTests(TestCase):
         resp = self.client.post('/api/mobile/v1/ai/nl/parse', {'text': 'test'}, format='json')
         self.assertEqual(resp.status_code, 503)
 
-    @override_settings(AI_ENABLED=True)
-    def test_no_license_forbidden(self):
+    @override_settings(AI_ENABLED=True, AI_LICENSED_UNLIMITED=True)
+    @_patch_chain(_UNKNOWN_JSON)
+    def test_free_user_without_license_can_parse(self, _mock):
         user = User.objects.create_user(username='09127770002', phone='09127770002', password='x')
+        client = APIClient()
+        client.credentials(HTTP_AUTHORIZATION=f'Bearer {RefreshToken.for_user(user).access_token}')
+        resp = client.post('/api/mobile/v1/ai/nl/parse', {'text': 'چیزی نامربوط'}, format='json')
+        self.assertEqual(resp.status_code, 200)
+
+    @override_settings(AI_ENABLED=True, AI_LICENSED_UNLIMITED=False)
+    def test_legacy_no_license_forbidden(self):
+        user = User.objects.create_user(username='09127770003', phone='09127770003', password='x')
         client = APIClient()
         client.credentials(HTTP_AUTHORIZATION=f'Bearer {RefreshToken.for_user(user).access_token}')
         resp = client.post('/api/mobile/v1/ai/nl/parse', {'text': 'test'}, format='json')
         self.assertEqual(resp.status_code, 403)
+
+    @override_settings(AI_ENABLED=True, AI_LICENSED_UNLIMITED=True)
+    def test_free_user_capabilities(self):
+        user = User.objects.create_user(username='09127770004', phone='09127770004', password='x')
+        client = APIClient()
+        client.credentials(HTTP_AUTHORIZATION=f'Bearer {RefreshToken.for_user(user).access_token}')
+        resp = client.get('/api/mobile/v1/ai/capabilities')
+        self.assertEqual(resp.status_code, 200)
+        data = resp.json()['data']
+        self.assertFalse(data['has_license'])
+        self.assertFalse(data['is_unlimited'])
+        self.assertTrue(data['can_use_smart_command'])
 
     @override_settings(AI_ENABLED=True)
     def test_empty_text_validation(self):

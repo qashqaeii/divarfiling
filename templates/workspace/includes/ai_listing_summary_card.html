@@ -10,7 +10,7 @@
                 {% if ai_listing_summary_quota %}
                 <p class="ws-ai-studio__quota" data-ai-quota-panel>
                     {% if ai_listing_summary_quota.is_unlimited %}
-                    <span class="ws-ai-studio__quota-pulse" aria-hidden="true"></span> ظرفیت نامحدود
+                    <span class="ws-ai-studio__quota-pulse" aria-hidden="true"></span> استفاده نامحدود ∞
                     {% else %}
                     <span data-ai-quota-used>{{ ai_listing_summary_quota.feature_used|to_persian_digits }}</span>
                     /

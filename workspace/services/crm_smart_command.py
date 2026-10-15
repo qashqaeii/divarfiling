@@ -62,6 +62,7 @@ SMART_COMMAND_PROFILES: Dict[str, Dict[str, Any]] = {
 def inject_smart_command_context(ctx: Dict[str, Any], request, profile: str) -> None:
     from ai_workspace.constants import FEATURE_NL_COMMAND, is_ai_enabled, is_feature_enabled
     from ai_workspace.services.quota import feature_quota_dict
+    from workspace.services.access import get_bot_product_buy_url
 
     user = request.user
     enabled = is_ai_enabled() and is_feature_enabled(FEATURE_NL_COMMAND, user)
@@ -90,6 +91,7 @@ def inject_smart_command_context(ctx: Dict[str, Any], request, profile: str) -> 
         'edit_url': reverse('workspace:reminder_create') if profile == 'today' else '',
         'quota': feature_quota_dict(user, FEATURE_NL_COMMAND),
         'ai_default': primary_model or 'Arvan AI',
+        'upgrade_url': get_bot_product_buy_url(),
     })
     ctx['smart_command'] = spec
     ctx['nl_command_enabled'] = True

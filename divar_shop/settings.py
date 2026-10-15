@@ -321,6 +321,8 @@ OPENROUTER_FREE_MODELS = config(
 OPENROUTER_TIMEOUT_SECONDS = config('OPENROUTER_TIMEOUT_SECONDS', default=8, cast=int)
 AI_GLOBAL_DAILY_CAP = config('AI_GLOBAL_DAILY_CAP', default=1050, cast=int)
 AI_DAILY_TOKEN_LIMIT = config('AI_DAILY_TOKEN_LIMIT', default=90000, cast=int)
+# True: کاربر بدون لایسنس سهمیه رایگان؛ لایسنس فعال = AI نامحدود. False: سیاست قبلی (فقط با لایسنس).
+AI_LICENSED_UNLIMITED = config('AI_LICENSED_UNLIMITED', default=True, cast=bool)
 # bump هنگام تغییر provider chain تا پاسخ‌های cache شدهٔ provider قبلی reuse نشوند
 AI_CACHE_VERSION = config('AI_CACHE_VERSION', default='v2')
 

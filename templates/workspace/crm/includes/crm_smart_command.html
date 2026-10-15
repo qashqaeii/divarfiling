@@ -16,7 +16,8 @@
     data-wrong-intent-message="{{ smart_command.wrong_intent_message }}"
     data-enable-contact-resolve="{% if smart_command.enable_contact_resolve %}1{% else %}0{% endif %}"
     data-ai-default="{{ smart_command.ai_default }}"
-    {% if smart_command.quota %}data-quota-remaining="{{ smart_command.quota.feature_remaining }}" data-quota-limit="{{ smart_command.quota.feature_limit }}"{% endif %}>
+    {% if smart_command.quota and not smart_command.quota.is_unlimited %}data-quota-remaining="{{ smart_command.quota.feature_remaining }}" data-quota-limit="{{ smart_command.quota.feature_limit }}"{% endif %}
+    data-upgrade-url="{{ smart_command.upgrade_url }}">
     <span class="visually-hidden" data-sc="ai-label">{{ smart_command.ai_default }}</span>
 
     <header class="crm-nl-command__head">
@@ -38,8 +39,13 @@
             </button>
             {% if smart_command.quota %}
             <span class="crm-nl-command__quota" data-sc="quota" title="سهمیه بررسی امروز">
+                {% if smart_command.quota.is_unlimited %}
+                <span class="crm-nl-command__quota-dot crm-nl-command__quota-dot--unlimited" aria-hidden="true"></span>
+                استفاده نامحدود ∞
+                {% else %}
                 <span class="crm-nl-command__quota-dot" aria-hidden="true"></span>
                 {{ smart_command.quota.feature_remaining }}<span class="crm-nl-command__quota-sep">/</span>{{ smart_command.quota.feature_limit }}
+                {% endif %}
             </span>
             {% endif %}
         </div>

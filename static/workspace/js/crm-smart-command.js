@@ -753,7 +753,16 @@
                 return;
             }
             if (res.status === 429 || errorCode === 'quota_exceeded') {
-                setStatus(data.message || data.error || 'سهمیه فرمان هوشمند امروز شما تمام شده است.', 'is-warn');
+                const upgradeUrl = data.upgrade_url || root.dataset.upgradeUrl || '';
+                const base = data.message || data.error || 'سهمیه فرمان هوشمند امروز شما تمام شده است.';
+                if (upgradeUrl) {
+                    setStatus(`${base} برای استفاده نامحدود، لایسنس را فعال کنید.`, 'is-warn', {
+                        actionLabel: 'خرید لایسنس',
+                        onAction: () => { window.location.href = upgradeUrl; },
+                    });
+                } else {
+                    setStatus(base, 'is-warn');
+                }
                 return;
             }
             if (errorCode === 'provider_unavailable' || errorCode === 'provider_timeout') {
@@ -926,7 +935,15 @@
             const opts = options || {};
             const quotaRem = parseInt(root.dataset.quotaRemaining || '', 10);
             if (!Number.isNaN(quotaRem) && quotaRem <= 0) {
-                setStatus('سهمیه فرمان هوشمند امروز شما تمام شده است.', 'is-error');
+                const upgradeUrl = root.dataset.upgradeUrl || '';
+                if (upgradeUrl) {
+                    setStatus('سهمیه فرمان هوشمند امروز شما تمام شده است. برای استفاده نامحدود، لایسنس را فعال کنید.', 'is-error', {
+                        actionLabel: 'خرید لایسنس',
+                        onAction: () => { window.location.href = upgradeUrl; },
+                    });
+                } else {
+                    setStatus('سهمیه فرمان هوشمند امروز شما تمام شده است.', 'is-error');
+                }
                 return;
             }
             const trimmed = (text || '').trim();

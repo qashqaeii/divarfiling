@@ -2187,6 +2187,7 @@ def _ai_quota_payload(user, *, enabled: bool | None = None):
     from ai_workspace.constants import is_ai_enabled
     from ai_workspace.services.quota import get_status
     from mobile_api.services.license_service import license_payload_for_user
+    from workspace.services.access import get_bot_product_buy_url
 
     ai_enabled = is_ai_enabled() if enabled is None else bool(enabled)
     plan_label = license_payload_for_user(user).get('plan') or 'پلن'
@@ -2196,6 +2197,8 @@ def _ai_quota_payload(user, *, enabled: bool | None = None):
             'remaining': 0,
             'limit': 0,
             'plan_label': plan_label,
+            'has_license': False,
+            'is_unlimited': False,
         }
     try:
         status = get_status(user)
@@ -2204,6 +2207,9 @@ def _ai_quota_payload(user, *, enabled: bool | None = None):
             'remaining': status.remaining,
             'limit': status.daily_limit,
             'plan_label': plan_label,
+            'has_license': status.has_license,
+            'is_unlimited': status.is_unlimited,
+            'upgrade_url': get_bot_product_buy_url(),
         }
     except Exception:
         return {
@@ -2211,6 +2217,9 @@ def _ai_quota_payload(user, *, enabled: bool | None = None):
             'remaining': 0,
             'limit': 0,
             'plan_label': plan_label,
+            'has_license': False,
+            'is_unlimited': False,
+            'upgrade_url': get_bot_product_buy_url(),
         }
 
 
@@ -2349,10 +2358,14 @@ class AIDraftMessageView(APIView):
                     )
                 )
             except QuotaExceededError as exc:
+                from ai_workspace.services.quota import quota_error_response
+                extra = quota_error_response(request.user, exc)
+                fields = {'upgrade_url': extra['upgrade_url']} if extra.get('upgrade_url') else None
                 return api_error(
                     str(exc) or 'سهمیه روزانه AI تمام شده است.',
                     code='QUOTA_EXCEEDED',
                     status=429,
+                    fields=fields,
                 )
             except FeatureDisabledError:
                 pass
@@ -2422,10 +2435,14 @@ class AISummarizeListingView(APIView):
                         )
                     )
             except QuotaExceededError as exc:
+                from ai_workspace.services.quota import quota_error_response
+                extra = quota_error_response(request.user, exc)
+                fields = {'upgrade_url': extra['upgrade_url']} if extra.get('upgrade_url') else None
                 return api_error(
                     str(exc) or 'سهمیه روزانه AI تمام شده است.',
                     code='QUOTA_EXCEEDED',
                     status=429,
+                    fields=fields,
                 )
             except FeatureDisabledError:
                 pass
@@ -2531,10 +2548,14 @@ class AISummarizePropertyView(APIView):
             except LookupError:
                 return api_error('فایل شخصی یافت نشد.', code='NOT_FOUND', status=404)
             except QuotaExceededError as exc:
+                from ai_workspace.services.quota import quota_error_response
+                extra = quota_error_response(request.user, exc)
+                fields = {'upgrade_url': extra['upgrade_url']} if extra.get('upgrade_url') else None
                 return api_error(
                     str(exc) or 'سهمیه روزانه AI تمام شده است.',
                     code='QUOTA_EXCEEDED',
                     status=429,
+                    fields=fields,
                 )
             except FeatureDisabledError:
                 pass

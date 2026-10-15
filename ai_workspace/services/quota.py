@@ -13,7 +13,16 @@ from ai_workspace.constants import (
     FEATURE_LABELS,
 )
 from ai_workspace.models import AIQuota
-from workspace.services.access import has_active_bot_license
+from workspace.services.access import get_bot_product_buy_url, has_active_bot_license
+
+AI_QUOTA_UPGRADE_SUFFIX = (
+    ' برای استفاده نامحدود از هوش مصنوعی، لایسنس ربات استخراج دیوار را فعال کنید.'
+)
+
+
+def ai_licensed_unlimited_enabled() -> bool:
+    """سیاست دو سطحی AI — خاموش = نیاز به لایسنس مثل قبل."""
+    return bool(getattr(settings, 'AI_LICENSED_UNLIMITED', True))
 
 
 class QuotaExceededError(Exception):
@@ -43,12 +52,41 @@ def _is_unlimited(user) -> bool:
     if getattr(user, 'is_staff', False) or getattr(user, 'is_superuser', False):
         return True
     quota = getattr(user, 'ai_quota', None)
-    return bool(quota and quota.is_unlimited)
+    if quota and quota.is_unlimited:
+        return True
+    if ai_licensed_unlimited_enabled() and has_active_bot_license(user):
+        return True
+    return False
 
 
 def is_ai_unlimited_user(user) -> bool:
-    """مدیر/staff/superuser یا پرچم is_unlimited — بدون سقف سهمیه و لایسنس AI."""
+    """بدون سقف سهمیه: staff، پرچم AIQuota.is_unlimited، یا لایسنس فعال (در سیاست دو سطحی)."""
     return _is_unlimited(user)
+
+
+def _quota_limit_message(base: str, user) -> str:
+    if _is_unlimited(user) or has_active_bot_license(user):
+        return base
+    if not ai_licensed_unlimited_enabled():
+        return base
+    return f'{base}{AI_QUOTA_UPGRADE_SUFFIX}'
+
+
+def quota_error_response(user, exc: QuotaExceededError) -> Dict[str, Any]:
+    """فیلدهای JSON مشترک برای اتمام سهمیه — وب و موبایل."""
+    payload: Dict[str, Any] = {
+        'ok': False,
+        'error': str(exc),
+        'code': exc.code,
+    }
+    if (
+        ai_licensed_unlimited_enabled()
+        and exc.code not in ('no_license',)
+        and not _is_unlimited(user)
+        and not has_active_bot_license(user)
+    ):
+        payload['upgrade_url'] = get_bot_product_buy_url()
+    return payload
 
 
 def get_or_create_quota(user) -> AIQuota:
@@ -77,7 +115,7 @@ def get_or_create_quota(user) -> AIQuota:
 def check_quota(user, feature: str) -> None:
     if _is_unlimited(user):
         return
-    if not has_active_bot_license(user):
+    if not ai_licensed_unlimited_enabled() and not has_active_bot_license(user):
         raise QuotaExceededError(
             'برای استفاده از هوش مصنوعی، لایسنس فعال ربات استخراج دیوار لازم است.',
             code='no_license',
@@ -85,13 +123,19 @@ def check_quota(user, feature: str) -> None:
     quota = get_or_create_quota(user)
     if quota.used_today >= quota.daily_limit:
         raise QuotaExceededError(
-            f'سقف روزانه {quota.daily_limit} درخواست AI تمام شده است.',
+            _quota_limit_message(
+                f'سقف روزانه {quota.daily_limit} درخواست AI تمام شده است.',
+                user,
+            ),
             code='daily_limit',
         )
     token_limit = _daily_token_limit()
     if token_limit > 0 and quota.tokens_used_today >= token_limit:
         raise QuotaExceededError(
-            f'سقف روزانه {token_limit:,} توکن AI تمام شده است.',
+            _quota_limit_message(
+                f'سقف روزانه {token_limit:,} توکن AI تمام شده است.',
+                user,
+            ),
             code='token_limit',
         )
     feature_limit = FEATURE_DAILY_LIMITS.get(feature, 0)
@@ -99,7 +143,10 @@ def check_quota(user, feature: str) -> None:
     if feature_used >= feature_limit:
         label = FEATURE_LABELS.get(feature, feature)
         raise QuotaExceededError(
-            f'سقف روزانه «{label}» ({feature_limit} درخواست) تمام شده است.',
+            _quota_limit_message(
+                f'سقف روزانه «{label}» ({feature_limit} درخواست) تمام شده است.',
+                user,
+            ),
             code='feature_limit',
         )
 
@@ -126,7 +173,7 @@ def consume_quota(
 
 def get_status(user) -> QuotaStatus:
     unlimited = _is_unlimited(user)
-    licensed = has_active_bot_license(user) or unlimited
+    licensed = has_active_bot_license(user)
     quota = get_or_create_quota(user) if user.is_authenticated else None
     daily_limit = quota.daily_limit if quota else DEFAULT_DAILY_LIMIT
     used = quota.used_today if quota else 0

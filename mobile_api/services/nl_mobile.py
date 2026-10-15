@@ -11,7 +11,7 @@ from ai_workspace.constants import (
     is_ai_enabled,
     is_feature_enabled,
 )
-from ai_workspace.services.quota import feature_quota_dict, get_status, is_ai_unlimited_user
+from ai_workspace.services.quota import feature_quota_dict, get_status, is_ai_license_exempt_user, is_ai_unlimited_user
 from workspace.services.access import has_active_bot_license
 from workspace.services.crm_smart_command import SMART_COMMAND_PROFILES
 
@@ -54,7 +54,7 @@ def ai_capabilities_for_user(user) -> Dict[str, Any]:
     ai_on = is_ai_enabled()
     unlimited = bool(user and user.is_authenticated and is_ai_unlimited_user(user))
     licensed = bool(
-        user and user.is_authenticated and (has_active_bot_license(user) or unlimited)
+        user and user.is_authenticated and (has_active_bot_license(user) or is_ai_license_exempt_user(user))
     )
     can_nl = ai_on and is_feature_enabled(FEATURE_NL_COMMAND, user)
     can_msg = ai_on and is_feature_enabled(FEATURE_CRM_MESSAGE, user)
@@ -116,7 +116,7 @@ def require_nl_access(user) -> None:
         raise NLCommandError('سرویس AI فعلاً غیرفعال است.', code='ai_disabled', status=503)
     if not user or not user.is_authenticated:
         raise NLCommandError('ورود لازم است.', code='unauthorized', status=401)
-    if not is_ai_unlimited_user(user) and not has_active_bot_license(user):
+    if not is_ai_license_exempt_user(user) and not has_active_bot_license(user):
         raise NLCommandError(
             'این قابلیت برای کاربران دارای لایسنس فعال در دسترس است.',
             code='license_required',

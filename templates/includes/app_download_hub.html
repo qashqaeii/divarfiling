@@ -1,4 +1,3 @@
-{% load static %}
 {# مرکز دانلود — نیاز: app_downloads, app_download_hub #}
 <section class="mk-dl-hub{% if compact %} mk-dl-hub--compact{% endif %}" id="download-apps" aria-labelledby="mk-dl-hub-title">
     <div class="mk-dl-hub-bg" aria-hidden="true"></div>
@@ -61,24 +60,23 @@
 
                 <div class="mk-dl-card-foot">
                     {% if windows_order_id %}
-                    <a href="{% url 'payment:download' windows_order_id %}" class="mk-dl-cta mk-dl-cta--primary">
-                        <i class="fas fa-download" aria-hidden="true"></i>
-                        دانلود نصب‌کننده
-                    </a>
+                    <div class="mk-dl-card-foot__actions">
+                        <a href="{% url 'payment:download' windows_order_id %}" class="mk-dl-cta mk-dl-cta--primary">
+                            <i class="fas fa-download" aria-hidden="true"></i>
+                            دانلود نصب‌کننده
+                        </a>
+                        <a href="{% url 'license_guide' %}" class="mk-dl-cta mk-dl-cta--secondary">راهنمای نصب</a>
+                    </div>
                     {% elif app_downloads.windows.available %}
-                    <a href="{% url 'windows_app_download' %}" class="mk-dl-cta mk-dl-cta--primary">
-                        <i class="fas fa-download" aria-hidden="true"></i>
-                        دانلود نصب‌کننده
-                    </a>
-                    <a href="{% url 'license_guide' %}" class="mk-dl-cta mk-dl-cta--secondary">راهنمای نصب</a>
-                    {% if app_downloads.windows.filename %}
-                    <span class="mk-dl-card-file" dir="ltr">{{ app_downloads.windows.filename }}</span>
-                    {% endif %}
+                    <div class="mk-dl-card-foot__actions">
+                        <a href="{% url 'windows_app_download' %}" class="mk-dl-cta mk-dl-cta--primary">
+                            <i class="fas fa-download" aria-hidden="true"></i>
+                            دانلود نصب‌کننده
+                        </a>
+                        <a href="{% url 'license_guide' %}" class="mk-dl-cta mk-dl-cta--secondary">راهنمای نصب</a>
+                    </div>
                     {% else %}
                     <p class="mk-dl-card-empty"><i class="fas fa-clock" aria-hidden="true"></i> نصب‌کننده به‌زودی در سرور قرار می‌گیرد</p>
-                    {% endif %}
-                    {% if windows_order_id and download_filename %}
-                    <span class="mk-dl-card-file" dir="ltr">{{ download_filename }}</span>
                     {% endif %}
                 </div>
 
@@ -120,7 +118,7 @@
                 <header class="mk-dl-card-head">
                     <div class="mk-dl-card-brand">
                         <span class="mk-dl-card-brand__icon mk-dl-card-brand__icon--android" aria-hidden="true">
-                            <img src="{% static 'logo.png' %}" alt="" width="40" height="40" loading="lazy">
+                            <i class="fab fa-android"></i>
                         </span>
                         <div class="mk-dl-card-brand__body">
                             <div class="mk-dl-card-brand__row">
@@ -141,6 +139,7 @@
                     {% endif %}
                     <span class="mk-dl-card-spec__dot" aria-hidden="true">·</span>
                     <span dir="ltr">Android {{ app_downloads.android.min_android }}+</span>
+                    <span class="mk-dl-card-spec__hint">استخراج با لایسنس فعال</span>
                     {% else %}
                     <span>به‌زودی در سرور</span>
                     {% endif %}
@@ -158,11 +157,13 @@
 
                 <div class="mk-dl-card-foot">
                     {% if app_downloads.android.available %}
-                    <a href="{% url 'android_app_download' %}" class="mk-dl-cta mk-dl-cta--primary">
-                        <i class="fas fa-download" aria-hidden="true"></i>
-                        دانلود APK
-                    </a>
-                    <a href="{% if compact %}{% url 'android_tutorial' %}{% else %}#mk-dl-android-notes{% endif %}" class="mk-dl-cta mk-dl-cta--secondary">راهنمای نصب</a>
+                    <div class="mk-dl-card-foot__actions">
+                        <a href="{% url 'android_app_download' %}" class="mk-dl-cta mk-dl-cta--primary">
+                            <i class="fas fa-download" aria-hidden="true"></i>
+                            دانلود APK
+                        </a>
+                        <a href="{% if compact %}{% url 'android_tutorial' %}{% else %}#mk-dl-android-notes{% endif %}" class="mk-dl-cta mk-dl-cta--secondary">راهنمای نصب</a>
+                    </div>
                     {% else %}
                     <p class="mk-dl-card-empty"><i class="fas fa-clock" aria-hidden="true"></i> به‌زودی در سرور قرار می‌گیرد</p>
                     {% endif %}

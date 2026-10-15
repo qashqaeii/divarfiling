@@ -72,7 +72,8 @@ class AgencyTeamLegacyRedirectTests(TestCase):
     def test_agency_hub_advisors_renders_members_ui(self):
         resp = self.client.get(reverse('workspace:agency_hub_advisors'))
         self.assertEqual(resp.status_code, 200)
-        self.assertContains(resp, 'مدیریت مشاوران')
+        self.assertContains(resp, 'اعضای آژانس')
+        self.assertContains(resp, 'agency-fold--export')
         self.assertNotContains(resp, '/crm/team/')
         self.assertNotContains(resp, 'workspace:crm_team')
 

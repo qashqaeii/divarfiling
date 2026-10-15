@@ -1,0 +1,23 @@
+<li class="agency-invite-row">
+    <span class="agency-invite-row__phone" dir="ltr"><i class="fas fa-mobile-screen" aria-hidden="true"></i>{{ inv.phone }}</span>
+    <span class="agency-invite-row__role">{{ inv.get_role_display }}</span>
+    {% include "workspace/crm/agency/includes/status_badge.html" with status=inv.status label=inv.get_status_display %}
+    <div class="agency-invite-row__actions">
+        {% if inv.status == 'pending' %}
+        <form method="post" action="{{ crm_team_url }}">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="agency_invite_resend">
+            <input type="hidden" name="invitation_id" value="{{ inv.pk }}">
+            <input type="hidden" name="tab" value="members">
+            <button type="submit" class="crm-btn crm-btn-ghost crm-btn-sm">ارسال مجدد</button>
+        </form>
+        <form method="post" action="{{ crm_team_url }}">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="agency_invite_cancel">
+            <input type="hidden" name="invitation_id" value="{{ inv.pk }}">
+            <input type="hidden" name="tab" value="members">
+            <button type="submit" class="crm-btn crm-btn-ghost crm-btn-sm">لغو</button>
+        </form>
+        {% endif %}
+    </div>
+</li>

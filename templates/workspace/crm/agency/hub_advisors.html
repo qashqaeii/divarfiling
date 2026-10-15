@@ -9,14 +9,15 @@
 </div>
 
 {% if can_team_export|default:True %}
-<section class="agency-section">
-    <div class="agency-section__head">
-        <div>
-            <h2 class="agency-section__title">خروجی تیمی</h2>
-            <p class="agency-page-head__sub">خروجی Excel/CSV از داده‌های مشاوران</p>
-        </div>
-    </div>
-    <div class="agency-panel">
+<details class="agency-fold agency-fold--export">
+    <summary class="agency-fold__summary agency-fold__summary--block">
+        <span class="agency-fold__summary-main">
+            <span class="agency-fold__summary-title">خروجی تیمی</span>
+            <span class="agency-fold__summary-hint">Excel / CSV از داده‌های مشاوران</span>
+        </span>
+        <i class="fas fa-chevron-down agency-fold__chev" aria-hidden="true"></i>
+    </summary>
+    <div class="agency-fold__body agency-fold__body--export">
         <form method="post" action="{% url 'workspace:agency_team_export' %}" class="agency-export-form">
             {% csrf_token %}
             <label>
@@ -77,6 +78,6 @@
             </button>
         </form>
     </div>
-</section>
+</details>
 {% endif %}
 {% endblock %}

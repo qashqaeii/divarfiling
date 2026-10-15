@@ -300,42 +300,41 @@
     </div>
 
     {% if members_dashboard.invitations %}
-    <div class="agency-invites agency-invites--panel">
-        <div class="agency-invites__head">
-            <div>
-                <h3 class="agency-invites__title">دعوت‌های در انتظار</h3>
-                <p class="agency-invites__sub">مدیریت دعوت‌های ارسال‌شده</p>
+    {% with invite_total=members_dashboard.invitations|length %}
+    <section class="agency-invites agency-invites--panel" aria-label="دعوت‌ها">
+        <header class="agency-invites__head">
+            <h3 class="agency-invites__title">دعوت‌ها</h3>
+            <div class="agency-invites__head-meta">
+                {% if members_dashboard.pending_invites %}
+                <span class="agency-invites__pill agency-invites__pill--pending">{{ members_dashboard.pending_invites }} در انتظار</span>
+                {% endif %}
+                <span class="agency-invites__pill agency-invites__pill--muted">{{ invite_total }} مورد</span>
             </div>
-            <span class="agency-invites__count">{{ members_dashboard.invitations|length }}</span>
-        </div>
+        </header>
         <ul class="agency-invite-rows">
             {% for inv in members_dashboard.invitations %}
-            <li class="agency-invite-row">
-                <span class="agency-invite-row__phone" dir="ltr"><i class="fas fa-mobile-screen" aria-hidden="true"></i>{{ inv.phone }}</span>
-                <span class="agency-invite-row__role">{{ inv.get_role_display }}</span>
-                {% include "workspace/crm/agency/includes/status_badge.html" with status=inv.status label=inv.get_status_display %}
-                <div class="agency-invite-row__actions">
-                    {% if inv.status == 'pending' %}
-                    <form method="post" action="{{ crm_team_url }}">
-                        {% csrf_token %}
-                        <input type="hidden" name="action" value="agency_invite_resend">
-                        <input type="hidden" name="invitation_id" value="{{ inv.pk }}">
-                        <input type="hidden" name="tab" value="members">
-                        <button type="submit" class="crm-btn crm-btn-ghost crm-btn-sm">ارسال مجدد</button>
-                    </form>
-                    <form method="post" action="{{ crm_team_url }}">
-                        {% csrf_token %}
-                        <input type="hidden" name="action" value="agency_invite_cancel">
-                        <input type="hidden" name="invitation_id" value="{{ inv.pk }}">
-                        <input type="hidden" name="tab" value="members">
-                        <button type="submit" class="crm-btn crm-btn-ghost crm-btn-sm">لغو</button>
-                    </form>
-                    {% endif %}
-                </div>
-            </li>
+            {% if forloop.counter <= 3 %}
+            {% include "workspace/crm/agency/includes/agency_invite_row.html" with inv=inv crm_team_url=crm_team_url %}
+            {% endif %}
             {% endfor %}
         </ul>
-    </div>
+        {% if invite_total > 3 %}
+        <details class="agency-fold agency-fold--invites">
+            <summary class="agency-fold__summary agency-fold__summary--inline">
+                <span class="agency-fold__summary-text">نمایش {{ invite_total|add:"-3" }} دعوت قبلی</span>
+                <i class="fas fa-chevron-down agency-fold__chev" aria-hidden="true"></i>
+            </summary>
+            <ul class="agency-invite-rows agency-invite-rows--older">
+                {% for inv in members_dashboard.invitations %}
+                {% if forloop.counter > 3 %}
+                {% include "workspace/crm/agency/includes/agency_invite_row.html" with inv=inv crm_team_url=crm_team_url %}
+                {% endif %}
+                {% endfor %}
+            </ul>
+        </details>
+        {% endif %}
+    </section>
+    {% endwith %}
     {% endif %}
 </section>
 

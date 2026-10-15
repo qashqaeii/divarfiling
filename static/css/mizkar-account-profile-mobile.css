@@ -1,0 +1,334 @@
+/* Account dashboard — profile tab, mobile / tablet (≤1024px) */
+
+@media (max-width: 1024px) {
+    body.mk-account-dashboard.mk-acc-tab-profile .mk-account-mob-top {
+        display: none;
+    }
+
+    body.mk-account-dashboard.mk-acc-tab-profile .mk-account-tab-rail {
+        padding-top: 0.2rem;
+    }
+
+    body.mk-account-dashboard.mk-acc-tab-profile .mk-profile-tab {
+        padding-inline: var(--acc-m-pad, 0.75rem);
+        padding-top: 0.15rem;
+    }
+
+    body.mk-account-dashboard.mk-acc-tab-profile .mk-acc-desk-only {
+        display: none !important;
+    }
+
+    body.mk-account-dashboard.mk-acc-tab-profile .mk-acc-mob-only {
+        display: block;
+    }
+
+    /* ── Identity card (wallet-style) ── */
+    body.mk-account-dashboard .mk-acc-mob-profile-id {
+        position: relative;
+        margin: 0 0 0.85rem;
+        padding: 1rem 0.9rem 0.9rem;
+        border-radius: 20px;
+        overflow: hidden;
+        color: #fff;
+        background: linear-gradient(155deg, #1e1035 0%, #2d1b69 40%, #4c1d95 78%, #5b21b6 100%);
+        box-shadow:
+            0 22px 50px -28px rgba(76, 29, 149, 0.75),
+            inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-profile-id__glow {
+        position: absolute;
+        inset: -45% -25% auto;
+        height: 75%;
+        background: radial-gradient(ellipse at 50% 0%, rgba(167, 139, 250, 0.5), transparent 62%);
+        pointer-events: none;
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-profile-id__main {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 0.85rem;
+        margin-bottom: 0.85rem;
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-profile-id__avatar {
+        position: relative;
+        flex-shrink: 0;
+        padding: 0;
+        border: none;
+        background: transparent;
+        cursor: pointer;
+        border-radius: 18px;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-profile-id__avatar img {
+        display: block;
+        width: 4.5rem;
+        height: 4.5rem;
+        border-radius: 18px;
+        object-fit: cover;
+        border: 2px solid rgba(255, 255, 255, 0.35);
+        box-shadow: 0 12px 28px -12px rgba(0, 0, 0, 0.35);
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-profile-id__avatar-edit {
+        position: absolute;
+        inset-inline-end: -0.15rem;
+        bottom: -0.15rem;
+        width: 1.65rem;
+        height: 1.65rem;
+        display: grid;
+        place-items: center;
+        border-radius: 50%;
+        font-size: 0.55rem;
+        color: #fff;
+        background: #7c3aed;
+        border: 2px solid #fff;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-profile-id__copy {
+        min-width: 0;
+        flex: 1;
+        text-align: start;
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-profile-id__name {
+        margin: 0;
+        font-size: 1.05rem;
+        font-weight: 800;
+        line-height: 1.3;
+        letter-spacing: -0.02em;
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-profile-id__user {
+        margin: 0.2rem 0 0;
+        font-size: 0.75rem;
+        font-weight: 600;
+        opacity: 0.88;
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-profile-id__meta {
+        margin: 0.35rem 0 0;
+        font-size: 0.68rem;
+        font-weight: 600;
+        opacity: 0.78;
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-profile-id__chips {
+        position: relative;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+        margin-bottom: 0.75rem;
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-profile-id__chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        min-height: 2.35rem;
+        padding: 0.35rem 0.7rem;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        background: rgba(255, 255, 255, 0.12);
+        font: inherit;
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: #fff;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        backdrop-filter: blur(8px);
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-profile-id__chip--muted {
+        opacity: 0.85;
+        background: rgba(0, 0, 0, 0.12);
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-profile-id__actions {
+        position: relative;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.45rem;
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-profile-id__btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.35rem;
+        min-height: var(--acc-m-touch, 2.75rem);
+        padding: 0.5rem 0.55rem;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        background: rgba(255, 255, 255, 0.1);
+        font: inherit;
+        font-size: 0.72rem;
+        font-weight: 800;
+        color: #fff;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-profile-id__btn--primary {
+        background: #fff;
+        color: #4c1d95;
+        border-color: transparent;
+        box-shadow: 0 10px 24px -14px rgba(0, 0, 0, 0.25);
+    }
+
+    /* ── Settings rows ── */
+    body.mk-account-dashboard .mk-acc-mob-profile-settings {
+        margin-bottom: 0.85rem;
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-section-eyebrow {
+        margin: 0 0 0.45rem;
+        padding-inline: 0.15rem;
+        font-size: 0.68rem;
+        font-weight: 800;
+        color: var(--acc-text-muted, #64748b);
+        letter-spacing: 0.02em;
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-settings {
+        display: flex;
+        flex-direction: column;
+        gap: 0.45rem;
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-settings__row {
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+        width: 100%;
+        min-height: var(--acc-m-touch, 2.75rem);
+        padding: 0.65rem 0.75rem;
+        border: 1px solid var(--acc-card-border, #e8edf3);
+        border-radius: var(--acc-m-radius, 16px);
+        background: var(--acc-card-bg, #fff);
+        box-shadow: var(--acc-m-shadow, 0 14px 36px -24px rgba(15, 23, 42, 0.16));
+        font: inherit;
+        text-align: start;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-settings__icon {
+        flex-shrink: 0;
+        width: 2.35rem;
+        height: 2.35rem;
+        display: grid;
+        place-items: center;
+        border-radius: 11px;
+        font-size: 0.82rem;
+        color: #fff;
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-settings__icon--violet {
+        background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-settings__icon--sky {
+        background: linear-gradient(135deg, #38bdf8, #0284c7);
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-settings__body {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.15rem;
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-settings__body strong {
+        font-size: 0.82rem;
+        font-weight: 800;
+        color: var(--acc-text, #0f172a);
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-settings__body span {
+        font-size: 0.72rem;
+        font-weight: 600;
+        color: var(--acc-text-muted, #64748b);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-settings__chev {
+        flex-shrink: 0;
+        font-size: 0.65rem;
+        color: var(--acc-text-muted, #94a3b8);
+        opacity: 0.7;
+    }
+
+    /* ── Public profile form ── */
+    body.mk-account-dashboard .mk-acc-mob-section-head {
+        margin: 0 0 0.65rem;
+        padding-inline: 0.1rem;
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-section-head h2 {
+        margin: 0;
+        font-size: 0.95rem;
+        font-weight: 800;
+        color: var(--acc-text, #0f172a);
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-section-head p {
+        margin: 0.25rem 0 0;
+        font-size: 0.72rem;
+        font-weight: 600;
+        color: var(--acc-text-muted, #64748b);
+        line-height: 1.5;
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-public {
+        border-radius: var(--acc-m-radius, 16px);
+        box-shadow: var(--acc-m-shadow, 0 14px 36px -24px rgba(15, 23, 42, 0.16));
+        margin-bottom: 0.5rem;
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-public .prof-form {
+        padding: 0 0.75rem 0.85rem;
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-public .prof-fold {
+        border-radius: var(--acc-m-radius-sm, 12px);
+        margin-bottom: 0.5rem;
+        border: 1px solid var(--acc-card-border, #e8edf3);
+        background: var(--acc-input-bg, #f8fafc);
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-public .prof-fold summary {
+        min-height: var(--acc-m-touch, 2.75rem);
+        padding: 0.75rem 0.85rem;
+        font-size: var(--acc-m-body, 0.875rem);
+        font-weight: 800;
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-public .prof-form-foot {
+        padding-top: 0.35rem;
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-public .prof-save-btn {
+        width: 100%;
+        min-height: var(--acc-m-touch, 2.75rem);
+        border-radius: 14px;
+        font-size: var(--acc-m-body, 0.875rem);
+        font-weight: 800;
+    }
+}
+
+@media (min-width: 1025px) {
+    body.mk-account-dashboard .mk-profile-tab .mk-acc-mob-only {
+        display: none !important;
+    }
+}

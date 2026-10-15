@@ -190,10 +190,42 @@
             }
         }
 
+        function syncCheckoutBodyMode(mode) {
+            document.body.classList.toggle('ck-checkout-personal-active', mode === 'personal');
+            document.body.classList.toggle('ck-checkout-agency-active', mode === 'agency');
+            var agencyPay = document.getElementById('agency-pay-btn');
+            if (agencyPay) agencyPay.hidden = mode !== 'agency';
+        }
+
+        function updatePlanPayPrices() {
+            document.querySelectorAll('[data-plan-pay-btn]').forEach(function (btn) {
+                var card = btn.closest('.ck-plan');
+                var radio = card && card.querySelector('input[name="plan"]');
+                var priceEl = btn.querySelector('.ck-plan-pay__price');
+                if (!radio || !priceEl) return;
+                var price = parseInt(radio.dataset.unitSalePrice, 10) || 0;
+                if (radio.checked && pricingState.final) {
+                    price = pricingState.final;
+                } else {
+                    price = parseInt(radio.dataset.finalPrice, 10) || price;
+                }
+                priceEl.textContent = formatNumber(price) + ' تومان';
+                btn.classList.toggle('is-active-plan', radio.checked);
+                btn.disabled = pricingState.loading;
+            });
+            var agencyPrice = document.getElementById('agency-pay-btn-price');
+            if (agencyPrice && pricingState.final) {
+                agencyPrice.textContent = formatNumber(pricingState.final) + ' تومان';
+            }
+            var agencyPay = document.getElementById('agency-pay-btn');
+            if (agencyPay) agencyPay.disabled = pricingState.loading;
+        }
+
         function setPlanMode(mode) {
             var personalPanel = document.querySelector('[data-plan-panel="personal"]');
             var agencyPanel = document.querySelector('[data-plan-panel="agency"]');
             var liveTotal = document.getElementById('agency-live-total');
+            syncCheckoutBodyMode(mode);
             document.querySelectorAll('[data-plan-mode]').forEach(function (btn) {
                 var active = btn.dataset.planMode === mode;
                 btn.classList.toggle('is-active', active);
@@ -293,6 +325,7 @@
             payBtns.forEach(function (btn) {
                 btn.disabled = pricingState.loading;
             });
+            updatePlanPayPrices();
         }
 
         function fetchPlanPricing(options) {
@@ -502,11 +535,39 @@
         document.querySelectorAll('.ck-plan, .ck-agency-duration-btn').forEach(function (card) {
             card.addEventListener('click', function (e) {
                 if (e.target.tagName === 'INPUT') return;
+                if (e.target.closest('[data-plan-pay-btn], .ck-plan-pay')) return;
                 var radio = card.querySelector('input[type="radio"]');
                 if (radio && !radio.disabled && !radio.checked) {
                     radio.checked = true;
                     radio.dispatchEvent(new Event('change', { bubbles: true }));
                 }
+            });
+        });
+
+        document.querySelectorAll('[data-plan-pay-btn]').forEach(function (btn) {
+            btn.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                var card = btn.closest('.ck-plan');
+                var radio = card && card.querySelector('input[name="plan"]');
+                if (!radio || radio.disabled) return;
+
+                if (!radio.checked) {
+                    document.querySelectorAll('.ck-plan, .ck-agency-duration-btn').forEach(function (c) {
+                        c.classList.remove('is-selected');
+                    });
+                    radio.checked = true;
+                    if (card) card.classList.add('is-selected');
+                    setPlanMode('personal');
+                    if (discountInput) discountInput.value = '';
+                    clearDiscountMessage();
+                    var qty = syncQuantityField();
+                    fallbackPricingFromDataset(radio, qty);
+                    renderSummary();
+                    fetchPlanPricing({ discountCode: '', quantity: qty });
+                }
+
+                handlePayClick(e);
             });
         });
 

@@ -4,7 +4,72 @@
 
 <div id="tab-profile" class="mk-acc-tab-panel mk-acc-tab-shell mk-profile-tab tab-content dash-tab-panel prof-tab"{% if active_tab != 'profile' %} hidden{% endif %}>
 
-    <section class="prof-hero prof-hero--unified" aria-label="پروفایل کاربر"
+    <input type="file" id="accountAvatarFileInput" accept="image/*" hidden onchange="uploadAccountAvatarFile(event)">
+
+    <article class="mk-acc-mob-profile-id mk-acc-mob-only" aria-label="پروفایل شما"
+             id="accountAvatarMeta"
+             data-saved-key="{{ account_avatar_saved_key }}"
+             data-effective-key="{{ account_avatar_effective_key }}"
+             data-has-custom="{% if account_avatar_has_custom %}1{% else %}0{% endif %}">
+        <div class="mk-acc-mob-profile-id__glow" aria-hidden="true"></div>
+        <div class="mk-acc-mob-profile-id__main">
+            <button type="button" class="mk-acc-mob-profile-id__avatar" onclick="openAvatarPickerModal()" aria-label="تغییر آواتار">
+                <img id="accountAvatarProfileMobImg" src="{{ account_avatar_panel_url }}" alt="" width="72" height="72" loading="eager" decoding="async">
+                <span class="mk-acc-mob-profile-id__avatar-edit" aria-hidden="true"><i class="fas fa-pen"></i></span>
+            </button>
+            <div class="mk-acc-mob-profile-id__copy">
+                <h1 class="mk-acc-mob-profile-id__name">{{ user.get_full_name|default:user.username }}</h1>
+                <p class="mk-acc-mob-profile-id__user">@{{ user.username }}</p>
+                <p class="mk-acc-mob-profile-id__meta">
+                    <i class="fas fa-calendar" aria-hidden="true"></i>
+                    عضو از {{ user.date_joined|to_jalali_date:'%Y/%m/%d' }}
+                </p>
+            </div>
+        </div>
+        <div class="mk-acc-mob-profile-id__chips">
+            <button type="button" class="mk-acc-mob-profile-id__chip" onclick="openAvatarPickerModal()">
+                <i class="fas fa-images" aria-hidden="true"></i> آواتار
+            </button>
+            <button type="button" class="mk-acc-mob-profile-id__chip" onclick="document.getElementById('accountAvatarFileInput').click()">
+                <i class="fas fa-upload" aria-hidden="true"></i> آپلود
+            </button>
+            {% if account_avatar_has_custom or account_avatar_saved_key %}
+            <button type="button" class="mk-acc-mob-profile-id__chip mk-acc-mob-profile-id__chip--muted" onclick="resetAccountAvatar()">بازنشانی</button>
+            {% endif %}
+        </div>
+        <div class="mk-acc-mob-profile-id__actions">
+            <button type="button" class="mk-acc-mob-profile-id__btn" onclick="openUserInfoModal()">
+                <i class="fas fa-pen" aria-hidden="true"></i> ویرایش حساب
+            </button>
+            <button type="button" class="mk-acc-mob-profile-id__btn mk-acc-mob-profile-id__btn--primary" onclick="openProfileModal()">
+                <i class="fas fa-user-cog" aria-hidden="true"></i> پروفایل تکمیلی
+            </button>
+        </div>
+    </article>
+
+    <div class="mk-acc-mob-profile-settings mk-acc-mob-only">
+        <p class="mk-acc-mob-section-eyebrow">اطلاعات ذخیره‌شده</p>
+        <div class="mk-acc-mob-settings" role="list">
+            <button type="button" class="mk-acc-mob-settings__row" role="listitem" onclick="openUserInfoModal()">
+                <span class="mk-acc-mob-settings__icon mk-acc-mob-settings__icon--violet"><i class="fas fa-user" aria-hidden="true"></i></span>
+                <span class="mk-acc-mob-settings__body">
+                    <strong>حساب کاربری</strong>
+                    <span dir="ltr">{{ user.email|default:user.username }}</span>
+                </span>
+                <i class="fas fa-chevron-left mk-acc-mob-settings__chev" aria-hidden="true"></i>
+            </button>
+            <button type="button" class="mk-acc-mob-settings__row" role="listitem" onclick="openProfileModal()">
+                <span class="mk-acc-mob-settings__icon mk-acc-mob-settings__icon--sky"><i class="fas fa-id-card" aria-hidden="true"></i></span>
+                <span class="mk-acc-mob-settings__body">
+                    <strong>پروفایل تکمیلی</strong>
+                    <span>{% if user.profile and user.profile.city %}{{ user.profile.city }}{% elif user.profile and user.profile.bio %}{{ user.profile.bio|truncatewords:8 }}{% else %}برای مشتریان و اشتراک‌ها تکمیل کنید{% endif %}</span>
+                </span>
+                <i class="fas fa-chevron-left mk-acc-mob-settings__chev" aria-hidden="true"></i>
+            </button>
+        </div>
+    </div>
+
+    <section class="prof-hero prof-hero--unified mk-acc-desk-only" aria-label="پروفایل کاربر"
              id="accountAvatarSection"
              data-saved-key="{{ account_avatar_saved_key }}"
              data-effective-key="{{ account_avatar_effective_key }}"
@@ -37,10 +102,9 @@
                 <button type="button" class="prof-save-btn prof-save-btn--sm" onclick="openAvatarPickerModal()">
                     <i class="fas fa-images" aria-hidden="true"></i> انتخاب آواتار
                 </button>
-                <label class="prof-edit-btn prof-edit-btn--ghost">
+                <button type="button" class="prof-edit-btn prof-edit-btn--ghost" onclick="document.getElementById('accountAvatarFileInput').click()">
                     <i class="fas fa-upload" aria-hidden="true"></i> آپلود عکس
-                    <input type="file" id="accountAvatarFileInput" accept="image/*" hidden onchange="uploadAccountAvatarFile(event)">
-                </label>
+                </button>
                 {% if account_avatar_has_custom or account_avatar_saved_key %}
                 <button type="button" class="prof-edit-btn prof-edit-btn--ghost" onclick="resetAccountAvatar()">بازنشانی</button>
                 {% endif %}
@@ -48,7 +112,7 @@
         </div>
     </section>
 
-    <div class="prof-grid mk-acc-profile-grid">
+    <div class="prof-grid mk-acc-profile-grid mk-acc-desk-only">
         <section class="prof-card mk-acc-panel">
             <header class="prof-card-head">
                 <h2 class="prof-card-title">حساب کاربری</h2>
@@ -104,8 +168,12 @@
         </section>
     </div>
 
-    <section class="prof-card prof-card--public" id="consultantPublicProfile">
-        <header class="prof-card-head prof-card-head--public">
+    <section class="prof-card prof-card--public mk-acc-mob-public" id="consultantPublicProfile">
+        <header class="mk-acc-mob-section-head mk-acc-mob-only">
+            <h2>پروفایل عمومی مشاور</h2>
+            <p>برای لینک اشتراک با مشتری</p>
+        </header>
+        <header class="prof-card-head prof-card-head--public mk-acc-desk-only">
             <div>
                 <h2 class="prof-card-title">پروفایل عمومی مشاور</h2>
                 <p class="prof-card-desc">در لینک اشتراک مشتری و صفحه عمومی نمایش داده می‌شود</p>

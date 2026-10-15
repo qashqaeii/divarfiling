@@ -6,7 +6,9 @@
 {% block body_class %}mk-checkout-page mk-checkout-page--pay{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/mizkar-checkout.css' %}?v=16">
+<link rel="stylesheet" href="{% static 'css/mizkar-checkout.css' %}?v=23">
+<link rel="stylesheet" href="{% static 'css/checkout-mobile.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'css/payment-checkout.css' %}?v=2">
 {% endblock %}
 
 {% block breadcrumbs %}{% endblock %}
@@ -14,43 +16,79 @@
 {% block content %}
 <div class="ck-flow ck-pay-flow" data-pay-checkout>
 
-    <div class="ck-ambient" aria-hidden="true">
+    <div class="ck-ambient ck-ambient--subtle" aria-hidden="true">
         <span class="ck-ambient-orb ck-ambient-orb--violet"></span>
         <span class="ck-ambient-orb ck-ambient-orb--cyan"></span>
-        <span class="ck-ambient-orb ck-ambient-orb--emerald"></span>
         <span class="ck-ambient-grid"></span>
     </div>
 
     <div class="ck-page ck-page--full ck-page--pay">
         <header class="ck-page-head ck-page-head--pay">
-            <div class="ck-page-head-row">
-                <a href="{% if order.renewal_license_id %}{% url 'buy' order.product.slug %}?renew={{ order.renewal_license_id }}&amp;plan={{ order.plan_id }}{% else %}{% url 'buy' order.product.slug %}{% endif %}" class="ck-back">
+            <div class="ck-pay-head-desk ck-pay-desk-only">
+                <div class="ck-page-head-row">
+                    <a href="{% if order.renewal_license_id %}{% url 'buy' order.product.slug %}?renew={{ order.renewal_license_id }}&amp;plan={{ order.plan_id }}{% else %}{% url 'buy' order.product.slug %}{% endif %}" class="ck-back">
+                        <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                        <span>بازگشت</span>
+                    </a>
+                    <nav class="ck-pay-rail ck-pay-rail--inline" aria-label="مراحل پرداخت">
+                        <div class="ck-pay-rail-item is-done"><span class="ck-pay-rail-dot"></span><span>پلن</span></div>
+                        <div class="ck-pay-rail-line is-done"></div>
+                        <div class="ck-pay-rail-item is-active"><span class="ck-pay-rail-dot"></span><span>پرداخت</span></div>
+                        <div class="ck-pay-rail-line"></div>
+                        <div class="ck-pay-rail-item"><span class="ck-pay-rail-dot"></span><span>لایسنس</span></div>
+                    </nav>
+                    <span class="ck-secure-pill"><i class="fas fa-lock" aria-hidden="true"></i> SSL</span>
+                </div>
+                <div class="ck-page-head-copy">
+                    <h1 class="ck-page-title">تأیید و پرداخت</h1>
+                    <p class="ck-page-sub">{{ order.product.title }} — {{ order.plan.name }}</p>
+                </div>
+            </div>
+
+            <div class="ck-pay-head-mob ck-pay-mob-only">
+                <a href="{% if order.renewal_license_id %}{% url 'buy' order.product.slug %}?renew={{ order.renewal_license_id }}&amp;plan={{ order.plan_id }}{% else %}{% url 'buy' order.product.slug %}{% endif %}" class="ck-pay-head-mob__back" aria-label="بازگشت">
                     <i class="fas fa-arrow-right" aria-hidden="true"></i>
-                    <span>بازگشت</span>
                 </a>
-                <nav class="ck-pay-rail ck-pay-rail--inline" aria-label="مراحل پرداخت">
-                    <div class="ck-pay-rail-item is-done"><span class="ck-pay-rail-dot"></span><span>پلن</span></div>
-                    <div class="ck-pay-rail-line is-done"></div>
-                    <div class="ck-pay-rail-item is-active"><span class="ck-pay-rail-dot"></span><span>پرداخت</span></div>
-                    <div class="ck-pay-rail-line"></div>
-                    <div class="ck-pay-rail-item"><span class="ck-pay-rail-dot"></span><span>لایسنس</span></div>
-                </nav>
-                <span class="ck-secure-pill"><i class="fas fa-lock"></i> SSL</span>
+                <div class="ck-pay-head-mob__copy">
+                    <p class="ck-pay-head-mob__step" aria-hidden="true">
+                        <span class="is-done">پلن</span>
+                        <i class="fas fa-chevron-left" aria-hidden="true"></i>
+                        <span class="is-active">پرداخت</span>
+                        <i class="fas fa-chevron-left" aria-hidden="true"></i>
+                        <span>لایسنس</span>
+                    </p>
+                    <h1 class="ck-pay-head-mob__title">تأیید و پرداخت</h1>
+                </div>
+                <span class="ck-pay-head-mob__secure" title="اتصال امن"><i class="fas fa-shield-halved" aria-hidden="true"></i></span>
             </div>
         </header>
 
         <div class="ck-layout ck-layout--pay">
         <div class="ck-shell ck-pay-shell">
+            <div class="ck-pay-mob-ticket ck-pay-mob-only" aria-label="خلاصه مبلغ">
+                <div class="ck-pay-mob-ticket__icon" aria-hidden="true">
+                    <i class="fas fa-{% if order.renewal_license_id %}rotate{% else %}robot{% endif %}"></i>
+                </div>
+                <div class="ck-pay-mob-ticket__body">
+                    <span class="ck-pay-mob-ticket__plan">{{ order.plan.name }}</span>
+                    <span class="ck-pay-mob-ticket__product">{{ order.product.title }}</span>
+                </div>
+                <div class="ck-pay-mob-ticket__amount">
+                    <span class="ck-pay-mob-ticket__amount-label">قابل پرداخت</span>
+                    <strong>{{ order.amount|currency }} <small>تومان</small></strong>
+                </div>
+            </div>
             <div class="ck-pay-grid">
                 <aside class="ck-pay-summary" aria-label="خلاصه سفارش">
                     <div class="ck-order-inner">
-                        <div class="ck-order-badge">
-                            <i class="fas fa-shopping-bag"></i>
+                        <div class="ck-order-badge ck-pay-desk-only">
+                            <i class="fas fa-shopping-bag" aria-hidden="true"></i>
                             <span>جزئیات سفارش</span>
                         </div>
+                        <p class="ck-pay-summary-mob-label ck-pay-mob-only">جزئیات و شناسه سفارش</p>
 
-                        <div class="ck-order-product">
-                            <span class="ck-order-product-icon"><i class="fas fa-{% if order.renewal_license_id %}rotate{% else %}robot{% endif %}"></i></span>
+                        <div class="ck-order-product ck-pay-desk-only">
+                            <span class="ck-order-product-icon"><i class="fas fa-{% if order.renewal_license_id %}rotate{% else %}robot{% endif %}" aria-hidden="true"></i></span>
                             <div>
                                 <strong>{{ order.product.title }}</strong>
                                 <span>{% if order.renewal_license_id %}تمدید — {% endif %}{{ order.plan.name }} — {{ order.plan.get_plan_type_display }}</span>
@@ -70,7 +108,7 @@
                             {% endif %}
                         </div>
 
-                        <div class="ck-order-total">
+                        <div class="ck-order-total ck-pay-desk-only">
                             <span>مبلغ قابل پرداخت</span>
                             <strong>{{ order.amount|currency }} تومان</strong>
                         </div>
@@ -82,13 +120,13 @@
                             </div>
                             <div class="ck-pay-meta-row ck-pay-meta-row--mono">
                                 <span>شناسه سفارش</span>
-                                <code>{{ order.id }}</code>
+                                <code dir="ltr">{{ order.id }}</code>
                             </div>
                         </div>
 
                         <ul class="ck-order-trust">
-                            <li><i class="fas fa-shield-halved"></i> اطلاعات کارت ذخیره نمی‌شود</li>
-                            <li><i class="fas fa-key"></i> لایسنس بلافاصله پس از پرداخت</li>
+                            <li><i class="fas fa-shield-halved" aria-hidden="true"></i> اطلاعات کارت ذخیره نمی‌شود</li>
+                            <li><i class="fas fa-key" aria-hidden="true"></i> لایسنس بلافاصله پس از پرداخت</li>
                         </ul>
                     </div>
                 </aside>
@@ -96,7 +134,7 @@
                 <main class="ck-pay-main">
                     {% if not merchant_configured %}
                     <div class="ck-pay-alert ck-pay-alert--warn" role="alert">
-                        <i class="fas fa-triangle-exclamation"></i>
+                        <i class="fas fa-triangle-exclamation" aria-hidden="true"></i>
                         <div>
                             <strong>درگاه هنوز پیکربندی نشده</strong>
                             <p>برای فعال‌سازی پرداخت آنلاین، مقدار <code>ZIBAL_MERCHANT_ID</code> را در فایل <code>.env</code> قرار دهید.</p>
@@ -108,7 +146,7 @@
 
                         <div class="ck-pay-gateway-head">
                             <span class="ck-pay-gateway-logo">
-                                <i class="fas fa-credit-card"></i>
+                                <i class="fas fa-credit-card" aria-hidden="true"></i>
                             </span>
                             <div>
                                 <h2>درگاه پرداخت زیبال</h2>
@@ -117,31 +155,31 @@
                             <span class="ck-pay-gateway-badge">درگاه رسمی</span>
                         </div>
 
-                        <div class="ck-pay-amount-display">
+                        <div class="ck-pay-amount-display ck-pay-desk-only">
                             <span class="ck-pay-amount-label">مبلغ پرداخت</span>
                             <strong class="ck-pay-amount-value">{{ order.amount|currency }} <small>تومان</small></strong>
                         </div>
 
                         <ul class="ck-pay-trust-list">
                             <li>
-                                <span class="ck-pay-trust-icon"><i class="fas fa-shield-halved"></i></span>
+                                <span class="ck-pay-trust-icon"><i class="fas fa-shield-halved" aria-hidden="true"></i></span>
                                 <span>اطلاعات کارت در سرور ما ذخیره نمی‌شود</span>
                             </li>
                             <li>
-                                <span class="ck-pay-trust-icon"><i class="fas fa-bolt"></i></span>
+                                <span class="ck-pay-trust-icon"><i class="fas fa-bolt" aria-hidden="true"></i></span>
                                 <span>فعال‌سازی لایسنس بلافاصله پس از پرداخت موفق</span>
                             </li>
                             <li>
-                                <span class="ck-pay-trust-icon"><i class="fas fa-rotate-left"></i></span>
+                                <span class="ck-pay-trust-icon"><i class="fas fa-rotate-left" aria-hidden="true"></i></span>
                                 <span>در صورت انصراف، می‌توانید دوباره تلاش کنید</span>
                             </li>
                         </ul>
 
-                        <form method="post" action="{% url 'payment:initiate' order.id %}" class="ck-pay-start-form">
+                        <form method="post" action="{% url 'payment:initiate' order.id %}" class="ck-pay-start-form" id="zibal-pay-form">
                             {% csrf_token %}
-                            <button type="submit" class="ck-pay-btn ck-pay-btn--full ck-pay-btn--glow">
+                            <button type="submit" class="ck-pay-btn ck-pay-btn--full ck-pay-btn--glow ck-pay-desk-only">
                                 <span class="ck-pay-btn-main">
-                                    <i class="fas fa-lock"></i>
+                                    <i class="fas fa-lock" aria-hidden="true"></i>
                                     پرداخت {{ order.amount|currency }} تومان
                                 </span>
                                 <span class="ck-pay-btn-sub">انتقال به درگاه امن زیبال</span>
@@ -149,15 +187,15 @@
                         </form>
 
                         <div class="ck-pay-security-row" aria-label="نشان‌های امنیتی">
-                            <span><i class="fas fa-lock"></i> SSL</span>
-                            <span><i class="fas fa-building-columns"></i> بانک مرکزی</span>
-                            <span><i class="fas fa-fingerprint"></i> ۳D Secure</span>
+                            <span><i class="fas fa-lock" aria-hidden="true"></i> SSL</span>
+                            <span><i class="fas fa-building-columns" aria-hidden="true"></i> بانک مرکزی</span>
+                            <span><i class="fas fa-fingerprint" aria-hidden="true"></i> ۳D Secure</span>
                         </div>
                     </div>
                     {% endif %}
 
                     <p class="ck-pay-footnote">
-                        <i class="fas fa-circle-info"></i>
+                        <i class="fas fa-circle-info" aria-hidden="true"></i>
                         با ادامه، <a href="{% url 'terms' %}">قوانین و مقررات</a> را می‌پذیرید.
                     </p>
                 </main>
@@ -166,13 +204,29 @@
 
             <section class="ck-trust-strip" aria-label="اعتماد و امنیت">
                 <ul>
-                    <li><i class="fas fa-lock"></i> رمزنگاری SSL</li>
-                    <li><i class="fas fa-certificate"></i> نماد اعتماد الکترونیکی</li>
-                    <li><i class="fas fa-headset"></i> پشتیبانی فنی</li>
-                    <li><i class="fas fa-file-invoice"></i> صدور فاکتور</li>
+                    <li><i class="fas fa-lock" aria-hidden="true"></i> رمزنگاری SSL</li>
+                    <li><i class="fas fa-certificate" aria-hidden="true"></i> نماد اعتماد الکترونیکی</li>
+                    <li><i class="fas fa-headset" aria-hidden="true"></i> پشتیبانی فنی</li>
+                    <li><i class="fas fa-file-invoice" aria-hidden="true"></i> صدور فاکتور</li>
                 </ul>
             </section>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block page_overlays %}
+{% if merchant_configured %}
+<div class="ck-pay-sticky ck-pay-mob-only" role="region" aria-label="پرداخت سریع">
+    <div class="ck-pay-sticky__inner">
+        <div class="ck-pay-sticky__copy">
+            <span>قابل پرداخت</span>
+            <strong>{{ order.amount|currency }} تومان</strong>
+        </div>
+        <button type="submit" form="zibal-pay-form" class="ck-pay-btn ck-pay-btn--compact">
+            <i class="fas fa-lock" aria-hidden="true"></i> پرداخت
+        </button>
+    </div>
+</div>
+{% endif %}
 {% endblock %}

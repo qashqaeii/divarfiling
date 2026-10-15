@@ -6,8 +6,8 @@
 {% block body_class %}mk-checkout-page mk-checkout-page--buy{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/mizkar-checkout.css' %}?v=22">
-<link rel="stylesheet" href="{% static 'css/checkout-mobile.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'css/mizkar-checkout.css' %}?v=23">
+<link rel="stylesheet" href="{% static 'css/checkout-mobile.css' %}?v=3">
 {% endblock %}
 
 {% block breadcrumbs %}{% endblock %}
@@ -271,7 +271,19 @@
                                     {% endif %}
                                 </ul>
 
-                                <span class="ck-plan-foot">{% if plan_data.purchase_blocked %}غیرفعال{% else %}انتخاب{% endif %}</span>
+                                {% if plan_data.purchase_blocked %}
+                                <button type="button" class="ck-plan-pay is-disabled" disabled>
+                                    <span class="ck-plan-pay__lead"><i class="fas fa-ban" aria-hidden="true"></i> غیرفعال</span>
+                                </button>
+                                {% else %}
+                                <button type="button" class="ck-plan-pay" data-plan-pay-btn>
+                                    <span class="ck-plan-pay__lead">
+                                        <i class="fas fa-lock" aria-hidden="true"></i>
+                                        {% if is_renewal %}پرداخت و تمدید{% else %}پرداخت و دریافت لایسنس{% endif %}
+                                    </span>
+                                    <span class="ck-plan-pay__price">{{ plan_data.unit_sale_price|currency }} تومان</span>
+                                </button>
+                                {% endif %}
                             </label>
                             {% endfor %}
                         </div>
@@ -346,6 +358,11 @@
                             </ul>
 
                             <div class="ck-agency-summary" id="agency-pricing-summary" hidden></div>
+
+                            <button type="button" class="ck-agency-pay" id="agency-pay-btn" data-pay-btn hidden>
+                                <span class="ck-agency-pay__lead"><i class="fas fa-lock" aria-hidden="true"></i> {% if is_renewal %}پرداخت و تمدید{% else %}پرداخت تیم{% endif %}</span>
+                                <span class="ck-agency-pay__price" id="agency-pay-btn-price">—</span>
+                            </button>
                         </div>
                     </section>
 
@@ -375,5 +392,5 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'js/mizkar-checkout.js' %}?v=14" defer></script>
+<script src="{% static 'js/mizkar-checkout.js' %}?v=15" defer></script>
 {% endblock %}

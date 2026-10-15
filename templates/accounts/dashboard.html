@@ -26,6 +26,7 @@
 <link rel="stylesheet" href="{% static 'workspace/css/modals.css' %}?v=34">
 <link rel="stylesheet" href="{% static 'css/mizkar-account-mobile.css' %}?v=7">
 <link rel="stylesheet" href="{% static 'css/mizkar-account-overview-mobile.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'css/mizkar-account-profile-mobile.css' %}?v=2">
 {% endblock %}
 
 {% block content %}
@@ -597,7 +598,7 @@ function updateAvatarPickerSaveState() {
 }
 
 function applyAccountAvatarToDom(url) {
-    ['accountAvatarHeroImg', 'accountAvatarPanelImg', 'avatarPickerPreviewImg', 'accountAvatarSidebarImg', 'accountAvatarMobImg'].forEach((id) => {
+    ['accountAvatarHeroImg', 'accountAvatarPanelImg', 'avatarPickerPreviewImg', 'accountAvatarSidebarImg', 'accountAvatarMobImg', 'accountAvatarProfileMobImg'].forEach((id) => {
         const el = document.getElementById(id);
         if (el) el.src = url;
     });

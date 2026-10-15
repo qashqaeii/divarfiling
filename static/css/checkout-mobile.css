@@ -21,6 +21,24 @@
 }
 
 @media (max-width: 767px) {
+    body.mk-checkout-page.ck-checkout-personal-active .ck-mobile-bar {
+        display: none !important;
+    }
+
+    body.mk-checkout-page.ck-checkout-agency-active .ck-mobile-bar {
+        display: flex;
+    }
+
+    body.mk-checkout-page {
+        background:
+            radial-gradient(ellipse 90% 50% at 50% -10%, rgba(124, 58, 237, 0.12), transparent 55%),
+            var(--mk-body-bg, #f7f8fc);
+    }
+
+    .mk-checkout-page .ck-page-head {
+        margin-bottom: 0.65rem;
+    }
+
     .mk-checkout-page .ck-page-head-row {
         flex-wrap: wrap;
         gap: 0.55rem;
@@ -67,9 +85,13 @@
         -webkit-tap-highlight-color: transparent;
     }
 
+    .mk-checkout-page .ck-plans-stage {
+        margin-bottom: 0.85rem;
+    }
+
     .mk-checkout-page .ck-plans {
         grid-template-columns: 1fr;
-        gap: 0.65rem;
+        gap: 0.85rem;
     }
 
     .mk-checkout-page .ck-agency-section {
@@ -83,31 +105,102 @@
     }
 
     .mk-checkout-page .ck-plan.ck-plan--card {
-        border-radius: 14px;
-        padding: 1rem 0.95rem;
-        min-height: var(--ck-m-touch);
+        border-radius: 18px;
+        padding: 1.05rem 1rem 1rem;
+        min-height: 0;
+        box-shadow: 0 16px 40px -28px rgba(15, 23, 42, 0.14);
+    }
+
+    .mk-checkout-page .ck-plan.ck-plan--featured {
+        border-color: color-mix(in srgb, var(--ck-plan-accent) 35%, transparent);
+        box-shadow:
+            0 20px 48px -26px var(--ck-plan-accent-glow),
+            0 0 0 1px color-mix(in srgb, var(--ck-plan-accent) 22%, transparent);
+    }
+
+    .mk-checkout-page .ck-plan.is-selected.ck-plan--card {
+        box-shadow:
+            0 22px 52px -26px var(--ck-plan-accent-glow),
+            0 0 0 2px color-mix(in srgb, var(--ck-plan-accent) 40%, transparent);
     }
 
     .mk-checkout-page .ck-plan-name {
-        font-size: var(--ck-m-body);
+        font-size: 0.95rem;
+        font-weight: 800;
+    }
+
+    .mk-checkout-page .ck-plan-tagline {
+        font-size: var(--ck-m-caption);
+        line-height: 1.55;
+    }
+
+    .mk-checkout-page .ck-plan-price-block {
+        margin: 0.65rem 0 0.5rem;
+        padding: 0.65rem 0.7rem;
+        border-radius: 14px;
+        background: color-mix(in srgb, var(--ck-plan-accent) 8%, transparent);
+        border: 1px solid color-mix(in srgb, var(--ck-plan-accent) 14%, transparent);
     }
 
     .mk-checkout-page .ck-plan-amount {
-        font-size: clamp(1.15rem, 5vw, 1.35rem);
+        font-size: clamp(1.35rem, 6vw, 1.65rem);
+        font-weight: 800;
+        letter-spacing: -0.02em;
     }
 
     .mk-checkout-page .ck-plan-feats li {
         font-size: var(--ck-m-caption);
         line-height: 1.6;
-        padding: 0.28rem 0;
+        padding: 0.32rem 0;
     }
 
-    .mk-checkout-page .ck-plan-foot {
+    .mk-checkout-page .ck-plan-pay {
         min-height: var(--ck-m-touch);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: var(--ck-m-body);
+        margin-top: 0.85rem;
+        padding: 0.7rem 0.9rem;
+        border-radius: 14px;
+    }
+
+    .mk-checkout-page .ck-plan-pay__lead {
+        font-size: 0.78rem;
+    }
+
+    .mk-checkout-page .ck-plan-pay__price {
+        font-size: 0.82rem;
+    }
+
+    .mk-checkout-page .ck-agency-pay {
+        min-height: 3rem;
+        padding: 0.75rem 1rem;
+        border-radius: 14px;
+        font-size: 0.85rem;
+    }
+
+    .mk-checkout-page .ck-order {
+        margin-top: 0.5rem;
+        padding: 0.9rem;
+        border-radius: 18px;
+        border: 1px solid rgba(124, 58, 237, 0.12);
+        background: color-mix(in srgb, var(--mk-surface, #fff) 92%, rgba(124, 58, 237, 0.04));
+        box-shadow: 0 14px 36px -26px rgba(15, 23, 42, 0.12);
+    }
+
+    .mk-checkout-page .ck-order-block-label {
+        font-size: 0.72rem;
+        font-weight: 800;
+        margin-bottom: 0.4rem;
+        display: block;
+    }
+
+    .mk-checkout-page .ck-plan-mode-tabs {
+        padding: 0.28rem;
+        border-radius: 14px;
+        background: rgba(148, 163, 184, 0.1);
+        border: 1px solid rgba(148, 163, 184, 0.12);
+    }
+
+    .mk-checkout-page .ck-plan-mode-tab.is-active {
+        box-shadow: 0 8px 20px -14px rgba(124, 58, 237, 0.35);
     }
 
     .mk-checkout-page .ck-pay-btn,
@@ -173,6 +266,14 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
+    }
+
+    body.mk-checkout-page.ck-checkout-personal-active .ck-page {
+        padding-bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));
+    }
+
+    body.mk-checkout-page.ck-checkout-personal-active footer.mk-footer-pro {
+        padding-bottom: 1rem !important;
     }
 }
 

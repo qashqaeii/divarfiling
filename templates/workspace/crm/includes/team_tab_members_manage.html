@@ -11,7 +11,7 @@
         </button>
     </header>
 
-    <div class="agency-kpi-strip agency-kpi-strip--ref agency-kpi-strip--4">
+    <div class="agency-kpi-strip agency-kpi-strip--ref agency-kpi-strip--4 agency-kpi-strip--members">
         {% include "workspace/crm/agency/includes/kpi_card.html" with label="عضو فعال" value=members_dashboard.active_count icon="users" tone="purple" %}
         {% include "workspace/crm/agency/includes/kpi_card.html" with label="بدون لایسنس" value=members_dashboard.without_seat icon="triangle-exclamation" tone="orange" %}
         {% include "workspace/crm/agency/includes/kpi_card.html" with label="دعوت در انتظار" value=members_dashboard.pending_invites icon="hourglass-half" tone="blue" %}
@@ -128,9 +128,6 @@
                             </form>
                             {% else %}
                             {{ m.get_role_display }}
-                            {% endif %}
-                            {% if agency_rbac_v2 and row.effective_perm_labels %}
-                            <p class="agency-table__sub agency-member-perms-summary">{{ row.effective_perm_labels|join:" · " }}</p>
                             {% endif %}
                         </td>
                         <td>
@@ -254,20 +251,34 @@
                     </div>
                 </div>
                 <div class="agency-member-card__meta">
-                    <span class="agency-status agency-status--muted">{{ m.get_role_display }}</span>
-                    {% if row.retained_seat_unused %}
-                    <span class="agency-status agency-status--warn">صندلی قبلی فعال است</span>
-                    {% elif row.seat_not_required %}
-                    <span class="agency-status agency-status--muted">بدون نیاز به لایسنس</span>
-                    {% elif row.has_seat %}
-                    <span class="agency-status agency-status--ok">لایسنس فعال</span>
+                    <span class="agency-member-card__chip agency-member-card__chip--role">{{ m.get_role_display }}</span>
+                    {% if m.data_visibility_consent_at %}
+                    {% include "workspace/crm/agency/includes/status_badge.html" with status="ok" label="عضویت فعال" %}
                     {% else %}
-                    <span class="agency-status agency-status--warn">بدون لایسنس</span>
+                    {% include "workspace/crm/agency/includes/status_badge.html" with status="pending" label="در انتظار پذیرش" %}
+                    {% endif %}
+                    {% if row.retained_seat_unused %}
+                    {% include "workspace/crm/agency/includes/status_badge.html" with status="warn" label="صندلی قبلی فعال" %}
+                    {% elif row.seat_not_required %}
+                    {% include "workspace/crm/agency/includes/status_badge.html" with status="muted" label="بدون نیاز به لایسنس" %}
+                    {% elif row.has_seat %}
+                    {% include "workspace/crm/agency/includes/status_badge.html" with status="ok" label="لایسنس فعال" %}
+                    {% else %}
+                    {% include "workspace/crm/agency/includes/status_badge.html" with status="unlicensed" label="بدون لایسنس" %}
                     {% endif %}
                 </div>
                 <div class="agency-member-card__actions">
                     {% if m.data_visibility_consent_at %}
-                    <a href="{% url 'workspace:agency_advisor_detail' m.pk %}" class="crm-btn crm-btn-primary crm-btn-sm">مشاهده پروفایل</a>
+                    <a href="{% url 'workspace:agency_advisor_detail' m.pk %}" class="crm-btn crm-btn-primary crm-btn-sm">مشاهده</a>
+                    {% endif %}
+                    {% if can_edit_member_permissions and m.role != 'owner' %}
+                    <button type="button"
+                        class="crm-btn crm-btn-ghost crm-btn-sm js-agency-perms-open"
+                        data-member-id="{{ m.pk }}"
+                        data-member-name="{{ m.user.get_full_name|default:m.user.phone }}"
+                        data-role="{{ m.role }}"
+                        data-effective-labels="{{ row.effective_perm_labels|join:'|' }}"
+                        data-perms="{{ row.effective_perm_set|join:',' }}">مجوزها</button>
                     {% endif %}
                     {% if m.data_visibility_consent_at and available_seats and not row.has_seat and row.needs_extraction_seat %}
                     <form method="post" action="{{ crm_team_url }}">

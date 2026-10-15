@@ -335,7 +335,14 @@ class AgencyHubRedirectView(LoginRequiredMixin, View):
             return redirect('workspace:agency_hub_dashboard')
         if has_assigned_agency_seat(user):
             return redirect('workspace:agency_advisor_member')
-        return redirect('workspace:agency_hub_dashboard')
+        from workspace.services.agency_entitlement import can_access_agency_hub
+
+        if can_access_agency_hub(user):
+            return redirect('workspace:agency_hub_dashboard')
+        from django.contrib import messages
+
+        messages.error(request, 'بخش آژانس فقط برای مشترکین پلن آژانس در دسترس است.')
+        return redirect('workspace:crm_dashboard')
 
 
 class AgencyTeamActionView(CRMTeamView):

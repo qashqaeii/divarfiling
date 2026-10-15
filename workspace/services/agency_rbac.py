@@ -50,7 +50,15 @@ OWNER_ENTITLEMENT_PERMISSIONS: FrozenSet[str] = frozenset({
 })
 
 # در UI ویرایش مجوز اعضا نمایش/ذخیره نمی‌شوند
-NON_ASSIGNABLE_MEMBER_PERMISSIONS: FrozenSet[str] = OWNER_ENTITLEMENT_PERMISSIONS
+HUB_NAV_PERMISSIONS: FrozenSet[str] = frozenset({
+    PERM_HUB_OWNER_DASHBOARD,
+    PERM_HUB_SECRETARY_DASHBOARD,
+    PERM_HUB_ADVISOR_DASHBOARD,
+})
+
+NON_ASSIGNABLE_MEMBER_PERMISSIONS: FrozenSet[str] = (
+    OWNER_ENTITLEMENT_PERMISSIONS | HUB_NAV_PERMISSIONS
+)
 
 ALL_PERMISSIONS: FrozenSet[str] = frozenset({
     PERM_TEAM_MANAGE,
@@ -118,6 +126,9 @@ PERMISSION_LABELS: Dict[str, str] = {
     PERM_MEMBERS_PERMISSIONS_EDIT: 'ویرایش مجوز اعضا',
     PERM_SETTINGS_MANAGE: 'تنظیمات آژانس',
     PERM_AUDIT_VIEW: 'ممیزی و تاریخچه',
+    PERM_HUB_OWNER_DASHBOARD: 'داشبورد مالک',
+    PERM_HUB_SECRETARY_DASHBOARD: 'میزکار پذیرش',
+    PERM_HUB_ADVISOR_DASHBOARD: 'میزکار مشاور',
 }
 
 ROLE_TEMPLATE_LABELS = {
@@ -385,7 +396,8 @@ def serialize_permissions_for_api(user) -> Dict[str, Any]:
 
 def summarize_effective_permissions(user, member: Optional[CRMAgencyMember] = None, limit: int = 6) -> list[str]:
     perms = effective_permissions(user, member or get_membership(user))
-    labels = [PERMISSION_LABELS.get(p, p) for p in sorted(perms)]
+    visible = sorted(p for p in perms if p not in HUB_NAV_PERMISSIONS)
+    labels = [PERMISSION_LABELS.get(p, p) for p in visible]
     if len(labels) > limit:
         return labels[:limit] + [f'+{len(labels) - limit} مورد دیگر']
     return labels

@@ -127,6 +127,10 @@ def _build_workspace_context(request, user, ctx):
             ctx['ws_upload_form'] = DatasetUploadForm()
         show_agency_nav = can_access_agency_hub(user)
         ctx.update(_ws_nav_flags(request, user, show_agency_nav))
+        if show_agency_nav:
+            from workspace.services.workspace_agency_home import resolve_workspace_agency_nav_url
+
+            ctx['ws_agency_nav_url'] = resolve_workspace_agency_nav_url(user)
         from workspace.services.agency_rbac import (
             PERM_CONTRACTS_VIEW_TEAM,
             PERM_FINANCE_VIEW,

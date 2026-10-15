@@ -10,7 +10,7 @@ from typing import Any, Optional
 
 from django.contrib.auth import get_user_model
 from django.db import transaction
-from django.db.models import Q, QuerySet
+from django.db.models import QuerySet
 from django.urls import reverse
 from django.utils import timezone
 
@@ -125,20 +125,9 @@ def get_advisor_agency_seat_context(user) -> Optional[dict[str, Any]]:
     if not sub:
         return None
 
-    from licenses.models import License
+    from workspace.services.agency_seats import get_member_seat
 
-    now = _now()
-    license_obj = (
-        License.objects.filter(
-            assigned_user=user,
-            agency_subscription=sub,
-            order__status='paid',
-        )
-        .exclude(status__in=['suspended', 'expired'])
-        .filter(Q(expires_at__isnull=True) | Q(expires_at__gt=now))
-        .select_related('plan', 'agency_subscription')
-        .first()
-    )
+    license_obj = get_member_seat(membership)
     if not license_obj:
         return None
     return {

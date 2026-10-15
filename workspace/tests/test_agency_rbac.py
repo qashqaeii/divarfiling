@@ -14,10 +14,12 @@ from workspace.services.agency_rbac import (
     NAV_PROFILE_SECRETARY,
     PERM_CONTRACTS_VIEW_TEAM,
     PERM_DEALS_VIEW_TEAM,
+    PERM_HUB_ADVISOR_DASHBOARD,
     PERM_LICENSES_MANAGE,
     has_agency_permission,
     is_agency_rbac_v2_enabled,
     resolve_nav_profile,
+    summarize_effective_permissions,
 )
 from workspace.services.agency_seats import assign_seat_to_member
 from licenses.models import License
@@ -86,6 +88,23 @@ class AgencyRbacV2Tests(TestCase):
         resp = self.client.get(reverse('workspace:agency_hub_dashboard'))
         self.assertEqual(resp.status_code, 200)
         self.assertContains(resp, 'میزکار پذیرش')
+
+    def test_summarize_permissions_hides_internal_hub_codes(self):
+        self.agency.feature_flags = {'agency_rbac_v2': True}
+        self.agency.save(update_fields=['feature_flags'])
+        adv_phone = f'0915{int(uuid.uuid4().hex[:6], 16):06d}'
+        advisor = User.objects.create_user(username=adv_phone, phone=adv_phone, password='x')
+        adv_member = CRMAgencyMember.objects.create(
+            agency=self.agency, user=advisor, role='advisor', is_active=True,
+            data_visibility_consent_at=timezone.now(),
+        )
+        lic = License.objects.filter(order__user=self.owner, assigned_user__isnull=True).first()
+        if lic:
+            assign_seat_to_member(self.owner, lic.pk, advisor.pk)
+        labels = summarize_effective_permissions(advisor, adv_member)
+        blob = ' '.join(labels)
+        self.assertNotIn('hub.', blob)
+        self.assertNotIn(PERM_HUB_ADVISOR_DASHBOARD, blob)
 
     def test_invite_role_manager_rejected_when_rbac_v2(self):
         from workspace.services.agency_invitations import create_agency_invitation

@@ -107,6 +107,19 @@ def _build_shortcuts(user, agency, profile: str, rbac_on: bool) -> List[Dict[str
     return unique[:4]
 
 
+def resolve_workspace_agency_nav_url(user) -> str:
+    """ورود یکپارچه سایدبار — همان منطق AgencyHubRedirectView."""
+    from workspace.services.agency_entitlement import has_assigned_agency_seat
+
+    if (
+        resolve_nav_profile(user) == NAV_PROFILE_ADVISOR
+        and not can_manage_agency(user)
+        and has_assigned_agency_seat(user)
+    ):
+        return reverse('workspace:agency_advisor_member')
+    return reverse('workspace:agency_hub')
+
+
 def build_workspace_agency_panel(user) -> Optional[Dict[str, Any]]:
     """None = کارت نمایش داده نشود."""
     if not user or not user.is_authenticated:

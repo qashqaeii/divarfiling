@@ -234,7 +234,10 @@ class AgencyAdvisorMemberView(AgencyHubAccessMixin, LoginRequiredMixin, Template
         if request.user.is_authenticated and can_manage_agency(request.user):
             return redirect('workspace:agency_hub_advisors')
         if not has_assigned_agency_seat(request.user):
-            messages.error(request, 'دسترسی بخش آژانس برای شما فعال نیست.')
+            messages.error(
+                request,
+                'دسترسی بخش آژانس برای شما فعال نیست. از مدیر آژانس بخواهید صندلی (لایسنس) به شما تخصیص دهد.',
+            )
             return redirect(reverse('workspace:crm_dashboard'))
         return super().dispatch(request, *args, **kwargs)
 
@@ -242,7 +245,7 @@ class AgencyAdvisorMemberView(AgencyHubAccessMixin, LoginRequiredMixin, Template
         ctx = super().get_context_data(**kwargs)
         seat_ctx = get_advisor_agency_seat_context(self.request.user)
         if not seat_ctx:
-            raise PermissionDenied
+            return ctx
         ctx.update(seat_ctx)
         ctx['access_level'] = agency_hub_access_level(self.request.user)
 

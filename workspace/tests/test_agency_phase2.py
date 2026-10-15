@@ -107,6 +107,30 @@ class ArchitectureTests(AgencyPhase2TestBase):
         self.assertTrue(has_assigned_agency_seat(self.advisor))
         self.assertTrue(can_access_agency_hub(self.advisor))
 
+    def test_advisor_seat_on_previous_subscription_still_entitled(self):
+        """پس از تمدید، لایسنس روی رکورد اشتراک قبلی همچنان دسترسی میزکار مشاور را می‌دهد."""
+        order = self._agency_order()
+        old_sub = provision_subscription_from_paid_order(order)
+        agency = create_or_link_agency(self.owner, 'Renewal Agency')
+        CRMAgencyMember.objects.create(
+            agency=agency, user=self.advisor, role='advisor', is_active=True,
+            data_visibility_consent_at=timezone.now(), consent_version='2026-03-01',
+        )
+        lic = License.objects.filter(agency_subscription=old_sub).first()
+        assign_seat_to_member(self.owner, lic.pk, self.advisor.pk)
+        old_sub.status = AgencySubscription.STATUS_EXPIRED
+        old_sub.expires_at = timezone.now() - timedelta(days=1)
+        old_sub.save(update_fields=['status', 'expires_at'])
+        renewal_order = self._agency_order()
+        new_sub = provision_subscription_from_paid_order(renewal_order)
+        new_sub.agency = agency
+        new_sub.save(update_fields=['agency'])
+        self.assertEqual(get_subscription_for_agency(agency).pk, new_sub.pk)
+        self.assertTrue(has_assigned_agency_seat(self.advisor))
+        self.client.force_login(self.advisor)
+        resp = self.client.get(reverse('workspace:agency_advisor_member'))
+        self.assertEqual(resp.status_code, 200)
+
 
 class PostPurchaseTests(AgencyPhase2TestBase):
     def test_agency_purchase_redirect_onboarding(self):

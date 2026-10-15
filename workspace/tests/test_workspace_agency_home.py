@@ -13,7 +13,10 @@ from shop.services.order_fulfillment import fulfill_order_after_payment
 from workspace.models import AgencySubscription, CRMAgencyMember
 from workspace.services.agency_onboarding import create_or_link_agency
 from workspace.services.agency_seats import assign_seat_to_member
-from workspace.services.workspace_agency_home import build_workspace_agency_panel
+from workspace.services.workspace_agency_home import (
+    build_workspace_agency_panel,
+    resolve_workspace_agency_nav_url,
+)
 
 User = get_user_model()
 
@@ -132,6 +135,10 @@ class WorkspaceAgencyHomePanelTests(TestCase):
         self.client.force_login(self.secretary)
         resp = self.client.get(reverse('workspace:home'))
         self.assertContains(resp, 'پذیرش · عضو تیم')
+
+    def test_advisor_sidebar_entry_points_to_member_hub(self):
+        url = resolve_workspace_agency_nav_url(self.advisor)
+        self.assertEqual(url, reverse('workspace:agency_advisor_member'))
 
     def test_advisor_panel_cta_and_shortcuts(self):
         panel = build_workspace_agency_panel(self.advisor)

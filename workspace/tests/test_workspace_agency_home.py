@@ -147,3 +147,10 @@ class WorkspaceAgencyHomePanelTests(TestCase):
         self.client.force_login(self.advisor)
         resp = self.client.get(reverse('workspace:home'))
         self.assertContains(resp, 'میزکار مشاور')
+
+    def test_advisor_member_hub_ok_with_rbac_v2(self):
+        self.agency.feature_flags = {'agency_rbac_v2': True}
+        self.agency.save(update_fields=['feature_flags'])
+        self.client.force_login(self.advisor)
+        resp = self.client.get(reverse('workspace:agency_advisor_member'))
+        self.assertEqual(resp.status_code, 200)

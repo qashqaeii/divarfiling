@@ -99,6 +99,10 @@ def _member_record_scope(member: CRMAgencyMember) -> Q:
     return scope
 
 
+def _viewer_is_member_self(viewer, member: CRMAgencyMember) -> bool:
+    return bool(viewer and getattr(viewer, 'is_authenticated', False) and member.user_id == viewer.id)
+
+
 def get_member_contacts_qs(
     viewer,
     member: CRMAgencyMember,
@@ -205,7 +209,7 @@ def get_member_deals_qs(
 
     from workspace.services.agency_rbac import PERM_DEALS_VIEW_TEAM, assert_agency_permission, is_agency_rbac_v2_enabled
 
-    if is_agency_rbac_v2_enabled(member.agency):
+    if is_agency_rbac_v2_enabled(member.agency) and not _viewer_is_member_self(viewer, member):
         assert_agency_permission(viewer, PERM_DEALS_VIEW_TEAM, message='دسترسی معاملات تیم مجاز نیست')
 
     qs = (
@@ -232,7 +236,7 @@ def get_member_contracts_qs(viewer, member: CRMAgencyMember) -> QuerySet:
 
     from workspace.services.agency_rbac import PERM_CONTRACTS_VIEW_TEAM, assert_agency_permission, is_agency_rbac_v2_enabled
 
-    if is_agency_rbac_v2_enabled(member.agency):
+    if is_agency_rbac_v2_enabled(member.agency) and not _viewer_is_member_self(viewer, member):
         assert_agency_permission(viewer, PERM_CONTRACTS_VIEW_TEAM, message='دسترسی قراردادهای تیم مجاز نیست')
 
     deal_ids = CRMDeal.objects.filter(_member_record_scope(member)).values_list('pk', flat=True)

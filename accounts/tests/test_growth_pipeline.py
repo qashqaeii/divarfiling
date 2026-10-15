@@ -12,6 +12,7 @@ from accounts.services.growth_suppression import (
     PURPOSE_ACQUISITION,
     PURPOSE_ACTIVATION,
     PURPOSE_RECOVERY,
+    PURPOSE_WEEKLY_TRIAL_CAMPAIGN,
     is_send_allowed,
 )
 from accounts.services.user_activation import get_or_create_default_activation_campaign
@@ -78,6 +79,43 @@ class GrowthJourneyTransitionTests(TestCase):
         )
         self.assertTrue(is_send_allowed('09121234568', purpose=PURPOSE_RECOVERY, user=user))
         self.assertFalse(is_send_allowed('09121234568', purpose=PURPOSE_ACTIVATION, user=user))
+
+    def test_registered_user_allows_weekly_trial_campaign_not_marketing(self):
+        user = User.objects.create_user(
+            username='u9121234569',
+            phone='09121234569',
+            password='x',
+        )
+        transition(
+            phone='09121234569',
+            user=user,
+            event_type='signup',
+            stage=GrowthJourney.Stage.REGISTERED,
+            allow_regress=True,
+        )
+        self.assertTrue(
+            is_send_allowed('09121234569', purpose=PURPOSE_WEEKLY_TRIAL_CAMPAIGN, user=user),
+        )
+        from accounts.services.growth_suppression import PURPOSE_MARKETING
+
+        self.assertFalse(is_send_allowed('09121234569', purpose=PURPOSE_MARKETING, user=user))
+
+    def test_pending_checkout_blocks_weekly_trial_campaign_allows_recovery(self):
+        user = User.objects.create_user(
+            username='u9121234570',
+            phone='09121234570',
+            password='x',
+        )
+        transition(
+            phone='09121234570',
+            user=user,
+            event_type='checkout_start',
+            allow_regress=True,
+        )
+        self.assertTrue(is_send_allowed('09121234570', purpose=PURPOSE_RECOVERY, user=user))
+        self.assertFalse(
+            is_send_allowed('09121234570', purpose=PURPOSE_WEEKLY_TRIAL_CAMPAIGN, user=user),
+        )
 
 
 class ActivationCampaignStepsTests(TestCase):

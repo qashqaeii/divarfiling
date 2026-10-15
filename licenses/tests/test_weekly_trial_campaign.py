@@ -10,13 +10,20 @@ from rest_framework.test import APIClient
 
 from ai_workspace.services.quota import is_ai_unlimited_user
 from licenses.models import License, LicenseCampaignGrant
+from licenses.services.management import _license_expiry_meta
 from licenses.services.weekly_trial_campaign import (
     CAMPAIGN_DURATION_DAYS,
+    WORKSPACE_CAMPAIGN_URL,
+    build_campaign_sms_attributes,
     evaluate_user_eligibility,
     grant_weekly_trial_to_user,
+    resolve_professional_gift_plan,
+    run_campaign_sms_batch,
     run_weekly_trial_campaign,
     send_campaign_sms_for_grant,
+    WeeklyTrialCampaignError,
 )
+from shop.bot_catalog import BOT_PRODUCT_SLUG
 from shop.models import LicensePlan, Order, PlanFunnelEvent, Product, Transaction
 from shop.services.plan_funnel import is_bi_production_order
 from workspace.services.access import has_active_bot_license, has_purchased_bot_license
@@ -24,6 +31,38 @@ from workspace.services.access import has_active_bot_license, has_purchased_bot_
 User = get_user_model()
 CAMPAIGN = 'test_weekly_gift'
 TEST_HW = 'd' * 64
+
+
+def _ensure_bot_monthly_plan():
+    product, _ = Product.objects.get_or_create(
+        slug=BOT_PRODUCT_SLUG,
+        defaults={
+            'title': 'ربات استخراج',
+            'description': 'test',
+            'is_active': True,
+        },
+    )
+    if not product.is_active:
+        product.is_active = True
+        product.save(update_fields=['is_active'])
+    plan = LicensePlan.objects.filter(
+        product=product,
+        plan_type='monthly',
+        allow_bulk_purchase=False,
+        is_active=True,
+    ).first()
+    if not plan:
+        plan = LicensePlan.objects.create(
+            product=product,
+            name='لایسنس یک‌ماهه',
+            plan_type='monthly',
+            price=990_000,
+            duration_days=30,
+            max_activations=2,
+            is_active=True,
+            order=1,
+        )
+    return product, plan
 
 
 class WeeklyTrialCampaignEligibilityTests(TestCase):
@@ -246,6 +285,16 @@ class WeeklyTrialCampaignSmsTests(TestCase):
         self.assertEqual(reason, 'sent')
         grant.refresh_from_db()
         self.assertIsNotNone(grant.sms_sent_at)
+        self.assertEqual(grant.sms_status, LicenseCampaignGrant.SmsStatus.SENT)
+
+    @patch('licenses.services.weekly_trial_campaign._send_templated_or_simple_sms', return_value=True)
+    def test_sms_attributes_include_workspace_link(self, mock_send):
+        grant, _ = grant_weekly_trial_to_user(self.user, campaign_key=CAMPAIGN, plan=self.plan)
+        send_campaign_sms_for_grant(grant)
+        mock_send.assert_called_once()
+        attrs = mock_send.call_args.kwargs.get('attributes') or {}
+        self.assertEqual(attrs.get('link'), 'workspace/')
+        self.assertIn(WORKSPACE_CAMPAIGN_URL, mock_send.call_args.kwargs.get('text', ''))
 
     @patch('licenses.services.weekly_trial_campaign._send_templated_or_simple_sms', return_value=True)
     def test_no_sms_when_grant_failed(self, _mock_send):
@@ -266,25 +315,13 @@ class WeeklyTrialCampaignSmsTests(TestCase):
         ok, reason = send_campaign_sms_for_grant(grant)
         self.assertFalse(ok)
         self.assertEqual(reason, 'marketing_opt_out')
+        grant.refresh_from_db()
+        self.assertEqual(grant.sms_status, LicenseCampaignGrant.SmsStatus.SKIPPED)
 
 
 class WeeklyTrialCampaignCommandTests(TestCase):
     def setUp(self):
-        self.product = Product.objects.create(
-            title='ربات',
-            slug='bot-weekly-cmd',
-            description='t',
-            is_active=True,
-        )
-        self.plan = LicensePlan.objects.create(
-            product=self.product,
-            name='ماهانه',
-            plan_type='monthly',
-            price=990_000,
-            duration_days=30,
-            max_activations=2,
-            is_active=True,
-        )
+        self.product, self.plan = _ensure_bot_monthly_plan()
         self.user = User.objects.create_user(username='cmd_user', password='p', phone='09126667788')
 
     def test_dry_run_does_not_create_grant(self):
@@ -304,3 +341,80 @@ class WeeklyTrialCampaignCommandTests(TestCase):
         )
         self.assertEqual(stats.grants_created, 1)
         self.assertTrue(LicenseCampaignGrant.objects.filter(campaign_key=CAMPAIGN).exists())
+
+
+class WeeklyTrialCampaignPlanResolutionTests(TestCase):
+    def test_resolve_requires_bot_product_slug(self):
+        with self.assertRaises(WeeklyTrialCampaignError):
+            resolve_professional_gift_plan()
+
+    def test_resolve_requires_monthly_individual_plan(self):
+        Product.objects.create(
+            title='ربات',
+            slug=BOT_PRODUCT_SLUG,
+            description='t',
+            is_active=True,
+        )
+        with self.assertRaises(WeeklyTrialCampaignError):
+            resolve_professional_gift_plan()
+
+    def test_resolve_returns_monthly_individual_plan(self):
+        _product, plan = _ensure_bot_monthly_plan()
+        resolved = resolve_professional_gift_plan()
+        self.assertEqual(resolved.pk, plan.pk)
+        self.assertEqual(resolved.plan_type, 'monthly')
+        self.assertFalse(resolved.allow_bulk_purchase)
+
+
+class WeeklyTrialGiftDashboardExpiryTests(TestCase):
+    def setUp(self):
+        self.product, self.plan = _ensure_bot_monthly_plan()
+        self.user = User.objects.create_user(username='dash_user', password='p', phone='09128889900')
+
+    def test_health_percent_based_on_seven_day_gift_not_plan_duration(self):
+        grant, _ = grant_weekly_trial_to_user(self.user, campaign_key=CAMPAIGN, plan=self.plan)
+        lic = grant.license
+        lic.expires_at = timezone.now() + timedelta(days=4)
+        lic.save(update_fields=['expires_at'])
+        meta = _license_expiry_meta(lic)
+        self.assertEqual(meta['days_remaining'], 4)
+        self.assertGreaterEqual(meta['health_pct'], 55)
+        self.assertLessEqual(meta['health_pct'], 60)
+
+
+class WeeklyTrialCampaignSmsQueueTests(TestCase):
+    def setUp(self):
+        self.product, self.plan = _ensure_bot_monthly_plan()
+
+    @override_settings(WEEKLY_TRIAL_CAMPAIGN_SMS_BATCH_SIZE=3)
+    @patch('licenses.services.weekly_trial_campaign._send_templated_or_simple_sms', return_value=True)
+    def test_batch_skips_invalid_and_reaches_valid_user(self, _mock_send):
+        u_invalid = User.objects.create_user(username='no_phone', password='p', phone='')
+        u_optout = User.objects.create_user(
+            username='optout_user',
+            password='p',
+            phone='09127778899',
+            marketing_sms_opt_out=True,
+        )
+        u_valid = User.objects.create_user(username='valid_user', password='p', phone='09129998877')
+        for user in (u_invalid, u_optout, u_valid):
+            grant_weekly_trial_to_user(user, campaign_key=CAMPAIGN, plan=self.plan)
+        attempted, sent, skipped, _failed = run_campaign_sms_batch(CAMPAIGN, limit=1)
+        self.assertEqual(sent, 1)
+        self.assertGreaterEqual(skipped, 2)
+        self.assertGreaterEqual(attempted, 3)
+        skipped_grants = LicenseCampaignGrant.objects.filter(
+            campaign_key=CAMPAIGN,
+            sms_status=LicenseCampaignGrant.SmsStatus.SKIPPED,
+        )
+        self.assertGreaterEqual(skipped_grants.count(), 2)
+        valid_grant = LicenseCampaignGrant.objects.get(user=u_valid, campaign_key=CAMPAIGN)
+        self.assertEqual(valid_grant.sms_status, LicenseCampaignGrant.SmsStatus.SENT)
+
+
+class WeeklyTrialCampaignSmsAttributesTests(TestCase):
+    def test_build_attributes_for_faraz_pattern(self):
+        attrs = build_campaign_sms_attributes('my_campaign')
+        self.assertEqual(attrs['days'], '7')
+        self.assertEqual(attrs['link'], 'workspace/')
+        self.assertEqual(attrs['url'], 'workspace/')

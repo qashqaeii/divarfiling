@@ -183,6 +183,12 @@ class LicenseCampaignGrant(models.Model):
         FAILED = 'failed', 'خطا'
         SKIPPED = 'skipped', 'رد شده'
 
+    class SmsStatus(models.TextChoices):
+        PENDING = 'pending', 'در انتظار پیامک'
+        SENT = 'sent', 'ارسال‌شده'
+        SKIPPED = 'skipped', 'رد شده'
+        FAILED = 'failed', 'ناموفق'
+
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -218,6 +224,14 @@ class LicenseCampaignGrant(models.Model):
     granted_at = models.DateTimeField(null=True, blank=True, verbose_name='زمان اعطا')
     expires_at = models.DateTimeField(null=True, blank=True, verbose_name='انقضا')
     sms_sent_at = models.DateTimeField(null=True, blank=True, verbose_name='زمان پیامک')
+    sms_status = models.CharField(
+        max_length=16,
+        choices=SmsStatus.choices,
+        default=SmsStatus.PENDING,
+        db_index=True,
+        verbose_name='وضعیت پیامک',
+    )
+    sms_skip_reason = models.CharField(max_length=64, blank=True, verbose_name='دلیل رد پیامک')
     sms_log = models.ForeignKey(
         'accounts.SmsMessageLog',
         on_delete=models.SET_NULL,

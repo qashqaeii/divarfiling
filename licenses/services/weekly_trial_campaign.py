@@ -15,7 +15,8 @@ from django.db.models import Exists, OuterRef, Q, QuerySet
 from django.utils import timezone
 
 from accounts.phone_utils import is_valid_iran_mobile, normalize_phone
-from accounts.services.growth_suppression import PURPOSE_MARKETING, is_send_allowed
+from accounts.services.growth_suppression import PURPOSE_WEEKLY_TRIAL_CAMPAIGN, is_send_allowed
+from shop.bot_catalog import BOT_PRODUCT_SLUG
 from accounts.services.notifications import _send_templated_or_simple_sms
 from licenses.models import AuditLog, License, LicenseActivation, LicenseCampaignGrant
 from licenses.utils import generate_license_key
@@ -35,6 +36,16 @@ CAMPAIGN_DURATION_DAYS = 7
 DEFAULT_CAMPAIGN_KEY = 'weekly_professional_gift_v1'
 SMS_PURPOSE = 'weekly_trial_campaign'
 ESTIMATED_SMS_COST_TOMAN = Decimal('300')
+WORKSPACE_CAMPAIGN_URL = 'https://divarfiling.ir/workspace/'
+WORKSPACE_CAMPAIGN_PATTERN_LINK = 'workspace/'
+
+SMS_SKIP_REASONS = frozenset({
+    'marketing_opt_out',
+    'invalid_phone',
+    'suppressed',
+    'license_not_valid',
+    'not_granted',
+})
 
 
 class WeeklyTrialCampaignError(Exception):
@@ -99,12 +110,12 @@ def sms_batch_size() -> int:
 
 
 def resolve_professional_gift_plan() -> LicensePlan:
-    product = (
-        Product.objects.filter(slug='professional', is_active=True).first()
-        or Product.objects.filter(is_active=True).order_by('order', 'pk').first()
-    )
-    if not product:
-        raise WeeklyTrialCampaignError('محصول فعال برای صدور لایسنس کمپین یافت نشد.')
+    try:
+        product = Product.objects.get(slug=BOT_PRODUCT_SLUG, is_active=True)
+    except Product.DoesNotExist:
+        raise WeeklyTrialCampaignError(
+            f'محصول فعال با نامک «{BOT_PRODUCT_SLUG}» برای کمپین یافت نشد.',
+        )
 
     plan = (
         LicensePlan.objects.filter(
@@ -117,13 +128,9 @@ def resolve_professional_gift_plan() -> LicensePlan:
         .first()
     )
     if not plan:
-        plan = (
-            LicensePlan.objects.filter(product=product, is_active=True)
-            .order_by('order', 'pk')
-            .first()
+        raise WeeklyTrialCampaignError(
+            'پلن ماهانه فردی فعال برای محصول ربات استخراج یافت نشد.',
         )
-    if not plan:
-        raise WeeklyTrialCampaignError('پلن فعال برای کمپین یافت نشد.')
     return plan
 
 
@@ -337,10 +344,21 @@ def grant_weekly_trial_to_user(
     return grant_row, 'granted'
 
 
+def build_campaign_sms_attributes(campaign_key: str) -> dict[str, str]:
+    """متغیرهای الگوی فراز — link بدون دامنه (مثل agency_invite)."""
+    return {
+        'days': str(CAMPAIGN_DURATION_DAYS),
+        'day': str(CAMPAIGN_DURATION_DAYS),
+        'link': WORKSPACE_CAMPAIGN_PATTERN_LINK,
+        'url': WORKSPACE_CAMPAIGN_PATTERN_LINK,
+        'campaign': (campaign_key or '')[:48],
+    }
+
+
 def _default_sms_text() -> str:
     return (
         'فایلینگ دیوار: ۷ روز دسترسی حرفه‌ای میزکار، استخراج و هوش مصنوعی برای شما فعال شد. '
-        'وارد میزکار شوید و امکانات را امتحان کنید.'
+        f'ورود به میزکار: {WORKSPACE_CAMPAIGN_URL}'
     )
 
 
@@ -350,9 +368,34 @@ def _user_may_receive_campaign_sms(user) -> tuple[bool, str]:
     phone = normalize_phone(getattr(user, 'phone', '') or '')
     if not phone or not is_valid_iran_mobile(phone):
         return False, 'invalid_phone'
-    if not is_send_allowed(phone, purpose=PURPOSE_MARKETING, user=user):
+    if not is_send_allowed(phone, purpose=PURPOSE_WEEKLY_TRIAL_CAMPAIGN, user=user):
         return False, 'suppressed'
     return True, ''
+
+
+def _mark_sms_skipped(grant: LicenseCampaignGrant, reason: str) -> None:
+    grant.sms_status = LicenseCampaignGrant.SmsStatus.SKIPPED
+    grant.sms_skip_reason = (reason or '')[:64]
+    grant.save(update_fields=['sms_status', 'sms_skip_reason', 'updated_at'])
+
+
+def _mark_sms_failed(grant: LicenseCampaignGrant, reason: str) -> None:
+    grant.sms_status = LicenseCampaignGrant.SmsStatus.FAILED
+    grant.sms_skip_reason = (reason or '')[:64]
+    grant.save(update_fields=['sms_status', 'sms_skip_reason', 'updated_at'])
+
+
+def grants_pending_sms(campaign_key: str) -> QuerySet:
+    return (
+        LicenseCampaignGrant.objects.filter(
+            campaign_key=campaign_key,
+            status=LicenseCampaignGrant.Status.GRANTED,
+            license__isnull=False,
+            sms_status=LicenseCampaignGrant.SmsStatus.PENDING,
+        )
+        .select_related('user', 'license')
+        .order_by('pk')
+    )
 
 
 @transaction.atomic
@@ -362,21 +405,21 @@ def send_campaign_sms_for_grant(grant: LicenseCampaignGrant) -> tuple[bool, str]
     )
     if grant.status != LicenseCampaignGrant.Status.GRANTED or not grant.license_id:
         return False, 'not_granted'
-    if grant.sms_sent_at:
+    if grant.sms_status != LicenseCampaignGrant.SmsStatus.PENDING:
         return False, 'sms_already_sent'
     if not grant.license.is_valid():
+        _mark_sms_skipped(grant, 'license_not_valid')
         return False, 'license_not_valid'
 
     user = grant.user
     ok, reason = _user_may_receive_campaign_sms(user)
     if not ok:
+        if reason in SMS_SKIP_REASONS:
+            _mark_sms_skipped(grant, reason)
         return False, reason
 
     phone = normalize_phone(user.phone)
-    attrs = {
-        'days': str(CAMPAIGN_DURATION_DAYS),
-        'campaign': grant.campaign_key,
-    }
+    attrs = build_campaign_sms_attributes(grant.campaign_key)
     sent = _send_templated_or_simple_sms(
         phone,
         purpose=SMS_PURPOSE,
@@ -384,6 +427,7 @@ def send_campaign_sms_for_grant(grant: LicenseCampaignGrant) -> tuple[bool, str]
         attributes=attrs,
     )
     if not sent:
+        _mark_sms_failed(grant, 'sms_send_failed')
         return False, 'sms_send_failed'
 
     from accounts.models import SmsMessageLog
@@ -394,9 +438,61 @@ def send_campaign_sms_for_grant(grant: LicenseCampaignGrant) -> tuple[bool, str]
         .first()
     )
     grant.sms_sent_at = timezone.now()
+    grant.sms_status = LicenseCampaignGrant.SmsStatus.SENT
+    grant.sms_skip_reason = ''
     grant.sms_log = log
-    grant.save(update_fields=['sms_sent_at', 'sms_log', 'updated_at'])
+    grant.save(
+        update_fields=[
+            'sms_sent_at',
+            'sms_status',
+            'sms_skip_reason',
+            'sms_log',
+            'updated_at',
+        ],
+    )
     return True, 'sent'
+
+
+def run_campaign_sms_batch(
+    campaign_key: str,
+    *,
+    limit: int | None = None,
+) -> tuple[int, int, int, int]:
+    """
+    ارسال دسته‌ای — تا رسیدن به سقف موفقیت یا پایان صف اسکن می‌شود
+    (ردشده‌ها ثبت می‌شوند و صف جلو می‌رود).
+    خروجی: attempted, sent, skipped, failed
+    """
+    batch_cap = sms_batch_size()
+    send_goal = batch_cap
+    if limit is not None:
+        send_goal = min(send_goal, max(0, int(limit)))
+
+    attempted = sent = skipped = failed = 0
+    max_scan = max(send_goal * 50, batch_cap * 20)
+    scanned = 0
+
+    for grant in grants_pending_sms(campaign_key).iterator(chunk_size=100):
+        if sent >= send_goal:
+            break
+        if scanned >= max_scan:
+            break
+        scanned += 1
+        attempted += 1
+        try:
+            ok, reason = send_campaign_sms_for_grant(grant)
+        except Exception:
+            failed += 1
+            logger.exception('weekly_trial sms failed grant_id=%s', grant.pk)
+            continue
+        if ok:
+            sent += 1
+        elif reason in SMS_SKIP_REASONS:
+            skipped += 1
+        else:
+            failed += 1
+
+    return attempted, sent, skipped, failed
 
 
 def run_weekly_trial_campaign(
@@ -465,29 +561,14 @@ def run_weekly_trial_campaign(
                 stats.grants_failed += 1
 
     if send_sms:
-        pending = LicenseCampaignGrant.objects.filter(
-            campaign_key=campaign_key,
-            status=LicenseCampaignGrant.Status.GRANTED,
-            sms_sent_at__isnull=True,
-            license__isnull=False,
-        ).select_related('user', 'license').order_by('pk')
-        if limit is not None:
-            pending = pending[: max(0, int(limit))]
-        batch_cap = sms_batch_size()
-        for grant in pending[:batch_cap]:
-            stats.sms_attempted += 1
-            try:
-                ok, reason = send_campaign_sms_for_grant(grant)
-            except Exception:
-                stats.sms_failed += 1
-                logger.exception('weekly_trial sms failed grant_id=%s', grant.pk)
-                continue
-            if ok:
-                stats.sms_sent += 1
-            elif reason in ('marketing_opt_out', 'invalid_phone', 'suppressed'):
-                stats.sms_skipped += 1
-            else:
-                stats.sms_failed += 1
+        attempted, sent, skipped, failed = run_campaign_sms_batch(
+            campaign_key,
+            limit=limit,
+        )
+        stats.sms_attempted = attempted
+        stats.sms_sent = sent
+        stats.sms_skipped = skipped
+        stats.sms_failed = failed
 
     return stats
 

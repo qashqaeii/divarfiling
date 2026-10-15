@@ -13,6 +13,7 @@ PURPOSE_RECOVERY = 'recovery'
 PURPOSE_LICENSE_RENEWAL = 'license_renewal'
 PURPOSE_MARKETING = 'marketing'
 PURPOSE_LICENSED_MARKETING = 'licensed_marketing'
+PURPOSE_WEEKLY_TRIAL_CAMPAIGN = 'weekly_trial_campaign'
 
 
 def _has_active_pending_order(user) -> bool:
@@ -78,6 +79,24 @@ def is_send_allowed(
 
     if pending:
         return purpose == PURPOSE_RECOVERY
+
+    if purpose == PURPOSE_WEEKLY_TRIAL_CAMPAIGN:
+        if stage in (
+            GrowthJourney.Stage.CUSTOMER,
+            GrowthJourney.Stage.RENEWED,
+        ) and _has_active_license(user):
+            return False
+        if stage == GrowthJourney.Stage.EXPIRING_SOON:
+            return False
+        if stage in (
+            GrowthJourney.Stage.REGISTERED,
+            GrowthJourney.Stage.ACTIVATED,
+            GrowthJourney.Stage.NURTURE_UNPAID,
+            GrowthJourney.Stage.CHURN_RISK,
+            None,
+        ):
+            return True
+        return False
 
     if stage in (
         GrowthJourney.Stage.CUSTOMER,

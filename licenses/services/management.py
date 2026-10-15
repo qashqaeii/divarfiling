@@ -484,6 +484,18 @@ def build_agency_license_pool(owner) -> Dict[str, Any]:
     }
 
 
+def _license_term_days_for_display(license_obj: License) -> int | None:
+    """مدت مرجع برای درصد باقی‌مانده — هدیه کمپین ۷ روز، نه duration_days پلن."""
+    order = getattr(license_obj, 'order', None)
+    if order is not None and getattr(order, 'status', None) == 'granted':
+        from licenses.services.weekly_trial_campaign import CAMPAIGN_DURATION_DAYS
+
+        return CAMPAIGN_DURATION_DAYS
+    if license_obj.plan_id and license_obj.plan.duration_days:
+        return int(license_obj.plan.duration_days)
+    return None
+
+
 def _license_expiry_meta(license_obj: License) -> Dict[str, Any]:
     """وضعیت انقضا برای نمایش در داشبورد."""
     license_obj.sync_expiration_status(save=True)
@@ -533,7 +545,7 @@ def _license_expiry_meta(license_obj: License) -> Dict[str, Any]:
     else:
         tone = 'healthy'
 
-    duration = license_obj.plan.duration_days
+    duration = _license_term_days_for_display(license_obj)
     if not duration and license_obj.created_at and license_obj.expires_at:
         duration = max(1, (license_obj.expires_at - license_obj.created_at).days)
     if duration:

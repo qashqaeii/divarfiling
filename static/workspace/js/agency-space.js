@@ -693,6 +693,7 @@
         marker: { lat, lng, title },
         zoom: 16,
         editable: false,
+        cartoBasemapKey: window.CartoBasemap?.getKey?.() || '',
       });
       if (api && typeof api.refresh === 'function') {
         requestAnimationFrame(() => {

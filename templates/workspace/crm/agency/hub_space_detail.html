@@ -302,8 +302,7 @@ window.AGENCY_SPACE_API = {
 </script>
 {% if space_payload.source_kind == 'property' and space_payload.property and space_payload.property.has_map %}
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="{% static 'workspace/js/carto-basemap.js' %}?v=2"></script>
 <script src="{% static 'workspace/js/listing-map.js' %}?v=9"></script>
 {% endif %}
-<script src="{% static 'workspace/js/agency-space.js' %}?v=23" defer></script>
+<script src="{% static 'workspace/js/agency-space.js' %}?v=24" defer></script>
 {% endblock %}

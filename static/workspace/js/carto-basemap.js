@@ -63,7 +63,10 @@
     function createCartoLayer(L, styleId, options, layerOptions) {
         var path = CARTO_STYLE_PATHS[styleId];
         if (!path) return null;
-        /* بدون API key هم از CARTO عمومی استفاده می‌شود — osmfr برچسب فارسی را مربع نشان می‌دهد */
+        /* CARTO از ۲۰۲۴+ بدون API key واترمارک «API KEY REQUIRED» می‌زند — fallback به OSM France */
+        if (!hasCartoBasemapKey()) {
+            return createOsmStandardLayer(L, options);
+        }
         var url = cartoRasterTileUrl(path, layerOptions);
         if (!url) {
             return createOsmStandardLayer(L, options);

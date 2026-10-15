@@ -24,19 +24,20 @@
         0 0 0 1px color-mix(in srgb, var(--mk-border) 70%, rgba(124, 58, 237, 0.2));
 }
 
-.mk-checkout-page--pay .ck-page-head-copy {
-    text-align: start;
-    max-width: none;
-    margin: 0.75rem 0 0;
+.mk-checkout-page--pay .ck-pay-sr-title {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
 }
 
-.mk-checkout-page--pay .ck-page-title {
-    font-size: clamp(1.2rem, 2.5vw, 1.45rem);
-}
-
-.mk-checkout-page--pay .ck-page-sub {
-    margin: 0;
-    font-size: 0.82rem;
+.mk-checkout-page--pay .ck-page-head--pay {
+    position: relative;
 }
 
 /* Desktop two-column */
@@ -167,8 +168,8 @@
         align-items: center;
         flex-wrap: wrap;
         gap: 0.28rem 0.35rem;
-        margin: 0 0 0.2rem;
-        font-size: 0.62rem;
+        margin: 0;
+        font-size: 0.72rem;
         font-weight: 700;
         color: var(--mk-text-muted, #64748b);
     }
@@ -184,18 +185,6 @@
     .mk-checkout-page--pay .ck-pay-head-mob__step i {
         font-size: 0.45rem;
         opacity: 0.45;
-    }
-
-    .mk-checkout-page--pay .ck-pay-head-mob__title {
-        margin: 0;
-        font-size: 1rem;
-        font-weight: 800;
-        line-height: 1.3;
-        letter-spacing: -0.02em;
-        color: var(--mk-text, #0f172a);
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
     }
 
     .mk-checkout-page--pay .ck-pay-head-mob__secure {

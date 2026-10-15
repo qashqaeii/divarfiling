@@ -8,7 +8,7 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/mizkar-checkout.css' %}?v=23">
 <link rel="stylesheet" href="{% static 'css/checkout-mobile.css' %}?v=3">
-<link rel="stylesheet" href="{% static 'css/payment-checkout.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'css/payment-checkout.css' %}?v=3">
 {% endblock %}
 
 {% block breadcrumbs %}{% endblock %}
@@ -24,6 +24,7 @@
 
     <div class="ck-page ck-page--full ck-page--pay">
         <header class="ck-page-head ck-page-head--pay">
+            <h1 class="ck-pay-sr-title">تأیید و پرداخت — {{ order.product.title }}</h1>
             <div class="ck-pay-head-desk ck-pay-desk-only">
                 <div class="ck-page-head-row">
                     <a href="{% if order.renewal_license_id %}{% url 'buy' order.product.slug %}?renew={{ order.renewal_license_id }}&amp;plan={{ order.plan_id }}{% else %}{% url 'buy' order.product.slug %}{% endif %}" class="ck-back">
@@ -39,10 +40,6 @@
                     </nav>
                     <span class="ck-secure-pill"><i class="fas fa-lock" aria-hidden="true"></i> SSL</span>
                 </div>
-                <div class="ck-page-head-copy">
-                    <h1 class="ck-page-title">تأیید و پرداخت</h1>
-                    <p class="ck-page-sub">{{ order.product.title }} — {{ order.plan.name }}</p>
-                </div>
             </div>
 
             <div class="ck-pay-head-mob ck-pay-mob-only">
@@ -50,14 +47,13 @@
                     <i class="fas fa-arrow-right" aria-hidden="true"></i>
                 </a>
                 <div class="ck-pay-head-mob__copy">
-                    <p class="ck-pay-head-mob__step" aria-hidden="true">
+                    <p class="ck-pay-head-mob__step">
                         <span class="is-done">پلن</span>
                         <i class="fas fa-chevron-left" aria-hidden="true"></i>
                         <span class="is-active">پرداخت</span>
                         <i class="fas fa-chevron-left" aria-hidden="true"></i>
                         <span>لایسنس</span>
                     </p>
-                    <h1 class="ck-pay-head-mob__title">تأیید و پرداخت</h1>
                 </div>
                 <span class="ck-pay-head-mob__secure" title="اتصال امن"><i class="fas fa-shield-halved" aria-hidden="true"></i></span>
             </div>

@@ -1,16 +1,50 @@
 {% extends "base.html" %}
 {% load static %}
 {% block title %}دعوت به آژانس{% endblock %}
-{% block body_class %}mk-page-agency-invite{% endblock %}
+{% block body_class %}mk-page-agency-invite mk-auth-page{% endblock %}
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/agency-invite-public.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'workspace/css/agency-invite-public.css' %}?v=2">
 <link rel="stylesheet" href="{% static 'workspace/css/agency-decor-icons.css' %}?v=1">
-<link rel="stylesheet" href="{% static 'workspace/css/crm-mobile-v2-agency.css' %}?v=1">
 {% endblock %}
 {% block content %}
-<section class="agency-invite" dir="rtl" aria-labelledby="agency-invite-title">
-    <div class="agency-invite__bg" aria-hidden="true"></div>
-    <div class="agency-invite__container">
+<section class="agency-invite-v2{% if error or declined %} agency-invite-v2--solo{% endif %}" dir="rtl" aria-labelledby="agency-invite-title">
+
+    {% if invitation and not error and not declined %}
+    <aside class="agency-invite-v2__hero" aria-hidden="true">
+        <div class="agency-invite-v2__hero-grid"></div>
+        <div class="agency-invite-v2__hero-inner">
+            <div class="agency-invite-v2__brand">
+                <img src="{% static 'logo.png' %}" alt="" width="32" height="32">
+                <span>فایلینگ دیوار</span>
+            </div>
+            <p class="agency-invite-v2__hero-kicker">دعوت همکاری آژانس</p>
+            <h2 class="agency-invite-v2__hero-agency">{{ agency.name }}</h2>
+            <p class="agency-invite-v2__hero-lead">
+                با پیوستن به این تیم، فایلینگ، CRM و ابزارهای روزانهٔ مشاوره را در یک میزکار مشترک آژانس استفاده می‌کنید.
+            </p>
+            <ul class="agency-invite-v2__hero-points">
+                <li>
+                    <span class="agency-invite-v2__hero-point-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='users' size='xs' only %}</span>
+                    <span>همکاری در تیم مشاوران آژانس</span>
+                </li>
+                <li>
+                    <span class="agency-invite-v2__hero-point-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='bar_chart' size='xs' only %}</span>
+                    <span>دسترسی مالک به گزارش‌ها و خروجی‌های کاری</span>
+                </li>
+                <li>
+                    <span class="agency-invite-v2__hero-point-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='shield' size='xs' only %}</span>
+                    <span>اطلاعات ورود و توکن‌های شخصی شما محفوظ می‌ماند</span>
+                </li>
+            </ul>
+        </div>
+    </aside>
+    {% endif %}
+
+    <div class="agency-invite-v2__panel">
+        <a href="{% url 'home' %}" class="agency-invite-v2__home-link">
+            <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='chevron_right' size='xs' only %}</span>
+            بازگشت به سایت
+        </a>
 
         {% if error %}
         <div class="agency-invite__card agency-invite__card--state">
@@ -33,41 +67,54 @@
         </div>
 
         {% elif invitation %}
-        <div class="agency-invite__card">
+        <article class="agency-invite__card">
             <header class="agency-invite__head">
+                <div class="agency-invite__agency-mark" aria-hidden="true">{{ agency.name|slice:":1" }}</div>
                 <span class="agency-invite__badge">
                     <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='building' size='xs' only %}</span>
                     دعوت همکاری آژانس
                 </span>
-                <div class="agency-invite__icon-wrap" aria-hidden="true">
-                    {% include 'includes/icon_slot.html' with decor='mail_open' size='lg' only %}
-                </div>
                 <h1 id="agency-invite-title" class="agency-invite__title">دعوت به آژانس</h1>
                 <p class="agency-invite__lead">
-                    آژانس <strong>{{ agency.name }}</strong> از شما دعوت کرده است تا به تیم مشاوران بپیوندید.
+                    <strong>{{ agency.name }}</strong> از شما دعوت کرده است تا به تیم مشاوران بپیوندید.
                 </p>
             </header>
 
             <div class="agency-invite__meta">
                 {% if inviter_name %}
                 <div class="agency-invite__meta-item">
-                    <span class="agency-invite__meta-label">دعوت‌کننده</span>
-                    <span class="agency-invite__meta-value">
-                        <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='user' size='xs' only %}</span>
-                        {{ inviter_name }}
-                    </span>
+                    <span class="agency-invite__meta-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='user' size='sm' only %}</span>
+                    <div class="agency-invite__meta-body">
+                        <span class="agency-invite__meta-label">دعوت‌کننده</span>
+                        <span class="agency-invite__meta-value">{{ inviter_name }}</span>
+                    </div>
                 </div>
                 {% endif %}
                 {% if masked_phone %}
                 <div class="agency-invite__meta-item">
-                    <span class="agency-invite__meta-label">شماره دعوت</span>
-                    <span class="agency-invite__meta-value agency-invite__meta-value--ltr">
-                        <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='phone' size='xs' only %}</span>
-                        {{ masked_phone }}
-                    </span>
+                    <span class="agency-invite__meta-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='phone' size='sm' only %}</span>
+                    <div class="agency-invite__meta-body">
+                        <span class="agency-invite__meta-label">شماره دعوت</span>
+                        <span class="agency-invite__meta-value agency-invite__meta-value--ltr">{{ masked_phone }}</span>
+                    </div>
                 </div>
                 {% endif %}
             </div>
+
+            <ol class="agency-invite__stepper" aria-label="مراحل پذیرش دعوت">
+                <li class="agency-invite__step{% if user_authenticated and user_phone_matches %} is-done{% elif not user_authenticated or not user_phone_matches %} is-active{% endif %}">
+                    <span class="agency-invite__step-dot" aria-hidden="true">۱</span>
+                    <span class="agency-invite__step-text">ورود با شماره دعوت‌شده</span>
+                </li>
+                <li class="agency-invite__step{% if user_authenticated and user_phone_matches %} is-active{% endif %}">
+                    <span class="agency-invite__step-dot" aria-hidden="true">۲</span>
+                    <span class="agency-invite__step-text">تأیید رضایت‌نامه</span>
+                </li>
+                <li class="agency-invite__step">
+                    <span class="agency-invite__step-dot" aria-hidden="true">۳</span>
+                    <span class="agency-invite__step-text">پیوستن به تیم</span>
+                </li>
+            </ol>
 
             <div class="agency-invite__consent" role="note">
                 <span class="agency-invite__consent-icon" aria-hidden="true">
@@ -89,54 +136,51 @@
             </div>
             {% endif %}
 
-            {% if user_authenticated and user_phone_matches %}
-            <div class="agency-invite__actions agency-invite__actions--row">
-                <form method="post">
-                    {% csrf_token %}
-                    <input type="hidden" name="data_consent" value="1">
-                    <button type="submit" name="action" value="accept" class="agency-invite__btn agency-invite__btn--primary">
-                        <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='circle_check' size='inline' only %}</span>
-                        پذیرش دعوت
-                    </button>
-                </form>
-                <form method="post">
-                    {% csrf_token %}
-                    <button type="submit" name="action" value="decline" class="agency-invite__btn agency-invite__btn--danger-ghost">
-                        رد دعوت
-                    </button>
-                </form>
-            </div>
+            <div class="agency-invite__actions-wrap">
+                {% if user_authenticated and user_phone_matches %}
+                <div class="agency-invite__actions agency-invite__actions--row">
+                    <form method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="data_consent" value="1">
+                        <button type="submit" name="action" value="accept" class="agency-invite__btn agency-invite__btn--primary">
+                            <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='circle_check' size='inline' only %}</span>
+                            پذیرش دعوت
+                        </button>
+                    </form>
+                    <form method="post">
+                        {% csrf_token %}
+                        <button type="submit" name="action" value="decline" class="agency-invite__btn agency-invite__btn--danger-ghost">
+                            رد دعوت
+                        </button>
+                    </form>
+                </div>
 
-            {% elif user_authenticated and not user_phone_matches %}
-            <div class="agency-invite__actions">
-                <a href="{% url 'logout' %}" class="agency-invite__btn agency-invite__btn--primary">
-                    <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='exit' size='inline' only %}</span>
-                    خروج و ورود با شماره صحیح
-                </a>
-                <p class="agency-invite__footnote">
-                    <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='info' size='xs' only %}</span>
-                    پس از خروج، همین لینک دعوت را دوباره باز کنید.
-                </p>
-            </div>
+                {% elif user_authenticated and not user_phone_matches %}
+                <div class="agency-invite__actions">
+                    <a href="{% url 'logout' %}" class="agency-invite__btn agency-invite__btn--primary">
+                        <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='exit' size='inline' only %}</span>
+                        خروج و ورود با شماره صحیح
+                    </a>
+                    <p class="agency-invite__hint">
+                        <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='info' size='xs' only %}</span>
+                        پس از خروج، همین لینک دعوت را دوباره باز کنید.
+                    </p>
+                </div>
 
-            {% else %}
-            <div class="agency-invite__actions">
-                <a href="{% url 'login' %}?next={{ request.path|urlencode }}" class="agency-invite__btn agency-invite__btn--primary">
-                    <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='chevron_left' size='inline' only %}</span>
-                    ورود برای پاسخ به دعوت
-                </a>
-                <a href="{% url 'register' %}?next={{ request.path|urlencode }}" class="agency-invite__btn agency-invite__btn--ghost">
-                    <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='user_plus' size='inline' only %}</span>
-                    ثبت‌نام با شماره {{ masked_phone }}
-                </a>
+                {% else %}
+                <div class="agency-invite__actions">
+                    <a href="{% url 'login' %}?next={{ request.path|urlencode }}" class="agency-invite__btn agency-invite__btn--primary">
+                        <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='chevron_left' size='inline' only %}</span>
+                        ورود برای پاسخ به دعوت
+                    </a>
+                    <a href="{% url 'register' %}?next={{ request.path|urlencode }}" class="agency-invite__btn agency-invite__btn--ghost">
+                        <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='user_plus' size='inline' only %}</span>
+                        ثبت‌نام با شماره {{ masked_phone }}
+                    </a>
+                </div>
+                {% endif %}
             </div>
-            <div class="agency-invite__steps" aria-label="مراحل پذیرش دعوت">
-                <span><strong aria-hidden="true">۱</strong> ورود با شماره دعوت‌شده</span>
-                <span><strong aria-hidden="true">۲</strong> تأیید رضایت‌نامه</span>
-                <span><strong aria-hidden="true">۳</strong> پیوستن به تیم آژانس</span>
-            </div>
-            {% endif %}
-        </div>
+        </article>
 
         <p class="agency-invite__footnote">
             <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='lock' size='xs' only %}</span>

@@ -106,6 +106,8 @@ def _log_usage(
 
 
 def _global_cap_reached() -> bool:
+    if getattr(settings, 'AI_QUOTA_UNLIMITED_FOR_ALL', False):
+        return False
     cap = int(getattr(settings, 'AI_GLOBAL_DAILY_CAP', 1050) or 0)
     if cap <= 0:
         return False

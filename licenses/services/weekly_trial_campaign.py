@@ -400,7 +400,7 @@ def grants_pending_sms(campaign_key: str) -> QuerySet:
 
 @transaction.atomic
 def send_campaign_sms_for_grant(grant: LicenseCampaignGrant) -> tuple[bool, str]:
-    grant = LicenseCampaignGrant.objects.select_for_update().select_related('user', 'license').get(
+    grant = LicenseCampaignGrant.objects.select_for_update(of=('self',)).select_related('user', 'license').get(
         pk=grant.pk,
     )
     if grant.status != LicenseCampaignGrant.Status.GRANTED or not grant.license_id:

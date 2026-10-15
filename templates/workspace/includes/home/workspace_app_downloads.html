@@ -1,0 +1,40 @@
+{% load static %}
+<section class="ws-app-dl" aria-labelledby="ws-app-dl-title" data-tour="workspace-downloads">
+    <div class="ws-app-dl__head">
+        <h2 class="ws-app-dl__title" id="ws-app-dl-title">دانلود نرم‌افزارها</h2>
+        <p class="ws-app-dl__lead">دانلود و نصب رایگان است؛ استفاده از امکانات استخراج نیازمند لایسنس فعال است.</p>
+    </div>
+    <div class="ws-app-dl__actions">
+        {% if app_downloads.windows.available %}
+        <a href="{% url 'windows_app_download' %}" class="ws-app-dl__btn ws-app-dl__btn--windows">
+            <span class="ws-app-dl__btn-icon" aria-hidden="true">🖥️</span>
+            <span class="ws-app-dl__btn-text">
+                <strong>دانلود ربات ویندوز</strong>
+                {% if app_downloads.windows.version_label %}
+                <em dir="ltr">{{ app_downloads.windows.version_label }}</em>
+                {% endif %}
+            </span>
+            <i class="fas fa-download ws-app-dl__btn-dl" aria-hidden="true"></i>
+        </a>
+        {% else %}
+        <p class="ws-app-dl__unavail" role="status">نصب‌کننده ویندوز به‌زودی در دسترس قرار می‌گیرد.</p>
+        {% endif %}
+        {% if app_downloads.android.available %}
+        <a href="{% url 'android_app_download' %}" class="ws-app-dl__btn ws-app-dl__btn--android">
+            <span class="ws-app-dl__btn-icon" aria-hidden="true">📱</span>
+            <span class="ws-app-dl__btn-text">
+                <strong>دانلود اپ اندروید</strong>
+                <em dir="ltr">{{ app_downloads.android.version_label }}{% if app_downloads.android.size_label %} · {{ app_downloads.android.size_label }}{% endif %}</em>
+            </span>
+            <i class="fas fa-download ws-app-dl__btn-dl" aria-hidden="true"></i>
+        </a>
+        {% else %}
+        <p class="ws-app-dl__unavail" role="status">اپ اندروید به‌زودی در دسترس قرار می‌گیرد.</p>
+        {% endif %}
+    </div>
+    <p class="ws-app-dl__foot">
+        <a href="{% url 'license_guide' %}" class="ws-app-dl__guide">راهنمای نصب</a>
+        <span class="ws-app-dl__foot-sep" aria-hidden="true">·</span>
+        <a href="{% url 'android_tutorial' %}" class="ws-app-dl__guide">آموزش نصب اندروید</a>
+    </p>
+</section>

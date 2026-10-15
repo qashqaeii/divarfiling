@@ -33,9 +33,9 @@
                 </div>
             </div>
             <div class="fl-extract-start__card-actions">
-                {% if app_downloads.windows_download %}
+                {% if app_downloads.windows.available %}
                 <a
-                    href="{% url 'payment:download' app_downloads.windows_download.order_id %}"
+                    href="{% url 'windows_app_download' %}"
                     class="fl-extract-start__btn fl-extract-start__btn--windows"
                 >
                     <i class="fas fa-download" aria-hidden="true"></i>

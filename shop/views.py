@@ -31,6 +31,7 @@ from .android_tutorial_content import android_tutorial_content, android_tutorial
 from .android_tutorial_video import get_android_video_context, resolve_android_video
 from .seo_landings import get_landing, landing_schema_json
 from .services.app_downloads import build_android_apk_response
+from .services.downloads import build_public_setup_installer_response
 from .author_content import author_page_content, AUTHOR_SLUG
 from workspace.services.jalali_input import format_jalali_datetime
 from .models import Product, LicensePlan, Order, ProductRating, ProductReview, ReviewHelpful, DiscountCode
@@ -596,6 +597,13 @@ class AndroidAppDownloadView(View):
 
     def get(self, request):
         return build_android_apk_response()
+
+
+class WindowsAppDownloadView(View):
+    """دانلود عمومی نصب‌کننده ویندوز از django/files/."""
+
+    def get(self, request):
+        return build_public_setup_installer_response()
 
 
 class LicenseGuideView(TemplateView):

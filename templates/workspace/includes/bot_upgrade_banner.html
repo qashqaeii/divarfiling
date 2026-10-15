@@ -16,11 +16,17 @@
     </div>
     <div class="ws-bot-banner-actions">
         {% if has_pending_bot_activation %}
+        {% if app_downloads.windows.available %}
+        <a href="{% url 'windows_app_download' %}" class="ws-btn ws-btn-ghost ws-btn-sm"><i class="fab fa-windows"></i> دانلود ربات</a>
+        {% endif %}
         <a href="{% url 'license_guide' %}" class="ws-btn ws-btn-ghost ws-btn-sm">راهنمای فعال‌سازی</a>
         <a href="{% url 'dashboard' %}" class="ws-btn ws-btn-primary ws-btn-sm"><i class="fas fa-key"></i> کلید لایسنس</a>
         {% else %}
+        {% if app_downloads.windows.available %}
+        <a href="{% url 'windows_app_download' %}" class="ws-btn ws-btn-ghost ws-btn-sm"><i class="fab fa-windows"></i> دانلود ربات</a>
+        {% endif %}
         <a href="{% url 'workspace:upgrade' %}" class="ws-btn ws-btn-ghost ws-btn-sm">امکانات ربات</a>
-        <a href="{{ bot_buy_url }}" class="ws-btn ws-btn-primary ws-btn-sm"><i class="fas fa-shopping-cart"></i> خرید ربات</a>
+        <a href="{{ bot_buy_url }}" class="ws-btn ws-btn-primary ws-btn-sm"><i class="fas fa-shopping-cart"></i> خرید لایسنس</a>
         {% endif %}
     </div>
 </div>

@@ -13,6 +13,7 @@ from shop.services.app_downloads import (
     parse_apk_version_from_filename,
     resolve_windows_download_for_user,
 )
+from shop.services.downloads import setup_installer_available
 from licenses.models import License
 
 
@@ -46,6 +47,61 @@ class AndroidAppDownloadTests(TestCase):
         )
         self.assertIn('.apk', response['Content-Disposition'].lower())
 
+    def test_windows_download_public_without_login(self):
+        if not setup_installer_available():
+            self.skipTest('Windows installer not present in django/files/')
+        response = self.client.get(reverse('windows_app_download'))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(
+            response['Content-Type'],
+            ('application/zip', 'application/vnd.microsoft.portable-executable'),
+        )
+        self.assertIn('attachment', response['Content-Disposition'].lower())
+
+    def test_windows_download_public_for_user_without_license(self):
+        if not setup_installer_available():
+            self.skipTest('Windows installer not present in django/files/')
+        user = get_user_model().objects.create_user(
+            username='free_dl',
+            password='test-pass-123',
+        )
+        self.client.force_login(user)
+        response = self.client.get(reverse('windows_app_download'))
+        self.assertEqual(response.status_code, 200)
+
+    @patch('shop.services.downloads.os.path.isfile', return_value=False)
+    def test_windows_download_404_when_missing(self, _mock_isfile):
+        response = self.client.get(reverse('windows_app_download'))
+        self.assertEqual(response.status_code, 404)
+
+    def test_dashboard_windows_public_link_without_paid_order(self):
+        user = get_user_model().objects.create_user(
+            username='nodlorder',
+            password='test-pass-123',
+        )
+        self.client.force_login(user)
+        response = self.client.get(reverse('dashboard_tab', kwargs={'tab': 'downloads'}))
+        self.assertEqual(response.status_code, 200)
+        if setup_installer_available():
+            self.assertContains(response, reverse('windows_app_download'))
+            self.assertNotContains(response, 'خرید لایسنس برای دانلود')
+        self.assertContains(response, 'لایسنس برای استخراج')
+
+    def test_workspace_home_shows_downloads_without_license(self):
+        user = get_user_model().objects.create_user(
+            username='ws_free_dl',
+            password='test-pass-123',
+        )
+        self.client.force_login(user)
+        response = self.client.get(reverse('workspace:home'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'دانلود نرم‌افزارها')
+        self.assertContains(response, 'دانلود و نصب رایگان است')
+        if setup_installer_available():
+            self.assertContains(response, reverse('windows_app_download'))
+        if android_apk_available():
+            self.assertContains(response, reverse('android_app_download'))
+
     def test_license_guide_install_link_uses_in_page_fragment(self):
         response = self.client.get(reverse('license_guide'))
         self.assertContains(response, 'href="#mk-dl-android-notes"')
@@ -63,15 +119,13 @@ class AndroidAppDownloadTests(TestCase):
             password='test-pass-123',
         )
         self.client.force_login(user)
-        response = self.client.get(reverse('dashboard'))
-        self.assertContains(response, 'data-tab="downloads"')
+        response = self.client.get(reverse('dashboard_tab', kwargs={'tab': 'downloads'}))
         self.assertContains(response, 'id="tab-downloads"')
         self.assertContains(response, 'id="download-apps"')
-        self.assertContains(response, "tabName = 'downloads'")
+        self.assertContains(response, 'mk-acc-tab-downloads')
         if android_apk_available():
-            self.assertContains(response, 'id="mk-dl-android-notes"')
-            self.assertContains(response, 'Play Protect')
-            self.assertContains(response, 'href="#mk-dl-android-notes"')
+            self.assertContains(response, reverse('android_app_download'))
+            self.assertContains(response, reverse('android_tutorial'))
         self.assertContains(response, 'id="mk-dl-windows-notes"')
         self.assertContains(response, 'output')
         self.assertContains(response, 'توصیه‌شده')
@@ -85,7 +139,7 @@ class AndroidAppDownloadTests(TestCase):
             password='test-pass-123',
         )
         self.client.force_login(user)
-        response = self.client.get(reverse('dashboard'))
+        response = self.client.get(reverse('dashboard_tab', kwargs={'tab': 'downloads'}))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, reverse('android_app_download'))
 

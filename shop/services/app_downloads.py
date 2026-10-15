@@ -9,6 +9,11 @@ from django.conf import settings
 from django.http import FileResponse, Http404
 from django.urls import reverse
 
+from shop.services.downloads import (
+    public_setup_installer_filename,
+    setup_installer_available,
+)
+
 # مقادیر پیش‌فرض وقتی فایل APK روی سرور نیست یا نام فایل قابل parse نیست
 ANDROID_APK_FILENAME = 'divar-filing-v2.6.3-43-direct-release.apk'
 ANDROID_APP_VERSION = '2.6.3'
@@ -162,9 +167,32 @@ def resolve_windows_download_for_user(user) -> Optional[Dict[str, Any]]:
     }
 
 
+def _windows_version_from_filename(filename: str) -> str:
+    match = re.match(
+        r'^DivarFilingExtractor_Setup_(\d+)\.(\d+)\.(\d+)\.',
+        filename or '',
+        re.IGNORECASE,
+    )
+    if match:
+        return f'{match.group(1)}.{match.group(2)}.{match.group(3)}'
+    return WINDOWS_APP_VERSION
+
+
+def windows_setup_version_info() -> Tuple[str, str]:
+    """version و version_label برای نصب‌کننده ویندوز روی سرور."""
+    if setup_installer_available():
+        filename = public_setup_installer_filename()
+        version = _windows_version_from_filename(filename)
+        return version, f'v{version}'
+    return WINDOWS_APP_VERSION, f'v{WINDOWS_APP_VERSION}'
+
+
 def build_app_download_context(request) -> Dict[str, Any]:
     user = getattr(request, 'user', None)
     version_name, version_code = android_apk_version_info()
+    win_version, win_version_label = windows_setup_version_info()
+    win_available = setup_installer_available()
+    win_filename = public_setup_installer_filename() if win_available else WINDOWS_INSTALLER_FILENAME
     return {
         'android': {
             'available': android_apk_available(),
@@ -177,10 +205,11 @@ def build_app_download_context(request) -> Dict[str, Any]:
             'min_android': ANDROID_MIN_ANDROID,
         },
         'windows': {
-            'filename': WINDOWS_INSTALLER_FILENAME,
-            'version': WINDOWS_APP_VERSION,
-            'version_label': f'v{WINDOWS_APP_VERSION}',
-            'requires_license': True,
+            'available': win_available,
+            'filename': win_filename,
+            'version': win_version,
+            'version_label': win_version_label,
+            'requires_license_for_extraction': True,
             'min_os': 'Windows 10 / 11',
         },
         'windows_download': resolve_windows_download_for_user(user),

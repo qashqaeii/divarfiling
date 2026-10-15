@@ -10,7 +10,7 @@
                 {{ app_download_hub.kicker|default:'مرکز دانلود' }}
             </span>
             <h2 id="mk-dl-hub-title">{{ app_download_hub.title|default:'ربات ویندوز و اپ اندروید' }}</h2>
-            <p class="mk-dl-hub-lead">{{ app_download_hub.lead|default:'برای استخراج حرفه‌ای ربات ویندوز توصیه می‌شود؛ اپ اندروید برای CRM و کار در محل. هر دو با یک لایسنس.' }}</p>
+            <p class="mk-dl-hub-lead">{{ app_download_hub.lead|default:'دانلود و نصب رایگان است؛ استفاده از امکانات استخراج نیازمند لایسنس فعال است.' }}</p>
         </header>
         {% else %}
         <h2 id="mk-dl-hub-title" class="visually-hidden">{{ app_download_hub.title|default:'دانلود اپ‌ها' }}</h2>
@@ -35,8 +35,11 @@
                         </div>
                         <h3>{{ app_download_hub.windows.title|default:'ربات استخراج دیوار' }}</h3>
                         <div class="mk-dl-badges">
+                            {% if app_downloads.windows.available and app_downloads.windows.version_label %}
+                            <span class="mk-dl-badge">{{ app_downloads.windows.version_label }}</span>
+                            {% endif %}
                             <span class="mk-dl-badge mk-dl-badge--muted">{{ app_downloads.windows.min_os }}</span>
-                            <span class="mk-dl-badge mk-dl-badge--license">نیاز به لایسنس</span>
+                            <span class="mk-dl-badge mk-dl-badge--license">لایسنس برای استخراج</span>
                         </div>
                     </div>
                 </header>
@@ -56,29 +59,20 @@
                             <i class="fab fa-windows" aria-hidden="true"></i>
                             دانلود نصب‌کننده
                         </a>
-                        {% elif app_downloads.windows_download %}
-                        <a href="{% url 'payment:download' app_downloads.windows_download.order_id %}" class="mk-dl-btn mk-dl-btn--windows">
+                        {% elif app_downloads.windows.available %}
+                        <a href="{% url 'windows_app_download' %}" class="mk-dl-btn mk-dl-btn--windows">
                             <i class="fab fa-windows" aria-hidden="true"></i>
                             دانلود نصب‌کننده
                         </a>
-                        {% elif user.is_authenticated %}
-                        <a href="{% url 'product_list' %}" class="mk-dl-btn mk-dl-btn--windows">
-                            <i class="fas fa-shopping-cart" aria-hidden="true"></i>
-                            خرید لایسنس برای دانلود
-                        </a>
-                        <a href="{% url 'license_guide' %}" class="mk-dl-btn mk-dl-btn--ghost">راهنمای فعال‌سازی</a>
+                        <a href="{% url 'license_guide' %}" class="mk-dl-btn mk-dl-btn--ghost">راهنمای نصب</a>
                         {% else %}
-                        <a href="{% url 'register' %}" class="mk-dl-btn mk-dl-btn--windows">
-                            <i class="fas fa-user-plus" aria-hidden="true"></i>
-                            ثبت‌نام و خرید لایسنس
-                        </a>
-                        <a href="{% url 'login' %}" class="mk-dl-btn mk-dl-btn--ghost">ورود</a>
+                        <span class="mk-dl-unavailable"><i class="fas fa-clock"></i> نصب‌کننده به‌زودی در سرور قرار می‌گیرد</span>
                         {% endif %}
                     </div>
                     {% if windows_order_id and download_filename %}
                     <span class="mk-dl-file-hint" dir="ltr">{{ download_filename }}</span>
-                    {% elif app_downloads.windows_download %}
-                    <span class="mk-dl-file-hint" dir="ltr">{{ app_downloads.windows_download.filename }}</span>
+                    {% elif app_downloads.windows.available %}
+                    <span class="mk-dl-file-hint" dir="ltr">{{ app_downloads.windows.filename }}</span>
                     {% else %}
                     <span class="mk-dl-file-hint mk-dl-file-hint--spacer" aria-hidden="true"></span>
                     {% endif %}

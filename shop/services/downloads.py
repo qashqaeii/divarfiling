@@ -31,6 +31,27 @@ def _version_key(filename: str) -> tuple[int, int, int, int]:
     return (int(major), int(minor), int(patch), 1 if ext.lower() == 'zip' else 0)
 
 
+def setup_installer_available() -> bool:
+    path = get_setup_installer_path()
+    return os.path.isfile(path)
+
+
+def public_setup_installer_filename() -> str:
+    path = get_setup_installer_path()
+    if os.path.isfile(path):
+        return os.path.basename(path)
+    return ''
+
+
+def setup_installer_content_type(filename: str) -> str:
+    ext = os.path.splitext(filename or '')[1].lower()
+    if ext == '.exe':
+        return 'application/vnd.microsoft.portable-executable'
+    if ext == '.zip':
+        return 'application/zip'
+    return 'application/octet-stream'
+
+
 def get_setup_installer_path() -> str:
     """مسیر فایل نصب ویندوز در django/files — آخرین نسخه موجود."""
     files_dir = _files_dir()
@@ -106,12 +127,27 @@ def build_download_response(order: Order) -> FileResponse:
         raise Http404('فایل دانلود برای این سفارش موجود نیست.')
 
     file_path, filename = resolved
-    file_handle: BinaryIO = open(file_path, 'rb')
+    return _build_setup_file_response(file_path, filename)
+
+
+def _build_setup_file_response(file_path: str, filename: str) -> FileResponse:
+    try:
+        file_handle: BinaryIO = open(file_path, 'rb')
+    except OSError as exc:
+        raise Http404('فایل دانلود موجود نیست.') from exc
     response = FileResponse(
         file_handle,
         as_attachment=True,
         filename=filename,
     )
-    response['Content-Type'] = 'application/zip'
+    response['Content-Type'] = setup_installer_content_type(filename)
     response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
     return response
+
+
+def build_public_setup_installer_response() -> FileResponse:
+    """دانلود عمومی نصب‌کننده ویندوز — بدون سفارش یا لایسنس."""
+    path = get_setup_installer_path()
+    if not os.path.isfile(path):
+        raise Http404('نصب‌کننده ویندوز در سرور موجود نیست.')
+    return _build_setup_file_response(path, os.path.basename(path))

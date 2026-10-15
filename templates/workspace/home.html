@@ -23,6 +23,10 @@
 
     {% include 'includes/announcements.html' with notice_layout='inline' %}
 
+    {% if not has_bot_license %}
+    {% include 'workspace/includes/home/workspace_app_downloads.html' %}
+    {% endif %}
+
     {% if home_is_empty %}
     <section class="wsh-start" aria-label="شروع کار" data-help-tour="workspace-actions" data-tour="workspace-start">
         <p class="wsh-start__title">می‌خواهید از کجا شروع کنید؟</p>

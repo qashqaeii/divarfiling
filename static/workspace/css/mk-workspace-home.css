@@ -2270,6 +2270,101 @@
 .wsh-nba-success p { margin: 0; display: flex; align-items: center; gap: 0.4rem; }
 .wsh-nba-success i { color: #059669; }
 
+/* ─── Workspace home — app downloads ─── */
+.ws-app-dl {
+    margin: 0 0 0.85rem;
+    padding: 0.85rem 0.95rem;
+    border-radius: 14px;
+    border: 1px solid color-mix(in srgb, #7c3aed 22%, var(--ws-border));
+    background: linear-gradient(
+        145deg,
+        color-mix(in srgb, #7c3aed 7%, var(--ws-surface)) 0%,
+        var(--ws-surface) 55%
+    );
+}
+.ws-app-dl__title {
+    margin: 0 0 0.25rem;
+    font-size: 0.92rem;
+    font-weight: 800;
+    color: var(--ws-text);
+}
+.ws-app-dl__lead {
+    margin: 0;
+    font-size: 0.68rem;
+    line-height: 1.55;
+    color: var(--ws-text-muted);
+}
+.ws-app-dl__head { margin-bottom: 0.65rem; }
+.ws-app-dl__actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+}
+.ws-app-dl__btn {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.65rem 0.75rem;
+    min-height: 2.75rem;
+    border-radius: 12px;
+    border: 1px solid transparent;
+    text-decoration: none;
+    color: #fff;
+    transition: filter 0.15s ease, transform 0.12s ease;
+}
+.ws-app-dl__btn:hover,
+.ws-app-dl__btn:focus-visible {
+    filter: brightness(1.05);
+    color: #fff;
+}
+.ws-app-dl__btn:active { transform: scale(0.99); }
+.ws-app-dl__btn--windows {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    border-color: color-mix(in srgb, #2563eb 40%, transparent);
+}
+.ws-app-dl__btn--android {
+    background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+    border-color: color-mix(in srgb, #7c3aed 45%, transparent);
+}
+.ws-app-dl__btn-icon { font-size: 1.15rem; line-height: 1; flex-shrink: 0; }
+.ws-app-dl__btn-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.05rem;
+    flex: 1;
+    min-width: 0;
+    text-align: right;
+}
+.ws-app-dl__btn-text strong { font-size: 0.74rem; font-weight: 800; }
+.ws-app-dl__btn-text em {
+    font-style: normal;
+    font-size: 0.6rem;
+    opacity: 0.88;
+}
+.ws-app-dl__btn-dl { font-size: 0.8rem; opacity: 0.9; flex-shrink: 0; }
+.ws-app-dl__unavail {
+    margin: 0;
+    padding: 0.55rem 0.65rem;
+    font-size: 0.68rem;
+    color: var(--ws-text-muted);
+    border-radius: 10px;
+    border: 1px dashed var(--ws-border);
+    grid-column: 1 / -1;
+}
+.ws-app-dl__foot {
+    margin: 0.55rem 0 0;
+    font-size: 0.64rem;
+    text-align: center;
+    color: var(--ws-text-muted);
+}
+.ws-app-dl__guide {
+    color: #7c3aed;
+    text-decoration: none;
+    font-weight: 700;
+}
+.ws-app-dl__guide:hover { text-decoration: underline; }
+.ws-app-dl__foot-sep { margin: 0 0.35rem; opacity: 0.5; }
+
 .wsh-start__title { margin: 0 0 0.35rem; font-size: 0.9rem; font-weight: 800; }
 .wsh-start__grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.5rem; }
 .wsh-start__card {
@@ -2319,6 +2414,8 @@
     .wsh-lower-grid { grid-template-columns: 1fr; }
     .wsh-contacts__layout { grid-template-columns: 1fr; }
     .wsh-start__grid { grid-template-columns: 1fr; }
+    .ws-app-dl__actions { grid-template-columns: 1fr; }
+    .ws-app-dl__btn { width: 100%; }
     .wsh-files__tx-wrap { display: block; }
     .wsh-files__adv-filters .wsh-files__select--tx { display: none; }
     .wsh-files__filters { display: grid; grid-template-columns: 1fr 1fr; gap: 0.35rem; width: 100%; }

@@ -22,6 +22,7 @@ urlpatterns = [
     path('privacy/', views.PrivacyView.as_view(), name='privacy'),
     path('license-guide/', views.LicenseGuideView.as_view(), name='license_guide'),
     path('download/android/', views.AndroidAppDownloadView.as_view(), name='android_app_download'),
+    path('download/windows/', views.WindowsAppDownloadView.as_view(), name='windows_app_download'),
     path('amoozesh/', views.EducationView.as_view(), name='education'),
     path('academy/', views.PublicAcademyView.as_view(), name='public_academy'),
     path('academy/videos/', views.PublicAcademyPlaylistView.as_view(), name='public_academy_playlist'),

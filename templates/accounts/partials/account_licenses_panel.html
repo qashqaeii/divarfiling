@@ -1,18 +1,14 @@
 {% load persian_tags %}
 
 <div id="tab-licenses" class="mk-acc-tab-panel mk-acc-tab-shell mk-licenses-tab tab-content dash-tab-panel"{% if active_tab != 'licenses' %} hidden{% endif %} data-license-mgmt>
-    <header class="mk-account-page-head mk-account-page-head--row">
-        <div>
-            <h1 class="mk-account-page-head__title">لایسنس‌های من</h1>
-            <p class="mk-account-page-head__sub">مدیریت کلید، دستگاه‌ها، تمدید و تخصیص تیم</p>
-        </div>
-        {% if products %}
+    {% if products %}
+    <div class="mk-acc-desk-only text-end mb-3">
         <a href="{% url 'product_list' %}" class="mk-acc-btn mk-acc-btn--primary" title="خرید لایسنس">
             <i class="fas fa-plus" aria-hidden="true"></i>
             <span>خرید لایسنس</span>
         </a>
-        {% endif %}
-    </header>
+    </div>
+    {% endif %}
 
     <div class="mk-acc-kpi-grid" aria-label="خلاصه لایسنس">
         <article class="mk-acc-kpi-card mk-acc-kpi-card--violet">

@@ -2,18 +2,14 @@
 {% load currency_tags %}
 
 <div id="tab-orders" class="mk-acc-tab-panel mk-acc-tab-shell mk-orders-tab tab-content dash-tab-panel"{% if active_tab != 'orders' %} hidden{% endif %} data-orders-tab>
-    <header class="mk-account-page-head mk-account-page-head--row">
-        <div>
-            <h1 class="mk-account-page-head__title">سفارش‌های من</h1>
-            <p class="mk-account-page-head__sub">پیگیری پرداخت، دریافت لایسنس و دانلود ربات — همه در یک نگاه</p>
-        </div>
-        {% if pending_orders_count %}
+    {% if pending_orders_count %}
+    <div class="mk-acc-desk-only mb-3">
         <a href="{{ dashboard_tab_urls.orders }}?order_status=pending" class="mk-acc-head-badge mk-acc-head-badge--warn">
             <i class="fas fa-clock" aria-hidden="true"></i>
             {{ pending_orders_count }} در انتظار
         </a>
-        {% endif %}
-    </header>
+    </div>
+    {% endif %}
 
     <div class="mk-acc-kpi-grid" aria-label="خلاصه سفارش‌ها">
         <article class="mk-acc-kpi-card">

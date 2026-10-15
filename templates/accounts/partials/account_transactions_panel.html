@@ -2,13 +2,6 @@
 {% load currency_tags %}
 
 <div id="tab-transactions" class="mk-acc-tab-panel mk-acc-tab-shell mk-transactions-tab tab-content dash-tab-panel"{% if active_tab != 'transactions' %} hidden{% endif %}>
-    <header class="mk-account-page-head mk-account-page-head--row">
-        <div>
-            <h1 class="mk-account-page-head__title">تراکنش‌های من</h1>
-            <p class="mk-account-page-head__sub">تاریخچه پرداخت‌های آنلاین، کد پیگیری و وضعیت درگاه</p>
-        </div>
-    </header>
-
     {% if transactions %}
     <div class="mk-acc-kpi-grid" aria-label="خلاصه تراکنش‌ها">
         <article class="mk-acc-kpi-card">

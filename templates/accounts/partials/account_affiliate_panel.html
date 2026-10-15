@@ -3,18 +3,14 @@
 
 {% if has_paid_orders %}
 <div id="tab-affiliate" class="mk-acc-tab-panel mk-acc-tab-shell mk-affiliate-tab tab-content dash-tab-panel"{% if active_tab != 'affiliate' %} hidden{% endif %}>
-    <header class="mk-account-page-head mk-account-page-head--row">
-        <div>
-            <h1 class="mk-account-page-head__title">همکاری در فروش</h1>
-            <p class="mk-account-page-head__sub">لینک معرف، کمیسیون، زیرمجموعه و برداشت درآمد</p>
-        </div>
-        {% if affiliate %}
+    {% if affiliate %}
+    <div class="mk-acc-desk-only text-end mb-3">
         <a href="{% url 'affiliate_dashboard' %}" class="mk-acc-btn mk-acc-btn--ghost" target="_blank" rel="noopener">
             <i class="fas fa-external-link-alt" aria-hidden="true"></i>
             داشبورد کامل
         </a>
-        {% endif %}
-    </header>
+    </div>
+    {% endif %}
 
     {% if affiliate %}
     <div class="mk-acc-kpi-grid" aria-label="آمار همکاری">

@@ -10,6 +10,7 @@ from django.utils import timezone
 from workspace.models import AgencyActivityEvent, CRMDeal, CRMProperty, Customer
 from workspace.services.agency_data_scope import list_visible_advisor_members
 from workspace.services.agency_entitlement import (
+    can_manage_agency,
     get_subscription_for_agency,
     resolve_managed_agency,
     seat_usage_summary,
@@ -23,6 +24,7 @@ from workspace.services.agency_rbac import (
     PERM_DEALS_VIEW_TEAM,
     has_agency_permission,
     is_agency_rbac_v2_enabled,
+    is_agency_secretary_hub_enabled,
     resolve_nav_profile,
 )
 from workspace.services.crm_agency_analytics import get_command_center_stats
@@ -48,6 +50,7 @@ def hub_base_context(user) -> dict[str, Any]:
         'hub_seats': seats,
         'hub_agency_logo_url': _agency_logo_url(agency) if agency else None,
         'hub_member_role': hub_member_role,
+        'hub_show_invite': bool(agency and can_manage_agency(user, agency)),
     }
 
 
@@ -91,7 +94,7 @@ def build_dashboard_context(user, days: int = 30) -> dict[str, Any]:
 
     profile = resolve_nav_profile(user)
     ctx['agency_dash_profile'] = profile
-    if is_agency_rbac_v2_enabled(agency) and profile == NAV_PROFILE_SECRETARY:
+    if profile == NAV_PROFILE_SECRETARY and is_agency_secretary_hub_enabled(agency):
         return build_secretary_dashboard_context(user, days=days)
 
     since = timezone.now() - timedelta(days=days)

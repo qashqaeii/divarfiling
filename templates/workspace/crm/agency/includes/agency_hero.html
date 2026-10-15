@@ -49,7 +49,7 @@
                 </span>
                 <span class="fl-header__help-label">راهنما</span>
             </button>
-            {% if hub_section != 'advisors' %}
+            {% if hub_show_invite and hub_section != 'advisors' %}
             <button type="button" class="crm-btn crm-btn-primary agency-hero__cta" data-bs-toggle="modal" data-bs-target="#agencyInviteModal">
                 <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='user_plus' size='inline' only %}</span>
                 دعوت مشاور

@@ -12,7 +12,7 @@
             <p class="agency-page-head__sub">ثبت سریع، صندوق سرنخ و پیگیری‌های امروز</p>
         </div>
     </div>
-    <div class="agency-kpi-strip agency-kpi-strip--ref" aria-label="کارهای امروز">
+    <div class="agency-kpi-strip agency-kpi-strip--ref agency-kpi-strip--secretary" aria-label="کارهای امروز">
         {% include "workspace/crm/agency/includes/kpi_card.html" with label="سرنخ بدون مسئول" value=summary.inbox_unassigned decor="inbox" tone="purple" %}
         {% include "workspace/crm/agency/includes/kpi_card.html" with label="پیگیری امروز" value=summary.followups_today decor="bell" tone="blue" %}
     </div>

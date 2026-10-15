@@ -210,9 +210,8 @@ def run(
                 status=AIUsageLog.STATUS_CACHED,
             )
 
+    check_quota(user, feature)
     use_rule_only = _global_cap_reached() and not is_ai_unlimited_user(user)
-    if not use_rule_only:
-        check_quota(user, feature)
 
     json_mode = feature_uses_json(feature)
 

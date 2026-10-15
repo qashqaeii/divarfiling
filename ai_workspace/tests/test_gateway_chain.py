@@ -8,7 +8,7 @@ from django.test import TestCase, override_settings
 
 from ai_workspace.providers.base import ProviderError, ProviderResult
 from ai_workspace.services.gateway import run
-from ai_workspace.services.quota import QuotaExceededError
+from ai_workspace.services.quota import QuotaExceededError, get_or_create_quota
 
 User = get_user_model()
 
@@ -129,4 +129,87 @@ class GatewayChainScenarioTests(TestCase):
                         entity_type='listing',
                         entity_id='qf',
                     )
+        chain[0].complete.assert_not_called()
+
+    @override_settings(AI_ENABLED=True, AI_LICENSED_UNLIMITED=True, GEMINI_API_KEY='test')
+    @patch('ai_workspace.services.quota.has_active_bot_license', return_value=False)
+    @patch('ai_workspace.services.gateway._global_cap_reached', return_value=True)
+    def test_global_cap_does_not_bypass_free_quota(self, _cap, _lic):
+        free_user = User.objects.create_user(
+            username='free_cap_user', password='x', phone='09120000099',
+        )
+        quota = get_or_create_quota(free_user)
+        quota.used_today = 30
+        quota.save(update_fields=['used_today'])
+        chain = _chain(arvan='ok')
+        with patch('ai_workspace.services.gateway.get_http_provider_chain', return_value=chain):
+            with self.assertRaises(QuotaExceededError):
+                run(
+                    'listing_summary',
+                    free_user,
+                    context={**_CTX, 'content_version': 'global-cap-quota'},
+                    entity_type='listing',
+                    entity_id='gcq',
+                )
+        chain[0].complete.assert_not_called()
+
+    @override_settings(AI_ENABLED=True, AI_LICENSED_UNLIMITED=True, GEMINI_API_KEY='test')
+    @patch('ai_workspace.services.quota.has_active_bot_license', return_value=False)
+    @patch('ai_workspace.services.gateway._global_cap_reached', return_value=True)
+    def test_global_cap_rule_based_when_quota_remaining(self, _cap, _lic):
+        free_user = User.objects.create_user(
+            username='free_cap_ok', password='x', phone='09120000098',
+        )
+        chain = _chain(arvan='ok')
+        with patch('ai_workspace.services.gateway.get_http_provider_chain', return_value=chain):
+            result = run(
+                'listing_summary',
+                free_user,
+                context={**_CTX, 'content_version': 'global-cap-ok'},
+                entity_type='listing',
+                entity_id='gco',
+            )
+        self.assertEqual(result.provider, 'rule_based')
+        chain[0].complete.assert_not_called()
+
+    @override_settings(AI_ENABLED=True, AI_LICENSED_UNLIMITED=True, GEMINI_API_KEY='test')
+    @patch('ai_workspace.services.gateway.has_active_bot_license', return_value=False, create=True)
+    @patch('ai_workspace.services.quota.has_active_bot_license', return_value=False)
+    @patch('ai_workspace.services.gateway._global_cap_reached', return_value=True)
+    def test_global_cap_does_not_bypass_free_quota(self, _cap, _lic_quota, _lic_gw):
+        free_user = User.objects.create_user(
+            username='free_cap_user', password='x', phone='09120000099',
+        )
+        quota = get_or_create_quota(free_user)
+        quota.used_today = 30
+        quota.save(update_fields=['used_today'])
+        chain = _chain(arvan='ok')
+        with patch('ai_workspace.services.gateway.get_http_provider_chain', return_value=chain):
+            with self.assertRaises(QuotaExceededError):
+                run(
+                    'listing_summary',
+                    free_user,
+                    context={**_CTX, 'content_version': 'global-cap-quota'},
+                    entity_type='listing',
+                    entity_id='gcq',
+                )
+        chain[0].complete.assert_not_called()
+
+    @override_settings(AI_ENABLED=True, AI_LICENSED_UNLIMITED=True, GEMINI_API_KEY='test')
+    @patch('ai_workspace.services.quota.has_active_bot_license', return_value=False)
+    @patch('ai_workspace.services.gateway._global_cap_reached', return_value=True)
+    def test_global_cap_rule_based_when_quota_remaining(self, _cap, _lic):
+        free_user = User.objects.create_user(
+            username='free_cap_ok', password='x', phone='09120000098',
+        )
+        chain = _chain(arvan='ok')
+        with patch('ai_workspace.services.gateway.get_http_provider_chain', return_value=chain):
+            result = run(
+                'listing_summary',
+                free_user,
+                context={**_CTX, 'content_version': 'global-cap-ok'},
+                entity_type='listing',
+                entity_id='gco',
+            )
+        self.assertEqual(result.provider, 'rule_based')
         chain[0].complete.assert_not_called()

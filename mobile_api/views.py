@@ -650,7 +650,7 @@ class ExtractionLimitsView(APIView):
 
 class ExtractionUploadView(APIView):
     permission_classes = [IsAuthenticated]
-    throttle_classes = [MobileExtractionThrottle]
+    throttle_classes = [MobileUserThrottle]
 
     def post(self, request):
         err = require_light_extract(request.user)
@@ -2203,6 +2203,7 @@ def _ai_quota_payload(user, *, enabled: bool | None = None):
             'enabled': True,
             'remaining': status.remaining,
             'limit': status.daily_limit,
+            'is_unlimited': status.is_unlimited,
             'plan_label': plan_label,
         }
     except Exception:

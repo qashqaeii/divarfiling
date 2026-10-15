@@ -8,24 +8,41 @@ from django.views import View
 from django.views.generic import TemplateView
 
 from workspace.crm_views import CRMTeamView, CRMContextMixin
-from workspace.mixins_agency import AgencyOwnerRequiredMixin, AgencyTeamHubRequiredMixin
+from workspace.mixins_agency import (
+    AgencyOwnerRequiredMixin,
+    AgencyTeamHubRequiredMixin,
+    AgencyTeamManageRequiredMixin,
+    AgencyTeamPerformanceRequiredMixin,
+)
 from workspace.services.agency_hub import build_dashboard_context, hub_base_context
 from workspace.services.agency_hub_nav import (
     build_hub_nav,
     build_settings_advanced_tabs,
     partition_hub_nav,
 )
+from workspace.services.agency_rbac import resolve_nav_profile
 from workspace.services.agency_members import build_members_dashboard
 from workspace.services.agency_seats import list_available_seats
 from workspace.services.agency_team_routes import redirect_after_team_action
 
 
 def _hub_shell_context(request, hub_section: str) -> dict:
+    from workspace.constants import AGENCY_ROLES_INVITE
     from workspace.services.agency_activity import EVENT_TYPE_LABELS
+    from workspace.services.agency_rbac import is_agency_rbac_v2_enabled
 
     ctx = hub_base_context(request.user)
+    agency = ctx.get('hub_agency')
+    if not agency:
+        from workspace.services.crm_scope import get_membership
+        m = get_membership(request.user)
+        agency = m.agency if m else None
+    ctx['agency_rbac_v2'] = is_agency_rbac_v2_enabled(agency) if agency else False
+    ctx['agency_roles_invite'] = AGENCY_ROLES_INVITE if ctx['agency_rbac_v2'] else None
     hub_nav = build_hub_nav(request.user)
-    hub_nav_primary, hub_nav_more = partition_hub_nav(hub_nav)
+    hub_nav_primary, hub_nav_more = partition_hub_nav(
+        hub_nav, profile=resolve_nav_profile(request.user),
+    )
     ctx.update({
         'crm_section': 'agency',
         'hub_section': hub_section,
@@ -62,17 +79,52 @@ class AgencyHubDashboardView(_AgencyHubTeamBase):
         return ctx
 
 
-class AgencyHubAdvisorsView(_AgencyHubTeamBase):
+class AgencyHubAdvisorsView(AgencyTeamManageRequiredMixin, _AgencyHubTeamBase):
     template_name = 'workspace/crm/agency/hub_advisors.html'
     hub_section = 'advisors'
 
     def get_context_data(self, **kwargs):
+        from workspace.services.agency_rbac import (
+            PERM_MEMBERS_PERMISSIONS_EDIT,
+            has_agency_permission,
+            is_agency_rbac_v2_enabled,
+            permission_choices_for_editor,
+            rbac_v2_enabled_for_user,
+        )
+        from workspace.constants import AGENCY_ROLES_ASSIGNABLE, AGENCY_ROLES_INVITE
+
         ctx = super().get_context_data(**kwargs)
         agency = ctx.get('hub_agency')
         if agency:
-            ctx['members_dashboard'] = build_members_dashboard(self.request.user, agency)
+            ctx['agency_rbac_v2'] = is_agency_rbac_v2_enabled(agency)
+            dash = build_members_dashboard(self.request.user, agency)
+            from workspace.services.agency_rbac import (
+                PERM_REPORTS_SENSITIVE,
+                effective_permissions as effective_perms_for,
+            )
+
+            if ctx['agency_rbac_v2']:
+                from workspace.services.agency_rbac import summarize_effective_permissions
+
+                for row in dash.get('members') or []:
+                    row['effective_perm_set'] = effective_perms_for(row['member'].user, row['member'])
+                    row['effective_perm_labels'] = summarize_effective_permissions(
+                        row['member'].user, row['member'], limit=5,
+                    )
+            ctx['members_dashboard'] = dash
             ctx['available_seats'] = list_available_seats(self.request.user, agency)
             ctx['team_export_url'] = reverse('workspace:agency_team_export')
+            ctx['agency_roles_invite'] = AGENCY_ROLES_INVITE if ctx['agency_rbac_v2'] else None
+            ctx['agency_roles_assignable'] = AGENCY_ROLES_ASSIGNABLE if ctx['agency_rbac_v2'] else None
+            ctx['can_edit_member_permissions'] = (
+                rbac_v2_enabled_for_user(self.request.user)
+                and has_agency_permission(self.request.user, PERM_MEMBERS_PERMISSIONS_EDIT)
+            )
+            ctx['agency_permission_choices'] = permission_choices_for_editor()
+            ctx['can_team_export'] = (
+                not ctx['agency_rbac_v2']
+                or has_agency_permission(self.request.user, PERM_REPORTS_SENSITIVE)
+            )
         return ctx
 
 
@@ -89,7 +141,7 @@ class AgencyHubLicensesView(AgencyOwnerRequiredMixin, _AgencyHubTeamBase):
         return ctx
 
 
-class AgencyHubActivityView(_AgencyHubTeamBase):
+class AgencyHubActivityView(AgencyTeamPerformanceRequiredMixin, _AgencyHubTeamBase):
     template_name = 'workspace/crm/agency/hub_activity.html'
     hub_section = 'activity'
 
@@ -270,7 +322,11 @@ class AgencyHubRedirectView(LoginRequiredMixin, View):
         from workspace.services.agency_entitlement import can_manage_agency, has_assigned_agency_seat
         from workspace.services.crm_scope import can_manage_team
 
+        from workspace.services.agency_rbac import NAV_PROFILE_SECRETARY, resolve_nav_profile
+
         user = request.user
+        if resolve_nav_profile(user) == NAV_PROFILE_SECRETARY:
+            return redirect('workspace:agency_hub_dashboard')
         if can_manage_agency(user) or can_manage_team(user):
             return redirect('workspace:agency_hub_dashboard')
         if has_assigned_agency_seat(user):

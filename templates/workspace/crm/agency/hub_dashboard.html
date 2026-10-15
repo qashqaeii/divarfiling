@@ -4,6 +4,53 @@
 {% url 'workspace:agency_hub_advisors' as advisors_url %}
 {% url 'workspace:agency_hub_activity' as activity_url %}
 {% if summary %}
+{% if agency_dash_profile == 'secretary' %}
+<div class="agency-dash agency-dash--secretary">
+    <div class="agency-dash-toolbar">
+        <div class="agency-dash-toolbar__copy">
+            <h2 class="agency-page-head__title">میزکار پذیرش</h2>
+            <p class="agency-page-head__sub">ثبت سریع، صندوق سرنخ و پیگیری‌های امروز</p>
+        </div>
+    </div>
+    <div class="agency-kpi-strip agency-kpi-strip--ref" aria-label="کارهای امروز">
+        {% include "workspace/crm/agency/includes/kpi_card.html" with label="سرنخ بدون مسئول" value=summary.inbox_unassigned decor="inbox" tone="purple" %}
+        {% include "workspace/crm/agency/includes/kpi_card.html" with label="پیگیری امروز" value=summary.followups_today decor="bell" tone="blue" %}
+    </div>
+    {% if quick_actions %}
+    <section class="agency-section">
+        {% include "workspace/crm/agency/includes/section_head.html" with title="دسترسی سریع" decor="zap" %}
+        <div class="agency-quick-actions">
+            {% for action in quick_actions %}
+            <a href="{{ action.url }}" class="agency-quick-actions__btn">
+                <span class="agency-quick-actions__icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor=action.decor size='sm' only %}</span>
+                <span>{{ action.label }}</span>
+            </a>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+    <section class="agency-section">
+        {% url 'workspace:agency_hub_inbox' as inbox_url %}
+        {% include "workspace/crm/agency/includes/section_head.html" with title="سرنخ‌های صندوق" decor="inbox" link_url=inbox_url link_label="مشاهده صندوق" %}
+        <div class="agency-panel agency-panel--flush">
+            {% if inbox_preview %}
+            <ul class="agency-inbox-preview">
+                {% for lead in inbox_preview %}
+                <li class="agency-inbox-preview__item">
+                    <a href="{% url 'workspace:crm_contact_detail' lead.pk %}" class="agency-inbox-preview__link">
+                        <strong>{{ lead.name|default:lead.phone }}</strong>
+                        <span class="agency-table__sub" dir="ltr">{{ lead.phone }}</span>
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            {% include "workspace/crm/agency/includes/empty_state.html" with decor="inbox" title="صندوق خالی است" description="سرنخ جدید اینجا نمایش داده می‌شود." compact=True variant="inline" %}
+            {% endif %}
+        </div>
+    </section>
+</div>
+{% else %}
 <div class="agency-dash">
     <div class="agency-dash-toolbar">
         <div class="agency-dash-toolbar__copy">
@@ -26,8 +73,12 @@
         {% endif %}
         {% include "workspace/crm/agency/includes/kpi_card.html" with label="مخاطب جدید" value=summary.contacts_new decor="users" tone="blue" %}
         {% include "workspace/crm/agency/includes/kpi_card.html" with label="فایل جدید" value=summary.properties_new decor="building" tone="orange" %}
+        {% if summary.deals_active != None %}
         {% include "workspace/crm/agency/includes/kpi_card.html" with label="معامله فعال" value=summary.deals_active decor="handshake" tone="green" %}
+        {% endif %}
+        {% if summary.contracts != None %}
         {% include "workspace/crm/agency/includes/kpi_card.html" with label="قرارداد" value=summary.contracts decor="file_edit" tone="teal" %}
+        {% endif %}
     </div>
 
     <div class="agency-dash-grid agency-dash-grid--ref">
@@ -126,6 +177,7 @@
         </section>
     </div>
 </div>
+{% endif %}
 
 {% else %}
 <div class="agency-panel">

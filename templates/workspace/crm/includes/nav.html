@@ -13,17 +13,23 @@
         <span class="ws-nav-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='building' size='nav' only %}</span><span>فایل‌های شخصی</span>
         {% if crm_nav_counts.properties %}<em class="crm-nav-count">{{ crm_nav_counts.properties }}</em>{% endif %}
     </a>
+    {% if ws_show_crm_deals_nav|default:True %}
     <a href="{% url 'workspace:crm_deals' %}" class="crm-nav-item {% if crm_section == 'deals' %}active{% endif %}">
         <span class="ws-nav-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='handshake' size='nav' only %}</span><span>قیف معاملات</span>
         {% if crm_nav_counts.deals %}<em class="crm-nav-count">{{ crm_nav_counts.deals }}</em>{% endif %}
     </a>
+    {% endif %}
+    {% if ws_show_crm_contracts_nav|default:True %}
     <a href="{% url 'workspace:contracts_dashboard' %}" class="crm-nav-item {% if crm_section == 'contracts' %}active{% endif %}">
         <span class="ws-nav-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='file_edit' size='nav' only %}</span><span>قراردادها</span>
         {% if crm_nav_counts.contracts %}<em class="crm-nav-count crm-nav-count-warn">{{ crm_nav_counts.contracts }}</em>{% endif %}
     </a>
+    {% endif %}
+    {% if ws_show_crm_deals_finance|default:True %}
     <a href="{% url 'workspace:crm_deals_finance' %}" class="crm-nav-item {% if crm_section == 'deals-finance' %}active{% endif %}">
         <span class="ws-nav-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='coins' size='nav' only %}</span><span>مالی معاملات</span>
     </a>
+    {% endif %}
     <a href="{% url 'workspace:crm_calendar' %}" class="crm-nav-item {% if crm_section == 'calendar' %}active{% endif %}">
         <span class="ws-nav-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='calendar' size='nav' only %}</span><span>تقویم</span>
     </a>

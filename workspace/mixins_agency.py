@@ -7,6 +7,7 @@ from django.urls import reverse
 
 from workspace.services.agency_entitlement import (
     agency_hub_access_level,
+    can_access_agency_hub,
     can_manage_agency,
     get_active_subscription_for_owner,
     get_subscription_for_agency,
@@ -23,7 +24,7 @@ class AgencyHubAccessMixin:
         if not user.is_authenticated:
             return self.handle_no_permission()
         level = agency_hub_access_level(user)
-        if level == 'none':
+        if level == 'none' and not can_access_agency_hub(user):
             return self._deny(request, 'بخش آژانس فقط برای مشترکین پلن آژانس در دسترس است.')
         if level == 'owner_locked':
             return HttpResponseRedirect(reverse('workspace:agency_locked'))
@@ -44,10 +45,21 @@ class AgencyTeamHubRequiredMixin(AgencyHubAccessMixin):
         if not user.is_authenticated:
             return self.handle_no_permission()
 
+        from workspace.services.agency_rbac import (
+            NAV_PROFILE_SECRETARY,
+            rbac_v2_enabled_for_user,
+            resolve_nav_profile,
+            staff_can_access_agency_hub_without_seat,
+        )
+
+        if rbac_v2_enabled_for_user(user) and resolve_nav_profile(user) == NAV_PROFILE_SECRETARY:
+            return super(AgencyHubAccessMixin, self).dispatch(request, *args, **kwargs)
+
         if (
             has_assigned_agency_seat(user)
             and not can_manage_agency(user)
             and not can_manage_team(user)
+            and not staff_can_access_agency_hub_without_seat(user)
         ):
             return HttpResponseRedirect(reverse('workspace:agency_advisor_member'))
 
@@ -79,18 +91,73 @@ class AgencyOwnerRequiredMixin:
     """فقط Owner با AgencySubscription فعال."""
 
     def dispatch(self, request, *args, **kwargs):
+        from workspace.services.agency_rbac import PERM_LICENSES_MANAGE, has_agency_permission, rbac_v2_enabled_for_user
+
         user = request.user
         if not user.is_authenticated:
             return self.handle_no_permission()
         if is_expired_agency_owner(user):
             return HttpResponseRedirect(reverse('workspace:agency_locked'))
-        if not can_manage_agency(user):
+        if rbac_v2_enabled_for_user(user):
+            if not has_agency_permission(user, PERM_LICENSES_MANAGE):
+                return self._deny(request)
+        elif not can_manage_agency(user):
             return self._deny(request)
         return super().dispatch(request, *args, **kwargs)
 
     def _deny(self, request):
         messages.error(request, 'دسترسی مدیریت آژانس ندارید.')
         return HttpResponseRedirect(reverse('workspace:crm_dashboard'))
+
+
+class AgencyTeamManageRequiredMixin(AgencyHubAccessMixin):
+    """مدیریت تیم — مالک اشتراک، مدیر legacy، یا RBAC v2 با team.manage."""
+
+    def dispatch(self, request, *args, **kwargs):
+        from workspace.services.agency_rbac import (
+            PERM_TEAM_MANAGE,
+            has_agency_permission,
+            rbac_v2_enabled_for_user,
+        )
+
+        user = request.user
+        if not user.is_authenticated:
+            return self.handle_no_permission()
+        if rbac_v2_enabled_for_user(user):
+            if not has_agency_permission(user, PERM_TEAM_MANAGE):
+                return self._deny_team(request)
+        elif not (can_manage_team(user) or can_manage_agency(user)):
+            return self._deny_team(request)
+        return super().dispatch(request, *args, **kwargs)
+
+    def _deny_team(self, request):
+        messages.error(request, 'دسترسی مدیریت تیم ندارید.')
+        return HttpResponseRedirect(reverse('workspace:crm_dashboard'))
+
+
+class AgencyTeamPerformanceRequiredMixin(AgencyHubAccessMixin):
+    """مشاهده عملکرد/Advisor 360."""
+
+    def dispatch(self, request, *args, **kwargs):
+        from workspace.services.agency_rbac import (
+            PERM_TEAM_VIEW_PERFORMANCE,
+            has_agency_permission,
+            rbac_v2_enabled_for_user,
+        )
+
+        user = request.user
+        if not user.is_authenticated:
+            return self.handle_no_permission()
+        if rbac_v2_enabled_for_user(user):
+            if not has_agency_permission(user, PERM_TEAM_VIEW_PERFORMANCE):
+                return self._deny_perf(request)
+        elif not (can_manage_team(user) or can_manage_agency(user)):
+            return self._deny_perf(request)
+        return super().dispatch(request, *args, **kwargs)
+
+    def _deny_perf(self, request):
+        messages.error(request, 'دسترسی مشاهده عملکرد تیم ندارید.')
+        return HttpResponseRedirect(reverse('workspace:agency_hub_dashboard'))
 
 
 class AgencyManageAPIPermissionMixin:

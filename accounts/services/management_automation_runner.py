@@ -105,7 +105,9 @@ def _site_link() -> str:
 
 
 def _renewal_link() -> str:
-    return getattr(settings, 'LICENSE_RENEWAL_LANDING_URL', f'{_site_link()}pricing/')
+    from accounts.services.growth_links import renewal_or_buy_landing_url
+
+    return renewal_or_buy_landing_url()
 
 
 def _format_expiry_date(dt) -> str:

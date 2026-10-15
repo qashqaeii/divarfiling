@@ -13,7 +13,19 @@ from django.urls import reverse
 from django.views import View
 from django.views.generic import TemplateView
 
-from workspace.mixins_agency import AgencyHubAccessMixin, AgencyOwnerRequiredMixin
+from workspace.mixins_agency import (
+    AgencyHubAccessMixin,
+    AgencyOwnerRequiredMixin,
+    AgencyTeamManageRequiredMixin,
+    AgencyTeamPerformanceRequiredMixin,
+)
+from workspace.services.agency_rbac import (
+    PERM_CONTRACTS_VIEW_TEAM,
+    PERM_DEALS_VIEW_TEAM,
+    PERM_REPORTS_SENSITIVE,
+    has_agency_permission,
+    is_agency_rbac_v2_enabled,
+)
 from workspace.services.agency_data_scope import (
     AgencyDataScopeError,
     get_advisor_member_header,
@@ -45,7 +57,7 @@ TAB_CHOICES = (
 PAGE_SIZE = 25
 
 
-class AgencyAdvisorDetailView(AgencyOwnerRequiredMixin, LoginRequiredMixin, TemplateView):
+class AgencyAdvisorDetailView(AgencyTeamPerformanceRequiredMixin, LoginRequiredMixin, TemplateView):
     template_name = 'workspace/crm/agency/advisor_detail.html'
 
     def get_context_data(self, **kwargs):
@@ -71,7 +83,7 @@ class AgencyAdvisorDetailView(AgencyOwnerRequiredMixin, LoginRequiredMixin, Temp
         ctx['deal_stages'] = DEAL_STAGES
         ctx['property_statuses'] = PROPERTY_TX_STATUSES
         ctx['licenses_url'] = reverse('workspace:agency_hub_licenses')
-        ctx['tabs'] = (
+        tabs = [
             ('overview', 'نمای کلی'),
             ('contacts', 'مخاطبین'),
             ('properties', 'فایل‌های شخصی'),
@@ -79,7 +91,15 @@ class AgencyAdvisorDetailView(AgencyOwnerRequiredMixin, LoginRequiredMixin, Temp
             ('deals', 'معاملات'),
             ('contracts', 'قراردادها'),
             ('activities', 'فعالیت‌ها'),
-        )
+        ]
+        if is_agency_rbac_v2_enabled(member.agency):
+            if not has_agency_permission(self.request.user, PERM_DEALS_VIEW_TEAM):
+                tabs = [t for t in tabs if t[0] != 'deals']
+            if not has_agency_permission(self.request.user, PERM_CONTRACTS_VIEW_TEAM):
+                tabs = [t for t in tabs if t[0] != 'contracts']
+            if tab not in {t[0] for t in tabs}:
+                tab = tabs[0][0]
+        ctx['tabs'] = tuple(tabs)
         ctx['periods'] = (7, 30, 90)
         ctx['tab'] = tab
         ctx['period'] = period
@@ -132,7 +152,7 @@ class AgencyAdvisorDetailView(AgencyOwnerRequiredMixin, LoginRequiredMixin, Temp
         return ctx
 
 
-class AgencyAdvisorExportView(AgencyOwnerRequiredMixin, LoginRequiredMixin, View):
+class AgencyAdvisorExportView(AgencyTeamPerformanceRequiredMixin, LoginRequiredMixin, View):
     def get(self, request, member_id: int):
         data_type = request.GET.get('type', 'contacts')
         fmt = request.GET.get('format', 'xlsx')
@@ -151,7 +171,7 @@ class AgencyAdvisorExportView(AgencyOwnerRequiredMixin, LoginRequiredMixin, View
             )
 
 
-class AgencyTeamExportView(AgencyOwnerRequiredMixin, LoginRequiredMixin, View):
+class AgencyTeamExportView(AgencyTeamManageRequiredMixin, LoginRequiredMixin, View):
     def post(self, request):
         data_type = request.POST.get('type', 'contacts')
         fmt = request.POST.get('format', 'xlsx')
@@ -173,7 +193,7 @@ class AgencyTeamExportView(AgencyOwnerRequiredMixin, LoginRequiredMixin, View):
             return redirect('workspace:agency_hub_advisors')
 
 
-class AgencyAdvisorContractPdfView(AgencyOwnerRequiredMixin, LoginRequiredMixin, View):
+class AgencyAdvisorContractPdfView(AgencyTeamPerformanceRequiredMixin, LoginRequiredMixin, View):
     """PDF قرارداد مشاور — مسیر read-only مدیریتی بدون License شخصی."""
 
     def get(self, request, member_id: int, contract_id: int):
@@ -241,7 +261,7 @@ class AgencyAdvisorMemberView(AgencyHubAccessMixin, LoginRequiredMixin, Template
         return ctx
 
 
-class AgencyAdvisorDocumentDownloadView(AgencyOwnerRequiredMixin, LoginRequiredMixin, View):
+class AgencyAdvisorDocumentDownloadView(AgencyTeamPerformanceRequiredMixin, LoginRequiredMixin, View):
     """دانلود مدرک CRM مشاور — با agency gate."""
 
     def get(self, request, member_id: int, document_id: int):
@@ -263,7 +283,7 @@ class AgencyAdvisorDocumentDownloadView(AgencyOwnerRequiredMixin, LoginRequiredM
         return FileResponse(doc.file.open('rb'), as_attachment=True, filename=doc.file.name.split('/')[-1])
 
 
-class AgencyAdvisorDetailAPIView(AgencyOwnerRequiredMixin, LoginRequiredMixin, View):
+class AgencyAdvisorDetailAPIView(AgencyTeamPerformanceRequiredMixin, LoginRequiredMixin, View):
     """API سبک برای pagination آینده — JSON 403."""
 
     def get(self, request, member_id: int):

@@ -272,10 +272,8 @@ RECOVERY_PROVIDER_TIMEOUT_SECONDS = config('RECOVERY_PROVIDER_TIMEOUT_SECONDS', 
 LICENSE_RENEWAL_FLOW_ENABLED = config('LICENSE_RENEWAL_FLOW_ENABLED', default=True, cast=bool)
 LICENSE_RENEWAL_WITHIN_DAYS = config('LICENSE_RENEWAL_WITHIN_DAYS', default=7, cast=int)
 LICENSE_RENEWAL_CHURN_AFTER_DAYS = config('LICENSE_RENEWAL_CHURN_AFTER_DAYS', default=3, cast=int)
-LICENSE_RENEWAL_LANDING_URL = config(
-    'LICENSE_RENEWAL_LANDING_URL',
-    default='https://divarfiling.ir/pricing/',
-)
+# خالی = لینک خودکار صفحه buy محصول ربات (accounts.services.growth_links)
+LICENSE_RENEWAL_LANDING_URL = config('LICENSE_RENEWAL_LANDING_URL', default='')
 
 # License Settings
 LICENSE_SECRET_KEY = config('LICENSE_SECRET_KEY', default='change-this-secret-key-in-production')

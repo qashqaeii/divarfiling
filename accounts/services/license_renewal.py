@@ -23,12 +23,16 @@ STEP_EXPIRING = 'expiring_soon'
 STEP_CHURN = 'churn_risk'
 
 DEFAULT_TEMPLATE_EXPIRING = (
-    'سلام{name_part}، لایسنس «{product}» تا {days} روز دیگر منقضی می‌شود. '
-    'برای تمدید: {link}'
+    'سلام{name_part} 👋\n'
+    'لایسنس «{product}» تا {days} روز دیگه تموم می‌شه.\n'
+    'میزکار و فایلینگ‌ات رو بدون قطعی نگه دار؛ تمدید:\n'
+    '{link}'
 )
 DEFAULT_TEMPLATE_CHURN = (
-    'سلام{name_part}، لایسنس «{product}» منقضی شده است. '
-    'برای تمدید و ادامه کار: {link}'
+    'سلام{name_part} 👋\n'
+    'لایسنس «{product}» منقضی شده — داده‌های میزکارت منتظرته.\n'
+    'برای فعال‌سازی دوباره:\n'
+    '{link}'
 )
 
 
@@ -52,11 +56,9 @@ def churn_after_days() -> int:
 
 
 def renewal_landing_url() -> str:
-    return getattr(
-        settings,
-        'LICENSE_RENEWAL_LANDING_URL',
-        'https://divarfiling.ir/pricing/',
-    )
+    from accounts.services.growth_links import renewal_or_buy_landing_url
+
+    return renewal_or_buy_landing_url()
 
 
 def _mask_phone(phone: str) -> str:

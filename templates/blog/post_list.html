@@ -11,17 +11,47 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/mizkar-blog.css' %}?v=5">
 <link rel="stylesheet" href="{% static 'css/blog-page.css' %}?v=2">
-<link rel="stylesheet" href="{% static 'css/blog-mobile.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'css/blog-mobile.css' %}?v=4">
+<link rel="stylesheet" href="{% static 'css/blog-hub-mobile.css' %}?v=6">
 {% endblock %}
 
 {% block content %}
 <div class="mk-pub-wrap mk-blog-hub">
 
-    <header class="blg-hero" aria-labelledby="blg-hero-title">
+    <header class="blg-hero blg-hero--hub-mob" aria-labelledby="blg-hero-title">
         <div class="blg-hero__media" style="--blg-hero-bg: url('{% static 'images/Blog-header.webp' %}');" aria-hidden="true"></div>
         <div class="blg-hero__fade" aria-hidden="true"></div>
+        <div class="blg-hero-mob__aurora blg-hub-mob-only" aria-hidden="true">
+            <span class="blg-hero-mob__orb blg-hero-mob__orb--violet"></span>
+            <span class="blg-hero-mob__orb blg-hero-mob__orb--cyan"></span>
+        </div>
         <div class="container blg-hero__shell">
-            <div class="blg-hero__content mk-blog-reveal">
+            <div class="blg-hero-mob blg-hub-mob-only" data-blg-hero-mob>
+                <p class="blg-hero-mob__kicker">
+                    <span class="blg-hero-mob__kicker-icon" aria-hidden="true"><i class="fas fa-book-open"></i></span>
+                    مرکز دانش مشاوران
+                </p>
+                <h1 class="blg-hero-mob__title">
+                    <span class="blg-hero-mob__title-main">مقالات تخصصی</span>
+                    <span class="blg-hero-mob__title-accent">املاک و فایلینگ</span>
+                </h1>
+                <p class="blg-hero-mob__lead">
+                    راهنمای عملی CRM، تحلیل بازار دیوار و گردش کار حرفه‌ای برای مشاوران و آژانس‌ها.
+                </p>
+                <ul class="blg-hero-mob__stats" aria-label="خلاصه بلاگ">
+                    <li><strong>{{ total_posts }}</strong><span>مقاله</span></li>
+                    <li><strong>{{ categories|length }}</strong><span>دسته</span></li>
+                    <li><strong aria-label="به‌روزرسانی مستمر">+</strong><span>به‌روز</span></li>
+                </ul>
+                <div class="blg-hero-mob__topics" aria-label="موضوعات">
+                    <span><i class="fas fa-users blg-gicon blg-gicon--xs" aria-hidden="true"></i> CRM</span>
+                    <span><i class="fas fa-chart-line blg-gicon blg-gicon--xs" aria-hidden="true"></i> تحلیل بازار</span>
+                    <span><i class="fas fa-robot blg-gicon blg-gicon--xs" aria-hidden="true"></i> ربات دیوار</span>
+                    <span><i class="fas fa-folder-tree blg-gicon blg-gicon--xs" aria-hidden="true"></i> فایلینگ</span>
+                </div>
+            </div>
+
+            <div class="blg-hero__content blg-hub-desk-only mk-blog-reveal">
                 <p class="blg-hero__eyebrow">
                     <i class="fas fa-book-open blg-gicon blg-gicon--xs" aria-hidden="true"></i>
                     <span>مرکز دانش مشاوران</span>
@@ -62,8 +92,22 @@
     </header>
 
     {% if categories %}
-    <div class="mk-blog-filter-bar">
+    <div class="mk-blog-filter-bar" data-blg-filter-bar>
         <div class="container mk-blog-filter-shell">
+            <div class="mk-blog-filter-mob-head blg-hub-mob-only">
+                <p class="mk-blog-filter-mob-title">
+                    <i class="fas fa-sliders" aria-hidden="true"></i>
+                    موضوع مقاله
+                </p>
+                {% if active_category %}
+                <p class="mk-blog-filter-mob-active">
+                    {% for cat in categories %}{% if cat.slug == active_category %}{{ cat.name }}{% endif %}{% endfor %}
+                </p>
+                {% else %}
+                <p class="mk-blog-filter-mob-active is-muted">همه مقالات</p>
+                {% endif %}
+            </div>
+            <div class="mk-blog-filter-scroll blg-hub-mob-only" data-blg-filter-scroll>
             <nav class="mk-blog-filter-nav" aria-label="فیلتر دسته‌بندی" data-filter-track>
                 <span class="mk-blog-filter-indicator" aria-hidden="true"></span>
                 <a href="{% url 'blog:post_list' %}"
@@ -80,6 +124,7 @@
                 </a>
                 {% endfor %}
             </nav>
+            </div>
         </div>
     </div>
     {% endif %}
@@ -98,9 +143,10 @@
                 </div>
             </header>
 
-            <article class="mk-blog-featured mk-blog-reveal">
+            <article class="mk-blog-featured mk-blog-featured--mob-editorial mk-blog-reveal">
                 <a href="{% url 'blog:post_detail' featured_post.slug %}" class="mk-blog-featured-link">
                     <div class="mk-blog-featured-media">
+                        <span class="mk-blog-featured-scrim" aria-hidden="true"></span>
                         {% if featured_post.featured_image %}
                         <img src="{{ featured_post.featured_image.url }}" alt="{{ featured_post.title }}" loading="eager">
                         {% else %}
@@ -121,7 +167,7 @@
                         <p class="mk-blog-featured-excerpt">
                             {{ featured_post.excerpt|default:featured_post.content|striptags|truncatewords:36 }}
                         </p>
-                        <span class="mk-blog-featured-author">
+                        <span class="mk-blog-featured-author blg-hub-desk-only">
                             <span class="mk-blog-featured-author-avatar" aria-hidden="true">
                                 <i class="fas fa-user-pen" aria-hidden="true"></i>
                             </span>
@@ -176,7 +222,10 @@
             </div>
 
             <div id="mk-blog-load-sentinel" class="mk-blog-load-sentinel"{% if not page_obj.has_next %} hidden{% endif %} aria-hidden="true"></div>
-            <p id="mk-blog-load-status" class="mk-blog-load-status" hidden role="status">در حال بارگذاری مقالات…</p>
+            <p id="mk-blog-load-status" class="mk-blog-load-status" hidden role="status">
+                <span class="mk-blog-load-status__spin" aria-hidden="true"></span>
+                در حال بارگذاری مقالات…
+            </p>
         </div>
     </section>
 
@@ -206,5 +255,5 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'js/mizkar-blog.js' %}?v=5" defer></script>
+<script src="{% static 'js/mizkar-blog.js' %}?v=7" defer></script>
 {% endblock %}

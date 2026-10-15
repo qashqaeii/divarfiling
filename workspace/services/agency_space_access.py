@@ -69,6 +69,11 @@ def can_publish_to_agency_space(user, agency: Optional[CRMAgency] = None) -> boo
 def can_moderate_agency_space(user, agency: Optional[CRMAgency] = None) -> bool:
     if not can_access_agency_space(user, agency):
         return False
+    from workspace.services.agency_rbac import PERM_AGENCY_SPACE_MODERATE, has_agency_permission, is_agency_rbac_v2_enabled
+
+    agency = agency or get_user_space_agency(user)
+    if agency and is_agency_rbac_v2_enabled(agency):
+        return has_agency_permission(user, PERM_AGENCY_SPACE_MODERATE)
     return can_manage_team(user)
 
 

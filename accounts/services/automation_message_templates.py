@@ -80,11 +80,11 @@ VARIABLE_REGISTRY: Dict[str, VariableDef] = {
     ),
     'checkout_link': VariableDef(
         'checkout_link', 'لینک خرید با کد', 'لینک checkout با کد تخفیف',
-        'https://divarfiling.ir/pricing/?code=DF-H7K4P2', 'product', optional=True,
+        'https://divarfiling.ir/products/divar-extraction-bot/buy/?code=DF-H7K4P2', 'product', optional=True,
     ),
     'link': VariableDef(
         'link', 'لینک اقدام', 'لینک اصلی اقدام (تمدید/خرید)',
-        'https://divarfiling.ir/pricing/', 'product',
+        'https://divarfiling.ir/products/divar-extraction-bot/buy/', 'product',
     ),
     'date': VariableDef(
         'date', 'تاریخ', 'تاریخ مرتبط با رویداد',
@@ -203,90 +203,85 @@ RULE_ALLOWED_VARIABLES: Dict[str, Set[str]] = {
 RULE_DEFAULT_TEMPLATES: Dict[str, str] = {
     'license_expiring_3d': (
         'سلام{name_part} 👋\n'
-        'اشتراک فایلینگ دیوارت تا {days_left} روز دیگه تموم می‌شه.\n'
-        'برای تمدید سریع: {link}'
+        '{days_left} روز تا پایان اشتراک {product} مونده.\n'
+        'همون میزکار و فایلینگ‌ات رو بدون قطعی نگه دار؛ تمدید:\n'
+        '{link}'
     ),
     'expired_renewal_campaign': (
         'سلام{name_part} 👋\n'
-        'اشتراک فایلینگ دیوارت تموم شده.\n'
-        'کد تخفیف اختصاصی‌ت: {discount_code}\n'
-        'تا {discount_expiry} فعاله.\n'
-        'تمدید: {checkout_link}'
+        'اشتراک {product} تموم شده — برگشتت راحته.\n'
+        'کد ویژه: {discount_code} ({discount_percent}٪) · تا {discount_expiry}\n'
+        '{checkout_link}'
     ),
     'pending_recovery': (
         'سلام{name_part} 👋\n'
-        'خرید {product} هنوز کامل نشده.\n'
-        'اگه قصد خرید داری، از اینجا ادامه بده:\n'
+        'سفارش {product} هنوز ثبت نهایی نشده.\n'
+        'چند ثانیه تا تکمیل خرید — از همین لینک:\n'
         '{link}'
     ),
     'pending_recovery_discount': (
         'سلام{name_part} 👋\n'
-        'برای تکمیل خرید {product}، یک تخفیف اختصاصی برات فعال کردیم:\n'
-        '{discount_code} ({discount_percent}٪)\n'
-        'تا {discount_expiry} · {checkout_link}'
+        'برای تکمیل {product}، {discount_percent}٪ تخفیف برات فعاله:\n'
+        '{discount_code}\n'
+        'مهلت: {discount_expiry}\n'
+        '{checkout_link}'
     ),
     'failed_payment_followup': (
         'سلام{name_part} 👋\n'
-        'پرداخت {product} کامل نشد.\n'
-        'می‌تونی دوباره از اینجا امتحان کنی:\n'
+        'پرداخت {product} انجام نشد — معمولاً یک بار دیگه درست می‌شه.\n'
+        'دوباره امتحان کن:\n'
         '{link}'
     ),
     'users_onboarding': (
-        'سلام{name_part} 👋\n'
-        'برای شروع کار با فایلینگ دیوار، این راهنمای کوتاه رو ببین:\n'
+        'سلام{name_part} 👋 خوش اومدی به فایلینگ دیوار.\n'
+        'اولین قدم: این آموزش کوتاه، بعد میزکار:\n'
         '{academy_link}'
     ),
     'returning_customer_renewal': (
-        'سلام{name_part} 👋\n'
-        'خوش برگشتی! برای تمدید، کد اختصاصی‌ت:\n'
-        '{discount_code} ({discount_percent}٪)\n'
-        'تا {discount_expiry} · {checkout_link}'
+        'سلام{name_part} 👋 دوباره دیدمت!\n'
+        'کد تمدید: {discount_code} ({discount_percent}٪) · تا {discount_expiry}\n'
+        '{checkout_link}'
     ),
     'purchase_no_download': (
         'سلام{name_part} 👋\n'
-        'لایسنس فعال شده؛ نسخه ویندوز رو هنوز دانلود نکردی.\n'
-        'لینک دانلود:\n'
+        'لایسنس آماده‌ست؛ نسخه ویندوز رو هنوز نگرفتی.\n'
+        'دانلود از همینجا:\n'
         '{download_link}'
     ),
     'windows_activation_nudge': (
         'سلام{name_part} 👋\n'
-        'نسخه ویندوز رو دانلود کردی ولی هنوز فعال نشده.\n'
-        'راهنمای فعال‌سازی:\n'
+        'ربات ویندوز رو دانلود کردی — فقط فعال‌سازی مونده.\n'
+        'راهنمای قدم‌به‌قدم:\n'
         '{guide_link}'
     ),
     'windows_activate_no_launch': (
         'سلام{name_part} 👋\n'
-        'فعال‌سازی انجام شده؛ فقط یک قدم مونده 🙂\n'
-        'راهنمای شروع سریع:\n'
+        'فعال شد ✅ یک قدم تا اولین استخراج:\n'
         '{guide_link}'
     ),
     'launch_no_dataset': (
         'سلام{name_part} 👋\n'
-        'هنوز اولین فایلینگت رو نساختی؟\n'
-        'این آموزش کوتاه کمکت می‌کنه سریع شروع کنی:\n'
+        'اولین فایلینگت رو بساز — این ویدیو ۳ دقیقه‌ای کمکت می‌کنه:\n'
         '{academy_link}'
     ),
     'dataset_no_crm': (
         'سلام{name_part} 👋\n'
-        'حالا که فایل‌هات آماده‌ست، مشتری‌ها و پیگیری‌هات رو داخل CRM مرتب کن.\n'
-        'ثبت اولین مشتری:\n'
+        'فایل‌ها آماده‌ان؛ حالا مشتری و پیگیری‌ها رو توی CRM مرتب کن:\n'
         '{crm_link}'
     ),
     'crm_not_started_nudge': (
         'سلام{name_part} 👋\n'
-        'با CRM فایلینگ دیوار می‌تونی مشتری‌ها و پیگیری‌هات رو مرتب مدیریت کنی.\n'
-        'شروع سریع:\n'
+        'CRM فایلینگ دیوار جای پیگیری مشتری‌هاست — شروع از این لینک:\n'
         '{crm_link}'
     ),
     'crm_abandoned_nudge': (
         'سلام{name_part} 👋\n'
-        'چند وقته از CRM استفاده نکردی.\n'
-        'اگه پیگیری مشتری داری، از اینجا ادامه بده:\n'
+        'مدتی CRM رو باز نکردی؛ پیگیری‌های باز منتظرتن:\n'
         '{crm_link}'
     ),
     'license_inactive_usage': (
         'سلام{name_part} 👋\n'
-        'برای شروع دوباره، این آموزش کوتاه رو ببین:\n'
+        'برای شروع دوباره، همین راهنمای کوتاه کافیه:\n'
         '{guide_link}'
     ),
 }
@@ -343,9 +338,11 @@ def _safe_reverse(name: str, **kwargs) -> str:
 
 
 def system_link_urls() -> Dict[str, str]:
+    from accounts.services.growth_links import renewal_or_buy_landing_url
+
     guide = _safe_reverse('license_guide')
     return {
-        'link': getattr(settings, 'LICENSE_RENEWAL_LANDING_URL', None) or f'{_site_base()}/pricing/',
+        'link': renewal_or_buy_landing_url(),
         'guide_link': guide,
         'activation_link': guide,
         'download_link': f'{guide}#download',

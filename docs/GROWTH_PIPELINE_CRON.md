@@ -54,7 +54,7 @@ Enable live renewal only after dry-run looks clean:
 | `LICENSE_RENEWAL_FLOW_ENABLED` | `True` | Master switch for renewal live sends |
 | `LICENSE_RENEWAL_WITHIN_DAYS` | `7` | Active licenses expiring within N days |
 | `LICENSE_RENEWAL_CHURN_AFTER_DAYS` | `3` | Days after expiry before churn SMS |
-| `LICENSE_RENEWAL_LANDING_URL` | pricing URL | Link in renewal SMS |
+| `LICENSE_RENEWAL_LANDING_URL` | (خالی = صفحه buy ربات) | Link in renewal SMS |
 
 Recovery still uses its own flags (`PENDING_RECOVERY_FLOW_ENABLED`, `RECOVERY_LIVE_SEND_ENABLED`, …) — see `RECOVERY_CRON.md`.
 

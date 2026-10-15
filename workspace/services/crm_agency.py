@@ -190,16 +190,35 @@ def cancel_membership_request(actor, request_id: int) -> None:
 
 
 def update_member_role(actor, member_id: int, role: str) -> CRMAgencyMember:
-    if not can_manage_team(actor):
-        raise ValueError('دسترسی ندارید')
+    from workspace.services.agency_rbac import (
+        clear_permission_overrides_for_role,
+        is_agency_rbac_v2_enabled,
+        validate_role_change,
+    )
+
+    from workspace.services.agency_rbac import PERM_TEAM_MANAGE, has_agency_permission
+
     m = get_membership(actor)
+    if is_agency_rbac_v2_enabled(m.agency) if m else False:
+        if not has_agency_permission(actor, PERM_TEAM_MANAGE):
+            raise ValueError('دسترسی ندارید')
+    elif not can_manage_team(actor):
+        raise ValueError('دسترسی ندارید')
     member = CRMAgencyMember.objects.get(pk=member_id, agency=m.agency, is_active=True)
     if member.role == AGENCY_ROLE_OWNER:
         raise ValueError('نقش مالک قابل تغییر نیست')
     if role == AGENCY_ROLE_OWNER:
         raise ValueError('نقش مالک مجاز نیست')
+    if is_agency_rbac_v2_enabled(m.agency):
+        role = validate_role_change(role)
     member.role = role
     member.save(update_fields=['role'])
+    if is_agency_rbac_v2_enabled(m.agency):
+        clear_permission_overrides_for_role(member)
+    log_agency_audit(m.agency, actor, 'member.role_changed', {
+        'member_id': member.pk,
+        'role': role,
+    })
     return member
 
 

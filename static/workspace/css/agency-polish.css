@@ -64,3 +64,171 @@
     justify-content: flex-start;
   }
 }
+
+/* ── پنل مجوز اعضا (sheet) ── */
+.agency-perms-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 1080;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.agency-perms-sheet:not([hidden]) {
+  pointer-events: auto;
+}
+
+.agency-perms-sheet__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.agency-perms-sheet:not([hidden]) .agency-perms-sheet__backdrop {
+  opacity: 1;
+}
+
+.agency-perms-sheet__panel {
+  position: relative;
+  width: min(100%, 28rem);
+  max-height: min(92vh, 640px);
+  margin: 0 auto;
+  background: #fff;
+  border-radius: 16px 16px 0 0;
+  box-shadow: 0 -8px 32px rgba(15, 23, 42, 0.12);
+  display: flex;
+  flex-direction: column;
+  transform: translateY(100%);
+  transition: transform 0.22s ease;
+}
+
+.agency-perms-sheet:not([hidden]) .agency-perms-sheet__panel {
+  transform: translateY(0);
+}
+
+.agency-perms-sheet__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 1rem 1rem 0.5rem;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.agency-perms-sheet__title {
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.agency-perms-sheet__sub {
+  font-size: 0.8rem;
+  color: #64748b;
+  margin: 0.25rem 0 0;
+}
+
+.agency-perms-sheet__close {
+  border: 0;
+  background: transparent;
+  padding: 0.35rem;
+  color: #64748b;
+  cursor: pointer;
+}
+
+.agency-perms-sheet__presets {
+  padding: 0.75rem 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.agency-perms-sheet__presets-label {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.agency-perms-sheet__preset-btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.agency-perms-sheet__effective {
+  font-size: 0.75rem;
+  color: #475569;
+  margin: 0 1rem 0.5rem;
+  line-height: 1.5;
+}
+
+.agency-perms-sheet__form {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.agency-perms-sheet__list {
+  list-style: none;
+  margin: 0;
+  padding: 0 1rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.agency-perms-sheet__check {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.45rem 0;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.agency-perms-sheet__foot {
+  padding: 0.75rem 1rem 1rem;
+  border-top: 1px solid rgba(15, 23, 42, 0.06);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.agency-perms-sheet__dirty {
+  flex: 1 1 100%;
+  font-size: 0.75rem;
+  color: #b45309;
+  margin: 0 0 0.25rem;
+}
+
+.agency-member-perms-summary {
+  font-size: 0.7rem;
+  color: #64748b;
+  margin: 0.2rem 0 0;
+  max-width: 14rem;
+}
+
+@media (min-width: 768px) {
+  .agency-perms-sheet {
+    align-items: center;
+  }
+
+  .agency-perms-sheet__panel {
+    border-radius: 16px;
+    max-height: min(85vh, 640px);
+    transform: translateY(12px);
+    opacity: 0;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+  }
+
+  .agency-perms-sheet:not([hidden]) .agency-perms-sheet__panel {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}

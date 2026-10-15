@@ -163,10 +163,12 @@ def update_discount_policy_config(
 
 
 def checkout_link_with_code(code: str, *, order_id: Optional[int] = None) -> str:
+    from accounts.services.growth_links import abs_url, renewal_or_buy_landing_url
+
     code = (code or '').strip().upper()
     if order_id:
-        return f'{_site_base()}/payment/checkout/{order_id}/?code={code}'
-    renewal = getattr(settings, 'LICENSE_RENEWAL_LANDING_URL', None) or f'{_site_base()}/pricing/'
+        return abs_url(f'/payment/checkout/{order_id}/?code={code}')
+    renewal = renewal_or_buy_landing_url()
     sep = '&' if '?' in renewal else '?'
     return f'{renewal}{sep}code={code}'
 

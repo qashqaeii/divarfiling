@@ -99,7 +99,29 @@
                             </div>
                         </td>
                         <td dir="ltr">{{ m.user.phone }}</td>
-                        <td>{{ m.get_role_display }}</td>
+                        <td>
+                            {% if agency_rbac_v2 and agency_roles_assignable and m.role != 'owner' %}
+                            <form method="post" action="{{ crm_team_url }}" class="agency-role-form" onsubmit="return confirm('نقش عضو تغییر کند؟ مجوزهای سفارشی بازنشانی می‌شوند.');">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="update_role">
+                                <input type="hidden" name="member_id" value="{{ m.pk }}">
+                                <input type="hidden" name="tab" value="members">
+                                <select name="role" class="crm-input" style="width:auto;min-width:6.5rem;font-size:0.8rem;" onchange="this.form.requestSubmit()">
+                                    {% for code, label in agency_roles_assignable %}
+                                    <option value="{{ code }}"{% if m.role == code %} selected{% endif %}>{{ label }}</option>
+                                    {% endfor %}
+                                    {% if m.role == 'manager' %}
+                                    <option value="manager" selected disabled>مدیر (legacy)</option>
+                                    {% endif %}
+                                </select>
+                            </form>
+                            {% else %}
+                            {{ m.get_role_display }}
+                            {% endif %}
+                            {% if agency_rbac_v2 and row.effective_perm_labels %}
+                            <p class="agency-table__sub agency-member-perms-summary">{{ row.effective_perm_labels|join:" · " }}</p>
+                            {% endif %}
+                        </td>
                         <td>
                             {% if m.data_visibility_consent_at %}
                             {% include "workspace/crm/agency/includes/status_badge.html" with status="ok" label="فعال" %}
@@ -119,6 +141,15 @@
                             <div class="agency-table__actions">
                                 {% if m.data_visibility_consent_at %}
                                 <a href="{% url 'workspace:agency_advisor_detail' m.pk %}" class="crm-btn crm-btn-ghost crm-btn-sm">مشاهده</a>
+                                {% endif %}
+                                {% if can_edit_member_permissions and m.role != 'owner' %}
+                                <button type="button"
+                                    class="crm-btn crm-btn-ghost crm-btn-sm js-agency-perms-open"
+                                    data-member-id="{{ m.pk }}"
+                                    data-member-name="{{ m.user.get_full_name|default:m.user.phone }}"
+                                    data-role="{{ m.role }}"
+                                    data-effective-labels="{{ row.effective_perm_labels|join:'|' }}"
+                                    data-perms="{{ row.effective_perm_set|join:',' }}">مجوزها</button>
                                 {% endif %}
                                 {% if row.has_seat %}
                                 <form method="post" action="{{ crm_team_url }}" onsubmit="return confirm('لغو تخصیص لایسنس؟');">
@@ -290,7 +321,16 @@
             <div class="modal-body">
                 <label class="agency-form-label">شماره موبایل</label>
                 <input type="tel" name="phone" class="crm-input" required dir="ltr" placeholder="0912xxxxxxx">
+                {% if agency_roles_invite %}
+                <label class="agency-form-label">نقش</label>
+                <select name="role" class="crm-input">
+                    {% for code, label in agency_roles_invite %}
+                    <option value="{{ code }}">{{ label }}</option>
+                    {% endfor %}
+                </select>
+                {% else %}
                 <input type="hidden" name="role" value="advisor">
+                {% endif %}
             </div>
             <div class="modal-footer">
                 <button type="submit" class="crm-btn crm-btn-primary">ارسال دعوت SMS</button>
@@ -299,3 +339,5 @@
     </div>
 </div>
 {% endif %}
+
+{% include "workspace/crm/agency/includes/agency_member_permissions_sheet.html" %}

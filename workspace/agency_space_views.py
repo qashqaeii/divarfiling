@@ -10,6 +10,7 @@ from django.views.generic import TemplateView
 from workspace.constants import CRM_PROPERTIES, CRM_TYPES, PROPERTY_DEAL_MODES
 from workspace.mixins_agency_space import AgencySpaceFeatureMixin
 from workspace.services.agency_hub_nav import build_hub_nav, partition_hub_nav
+from workspace.services.agency_rbac import NAV_PROFILE_SECRETARY, resolve_nav_profile
 from workspace.services.agency_hub import hub_base_context
 from workspace.services.agency_space_access import (
     can_moderate_agency_space,
@@ -44,7 +45,8 @@ from workspace.services.crm_scope import agency_members
 def _hub_shell(request, hub_section: str) -> dict:
     ctx = hub_base_context(request.user)
     hub_nav = build_hub_nav(request.user)
-    hub_nav_primary, hub_nav_more = partition_hub_nav(hub_nav)
+    profile = resolve_nav_profile(request.user)
+    hub_nav_primary, hub_nav_more = partition_hub_nav(hub_nav, profile=profile)
     ctx.update({
         'crm_section': 'agency',
         'hub_section': hub_section,
@@ -115,7 +117,14 @@ class AgencyHubSpaceView(AgencySpaceFeatureMixin, LoginRequiredMixin, TemplateVi
             'space_management_url': reverse('workspace:agency_hub_space_manage'),
             'space_publish_property_url': reverse('workspace:crm_properties'),
             'space_publish_contact_url': reverse('workspace:crm_contacts'),
+            'space_quick_actions': [],
         })
+        if profile == NAV_PROFILE_SECRETARY:
+            ctx['space_quick_actions'] = [
+                {'label': 'صندوق سرنخ', 'url': reverse('workspace:agency_hub_inbox'), 'decor': 'inbox'},
+                {'label': 'ثبت مخاطب', 'url': reverse('workspace:crm_contacts') + '?open=create', 'decor': 'user_plus'},
+                {'label': 'جست‌وجوی فایل', 'url': reverse('workspace:crm_properties'), 'decor': 'search'},
+            ]
         return ctx
 
 

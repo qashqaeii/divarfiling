@@ -17,7 +17,16 @@ from workspace.services.agency_entitlement import (
 from workspace.services.agency_members import build_members_dashboard
 from workspace.services.agency_seats import get_member_seat
 from workspace.services.crm_agency_tv import _agency_logo_url
-from workspace.services.crm_scope import get_membership
+from workspace.services.agency_rbac import (
+    NAV_PROFILE_SECRETARY,
+    PERM_CONTRACTS_VIEW_TEAM,
+    PERM_DEALS_VIEW_TEAM,
+    has_agency_permission,
+    is_agency_rbac_v2_enabled,
+    resolve_nav_profile,
+)
+from workspace.services.crm_agency_analytics import get_command_center_stats
+from workspace.services.crm_scope import can_operate_team_leads, get_membership, team_inbox_qs
 
 
 def hub_base_context(user) -> dict[str, Any]:
@@ -42,11 +51,48 @@ def hub_base_context(user) -> dict[str, Any]:
     }
 
 
+def build_secretary_dashboard_context(user, days: int = 30) -> dict[str, Any]:
+    ctx = hub_base_context(user)
+    agency = ctx['hub_agency']
+    membership = get_membership(user)
+    if not agency and membership:
+        agency = membership.agency
+        ctx['hub_agency'] = agency
+        ctx['hub_subscription'] = get_subscription_for_agency(agency)
+    if not agency:
+        return ctx
+    ctx['agency_dash_profile'] = NAV_PROFILE_SECRETARY
+    stats = get_command_center_stats(agency, days=min(days, 30))
+    inbox_qs = team_inbox_qs(user)
+    ctx['summary'] = {
+        'inbox_unassigned': stats.get('inbox_unassigned', inbox_qs.count()),
+        'followups_today': stats.get('followups_today', 0),
+        'period_days': days,
+    }
+    ctx['inbox_preview'] = list(inbox_qs[:8])
+    ctx['quick_actions'] = [
+        {'label': 'ثبت مخاطب', 'url': '/workspace/crm/contacts/new/', 'decor': 'user_plus'},
+        {'label': 'ثبت فایل', 'url': '/workspace/crm/properties/new/', 'decor': 'building'},
+        {'label': 'صندوق سرنخ', 'url': '/workspace/crm/agency/inbox/', 'decor': 'inbox'},
+    ]
+    return ctx
+
+
 def build_dashboard_context(user, days: int = 30) -> dict[str, Any]:
     ctx = hub_base_context(user)
     agency = ctx['hub_agency']
+    membership = get_membership(user)
+    if not agency and membership:
+        agency = membership.agency
+        ctx['hub_agency'] = agency
+        ctx['hub_subscription'] = get_subscription_for_agency(agency)
     if not agency:
         return ctx
+
+    profile = resolve_nav_profile(user)
+    ctx['agency_dash_profile'] = profile
+    if is_agency_rbac_v2_enabled(agency) and profile == NAV_PROFILE_SECRETARY:
+        return build_secretary_dashboard_context(user, days=days)
 
     since = timezone.now() - timedelta(days=days)
     members = list_visible_advisor_members(user)
@@ -63,17 +109,23 @@ def build_dashboard_context(user, days: int = 30) -> dict[str, Any]:
     ).exclude(stage__in=['بسته‌شده', 'از دست رفته']).count()
 
     from contracts.models import Contract
-    contracts_count = Contract.objects.filter(
-        Q(agency=agency) & Q(user_id__in=member_users),
-    ).count()
+    contracts_count = 0
+    if has_agency_permission(user, PERM_CONTRACTS_VIEW_TEAM):
+        contracts_count = Contract.objects.filter(
+            Q(agency=agency) & Q(user_id__in=member_users),
+        ).count()
+
+    summary_deals = deals_active
+    if is_agency_rbac_v2_enabled(agency) and not has_agency_permission(user, PERM_DEALS_VIEW_TEAM):
+        summary_deals = None
 
     ctx['summary'] = {
         'active_advisors': members.count(),
         'available_seats': (ctx['hub_seats'] or {}).get('available', 0),
         'contacts_new': contacts_new,
         'properties_new': properties_new,
-        'deals_active': deals_active,
-        'contracts': contracts_count,
+        'deals_active': summary_deals,
+        'contracts': contracts_count if has_agency_permission(user, PERM_CONTRACTS_VIEW_TEAM) else None,
         'period_days': days,
     }
 
@@ -84,7 +136,9 @@ def build_dashboard_context(user, days: int = 30) -> dict[str, Any]:
     contact_counts = _counts_by_user(Customer)
     property_counts = _counts_by_user(CRMProperty, deleted_at__isnull=True)
     deal_counts = _counts_by_user(CRMDeal)
-    contract_counts = _counts_by_user(Contract)
+    contract_counts = {}
+    if has_agency_permission(user, PERM_CONTRACTS_VIEW_TEAM):
+        contract_counts = _counts_by_user(Contract)
 
     perf_rows = []
     dash = build_members_dashboard(user, agency)

@@ -1108,6 +1108,10 @@ class CRMAgency(models.Model):
     onboarding_completed_at = models.DateTimeField(
         null=True, blank=True, verbose_name='تکمیل onboarding',
     )
+    feature_flags = models.JSONField(
+        default=dict, blank=True,
+        verbose_name='پرچم‌های قابلیت آژانس',
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -1147,6 +1151,11 @@ class CRMAgencyMember(models.Model):
     consent_version = models.CharField(
         max_length=20, blank=True, default='',
         verbose_name='نسخه متن رضایت',
+    )
+    permission_overrides = models.JSONField(
+        default=dict, blank=True,
+        verbose_name='تنظیم مجوزهای جزئی',
+        help_text='کلیدهای مجوز با مقدار boolean — فقط با agency_rbac_v2',
     )
 
     class Meta:

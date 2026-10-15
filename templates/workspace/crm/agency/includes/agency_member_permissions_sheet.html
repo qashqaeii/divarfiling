@@ -1,0 +1,56 @@
+{% if can_edit_member_permissions and agency_rbac_v2 %}
+<div class="agency-perms-sheet" id="agencyMemberPermsSheet" hidden aria-hidden="true">
+    <div class="agency-perms-sheet__backdrop" data-agency-perms-close tabindex="-1" aria-hidden="true"></div>
+    <div class="agency-perms-sheet__panel" role="dialog" aria-modal="true" aria-labelledby="agencyMemberPermsTitle">
+        <header class="agency-perms-sheet__head">
+            <div>
+                <h2 class="agency-perms-sheet__title" id="agencyMemberPermsTitle">مجوزهای عضو</h2>
+                <p class="agency-perms-sheet__sub" id="agencyMemberPermsSubtitle"></p>
+            </div>
+            <button type="button" class="agency-perms-sheet__close" data-agency-perms-close aria-label="بستن">
+                <i class="fas fa-times" aria-hidden="true"></i>
+            </button>
+        </header>
+
+        <div class="agency-perms-sheet__presets" id="agencyMemberPermsPresets">
+            <span class="agency-perms-sheet__presets-label">الگوی سریع</span>
+            <div class="agency-perms-sheet__preset-btns">
+                <button type="button" class="crm-btn crm-btn-ghost crm-btn-sm" data-agency-perms-preset="secretary">منشی (پذیرش)</button>
+                <button type="button" class="crm-btn crm-btn-ghost crm-btn-sm" data-agency-perms-preset="advisor">مشاور</button>
+            </div>
+        </div>
+
+        <p class="agency-perms-sheet__effective" id="agencyMemberPermsEffective" hidden></p>
+
+        <form method="post" action="{{ crm_team_url }}" class="agency-perms-sheet__form" id="agencyMemberPermsForm">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="agency_update_member_permissions">
+            <input type="hidden" name="member_id" value="" id="agencyMemberPermsMemberId">
+            <input type="hidden" name="tab" value="members">
+            <ul class="agency-perms-sheet__list" id="agencyMemberPermsList">
+                {% for code, label in agency_permission_choices %}
+                <li>
+                    <label class="agency-perms-sheet__check">
+                        <input type="checkbox" name="perm_{{ code }}" value="1" data-perm-code="{{ code }}">
+                        <span>{{ label }}</span>
+                    </label>
+                </li>
+                {% endfor %}
+            </ul>
+            <footer class="agency-perms-sheet__foot">
+                <p class="agency-perms-sheet__dirty" id="agencyMemberPermsDirty" hidden>تغییرات ذخیره نشده</p>
+                <button type="button" class="crm-btn crm-btn-ghost crm-btn-sm" data-agency-perms-close>انصراف</button>
+                <button type="submit" class="crm-btn crm-btn-primary crm-btn-sm" id="agencyMemberPermsSave">ذخیره مجوزها</button>
+            </footer>
+        </form>
+
+        <form method="post" action="{{ crm_team_url }}" id="agencyMemberPermsPresetForm" class="agency-perms-sheet__preset-form" hidden>
+            {% csrf_token %}
+            <input type="hidden" name="action" value="agency_apply_role_preset">
+            <input type="hidden" name="member_id" value="" id="agencyMemberPermsPresetMemberId">
+            <input type="hidden" name="preset" value="" id="agencyMemberPermsPresetValue">
+            <input type="hidden" name="tab" value="members">
+        </form>
+    </div>
+</div>
+{% endif %}

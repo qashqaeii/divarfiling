@@ -131,7 +131,7 @@
                         </div>
 
                         <button type="button" class="ck-pay-btn ck-pay-btn--sidebar" data-pay-btn>
-                            <span class="ck-pay-btn-main"><i class="fas fa-lock"></i> {% if is_renewal %}پرداخت و تمدید{% else %}پرداخت و دریافت لایسنس{% endif %}</span>
+                            <span class="ck-pay-btn-main"><i class="fas fa-lock"></i> {% if is_renewal %}پرداخت و تمدید{% else %}پرداخت امن{% endif %}</span>
                             <span class="ck-pay-btn-sub" id="pay-btn-hint">{% if show_payment_choice %}انتخاب روش پرداخت{% elif 'card_transfer' in payment_methods %}ثبت واریز کارت به کارت{% else %}انتقال به درگاه زیبال{% endif %}</span>
                         </button>
 
@@ -279,7 +279,7 @@
                                 <button type="button" class="ck-plan-pay" data-plan-pay-btn>
                                     <span class="ck-plan-pay__lead">
                                         <i class="fas fa-lock" aria-hidden="true"></i>
-                                        {% if is_renewal %}پرداخت و تمدید{% else %}پرداخت و دریافت لایسنس{% endif %}
+                                        {% if is_renewal %}پرداخت و تمدید{% else %}پرداخت امن{% endif %}
                                     </span>
                                     <span class="ck-plan-pay__price">{{ plan_data.unit_sale_price|currency }} تومان</span>
                                 </button>

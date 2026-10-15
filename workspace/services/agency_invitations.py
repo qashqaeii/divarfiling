@@ -230,6 +230,10 @@ def create_agency_invitation(
         raise ValueError('اشتراک آژانس در حال حاضر فعال نیست.')
 
     phone = _validate_invite_phone(agency, phone)
+    from workspace.services.agency_rbac import is_agency_rbac_v2_enabled, validate_invite_role
+
+    if is_agency_rbac_v2_enabled(agency):
+        role = validate_invite_role(role)
 
     with transaction.atomic():
         locked_sub = AgencySubscription.objects.select_for_update().get(pk=sub.pk)

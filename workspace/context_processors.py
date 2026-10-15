@@ -127,4 +127,37 @@ def _build_workspace_context(request, user, ctx):
             ctx['ws_upload_form'] = DatasetUploadForm()
         show_agency_nav = can_access_agency_hub(user)
         ctx.update(_ws_nav_flags(request, user, show_agency_nav))
+        from workspace.services.agency_rbac import (
+            PERM_CONTRACTS_VIEW_TEAM,
+            PERM_FINANCE_VIEW,
+            has_agency_permission,
+            is_agency_rbac_v2_enabled,
+            resolve_nav_profile,
+        )
+        from workspace.services.crm_scope import get_membership
+
+        _m = get_membership(user)
+        _agency = _m.agency if _m else None
+        _rbac = is_agency_rbac_v2_enabled(_agency) if _agency else False
+        ctx['ws_agency_rbac_v2'] = _rbac
+        profile = resolve_nav_profile(user) if _agency else ''
+        ctx['ws_agency_nav_profile'] = profile
+        ctx['ws_show_crm_deals_finance'] = True
+        ctx['ws_show_crm_deals_nav'] = True
+        ctx['ws_show_crm_contracts_nav'] = True
+        if _rbac:
+            if profile == 'secretary':
+                ctx['ws_show_crm_deals_finance'] = False
+                ctx['ws_show_crm_deals_nav'] = False
+                ctx['ws_show_crm_contracts_nav'] = False
+            elif profile == 'advisor':
+                ctx['ws_show_crm_deals_finance'] = True
+                ctx['ws_show_crm_deals_nav'] = True
+                ctx['ws_show_crm_contracts_nav'] = True
+            else:
+                ctx['ws_show_crm_deals_finance'] = has_agency_permission(user, PERM_FINANCE_VIEW)
+                ctx['ws_show_crm_deals_nav'] = True
+                ctx['ws_show_crm_contracts_nav'] = has_agency_permission(
+                    user, PERM_CONTRACTS_VIEW_TEAM,
+                )
     return ctx

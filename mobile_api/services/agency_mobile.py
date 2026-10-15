@@ -189,9 +189,15 @@ def agency_home_for_user(user) -> Dict[str, Any]:
         for ev in build_activity_feed(user, limit=8):
             team_activity.append(_activity_event_payload(ev))
 
+    rbac_payload = {}
+    from workspace.services.agency_rbac import serialize_permissions_for_api
+
+    rbac_payload = serialize_permissions_for_api(user)
+
     return {
         **overview,
         'permissions': permissions,
+        'rbac': rbac_payload,
         'capabilities': capabilities,
         'seats': _seat_dict(seats),
         'kpis': kpis,
@@ -374,8 +380,19 @@ def seats_overview_for_user(user) -> Dict[str, Any]:
 
 
 def team_performance_for_user(user, *, days: int = 7) -> Dict[str, Any]:
+    from workspace.services.agency_rbac import (
+        PERM_TEAM_VIEW_PERFORMANCE,
+        has_agency_permission,
+        is_agency_rbac_v2_enabled,
+    )
+
     membership = get_membership(user)
-    if not membership or not can_manage_team(user):
+    if not membership:
+        raise ValueError('دسترسی گزارش عملکرد ندارید')
+    if is_agency_rbac_v2_enabled(membership.agency):
+        if not has_agency_permission(user, PERM_TEAM_VIEW_PERFORMANCE, member=membership):
+            raise ValueError('دسترسی گزارش عملکرد ندارید')
+    elif not can_manage_team(user):
         raise ValueError('دسترسی گزارش عملکرد ندارید')
     agency = membership.agency
     data = get_team_performance(agency, days=days)

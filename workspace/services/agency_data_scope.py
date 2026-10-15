@@ -48,6 +48,22 @@ def resolve_visible_agency_member(viewer, member_id: int) -> CRMAgencyMember:
 
     agency, sub = resolve_managed_agency(viewer)
     if not agency or not sub:
+        from workspace.services.agency_rbac import (
+            PERM_TEAM_VIEW_PERFORMANCE,
+            has_agency_permission,
+            is_agency_rbac_v2_enabled,
+        )
+        from workspace.services.crm_scope import get_membership
+
+        membership = get_membership(viewer)
+        if (
+            membership
+            and is_agency_rbac_v2_enabled(membership.agency)
+            and has_agency_permission(viewer, PERM_TEAM_VIEW_PERFORMANCE)
+        ):
+            agency = membership.agency
+            sub = get_subscription_for_agency(agency)
+    if not agency or not sub:
         raise AgencyDataScopeError('اشتراک آژانس فعال نیست')
 
     try:
@@ -187,6 +203,11 @@ def get_member_deals_qs(
     elif not can_view_agency_member(viewer, member):
         raise AgencyDataScopeError('دسترسی مجاز نیست')
 
+    from workspace.services.agency_rbac import PERM_DEALS_VIEW_TEAM, assert_agency_permission, is_agency_rbac_v2_enabled
+
+    if is_agency_rbac_v2_enabled(member.agency):
+        assert_agency_permission(viewer, PERM_DEALS_VIEW_TEAM, message='دسترسی معاملات تیم مجاز نیست')
+
     qs = (
         CRMDeal.objects.filter(_member_record_scope(member))
         .select_related('customer', 'property')
@@ -208,6 +229,11 @@ def get_member_contracts_qs(viewer, member: CRMAgencyMember) -> QuerySet:
         member = resolve_visible_agency_member(viewer, member)
     elif not can_view_agency_member(viewer, member):
         raise AgencyDataScopeError('دسترسی مجاز نیست')
+
+    from workspace.services.agency_rbac import PERM_CONTRACTS_VIEW_TEAM, assert_agency_permission, is_agency_rbac_v2_enabled
+
+    if is_agency_rbac_v2_enabled(member.agency):
+        assert_agency_permission(viewer, PERM_CONTRACTS_VIEW_TEAM, message='دسترسی قراردادهای تیم مجاز نیست')
 
     deal_ids = CRMDeal.objects.filter(_member_record_scope(member)).values_list('pk', flat=True)
     return (

@@ -314,6 +314,13 @@ class AgencyContractsView(APIView):
         _, err = _require_membership(request.user)
         if err:
             return err
+        from django.core.exceptions import PermissionDenied
+        from workspace.services.crm_rbac_guard import assert_crm_contracts_access_allowed
+
+        try:
+            assert_crm_contracts_access_allowed(request.user)
+        except PermissionDenied as exc:
+            return api_error(str(exc), code='FORBIDDEN', status=403)
         page = clamp_page(request.GET.get('page', 1))
         page_size = clamp_page_size(request.GET.get('page_size', 20), default=20, maximum=50)
         params = {
@@ -367,7 +374,9 @@ class AgencyLeadAssignView(APIView):
         from workspace.services.crm_agency import assign_lead_to_member
         from workspace.services.crm_scope import can_operate_team_leads, get_membership
 
-        if not can_operate_team_leads(request.user):
+        from workspace.services.agency_rbac import can_operate_team_inbox
+
+        if not can_operate_team_inbox(request.user):
             return api_error('دسترسی تخصیص سرنخ ندارید.', code='FORBIDDEN', status=403)
         m = get_membership(request.user)
         if not m:

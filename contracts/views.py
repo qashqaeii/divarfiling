@@ -59,10 +59,11 @@ from contracts.mixins import ContractLicenseContextMixin, ContractLicenseRequire
 from contracts.services.scope import contract_for_deal, contract_for_user, contracts_qs
 from contracts.services.wizard_parse import parse_wizard_step
 from workspace.crm_views import CRMContextMixin
+from workspace.mixins_crm_rbac import CRMContractsAccessMixin
 from workspace.services.crm_scope import deal_for_user, deals_qs
 
 
-class DealContractsMixin(ContractLicenseRequiredMixin, CRMContextMixin):
+class DealContractsMixin(CRMContractsAccessMixin, ContractLicenseRequiredMixin, CRMContextMixin):
     deal_id_kwarg = 'deal_id'
 
     def get_deal(self):
@@ -72,7 +73,7 @@ class DealContractsMixin(ContractLicenseRequiredMixin, CRMContextMixin):
         return deal
 
 
-class ContractAccessMixin(ContractLicenseRequiredMixin, CRMContextMixin):
+class ContractAccessMixin(CRMContractsAccessMixin, ContractLicenseRequiredMixin, CRMContextMixin):
     """دسترسی قرارداد — URL با یا بدون deal_id."""
 
     def _url_deal_id(self):
@@ -155,7 +156,9 @@ class DealSearchApiView(ContractLicenseRequiredMixin, View):
         return JsonResponse({'results': results})
 
 
-class ContractCreateStandaloneView(ContractLicenseRequiredMixin, CRMContextMixin, TemplateView):
+class ContractCreateStandaloneView(
+    CRMContractsAccessMixin, ContractLicenseRequiredMixin, CRMContextMixin, TemplateView,
+):
     """ایجاد قرارداد مستقل از workspace قراردادها."""
     template_name = 'contracts/create.html'
 
@@ -604,7 +607,11 @@ class ContractPdfPreviewView(ContractAccessMixin, View):
 
 
 class ContractsDashboardView(
-    LoginRequiredMixin, ContractLicenseContextMixin, CRMContextMixin, TemplateView,
+    CRMContractsAccessMixin,
+    LoginRequiredMixin,
+    ContractLicenseContextMixin,
+    CRMContextMixin,
+    TemplateView,
 ):
     template_name = 'contracts/dashboard.html'
 

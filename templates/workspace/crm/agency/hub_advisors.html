@@ -8,6 +8,7 @@
 {% endif %}
 </div>
 
+{% if can_team_export|default:True %}
 <section class="agency-section">
     <div class="agency-section__head">
         <div>
@@ -77,4 +78,5 @@
         </form>
     </div>
 </section>
+{% endif %}
 {% endblock %}

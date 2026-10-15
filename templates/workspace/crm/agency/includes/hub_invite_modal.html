@@ -21,7 +21,18 @@
                     <input type="tel" id="agencyInvitePhone" name="phone" class="crm-input agency-modal__input" required dir="ltr" placeholder="09123456789" autocomplete="tel" inputmode="tel">
                     <p class="agency-form-helper" id="agencyModalPhoneHint" hidden></p>
                 </div>
+                {% if agency_roles_invite %}
+                <div class="agency-field">
+                    <label class="agency-form-label" for="agencyInviteRole">نقش</label>
+                    <select id="agencyInviteRole" name="role" class="crm-input agency-modal__input" required>
+                        {% for code, label in agency_roles_invite %}
+                        <option value="{{ code }}"{% if code == 'advisor' %} selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% else %}
                 <input type="hidden" name="role" value="advisor">
+                {% endif %}
             </div>
             <div class="modal-footer agency-modal__footer">
                 <button type="button" class="crm-btn crm-btn-ghost" data-bs-dismiss="modal">انصراف</button>

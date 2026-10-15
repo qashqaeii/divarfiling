@@ -17,6 +17,11 @@
 
         moveFilterIndicator(track);
         window.addEventListener('resize', function () { moveFilterIndicator(track); });
+
+        var activePill = track.querySelector('.mk-blog-filter-pill.is-active');
+        if (activePill && typeof activePill.scrollIntoView === 'function') {
+            activePill.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'auto' });
+        }
     }
 
     /* ─── Sticky filter bar (list hub) ─── */
@@ -152,8 +157,8 @@
                     var cards = wrap.querySelectorAll('.mk-blog-card');
 
                     cards.forEach(function (card) {
-                        card.classList.add('is-visible');
                         grid.appendChild(card);
+                        bindReveal(card);
                     });
 
                     if (data.has_next && data.next_page) {
@@ -187,24 +192,64 @@
     }
 
     /* ─── Scroll reveal (list page) ─── */
-    var revealEls = document.querySelectorAll('.mk-blog-reveal');
-    if (revealEls.length && 'IntersectionObserver' in window) {
-        var revealObs = new IntersectionObserver(function (entries) {
-            entries.forEach(function (entry) {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('is-visible');
-                    revealObs.unobserve(entry.target);
-                }
+    var revealObs = null;
+
+    function bindReveal(el) {
+        if (!el || el.classList.contains('is-visible')) return;
+        if (!revealObs) {
+            if ('IntersectionObserver' in window) {
+                revealObs = new IntersectionObserver(function (entries) {
+                    entries.forEach(function (entry) {
+                        if (entry.isIntersecting) {
+                            entry.target.classList.add('is-visible');
+                            revealObs.unobserve(entry.target);
+                        }
+                    });
+                }, { rootMargin: '0px 0px -6% 0px', threshold: 0.06 });
+            }
+        }
+        if (revealObs) {
+            revealObs.observe(el);
+        } else {
+            el.classList.add('is-visible');
+        }
+    }
+
+    document.querySelectorAll('.mk-blog-reveal').forEach(bindReveal);
+
+    function initBlogHubMob() {
+        var hero = document.querySelector('[data-blg-hero-mob]');
+        if (hero) {
+            requestAnimationFrame(function () {
+                hero.classList.add('is-entered');
             });
-        }, { rootMargin: '0px 0px -8% 0px', threshold: 0.08 });
-        revealEls.forEach(function (el) { revealObs.observe(el); });
-    } else {
-        revealEls.forEach(function (el) { el.classList.add('is-visible'); });
+        }
+
+        var scrollWrap = document.querySelector('[data-blg-filter-scroll]');
+        if (!scrollWrap) return;
+        var nav = scrollWrap.querySelector('.mk-blog-filter-nav');
+        if (!nav) return;
+
+        function scrollMetrics() {
+            var max = Math.max(0, nav.scrollWidth - nav.clientWidth);
+            var pos = Math.abs(nav.scrollLeft);
+            if (max <= 2) {
+                scrollWrap.classList.remove('has-start-fade', 'has-end-fade');
+                return;
+            }
+            scrollWrap.classList.toggle('has-start-fade', pos > 6);
+            scrollWrap.classList.toggle('has-end-fade', pos < max - 6);
+        }
+
+        nav.addEventListener('scroll', scrollMetrics, { passive: true });
+        window.addEventListener('resize', scrollMetrics, { passive: true });
+        scrollMetrics();
     }
 
     initBlogFilterBar();
     initFilterIndicator();
     initBlogInfiniteScroll();
+    initBlogHubMob();
 
     var prose = document.getElementById('blog-content');
     if (!prose) return;

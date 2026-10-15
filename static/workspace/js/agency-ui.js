@@ -568,6 +568,120 @@
     });
   }
 
+  function initMemberPermissionsSheet() {
+    var sheet = document.getElementById('agencyMemberPermsSheet');
+    var form = document.getElementById('agencyMemberPermsForm');
+    var presetForm = document.getElementById('agencyMemberPermsPresetForm');
+    if (!sheet || !form) return;
+
+    var memberIdInput = document.getElementById('agencyMemberPermsMemberId');
+    var presetMemberId = document.getElementById('agencyMemberPermsPresetMemberId');
+    var presetValue = document.getElementById('agencyMemberPermsPresetValue');
+    var subtitle = document.getElementById('agencyMemberPermsSubtitle');
+    var effectiveEl = document.getElementById('agencyMemberPermsEffective');
+    var dirtyEl = document.getElementById('agencyMemberPermsDirty');
+    var checkboxes = form.querySelectorAll('input[data-perm-code]');
+    var initialState = '';
+
+    function permState() {
+      return Array.prototype.map.call(checkboxes, function (cb) {
+        return cb.getAttribute('data-perm-code') + ':' + (cb.checked ? '1' : '0');
+      }).join(';');
+    }
+
+    function updateDirty() {
+      var dirty = initialState && permState() !== initialState;
+      if (dirtyEl) dirtyEl.hidden = !dirty;
+    }
+
+    function setOpen(open) {
+      sheet.hidden = !open;
+      sheet.setAttribute('aria-hidden', open ? 'false' : 'true');
+      document.body.classList.toggle('agency-perms-sheet-open', open);
+      if (!open) initialState = '';
+    }
+
+    function fillForm(permsSet) {
+      checkboxes.forEach(function (cb) {
+        var code = cb.getAttribute('data-perm-code');
+        cb.checked = permsSet.indexOf(code) !== -1;
+      });
+      initialState = permState();
+      updateDirty();
+    }
+
+    function openForButton(btn) {
+      var id = btn.getAttribute('data-member-id');
+      var name = btn.getAttribute('data-member-name') || '';
+      var labels = btn.getAttribute('data-effective-labels') || '';
+      var permsRaw = btn.getAttribute('data-perms') || '';
+      var perms = permsRaw ? permsRaw.split(',').filter(Boolean) : [];
+      if (memberIdInput) memberIdInput.value = id || '';
+      if (presetMemberId) presetMemberId.value = id || '';
+      if (subtitle) subtitle.textContent = name;
+      if (effectiveEl) {
+        if (labels) {
+          effectiveEl.textContent = 'مجوز مؤثر: ' + labels.replace(/\|/g, ' · ');
+          effectiveEl.hidden = false;
+        } else {
+          effectiveEl.hidden = true;
+        }
+      }
+      fillForm(perms);
+      setOpen(true);
+    }
+
+    document.querySelectorAll('.js-agency-perms-open').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        openForButton(btn);
+      });
+    });
+
+    sheet.querySelectorAll('[data-agency-perms-close]').forEach(function (el) {
+      el.addEventListener('click', function () {
+        if (dirtyEl && !dirtyEl.hidden) {
+          if (!window.confirm('تغییرات ذخیره نشده‌اند. بسته شود؟')) return;
+        }
+        setOpen(false);
+      });
+    });
+
+    checkboxes.forEach(function (cb) {
+      cb.addEventListener('change', updateDirty);
+    });
+
+    form.addEventListener('submit', function (e) {
+      var sensitive = ['finance.view', 'contracts.view_team', 'deals.view_team', 'licenses.manage'];
+      var toggledSensitive = false;
+      checkboxes.forEach(function (cb) {
+        var code = cb.getAttribute('data-perm-code');
+        if (sensitive.indexOf(code) === -1) return;
+        var was = initialState.indexOf(code + ':1') !== -1;
+        if (cb.checked !== was) toggledSensitive = true;
+      });
+      if (toggledSensitive && !window.confirm('مجوزهای حساس تغییر می‌کند. تأیید می‌کنید؟')) {
+        e.preventDefault();
+      }
+    });
+
+    sheet.querySelectorAll('[data-agency-perms-preset]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var preset = btn.getAttribute('data-agency-perms-preset');
+        if (!presetMemberId || !presetValue || !presetForm) return;
+        if (!window.confirm('الگوی نقش اعمال شود؟ مجوزهای سفارشی بازنشانی می‌شوند.')) return;
+        presetValue.value = preset;
+        presetForm.requestSubmit();
+      });
+    });
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && !sheet.hidden) {
+        e.preventDefault();
+        setOpen(false);
+      }
+    }, true);
+  }
+
   function initAdvisor360ExportMenus() {
     document.querySelectorAll('.a360-export').forEach(function (wrap) {
       wrap.addEventListener('toggle', function () {
@@ -593,6 +707,7 @@
     initStickyStepFooter();
     initNavScrollHint();
     initAgencyMembersFilterSheet();
+    initMemberPermissionsSheet();
     initMemberFilters();
     initSearchAutofillGuards();
     initAdvisor360ActivityFilters();

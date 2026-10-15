@@ -32,6 +32,10 @@ from workspace.services.property_images import (
 )
 from workspace.export_security import ExportSecurityMixin
 from workspace.mixins_agency import AgencyHubAccessMixin, AgencyTeamHubRequiredMixin
+from workspace.mixins_crm_rbac import (
+    CRMDealsAccessMixin,
+    CRMFinanceDashboardAccessMixin,
+)
 from workspace.forms import (
     ActivityForm, CRMAutomationRuleForm, CRMDealCreateForm, CRMDealForm, CRMMessageTemplateForm,
     CRMPropertyForm, CRMPropertyImportForm, CRMReminderForm, ConvertLeadForm,
@@ -2564,7 +2568,7 @@ class CRMListRedirectView(LoginRequiredMixin, View):
 
 # ── فاز ۲: معاملات ───────────────────────────────────────────────────────────
 
-class CRMDealListView(CRMContextMixin, LoginRequiredMixin, ListView):
+class CRMDealListView(CRMDealsAccessMixin, CRMContextMixin, LoginRequiredMixin, ListView):
     model = CRMDeal
     template_name = 'workspace/crm/deals/list.html'
     context_object_name = 'deals'
@@ -2604,7 +2608,7 @@ class CRMDealListView(CRMContextMixin, LoginRequiredMixin, ListView):
         return ctx
 
 
-class CRMDealCreateView(LoginRequiredMixin, View):
+class CRMDealCreateView(CRMDealsAccessMixin, LoginRequiredMixin, View):
     def post(self, request):
         form = CRMDealCreateForm(request.POST, user=request.user)
         if form.is_valid():
@@ -2619,7 +2623,7 @@ class CRMDealCreateView(LoginRequiredMixin, View):
         return redirect(request.POST.get('next') or reverse('workspace:crm_deals'))
 
 
-class CRMDealDetailView(CRMContextMixin, LoginRequiredMixin, DetailView):
+class CRMDealDetailView(CRMDealsAccessMixin, CRMContextMixin, LoginRequiredMixin, DetailView):
     model = CRMDeal
     template_name = 'workspace/crm/deals/detail.html'
     context_object_name = 'deal'
@@ -2714,7 +2718,7 @@ class CRMDealDetailView(CRMContextMixin, LoginRequiredMixin, DetailView):
         return redirect('workspace:crm_deal_detail', deal_id=deal_id)
 
 
-class CRMDealUpdateView(LoginRequiredMixin, UpdateView):
+class CRMDealUpdateView(CRMDealsAccessMixin, LoginRequiredMixin, UpdateView):
     model = CRMDeal
     form_class = CRMDealForm
     template_name = 'workspace/crm/deals/detail.html'
@@ -2760,7 +2764,7 @@ class CRMDealUpdateView(LoginRequiredMixin, UpdateView):
         return self._edit_redirect(deal_id)
 
 
-class CRMDealStageUpdateView(LoginRequiredMixin, View):
+class CRMDealStageUpdateView(CRMDealsAccessMixin, LoginRequiredMixin, View):
     def post(self, request, deal_id):
         deal = deal_for_user(request.user, deal_id)
         if not deal:
@@ -2784,7 +2788,7 @@ class CRMDealStageUpdateView(LoginRequiredMixin, View):
         return JsonResponse({'ok': True, 'stage': stage, 'deal_id': deal.pk})
 
 
-class CRMDealStagesView(LoginRequiredMixin, View):
+class CRMDealStagesView(CRMDealsAccessMixin, LoginRequiredMixin, View):
     """مدیریت مراحل سفارشی pipeline."""
 
     def get(self, request):
@@ -2814,7 +2818,7 @@ class CRMDealStagesView(LoginRequiredMixin, View):
         })
 
 
-class CRMDealChecklistView(LoginRequiredMixin, View):
+class CRMDealChecklistView(CRMDealsAccessMixin, LoginRequiredMixin, View):
     """تغییر وضعیت چک‌لیست معامله — B8."""
 
     def post(self, request, deal_id):
@@ -2838,7 +2842,7 @@ class CRMDealChecklistView(LoginRequiredMixin, View):
         return JsonResponse({'ok': True, **result})
 
 
-class CRMDealFollowUpView(LoginRequiredMixin, View):
+class CRMDealFollowUpView(CRMDealsAccessMixin, LoginRequiredMixin, View):
     """ثبت پیگیری سریع معامله."""
 
     def post(self, request, deal_id):
@@ -2873,7 +2877,7 @@ class CRMDealFollowUpView(LoginRequiredMixin, View):
         })
 
 
-class CRMDealNextActionView(LoginRequiredMixin, View):
+class CRMDealNextActionView(CRMDealsAccessMixin, LoginRequiredMixin, View):
     def patch(self, request, deal_id):
         return self._handle(request, deal_id)
 
@@ -2902,7 +2906,7 @@ class CRMDealNextActionView(LoginRequiredMixin, View):
         return JsonResponse({'ok': True, 'next_action': serialize_next_action(deal)})
 
 
-class CRMDealCompleteNextActionView(LoginRequiredMixin, View):
+class CRMDealCompleteNextActionView(CRMDealsAccessMixin, LoginRequiredMixin, View):
     def post(self, request, deal_id):
         deal = deal_for_user(request.user, deal_id)
         if not deal:
@@ -2922,7 +2926,7 @@ class CRMDealCompleteNextActionView(LoginRequiredMixin, View):
         })
 
 
-class CRMDealTimelineView(LoginRequiredMixin, View):
+class CRMDealTimelineView(CRMDealsAccessMixin, LoginRequiredMixin, View):
     def get(self, request, deal_id):
         deal = deal_for_user(request.user, deal_id)
         if not deal:
@@ -2935,7 +2939,9 @@ class CRMDealTimelineView(LoginRequiredMixin, View):
         return JsonResponse({'ok': True, **get_deal_timeline(deal, limit=limit, offset=offset)})
 
 
-class CRMDealFinanceDashboardView(CRMContextMixin, LoginRequiredMixin, TemplateView):
+class CRMDealFinanceDashboardView(
+    CRMFinanceDashboardAccessMixin, CRMContextMixin, LoginRequiredMixin, TemplateView,
+):
     template_name = 'workspace/crm/deals/finance.html'
 
     def get_context_data(self, **kwargs):
@@ -2947,7 +2953,7 @@ class CRMDealFinanceDashboardView(CRMContextMixin, LoginRequiredMixin, TemplateV
         return ctx
 
 
-class CRMDealFinanceSettingsView(LoginRequiredMixin, View):
+class CRMDealFinanceSettingsView(CRMDealsAccessMixin, LoginRequiredMixin, View):
     def get(self, request):
         return JsonResponse({'ok': True, 'defaults': get_finance_defaults(request.user)})
 
@@ -2968,7 +2974,7 @@ class CRMDealFinanceSettingsView(LoginRequiredMixin, View):
         return redirect(nxt)
 
 
-class CRMDealFinanceUpdateView(LoginRequiredMixin, View):
+class CRMDealFinanceUpdateView(CRMDealsAccessMixin, LoginRequiredMixin, View):
     def post(self, request, deal_id):
         deal = deal_for_user(request.user, deal_id)
         if not deal:
@@ -4030,6 +4036,29 @@ class CRMTeamView(AgencyTeamHubRequiredMixin, CRMContextMixin, LoginRequiredMixi
                     request.POST.get('role', ''),
                 )
                 messages.success(request, 'نقش به‌روز شد.')
+            elif action == 'agency_apply_role_preset':
+                from workspace.services.agency_rbac import apply_member_role_preset
+
+                apply_member_role_preset(
+                    request.user,
+                    int(request.POST.get('member_id', 0)),
+                    request.POST.get('preset', ''),
+                )
+                messages.success(request, 'الگوی نقش اعمال شد.')
+            elif action == 'agency_update_member_permissions':
+                from workspace.services.agency_rbac import update_member_permission_overrides
+
+                overrides = {}
+                for key in request.POST:
+                    if key.startswith('perm_'):
+                        perm_key = key[5:]
+                        overrides[perm_key] = request.POST.get(key) == '1'
+                update_member_permission_overrides(
+                    request.user,
+                    int(request.POST.get('member_id', 0)),
+                    overrides,
+                )
+                messages.success(request, 'مجوزهای عضو به‌روز شد.')
             elif action == 'remove_member':
                 remove_member(request.user, int(request.POST.get('member_id', 0)))
                 messages.success(request, 'عضو غیرفعال شد.')
@@ -4202,7 +4231,7 @@ class CRMShareRevokeView(LoginRequiredMixin, View):
         return JsonResponse({'ok': True})
 
 
-class CRMDealCommissionSplitView(LoginRequiredMixin, View):
+class CRMDealCommissionSplitView(CRMDealsAccessMixin, LoginRequiredMixin, View):
     def post(self, request, deal_id):
         deal = deal_for_user(request.user, deal_id)
         if not deal:

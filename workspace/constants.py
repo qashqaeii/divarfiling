@@ -492,6 +492,12 @@ AGENCY_ROLE_OWNER = 'owner'
 AGENCY_ROLE_MANAGER = 'manager'
 AGENCY_ROLE_ADVISOR = 'advisor'
 AGENCY_ROLE_SECRETARY = 'secretary'
+# نقش‌های قابل انتخاب هنگام دعوت/تغییر نقش (manager فقط legacy در DB)
+AGENCY_ROLES_ASSIGNABLE = [
+    ('advisor', 'مشاور'),
+    ('secretary', 'منشی'),
+]
+AGENCY_ROLES_INVITE = AGENCY_ROLES_ASSIGNABLE
 AGENCY_MANAGER_ROLES = {AGENCY_ROLE_OWNER, AGENCY_ROLE_MANAGER}
 AGENCY_FULL_VIEW_ROLES = {AGENCY_ROLE_OWNER, AGENCY_ROLE_MANAGER, AGENCY_ROLE_SECRETARY}
 AGENCY_INBOX_ROLES = AGENCY_FULL_VIEW_ROLES
@@ -516,6 +522,7 @@ LEAD_ROUTING_CHOICES = [
 
 AUDIT_EVENTS = [
     'agency.updated', 'api_key.regenerated', 'member.invited', 'member.role_changed',
+    'member.permissions_updated',
     'member.removed', 'lead.assigned', 'lead.bulk_assigned', 'customer.transferred',
     'sync.export', 'sync.import', 'webhook.created', 'webhook.deleted', 'webhook.tested',
     'message.sent', 'message.broadcast', 'message.deleted', 'announcement.created',
@@ -533,6 +540,8 @@ AGENCY_COMMAND_CENTER_FEATURES = {
     'heatmap': True,
     'tv_mode': True,
     'agency_space': True,
+    # نقش‌محور RBAC + داشبورد/ناوبری اختصاصی — پیش‌فرض خاموش؛ per-agency در feature_flags
+    'agency_rbac_v2': False,
 }
 
 MESSAGE_RETENTION_DAYS = 30

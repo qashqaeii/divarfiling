@@ -156,7 +156,11 @@ def has_assigned_agency_seat(user) -> bool:
 def can_access_agency_hub(user) -> bool:
     if has_active_agency_entitlement(user):
         return True
-    return has_assigned_agency_seat(user)
+    if has_assigned_agency_seat(user):
+        return True
+    from workspace.services.agency_rbac import staff_can_access_agency_hub_without_seat
+
+    return staff_can_access_agency_hub_without_seat(user)
 
 
 def can_share_team_resources(user) -> bool:

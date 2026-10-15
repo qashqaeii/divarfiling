@@ -28,6 +28,17 @@
         </div>
     </header>
 
+    {% if space_quick_actions %}
+    <div class="agency-quick-actions agency-space-page__quick" aria-label="دسترسی سریع">
+        {% for action in space_quick_actions %}
+        <a href="{{ action.url }}" class="agency-quick-actions__btn">
+            <span class="agency-quick-actions__icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor=action.decor size='sm' only %}</span>
+            <span>{{ action.label }}</span>
+        </a>
+        {% endfor %}
+    </div>
+    {% endif %}
+
     {% if space_kpis %}
     <div class="agency-kpi-strip agency-kpi-strip--ref agency-kpi-strip--4 agency-space-page__kpis" aria-label="شاخص‌های فضا">
         {% include "workspace/crm/agency/includes/kpi_card.html" with label="فایل فعال" value=space_kpis.active_properties decor="building" tone="orange" %}

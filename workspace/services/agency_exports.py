@@ -279,6 +279,19 @@ def export_team_data(
     if not members:
         raise ValueError('مشاوری برای خروجی انتخاب نشده است')
 
+    from workspace.services.agency_rbac import (
+        PERM_DEALS_VIEW_TEAM,
+        PERM_REPORTS_SENSITIVE,
+        has_agency_permission,
+        is_agency_rbac_v2_enabled,
+    )
+
+    if is_agency_rbac_v2_enabled(agency):
+        if data_type == 'deals' and not has_agency_permission(actor, PERM_DEALS_VIEW_TEAM):
+            raise PermissionError('دسترسی خروجی معاملات مجاز نیست')
+        if not has_agency_permission(actor, PERM_REPORTS_SENSITIVE):
+            raise PermissionError('دسترسی خروجی تیمی مجاز نیست')
+
     all_rows: list[dict] = []
     for member in members:
         assert_can_export(actor, member)

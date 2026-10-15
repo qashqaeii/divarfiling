@@ -39,11 +39,19 @@ def _daily_token_limit() -> int:
     return int(getattr(settings, 'AI_DAILY_TOKEN_LIMIT', 90000) or 0)
 
 
-def _is_unlimited(user) -> bool:
+def _is_privileged_unlimited(user) -> bool:
     if getattr(user, 'is_staff', False) or getattr(user, 'is_superuser', False):
         return True
     quota = getattr(user, 'ai_quota', None)
     return bool(quota and quota.is_unlimited)
+
+
+def is_ai_license_exempt_user(user) -> bool:
+    return _is_privileged_unlimited(user)
+
+
+def _is_unlimited(user) -> bool:
+    return bool(getattr(user, 'is_authenticated', False) and (getattr(settings, 'AI_QUOTA_UNLIMITED_FOR_ALL', False) or _is_privileged_unlimited(user)))
 
 
 def is_ai_unlimited_user(user) -> bool:
@@ -75,13 +83,13 @@ def get_or_create_quota(user) -> AIQuota:
 
 
 def check_quota(user, feature: str) -> None:
-    if _is_unlimited(user):
-        return
-    if not has_active_bot_license(user):
+    if not has_active_bot_license(user) and not _is_privileged_unlimited(user):
         raise QuotaExceededError(
             'برای استفاده از هوش مصنوعی، لایسنس فعال ربات استخراج دیوار لازم است.',
             code='no_license',
         )
+    if _is_unlimited(user):
+        return
     quota = get_or_create_quota(user)
     if quota.used_today >= quota.daily_limit:
         raise QuotaExceededError(
@@ -126,7 +134,7 @@ def consume_quota(
 
 def get_status(user) -> QuotaStatus:
     unlimited = _is_unlimited(user)
-    licensed = has_active_bot_license(user) or unlimited
+    licensed = has_active_bot_license(user) or _is_privileged_unlimited(user)
     quota = get_or_create_quota(user) if user.is_authenticated else None
     daily_limit = quota.daily_limit if quota else DEFAULT_DAILY_LIMIT
     used = quota.used_today if quota else 0

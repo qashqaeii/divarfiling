@@ -147,6 +147,8 @@ class WorkspaceHomeView(WorkspaceLoginMixin, TemplateView):
             and not ctx['data_stats']['datasets']
             and not ctx['home_nba']
         )
+        from workspace.services.workspace_agency_home import build_workspace_agency_panel
+        ctx['workspace_agency_panel'] = build_workspace_agency_panel(user)
         return ctx
 
 

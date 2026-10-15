@@ -10,6 +10,7 @@ from django.views.generic import TemplateView
 from workspace.crm_views import CRMTeamView, CRMContextMixin
 from workspace.mixins_agency import (
     AgencyOwnerRequiredMixin,
+    AgencySettingsAccessMixin,
     AgencyTeamHubRequiredMixin,
     AgencyTeamManageRequiredMixin,
     AgencyTeamPerformanceRequiredMixin,
@@ -169,7 +170,7 @@ class AgencyHubActivityView(AgencyTeamPerformanceRequiredMixin, _AgencyHubTeamBa
         return ctx
 
 
-class AgencyHubSettingsView(_AgencyHubTeamBase):
+class AgencyHubSettingsView(AgencySettingsAccessMixin, _AgencyHubTeamBase):
     template_name = 'workspace/crm/agency/hub_settings.html'
     hub_section = 'settings'
 
@@ -243,7 +244,7 @@ class AgencyHubAnnouncementsView(_AgencyTeamTabView):
     ]
 
 
-class AgencyHubSettingsProfileView(_AgencyTeamTabView):
+class AgencyHubSettingsProfileView(AgencySettingsAccessMixin, _AgencyTeamTabView):
     hub_section = 'settings'
     team_tab = 'settings'
     team_tab_template = 'workspace/crm/includes/team_tab_settings_audit.html'
@@ -252,25 +253,25 @@ class AgencyHubSettingsProfileView(_AgencyTeamTabView):
     ]
 
 
-class AgencyHubSettingsSyncView(_AgencyTeamTabView):
+class AgencyHubSettingsSyncView(AgencySettingsAccessMixin, _AgencyTeamTabView):
     hub_section = 'settings'
     team_tab = 'sync'
     team_tab_template = 'workspace/crm/includes/team_tab_sync.html'
 
 
-class AgencyHubSettingsWebhooksView(_AgencyTeamTabView):
+class AgencyHubSettingsWebhooksView(AgencySettingsAccessMixin, _AgencyTeamTabView):
     hub_section = 'settings'
     team_tab = 'webhooks'
     team_tab_template = 'workspace/crm/includes/team_tab_webhooks.html'
 
 
-class AgencyHubSettingsTransfersView(_AgencyTeamTabView):
+class AgencyHubSettingsTransfersView(AgencySettingsAccessMixin, _AgencyTeamTabView):
     hub_section = 'settings'
     team_tab = 'transfers'
     team_tab_template = 'workspace/crm/includes/team_tab_transfers.html'
 
 
-class AgencyHubSettingsAuditView(_AgencyTeamTabView):
+class AgencyHubSettingsAuditView(AgencySettingsAccessMixin, _AgencyTeamTabView):
     hub_section = 'settings'
     team_tab = 'audit'
     team_tab_template = 'workspace/crm/includes/team_tab_audit.html'

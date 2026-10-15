@@ -37,7 +37,7 @@ from workspace.services.crm_scope import (
     get_membership,
 )
 from mobile_api.services.team_mobile import member_to_dict, team_overview_for_user
-from workspace.services.agency_activity import EVENT_TYPE_LABELS
+from workspace.services.agency_activity import EVENT_TYPE_LABELS, object_type_label
 
 
 def _activity_event_title(event_type: str) -> str:
@@ -50,11 +50,22 @@ def _activity_event_title(event_type: str) -> str:
 def _activity_event_payload(ev) -> Dict[str, Any]:
     event_type = ev.event_type
     label = _activity_event_title(event_type)
+    meta = getattr(ev, 'metadata', None) or {}
+    object_label = ''
+    if event_type == 'space_item_published':
+        object_label = (meta.get('kind_label') or '').strip() or object_type_label(
+            getattr(ev, 'object_type', '') or '',
+        )
+    elif getattr(ev, 'object_type', None):
+        object_label = object_type_label(ev.object_type)
     return {
         'id': ev.pk,
         'event_type': event_type,
         'event_label': label,
         'title': label,
+        'object_type': getattr(ev, 'object_type', '') or '',
+        'object_label': object_label,
+        'detail': object_label,
         'created_at': ev.created_at.isoformat() if ev.created_at else '',
         'actor_name': ev.actor.get_full_name() if ev.actor_id else '',
     }

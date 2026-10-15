@@ -44,6 +44,14 @@ PERM_HUB_OWNER_DASHBOARD = 'hub.dashboard_owner'
 PERM_HUB_SECRETARY_DASHBOARD = 'hub.dashboard_secretary'
 PERM_HUB_ADVISOR_DASHBOARD = 'hub.dashboard_advisor'
 
+# فقط مالک اشتراک (can_manage_agency) — هرگز از override قابل واگذاری نیست
+OWNER_ENTITLEMENT_PERMISSIONS: FrozenSet[str] = frozenset({
+    PERM_LICENSES_MANAGE,
+})
+
+# در UI ویرایش مجوز اعضا نمایش/ذخیره نمی‌شوند
+NON_ASSIGNABLE_MEMBER_PERMISSIONS: FrozenSet[str] = OWNER_ENTITLEMENT_PERMISSIONS
+
 ALL_PERMISSIONS: FrozenSet[str] = frozenset({
     PERM_TEAM_MANAGE,
     PERM_TEAM_INVITE,
@@ -153,10 +161,26 @@ def _apply_overrides(base: Set[str], member: CRMAgencyMember) -> Set[str]:
     for key, val in overrides.items():
         if key not in ALL_PERMISSIONS:
             continue
+        if key in NON_ASSIGNABLE_MEMBER_PERMISSIONS:
+            continue
         if val is True:
             result.add(key)
         elif val is False:
             result.discard(key)
+    return result
+
+
+def _finalize_effective_permissions(
+    user,
+    member: CRMAgencyMember,
+    perms: Set[str],
+) -> Set[str]:
+    """حذف مجوزهای مالک اشتراک از اعضایی که entitlement واقعی ندارند."""
+    from workspace.services.agency_entitlement import can_manage_agency
+
+    result = set(perms)
+    if not can_manage_agency(user, member.agency):
+        result -= OWNER_ENTITLEMENT_PERMISSIONS
     return result
 
 
@@ -186,7 +210,7 @@ def effective_permissions(user, member: Optional[CRMAgencyMember] = None) -> Set
     # محافظت: مالک آژانس (رکورد owner) همیشه دسترسی مدیریت تیم و تنظیمات را نگه می‌دارد
     if m.role == AGENCY_ROLE_OWNER and m.agency.owner_id == m.user_id:
         perms |= {PERM_TEAM_MANAGE, PERM_SETTINGS_MANAGE, PERM_LICENSES_MANAGE}
-    return perms
+    return _finalize_effective_permissions(user, m, perms)
 
 
 def _legacy_permissions_as_set(user) -> Set[str]:
@@ -252,7 +276,11 @@ def can_view_team_performance_data(user) -> bool:
 
 
 def permission_choices_for_editor() -> list[tuple[str, str]]:
-    return [(k, PERMISSION_LABELS[k]) for k in sorted(PERMISSION_LABELS) if k in ALL_PERMISSIONS]
+    return [
+        (k, PERMISSION_LABELS[k])
+        for k in sorted(PERMISSION_LABELS)
+        if k in ALL_PERMISSIONS and k not in NON_ASSIGNABLE_MEMBER_PERMISSIONS
+    ]
 
 
 def has_agency_permission(user, permission: str, *, member: Optional[CRMAgencyMember] = None) -> bool:
@@ -263,6 +291,11 @@ def has_agency_permission(user, permission: str, *, member: Optional[CRMAgencyMe
         return False
     if not is_agency_rbac_v2_enabled(m.agency):
         return permission in _legacy_permissions_as_set(user)
+    if permission in OWNER_ENTITLEMENT_PERMISSIONS:
+        from workspace.services.agency_entitlement import can_manage_agency
+
+        if not can_manage_agency(user, m.agency):
+            return False
     return permission in effective_permissions(user, m)
 
 
@@ -377,6 +410,8 @@ def update_member_permission_overrides(
         raise ValueError('مجوز مالک قابل شخصی‌سازی نیست')
     clean: Dict[str, bool] = {}
     for k, v in (overrides or {}).items():
+        if k in NON_ASSIGNABLE_MEMBER_PERMISSIONS:
+            continue
         if k in ALL_PERMISSIONS and isinstance(v, bool):
             clean[k] = v
     member.permission_overrides = clean

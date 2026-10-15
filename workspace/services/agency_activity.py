@@ -22,6 +22,22 @@ EVENT_LICENSE_UNASSIGNED = 'license_unassigned'
 EVENT_ADVISOR_DATA_EXPORT = 'advisor_data_export'
 EVENT_SPACE_ITEM_PUBLISHED = 'space_item_published'
 
+OBJECT_TYPE_LABELS = {
+    'customer': 'مخاطب',
+    'property': 'فایل',
+    'deal': 'معامله',
+    'contract': 'قرارداد',
+    'dataset': 'فایلینگ',
+}
+
+
+def object_type_label(object_type: str) -> str:
+    key = (object_type or '').strip().lower()
+    if not key:
+        return ''
+    return OBJECT_TYPE_LABELS.get(key, key)
+
+
 EVENT_TYPE_LABELS = {
     EVENT_CONTACT_CREATED: 'مخاطب جدید',
     EVENT_PROPERTY_CREATED: 'فایل شخصی جدید',

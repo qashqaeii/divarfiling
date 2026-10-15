@@ -7,8 +7,8 @@
 {% endblock %}
 
 {% block ws_surface_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/mk-workspace-home.css' %}?v=18">
-<link rel="stylesheet" href="{% static 'workspace/css/ws-home-mobile-v2.css' %}?v=14">
+<link rel="stylesheet" href="{% static 'workspace/css/mk-workspace-home.css' %}?v=21">
+<link rel="stylesheet" href="{% static 'workspace/css/ws-home-mobile-v2.css' %}?v=15">
 {% endblock %}
 
 {% block page_title %}{% endblock %}
@@ -18,6 +18,8 @@
 <div class="mk-page mk-hub mk-hub-pro ws-home ws-home-pro wsh-dashboard wsh-dashboard--mob3" id="wsHome">
 
     {% include 'workspace/includes/home/workspace_header.html' %}
+
+    {% include 'workspace/includes/home/workspace_agency_panel.html' %}
 
     {% include 'includes/announcements.html' with notice_layout='inline' %}
 

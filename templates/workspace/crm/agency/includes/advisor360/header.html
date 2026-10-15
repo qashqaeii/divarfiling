@@ -13,11 +13,9 @@
             <p class="a360-identity__meta">
                 {% if user.get_full_name and user.phone %}
                 <span class="a360-identity__phone" dir="ltr">{{ user.phone }}</span>
-                <span class="a360-identity__sep" aria-hidden="true">·</span>
                 {% endif %}
-                <span>{{ member.get_role_display|default:member.role }}</span>
-                <span class="a360-identity__sep" aria-hidden="true">·</span>
-                <span>عضویت {{ member.joined_at|ws_jalali_date }}</span>
+                <span class="a360-identity__role">{{ member.get_role_display|default:member.role }}</span>
+                <span class="a360-identity__joined">عضویت {{ member.joined_at|ws_jalali_date }}</span>
             </p>
             <div class="a360-badges">
                 {% if member.is_active %}
@@ -40,20 +38,23 @@
         </div>
     </div>
     <div class="a360-header__actions">
-        <a href="{{ team_url }}" class="crm-btn crm-btn-ghost crm-btn-sm">
-            <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='chevron_right' size='inline' only %}</span>
-            بازگشت به مشاوران
+        <a href="{{ team_url }}" class="crm-btn crm-btn-ghost crm-btn-sm a360-header__action a360-header__action--back">
+            <span class="a360-header__action-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='chevron_right' size='inline' only %}</span>
+            <span class="a360-btn-label a360-btn-label--desktop">بازگشت به مشاوران</span>
+            <span class="a360-btn-label a360-btn-label--mobile">بازگشت به لیست</span>
         </a>
         {% if licenses_url %}
-        <a href="{{ licenses_url }}" class="crm-btn crm-btn-ghost crm-btn-sm">
-            <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='key' size='inline' only %}</span>
-            مدیریت لایسنس
+        <a href="{{ licenses_url }}" class="crm-btn crm-btn-ghost crm-btn-sm a360-header__action">
+            <span class="a360-header__action-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='key' size='inline' only %}</span>
+            <span class="a360-btn-label a360-btn-label--desktop">مدیریت لایسنس</span>
+            <span class="a360-btn-label a360-btn-label--mobile">لایسنس</span>
         </a>
         {% endif %}
-        <details class="a360-export">
-            <summary class="crm-btn crm-btn-ghost crm-btn-sm">
-                <span aria-hidden="true">{% include 'includes/icon_slot.html' with decor='download' size='inline' only %}</span>
-                دانلود خروجی
+        <details class="a360-export a360-header__action">
+            <summary class="crm-btn crm-btn-ghost crm-btn-sm a360-header__action-summary">
+                <span class="a360-header__action-icon" aria-hidden="true">{% include 'includes/icon_slot.html' with decor='download' size='inline' only %}</span>
+                <span class="a360-btn-label a360-btn-label--desktop">دانلود خروجی</span>
+                <span class="a360-btn-label a360-btn-label--mobile">خروجی</span>
             </summary>
             <div class="a360-export__menu" role="menu">
                 <a href="{{ export_url }}?type=contacts&format=xlsx" role="menuitem">مخاطبین (XLSX)</a>

@@ -156,3 +156,87 @@ class AgencyRbacV2Tests(TestCase):
         self.sec_member.is_active = False
         self.sec_member.save(update_fields=['is_active'])
         self.assertFalse(can_access_agency_hub(self.secretary))
+
+    def test_license_override_cannot_escalate_advisor_when_rbac_v2(self):
+        from workspace.services.agency_rbac import (
+            PERM_LICENSES_MANAGE,
+            update_member_permission_overrides,
+        )
+
+        adv = User.objects.create_user(
+            username=f'0915{int(uuid.uuid4().hex[:6], 16) % 9_000_000:06d}',
+            password='x',
+        )
+        adv_member = CRMAgencyMember.objects.create(
+            agency=self.agency, user=adv, role='advisor', is_active=True,
+        )
+        self.agency.feature_flags = {'agency_rbac_v2': True}
+        self.agency.save(update_fields=['feature_flags'])
+        adv_member.permission_overrides = {PERM_LICENSES_MANAGE: True}
+        adv_member.save(update_fields=['permission_overrides'])
+        self.assertFalse(has_agency_permission(adv, PERM_LICENSES_MANAGE))
+        update_member_permission_overrides(
+            self.owner, adv_member.pk, {PERM_LICENSES_MANAGE: True},
+        )
+        adv_member.refresh_from_db()
+        self.assertNotIn(PERM_LICENSES_MANAGE, adv_member.permission_overrides)
+        self.assertFalse(has_agency_permission(adv, PERM_LICENSES_MANAGE))
+
+    def test_secretary_denied_licenses_hub_when_rbac_v2(self):
+        self.agency.feature_flags = {'agency_rbac_v2': True}
+        self.agency.save(update_fields=['feature_flags'])
+        self.client.force_login(self.secretary)
+        resp = self.client.get(reverse('workspace:agency_hub_licenses'))
+        self.assertIn(resp.status_code, (302, 403))
+        if resp.status_code == 302:
+            self.assertNotEqual(resp.url, reverse('workspace:agency_hub_licenses'))
+
+    def test_secretary_denied_settings_when_rbac_v2(self):
+        self.agency.feature_flags = {'agency_rbac_v2': True}
+        self.agency.save(update_fields=['feature_flags'])
+        self.client.force_login(self.secretary)
+        resp = self.client.get(reverse('workspace:agency_hub_settings'))
+        self.assertEqual(resp.status_code, 302)
+        self.assertEqual(resp.url, reverse('workspace:agency_hub_dashboard'))
+
+    def test_manager_cannot_access_licenses_hub_when_rbac_v2(self):
+        mgr = User.objects.create_user(
+            username=f'0915{int(uuid.uuid4().hex[:6], 16) % 9_000_000:06d}',
+            password='x',
+        )
+        CRMAgencyMember.objects.create(
+            agency=self.agency, user=mgr, role='manager', is_active=True,
+        )
+        self.agency.feature_flags = {'agency_rbac_v2': True}
+        self.agency.save(update_fields=['feature_flags'])
+        self.client.force_login(mgr)
+        resp = self.client.get(reverse('workspace:agency_hub_licenses'))
+        self.assertIn(resp.status_code, (302, 403))
+
+    def test_cross_agency_permission_update_rejected(self):
+        from workspace.services.agency_rbac import update_member_permission_overrides
+
+        base2 = int(uuid.uuid4().hex[:8], 16) % 9_000_000
+        other_phone = f'0916{base2:07d}'
+        other_owner = User.objects.create_user(
+            username=other_phone, phone=other_phone, password='x',
+        )
+        order2 = Order.objects.create(
+            user=other_owner, product=self.product, plan=self.agency_plan,
+            quantity=2, amount=1_980_000, status='paid', paid_at=timezone.now(),
+        )
+        fulfill_order_after_payment(order2)
+        other_agency = create_or_link_agency(other_owner, 'Other Agency')
+        other_adv_phone = f'0916{base2 + 1:07d}'
+        other_adv = User.objects.create_user(
+            username=other_adv_phone, phone=other_adv_phone, password='x',
+        )
+        other_member = CRMAgencyMember.objects.create(
+            agency=other_agency, user=other_adv, role='advisor', is_active=True,
+        )
+        self.agency.feature_flags = {'agency_rbac_v2': True}
+        self.agency.save(update_fields=['feature_flags'])
+        with self.assertRaises(CRMAgencyMember.DoesNotExist):
+            update_member_permission_overrides(
+                self.owner, other_member.pk, {'inbox.view': True},
+            )

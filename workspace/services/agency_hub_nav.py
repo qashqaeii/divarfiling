@@ -6,11 +6,11 @@ from django.urls import reverse
 from workspace.services.agency_entitlement import can_manage_agency, resolve_managed_agency
 from workspace.services.agency_rbac import (
     NAV_PROFILE_ADVISOR,
+    NAV_PROFILE_MANAGER_LEGACY,
     NAV_PROFILE_OWNER,
     NAV_PROFILE_SECRETARY,
-    PERM_AUDIT_VIEW,
     PERM_INBOX_VIEW,
-    PERM_LICENSES_MANAGE,
+    PERM_SETTINGS_MANAGE,
     PERM_TEAM_VIEW_PERFORMANCE,
     has_agency_permission,
     is_agency_rbac_v2_enabled,
@@ -66,13 +66,18 @@ def build_hub_nav(user) -> list[tuple[str, str, str]]:
     ]
     if profile != NAV_PROFILE_SECRETARY:
         nav.append(('advisors', 'مشاوران', reverse('workspace:agency_hub_advisors')))
-    if can_manage_agency(user) or (
-        profile and has_agency_permission(user, PERM_LICENSES_MANAGE)
-    ):
+    if can_manage_agency(user):
         nav.append(('licenses', 'لایسنس‌ها', reverse('workspace:agency_hub_licenses')))
-    if profile != NAV_PROFILE_SECRETARY and (
-        not profile or has_agency_permission(user, PERM_TEAM_VIEW_PERFORMANCE)
-    ):
+    show_activity = False
+    if profile == NAV_PROFILE_SECRETARY:
+        show_activity = False
+    elif not profile:
+        show_activity = can_manage_team(user) or can_manage_agency(user)
+    elif profile in (NAV_PROFILE_OWNER, NAV_PROFILE_MANAGER_LEGACY):
+        show_activity = has_agency_permission(user, PERM_TEAM_VIEW_PERFORMANCE)
+    elif profile == NAV_PROFILE_ADVISOR:
+        show_activity = has_agency_permission(user, PERM_TEAM_VIEW_PERFORMANCE)
+    if show_activity:
         nav.append(('activity', 'فعالیت تیم', reverse('workspace:agency_hub_activity')))
     if agency and is_agency_feature_enabled('agency_space', agency) and can_access_agency_space(user, agency):
         nav.append(('space', 'فضای آژانس', reverse('workspace:agency_hub_space')))
@@ -84,7 +89,11 @@ def build_hub_nav(user) -> list[tuple[str, str, str]]:
         nav.append(('messages', 'پیام‌ها', reverse('workspace:agency_hub_messages')))
     if agency and is_agency_feature_enabled('announcements', agency):
         nav.append(('announcements', 'اطلاعیه‌ها', reverse('workspace:agency_hub_announcements')))
-    nav.append(('settings', 'تنظیمات', reverse('workspace:agency_hub_settings')))
+    if not profile:
+        if can_manage_team(user) or can_manage_agency(user):
+            nav.append(('settings', 'تنظیمات', reverse('workspace:agency_hub_settings')))
+    elif has_agency_permission(user, PERM_SETTINGS_MANAGE):
+        nav.append(('settings', 'تنظیمات', reverse('workspace:agency_hub_settings')))
     return nav
 
 

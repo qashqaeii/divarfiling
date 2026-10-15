@@ -1,0 +1,41 @@
+{% if workspace_agency_panel %}
+<section class="wsh-agency" aria-label="آژانس" data-tour="workspace-agency">
+    <p class="wsh-agency__eyebrow"><i class="fas fa-building-columns" aria-hidden="true"></i> پنل آژانس</p>
+    <div class="wsh-agency__card{% if workspace_agency_panel.status == 'locked' %} wsh-agency__card--locked{% endif %}">
+        <div class="wsh-agency__glow" aria-hidden="true"></div>
+        <div class="wsh-agency__content">
+            <div class="wsh-agency__top">
+                <div class="wsh-agency__identity">
+                    <span class="wsh-agency__mark" aria-hidden="true"><i class="fas fa-people-roof"></i></span>
+                    <div class="wsh-agency__copy">
+                        <h2 class="wsh-agency__title">{{ workspace_agency_panel.agency_name }}</h2>
+                        <div class="wsh-agency__chips">
+                            <span class="wsh-agency__chip wsh-agency__chip--role">{{ workspace_agency_panel.role_label }}</span>
+                            <span class="wsh-agency__chip wsh-agency__chip--{% if workspace_agency_panel.status == 'locked' %}warn{% else %}ok{% endif %}">
+                                {{ workspace_agency_panel.status_label }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <a href="{{ workspace_agency_panel.enter_url }}" class="wsh-agency__enter{% if workspace_agency_panel.status == 'locked' %} wsh-agency__enter--renew{% endif %}">
+                    <span class="wsh-agency__enter-label">{{ workspace_agency_panel.enter_label }}</span>
+                    <i class="fas fa-arrow-left" aria-hidden="true"></i>
+                </a>
+            </div>
+            {% if workspace_agency_panel.show_shortcuts %}
+            <nav class="wsh-agency__nav" aria-label="میانبرهای آژانس">
+                {% for item in workspace_agency_panel.shortcuts %}
+                <a href="{{ item.url }}" class="wsh-agency__link">
+                    <span class="wsh-agency__link-icon" aria-hidden="true"><i class="fas {{ item.fa }}"></i></span>
+                    <span class="wsh-agency__link-text">{{ item.label }}</span>
+                    <i class="fas fa-chevron-left wsh-agency__link-chev" aria-hidden="true"></i>
+                </a>
+                {% endfor %}
+            </nav>
+            {% elif workspace_agency_panel.status == 'locked' %}
+            <p class="wsh-agency__hint">برای دسترسی به بخش آژانس، اشتراک را تمدید کنید.</p>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endif %}

@@ -68,6 +68,7 @@ class AgencyHubSpaceView(AgencySpaceFeatureMixin, LoginRequiredMixin, TemplateVi
         filters = parse_space_list_filters(self.request.GET)
         tab = filters.normalized_tab()
         agency = get_user_space_agency(user)
+        profile = resolve_nav_profile(user)
         can_moderate = can_moderate_agency_space(user, agency)
 
         items = []

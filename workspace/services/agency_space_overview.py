@@ -4,7 +4,11 @@ from __future__ import annotations
 from typing import Any, Dict, List
 
 from workspace.models import AgencyActivityEvent, CRMAgency
-from workspace.services.agency_activity import EVENT_TYPE_LABELS, EVENT_SPACE_ITEM_PUBLISHED
+from workspace.services.agency_activity import (
+    EVENT_SPACE_ITEM_PUBLISHED,
+    EVENT_TYPE_LABELS,
+    object_type_label,
+)
 from workspace.services.agency_space_analytics import get_contributor_metrics, get_space_header_kpis
 from workspace.services.agency_space_query import get_space_items_qs
 from workspace.services.agency_space_serialize import serialize_space_item
@@ -75,8 +79,8 @@ def get_space_overview_payload(user, agency: CRMAgency) -> Dict[str, Any]:
         actor_name = user_display_name(ev.actor) if ev.actor else ''
         detail = ''
         if ev.event_type == EVENT_SPACE_ITEM_PUBLISHED:
-            kind = (ev.metadata or {}).get('kind_label') or ev.object_type or ''
-            detail = kind
+            meta = ev.metadata or {}
+            detail = (meta.get('kind_label') or '').strip() or object_type_label(ev.object_type)
         activity_rows.append({
             'event_type': ev.event_type,
             'label': label,

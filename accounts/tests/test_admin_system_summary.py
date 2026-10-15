@@ -23,6 +23,7 @@ class SystemSummaryServiceTests(TestCase):
         self.assertIn('academy', payload['content'])
         self.assertIn('posts_total', payload['content']['blog'])
         self.assertIn('videos_total', payload['content']['academy'])
+        self.assertIn('mission_started', payload['content']['academy'])
         self.assertNotIn('top_posts', payload['content']['blog'])
         self.assertNotIn('top_videos', payload['content']['academy'])
         self.assertIn('recovered', payload['recovery'])

@@ -110,7 +110,9 @@ class AdminAcademyPanelTests(TestCase):
         self.assertGreaterEqual(stats['videos_active'], 1)
         self.assertIn('completion_rate', stats)
         self.assertIn('avg_progress_percent', stats)
-        self.assertNotIn('mission_rate', stats)
+        self.assertIn('mission_started', stats)
+        self.assertIn('mission_completed', stats)
+        self.assertIn('mission_rate', stats)
         chart = get_academy_analytics_chart(days=7)
         self.assertIn('pulse', chart)
 

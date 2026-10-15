@@ -15,6 +15,8 @@ from workspace.academy.models import (
     AcademyVideo,
     AcademyVideoViewDaily,
     LearningPath,
+    UserAcademySettings,
+    UserMissionProgress,
     UserVideoProgress,
 )
 from workspace.academy.search import admin_video_search_blob
@@ -103,6 +105,18 @@ def get_academy_dashboard_stats() -> dict[str, Any]:
         if int(row.get('views') or 0) == 0:
             row['views'] = int(row.get('starts') or 0)
 
+    mission_started = UserAcademySettings.objects.filter(
+        mission_started_at__isnull=False,
+    ).count()
+    mission_completed = UserMissionProgress.objects.filter(
+        completed=True,
+        mission__is_active=True,
+    ).count()
+    mission_rate = round(
+        (mission_completed / mission_started * 100) if mission_started else 0,
+        1,
+    )
+
     return {
         'videos_total': qs.count(),
         'videos_active': active_qs.count(),
@@ -122,6 +136,9 @@ def get_academy_dashboard_stats() -> dict[str, Any]:
         'paths_total': LearningPath.objects.filter(
             slug__in=ACTIVE_PATH_SLUGS, is_active=True,
         ).count(),
+        'mission_started': mission_started,
+        'mission_completed': mission_completed,
+        'mission_rate': mission_rate,
         'top_videos': top_videos,
         'paths': paths,
         'needs_backfill': (

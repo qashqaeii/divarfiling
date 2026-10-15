@@ -162,6 +162,41 @@ def can_create_agency_invitation(
     return False, f'فقط {avail} ظرفیت برای دعوت مشاور باقی مانده است.'
 
 
+def assert_member_role_change_capacity(
+    agency,
+    subscription,
+    member: CRMAgencyMember,
+    new_role: str,
+) -> None:
+    """قبل از تغییر نقش — ظرفیت نقش مقصد را بررسی می‌کند (دور زدن سقف منشی/مشاور)."""
+    from workspace.services.agency_seats import get_member_seat
+
+    old_role = member.role
+    if old_role == new_role:
+        return
+    if new_role == AGENCY_ROLE_SECRETARY and old_role != AGENCY_ROLE_SECRETARY:
+        cap = get_secretary_invite_capacity(agency)
+        if cap['invite_available'] < 1:
+            raise ValueError(
+                f'حداکثر {cap["max"]} منشی برای این آژانس مجاز است. '
+                'برای تبدیل نقش، ابتدا یک منشی را حذف یا نقش او را تغییر دهید.'
+            )
+    if (
+        new_role in AGENCY_ROLES_REQUIRING_EXTRACTION_SEAT
+        and old_role == AGENCY_ROLE_SECRETARY
+    ):
+        if get_member_seat(member):
+            return
+        if not subscription:
+            raise ValueError('اشتراک آژانس در حال حاضر فعال نیست.')
+        cap = get_agency_invite_capacity(agency, subscription)
+        if cap['invite_available'] < 1:
+            raise ValueError(
+                'ظرفیت اعضای مشاور تکمیل است. صندلی آزاد کنید، لایسنس اضافه کنید '
+                'یا دعوت‌های در انتظار را لغو کنید.'
+            )
+
+
 def _assert_invite_capacity(
     agency,
     subscription,

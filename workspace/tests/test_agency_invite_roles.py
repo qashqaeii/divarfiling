@@ -205,3 +205,85 @@ class AgencyInviteRoleTests(AgencyInviteRolesTestBase):
                 self.owner, self.phones[19], role='secretary', request=None,
             )
         self.assertEqual(ctx.exception.code, 'agency_secretary_capacity_reached')
+
+    def test_role_change_advisor_to_secretary_blocked_at_secretary_cap(self):
+        self._setup_agency(qty=3)
+        for i in range(AGENCY_MAX_SECRETARIES_PER_AGENCY):
+            u = User.objects.create_user(
+                username=self.phones[10 + i], phone=self.phones[10 + i], password='x',
+            )
+            CRMAgencyMember.objects.create(
+                agency=self.agency, user=u, role='secretary', is_active=True,
+                data_visibility_consent_at=timezone.now(),
+            )
+        adv = User.objects.create_user(username=self.phones[5], phone=self.phones[5], password='x')
+        member = CRMAgencyMember.objects.create(
+            agency=self.agency, user=adv, role='advisor', is_active=True,
+            data_visibility_consent_at=timezone.now(),
+        )
+        with self.assertRaises(ValueError) as ctx:
+            update_member_role(self.owner, member.pk, 'secretary')
+        self.assertIn('منشی', str(ctx.exception))
+
+    def test_role_change_secretary_to_advisor_blocked_when_advisor_capacity_full(self):
+        self._setup_agency(qty=2)
+        adv1 = User.objects.create_user(username=self.phones[5], phone=self.phones[5], password='x')
+        adv2 = User.objects.create_user(username=self.phones[6], phone=self.phones[6], password='x')
+        sec = User.objects.create_user(username=self.phones[7], phone=self.phones[7], password='x')
+        CRMAgencyMember.objects.create(
+            agency=self.agency, user=adv1, role='advisor', is_active=True,
+            data_visibility_consent_at=timezone.now(),
+        )
+        CRMAgencyMember.objects.create(
+            agency=self.agency, user=adv2, role='advisor', is_active=True,
+            data_visibility_consent_at=timezone.now(),
+        )
+        member = CRMAgencyMember.objects.create(
+            agency=self.agency, user=sec, role='secretary', is_active=True,
+            data_visibility_consent_at=timezone.now(),
+        )
+        licenses = list(License.objects.filter(agency_subscription=self.sub))
+        assign_seat_to_member(self.owner, licenses[0].pk, adv1.pk)
+        assign_seat_to_member(self.owner, licenses[1].pk, adv2.pk)
+        with self.assertRaises(ValueError) as ctx:
+            update_member_role(self.owner, member.pk, 'advisor')
+        self.assertIn('ظرفیت', str(ctx.exception))
+
+    def test_role_change_secretary_to_advisor_allowed_when_retains_seat(self):
+        self._setup_agency(qty=2)
+        adv = User.objects.create_user(username=self.phones[5], phone=self.phones[5], password='x')
+        member = CRMAgencyMember.objects.create(
+            agency=self.agency, user=adv, role='advisor', is_active=True,
+            data_visibility_consent_at=timezone.now(),
+        )
+        lic = License.objects.filter(agency_subscription=self.sub, assigned_user__isnull=True).first()
+        assign_seat_to_member(self.owner, lic.pk, adv.pk)
+        update_member_role(self.owner, member.pk, 'secretary')
+        updated = update_member_role(self.owner, member.pk, 'advisor')
+        self.assertEqual(updated.role, 'advisor')
+        lic.refresh_from_db()
+        self.assertEqual(lic.assigned_user_id, adv.pk)
+
+    def test_team_api_role_change_respects_capacity(self):
+        self._setup_agency(qty=2)
+        for i in range(AGENCY_MAX_SECRETARIES_PER_AGENCY):
+            u = User.objects.create_user(
+                username=self.phones[10 + i], phone=self.phones[10 + i], password='x',
+            )
+            CRMAgencyMember.objects.create(
+                agency=self.agency, user=u, role='secretary', is_active=True,
+                data_visibility_consent_at=timezone.now(),
+            )
+        adv = User.objects.create_user(username=self.phones[5], phone=self.phones[5], password='x')
+        member = CRMAgencyMember.objects.create(
+            agency=self.agency, user=adv, role='advisor', is_active=True,
+            data_visibility_consent_at=timezone.now(),
+        )
+        self.client.force_login(self.owner)
+        resp = self.client.patch(
+            reverse('workspace:api_crm_team_member_detail', kwargs={'member_id': member.pk}),
+            data='{"role":"secretary"}',
+            content_type='application/json',
+        )
+        self.assertEqual(resp.status_code, 400)
+        self.assertIn('منشی', resp.json().get('error', ''))

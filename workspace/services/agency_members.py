@@ -24,12 +24,15 @@ def build_members_dashboard(actor, agency) -> dict:
             continue
         seat = get_member_seat(m)
         needs_seat = m.role in AGENCY_ROLES_REQUIRING_EXTRACTION_SEAT
+        has_seat = seat is not None
+        seat_not_required = m.role == AGENCY_ROLE_SECRETARY
         members.append({
             'member': m,
             'seat': seat,
-            'has_seat': seat is not None,
+            'has_seat': has_seat,
             'needs_extraction_seat': needs_seat,
-            'seat_not_required': m.role == AGENCY_ROLE_SECRETARY,
+            'seat_not_required': seat_not_required,
+            'retained_seat_unused': seat_not_required and has_seat,
         })
     invitations = list_agency_invitations(agency)
     return {

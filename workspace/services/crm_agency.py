@@ -210,6 +210,11 @@ def update_member_role(actor, member_id: int, role: str) -> CRMAgencyMember:
     if role == AGENCY_ROLE_OWNER:
         raise ValueError('نقش مالک مجاز نیست')
     role = validate_role_change(role)
+    from workspace.services.agency_entitlement import get_subscription_for_agency
+    from workspace.services.agency_invitations import assert_member_role_change_capacity
+
+    sub = get_subscription_for_agency(m.agency)
+    assert_member_role_change_capacity(m.agency, sub, member, role)
     member.role = role
     member.save(update_fields=['role'])
     if is_agency_rbac_v2_enabled(m.agency):

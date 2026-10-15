@@ -141,7 +141,9 @@
                             {% endif %}
                         </td>
                         <td>
-                            {% if row.seat_not_required %}
+                            {% if row.retained_seat_unused %}
+                            {% include "workspace/crm/agency/includes/status_badge.html" with status="warn" label="صندلی قبلی همچنان تخصیص‌یافته" %}
+                            {% elif row.seat_not_required %}
                             {% include "workspace/crm/agency/includes/status_badge.html" with status="muted" label="بدون نیاز به لایسنس استخراج" %}
                             {% elif row.has_seat %}
                             {% include "workspace/crm/agency/includes/status_badge.html" with status="ok" label="فعال" %}
@@ -253,7 +255,9 @@
                 </div>
                 <div class="agency-member-card__meta">
                     <span class="agency-status agency-status--muted">{{ m.get_role_display }}</span>
-                    {% if row.seat_not_required %}
+                    {% if row.retained_seat_unused %}
+                    <span class="agency-status agency-status--warn">صندلی قبلی فعال است</span>
+                    {% elif row.seat_not_required %}
                     <span class="agency-status agency-status--muted">بدون نیاز به لایسنس</span>
                     {% elif row.has_seat %}
                     <span class="agency-status agency-status--ok">لایسنس فعال</span>

@@ -9,7 +9,7 @@
             {% endif %}
         </figure>
         <div class="agency-hero__identity">
-            <p class="agency-hero__eyebrow">مدیریت آژانس</p>
+            <p class="agency-hero__eyebrow">{% if hub_advisor_member_shell %}میزکار مشاور{% else %}مدیریت آژانس{% endif %}</p>
             <h1 class="agency-hero__title">{{ hub_agency.name|default:"آژانس" }}</h1>
             {% if hub_member_role %}<p class="agency-hero__role">{{ hub_member_role }}</p>{% endif %}
             {% if hub_subscription %}
@@ -28,7 +28,7 @@
     </div>
 
     <div class="agency-hero__end">
-        {% if hub_seats %}
+        {% if hub_seats and not hub_advisor_member_shell %}
         <div class="agency-hero__seats" aria-label="صندلی مشاوران">
             <span class="agency-hero__seats-kpi">
                 <span class="agency-hero__seats-kpi-label">صندلی</span>

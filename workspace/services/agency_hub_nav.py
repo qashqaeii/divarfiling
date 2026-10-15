@@ -3,7 +3,12 @@ from __future__ import annotations
 
 from django.urls import reverse
 
-from workspace.services.agency_entitlement import can_manage_agency, resolve_managed_agency
+from workspace.constants import AGENCY_ROLE_ADVISOR
+from workspace.services.agency_entitlement import (
+    can_manage_agency,
+    has_assigned_agency_seat,
+    resolve_managed_agency,
+)
 from workspace.services.agency_rbac import (
     NAV_PROFILE_ADVISOR,
     NAV_PROFILE_MANAGER_LEGACY,
@@ -36,6 +41,44 @@ HUB_NAV_MOBILE_PRIMARY_SECRETARY: tuple[str, ...] = (
     'messages',
 )
 
+HUB_NAV_MOBILE_PRIMARY_ADVISOR: tuple[str, ...] = (
+    'member',
+    'space',
+)
+
+
+def uses_advisor_member_hub(user) -> bool:
+    """مشاور با صندلی — میزکار عضو، نه داشبورد مدیریت آژانس."""
+    if not user or not getattr(user, 'is_authenticated', False):
+        return False
+    if can_manage_agency(user) or can_manage_team(user):
+        return False
+    if not has_assigned_agency_seat(user):
+        return False
+    membership = get_membership(user)
+    if not membership or not membership.is_active:
+        return False
+    agency = membership.agency
+    if is_agency_rbac_v2_enabled(agency):
+        return resolve_nav_profile(user) == NAV_PROFILE_ADVISOR
+    return membership.role == AGENCY_ROLE_ADVISOR
+
+
+def _build_advisor_member_hub_nav(user) -> list[tuple[str, str, str]]:
+    membership = get_membership(user)
+    agency = membership.agency if membership else None
+    member_url = reverse('workspace:agency_advisor_member')
+    nav: list[tuple[str, str, str]] = [
+        ('member', 'نمای من', member_url),
+    ]
+    if agency and is_agency_feature_enabled('agency_space', agency) and can_access_agency_space(user, agency):
+        nav.append(('space', 'فضای آژانس', reverse('workspace:agency_hub_space')))
+    if agency and is_agency_feature_enabled('messages', agency):
+        nav.append(('messages', 'پیام‌ها', f'{member_url}?tab=messages'))
+    if agency and is_agency_feature_enabled('announcements', agency):
+        nav.append(('announcements', 'اطلاعیه‌ها', f'{member_url}?tab=announcements'))
+    return nav
+
 
 def partition_hub_nav(
     nav: list[tuple[str, str, str]],
@@ -47,6 +90,8 @@ def partition_hub_nav(
     primary_keys_order = HUB_NAV_MOBILE_PRIMARY_KEYS
     if profile == NAV_PROFILE_SECRETARY:
         primary_keys_order = HUB_NAV_MOBILE_PRIMARY_SECRETARY
+    elif nav and nav[0][0] == 'member':
+        primary_keys_order = HUB_NAV_MOBILE_PRIMARY_ADVISOR
     primary = [by_key[k] for k in primary_keys_order if k in by_key]
     primary_keys = {item[0] for item in primary}
     secondary = [item for item in nav if item[0] not in primary_keys]
@@ -54,6 +99,9 @@ def partition_hub_nav(
 
 
 def build_hub_nav(user) -> list[tuple[str, str, str]]:
+    if uses_advisor_member_hub(user):
+        return _build_advisor_member_hub_nav(user)
+
     agency, _sub = resolve_managed_agency(user)
     if not agency:
         membership = get_membership(user)

@@ -20,6 +20,7 @@ from workspace.services.agency_hub_nav import (
     build_hub_nav,
     build_settings_advanced_tabs,
     partition_hub_nav,
+    uses_advisor_member_hub,
 )
 from workspace.services.agency_rbac import resolve_nav_profile
 from workspace.services.agency_members import build_members_dashboard
@@ -51,6 +52,7 @@ def _hub_shell_context(request, hub_section: str) -> dict:
         'hub_nav': hub_nav,
         'hub_nav_primary': hub_nav_primary,
         'hub_nav_more': hub_nav_more,
+        'hub_advisor_member_shell': uses_advisor_member_hub(request.user),
         'agency_team_action_url': reverse('workspace:agency_team_action'),
         'crm_team_url': reverse('workspace:agency_team_action'),
     })

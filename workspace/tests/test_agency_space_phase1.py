@@ -146,6 +146,15 @@ class AgencySpacePublishTests(AgencySpaceTestBase):
         self.assertContains(resp, reverse('workspace:agency_hub_space'))
         self.assertContains(resp, 'فضای آژانس')
 
+    def test_advisor_agency_space_uses_member_hub_shell(self):
+        self.client.force_login(self.advisor)
+        resp = self.client.get(reverse('workspace:agency_hub_space'))
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, 'میزکار مشاور')
+        self.assertContains(resp, 'نمای من')
+        self.assertNotContains(resp, 'agency-hero__eyebrow">مدیریت آژانس')
+        self.assertNotContains(resp, '>اعضا<')
+
     def test_advisor_no_seat_sees_public_read_only(self):
         prop = self._prop()
         item = publish_property(self.advisor, prop.pk, visibility=AgencySpaceItem.VISIBILITY_AGENCY_PUBLIC)

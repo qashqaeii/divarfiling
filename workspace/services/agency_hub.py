@@ -34,12 +34,9 @@ from workspace.services.crm_scope import can_operate_team_leads, get_membership,
 def hub_base_context(user) -> dict[str, Any]:
     agency, sub = resolve_managed_agency(user)
     membership = get_membership(user)
-    if not agency:
-        from workspace.services.crm_scope import can_manage_team
-
-        if membership and membership.is_active and can_manage_team(user):
-            agency = membership.agency
-            sub = get_subscription_for_agency(agency) if agency else None
+    if not agency and membership and membership.is_active:
+        agency = membership.agency
+        sub = get_subscription_for_agency(agency) if agency else None
     seats = seat_usage_summary(sub) if sub else None
     hub_member_role = ''
     if membership and membership.is_active:

@@ -9,7 +9,11 @@ from django.views.generic import TemplateView
 
 from workspace.constants import CRM_PROPERTIES, CRM_TYPES, PROPERTY_DEAL_MODES
 from workspace.mixins_agency_space import AgencySpaceFeatureMixin
-from workspace.services.agency_hub_nav import build_hub_nav, partition_hub_nav
+from workspace.services.agency_hub_nav import (
+    build_hub_nav,
+    partition_hub_nav,
+    uses_advisor_member_hub,
+)
 from workspace.services.agency_rbac import NAV_PROFILE_SECRETARY, resolve_nav_profile
 from workspace.services.agency_hub import hub_base_context
 from workspace.services.agency_space_access import (
@@ -53,6 +57,7 @@ def _hub_shell(request, hub_section: str) -> dict:
         'hub_nav': hub_nav,
         'hub_nav_primary': hub_nav_primary,
         'hub_nav_more': hub_nav_more,
+        'hub_advisor_member_shell': uses_advisor_member_hub(request.user),
     })
     return ctx
 

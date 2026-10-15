@@ -85,7 +85,7 @@ class AndroidAppDownloadTests(TestCase):
         if setup_installer_available():
             self.assertContains(response, reverse('windows_app_download'))
             self.assertNotContains(response, 'خرید لایسنس برای دانلود')
-        self.assertContains(response, 'لایسنس برای استخراج')
+        self.assertContains(response, 'استخراج با لایسنس فعال')
 
     def test_workspace_home_shows_downloads_without_license(self):
         user = get_user_model().objects.create_user(

@@ -15,7 +15,9 @@
             <strong class="mk-account-sidebar__user-name">{{ user.get_full_name|default:user.username }}</strong>
             <span class="mk-account-sidebar__user-meta">@{{ user.username }}</span>
             {% if user.phone %}<span class="mk-account-sidebar__user-meta" dir="ltr">{{ user.phone }}</span>{% endif %}
+            {% if active_tab != 'profile' %}
             <button type="button" class="mk-account-sidebar__avatar-link" onclick="openAccountAvatarPicker()">تغییر آواتار</button>
+            {% endif %}
         </div>
     </div>
 

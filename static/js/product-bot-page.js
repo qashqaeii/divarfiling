@@ -176,17 +176,24 @@
     function updateStickyTop() {
         var header = document.querySelector('.mk-site-header');
         if (!header) return;
-        document.documentElement.style.setProperty(
-            '--pbp-sticky-top',
-            Math.ceil(header.getBoundingClientRect().height) + 'px'
-        );
+        // فقط offset چسبندگی — هرگز --mk-site-header-h را از ارتفاع header ست نکنید:
+        // آن متغیر min-height .mk-nav-inner است و حلقهٔ رشد بی‌نهایت هدر می‌سازد.
+        var height = Math.ceil(header.getBoundingClientRect().height);
+        document.documentElement.style.setProperty('--pbp-sticky-top', height + 'px');
+    }
+
+    function watchSiteHeaderHeight() {
+        var header = document.querySelector('.mk-site-header');
+        if (!header || typeof ResizeObserver === 'undefined') return;
+        var ro = new ResizeObserver(function () { updateStickyTop(); });
+        ro.observe(header);
     }
 
     function initStickyBuyCta() {
         if (!document.body.classList.contains('mk-product-bot-page')) return;
 
         var bar = document.querySelector('[data-pbp-sticky-cta]');
-        var hero = document.querySelector('.pbp-hero');
+        var hero = document.querySelector('.pbp-hero-mob') || document.querySelector('.pbp-hero');
         var bottomCta = document.querySelector('.pbp-cta');
         var mobileMq = window.matchMedia('(max-width: 767px)');
 
@@ -234,15 +241,75 @@
         bindObservers();
     }
 
+    function initMobHeroEntrance() {
+        var hero = document.querySelector('.pbp-hero-mob');
+        if (!hero) return;
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            hero.classList.add('is-live');
+            return;
+        }
+        requestAnimationFrame(function () {
+            hero.classList.add('is-live');
+        });
+    }
+
+    function initMobHeroPreview() {
+        var root = document.querySelector('[data-pbp-mob-preview]');
+        if (!root) return;
+        var tabs = root.querySelectorAll('[data-pbp-mob-tab]');
+        var panels = document.querySelectorAll('[data-pbp-mob-panel]');
+        if (!tabs.length || !panels.length) return;
+
+        tabs.forEach(function (tab) {
+            tab.addEventListener('click', function () {
+                var id = tab.dataset.pbpMobTab;
+                tabs.forEach(function (t) {
+                    var on = t === tab;
+                    t.classList.toggle('is-active', on);
+                    t.setAttribute('aria-selected', on ? 'true' : 'false');
+                });
+                panels.forEach(function (panel) {
+                    var on = panel.dataset.pbpMobPanel === id;
+                    panel.classList.toggle('is-active', on);
+                    if (on) panel.removeAttribute('hidden');
+                    else panel.setAttribute('hidden', '');
+                });
+            });
+        });
+    }
+
+    function initSmoothAnchors() {
+        if (!document.body.classList.contains('mk-product-bot-page')) return;
+        var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        document.querySelectorAll('.pbp-sticky-nav__link[href^="#"], .pbp-btn[href^="#"], .pbp-hero-mob__secondary[href^="#"]').forEach(function (link) {
+            link.addEventListener('click', function (e) {
+                var id = link.getAttribute('href');
+                if (!id || id.length < 2) return;
+                var target = document.querySelector(id);
+                if (!target) return;
+                e.preventDefault();
+                var header = document.querySelector('.mk-site-header');
+                var subnav = document.querySelector('.pbp-sticky-nav');
+                var offset = (header ? header.offsetHeight : 0) + (subnav ? subnav.offsetHeight : 0) + 8;
+                var top = target.getBoundingClientRect().top + window.scrollY - offset;
+                window.scrollTo({ top: top, behavior: reduceMotion ? 'auto' : 'smooth' });
+            });
+        });
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
         updateStickyTop();
+        watchSiteHeaderHeight();
         window.addEventListener('resize', updateStickyTop, { passive: true });
+        initSmoothAnchors();
         initReveal();
         initStickyNav();
         initTabs();
         initJourney();
         initFaq();
         initLightbox();
+        initMobHeroEntrance();
+        initMobHeroPreview();
         initStickyBuyCta();
     });
 })();

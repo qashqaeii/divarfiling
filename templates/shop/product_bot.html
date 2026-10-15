@@ -11,15 +11,15 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/mizkar-video-player.css' %}?v=2">
 <link rel="stylesheet" href="{% static 'css/mizkar-product-bot.css' %}?v=37">
-<link rel="stylesheet" href="{% static 'css/product-bot-page.css' %}?v=4">
-<link rel="stylesheet" href="{% static 'css/product-bot-mobile.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'css/product-bot-page.css' %}?v=5">
+<link rel="stylesheet" href="{% static 'css/product-bot-mobile.css' %}?v=6">
 {% endblock %}
 
 {% block content %}
 <div class="pb-page pbp-page">
 
-    {# ─── Hero ─── #}
-    <section class="pbp-hero">
+    {# ─── Hero (desktop / tablet) ─── #}
+    <section class="pbp-hero mk-pbp-desk-only">
         <div class="pbp-hero__mesh" aria-hidden="true"></div>
         <div class="container pbp-hero__grid">
             <div class="pbp-hero__copy pbp-reveal">
@@ -28,6 +28,13 @@
                     {{ bot_page.tagline }}
                 </p>
                 <h1 class="pbp-hero__title">{{ product.title }}</h1>
+                {% if buyable_plans %}
+                <p class="pbp-hero__price-chip" aria-label="شروع قیمت">
+                    <span class="pbp-hero__price-chip-label">از</span>
+                    <strong>{{ buyable_plans.0.price|currency }}</strong>
+                    <span class="pbp-hero__price-chip-unit">تومان</span>
+                </p>
+                {% endif %}
                 <p class="pbp-hero__lead">{{ product.short_description|default:bot_page.hero_lead }}</p>
 
                 <ul class="pbp-hero__pills" aria-label="خلاصه محصول">
@@ -79,16 +86,138 @@
         </div>
     </section>
 
+    {# ─── Hero (mobile — App Store–style) ─── #}
+    <section class="pbp-hero-mob mk-pbp-mob-only" aria-label="{{ product.title }}">
+        <div class="pbp-hero-mob__preview-wrap">
+            <div class="pbp-hero-mob__aurora" aria-hidden="true">
+                <span class="pbp-hero-mob__orb pbp-hero-mob__orb--violet"></span>
+                <span class="pbp-hero-mob__orb pbp-hero-mob__orb--sky"></span>
+                <span class="pbp-hero-mob__orb pbp-hero-mob__orb--amber"></span>
+            </div>
+            <div class="pbp-hero-mob__glow" aria-hidden="true"></div>
+            <div class="pbp-hero-mob__seg" role="tablist" aria-label="پیش‌نمایش محصول" data-pbp-mob-preview>
+                <button type="button" class="pbp-hero-mob__seg-btn is-active" role="tab" aria-selected="true" data-pbp-mob-tab="win">
+                    <i class="fab fa-windows" aria-hidden="true"></i> ویندوز
+                </button>
+                <button type="button" class="pbp-hero-mob__seg-btn" role="tab" aria-selected="false" data-pbp-mob-tab="android">
+                    <i class="fab fa-android" aria-hidden="true"></i> اندروید
+                </button>
+            </div>
+            <div class="pbp-hero-mob__preview">
+                <button type="button" class="pbp-hero-mob__shot is-active" data-pbp-mob-panel="win" data-pb-lightbox-open aria-label="بزرگنمایی ربات ویندوز">
+                    <img src="{% static 'images/help-bot-extract-tab.png' %}" alt="ربات استخراج دیوار" loading="eager" decoding="async" width="1680" height="1000">
+                </button>
+                <button type="button" class="pbp-hero-mob__shot" data-pbp-mob-panel="android" data-pb-lightbox-open data-pb-lightbox-src="{% static 'images/android/android-02-home.png' %}" data-pb-lightbox-caption="اپ اندروید" hidden aria-label="بزرگنمایی اپ اندروید">
+                    <img src="{% static 'images/android/android-02-home.png' %}" alt="اپ فایلینگ دیوار" loading="eager" decoding="async" width="390" height="844">
+                </button>
+            </div>
+            <p class="pbp-hero-mob__preview-hint" aria-hidden="true">
+                <i class="fas fa-expand" aria-hidden="true"></i>
+                لمس کنید — پیش‌نمایش تمام‌صفحه
+            </p>
+        </div>
+
+        <div class="pbp-hero-mob__shell">
+            <span class="pbp-hero-mob__sheet-handle" aria-hidden="true"></span>
+            <div class="pbp-hero-mob__head">
+                <p class="pbp-hero-mob__kicker">
+                    <i class="fas fa-robot" aria-hidden="true"></i>
+                    {{ bot_page.tagline }}
+                </p>
+                <h1 class="pbp-hero-mob__title">{{ product.title }}</h1>
+                <p class="pbp-hero-mob__lead">{{ product.short_description|default:bot_page.hero_lead }}</p>
+                <p class="pbp-hero-mob__vibe">
+                    <i class="fas fa-sparkles" aria-hidden="true"></i>
+                    کمتر وقت صرف کپی دستی کن — فایلینگ آماده را همان روز تحویل بگیر.
+                </p>
+            </div>
+
+            <dl class="pbp-hero-mob__stats" aria-label="خلاصه مشخصات">
+                <div data-accent="violet">
+                    <dt><i class="fas fa-laptop" aria-hidden="true"></i> پلتفرم</dt>
+                    <dd>ویندوز + اندروید</dd>
+                </div>
+                <div data-accent="sky">
+                    <dt><i class="fas fa-database" aria-hidden="true"></i> داده</dt>
+                    <dd>۸۰+ فیلد</dd>
+                </div>
+                <div data-accent="emerald">
+                    <dt><i class="fas fa-file-excel" aria-hidden="true"></i> خروجی</dt>
+                    <dd>Excel · CSV</dd>
+                </div>
+            </dl>
+
+            {% if average_rating > 0 %}
+            <p class="pbp-hero-mob__rating">
+                <span class="pbp-hero-mob__rating-score">{{ average_rating|floatformat:1 }}</span>
+                <span class="pbp-hero-mob__stars" dir="rtl" aria-hidden="true">
+                    {% for i in "12345" %}
+                    <i class="fas fa-star{% if forloop.counter > average_rating %}-o{% endif %}"></i>
+                    {% endfor %}
+                </span>
+                <span class="pbp-hero-mob__rating-count">{{ rating_count }} نظر</span>
+            </p>
+            {% endif %}
+
+            <div class="pbp-hero-mob__purchase" aria-label="خرید لایسنس">
+                <div class="pbp-hero-mob__purchase-copy">
+                    <span class="pbp-hero-mob__purchase-label">لایسنس یکپارچه</span>
+                    {% if buyable_plans %}
+                    <span class="pbp-hero-mob__purchase-price">از <strong>{{ buyable_plans.0.price|currency }}</strong> تومان</span>
+                    {% elif plans.first %}
+                    <span class="pbp-hero-mob__purchase-price">پلن‌های متنوع</span>
+                    {% endif %}
+                </div>
+                {% if buyable_plans %}
+                <a href="{% url 'buy' product.slug %}?plan={{ buyable_plans.0.id }}" class="pbp-hero-mob__purchase-btn">
+                    <span>شروع کنید</span>
+                    <i class="fas fa-arrow-left" aria-hidden="true"></i>
+                </a>
+                {% elif plans.first %}
+                <a href="{% url 'buy' product.slug %}?plan={{ plans.first.id }}" class="pbp-hero-mob__purchase-btn">
+                    <span>شروع کنید</span>
+                    <i class="fas fa-arrow-left" aria-hidden="true"></i>
+                </a>
+                {% endif %}
+            </div>
+
+            <a href="#pbp-journey" class="pbp-hero-mob__secondary">
+                <i class="fas fa-play-circle" aria-hidden="true"></i>
+                ببینید چطور کار می‌کند
+            </a>
+
+            <div class="pbp-hero-mob__scroll" aria-label="مزایا">
+                <ul class="pbp-hero-mob__cards">
+                    <li data-accent="violet">
+                        <i class="fas fa-key" aria-hidden="true"></i>
+                        <strong>یک لایسنس</strong>
+                        <span>ربات و اپ با هم</span>
+                    </li>
+                    <li data-accent="amber">
+                        <i class="fas fa-table" aria-hidden="true"></i>
+                        <strong>فایلینگ کامل</strong>
+                        <span>ستون‌بندی آماده</span>
+                    </li>
+                    <li data-accent="emerald">
+                        <i class="fas fa-layer-group" aria-hidden="true"></i>
+                        <strong>میزکار</strong>
+                        <span>CRM و فایلینگ</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
     <nav class="pbp-sticky-nav" aria-label="ناوبری صفحه">
         <div class="container pbp-sticky-nav__track">
-            <a href="#pbp-journey" class="pbp-sticky-nav__link is-active" data-pbp-nav="journey"><i class="fas fa-route"></i> مسیر کار</a>
-            <a href="#platforms" class="pbp-sticky-nav__link" data-pbp-nav="platforms"><i class="fas fa-desktop"></i> پلتفرم‌ها</a>
-            <a href="#pbp-hub" class="pbp-sticky-nav__link" data-pbp-nav="hub"><i class="fas fa-gem"></i> امکانات</a>
-            <a href="#pbp-support" class="pbp-sticky-nav__link" data-pbp-nav="support"><i class="fas fa-circle-question"></i> پشتیبانی</a>
+            <a href="#pbp-journey" class="pbp-sticky-nav__link is-active" data-pbp-nav="journey" aria-label="مسیر کار"><i class="fas fa-route" aria-hidden="true"></i><span class="pbp-sticky-nav__label">مسیر</span></a>
+            <a href="#platforms" class="pbp-sticky-nav__link" data-pbp-nav="platforms" aria-label="پلتفرم‌ها"><i class="fas fa-desktop" aria-hidden="true"></i><span class="pbp-sticky-nav__label">پلتفرم</span></a>
+            <a href="#pbp-hub" class="pbp-sticky-nav__link" data-pbp-nav="hub" aria-label="امکانات"><i class="fas fa-gem" aria-hidden="true"></i><span class="pbp-sticky-nav__label">امکانات</span></a>
+            <a href="#pbp-support" class="pbp-sticky-nav__link" data-pbp-nav="support" aria-label="پشتیبانی"><i class="fas fa-circle-question" aria-hidden="true"></i><span class="pbp-sticky-nav__label">پشتیبانی</span></a>
             {% if buyable_plans %}
-            <a href="{% url 'buy' product.slug %}?plan={{ buyable_plans.0.id }}" class="pbp-sticky-nav__link pbp-sticky-nav__cta"><i class="fas fa-shopping-cart"></i> خرید</a>
+            <a href="{% url 'buy' product.slug %}?plan={{ buyable_plans.0.id }}" class="pbp-sticky-nav__link pbp-sticky-nav__cta" aria-label="خرید لایسنس"><i class="fas fa-shopping-cart" aria-hidden="true"></i><span class="pbp-sticky-nav__label">خرید</span></a>
             {% elif plans.first %}
-            <a href="{% url 'buy' product.slug %}?plan={{ plans.first.id }}" class="pbp-sticky-nav__link pbp-sticky-nav__cta"><i class="fas fa-shopping-cart"></i> خرید</a>
+            <a href="{% url 'buy' product.slug %}?plan={{ plans.first.id }}" class="pbp-sticky-nav__link pbp-sticky-nav__cta" aria-label="خرید لایسنس"><i class="fas fa-shopping-cart" aria-hidden="true"></i><span class="pbp-sticky-nav__label">خرید</span></a>
             {% endif %}
         </div>
     </nav>
@@ -334,17 +463,21 @@
 
 {% if buyable_plans or plans.first %}
 <aside class="pbp-sticky-cta" data-pbp-sticky-cta aria-label="خرید سریع" hidden>
-    {% if buyable_plans %}
-    <a href="{% url 'buy' product.slug %}?plan={{ buyable_plans.0.id }}" class="pbp-sticky-cta__btn">
-        <i class="fas fa-shopping-cart" aria-hidden="true"></i>
-        <span>خرید لایسنس</span>
-    </a>
-    {% elif plans.first %}
-    <a href="{% url 'buy' product.slug %}?plan={{ plans.first.id }}" class="pbp-sticky-cta__btn">
-        <i class="fas fa-shopping-cart" aria-hidden="true"></i>
-        <span>خرید لایسنس</span>
-    </a>
-    {% endif %}
+    <div class="pbp-sticky-cta__bar">
+        <div class="pbp-sticky-cta__info">
+            <span class="pbp-sticky-cta__title">ربات استخراج دیوار</span>
+            {% if buyable_plans %}
+            <span class="pbp-sticky-cta__price">از {{ buyable_plans.0.price|currency }} تومان</span>
+            {% else %}
+            <span class="pbp-sticky-cta__price">لایسنس یکپارچه</span>
+            {% endif %}
+        </div>
+        {% if buyable_plans %}
+        <a href="{% url 'buy' product.slug %}?plan={{ buyable_plans.0.id }}" class="pbp-sticky-cta__btn">خرید</a>
+        {% elif plans.first %}
+        <a href="{% url 'buy' product.slug %}?plan={{ plans.first.id }}" class="pbp-sticky-cta__btn">خرید</a>
+        {% endif %}
+    </div>
 </aside>
 {% endif %}
 {% endblock %}
@@ -366,5 +499,5 @@
 {% if install_video.available %}
 <script src="{% static 'js/bot-install-video.js' %}?v=1" defer></script>
 {% endif %}
-<script src="{% static 'js/product-bot-page.js' %}?v=3" defer></script>
+<script src="{% static 'js/product-bot-page.js' %}?v=8" defer></script>
 {% endblock %}

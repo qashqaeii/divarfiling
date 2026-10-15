@@ -3,67 +3,47 @@
 {% load account_avatar_tags %}
 
 <div id="tab-profile" class="mk-acc-tab-panel mk-acc-tab-shell mk-profile-tab tab-content dash-tab-panel prof-tab"{% if active_tab != 'profile' %} hidden{% endif %}>
-    <header class="mk-account-page-head">
-        <h1 class="mk-account-page-head__title">پروفایل</h1>
-        <p class="mk-account-page-head__sub">حساب کاربری و برند عمومی برای اشتراک با مشتری</p>
-    </header>
 
-    <div class="prof-hero" aria-label="پروفایل کاربر">
-        <button type="button" class="prof-hero__avatar prof-hero__avatar-btn" onclick="openAvatarPickerModal()" aria-label="تغییر آواتار">
-            <img id="accountAvatarHeroImg" src="{{ account_avatar_panel_url }}" alt="" width="88" height="88" loading="eager" decoding="async">
-            <span class="prof-hero__avatar-edit" aria-hidden="true"><i class="fas fa-pen"></i></span>
-        </button>
-        <div class="prof-hero__copy">
-            <h2 class="prof-hero__name">{{ user.get_full_name|default:user.username }}</h2>
-            <p class="prof-hero__username">@{{ user.username }}</p>
-            <p class="prof-hero__meta">
-                <i class="fas fa-calendar" aria-hidden="true"></i>
-                عضو از {{ user.date_joined|to_jalali_date:'%Y/%m/%d' }}
-            </p>
-        </div>
-        <div class="prof-hero__actions">
-            <button type="button" class="prof-edit-btn prof-edit-btn--primary" onclick="openAvatarPickerModal()">
-                <i class="fas fa-user-circle" aria-hidden="true"></i> انتخاب آواتار
-            </button>
-            <button type="button" class="prof-edit-btn" onclick="openUserInfoModal()">
-                <i class="fas fa-pen" aria-hidden="true"></i> ویرایش حساب
-            </button>
-            <button type="button" class="prof-edit-btn" onclick="openProfileModal()">
-                <i class="fas fa-user-cog" aria-hidden="true"></i> پروفایل تکمیلی
-            </button>
-        </div>
-    </div>
-
-    <section class="prof-card prof-card--avatar mk-acc-panel" id="accountAvatarSection"
+    <section class="prof-hero prof-hero--unified" aria-label="پروفایل کاربر"
+             id="accountAvatarSection"
              data-saved-key="{{ account_avatar_saved_key }}"
              data-effective-key="{{ account_avatar_effective_key }}"
              data-has-custom="{% if account_avatar_has_custom %}1{% else %}0{% endif %}">
-        <header class="prof-card-head">
-            <div>
-                <h3 class="prof-card-title">آواتار حساب کاربری</h3>
-                <p class="prof-card-desc">در اپ موبایل و بخش‌های پروفایل شما نمایش داده می‌شود</p>
+        <div class="prof-hero__top">
+            <button type="button" class="prof-hero__avatar prof-hero__avatar-btn" onclick="openAvatarPickerModal()" aria-label="تغییر آواتار">
+                <img id="accountAvatarHeroImg" src="{{ account_avatar_panel_url }}" alt="" width="88" height="88" loading="eager" decoding="async">
+                <span class="prof-hero__avatar-edit" aria-hidden="true"><i class="fas fa-pen"></i></span>
+            </button>
+            <div class="prof-hero__copy">
+                <h1 class="prof-hero__name">{{ user.get_full_name|default:user.username }}</h1>
+                <p class="prof-hero__username">@{{ user.username }}</p>
+                <p class="prof-hero__meta">
+                    <i class="fas fa-calendar" aria-hidden="true"></i>
+                    عضو از {{ user.date_joined|to_jalali_date:'%Y/%m/%d' }}
+                </p>
             </div>
-            <button type="button" class="prof-edit-btn prof-edit-btn--primary" onclick="openAvatarPickerModal()">
-                <i class="fas fa-images" aria-hidden="true"></i> تغییر آواتار
-            </button>
-        </header>
-        <div class="prof-avatar-panel">
-            <button type="button" class="prof-avatar-panel__preview" onclick="openAvatarPickerModal()" aria-label="انتخاب آواتار">
-                <img id="accountAvatarPanelImg" src="{{ account_avatar_panel_url }}" alt="" width="96" height="96" loading="lazy" decoding="async">
-                <span class="prof-avatar-panel__badge"><i class="fas fa-pen" aria-hidden="true"></i></span>
-            </button>
-            <div class="prof-avatar-panel__copy">
-                <p class="prof-avatar-panel__hint">از مجموعه آواتارهای آماده انتخاب کنید یا یک عکس شخصی آپلود کنید.</p>
-                <div class="prof-avatar-panel__actions">
-                    <button type="button" class="prof-save-btn prof-save-btn--sm" onclick="openAvatarPickerModal()">انتخاب از آواتارها</button>
-                    <label class="prof-edit-btn prof-edit-btn--ghost">
-                        <i class="fas fa-upload" aria-hidden="true"></i> آپلود عکس
-                        <input type="file" id="accountAvatarFileInput" accept="image/*" hidden onchange="uploadAccountAvatarFile(event)">
-                    </label>
-                    {% if account_avatar_has_custom or account_avatar_saved_key %}
-                    <button type="button" class="prof-edit-btn prof-edit-btn--ghost" onclick="resetAccountAvatar()">بازنشانی</button>
-                    {% endif %}
-                </div>
+            <div class="prof-hero__actions">
+                <button type="button" class="prof-edit-btn" onclick="openUserInfoModal()">
+                    <i class="fas fa-pen" aria-hidden="true"></i> ویرایش حساب
+                </button>
+                <button type="button" class="prof-edit-btn prof-edit-btn--primary" onclick="openProfileModal()">
+                    <i class="fas fa-user-cog" aria-hidden="true"></i> پروفایل تکمیلی
+                </button>
+            </div>
+        </div>
+        <div class="prof-hero__tools">
+            <p class="prof-hero__tools-hint">آواتار در اپ موبایل و بخش‌های عمومی حساب شما نمایش داده می‌شود.</p>
+            <div class="prof-hero__tools-row">
+                <button type="button" class="prof-save-btn prof-save-btn--sm" onclick="openAvatarPickerModal()">
+                    <i class="fas fa-images" aria-hidden="true"></i> انتخاب آواتار
+                </button>
+                <label class="prof-edit-btn prof-edit-btn--ghost">
+                    <i class="fas fa-upload" aria-hidden="true"></i> آپلود عکس
+                    <input type="file" id="accountAvatarFileInput" accept="image/*" hidden onchange="uploadAccountAvatarFile(event)">
+                </label>
+                {% if account_avatar_has_custom or account_avatar_saved_key %}
+                <button type="button" class="prof-edit-btn prof-edit-btn--ghost" onclick="resetAccountAvatar()">بازنشانی</button>
+                {% endif %}
             </div>
         </div>
     </section>
@@ -71,7 +51,7 @@
     <div class="prof-grid mk-acc-profile-grid">
         <section class="prof-card mk-acc-panel">
             <header class="prof-card-head">
-                <h3 class="prof-card-title">حساب کاربری</h3>
+                <h2 class="prof-card-title">حساب کاربری</h2>
                 <button type="button" class="prof-edit-btn" onclick="openUserInfoModal()">
                     <i class="fas fa-pen" aria-hidden="true"></i> ویرایش
                 </button>
@@ -89,21 +69,12 @@
                     <dt>موبایل</dt>
                     <dd>{{ user.phone|default:"—" }}</dd>
                 </div>
-                <div class="prof-field">
-                    <dt>عضویت</dt>
-                    <dd>{{ user.date_joined|to_jalali_date:'%Y/%m/%d' }}</dd>
-                </div>
             </dl>
         </section>
 
         <section class="prof-card mk-acc-panel">
             <header class="prof-card-head">
-                <div class="prof-card-head-main">
-                    {% if user.profile and user.profile.avatar %}
-                    <img src="{{ user.profile.avatar.url }}" alt="" class="prof-avatar-thumb">
-                    {% endif %}
-                    <h3 class="prof-card-title">پروفایل تکمیلی</h3>
-                </div>
+                <h2 class="prof-card-title">پروفایل تکمیلی</h2>
                 <button type="button" class="prof-edit-btn" onclick="openProfileModal()">
                     <i class="fas fa-pen" aria-hidden="true"></i> ویرایش
                 </button>
@@ -128,7 +99,7 @@
                 </div>
             </dl>
             {% else %}
-            <p class="prof-empty">اطلاعات تکمیلی ثبت نشده — از دکمه ویرایش شروع کنید.</p>
+            <p class="prof-empty">اطلاعات تکمیلی ثبت نشده — از «پروفایل تکمیلی» در بالا شروع کنید.</p>
             {% endif %}
         </section>
     </div>
@@ -136,7 +107,7 @@
     <section class="prof-card prof-card--public" id="consultantPublicProfile">
         <header class="prof-card-head prof-card-head--public">
             <div>
-                <h3 class="prof-card-title">پروفایل عمومی مشاور</h3>
+                <h2 class="prof-card-title">پروفایل عمومی مشاور</h2>
                 <p class="prof-card-desc">در لینک اشتراک مشتری و صفحه عمومی نمایش داده می‌شود</p>
             </div>
             {% if consultant_socials_active %}

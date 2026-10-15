@@ -1,7 +1,7 @@
 /* Account dashboard — premium mobile UX (sidebar pinned ≥961px unchanged) */
 @media (max-width: 1024px) {
     body.mk-account-dashboard {
-        --acc-m-pad: clamp(0.9rem, 4vw, 1.25rem);
+        --acc-m-pad: clamp(0.75rem, 3.6vw, 1rem);
         --acc-m-touch: 2.75rem;
         --acc-m-body: clamp(0.875rem, 3.6vw, 0.9375rem);
         --acc-m-caption: clamp(0.75rem, 3.2vw, 0.8125rem);
@@ -9,6 +9,30 @@
         --acc-m-radius-sm: 12px;
         --acc-m-shadow: 0 14px 36px -24px rgba(15, 23, 42, 0.16);
         --acc-m-shadow-lg: 0 20px 48px -28px rgba(124, 58, 237, 0.22);
+        /* هم‌تراز با ارتفاع واقعی nav موبایل (~61px) */
+        --mk-site-header-h: 3.8125rem;
+    }
+
+    /* بنر/اطلاعیه/فلش بین chrome و main */
+    body.mk-account-dashboard > .mk-notices,
+    body.mk-account-dashboard > .banners-section,
+    body.mk-account-dashboard > .announcements-section {
+        display: none !important;
+        max-height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: hidden !important;
+        border: 0 !important;
+    }
+
+    body.mk-account-dashboard main.main-content {
+        margin-top: 0 !important;
+        padding-top: 0 !important;
+    }
+
+    body.mk-account-dashboard .mk-dashboard-page {
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
     }
 
     /* No hamburger — tab rail is primary nav */
@@ -34,8 +58,8 @@
     }
 
     body.mk-account-dashboard .mk-account-main {
-        padding: 0;
-        padding-bottom: calc(1.25rem + env(safe-area-inset-bottom, 0px));
+        padding: 0 !important;
+        padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px)) !important;
     }
 
     /* Hide redundant breadcrumb — tabs show current section */
@@ -46,21 +70,41 @@
     /* ─── Mobile nav shell ─── */
     body.mk-account-dashboard .mk-account-mob-shell {
         position: sticky;
-        top: var(--mk-site-header-h, 3.35rem);
-        z-index: 850;
-        margin-bottom: 0.85rem;
-        background: color-mix(in srgb, var(--acc-main-bg) 94%, transparent);
-        backdrop-filter: blur(14px);
-        border-bottom: 1px solid rgba(148, 163, 184, 0.14);
-        box-shadow: 0 10px 28px -24px rgba(15, 23, 42, 0.12);
+        top: var(--mk-site-header-h, 3.8125rem);
+        z-index: 900;
+        width: 100%;
+        margin: 0;
+        background: var(--mk-pub-header-bg, #fff);
+        backdrop-filter: blur(16px) saturate(1.08);
+        -webkit-backdrop-filter: blur(16px) saturate(1.08);
+        border-bottom: 1px solid var(--mk-pub-header-border, rgba(148, 163, 184, 0.14));
+        box-shadow: 0 6px 20px -18px rgba(15, 23, 42, 0.1);
+    }
+
+    html.mk-public[data-theme="light"] body.mk-account-dashboard .mk-account-mob-shell {
+        background: rgba(255, 255, 255, 0.96);
+    }
+
+    /* نمای کلی: هدر داخلی تکراری نیست — کارت wallet زمینه می‌دهد */
+    body.mk-account-dashboard.mk-acc-tab-overview .mk-account-mob-top {
+        display: none;
+    }
+
+    body.mk-account-dashboard.mk-acc-tab-overview .mk-account-tab-rail {
+        padding-top: 0.2rem;
+    }
+
+    body.mk-account-dashboard.mk-acc-tab-overview .mk-account-mob-shell {
+        margin-bottom: 0.25rem;
     }
 
     body.mk-account-dashboard .mk-account-mob-top {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 0.65rem;
-        padding: 0.7rem var(--acc-m-pad) 0.55rem;
+        gap: 0.5rem;
+        padding: 0.45rem var(--acc-m-pad) 0.35rem;
+        min-height: 0;
     }
 
     body.mk-account-dashboard .mk-account-mob-top__user {
@@ -82,9 +126,9 @@
 
     body.mk-account-dashboard .mk-account-mob-top__avatar {
         flex-shrink: 0;
-        width: 2.5rem;
-        height: 2.5rem;
-        border-radius: 13px;
+        width: 2.65rem;
+        height: 2.65rem;
+        border-radius: 14px;
         overflow: hidden;
         display: grid;
         place-items: center;
@@ -107,7 +151,7 @@
 
     body.mk-account-dashboard .mk-account-mob-top__copy strong {
         display: block;
-        font-size: var(--acc-m-body);
+        font-size: clamp(0.85rem, 3.8vw, var(--acc-m-body));
         font-weight: 800;
         color: var(--acc-text);
         line-height: 1.3;
@@ -119,7 +163,7 @@
     body.mk-account-dashboard .mk-account-mob-top__copy span {
         display: block;
         margin-top: 0.1rem;
-        font-size: var(--acc-m-caption);
+        font-size: 0.72rem;
         color: var(--acc-text-muted);
         overflow: hidden;
         text-overflow: ellipsis;
@@ -157,9 +201,54 @@
         transform: scale(0.96);
     }
 
-    /* Tab rail — horizontal pills */
+    body.mk-account-dashboard .mk-account-mob-cta-pill {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.35rem;
+        min-height: 2.35rem;
+        padding: 0.35rem 0.72rem;
+        border-radius: 999px;
+        border: none;
+        background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 55%, #5b21b6 100%);
+        color: #fff;
+        text-decoration: none;
+        font-size: 0.72rem;
+        font-weight: 800;
+        box-shadow: 0 10px 22px -12px rgba(109, 40, 217, 0.55);
+        -webkit-tap-highlight-color: transparent;
+        white-space: nowrap;
+    }
+
+    body.mk-account-dashboard .mk-account-mob-cta-pill:active {
+        transform: scale(0.97);
+    }
+
+    /* Tab rail — icon chips */
     body.mk-account-dashboard .mk-account-tab-rail {
-        padding: 0 0 0.55rem;
+        padding: 0 0 0.4rem;
+        position: relative;
+    }
+
+    body.mk-account-dashboard .mk-account-tab-rail::before,
+    body.mk-account-dashboard .mk-account-tab-rail::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        bottom: 0.55rem;
+        width: 1.25rem;
+        z-index: 2;
+        pointer-events: none;
+    }
+
+    body.mk-account-dashboard .mk-account-tab-rail::before {
+        inset-inline-start: 0;
+        background: linear-gradient(to left, transparent, color-mix(in srgb, var(--acc-main-bg) 92%, transparent));
+    }
+
+    body.mk-account-dashboard .mk-account-tab-rail::after {
+        inset-inline-end: 0;
+        background: linear-gradient(to right, transparent, color-mix(in srgb, var(--acc-main-bg) 92%, transparent));
     }
 
     body.mk-account-dashboard .mk-account-tab-rail__track {
@@ -178,54 +267,65 @@
 
     body.mk-account-dashboard .mk-account-tab-rail__item {
         display: inline-flex;
-        flex-direction: row;
+        flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 0.38rem;
+        gap: 0.22rem;
         flex: 0 0 auto;
         scroll-snap-align: center;
-        min-height: 2.35rem;
-        padding: 0.48rem 0.85rem;
-        border-radius: 999px;
-        border: 1px solid var(--acc-card-border);
-        background: var(--acc-card-bg);
+        min-width: 3.75rem;
+        min-height: 3rem;
+        padding: 0.32rem 0.45rem 0.28rem;
+        border-radius: 14px;
+        border: 1px solid transparent;
+        background: transparent;
         color: var(--acc-text-muted);
         text-decoration: none;
-        font-size: var(--acc-m-caption);
-        font-weight: 700;
+        font-size: 0.62rem;
+        font-weight: 800;
         line-height: 1.2;
         white-space: nowrap;
-        box-shadow: 0 6px 18px -16px rgba(15, 23, 42, 0.18);
         -webkit-tap-highlight-color: transparent;
-        transition: border-color 0.18s, color 0.18s, background 0.18s, box-shadow 0.18s, transform 0.15s;
+        transition: color 0.18s, background 0.18s, transform 0.15s;
     }
 
     body.mk-account-dashboard .mk-account-tab-rail__item i {
-        font-size: 0.78rem;
-        opacity: 0.9;
+        width: 2rem;
+        height: 2rem;
+        display: grid;
+        place-items: center;
+        border-radius: 11px;
+        font-size: 0.82rem;
+        background: var(--acc-card-bg);
+        border: 1px solid var(--acc-card-border);
+        color: var(--acc-text-muted);
+        box-shadow: 0 6px 16px -14px rgba(15, 23, 42, 0.2);
+        transition: background 0.18s, color 0.18s, border-color 0.18s, box-shadow 0.18s;
     }
 
     body.mk-account-dashboard .mk-account-tab-rail__item.is-active {
+        color: var(--acc-purple);
+    }
+
+    body.mk-account-dashboard .mk-account-tab-rail__item.is-active i {
         color: #fff;
         border-color: transparent;
         background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 55%, #5b21b6 100%);
         box-shadow: var(--acc-m-shadow-lg);
     }
 
-    body.mk-account-dashboard .mk-account-tab-rail__item.is-active i {
-        opacity: 1;
-    }
-
     body.mk-account-dashboard .mk-account-tab-rail__item:active:not(.is-active) {
         transform: scale(0.98);
+    }
+
+    body.mk-account-dashboard .mk-account-tab-rail__item:active:not(.is-active) i {
         border-color: rgba(124, 58, 237, 0.22);
         color: var(--acc-purple);
     }
 
     /* Tab content area */
-    body.mk-account-dashboard .mk-acc-tab-shell,
-    body.mk-account-dashboard .mk-acc-tab-body,
-    body.mk-account-dashboard .mk-overview-tab {
+    body.mk-account-dashboard .mk-acc-tab-shell:not(.mk-overview-tab),
+    body.mk-account-dashboard .mk-acc-tab-body {
         padding-inline: var(--acc-m-pad);
     }
 
@@ -690,16 +790,35 @@
 
     /* ─── Profile ─── */
     body.mk-account-dashboard .prof-hero {
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-        padding: 1.15rem 1rem;
         border-radius: var(--acc-m-radius);
         box-shadow: var(--acc-m-shadow-lg);
         margin-bottom: 0.75rem;
         background:
             radial-gradient(ellipse 80% 60% at 50% 0%, rgba(124, 58, 237, 0.08), transparent 70%),
             var(--acc-card-bg);
+    }
+
+    body.mk-account-dashboard .prof-hero--unified .prof-hero__top {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        padding: 1.15rem 1rem 0.85rem;
+    }
+
+    body.mk-account-dashboard .prof-hero--unified .prof-hero__tools {
+        padding: 0.75rem 1rem 1rem;
+        text-align: center;
+    }
+
+    body.mk-account-dashboard .prof-hero__tools-row {
+        justify-content: center;
+    }
+
+    body.mk-account-dashboard .prof-hero__tools-row .prof-edit-btn,
+    body.mk-account-dashboard .prof-hero__tools-row .prof-save-btn {
+        min-height: var(--acc-m-touch);
+        padding: 0.45rem 0.75rem;
+        font-size: var(--acc-m-caption);
     }
 
     body.mk-account-dashboard .prof-hero__avatar {

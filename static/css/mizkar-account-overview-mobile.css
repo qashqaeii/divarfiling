@@ -1,0 +1,546 @@
+/* Account dashboard — overview tab, mobile-first polish */
+
+@media (max-width: 767px) {
+    body.mk-account-dashboard .mk-acc-desk-only {
+        display: none !important;
+    }
+}
+
+@media (min-width: 768px) {
+    body.mk-account-dashboard .mk-acc-mob-only {
+        display: none !important;
+    }
+}
+
+@media (max-width: 767px) {
+    body.mk-account-dashboard.mk-acc-tab-overview {
+        --acc-m-wallet-radius: 20px;
+        background: var(--acc-main-bg);
+    }
+
+    body.mk-account-dashboard .mk-overview-tab {
+        padding-top: 0;
+        padding-inline: var(--acc-m-pad, 0.75rem);
+    }
+
+    body.mk-account-dashboard .mk-overview-tab .mk-acc-tab-body {
+        padding-bottom: 0.5rem;
+        padding-inline: 0;
+    }
+
+    body.mk-account-dashboard.mk-acc-tab-overview .mk-acc-tab-shell.mk-overview-tab {
+        padding-inline: var(--acc-m-pad, 0.75rem);
+    }
+
+    /* ─── Wallet hero ─── */
+    body.mk-account-dashboard .mk-acc-mob-wallet {
+        position: relative;
+        margin: 0 0 0.85rem;
+        padding: 0.95rem 0.9rem 0.9rem;
+        border-radius: var(--acc-m-wallet-radius);
+        overflow: hidden;
+        background: linear-gradient(155deg, #1e1035 0%, #2d1b69 38%, #4c1d95 72%, #5b21b6 100%);
+        color: #fff;
+        box-shadow:
+            0 22px 50px -28px rgba(76, 29, 149, 0.75),
+            inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-wallet__glow {
+        position: absolute;
+        inset: -40% -20% auto;
+        height: 70%;
+        background: radial-gradient(ellipse at 50% 0%, rgba(167, 139, 250, 0.45), transparent 62%);
+        pointer-events: none;
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-wallet__head {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+        margin-bottom: 0.65rem;
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-wallet__badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.28rem 0.62rem;
+        border-radius: 999px;
+        font-size: 0.68rem;
+        font-weight: 800;
+        letter-spacing: 0.01em;
+        background: rgba(255, 255, 255, 0.14);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(8px);
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-wallet__badge-dot {
+        width: 0.42rem;
+        height: 0.42rem;
+        border-radius: 50%;
+        background: #34d399;
+        box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.25);
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-wallet__badge--warn .mk-acc-mob-wallet__badge-dot {
+        background: #fbbf24;
+        box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.28);
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-wallet__hint-link {
+        font-size: 0.68rem;
+        font-weight: 700;
+        color: rgba(255, 255, 255, 0.88);
+        text-decoration: none;
+        white-space: nowrap;
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-wallet__lead {
+        position: relative;
+        margin: 0 0 0.85rem;
+        font-size: clamp(1.05rem, 4.6vw, 1.22rem);
+        font-weight: 800;
+        line-height: 1.45;
+        letter-spacing: -0.03em;
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-wallet__lead small {
+        display: block;
+        margin-top: 0.35rem;
+        font-size: var(--acc-m-caption, 0.8125rem);
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.72);
+        letter-spacing: 0;
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-metric-rail {
+        position: relative;
+        display: flex;
+        gap: 0.45rem;
+        overflow-x: auto;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+        scroll-snap-type: x mandatory;
+        margin: 0 -0.15rem 0.85rem;
+        padding: 0.1rem 0.15rem 0.2rem;
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-metric-rail::-webkit-scrollbar {
+        display: none;
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-metric {
+        flex: 0 0 auto;
+        scroll-snap-align: start;
+        min-width: 6.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.18rem;
+        padding: 0.55rem 0.62rem;
+        border-radius: 12px;
+        text-decoration: none;
+        color: #fff;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        -webkit-tap-highlight-color: transparent;
+        transition: background 0.18s, transform 0.15s;
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-metric:active {
+        transform: scale(0.98);
+        background: rgba(255, 255, 255, 0.16);
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-metric__icon {
+        width: 1.65rem;
+        height: 1.65rem;
+        display: grid;
+        place-items: center;
+        border-radius: 8px;
+        font-size: 0.72rem;
+        background: rgba(255, 255, 255, 0.12);
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-metric__val {
+        font-size: 1.02rem;
+        font-weight: 800;
+        line-height: 1.15;
+        letter-spacing: -0.02em;
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-metric__lbl {
+        font-size: 0.66rem;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.72);
+        line-height: 1.35;
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-wallet__actions {
+        position: relative;
+        display: grid;
+        grid-template-columns: 1.35fr 1fr;
+        gap: 0.45rem;
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-wallet__btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.4rem;
+        min-height: var(--acc-m-touch, 2.75rem);
+        border-radius: 13px;
+        font-size: var(--acc-m-caption, 0.8125rem);
+        font-weight: 800;
+        text-decoration: none;
+        -webkit-tap-highlight-color: transparent;
+        transition: transform 0.15s, background 0.18s;
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-wallet__btn:active {
+        transform: scale(0.99);
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-wallet__btn--primary {
+        color: #4c1d95;
+        background: #fff;
+        box-shadow: 0 10px 24px -12px rgba(0, 0, 0, 0.35);
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-wallet__btn--ghost {
+        color: #fff;
+        background: rgba(255, 255, 255, 0.12);
+        border: 1px solid rgba(255, 255, 255, 0.22);
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-pending {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 0.55rem;
+        margin-top: 0.55rem;
+        padding: 0.62rem 0.7rem;
+        border-radius: 12px;
+        text-decoration: none;
+        color: #fef3c7;
+        background: rgba(0, 0, 0, 0.22);
+        border: 1px solid rgba(251, 191, 36, 0.35);
+        font-size: 0.72rem;
+        font-weight: 700;
+        line-height: 1.45;
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-pending strong {
+        color: #fff;
+        font-weight: 800;
+    }
+
+    /* ─── Action dock ─── */
+    body.mk-account-dashboard .mk-acc-mob-dock-wrap {
+        margin-bottom: 1.15rem;
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-section-eyebrow {
+        margin: 0 0 0.55rem;
+        font-size: 0.68rem;
+        font-weight: 800;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--acc-text-muted);
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-dock {
+        display: flex;
+        gap: 0.55rem;
+        overflow-x: auto;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+        scroll-snap-type: x proximity;
+        padding-bottom: 0.15rem;
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-dock::-webkit-scrollbar {
+        display: none;
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-dock__item {
+        flex: 0 0 auto;
+        scroll-snap-align: start;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.38rem;
+        min-width: 4.35rem;
+        max-width: 4.85rem;
+        padding: 0.55rem 0.35rem 0.45rem;
+        border-radius: 16px;
+        text-decoration: none;
+        color: var(--acc-text);
+        background: var(--acc-card-bg);
+        border: 1px solid var(--acc-card-border);
+        box-shadow: var(--acc-m-shadow);
+        -webkit-tap-highlight-color: transparent;
+        transition: border-color 0.18s, transform 0.15s, box-shadow 0.18s;
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-dock__item:active {
+        transform: translateY(1px);
+        border-color: rgba(124, 58, 237, 0.28);
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-dock__icon {
+        width: 2.5rem;
+        height: 2.5rem;
+        display: grid;
+        place-items: center;
+        border-radius: 14px;
+        font-size: 0.95rem;
+        color: var(--acc-purple);
+        background: var(--acc-purple-soft);
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-dock__item--accent .mk-acc-mob-dock__icon {
+        color: #fff;
+        background: linear-gradient(145deg, #7c3aed, #5b21b6);
+        box-shadow: 0 10px 22px -12px rgba(109, 40, 217, 0.65);
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-dock__label {
+        font-size: 0.66rem;
+        font-weight: 800;
+        line-height: 1.35;
+        text-align: center;
+        color: var(--acc-text);
+    }
+
+    /* ─── Content sections ─── */
+    body.mk-account-dashboard .mk-acc-mob-section-head {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 0.5rem;
+        margin-bottom: 0.6rem;
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-section-head h2 {
+        margin: 0;
+        font-size: clamp(0.92rem, 3.9vw, 1rem);
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        color: var(--acc-text);
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-section-head a {
+        font-size: 0.72rem;
+        font-weight: 800;
+        color: var(--acc-purple);
+        text-decoration: none;
+        white-space: nowrap;
+    }
+
+    body.mk-account-dashboard .mk-overview-tab .mk-acc-panel {
+        margin-bottom: 0.85rem;
+        padding: 0;
+        border: none;
+        background: transparent;
+        box-shadow: none;
+    }
+
+    body.mk-account-dashboard .mk-overview-tab .mk-acc-panel__head {
+        display: none;
+    }
+
+    body.mk-account-dashboard .mk-overview-tab .mk-acc-lic-list {
+        gap: 0.5rem;
+    }
+
+    body.mk-account-dashboard .mk-overview-tab .mk-acc-lic-card {
+        padding: 0.78rem 0.85rem;
+        border-radius: 16px;
+    }
+
+    body.mk-account-dashboard .mk-overview-tab .mk-acc-lic-card__skyline {
+        display: none;
+    }
+
+    body.mk-account-dashboard .mk-overview-tab .mk-acc-lic-card__badge {
+        margin-bottom: 0.4rem;
+        font-size: 0.6rem;
+    }
+
+    body.mk-account-dashboard .mk-overview-tab .mk-acc-lic-card__btn {
+        width: 100%;
+        justify-content: center;
+        min-height: 2.35rem;
+        border-radius: 11px;
+        font-size: 0.72rem;
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-order-feed {
+        display: flex;
+        flex-direction: column;
+        gap: 0.45rem;
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-order-mini {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        align-items: center;
+        gap: 0.55rem;
+        padding: 0.72rem 0.75rem;
+        border-radius: 14px;
+        border: 1px solid var(--acc-card-border);
+        background: var(--acc-card-bg);
+        box-shadow: var(--acc-m-shadow);
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-order-mini__icon {
+        width: 2.35rem;
+        height: 2.35rem;
+        display: grid;
+        place-items: center;
+        border-radius: 11px;
+        font-size: 0.85rem;
+        color: var(--acc-purple);
+        background: var(--acc-purple-soft);
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-order-mini__copy {
+        min-width: 0;
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-order-mini__product {
+        margin: 0;
+        font-size: 0.82rem;
+        font-weight: 800;
+        line-height: 1.4;
+        color: var(--acc-text);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-order-mini__meta {
+        margin-top: 0.15rem;
+        font-size: 0.68rem;
+        color: var(--acc-text-muted);
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-order-mini__side {
+        text-align: end;
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-order-mini__amount {
+        display: block;
+        font-size: 0.75rem;
+        font-weight: 800;
+        color: var(--acc-purple);
+        white-space: nowrap;
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-order-mini .mk-acc-status-pill {
+        margin-top: 0.2rem;
+        font-size: 0.6rem;
+        padding: 0.2rem 0.45rem;
+    }
+
+    body.mk-account-dashboard .mk-overview-tab .mk-acc-empty {
+        margin: 0;
+        padding: 1.1rem 0.85rem;
+        text-align: center;
+        font-size: var(--acc-m-caption);
+        color: var(--acc-text-muted);
+        border-radius: 14px;
+        background: var(--acc-card-bg);
+        border: 1px dashed var(--acc-card-border);
+    }
+
+    body.mk-account-dashboard .mk-overview-tab .mk-acc-empty a {
+        color: var(--acc-purple);
+        font-weight: 800;
+    }
+
+    /* Affiliate teaser */
+    body.mk-account-dashboard .mk-acc-mob-aff-teaser {
+        padding: 0.95rem;
+        border-radius: 18px;
+        background: var(--acc-card-bg);
+        border: 1px solid var(--acc-card-border);
+        box-shadow: var(--acc-m-shadow);
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-aff-teaser__head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+        margin-bottom: 0.65rem;
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-aff-teaser__title {
+        margin: 0;
+        font-size: 0.88rem;
+        font-weight: 800;
+        color: var(--acc-text);
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-aff-teaser__stats {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.45rem;
+        margin-bottom: 0.65rem;
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-aff-teaser__stat {
+        padding: 0.62rem 0.65rem;
+        border-radius: 12px;
+        background: var(--acc-surface-muted);
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-aff-teaser__stat span {
+        display: block;
+        font-size: 0.66rem;
+        color: var(--acc-text-muted);
+        margin-bottom: 0.12rem;
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-aff-teaser__stat strong {
+        font-size: 0.92rem;
+        font-weight: 800;
+        color: var(--acc-text);
+    }
+
+    body.mk-account-dashboard .mk-acc-mob-aff-teaser__link {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.35rem;
+        min-height: var(--acc-m-touch, 2.75rem);
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 800;
+        text-decoration: none;
+        color: #fff;
+        background: linear-gradient(135deg, #7c3aed, #6d28d9);
+        box-shadow: 0 12px 26px -14px rgba(109, 40, 217, 0.55);
+    }
+}
+
+@media (max-width: 767px) and (prefers-reduced-motion: no-preference) {
+    body.mk-account-dashboard .mk-acc-mob-wallet {
+        animation: mk-acc-wallet-in 0.45s ease both;
+    }
+
+    @keyframes mk-acc-wallet-in {
+        from {
+            opacity: 0;
+            transform: translateY(8px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+}

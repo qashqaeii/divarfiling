@@ -3,13 +3,104 @@
 <div class="mk-acc-tab-shell mk-overview-tab">
 {% include 'accounts/partials/account_breadcrumb.html' %}
 
-<header class="mk-account-page-head">
+<header class="mk-account-page-head mk-acc-desk-only">
     <h1 class="mk-account-page-head__title">نمای کلی حساب</h1>
     <p class="mk-account-page-head__sub">خلاصه حساب، سفارش‌ها و وضعیت لایسنس‌ها</p>
 </header>
 
 <div class="mk-acc-tab-body">
-<nav class="mk-acc-quick-grid" aria-label="دسترسی سریع">
+
+<article class="mk-acc-mob-wallet mk-acc-mob-only" aria-label="خلاصه حساب">
+    <div class="mk-acc-mob-wallet__glow" aria-hidden="true"></div>
+    <header class="mk-acc-mob-wallet__head">
+        {% if active_licenses %}
+        <span class="mk-acc-mob-wallet__badge">
+            <span class="mk-acc-mob-wallet__badge-dot" aria-hidden="true"></span>
+            حساب فعال
+        </span>
+        {% else %}
+        <span class="mk-acc-mob-wallet__badge mk-acc-mob-wallet__badge--warn">
+            <span class="mk-acc-mob-wallet__badge-dot" aria-hidden="true"></span>
+            بدون لایسنس فعال
+        </span>
+        {% endif %}
+        <a href="{{ dashboard_tab_urls.profile }}" class="mk-acc-mob-wallet__hint-link">تنظیمات حساب</a>
+    </header>
+    <p class="mk-acc-mob-wallet__lead">
+        سلام {{ user.get_full_name|default:user.username }} — {{ active_licenses }} لایسنس فعال
+        <small>{{ paid_orders }} خرید موفق · {{ total_spent|currency }} تومان مجموع</small>
+    </p>
+    <div class="mk-acc-mob-metric-rail" role="list">
+        <a href="{{ dashboard_tab_urls.licenses }}" class="mk-acc-mob-metric" role="listitem">
+            <span class="mk-acc-mob-metric__icon"><i class="fas fa-key" aria-hidden="true"></i></span>
+            <span class="mk-acc-mob-metric__val">{{ active_licenses }}</span>
+            <span class="mk-acc-mob-metric__lbl">لایسنس فعال</span>
+        </a>
+        <a href="{{ dashboard_tab_urls.orders }}?order_status=paid" class="mk-acc-mob-metric" role="listitem">
+            <span class="mk-acc-mob-metric__icon"><i class="fas fa-shopping-bag" aria-hidden="true"></i></span>
+            <span class="mk-acc-mob-metric__val">{{ paid_orders }}</span>
+            <span class="mk-acc-mob-metric__lbl">پرداخت‌شده</span>
+        </a>
+        <a href="{{ dashboard_tab_urls.orders }}?order_status=pending" class="mk-acc-mob-metric" role="listitem">
+            <span class="mk-acc-mob-metric__icon"><i class="fas fa-hourglass-half" aria-hidden="true"></i></span>
+            <span class="mk-acc-mob-metric__val">{{ pending_orders_count }}</span>
+            <span class="mk-acc-mob-metric__lbl">در انتظار</span>
+        </a>
+        <a href="{{ dashboard_tab_urls.transactions }}" class="mk-acc-mob-metric" role="listitem">
+            <span class="mk-acc-mob-metric__icon"><i class="fas fa-receipt" aria-hidden="true"></i></span>
+            <span class="mk-acc-mob-metric__val">{{ total_spent|currency }}</span>
+            <span class="mk-acc-mob-metric__lbl">تومان خرید</span>
+        </a>
+    </div>
+    <div class="mk-acc-mob-wallet__actions">
+        <a href="{% url 'workspace:home' %}" class="mk-acc-mob-wallet__btn mk-acc-mob-wallet__btn--primary">
+            <i class="fas fa-layer-group" aria-hidden="true"></i>
+            میزکار
+        </a>
+        <a href="{{ dashboard_tab_urls.downloads }}" class="mk-acc-mob-wallet__btn mk-acc-mob-wallet__btn--ghost">
+            <i class="fas fa-download" aria-hidden="true"></i>
+            دانلود
+        </a>
+    </div>
+    {% if pending_orders_count %}
+    <a href="{{ dashboard_tab_urls.orders }}?order_status=pending" class="mk-acc-mob-pending">
+        <i class="fas fa-bolt" aria-hidden="true"></i>
+        <span><strong>{{ pending_orders_count }}</strong> سفارش منتظر پرداخت — همین الان تکمیل کنید</span>
+    </a>
+    {% endif %}
+</article>
+
+<div class="mk-acc-mob-dock-wrap mk-acc-mob-only">
+    <p class="mk-acc-mob-section-eyebrow">میانبرها</p>
+    <nav class="mk-acc-mob-dock" aria-label="دسترسی سریع">
+        <a href="{% url 'workspace:home' %}" class="mk-acc-mob-dock__item mk-acc-mob-dock__item--accent">
+            <span class="mk-acc-mob-dock__icon"><i class="fas fa-layer-group" aria-hidden="true"></i></span>
+            <span class="mk-acc-mob-dock__label">میزکار</span>
+        </a>
+        <a href="{{ dashboard_tab_urls.orders }}" class="mk-acc-mob-dock__item">
+            <span class="mk-acc-mob-dock__icon"><i class="fas fa-shopping-bag" aria-hidden="true"></i></span>
+            <span class="mk-acc-mob-dock__label">سفارش‌ها</span>
+        </a>
+        <a href="{{ dashboard_tab_urls.licenses }}" class="mk-acc-mob-dock__item">
+            <span class="mk-acc-mob-dock__icon"><i class="fas fa-key" aria-hidden="true"></i></span>
+            <span class="mk-acc-mob-dock__label">لایسنس</span>
+        </a>
+        <a href="{{ dashboard_tab_urls.downloads }}" class="mk-acc-mob-dock__item">
+            <span class="mk-acc-mob-dock__icon"><i class="fas fa-download" aria-hidden="true"></i></span>
+            <span class="mk-acc-mob-dock__label">دانلود</span>
+        </a>
+        <a href="{{ dashboard_tab_urls.transactions }}" class="mk-acc-mob-dock__item">
+            <span class="mk-acc-mob-dock__icon"><i class="fas fa-right-left" aria-hidden="true"></i></span>
+            <span class="mk-acc-mob-dock__label">تراکنش</span>
+        </a>
+        <a href="{{ dashboard_tab_urls.profile }}" class="mk-acc-mob-dock__item">
+            <span class="mk-acc-mob-dock__icon"><i class="fas fa-user-pen" aria-hidden="true"></i></span>
+            <span class="mk-acc-mob-dock__label">پروفایل</span>
+        </a>
+    </nav>
+</div>
+
+<nav class="mk-acc-quick-grid mk-acc-desk-only" aria-label="دسترسی سریع">
     <a href="{% url 'workspace:home' %}" class="mk-acc-quick-card">
         <span class="mk-acc-quick-card__icon"><i class="fas fa-layer-group" aria-hidden="true"></i></span>
         <span class="mk-acc-quick-card__body">
@@ -43,6 +134,11 @@
         <span class="mk-acc-quick-card__chev"><i class="fas fa-chevron-left" aria-hidden="true"></i></span>
     </a>
 </nav>
+
+<div class="mk-acc-mob-section-head mk-acc-mob-only">
+    <h2 id="acc-licenses-mob-title">لایسنس‌های من</h2>
+    <a href="{{ dashboard_tab_urls.licenses }}">همه</a>
+</div>
 
 <div class="mk-acc-overview-grid">
     <section class="mk-acc-panel" aria-labelledby="acc-licenses-title">
@@ -106,13 +202,35 @@
     </section>
 
     <section class="mk-acc-panel" aria-labelledby="acc-orders-title">
+        <div class="mk-acc-mob-section-head mk-acc-mob-only">
+            <h2 id="acc-orders-mob-title">آخرین خریدها</h2>
+            <a href="{{ dashboard_tab_urls.orders }}">همه</a>
+        </div>
         <div class="mk-acc-panel__head">
             <h2 class="mk-acc-panel__title" id="acc-orders-title">آخرین سفارش‌های پرداخت‌شده</h2>
             <a href="{{ dashboard_tab_urls.orders }}" class="mk-acc-panel__link">مشاهده همه</a>
         </div>
 
         {% if paid_orders_for_overview %}
-        <div class="mk-acc-orders-table-wrap">
+        <div class="mk-acc-mob-order-feed mk-acc-mob-only" role="list">
+            {% for order in paid_orders_for_overview %}
+            <article class="mk-acc-mob-order-mini" role="listitem">
+                <span class="mk-acc-mob-order-mini__icon" aria-hidden="true"><i class="fas fa-robot"></i></span>
+                <div class="mk-acc-mob-order-mini__copy">
+                    <h3 class="mk-acc-mob-order-mini__product">{{ order.product.title }}</h3>
+                    <p class="mk-acc-mob-order-mini__meta">{{ order.created_at|to_jalali_date:"%Y/%m/%d" }}</p>
+                </div>
+                <div class="mk-acc-mob-order-mini__side">
+                    <span class="mk-acc-mob-order-mini__amount">{{ order.amount|currency }}</span>
+                    <span class="mk-acc-status-pill">
+                        <i class="fas fa-check" aria-hidden="true"></i>
+                        {{ order.get_status_display }}
+                    </span>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+        <div class="mk-acc-orders-table-wrap mk-acc-desk-only">
             <table class="mk-acc-orders-table">
                 <thead>
                     <tr>
@@ -146,7 +264,28 @@
 </div>
 
 {% if has_paid_orders %}
-<section class="mk-acc-affiliate" aria-labelledby="acc-affiliate-title">
+<section class="mk-acc-mob-aff-teaser mk-acc-mob-only" aria-labelledby="acc-affiliate-mob-title">
+    <div class="mk-acc-mob-aff-teaser__head">
+        <h2 class="mk-acc-mob-aff-teaser__title" id="acc-affiliate-mob-title">همکاری در فروش</h2>
+        <a href="{{ dashboard_tab_urls.affiliate }}" class="mk-acc-panel__link">جزئیات</a>
+    </div>
+    <div class="mk-acc-mob-aff-teaser__stats">
+        <div class="mk-acc-mob-aff-teaser__stat">
+            <span>فروش</span>
+            <strong>{{ affiliate_stats.total_sales_count|default:0 }}</strong>
+        </div>
+        <div class="mk-acc-mob-aff-teaser__stat">
+            <span>موجودی کیف پول</span>
+            <strong>{% if affiliate_wallet %}{{ affiliate_wallet.balance|currency }}{% else %}0{% endif %}</strong>
+        </div>
+    </div>
+    <a href="{{ dashboard_tab_urls.affiliate }}" class="mk-acc-mob-aff-teaser__link">
+        <i class="fas fa-handshake" aria-hidden="true"></i>
+        مدیریت لینک معرف و برداشت
+    </a>
+</section>
+
+<section class="mk-acc-affiliate mk-acc-desk-only" aria-labelledby="acc-affiliate-title">
     <div class="mk-acc-affiliate__head">
         <h2 class="mk-acc-affiliate__title" id="acc-affiliate-title">همکاری در فروش</h2>
         {% if has_paid_orders %}

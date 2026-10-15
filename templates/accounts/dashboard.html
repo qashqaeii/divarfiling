@@ -5,22 +5,27 @@
 
 {% block title %}پروفایل | فایلینگ دیوار{% endblock %}
 
-{% block body_class %}mk-account-dashboard{% endblock %}
+{% block body_class %}mk-account-dashboard mk-acc-tab-{{ active_tab }}{% endblock %}
 
 {% block site_footer %}{% endblock %}
 
+{% block account_mobile_chrome %}
+{% include 'accounts/partials/account_mobile_tab_rail.html' %}
+{% endblock %}
+
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/mizkar-dashboard.css' %}?v=19">
-<link rel="stylesheet" href="{% static 'css/mizkar-dashboard-head.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'css/mizkar-dashboard-head.css' %}?v=3">
 <link rel="stylesheet" href="{% static 'css/mizkar-dashboard-licenses.css' %}?v=2">
-<link rel="stylesheet" href="{% static 'css/mizkar-dashboard-profile.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'css/mizkar-dashboard-profile.css' %}?v=4">
 <link rel="stylesheet" href="{% static 'css/mizkar-dashboard-premium.css' %}?v=1">
-<link rel="stylesheet" href="{% static 'css/mizkar-account-shell.css' %}?v=10">
+<link rel="stylesheet" href="{% static 'css/mizkar-account-shell.css' %}?v=11">
 <link rel="stylesheet" href="{% static 'css/mizkar-dashboard-orders.css' %}?v=2">
 <link rel="stylesheet" href="{% static 'css/mizkar-dashboard-tabs.css' %}?v=1">
 <link rel="stylesheet" href="{% static 'css/mizkar-app-download.css' %}?v=4">
 <link rel="stylesheet" href="{% static 'workspace/css/modals.css' %}?v=34">
-<link rel="stylesheet" href="{% static 'css/mizkar-account-mobile.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'css/mizkar-account-mobile.css' %}?v=7">
+<link rel="stylesheet" href="{% static 'css/mizkar-account-overview-mobile.css' %}?v=3">
 {% endblock %}
 
 {% block content %}
@@ -31,8 +36,6 @@
 
     <div class="mk-account-content-scroll">
     <div class="mk-account-main">
-        {% include 'accounts/partials/account_mobile_tab_rail.html' %}
-
         {% if active_tab == 'overview' %}
             {% include 'accounts/partials/account_overview_panel.html' %}
                         {% else %}
@@ -1008,7 +1011,7 @@ function copyAffiliateLinkOverview() {
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'js/mizkar-account-shell.js' %}?v=2"></script>
+<script src="{% static 'js/mizkar-account-shell.js' %}?v=3"></script>
 <script src="{% static 'js/mk-order-detail-modal.js' %}?v=1"></script>
 <script>
 (function initDashboardFooterAccordion() {

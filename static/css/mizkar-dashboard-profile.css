@@ -403,8 +403,56 @@
     background: transparent;
 }
 
-.mk-dashboard-page .prof-card--avatar {
+.mk-dashboard-page .prof-hero--unified {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    padding: 0;
     margin-bottom: 0.65rem;
+    overflow: hidden;
+}
+
+.mk-dashboard-page .prof-hero--unified .prof-hero__top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 1rem 1.05rem 0.85rem;
+}
+
+.mk-dashboard-page .prof-hero--unified .prof-hero__name {
+    font-size: 1rem;
+}
+
+.mk-dashboard-page .prof-hero--unified .prof-hero__actions {
+    width: 100%;
+}
+
+@media (min-width: 640px) {
+    .mk-dashboard-page .prof-hero--unified .prof-hero__actions {
+        width: auto;
+        margin-inline-start: auto;
+    }
+}
+
+.mk-dashboard-page .prof-hero__tools {
+    padding: 0.65rem 1.05rem 0.85rem;
+    border-top: 1px solid var(--mk-border);
+    background: color-mix(in srgb, var(--mk-card) 55%, transparent);
+}
+
+.mk-dashboard-page .prof-hero__tools-hint {
+    margin: 0 0 0.5rem;
+    font-size: 0.65rem;
+    color: var(--mk-text-muted);
+    line-height: 1.55;
+}
+
+.mk-dashboard-page .prof-hero__tools-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    align-items: center;
 }
 
 .mk-dashboard-page .prof-hero__avatar-btn {

@@ -1,5 +1,5 @@
 {% load account_avatar_tags %}
-<div class="mk-account-mob-shell">
+<div class="mk-account-mob-shell mk-account-mob-shell--{{ active_tab }}">
     <header class="mk-account-mob-top">
         <div class="mk-account-mob-top__user">
             <button type="button" class="mk-account-mob-top__avatar-btn" onclick="openAccountAvatarPicker()" aria-label="تغییر آواتار">
@@ -9,18 +9,25 @@
             </button>
             <div class="mk-account-mob-top__copy">
                 <strong>{{ user.get_full_name|default:user.username }}</strong>
-                <span>حساب کاربری · @{{ user.username }}</span>
+                <span>
+                    {% if active_tab == 'overview' %}نمای کلی حساب
+                    {% elif active_tab == 'orders' %}سفارش‌ها و پرداخت
+                    {% elif active_tab == 'licenses' %}مدیریت لایسنس
+                    {% elif active_tab == 'downloads' %}دانلود ربات و اپ
+                    {% elif active_tab == 'transactions' %}تراکنش‌های مالی
+                    {% elif active_tab == 'affiliate' %}همکاری در فروش
+                    {% elif active_tab == 'profile' %}پروفایل و تنظیمات
+                    {% else %}حساب کاربری{% endif %}
+                </span>
             </div>
         </div>
         <div class="mk-account-mob-top__actions">
-            <a href="{% url 'workspace:home' %}" class="mk-account-mob-icon-btn" title="میزکار" aria-label="میزکار">
+            <a href="{% url 'workspace:home' %}" class="mk-account-mob-cta-pill" title="میزکار" aria-label="ورود به میزکار">
                 <i class="fas fa-layer-group" aria-hidden="true"></i>
+                <span>میزکار</span>
             </a>
-            <a href="{% url 'home' %}" class="mk-account-mob-icon-btn" title="بازگشت به سایت" aria-label="بازگشت به سایت">
-                <i class="fas fa-house" aria-hidden="true"></i>
-            </a>
-            <a href="{% url 'logout' %}" class="mk-account-mob-icon-btn mk-account-mob-icon-btn--muted" title="خروج" aria-label="خروج از حساب">
-                <i class="fas fa-arrow-right-from-bracket" aria-hidden="true"></i>
+            <a href="{{ dashboard_tab_urls.profile }}" class="mk-account-mob-icon-btn" title="پروفایل" aria-label="پروفایل">
+                <i class="fas fa-user" aria-hidden="true"></i>
             </a>
         </div>
     </header>

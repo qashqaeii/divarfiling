@@ -92,7 +92,7 @@
         });
     });
 
-    var tabTrack = shell.querySelector('[data-account-tab-track]');
+    var tabTrack = document.querySelector('[data-account-tab-track]');
     if (tabTrack) {
         var activeTab = tabTrack.querySelector('.mk-account-tab-rail__item.is-active');
         if (activeTab) {

@@ -91,6 +91,32 @@ html.mk-public.mk-product-bot-premium .main-content {
     background: linear-gradient(to left, var(--pbp-violet), transparent);
 }
 
+.pbp-hero__price-chip {
+    display: inline-flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 0.25rem 0.4rem;
+    margin: 0 0 0.65rem;
+    padding: 0.32rem 0.7rem;
+    border-radius: 999px;
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: var(--pbp-violet-dark);
+    background: rgba(124, 58, 237, 0.07);
+    border: 1px solid rgba(124, 58, 237, 0.14);
+}
+
+.pbp-hero__price-chip strong {
+    font-size: 1.05rem;
+    font-weight: 900;
+    letter-spacing: -0.02em;
+}
+
+.pbp-hero__price-chip-unit {
+    color: var(--pbp-muted);
+    font-weight: 600;
+}
+
 .pbp-hero__title {
     margin: 0 0 0.55rem;
     font-size: clamp(1.85rem, 4.5vw, 2.75rem);
@@ -317,6 +343,10 @@ html.mk-public.mk-product-bot-premium .main-content {
 }
 
 .pbp-sticky-nav__track::-webkit-scrollbar { display: none; }
+
+.pbp-sticky-nav__label {
+    display: inline;
+}
 
 .pbp-sticky-nav__link {
     display: inline-flex;

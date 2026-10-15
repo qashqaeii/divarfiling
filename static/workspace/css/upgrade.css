@@ -209,6 +209,146 @@
     gap: 0.75rem;
 }
 
+.upg.upg--with-demo {
+    max-width: 960px;
+    gap: 0.85rem;
+}
+
+/* ─── دمو ویدیوی استخراج (بدون لایسنس) ─── */
+.upg-demo {
+    position: relative;
+    border-radius: 16px;
+    border: 1px solid color-mix(in srgb, var(--upg-accent) 20%, var(--ws-border));
+    background: linear-gradient(
+        145deg,
+        color-mix(in srgb, var(--upg-accent) 10%, var(--ws-surface)) 0%,
+        var(--ws-surface) 42%,
+        color-mix(in srgb, var(--upg-accent) 4%, var(--ws-surface)) 100%
+    );
+    overflow: hidden;
+}
+
+.upg-demo-glow {
+    position: absolute;
+    inset-inline-end: -12%;
+    inset-block-start: -40%;
+    width: 55%;
+    height: 140%;
+    background: radial-gradient(
+        ellipse at center,
+        color-mix(in srgb, var(--upg-accent) 18%, transparent) 0%,
+        transparent 68%
+    );
+    pointer-events: none;
+}
+
+.upg-demo-inner {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+    gap: 1.25rem 1.5rem;
+    padding: 1.35rem 1.4rem 1.15rem;
+    align-items: center;
+}
+
+.upg-demo-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-bottom: 0.55rem;
+    padding: 0.22rem 0.65rem;
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: var(--upg-accent);
+    background: color-mix(in srgb, var(--upg-accent) 12%, transparent);
+    border: 1px solid color-mix(in srgb, var(--upg-accent) 22%, transparent);
+    border-radius: 999px;
+}
+
+.upg-demo-kicker i {
+    font-size: 0.72rem;
+}
+
+.upg-demo-head h2 {
+    margin: 0 0 0.45rem;
+    font-size: 1.12rem;
+    font-weight: 700;
+    line-height: 1.45;
+    color: var(--ws-text);
+}
+
+.upg-demo-lead {
+    margin: 0 0 0.85rem;
+    font-size: 0.8rem;
+    line-height: 1.65;
+    color: var(--ws-text-muted);
+}
+
+.upg-demo-points {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+}
+
+.upg-demo-points li {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.76rem;
+    color: var(--ws-text-secondary, var(--ws-text-muted));
+}
+
+.upg-demo-points i {
+    width: 1.35rem;
+    text-align: center;
+    color: var(--upg-accent);
+    font-size: 0.72rem;
+}
+
+.upg-demo-player .mk-vid--upgrade {
+    margin: 0;
+}
+
+.upg-demo-player .mk-vid-frame {
+    border-radius: 12px;
+    box-shadow:
+        0 18px 40px -28px color-mix(in srgb, var(--upg-accent) 55%, transparent),
+        0 0 0 1px color-mix(in srgb, var(--upg-accent) 12%, var(--ws-border));
+}
+
+.upg-demo-foot {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem 0.5rem;
+    padding-top: 0.15rem;
+    font-size: 0.74rem;
+}
+
+.upg-demo-link {
+    color: var(--upg-accent);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.upg-demo-link:hover {
+    text-decoration: underline;
+}
+
+.upg-demo-link--muted {
+    color: var(--ws-text-muted);
+    font-weight: 500;
+}
+
+.upg-demo-foot-sep {
+    color: var(--ws-border);
+}
+
 .upg[data-accent="violet"]  { --upg-accent: #7c3aed; --upg-accent-rgb: 124, 58, 237; }
 .upg[data-accent="sky"]     { --upg-accent: #0ea5e9; --upg-accent-rgb: 14, 165, 233; }
 .upg[data-accent="emerald"] { --upg-accent: #10b981; --upg-accent-rgb: 16, 185, 129; }
@@ -654,6 +794,15 @@
 }
 
 @media (max-width: 720px) {
+    .upg-demo-inner {
+        grid-template-columns: 1fr;
+        padding: 1.15rem 1.1rem 1rem;
+    }
+
+    .upg-demo-player {
+        order: -1;
+    }
+
     .upg-stage-grid {
         grid-template-columns: 1fr;
     }

@@ -73,7 +73,7 @@
         <article class="crm-detail-intel-card{% if contact_links %} is-growth{% endif %}">
             <span class="crm-detail-intel-card__icon" aria-hidden="true"><i class="fas fa-users"></i></span>
             <div class="crm-detail-intel-card__body">
-                <span class="crm-detail-intel-card__label">مشتریان مرتبط</span>
+                <span class="crm-detail-intel-card__label">افراد مرتبط</span>
                 {% if contact_links %}
                 <strong class="crm-detail-intel-card__value">{{ contact_links|length }} مخاطب</strong>
                 <span class="crm-detail-intel-card__meta">{{ contact_links.0.customer.name|truncatechars:20 }}{% if contact_links|length > 1 %} و {{ contact_links|length|add:"-1" }} نفر دیگر{% endif %}</span>

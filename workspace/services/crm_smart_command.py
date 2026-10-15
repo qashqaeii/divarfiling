@@ -60,7 +60,7 @@ SMART_COMMAND_PROFILES: Dict[str, Dict[str, Any]] = {
 
 
 def inject_smart_command_context(ctx: Dict[str, Any], request, profile: str) -> None:
-    from ai_workspace.constants import FEATURE_NL_COMMAND, is_ai_enabled, is_feature_enabled
+    from ai_workspace.constants import FEATURE_NL_COMMAND, is_ai_enabled, is_feature_enabled, resolve_model_label
     from ai_workspace.services.quota import feature_quota_dict
     from workspace.services.access import get_bot_product_buy_url
 
@@ -76,6 +76,11 @@ def inject_smart_command_context(ctx: Dict[str, Any], request, profile: str) -> 
     spec.setdefault('spark_icon', 'fa-sparkles')
 
     primary_model = (getattr(settings, 'ARVAN_AI_MODEL', '') or '').strip()
+    ai_default_label = (
+        resolve_model_label(provider='arvan', model=primary_model)
+        if primary_model
+        else 'مدل ابری فایلینگ'
+    )
     spec.update({
         'enabled': True,
         'urls': {
@@ -90,7 +95,8 @@ def inject_smart_command_context(ctx: Dict[str, Any], request, profile: str) -> 
         },
         'edit_url': reverse('workspace:reminder_create') if profile == 'today' else '',
         'quota': feature_quota_dict(user, FEATURE_NL_COMMAND),
-        'ai_default': primary_model or 'Arvan AI',
+        'ai_default': ai_default_label,
+        'ai_model_raw': primary_model,
         'upgrade_url': get_bot_product_buy_url(),
     })
     ctx['smart_command'] = spec

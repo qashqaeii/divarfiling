@@ -168,9 +168,86 @@
     font-size: 0.85rem;
 }
 
-.crm-smart-command .crm-nl-command__info:hover {
+.crm-smart-command .crm-nl-command__info:hover,
+.crm-smart-command .crm-nl-command__info[aria-expanded="true"] {
     color: var(--ws-primary);
     background: color-mix(in srgb, var(--ws-primary) 6%, transparent);
+}
+
+.crm-smart-command .crm-nl-command__model-tip {
+    position: relative;
+    display: inline-flex;
+}
+
+.crm-smart-command .crm-nl-command__model-popover {
+    position: absolute;
+    z-index: 40;
+    inset-inline-end: 0;
+    inset-block-start: calc(100% + 0.45rem);
+    min-width: 11.5rem;
+    max-width: min(16rem, 72vw);
+    padding: 0.55rem 0.65rem 0.6rem;
+    border-radius: 10px;
+    border: 1px solid color-mix(in srgb, var(--ws-primary) 18%, var(--ws-border, #e8ecf1));
+    background: var(--ws-surface, #fff);
+    box-shadow:
+        0 14px 32px -22px color-mix(in srgb, var(--ws-primary) 45%, transparent),
+        0 0 0 1px color-mix(in srgb, var(--ws-primary) 6%, transparent);
+    text-align: start;
+    animation: crm-nl-model-pop 0.16s ease-out;
+}
+
+.crm-smart-command .crm-nl-command__model-popover::before {
+    content: '';
+    position: absolute;
+    inset-inline-end: 0.55rem;
+    inset-block-start: -5px;
+    width: 10px;
+    height: 10px;
+    background: var(--ws-surface, #fff);
+    border-inline-start: 1px solid color-mix(in srgb, var(--ws-primary) 18%, var(--ws-border, #e8ecf1));
+    border-block-start: 1px solid color-mix(in srgb, var(--ws-primary) 18%, var(--ws-border, #e8ecf1));
+    transform: rotate(45deg);
+}
+
+.crm-smart-command .crm-nl-command__model-popover-kicker {
+    display: block;
+    margin-bottom: 0.2rem;
+    font-size: 0.62rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: var(--ws-primary);
+}
+
+.crm-smart-command .crm-nl-command__model-popover-label {
+    margin: 0;
+    font-size: 0.78rem;
+    font-weight: 700;
+    line-height: 1.45;
+    color: var(--ws-text, #0f172a);
+    word-break: break-word;
+}
+
+.crm-smart-command .crm-nl-command__model-popover-note {
+    margin: 0.35rem 0 0;
+    font-size: 0.64rem;
+    line-height: 1.5;
+    color: var(--ws-text-muted);
+}
+
+.crm-smart-command .crm-nl-command__model-popover.is-cached .crm-nl-command__model-popover-label {
+    color: var(--ws-text-muted);
+}
+
+@keyframes crm-nl-model-pop {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .crm-smart-command .crm-nl-command__quota {

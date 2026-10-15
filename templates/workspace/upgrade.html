@@ -4,7 +4,10 @@
 {% block title %}فعال‌سازی امکانات ربات{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'workspace/css/upgrade.css' %}?v=12">
+<link rel="stylesheet" href="{% static 'workspace/css/upgrade.css' %}?v=13">
+{% if extraction_demo and extraction_demo.can_embed %}
+<link rel="stylesheet" href="{% static 'css/mizkar-video-player.css' %}?v=2">
+{% endif %}
 <link rel="stylesheet" href="{% static 'workspace/css/ws-utility-mobile.css' %}?v=1">
 <link rel="stylesheet" href="{% static 'workspace/css/ws-utility-mobile-v2.css' %}?v=1">
 {% endblock %}
@@ -12,8 +15,42 @@
 {% block mobile_bar_title %}ارتقا{% endblock %}
 
 {% block content %}
-<div class="upg upg-mobile{% if feature %} upg--focused{% endif %}"
+<div class="upg upg-mobile{% if feature %} upg--focused{% endif %}{% if extraction_demo and extraction_demo.can_embed %} upg--with-demo{% endif %}"
      data-accent="{% if feature %}{{ feature.accent|default:'violet' }}{% else %}violet{% endif %}">
+
+    {% if extraction_demo and extraction_demo.can_embed %}
+    <section class="upg-demo" aria-labelledby="upg-demo-title">
+        <div class="upg-demo-glow" aria-hidden="true"></div>
+        <div class="upg-demo-inner">
+            <header class="upg-demo-head">
+                <span class="upg-demo-kicker">
+                    <i class="fas fa-circle-play" aria-hidden="true"></i>
+                    {{ extraction_demo.kicker }}
+                </span>
+                <h2 id="upg-demo-title">{{ extraction_demo.headline }}</h2>
+                <p class="upg-demo-lead">{{ extraction_demo.lead }}</p>
+                <ul class="upg-demo-points" aria-label="نکات کلیدی">
+                    <li><i class="fas fa-filter" aria-hidden="true"></i> فیلتر و جستجو در دیوار</li>
+                    <li><i class="fas fa-download" aria-hidden="true"></i> استخراج با ربات ویندوز یا اپ</li>
+                    <li><i class="fas fa-folder-open" aria-hidden="true"></i> مدیریت فایل‌ها در فایلینگ</li>
+                </ul>
+            </header>
+            <div class="upg-demo-player">
+                {% include 'includes/mk_video_player.html' with video=extraction_demo.player variant='upgrade' show_heading=False show_meta=True extra_class='upg-demo-vid' %}
+            </div>
+            <footer class="upg-demo-foot">
+                <a href="{{ extraction_demo.academy_url }}" class="upg-demo-link">
+                    مشاهده در آکادمی
+                    <i class="fas fa-arrow-left" aria-hidden="true"></i>
+                </a>
+                <span class="upg-demo-foot-sep" aria-hidden="true">·</span>
+                <a href="{{ extraction_demo.playlist_url }}" class="upg-demo-link upg-demo-link--muted">
+                    مسیر آموزشی کامل
+                </a>
+            </footer>
+        </div>
+    </section>
+    {% endif %}
 
     <section class="upg-stage" aria-labelledby="upg-title">
         <div class="upg-stage-accent" aria-hidden="true"></div>
@@ -136,4 +173,10 @@
         </div>
     </section>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+{% if extraction_demo and extraction_demo.can_embed %}
+<script src="{% static 'js/bot-install-video.js' %}?v=2" defer></script>
+{% endif %}
 {% endblock %}

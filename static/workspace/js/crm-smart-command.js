@@ -127,6 +127,9 @@
         const noteRow = previewReminderBody?.querySelector('[data-note-row]');
         const aiLabelEl = root.querySelector('[data-sc="ai-label"]');
         const modelInfoBtn = root.querySelector('[data-sc="model-info"]');
+        const modelPopover = root.querySelector('[data-sc="model-popover"]');
+        const modelPopoverLabel = root.querySelector('[data-sc="model-popover-label"]');
+        const modelPopoverNote = root.querySelector('[data-sc="model-popover-note"]');
         const chipsWrap = root.querySelector('.crm-nl-command__chips');
         const composer = root.querySelector('[data-sc="composer"]');
         const backdrop = root.querySelector('[data-sc="backdrop"]');
@@ -168,12 +171,33 @@
         /** @type {'idle'|'loading'|'incomplete'|'ambiguous'|'preview'|'editing'|'confirming'|'success'|'error'} */
         let sessionState = 'idle';
 
+        function setModelPopoverOpen(open) {
+            if (!modelInfoBtn || !modelPopover) return;
+            const show = !!open;
+            modelInfoBtn.setAttribute('aria-expanded', show ? 'true' : 'false');
+            modelPopover.hidden = !show;
+            modelInfoBtn.classList.toggle('is-active', show);
+        }
+
         function setAiModel(ai) {
-            const label = (ai && ai.model_label) || aiDefault;
+            const label = ((ai && ai.model_label) || aiDefault || 'مدل ابری').trim();
+            const cached = !!(ai && ai.cached);
             if (aiLabelEl) aiLabelEl.textContent = label;
+            if (modelPopoverLabel) modelPopoverLabel.textContent = label;
+            if (modelPopover) {
+                modelPopover.classList.toggle('is-cached', cached);
+            }
+            if (modelPopoverNote) {
+                if (cached) {
+                    modelPopoverNote.textContent = 'این پاسخ از کش سریع بارگذاری شد؛ مدل دوباره فراخوانی نشد.';
+                } else if (ai && ai.model_label) {
+                    modelPopoverNote.textContent = 'مدل استفاده‌شده برای آخرین پاسخ دستیار هوشمند.';
+                } else {
+                    modelPopoverNote.textContent = 'پس از ارسال فرمان، مدل واقعی پاسخ اینجا نمایش داده می‌شود.';
+                }
+            }
             if (modelInfoBtn) {
-                const cached = ai && ai.cached ? ' (از کش)' : '';
-                modelInfoBtn.title = 'مدل: ' + label + cached;
+                modelInfoBtn.setAttribute('aria-label', 'مدل فعال: ' + label);
             }
         }
 
@@ -1156,6 +1180,34 @@
         autoGrowInput();
         syncInputState();
         setAiModel(null);
+
+        modelInfoBtn?.addEventListener('click', (event) => {
+            event.stopPropagation();
+            const open = modelInfoBtn.getAttribute('aria-expanded') !== 'true';
+            setModelPopoverOpen(open);
+        });
+
+        modelInfoBtn?.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                setModelPopoverOpen(false);
+            }
+        });
+
+        document.addEventListener('click', (event) => {
+            if (!modelPopover || modelPopover.hidden) return;
+            const target = event.target;
+            if (target instanceof Node && root.contains(target)) {
+                if (modelInfoBtn && (target === modelInfoBtn || modelInfoBtn.contains(target))) {
+                    return;
+                }
+                if (modelPopover.contains(target)) return;
+            }
+            setModelPopoverOpen(false);
+        });
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') setModelPopoverOpen(false);
+        });
 
         if (voiceBtn && window.CrmSmartCommandVoice && typeof window.CrmSmartCommandVoice.createVoiceInputAdapter === 'function') {
             voiceAdapter = window.CrmSmartCommandVoice.createVoiceInputAdapter(root, {

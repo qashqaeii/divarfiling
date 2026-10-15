@@ -1,6 +1,6 @@
 {% load static %}
 {% if smart_command.enabled %}
-<link rel="stylesheet" href="{% static 'workspace/css/crm-nl-command.css' %}?v=15">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-nl-command.css' %}?v=16">
 <div class="crm-smart-command-wrap">
 <section class="crm-nl-command crm-smart-command crm-smart-command--ctx-{{ smart_command.context }}"
     data-crm-smart-command
@@ -32,11 +32,23 @@
             </div>
         </div>
         <div class="crm-nl-command__head-meta">
-            <button type="button" class="crm-nl-command__info" data-sc="model-info"
-                aria-label="اطلاعات مدل تحلیل"
-                title="مدل: {{ smart_command.ai_default }}">
-                <i class="fas fa-circle-info" aria-hidden="true"></i>
-            </button>
+            <div class="crm-nl-command__model-tip" data-sc="model-tip-wrap">
+                <button type="button" class="crm-nl-command__info" data-sc="model-info"
+                    aria-label="مدل هوش مصنوعی"
+                    aria-expanded="false"
+                    aria-controls="crmSmartModelTip-{{ smart_command.context }}">
+                    <i class="fas fa-circle-info" aria-hidden="true"></i>
+                </button>
+                <div class="crm-nl-command__model-popover"
+                     id="crmSmartModelTip-{{ smart_command.context }}"
+                     data-sc="model-popover"
+                     role="tooltip"
+                     hidden>
+                    <span class="crm-nl-command__model-popover-kicker">مدل فعال</span>
+                    <p class="crm-nl-command__model-popover-label" data-sc="model-popover-label">{{ smart_command.ai_default }}</p>
+                    <p class="crm-nl-command__model-popover-note" data-sc="model-popover-note">پس از ارسال فرمان، مدل واقعی پاسخ اینجا نمایش داده می‌شود.</p>
+                </div>
+            </div>
             {% if smart_command.quota %}
             <span class="crm-nl-command__quota" data-sc="quota" title="سهمیه بررسی امروز">
                 {% if smart_command.quota.is_unlimited %}
@@ -166,5 +178,5 @@
     <div class="crm-nl-command__backdrop" data-sc="backdrop" hidden aria-hidden="true"></div>
 </section>
 </div>
-<script src="{% static 'workspace/js/crm-smart-command.js' %}?v=8"></script>
+<script src="{% static 'workspace/js/crm-smart-command.js' %}?v=9"></script>
 {% endif %}

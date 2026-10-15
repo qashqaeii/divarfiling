@@ -17,6 +17,7 @@ from django.views import View
 from django.views.generic import CreateView, DetailView, ListView, TemplateView, UpdateView
 
 from workspace.services.filing_video import get_filing_video_context
+from workspace.services.upgrade_extraction_video import get_upgrade_extraction_demo
 from workspace.constants import SUPPORTED_UPLOAD_EXTENSIONS, TABLE_COLUMNS_DEFAULT
 from workspace.forms import (
     CompareForm, DatasetRenameForm, DatasetUploadForm,
@@ -2030,6 +2031,7 @@ class BotUpgradeView(WorkspaceLoginMixin, TemplateView):
         ctx['bot_features'] = BOT_LOCKED_FEATURES
         ctx['bot_buy_url'] = get_bot_product_buy_url()
         ctx['next_url'] = self.request.GET.get('next', '')
+        ctx['extraction_demo'] = get_upgrade_extraction_demo(self.request.user, feature_key)
         return ctx
 
 

@@ -23,6 +23,7 @@ from licenses.services.security import (
     normalize_hardware_fingerprint,
     validate_hardware_fingerprint_format,
 )
+from shop.services.license_entitlement import LICENSE_ACCESS_ORDER_STATUSES
 from workspace.services.access import _assigned_license_qs, _paid_license_qs
 
 User = get_user_model()
@@ -228,7 +229,7 @@ def get_eligible_licenses(user, hardware_fingerprint: str) -> Dict[str, Any]:
     for act in LicenseActivation.objects.filter(
         hardware_fingerprint=hw,
         is_active=True,
-        license__order__status='paid',
+        license__order__status__in=LICENSE_ACCESS_ORDER_STATUSES,
     ).select_related('license', 'license__plan', 'license__order', 'license__assigned_user'):
         lic = act.license
         if _user_can_use_license(user, lic, act):
@@ -247,7 +248,7 @@ def get_eligible_licenses(user, hardware_fingerprint: str) -> Dict[str, Any]:
 
     for act in LicenseActivation.objects.filter(
         assigned_user=user,
-        license__order__status='paid',
+        license__order__status__in=LICENSE_ACCESS_ORDER_STATUSES,
     ).exclude(
         license__status__in=['suspended', 'expired'],
     ).filter(
@@ -281,7 +282,7 @@ def _get_license_for_bind(user, license_id: int) -> License:
     try:
         lic = License.objects.select_related('order', 'plan', 'assigned_user').get(
             pk=license_id,
-            order__status='paid',
+            order__status__in=LICENSE_ACCESS_ORDER_STATUSES,
         )
     except License.DoesNotExist as exc:
         raise DesktopLicensingError(
@@ -459,7 +460,7 @@ def validate_desktop_session(
         for act in LicenseActivation.objects.filter(
             hardware_fingerprint=hw,
             is_active=True,
-            license__order__status='paid',
+            license__order__status__in=LICENSE_ACCESS_ORDER_STATUSES,
         ).select_related(
             'license', 'license__plan', 'license__order', 'license__order__user',
             'license__assigned_user', 'license__assigned_by',

@@ -236,14 +236,11 @@ html.mk-public[data-theme="light"] .mk-dl-card-brand__platform {
 .mk-dl-card--recommended {
     border-color: color-mix(in srgb, #7c3aed 28%, rgba(148, 163, 184, 0.22));
     box-shadow: 0 14px 36px -20px rgba(124, 58, 237, 0.35);
-    padding-top: 1.45rem;
 }
 
-.mk-dl-card--recommended .mk-dl-chip--rec {
-    position: absolute;
-    top: 0.55rem;
-    inset-inline-start: 0.75rem;
-    z-index: 2;
+.mk-dl-card-brand__row .mk-dl-chip--rec {
+    margin-inline-start: auto;
+    flex-shrink: 0;
 }
 
 .mk-dl-card-spec {

@@ -9,13 +9,14 @@ from django.utils import timezone
 
 from licenses.models import License, LicenseActivation
 from shop.models import Order
+from shop.services.license_entitlement import LICENSE_ACCESS_ORDER_STATUSES
 
 
 def _paid_license_qs(user):
-    """لایسنس‌های مرتبط با سفارش پرداخت‌شده و معتبر."""
+    """لایسنس‌های مرتبط با سفارش معتبر (پرداخت یا هدیه کمپین) و معتبر زمانی."""
     return License.objects.filter(
         order__user=user,
-        order__status='paid',
+        order__status__in=LICENSE_ACCESS_ORDER_STATUSES,
     ).filter(
         Q(expires_at__isnull=True) | Q(expires_at__gt=timezone.now())
     ).exclude(status__in=['suspended', 'expired'])
@@ -25,7 +26,7 @@ def _assigned_license_qs(user):
     """کلیدهای تخصیص‌یافته به عضو تیم — هم‌تراز allocated_licenses داشبورد."""
     return License.objects.filter(
         assigned_user=user,
-        order__status='paid',
+        order__status__in=LICENSE_ACCESS_ORDER_STATUSES,
     ).filter(
         Q(expires_at__isnull=True) | Q(expires_at__gt=timezone.now())
     ).exclude(status__in=['suspended', 'expired'])
@@ -36,7 +37,7 @@ def _assigned_active_seat_qs(user):
     return LicenseActivation.objects.filter(
         assigned_user=user,
         is_active=True,
-        license__order__status='paid',
+        license__order__status__in=LICENSE_ACCESS_ORDER_STATUSES,
         license__status='active',
     ).filter(
         Q(license__expires_at__isnull=True) | Q(license__expires_at__gt=timezone.now())
@@ -128,7 +129,9 @@ def user_can_download_bot_order(user, order: Order) -> bool:
     """دانلود نصب ویندوز — مالک سفارش یا عضو با صندلی/لایسنس تخصیص‌یافته."""
     if not user or not getattr(user, 'is_authenticated', False):
         return False
-    if order.status != 'paid':
+    from shop.services.license_entitlement import order_grants_license_access
+
+    if not order_grants_license_access(order):
         return False
     if order.user_id == user.id:
         return True

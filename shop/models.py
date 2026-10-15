@@ -283,6 +283,7 @@ class Order(models.Model):
         ('pending', 'در انتظار پرداخت'),
         ('pending_verification', 'در انتظار تایید پرداخت'),
         ('paid', 'پرداخت شده'),
+        ('granted', 'اعطای هدیه/کمپین'),
         ('failed', 'ناموفق'),
         ('cancelled', 'لغو شده'),
     ]

@@ -37,13 +37,15 @@ def payment_failed_idempotency_key(order_id, attempt_id: str) -> str:
 def is_bi_production_order(order: Order) -> bool:
     """
     سفارش‌های قابل‌شمارش در BI Production.
-    حذف: staff/superuser، سفارش فیک (پیشوند FAKE-)، فلگ metadata.
+    حذف: staff/superuser، سفارش فیک (پیشوند FAKE-)، هدیه کمپین (granted / GRANT-).
     """
+    if (getattr(order, 'status', None) or '') != 'paid':
+        return False
     user = getattr(order, 'user', None)
     if user is not None and (getattr(user, 'is_staff', False) or getattr(user, 'is_superuser', False)):
         return False
     track = (getattr(order, 'zibal_track_id', None) or '').strip().upper()
-    if track.startswith('FAKE-'):
+    if track.startswith('FAKE-') or track.startswith('GRANT-'):
         return False
     # آینده: اگر Order فیلد/متادیتای تست گرفت
     return True

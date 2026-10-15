@@ -38,7 +38,9 @@ def _resolve_bot_license_user(license_key: str, hardware_fingerprint: str) -> tu
     except License.DoesNotExist as exc:
         raise LicenseAPIError('لایسنس یافت نشد.', http_status=404) from exc
 
-    if license_obj.order.status != 'paid':
+    from shop.services.license_entitlement import order_grants_license_access
+
+    if not order_grants_license_access(license_obj.order):
         raise LicenseAPIError('سفارش لایسنس پرداخت نشده است.', http_status=403)
 
     if license_obj.status in ('suspended', 'expired'):

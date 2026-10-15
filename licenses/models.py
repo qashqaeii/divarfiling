@@ -175,6 +175,79 @@ class LicenseActivation(models.Model):
         return 'pending'
 
 
+class LicenseCampaignGrant(models.Model):
+    """ثبت هدیه لایسنس کمپین — جدا از خرید پولی و قابل گزارش‌گیری."""
+
+    class Status(models.TextChoices):
+        GRANTED = 'granted', 'فعال‌شده'
+        FAILED = 'failed', 'خطا'
+        SKIPPED = 'skipped', 'رد شده'
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='license_campaign_grants',
+        verbose_name='کاربر',
+    )
+    campaign_key = models.CharField(max_length=64, db_index=True, verbose_name='شناسه کمپین')
+    order = models.ForeignKey(
+        Order,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='campaign_grants',
+        verbose_name='سفارش هدیه',
+    )
+    license = models.ForeignKey(
+        'License',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='campaign_grants',
+        verbose_name='لایسنس',
+    )
+    status = models.CharField(
+        max_length=16,
+        choices=Status.choices,
+        default=Status.GRANTED,
+        db_index=True,
+        verbose_name='وضعیت',
+    )
+    skip_reason = models.CharField(max_length=64, blank=True, verbose_name='دلیل رد')
+    error_message = models.CharField(max_length=500, blank=True, verbose_name='پیام خطا')
+    granted_at = models.DateTimeField(null=True, blank=True, verbose_name='زمان اعطا')
+    expires_at = models.DateTimeField(null=True, blank=True, verbose_name='انقضا')
+    sms_sent_at = models.DateTimeField(null=True, blank=True, verbose_name='زمان پیامک')
+    sms_log = models.ForeignKey(
+        'accounts.SmsMessageLog',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='license_campaign_grants',
+        verbose_name='لاگ پیامک',
+    )
+    metadata = models.JSONField(default=dict, blank=True, verbose_name='متادیتا')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='ایجاد')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='به‌روزرسانی')
+
+    class Meta:
+        verbose_name = 'هدیه کمپین لایسنس'
+        verbose_name_plural = 'هدایای کمپین لایسنس'
+        ordering = ['-created_at']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'campaign_key'],
+                name='uniq_license_campaign_grant_user_key',
+            ),
+        ]
+        indexes = [
+            models.Index(fields=['campaign_key', 'status']),
+        ]
+
+    def __str__(self):
+        return f'{self.campaign_key} — user={self.user_id} [{self.status}]'
+
+
 class AuditLog(models.Model):
     """لاگ امنیتی و لایسنس"""
     ACTION_TYPES = [

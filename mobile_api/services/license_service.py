@@ -6,6 +6,7 @@ from typing import Any, Dict, Optional
 from django.utils import timezone
 
 from licenses.models import License
+from shop.services.license_entitlement import LICENSE_ACCESS_ORDER_STATUSES
 from workspace.services.access import (
     _assigned_license_qs,
     _paid_license_qs,
@@ -57,7 +58,7 @@ def _display_license(user) -> Optional[License]:
     if lic:
         return lic
     return (
-        License.objects.filter(order__user=user, order__status='paid')
+        License.objects.filter(order__user=user, order__status__in=LICENSE_ACCESS_ORDER_STATUSES)
         .select_related('order', 'plan')
         .exclude(status='suspended')
         .order_by('-expires_at', '-created_at')

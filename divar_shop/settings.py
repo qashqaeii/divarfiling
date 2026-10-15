@@ -430,7 +430,17 @@ FARAZSMS_PATTERNS = {
     'card_transfer_license_activated': config('FARAZSMS_PATTERN_CARD_TRANSFER_ACTIVATED', default=''),
     'card_transfer_rejected': config('FARAZSMS_PATTERN_CARD_TRANSFER_REJECTED', default=''),
     'agency_invite': config('FARAZSMS_PATTERN_AGENCY_INVITE', default='mPibtIrJSo'),
+    'weekly_trial_campaign': config('FARAZSMS_PATTERN_WEEKLY_TRIAL_CAMPAIGN', default=''),
 }
+WEEKLY_TRIAL_CAMPAIGN_DEFAULT_KEY = config(
+    'WEEKLY_TRIAL_CAMPAIGN_DEFAULT_KEY',
+    default='weekly_professional_gift_v1',
+)
+WEEKLY_TRIAL_CAMPAIGN_SMS_BATCH_SIZE = config(
+    'WEEKLY_TRIAL_CAMPAIGN_SMS_BATCH_SIZE',
+    default=10,
+    cast=int,
+)
 # شماره‌های مدیر برای اعلان کارت‌به‌کارت (جدا با کاما) — در صورت خالی، staff فعال
 CARD_TRANSFER_ADMIN_PHONES = config('CARD_TRANSFER_ADMIN_PHONES', default='')
 # اگر الگوی جداگانه ندارید، یک الگو برای همه OTPها:

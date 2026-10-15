@@ -989,7 +989,7 @@
     {% include 'workspace/crm/includes/nearby_pois_panel.html' %}
     {% endif %}
 
-    {% if ai_enabled and has_bot_license %}
+    {% if ai_listing_summary_enabled %}
     {% url 'workspace:ai_workspace:property_summary' property.id as property_summary_ai_url %}
     {% include 'workspace/includes/ai_listing_summary_card.html' with ai_summary_url=property_summary_ai_url ai_listing_summary_quota=ai_listing_summary_quota ai_listing_summary_tone_options=ai_listing_summary_tone_options ai_listing_summary_style_options=ai_listing_summary_style_options ai_listing_summary_default_tone=ai_listing_summary_default_tone ai_listing_summary_default_style=ai_listing_summary_default_style only %}
     {% endif %}
@@ -1537,7 +1537,7 @@ document.addEventListener('DOMContentLoaded', function () {
 {% if show_nearby_pois %}
 <script src="{% static 'workspace/js/crm-property-nearby-pois.js' %}?v=8"></script>
 {% endif %}
-{% if ai_enabled and has_bot_license %}
+{% if ai_listing_summary_enabled %}
 <script src="{% static 'workspace/js/ai.js' %}?v=14"></script>
 {% endif %}
 

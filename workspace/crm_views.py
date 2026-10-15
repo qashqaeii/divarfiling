@@ -1827,9 +1827,14 @@ class CRMPropertyDetailView(CRMContextMixin, LoginRequiredMixin, DetailView):
             LISTING_SUMMARY_STYLE_CHOICES,
             LISTING_SUMMARY_TONE_CHOICES,
             is_ai_enabled,
+            is_feature_enabled,
         )
         from ai_workspace.services.quota import feature_quota_dict
-        if is_ai_enabled() and ctx.get('has_bot_license'):
+        ctx['ai_listing_summary_enabled'] = (
+            is_ai_enabled()
+            and is_feature_enabled(FEATURE_LISTING_SUMMARY, self.request.user)
+        )
+        if ctx['ai_listing_summary_enabled']:
             ctx['ai_listing_summary_quota'] = feature_quota_dict(
                 self.request.user, FEATURE_LISTING_SUMMARY,
             )

@@ -25,7 +25,8 @@
     {% endif %}
     {% endfor %}
     {% if agency_space_hub_url %}
-    <a href="{{ agency_space_hub_url }}" class="amh-tab amh-tab--space">
+    <a href="{{ agency_space_hub_url }}" class="amh-tab amh-tab--space{% if member_hub_space_active %} is-active{% endif %}"
+       {% if member_hub_space_active %}aria-current="page"{% endif %}>
         <span class="amh-tab__icon" aria-hidden="true">
             {% include 'includes/icon_slot.html' with decor='users' size='nav' only %}
         </span>

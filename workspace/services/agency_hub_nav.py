@@ -48,20 +48,22 @@ HUB_NAV_MOBILE_PRIMARY_ADVISOR: tuple[str, ...] = (
 
 
 def uses_advisor_member_hub(user) -> bool:
-    """مشاور با صندلی — میزکار عضو، نه داشبورد مدیریت آژانس."""
+    """همان مرز AgencyAdvisorMemberView — میزکار عضو، نه داشبورد مدیریت."""
     if not user or not getattr(user, 'is_authenticated', False):
-        return False
-    if can_manage_agency(user) or can_manage_team(user):
-        return False
-    if not has_assigned_agency_seat(user):
         return False
     membership = get_membership(user)
     if not membership or not membership.is_active:
         return False
     agency = membership.agency
+    if can_manage_agency(user, agency) or can_manage_team(user):
+        return False
+    if not has_assigned_agency_seat(user):
+        return False
+    if membership.role == AGENCY_ROLE_ADVISOR:
+        return True
     if is_agency_rbac_v2_enabled(agency):
         return resolve_nav_profile(user) == NAV_PROFILE_ADVISOR
-    return membership.role == AGENCY_ROLE_ADVISOR
+    return False
 
 
 def _build_advisor_member_hub_nav(user) -> list[tuple[str, str, str]]:

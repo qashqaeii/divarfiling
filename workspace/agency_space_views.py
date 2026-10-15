@@ -46,6 +46,36 @@ from workspace.services.agency_space_ui_context import (
 from workspace.services.crm_scope import agency_members
 
 
+def _merge_advisor_member_shell(request, ctx: dict) -> dict:
+    if not uses_advisor_member_hub(request.user):
+        return ctx
+    from workspace.services.agency_entitlement import (
+        agency_hub_access_level,
+        get_advisor_agency_seat_context,
+    )
+    from workspace.services.agency_member_hub import build_member_hub_context
+
+    seat_ctx = get_advisor_agency_seat_context(request.user)
+    if not seat_ctx:
+        return ctx
+    ctx.update(seat_ctx)
+    ctx['access_level'] = agency_hub_access_level(request.user)
+    period = int(request.GET.get('period', '30') or 30)
+    ctx.update(
+        build_member_hub_context(
+            request,
+            membership=seat_ctx['membership'],
+            agency=seat_ctx['agency'],
+            subscription=seat_ctx['subscription'],
+            license_obj=seat_ctx['license'],
+            tab='overview',
+            period=period,
+        )
+    )
+    ctx['member_hub_space_active'] = True
+    return ctx
+
+
 def _hub_shell(request, hub_section: str) -> dict:
     ctx = hub_base_context(request.user)
     hub_nav = build_hub_nav(request.user)
@@ -65,6 +95,11 @@ def _hub_shell(request, hub_section: str) -> dict:
 class AgencyHubSpaceView(AgencySpaceFeatureMixin, LoginRequiredMixin, TemplateView):
     template_name = 'workspace/crm/agency/hub_space.html'
     hub_section = 'space'
+
+    def get_template_names(self):
+        if uses_advisor_member_hub(self.request.user):
+            return ['workspace/crm/agency/hub_space_member.html']
+        return [self.template_name]
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
@@ -131,7 +166,7 @@ class AgencyHubSpaceView(AgencySpaceFeatureMixin, LoginRequiredMixin, TemplateVi
                 {'label': 'ثبت مخاطب', 'url': reverse('workspace:crm_contacts') + '?open=create', 'decor': 'user_plus'},
                 {'label': 'جست‌وجوی فایل', 'url': reverse('workspace:crm_properties'), 'decor': 'search'},
             ]
-        return ctx
+        return _merge_advisor_member_shell(self.request, ctx)
 
 
 class AgencyHubSpaceManageView(AgencySpaceFeatureMixin, LoginRequiredMixin, TemplateView):

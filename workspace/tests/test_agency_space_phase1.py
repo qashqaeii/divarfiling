@@ -150,10 +150,11 @@ class AgencySpacePublishTests(AgencySpaceTestBase):
         self.client.force_login(self.advisor)
         resp = self.client.get(reverse('workspace:agency_hub_space'))
         self.assertEqual(resp.status_code, 200)
-        self.assertContains(resp, 'میزکار مشاور')
-        self.assertContains(resp, 'نمای من')
+        self.assertContains(resp, 'agency-member-hub--space')
+        self.assertContains(resp, 'پنل عضویت آژانس')
+        self.assertContains(resp, 'amh-tab--space is-active')
+        self.assertNotContains(resp, 'agency-hub-nav--ref')
         self.assertNotContains(resp, 'agency-hero__eyebrow">مدیریت آژانس')
-        self.assertNotContains(resp, '>اعضا<')
 
     def test_advisor_no_seat_sees_public_read_only(self):
         prop = self._prop()

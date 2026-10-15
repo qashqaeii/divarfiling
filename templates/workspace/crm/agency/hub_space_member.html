@@ -1,0 +1,30 @@
+{% extends "workspace/crm/base_crm.html" %}
+{% load static workspace_tags %}
+
+{% block crm_extra_css %}
+<link rel="stylesheet" href="{% static 'workspace/css/agency-phase2.css' %}?v=8">
+<link rel="stylesheet" href="{% static 'workspace/css/agency-phase3.css' %}?v=9">
+<link rel="stylesheet" href="{% static 'workspace/css/agency-hub.css' %}?v=9">
+<link rel="stylesheet" href="{% static 'workspace/css/agency-member-hub.css' %}?v=5">
+<link rel="stylesheet" href="{% static 'workspace/css/agency-decor-icons.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'workspace/css/agency-space.css' %}?v=49">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-agency-space-mobile-closure.css' %}?v=6">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-mobile-v2-agency.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-agency-hub-mobile-closure.css' %}?v=5">
+<link rel="stylesheet" href="{% static 'workspace/css/crm-agency-visual-correction.css' %}?v=7">
+{% endblock %}
+
+{% block crm_content %}
+<div class="agency-member-hub agency-member-hub--space" data-amh-tab="space" dir="rtl">
+    {% include "workspace/crm/agency/includes/member_hub/header.html" %}
+    {% include "workspace/crm/agency/includes/member_hub/tabs.html" %}
+    <div class="amh-body amh-body--space">
+        {% include "workspace/crm/agency/includes/space_page_content.html" %}
+    </div>
+</div>
+{% endblock %}
+
+{% block crm_js %}
+<script src="{% static 'workspace/js/agency-ui.js' %}?v=8" defer></script>
+<script src="{% static 'workspace/js/agency-space.js' %}?v=22" defer></script>
+{% endblock %}

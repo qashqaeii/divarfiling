@@ -1162,6 +1162,12 @@ FEATURE_EXCEL_COLUMNS = [
     "نمای ساختمان",
     "وضعیت سند",
     "وضعیت سکونت",
+    "کاربری ملک",
+    "موقعیت ملک",
+    "جهت ملک",
+    "بنای کلنگی",
+    "دسترسی به انشعابات",
+    "عرض گذر",
 ]
 
 _FEATURE_ROW_PREFIXES = (
@@ -1310,6 +1316,43 @@ def _extract_modal_features_from_action(action: Optional[Dict[str, Any]]) -> Dic
     if not modal_page:
         return {}
     return _parse_feature_widget_list(safe_get(modal_page, ["widget_list"]) or [])
+
+
+_LIST_DATA_UNEXPANDABLE_SKIP_TITLES = frozenset({
+    *_TOTAL_PRICE_TITLES,
+    "قیمت هر متر",
+    "متراژ",
+    "ودیعه",
+    "بیعانه",
+    "رهن",
+    "رهن کامل",
+    "اجارهٔ ماهانه",
+    "اجاره ماهانه",
+    "ودیعه و اجاره",
+    "رهن و اجاره",
+    *_IMAGE_ORIGINALITY_TITLES,
+})
+
+
+def _extract_list_data_unexpandable_features(sections: List[Dict[str, Any]]) -> Dict[str, str]:
+    """ویژگی‌های UNEXPANDABLE_ROW در LIST_DATA (غیرقیمت/غیرمشخصات اصلی)."""
+    features: Dict[str, str] = {}
+    for sec in sections or []:
+        if sec.get("section_name") != "LIST_DATA":
+            continue
+        for w in sec.get("widgets", []) or []:
+            if w.get("widget_type") != "UNEXPANDABLE_ROW":
+                continue
+            title = str(safe_get(w, ["data", "title"]) or "").strip()
+            value = str(safe_get(w, ["data", "value"]) or "").strip()
+            if not title or not value:
+                continue
+            if title in _LIST_DATA_UNEXPANDABLE_SKIP_TITLES:
+                continue
+            if title in _SPEC_FIELD_TITLES or title == "سال ساخت":
+                continue
+            features[title] = value
+    return features
 
 
 def _default_business_lazy_body(token: str) -> Dict[str, Any]:
@@ -2051,6 +2094,7 @@ def flatten_post_detail(detail: Dict[str, Any]) -> Dict[str, Any]:
 
     # ویژگی‌ها و امکانات (صفحه اصلی + مودال LOAD_MODAL_PAGE)
     features_kv: Dict[str, str] = {}
+    _merge_feature_kv(features_kv, _extract_list_data_unexpandable_features(sections))
     features_titles: List[str] = []
     for s in sections:
         if s.get("section_name") != "LIST_DATA":

@@ -443,7 +443,7 @@ def _has_explicit_coords_in_data(data: dict | None) -> bool:
     for key in (
         'عرض جغرافیایی', 'طول جغرافیایی',
         'مکان_مختصات_lat', 'مکان_مختصات_lng',
-        'latitude', 'longitude', 'نقشه_نوع',
+        'latitude', 'longitude',
     ):
         val = data.get(key)
         if val is None:

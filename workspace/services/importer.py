@@ -437,6 +437,23 @@ def _has_explicit_publish_in_data(data: dict | None) -> bool:
     return has_explicit_publish_in_export_data(data)
 
 
+def _has_explicit_coords_in_data(data: dict | None) -> bool:
+    if not data:
+        return False
+    for key in (
+        'عرض جغرافیایی', 'طول جغرافیایی',
+        'مکان_مختصات_lat', 'مکان_مختصات_lng',
+        'latitude', 'longitude', 'نقشه_نوع',
+    ):
+        val = data.get(key)
+        if val is None:
+            continue
+        s = str(val).strip()
+        if s and s not in ('-', '—', 'nan', 'None'):
+            return True
+    return False
+
+
 def _update_listing_from_fields(listing: Listing, fields: dict) -> bool:
     """به‌روزرسانی آگهی موجود — ادغام ویژگی‌های جدید اکسل در data."""
     changed = False
@@ -455,6 +472,9 @@ def _update_listing_from_fields(listing: Listing, fields: dict) -> bool:
             continue
         if attr == 'published_at' and listing.published_at and not _has_explicit_publish_in_data(fields.get('data')):
             continue
+        if attr in ('latitude', 'longitude') and not _has_explicit_coords_in_data(fields.get('data')):
+            if getattr(listing, attr) is not None:
+                continue
         if getattr(listing, attr) != new_val:
             setattr(listing, attr, new_val)
             changed = True

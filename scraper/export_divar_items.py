@@ -705,6 +705,83 @@ def _export_label_for_decorative(decorative: Optional[bool]) -> str:
     return "-"
 
 
+def _parse_geo_coordinate(value: Any) -> Optional[float]:
+    if value is None or value == "":
+        return None
+    try:
+        num = float(str(value).strip().replace(",", ""))
+    except (TypeError, ValueError):
+        return None
+    if math.isnan(num) or math.isinf(num):
+        return None
+    return num
+
+
+def _normalize_lat_lng_pair(lat: Optional[float], lng: Optional[float]) -> tuple:
+    if lat is None or lng is None:
+        return lat, lng
+    if not (-90 <= lat <= 90 and -180 <= lng <= 180):
+        return None, None
+    if 44 <= lat <= 63 and 25 <= lng <= 40:
+        return lng, lat
+    return lat, lng
+
+
+def _extract_map_fields_from_sections(sections: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """استخراج مختصات و نوع موقعیت — EXACT و FUZZY جدا و بدون شعاع ساختگی."""
+    out: Dict[str, Any] = {
+        "latitude": "",
+        "longitude": "",
+        "مکان_مختصات_lat": "",
+        "مکان_مختصات_lng": "",
+        "نقشه_نوع": "",
+        "نقشه_شعاع_محدوده_متر": "",
+        "نقشه_تصویر": "",
+        "مکان_مختصات_اعتبار": "missing",
+    }
+    for sec in sections or []:
+        if sec.get("section_name") != "MAP":
+            continue
+        for w in sec.get("widgets", []) or []:
+            if w.get("widget_type") != "MAP_ROW":
+                continue
+            loc = safe_get(w, ["data", "location"]) or {}
+            loc_type = str(loc.get("type") or "").strip().upper()
+            point: Dict[str, Any] = {}
+            radius_val: Any = ""
+            if loc_type == "EXACT":
+                point = safe_get(loc, ["exact_data", "point"]) or {}
+            elif loc_type == "FUZZY":
+                point = safe_get(loc, ["fuzzy_data", "point"]) or {}
+                radius_val = safe_get(loc, ["fuzzy_data", "radius"])
+            elif safe_get(loc, ["exact_data", "point"]):
+                point = safe_get(loc, ["exact_data", "point"]) or {}
+                loc_type = "EXACT"
+            elif safe_get(loc, ["fuzzy_data", "point"]):
+                point = safe_get(loc, ["fuzzy_data", "point"]) or {}
+                loc_type = "FUZZY"
+                radius_val = safe_get(loc, ["fuzzy_data", "radius"])
+            lat = _parse_geo_coordinate(point.get("latitude"))
+            lng = _parse_geo_coordinate(point.get("longitude"))
+            lat, lng = _normalize_lat_lng_pair(lat, lng)
+            if lat is not None and lng is not None:
+                out["latitude"] = str(lat)
+                out["longitude"] = str(lng)
+                out["مکان_مختصات_lat"] = str(lat)
+                out["مکان_مختصات_lng"] = str(lng)
+                out["مکان_مختصات_اعتبار"] = "valid"
+            elif point:
+                out["مکان_مختصات_اعتبار"] = "invalid"
+            out["نقشه_نوع"] = loc_type
+            if radius_val not in (None, ""):
+                parsed_radius = _parse_geo_coordinate(radius_val)
+                if parsed_radius is not None and parsed_radius > 0:
+                    out["نقشه_شعاع_محدوده_متر"] = str(int(parsed_radius))
+            out["نقشه_تصویر"] = safe_get(w, ["data", "image_url"]) or ""
+            return out
+    return out
+
+
 def _merge_flatten_passthrough_into_records(
     records: List[Dict[str, Any]],
     rows: List[Dict[str, Any]],
@@ -2006,34 +2083,8 @@ def flatten_post_detail(detail: Dict[str, Any]) -> Dict[str, Any]:
     features_titles = _apply_features_to_out(out, features_kv)
 
     # مختصات و نقشه
-    lat = ""
-    lon = ""
-    map_type = ""
-    map_radius = ""
-    map_image = ""
-    for s in sections:
-        if s.get("section_name") == "MAP":
-            for w in s.get("widgets", []) or []:
-                if w.get("widget_type") == "MAP_ROW":
-                    lat = str(
-                        safe_get(w, ["data", "location", "exact_data", "point", "latitude"]) or
-                        safe_get(w, ["data", "location", "fuzzy_data", "point", "latitude"]) or ""
-                    )
-                    lon = str(
-                        safe_get(w, ["data", "location", "exact_data", "point", "longitude"]) or
-                        safe_get(w, ["data", "location", "fuzzy_data", "point", "longitude"]) or ""
-                    )
-                    map_type = safe_get(w, ["data", "location", "type"]) or ""
-                    map_radius = str(safe_get(w, ["data", "location", "fuzzy_data", "radius"]) or "")
-                    map_image = safe_get(w, ["data", "image_url"]) or ""
-                    break
-    out["latitude"] = lat
-    out["longitude"] = lon
-    out["مکان_مختصات_lat"] = lat
-    out["مکان_مختصات_lng"] = lon
-    out["نقشه_نوع"] = map_type
-    out["نقشه_شعاع_محدوده_متر"] = map_radius
-    out["نقشه_تصویر"] = map_image
+    map_fields = _extract_map_fields_from_sections(sections)
+    out.update(map_fields)
 
     # تصاویر و ویدیو
     image_urls = _extract_image_urls_from_detail(detail)

@@ -726,6 +726,7 @@ class ListingDisplaySectionTests(SimpleTestCase):
         fuzzy_only = location_accuracy_for_map({'نوع مختصات': 'FUZZY'})
         self.assertEqual(fuzzy_only['kind'], 'approx')
         self.assertIn('تقریبی', fuzzy_only['label'])
+        self.assertEqual(fuzzy_only['radius_m'], 0)
 
         radius_only = location_accuracy_for_map({'در شعاع (متر)': 300})
         self.assertEqual(radius_only['kind'], 'approx')

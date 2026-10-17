@@ -118,9 +118,12 @@ def _normalize_coord_type(raw: Any) -> str:
 def location_accuracy_for_map(data: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     """دقت موقعیت آگهی — برای tooltip نقشه."""
     data = data or {}
-    raw_type = str(data.get('نوع مختصات') or '').strip()
+    raw_type = str(data.get('نوع مختصات') or data.get('نقشه_نوع') or '').strip()
     norm = _normalize_coord_type(raw_type)
-    radius = _parse_radius_meters(data.get('در شعاع (متر)'))
+    radius = _parse_radius_meters(
+        data.get('در شعاع (متر)') if data.get('در شعاع (متر)') not in (None, '', '-')
+        else data.get('نقشه_شعاع_محدوده_متر')
+    )
 
     if norm in _EXACT_COORD_MARKERS or raw_type in _EXACT_COORD_MARKERS:
         return {'label': 'موقعیت دقیق روی نقشه', 'kind': 'exact', 'radius_m': 0}
@@ -131,7 +134,7 @@ def location_accuracy_for_map(data: Optional[Dict[str, Any]] = None) -> Dict[str
                 'kind': 'approx',
                 'radius_m': radius,
             }
-        return {'label': 'موقعیت تقریبی روی نقشه', 'kind': 'approx', 'radius_m': 500}
+        return {'label': 'موقعیت تقریبی روی نقشه', 'kind': 'approx', 'radius_m': 0}
     return {'label': '', 'kind': '', 'radius_m': 0}
 
 

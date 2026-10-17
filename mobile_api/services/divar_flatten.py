@@ -179,16 +179,16 @@ def _merge_client_images(row: Dict[str, Any], item: Dict[str, Any]) -> None:
     ).strip()
     if _has_meaningful_images(existing):
         return
-    thumb = str(item.get('thumbnail_url') or item.get('thumbnailUrl') or '').strip()
     urls_raw = item.get('image_urls') or item.get('imageUrls') or []
     urls: List[str] = []
-    if thumb:
-        urls.append(thumb)
     if isinstance(urls_raw, list):
         for entry in urls_raw:
             value = str(entry or '').strip()
             if value and value not in urls:
                 urls.append(value)
+    thumb = str(item.get('thumbnail_url') or item.get('thumbnailUrl') or '').strip()
+    if thumb and thumb not in urls:
+        urls.append(thumb)
     if not urls:
         raw = item.get('raw')
         if isinstance(raw, dict):

@@ -581,10 +581,21 @@ _FLATTEN_PASSTHROUGH_PREFIXES = (
     "انتشار_",
     "اجاره_",
     "مالی_",
-    "سیستمی_",
-    "تماس_",
     "ویژگی_",
 )
+
+_FLATTEN_PASSTHROUGH_BLOCKED_PREFIXES = (
+    "تماس_",
+    "سیستمی_",
+)
+
+_FLATTEN_PASSTHROUGH_BLOCKED_EXACT = frozenset({
+    "phone_text",
+    "owner_phone",
+    "تماس_contact_uuid",
+    "تماس_چت_فعال",
+    "تماس_تماس_ایمن",
+})
 
 _FLATTEN_PASSTHROUGH_EXACT = frozenset({
     "token",
@@ -620,11 +631,78 @@ def _flatten_passthrough_payload(raw: Dict[str, Any]) -> Dict[str, Any]:
         if val is None or str(val).strip() in ("", "-"):
             continue
         key_s = str(key)
+        if key_s in _FLATTEN_PASSTHROUGH_BLOCKED_EXACT or any(
+            key_s.startswith(prefix) for prefix in _FLATTEN_PASSTHROUGH_BLOCKED_PREFIXES
+        ):
+            continue
         if key_s in _FLATTEN_PASSTHROUGH_EXACT or any(
             key_s.startswith(prefix) for prefix in _FLATTEN_PASSTHROUGH_PREFIXES
         ):
             out[key_s] = val
     return out
+
+
+_IMAGE_ORIGINALITY_TITLES = frozenset({
+    "تصویر‌ها برای همین ملک است؟",
+    "تصویرها برای همین ملک است؟",
+    "تصاویر برای همین ملک است؟",
+})
+
+
+def _parse_image_originality_answer(value: Any) -> Dict[str, str]:
+    """پاسخ آگهی‌دهنده به اصالت تصویر — بدون تأیید مستقل صحت عکس."""
+    raw = str(value or "").strip()
+    if not raw or raw in ("-", "—"):
+        return {"raw": "", "status": "unknown", "export_label": ""}
+    norm = raw.replace("\u200c", "").strip().lower()
+    if norm in ("بله", "yes", "true", "آری"):
+        return {"raw": raw, "status": "yes", "export_label": "بله"}
+    if norm in ("خیر", "no", "false"):
+        return {"raw": raw, "status": "no", "export_label": "خیر"}
+    return {"raw": raw, "status": "unknown", "export_label": raw}
+
+
+def _extract_image_carousel_tooltip_text(detail: Dict[str, Any]) -> str:
+    for section in detail.get("sections", []) or []:
+        if section.get("section_name") != "IMAGE":
+            continue
+        for widget in section.get("widgets", []) or []:
+            if str(widget.get("widget_type") or "") != "IMAGE_CAROUSEL":
+                continue
+            data = widget.get("data") or {}
+            tooltip = data.get("tooltip_data") or {}
+            text = str(tooltip.get("text") or "").strip()
+            if text:
+                return text
+    return ""
+
+
+def _parse_decorative_image_tooltip(text: str) -> Dict[str, Any]:
+    """برچسب Tooltip کاروسل — فقط «تزئینی» صریح؛ اعداد معنی ندارند."""
+    raw = str(text or "").strip()
+    if not raw:
+        return {"raw": "", "decorative": None}
+    digits_only = re.sub(r"\s+", "", raw)
+    if digits_only.isdigit() or re.fullmatch(r"[\d۰-۹]+", digits_only):
+        return {"raw": raw, "decorative": None}
+    if "تزئین" in raw.replace("\u200c", ""):
+        return {"raw": raw, "decorative": True}
+    return {"raw": raw, "decorative": None}
+
+
+def _export_label_for_image_originality(parsed: Dict[str, str]) -> str:
+    label = parsed.get("export_label") or ""
+    if label in ("بله", "خیر"):
+        return label
+    return label if label else "-"
+
+
+def _export_label_for_decorative(decorative: Optional[bool]) -> str:
+    if decorative is True:
+        return "تزئینی"
+    if decorative is False:
+        return "خیر"
+    return "-"
 
 
 def _merge_flatten_passthrough_into_records(
@@ -1978,17 +2056,29 @@ def flatten_post_detail(detail: Dict[str, Any]) -> Dict[str, Any]:
     out["لینک تصاویر"] = joined_images
     out["رسانه_تعداد_تصویر"] = len(image_urls) if image_urls else ""
     out["رسانه_ویدیو"] = video_url
-    # اصالت تصویر
-    image_originality = ""
+    out["رسانه_ویدیو_دارد"] = "1" if video_url else ""
+    tooltip_text = _extract_image_carousel_tooltip_text(detail)
+    decorative = _parse_decorative_image_tooltip(tooltip_text)
+    out["رسانه_برچسب_تصاویر_tooltip"] = decorative.get("raw") or ""
+    if decorative.get("decorative") is True:
+        out["رسانه_تصاویر_تزئینی"] = "بله"
+    # اصالت تصویر (اظهار آگهی‌دهنده)
+    image_originality_raw = ""
     for s in sections:
-        if s.get("section_name") == "LIST_DATA":
-            for w in s.get("widgets", []) or []:
-                if w.get("widget_type") == "UNEXPANDABLE_ROW":
-                    title = str(safe_get(w, ["data", "title"]) or "")
-                    if title.strip() == "تصویر‌ها برای همین ملک است؟":
-                        image_originality = str(safe_get(w, ["data", "value"]) or "")
-                        break
-    out["رسانه_اصالت_تصویر_برای_همین_ملک"] = image_originality
+        if s.get("section_name") != "LIST_DATA":
+            continue
+        for w in s.get("widgets", []) or []:
+            if w.get("widget_type") != "UNEXPANDABLE_ROW":
+                continue
+            title = str(safe_get(w, ["data", "title"]) or "").strip().replace("\u200c", "")
+            if title in _IMAGE_ORIGINALITY_TITLES:
+                image_originality_raw = str(safe_get(w, ["data", "value"]) or "")
+                break
+        if image_originality_raw:
+            break
+    originality = _parse_image_originality_answer(image_originality_raw)
+    out["رسانه_اصالت_تصویر_برای_همین_ملک"] = originality.get("raw") or image_originality_raw
+    out["رسانه_اصالت_تصویر_وضعیت"] = originality.get("status") or "unknown"
 
     # لینک اشتراک
     out["share_link"] = safe_get(share, ["web_url"]) or ""

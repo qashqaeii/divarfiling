@@ -42,6 +42,14 @@ COLUMN_ALIASES: Dict[str, List[str]] = {
     'storage': ['انباری', 'storage', 'انبار'],
 }
 
+_EXPORT_TEXT_MONEY = frozenset({"توافقی", "متعارف", "رایگان", "رهن کامل"})
+_TEXTUAL_MONEY_STATUS_KEYS = frozenset({"free", "negotiable", "customary", "full_deposit"})
+_MONEY_STATUS_ROW_KEYS = {
+    "price": ("مالی_قیمت_کل_وضعیت", "مالی_قیمت_کل_عدد", "مالی_قیمت_کل_نمایش"),
+    "deposit": ("اجاره_ودیعه_وضعیت", "اجاره_ودیعه_عدد", "اجاره_ودیعه_نمایش"),
+    "rent": ("اجاره_ماهانه_وضعیت", "اجاره_ماهانه_عدد", "اجاره_ماهانه_نمایش"),
+}
+
 CONSULTANT_NAME_KEYS = (
     'نام مشاور / آژانس',
     'مشاور_نام',
@@ -188,6 +196,42 @@ def _pick_row_value(row: Dict[str, Any], field: str) -> Any:
     return None
 
 
+def _export_money_is_textual(raw: Any) -> bool:
+    if raw is None:
+        return False
+    s = str(raw).strip()
+    if not s or s in ("-", "—", "nan", "None"):
+        return False
+    return s in _EXPORT_TEXT_MONEY
+
+
+def _listing_money_scalar(row: Dict[str, Any], field: str) -> Optional[int]:
+    """عدد اسکالر Listing — بدون ساخت قیمت از برچسب متنی."""
+    raw = _pick_row_value(row, field)
+    if _export_money_is_textual(raw):
+        return None
+    if raw is not None:
+        s = str(raw).strip()
+        if s not in ("", "-", "—", "nan", "None"):
+            parsed = _safe_int(raw)
+            if parsed is not None:
+                return parsed
+
+    status_key, num_key, display_key = _MONEY_STATUS_ROW_KEYS.get(field, ("", "", ""))
+    status = row.get(status_key)
+    if status in _TEXTUAL_MONEY_STATUS_KEYS:
+        return None
+    if display_key in row and _export_money_is_textual(row.get(display_key)):
+        return None
+    if num_key in row:
+        num_raw = row.get(num_key)
+        if num_raw is not None and str(num_raw).strip() not in ("", "-", "—", "nan", "None"):
+            parsed = _safe_int(num_raw)
+            if parsed is not None:
+                return parsed
+    return None
+
+
 def _is_na(val: Any) -> bool:
     if val is None:
         return True
@@ -266,9 +310,9 @@ def export_record_to_listing_fields(row: Dict[str, Any]) -> Dict[str, Any]:
     return {
         'token': token,
         'title': _safe_str(_pick_row_value(row, 'title')),
-        'price': _safe_int(_pick_row_value(row, 'price')),
-        'deposit': _safe_int(_pick_row_value(row, 'deposit')),
-        'rent': _safe_int(_pick_row_value(row, 'rent')),
+        'price': _listing_money_scalar(row, 'price'),
+        'deposit': _listing_money_scalar(row, 'deposit'),
+        'rent': _listing_money_scalar(row, 'rent'),
         'area': _safe_float(_pick_row_value(row, 'area')),
         'rooms': rooms,
         'neighborhood': normalize_location_label(_pick_row_value(row, 'neighborhood')),
@@ -316,12 +360,14 @@ def row_to_listing_fields(row: pd.Series, df: pd.DataFrame) -> Dict[str, Any]:
         data=data,
     )
 
+    money_row = {str(k): json_safe_value(v) for k, v in data.items()}
+
     return {
         'token': token or f'row_{hash(tuple(row.values)) % 10**8}',
         'title': title,
-        'price': _safe_int(row[cols['price']]) if cols['price'] else None,
-        'deposit': _safe_int(row[cols['deposit']]) if cols['deposit'] else None,
-        'rent': _safe_int(row[cols['rent']]) if cols['rent'] else None,
+        'price': _listing_money_scalar(money_row, 'price'),
+        'deposit': _listing_money_scalar(money_row, 'deposit'),
+        'rent': _listing_money_scalar(money_row, 'rent'),
         'area': _safe_float(row[cols['area']]) if cols['area'] else None,
         'rooms': _rooms_from_row_data(data, _safe_str(row[cols['rooms']]) if cols['rooms'] else ''),
         'neighborhood': normalize_location_label(row[cols['neighborhood']]) if cols['neighborhood'] else '',

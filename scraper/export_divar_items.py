@@ -143,6 +143,12 @@ _JALALI_MONTH_BY_NAME = {
     "اسفند": 12,
 }
 _TEXTUAL_PRICE_LABELS = frozenset({"توافقی", "متعارف", "رایگان", "رهن کامل"})
+_MONEY_STATUS_LABELS = {
+    "free": "رایگان",
+    "negotiable": "توافقی",
+    "customary": "متعارف",
+    "full_deposit": "رهن کامل",
+}
 _AREA_UNIT_SUFFIX_RE = re.compile(
     r"[\s\u200c\u200f\u200e]*(متر\s*مربع|مترمربع|متر\s*زمین|متر)?\s*$",
     re.IGNORECASE,
@@ -195,30 +201,168 @@ def format_metraj_export(val: Any) -> str:
     return str(parsed)
 
 
+def _normalize_money_status_label(text: str) -> str:
+    s = str(text or "").strip().replace("\u200c", "")
+    if not s:
+        return ""
+    if "رایگان" in s:
+        return "رایگان"
+    if "توافقی" in s:
+        return "توافقی"
+    if "متعارف" in s:
+        return "متعارف"
+    if "رهن" in s and "کامل" in s:
+        return "رهن کامل"
+    return s if s in _TEXTUAL_PRICE_LABELS else ""
+
+
+def parse_divar_money_display(text: Any) -> Dict[str, Any]:
+    """
+    تفکیک مبلغ عددی، صفر، وضعیت متنی و نامشخص.
+    amount: int شامل صفر، یا None
+    status: numeric | zero | free | negotiable | customary | full_deposit | unknown
+    """
+    display = str(text or "").strip()
+    if not display or display in ("-", "—", "nan", "None"):
+        return {"amount": None, "status": "unknown", "label": "", "display": display}
+
+    label = _normalize_money_status_label(display)
+    if label == "رایگان":
+        return {"amount": None, "status": "free", "label": "رایگان", "display": display}
+    if label == "توافقی":
+        return {"amount": None, "status": "negotiable", "label": "توافقی", "display": display}
+    if label == "متعارف":
+        return {"amount": None, "status": "customary", "label": "متعارف", "display": display}
+    if label == "رهن کامل":
+        return {"amount": None, "status": "full_deposit", "label": "رهن کامل", "display": display}
+
+    amount = parse_money_to_int(display)
+    if amount is not None:
+        if amount == 0:
+            return {"amount": 0, "status": "zero", "label": "۰", "display": display}
+        return {"amount": amount, "status": "numeric", "label": "", "display": display}
+    return {"amount": None, "status": "unknown", "label": "", "display": display}
+
+
 def _is_textual_price(value: str) -> bool:
-    v = str(value or "").strip()
-    if not v:
-        return False
-    for label in _TEXTUAL_PRICE_LABELS:
-        if label in v:
-            return True
-    return parse_money_to_int(v) is None and bool(re.search(r"[^\d\s,.\-٬،]", v))
+    return parse_divar_money_display(value).get("status") in (
+        "free",
+        "negotiable",
+        "customary",
+        "full_deposit",
+    )
+
+
+def _money_status_from_label(label: str) -> str:
+    for status, text in _MONEY_STATUS_LABELS.items():
+        if label == text:
+            return status
+    return "unknown"
+
+
+def format_money_export_value(money: Dict[str, Any]) -> Any:
+    """خروجی ستون مالی اکسل/CSV/JSON."""
+    status = money.get("status") or "unknown"
+    if status in _MONEY_STATUS_LABELS:
+        return _MONEY_STATUS_LABELS[status]
+    if status == "zero":
+        return 0
+    amount = money.get("amount")
+    if status == "numeric" and amount is not None:
+        return amount
+    return "-"
+
+
+def _merge_money_parsed(display: str, amount_val: Any, status_label: str = "") -> Dict[str, Any]:
+    if status_label:
+        return {
+            "amount": None,
+            "status": _money_status_from_label(status_label),
+            "label": status_label,
+            "display": display or status_label,
+        }
+    money = parse_divar_money_display(display)
+    if money.get("status") != "unknown":
+        return money
+    if amount_val is not None and not (isinstance(amount_val, float) and math.isnan(amount_val)):
+        try:
+            import pandas as pd
+            if pd.isna(amount_val):
+                return money
+        except Exception:
+            pass
+        try:
+            num = int(amount_val)
+            if num == 0:
+                return {"amount": 0, "status": "zero", "label": "۰", "display": display}
+            return {"amount": num, "status": "numeric", "label": "", "display": display}
+        except (TypeError, ValueError):
+            pass
+    return money
+
+
+def _resolve_money_amount(
+    money: Dict[str, Any],
+    webengage_val: Any,
+    *,
+    explicit_display: bool,
+) -> Optional[int]:
+    if money.get("amount") is not None:
+        return money.get("amount")
+    if explicit_display and money.get("status") not in ("unknown",):
+        return None
+    if isinstance(webengage_val, int):
+        return webengage_val
+    return None
 
 
 def _resolve_total_price_num(
     display: str,
     parsed: Optional[int],
     webengage: Dict[str, Any],
+    *,
+    explicit_display: bool = True,
 ) -> Optional[int]:
-    if parsed is not None:
-        return parsed
-    display_s = str(display or "").strip()
-    if display_s:
-        if _is_textual_price(display_s):
-            return None
-        return None
-    we_price = webengage.get("price")
-    return we_price if isinstance(we_price, int) else None
+    money = _merge_money_parsed(display, parsed)
+    return _resolve_money_amount(money, webengage.get("price"), explicit_display=explicit_display)
+
+
+def _money_export_series(
+    df: Any,
+    get_col,
+    display_key: str,
+    num_key: str,
+    status_key: str,
+) -> Any:
+    """ساخت ستون مالی نهایی از نمایش/عدد/وضعیت."""
+    import pandas as pd
+
+    values: List[Any] = []
+    for idx in range(len(df)):
+        status_label = ""
+        label_key = status_key.replace("_وضعیت", "_برچسب")
+        if label_key in df.columns:
+            raw_label = get_col(label_key).iloc[idx]
+            if not pd.isna(raw_label) and str(raw_label).strip():
+                status_label = str(raw_label).strip()
+        if not status_label and status_key in df.columns:
+            raw_status = get_col(status_key).iloc[idx]
+            if not pd.isna(raw_status):
+                st = str(raw_status).strip()
+                status_label = _MONEY_STATUS_LABELS.get(st, st if st in _TEXTUAL_PRICE_LABELS else "")
+        display = ""
+        if display_key in df.columns:
+            raw_display = get_col(display_key).iloc[idx]
+            if not pd.isna(raw_display):
+                display = str(raw_display).strip()
+        amount_val = None
+        if num_key in df.columns:
+            raw_num = get_col(num_key).iloc[idx]
+            if not pd.isna(raw_num):
+                amount_val = raw_num
+        money = _merge_money_parsed(display, amount_val, status_label)
+        values.append(format_money_export_value(money))
+    return pd.Series(values)
 
 
 def _parse_slider_money(val: Any) -> Optional[int]:
@@ -1598,33 +1742,63 @@ def flatten_post_detail(detail: Dict[str, Any]) -> Dict[str, Any]:
         area_num = parse_area_sqm(out.get("متراژ"))
         if area_num is not None:
             out["متراژ_عدد"] = area_num
+    total_money = _merge_money_parsed(total_price, total_price_num)
     out["price_text"] = total_price
     out["مالی_قیمت_کل_نمایش"] = total_price
-    out["مالی_قیمت_کل_عدد"] = _resolve_total_price_num(total_price, total_price_num, webengage)
+    out["مالی_قیمت_کل_وضعیت"] = total_money.get("status") or "unknown"
+    if total_money.get("label"):
+        out["مالی_قیمت_کل_برچسب"] = total_money["label"]
+    out["مالی_قیمت_کل_عدد"] = _resolve_money_amount(
+        total_money,
+        webengage.get("price"),
+        explicit_display=bool(str(total_price or "").strip()),
+    )
+    ppm_money = _merge_money_parsed(price_per_meter, price_per_meter_num)
     if price_per_meter:
         attrs_list.append(f"قیمت هر متر:{price_per_meter}")
     out["مالی_قیمت_هر_متر_نمایش"] = price_per_meter
-    out["مالی_قیمت_هر_متر_عدد"] = price_per_meter_num
+    out["مالی_قیمت_هر_متر_وضعیت"] = ppm_money.get("status") or "unknown"
+    if ppm_money.get("label"):
+        out["مالی_قیمت_هر_متر_برچسب"] = ppm_money["label"]
+    out["مالی_قیمت_هر_متر_عدد"] = ppm_money.get("amount") if ppm_money.get("status") in ("numeric", "zero") else (
+        None if ppm_money.get("status") not in ("unknown",) else price_per_meter_num
+    )
     out["مالی_ارز"] = "تومان" if (total_price or price_per_meter) else ""
     out["مالی_منبع_قیمت_وب‌انگیج"] = webengage.get("price")
 
-    # اجاره
-    # تکمیل از RENT_SLIDER در صورت نبود دادهٔ صریح (مقدار اصلی، نه transformed)
-    if deposit_num is None:
-        deposit_num = slider_credit_value
-    if rent_monthly_num is None:
-        rent_monthly_num = slider_rent_value
-    # تکمیل از webengage در صورت نبود
-    if deposit_num is None:
-        deposit_num = webengage.get("credit") if isinstance(webengage.get("credit"), int) else None
-    if rent_monthly_num is None:
-        rent_monthly_num = webengage.get("rent") if isinstance(webengage.get("rent"), int) else None
+    # اجاره — وضعیت متنی بر webengage/slider اولویت دارد
+    def _finalize_rent_component(display_text: str, parsed_num: Optional[int], slider_num: Optional[int], webengage_num: Any) -> tuple:
+        explicit = bool(str(display_text or "").strip())
+        money = parse_divar_money_display(display_text) if explicit else _merge_money_parsed("", parsed_num)
+        if money.get("status") in ("free", "negotiable", "customary", "full_deposit"):
+            return money, None
+        if money.get("amount") is not None:
+            return money, money["amount"]
+        if not explicit:
+            if slider_num is not None:
+                return {"amount": slider_num, "status": "numeric", "label": "", "display": display_text}, slider_num
+            if isinstance(webengage_num, int):
+                return {"amount": webengage_num, "status": "numeric", "label": "", "display": display_text}, webengage_num
+        return money, None
+
+    dep_money, deposit_resolved = _finalize_rent_component(
+        deposit_text, deposit_num, slider_credit_value, webengage.get("credit"),
+    )
+    rent_money, rent_resolved = _finalize_rent_component(
+        rent_monthly_text, rent_monthly_num, slider_rent_value, webengage.get("rent"),
+    )
 
     out["اجاره_ودیعه_نمایش"] = deposit_text
-    out["اجاره_ودیعه_عدد"] = deposit_num
+    out["اجاره_ودیعه_وضعیت"] = dep_money.get("status") or "unknown"
+    if dep_money.get("label"):
+        out["اجاره_ودیعه_برچسب"] = dep_money["label"]
+    out["اجاره_ودیعه_عدد"] = deposit_resolved
     out["اجاره_ودیعه_تبدیل_عدد"] = slider_credit_transformed
     out["اجاره_ماهانه_نمایش"] = rent_monthly_text
-    out["اجاره_ماهانه_عدد"] = rent_monthly_num
+    out["اجاره_ماهانه_وضعیت"] = rent_money.get("status") or "unknown"
+    if rent_money.get("label"):
+        out["اجاره_ماهانه_برچسب"] = rent_money["label"]
+    out["اجاره_ماهانه_عدد"] = rent_resolved
     out["اجاره_ماهانه_تبدیل_عدد"] = slider_rent_transformed
 
     if rent_convertibility:
@@ -2089,7 +2263,35 @@ def export_rows_to_records(
         result_df[col] = result_df[col].apply(
             lambda x: "-" if (x is None or (isinstance(x, str) and str(x).strip() == "")) else x
         )
-    return result_df.to_dict("records")
+    records = result_df.to_dict("records")
+    _money_meta_keys = (
+        "مالی_قیمت_کل_نمایش",
+        "مالی_قیمت_کل_عدد",
+        "مالی_قیمت_کل_وضعیت",
+        "مالی_قیمت_کل_برچسب",
+        "مالی_قیمت_هر_متر_نمایش",
+        "مالی_قیمت_هر_متر_عدد",
+        "مالی_قیمت_هر_متر_وضعیت",
+        "مالی_قیمت_هر_متر_برچسب",
+        "اجاره_ودیعه_نمایش",
+        "اجاره_ودیعه_عدد",
+        "اجاره_ودیعه_وضعیت",
+        "اجاره_ودیعه_برچسب",
+        "اجاره_ماهانه_نمایش",
+        "اجاره_ماهانه_عدد",
+        "اجاره_ماهانه_وضعیت",
+        "اجاره_ماهانه_برچسب",
+        "price_text",
+    )
+    for i, raw in enumerate(rows):
+        if i >= len(records):
+            break
+        for key in _money_meta_keys:
+            val = raw.get(key)
+            if val is None or val == "":
+                continue
+            records[i][key] = val
+    return records
 
 
 def normalize_mixed_export_rows(rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
@@ -2524,10 +2726,32 @@ def _export_to_excel_sell(df: Any, output_path: str, export_columns: Optional[Li
         result_df["طبقه"] = extract_from_attributes("طبقه", "-")
     
     # 11. قیمت
-    result_df["قیمت"] = combine_excel_and_source("قیمت", "مالی_قیمت_کل_عدد")
+    if "قیمت" in df.columns:
+        excel_col = get_col("قیمت").copy()
+        mask = excel_col.isna() | (excel_col == "") | (excel_col == "-")
+        filled = _money_export_series(
+            df, get_col, "مالی_قیمت_کل_نمایش", "مالی_قیمت_کل_عدد", "مالی_قیمت_کل_وضعیت",
+        )
+        excel_col.loc[mask] = filled.loc[mask]
+        result_df["قیمت"] = excel_col
+    else:
+        result_df["قیمت"] = _money_export_series(
+            df, get_col, "مالی_قیمت_کل_نمایش", "مالی_قیمت_کل_عدد", "مالی_قیمت_کل_وضعیت",
+        )
     
     # 12. قیمت هر متر
-    result_df["قیمت هر متر"] = combine_excel_and_source("قیمت هر متر", "مالی_قیمت_هر_متر_عدد")
+    if "قیمت هر متر" in df.columns:
+        excel_col = get_col("قیمت هر متر").copy()
+        mask = excel_col.isna() | (excel_col == "") | (excel_col == "-")
+        filled = _money_export_series(
+            df, get_col, "مالی_قیمت_هر_متر_نمایش", "مالی_قیمت_هر_متر_عدد", "مالی_قیمت_هر_متر_وضعیت",
+        )
+        excel_col.loc[mask] = filled.loc[mask]
+        result_df["قیمت هر متر"] = excel_col
+    else:
+        result_df["قیمت هر متر"] = _money_export_series(
+            df, get_col, "مالی_قیمت_هر_متر_نمایش", "مالی_قیمت_هر_متر_عدد", "مالی_قیمت_هر_متر_وضعیت",
+        )
     
     # 13. آسانسور
     result_df["آسانسور"] = combine_excel_and_source("آسانسور", "آسانسور", "-")
@@ -2946,10 +3170,16 @@ def _export_to_excel_rent(df: Any, output_path: str, export_columns: Optional[Li
     
     # Helper function برای استخراج عدد از رشته قیمت (فقط برای مقادیر رشته‌ای)
     def extract_number_from_price(val):
-        """استخراج عدد از رشته قیمت (مثلاً "۱،۲۰۰،۰۰۰،۰۰۰ تومان" -> "1200000000")
-        اگر مقدار عددی خالص باشد، بدون تغییر برمی‌گرداند."""
+        """استخراج عدد یا برچسب متنی قیمت برای ستون‌های ودیعه/اجاره."""
         if pd.isna(val) or val == "" or val is None or val == "-":
             return "-"
+        money = parse_divar_money_display(val)
+        if money.get("status") in _MONEY_STATUS_LABELS:
+            return _MONEY_STATUS_LABELS[money["status"]]
+        if money.get("status") == "zero":
+            return 0
+        if money.get("status") == "numeric" and money.get("amount") is not None:
+            return money["amount"]
         
         # اگر مقدار عددی خالص است، آن را به رشته تبدیل می‌کنیم و برمی‌گردانیم
         if is_pure_numeric(val):
@@ -3159,50 +3389,42 @@ def _export_to_excel_rent(df: Any, output_path: str, export_columns: Optional[Li
     # 10. ودیعه
     if "ودیعه" in df.columns:
         excel_col = get_col("ودیعه").copy()
-        # فقط روی مقادیر خالی یا "-" پردازش انجام می‌شود
-        # مقادیر موجود که عددی خالص هستند، بدون تغییر نگه داشته می‌شوند
         mask_empty = excel_col.isna() | (excel_col == "") | (excel_col == "-")
-        # برای مقادیر غیر خالی که رشته‌ای با فرمت خاص هستند، پردازش انجام می‌شود
+        filled = _money_export_series(
+            df, get_col, "اجاره_ودیعه_نمایش", "اجاره_ودیعه_عدد", "اجاره_ودیعه_وضعیت",
+        )
+        excel_col.loc[mask_empty] = filled.loc[mask_empty]
         mask_to_process = ~mask_empty
         if mask_to_process.any():
             for idx in df.index[mask_to_process]:
                 val = excel_col.iloc[idx]
-                # فقط اگر مقدار عددی خالص نیست، پردازش می‌شود
                 if not is_pure_numeric(val):
-                    processed_val = extract_number_from_price(val)
-                    excel_col.iloc[idx] = processed_val
-        
-        # برای مقادیر خالی، از ستون منبع استفاده می‌کنیم
-        if "اجاره_ودیعه_عدد" in df.columns:
-            source_col = get_col("اجاره_ودیعه_عدد")
-            excel_col[mask_empty] = source_col[mask_empty]
+                    excel_col.iloc[idx] = extract_number_from_price(val)
         result_df["ودیعه"] = excel_col
     else:
-        result_df["ودیعه"] = get_col("اجاره_ودیعه_عدد", "-")
+        result_df["ودیعه"] = _money_export_series(
+            df, get_col, "اجاره_ودیعه_نمایش", "اجاره_ودیعه_عدد", "اجاره_ودیعه_وضعیت",
+        )
     
     # 11. اجاره ماهانه
     if "اجاره ماهانه" in df.columns:
         excel_col = get_col("اجاره ماهانه").copy()
-        # فقط روی مقادیر خالی یا "-" پردازش انجام می‌شود
-        # مقادیر موجود که عددی خالص هستند، بدون تغییر نگه داشته می‌شوند
         mask_empty = excel_col.isna() | (excel_col == "") | (excel_col == "-")
-        # برای مقادیر غیر خالی که رشته‌ای با فرمت خاص هستند، پردازش انجام می‌شود
+        filled = _money_export_series(
+            df, get_col, "اجاره_ماهانه_نمایش", "اجاره_ماهانه_عدد", "اجاره_ماهانه_وضعیت",
+        )
+        excel_col.loc[mask_empty] = filled.loc[mask_empty]
         mask_to_process = ~mask_empty
         if mask_to_process.any():
             for idx in df.index[mask_to_process]:
                 val = excel_col.iloc[idx]
-                # فقط اگر مقدار عددی خالص نیست، پردازش می‌شود
                 if not is_pure_numeric(val):
-                    processed_val = extract_number_from_price(val)
-                    excel_col.iloc[idx] = processed_val
-        
-        # برای مقادیر خالی، از ستون منبع استفاده می‌کنیم
-        if "اجاره_ماهانه_عدد" in df.columns:
-            source_col = get_col("اجاره_ماهانه_عدد")
-            excel_col[mask_empty] = source_col[mask_empty]
+                    excel_col.iloc[idx] = extract_number_from_price(val)
         result_df["اجاره ماهانه"] = excel_col
     else:
-        result_df["اجاره ماهانه"] = get_col("اجاره_ماهانه_عدد", "-")
+        result_df["اجاره ماهانه"] = _money_export_series(
+            df, get_col, "اجاره_ماهانه_نمایش", "اجاره_ماهانه_عدد", "اجاره_ماهانه_وضعیت",
+        )
     
     # 12. ودیعه و اجاره (قابل تبدیل/غیر قابل تبدیل)
     if "ودیعه و اجاره" in df.columns:

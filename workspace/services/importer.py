@@ -394,6 +394,28 @@ _LISTING_SCALAR_FIELDS = (
     'published_at', 'expires_at',
 )
 
+_MONEY_SCALAR_ATTRS = ('price', 'deposit', 'rent')
+_TEXTUAL_MONEY_STATUSES = frozenset({'free', 'negotiable', 'customary', 'full_deposit'})
+_MONEY_STATUS_DATA_KEYS = {
+    'price': 'مالی_قیمت_کل_وضعیت',
+    'deposit': 'اجاره_ودیعه_وضعیت',
+    'rent': 'اجاره_ماهانه_وضعیت',
+}
+_EXPORT_TEXT_MONEY = frozenset({'توافقی', 'متعارف', 'رایگان', 'رهن کامل'})
+_MONEY_EXPORT_COLUMN = {'price': 'قیمت', 'deposit': 'ودیعه', 'rent': 'اجاره ماهانه'}
+
+
+def _incoming_money_is_textual(fields: dict, attr: str) -> bool:
+    data = fields.get('data') or {}
+    status_key = _MONEY_STATUS_DATA_KEYS.get(attr, '')
+    if data.get(status_key) in _TEXTUAL_MONEY_STATUSES:
+        return True
+    col = _MONEY_EXPORT_COLUMN.get(attr, '')
+    raw = data.get(col)
+    if raw is not None and str(raw).strip() in _EXPORT_TEXT_MONEY:
+        return True
+    return False
+
 
 def _merge_listing_data(old: dict | None, new: dict | None) -> dict:
     merged = dict(old or {})
@@ -420,9 +442,16 @@ def _has_explicit_publish_in_data(data: dict | None) -> bool:
 def _update_listing_from_fields(listing: Listing, fields: dict) -> bool:
     """به‌روزرسانی آگهی موجود — ادغام ویژگی‌های جدید اکسل در data."""
     changed = False
+    for money_attr in _MONEY_SCALAR_ATTRS:
+        if _incoming_money_is_textual(fields, money_attr):
+            if getattr(listing, money_attr) is not None:
+                setattr(listing, money_attr, None)
+                changed = True
     for attr in _LISTING_SCALAR_FIELDS:
         new_val = fields.get(attr)
         if new_val is None:
+            continue
+        if attr in _MONEY_SCALAR_ATTRS and _incoming_money_is_textual(fields, attr):
             continue
         if isinstance(new_val, str) and not new_val.strip():
             continue

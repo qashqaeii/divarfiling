@@ -205,12 +205,15 @@ def listing_map_price_label(listing, tx: Optional[Dict[str, Any]] = None) -> str
     tx = tx or transaction_profile(getattr(listing, 'transaction_type', '') or '')
     data = getattr(listing, 'data', None) or {}
 
-    if tx.get('show_price') and getattr(listing, 'price', None):
-        return format_toman(listing.price)
-    if tx.get('show_rent') and getattr(listing, 'rent', None):
-        return f'اجاره {format_toman(listing.rent)}'
-    if tx.get('show_deposit') and getattr(listing, 'deposit', None):
-        return f'ودیعه {format_toman(listing.deposit)}'
+    price_val = getattr(listing, 'price', None)
+    rent_val = getattr(listing, 'rent', None)
+    deposit_val = getattr(listing, 'deposit', None)
+    if tx.get('show_price') and price_val is not None:
+        return format_toman(price_val)
+    if tx.get('show_rent') and rent_val is not None:
+        return f'اجاره {format_toman(rent_val)}'
+    if tx.get('show_deposit') and deposit_val is not None:
+        return f'ودیعه {format_toman(deposit_val)}'
 
     sale_txt = _listing_text_sale(data)
     dep_txt = _listing_text_deposit(data)
@@ -429,10 +432,15 @@ def format_display_value(key: str, value: Any, profile: Optional[Dict] = None) -
         return str(value).strip()
 
     if _is_money_key(key):
+        s_money = str(value).strip()
+        if s_money in KNOWN_TEXT_PRICES:
+            return s_money
         try:
-            num = int(float(str(value).replace(',', '').replace('٬', '')))
-            if num <= 0:
+            num = int(float(s_money.replace(',', '').replace('٬', '')))
+            if num < 0:
                 return '—'
+            if num == 0:
+                return format_toman(0, per_sqm=_is_per_sqm_key(key))
             return format_toman(num, per_sqm=_is_per_sqm_key(key))
         except (ValueError, TypeError):
             pass

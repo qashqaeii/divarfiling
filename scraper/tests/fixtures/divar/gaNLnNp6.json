@@ -1,0 +1,941 @@
+{
+  "sections": [
+    {
+      "section_name": "BREADCRUMB",
+      "widgets": [
+        {
+          "widget_type": "BREADCRUMB",
+          "data": {
+            "@type": "type.googleapis.com/widgets.BreadcrumbData",
+            "parent_items": [
+              {
+                "title": "املاک",
+                "action": {
+                  "type": "OPEN_POSTLIST_PAGE_GRPC",
+                  "payload": {
+                    "@type": "type.googleapis.com/widgets.OpenPostListPageGRPCPayload",
+                    "search_data": {
+                      "form_data": {
+                        "data": {
+                          "category": {
+                            "str": {
+                              "value": "real-estate"
+                            }
+                          }
+                        },
+                        "online_request_response_data": {}
+                      },
+                      "query": "",
+                      "query_input_type": "UNKNOWN"
+                    },
+                    "source_view": "CATEGORY_BREAD_CRUMB",
+                    "tooltip": "",
+                    "refresh": false,
+                    "source_view_str": "CATEGORY_BREAD_CRUMB",
+                    "is_not_link": false,
+                    "referer": "",
+                    "navigation_type": "NAVIGATION_TYPE_UNKNOWN"
+                  },
+                  "page_pop_link": false
+                }
+              },
+              {
+                "title": "فروش مسکونی",
+                "action": {
+                  "type": "OPEN_POSTLIST_PAGE_GRPC",
+                  "payload": {
+                    "@type": "type.googleapis.com/widgets.OpenPostListPageGRPCPayload",
+                    "search_data": {
+                      "form_data": {
+                        "data": {
+                          "category": {
+                            "str": {
+                              "value": "residential-sell"
+                            }
+                          }
+                        },
+                        "online_request_response_data": {}
+                      },
+                      "query": "",
+                      "query_input_type": "UNKNOWN"
+                    },
+                    "source_view": "CATEGORY_BREAD_CRUMB",
+                    "tooltip": "",
+                    "refresh": false,
+                    "source_view_str": "CATEGORY_BREAD_CRUMB",
+                    "is_not_link": false,
+                    "referer": "",
+                    "navigation_type": "NAVIGATION_TYPE_UNKNOWN"
+                  },
+                  "page_pop_link": false
+                }
+              },
+              {
+                "title": "فروش زمین و ملک کلنگی",
+                "action": {
+                  "type": "OPEN_POSTLIST_PAGE_GRPC",
+                  "payload": {
+                    "@type": "type.googleapis.com/widgets.OpenPostListPageGRPCPayload",
+                    "search_data": {
+                      "form_data": {
+                        "data": {
+                          "category": {
+                            "str": {
+                              "value": "plot-old"
+                            }
+                          }
+                        },
+                        "online_request_response_data": {}
+                      },
+                      "query": "",
+                      "query_input_type": "UNKNOWN"
+                    },
+                    "source_view": "CATEGORY_BREAD_CRUMB",
+                    "tooltip": "",
+                    "refresh": false,
+                    "source_view_str": "CATEGORY_BREAD_CRUMB",
+                    "is_not_link": false,
+                    "referer": "",
+                    "navigation_type": "NAVIGATION_TYPE_UNKNOWN"
+                  },
+                  "page_pop_link": false
+                }
+              }
+            ],
+            "current_page_title": "زمین ۲۲۰۴متر پهنه زمین R241",
+            "padded": true
+          },
+          "visibility_condition": [],
+          "uid": "",
+          "reload_type": "BLOCKING"
+        }
+      ]
+    },
+    {
+      "section_name": "TITLE",
+      "widgets": [
+        {
+          "widget_type": "LEGEND_TITLE_ROW",
+          "data": {
+            "@type": "type.googleapis.com/widgets.LegendTitleRowData",
+            "title": "زمین ۲۲۰۴متر پهنه زمین R241",
+            "subtitle": "",
+            "has_divider": false,
+            "image_url": "",
+            "tags": [],
+            "show_thumbnail": false,
+            "mobile_design": false,
+            "high_level_heading": true,
+            "padding": "NO_PADDING"
+          },
+          "visibility_condition": [],
+          "uid": "",
+          "reload_type": "BLOCKING"
+        },
+        {
+          "widget_type": "EXPANDABLE_SECTION",
+          "data": {
+            "@type": "type.googleapis.com/widgets.ExpandableSectionData",
+            "widget_list": [
+              {
+                "widget_type": "DESCRIPTION_ROW",
+                "data": {
+                  "@type": "type.googleapis.com/widgets.DescriptionRowData",
+                  "text": "انتشار آگهی: ۲۱ مهر ۱۴۰۵، ۰۳:۲۲\nآخرین به‌روز‌رسانی: ۲۱ مهر ۱۴۰۵، ۰۳:۲۲",
+                  "has_divider": false,
+                  "is_primary": true,
+                  "expandable": false,
+                  "small": true,
+                  "padded": false,
+                  "preview_max_line": 0,
+                  "text_alignment": "RIGHT"
+                },
+                "visibility_condition": [],
+                "uid": "",
+                "reload_type": "BLOCKING"
+              }
+            ],
+            "title": "۴ روز پیش در تهران، سعادت‌آباد، خ سوری",
+            "icon": {
+              "image_url_dark": "",
+              "image_url_light": "",
+              "icon_name": "UNKNOWN",
+              "icon_color": "UNKNOWN"
+            },
+            "is_expanded": false
+          },
+          "visibility_condition": [],
+          "uid": "",
+          "reload_type": "BLOCKING"
+        },
+        {
+          "widget_type": "SELECTOR_ROW",
+          "data": {
+            "@type": "type.googleapis.com/widgets.SelectorRowData",
+            "title": "زنگ خطرهای قبل از معامله",
+            "image_url": "",
+            "action": {
+              "type": "OPEN_PAGE",
+              "payload": {
+                "@type": "type.googleapis.com/widgets.OpenPagePayload",
+                "request_http_method": "POST",
+                "request_data": {
+                  "@type": "type.googleapis.com/post_api_v2.GetFraudAlertPageRequest.Data",
+                  "category": "plot-old"
+                },
+                "page": "UNKNOWN_PAGE",
+                "specification": {
+                  "@type": "type.googleapis.com/widgets.OpenPagePayload.SimplePageSpecification",
+                  "has_bottom_navbar": false,
+                  "has_search": false,
+                  "search_placeholder": "",
+                  "navigation_button": "BACK",
+                  "disable_silent_fetch": false
+                },
+                "page_type": "SIMPLE_PAGE",
+                "is_modal": true,
+                "rest_request_path": "/v8/postview/fraud-alert",
+                "grpc_request_path": "/post_api_v2.PostApi/GetFraudAlertPage"
+              },
+              "page_pop_link": false
+            },
+            "has_divider": true,
+            "has_notification": false,
+            "icon": {
+              "image_url_dark": "https://s100.divarcdn.com/static/imgs/widget-icons/dark/icon_secondary/v1/warning.png",
+              "image_url_light": "https://s100.divarcdn.com/static/imgs/widget-icons/light/icon_secondary/v1/warning.png",
+              "icon_name": "WARNING",
+              "icon_color": "ICON_SECONDARY"
+            },
+            "notification_text": "",
+            "description": "",
+            "has_arrow": true,
+            "small": false,
+            "last_notification_date": "0001-01-01T00:00:00Z",
+            "uid": "",
+            "fullwidth": false,
+            "truncate_title": false
+          },
+          "action_log": {
+            "server_side_info": {
+              "info": {
+                "@type": "type.googleapis.com/action_log.PostWarningInfo",
+                "post_token": "gaNLnNp6"
+              },
+              "item_type": {
+                "type": "POST_WARNING"
+              }
+            },
+            "enabled": true
+          },
+          "visibility_condition": [],
+          "uid": "",
+          "reload_type": "BLOCKING"
+        }
+      ]
+    },
+    {
+      "section_name": "DESCRIPTION",
+      "widgets": [
+        {
+          "widget_type": "TITLE_ROW",
+          "data": {
+            "@type": "type.googleapis.com/widgets.TitleRowData",
+            "text": "توضیحات",
+            "has_divider": false,
+            "color": "",
+            "text_color": "TEXT_PRIMARY",
+            "description": "",
+            "description_color": "UNKNOWN",
+            "subtitle": "",
+            "subtitle_color": "UNKNOWN",
+            "text_type": "SECONDARY",
+            "type": "UNKNOWN_TYPE",
+            "show_required": false,
+            "state": "TITLE_ROW_STATE_UNKNOWN",
+            "is_sticky_header": false
+          },
+          "visibility_condition": [],
+          "uid": "",
+          "reload_type": "BLOCKING"
+        },
+        {
+          "widget_type": "DESCRIPTION_ROW",
+          "data": {
+            "@type": "type.googleapis.com/widgets.DescriptionRowData",
+            "text": "قولنامه ای از سال ۱۳۴۵مدارک کامل",
+            "has_divider": false,
+            "is_primary": true,
+            "expandable": false,
+            "small": false,
+            "padded": false,
+            "preview_max_line": 0,
+            "text_alignment": "RIGHT"
+          },
+          "visibility_condition": [],
+          "uid": "",
+          "reload_type": "BLOCKING"
+        }
+      ]
+    },
+    {
+      "section_name": "IMAGE",
+      "widgets": [
+        {
+          "widget_type": "IMAGE_CAROUSEL",
+          "data": {
+            "@type": "type.googleapis.com/widgets.ImageCarouselData",
+            "items": [
+              {
+                "image_url": "",
+                "image": {
+                  "url": "https://s100.divarcdn.com/static/photo/neda/webp_post/RfV8rJxodioqqG2FuWOHcw/2d180501-89f7-414e-b7a9-25ad27468512.webp",
+                  "alt": "زمین ۲۲۰۴متر پهنه زمین R241|فروش زمین و ملک کلنگی|تهران, سعادت‌آباد|دیوار",
+                  "thumbnail_url": "https://s100.divarcdn.com/static/photo/neda/webp_thumbnail/AGLo6w0ym5qNiRgViKBxLw/2d180501-89f7-414e-b7a9-25ad27468512.webp"
+                },
+                "video_url": ""
+              }
+            ],
+            "padded": false,
+            "image_aspect_ratio": {
+              "dynamic_aspect_ratio": {
+                "height": 3,
+                "width": 4
+              }
+            },
+            "has_preview": true,
+            "has_thumbnails": false,
+            "scale_type": "CENTER_CROP",
+            "show_tooltip": true,
+            "tooltip_data": {
+              "icon": {
+                "image_url_dark": "https://s100.divarcdn.com/static/imgs/widget-icons/dark/white_primary/v1/fullscreen.png",
+                "image_url_light": "https://s100.divarcdn.com/static/imgs/widget-icons/light/white_primary/v1/fullscreen.png",
+                "icon_name": "FULLSCREEN",
+                "icon_color": "WHITE_PRIMARY"
+              },
+              "text": "۱"
+            }
+          },
+          "visibility_condition": [],
+          "uid": "",
+          "reload_type": "BLOCKING"
+        }
+      ]
+    },
+    {
+      "section_name": "LIST_DATA",
+      "widgets": [
+        {
+          "widget_type": "UNEXPANDABLE_ROW",
+          "data": {
+            "@type": "type.googleapis.com/widgets.UnexpandableRowData",
+            "title": "تصویر‌ها برای همین ملک است؟",
+            "value": "بله",
+            "has_divider": true,
+            "compact": false,
+            "has_copy_to_clipboard": false,
+            "send_action_log_on_copy": false
+          },
+          "visibility_condition": [],
+          "uid": "",
+          "reload_type": "BLOCKING"
+        },
+        {
+          "widget_type": "UNEXPANDABLE_ROW",
+          "data": {
+            "@type": "type.googleapis.com/widgets.UnexpandableRowData",
+            "title": "متراژ",
+            "value": "۲,۴۰۰ متر مربع",
+            "has_divider": true,
+            "compact": false,
+            "has_copy_to_clipboard": false,
+            "send_action_log_on_copy": false
+          },
+          "visibility_condition": [],
+          "uid": "",
+          "reload_type": "BLOCKING"
+        },
+        {
+          "widget_type": "UNEXPANDABLE_ROW",
+          "data": {
+            "@type": "type.googleapis.com/widgets.UnexpandableRowData",
+            "title": "قیمت کل ملک",
+            "value": "‏۶۷۲,۰۰۰,۰۰۰,۰۰۰ تومان",
+            "has_divider": true,
+            "compact": false,
+            "has_copy_to_clipboard": false,
+            "send_action_log_on_copy": false
+          },
+          "visibility_condition": [],
+          "uid": "",
+          "reload_type": "BLOCKING"
+        },
+        {
+          "widget_type": "UNEXPANDABLE_ROW",
+          "data": {
+            "@type": "type.googleapis.com/widgets.UnexpandableRowData",
+            "title": "قیمت هر متر",
+            "value": "‏۲۸۰,۰۰۰,۰۰۰ تومان",
+            "has_divider": true,
+            "compact": false,
+            "has_copy_to_clipboard": false,
+            "send_action_log_on_copy": false
+          },
+          "visibility_condition": [],
+          "uid": "",
+          "reload_type": "BLOCKING"
+        },
+        {
+          "widget_type": "SELECTOR_ROW",
+          "data": {
+            "@type": "type.googleapis.com/widgets.SelectorRowData",
+            "title": "سایر ویژگی‌ها و امکانات",
+            "image_url": "",
+            "action": {
+              "type": "LOAD_MODAL_PAGE",
+              "payload": {
+                "@type": "type.googleapis.com/widgets.LoadModalPagePayload",
+                "modal_page": {
+                  "title": "ویژگی‌ها و امکانات",
+                  "widget_list": [
+                    {
+                      "widget_type": "UNEXPANDABLE_ROW",
+                      "data": {
+                        "@type": "type.googleapis.com/widgets.UnexpandableRowData",
+                        "title": "کاربری ملک",
+                        "value": "مسکونی",
+                        "has_divider": true,
+                        "compact": false,
+                        "has_copy_to_clipboard": false,
+                        "send_action_log_on_copy": false
+                      },
+                      "visibility_condition": [],
+                      "uid": "",
+                      "reload_type": "BLOCKING"
+                    },
+                    {
+                      "widget_type": "UNEXPANDABLE_ROW",
+                      "data": {
+                        "@type": "type.googleapis.com/widgets.UnexpandableRowData",
+                        "title": "موقعیت ملک",
+                        "value": "دوکله",
+                        "has_divider": true,
+                        "compact": false,
+                        "has_copy_to_clipboard": false,
+                        "send_action_log_on_copy": false
+                      },
+                      "visibility_condition": [],
+                      "uid": "",
+                      "reload_type": "BLOCKING"
+                    },
+                    {
+                      "widget_type": "UNEXPANDABLE_ROW",
+                      "data": {
+                        "@type": "type.googleapis.com/widgets.UnexpandableRowData",
+                        "title": "وضعیت سند",
+                        "value": "قولنامه",
+                        "has_divider": true,
+                        "compact": false,
+                        "has_copy_to_clipboard": false,
+                        "send_action_log_on_copy": false
+                      },
+                      "visibility_condition": [],
+                      "uid": "",
+                      "reload_type": "BLOCKING"
+                    },
+                    {
+                      "widget_type": "UNEXPANDABLE_ROW",
+                      "data": {
+                        "@type": "type.googleapis.com/widgets.UnexpandableRowData",
+                        "title": "قابل معاوضه",
+                        "value": "دارد",
+                        "has_divider": true,
+                        "compact": false,
+                        "has_copy_to_clipboard": false,
+                        "send_action_log_on_copy": false
+                      },
+                      "visibility_condition": [],
+                      "uid": "",
+                      "reload_type": "BLOCKING"
+                    }
+                  ],
+                  "has_close_button": false
+                }
+              },
+              "page_pop_link": false
+            },
+            "has_divider": true,
+            "has_notification": false,
+            "icon": {
+              "image_url_dark": "",
+              "image_url_light": "",
+              "icon_name": "UNKNOWN",
+              "icon_color": "UNKNOWN"
+            },
+            "notification_text": "",
+            "description": "",
+            "has_arrow": true,
+            "small": false,
+            "last_notification_date": "0001-01-01T00:00:00Z",
+            "uid": "",
+            "fullwidth": true,
+            "truncate_title": false
+          },
+          "action_log": {
+            "server_side_info": {
+              "info": {
+                "@type": "type.googleapis.com/action_log.ViewPostFeaturesInfo",
+                "post_token": "gaNLnNp6"
+              },
+              "item_type": {
+                "type": "VIEW_POST_FEATURES"
+              }
+            },
+            "enabled": true
+          },
+          "visibility_condition": [],
+          "uid": "",
+          "reload_type": "BLOCKING"
+        },
+        {
+          "widget_type": "SELECTOR_ROW",
+          "data": {
+            "@type": "type.googleapis.com/widgets.SelectorRowData",
+            "title": "بررسی و کارشناسی",
+            "image_url": "",
+            "action": {
+              "type": "OPEN_PAGE",
+              "payload": {
+                "@type": "type.googleapis.com/widgets.OpenPagePayload",
+                "request_http_method": "POST",
+                "request_data": {
+                  "@type": "type.googleapis.com/service_providers.GetServiceProvidersPageRequest.RequestData",
+                  "source_v2": "DEMAND_POST",
+                  "filter": {
+                    "service_types": [
+                      "REPORT_INSPECTION"
+                    ],
+                    "city_id": 1,
+                    "category": "plot-old",
+                    "post_token": "gaNLnNp6",
+                    "touchpoint": "DEMAND_POST",
+                    "app_slugs": []
+                  },
+                  "action_data_builder": {
+                    "conversation_id": "gaNLnNp6",
+                    "post_token": "gaNLnNp6",
+                    "ticket_uuid": "00000000-0000-0000-0000-000000000000",
+                    "return_url": "",
+                    "user_side": "",
+                    "business_token": "",
+                    "touchpoint": "DEMAND_POST",
+                    "is_bottomsheet": false,
+                    "source": "DEMAND_POST",
+                    "lead_source": "DEMAND"
+                  },
+                  "display_data": {
+                    "page_title": "بررسی و کارشناسی",
+                    "page_description": ""
+                  },
+                  "trace_id": "00000000-0000-0000-0000-000000000000",
+                  "source": "DEMAND_POST",
+                  "lead_source": "DEMAND"
+                },
+                "page": "UNKNOWN_PAGE",
+                "specification": {
+                  "@type": "type.googleapis.com/widgets.OpenPagePayload.SimplePageSpecification",
+                  "has_bottom_navbar": false,
+                  "has_search": false,
+                  "search_placeholder": "",
+                  "navigation_button": "UNKNOWN",
+                  "disable_silent_fetch": false
+                },
+                "page_type": "SIMPLE_PAGE",
+                "is_modal": true,
+                "rest_request_path": "/v8/open-platform/service-providers",
+                "grpc_request_path": "/service_providers.ServiceProviders/GetServiceProvidersPage"
+              },
+              "page_pop_link": false
+            },
+            "has_divider": true,
+            "has_notification": false,
+            "icon": {
+              "image_url_dark": "https://s100.divarcdn.com/static/imgs/widget-icons/dark/icon_secondary/v1/article-magnifier.png",
+              "image_url_light": "https://s100.divarcdn.com/static/imgs/widget-icons/light/icon_secondary/v1/article-magnifier.png",
+              "icon_name": "ARTICLE_MAGNIFIER",
+              "icon_color": "ICON_SECONDARY"
+            },
+            "notification_text": "",
+            "description": "",
+            "has_arrow": true,
+            "small": false,
+            "last_notification_date": "0001-01-01T00:00:00Z",
+            "uid": "",
+            "fullwidth": false,
+            "truncate_title": false
+          },
+          "visibility_condition": [],
+          "uid": "",
+          "reload_type": "BLOCKING"
+        }
+      ]
+    },
+    {
+      "section_name": "TAGS",
+      "widgets": [
+        {
+          "widget_type": "WRAPPER_ROW",
+          "data": {
+            "@type": "type.googleapis.com/widgets.WrapperRowData",
+            "chip_list": {
+              "chips": [
+                {
+                  "text": "فروش زمین و ملک کلنگی",
+                  "type": "ACTION",
+                  "style": "NORMAL",
+                  "rounded": false,
+                  "small": false,
+                  "action": {
+                    "type": "OPEN_POSTLIST_PAGE_GRPC",
+                    "payload": {
+                      "@type": "type.googleapis.com/widgets.OpenPostListPageGRPCPayload",
+                      "search_data": {
+                        "form_data": {
+                          "data": {
+                            "category": {
+                              "str": {
+                                "value": "plot-old"
+                              }
+                            }
+                          },
+                          "online_request_response_data": {}
+                        },
+                        "query": "",
+                        "query_input_type": "UNKNOWN"
+                      },
+                      "source_view": "CATEGORY_BREAD_CRUMB",
+                      "tooltip": "",
+                      "refresh": false,
+                      "source_view_str": "CATEGORY_BREAD_CRUMB",
+                      "is_not_link": false,
+                      "referer": "",
+                      "navigation_type": "NAVIGATION_TYPE_UNKNOWN"
+                    },
+                    "page_pop_link": false
+                  },
+                  "is_active": false
+                },
+                {
+                  "text": "فروش زمین و ملک کلنگی در سعادت‌آباد",
+                  "type": "ACTION",
+                  "style": "NORMAL",
+                  "rounded": false,
+                  "small": false,
+                  "action": {
+                    "type": "OPEN_POSTLIST_PAGE_GRPC",
+                    "payload": {
+                      "@type": "type.googleapis.com/widgets.OpenPostListPageGRPCPayload",
+                      "search_data": {
+                        "form_data": {
+                          "data": {
+                            "districts": {
+                              "repeated_string": {
+                                "value": [
+                                  "75"
+                                ]
+                              }
+                            },
+                            "category": {
+                              "str": {
+                                "value": "plot-old"
+                              }
+                            }
+                          },
+                          "online_request_response_data": {}
+                        },
+                        "query": "",
+                        "query_input_type": "UNKNOWN"
+                      },
+                      "source_view": "CATEGORY_BREAD_CRUMB",
+                      "tooltip": "",
+                      "refresh": false,
+                      "source_view_str": "CATEGORY_BREAD_CRUMB",
+                      "is_not_link": false,
+                      "referer": "",
+                      "navigation_type": "NAVIGATION_TYPE_UNKNOWN"
+                    },
+                    "page_pop_link": false
+                  },
+                  "is_active": false
+                }
+              ]
+            },
+            "padded": false
+          },
+          "visibility_condition": [],
+          "uid": "",
+          "reload_type": "BLOCKING"
+        }
+      ]
+    },
+    {
+      "section_name": "MAP",
+      "widgets": [
+        {
+          "widget_type": "MAP_ROW",
+          "data": {
+            "@type": "type.googleapis.com/widgets.MapRowData",
+            "location": {
+              "type": "FUZZY",
+              "fuzzy_data": {
+                "point": {
+                  "latitude": 35.78948761101271,
+                  "longitude": 51.38754875919325
+                },
+                "radius": 500
+              }
+            },
+            "image_url": "https://mapimage.divarcdn.com/v8/mapimage?encrypted_data=MTIzNDU2Nzg5MTIzXIidBH9T8qzuQqqctxO1avpL-0xJQZvYWlYJyyYZrYatgg==&is_nearby=true",
+            "preview_type": "STATIC_IMAGE"
+          },
+          "action_log": {
+            "server_side_info": {
+              "info": {
+                "@type": "type.googleapis.com/action_log.MapInfo",
+                "post_token": "gaNLnNp6"
+              },
+              "item_type": {
+                "type": "MAP"
+              }
+            },
+            "enabled": true
+          },
+          "visibility_condition": [],
+          "uid": "",
+          "reload_type": "BLOCKING"
+        }
+      ]
+    },
+    {
+      "section_name": "NOTE",
+      "widgets": [
+        {
+          "widget_type": "NOTE",
+          "data": {
+            "@type": "type.googleapis.com/widgets.NoteData",
+            "title": "یادداشت من",
+            "button_title": "ویرایش یادداشت",
+            "post_token": "gaNLnNp6",
+            "icon_button": {
+              "icon": {
+                "image_url_dark": "https://s100.divarcdn.com/static/imgs/widget-icons/dark/icon_secondary/v1/more_vert.png",
+                "image_url_light": "https://s100.divarcdn.com/static/imgs/widget-icons/light/icon_secondary/v1/more_vert.png",
+                "icon_name": "MORE_VERT",
+                "icon_color": "ICON_SECONDARY"
+              },
+              "action": {
+                "type": "LOAD_MENU",
+                "payload": {
+                  "@type": "type.googleapis.com/widgets.LoadMenuPayload",
+                  "menu": {
+                    "title": "",
+                    "items": [
+                      {
+                        "text": "ویرایش یادداشت",
+                        "icon": {
+                          "image_url_dark": "https://s100.divarcdn.com/static/imgs/widget-icons/dark/icon_secondary/v1/edit.png",
+                          "image_url_light": "https://s100.divarcdn.com/static/imgs/widget-icons/light/icon_secondary/v1/edit.png",
+                          "icon_name": "EDIT",
+                          "icon_color": "ICON_SECONDARY"
+                        },
+                        "disabled": false,
+                        "action": {
+                          "type": "NOTE",
+                          "payload": {
+                            "@type": "type.googleapis.com/widgets.NotePayload",
+                            "post_token": "gaNLnNp6",
+                            "max_character_count": 256
+                          },
+                          "page_pop_link": false
+                        },
+                        "alignment": "RIGHT",
+                        "state": "STATE_UNKNOWN"
+                      },
+                      {
+                        "text": "حذف یادداشت",
+                        "icon": {
+                          "image_url_dark": "https://s100.divarcdn.com/static/imgs/widget-icons/dark/icon_primary/v1/trash_o.png",
+                          "image_url_light": "https://s100.divarcdn.com/static/imgs/widget-icons/light/icon_primary/v1/trash_o.png",
+                          "icon_name": "TRASH_O",
+                          "icon_color": "ICON_PRIMARY"
+                        },
+                        "disabled": false,
+                        "action": {
+                          "type": "MAKE_NETWORK_CALL",
+                          "payload": {
+                            "@type": "type.googleapis.com/widgets.MakeNetworkCallPayload",
+                            "grpc_request_path": "/yaad_v2.YaadV2/DeleteNoteV2",
+                            "rest_request_path": "/yaad/delete-note-v2",
+                            "request_data": {
+                              "@type": "type.googleapis.com/yaad_v2.DeleteNoteV2Request.RequestData",
+                              "token": "gaNLnNp6"
+                            },
+                            "needs_auth": true
+                          },
+                          "page_pop_link": false
+                        },
+                        "alignment": "RIGHT",
+                        "state": "STATE_NEGATIVE"
+                      }
+                    ],
+                    "banner": {
+                      "title": "",
+                      "text": "",
+                      "image_url": ""
+                    }
+                  },
+                  "display_type": "LOAD_MENU_DISPLAY_TYPE_BOTTOM_SHEET"
+                },
+                "page_pop_link": false
+              },
+              "alt_text": "",
+              "disable": false
+            }
+          },
+          "visibility_condition": [],
+          "uid": "",
+          "reload_type": "BLOCKING"
+        }
+      ]
+    },
+    {
+      "section_name": "STATIC",
+      "widgets": [
+        {
+          "widget_type": "SELECTOR_ROW",
+          "data": {
+            "@type": "type.googleapis.com/widgets.SelectorRowData",
+            "title": "گزارش آگهی",
+            "image_url": "",
+            "action": {
+              "type": "OPEN_FORM_PAGE",
+              "payload": {
+                "@type": "type.googleapis.com/widgets.OpenFormPagePayload",
+                "grpc_servicer": "/post_quality.PostQualityFeedback/GetFeedbackForm",
+                "request_data": {
+                  "@type": "type.googleapis.com/post_quality.GetFeedbackFormRequest.RequestData",
+                  "post_token": "gaNLnNp6"
+                },
+                "rest_request_path": "/v8/post-quality/feedback-form"
+              },
+              "page_pop_link": false
+            },
+            "has_divider": true,
+            "has_notification": false,
+            "icon": {
+              "image_url_dark": "https://s100.divarcdn.com/static/imgs/widget-icons/dark/icon_secondary/v1/report.png",
+              "image_url_light": "https://s100.divarcdn.com/static/imgs/widget-icons/light/icon_secondary/v1/report.png",
+              "icon_name": "REPORT",
+              "icon_color": "ICON_SECONDARY"
+            },
+            "notification_text": "",
+            "description": "",
+            "has_arrow": false,
+            "small": false,
+            "last_notification_date": "0001-01-01T00:00:00Z",
+            "uid": "",
+            "fullwidth": false,
+            "truncate_title": false
+          },
+          "visibility_condition": [],
+          "uid": "",
+          "reload_type": "BLOCKING"
+        }
+      ]
+    }
+  ],
+  "share": {
+    "title": "زمین ۲۲۰۴متر پهنه زمین R241",
+    "web_url": "https://divar.ir/v/gaNLnNp6",
+    "image_url": ""
+  },
+  "seo": {
+    "title": "فروش زمین ۲۲۰۴متر پهنه زمین R241 در تهران - ۲۱ مهر ۱۴۰۵",
+    "description": "آگهی زمین ۲۲۰۴متر پهنه زمین R241 در دیوار تهران",
+    "android_package_name": "ir.divar",
+    "android_app_url": "android-app://ir.divar/http/v/زمین ۲۲۰۴متر پهنه زمین R241/gaNLnNp6/",
+    "web_info": {
+      "title": "زمین ۲۲۰۴متر پهنه زمین R241",
+      "district_persian": "سعادت‌آباد",
+      "city_persian": "تهران",
+      "category_slug_persian": "فروش زمین و ملک کلنگی"
+    },
+    "unavailable_after": "2026-11-13T03:22:13.213594",
+    "bread_crumb": []
+  },
+  "contact": {
+    "chat_enabled": true,
+    "apply_enabled": false,
+    "contact_encrypted_data": "",
+    "secure_call_enabled": false,
+    "experimental_api_enabled": false,
+    "action_log": {
+      "server_side_info": {
+        "info": {
+          "@type": "type.googleapis.com/action_log.ContactInfoInfo",
+          "post_token": "gaNLnNp6",
+          "source_view": "",
+          "event_id": "",
+          "method_name": "GetContactWeb",
+          "experimental_api_enabled": false,
+          "contact_uuid": "00000000-0000-0000-0000-000000000000",
+          "contact_layer_experiment_id": 0,
+          "tracker_session_id": "",
+          "call_method": "UNKNOWN"
+        },
+        "item_type": {
+          "type": "CONTACT_INFO"
+        }
+      },
+      "enabled": true
+    },
+    "contact_uuid": "00000000-0000-0000-0000-000000000000",
+    "tracker_session_id": "",
+    "supplier_chat_assistant_enabled": false,
+    "eshop_enabled": false
+  },
+  "webengage": {
+    "district": "saadat-abad",
+    "business_type": "personal",
+    "gender": "",
+    "cat_2": "residential-sell",
+    "category": "plot-old",
+    "rent": 0,
+    "brand_model": "",
+    "image_count": 1,
+    "token": "gaNLnNp6",
+    "source_view": "",
+    "cat_1": "real-estate",
+    "city": "tehran",
+    "business_ref": "",
+    "price": 671999983616,
+    "cat_3": "plot-old",
+    "status": "",
+    "originality": "",
+    "credit": 0
+  },
+  "analytics": {
+    "cat1": "real-estate",
+    "cat2": "residential-sell",
+    "cat3": "plot-old",
+    "city": "tehran"
+  },
+  "city": {
+    "city_id": "1",
+    "name": "تهران",
+    "parent_id": "904",
+    "is_province": false,
+    "second_slug": "tehran"
+  }
+}

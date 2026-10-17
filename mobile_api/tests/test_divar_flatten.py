@@ -24,7 +24,12 @@ class DivarFlattenTest(SimpleTestCase):
         detail = {
             'seo': {'web_info': {'title': 'اجاره آپارتمان', 'city_persian': 'تهران'}},
             'share': {'web_url': 'https://divar.ir/v/abc123'},
-            'webengage': {'token': 'abc123', 'business_type': 'personal'},
+            'webengage': {
+                'token': 'abc123',
+                'business_type': 'personal',
+                'credit': 999,
+                'rent': 888,
+            },
             'sections': [
                 {
                     'section_name': 'LIST_DATA',

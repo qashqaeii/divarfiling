@@ -126,6 +126,291 @@ def parse_money_to_int(text: str) -> Optional[int]:
     return amount
 
 
+_TOTAL_PRICE_TITLES = frozenset({"قیمت کل", "قیمت کل ملک"})
+_RENT_CONVERT_NON_PATTERN = re.compile(r"غیر\s*قابل\s*تبدیل|غیرقابل\s*تبدیل")
+_JALALI_MONTH_BY_NAME = {
+    "فروردین": 1,
+    "اردیبهشت": 2,
+    "خرداد": 3,
+    "تیر": 4,
+    "مرداد": 5,
+    "شهریور": 6,
+    "مهر": 7,
+    "آبان": 8,
+    "آذر": 9,
+    "دی": 10,
+    "بهمن": 11,
+    "اسفند": 12,
+}
+_TEXTUAL_PRICE_LABELS = frozenset({"توافقی", "متعارف", "رایگان", "رهن کامل"})
+_AREA_UNIT_SUFFIX_RE = re.compile(
+    r"[\s\u200c\u200f\u200e]*(متر\s*مربع|مترمربع|متر\s*زمین|متر)?\s*$",
+    re.IGNORECASE,
+)
+
+
+def parse_area_sqm(text: Any) -> Optional[float]:
+    """استخراج متراژ به متر مربع از متن نمایشی دیوار."""
+    if text is None:
+        return None
+    val_str = str(text).strip()
+    if not val_str or val_str in ("-", "—", "Unknown", "unknown", "nan", "None"):
+        return None
+    val_str = to_english_digits(val_str)
+    val_str = re.sub(r"[\s\u200c\u200f\u200e]+", " ", val_str).strip()
+    val_str = _AREA_UNIT_SUFFIX_RE.sub("", val_str).strip()
+    val_str = val_str.replace("٬", "").replace(",", "").replace("،", "").replace(" ", "")
+    if not val_str:
+        return None
+    if not re.fullmatch(r"\d+\.?\d*", val_str):
+        match = re.search(r"(\d+(?:\.\d+)?)", val_str)
+        if not match:
+            return None
+        val_str = match.group(1)
+    try:
+        num = float(val_str)
+    except ValueError:
+        return None
+    if num <= 0:
+        return None
+    return num
+
+
+def format_metraj_export(val: Any) -> str:
+    """خروجی ستون متراژ — «-» یعنی نامشخص (نه صفر)."""
+    if val is None:
+        return "-"
+    try:
+        import pandas as pd
+        if pd.isna(val):
+            return "-"
+    except Exception:
+        pass
+    parsed = parse_area_sqm(val)
+    if parsed is None:
+        s = str(val).strip()
+        return "-" if not s or s == "-" else "-"
+    if parsed == int(parsed):
+        return str(int(parsed))
+    return str(parsed)
+
+
+def _is_textual_price(value: str) -> bool:
+    v = str(value or "").strip()
+    if not v:
+        return False
+    for label in _TEXTUAL_PRICE_LABELS:
+        if label in v:
+            return True
+    return parse_money_to_int(v) is None and bool(re.search(r"[^\d\s,.\-٬،]", v))
+
+
+def _resolve_total_price_num(
+    display: str,
+    parsed: Optional[int],
+    webengage: Dict[str, Any],
+) -> Optional[int]:
+    if parsed is not None:
+        return parsed
+    display_s = str(display or "").strip()
+    if display_s:
+        if _is_textual_price(display_s):
+            return None
+        return None
+    we_price = webengage.get("price")
+    return we_price if isinstance(we_price, int) else None
+
+
+def _parse_slider_money(val: Any) -> Optional[int]:
+    if val is None or val == "":
+        return None
+    if isinstance(val, bool):
+        return None
+    if isinstance(val, int):
+        return val
+    if isinstance(val, float):
+        try:
+            return int(val)
+        except (ValueError, OverflowError):
+            return None
+    return parse_money_to_int(str(val))
+
+
+def _rent_convertibility_from_feature_title(fr_title: str) -> str:
+    t = str(fr_title or "").strip()
+    if not t:
+        return ""
+    if _RENT_CONVERT_NON_PATTERN.search(t):
+        return "غیر قابل تبدیل"
+    if "قابل تبدیل" in t:
+        return "قابل تبدیل"
+    return ""
+
+
+def _strip_schedule_prefix(text: str) -> str:
+    t = str(text or "").strip()
+    for label in (
+        "انتشار",
+        "تاریخ انتشار",
+        "آخرین نردبان",
+        "آخرین به‌روزرسانی",
+        "بروزرسانی",
+    ):
+        if t.startswith(label):
+            rest = t[len(label):].strip()
+            if rest.startswith(":") or rest.startswith("："):
+                return rest[1:].strip()
+            return rest
+    return t
+
+
+def parse_divar_schedule_label(text: str) -> Optional[str]:
+    """تبدیل «۲۱ شهریور ۱۴۰۵، ۱۳:۳۴» به 1405/06/21 13:34."""
+    raw = _strip_schedule_prefix(text)
+    t = to_english_digits(raw).replace("،", ",").strip()
+    t = t.replace("‌", " ").replace("\u200c", " ")
+    match = re.search(r"(\d{1,2})\s+(\S+)\s+(\d{4})", t)
+    if not match:
+        return None
+    day = int(match.group(1))
+    month_name = match.group(2).strip()
+    year = int(match.group(3))
+    month = _JALALI_MONTH_BY_NAME.get(month_name)
+    if not month or not (1300 <= year <= 1500) or not (1 <= day <= 31):
+        return None
+    time_match = re.search(r"(\d{1,2}):(\d{2})", t)
+    if time_match:
+        hour = int(time_match.group(1))
+        minute = int(time_match.group(2))
+        return f"{year}/{month:02d}/{day:02d} {hour:02d}:{minute:02d}"
+    return f"{year}/{month:02d}/{day:02d} 00:00"
+
+
+def _format_shamsi_export_datetime(value: str) -> str:
+    """خروجی یکنواخت شمسی با دقت دقیقه (بدون ثانیهٔ ساختگی)."""
+    s = str(value or "").strip()
+    if not s or s in ("-", "—"):
+        return ""
+    if len(s) >= 19 and s[4] == "/" and s[13] == ":" and s[16] == ":":
+        return s[:16]
+    return s
+
+
+def _classify_schedule_line(line: str) -> Optional[str]:
+    t = str(line or "").strip()
+    if not t:
+        return None
+    if t.startswith("انتشار") or "انتشار آگهی" in t[:24]:
+        return "published"
+    if "نردبان" in t:
+        return "last_bumped"
+    if "به‌روز" in t or "بروز" in t:
+        return "last_updated"
+    return None
+
+
+def _extract_publish_schedule_from_detail(sections: List[Dict[str, Any]]) -> Dict[str, str]:
+    out = {"published": "", "last_bumped": "", "last_updated": ""}
+    for sec in sections or []:
+        if sec.get("section_name") != "TITLE":
+            continue
+        for w in sec.get("widgets") or []:
+            widget_lists: List[List[Dict[str, Any]]] = []
+            if w.get("widget_type") == "EXPANDABLE_SECTION":
+                widget_lists.append(safe_get(w, ["data", "widget_list"]) or [])
+            elif w.get("widget_type") == "DESCRIPTION_ROW":
+                widget_lists.append([w])
+            for wl in widget_lists:
+                for iw in wl:
+                    if iw.get("widget_type") != "DESCRIPTION_ROW":
+                        continue
+                    text = str(safe_get(iw, ["data", "text"]) or "").strip()
+                    if not text:
+                        continue
+                    lines = text.splitlines() if "\n" in text else [text]
+                    for line in lines:
+                        kind = _classify_schedule_line(line)
+                        if not kind:
+                            continue
+                        parsed = parse_divar_schedule_label(line)
+                        if parsed:
+                            out[kind] = _format_shamsi_export_datetime(parsed)
+    return out
+
+
+def _publish_shamsi_from_flat_fields(row: Dict[str, Any]) -> Optional[str]:
+    for key in ("انتشار_تاریخ_شمسی", "created_at"):
+        val = row.get(key)
+        if val is None:
+            continue
+        s = str(val).strip()
+        if s and s not in ("-", "—", "nan", "None"):
+            return s
+    return None
+
+
+def _series_created_shamsi_from_df(df: Any, get_col) -> List[str]:
+    """تاریخ انتشار — فقط از منبع واقعی دیوار؛ بدون انقضا منهای ۳۰ روز."""
+    import pandas as pd
+
+    publish_col = get_col("انتشار_تاریخ_شمسی") if "انتشار_تاریخ_شمسی" in df.columns else None
+    created_dates: List[str] = []
+    for idx in range(len(df)):
+        if publish_col is not None:
+            pv = publish_col.iloc[idx]
+            if not pd.isna(pv) and str(pv).strip() not in ("", "-"):
+                created_dates.append(_format_shamsi_export_datetime(str(pv).strip()) or "-")
+                continue
+        created_dates.append("-")
+    return created_dates
+
+
+def _apply_created_shamsi_column(df: Any, get_col, result_df: Any, column_name: str = "ایجاد آگهی") -> None:
+    """ستون ایجاد آگهی/تاریخ انتشار — بدون ساخت تاریخ از unavailable_after."""
+    import pandas as pd
+
+    if column_name in df.columns:
+        excel_col = get_col(column_name).copy()
+    else:
+        excel_col = pd.Series(["-"] * len(df), index=df.index)
+
+    publish_col = get_col("انتشار_تاریخ_شمسی") if "انتشار_تاریخ_شمسی" in df.columns else None
+    if publish_col is not None:
+        for idx in range(len(df)):
+            pv = publish_col.iloc[idx]
+            if pd.isna(pv) or str(pv).strip() in ("", "-"):
+                continue
+            formatted = _format_shamsi_export_datetime(str(pv).strip())
+            if formatted:
+                excel_col.iloc[idx] = formatted
+
+    result_df[column_name] = excel_col.apply(
+        lambda x: "-" if (pd.isna(x) or str(x).strip() in ("", "-")) else _format_shamsi_export_datetime(str(x).strip()) or str(x).strip()
+    )
+
+
+def _optional_schedule_columns_from_df(df: Any, get_col, result_df: Any) -> None:
+    """ستون‌های اختیاری زمان‌بندی در خروجی اکسل."""
+    import pandas as pd
+
+    mapping = (
+        ("انتشار_تاریخ_شمسی", "تاریخ انتشار"),
+        ("انتشار_آخرین_نردبان_شمسی", "آخرین نردبان"),
+        ("انتشار_آخرین_به‌روزرسانی_شمسی", "آخرین به‌روزرسانی"),
+    )
+    for source_key, excel_col in mapping:
+        if source_key not in df.columns:
+            continue
+        col = get_col(source_key)
+        values = []
+        for val in col:
+            if pd.isna(val) or str(val).strip() in ("", "-"):
+                values.append("-")
+            else:
+                values.append(str(val).strip())
+        result_df[excel_col] = pd.Series(values)
+
+
 GEO_COORD_EXCEL_COLUMNS = ("عرض جغرافیایی", "طول جغرافیایی")
 GEO_COORD_TEXT_FORMAT = "@"
 
@@ -513,7 +798,11 @@ def _assign_spec_field(out: Dict[str, Any], title: str, value: str) -> None:
         return
     key = "ساخت" if t == "سال ساخت" else t
     if key in _SPEC_FIELD_TITLES or key in ("متراژ", "اتاق", "طبقه", "ساخت"):
-        out[key] = v
+        if key == "متراژ":
+            formatted = format_metraj_export(v)
+            out[key] = formatted if formatted != "-" else v
+        else:
+            out[key] = v
 
 
 def _parse_subtitle_specs(text: str) -> Dict[str, str]:
@@ -1264,7 +1553,7 @@ def flatten_post_detail(detail: Dict[str, Any]) -> Dict[str, Any]:
                 elif wtype == "UNEXPANDABLE_ROW":
                     title = str(safe_get(w, ["data", "title"]) or "").strip()
                     value = str(safe_get(w, ["data", "value"]) or "").strip()
-                    if title == "قیمت کل":
+                    if title in _TOTAL_PRICE_TITLES:
                         total_price = value
                         total_price_num = parse_money_to_int(value)
                     elif title == "قیمت هر متر":
@@ -1279,34 +1568,39 @@ def flatten_post_detail(detail: Dict[str, Any]) -> Dict[str, Any]:
                     elif title in ("ودیعه و اجاره", "رهن و اجاره"):
                         rent_convertibility = value
                     elif title or value:
-                        attrs_list.append(f"{title}:{value}")
+                        attr_val = value
+                        if title.strip() == "متراژ":
+                            formatted = format_metraj_export(value)
+                            if formatted != "-":
+                                attr_val = formatted
+                        attrs_list.append(f"{title}:{attr_val}")
                         _assign_spec_field(out, title, value)
                 elif wtype == "FEATURE_ROW":
                     # برخی آگهی‌ها فقط یک متن دربارهٔ قابلیت تبدیل دارند
                     # فقط اگر rent_convertibility قبلاً تنظیم نشده باشد
                     if not rent_convertibility:
                         fr_title = str(safe_get(w, ["data", "title"]) or "").strip()
-                        if fr_title:
-                            # بررسی "قابل تبدیل"
-                            if "قابل تبدیل" in fr_title:
-                                rent_convertibility = "قابل تبدیل"
-                            # بررسی "غیر قابل تبدیل" (برای اطمینان)
-                            elif "غیر قابل تبدیل" in fr_title or "غیرقابل تبدیل" in fr_title:
-                                rent_convertibility = "غیر قابل تبدیل"
+                        conv = _rent_convertibility_from_feature_title(fr_title)
+                        if conv:
+                            rent_convertibility = conv
                 elif wtype == "RENT_SLIDER":
                     # RENT_SLIDER نشان‌دهنده قابل تبدیل بودن است
                     has_rent_slider = True
-                    c_val = safe_get(w, ["data", "credit", "value"]) or ""
-                    c_tr = safe_get(w, ["data", "credit", "transformed_value"]) or ""
-                    r_val = safe_get(w, ["data", "rent", "value"]) or ""
-                    r_tr = safe_get(w, ["data", "rent", "transformed_value"]) or ""
-                    slider_credit_value = parse_money_to_int(str(c_val))
-                    slider_credit_transformed = parse_money_to_int(str(c_tr))
-                    slider_rent_value = parse_money_to_int(str(r_val))
-                    slider_rent_transformed = parse_money_to_int(str(r_tr))
+                    c_val = safe_get(w, ["data", "credit", "value"])
+                    c_tr = safe_get(w, ["data", "credit", "transformed_value"])
+                    r_val = safe_get(w, ["data", "rent", "value"])
+                    r_tr = safe_get(w, ["data", "rent", "transformed_value"])
+                    slider_credit_value = _parse_slider_money(c_val)
+                    slider_credit_transformed = _parse_slider_money(c_tr)
+                    slider_rent_value = _parse_slider_money(r_val)
+                    slider_rent_transformed = _parse_slider_money(r_tr)
+    if out.get("متراژ"):
+        area_num = parse_area_sqm(out.get("متراژ"))
+        if area_num is not None:
+            out["متراژ_عدد"] = area_num
     out["price_text"] = total_price
     out["مالی_قیمت_کل_نمایش"] = total_price
-    out["مالی_قیمت_کل_عدد"] = total_price_num if total_price_num is not None else webengage.get("price")
+    out["مالی_قیمت_کل_عدد"] = _resolve_total_price_num(total_price, total_price_num, webengage)
     if price_per_meter:
         attrs_list.append(f"قیمت هر متر:{price_per_meter}")
     out["مالی_قیمت_هر_متر_نمایش"] = price_per_meter
@@ -1315,12 +1609,11 @@ def flatten_post_detail(detail: Dict[str, Any]) -> Dict[str, Any]:
     out["مالی_منبع_قیمت_وب‌انگیج"] = webengage.get("price")
 
     # اجاره
-    # تکمیل از RENT_SLIDER در صورت نبود دادهٔ صریح
+    # تکمیل از RENT_SLIDER در صورت نبود دادهٔ صریح (مقدار اصلی، نه transformed)
     if deposit_num is None:
-        # ابتدا transformed سپس value
-        deposit_num = slider_credit_transformed if slider_credit_transformed is not None else slider_credit_value
+        deposit_num = slider_credit_value
     if rent_monthly_num is None:
-        rent_monthly_num = slider_rent_transformed if slider_rent_transformed is not None else slider_rent_value
+        rent_monthly_num = slider_rent_value
     # تکمیل از webengage در صورت نبود
     if deposit_num is None:
         deposit_num = webengage.get("credit") if isinstance(webengage.get("credit"), int) else None
@@ -1329,8 +1622,10 @@ def flatten_post_detail(detail: Dict[str, Any]) -> Dict[str, Any]:
 
     out["اجاره_ودیعه_نمایش"] = deposit_text
     out["اجاره_ودیعه_عدد"] = deposit_num
+    out["اجاره_ودیعه_تبدیل_عدد"] = slider_credit_transformed
     out["اجاره_ماهانه_نمایش"] = rent_monthly_text
     out["اجاره_ماهانه_عدد"] = rent_monthly_num
+    out["اجاره_ماهانه_تبدیل_عدد"] = slider_rent_transformed
 
     if rent_convertibility:
         out["اجاره_قابل_تبدیل"] = rent_convertibility
@@ -1477,8 +1772,12 @@ def flatten_post_detail(detail: Dict[str, Any]) -> Dict[str, Any]:
     out["برچسب‌ها"] = " | ".join(tags)
 
     # انتشار
-    out["created_at"] = ""
-    out["انتشار_تاریخ_شمسی"] = ""
+    schedule = _extract_publish_schedule_from_detail(sections)
+    published_shamsi = schedule.get("published") or ""
+    out["created_at"] = published_shamsi
+    out["انتشار_تاریخ_شمسی"] = published_shamsi
+    out["انتشار_آخرین_نردبان_شمسی"] = schedule.get("last_bumped") or ""
+    out["انتشار_آخرین_به‌روزرسانی_شمسی"] = schedule.get("last_updated") or ""
     out["انتشار_تاریخ_میلادی"] = ""
     out["انتشار_unavailable_after"] = safe_get(seo, ["unavailable_after"]) or ""
 
@@ -1937,23 +2236,7 @@ def _export_to_excel_sell(df: Any, output_path: str, export_columns: Optional[Li
 
     # Helper function برای استخراج عدد از رشته متراژ
     def extract_number_from_metraj(val):
-        """استخراج عدد از رشته متراژ (مثلاً "۲۴۴ متر" -> "۲۴۴")"""
-        if pd.isna(val) or val == "" or val is None or val == "-":
-            return "-"
-        val_str = str(val).strip()
-        if not val_str or val_str == "-":
-            return "-"
-
-        # حذف کلمه "متر" و فاصله‌ها
-        val_str = val_str.replace("متر", "").strip()
-
-        # استخراج اعداد (فارسی و انگلیسی)
-        numbers = re.findall(r'[\d۰-۹]+', val_str)
-        if numbers:
-            persian_to_english = str.maketrans('۰۱۲۳۴۵۶۷۸۹', '0123456789')
-            number = numbers[0].translate(persian_to_english)
-            return number
-        return "-"
+        return format_metraj_export(val)
 
     # 1. شناسه
     result_df["شناسه"] = combine_excel_and_source("شناسه", "token")
@@ -1967,141 +2250,9 @@ def _export_to_excel_sell(df: Any, output_path: str, export_columns: Optional[Li
     # 4. شماره تماس (ستون خالی)
     result_df["شماره تماس"] = pd.Series(["-"] * len(df))
     
-    # 5. ایجاد آگهی
-    if "ایجاد آگهی" in df.columns:
-        # اگر ستون اکسل وجود دارد، از آن استفاده می‌کنیم
-        excel_col = get_col("ایجاد آگهی").copy()
-        # برای ردیف‌هایی که مقدار ندارند یا "-" هستند، از ستون اصلی استفاده می‌کنیم
-        if "انتشار_unavailable_after" in df.columns:
-            expiry_col = get_col("انتشار_unavailable_after")
-            try:
-                import jdatetime
-            except ImportError:
-                import subprocess
-                subprocess.check_call([sys.executable, "-m", "pip", "install", "jdatetime"])
-                import jdatetime
-            
-            def calc_created_from_expiry(val):
-                if pd.isna(val) or val == "" or val is None:
-                    return None
-                try:
-                    val_str = str(val).strip()
-                    formats = ["%Y-%m-%dT%H:%M:%S.%f", "%Y-%m-%dT%H:%M:%S", "%Y-%m-%d %H:%M:%S"]
-                    val_clean = val_str.split("+")[0].split("Z")[0]
-                    if "T" in val_clean:
-                        parts = val_clean.split("T")
-                        if len(parts) == 2:
-                            date_part = parts[0]
-                            time_part = parts[1].split(".")[0]
-                            val_clean = f"{date_part} {time_part}"
-                    
-                    dt = None
-                    for fmt in formats:
-                        try:
-                            dt = datetime.strptime(val_clean.strip(), fmt)
-                            break
-                        except:
-                            continue
-                    
-                    if dt:
-                        created_dt = dt - timedelta(days=30)
-                        jdt = jdatetime.datetime.fromgregorian(datetime=created_dt)
-                        return jdt.strftime("%Y/%m/%d %H:%M:%S")
-                except:
-                    pass
-                return None
-            
-            # برای ردیف‌هایی که مقدار ندارند یا "-" هستند، از ستون اصلی استفاده می‌کنیم
-            calculated_col = expiry_col.apply(calc_created_from_expiry)
-            excel_col = excel_col.fillna(calculated_col)
-            # همچنین مقادیر "-" را با مقادیر محاسبه شده جایگزین می‌کنیم
-            mask = (excel_col == "-") | (excel_col == "") | excel_col.isna()
-            excel_col[mask] = calculated_col[mask]
-            
-            result_df["ایجاد آگهی"] = excel_col
-        else:
-            result_df["ایجاد آگهی"] = excel_col
-    else:
-        # محاسبه از زیرعنوان یا انقضا
-        try:
-            import jdatetime
-        except ImportError:
-            import subprocess
-            subprocess.check_call([sys.executable, "-m", "pip", "install", "jdatetime"])
-            import jdatetime
-        
-        def convert_to_shamsi(val):
-            """تبدیل تاریخ میلادی به شمسی"""
-            if pd.isna(val) or val == "" or val is None:
-                return "-"
-            val_str = str(val).strip()
-            if not val_str or val_str == "-":
-                return "-"
-            try:
-                # تلاش برای پارس کردن تاریخ میلادی
-                formats = ["%Y-%m-%dT%H:%M:%S.%f", "%Y-%m-%dT%H:%M:%S", "%Y-%m-%d %H:%M:%S", "%Y-%m-%d"]
-                val_clean = val_str.split("+")[0].split("Z")[0]
-                if "T" in val_clean:
-                    parts = val_clean.split("T")
-                    if len(parts) == 2:
-                        date_part = parts[0]
-                        time_part = parts[1].split(".")[0]
-                        val_clean = f"{date_part} {time_part}"
-                
-                dt = None
-                for fmt in formats:
-                    try:
-                        dt = datetime.strptime(val_clean.strip(), fmt)
-                        break
-                    except:
-                        continue
-                
-                if dt:
-                    jdt = jdatetime.datetime.fromgregorian(datetime=dt)
-                    return jdt.strftime("%Y/%m/%d %H:%M:%S")
-                return val_str
-            except:
-                return val_str
-        
-        # ایجاد آگهی: از انقضا 30 روز کم می‌کنیم
-        expiry_col = get_col("انتشار_unavailable_after")
-        created_dates = []
-        if len(expiry_col) > 0 and expiry_col.notna().any():
-            for val in expiry_col:
-                if pd.isna(val) or val == "" or val is None:
-                    created_dates.append("-")
-                    continue
-                try:
-                    val_str = str(val).strip()
-                    formats = ["%Y-%m-%dT%H:%M:%S.%f", "%Y-%m-%dT%H:%M:%S", "%Y-%m-%d %H:%M:%S"]
-                    val_clean = val_str.split("+")[0].split("Z")[0]
-                    if "T" in val_clean:
-                        parts = val_clean.split("T")
-                        if len(parts) == 2:
-                            date_part = parts[0]
-                            time_part = parts[1].split(".")[0]
-                            val_clean = f"{date_part} {time_part}"
-                    
-                    dt = None
-                    for fmt in formats:
-                        try:
-                            dt = datetime.strptime(val_clean.strip(), fmt)
-                            break
-                        except:
-                            continue
-                    
-                    if dt:
-                        # 30 روز قبل از انقضا = تاریخ ایجاد
-                        created_dt = dt - timedelta(days=30)
-                        jdt = jdatetime.datetime.fromgregorian(datetime=created_dt)
-                        created_dates.append(jdt.strftime("%Y/%m/%d %H:%M:%S"))
-                    else:
-                        created_dates.append("-")
-                except:
-                    created_dates.append("-")
-        else:
-            created_dates = ["-"] * len(df)
-        result_df["ایجاد آگهی"] = created_dates
+    # 5. ایجاد آگهی (فقط تاریخ واقعی انتشار — بدون unavailable_after - 30)
+    _apply_created_shamsi_column(df, get_col, result_df, "ایجاد آگهی")
+    _optional_schedule_columns_from_df(df, get_col, result_df)
     
     # 6. انقضا آگهی
     if "انقضا آگهی" in df.columns:
@@ -2271,6 +2422,8 @@ def _export_to_excel_sell(df: Any, output_path: str, export_columns: Optional[Li
         else:
             metras = ["-"] * len(df)
         result_df["متراژ"] = pd.Series(metras)
+    if "متراژ" in result_df.columns:
+        result_df["متراژ"] = result_df["متراژ"].apply(extract_number_from_metraj)
 
     def extract_from_attributes(attr_key, default="-"):
         """استخراج مقدار از attributes بر اساس کلید."""
@@ -2764,24 +2917,7 @@ def _export_to_excel_rent(df: Any, output_path: str, export_columns: Optional[Li
     
     # Helper function برای استخراج عدد از رشته متراژ
     def extract_number_from_metraj(val):
-        """استخراج عدد از رشته متراژ (مثلاً "۲۴۴ متر" -> "۲۴۴")"""
-        if pd.isna(val) or val == "" or val is None or val == "-":
-            return "-"
-        val_str = str(val).strip()
-        if not val_str or val_str == "-":
-            return "-"
-        
-        # حذف کلمه "متر" و فاصله‌ها
-        val_str = val_str.replace("متر", "").strip()
-        
-        # استخراج اعداد (فارسی و انگلیسی)
-        numbers = re.findall(r'[\d۰-۹]+', val_str)
-        if numbers:
-            # تبدیل اعداد فارسی به انگلیسی
-            persian_to_english = str.maketrans('۰۱۲۳۴۵۶۷۸۹', '0123456789')
-            number = numbers[0].translate(persian_to_english)
-            return number
-        return "-"
+        return format_metraj_export(val)
     
     # Helper function برای بررسی اینکه آیا مقدار عددی خالص است
     def is_pure_numeric(val):
@@ -3150,134 +3286,9 @@ def _export_to_excel_rent(df: Any, output_path: str, export_columns: Optional[Li
         video_col = get_col("رسانه_ویدیو")
         result_df["ویدیو دارد؟"] = video_col.apply(lambda x: "دارد" if x and str(x).strip() else "ندارد")
     
-    # 24. ایجاد آگهی (محاسبه از انقضا - 30 روز)
-    try:
-        import jdatetime
-    except ImportError:
-        import subprocess
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "jdatetime"])
-        import jdatetime
-    
-    if "ایجاد آگهی" in df.columns:
-        # اگر ستون اکسل وجود دارد، از آن استفاده می‌کنیم
-        excel_col = get_col("ایجاد آگهی").copy()
-        # برای ردیف‌هایی که مقدار ندارند یا "-" هستند، از ستون اصلی استفاده می‌کنیم
-        if "انتشار_unavailable_after" in df.columns:
-            expiry_col = get_col("انتشار_unavailable_after")
-            
-            def calc_created_from_expiry(val):
-                if pd.isna(val) or val == "" or val is None:
-                    return None
-                try:
-                    val_str = str(val).strip()
-                    formats = ["%Y-%m-%dT%H:%M:%S.%f", "%Y-%m-%dT%H:%M:%S", "%Y-%m-%d %H:%M:%S"]
-                    val_clean = val_str.split("+")[0].split("Z")[0]
-                    if "T" in val_clean:
-                        parts = val_clean.split("T")
-                        if len(parts) == 2:
-                            date_part = parts[0]
-                            time_part = parts[1].split(".")[0]
-                            val_clean = f"{date_part} {time_part}"
-                    
-                    dt = None
-                    for fmt in formats:
-                        try:
-                            dt = datetime.strptime(val_clean.strip(), fmt)
-                            break
-                        except:
-                            continue
-                    
-                    if dt:
-                        created_dt = dt - timedelta(days=30)
-                        jdt = jdatetime.datetime.fromgregorian(datetime=created_dt)
-                        return jdt.strftime("%Y/%m/%d %H:%M:%S")
-                except:
-                    pass
-                return None
-            
-            # برای ردیف‌هایی که مقدار ندارند یا "-" هستند، از ستون اصلی استفاده می‌کنیم
-            calculated_col = expiry_col.apply(calc_created_from_expiry)
-            excel_col = excel_col.fillna(calculated_col)
-            # همچنین مقادیر "-" را با مقادیر محاسبه شده جایگزین می‌کنیم
-            mask = (excel_col == "-") | (excel_col == "") | excel_col.isna()
-            excel_col[mask] = calculated_col[mask]
-            
-            result_df["ایجاد آگهی"] = excel_col
-        else:
-            result_df["ایجاد آگهی"] = excel_col
-    else:
-        # محاسبه از انقضا
-        def convert_to_shamsi(val):
-            """تبدیل تاریخ میلادی به شمسی"""
-            if pd.isna(val) or val == "" or val is None:
-                return "-"
-            val_str = str(val).strip()
-            if not val_str or val_str == "-":
-                return "-"
-            try:
-                formats = ["%Y-%m-%dT%H:%M:%S.%f", "%Y-%m-%dT%H:%M:%S", "%Y-%m-%d %H:%M:%S", "%Y-%m-%d"]
-                val_clean = val_str.split("+")[0].split("Z")[0]
-                if "T" in val_clean:
-                    parts = val_clean.split("T")
-                    if len(parts) == 2:
-                        date_part = parts[0]
-                        time_part = parts[1].split(".")[0]
-                        val_clean = f"{date_part} {time_part}"
-                
-                dt = None
-                for fmt in formats:
-                    try:
-                        dt = datetime.strptime(val_clean.strip(), fmt)
-                        break
-                    except:
-                        continue
-                
-                if dt:
-                    jdt = jdatetime.datetime.fromgregorian(datetime=dt)
-                    return jdt.strftime("%Y/%m/%d %H:%M:%S")
-                return val_str
-            except:
-                return val_str
-        
-        # ایجاد آگهی: از انقضا 30 روز کم می‌کنیم
-        expiry_col = get_col("انتشار_unavailable_after")
-        created_dates = []
-        if len(expiry_col) > 0 and expiry_col.notna().any():
-            for val in expiry_col:
-                if pd.isna(val) or val == "" or val is None:
-                    created_dates.append("-")
-                    continue
-                try:
-                    val_str = str(val).strip()
-                    formats = ["%Y-%m-%dT%H:%M:%S.%f", "%Y-%m-%dT%H:%M:%S", "%Y-%m-%d %H:%M:%S"]
-                    val_clean = val_str.split("+")[0].split("Z")[0]
-                    if "T" in val_clean:
-                        parts = val_clean.split("T")
-                        if len(parts) == 2:
-                            date_part = parts[0]
-                            time_part = parts[1].split(".")[0]
-                            val_clean = f"{date_part} {time_part}"
-                    
-                    dt = None
-                    for fmt in formats:
-                        try:
-                            dt = datetime.strptime(val_clean.strip(), fmt)
-                            break
-                        except:
-                            continue
-                    
-                    if dt:
-                        # 30 روز قبل از انقضا = تاریخ ایجاد
-                        created_dt = dt - timedelta(days=30)
-                        jdt = jdatetime.datetime.fromgregorian(datetime=created_dt)
-                        created_dates.append(jdt.strftime("%Y/%m/%d %H:%M:%S"))
-                    else:
-                        created_dates.append("-")
-                except:
-                    created_dates.append("-")
-        else:
-            created_dates = ["-"] * len(df)
-        result_df["ایجاد آگهی"] = created_dates
+    # 24. ایجاد آگهی (فقط تاریخ واقعی انتشار)
+    _apply_created_shamsi_column(df, get_col, result_df, "ایجاد آگهی")
+    _optional_schedule_columns_from_df(df, get_col, result_df)
     
     # 25. انقضا آگهی
     if "انقضا آگهی" in df.columns:

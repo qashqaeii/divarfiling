@@ -6,6 +6,7 @@ from datetime import date, datetime
 from typing import Any, Dict, List, Optional, Tuple
 
 import jdatetime
+from django.utils import timezone as dj_tz
 
 from workspace.services.columns import COLUMN_ALIASES
 from workspace.services.formatting import format_area, format_toman
@@ -381,6 +382,8 @@ def _format_date_display(value: Any) -> Optional[str]:
     dt = _try_parse_date(value)
     if dt:
         try:
+            if dj_tz.is_aware(dt):
+                dt = dj_tz.localtime(dt)
             jdt = jdatetime.datetime.fromgregorian(datetime=dt)
             if jdt.hour or jdt.minute:
                 return jdt.strftime('%Y/%m/%d %H:%M')
@@ -1036,7 +1039,10 @@ def to_jalali_display(value) -> str:
         return formatted
     try:
         if hasattr(value, 'hour'):
-            jdt = jdatetime.datetime.fromgregorian(datetime=value)
+            dt = value
+            if isinstance(dt, datetime) and dj_tz.is_aware(dt):
+                dt = dj_tz.localtime(dt)
+            jdt = jdatetime.datetime.fromgregorian(datetime=dt)
             if jdt.hour or jdt.minute:
                 return jdt.strftime('%Y/%m/%d %H:%M')
             return jdt.strftime('%Y/%m/%d')

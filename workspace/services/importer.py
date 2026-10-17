@@ -407,6 +407,16 @@ def _merge_listing_data(old: dict | None, new: dict | None) -> dict:
     return merged
 
 
+def _has_explicit_publish_in_data(data: dict | None) -> bool:
+    if not data:
+        return False
+    for key in ('انتشار_تاریخ_شمسی', 'تاریخ انتشار', 'ایجاد آگهی'):
+        val = str(data.get(key) or '').strip()
+        if val and val not in ('-', '—', 'nan', 'None'):
+            return True
+    return False
+
+
 def _update_listing_from_fields(listing: Listing, fields: dict) -> bool:
     """به‌روزرسانی آگهی موجود — ادغام ویژگی‌های جدید اکسل در data."""
     changed = False
@@ -415,6 +425,8 @@ def _update_listing_from_fields(listing: Listing, fields: dict) -> bool:
         if new_val is None:
             continue
         if isinstance(new_val, str) and not new_val.strip():
+            continue
+        if attr == 'published_at' and listing.published_at and not _has_explicit_publish_in_data(fields.get('data')):
             continue
         if getattr(listing, attr) != new_val:
             setattr(listing, attr, new_val)

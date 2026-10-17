@@ -555,6 +555,92 @@ def _optional_schedule_columns_from_df(df: Any, get_col, result_df: Any) -> None
         result_df[excel_col] = pd.Series(values)
 
 
+# ستون‌های مشترک فروش/اجاره — معنای یکسان، بدون ستون‌های مالی اختصاصی
+SHARED_EXPORT_EXCEL_COLUMNS = (
+    "دسته‌بندی",
+    "آدرس",
+    "اصالت تصویر",
+    "تصویر نقشه",
+)
+
+SHARED_SCHEDULE_EXPORT_COLUMNS = (
+    "ایجاد آگهی",
+    "تاریخ انتشار",
+    "آخرین نردبان",
+    "آخرین به‌روزرسانی",
+    "انقضا آگهی",
+)
+
+_FLATTEN_PASSTHROUGH_PREFIXES = (
+    "دسته‌بندی_",
+    "مکان_",
+    "نقشه_",
+    "رسانه_",
+    "مشاور_",
+    "فروشنده_",
+    "انتشار_",
+    "اجاره_",
+    "مالی_",
+    "سیستمی_",
+    "تماس_",
+    "ویژگی_",
+)
+
+_FLATTEN_PASSTHROUGH_EXACT = frozenset({
+    "token",
+    "title",
+    "description",
+    "attributes",
+    "share_link",
+    "price_text",
+    "rent_convertibility",
+    "ویژگی_ها_و_امکانات",
+})
+
+
+def _append_shared_listing_export_columns(
+    result_df: Any,
+    df: Any,
+    get_col,
+    combine_excel_and_source,
+) -> None:
+    """ستون‌های پایه مشترک بین مسیر فروش و اجاره."""
+    result_df["دسته‌بندی"] = combine_excel_and_source("دسته‌بندی", "دسته‌بندی_عنوان")
+    result_df["آدرس"] = combine_excel_and_source("آدرس", "مکان_آدرس", "-")
+    result_df["اصالت تصویر"] = combine_excel_and_source(
+        "اصالت تصویر",
+        "رسانه_اصالت_تصویر_برای_همین_ملک",
+    )
+    result_df["تصویر نقشه"] = combine_excel_and_source("تصویر نقشه", "نقشه_تصویر")
+
+
+def _flatten_passthrough_payload(raw: Dict[str, Any]) -> Dict[str, Any]:
+    out: Dict[str, Any] = {}
+    for key, val in (raw or {}).items():
+        if val is None or str(val).strip() in ("", "-"):
+            continue
+        key_s = str(key)
+        if key_s in _FLATTEN_PASSTHROUGH_EXACT or any(
+            key_s.startswith(prefix) for prefix in _FLATTEN_PASSTHROUGH_PREFIXES
+        ):
+            out[key_s] = val
+    return out
+
+
+def _merge_flatten_passthrough_into_records(
+    records: List[Dict[str, Any]],
+    rows: List[Dict[str, Any]],
+) -> None:
+    """فیلدهای flatten که در اکسل نیستند — برای Import/Listing.data حفظ شوند."""
+    for i, raw in enumerate(rows):
+        if i >= len(records):
+            break
+        for key, val in _flatten_passthrough_payload(raw).items():
+            if key in records[i] and records[i][key] not in (None, "", "-"):
+                continue
+            records[i][key] = val
+
+
 GEO_COORD_EXCEL_COLUMNS = ("عرض جغرافیایی", "طول جغرافیایی")
 GEO_COORD_TEXT_FORMAT = "@"
 
@@ -2296,6 +2382,7 @@ def export_rows_to_records(
             if val is None or val == "":
                 continue
             records[i][key] = val
+    _merge_flatten_passthrough_into_records(records, rows)
     return records
 
 
@@ -2563,10 +2650,10 @@ def _export_to_excel_sell(df: Any, output_path: str, export_columns: Optional[Li
         else:
             result_df["انقضا آگهی"] = pd.Series(["-"] * len(df))
     
-    # 7. دسته‌بندی   
-    result_df["دسته‌بندی"] = combine_excel_and_source("دسته‌بندی", "دسته‌بندی_عنوان")
+    # 7–8. دسته‌بندی / آدرس / رسانه مشترک
+    _append_shared_listing_export_columns(result_df, df, get_col, combine_excel_and_source)
     
-    # 8. شهر
+    # 9. شهر
     if "شهر" in df.columns and "مکان_شهر" in df.columns:
         result_df["شهر"] = combine_excel_and_source("شهر", "مکان_شهر")
     elif "شهر" in df.columns:
@@ -2849,10 +2936,7 @@ def _export_to_excel_sell(df: Any, output_path: str, export_columns: Optional[Li
     # 21. تعداد تصاویر
     result_df["تعداد تصاویر"] = combine_excel_and_source("تعداد تصاویر", "رسانه_تعداد_تصویر")
     
-    # 22. اصالت تصویر
-    result_df["اصالت تصویر"] = combine_excel_and_source("اصالت تصویر", "رسانه_اصالت_تصویر_برای_همین_ملک")
-    
-    # 23. ویدیو دارد؟
+    # 22. ویدیو دارد؟
     if "ویدیو دارد؟" in df.columns:
         excel_col = get_col("ویدیو دارد؟").copy()
         if "رسانه_ویدیو" in df.columns:
@@ -2875,16 +2959,14 @@ def _export_to_excel_sell(df: Any, output_path: str, export_columns: Optional[Li
     else:
         result_df["توضیحات"] = get_col("توضیحات") if "توضیحات" in df.columns else get_col("description")
     
-    # 26. تصویر نقشه
-    result_df["تصویر نقشه"] = combine_excel_and_source("تصویر نقشه", "نقشه_تصویر")
-
-    # 27–28. لینک تصاویر (در انتهای فایل)
+    # 26–27. لینک تصاویر (در انتهای فایل)
     _append_image_link_excel_columns(result_df, df, combine_excel_and_source)
     
     # ترتیب ستون‌ها — ویژگی‌های تفکیک‌شده بعد از امکانات پایه
     sell_column_order = [
-        "شناسه", "عنوان", "لینک", "شماره تماس", "ایجاد آگهی", "انقضا آگهی",
-        "دسته‌بندی", "شهر", "محله", "متراژ", "ساخت", "اتاق", "طبقه",
+        "شناسه", "عنوان", "لینک", "شماره تماس",
+        *SHARED_SCHEDULE_EXPORT_COLUMNS,
+        "دسته‌بندی", "شهر", "محله", "آدرس", "متراژ", "ساخت", "اتاق", "طبقه",
         "قیمت", "قیمت هر متر",
         "آسانسور", "پارکینگ", "انباری",
         *FEATURE_EXCEL_COLUMNS,
@@ -3284,8 +3366,8 @@ def _export_to_excel_rent(df: Any, output_path: str, export_columns: Optional[Li
     else:
         result_df["محله"] = get_col("مکان_منطقه") if "مکان_منطقه" in df.columns else get_col("district_persian")
     
-    # 5. آدرس
-    result_df["آدرس"] = combine_excel_and_source("آدرس", "مکان_آدرس", "-")
+    # 5. دسته‌بندی / آدرس / رسانه مشترک
+    _append_shared_listing_export_columns(result_df, df, get_col, combine_excel_and_source)
     
     # 6. متراژ
     if "متراژ" in df.columns:
@@ -3679,16 +3761,16 @@ def _export_to_excel_rent(df: Any, output_path: str, export_columns: Optional[Li
     
     # تنظیم ترتیب ستون‌ها
     column_order = [
-        "شناسه", "عنوان", "لینک", "نوع آگهی دهنده",
-        "نام مشاور / آژانس", "آگهی‌های فعال مشاور",
-        "شهر", "محله", "آدرس", "متراژ", "ساخت", "اتاق", "طبقه",
+        "شناسه", "عنوان", "لینک", "شماره تماس",
+        *SHARED_SCHEDULE_EXPORT_COLUMNS,
+        "دسته‌بندی", "شهر", "محله", "آدرس", "متراژ", "ساخت", "اتاق", "طبقه",
         "آسانسور", "پارکینگ", "انباری",
         *FEATURE_EXCEL_COLUMNS,
         "ودیعه", "اجاره ماهانه", "ودیعه و اجاره",
-        "ایجاد آگهی", "انقضا آگهی", "شماره تماس",
-        "تعداد تصاویر", "ویدیو دارد؟",
-        "عرض جغرافیایی", "طول جغرافیایی", "در شعاع (متر)", "نوع مختصات",
-        "ویژگی‌ها و امکانات", "توضیحات",
+        "نوع آگهی دهنده", "نام مشاور / آژانس", "آگهی‌های فعال مشاور",
+        "عرض جغرافیایی", "طول جغرافیایی", "نوع مختصات", "در شعاع (متر)",
+        "تعداد تصاویر", "اصالت تصویر", "ویدیو دارد؟",
+        "ویژگی‌ها و امکانات", "توضیحات", "تصویر نقشه",
         *IMAGE_LINK_EXCEL_COLUMNS,
     ]
     

@@ -15,6 +15,10 @@ from workspace.services.columns import detect_metadata, row_to_listing_fields
 from workspace.services.ingest_mode import resolve_ingest_mode, should_prune_stale_listings
 from workspace.services.listing_personal_status import DIVAR_SOURCE_PLATFORM
 from workspace.services.listing_suppression import get_suppressed_external_ids
+from workspace.services.divar_listing_datetime import (
+    has_explicit_publish_in_export_data,
+    merge_listing_schedule_data,
+)
 from workspace.services.price_history import load_latest_snapshots, should_record_price
 from workspace.services.folder_import import (
     build_dataset_name, build_file_identity, dataset_path_info_from_record, locations_match,
@@ -426,17 +430,11 @@ def _merge_listing_data(old: dict | None, new: dict | None) -> dict:
         if s in ('', '-', '—', 'nan', 'None'):
             continue
         merged[key] = val
-    return merged
+    return merge_listing_schedule_data(old, new)
 
 
 def _has_explicit_publish_in_data(data: dict | None) -> bool:
-    if not data:
-        return False
-    for key in ('انتشار_تاریخ_شمسی', 'تاریخ انتشار', 'ایجاد آگهی'):
-        val = str(data.get(key) or '').strip()
-        if val and val not in ('-', '—', 'nan', 'None'):
-            return True
-    return False
+    return has_explicit_publish_in_export_data(data)
 
 
 def _update_listing_from_fields(listing: Listing, fields: dict) -> bool:

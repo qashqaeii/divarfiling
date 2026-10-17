@@ -2264,6 +2264,11 @@ def export_rows_to_records(
             lambda x: "-" if (x is None or (isinstance(x, str) and str(x).strip() == "")) else x
         )
     records = result_df.to_dict("records")
+    _schedule_meta_keys = (
+        "انتشار_تاریخ_شمسی",
+        "انتشار_آخرین_نردبان_شمسی",
+        "انتشار_آخرین_به‌روزرسانی_شمسی",
+    )
     _money_meta_keys = (
         "مالی_قیمت_کل_نمایش",
         "مالی_قیمت_کل_عدد",
@@ -2286,7 +2291,7 @@ def export_rows_to_records(
     for i, raw in enumerate(rows):
         if i >= len(records):
             break
-        for key in _money_meta_keys:
+        for key in (*_schedule_meta_keys, *_money_meta_keys):
             val = raw.get(key)
             if val is None or val == "":
                 continue

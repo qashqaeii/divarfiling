@@ -11,6 +11,12 @@ import pandas as pd
 from django.db.models import Q
 from django.utils import timezone as dj_tz
 
+from workspace.services.divar_listing_datetime import (
+    SHAMSI_KEY_LAST_BUMPED,
+    enrich_listing_schedule_data,
+    parse_divar_listing_datetime,
+    parse_published_at_from_export_row,
+)
 from workspace.services.jalali_input import _normalize_digits, parse_jalali_datetime_string
 from workspace.services.property_images import (
     deduplicate_divar_image_urls,
@@ -34,6 +40,8 @@ COLUMN_ALIASES: Dict[str, List[str]] = {
     'link': ['لینک', 'url', 'link', 'آدرس آگهی'],
     'published_at': ['ایجاد آگهی', 'تاریخ انتشار', 'published_at', 'created_at'],
     'expires_at': ['انقضا آگهی', 'expires_at', 'انتشار_unavailable_after'],
+    'last_bumped_at': ['آخرین نردبان', SHAMSI_KEY_LAST_BUMPED],
+    'last_updated_at': ['آخرین به‌روزرسانی', 'انتشار_آخرین_به‌روزرسانی_شمسی'],
     'images': ['لینک تصاویر', 'تصاویر', 'images', 'عکس‌ها', 'رسانه_تصاویر', 'لینک تصویر اول'],
     'build_year': ['ساخت', 'سال ساخت', 'build_year', 'سن بنا'],
     'floor': ['طبقه', 'floor'],
@@ -285,7 +293,7 @@ def assert_json_serializable(data: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def _export_data_from_row(row: Dict[str, Any]) -> Dict[str, Any]:
-    return assert_json_serializable(dict(row))
+    return assert_json_serializable(enrich_listing_schedule_data(dict(row)))
 
 
 def _rooms_from_row_data(row: Dict[str, Any], rooms: str) -> str:
@@ -323,8 +331,8 @@ def export_record_to_listing_fields(row: Dict[str, Any]) -> Dict[str, Any]:
         'description': _safe_str(_pick_row_value(row, 'description')),
         'link': _safe_str(_pick_row_value(row, 'link')),
         'images': _parse_images(_pick_row_value(row, 'images')),
-        'published_at': _parse_datetime(_pick_row_value(row, 'published_at')),
-        'expires_at': _parse_datetime(_pick_row_value(row, 'expires_at')),
+        'published_at': parse_published_at_from_export_row(row),
+        'expires_at': parse_divar_listing_datetime(_pick_row_value(row, 'expires_at')),
         'data': data,
     }
 
@@ -341,7 +349,7 @@ def row_to_listing_fields(row: pd.Series, df: pd.DataFrame) -> Dict[str, Any]:
                 break
 
     raw_data = {str(col): row[col] for col in df.columns}
-    data = assert_json_serializable(raw_data)
+    data = assert_json_serializable(enrich_listing_schedule_data(raw_data))
 
     title = _safe_str(row[cols['title']]) if cols['title'] else ''
     description = _safe_str(row[cols['description']]) if cols['description'] else ''
@@ -379,8 +387,8 @@ def row_to_listing_fields(row: pd.Series, df: pd.DataFrame) -> Dict[str, Any]:
         'description': description,
         'link': _safe_str(row[cols['link']]) if cols['link'] else '',
         'images': _parse_images(row[cols['images']]) if cols['images'] else [],
-        'published_at': _parse_datetime(row[cols['published_at']]) if cols['published_at'] else None,
-        'expires_at': _parse_datetime(row[cols['expires_at']]) if cols['expires_at'] else None,
+        'published_at': parse_published_at_from_export_row(money_row) if cols['published_at'] else None,
+        'expires_at': parse_divar_listing_datetime(row[cols['expires_at']]) if cols['expires_at'] else None,
         'data': data,
     }
 

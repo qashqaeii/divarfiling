@@ -400,6 +400,7 @@ def _is_date_key(key: str) -> bool:
     kl = key.lower()
     return any(x in key or x in kl for x in (
         'تاریخ', 'date', 'ایجاد', 'انقضا', 'انتشار', 'published', 'expires', 'created',
+        'نردبان', 'به‌روزرسانی', 'بروزرسانی',
     ))
 
 
@@ -709,10 +710,28 @@ def build_listing_display_data(listing, feat: Optional[Dict[str, Any]] = None) -
     _set_model_field(data, 'عرض جغرافیایی', listing.latitude, clear_keys=('latitude', 'lat', 'مکان_مختصات_lat'))
     _set_model_field(data, 'طول جغرافیایی', listing.longitude, clear_keys=('longitude', 'lng', 'مکان_مختصات_lng'))
 
+    from workspace.services.divar_listing_datetime import (
+        DATA_KEY_LAST_BUMPED_AT,
+        DATA_KEY_LAST_UPDATED_AT,
+        listing_datetime_to_jalali_label,
+    )
+
     if listing.published_at:
         _set_if_missing(data, 'تاریخ انتشار', listing.published_at)
     if listing.expires_at:
         _set_if_missing(data, 'تاریخ انقضا', listing.expires_at)
+    if data.get(DATA_KEY_LAST_BUMPED_AT):
+        _set_if_missing(
+            data,
+            'آخرین نردبان',
+            listing_datetime_to_jalali_label(data.get(DATA_KEY_LAST_BUMPED_AT)),
+        )
+    if data.get(DATA_KEY_LAST_UPDATED_AT):
+        _set_if_missing(
+            data,
+            'آخرین به‌روزرسانی',
+            listing_datetime_to_jalali_label(data.get(DATA_KEY_LAST_UPDATED_AT)),
+        )
     _collapse_schedule_fields(data, listing)
     if listing.images:
         data['تعداد تصاویر'] = len(listing.images)
@@ -921,6 +940,8 @@ _EXPIRE_SCHEDULE_KEYS = frozenset(COLUMN_ALIASES['expires_at'])
 _SUPPLEMENTARY_ROW_PREF: Dict[str, Tuple[str, ...]] = {
     'schedule_published': ('تاریخ انتشار', 'ایجاد آگهی', 'published_at', 'created_at'),
     'schedule_expires': ('تاریخ انقضا', 'انقضا آگهی', 'expires_at', 'انتشار_unavailable_after'),
+    'schedule_last_bumped': ('آخرین نردبان', 'last_bumped_at', 'انتشار_آخرین_نردبان_شمسی'),
+    'schedule_last_updated': ('آخرین به‌روزرسانی', 'last_updated_at', 'انتشار_آخرین_به‌روزرسانی_شمسی'),
 }
 
 
@@ -930,6 +951,10 @@ def _normalize_supplementary_row_key(key: str) -> str:
         return 'schedule_published'
     if key in _EXPIRE_SCHEDULE_KEYS:
         return 'schedule_expires'
+    if 'نردبان' in key:
+        return 'schedule_last_bumped'
+    if 'به‌روز' in key or 'بروز' in key:
+        return 'schedule_last_updated'
     if any(m in key for m in ('نوع آگهی', 'آگهی دهنده', 'آگهی‌دهنده')) or 'advertiser' in k:
         return 'advertiser_type'
     if 'لینک تصویر اول' in key or k == 'لینکتصویراول':

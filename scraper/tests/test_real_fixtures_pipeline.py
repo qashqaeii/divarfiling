@@ -83,6 +83,23 @@ class RealFixturesPipelineTest(SimpleTestCase):
                 self.assertIn(bump_val, ("-", "—", ""), msg=token)
             else:
                 self.assertEqual(bump_val, bump, token)
+            upd = exp.get("last_updated_jalali")
+            upd_val = _norm_shamsi(
+                flat.get("انتشار_آخرین_به‌روزرسانی_شمسی")
+                or rec.get("آخرین به‌روزرسانی")
+                or "-"
+            )
+            if upd is None:
+                self.assertIn(upd_val, ("-", "—", ""), msg=token)
+            else:
+                self.assertEqual(upd_val, upd, token)
+            data = fields.get("data") or {}
+            if bump:
+                self.assertIn("last_bumped_at", data, token)
+            else:
+                self.assertNotIn("last_bumped_at", data, token)
+            if upd:
+                self.assertIn("last_updated_at", data, token)
             self.assertIsNotNone(fields.get("published_at"), token)
             display = to_jalali_display(fields["published_at"])
             self.assertEqual(_norm_shamsi(display), exp["published_jalali"], token)

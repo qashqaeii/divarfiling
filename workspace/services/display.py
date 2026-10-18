@@ -261,7 +261,195 @@ def listing_map_rent_label(listing) -> str:
 MONEY_FIELD_ORDER = (
     'قیمت', 'price', 'قیمت هر متر', 'قیمت/متر', 'ودیعه', 'deposit',
     'رهن', 'اجاره', 'rent', 'اجاره ماهانه', 'ودیعه و اجاره',
+    'ودیعه (شرایط تبدیل)', 'اجاره ماهانه (شرایط تبدیل)',
 )
+
+_DOSSIER_INTERNAL_PREFIXES = (
+    'مالی_', 'سیستمی_', 'تماس_', 'رسانه_', 'فروشنده_', 'دسته‌بندی_',
+    'اجاره_', 'مکان_', 'نقشه_', 'ویژگی_', 'مشاور_business',
+)
+
+_DOSSIER_INTERNAL_EXACT_KEYS = frozenset({
+    'متراژ_عدد', 'rent_convertibility', 'اجاره_قابل_تبدیل', 'price_text',
+    'normalized_city', 'normalized_district', 'published_at_iso',
+    'city_persian', 'district_persian', 'مکان_مختصات_اعتبار',
+})
+
+_CANONICAL_MONEY_KEYS = frozenset({
+    'قیمت', 'price', 'قیمت هر متر', 'قیمت/متر',
+    'ودیعه', 'deposit', 'رهن', 'اجاره', 'rent', 'اجاره ماهانه',
+    'ودیعه و اجاره',
+    'ودیعه (شرایط تبدیل)', 'اجاره ماهانه (شرایط تبدیل)',
+})
+
+_RENT_DOSSIER_MONEY_KEYS = frozenset({
+    'ودیعه', 'deposit', 'رهن', 'اجاره', 'rent', 'اجاره ماهانه',
+    'ودیعه و اجاره', 'ودیعه (شرایط تبدیل)', 'اجاره ماهانه (شرایط تبدیل)',
+})
+
+_SALE_DOSSIER_MONEY_KEYS = frozenset({
+    'قیمت', 'price', 'قیمت هر متر', 'قیمت/متر',
+})
+
+_NON_DISPLAYABLE_RAW_VALUES = frozenset({
+    'unknown', 'numeric', 'valid', 'null', 'none', 'nan',
+})
+
+
+def _clean_dossier_label(val: Any) -> str:
+    s = str(val or '').strip()
+    if not s or s.lower() in ('nan', 'none', '-', '—'):
+        return ''
+    return s
+
+
+def _is_dossier_internal_key(key: str) -> bool:
+    """کلیدهای فنی JSON/Android — فقط برای ذخیره، نه ردیف پرونده."""
+    k = str(key or '').strip()
+    if not k:
+        return True
+    if k in _DOSSIER_INTERNAL_EXACT_KEYS:
+        return True
+    if any(k.startswith(prefix) for prefix in _DOSSIER_INTERNAL_PREFIXES):
+        return True
+    if re.search(r'_(وضعیت|عدد|نمایش|برچسب)$', k):
+        return True
+    return False
+
+
+def _is_rent_convertible(raw: dict) -> bool:
+    conv = str(
+        raw.get('اجاره_قابل_تبدیل')
+        or raw.get('rent_convertibility')
+        or raw.get('ودیعه و اجاره')
+        or ''
+    ).strip()
+    if not conv:
+        return False
+    if 'غیر' in conv and 'قابل' in conv:
+        return False
+    low = conv.lower()
+    return 'قابل تبدیل' in conv or low in ('convertible', 'convertable')
+
+
+def _enrich_dossier_financial_fields(data: dict, listing, profile: Dict, raw: dict) -> None:
+    from workspace.services.columns import _listing_money_scalar, _safe_int
+
+    merged = {**(raw or {}), **(data or {})}
+
+    if profile.get('is_sale') and not profile.get('is_mixed'):
+        for key in list(data.keys()):
+            if key in _RENT_DOSSIER_MONEY_KEYS and key != 'ودیعه و اجاره':
+                data.pop(key, None)
+
+        price_txt = _listing_text_sale(merged)
+        price_num = listing.price if listing.price is not None else _listing_money_scalar(merged, 'price')
+        if price_txt:
+            data['قیمت'] = price_txt
+        elif price_num is not None:
+            data['قیمت'] = price_num
+
+        pps_txt = _parse_text_price(merged.get('مالی_قیمت_هر_متر_نمایش'))
+        pps_num = _safe_int(merged.get('مالی_قیمت_هر_متر_عدد'))
+        if pps_txt:
+            data['قیمت هر متر'] = pps_txt
+        elif pps_num is not None:
+            data['قیمت هر متر'] = pps_num
+        return
+
+    if not (profile.get('is_rent') or profile.get('is_mixed')):
+        return
+
+    for key in list(data.keys()):
+        if key in _SALE_DOSSIER_MONEY_KEYS:
+            data.pop(key, None)
+
+    dep_txt = _listing_text_deposit(merged)
+    dep_num = listing.deposit if listing.deposit is not None else _listing_money_scalar(merged, 'deposit')
+    if dep_txt:
+        data['ودیعه'] = dep_txt
+    elif dep_num is not None:
+        data['ودیعه'] = dep_num
+
+    rent_txt = _listing_text_rent(merged)
+    rent_num = listing.rent if listing.rent is not None else _listing_money_scalar(merged, 'rent')
+    if rent_txt:
+        data['اجاره'] = rent_txt
+    elif rent_num is not None:
+        data['اجاره'] = rent_num
+    elif listing.rent is not None:
+        data['اجاره'] = listing.rent
+
+    combined = _clean_dossier_label(merged.get('ودیعه و اجاره'))
+    if combined and combined not in ('قابل تبدیل', 'غیر قابل تبدیل'):
+        data['ودیعه و اجاره'] = combined
+
+    if _is_rent_convertible(merged):
+        conv_dep = _safe_int(merged.get('اجاره_ودیعه_تبدیل_عدد'))
+        conv_rent = _safe_int(merged.get('اجاره_ماهانه_تبدیل_عدد'))
+        if conv_dep is not None or conv_rent is not None:
+            data['ودیعه و اجاره'] = 'قابل تبدیل'
+            if conv_dep is not None:
+                data['ودیعه (شرایط تبدیل)'] = conv_dep
+            if conv_rent is not None:
+                data['اجاره ماهانه (شرایط تبدیل)'] = conv_rent
+
+
+def _normalize_dossier_location_fields(data: dict) -> None:
+    city = _clean_dossier_label(data.get('شهر'))
+    neighborhood = _clean_dossier_label(data.get('محله'))
+    address = _clean_dossier_label(data.get('آدرس'))
+
+    for alias in (
+        'مکان_شهر', 'مکان_منطقه', 'مکان_آدرس',
+        'city', 'city_persian', 'district', 'district_persian', 'address',
+    ):
+        data.pop(alias, None)
+
+    raw_acc = str(data.get('مکان_مختصات_اعتبار') or '').strip().lower()
+    if raw_acc in ('valid', 'exact'):
+        if not _clean_dossier_label(data.get('نوع مختصات')):
+            data['نوع مختصات'] = 'دقیق'
+    elif raw_acc in ('fuzzy', 'approximate', 'approx'):
+        if not _clean_dossier_label(data.get('نوع مختصات')):
+            data['نوع مختصات'] = 'تقریبی'
+    data.pop('مکان_مختصات_اعتبار', None)
+
+    coord = str(data.get('نوع مختصات') or '').strip()
+    if coord:
+        norm = _normalize_coord_type(coord)
+        if norm in _EXACT_COORD_MARKERS or coord in _EXACT_COORD_MARKERS:
+            data['نوع مختصات'] = 'دقیق'
+        elif norm in _FUZZY_COORD_MARKERS or 'تقری' in coord:
+            data['نوع مختصات'] = 'تقریبی'
+
+    if address:
+        if city and address == city:
+            data.pop('آدرس', None)
+        elif neighborhood and address == neighborhood:
+            data.pop('آدرس', None)
+
+
+def _strip_dossier_internal_keys(data: dict) -> None:
+    for key in list(data.keys()):
+        if _is_dossier_internal_key(key):
+            data.pop(key, None)
+
+
+def apply_dossier_presentation_rules(
+    data: dict,
+    listing,
+    profile: Dict,
+    *,
+    raw_data: Optional[dict] = None,
+) -> None:
+    """قواعد نمایش پرونده — فقط روی کپی نمایش، بدون تغییر Listing.data."""
+    raw = raw_data if raw_data is not None else (getattr(listing, 'data', None) or {})
+    _enrich_dossier_financial_fields(data, listing, profile, raw if isinstance(raw, dict) else {})
+    _normalize_dossier_location_fields(data)
+    _strip_dossier_internal_keys(data)
+    if _clean_dossier_label(data.get('متراژ')):
+        data.pop('متراژ_عدد', None)
 
 
 def transaction_profile(transaction_type: str = '') -> Dict[str, Any]:
@@ -296,10 +484,15 @@ def transaction_profile(transaction_type: str = '') -> Dict[str, Any]:
 
 
 def _is_money_key(key: str) -> bool:
-    kl = key.lower()
-    return any(m in key or m in kl for m in (
-        'قیمت', 'ودیعه', 'اجاره', 'رهن', 'price', 'deposit', 'rent', 'تومان',
-    ))
+    if _is_dossier_internal_key(key):
+        return False
+    k = str(key or '').strip()
+    if k in _CANONICAL_MONEY_KEYS:
+        return True
+    kl = k.lower()
+    if 'قیمت هر متر' in k or 'قیمت/متر' in k:
+        return True
+    return False
 
 
 def _is_per_sqm_key(key: str) -> bool:
@@ -322,16 +515,19 @@ def _is_sale_price_field(key: str) -> bool:
 
 
 def field_visible_for_transaction(key: str, profile: Dict) -> bool:
+    if _is_dossier_internal_key(key):
+        return False
     if profile.get('is_mixed'):
         return True
     if profile.get('is_sale'):
-        return not _is_rent_field(key)
+        return key in _SALE_DOSSIER_MONEY_KEYS or not _is_rent_field(key)
     if profile.get('is_rent'):
+        if key in _SALE_DOSSIER_MONEY_KEYS:
+            return False
+        if key.startswith('مالی_'):
+            return False
         if _is_sale_price_field(key) and not _is_rent_field(key):
-            if _is_per_sqm_key(key):
-                return False
-            if key in ('قیمت', 'price') or key.strip() == 'قیمت':
-                return False
+            return False
         return True
     return True
 
@@ -424,6 +620,10 @@ def format_display_value(key: str, value: Any, profile: Optional[Dict] = None) -
     if value is None or str(value).strip() in ('', 'nan', 'None', '-'):
         return '—'
 
+    raw_s = str(value).strip()
+    if raw_s.lower() in _NON_DISPLAYABLE_RAW_VALUES:
+        return '—'
+
     if profile and not field_visible_for_transaction(key, profile):
         return '—'
 
@@ -501,6 +701,8 @@ def display_field_label(key: str) -> str:
 
 def _include_in_sections(key: str) -> bool:
     """آیا فیلد در تب‌های اصلی نمایش داده شود (نه فقط تب ویژگی‌ها)؟"""
+    if _is_dossier_internal_key(key):
+        return False
     if _is_core_property_key(key) or _is_location_key(key):
         return True
     if _is_money_key(key) or _is_contact_key(key):
@@ -736,9 +938,15 @@ def _set_model_field(data: dict, key: str, value: Any, *, clear_keys: tuple = ()
     data[key] = value
 
 
-def build_listing_display_data(listing, feat: Optional[Dict[str, Any]] = None) -> dict:
+def build_listing_display_data(
+    listing,
+    feat: Optional[Dict[str, Any]] = None,
+    *,
+    transaction_type: str = '',
+) -> dict:
     """ادغام فیلدهای مدل و استخراج‌شده در دیکشنری نمایش."""
-    data = _dedupe_listing_data_keys(dict(listing.data or {}))
+    raw_stored = dict(listing.data or {})
+    data = _dedupe_listing_data_keys(dict(raw_stored))
 
     # فیلدهای مدل بعد از ویرایش اولویت دارند (نه فقط وقتی data خالی است)
     _set_model_field(data, 'شناسه', listing.token)
@@ -805,6 +1013,8 @@ def build_listing_display_data(listing, feat: Optional[Dict[str, Any]] = None) -
             _set_if_missing(data, 'سال ساخت', feat['build_year'])
 
     _normalize_contact_fields(data, listing)
+    profile = transaction_profile(transaction_type)
+    apply_dossier_presentation_rules(data, listing, profile, raw_data=raw_stored)
     return data
 
 
@@ -920,7 +1130,26 @@ def _normalize_dossier_field_key(key: str) -> str:
     k = str(key or '').strip().lower().replace(' ', '').replace('_', '').replace('‌', '')
     if k in ('سالساخت', 'ساخت', 'buildyear', 'سنبنا'):
         return 'build_year'
+    if k in ('متراژعدد', 'area') or (k.startswith('متراژ') and k.endswith('عدد')):
+        return 'area'
+    if k in ('شهر', 'city', 'مکانشهر'):
+        return 'location_city'
+    if k in ('آدرس', 'address', 'مکانآدرس'):
+        return 'location_address'
     return k
+
+
+def _dossier_row_preference(norm: str, raw_key: str) -> int:
+    preferred = {
+        'build_year': ('سال ساخت', 'ساخت', 'build_year'),
+        'area': ('متراژ', 'area'),
+        'location_city': ('شهر', 'city'),
+        'location_address': ('آدرس', 'address'),
+    }.get(norm, ())
+    for idx, marker in enumerate(preferred):
+        if raw_key == marker or marker in raw_key:
+            return idx
+    return 50
 
 
 def dedupe_listing_dossier_rows(rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
@@ -934,11 +1163,12 @@ def dedupe_listing_dossier_rows(rows: List[Dict[str, Any]]) -> List[Dict[str, An
             by_norm[nk] = row
             order.append(nk)
             continue
-        if nk == 'build_year':
-            existing = by_norm[nk]
-            ex_key = str(existing.get('raw_key') or existing.get('key') or '')
-            if 'سال ساخت' in raw_key and 'سال ساخت' not in ex_key:
-                by_norm[nk] = row
+        existing = by_norm[nk]
+        ex_key = str(existing.get('raw_key') or existing.get('key') or '')
+        if _dossier_row_preference(nk, raw_key) < _dossier_row_preference(nk, ex_key):
+            by_norm[nk] = row
+        elif nk == 'build_year' and 'سال ساخت' in raw_key and 'سال ساخت' not in ex_key:
+            by_norm[nk] = row
     return [by_norm[k] for k in order]
 
 

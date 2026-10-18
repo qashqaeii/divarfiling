@@ -1029,7 +1029,9 @@ class ListingDetailView(DatasetOwnerMixin, DetailView):
         dataset = self.get_dataset()
         tx = transaction_profile(dataset.transaction_type)
         ctx['feat'] = extract_listing_features(listing)
-        data = build_listing_display_data(listing, ctx['feat'])
+        data = build_listing_display_data(
+            listing, ctx['feat'], transaction_type=dataset.transaction_type,
+        )
         ctx['tx'] = tx
         sections = format_sections(data, tx)
         sections.pop('سایر', None)

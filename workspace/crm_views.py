@@ -1678,8 +1678,10 @@ class CRMPropertyDetailView(CRMContextMixin, LoginRequiredMixin, DetailView):
                 format_supplementary_groups,
                 transaction_profile,
             )
-            listing_data = build_listing_display_data(source_listing, feat)
             listing_tx = transaction_profile(p.deal_mode)
+            listing_data = build_listing_display_data(
+                source_listing, feat, transaction_type=listing_tx.get('mode') or p.deal_mode,
+            )
             listing_sections = format_sections(listing_data, listing_tx)
             listing_sections.pop('سایر', None)
             ctx['supplementary_fields'] = format_supplementary_fields(

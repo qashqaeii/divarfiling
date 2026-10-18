@@ -262,7 +262,7 @@ def build_public_listing_context(share: ListingPublicShare, request=None) -> Dic
 
     feat = extract_listing_features(listing)
     tx = transaction_profile(dataset.transaction_type)
-    data = build_listing_display_data(listing, feat)
+    data = build_listing_display_data(listing, feat, transaction_type=dataset.transaction_type)
     desc = (listing.description or '').strip()
     if desc and not any('توضیح' in k or 'description' in k.lower() for k in data):
         data['توضیحات'] = desc

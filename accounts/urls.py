@@ -26,6 +26,7 @@ from .admin_views import (
     AdminRecoveryCenterJsonView,
     AdminRecoveryCenterView,
     AdminLicensesCenterView,
+    AdminDivarContactSettingsView,
     AdminOperationsCenterView,
     AdminSupportCenterView,
     AdminActivityCenterView,
@@ -86,6 +87,7 @@ from .lead_acquisition_views import (
     AdminLeadSendProgressTickView,
     AdminAutomationPlacesJsonView,
     AdminAutomationLinesJsonView,
+    AdminDivarSessionsJsonView,
     LeadClickRedirectView,
 )
 
@@ -232,6 +234,11 @@ urlpatterns = [
         name='admin_panel_lead_automation_lines_json',
     ),
     path(
+        'admin-panel/marketing/leads/divar-sessions.json',
+        AdminDivarSessionsJsonView.as_view(),
+        name='admin_panel_divar_sessions_json',
+    ),
+    path(
         'admin-panel/marketing/lead-campaigns/<int:pk>/',
         AdminLeadCampaignDetailView.as_view(),
         name='admin_panel_lead_campaign_detail',
@@ -350,6 +357,11 @@ urlpatterns = [
     path('admin-panel/users/', AdminUsersCenterView.as_view(), name='admin_panel_users'),
     path('admin-panel/licenses/', AdminLicensesCenterView.as_view(), name='admin_panel_licenses'),
     path('admin-panel/operations/', AdminOperationsCenterView.as_view(), name='admin_panel_operations'),
+    path(
+        'admin-panel/operations/divar-contact/',
+        AdminDivarContactSettingsView.as_view(),
+        name='admin_panel_divar_contact_settings',
+    ),
     path('admin-panel/support/', AdminSupportCenterView.as_view(), name='admin_panel_support'),
     path('admin-panel/activity/', AdminActivityCenterView.as_view(), name='admin_panel_activity'),
     path('admin-panel/windows/', AdminWindowsCenterView.as_view(), name='admin_panel_windows'),

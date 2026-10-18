@@ -997,11 +997,48 @@
         </form>
     </div>
 </div>
+
+{% if divar_contact_enabled %}
+<div class="ws-modal" id="divar-connect-modal" hidden aria-hidden="true" role="dialog" aria-labelledby="divar-connect-title">
+    <div class="ws-modal__backdrop" data-divar-close tabindex="-1"></div>
+    <div class="ws-modal__panel ws-modal__panel--sm">
+        <header class="ws-modal__head">
+            <h2 id="divar-connect-title" class="ws-modal__title">اتصال به دیوار</h2>
+            <button type="button" class="ws-modal__close" data-divar-close aria-label="بستن">
+                <i class="fas fa-xmark" aria-hidden="true"></i>
+            </button>
+        </header>
+        <div class="ws-modal__body">
+            <p class="mk-owner-box__hint">کد ورود به حساب دیوار (نه کد HIP آگهی) را وارد کنید.</p>
+            <p class="ws-form-error" data-divar-error hidden></p>
+            <div data-divar-step="phone">
+                <label class="mk-owner-box__label" for="divar-connect-phone">شماره موبایل حساب دیوار</label>
+                <input type="tel" id="divar-connect-phone" class="ws-input" dir="ltr" inputmode="tel"
+                       data-divar-phone placeholder="0912…" autocomplete="tel">
+                <button type="button" class="ws-btn ws-btn-primary ws-btn-block" data-divar-send-otp style="margin-top:0.75rem">
+                    ارسال کد تأیید
+                </button>
+            </div>
+            <div data-divar-step="otp" hidden>
+                <label class="mk-owner-box__label" for="divar-connect-otp">کد پیامک‌شده</label>
+                <input type="text" id="divar-connect-otp" class="ws-input" dir="ltr" inputmode="numeric"
+                       data-divar-otp maxlength="6" autocomplete="one-time-code">
+                <button type="button" class="ws-btn ws-btn-primary ws-btn-block" data-divar-verify-otp style="margin-top:0.75rem">
+                    تأیید و اتصال
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
 {% endblock %}
 
 {% block extra_js %}
 <script src="{% static 'workspace/js/listing-edit.js' %}?v=7"></script>
 <script src="{% static 'workspace/js/filing-help-modal.js' %}?v=2"></script>
+{% if divar_contact_enabled %}
+<script src="{% static 'workspace/js/divar_contact.js' %}?v=1"></script>
+{% endif %}
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     initListingEdit({

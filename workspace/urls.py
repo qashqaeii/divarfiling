@@ -20,6 +20,13 @@ from workspace import (
 from workspace.academy import api_views as academy_api_views
 from workspace.academy import views as academy_views
 from workspace.app_bridge_views import WorkspaceAppBridgeView
+from workspace.divar_contact_views import (
+    DivarContactDisconnectView,
+    DivarContactFetchPhoneView,
+    DivarContactOtpSendView,
+    DivarContactOtpVerifyView,
+    DivarContactStatusView,
+)
 
 app_name = 'workspace'
 
@@ -50,6 +57,31 @@ urlpatterns = [
 
     # Listings
     path('datasets/<uuid:dataset_id>/listings/<int:listing_id>/', views.ListingDetailView.as_view(), name='listing_detail'),
+    path(
+        'api/divar-contact/status/',
+        DivarContactStatusView.as_view(),
+        name='divar_contact_status',
+    ),
+    path(
+        'api/divar-contact/otp/send/',
+        DivarContactOtpSendView.as_view(),
+        name='divar_contact_otp_send',
+    ),
+    path(
+        'api/divar-contact/otp/verify/',
+        DivarContactOtpVerifyView.as_view(),
+        name='divar_contact_otp_verify',
+    ),
+    path(
+        'api/divar-contact/disconnect/',
+        DivarContactDisconnectView.as_view(),
+        name='divar_contact_disconnect',
+    ),
+    path(
+        'datasets/<uuid:dataset_id>/listings/<int:listing_id>/divar-contact/fetch/',
+        DivarContactFetchPhoneView.as_view(),
+        name='divar_contact_fetch_phone',
+    ),
     path('datasets/<uuid:dataset_id>/listings/<int:listing_id>/edit/', views.ListingUpdateView.as_view(), name='listing_edit'),
     path('datasets/<uuid:dataset_id>/listings/<int:listing_id>/delete/', views.ListingDeleteView.as_view(), name='listing_delete'),
     path('datasets/<uuid:dataset_id>/listings/<int:listing_id>/favorite/', views.ListingFavoriteToggleView.as_view(), name='listing_favorite_toggle'),

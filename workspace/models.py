@@ -2420,3 +2420,12 @@ class WorkspaceSettings(models.Model):
     class Meta:
         verbose_name = 'تنظیمات workspace'
         verbose_name_plural = 'تنظیمات workspace'
+
+
+from workspace.divar_session_models import (  # noqa: E402,F401
+    DivarAccountSession,
+    DivarContactFeatureAuditLog,
+    DivarContactFeatureConfig,
+    DivarOtpChallenge,
+    DivarPhoneFetchLog,
+)

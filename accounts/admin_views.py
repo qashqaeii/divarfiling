@@ -886,6 +886,21 @@ class AdminLicensesCenterView(StaffRequiredMixin, TemplateView):
         return ctx
 
 
+class AdminDivarContactSettingsView(StaffRequiredMixin, View):
+    """ذخیره وضعیت انتشار دریافت شماره از دیوار — فقط Superuser."""
+
+    def post(self, request):
+        from accounts.services.divar_contact_admin import save_divar_contact_rollout
+
+        rollout_mode = (request.POST.get('rollout_mode') or '').strip()
+        result = save_divar_contact_rollout(rollout_mode=rollout_mode, user=request.user)
+        if result.get('ok'):
+            messages.success(request, 'تنظیمات دریافت شماره از دیوار ذخیره شد.')
+        else:
+            messages.error(request, result.get('error') or 'ذخیره ناموفق بود.')
+        return redirect('admin_panel_operations')
+
+
 class AdminOperationsCenterView(StaffRequiredMixin, TemplateView):
     """مرکز عملیات — سلامت سیستم، SMS و بک‌آپ."""
 

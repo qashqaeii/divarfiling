@@ -282,6 +282,7 @@ class AdminLeadAcquisitionView(StaffRequiredMixin, TemplateView):
             'automation_places_ok': places_config_available(),
             'automation_lines_url': reverse('admin_panel_lead_automation_lines_json'),
             'automation_lines_ok': phone_detector_available(),
+            'divar_sessions_url': reverse('admin_panel_divar_sessions_json'),
         })
         return ctx
 
@@ -1003,6 +1004,49 @@ class AdminAutomationPlacesJsonView(StaffRequiredMixin, View):
             'count': len(districts),
             'places_available': places_config_available(),
         }, json_dumps_params={'ensure_ascii': False})
+
+
+class AdminDivarSessionsJsonView(StaffRequiredMixin, View):
+    """نشست‌های دیوار کاربران فایلینگ — مدیریت و افزودن به خطوط Phone Detector."""
+
+    def get(self, request):
+        from workspace.services.divar_session.phone_detector_bridge import list_sessions_for_admin
+
+        return JsonResponse(
+            {'ok': True, 'sessions': list_sessions_for_admin()},
+            json_dumps_params={'ensure_ascii': False},
+        )
+
+    def post(self, request):
+        try:
+            body = json.loads(request.body.decode('utf-8') or '{}')
+        except (UnicodeDecodeError, json.JSONDecodeError):
+            return JsonResponse({'ok': False, 'error': 'JSON نامعتبر'}, status=400)
+
+        action = (body.get('action') or '').strip().lower()
+        session_id = (body.get('session_id') or '').strip()
+        from workspace.divar_session_models import DivarAccountSession
+        from workspace.services.divar_session.phone_detector_bridge import (
+            add_session_to_phone_detector_line,
+            grant_phone_detector_consent,
+            unlink_session_from_line,
+        )
+        from workspace.services.divar_session.service import DivarSessionError
+
+        session = get_object_or_404(DivarAccountSession, pk=session_id)
+        try:
+            if action == 'grant_consent':
+                grant_phone_detector_consent(session)
+                result = {'ok': True}
+            elif action == 'add_to_line':
+                result = add_session_to_phone_detector_line(session)
+            elif action == 'unlink_line':
+                result = unlink_session_from_line(session)
+            else:
+                return JsonResponse({'ok': False, 'error': 'عملیات نامعتبر'}, status=400)
+        except DivarSessionError as exc:
+            return JsonResponse({'ok': False, 'error': exc.message, 'code': exc.code}, status=400)
+        return JsonResponse(result, json_dumps_params={'ensure_ascii': False})
 
 
 class AdminAutomationLinesJsonView(StaffRequiredMixin, View):

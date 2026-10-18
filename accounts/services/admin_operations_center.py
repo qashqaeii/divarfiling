@@ -11,6 +11,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from accounts.models import SmsMessageLog
+from accounts.services.divar_contact_admin import build_divar_contact_admin_context
 from accounts.services.admin_dashboard import (
     _date_range,
     _fill_daily_series,
@@ -570,4 +571,5 @@ def get_operations_center_context(*, days: int = 30, compare: bool = False) -> D
         },
         'system_summary_url': reverse('admin_panel_system_summary') + f'?days={days}',
         'marketing_url': reverse('admin_panel_marketing'),
+        **build_divar_contact_admin_context(),
     }

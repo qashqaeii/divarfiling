@@ -1080,6 +1080,18 @@ class ListingDetailView(DatasetOwnerMixin, DetailView):
         ctx['owner_contact'] = primary_owner_contact(
             listing=listing, crm_property=ctx['crm_property'],
         )
+        from workspace.services.divar_session.feature import user_can_use_divar_contact
+        from workspace.services.divar_session.service import public_session_status
+
+        ctx['divar_contact_enabled'] = user_can_use_divar_contact(self.request.user)
+        ctx['divar_contact_status'] = (
+            public_session_status(self.request.user) if ctx['divar_contact_enabled'] else {}
+        )
+        if ctx['divar_contact_enabled']:
+            ctx['divar_contact_fetch_url'] = reverse(
+                'workspace:divar_contact_fetch_phone',
+                kwargs={'dataset_id': dataset.id, 'listing_id': listing.id},
+            )
         ctx['gallery_images'] = deduplicate_divar_image_urls(
             [normalize_external_image_url(img) for img in (listing.images or []) if img],
         )

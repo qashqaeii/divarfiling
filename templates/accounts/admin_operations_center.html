@@ -228,6 +228,43 @@
     </div>
 </section>
 
+<section class="ecc-section" id="ecc-divar-contact" aria-label="دریافت شماره از دیوار">
+    <header class="ecc-section-head ecc-section-head--slim">
+        <div>
+            <h2><i class="fas fa-phone-volume"></i> دریافت شماره از دیوار</h2>
+            <p>انتشار قابلیت و آمار نشست‌های متصل</p>
+        </div>
+        <a href="{% url 'admin_panel_lead_acquisition' %}#divar-sessions" class="ecc-btn ecc-btn--ghost">حساب‌های متصل</a>
+    </header>
+    {% with dc=divar_contact %}
+    <form method="post" action="{% url 'admin_panel_divar_contact_settings' %}" class="ecc-divar-contact-form">
+        {% csrf_token %}
+        <div class="ecc-divar-contact-toggles">
+            <label class="ecc-divar-contact-toggle">
+                <span>وضعیت انتشار</span>
+                <select name="rollout_mode" class="ecc-input">
+                    {% for value, label in dc.rollout_choices %}
+                    <option value="{{ value }}"{% if dc.rollout_mode == value %} selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <button type="submit" class="ecc-btn ecc-btn--primary">ذخیره</button>
+        </div>
+        <p class="adm-lac-kpi-sub">پیش‌فرض: فقط Superuser — با «فعال برای همه» بدون Deploy منتشر می‌شود.</p>
+    </form>
+    <div class="ecc-ops-health-grid" style="margin-top:1rem">
+        <article class="ecc-ops-health-card"><span class="ecc-ops-health-label">نشست کل</span><strong>{{ dc.stats.total_sessions|to_persian_digits }}</strong></article>
+        <article class="ecc-ops-health-card"><span class="ecc-ops-health-label">فعال</span><strong>{{ dc.stats.connected|to_persian_digits }}</strong></article>
+        <article class="ecc-ops-health-card"><span class="ecc-ops-health-label">منقضی</span><strong>{{ dc.stats.expired|to_persian_digits }}</strong></article>
+        <article class="ecc-ops-health-card"><span class="ecc-ops-health-label">کپچا</span><strong>{{ dc.stats.captcha|to_persian_digits }}</strong></article>
+        <article class="ecc-ops-health-card"><span class="ecc-ops-health-label">مجوز Phone Detector</span><strong>{{ dc.stats.pd_consent|to_persian_digits }}</strong></article>
+        <article class="ecc-ops-health-card"><span class="ecc-ops-health-label">روی خطوط</span><strong>{{ dc.stats.pd_linked|to_persian_digits }}</strong></article>
+        <article class="ecc-ops-health-card"><span class="ecc-ops-health-label">دریافت موفق</span><strong>{{ dc.stats.fetch_success|to_persian_digits }}</strong></article>
+        <article class="ecc-ops-health-card"><span class="ecc-ops-health-label">خطای ۷ روز</span><strong>{{ dc.stats.fetch_errors_recent|to_persian_digits }}</strong></article>
+    </div>
+    {% endwith %}
+</section>
+
 <section class="ecc-section" id="ecc-operations" aria-hidden="true"></section>
 
 {% endblock %}

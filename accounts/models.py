@@ -1482,6 +1482,14 @@ class PhoneDetectorExtractionLine(models.Model):
         SHARED_IP = 'shared_ip', 'IP مشترک'
 
     phone = models.CharField(max_length=20, unique=True, db_index=True)
+    divar_account_session = models.OneToOneField(
+        'workspace.DivarAccountSession',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='extraction_line',
+        verbose_name='نشست مرکزی فایلینگ',
+    )
     line_index = models.PositiveSmallIntegerField(
         default=0,
         help_text='ترتیب نمایش در پنل (۱، ۲، …)',

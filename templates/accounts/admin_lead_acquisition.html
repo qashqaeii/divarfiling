@@ -869,6 +869,35 @@
             </aside>
         </div>
 
+        <div class="adm-lac-panel" id="divar-sessions" style="margin-top:1rem">
+            <div class="adm-lac-section-head">
+                <div>
+                    <h3 style="margin:0;font-size:1.05rem">حساب‌های دیوار متصل (فایلینگ)</h3>
+                    <p class="adm-lac-kpi-sub">نشست‌های کاربران — افزودن به خطوط بدون OTP مجدد (با مجوز)</p>
+                </div>
+                <button type="button" class="adm-lac-btn adm-lac-btn--ghost adm-lac-btn--sm" id="lac-divar-sessions-refresh">
+                    <i class="fas fa-rotate"></i> بروزرسانی
+                </button>
+            </div>
+            <div class="adm-lac-table-wrap">
+                <table class="adm-lac-table">
+                    <thead>
+                        <tr>
+                            <th>شماره دیوار</th>
+                            <th>کاربر</th>
+                            <th>وضعیت</th>
+                            <th>مجوز PD</th>
+                            <th>خط</th>
+                            <th>عملیات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="lac-divar-sessions-tbody">
+                        <tr><td colspan="6"><div class="adm-lac-empty"><i class="fas fa-spinner fa-spin"></i> بارگذاری...</div></td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
         <div class="adm-lac-panel adm-lac-panel--lines" style="margin-top:1rem">
             <div class="adm-lac-section-head">
                 <div>
@@ -2785,6 +2814,69 @@
         if (location.hash === '#lac-automation') loadLines(false);
       });
     }
+  })();
+
+  (function () {
+    var sessionsUrl = '{{ divar_sessions_url|escapejs }}';
+    var tbody = document.getElementById('lac-divar-sessions-tbody');
+    var refreshBtn = document.getElementById('lac-divar-sessions-refresh');
+    if (!sessionsUrl || !tbody) return;
+
+    function postAction(action, sessionId) {
+      return fetch(sessionsUrl, {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': (document.querySelector('[name=csrfmiddlewaretoken]') || {}).value || '',
+        },
+        body: JSON.stringify({ action: action, session_id: sessionId }),
+      }).then(function (r) { return r.json(); });
+    }
+
+    function renderSessions(rows) {
+      if (!rows || !rows.length) {
+        tbody.innerHTML = '<tr><td colspan="6"><div class="adm-lac-empty">نشستی ثبت نشده است.</div></td></tr>';
+        return;
+      }
+      tbody.innerHTML = rows.map(function (row) {
+        var ops = '';
+        if (!row.phone_detector_consent) {
+          ops += '<button type="button" class="adm-lac-btn adm-lac-btn--ghost adm-lac-btn--sm" data-ds-action="grant_consent" data-id="' + row.id + '">ثبت مجوز PD</button> ';
+        }
+        if (row.can_add_to_line) {
+          ops += '<button type="button" class="adm-lac-btn adm-lac-btn--primary adm-lac-btn--sm" data-ds-action="add_to_line" data-id="' + row.id + '">افزودن به خطوط فون‌دتکتور</button>';
+        } else if (row.on_line) {
+          ops += '<button type="button" class="adm-lac-btn adm-lac-btn--ghost adm-lac-btn--sm" data-ds-action="unlink_line" data-id="' + row.id + '">حذف ارتباط خط</button>';
+        }
+        return '<tr><td dir="ltr">' + row.divar_phone + '</td><td>' + row.user_label + '</td><td>' +
+          row.auth_status_label + '</td><td>' + (row.phone_detector_consent ? 'دارد' : 'ندارد') + '</td><td>' +
+          (row.on_line ? row.line_phone : '—') + '</td><td>' + ops + '</td></tr>';
+      }).join('');
+      tbody.querySelectorAll('[data-ds-action]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var action = btn.getAttribute('data-ds-action');
+          var id = btn.getAttribute('data-id');
+          btn.disabled = true;
+          postAction(action, id).then(function () { loadSessions(); }).finally(function () { btn.disabled = false; });
+        });
+      });
+    }
+
+    function loadSessions() {
+      fetch(sessionsUrl, { credentials: 'same-origin' })
+        .then(function (r) { return r.json(); })
+        .then(function (data) { renderSessions(data.sessions || []); })
+        .catch(function () {
+          tbody.innerHTML = '<tr><td colspan="6"><div class="adm-lac-empty">خطا در بارگذاری</div></td></tr>';
+        });
+    }
+
+    if (refreshBtn) refreshBtn.addEventListener('click', loadSessions);
+    if (location.hash === '#divar-sessions') loadSessions();
+    window.addEventListener('hashchange', function () {
+      if (location.hash === '#divar-sessions') loadSessions();
+    });
   })();
 })();
 </script>

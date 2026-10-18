@@ -87,6 +87,7 @@ class DivarAccountSession(models.Model):
         db_index=True,
     )
     hip_status = models.CharField(max_length=64, blank=True, default='')
+    captcha_post_url = models.URLField(max_length=500, blank=True, default='')
     connected_at = models.DateTimeField(null=True, blank=True)
     last_health_check_at = models.DateTimeField(null=True, blank=True)
     last_success_at = models.DateTimeField(null=True, blank=True)
@@ -131,6 +132,30 @@ class DivarAccountSession(models.Model):
                 'updated_at',
             ],
         )
+
+
+class DivarPdSessionFileSyncBlock(models.Model):
+    """جلوگیری از ایجاد/فعال‌سازی مجدد خط از فایل sessions پس از قطع ارتباط مرکزی."""
+
+    class Reason(models.TextChoices):
+        UNLINKED = 'unlinked', 'حذف ارتباط'
+        DISCONNECTED = 'disconnected', 'قطع اتصال'
+        INVALID = 'invalid', 'نشست نامعتبر'
+
+    phone = models.CharField(max_length=20, unique=True, db_index=True)
+    reason = models.CharField(max_length=32, choices=Reason.choices, default=Reason.UNLINKED)
+    session = models.ForeignKey(
+        'DivarAccountSession',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='pd_sync_blocks',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'مسدودیت sync فایل PD'
+        verbose_name_plural = 'مسدودیت‌های sync فایل PD'
 
 
 class DivarContactThrottle(models.Model):

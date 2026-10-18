@@ -38,7 +38,9 @@
          data-send-otp-url="{% url 'workspace:divar_contact_otp_send' %}"
          data-verify-otp-url="{% url 'workspace:divar_contact_otp_verify' %}"
          data-fetch-url="{{ divar_contact_fetch_url }}"
-         data-disconnect-url="{% url 'workspace:divar_contact_disconnect' %}">
+         data-disconnect-url="{% url 'workspace:divar_contact_disconnect' %}"
+         data-captcha-post-url="{{ divar_contact_status.captcha_post_url|default:'' }}"
+         data-captcha-fallback-url="{{ divar_listing_captcha_url|default:'' }}">
         <div class="mk-owner-box__divar-row">
             <button type="button" class="ws-btn ws-btn-sm ws-btn-secondary" data-divar-action
                     data-state="{{ divar_contact_status.button_state|default:'connect' }}">

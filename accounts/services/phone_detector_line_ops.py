@@ -12,6 +12,10 @@ from django.utils import timezone
 
 from accounts.models import AcquisitionRun, PhoneDetectorExtractionLine
 from workspace.divar_session_models import DivarAccountSession
+from workspace.services.divar_session.pd_sync_block import (
+    blocked_phones_set,
+    is_phone_detector_file_sync_blocked,
+)
 from accounts.services.phone_detector_lines import (
     PhoneDetectorLineError,
     _load_index,
@@ -34,17 +38,18 @@ def normalize_line_phone(phone: str) -> str:
     return raw
 
 
-def _central_session_blocks_line(phone: str) -> bool:
-    """نشست مرکزی نامعتبر نباید خط را در rotation نگه دارد."""
-    row = (
-        DivarAccountSession.objects.filter(divar_phone=normalize_line_phone(phone))
-        .exclude(auth_status=DivarAccountSession.AuthStatus.DISCONNECTED)
-        .order_by('-updated_at')
-        .first()
-    )
-    if not row:
+def _central_session_blocks_line(row: Optional[PhoneDetectorExtractionLine]) -> bool:
+    """فقط خطوط مرتبط با FK نشست مرکزی — نه تطبیق صرف شماره."""
+    if not row or not row.divar_account_session_id:
         return False
-    return row.auth_status != DivarAccountSession.AuthStatus.CONNECTED
+    central = row.divar_account_session
+    return central.auth_status != DivarAccountSession.AuthStatus.CONNECTED
+
+
+def _line_central_session_allows_activation(row: PhoneDetectorExtractionLine) -> bool:
+    if not row.divar_account_session_id:
+        return True
+    return row.divar_account_session.auth_status == DivarAccountSession.AuthStatus.CONNECTED
 
 
 def _pause_line_for_central_session(row: PhoneDetectorExtractionLine, *, detail: str) -> bool:
@@ -115,16 +120,23 @@ def sync_lines_from_sessions() -> int:
     phones = _sessions_index_phones()
     existing = {
         normalize_line_phone(row.phone): row
-        for row in PhoneDetectorExtractionLine.objects.all()
+        for row in PhoneDetectorExtractionLine.objects.select_related('divar_account_session').all()
     }
     touched = 0
     for idx, phone in enumerate(phones, start=1):
         if not _PHONE_RE.match(phone):
             continue
+        if is_phone_detector_file_sync_blocked(phone):
+            row = existing.get(phone)
+            if row and row.operational_status == OPS.ACTIVE:
+                row.operational_status = OPS.PAUSED
+                row.status_detail = 'فایل sessions بدون ارتباط مرکزی — sync مسدود'
+                row.updated_at = timezone.now()
+                row.save(update_fields=['operational_status', 'status_detail', 'updated_at'])
+                touched += 1
+            continue
         row = existing.get(phone)
         if row is None:
-            if _central_session_blocks_line(phone):
-                continue
             PhoneDetectorExtractionLine.objects.create(
                 phone=phone,
                 line_index=idx,
@@ -136,7 +148,7 @@ def sync_lines_from_sessions() -> int:
                 row,
                 detail='نشست مرکزی فایلینگ معتبر نیست — خط متوقف شد',
             )
-            if not paused and _central_session_blocks_line(phone):
+            if not paused and _central_session_blocks_line(row):
                 if row.operational_status != OPS.PAUSED:
                     row.operational_status = OPS.PAUSED
                     row.status_detail = 'نشست مرکزی فایلینگ معتبر نیست — خط متوقف شد'
@@ -144,6 +156,12 @@ def sync_lines_from_sessions() -> int:
                     row.save(update_fields=['operational_status', 'status_detail', 'updated_at'])
                     paused = True
             if paused:
+                touched += 1
+            elif row.operational_status == OPS.ACTIVE and is_phone_detector_file_sync_blocked(phone):
+                row.operational_status = OPS.PAUSED
+                row.status_detail = 'فایل sessions بدون ارتباط مرکزی — sync مسدود'
+                row.updated_at = timezone.now()
+                row.save(update_fields=['operational_status', 'status_detail', 'updated_at'])
                 touched += 1
             elif row.line_index != idx:
                 row.line_index = idx
@@ -155,7 +173,8 @@ def sync_lines_from_sessions() -> int:
 def schedulable_lines_qs():
     sync_lines_from_sessions()
     now = timezone.now()
-    return PhoneDetectorExtractionLine.objects.filter(
+    blocked = blocked_phones_set()
+    qs = PhoneDetectorExtractionLine.objects.select_related('divar_account_session').filter(
         Q(operational_status=OPS.ACTIVE)
         | Q(
             operational_status=OPS.COOLDOWN,
@@ -165,7 +184,13 @@ def schedulable_lines_qs():
             operational_status=OPS.COOLDOWN,
             blocked_until__lte=now,
         ),
+    ).filter(
+        Q(divar_account_session__isnull=True)
+        | Q(divar_account_session__auth_status=DivarAccountSession.AuthStatus.CONNECTED),
     )
+    if blocked:
+        qs = qs.exclude(phone__in=blocked)
+    return qs
 
 
 def count_schedulable_lines() -> int:
@@ -177,15 +202,11 @@ def excluded_phones_for_extraction() -> set[str]:
     sync_lines_from_sessions()
     now = timezone.now()
     phones: set[str] = set()
+    phones.update(blocked_phones_set())
     for row in PhoneDetectorExtractionLine.objects.select_related('divar_account_session').all():
-        if _central_session_blocks_line(row.phone):
+        if _central_session_blocks_line(row):
             phones.add(row.phone)
             continue
-        if row.divar_account_session_id:
-            central = row.divar_account_session
-            if central.auth_status != DivarAccountSession.AuthStatus.CONNECTED:
-                phones.add(row.phone)
-                continue
         if row.operational_status in (
             OPS.BLOCKED_CAPTCHA,
             OPS.PAUSED,
@@ -283,9 +304,17 @@ def apply_run_outcome_from_engine(
             .first()
         )
         if not row:
+            if is_phone_detector_file_sync_blocked(phone):
+                continue
             row = PhoneDetectorExtractionLine.objects.create(phone=phone)
 
         prior_status = row.operational_status
+        if _central_session_blocks_line(row):
+            row.operational_status = OPS.PAUSED
+            row.status_detail = 'نشست مرکزی نامعتبر — خارج از rotation'
+            row.updated_at = now
+            row.save(update_fields=['operational_status', 'status_detail', 'updated_at'])
+            continue
 
         if prior_status == OPS.PAUSED:
             continue
@@ -461,7 +490,9 @@ def merge_operational_fields(row: dict[str, Any]) -> dict[str, Any]:
 def set_line_paused(phone: str, *, paused: bool) -> PhoneDetectorExtractionLine:
     phone = normalize_line_phone(phone)
     sync_lines_from_sessions()
-    row = PhoneDetectorExtractionLine.objects.filter(phone=phone).first()
+    row = PhoneDetectorExtractionLine.objects.select_related('divar_account_session').filter(
+        phone=phone,
+    ).first()
     if not row:
         raise PhoneDetectorLineError('خط یافت نشد.', code='line_not_found')
     now = timezone.now()
@@ -469,6 +500,16 @@ def set_line_paused(phone: str, *, paused: bool) -> PhoneDetectorExtractionLine:
         row.operational_status = OPS.PAUSED
         row.status_detail = 'متوقف توسط مدیر — در زمان‌بندی انتخاب نمی‌شود'
     else:
+        if is_phone_detector_file_sync_blocked(phone):
+            raise PhoneDetectorLineError(
+                'این شماره از sync نشست مرکزی جدا شده — افزودن مجدد از مرکز جذب لازم است.',
+                code='line_sync_blocked',
+            )
+        if not _line_central_session_allows_activation(row):
+            raise PhoneDetectorLineError(
+                'نشست مرکزی فایلینگ معتبر نیست — فعال‌سازی مجاز نیست.',
+                code='central_session_invalid',
+            )
         if row.operational_status == OPS.BLOCKED_CAPTCHA:
             raise PhoneDetectorLineError(
                 'خط هنوز محدودیت کپچا دارد — از «بررسی و فعال‌سازی مجدد» استفاده کنید.',
@@ -487,13 +528,25 @@ def probe_and_reactivate_line(phone: str) -> dict[str, Any]:
 
     phone = normalize_line_phone(phone)
     sync_lines_from_sessions()
-    row = PhoneDetectorExtractionLine.objects.filter(phone=phone).first()
+    row = PhoneDetectorExtractionLine.objects.select_related('divar_account_session').filter(
+        phone=phone,
+    ).first()
     if not row:
         raise PhoneDetectorLineError('خط یافت نشد.', code='line_not_found')
     if row.operational_status == OPS.PAUSED:
         raise PhoneDetectorLineError(
             'خط توسط مدیر متوقف شده — ابتدا «فعال‌سازی» را بزنید.',
             code='line_paused',
+        )
+    if is_phone_detector_file_sync_blocked(phone):
+        raise PhoneDetectorLineError(
+            'sync نشست مرکزی مسدود است — افزودن مجدد از مرکز جذب لازم است.',
+            code='line_sync_blocked',
+        )
+    if not _line_central_session_allows_activation(row):
+        raise PhoneDetectorLineError(
+            'نشست مرکزی فایلینگ معتبر نیست.',
+            code='central_session_invalid',
         )
 
     now = timezone.now()

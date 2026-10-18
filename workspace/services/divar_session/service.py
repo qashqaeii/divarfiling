@@ -81,17 +81,38 @@ def get_primary_session(user) -> Optional[DivarAccountSession]:
     return None
 
 
+def _try_refresh_session_row(row: DivarAccountSession) -> bool:
+    if not row.encrypted_session:
+        return False
+    try:
+        runtime = _runtime_from_row(row)
+        health = runtime.health_check()
+        if health.ok:
+            _persist_session(row, runtime)
+            return True
+    except Exception:
+        logger.debug('divar session refresh failed for %s', row.pk, exc_info=True)
+    return False
+
+
+def _mark_session_expired(row: DivarAccountSession) -> DivarAccountSession:
+    row.auth_status = DivarAccountSession.AuthStatus.EXPIRED
+    row.save(update_fields=['auth_status', 'updated_at'])
+    from workspace.services.divar_session.phone_detector_bridge import on_central_session_invalidated
+
+    on_central_session_invalidated(row, reason='expired')
+    return row
+
+
 def _resolve_expired_if_needed(row: DivarAccountSession) -> DivarAccountSession:
     if row.auth_status != DivarAccountSession.AuthStatus.CONNECTED:
         return row
     if not row.encrypted_session:
-        row.auth_status = DivarAccountSession.AuthStatus.EXPIRED
-        row.save(update_fields=['auth_status', 'updated_at'])
-        return row
+        return _mark_session_expired(row)
     if row.token_expires_at and row.token_expires_at <= timezone.now():
-        row.auth_status = DivarAccountSession.AuthStatus.EXPIRED
-        row.save(update_fields=['auth_status', 'updated_at'])
-        return row
+        if _try_refresh_session_row(row):
+            return row
+        return _mark_session_expired(row)
     return row
 
 
@@ -114,6 +135,7 @@ def public_session_status(user) -> dict[str, Any]:
             'button_state': 'captcha',
             'divar_phone_masked': _mask_phone(row.divar_phone),
             'hip_status': row.hip_status,
+            'captcha_post_url': (row.captcha_post_url or '').strip(),
         }
     if row.auth_status == DivarAccountSession.AuthStatus.CONNECTED:
         return {
@@ -254,9 +276,18 @@ def verify_divar_otp(user, phone: str, otp: str) -> dict[str, Any]:
         row.auth_status = DivarAccountSession.AuthStatus.CONNECTED
         row.connected_at = timezone.now()
         row.hip_status = ''
+        row.captcha_post_url = ''
         _persist_session(row, runtime)
         row.last_success_at = timezone.now()
-        row.save(update_fields=['divar_phone', 'connected_at', 'last_success_at', 'updated_at'])
+        row.save(
+            update_fields=[
+                'divar_phone',
+                'connected_at',
+                'last_success_at',
+                'captcha_post_url',
+                'updated_at',
+            ],
+        )
 
     return {'ok': True, 'phone': saved_phone, 'status': public_session_status(user)}
 
@@ -316,13 +347,7 @@ def fetch_listing_phone(user, listing) -> dict[str, Any]:
             runtime = _runtime_from_row(row)
             health = runtime.health_check()
             if not health.ok:
-                row.auth_status = DivarAccountSession.AuthStatus.EXPIRED
-                row.save(update_fields=['auth_status', 'updated_at'])
-                from workspace.services.divar_session.phone_detector_bridge import (
-                    on_central_session_invalidated,
-                )
-
-                on_central_session_invalidated(row, reason='expired')
+                _mark_session_expired(row)
                 raise DivarSessionError('نشست منقضی شده — دوباره متصل شوید.', code='session_expired')
 
             scraper = runtime.make_scraper()
@@ -346,9 +371,11 @@ def fetch_listing_phone(user, listing) -> dict[str, Any]:
             if hip_status and str(hip_status).startswith('captcha'):
                 row.auth_status = DivarAccountSession.AuthStatus.CAPTCHA_REQUIRED
                 row.hip_status = str(hip_status)
+                row.captcha_post_url = post_url
                 row.last_error_code = 'captcha_required'
                 row.last_error_message = 'نیاز به حل کپچا در دیوار'
                 _persist_session(row, runtime, preserve_captcha=True)
+                row.save(update_fields=['captcha_post_url', 'updated_at'])
                 DivarPhoneFetchLog.objects.create(
                     user=user,
                     listing_token=token,
@@ -362,26 +389,26 @@ def fetch_listing_phone(user, listing) -> dict[str, Any]:
                     'status': public_session_status(user),
                 }
 
-            if hip_status == 'auth_expired' or not phone:
-                row.auth_status = DivarAccountSession.AuthStatus.EXPIRED
-                row.save(update_fields=['auth_status', 'updated_at'])
-                from workspace.services.divar_session.phone_detector_bridge import (
-                    on_central_session_invalidated,
-                )
-
-                on_central_session_invalidated(row, reason='expired')
-                code = 'auth_expired' if hip_status == 'auth_expired' else 'no_phone'
+            if hip_status == 'auth_expired':
+                _mark_session_expired(row)
                 raise DivarSessionError(
-                    'دریافت شماره ناموفق بود.',
-                    code=code,
+                    'نشست منقضی شده — دوباره متصل شوید.',
+                    code='auth_expired',
+                )
+            if not phone:
+                raise DivarSessionError(
+                    'شماره تماس در پاسخ دیوار موجود نبود.',
+                    code='no_phone',
                 )
 
             pd = runtime._pd
             phone_out = pd.normalize_phone(phone)
             row.auth_status = DivarAccountSession.AuthStatus.CONNECTED
             row.hip_status = ''
+            row.captcha_post_url = ''
             row.last_success_at = timezone.now()
             _persist_session(row, runtime)
+            row.save(update_fields=['captcha_post_url', 'last_success_at', 'updated_at'])
     except DivarSessionError as exc:
         if exc.code != 'captcha_required':
             DivarPhoneFetchLog.objects.create(

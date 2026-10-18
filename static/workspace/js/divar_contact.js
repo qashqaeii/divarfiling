@@ -64,11 +64,22 @@
         loading: 'در حال دریافت...',
       };
       setButtonState(st.button_state || 'connect', map[st.button_state] || map.connect);
+      syncCaptchaUrl(st);
+    }
+
+    function syncCaptchaUrl(st) {
+      var fromStatus = (st && st.captcha_post_url) || root.dataset.captchaPostUrl || '';
+      var fallback = root.dataset.captchaFallbackUrl || '';
+      if (fromStatus) root.dataset.captchaPostUrl = fromStatus;
+      else if (!root.dataset.captchaPostUrl && fallback) root.dataset.captchaPostUrl = fallback;
     }
 
     applyStatus({
       button_state: root.dataset.initialState || 'connect',
     });
+    if ((root.dataset.initialState || '') === 'captcha') {
+      syncCaptchaUrl({ captcha_post_url: root.dataset.captchaPostUrl });
+    }
 
     function openModal() {
       if (!modal) return;
@@ -137,7 +148,10 @@
       if (state === 'captcha') {
         var postUrl = root.dataset.captchaPostUrl;
         if (postUrl) window.open(postUrl, '_blank', 'noopener');
-        setButtonState('fetch', 'بررسی مجدد');
+        if (!root.dataset.captchaPostUrl && root.dataset.captchaFallbackUrl) {
+          root.dataset.captchaPostUrl = root.dataset.captchaFallbackUrl;
+        }
+        setButtonState('captcha', 'بررسی مجدد');
         return;
       }
       if (state === 'fetch' && fetchUrl) {

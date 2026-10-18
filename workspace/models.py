@@ -2427,6 +2427,7 @@ from workspace.divar_session_models import (  # noqa: E402,F401
     DivarContactFeatureAuditLog,
     DivarContactFeatureConfig,
     DivarContactThrottle,
+    DivarPdSessionFileSyncBlock,
     DivarOtpChallenge,
     DivarPhoneFetchLog,
 )

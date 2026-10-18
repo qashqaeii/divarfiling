@@ -8,9 +8,13 @@ from django.db import transaction
 from django.utils import timezone
 
 from accounts.models import PhoneDetectorExtractionLine
-from workspace.divar_session_models import DivarAccountSession
+from workspace.divar_session_models import DivarAccountSession, DivarPdSessionFileSyncBlock
 from workspace.services.divar_session.errors import DivarSessionError
 from workspace.services.divar_session.pd_import import resolve_phone_detector_dir
+from workspace.services.divar_session.pd_sync_block import (
+    block_phone_detector_file_sync,
+    clear_phone_detector_file_sync_block,
+)
 from workspace.services.divar_session.service import _persist_session, _runtime_from_row
 
 logger = logging.getLogger(__name__)
@@ -28,14 +32,27 @@ def on_central_session_invalidated(
     *,
     reason: str = 'invalid',
 ) -> None:
-    """خط مرتبط را از rotation خارج کن؛ فایل سشن مرکزی را حذف نکن (خارج از scope مجوز فایل)."""
+    """خط مرتبط را از rotation خارج کن."""
     detail = {
         'disconnected': 'نشست کاربر قطع شد — خط متوقف شد',
         'expired': 'نشست منقضی شد — خط متوقف شد',
         'invalid': 'نشست نامعتبر — خط متوقف شد',
     }.get(reason, 'نشست نامعتبر — خط متوقف شد')
 
-    PhoneDetectorExtractionLine.objects.filter(divar_account_session=session).update(
+    block_reason = {
+        'disconnected': DivarPdSessionFileSyncBlock.Reason.DISCONNECTED,
+        'expired': DivarPdSessionFileSyncBlock.Reason.INVALID,
+        'invalid': DivarPdSessionFileSyncBlock.Reason.INVALID,
+    }.get(reason, DivarPdSessionFileSyncBlock.Reason.INVALID)
+
+    linked = PhoneDetectorExtractionLine.objects.filter(divar_account_session=session)
+    if linked.exists():
+        block_phone_detector_file_sync(
+            session.divar_phone,
+            reason=block_reason,
+            session=session,
+        )
+    linked.update(
         operational_status=PhoneDetectorExtractionLine.OperationalStatus.PAUSED,
         status_detail=detail,
         updated_at=timezone.now(),
@@ -117,6 +134,7 @@ def add_session_to_phone_detector_line(session: DivarAccountSession) -> dict:
             code='phone_duplicate',
         )
 
+    clear_phone_detector_file_sync_block(session.divar_phone)
     _write_refreshed_session_file(session)
 
     with transaction.atomic():
@@ -134,9 +152,16 @@ def add_session_to_phone_detector_line(session: DivarAccountSession) -> dict:
 
 
 def unlink_session_from_line(session: DivarAccountSession) -> dict:
+    had_line = PhoneDetectorExtractionLine.objects.filter(divar_account_session=session).exists()
+    if had_line:
+        block_phone_detector_file_sync(
+            session.divar_phone,
+            reason=DivarPdSessionFileSyncBlock.Reason.UNLINKED,
+            session=session,
+        )
     PhoneDetectorExtractionLine.objects.filter(divar_account_session=session).update(
         operational_status=PhoneDetectorExtractionLine.OperationalStatus.PAUSED,
-        status_detail='ارتباط با نشست مرکزی حذف شد',
+        status_detail='ارتباط با نشست مرکزی حذف شد — sync خودکار مسدود',
         updated_at=timezone.now(),
     )
     deleted, _ = PhoneDetectorExtractionLine.objects.filter(divar_account_session=session).delete()

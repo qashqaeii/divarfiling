@@ -1092,6 +1092,9 @@ class ListingDetailView(DatasetOwnerMixin, DetailView):
                 'workspace:divar_contact_fetch_phone',
                 kwargs={'dataset_id': dataset.id, 'listing_id': listing.id},
             )
+            ctx['divar_listing_captcha_url'] = (
+                (listing.link or '').strip() or f'https://divar.ir/v/{listing.token}'
+            )
         ctx['gallery_images'] = deduplicate_divar_image_urls(
             [normalize_external_image_url(img) for img in (listing.images or []) if img],
         )

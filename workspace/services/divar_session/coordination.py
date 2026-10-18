@@ -32,6 +32,7 @@ def assert_rate_limit(key: str, *, seconds: int) -> None:
 @contextmanager
 def session_operation_lock(session: DivarAccountSession):
     now = timezone.now()
+    acquired_until = now + timedelta(seconds=LOCK_SECONDS)
     with transaction.atomic():
         row = DivarAccountSession.objects.select_for_update().get(pk=session.pk)
         if row.operation_lock_until and row.operation_lock_until > now:
@@ -39,12 +40,15 @@ def session_operation_lock(session: DivarAccountSession):
                 'عملیات دیگری روی این نشست در حال انجام است. لحظه‌ای بعد دوباره تلاش کنید.',
                 code='session_busy',
             )
-        row.operation_lock_until = now + timedelta(seconds=LOCK_SECONDS)
+        row.operation_lock_until = acquired_until
         row.save(update_fields=['operation_lock_until', 'updated_at'])
     try:
         yield
     finally:
-        DivarAccountSession.objects.filter(pk=session.pk).update(
+        DivarAccountSession.objects.filter(
+            pk=session.pk,
+            operation_lock_until=acquired_until,
+        ).update(
             operation_lock_until=None,
             updated_at=timezone.now(),
         )

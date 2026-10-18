@@ -1364,6 +1364,32 @@ def _default_business_lazy_body(token: str) -> Dict[str, Any]:
     }
 
 
+_BUSINESS_LAZY_REST_PATH_RE = re.compile(
+    r"^/v8/premium-user/post-page/business-data/([A-Za-z0-9_-]+)/lazy$"
+)
+
+
+def _normalize_business_lazy_rest_path(path: str, expected_token: str) -> Optional[str]:
+    """فقط endpoint مجاز lazy پنل تجاری — بدون دامنه یا مسیر غیرمنتظره."""
+    raw = str(path or "").strip()
+    if not raw:
+        return None
+    if raw.startswith("https://api.divar.ir"):
+        raw = raw[len("https://api.divar.ir"):]
+    elif raw.startswith("http://api.divar.ir"):
+        raw = raw[len("http://api.divar.ir"):]
+    if not raw.startswith("/"):
+        return None
+    match = _BUSINESS_LAZY_REST_PATH_RE.match(raw)
+    if not match:
+        return None
+    path_token = match.group(1)
+    token = str(expected_token or "").strip()
+    if token and path_token != token:
+        return None
+    return raw
+
+
 def _find_business_lazy_request(detail: Dict[str, Any]) -> Optional[tuple]:
     """مسیر و بدنهٔ درخواست lazy برای اطلاعات مشاور/آژانس از BUSINESS_SECTION."""
     for sec in detail.get("sections") or []:
@@ -1374,15 +1400,16 @@ def _find_business_lazy_request(detail: Dict[str, Any]) -> Optional[tuple]:
                 continue
             data = w.get("data") or {}
             path = str(data.get("rest_request_path") or "").strip()
-            if not path:
+            post_token = str(safe_get(detail, ["webengage", "token"]) or "").strip()
+            normalized = _normalize_business_lazy_rest_path(path, post_token)
+            if not normalized:
                 continue
             req_data = data.get("request_data") or {}
             if req_data:
                 body: Dict[str, Any] = {"request_data": req_data}
             else:
-                post_token = str(safe_get(detail, ["webengage", "token"]) or "").strip()
                 body = _default_business_lazy_body(post_token)
-            return path, body
+            return normalized, body
     return None
 
 
@@ -1392,35 +1419,62 @@ def fetch_business_lazy_widgets(
     session: Optional[requests.Session] = None,
 ) -> List[Dict[str, Any]]:
     """دریافت widget_list مشاور/آژانس از API lazy (POST)."""
+    token = str(token or safe_get(detail, ["webengage", "token"]) or "").strip()
     found = _find_business_lazy_request(detail)
     if found:
         path, body = found
     else:
         business_type = str(safe_get(detail, ["webengage", "business_type"]) or "").strip().lower()
-        if business_type != "premium-panel":
+        if business_type not in ("premium-panel", "premium_panel"):
             return []
         path = f"/v8/premium-user/post-page/business-data/{token}/lazy"
         body = _default_business_lazy_body(token)
 
+    normalized = _normalize_business_lazy_rest_path(path, token)
+    if not normalized:
+        return []
+
     if not body.get("request_data"):
         body = _default_business_lazy_body(token)
 
-    url = path if path.startswith("http") else f"https://api.divar.ir{path}"
-    resp = request_with_retry(
-        "POST",
-        url,
-        headers=LIST_HEADERS,
-        json_body=body,
-        timeout=CONFIG["timeout_sec"],
-        session=session,
-    )
+    url = f"https://api.divar.ir{normalized}"
+    try:
+        resp = request_with_retry(
+            "POST",
+            url,
+            headers=LIST_HEADERS,
+            json_body=body,
+            timeout=CONFIG["timeout_sec"],
+            session=session,
+        )
+    except Exception:
+        return []
     if resp is None or resp.status_code != 200:
         return []
     try:
         payload = resp.json()
     except json.JSONDecodeError:
         return []
-    return payload.get("widget_list") or []
+    if not isinstance(payload, dict):
+        return []
+    widgets = payload.get("widget_list")
+    if not isinstance(widgets, list):
+        return []
+    return widgets
+
+
+def _normalize_consultant_active_ads_subtitle(subtitle: str) -> str:
+    """زیرعنوان آگهی‌های فعال — اعداد تنها (مثل image_count) معتبر نیستند."""
+    s = str(subtitle or "").strip()
+    if not s:
+        return ""
+    compact = re.sub(r"[\s\u200c\u200f\u200e]+", "", s)
+    compact = to_english_digits(compact).replace(",", "").replace("٬", "")
+    if compact.isdigit():
+        return ""
+    if "آگهی" not in s and "فعال" not in s:
+        return ""
+    return s
 
 
 def _extract_consultant_from_widget_list(widget_list: List[Dict[str, Any]]) -> Dict[str, str]:
@@ -1430,15 +1484,24 @@ def _extract_consultant_from_widget_list(widget_list: List[Dict[str, Any]]) -> D
         "مشاور_آگهی_فعال": "",
     }
     for w in widget_list or []:
+        if not isinstance(w, dict):
+            continue
         if w.get("widget_type") != "EVENT_ROW":
             continue
         data = w.get("data") or {}
+        if not isinstance(data, dict):
+            continue
         action = data.get("action") or {}
         if action.get("type") != "PREMIUM_PANEL_BRAND_LANDING":
             continue
-        result["مشاور_نام"] = str(data.get("title") or "").strip()
-        result["مشاور_آگهی_فعال"] = str(data.get("subtitle") or "").strip()
-        break
+        name = str(data.get("title") or "").strip()
+        if name:
+            result["مشاور_نام"] = name
+        active = _normalize_consultant_active_ads_subtitle(str(data.get("subtitle") or ""))
+        if active:
+            result["مشاور_آگهی_فعال"] = active
+        if result["مشاور_نام"]:
+            break
     return result
 
 
@@ -2186,10 +2249,13 @@ def flatten_post_detail(detail: Dict[str, Any]) -> Dict[str, Any]:
     out["فروشنده_تخفیف"] = "جزئی" if "تخفیف" in (description_text or "") else ""
 
     # مشاور / آژانس املاک (از API lazy: business-data/.../lazy)
-    business_widgets = detail.get("business_lazy_widget_list") or detail.get("widget_list") or []
+    business_widgets = detail.get("business_lazy_widget_list")
+    if not isinstance(business_widgets, list):
+        business_widgets = []
     consultant = _extract_consultant_from_widget_list(business_widgets)
     out.update(consultant)
-    out["مشاور_business_ref"] = webengage.get("business_ref") or ""
+    business_ref = str(webengage.get("business_ref") or "").strip()
+    out["مشاور_business_ref"] = business_ref
 
     # آدرس (از توضیحات اگر یافت شود)
     address = "، ".join([p for p in [city_pers, dist_pers] if p])

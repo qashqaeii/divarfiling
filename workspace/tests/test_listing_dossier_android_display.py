@@ -3,11 +3,13 @@ from django.test import SimpleTestCase
 
 from workspace.models import Listing
 from workspace.services.display import (
+    apply_convertible_rent_to_dossier,
     build_listing_display_data,
     dedupe_listing_dossier_rows,
     format_field_rows,
     format_sections,
     location_accuracy_for_map,
+    resolve_convertible_rent_card,
     transaction_profile,
 )
 
@@ -27,8 +29,8 @@ def _rent_listing(data: dict, **fields) -> Listing:
 
 
 class ListingDossierAndroidDisplayTests(SimpleTestCase):
-    def test_convertible_rent_hides_internal_money_keys(self):
-        raw = {
+    def _convertible_android_raw(self):
+        return {
             'مالی_قیمت_کل_وضعیت': 'unknown',
             'مالی_قیمت_کل_عدد': 0,
             'مالی_قیمت_هر_متر_وضعیت': 'unknown',
@@ -43,6 +45,9 @@ class ListingDossierAndroidDisplayTests(SimpleTestCase):
             'متراژ_عدد': 250,
             'متراژ': 250,
         }
+
+    def test_convertible_rent_hides_internal_money_keys(self):
+        raw = self._convertible_android_raw()
         listing = _rent_listing(raw, deposit=3_000_000_000, rent=0, area=250)
         self.assertEqual(listing.data.get('اجاره_ودیعه_عدد'), 3_000_000_000)
 
@@ -62,6 +67,56 @@ class ListingDossierAndroidDisplayTests(SimpleTestCase):
         self.assertNotIn('اجاره_ودیعه_عدد', money)
         labels = [r['key'] for r in dedupe_listing_dossier_rows(format_field_rows(money, data))]
         self.assertEqual(labels.count('ودیعه'), 1)
+
+    def test_convertible_rent_card_dual_mode_android(self):
+        raw = self._convertible_android_raw()
+        listing = _rent_listing(raw, deposit=3_000_000_000, rent=0, area=250)
+        profile = transaction_profile('اجاره')
+        data = build_listing_display_data(listing, {}, transaction_type='اجاره')
+        card = resolve_convertible_rent_card(listing, data, profile, raw_data=raw)
+        self.assertTrue(card['show_card'])
+        self.assertEqual(card['states']['base']['deposit'], 3_000_000_000)
+        self.assertEqual(card['states']['base']['rent'], 0)
+        self.assertEqual(card['states']['alt']['deposit'], 1_300_000_000)
+        self.assertEqual(card['states']['alt']['rent'], 50_000_000)
+        self.assertEqual(card['states']['base']['rent_label'], 'رایگان')
+
+        sections = format_sections(data, profile)
+        section_rows = {
+            name: dedupe_listing_dossier_rows(format_field_rows(fields, data))
+            for name, fields in sections.items()
+        }
+        apply_convertible_rent_to_dossier(sections, section_rows, card)
+        money_rows = section_rows.get('مالی', [])
+        raw_keys = {r.get('raw_key') for r in money_rows}
+        self.assertFalse(raw_keys & {'ودیعه', 'اجاره', 'ودیعه (شرایط تبدیل)'})
+
+    def test_convertible_rent_card_excel_style_keys(self):
+        raw = {
+            'ودیعه': 3_000_000_000,
+            'اجاره': 0,
+            'ودیعه (شرایط تبدیل)': 1_300_000_000,
+            'اجاره ماهانه (شرایط تبدیل)': 50_000_000,
+            'ودیعه و اجاره': 'قابل تبدیل',
+        }
+        listing = _rent_listing(raw, deposit=3_000_000_000, rent=0)
+        profile = transaction_profile('اجاره')
+        data = build_listing_display_data(listing, {}, transaction_type='اجاره')
+        card = resolve_convertible_rent_card(listing, data, profile, raw_data=raw)
+        self.assertTrue(card['show_card'])
+
+    def test_convertible_rent_partial_data_no_card(self):
+        raw = {
+            'اجاره_قابل_تبدیل': 'قابل تبدیل',
+            'اجاره_ودیعه_عدد': 2_000_000_000,
+            'اجاره_ماهانه_عدد': 10_000_000,
+        }
+        listing = _rent_listing(raw, deposit=2_000_000_000, rent=10_000_000)
+        profile = transaction_profile('اجاره')
+        data = build_listing_display_data(listing, {}, transaction_type='اجاره')
+        card = resolve_convertible_rent_card(listing, data, profile, raw_data=raw)
+        self.assertFalse(card['show_card'])
+        self.assertTrue(card['convertible'])
 
     def test_rent_without_convertibility(self):
         raw = {

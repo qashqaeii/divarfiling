@@ -9,7 +9,7 @@ import jdatetime
 from django.utils import timezone as dj_tz
 
 from workspace.services.columns import COLUMN_ALIASES
-from workspace.services.formatting import format_area, format_toman
+from workspace.services.formatting import format_area, format_toman, format_toman_compact
 from workspace.services.jalali_input import to_persian_digits
 from workspace.services.listing_features import is_listing_feature_key
 
@@ -1418,3 +1418,198 @@ def to_jalali_display(value) -> str:
     except Exception:
         pass
     return str(value)
+
+
+_CONVERTIBLE_RENT_DOSSIER_KEYS = frozenset({
+    'ودیعه', 'deposit', 'رهن', 'اجاره', 'rent', 'اجاره ماهانه',
+    'ودیعه و اجاره', 'ودیعه (شرایط تبدیل)', 'اجاره ماهانه (شرایط تبدیل)',
+})
+
+
+def _dossier_money_amount(value: Any) -> Optional[int]:
+    from workspace.services.columns import _safe_int
+
+    if value is None:
+        return None
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, (int, float)):
+        return int(round(float(value)))
+    s = str(value).strip().replace('،', ',').replace(',', '')
+    if not s or s.lower() in ('nan', 'none', '-', '—'):
+        return None
+    if s in KNOWN_TEXT_PRICES:
+        return None
+    parsed = _safe_int(s)
+    if parsed is not None:
+        return parsed
+    return None
+
+
+def _dossier_rent_label(amount: Optional[int]) -> str:
+    if amount is None:
+        return '—'
+    if amount == 0:
+        return 'رایگان'
+    return format_toman(amount)
+
+
+def _dossier_deposit_label(amount: Optional[int]) -> str:
+    if amount is None:
+        return '—'
+    return format_toman(amount)
+
+
+def _dossier_endpoint_rent_phrase(amount: Optional[int]) -> str:
+    if amount is None:
+        return '—'
+    if amount == 0:
+        return 'اجاره رایگان'
+    return f'{format_toman_compact(amount)} اجاره'
+
+
+def _dossier_endpoint_deposit_phrase(amount: Optional[int]) -> str:
+    if amount is None:
+        return '—'
+    return f'{format_toman_compact(amount)} ودیعه'
+
+
+def _resolve_convertible_money_pair(
+    listing,
+    merged: dict,
+    *,
+    deposit_keys: Tuple[str, ...],
+    rent_keys: Tuple[str, ...],
+    deposit_scalar: str = '',
+    rent_scalar: str = '',
+    use_listing_model: bool = False,
+) -> Tuple[Optional[int], Optional[int]]:
+    from workspace.services.columns import _listing_money_scalar
+
+    dep: Optional[int] = None
+    rent: Optional[int] = None
+
+    if use_listing_model:
+        if listing.deposit is not None:
+            dep = int(listing.deposit)
+        if listing.rent is not None:
+            rent = int(listing.rent)
+
+    for key in deposit_keys:
+        if dep is not None:
+            break
+        dep = _dossier_money_amount(merged.get(key))
+    if dep is None and deposit_scalar:
+        dep = _listing_money_scalar(merged, deposit_scalar)
+
+    for key in rent_keys:
+        if rent is not None:
+            break
+        rent = _dossier_money_amount(merged.get(key))
+    if rent is None and rent_scalar:
+        rent = _listing_money_scalar(merged, rent_scalar)
+
+    return dep, rent
+
+
+def resolve_convertible_rent_card(
+    listing,
+    display_data: dict,
+    profile: Dict,
+    *,
+    raw_data: Optional[dict] = None,
+) -> Optional[Dict[str, Any]]:
+    """کارت دوحالته رهن/اجاره قابل تبدیل — فقط وقتی هر دو نقطه عددی معتبر داریم."""
+    if not (profile.get('is_rent') or profile.get('is_mixed') or profile.get('show_deposit')):
+        return None
+
+    raw = raw_data if isinstance(raw_data, dict) else (getattr(listing, 'data', None) or {})
+    merged = {**(raw or {}), **(display_data or {})}
+    if not _is_rent_convertible(merged):
+        return None
+
+    base_dep, base_rent = _resolve_convertible_money_pair(
+        listing,
+        merged,
+        deposit_keys=('ودیعه', 'deposit', 'رهن', 'اجاره_ودیعه_عدد'),
+        rent_keys=('اجاره', 'اجاره ماهانه', 'rent', 'اجاره_ماهانه_عدد'),
+        deposit_scalar='deposit',
+        rent_scalar='rent',
+        use_listing_model=True,
+    )
+    alt_dep, alt_rent = _resolve_convertible_money_pair(
+        listing,
+        merged,
+        deposit_keys=('ودیعه (شرایط تبدیل)', 'اجاره_ودیعه_تبدیل_عدد'),
+        rent_keys=('اجاره ماهانه (شرایط تبدیل)', 'اجاره_ماهانه_تبدیل_عدد'),
+    )
+
+    if base_dep is None and base_rent is None:
+        return {'show_card': False, 'convertible': True, 'badge': 'قابل تبدیل'}
+    if alt_dep is None and alt_rent is None:
+        return {'show_card': False, 'convertible': True, 'badge': 'قابل تبدیل'}
+
+    if base_dep is None or base_rent is None or alt_dep is None or alt_rent is None:
+        return {'show_card': False, 'convertible': True, 'badge': 'قابل تبدیل'}
+
+    state_base = {
+        'id': 'base',
+        'deposit': base_dep,
+        'rent': base_rent,
+        'deposit_label': _dossier_deposit_label(base_dep),
+        'rent_label': _dossier_rent_label(base_rent),
+        'endpoint_deposit': _dossier_endpoint_deposit_phrase(base_dep),
+        'endpoint_rent': _dossier_endpoint_rent_phrase(base_rent),
+    }
+    state_alt = {
+        'id': 'alt',
+        'deposit': alt_dep,
+        'rent': alt_rent,
+        'deposit_label': _dossier_deposit_label(alt_dep),
+        'rent_label': _dossier_rent_label(alt_rent),
+        'endpoint_deposit': _dossier_endpoint_deposit_phrase(alt_dep),
+        'endpoint_rent': _dossier_endpoint_rent_phrase(alt_rent),
+    }
+
+    # در RTL سر راست معمولاً رهن بیشتر است.
+    if (alt_dep or 0) > (base_dep or 0):
+        endpoints = (state_alt, state_base)
+        default_id = 'alt'
+    else:
+        endpoints = (state_base, state_alt)
+        default_id = 'base'
+
+    return {
+        'show_card': True,
+        'convertible': True,
+        'badge': 'قابل تبدیل',
+        'title': 'شرایط رهن و اجاره',
+        'hint': 'ودیعه و اجارهٔ این ملک قابل تبدیل است.',
+        'default_id': default_id,
+        'states': {
+            'base': state_base,
+            'alt': state_alt,
+        },
+        'endpoints_rtl': endpoints,
+    }
+
+
+def apply_convertible_rent_to_dossier(
+    sections: Dict[str, Dict[str, str]],
+    section_rows: Dict[str, List[Dict[str, Any]]],
+    card: Optional[Dict[str, Any]],
+) -> None:
+    """حذف ردیف‌های خام مالی وقتی کارت قابل تبدیل فعال است."""
+    if not card or not card.get('show_card'):
+        return
+    money = sections.get('مالی')
+    if isinstance(money, dict):
+        for key in list(money.keys()):
+            if key in _CONVERTIBLE_RENT_DOSSIER_KEYS:
+                money.pop(key, None)
+    rows = section_rows.get('مالی')
+    if rows:
+        section_rows['مالی'] = [
+            row for row in rows
+            if str(row.get('raw_key') or '') not in _CONVERTIBLE_RENT_DOSSIER_KEYS
+        ]

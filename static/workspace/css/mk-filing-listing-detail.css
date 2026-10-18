@@ -159,3 +159,198 @@
         grid-column: 1 / -1;
     }
 }
+
+/* ── کارت رهن/اجاره قابل تبدیل (پرونده آگهی) ── */
+.ws-ld-detail.mk-filing-datasets .ws-ld-dossier-h__text {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem 0.5rem;
+}
+
+.ws-ld-detail.mk-filing-datasets .ws-ld-dossier-h__chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.12rem 0.45rem;
+    border-radius: 999px;
+    font-size: 0.62rem;
+    font-weight: 750;
+    letter-spacing: 0.01em;
+    color: color-mix(in srgb, var(--ws-primary) 88%, #000);
+    background: color-mix(in srgb, var(--ws-primary) 11%, var(--ws-surface));
+    border: 1px solid color-mix(in srgb, var(--ws-primary) 22%, var(--ws-border));
+}
+
+.ws-ld-detail.mk-filing-datasets .ws-ld-dossier-section--finance .ws-ld-rent-convert {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    margin-top: 0.15rem;
+}
+
+.ws-ld-detail.mk-filing-datasets .ws-ld-rent-convert__banner {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.45rem;
+    padding: 0.55rem 0.65rem;
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--ws-primary) 5%, var(--ws-surface-elevated, var(--ws-surface)));
+    border: 1px solid color-mix(in srgb, var(--ws-primary) 12%, var(--ws-border-light));
+}
+
+.ws-ld-detail.mk-filing-datasets .ws-ld-rent-convert__banner-ico {
+    flex-shrink: 0;
+    width: 1.35rem;
+    height: 1.35rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    font-size: 0.62rem;
+    color: var(--ws-primary);
+    background: color-mix(in srgb, var(--ws-primary) 12%, transparent);
+}
+
+.ws-ld-detail.mk-filing-datasets .ws-ld-rent-convert__banner-text {
+    margin: 0;
+    font-size: 0.72rem;
+    font-weight: 600;
+    line-height: 1.55;
+    color: var(--ws-text-muted, var(--ws-text));
+}
+
+.ws-ld-detail.mk-filing-datasets .ws-ld-rent-convert__current {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.65rem;
+}
+
+.ws-ld-detail.mk-filing-datasets .ws-ld-rent-convert__metric {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    min-width: 0;
+}
+
+.ws-ld-detail.mk-filing-datasets .ws-ld-rent-convert__metric-lbl {
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: var(--ws-text-muted, #64748b);
+}
+
+.ws-ld-detail.mk-filing-datasets .ws-ld-rent-convert__metric-val {
+    font-size: clamp(0.95rem, 2.8vw, 1.12rem);
+    font-weight: 800;
+    line-height: 1.35;
+    color: var(--ws-text);
+    font-variant-numeric: tabular-nums;
+}
+
+.ws-ld-detail.mk-filing-datasets .ws-ld-rent-convert__range {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+}
+
+.ws-ld-detail.mk-filing-datasets .ws-ld-rent-convert__track {
+    position: relative;
+    height: 4px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--ws-border) 70%, transparent);
+    margin: 0.15rem 0 0.35rem;
+}
+
+.ws-ld-detail.mk-filing-datasets .ws-ld-rent-convert__track-thumb {
+    position: absolute;
+    top: 50%;
+    inset-inline-end: 0;
+    width: 2.15rem;
+    height: 1.35rem;
+    margin-top: -0.675rem;
+    margin-inline-end: -0.2rem;
+    border-radius: 999px;
+    background: var(--ws-primary);
+    box-shadow: 0 2px 8px color-mix(in srgb, var(--ws-primary) 35%, transparent);
+    transition: inset-inline-end 0.22s ease, inset-inline-start 0.22s ease;
+    pointer-events: none;
+}
+
+.ws-ld-detail.mk-filing-datasets .ws-ld-rent-convert__track-thumb::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    margin: auto;
+    width: 0.45rem;
+    height: 0.45rem;
+    border: 2px solid #fff;
+    border-top: none;
+    border-right: none;
+    transform: rotate(45deg);
+    opacity: 0.9;
+}
+
+.ws-ld-detail.mk-filing-datasets .ws-ld-rent-convert[data-rc-side="start"] .ws-ld-rent-convert__track-thumb {
+    inset-inline-end: auto;
+    inset-inline-start: 0;
+    margin-inline-end: 0;
+    margin-inline-start: -0.2rem;
+}
+
+.ws-ld-detail.mk-filing-datasets .ws-ld-rent-convert__endpoints {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+}
+
+.ws-ld-detail.mk-filing-datasets .ws-ld-rent-convert__ep {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.12rem;
+    padding: 0.5rem 0.55rem;
+    margin: 0;
+    border: 1px solid var(--ws-border-light);
+    border-radius: 10px;
+    background: var(--ws-surface);
+    cursor: pointer;
+    text-align: start;
+    font: inherit;
+    color: var(--ws-text-muted, #64748b);
+    transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.ws-ld-detail.mk-filing-datasets .ws-ld-rent-convert__ep:hover {
+    border-color: color-mix(in srgb, var(--ws-primary) 28%, var(--ws-border));
+}
+
+.ws-ld-detail.mk-filing-datasets .ws-ld-rent-convert__ep.is-active {
+    border-color: color-mix(in srgb, var(--ws-primary) 45%, var(--ws-border));
+    background: color-mix(in srgb, var(--ws-primary) 7%, var(--ws-surface));
+    color: var(--ws-text);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--ws-primary) 12%, transparent);
+}
+
+.ws-ld-detail.mk-filing-datasets .ws-ld-rent-convert__ep-dep,
+.ws-ld-detail.mk-filing-datasets .ws-ld-rent-convert__ep-rent {
+    font-size: 0.68rem;
+    font-weight: 650;
+    line-height: 1.45;
+}
+
+.ws-ld-detail.mk-filing-datasets .ws-ld-rent-convert__ep.is-active .ws-ld-rent-convert__ep-dep {
+    font-weight: 800;
+}
+
+.ws-ld-detail.mk-filing-datasets .ws-ld-rent-convert__cta {
+    margin: 0;
+    font-size: 0.64rem;
+    font-weight: 600;
+    color: var(--ws-text-muted, #94a3b8);
+    text-align: center;
+}
+
+@media (min-width: 901px) {
+    .ws-ld-detail.mk-filing-datasets .ws-ld-dossier-section--finance:has(.ws-ld-rent-convert) {
+        grid-column: 1 / -1;
+    }
+}

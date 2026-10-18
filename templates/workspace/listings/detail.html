@@ -11,7 +11,7 @@
 <link rel="stylesheet" href="{% static 'workspace/css/ws-ld-mobile.css' %}?v=1">
 <link rel="stylesheet" href="{% static 'workspace/css/advertiser-analysis.css' %}?v=5">
 <link rel="stylesheet" href="{% static 'workspace/css/mk-filing-datasets.css' %}?v=19">
-<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-listing-detail.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-listing-detail.css' %}?v=3">
 <link rel="stylesheet" href="{% static 'workspace/css/ws-listing-detail-mobile-v2.css' %}?v=3">
 <link rel="stylesheet" href="{% static 'workspace/css/ws-listing-detail-mobile-v3.css' %}?v=5">
 <link rel="stylesheet" href="{% static 'workspace/css/ws-filing-mobile-dl-v1.css' %}?v=29">
@@ -471,7 +471,7 @@
                     {% if sections %}
                     <div class="ws-ld-dossier-grid">
                         {% for section, fields in sections.items %}
-                        {% if fields and section != 'متن' %}
+                        {% if section != 'متن' and fields or section == 'مالی' and convertible_rent.show_card %}
                         <section class="ws-ld-dossier-section ws-ld-dossier-section--{% if section == 'مالی' %}finance{% elif section == 'ملک' %}specs{% elif section == 'مکان' %}location{% elif section == 'تماس' %}contact{% else %}misc{% endif %}">
                             <header class="ws-ld-dossier-h">
                                 <span class="ws-ld-dossier-h__ico" aria-hidden="true">
@@ -482,11 +482,18 @@
                                     {% else %}<i class="fas fa-circle-info"></i>{% endif %}
                                 </span>
                                 <div class="ws-ld-dossier-h__text">
-                                    <strong>{{ section }}</strong>
+                                    <strong>{% if section == 'مالی' and convertible_rent.show_card %}{{ convertible_rent.title }}{% else %}{{ section }}{% endif %}</strong>
+                                    {% if section == 'مالی' and convertible_rent.show_card %}
+                                    <span class="ws-ld-dossier-h__chip">{{ convertible_rent.badge }}</span>
+                                    {% endif %}
                                 </div>
                             </header>
                             {% with section_rows|dict_get:section as rows %}
+                            {% if section == 'مالی' and convertible_rent.show_card %}
+                            {% include 'workspace/includes/listing_convertible_rent_card.html' with card=convertible_rent %}
+                            {% elif rows %}
                             {% include 'workspace/includes/listing_field_list_ld_mob.html' with fields=rows %}
+                            {% endif %}
                             {% endwith %}
                             {% if section == 'مکان' and listing.latitude and listing.longitude %}
                             <div class="ws-ld-dossier-map-embed" id="wsLdMapFinale">
@@ -1199,6 +1206,32 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (sel) sel.focus();
             }
         });
+    });
+
+    document.querySelectorAll('[data-ws-rent-convert]').forEach(function (root) {
+        var depEl = root.querySelector('[data-rc-dep]');
+        var rentEl = root.querySelector('[data-rc-rent]');
+        var buttons = root.querySelectorAll('[data-rc-state]');
+        function syncThumb(activeBtn) {
+            if (!activeBtn || !buttons.length) return;
+            var atStart = activeBtn === buttons[buttons.length - 1];
+            root.setAttribute('data-rc-side', atStart ? 'start' : 'end');
+        }
+        buttons.forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                buttons.forEach(function (b) {
+                    b.classList.remove('is-active');
+                    b.setAttribute('aria-pressed', 'false');
+                });
+                btn.classList.add('is-active');
+                btn.setAttribute('aria-pressed', 'true');
+                if (depEl) depEl.textContent = btn.getAttribute('data-rc-dep') || '';
+                if (rentEl) rentEl.textContent = btn.getAttribute('data-rc-rent') || '';
+                syncThumb(btn);
+            });
+        });
+        var initial = root.querySelector('.ws-ld-rent-convert__ep.is-active');
+        syncThumb(initial || buttons[0]);
     });
 });
 </script>

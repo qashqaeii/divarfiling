@@ -1,0 +1,40 @@
+{% with default=card.states|dict_get:card.default_id %}
+<div class="ws-ld-rent-convert" data-ws-rent-convert>
+    <div class="ws-ld-rent-convert__banner">
+        <span class="ws-ld-rent-convert__banner-ico" aria-hidden="true"><i class="fas fa-right-left"></i></span>
+        <p class="ws-ld-rent-convert__banner-text">{{ card.hint }}</p>
+    </div>
+
+    <div class="ws-ld-rent-convert__current" aria-live="polite">
+        <div class="ws-ld-rent-convert__metric">
+            <span class="ws-ld-rent-convert__metric-lbl">ودیعه</span>
+            <strong class="ws-ld-rent-convert__metric-val" data-rc-dep>{{ default.deposit_label }}</strong>
+        </div>
+        <div class="ws-ld-rent-convert__metric">
+            <span class="ws-ld-rent-convert__metric-lbl">اجاره ماهانه</span>
+            <strong class="ws-ld-rent-convert__metric-val" data-rc-rent>{{ default.rent_label }}</strong>
+        </div>
+    </div>
+
+    <div class="ws-ld-rent-convert__range" role="group" aria-label="انتخاب بین دو حالت رهن و اجاره">
+        <div class="ws-ld-rent-convert__track" aria-hidden="true">
+            <span class="ws-ld-rent-convert__track-fill"></span>
+            <span class="ws-ld-rent-convert__track-thumb" data-rc-thumb></span>
+        </div>
+        <div class="ws-ld-rent-convert__endpoints">
+            {% for ep in card.endpoints_rtl %}
+            <button type="button"
+                    class="ws-ld-rent-convert__ep{% if ep.id == card.default_id %} is-active{% endif %}"
+                    data-rc-state="{{ ep.id }}"
+                    data-rc-dep="{{ ep.deposit_label }}"
+                    data-rc-rent="{{ ep.rent_label }}"
+                    aria-pressed="{% if ep.id == card.default_id %}true{% else %}false{% endif %}">
+                <span class="ws-ld-rent-convert__ep-dep">{{ ep.endpoint_deposit }}</span>
+                <span class="ws-ld-rent-convert__ep-rent">{{ ep.endpoint_rent }}</span>
+            </button>
+            {% endfor %}
+        </div>
+        <p class="ws-ld-rent-convert__cta">برای مشاهده شرایط تبدیل، یکی از دو حالت را انتخاب کنید</p>
+    </div>
+</div>
+{% endwith %}

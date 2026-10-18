@@ -61,9 +61,10 @@ from workspace.services.folder_import import (
 )
 from workspace.services.importer import import_dataset, import_message
 from workspace.services.display import (
+    apply_convertible_rent_to_dossier,
     build_listing_display_data, dedupe_listing_dossier_rows, format_field_rows, format_sections,
     format_supplementary_fields, format_supplementary_groups, location_accuracy_for_map,
-    transaction_profile,
+    resolve_convertible_rent_card, transaction_profile,
 )
 from workspace.services.features import extract_listing_features
 from workspace.services.listing_features import (
@@ -1042,6 +1043,12 @@ class ListingDetailView(DatasetOwnerMixin, DetailView):
             name: dedupe_listing_dossier_rows(format_field_rows(fields, data))
             for name, fields in sections.items()
         }
+        raw_stored = dict(listing.data or {})
+        convertible_rent = resolve_convertible_rent_card(
+            listing, data, tx, raw_data=raw_stored,
+        )
+        ctx['convertible_rent'] = convertible_rent or {}
+        apply_convertible_rent_to_dossier(sections, ctx['section_rows'], convertible_rent)
         ctx['location_accuracy'] = location_accuracy_for_map(data)
         ctx['supplementary_fields'] = format_supplementary_fields(data, tx, sections)
         ctx['supplementary_groups'] = format_supplementary_groups(data, tx, sections)

@@ -136,9 +136,13 @@ class DivarConnectModalMarkupTests(TestCase):
         self.assertIn('ws-modal-overlay', html)
         self.assertIn('ws-modal-panel', html)
         self.assertIn('divar_contact.js', html)
-        self.assertIn('divar_contact.js?v=2', html)
+        self.assertIn('divar_contact.js?v=3', html)
         self.assertNotIn('ws-modal__backdrop', html)
         self.assertNotIn('ws-modal__panel', html)
+        self.assertIn('mk-owner-divar-fetch', html)
+        self.assertIn('data-divar-action-label', html)
+        self.assertIn('mk-owner-divar-status', html)
+        self.assertNotIn('mk-owner-box__divar-row', html)
 
     def test_divar_contact_js_opens_via_ws_modal(self):
         js_path = (

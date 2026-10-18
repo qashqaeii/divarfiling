@@ -1,16 +1,60 @@
 {% load crm_tags %}
 {# باکس ثبت/ویرایش مالک ملک — مشترک فایلینگ و فایل شخصی #}
 {% if can_edit_owner %}
-<form method="post" action="{{ owner_form_action }}" class="mk-owner-box mk-owner-box--edit">
+<form method="post" action="{{ owner_form_action }}"
+      class="mk-owner-box mk-owner-box--edit{% if divar_contact_enabled %} mk-owner-box--divar{% endif %}"
+      {% if divar_contact_enabled %}
+      data-divar-contact-box
+      data-divar-modal-id="divar-connect-modal"
+      data-owner-phone-id="{{ owner_id_prefix }}-phone"
+      data-owner-name-id="{{ owner_id_prefix }}-name"
+      data-initial-state="{{ divar_contact_status.button_state|default:'connect' }}"
+      data-initial-has-session="{% if divar_contact_status.has_session %}1{% else %}0{% endif %}"
+      data-initial-masked-phone="{{ divar_contact_status.divar_phone_masked|default:'' }}"
+      data-send-otp-url="{% url 'workspace:divar_contact_otp_send' %}"
+      data-verify-otp-url="{% url 'workspace:divar_contact_otp_verify' %}"
+      data-fetch-url="{{ divar_contact_fetch_url }}"
+      data-disconnect-url="{% url 'workspace:divar_contact_disconnect' %}"
+      data-captcha-post-url="{{ divar_contact_status.captcha_post_url|default:'' }}"
+      data-captcha-fallback-url="{{ divar_listing_captcha_url|default:'' }}"
+      {% endif %}>
     {% csrf_token %}
     <input type="hidden" name="action" value="save_owner">
     <div class="mk-owner-box__head">
-        <h3 class="mk-owner-box__title"><i class="fas fa-user-tie" aria-hidden="true"></i> مالک ملک</h3>
-        {% if owner_contact %}
-        <a href="{% url 'workspace:crm_detail' owner_contact.id %}" class="mk-owner-box__link" title="مشاهده مخاطب">
-            {{ owner_contact.name }}
-        </a>
-        {% endif %}
+        <div class="mk-owner-box__head-main">
+            <h3 class="mk-owner-box__title"><i class="fas fa-user-tie" aria-hidden="true"></i> مالک ملک</h3>
+        </div>
+        <div class="mk-owner-box__head-aside">
+            {% if divar_contact_enabled %}
+            <div class="mk-owner-divar-status" data-divar-status
+                 {% if not divar_contact_status.has_session %}hidden{% endif %}>
+                <span class="mk-owner-divar-status__chip" title="حساب دیوار متصل است">
+                    <i class="fas fa-check-circle" aria-hidden="true"></i>
+                    <span class="mk-owner-divar-status__chip-text">متصل به دیوار</span>
+                </span>
+                <details class="mk-owner-divar-status__details">
+                    <summary class="mk-owner-divar-status__summary" aria-label="جزئیات اتصال دیوار">
+                        <i class="fas fa-chevron-down" aria-hidden="true"></i>
+                    </summary>
+                    <div class="mk-owner-divar-status__panel">
+                        {% if divar_contact_status.divar_phone_masked %}
+                        <span class="mk-owner-divar-status__phone" data-divar-masked-phone dir="ltr">{{ divar_contact_status.divar_phone_masked }}</span>
+                        {% else %}
+                        <span class="mk-owner-divar-status__phone" data-divar-masked-phone dir="ltr"></span>
+                        {% endif %}
+                        <button type="button" class="mk-owner-divar-status__disconnect" data-divar-disconnect>
+                            قطع اتصال
+                        </button>
+                    </div>
+                </details>
+            </div>
+            {% endif %}
+            {% if owner_contact %}
+            <a href="{% url 'workspace:crm_detail' owner_contact.id %}" class="mk-owner-box__link" title="مشاهده مخاطب">
+                {{ owner_contact.name }}
+            </a>
+            {% endif %}
+        </div>
     </div>
     {% if owner_phone %}
     <div class="mk-owner-box__acts">
@@ -27,43 +71,24 @@
         {% include 'workspace/includes/contact_quick_actions.html' with phone=owner_contact.phone profile_url=owner_profile_url copy_text=owner_contact.name acts_label='تماس با مالک' %}
     </div>
     {% endif %}
-    <p class="mk-owner-box__hint">با ذخیره، به مخاطبین اضافه و به‌عنوان مالک پیوند می‌شود.</p>
-    {% if divar_contact_enabled %}
-    <div class="mk-owner-box__divar"
-         data-divar-contact-box
-         data-divar-modal-id="divar-connect-modal"
-         data-owner-phone-id="{{ owner_id_prefix }}-phone"
-         data-owner-name-id="{{ owner_id_prefix }}-name"
-         data-initial-state="{{ divar_contact_status.button_state|default:'connect' }}"
-         data-send-otp-url="{% url 'workspace:divar_contact_otp_send' %}"
-         data-verify-otp-url="{% url 'workspace:divar_contact_otp_verify' %}"
-         data-fetch-url="{{ divar_contact_fetch_url }}"
-         data-disconnect-url="{% url 'workspace:divar_contact_disconnect' %}"
-         data-captcha-post-url="{{ divar_contact_status.captcha_post_url|default:'' }}"
-         data-captcha-fallback-url="{{ divar_listing_captcha_url|default:'' }}">
-        <div class="mk-owner-box__divar-row">
-            <button type="button" class="ws-btn ws-btn-sm ws-btn-secondary" data-divar-action
-                    data-state="{{ divar_contact_status.button_state|default:'connect' }}">
-                {% if divar_contact_status.button_state == 'fetch' %}دریافت از دیوار
-                {% elif divar_contact_status.button_state == 'captcha' %}حل کپچا
-                {% elif divar_contact_status.button_state == 'reconnect' %}اتصال مجدد
-                {% else %}اتصال به دیوار{% endif %}
-            </button>
-            {% if divar_contact_status.has_session %}
-            <button type="button" class="ws-btn ws-btn-sm ws-btn-ghost" data-divar-disconnect title="قطع اتصال دیوار">
-                <i class="fas fa-unlink" aria-hidden="true"></i>
-            </button>
-            {% endif %}
-        </div>
-        {% if divar_contact_status.divar_phone_masked %}
-        <p class="mk-owner-box__divar-meta">حساب متصل: <span dir="ltr">{{ divar_contact_status.divar_phone_masked }}</span></p>
-        {% endif %}
-        <p class="mk-owner-box__hint mk-owner-box__hint--divar">شماره فقط در فرم مالک قرار می‌گیرد؛ با «ذخیره مالک» در CRM ثبت می‌شود.</p>
-    </div>
-    {% endif %}
     <div class="mk-owner-box__fields">
         <div class="mk-owner-box__field">
-            <label class="mk-owner-box__label" for="{{ owner_id_prefix }}-phone">شماره تماس</label>
+            <div class="mk-owner-box__label-row">
+                <label class="mk-owner-box__label" for="{{ owner_id_prefix }}-phone">شماره تماس</label>
+                {% if divar_contact_enabled %}
+                <button type="button" class="mk-owner-divar-fetch" data-divar-action
+                        data-state="{{ divar_contact_status.button_state|default:'connect' }}"
+                        aria-live="polite">
+                    <i class="fas fa-link mk-owner-divar-fetch__icon" data-divar-action-icon aria-hidden="true"></i>
+                    <span class="mk-owner-divar-fetch__label" data-divar-action-label>
+                        {% if divar_contact_status.button_state == 'fetch' %}دریافت از دیوار
+                        {% elif divar_contact_status.button_state == 'captcha' %}حل کپچا
+                        {% elif divar_contact_status.button_state == 'reconnect' %}اتصال مجدد
+                        {% else %}اتصال به دیوار{% endif %}
+                    </span>
+                </button>
+                {% endif %}
+            </div>
             <input type="tel" name="owner_phone" id="{{ owner_id_prefix }}-phone"
                    class="ws-input mk-owner-box__input" dir="ltr" inputmode="tel"
                    autocomplete="tel" placeholder="۰۹۱۲…"
@@ -77,6 +102,13 @@
                    value="{{ owner_name|default:'' }}">
         </div>
     </div>
+    <p class="mk-owner-box__hint">
+        {% if divar_contact_enabled %}
+        دریافت شماره از دیوار فقط فیلد تماس را پر می‌کند؛ برای ثبت در CRM «ذخیره مالک» را بزنید.
+        {% else %}
+        با ذخیره، به مخاطبین اضافه و به‌عنوان مالک پیوند می‌شود.
+        {% endif %}
+    </p>
     <button type="submit" class="ws-btn ws-btn-sm ws-btn-primary mk-owner-box__submit">
         <i class="fas fa-check" aria-hidden="true"></i> ذخیره مالک
     </button>

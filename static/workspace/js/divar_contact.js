@@ -22,11 +22,29 @@
     });
   }
 
+  var ACTION_LABELS = {
+    connect: 'اتصال به دیوار',
+    fetch: 'دریافت از دیوار',
+    captcha: 'حل کپچا',
+    reconnect: 'اتصال مجدد',
+    loading: 'در حال دریافت...',
+  };
+
+  var ACTION_ICONS = {
+    connect: 'fa-link',
+    reconnect: 'fa-rotate-right',
+    fetch: 'fa-cloud-arrow-down',
+    captcha: 'fa-shield-halved',
+    loading: 'fa-spinner fa-spin',
+  };
+
   function initBox(root) {
     if (!root || root.dataset.divarInit === '1') return;
     root.dataset.divarInit = '1';
 
     var btn = root.querySelector('[data-divar-action]');
+    var statusEl = root.querySelector('[data-divar-status]');
+    var maskedPhoneEl = root.querySelector('[data-divar-masked-phone]');
     var modal = document.getElementById(root.dataset.divarModalId || 'divar-connect-modal');
     var phoneInput = modal ? modal.querySelector('[data-divar-phone]') : null;
     var otpInput = modal ? modal.querySelector('[data-divar-otp]') : null;
@@ -49,21 +67,49 @@
 
     function setButtonState(state, label) {
       if (!btn) return;
-      btn.dataset.state = state;
-      if (label) btn.textContent = label;
-      btn.disabled = state === 'loading';
+      var resolved = state || 'connect';
+      btn.dataset.state = resolved;
+      var labelEl = btn.querySelector('[data-divar-action-label]');
+      var iconEl = btn.querySelector('[data-divar-action-icon]');
+      var text = label || ACTION_LABELS[resolved] || ACTION_LABELS.connect;
+      if (labelEl) labelEl.textContent = text;
+      else btn.textContent = text;
+      if (iconEl) {
+        iconEl.className = 'fas mk-owner-divar-fetch__icon ' + (ACTION_ICONS[resolved] || ACTION_ICONS.connect);
+      }
+      btn.disabled = resolved === 'loading';
+      btn.classList.toggle('is-loading', resolved === 'loading');
+      btn.classList.toggle('is-captcha', resolved === 'captcha');
+      btn.classList.toggle('is-reconnect', resolved === 'reconnect');
+      btn.setAttribute('aria-busy', resolved === 'loading' ? 'true' : 'false');
+    }
+
+    function sessionConnected(st) {
+      if (!st) return false;
+      if (st.has_session) return true;
+      if (st.divar_phone_masked) return true;
+      var bs = st.button_state || '';
+      return bs === 'fetch' || bs === 'captcha';
+    }
+
+    function updateConnectionBadge(st) {
+      if (!statusEl) return;
+      var show = sessionConnected(st);
+      statusEl.hidden = !show;
+      if (!show) {
+        var details = statusEl.querySelector('.mk-owner-divar-status__details');
+        if (details) details.removeAttribute('open');
+        return;
+      }
+      if (maskedPhoneEl && st && st.divar_phone_masked) {
+        maskedPhoneEl.textContent = st.divar_phone_masked;
+      }
     }
 
     function applyStatus(st) {
       if (!st) return;
-      var map = {
-        connect: 'اتصال به دیوار',
-        fetch: 'دریافت از دیوار',
-        captcha: 'حل کپچا',
-        reconnect: 'اتصال مجدد',
-        loading: 'در حال دریافت...',
-      };
-      setButtonState(st.button_state || 'connect', map[st.button_state] || map.connect);
+      setButtonState(st.button_state || 'connect', ACTION_LABELS[st.button_state] || null);
+      updateConnectionBadge(st);
       syncCaptchaUrl(st);
     }
 
@@ -76,6 +122,8 @@
 
     applyStatus({
       button_state: root.dataset.initialState || 'connect',
+      has_session: root.dataset.initialHasSession === '1',
+      divar_phone_masked: root.dataset.initialMaskedPhone || '',
     });
     if ((root.dataset.initialState || '') === 'captcha') {
       syncCaptchaUrl({ captcha_post_url: root.dataset.captchaPostUrl });
@@ -164,11 +212,12 @@
         return;
       }
       if (state === 'fetch' && fetchUrl) {
-        setButtonState('loading', 'در حال دریافت...');
+        setButtonState('loading');
         postJson(fetchUrl, {}).then(function (res) {
           var data = res.data || {};
           if (data.code === 'captcha_required') {
             root.dataset.captchaPostUrl = data.post_url || '';
+            applyStatus(data.status || { button_state: 'captcha', has_session: true });
             setButtonState('captcha', 'حل کپچا');
             return;
           }
@@ -181,9 +230,9 @@
           if (ownerName && data.owner_name_hint && !ownerName.value) {
             ownerName.value = data.owner_name_hint;
           }
-          applyStatus(data.status || { button_state: 'fetch' });
+          applyStatus(data.status || { button_state: 'fetch', has_session: true });
         }).catch(function () {
-          setButtonState('fetch', 'دریافت از دیوار');
+          setButtonState('fetch');
         });
       }
     });
@@ -191,8 +240,9 @@
     var disconnectBtn = root.querySelector('[data-divar-disconnect]');
     if (disconnectBtn && disconnectUrl) {
       disconnectBtn.addEventListener('click', function () {
-        postJson(disconnectUrl, {}).then(function () {
-          applyStatus({ button_state: 'connect' });
+        postJson(disconnectUrl, {}).then(function (res) {
+          var data = (res && res.data) || {};
+          applyStatus(data.status || { button_state: 'connect', has_session: false });
         });
       });
     }

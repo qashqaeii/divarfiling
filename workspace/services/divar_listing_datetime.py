@@ -207,3 +207,22 @@ def parse_published_at_from_export_row(row: dict) -> Optional[datetime]:
     if _is_empty_value(raw):
         raw = _pick_first_non_empty(row, EXPLICIT_PUBLISH_DATA_KEYS)
     return parse_divar_listing_datetime(raw)
+
+
+def resolve_listing_last_bump_jalali_label(listing) -> str:
+    """برچسب شمسی «آخرین نردبان» — فقط وقتی زمان نردبان قابل parse است (نه به‌روزرسانی/انتشار)."""
+    data = getattr(listing, 'data', None) or {}
+    candidates: list[Any] = []
+    iso = data.get(DATA_KEY_LAST_BUMPED_AT)
+    if not _is_empty_value(iso):
+        candidates.append(iso)
+    shamsi = _pick_first_non_empty(data, EXPLICIT_BUMP_DATA_KEYS)
+    if shamsi and shamsi not in candidates:
+        candidates.append(shamsi)
+    for raw in candidates:
+        if not parse_divar_listing_datetime(raw):
+            continue
+        label = listing_datetime_to_jalali_label(raw)
+        if label:
+            return label
+    return ''

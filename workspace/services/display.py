@@ -566,17 +566,42 @@ def _schedule_field_has_value(value: Any) -> bool:
 
 
 def _collapse_schedule_fields(data: dict, listing) -> None:
-    """یک برچسب برای انتشار و یک برای انقضا — معادل‌های اکسل و مدل ادغام می‌شوند."""
+    """یک برچسب نمایشی برای هر مفهوم زمان‌بندی — aliasهای اکسل/ISO در لایه نمایش ادغام می‌شوند."""
+    from workspace.services.divar_listing_datetime import (
+        DATA_KEY_LAST_BUMPED_AT,
+        DATA_KEY_LAST_UPDATED_AT,
+        SHAMSI_KEY_LAST_BUMPED,
+        SHAMSI_KEY_LAST_UPDATED,
+        SHAMSI_KEY_PUBLISH,
+        listing_datetime_to_jalali_label,
+    )
+
     if not data:
         return
-    for model_attr, label, aliases in (
-        ('published_at', 'تاریخ انتشار', COLUMN_ALIASES['published_at']),
-        ('expires_at', 'تاریخ انقضا', COLUMN_ALIASES['expires_at']),
-    ):
+
+    publish_aliases = tuple(dict.fromkeys((
+        *COLUMN_ALIASES['published_at'],
+        SHAMSI_KEY_PUBLISH,
+        'published_at_iso',
+        'انتشار_تاریخ_میلادی',
+    )))
+    expire_aliases = tuple(dict.fromkeys((*COLUMN_ALIASES['expires_at'], 'تاریخ انقضا')))
+    bump_aliases = tuple(dict.fromkeys((
+        *COLUMN_ALIASES['last_bumped_at'],
+        DATA_KEY_LAST_BUMPED_AT,
+        SHAMSI_KEY_LAST_BUMPED,
+    )))
+    update_aliases = tuple(dict.fromkeys((
+        *COLUMN_ALIASES['last_updated_at'],
+        DATA_KEY_LAST_UPDATED_AT,
+        SHAMSI_KEY_LAST_UPDATED,
+    )))
+
+    def _collapse_model_field(model_attr: str, label: str, aliases: tuple) -> None:
         model_val = getattr(listing, model_attr, None)
         keys_present = [k for k in aliases if k in data]
         if model_val is None and not keys_present:
-            continue
+            return
         value = model_val
         if value is None:
             for key in aliases:
@@ -588,11 +613,44 @@ def _collapse_schedule_fields(data: dict, listing) -> None:
             for key in aliases:
                 data.pop(key, None)
             data.pop(label, None)
-            continue
+            return
         for key in aliases:
             data.pop(key, None)
         data.pop(label, None)
         data[label] = value
+
+    def _collapse_display_only(label: str, aliases: tuple) -> None:
+        keys_present = [k for k in aliases if k in data]
+        if not keys_present and not _schedule_field_has_value(data.get(label)):
+            return
+        value = None
+        if _schedule_field_has_value(data.get(label)):
+            value = data.get(label)
+        if value is None:
+            for key in aliases:
+                raw = data.get(key)
+                if _schedule_field_has_value(raw):
+                    value = raw
+                    break
+        if value is None:
+            for key in aliases:
+                data.pop(key, None)
+            data.pop(label, None)
+            return
+        display_val = value
+        if label in ('آخرین نردبان', 'آخرین به‌روزرسانی'):
+            jalali = listing_datetime_to_jalali_label(value)
+            if jalali:
+                display_val = jalali
+        for key in aliases:
+            data.pop(key, None)
+        data.pop(label, None)
+        data[label] = display_val
+
+    _collapse_model_field('published_at', 'تاریخ انتشار', publish_aliases)
+    _collapse_model_field('expires_at', 'تاریخ انقضا', expire_aliases)
+    _collapse_display_only('آخرین نردبان', bump_aliases)
+    _collapse_display_only('آخرین به‌روزرسانی', update_aliases)
 
 
 def _dedupe_listing_data_keys(data: dict) -> dict:
@@ -922,6 +980,8 @@ def _supplementary_group_name(key: str) -> str:
     kl = key.lower()
     if any(x in key or x in kl for x in ('شناسه', 'token', 'عنوان', 'title', 'لینک', 'link', 'دسته', 'نوع آگهی', 'آگهی دهنده', 'business', 'category')):
         return 'شناسایی'
+    if any(x in key or x in kl for x in ('نردبان', 'به‌روز', 'بروز')):
+        return 'زمان‌بندی'
     if any(x in key or x in kl for x in ('ایجاد', 'انقضا', 'انتشار', 'created', 'expires', 'published', 'تاریخ')):
         return 'زمان‌بندی'
     if any(x in key or x in kl for x in ('تصویر', 'ویدیو', 'اصالت', 'video', 'images')):
@@ -937,14 +997,51 @@ _SUPPLEMENTARY_GROUP_ICONS: Dict[str, str] = {
 }
 
 
-_PUBLISH_SCHEDULE_KEYS = frozenset(COLUMN_ALIASES['published_at'])
-_EXPIRE_SCHEDULE_KEYS = frozenset(COLUMN_ALIASES['expires_at'])
+def _build_schedule_key_sets() -> Tuple[frozenset, frozenset, frozenset, frozenset, frozenset]:
+    from workspace.services.divar_listing_datetime import (
+        DATA_KEY_LAST_BUMPED_AT,
+        DATA_KEY_LAST_UPDATED_AT,
+        SHAMSI_KEY_LAST_BUMPED,
+        SHAMSI_KEY_LAST_UPDATED,
+        SHAMSI_KEY_PUBLISH,
+    )
+
+    publish = frozenset((
+        *COLUMN_ALIASES['published_at'],
+        SHAMSI_KEY_PUBLISH,
+        'published_at_iso',
+        'انتشار_تاریخ_میلادی',
+    ))
+    expire = frozenset((*COLUMN_ALIASES['expires_at'], 'تاریخ انقضا'))
+    bumped = frozenset((*COLUMN_ALIASES['last_bumped_at'], DATA_KEY_LAST_BUMPED_AT, SHAMSI_KEY_LAST_BUMPED))
+    updated = frozenset((
+        *COLUMN_ALIASES['last_updated_at'],
+        DATA_KEY_LAST_UPDATED_AT,
+        SHAMSI_KEY_LAST_UPDATED,
+    ))
+    internal = frozenset((
+        'published_at_iso',
+        DATA_KEY_LAST_BUMPED_AT,
+        DATA_KEY_LAST_UPDATED_AT,
+        SHAMSI_KEY_PUBLISH,
+        SHAMSI_KEY_LAST_BUMPED,
+        SHAMSI_KEY_LAST_UPDATED,
+        'انتشار_تاریخ_میلادی',
+    ))
+    return publish, expire, bumped, updated, internal
+
+
+_PUBLISH_SCHEDULE_KEYS, _EXPIRE_SCHEDULE_KEYS, _BUMP_SCHEDULE_KEYS, _UPDATE_SCHEDULE_KEYS, _INTERNAL_SCHEDULE_KEYS = (
+    _build_schedule_key_sets()
+)
 
 _SUPPLEMENTARY_ROW_PREF: Dict[str, Tuple[str, ...]] = {
-    'schedule_published': ('تاریخ انتشار', 'ایجاد آگهی', 'published_at', 'created_at'),
+    'schedule_published': (
+        'تاریخ انتشار', 'ایجاد آگهی', 'انتشار_تاریخ_شمسی', 'published_at', 'created_at', 'published_at_iso',
+    ),
     'schedule_expires': ('تاریخ انقضا', 'انقضا آگهی', 'expires_at', 'انتشار_unavailable_after'),
-    'schedule_last_bumped': ('آخرین نردبان', 'last_bumped_at', 'انتشار_آخرین_نردبان_شمسی'),
-    'schedule_last_updated': ('آخرین به‌روزرسانی', 'last_updated_at', 'انتشار_آخرین_به‌روزرسانی_شمسی'),
+    'schedule_last_bumped': ('آخرین نردبان', 'انتشار_آخرین_نردبان_شمسی', 'last_bumped_at'),
+    'schedule_last_updated': ('آخرین به‌روزرسانی', 'انتشار_آخرین_به‌روزرسانی_شمسی', 'last_updated_at'),
 }
 
 
@@ -954,6 +1051,10 @@ def _normalize_supplementary_row_key(key: str) -> str:
         return 'schedule_published'
     if key in _EXPIRE_SCHEDULE_KEYS:
         return 'schedule_expires'
+    if key in _BUMP_SCHEDULE_KEYS:
+        return 'schedule_last_bumped'
+    if key in _UPDATE_SCHEDULE_KEYS:
+        return 'schedule_last_updated'
     if 'نردبان' in key:
         return 'schedule_last_bumped'
     if 'به‌روز' in key or 'بروز' in key:
@@ -1009,6 +1110,8 @@ def _collect_supplementary_rows(
     rows: List[Dict[str, Any]] = []
     for k, v in (data or {}).items():
         if k in shown_keys or k in feature_keys or _is_features_supplementary_key(k):
+            continue
+        if k in _INTERNAL_SCHEDULE_KEYS:
             continue
         if k.lower() in _skip_supplementary:
             continue

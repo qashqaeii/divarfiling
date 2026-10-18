@@ -12,6 +12,7 @@ from workspace.services.divar_listing_datetime import (
     listing_datetime_to_jalali_label,
     merge_listing_schedule_data,
     parse_divar_listing_datetime,
+    resolve_listing_last_bump_jalali_label,
 )
 from workspace.services.display import to_jalali_display
 from workspace.services.importer import _merge_listing_data, _update_listing_from_fields
@@ -92,6 +93,35 @@ class ReimportSchedulePreserveTest(SimpleTestCase):
         }
         self.assertTrue(_update_listing_from_fields(listing, fields))
         self.assertEqual(listing.data.get(DATA_KEY_LAST_BUMPED_AT), '2026-01-01T10:00:00+00:00')
+
+
+class ResolveLastBumpLabelTest(SimpleTestCase):
+    def test_shamsi_bump_label(self):
+        listing = Listing(
+            token='t1',
+            data={'انتشار_آخرین_نردبان_شمسی': '1405/07/25 10:00'},
+        )
+        self.assertEqual(resolve_listing_last_bump_jalali_label(listing), '1405/07/25 10:00')
+
+    def test_iso_bump_label(self):
+        listing = Listing(
+            token='t2',
+            data={DATA_KEY_LAST_BUMPED_AT: '2030-01-15T12:00:00Z'},
+        )
+        label = resolve_listing_last_bump_jalali_label(listing)
+        self.assertTrue(label)
+        self.assertIn('1408', label)
+
+    def test_no_bump_when_only_last_updated(self):
+        listing = Listing(
+            token='t3',
+            data={DATA_KEY_LAST_UPDATED_AT: '2030-01-15T12:00:00Z'},
+        )
+        self.assertEqual(resolve_listing_last_bump_jalali_label(listing), '')
+
+    def test_no_bump_without_valid_date(self):
+        listing = Listing(token='t4', data={})
+        self.assertEqual(resolve_listing_last_bump_jalali_label(listing), '')
 
 
 class ListingDisplayTimezoneTest(SimpleTestCase):

@@ -97,6 +97,7 @@ class DivarAccountSession(models.Model):
     phone_detector_consent = models.BooleanField(default=False, db_index=True)
     phone_detector_consent_at = models.DateTimeField(null=True, blank=True)
     phone_detector_consent_version = models.CharField(max_length=16, blank=True, default='')
+    operation_lock_until = models.DateTimeField(null=True, blank=True, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -120,14 +121,27 @@ class DivarAccountSession(models.Model):
         self.auth_status = self.AuthStatus.DISCONNECTED
         self.encrypted_session = ''
         self.hip_status = ''
+        self.operation_lock_until = None
         self.save(
             update_fields=[
                 'auth_status',
                 'encrypted_session',
                 'hip_status',
+                'operation_lock_until',
                 'updated_at',
             ],
         )
+
+
+class DivarContactThrottle(models.Model):
+    """Rate limit سراسری (DB) — مستقل از LocMemCache."""
+
+    throttle_key = models.CharField(max_length=128, primary_key=True)
+    expires_at = models.DateTimeField(db_index=True)
+
+    class Meta:
+        verbose_name = 'Throttle دیوار'
+        verbose_name_plural = 'Throttleهای دیوار'
 
 
 class DivarOtpChallenge(models.Model):

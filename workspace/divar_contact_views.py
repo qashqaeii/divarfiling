@@ -10,8 +10,8 @@ from django.views import View
 
 from workspace.models import Listing
 from workspace.services.divar_session.feature import user_can_use_divar_contact
+from workspace.services.divar_session.errors import DivarSessionError
 from workspace.services.divar_session.service import (
-    DivarSessionError,
     disconnect_divar_session,
     fetch_listing_phone,
     public_session_status,

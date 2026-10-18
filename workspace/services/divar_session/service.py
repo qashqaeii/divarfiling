@@ -2,11 +2,9 @@
 from __future__ import annotations
 
 import logging
-from contextlib import contextmanager
 from datetime import timedelta
 from typing import Any, Optional
 
-from django.core.cache import cache
 from django.db import transaction
 from django.utils import timezone
 
@@ -17,7 +15,12 @@ from workspace.divar_session_models import (
     DivarOtpChallenge,
     DivarPhoneFetchLog,
 )
+from workspace.services.divar_session.coordination import (
+    assert_rate_limit,
+    session_operation_lock,
+)
 from workspace.services.divar_session.crypto import decrypt_payload, encrypt_payload
+from workspace.services.divar_session.errors import DivarSessionError
 from workspace.services.divar_session.pd_import import PhoneDetectorImportError
 from workspace.services.divar_session.runtime import DivarUserRuntime
 
@@ -26,30 +29,12 @@ logger = logging.getLogger(__name__)
 OTP_TTL_SECONDS = 300
 OTP_RATE_LIMIT_SECONDS = 60
 FETCH_RATE_LIMIT_SECONDS = 8
-SESSION_LOCK_SECONDS = 120
 PD_CONSENT_VERSION = '1'
 
-
-class DivarSessionError(Exception):
-    def __init__(self, message: str, *, code: str = 'divar_error'):
-        self.message = message
-        self.code = code
-        super().__init__(message)
-
-
-@contextmanager
-def _session_lock(session_id: str):
-    key = f'divar_session_lock:{session_id}'
-    acquired = cache.add(key, '1', timeout=SESSION_LOCK_SECONDS)
-    if not acquired:
-        raise DivarSessionError(
-            'عملیات دیگری روی این نشست در حال انجام است. لحظه‌ای بعد دوباره تلاش کنید.',
-            code='session_busy',
-        )
-    try:
-        yield
-    finally:
-        cache.delete(key)
+_ACTIVE_STATUSES = (
+    DivarAccountSession.AuthStatus.CONNECTED,
+    DivarAccountSession.AuthStatus.CAPTCHA_REQUIRED,
+)
 
 
 def _otp_rate_key(user_id: int, phone: str) -> str:
@@ -60,24 +45,69 @@ def _fetch_rate_key(user_id: int) -> str:
     return f'divar_fetch_rl:{user_id}'
 
 
-def get_primary_session(user) -> Optional[DivarAccountSession]:
+def _visible_session(user) -> Optional[DivarAccountSession]:
+    """آخرین نشست قابل‌نمایش (غیر از قطع‌شده)."""
     return (
-        DivarAccountSession.objects.filter(
-            user=user,
-            auth_status__in=[
-                DivarAccountSession.AuthStatus.CONNECTED,
-                DivarAccountSession.AuthStatus.CAPTCHA_REQUIRED,
-            ],
-        )
-        .order_by('-last_success_at', '-connected_at', '-updated_at')
+        DivarAccountSession.objects.filter(user=user)
+        .exclude(auth_status=DivarAccountSession.AuthStatus.DISCONNECTED)
+        .order_by('-updated_at', '-connected_at')
         .first()
     )
 
 
+def get_primary_session(user) -> Optional[DivarAccountSession]:
+    """نشست عملیاتی برای fetch — شامل نشست معتبر حین OTP مجدد."""
+    row = (
+        DivarAccountSession.objects.filter(
+            user=user,
+            auth_status__in=_ACTIVE_STATUSES,
+        )
+        .order_by('-last_success_at', '-connected_at', '-updated_at')
+        .first()
+    )
+    if row:
+        return row
+    pending = (
+        DivarAccountSession.objects.filter(
+            user=user,
+            auth_status=DivarAccountSession.AuthStatus.PENDING_OTP,
+        )
+        .exclude(encrypted_session='')
+        .order_by('-updated_at')
+        .first()
+    )
+    if pending and pending.encrypted_session:
+        return pending
+    return None
+
+
+def _resolve_expired_if_needed(row: DivarAccountSession) -> DivarAccountSession:
+    if row.auth_status != DivarAccountSession.AuthStatus.CONNECTED:
+        return row
+    if not row.encrypted_session:
+        row.auth_status = DivarAccountSession.AuthStatus.EXPIRED
+        row.save(update_fields=['auth_status', 'updated_at'])
+        return row
+    if row.token_expires_at and row.token_expires_at <= timezone.now():
+        row.auth_status = DivarAccountSession.AuthStatus.EXPIRED
+        row.save(update_fields=['auth_status', 'updated_at'])
+        return row
+    return row
+
+
 def public_session_status(user) -> dict[str, Any]:
-    row = get_primary_session(user)
+    row = _visible_session(user)
     if not row:
         return {'has_session': False, 'button_state': 'connect'}
+
+    row = _resolve_expired_if_needed(row)
+
+    if row.auth_status == DivarAccountSession.AuthStatus.EXPIRED:
+        return {
+            'has_session': False,
+            'button_state': 'reconnect',
+            'divar_phone_masked': _mask_phone(row.divar_phone),
+        }
     if row.auth_status == DivarAccountSession.AuthStatus.CAPTCHA_REQUIRED:
         return {
             'has_session': True,
@@ -85,18 +115,20 @@ def public_session_status(user) -> dict[str, Any]:
             'divar_phone_masked': _mask_phone(row.divar_phone),
             'hip_status': row.hip_status,
         }
-    if row.auth_status == DivarAccountSession.AuthStatus.EXPIRED:
-        return {
-            'has_session': False,
-            'button_state': 'reconnect',
-            'divar_phone_masked': _mask_phone(row.divar_phone),
-        }
     if row.auth_status == DivarAccountSession.AuthStatus.CONNECTED:
         return {
             'has_session': True,
             'button_state': 'fetch',
             'divar_phone_masked': _mask_phone(row.divar_phone),
         }
+    if row.auth_status == DivarAccountSession.AuthStatus.PENDING_OTP:
+        if row.encrypted_session:
+            return {
+                'has_session': True,
+                'button_state': 'fetch',
+                'divar_phone_masked': _mask_phone(row.divar_phone),
+            }
+        return {'has_session': False, 'button_state': 'connect'}
     return {'has_session': False, 'button_state': 'connect'}
 
 
@@ -115,40 +147,52 @@ def _runtime_from_row(row: DivarAccountSession) -> DivarUserRuntime:
     return runtime
 
 
-def _persist_session(row: DivarAccountSession, runtime: DivarUserRuntime) -> None:
+def _persist_session(
+    row: DivarAccountSession,
+    runtime: DivarUserRuntime,
+    *,
+    preserve_captcha: bool = False,
+    force_auth_status: str | None = None,
+) -> None:
     health = runtime.health_check()
     payload = runtime.export_session_payload(phone=row.divar_phone)
     row.encrypted_session = encrypt_payload(payload)
     row.last_health_check_at = timezone.now()
     row.token_expires_at = health.expires_at
-    if health.ok:
-        row.auth_status = DivarAccountSession.AuthStatus.CONNECTED
-        row.last_error_code = ''
-        row.last_error_message = ''
+    if health.ok and health.status == 'active':
+        row.last_refresh_at = timezone.now()
+
+    if force_auth_status:
+        row.auth_status = force_auth_status
+    elif preserve_captcha and row.auth_status == DivarAccountSession.AuthStatus.CAPTCHA_REQUIRED:
+        pass
+    elif health.ok:
+        if row.auth_status != DivarAccountSession.AuthStatus.CAPTCHA_REQUIRED:
+            row.auth_status = DivarAccountSession.AuthStatus.CONNECTED
+            row.last_error_code = ''
+            row.last_error_message = ''
     elif health.needs_relogin:
         row.auth_status = DivarAccountSession.AuthStatus.EXPIRED
-    row.save(
-        update_fields=[
-            'encrypted_session',
-            'last_health_check_at',
-            'token_expires_at',
-            'auth_status',
-            'last_error_code',
-            'last_error_message',
-            'updated_at',
-        ],
-    )
+
+    update_fields = [
+        'encrypted_session',
+        'last_health_check_at',
+        'token_expires_at',
+        'auth_status',
+        'last_error_code',
+        'last_error_message',
+        'updated_at',
+    ]
+    if health.ok and health.status == 'active':
+        update_fields.append('last_refresh_at')
+    row.save(update_fields=update_fields)
 
 
 def send_divar_otp(user, phone: str) -> dict[str, Any]:
     phone = normalize_phone(phone or '')
     if not is_valid_iran_mobile(phone):
         raise DivarSessionError('شماره موبایل معتبر نیست.', code='invalid_phone')
-    if cache.get(_otp_rate_key(user.id, phone)):
-        raise DivarSessionError(
-            'لطفاً کمی صبر کنید و دوباره درخواست کد دهید.',
-            code='rate_limited',
-        )
+    assert_rate_limit(_otp_rate_key(user.id, phone), seconds=OTP_RATE_LIMIT_SECONDS)
     try:
         runtime = DivarUserRuntime()
         normalized = runtime.send_login_otp(phone)
@@ -172,11 +216,10 @@ def send_divar_otp(user, phone: str) -> dict[str, Any]:
             divar_phone=normalized,
             defaults={'auth_status': DivarAccountSession.AuthStatus.PENDING_OTP},
         )
-        row.auth_status = DivarAccountSession.AuthStatus.PENDING_OTP
-        row.encrypted_session = ''
-        row.save(update_fields=['auth_status', 'encrypted_session', 'updated_at'])
+        if not row.encrypted_session:
+            row.auth_status = DivarAccountSession.AuthStatus.PENDING_OTP
+            row.save(update_fields=['auth_status', 'updated_at'])
 
-    cache.set(_otp_rate_key(user.id, normalized), '1', timeout=OTP_RATE_LIMIT_SECONDS)
     return {'ok': True, 'phone': normalized}
 
 
@@ -223,7 +266,10 @@ def disconnect_divar_session(user, *, session_id: str | None = None) -> dict[str
     if session_id:
         qs = qs.filter(pk=session_id)
     updated = 0
+    from workspace.services.divar_session.phone_detector_bridge import on_central_session_invalidated
+
     for row in qs:
+        on_central_session_invalidated(row, reason='disconnected')
         row.mark_disconnected()
         updated += 1
     return {'ok': True, 'disconnected': updated}
@@ -242,21 +288,21 @@ def _contact_uuid_from_listing(listing) -> str:
 
 
 def fetch_listing_phone(user, listing) -> dict[str, Any]:
-    if cache.get(_fetch_rate_key(user.id)):
-        raise DivarSessionError('درخواست‌های پیاپی — چند ثانیه صبر کنید.', code='rate_limited')
+    assert_rate_limit(_fetch_rate_key(user.id), seconds=FETCH_RATE_LIMIT_SECONDS)
 
     row = get_primary_session(user)
-    if not row or row.auth_status not in (
-        DivarAccountSession.AuthStatus.CONNECTED,
-        DivarAccountSession.AuthStatus.CAPTCHA_REQUIRED,
-    ):
+    if not row:
+        raise DivarSessionError('ابتدا حساب دیوار را متصل کنید.', code='no_session')
+    if row.auth_status == DivarAccountSession.AuthStatus.PENDING_OTP and row.encrypted_session:
+        effective = DivarAccountSession.AuthStatus.CONNECTED
+    else:
+        effective = row.auth_status
+    if effective not in _ACTIVE_STATUSES:
         raise DivarSessionError('ابتدا حساب دیوار را متصل کنید.', code='no_session')
 
     token = (listing.token or '').strip()
     if not token:
         raise DivarSessionError('شناسه آگهی موجود نیست.', code='missing_token')
-
-    cache.set(_fetch_rate_key(user.id), '1', timeout=FETCH_RATE_LIMIT_SECONDS)
 
     post_url = (listing.link or '').strip() or f'https://divar.ir/v/{token}'
     contact_uuid = _contact_uuid_from_listing(listing)
@@ -265,12 +311,18 @@ def fetch_listing_phone(user, listing) -> dict[str, Any]:
     name_hint = ''
 
     try:
-        with _session_lock(str(row.pk)):
+        with session_operation_lock(row):
+            row.refresh_from_db()
             runtime = _runtime_from_row(row)
             health = runtime.health_check()
             if not health.ok:
                 row.auth_status = DivarAccountSession.AuthStatus.EXPIRED
                 row.save(update_fields=['auth_status', 'updated_at'])
+                from workspace.services.divar_session.phone_detector_bridge import (
+                    on_central_session_invalidated,
+                )
+
+                on_central_session_invalidated(row, reason='expired')
                 raise DivarSessionError('نشست منقضی شده — دوباره متصل شوید.', code='session_expired')
 
             scraper = runtime.make_scraper()
@@ -296,7 +348,7 @@ def fetch_listing_phone(user, listing) -> dict[str, Any]:
                 row.hip_status = str(hip_status)
                 row.last_error_code = 'captcha_required'
                 row.last_error_message = 'نیاز به حل کپچا در دیوار'
-                _persist_session(row, runtime)
+                _persist_session(row, runtime, preserve_captcha=True)
                 DivarPhoneFetchLog.objects.create(
                     user=user,
                     listing_token=token,
@@ -313,6 +365,11 @@ def fetch_listing_phone(user, listing) -> dict[str, Any]:
             if hip_status == 'auth_expired' or not phone:
                 row.auth_status = DivarAccountSession.AuthStatus.EXPIRED
                 row.save(update_fields=['auth_status', 'updated_at'])
+                from workspace.services.divar_session.phone_detector_bridge import (
+                    on_central_session_invalidated,
+                )
+
+                on_central_session_invalidated(row, reason='expired')
                 code = 'auth_expired' if hip_status == 'auth_expired' else 'no_phone'
                 raise DivarSessionError(
                     'دریافت شماره ناموفق بود.',

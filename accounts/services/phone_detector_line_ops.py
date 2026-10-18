@@ -11,6 +11,7 @@ from django.db.models import F, Q
 from django.utils import timezone
 
 from accounts.models import AcquisitionRun, PhoneDetectorExtractionLine
+from workspace.divar_session_models import DivarAccountSession
 from accounts.services.phone_detector_lines import (
     PhoneDetectorLineError,
     _load_index,
@@ -31,6 +32,34 @@ def normalize_line_phone(phone: str) -> str:
     if raw.startswith('+98'):
         raw = '0' + raw[3:]
     return raw
+
+
+def _central_session_blocks_line(phone: str) -> bool:
+    """نشست مرکزی نامعتبر نباید خط را در rotation نگه دارد."""
+    row = (
+        DivarAccountSession.objects.filter(divar_phone=normalize_line_phone(phone))
+        .exclude(auth_status=DivarAccountSession.AuthStatus.DISCONNECTED)
+        .order_by('-updated_at')
+        .first()
+    )
+    if not row:
+        return False
+    return row.auth_status != DivarAccountSession.AuthStatus.CONNECTED
+
+
+def _pause_line_for_central_session(row: PhoneDetectorExtractionLine, *, detail: str) -> bool:
+    if not row.divar_account_session_id:
+        return False
+    central = row.divar_account_session
+    if central.auth_status == DivarAccountSession.AuthStatus.CONNECTED:
+        return False
+    if row.operational_status == OPS.PAUSED:
+        return False
+    row.operational_status = OPS.PAUSED
+    row.status_detail = detail
+    row.updated_at = timezone.now()
+    row.save(update_fields=['operational_status', 'status_detail', 'updated_at'])
+    return True
 
 
 def _sessions_index_phones() -> list[str]:
@@ -94,16 +123,32 @@ def sync_lines_from_sessions() -> int:
             continue
         row = existing.get(phone)
         if row is None:
+            if _central_session_blocks_line(phone):
+                continue
             PhoneDetectorExtractionLine.objects.create(
                 phone=phone,
                 line_index=idx,
                 operational_status=OPS.ACTIVE,
             )
             touched += 1
-        elif row.line_index != idx:
-            row.line_index = idx
-            row.save(update_fields=['line_index', 'updated_at'])
-            touched += 1
+        else:
+            paused = _pause_line_for_central_session(
+                row,
+                detail='نشست مرکزی فایلینگ معتبر نیست — خط متوقف شد',
+            )
+            if not paused and _central_session_blocks_line(phone):
+                if row.operational_status != OPS.PAUSED:
+                    row.operational_status = OPS.PAUSED
+                    row.status_detail = 'نشست مرکزی فایلینگ معتبر نیست — خط متوقف شد'
+                    row.updated_at = timezone.now()
+                    row.save(update_fields=['operational_status', 'status_detail', 'updated_at'])
+                    paused = True
+            if paused:
+                touched += 1
+            elif row.line_index != idx:
+                row.line_index = idx
+                row.save(update_fields=['line_index', 'updated_at'])
+                touched += 1
     return touched
 
 
@@ -132,7 +177,15 @@ def excluded_phones_for_extraction() -> set[str]:
     sync_lines_from_sessions()
     now = timezone.now()
     phones: set[str] = set()
-    for row in PhoneDetectorExtractionLine.objects.all():
+    for row in PhoneDetectorExtractionLine.objects.select_related('divar_account_session').all():
+        if _central_session_blocks_line(row.phone):
+            phones.add(row.phone)
+            continue
+        if row.divar_account_session_id:
+            central = row.divar_account_session
+            if central.auth_status != DivarAccountSession.AuthStatus.CONNECTED:
+                phones.add(row.phone)
+                continue
         if row.operational_status in (
             OPS.BLOCKED_CAPTCHA,
             OPS.PAUSED,

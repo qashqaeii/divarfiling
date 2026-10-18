@@ -1031,7 +1031,7 @@ class AdminDivarSessionsJsonView(StaffRequiredMixin, View):
             grant_phone_detector_consent,
             unlink_session_from_line,
         )
-        from workspace.services.divar_session.service import DivarSessionError
+        from workspace.services.divar_session.errors import DivarSessionError
 
         session = get_object_or_404(DivarAccountSession, pk=session_id)
         try:

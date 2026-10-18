@@ -7,7 +7,12 @@
         <i class="fas fa-circle-exclamation" aria-hidden="true"></i>
         <div>
             <strong>خطا در ثبت اطلاعات</strong>
+            {% for err in form.non_field_errors %}
+            <p>{{ err }}</p>
+            {% endfor %}
+            {% if not form.non_field_errors or form.errors|length > 1 %}
             <p>فیلدهای مشخص‌شده را تکمیل یا اصلاح کنید.</p>
+            {% endif %}
         </div>
     </div>
     {% endif %}

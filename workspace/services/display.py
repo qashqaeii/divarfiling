@@ -1474,6 +1474,57 @@ def _dossier_endpoint_deposit_phrase(amount: Optional[int]) -> str:
     return f'{format_toman_compact(amount)} ودیعه'
 
 
+def effective_convertible_rent_rate(
+    base_deposit: int,
+    base_rent: int,
+    alt_deposit: int,
+    alt_rent: int,
+) -> Optional[int]:
+    """تومان ودیعه به‌ازای هر ۱ میلیون تومان تغییر اجاره — از دو نقطه ثبت‌شده."""
+    rent_delta = alt_rent - base_rent
+    dep_delta = alt_deposit - base_deposit
+    if rent_delta == 0:
+        return None
+    return int(round(abs(dep_delta) / abs(rent_delta) * 1_000_000))
+
+
+def is_convertible_slider_compatible(
+    base_deposit: int,
+    base_rent: int,
+    alt_deposit: int,
+    alt_rent: int,
+) -> bool:
+    """اسلایدر پیوسته فقط وقتی تغییر رهن و اجاره هم‌جهت نباشند."""
+    dep_delta = alt_deposit - base_deposit
+    rent_delta = alt_rent - base_rent
+    if dep_delta == 0 and rent_delta == 0:
+        return False
+    if dep_delta != 0 and rent_delta != 0 and dep_delta * rent_delta > 0:
+        return False
+    return True
+
+
+def interpolate_convertible_rent(
+    base_deposit: int,
+    base_rent: int,
+    alt_deposit: int,
+    alt_rent: int,
+    t: float,
+) -> Tuple[int, int]:
+    """t∈[0,1] — ۰ پایه، ۱ شرایط تبدیل؛ دو سر بازه دقیق."""
+    if t <= 0:
+        return base_deposit, base_rent
+    if t >= 1:
+        return alt_deposit, alt_rent
+    dep = int(round(base_deposit + t * (alt_deposit - base_deposit)))
+    rent = int(round(base_rent + t * (alt_rent - base_rent)))
+    dep = max(0, dep)
+    rent = max(0, rent)
+    lo_d, hi_d = min(base_deposit, alt_deposit), max(base_deposit, alt_deposit)
+    lo_r, hi_r = min(base_rent, alt_rent), max(base_rent, alt_rent)
+    return max(lo_d, min(hi_d, dep)), max(lo_r, min(hi_r, rent))
+
+
 def _resolve_convertible_money_pair(
     listing,
     merged: dict,
@@ -1571,13 +1622,20 @@ def resolve_convertible_rent_card(
         'endpoint_rent': _dossier_endpoint_rent_phrase(alt_rent),
     }
 
-    # در RTL سر راست معمولاً رهن بیشتر است.
-    if (alt_dep or 0) > (base_dep or 0):
-        endpoints = (state_alt, state_base)
-        default_id = 'alt'
+    default_id = 'base'
+    endpoints_rtl = (state_base, state_alt)
+    dep_delta = alt_dep - base_dep
+    rent_delta = alt_rent - base_rent
+    identical = dep_delta == 0 and rent_delta == 0
+    slider_ok = is_convertible_slider_compatible(base_dep, base_rent, alt_dep, alt_rent)
+    if identical:
+        ui_mode = 'static'
+    elif slider_ok:
+        ui_mode = 'slider'
     else:
-        endpoints = (state_base, state_alt)
-        default_id = 'base'
+        ui_mode = 'dual'
+
+    conv_rate = effective_convertible_rent_rate(base_dep, base_rent, alt_dep, alt_rent)
 
     return {
         'show_card': True,
@@ -1585,12 +1643,23 @@ def resolve_convertible_rent_card(
         'badge': 'قابل تبدیل',
         'title': 'شرایط رهن و اجاره',
         'hint': 'ودیعه و اجارهٔ این ملک قابل تبدیل است.',
+        'mid_note': 'محاسبه بر اساس شرایط آگهی',
         'default_id': default_id,
+        'ui_mode': ui_mode,
+        'conversion_rate_per_million_rent': conv_rate,
         'states': {
             'base': state_base,
             'alt': state_alt,
         },
-        'endpoints_rtl': endpoints,
+        'endpoints_rtl': endpoints_rtl,
+        'slider': {
+            'base_deposit': base_dep,
+            'base_rent': base_rent,
+            'alt_deposit': alt_dep,
+            'alt_rent': alt_rent,
+            'steps': 100,
+            'default_step': 0,
+        },
     }
 
 

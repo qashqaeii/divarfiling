@@ -11,7 +11,7 @@
 <link rel="stylesheet" href="{% static 'workspace/css/ws-ld-mobile.css' %}?v=1">
 <link rel="stylesheet" href="{% static 'workspace/css/advertiser-analysis.css' %}?v=5">
 <link rel="stylesheet" href="{% static 'workspace/css/mk-filing-datasets.css' %}?v=19">
-<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-listing-detail.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'workspace/css/mk-filing-listing-detail.css' %}?v=4">
 <link rel="stylesheet" href="{% static 'workspace/css/ws-listing-detail-mobile-v2.css' %}?v=3">
 <link rel="stylesheet" href="{% static 'workspace/css/ws-listing-detail-mobile-v3.css' %}?v=5">
 <link rel="stylesheet" href="{% static 'workspace/css/ws-filing-mobile-dl-v1.css' %}?v=29">
@@ -1208,33 +1208,11 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    document.querySelectorAll('[data-ws-rent-convert]').forEach(function (root) {
-        var depEl = root.querySelector('[data-rc-dep]');
-        var rentEl = root.querySelector('[data-rc-rent]');
-        var buttons = root.querySelectorAll('[data-rc-state]');
-        function syncThumb(activeBtn) {
-            if (!activeBtn || !buttons.length) return;
-            var atStart = activeBtn === buttons[buttons.length - 1];
-            root.setAttribute('data-rc-side', atStart ? 'start' : 'end');
-        }
-        buttons.forEach(function (btn) {
-            btn.addEventListener('click', function () {
-                buttons.forEach(function (b) {
-                    b.classList.remove('is-active');
-                    b.setAttribute('aria-pressed', 'false');
-                });
-                btn.classList.add('is-active');
-                btn.setAttribute('aria-pressed', 'true');
-                if (depEl) depEl.textContent = btn.getAttribute('data-rc-dep') || '';
-                if (rentEl) rentEl.textContent = btn.getAttribute('data-rc-rent') || '';
-                syncThumb(btn);
-            });
-        });
-        var initial = root.querySelector('.ws-ld-rent-convert__ep.is-active');
-        syncThumb(initial || buttons[0]);
-    });
 });
 </script>
+{% if convertible_rent.show_card %}
+<script src="{% static 'workspace/js/listing-rent-convert.js' %}?v=1"></script>
+{% endif %}
 {% if listing.latitude and listing.longitude %}
 {{ listing_map_marker|json_script:"listing-map-marker" }}
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">

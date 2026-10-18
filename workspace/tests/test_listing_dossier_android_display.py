@@ -6,8 +6,11 @@ from workspace.services.display import (
     apply_convertible_rent_to_dossier,
     build_listing_display_data,
     dedupe_listing_dossier_rows,
+    effective_convertible_rent_rate,
     format_field_rows,
     format_sections,
+    interpolate_convertible_rent,
+    is_convertible_slider_compatible,
     location_accuracy_for_map,
     resolve_convertible_rent_card,
     transaction_profile,
@@ -68,13 +71,38 @@ class ListingDossierAndroidDisplayTests(SimpleTestCase):
         labels = [r['key'] for r in dedupe_listing_dossier_rows(format_field_rows(money, data))]
         self.assertEqual(labels.count('ودیعه'), 1)
 
-    def test_convertible_rent_card_dual_mode_android(self):
+    def test_convertible_rent_interpolation_math(self):
+        base_d, base_r = 3_000_000_000, 0
+        alt_d, alt_r = 1_300_000_000, 50_000_000
+        self.assertEqual(
+            effective_convertible_rent_rate(base_d, base_r, alt_d, alt_r),
+            34_000_000,
+        )
+        self.assertTrue(is_convertible_slider_compatible(base_d, base_r, alt_d, alt_r))
+        d0, r0 = interpolate_convertible_rent(base_d, base_r, alt_d, alt_r, 0)
+        d1, r1 = interpolate_convertible_rent(base_d, base_r, alt_d, alt_r, 1)
+        self.assertEqual((d0, r0), (base_d, base_r))
+        self.assertEqual((d1, r1), (alt_d, alt_r))
+        dm, rm = interpolate_convertible_rent(base_d, base_r, alt_d, alt_r, 0.5)
+        self.assertEqual(dm, 2_150_000_000)
+        self.assertEqual(rm, 25_000_000)
+        self.assertEqual(
+            effective_convertible_rent_rate(900_000_000, 30_000_000, 600_000_000, 40_000_000),
+            30_000_000,
+        )
+        self.assertFalse(
+            is_convertible_slider_compatible(1_000_000_000, 10_000_000, 2_000_000_000, 20_000_000),
+        )
+
+    def test_convertible_rent_card_slider_mode_android(self):
         raw = self._convertible_android_raw()
         listing = _rent_listing(raw, deposit=3_000_000_000, rent=0, area=250)
         profile = transaction_profile('اجاره')
         data = build_listing_display_data(listing, {}, transaction_type='اجاره')
         card = resolve_convertible_rent_card(listing, data, profile, raw_data=raw)
         self.assertTrue(card['show_card'])
+        self.assertEqual(card['ui_mode'], 'slider')
+        self.assertEqual(card['conversion_rate_per_million_rent'], 34_000_000)
         self.assertEqual(card['states']['base']['deposit'], 3_000_000_000)
         self.assertEqual(card['states']['base']['rent'], 0)
         self.assertEqual(card['states']['alt']['deposit'], 1_300_000_000)
@@ -91,6 +119,21 @@ class ListingDossierAndroidDisplayTests(SimpleTestCase):
         raw_keys = {r.get('raw_key') for r in money_rows}
         self.assertFalse(raw_keys & {'ودیعه', 'اجاره', 'ودیعه (شرایط تبدیل)'})
 
+    def test_convertible_rent_incompatible_falls_back_to_dual_ui(self):
+        raw = {
+            'اجاره_قابل_تبدیل': 'قابل تبدیل',
+            'ودیعه': 1_000_000_000,
+            'اجاره': 10_000_000,
+            'ودیعه (شرایط تبدیل)': 2_000_000_000,
+            'اجاره ماهانه (شرایط تبدیل)': 20_000_000,
+        }
+        listing = _rent_listing(raw, deposit=1_000_000_000, rent=10_000_000)
+        profile = transaction_profile('اجاره')
+        data = build_listing_display_data(listing, {}, transaction_type='اجاره')
+        card = resolve_convertible_rent_card(listing, data, profile, raw_data=raw)
+        self.assertTrue(card['show_card'])
+        self.assertEqual(card['ui_mode'], 'dual')
+
     def test_convertible_rent_card_excel_style_keys(self):
         raw = {
             'ودیعه': 3_000_000_000,
@@ -104,6 +147,7 @@ class ListingDossierAndroidDisplayTests(SimpleTestCase):
         data = build_listing_display_data(listing, {}, transaction_type='اجاره')
         card = resolve_convertible_rent_card(listing, data, profile, raw_data=raw)
         self.assertTrue(card['show_card'])
+        self.assertEqual(card['ui_mode'], 'slider')
 
     def test_convertible_rent_partial_data_no_card(self):
         raw = {

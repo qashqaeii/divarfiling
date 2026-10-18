@@ -1,12 +1,12 @@
 {% load workspace_tags %}
 {% with default=card.states|dict_get:card.default_id %}
-<div class="ws-ld-rent-convert" data-ws-rent-convert>
+<div class="ws-ld-rent-convert ws-ld-rent-convert--{{ card.ui_mode }}" data-ws-rent-convert>
     <div class="ws-ld-rent-convert__banner">
         <span class="ws-ld-rent-convert__banner-ico" aria-hidden="true"><i class="fas fa-right-left"></i></span>
         <p class="ws-ld-rent-convert__banner-text">{{ card.hint }}</p>
     </div>
 
-    <div class="ws-ld-rent-convert__current" aria-live="polite">
+    <div class="ws-ld-rent-convert__current" aria-live="polite" aria-atomic="true">
         <div class="ws-ld-rent-convert__metric">
             <span class="ws-ld-rent-convert__metric-lbl">ودیعه</span>
             <strong class="ws-ld-rent-convert__metric-val" data-rc-dep>{{ default.deposit_label }}</strong>
@@ -16,13 +16,44 @@
             <strong class="ws-ld-rent-convert__metric-val" data-rc-rent>{{ default.rent_label }}</strong>
         </div>
     </div>
+    <p class="ws-ld-rent-convert__mid-note" data-rc-mid-note hidden>{{ card.mid_note }}</p>
 
-    <div class="ws-ld-rent-convert__range" role="group" aria-label="انتخاب بین دو حالت رهن و اجاره">
-        <div class="ws-ld-rent-convert__track" aria-hidden="true">
-            <span class="ws-ld-rent-convert__track-fill"></span>
-            <span class="ws-ld-rent-convert__track-thumb" data-rc-thumb></span>
+    {% if card.ui_mode == 'slider' or card.ui_mode == 'static' %}
+    {{ card.slider|json_script:"ws-rent-convert-slider" }}
+    <div class="ws-ld-rent-convert__slider-block">
+        <div class="ws-ld-rent-convert__slider-wrap">
+            <div class="ws-ld-rent-convert__slider-rail" aria-hidden="true">
+                <span class="ws-ld-rent-convert__slider-fill" data-rc-fill></span>
+            </div>
+            <input type="range"
+                   class="ws-ld-rent-convert__range-input"
+                   data-rc-range
+                   min="0"
+                   max="{{ card.slider.steps }}"
+                   step="1"
+                   value="{{ card.slider.default_step }}"
+                   dir="rtl"
+                   aria-label="تبدیل بین ودیعه و اجاره ماهانه"
+                   {% if card.ui_mode == 'static' %}disabled aria-disabled="true"{% endif %}>
         </div>
         <div class="ws-ld-rent-convert__endpoints">
+            {% for ep in card.endpoints_rtl %}
+            <button type="button"
+                    class="ws-ld-rent-convert__ep{% if forloop.first %} is-active{% endif %}"
+                    data-rc-step="{% if forloop.first %}0{% else %}{{ card.slider.steps }}{% endif %}"
+                    data-rc-dep="{{ ep.deposit_label }}"
+                    data-rc-rent="{{ ep.rent_label }}"
+                    aria-pressed="{% if forloop.first %}true{% else %}false{% endif %}">
+                <span class="ws-ld-rent-convert__ep-dep">{{ ep.endpoint_deposit }}</span>
+                <span class="ws-ld-rent-convert__ep-rent">{{ ep.endpoint_rent }}</span>
+            </button>
+            {% endfor %}
+        </div>
+        <p class="ws-ld-rent-convert__cta">نوار را بکشید یا روی هر حالت بزنید</p>
+    </div>
+    {% else %}
+    <div class="ws-ld-rent-convert__range" role="group" aria-label="انتخاب بین دو حالت رهن و اجاره">
+        <div class="ws-ld-rent-convert__endpoints ws-ld-rent-convert__endpoints--dual">
             {% for ep in card.endpoints_rtl %}
             <button type="button"
                     class="ws-ld-rent-convert__ep{% if ep.id == card.default_id %} is-active{% endif %}"
@@ -37,5 +68,6 @@
         </div>
         <p class="ws-ld-rent-convert__cta">برای مشاهده شرایط تبدیل، یکی از دو حالت را انتخاب کنید</p>
     </div>
+    {% endif %}
 </div>
 {% endwith %}

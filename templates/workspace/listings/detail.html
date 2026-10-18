@@ -999,17 +999,20 @@
 </div>
 
 {% if divar_contact_enabled %}
-<div class="ws-modal" id="divar-connect-modal" hidden aria-hidden="true" role="dialog" aria-labelledby="divar-connect-title">
-    <div class="ws-modal__backdrop" data-divar-close tabindex="-1"></div>
-    <div class="ws-modal__panel ws-modal__panel--sm">
-        <header class="ws-modal__head">
-            <h2 id="divar-connect-title" class="ws-modal__title">اتصال به دیوار</h2>
-            <button type="button" class="ws-modal__close" data-divar-close aria-label="بستن">
-                <i class="fas fa-xmark" aria-hidden="true"></i>
+<div class="ws-modal" id="divar-connect-modal" role="dialog" aria-modal="true"
+     aria-labelledby="divar-connect-title" data-modal-uses-hidden hidden>
+    <div class="ws-modal-overlay" data-modal-close tabindex="-1"></div>
+    <div class="ws-modal-panel ws-modal-panel-sm">
+        <div class="ws-modal-head">
+            <div>
+                <h2 class="ws-modal-title" id="divar-connect-title">اتصال به دیوار</h2>
+                <p class="ws-modal-sub">کد ورود به حساب دیوار (نه کد HIP آگهی)</p>
+            </div>
+            <button type="button" class="ws-modal-close" data-modal-close aria-label="بستن">
+                <i class="fas fa-times" aria-hidden="true"></i>
             </button>
-        </header>
-        <div class="ws-modal__body">
-            <p class="mk-owner-box__hint">کد ورود به حساب دیوار (نه کد HIP آگهی) را وارد کنید.</p>
+        </div>
+        <div class="ws-modal-body">
             <p class="ws-form-error" data-divar-error hidden></p>
             <div data-divar-step="phone">
                 <label class="mk-owner-box__label" for="divar-connect-phone">شماره موبایل حساب دیوار</label>
@@ -1037,7 +1040,7 @@
 <script src="{% static 'workspace/js/listing-edit.js' %}?v=7"></script>
 <script src="{% static 'workspace/js/filing-help-modal.js' %}?v=2"></script>
 {% if divar_contact_enabled %}
-<script src="{% static 'workspace/js/divar_contact.js' %}?v=1"></script>
+<script src="{% static 'workspace/js/divar_contact.js' %}?v=2"></script>
 {% endif %}
 <script>
 document.addEventListener('DOMContentLoaded', function () {

@@ -89,20 +89,29 @@
       if (otpStep) otpStep.hidden = true;
       if (phoneInput) phoneInput.value = '';
       if (otpInput) otpInput.value = '';
-      modal.hidden = false;
-      modal.setAttribute('aria-hidden', 'false');
+      if (window.WSModal && typeof window.WSModal.open === 'function') {
+        window.WSModal.open(modal.id || 'divar-connect-modal');
+      } else {
+        modal.removeAttribute('hidden');
+        modal.classList.add('is-open');
+        document.body.classList.add('ws-modal-open');
+      }
     }
 
     function closeModal() {
       if (!modal) return;
-      modal.hidden = true;
-      modal.setAttribute('aria-hidden', 'true');
+      if (window.WSModal && typeof window.WSModal.close === 'function') {
+        window.WSModal.close(modal);
+      } else {
+        modal.classList.remove('is-open');
+        if (modal.hasAttribute('data-modal-uses-hidden')) {
+          modal.setAttribute('hidden', '');
+        }
+        document.body.classList.remove('ws-modal-open');
+      }
     }
 
     if (modal) {
-      modal.querySelectorAll('[data-divar-close]').forEach(function (el) {
-        el.addEventListener('click', closeModal);
-      });
       var sendBtn = modal.querySelector('[data-divar-send-otp]');
       if (sendBtn) {
         sendBtn.addEventListener('click', function () {

@@ -1043,8 +1043,8 @@ class ListingDetailView(DatasetOwnerMixin, DetailView):
         ctx['location_accuracy'] = location_accuracy_for_map(data)
         ctx['supplementary_fields'] = format_supplementary_fields(data, tx, sections)
         ctx['supplementary_groups'] = format_supplementary_groups(data, tx, sections)
-        from workspace.services.divar_listing_datetime import resolve_listing_last_bump_jalali_label
-        ctx['last_bump_label'] = resolve_listing_last_bump_jalali_label(listing)
+        from workspace.services.divar_listing_datetime import resolve_listing_last_bump_datetime
+        ctx['last_bump_at'] = resolve_listing_last_bump_datetime(listing)
         ctx['feature_profile'] = build_listing_feature_profile(listing, ctx['feat'])
         ctx['dossier_amenities'] = build_listing_amenity_dossier_items(
             listing, ctx['feat'], ctx['feature_profile'],

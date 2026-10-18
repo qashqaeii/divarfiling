@@ -209,8 +209,8 @@ def parse_published_at_from_export_row(row: dict) -> Optional[datetime]:
     return parse_divar_listing_datetime(raw)
 
 
-def resolve_listing_last_bump_jalali_label(listing) -> str:
-    """برچسب شمسی «آخرین نردبان» — فقط وقتی زمان نردبان قابل parse است (نه به‌روزرسانی/انتشار)."""
+def resolve_listing_last_bump_datetime(listing) -> Optional[datetime]:
+    """زمان آخرین نردبان — فقط وقتی قابل parse است (نه به‌روزرسانی/انتشار)."""
     data = getattr(listing, 'data', None) or {}
     candidates: list[Any] = []
     iso = data.get(DATA_KEY_LAST_BUMPED_AT)
@@ -220,9 +220,18 @@ def resolve_listing_last_bump_jalali_label(listing) -> str:
     if shamsi and shamsi not in candidates:
         candidates.append(shamsi)
     for raw in candidates:
-        if not parse_divar_listing_datetime(raw):
-            continue
-        label = listing_datetime_to_jalali_label(raw)
-        if label:
-            return label
-    return ''
+        parsed = parse_divar_listing_datetime(raw)
+        if parsed:
+            return parsed
+    return None
+
+
+def resolve_listing_last_bump_jalali_label(listing) -> str:
+    """برچسب شمسی «آخرین نردبان» با ارقام فارسی — برای نمایش بدون فیلتر تمپلیت."""
+    from workspace.services.jalali_input import to_persian_digits
+
+    parsed = resolve_listing_last_bump_datetime(listing)
+    if not parsed:
+        return ''
+    label = listing_datetime_to_jalali_label(parsed)
+    return to_persian_digits(label) if label else ''

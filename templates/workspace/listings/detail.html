@@ -706,7 +706,7 @@
                     {% if listing.city %}<div><dt>شهر</dt><dd>{{ listing.city }}</dd></div>{% endif %}
                     <div><dt>فایلینگ</dt><dd>{{ dataset.name }}</dd></div>
                     {% if listing.published_at %}<div><dt>تاریخ ایجاد در دیوار</dt><dd>{{ listing.published_at|ws_jalali_datetime }}</dd></div>{% endif %}
-                    {% if last_bump_label %}<div><dt>آخرین نردبان</dt><dd><i class="fas fa-angles-up ws-ld-side-bump-icon" aria-hidden="true"></i> {{ last_bump_label }}</dd></div>{% endif %}
+                    {% if last_bump_at %}<div><dt>آخرین نردبان</dt><dd><i class="fas fa-angles-up ws-ld-side-bump-icon" aria-hidden="true"></i> {{ last_bump_at|ws_jalali_datetime }}</dd></div>{% endif %}
                     {% if listing.is_expired %}<div><dt>وضعیت</dt><dd>منقضی</dd></div>{% endif %}
                     {% if crm_property %}
                     <div><dt>فایل شخصی</dt><dd><a href="{% url 'workspace:crm_property_detail' crm_property.id %}">مشاهده فایل شخصی</a></dd></div>

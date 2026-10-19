@@ -22,7 +22,7 @@ class FirstVisitHomeChatTest(TestCase):
     def test_first_visit_home_then_chat(self):
         home = self.client.get('/')
         self.assertEqual(home.status_code, 200)
-        self.assertIn('pa-head__badge', home.content.decode('utf-8'))
+        self.assertIn('pa-welcome', home.content.decode('utf-8'))
         csrf = self.client.cookies.get('csrftoken')
         self.assertIsNotNone(csrf, 'صفحه اصلی باید CSRF cookie بدهد')
         r = self.client.post(

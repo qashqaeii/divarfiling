@@ -64,6 +64,7 @@ INSTALLED_APPS = [
     'blog',
     'workspace',
     'ai_workspace',
+    'public_assistant',
     'product_hub',
     'mobile_api',
     'desktop_api',
@@ -101,6 +102,7 @@ TEMPLATES = [
                 'workspace.context_processors.workspace_context',
                 'affiliates.context_processors.affiliate_context',
                 'accounts.context_processors.admin_panel_shell',
+                'public_assistant.context_processors.public_assistant',
             ],
         },
     },
@@ -325,6 +327,15 @@ AI_DAILY_TOKEN_LIMIT = config('AI_DAILY_TOKEN_LIMIT', default=90000, cast=int)
 AI_LICENSED_UNLIMITED = config('AI_LICENSED_UNLIMITED', default=True, cast=bool)
 # bump هنگام تغییر provider chain تا پاسخ‌های cache شدهٔ provider قبلی reuse نشوند
 AI_CACHE_VERSION = config('AI_CACHE_VERSION', default='v2')
+
+# دستیار عمومی سایت (RAG + ویجت) — پیش‌فرض خاموش تا استقرار کنترل‌شده
+PUBLIC_ASSISTANT_ENABLED = config('PUBLIC_ASSISTANT_ENABLED', default=False, cast=bool)
+PUBLIC_ASSISTANT_RATE_LIMIT_PER_HOUR = config('PUBLIC_ASSISTANT_RATE_LIMIT_PER_HOUR', default=40, cast=int)
+PUBLIC_ASSISTANT_SESSION_RATE_LIMIT_PER_HOUR = config(
+    'PUBLIC_ASSISTANT_SESSION_RATE_LIMIT_PER_HOUR', default=25, cast=int
+)
+PUBLIC_ASSISTANT_TEMPERATURE = config('PUBLIC_ASSISTANT_TEMPERATURE', default=0.35, cast=float)
+PUBLIC_ASSISTANT_MAX_TOKENS = config('PUBLIC_ASSISTANT_MAX_TOKENS', default=900, cast=int)
 
 # CARTO raster basemaps (Leaflet tile layers) — free tier with API key
 CARTO_BASEMAP_API_KEY = config('CARTO_BASEMAP_API_KEY', default='')

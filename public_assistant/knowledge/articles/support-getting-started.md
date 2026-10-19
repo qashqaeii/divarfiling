@@ -1,0 +1,33 @@
+---
+id: support-getting-started
+title: شروع کار پس از ثبت‌نام
+category: آموزش و پشتیبانی
+summary: 'مسیر سریع: ورود، لایسنس، اولین استخراج، اولین مخاطب.'
+platforms:
+- web
+- android
+- windows
+subscription_note: ''
+prerequisites: ''
+limitations: ''
+synonyms: []
+links:
+- label: آموزش
+  url: /amoozesh/
+- label: آکادمی
+  url: /academy/
+technical_refs: []
+reviewed_at: '2026-10-19'
+is_public: true
+is_active: true
+---
+
+## گام‌ها
+1. ورود به میزکار
+2. اگر کمپین فعال است، هدیه ۷ روزه را بررسی کنید
+3. لایسنس را فعال کنید (یا خرید از `/products/`)
+4. اپ اندروید/ویندوز را نصب و یک آگهی تست استخراج کنید
+5. یک مخاطب CRM ثبت کنید
+
+## آموزش
+`/amoozesh/` و `/academy/` ویدیو و مقالات عمومی دارند.

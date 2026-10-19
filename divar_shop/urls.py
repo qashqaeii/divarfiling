@@ -49,6 +49,7 @@ urlpatterns = [
     path('payment/', include('shop.payment_urls')),
     path('affiliate/', include('affiliates.urls')),
     path('blog/', include('blog.urls')),
+    path('api/public-assistant/', include('public_assistant.urls')),
     path('workspace/', include('workspace.urls')),
     path('p/', include('workspace.public_urls')),
 ] + contract_public_urls

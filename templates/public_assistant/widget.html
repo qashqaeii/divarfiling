@@ -1,43 +1,53 @@
 {% load static %}
 {% if public_assistant_widget %}
-<link rel="stylesheet" href="{% static 'public_assistant/css/widget.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'public_assistant/css/widget.css' %}?v=4">
 <div id="pa-root" class="pa-root" dir="rtl" data-config-url="{% url 'public_assistant:config' %}" data-chat-url="{% url 'public_assistant:chat' %}" data-feedback-url="{% url 'public_assistant:feedback' %}" data-reset-url="{% url 'public_assistant:reset' %}" hidden>
   <button type="button" class="pa-backdrop" id="paBackdrop" aria-label="بستن گفتگو" tabindex="-1"></button>
   <button type="button" class="pa-fab" id="paFab" aria-label="گفتگو با دستیار فایلینگ دیوار" aria-expanded="false" aria-controls="paPanel">
     <span class="pa-fab__icon" aria-hidden="true">
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <path d="M12 3C7.03 3 3 6.58 3 11c0 2.02.9 3.85 2.36 5.22L4 21l4.96-1.28C9.9 20.45 10.93 20.6 12 20.6c4.97 0 9-3.58 9-8s-4.03-8-9-8z" stroke="currentColor" stroke-width="1.6"/>
-        <circle cx="8.5" cy="11" r="1" fill="currentColor"/>
-        <circle cx="12" cy="11" r="1" fill="currentColor"/>
-        <circle cx="15.5" cy="11" r="1" fill="currentColor"/>
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M9.5 4.5h5A5.5 5.5 0 0 1 20 10v5.8c0 .7-.6 1.2-1.3 1.2H8.2l-3.7 2.5V10A5.5 5.5 0 0 1 9.5 4.5Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+        <circle cx="9" cy="11" r=".75" fill="currentColor"/>
+        <circle cx="12" cy="11" r=".75" fill="currentColor"/>
+        <circle cx="15" cy="11" r=".75" fill="currentColor"/>
       </svg>
     </span>
   </button>
   <div class="pa-panel" id="paPanel" role="dialog" aria-label="دستیار فایلینگ دیوار" aria-modal="true" hidden>
-    <header class="pa-panel__head">
-      <div class="pa-panel__title">
-        <span class="pa-panel__badge">AI</span>
-        <span class="pa-panel__title-text">دستیار فایلینگ دیوار</span>
+    <header class="pa-head">
+      <div class="pa-head__brand">
+        <span class="pa-head__avatar" aria-hidden="true">AI</span>
+        <div class="pa-head__text">
+          <span class="pa-head__title">دستیار فایلینگ دیوار</span>
+          <span class="pa-head__sub">راهنمای محصول و شروع کار</span>
+        </div>
       </div>
-      <div class="pa-panel__actions">
-        <button type="button" class="pa-btn pa-btn--ghost" id="paNewChat" title="گفتگوی جدید">گفتگوی جدید</button>
-        <button type="button" class="pa-btn pa-btn--icon" id="paClose" aria-label="بستن">×</button>
+      <div class="pa-head__tools">
+        <button type="button" class="pa-icon-btn" id="paNewChat" title="گفتگوی جدید" aria-label="گفتگوی جدید">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 6h16M4 12h10M4 18h7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M17 15l3 3-3 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <button type="button" class="pa-icon-btn" id="paClose" aria-label="بستن">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        </button>
       </div>
     </header>
     <div class="pa-messages" id="paMessages" tabindex="0" aria-live="polite"></div>
     <div class="pa-suggestions-wrap" id="paSuggestionsWrap">
-      <p class="pa-suggestions-label">پیشنهاد سؤال</p>
       <div class="pa-suggestions" id="paSuggestions"></div>
     </div>
-    <form class="pa-compose" id="paForm">
-      <label class="pa-compose__label" for="paInput">پیام شما</label>
-      <div class="pa-compose__row">
-        <textarea id="paInput" class="pa-compose__input" rows="1" maxlength="1200" placeholder="سؤال خود را بنویسید…" autocomplete="off"></textarea>
-        <button type="submit" class="pa-btn pa-btn--primary" id="paSend" aria-label="ارسال پیام">ارسال</button>
-      </div>
-    </form>
-    <p class="pa-footnote">پاسخ‌ها بر اساس دانشنامه عمومی است؛ به اطلاعات حساب شما دسترسی ندارد.</p>
+    <footer class="pa-footer">
+      <form class="pa-compose" id="paForm">
+        <label class="pa-compose__label" for="paInput">پیام شما</label>
+        <div class="pa-compose__shell">
+          <textarea id="paInput" class="pa-compose__input" rows="1" maxlength="1200" placeholder="پیام خود را بنویسید…" autocomplete="off"></textarea>
+          <button type="submit" class="pa-send" id="paSend" aria-label="ارسال">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+      </form>
+      <p class="pa-footnote">پاسخ از دانشنامه عمومی — بدون دسترسی به حساب شما</p>
+    </footer>
   </div>
 </div>
-<script src="{% static 'public_assistant/js/widget.js' %}?v=3" defer></script>
+<script src="{% static 'public_assistant/js/widget.js' %}?v=4" defer></script>
 {% endif %}

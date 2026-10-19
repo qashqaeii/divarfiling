@@ -142,40 +142,37 @@
     var div = document.createElement('div');
     div.className = 'pa-msg pa-msg--' + (role === 'user' ? 'user' : 'bot');
     div.innerHTML = html;
-    if (sources && sources.length) {
-      var src = document.createElement('div');
-      src.className = 'pa-msg__sources';
-      src.innerHTML =
-        'منابع: ' +
-        sources
+    if (role === 'bot') {
+      var meta = document.createElement('div');
+      meta.className = 'pa-msg__meta';
+      if (sources && sources.length) {
+        var src = document.createElement('span');
+        src.className = 'pa-msg__sources';
+        src.innerHTML = sources
           .map(function (l) {
-            if (!isAllowedPublicLink(l.url)) return escapeHtml(l.label || '');
+            if (!isAllowedPublicLink(l.url)) return '';
             return '<a href="' + escapeHtml(l.url) + '">' + escapeHtml(l.label || l.url) + '</a>';
           })
           .filter(Boolean)
           .join(' · ');
-      div.appendChild(src);
-    }
-    if (role === 'bot') {
-      var actions = document.createElement('div');
+        if (src.innerHTML) meta.appendChild(src);
+      }
+      var actions = document.createElement('span');
       actions.className = 'pa-msg__actions';
       var copy = document.createElement('button');
       copy.type = 'button';
-      copy.className = 'pa-btn pa-btn--ghost';
       copy.textContent = 'کپی';
       copy.addEventListener('click', function () {
         navigator.clipboard.writeText(div.innerText || '');
       });
       var up = document.createElement('button');
       up.type = 'button';
-      up.className = 'pa-btn pa-btn--ghost';
       up.textContent = 'مفید';
       up.addEventListener('click', function () {
         postFeedback(true);
       });
       var down = document.createElement('button');
       down.type = 'button';
-      down.className = 'pa-btn pa-btn--ghost';
       down.textContent = 'نامفید';
       down.addEventListener('click', function () {
         postFeedback(false);
@@ -183,7 +180,8 @@
       actions.appendChild(copy);
       actions.appendChild(up);
       actions.appendChild(down);
-      div.appendChild(actions);
+      meta.appendChild(actions);
+      div.appendChild(meta);
     }
     messagesEl.appendChild(div);
     messagesEl.scrollTop = messagesEl.scrollHeight;

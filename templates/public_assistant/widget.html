@@ -1,6 +1,6 @@
 {% load static %}
 {% if public_assistant_widget %}
-<link rel="stylesheet" href="{% static 'public_assistant/css/widget.css' %}?v=9">
+<link rel="stylesheet" href="{% static 'public_assistant/css/widget.css' %}?v=10">
 <div id="pa-root" class="pa-root" dir="rtl" data-config-url="{% url 'public_assistant:config' %}" data-chat-url="{% url 'public_assistant:chat' %}" data-feedback-url="{% url 'public_assistant:feedback' %}" data-reset-url="{% url 'public_assistant:reset' %}" hidden>
   <button type="button" class="pa-backdrop" id="paBackdrop" aria-label="بستن گفتگو" tabindex="-1"></button>
   <button type="button" class="pa-fab" id="paFab" aria-label="گفتگو با دستیار فایلینگ دیوار" aria-expanded="false" aria-controls="paPanel">
@@ -70,5 +70,5 @@
     </footer>
   </div>
 </div>
-<script src="{% static 'public_assistant/js/widget.js' %}?v=9" defer></script>
+<script src="{% static 'public_assistant/js/widget.js' %}?v=10" defer></script>
 {% endif %}

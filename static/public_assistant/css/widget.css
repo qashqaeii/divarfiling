@@ -662,11 +662,12 @@
 }
 
 /* Loading */
-.pa-msg--loading {
+.pa-msg.pa-msg--loading {
   align-self: flex-start;
   max-width: 100%;
   padding: 2px 4px;
-  animation: none;
+  animation-name: none;
+  animation-duration: 0s;
 }
 
 .pa-msg--loading.is-out {
@@ -696,37 +697,50 @@
 
 .pa-loading__dots {
   display: flex;
-  align-items: center;
-  gap: 4px;
+  align-items: flex-end;
+  gap: 5px;
+  min-height: 14px;
+  padding-bottom: 1px;
 }
 
 .pa-loading__dots span {
-  width: 5px;
-  height: 5px;
+  display: inline-block;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   background: var(--pa-brand);
-  opacity: 0.35;
-  animation: pa-dot-wave 1s ease-in-out infinite;
+  opacity: 0.4;
+  transform: translate3d(0, 0, 0) scale(1);
+  will-change: transform, opacity;
+  animation-name: pa-dot-wave;
+  animation-duration: 1.15s;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-play-state: running;
+}
+
+.pa-loading__dots span:nth-child(1) {
+  animation-delay: 0s;
 }
 
 .pa-loading__dots span:nth-child(2) {
-  animation-delay: 0.12s;
+  animation-delay: 0.15s;
 }
 
 .pa-loading__dots span:nth-child(3) {
-  animation-delay: 0.24s;
+  animation-delay: 0.3s;
 }
 
 @keyframes pa-dot-wave {
   0%,
-  70%,
+  55%,
   100% {
-    transform: translateY(0);
-    opacity: 0.35;
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.4;
   }
-  35% {
-    transform: translateY(-3px);
-    opacity: 0.95;
+  28% {
+    transform: translate3d(0, -5px, 0) scale(1.18);
+    opacity: 1;
   }
 }
 
@@ -909,12 +923,21 @@
   .pa-fab,
   .pa-panel,
   .pa-backdrop,
-  .pa-loading__dots span,
-  .pa-msg,
+  .pa-msg:not(.pa-msg--loading),
   .pa-welcome,
   .pa-msg__meta,
   .pa-send__spinner {
     animation: none !important;
+    transition: none !important;
+  }
+
+  .pa-loading__dots span {
+    animation: none !important;
+    opacity: 0.65;
+    transform: none;
+  }
+
+  .pa-msg--loading.is-out {
     transition: none !important;
   }
 }

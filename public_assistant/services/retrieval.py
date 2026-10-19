@@ -20,6 +20,7 @@ class RetrievedChunk:
     score: float
     related_links: list
     subscription_note: str
+    summary: str = ''
 
 
 def _intent_boost(query_norm: str, article_id: str) -> float:
@@ -100,6 +101,18 @@ def _intent_boost(query_norm: str, article_id: str) -> float:
         w in query_norm for w in ('کمک', 'فایده', 'چرا', 'مشاور', 'چه میکند', 'چه می')
     ):
         boost += 4.5
+    if article_id == 'crm-advisor-guide' and 'crm' in query_norm and any(
+        w in query_norm for w in ('کمک', 'فایده', 'چرا', 'مشاور', 'مدیریت', 'پیگیری', 'چه میکند', 'چه می')
+    ):
+        boost += 5.5
+    if article_id == 'filing-collections' and any(
+        w in query_norm for w in ('مجموعه فایل', 'dataset', 'دیتاست', 'فایلینگ', 'بانک فایل')
+    ):
+        boost += 3.0
+    if article_id == 'support-getting-started' and any(
+        w in query_norm for w in ('شروع', 'اولین', 'تازه', 'ثبت نام', 'onboarding')
+    ):
+        boost += 3.5
     if article_id == 'extractor-overview' and any(w in query_norm for w in ('شماره', 'تماس', 'تلفن')):
         boost += 4.5
     if article_id == 'filing-detail-map' and 'نقشه' in query_norm:
@@ -178,6 +191,7 @@ def retrieve(query: str, limit: int = MAX_RETRIEVAL_CHUNKS) -> list[RetrievedChu
             'article__related_links',
             'article__subscription_note',
             'article__synonyms',
+            'article__summary',
         )
     )
 
@@ -211,11 +225,23 @@ def retrieve(query: str, limit: int = MAX_RETRIEVAL_CHUNKS) -> list[RetrievedChu
                 score=s,
                 related_links=art.related_links or [],
                 subscription_note=art.subscription_note or '',
+                summary=art.summary or '',
             )
         )
 
     scored.sort(key=lambda x: (-x.score, x.title))
-    return scored[:limit]
+    picked: list[RetrievedChunk] = []
+    per_article: dict[str, int] = {}
+    max_per_article = 2
+    for ch in scored:
+        count = per_article.get(ch.article_id, 0)
+        if count >= max_per_article:
+            continue
+        picked.append(ch)
+        per_article[ch.article_id] = count + 1
+        if len(picked) >= limit:
+            break
+    return picked
 
 
 def prefetch_articles_for_admin():

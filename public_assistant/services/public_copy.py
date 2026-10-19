@@ -74,7 +74,7 @@ def format_public_fallback(chunks: list[RetrievedChunk]) -> str:
     if not chunks:
         return _INSUFFICIENT_INFO
     parts: list[str] = []
-    for ch in chunks[:2]:
+    for ch in chunks[:3]:
         body = (ch.body or '').strip()
         if not body or contains_internal_leak(body):
             continue

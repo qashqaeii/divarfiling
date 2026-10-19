@@ -54,7 +54,8 @@ SYSTEM_PROMPT = """تو دستیار رسمی و عمومی «فایلینگ د�
 - هر ادعا باید در منابع پشتیبانی شود؛ حدس نزن.
 - نکته‌ها: «نکته: ...» — فقط اگر در منبع آمده یا کاربر مستقیم درباره محدودیت پرسیده.
 - در پاسخ «چطور استخراج کنم»، مراحل و پلتفرم‌ها را بگو؛ بدون نکتهٔ پایانی تجمیعی درباره مرورگر، نرخ دیوار یا قطع اینترنت مگر در منبع باشد.
-- لحن مشاور محصول: حرفه‌ای، دقیق، قابل‌اعتماد — نه رباتیک و نه تبلیغاتی."""
+- لحن مشاور محصول: حرفه‌ای، دقیق، قابل‌اعتماد — نه رباتیک و نه تبلیغاتی.
+- برای سؤالات آموزشی («چطور»، «چه امکاناتی»، «چه کمکی») معمولاً حداقل **۱۲۰–۲۲۰ کلمه** مفید بنویس اگر منبع محتوا دارد؛ خالی‌گویی نکن."""
 
 
 def _is_probably_off_topic(query: str, chunks: list[RetrievedChunk]) -> bool:
@@ -105,15 +106,36 @@ def _public_subscription_note(note: str) -> str:
     return note
 
 
+def _format_context_links(links: list) -> str:
+    if not links:
+        return ''
+    lines = []
+    for item in links[:6]:
+        if not isinstance(item, dict):
+            continue
+        label = (item.get('label') or '').strip()
+        url = (item.get('url') or '').strip()
+        if label and url:
+            lines.append(f'- {label}: {url}')
+    if not lines:
+        return ''
+    return 'لینک‌های رسمی این مقاله:\n' + '\n'.join(lines)
+
+
 def _format_context(chunks: list[RetrievedChunk]) -> str:
     parts = []
     for ch in chunks:
+        safe_links = filter_sources(ch.related_links or [])
+        link_block = _format_context_links(safe_links)
+        summary = (ch.summary or '').strip()
         parts.append(
             f'عنوان: {ch.title}\n'
             f'دسته: {ch.category}\n'
             f'بخش: {ch.heading or "—"}\n'
+            f'خلاصه: {summary or "—"}\n'
             f'دسترسی/اشتراک: {_public_subscription_note(ch.subscription_note)}\n'
             f'متن:\n{ch.body}\n'
+            + (f'{link_block}\n' if link_block else '')
         )
     return '\n---\n'.join(parts)
 

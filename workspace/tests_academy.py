@@ -88,10 +88,22 @@ class AcademySeedTests(TestCase):
         )
         datasets_banner = get_contextual_banner(user, 'datasets_empty')
         self.assertIsNotNone(datasets_banner)
+        self.assertTrue(datasets_banner['player']['available'])
+        self.assertEqual(datasets_banner['modal_id'], 'modal-acd-contextual-datasets_empty')
         self.assertEqual(datasets_banner['video'].slug, 'academy-extract-divar-listings')
         self.assertEqual(
             datasets_banner['video'].file_name,
             'Extracting-Divar-Listings-in-Less-Than-Two-Minutes.mp4',
+        )
+
+    def test_contextual_banner_lazy_seeds_missing_video_row(self):
+        user = User.objects.create_user(username='ctx_lazy', password='x', phone='09121110002')
+        deleted, _ = AcademyVideo.objects.filter(slug='academy-extract-divar-listings').delete()
+        self.assertGreater(deleted, 0)
+        banner = get_contextual_banner(user, 'datasets_empty')
+        self.assertIsNotNone(banner)
+        self.assertTrue(
+            AcademyVideo.objects.filter(slug='academy-extract-divar-listings', is_active=True).exists()
         )
 
 

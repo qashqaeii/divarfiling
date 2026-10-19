@@ -15,6 +15,33 @@
             <i class="fas fa-xmark" aria-hidden="true"></i>
         </button>
 
+        {% if academy_contextual.player.available %}
+        <button
+            type="button"
+            class="acd-contextual-media acd-contextual-media--btn"
+            data-modal-open="{{ academy_contextual.modal_id }}"
+            data-acd-cta
+            aria-label="پخش آموزش: {{ academy_contextual.title }}"
+        >
+            {% if academy_contextual.poster %}
+            <img
+                class="acd-contextual-media-img"
+                src="{% if academy_contextual.poster_kind == 'static' %}{% static academy_contextual.poster %}{% else %}{{ academy_contextual.poster }}{% endif %}"
+                alt=""
+                loading="lazy"
+                decoding="async"
+                width="160"
+                height="90"
+            >
+            {% else %}
+            <span class="acd-contextual-media-fallback" aria-hidden="true">
+                <i class="fas fa-circle-play"></i>
+            </span>
+            {% endif %}
+            <span class="acd-contextual-media-play" aria-hidden="true"><i class="fas fa-play"></i></span>
+            <span class="acd-contextual-media-duration">{{ academy_contextual.duration_display }}</span>
+        </button>
+        {% else %}
         <a
             href="{{ academy_contextual.video_url }}"
             class="acd-contextual-media"
@@ -39,18 +66,70 @@
             <span class="acd-contextual-media-play" aria-hidden="true"><i class="fas fa-play"></i></span>
             <span class="acd-contextual-media-duration">{{ academy_contextual.duration_display }}</span>
         </a>
+        {% endif %}
 
         <div class="acd-contextual-copy">
             <h2 class="acd-contextual-title" id="acd-contextual-title-{{ academy_contextual.key }}">
                 {{ academy_contextual.title }}
             </h2>
             <p class="acd-contextual-msg">{{ academy_contextual.message }}</p>
+            {% if academy_contextual.player.available %}
+            <button
+                type="button"
+                class="acd-contextual-link-cta acd-contextual-link-cta--btn"
+                data-modal-open="{{ academy_contextual.modal_id }}"
+                data-acd-cta
+            >
+                <i class="fas fa-play acd-contextual-link-cta-icon" aria-hidden="true"></i>
+                <span>تماشای آموزش</span>
+                <i class="fas fa-arrow-left acd-contextual-link-cta-arrow" aria-hidden="true"></i>
+            </button>
+            {% else %}
             <a href="{{ academy_contextual.video_url }}" class="acd-contextual-link-cta" data-acd-cta>
                 <i class="fas fa-play acd-contextual-link-cta-icon" aria-hidden="true"></i>
                 <span>تماشای آموزش</span>
                 <i class="fas fa-arrow-left acd-contextual-link-cta-arrow" aria-hidden="true"></i>
             </a>
+            {% endif %}
         </div>
     </section>
+
+    {% if academy_contextual.player.available %}
+    <div
+        class="ws-modal acd-contextual-modal"
+        id="{{ academy_contextual.modal_id }}"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="acd-contextual-modal-title-{{ academy_contextual.key }}"
+        data-acd-contextual-modal
+        hidden
+        data-modal-uses-hidden
+    >
+        <div class="ws-modal-overlay" data-modal-close data-acd-contextual-modal-close></div>
+        <div class="ws-modal-panel ws-modal-panel-lg acd-contextual-modal-panel">
+            <div class="ws-modal-head">
+                <div>
+                    <h2 class="ws-modal-title" id="acd-contextual-modal-title-{{ academy_contextual.key }}">
+                        {{ academy_contextual.video.title }}
+                    </h2>
+                    {% if academy_contextual.video.subtitle %}
+                    <p class="ws-modal-sub">{{ academy_contextual.video.subtitle }}</p>
+                    {% endif %}
+                </div>
+                <button type="button" class="ws-modal-close" data-modal-close data-acd-contextual-modal-close aria-label="بستن">
+                    <i class="fas fa-times" aria-hidden="true"></i>
+                </button>
+            </div>
+            <div class="ws-modal-body acd-contextual-modal-body">
+                <div
+                    data-acd-video-slug="{{ academy_contextual.player.slug }}"
+                    data-acd-duration="{{ academy_contextual.video.duration_seconds }}"
+                >
+                    {% include 'includes/mk_video_player.html' with video=academy_contextual.player variant='academy' show_heading=False show_meta=True extra_class='acd-contextual-vid' %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 </div>
 {% endif %}

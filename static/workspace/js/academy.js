@@ -194,6 +194,30 @@
         }, 220);
     }
 
+    function resetContextualModalVideo(modal) {
+        if (!modal) return;
+        modal.querySelectorAll('video').forEach(function (video) {
+            try { video.pause(); } catch (e) { /* ignore */ }
+            try { video.currentTime = 0; } catch (e) { /* ignore */ }
+            video.removeAttribute('controls');
+            const frame = video.closest('.mk-vid-frame');
+            if (frame) {
+                frame.classList.remove('is-playing', 'is-ended');
+            }
+        });
+    }
+
+    function initContextualModal(modal) {
+        if (!modal || modal.dataset.acdContextualModalBound === '1') return;
+        modal.dataset.acdContextualModalBound = '1';
+        modal.querySelectorAll('[data-acd-contextual-modal-close]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                resetContextualModalVideo(modal);
+            });
+        });
+        bindVideoProgress(modal);
+    }
+
     function initContextual() {
         document.querySelectorAll('[data-acd-dismiss-contextual]').forEach(function (btn) {
             btn.addEventListener('click', function () {
@@ -209,8 +233,15 @@
         });
         document.querySelectorAll('[data-acd-cta]').forEach(function (el) {
             el.addEventListener('click', function () {
-                trackEvent('academy_cta_clicked', { url: el.getAttribute('href') });
+                trackEvent('academy_cta_clicked', {
+                    url: el.getAttribute('href') || el.getAttribute('data-modal-open') || '',
+                });
             });
+        });
+        document.querySelectorAll('[data-acd-contextual-modal]').forEach(initContextualModal);
+        document.addEventListener('keydown', function (e) {
+            if (e.key !== 'Escape') return;
+            document.querySelectorAll('[data-acd-contextual-modal].is-open').forEach(resetContextualModalVideo);
         });
     }
 

@@ -1,4 +1,7 @@
 {% load static %}
 {% if academy_contextual %}
-<script src="{% static 'workspace/js/academy.js' %}?v=3"></script>
+{% if academy_contextual.player.available %}
+<script src="{% static 'js/bot-install-video.js' %}?v=1"></script>
+{% endif %}
+<script src="{% static 'workspace/js/academy.js' %}?v=4"></script>
 {% endif %}

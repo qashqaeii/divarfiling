@@ -3,9 +3,9 @@ from __future__ import annotations
 
 from django.urls import reverse
 
-from workspace.academy.models import AcademyVideo
 from workspace.academy.seed_data import CONTEXTUAL_BANNERS
 from workspace.academy.services.progress_service import get_or_create_academy_settings
+from workspace.academy.services.video_seed_resolve import resolve_academy_video
 
 
 def get_contextual_banner(user, key: str) -> dict | None:
@@ -17,15 +17,19 @@ def get_contextual_banner(user, key: str) -> dict | None:
     settings_obj = get_or_create_academy_settings(user)
     if key in (settings_obj.dismissed_contextual or []):
         return None
-    video = AcademyVideo.objects.filter(slug=meta['video_slug'], is_active=True).first()
+    video = resolve_academy_video(meta['video_slug'])
     if not video:
         return None
     poster, poster_kind = video.get_poster_context()
+    player = video.to_player_context()
+    modal_id = f'modal-acd-contextual-{key}'
     return {
         'key': key,
         'title': meta['title'],
         'message': meta['message'],
         'video': video,
+        'player': player,
+        'modal_id': modal_id,
         'duration_display': video.duration_display,
         'video_url': reverse('workspace:academy_video', kwargs={'slug': video.slug}) + f'?context={key}',
         'poster': poster,

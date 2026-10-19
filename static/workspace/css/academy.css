@@ -1810,12 +1810,27 @@
     overflow: hidden;
 }
 
+.acd-contextual--minimal {
+    gap: 0.75rem 0.9rem;
+    padding: 0.65rem 0.75rem;
+    border-radius: 12px;
+    border: 1px solid var(--acd-border);
+    background: var(--acd-card);
+    box-shadow: var(--acd-shadow);
+}
+
 @media (min-width: 720px) {
     .acd-contextual {
         grid-template-columns: auto 1fr auto;
         grid-template-rows: auto;
         align-items: center;
         padding: 0.9rem 1rem 0.9rem 0.9rem;
+    }
+
+    .acd-contextual--minimal {
+        grid-template-columns: auto 1fr;
+        align-items: center;
+        padding: 0.65rem 2.25rem 0.65rem 0.65rem;
     }
 }
 
@@ -1859,6 +1874,48 @@
     color: inherit;
     box-shadow: 0 6px 18px -10px rgba(15, 23, 42, 0.45);
     isolation: isolate;
+}
+
+.acd-contextual--minimal .acd-contextual-media {
+    box-shadow: none;
+    border: 1px solid var(--acd-border);
+}
+
+@media (min-width: 720px) {
+    .acd-contextual--minimal .acd-contextual-media {
+        width: 132px;
+    }
+}
+
+.acd-contextual-link-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-top: 0.45rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--acd-primary);
+    text-decoration: none;
+    touch-action: manipulation;
+}
+
+.acd-contextual-link-cta:hover {
+    text-decoration: underline;
+}
+
+.acd-contextual-link-cta-icon {
+    display: none;
+}
+
+.acd-contextual--minimal .acd-contextual-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+}
+
+.acd-contextual--minimal .acd-contextual-msg {
+    font-size: 0.78rem;
+    margin-top: 0.2rem;
+    line-height: 1.55;
 }
 
 @media (min-width: 720px) {
@@ -2028,6 +2085,105 @@
         width: 100%;
         min-height: 2.75rem;
         justify-content: center;
+    }
+}
+
+/* ── Contextual banner — mobile-first (CRM empty states) ── */
+@media (max-width: 767px) {
+    .acd-contextual-shell {
+        margin: 0.35rem 0.75rem 0.55rem;
+        max-width: none;
+    }
+
+    .crm-app--contacts .acd-contextual-shell,
+    .crm-app--properties .acd-contextual-shell {
+        margin-inline: 0.75rem;
+    }
+
+    .acd-contextual--minimal {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.6rem;
+        padding: 0.7rem 0.75rem 0.75rem;
+        padding-top: 2.35rem;
+        border-radius: 14px;
+    }
+
+    .acd-contextual--minimal .acd-contextual-media {
+        width: 100%;
+        max-width: none;
+        aspect-ratio: 16 / 9;
+        border-radius: 11px;
+    }
+
+    .acd-contextual--minimal .acd-contextual-copy {
+        min-width: 0;
+    }
+
+    .acd-contextual--minimal .acd-contextual-title {
+        font-size: 0.92rem;
+        line-height: 1.45;
+        padding-inline-end: 0.25rem;
+    }
+
+    .acd-contextual--minimal .acd-contextual-msg {
+        font-size: 0.8rem;
+        line-height: 1.55;
+        color: var(--acd-muted);
+    }
+
+    .acd-contextual--minimal .acd-contextual-link-cta {
+        justify-content: center;
+        width: 100%;
+        min-height: 2.75rem;
+        margin-top: 0.5rem;
+        padding: 0.65rem 1rem;
+        border-radius: 12px;
+        border: none;
+        background: var(--acd-primary);
+        color: #fff;
+        font-size: 0.88rem;
+        font-weight: 700;
+        box-shadow: 0 6px 16px -8px var(--acd-primary-glow);
+        text-decoration: none;
+    }
+
+    .acd-contextual--minimal .acd-contextual-link-cta:hover,
+    .acd-contextual--minimal .acd-contextual-link-cta:focus-visible {
+        text-decoration: none;
+        color: #fff;
+    }
+
+    .acd-contextual--minimal .acd-contextual-link-cta-icon {
+        display: inline-block;
+        font-size: 0.75rem;
+    }
+
+    .acd-contextual--minimal .acd-contextual-link-cta-arrow {
+        font-size: 0.72rem;
+        opacity: 0.9;
+    }
+
+    .acd-contextual--minimal .acd-contextual-dismiss {
+        top: 0.4rem;
+        inset-inline-end: 0.4rem;
+        width: 2.25rem;
+        height: 2.25rem;
+        background: color-mix(in srgb, var(--acd-card) 94%, transparent);
+    }
+
+    .acd-contextual--minimal .acd-contextual-media-play i {
+        width: 2.5rem;
+        height: 2.5rem;
+        font-size: 0.85rem;
+    }
+
+    .acd-contextual--minimal .acd-contextual-media-duration {
+        bottom: 0.4rem;
+        inset-inline-start: 0.4rem;
+        font-size: 0.68rem;
+        padding: 0.15rem 0.4rem;
     }
 }
 

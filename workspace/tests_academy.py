@@ -10,7 +10,8 @@ from workspace.academy.models import UserVideoProgress
 
 from workspace.academy.curriculum import adjacent_videos, ordered_videos
 from workspace.academy.models import AcademyMission, AcademyVideo, LearningPath
-from workspace.academy.seed_data import CURRICULUM_VIDEO_SLUGS, VIDEOS
+from workspace.academy.seed_data import CONTEXTUAL_BANNERS, CURRICULUM_VIDEO_SLUGS, VIDEOS
+from workspace.academy.services.contextual_service import get_contextual_banner
 
 User = get_user_model()
 
@@ -63,6 +64,28 @@ class AcademySeedTests(TestCase):
             poster_file = media / row['poster_path']
             self.assertTrue(video_file.is_file(), msg=str(video_file))
             self.assertTrue(poster_file.is_file(), msg=str(poster_file))
+
+    def test_contextual_empty_state_banners(self):
+        user = User.objects.create_user(username='ctx_banner', password='x', phone='09121110001')
+        self.assertIn('contacts_empty', CONTEXTUAL_BANNERS)
+        self.assertIn('properties_empty', CONTEXTUAL_BANNERS)
+        contacts_banner = get_contextual_banner(user, 'contacts_empty')
+        props_banner = get_contextual_banner(user, 'properties_empty')
+        self.assertIsNotNone(contacts_banner)
+        self.assertIsNotNone(props_banner)
+        self.assertEqual(contacts_banner['video'].slug, 'academy-adding-a-new-contact-to-crm')
+        self.assertEqual(
+            contacts_banner['video'].file_name,
+            'Adding-a-New-Contact-to-CRM.mp4',
+        )
+        self.assertEqual(
+            props_banner['video'].slug,
+            'academy-personal-files-and-sharing-with-customers',
+        )
+        self.assertEqual(
+            props_banner['video'].file_name,
+            'Personal-Files-and-Sharing-with-Customers-via-Link.mp4',
+        )
 
 
 class AcademyPageTests(TestCase):

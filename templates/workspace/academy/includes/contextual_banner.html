@@ -2,7 +2,7 @@
 {% if academy_contextual %}
 <div class="acd-contextual-shell">
     <section
-        class="acd-contextual contextual-academy-banner"
+        class="acd-contextual acd-contextual--minimal"
         data-acd-contextual="{{ academy_contextual.key }}"
         aria-labelledby="acd-contextual-title-{{ academy_contextual.key }}"
     >
@@ -10,7 +10,7 @@
             type="button"
             class="acd-contextual-dismiss"
             data-acd-dismiss-contextual="{{ academy_contextual.key }}"
-            aria-label="بستن پیشنهاد مربی"
+            aria-label="بستن پیشنهاد آموزش"
         >
             <i class="fas fa-xmark" aria-hidden="true"></i>
         </button>
@@ -41,27 +41,15 @@
         </a>
 
         <div class="acd-contextual-copy">
-            <div class="acd-contextual-head">
-                <span class="acd-contextual-kicker">
-                    <i class="fas fa-graduation-cap" aria-hidden="true"></i>
-                    مربی فایلینگ دیوار
-                </span>
-                <span class="acd-contextual-chip">ویدیوی آموزشی</span>
-            </div>
             <h2 class="acd-contextual-title" id="acd-contextual-title-{{ academy_contextual.key }}">
                 {{ academy_contextual.title }}
             </h2>
             <p class="acd-contextual-msg">{{ academy_contextual.message }}</p>
-        </div>
-
-        <div class="acd-contextual-actions">
-            <a href="{{ academy_contextual.video_url }}" class="acd-btn acd-btn--primary acd-btn--sm acd-contextual-cta" data-acd-cta>
-                <i class="fas fa-play" aria-hidden="true"></i>
-                شروع آموزش
+            <a href="{{ academy_contextual.video_url }}" class="acd-contextual-link-cta" data-acd-cta>
+                <i class="fas fa-play acd-contextual-link-cta-icon" aria-hidden="true"></i>
+                <span>تماشای آموزش</span>
+                <i class="fas fa-arrow-left acd-contextual-link-cta-arrow" aria-hidden="true"></i>
             </a>
-            <button type="button" class="acd-btn acd-btn--ghost acd-btn--sm" data-acd-dismiss-contextual="{{ academy_contextual.key }}">
-                بعداً یادآوری کن
-            </button>
         </div>
     </section>
 </div>

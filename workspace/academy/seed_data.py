@@ -309,8 +309,13 @@ CONTEXTUAL_BANNERS = {
         'message': 'آموزش استخراج سریع آگهی‌های دیوار',
     },
     'properties_empty': {
-        'video_slug': 'academy-personal-files-map',
-        'title': 'فایل شخصی بسازید',
-        'message': 'یاد بگیرید فایل را به فایل‌های شخصی اضافه کنید و روی نقشه ببینید',
+        'video_slug': 'academy-personal-files-and-sharing-with-customers',
+        'title': 'اولین فایل شخصی',
+        'message': 'ثبت ملک و اشتراک حرفه‌ای با لینک برای مشتری — گام‌به‌گام',
+    },
+    'contacts_empty': {
+        'video_slug': 'academy-adding-a-new-contact-to-crm',
+        'title': 'اولین مخاطب CRM',
+        'message': 'ثبت مشتری، نیازها و پیگیری — گام‌به‌گام در همین بخش',
     },
 }

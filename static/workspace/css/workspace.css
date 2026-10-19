@@ -1216,6 +1216,11 @@ body.ws-body::before {
 /* ─── MODALS ─── */
 body.ws-modal-open { overflow: hidden; }
 
+/* Dialogs render inside .ws-main (z-index 1); fixed sidebar is 200 — lift main while open */
+body.ws-modal-open .ws-main {
+    z-index: 250;
+}
+
 .ws-modal {
     position: fixed; inset: 0; z-index: var(--ws-modal-z);
     display: flex; align-items: center; justify-content: center;

@@ -338,16 +338,25 @@
   }
 
   function showTyping() {
+    root.classList.add('is-waiting');
     var el = document.createElement('div');
-    el.className = 'pa-msg pa-msg--bot';
+    el.className = 'pa-msg pa-msg--bot pa-msg--loading';
     el.id = 'paTyping';
+    el.setAttribute('role', 'status');
+    el.setAttribute('aria-live', 'polite');
+    el.setAttribute('aria-label', 'در حال تولید پاسخ');
     el.innerHTML =
-      '<div class="pa-typing-wrap"><div class="pa-typing" aria-hidden="true"><span></span><span></span><span></span></div><span>در حال آماده‌سازی پاسخ…</span></div>';
+      '<div class="pa-loading">' +
+      '<div class="pa-loading__dots" aria-hidden="true"><span></span><span></span><span></span></div>' +
+      '<div class="pa-loading__bars" aria-hidden="true"><span></span><span></span><span></span></div>' +
+      '<p class="pa-loading__label">در حال نوشتن پاسخ…</p>' +
+      '</div>';
     messagesEl.appendChild(el);
     messagesEl.scrollTop = messagesEl.scrollHeight;
   }
 
   function hideTyping() {
+    root.classList.remove('is-waiting');
     var t = document.getElementById('paTyping');
     if (t) t.remove();
   }

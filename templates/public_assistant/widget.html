@@ -1,15 +1,19 @@
 {% load static %}
 {% if public_assistant_widget %}
-<link rel="stylesheet" href="{% static 'public_assistant/css/widget.css' %}?v=6">
+<link rel="stylesheet" href="{% static 'public_assistant/css/widget.css' %}?v=7">
 <div id="pa-root" class="pa-root" dir="rtl" data-config-url="{% url 'public_assistant:config' %}" data-chat-url="{% url 'public_assistant:chat' %}" data-feedback-url="{% url 'public_assistant:feedback' %}" data-reset-url="{% url 'public_assistant:reset' %}" hidden>
   <button type="button" class="pa-backdrop" id="paBackdrop" aria-label="بستن گفتگو" tabindex="-1"></button>
   <button type="button" class="pa-fab" id="paFab" aria-label="گفتگو با دستیار فایلینگ دیوار" aria-expanded="false" aria-controls="paPanel">
-    <span class="pa-fab__pulse" aria-hidden="true"></span>
-    <span class="pa-fab__icon" aria-hidden="true">
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-        <path d="M12 3l1.2 3.6L17 8l-3.6 1.2L12 13l-1.2-3.8L7 8l3.8-1.4L12 3z" fill="currentColor" opacity=".9"/>
-        <path d="M9.5 4.5h5A5.5 5.5 0 0 1 20 10v5.8c0 .7-.6 1.2-1.3 1.2H8.2l-3.7 2.5V10A5.5 5.5 0 0 1 9.5 4.5Z" stroke="currentColor" stroke-width="1.45" stroke-linejoin="round"/>
-      </svg>
+    <span class="pa-fab__glow" aria-hidden="true"></span>
+    <span class="pa-fab__shine" aria-hidden="true"></span>
+    <span class="pa-fab__content">
+      <span class="pa-fab__icon-wrap" aria-hidden="true">
+        <svg class="pa-fab__svg" width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M12 2.5l1.1 3.3L16.4 7l-3.3 1.1L12 11.4 10.9 8.1 7.6 7l3.3-1.2L12 2.5z" fill="currentColor"/>
+          <path d="M8 9.2h8a4 4 0 0 1 4 4v4.2a1 1 0 0 1-1 1h-2.4l-2.8 1.9V18.2a4 4 0 0 1-4-4V9.2z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+        </svg>
+      </span>
+      <span class="pa-fab__label">دستیار AI</span>
     </span>
   </button>
   <div class="pa-panel" id="paPanel" role="dialog" aria-label="دستیار فایلینگ دیوار" aria-modal="true" hidden>
@@ -64,5 +68,5 @@
     </footer>
   </div>
 </div>
-<script src="{% static 'public_assistant/js/widget.js' %}?v=6" defer></script>
+<script src="{% static 'public_assistant/js/widget.js' %}?v=7" defer></script>
 {% endif %}

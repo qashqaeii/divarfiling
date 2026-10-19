@@ -11,17 +11,39 @@ class RateLimitExceeded(Exception):
     pass
 
 
-def _client_ip(request) -> str:
-    forwarded = (request.META.get('HTTP_X_FORWARDED_FOR') or '').split(',')[0].strip()
-    if forwarded:
-        return forwarded
-    return request.META.get('REMOTE_ADDR') or ''
+def _trusted_proxy_ips() -> frozenset[str]:
+    raw = getattr(settings, 'PUBLIC_ASSISTANT_TRUSTED_PROXY_IPS', None) or []
+    return frozenset(str(x).strip() for x in raw if str(x).strip())
+
+
+def client_ip(request) -> str:
+    """IP بازدیدکننده — X-Forwarded-For فقط پشت پراکسی معتبر."""
+    remote = (request.META.get('REMOTE_ADDR') or '').strip()
+    if remote in _trusted_proxy_ips():
+        forwarded = (request.META.get('HTTP_X_FORWARDED_FOR') or '').split(',')[0].strip()
+        if forwarded:
+            return forwarded
+    return remote
 
 
 def ip_hash(request) -> str:
-    raw = _client_ip(request)
+    raw = client_ip(request)
     salt = getattr(settings, 'SECRET_KEY', '')[:16]
     return hashlib.sha256(f'{salt}:{raw}'.encode()).hexdigest()
+
+
+def _consume(key: str, limit: int, window: int) -> bool:
+    """یک واحد از سهمیه مصرف کن؛ False اگر سقف پر شده."""
+    if limit <= 0:
+        return True
+    try:
+        if cache.add(key, 1, window):
+            return True
+        count = cache.incr(key)
+    except ValueError:
+        cache.add(key, 1, window)
+        return True
+    return int(count) <= limit
 
 
 def _limits() -> tuple[int, int]:
@@ -30,26 +52,34 @@ def _limits() -> tuple[int, int]:
     return per_ip, per_session
 
 
-def check_rate_limit(request, session_id: str) -> None:
+def check_chat_rate_limit(request, session_id: str) -> None:
     per_ip, per_session = _limits()
     window = 3600
-    ip_key = f'pa:rl:ip:{ip_hash(request)}'
-    sess_key = f'pa:rl:sess:{session_id}'
+    if not _consume(f'pa:rl:chat:ip:{ip_hash(request)}', per_ip, window):
+        raise RateLimitExceeded('ip')
+    if not _consume(f'pa:rl:chat:sess:{session_id}', per_session, window):
+        raise RateLimitExceeded('session')
 
-    ip_count = cache.get(ip_key) or 0
-    sess_count = cache.get(sess_key) or 0
-    if ip_count >= per_ip or sess_count >= per_session:
-        raise RateLimitExceeded()
 
-    if ip_count == 0:
-        cache.set(ip_key, 1, window)
-    else:
-        cache.incr(ip_key)
+def check_session_create_rate(request) -> None:
+    limit = int(getattr(settings, 'PUBLIC_ASSISTANT_SESSION_CREATE_LIMIT_PER_HOUR', 12))
+    window = 3600
+    if not _consume(f'pa:rl:session:new:{ip_hash(request)}', limit, window):
+        raise RateLimitExceeded('session_create')
 
-    if sess_count == 0:
-        cache.set(sess_key, 1, window)
-    else:
-        cache.incr(sess_key)
+
+def check_feedback_rate_limit(request, session_id: str) -> None:
+    limit = int(getattr(settings, 'PUBLIC_ASSISTANT_FEEDBACK_LIMIT_PER_HOUR', 30))
+    if not _consume(f'pa:rl:feedback:ip:{ip_hash(request)}', limit, 3600):
+        raise RateLimitExceeded('feedback')
+    if not _consume(f'pa:rl:feedback:sess:{session_id}', 15, 3600):
+        raise RateLimitExceeded('feedback_session')
+
+
+def check_reset_rate_limit(request) -> None:
+    limit = int(getattr(settings, 'PUBLIC_ASSISTANT_RESET_LIMIT_PER_HOUR', 10))
+    if not _consume(f'pa:rl:reset:ip:{ip_hash(request)}', limit, 3600):
+        raise RateLimitExceeded('reset')
 
 
 def check_duplicate_request(session_id: str, message_norm: str) -> None:

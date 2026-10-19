@@ -6,6 +6,7 @@ from typing import Any
 from public_assistant.constants import (
     MAX_HISTORY_MESSAGES,
     MAX_USER_MESSAGE_LENGTH,
+    MIN_RETRIEVAL_SCORE,
     OFF_TOPIC_HINTS,
 )
 from public_assistant.models import (
@@ -40,6 +41,7 @@ def _is_probably_off_topic(query: str, chunks: list[RetrievedChunk]) -> bool:
         'دیوار',
         'crm',
         'مشتری',
+        'مخاطب',
         'آگهی',
         'استخراج',
         'لایسنس',
@@ -55,10 +57,16 @@ def _is_probably_off_topic(query: str, chunks: list[RetrievedChunk]) -> bool:
         'ویندوز',
         'هوش',
         'ai',
+        'پلن',
+        'خرید',
     )
     if any(h in norm for h in product_hints):
         return False
     return any(h in norm for h in OFF_TOPIC_HINTS)
+
+
+def _has_relevant_knowledge(chunks: list[RetrievedChunk]) -> bool:
+    return bool(chunks) and chunks[0].score >= MIN_RETRIEVAL_SCORE
 
 
 def _format_context(chunks: list[RetrievedChunk]) -> str:
@@ -75,9 +83,7 @@ def _format_context(chunks: list[RetrievedChunk]) -> str:
 
 
 def _history_lines(session: PublicChatSession) -> str:
-    msgs = list(
-        session.messages.order_by('-created_at')[:MAX_HISTORY_MESSAGES]
-    )
+    msgs = list(session.messages.order_by('-created_at')[:MAX_HISTORY_MESSAGES])
     msgs.reverse()
     lines = []
     for m in msgs:
@@ -102,14 +108,21 @@ def _collect_sources(chunks: list[RetrievedChunk]) -> list[dict]:
 def _fallback_from_chunks(chunks: list[RetrievedChunk]) -> str:
     if not chunks:
         return (
-            'در حال حاضر پاسخ خودکار در دسترس نیست. '
-            'می‌توانید از صفحه «تماس با ما» یا راهنمای سایت کمک بگیرید.'
+            'در دانشنامه عمومی ما پاسخ کاملی برای این سؤال پیدا نشد. '
+            'می‌توانید از صفحه «تماس با ما» (`/contact/`) یا راهنمای سایت کمک بگیرید.'
         )
     ch = chunks[0]
     text = f'**{ch.title}**\n\n{ch.body}'
     if ch.subscription_note:
         text += f'\n\n_نیاز اشتراک/دسترسی:_ {ch.subscription_note}'
     return text
+
+
+def _low_confidence_answer() -> str:
+    return (
+        'در دانشنامه عمومی فعلی، منبع کافی و قطعی برای پاسخ دقیق به این سؤال ندارم. '
+        'لطفاً سؤال را مشخص‌تر بپرسید یا از صفحه تماس (`/contact/`) با پشتیبانی در ارتباط باشید.'
+    )
 
 
 def answer_question(
@@ -130,6 +143,7 @@ def answer_question(
         }
 
     chunks = retrieve(user_text)
+
     if _is_probably_off_topic(user_text, chunks):
         return {
             'ok': True,
@@ -141,6 +155,15 @@ def answer_question(
             'session_id': str(session.id),
         }
 
+    if not _has_relevant_knowledge(chunks):
+        return {
+            'ok': True,
+            'answer': _low_confidence_answer(),
+            'sources': [],
+            'session_id': str(session.id),
+            'low_confidence': True,
+        }
+
     sources = _collect_sources(chunks)
     context = _format_context(chunks)
     history = _history_lines(session)
@@ -148,8 +171,8 @@ def answer_question(
     user_prompt = (
         f'سابقه گفتگو:\n{history or "—"}\n\n'
         f'سؤال کاربر:\n{user_text}\n\n'
-        f'منابع دانشنامه:\n{context or "—"}\n\n'
-        'پاسخ را بر اساس منابع بنویس. اگر منبع کافی نیست، نگو که مطمئنی.'
+        f'منابع دانشنامه:\n{context}\n\n'
+        'فقط بر اساس منابع بالا پاسخ بده. اگر منبع کافی نیست صریح بگو مطمئن نیستی.'
     )
 
     text, provider, model, latency, in_tok, out_tok = llm.complete(SYSTEM_PROMPT, user_prompt)
@@ -158,8 +181,6 @@ def answer_question(
     if not text:
         status = PublicAssistantUsageLog.STATUS_FALLBACK
         text = _fallback_from_chunks(chunks)
-    elif not chunks:
-        status = PublicAssistantUsageLog.STATUS_FALLBACK
 
     PublicAssistantUsageLog.objects.create(
         session=session,

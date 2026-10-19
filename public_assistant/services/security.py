@@ -4,6 +4,8 @@ from __future__ import annotations
 import re
 from urllib.parse import urlparse
 
+from django.conf import settings
+
 _INJECTION_PATTERNS = (
     re.compile(r'ignore\s+(all\s+)?previous\s+instructions', re.I),
     re.compile(r'system\s+prompt', re.I),
@@ -11,13 +13,17 @@ _INJECTION_PATTERNS = (
     re.compile(r'توکن\s+دسترسی', re.I),
 )
 
-def _allowed_prefixes():
-    from django.conf import settings
+_ALLOWED_PRODUCTION_HOSTS = frozenset({'divarfiling.ir', 'www.divarfiling.ir'})
+_DEBUG_HOSTS = frozenset({'localhost', '127.0.0.1'})
 
-    base = ('/', 'https://divarfiling.ir', 'https://www.divarfiling.ir')
+
+def _allowed_hosts() -> frozenset[str]:
+    hosts = set(_ALLOWED_PRODUCTION_HOSTS)
+    extra = getattr(settings, 'PUBLIC_ASSISTANT_ALLOWED_LINK_HOSTS', None) or []
+    hosts.update(str(h).lower().strip() for h in extra if str(h).strip())
     if getattr(settings, 'DEBUG', False):
-        return base + ('http://127.0.0.1', 'http://localhost')
-    return base
+        hosts |= _DEBUG_HOSTS
+    return frozenset(hosts)
 
 
 def looks_like_prompt_injection(text: str) -> bool:
@@ -38,13 +44,26 @@ def is_allowed_public_link(url: str) -> bool:
     if not url:
         return False
     url = url.strip()
+    if any(c in url for c in ('\n', '\r', '\0', '<', '>', '"', "'")):
+        return False
     if url.startswith('/'):
-        return not url.startswith('//')
+        if url.startswith('//'):
+            return False
+        if '..' in url.split('?')[0]:
+            return False
+        return True
+
     parsed = urlparse(url)
     if parsed.scheme not in ('http', 'https'):
         return False
-    full = f'{parsed.scheme}://{parsed.netloc}'
-    return any(url.startswith(p) or full == p.rstrip('/') for p in _allowed_prefixes())
+    if parsed.username or parsed.password:
+        return False
+    host = (parsed.hostname or '').lower()
+    if not host or host not in _allowed_hosts():
+        return False
+    if parsed.port and parsed.port not in (80, 443):
+        return False
+    return True
 
 
 def filter_sources(links: list) -> list[dict]:
@@ -55,6 +74,8 @@ def filter_sources(links: list) -> list[dict]:
         if not isinstance(item, dict):
             continue
         url = (item.get('url') or '').strip()
-        if is_allowed_public_link(url):
-            out.append({'label': item.get('label') or url, 'url': url})
+        if not is_allowed_public_link(url):
+            continue
+        label = (item.get('label') or url).strip()[:200]
+        out.append({'label': label or url, 'url': url})
     return out

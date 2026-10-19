@@ -12,6 +12,59 @@ _PERSIAN_KAF = '\u06a9'
 _DIACRITICS = re.compile(r'[\u064b-\u065f\u0670]')
 _WS = re.compile(r'\s+')
 
+STOPWORDS = frozenset(
+    {
+        'از',
+        'به',
+        'در',
+        'با',
+        'برای',
+        'که',
+        'این',
+        'آن',
+        'را',
+        'رو',
+        'یه',
+        'یک',
+        'من',
+        'شما',
+        'می',
+        'چطور',
+        'چگونه',
+        'چی',
+        'چیه',
+        'است',
+        'هست',
+        'کرد',
+        'کنم',
+        'کنید',
+        'the',
+        'and',
+    }
+)
+
+# گسترش پرسش محاوره‌ای → واژه‌های دانشنامه
+QUERY_SYNONYMS: dict[str, list[str]] = {
+    'مشتری': ['مخاطب', 'خریدار', 'مراجع', 'crm'],
+    'مخاطب': ['مشتری', 'خریدار', 'crm'],
+    'خریدار': ['مشتری', 'مخاطب'],
+    'لاگین': ['ورود', 'ثبت'],
+    'ورود': ['لاگین', 'login'],
+    'قیمت': ['پلن', 'لایسنس', 'اشتراک', 'خرید'],
+    'اشتراک': ['لایسنس', 'پلن'],
+    'لایسنس': ['اشتراک', 'کلید', 'فعال'],
+    'استخراج': ['ربات', 'اسکرپ', 'کشیدن', 'آگهی'],
+    'ربات': ['استخراج', 'extractor'],
+    'فایلینگ': ['dataset', 'مجموعه', 'فایل'],
+    'فایل': ['فایلینگ', 'dataset', 'آگهی'],
+    'آژانس': ['تیم', 'agency'],
+    'هوش': ['ai', 'هوشمند'],
+    'فرمان': ['nl', 'دستور'],
+    'هدیه': ['آزمایشی', 'هفت', 'trial'],
+    'اندروید': ['android', 'موبایل', 'اپ'],
+    'ویندوز': ['windows', 'دسکتاپ'],
+}
+
 
 def normalize_persian(text: str) -> str:
     if not text:
@@ -25,7 +78,24 @@ def normalize_persian(text: str) -> str:
     return text
 
 
+def expand_query_tokens(tokens: list[str]) -> list[str]:
+    expanded: list[str] = []
+    seen: set[str] = set()
+    for tok in tokens:
+        if tok in seen:
+            continue
+        seen.add(tok)
+        expanded.append(tok)
+        for alt in QUERY_SYNONYMS.get(tok, []):
+            alt_n = normalize_persian(alt)
+            if alt_n and alt_n not in seen and len(alt_n) >= 2:
+                seen.add(alt_n)
+                expanded.append(alt_n)
+    return expanded
+
+
 def tokenize_query(text: str) -> list[str]:
     norm = normalize_persian(text)
     parts = re.split(r'[^\w\u0600-\u06ff]+', norm)
-    return [p for p in parts if len(p) >= 2]
+    tokens = [p for p in parts if len(p) >= 2 and p not in STOPWORDS]
+    return expand_query_tokens(tokens)

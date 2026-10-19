@@ -48,8 +48,8 @@
   var feedbackUrl = root.dataset.feedbackUrl;
   var resetUrl = root.dataset.resetUrl;
 
-  var sessionId = '';
   var openState = false;
+  var configReady = false;
 
   try {
     openState = sessionStorage.getItem('pa_open') === '1';
@@ -148,12 +148,20 @@
     }).catch(function () {});
   }
 
+  function ensureCsrfCookie() {
+    if (getCsrf()) {
+      return Promise.resolve();
+    }
+    return fetch(configUrl, { credentials: 'same-origin' }).then(function () {});
+  }
+
   function loadConfig() {
-    fetch(configUrl, { credentials: 'same-origin' })
+    return fetch(configUrl, { credentials: 'same-origin' })
       .then(function (r) {
         return r.json();
       })
       .then(function (data) {
+        configReady = true;
         if (!data.ok) return;
         appendMessage('bot', renderMarkdownLite(data.welcome || ''));
         suggestionsEl.innerHTML = '';
@@ -174,13 +182,7 @@
 
   loadConfig();
 
-  form.addEventListener('submit', function (ev) {
-    ev.preventDefault();
-    var text = (input.value || '').trim();
-    if (!text) return;
-    appendMessage('user', escapeHtml(text));
-    input.value = '';
-    sendBtn.disabled = true;
+  function sendChat(text) {
     showTyping();
     fetch(chatUrl, {
       method: 'POST',
@@ -189,7 +191,7 @@
         'Content-Type': 'application/json',
         'X-CSRFToken': getCsrf(),
       },
-      body: JSON.stringify({ message: text, session_id: sessionId }),
+      body: JSON.stringify({ message: text }),
     })
       .then(function (r) {
         return r.json().then(function (j) {
@@ -199,7 +201,6 @@
       .then(function (res) {
         hideTyping();
         sendBtn.disabled = false;
-        if (res.body.session_id) sessionId = res.body.session_id;
         if (!res.body.ok) {
           appendMessage('bot', escapeHtml(res.body.error || 'خطا در پاسخ‌دهی.'));
           return;
@@ -210,6 +211,24 @@
         hideTyping();
         sendBtn.disabled = false;
         appendMessage('bot', 'اتصال برقرار نشد. دوباره تلاش کنید.');
+      });
+  }
+
+  form.addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    var text = (input.value || '').trim();
+    if (!text) return;
+    appendMessage('user', escapeHtml(text));
+    input.value = '';
+    sendBtn.disabled = true;
+    var run = configReady ? ensureCsrfCookie() : loadConfig().then(ensureCsrfCookie);
+    run
+      .then(function () {
+        sendChat(text);
+      })
+      .catch(function () {
+        sendBtn.disabled = false;
+        appendMessage('bot', 'خطا در آماده‌سازی امن گفتگو. صفحه را یک‌بار رفرش کنید.');
       });
   });
 
@@ -226,8 +245,7 @@
       .then(function (r) {
         return r.json();
       })
-      .then(function (data) {
-        if (data.session_id) sessionId = data.session_id;
+      .then(function () {
         messagesEl.innerHTML = '';
         loadConfig();
       });

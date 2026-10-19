@@ -1,7 +1,7 @@
 """بارگذاری/به‌روزرسانی دانشنامه از فایل‌های Markdown."""
 from __future__ import annotations
 
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 from django.utils.dateparse import parse_date
 
@@ -29,32 +29,44 @@ class Command(BaseCommand):
         dry_run = options['dry_run']
         paths = list(iter_article_files())
         if not paths:
-            self.stderr.write('No markdown articles found.')
-            return
+            raise CommandError('No markdown articles found.')
 
         seen_ids: set[str] = set()
+        parsed_items: list[tuple] = []
+        errors: list[str] = []
+
+        for path in paths:
+            try:
+                parsed = parse_markdown_file(path)
+            except ValueError as exc:
+                errors.append(f'{path}: {exc}')
+                continue
+
+            meta = parsed.meta
+            article_id = str(meta['id'])
+            if article_id in seen_ids:
+                errors.append(f'Duplicate id {article_id} in {path}')
+                continue
+            seen_ids.add(article_id)
+            parsed_items.append((path, parsed))
+
+        if errors:
+            for line in errors:
+                self.stderr.write(self.style.ERROR(f'ERROR {line}'))
+            raise CommandError(f'{len(errors)} validation error(s); sync aborted with no DB changes.')
+
+        if dry_run:
+            for path, parsed in parsed_items:
+                self.stdout.write(f'OK {parsed.meta["id"]} ({path.name})')
+            self.stdout.write(self.style.SUCCESS(f'Validated {len(parsed_items)} files.'))
+            return
+
         created = updated = unchanged = 0
-        errors = 0
 
-        @transaction.atomic
-        def _run():
-            nonlocal created, updated, unchanged, errors
-            for path in paths:
-                try:
-                    parsed = parse_markdown_file(path)
-                except ValueError as exc:
-                    errors += 1
-                    self.stderr.write(f'ERROR {path}: {exc}')
-                    continue
-
+        with transaction.atomic():
+            for path, parsed in parsed_items:
                 meta = parsed.meta
                 article_id = str(meta['id'])
-                if article_id in seen_ids:
-                    errors += 1
-                    self.stderr.write(f'Duplicate id {article_id} in {path}')
-                    continue
-                seen_ids.add(article_id)
-
                 body = parsed.body
                 chash = article_content_hash(meta, body)
                 reviewed = meta.get('reviewed_at')
@@ -78,10 +90,6 @@ class Command(BaseCommand):
                     'is_public': bool(meta.get('is_public', True)),
                     'is_active': bool(meta.get('is_active', True)),
                 }
-
-                if dry_run:
-                    self.stdout.write(f'OK {article_id} ({path.name})')
-                    continue
 
                 obj, was_created = KnowledgeArticle.objects.get_or_create(
                     article_id=article_id,
@@ -108,18 +116,13 @@ class Command(BaseCommand):
                         search_blob=build_search_blob(meta, heading, chunk_body_text),
                     )
 
-            if not dry_run:
-                stale = KnowledgeArticle.objects.exclude(article_id__in=seen_ids)
-                deactivated = stale.update(is_active=False)
-                if deactivated:
-                    self.stdout.write(f'Deactivated {deactivated} articles missing from source files.')
+            stale = KnowledgeArticle.objects.exclude(article_id__in=seen_ids)
+            deactivated = stale.update(is_active=False)
+            if deactivated:
+                self.stdout.write(f'Deactivated {deactivated} articles missing from source files.')
 
-        _run()
-        if dry_run:
-            self.stdout.write(self.style.SUCCESS(f'Validated {len(paths)} files.'))
-        else:
-            self.stdout.write(
-                self.style.SUCCESS(
-                    f'Done. created={created} updated={updated} unchanged={unchanged} errors={errors}'
-                )
+        self.stdout.write(
+            self.style.SUCCESS(
+                f'Done. created={created} updated={updated} unchanged={unchanged}'
             )
+        )

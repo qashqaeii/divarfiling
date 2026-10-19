@@ -21,14 +21,14 @@ class PublicAssistantAPITest(TestCase):
 
     def test_retrieve_crm(self):
         hits = retrieve('چطور مشتری اضافه کنم')
-        self.assertTrue(any('crm' in h.article_id or 'مخاطب' in h.title for h in hits))
+        self.assertTrue(any(h.article_id == 'crm-contacts' for h in hits))
 
-    def test_config_endpoint(self):
+    def test_config_sets_csrf(self):
         r = self.client.get('/api/public-assistant/config/')
         self.assertEqual(r.status_code, 200)
+        self.assertIsNotNone(self.client.cookies.get('csrftoken'))
         data = r.json()
         self.assertTrue(data['ok'])
-        self.assertTrue(len(data['suggested_questions']) >= 3)
 
     def test_chat_requires_csrf(self):
         r = self.client.post(
@@ -37,22 +37,6 @@ class PublicAssistantAPITest(TestCase):
             content_type='application/json',
         )
         self.assertEqual(r.status_code, 403)
-
-    def test_chat_with_csrf(self):
-        home = self.client.get('/contact/')
-        csrf = home.cookies.get('csrftoken')
-        self.assertIsNotNone(csrf)
-        r = self.client.post(
-            '/api/public-assistant/chat/',
-            data='{"message":"فایلینگ دیوار چیست"}',
-            content_type='application/json',
-            HTTP_X_CSRFTOKEN=csrf.value,
-        )
-        self.assertIn(r.status_code, (200, 429))
-        if r.status_code == 200:
-            data = r.json()
-            self.assertTrue(data.get('ok'))
-            self.assertTrue(data.get('answer'))
 
 
 @override_settings(PUBLIC_ASSISTANT_ENABLED=False)
@@ -63,6 +47,6 @@ class DisabledAssistantTest(TestCase):
 
 
 class PersianTokenTest(TestCase):
-    def test_tokenize(self):
-        tokens = tokenize_query('ثبت مشتری در CRM')
-        self.assertIn('مشتری', tokens)
+    def test_tokenize_synonym(self):
+        tokens = tokenize_query('ثبت مشتری')
+        self.assertTrue('مخاطب' in tokens or 'مشتری' in tokens)

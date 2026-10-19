@@ -40,6 +40,7 @@ import requests
 import json
 
 
+@method_decorator(ensure_csrf_cookie, name='dispatch')
 class HomeView(TemplateView):
     template_name = 'shop/home.html'
     

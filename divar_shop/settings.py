@@ -336,6 +336,18 @@ PUBLIC_ASSISTANT_SESSION_RATE_LIMIT_PER_HOUR = config(
 )
 PUBLIC_ASSISTANT_TEMPERATURE = config('PUBLIC_ASSISTANT_TEMPERATURE', default=0.35, cast=float)
 PUBLIC_ASSISTANT_MAX_TOKENS = config('PUBLIC_ASSISTANT_MAX_TOKENS', default=900, cast=int)
+PUBLIC_ASSISTANT_MAX_JSON_BYTES = config('PUBLIC_ASSISTANT_MAX_JSON_BYTES', default=4096, cast=int)
+PUBLIC_ASSISTANT_SESSION_CREATE_LIMIT_PER_HOUR = config(
+    'PUBLIC_ASSISTANT_SESSION_CREATE_LIMIT_PER_HOUR', default=12, cast=int
+)
+PUBLIC_ASSISTANT_FEEDBACK_LIMIT_PER_HOUR = config(
+    'PUBLIC_ASSISTANT_FEEDBACK_LIMIT_PER_HOUR', default=30, cast=int
+)
+PUBLIC_ASSISTANT_RESET_LIMIT_PER_HOUR = config('PUBLIC_ASSISTANT_RESET_LIMIT_PER_HOUR', default=10, cast=int)
+# IPهای پراکسی معتبر (مثلاً 127.0.0.1) — فقط از این‌ها X-Forwarded-For خوانده می‌شود
+PUBLIC_ASSISTANT_TRUSTED_PROXY_IPS = config(
+    'PUBLIC_ASSISTANT_TRUSTED_PROXY_IPS', default='127.0.0.1', cast=lambda v: [s.strip() for s in v.split(',') if s.strip()]
+)
 
 # CARTO raster basemaps (Leaflet tile layers) — free tier with API key
 CARTO_BASEMAP_API_KEY = config('CARTO_BASEMAP_API_KEY', default='')

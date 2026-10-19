@@ -1,9 +1,10 @@
 {% load static %}
-{% if show_onboarding %}
+{% if show_onboarding or show_signup_welcome_gift %}
 <link rel="stylesheet" href="{% static 'workspace/css/onboarding-tour.css' %}?v=12">
 <script>
 window.wsOnboardingConfig = {
     variant: "workspace",
+    autoStart: {% if signup_welcome_blocks_tour %}false{% else %}true{% endif %},
     completeUrl: "/workspace/api/onboarding/complete/",
     logoUrl: "{% static 'logo.png' %}",
     welcomeEyebrow: "<i class=\"fas fa-sparkles\" aria-hidden=\"true\"></i> تور تعاملی میزکار · ~۵ دقیقه",

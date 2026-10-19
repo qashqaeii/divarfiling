@@ -208,8 +208,17 @@ def get_bot_license_display(user) -> Dict[str, Any]:
         days_remaining = max(0, (end_date - today).days)
         expiring_soon = days_remaining <= 7
 
+    from licenses.services.signup_welcome_gift import campaign_key as signup_welcome_campaign_key
+
+    is_signup_welcome = lic.campaign_grants.filter(
+        campaign_key=signup_welcome_campaign_key(),
+        status='granted',
+    ).exists()
+
     if unlimited:
         label = 'لایسنس فعال — نامحدود'
+    elif is_signup_welcome:
+        label = f'هدیه {to_persian_digits(days_remaining)} روزه — اشتراک حرفه‌ای'
     else:
         label = f'لایسنس فعال — {to_persian_digits(days_remaining)} روز تا انقضا'
 

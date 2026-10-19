@@ -242,6 +242,9 @@ def grant_weekly_trial_to_user(
     campaign_key: str,
     plan: LicensePlan,
     dry_run: bool = False,
+    grant_metadata: Optional[dict[str, Any]] = None,
+    audit_event: str = 'weekly_trial_campaign_granted',
+    skip_sms: bool = False,
 ) -> tuple[LicenseCampaignGrant | None, str]:
     """
     اعطای هدیه به یک کاربر — idempotent per (user, campaign_key).
@@ -264,11 +267,14 @@ def grant_weekly_trial_to_user(
     grant_row = existing
     if not grant_row:
         try:
+            meta = {'source': 'weekly_trial_campaign'}
+            if grant_metadata:
+                meta.update(grant_metadata)
             grant_row = LicenseCampaignGrant.objects.create(
                 user=user,
                 campaign_key=campaign_key,
                 status=LicenseCampaignGrant.Status.GRANTED,
-                metadata={'source': 'weekly_trial_campaign'},
+                metadata=meta,
             )
         except IntegrityError:
             grant_row = LicenseCampaignGrant.objects.select_for_update().get(
@@ -311,7 +317,7 @@ def grant_weekly_trial_to_user(
         license=license_obj,
         action_type='activation',
         details={
-            'event': 'weekly_trial_campaign_granted',
+            'event': audit_event,
             'campaign_key': campaign_key,
             'duration_days': CAMPAIGN_DURATION_DAYS,
             'order_id': str(order.pk),
@@ -324,6 +330,9 @@ def grant_weekly_trial_to_user(
     grant_row.granted_at = now
     grant_row.expires_at = expires_at
     grant_row.error_message = ''
+    if skip_sms:
+        grant_row.sms_status = LicenseCampaignGrant.SmsStatus.SKIPPED
+        grant_row.sms_skip_reason = 'campaign_no_sms'
     grant_row.save(
         update_fields=[
             'order',
@@ -332,6 +341,8 @@ def grant_weekly_trial_to_user(
             'granted_at',
             'expires_at',
             'error_message',
+            'sms_status',
+            'sms_skip_reason',
             'updated_at',
         ],
     )

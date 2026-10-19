@@ -1,0 +1,262 @@
+/* هدیه خوش‌آمدگویی ۷روزه — پنجره جشن میزکار */
+
+.ws-signup-welcome {
+    --swg-z: 12500;
+    --swg-accent: var(--ws-primary, #7c3aed);
+    --swg-accent-soft: rgba(124, 58, 237, 0.14);
+    --swg-glow: rgba(124, 58, 237, 0.45);
+    position: fixed;
+    inset: 0;
+    z-index: var(--swg-z);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.4s ease, visibility 0.4s;
+}
+
+.ws-signup-welcome.is-active {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+.ws-signup-welcome__backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.72);
+    backdrop-filter: blur(6px);
+}
+
+[data-theme="light"] .ws-signup-welcome__backdrop {
+    background: rgba(15, 23, 42, 0.45);
+}
+
+.ws-signup-welcome__confetti {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.ws-signup-welcome__confetti i {
+    position: absolute;
+    top: -12%;
+    width: 8px;
+    height: 14px;
+    border-radius: 2px;
+    opacity: 0;
+    animation: swg-confetti-fall 2.8s ease-in forwards;
+}
+
+@keyframes swg-confetti-fall {
+    0% {
+        transform: translate3d(0, 0, 0) rotate(0deg);
+        opacity: 0;
+    }
+    12% {
+        opacity: 1;
+    }
+    100% {
+        transform: translate3d(var(--swg-dx, 0), 110vh, 0) rotate(540deg);
+        opacity: 0;
+    }
+}
+
+.ws-signup-welcome__card {
+    position: relative;
+    width: min(100%, 420px);
+    border-radius: 20px;
+    background: var(--ws-surface, #0f172a);
+    border: 1px solid rgba(124, 58, 237, 0.25);
+    box-shadow:
+        0 24px 64px rgba(0, 0, 0, 0.35),
+        0 0 0 1px rgba(255, 255, 255, 0.04) inset,
+        0 0 48px var(--swg-glow);
+    padding: 28px 24px 24px;
+    text-align: center;
+    transform: translateY(16px) scale(0.96);
+    transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.ws-signup-welcome.is-active .ws-signup-welcome__card {
+    transform: translateY(0) scale(1);
+}
+
+[data-theme="light"] .ws-signup-welcome__card {
+    background: #fff;
+    border-color: rgba(124, 58, 237, 0.2);
+    box-shadow: 0 20px 48px rgba(124, 58, 237, 0.12);
+}
+
+.ws-signup-welcome__gift {
+    width: 88px;
+    height: 88px;
+    margin: 0 auto 16px;
+    position: relative;
+}
+
+.ws-signup-welcome__gift-lid,
+.ws-signup-welcome__gift-box {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    border-radius: 8px;
+}
+
+.ws-signup-welcome__gift-box {
+    bottom: 0;
+    width: 72px;
+    height: 48px;
+    background: linear-gradient(145deg, #8b5cf6, var(--swg-accent));
+    box-shadow: inset 0 -4px 0 rgba(0, 0, 0, 0.15);
+}
+
+.ws-signup-welcome__gift-lid {
+    top: 8px;
+    width: 80px;
+    height: 22px;
+    background: linear-gradient(145deg, #a78bfa, #7c3aed);
+    transform-origin: center bottom;
+    animation: swg-lid-open 0.9s 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.ws-signup-welcome__gift-ribbon {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+.ws-signup-welcome__gift-ribbon::before,
+.ws-signup-welcome__gift-ribbon::after {
+    content: '';
+    position: absolute;
+    background: #fbbf24;
+    border-radius: 2px;
+}
+
+.ws-signup-welcome__gift-ribbon::before {
+    width: 10px;
+    height: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.ws-signup-welcome__gift-ribbon::after {
+    height: 10px;
+    width: 100%;
+    top: 42%;
+}
+
+@keyframes swg-lid-open {
+    0% {
+        transform: translateX(-50%) rotateX(0deg);
+    }
+    100% {
+        transform: translateX(-50%) translateY(-18px) rotateX(-28deg);
+    }
+}
+
+.ws-signup-welcome__eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--swg-accent);
+    background: var(--swg-accent-soft);
+    padding: 6px 12px;
+    border-radius: 999px;
+    margin-bottom: 12px;
+}
+
+.ws-signup-welcome__title {
+    font-size: 1.35rem;
+    font-weight: 800;
+    line-height: 1.45;
+    margin: 0 0 8px;
+    color: var(--ws-text, #f8fafc);
+}
+
+[data-theme="light"] .ws-signup-welcome__title {
+    color: #0f172a;
+}
+
+.ws-signup-welcome__badge {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 12px 20px;
+    margin: 12px 0 16px;
+    border-radius: 14px;
+    background: var(--swg-accent-soft);
+    border: 1px solid rgba(124, 58, 237, 0.25);
+}
+
+.ws-signup-welcome__badge strong {
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: var(--swg-accent);
+    line-height: 1.2;
+}
+
+.ws-signup-welcome__badge span {
+    font-size: 0.85rem;
+    color: var(--ws-text-muted, #94a3b8);
+}
+
+.ws-signup-welcome__desc {
+    font-size: 0.92rem;
+    line-height: 1.7;
+    color: var(--ws-text-muted, #94a3b8);
+    margin: 0 0 20px;
+}
+
+.ws-signup-welcome__cta {
+    width: 100%;
+    min-height: 48px;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    color: #fff;
+    background: linear-gradient(135deg, #8b5cf6, var(--swg-accent));
+    box-shadow: 0 8px 24px var(--swg-glow);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.ws-signup-welcome__cta:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 12px 28px var(--swg-glow);
+}
+
+.ws-signup-welcome__cta:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 2px;
+}
+
+.ws-signup-welcome__fine {
+    margin: 12px 0 0;
+    font-size: 0.75rem;
+    color: var(--ws-text-muted, #64748b);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ws-signup-welcome__gift-lid {
+        animation: none;
+        transform: translateX(-50%) translateY(-12px);
+    }
+
+    .ws-signup-welcome__confetti {
+        display: none;
+    }
+
+    .ws-signup-welcome__card {
+        transition: none;
+        transform: none;
+    }
+}

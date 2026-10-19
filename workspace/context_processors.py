@@ -112,6 +112,28 @@ def _build_workspace_context(request, user, ctx):
             and request.resolver_match.url_name == 'home'
             and (force_tour or not settings_obj.onboarding_completed)
         )
+        show_signup_welcome_gift = False
+        signup_welcome_ack_url = ''
+        signup_welcome_gift_days = 7
+        if (
+            request.resolver_match
+            and request.resolver_match.url_name == 'home'
+        ):
+            try:
+                from django.urls import reverse
+                from licenses.services.signup_welcome_gift import (
+                    gift_duration_days,
+                    retry_signup_welcome_gift_if_needed,
+                    should_show_welcome_modal,
+                )
+
+                retry_signup_welcome_gift_if_needed(user)
+                show_signup_welcome_gift = should_show_welcome_modal(user)
+                signup_welcome_gift_days = gift_duration_days()
+                if show_signup_welcome_gift:
+                    signup_welcome_ack_url = reverse('workspace:signup_welcome_ack')
+            except Exception:
+                pass
         from workspace.services.public_share_common import social_networks_form_list
         ctx.update({
             'is_workspace': True,
@@ -120,6 +142,10 @@ def _build_workspace_context(request, user, ctx):
             'open_modal': request.GET.get('open', ''),
             'show_onboarding': show_onboarding,
             'onboarding_force': force_tour,
+            'show_signup_welcome_gift': show_signup_welcome_gift,
+            'signup_welcome_ack_url': signup_welcome_ack_url,
+            'signup_welcome_gift_days': signup_welcome_gift_days,
+            'signup_welcome_blocks_tour': show_signup_welcome_gift,
             'ws_consultant_social_networks': social_networks_form_list(settings_obj.social_links),
             'ws_agency_social_networks': social_networks_form_list(settings_obj.agency_social_links),
         })

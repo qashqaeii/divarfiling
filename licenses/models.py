@@ -241,6 +241,16 @@ class LicenseCampaignGrant(models.Model):
         verbose_name='لاگ پیامک',
     )
     metadata = models.JSONField(default=dict, blank=True, verbose_name='متادیتا')
+    welcome_modal_seen_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name='زمان مشاهده تبریک خوش‌آمد',
+    )
+    welcome_tour_started_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name='زمان شروع تور پس از هدیه',
+    )
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='ایجاد')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='به‌روزرسانی')
 

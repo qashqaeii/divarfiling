@@ -1,0 +1,12 @@
+{% load static %}
+{% if show_signup_welcome_gift %}
+<link rel="stylesheet" href="{% static 'workspace/css/signup-welcome-gift.css' %}?v=1">
+<script>
+window.wsSignupWelcomeConfig = {
+    ackUrl: "{{ signup_welcome_ack_url|escapejs }}",
+    giftDays: {{ signup_welcome_gift_days }},
+    startTourAfter: {% if show_onboarding %}true{% else %}false{% endif %},
+};
+</script>
+<script src="{% static 'workspace/js/signup-welcome-gift.js' %}?v=1"></script>
+{% endif %}

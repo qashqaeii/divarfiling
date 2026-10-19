@@ -489,6 +489,13 @@ class OtpVerifyPhoneView(View):
             })
 
         request.user.mark_phone_verified()
+        try:
+            from licenses.services.signup_welcome_gift import offer_signup_welcome_gift
+
+            offer_signup_welcome_gift(request.user, channel='web_phone_verify')
+        except Exception:
+            import logging
+            logging.getLogger(__name__).exception('signup welcome gift after phone verify failed')
         next_url = _safe_next(request, 'dashboard')
         _clear_otp_session(request)
         messages.success(request, 'شماره موبایل شما با موفقیت تأیید شد.')

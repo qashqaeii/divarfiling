@@ -445,6 +445,13 @@ WEEKLY_TRIAL_CAMPAIGN_SMS_BATCH_SIZE = config(
     default=10,
     cast=int,
 )
+# هدیه خوش‌آمدگویی ۷روزه — فقط ثبت‌نام‌های جدید پس از تاریخ شروع
+SIGNUP_WELCOME_GIFT_ENABLED = config('SIGNUP_WELCOME_GIFT_ENABLED', default=False, cast=bool)
+SIGNUP_WELCOME_GIFT_START_AT = config('SIGNUP_WELCOME_GIFT_START_AT', default='')
+SIGNUP_WELCOME_GIFT_CAMPAIGN_KEY = config(
+    'SIGNUP_WELCOME_GIFT_CAMPAIGN_KEY',
+    default='signup_welcome_7d_v1',
+)
 # شماره‌های مدیر برای اعلان کارت‌به‌کارت (جدا با کاما) — در صورت خالی، staff فعال
 CARD_TRANSFER_ADMIN_PHONES = config('CARD_TRANSFER_ADMIN_PHONES', default='')
 # اگر الگوی جداگانه ندارید، یک الگو برای همه OTPها:

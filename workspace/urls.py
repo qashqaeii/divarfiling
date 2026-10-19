@@ -34,6 +34,11 @@ urlpatterns = [
     path('app-bridge/<str:token>/', WorkspaceAppBridgeView.as_view(), name='app_bridge'),
     path('', views.WorkspaceHomeView.as_view(), name='home'),
     path('api/onboarding/complete/', views.OnboardingCompleteView.as_view(), name='onboarding_complete'),
+    path(
+        'api/signup-welcome/ack/',
+        views.SignupWelcomeAcknowledgeView.as_view(),
+        name='signup_welcome_ack',
+    ),
     path('api/export-security/verify-password/', export_security_views.ExportSecurityVerifyPasswordView.as_view(), name='export_security_verify_password'),
     path('api/export-security/verify-otp/', export_security_views.ExportSecurityVerifyOtpView.as_view(), name='export_security_verify_otp'),
     path('api/export-security/resend-otp/', export_security_views.ExportSecurityResendOtpView.as_view(), name='export_security_resend_otp'),

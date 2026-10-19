@@ -2110,3 +2110,16 @@ class OnboardingCompleteView(WorkspaceLoginMixin, View):
             'ok': True,
             'redirect_url': reverse('workspace:academy_home'),
         })
+
+
+class SignupWelcomeAcknowledgeView(WorkspaceLoginMixin, View):
+    """ثبت مشاهده پنجره هدیه خوش‌آمدگویی — یک‌بار برای هر کاربر."""
+
+    def post(self, request):
+        from licenses.services.signup_welcome_gift import acknowledge_welcome_modal
+
+        start_tour = request.POST.get('start_tour') in ('1', 'true', 'yes')
+        ok, payload = acknowledge_welcome_modal(request.user, start_tour=start_tour)
+        if not ok:
+            return JsonResponse({'ok': False, **payload}, status=400)
+        return JsonResponse({'ok': True, **payload})

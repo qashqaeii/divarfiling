@@ -88,6 +88,15 @@ class SignupWelcomeGiftGrantTests(TestCase):
             result = offer_signup_welcome_gift(self.user, channel='test')
         self.assertEqual(result, 'skipped:start_at_invalid')
 
+    def test_fail_closed_when_start_at_has_no_timezone(self):
+        with override_settings(
+            SIGNUP_WELCOME_GIFT_ENABLED=True,
+            SIGNUP_WELCOME_GIFT_START_AT='2030-06-01T00:00:00',
+            SIGNUP_WELCOME_GIFT_CAMPAIGN_KEY=GIFT_SETTINGS['SIGNUP_WELCOME_GIFT_CAMPAIGN_KEY'],
+        ):
+            result = offer_signup_welcome_gift(self.user, channel='test')
+        self.assertEqual(result, 'skipped:start_at_missing_timezone')
+
     def test_user_joined_before_start_at_not_granted(self):
         with override_settings(
             SIGNUP_WELCOME_GIFT_ENABLED=True,

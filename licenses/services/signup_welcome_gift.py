@@ -6,7 +6,7 @@ from datetime import datetime
 from typing import Any, Optional
 
 from django.conf import settings
-from django.db import transaction
+from django.db import IntegrityError, transaction
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 
@@ -46,7 +46,11 @@ def _configured_start_at() -> tuple[Optional[datetime], str]:
         )
         return None, 'start_at_invalid'
     if timezone.is_naive(parsed):
-        parsed = timezone.make_aware(parsed, timezone.get_current_timezone())
+        logger.error(
+            'signup_welcome_gift: SIGNUP_WELCOME_GIFT_START_AT must include timezone — got %r',
+            raw,
+        )
+        return None, 'start_at_missing_timezone'
     return parsed, ''
 
 
@@ -149,30 +153,56 @@ def offer_signup_welcome_gift(user, *, channel: str = 'unknown') -> str:
     return f'skipped:{status}'
 
 
+def _grant_is_successful(grant: LicenseCampaignGrant | None) -> bool:
+    return bool(
+        grant
+        and grant.status == LicenseCampaignGrant.Status.GRANTED
+        and grant.license_id
+    )
+
+
+@transaction.atomic
 def _record_failed_grant(user, *, channel: str, error: str) -> None:
+    """ثبت خطا — با قفل ردیف تا grant موفق همزمان به FAILED تبدیل نشود."""
+    key = campaign_key()
+    meta = {
+        'source': 'signup_welcome_gift',
+        'signup_channel': (channel or 'unknown')[:32],
+    }
+    err_text = (error or '')[:500]
     try:
-        existing = LicenseCampaignGrant.objects.filter(
-            user=user,
-            campaign_key=campaign_key(),
-        ).first()
-        if (
-            existing
-            and existing.status == LicenseCampaignGrant.Status.GRANTED
-            and existing.license_id
-        ):
-            return
-        LicenseCampaignGrant.objects.update_or_create(
-            user=user,
-            campaign_key=campaign_key(),
-            defaults={
-                'status': LicenseCampaignGrant.Status.FAILED,
-                'error_message': (error or '')[:500],
-                'metadata': {
-                    'source': 'signup_welcome_gift',
-                    'signup_channel': (channel or 'unknown')[:32],
-                },
-            },
+        grant = (
+            LicenseCampaignGrant.objects.select_for_update()
+            .filter(user=user, campaign_key=key)
+            .first()
         )
+        if _grant_is_successful(grant):
+            return
+        if grant:
+            grant.status = LicenseCampaignGrant.Status.FAILED
+            grant.error_message = err_text
+            grant.metadata = meta
+            grant.save(update_fields=['status', 'error_message', 'metadata', 'updated_at'])
+            return
+        try:
+            LicenseCampaignGrant.objects.create(
+                user=user,
+                campaign_key=key,
+                status=LicenseCampaignGrant.Status.FAILED,
+                error_message=err_text,
+                metadata=meta,
+            )
+        except IntegrityError:
+            grant = LicenseCampaignGrant.objects.select_for_update().get(
+                user=user,
+                campaign_key=key,
+            )
+            if _grant_is_successful(grant):
+                return
+            grant.status = LicenseCampaignGrant.Status.FAILED
+            grant.error_message = err_text
+            grant.metadata = meta
+            grant.save(update_fields=['status', 'error_message', 'metadata', 'updated_at'])
     except Exception:
         logger.exception('signup_welcome_gift: failed to persist failure user_id=%s', user.pk)
 

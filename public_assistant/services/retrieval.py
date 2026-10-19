@@ -48,9 +48,22 @@ def _intent_boost(query_norm: str, article_id: str) -> float:
     if article_id == 'crm-matching' and any(w in query_norm for w in ('تطبیق', 'مناسب', 'پیشنهاد فایل')):
         boost += 3.5
     if article_id == 'public-assistant-scope' and any(
-        w in query_norm for w in ('api', 'key', 'مشتریان من', 'سیاست', 'پزشک')
+        w in query_norm for w in (
+            'api',
+            'key',
+            'مشتریان',
+            'مشتریان من',
+            'اطلاعات',
+            'مخاطب',
+            'حساب',
+            'خصوصی',
+            'ببینی',
+            'سیاست',
+            'پزشک',
+            'دستیار',
+        )
     ):
-        boost += 3.0
+        boost += 5.0
     if article_id == 'agency-create-roles' and 'آژانس' in query_norm and any(
         w in query_norm for w in ('ساخت', 'نقش', 'مالک', 'منشی')
     ):

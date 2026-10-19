@@ -55,14 +55,26 @@
     safe = safe.replace(/_(.+?)_/g, '<em>$1</em>');
     safe = safe.replace(/\[([^\]]+)\]\(([^)]+)\)/g, function (_, label, url) {
       if (!isAllowedPublicLink(url)) return escapeHtml(label);
-      return '<a href="' + escapeHtml(url) + '" rel="noopener noreferrer" target="_blank">' + escapeHtml(label) + '</a>';
+      var href = escapeHtml(url);
+      var dirAttr = /^https?:\/\//i.test(url) ? ' dir="ltr"' : '';
+      return (
+        '<a href="' +
+        href +
+        '" rel="noopener noreferrer" target="_blank"' +
+        dirAttr +
+        '>' +
+        escapeHtml(label) +
+        '</a>'
+      );
     });
     return safe;
   }
 
-  function renderMarkdownLite(text) {
-    var raw = stripInternalCitations(text || '');
-    var lines = raw.split(/\n/);
+  function renderBlock(block) {
+    var lines = block.split(/\n/).map(function (l) {
+      return l.trim();
+    }).filter(Boolean);
+    if (!lines.length) return '';
     var html = [];
     var inList = false;
     var listType = null;
@@ -75,12 +87,7 @@
       }
     }
 
-    lines.forEach(function (line) {
-      var trimmed = line.trim();
-      if (!trimmed) {
-        closeList();
-        return;
-      }
+    lines.forEach(function (trimmed) {
       if (/^###\s+/.test(trimmed)) {
         closeList();
         html.push('<h3 class="pa-md-h3">' + renderInline(escapeHtml(trimmed.replace(/^###\s+/, ''))) + '</h3>');
@@ -124,6 +131,20 @@
     });
     closeList();
     return html.join('');
+  }
+
+  function renderMarkdownLite(text) {
+    var raw = stripInternalCitations(text || '');
+    var blocks = raw.split(/\n\s*\n/);
+    if (blocks.length === 1 && blocks[0].indexOf('\n') === -1) {
+      return renderBlock(blocks[0]);
+    }
+    return blocks
+      .map(function (b) {
+        return renderBlock(b);
+      })
+      .filter(Boolean)
+      .join('');
   }
 
   var root = document.getElementById('pa-root');
@@ -232,7 +253,7 @@
     wrap.className = 'pa-msg__sources';
     var label = document.createElement('p');
     label.className = 'pa-msg__sources-label';
-    label.textContent = 'بیشتر بخوانید';
+    label.textContent = 'راهنماهای مرتبط';
     wrap.appendChild(label);
     var chips = document.createElement('div');
     chips.className = 'pa-msg__source-chips';
@@ -261,7 +282,8 @@
     div.className = 'pa-msg pa-msg--' + (role === 'user' ? 'user' : 'bot') + extra;
     var body = document.createElement('div');
     body.className = 'pa-msg__body';
-    body.innerHTML = role === 'user' ? escapeHtml(html) : html;
+    body.setAttribute('dir', 'auto');
+    body.innerHTML = role === 'user' ? '<p>' + escapeHtml(html) + '</p>' : html;
     div.appendChild(body);
 
     if (role === 'bot') {

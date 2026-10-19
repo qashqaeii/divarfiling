@@ -1,7 +1,6 @@
 """موتور پاسخ‌گویی RAG دستیار عمومی."""
 from __future__ import annotations
 
-import re
 from typing import Any
 
 from public_assistant.constants import (
@@ -18,25 +17,37 @@ from public_assistant.models import (
 from public_assistant.services import llm
 from public_assistant.services.persian_text import normalize_persian
 from public_assistant.services.retrieval import RetrievedChunk, retrieve
+from public_assistant.services.public_copy import (
+    asks_internal_implementation,
+    deflect_internal_question,
+    format_public_fallback,
+    polish_public_answer,
+)
 from public_assistant.services.security import (
     filter_sources,
     looks_like_prompt_injection,
     sanitize_user_message,
 )
 
-SYSTEM_PROMPT = """تو دستیار رسمی و عمومی «فایلینگ دیوار» هستی.
-فقط بر اساس «منابع دانشنامه» پاسخ بده. اگر منبع کافی نیست، صریح بگو و کاربر را به پشتیبانی یا صفحات رسمی هدایت کن.
-هرگز قیمت، URL، قابلیت یا دستورالعملی را از خودت نساز.
-به داده‌های خصوصی کاربران، CRM، لایسنس دیگران، API Key و اطلاعات داخلی سرور دسترسی نداری و نباید ادعای دسترسی کنی.
-اگر سؤال خارج از حوزه فایلینگ دیوار است، مودبانه محدودیت خود را بگو.
+SYSTEM_PROMPT = """تو دستیار رسمی و عمومی «فایلینگ دیوار» هستی — مانند کارشناس محصول و پشتیبان آموزشی برای مشاوران املاک.
 
-قالب پاسخ (مارک‌داون ساده):
-- یک تیتر کوتاه با **bold** در ابتدا
-- برای مراحل از لیست شماره‌دار 1. 2. 3. استفاده کن
-- برای نکات مهم از «نکته: ...» یا bullet استفاده کن
-- پاسخ عملیاتی و مشخص باشد؛ از کلی‌گویی پرهیز کن
-- هرگز ارجاع عددی مثل [1] یا [2] در متن ننویس؛ لینک در UI جدا نمایش داده می‌شود
-- بخش «منابع:» در متن پاسخ ننویس"""
+فقط بر اساس «منابع دانشنامه» پاسخ بده. اگر منبع کافی نیست، کوتاه بگو اطلاعات تأییدشده کافی نداری و به `/contact/` یا صفحات رسمی ارجاع بده.
+هرگز قیمت، URL، قابلیت یا شرایطی را از خودت نساز.
+به داده‌های خصوصی حساب کاربران (مخاطبین، فایل‌ها، لایسنس شخصی) دسترسی نداری.
+
+ممنوع در پاسخ کاربر:
+- نام متغیرهای ENV، Feature Flag، مسیر فایل Python، نام مدل/تابع Django، تنظیمات سرور
+- توضیح پیاده‌سازی Backend به‌جای رفتار قابل مشاهده محصول
+- ارجاع عددی [1] یا بخش «منابع:» در متن (لینک‌ها جدا نمایش داده می‌شود)
+
+مجاز: CRM، API عمومی مستندشده، نام پلتفرم‌ها — وقتی برای کاربر مفید است.
+
+قالب (مارک‌داون ساده، فارسی روان):
+- تیتر کوتاه **bold**
+- مراحل: 1. 2. 3. هر مرحله در خط جدا
+- نکته‌ها: «نکته: ...» یا bullet
+- محدودیت واقعی را شفاف بگو؛ برای همه کاربران تضمین نکن مگر منبع صریح گفته باشد
+- لحن حرفه‌ای، مستقیم و کاربردی — نه رباتیک"""
 
 
 def _is_probably_off_topic(query: str, chunks: list[RetrievedChunk]) -> bool:
@@ -76,14 +87,25 @@ def _has_relevant_knowledge(chunks: list[RetrievedChunk]) -> bool:
     return bool(chunks) and chunks[0].score >= MIN_RETRIEVAL_SCORE
 
 
+def _public_subscription_note(note: str) -> str:
+    note = (note or '').strip()
+    if not note:
+        return 'طبق محصول'
+    from public_assistant.services.public_copy import contains_internal_leak
+
+    if contains_internal_leak(note):
+        return 'طبق محصول'
+    return note
+
+
 def _format_context(chunks: list[RetrievedChunk]) -> str:
     parts = []
-    for i, ch in enumerate(chunks, 1):
+    for ch in chunks:
         parts.append(
-            f'[{i}] عنوان: {ch.title}\n'
+            f'عنوان: {ch.title}\n'
             f'دسته: {ch.category}\n'
             f'بخش: {ch.heading or "—"}\n'
-            f'اشتراک/نقش: {ch.subscription_note or "عمومی/طبق محصول"}\n'
+            f'دسترسی/اشتراک: {_public_subscription_note(ch.subscription_note)}\n'
             f'متن:\n{ch.body}\n'
         )
     return '\n---\n'.join(parts)
@@ -95,7 +117,10 @@ def _history_lines(session: PublicChatSession) -> str:
     lines = []
     for m in msgs:
         role = 'کاربر' if m.role == PublicChatMessage.ROLE_USER else 'دستیار'
-        lines.append(f'{role}: {m.content[:500]}')
+        snippet = m.content[:500]
+        if m.role == PublicChatMessage.ROLE_ASSISTANT:
+            snippet = polish_public_answer(snippet)
+        lines.append(f'{role}: {snippet}')
     return '\n'.join(lines)
 
 
@@ -112,32 +137,14 @@ def _collect_sources(chunks: list[RetrievedChunk]) -> list[dict]:
     return out[:8]
 
 
-def _clean_answer_text(text: str) -> str:
-    if not text:
-        return text
-    text = re.sub(r'\s*\[\d+\]', '', text)
-    text = re.sub(r'\n+منابع:\s*\n.*', '', text, flags=re.DOTALL)
-    return text.strip()
-
-
 def _fallback_from_chunks(chunks: list[RetrievedChunk]) -> str:
     if not chunks:
-        return (
-            'در دانشنامه عمومی ما پاسخ کاملی برای این سؤال پیدا نشد. '
-            'می‌توانید از صفحه «تماس با ما» (`/contact/`) یا راهنمای سایت کمک بگیرید.'
-        )
-    ch = chunks[0]
-    text = f'**{ch.title}**\n\n{ch.body}'
-    if ch.subscription_note:
-        text += f'\n\n_نیاز اشتراک/دسترسی:_ {ch.subscription_note}'
-    return text
+        return format_public_fallback([])
+    return format_public_fallback(chunks)
 
 
 def _low_confidence_answer() -> str:
-    return (
-        'در دانشنامه عمومی فعلی، منبع کافی و قطعی برای پاسخ دقیق به این سؤال ندارم. '
-        'لطفاً سؤال را مشخص‌تر بپرسید یا از صفحه تماس (`/contact/`) با پشتیبانی در ارتباط باشید.'
-    )
+    return format_public_fallback([])
 
 
 def answer_question(
@@ -158,6 +165,14 @@ def answer_question(
         }
 
     chunks = retrieve(user_text)
+
+    if asks_internal_implementation(user_text):
+        return {
+            'ok': True,
+            'answer': deflect_internal_question(),
+            'sources': _collect_sources(chunks) if chunks else [],
+            'session_id': str(session.id),
+        }
 
     if _is_probably_off_topic(user_text, chunks):
         return {
@@ -197,7 +212,7 @@ def answer_question(
         status = PublicAssistantUsageLog.STATUS_FALLBACK
         text = _fallback_from_chunks(chunks)
     else:
-        text = _clean_answer_text(text)
+        text = polish_public_answer(text, chunks=chunks)
 
     PublicAssistantUsageLog.objects.create(
         session=session,

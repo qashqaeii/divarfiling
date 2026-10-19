@@ -2,29 +2,45 @@
 id: crm-personal-properties
 title: فایل‌های شخصی (ملک تحت مدیریت مشاور)
 category: CRM
-summary: ثبت ملک شخصی مشاور جدا از آگهی‌های استخراج‌شده.
+summary: ملک اکسکلوییو و فایل خارج از دیوار — مسیر /workspace/crm/properties/
 platforms:
 - web
 - android
-- windows
 subscription_note: ''
-prerequisites: ''
+prerequisites: ورود به میزکار
 limitations: ''
 synonyms:
 - فایل اکس
 - ملک شخصی
 - property شخصی
-links: []
+- املاک شخصی
+links:
+- label: املاک شخصی
+  url: /workspace/crm/properties/
+- label: نقشه
+  url: /workspace/crm/properties/map/
 technical_refs: []
 reviewed_at: '2026-10-19'
 is_public: true
 is_active: true
 ---
 
-فایل شخصی برای ملک‌هایی است که مشاور مستقیماً مدیریت می‌کند (فایل اکسکلوییو، مالک مستقیم و …).
+**املاک شخصی** برای ملک‌هایی است که مشاور **مستقیماً** مدیریت می‌کند (فایل اکسکلوییو، مالک مستقیم، قرارداد خاص) — جدا از آگهی **dataset** دیوار.
 
-## تفاوت با فایلینگ دیوار
-آگهی استخراج‌شده از دیوار در dataset است؛ فایل شخصی در ماژول CRM/properties.
+## مسیر
+- لیست: `/workspace/crm/properties/`
+- نقشه: `/workspace/crm/properties/map/`
+
+## تفاوت با فایلینگ (dataset)
+| dataset | املاک شخصی |
+| آگهی استخراج‌شده از دیوار | ملک تحت مدیریت مشاور |
+| `/workspace/datasets/` | `/workspace/crm/properties/` |
 
 ## امکانات
-فرم جزئیات، امکانات (پارکینگ، انباری، آسانسور)، یادداشت و اتصال به مخاطب.
+- فرم جزئیات (متراژ، قیمت، امکانات، پارکینگ، انباری، آسانسور و …)
+- یادداشت و تصاویر
+- اتصال به **مخاطب** و **معامله**
+- **خلاصه AI** از صفحه ملک (در صورت دسترسی AI)
+
+## از آگهی dataset به شخصی
+از صفحه آگهی در dataset می‌توانید **افزودن به فایل شخصی** را بزنید تا پیگیری CRM جدا شود.

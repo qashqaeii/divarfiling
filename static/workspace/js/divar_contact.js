@@ -129,13 +129,18 @@
       syncCaptchaUrl({ captcha_post_url: root.dataset.captchaPostUrl });
     }
 
+    function defaultDivarPhone() {
+      if (!phoneInput) return '';
+      return phoneInput.getAttribute('data-divar-default-phone') || '';
+    }
+
     function openModal() {
       if (!modal) return;
       setError('');
       pendingPhone = '';
       if (phoneStep) phoneStep.hidden = false;
       if (otpStep) otpStep.hidden = true;
-      if (phoneInput) phoneInput.value = '';
+      if (phoneInput) phoneInput.value = defaultDivarPhone();
       if (otpInput) otpInput.value = '';
       if (window.WSModal && typeof window.WSModal.open === 'function') {
         window.WSModal.open(modal.id || 'divar-connect-modal');

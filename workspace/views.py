@@ -1088,6 +1088,12 @@ class ListingDetailView(DatasetOwnerMixin, DetailView):
             public_session_status(self.request.user) if ctx['divar_contact_enabled'] else {}
         )
         if ctx['divar_contact_enabled']:
+            from accounts.phone_utils import is_valid_iran_mobile, normalize_phone
+
+            reg_phone = normalize_phone(getattr(self.request.user, 'phone', '') or '')
+            ctx['divar_connect_default_phone'] = (
+                reg_phone if is_valid_iran_mobile(reg_phone) else ''
+            )
             ctx['divar_contact_fetch_url'] = reverse(
                 'workspace:divar_contact_fetch_phone',
                 kwargs={'dataset_id': dataset.id, 'listing_id': listing.id},

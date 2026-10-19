@@ -1006,7 +1006,7 @@
         <div class="ws-modal-head">
             <div>
                 <h2 class="ws-modal-title" id="divar-connect-title">اتصال به دیوار</h2>
-                <p class="ws-modal-sub">کد ورود به حساب دیوار (نه کد HIP آگهی)</p>
+                <p class="ws-modal-sub">حساب دیوار خود را متصل کنید تا شمارهٔ تماس مالک آگهی را دریافت کنید.</p>
             </div>
             <button type="button" class="ws-modal-close" data-modal-close aria-label="بستن">
                 <i class="fas fa-times" aria-hidden="true"></i>
@@ -1017,7 +1017,9 @@
             <div data-divar-step="phone">
                 <label class="mk-owner-box__label" for="divar-connect-phone">شماره موبایل حساب دیوار</label>
                 <input type="tel" id="divar-connect-phone" class="ws-input" dir="ltr" inputmode="tel"
-                       data-divar-phone placeholder="0912…" autocomplete="tel">
+                       data-divar-phone data-divar-default-phone="{{ divar_connect_default_phone|default:'' }}"
+                       value="{{ divar_connect_default_phone|default:'' }}"
+                       placeholder="0912…" autocomplete="tel">
                 <button type="button" class="ws-btn ws-btn-primary ws-btn-block" data-divar-send-otp style="margin-top:0.75rem">
                     ارسال کد تأیید
                 </button>
@@ -1040,7 +1042,7 @@
 <script src="{% static 'workspace/js/listing-edit.js' %}?v=7"></script>
 <script src="{% static 'workspace/js/filing-help-modal.js' %}?v=2"></script>
 {% if divar_contact_enabled %}
-<script src="{% static 'workspace/js/divar_contact.js' %}?v=3"></script>
+<script src="{% static 'workspace/js/divar_contact.js' %}?v=4"></script>
 {% endif %}
 <script>
 document.addEventListener('DOMContentLoaded', function () {

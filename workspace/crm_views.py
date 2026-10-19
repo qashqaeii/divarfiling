@@ -1818,6 +1818,13 @@ class CRMPropertyDetailView(CRMContextMixin, LoginRequiredMixin, DetailView):
             ctx['nearby_pois_url'] = reverse(
                 'workspace:crm_property_nearby_pois', kwargs={'property_id': p.pk},
             )
+        if ctx.get('can_edit_property') and source_listing and not ctx.get('property_is_deleted'):
+            from workspace.services.divar_session.ui_context import divar_contact_page_context
+
+            ctx.update(divar_contact_page_context(self.request, source_listing))
+        else:
+            ctx.setdefault('divar_contact_enabled', False)
+            ctx.setdefault('divar_contact_status', {})
         else:
             ctx['show_nearby_pois'] = False
             ctx['nearby_pois_ctx'] = {}

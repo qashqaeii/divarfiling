@@ -1849,4 +1849,13 @@ document.addEventListener('DOMContentLoaded', function () {
 .rrd-btn--cancel:hover { background: #e2e8f0; color: #334155; }
 </style>
 {% endif %}
+
+{% include 'workspace/includes/divar_connect_modal.html' %}
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+{% if divar_contact_enabled %}
+<script src="{% static 'workspace/js/divar_contact.js' %}?v=8"></script>
+{% endif %}
 {% endblock %}

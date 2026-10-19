@@ -1080,27 +1080,9 @@ class ListingDetailView(DatasetOwnerMixin, DetailView):
         ctx['owner_contact'] = primary_owner_contact(
             listing=listing, crm_property=ctx['crm_property'],
         )
-        from workspace.services.divar_session.feature import user_can_use_divar_contact
-        from workspace.services.divar_session.service import public_session_status
+        from workspace.services.divar_session.ui_context import divar_contact_page_context
 
-        ctx['divar_contact_enabled'] = user_can_use_divar_contact(self.request.user)
-        ctx['divar_contact_status'] = (
-            public_session_status(self.request.user) if ctx['divar_contact_enabled'] else {}
-        )
-        if ctx['divar_contact_enabled']:
-            from accounts.phone_utils import is_valid_iran_mobile, normalize_phone
-
-            reg_phone = normalize_phone(getattr(self.request.user, 'phone', '') or '')
-            ctx['divar_connect_default_phone'] = (
-                reg_phone if is_valid_iran_mobile(reg_phone) else ''
-            )
-            ctx['divar_contact_fetch_url'] = reverse(
-                'workspace:divar_contact_fetch_phone',
-                kwargs={'dataset_id': dataset.id, 'listing_id': listing.id},
-            )
-            ctx['divar_listing_captcha_url'] = (
-                (listing.link or '').strip() or f'https://divar.ir/v/{listing.token}'
-            )
+        ctx.update(divar_contact_page_context(self.request, listing))
         ctx['gallery_images'] = deduplicate_divar_image_urls(
             [normalize_external_image_url(img) for img in (listing.images or []) if img],
         )

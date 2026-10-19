@@ -2237,7 +2237,7 @@ body.ws-lightbox-open { overflow: hidden; }
     align-items: flex-end;
     gap: .35rem;
     flex-shrink: 0;
-    max-width: 58%;
+    max-width: min(11rem, 48%);
 }
 .mk-owner-box__title {
     margin: 0;
@@ -2255,10 +2255,30 @@ body.ws-lightbox-open { overflow: hidden; }
     font-weight: 600;
     color: var(--ws-primary);
     text-decoration: none;
-    max-width: 45%;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+.mk-owner-box__link--sub {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    margin-top: .25rem;
+    max-width: 100%;
+    font-size: .78rem;
+    font-weight: 700;
+    color: var(--ws-text-secondary);
+}
+.mk-owner-box__link--sub i {
+    font-size: .7rem;
+    opacity: .75;
+    flex-shrink: 0;
+}
+.mk-owner-box__link--sub span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
 }
 .mk-owner-box__link:hover { text-decoration: underline; }
 .mk-owner-box__hint {

@@ -116,22 +116,32 @@ def _resolve_expired_if_needed(row: DivarAccountSession) -> DivarAccountSession:
     return row
 
 
+def _session_shows_connected_badge(row: DivarAccountSession) -> bool:
+    """نشان «متصل به دیوار» فقط پس از ورود موفق یا کپچای HIP روی نشست فعال."""
+    return row.auth_status in (
+        DivarAccountSession.AuthStatus.CONNECTED,
+        DivarAccountSession.AuthStatus.CAPTCHA_REQUIRED,
+    )
+
+
 def public_session_status(user) -> dict[str, Any]:
     row = _visible_session(user)
     if not row:
-        return {'has_session': False, 'button_state': 'connect'}
+        return {'has_session': False, 'button_state': 'connect', 'show_connected_badge': False}
 
     row = _resolve_expired_if_needed(row)
 
     if row.auth_status == DivarAccountSession.AuthStatus.EXPIRED:
         return {
             'has_session': False,
+            'show_connected_badge': False,
             'button_state': 'reconnect',
             'divar_phone_masked': _mask_phone(row.divar_phone),
         }
     if row.auth_status == DivarAccountSession.AuthStatus.CAPTCHA_REQUIRED:
         return {
             'has_session': True,
+            'show_connected_badge': True,
             'button_state': 'captcha',
             'divar_phone_masked': _mask_phone(row.divar_phone),
             'hip_status': row.hip_status,
@@ -140,18 +150,26 @@ def public_session_status(user) -> dict[str, Any]:
     if row.auth_status == DivarAccountSession.AuthStatus.CONNECTED:
         return {
             'has_session': True,
+            'show_connected_badge': True,
             'button_state': 'fetch',
             'divar_phone_masked': _mask_phone(row.divar_phone),
         }
     if row.auth_status == DivarAccountSession.AuthStatus.PENDING_OTP:
+        masked = _mask_phone(row.divar_phone)
         if row.encrypted_session:
             return {
-                'has_session': True,
+                'has_session': False,
+                'show_connected_badge': False,
                 'button_state': 'fetch',
-                'divar_phone_masked': _mask_phone(row.divar_phone),
+                'divar_phone_masked': masked,
             }
-        return {'has_session': False, 'button_state': 'connect'}
-    return {'has_session': False, 'button_state': 'connect'}
+        return {
+            'has_session': False,
+            'show_connected_badge': False,
+            'button_state': 'connect',
+            'divar_phone_masked': masked,
+        }
+    return {'has_session': False, 'show_connected_badge': False, 'button_state': 'connect'}
 
 
 def _mask_phone(phone: str) -> str:

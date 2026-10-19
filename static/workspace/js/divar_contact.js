@@ -195,7 +195,11 @@
 
     function sessionConnected(st) {
       if (!st) return false;
-      return st.has_session === true;
+      if (st.show_connected_badge === false) return false;
+      if (st.show_connected_badge === true) return true;
+      var bs = st.button_state || '';
+      if (bs === 'connect' || bs === 'reconnect') return false;
+      return st.has_session === true && (bs === 'fetch' || bs === 'captcha');
     }
 
     function updateConnectionBadge(st) {
@@ -365,7 +369,11 @@
           var data = res.data || {};
           if (data.code === 'captcha_required') {
             root.dataset.captchaPostUrl = data.post_url || '';
-            applyStatus(data.status || { button_state: 'captcha', has_session: true });
+            applyStatus(data.status || {
+              button_state: 'captcha',
+              has_session: true,
+              show_connected_badge: true,
+            });
             setButtonState('captcha', 'حل کپچا');
             return;
           }
@@ -378,7 +386,11 @@
           if (ownerName && data.owner_name_hint && !ownerName.value) {
             ownerName.value = data.owner_name_hint;
           }
-          applyStatus(data.status || { button_state: 'fetch', has_session: true });
+          applyStatus(data.status || {
+            button_state: 'fetch',
+            has_session: true,
+            show_connected_badge: true,
+          });
         }).catch(function () {
           setButtonState('fetch');
         });
@@ -390,7 +402,11 @@
       disconnectBtn.addEventListener('click', function () {
         postJson(disconnectUrl, {}).then(function (res) {
           var data = (res && res.data) || {};
-          applyStatus(data.status || { button_state: 'connect', has_session: false });
+          applyStatus(data.status || {
+            button_state: 'connect',
+            has_session: false,
+            show_connected_badge: false,
+          });
         });
       });
     }

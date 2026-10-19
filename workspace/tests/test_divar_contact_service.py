@@ -106,6 +106,29 @@ class DivarSessionServiceTests(TestCase):
         status = public_session_status(self.user)
         self.assertEqual(status['button_state'], 'fetch')
 
+    def test_pending_otp_does_not_show_connected_badge(self):
+        DivarAccountSession.objects.create(
+            user=self.user,
+            divar_phone='09121234567',
+            auth_status=DivarAccountSession.AuthStatus.PENDING_OTP,
+            encrypted_session=encrypt_payload(_session_payload()),
+        )
+        status = public_session_status(self.user)
+        self.assertFalse(status['has_session'])
+        self.assertFalse(status['show_connected_badge'])
+        self.assertEqual(status['button_state'], 'fetch')
+
+    def test_connected_shows_badge(self):
+        DivarAccountSession.objects.create(
+            user=self.user,
+            divar_phone='09121234567',
+            auth_status=DivarAccountSession.AuthStatus.CONNECTED,
+            encrypted_session=encrypt_payload(_session_payload()),
+        )
+        status = public_session_status(self.user)
+        self.assertTrue(status['show_connected_badge'])
+        self.assertEqual(status['button_state'], 'fetch')
+
     def test_captcha_status_includes_post_url(self):
         DivarAccountSession.objects.create(
             user=self.user,

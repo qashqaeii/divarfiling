@@ -136,7 +136,7 @@ class DivarConnectModalMarkupTests(TestCase):
         self.assertIn('ws-modal-overlay', html)
         self.assertIn('ws-modal-panel', html)
         self.assertIn('divar_contact.js', html)
-        self.assertIn('divar_contact.js?v=7', html)
+        self.assertIn('divar_contact.js?v=8', html)
         self.assertIn('ws-divar-modal-btn', html)
         self.assertIn('data-divar-otp-timer', html)
         self.assertIn('ws-divar-connect-modal', html)

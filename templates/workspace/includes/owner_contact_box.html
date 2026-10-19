@@ -9,7 +9,7 @@
       data-owner-phone-id="{{ owner_id_prefix }}-phone"
       data-owner-name-id="{{ owner_id_prefix }}-name"
       data-initial-state="{{ divar_contact_status.button_state|default:'connect' }}"
-      data-initial-has-session="{% if divar_contact_status.has_session %}1{% else %}0{% endif %}"
+      data-initial-has-session="{% if divar_contact_status.show_connected_badge %}1{% else %}0{% endif %}"
       data-initial-masked-phone="{{ divar_contact_status.divar_phone_masked|default:'' }}"
       data-send-otp-url="{% url 'workspace:divar_contact_otp_send' %}"
       data-verify-otp-url="{% url 'workspace:divar_contact_otp_verify' %}"
@@ -27,7 +27,7 @@
         <div class="mk-owner-box__head-aside">
             {% if divar_contact_enabled %}
             <div class="mk-owner-divar-status" data-divar-status
-                 {% if not divar_contact_status.has_session %}hidden{% endif %}>
+                 {% if not divar_contact_status.show_connected_badge %}hidden{% endif %}>
                 <span class="mk-owner-divar-status__chip" title="حساب دیوار متصل است">
                     <i class="fas fa-check-circle" aria-hidden="true"></i>
                     <span class="mk-owner-divar-status__chip-text">متصل به دیوار</span>

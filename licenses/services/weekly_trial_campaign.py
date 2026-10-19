@@ -267,21 +267,25 @@ def grant_weekly_trial_to_user(
     grant_row = existing
     if not grant_row:
         try:
-            meta = {'source': 'weekly_trial_campaign'}
-            if grant_metadata:
-                meta.update(grant_metadata)
-            grant_row = LicenseCampaignGrant.objects.create(
-                user=user,
-                campaign_key=campaign_key,
-                status=LicenseCampaignGrant.Status.GRANTED,
-                metadata=meta,
-            )
+            with transaction.atomic():
+                meta = {'source': 'weekly_trial_campaign'}
+                if grant_metadata:
+                    meta.update(grant_metadata)
+                grant_row = LicenseCampaignGrant.objects.create(
+                    user=user,
+                    campaign_key=campaign_key,
+                    status=LicenseCampaignGrant.Status.GRANTED,
+                    metadata=meta,
+                )
         except IntegrityError:
             grant_row = LicenseCampaignGrant.objects.select_for_update().get(
                 user=user,
                 campaign_key=campaign_key,
             )
-            if grant_row.status == LicenseCampaignGrant.Status.GRANTED:
+            if (
+                grant_row.status == LicenseCampaignGrant.Status.GRANTED
+                and grant_row.license_id
+            ):
                 return grant_row, 'already_granted'
 
     grant_row = LicenseCampaignGrant.objects.select_for_update().get(pk=grant_row.pk)

@@ -65,6 +65,17 @@ def workspace_context(request):
 
 def _build_workspace_context(request, user, ctx):
     settings_obj = get_or_create_settings(user)
+    if (
+        request.path.startswith('/workspace')
+        and getattr(request, 'resolver_match', None)
+        and request.resolver_match.url_name == 'home'
+    ):
+        try:
+            from licenses.services.signup_welcome_gift import retry_signup_welcome_gift_if_needed
+
+            retry_signup_welcome_gift_if_needed(user)
+        except Exception:
+            pass
     access = get_bot_access_state(user)
     try:
         from product_hub.services.notifications import unread_count as product_hub_unread_count
@@ -123,11 +134,9 @@ def _build_workspace_context(request, user, ctx):
                 from django.urls import reverse
                 from licenses.services.signup_welcome_gift import (
                     gift_duration_days,
-                    retry_signup_welcome_gift_if_needed,
                     should_show_welcome_modal,
                 )
 
-                retry_signup_welcome_gift_if_needed(user)
                 show_signup_welcome_gift = should_show_welcome_modal(user)
                 signup_welcome_gift_days = gift_duration_days()
                 if show_signup_welcome_gift:

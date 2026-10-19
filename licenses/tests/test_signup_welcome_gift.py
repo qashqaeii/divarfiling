@@ -69,6 +69,43 @@ class SignupWelcomeGiftGrantTests(TestCase):
         self.assertTrue(result.startswith('skipped:'))
         self.assertEqual(LicenseCampaignGrant.objects.count(), 0)
 
+    def test_fail_closed_when_start_at_missing(self):
+        with override_settings(
+            SIGNUP_WELCOME_GIFT_ENABLED=True,
+            SIGNUP_WELCOME_GIFT_START_AT='',
+            SIGNUP_WELCOME_GIFT_CAMPAIGN_KEY=GIFT_SETTINGS['SIGNUP_WELCOME_GIFT_CAMPAIGN_KEY'],
+        ):
+            result = offer_signup_welcome_gift(self.user, channel='test')
+        self.assertEqual(result, 'skipped:start_at_not_configured')
+        self.assertEqual(LicenseCampaignGrant.objects.count(), 0)
+
+    def test_fail_closed_when_start_at_invalid(self):
+        with override_settings(
+            SIGNUP_WELCOME_GIFT_ENABLED=True,
+            SIGNUP_WELCOME_GIFT_START_AT='not-a-date',
+            SIGNUP_WELCOME_GIFT_CAMPAIGN_KEY=GIFT_SETTINGS['SIGNUP_WELCOME_GIFT_CAMPAIGN_KEY'],
+        ):
+            result = offer_signup_welcome_gift(self.user, channel='test')
+        self.assertEqual(result, 'skipped:start_at_invalid')
+
+    def test_user_joined_before_start_at_not_granted(self):
+        with override_settings(
+            SIGNUP_WELCOME_GIFT_ENABLED=True,
+            SIGNUP_WELCOME_GIFT_START_AT='2030-01-01T00:00:00+03:30',
+            SIGNUP_WELCOME_GIFT_CAMPAIGN_KEY=GIFT_SETTINGS['SIGNUP_WELCOME_GIFT_CAMPAIGN_KEY'],
+        ):
+            result = offer_signup_welcome_gift(self.user, channel='test')
+        self.assertEqual(result, 'skipped:campaign_not_started')
+
+    def test_failed_record_does_not_clobber_successful_grant(self):
+        offer_signup_welcome_gift(self.user, channel='test')
+        from licenses.services.signup_welcome_gift import _record_failed_grant
+
+        _record_failed_grant(self.user, channel='race', error='simulated')
+        grant = LicenseCampaignGrant.objects.get(user=self.user, campaign_key=campaign_key())
+        self.assertEqual(grant.status, LicenseCampaignGrant.Status.GRANTED)
+        self.assertIsNotNone(grant.license_id)
+
     def test_skipped_when_phone_not_verified(self):
         self.user.phone_verified = False
         self.user.save(update_fields=['phone_verified'])
@@ -154,3 +191,29 @@ class SignupWelcomeWorkspaceContextTests(TestCase):
         self.assertEqual(resp.status_code, 200)
         self.assertTrue(resp.context['show_signup_welcome_gift'])
         self.assertTrue(resp.context['signup_welcome_blocks_tour'])
+        self.assertTrue(resp.context['has_bot_license'])
+
+
+@override_settings(**GIFT_SETTINGS)
+class SignupWelcomeAndroidVerifyTests(TestCase):
+    def setUp(self):
+        _ensure_bot_monthly_plan()
+        self.user = User.objects.create_user(
+            username='android_verify',
+            password='pass',
+            phone='09127778899',
+            phone_verified=False,
+        )
+
+    @patch('mobile_api.services.auth_otp_service.verify_otp')
+    def test_complete_verify_phone_triggers_gift(self, _mock_verify):
+        from mobile_api.services.auth_otp_service import complete_verify_phone
+
+        complete_verify_phone(self.user, '123456')
+        self.assertTrue(
+            LicenseCampaignGrant.objects.filter(
+                user=self.user,
+                campaign_key=campaign_key(),
+                status=LicenseCampaignGrant.Status.GRANTED,
+            ).exists()
+        )

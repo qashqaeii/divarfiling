@@ -245,6 +245,22 @@
     color: var(--ws-text-muted, #64748b);
 }
 
+.ws-signup-welcome__error {
+    margin: 0 0 12px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    color: #fecaca;
+    background: rgba(239, 68, 68, 0.12);
+    border: 1px solid rgba(239, 68, 68, 0.35);
+}
+
+[data-theme="light"] .ws-signup-welcome__error {
+    color: #b91c1c;
+    background: #fef2f2;
+}
+
 @media (prefers-reduced-motion: reduce) {
     .ws-signup-welcome__gift-lid {
         animation: none;

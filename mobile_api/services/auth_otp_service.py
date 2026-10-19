@@ -1,7 +1,10 @@
 """لایه نازک OTP برای API موبایل — همان سرویس accounts.services.otp."""
 from __future__ import annotations
 
+import logging
 from typing import Any, Dict, Optional
+
+logger = logging.getLogger(__name__)
 
 from django.conf import settings
 
@@ -231,6 +234,12 @@ def complete_verify_phone(user, code: str) -> User:
     except OtpError as exc:
         raise _map_otp_error(exc) from exc
     user.mark_phone_verified()
+    try:
+        from licenses.services.signup_welcome_gift import offer_signup_welcome_gift
+
+        offer_signup_welcome_gift(user, channel='android_phone_verify')
+    except Exception:
+        logger.exception('signup welcome gift after android phone verify failed')
     return user
 
 

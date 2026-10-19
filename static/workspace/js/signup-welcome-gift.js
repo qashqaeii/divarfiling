@@ -9,6 +9,7 @@
         return;
     }
 
+    const CTA_LABEL = 'بزن بریم، میزکارمو نشون بده!';
     const CONFETTI_COLORS = ['#7c3aed', '#a78bfa', '#fbbf24', '#34d399', '#f472b6'];
 
     function getCsrfToken() {
@@ -72,8 +73,9 @@
                     به مناسبت عضویتت در فایلینگ دیوار، اشتراک حرفه‌ای ${daysFa} روزه بهت هدیه دادیم.
                     ${daysFa} روز فرصت داری امکانات حرفه‌ای رو تجربه کنی — بدون پرداخت و بدون کد تخفیف.
                 </p>
+                <p class="ws-signup-welcome__error" id="wsSignupWelcomeError" hidden role="alert"></p>
                 <button type="button" class="ws-signup-welcome__cta" id="wsSignupWelcomeCta">
-                    بزن بریم، میزکارمو نشون بده!
+                    ${CTA_LABEL}
                 </button>
                 <p class="ws-signup-welcome__fine">هدیه همین الان فعال شده است.</p>
             </div>
@@ -121,15 +123,40 @@
     function boot() {
         const root = buildModal();
         const cta = root.querySelector('#wsSignupWelcomeCta');
+        const errEl = root.querySelector('#wsSignupWelcomeError');
         const backdrop = root.querySelector('[data-swg-backdrop]');
+
+        function showError(message) {
+            if (!errEl) return;
+            errEl.textContent = message;
+            errEl.hidden = false;
+        }
 
         function onContinue() {
             cta.disabled = true;
+            cta.textContent = 'لطفاً صبر کنید…';
+            if (errEl) {
+                errEl.hidden = true;
+                errEl.textContent = '';
+            }
             acknowledge(cfg.startTourAfter)
-                .catch(() => {})
-                .finally(() => {
+                .then((resp) => {
+                    if (!resp.ok) {
+                        throw new Error('http_error');
+                    }
+                    return resp.json();
+                })
+                .then((data) => {
+                    if (!data || !data.ok) {
+                        throw new Error('ack_failed');
+                    }
                     closeModal(root);
                     startTourIfNeeded();
+                })
+                .catch(() => {
+                    cta.disabled = false;
+                    cta.textContent = CTA_LABEL;
+                    showError('ثبت مشاهده انجام نشد. اتصال را بررسی کنید و دوباره تلاش کنید.');
                 });
         }
 

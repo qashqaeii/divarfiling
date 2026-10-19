@@ -30,32 +30,38 @@ def campaign_key() -> str:
     )
 
 
-def _parse_start_at() -> Optional[datetime]:
+def _configured_start_at() -> tuple[Optional[datetime], str]:
+    """
+    تاریخ شروع کمپین — fail-closed: خالی یا نامعتبر یعنی صدور هدیه مجاز نیست.
+    خروجی: (datetime یا None، کد خطا)
+    """
     raw = (getattr(settings, 'SIGNUP_WELCOME_GIFT_START_AT', None) or '').strip()
     if not raw:
-        return None
+        return None, 'start_at_not_configured'
     parsed = parse_datetime(raw)
     if parsed is None:
-        logger.warning('signup_welcome_gift: invalid SIGNUP_WELCOME_GIFT_START_AT=%s', raw)
-        return None
+        logger.error(
+            'signup_welcome_gift: invalid SIGNUP_WELCOME_GIFT_START_AT=%r — grants blocked',
+            raw,
+        )
+        return None, 'start_at_invalid'
     if timezone.is_naive(parsed):
         parsed = timezone.make_aware(parsed, timezone.get_current_timezone())
-    return parsed
+    return parsed, ''
 
 
 def is_feature_enabled() -> bool:
     if not getattr(settings, 'SIGNUP_WELCOME_GIFT_ENABLED', False):
         return False
-    start_at = _parse_start_at()
-    if start_at and timezone.now() < start_at:
+    start_at, err = _configured_start_at()
+    if err:
+        return False
+    if timezone.now() < start_at:
         return False
     return True
 
 
-def _user_joined_after_campaign_start(user) -> bool:
-    start_at = _parse_start_at()
-    if not start_at:
-        return True
+def _user_joined_after_campaign_start(user, start_at: datetime) -> bool:
     joined = getattr(user, 'date_joined', None)
     if not joined:
         return False
@@ -65,11 +71,17 @@ def _user_joined_after_campaign_start(user) -> bool:
 
 
 def user_may_receive_signup_gift(user) -> tuple[bool, str]:
-    if not is_feature_enabled():
+    if not getattr(settings, 'SIGNUP_WELCOME_GIFT_ENABLED', False):
         return False, 'feature_disabled'
+    start_at, err = _configured_start_at()
+    if err:
+        logger.error('signup_welcome_gift: grant blocked (%s)', err)
+        return False, err
+    if timezone.now() < start_at:
+        return False, 'campaign_not_started'
     if not user or not getattr(user, 'is_active', False):
         return False, 'inactive_user'
-    if not _user_joined_after_campaign_start(user):
+    if not _user_joined_after_campaign_start(user, start_at):
         return False, 'user_before_campaign_start'
     if not getattr(user, 'phone_verified', False):
         return False, 'phone_not_verified'
@@ -112,6 +124,13 @@ def offer_signup_welcome_gift(user, *, channel: str = 'unknown') -> str:
             skip_sms=True,
         )
     except Exception as exc:
+        concurrent = LicenseCampaignGrant.objects.filter(
+            user=user,
+            campaign_key=campaign_key(),
+            status=LicenseCampaignGrant.Status.GRANTED,
+        ).exclude(license__isnull=True).first()
+        if concurrent and concurrent.license_id:
+            return 'already_granted'
         logger.exception('signup_welcome_gift: grant failed user_id=%s', user.pk)
         _record_failed_grant(user, channel=channel, error=str(exc))
         return 'failed'
@@ -132,6 +151,16 @@ def offer_signup_welcome_gift(user, *, channel: str = 'unknown') -> str:
 
 def _record_failed_grant(user, *, channel: str, error: str) -> None:
     try:
+        existing = LicenseCampaignGrant.objects.filter(
+            user=user,
+            campaign_key=campaign_key(),
+        ).first()
+        if (
+            existing
+            and existing.status == LicenseCampaignGrant.Status.GRANTED
+            and existing.license_id
+        ):
+            return
         LicenseCampaignGrant.objects.update_or_create(
             user=user,
             campaign_key=campaign_key(),

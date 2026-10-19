@@ -73,12 +73,17 @@ def _strip_citations(text: str) -> str:
 def format_public_fallback(chunks: list[RetrievedChunk]) -> str:
     if not chunks:
         return _INSUFFICIENT_INFO
-    ch = chunks[0]
-    body = (ch.body or '').strip()
-    if contains_internal_leak(body):
+    parts: list[str] = []
+    for ch in chunks[:2]:
+        body = (ch.body or '').strip()
+        if not body or contains_internal_leak(body):
+            continue
+        heading = f' — {ch.heading}' if ch.heading else ''
+        parts.append(f'**{ch.title}{heading}**\n\n{body}')
+    if not parts:
         return _INSUFFICIENT_INFO
-    text = f'**{ch.title}**\n\n{body}'
-    note = (ch.subscription_note or '').strip()
+    text = '\n\n'.join(parts)
+    note = (chunks[0].subscription_note or '').strip()
     if note and not contains_internal_leak(note):
         text += f'\n\nنکته: {note}'
     return text

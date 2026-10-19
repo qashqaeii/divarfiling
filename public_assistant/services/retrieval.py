@@ -84,6 +84,22 @@ def _intent_boost(query_norm: str, article_id: str) -> float:
         w in query_norm for w in ('چیست', 'چیه', 'معرفی', 'مناسب', 'مشاور')
     ):
         boost += 3.0
+    if article_id == 'extractor-overview' and any(
+        w in query_norm for w in ('استخراج', 'چطور', 'چگونه', 'ربات', 'اسکرپ', 'کشیدن')
+    ):
+        boost += 3.5
+    if article_id == 'extractor-to-filing' and any(
+        w in query_norm for w in ('استخراج', 'چطور', 'چگونه', 'میزکار', 'همگام')
+    ):
+        boost += 2.0
+    if article_id == 'intro-what-is-divar-filing' and any(
+        w in query_norm for w in ('امکانات', 'قابلیت', 'چه دارد', 'چی دارد', 'امکان')
+    ):
+        boost += 4.5
+    if article_id == 'intro-crm-filing-extractor' and 'crm' in query_norm and any(
+        w in query_norm for w in ('کمک', 'فایده', 'چرا', 'مشاور', 'چه میکند', 'چه می')
+    ):
+        boost += 4.5
     if article_id == 'extractor-overview' and any(w in query_norm for w in ('شماره', 'تماس', 'تلفن')):
         boost += 4.5
     if article_id == 'filing-detail-map' and 'نقشه' in query_norm:

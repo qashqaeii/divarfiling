@@ -2,6 +2,8 @@
 
 EVAL_QUESTIONS: list[tuple[str, str]] = [
     ('فایلینگ دیوار چیست', 'intro-what-is-divar-filing'),
+    ('فایلینگ دیوار چه امکاناتی دارد', 'intro-what-is-divar-filing'),
+    ('crm چه کمکی به مشاور دارد', 'intro-crm-filing-extractor'),
     ('برای مشاور املاک چه کمکی میکنه', 'intro-what-is-divar-filing'),
     ('تفاوت crm و فایلینگ', 'intro-crm-filing-extractor'),
     ('استخراج با crm چه فرقی داره', 'intro-crm-filing-extractor'),

@@ -185,13 +185,14 @@ def _record_failed_grant(user, *, channel: str, error: str) -> None:
             grant.save(update_fields=['status', 'error_message', 'metadata', 'updated_at'])
             return
         try:
-            LicenseCampaignGrant.objects.create(
-                user=user,
-                campaign_key=key,
-                status=LicenseCampaignGrant.Status.FAILED,
-                error_message=err_text,
-                metadata=meta,
-            )
+            with transaction.atomic():
+                LicenseCampaignGrant.objects.create(
+                    user=user,
+                    campaign_key=key,
+                    status=LicenseCampaignGrant.Status.FAILED,
+                    error_message=err_text,
+                    metadata=meta,
+                )
         except IntegrityError:
             grant = LicenseCampaignGrant.objects.select_for_update().get(
                 user=user,

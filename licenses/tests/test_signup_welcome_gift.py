@@ -3,6 +3,7 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
+from django.db import IntegrityError
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
@@ -111,6 +112,37 @@ class SignupWelcomeGiftGrantTests(TestCase):
         from licenses.services.signup_welcome_gift import _record_failed_grant
 
         _record_failed_grant(self.user, channel='race', error='simulated')
+        grant = LicenseCampaignGrant.objects.get(user=self.user, campaign_key=campaign_key())
+        self.assertEqual(grant.status, LicenseCampaignGrant.Status.GRANTED)
+        self.assertIsNotNone(grant.license_id)
+
+    def test_failed_record_integrity_error_preserves_successful_grant(self):
+        """create داخل savepoint — پس از IntegrityError تراکنش سالم می‌ماند."""
+        offer_signup_welcome_gift(self.user, channel='test')
+        from licenses.services.signup_welcome_gift import _record_failed_grant
+
+        real_filter = LicenseCampaignGrant.objects.filter
+        hide_first_lookup = {'done': False}
+
+        def filter_side_effect(*args, **kwargs):
+            qs = real_filter(*args, **kwargs)
+            if (
+                not hide_first_lookup['done']
+                and kwargs.get('user') == self.user
+                and kwargs.get('campaign_key') == campaign_key()
+            ):
+                hide_first_lookup['done'] = True
+                return qs.none()
+            return qs
+
+        with patch.object(LicenseCampaignGrant.objects, 'filter', side_effect=filter_side_effect):
+            with patch.object(
+                LicenseCampaignGrant.objects,
+                'create',
+                side_effect=IntegrityError('duplicate key'),
+            ):
+                _record_failed_grant(self.user, channel='race', error='simulated')
+
         grant = LicenseCampaignGrant.objects.get(user=self.user, campaign_key=campaign_key())
         self.assertEqual(grant.status, LicenseCampaignGrant.Status.GRANTED)
         self.assertIsNotNone(grant.license_id)

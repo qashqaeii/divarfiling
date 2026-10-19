@@ -86,6 +86,13 @@ class AcademySeedTests(TestCase):
             props_banner['video'].file_name,
             'Personal-Files-and-Sharing-with-Customers-via-Link.mp4',
         )
+        datasets_banner = get_contextual_banner(user, 'datasets_empty')
+        self.assertIsNotNone(datasets_banner)
+        self.assertEqual(datasets_banner['video'].slug, 'academy-extract-divar-listings')
+        self.assertEqual(
+            datasets_banner['video'].file_name,
+            'Extracting-Divar-Listings-in-Less-Than-Two-Minutes.mp4',
+        )
 
 
 class AcademyPageTests(TestCase):

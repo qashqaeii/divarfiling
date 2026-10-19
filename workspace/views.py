@@ -287,6 +287,9 @@ def _dataset_list_context(request, extra=None):
     }
     if extra:
         ctx.update(extra)
+    from workspace.academy.context_helpers import inject_datasets_empty_banner
+
+    inject_datasets_empty_banner(ctx, request.user)
     return ctx
 
 
@@ -326,9 +329,9 @@ class DatasetListView(LicenseRequiredMixin, ListView):
             'page_query': _dataset_page_query(self.request),
             'filing_video': get_filing_video_context(),
         })
-        if ctx['stats'].get('files', 0) == 0:
-            from workspace.academy.context_helpers import inject_academy_context
-            inject_academy_context(ctx, self.request.user, 'datasets_empty')
+        from workspace.academy.context_helpers import inject_datasets_empty_banner
+
+        inject_datasets_empty_banner(ctx, self.request.user)
         return ctx
 
 

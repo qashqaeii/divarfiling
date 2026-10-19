@@ -305,8 +305,8 @@ CONTEXTUAL_BANNERS = {
     },
     'datasets_empty': {
         'video_slug': 'academy-extract-divar-listings',
-        'title': 'اولین استخراج را شروع کنید',
-        'message': 'آموزش استخراج سریع آگهی‌های دیوار',
+        'title': 'اولین پوشه استخراج',
+        'message': 'استخراج آگهی‌های دیوار در کمتر از دو دقیقه — گام‌به‌گام',
     },
     'properties_empty': {
         'video_slug': 'academy-personal-files-and-sharing-with-customers',

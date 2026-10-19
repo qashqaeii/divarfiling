@@ -26,7 +26,7 @@ from workspace.services.divar_session.runtime import DivarUserRuntime
 
 logger = logging.getLogger(__name__)
 
-OTP_TTL_SECONDS = 300
+OTP_TTL_SECONDS = 120
 OTP_RATE_LIMIT_SECONDS = 60
 FETCH_RATE_LIMIT_SECONDS = 8
 PD_CONSENT_VERSION = '1'
@@ -242,7 +242,7 @@ def send_divar_otp(user, phone: str) -> dict[str, Any]:
             row.auth_status = DivarAccountSession.AuthStatus.PENDING_OTP
             row.save(update_fields=['auth_status', 'updated_at'])
 
-    return {'ok': True, 'phone': normalized}
+    return {'ok': True, 'phone': normalized, 'otp_ttl_seconds': OTP_TTL_SECONDS}
 
 
 def verify_divar_otp(user, phone: str, otp: str) -> dict[str, Any]:

@@ -1025,11 +1025,25 @@
                 </button>
             </div>
             <div data-divar-step="otp" hidden>
-                <label class="mk-owner-box__label" for="divar-connect-otp">کد پیامک‌شده</label>
+                <div class="ws-divar-otp-label-row">
+                    <label class="mk-owner-box__label" for="divar-connect-otp">کد پیامک‌شده</label>
+                    <span class="ws-divar-otp-timer" data-divar-otp-timer hidden aria-live="polite"
+                          title="مهلت ورود کد تأیید">
+                        <i class="fas fa-clock" aria-hidden="true"></i>
+                        <span data-divar-otp-timer-text dir="ltr">۰۲:۰۰</span>
+                    </span>
+                </div>
+                <p class="ws-divar-otp-timer-hint">کد را تا <strong>۲ دقیقه</strong> وارد کنید.</p>
                 <input type="text" id="divar-connect-otp" class="ws-input" dir="ltr" inputmode="numeric"
                        data-divar-otp maxlength="6" autocomplete="one-time-code">
+                <p class="ws-divar-otp-expired-hint" data-divar-otp-expired hidden role="status">
+                    مهلت ورود کد تمام شد. برای دریافت کد جدید، «ارسال مجدد کد» را بزنید.
+                </p>
                 <button type="button" class="ws-btn ws-btn-primary ws-btn-block ws-divar-modal-btn" data-divar-verify-otp style="margin-top:0.75rem">
                     تأیید و اتصال
+                </button>
+                <button type="button" class="ws-btn ws-btn-ghost ws-btn-block ws-divar-otp-resend" data-divar-otp-resend hidden>
+                    ارسال مجدد کد
                 </button>
             </div>
         </div>
@@ -1042,7 +1056,7 @@
 <script src="{% static 'workspace/js/listing-edit.js' %}?v=7"></script>
 <script src="{% static 'workspace/js/filing-help-modal.js' %}?v=2"></script>
 {% if divar_contact_enabled %}
-<script src="{% static 'workspace/js/divar_contact.js' %}?v=5"></script>
+<script src="{% static 'workspace/js/divar_contact.js' %}?v=6"></script>
 {% endif %}
 <script>
 document.addEventListener('DOMContentLoaded', function () {

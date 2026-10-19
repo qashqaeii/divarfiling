@@ -126,7 +126,8 @@ class DivarSessionServiceTests(TestCase):
             auth_status=DivarAccountSession.AuthStatus.CONNECTED,
             encrypted_session=encrypted,
         )
-        send_divar_otp(self.user, '09121234567')
+        result = send_divar_otp(self.user, '09121234567')
+        self.assertEqual(result.get('otp_ttl_seconds'), 120)
         row = DivarAccountSession.objects.get(user=self.user, divar_phone='09121234567')
         self.assertEqual(row.encrypted_session, encrypted)
         self.assertEqual(get_primary_session(self.user).auth_status, DivarAccountSession.AuthStatus.CONNECTED)

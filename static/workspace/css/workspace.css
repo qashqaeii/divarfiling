@@ -2405,6 +2405,62 @@ body.ws-lightbox-open { overflow: hidden; }
 .ws-divar-modal-btn__ico {
     font-size: .9em;
 }
+.ws-divar-otp-label-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .5rem;
+    margin-bottom: .15rem;
+}
+.ws-divar-otp-label-row .mk-owner-box__label {
+    margin: 0;
+}
+.ws-divar-otp-timer {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    flex-shrink: 0;
+    padding: .18rem .55rem;
+    border-radius: 999px;
+    font-size: .72rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    color: var(--ws-text-secondary);
+    background: rgba(99, 102, 241, 0.08);
+    border: 1px solid rgba(99, 102, 241, 0.18);
+}
+.ws-divar-otp-timer i {
+    font-size: .68rem;
+    opacity: .85;
+}
+.ws-divar-otp-timer.is-warning {
+    color: #b45309;
+    background: rgba(245, 158, 11, 0.1);
+    border-color: rgba(245, 158, 11, 0.28);
+}
+.ws-divar-otp-timer.is-expired {
+    color: #b91c1c;
+    background: rgba(239, 68, 68, 0.08);
+    border-color: rgba(239, 68, 68, 0.22);
+}
+.ws-divar-otp-timer-hint {
+    margin: 0 0 .5rem;
+    font-size: .72rem;
+    color: var(--ws-text-muted);
+}
+.ws-divar-otp-timer-hint strong {
+    font-weight: 600;
+    color: var(--ws-text-secondary);
+}
+.ws-divar-otp-expired-hint {
+    margin: .45rem 0 0;
+    font-size: .72rem;
+    line-height: 1.45;
+    color: #b91c1c;
+}
+.ws-divar-otp-resend {
+    margin-top: .5rem;
+}
 @media (max-width: 380px) {
     .mk-owner-divar-fetch__label { max-width: 5.2rem; }
     .mk-owner-divar-status__chip-text { max-width: 4.8rem; }

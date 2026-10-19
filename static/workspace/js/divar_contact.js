@@ -6,6 +6,96 @@
     return el ? el.value : '';
   }
 
+  var DIVAR_OTP_TTL_SECONDS = 120;
+
+  function toFaDigits(str) {
+    var fa = '۰۱۲۳۴۵۶۷۸۹';
+    return String(str).replace(/\d/g, function (d) {
+      return fa[Number(d)];
+    });
+  }
+
+  function bindDivarOtpTimer(modal) {
+    if (!modal) return null;
+    if (modal._divarOtpTimerApi) return modal._divarOtpTimerApi;
+
+    var intervalId = null;
+
+    function queryTimerEls() {
+      return {
+        wrap: modal.querySelector('[data-divar-otp-timer]'),
+        text: modal.querySelector('[data-divar-otp-timer-text]'),
+        expired: modal.querySelector('[data-divar-otp-expired]'),
+        resend: modal.querySelector('[data-divar-otp-resend]'),
+        verify: modal.querySelector('[data-divar-verify-otp]'),
+        otpInput: modal.querySelector('[data-divar-otp]'),
+      };
+    }
+
+    function clear() {
+      if (intervalId) {
+        clearInterval(intervalId);
+        intervalId = null;
+      }
+      var e = queryTimerEls();
+      if (e.wrap) {
+        e.wrap.hidden = true;
+        e.wrap.classList.remove('is-warning', 'is-expired');
+      }
+      if (e.expired) e.expired.hidden = true;
+      if (e.resend) e.resend.hidden = true;
+      modal.dataset.divarOtpExpired = '0';
+    }
+
+    function start(seconds) {
+      clear();
+      var total = Number(seconds) || DIVAR_OTP_TTL_SECONDS;
+      var deadline = Date.now() + total * 1000;
+      var e = queryTimerEls();
+      if (e.wrap) e.wrap.hidden = false;
+      modal.dataset.divarOtpExpired = '0';
+
+      function tick() {
+        var left = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
+        var mins = Math.floor(left / 60);
+        var secs = left % 60;
+        var clock =
+          (mins < 10 ? '0' : '') + mins + ':' + (secs < 10 ? '0' : '') + secs;
+        if (e.text) e.text.textContent = toFaDigits(clock);
+        if (e.wrap) {
+          e.wrap.classList.toggle('is-warning', left > 0 && left <= 30);
+          e.wrap.classList.toggle('is-expired', left === 0);
+        }
+        var expired = left === 0;
+        modal.dataset.divarOtpExpired = expired ? '1' : '0';
+        if (e.verify && !e.verify.classList.contains('is-loading')) {
+          e.verify.disabled = expired;
+        }
+        if (expired) {
+          if (intervalId) {
+            clearInterval(intervalId);
+            intervalId = null;
+          }
+          if (e.expired) e.expired.hidden = false;
+          if (e.resend) e.resend.hidden = false;
+        }
+      }
+
+      tick();
+      intervalId = setInterval(tick, 1000);
+      if (e.otpInput) {
+        try {
+          e.otpInput.focus();
+        } catch (ignoreErr) {
+          /* noop */
+        }
+      }
+    }
+
+    modal._divarOtpTimerApi = { clear: clear, start: start };
+    return modal._divarOtpTimerApi;
+  }
+
   function setModalSubmitBusy(button, busy, loadingLabel) {
     if (!button) return;
     if (!button.dataset.idleLabel) {
@@ -76,6 +166,7 @@
     var ownerPhone = document.getElementById(root.dataset.ownerPhoneId || '');
     var ownerName = document.getElementById(root.dataset.ownerNameId || '');
     var pendingPhone = '';
+    var otpTimer = modal ? bindDivarOtpTimer(modal) : null;
 
     function setError(msg) {
       if (!errEl) return;
@@ -164,6 +255,7 @@
       var verifyBtnReset = modal.querySelector('[data-divar-verify-otp]');
       setModalSubmitBusy(sendBtnReset, false);
       setModalSubmitBusy(verifyBtnReset, false);
+      if (otpTimer) otpTimer.clear();
       if (window.WSModal && typeof window.WSModal.open === 'function') {
         window.WSModal.open(modal.id || 'divar-connect-modal');
       } else {
@@ -203,16 +295,35 @@
             pendingPhone = res.data.phone || (phoneInput ? phoneInput.value : '');
             if (phoneStep) phoneStep.hidden = true;
             if (otpStep) otpStep.hidden = false;
+            if (otpTimer) {
+              otpTimer.start(res.data.otp_ttl_seconds || DIVAR_OTP_TTL_SECONDS);
+            }
           }).catch(function () {
             setModalSubmitBusy(sendBtn, false);
             setError('خطا در ارتباط با سرور. دوباره تلاش کنید.');
           });
         });
       }
+      var resendBtn = modal.querySelector('[data-divar-otp-resend]');
+      if (resendBtn) {
+        resendBtn.addEventListener('click', function () {
+          if (otpTimer) otpTimer.clear();
+          setError('');
+          if (phoneStep) phoneStep.hidden = false;
+          if (otpStep) otpStep.hidden = true;
+          if (otpInput) otpInput.value = '';
+          var verifyBtnReset = modal.querySelector('[data-divar-verify-otp]');
+          setModalSubmitBusy(verifyBtnReset, false);
+        });
+      }
       var verifyBtn = modal.querySelector('[data-divar-verify-otp]');
       if (verifyBtn) {
         verifyBtn.addEventListener('click', function () {
           if (verifyBtn.disabled) return;
+          if (modal.dataset.divarOtpExpired === '1') {
+            setError('مهلت ورود کد تمام شده. «ارسال مجدد کد» را بزنید.');
+            return;
+          }
           setError('');
           setModalSubmitBusy(verifyBtn, true, 'در حال تأیید…');
           postJson(verifyUrl, {

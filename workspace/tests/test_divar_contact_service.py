@@ -79,6 +79,7 @@ class DivarSessionServiceTests(TestCase):
         )
         status = public_session_status(self.user)
         self.assertEqual(status['button_state'], 'reconnect')
+        self.assertFalse(status['has_session'])
 
     @patch('workspace.services.divar_session.service._try_refresh_session_row', return_value=False)
     def test_token_expiry_marks_reconnect_when_refresh_fails(self, _mock_refresh):
@@ -91,6 +92,7 @@ class DivarSessionServiceTests(TestCase):
         )
         status = public_session_status(self.user)
         self.assertEqual(status['button_state'], 'reconnect')
+        self.assertFalse(status['has_session'])
 
     @patch('workspace.services.divar_session.service._try_refresh_session_row', return_value=True)
     def test_token_expiry_refresh_keeps_fetch(self, _mock_refresh):

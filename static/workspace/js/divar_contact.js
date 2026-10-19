@@ -195,10 +195,7 @@
 
     function sessionConnected(st) {
       if (!st) return false;
-      if (st.has_session) return true;
-      if (st.divar_phone_masked) return true;
-      var bs = st.button_state || '';
-      return bs === 'fetch' || bs === 'captcha';
+      return st.has_session === true;
     }
 
     function updateConnectionBadge(st) {

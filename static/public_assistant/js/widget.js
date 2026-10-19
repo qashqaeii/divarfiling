@@ -18,13 +18,39 @@
       .replace(/"/g, '&quot;');
   }
 
+  var PA_ALLOWED_HOSTS = ['divarfiling.ir', 'www.divarfiling.ir'];
+
+  function isAllowedPublicLink(url) {
+    if (!url) return false;
+    url = String(url).trim();
+    if (/[\n\r\0<>"]/.test(url)) return false;
+    if (url.charAt(0) === '/') {
+      return url.indexOf('//') !== 0 && url.split('?')[0].indexOf('..') === -1;
+    }
+    try {
+      var parsed = new URL(url, window.location.origin);
+      if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return false;
+      if (parsed.username || parsed.password) return false;
+      var host = parsed.hostname.toLowerCase();
+      if (PA_ALLOWED_HOSTS.indexOf(host) !== -1) return true;
+      var pageHost = (window.location.hostname || '').toLowerCase();
+      if (pageHost === 'localhost' || pageHost === '127.0.0.1') {
+        return host === 'localhost' || host === '127.0.0.1';
+      }
+      return false;
+    } catch (e) {
+      return false;
+    }
+  }
+
   function renderMarkdownLite(text) {
     var safe = escapeHtml(text || '');
     safe = safe.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
     safe = safe.replace(/_(.+?)_/g, '<em>$1</em>');
     safe = safe.replace(/\[([^\]]+)\]\(([^)]+)\)/g, function (_, label, url) {
-      if (!/^https?:\/\//i.test(url) && !url.startsWith('/')) return label;
-      return '<a href="' + escapeHtml(url) + '" rel="noopener noreferrer" target="_blank">' + label + '</a>';
+      if (!isAllowedPublicLink(url)) return escapeHtml(label);
+      var href = escapeHtml(url);
+      return '<a href="' + href + '" rel="noopener noreferrer" target="_blank">' + escapeHtml(label) + '</a>';
     });
     return safe;
   }

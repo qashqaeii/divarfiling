@@ -71,7 +71,11 @@ def chat_view(request):
     if len(message) > MAX_USER_MESSAGE_LENGTH:
         return JsonResponse({'ok': False, 'error': 'پیام بیش از حد طولانی است.'}, status=400)
 
-    session, _created = session_from_cookie(request)
+    try:
+        session, _created = session_from_cookie(request)
+    except RateLimitExceeded:
+        return _rate_limit_response()
+
     norm = normalize_persian(message)
 
     try:
@@ -96,7 +100,10 @@ def feedback_view(request):
     except InvalidRequestBody:
         return JsonResponse({'ok': False, 'error': 'درخواست نامعتبر.'}, status=400)
 
-    session, _ = session_from_cookie(request)
+    try:
+        session, _ = session_from_cookie(request)
+    except RateLimitExceeded:
+        return _rate_limit_response()
 
     try:
         check_feedback_rate_limit(request, str(session.id))

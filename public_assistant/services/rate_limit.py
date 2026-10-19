@@ -16,11 +16,22 @@ def _trusted_proxy_ips() -> frozenset[str]:
     return frozenset(str(x).strip() for x in raw if str(x).strip())
 
 
+def _ip_from_x_forwarded_for(header: str) -> str:
+    """
+    آخرین IP در زنجیره X-Forwarded-For — با proxy_add_x_forwarded_for در Nginx
+    مقدار تزریقی کلاینت در ابتدای هدر می‌آید و IP واقعی در انتها append می‌شود.
+    """
+    parts = [p.strip() for p in (header or '').split(',') if p.strip()]
+    if not parts:
+        return ''
+    return parts[-1]
+
+
 def client_ip(request) -> str:
-    """IP بازدیدکننده — X-Forwarded-For فقط پشت پراکسی معتبر."""
+    """IP بازدیدکننده — X-Forwarded-For فقط وقتی REMOTE_ADDR پراکسی معتبر است."""
     remote = (request.META.get('REMOTE_ADDR') or '').strip()
     if remote in _trusted_proxy_ips():
-        forwarded = (request.META.get('HTTP_X_FORWARDED_FOR') or '').split(',')[0].strip()
+        forwarded = _ip_from_x_forwarded_for(request.META.get('HTTP_X_FORWARDED_FOR') or '')
         if forwarded:
             return forwarded
     return remote

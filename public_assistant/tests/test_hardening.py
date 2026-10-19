@@ -7,7 +7,9 @@ from django.test import Client, TestCase, override_settings
 
 from public_assistant.models import KnowledgeArticle, PublicChatSession
 from public_assistant.services.chat import answer_question
+from public_assistant.services.rate_limit import client_ip
 from public_assistant.services.security import is_allowed_public_link
+from django.test import RequestFactory
 from public_assistant.tests.eval_dataset import EVAL_QUESTIONS
 
 
@@ -53,6 +55,56 @@ class SessionSecurityTest(TestCase):
         )
         self.assertEqual(r.status_code, 200)
         self.assertEqual(r.json().get('session_id'), str(own.id))
+
+
+@override_settings(
+    PUBLIC_ASSISTANT_ENABLED=True,
+    PUBLIC_ASSISTANT_SESSION_CREATE_LIMIT_PER_HOUR=1,
+)
+class SessionCreateRateLimitTest(TestCase):
+    def setUp(self):
+        from django.core.cache import cache
+
+        cache.clear()
+        call_command('sync_public_knowledge')
+        self.client = Client(enforce_csrf_checks=True)
+
+    def _post_chat_no_session_cookie(self):
+        self.client.cookies.pop('pa_session', None)
+        self.client.get('/api/public-assistant/config/')
+        csrf = self.client.cookies.get('csrftoken').value
+        return self.client.post(
+            '/api/public-assistant/chat/',
+            data=json.dumps({'message': 'سلام'}),
+            content_type='application/json',
+            HTTP_X_CSRFTOKEN=csrf,
+        )
+
+    def test_chat_without_cookie_429_after_session_create_quota(self):
+        first = self._post_chat_no_session_cookie()
+        self.assertEqual(first.status_code, 200)
+        second = self._post_chat_no_session_cookie()
+        self.assertEqual(second.status_code, 429)
+        self.assertFalse(second.json().get('ok'))
+
+
+@override_settings(PUBLIC_ASSISTANT_TRUSTED_PROXY_IPS=['127.0.0.1'])
+class ClientIpTrustTest(TestCase):
+    def test_uses_last_x_forwarded_for_behind_trusted_proxy(self):
+        req = RequestFactory().get(
+            '/',
+            REMOTE_ADDR='127.0.0.1',
+            HTTP_X_FORWARDED_FOR='203.0.113.50, 198.51.100.99',
+        )
+        self.assertEqual(client_ip(req), '198.51.100.99')
+
+    def test_ignores_x_forwarded_for_without_trusted_proxy(self):
+        req = RequestFactory().get(
+            '/',
+            REMOTE_ADDR='203.0.113.50',
+            HTTP_X_FORWARDED_FOR='1.2.3.4',
+        )
+        self.assertEqual(client_ip(req), '203.0.113.50')
 
 
 class LinkSecurityTest(TestCase):

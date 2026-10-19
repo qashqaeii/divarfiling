@@ -22,6 +22,7 @@ class FirstVisitHomeChatTest(TestCase):
     def test_first_visit_home_then_chat(self):
         home = self.client.get('/')
         self.assertEqual(home.status_code, 200)
+        self.assertIn('pa-head__badge', home.content.decode('utf-8'))
         csrf = self.client.cookies.get('csrftoken')
         self.assertIsNotNone(csrf, 'صفحه اصلی باید CSRF cookie بدهد')
         r = self.client.post(
@@ -138,14 +139,14 @@ class SyncAbortTest(TestCase):
 
 
 @override_settings(PUBLIC_ASSISTANT_ENABLED=True)
-class EvalRetrieval50Test(TestCase):
+class EvalRetrievalTest(TestCase):
     def setUp(self):
         call_command('sync_public_knowledge')
         from public_assistant.services.retrieval import retrieve
 
         self.retrieve = retrieve
 
-    def test_fifty_question_retrieval(self):
+    def test_eval_question_retrieval(self):
         from public_assistant.services.retrieval import retrieve
 
         misses = []

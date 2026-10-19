@@ -43,16 +43,87 @@
     }
   }
 
-  function renderMarkdownLite(text) {
-    var safe = escapeHtml(text || '');
+  function stripInternalCitations(text) {
+    return String(text || '')
+      .replace(/\s*\[\d+\]/g, '')
+      .replace(/^منابع:\s*$/gm, '')
+      .trim();
+  }
+
+  function renderInline(safe) {
     safe = safe.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
     safe = safe.replace(/_(.+?)_/g, '<em>$1</em>');
     safe = safe.replace(/\[([^\]]+)\]\(([^)]+)\)/g, function (_, label, url) {
       if (!isAllowedPublicLink(url)) return escapeHtml(label);
-      var href = escapeHtml(url);
-      return '<a href="' + href + '" rel="noopener noreferrer" target="_blank">' + escapeHtml(label) + '</a>';
+      return '<a href="' + escapeHtml(url) + '" rel="noopener noreferrer" target="_blank">' + escapeHtml(label) + '</a>';
     });
     return safe;
+  }
+
+  function renderMarkdownLite(text) {
+    var raw = stripInternalCitations(text || '');
+    var lines = raw.split(/\n/);
+    var html = [];
+    var inList = false;
+    var listType = null;
+
+    function closeList() {
+      if (inList) {
+        html.push(listType === 'ol' ? '</ol>' : '</ul>');
+        inList = false;
+        listType = null;
+      }
+    }
+
+    lines.forEach(function (line) {
+      var trimmed = line.trim();
+      if (!trimmed) {
+        closeList();
+        return;
+      }
+      if (/^###\s+/.test(trimmed)) {
+        closeList();
+        html.push('<h3 class="pa-md-h3">' + renderInline(escapeHtml(trimmed.replace(/^###\s+/, ''))) + '</h3>');
+        return;
+      }
+      if (/^##\s+/.test(trimmed)) {
+        closeList();
+        html.push('<h3 class="pa-md-h3">' + renderInline(escapeHtml(trimmed.replace(/^##\s+/, ''))) + '</h3>');
+        return;
+      }
+      if (/^>\s+/.test(trimmed) || /^نکته:/.test(trimmed)) {
+        closeList();
+        var tip = trimmed.replace(/^>\s+/, '').replace(/^نکته:\s*/, 'نکته: ');
+        html.push('<blockquote class="pa-md-tip">' + renderInline(escapeHtml(tip)) + '</blockquote>');
+        return;
+      }
+      var ul = /^[-*•]\s+(.+)$/.exec(trimmed);
+      if (ul) {
+        if (!inList || listType !== 'ul') {
+          closeList();
+          html.push('<ul>');
+          inList = true;
+          listType = 'ul';
+        }
+        html.push('<li>' + renderInline(escapeHtml(ul[1])) + '</li>');
+        return;
+      }
+      var ol = /^\d+[.)]\s+(.+)$/.exec(trimmed);
+      if (ol) {
+        if (!inList || listType !== 'ol') {
+          closeList();
+          html.push('<ol>');
+          inList = true;
+          listType = 'ol';
+        }
+        html.push('<li>' + renderInline(escapeHtml(ol[1])) + '</li>');
+        return;
+      }
+      closeList();
+      html.push('<p>' + renderInline(escapeHtml(trimmed)) + '</p>');
+    });
+    closeList();
+    return html.join('');
   }
 
   var root = document.getElementById('pa-root');
@@ -78,9 +149,20 @@
 
   var configReady = false;
   var welcomeLoaded = false;
+  var lastFailedMessage = '';
 
   function isMobile() {
     return window.matchMedia('(max-width: 640px)').matches;
+  }
+
+  function setSending(on) {
+    if (on) {
+      root.classList.add('is-sending');
+      sendBtn.disabled = true;
+    } else {
+      root.classList.remove('is-sending');
+      sendBtn.disabled = false;
+    }
   }
 
   function setOpen(open) {
@@ -137,31 +219,63 @@
   }
 
   input.addEventListener('input', autoResizeInput);
+  input.addEventListener('keydown', function (ev) {
+    if (ev.key === 'Enter' && !ev.shiftKey) {
+      ev.preventDefault();
+      form.requestSubmit();
+    }
+  });
 
-  function appendMessage(role, html, sources) {
+  function buildSourceChips(sources) {
+    if (!sources || !sources.length) return null;
+    var wrap = document.createElement('div');
+    wrap.className = 'pa-msg__sources';
+    var label = document.createElement('p');
+    label.className = 'pa-msg__sources-label';
+    label.textContent = 'بیشتر بخوانید';
+    wrap.appendChild(label);
+    var chips = document.createElement('div');
+    chips.className = 'pa-msg__source-chips';
+    sources.forEach(function (l) {
+      if (!isAllowedPublicLink(l.url)) return;
+      var a = document.createElement('a');
+      a.className = 'pa-source-chip';
+      a.href = l.url;
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+      a.innerHTML =
+        '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M10 6H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4M14 4h6m0 0v6m0-6L10 14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
+        escapeHtml(l.label || l.url);
+      chips.appendChild(a);
+    });
+    if (!chips.children.length) return null;
+    wrap.appendChild(chips);
+    return wrap;
+  }
+
+  function appendMessage(role, html, options) {
+    options = options || {};
     var div = document.createElement('div');
-    div.className = 'pa-msg pa-msg--' + (role === 'user' ? 'user' : 'bot');
-    div.innerHTML = html;
+    var extra = options.variant ? ' pa-msg--' + options.variant : '';
+    if (options.welcome) extra += ' pa-msg--welcome';
+    div.className = 'pa-msg pa-msg--' + (role === 'user' ? 'user' : 'bot') + extra;
+    var body = document.createElement('div');
+    body.className = 'pa-msg__body';
+    body.innerHTML = role === 'user' ? escapeHtml(html) : html;
+    div.appendChild(body);
+
     if (role === 'bot') {
       var meta = document.createElement('div');
       meta.className = 'pa-msg__meta';
-      if (sources && sources.length) {
-        var src = document.createElement('span');
-        src.className = 'pa-msg__sources';
-        src.innerHTML = sources
-          .map(function (l) {
-            if (!isAllowedPublicLink(l.url)) return '';
-            return '<a href="' + escapeHtml(l.url) + '">' + escapeHtml(l.label || l.url) + '</a>';
-          })
-          .filter(Boolean)
-          .join(' · ');
-        if (src.innerHTML) meta.appendChild(src);
-      }
+      var srcEl = buildSourceChips(options.sources);
+      if (srcEl) meta.appendChild(srcEl);
+
       var actions = document.createElement('span');
       actions.className = 'pa-msg__actions';
       var copy = document.createElement('button');
       copy.type = 'button';
       copy.textContent = 'کپی';
+      copy.setAttribute('aria-label', 'کپی پاسخ');
       copy.addEventListener('click', function () {
         navigator.clipboard.writeText(div.innerText || '');
       });
@@ -182,6 +296,19 @@
       actions.appendChild(down);
       meta.appendChild(actions);
       div.appendChild(meta);
+
+      if (options.retryText) {
+        var retry = document.createElement('button');
+        retry.type = 'button';
+        retry.className = 'pa-msg__retry';
+        retry.textContent = 'تلاش دوباره';
+        retry.addEventListener('click', function () {
+          input.value = options.retryText;
+          autoResizeInput();
+          form.requestSubmit();
+        });
+        body.appendChild(retry);
+      }
     }
     messagesEl.appendChild(div);
     messagesEl.scrollTop = messagesEl.scrollHeight;
@@ -192,7 +319,8 @@
     var el = document.createElement('div');
     el.className = 'pa-msg pa-msg--bot';
     el.id = 'paTyping';
-    el.innerHTML = '<div class="pa-typing"><span></span><span></span><span></span></div>';
+    el.innerHTML =
+      '<div class="pa-typing-wrap"><div class="pa-typing" aria-hidden="true"><span></span><span></span><span></span></div><span>در حال آماده‌سازی پاسخ…</span></div>';
     messagesEl.appendChild(el);
     messagesEl.scrollTop = messagesEl.scrollHeight;
   }
@@ -230,7 +358,7 @@
         configReady = true;
         if (!data.ok) return;
         if (!welcomeLoaded) {
-          appendMessage('bot', renderMarkdownLite(data.welcome || ''));
+          appendMessage('bot', renderMarkdownLite(data.welcome || ''), { welcome: true });
           welcomeLoaded = true;
         }
         suggestionsEl.innerHTML = '';
@@ -238,6 +366,7 @@
           var chip = document.createElement('button');
           chip.type = 'button';
           chip.className = 'pa-chip';
+          chip.setAttribute('role', 'listitem');
           chip.textContent = q;
           chip.addEventListener('click', function () {
             input.value = q;
@@ -276,17 +405,36 @@
       })
       .then(function (res) {
         hideTyping();
-        sendBtn.disabled = false;
-        if (!res.body.ok) {
-          appendMessage('bot', escapeHtml(res.body.error || 'خطا در پاسخ‌دهی.'));
+        setSending(false);
+        if (res.status === 429) {
+          appendMessage('bot', escapeHtml('تعداد درخواست‌ها زیاد است. لطفاً یک یا دو دقیقه صبر کنید و دوباره امتحان کنید.'), {
+            variant: 'limit',
+            retryText: text,
+          });
           return;
         }
-        appendMessage('bot', renderMarkdownLite(res.body.answer || ''), res.body.sources || []);
+        if (!res.body.ok) {
+          appendMessage('bot', escapeHtml(res.body.error || 'خطا در پاسخ‌دهی.'), {
+            variant: 'error',
+            retryText: text,
+          });
+          return;
+        }
+        var variant = res.body.low_confidence ? 'notice' : '';
+        appendMessage('bot', renderMarkdownLite(res.body.answer || ''), {
+          sources: res.body.sources || [],
+          variant: variant,
+        });
+        lastFailedMessage = '';
       })
       .catch(function () {
         hideTyping();
-        sendBtn.disabled = false;
-        appendMessage('bot', 'اتصال برقرار نشد. دوباره تلاش کنید.');
+        setSending(false);
+        lastFailedMessage = text;
+        appendMessage('bot', 'اتصال برقرار نشد. اتصال اینترنت را بررسی کنید.', {
+          variant: 'error',
+          retryText: text,
+        });
       });
   }
 
@@ -295,18 +443,18 @@
     var text = (input.value || '').trim();
     if (!text) return;
     hideSuggestionsAfterChat();
-    appendMessage('user', escapeHtml(text));
+    appendMessage('user', text);
     input.value = '';
     autoResizeInput();
-    sendBtn.disabled = true;
+    setSending(true);
     var run = configReady ? ensureCsrfCookie() : loadConfig().then(ensureCsrfCookie);
     run
       .then(function () {
         sendChat(text);
       })
       .catch(function () {
-        sendBtn.disabled = false;
-        appendMessage('bot', 'خطا در آماده‌سازی امن گفتگو. صفحه را یک‌بار رفرش کنید.');
+        setSending(false);
+        appendMessage('bot', 'خطا در آماده‌سازی امن گفتگو. صفحه را یک‌بار رفرش کنید.', { variant: 'error' });
       });
   });
 

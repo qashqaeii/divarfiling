@@ -1,6 +1,7 @@
 """موتور پاسخ‌گویی RAG دستیار عمومی."""
 from __future__ import annotations
 
+import re
 from typing import Any
 
 from public_assistant.constants import (
@@ -28,8 +29,14 @@ SYSTEM_PROMPT = """تو دستیار رسمی و عمومی «فایلینگ د�
 هرگز قیمت، URL، قابلیت یا دستورالعملی را از خودت نساز.
 به داده‌های خصوصی کاربران، CRM، لایسنس دیگران، API Key و اطلاعات داخلی سرور دسترسی نداری و نباید ادعای دسترسی کنی.
 اگر سؤال خارج از حوزه فایلینگ دیوار است، مودبانه محدودیت خود را بگو.
-پاسخ را فارسی، روان، حرفه‌ای و در صورت نیاز مرحله‌به‌مرحله بنویس.
-در پایان اگر منبع مرتبط داری، با عنوان «منابع:» لیست کن (فقط لینک‌های داده‌شده در منابع)."""
+
+قالب پاسخ (مارک‌داون ساده):
+- یک تیتر کوتاه با **bold** در ابتدا
+- برای مراحل از لیست شماره‌دار 1. 2. 3. استفاده کن
+- برای نکات مهم از «نکته: ...» یا bullet استفاده کن
+- پاسخ عملیاتی و مشخص باشد؛ از کلی‌گویی پرهیز کن
+- هرگز ارجاع عددی مثل [1] یا [2] در متن ننویس؛ لینک در UI جدا نمایش داده می‌شود
+- بخش «منابع:» در متن پاسخ ننویس"""
 
 
 def _is_probably_off_topic(query: str, chunks: list[RetrievedChunk]) -> bool:
@@ -103,6 +110,14 @@ def _collect_sources(chunks: list[RetrievedChunk]) -> list[dict]:
             seen.add(url)
             out.append(link)
     return out[:8]
+
+
+def _clean_answer_text(text: str) -> str:
+    if not text:
+        return text
+    text = re.sub(r'\s*\[\d+\]', '', text)
+    text = re.sub(r'\n+منابع:\s*\n.*', '', text, flags=re.DOTALL)
+    return text.strip()
 
 
 def _fallback_from_chunks(chunks: list[RetrievedChunk]) -> str:
@@ -181,6 +196,8 @@ def answer_question(
     if not text:
         status = PublicAssistantUsageLog.STATUS_FALLBACK
         text = _fallback_from_chunks(chunks)
+    else:
+        text = _clean_answer_text(text)
 
     PublicAssistantUsageLog.objects.create(
         session=session,

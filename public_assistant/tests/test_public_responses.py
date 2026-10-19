@@ -98,3 +98,22 @@ class PublicResponsePolicyTest(TestCase):
         cleaned = polish_public_answer(raw)
         self.assertIn('1.', cleaned)
         self.assertIn('2.', cleaned)
+
+    def test_extractor_overview_kb_no_browser_rate_limit_disclaimer(self):
+        from public_assistant.models import KnowledgeArticle
+
+        art = KnowledgeArticle.objects.get(article_id='extractor-overview')
+        blob = ' '.join(c.search_blob for c in art.chunks.all())
+        self.assertNotIn('استخراج مستقیم از مرورگر', blob)
+        self.assertNotIn('محدودیت نرخ و قوانین دیوار', blob)
+
+    def test_polish_strips_extractor_auto_disclaimer(self):
+        raw = (
+            '**راهنما**\n\nمتن.\n\n'
+            'نکته: استخراج مستقیم از مرورگر معمولاً جایگزین اپ نیست. همچنین، '
+            'محدودیت نرخ و قوانین دیوار ممکن است استخراج را کند یا موقتاً متوقف کند '
+            'و بدون اینترنت نیز همگام‌سازی با میزکار انجام نمی‌شود.'
+        )
+        cleaned = polish_public_answer(raw)
+        self.assertNotIn('استخراج مستقیم از مرورگر', cleaned)
+        self.assertIn('راهنما', cleaned)

@@ -25,6 +25,13 @@ _INTERNAL_LEAK_RE = re.compile(
 _CITATION_RE = re.compile(r'\s*\[\d+\]')
 _SOURCES_TAIL_RE = re.compile(r'\n+منابع:\s*[\s\S]*$', re.IGNORECASE)
 
+# نکتهٔ تجمیعی استخراج که در راهنمای «چطور» نباید به‌صورت خودکار تکرار شود
+_EXTRACTOR_AUTO_DISCLAIMER_RE = re.compile(
+    r'(?:^|\n)\s*(?:>\s*)?[«"]?نکته:\s*استخراج مستقیم از مرورگر[\s\S]*?'
+    r'همگام‌سازی با میزکار انجام نمی‌شود[\.»"]?\s*',
+    re.IGNORECASE,
+)
+
 _INSUFFICIENT_INFO = (
     'برای این مورد اطلاعات تأییدشدهٔ کافی در راهنمای فعلی ندارم. '
     'می‌توانید سؤال را دقیق‌تر بپرسید یا از صفحه تماس (`/contact/`) با پشتیبانی فایلینگ دیوار '
@@ -59,6 +66,7 @@ def contains_internal_leak(text: str) -> bool:
 def _strip_citations(text: str) -> str:
     text = _CITATION_RE.sub('', text or '')
     text = _SOURCES_TAIL_RE.sub('', text)
+    text = _EXTRACTOR_AUTO_DISCLAIMER_RE.sub('\n', text)
     return text.strip()
 
 

@@ -139,6 +139,8 @@ class DivarConnectModalMarkupTests(TestCase):
         self.assertIn('divar_contact.js?v=6', html)
         self.assertIn('ws-divar-modal-btn', html)
         self.assertIn('data-divar-otp-timer', html)
+        self.assertIn('ws-divar-connect-modal', html)
+        self.assertNotIn('کد را تا ۲ دقیقه وارد کنید', html)
         self.assertIn('data-divar-default-phone="09121110099"', html)
         self.assertIn('value="09121110099"', html)
         self.assertNotIn('ws-modal__backdrop', html)

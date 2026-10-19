@@ -999,10 +999,10 @@
 </div>
 
 {% if divar_contact_enabled %}
-<div class="ws-modal" id="divar-connect-modal" role="dialog" aria-modal="true"
+<div class="ws-modal ws-divar-connect-modal" id="divar-connect-modal" role="dialog" aria-modal="true"
      aria-labelledby="divar-connect-title" data-modal-uses-hidden hidden>
     <div class="ws-modal-overlay" data-modal-close tabindex="-1"></div>
-    <div class="ws-modal-panel ws-modal-panel-sm">
+    <div class="ws-modal-panel ws-modal-panel-sm ws-divar-connect-panel">
         <div class="ws-modal-head">
             <div>
                 <h2 class="ws-modal-title" id="divar-connect-title">اتصال به دیوار</h2>
@@ -1016,7 +1016,7 @@
             <p class="ws-form-error" data-divar-error hidden></p>
             <div data-divar-step="phone">
                 <label class="mk-owner-box__label" for="divar-connect-phone">شماره موبایل حساب دیوار</label>
-                <input type="tel" id="divar-connect-phone" class="ws-input" dir="ltr" inputmode="tel"
+                <input type="tel" id="divar-connect-phone" class="ws-input ws-divar-connect-input" dir="ltr" inputmode="tel"
                        data-divar-phone data-divar-default-phone="{{ divar_connect_default_phone|default:'' }}"
                        value="{{ divar_connect_default_phone|default:'' }}"
                        placeholder="0912…" autocomplete="tel">
@@ -1033,8 +1033,7 @@
                         <span data-divar-otp-timer-text dir="ltr">۰۲:۰۰</span>
                     </span>
                 </div>
-                <p class="ws-divar-otp-timer-hint">کد را تا <strong>۲ دقیقه</strong> وارد کنید.</p>
-                <input type="text" id="divar-connect-otp" class="ws-input" dir="ltr" inputmode="numeric"
+                <input type="text" id="divar-connect-otp" class="ws-input ws-divar-connect-input" dir="ltr" inputmode="numeric"
                        data-divar-otp maxlength="6" autocomplete="one-time-code">
                 <p class="ws-divar-otp-expired-hint" data-divar-otp-expired hidden role="status">
                     مهلت ورود کد تمام شد. برای دریافت کد جدید، «ارسال مجدد کد» را بزنید.

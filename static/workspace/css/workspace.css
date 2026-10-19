@@ -2267,7 +2267,13 @@ body.ws-lightbox-open { overflow: hidden; }
     color: var(--ws-text-muted);
     line-height: 1.45;
 }
-/* اتصال دیوار — scoped به باکس مالک */
+/* اتصال دیوار — برند دیوار (#a62626) */
+.mk-owner-box--divar {
+    --ws-divar-brand: #a62626;
+    --ws-divar-brand-hover: #8f2121;
+    --ws-divar-brand-soft: rgba(166, 38, 38, 0.09);
+    --ws-divar-brand-border: rgba(166, 38, 38, 0.22);
+}
 .mk-owner-box--divar .mk-owner-box__submit { margin-top: .65rem; }
 .mk-owner-divar-status {
     display: inline-flex;
@@ -2366,13 +2372,13 @@ body.ws-lightbox-open { overflow: hidden; }
     font-size: .66rem;
     font-weight: 600;
     line-height: 1.25;
-    color: var(--ws-primary);
+    color: var(--ws-divar-brand, #a62626);
     cursor: pointer;
     transition: background .12s, border-color .12s, color .12s, opacity .12s;
 }
 .mk-owner-divar-fetch:hover:not(:disabled) {
-    background: var(--ws-primary-soft, rgba(99, 102, 241, .08));
-    border-color: rgba(99, 102, 241, .18);
+    background: var(--ws-divar-brand-soft, rgba(166, 38, 38, .09));
+    border-color: var(--ws-divar-brand-border, rgba(166, 38, 38, .22));
 }
 .mk-owner-divar-fetch:disabled {
     opacity: .65;
@@ -2425,9 +2431,9 @@ body.ws-lightbox-open { overflow: hidden; }
     font-size: .72rem;
     font-weight: 600;
     font-variant-numeric: tabular-nums;
-    color: var(--ws-text-secondary);
-    background: rgba(99, 102, 241, 0.08);
-    border: 1px solid rgba(99, 102, 241, 0.18);
+    color: #616161;
+    background: #f5f5f5;
+    border: 1px solid #e8e8e8;
 }
 .ws-divar-otp-timer i {
     font-size: .68rem;
@@ -2443,15 +2449,6 @@ body.ws-lightbox-open { overflow: hidden; }
     background: rgba(239, 68, 68, 0.08);
     border-color: rgba(239, 68, 68, 0.22);
 }
-.ws-divar-otp-timer-hint {
-    margin: 0 0 .5rem;
-    font-size: .72rem;
-    color: var(--ws-text-muted);
-}
-.ws-divar-otp-timer-hint strong {
-    font-weight: 600;
-    color: var(--ws-text-secondary);
-}
 .ws-divar-otp-expired-hint {
     margin: .45rem 0 0;
     font-size: .72rem;
@@ -2461,6 +2458,89 @@ body.ws-lightbox-open { overflow: hidden; }
 .ws-divar-otp-resend {
     margin-top: .5rem;
 }
+
+/* مودال اتصال — ظاهر نزدیک به ورود دیوار */
+.ws-divar-connect-modal {
+    --ws-divar-brand: #a62626;
+    --ws-divar-brand-hover: #8f2121;
+    --ws-divar-brand-soft: rgba(166, 38, 38, 0.09);
+    --ws-divar-brand-border: rgba(166, 38, 38, 0.28);
+    --ws-divar-brand-ring: rgba(166, 38, 38, 0.18);
+}
+.ws-divar-connect-modal .ws-divar-connect-panel {
+    border-radius: 12px !important;
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.14) !important;
+    border: 1px solid #ebebeb !important;
+    background: #fff !important;
+}
+.ws-divar-connect-modal .ws-divar-connect-panel::before {
+    height: 3px;
+    background: var(--ws-divar-brand) !important;
+}
+.ws-divar-connect-modal .ws-modal-head {
+    background: #fff !important;
+    border-bottom: 1px solid #f0f0f0 !important;
+    padding: 1rem 1.15rem !important;
+}
+.ws-divar-connect-modal .ws-modal-body {
+    padding: 1rem 1.15rem 1.15rem !important;
+}
+.ws-divar-connect-modal .ws-modal-title {
+    font-weight: 700;
+    color: #222;
+}
+.ws-divar-connect-modal .ws-modal-sub {
+    color: #757575;
+    line-height: 1.5;
+}
+.ws-divar-connect-modal .ws-divar-connect-input:focus {
+    border-color: var(--ws-divar-brand) !important;
+    box-shadow: 0 0 0 2px var(--ws-divar-brand-ring) !important;
+}
+.ws-divar-connect-modal .ws-divar-modal-btn.ws-btn-primary {
+    background: var(--ws-divar-brand) !important;
+    border-color: var(--ws-divar-brand) !important;
+    color: #fff !important;
+    border-radius: 8px;
+    font-weight: 600;
+    min-height: 2.65rem;
+}
+.ws-divar-connect-modal .ws-divar-modal-btn.ws-btn-primary:hover:not(:disabled):not(.is-loading) {
+    background: var(--ws-divar-brand-hover) !important;
+    border-color: var(--ws-divar-brand-hover) !important;
+}
+.ws-divar-connect-modal .ws-divar-modal-btn.ws-btn-primary:disabled {
+    background: #c9c9c9 !important;
+    border-color: #c9c9c9 !important;
+    color: #fff !important;
+    opacity: 1;
+}
+.ws-divar-connect-modal .ws-divar-otp-resend {
+    margin-top: .65rem;
+    padding: .45rem .5rem;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    color: var(--ws-divar-brand) !important;
+    font-weight: 600;
+    font-size: .78rem;
+}
+.ws-divar-connect-modal .ws-divar-otp-resend:hover:not(:disabled) {
+    color: var(--ws-divar-brand-hover) !important;
+    background: var(--ws-divar-brand-soft) !important;
+}
+.ws-divar-connect-modal .ws-divar-otp-label-row {
+    margin-bottom: .4rem;
+}
+.ws-divar-connect-modal .ws-divar-otp-timer.is-warning {
+    color: #9a3412;
+    background: #fff7ed;
+    border-color: #fed7aa;
+}
+.ws-divar-connect-modal .ws-form-error {
+    color: #b91c1c;
+}
+
 @media (max-width: 380px) {
     .mk-owner-divar-fetch__label { max-width: 5.2rem; }
     .mk-owner-divar-status__chip-text { max-width: 4.8rem; }

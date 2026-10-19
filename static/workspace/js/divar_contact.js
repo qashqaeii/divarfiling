@@ -6,6 +6,24 @@
     return el ? el.value : '';
   }
 
+  function setModalSubmitBusy(button, busy, loadingLabel) {
+    if (!button) return;
+    if (!button.dataset.idleLabel) {
+      button.dataset.idleLabel = (button.textContent || '').trim();
+    }
+    var idle = button.dataset.idleLabel;
+    button.disabled = !!busy;
+    button.classList.toggle('is-loading', !!busy);
+    button.setAttribute('aria-busy', busy ? 'true' : 'false');
+    if (busy) {
+      button.innerHTML =
+        '<i class="fas fa-spinner fa-spin ws-divar-modal-btn__ico" aria-hidden="true"></i>' +
+        '<span>' + (loadingLabel || 'لطفاً صبر کنید…') + '</span>';
+    } else {
+      button.textContent = idle;
+    }
+  }
+
   function postJson(url, body) {
     return fetch(url, {
       method: 'POST',
@@ -142,6 +160,10 @@
       if (otpStep) otpStep.hidden = true;
       if (phoneInput) phoneInput.value = defaultDivarPhone();
       if (otpInput) otpInput.value = '';
+      var sendBtnReset = modal.querySelector('[data-divar-send-otp]');
+      var verifyBtnReset = modal.querySelector('[data-divar-verify-otp]');
+      setModalSubmitBusy(sendBtnReset, false);
+      setModalSubmitBusy(verifyBtnReset, false);
       if (window.WSModal && typeof window.WSModal.open === 'function') {
         window.WSModal.open(modal.id || 'divar-connect-modal');
       } else {
@@ -164,12 +186,16 @@
       }
     }
 
-    if (modal) {
+    if (modal && modal.dataset.divarOtpHandlersBound !== '1') {
+      modal.dataset.divarOtpHandlersBound = '1';
       var sendBtn = modal.querySelector('[data-divar-send-otp]');
       if (sendBtn) {
         sendBtn.addEventListener('click', function () {
+          if (sendBtn.disabled) return;
           setError('');
+          setModalSubmitBusy(sendBtn, true, 'در حال ارسال…');
           postJson(sendUrl, { phone: phoneInput ? phoneInput.value : '' }).then(function (res) {
+            setModalSubmitBusy(sendBtn, false);
             if (!res.data.ok) {
               setError(res.data.error || 'ارسال کد ناموفق بود');
               return;
@@ -177,23 +203,32 @@
             pendingPhone = res.data.phone || (phoneInput ? phoneInput.value : '');
             if (phoneStep) phoneStep.hidden = true;
             if (otpStep) otpStep.hidden = false;
+          }).catch(function () {
+            setModalSubmitBusy(sendBtn, false);
+            setError('خطا در ارتباط با سرور. دوباره تلاش کنید.');
           });
         });
       }
       var verifyBtn = modal.querySelector('[data-divar-verify-otp]');
       if (verifyBtn) {
         verifyBtn.addEventListener('click', function () {
+          if (verifyBtn.disabled) return;
           setError('');
+          setModalSubmitBusy(verifyBtn, true, 'در حال تأیید…');
           postJson(verifyUrl, {
             phone: pendingPhone,
             otp: otpInput ? otpInput.value : '',
           }).then(function (res) {
+            setModalSubmitBusy(verifyBtn, false);
             if (!res.data.ok) {
               setError(res.data.error || 'تأیید ناموفق بود');
               return;
             }
             closeModal();
             applyStatus(res.data.status);
+          }).catch(function () {
+            setModalSubmitBusy(verifyBtn, false);
+            setError('خطا در ارتباط با سرور. دوباره تلاش کنید.');
           });
         });
       }

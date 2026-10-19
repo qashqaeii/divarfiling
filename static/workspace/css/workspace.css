@@ -2392,6 +2392,19 @@ body.ws-lightbox-open { overflow: hidden; }
     text-overflow: ellipsis;
     white-space: nowrap;
 }
+.ws-divar-modal-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .4rem;
+}
+.ws-divar-modal-btn.is-loading {
+    cursor: wait;
+    opacity: .9;
+}
+.ws-divar-modal-btn__ico {
+    font-size: .9em;
+}
 @media (max-width: 380px) {
     .mk-owner-divar-fetch__label { max-width: 5.2rem; }
     .mk-owner-divar-status__chip-text { max-width: 4.8rem; }

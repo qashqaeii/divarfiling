@@ -1020,7 +1020,7 @@
                        data-divar-phone data-divar-default-phone="{{ divar_connect_default_phone|default:'' }}"
                        value="{{ divar_connect_default_phone|default:'' }}"
                        placeholder="0912…" autocomplete="tel">
-                <button type="button" class="ws-btn ws-btn-primary ws-btn-block" data-divar-send-otp style="margin-top:0.75rem">
+                <button type="button" class="ws-btn ws-btn-primary ws-btn-block ws-divar-modal-btn" data-divar-send-otp style="margin-top:0.75rem">
                     ارسال کد تأیید
                 </button>
             </div>
@@ -1028,7 +1028,7 @@
                 <label class="mk-owner-box__label" for="divar-connect-otp">کد پیامک‌شده</label>
                 <input type="text" id="divar-connect-otp" class="ws-input" dir="ltr" inputmode="numeric"
                        data-divar-otp maxlength="6" autocomplete="one-time-code">
-                <button type="button" class="ws-btn ws-btn-primary ws-btn-block" data-divar-verify-otp style="margin-top:0.75rem">
+                <button type="button" class="ws-btn ws-btn-primary ws-btn-block ws-divar-modal-btn" data-divar-verify-otp style="margin-top:0.75rem">
                     تأیید و اتصال
                 </button>
             </div>
@@ -1042,7 +1042,7 @@
 <script src="{% static 'workspace/js/listing-edit.js' %}?v=7"></script>
 <script src="{% static 'workspace/js/filing-help-modal.js' %}?v=2"></script>
 {% if divar_contact_enabled %}
-<script src="{% static 'workspace/js/divar_contact.js' %}?v=4"></script>
+<script src="{% static 'workspace/js/divar_contact.js' %}?v=5"></script>
 {% endif %}
 <script>
 document.addEventListener('DOMContentLoaded', function () {

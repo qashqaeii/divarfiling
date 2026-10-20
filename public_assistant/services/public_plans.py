@@ -142,11 +142,29 @@ def get_plan_model(catalog: PublicPlanCatalog, plan_id: int) -> LicensePlan | No
     return LicensePlan.objects.filter(pk=plan_id, product=product, is_active=True).first()
 
 
+def agency_plan_limits(plan: PublicPlanInfo) -> tuple[int, int]:
+    min_q = max(AGENCY_MIN_QUANTITY, int(plan.min_quantity or AGENCY_MIN_QUANTITY))
+    max_q = max(min_q, int(plan.max_quantity or AGENCY_MAX_QUANTITY))
+    return min_q, max_q
+
+
+def agency_quantity_status(plan: PublicPlanInfo, quantity: int) -> str:
+    """ok | below_min | above_max"""
+    min_q, max_q = agency_plan_limits(plan)
+    qty = int(quantity)
+    if qty < min_q:
+        return 'below_min'
+    if qty > max_q:
+        return 'above_max'
+    return 'ok'
+
+
 def public_plan_quote(
     catalog: PublicPlanCatalog,
     plan_info: PublicPlanInfo,
     *,
     quantity: int = 1,
+    strict: bool = False,
 ) -> dict | None:
     """قیمت عمومی بدون کاربر — فقط تخفیف حجمی آژانس."""
     product = get_bot_product()
@@ -155,6 +173,10 @@ def public_plan_quote(
     plan = get_plan_model(catalog, plan_info.id)
     if not plan:
         return None
+    if plan_info.allow_bulk_purchase and strict:
+        status = agency_quantity_status(plan_info, quantity)
+        if status != 'ok':
+            return None
     return calculate_plan_pricing(plan, product, None, request=None, quantity=quantity)
 
 
@@ -236,9 +258,10 @@ def catalog_context_for_llm(
     lines.append('')
     lines.append('--- پلن آژانس (چند لایسنس مستقل) ---')
     for p in catalog.agency:
+        min_q, max_q = agency_plan_limits(p)
         lines.append(
             f'- {p.name} ({p.duration_label}): قیمت پایه هر لایسنس {format_price(p.price)}'
-            f' — خرید {AGENCY_MIN_QUANTITY} تا {AGENCY_MAX_QUANTITY} لایسنس'
+            f' — خرید آنلاین {min_q} تا {max_q} لایسنس'
         )
 
     savings = compare_personal_duration_savings(catalog)
@@ -261,20 +284,37 @@ def catalog_context_for_llm(
                     f'(در قیمت فعلی تفاوت معنادار با {item["months"]}× ماهانه نیست)'
                 )
 
-    if team_size and team_size >= AGENCY_MIN_QUANTITY:
+    if team_size:
         dur = duration or 'quarterly'
         agency_plan = catalog.agency_by_type(dur) or (catalog.agency[0] if catalog.agency else None)
         if agency_plan:
-            quote = public_plan_quote(catalog, agency_plan, quantity=team_size)
-            if quote:
-                pct = int(get_agency_bulk_discount_percent(team_size))
+            status = agency_quantity_status(agency_plan, team_size)
+            min_q, max_q = agency_plan_limits(agency_plan)
+            if status == 'below_min':
                 lines.append('')
-                lines.append(f'--- محاسبه آژانس برای {team_size} مشاور — {agency_plan.name} ---')
-                lines.append(f'قیمت پایه هر لایسنس: {format_price(quote["base_unit_price"])}')
-                lines.append(f'تخفیف حجمی: {pct}٪')
-                lines.append(f'قیمت هر لایسنس پس از تخفیف: {format_price(quote["effective_unit_price"])}')
-                lines.append(f'جمع مبلغ پایه سفارش: {format_price(quote["final_price"])}')
-                lines.append(agency_bulk_note())
+                lines.append(
+                    f'--- تعداد {team_size} مشاور ---\n'
+                    f'خرید آنلاین این پلن از **{min_q} لایسنس** شروع می‌شود؛ برای یک نفر پلن شخصی مناسب‌تر است.'
+                )
+            elif status == 'above_max':
+                lines.append('')
+                lines.append(
+                    f'--- تعداد {team_size} مشاور ---\n'
+                    f'خرید آنلاین حداکثر **{max_q} لایسنس** در یک سفارش است؛ برای بیشتر با `/contact/` هماهنگ کنید.'
+                )
+            else:
+                quote = public_plan_quote(catalog, agency_plan, quantity=team_size, strict=True)
+                if quote:
+                    pct = int(get_agency_bulk_discount_percent(team_size))
+                    lines.append('')
+                    lines.append(f'--- محاسبه آژانس برای {team_size} مشاور — {agency_plan.name} ---')
+                    lines.append(f'قیمت پایه هر لایسنس: {format_price(quote["base_unit_price"])}')
+                    lines.append(f'تخفیف حجمی: {pct}٪')
+                    lines.append(
+                        f'قیمت هر لایسنس پس از تخفیف: {format_price(quote["effective_unit_price"])}'
+                    )
+                    lines.append(f'جمع مبلغ پایه سفارش: {format_price(quote["final_price"])}')
+                    lines.append(agency_bulk_note())
 
     lines.append('')
     lines.append(

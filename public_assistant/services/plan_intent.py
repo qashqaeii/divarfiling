@@ -28,6 +28,15 @@ _SUBSCRIPTION_STRONG = (
     'نسخه آزمایشی',
     'پلن آزمایشی',
     'آزمایشی خرید',
+    'فایلینگ دیوار',
+)
+
+_SUBSCRIPTION_FILING = (
+    'اشتراک فایلینگ',
+    'فایلینگ دیوار',
+    'فایل های دیوار',
+    'فایل‌های دیوار',
+    'مدیریت فایل',
 )
 
 _SUBSCRIPTION_MEDIUM = (
@@ -82,18 +91,28 @@ _TEAM_PATTERNS = (
     re.compile(r'(\d+)\s*(?:نفر|مشاور|نفره|نفرای|نفری)'),
     re.compile(r'ما\s*(\d+)\s*نفر'),
     re.compile(r'تیم\s*(\d+)'),
+    re.compile(r'(\d+)\s*نفر\s*شدیم'),
 )
 
 _AGENCY_HINTS = ('آژانس', 'تیم', 'دفتر', 'چند مشاور', 'گروهی', 'مدیر آژانس')
 _SOLO_HINTS = ('تنها', 'تک نفر', 'تک‌نفر', 'مستقل', 'alone', 'solo', 'خودم', 'تنهایی')
 _NEWBIE_HINTS = ('تازه شروع', 'تازه کار', 'جدید شدم', 'شروع کردم', 'مبتدی')
 
+_DURATION_ORDER = ('quarterly', 'yearly', 'monthly', 'daily')
 _DURATION_MAP = {
     'monthly': ('ماهانه', 'یک ماهه', 'یک‌ماهه', '۱ ماه', '1 ماه', 'monthly'),
     'quarterly': ('سه ماهه', 'سه‌ماهه', '۳ ماه', '3 ماه', '90 روز', 'quarterly'),
     'yearly': ('سالانه', 'یکساله', 'یک ساله', 'یک‌ساله', '۱۲ ماه', '12 ماه', 'yearly'),
-    'daily': ('هفت روز', 'هفت‌روزه', '۷ روز', '7 روز', 'آزمایشی', 'trial', 'daily'),
+    'daily': ('هفت روز', 'هفت‌روزه', '۷ روز', '7 روز', 'trial', 'daily'),
 }
+
+_SHARE_FILE_RE = re.compile(
+    r'(لینک\s+اشتراک\s+فایل|اشتراک\s+فایل\s+برای|اشتراک\s+گذاری\s+فایل|share\s+فایل|لینک\s+برای\s+مشتری)',
+    re.IGNORECASE,
+)
+
+_HOWTO_BREAK = ('چطور', 'چطوری', 'چگونه', 'چجوری', 'آموزش', 'راهنما')
+_CRM_TOPIC = ('مخاطب', 'crm', 'ثبت مشتری', 'معامله', 'deal')
 
 
 @dataclass
@@ -111,6 +130,7 @@ class SubscriptionQueryContext:
     agency_context: bool
     newbie: bool
     duration: str | None
+    needs_team_count: bool
     raw_message: str
 
 
@@ -131,10 +151,118 @@ def extract_team_size(text: str) -> int | None:
 
 def extract_duration(text: str) -> str | None:
     norm = normalize_persian(text)
-    for key, hints in _DURATION_MAP.items():
-        if any(h in norm for h in hints):
+    for key in _DURATION_ORDER:
+        if any(h in norm for h in _DURATION_MAP[key]):
             return key
+    if any(h in norm for h in _DURATION_MAP['daily']):
+        return 'daily'
     return None
+
+
+def _is_share_file_context(norm: str) -> bool:
+    if 'فایلینگ' in norm and any(w in norm for w in ('اشتراک', 'پلن', 'لایسنس', 'قیمت')):
+        return False
+    if _SHARE_FILE_RE.search(norm):
+        return True
+    if any(h in norm for h in _HOWTO_BREAK) and 'لینک' in norm and 'مشتری' in norm:
+        if 'فایلینگ' in norm or 'پلن' in norm or 'لایسنس' in norm:
+            return False
+        return True
+    if 'اشتراک' in norm and 'لینک' in norm and 'مشتری' in norm:
+        if 'فایلینگ' in norm or 'پلن' in norm or 'لایسنس' in norm:
+            return False
+        return True
+    return False
+
+
+def _is_subscription_topic(norm: str) -> bool:
+    if any(h in norm for h in _SUBSCRIPTION_FILING):
+        return True
+    if any(h in norm for h in _SUBSCRIPTION_STRONG):
+        return True
+    if 'اشتراک' in norm and ('فایلینگ' in norm or 'دیوار' in norm):
+        return True
+    if 'پلن' in norm or 'لایسنس' in norm:
+        return True
+    return False
+
+
+def _is_subscription_followup(norm: str) -> bool:
+    if extract_team_size(norm) or extract_duration(norm):
+        return True
+    short = len(norm.split()) <= 10
+    if not short:
+        return False
+    hints = (
+        'چقدر',
+        'چنده',
+        'سالانه',
+        'ماهانه',
+        'سه ماه',
+        'سه‌ماه',
+        'حالا',
+        'شدیم',
+        'نفر',
+        'مشاور',
+    )
+    return any(h in norm for h in hints)
+
+
+def _is_topic_break(norm: str) -> bool:
+    if _is_share_file_context(norm):
+        return True
+    if any(h in norm for h in _HOWTO_BREAK) and any(h in norm for h in _CRM_TOPIC):
+        return True
+    if any(h in norm for h in _HOWTO_BREAK) and not _is_subscription_topic(norm):
+        return True
+    return False
+
+
+def _resolve_slots_from_history(
+    session: PublicChatSession | None,
+    current_message: str,
+) -> tuple[int | None, str | None]:
+    """تعداد/مدت از پیام فعلی اولویت دارد؛ فقط پیام‌های بعد از آخرین topic break."""
+    current_team = extract_team_size(current_message)
+    current_duration = extract_duration(current_message)
+    if current_team is not None and current_duration is not None:
+        return current_team, current_duration
+
+    if not session:
+        return current_team, current_duration
+
+    from public_assistant.models import PublicChatMessage
+
+    current_norm = normalize_persian(current_message)
+    msgs = list(
+        session.messages.filter(role=PublicChatMessage.ROLE_USER).order_by('created_at', 'id')[:12]
+    )
+
+    last_break_index = -1
+    for i, m in enumerate(msgs):
+        if normalize_persian(m.content) == current_norm:
+            continue
+        if _is_topic_break(normalize_persian(m.content)):
+            last_break_index = i
+
+    history_team: int | None = None
+    history_duration: str | None = None
+    for m in msgs[last_break_index + 1 :]:
+        if normalize_persian(m.content) == current_norm:
+            continue
+        norm = normalize_persian(m.content)
+        if not (_is_subscription_topic(norm) or _is_subscription_followup(norm)):
+            continue
+        t = extract_team_size(m.content)
+        d = extract_duration(m.content)
+        if t is not None:
+            history_team = t
+        if d is not None:
+            history_duration = d
+
+    team = current_team if current_team is not None else history_team
+    duration = current_duration if current_duration is not None else history_duration
+    return team, duration
 
 
 def _session_context_text(session: PublicChatSession | None) -> str:
@@ -147,12 +275,6 @@ def _session_context_text(session: PublicChatSession | None) -> str:
         if m.role == PublicChatMessage.ROLE_USER:
             parts.append(m.content)
     return ' '.join(parts)
-
-
-def _is_share_file_context(norm: str) -> bool:
-    return 'اشتراک' in norm and any(
-        w in norm for w in ('فایل', 'لینک', 'مشتری', 'عمومی', 'share', 'بفرست', 'ارسال')
-    )
 
 
 def newbie_hint(text: str) -> bool:
@@ -183,16 +305,20 @@ def analyze_subscription_query(
             agency_context=False,
             newbie=False,
             duration=None,
+            needs_team_count=False,
             raw_message=message,
         )
 
     property_score = sum(1 for h in _PROPERTY_STRONG if h in norm)
     subscription_score = sum(1 for h in _SUBSCRIPTION_STRONG if h in norm)
+    if any(h in norm for h in _SUBSCRIPTION_FILING):
+        subscription_score += 2
     if any(h in norm for h in _SUBSCRIPTION_MEDIUM):
         subscription_score += 1
 
+    team_size, duration = _resolve_slots_from_history(session, message)
+
     agency_context = any(h in combined for h in _AGENCY_HINTS)
-    team_size = extract_team_size(combined)
     if team_size and team_size >= 2:
         agency_context = True
         subscription_score += 2
@@ -203,7 +329,9 @@ def analyze_subscription_query(
     if solo:
         subscription_score += 1
 
-    has_subscription_anchor = any(h in norm for h in _SUBSCRIPTION_STRONG)
+    has_subscription_anchor = any(h in norm for h in _SUBSCRIPTION_STRONG) or any(
+        h in norm for h in _SUBSCRIPTION_FILING
+    )
     if property_score >= 1 and not has_subscription_anchor:
         is_property = True
     elif property_score >= 2 and subscription_score < 2:
@@ -233,10 +361,16 @@ def analyze_subscription_query(
         w in norm for w in ('crm', 'هوش', 'ai', 'امکانات', 'قابلیت', 'شامل', 'دارد')
     ) and is_subscription
 
-    duration = extract_duration(combined)
-
     if not is_property and (wants_price or wants_comparison or wants_recommendation):
         is_subscription = is_subscription or subscription_score >= 1
+
+    needs_team_count = bool(
+        is_subscription
+        and agency_context
+        and wants_price
+        and team_size is None
+        and not solo
+    )
 
     return SubscriptionQueryContext(
         is_subscription=is_subscription,
@@ -252,5 +386,6 @@ def analyze_subscription_query(
         agency_context=agency_context,
         newbie=newbie_hint(combined),
         duration=duration,
+        needs_team_count=needs_team_count,
         raw_message=message,
     )

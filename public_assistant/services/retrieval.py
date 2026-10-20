@@ -81,10 +81,12 @@ def _intent_boost(query_norm: str, article_id: str) -> float:
         or ('شماره' in query_norm and 'فایل' in query_norm)
     ):
         boost += 7.5
-    if article_id == 'share-public-file' and 'لینک' in query_norm and any(
-        w in query_norm for w in ('مشتری', 'بفرست', 'ارسال', 'بساز', 'ساخت', 'عمومی', 'share', 'اشتراک')
-    ):
-        boost += 8.0
+    if article_id == 'share-public-file' and 'لینک' in query_norm and 'مشتری' in query_norm:
+        if any(
+            w in query_norm
+            for w in ('چطور', 'چطوری', 'چگونه', 'بفرست', 'ارسال', 'بساز', 'ساخت', 'عمومی', 'share', 'اشتراک')
+        ):
+            boost += 12.0
     if article_id == 'agency-create-roles' and 'آژانس' in query_norm and any(
         w in query_norm for w in ('ساخت', 'نقش', 'مالک', 'منشی')
     ):

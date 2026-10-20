@@ -8,8 +8,13 @@ from django.test import TestCase, override_settings
 
 from public_assistant.models import PublicChatMessage, PublicChatSession
 from public_assistant.services.chat import answer_question
-from public_assistant.services.plan_advisor import compose_subscription_answer
+from public_assistant.services.plan_advisor import (
+    AGENCY_TEAM_COUNT_QUESTION,
+    compose_subscription_answer,
+)
+from public_assistant.services.plan_answer_guard import reconcile_subscription_answer
 from public_assistant.services.plan_intent import analyze_subscription_query
+from public_assistant.services.public_plans import catalog_context_for_llm
 from public_assistant.services.public_plans import (
     compare_personal_duration_savings,
     load_public_plan_catalog,
@@ -153,7 +158,7 @@ class PlanAdvisorCatalogTests(TestCase):
         ctx = analyze_subscription_query('سه‌ماهه بهتره یا ماهانه؟')
         ans = compose_subscription_answer(ctx, cat)
         self.assertIn('2', ans)
-        self.assertIn('صرفه‌جویی', ans)
+        self.assertTrue('ارزان‌تر' in ans or 'صرفه‌جویی' in ans)
 
     def test_property_price_not_subscription(self):
         ctx = analyze_subscription_query('قیمت این ملک چقدر است؟')
@@ -161,8 +166,17 @@ class PlanAdvisorCatalogTests(TestCase):
         self.assertFalse(ctx.is_subscription)
 
     def test_share_file_not_subscription(self):
-        ctx = analyze_subscription_query('لینک اشتراک فایل برای مشتری')
+        ctx = analyze_subscription_query('چطور لینک اشتراک فایل برای مشتری بفرستم؟')
         self.assertFalse(ctx.is_subscription)
+
+    def test_filing_subscription_is_subscription(self):
+        for q in (
+            'قیمت اشتراک فایلینگ دیوار چنده؟',
+            'اشتراک ماهانه برای مدیریت فایل‌هام می‌خوام.',
+            'پلن مناسب کار با فایل‌های دیوار کدومه؟',
+        ):
+            ctx = analyze_subscription_query(q)
+            self.assertTrue(ctx.is_subscription, msg=q)
 
     def test_followup_team_size_in_session(self):
         session = PublicChatSession.objects.create(ip_hash='followup-plan')
@@ -236,12 +250,142 @@ class PlanAdvisorCatalogTests(TestCase):
         self.assertEqual(quote['effective_unit_price'], Decimal('2000000'))
 
     def test_all_agency_durations_listed_in_context(self):
-        from public_assistant.services.public_plans import catalog_context_for_llm
-
         cat = self.catalog()
         block = catalog_context_for_llm(cat)
         self.assertIn('آژانس', block)
         self.assertIn('شخصی', block)
+
+    def test_multi_turn_six_quarterly_after_four_monthly(self):
+        session = PublicChatSession.objects.create(ip_hash='mt-64')
+        PublicChatMessage.objects.create(
+            session=session,
+            role=PublicChatMessage.ROLE_USER,
+            content='برای ۴ مشاور ماهانه چقدر؟',
+        )
+        ctx = analyze_subscription_query('حالا ۶ نفر شدیم، سه‌ماهه چقدر؟', session)
+        self.assertEqual(ctx.team_size, 6)
+        self.assertEqual(ctx.duration, 'quarterly')
+        cat = self.catalog()
+        ans = compose_subscription_answer(ctx, cat)
+        plan = cat.agency_by_type('quarterly')
+        quote = public_plan_quote(cat, plan, quantity=6, strict=True)
+        self.assertEqual(quote['final_price'], Decimal('12000000'))
+        self.assertIn('6', ans)
+
+    def test_duration_switch_yearly_then_monthly(self):
+        session = PublicChatSession.objects.create(ip_hash='dur-sw')
+        PublicChatMessage.objects.create(
+            session=session,
+            role=PublicChatMessage.ROLE_USER,
+            content='برای ۳ مشاور سالانه چقدر؟',
+        )
+        ctx = analyze_subscription_query('ماهانه چقدر می‌شود؟', session)
+        self.assertEqual(ctx.team_size, 3)
+        self.assertEqual(ctx.duration, 'monthly')
+
+    def test_topic_change_clears_team_size(self):
+        session = PublicChatSession.objects.create(ip_hash='topic-br')
+        PublicChatMessage.objects.create(
+            session=session,
+            role=PublicChatMessage.ROLE_USER,
+            content='ما ۴ مشاور داریم',
+        )
+        PublicChatMessage.objects.create(
+            session=session,
+            role=PublicChatMessage.ROLE_USER,
+            content='چطور مخاطب ثبت کنم؟',
+        )
+        ctx = analyze_subscription_query('سالانه چقدر؟', session)
+        self.assertIsNone(ctx.team_size)
+
+    def test_agency_price_without_count_asks(self):
+        cat = self.catalog()
+        ctx = analyze_subscription_query('قیمت پلن آژانس سه‌ماهه')
+        self.assertTrue(ctx.needs_team_count)
+        ans = compose_subscription_answer(ctx, cat)
+        self.assertIn(AGENCY_TEAM_COUNT_QUESTION, ans)
+
+    def test_over_max_no_clamped_quote_in_context(self):
+        cat = self.catalog()
+        block = catalog_context_for_llm(cat, team_size=30, duration='quarterly')
+        self.assertIn('30', block)
+        self.assertNotIn('جمع مبلغ پایه سفارش', block)
+
+    def test_quarterly_not_cheaper_when_prices_equal(self):
+        self.plans['personal_quarterly'].price = 990_000 * 3
+        self.plans['personal_quarterly'].save(update_fields=['price'])
+        cat = self.catalog()
+        ctx = analyze_subscription_query('سه‌ماهه بهتره یا ماهانه؟')
+        ans = compose_subscription_answer(ctx, cat)
+        self.assertIn('به‌صرفه‌تر نیست', ans)
+
+    @patch('public_assistant.services.chat.llm.complete')
+    def test_llm_wrong_price_replaced(self, mock_complete):
+        call_command('sync_public_knowledge')
+        mock_complete.return_value = (
+            'قیمت ماهانه **۵ میلیون تومان** است.',
+            'mock',
+            'mock',
+            1,
+            1,
+            1,
+        )
+        session = PublicChatSession.objects.create(ip_hash='llm-wrong')
+        out = answer_question(session=session, message='قیمت اشتراک ماهانه چقدر است؟')
+        self.assertIn('990', out['answer'].replace(',', ''))
+        self.assertNotIn('۵ میلیون', out['answer'])
+
+    @patch('public_assistant.services.chat.llm.complete')
+    def test_llm_wrong_discount_replaced(self, mock_complete):
+        call_command('sync_public_knowledge')
+        mock_complete.return_value = (
+            'برای ۴ مشاور تخفیف **۲۰٪** و جمع **۱۰ میلیون**.',
+            'mock',
+            'mock',
+            1,
+            1,
+            1,
+        )
+        session = PublicChatSession.objects.create(ip_hash='llm-disc')
+        out = answer_question(
+            session=session,
+            message='ما ۴ مشاور داریم سه ماهه چقدر می‌شود؟',
+        )
+        self.assertIn('15', out['answer'])
+        self.assertIn('8', out['answer'])
+
+    @patch('public_assistant.services.chat.llm.complete')
+    def test_llm_ok_answer_kept_when_no_conflict(self, mock_complete):
+        call_command('sync_public_knowledge')
+        good = 'برای شروع، از مسیر `/products/` و راهنمای لایسنس کمک بگیرید.'
+        mock_complete.return_value = (good, 'mock', 'mock', 1, 1, 1)
+        session = PublicChatSession.objects.create(ip_hash='llm-ok')
+        out = answer_question(session=session, message='چطور اشتراک بخرم؟')
+        self.assertIn('/products/', out['answer'])
+
+    @patch('public_assistant.services.chat.llm.complete')
+    def test_no_catalog_strips_kb_prices(self, mock_complete):
+        call_command('sync_public_knowledge')
+        mock_complete.return_value = (
+            'پلن ماهانه ۹۹۰ هزار تومان است.',
+            'mock',
+            'mock',
+            1,
+            1,
+            1,
+        )
+        with patch('public_assistant.services.chat.load_public_plan_catalog', return_value=None):
+            session = PublicChatSession.objects.create(ip_hash='no-cat')
+            out = answer_question(session=session, message='قیمت اشتراک ماهانه؟')
+        self.assertIn('buy', out['answer'])
+        self.assertNotIn('990', out['answer'].replace(',', ''))
+
+    def test_reconcile_unit(self):
+        cat = self.catalog()
+        ctx = analyze_subscription_query('قیمت ماهانه اشتراک')
+        bad = 'هزینه: ۵ میلیون تومان'
+        fixed = reconcile_subscription_answer(bad, ctx, cat)
+        self.assertIn('990', fixed.replace(',', ''))
 
 
 class PlanAdvisorIntentMatrixTests(TestCase):

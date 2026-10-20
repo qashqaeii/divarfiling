@@ -7,13 +7,17 @@ from public_assistant.services.public_plans import (
     PublicPlanCatalog,
     PublicPlanInfo,
     agency_bulk_note,
+    agency_plan_limits,
+    agency_quantity_status,
     catalog_context_for_llm,
     compare_personal_duration_savings,
     format_price,
     load_public_plan_catalog,
     public_plan_quote,
 )
-from shop.services.plan_pricing import AGENCY_MAX_QUANTITY, AGENCY_MIN_QUANTITY, get_agency_bulk_discount_percent
+from shop.services.plan_pricing import get_agency_bulk_discount_percent
+
+AGENCY_TEAM_COUNT_QUESTION = 'چند مشاور قرار است از اشتراک استفاده کنند؟'
 
 PLAN_ADVISOR_SYSTEM_ADDENDUM = """
 وقتی بخش «داده فروشگاه زنده» در پیام کاربر آمده، قیمت و مدت پلن‌ها فقط از آن بخش است — نه از حافظه و نه حدس.
@@ -47,11 +51,13 @@ def compose_subscription_answer(
     if ctx.team_size == 1 and ctx.agency_context:
         return _agency_single_advisor_note(catalog)
 
-    if ctx.team_size and ctx.team_size > AGENCY_MAX_QUANTITY:
-        return _agency_over_capacity(catalog, ctx.team_size)
+    if ctx.needs_team_count:
+        return _ask_agency_team_count(catalog, ctx)
 
-    if ctx.agency_context or (ctx.team_size and ctx.team_size >= AGENCY_MIN_QUANTITY):
-        return _answer_agency(catalog, ctx)
+    if ctx.agency_context or (ctx.team_size and ctx.team_size >= 2):
+        agency_ans = _answer_agency(catalog, ctx)
+        if agency_ans:
+            return agency_ans
 
     if ctx.wants_welcome_gift and not ctx.wants_price:
         return _welcome_gift_pointer(catalog)
@@ -65,7 +71,7 @@ def compose_subscription_answer(
         or ('ماهانه' in norm and 'سه' in norm and 'ماه' in norm)
     )
     if duration_compare:
-        cmp_ans = _compare_monthly_quarterly(catalog)
+        cmp_ans = _compare_personal_durations(catalog, ctx.duration)
         if cmp_ans:
             return cmp_ans
 
@@ -73,7 +79,7 @@ def compose_subscription_answer(
         return _recommend_personal(catalog, ctx)
 
     if ctx.wants_comparison:
-        cmp_ans = _compare_monthly_quarterly(catalog)
+        cmp_ans = _compare_personal_durations(catalog, ctx.duration)
         if cmp_ans:
             return cmp_ans
 
@@ -104,9 +110,12 @@ def _buy_line(plan: PublicPlanInfo | None, catalog: PublicPlanCatalog) -> str:
 
 def _agency_single_advisor_note(catalog: PublicPlanCatalog) -> str:
     monthly = catalog.personal_by_type('monthly')
+    min_agency = 2
+    if catalog.agency:
+        min_agency, _ = agency_plan_limits(catalog.agency[0])
     lines = [
         'برای **یک مشاور**، پلن **شخصی** مناسب‌تر از خرید گروهی آژانس است؛ '
-        f'خرید آژانس از **{AGENCY_MIN_QUANTITY} لایسنس** به بالا طراحی شده.',
+        f'خرید آژانس از **{min_agency} لایسنس** به بالا طراحی شده.',
     ]
     if monthly:
         lines.append(f'پلن یک‌ماهه شخصی الان **{format_price(monthly.price)}** است.')
@@ -114,17 +123,34 @@ def _agency_single_advisor_note(catalog: PublicPlanCatalog) -> str:
     return '\n\n'.join(lines)
 
 
-def _agency_over_capacity(catalog: PublicPlanCatalog, team_size: int) -> str:
+def _ask_agency_team_count(catalog: PublicPlanCatalog, ctx: SubscriptionQueryContext) -> str:
+    dur = ctx.duration or 'quarterly'
+    plan = catalog.agency_by_type(dur)
+    hint = ''
+    if plan:
+        min_q, max_q = agency_plan_limits(plan)
+        hint = f' (خرید آنلاین این پلن معمولاً **{min_q} تا {max_q}** لایسنس است)'
     return (
-        f'برای **{team_size} مشاور**، خرید آنلاین فعلاً تا **{AGENCY_MAX_QUANTITY} لایسنس** در یک سفارش محدود است. '
+        f'برای محاسبه **قیمت کل آژانس**، {AGENCY_TEAM_COUNT_QUESTION}{hint}\n\n'
+        f'صفحه خرید: {catalog.product_buy_url}'
+    )
+
+
+def _agency_over_capacity(catalog: PublicPlanCatalog, team_size: int, plan: PublicPlanInfo) -> str:
+    _, max_q = agency_plan_limits(plan)
+    return (
+        f'برای **{team_size} مشاور**، خرید آنلاین این پلن حداکثر **{max_q} لایسنس** در یک سفارش دارد. '
         'برای تعداد بیشتر با پشتیبانی هماهنگ کنید: `/contact/`.\n\n'
         f'صفحه خرید آژانس: {catalog.product_buy_url}'
     )
 
 
 def _answer_agency(catalog: PublicPlanCatalog, ctx: SubscriptionQueryContext) -> str:
-    qty = ctx.team_size or AGENCY_MIN_QUANTITY
-    if qty < AGENCY_MIN_QUANTITY:
+    if ctx.team_size is None:
+        return ''
+
+    qty = ctx.team_size
+    if qty < 2:
         return _agency_single_advisor_note(catalog)
 
     duration = ctx.duration or 'quarterly'
@@ -132,7 +158,13 @@ def _answer_agency(catalog: PublicPlanCatalog, ctx: SubscriptionQueryContext) ->
     if not plan:
         return compose_no_catalog_answer()
 
-    quote = public_plan_quote(catalog, plan, quantity=qty)
+    status = agency_quantity_status(plan, qty)
+    if status == 'below_min':
+        return _agency_single_advisor_note(catalog)
+    if status == 'above_max':
+        return _agency_over_capacity(catalog, qty, plan)
+
+    quote = public_plan_quote(catalog, plan, quantity=qty, strict=True)
     if not quote:
         return compose_no_catalog_answer()
 
@@ -151,23 +183,48 @@ def _answer_agency(catalog: PublicPlanCatalog, ctx: SubscriptionQueryContext) ->
     return '\n'.join(lines)
 
 
-def _compare_monthly_quarterly(catalog: PublicPlanCatalog) -> str | None:
+def _compare_personal_durations(catalog: PublicPlanCatalog, focus: str | None) -> str | None:
     monthly = catalog.personal_by_type('monthly')
-    quarterly = catalog.personal_by_type('quarterly')
-    if not monthly or not quarterly:
+    if not monthly:
         return None
-    baseline = monthly.price * 3
-    bundle = quarterly.price
-    savings = baseline - bundle
-    lines = [
-        'اگر حداقل **سه ماه** با فایلینگ دیوار کار می‌کنید، معمولاً پلن **سه‌ماهه** به‌صرفه‌تر از خرید سه بار ماهانه است.',
-        f'- سه ماه جداگانه پلن ماهانه: **{format_price(baseline)}**',
-        f'- پلن سه‌ماهه: **{format_price(bundle)}**',
-    ]
-    if savings > 0:
-        lines.append(f'- با قیمت فعلی حدود **{format_price(savings)}** صرفه‌جویی می‌کنید.')
+
+    if focus == 'yearly':
+        yearly = catalog.personal_by_type('yearly')
+        if not yearly:
+            return None
+        baseline = monthly.price * 12
+        bundle = yearly.price
+        savings = baseline - bundle
+        lines = [
+            'مقایسه **یک‌ساله** با خرید **۱۲ بار ماهانه** (با قیمت فعلی):',
+            f'- ۱۲× ماهانه: **{format_price(baseline)}**',
+            f'- پلن سالانه: **{format_price(bundle)}**',
+        ]
+        if savings > 0:
+            lines.append(f'- پلن سالانه حدود **{format_price(savings)}** ارزان‌تر است.')
+        else:
+            lines.append('- با قیمت فعلی پلن سالانه از نظر جمع هزینه به‌صرفه‌تر نیست؛ مدت و شرایط را در فروشگاه ببینید.')
+        target = yearly
+    else:
+        quarterly = catalog.personal_by_type('quarterly')
+        if not quarterly:
+            return None
+        baseline = monthly.price * 3
+        bundle = quarterly.price
+        savings = baseline - bundle
+        lines = [
+            'مقایسه **سه‌ماهه** با خرید **۳ بار ماهانه** (با قیمت فعلی):',
+            f'- ۳× ماهانه: **{format_price(baseline)}**',
+            f'- پلن سه‌ماهه: **{format_price(bundle)}**',
+        ]
+        if savings > 0:
+            lines.append(f'- پلن سه‌ماهه حدود **{format_price(savings)}** ارزان‌تر است.')
+        else:
+            lines.append('- با قیمت فعلی پلن سه‌ماهه از نظر جمع هزینه به‌صرفه‌تر نیست.')
+        target = quarterly
+
     lines.append('امکانات اصلی یکسان است؛ تفاوت در **مدت** و **هزینه کل** است.')
-    lines.append(_buy_line(quarterly, catalog))
+    lines.append(_buy_line(target, catalog))
     return '\n\n'.join(lines)
 
 
@@ -195,7 +252,7 @@ def _recommend_personal(catalog: PublicPlanCatalog, ctx: SubscriptionQueryContex
             'این با **هدیه ۷روزه ثبت‌نام** (در صورت واجد شرایط بودن) متفاوت است.'
         )
     elif quarterly and ctx.wants_comparison:
-        cmp_txt = _compare_monthly_quarterly(catalog)
+        cmp_txt = _compare_personal_durations(catalog, ctx.duration)
         if cmp_txt:
             lines.append(cmp_txt)
     lines.append(_buy_line(monthly, catalog))
@@ -223,8 +280,10 @@ def _personal_price_summary(catalog: PublicPlanCatalog, ctx: SubscriptionQueryCo
                 + _buy_line(plan, catalog)
             )
         agency_plan = catalog.agency_by_type(ctx.duration)
-        if agency_plan and ctx.team_size and ctx.team_size >= AGENCY_MIN_QUANTITY:
-            return _answer_agency(catalog, ctx)
+        if agency_plan and ctx.team_size and ctx.team_size >= 2:
+            ans = _answer_agency(catalog, ctx)
+            if ans:
+                return ans
 
     parts = ['**قیمت پلن‌های شخصی (فعلی):**']
     if catalog.trial:

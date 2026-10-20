@@ -29,6 +29,10 @@ from public_assistant.services.plan_advisor import (
     compose_no_catalog_answer,
     compose_subscription_answer,
 )
+from public_assistant.services.plan_answer_guard import (
+    reconcile_subscription_answer,
+    strip_unverified_subscription_prices,
+)
 from public_assistant.services.plan_intent import analyze_subscription_query
 from public_assistant.services.public_plans import load_public_plan_catalog
 from public_assistant.services.security import (
@@ -302,6 +306,11 @@ def answer_question(
             text = _fallback_from_chunks(chunks)
     else:
         text = polish_public_answer(text, chunks=chunks)
+        if sub_ctx.is_subscription:
+            text = reconcile_subscription_answer(text, sub_ctx, plan_catalog)
+            text = strip_unverified_subscription_prices(text, sub_ctx, plan_catalog)
+    if sub_ctx.is_subscription and not plan_catalog and not text:
+        text = compose_no_catalog_answer()
 
     PublicAssistantUsageLog.objects.create(
         session=session,
